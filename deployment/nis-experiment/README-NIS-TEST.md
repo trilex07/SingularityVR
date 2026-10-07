@@ -14,8 +14,10 @@ Official NVIDIA Image Scaling v1.0.3 (MIT, see `nis/licence.txt`).
 | `nis/licence.txt` | NVIDIA MIT license notice |
 
 Prototype DLL (this build):
-- PE32 x86 (`0x014C`), `/O2`, 577,536 bytes
-- SHA-256: `F2DC0227FE407D4949506954C8FF48EC0E1B3F05E4ED4DDC266B2EC5DE3011DF`
+- PE32 x86 (`0x014C`), `/O2`, 622,592 bytes
+- SHA-256: `C20EC3A9F37DECD6453896BF59125713ED8DCA782DBE1F3CADC3E6A2BBC1E10D`
+- Shaders: embedded official bytecode (primary). `nis/NIS_Main.hlsl` ships
+  as fallback only and is compiled only if embedded creation fails.
 
 ## Install (isolated game copy only)
 
