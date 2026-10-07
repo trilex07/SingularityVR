@@ -46,7 +46,13 @@ static bool UpdateMenu() {
   static unsigned generation=0;
   InterlockedExchange64(&g_vrMenuStateToken,((LONG64)++generation<<32)|(unsigned)kind);
   InterlockedExchange(&g_vrMenuClass,kind);
-  Log("VR UI focus: movie=%p class=%s menu=%d",(void*)movie,className,cachedMenu?1:0);
+  Log("VR UI focus: movie=%p object=%s class=%s menu=%d",(void*)movie,objectName,className,cachedMenu?1:0);
+  // Fix-4/menus: a movie outside the table is the prime suspect for the nested-views
+  // second menu - its draws miss the menu path and fall through to StereoPair. Name it
+  // loudly, once per focus change (never per frame/draw), so a test run identifies it.
+  if(movie && !cachedMenu)
+      Log("VR UI focus UNCLASSIFIED: object=%s class=%s - not in the menu table; open this"
+          " menu in the test run, then check which render path its draws take",objectName,className);
  }
  const bool menu=cachedMenu && InterlockedCompareExchange(&g_vrUiEnabled,0,0)!=0;
  InterlockedExchange(&g_vrUiMenu,menu?1:0);
