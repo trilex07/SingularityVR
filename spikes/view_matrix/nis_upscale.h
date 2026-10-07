@@ -133,6 +133,17 @@ inline Rect EyeSrcRect(int eye, uint32_t sbsW, uint32_t sbsH) {
     return r;
 }
 
+// Engagement predicate: the ONLY conditions under which NIS may run.
+// Pure logic (no D3D) so the Off-mode regression is unit-testable:
+// mode Off never engages, regardless of every other flag.
+inline bool ShouldEngageUpscale(int mode, bool ready, bool failedOnce,
+                                bool cropEyes, bool haveSrc) {
+    if (mode != kNIS && mode != kNISSharpen) return false;  // Off AND bogus
+    if (!ready || failedOnce) return false;
+    if (!cropEyes || !haveSrc) return false;
+    return true;
+}
+
 // Resource recreation predicate: recreate persistent NIS textures only when
 // something that changes their shape changed.
 inline bool NeedsRecreate(uint32_t curInW, uint32_t curInH,
