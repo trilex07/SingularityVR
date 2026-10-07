@@ -123,17 +123,24 @@ inline Command Select(const PolicyInput& in) {
 
 // Packed-uint64 dedup codec: forward to the backend only on change, exactly
 // like KHARVOX packTriggerCommand/unpackTriggerCommand + generation counter.
+// Tight 43-bit layout (all fields masked): effect 3 | hand 1 | start 4 |
+// end 4 | strength 4 | position 4 | amplitude 4 | frequency 7 |
+// startStrength 4 | endStrength 4 | reason 4. Values must respect the
+// KHARVOX validation ranges (start 2-7, end<=8, strengths 1-8, position<=9,
+// amplitude 1-8); out-of-range values collide by design — validate at the
+// profile layer (psvr2_trigger_config.h Clamp*), never here.
 inline std::uint64_t Pack(const Command& c) {
-    std::uint64_t v = static_cast<std::uint64_t>(c.effect);
-    v = (v << 3) | static_cast<std::uint64_t>(c.hand);
-    v = (v << 8) | c.start;
-    v = (v << 8) | c.end;
-    v = (v << 8) | c.strength;
-    v = (v << 8) | c.position;
-    v = (v << 8) | c.amplitude;
-    v = (v << 8) | c.frequency;
-    v = (v << 4) | c.startStrength;
-    v = (v << 4) | c.endStrength;
+    std::uint64_t v = (std::uint64_t)((unsigned)c.effect & 0x7u);
+    v = (v << 1) | (std::uint64_t)((unsigned)c.hand & 0x1u);
+    v = (v << 4) | (c.start & 0xFu);
+    v = (v << 4) | (c.end & 0xFu);
+    v = (v << 4) | (c.strength & 0xFu);
+    v = (v << 4) | (c.position & 0xFu);
+    v = (v << 4) | (c.amplitude & 0xFu);
+    v = (v << 7) | (c.frequency & 0x7Fu);
+    v = (v << 4) | (c.startStrength & 0xFu);
+    v = (v << 4) | (c.endStrength & 0xFu);
+    v = (v << 4) | ((std::uint64_t)((unsigned)c.reason & 0xFu));
     return v;
 }
 
@@ -204,6 +211,15 @@ public:
     void SetAmmoOk(bool ok) {
         if (ok != ammoOk_) { ammoOk_ = ok; dirty_ = true; }
     }
+    // Gameplay event interface (research brief section 17): thin aliases so
+    // the main agent can connect weapon/fire/reload hooks without touching
+    // Runner internals. No behaviour change versus the Set* methods.
+    void OnWeaponChanged(Weapon w) { SetWeapon(w); }
+    void OnFirePressed() { SetFireDown(true); }
+    void OnFireReleased() { SetFireDown(false); }
+    void OnReloadStarted() { SetReloading(true); }
+    void OnReloadFinished() { SetReloading(false); }
+    bool ClearTriggerEffects() { return ClearTrigger(); }
     const Command& Last() const { return last_; }
     unsigned Sends() const { return sends_; }
 
