@@ -1,5 +1,6 @@
 #pragma once
 // Included after the D3D state/overlay helpers. No per-frame allocation or scan.
+#include "menu_draw_trace.h"
 static uintptr_t g_vrMenuSurface=0;
 static unsigned g_vrMenuFrame=0,g_vrMenuTextureFrame=0;
 static uipointer::Hit g_vrUiHit;
@@ -123,7 +124,22 @@ void UpdateVrUiPointer(float,bool available) {
     else InterlockedExchange(&g_vrUiDown,0);
     InterlockedExchange(&g_vrUiValid,valid?1:0);
 }
+void SyncVrMenuCaptureState() {
+    const auto token=VrMenuStateToken();
+    if(g_vrCaptureOwner.state==token)return;
+    if(g_vrMenuTexture)InterlockedIncrement(&g_vrStaleRejected);
+    Log("MenuCapture transition old=%llu source=%p texture=%p new=%llu staleRejected=%ld",
+        g_vrCaptureOwner.state,(void*)g_vrCaptureOwner.source,(void*)g_vrMenuTexture,token,Rd(g_vrStaleRejected));
+    if(g_vrMenuTexture){g_vrMenuTexture->Release();g_vrMenuTexture=nullptr;}
+    for(unsigned i=0;i<g_vrMenuSourceCount;++i)if(g_vrMenuSources[i])g_vrMenuSources[i]->Release();
+    memset(g_vrMenuSources,0,sizeof(g_vrMenuSources));g_vrMenuSourceCount=0;
+    g_vrMenuTextureScore=1e9f;g_vrMenuSurface=0;
+    InterlockedExchange(&g_vrMenuSourceBound,0);
+    g_vrCaptureOwner.Invalidate(token);
+}
 void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
+    SyncVrMenuCaptureState();
+    const auto captureState=VrMenuStateToken();
     if(!Rd(g_vrUiEnabled)||!Rd(g_vrUiMenu)||!Rd(g_vrUiNativeReady)||g_boundShaderLayout.shadow)return;
     // GFx menu surfaces are not guaranteed to carry the identity c5 orthographic constants.
     // Requiring that matrix silently missed the live menu and left only its lower-right diegetic
@@ -158,6 +174,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
             if(g_vrMenuTexture)g_vrMenuTexture->Release();
             texture->AddRef();
             g_vrMenuTexture=texture;g_vrMenuSurface=(uintptr_t)surface;g_vrMenuTextureScore=score;
+            g_vrCaptureOwner.Capture(captureState,(uintptr_t)surface);
         }
         if(known || !retained) texture->Release(); // retained entries own the GetContainer reference
         g_vrMenuTextureFrame=g_vrMenuFrame+1;
@@ -165,6 +182,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
     surface->Release();
 }
 void ReleaseVrMenuResources(){
+    g_vrCaptureOwner.Invalidate(VrMenuStateToken());
     ReleaseFpCasterCache();
     if(g_vrMenuTexture){g_vrMenuTexture->Release();g_vrMenuTexture=nullptr;}
     for(unsigned i=0;i<g_vrMenuSourceCount;++i)if(g_vrMenuSources[i])g_vrMenuSources[i]->Release();
@@ -176,6 +194,8 @@ void ReleaseVrMenuResources(){
 // Also draws the laser pointer and prompt legend.
 void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     ++g_vrMenuFrame;
+    SyncVrMenuCaptureState();
+    MenuDrawTraceFrame();
     const bool menu = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && Rd(g_vrUiMenu);
     if (!menu || Rd(g_panelOpen) || !g_origDrawPrimUP || !g_origSetVS || !g_origSetRenderTarget) return;
 
@@ -210,7 +230,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 
     // ---- RENDER MENU QUAD ----
-    if (menu && g_vrMenuTexture && g_vrMenuPanelValid) {
+    if (menu && g_vrMenuTexture && g_vrMenuPanelValid && g_vrCaptureOwner.CanProvide(VrMenuStateToken())) {
         for(int eye=0;eye<2;++eye) {
             VrMenuVtx v[4]; bool visible=true;
             for(unsigned k=0;k<4;++k) {

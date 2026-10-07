@@ -9,6 +9,7 @@
 #include "camera_stabilization.h"
 #include "shadow_policy.h"
 #include "ui_pointer.h"
+#include "menu_capture_owner.h"
 #include "recenter_chord.h"
 // view_matrix - Singularity VR mod, spike 9
 //
@@ -5218,6 +5219,11 @@ struct VrRuntimeCounters {
     volatile LONG contextPromptShow=0,contextPromptHide=0,contextPromptAction=0,psIconDraws=0,psIconDrawWithoutPromptERROR=0;
     volatile LONG fpShadowDepthDraws=0,fpShadowDepthSkipped=0,fpShadowEyeModifiedERROR=0;
 } g_vrCounters;
+alignas(8) volatile LONG64 g_vrMenuStateToken=0;
+static unsigned long long VrMenuStateToken(){return (unsigned long long)InterlockedCompareExchange64(&g_vrMenuStateToken,0,0);}
+static menucapture::Owner g_vrCaptureOwner;
+volatile LONG g_vrStaleRejected=0;
+void SyncVrMenuCaptureState();
 volatile LONG g_vrMenuClass=0; // 0 none, 1 IIS boot, 2 Main, 3 Pause, 4 other native UI.
 static void ReportVrRuntimeCounters() {
     const auto& c=g_vrCounters;
@@ -16577,7 +16583,8 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
 }
 
 inline bool SuppressCapturedVrMenuDraw() {
-    if (!VrModeOn() || g_boundShaderLayout.shadow || !Rd(g_vrMenuSourceBound) || Rd(g_vrMenuProviderDrawing) || !Rd(g_vrUiMenu) || !Rd(g_rtIsScene))
+    SyncVrMenuCaptureState();
+    if (!g_vrCaptureOwner.CanProvide(VrMenuStateToken()) || !VrModeOn() || g_boundShaderLayout.shadow || !Rd(g_vrMenuSourceBound) || Rd(g_vrMenuProviderDrawing) || !Rd(g_vrUiMenu) || !Rd(g_rtIsScene))
         return false;
     InterlockedIncrement(&g_vrMenuSuppressed);
     if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuSuppressed);

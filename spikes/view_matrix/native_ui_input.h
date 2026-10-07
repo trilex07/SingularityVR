@@ -43,6 +43,8 @@ static bool UpdateMenu() {
   if(movie && NameOf(movie,objectName,sizeof(objectName)) && strncmp(objectName,"Default__",9)
      && cls && NameOf(cls,className,sizeof(className)))cachedMenu=MenuClass(className);
   const LONG kind=!cachedMenu?0:!strcmp(className,"RvUIGFxMovie_IIS")?1:!strcmp(className,"RvUIGFxMovie_Main")?2:!strcmp(className,"RvUIGFxMovie_Pause")?3:4;
+  static unsigned generation=0;
+  InterlockedExchange64(&g_vrMenuStateToken,((LONG64)++generation<<32)|(unsigned)kind);
   InterlockedExchange(&g_vrMenuClass,kind);
   Log("VR UI focus: movie=%p class=%s menu=%d",(void*)movie,className,cachedMenu?1:0);
  }
