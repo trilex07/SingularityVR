@@ -1,6 +1,8 @@
 #include "../ui_pointer.h"
 #include "../support_grip.h"
 #include "../shadow_policy.h"
+#include "../support_latch.h"
+#include "../recenter_chord.h"
 #include <cassert>
 #include <cmath>
 #include <cstdio>
@@ -39,6 +41,11 @@ static void menu_projection_tests(){
         assert(!Intersect(head,f*(-1.f),plane,size[0],size[1],miss));
         ScreenPoint behind;assert(!ProjectPoint(head-f,head,f,r,up,tanX,tanY,behind));
     }
+    CanvasMap native;
+    int px=0,py=0;
+    assert(MapCanvas(.5f,.0f,5264,2684,native,px,py)&&py==2683);
+    assert(MapCanvas(.5f,1.f,5264,2684,native,px,py)&&py==0);
+    native.flipY=false; assert(MapCanvas(.25f,.75f,1000,500,native,px,py)&&px==250&&py==374);
     TriggerGate gate;using C=Context;
     assert(!gate.Update(C::Gameplay,true,true,false).fireHeld);gate.Update(C::Gameplay,true,false,false);
     assert(gate.Update(C::Gameplay,true,true,false).fireHeld);
@@ -72,6 +79,32 @@ static void shadow_tests(){
     assert(!IsProjectedShadowMap(21,512,512));
     assert(!SuppressVrShadow(false,false,true));assert(!SuppressVrShadow(true,true,true));
     std::puts("shadow: exact sampled 512x512 R32F projection classification");
+    assert(SuppressFirstPersonShadowCaster(true,true,false,5799,5799,3314));
+    assert(SuppressFirstPersonShadowCaster(true,true,false,3314,5799,3314));
+    assert(!SuppressFirstPersonShadowCaster(true,true,false,4000,5799,3314));
+    assert(!SuppressFirstPersonShadowCaster(true,false,false,5799,5799,3314));
 }
 
-int main(){menu_projection_tests();support_tests();shadow_tests();std::puts("PASS");}
+static void latch_tests(){
+    SupportLatch s;
+    assert(!UpdateSupportLatch(s,{true,true,true,true})); // Idle -> Searching
+    assert(UpdateSupportLatch(s,{true,true,true,false}) == false);
+    assert(UpdateSupportLatch(s,{true,true,true,true}));
+    assert(s.state==SupportLatchState::Latched);
+    assert(UpdateSupportLatch(s,{true,true,true,false})); // distance drift does not unlatch
+    assert(UpdateSupportLatch(s,{false,true,true,false}) == false);
+    assert(s.state==SupportLatchState::Idle);
+    assert(!UpdateSupportLatch(s,{true,false,true,false}));
+    for(int i=0;i<18;++i) assert(!UpdateSupportLatch(s,{true,false,true,false}));
+    assert(UpdateSupportLatch(s,{true,true,true,false})); // grace recovery
+    assert(UpdateSupportLatch(s,{false,true,true,false})==false);
+    RecenterChord c; c.window=24;
+    assert(!c.Update(true,false)); assert(!c.Update(false,false));
+    assert(!c.Update(false,true)); assert(!c.Update(false,false));
+    RecenterChord d; d.window=24;
+    assert(!d.Update(true,false)); assert(d.Update(true,true));
+    assert(!d.Update(true,true)); assert(!d.Update(false,false));
+    std::puts("support latch: acquire, drift hold, release, tracking grace; recenter chord edges");
+}
+
+int main(){menu_projection_tests();support_tests();shadow_tests();latch_tests();std::puts("PASS");}

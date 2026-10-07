@@ -4,9 +4,11 @@
 #include "arm_ik.h"
 #include "arm_bind.h"
 #include "support_grip.h"
+#include "support_latch.h"
 #include "camera_stabilization.h"
 #include "shadow_policy.h"
 #include "ui_pointer.h"
+#include "recenter_chord.h"
 // view_matrix - Singularity VR mod, spike 9
 //
 // GOES AFTER THE ONE BLOCKING PROBLEM: camera POSITION, which gates both stereo (a per-eye
@@ -5107,6 +5109,7 @@ XrActionSet g_actionSet = XR_NULL_HANDLE;
 XrAction g_actMove = XR_NULL_HANDLE, g_actTurn = XR_NULL_HANDLE;
 XrAction g_actFire = XR_NULL_HANDLE, g_actAltFire = XR_NULL_HANDLE;
 XrAction g_actUiSelect=XR_NULL_HANDLE,g_actUiBack=XR_NULL_HANDLE;
+XrAction g_actTriangle=XR_NULL_HANDLE, g_actL3=XR_NULL_HANDLE, g_actR3=XR_NULL_HANDLE;
 XrAction g_actHaptic = XR_NULL_HANDLE;
 XrPath   g_handSubPath[2] = { XR_NULL_PATH, XR_NULL_PATH };   // left, right
 
@@ -5192,8 +5195,22 @@ volatile LONG g_vrShadows=0;
 volatile LONG g_vrUiDown=0,g_vrUiBack=0,g_vrUiNativeReady=0;
 unsigned g_vrUiTargetEpoch=0;
 volatile LONG g_vrUiDesktopProbe=0; // Diagnostic-only, default off; final staging keeps it off.
+volatile LONG g_vrMenuSourceBound=0;
+volatile LONG g_vrMenuProviderDrawing=0;
+volatile LONG g_vrMenuCaptured=0,g_vrMenuSuppressed=0;
+volatile LONG g_vrMenuSourceMatches=0;
+volatile LONG g_firstPersonShadowSkipped=0;
+// Defined here so the SetTexture hook can identify the private GFx sink before the overlay header
+// is included later in this translation unit.
+static IDirect3DTexture9* g_vrMenuTexture=nullptr;
+static IDirect3DTexture9* g_vrMenuSources[8]={};
+static unsigned g_vrMenuSourceCount=0;
+inline bool SuppressCapturedVrMenuDraw();
 #include "native_ui_input.h"
 uipointer::TriggerGate g_vrUiTrigger[2];
+SupportLatch g_supportLatch;
+RecenterChord g_recenterChord;
+volatile LONG g_recenterRequested=0;
 void UpdateVrUiPointer(float rightTrigger,bool available);
 void CaptureVrMenuTarget(IDirect3DDevice9* dev);
 void DrawVrMenuPointer(IDirect3DDevice9* dev);
@@ -7153,7 +7170,9 @@ PadButtonAction g_padButtons[] = {
     { "antigrav",   "Anti-gravity",   "/user/hand/right/input/thumbstick/click", "AntiGrav",   XI_RTHUMB,    XR_NULL_HANDLE, false, false },
     { "impulse",    "Impulse",        "/user/hand/left/input/trigger/value",     "Impulse",    XI_RSHOULDER, XR_NULL_HANDLE, false, false },
     { "ageyoung",   "Age / renovate", "/user/hand/left/input/x/click",           "AgeYoung",   XI_LSHOULDER, XR_NULL_HANDLE, false, false },
-    { "flashlight", "Flashlight",     "/user/hand/left/input/y/click",           "Flashlight", XI_DPAD_DOWN, XR_NULL_HANDLE, false, true  },
+    // Left Y is Triangle/menu.  Keep the legacy row for profile compatibility, but do not let it
+    // become the old flashlight/panel action or leak D-pad input into the native pause menu.
+    { "flashlight", "Flashlight",     "/user/hand/left/input/y/click",           "Flashlight", 0,          XR_NULL_HANDLE, false, false },
     { "dash",       "Dash",           "/user/hand/left/input/thumbstick/click",  "Dash",       XI_LTHUMB,    XR_NULL_HANDLE, false, false },
     { "menu",       "Menu",           "/user/hand/left/input/menu/click",        "Menu",       XI_START,     XR_NULL_HANDLE, true,  false },
 };
@@ -7712,6 +7731,9 @@ bool InitXRInput() {
     ok &= mkAction("altfire", "Alt fire", XR_ACTION_TYPE_FLOAT_INPUT,    &g_actAltFire);
     ok &= mkAction("ui_select","Menu select",XR_ACTION_TYPE_BOOLEAN_INPUT,&g_actUiSelect);
     ok &= mkAction("ui_back","Menu back",XR_ACTION_TYPE_BOOLEAN_INPUT,&g_actUiBack);
+    ok &= mkAction("triangle_menu","Triangle menu",XR_ACTION_TYPE_BOOLEAN_INPUT,&g_actTriangle);
+    ok &= mkAction("left_stick_click","Left stick click",XR_ACTION_TYPE_BOOLEAN_INPUT,&g_actL3);
+    ok &= mkAction("right_stick_click","Right stick click",XR_ACTION_TYPE_BOOLEAN_INPUT,&g_actR3);
     for (int i = 0; i < kPadButtonCount; ++i)
         ok &= mkAction(g_padButtons[i].name, g_padButtons[i].localised,
                        XR_ACTION_TYPE_BOOLEAN_INPUT, &g_padButtons[i].action);
@@ -7728,7 +7750,7 @@ bool InitXRInput() {
     //
     // Now spelled one term per emission site, in the order they run, and bounds-checked at the point
     // of use so the next row that gets added fails loudly instead of scribbling on the stack.
-    static const uint32_t kMaxBinds = 6                  // fixed: gameplay axes/triggers + physical right UI buttons
+    static const uint32_t kMaxBinds = 9                  // fixed: gameplay axes/triggers + UI/chord buttons
                                     + kPadButtonCount    // one per pad button
                                     + 2                  // haptic outputs
                                     + 12                 // grasp sources
@@ -7840,6 +7862,10 @@ bool InitXRInput() {
             { g_actAltFire, "/user/hand/left/input/trigger/value",  true  },
             { g_actUiSelect,"/user/hand/right/input/a/click",false },
             { g_actUiBack,"/user/hand/right/input/b/click",false },
+            // PSVR2 Sense vocabulary under SteamVR/OpenXR: left Y is Triangle.
+            { g_actTriangle,"/user/hand/left/input/y/click",false },
+            { g_actL3,"/user/hand/left/input/thumbstick/click",false },
+            { g_actR3,"/user/hand/right/input/thumbstick/click",false },
         };
         for (auto& f : fixed) add(f.a, f.p, f.handed, false);
 
@@ -8030,6 +8056,7 @@ void SyncXRInput(XrTime displayTime) {
         UpdateVrUiPointer(0,false);
         ++g_syncFailFrames;
         InterlockedExchange(&g_twoHandActive, 0);
+        g_supportLatch = SupportLatch{};
         g_handPositionValid[0] = g_handPositionValid[1] = false;
         InterlockedExchange(&g_padBtns, 0);
         InterlockedExchange(&g_padLStick, PackStick(0, 0));
@@ -8297,18 +8324,32 @@ void SyncXRInput(XrTime displayTime) {
     bool panelHeld = false;
     WORD panelMask = 0;
     const bool supportGrip = getGrip(OffHand());
+    const bool triangleHeld = getBool(g_actTriangle);
+    const bool l3Held = getBool(g_actL3);
+    const bool r3Held = getBool(g_actR3);
+    if (g_recenterChord.Update(l3Held, r3Held))
+        InterlockedExchange(&g_recenterRequested, 1);
+    static bool triangleWasHeld = false;
+    const bool trianglePressed = triangleHeld && !triangleWasHeld;
+    triangleWasHeld = triangleHeld;
+    // Triangle is the single game-menu edge.  It is emitted through the same synthetic XInput
+    // START path as a physical pad, so the game's normal pause/options state remains authoritative.
+    if (trianglePressed) btns |= XI_START;
     for (int i = 0; i < kPadButtonCount; ++i) {
         const bool down = getBool(g_padButtons[i].action);
+        if (i == 6) continue; // Triangle is handled above as a single START rising edge.
         if (g_padButtons[i].mask == XI_RSHOULDER) {
             const XrVector3f& a=g_handLastPos[AimHand()];
             const XrVector3f& b=g_handLastPos[OffHand()];
             const float delta[3]={b.x-a.x,b.y-a.y,b.z-a.z};
             const float yaw=g_handYawRad[AimHand()], pitch=g_handPitchRad[AimHand()];
             const float forward[3]={-sinf(yaw)*cosf(pitch),sinf(pitch),-cosf(yaw)*cosf(pitch)};
-            const bool active=Rd(g_twoHandEnabled) && feedGame && WeaponInHands() && !Rd(g_gamePaused) &&
-                TwoHandGripAllowed(delta,forward,supportGrip,
-                    g_handPositionValid[AimHand()] && g_handPositionValid[OffHand()] &&
-                    g_handPoseValid[AimHand()] && g_handPoseValid[OffHand()], Rd(g_twoHandActive)!=0);
+            const bool tracked = g_handPositionValid[AimHand()] && g_handPositionValid[OffHand()] &&
+                                 g_handPoseValid[AimHand()] && g_handPoseValid[OffHand()];
+            const bool weaponValid = Rd(g_twoHandEnabled) && feedGame && WeaponInHands() && !Rd(g_gamePaused);
+            const bool withinAcquire = TwoHandGripAllowed(delta,forward,supportGrip,tracked,false);
+            const bool active = UpdateSupportLatch(g_supportLatch,
+                {supportGrip, tracked, weaponValid, withinAcquire});
             const LONG previous=InterlockedExchange(&g_twoHandActive,active?1:0);
             if(previous!=(active?1:0)) Log("two-hand grip: %s",active?"ACQUIRED":"RELEASED");
             // A deliberate support-hand grip belongs to the gun, not the TMD impulse action.
@@ -8419,31 +8460,9 @@ void SyncXRInput(XrTime displayTime) {
     msStates += MsSince(tSt);
     DiagPhaseAdd(DP_ACTIONS, tSt.QuadPart);
 
-    // ---- recentre, which had no controller binding at all ----
-    //
-    // F8 recentres, and F8 cannot be found by feel inside a headset - so in practice the mod could
-    // not be recentred while it was being worn, which is the only time it is ever needed.
-    //
-    // Every button on both controllers is spoken for, so this is a long press rather than a new
-    // binding: hold MENU for a second to recentre, tap it for the pause menu. The tap has to fire
-    // on RELEASE for that to work, which also happens to be what Raven's own config does with this
-    // button (`|onrelease showmenu`).
-    static int  menuFrames = 0;
-    static bool menuConsumed = false;
-    static int  menuTapPulse = 0;
-    const int kMenuLongFrames = 120;        // ~1 s at 120 fps, ~2 s at 60 - deliberately generous
-    if (menuHeld) {
-        if (++menuFrames >= kMenuLongFrames && !menuConsumed) {
-            g_haveCentre = false;
-            menuConsumed = true;
-            Log("menu held: recentred");
-        }
-    } else {
-        if (menuFrames > 0 && !menuConsumed) menuTapPulse = 8;   // short press -> pause menu
-        menuFrames = 0;
-        menuConsumed = false;
-    }
-    if (menuTapPulse > 0) { btns |= menuMask; --menuTapPulse; }
+    // The old Options tap/hold split is retired.  Options/Triangle is now a direct START edge and
+    // recenter is the explicit L3+R3 chord above; this prevents a held system button from toggling
+    // the pause state repeatedly or stealing a weapon action.
 
     // Weapon cycle (up) and health (down) on the look stick's vertical axis. It is free in both
     // turn modes - smooth turn only ever feeds X to the look stick, because a thumbstick that
@@ -8939,6 +8958,14 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         // OpenXR is Y-up with forward at -Z, so roll is the rotation about Z.
         float rollRad = atan2f(2.0f * (q.w * q.z + q.x * q.y),
                                1.0f - 2.0f * (q.x * q.x + q.z * q.z));
+        if (InterlockedExchange(&g_recenterRequested, 0)) {
+            // Re-enter the existing centre acquisition below.  It updates the one shared XR
+            // stage reference used by HMD translation, both hands and the eye projection; the pawn
+            // and its world transform are untouched.
+            g_haveCentre = false;
+            g_haveCentrePos = false;
+            Log("recenter chord: L3+R3 accepted; rebuilding common HMD/controller stage");
+        }
         // Anchor to the GAME's current yaw, not our own previous output. Seeding from
         // g_wantYaw (initially 0) made enabling snap the view to world yaw 0.
         // ---- ⚠️ run 159: the centre was captured before the pose had converged ----
@@ -10411,6 +10438,18 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
             InvalidateCamMats();
             g_camMatrixBound = false;
         }
+        // GFx menu movies render into a private colour target before the scene samples that
+        // target on the diegetic monitor.  Register only plausible wide colour targets here;
+        // CaptureVrMenuTarget keeps the best candidate for this frame and holds its texture for
+        // the Present-time provider.  No readback or per-frame allocation is involved.
+        if (!scene && Rd(g_vrUiMenu) && surf) {
+            D3DSURFACE_DESC d{};
+            if (SUCCEEDED(surf->GetDesc(&d)) &&
+                (d.Format == D3DFMT_A8R8G8B8 || d.Format == D3DFMT_X8R8G8B8) &&
+                d.Width >= 640 && d.Height >= 360 && d.Width <= 2048 && d.Height <= 1536 &&
+                (float)d.Width / (float)d.Height > 1.20f && (float)d.Width / (float)d.Height < 2.20f)
+                CaptureVrMenuTarget(dev);
+        }
     }
     return hr;
 }
@@ -11716,6 +11755,7 @@ void VidProbeFrameEnd() {
 HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                         UINT start, UINT count) {
     InterlockedIncrement(&g_frameDrawIdx);
+    if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     ++g_vidFrameDraws;
     if (count <= 4) VidProbeRecord(dev, 0, t, count, nullptr, 0);
     // No vertex data on this path, so no bounding box - but its PRESENCE still matters. If the flash
@@ -14329,6 +14369,13 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                                                INT baseVertex, UINT minIndex, UINT numVertices,
                                                UINT startIndex, UINT primCount) {
     InterlockedIncrement(&g_frameDrawIdx);
+    if (SuppressCapturedVrMenuDraw()) return D3D_OK;
+    if (SuppressFirstPersonShadowCaster(VrModeOn(), g_boundShaderLayout.shadow,
+                                        Rd(g_vrShadows)!=0, numVertices,
+                                        (unsigned)Rd(g_gunVerts), (unsigned)Rd(g_armsVerts))) {
+        InterlockedIncrement(&g_firstPersonShadowSkipped);
+        return D3D_OK;
+    }
     ++g_vidFrameDraws;
     // Indexed geometry cannot expose its vertices cheaply here, so v0 stays zero on these rows -
     // the texture and render-target columns are what this path contributes.
@@ -15660,6 +15707,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
                                           UINT primCount, const void* vtxData, UINT vtxStride) {
     if (primCount<=4) CaptureShadowEvidence(dev);
     if (!g_origDrawPrimUP) return D3DERR_INVALIDCALL;
+    if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     ++g_vidFrameDraws;
     if (primCount <= 4) VidProbeRecord(dev, 2, t, primCount, vtxData, vtxStride);
     // Touch nothing off the render thread - see the note above OnRenderThread.
@@ -15779,6 +15827,13 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
                                                 const void* idxData, D3DFORMAT idxFormat,
                                                 const void* vtxData, UINT vtxStride) {
     if (!g_origDrawIndexedPrimUP) return D3DERR_INVALIDCALL;
+    if (SuppressCapturedVrMenuDraw()) return D3D_OK;
+    if (SuppressFirstPersonShadowCaster(VrModeOn(), g_boundShaderLayout.shadow,
+                                        Rd(g_vrShadows)!=0, numVertices,
+                                        (unsigned)Rd(g_gunVerts), (unsigned)Rd(g_armsVerts))) {
+        InterlockedIncrement(&g_firstPersonShadowSkipped);
+        return D3D_OK;
+    }
     ++g_vidFrameDraws;
     if (primCount <= 4) VidProbeRecord(dev, 3, t, primCount, vtxData, vtxStride);
     if (UserPtrInert())
@@ -16439,10 +16494,27 @@ static void ReleaseVrShadowResources() {
 // VrShadows=0 now simply logs the projection candidates without substitution.
 // Proper fix: disable first-person arm/weapon shadow casting at engine level (bCastDynamicShadow=false).
 HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDirect3DBaseTexture9* texture) {
+    if(stage==0) {
+        bool menuSource = false;
+        if (Rd(g_vrUiMenu) && !Rd(g_vrMenuProviderDrawing) && texture && Rd(g_rtIsScene)) {
+            if (g_vrMenuTexture && texture==g_vrMenuTexture) menuSource = true;
+            for (unsigned i=0; !menuSource && i<g_vrMenuSourceCount; ++i)
+                if (texture==g_vrMenuSources[i]) menuSource = true;
+        }
+        InterlockedExchange(&g_vrMenuSourceBound,menuSource?1:0);
+        if (menuSource) InterlockedIncrement(&g_vrMenuSourceMatches);
+    }
     if(VrModeOn() && !Rd(g_vrShadows) && ProjectedShadowTexture(texture)) {
         InterlockedIncrement(&g_shadowMapCandidates);
     }
     return g_origSetTexture(dev,stage,texture);
+}
+
+inline bool SuppressCapturedVrMenuDraw() {
+    if (!Rd(g_vrMenuSourceBound) || Rd(g_vrMenuProviderDrawing) || !Rd(g_vrUiMenu) || !Rd(g_rtIsScene))
+        return false;
+    InterlockedIncrement(&g_vrMenuSuppressed);
+    return true;
 }
 
 // D3DUSAGE_DYNAMIC never legally coexists with MANAGED, and a DEFAULT texture that IS dynamic can

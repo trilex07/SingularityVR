@@ -1,6 +1,5 @@
 #pragma once
 // Included after the D3D state/overlay helpers. No per-frame allocation or scan.
-static IDirect3DTexture9* g_vrMenuTexture=nullptr;
 static uintptr_t g_vrMenuSurface=0;
 static unsigned g_vrMenuFrame=0,g_vrMenuTextureFrame=0;
 static uipointer::Hit g_vrUiHit;
@@ -46,7 +45,10 @@ static void DrawVrPromptLegend(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,bo
     dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_MODULATE); dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE); dev->SetTextureStageState(0,D3DTSS_COLORARG2,D3DTA_DIFFUSE);
     dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_MODULATE); dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE); dev->SetTextureStageState(0,D3DTSS_ALPHAARG2,D3DTA_DIFFUSE);
     dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_POINT); dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_POINT);
-    const float eyeW=d.Width*.5f, size=std::max(22.f,d.Height*.035f), y=d.Height*.83f;
+    // Normalized lower-middle safe area.  The old .83/.90 pair put the icons almost under the
+    // visible panel on the 2684px SBS target; keeping both coordinates normalized makes this
+    // independent of the current eye resolution and crop.
+    const float eyeW=d.Width*.5f, size=std::max(22.f,d.Height*.035f), y=d.Height*.72f;
     for(int eye=0;eye<2;++eye){
         const float base=eye*eyeW+eyeW*.12f;
         DrawVrPromptIcon(dev,base,y,size,0.f,.2f);
@@ -120,35 +122,59 @@ void UpdateVrUiPointer(float,bool available) {
 }
 void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
     if(!Rd(g_vrUiEnabled)||!Rd(g_vrUiMenu)||!Rd(g_vrUiNativeReady)||g_boundShaderLayout.shadow)return;
-    static unsigned frame=~0u,target=~0u;
-    if(frame==g_vrMenuFrame&&target==g_vrUiTargetEpoch)return;
     // GFx menu surfaces are not guaranteed to carry the identity c5 orthographic constants.
     // Requiring that matrix silently missed the live menu and left only its lower-right diegetic
     // monitor visible. Read c5 for diagnostics, but identify the target by bounded colour format
     // and dimensions below so it can be copied to the centered head-relative overlay.
-    float c[16];if(FAILED(dev->GetVertexShaderConstantF(5,c,4)))return;
-    frame=g_vrMenuFrame;target=g_vrUiTargetEpoch;
+    // Private GFx targets frequently draw through a fixed-function or a shader that does not
+    // expose the scene c5 matrix.  The render-target descriptor is the reliable discriminator;
+    // keep the read only as optional diagnostics and never make capture depend on it.
+    float c[16];(void)dev->GetVertexShaderConstantF(5,c,4);
     IDirect3DSurface9* surface=nullptr;if(FAILED(dev->GetRenderTarget(0,&surface))||!surface)return;
     D3DSURFACE_DESC desc{};surface->GetDesc(&desc);
-    if(desc.Width<256||desc.Height<256||desc.Width>2048||desc.Height>2048||
+    if(desc.Width<640||desc.Height<360||desc.Width>2048||desc.Height>1536||
        (desc.Format!=D3DFMT_A8R8G8B8&&desc.Format!=D3DFMT_X8R8G8B8)){surface->Release();return;}
-    if(g_vrMenuSurface!=(uintptr_t)surface){
-        IDirect3DTexture9* texture=nullptr;
-        if(SUCCEEDED(surface->GetContainer(__uuidof(IDirect3DTexture9),(void**)&texture))&&texture){
-            if(g_vrMenuTexture)g_vrMenuTexture->Release();g_vrMenuTexture=texture;g_vrMenuSurface=(uintptr_t)surface;
-            Log("VR menu head-relative source: GFx target %ux%u; native viewport coordinates",desc.Width,desc.Height);
+    IDirect3DTexture9* texture=nullptr;
+    if(SUCCEEDED(surface->GetContainer(__uuidof(IDirect3DTexture9),(void**)&texture))&&texture){
+        bool known=false;
+        for(unsigned i=0;i<g_vrMenuSourceCount;++i) if(g_vrMenuSources[i]==texture){known=true;break;}
+        const bool retained=!known && g_vrMenuSourceCount<8;
+        if(retained) {
+            g_vrMenuSources[g_vrMenuSourceCount++]=texture;
+            InterlockedIncrement(&g_vrMenuCaptured);
+            Log("VR menu sink: private GFx candidate %ux%u registered; all matching scene draws will be suppressed",desc.Width,desc.Height);
         }
+        // Prefer the candidate whose aspect is closest to the native GFx canvas.  The source list
+        // is retained as well because the physical menu can be submitted through more than one
+        // monitor/resolve target; suppressing only the selected texture leaves a second menu alive.
+        const float ratio=(float)desc.Width/(float)desc.Height;
+        const float score=fabsf(ratio-(16.0f/9.0f)) + (desc.Width<960 ? .15f : 0.0f);
+        float current=1e9f;
+        if(g_vrMenuTexture){ D3DSURFACE_DESC old{}; IDirect3DSurface9* os=nullptr; if(SUCCEEDED(g_vrMenuTexture->GetSurfaceLevel(0,&os))&&os){os->GetDesc(&old);os->Release();if(old.Height)current=fabsf((float)old.Width/(float)old.Height-(16.0f/9.0f))+(old.Width<960?.15f:0.f);} }
+        if((!g_vrMenuTexture || score<current) && (known || retained)){
+            if(g_vrMenuTexture)g_vrMenuTexture->Release();
+            texture->AddRef();
+            g_vrMenuTexture=texture;g_vrMenuSurface=(uintptr_t)surface;
+        }
+        if(known || !retained) texture->Release(); // retained entries own the GetContainer reference
+        g_vrMenuTextureFrame=g_vrMenuFrame+1;
     }
-    if(g_vrMenuTexture && g_vrMenuSurface==(uintptr_t)surface)g_vrMenuTextureFrame=g_vrMenuFrame;
     surface->Release();
 }
-void ReleaseVrMenuResources(){if(g_vrMenuTexture){g_vrMenuTexture->Release();g_vrMenuTexture=nullptr;}if(g_vrPromptAtlas){g_vrPromptAtlas->Release();g_vrPromptAtlas=nullptr;}g_vrPromptAtlasAttempted=false;g_vrMenuSurface=0;}
+void ReleaseVrMenuResources(){
+    if(g_vrMenuTexture){g_vrMenuTexture->Release();g_vrMenuTexture=nullptr;}
+    for(unsigned i=0;i<g_vrMenuSourceCount;++i)if(g_vrMenuSources[i])g_vrMenuSources[i]->Release();
+    memset(g_vrMenuSources,0,sizeof(g_vrMenuSources));g_vrMenuSourceCount=0;
+    if(g_vrPromptAtlas){g_vrPromptAtlas->Release();g_vrPromptAtlas=nullptr;}
+    g_vrPromptAtlasAttempted=false;g_vrMenuSurface=0;g_vrMenuTextureFrame=~0u;InterlockedExchange(&g_vrMenuSourceBound,0);
+}
 // Render the captured GFx menu texture as a single head-relative quad at VrMenuDistanceMm.
 // Also draws the laser pointer and prompt legend.
 void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     ++g_vrMenuFrame;
     const bool menu = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && Rd(g_vrUiMenu);
-    const bool gameplayHints = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && !Rd(g_vrUiMenu) && Rd(g_lastMenuAge) < 180;
+    const bool gameplayHints = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) &&
+                               Rd(g_vrUiNativeReady) && !Rd(g_vrUiMenu) && Rd(g_camPosValid);
     if ((!menu && !gameplayHints) || Rd(g_panelOpen) || !g_origDrawPrimUP || !g_origSetVS || !g_origSetRenderTarget) return;
 
     IDirect3DSurface9 *back = nullptr, *old = nullptr, *depth = nullptr;
@@ -182,7 +208,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 
     // ---- RENDER MENU QUAD ----
-    if (menu && g_vrMenuTexture && g_vrMenuTextureFrame == g_vrMenuFrame) {
+    if (menu && g_vrMenuTexture) {
         int slot = -1;
         for (int i = 0; i < g_camMatUsed; ++i) if (g_camMats[i].valid) { slot = i; break; }
         if (slot >= 0) {
@@ -221,10 +247,12 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
                                  (k & 2) ? 1.0f : 0.0f }; // v
                     }
                     if (visible) {
-                        dev->SetTexture(0, g_vrMenuTexture);
+                        InterlockedExchange(&g_vrMenuProviderDrawing,1);
+                        if(g_origSetTexture) g_origSetTexture(dev,0, g_vrMenuTexture); else dev->SetTexture(0, g_vrMenuTexture);
                         dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
                         g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(VrMenuVtx));
-                        dev->SetTexture(0, nullptr);
+                        if(g_origSetTexture) g_origSetTexture(dev,0,nullptr); else dev->SetTexture(0,nullptr);
+                        InterlockedExchange(&g_vrMenuProviderDrawing,0);
                     }
                 }
             }
@@ -248,7 +276,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     DrawVrPromptLegend(dev, d, gameplayHints);
     D3DRECT text[1024]; int n = 0; const int px = std::max(1, (int)d.Height / 1000);
     const char* labels = gameplayHints ? "FIRE   USE   JUMP   CROUCH" : "SELECT   BACK   PAUSE";
-    for (int eye = 0; eye < 2; ++eye) { int x = (int)(eye * d.Width * .5f + d.Width * .12f); int y = (int)(d.Height * .90f); n = TextRects(text, n, 1024, x, y, px, labels); }
+    for (int eye = 0; eye < 2; ++eye) { int x = (int)(eye * d.Width * .5f + d.Width * .12f); int y = (int)(d.Height * .79f); n = TextRects(text, n, 1024, x, y, px, labels); }
     ClearRects(dev, text, n, 0xFFB8FFD0);
 
     if (old) g_origSetRenderTarget(dev, 0, old);

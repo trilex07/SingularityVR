@@ -7,3 +7,13 @@ inline bool SuppressVrShadow(bool vrMode, bool shadowsEnabled, bool classifiedSh
 inline bool IsProjectedShadowMap(unsigned format,unsigned width,unsigned height) {
     return format==114u && width==512u && height==512u; // D3DFMT_R32F
 }
+
+// A first-person shadow caster is identified at the draw seam by the already-latched
+// arms/weapon vertex fingerprints.  This policy never treats a texture as a shadow and
+// never changes the normal colour/depth pass.
+inline bool SuppressFirstPersonShadowCaster(bool vrMode, bool shadowPass, bool shadowsEnabled,
+                                            unsigned vertices, unsigned gunVertices,
+                                            unsigned armVertices) {
+    if (!vrMode || !shadowPass || shadowsEnabled || !vertices) return false;
+    return vertices == gunVertices || vertices == armVertices;
+}

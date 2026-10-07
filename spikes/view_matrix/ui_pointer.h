@@ -37,6 +37,16 @@ inline bool CanvasPixel(float u,float v,unsigned width,unsigned height,int& x,in
     if(!std::isfinite(u)||!std::isfinite(v)||u<0||u>1||v<0||v>1||width<2||height<2||width>10000000||height>10000000)return false;
     x=(int)std::lround(u*(width-1));y=(int)std::lround(v*(height-1));return true;
 }
+// The panel uses top-left texture coordinates, while the UE3 viewport cursor accessor in this
+// build consumes bottom-left logical Y. crop values are normalized to the captured GFx canvas.
+struct CanvasMap { float cropU0=0,cropV0=0,cropU1=1,cropV1=1; bool flipY=true; };
+inline bool MapCanvas(float u,float v,unsigned width,unsigned height,const CanvasMap& map,int& x,int& y){
+    if(!std::isfinite(u)||!std::isfinite(v)||map.cropU1<=map.cropU0||map.cropV1<=map.cropV0)return false;
+    u=map.cropU0+(map.cropU1-map.cropU0)*u;
+    v=map.cropV0+(map.cropV1-map.cropV0)*v;
+    if(map.flipY)v=1.f-v;
+    return CanvasPixel(u,v,width,height,x,y);
+}
 // u/v address the ORIGINAL GFx logical canvas, before inset/stereo remap.
 // eyeU/eyeV address its visible inset on one eye for a matching reticle.
 // Out-of-panel rays fail rather than clamp onto an unintended menu item.

@@ -57,7 +57,9 @@ static bool Coordinates(void* self,int& x,int& y) {
  if(w<64 || h<64 || w>32768 || h>32768)return false;
  LONG u=InterlockedCompareExchange(&g_vrUiU,0,0),v=InterlockedCompareExchange(&g_vrUiV,0,0);
  if(u<0 || u>1000000 || v<0 || v>1000000)return false;
- return uipointer::CanvasPixel(u/1000000.0f,v/1000000.0f,(unsigned)w,(unsigned)h,x,y);
+ // The visual panel remains top-left (D3D9 texture convention). UE3's native viewport cursor
+ // accessor consumes the opposite logical Y origin, so this is the one explicit conversion.
+ return uipointer::MapCanvas(u/1000000.0f,v/1000000.0f,(unsigned)w,(unsigned)h,{},x,y);
 }
 static int __fastcall GetX(void* self,void*){int x,y;return Coordinates(self,x,y)?x:originalX(self);}
 static int __fastcall GetY(void* self,void*){int x,y;return Coordinates(self,x,y)?y:originalY(self);}
