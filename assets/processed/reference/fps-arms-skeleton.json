@@ -1,0 +1,51 @@
+{
+  "source": "singularity-vr-mod/assets/reference/fps-arms-rigged/FPS ARMS RIG 1.fbx",
+  "format": "FBX binary string-table extraction",
+  "hierarchy_extracted": false,
+  "bones": [
+    {
+      "name": "forearm.L",
+      "role": "forearm"
+    },
+    {
+      "name": "forearm.L_end",
+      "role": "forearm"
+    },
+    {
+      "name": "forearm.R",
+      "role": "forearm"
+    },
+    {
+      "name": "forearm.R_end",
+      "role": "forearm"
+    },
+    {
+      "name": "hand.L",
+      "role": "hand"
+    },
+    {
+      "name": "hand.L.control",
+      "role": "hand"
+    },
+    {
+      "name": "hand.R",
+      "role": "hand"
+    },
+    {
+      "name": "hand.R.control",
+      "role": "hand"
+    },
+    {
+      "name": "upper_arm.L",
+      "role": "upper_arm"
+    },
+    {
+      "name": "upper_arm.R",
+      "role": "upper_arm"
+    }
+  ],
+  "notes": [
+    "The reference is used to compare IK naming and control/handle concepts only.",
+    "Native Singularity skeleton and finger animation remain authoritative."
+  ]
+}

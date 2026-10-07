@@ -1,0 +1,71 @@
+{
+  "source": "Kenney Input Prompts 1.5A",
+  "license": "CC0-1.0",
+  "source_url": "https://kenney.nl/assets/input-prompts",
+  "atlas": "runtime/vr_prompt_atlas.bmp",
+  "width": 320,
+  "height": 64,
+  "format": "BMP/32bpp ARGB",
+  "sha256": "0B175AAA64F443CAEBC3B8F4E0EF5B7C3B2257F0B810A1146094AAC14004117C",
+  "icons": {
+    "R2": {
+      "x": 0,
+      "y": 0,
+      "width": 64,
+      "height": 64,
+      "u0": 0.0,
+      "v0": 0.0,
+      "u1": 0.2,
+      "v1": 1.0
+    },
+    "Circle": {
+      "x": 64,
+      "y": 0,
+      "width": 64,
+      "height": 64,
+      "u0": 0.2,
+      "v0": 0.0,
+      "u1": 0.4,
+      "v1": 1.0
+    },
+    "Cross": {
+      "x": 128,
+      "y": 0,
+      "width": 64,
+      "height": 64,
+      "u0": 0.4,
+      "v0": 0.0,
+      "u1": 0.6,
+      "v1": 1.0
+    },
+    "R1": {
+      "x": 192,
+      "y": 0,
+      "width": 64,
+      "height": 64,
+      "u0": 0.6,
+      "v0": 0.0,
+      "u1": 0.8,
+      "v1": 1.0
+    },
+    "Options": {
+      "x": 256,
+      "y": 0,
+      "width": 64,
+      "height": 64,
+      "u0": 0.8,
+      "v0": 0.0,
+      "u1": 1.0,
+      "v1": 1.0
+    }
+  },
+  "runtime_roles": {
+    "menu_select": "R2",
+    "menu_back": "Circle",
+    "menu_pause": "Options",
+    "gameplay_fire": "R2",
+    "gameplay_interact": "R1",
+    "gameplay_jump": "Cross",
+    "gameplay_crouch": "Circle"
+  }
+}
