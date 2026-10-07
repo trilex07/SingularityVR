@@ -149,12 +149,10 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
         // monitor/resolve target; suppressing only the selected texture leaves a second menu alive.
         const float ratio=(float)desc.Width/(float)desc.Height;
         const float score=fabsf(ratio-(16.0f/9.0f)) + (desc.Width<960 ? .15f : 0.0f);
-        float current=1e9f;
-        if(g_vrMenuTexture){ D3DSURFACE_DESC old{}; IDirect3DSurface9* os=nullptr; if(SUCCEEDED(g_vrMenuTexture->GetSurfaceLevel(0,&os))&&os){os->GetDesc(&old);os->Release();if(old.Height)current=fabsf((float)old.Width/(float)old.Height-(16.0f/9.0f))+(old.Width<960?.15f:0.f);} }
-        if((!g_vrMenuTexture || score<current) && (known || retained)){
+        if((!g_vrMenuTexture || score<g_vrMenuTextureScore) && (known || retained)){
             if(g_vrMenuTexture)g_vrMenuTexture->Release();
             texture->AddRef();
-            g_vrMenuTexture=texture;g_vrMenuSurface=(uintptr_t)surface;
+            g_vrMenuTexture=texture;g_vrMenuSurface=(uintptr_t)surface;g_vrMenuTextureScore=score;
         }
         if(known || !retained) texture->Release(); // retained entries own the GetContainer reference
         g_vrMenuTextureFrame=g_vrMenuFrame+1;
@@ -166,7 +164,7 @@ void ReleaseVrMenuResources(){
     for(unsigned i=0;i<g_vrMenuSourceCount;++i)if(g_vrMenuSources[i])g_vrMenuSources[i]->Release();
     memset(g_vrMenuSources,0,sizeof(g_vrMenuSources));g_vrMenuSourceCount=0;
     if(g_vrPromptAtlas){g_vrPromptAtlas->Release();g_vrPromptAtlas=nullptr;}
-    g_vrPromptAtlasAttempted=false;g_vrMenuSurface=0;g_vrMenuTextureFrame=~0u;InterlockedExchange(&g_vrMenuSourceBound,0);
+    g_vrPromptAtlasAttempted=false;g_vrMenuSurface=0;g_vrMenuTextureFrame=~0u;g_vrMenuTextureScore=1e9f;InterlockedExchange(&g_vrMenuSourceBound,0);
 }
 // Render the captured GFx menu texture as a single head-relative quad at VrMenuDistanceMm.
 // Also draws the laser pointer and prompt legend.

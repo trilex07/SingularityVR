@@ -5205,6 +5205,7 @@ volatile LONG g_firstPersonShadowSkipped=0;
 static IDirect3DTexture9* g_vrMenuTexture=nullptr;
 static IDirect3DTexture9* g_vrMenuSources[8]={};
 static unsigned g_vrMenuSourceCount=0;
+static float g_vrMenuTextureScore=1e9f;
 inline bool SuppressCapturedVrMenuDraw();
 #include "native_ui_input.h"
 uipointer::TriggerGate g_vrUiTrigger[2];
