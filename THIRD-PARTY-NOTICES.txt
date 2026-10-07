@@ -17,6 +17,15 @@ Not included in any release archive:
     tools/uedecompress .... a development tool, GPL-2.0-or-later. See LICENSE.
     PhysXLoader.dll ....... NOT redistributed. setup_physx.ps1 copies the file
                             that is already on the user's own machine.
+    Reference checkouts ... Dishonored-VR (zlib/libpng), KHARVOX (MIT) and
+                            PSVR2Toolkit (MIT) are studied from external
+                            checkouts at ../references/ and are never vendored
+                            or shipped. Behaviour-derived clean-room headers
+                            (spikes/view_matrix/psvr2_trigger.h,
+                            fake_xr.h, recenter.h) carry their own
+                            attribution comments; no third-party source is
+                            copied into this tree. See
+                            docs/REFERENCE_VR_IMPLEMENTATIONS.md.
 
 
 ================================================================================
