@@ -128,8 +128,7 @@ static void TestOutputEye() {
     CHECK(w == 2028 && h == 2068);
 }
 
-static void TestNeedsRecreate() {
-    using nis_upscale::NeedsRecreate;
+static void TestNeedsRecreate() {    using nis_upscale::NeedsRecreate;
     CHECK(!NeedsRecreate(2028, 2068, 2632, 2684, 2028, 2068, 2632, 2684));
     CHECK(NeedsRecreate(2028, 2068, 2632, 2684, 2238, 2282, 2632, 2684));  // input changed
     CHECK(NeedsRecreate(2028, 2068, 2632, 2684, 2028, 2068, 3160, 3222));  // output changed
@@ -166,6 +165,55 @@ static void TestOfficialConfig() {
     CHECK(NVSharpenUpdateConfig(sh, 0.35f, 0, 0, 2632, 2684, 2632, 2684, 0, 0));
 }
 
+static void TestShouldEngage() {
+    using nis_upscale::ShouldEngageUpscale;
+    using nis_upscale::kOff;
+    using nis_upscale::kNIS;
+    using nis_upscale::kNISSharpen;
+    // Off-mode regression: Off NEVER engages, whatever the rest claims.
+    CHECK(!ShouldEngageUpscale(kOff, true, false, true, true));
+    CHECK(!ShouldEngageUpscale(kOff, true, false, false, false));
+    CHECK(!ShouldEngageUpscale(kOff, false, true, true, true));
+    // Fully armed NIS / NISSharpen engage.
+    CHECK(ShouldEngageUpscale(kNIS, true, false, true, true));
+    CHECK(ShouldEngageUpscale(kNISSharpen, true, false, true, true));
+    // Each single missing precondition disengages.
+    CHECK(!ShouldEngageUpscale(kNIS, false, false, true, true));   // not ready
+    CHECK(!ShouldEngageUpscale(kNIS, true, true, true, true));     // failedOnce
+    CHECK(!ShouldEngageUpscale(kNIS, true, false, false, true));   // mono/menu
+    CHECK(!ShouldEngageUpscale(kNIS, true, false, true, false));   // no source
+    CHECK(!ShouldEngageUpscale(99, true, false, true, true));      // bogus mode
+}
+
+static void TestSeamBounds() {
+    // Every eye viewport must lie inside the source texture: origin + size
+    // <= dimension on both axes. A high-contrast SBS seam would reveal any
+    // cross-eye tap as color bleed; these bounds are what prevents it,
+    // together with the clamp-to-edge sampler.
+    const uint32_t widths[] = { 5264, 4476, 4056, 3688, 4054, 4055, 640 };
+    for (uint32_t sbsW : widths) {
+        for (int eye = 0; eye < 2; ++eye) {
+            auto r = nis_upscale::EyeSrcRect(eye, sbsW, 2684);
+            CHECK(r.x + r.w <= sbsW);
+            CHECK(r.y + r.h <= 2684);
+            CHECK(r.w > 0 && r.h > 0);
+        }
+        auto L = nis_upscale::EyeSrcRect(0, sbsW, 2684);
+        auto R = nis_upscale::EyeSrcRect(1, sbsW, 2684);
+        CHECK(L.x + L.w == R.x);   // adjacent, never overlapping
+        // Odd widths leave one remainder column unsampled (never duplicated).
+        CHECK(R.x + R.w <= sbsW);
+        CHECK(sbsW - (R.x + R.w) <= 1);
+    }
+    // Official config honors the same bounds for the right eye.
+    NISConfig right = {};
+    CHECK(NVScalerUpdateConfig(right, 0.35f,
+        2028, 0, 2028, 2068, 4056, 2068,
+        0, 0, 2632, 2684, 2632, 2684,
+        NISHDRMode::None));
+    CHECK(right.kInputViewportOriginX + right.kInputViewportWidth <= 4056);
+}
+
 int main() {
     TestParseMode();
     TestClamps();
@@ -173,6 +221,8 @@ int main() {
     TestEyeRects();
     TestOutputEye();
     TestNeedsRecreate();
+    TestShouldEngage();
+    TestSeamBounds();
     TestOfficialConfig();
     std::printf("nis-upscale tests: %d passed, %d failed\n", g_pass, g_fail);
     return g_fail ? 1 : 0;
