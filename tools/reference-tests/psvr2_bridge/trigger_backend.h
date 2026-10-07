@@ -36,6 +36,8 @@ public:
     virtual void Clear() = 0;
     virtual void Shutdown() = 0;
     virtual const char* Name() const = 0;
+    // One-line failure/status detail for logs ("" when healthy).
+    virtual const char* Status() const { return ""; }
 };
 
 // Disabled stub: used when no hardware backend is compiled in. Reports
@@ -50,24 +52,15 @@ public:
     const char* Name() const override { return "disabled"; }
 };
 
+// Real-backend factory (toolkit_backend.cpp, compiled only with
+// PSVR2TK_AVAILABLE). Returns nullptr when the loader DLL or init fails;
+// caller falls back to DisabledBackend. Never throws.
+// Body maps EffectDesc -> ScePadTriggerEffectCommand per KHARVOX ranges,
+// guards every CAPI call, and clears on shutdown.
 #ifdef PSVR2TK_AVAILABLE
-// Real hardware backend. Populated when tools/PSVR2Toolkit is available:
-//   - LoadLibraryExW(psvr2_toolkit_capi_loader.dll) from bridge directory
-//   - resolve init/deinit/get_driver_active/set_trigger_effect
-//   - map EffectDesc -> ScePadTriggerEffectCommand per KHARVOX ranges
-//   - guard every CAPI call, translate return codes
-//     (Ok/DriverInactive/NoSlot/Timeout/InvalidParameter)
-// This declaration reserves the integration point; the body lives in
-// toolkit_backend.cpp once the submodule + hardware are present.
-class ToolkitBackend : public ITriggerBackend {
-public:
-    bool Init() override; // load DLL, resolve imports, psvr2_toolkit_init
-    bool IsDriverActive() override; // get_driver_active (guarded)
-    bool Apply(const psvr2ipc::EffectDesc& fx) override; // set_trigger_effect RIGHT
-    void Clear() override; // Off effect
-    void Shutdown() override; // Clear + deinit + unload
-    const char* Name() const override { return "psvr2toolkit"; }
-};
+ITriggerBackend* CreateToolkitBackend();
+#else
+inline ITriggerBackend* CreateToolkitBackend() { return nullptr; }
 #endif
 
 } // namespace psvr2bridge

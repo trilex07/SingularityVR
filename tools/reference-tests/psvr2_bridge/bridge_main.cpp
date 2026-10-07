@@ -137,6 +137,26 @@ int main(int argc, char** argv) {
     }
     LogLine(log, "pipe listening", nullptr);
 
+    // Backend lifetime spans the process: init once, clear per disconnect,
+    // shutdown once at exit. Never re-enumerate per shot.
+    psvr2bridge::DisabledBackend disabled;
+    psvr2bridge::ITriggerBackend* toolkit = psvr2bridge::CreateToolkitBackend();
+    psvr2bridge::ITriggerBackend* backend = &disabled;
+    if (toolkit && toolkit->Init()) {
+        backend = toolkit;
+        LogLine(log, "backend: psvr2toolkit", nullptr);
+    } else {
+        if (toolkit) {
+            char why[128] = {0};
+            _snprintf_s(why, sizeof(why), _TRUNCATE, "toolkit init failed at: %s",
+                        toolkit->Status());
+            LogLine(log, why, nullptr);
+            delete toolkit;
+        }
+        backend->Init();
+        LogLine(log, "backend: disabled (log-only)", nullptr);
+    }
+
     const DWORD startTick = GetTickCount();
     bool running = true;
     while (running && !g_ctrlStop) {
@@ -157,8 +177,6 @@ int main(int argc, char** argv) {
         LogLine(log, "client connected", nullptr);
 
         ServerSession session((const std::uint8_t*)o.tokenRaw, std::strlen(o.tokenRaw));
-        psvr2bridge::DisabledBackend backend;
-        backend.Init();
         EffectDesc applied{};
         bool haveApplied = false;
         bool shutdownMsg = false;
@@ -182,8 +200,8 @@ int main(int argc, char** argv) {
                 if (!(d.fx == applied) || !haveApplied) {
                     applied = d.fx;
                     haveApplied = true;
-                    if (backend.IsDriverActive()) {
-                        backend.Apply(d.fx);
+                    if (backend->IsDriverActive()) {
+                        backend->Apply(d.fx);
                         LogLine(log, "apply(hw)", &d.fx);
                     } else {
                         LogLine(log, "apply(log-only, no driver)", &d.fx);
@@ -197,7 +215,8 @@ int main(int argc, char** argv) {
             }
             // Hello produces no action beyond auth.
         }
-        // Every disconnect/shutdown clears (log-only here; hardware Off in ToolkitBackend).
+        // Every disconnect/shutdown clears (hardware Off in ToolkitBackend).
+        backend->Clear();
         LogLine(log, "clear on disconnect", nullptr);
         DisconnectNamedPipe(pipe);
         if (shutdownMsg) break;
@@ -205,6 +224,10 @@ int main(int argc, char** argv) {
 
     LogLine(log, "bridge exit", nullptr);
     if (log) std::fclose(log);
+    if (backend != &disabled) {
+        backend->Shutdown();
+        delete backend;
+    }
     if (parent) CloseHandle(parent);
     CloseHandle(pipe);
     return 0;
