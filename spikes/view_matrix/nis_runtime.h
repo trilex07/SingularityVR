@@ -45,6 +45,9 @@ struct NisRuntime {
     uint32_t inW = 0, inH = 0;         // per-eye input size (recreate check)
     bool ready = false;
     bool failedOnce = false;           // sticky fallback: log once, stay native
+    // Lifetime counters: any of these moving per frame means a recreation bug.
+    unsigned numShaderInits = 0;       // successful shader pairs created (expect 1)
+    unsigned numOutputCreates = 0;     // output texture pair (re)creations
     // GPU timing (timestamp + disjoint, optional - null when unsupported)
     ID3D11Query* disjoint = nullptr;
     ID3D11Query* tsStart = nullptr;
@@ -130,30 +133,65 @@ static bool NisCreateCoefTex(ID3D11Device* dev, const float coefs[64][8],
     return true;
 }
 
-static bool NisInit(NisRuntime* nis, ID3D11Device* dev, const wchar_t* hlslPath,
+static bool NisCreateShaderFromBytes(ID3D11Device* dev,
+    const unsigned char* bytes, unsigned int size, ID3D11ComputeShader** out) {
+    if (!bytes || size < 16) return false;
+    return SUCCEEDED(dev->CreateComputeShader(bytes, size, nullptr, out)) && *out;
+}
+
+// Init order: embedded official bytecode first (no file, no compiler, no
+// startup cost beyond CreateComputeShader). Only if that fails, fall back to
+// compiling nis/NIS_Main.hlsl at runtime (needs d3dcompiler_47.dll, present
+// in SysWOW64 for x86 processes on stock Windows 10/11; LoadLibrary-based so
+// a missing compiler is a log-once fallback, never a crash). Either way the
+// game launches: failure sets failedOnce and the caller stays native.
+static bool NisInit(NisRuntime* nis, ID3D11Device* dev,
+                    const unsigned char* scalerBytes, unsigned int scalerSize,
+                    const unsigned char* sharpenBytes, unsigned int sharpenSize,
+                    const wchar_t* hlslFallbackPath,  // nullable
                     NisLogFn* logFn) {
     if (nis->ready) return true;
     if (nis->failedOnce) return false;  // sticky fallback: never retry-spam
-    char err[512] = {};
     char msg[640] = {};
-    if (!NisCompileShader(dev, hlslPath, true, &nis->csScaler, err, sizeof(err))) {
+    const bool haveEmbedded =
+        NisCreateShaderFromBytes(dev, scalerBytes, scalerSize, &nis->csScaler) &&
+        NisCreateShaderFromBytes(dev, sharpenBytes, sharpenSize, &nis->csSharpen);
+    if (haveEmbedded) {
+        if (logFn) logFn("nis: shaders from embedded official bytecode (no HLSL file, no compile)");
+    } else {
+        if (nis->csScaler) { nis->csScaler->Release(); nis->csScaler = nullptr; }
+        if (nis->csSharpen) { nis->csSharpen->Release(); nis->csSharpen = nullptr; }
+        if (!hlslFallbackPath || !hlslFallbackPath[0]) {
+            if (logFn) logFn("nis: embedded bytecode unusable and no HLSL fallback"
+                             " - upscaling disabled, native path");
+            nis->failedOnce = true;
+            return false;
+        }
+        LARGE_INTEGER t0{}; QueryPerformanceCounter(&t0);
+        char err[512] = {};
+        const bool okS = NisCompileShader(dev, hlslFallbackPath, true, &nis->csScaler, err, sizeof(err));
+        const bool okH = okS && NisCompileShader(dev, hlslFallbackPath, false, &nis->csSharpen, err, sizeof(err));
+        LARGE_INTEGER t1{}; QueryPerformanceCounter(&t1);
+        LARGE_INTEGER freq{}; QueryPerformanceFrequency(&freq);
+        const double compileMs = freq.QuadPart
+            ? 1000.0 * (double)(t1.QuadPart - t0.QuadPart) / (double)freq.QuadPart : -1.0;
+        if (!okS || !okH) {
+            if (logFn) {
+                _snprintf_s(msg, sizeof(msg), _TRUNCATE,
+                    "nis: HLSL fallback compile FAILED (%.256s) - upscaling disabled, native path", err);
+                logFn(msg);
+            }
+            nis->failedOnce = true;
+            return false;
+        }
         if (logFn) {
             _snprintf_s(msg, sizeof(msg), _TRUNCATE,
-                "nis: scaler compile FAILED (%.256s) - upscaling disabled, native path", err);
+                "nis: shaders from runtime HLSL compile (startup cost %.1f ms; embedded preferred)",
+                compileMs);
             logFn(msg);
         }
-        nis->failedOnce = true;
-        return false;
     }
-    if (!NisCompileShader(dev, hlslPath, false, &nis->csSharpen, err, sizeof(err))) {
-        if (logFn) {
-            _snprintf_s(msg, sizeof(msg), _TRUNCATE,
-                "nis: sharpen compile FAILED (%.256s) - upscaling disabled, native path", err);
-            logFn(msg);
-        }
-        nis->failedOnce = true;
-        return false;
-    }
+    ++nis->numShaderInits;
     D3D11_BUFFER_DESC bd = {};
     bd.ByteWidth = sizeof(NISConfig);
     bd.Usage = D3D11_USAGE_DYNAMIC;
@@ -237,6 +275,7 @@ static bool NisEnsureOutput(NisRuntime* nis, ID3D11Device* dev,
     }
     nis->inW = eyeInW; nis->inH = eyeInH;
     nis->outW = eyeOutW; nis->outH = eyeOutH;
+    ++nis->numOutputCreates;
     return true;
 }
 
