@@ -80,6 +80,7 @@
 #include "startup_crash_capture.h"
 #endif
 #include "async_log.h"
+#include "nis_upscale.h"   // research/nvidia-vr-upscaling: pure mode/resolution math (no D3D)
 #include <intrin.h>       // _ReturnAddress, for the XInput caller census
 
 #pragma comment(lib, "d3d11.lib")
@@ -288,6 +289,12 @@ inline double MsSince(const LARGE_INTEGER& t0) {
 // failure than a game that will not start.
 int  g_autoResMode = 1;          // ini AutoResolution
 UINT g_autoResW = 0, g_autoResH = 0;
+// research/nvidia-vr-upscaling: UE3 render-scale multiplier (ini [Upscaling]
+// RenderScale). Read in DllMain-time InstallAutoResolution (the only place
+// early enough for the command-line hook) and again in LoadIniSettings; the
+// two reads agree because they read the same key. Applied to the CACHED
+// (full recommended) size at injection time - the cache always holds full.
+static float g_nisRenderScaleF = 1.0f;
 bool g_autoResInjected = false;
 char  g_cmdLineA[1024]{};
 WCHAR g_cmdLineW[1024]{};
@@ -318,8 +325,15 @@ bool BuildAutoCmdLine(const char* orig) {
     // engine parsing two, and whichever it picked would silently override a deliberate choice.
     if (HasResArg(orig)) return false;
 
+    // research/nvidia-vr-upscaling: RenderScale shrinks the UE3 source here -
+    // the ONLY place that changes what the engine renders. NIS then
+    // reconstructs to the recommended output on the D3D11 bridge. Same
+    // normalized scale on both axes (no distortion); SBS width stays a
+    // multiple of 4 so each eye stays even for a clean seam split.
+    UINT effW = g_autoResW, effH = g_autoResH;
+    nis_upscale::ComputeRenderSBS(g_autoResW, g_autoResH, g_nisRenderScaleF, &effW, &effH);
     const int n = _snprintf_s(g_cmdLineA, sizeof(g_cmdLineA), _TRUNCATE,
-                              "%s -ResX=%u -ResY=%u -windowed", orig, g_autoResW, g_autoResH);
+                              "%s -ResX=%u -ResY=%u -windowed", orig, effW, effH);
     if (n <= 0) return false;   // truncated or failed - do not hand back a mangled command line
     if (MultiByteToWideChar(CP_ACP, 0, g_cmdLineA, -1, g_cmdLineW,
                             sizeof(g_cmdLineW) / sizeof(g_cmdLineW[0])) == 0) return false;
@@ -4390,6 +4404,65 @@ ID3D11Texture2D*    g_sharedTex11  = nullptr;   // the same memory, opened by D3
 ID3D11Texture2D*    g_frameSrc11   = nullptr;   // what the submit block copies into the swapchain
 
 #include "gpu_copy_timing.h"
+#include "nis_runtime.h"   // research/nvidia-vr-upscaling: official NIS v1.0.3 D3D11 runtime
+
+// ---------------------------------------------------------------- NIS upscaling (research/nvidia-vr-upscaling)
+//
+// Official NVIDIA Image Scaling v1.0.3, spatial, on the D3D11 bridge.
+// Per-eye only, never across the SBS seam. Off by default; any failure falls
+// back to the native copy path for that frame (and sticky-disables after a
+// log-once). Extra cost vs baseline native path: 1 staging copy + 1 compute
+// dispatch per eye. The final swapchain copy is unchanged in count.
+static NisRuntime g_nis;
+static volatile LONG g_nisMode = 0;          // 0 Off, 1 NIS, 2 NISSharpen (ini [Upscaling] Mode)
+static float g_nisOutputScale = 1.0f;        // ini OutputScale (swapchain multiplier)
+static float g_nisSharpness = 0.35f;         // ini Sharpness 0..1 (conservative default)
+static ID3D11Texture2D* g_nisStageTex = nullptr;  // SBS staging (SRV-capable)
+static ID3D11ShaderResourceView* g_nisStageSrv = nullptr;
+static UINT g_nisStageW = 0, g_nisStageH = 0;
+static double g_msNisGpu = 0.0, g_msNisGpuPeak = 0.0;  // MEASURED GPU (timestamp)
+static int g_nisGpuFrames = 0;
+static int g_nisLastTimingFrames = 0;
+static double g_msNisStage = 0.0;            // staging CopyResource queue time (CPU-measured)
+static int g_nisStageFrames = 0;
+static void NisLogAdapter(const char* msg) { Log("%s", msg); }
+static void NisGetHlslPath(wchar_t* out, size_t cap) {
+    // <dll-dir>\nis\NIS_Main.hlsl, beside this DLL (never CWD-dependent).
+    HMODULE self = nullptr;
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCSTR)&NisGetHlslPath, &self)) { out[0] = 0; return; }
+    wchar_t dir[MAX_PATH] = {};
+    GetModuleFileNameW(self, dir, MAX_PATH);
+    wchar_t* slash = wcsrchr(dir, L'\\');
+    size_t head = slash ? (size_t)(slash - dir + 1) : 0;
+    _snwprintf_s(out, cap, _TRUNCATE, L"%.*snis\\NIS_Main.hlsl", (int)head, dir);
+}
+static bool NisEnsureStage(UINT sbsW, UINT sbsH) {
+    if (g_nisStageTex && sbsW == g_nisStageW && sbsH == g_nisStageH) return true;
+    if (g_nisStageSrv) { g_nisStageSrv->Release(); g_nisStageSrv = nullptr; }
+    if (g_nisStageTex) { g_nisStageTex->Release(); g_nisStageTex = nullptr; }
+    g_nisStageW = g_nisStageH = 0;
+    if (!g_dev11 || !sbsW || !sbsH) return false;
+    D3D11_TEXTURE2D_DESC td = {};
+    td.Width = sbsW; td.Height = sbsH; td.MipLevels = 1; td.ArraySize = 1;
+    td.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    td.SampleDesc.Count = 1;
+    td.Usage = D3D11_USAGE_DEFAULT;
+    td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    if (FAILED(g_dev11->CreateTexture2D(&td, nullptr, &g_nisStageTex))) return false;
+    if (FAILED(g_dev11->CreateShaderResourceView(g_nisStageTex, nullptr, &g_nisStageSrv))) {
+        g_nisStageTex->Release(); g_nisStageTex = nullptr; return false;
+    }
+    g_nisStageW = sbsW; g_nisStageH = sbsH;
+    return true;
+}
+// Output eye size for NIS: recommended * OutputScale, never the reduced render.
+static void NisOutputEye(UINT* w, UINT* h) {
+    UINT fbW = (g_srcW >= 2) ? g_srcW / 2 : 0, fbH = g_srcH;
+    nis_upscale::ComputeOutputEye(g_recEyeW, g_recEyeH,
+        g_nisOutputScale, fbW, fbH, w, h);
+}
 
 // Create the XR swapchain lazily, sized to the game's backbuffer - we are pasting the game's
 // own image, so matching its dimensions avoids any rescale on the way in.
@@ -9685,7 +9758,39 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
 
     const bool cropEyes = frame && frame->dup && !frame->stereo && g_srcW >= 2;
     g_scCropped = cropEyes;
-    if (frame && EnsureSwapchain(cropEyes ? g_srcW / 2 : g_srcW, g_srcH)) {
+    // research/nvidia-vr-upscaling: NIS engages only on the SBS true-stereo
+    // path (two independent eye viewports, seam never in the kernel). Mono and
+    // alternate-eye stereo keep the native path. Output is sized from the
+    // RECOMMENDED eye size, never from the (possibly reduced) render size.
+    bool nisFrame = false;
+    UINT nisOutW = 0, nisOutH = 0;
+    if (cropEyes && frame && InterlockedCompareExchange(&g_nisMode, 0, 0) != 0 && g_frameSrc11) {
+        NisOutputEye(&nisOutW, &nisOutH);
+        nisFrame = nisOutW && nisOutH;
+        if (nisFrame && !g_nis.ready && !g_nis.failedOnce) {
+            wchar_t hlsl[MAX_PATH] = {};
+            NisGetHlslPath(hlsl, _countof(hlsl));
+            if (!hlsl[0]) {
+                Log("nis: no HLSL path - upscaling disabled for this session, native path");
+                g_nis.failedOnce = true; nisFrame = false;
+            } else if (!NisInit(&g_nis, g_dev11, hlsl, NisLogAdapter)) {
+                nisFrame = false;  // NisInit already logged the reason once
+            }
+        }
+        if (nisFrame && !NisEnsureStage(g_srcW, g_srcH)) nisFrame = false;
+        if (nisFrame && !NisEnsureOutput(&g_nis, g_dev11,
+                g_srcW / 2, g_srcH, nisOutW, nisOutH)) {
+            static bool saidOut = false;
+            if (!saidOut) {
+                saidOut = true;
+                Log("nis: output textures FAILED - native path for this session");
+            }
+            g_nis.failedOnce = true; nisFrame = false;
+        }
+    }
+    const UINT wantW = nisFrame ? nisOutW : (cropEyes ? g_srcW / 2 : g_srcW);
+    const UINT wantH = nisFrame ? nisOutH : g_srcH;
+    if (frame && EnsureSwapchain(wantW, wantH)) {
         // Every one of these was captured with the pixels, not read live. In pipelined mode the
         // image is a frame old, and reading `g_stereo` or `g_eyePose` here would describe the
         // frame being drawn now rather than the one being submitted.
@@ -9709,7 +9814,41 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 // the copy into the swapchain image is identical either way.
                 LARGE_INTEGER tUp = Now();
                 g_gpuCopyTiming.Begin(g_ctx11);
-                if (g_frameSrc11) {
+                // research/nvidia-vr-upscaling: NIS path stages the full SBS once,
+                // dispatches one eye viewport per output texture, then copies each
+                // output to its swapchain image. Copies this frame: 1 stage +
+                // 2 final (vs 2 native half-copies). Compute: 2 NIS dispatches.
+                bool nisDone = false;
+                if (nisFrame) {
+                    LARGE_INTEGER tStage = Now();
+                    g_ctx11->CopyResource(g_nisStageTex, g_frameSrc11);
+                    g_msNisStage += MsSince(tStage);
+                    ++g_nisStageFrames;
+                    const bool sharpenOnly =
+                        InterlockedCompareExchange(&g_nisMode, 0, 0) == 2;
+                    NisTimingBegin(&g_nis, g_ctx11);
+                    const bool ok0 = NisDispatchEye(&g_nis, g_ctx11, g_nisStageSrv,
+                        g_srcW, g_srcH, 0, nisOutW, nisOutH,
+                        g_nisSharpness, sharpenOnly);
+                    const bool ok1 = NisDispatchEye(&g_nis, g_ctx11, g_nisStageSrv,
+                        g_srcW, g_srcH, 1, nisOutW, nisOutH,
+                        g_nisSharpness, sharpenOnly);
+                    NisTimingEnd(&g_nis, g_ctx11);
+                    if (ok0 && ok1) {
+                        const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
+                        g_ctx11->CopyResource(g_scImages[0][idx],
+                            g_nis.outTex[swap ? 1 : 0]);
+                        nisDone = true;
+                    } else {
+                        static bool saidCfg = false;
+                        if (!saidCfg) {
+                            saidCfg = true;
+                            Log("nis: dispatch config FAILED (scale out of range?) -"
+                                " native halves for this frame");
+                        }
+                    }
+                }
+                if (!nisDone && g_frameSrc11) {
                     if (cropEyes) {
                         const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
                         const UINT left = swap ? g_srcW / 2 : 0;
@@ -9736,12 +9875,19 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                         const int64_t tw = g_diagEnabled ? DiagQpc() : 0;
                         const XrResult wr = xrWaitSwapchainImage(g_swapchain[1], &wi);
                         DiagPhaseAdd(DP_SWAPWAIT, tw);
-                        rightReady = XR_SUCCEEDED(wr) && g_frameSrc11;
+                        rightReady = XR_SUCCEEDED(wr) && (g_frameSrc11 || nisFrame);
                         if (rightReady) {
                             const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
-                            const UINT left = swap ? 0 : g_srcW / 2;
-                            const D3D11_BOX box{ left, 0, 0, left + g_scWidth, g_scHeight, 1 };
-                            g_ctx11->CopySubresourceRegion(g_scImages[1][rightIndex], 0, 0, 0, 0, g_frameSrc11, 0, &box);
+                            if (nisFrame && nisDone) {
+                                g_ctx11->CopyResource(g_scImages[1][rightIndex],
+                                    g_nis.outTex[swap ? 0 : 1]);
+                            } else if (g_frameSrc11) {
+                                const UINT left = swap ? 0 : g_srcW / 2;
+                                const D3D11_BOX box{ left, 0, 0, left + g_scWidth, g_scHeight, 1 };
+                                g_ctx11->CopySubresourceRegion(g_scImages[1][rightIndex], 0, 0, 0, 0, g_frameSrc11, 0, &box);
+                            } else {
+                                rightReady = false;
+                            }
                         }
                         const int64_t tr = g_diagEnabled ? DiagQpc() : 0;
                         xrReleaseSwapchainImage(g_swapchain[1], &ri);
@@ -9829,6 +9975,17 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // hundred fast ones, and one stall that long IS a visible dip.
     if (msEnd > g_msXrSubmitPeak) g_msXrSubmitPeak = msEnd;
     ++g_xrSubmitFrames;
+    // research/nvidia-vr-upscaling: harvest NIS GPU timestamps without
+    // stalling (MEASURED dispatch time, not CPU Dispatch call time).
+    if (g_ctx11) {
+        NisTimingPoll(&g_nis, g_ctx11);
+        if (g_nis.timingFrames != g_nisLastTimingFrames) {
+            g_nisLastTimingFrames = g_nis.timingFrames;
+            g_msNisGpu += g_nis.msGpu;
+            if (g_nis.msGpu > g_msNisGpuPeak) g_msNisGpuPeak = g_nis.msGpu;
+            ++g_nisGpuFrames;
+        }
+    }
 }
 
 // ---------------------------------------------------------------- d3d9 plumbing
@@ -20087,6 +20244,29 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     }
     pTilde = kTilde;
 
+    // research/nvidia-vr-upscaling: N cycles Off -> NIS -> NISSharpen -> Off
+    // for one-session A/B without relaunch. RenderScale itself still needs a
+    // relaunch (it changes the UE3 command line); sharpening/native toggles
+    // apply from the next frame. Nonintrusive: one log line per change.
+    {
+        static bool pN = false;
+        bool kN = (DebugKey('N') & 0x8000) != 0;
+        if (kN && !pN) {
+            LONG cur = InterlockedCompareExchange(&g_nisMode, 0, 0);
+            LONG next = (cur + 1) % 3;
+            InterlockedExchange(&g_nisMode, next);
+            Log("NIS mode -> %s (N pressed)%s",
+                nis_upscale::ModeName((nis_upscale::Mode)next),
+                next == 1 && g_nisRenderScaleF != 1.0f
+                    ? " - note: RenderScale needs a relaunch to change the UE3 source;"
+                      " this session still renders at the launch resolution"
+                    : next == 1 ? " - upscaling this session's SBS source to recommended output"
+                    : next == 2 ? " - native resolution + sharpening only"
+                    : " - native copy path, no NIS dispatches");
+        }
+        pN = kN;
+    }
+
     // Diagnostic modes only exist when [Diagnostic] Enabled=1. Shift+F11 isolates
     // action polling while xrLocateSpace keeps tracking hand poses.
     if (g_diagEnabled) {
@@ -21472,6 +21652,26 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     g_zeroCopyActive ? "ZERO-COPY" : (g_copyMode == 1 ? "immediate" : "pipelined"),
                     g_zeroCopyActive ? "StretchRect" : "readback", rb, lk, lc, up,
                     copy, ms, ms > 0 ? 100.0 * copy / ms : 0.0);
+                // research/nvidia-vr-upscaling: MEASURED NIS GPU time (timestamp
+                // queries around both eye dispatches) + staging copy queue time.
+                // Absent when Mode=Off or NIS never engaged this window.
+                if (g_nisGpuFrames > 0) {
+                    Log("    NIS upscaling [MEASURED GPU]: mode %s sharp %.2f renderScale %.2f"
+                        " outScale %.2f | eye in %ux%u -> out %ux%u | GPU mean %.3f ms"
+                        " peak %.3f | stage copy mean %.3f ms | %d frames",
+                        nis_upscale::ModeName(
+                            (nis_upscale::Mode)InterlockedCompareExchange(&g_nisMode, 0, 0)),
+                        g_nisSharpness, g_nisRenderScaleF, g_nisOutputScale,
+                        g_nis.inW, g_nis.inH, g_nis.outW, g_nis.outH,
+                        g_msNisGpu / g_nisGpuFrames, g_msNisGpuPeak,
+                        g_nisStageFrames ? g_msNisStage / g_nisStageFrames : 0.0,
+                        g_nisGpuFrames);
+                } else if (InterlockedCompareExchange(&g_nisMode, 0, 0) != 0) {
+                    Log("    NIS upscaling: mode %s but NO measured dispatches this window"
+                        " (mono/menu frames stay native; needs SBS true-stereo)",
+                        nis_upscale::ModeName(
+                            (nis_upscale::Mode)InterlockedCompareExchange(&g_nisMode, 0, 0)));
+                }
                 // The split that decides where any further effort goes. Time in xrWaitFrame is
                 // the app sitting idle waiting for the compositor, so it is not ours to optimise;
                 // "our work" is. Chasing the copy or the draw count while xrWaitFrame holds most
@@ -21633,6 +21833,9 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             }
             g_msGRTD = g_msLock = g_msLockCopy = g_msUpload = 0.0;
             g_copyFrames = 0;
+            g_msNisGpu = g_msNisGpuPeak = 0.0;   // research/nvidia-vr-upscaling
+            g_nisGpuFrames = 0;
+            g_msNisStage = 0.0; g_nisStageFrames = 0;
             g_msWaitFrame = 0.0; g_waitFrames = 0;
             g_msGpuWait = 0.0; g_gpuWaitFrames = 0;
             g_msEngineObjects = 0.0; g_engineObjectFrames = 0;
@@ -23367,6 +23570,47 @@ void LoadIniSettings() {
         g_userPtrHookLevel == 0 ? "not hooked - known good" :
         g_userPtrHookLevel == 1 ? "patch only, immediate forward" :
         g_userPtrHookLevel == 2 ? "patch + counter" : "full StereoPair treatment");
+
+    // ---- research/nvidia-vr-upscaling: NVIDIA Image Scaling (NIS) ----
+    //
+    // Off by default. NIS = spatial upscale from a reduced UE3 render to the
+    // recommended OpenXR output (RenderScale needs a relaunch - it changes the
+    // UE3 command line). NISSharpen = same-resolution sharpen only, runtime
+    // switchable. Unknown Mode falls back to Off and says so.
+    {
+        char mode[32] = {};
+        GetPrivateProfileStringA("Upscaling", "Mode", "Off", mode, sizeof(mode), path);
+        LONG m = (LONG)nis_upscale::ParseMode(mode);
+        char rs[32] = {}, os[32] = {}, sh[32] = {};
+        GetPrivateProfileStringA("Upscaling", "RenderScale", "1.0", rs, sizeof(rs), path);
+        GetPrivateProfileStringA("Upscaling", "OutputScale", "1.0", os, sizeof(os), path);
+        GetPrivateProfileStringA("Upscaling", "Sharpness", "0.35", sh, sizeof(sh), path);
+        float frs = nis_upscale::ClampRenderScale((float)strtod(rs, nullptr));
+        float fos = nis_upscale::ClampOutputScale((float)strtod(os, nullptr));
+        float fsh = nis_upscale::ClampSharpness((float)strtod(sh, nullptr));
+        g_nisRenderScaleF = frs;   // keep DllMain-time read and this one in agreement
+        g_nisOutputScale = fos;
+        g_nisSharpness = fsh;
+        InterlockedExchange(&g_nisMode, m);
+        {
+            UINT effW = 0, effH = 0;
+            nis_upscale::ComputeRenderSBS(g_autoResW, g_autoResH, frs, &effW, &effH);
+            UINT outW = 0, outH = 0;
+            nis_upscale::ComputeOutputEye(g_recEyeW, g_recEyeH, fos,
+                g_autoResW >= 2 ? g_autoResW / 2 : 0, g_autoResH, &outW, &outH);
+            Log("ini: Upscaling Mode=%s RenderScale=%.2f OutputScale=%.2f Sharpness=%.2f",
+                nis_upscale::ModeName((nis_upscale::Mode)m), frs, fos, fsh);
+            if (m == 0)
+                Log("    NIS is OFF - native copy path, no NIS resources or dispatches");
+            else if (m == 1)
+                Log("    NIS: UE3 renders SBS %ux%u (eye %ux%u) -> NIS per eye -> OpenXR %ux%u."
+                    " RenderScale needs a relaunch; OutputScale resizes the swapchain only.",
+                    effW, effH, effW / 2, effH, outW, outH);
+            else
+                Log("    NISSharpen: native resolution + NIS sharpening only (%.2f)."
+                    " Runtime-switchable with Off.", fsh);
+        }
+    }
 }
 
 HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYPE t, HWND w, DWORD f,
@@ -23631,6 +23875,18 @@ void InstallAutoResolution() {
 
     g_autoResW = (UINT)GetPrivateProfileIntA("Render", "AutoResX", 0, path);
     g_autoResH = (UINT)GetPrivateProfileIntA("Render", "AutoResY", 0, path);
+    // research/nvidia-vr-upscaling: early RenderScale read (DllMain time - the
+    // only place early enough for the command-line hook). The cache keeps the
+    // FULL recommended size; the scale is applied in BuildAutoCmdLine.
+    {
+        char rs[32] = {};
+        GetPrivateProfileStringA("Upscaling", "RenderScale", "1.0", rs, sizeof(rs), path);
+        g_nisRenderScaleF = nis_upscale::ClampRenderScale((float)strtod(rs, nullptr));
+        if (g_nisRenderScaleF != 1.0f)
+            Log("upscaling: RenderScale=%.2f (UE3 source will be scaled from cached %ux%u;"
+                " NIS reconstructs to recommended on the bridge; relaunch to apply)",
+                g_nisRenderScaleF, g_autoResW, g_autoResH);
+    }
     if (!g_autoResW || !g_autoResH) {
         Log("auto-resolution: nothing cached yet - this run uses your command line as typed."
             " The headset's size will be written to the ini and injected from the next launch.");

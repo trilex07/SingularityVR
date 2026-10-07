@@ -146,7 +146,7 @@ inline bool NeedsRecreate(uint32_t curInW, uint32_t curInH,
 // Expected dimensions table (documentation + tests):
 //   recEye 2632x2684 -> recSBS 5264x2684
 //   1.00 -> SBS 5264x2684, eye 2632x2684
-//   0.85 -> SBS 4476x2282, eye 2238x2281 (2281.4->2282 aligned 2)
+//   0.85 -> SBS 4476x2282, eye 2238x2282
 //   0.77 -> SBS 4056x2068, eye 2028x2068 (4053.3->4056; 2066.7->2068)
 //   0.70 -> SBS 3688x1880, eye 1844x1880 (3684.8->3688; 1878.8->1880)
 // Output at OutputScale=1.0 is always 2632x2684 per eye (from recommended).
