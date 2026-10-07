@@ -7,6 +7,7 @@
 *.pdb
 *.ilk
 *.log
+*.map
 # /analyze output - build.ps1 runs a static-analysis pass, see the note in it
 *.nativecodeanalysis.xml
 
