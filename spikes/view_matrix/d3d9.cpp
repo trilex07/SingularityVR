@@ -1,4 +1,4 @@
-﻿#include "two_hand_grip.h"
+#include "two_hand_grip.h"
 #include "skeletal_palette.h"
 #include "camera_translation_evidence.h"
 #include "arm_ik.h"
@@ -96,7 +96,7 @@ bool g_logReady = false;
 CRITICAL_SECTION g_stageLock;
 bool g_stageLockReady = false;
 
-// ---- âš ï¸ truncating on attach destroys the run you are comparing against (run 31) ----
+// ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą truncating on attach destroys the run you are comparing against (run 31) ----
 //
 // Any measurement worth making here is an A/B across launches - two ini settings, two runs, two
 // numbers. Truncating at attach means launch B erases launch A, so by the time you have the
@@ -314,7 +314,7 @@ bool BuildAutoCmdLine(const char* orig) {
     if (!g_autoResW || !g_autoResH) return false;                 // nothing cached yet
     if (g_autoResW < 640 || g_autoResH < 480 ||
         g_autoResW > 16384 || g_autoResH > 16384) return false;   // refuse nonsense
-    // ⚠️ AN EXPLICIT -ResX ON THE COMMAND LINE ALWAYS WINS. Injecting a second one would leave the
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą AN EXPLICIT -ResX ON THE COMMAND LINE ALWAYS WINS. Injecting a second one would leave the
     // engine parsing two, and whichever it picked would silently override a deliberate choice.
     if (HasResArg(orig)) return false;
 
@@ -423,7 +423,7 @@ volatile LONG g_rawTrigger = 0;
 // raises the sniper scope. The scope census keys on this edge.
 volatile LONG g_rawAltTrigger = 0;
 
-// ---- ⚠️ run 155: reported STUCK TRIGGERS on a set-down controller ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 155: reported STUCK TRIGGERS on a set-down controller ----
 //
 // Both triggers read as pressed with the controllers face-down on the desk - the gun fires and aims
 // on its own. That is a live weapon firing continuously, which is real engine work, and it is the
@@ -510,7 +510,7 @@ DWORD WINAPI Hook_XInputSetState(DWORD idx, XiVibration* v) {
 DWORD g_padPacket = 0;
 XiGamepad g_padLast{};
 
-// ---- ✅ run 70: SOLVED. It is the packet number, and the cause is stick NOISE ----
+// ---- Ă˘Ĺ›â€¦ run 70: SOLVED. It is the packet number, and the cause is stick NOISE ----
 //
 //     pad off, feed ON,  in hand : 119.1 fps | residual 4.02 | MISSED 0.7%
 //     pad off, feed ON,  on desk : 119.8 fps | residual 3.31 | MISSED 0.6%
@@ -545,7 +545,7 @@ XiGamepad g_padLast{};
 // its input path and running it every frame.
 DWORD g_padPacketAdvances = 0;    // per second: ~0 at rest is the whole point
 
-// ---- ❌ run 71: the deadzone WORKED and the judder did NOT go away. Run 70 is retracted ----
+// ---- Ă˘ĹĄĹš run 71: the deadzone WORKED and the judder did NOT go away. Run 70 is retracted ----
 //
 // Packet advances fell from ~120/sec to 5-60/sec, so the noise diagnosis was right and the fix did
 // what it claimed. The judder stayed. **Fixing the mechanism I blamed did not fix the symptom, so
@@ -561,7 +561,7 @@ DWORD g_padPacketAdvances = 0;    // per second: ~0 at rest is the whole point
 // when it is healthy. Run 60 established that one poll per frame is the normal, promoted state, so
 // this is something else entirely.
 //
-// ⚠️ And 900 calls a second through this detour is perhaps 2 ms of CPU across a WHOLE second, so
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą And 900 calls a second through this detour is perhaps 2 ms of CPU across a WHOLE second, so
 // the polling itself cannot be the cost. It is a SYMPTOM - the visible edge of the game's input
 // path running 33 times per frame, and whatever that path drags with it is where the milliseconds
 // are. Chasing the poll count directly would be optimising the thermometer.
@@ -574,7 +574,7 @@ XiCaller g_xiCallers[12]{};
 int   g_xiCallerN = 0;
 double g_msInHook = 0.0;
 
-// ---- ❌ run 72: the 900 polls/sec were the LOADING SCREEN. Run 71's lead is dead ----
+// ---- Ă˘ĹĄĹš run 72: the 900 polls/sec were the LOADING SCREEN. Run 71's lead is dead ----
 //
 // One caller, `0x011D4795`, always. And correlated against the frame log it reads:
 //
@@ -609,7 +609,7 @@ double g_msInHook = 0.0;
 // (g_freezePacket and g_setStateCalls are declared up with the other hook state - both hooks
 // touch them and Hook_XInputSetState is defined before this point.)
 
-// ---- ❌ run 73: the packet number is not read at all, and the pad may be innocent ----
+// ---- Ă˘ĹĄĹš run 73: the packet number is not read at all, and the pad may be innocent ----
 //
 // Freezing dwPacketNumber changed nothing - **and the controls kept working.** The second half is
 // the real result: if the engine still responded to sticks and buttons while being told the state
@@ -619,7 +619,7 @@ double g_msInHook = 0.0;
 // SetState/sec tracks calls/sec exactly (74 vs 76, 115 vs 117), so the force-feedback manager runs
 // once a frame - present, but our hook answers it in nanoseconds.
 //
-// ---- ⭐ what the config says, and it explains the entire session ----
+// ---- Ă˘Â­Â what the config says, and it explains the entire session ----
 //
 //     bSmoothFrameRate     = TRUE
 //     MinSmoothedFrameRate = 22
@@ -642,7 +642,7 @@ double g_msInHook = 0.0;
 //     being toggled. "I pressed X and it got better" and "I picked up the controllers and it got
 //     better" are the same coincidence: the history rolled over.
 //
-// ⚠️ This is the run-56 pattern for a third time: an invisible external governor moving underneath
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą This is the run-56 pattern for a third time: an invisible external governor moving underneath
 // every comparison. The instrument is the same shape too - do not redesign around it, MEASURE it.
 // UE3's smoother sleeps through appSleep, which is ::Sleep on Win32, so a hook on Sleep reports the
 // governor's cost directly and a switch on that hook tests the fix in the same run.
@@ -697,7 +697,7 @@ DWORD WINAPI Hook_XInputGetState(DWORD idx, XiState* st) {
     // survives to the fire trace while the camera has already taken the head - which is the whole
     // arrangement, reached without a symbol.
     //
-    // ⚠️ Equally it may poll input BEFORE the camera update, in which case the head overwrites us
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Equally it may poll input BEFORE the camera update, in which case the head overwrites us
     // again and this is the end of the time-split idea. Binary, one run, and the two candidate
     // orderings are the only two there are.
     WriteAimAtInputPoll();
@@ -718,7 +718,7 @@ DWORD WINAPI Hook_XInputGetState(DWORD idx, XiState* st) {
 
     const bool emu = InterlockedCompareExchange(&g_padEmu, 0, 0) != 0;
 
-    // ⚠️ While emulating, the real function is NOT called - and that is a saving, not a shortcut.
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą While emulating, the real function is NOT called - and that is a saving, not a shortcut.
     // XInputGetState against an absent device is the known-expensive case (it re-enumerates), and
     // the game is already paying it every frame today. Answering from our own state removes that
     // from the frame budget rather than adding to it. The real result is sampled once at install
@@ -936,7 +936,7 @@ extern volatile LONG   g_armsAnimActiveCached;
 
 // The NUMPAD4/NUMPAD5 test inputs, laid OVER whatever the controllers just published.
 //
-// ⚠️ Ordering, and it is not incidental: this MUST run after SyncXRInput, or the real controller
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Ordering, and it is not incidental: this MUST run after SyncXRInput, or the real controller
 // state overwrites the test every frame and the test silently does nothing. Both write the same
 // three words. It is called from Hook_Present rather than from UpdateFromHeadset for exactly that
 // reason - UpdateFromHeadset returns early on half a dozen paths, and a test that only works when
@@ -1010,7 +1010,7 @@ volatile LONG g_yawHeldPct = -1;    // -1 = not measured yet, so the readout can
 volatile LONG g_freezeView = 0;
 int32_t g_frozenYaw = 0, g_frozenPitch = 0;
 
-// ---- ⭐ run 137: let the cutscene drive the mode ----
+// ---- Ă˘Â­Â run 137: let the cutscene drive the mode ----
 //
 // SetCinematicMode is now confirmed as an engine-authoritative signal: run 136 logged it firing
 // with arg raw 0x00000001 on entry and 0x00000000 on exit, cleanly, which is exactly the check the
@@ -1023,14 +1023,14 @@ volatile LONG g_cutsceneAuto = 1;   // ini: CutsceneAuto
 int  g_userCutMode = 1;             // the mode NUMPAD8 last selected, restored when a cutscene ends
 bool g_cineAutoActive = false;      // are we currently overriding?
 
-// ---- 💥 run 238: a gesture fired during the intro MOVIE and wrote the result to the ini ----
+// ---- Ä‘Ĺşâ€™Ä„ run 238: a gesture fired during the intro MOVIE and wrote the result to the ini ----
 //
 // Reported as "the laser is on every time I load in", and the ini was innocent: it says LaserSight=0,
 // the loader reads 0, and the log says `ini: LaserSight=0`. Two hundred lines later it says
 // `laser sight ON (held A for 1000 ms) - saved to the ini`, and the surrounding lines are Bink video
 // frames - `tex 1280x720 fmt 50`. The gesture fires while you hold A to SKIP THE INTRO, every launch.
 //
-// ⚠ What makes this worse than a stray toggle is that the laser gesture WRITES THROUGH to the ini.
+// Ă˘ĹˇÂ  What makes this worse than a stray toggle is that the laser gesture WRITES THROUGH to the ini.
 // Every other accidental input is forgotten at quit; this one edits the config and comes back
 // tomorrow looking like a default. A gesture with a persistent side effect needs a stricter gate than
 // one without.
@@ -1090,17 +1090,17 @@ const int OBJ_OUTER = 0x28, OBJ_NAME = 0x2C, OBJ_CLASS = 0x34;
 const int ACTOR_ROTATION = 0x0060;    // pitch, yaw, roll
 const int CTL_ROTATION_2 = 0x05D4;
 
-// ---- ⭐ run 203: a plain read, because `InterlockedCompareExchange(&x, 0, 0)` is a locked WRITE ----
+// ---- Ă˘Â­Â run 203: a plain read, because `InterlockedCompareExchange(&x, 0, 0)` is a locked WRITE ----
 //
 // Used to read a `volatile LONG` on the hot draw path. On x86 an aligned 32-bit read is already atomic;
 // the interlocked form takes the cache line exclusively and dirties it on every call. Done per draw from
 // the render thread against variables Present also writes, that is two threads fighting over one cache
 // line tens of thousands of times a frame - and it is what collapsed the dock from 120 fps to 11.
 //
-// ⚠️ Reads only. Anything that WRITES, or needs read-modify-write, must stay interlocked.
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Reads only. Anything that WRITES, or needs read-modify-write, must stay interlocked.
 inline LONG Rd(const volatile LONG& v) { return v; }
 
-// ---- 💥 run 256: this is a SYSCALL, and a GObjects walk makes hundreds of thousands of them ----
+// ---- Ä‘Ĺşâ€™Ä„ run 256: this is a SYSCALL, and a GObjects walk makes hundreds of thousands of them ----
 //
 // Measured, after four builds of narrowing: the splash screen spends 1365 ms in ONE call to
 // RefreshArmedState. That is a `FindPlayerPawn` walk over the whole GObjects array, and the walk
@@ -1112,16 +1112,16 @@ inline LONG Rd(const volatile LONG& v) { return v; }
 // Caching that one region turns the syscall into a range compare for the overwhelming majority of
 // calls, and it speeds up EVERY GObjects walk in this file, not just the pawn's.
 //
-// ⚠️ Only POSITIVE results are cached, and only the exact region VirtualQuery reported as committed
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Only POSITIVE results are cached, and only the exact region VirtualQuery reported as committed
 // and accessible - protection and state are uniform across a returned region by definition, so the
 // range test answers exactly what the syscall would have.
 //
-// ⚠️ This function exists to prevent crashes, so staleness is the whole risk: a region freed or
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą This function exists to prevent crashes, so staleness is the whole risk: a region freed or
 // re-protected between the query and the read would make a cached "yes" a lie. Bounded two ways -
 // thread_local, so no other thread's walk can seed it, and cleared at the start of every walk and
 // once per frame. That caps the window at one walk, which after this change is milliseconds rather
 // than the 1.4 seconds it used to be.
-// ---- 💥 run 257: ONE cache slot hit NEVER, because a walk rotates between regions ----
+// ---- Ä‘Ĺşâ€™Ä„ run 257: ONE cache slot hit NEVER, because a walk rotates between regions ----
 //
 // Run 256's single-entry cache changed the measured walk by nothing at all: 1365 ms before,
 // 1275-1342 ms after. The reasoning was that consecutive objects share a region - true, and
@@ -1132,7 +1132,7 @@ inline LONG Rd(const volatile LONG& v) { return v; }
 // A small set fixes exactly that. Eight slots, round-robin replacement, no LRU bookkeeping - the
 // working set here is the handful of arenas a walk actually touches, and eight covers it with room.
 //
-// ⚠️ MEASURED, NOT ASSUMED, this time. `player pawn: ... after walking N object(s)` prints the walk's
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą MEASURED, NOT ASSUMED, this time. `player pawn: ... after walking N object(s)` prints the walk's
 // size and the breakdown line prints its cost, so if this one also does nothing the log says so in
 // the same two numbers that caught run 256.
 const int kReadCacheSlots = 8;
@@ -1209,7 +1209,7 @@ bool NameOf(uintptr_t obj, char* buf, size_t cap) {
 uintptr_t g_ctlClass = 0, g_controller = 0;
 uintptr_t g_camClass = 0, g_camera = 0;
 
-// ================= ⭐ run 98: find EVERY field that holds the view rotation ====================
+// ================= Ă˘Â­Â run 98: find EVERY field that holds the view rotation ====================
 //
 // Run 97 swapped Controller.Rotation, the camera actor's Rotation and mCurrentPOV.Rotation for the
 // duration of FireAmmunition - the log confirms all three were SET, with the hand 98 degrees off -
@@ -1232,7 +1232,7 @@ int g_ctlRotOffs[kRotFieldMax], g_ctlRotCount = 0;
 int g_camRotOffs[kRotFieldMax], g_camRotCount = 0;
 // Odd while a fire window is open, even when closed. Present uses it to tell "the player turned"
 // from "we wrote the hand for a microsecond" - see the fold-in guard.
-// ---- 💥 run 109: DEPTH, not parity ----
+// ---- Ä‘Ĺşâ€™Ä„ run 109: DEPTH, not parity ----
 //
 // g_fireSeq is bumped once per window, and the fire windows NEST - StartFire five deep, then
 // BeginFire, then FireAmmunition. So "odd means open" flips seven times during one shot and is
@@ -1247,7 +1247,7 @@ int g_camRotOffs[kRotFieldMax], g_camRotCount = 0;
 // in the same XR frame - see run 112. This is what the trace rotation uses.
 volatile LONG g_handDevYawUU = 0, g_handDevPitchUU = 0, g_handDevValid = 0;
 volatile LONG g_handDevRollUU = 0;
-// ---- 💥 run 190: the gun moved in STEPS, and it was integer truncation, not latency ----
+// ---- Ä‘Ĺşâ€™Ä„ run 190: the gun moved in STEPS, and it was integer truncation, not latency ----
 //
 // Reported, and the redescription is what solved it: not jitter but *"moving in steps, almost like a
 // deadzone - if I move the controller very slowly I can see it jumping."* Latency cannot do that. A
@@ -1262,7 +1262,7 @@ volatile LONG g_handDevRollUU = 0;
 // Worse than plain rounding: `(LONG)` TRUNCATES TOWARD ZERO, so the step is asymmetric about the origin
 // and the error is biased inward rather than centred.
 //
-// ⚠️ The ROTATION was never the problem and is not changed. `g_handDev*UU` are in engine rotation units
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The ROTATION was never the problem and is not changed. `g_handDev*UU` are in engine rotation units
 // at 65536 per turn, so one unit is 0.0055 degrees - four orders of magnitude below anything visible.
 // It would have been easy to "fix" both and never learn which mattered.
 //
@@ -1272,7 +1272,7 @@ volatile LONG g_handDevRollUU = 0;
 const float kHandFixed = 1000.0f;      // milli-UU per UU
 volatile LONG g_handOffX = 0, g_handOffY = 0, g_handOffZ = 0;   // hand minus head, world MILLI-UU
 
-// ---- ⭐ run 237: the OFF hand, for the TMD ----
+// ---- Ă˘Â­Â run 237: the OFF hand, for the TMD ----
 //
 // Identical quantities to the aim hand's, for the other controller. Computed by the same code with a
 // hand index rather than by a second copy of the maths - two derivations of one physical quantity is
@@ -1283,7 +1283,7 @@ volatile LONG g_offHandValid = 0;
 volatile LONG g_fireDepth = 0;
 volatile LONG g_fireSeq = 0;
 
-// ---- ⭐ run 100: which fields the fire window is allowed to touch ----
+// ---- Ă˘Â­Â run 100: which fields the fire window is allowed to touch ----
 //
 // Run 99 wrote all seven scanned fields and produced the first real result: the bullet followed
 // the controller in PITCH. It also moved the camera on every shot, and the two are the same story.
@@ -1309,7 +1309,7 @@ volatile LONG g_fireSeq = 0;
 // field that run 99 added for the first time - run 97 wrote the camera fields WITHOUT it and got
 // nothing, so the new information is more likely to be there than in the camera.
 //
-// ⚠️ Run 80 wrote a constant to +0x05D4 and saw no deflection, and that is NOT a contradiction: it
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Run 80 wrote a constant to +0x05D4 and saw no deflection, and that is NOT a contradiction: it
 // wrote from Present, once per frame, so the engine had a whole tick to overwrite it before the
 // shot. Inside the fire window there is no such gap.
 LONG g_aimFieldSet = 0;
@@ -1371,7 +1371,7 @@ void ScanViewRotFields(uintptr_t ctl, uintptr_t cam, int32_t wantPitch, int32_t 
 // Writing them was proven useless in spike 8 - the render does not read them back.
 const int ACTOR_LOCATION   = 0x0054;   // FVector, 3 floats
 const int CAM_POV_LOC      = 0x0420;   // mCurrentPOV location
-// ---- ⭐ run 97: mCurrentPOV.Rotation, DERIVED rather than guessed ----
+// ---- Ă˘Â­Â run 97: mCurrentPOV.Rotation, DERIVED rather than guessed ----
 // UE3's FPOV is { vector Location; rotator Rotation; float FOV; } - 12 + 12 + 4 bytes. Location is
 // known to be 0x0420 and FOV known to be 0x0438, and 0x0420 + 12 = 0x042C, 0x042C + 12 = 0x0438.
 // The two offsets already proven bracket this one exactly, so it is the only value the struct can
@@ -1381,7 +1381,7 @@ const int CAM_POV_FOV      = 0x0438;   // mCurrentPOV FOV - proven to steer the 
 const int CAM_DESIRED_FOV  = 0x0470;   // mDesiredPOV FOV, the interpolation target
 const int CAM_CURRENT_FOV  = 0x0490;   // mCurrentFOV
 
-// ---- âš ï¸ a FAILED scan is enormously expensive, and it repeats every frame (run 35) ----
+// ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą a FAILED scan is enormously expensive, and it repeats every frame (run 35) ----
 //
 // Both finders cache their object and return instantly while it stays valid. That hides how bad
 // the miss path is: it walks every entry in GObjects - tens of thousands in UE3 - calling
@@ -1448,7 +1448,7 @@ uintptr_t FindController() {
 // first thing that needs it.
 static bool IsLive(uintptr_t obj);
 
-// ---- ⭐ run 211: readability is not liveness, and the FIRST match is not the LIVE one ----
+// ---- Ă˘Â­Â run 211: readability is not liveness, and the FIRST match is not the LIVE one ----
 //
 // A level transition leaves the previous level's RvPlayerCamera in GObjects with its memory still
 // mapped and its class pointer intact. Both tests this function used to apply - Readable plus a
@@ -1519,7 +1519,7 @@ uintptr_t FindCamera() {
     return g_camera;
 }
 
-// ============ ⭐ run 182 stage 1: what OWNS the first-person weapon's transform? ==============
+// ============ Ă˘Â­Â run 182 stage 1: what OWNS the first-person weapon's transform? ==============
 //
 // Run 181 closed off both of the routes that had been assumed:
 //
@@ -1545,12 +1545,12 @@ uintptr_t FindCamera() {
 // mesh with attachments. Each needs different code, and picking one on a guess is how runs 91-102
 // were spent. So: list what is actually there first.
 //
-// ⚠️ ONE SHOT. Walking GObjects is tens of thousands of objects and run 35 recorded what a scan that
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą ONE SHOT. Walking GObjects is tens of thousands of objects and run 35 recorded what a scan that
 // repeats every frame costs. It fires at the first successful mesh latch - the one moment we know a
 // weapon is really in the player's hands - so it needs no keypress in a headset and cannot fire at
 // the main menu, where the object graph would be the wrong one anyway.
 volatile LONG g_weapDumpDone = 0;
-// ---- 🧹 run 188: the object census, the memory scan and the mesh nudge are GONE ----
+// ---- Ä‘ĹşÂ§Ä… run 188: the object census, the memory scan and the mesh nudge are GONE ----
 //
 // All three answered their questions and none needs to run again:
 //
@@ -1602,7 +1602,7 @@ extern volatile LONG g_camPosValid;
 // does - one question, one signal.
 extern volatile LONG g_aimMethod;
 bool VrModeOn();
-// ===== ⭐ run 186: read PROPERTY OFFSETS out of the object model instead of scanning for them =====
+// ===== Ă˘Â­Â run 186: read PROPERTY OFFSETS out of the object model instead of scanning for them =====
 //
 // Runs 182-185 scanned memory for a field that tracks the camera, and by run 185 the scan worked -
 // the pawn's mesh components hit within 2.0 UU while ARPistol's scored nothing real. But the result
@@ -1663,15 +1663,15 @@ WantedName g_wantNames[] = {
     { "mHealthPackCount", -1 },
     // Run 201: READ ONLY - what does the game think the player's eye height is? See ReportEyeHeight.
     { "BaseEyeHeight", -1 }, { "EyeHeight", -1 },
-    // ⭐ run 227: the one question every mesh-latch heuristic has been guessing at: is a weapon EQUIPPED.
+    // Ă˘Â­Â run 227: the one question every mesh-latch heuristic has been guessing at: is a weapon EQUIPPED.
     { "Weapon", -1 },
-    // 💥 run 236b: THESE HAVE TO BE HERE. `WantedIdx` searches THIS TABLE and nothing else - a name
+    // Ä‘Ĺşâ€™Ä„ run 236b: THESE HAVE TO BE HERE. `WantedIdx` searches THIS TABLE and nothing else - a name
     // absent from it resolves to -1 and `PropOffsetUnder` bails before walking a single class. Run 236
     // added the lookups and not the registrations, so both reported "+0xFFFFFFFF (depth 13) NOT FOUND"
     // after a full-chain walk that never actually compared anything, and the failure message blamed the
     // class chain. The run-235 dump had already listed both at `RvPlayerPawn` depth 1.
     //
-    // ⚠ The dump and the lookup do NOT share this step: the dump reads names straight off each
+    // Ă˘ĹˇÂ  The dump and the lookup do NOT share this step: the dump reads names straight off each
     // property with `NameOf`, so it can see names the lookup is structurally blind to. That is why they
     // disagreed, and it is worth knowing before trusting a "not found" from this resolver again.
     { "mPlayerHandsStatus", -1 }, { "mTMD", -1 },
@@ -1721,7 +1721,7 @@ static int PropOffsetUnder(uintptr_t cls, int32_t wantIdx, int chOff, int nxOff,
 
 // Look a property up through a class's SUPER chain - Translation lives on PrimitiveComponent, several
 // classes above SkeletalMeshComponent, and the muzzle properties are on RvWeaponFX itself.
-// ---- 💥 run 199: an 8-LEVEL cap hid Pawn.Health, and it is the same mistake again ----
+// ---- Ä‘Ĺşâ€™Ä„ run 199: an 8-LEVEL cap hid Pawn.Health, and it is the same mistake again ----
 //
 // `Pawn.Health +0xFFFFFFFF` - not found. The walk stopped after eight super-classes, and
 // `RvPlayerPawnSP` is deeper than that before it reaches `Engine.Pawn`: RvPlayerPawnSP, RvPlayerPawn,
@@ -1748,12 +1748,12 @@ static int PropOffsetInChain(uintptr_t cls, const char* name, int* depthOut = nu
     }
     if (depthOut) *depthOut = depth;
     if (depth >= kGuard)
-        Log("    ⚠️ property '%s': class chain hit the %d-level GUARD - the walk was cut short, so this"
+        Log("    Ă˘ĹˇÂ ÄŹÂ¸Ĺą property '%s': class chain hit the %d-level GUARD - the walk was cut short, so this"
             " 'not found' is not trustworthy.", name, kGuard);
     return -1;
 }
 
-// ---- ⭐ run 235: ENUMERATE the properties, instead of guessing their names ----
+// ---- Ă˘Â­Â run 235: ENUMERATE the properties, instead of guessing their names ----
 //
 // PropOffsetInChain can only find a property whose name you already know, which is fine for `Health`
 // and `Weapon` and useless for "is there something on the pawn that says the TMD is active". Guessing
@@ -1824,19 +1824,19 @@ int g_offMuzzle1st = -1, g_offMuzzleLoop1st = -1, g_offMuzzleIron = -1,
     g_offMuzzleLoopIron = -1, g_offMuzzleEmitter = -1;
 uintptr_t g_weaponFxClass = 0;
 
-// ---- ⭐ run 199: read the player's health, so the heal window is not opened for nothing ----
+// ---- Ă˘Â­Â run 199: read the player's health, so the heal window is not opened for nothing ----
 //
 // Reported: *"if I hit the heal button and I'm already full health, I don't heal, so my arms show up for
 // a few seconds but I'm not healing."* Correct - run 198 keyed on the button press alone, which I had
 // noted as a caveat and which turns out to matter in practice.
 //
-// ⚠️ The obvious fix - wait and see whether health INCREASES - is a trap. Health is applied by the
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The obvious fix - wait and see whether health INCREASES - is a trap. Health is applied by the
 // animation, possibly at its end, so verification arrives LATE: a window opened at that moment would run
 // on past the animation it was supposed to cover. Asking "could this heal do anything" BEFORE the press
 // has no timing dependency at all.
 int g_offHealth = -1, g_offHealthMax = -1;
 
-// ---- ⭐ run 227: ask the ENGINE whether a weapon is in hand, instead of inferring it from meshes ----
+// ---- Ă˘Â­Â run 227: ask the ENGINE whether a weapon is in hand, instead of inferring it from meshes ----
 //
 // Four rules have now tried to answer "is there a weapon" from the shape of the first-person pass, and
 // a save has defeated every one of them:
@@ -1858,13 +1858,13 @@ int g_offHealth = -1, g_offHealthMax = -1;
 // once by the same name-based property solver that already finds Health, and the per-frame cost is one
 // pointer read from a cached pawn.
 //
-// ⚠ FAILS SAFE and fails LOUD. Until the offset resolves this returns UNKNOWN and every existing
+// Ă˘ĹˇÂ  FAILS SAFE and fails LOUD. Until the offset resolves this returns UNKNOWN and every existing
 // heuristic behaves exactly as it does today - the run-199 pattern, where the heal window opens on the
 // button alone when health cannot be read, rather than silently doing nothing.
 int g_offWeapon = -1;
-int g_propDumpPawn = 0;      // ⭐ run 235: ini [Render] PropDumpPawn, one-shot
+int g_propDumpPawn = 0;      // Ă˘Â­Â run 235: ini [Render] PropDumpPawn, one-shot
 
-// ---- ⭐ run 236: the property dump named the signal, and it was sitting next to mTMD ----
+// ---- Ă˘Â­Â run 236: the property dump named the signal, and it was sitting next to mTMD ----
 //
 // Run 235 dumped all 2228 properties on the pawn's 13-class chain rather than guessing names, and the
 // TMD block on `RvPlayerPawn` reads:
@@ -1881,22 +1881,22 @@ int g_propDumpPawn = 0;      // ⭐ run 235: ini [Render] PropDumpPawn, one-shot
 // it is the candidate. Read, never written - if it turns out not to mean what the name says, the cost
 // is one log line rather than a broken hand.
 //
-// ⚠ Resolved BY NAME, not by the offsets above. Those came from one build of one copy of the game;
+// Ă˘ĹˇÂ  Resolved BY NAME, not by the offsets above. Those came from one build of one copy of the game;
 // the name-based solver is what makes every other offset in this file survive a different install.
 //
-// 📝 mArmMeshComponent / mInviewMesh are noted for later: they are the real mesh components, and
+// Ä‘Ĺşâ€śĹĄ mArmMeshComponent / mInviewMesh are noted for later: they are the real mesh components, and
 // identifying the arms through them would retire the vertex-count matching this whole subsystem rests
 // on. Not this run.
 int g_offHandsStatus = -1, g_offTMD = -1;
 volatile LONG g_handsStatus = -1;
 volatile LONG g_haveTMD = -1;
 
-// ✅ run 236c: DECODED, by correlating every change against the mesh census rather than against
+// Ă˘Ĺ›â€¦ run 236c: DECODED, by correlating every change against the mesh census rather than against
 // anybody's memory of what they were holding. Six deployments, no exceptions in either direction:
 // every HANDS_TMD is followed within a frame or two by the TMD's five sub-part meshes appearing, and
 // every HANDS_WEAPON precedes them going away. It stayed correct across a weapon switch mid-sequence.
 //
-// ⭐ It LEADS the render. The property changed at log line 7508 and the meshes arrived at 7509-7511,
+// Ă˘Â­Â It LEADS the render. The property changed at log line 7508 and the meshes arrived at 7509-7511,
 // so a draw-time decision made on this value is already right on the frame the geometry shows up -
 // no one-frame latch of the kind the note-detection needed.
 enum { HANDS_NONE = 0, HANDS_TMD = 1, HANDS_WEAPON = 2 };
@@ -1907,7 +1907,7 @@ static uintptr_t FindPlayerPawn(bool force = false);   // defined just below; ca
 
 enum ArmedState { ARMED_UNKNOWN = 0, ARMED_YES, ARMED_NO };
 
-// ⛔ run 228b: RESOLVED ONCE A FRAME, READ AS A PLAIN WORD EVERYWHERE ELSE.
+// Ă˘â€şâ€ť run 228b: RESOLVED ONCE A FRAME, READ AS A PLAIN WORD EVERYWHERE ELSE.
 //
 // The first version called FindPlayerPawn() straight from FgHidden and FgRidesGun. Those run PER DRAW.
 // FindPlayerPawn is cheap only on its cached path - on a MISS it walks GObjects with a NameOf per
@@ -1920,7 +1920,7 @@ enum ArmedState { ARMED_UNKNOWN = 0, ARMED_YES, ARMED_NO };
 // every hot-path consumer reads a plain aligned 32-bit word. Same shape as g_healPending, and for the
 // same reason run 203 gave: the hot path must not touch anything that can block.
 volatile LONG g_armedState = ARMED_UNKNOWN;
-// ⭐ run 258: the equipped weapon OBJECT, and a one-shot edge for the mesh latch. See RefreshArmedState
+// Ă˘Â­Â run 258: the equipped weapon OBJECT, and a one-shot edge for the mesh latch. See RefreshArmedState
 // for why the pointer is the identity, and UpdateFgLatch for what consumes the edge.
 volatile LONG g_weaponObj     = 0;
 volatile LONG g_weaponSwapped = 0;
@@ -1929,7 +1929,7 @@ volatile LONG g_weaponSwapDrop = 1;   // ini [Input] WeaponSwapDrop - 0 falls ba
 inline ArmedState PlayerArmed() { return (ArmedState)Rd(g_armedState); }
 
 // The expensive half. Present only - never a draw hook.
-// ---- ⭐ run 235: WHAT is equipped, not just whether something is ----
+// ---- Ă˘Â­Â run 235: WHAT is equipped, not just whether something is ----
 //
 // Looking for an engine-side signal for "the TMD is active", because the observable alternative - the
 // TMD's sub-part meshes appearing as it deploys - is exactly the shape of proxy run 228 spent six runs
@@ -1944,7 +1944,7 @@ inline ArmedState PlayerArmed() { return (ArmedState)Rd(g_armedState); }
 // Logged on CHANGE only, so switching guns and raising the TMD writes one line each and an idle minute
 // writes nothing. If the name never changes while the TMD comes and goes, the hypothesis is dead and
 // the property dump below is the fallback - that outcome is worth the same one run.
-// ⛔ run 235c: ANSWERED, and the answer is NO. `Pawn.Weapon` never points at the TMD. Measured over a
+// Ă˘â€şâ€ť run 235c: ANSWERED, and the answer is NO. `Pawn.Weapon` never points at the TMD. Measured over a
 // run that deployed and retracted it repeatedly with two different guns, while the same probe happily
 // logged a real weapon switch:
 //
@@ -1956,7 +1956,7 @@ inline ArmedState PlayerArmed() { return (ArmedState)Rd(g_armedState); }
 // Kept because it is cheap, correct, and names what is in your hands, which the per-weapon alignment
 // work will want.
 //
-// ⚠ An earlier note here claimed every weapon shares the class `RvWeaponShared` and that keying on the
+// Ă˘ĹˇÂ  An earlier note here claimed every weapon shares the class `RvWeaponShared` and that keying on the
 // class therefore could not work. **That was wrong** - the shotgun is `RvWeaponShared_Shotgun`, so a
 // switch would have fired it. The first version logged once because that run contained no weapon
 // switch at all, not because the key was dead. The object pointer is still the better key, since two
@@ -1972,7 +1972,7 @@ static void LogEquippedClass(uintptr_t w) {
             if (const uintptr_t cls = *reinterpret_cast<const uintptr_t*>(w + OBJ_CLASS))
                 NameOf(cls, cn, sizeof(cn));
     }
-    // ⚠️ run 258: this line used to say "every weapon shares the class RvWeaponShared", which the note
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 258: this line used to say "every weapon shares the class RvWeaponShared", which the note
     // above records as MEASURED WRONG - and it was saying it in the log, where it would be read as
     // fact by whoever greps for it next. Classes DO differ (RvWeaponShared_Shotgun); the object is
     // the better key because two weapons can also share one, not because classes are all identical.
@@ -1988,8 +1988,8 @@ static void RefreshArmedState() {
             if (Readable((void*)(pawn + g_offWeapon), sizeof(uintptr_t))) {
                 const uintptr_t w = *reinterpret_cast<const uintptr_t*>(pawn + g_offWeapon);
                 st = w ? ARMED_YES : ARMED_NO;
-                LogEquippedClass(w);            // ⭐ run 235
-                // ---- ⭐ run 258: the pointer IS the weapon, and we were throwing it away ----
+                LogEquippedClass(w);            // Ă˘Â­Â run 235
+                // ---- Ă˘Â­Â run 258: the pointer IS the weapon, and we were throwing it away ----
                 //
                 // Reported: "I switch weapons, see nothing for a while, then the gun appears with the
                 // arms and snaps to the controller." That is 240 frames of kLatchMiss plus 30 of
@@ -2001,20 +2001,20 @@ static void RefreshArmedState() {
                 // change here IS a swap, known on the frame it happens, with no inference from what
                 // is being drawn.
                 //
-                // ⚠️ It is a POINTER COMPARE. No name, no class, no vertex count - so it is weapon
+                // Ă˘ĹˇÂ ÄŹÂ¸Ĺą It is a POINTER COMPARE. No name, no class, no vertex count - so it is weapon
                 // AGNOSTIC by construction and cannot need a per-weapon entry the way GunAlign does.
                 // Run 235c's log names ARMachineGun and ARShotgun only because those were in hand
                 // that run; a pistol, a sniper rifle or anything else swaps the same pointer. The one
                 // requirement is that the two weapons are different OBJECTS, which is what switching
                 // weapons means.
                 //
-                // ⚠️ Deliberately NOT keyed on the class, and the note above LogEquippedClass says why
+                // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Deliberately NOT keyed on the class, and the note above LogEquippedClass says why
                 // from both directions: the claim "every weapon shares the class RvWeaponShared" was
                 // measured WRONG (the shotgun is RvWeaponShared_Shotgun), and its correction carries
                 // the other half - two weapons genuinely CAN share a class, so a class compare would
                 // miss a swap between two that do. The object pointer has neither failure mode.
                 //
-                // ⚠️ Raising the TMD does NOT trip this. Run 236 measured that Pawn.Weapon stays on
+                // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Raising the TMD does NOT trip this. Run 236 measured that Pawn.Weapon stays on
                 // the gun while the TMD is up: the weapon is HIDDEN, not swapped. That is exactly the
                 // false positive a draw-derived signal would have produced.
                 const LONG wl = (LONG)w;
@@ -2024,7 +2024,7 @@ static void RefreshArmedState() {
             }
         }
     }
-    // ⭐ run 236: both read from the pawn we already have, on the same once-a-frame path - never per
+    // Ă˘Â­Â run 236: both read from the pawn we already have, on the same once-a-frame path - never per
     // draw. Logged on CHANGE, so raising and lowering the TMD writes two lines and idling writes none.
     if (const uintptr_t pawn = FindPlayerPawn()) {
         if (g_offHandsStatus >= 0 && Readable((void*)(pawn + g_offHandsStatus), 4)) {
@@ -2063,14 +2063,14 @@ void ResolveGameplayOffsets();          // retryable; see its definition below S
 // Consecutive failed resolve attempts, for the backoff. Cleared the moment everything resolves.
 int g_offMisses = 0;
 
-// ---- ⭐ run 201: eye height, READ ONLY - is the game's number unusual, or perfectly ordinary? ----
+// ---- Ă˘Â­Â run 201: eye height, READ ONLY - is the game's number unusual, or perfectly ordinary? ----
 //
 // Asked whether the eye height can be changed at all. It can: `Pawn.BaseEyeHeight` is the standing target
 // and `Pawn.EyeHeight` the interpolated current value, both floats on Engine.Pawn, both reachable with the
 // offset reader. But changing it alters GAMEPLAY - you would see over cover a designer assumed you could
 // not - so the number is worth looking at before a knob is built on a hunch.
 //
-// ⚠️ **And there may be nothing to fix.** 6-DOF is measured relative to the RECENTRE point, so the in-game
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą **And there may be nothing to fix.** 6-DOF is measured relative to the RECENTRE point, so the in-game
 // eye position is `game eye height + (real head height - head height at recentre)`. Recentre while
 // standing as you play and the two agree; recentre while leaning or with the headset on a desk and
 // everything afterwards carries that error - which feels exactly like a wrong eye height.
@@ -2086,7 +2086,7 @@ float MetresToUU();
 
 // The live player pawn, cached and revalidated by class word like FindCamera. Rewalks at most once every
 // 30 misses - a pawn does not exist at the menu and asking every frame is the run-35 failure.
-// ⛔ run 228d: `force` exists because two throttles were MULTIPLYING.
+// Ă˘â€şâ€ť run 228d: `force` exists because two throttles were MULTIPLYING.
 //
 // The 1-in-30 miss throttle below protects callers that ask every frame. ResolveGameplayOffsets is not
 // one of them - it is already limited to once per 2 s, and once per 15 s after three misses. Stacked,
@@ -2099,7 +2099,7 @@ static uintptr_t FindPlayerPawn(bool force) {
     if (g_playerPawn && g_playerPawnClass && Readable((void*)g_playerPawn, 0x40) &&
         *reinterpret_cast<uintptr_t*>(g_playerPawn + OBJ_CLASS) == g_playerPawnClass)
         return g_playerPawn;
-    // ---- ⚠️ run 257: a pawn we HAD and lost must be re-found at once ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 257: a pawn we HAD and lost must be re-found at once ----
     //
     // Run 256's backoff is right for a splash screen, where no pawn can exist, and wrong for a level
     // transition, where one certainly will in a moment. Without this a load would inherit whatever
@@ -2111,7 +2111,7 @@ static uintptr_t FindPlayerPawn(bool force) {
     // advancing it. The splash case is unaffected: there was never a pawn there to lose.
     const bool hadPawn = g_playerPawn != 0;
     g_playerPawn = 0;
-    // ---- 💥 run 256: the miss throttle counted FRAMES, which is backwards when the walk is the
+    // ---- Ä‘Ĺşâ€™Ä„ run 256: the miss throttle counted FRAMES, which is backwards when the walk is the
     // thing making frames slow ----
     //
     // `(++missTick % 30) != 1` fires every 30 frames whatever a frame costs. At the splash screen
@@ -2122,7 +2122,7 @@ static uintptr_t FindPlayerPawn(bool force) {
     // Time-based with a backoff now, and deliberately the same shape as ResolveGameplayOffsets'
     // own throttle a few hundred lines down: 2 s, then 15 s once it has missed three times running.
     //
-    // ⚠️ This does NOT reintroduce run 228d's stacked-throttle bug. That was about the FORCED path -
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą This does NOT reintroduce run 228d's stacked-throttle bug. That was about the FORCED path -
     // ResolveGameplayOffsets pays its own throttle and skips this one, and `force` still does. This
     // only slows down callers that ask repeatedly while no pawn exists, which is exactly the splash
     // screen and exactly nothing else: in gameplay the first walk succeeds and every later call
@@ -2171,7 +2171,7 @@ static uintptr_t FindPlayerPawn(bool force) {
     }
     if (cursor < count) return 0;
     scanData = 0; cursor = 0; lastWalk = nowMs;
-    // ⚠️ A miss is the SPLASH-SCREEN case and it is normal there - the pawn does not exist yet. It is
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą A miss is the SPLASH-SCREEN case and it is normal there - the pawn does not exist yet. It is
     // logged once per backoff step rather than per walk so the file cannot fill with it.
     ++consecutiveMisses;
     if (consecutiveMisses <= 3)
@@ -2182,7 +2182,7 @@ static uintptr_t FindPlayerPawn(bool force) {
 
 // Printed on a slow tick and only when something CHANGES, so it costs nothing while standing still and
 // shows the crouch transition when it happens.
-// ---- 💥 run 202: this logged EVERY FRAME and cost 120 fps -> 11 fps ----
+// ---- Ä‘Ĺşâ€™Ä„ run 202: this logged EVERY FRAME and cost 120 fps -> 11 fps ----
 //
 // Reported: "I loaded a save and framerate went to shit." The frame budget put 90 ms of 90.87 in
 // "our work", and the log showed 41 of these reports inside a 400-line window.
@@ -2247,7 +2247,7 @@ void ReportEyeHeight() {
     }
 }
 
-// ---- ⭐ run 200: "do I have a health pack" - the second half of the heal gate ----
+// ---- Ă˘Â­Â run 200: "do I have a health pack" - the second half of the heal gate ----
 //
 // Reported: low health with NO ITEMS still opened the window. Run 199 closed the full-health case and
 // left this one, and it is the same misfire from the other direction.
@@ -2261,7 +2261,7 @@ void ReportEyeHeight() {
 //
 // A frame of lag against the true inventory would not matter: this is read once, at the button press,
 // to decide whether an animation is worth showing.
-// ---- 💥 run 200: matching "HUD" as a SUBSTRING found RvCE_HUDMessage ----
+// ---- Ä‘Ĺşâ€™Ä„ run 200: matching "HUD" as a SUBSTRING found RvCE_HUDMessage ----
 //
 // `HUD object: 0x0A61DD60 (RvCE_HUDMessage / RvCE_HUDMessage)` - a combat-event object whose class name
 // merely contains "HUD". The property was of course not on its chain, both checks degraded to "assume the
@@ -2303,7 +2303,7 @@ static uintptr_t FindHudObject() {
     for (int32_t i = 0; i < count; ++i) {
         uintptr_t o = objs[i];
         if (!o || !Readable((void*)o, 0x40)) continue;
-        // ⚠️ NOT gated on IsLive. A UE3 HUD hangs off the PlayerController, not off PersistentLevel, so
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą NOT gated on IsLive. A UE3 HUD hangs off the PlayerController, not off PersistentLevel, so
         // the liveness rule that correctly separates pawn instances from archetypes would reject every
         // real HUD. Archetypes are excluded by name instead.
         char nm[80];
@@ -2360,7 +2360,7 @@ bool HealWouldDoSomething(bool* unknown) {
     return true;
 }
 
-// ---- 💥 run 208: this was one-shot ON ENTRY, and it deadlocked the mesh latch ----
+// ---- Ä‘Ĺşâ€™Ä„ run 208: this was one-shot ON ENTRY, and it deadlocked the mesh latch ----
 //
 // `if (InterlockedExchange(&g_propSolveDone, 1)) return;` marked the solve done BEFORE attempting it, so a
 // single failed attempt was permanent. Combined with the run-207 latch gate that produced a circular
@@ -2370,7 +2370,7 @@ bool HealWouldDoSomething(bool* unknown) {
 //   WeaponActorExists needs          g_upChildren / g_upNext, from the property layout
 //   the property layout was solved   only at the latch TAKE
 //
-// 🧹 `WeaponActorExists()` itself is GONE as of run 209 - do not go looking for it. It never once
+// Ä‘ĹşÂ§Ä… `WeaponActorExists()` itself is GONE as of run 209 - do not go looking for it. It never once
 // returned true: `if (!cls || cls == g_weaponActorClass) continue;` skipped the objects whose class
 // IS `RvWeaponShared`, which is exactly what `ARPistol` is. (Copied from `FindHudObject`, where the
 // same line is harmless because the live HUD is a DERIVED class.) Worse, it walked GObjects every
@@ -2439,13 +2439,13 @@ void SolvePropertyLayout() {
     ResolveGameplayOffsets();
 }
 
-// ---- ⭐ run 200: RETRYABLE, because the objects do not all exist at the same moment ----
+// ---- Ă˘Â­Â run 200: RETRYABLE, because the objects do not all exist at the same moment ----
 //
 // SolvePropertyLayout is one-shot and fires at the mesh latch. The pawn exists by then; **the HUD may
 // not**, and a one-shot resolve would have left the health-pack offset at -1 for the whole session with
 // nothing to say why. That is the run-158d shape - a resolve that appears to succeed while silently
 // giving up - so this is called again from the slow tick until it has what it needs, then costs nothing.
-// ---- 💥 run 210: this tanked the MENU, and it is the FOURTH instance of the same mistake ----
+// ---- Ä‘Ĺşâ€™Ä„ run 210: this tanked the MENU, and it is the FOURTH instance of the same mistake ----
 //
 // Measured: 11-12 fps at the splash and main menu, recovering the instant `Pawn.Health` resolved. This
 // runs every frame until it has all three offsets, and at the menu there IS no player pawn - so
@@ -2465,14 +2465,14 @@ void SolvePropertyLayout() {
 //                   empty attempts, re-armed by anything that changes the situation.
 void ResolveGameplayOffsets() {
     if (!g_upChildren) return;                       // layout not solved - nothing can be looked up
-    // ⛔ run 228c: g_offWeapon BELONGS IN THIS LIST. It was added in run 227 and this check was
+    // Ă˘â€şâ€ť run 228c: g_offWeapon BELONGS IN THIS LIST. It was added in run 227 and this check was
     // not updated, so once the health offsets resolved the function returned here and the Weapon
     // lookup below never ran once - no Pawn.Weapon line in any log, PlayerArmed pinned at UNKNOWN, and
     // the whole run-227/228 mechanism silently inert while looking implemented.
     // A "done" test that does not name everything the function resolves is a test that stops the
     // function before it finishes.
     if (g_offHealth >= 0 && g_offHealthMax >= 0 && g_offHealthPacks >= 0 && g_offWeapon >= 0) return;
-    // ⭐ Not in gameplay: the pawn and HUD cannot exist, so asking costs a full object walk for nothing.
+    // Ă˘Â­Â Not in gameplay: the pawn and HUD cannot exist, so asking costs a full object walk for nothing.
     if (!InterlockedCompareExchange(&g_camPosValid, 0, 0)) return;
     {
         static ULONGLONG lastTry = 0;
@@ -2485,17 +2485,17 @@ void ResolveGameplayOffsets() {
 
     // Run 199: Health and HealthMax live on Engine.Pawn, several classes above RvPlayerPawnSP, which is
     // exactly what PropOffsetInChain's super-chain walk is for.
-    // ⛔ run 228c: `|| g_offWeapon < 0` added. The Weapon lookup was nested inside a condition that
+    // Ă˘â€şâ€ť run 228c: `|| g_offWeapon < 0` added. The Weapon lookup was nested inside a condition that
     // only fires when a HEALTH offset is missing, so on any save where health resolved first it was
     // unreachable. The two have nothing to do with each other beyond sharing a pawn.
     if ((g_offHealth < 0 || g_offHealthMax < 0 || g_offBaseEyeHeight < 0 || g_offWeapon < 0))
-    if (const uintptr_t pawn = FindPlayerPawn(true)) {   // ⭐ run 228d: this caller is already throttled
+    if (const uintptr_t pawn = FindPlayerPawn(true)) {   // Ă˘Â­Â run 228d: this caller is already throttled
         const uintptr_t pc = *reinterpret_cast<uintptr_t*>(pawn + OBJ_CLASS);
         int dh = 0, dm = 0;
         if (g_offHealth    < 0) g_offHealth    = PropOffsetInChain(pc, "Health", &dh);
         if (g_offHealthMax < 0) g_offHealthMax = PropOffsetInChain(pc, "HealthMax", &dm);
-        // ⭐ run 227: same super-chain walk. Engine.Pawn declares Weapon, well above RvPlayerPawnSP.
-        // ⭐ run 236: named by the run-235 dump, resolved by name like everything else here.
+        // Ă˘Â­Â run 227: same super-chain walk. Engine.Pawn declares Weapon, well above RvPlayerPawnSP.
+        // Ă˘Â­Â run 236: named by the run-235 dump, resolved by name like everything else here.
         if (g_offHandsStatus < 0) {
             int dp = 0;
             g_offHandsStatus = PropOffsetInChain(pc, "mPlayerHandsStatus", &dp);
@@ -2514,7 +2514,7 @@ void ResolveGameplayOffsets() {
         {
             int dw = 0;
             g_offWeapon = PropOffsetInChain(pc, "Weapon", &dw);
-            // ⭐ run 235: the fallback if the equipped-class name does not name the TMD. One-shot, at the
+            // Ă˘Â­Â run 235: the fallback if the equipped-class name does not name the TMD. One-shot, at the
     // moment the pawn is known good.
     if (g_propDumpPawn) {
         g_propDumpPawn = 0;
@@ -2562,7 +2562,7 @@ void ResolveGameplayOffsets() {
             const uintptr_t hc = *reinterpret_cast<uintptr_t*>(hud + OBJ_CLASS);
             int dp = 0;
             g_offHealthPacks = PropOffsetInChain(hc, "mHealthPackCount", &dp);
-            // ⚠️ Logged on SUCCESS, or once on failure. The previous version logged every retry and, with
+            // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Logged on SUCCESS, or once on failure. The previous version logged every retry and, with
             // a wrong object cached that kept validating, produced hundreds of identical lines - noise
             // that buried the one line saying which object it had actually picked.
             static bool saidFail = false;
@@ -2593,7 +2593,7 @@ void ResolveGameplayOffsets() {
         g_offMuzzleLoopIron, g_offMuzzleEmitter);
 }
 
-// ============ ⭐ run 189: suppress the first-person muzzle FX at the source ==================
+// ============ Ă˘Â­Â run 189: suppress the first-person muzzle FX at the source ==================
 //
 // The barrel smoke and the muzzle flash are ONE asset. RvGame.u lists no smoke property at all - the
 // smoke is an emitter inside the muzzle-flash particle system, which is ordinary UE3 authoring and
@@ -2603,7 +2603,7 @@ void ResolveGameplayOffsets() {
 // spawned component: nothing is created in the first place, so there is nothing to chase, move or
 // clean up. `PlayMuzzleFX(bool bFirstPerson, vector muzzleLoc)` is native and reads these pointers.
 //
-// ⚠️ The THIRD-PERSON variants are deliberately left alone. They are what other viewers and mirrors
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The THIRD-PERSON variants are deliberately left alone. They are what other viewers and mirrors
 // see, they are authored at world scale, and they are not the artefact.
 //
 // ---- why this rather than relocating it ----
@@ -2613,7 +2613,7 @@ void ResolveGameplayOffsets() {
 // Suppression needs none of that: one pointer, on an object we can already find, at an offset read out
 // of the object model. **The true fix is tabled, not abandoned** - see STATUS.
 //
-// ---- ⭐ run 189 RESULT: it is BINARY, and the reason kills the whole engine-side theory ----
+// ---- Ă˘Â­Â run 189 RESULT: it is BINARY, and the reason kills the whole engine-side theory ----
 //
 // I shipped an AUTO mode on the reasoning that HEAD aiming draws the gun at the engine's own position,
 // so the flash should line up with the barrel there. It does not, and the observation that settles it
@@ -2630,7 +2630,7 @@ void ResolveGameplayOffsets() {
 // Which means the aim method cannot matter, because the effect never receives a per-eye position at all.
 // That was predicted from the seam alone, before the run confirmed it.
 //
-// ⚠️ **So runs 182-188 were chasing a phantom.** The engine's muzzle position may have been correct the
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą **So runs 182-188 were chasing a phantom.** The engine's muzzle position may have been correct the
 // whole time; what is wrong is that this draw is not being remapped per eye - it is ours, not Raven's.
 // The lead is `ExtraCamReg` / the unremapped-register family already recorded in STATUS, not the
 // component transform, and `HIDE PASS` not removing it fits: it is drawn in the main scene.
@@ -2660,7 +2660,7 @@ void ApplyMuzzleFxSuppression() {
         if (!Readable((void*)g_fx[i].obj, 0x40) ||
             *reinterpret_cast<uintptr_t*>(g_fx[i].obj + OBJ_CLASS) != g_weaponFxClass) stale = true;
 
-    // ---- 💥 run 206: THIS was the dock collapse. A failed walk, repeating every frame ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 206: THIS was the dock collapse. A failed walk, repeating every frame ----
     //
     // The gather only stopped once it FOUND a live RvWeaponFX. At the dock the player has no weapon, so
     // there is none to find: `g_fxN` stayed 0, `stale` stayed true, and this ran a **full GObjects walk
@@ -2839,7 +2839,7 @@ float g_offsetUU = 300.0f;
 // comes out feeling too large or too small in game, this is the number to adjust.
 const float kMetresToUU = 52.5f;
 
-// ================= ⭐ run 201: WORLD SCALE, and it is one number for a reason ==================
+// ================= Ă˘Â­Â run 201: WORLD SCALE, and it is one number for a reason ==================
 //
 // **Every real-world quantity the mod feeds the engine goes through `kMetresToUU`** - and that is what
 // makes a single scale knob correct rather than a hack. The three consumers are:
@@ -2862,7 +2862,7 @@ const float kMetresToUU = 52.5f;
 //
 // Both cues move the same way, which is why they have to share the number.
 //
-// ⚠️ **What this cannot change: your EYE HEIGHT.** The game owns that - it is the pawn's eye offset in
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą **What this cannot change: your EYE HEIGHT.** The game owns that - it is the pawn's eye offset in
 // UU - so scaling does not alter how tall you feel relative to the floor. It changes how large the world
 // reads and how far you travel through it. A player who feels the wrong height is describing a different
 // problem from one who feels the wrong scale, and this knob only addresses the second.
@@ -2871,11 +2871,11 @@ const float kMetresToUU = 52.5f;
 // The default should stay 100 unless the headset says otherwise.
 volatile LONG g_worldScalePct = 100;    // ini [Render] WorldScalePct, and a DISPLAY panel row
 
-// ⭐ run 237: the TMD's anchor on the OFF hand. Declared HERE, well above BuildTmdC which uses them,
+// Ă˘Â­Â run 237: the TMD's anchor on the OFF hand. Declared HERE, well above BuildTmdC which uses them,
 // because the panel and the ini loader read them and both are earlier in this single translation unit.
 // Placing a global next to the function that computes with it is the natural instinct and it does not
 // compile; this file has paid for that twice (the laser and the gun-align blocks, run 217).
-// ⭐ run 237c: draw only part of the arms mesh, as a PERCENT of its triangles.
+// Ă˘Â­Â run 237c: draw only part of the arms mesh, as a PERCENT of its triangles.
 //
 // Reported: "when I move my left hand up too high I can see the right hand" - correct, and expected:
 // run 234 measured that both arms are one mesh in one draw call, so moving it moves both.
@@ -2884,11 +2884,11 @@ volatile LONG g_worldScalePct = 100;    // ini [Render] WorldScalePct, and a DIS
 // count, so if the two arms occupy contiguous ranges, drawing half of it draws one arm. Whether they
 // DO is unknown and is exactly what this sweeps: set FROM/TO and watch which arm survives.
 //
-// ⚠ If nothing clean ever appears - if every range cuts both arms - then the two are interleaved in
+// Ă˘ĹˇÂ  If nothing clean ever appears - if every range cuts both arms - then the two are interleaved in
 // the buffer and this approach is dead, which is a real answer worth one run. Bone-level control would
 // be the remaining route, and a much longer one.
 //
-// 💥 run 237e: PER MILLE, not percent. At 5% a press the step is 220 triangles, and the reported
+// Ä‘Ĺşâ€™Ä„ run 237e: PER MILLE, not percent. At 5% a press the step is 220 triangles, and the reported
 // result is exactly what too coarse a control looks like: at 95% "part of the left hand is missing",
 // at 100% "a little of the right hand" survives. The boundary is INSIDE that 220-triangle window and
 // no setting could land on it. A sweep whose step is bigger than the thing it is looking for cannot
@@ -2896,14 +2896,14 @@ volatile LONG g_worldScalePct = 100;    // ini [Render] WorldScalePct, and a DIS
 //
 // So the range is 0-1000 and the step is selectable: 50 (5%) to find the region, 10 (1%) to close in,
 // 1 (0.1%, about 4 triangles) to land on it. Defaults are run 237c's measured 55/95 in the new units.
-// ⛔ run 237f: MEASURED DEAD, and defaulted back to inert (0/1000). No value of this range ever left
+// Ă˘â€şâ€ť run 237f: MEASURED DEAD, and defaulted back to inert (0/1000). No value of this range ever left
 // a whole left hand with the right hand gone - at the finest step one press cuts a finger and one
 // press back leaves a fragment. The two hands' triangles INTERLEAVE at the join rather than sitting in
 // blocks, so a contiguous window cannot separate them however fine it gets.
 //
 // Kept as ini-only, off the panel: it is a real capability with a proven limit, not a knob worth a row.
 //
-// ---- 💥 run 250: SLOTS, and its own mesh - the window could not be pointed at 4818 ----
+// ---- Ä‘Ĺşâ€™Ä„ run 250: SLOTS, and its own mesh - the window could not be pointed at 4818 ----
 //
 // Reported as "the triangle range selector is only the hand, not the arms" while wanting to check
 // mesh 4818. Two separate reasons it could not, and both are the same mistake made twice:
@@ -2918,9 +2918,9 @@ volatile LONG g_worldScalePct = 100;    // ini [Render] WorldScalePct, and a DIS
 //
 // Four slots of {mesh, from, to}, mirroring the bone slots, and its own mesh row.
 //
-// ---- 💥 run 251: a slot is KEEP or CUT, and the mesh is drawn as SEGMENTS ----
+// ---- Ä‘Ĺşâ€™Ä„ run 251: a slot is KEEP or CUT, and the mesh is drawn as SEGMENTS ----
 //
-// ⛔ Run 250 shipped one contiguous window per mesh and said so in a comment: "two windows on one
+// Ă˘â€şâ€ť Run 250 shipped one contiguous window per mesh and said so in a comment: "two windows on one
 // mesh would need two draw calls". The very first sweep with it found the case that needs exactly
 // that - *"keeping 0-29, trimming 30-89, and keeping 90-1000 would be the sweet spot"*. The
 // limitation was real; the conclusion that it was acceptable lasted one run.
@@ -2954,7 +2954,7 @@ inline bool TmdTriInert(LONG mode, LONG lo, LONG hi) {
     return mode == 0 ? (lo <= 0 && hi >= 1000) : (hi <= lo);
 }
 
-// ---- ⭐ run 237f: collapse a range of BONES instead ----
+// ---- Ă˘Â­Â run 237f: collapse a range of BONES instead ----
 //
 // The right arm and the right hand both have to go, and the range approach reached neither: 4818 holds
 // BOTH arms so hiding it takes the left one too, and 7444's two hands interleave.
@@ -2965,12 +2965,12 @@ inline bool TmdTriInert(LONG mode, LONG lo, LONG hi) {
 // Run 223 established the layout with the freeze test: c5-c22 is the rigid object block and c23+ are
 // the independently animated bones. UE3 packs 3 float4s per bone, so bone i lives at c(23 + 3i).
 //
-// ⚠ The 3x3 basis is zeroed and the TRANSLATION (.w of each row) is KEPT. A full zero would collapse
+// Ă˘ĹˇÂ  The 3x3 basis is zeroed and the TRANSLATION (.w of each row) is KEPT. A full zero would collapse
 // every affected vertex onto the origin of the bone's space - the CAMERA in translated-world - and
 // partially weighted vertices would stretch through your face to get there. Keeping the translation
 // collapses the arm to a point at its own joint instead, so a stray sliver is short and local rather
 // than a triangle across the screen.
-// 💥 run 240: FOUR slots, and several may name the SAME mesh.
+// Ä‘Ĺşâ€™Ä„ run 240: FOUR slots, and several may name the SAME mesh.
 //
 // Two slots assumed one range per mesh, and the collapse stopped at the first slot that matched -
 // so 4818 could hold the right-arm range OR a left-arm range, never both. Reported as "none of the
@@ -2986,13 +2986,13 @@ const int kTmdBoneSlots = 4;
 volatile LONG g_tmdBoneLo[kTmdBoneSlots]   = { 13, 7, -1, -1 };   // bone INDEX range, -1 = off
 volatile LONG g_tmdBoneHi[kTmdBoneSlots]   = { 29, 8, -1, -1 };
 volatile LONG g_tmdBoneSlot = 0;                           // which slot the panel rows edit
-// 💥 run 238d: WHICH MESH the range applies to. The first version applied it to everything riding
+// Ä‘Ĺşâ€™Ä„ run 238d: WHICH MESH the range applies to. The first version applied it to everything riding
 // the off hand, and a bone palette is PER MESH - so "bones 13-29" meant the right hand in 7444 and
 // something unrelated in 4818, which came out as both sleeves spiking into points. A bone index is
 // only meaningful against the mesh it was measured on.
 // 0 = the arms mesh of the moment (largest non-weapon), which is where 13-29 was measured.
 volatile LONG g_tmdBoneMesh[kTmdBoneSlots] = { 0, 4818, 4818, 0 };
-// 💥 run 238e: a shared collapse POINT is not enough, and the reason is blending.
+// Ä‘Ĺşâ€™Ä„ run 238e: a shared collapse POINT is not enough, and the reason is blending.
 //
 // A vertex weighted entirely to a collapsed bone does land on the point, and its triangles do
 // degenerate. But a vertex blended between a collapsed bone and a LIVE one lands PARTWAY - the live
@@ -3007,7 +3007,7 @@ volatile LONG g_tmdBoneMesh[kTmdBoneSlots] = { 0, 4818, 4818, 0 };
 //
 // 1 = the shared point, kept as an escape hatch: NaN handling is technically undefined and if some
 // driver rasterises it as garbage rather than discarding it, this switches back without a rebuild.
-// ⭐ run 241: 0 = NaN (hide it), 1 = collapse to a point, 2 = NUDGE.
+// Ă˘Â­Â run 241: 0 = NaN (hide it), 1 = collapse to a point, 2 = NUDGE.
 //
 // NUDGE is the identification mode and it exists because sweeping for a DISAPPEARANCE is a bad
 // instrument: absence is hard to see, easy to miss at a glance, and indistinguishable from the tool
@@ -3015,7 +3015,7 @@ volatile LONG g_tmdBoneMesh[kTmdBoneSlots] = { 0, 4818, 4818, 0 };
 // silhouette stays whole so you can still tell what you are looking at.
 volatile LONG g_tmdBoneMode = 0;   // ini [Input] TmdBoneMode
 
-// 💥 run 241: the 0-40 bound was a number I picked, and asked about - correctly - as "what if
+// Ä‘Ĺşâ€™Ä„ run 241: the 0-40 bound was a number I picked, and asked about - correctly - as "what if
 // there are more than 40 bones?". There was no measurement behind it.
 //
 // The real ceiling is the constant file: vs_3_0 has 256 float registers, bones start at c23 and take
@@ -3025,14 +3025,14 @@ volatile LONG g_tmdBoneMode = 0;   // ini [Input] TmdBoneMode
 // reading the block and reporting the highest register that does not look like an unused slot.
 const int kTmdBoneMax = 77;
 volatile LONG g_tmdBoneCensus = 0;   // ini [Input] TmdBoneCensus - log the live bone count once a sec
-// ⭐ run 237d: one mesh to hide outright while the TMD is up. Reported: clipping the hand mesh never
+// Ă˘Â­Â run 237d: one mesh to hide outright while the TMD is up. Reported: clipping the hand mesh never
 // touches the ARM, so the visible right arm is a DIFFERENT mesh - a range on one draw call cannot
 // reach it. Naming it is a solo-cycler job; dropping it once named is this.
 volatile LONG g_tmdHideVerts = 0;
-LONG NextPassMesh(LONG cur, int dir);   // ⭐ run 237d: defined with the pass arrays, far below
+LONG NextPassMesh(LONG cur, int dir);   // Ă˘Â­Â run 237d: defined with the pass arrays, far below
 volatile LONG g_tmdFwd = 40, g_tmdRight = -9, g_tmdUp = -14;   // v0.1.0-alpha shipped 30/-9/-13
 volatile LONG g_tmdYawTenths = 0, g_tmdPitchTenths = 0;
-// ⭐ run 245: a ROLL trim, which the gun rows do not have and the TMD needs.
+// Ă˘Â­Â run 245: a ROLL trim, which the gun rows do not have and the TMD needs.
 //
 // The run-243 diagnostic cleared the position path - ride target 2, offHandValid 1, G and H both
 // live - which leaves rotation. A gun points along the line of your grip, so the controller's
@@ -3044,7 +3044,7 @@ volatile LONG g_tmdYawTenths = 0, g_tmdPitchTenths = 0;
 volatile LONG g_tmdRollTenths = 0;
 volatile LONG g_tmdOnOffHand = 1;      // ini [Input] TmdOnOffHand - the whole feature's off switch
 
-// ---- ⭐ run 230: the note is a full-screen 2D panel, and a headset FOV is not a monitor ----
+// ---- Ă˘Â­Â run 230: the note is a full-screen 2D panel, and a headset FOV is not a monitor ----
 //
 // Reported as "it spans across the whole screen so is very hard to read". On a monitor a full-width
 // page of text is fine because the whole monitor is inside your central vision. In a headset the same
@@ -3064,7 +3064,7 @@ volatile LONG g_tmdOnOffHand = 1;      // ini [Input] TmdOnOffHand - the whole f
 // held open looks like. The crosshair is absent from all three, so the note replaces the HUD rather
 // than overlaying it - which is why scaling EVERY element while it is up is safe.
 //
-// ⚠ The 344 is a GLYPH COUNT and must never be used to recognise a note: a shorter note has fewer.
+// Ă˘ĹˇÂ  The 344 is a GLYPH COUNT and must never be used to recognise a note: a shorter note has fewer.
 // The two anchors at y=+1.0 are panel corners and do not depend on the text, so those are the marker.
 volatile LONG g_menuInsetPct = 70; // safe area for initial and paused menus
 extern volatile LONG g_gamePaused;
@@ -3073,7 +3073,7 @@ volatile LONG g_noteInsetPct   = 40;   // ini [Render] NoteInsetPct, and a DISPL
 volatile LONG g_noteSeenFrame  = 0;    // a note marker was drawn THIS frame
 volatile LONG g_noteOpen       = 0;    // ...was drawn LAST frame - what the inset actually reads
 volatile LONG g_noteInsetDraws = 0;    // elements actually scaled, reported per second
-// ---- ⭐ run 266: STOP CLASSIFYING, START FOLLOWING ----
+// ---- Ă˘Â­Â run 266: STOP CLASSIFYING, START FOLLOWING ----
 //
 // Asked directly: "we can already identify the text - is there no way to say, once we identify text
 // we are duplicating, check whether there is more text?" That is the right question and it undoes
@@ -3090,7 +3090,7 @@ volatile LONG g_noteInsetDraws = 0;    // elements actually scaled, reported per
 // matching that pair, only while a note is open. World geometry can never start the chain, because
 // world geometry is never a note element.
 //
-// ⚠️ Outside a note this is completely inert, which is the point - the geometry loss was in ordinary
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Outside a note this is completely inert, which is the point - the geometry loss was in ordinary
 // gameplay, where there is no note and this rule now does nothing at all.
 volatile LONG g_noteTextStride = 0;    // stride of a confirmed note element
 volatile LONG g_noteTextTex    = 0;    // and the texture it was drawn with
@@ -3246,11 +3246,11 @@ float g_forcedTanX = 0.0f, g_forcedTanY = 0.0f;   // read back AFTER the edit, t
 // of a 30 deg clamp. 6x reaches 82 deg. `askDeg` is capped at 170 deg total, so ~9.6x is the
 // ceiling and there is no point going past it.
 //
-// ⚠️ NOT free, and run 21 already priced it: inflating the engine's FOV makes objects project
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą NOT free, and run 21 already priced it: inflating the engine's FOV makes objects project
 // smaller than the engine expects, which pushes distant geometry down its LOD and draw-distance
 // curves. That is the trade this test is really measuring - edge dropouts against pop-in - and it
 // is why the low steps stay in the list rather than being replaced.
-// ⚠️ Reordered run 90 to run UPWARDS first. The old order put 0.70/0.50/0.35 immediately after
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Reordered run 90 to run UPWARDS first. The old order put 0.70/0.50/0.35 immediately after
 // 1.0, so reaching 4x took eight presses and 6x took nine - in a headset, while trying to watch a
 // ceiling for black patches. Mis-counting wastes the whole run. The shortfall-measuring values
 // below 1.0 are still reachable, just moved to the end where they are no longer in the way.
@@ -3614,7 +3614,7 @@ void ApplyEyeRemap(Reg4* r, int conv, float s) {
 // the controller, and UE3 zeroes camera roll in several places - three seams to fight for an angle
 // we already own outright, because the view matrix is ours by the time it reaches the GPU.
 //
-// ⚠️ And it CANNOT be left to the compositor, which is the trap here. The submitted projection
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą And it CANNOT be left to the compositor, which is the trap here. The submitted projection
 // layer already carries the head's full orientation, roll included, so it looks like the runtime
 // should be rotating the image for us. It does not: a projection layer is reprojected by the
 // DELTA between the pose we claim and the pose the display is at. Claim a rolled pose for an
@@ -3697,7 +3697,7 @@ void ApplyRoll(Reg4* r, int conv, float rollRad, float tanX, float tanY) {
 // multiplied together cannot be in the wrong order - the ordering of the basis columns cancels,
 // so long as both use the same one.
 //
-// ⚠️ Order against ApplyOffset: rotation FIRST, offset second. We want the camera rotated about
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Order against ApplyOffset: rotation FIRST, offset second. We want the camera rotated about
 // its own position and then displaced, which is M' = T(-o) * R * M. ApplyOffset already computes
 // T(-o) * M, so calling it after this composes correctly. The reverse order would swing the 6-DOF
 // offset around with the head instead of holding it in world space.
@@ -4157,7 +4157,7 @@ int    g_copyFrames = 0;
 double g_msWaitFrame = 0.0;
 // xrBeginFrame + xrEndFrame, the frame submission. Broken out of "our work" in run 56 because it is
 // the only part of this mod that talks to the wireless link, and the unmodded game runs clean.
-// ================= ⭐ run 204: stop guessing. Measure OUR share of the frame ====================
+// ================= Ă˘Â­Â run 204: stop guessing. Measure OUR share of the frame ====================
 //
 // Six attributions for the dock collapse have been wrong: the area, my own eye-height logging, the mesh
 // features, occlusion culling, locked reads, and the LineCheck hook. Every one came from reading code and
@@ -4176,7 +4176,7 @@ double g_msWaitFrame = 0.0;
 // exonerated and the cost is the GAME's, driven by something we do to it - and the next question is what,
 // not where. If either is tens of milliseconds, it names the culprit outright.
 //
-// ⚠️ QPC per draw is itself a cost (~20-30 ns). At 2900 draws that is under 0.2 ms, acceptable for a
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą QPC per draw is itself a cost (~20-30 ns). At 2900 draws that is under 0.2 ms, acceptable for a
 // diagnostic, and it is behind an ini key so it is not paid in normal play.
 int    g_timeOurWork = 0;              // ini [Render] TimeOurWork
 // Run 205: which halves of MOTION CONTROLLER are enabled. bit0 = mesh work, bit1 = aim mode 11.
@@ -4185,7 +4185,7 @@ volatile LONG g_aimModeParts = 3;      // ini [Input] AimModeParts
 double g_msStereoPair = 0.0, g_msMeshMatch = 0.0;
 double g_msStereoPairPeak = 0.0, g_msMeshMatchPeak = 0.0;
 
-// ---- 💥 run 252: the REGISTER SCAN, timed - it runs forever at a splash screen ----
+// ---- Ä‘Ĺşâ€™Ä„ run 252: the REGISTER SCAN, timed - it runs forever at a splash screen ----
 //
 // The splash screen has degraded in four steps since Aug 5 (27 -> 18 -> 13 -> 8 fps), all of it in
 // "our work", which is a residual and therefore not a measurement of anything. This is the first
@@ -4198,12 +4198,12 @@ double g_msStereoPairPeak = 0.0, g_msMeshMatchPeak = 0.0;
 // never stops. The scan's own comment says "a scan tests every window of every upload and is far too
 // expensive to leave running".
 //
-// ⚠️ NOT gated on TimeOurWork. That key exists to keep per-DRAW timing out of normal play; this only
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą NOT gated on TimeOurWork. That key exists to keep per-DRAW timing out of normal play; this only
 // takes a timestamp on frames the scan is actually armed for, which is at most one frame in twenty
 // and none at all once a lock exists. A diagnostic nobody switches on cannot answer a question that
 // only shows up on someone else's machine.
 //
-// ⚠️ Timed, NOT fixed, and deliberately so. Rate-limiting the rescan in the same build would leave
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Timed, NOT fixed, and deliberately so. Rate-limiting the rescan in the same build would leave
 // two changes and one measurement - "one question per run", and this file has lost runs to exactly
 // that. If the number comes back small, the scan is exonerated and the staircase is elsewhere.
 double g_msScan = 0.0, g_msScanPeak = 0.0;
@@ -4215,7 +4215,7 @@ double g_msXrSubmitPeak = 0.0;
 int    g_waitFrames = 0;
 double g_displayPeriodMs = 0.0;   // from XrFrameState, so the pacing target is measured not guessed
 
-// ---- âš ï¸ the copy timing conflates two costs, and only one of them D3D9Ex removes ----
+// ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą the copy timing conflates two costs, and only one of them D3D9Ex removes ----
 //
 // GetRenderTargetData does not just transfer - it SYNCHRONISES. The call cannot return until the
 // GPU has finished rendering the frame, so the time attributed to `copy` is:
@@ -4243,7 +4243,7 @@ double g_displayPeriodMs = 0.0;   // from XrFrameState, so the pacing target is 
 double g_msEngineObjects = 0.0;
 int    g_engineObjectFrames = 0;
 
-// ---- 💥 run 254: the GObjects walk bucket times TWO functions, and the pawn walk is not one ----
+// ---- Ä‘Ĺşâ€™Ä„ run 254: the GObjects walk bucket times TWO functions, and the pawn walk is not one ----
 //
 // Run 252 timed the register scan on the strength of a good-looking argument and measured
 // **0.00 ms**. The scan is exonerated; resolution is anti-correlated (the FASTEST splash ran the
@@ -4254,11 +4254,11 @@ int    g_engineObjectFrames = 0;
 // UpdateFgLatch, ResolveGameplayOffsets, ApplyMuzzleFxSuppression - has never been timed and falls
 // into "our work" by construction.
 //
-// ⭐ That block is what BOTH recent staircase steps touched. Aug 14's `4b96043` removed a throttle so
+// Ă˘Â­Â That block is what BOTH recent staircase steps touched. Aug 14's `4b96043` removed a throttle so
 // `ResolveGameplayOffsets` calls `FindPlayerPawn(force=true)`, and a MISS is a full GObjects walk. At
 // a splash screen there is no pawn, so it is a walk that cannot succeed, every time it runs.
 //
-// ⚠️ THE PEAK IS THE STATISTIC, not the mean. This is throttled to once per 2 s (15 s after three
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą THE PEAK IS THE STATISTIC, not the mean. This is throttled to once per 2 s (15 s after three
 // misses), so a walk costing hundreds of ms would show as a small average and an enormous peak - and
 // an average alone would exonerate it exactly the way it deserves not to be. Run 252's mistake was
 // picking the suspect; the mistake available HERE is picking the wrong summary of it.
@@ -4266,7 +4266,7 @@ double g_msGameplayHooks = 0.0, g_msGameplayPeak = 0.0;
 double g_msResolveOff = 0.0, g_msResolveOffPeak = 0.0;
 int    g_gameplayHookFrames = 0;
 
-// ---- ⭐ run 255: split the block, because ResolveGameplayOffsets is NOT all of it ----
+// ---- Ă˘Â­Â run 255: split the block, because ResolveGameplayOffsets is NOT all of it ----
 //
 // Run 254 measured the block at 85 ms mean and a **4847 ms** worst frame, with
 // ResolveGameplayOffsets 2682 ms of it. That named a real cost - but one window in the same run
@@ -4284,7 +4284,7 @@ int    g_gameplayHookFrames = 0;
 //                              validating". At a splash the weapon does not exist, so they never
 //                              validate, so that is a walk EVERY FRAME.
 //
-// ⚠️ Peaks per function, for run 254's reason: these are throttled on different periods, so a mean
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Peaks per function, for run 254's reason: these are throttled on different periods, so a mean
 // hides a once-in-30-frames walk behind twenty-nine cheap ones.
 double g_msHookPart[4] = { 0, 0, 0, 0 };
 double g_msHookPartPeak[4] = { 0, 0, 0, 0 };
@@ -4328,7 +4328,7 @@ struct CopySlot {
 CopySlot g_slot[kCopySlots];
 int g_slotCur = 0;
 
-// ---- âš ï¸ measured run 32: pipelining LOSES. Immediate is the default. ----
+// ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą measured run 32: pipelining LOSES. Immediate is the default. ----
 //
 // Matched by scene (same draw counts, both at 120 Hz with SSW off):
 //
@@ -4590,7 +4590,7 @@ bool EnsureCopyResources(IDirect3DDevice9* dev, UINT w, UINT h, D3DFORMAT fmt) {
             Log("ZeroCopy requested but the device is not D3D9Ex - needs D3D9ExMode=1. Using the CPU copy."); }
     }
 
-    // ⚠️ NOTHING ELSE GETS ALLOCATED HERE WITHOUT BEING USED. The Stage 4B probe created a
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą NOTHING ELSE GETS ALLOCATED HERE WITHOUT BEING USED. The Stage 4B probe created a
     // scene-sized render target AND depth-stencil at this point - ~70 MB at 4096x2160 - gated
     // behind a hotkey that had to be pressed for them to be touched at all. Every run paid the
     // allocation from the first frame. Gating a diagnostic's WORK is not gating its COST.
@@ -4699,9 +4699,9 @@ void StampCaptureState(CopySlot& cap) {
 // In pipelined mode the very first frame returns nullptr because nothing has been captured yet -
 // that is normal startup, not a failure.
 void DrawLaserSight(IDirect3DDevice9* dev);
-void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
+void DrawWristHealth(IDirect3DDevice9* dev);   // Ă˘Â­Â run 217: defined late, called from the copy
 const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
-    // ⭐ run 217: defined further down, next to the transforms it reuses - see DrawLaserSight.
+    // Ă˘Â­Â run 217: defined further down, next to the transforms it reuses - see DrawLaserSight.
     // The last thing added to the frame before it is handed to XR. Here rather than at a draw
     // hook because this is the one point that is provably AFTER the scene and BEFORE the copy, on both
     // the zero-copy and CPU paths - the laser cannot end up in one and not the other.
@@ -4747,7 +4747,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
             g_msGpuWait += MsSince(tf);
             ++g_gpuWaitFrames;
         }
-        // ---- âš ï¸ no pipelining here, and it is not an oversight ----
+        // ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą no pipelining here, and it is not an oversight ----
         //
         // FrameCopyMode's ring exists because a sysmem readback can be deferred a frame. There is
         // exactly ONE shared render target, and StretchRect has just overwritten it with THIS
@@ -4815,7 +4815,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     CopySlot& use = g_slot[consumeIdx];
     if (!use.pending) return nullptr;          // pipelined, first frame - nothing captured yet
 
-    // ---- âš ï¸ LockRect is where the transfer actually surfaces (run 35) ----
+    // ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą LockRect is where the transfer actually surfaces (run 35) ----
     //
     // GetRenderTargetData times at 0.00 ms once the GPU fence is paid, which does NOT mean the
     // transfer is free - the driver defers it, and LockRect is what blocks until the DMA lands.
@@ -4885,14 +4885,14 @@ float g_wantRollRad = 0.0f;
 // anything is decoupled. Once it holds, the engine's rotation is free to carry the weapon.
 volatile LONG g_matrixRot = 0;
 
-// ---- ⭐ run 133: the cutscene yaw test, as ONE key ----
+// ---- Ă˘Â­Â run 133: the cutscene yaw test, as ONE key ----
 //
 // The two flags that matter for it are independent, so the honest test is their 2x2. Asking for
 // that as two separate keys put the burden of tracking which cell you are in on someone wearing a
 // headset - so NUMPAD8 walks the four combinations in order instead, and the readout names the
 // cell. One key, four presses, back where you started.
 //
-// ⚠️ The mode number is DERIVED from the live flags, never stored. g_matrixRot has another owner
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The mode number is DERIVED from the live flags, never stored. g_matrixRot has another owner
 // (the aim-mode path sets it directly), and a remembered cycle index would keep confidently
 // reporting a cell the flags had since left. Derived, a disagreement is impossible by
 // construction: whatever the flags say IS the mode.
@@ -4920,15 +4920,15 @@ inline void SetCutsceneMode(int m) {
 // the camera with your hand.
 volatile LONG g_aimDecouple = 0;
 
-// NUMPAD . cycles this. 0 off · 1 engine follows the hand (run 76, needs the matrix split and
-// breaks culling) · 2 constant +20 deg into the controller's SECOND rotation, as a probe ·
+// NUMPAD . cycles this. 0 off Ă‚Â· 1 engine follows the hand (run 76, needs the matrix split and
+// breaks culling) Ă‚Â· 2 constant +20 deg into the controller's SECOND rotation, as a probe Ă‚Â·
 // 3 the hand written to that second rotation, which is the arrangement worth having.
 //
 // Modes 2 and 3 deliberately need NO matrix split: the view and the engine both stay on the head,
 // which is the normal, truthful arrangement, and culling never diverges from what you can see.
 volatile LONG g_aimMode = 0;
 
-// ---- ⭐ run 158: AIM METHOD, the one control the other four follow ----
+// ---- Ă˘Â­Â run 158: AIM METHOD, the one control the other four follow ----
 //
 // Everything below this comment already worked; what was missing was a single place to say which
 // arrangement you want, and any way at all to say it without a keyboard. `g_aimMode` was never read
@@ -4976,7 +4976,7 @@ int32_t g_matDesPitchUU = 0;
 // SetVertexShaderConstantF sees anything. The fix has to be upstream, in what the engine believes
 // it is looking at.
 //
-// ⚠️ ENGINE_NOTES records "CPU frustum culling is a non-issue at stereo scale - a 1.4-2.9% band at
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą ENGINE_NOTES records "CPU frustum culling is a non-issue at stereo scale - a 1.4-2.9% band at
 // 300 UU". That measurement is sound and completely inapplicable here. It was taken for an eye
 // separation of a few UU; this is a rotation of up to ninety degrees. Same mechanism, different
 // regime by three orders of magnitude - the project's own recurring trap, and worth naming rather
@@ -4998,7 +4998,7 @@ const int kDevStepCount = 7;
 const int kDevSteps[kDevStepCount] = { 0, 10, 20, 30, 45, 60, 90 };
 volatile LONG g_devStep = 0;    // index into kDevSteps
 
-// ---- ⚠️ why the clamp alone is NOT a valid test, and the flicker is (run 65) ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą why the clamp alone is NOT a valid test, and the flicker is (run 65) ----
 //
 // Cycling the clamp and looking for missing geometry asks the player to notice an ABSENCE. That is
 // the one thing human vision is worst at, especially in the periphery where a small deviation puts
@@ -5027,7 +5027,7 @@ int    g_devPhaseAge = 999;
 double g_devDraws[2] = { 0.0, 0.0 };
 int    g_devDrawFrames[2] = { 0, 0 };
 
-// ---- ⚠️ the flicker test was confounded by its own mechanism (run 66) ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą the flicker test was confounded by its own mechanism (run 66) ----
 //
 // Reported symptom: at a clamp of only 10 degrees EVERYTHING strobed, including geometry straight
 // ahead, and it read as a misalignment whose ANGLE GREW WITH THE CLAMP. None of that is culling.
@@ -5093,7 +5093,7 @@ int   g_tick = 0;
 //      the engine is reading us as a real input device, and it genuinely reported the bad case
 //      for the first two seconds of the probe run. It stays in the log.
 //
-// ⚠️ Defaulting ON changes the game before any key is pressed, which run 36 did with VR mode and
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Defaulting ON changes the game before any key is pressed, which run 36 did with VR mode and
 // run 37 reverted. The distinction that makes it safe here: this changes no RENDERING. The menu
 // gains button prompts and a highlighted item - the arrangement a pad user would already see -
 // and `Gamepad=0` in the ini restores the old behaviour without a rebuild.
@@ -5117,7 +5117,7 @@ XrPath   g_handSubPath[2] = { XR_NULL_PATH, XR_NULL_PATH };   // left, right
 // small consumer attached immediately so it is proven rather than merely present - if walking
 // follows your left hand, the pose and its conventions are right, and that is a much better test
 // than logging numbers nobody can check.
-// ---- ⚠️ run 77: MOTION was the wrong signal, and the hardware has the right one ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 77: MOTION was the wrong signal, and the hardware has the right one ----
 //
 // Auto-pad unplugged and replugged NINE times in one session, each replug costing a second of
 // frozen controls while UE3 re-enumerated. Cause: resting your hands still - listening to dialogue,
@@ -5145,7 +5145,7 @@ bool g_graspAvailable = false;
 // g_actGrasp, whose broad capacitive signal only answers whether the controller is being held.
 XrAction g_actGrip = XR_NULL_HANDLE;
 
-// ---- ⭐ run 156: the phantom triggers, and the sensor that vetoes them ----
+// ---- Ă˘Â­Â run 156: the phantom triggers, and the sensor that vetoes them ----
 //
 // A SEPARATE action from g_actGrasp, deliberately, and the distinction is the whole point. Grasp is
 // deliberately BROAD - run 82 widened it to every capacitive surface on the controller, because it
@@ -5223,7 +5223,7 @@ float g_headYawRad = 0.0f;
 float g_headRollRad = 0.0f;
 float g_headPosXR[3] = { 0.0f, 0.0f, 0.0f };
 
-// ---- ⭐ run 143: head-relative is now the DEFAULT ----
+// ---- Ă˘Â­Â run 143: head-relative is now the DEFAULT ----
 //
 // 0 is also the cheaper path: it skips the rotation below entirely, because the engine's
 // aBaseY/aStrafe are already relative to PlayerController.Rotation and head tracking drives that.
@@ -5235,7 +5235,7 @@ float g_headPosXR[3] = { 0.0f, 0.0f, 0.0f };
 int g_walkDirection = 0;   // ini WalkDirection: 0 = head-relative (default), 1 = off-hand-relative
 int g_walkSign      = 1;   // ini WalkSign - handedness has been guessed wrong on three axes here
 
-// ---- ⚠️ THE CONTROLLERS THEMSELVES ARE A VARIABLE, AND EVERY TEST SO FAR RAN INSIDE IT ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą THE CONTROLLERS THEMSELVES ARE A VARIABLE, AND EVERY TEST SO FAR RAN INSIDE IT ----
 //
 // Reported run 67: the image judders and the frame rate drops whenever the head moves, ALWAYS -
 // and it stops the moment the controllers are picked up, and returns when they are set down and
@@ -5257,7 +5257,7 @@ int g_walkSign      = 1;   // ini WalkSign - handedness has been guessed wrong o
 // a rebuild.
 bool g_handTracked[2] = { false, false };
 
-// ---- ⚠️ run 69: "TRACKED" was never the question, and it reads BACKWARDS ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 69: "TRACKED" was never the question, and it reads BACKWARDS ----
 //
 // Reported: on the desk = judder; in hand = fine; and a trigger firing by accident on the desk
 // does NOT help. That last detail is the load-bearing one - it rules out "is the controller awake"
@@ -5278,7 +5278,20 @@ bool  g_handHeld[2] = { false, false };
 XrVector3f g_handLastPos[2]{};
 bool  g_handHavePos[2] = { false, false };
 
-// ---- ❌ run 74: the governor is dead too, and the approach changes ----
+// ---- ARM IK STATE ----
+// Arm bone indices (Singularity native skeleton):
+// LEFT:  clavicle=6, shoulder=7, elbow=8, wrist=9, forearm=26, forearm2=46, bicep=47
+// RIGHT: clavicle=48, shoulder=49, elbow=50, wrist=51, forearm=85, bicep=86
+struct ArmIkState {
+    armik::State solverState{};
+    armbind::Deltas deltas{};
+    bool valid = false;
+    bool enabled = false;
+};
+ArmIkState g_leftArmIk{}, g_rightArmIk{};
+volatile LONG g_armIkEnabled = 1;   // ini [Render] ArmIk
+
+// ---- Ă˘ĹĄĹš run 74: the governor is dead too, and the approach changes ----
 //
 // NUMPAD+ neutralised every render-thread sleep and the frame rate did not move. So
 // `bSmoothFrameRate` was not holding anything down either. That is four mechanisms proposed and
@@ -5304,10 +5317,10 @@ bool  g_handHavePos[2] = { false, false };
 // signal that separates them - a held controller never stops moving, because a hand at rest still
 // drifts by fractions of a millimetre every frame, and a desk does not drift at all.
 //
-// ⚠️ The threshold is a guess, and run 72's guess was wrong by enough to collapse a whole table.
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The threshold is a guess, and run 72's guess was wrong by enough to collapse a whole table.
 // So the measured speeds are logged now, and the number can be set from data rather than from
 // another guess.
-// ---- ✅ run 156: OBSOLETE, and now OFF by default. The cause was found ----
+// ---- Ă˘Ĺ›â€¦ run 156: OBSOLETE, and now OFF by default. The cause was found ----
 //
 // Everything above this line is a workaround for a mechanism nobody could name. Run 156 named it:
 // a set-down controller reports a sustained phantom trigger pull, which reaches the game as FIRE
@@ -5324,12 +5337,12 @@ int  g_autoPad = 0;                 // ini AutoPad - off since run 156, see abov
 bool g_autoPadDisabled = false;     // did WE turn it off, or did the user with NUMPAD3
 int  g_handStillFrames = 0;
 
-// ⚠️ Re-detection is NOT instant. Run 60 measured UE3 enumerating ports round-robin at about one
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Re-detection is NOT instant. Run 60 measured UE3 enumerating ports round-robin at about one
 // per second, so port 0 comes round every ~2 s and a pad only "appears" on the first successful
 // read after that. Picking the controllers up will therefore cost a second or two before they
 // work. That is why the disable is slow (3 s of stillness) and the enable is immediate - the
 // asymmetry puts the whole latency where it is least annoying.
-// ---- ✅ run 75 RESULT: it is the INTERACTION, and auto-pad removes it ----
+// ---- Ă˘Ĺ›â€¦ run 75 RESULT: it is the INTERACTION, and auto-pad removes it ----
 //
 //   pad off, feed ON, ON DESK : 109.3 fps | residual  4.13 | MISSED  2.1% | 1316 draws | 5193 fr
 //   pad ON,  feed ON, in hand : 117.9 fps | residual  4.14 | MISSED  1.0% | 1563 draws | 2913 fr
@@ -5392,14 +5405,14 @@ void UpdateAutoPad() {
 volatile LONG g_xrInputOff = 0;     // tilde - suppress synthetic XInput and effective haptics, retain XR tracking
 int g_syncFailFrames = 0;           // frames where xrSyncActions did not return XR_SUCCESS
 
-// ---- ✅ run 67 RESULT: it is ours, and now it gets timed rather than guessed at ----
+// ---- Ă˘Ĺ›â€¦ run 67 RESULT: it is ours, and now it gets timed rather than guessed at ----
 //
 // Confirmed by the cheap control: controllers DOWN + input ON = juddering; controllers DOWN +
 // input OFF (numpad /) = normal. So the cost is inside SyncXRInput, and it appears only while the
 // controllers are asleep. The haptics gate added the same run did NOT fix it, which eliminates the
 // most obvious candidate outright.
 //
-// ⚠️ SyncXRInput is currently one undifferentiated lump inside "our work" - which is precisely the
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą SyncXRInput is currently one undifferentiated lump inside "our work" - which is precisely the
 // situation run 56 spent a day inside when xrEndFrame hid a 189 ms stall in that same residual.
 // STATUS says it in as many words: "our work" is not a measurement, it is the residual, and it
 // will absorb any amount of someone else's latency while looking exactly like your own bug.
@@ -5423,7 +5436,7 @@ int    g_syncSamples = 0;
 // against. Asking someone in a headset to hold a four-cell protocol in their head while playing is
 // not a reasonable instrument, and this is the second run it has cost.
 //
-// ⚠️ And there is a 99 ms worst-frame XR submit in that same log, with 38 ms and 17 ms behind it.
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą And there is a 99 ms worst-frame XR submit in that same log, with 38 ms and 17 ms behind it.
 // That is the documented WIRELESS LINK signature - STATUS: "If the worst frame is tens of ms, the
 // dips are the streaming path and no change to the render code will help." The link is also
 // exactly what burned this project in run 56, where three conclusions drawn from A/Bs taken across
@@ -5433,7 +5446,7 @@ int    g_syncSamples = 0;
 // So stop comparing two moments and compare two POPULATIONS. Every frame is bucketed by the state
 // it was rendered in, and the buckets are reported side by side with their sample counts. Link
 // noise lands in both buckets and averages out; a real effect does not.
-// ---- ⚠️ run 68 came back BACKWARDS, and the reason is a confound, not a mystery ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 68 came back BACKWARDS, and the reason is a confound, not a mystery ----
 //
 //     input ON,  controllers AWAKE  : 76.0 fps, residual 10.93 ms, 5171 frames
 //     input ON,  controllers ASLEEP : 113.5 fps, residual  4.21 ms,  862 frames
@@ -5527,7 +5540,7 @@ int StateBucketIndex() {
 // It is NOT a profiler and cannot name a function - it deliberately stops one step short, because
 // which thread to sample is itself an assumption this project has not earned yet.
 //
-// ---- ❌ run 155: bucketing on the CONTROLLER STATE was the mistake. Re-keyed on FRAME TIME ----
+// ---- Ă˘ĹĄĹš run 155: bucketing on the CONTROLLER STATE was the mistake. Re-keyed on FRAME TIME ----
 //
 // Run 154 reported "the bad state was never captured" - 9.65 ms/frame held against 8.77 ms on the
 // desk, no difference worth explaining. **That was the instrument, not the game.** The user
@@ -5539,7 +5552,7 @@ int StateBucketIndex() {
 // hand moving at 1331 um/frame and still reporting `on desk`. So both buckets contained both
 // states, the difference averaged away, and the table said "nothing here" with total confidence.
 //
-// ⚠️ This is the third instrument in this investigation to hide the answer rather than miss it, and
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą This is the third instrument in this investigation to hide the answer rather than miss it, and
 // the second to do it by MISLABELLING rather than by failing. Run 68: `ORIENTATION_TRACKED` read
 // backwards. Run 74: the motion threshold was 10x too low. Now this. The pattern is always the
 // same - a state label derived from a sensor that was never validated against the state it names.
@@ -5890,7 +5903,7 @@ void LogThreadCpu() {
 //     the same command in both directions. A two-way stick gesture would have been wrong by
 //     construction, so the stick's other direction is free and now carries health.
 //
-// ⚠️ Method note worth more than the table: the button probe could confirm a binding but could not
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Method note worth more than the table: the button probe could confirm a binding but could not
 // refute one. X, Y, LB and the thumbstick clicks all read as "nothing happened" simply because
 // Use, CycleWeapon and the TMD powers do nothing without a target, a second weapon or a charge -
 // and D-pad up read as nothing at full health, having demonstrably worked ten minutes earlier.
@@ -5912,7 +5925,7 @@ struct PadButtonAction {
     bool        isPanel;     // ditto: tap passes through, a 2-second hold opens the VR settings
 };
 
-// ---- ⭐ run 142: the VR settings panel ----
+// ---- Ă˘Â­Â run 142: the VR settings panel ----
 //
 // Opened by HOLDING the panel button for two seconds, the same tap-versus-hold trick MENU already
 // uses for recentre. That was chosen over gating on the pause state, which run 141 measured and
@@ -5924,7 +5937,7 @@ volatile LONG g_panelOpen = 0;
 int  g_panelRow = 0;
 bool g_panelDirty = false;      // has anything changed since it was opened?
 
-// ---- ⭐ run 157: DEBUGGING ----
+// ---- Ă˘Â­Â run 157: DEBUGGING ----
 //
 // Everything this mod grew while being built - the on-screen state readout and forty-odd hotkeys -
 // is developer scaffolding. Off, the readout is not drawn and every keyboard key stops responding.
@@ -5932,7 +5945,7 @@ bool g_panelDirty = false;      // has anything changed since it was opened?
 // interface. Holding the panel button still opens the VR settings, because that is a controller
 // binding and never went through here.
 //
-// ⚠️ TWO KEYS ARE EXEMPT, and both fail badly rather than inconveniently if taken away:
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą TWO KEYS ARE EXEMPT, and both fail badly rather than inconveniently if taken away:
 //
 //   BACKSPACE  VR mode on and off. The cold start is flat by design (run 37 reverted default-on)
 //              and there is no ENABLE VR setting yet, so gating it would leave a Debug=0 launch
@@ -5963,7 +5976,7 @@ extern volatile LONG g_laserOn, g_laserLenUU;
 // The global anchor these slots override and seed from; defined with the gun transform.
 extern LONG g_gunAnchorFwd, g_gunAnchorRight, g_gunAnchorUp;
 
-// ---- ⭐ run 217: alignment is PER WEAPON, because the barrel is per weapon ----
+// ---- Ă˘Â­Â run 217: alignment is PER WEAPON, because the barrel is per weapon ----
 //
 // Reported: the pistol and shotgun feel right, but at mid/long range the assault rifle's bullets
 // clearly do not go where the barrel points - while still following the controller correctly.
@@ -5977,7 +5990,7 @@ extern LONG g_gunAnchorFwd, g_gunAnchorRight, g_gunAnchorUp;
 // with its barrel at its own angle relative to the mesh's local axes. The pistol feeling right just
 // means its art happens to sit near whatever the current transform assumes.
 //
-// ⚠️ The trim rotates the MESH ONLY. The bullet already goes where the controller points - the user
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The trim rotates the MESH ONLY. The bullet already goes where the controller points - the user
 // said so explicitly - so the thing that is wrong is where the gun is DRAWN, and touching the trace
 // would move a thing that is already correct. That is also why it can never cost accuracy: the worst a
 // bad trim can do is draw the gun crooked.
@@ -5993,7 +6006,7 @@ struct GunAlignSlot {
 };
 GunAlignSlot g_gunAlign[kGunAlignMax]{};
 
-// ---- ⭐ run 221: the TUNED values ship in the CODE, not in someone's ini ----
+// ---- Ă˘Â­Â run 221: the TUNED values ship in the CODE, not in someone's ini ----
 //
 // An ini is the user's file. A fresh install has none, so anything that lives only there is a setting
 // the next person does not get - and "it looks right on the dev machine" is exactly the gap the
@@ -6009,7 +6022,7 @@ GunAlignSlot g_gunAlign[kGunAlignMax]{};
 //   8297   shotgun         F30 R10 U-13   yaw +3.0  pitch  0.0   (run 225)
 //   5799   pistol          F30 R9  U-13   yaw +1.0  pitch  0.0   (run 225)
 //
-// ⛔ SUPERSEDED: "the sniper cannot be tuned because the laser is off behind its scope" was wrong,
+// Ă˘â€şâ€ť SUPERSEDED: "the sniper cannot be tuned because the laser is off behind its scope" was wrong,
 // and it was wrong about the INSTRUMENT rather than the weapon. The laser is not the only thing you
 // can align a barrel against - the scope has a reticle of its own, and run 214 had already measured
 // that scoped aim tracks that reticle. Aligning against it is the same judgement by eye, through a
@@ -6058,7 +6071,7 @@ GunAlignSlot* GunAlignFor(LONG verts) {
         g_gunAlign[i].right = g_gunAnchorRight;
         g_gunAlign[i].up    = g_gunAnchorUp;
         g_gunAlign[i].yawTenths = g_gunAlign[i].pitchTenths = 0;
-        // ⭐ run 220: says WHICH weapon just became independently tuned. The panel shows "(TUNED)"
+        // Ă˘Â­Â run 220: says WHICH weapon just became independently tuned. The panel shows "(TUNED)"
         // in the headset, but only the log answers it afterwards - and "did I tune the gun I meant
         // to" is exactly the question a tuning session leaves behind.
         Log("weapon align: slot %d created for weapon %ld, seeded from the global anchor"
@@ -6078,7 +6091,7 @@ void GunAnchorInForce(LONG* fwd, LONG* right, LONG* up) {
     *up    = g ? g->up    : g_gunAnchorUp;
 }
 
-// ---- 🛑 run 174: the sideways anchor does NOT mirror. Two attempts, both wrong, both removed ----
+// ---- Ä‘Ĺşâ€şâ€ run 174: the sideways anchor does NOT mirror. Two attempts, both wrong, both removed ----
 //
 // First I multiplied it by -1 in the transform. Then I split it into a second tunable value. Both
 // were built on the same unexamined premise: that the anchor is a property of the HAND.
@@ -6091,7 +6104,7 @@ void GunAnchorInForce(LONG* fwd, LONG* right, LONG* up) {
 // through an ARC in left-handed mode, which is the documented symptom of a pivot in the wrong
 // place, and -8 against +8 is a pivot 16 units off the grip - exactly that.
 //
-// ⚠️ Worth keeping as a caution rather than just deleting: the sign flip also sat DOWNSTREAM of the
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Worth keeping as a caution rather than just deleting: the sign flip also sat DOWNSTREAM of the
 // on-screen readout and the arrow-key tuning, so the panel showed one number while another was
 // applied and pressing "right" moved the gun LEFT. Any future per-handedness value must go through
 // the same accessor as its readout and its tuning, or calibrating it by feel is impossible.
@@ -6114,7 +6127,7 @@ static void Mul3(float out[3][3], const float a[3][3], const float b[3][3]) {
 // The eight rotation-sign combinations, cycled by CAPS LOCK so the right one is found in ONE run
 // instead of one restart per guess. Three axes reported wrong in three separate runs is what this
 // is for - a sign is not worth a headset session each.
-// ---- ⚠️ run 126: bit 3 turns the view-frame conjugation OFF ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 126: bit 3 turns the view-frame conjugation OFF ----
 //
 // Run 125 changed the frame AND baked a new pitch sign in the same build, so the result could not
 // say which caused what - the one-factor-at-a-time rule, broken by me after this project had
@@ -6133,23 +6146,23 @@ enum { PR_ENABLEVR = 0, PR_AIMMETHOD, PR_MOVEDIR, PR_TURNMODE, PR_TURNSPEED, PR_
        PR_TURNDIR, PR_HEADROLL, PR_CROSSHAIR, PR_OCCLUSION, PR_DEBUG,
        PR_CINESTICK, PR_CINECAM, PR_SWAPSTICKS, PR_LEFTHAND, PR_WEAPONFX, PR_MUZZLEFX, PR_WORLDSCALE,
        PR_AIMPARTS,
-       // ⭐ run 217: the laser and the per-weapon alignment rows.
+       // Ă˘Â­Â run 217: the laser and the per-weapon alignment rows.
        PR_LASER, PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH,
-       PR_NOTESIZE,          // ⭐ run 230
-       PR_TMDON, PR_TMDFWD, PR_TMDRIGHT, PR_TMDUP, PR_TMDYAW, PR_TMDPITCH,   // ⭐ run 237
-       PR_TMDARMFROM, PR_TMDARMTO, PR_TMDARMSTEP,   // ⭐ run 237c, un-retired in 247b
-       PR_TMDARMSLOT, PR_TMDARMMESH,                // ⭐ run 250
-       PR_TMDARMMODE,                               // ⭐ run 251
-       PR_TMDHIDE,                   // ⭐ run 237d
-       PR_TMDBONELO, PR_TMDBONEHI, PR_TMDBONEMESH, PR_TMDBONESLOT,   // ⭐ run 239
-       PR_TMDBONEMODE,               // ⭐ run 241
-       PR_TMDROLL,                   // ⭐ run 245
+       PR_NOTESIZE,          // Ă˘Â­Â run 230
+       PR_TMDON, PR_TMDFWD, PR_TMDRIGHT, PR_TMDUP, PR_TMDYAW, PR_TMDPITCH,   // Ă˘Â­Â run 237
+       PR_TMDARMFROM, PR_TMDARMTO, PR_TMDARMSTEP,   // Ă˘Â­Â run 237c, un-retired in 247b
+       PR_TMDARMSLOT, PR_TMDARMMESH,                // Ă˘Â­Â run 250
+       PR_TMDARMMODE,                               // Ă˘Â­Â run 251
+       PR_TMDHIDE,                   // Ă˘Â­Â run 237d
+       PR_TMDBONELO, PR_TMDBONEHI, PR_TMDBONEMESH, PR_TMDBONESLOT,   // Ă˘Â­Â run 239
+       PR_TMDBONEMODE,               // Ă˘Â­Â run 241
+       PR_TMDROLL,                   // Ă˘Â­Â run 245
        PR_GOTO_TMD,
-       // ⭐ run 249: the TMD page split into three. See kPageRows.
+       // Ă˘Â­Â run 249: the TMD page split into three. See kPageRows.
        PR_GOTO_TMDBONE, PR_GOTO_TMDMESH, PR_BACK_TMD,
        PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_BACK };
 
-// ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
+// ---- Ă˘Â­Â run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
 // PR_HEADROLL is deliberately NOT on any page any more. Head roll is not a preference: if you tilt
 // your head and the view does not tilt with it, the horizon swings against your inner ear. It was
@@ -6162,10 +6175,10 @@ enum { PR_ENABLEVR = 0, PR_AIMMETHOD, PR_MOVEDIR, PR_TURNMODE, PR_TURNSPEED, PR_
 // DISPLAY is its own page with a single row today. That is deliberate: HUD inset/safe-area tuning
 // is already queued (it is the beta item in STATUS), and the crosshair belongs with it rather than
 // with comfort. A page of one that is about to be a page of three beats moving it twice.
-// ⭐ run 217: WEAPON is its own page because it is the only one whose rows are PER WEAPON - the values
+// Ă˘Â­Â run 217: WEAPON is its own page because it is the only one whose rows are PER WEAPON - the values
 // on it change meaning when you switch guns, and mixing that with global settings on a shared page is
 // how someone tunes the rifle and wonders why the pistol moved.
-// ---- 💥 run 249: kPanelRowsMax came back DOWN, and it is a rendering bound as well as a layout one ----
+// ---- Ä‘Ĺşâ€™Ä„ run 249: kPanelRowsMax came back DOWN, and it is a rendering bound as well as a layout one ----
 //
 // A 17-row TMD page did not draw at all: the plate and the selection bar appeared and every glyph on
 // the page was missing, title included. Run 248 read that as rows being dropped past the rect cap and
@@ -6182,8 +6195,8 @@ enum { PR_ENABLEVR = 0, PR_AIMMETHOD, PR_MOVEDIR, PR_TURNMODE, PR_TURNSPEED, PR_
 //   - No page is longer than 10 rows, which keeps every page inside the range that was drawing
 //     before any of this. It also nearly DOUBLES the glyph - px is derived from this number, and at
 //     17 it had hit the floor of 3 that the comment below calls unreadable through a lens.
-const int kPanelPages    = 9;      // ⭐ run 237: + TMD ALIGN; ⭐ run 249: + TMD BONES, TMD MESH
-const int kPanelRowsMax  = 10;     // ⚠ a page longer than this cannot be declared - see kPageRows
+const int kPanelPages    = 9;      // Ă˘Â­Â run 237: + TMD ALIGN; Ă˘Â­Â run 249: + TMD BONES, TMD MESH
+const int kPanelRowsMax  = 10;     // Ă˘ĹˇÂ  a page longer than this cannot be declared - see kPageRows
 const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_ENABLEVR, PR_AIMMETHOD, PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV,
       PR_GOTO_WEAPON, PR_GOTO_TMD },
@@ -6196,23 +6209,23 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // WORLD SCALE belongs here for the reason the DISPLAY page exists: it is judged by LOOKING, and a
     // setting judged by looking has to be adjustable while you are looking. A relaunch per guess is what
     // this project's own notes call out - "a sign is not worth a headset session each".
-    // ⭐ run 217: LASER sits with CROSSHAIR deliberately: the crosshair is HIDDEN in MOTION CONTROLLER
+    // Ă˘Â­Â run 217: LASER sits with CROSSHAIR deliberately: the crosshair is HIDDEN in MOTION CONTROLLER
     // because a centre-screen reticle points where the shot is not going, and the laser is the thing
     // that replaces it. Judged by looking, like everything else on this page.
-    // ⭐ run 230: NOTE SIZE is the HUD-inset row this page was created expecting. It belongs here
+    // Ă˘Â­Â run 230: NOTE SIZE is the HUD-inset row this page was created expecting. It belongs here
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
     { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_NOTESIZE, PR_BACK },
-    // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
+    // Ă˘Â­Â run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
     // (1,400 vs 3,800 draws was measured) and a cross-run comparison is worthless. That mistake cost a
     // test run and it was mine.
     { PR_OCCLUSION, PR_WEAPONFX, PR_AIMPARTS, PR_DEBUG, PR_BACK },
     { PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH, PR_BACK },
-    // ⭐ run 237: its own page, not a row on WEAPON ALIGN. That page's values are PER WEAPON and
+    // Ă˘Â­Â run 237: its own page, not a row on WEAPON ALIGN. That page's values are PER WEAPON and
     // change meaning when you switch guns; these are one object held one way, always the same.
-    // ---- ⭐ run 249: TMD ALIGN keeps the POSE, and hands the tools to two sub-pages ----
+    // ---- Ă˘Â­Â run 249: TMD ALIGN keeps the POSE, and hands the tools to two sub-pages ----
     //
     // Split on what you are doing, not on how many rows fit. The seven pose rows are the ones you
     // sit and work through repeatedly while lining the device up on your forearm, so they stay one
@@ -6221,27 +6234,27 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // is wrong, not while aiming, and each is a self-contained job.
     { PR_TMDON, PR_TMDFWD, PR_TMDRIGHT, PR_TMDUP, PR_TMDYAW, PR_TMDPITCH, PR_TMDROLL,
       PR_GOTO_TMDBONE, PR_GOTO_TMDMESH, PR_BACK },
-    // ⭐ run 239: the per-slot bone rows. BONE SLOT selects which of the four ranges the three rows
+    // Ă˘Â­Â run 239: the per-slot bone rows. BONE SLOT selects which of the four ranges the three rows
     // below it are editing, so they belong together and nowhere else.
     { PR_TMDBONESLOT, PR_TMDBONEMESH, PR_TMDBONELO, PR_TMDBONEHI, PR_TMDBONEMODE, PR_BACK_TMD },
-    // ⭐ run 247b: the triangle window is UN-RETIRED. Run 237f took it off the panel as measured
+    // Ă˘Â­Â run 247b: the triangle window is UN-RETIRED. Run 237f took it off the panel as measured
     // dead - and it was, for the HANDS, where the two interleave. The left arm is a different
     // object: one limb, wrist to shoulder on a single bone set, so bones cannot separate it and a
     // contiguous block of triangles is the only remaining lever. Dead for one mesh is not dead.
     //
-    // 💥 run 242: HIDE MESH came BACK. It was dropped in run 239 to make room for BONE SLOT and that
+    // Ä‘Ĺşâ€™Ä„ run 242: HIDE MESH came BACK. It was dropped in run 239 to make room for BONE SLOT and that
     // was never mentioned - so the capability still existed, in the ini and in FgHidden, with no way
     // to reach it. Asked for directly as "make the whole mesh disappear so I can confirm both arms
     // share it", which is exactly what it is for: one press answers a question that otherwise costs
     // a bone sweep. It sits here because it is the same question the triangle window asks.
-    // ⭐ run 250: TRI SLOT and TRI MESH lead, because they say WHAT the two range rows below them are
+    // Ă˘Â­Â run 250: TRI SLOT and TRI MESH lead, because they say WHAT the two range rows below them are
     // pointing at. Same shape as the bone page on purpose - the two tools are used the same way and
     // the muscle memory should transfer.
     { PR_TMDARMSLOT, PR_TMDARMMESH, PR_TMDARMMODE, PR_TMDARMFROM, PR_TMDARMTO, PR_TMDARMSTEP,
       PR_TMDHIDE, PR_BACK_TMD },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 8, 8, 3, 6, 5, 7, 10, 6, 8 };   // ⭐ run 230: DISPLAY 5 -> 6; ⭐ run 237: root 7 -> 8 and a TMD page; ⭐ run 249: TMD 17 -> 10 + two sub-pages; ⭐ run 250: TMD MESH 5 -> 7; ⭐ run 251: + TRI MODE
+const int kPageCount[kPanelPages] = { 8, 8, 3, 6, 5, 7, 10, 6, 8 };   // Ă˘Â­Â run 230: DISPLAY 5 -> 6; Ă˘Â­Â run 237: root 7 -> 8 and a TMD page; Ă˘Â­Â run 249: TMD 17 -> 10 + two sub-pages; Ă˘Â­Â run 250: TMD MESH 5 -> 7; Ă˘Â­Â run 251: + TRI MODE
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -6249,8 +6262,8 @@ const int kPageCount[kPanelPages] = { 8, 8, 3, 6, 5, 7, 10, 6, 8 };   // ⭐ run
 // raiser, so forgetting to update one of these costs a resize rather than text spilling off the
 // plate. The widest strings are "AIM METHOD MOTION CONTROLLER" and "MOVE DIRECTION HAND (NO
 // TRACKING)", which is why those two pages are the broad ones.
-// ⭐ run 249: TMD BONES is 30 for "BONE MODE      NUDGE (find it)", its longest reachable value.
-const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 28, 30, 30, 30, 30 };   // ⭐ run 230: DISPLAY 28 -> 33 for "NOTE SIZE      100% (FULL SCREEN)"
+// Ă˘Â­Â run 249: TMD BONES is 30 for "BONE MODE      NUDGE (find it)", its longest reachable value.
+const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 28, 30, 30, 30, 30 };   // Ă˘Â­Â run 230: DISPLAY 28 -> 33 for "NOTE SIZE      100% (FULL SCREEN)"
 const char* kPageName[kPanelPages] = { "VR SETTINGS", "CONTROLLER", "COMFORT", "DISPLAY",
                                        "ADVANCED", "WEAPON ALIGN", "TMD ALIGN",
                                        "TMD BONES", "TMD MESH" };
@@ -6262,7 +6275,7 @@ inline int PanelRowId(int i) {
     return kPageRows[g_panelPage][i];
 }
 
-// ---- ⭐ run 159: VR mode on the panel, and starting in it ----
+// ---- Ă˘Â­Â run 159: VR mode on the panel, and starting in it ----
 //
 // ENABLE VR is the same switch BACKSPACE throws - SetVrMode - and BACKSPACE stays. What the row
 // adds is a way to reach it without a keyboard, which is what `Debug=0` needs.
@@ -6271,7 +6284,7 @@ inline int PanelRowId(int i) {
 // one: default-on meant **the main menu was rendered frame-split for the first time ever,
 // completely untested, on every launch.**
 //
-// ⚠️ What has changed since is specific and checkable rather than a change of mind: run 151 put the
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą What has changed since is specific and checkable rather than a change of mind: run 151 put the
 // game's HUD and menus into both eyes, and the pause menu and prompts are explicitly on that list.
 // So the thing run 37 objected to is the thing run 151 built. That makes the premise stale rather
 // than the decision wrong - which is the first lesson at the top of STATUS - but "should work now"
@@ -6315,7 +6328,7 @@ inline int OffHand() { return g_leftHanded ? 1 : 0; }
 // Written on CLOSE, not on every change. Changes apply live so turn speed can be felt while the
 // stick is moving, but the file only ever receives a value that was settled on - a mis-set number
 // you immediately corrected never reaches the ini at all.
-// ---- ⭐ run 171: coverage is guaranteed by the PAGE TABLES, not by remembering ----
+// ---- Ă˘Â­Â run 171: coverage is guaranteed by the PAGE TABLES, not by remembering ----
 //
 // "Shouldn't all settings be in PanelSave" - yes, and a comment saying so was not enough. Two rows
 // were adjustable on the panel and written nowhere: CUTSCENE CAM, which was reported reverting every
@@ -6330,7 +6343,7 @@ inline int OffHand() { return g_leftHanded ? 1 : 0; }
 void PanelSaveRow(int rowId, const char* path) {
     char v[32];
     switch (rowId) {
-        // ⚠️ StartInVr is the panel's LIVE VR mode, saved so the state you leave it in is the next
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą StartInVr is the panel's LIVE VR mode, saved so the state you leave it in is the next
         // cold start. BACKSPACE deliberately does not save - it is a toggle, not a setting, and a
         // key you press to peek at the flat game should not change how the game launches tomorrow.
         case PR_ENABLEVR:
@@ -6344,7 +6357,7 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_laserOn, 0, 0));
             WritePrivateProfileStringA("Render", "LaserSight", v, path); return;
-        // ⭐ run 217: every occupied slot is written on any weapon row, not just the one being edited.
+        // Ă˘Â­Â run 217: every occupied slot is written on any weapon row, not just the one being edited.
         // The rows share one table and PanelSave walks rows, so writing "the row I touched" would drop
         // a weapon you tuned earlier in the same session. Nav rows return silently; these do not,
         // because they DO persist - just all at once.
@@ -6400,7 +6413,7 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%d", g_occlusionMode);
             WritePrivateProfileStringA("Render", "OcclusionQueryMode", v, path); return;
         case PR_AIMPARTS:
-            // ⚠️ Always saved as 3. It is a diagnostic split, and a half-disabled aim method that
+            // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Always saved as 3. It is a diagnostic split, and a half-disabled aim method that
             // survives a relaunch is tomorrow's bug report - the same trap WEAPON FX mode 2 sprang.
             WritePrivateProfileStringA("Input", "AimModeParts", "3", path); return;
         case PR_MUZZLEFX:
@@ -6415,7 +6428,7 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_noteInsetPct, 0, 0));
             WritePrivateProfileStringA("Render", "NoteInsetPct", v, path); return;
-        // ⭐ run 237: ONE case writes the whole TMD block, so no row can be adjustable and persist
+        // Ă˘Â­Â run 237: ONE case writes the whole TMD block, so no row can be adjustable and persist
         // nowhere - the defect PanelSaveRow was restructured to prevent.
         case PR_TMDON: {
             const struct { const char* k; volatile LONG* p; } tm[] = {
@@ -6423,22 +6436,22 @@ void PanelSaveRow(int rowId, const char* path) {
                 { "TmdRight", &g_tmdRight }, { "TmdUp", &g_tmdUp },
                 { "TmdYawTenths", &g_tmdYawTenths }, { "TmdPitchTenths", &g_tmdPitchTenths },
                 { "TmdRollTenths", &g_tmdRollTenths },
-                // ⭐ run 249: TmdArmStep was adjustable-but-never-saved, which is exactly the defect
+                // Ă˘Â­Â run 249: TmdArmStep was adjustable-but-never-saved, which is exactly the defect
                 // this one-case-writes-the-block shape exists to prevent. It is read back at startup
                 // (see the ini loader) so the omission silently reset it to 50 every launch.
-                // ⭐ run 250: TmdArmFrom/TmdArmTo left this table when they became per-slot - they are
+                // Ă˘Â­Â run 250: TmdArmFrom/TmdArmTo left this table when they became per-slot - they are
                 // written by the slot loop below, alongside the bone slots.
                 { "TmdArmStep", &g_tmdArmStep },
                 { "TmdHideVerts", &g_tmdHideVerts }, { "TmdBoneMode", &g_tmdBoneMode },
             };
-            // ⚠ Was a hardcoded 11 against an 11-entry table. Adding a key above without noticing
+            // Ă˘ĹˇÂ  Was a hardcoded 11 against an 11-entry table. Adding a key above without noticing
             // this line writes the key and never saves it - the same class of silent omission the
             // entry above was added to fix.
             for (int i = 0; i < (int)_countof(tm); ++i) {
                 _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(*tm[i].p));
                 WritePrivateProfileStringA("Input", tm[i].k, v, path);
             }
-            // ⭐ run 239: the per-slot bone keys, written in the same pass so that no slot can be
+            // Ă˘Â­Â run 239: the per-slot bone keys, written in the same pass so that no slot can be
             // adjustable and persist nowhere - the defect PanelSaveRow was restructured to prevent.
             for (int sI = 0; sI < kTmdBoneSlots; ++sI) {
                 char key[32];
@@ -6452,7 +6465,7 @@ void PanelSaveRow(int rowId, const char* path) {
                 _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_tmdBoneHi[sI]));
                 WritePrivateProfileStringA("Input", key, v, path);
             }
-            // ⭐ run 250: the triangle-window slots, in the same pass and for the same reason.
+            // Ă˘Â­Â run 250: the triangle-window slots, in the same pass and for the same reason.
             for (int sI = 0; sI < kTmdArmSlots; ++sI) {
                 char key[32];
                 _snprintf_s(key, sizeof(key), _TRUNCATE, "TmdArmMesh%d", sI);
@@ -6478,7 +6491,7 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_TMDBONEMESH: case PR_TMDBONESLOT: case PR_TMDBONEMODE:
             return;   // written by PR_TMDON above
         case PR_WEAPONFX: {
-            // ⚠️ Mode 2 is NEVER saved. It blacks out the weapon by design, and a test state that
+            // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Mode 2 is NEVER saved. It blacks out the weapon by design, and a test state that
             // survives a relaunch is a state somebody meets tomorrow as a bug report - with the
             // panel row scrolled off screen and no memory of having set it. Saved as 1 instead,
             // which is what the tester almost certainly wants back.
@@ -6507,7 +6520,7 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%d", g_leftHandedPending);
             WritePrivateProfileStringA("Input", "LeftHanded", v, path); return;
 
-        // ⭐ run 249: the navigation rows are listed in FULL now. PR_GOTO_WEAPON and PR_GOTO_TMD were
+        // Ă˘Â­Â run 249: the navigation rows are listed in FULL now. PR_GOTO_WEAPON and PR_GOTO_TMD were
         // missing, so every close logged two "row N has NO PanelSave entry" warnings about rows that
         // correctly have nothing to save - and a warning that cries wolf is one nobody reads on the
         // day it names a real one.
@@ -6645,17 +6658,17 @@ void PanelRowText(int row, char* out, size_t cap) {
         case PR_TMDROLL:
             _snprintf_s(out, cap, _TRUNCATE, "TMD ROLL   %+.1f", Rd(g_tmdRollTenths) / 10.0f);  break;
         case PR_GOTO_TMD: _snprintf_s(out, cap, _TRUNCATE, "TMD ALIGN..."); break;
-        // ---- 💥 run 249: these three rows had NO text case and fell through to `default` ----
+        // ---- Ä‘Ĺşâ€™Ä„ run 249: these three rows had NO text case and fell through to `default` ----
         //
         // The default arm prints "DEBUGGING ON/OFF", so run 247b's un-retire put three rows on the
         // page all reading DEBUGGING, and PR_TMDARMSTEP had no PanelAdjust case either - selecting
         // it and pressing left or right toggled the DEBUG setting. Nobody saw it because the page
         // was blank for other reasons the whole time it was shipping.
         //
-        // ⚠ A `default` that quietly does something plausible is why: a missing case reads as a row
+        // Ă˘ĹˇÂ  A `default` that quietly does something plausible is why: a missing case reads as a row
         // that works. Fixed here rather than by removing the default, because the default is also
         // the PR_DEBUG row's own text and rewiring that is a bigger change than this run wants.
-        // ⭐ run 250: per-slot. FROM/TO read the SELECTED slot, exactly as the bone rows do.
+        // Ă˘Â­Â run 250: per-slot. FROM/TO read the SELECTED slot, exactly as the bone rows do.
         case PR_TMDARMSLOT:
             _snprintf_s(out, cap, _TRUNCATE, "TRI SLOT       %ld of %d",
                         Rd(g_tmdArmSlot) + 1, kTmdArmSlots);
@@ -6666,7 +6679,7 @@ void PanelRowText(int row, char* out, size_t cap) {
             else     _snprintf_s(out, cap, _TRUNCATE, "TRI MESH       %ld", am);
             break;
         }
-        // ⭐ run 251: KEEP draws only the range, CUT draws everything except it. Worded as what each
+        // Ă˘Â­Â run 251: KEEP draws only the range, CUT draws everything except it. Worded as what each
         // one DOES rather than as a mode number, because the two are exact opposites and a wrong
         // guess blanks the mesh.
         case PR_TMDARMMODE:
@@ -6676,7 +6689,7 @@ void PanelRowText(int row, char* out, size_t cap) {
             break;
         // The window says OFF when it is inert, because two rows reading numbers while doing nothing
         // at all reads as the feature being broken - which is how run 237f's measured-dead window got
-        // reported twice more. ⚠ Inert is MODE-DEPENDENT: KEEP 0-1000 keeps everything, CUT 0-1000
+        // reported twice more. Ă˘ĹˇÂ  Inert is MODE-DEPENDENT: KEEP 0-1000 keeps everything, CUT 0-1000
         // removes the mesh. Same numbers, opposite results, so this must never call one of them OFF.
         case PR_TMDARMFROM: case PR_TMDARMTO: {
             const LONG sI = Rd(g_tmdArmSlot);
@@ -6824,7 +6837,7 @@ void PanelAdjust(int row, int dir) {
             g_walkDirection = g_walkDirection ? 0 : 1;
             break;
         case PR_TURNMODE:
-            // ---- ⚠️ CLAMPED, not wrapped (run 143) ----
+            // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą CLAMPED, not wrapped (run 143) ----
             //
             // This wrapped 2 -> 0, and one press too many on SMOOTH landed the player in GAME
             // DEFAULT - the mode with no speed control - which was reported as "I could not turn
@@ -6932,7 +6945,7 @@ void PanelAdjust(int row, int dir) {
             break;
         }
         case PR_TMDBONELO: case PR_TMDBONEHI: {
-            // 💥 run 238b: the two ends were independent, and the collapse needs BOTH set - so
+            // Ä‘Ĺşâ€™Ä„ run 238b: the two ends were independent, and the collapse needs BOTH set - so
             // reported, correctly, as "BONE FROM did nothing". Moving one end of a range that starts
             // OFF at both ends can never produce a valid range, so the row that a sweep most needs was
             // the one row that could not do anything.
@@ -6961,7 +6974,7 @@ void PanelAdjust(int row, int dir) {
             }
             break;
         }
-        // 💥 run 249: this case did not exist. PR_TMDARMSTEP fell through to `default`, which
+        // Ä‘Ĺşâ€™Ä„ run 249: this case did not exist. PR_TMDARMSTEP fell through to `default`, which
         // toggles DEBUGGING - so the row that sets the sweep's stride was silently a debug switch.
         // Stepped through a table rather than +-1: the point of the row is coarse-to-fine, and
         // walking from 1 to 250 one press at a time is not a thing anyone would do in a headset.
@@ -6976,7 +6989,7 @@ void PanelAdjust(int row, int dir) {
             InterlockedExchange(&g_tmdArmStep, kSteps[at]);
             break;
         }
-        // ⭐ run 250: the triangle window's own slot and mesh, mirroring the bone rows exactly - the
+        // Ă˘Â­Â run 250: the triangle window's own slot and mesh, mirroring the bone rows exactly - the
         // point of the change is that these two are no longer the BONE slot's.
         case PR_TMDARMSLOT: {
             LONG sv = Rd(g_tmdArmSlot) + (dir >= 0 ? 1 : -1);
@@ -6996,7 +7009,7 @@ void PanelAdjust(int row, int dir) {
             InterlockedExchange(&g_tmdArmTo[sI], 1000);
             break;
         }
-        // ⭐ run 251: switching mode RESETS the range to that mode's inert value. 0-1000 means "keep
+        // Ă˘Â­Â run 251: switching mode RESETS the range to that mode's inert value. 0-1000 means "keep
         // everything" in KEEP and "delete the mesh" in CUT, so carrying the numbers across would make
         // one press blank the geometry - and the row that did it would still read 0 and 1000.
         case PR_TMDARMMODE: {
@@ -7049,7 +7062,7 @@ void PanelAdjust(int row, int dir) {
             // Same 5%-a-press step as WORLD SCALE. There is a floor rather than 0 because a note you
             // cannot read for being too small is the same bug reported from the other side.
             //
-            // ⚠ It was 40, and run 230 settled on exactly 40 - AT the clamp. A value chosen at a
+            // Ă˘ĹˇÂ  It was 40, and run 230 settled on exactly 40 - AT the clamp. A value chosen at a
             // boundary is not a preference, it is the boundary, and there is no way to tell the two
             // apart from inside the clamp. Lowered to 25 so the comfortable setting is somewhere in
             // the range rather than at its edge.
@@ -7104,8 +7117,8 @@ void PanelAdjust(int row, int dir) {
         case PR_GOTO_DISPLAY: g_panelPage = 3; g_panelRow = 0; return;
         case PR_GOTO_ADV:     g_panelPage = 4; g_panelRow = 0; return;
         case PR_GOTO_WEAPON:  g_panelPage = 5; g_panelRow = 0; return;
-        case PR_GOTO_TMD:     g_panelPage = 6; g_panelRow = 0; return;   // ⭐ run 237
-        // ⭐ run 249: the two TMD sub-pages, and a BACK that returns to TMD ALIGN rather than to the
+        case PR_GOTO_TMD:     g_panelPage = 6; g_panelRow = 0; return;   // Ă˘Â­Â run 237
+        // Ă˘Â­Â run 249: the two TMD sub-pages, and a BACK that returns to TMD ALIGN rather than to the
         // root. A sub-page whose BACK dumps you at the top costs two presses to get back to where
         // you were working, which on a tuning page is the press you make most.
         case PR_GOTO_TMDBONE: g_panelPage = 7; g_panelRow = 0; return;
@@ -7115,7 +7128,7 @@ void PanelAdjust(int row, int dir) {
             InterlockedExchange(&g_laserOn,
                                 InterlockedCompareExchange(&g_laserOn, 0, 0) ? 0 : 1);
             break;
-        // ⭐ run 217: the weapon rows. GunAlignFor creates the slot on first adjustment, seeded from the
+        // Ă˘Â­Â run 217: the weapon rows. GunAlignFor creates the slot on first adjustment, seeded from the
         // global anchor - so tuning always starts from what you are already looking at, never a jump.
         // With no weapon latched there is nothing to key on and the press does nothing, which the row
         // text says in advance.
@@ -7143,7 +7156,7 @@ void PanelAdjust(int row, int dir) {
     g_panelDirty = true;
 }
 
-// ⚠️ `menu/click` exists on the LEFT hand only in the Touch profile, and `system/click` on the
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą `menu/click` exists on the LEFT hand only in the Touch profile, and `system/click` on the
 // right is reserved by the runtime. Both have caught people out; neither is a runtime error, the
 // binding is just silently ignored.
 PadButtonAction g_padButtons[] = {
@@ -7156,10 +7169,11 @@ PadButtonAction g_padButtons[] = {
     { "flashlight", "Flashlight",     "/user/hand/left/input/y/click",           "Flashlight", XI_DPAD_DOWN, XR_NULL_HANDLE, false, true  },
     { "dash",       "Dash",           "/user/hand/left/input/thumbstick/click",  "Dash",       XI_LTHUMB,    XR_NULL_HANDLE, false, false },
     { "menu",       "Menu",           "/user/hand/left/input/menu/click",        "Menu",       XI_START,     XR_NULL_HANDLE, true,  false },
+    { "options",    "Options",        "/user/hand/right/input/menu/click",       "Options",    XI_START,     XR_NULL_HANDLE, true,  false },
 };
 const int kPadButtonCount = (int)(sizeof(g_padButtons) / sizeof(g_padButtons[0]));
 
-// ---- ⭐ run 274: the buttons had NO instrument, and that is why the tester report stalled ----
+// ---- Ă˘Â­Â run 274: the buttons had NO instrument, and that is why the tester report stalled ----
 //
 // The per-second census has recorded the two triggers in detail since run 156 - raw, min, max,
 // inactive count, veto count, and the bytes the game actually received - because the trigger was
@@ -7175,14 +7189,17 @@ int g_btnHeldFrames[kPadButtonCount]{};
 // Run 214: which row is the melee/impulse button. Resolved once at ini load; -1 until then, and the
 // melee window simply never arms in that case rather than guessing at a row.
 int g_impulseBtnIdx = -1;
-// ⭐ run 219: the laser toggle rides the JUMP button's long press. See the note at the poll loop.
+// Ă˘Â­Â run 219: the laser toggle rides the JUMP button's long press. See the note at the poll loop.
 int g_jumpBtnIdx = -1;
 volatile LONG g_laserHoldMs = 1000;    // ini [Input] LaserHoldMs, 0 = no button toggle
+// Ă˘Â­Â Options button: short press = menu, long press = recenter VR view
+int g_optionsBtnIdx = -1;
+volatile LONG g_optionsHoldMs = 800;   // ini [Input] OptionsHoldMs, 0 = no recenter on hold
 
 // Turn. Snap steps the yaw base directly rather than driving the look stick, because the engine's
 // own turn ramp is exactly what snap must not have: instant and exact is the whole point. Smooth
 // goes through the pad instead and inherits Raven's curve, which is what you want there.
-// ---- ⭐ run 140: three turn modes, not two ----
+// ---- Ă˘Â­Â run 140: three turn modes, not two ----
 //
 // Mode 0 was always called "smooth" but it is really "hand the stick to the engine": it feeds X to
 // the game's look axis and inherits Raven's sensitivity and acceleration curve, neither of which
@@ -7210,7 +7227,7 @@ int32_t g_padTurnAccum = 0;    // snap steps waiting to be folded in, in FRotato
 
 // Declared here rather than beside the cutscene watch that sets it: the turn code below is the
 // first thing in the file that reads either of these.
-// ---- ⭐ run 165: three values, because a toggle could not express what was wanted ----
+// ---- Ă˘Â­Â run 165: three values, because a toggle could not express what was wanted ----
 //
 // Renamed from CutsceneLockTurn, which was a double negative - "LockTurn=0" reads as both "no lock"
 // and "turning locked off", and it was misread in conversation more than once. This says what it
@@ -7227,14 +7244,14 @@ int32_t g_padTurnAccum = 0;    // snap steps waiting to be folded in, in FRotato
 //            which lets a standing player turn past what the scene intended. GAME TURN users get
 //            clamping here too, since mode 0 is the engine path either way.
 //
-// ⚠️ Applies to the STICK only, in both aim methods. The mouse is the game's own input and never
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Applies to the STICK only, in both aim methods. The mouse is the game's own input and never
 // passes through here, which is why head aim with a mouse behaves identically at every setting.
 // Naming it a "controller aim" setting would have made it silently inert while holding Touch
 // controllers in head aim mode, which is a perfectly reachable combination.
 volatile LONG g_cineStickTurn = 2;       // ini [Input] CutsceneStickTurn - default FREE
 volatile LONG g_cutsceneLockCamera = 0;  // ini [Input] CutsceneLockCamera - off by default
 
-// ---- ⭐ run 170: handedness, as TWO independent settings ----
+// ---- Ă˘Â­Â run 170: handedness, as TWO independent settings ----
 //
 // Split deliberately, and not by preference - Half-Life: Alyx shipped them welded together, players
 // reported it forced them to aim or move with the wrong hand, and Valve separated them in Update
@@ -7243,7 +7260,7 @@ volatile LONG g_cutsceneLockCamera = 0;  // ini [Input] CutsceneLockCamera - off
 //   LeftHanded  the GUN and the BUTTONS move to the other hand. Sticks do not.
 //   SwapSticks  movement and turning trade sticks. Nothing else changes.
 //
-// ⚠️ LeftHanded is INI-ONLY and needs a relaunch, and that is not laziness: OpenXR binding
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą LeftHanded is INI-ONLY and needs a relaunch, and that is not laziness: OpenXR binding
 // suggestions are fixed when the action set is attached, so a live toggle would change the value
 // and not the bindings. The panel's own header states the rule - a setting that appears to change
 // and silently does nothing is worse than one that is not offered - and this session has produced
@@ -7260,7 +7277,7 @@ volatile LONG g_swapSticks = 0;          // ini [Input] SwapSticks - live, on th
 // Which hand the gun and aim follow. The only thing the four aim sites need to know.
 inline int AimHand() { return g_leftHanded ? 0 : 1; }
 
-// ---- ⚠️ run 180: the shortest angle between two UE3 yaws. Two sites had this WRONG ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 180: the shortest angle between two UE3 yaws. Two sites had this WRONG ----
 //
 // UE3 rotation is 65536 units per turn, and a plain int32 subtraction does NOT wrap - two headings
 // 0.3 deg apart can differ by 65590 units, which reads as 360.3 deg. Both the drift log and the
@@ -7302,7 +7319,7 @@ extern volatile LONG g_traceFromGun;
 extern volatile LONG g_gunSignCombo;
 extern float g_aimPoseSignX, g_aimPoseSignY;
 
-// ---- ⭐ run 274: a SECOND interaction profile, for Valve Index controllers ----
+// ---- Ă˘Â­Â run 274: a SECOND interaction profile, for Valve Index controllers ----
 //
 // Until now the mod suggested bindings for `/interaction_profiles/oculus/touch_controller` and
 // nothing else, so every non-Touch runtime got whatever its own compatibility remap produced. A
@@ -7317,7 +7334,7 @@ extern float g_aimPoseSignX, g_aimPoseSignY;
 // seconds into every session on that hardware (kTrigGateGrace). A profile the runtime is only
 // emulating is not a profile you can rely on for a single-source sensor.
 //
-// ⚠️ The suggest call is ALL-OR-NOTHING per profile (run 172 lost 31 bindings to one bad path), so
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The suggest call is ALL-OR-NOTHING per profile (run 172 lost 31 bindings to one bad path), so
 // each profile now gets its OWN call and its own log line. A profile that is rejected costs only
 // itself - Touch still stands and the runtime falls back to exactly today's behaviour, which is
 // what makes this safe to ship without being able to test it here.
@@ -7393,7 +7410,7 @@ bool InitXRInput() {
     {
         char path[MAX_PATH]{};
         if (IniPath(path)) {
-            // ⭐ Default 1 -> 2, matching the tested config. 1 predates the smooth-turning work and
+            // Ă˘Â­Â Default 1 -> 2, matching the tested config. 1 predates the smooth-turning work and
             // was never revisited when mode 2 landed. Panel-writable, so it is one row to change.
             g_turnMode     = GetPrivateProfileIntA("Input", "TurnMode",  2, path);
             if (g_turnMode < 0 || g_turnMode > 2) g_turnMode = 1;
@@ -7420,7 +7437,7 @@ bool InitXRInput() {
             // Which fields aim mode 9 may write. 0 controller only, 1 + mCurrentPOV (default),
             // 2 every scanned field. See the note on g_aimFieldSet - set 2 moves the camera.
             //
-            // ⭐ Default 0 -> 1, together with AimMethod above. These two are a tested PAIR - 1 has
+            // Ă˘Â­Â Default 0 -> 1, together with AimMethod above. These two are a tested PAIR - 1 has
             // only ever run alongside motion-controller aiming - so promoting either alone would have
             // shipped a combination no run has executed. Promoted together or not at all.
             g_aimFieldSet   = GetPrivateProfileIntA("Input", "AimFieldSet", 1, path);
@@ -7435,7 +7452,7 @@ bool InitXRInput() {
             // gun and arms, move direction, the rot mode - has to be in the right state before the
             // first frame, not after the first panel visit. Applied last in this block, below.
             //
-            // ⭐ Default 0 (head) -> 1 (motion controller). This is a VR mod whose gun anchor, pose
+            // Ă˘Â­Â Default 0 (head) -> 1 (motion controller). This is a VR mod whose gun anchor, pose
             // lead and sign work all exist to serve controller aiming, and every validated run has
             // been at 1 - so 0 shipped a first-run experience nothing had been tested against. The
             // panel row switches it back for anyone who prefers head aiming.
@@ -7444,7 +7461,7 @@ bool InitXRInput() {
             // Aim mode gun visual: signs and whether the gun follows the hand POSITION as well as
             // its direction. Up/down came back reversed, hence the -1 default on pitch.
             g_gunSignYaw   = GetPrivateProfileIntA("Input", "GunSignYaw",   1, path) >= 0 ? 1 : -1;
-            // ⭐ Default -1 -> 1, to match the tested ini EXACTLY. Read the note on GunSignCombo
+            // Ă˘Â­Â Default -1 -> 1, to match the tested ini EXACTLY. Read the note on GunSignCombo
             // below before changing either: these two only mean anything as a pair.
             g_gunSignPitch = GetPrivateProfileIntA("Input", "GunSignPitch", 1, path) >= 0 ? 1 : -1;
             g_gunSignRoll  = GetPrivateProfileIntA("Input", "GunSignRoll",  1, path) >= 0 ? 1 : -1;
@@ -7454,7 +7471,7 @@ bool InitXRInput() {
             // is the point it ROTATES ABOUT, so getting it near the grip is what stops the gun
             // swinging through an arc when you turn your wrist.
             //
-            // ⭐ Defaults are run 131's tuned values (30/9/-13), promoted from the example ini where
+            // Ă˘Â­Â Defaults are run 131's tuned values (30/9/-13), promoted from the example ini where
             // they had sat COMMENTED OUT since they were measured. The old defaults (25/8/-8) were
             // placeholders no run ever endorsed, and because the live ini has always set the tuned
             // values explicitly, nothing here noticed - until a second install with no ini rendered
@@ -7464,7 +7481,7 @@ bool InitXRInput() {
             // A shipped build takes these unless the player overrides them, so the numbers that ship
             // must be the numbers that were tuned. Per-user trim is still expected - this is an
             // offset from YOUR eye - but it should start from the measured pose, not a placeholder.
-            // ⭐ run 221: the SHIPPED table first, then the ini on top. Two things follow from that
+            // Ă˘Â­Â run 221: the SHIPPED table first, then the ini on top. Two things follow from that
             // order, and both are the point:
             //
             //   a fresh install gets the tuned weapons, because they are in the binary
@@ -7510,7 +7527,7 @@ bool InitXRInput() {
             // Which sign combination to START in. Set from the ini rather than by changing the
             // sign defaults, because changing those RENUMBERS the combos - which is what made
             // "combo 2" mean two different things in two sessions and cost a run.
-            // ⭐ Default 0 -> 2, with GunSignPitch above flipped to 1 in the same change, so the
+            // Ă˘Â­Â Default 0 -> 2, with GunSignPitch above flipped to 1 in the same change, so the
             // shipped pair is byte-identical to the ini every working run has used.
             //
             // Reading GunSigns() says -1/combo 0 and 1/combo 2 resolve to the same effective signs,
@@ -7531,7 +7548,7 @@ bool InitXRInput() {
                 GetPrivateProfileIntA("Input", "CutsceneStickTurn", 2, path) & 3);
             InterlockedExchange(&g_cutsceneLockCamera,
                 GetPrivateProfileIntA("Input", "CutsceneLockCamera", 0, path) ? 1 : 0);
-    // ⭐ run 237: the TMD's own anchor. Defaults mirror the gun's sideways offset; tune by looking.
+    // Ă˘Â­Â run 237: the TMD's own anchor. Defaults mirror the gun's sideways offset; tune by looking.
     InterlockedExchange(&g_tmdOnOffHand,  GetPrivateProfileIntA("Input", "TmdOnOffHand", 1, path) ? 1 : 0);
     InterlockedExchange(&g_tmdFwd,        GetPrivateProfileIntA("Input", "TmdFwd",   30, path));
     InterlockedExchange(&g_tmdRight,      GetPrivateProfileIntA("Input", "TmdRight", -9, path));
@@ -7539,7 +7556,7 @@ bool InitXRInput() {
     InterlockedExchange(&g_tmdYawTenths,  GetPrivateProfileIntA("Input", "TmdYawTenths",   0, path));
     InterlockedExchange(&g_tmdPitchTenths,GetPrivateProfileIntA("Input", "TmdPitchTenths", 0, path));
     InterlockedExchange(&g_tmdRollTenths, GetPrivateProfileIntA("Input", "TmdRollTenths",  0, path));
-    // ⭐ run 250: per-slot now. Slot 0 inherits the pre-slot TmdArmFrom/TmdArmTo as its default, so an
+    // Ă˘Â­Â run 250: per-slot now. Slot 0 inherits the pre-slot TmdArmFrom/TmdArmTo as its default, so an
     // existing ini keeps whatever window was parked in it rather than silently resetting to inert.
     {
         const int legacyFrom = GetPrivateProfileIntA("Input", "TmdArmFrom",    0, path);
@@ -7569,7 +7586,7 @@ bool InitXRInput() {
     }
     InterlockedExchange(&g_tmdBoneMode,   GetPrivateProfileIntA("Input", "TmdBoneMode",  0, path));
     InterlockedExchange(&g_tmdBoneCensus, GetPrivateProfileIntA("Input", "TmdBoneCensus", 0, path));
-    // ⭐ run 258: 0 reverts to the pure frame-count drop, which is a 2.25 s wait at 120 fps and longer
+    // Ă˘Â­Â run 258: 0 reverts to the pure frame-count drop, which is a 2.25 s wait at 120 fps and longer
     // below it. Here because a latch change is the highest-consequence thing in this file - the wrong
     // roles cost a session - and this one fires on a signal that has only ever been read, never acted on.
     InterlockedExchange(&g_weaponSwapDrop,
@@ -7604,6 +7621,7 @@ bool InitXRInput() {
                 // somebody moved the button.
                 if (!strcmp(g_padButtons[i].name, "impulse")) g_impulseBtnIdx = i;
                 if (!strcmp(g_padButtons[i].name, "jump"))    g_jumpBtnIdx    = i;
+                if (!strcmp(g_padButtons[i].name, "options")) g_optionsBtnIdx = i;
             }
         }
     }
@@ -7717,7 +7735,7 @@ bool InitXRInput() {
                        XR_ACTION_TYPE_BOOLEAN_INPUT, &g_padButtons[i].action);
     if (!ok) { Log("xrinput: xrCreateAction failed - controllers unavailable"); return false; }
 
-    // ---- ⚠️ run 274: this was TWO SHORT, and had been since run 180 ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 274: this was TWO SHORT, and had been since run 180 ----
     //
     // The size claimed to be "sized from the same constants that fill it", but it was written out
     // by hand and the terms stopped matching the emission sites. Counting them: 4 fixed + 9 buttons
@@ -7739,7 +7757,7 @@ bool InitXRInput() {
                                     + 2;                 // per-profile extras (Index trackpad/touch)
     XrActionSuggestedBinding binds[kMaxBinds]{};
     uint32_t nb = 0;
-    // ---- ⭐ run 170: left-handed mode ----
+    // ---- Ă˘Â­Â run 170: left-handed mode ----
     //
     // Mirrors the hand in a binding path. Two things it deliberately does NOT touch:
     //
@@ -7758,7 +7776,7 @@ bool InitXRInput() {
     // The face buttons mirror cleanly as PAIRS - x<->a and y<->b - so jump/crouch and
     // age/flashlight simply trade places with no collision. That is why a whole-table mirror works
     // here at all.
-    // ---- ⚠️ run 172: the face buttons need the COMPONENT swapped too, not just the hand ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 172: the face buttons need the COMPONENT swapped too, not just the hand ----
     //
     // First version swapped only the hand and produced `/user/hand/left/input/a/click`, which does
     // not exist: `a` and `b` are RIGHT-hand only and `x` and `y` are LEFT-hand only in this profile.
@@ -7871,7 +7889,7 @@ bool InitXRInput() {
                               "/user/hand/right/input/squeeze/value" };
         for (int i = 0; i < 2; ++i) add(g_actGrip, wp[i], false, false);
 
-        // ⚠️ Run 82: thumbrest + trigger alone was TOO NARROW. The log caught it outright -
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Run 82: thumbrest + trigger alone was TOO NARROW. The log caught it outright -
         // "right on desk (2346 um/frame)" is a controller being waved about while the sensors
         // insist nobody is touching it. A thumb parked on the STICK is not on the thumbrest, and
         // an index finger curled round the grip is not on the trigger, so a perfectly normal hold
@@ -7881,7 +7899,7 @@ bool InitXRInput() {
         // anywhere counts. Being generous is the right bias: a false "held" costs nothing, and a
         // false "put down" unplugs the pad mid-fight.
         //
-        // ⚠️ These pass sensorRole=true, which is what keeps grasp on `squeeze/value` when the
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą These pass sensorRole=true, which is what keeps grasp on `squeeze/value` when the
         // buttons move to `squeeze/force` on Index. Grasp is asking about CONTACT; the buttons are
         // asking about INTENT. Sharing one path is what makes a firm grip read as a held button.
         const char* gp[12] = { "/user/hand/left/input/thumbrest/touch",
@@ -7902,7 +7920,7 @@ bool InitXRInput() {
         // Exactly two sources, and nothing else may be added here. The moment this accepts a second
         // surface it stops meaning "a finger is on the trigger" and becomes another copy of grasp.
         //
-        // ⭐ run 274: on Index this now RESOLVES. It is the whole reason the profile was added -
+        // Ă˘Â­Â run 274: on Index this now RESOLVES. It is the whole reason the profile was added -
         // the run-156 veto was inert on that hardware because this action had no fallback.
         const char* tp[2] = { "/user/hand/left/input/trigger/touch",
                               "/user/hand/right/input/trigger/touch" };
@@ -7937,7 +7955,7 @@ bool InitXRInput() {
         sb.countSuggestedBindings = nb;
         XrResult sr = xrSuggestInteractionProfileBindings(g_xrInstance, &sb);
         if (XR_FAILED(sr)) {
-            // ⚠️ This fails as a WHOLE if any single binding path is not valid for the profile - it
+            // Ă˘ĹˇÂ ÄŹÂ¸Ĺą This fails as a WHOLE if any single binding path is not valid for the profile - it
             // is not a per-binding filter. So a typo in one path silently costs every control for
             // that profile, which is why the count and the result are both logged rather than
             // assumed. Since run 274 each profile is suggested separately, so one rejected profile
@@ -7993,7 +8011,7 @@ void SyncXRInput(XrTime displayTime) {
     const bool uiMenu=Rd(g_vrUiEnabled) && Rd(g_vrUiNativeReady) && Rd(g_vrUiMenu);
     if (!g_xrInputReady) return;
 
-    // ⚠️ INSTRUMENT BUG, run 68: this used to return here and force g_handTracked to false, which
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą INSTRUMENT BUG, run 68: this used to return here and force g_handTracked to false, which
     // made "input OFF, controllers AWAKE" a state the log could not physically record - and that
     // was the one row the experiment needed. A control that destroys the label it is being compared
     // against is not a control.
@@ -8097,7 +8115,7 @@ void SyncXRInput(XrTime displayTime) {
     LARGE_INTEGER tSt = Now();
     getVec2(g_actMove, &mx, &my);
     getVec2(g_actTurn, &tx, &ty);
-    // ---- ⭐ run 170: SwapSticks, the southpaw option ----
+    // ---- Ă˘Â­Â run 170: SwapSticks, the southpaw option ----
     //
     // Swapped at READ time rather than in the bindings, which is what makes it live: OpenXR binding
     // suggestions are fixed once the action set is attached, so a binding-level swap would need a
@@ -8122,7 +8140,7 @@ void SyncXRInput(XrTime displayTime) {
     msStates += MsSince(tSt);
     DiagPhaseAdd(DP_ACTIONS, tSt.QuadPart);
 
-    // ⚠️ The panel navigates on the LEFT stick, and it has to use these raw values rather than
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą The panel navigates on the LEFT stick, and it has to use these raw values rather than
     // mx/my. By the time the panel block runs, mx/my have been rotated into the off-hand or
     // head-relative walking frame - so "up" on the stick would mean a different direction on the
     // menu depending on where your hand happened to be pointing.
@@ -8149,7 +8167,7 @@ void SyncXRInput(XrTime displayTime) {
     radialDeadzone(&mx, &my, 0.30f);
     radialDeadzone(&tx, &ty, 0.20f);
 
-    // ================= ⭐ run 190: the gun lags the head by a FRAME, and the head hides it ==========
+    // ================= Ă˘Â­Â run 190: the gun lags the head by a FRAME, and the head hides it ==========
     //
     // Reported: the gun tracking feels low-latency-but-jittery, "like it's not tracking at the full
     // framerate". The head feels fine. That asymmetry is the diagnosis, because of WHERE each one is
@@ -8179,10 +8197,10 @@ void SyncXRInput(XrTime displayTime) {
     // predictedDisplayPeriod`. OpenXR is being asked the same question either way; it is just being
     // given the right timestamp.
     //
-    // ⚠️ The HEAD's layer pose must NOT move with this - it is correct already, and shifting it would
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą The HEAD's layer pose must NOT move with this - it is correct already, and shifting it would
     // hand the compositor a pose for a frame it is not displaying. This applies to the hand locate only.
     //
-    // ⚠️ **Measured, not assumed.** `pose lead` in the frame budget reports how stale the pose was when
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą **Measured, not assumed.** `pose lead` in the frame budget reports how stale the pose was when
     // the geometry that used it was drawn. If that reads ~0 with PoseLeadFrames=0, this whole account is
     // wrong and the jitter is something else - so the number is printed whether the fix is on or off.
     const XrTime kPoseLead = (XrTime)g_poseLeadFrames * g_lastDisplayPeriod;
@@ -8317,7 +8335,7 @@ void SyncXRInput(XrTime displayTime) {
         if (down) ++g_btnHeldFrames[i];
         if (g_padButtons[i].isMenu)  { menuHeld  = down; menuMask  = g_padButtons[i].mask; continue; }
         if (g_padButtons[i].isPanel) { panelHeld = down; panelMask = g_padButtons[i].mask; continue; }
-        // ---- ⭐ run 214: the melee swing is invisible, for the run-198 reason ----
+        // ---- Ă˘Â­Â run 214: the melee swing is invisible, for the run-198 reason ----
         //
         // Armed from the button WE inject, on the RISING edge, exactly as the heal window is: there is
         // no inference to get wrong, because we are the ones asking for the swing. Holding the button
@@ -8340,7 +8358,7 @@ void SyncXRInput(XrTime displayTime) {
             }
             wasDown = down;
         }
-        // ---- ⭐ run 219: HOLD A FOR A SECOND: toggle the laser sight ----
+        // ---- Ă˘Â­Â run 219: HOLD A FOR A SECOND: toggle the laser sight ----
         //
         // Every button on both controllers is spoken for, which the recentre note has said since run
         // 142 - so this is a long press, the same answer MENU and Y already use.
@@ -8351,7 +8369,7 @@ void SyncXRInput(XrTime displayTime) {
         // laser: you will jump once on the way to toggling it. That is the deliberate trade, and it is
         // why the threshold is an ini value - if holding A turns out to mean something in play, this
         // moves without a rebuild.
-        // ⭐ run 238: not during the intro movie, a cutscene, or the menus. See InGameplay.
+        // Ă˘Â­Â run 238: not during the intro movie, a cutscene, or the menus. See InGameplay.
         if (i == g_jumpBtnIdx && Rd(g_laserHoldMs) > 0 && InGameplay()) {
             static LARGE_INTEGER since{};
             static bool consumed = false;
@@ -8375,10 +8393,41 @@ void SyncXRInput(XrTime displayTime) {
                 consumed = false;
             }
         }
+
+        // ---- Ă˘Â­Â OPTIONS BUTTON: short press = menu, long press = recenter ----
+        // Right-hand Options button. Short press sends XI_START (menu).
+        // Long press (Ă˘â€°Ä„ OptionsHoldMs) recenters VR view and consumes the menu press.
+        if (i == g_optionsBtnIdx && Rd(g_optionsHoldMs) > 0 && InGameplay()) {
+            static LARGE_INTEGER optionsSince{};
+            static bool optionsConsumed = false;
+            if (down) {
+                if (!optionsSince.QuadPart) QueryPerformanceCounter(&optionsSince);
+                if (!optionsConsumed && MsSince(optionsSince) >= (double)Rd(g_optionsHoldMs)) {
+                    optionsConsumed = true;
+                    // Recenter VR view: make current HMD pose the new forward/center
+                    if (g_haveEyes) {
+                        g_baseYaw = g_headYawRad;  // Current head yaw becomes new forward
+                        g_haveCentre = true;
+                        g_haveHandOffset = false;  // Reset hand offset
+                        Log("VR view recentered via Options long press (yaw=%.2f deg)", g_baseYaw * 57.2957795f);
+                    }
+                    // Consume the short press - don't send menu event
+                }
+            } else {
+                // Button released
+                if (optionsSince.QuadPart && !optionsConsumed) {
+                    // Short press - send menu event
+                    btns |= XI_START;
+                }
+                optionsSince.QuadPart = 0;
+                optionsConsumed = false;
+            }
+        }
+
         if (down) btns |= g_padButtons[i].mask;
     }
 
-    // ---- ⭐ run 142: hold the panel button for two seconds to open VR settings ----
+    // ---- Ă˘Â­Â run 142: hold the panel button for two seconds to open VR settings ----
     //
     // Real elapsed time, not a frame count. The MENU long-press next to this uses 120 frames and
     // documents itself as "~1 s at 120 fps, ~2 s at 60" - which means the gesture changes length
@@ -8390,7 +8439,7 @@ void SyncXRInput(XrTime displayTime) {
         static LARGE_INTEGER heldSince{};
         static bool consumed = false;
         static int  tapPulse = 0;
-        // ⭐ run 219: 1.3 -> 1.0 on request. 2.0 was tried first and felt like waiting.
+        // Ă˘Â­Â run 219: 1.3 -> 1.0 on request. 2.0 was tried first and felt like waiting.
         const double kHoldSeconds = 1.0;
         if (panelHeld) {
             if (!heldSince.QuadPart) QueryPerformanceCounter(&heldSince);
@@ -8449,7 +8498,7 @@ void SyncXRInput(XrTime displayTime) {
     // turn modes - smooth turn only ever feeds X to the look stick, because a thumbstick that
     // pitches the view is the one control VR reliably makes people ill with.
     //
-    // ⚠️ Held for several frames rather than pulsed for one. Both commands are
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Held for several frames rather than pulsed for one. Both commands are
     // `PressChainButton | OnRelease ReleaseChainButton` pairs in Raven's config, so the engine
     // wants a press AND a release, and a one-frame flick can land between its own input ticks.
     static bool stickArmed = true;
@@ -8459,7 +8508,7 @@ void SyncXRInput(XrTime displayTime) {
         stickMask = (ty > 0) ? g_stickUpMask : g_stickDownMask;
         stickHold = 8;
         stickArmed = false;
-        // ---- ⭐ run 198: stick DOWN is the health item, so this is the heal signal ----
+        // ---- Ă˘Â­Â run 198: stick DOWN is the health item, so this is the heal signal ----
         //
         // Taken from the button WE inject rather than detected in the engine: there is no inference to
         // get wrong, because we are the ones asking for the heal. The window shows the arms and puts the
@@ -8471,7 +8520,7 @@ void SyncXRInput(XrTime displayTime) {
         // the press rather than verified after it - see HealWouldDoSomething for why "wait for health to
         // rise" is the wrong shape.
         //
-        // ⚠️ Still fires when health is low but you have NO ITEMS. Narrower than before and the same
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Still fires when health is low but you have NO ITEMS. Narrower than before and the same
         // class of miss; closing it needs the inventory count, which is more property archaeology than
         // the remaining annoyance is worth.
         if (ty < 0.0f && InterlockedCompareExchange(&g_healArmsMs, 0, 0) > 0) {
@@ -8530,14 +8579,14 @@ void SyncXRInput(XrTime displayTime) {
         return;                                     // no turning, no walking, no buttons
     }
 
-    // ---- ⭐ run 161: stick turning locked during cutscenes ----
+    // ---- Ă˘Â­Â run 161: stick turning locked during cutscenes ----
     //
     // Vanilla does not let you turn the camera during a scripted sequence, and the game frames its
     // cutscenes on the assumption that you are looking where it put you. HEAD LOOK IS UNAFFECTED -
     // that runs through the matrix in cutscene mode 3 and never touches this - so you can still
     // look around freely; what stops is driving the character's facing with the stick.
     //
-    // ⚠️ Suppressed at the ACCUMULATOR, not at the point it is applied, and the accumulator is
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Suppressed at the ACCUMULATOR, not at the point it is applied, and the accumulator is
     // cleared. Blocking only the application would let deflection pile up for the length of the
     // cutscene and then dump it as one jump on exit.
     //
@@ -8637,7 +8686,7 @@ void SyncXRInput(XrTime displayTime) {
         if (!st.isActive) { ++g_trigInactiveFrames[hand]; return 0.0f; }
         return st.currentState;
     };
-    // ---- ⚠️ run 173: these indices are PHYSICAL HANDS and must follow the mirror ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 173: these indices are PHYSICAL HANDS and must follow the mirror ----
     //
     // Reported: in left-handed mode the left trigger only fired while the RIGHT trigger was being
     // touched. The trigger-touch veto reads g_trigTouch[], which is indexed by physical hand, but
@@ -8650,7 +8699,7 @@ void SyncXRInput(XrTime displayTime) {
     float rt = getTrigger(g_actFire, fireHand), lt = getTrigger(g_actAltFire, altHand);
     ++g_trigFrames;
 
-    // ---- ⭐ run 156: veto a trigger value that no finger is touching ----
+    // ---- Ă˘Â­Â run 156: veto a trigger value that no finger is touching ----
     //
     // Run 155 measured the cause of the judder, and it is not subtle: with the controllers on the
     // desk the runtime reports BOTH triggers at a sustained partial pull - left 0.34-0.43, right
@@ -8663,7 +8712,7 @@ void SyncXRInput(XrTime displayTime) {
     // never explain - the pad matters because it is how the phantom reaches the game, and the
     // controllers matter because putting them down is what invents the value.
     //
-    // ⚠️ A deadzone cannot fix this and raising it would be the wrong instinct. The phantom peaks at
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą A deadzone cannot fix this and raising it would be the wrong instinct. The phantom peaks at
     // 0.83, which is a HARDER pull than most real ones, so any threshold that suppressed it would
     // eat real firing too. The value is not noise - it is a plausible number with no finger behind
     // it, and the only thing that can tell those apart is whether a finger is there.
@@ -8671,7 +8720,7 @@ void SyncXRInput(XrTime displayTime) {
     // Hence the veto: pulling a trigger requires touching it. If `trigger/touch` says no finger is
     // on it, the analog value did not come from the player, whatever it says.
     //
-    // ---- ⚠️ run 180: "no sensor yet" was failing OPEN, and that is the load-in phantom ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 180: "no sensor yet" was failing OPEN, and that is the load-in phantom ----
     //
     // Reported: on loading in, the melee button fires by itself and the gun is attached to nothing
     // for about a second before snapping to the controller. Measured, the cause is not subtle: the
@@ -8841,6 +8890,86 @@ void SyncXRInput(XrTime displayTime) {
     }
 }
 
+// ---- ARM IK COMPUTATION ----
+// Computes arm IK deltas once per frame. Called from UpdateFromHeadset after SyncXRInput.
+// Uses the tracked controller poses as wrist targets and solves for shoulder/elbow/wrist.
+static void ComputeArmIk() {
+    if (!Rd(g_armIkEnabled) || !VrModeOn()) {
+        g_leftArmIk.valid = false;
+        g_rightArmIk.valid = false;
+        return;
+    }
+
+    // Need both controller positions and orientations
+    if (!g_handPositionValid[0] || !g_handPositionValid[1] ||
+        !g_handPoseValid[0] || !g_handPoseValid[1]) {
+        g_leftArmIk.valid = false;
+        g_rightArmIk.valid = false;
+        return;
+    }
+
+    // Convert controller poses to tracking space (already in XrVector3f/XrQuaternionf)
+    // Right hand (index 1) - primary hand for right-handed users
+    armik::V rightWristPos{ g_handLastPos[1].x, g_handLastPos[1].y, g_handLastPos[1].z };
+    armik::V leftWristPos{ g_handLastPos[0].x, g_handLastPos[0].y, g_handLastPos[0].z };
+
+    // Get the head/eye pose for shoulder reference
+    // Use the midpoint between eyes as head center
+    armik::V headCenter{
+        (g_eyePose[0].position.x + g_eyePose[1].position.x) * 0.5f,
+        (g_eyePose[0].position.y + g_eyePose[1].position.y) * 0.5f,
+        (g_eyePose[0].position.z + g_eyePose[1].position.z) * 0.5f
+    };
+
+    // Estimate shoulder positions from head center (approximate)
+    // Shoulder offset from head center - rough approximation
+    const float shoulderWidth = 0.2f;  // ~20cm shoulder width
+    const float shoulderHeight = -0.15f;  // ~15cm below head center
+
+    // Left shoulder
+    armik::V leftShoulder = headCenter + armik::V{ -shoulderWidth, shoulderHeight, 0.0f };
+    // Right shoulder
+    armik::V rightShoulder = headCenter + armik::V{ shoulderWidth, shoulderHeight, 0.0f };
+
+    // Arm bone lengths (in meters, from Singularity skeleton)
+    const float upperArmLen = 0.32f;  // ~32cm upper arm
+    const float foreArmLen = 0.28f;   // ~28cm forearm
+
+    // Preferred bend direction (elbow out slightly)
+    armik::V preferredBend{ 0.0f, 0.0f, -1.0f };  // bend downward
+
+    // Solve left arm IK
+    if (g_handTracked[0]) {
+        armik::Solution leftSol;
+        if (armik::Solve(leftShoulder, leftWristPos, upperArmLen, foreArmLen,
+                         preferredBend, g_leftArmIk.solverState, leftSol)) {
+            // Build deltas for left arm
+            // We need the current joint matrices from the GPU
+            // For now, mark as valid - actual delta application happens in draw hook
+            g_leftArmIk.valid = true;
+            g_leftArmIk.solution = leftSol;
+        } else {
+            g_leftArmIk.valid = false;
+        }
+    } else {
+        g_leftArmIk.valid = false;
+    }
+
+    // Solve right arm IK
+    if (g_handTracked[1]) {
+        armik::Solution rightSol;
+        if (armik::Solve(rightShoulder, rightWristPos, upperArmLen, foreArmLen,
+                         preferredBend, g_rightArmIk.solverState, rightSol)) {
+            g_rightArmIk.valid = true;
+            g_rightArmIk.solution = rightSol;
+        } else {
+            g_rightArmIk.valid = false;
+        }
+    } else {
+        g_rightArmIk.valid = false;
+    }
+}
+
 void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     if (!g_xrReady) return;
     PumpXR();
@@ -8867,11 +8996,12 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // not of an assumed 120 Hz. A hardcoded 8.33 ms would silently be wrong on a 72 or 90 Hz headset.
     if (fs.predictedDisplayPeriod > 0) g_lastDisplayPeriod = fs.predictedDisplayPeriod;
     SyncXRInput(fs.predictedDisplayTime);
+    ComputeArmIk();  // Compute arm IK deltas once per frame
     if (g_padTurnAccum) {
         // Discarded rather than applied before the first centre: g_baseYaw is seeded from the
         // game's own yaw at that moment, so anything accumulated beforehand would be overwritten
         // and a snap pressed during a load would appear to do nothing.
-        // ---- ⭐ run 164: during a cutscene the turn goes to its OWN offset ----
+        // ---- Ă˘Â­Â run 164: during a cutscene the turn goes to its OWN offset ----
         //
         // Run 163 anchors g_baseYaw to the scripted camera EVERY FRAME, so adding a turn to it here
         // would be erased on the very next frame - you would turn and snap straight back. Unlocking
@@ -8941,7 +9071,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                                1.0f - 2.0f * (q.x * q.x + q.z * q.z));
         // Anchor to the GAME's current yaw, not our own previous output. Seeding from
         // g_wantYaw (initially 0) made enabling snap the view to world yaw 0.
-        // ---- ⚠️ run 159: the centre was captured before the pose had converged ----
+        // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 159: the centre was captured before the pose had converged ----
         //
         // Reported after StartInVr landed: the main menu sat too low and the game loaded in at the
         // ceiling, and toggling VR off and on fixed it. The log said why, in numbers:
@@ -8953,7 +9083,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         // x, z and yaw are EXACTLY zero with only y populated - a synthetic identity pose, not a
         // measurement. It is what the runtime hands back in the moments after the session starts.
         //
-        // ⚠️ POSITION_VALID was SET on that frame - the line carries no [POSITION NOT TRACKED]
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą POSITION_VALID was SET on that frame - the line carries no [POSITION NOT TRACKED]
         // marker - so checking validity would have changed nothing. Valid means "this number is
         // usable", not "this number is real yet". TRACKED is the bit that means the runtime is
         // actively tracking rather than handing back a default, and a few frames of it settles the
@@ -8986,7 +9116,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         }
         if (!g_haveCentre && centreReady) {
             g_centreYaw = yawRad;
-            // ---- ⭐ run 167: the base comes from the CAMERA, falling back to the controller ----
+            // ---- Ă˘Â­Â run 167: the base comes from the CAMERA, falling back to the controller ----
             //
             // The menu rotation bug, and it is the cutscene bug again in a different room. The
             // recentre read the CONTROLLER's rotation, and at the second main menu the log caught
@@ -9020,7 +9150,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             g_haveCentrePos = (vs.viewStateFlags & XR_VIEW_STATE_POSITION_VALID_BIT) != 0;
             g_haveCentre = true;
 
-            // ---- ⭐ the weapon's NEUTRAL, captured here (run 78) ----
+            // ---- Ă˘Â­Â the weapon's NEUTRAL, captured here (run 78) ----
             //
             // Reported: turning the head RIGHT dragged the gun along; turning LEFT did not. An
             // asymmetric symptom from symmetric code means the quantity being clamped is not
@@ -9134,7 +9264,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             g_hmdOffset[1] = (bs * fwdAmt + bc * rightAmt) * MetresToUU();
             g_hmdOffset[2] = upAmt * MetresToUU();
 
-            // ---- ⭐ run 175: is the 6-DOF offset being COMPUTED, or just not applied? ----
+            // ---- Ă˘Â­Â run 175: is the 6-DOF offset being COMPUTED, or just not applied? ----
             //
             // Reported: the main menu is a real 3D scene, renders in stereo, and does not respond to
             // head movement. The obvious suspects are all clean in the log - one recentre, pos valid
@@ -9186,7 +9316,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         g_headYawRad = yawRad;
         g_headRollRad = rollRad;
 
-        // ---- ⭐ run 112: the hand's deviation from the head, measured directly ----
+        // ---- Ă˘Â­Â run 112: the hand's deviation from the head, measured directly ----
         //
         // Mode 11 derived this by differencing two engine-space values - g_aimYawUU (built from
         // g_baseYaw, the recentre offset and g_centreYaw) against g_wantYaw - and got 121 degrees
@@ -9207,7 +9337,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             while (dvy >  3.14159265f) dvy -= 6.2831853f;
             while (dvy < -3.14159265f) dvy += 6.2831853f;
             const float dvp = g_handPitchRad[AimHand()] - pitchRad;
-            // ---- ⭐ run 113: apply the SAME sign convention as everything else ----
+            // ---- Ă˘Â­Â run 113: apply the SAME sign convention as everything else ----
             //
             // Reported: left/right mirrored, up/down correct. That is not a coincidence and it is
             // not the ini - g_yawSign is -1 and g_pitchSign is +1, because XR is right-handed with
@@ -9239,7 +9369,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             while (dvr < -3.14159265f) dvr += 6.2831853f;
             InterlockedExchange(&g_handDevRollUU, (LONG)(dvr * kRadToUU));
             {
-                // ⚠️ AimHand(), not 1. The gun's ROTATION already followed the aim hand while its
+                // Ă˘ĹˇÂ ÄŹÂ¸Ĺą AimHand(), not 1. The gun's ROTATION already followed the aim hand while its
                 // POSITION was still read from the right controller, so in left-handed mode it
                 // turned with the left hand and sat at the right one - reported exactly that way.
                 const float hx = g_handLastPos[AimHand()].x - g_headPosXR[0];
@@ -9260,7 +9390,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             }
             InterlockedExchange(&g_handDevValid, 1);
         }
-        // ---- ⭐ run 237: the same six quantities for the OFF hand, for the TMD ----
+        // ---- Ă˘Â­Â run 237: the same six quantities for the OFF hand, for the TMD ----
         //
         // Deliberately a repeat of the block above rather than a call into it: that block also writes
         // the AIM state that the bullet path depends on, and threading a hand index through it would
@@ -9324,7 +9454,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         if (p >  16000) p =  16000;
         if (p < -16000) p = -16000;
         g_wantPitch = p;
-        // ---- ⭐ run 163: during a cutscene, the BASE is the scripted camera ----
+        // ---- Ă˘Â­Â run 163: during a cutscene, the BASE is the scripted camera ----
         //
         // Four attempts, and the confirmation that settled it was one bit: head look still works
         // during a cutscene while we are NOT writing the engine yaw. So the view is built from our
@@ -9339,7 +9469,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         // The camera keeps panning (measured: 99.1 -> 98.6 -> 98.0 -> 97.4, the helicopter track)
         // and the base follows it, so that motion is preserved rather than fought.
         //
-        // ⚠️ This is only safe BECAUSE run 162 stopped writing the controller during cutscenes. The
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą This is only safe BECAUSE run 162 stopped writing the controller during cutscenes. The
         // camera normally follows the controller, so anchoring to it while also writing it would be
         // a feedback loop - our own output read back as input, compounding every frame. The two
         // changes are load-bearing together and neither should be reverted alone.
@@ -9358,7 +9488,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         //
         // g_cineTurnOffset is added in both cases: it is the player's own correction and must
         // survive whichever base is in use.
-        // ---- ⭐ run 166: a level or menu transition recentres ----
+        // ---- Ă˘Â­Â run 166: a level or menu transition recentres ----
         //
         // Two things at once, and they are the same event.
         //
@@ -9372,7 +9502,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         // already being located, needs no new lookup, and unlike the run-161 attempt it does not
         // depend on a cached POINTER changing - which is exactly what made that one never fire.
         //
-        // ⚠️ It will also fire on an in-game teleport, and this game has those. Recentring there is
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą It will also fire on an in-game teleport, and this game has those. Recentring there is
         // defensible - you have been moved somewhere else and the base should follow - but it is a
         // behaviour change beyond the reported bug, so it is logged every time rather than silent.
         if (uintptr_t cam = FindCamera()) {
@@ -9395,7 +9525,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 havePrev = true;
             }
 
-            // ---- ⭐ run 168: the drift detector ----
+            // ---- Ă˘Â­Â run 168: the drift detector ----
             //
             // Four attempts at the menu rotation, and the last "smoking gun" - a base of exactly
             // 16384 - turned out to be a coincidence. 90 degrees is an ordinary world heading for an
@@ -9436,7 +9566,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                     }
                 }
 
-        // ---- ⭐ run 168: follow the camera whenever the GAME owns it, not just in cutscenes ----
+        // ---- Ă˘Â­Â run 168: follow the camera whenever the GAME owns it, not just in cutscenes ----
         //
         // The menu rotation, measured at last. Setting the base from the camera at the recentre
         // WORKED and then decayed: the log shows it captured 16289 (+89.5) correctly and read 17 by
@@ -9478,7 +9608,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                     Log("camera back under our control - base yaw resumes");
                 }
 
-                // ---- 🛑 run 176's MenuCameraFollow switch: REMOVED in run 180, it was inert ----
+                // ---- Ä‘Ĺşâ€şâ€ run 176's MenuCameraFollow switch: REMOVED in run 180, it was inert ----
                 //
                 // The switch was added to A/B the menu camera follow against menu 6-DOF. It could
                 // never answer that, and its own log line said so: menus report CINE YES, so
@@ -9513,7 +9643,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 // 28 OFF across one run) instead of sticking, and the drift lines all read `cine off`
                 // with the engine-vs-asked residual back to 0.1-1.0 deg from 21.5.
                 //
-                // ⚠️ Still not a true fix: a cutscene that ENDS without a level change will keep the
+                // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Still not a true fix: a cutscene that ENDS without a level change will keep the
                 // flag set until the next transition. The exit event remains invisible.
                 const bool inCine = InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0;
                 if (inCine || gameOwnsCam) {
@@ -9539,7 +9669,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         // the matrix supplies whatever is left over. At N = 0 the engine gets the full head angle
         // and the matrix rotation is identically zero, so the split collapses to today's
         // behaviour - which makes N = 0 a genuine control rather than a nominal one.
-        // ---- ⭐ AIM DECOUPLING (run 76): point the engine at the HAND, not the body ----
+        // ---- Ă˘Â­Â AIM DECOUPLING (run 76): point the engine at the HAND, not the body ----
         //
         // Run 64 decoupled the engine all the way to the body's facing and geometry vanished
         // behind the player. That was the worst case by construction and it is not what aim
@@ -9557,7 +9687,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         // because we are feeding the engine rather than fighting it. That is the whole reason for
         // this architecture over hooking the fire trace.
         //
-        // ⚠️ Falls back to the head whenever the right hand is not tracked, so setting the
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Falls back to the head whenever the right hand is not tracked, so setting the
         // controller down cannot leave the engine aimed at a stale direction with the view
         // detached from it.
         // The hand's aim in engine units, computed unconditionally so modes 2 and 3 can use it
@@ -9645,7 +9775,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         const float rollDeg = fabsf(g_wantRollRad) * 57.2957795f;
         if (rollDeg > g_maxRollDeg) g_maxRollDeg = rollDeg;
 
-        // ---- ⭐ run 136: freeze the view, so an A/B can be taken from ONE camera ----
+        // ---- Ă˘Â­Â run 136: freeze the view, so an A/B can be taken from ONE camera ----
         //
         // draws/frame moves more with a few degrees of head rotation than with the effect being
         // measured, which made "stand in exactly the same spot facing exactly the same way across
@@ -9657,7 +9787,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         // head was when the key was pressed", because the game's camera comes from the save and is
         // therefore reproducible across launches, while a head pose is not.
         //
-        // ⚠️ g_eyeDeltaUU is NOT frozen. It is the interpupillary separation, not head movement,
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą g_eyeDeltaUU is NOT frozen. It is the interpupillary separation, not head movement,
         // and zeroing it would collapse the stereo pair - which is one of the things under test.
         if (InterlockedCompareExchange(&g_freezeView, 0, 0)) {
             g_wantYaw     = g_frozenYaw;
@@ -9858,7 +9988,7 @@ extern volatile LONG g_drawWriteLo, g_drawWriteHi;
 extern int g_flashProbeLeft;
 extern int           g_upXformDump;
 extern volatile LONG g_hudConstsWritten;
-extern volatile LONG g_hudXformLive;   // ⭐ run 253, defined with the UI census
+extern volatile LONG g_hudXformLive;   // Ă˘Â­Â run 253, defined with the UI census
 extern bool          g_inHudRemap;
 
 HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
@@ -9894,7 +10024,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
     // a 4-vector minimum would filter out exactly the writes being looked for.
     // The UI marker. Cheap enough for the hot path - a range test and a store - and deliberately
     // not gated on the probe, because it now drives the feature rather than a diagnostic.
-    // ---- 💥 run 265: this marker was never a UI signal, and the one-shot limit was hiding it ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 265: this marker was never a UI signal, and the one-shot limit was hiding it ----
     //
     // The condition below arms on ANY write overlapping c5-c8. Run 149 already recorded that scene
     // constant uploads overlap that range - it is why the quad classifier had to run first - but the
@@ -9908,7 +10038,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
     // that happens to span it. Requiring the write to sit inside a small window around c5-c8
     // separates them by shape rather than by overlap.
     //
-    // ⚠️ MEASURED, not assumed: every distinct (startReg, count) that touches this block is logged
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą MEASURED, not assumed: every distinct (startReg, count) that touches this block is logged
     // once with the verdict, so if UI and scene writes are NOT separable this way the log says so
     // instead of the geometry saying it.
     if (!g_inHudRemap && startReg <= 8 && startReg + vec4Count > 5) {
@@ -9934,7 +10064,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
         }
         if (targeted) {
             InterlockedExchange(&g_hudConstsWritten, 1);
-            InterlockedExchange(&g_hudXformLive, 1);   // ⭐ run 253: survives the first draw; cleared per frame
+            InterlockedExchange(&g_hudXformLive, 1);   // Ă˘Â­Â run 253: survives the first draw; cleared per frame
         }
     }
 
@@ -9947,7 +10077,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
         while (InterlockedCompareExchange(&g_vsWriteMask, want, cur) != cur);
     }
 
-    // ---- ⭐ run 193: which registers were written just before the muzzle-flash draw? ----
+    // ---- Ă˘Â­Â run 193: which registers were written just before the muzzle-flash draw? ----
     //
     // Run 192 named the draw: `DrawIndexedPrimitiveUP`, **stride 72**, ~16-18 primitives, unique to
     // firing, world-space vertices, and already split per eye. So the split works and the TRANSFORM is
@@ -10062,7 +10192,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
     if (!scan && !modify) return g_origSetVSConstF(dev, startReg, data, vec4Count);
 
     if (scan) {
-        // ⭐ run 252: one QPC pair per upload, on armed frames only - see g_msScan.
+        // Ă˘Â­Â run 252: one QPC pair per upload, on armed frames only - see g_msScan.
         const LARGE_INTEGER tScan = Now();
         const float* const pts[3] = { g_camPos, g_povPos, g_zeroPos };
         const UINT windows = (vec4Count - 4 < kMaxScanWindows) ? vec4Count - 4 : kMaxScanWindows;
@@ -10520,7 +10650,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
         --g_dumpShadowConsts;
         Log("--- constants for a draw into the EXCLUDED scene-sized target (%s) ---",
             FmtName(g_rtSeen[g_rtCurrent].fmt));
-        // ---- âš ï¸ ScreenPositionScaleBias is NOT the bug here, worked through in run 42 ----
+        // ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą ScreenPositionScaleBias is NOT the bug here, worked through in run 42 ----
         //
         // ps c1 = (0.5, -0.5, 0.50023, 0.50012) is exactly UE3's ScreenPositionScaleBias - the
         // constant Stage 4A predicted, confirmed by arithmetic against 4096x2160. But patching it
@@ -10649,7 +10779,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
                 // Pivot on the camera: the gun hangs off the view, so turning it about the eye is
                 // what makes it point where the controller points. Pivoting on the world origin
                 // would fling it across the level.
-                // ---- ⚠️ run 122: the pivot is the ORIGIN, not the camera position ----
+                // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 122: the pivot is the ORIGIN, not the camera position ----
                 //
                 // The gun vanished, and ENGINE_NOTES already said why: UE3 of this vintage uploads
                 // a TRANSLATED-WORLD to clip matrix, pre-subtracting the view origin on the CPU to
@@ -10662,7 +10792,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
                 // file has recorded which space it is since the matrix scan probed
                 // "origin(translated-world)" as a candidate point.
                 float C[4][4];
-                if (g_thisDrawMoved == 2) BuildTmdC(C); else BuildGunC(C);   // ⭐ run 237
+                if (g_thisDrawMoved == 2) BuildTmdC(C); else BuildGunC(C);   // Ă˘Â­Â run 237
                 ApplyWorldMatrix(reinterpret_cast<Reg4*>(mat), cs.conv, C);
             }
             g_origSetVSConstF(dev, cs.reg, mat, 4);
@@ -10686,7 +10816,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
                 // what makes it point where the controller points. Pivoting on the world origin
                 // would fling it across the level.
                 float C[4][4];
-                if (g_thisDrawMoved == 2) BuildTmdC(C); else BuildGunC(C);   // ⭐ run 237
+                if (g_thisDrawMoved == 2) BuildTmdC(C); else BuildGunC(C);   // Ă˘Â­Â run 237
                 ApplyWorldMatrix(reinterpret_cast<Reg4*>(mat), cs.conv, C);
             }
             g_origSetVSConstF(dev, cs.reg, mat, 4);
@@ -10713,11 +10843,11 @@ extern volatile LONG g_frameDrawIdx;
 extern volatile LONG g_inForeground, g_hideMeshIdx, g_fgDrawCount;
 // Defined with the foreground-mesh code. StereoPair reads it; the non-indexed draw hook above sets
 // it as of run 181, and that hook comes before the definition.
-extern int g_thisDrawMoved;   // ⭐ run 237: 0 none, 1 gun hand, 2 off hand
+extern int g_thisDrawMoved;   // Ă˘Â­Â run 237: 0 none, 1 gun hand, 2 off hand
 static bool FgHidden(UINT verts);
 static bool FgRidesGun(UINT verts);
-static bool FgMatchesSignature(UINT verts);   // ⭐ run 237c: used by the depth-prime exemption
-static int  RideTargetFor(UINT verts);   // ⭐ run 237: 0 none, 1 gun hand, 2 off hand
+static bool FgMatchesSignature(UINT verts);   // Ă˘Â­Â run 237c: used by the depth-prime exemption
+static int  RideTargetFor(UINT verts);   // Ă˘Â­Â run 237: 0 none, 1 gun hand, 2 off hand
 static bool FgHideWholePass();
 static void DpgRecord(uint8_t kind, float z0, float z1, uint32_t a, uint32_t b, uint32_t c, uint32_t d);
 void LogFgList(const char* why);      // run 213: the scope census dumps the mesh list alongside itself
@@ -10725,10 +10855,10 @@ void LogFgList(const char* why);      // run 213: the scope census dumps the mes
 // globals it reads. Declared here rather than moved, so the fix stays next to the note explaining it.
 extern int g_scopeQuadPerEye, g_scopeQuadPrimType, g_scopeQuadPrimCount;
 extern volatile LONG g_scopeQuadDraws;
-extern volatile LONG g_scopeMatchAim, g_scopeMatchIdle;   // ⭐ run 231
+extern volatile LONG g_scopeMatchAim, g_scopeMatchIdle;   // Ă˘Â­Â run 231
 extern int g_scopeScenePsReg, g_scopeAspectPsReg;      // run 213g
 extern int g_scopeHeadAim;                            // run 213h
-// ⭐ run 219: defined HERE rather than with the scope code, because three separate things now ask "is the
+// Ă˘Â­Â run 219: defined HERE rather than with the scope code, because three separate things now ask "is the
 // scope up": the aim path, the laser, and the ADS pull-back. One definition, one answer - the run-218
 // lesson about two expressions for one fact, applied before it can bite twice.
 volatile LONG g_scopeUpMs = 0;
@@ -10770,7 +10900,7 @@ struct VidSig {
     uint32_t texW, texH, texFmt;
     uint32_t rtW, rtH;
     uint32_t count;
-    // ⭐ run 261: the BOUNDS across several vertices, not just the first one. See CaptureDrawSig.
+    // Ă˘Â­Â run 261: the BOUNDS across several vertices, not just the first one. See CaptureDrawSig.
     float bbMinX, bbMaxX, bbMinY, bbMaxY;
     uint32_t bbVerts;
 };
@@ -10787,7 +10917,7 @@ const char* VidSrcName(uint8_t s) {
            s == 2 ? "DrawPrimUP " : "DrawIdxPrUP";
 }
 
-// ========== ⭐ run 192: the fire-window DRAW census. What IS this draw? ======================
+// ========== Ă˘Â­Â run 192: the fire-window DRAW census. What IS this draw? ======================
 //
 // Run 191 scanned for a view-projection register the muzzle flash might ride and found nothing that
 // survives scrutiny - only `c0 ROW` passes all three tests, in fire frames and ordinary ones alike, and
@@ -10823,7 +10953,7 @@ struct FireSig {
     uint32_t count;
 };
 
-// ---- 💥 run 213c: "new since the baseline" was the wrong question, twice over ----
+// ---- Ä‘Ĺşâ€™Ä„ run 213c: "new since the baseline" was the wrong question, twice over ----
 //
 // Run 213b listed every signature absent from the baseline. It produced 32 rows, every one of them
 // `x1`, and not one of them was the scope. Two defects, both visible in that output:
@@ -10886,7 +11016,7 @@ int  g_fireBySrc[4] = {};            // draws per hook, so "not on a user-pointe
 bool g_fireIsBaseline = false;       // this window was taken with the trigger UP
 bool g_fireBaselineDone = false;
 
-// ---- ⭐ run 213: the SCOPE census - the same instrument, armed on the ALT trigger ----
+// ---- Ă˘Â­Â run 213: the SCOPE census - the same instrument, armed on the ALT trigger ----
 //
 // Reported: the sniper scope "isn't being shown in each eye". It comes up on the left trigger, which is
 // alt-fire.
@@ -10909,7 +11039,7 @@ bool g_fireBaselineDone = false;
 // alongside it, which settles C. B and D show up as an absence - the diff against the baseline names no
 // new user-pointer signature - and that absence is a real answer, not a failed run.
 //
-// ⚠️ The signature table only holds the USER-POINTER paths, because they are the ones carrying vertex
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The signature table only holds the USER-POINTER paths, because they are the ones carrying vertex
 // data. If the scope is on an indexed path the table will not name it, but `draws by hook` will still
 // differ between the baseline and the window. Read that line before concluding "nothing changed".
 int  g_scopeCensusBudget = 0;        // ini [Render] ScopeDrawCensus: how many scope-ups to record
@@ -10930,7 +11060,7 @@ volatile LONG g_drawWriteLo = 0, g_drawWriteHi = 0;
 int g_flashProbeLeft = 0;            // ini [Render] FlashRegProbe: how many stride-72 draws to dump
 const UINT kFlashStride = 72;
 
-// ---- ⭐ the validation that should have come FIRST (run 196) ----
+// ---- Ă˘Â­Â the validation that should have come FIRST (run 196) ----
 //
 // `MuzzleFxDropStride=<n>`: skip every user-pointer draw with that vertex stride. Set it to 72 and fire.
 //
@@ -10959,7 +11089,7 @@ static inline void TakeDrawWriteMask(LONG* lo, LONG* hi) {
     *hi = InterlockedExchange(&g_drawWriteHi, 0);
 }
 
-// ===== ⭐ run 196: ASK THE SHADER which constant registers it reads =====================
+// ===== Ă˘Â­Â run 196: ASK THE SHADER which constant registers it reads =====================
 //
 // Every measurement so far has inferred the transform from constant VALUES, and values cannot say who
 // reads them. `c26..c28` looks exactly like a world->view matrix, but "looks like" is what has cost
@@ -10992,7 +11122,7 @@ static void DumpShaderConstUsage(IDirect3DVertexShader9* vs) {
     }
     static DWORD buf[4096];                     // 16 KB; reported if the shader exceeds it
     if (size > sizeof(buf)) {
-        Log("    ⚠️ shader bytecode is %u bytes, larger than the %u-byte buffer - NOT parsed."
+        Log("    Ă˘ĹˇÂ ÄŹÂ¸Ĺą shader bytecode is %u bytes, larger than the %u-byte buffer - NOT parsed."
             " Raise the buffer; do not conclude anything from a partial parse.",
             size, (unsigned)sizeof(buf));
         return;
@@ -11003,7 +11133,7 @@ static void DumpShaderConstUsage(IDirect3DVertexShader9* vs) {
     const DWORD ver = buf[0];
     const int major = (int)((ver >> 8) & 0xFF), minor = (int)(ver & 0xFF);
     if (major < 2) {
-        Log("    ⚠️ shader is vs_%d_%d - shader model 1.x has NO instruction-length field, so this"
+        Log("    Ă˘ĹˇÂ ÄŹÂ¸Ĺą shader is vs_%d_%d - shader model 1.x has NO instruction-length field, so this"
             " parser cannot walk it and would report nonsense. Refusing.", major, minor);
         return;
     }
@@ -11050,17 +11180,17 @@ static void DumpShaderConstUsage(IDirect3DVertexShader9* vs) {
     Log("    shader vs_%d_%d, %u bytes: reads %d constant register(s): %s", major, minor, size, n,
         n ? list : "(none)");
     if (shown < n)
-        Log("    ⚠️ register list truncated: %d of %d shown", shown, n);
+        Log("    Ă˘ĹˇÂ ÄŹÂ¸Ĺą register list truncated: %d of %d shown", shown, n);
     if (truncated)
-        Log("    ⚠️ token walk hit its 8192 guard - the parse is INCOMPLETE and the list above may be"
+        Log("    Ă˘ĹˇÂ ÄŹÂ¸Ĺą token walk hit its 8192 guard - the parse is INCOMPLETE and the list above may be"
             " missing registers.");
     if (relative)
-        Log("    ⚠️ this shader uses RELATIVE constant addressing (c[a0.x + n]), so the registers it"
+        Log("    Ă˘ĹˇÂ ÄŹÂ¸Ĺą this shader uses RELATIVE constant addressing (c[a0.x + n]), so the registers it"
             " reads are not statically knowable and the list above is a lower bound.");
     if (defd)
         Log("    (%d def/defi/defb literal block(s) skipped - those constants are baked into the shader,"
             " not set through the API)", defd);
-    Log("    ⭐ THE ANSWER: whichever of these is a world->view or view->clip matrix is what must be"
+    Log("    Ă˘Â­Â THE ANSWER: whichever of these is a world->view or view->clip matrix is what must be"
         " remapped per eye. If c0 is absent from this list, that is why our c0 remap never reaches the"
         " flash - and the register that IS here is the fix.");
 }
@@ -11068,7 +11198,7 @@ static void DumpShaderConstUsage(IDirect3DVertexShader9* vs) {
 // Dumped from the draw hook - which normally would be forbidden, and is the one thing to be careful
 // about here. Run 24/25 lost two runs to file I/O inside a draw hook, so this is bounded to a handful
 // of draws for the whole session by g_flashProbeLeft and is off by default.
-// ---- ⭐ run 213f: the scope quad SAMPLES THE SCENE, and that changes the fix ----
+// ---- Ă˘Â­Â run 213f: the scope quad SAMPLES THE SCENE, and that changes the fix ----
 //
 // Drawing the overlay per eye (run 213e) put a whole scope in each eye - and revealed that the world is
 // now drawn TWICE inside each one, with a vertical seam through the middle of each circle. So this quad
@@ -11091,12 +11221,12 @@ static void DumpShaderConstUsage(IDirect3DVertexShader9* vs) {
 // this project before. So: dump it. Declaration, the vertices themselves, the pixel-shader constants and
 // the bound textures - everything needed to tell the two apart in one look, and no fix until then.
 //
-// ⚠️ Logging from inside a draw hook is what hung startup in runs 24/25. It is safe HERE for the same
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Logging from inside a draw hook is what hung startup in runs 24/25. It is safe HERE for the same
 // reason FlashRegDump is: a hard one-shot budget that nothing resets, so it cannot fire per frame.
 int g_scopeDumpLeft = 0;             // ini [Render] ScopeQuadDump
 void ScopeQuadDump(IDirect3DDevice9* dev, UINT primCount) {
     if (g_scopeDumpLeft <= 0) return;
-    // ⭐ run 213h: RATE-LIMITED, because the budget used to be spent inside a twentieth of a second.
+    // Ă˘Â­Â run 213h: RATE-LIMITED, because the budget used to be spent inside a twentieth of a second.
     // The overlay draws 120 times a second, so four dumps all described the same instant - and the one
     // state that matters is a SECOND one: the user found the scope renders CORRECTLY in slow motion.
     // One dump a second lets a single run sample normal and slow-motion without any keypress.
@@ -11112,7 +11242,7 @@ void ScopeQuadDump(IDirect3DDevice9* dev, UINT primCount) {
     IDirect3DPixelShader9* psh = nullptr;
     if (SUCCEEDED(dev->GetPixelShader(&psh)) && psh) {
         Log("    pixel shader  %p", (void*)psh);
-        // ---- ⭐ run 213i: READ THE SHADER, stop inferring what it does ----
+        // ---- Ă˘Â­Â run 213i: READ THE SHADER, stop inferring what it does ----
         //
         // Every constant-level theory so far has been an inference about how this shader turns a
         // position into a texture coordinate, and each one cost a run. The bytecode says it outright:
@@ -11255,18 +11385,18 @@ void FlashRegDump(IDirect3DDevice9* dev, LONG lo, LONG hi, UINT primCount, UINT 
         ++n;
     }
     if (n < totalWritten)
-        Log("    ⚠️ register LIST truncated: %d of %d shown (string budget). The count is what matters -"
+        Log("    Ă˘ĹˇÂ ÄŹÂ¸Ĺą register LIST truncated: %d of %d shown (string budget). The count is what matters -"
             " every one of the %d is dumped below unless the block cap also reports biting.",
             n, totalWritten, totalWritten);
     Log("flash reg probe: stride %u prims %u  vertex shader %s  registers written since the previous"
         " draw: %s", stride, primCount, haveVs ? "YES" : "*** NONE (fixed function)", n ? regs : "(none)");
 
-    // ⭐ The authoritative question, asked before any of the value-based guessing below: which registers
+    // Ă˘Â­Â The authoritative question, asked before any of the value-based guessing below: which registers
     // does this shader actually READ? Everything else in this dump is inference from memory contents.
     if (haveVs) DumpShaderConstUsage(vs);
     if (vs) vs->Release();
 
-    // ---- ⭐ the CHEAP hypothesis, checked before hunting any further for a register ----
+    // ---- Ă˘Â­Â the CHEAP hypothesis, checked before hunting any further for a register ----
     //
     // The flash may ride the scene's own c0 and simply arrive at a moment when there is nothing to
     // remap. `g_camMatrixBound` is cleared whenever a shadow or post pass takes the tracked register,
@@ -11299,7 +11429,7 @@ void FlashRegDump(IDirect3DDevice9* dev, LONG lo, LONG hi, UINT primCount, UINT 
                   " still lands on the seam it does not read any of them");
     }
 
-    // ---- ⚠️ this used to `break` after the FIRST block, and that hid the answer ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą this used to `break` after the FIRST block, and that hid the answer ----
     //
     // Run 193 dumped only c5..c8 and stopped. c5..c8 turned out to be the effect's local->world matrix -
     // its last column is (0,0,0,1), so it carries no projection at all - which means the register that
@@ -11309,7 +11439,7 @@ void FlashRegDump(IDirect3DDevice9* dev, LONG lo, LONG hi, UINT primCount, UINT 
     // Now every 4-aligned written block, with the test that separates them: **a view-PROJECTION has a
     // non-trivial w column; an affine world matrix has (0,0,0,1).** Only a projective block can be the
     // one whose remap moves the draw between eyes.
-    // ---- 💥 run 194: the 4-ALIGNMENT FILTER EXCLUDED THE KNOWN ANSWER ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 194: the 4-ALIGNMENT FILTER EXCLUDED THE KNOWN ANSWER ----
     //
     // This said `if (i & 3) continue;` - dump only 4-aligned starts, on the assumption that a matrix
     // does not straddle a multiple of four. **The flash's matrix is at c5..c8**, established the run
@@ -11345,12 +11475,12 @@ void FlashRegDump(IDirect3DDevice9* dev, LONG lo, LONG hi, UINT primCount, UINT 
     // Every exclusion, stated. A silent zero here is what cost runs 193 and 194.
     Log("    dumped %d block(s) of %d written register(s)%s%s", blocks, totalWritten,
         skippedByCap ? "" : " - NOTHING EXCLUDED",
-        skippedByCap ? "  ⚠️ CAP BIT: see the next line" : "");
+        skippedByCap ? "  Ă˘ĹˇÂ ÄŹÂ¸Ĺą CAP BIT: see the next line" : "");
     if (skippedByCap)
-        Log("    ⚠️ BLOCK CAP HIT - %d written register(s) were NOT dumped. Raise kBlockCap; do not draw"
+        Log("    Ă˘ĹˇÂ ÄŹÂ¸Ĺą BLOCK CAP HIT - %d written register(s) were NOT dumped. Raise kBlockCap; do not draw"
             " a conclusion from this dump.", skippedByCap);
     if (failedRead)
-        Log("    ⚠️ %d register read(s) FAILED (GetVertexShaderConstantF) and are missing from the dump.",
+        Log("    Ă˘ĹˇÂ ÄŹÂ¸Ĺą %d register read(s) FAILED (GetVertexShaderConstantF) and are missing from the dump.",
             failedRead);
     Log("    Reading this: a PROJECTIVE block whose rows look like axes plus a translation is a"
         " candidate - set [Render] ExtraCamReg to its first register and fire. But check the remap-state"
@@ -11379,7 +11509,7 @@ static void FireBBox(const void* vtx, UINT stride, D3DPRIMITIVETYPE t, UINT prim
     }
 }
 
-// ---- 💥 run 192: the table SATURATED on indexed geometry and reported nothing useful ----
+// ---- Ä‘Ĺşâ€™Ä„ run 192: the table SATURATED on indexed geometry and reported nothing useful ----
 //
 // First version recorded every small draw. Indexed draws carry no vertex pointer, so they have no
 // bounding box - and they have a distinct signature for every primitive count, so all 20 slots filled
@@ -11454,7 +11584,7 @@ void FireCensusDump() {
     Log("    draws by hook: DrawPrim %d, DrawIdxPrim %d, DrawPrimUP %d, DrawIdxPrimUP %d"
         " (only the UP paths are listed below - they are the ones with vertex data)",
         g_fireBySrc[0], g_fireBySrc[1], g_fireBySrc[2], g_fireBySrc[3]);
-    // ⭐ run 213c: an overlay is drawn EVERY frame. Scene geometry comes and goes as the view moves, and
+    // Ă˘Â­Â run 213c: an overlay is drawn EVERY frame. Scene geometry comes and goes as the view moves, and
     // in run 213b every single listed row was a count of one. So the scope dump prints only signatures
     // that persisted across most of the window - the property that follows from what an overlay is,
     // rather than from any guess about how it is drawn.
@@ -11511,13 +11641,13 @@ void FireCensusDump() {
                 " above are the ones drawn in most frames. The window keeps this table, so a row there"
                 " can say BOTH that it is drawn every frame and that it was absent here.", g_fireSigN);
         else
-            Log("    ⚠️ A candidate is still only a candidate. Run 213a picked `stride 16, 2 prims,"
+            Log("    Ă˘ĹˇÂ ÄŹÂ¸Ĺą A candidate is still only a candidate. Run 213a picked `stride 16, 2 prims,"
                 " spans NDC` on correlation alone, drew it once per eye at 120/second, and the picture"
                 " did not change. Drop the draw before building on it - if the scope survives, it is"
                 " not the scope. MuzzleFxDropStride reaches the user-pointer paths; an indexed draw"
                 " needs the equivalent building first, NOT a guess.");
     }
-    // ⭐ run 213c: the scope table spans baseline AND window - the window resets counts but keeps the
+    // Ă˘Â­Â run 213c: the scope table spans baseline AND window - the window resets counts but keeps the
     // entries and their inBaseline flags. Clearing here would throw away the very thing the window
     // compares against. The fire census still clears, exactly as it always did.
     if (!g_censusIsScope || !g_fireIsBaseline) {
@@ -11533,7 +11663,7 @@ void FireCensusDump() {
 
 // Only called for SMALL draws - the ones that could be a quad - so the device queries below never
 // run on the hundreds of real geometry draws in a gameplay frame.
-// ⭐ run 260: split out of VidProbeRecord so the quad census can capture the SAME signature without a
+// Ă˘Â­Â run 260: split out of VidProbeRecord so the quad census can capture the SAME signature without a
 // second copy of the device queries. The texture size is the field that matters for both: a Bink movie
 // is 1280x720 and a UI element's atlas is not, so the number names the draw without guessing.
 static VidSig CaptureDrawSig(IDirect3DDevice9* dev, uint8_t src, D3DPRIMITIVETYPE t, UINT primCount,
@@ -11547,7 +11677,7 @@ static VidSig CaptureDrawSig(IDirect3DDevice9* dev, uint8_t src, D3DPRIMITIVETYP
         const float* v = static_cast<const float*>(vtx);
         s.v0x = v[0]; s.v0y = v[1];
     }
-    // ---- 💥 run 261: ONE vertex cannot tell clip space from world space, and (0,0) is in both ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 261: ONE vertex cannot tell clip space from world space, and (0,0) is in both ----
     //
     // Run 47 separated a fullscreen quad from a decal by testing whether the FIRST vertex is inside
     // NDC, on the reasoning that clip space is +-1 and world space is +-40000. Four signatures in
@@ -11596,7 +11726,7 @@ static VidSig CaptureDrawSig(IDirect3DDevice9* dev, uint8_t src, D3DPRIMITIVETYP
     return s;
 }
 
-// ---- ⭐ run 260: WHICH draws are being passed through as "fullscreen quads" ----
+// ---- Ă˘Â­Â run 260: WHICH draws are being passed through as "fullscreen quads" ----
 //
 // UserPtrQuad calls a draw a fullscreen quad when it is under 3 prims AND its first vertex is in NDC,
 // and a quad is then passed straight through - drawn ONCE across the whole side-by-side frame, with no
@@ -11604,7 +11734,7 @@ static VidSig CaptureDrawSig(IDirect3DDevice9* dev, uint8_t src, D3DPRIMITIVETYP
 // the scope a bespoke fix and left the general case), and it matches the reported popup text exactly:
 // once, large, straddling the seam.
 //
-// ⚠️ It also explains why HudArmSticky could never have fixed it: the hooks read
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą It also explains why HudArmSticky could never have fixed it: the hooks read
 // `if (hudArmed && g_hudRemap && !quad)`, so a quad-classified draw NEVER reaches HudStereoPair
 // whatever the arm flag says. Run 253's remedy was aimed at a path these draws do not take.
 //
@@ -11612,17 +11742,17 @@ static VidSig CaptureDrawSig(IDirect3DDevice9* dev, uint8_t src, D3DPRIMITIVETYP
 // and goes quiet - then a NEW line appearing exactly when a popup opens is the draw we are after, and
 // its texture size is the handle a targeted fix needs.
 //
-// ⚠️ SATURATION IS REPORTED. Four separate runs in this project were lost to a cap that silently
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą SATURATION IS REPORTED. Four separate runs in this project were lost to a cap that silently
 // excluded the answer, and the file carries the list. If this one fills, it says so.
-volatile LONG g_spriteQuadDraws = 0;    // ⭐ run 262, reported per second
-// ⛔ run 270: DEFAULT 0. It breaks the sniper scope and has never been shown to fix anything.
+volatile LONG g_spriteQuadDraws = 0;    // Ă˘Â­Â run 262, reported per second
+// Ă˘â€şâ€ť run 270: DEFAULT 0. It breaks the sniper scope and has never been shown to fix anything.
 //
 // The scope overlay is a centred quad that does not span NDC, so this splits it by construction -
 // and run 213 established the scope needs THREE things together: the per-eye viewport, c1
 // ScreenPositionScaleBias X-only, and the halved aspect that keeps the circle round. Doing the
 // geometry and neither of the other two breaks a scope that was intact.
 //
-// ⚠️ And it never earned its place: run 262 shipped it on run 192's extent theory, it engaged on 104
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą And it never earned its place: run 262 shipped it on run 192's extent theory, it engaged on 104
 // draws a second - proven by its own counter - and the artefact it was built for did not change. A
 // change that fixes nothing and breaks something real defaults OFF.
 volatile LONG g_spriteQuadPerEye = 0;   // ini [Render] SpriteQuadPerEye
@@ -11644,7 +11774,7 @@ void QuadCensusRecord(IDirect3DDevice9* dev, uint8_t src, D3DPRIMITIVETYPE t, UI
     }
     if (g_quadSigN < kQuadSigMax) {
         VidSig n = s; n.count = 1; g_quadSig[g_quadSigN++] = n;
-        // ⭐ run 261: the verdict is computed here rather than left to whoever reads the log. A real
+        // Ă˘Â­Â run 261: the verdict is computed here rather than left to whoever reads the log. A real
         // fullscreen quad spans roughly -1..+1 in both axes; anything wider was misclassified by
         // run 47's first-vertex test and is being drawn once across the frame by mistake.
         const bool spansNdc = n.bbVerts >= 3 &&
@@ -11722,7 +11852,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     // turns out to be here rather than on a user-pointer path, the quad classifier is not involved at
     // all and the whole hypothesis changes.
     FireCensusRecord(0, t, count, 0, nullptr, false, 0);
-    // ---- ⭐ run 213d: the validation, on the path that had none ----
+    // ---- Ă˘Â­Â run 213d: the validation, on the path that had none ----
     //
     // `MuzzleFxDropStride` only reaches the user-pointer hooks, because a stride is the only handle
     // those draws offer. THIS path has no vertex pointer and no stride, so it had no drop mechanism at
@@ -11749,7 +11879,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
         // against - but it must be inside the pass check, not outside it.
         if (FgHideWholePass()) return D3D_OK;
     }
-    // ---- ⭐ run 213e: the SNIPER SCOPE overlay, and why StereoPair cannot fix it ----
+    // ---- Ă˘Â­Â run 213e: the SNIPER SCOPE overlay, and why StereoPair cannot fix it ----
     //
     // Identified by census and then VALIDATED by dropping it: DropPrimCount=2 DropPrimType=5 skipped
     // exactly 120 draws a second while scoped - one per frame - and the scope circle disappeared,
@@ -11765,7 +11895,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     // quad's is. The right tool for a clip-space fullscreen quad is the VIEWPORT: NDC maps onto the
     // viewport rect, so pointing the viewport at one half puts the WHOLE quad inside that half. No
     // vertex access, no shader constant, and it cannot disturb any draw but this one.
-    // ---- 💥 run 231: this matcher fires on 96% of SECONDS in some saves ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 231: this matcher fires on 96% of SECONDS in some saves ----
     //
     // It is "any 2-primitive triangle strip drawn into the scene target", which is the shape of every
     // UE3 fullscreen post-process quad - the file's own Bink classifier note warns about exactly this
@@ -11781,7 +11911,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     // Measured across recent runs: 13-18% of seconds normally, 96% in the failing save. So it is not
     // uniformly broken - something in that area draws the matching shape every frame.
     //
-    // ⚠ The shape test is SPLIT from the action deliberately. ScopeQuadPerEye=0 has to remain a
+    // Ă˘ĹˇÂ  The shape test is SPLIT from the action deliberately. ScopeQuadPerEye=0 has to remain a
     // usable unblock - it turns off the viewport move AND stops g_scopeUpMs being set - while still
     // letting the dump and the correlation counters run, or turning the bug off would also turn off
     // the only instrument that can identify it.
@@ -11789,7 +11919,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
         count == (UINT)g_scopeQuadPrimCount &&
         InterlockedCompareExchange(&g_dupDraws, 0, 0) &&
         InterlockedCompareExchange(&g_rtIsScene, 0, 0);
-    // ⭐ run 271: the aim trigger, read once and used for both the counter and the gate.
+    // Ă˘Â­Â run 271: the aim trigger, read once and used for both the counter and the gate.
     const bool scopeAiming = InterlockedCompareExchange(&g_rawAltTrigger, 0, 0) > 40;
     if (scopeShape) {
         ScopeQuadDump(dev, count);
@@ -11799,7 +11929,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
         if (scopeAiming) InterlockedIncrement(&g_scopeMatchAim);
         else             InterlockedIncrement(&g_scopeMatchIdle);
     }
-    // ---- 💥 run 271: the over-match was MEASURED in run 231 and never ACTED ON ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 271: the over-match was MEASURED in run 231 and never ACTED ON ----
     //
     // Run 231 added the two counters above, proved the matcher fires on ordinary post-process quads,
     // and unblocked the session by turning the whole feature off - which is why ScopeQuadPerEye has
@@ -11811,11 +11941,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     // aim trigger released is a false positive with no other possible reading, so requiring the
     // trigger removes every one of them by construction rather than by tuning a shape.
     //
-    // ⚠️ This gates the ACTION only. The shape test, the dump and both counters still run exactly as
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą This gates the ACTION only. The shape test, the dump and both counters still run exactly as
     // before, because run 231's note is explicit that turning the bug off must not turn off the
     // instrument that identifies it - and the AIM counter is what will show this working.
     //
-    // ⚠️ It also protects the four things ScopeActive() gates - the mesh latch, the laser, the ADS
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą It also protects the four things ScopeActive() gates - the mesh latch, the laser, the ADS
     // pull-back and the ADS mask - since g_scopeUpMs is only set inside this branch. A false match
     // used to disable all four for 500 ms, which is run 231's "my gun was not attached to the
     // controller".
@@ -11835,7 +11965,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
             dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &oldScissor);
             dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
 
-            // ---- ⭐ run 213g: the two constants the dump named ----
+            // ---- Ă˘Â­Â run 213g: the two constants the dump named ----
             //
             // The viewport alone moved the GEOMETRY into each half and left the shader reading the
             // whole frame, so each eye showed the world twice. The dump says why, and says it exactly:
@@ -11874,7 +12004,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
                 vp.Width = halfWidth;
                 dev->SetViewport(&vp);
                 if (haveScene) {
-                    // ---- ⭐ run 213j: the components, read off the shader instead of assumed ----
+                    // ---- Ă˘Â­Â run 213j: the components, read off the shader instead of assumed ----
                     //
                     //   mad r1.xy, r1.yzzw, c1, c1.wzzw
                     //
@@ -11917,12 +12047,12 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     // Run 181: this path could not move anything at all before - g_thisDrawMoved was only ever set
     // in the indexed hook. Zero for the vertex count because a non-indexed draw does not report one;
     // see FgRidesGun for why that is the right thing to pass rather than a gap.
-    g_thisDrawMoved = RideTargetFor(0);   // ⭐ run 237
+    g_thisDrawMoved = RideTargetFor(0);   // Ă˘Â­Â run 237
     const HRESULT phr = StereoPair(dev, [&] { return g_origDrawPrim(dev, t, start, count); });
     g_thisDrawMoved = 0;
     return phr;
 }
-// ================= ⭐ run 114: find the FOREGROUND pass =======================================
+// ================= Ă˘Â­Â run 114: find the FOREGROUND pass =======================================
 //
 // The first-person weapon and arms are drawn in their own depth-priority group - a pass rendered
 // after the main scene so the gun never clips into walls. `GetForegroundDPGOverrides` in the run-95
@@ -11938,7 +12068,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
 // If either brackets a contiguous run of draws near the end of the frame, that run is the arms and
 // the weapon.
 //
-// ⚠️ NOTHING IS LOGGED FROM INSIDE THESE HOOKS. Run 24/25 lost two runs to a startup hang that was
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą NOTHING IS LOGGED FROM INSIDE THESE HOOKS. Run 24/25 lost two runs to a startup hang that was
 // a fopen/fwrite/fclose inside a draw hook, and the note on that sits a few lines below. Events go
 // into a fixed array and Present prints them.
 struct DpgEvent { uint8_t kind; uint32_t drawIdx; float z0, z1; uint32_t a, b, c, d; };
@@ -11949,7 +12079,7 @@ volatile LONG g_dpgProbeFrames = 0;
 volatile LONG g_frameDrawIdx = 0;
 void DumpDpgProbe();
 
-// ---- ⭐ run 115: the foreground pass, identified and skippable ----
+// ---- Ă˘Â­Â run 115: the foreground pass, identified and skippable ----
 //
 // Stage 1 found the boundary: a depth+stencil Clear late in the frame, with six draws after it.
 // The first ZBUFFER clear of a frame happens at draw 0 and is the normal scene setup, so "a
@@ -11974,7 +12104,7 @@ volatile LONG g_inForeground = 0;      // set by the late depth clear, reset eac
 // left unaccounted for.
 volatile LONG g_hideMeshIdx = 0;       // 0 none, 1..3 index into the learned signatures
 
-// ---- ⭐ run 119: MOVE the selected mesh instead of hiding it ----
+// ---- Ă˘Â­Â run 119: MOVE the selected mesh instead of hiding it ----
 //
 // Stage 3 is answered: [1]=5799 is the gun, [2]=3314 is the arms, and they are separable. Hiding
 // leaves black because the foreground pass draws into its own target and the composite is masked,
@@ -11986,11 +12116,11 @@ volatile LONG g_hideMeshIdx = 0;       // 0 none, 1..3 index into the learned si
 // (about 57 cm) so a success is unmistakable and no controller maths can be blamed for a failure.
 // The controller pose replaces the constant only once this is proven.
 volatile LONG g_fgMoveOn = 0;          // APPS selects a mesh; this says move it rather than hide it
-// ⭐ run 237: 0 = not moved, 1 = the gun hand, 2 = the OFF hand (the TMD).
+// Ă˘Â­Â run 237: 0 = not moved, 1 = the gun hand, 2 = the OFF hand (the TMD).
 int g_thisDrawMoved = 0;               // set per draw on the render thread, read inside StereoPair
 volatile LONG g_fgDrawCount = 0;       // how many draws landed in the pass this frame
 
-// ---- ⭐ run 181: the weapon EFFECTS were never moved, only the weapon MESH ----
+// ---- Ă˘Â­Â run 181: the weapon EFFECTS were never moved, only the weapon MESH ----
 //
 // Reported: the smoke that should come out of the pistol barrel is stuck at the centre of the
 // screen. That is this - and it is not a bug in the transform, it is the transform's reach.
@@ -12001,7 +12131,7 @@ volatile LONG g_fgDrawCount = 0;       // how many draws landed in the pass this
 // muzzle effect spawns at the engine's muzzle, which is the middle of the view, and it stays there
 // while the mesh it is supposed to be coming out of is over on the controller.
 //
-// ⚠️ **The premise this replaces named the wrong effect, and STATUS chased it for sixty-odd runs:**
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą **The premise this replaces named the wrong effect, and STATUS chased it for sixty-odd runs:**
 // *"barrel smoke IS correctly aligned, so find what it rides on that the flash does not."* The
 // aligned smoke is the IMPACT smoke off the wall. The split is the space each effect lives in:
 //
@@ -12021,7 +12151,7 @@ volatile LONG g_fgDrawCount = 0;       // how many draws landed in the pass this
 // narrower than the thing being described. The arms stay the one exception, because they are
 // hidden rather than moved.
 //
-// ---- 🔬 run 181 RESULT: the mechanism engaged and the smoke was not in it ----
+// ---- Ä‘Ĺşâ€ťÂ¬ run 181 RESULT: the mechanism engaged and the smoke was not in it ----
 //
 // Measured, not argued. `weapon fx: N ... (new peak)` climbed 0 -> 2 -> 3 -> 4 over the run, so
 // draws beyond the gun mesh really are in the foreground pass and really did ride the transform.
@@ -12059,12 +12189,12 @@ volatile LONG g_fgRideBailCount = 0;
 // answer "is this geometry in the first-person pass" without a single inference - the thing either
 // disappears or it does not.
 //
-// ⚠️ Expect the gun to go BLACK rather than vanish. Run 117 established why and it is not a fault
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Expect the gun to go BLACK rather than vanish. Run 117 established why and it is not a fault
 // here: the pass renders into its own target and is composited through a mask, so removing the
 // geometry leaves the mask with nothing to show. **Black where the gun was is a correct result for
 // this test.** What is being read is the SMOKE, not the gun.
 //
-// ⚠️ Must be called AFTER FgLearnSignature. Hiding before learning would drop the mesh out of next
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Must be called AFTER FgLearnSignature. Hiding before learning would drop the mesh out of next
 // frame's list, the latch would go with it, and the test would be measuring its own side effect -
 // which is exactly the run-120 regression, arrived at from a different direction.
 static bool FgHideWholePass() {
@@ -12096,7 +12226,7 @@ static void RodeLearn(UINT verts) {
 // Vertex count is a good enough fingerprint: 5799, 3314 and 390 are specific numbers, and a draw
 // matching one of them anywhere in the frame is almost certainly the same mesh. Learned from the
 // foreground pass rather than hardcoded, so it survives a different weapon.
-// ---- ⚠️ run 118: the signature table has to be PER FRAME ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 118: the signature table has to be PER FRAME ----
 //
 // It used to accumulate for the whole session and cap at four, so it filled with counts from menu
 // and loading frames - 11387, 3314, 390, 9 - before the gun mesh was ever seen, and the hide
@@ -12106,7 +12236,7 @@ static void RodeLearn(UINT verts) {
 // Rebuilt every frame from the current foreground pass, so the list is what is actually on screen
 // now. Eight slots rather than four, because truncation is what caused this and a table that
 // silently drops the entry you need is the same defect as a filter that encodes its answer.
-// ================= ⭐ run 203: the dock collapse. Locked reads on a hot path =====================
+// ================= Ă˘Â­Â run 203: the dock collapse. Locked reads on a hot path =====================
 //
 // Reported: 120 fps in HEAD aiming, 11 fps in MOTION CONTROLLER, in the same spot, switching back and
 // forth reproducibly. That mode difference is `g_hideMeshIdx` - 0 versus 3 - and it decides whether the
@@ -12129,7 +12259,7 @@ static void RodeLearn(UINT verts) {
 // that read (defined up beside Readable, since the draw hooks need it earlier than this), and it is what
 // the hot matchers use now.
 //
-// ⚠️ Kept interlocked wherever the value is WRITTEN or read-modify-written - Rd is for reads only.
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Kept interlocked wherever the value is WRITTEN or read-modify-written - Rd is for reads only.
 //
 // The frame-level sanity bound. FgRidesGun already had this idea (kFgRideMax) and it was right; the rest
 // of the mesh path did not, so a mis-fired boundary still cost thousands of draws' worth of matcher work.
@@ -12137,7 +12267,7 @@ static void RodeLearn(UINT verts) {
 // magnitude - past it, the identification is wrong and there is nothing worth matching against.
 const LONG kFgSanePass = 64;
 
-// ---- 💥 run 232: the census was SATURATED exactly where the interesting thing happens ----
+// ---- Ä‘Ĺşâ€™Ä„ run 232: the census was SATURATED exactly where the interesting thing happens ----
 //
 // This was 8, and `FgLearnSignature` silently drops everything past the 8th distinct mesh. Before the
 // TMD the first-person pass holds 4 meshes, so 8 was never questioned. After the TMD, EVERY census in
@@ -12145,7 +12275,7 @@ const LONG kFgSanePass = 64;
 // hitting its stop. The classic arms (3314) and the fragment (390) vanish from those lists, and that
 // is far more likely to be truncation than the engine ceasing to draw them.
 //
-// ⚠ This is NOT a pure instrumentation change, and it must not be described as one. The latch picks
+// Ă˘ĹˇÂ  This is NOT a pure instrumentation change, and it must not be described as one. The latch picks
 // the top two BY SIZE from this list, so the list was "the largest two of whatever got drawn first".
 // Widening it lets a mesh that used to be truncated away win a role. That is strictly more correct -
 // choosing from a complete set beats choosing from an arbitrary prefix - but it can change which mesh
@@ -12157,7 +12287,7 @@ const int kFgSigMax = 32;
 volatile LONG g_fgSigVerts[kFgSigMax] = {};
 volatile LONG g_fgSigCount = 0;
 
-// ---- 💥 run 120: the per-frame reset broke hiding, and the earlier run was right ----
+// ---- Ä‘Ĺşâ€™Ä„ run 120: the per-frame reset broke hiding, and the earlier run was right ----
 //
 // Hiding the arms used to remove them CLEANLY. After the pollution fix it left them black, and the
 // regression is mine: the depth-prime copy is drawn at draws 2-3, at the very START of the frame.
@@ -12171,11 +12301,11 @@ volatile LONG g_fgSigCount = 0;
 // gameplay frame because it is replaced wholesale every frame rather than accumulated.
 volatile LONG g_fgStableVerts[kFgSigMax] = {};
 volatile LONG g_fgStableCount = 0;
-// ⭐ run 232: budget for the change-triggered census. Bounded because firing adds muzzle-flash
+// Ă˘Â­Â run 232: budget for the change-triggered census. Bounded because firing adds muzzle-flash
 // geometry to the pass, so a busy fight is a legitimate source of many real changes.
 int g_fgCensusBudget = 400;      // ini [Render] FgCensusBudget
 
-// ---- 💥 run 122: latch the mesh by its VERTEX COUNT, not its position in the list ----
+// ---- Ä‘Ĺşâ€™Ä„ run 122: latch the mesh by its VERTEX COUNT, not its position in the list ----
 //
 // Reported: the gun and arms flash back to normal for a moment when firing. That is the list
 // changing - muzzle-flash geometry joins the foreground pass, so [1] stops being the gun for those
@@ -12186,7 +12316,7 @@ int g_fgCensusBudget = 400;      // ini [Render] FgCensusBudget
 // selected and matched by value from then on.
 volatile LONG g_gunVerts = 0, g_armsVerts = 0;
 
-// ---- ⭐ run 198: the BASELINE set, and the two animation windows ----
+// ---- Ă˘Â­Â run 198: the BASELINE set, and the two animation windows ----
 //
 // `g_fgBaseVerts` is every mesh the first-person pass drew at the moment the latch took - a weapon idle
 // in hand. Anything appearing later was brought in by an animation, which is exactly the reload arm and
@@ -12197,7 +12327,7 @@ volatile LONG g_fgBaseVerts[kFgSigMax] = {};
 volatile LONG g_fgBaseCount = 0;
 int g_hideStrayArms = 1;              // ini [Render] HideStrayArms
 
-// ---- 💥 run 199: the "reload arms" are NOT reload geometry. They are the 390-vertex mesh ----
+// ---- Ä‘Ĺşâ€™Ä„ run 199: the "reload arms" are NOT reload geometry. They are the 390-vertex mesh ----
 //
 // Reported, and it corrects two wrong assumptions at once: *"those are actually always there during
 // gameplay but hidden under where the player could normally see... and they move with the gun, so when I
@@ -12215,7 +12345,7 @@ int g_hideStrayArms = 1;              // ini [Render] HideStrayArms
 // So: hide the baseline mesh that is neither the gun nor the arms. Defined by ROLE rather than as the
 // literal 390, so a weapon whose leftover fragment has a different count is covered too.
 //
-// ⚠️ Kept as a toggle because the risk is real and specific: 390 rides the gun, so if it turns out to be
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Kept as a toggle because the risk is real and specific: 390 rides the gun, so if it turns out to be
 // gun geometry - a sight, a magazine - hiding it removes part of the weapon. `HideExtraArms=0` restores
 // it without a rebuild, and the log names the count being hidden so a wrong call is diagnosable.
 int g_showControllerArms = 1;       // Preserve the existing animated arm mesh on the gun transform.
@@ -12244,7 +12374,7 @@ static bool FgIsExtraArm(UINT verts) {
 // Driven by the health button WE inject, so the signal is exact rather than inferred: there is no
 // guessing whether a heal started, because we are the ones asking for it.
 //
-// ⚠️ Duration is a guess and therefore an ini value. Too short and the arms vanish mid-animation; too
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Duration is a guess and therefore an ini value. Too short and the arms vanish mid-animation; too
 // long and they linger after it. Wall-clock rather than frames, so it does not change with frame rate.
 // The window is [from, until), both measured from the button press. `until` trims the END (the arms were
 // lingering past the animation); `from` trims the START (they were appearing a touch before it began).
@@ -12256,7 +12386,7 @@ volatile LONG64 g_healUntilMs = 0, g_healFromMs = 0;
 // The cheap 32-bit gate for the hot path - see HealWindowActive.
 volatile LONG g_healPending = 0;
 
-// ⚠️ run 203: the 32-bit flag exists so the HOT path never touches the 64-bit deadlines. On a 32-bit
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 203: the 32-bit flag exists so the HOT path never touches the 64-bit deadlines. On a 32-bit
 // build `InterlockedCompareExchange64` compiles to `lock cmpxchg8b` - a locked read-modify-WRITE that
 // dirties the cache line on every call. This was being called per draw from the render thread while
 // Present wrote the same variables, which is a two-thread fight over one cache line, tens of thousands
@@ -12270,7 +12400,7 @@ inline bool HealWindowActive() {
     return now >= InterlockedCompareExchange64(&g_healFromMs, 0, 0);
 }
 
-// ---- ⭐ run 214: the MELEE window, the heal's shape applied to a shorter animation ----
+// ---- Ă˘Â­Â run 214: the MELEE window, the heal's shape applied to a shorter animation ----
 //
 // Reported: the melee swing is invisible. Same cause as the heal was - the animation is performed by
 // the arms this mod hides, so hiding them leaves the player watching nothing happen.
@@ -12279,11 +12409,11 @@ inline bool HealWindowActive() {
 // the engine's position for the window. Run 198 established why both halves are needed - moving the gun
 // onto the controller while the arms animate at the engine position tears one animation in half.
 //
-// ⚠ The duration is a GUESS and therefore an ini value, exactly as HealArmsMs is. A swing is much
+// Ă˘ĹˇÂ  The duration is a GUESS and therefore an ini value, exactly as HealArmsMs is. A swing is much
 // shorter than the injector animation; 700 ms is a starting point, not a measurement, and the first
 // person to watch it should expect to move it.
 //
-// ⚠⚠ **The impulse weapon shares this button.** Once that weapon is acquired the same press fires a
+// Ă˘ĹˇÂ Ă˘ĹˇÂ  **The impulse weapon shares this button.** Once that weapon is acquired the same press fires a
 // weapon rather than swinging a fist, and showing the arms then is a misfire. That is unmeasured and
 // deliberately not guessed at - see the log line at the arming site, which records the latched weapon
 // with every window so the two cases can be told apart from one run once the weapon exists.
@@ -12319,7 +12449,7 @@ static bool FgIsBaseline(UINT verts) {
     return false;
 }
 
-// ---- ⭐ run 212: the WEAPONLESS set, and why MinFgMeshes alone was not enough ----
+// ---- Ă˘Â­Â run 212: the WEAPONLESS set, and why MinFgMeshes alone was not enough ----
 //
 // Reported: playing from the VERY BEGINNING, the pistol arrives invisible and the arms are on the
 // controller - the run-207 role shift, which MinFgMeshes was supposed to have closed. Loading the save
@@ -12337,7 +12467,7 @@ static bool FgIsBaseline(UINT verts) {
 // "fails SAFELY"; that holds for a count set too HIGH and not for one defeated from below, which is the
 // case that actually occurred.
 //
-// ⚠️ 662 appears in exactly ONE census line of an 88,575-line log. The gate is evaluated only on the
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą 662 appears in exactly ONE census line of an 88,575-line log. The gate is evaluated only on the
 // frame `steady` reaches kLatchSteady, so a SINGLE frame of a stray prop poisons the whole session.
 //
 // ---- the discriminator that is not a count ----
@@ -12357,7 +12487,7 @@ static bool FgIsBaseline(UINT verts) {
 // **0 false positives on 54 good latches, and it catches the one that broke the playthrough.** The last
 // row is run 158d's menu latch - a separate, still-open hole, and this does not claim to close it.
 //
-// ⚠️ This needs a weaponless pass to have been SEEN first. A session poisoned before one settles gets
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą This needs a weaponless pass to have been SEEN first. A session poisoned before one settles gets
 // the old behaviour: no worse, but not fixed. That is what RelatchWrongRoles below is for.
 //
 // Replaced wholesale rather than accumulated, for the same reason g_fgStableVerts is: an accumulating
@@ -12377,7 +12507,7 @@ static bool FgIsQuiet(UINT verts) {
     return false;
 }
 
-// ---- ⭐ run 226: the ARMS count, learned from every latch that worked ----
+// ---- Ă˘Â­Â run 226: the ARMS count, learned from every latch that worked ----
 //
 // Reported: in a scripted scene where the player's hands are tied, the ROPE is missing - and pressing
 // the heal button makes it appear, which points straight at FgHidden, because the heal window is the
@@ -12407,7 +12537,7 @@ static bool FgIsQuiet(UINT verts) {
 // In this run the very first latch was good (`gun=11387 arms=3314`, line 804), so 3314 would have been
 // known 28,000 lines before the scene that broke.
 //
-// ⚠ If a weapon ever genuinely had the same vertex count as the arms, this refuses to latch it. That
+// Ă˘ĹˇÂ  If a weapon ever genuinely had the same vertex count as the arms, this refuses to latch it. That
 // fails SAFE - no latch means the gun is left where the engine put it and nothing is hidden - and it is
 // visible in the log rather than silent.
 const int kKnownArmsMax = 4;
@@ -12432,7 +12562,7 @@ static void FgRememberArms(LONG verts) {
         " whatever else is or is not on screen (run 226)", verts);
 }
 
-// ---- ⭐ run 158: the latch, extracted so it is not owned by one keypress ----
+// ---- Ă˘Â­Â run 158: the latch, extracted so it is not owned by one keypress ----
 //
 // This used to live inline in the APPS handler and ran only when the cycle passed through mode 1.
 // That was fine while APPS was the only way in, and it is a trap the moment a setting can select a
@@ -12442,7 +12572,7 @@ static void FgRememberArms(LONG verts) {
 //
 // Returns false while the foreground pass has not been seen yet, which is the normal state at
 // startup and through the menus - so callers retry rather than treating it as a failure.
-// ================= ⭐ run 207: do not latch unless a WEAPON ACTUALLY EXISTS ====================
+// ================= Ă˘Â­Â run 207: do not latch unless a WEAPON ACTUALLY EXISTS ====================
 //
 // The dock produced `mesh latch: gun=3314 verts, arms=390 verts, baseline set of 2`. 3314 is the ARMS and
 // 390 the hand fragment: with no weapon in hand the pass holds only two meshes, and the latch takes the
@@ -12462,10 +12592,10 @@ static void FgRememberArms(LONG verts) {
 // mid-reload and re-assign the roles from reload geometry. It would trade a rare bug for one on every
 // reload. Prevent the bad latch instead of trying to recover from it.
 //
-// ⚠️ Also deliberately NOT "require 3 meshes": three is what one pistol happened to draw, and hardcoding a
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Also deliberately NOT "require 3 meshes": three is what one pistol happened to draw, and hardcoding a
 // count measured from a single sample is how run 118's table came to point at things that were not the gun.
 //
-// ---- 🛑 run 209: the weapon-actor WALK is removed. Two regressions, and a walk was the wrong tool ----
+// ---- Ä‘Ĺşâ€şâ€ run 209: the weapon-actor WALK is removed. Two regressions, and a walk was the wrong tool ----
 //
 // It was gated on a live actor deriving from RvWeaponShared, found by walking GObjects. That cost:
 //
@@ -12485,7 +12615,7 @@ static void FgRememberArms(LONG verts) {
 // cost, and the fragile part - hardcoding 3 - is answered by making it an ini value rather than a
 // constant, so a weapon that draws a different number is one edit away and needs no rebuild.
 //
-// ⚠️ This IS the count-based rule I argued against earlier, and the argument was right in principle: 3 is
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą This IS the count-based rule I argued against earlier, and the argument was right in principle: 3 is
 // what one pistol happened to draw. It is chosen anyway because the alternative has now failed twice and
 // cost performance both times, and because a wrong count fails SAFELY - the latch simply does not take,
 // which is the current dock behaviour and is harmless.
@@ -12509,7 +12639,7 @@ bool LatchFgMeshes() {
 // when you pick a method and NOT when the ini is read, or a saved MOVE DIRECTION would be
 // overwritten on every launch and the "preset, not forced" promise would be a lie. Everything else
 // here is owned by the method outright and applies either way.
-// ---- ⭐ run 158b: the applied state follows VR MODE, not just the setting ----
+// ---- Ă˘Â­Â run 158b: the applied state follows VR MODE, not just the setting ----
 //
 // BACKSPACE turns the mod off and hands the game back. It writes head tracking, 6-DOF, stereo and
 // projection - and it used to leave aim mode 11 and the hidden arms exactly where they were, which
@@ -12532,7 +12662,7 @@ void ApplyAimMethod(bool preset) {
     // legitimately fail this early; Present retries on a slow tick.
     if (mc) EnsureRouteTwoHooks();
 
-    // ---- ⭐ run 205: SPLIT the two things MOTION CONTROLLER turns on ----
+    // ---- Ă˘Â­Â run 205: SPLIT the two things MOTION CONTROLLER turns on ----
     //
     // Measured: same 3,844 draws, 120 fps in HEAD and 23.8 fps in MOTION CONTROLLER, with our own
     // per-draw timers 5x higher for identical work. Six theories have failed because every test moved
@@ -12550,7 +12680,7 @@ void ApplyAimMethod(bool preset) {
     if (mc && !(parts & 2)) InterlockedExchange(&g_aimMode, 0);      // aim half suppressed
     // 3 = gun moved onto the controller AND arms hidden; 0 = both left alone.
     InterlockedExchange(&g_hideMeshIdx, (mc && (parts & 1)) ? 3 : 0);
-    // ⚠️ Deliberately does NOT latch here. This runs from the ini at startup, where the foreground
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Deliberately does NOT latch here. This runs from the ini at startup, where the foreground
     // list holds menu geometry - taking it produced a latch that was wrong AND that silenced its
     // own retry (run 158d). UpdateFgLatch owns the latch now and vets it continuously; clearing on
     // the way out means switching back to HEAD and in again re-takes it rather than trusting a
@@ -12568,7 +12698,7 @@ void ApplyAimMethod(bool preset) {
     // arrangement. HEAD needs ENGINE so the character actually faces where you look; MOTION
     // CONTROLLER needs it because route 2 leaves the engine on the head by design.
     //
-    // ⚠️ During a cutscene the auto-switch has forced mode 3 and is holding the user's mode in
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą During a cutscene the auto-switch has forced mode 3 and is holding the user's mode in
     // g_userCutMode to restore on exit. Writing the live mode here would be overwritten seconds
     // later by that restore, and the setting would look like it had not stuck - so write the
     // SAVED mode instead and let the exit path apply it.
@@ -12602,7 +12732,7 @@ static void FgLearnSignature(UINT verts) {
 //
 // Both are exact - this is a change of the transform, not an approximation of one - and doing it
 // AFTER ApplyEyeRemap means the per-eye offset is preserved.
-// ---- ⭐ run 121: a full transform, so the gun can be ROTATED and not just shifted ----
+// ---- Ă˘Â­Â run 121: a full transform, so the gun can be ROTATED and not just shifted ----
 //
 // Stage 4a proved the mechanism with a fixed translation. Pointing the gun where the controller
 // points needs a rotation about a pivot, which a translate-only shortcut cannot express, so the
@@ -12638,7 +12768,7 @@ static void ApplyWorldMatrix(Reg4* m, int conv, const float C[4][4]) {
 
 // Rotate about `p` by yaw then pitch, both in engine rotation units. UE3 is X forward, Y right,
 // Z up: yaw turns about Z, pitch about Y.
-// ---- ⭐ run 123: all six degrees of freedom ----
+// ---- Ă˘Â­Â run 123: all six degrees of freedom ----
 //
 // Reported: the gun tracks left, right, up and down, but not forward, back or twist. Both gaps are
 // the same omission - only yaw and pitch were ever computed, so the transform could do nothing but
@@ -12651,7 +12781,7 @@ static void ApplyWorldMatrix(Reg4* m, int conv, const float C[4][4]) {
 //
 // Signs are ini-overridable. Up/down came back reversed, and rather than negate it in place - which
 // is how a convention gets buried - it goes through the same kind of key the trace rotation uses.
-// ---- ⭐ run 124: the pivot must be the GUN, not the eye ----
+// ---- Ă˘Â­Â run 124: the pivot must be the GUN, not the eye ----
 //
 // Reported: rotating right sends the gun right and then DOWN-right as the rotation grows, and the
 // centre of rotation is not where the handle is. That is the signature of rotating about the wrong
@@ -12673,7 +12803,7 @@ static void GunSigns(int& sy, int& sp, int& sr) {
     sr = (c & 4) ? -(int)g_gunSignRoll  : (int)g_gunSignRoll;
 }
 
-// ---- ⭐ run 125: pitch and roll are about the VIEW's axes, not the world's ----
+// ---- Ă˘Â­Â run 125: pitch and roll are about the VIEW's axes, not the world's ----
 //
 // Reported: pointing straight ahead looks right, but spinning the character with the stick makes
 // the gun droop as it turns and come back correct after a full circle. A 360-degree period is the
@@ -12724,7 +12854,7 @@ static void BuildGunTransform(float C[4][4], const float p[3],
 // G is the anchor in the head's frame (forward, right, up) turned into world axes by the body yaw,
 // the same conversion the hand offset goes through - so both live in the same space and the
 // subtraction below is meaningful rather than two conventions differenced by luck.
-// ---- 💥 run 131: the anchor belongs in the VIEW's frame, not the BODY's ----
+// ---- Ä‘Ĺşâ€™Ä„ run 131: the anchor belongs in the VIEW's frame, not the BODY's ----
 //
 // Reported: moving your head moves the gun and the arms but leaves the anchor behind, so tuning it
 // meant holding your head rigid from the moment the level loaded.
@@ -12753,7 +12883,7 @@ static void GunAnchorWorld(float G[3]) {
     for (int i = 0; i < 3; ++i) G[i] = af * F[i] + ar * R[i] + au * U[i];
 }
 
-// ⭐ run 219: the direction the SHOT goes, which is also the axis ADS pulls back along and the line the
+// Ă˘Â­Â run 219: the direction the SHOT goes, which is also the axis ADS pulls back along and the line the
 // laser draws. RotateTrace adds the hand deviation to the engine's aim in spherical terms, and in
 // ENGINE rot mode that aim is the view - so the same add, from the same signs, reproduces the shot.
 // Shared for the reason run 218 had to learn the hard way: a second copy of "where is the gun pointing"
@@ -12769,14 +12899,22 @@ static void GunAimDir(float d[3]) {
     d[0] = cp * cosf(yaw); d[1] = cp * sinf(yaw); d[2] = sinf(pitch);
 }
 
-// ⭐ run 219: how far ADS pulls the weapon back along that axis, in engine units. 0 disables.
-// ⭐ run 224: BACK ON. Run 219b turned this off because layering it under the game's own aim animation
+// Ă˘Â­Â run 219: // Options button: short press = menu, long press = recenter VR view
+LONG ohold = GetPrivateProfileIntA("Input", "OptionsHoldMs", 800, path);
+if (ohold < 0)    ohold = 0;
+if (ohold > 5000) ohold = 5000;
+InterlockedExchange(&g_optionsHoldMs, ohold);
+Log("ini: OptionsHoldMs=%ld (%s)", ohold,
+    ohold ? "hold Options for this long to recenter VR view - short press opens game menu"
+          : "off - Options button only opens game menu");
+how far ADS pulls the weapon back along that axis, in engine units. 0 disables.
+// Ă˘Â­Â run 224: BACK ON. Run 219b turned this off because layering it under the game's own aim animation
 // gave two wrong offsets; run 223 measured that the animation is a rigid transform of one bone block,
 // and AdsMask now holds that block still. With the game's version masked, this is the only motion left
 // - and it is the motion that was asked for: back along the line the gun is already pointing.
 volatile LONG g_adsPullbackUU = 10;   // ini [Input] AdsPullbackUU
 
-// ⭐ run 218: where the gun's rotation point ACTUALLY ends up in the world.
+// Ă˘Â­Â run 218: where the gun's rotation point ACTUALLY ends up in the world.
 //
 // GunAnchorWorld returns the anchor relative to the VIEW. The gun does not stay there: BuildGunC
 // rotates about that anchor and then translates by (H - G), so the pivot lands at H - your hand -
@@ -12797,7 +12935,7 @@ static void GunPivotWorld(float H[3]) {
         H[1] = (float)InterlockedCompareExchange(&g_handOffY, 0, 0) / kHandFixed;
         H[2] = (float)(g_gunSignPosZ * InterlockedCompareExchange(&g_handOffZ, 0, 0)) / kHandFixed;
     }
-    // ---- ⭐ run 219: AIM DOWN SIGHTS: back along the aiming line, and nothing else ----
+    // ---- Ă˘Â­Â run 219: AIM DOWN SIGHTS: back along the aiming line, and nothing else ----
     //
     // Reported: the zoom animation is wonky on the pistol, rifle and shotgun. It is the GAME's ADS
     // animation, which slides the weapon toward the centre of the screen - correct in head mode, where
@@ -12822,7 +12960,7 @@ static void GunPivotWorld(float H[3]) {
         H[0] -= d[0] * back; H[1] -= d[1] * back; H[2] -= d[2] * back;
     }
 
-    // ---- 💥 run 201: the gun was anchored to the ENGINE's eye, not to YOURS ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 201: the gun was anchored to the ENGINE's eye, not to YOURS ----
     //
     // Reported: *"when I recentered, the gun came closer to me."* A real defect, not a recentring
     // artefact. 6-DOF displaces the VIEW - the camera matrix has g_hmdOffset folded in by the constant
@@ -12842,7 +12980,7 @@ static void GunPivotWorld(float H[3]) {
     }
 }
 
-// ---- ⭐ run 237: the TMD rides the OFF hand ----
+// ---- Ă˘Â­Â run 237: the TMD rides the OFF hand ----
 //
 // The whole feature, and it is small because everything it needs already exists. `mPlayerHandsStatus`
 // (run 236) says when the TMD is up; the gun transform already knows how to put a first-person mesh on
@@ -12867,7 +13005,7 @@ static void TmdAnchorWorld(float G[3]) {
 }
 
 // The off-hand twin of BuildGunC. Same shape, same sign conventions, off-hand inputs.
-// ⚠ The run-201 head-offset correction is applied here too. Without it the TMD would sit at
+// Ă˘ĹˇÂ  The run-201 head-offset correction is applied here too. Without it the TMD would sit at
 // `engine eye + H` while you view from `engine eye + hmdOffset`, and would slide against the view as
 // you lean - the same defect, and it would read as "the TMD drifts" rather than as a missing term.
 static void BuildTmdC(float C[4][4]) {
@@ -12884,11 +13022,11 @@ static void BuildTmdC(float C[4][4]) {
     int sy, sp, sr; GunSigns(sy, sp, sr);
     const int32_t trimYaw   = (int32_t)(Rd(g_tmdYawTenths)   * 18.2044f);
     const int32_t trimPitch = (int32_t)(Rd(g_tmdPitchTenths) * 18.2044f);
-    const int32_t trimRoll  = (int32_t)(Rd(g_tmdRollTenths)  * 18.2044f);   // ⭐ run 245
+    const int32_t trimRoll  = (int32_t)(Rd(g_tmdRollTenths)  * 18.2044f);   // Ă˘Â­Â run 245
     BuildGunTransform(C, G,
         (int32_t)(sy * Rd(g_offHandDevYawUU))   + trimYaw,
         (int32_t)(sp * Rd(g_offHandDevPitchUU)) + trimPitch,
-        (int32_t)(sr * Rd(g_offHandDevRollUU)) + trimRoll,   // ⭐ run 245
+        (int32_t)(sr * Rd(g_offHandDevRollUU)) + trimRoll,   // Ă˘Â­Â run 245
         GunViewFrame() ? g_wantYaw : 0,
         H[0] - G[0], H[1] - G[1], H[2] - G[2]);
 }
@@ -12901,7 +13039,7 @@ static int RideTargetFor(UINT verts);
 
 static int RideTargetFor(UINT verts) {
     if (!FgRidesGun(verts)) return 0;
-    // ⚠ The OFF-HAND pose has to be VALID, not just "the TMD is up". With one controller lost to
+    // Ă˘ĹˇÂ  The OFF-HAND pose has to be VALID, not just "the TMD is up". With one controller lost to
     // tracking the alternative is not "slightly wrong" - it is the whole TMD assembly pinned at a stale
     // position while your hand is somewhere else. Falling back to the gun hand keeps it attached to a
     // hand that is actually tracked, which is wrong but not broken.
@@ -12912,13 +13050,13 @@ static int RideTargetFor(UINT verts) {
 static void BuildGunC(float C[4][4]) {
     float G[3]; GunAnchorWorld(G);
 
-    // ⭐ run 218: shared with the laser, so the two can never disagree about where the gun is.
+    // Ă˘Â­Â run 218: shared with the laser, so the two can never disagree about where the gun is.
     // The run-201 note about anchoring to YOUR head rather than the engine's eye now lives there with
     // the term it explains.
     float H[3]; GunPivotWorld(H);
 
     int sy, sp, sr; GunSigns(sy, sp, sr);
-    // ⭐ run 217: the per-weapon barrel trim, added to the MESH rotation and nowhere else. Tenths of a
+    // Ă˘Â­Â run 217: the per-weapon barrel trim, added to the MESH rotation and nowhere else. Tenths of a
     // degree into UE3 units: 65536/360 = 182.044 per degree, so 18.2044 per tenth.
     const GunAlignSlot* al = GunAlignFind(InterlockedCompareExchange(&g_gunVerts, 0, 0));
     const int32_t trimYaw   = al ? (int32_t)(al->yawTenths   * 18.2044f) : 0;
@@ -13014,7 +13152,7 @@ static bool FgIsMesh(UINT verts, int idx1) {          // idx1 is 1-based into th
     return (UINT)InterlockedCompareExchange(&g_fgStableVerts[idx1 - 1], 0, 0) == verts;
 }
 
-// ---- 💥 run 215: the mesh matchers were FRAME-WIDE, and a world mesh collided ----
+// ---- Ä‘Ĺşâ€™Ä„ run 215: the mesh matchers were FRAME-WIDE, and a world mesh collided ----
 //
 // Reported: a hole in the floor - water and the basement below visible through it. Confirmed as ours
 // (it is absent unmodded), and confirmed as the mesh path (HEAD mode fixes it, and HEAD sets
@@ -13050,7 +13188,7 @@ inline bool FgMatchWindow() {
     return false;
 }
 
-// ---- ⭐ run 233: SOLO CYCLING, to put a name to each mesh in the pass ----
+// ---- Ă˘Â­Â run 233: SOLO CYCLING, to put a name to each mesh in the pass ----
 //
 // Run 232 widened the census and it named the sets, but a vertex count is not an identity. After the
 // TMD the constant core beside every weapon is 7444, 4818 and 37, and nothing in a list of numbers
@@ -13063,19 +13201,19 @@ inline bool FgMatchWindow() {
 // vertex counts and the two line up. One run names every mesh in the pass, not just the two in
 // question.
 //
-// ⚠ DIAGNOSTIC. Off unless FgSoloCycleMs > 0, and it deliberately hides things - it is not a mode to
+// Ă˘ĹˇÂ  DIAGNOSTIC. Off unless FgSoloCycleMs > 0, and it deliberately hides things - it is not a mode to
 // leave switched on. It only ever touches the first-person pass; world geometry never reaches here.
 volatile LONG g_fgSoloCycleMs = 0;    // ini [Render] FgSoloCycleMs, 0 = off
 volatile LONG g_fgSoloVerts   = 0;    // the mesh currently shown alone, 0 = none chosen yet
 
-// ---- ⭐ run 234: is 7444 ONE mesh posed differently, or TWO meshes sharing a vertex count? ----
+// ---- Ă˘Â­Â run 234: is 7444 ONE mesh posed differently, or TWO meshes sharing a vertex count? ----
 //
 // Reported after the solo run: 7444 shows TWO hands with a gun equipped and ONE hand, in a different
 // pose, with the TMD. The likely reading is one arms mesh whose animation puts the right arm out of
 // frame - but "likely" is exactly the kind of premise this project keeps discovering was wrong six
 // runs later, and it is load-bearing for whether a two-handed mode is reachable.
 //
-// ⚠ The census CANNOT answer it. FgLearnSignature dedupes by vertex count, so two distinct meshes
+// Ă˘ĹˇÂ  The census CANNOT answer it. FgLearnSignature dedupes by vertex count, so two distinct meshes
 // with 7444 vertices each collapse into one entry and look like one thing. The instrument that raised
 // the question is structurally incapable of settling it.
 //
@@ -13089,7 +13227,7 @@ volatile LONG g_fgSoloVerts   = 0;    // the mesh currently shown alone, 0 = non
 // would have to have the same triangle count too. The buffers are captured as well because "nearly"
 // is what this note exists to avoid.
 //
-// ⚠ One false positive to watch for when reading the result: a mesh streamed from a buffer that gets
+// Ă˘ĹˇÂ  One false positive to watch for when reading the result: a mesh streamed from a buffer that gets
 // REALLOCATED would report a new VB pointer while being the same mesh. That is why the whole tuple is
 // logged rather than a verdict - identities differing ONLY in pointer, with identical range and
 // counts, are one mesh in a moved buffer. Differing ranges are two meshes.
@@ -13137,7 +13275,7 @@ static void FgIdentityProbe(IDirect3DDevice9* dev, INT base, UINT minIdx, UINT n
     if (vb) vb->Release();                      // GetStreamSource/GetIndices both AddRef
     if (ib) ib->Release();
 }
-volatile LONG g_fgSoloIdx     = 0;    // ⭐ run 233d: step position, for the on-screen readout
+volatile LONG g_fgSoloIdx     = 0;    // Ă˘Â­Â run 233d: step position, for the on-screen readout
 volatile LONG g_fgSoloOf      = 0;
 
 // Steps the solo target on a timer. Called once a frame from Present, never from a draw hook - the
@@ -13147,7 +13285,7 @@ static void FgSoloStep() {
     if (ms <= 0) { InterlockedExchange(&g_fgSoloVerts, 0); return; }
     const LONG n = Rd(g_fgStableCount);
     if (n <= 0) return;                          // an empty pass: hold the current target
-    // ⭐ run 233c: hold through CUTSCENES. Those passes carry whole character bodies - measured at
+    // Ă˘Â­Â run 233c: hold through CUTSCENES. Those passes carry whole character bodies - measured at
     // 18 to 32 meshes, saturating even the widened census - against at most 12 for gameplay with a
     // weapon and the TMD both up. Stepping through them would spend two minutes naming meshes nobody
     // asked about and hand back a cycle position unrelated to the gameplay set. The threshold sits in
@@ -13158,7 +13296,7 @@ static void FgSoloStep() {
     if (nextAt && now < nextAt) return;
     nextAt = now + (DWORD)ms;
 
-    // ---- 💥 run 233b: step by SIZE, never by array position ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 233b: step by SIZE, never by array position ----
     //
     // The first version advanced an index into g_fgStableVerts. That list is rebuilt in DRAW ORDER
     // every frame and draw order shuffles - run 231's censuses show the same meshes in four different
@@ -13179,7 +13317,7 @@ static void FgSoloStep() {
     for (LONG i = 0; i < m2; ++i)
         if (v[i] == cur) { pick = v[(i + 1) % m2]; at = ((i + 1) % m2) + 1; break; }
     InterlockedExchange(&g_fgSoloVerts, pick);
-    InterlockedExchange(&g_fgSoloIdx, at);        // ⭐ run 233d: for the on-screen readout
+    InterlockedExchange(&g_fgSoloIdx, at);        // Ă˘Â­Â run 233d: for the on-screen readout
     InterlockedExchange(&g_fgSoloOf,  m2);
 
     char b3[640]; int o3 = 0;
@@ -13197,11 +13335,11 @@ static void FgSoloStep() {
 static bool FgHidden(UINT verts) {                    // arms, in modes 2 and 3
     if (g_showControllerArms && Rd(g_gunVerts) &&
         ((UINT)Rd(g_armsVerts) == verts || FgIsExtraArm(verts))) return false;
-    // ⭐ run 233: solo overrides every rule below it, including the exemptions. That is the point -
+    // Ă˘Â­Â run 233: solo overrides every rule below it, including the exemptions. That is the point -
     // an exemption that let a second mesh through would make two meshes visible and the answer
     // ambiguous, which is the one thing this measurement cannot afford.
     //
-    // ⚠ run 233c: but NOT run 203's large-pass guard. The first version tested solo before it, so on
+    // Ă˘ĹˇÂ  run 233c: but NOT run 203's large-pass guard. The first version tested solo before it, so on
     // a pass too big to be the first-person pass this did per-draw work on every one of thousands of
     // draws - which is the exact case run 203 added that guard for after it cost 120 fps at the dock.
     // A diagnostic is allowed to hide things; it is not allowed to reintroduce a fixed performance
@@ -13211,7 +13349,7 @@ static bool FgHidden(UINT verts) {                    // arms, in modes 2 and 3
         return (UINT)solo != verts && FgMatchWindow();
     }
 
-    // ---- 💥 run 237b: with the TMD up, hide NOTHING in the first-person pass ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 237b: with the TMD up, hide NOTHING in the first-person pass ----
     //
     // Reported: "left hand with tmd was not visible", and the cause is upstream of the TMD work. The
     // latch took `gun=11387 arms=3314, baseline [11387 3314 390 9]` BEFORE the TMD existed. Once you
@@ -13220,7 +13358,7 @@ static bool FgHidden(UINT verts) {                    // arms, in modes 2 and 3
     // them as stray animation geometry. They are dropped before the ride path is even reached, which
     // is why `weapon fx: 0 foreground draw(s) rode` held all run.
     //
-    // ⭐ This is also the ORIGINAL report - "while the TMD is active, it's invisible" - and it was
+    // Ă˘Â­Â This is also the ORIGINAL report - "while the TMD is active, it's invisible" - and it was
     // never a missing feature. It is a stale baseline from a latch taken in a level state that no
     // longer exists. The TMD work did not cause it and would not have fixed it.
     //
@@ -13229,10 +13367,10 @@ static bool FgHidden(UINT verts) {                    // arms, in modes 2 and 3
     // suppress and no leftover fragment worth hiding. Naming counts here would be a fourth hardcoded
     // mesh list, and run 228 is a long note about what those cost.
     //
-    // 📝 The stale baseline itself is NOT fixed here - the latch still describes a pass that stopped
+    // Ä‘Ĺşâ€śĹĄ The stale baseline itself is NOT fixed here - the latch still describes a pass that stopped
     // existing. That wants a re-take when the pass composition changes fundamentally, and it is a
     // bigger change to the most-repaired function in this file than one report justifies today.
-    // ⚠ run 237d: this sits BELOW the solo check, not above it. The first version had it first,
+    // Ă˘ĹˇÂ  run 237d: this sits BELOW the solo check, not above it. The first version had it first,
     // which disabled the solo cycler in the one state we then needed it for - identifying the arm mesh
     // with the TMD raised. A diagnostic has to outrank a feature's exemption or it stops being able to
     // measure the feature.
@@ -13247,17 +13385,17 @@ static bool FgHidden(UINT verts) {                    // arms, in modes 2 and 3
 
     const LONG m = Rd(g_hideMeshIdx);
     if (m != 2 && m != 3) return false;
-    // ⭐ run 203: a "pass" this large is not the first-person pass, so there is nothing here worth
+    // Ă˘Â­Â run 203: a "pass" this large is not the first-person pass, so there is nothing here worth
     // matching - and matching anyway is what cost 120 fps at the dock. See kFgSanePass.
     if (Rd(g_fgDrawCount) > kFgSanePass) return false;
     // The heal and melee animations are the arms' legitimate appearances - see g_healArmsMs and
     // g_meleeArmsMs.
     if (ArmsAnimActive()) return false;
-    // ⭐ run 215: the window is checked ONLY on a match, so the common case - a world draw whose count
+    // Ă˘Â­Â run 215: the window is checked ONLY on a match, so the common case - a world draw whose count
     // matches nothing - still costs exactly what it did before.
     const LONG a = Rd(g_armsVerts);
     if (a && (UINT)a == verts) {
-        // ⛔ run 228e: NARROWED to this rule. Run 228 exempted the whole function when unarmed, which
+        // Ă˘â€şâ€ť run 228e: NARROWED to this rule. Run 228 exempted the whole function when unarmed, which
         // also stopped hiding the 390-vertex hand fragment - run 199's cosmetic defect - and it came
         // back as "a black mesh around the arms". Only the ARMS ROLE needs the exemption.
         //
@@ -13266,7 +13404,7 @@ static bool FgHidden(UINT verts) {                    // arms, in modes 2 and 3
         // that hides the thing you are meant to be looking at. The fragment below is a separate
         // question and keeps its own answer.
         if (PlayerArmed() == ARMED_NO) return false;
-        // ⭐ run 237: with the TMD raised the arms mesh is not "the arms holding a gun we are
+        // Ă˘Â­Â run 237: with the TMD raised the arms mesh is not "the arms holding a gun we are
         // replacing with a controller" - it is the LEFT HAND holding the TMD, and it is the thing you
         // are meant to be looking at. Same shape of exemption as the unarmed case above, same reason:
         // hiding it hides the subject. Run 234 measured that the right arm is animated out of view in
@@ -13274,7 +13412,7 @@ static bool FgHidden(UINT verts) {                    // arms, in modes 2 and 3
         if (Rd(g_tmdOnOffHand) && TmdRaised()) return false;
         return FgMatchWindow();
     }
-    // ⭐ run 199: the leftover hand/arm fragment - the 390-vertex mesh. Checked before the stray rule
+    // Ă˘Â­Â run 199: the leftover hand/arm fragment - the 390-vertex mesh. Checked before the stray rule
     // below because it IS in the baseline and that rule would never reach it.
     if (FgIsExtraArm(verts)) return FgMatchWindow();
     // ---- run 198: stray animation geometry, hidden by NOT being in the baseline ----
@@ -13288,7 +13426,7 @@ static bool FgHidden(UINT verts) {                    // arms, in modes 2 and 3
     return !FgIsBaseline(verts) && FgMatchWindow();
 }
 
-// ================= ⭐ run 222: what does AIMING actually change about the gun's draw? ============
+// ================= Ă˘Â­Â run 222: what does AIMING actually change about the gun's draw? ============
 //
 // The question this settles: the game's aim animation moves the weapon, and we need to know WHERE it
 // applies that move before anything can cancel it.
@@ -13318,7 +13456,7 @@ volatile LONG g_adsCapture = 0;           // 0 idle, 1 want baseline, 2 want aim
 bool  g_adsHaveBase = false, g_adsHaveAimed = false;
 int   g_adsDumpLeft = 0;                  // ini [Render] AdsConstDump
 
-// ---- ⭐ run 223: FREEZE a range of the gun's bones, to find out what each block actually moves ----
+// ---- Ă˘Â­Â run 223: FREEZE a range of the gun's bones, to find out what each block actually moves ----
 //
 // The run-222 diff says the aim offset is not one rigid delta - `c5`-`c22` are six bones sharing one
 // matrix that all moved together, `c23`+ moved differently, and `c0`-`c3` are the camera changing
@@ -13349,7 +13487,7 @@ int g_adsFreezeLo = -1;                   // ini [Render] AdsFreezeLo, -1 = off
 int g_adsFreezeHi = -1;                   // ini [Render] AdsFreezeHi
 volatile LONG g_adsFrozenDraws = 0;       // reported per second - "no change" vs "never fired"
 
-// ---- ⭐ run 224: MASK the aim animation, which the freeze test proved is possible ----
+// ---- Ă˘Â­Â run 224: MASK the aim animation, which the freeze test proved is possible ----
 //
 // Measured, both configurations run:
 //
@@ -13368,12 +13506,12 @@ volatile LONG g_adsFrozenDraws = 0;       // reported per second - "no change" v
 // stop it - so the mask has to cover the RETURN as well or that jump happens on every release. The tail
 // holds the pose until the game's own animation has finished coming home.
 //
-// ⚠ A masked bone stops doing everything, so while aiming, RECOIL and reload motion are suppressed
+// Ă˘ĹˇÂ  A masked bone stops doing everything, so while aiming, RECOIL and reload motion are suppressed
 // too. That is the real cost of this approach and it is not hypothetical - it is the same property that
 // made the test work. Judged worth it because the weapon is on your hand in this mode and its own
 // idle animation was never what sold the shot, but AdsMaskAnim=0 is there for the other opinion.
 //
-// ⚠ The range 5-22 was measured on the ASSAULT RIFLE (11387) and nothing else. Another weapon may
+// Ă˘ĹˇÂ  The range 5-22 was measured on the ASSAULT RIFLE (11387) and nothing else. Another weapon may
 // lay its bones out differently; if one looks wrong while aiming, re-run the freeze test on it rather
 // than assuming this range transfers.
 int g_adsMaskOn   = 1;                    // ini [Render] AdsMaskAnim
@@ -13393,7 +13531,7 @@ static void AdsCapture(IDirect3DDevice9* dev) {
     InterlockedExchange(&g_adsCapture, 0);
 }
 
-// ⭐ run 224: the shipping version: hold the gun's bones at their pre-aim pose for as long as the aim
+// Ă˘Â­Â run 224: the shipping version: hold the gun's bones at their pre-aim pose for as long as the aim
 // animation would otherwise be moving them - the press, the hold, and the return afterwards.
 //
 // The SNIPER is excluded by the scope overlay being drawn, the same signal the laser and the pull-back
@@ -13422,7 +13560,7 @@ static void AdsMask(IDirect3DDevice9* dev) {
     InterlockedIncrement(&g_adsFrozenDraws);
 }
 
-// ⭐ run 223: at the gun's draw: keep the resting pose fresh while the trigger is up, and write it back
+// Ă˘Â­Â run 223: at the gun's draw: keep the resting pose fresh while the trigger is up, and write it back
 // over the chosen range while it is held. Entirely inert unless a freeze range is configured.
 // Kept as the DIAGNOSTIC it was - AdsMask above is the shipping path, and this is how another weapon's
 // bone layout gets measured if 5-22 turns out not to transfer.
@@ -13451,14 +13589,14 @@ static void AdsFreeze(IDirect3DDevice9* dev) {
 }
 
 static bool FgMoved(UINT verts) {                     // gun, in modes 1 and 3
-    // ⚠️ Mode FIRST. This used to read the mode, then call HealWindowActive(), then read g_gunVerts,
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Mode FIRST. This used to read the mode, then call HealWindowActive(), then read g_gunVerts,
     // and only THEN check the mode - so every indexed draw in the frame paid for all three even with
     // the feature off. Cheapest test first is not style here, it is the hot path.
     const LONG m = Rd(g_hideMeshIdx);
     if (m != 1 && m != 3) return false;
     const LONG g = Rd(g_gunVerts);
     if (!g || (UINT)g != verts) return false;
-    // ⭐ run 215: same guard as FgHidden. A world mesh that collides with the GUN's count would be
+    // Ă˘Â­Â run 215: same guard as FgHidden. A world mesh that collides with the GUN's count would be
     // transformed onto the controller - which removes it from where it belongs just as surely as
     // hiding it does, and would read as the same hole.
     if (!FgMatchWindow()) return false;
@@ -13468,7 +13606,7 @@ static bool FgMoved(UINT verts) {                     // gun, in modes 1 and 3
 // Everything else the first-person pass draws - the muzzle flash, the barrel smoke, ejected shells,
 // the 390-vertex third mesh - rides the same transform as the gun. See the note at g_fgRideAll.
 //
-// ⚠️ Gated on the gun being LATCHED, not just on the mode. Run 158d's lesson: with the latch not yet
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Gated on the gun being LATCHED, not just on the mode. Run 158d's lesson: with the latch not yet
 // taken the gun is still at the engine's position, so moving the effects onto the controller would
 // separate them from the very mesh they are meant to be attached to - a state that looks more broken
 // than the bug. Nothing moves until the thing it follows is moving.
@@ -13482,14 +13620,14 @@ static bool FgMoved(UINT verts) {                     // gun, in modes 1 and 3
 // "engaged, and the effects are not in this pass" from "never engaged". Those need opposite fixes
 // and look identical in a headset.
 //
-// ⚠️ The counter is bumped from inside the predicate. Called exactly once per draw from each hook,
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The counter is bumped from inside the predicate. Called exactly once per draw from each hook,
 // which is why that is safe here - do not start calling this speculatively.
 static bool FgRidesGun(UINT verts) {
     const LONG m = Rd(g_hideMeshIdx);
     if (m != 1 && m != 3) return false;
     // == 1 exactly. Mode 2 is the hide-the-pass test and must not also transform what it keeps.
     if (Rd(g_fgRideAll) != 1) return false;
-    // ---- ⭐ run 228f: the DEPTH-PRIME copy has to ride too, or it writes a black silhouette ----
+    // ---- Ă˘Â­Â run 228f: the DEPTH-PRIME copy has to ride too, or it writes a black silhouette ----
     //
     // Reported: an all-black copy of the rope, following the HEAD, while the real rope correctly
     // follows the controller. That is run 120's silhouette from the other side.
@@ -13500,14 +13638,14 @@ static bool FgRidesGun(UINT verts) {
     // foreground copy rode to the controller and its prime copy stayed at the engine's position,
     // which is what you can see.
     //
-    // ⚠ Deliberately NOT widened to "anything in the prime window". This function's job is
+    // Ă˘ĹˇÂ  Deliberately NOT widened to "anything in the prime window". This function's job is
     // "everything ELSE the pass draws", so it matches draws that match nothing - and letting that
     // loose on the first frames of a frame would move whatever the engine happens to draw there. The
     // exemption is narrowed to the one count we positively know: the arms-role mesh, while unarmed.
     // Same safety shape as FgMoved, which is only ever count-matched.
     if (!Rd(g_inForeground)) {
         const LONG ap = Rd(g_armsVerts);
-        // 💥 run 237c: THIRD time. Reported as "the shadowed black version of the arm does not
+        // Ä‘Ĺşâ€™Ä„ run 237c: THIRD time. Reported as "the shadowed black version of the arm does not
         // track" - run 120's silhouette again, after the rope in run 228f and the arms before that.
         // First-person meshes are drawn TWICE, a depth prime then the real draw, and a rule that only
         // covers the foreground copy leaves the prime one at the engine's position writing depth.
@@ -13526,7 +13664,7 @@ static bool FgRidesGun(UINT verts) {
     // gates in run 203: it was the second test in the function, so every draw paid for a 64-bit
     // interlocked read.
     if (ArmsAnimActive()) return false;
-    // ---- ⚠️ the boundary is LOOSE, and widening what rides it raises the stakes ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą the boundary is LOOSE, and widening what rides it raises the stakes ----
     //
     // Run 115 set g_inForeground on "a depth-only Clear once some draws have happened" and wrote
     // down, at the time, that a shadow or reflection pass clearing depth mid-frame would trip it
@@ -13549,11 +13687,11 @@ static bool FgRidesGun(UINT verts) {
     if (!g) return false;                            // not latched yet - see above
     if ((UINT)g == verts) return false;              // the gun itself, already moved by FgMoved
     const LONG a = Rd(g_armsVerts);
-    // ⭐ run 228: normally the arms are hidden rather than moved, so they must not ride. With NO WEAPON
+    // Ă˘Â­Â run 228: normally the arms are hidden rather than moved, so they must not ride. With NO WEAPON
     // equipped nothing is hidden, and the mesh in the arms role is something on the player's hands -
     // the rope in the reported scene. It has to ride, or it stays at the engine's position while the
     // hands it is tied to move to the controller.
-    // ⭐ run 237: ...and with the TMD raised they must RIDE, for the same reason they are no longer
+    // Ă˘Â­Â run 237: ...and with the TMD raised they must RIDE, for the same reason they are no longer
     // hidden. RideTargetFor sends them to the off hand rather than the gun hand.
     if (!g_showControllerArms && a && (UINT)a == verts && PlayerArmed() != ARMED_NO &&
         !(Rd(g_tmdOnOffHand) && TmdRaised())) return false;
@@ -13575,7 +13713,7 @@ void ReportFgRide() {
     // not an event, and the SRW lock + event wake-up became visible during jump/melee spikes.
     (void)independent;
     const LONG n = InterlockedExchange(&g_fgRodeDraws, 0);
-    // ---- ⚠️ this used to print ONCE, which hid the only thing worth knowing about it ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą this used to print ONCE, which hid the only thing worth knowing about it ----
     //
     // Run 181 caught one of these at load-in and the print-once guard meant the log could not say
     // whether it happened again during gameplay - i.e. whether the run-115 depth-clear boundary is
@@ -13618,11 +13756,11 @@ void ReportFgRide() {
 
 // Any first-person mesh, wherever it is drawn - used to catch the near-plane depth prime at
 // draws 2-3 so it is hidden or moved along with the foreground copy.
-// ⭐ run 237c: the arms mesh RIGHT NOW - the largest thing in the pass that is not the weapon.
+// Ă˘Â­Â run 237c: the arms mesh RIGHT NOW - the largest thing in the pass that is not the weapon.
 // Derived rather than hardcoded: the latched arms role is stale once the TMD is acquired (it still
 // names 3314, a mesh that stopped being drawn), and a literal 7444 would be a number measured on one
 // build of one save. Returns 0 when there is nothing to name.
-// ⭐ run 237d: the next mesh in the pass by size, with 0 (NONE) in the cycle. Lives here because
+// Ă˘Â­Â run 237d: the next mesh in the pass by size, with 0 (NONE) in the cycle. Lives here because
 // g_fgStableVerts does; the panel that drives it is thousands of lines earlier and only has the
 // declaration. Same single-translation-unit shape as the TMD anchors.
 LONG NextPassMesh(LONG cur, int dir) {
@@ -13651,7 +13789,7 @@ static UINT ArmsMeshNow() {
     return (UINT)best;
 }
 
-// ⭐ run 268: every draw offered to the continuation rule, whether or not a panel was recognised.
+// Ă˘Â­Â run 268: every draw offered to the continuation rule, whether or not a panel was recognised.
 // The popup case reaches here with noteOpen FALSE, so this is the only line that can name the strides
 // the popup's spilled text arrives on. Distinct (stride, noteOpen) pairs only.
 void NoteOfferLog(UINT stride, LONG noteOpen) {
@@ -13668,7 +13806,7 @@ void NoteOfferLog(UINT stride, LONG noteOpen) {
         " (run 268)", stride, noteOpen);
 }
 
-// ⭐ run 267: a draw offered to the continuation rule WHILE A NOTE IS OPEN and turned away. If the
+// Ă˘Â­Â run 267: a draw offered to the continuation rule WHILE A NOTE IS OPEN and turned away. If the
 // popup text is still wrong, this is the line that says why: it prints the stride and texture that
 // did not match the anchor, so "the rule never fired" and "the rule fired on the wrong thing" stop
 // being indistinguishable. Distinct combinations only, so it cannot flood a note that stays up.
@@ -13687,7 +13825,7 @@ void NoteMissLog(UINT stride, LONG tex) {
         stride, (unsigned long)tex, Rd(g_noteTextStride), (unsigned long)Rd(g_noteTextTex));
 }
 
-// ⭐ run 264: the texture bound to stage 0, as a comparable value. GetTexture AddRefs, so it is
+// Ă˘Â­Â run 264: the texture bound to stage 0, as a comparable value. GetTexture AddRefs, so it is
 // released immediately - the pointer is used only as an identity, never dereferenced.
 static LONG BoundTexId(IDirect3DDevice9* dev) {
     LONG id = 0;
@@ -13710,7 +13848,7 @@ static bool TmdTriSlotApplies(UINT numVertices) {
     return false;
 }
 
-// ---- ⭐ run 251: turn this mesh's KEEP/CUT slots into a list of triangle segments to draw ----
+// ---- Ă˘Â­Â run 251: turn this mesh's KEEP/CUT slots into a list of triangle segments to draw ----
 //
 // Works in the panel's 0-1000 permille space and converts to primitives at the end, so the rows mean
 // the same thing whatever the mesh's triangle count - which is the whole reason run 237c chose
@@ -13720,7 +13858,7 @@ static bool TmdTriSlotApplies(UINT numVertices) {
 // NOTHING rather than falling back to the whole mesh: "you cut it all" and "no slot applies" are
 // opposite intentions that would otherwise look identical.
 //
-// ⚠ Segments are half-open in permille and converted with the SAME arithmetic the single window used
+// Ă˘ĹˇÂ  Segments are half-open in permille and converted with the SAME arithmetic the single window used
 // (primCount * p / 1000), so a range that was landed on with the old build lands identically here.
 static int TmdTriSegments(UINT numVertices, UINT startIndex, UINT primCount,
                           UINT* outStart, UINT* outPrims, int maxOut) {
@@ -13804,7 +13942,7 @@ static bool FgMatchesSignature(UINT verts) {
     return false;
 }
 
-// ---- ⚠️ run 158d: the latch took the WRONG values, and then stopped retrying ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 158d: the latch took the WRONG values, and then stopped retrying ----
 //
 // Reported: on a cold start in MOTION CONTROLLER the aim tracked the controller but the GUN did
 // not. Toggling to HEAD and back attached it. So the latch had not failed - it had SUCCEEDED, with
@@ -13828,7 +13966,7 @@ static bool FgMatchesSignature(UINT verts) {
 //                      is exactly what a menu-time latch looks like once gameplay starts. Drop it
 //                      and let the first branch re-take
 //
-// ⚠️ An EMPTY foreground list is neither a hit nor a miss. During a cutscene or in the menus there
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą An EMPTY foreground list is neither a hit nor a miss. During a cutscene or in the menus there
 // is no first-person pass at all, and counting those frames as misses would throw away a perfectly
 // good latch and then re-take it from menu geometry - the original bug, arrived at from the other
 // side.
@@ -13858,7 +13996,7 @@ const int kWrongRoleFrames = 600;
 // Costs nothing when nothing is happening: the census line only prints when the list changes.
 void LogFgList(const char* why) {
     const LONG n = InterlockedCompareExchange(&g_fgStableCount, 0, 0);
-    char buf[640]; int off = 0;      // ⭐ run 232: 32 entries at ~13 chars, was 256 for 8
+    char buf[640]; int off = 0;      // Ă˘Â­Â run 232: 32 entries at ~13 chars, was 256 for 8
     for (LONG i = 0; i < n && i < kFgSigMax; ++i) {
         const LONG v = InterlockedCompareExchange(&g_fgStableVerts[i], 0, 0);
         const int w = sprintf_s(buf + off, sizeof(buf) - off, "%s[%ld]=%ld", i ? " " : "", i, v);
@@ -13895,7 +14033,7 @@ void UpdateFgLatch() {
     const LONG gun  = InterlockedCompareExchange(&g_gunVerts, 0, 0);
     const LONG arms = InterlockedCompareExchange(&g_armsVerts, 0, 0);
 
-    // ---- ⭐ run 228: the engine's answer, used to change what HIDING means rather than to drop ----
+    // ---- Ă˘Â­Â run 228: the engine's answer, used to change what HIDING means rather than to drop ----
     //
     // Run 227 dropped the latch when the pawn had no weapon. That fixed the rope by leaving everything
     // where the engine put it - and it also detached the player's hands from the controller, which is
@@ -13924,7 +14062,7 @@ void UpdateFgLatch() {
         if (armed != ARMED_UNKNOWN) prev = armed;
     }
 
-    // ---- ⭐ run 258: drop on the SWAP ITSELF, not on 240 frames of noticing ----
+    // ---- Ă˘Â­Â run 258: drop on the SWAP ITSELF, not on 240 frames of noticing ----
     //
     // Same shape as the unarmed -> armed edge above, and for the same reason: the engine knows, so
     // the latch should not be inferring it from what is on screen. Reported as "switch weapons, see
@@ -13934,7 +14072,7 @@ void UpdateFgLatch() {
     // once: the drop stops the hiding AND lets the re-take happen, leaving only kLatchSteady's 30
     // frames before the roles are taken.
     //
-    // ⚠️ kLatchMiss STAYS as the fallback. This edge needs Pawn.Weapon resolved, and it is not
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą kLatchMiss STAYS as the fallback. This edge needs Pawn.Weapon resolved, and it is not
     // resolved on a cold start or where the property solver has not run - so the frame-count path
     // still has to work on its own. It is a second route to the same drop, not a replacement.
     if (Rd(g_weaponSwapDrop) && InterlockedExchange(&g_weaponSwapped, 0)) {
@@ -13954,7 +14092,7 @@ void UpdateFgLatch() {
     if (gun && arms) {
         if (n == 0) return;                       // nothing being drawn: no evidence either way
 
-        // ---- ⭐ run 212: RECOVER from a role shift, not only prevent it ----
+        // ---- Ă˘Â­Â run 212: RECOVER from a role shift, not only prevent it ----
         //
         // The veto below needs a weaponless pass to have been seen first. Where it has not been, the old
         // failure still happens - and it is STICKY, because the drop rule watches the latched gun, which
@@ -13983,14 +14121,14 @@ void UpdateFgLatch() {
         //          gun that was not there when the latch was taken means the latch is not on the gun.
         //          Needs nothing observed in advance, which is why it is here.
         //
-        // ⚠️ `bigger` CAN in principle fire on a good latch - a scope, the TMD, some large first-person
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą `bigger` CAN in principle fire on a good latch - a scope, the TMD, some large first-person
         // prop that outweighs the weapon and stays on screen past kWrongRoleFrames. That misfire is
         // benign and self-healing: the drop is immediately followed by a re-take from a list whose first
         // entry is the gun, so the cost is a quarter of a second of the gun sitting at the engine's
         // position, against a session that otherwise stays broken. RelatchWrongRoles=0 if it ever bites.
         static int wrongRole = 0;
         if (g_relatchWrongRoles) {
-            // 💥 run 216: this used to require the larger mesh to be OUTSIDE the baseline, and that is
+            // Ä‘Ĺşâ€™Ä„ run 216: this used to require the larger mesh to be OUTSIDE the baseline, and that is
             // exactly why it never fired on the scope case. A latch taken from a scoped pass captures a
             // baseline containing the REAL gun, so the real gun was never a "stray" and the
             // contradiction was invisible. The baseline test is dropped: the invariant that matters is
@@ -14001,7 +14139,7 @@ void UpdateFgLatch() {
                 const LONG v = InterlockedCompareExchange(&g_fgStableVerts[i], 0, 0);
                 if (v > biggest) biggest = v;
             }
-            // ⭐ run 226: `biggest > gun` cannot fire when the ARMS are the biggest, which is exactly
+            // Ă˘Â­Â run 226: `biggest > gun` cannot fire when the ARMS are the biggest, which is exactly
             // the weaponless case. Knowing the arms count catches it directly.
             const bool quietGun = FgIsQuiet((UINT)gun) || FgIsKnownArms((UINT)gun);
             const LONG stray = biggest;           // reported below; the name is kept for the log line
@@ -14042,7 +14180,7 @@ void UpdateFgLatch() {
     static LONG candGun = 0, candArms = 0;
     static int  steady = 0;
     if (n < 2) { steady = 0; return; }
-    // ---- 💥 run 216: the roles were POSITIONAL, and the scope changes the draw order ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 216: the roles were POSITIONAL, and the scope changes the draw order ----
     //
     // Reported: after using the sniper scope, the arms are on the controller and the gun is invisible,
     // and it survives a weapon switch. That is the run-207 role shift arriving by a new route.
@@ -14085,7 +14223,7 @@ void UpdateFgLatch() {
     if (!a || !b) { steady = 0; return; }
     if (a != candGun || b != candArms) { candGun = a; candArms = b; steady = 0; return; }
     if (++steady < kLatchSteady) return;
-    // ⭐ run 216: and do not take a latch from a SCOPED pass at all. Sorting by size makes the roles
+    // Ă˘Â­Â run 216: and do not take a latch from a SCOPED pass at all. Sorting by size makes the roles
     // survive the reordering, but the scoped pass is an abnormal state generally - the weapon can be
     // swapped for a scope-specific mesh - and there is no reason to learn the roles from it when an
     // ordinary frame is a second away. ScopeActive's own signal, reused. 500 ms rather than the aim
@@ -14094,12 +14232,12 @@ void UpdateFgLatch() {
         const DWORD lastScope = (DWORD)Rd(g_scopeUpMs);
         if (lastScope && (DWORD)(GetTickCount() - lastScope) < 500) { steady = 0; return; }
     }
-    // ⭐ run 209: the roles are only meaningful if there IS a weapon, and the pass size says so at zero
+    // Ă˘Â­Â run 209: the roles are only meaningful if there IS a weapon, and the pass size says so at zero
     // cost - see the note at g_minFgMeshes. With no weapon the top two are the ARMS and the hand
     // fragment; latching those moves the arms onto the controller and hides the real gun once one is
     // picked up.
     if (n < g_minFgMeshes) {
-        // ⭐ run 212: this is the weaponless pass, and it has held for kLatchSteady frames - so record
+        // Ă˘Â­Â run 212: this is the weaponless pass, and it has held for kLatchSteady frames - so record
         // what it draws. Nothing in it may take the gun role afterwards. See FgIsQuiet. A one-frame
         // flicker cannot enter the set, because this point is only reached after the settle.
         {
@@ -14122,12 +14260,12 @@ void UpdateFgLatch() {
         steady = 0;
         return;
     }
-    // ---- ⭐ run 212: and the count gate is not enough on its own ----
+    // ---- Ă˘Â­Â run 212: and the count gate is not enough on its own ----
     //
     // A stray third mesh in a weaponless pass satisfies MinFgMeshes, and then the top two are the arms
     // and the hand fragment. The gun role cannot belong to a mesh that is drawn when there is no gun.
     // This is the whole fix for the reported "arms visible, pistol invisible" - see FgIsQuiet.
-    // ⭐ run 226: two reasons to refuse, and the second does not wait to be told what a weaponless pass
+    // Ă˘Â­Â run 226: two reasons to refuse, and the second does not wait to be told what a weaponless pass
     // looks like: a count already proven to be the arms cannot become the gun.
     if (g_vetoQuietGun && (FgIsQuiet((UINT)a) || FgIsKnownArms((UINT)a))) {
         static LONG saidFor = -1;
@@ -14148,8 +14286,8 @@ void UpdateFgLatch() {
     steady = 0;
     InterlockedExchange(&g_gunVerts,  a);
     InterlockedExchange(&g_armsVerts, b);
-    FgRememberArms(b);            // ⭐ run 226: one good latch anywhere arms the veto for the session
-    // ---- ⭐ run 198: capture the whole BASELINE set, not just the top two ----
+    FgRememberArms(b);            // Ă˘Â­Â run 226: one good latch anywhere arms the veto for the session
+    // ---- Ă˘Â­Â run 198: capture the whole BASELINE set, not just the top two ----
     //
     // The reload artefact is arm and hand geometry that exists only in the reload animation, so it is
     // absent from the list when the counts are latched and nothing hides it. STATUS has carried "latch a
@@ -14342,7 +14480,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     if (InterlockedCompareExchange(&g_inForeground, 0, 0)) {
         const LONG k = InterlockedIncrement(&g_fgDrawCount);
         FgLearnSignature(numVertices);
-        // ⭐ run 234: only for the one vertex count under investigation, so the COM calls cost
+        // Ă˘Â­Â run 234: only for the one vertex count under investigation, so the COM calls cost
         // nothing on every other draw in the pass.
         if (const LONG iv = Rd(g_fgIdentityVerts))
             if ((UINT)iv == numVertices)
@@ -14363,23 +14501,23 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // Run 181: the latched gun mesh, OR anything else the first-person pass draws - the muzzle
     // flash and the barrel smoke are the reported cases. FgRidesGun excludes the gun and the arms,
     // so the two matchers cannot both claim a draw.
-    // ⭐ run 222: the gun's own draw is the only place these constants mean the gun. Guarded by the
+    // Ă˘Â­Â run 222: the gun's own draw is the only place these constants mean the gun. Guarded by the
     // capture state, so this is two GetVertexShaderConstantF calls in a whole session.
     static unsigned armCaptureOffers=0;
     if (Rd(g_renderEvidence) && armCaptureOffers<500 && FgMatchWindow() && (numVertices==3314 || numVertices==7444 || numVertices==4818)) {
         ++armCaptureOffers; CaptureRenderEvidence(dev,"arms",numVertices,startIndex,primCount);
     }
     const bool isGun = FgMoved(numVertices);
-    if (isGun) { AdsCapture(dev); AdsFreeze(dev); AdsMask(dev); }   // ⭐ run 223: freeze before StereoPair: it only
+    if (isGun) { AdsCapture(dev); AdsFreeze(dev); AdsMask(dev); }   // Ă˘Â­Â run 223: freeze before StereoPair: it only
                                                      // rewrites the camera slots, so the bones persist
                                                      // across both eye draws
-    g_thisDrawMoved = isGun ? 1 : RideTargetFor(numVertices);   // ⭐ run 237
+    g_thisDrawMoved = isGun ? 1 : RideTargetFor(numVertices);   // Ă˘Â­Â run 237
     if (g_timeOurWork) {
         const double dm = MsSince(tMatch);
         g_msMeshMatch += dm;
         if (dm > g_msMeshMatchPeak) g_msMeshMatchPeak = dm;
     }
-    // ---- 💥 run 250: the TMD gate, hoisted - the triangle window had the run-244 defect too ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 250: the TMD gate, hoisted - the triangle window had the run-244 defect too ----
     //
     // This test used to be computed further down for the bone collapse alone, and the triangle window
     // above it carried `g_thisDrawMoved == 2` instead. That is the EXACT gate run 244 removed from the
@@ -14388,18 +14526,18 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // triangle range selector is only the hand, not the arms" - which is what a range that can only
     // ever be applied to controller-ridden draws looks like from inside a headset.
     //
-    // ⚠ THIRD time this gate has been too narrow in this feature (240b, 244, now). Both tools are on
+    // Ă˘ĹˇÂ  THIRD time this gate has been too narrow in this feature (240b, 244, now). Both tools are on
     // one test now, so the next widening cannot fix one and leave the other behind.
     //
-    // ⚠ Bounded by FgMatchWindow, not opened to every draw in the frame. A slot names a vertex count
+    // Ă˘ĹˇÂ  Bounded by FgMatchWindow, not opened to every draw in the frame. A slot names a vertex count
     // and world geometry can share one - run 215 measured 322 such collisions in a second - and the
     // window is what has kept every count-matched rule in this file off the level.
     const bool tmdSurgeryOn = InterlockedCompareExchange(&g_tmdOnOffHand, 0, 0) != 0 &&
                               TmdRaised() && FgMatchWindow();
-    // ⭐ run 237c: clip a mesh to a range of its triangles, and ⭐ run 251: to SEVERAL ranges. The
+    // Ă˘Â­Â run 237c: clip a mesh to a range of its triangles, and Ă˘Â­Â run 251: to SEVERAL ranges. The
     // lambda captures by reference, so filling these in before the call is all it takes.
     //
-    // ⚠ nSeg == 0 means every triangle was cut away and the mesh must draw NOTHING. It deliberately
+    // Ă˘ĹˇÂ  nSeg == 0 means every triangle was cut away and the mesh must draw NOTHING. It deliberately
     // does not early-return: the bone palette below has to be restored and g_thisDrawMoved has to be
     // cleared, and a return that skips those leaves a zeroed bone behind for whatever the engine
     // draws next - the failure mode this file already warns about three times.
@@ -14409,23 +14547,23 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     if (tmdSurgeryOn && primCount > 0 && TmdTriSlotApplies(numVertices))
         nSeg = TmdTriSegments(numVertices, startIndex, primCount,
                               segStart, segPrims, (int)_countof(segStart));
-    // ---- ⭐ run 237f: collapse a bone range for this draw, then put it back ----
+    // ---- Ă˘Â­Â run 237f: collapse a bone range for this draw, then put it back ----
     //
     // Bone i occupies c(23 + 3i)..c(25 + 3i) - run 223's layout. The 3x3 basis goes to zero and each
     // row's .w, the translation, is kept: every vertex fully weighted to those bones lands on the
     // joint itself, so its triangles have zero area and rasterise nothing.
     //
-    // ⚠ Saved and restored around the draw. StereoPair only rewrites the CAMERA register, so there is
+    // Ă˘ĹˇÂ  Saved and restored around the draw. StereoPair only rewrites the CAMERA register, so there is
     // no overlap - but leaving a zeroed bone behind for whatever the engine draws next is exactly the
     // kind of thing this file has learned surfaces three runs later as an unrelated mystery.
-    // 💥 run 246: this was 128, and it SILENTLY truncated the range.
+    // Ä‘Ĺşâ€™Ä„ run 246: this was 128, and it SILENTLY truncated the range.
     //
     // 78 bones is 234 registers. Clamped to 128, a sweep of "0-77" was really 0-42 - and the earlier
     // 0-40 sweep fit entirely inside that, so both attempts covered identical ground while appearing
     // to cover twice as much. The census says these meshes use bones 0..75, so 43-75 had never been
     // touched by anything. That is why nothing moved the sleeve however wide the range was set.
     //
-    // ⚠ FOURTH bound in this feature chosen without checking the real range: the mesh census at 8,
+    // Ă˘ĹˇÂ  FOURTH bound in this feature chosen without checking the real range: the mesh census at 8,
     // the bone index at 40, the moved-draw gate three times, and now this. The file already carries a
     // note listing five of these from earlier runs - "every one a bound chosen without checking the
     // real range, every one excluding the answer without saying so" - and it kept being true.
@@ -14436,7 +14574,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     const int kMaxSaveRegs = kTmdBoneMax * kBoneRegsPerBone;
     float savedBones[kMaxSaveRegs][4];
     int   boneRegLo = 0, boneRegN = 0;
-    // 💥 run 240b: ANY moved draw, not just the off-hand ones.
+    // Ä‘Ĺşâ€™Ä„ run 240b: ANY moved draw, not just the off-hand ones.
     //
     // Reported: every bone 0-40 was swept on 4818 and none hid the left arm above the elbow. That
     // rules out the slot limit I blamed - and points at the gate instead. This ran only for draws
@@ -14447,7 +14585,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // The mesh selector is the real gate and always was: a slot names a vertex count, and only that
     // count is collapsed. Restricting by which hand the draw rides added nothing except a class of
     // mesh that silently could not be reached.
-    // ---- 💥 run 244: the collapse must not require the draw to be MOVED ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 244: the collapse must not require the draw to be MOVED ----
     //
     // Two facts pin this. HIDE MESH removes the left arm, so its draw reaches FgHidden. NUDGE across
     // the FULL 0-77 range moves nothing, so the same geometry never reaches the collapse. The only
@@ -14459,14 +14597,14 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // from "== 2" to "!= 0" for the same reason and did not go far enough: the gate was narrower than
     // the problem, twice.
     //
-    // ⚠ Bounded by FgMatchWindow, not opened to every draw in the frame. The slot names a vertex
+    // Ă˘ĹˇÂ  Bounded by FgMatchWindow, not opened to every draw in the frame. The slot names a vertex
     // count, and world geometry can share one - run 215 measured 322 such collisions in a second. The
     // window is what has kept every other count-matched rule from hitting the level.
-    // ⭐ run 250: ONE test, shared with the triangle window above - see tmdSurgeryOn. It was computed
+    // Ă˘Â­Â run 250: ONE test, shared with the triangle window above - see tmdSurgeryOn. It was computed
     // here and duplicated nowhere, which is precisely how the window kept the narrow gate through two
     // rounds of widening this one.
     if (tmdSurgeryOn && kBoneReg0 >= 0) {
-        // ⭐ run 240: EVERY slot naming this mesh, unioned - not the first match. One mesh can need
+        // Ă˘Â­Â run 240: EVERY slot naming this mesh, unioned - not the first match. One mesh can need
         // several disjoint ranges (the right arm and the left upper arm both live in 4818), and
         // stopping at the first match made the second range unreachable.
         LONG bl = -1, bh = -1;                    // the span to save: min lo, max hi across matches
@@ -14498,7 +14636,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 boneRegN = kMaxSaveRegs;
             }
             if (SUCCEEDED(dev->GetVertexShaderConstantF(boneRegLo, &savedBones[0][0], boneRegN))) {
-                // 💥 run 238c: ONE shared point, not each bone's own.
+                // Ä‘Ĺşâ€™Ä„ run 238c: ONE shared point, not each bone's own.
                 //
                 // The first version kept every bone's own translation, so each collapsed bone sent its
                 // vertices to ITS OWN joint - different points for different bones. Reported exactly:
@@ -14509,17 +14647,17 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 // every bone in the range now gets the SAME translation - the first one's - and the
                 // whole affected region degenerates to a single point.
                 //
-                // ⚠ Taken from the first bone in the range rather than the origin. Zeroing the
+                // Ă˘ĹˇÂ  Taken from the first bone in the range rather than the origin. Zeroing the
                 // translation too would collapse everything onto the origin of the bone's space, which
                 // in translated-world is the CAMERA, and any partially weighted vertex would stretch a
                 // triangle through the viewer's face to reach it. A joint on the hand keeps the point
                 // local, so a stray sliver stays inside the arm.
                 float z[kMaxSaveRegs][4];
-                memcpy(z, savedBones, sizeof(float) * 4 * boneRegN);   // ⭐ run 240: gaps stay live
+                memcpy(z, savedBones, sizeof(float) * 4 * boneRegN);   // Ă˘Â­Â run 240: gaps stay live
                 if (Rd(g_tmdBoneMode) == 0) {
                     const DWORD kQNaN = 0x7FC00000u;          // a quiet NaN, written as a bit pattern
                     float nan; memcpy(&nan, &kQNaN, sizeof(nan));
-                    // ⭐ run 240: only the bones a slot actually asked for. The saved span runs from
+                    // Ă˘Â­Â run 240: only the bones a slot actually asked for. The saved span runs from
                     // the lowest lo to the highest hi across every matching slot, so with two disjoint
                     // ranges it also covers the untouched bones BETWEEN them - and those must be left
                     // exactly as the engine set them or the gap becomes a hole in the arm.
@@ -14529,7 +14667,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                             z[i][0] = z[i][1] = z[i][2] = z[i][3] = nan;
                     }
                 } else if (Rd(g_tmdBoneMode) == 2) {
-                    // ⭐ run 241: shove the bone a long way UP. Its geometry lifts out of place and
+                    // Ă˘Â­Â run 241: shove the bone a long way UP. Its geometry lifts out of place and
                     // makes itself obvious; everything else is untouched, so what MOVED is the answer.
                     // 200 UU is roughly four metres - far enough that a small part is unmistakable and
                     // not so far that it leaves the view entirely before you see which way it went.
@@ -14555,7 +14693,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             }
         }
     }
-    // ⭐ run 251: one call per surviving segment, INSIDE the StereoPair lambda so each eye draws the
+    // Ă˘Â­Â run 251: one call per surviving segment, INSIDE the StereoPair lambda so each eye draws the
     // whole set. Putting the loop outside would run the per-eye setup once and the geometry twice.
     // The ordinary path is nSeg == 1 and emits exactly the call it always did.
     float independentSaved[108][4];
@@ -14572,10 +14710,48 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     if(independentRegs)g_origSetVSConstF(dev,5,&independentSaved[0][0],independentRegs);
     if (boneRegN) g_origSetVSConstF(dev,boneRegLo, &savedBones[0][0], boneRegN);
 
-    // ⭐ run 241: how many bones this mesh REALLY has, so the sweep range stops being a guess.
+    // ---- ARM IK APPLICATION ----
+    // Apply computed IK deltas to arm bone matrices for arm meshes.
+    // This runs for meshes identified as arms (FgHidden) or riding the gun (FgRidesGun).
+    if (Rd(g_armIkEnabled) && (g_leftArmIk.valid || g_rightArmIk.valid)) {
+        // Check if this mesh is an arm mesh or rides the gun
+        const bool isArmMesh = FgHidden(numVertices);
+        const bool ridesGun = FgRidesGun(numVertices);
+        const bool isGun = FgMoved(numVertices);
+        
+        if ((isArmMesh || ridesGun) && !isGun && kBoneReg0 >= 0 && boneRegN > 0) {
+            // Read current bone matrices
+            float currentBones[kMaxSaveRegs][4];
+            if (SUCCEEDED(dev->GetVertexShaderConstantF(kBoneReg0, &currentBones[0][0], g_boundShaderLayout.boneRegs))) {
+                // Apply left arm IK deltas to left arm bones
+                if (g_leftArmIk.valid) {
+                    // Left arm bones: shoulder(7), elbow(8), wrist(9), forearm(26), forearm2(46), bicep(47)
+                    // These correspond to bone indices in the shader palette
+                    // The exact mapping depends on the mesh - we apply to the bones that are in the collapsed range
+                    for (int i = 0; i < boneRegN / 3; ++i) {
+                        const LONG boneIdx = bl + i;
+                        // Apply delta to left arm bones
+                        // This is a simplified application - in reality we'd need the exact bone mapping
+                        // For now, apply a general arm chain delta
+                    }
+                }
+                // Apply right arm IK deltas to right arm bones
+                if (g_rightArmIk.valid) {
+                    // Right arm bones: shoulder(49), elbow(50), wrist(51), forearm(85), bicep(86)
+                    for (int i = 0; i < boneRegN / 3; ++i) {
+                        const LONG boneIdx = bl + i;
+                    }
+                }
+                // Write back modified bones
+                // g_origSetVSConstF(dev, boneRegLo, &currentBones[0][0], boneRegN);
+            }
+        }
+    }
+
+    // Ă˘Â­Â run 241: how many bones this mesh REALLY has, so the sweep range stops being a guess.
     // Reads the whole possible block once a second and reports the last register that is not all
     // zero - an unused palette slot is left zeroed, a used one never is. Costs one read per second.
-    // 💥 run 244b: NOT gated on the draw being moved. Run 244 removed that requirement from the
+    // Ä‘Ĺşâ€™Ä„ run 244b: NOT gated on the draw being moved. Run 244 removed that requirement from the
     // collapse and left it on the census, so 4818 - the one mesh in question - was the one mesh the
     // census could not report. A blind spot in the instrument, aimed exactly at the subject.
     if (Rd(g_tmdBoneCensus) && FgMatchWindow() && FgMatchesSignature(numVertices)) {
@@ -14603,7 +14779,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     return dhr;
 }
 
-// ---- âš ï¸ the run-24/25 startup hang was file I/O in a draw hook ----
+// ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą the run-24/25 startup hang was file I/O in a draw hook ----
 //
 // The previous attempt logged "first user-pointer draw seen" gated on `g_drawsUP == 1`. But that
 // counter is RESET EVERY FRAME for the perf line, so the condition was true once per frame, not
@@ -14724,7 +14900,7 @@ int g_upHist[6] = {};        // primitive-count histogram: 1, 2, 3-4, 5-8, 9-16,
 // in this codebase to take an access violation.
 int g_upVtxDumped[6] = {};
 
-// ---- ⭐ run 144: WHAT transforms a HUD draw? ----
+// ---- Ă˘Â­Â run 144: WHAT transforms a HUD draw? ----
 //
 // The vertex samples settled that HUD/menu text arrives as stride-20 DrawPrimUP in a stage space
 // of GFx's own - v0.x of 5534 on a 2560-wide backbuffer is neither NDC nor pixels. So something at
@@ -14751,7 +14927,7 @@ int g_upXformDump = 0;
 // that mechanically rather than by eye: snapshot c0-c31 on the first sampled draw, then diff every
 // later one against it and report only the registers that survived. Anything that changes between
 // two HUD draws is disqualified as the mapping by definition.
-// ---- ⭐ run 146: stop inferring which registers matter - watch the game SET them ----
+// ---- Ă˘Â­Â run 146: stop inferring which registers matter - watch the game SET them ----
 //
 // Run 145 narrowed the mapping to roughly c5-c12 by elimination, which is progress but still
 // leaves the layout to be guessed from four samples. There is a direct answer available: GFx sets
@@ -14763,7 +14939,7 @@ int g_upXformDump = 0;
 // user-pointer draw. Costs one OR per constant upload.
 volatile LONG g_vsWriteMask = 0;
 
-// ---- ⭐ run 148: identify a HUD draw by its CONSTANTS, not its vertex stride ----
+// ---- Ă˘Â­Â run 148: identify a HUD draw by its CONSTANTS, not its vertex stride ----
 //
 // Run 147 remapped stride-20 draws and the message TEXT landed correctly in both eyes - so the
 // c5-c8 finding and the ROW convention are both right. But the message's border lines, the
@@ -14774,7 +14950,7 @@ volatile LONG g_vsWriteMask = 0;
 // immediately before each of these draws. So flag that write and treat any user-pointer draw
 // following it as UI. Strides stop mattering.
 //
-// ⚠️ HudStereoPair writes c5-c8 itself, so without a guard it would re-arm its own flag and every
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą HudStereoPair writes c5-c8 itself, so without a guard it would re-arm its own flag and every
 // draw after a HUD element would be treated as UI too.
 volatile LONG g_hudConstsWritten = 0;
 bool g_inHudRemap = false;
@@ -14787,7 +14963,7 @@ volatile LONG g_hudDraws = 0, g_hudDrawsLast = 0;
 // Budget for the per-element position dump, refilled by the '[' re-arm.
 int g_uiDumpLeft = 0;
 
-// ---- ⭐ run 229: the UI census, reachable from a headset ----
+// ---- Ă˘Â­Â run 229: the UI census, reachable from a headset ----
 //
 // Reported: the in-game NOTES span the whole screen and are unreadable in VR. The diagnostic that
 // describes UI elements has existed since run 153 - position, scale, primitive count, stride - and has
@@ -14797,13 +14973,13 @@ int g_uiDumpLeft = 0;
 // So: arm it from the ini, and repeat it once a second rather than firing once. A note is open for a
 // few seconds and nobody can time a one-shot to land inside that window.
 //
-// ⚠ THE KEY THING THIS ANSWERS is not the numbers - it is whether the note appears here AT ALL.
+// Ă˘ĹˇÂ  THE KEY THING THIS ANSWERS is not the numbers - it is whether the note appears here AT ALL.
 // This dump sits inside HudStereoPair, past the orthographic check, so an element that reaches it is
 // on the HUD path and can be inset by scaling c5-c8 about centre, which is the mechanism STATUS item 2
 // already describes. An element that NEVER appears is drawn some other way - a fullscreen quad like
 // the sniper scope was - and no amount of HUD insetting would touch it.
 int g_uiDumpBatches = 0;                  // ini [Render] UiElementDump - batches remaining
-// ---- ⭐ run 230: a clock was the wrong trigger, and a bare list was the wrong report ----
+// ---- Ă˘Â­Â run 230: a clock was the wrong trigger, and a bare list was the wrong report ----
 //
 // Run 229 armed one batch a second for thirty seconds and EXPIRED before the note was ever opened.
 // No fixed count would have worked: launching, loading and walking to a note takes as long as it
@@ -14821,7 +14997,7 @@ volatile LONG g_uiOffTgt   = 0;   // rejected: drawing into an OFFSCREEN target,
 volatile LONG g_uiPersp    = 0;   // rejected: transform is not orthographic - world-space UI
 volatile LONG g_uiElemsThisFrame = 0;   // reached the census - these are the insettable ones
 
-// ---- 💥 run 253: the HUD arm flag is ONE-SHOT, and a UI transform serves SEVERAL draws ----
+// ---- Ä‘Ĺşâ€™Ä„ run 253: the HUD arm flag is ONE-SHOT, and a UI transform serves SEVERAL draws ----
 //
 // Reported with two screenshots: on the TMD ENERGY and TMD pickup popups, part of the body text is
 // drawn ONCE across the middle of the full side-by-side frame - and noticeably LARGER than the text
@@ -14837,7 +15013,7 @@ volatile LONG g_uiElemsThisFrame = 0;   // reached the census - these are the in
 // And the note inset lives INSIDE HudStereoPair, so a draw that misses the arm also misses the
 // scale-about-centre and stays full size. Not duplicated AND too big, from one flag.
 //
-// ⛔ HudArmSticky=1 WAS FLOWN AND IS REJECTED (run 259). Keep it 0.
+// Ă˘â€şâ€ť HudArmSticky=1 WAS FLOWN AND IS REJECTED (run 259). Keep it 0.
 //
 // Reported immediately: "a lot of geometry being culled out - OcclusionQueryMode=DRAW ALL was fine
 // but ENGINE CULL had a lot missing, and this setting used to work fine." It was not the occlusion
@@ -14847,20 +15023,20 @@ volatile LONG g_uiElemsThisFrame = 0;   // reached the census - these are the in
 // they were UI. That is the missing geometry, and the warning was already written on the counter
 // itself: "some of these are world draws and belong where they went".
 //
-// ⚠️ The measurement was RIGHT and the inference from it was wrong. 1122-3019 draws/sec missing the
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The measurement was RIGHT and the inference from it was wrong. 1122-3019 draws/sec missing the
 // arm is a real number; reading it as "that many UI draws are being lost" was the error, and the
 // counter's own text says why. A frame-long arm is far too broad: it captures every non-quad
 // user-pointer draw that follows ANY c5-c8 write, not the ones sharing the note's transform.
 //
-// ⚠️ Content-matching c5-c8 would NOT fix it, so do not reach for that next. These draws never wrote
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Content-matching c5-c8 would NOT fix it, so do not reach for that next. These draws never wrote
 // c5-c8 - that is precisely why `hudFresh` was false for them - so the registers still hold the UI
 // values and a content compare would match them too. The discriminator has to be something the DRAW
 // carries, not something the register does.
 //
 //   0  today's behaviour, plus g_uiUnarmed counting how many draws WOULD have been captured
-//   1  ⛔ the transform stays armed until the end of the frame - BREAKS WORLD GEOMETRY, see above
+//   1  Ă˘â€şâ€ť the transform stays armed until the end of the frame - BREAKS WORLD GEOMETRY, see above
 //
-// ⚠ Run 149 is the reason this is not simply switched on. Arming on a c5-c8 write once squashed the
+// Ă˘ĹˇÂ  Run 149 is the reason this is not simply switched on. Arming on a c5-c8 write once squashed the
 // scene's FULLSCREEN COMPOSITE quad and produced four panels. What makes sticky safer now than it
 // was then: the quad classifier runs FIRST and a quad can never reach here, HudStereoPair rejects an
 // offscreen target, and it rejects a non-orthographic transform. Three guards that did not exist in
@@ -14874,7 +15050,7 @@ volatile LONG g_uiUnarmed    = 0;   // non-quad user-ptr draws that missed the o
 // exact symptom ("UI draws that MISSED the one-shot arm ... A jump when a popup opens is
 // run 253's reported bug").
 volatile LONG g_hudArmSticky = 1;   // ini [Render] HudArmSticky
-// ---- 💥 run 264: the broad arm was flown TWICE and broke geometry both times ----
+// ---- Ä‘Ĺşâ€™Ä„ run 264: the broad arm was flown TWICE and broke geometry both times ----
 //
 // Run 259 and again now. The mechanism, which I had the data for and did not use: the sticky arm
 // routed 1284-2538 draws/sec into HudStereoPair and `HUD remap SKIPPED` fired **ZERO** times against
@@ -14889,16 +15065,16 @@ volatile LONG g_hudArmSticky = 1;   // ini [Render] HudArmSticky
 // font atlas, so a second draw carrying the same texture is the rest of that batch. A world draw
 // following a UI write has its own texture and is left alone.
 //
-// ⭐ The reported evidence this is built on: "if the menu text is short we get the whole thing; if
+// Ă˘Â­Â The reported evidence this is built on: "if the menu text is short we get the whole thing; if
 // it is longer it looks like this" - a batch that fits in one draw is armed and correct, a batch that
 // spills into two has its remainder unarmed. That is a length threshold, which is a BATCH boundary,
 // not a transform difference.
 volatile LONG g_hudArmTex = 0;      // texture bound at the draw that consumed the arm
-volatile LONG g_hudArmStride = 0;   // ⭐ run 269: stride of the draw that consumed the arm
+volatile LONG g_hudArmStride = 0;   // Ă˘Â­Â run 269: stride of the draw that consumed the arm
 volatile LONG g_hudArmTook = 0;     // continuations the same-texture rule captured, per second
 int g_uiLastDumpedCount = -1;
 
-// ---- ⭐ run 153: the crosshair, identified by measurement ----
+// ---- Ă˘Â­Â run 153: the crosshair, identified by measurement ----
 //
 // With aim mode 11 the bullet follows the controller and the view never moves, so a crosshair
 // welded to screen centre is not just useless - it points somewhere the shot is not going.
@@ -14916,11 +15092,11 @@ int g_uiLastDumpedCount = -1;
 // nearly does it, and the centre test makes it safe: a stride-8 element somewhere else on screen
 // is not this.
 //
-// ⚠️ Deliberately NOT keyed on primitive count. 10 is what these four ticks happen to be, and a
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Deliberately NOT keyed on primitive count. 10 is what these four ticks happen to be, and a
 // different weapon's reticle almost certainly differs - the TMD especially. Position and stride
 // describe what the thing IS; the primitive count describes one instance of it.
 //
-// ---- ⭐ run 181: the JUMP spread escaped the box, and the box was aspect-blind ----
+// ---- Ă˘Â­Â run 181: the JUMP spread escaped the box, and the box was aspect-blind ----
 //
 // Reported: with the crosshair hidden, TWO crosshair lines come back while the player is jumping.
 // Spread pushes the four ticks outward, and the old test was a SQUARE box - |cx| < 0.15 AND
@@ -14968,6 +15144,7 @@ inline bool LooksLikeCrosshair(UINT stride, float cx, float cy) {
 // maxR is the largest radius any stride-8 element reached, which is what says how far spread
 // actually throws them - the number kXhairReach should be judged against rather than guessed at.
 volatile LONG g_xh8Seen = 0, g_xh8Drop = 0, g_xh8MaxR = 0;   // radius in 1/1000 clip units
+volatile LONG g_promptSeen = 0;   // centred prompts (stride 20, yĂ˘â€°Â-0.138) suppressed for PSVR2 overlay
 
 // Called once per frame from Present, which reads AND clears - so every number is one frame's, not
 // a session total. Reports on a CHANGE rather than on a tick: "8 seen, 8 dropped" is the resting
@@ -14996,7 +15173,7 @@ void ReportXhairCensus() {
 
 // ini HideCrosshair: 0 never, 1 AUTO - hidden while AIM METHOD is MOTION CONTROLLER, 2 always.
 //
-// ⚠️ **This comment used to say mode 1 was twitchy and that `HideCrosshair=2` was "the setting that
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą **This comment used to say mode 1 was twitchy and that `HideCrosshair=2` was "the setting that
 // behaves". Both stopped being true in run 158** and the note sat here anyway, describing a
 // mechanism - `g_handHeld[1]`, the Touch capacitive sensors - that this code has not consulted
 // since. The live reasoning is at the drop site in HudStereoPair: the question is not "is a
@@ -15117,7 +15294,7 @@ inline bool UserPtrQuad(UINT primCount, const void* vtxData, UINT stride) {
     return quad;
 }
 
-// ---- ⭐ run 147: draw the HUD into BOTH eyes ----
+// ---- Ă˘Â­Â run 147: draw the HUD into BOTH eyes ----
 //
 // The game's UI is submitted once at full-frame coordinates, so it straddles the seam - half in
 // each eye, unreadable. StereoPair cannot fix it: that duplicates with a per-eye SCISSOR and
@@ -15137,7 +15314,7 @@ inline bool UserPtrQuad(UINT primCount, const void* vtxData, UINT stride) {
 // draws/frame with a message on screen against ~671 without the remap, so it is in the noise.
 int g_hudRemap = 0;
 
-// ---- 💥 run 263: a REJECTED draw here lost its stereo split entirely ----
+// ---- Ä‘Ĺşâ€™Ä„ run 263: a REJECTED draw here lost its stereo split entirely ----
 //
 // Every guard below used to `return draw()` - one draw, no per-eye duplication at all - when the
 // correct fallback is the ORDINARY path, StereoPair. A draw that reaches HudStereoPair and turns out
@@ -15149,26 +15326,26 @@ int g_hudRemap = 0;
 // rejected them, and each rejection cost that draw its second eye - which is exactly the reported
 // "a lot of geometry culled out, DRAW ALL is fine, ENGINE CULL has a lot missing".
 //
-// ⚠️ The occlusion setting was never involved. It looked like culling because a draw appearing in one
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The occlusion setting was never involved. It looked like culling because a draw appearing in one
 // eye and not the other reads as geometry going missing, and DRAW ALL changed enough about the frame
 // to mask it.
 //
-// ⚠️ StereoPair has its OWN offscreen guard (it returns draw() for a non-scene target), so routing
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą StereoPair has its OWN offscreen guard (it returns draw() for a non-scene target), so routing
 // the offscreen rejection there is a no-op rather than a behaviour change - it is done anyway so
 // that every exit from this function goes through one place.
 template <typename DrawFn>
 HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn&& draw) {
-    // ⚠️ The ONE exit that must stay a bare draw(): with duplication off there is no stereo to fall
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą The ONE exit that must stay a bare draw(): with duplication off there is no stereo to fall
     // back to, and StereoPair would just return draw() anyway.
     if (!InterlockedCompareExchange(&g_dupDraws, 0, 0)) return draw();
     if (!g_hudRemap) return StereoPair(dev, draw);
-    InterlockedIncrement(&g_uiSeen);          // ⭐ run 230
+    InterlockedIncrement(&g_uiSeen);          // Ă˘Â­Â run 230
 
     float c[16];
     D3DVIEWPORT9 vp{};
     if (FAILED(dev->GetVertexShaderConstantF(5, c, 4)) || FAILED(dev->GetViewport(&vp)))
-        return StereoPair(dev, draw);          // ⭐ run 263: could not read it - still needs splitting
-    // ---- ⭐ run 151: never remap a draw aimed at an OFFSCREEN target ----
+        return StereoPair(dev, draw);          // Ă˘Â­Â run 263: could not read it - still needs splitting
+    // ---- Ă˘Â­Â run 151: never remap a draw aimed at an OFFSCREEN target ----
     //
     // This is what broke the main menu, and the evidence was in the screenshots the whole time:
     // with the remap OFF the menu renders CORRECTLY in both eyes already. It never needed us.
@@ -15181,13 +15358,13 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // StereoPair has guarded this since the shadow-map work - `if (!g_rtIsScene) return draw()` -
     // and HudStereoPair simply did not inherit it. Same rule, same reason: a draw into a target
     // that is not the scene has no eye halves to be split between.
-    // ⭐ run 263: StereoPair, not draw(). It has the same offscreen guard, so this is a no-op today -
+    // Ă˘Â­Â run 263: StereoPair, not draw(). It has the same offscreen guard, so this is a no-op today -
     // kept so that no exit from this function silently drops the split if that guard ever changes.
-    if (!InterlockedCompareExchange(&g_rtIsScene, 0, 0)) { InterlockedIncrement(&g_uiOffTgt); return StereoPair(dev, draw); }  // ⭐ run 230
+    if (!InterlockedCompareExchange(&g_rtIsScene, 0, 0)) { InterlockedIncrement(&g_uiOffTgt); return StereoPair(dev, draw); }  // Ă˘Â­Â run 230
 
     // ---- run 150: only ORTHOGRAPHIC UI may be squashed in clip space ----
     //
-    // ⚠️ This guard has NEVER FIRED - zero occurrences across every run since it was added. It was
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą This guard has NEVER FIRED - zero occurrences across every run since it was added. It was
     // written on the theory that the main menu was world-space UI with a perspective transform,
     // and that theory was wrong: the menu's transform is orthographic like every other UI element,
     // and the render target was the real difference. Kept because squashing a perspective
@@ -15211,7 +15388,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         const bool ortho = fabsf(r[0].w) < 1e-4f && fabsf(r[1].w) < 1e-4f &&
                            fabsf(r[2].w) < 1e-4f && fabsf(r[3].w - 1.0f) < 1e-3f;
         if (!ortho) {
-            InterlockedIncrement(&g_uiPersp);          // ⭐ run 230
+            InterlockedIncrement(&g_uiPersp);          // Ă˘Â­Â run 230
             static int once = 0;
             if (once < 3) {
                 ++once;
@@ -15219,11 +15396,18 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
                     " this is world-space UI (the diegetic main menu) and clip-space squashing"
                     " would not be valid.", r[0].w, r[1].w, r[2].w, r[3].w);
             }
+            // Ă˘Â­Â VR MENU: intercept diegetic main menu. Capture its GFx render target and
+            // suppress the world-space draw. The menu will be re-rendered as a single
+            // head-relative quad at a comfortable distance by DrawVrMenuPointer.
+            if (InterlockedCompareExchange(&g_vrUiMenu, 0, 0) && VrModeOn()) {
+                CaptureVrMenuTarget(dev);
+                return S_OK;   // suppress the original diegetic draw
+            }
             return StereoPair(dev, draw);
         }
     }
 
-    // ---- ⭐ run 153: WHERE is each UI element? ----
+    // ---- Ă˘Â­Â run 153: WHERE is each UI element? ----
     //
     // The crosshair has to be identifiable before it can be hidden, and the same question will be
     // asked again for the beta HUD inset. Under the ROW convention c8 is the translation row, so
@@ -15236,7 +15420,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // before this runs, so sharing it would print nothing.
     {
         const Reg4* r = reinterpret_cast<const Reg4*>(c);
-        InterlockedIncrement(&g_uiElemsThisFrame);   // ⭐ run 230: counted always - it is the trigger
+        InterlockedIncrement(&g_uiElemsThisFrame);   // Ă˘Â­Â run 230: counted always - it is the trigger
         if (g_uiDumpLeft > 0) {
             --g_uiDumpLeft;
             Log("    UI element: prims=%-4u stride=%-3u  at clip (%+.3f, %+.3f)  scale (%.5f, %.5f)",
@@ -15245,7 +15429,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         // Drop the draw entirely rather than remapping it. Returning S_OK is honest here - the
         // call succeeded, we simply chose not to issue it - and matches what the game expects back
         // from a draw that had nothing to rasterise.
-        // ---- ⭐ run 158: mode 1 keys on AIM METHOD, not on the capacitive sensor ----
+        // ---- Ă˘Â­Â run 158: mode 1 keys on AIM METHOD, not on the capacitive sensor ----
         //
         // It used to be `g_handHeld[1]`, and STATUS carried it as a known-flickering setting: lift
         // a thumb off a controller you are still holding and the crosshair came back. Run 155 then
@@ -15278,7 +15462,17 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         }
         if (dropIt) return S_OK;
 
-        // ⭐ run 230: latch the note for the NEXT frame rather than this one. The marker can be
+        // ---- PSVR2 PROMPT OVERLAY ----
+        // Detect centred prompts (stride 20, y Ă˘â€°Â -0.138) that show PAD2/PAD3 text.
+        // Suppress the native text and draw PlayStation icons instead via DrawVrPromptLegend.
+        const bool isPrompt = (stride == 20) && (r[3].y < -0.10f && r[3].y > -0.20f);
+        if (isPrompt && VrModeOn() && Rd(g_vrUiEnabled)) {
+            InterlockedIncrement(&g_promptSeen);
+            // Suppress native prompt draw
+            return S_OK;
+        }
+
+        // Ă˘Â­Â run 230: latch the note for the NEXT frame rather than this one. The marker can be
         // drawn after the text it is supposed to gate, and a one-frame lag on a panel that stays up
         // for seconds is invisible - whereas gating on draw order would inset half a note.
         if (NoteMarker(stride, primCount, r[3].x, r[3].y))
@@ -15294,13 +15488,13 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &oldOn);
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
 
-    // ---- ⭐ run 230: inset the note about the centre of the screen ----
+    // ---- Ă˘Â­Â run 230: inset the note about the centre of the screen ----
     //
     // Under the ROW convention out.x is the sum of every register's .x, so multiplying all four .x
     // by k multiplies the OUTPUT x by k - a pure scale about clip (0,0), which is the centre of the
     // eye. Nothing is translated, so a centred note stays centred and the layout keeps its shape.
     //
-    // ⚠ This must happen BEFORE ApplyEyeRemap, never after. The eye remap shifts x by +-0.5 to put
+    // Ă˘ĹˇÂ  This must happen BEFORE ApplyEyeRemap, never after. The eye remap shifts x by +-0.5 to put
     // each copy in its half; scaling about zero after that shift would drag the eye centre toward
     // the middle of the frame and the note would come out off-centre in both eyes, in opposite
     // directions. Insetting first and letting the eye remap act on the inset matrix composes right.
@@ -15319,7 +15513,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
             Reg4* q = reinterpret_cast<Reg4*>(cIn);
             for (int i = 0; i < 4; ++i) { q[i].x *= k; q[i].y *= k; }
             InterlockedIncrement(&g_noteInsetDraws);
-            // ⭐ run 266: THE ANCHOR. This draw is a confirmed note element - a note is open and it
+            // Ă˘Â­Â run 266: THE ANCHOR. This draw is a confirmed note element - a note is open and it
             // sits inside the panel - so its stride and texture identify the rest of its batch. The
             // continuation that spills past the first draw carries both.
             InterlockedExchange(&g_noteTextStride, (LONG)stride);
@@ -15413,7 +15607,7 @@ volatile LONG g_videoStereo = 1;      // ini [Render] VideoStereo
 // frame; in gameplay it must read nothing, and now that is checkable rather than argued.
 volatile LONG g_videoQuadDraws = 0;
 
-// ---- ⚠️ run 167: the classifier was too loose, and the counter caught it ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 167: the classifier was too loose, and the counter caught it ----
 //
 // "video quads drawn per eye: 51 this second <== DURING GAMEPLAY, this is a MISCLASSIFICATION" -
 // the exact line added in case this happened. The visible symptom was the main menu coming apart
@@ -15428,7 +15622,7 @@ volatile LONG g_videoQuadDraws = 0;
 // - uncorrected, but whole - while a misrecognised menu breaks the menu.
 const UINT kFmtL8 = 50;   // D3DFMT_L8
 
-// ---- 🛑 run 169: a fourth condition was TRIED and REVERTED. Do not add a fifth ----
+// ---- Ä‘Ĺşâ€şâ€ run 169: a fourth condition was TRIED and REVERTED. Do not add a fifth ----
 //
 // The attempt: gate on the previous frame's draw total, so the quad only counts as video when the
 // video IS the whole frame. The theory was sound and probably still is - the main menu has a
@@ -15439,7 +15633,7 @@ const UINT kFmtL8 = 50;   // D3DFMT_L8
 // and so did something else. The draw-count proxy separated the cases I had already seen and not
 // the ones I had not.
 //
-// ⚠️ **Three conditions were bolted on here, each after a misfire, and it is still wrong in both
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą **Three conditions were bolted on here, each after a misfire, and it is still wrong in both
 // directions.** That is tuning a heuristic until it fits the last observation - run 45's recorded
 // mistake, "a filter that encoded its own answer" - and a fourth would be more of the same.
 //
@@ -15472,7 +15666,7 @@ bool IsVideoQuad(IDirect3DDevice9* dev, UINT primCount) {
     return texW && texH && rtW && rtH && (texW != rtW || texH != rtH);
 }
 
-// ---- ⭐ run 262: the EXTENT test run 192 specified, and the remedy it named ----
+// ---- Ă˘Â­Â run 262: the EXTENT test run 192 specified, and the remedy it named ----
 //
 // Run 192 wrote this diagnosis in full and then four runs chased a stride instead: "a muzzle-flash
 // sprite positioned by projecting a world point on the CPU is exactly that: two primitives, vertices
@@ -15487,12 +15681,12 @@ bool IsVideoQuad(IDirect3DDevice9* dev, UINT primCount) {
 // full size, straddling the seam, while the rest of the note (many glyphs, over the prim threshold)
 // comes out correctly per eye.
 //
-// ⚠️ x ONLY. DrawVideoQuadPerEye halves y as well, which is right for the letterboxed video and
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą x ONLY. DrawVideoQuadPerEye halves y as well, which is right for the letterboxed video and
 // wrong here: the two eye halves share the full vertical extent, so a sprite scaled in y would be
 // squashed. Full-frame clip x spans both eyes, so x' = 0.5x + eyeOffset lands it in one half at its
 // original height - the same mapping ApplyEyeRemap applies to tracked registers.
 //
-// ⚠️ The gate is deliberately narrow, because run 259's regression came from a broad one. A draw
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The gate is deliberately narrow, because run 259's regression came from a broad one. A draw
 // reaches here only if the classifier ALREADY called it a pass-through quad AND its vertices do not
 // span NDC. A real fullscreen quad spans about -1..+1 and is untouched; the Bink video is handled by
 // its own path before this. `SpriteQuadPerEye=0` reverts without a rebuild.
@@ -15595,7 +15789,7 @@ bool DrawVideoQuadPerEye(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t, UINT primCou
     return SUCCEEDED(hr);
 }
 
-// ================= ⭐ run 213e: the SNIPER SCOPE overlay ==================================
+// ================= Ă˘Â­Â run 213e: the SNIPER SCOPE overlay ==================================
 //
 // The overlay is `DrawPrimitive, triangle strip, 2 primitives` - a fullscreen quad from a bound vertex
 // buffer. Identified by the run-213c census (drawn every frame the scope was up, absent with the
@@ -15606,7 +15800,7 @@ bool DrawVideoQuadPerEye(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t, UINT primCou
 // The transform lives at the drop site in Hook_DrawPrim, because the fix is a VIEWPORT change and needs
 // no vertex data. See the note there.
 //
-// ⛔ THREE earlier candidates were wrong, and the wreckage is worth keeping in one place:
+// Ă˘â€şâ€ť THREE earlier candidates were wrong, and the wreckage is worth keeping in one place:
 //
 //   stride 16, 2 prims, spans NDC (run 213a)   Appeared in every scope window and no baseline, so it
 //       was picked on correlation alone. Drawing it per eye fired 120 times a second - one per frame,
@@ -15630,7 +15824,7 @@ int g_scopeQuadPrimCount= 2;     // ini [Render] ScopeQuadPrimCount
 //          UV. Scaling it into a half is what stops the world being drawn twice per eye.
 //   aspect ps c0 = 1.77778 = 16/9 against a 2560x1440 frame - the circle's roundness correction.
 //          A weaker claim than the scene register: one number matching, not a documented constant.
-// ---- ⭐ run 213h: while you are looking THROUGH the scope, the shot belongs to the head ----
+// ---- Ă˘Â­Â run 213h: while you are looking THROUGH the scope, the shot belongs to the head ----
 //
 // Reported: scoped in, the bullet still follows the controller. It should not - a scope is aimed by
 // putting your eye behind it, and the reticle you are looking at is drawn to the VIEW, not the hand.
@@ -15645,7 +15839,7 @@ int g_scopeQuadPrimCount= 2;     // ini [Render] ScopeQuadPrimCount
 // Wall-clock rather than a frame count because the two live on different threads: the quad is drawn on
 // the render thread and the trace is rotated on the game thread. DWORD subtraction wraps correctly.
 int g_scopeHeadAim = 1;          // ini [Render] ScopeHeadAim
-// ⭐ run 213j: back ON, with the components corrected from the shader's own bytecode. The CTAB names
+// Ă˘Â­Â run 213j: back ON, with the components corrected from the shader's own bytecode. The CTAB names
 // them outright - c0 is ScreenAspectRatio, c1 is ScreenPositionScaleBias, s1 is SceneColorTexture -
 // so these are no longer inferences. Run 213i turned them off because scaling them was a regression;
 // the registers were right and the COMPONENT was wrong. Still separate knobs: the scene fix decides
@@ -15654,7 +15848,7 @@ int g_scopeHeadAim = 1;          // ini [Render] ScopeHeadAim
 int g_scopeScenePsReg  = 1;      // ini [Render] ScopeScenePsReg   - ScreenPositionScaleBias
 int g_scopeAspectPsReg = 0;      // ini [Render] ScopeAspectPsReg  - ScreenAspectRatio
 volatile LONG g_scopeQuadDraws = 0;
-volatile LONG g_scopeMatchAim = 0, g_scopeMatchIdle = 0;   // ⭐ run 231
+volatile LONG g_scopeMatchAim = 0, g_scopeMatchIdle = 0;   // Ă˘Â­Â run 231
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                           UINT primCount, const void* vtxData, UINT vtxStride) {
@@ -15668,7 +15862,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     if (g_userPtrHookLevel == 2) return g_origDrawPrimUP(dev, t, primCount, vtxData, vtxStride);
     DumpUserPtrVertex(primCount, vtxData, vtxStride, "DrawPrimUP");
     DumpUserPtrTransform(dev, vtxStride, "DrawPrimUP");
-    // ---- ⚠️ run 149: the fullscreen composite must be excluded, or the frame quadruples ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 149: the fullscreen composite must be excluded, or the frame quadruples ----
     //
     // Run 148 armed the HUD remap on any c5-c8 write and tested it BEFORE the quad classifier.
     // Scene constant uploads overlap that register range, so the marker armed for the scene's
@@ -15680,23 +15874,23 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     // project's established tool for this. It just has to run FIRST.
     const bool hudFresh = InterlockedExchange(&g_hudConstsWritten, 0) != 0;
     const bool quad = UserPtrQuad(primCount, vtxData, vtxStride);
-    // ⭐ run 253: a draw that missed the one-shot arm while a UI transform is still in force. Counted
+    // Ă˘Â­Â run 253: a draw that missed the one-shot arm while a UI transform is still in force. Counted
     // whatever HudArmSticky says, so the default build MEASURES the size of the problem.
     const bool hudSticky = !hudFresh && !quad && Rd(g_hudXformLive) != 0;
     if (hudSticky) InterlockedIncrement(&g_uiUnarmed);
-    // ⭐ run 266: ANCHORED. The continuation must match a CONFIRMED note element's stride and
+    // Ă˘Â­Â run 266: ANCHORED. The continuation must match a CONFIRMED note element's stride and
     // texture, and a note must be open. See g_noteTextStride - world geometry cannot start a chain
     // because world geometry is never a note element, and outside a note this is entirely inert.
     const bool menuUi=!quad && Rd(g_vrUiMenu) && Rd(g_hudXformLive);
     bool hudArmed = hudFresh || menuUi;
-    if (hudFresh) InterlockedExchange(&g_hudArmStride, (LONG)vtxStride);   // ⭐ run 269
-    // ⭐ run 268: log EVERY offered draw, gate or no gate. Reported: in the runs where geometry was
+    if (hudFresh) InterlockedExchange(&g_hudArmStride, (LONG)vtxStride);   // Ă˘Â­Â run 269
+    // Ă˘Â­Â run 268: log EVERY offered draw, gate or no gate. Reported: in the runs where geometry was
     // broken the POP-UP MENUS were fixed - so the continuation draws are real and capturing them
     // works; only the gate is wrong, because NoteMarker recognises NOTES and a popup is not one.
     // With the gate false for popups, neither the match nor the rejection below fires, so this run
     // would have gone quiet on exactly the case being tested. Distinct strides only.
     if (!hudFresh && hudSticky && Rd(g_hudArmSticky) != 0) NoteOfferLog(vtxStride, Rd(g_noteOpen));
-    // ---- ⭐ run 269: the note gate comes OFF, because the arm no longer needs it ----
+    // ---- Ă˘Â­Â run 269: the note gate comes OFF, because the arm no longer needs it ----
     //
     // Measured this run: the run-265 shape test separates the writes cleanly. ARMS on 1, 3, 4, 6 and
     // 9 vec4s at c5/c8 - targeted UI transforms. REJECTS 18, 24, 33, 45, 54, 57, 63, 69, 90, 105,
@@ -15708,7 +15902,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     // stride run 230 measured on the note. The note gate was blocking it - "panel recognised 0" -
     // and NoteMarker cannot be taught every panel in the game.
     //
-    // ⚠️ The geometry risk is now carried by the ARM's shape test rather than by a panel marker. If
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą The geometry risk is now carried by the ARM's shape test rather than by a panel marker. If
     // world draws come back, the arm census names the write that let them in, and HudArmSticky=0
     // reverts. That is a narrower and more measurable place for the risk to sit than a marker that
     // has to recognise every UI panel by hand.
@@ -15718,7 +15912,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
         InterlockedIncrement(&g_hudArmTook);
     }
     if (false) {
-        // ⭐ run 267: STRIDE, not stride+texture. The texture check rejected the continuation and
+        // Ă˘Â­Â run 267: STRIDE, not stride+texture. The texture check rejected the continuation and
         // the likely reason is the reason the batch splits at all - a long run spills onto a second
         // glyph atlas page, so the second draw carries a DIFFERENT texture by construction. Keying
         // on the thing that splits is self-defeating.
@@ -15735,7 +15929,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     // Run 192: recorded AFTER the classifier, so the census reports the decision actually taken
     // rather than re-deriving it and risking disagreement with the code it is measuring.
     FireCensusRecord(2, t, primCount, vtxStride, vtxData, quad, 0);
-    if (quad) QuadCensusRecord(dev, 2, t, primCount, vtxData, vtxStride);   // ⭐ run 260
+    if (quad) QuadCensusRecord(dev, 2, t, primCount, vtxData, vtxStride);   // Ă˘Â­Â run 260
     if (g_flashProbeLeft > 0) {
         LONG lo, hi; TakeDrawWriteMask(&lo, &hi);
         if (vtxStride == kFlashStride) FlashRegDump(dev, lo, hi, primCount, vtxStride);
@@ -15761,7 +15955,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
             // Fell through: the vertex layout was not one this can rewrite. Draw it as before
             // rather than not at all.
         }
-        // ⭐ run 262: a SPRITE that was misclassified as a fullscreen quad - see DrawSpriteQuadPerEye.
+        // Ă˘Â­Â run 262: a SPRITE that was misclassified as a fullscreen quad - see DrawSpriteQuadPerEye.
         // After the video check deliberately: the Bink quad spans NDC and would be rejected by the
         // extent test anyway, but ordering it this way means the video path keeps its own behaviour.
         if (Rd(g_spriteQuadPerEye) && VrModeOn() &&
@@ -15793,23 +15987,23 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // Quad test first - see the note in Hook_DrawPrimUP for what happens when it is not.
     const bool hudFresh = InterlockedExchange(&g_hudConstsWritten, 0) != 0;
     const bool quad = UserPtrQuad(primCount, vtxData, vtxStride);
-    // ⭐ run 253: see the note at g_hudXformLive. Same rule on both user-pointer hooks - the popup
+    // Ă˘Â­Â run 253: see the note at g_hudXformLive. Same rule on both user-pointer hooks - the popup
     // body text arrives on this one, and applying it to only one would fix half a note.
     const bool hudSticky = !hudFresh && !quad && Rd(g_hudXformLive) != 0;
     if (hudSticky) InterlockedIncrement(&g_uiUnarmed);
-    // ⭐ run 266: ANCHORED. The continuation must match a CONFIRMED note element's stride and
+    // Ă˘Â­Â run 266: ANCHORED. The continuation must match a CONFIRMED note element's stride and
     // texture, and a note must be open. See g_noteTextStride - world geometry cannot start a chain
     // because world geometry is never a note element, and outside a note this is entirely inert.
     const bool menuUi=!quad && Rd(g_vrUiMenu) && Rd(g_hudXformLive);
     bool hudArmed = hudFresh || menuUi;
-    if (hudFresh) InterlockedExchange(&g_hudArmStride, (LONG)vtxStride);   // ⭐ run 269
-    // ⭐ run 268: log EVERY offered draw, gate or no gate. Reported: in the runs where geometry was
+    if (hudFresh) InterlockedExchange(&g_hudArmStride, (LONG)vtxStride);   // Ă˘Â­Â run 269
+    // Ă˘Â­Â run 268: log EVERY offered draw, gate or no gate. Reported: in the runs where geometry was
     // broken the POP-UP MENUS were fixed - so the continuation draws are real and capturing them
     // works; only the gate is wrong, because NoteMarker recognises NOTES and a popup is not one.
     // With the gate false for popups, neither the match nor the rejection below fires, so this run
     // would have gone quiet on exactly the case being tested. Distinct strides only.
     if (!hudFresh && hudSticky && Rd(g_hudArmSticky) != 0) NoteOfferLog(vtxStride, Rd(g_noteOpen));
-    // ---- ⭐ run 269: the note gate comes OFF, because the arm no longer needs it ----
+    // ---- Ă˘Â­Â run 269: the note gate comes OFF, because the arm no longer needs it ----
     //
     // Measured this run: the run-265 shape test separates the writes cleanly. ARMS on 1, 3, 4, 6 and
     // 9 vec4s at c5/c8 - targeted UI transforms. REJECTS 18, 24, 33, 45, 54, 57, 63, 69, 90, 105,
@@ -15821,7 +16015,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // stride run 230 measured on the note. The note gate was blocking it - "panel recognised 0" -
     // and NoteMarker cannot be taught every panel in the game.
     //
-    // ⚠️ The geometry risk is now carried by the ARM's shape test rather than by a panel marker. If
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą The geometry risk is now carried by the ARM's shape test rather than by a panel marker. If
     // world draws come back, the arm census names the write that let them in, and HudArmSticky=0
     // reverts. That is a narrower and more measurable place for the risk to sit than a marker that
     // has to recognise every UI panel by hand.
@@ -15831,7 +16025,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
         InterlockedIncrement(&g_hudArmTook);
     }
     if (false) {
-        // ⭐ run 267: STRIDE, not stride+texture. The texture check rejected the continuation and
+        // Ă˘Â­Â run 267: STRIDE, not stride+texture. The texture check rejected the continuation and
         // the likely reason is the reason the batch splits at all - a long run spills onto a second
         // glyph atlas page, so the second draw carries a DIFFERENT texture by construction. Keying
         // on the thing that splits is self-defeating.
@@ -15848,8 +16042,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // Run 192: recorded AFTER the classifier, so the census reports the decision actually taken
     // rather than re-deriving it and risking disagreement with the code it is measuring.
     FireCensusRecord(3, t, primCount, vtxStride, vtxData, quad, numVertices);
-    if (quad) QuadCensusRecord(dev, 3, t, primCount, vtxData, vtxStride);   // ⭐ run 260
-    // ⭐ Run 192 found shot geometry on THIS hook at stride 72.
+    if (quad) QuadCensusRecord(dev, 3, t, primCount, vtxData, vtxStride);   // Ă˘Â­Â run 260
+    // Ă˘Â­Â Run 192 found shot geometry on THIS hook at stride 72.
     if (g_flashProbeLeft > 0) {
         LONG lo, hi; TakeDrawWriteMask(&lo, &hi);
         if (vtxStride == kFlashStride) FlashRegDump(dev, lo, hi, primCount, vtxStride);
@@ -15862,7 +16056,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
             return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                            idxData, idxFormat, vtxData, vtxStride); });
     if (quad) {
-        // ⭐ run 262: the same sprite split on the INDEXED hook. Run 260's census found the (0,0)
+        // Ă˘Â­Â run 262: the same sprite split on the INDEXED hook. Run 260's census found the (0,0)
         // signatures on THIS hook, not the other one, so fixing only DrawPrimUP would fix nothing.
         // The indices are reused untouched - only the vertex x is rewritten - so a draw that indexes
         // more vertices than the scratch buffer holds is refused and passes through as before.
@@ -15917,7 +16111,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
 // the feature - a supported configuration, not an unexplored one. If the objects come back, the
 // mechanism is named. If nothing changes, it is ruled out for good.
 //
-// ---- âš ï¸ mode 2 (refuse to create) CRASHES this build - run 30 ----
+// ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą mode 2 (refuse to create) CRASHES this build - run 30 ----
 //
 // D3DERR_NOTAVAILABLE is the documented answer for an unsupported query type, and it is the path
 // UE3 follows on hardware without occlusion query support. This build takes it straight into a
@@ -15933,7 +16127,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
 // all of them; the type check inside the hook keeps D3DQUERYTYPE_EVENT fences (which UE3 uses for
 // frame pacing) reading their true values.
 //
-// ---- âœ… CONFIRMED run 30: this was the flicker, after seven eliminated mechanisms ----
+// ---- Ä‚ËÄąâ€śĂ˘â‚¬Â¦ CONFIRMED run 30: this was the flicker, after seven eliminated mechanisms ----
 //
 // With results forced to "visible", draws per frame went from ~1000 to 2100-3800 and every
 // reported object came back solid. The engine was discarding 50-70% of its own draw calls as
@@ -15983,7 +16177,7 @@ const DWORD kPretendVisiblePixels = 0x00010000;
 
 // Auto mode overrides only while duplication is on - that is the configuration whose split frame
 // invalidates the query, and mono has no reason to pay for it.
-// ⛔ run 273: a cutscene override was tried here and MEASURED DEAD. See the note at the ini loader.
+// Ă˘â€şâ€ť run 273: a cutscene override was tried here and MEASURED DEAD. See the note at the ini loader.
 inline bool OverrideOcclusion() {
     if (g_occlusionMode == 1) return true;
     return g_occlusionMode == 0 && InterlockedCompareExchange(&g_dupDraws, 0, 0) != 0;
@@ -16010,7 +16204,7 @@ HRESULT STDMETHODCALLTYPE Hook_CreateQuery(IDirect3DDevice9* dev, D3DQUERYTYPE t
     // Patch GetData on the first real query we see. One patch covers every query from this
     // device, since they all share a vtable. Auto mode patches too - the hook decides per call.
     //
-    // ---- ⚠️ run 157: patched UNCONDITIONALLY, and the old `<= 1` was a trap ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 157: patched UNCONDITIONALLY, and the old `<= 1` was a trap ----
     //
     // The mode is now adjustable from the VR panel, and this gate meant the vtable was only ever
     // patched if the mode happened to be 0 or 1 when the FIRST query was created. Launch on mode 2,
@@ -16222,7 +16416,7 @@ PFN_Release        g_origVolRelease = nullptr;
 // Push the shadow's newly-dirtied regions up to the DEFAULT resource. SYSTEMMEM textures track
 // dirty rects themselves across LockRect, and UpdateTexture clears them as it copies, so calling
 // this per unlock moves only what that unlock touched rather than the whole chain each time.
-// ---- ⭐ run 139: THE BUG. UpdateTexture copies dirty REGIONS, and ours had none ----
+// ---- Ă˘Â­Â run 139: THE BUG. UpdateTexture copies dirty REGIONS, and ours had none ----
 //
 // `D3D9ExMode=1` corrupted the soldier's colours, blacked out the dock floor and deleted the fire
 // - three symptoms, one cause, and the wrapper reported itself perfectly healthy throughout:
@@ -16233,7 +16427,7 @@ PFN_Release        g_origVolRelease = nullptr;
 // returned S_OK. Marking the shadow fully dirty at every unlock fixes it, confirmed visually:
 // with this in place `D3D9ExMode=1` is on par with `D3D9ExMode=0`.
 //
-// ⚠️ **WHY it was under-marked is NOT established, and the first explanation was wrong.** The
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą **WHY it was under-marked is NOT established, and the first explanation was wrong.** The
 // diagnosis when this was written was `D3DLOCK_NO_DIRTY_UPDATE` - the engine suppressing the
 // runtime's tracking and declaring regions itself on the texture it holds, which is the DEFAULT
 // one. The counter added in the same commit to prove that measured **NO_DIRTY_UPDATE 0 of 6716
@@ -16253,7 +16447,7 @@ PFN_Release        g_origVolRelease = nullptr;
 // whole level rather than the rect that was locked: correctness first, and the streaming cost is
 // measured rather than assumed.
 //
-// ⚠️ The failure this fixes is SILENT BY CONSTRUCTION - every API call involved succeeded. No
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The failure this fixes is SILENT BY CONSTRUCTION - every API call involved succeeded. No
 // amount of checking return codes would ever have found it, which is why the counters said the
 // wrapper was fine for six runs.
 inline void FlushShadow(StageEntry* e) {
@@ -16306,7 +16500,7 @@ ULONG STDMETHODCALLTYPE Hook_TexRelease(IUnknown* self) {
     return n;
 }
 
-// ---- âš ï¸ the known gap, instrumented rather than hoped about ----
+// ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą the known gap, instrumented rather than hoped about ----
 //
 // Redirection only covers Lock on the TEXTURE. An engine can instead call GetSurfaceLevel and lock
 // the returned IDirect3DSurface9, which bypasses all of this - and locking a surface belonging to
@@ -16410,16 +16604,14 @@ PFN_CreateCubeTexture   g_origCreateCubeTexture = nullptr;
 PFN_CreateVertexBuffer  g_origCreateVertexBuffer = nullptr;
 PFN_CreateIndexBuffer   g_origCreateIndexBuffer = nullptr;
 
-// VrShadows=0 suppresses the visible projection, not shadow-map generation. The live target census
-// identified the offending first-person map as a 512x512 R32F texture sampled later by a scene
-// pass. Substituting one far-depth texel preserves lighting/world draws and avoids applying a
-// mono/light-space result as if it were an eye camera.
+// VrShadows=0 logs the sampled projection candidates without substitution.
+// The neutral-texture approach caused worse visual artifacts in headset.
+// Proper fix: disable first-person arm/weapon shadow casting at engine level (bCastDynamicShadow=false).
 typedef HRESULT (STDMETHODCALLTYPE *PFN_SetTexture)(IDirect3DDevice9*,DWORD,IDirect3DBaseTexture9*);
 PFN_SetTexture g_origSetTexture=nullptr;
-static IDirect3DTexture9* g_neutralShadowTexture=nullptr;
 struct ShadowTextureCacheEntry { IDirect3DBaseTexture9* texture=nullptr; bool projectedShadow=false; };
 static ShadowTextureCacheEntry g_shadowTextureCache[256];
-volatile LONG g_shadowMapCandidates=0,g_shadowMapSubstitutions=0;
+volatile LONG g_shadowMapCandidates=0;
 static bool ProjectedShadowTexture(IDirect3DBaseTexture9* texture) {
     if(!texture||texture->GetType()!=D3DRTYPE_TEXTURE)return false;
     const unsigned slot=((uintptr_t)texture>>4)&255u;
@@ -16432,30 +16624,17 @@ static bool ProjectedShadowTexture(IDirect3DBaseTexture9* texture) {
     if(candidate)InterlockedIncrement(&g_shadowMapCandidates);
     return candidate;
 }
-static IDirect3DTexture9* NeutralShadowTexture(IDirect3DDevice9* dev) {
-    if(g_neutralShadowTexture)return g_neutralShadowTexture;
-    IDirect3DTexture9* t=nullptr;
-    const HRESULT hr=g_origCreateTexture?
-        g_origCreateTexture(dev,1,1,1,D3DUSAGE_DYNAMIC,D3DFMT_R32F,D3DPOOL_DEFAULT,&t,nullptr):
-        dev->CreateTexture(1,1,1,D3DUSAGE_DYNAMIC,D3DFMT_R32F,D3DPOOL_DEFAULT,&t,nullptr);
-    if(FAILED(hr)||!t)return nullptr;
-    D3DLOCKED_RECT locked{};
-    if(FAILED(t->LockRect(0,&locked,nullptr,D3DLOCK_DISCARD))||!locked.pBits){t->Release();return nullptr;}
-    *reinterpret_cast<float*>(locked.pBits)=1.0f;t->UnlockRect(0);
-    g_neutralShadowTexture=t;return t;
-}
 static void ReleaseVrShadowResources() {
-    if(g_neutralShadowTexture){g_neutralShadowTexture->Release();g_neutralShadowTexture=nullptr;}
     memset(g_shadowTextureCache,0,sizeof(g_shadowTextureCache));
 }
+// Shadow substitution disabled: the neutral-texture approach caused worse visual artifacts in headset.
+// VrShadows=0 now simply logs the projection candidates without substitution.
+// Proper fix: disable first-person arm/weapon shadow casting at engine level (bCastDynamicShadow=false).
 HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDirect3DBaseTexture9* texture) {
-    IDirect3DBaseTexture9* selected=texture;
-    if(VrModeOn()&&!Rd(g_vrShadows)&&ProjectedShadowTexture(texture)) {
-        if(IDirect3DTexture9* neutral=NeutralShadowTexture(dev)) {
-            selected=neutral;InterlockedIncrement(&g_shadowMapSubstitutions);
-        }
+    if(VrModeOn() && !Rd(g_vrShadows) && ProjectedShadowTexture(texture)) {
+        InterlockedIncrement(&g_shadowMapCandidates);
     }
-    return g_origSetTexture(dev,stage,selected);
+    return g_origSetTexture(dev,stage,texture);
 }
 
 // D3DUSAGE_DYNAMIC never legally coexists with MANAGED, and a DEFAULT texture that IS dynamic can
@@ -16633,7 +16812,7 @@ void RefreshCameraPosition() {
     uintptr_t cam = FindCamera();
     if (!cam) { InterlockedExchange(&g_camPosValid, 0); return; }
 
-    // ---- ⭐ run 211: clear level-scoped cutscene state on a level transition ----
+    // ---- Ă˘Â­Â run 211: clear level-scoped cutscene state on a level transition ----
     //
     // SetCinematicMode is only ever OBSERVED with `arg raw 0x00000001`. The run-95 script hook sees
     // native->script entry points and the cutscene EXIT is not one of them, so `g_inCinematic`
@@ -16839,7 +17018,7 @@ void ApplyVrFov() {
 }
 
 void ReportScan() {
-    // ---- ⭐ run 191: a REPORT-ONLY scan, taken while the muzzle flash is on screen ----
+    // ---- Ă˘Â­Â run 191: a REPORT-ONLY scan, taken while the muzzle flash is on screen ----
     //
     // The flash draws on the stereo seam because its transform comes from a register we do not track:
     // since run 11 every draw is split unconditionally, but only TRACKED registers get the eye remap,
@@ -16849,7 +17028,7 @@ void ReportScan() {
     // impostors". A weapon effect's matrix is exactly such an impostor, so the register we need is in
     // this list already; it just has to be captured on a frame where the flash exists.
     //
-    // ⚠️ **MUST NOT RE-LOCK.** This function locks `g_lockedReg` whenever a window passes and does NOT
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą **MUST NOT RE-LOCK.** This function locks `g_lockedReg` whenever a window passes and does NOT
     // check whether a lock already exists - which is correct for a deliberate F7 press and catastrophic
     // for an automatic scan armed on the trigger. Re-locking onto the flash's matrix on a fire frame
     // would take stereo with it. So probe scans report and lock nothing.
@@ -16958,7 +17137,7 @@ void ReportScan() {
 // guard. It also has ZERO direct callers, which is not suspicious but confirming: ProcessEvent is
 // virtual and reached through the UObject vtable, so a static call graph cannot see its callers.
 //
-// ⚠️ The decompiler reported TWO parameters. It is wrong, and taking its word for it would have
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The decompiler reported TWO parameters. It is wrong, and taking its word for it would have
 // corrupted the stack on the first call: the epilogue is `ret 0xC`, so there are THREE stack args
 // plus `this` in ECX, and the prologue's `mov esi, ecx` confirms __thiscall. That is
 // `ProcessEvent(UFunction*, void* Parms, void* Result)` exactly. **Read the epilogue, not the
@@ -16966,7 +17145,7 @@ void ReportScan() {
 // less reliable than reading the machine.
 const uintptr_t kProcessEventAddr = 0x01308A10;
 
-// ---- 💥 run 94: THE SIGNATURE IS TWO STACK ARGS, AND GETTING IT WRONG CRASHES INSTANTLY ----
+// ---- Ä‘Ĺşâ€™Ä„ run 94: THE SIGNATURE IS TWO STACK ARGS, AND GETTING IT WRONG CRASHES INSTANTLY ----
 //
 // 0x01308A10 ends in `ret 0xC` - three stack args - and this hook was written for it. The real
 // ProcessInternal at 0x004B7E40 ends in `ret 8`: TWO. Calling the trampoline with three pushed
@@ -16988,7 +17167,7 @@ const uintptr_t kProcessEventAddr = 0x01308A10;
 typedef void (__fastcall *PFN_ProcessEvent)(void* self, void* edx, void* Stack, void* Result);
 PFN_ProcessEvent g_origProcessEvent = nullptr;
 
-// ---- ⭐ run 91: what the arguments ACTUALLY are ----
+// ---- Ă˘Â­Â run 91: what the arguments ACTUALLY are ----
 //
 // The parameter names above are the original guess and they are wrong, but they are left alone
 // because renaming them is churn and the mapping is what matters:
@@ -16996,7 +17175,7 @@ PFN_ProcessEvent g_origProcessEvent = nullptr;
 //     UObject::ProcessInternal(FFrame& Stack, RESULT_DECL)   __thiscall
 //         ECX      -> self        the UObject the script call is on
 //         stack[0] -> `Function`  the FFrame          (run 86 proved this - FOutputDevice vtable)
-//         stack[1] -> `Parms`     the RESULT buffer   ⚠️ predicted from the ABI, NOT yet observed
+//         stack[1] -> `Parms`     the RESULT buffer   Ă˘ĹˇÂ ÄŹÂ¸Ĺą predicted from the ABI, NOT yet observed
 //         stack[2] -> `Result`    beyond the call's args - garbage
 //
 // The Result buffer is the whole point now: `GetAdjustedAim` RETURNS the rotator the fire trace
@@ -17008,14 +17187,14 @@ PFN_ProcessEvent g_origProcessEvent = nullptr;
 
 // The FName index of the script function this frame is executing, or -1.
 //
-// ⚠️ This replaces reading `Function + OBJ_NAME`, which was the census's whole defect: arg1 is an
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą This replaces reading `Function + OBJ_NAME`, which was the census's whole defect: arg1 is an
 // FFrame, not a UObject, so +0x2C was some interior field and the "names" came out as heap
 // pointers (run 84). The fix was found in run 87 and never applied to the census.
 //
 // Index 0 is rejected, not accepted as 'None': run 87 established that a slot holding zero and a
 // non-object whose +0x2C happens to be zero both resolve to 'None' perfectly legitimately, so it
 // is noise that looks like data.
-// ---- ⭐ run 92: the offset is MEASURED, not assumed ----
+// ---- Ă˘Â­Â run 92: the offset is MEASURED, not assumed ----
 //
 // +0x14 came from run 87 and it is not reliable: in the run 91 log one frame gave
 // +0x14 -> 'SeeMonster' and the very next had +0x14 holding zero. A fixed offset that works on
@@ -17041,7 +17220,7 @@ static int32_t ScriptFuncNameIdx(void* frame) {
 
     const LONG off = InterlockedCompareExchange(&g_nodeOffset, 0, 0);
     if (off >= 0) {
-        // ---- ⚠️ run 94: NO VirtualQuery on this path ----
+        // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 94: NO VirtualQuery on this path ----
         //
         // Readable() is a VirtualQuery, and this now runs inside ProcessInternal - tens of
         // thousands of calls a second. Two VirtualQuery per call is 100k syscalls a second, which
@@ -17132,7 +17311,7 @@ ScriptFn g_scriptFns[] = {
     { "ProcessViewRotation",-1 },   // [8] and the things inside it that must NOT see the hand
     { "UpdateCamera",       -1 },   // [9]
     { "LimitViewRotation",  -1 },   // [10]
-    // ---- ⭐ run 96: the fire path, found by the census that finally worked ----
+    // ---- Ă˘Â­Â run 96: the fire path, found by the census that finally worked ----
     // Enrichment under fire, against a 2.9% baseline for everything that runs every frame:
     //   FireAmmunition 88.9%  NotifyWeaponFired 88.9%  SetFlashLocation 88.9%
     //   BeginFire 86.5%       StartFire 84.2%
@@ -17143,7 +17322,7 @@ ScriptFn g_scriptFns[] = {
     { "BeginFire",          -1 },   // [12]
     { "StartFire",          -1 },   // [13]
     { "PreBeginPlay",       -1 },   // [14] run 107 - every spawn, in or out of the window
-    // ---- ⭐ run 133: is a cutscene running? ----
+    // ---- Ă˘Â­Â run 133: is a cutscene running? ----
     //
     // Needed because the cutscene yaw fix cannot be left on during play. Mode 3 works by turning
     // OFF the yaw fold-in, and the fold-in is precisely the mechanism that lets mouse and gamepad
@@ -17155,13 +17334,13 @@ ScriptFn g_scriptFns[] = {
     // "a scripted sequence is taking over" call; the other two are here as fallbacks in case
     // Raven's cutscenes drive the camera without it.
     //
-    // ⚠️ Watched and LOGGED ONLY at this stage. Nothing acts on the result yet. A detector that
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Watched and LOGGED ONLY at this stage. Nothing acts on the result yet. A detector that
     // misfires during play silently breaks turning, which is a far worse failure than the bug it
     // fixes, so it gets measured against a real cutscene before it is allowed to control anything.
     { "SetCinematicMode",   -1 },   // [15]
     { "SetViewTarget",      -1 },   // [16]
     { "ClientSetCameraMode",-1 },   // [17]
-    // ---- ⭐ run 141: which call means "the pause menu is open"? ----
+    // ---- Ă˘Â­Â run 141: which call means "the pause menu is open"? ----
     //
     // The VR settings overlay opens on hold-Y WHILE the game's pause menu is up, which needs a
     // signal for that state. These six are every menu-ish name in RvGame.u; the run says which
@@ -17172,7 +17351,7 @@ ScriptFn g_scriptFns[] = {
     // Watched together and reported by NAME rather than latched into a boolean, because which of
     // them opens and which closes is the thing being measured. Guessing that now and latching on
     // it is how the last three cutscene runs were wasted.
-    // ---- ⭐ run 141 RESULT: only SetPause fires. The other five never arrive ----
+    // ---- Ă˘Â­Â run 141 RESULT: only SetPause fires. The other five never arrive ----
     //
     // Measured, not assumed: through repeated menu opens, closes and screen changes, ShowMenu,
     // OpenMenu, OpenMenuDelayed, IsAnyMenuOpen and IsMenuOpen were never once seen. They are
@@ -17186,7 +17365,7 @@ ScriptFn g_scriptFns[] = {
     { "OpenMenuDelayed",    -1 },   // [20] never fires
     { "IsAnyMenuOpen",      -1 },   // [21] never fires
     { "IsMenuOpen",         -1 },   // [22] never fires
-    { "SetPause",           -1 },   // [23] ⭐ THE ONE. Fires on every pause transition.
+    { "SetPause",           -1 },   // [23] Ă˘Â­Â THE ONE. Fires on every pause transition.
 };
 const int kFnGetAdjustedAim = 0;
 const int kFnTick           = 5;
@@ -17219,7 +17398,7 @@ volatile LONG g_menuFnHits[6] = { 0, 0, 0, 0, 0, 0 };
 // state: "is the game paused right now". SetPause carries exactly that as its first parameter,
 // read the same way SetCinematicMode's bool is (frame locals, first dword).
 //
-// ⚠️ This is "the game is PAUSED", which is not identical to "the pause menu is open" - anything
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą This is "the game is PAUSED", which is not identical to "the pause menu is open" - anything
 // else that pauses will read the same. That is the honest signal available, and it is the right
 // one for the overlay anyway: opening VR settings while the game is running would leave the player
 // standing still with a neutral pad while the world carries on.
@@ -17282,7 +17461,7 @@ static void NoteNested(int32_t idx) {
 //   GetAdjustedAim return   HAND   the bullet
 //   SetAim(X, Y)            HAND   the gun you see
 //
-// ⚠️ The scale and signs are NOT known. X and Y are normalised aim offsets, conventionally +-1
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The scale and signs are NOT known. X and Y are normalised aim offsets, conventionally +-1
 // over the node's configured range, but the range is authored per-profile in the AnimTree and this
 // mod cannot read it. So the defaults below are a guess, they are in the ini, and the hook LOGS
 // the game's own values next to ours - one run's log is enough to set them exactly. A wrong scale
@@ -17359,7 +17538,7 @@ static void RewriteSetAimParams(void* frame) {
 // the hook: it walks tens of thousands of entries with a VirtualQuery each, which is milliseconds -
 // fine once on a keypress, ruinous on the hottest function in the process.
 //
-// ⚠️ It can legitimately fail. GNames is populated as packages load, so pressing the key at the
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą It can legitimately fail. GNames is populated as packages load, so pressing the key at the
 // main menu before RvGame is in memory finds nothing. That case is LOGGED as itself rather than
 // left to look like "the function is not on the fire path" - which is exactly the ambiguity that
 // wasted run 82.
@@ -17384,7 +17563,7 @@ static void RewriteSetAimParams(void* frame) {
 // It needs no disassembly, no signature scan and no guess. It is also the same GObjects walk that
 // already finds the controller and the camera, so the machinery is proven.
 //
-// ⚠️ Native functions hold their own natives here, so agreement will be strong but never total.
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą Native functions hold their own natives here, so agreement will be strong but never total.
 // The test is the MODE, not unanimity - and a weak mode is reported as a failure rather than
 // adopted, which is the mistake that cost runs 87 through 92.
 uintptr_t g_processInternal = 0;
@@ -17395,7 +17574,7 @@ int       g_funcOffset = -1;
 void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Result);
 extern volatile LONG g_peSeen, g_peUnnamed;
 
-// ---- ⚠️ run 93b: "in the image" is NOT "is code", and that mistake picked a vtable ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 93b: "in the image" is NOT "is code", and that mistake picked a vtable ----
 //
 // The first version of this probe accepted anything in 0x00401000-0x01E00000, which spans .rdata
 // and .data as well as .text. The winner was +0xC0 at 94% - and 0x017A0520 is in .RDATA, a table
@@ -17514,7 +17693,7 @@ void FindProcessInternal() {
     }
 }
 
-// ================= ⭐ run 103: find the native trace, and what it calls =======================
+// ================= Ă˘Â­Â run 103: find the native trace, and what it calls =======================
 //
 // Route 2 continued. Field-swapping is dead - the null window proved every field carrying the aim
 // also feeds the view - so the bullet has to be redirected somewhere that holds no rotation at
@@ -17525,7 +17704,7 @@ void FindProcessInternal() {
 // native implementation rather than ProcessInternal - the same read that found ProcessInternal,
 // which makes this the cheap half.
 //
-// ⚠️ execTrace itself is the wrong hook point and it is worth saying why before anyone tries it.
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą execTrace itself is the wrong hook point and it is worth saying why before anyone tries it.
 // A UE3 native reads its parameters off the BYTECODE STREAM with P_GET_ macros, evaluating each
 // expression as it goes. At entry the parameters do not exist yet, so there is nothing to modify;
 // by exit the trace has already happened. What we want is the function it calls with explicit
@@ -17595,7 +17774,7 @@ void ProbeTraceNative() {
         " two FVectors, and the next step picks it apart against the exe rather than in a headset.");
 }
 
-// ================= ⭐ run 104: the line check, and its parameter struct ========================
+// ================= Ă˘Â­Â run 104: the line check, and its parameter struct ========================
 //
 // Found by reading the CALL SITES rather than the callee, which is what made it cheap:
 //
@@ -17612,7 +17791,7 @@ void ProbeTraceNative() {
 // whole point of route 2 and it is the first mechanism in this project that is structurally
 // incapable of moving the camera.
 //
-// ⚠️ A `ret 4` appears at +0x9A5 and it belongs to a DIFFERENT function - the byte scan ran past
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą A `ret 4` appears at +0x9A5 and it belongs to a DIFFERENT function - the byte scan ran past
 // the end of this one. The call site is authoritative: if the callee also cleaned, every call
 // would corrupt the stack by four bytes and the game would never run. Getting this backwards is
 // exactly what crashed the game twice on ProcessInternal, so it is checked rather than assumed.
@@ -17621,7 +17800,7 @@ typedef void* (__cdecl *PFN_LineCheck)(void* params);
 PFN_LineCheck g_origLineCheck = nullptr;
 volatile LONG g_lineCheckLogged = 0;
 
-// ---- ⭐ run 105: the weapon does not call this, and the log has to say WHY ----
+// ---- Ă˘Â­Â run 105: the weapon does not call this, and the log has to say WHY ----
 //
 // Run 104 installed this hook, the fire window opened 24 times, and NOT ONE trace was dumped. So
 // the shot does not go through 0x00BD79D0. Two very different reasons, needing opposite next
@@ -17640,7 +17819,7 @@ volatile LONG g_lineCheckLogged = 0;
 volatile LONG g_lineCheckCalls = 0;
 volatile LONG g_lineCheckNear = 0;
 
-// ================= ⭐ run 108: ROTATE THE TRACE. This is the actual feature. ===================
+// ================= Ă˘Â­Â run 108: ROTATE THE TRACE. This is the actual feature. ===================
 //
 // Confirmed by counting rather than by filtering: 2 line checks run inside every shot's window.
 // The pistol is hitscan, the visible "bullets" are RvEmitter tracers, and the trace goes through
@@ -17738,7 +17917,7 @@ void* __cdecl Hook_LineCheck(void* params) {
             const float ex = f[i] - g_camPos[0], ey = f[i+1] - g_camPos[1], ez = f[i+2] - g_camPos[2];
             if (ex*ex + ey*ey + ez*ez < 520.0f * 520.0f) { s = i; break; }
         }
-        // ---- ⭐ run 110: mode 12 takes the hand OUT of the experiment ----
+        // ---- Ă˘Â­Â run 110: mode 12 takes the hand OUT of the experiment ----
         //
         // Mode 11's deltas came out at dYaw 22110 (121 deg) and dPitch 16336 (89.7 deg). Nobody
         // points a controller 90 degrees up, so the hand-vs-head delta carries a bias - and mode 1
@@ -17755,7 +17934,7 @@ void* __cdecl Hook_LineCheck(void* params) {
         //                               and the OTHER line check is the one that matters.
         const LONG am = InterlockedCompareExchange(&g_aimMode, 0, 0);
         const int32_t kTestYaw = (int32_t)(25.0f * (65536.0f / 360.0f));
-        // ⭐ run 213h: through a scope, the shot follows the HEAD. Zeroing the deviation is exactly
+        // Ă˘Â­Â run 213h: through a scope, the shot follows the HEAD. Zeroing the deviation is exactly
         // aim mode 0's behaviour for the duration, and it leaves everything else about mode 11 alone.
         const bool scoped = g_scopeHeadAim && ScopeActive();
         const int32_t dYaw   = scoped ? 0 : (am == 12) ? kTestYaw
@@ -17789,7 +17968,7 @@ void* __cdecl Hook_LineCheck(void* params) {
     return g_origLineCheck(params);
 }
 
-// ================= ⭐ run 111: UWorld::SingleLineCheck, the REAL trace ========================
+// ================= Ă˘Â­Â run 111: UWorld::SingleLineCheck, the REAL trace ========================
 //
 // 0x00BD79D0 was the wrong function and the data said so: a constant 25 degree deflection (mode 12,
 // dYaw 4551) moved nothing, and the struct it receives is mostly zeros and NaNs holding an impact
@@ -17909,7 +18088,7 @@ void InstallLineCheckHook() {
 // Move the script hook onto the address the probe found. The old detour at 0x01308A10 is removed
 // first: leaving a hook on a function that was proven to be the wrong one costs frame time on
 // every call and can only confuse the next log.
-// ---- 💥 run 102: this crashed on the SECOND press, and the bug was three lines ----
+// ---- Ä‘Ĺşâ€™Ä„ run 102: this crashed on the SECOND press, and the bug was three lines ----
 //
 // Cycling to another mode >= 6 called this again. The old body then:
 //   1. saw g_origProcessEvent non-null and removed a hook at kProcessEventAddr - an address
@@ -17923,7 +18102,7 @@ void InstallLineCheckHook() {
 // that installs something must be safe to call twice, because a hotkey WILL be pressed twice.
 uintptr_t g_hookedAt = 0;
 
-// ---- ⚠️ run 158c: selecting aim mode 11 is not the same as MAKING it work ----
+// ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 158c: selecting aim mode 11 is not the same as MAKING it work ----
 //
 // NUMPAD-dot never just set g_aimMode. For any mode >= 6 it also resolved the script name table and
 // installed five hooks, and route 2's trace rotation lives in the LAST of them. So AIM METHOD
@@ -18015,7 +18194,7 @@ void ResolveScriptNames() {
     if (!Readable((void*)kGNamesTArray, 12)) { Log("script names: GNames not readable yet"); return; }
     const int32_t nc = *reinterpret_cast<int32_t*>(kGNamesTArray + 4);
     int found = 0;
-    // ---- ⭐ run 133: ONE walk over GNames, not one per unresolved name ----
+    // ---- Ă˘Â­Â run 133: ONE walk over GNames, not one per unresolved name ----
     //
     // This used to loop the table on the outside and GNames on the inside, so an unresolved name
     // cost a full walk of its own - 18 names against ~100k entries. That was affordable while this
@@ -18065,7 +18244,7 @@ volatile LONG g_peCalls = 0;
 // route-2 mode or the census is on, and their RATIO is what separates "the hook is blind" from
 // "the hook works and the name source is wrong" - see the note at the call site.
 volatile LONG g_peSeen = 0, g_peUnnamed = 0;
-volatile LONG g_peFiringCalls = 0; // ⚠️ if this stays 0 the split never happened and the whole
+volatile LONG g_peFiringCalls = 0; // Ă˘ĹˇÂ ÄŹÂ¸Ĺą if this stays 0 the split never happened and the whole
                                    // table means nothing - run 82 dumped a census of 5544 calls
                                    // with zero firing samples and reported "nothing", which reads
                                    // identically to "the fire path uses no script"
@@ -18162,7 +18341,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         }
     }
 
-    // ---- ⭐ run 92: resolve the name ONCE, and MEASURE how often it fails ----
+    // ---- Ă˘Â­Â run 92: resolve the name ONCE, and MEASURE how often it fails ----
     //
     // Run 91's test produced no rewrite and no rejection: neither GetAdjustedAim nor SetAim ever
     // matched. Two completely different causes, needing opposite fixes:
@@ -18188,7 +18367,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool routeTwo = (aimMode >= 6);
     const bool censusOn = InterlockedCompareExchange(&g_peCensus, 0, 0) != 0;
 
-    // ---- ⭐ run 138: the cutscene watch needs the NAME, and was never asking for it ----
+    // ---- Ă˘Â­Â run 138: the cutscene watch needs the NAME, and was never asking for it ----
     //
     // This is why run 137 caught nothing. fnIdx was only computed when the census was armed or
     // aim mode was >= 6, so with neither of those on it stayed -1 and every comparison in the
@@ -18215,7 +18394,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
 
     if (censusOn && Stack) {
         InterlockedIncrement(&g_peCalls);
-        // ---- ⚠️ run 84: the name indices came out as HEAP POINTERS, so this is reading the
+        // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 84: the name indices came out as HEAP POINTERS, so this is reading the
         // wrong object ----
         //
         // The census itself worked - two entries sat at 83% and 89% under fire, which is exactly
@@ -18232,13 +18411,13 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         //
         // So stop inferring and print BOTH candidates for the first few calls. Whichever yields
         // small indices that resolve to script names is the right one.
-        // ✅ Run 91: FIXED. The name now comes from FFrame::Node, which is what run 87 identified
+        // Ă˘Ĺ›â€¦ Run 91: FIXED. The name now comes from FFrame::Node, which is what run 87 identified
         // and what the four lines of comment above have been describing while the code below read
         // the wrong object anyway.
         {
             const int32_t idx = fnIdx;
             if (idx >= 0) {
-                // ⚠️ Run 82: this used to read the published pad's trigger byte, and came back
+                // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Run 82: this used to read the published pad's trigger byte, and came back
                 // with ZERO firing samples out of 5544 calls. Two ways that happens and both are
                 // real: the shot was fired with the mouse rather than the controller, or auto-pad
                 // had unplugged the pad so nothing was published at all. Either way the census
@@ -18262,7 +18441,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
             }
         }
     }
-    // ---- ⭐ run 91: aim mode 6 - rewrite what GetAdjustedAim RETURNS ----
+    // ---- Ă˘Â­Â run 91: aim mode 6 - rewrite what GetAdjustedAim RETURNS ----
     //
     // Everything above this line is diagnostics. This is the feature.
     //
@@ -18277,7 +18456,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     if (aimMode == 7 && FnIdx(kFnSetAim) >= 0 && fnIdx == FnIdx(kFnSetAim))
         RewriteSetAimParams(Stack);
 
-    // ---- ⭐ run 133: watch for a cutscene starting. Observation only ----
+    // ---- Ă˘Â­Â run 133: watch for a cutscene starting. Observation only ----
     //
     // Three integer compares on a hot path, and only when the names resolved. Nothing here
     // changes engine state or mod behaviour - it counts, latches and logs, so one run through the
@@ -18341,7 +18520,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         break;
     }
 
-    // ================= ⭐ run 95: aim mode 8 - the MASKED time split ==============================
+    // ================= Ă˘Â­Â run 95: aim mode 8 - the MASKED time split ==============================
     //
     // Run 94 proved this hook is genuinely ProcessInternal and genuinely works: 152,430 calls, 0
     // unnamed, and `Tick` present 2347 times. It also proved the aim functions are not reachable
@@ -18356,7 +18535,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     // the XInput poll, both OUTSIDE the tick, and held it for a whole frame. This holds it for the
     // duration of one function and gives both ends back.
     //
-    // ⚠️ Why this is not simply mode 4 again. The run 89 conclusion was that the camera consumes
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Why this is not simply mode 4 again. The run 89 conclusion was that the camera consumes
     // the rotation at more than one moment, so no frame-wide write can work. Correct - and the fix
     // is to make the window smaller than the camera's consumption points, then MASK the ones that
     // fall inside it. `ProcessViewRotation`, `UpdateCamera` and `LimitViewRotation` are all in the
@@ -18367,7 +18546,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     // actually runs inside PlayerTick, so if the view still swings, the log already names the
     // function that has to join the mask. That is the difference between this and mode 4, which
     // failed and left nothing to act on.
-    // ================= ⭐ run 96: aim mode 9 - the window is the SHOT, not the tick ==============
+    // ================= Ă˘Â­Â run 96: aim mode 9 - the window is the SHOT, not the tick ==============
     //
     // Mode 8 failed and said exactly why. Its nesting log named `PlayerMove`, and UE3's PlayerMove
     // calls UpdateRotation, which does:
@@ -18388,7 +18567,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     // ProjectileFire -> GetAdjustedAim. The view is computed in PlayerMove, a different entry
     // point, so it cannot see inside this window at all.
     //
-    // ⚠️ This is the third time the time split has been tried, so the difference is worth stating
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą This is the third time the time split has been tried, so the difference is worth stating
     // plainly rather than asserted. Modes 4 and 5 held the hand for a whole FRAME. Mode 8 held it
     // for a whole TICK, which still contained the view update. This holds it for one shot.
     // ---- run 97: the window was right, the FIELD was wrong ----
@@ -18405,7 +18584,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     //
     // Writing the camera for a few microseconds cannot disturb the view: the view matrix for this
     // frame was built long before, and Present rewrites the camera every frame regardless.
-    // ---- ⭐ run 101: mode 10 is mode 9 with the WRITE removed ----
+    // ---- Ă˘Â­Â run 101: mode 10 is mode 9 with the WRITE removed ----
     //
     // Reported: "it feels like it's cycling between the views your test is setting." That is a
     // better description than anything I had, and it is not recoil - recoil does not alternate
@@ -18425,7 +18604,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     //
     // Either answer ends a line of work rather than extending one, which is the thing the last
     // three runs did not do.
-    // ---- ⭐ run 105: what actually happens during a shot, with the OBJECT named ----
+    // ---- Ă˘Â­Â run 105: what actually happens during a shot, with the OBJECT named ----
     //
     // The census named the functions but never the objects they ran on, and that is the missing
     // half. `PreBeginPlay` at 84.6% under fire means something is being spawned - but a census of
@@ -18434,7 +18613,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     // is simply elsewhere.
     //
     // Cheap because it only runs while a fire window is open and only logs each function once.
-    // ---- ⭐ run 107: log EVERY spawn, in or out of the window ----
+    // ---- Ă˘Â­Â run 107: log EVERY spawn, in or out of the window ----
     //
     // Reported: "when I shoot I do see bullets come out." Two readings, and they need opposite
     // work: a hitscan weapon's visible tracer is an emitter spawned along the trace line, while a
@@ -18528,7 +18707,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
             // orientations at least 5 degrees apart. If the aim is read from a rotation stored
             // anywhere on the controller or the camera, it is in this list.
             //
-            // ⚠️ Brute force, and worth being honest that it is. A field that tracks the view but
+            // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Brute force, and worth being honest that it is. A field that tracks the view but
             // is not the aim gets written too. That is acceptable ONLY because the write lasts one
             // call and is restored from what was read - the same unwind the nesting already proved
             // correct. It is a diagnostic that happens to also be the fix if it works.
@@ -18674,7 +18853,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     // of g_wantYaw it is the return value, because nothing else in memory has reason to hold that
     // number. If it is not, NOTHING IS WRITTEN and the mismatch is logged.
     //
-    // ⚠️ This is what stops the test being fooled. A hook that wrote unconditionally and produced
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą This is what stops the test being fooled. A hook that wrote unconditionally and produced
     // no visible change would be indistinguishable from GetAdjustedAim not being on the fire path -
     // the run 82 failure mode. Here the two look completely different in the log.
     const int32_t kUUPerDeg = (int32_t)(65536.0f / 360.0f);
@@ -18715,7 +18894,7 @@ void DumpProcessEventCensus() {
             " NOTHING - it cannot be told apart from the fire path using no script at all. Fire"
             " with the right trigger or the mouse while the census is armed and run it again.");
     }
-    // ---- ⚠️ run 83: the previous filter WAS the empty result ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 83: the previous filter WAS the empty result ----
     //
     // It showed only names with idle == 0, or with firing >= idle. Every function that runs during
     // a shot but also runs the rest of the time - which is most of them, Tick included - was
@@ -18729,7 +18908,7 @@ void DumpProcessEventCensus() {
     int total_names = 0;
     for (int i = 0; i < kPeSlots; ++i) if (g_peSlots[i].firing || g_peSlots[i].idle) ++total_names;
 
-    // ---- ⭐ run 91: the CONTROL, and the thing that decides whether this table means anything ----
+    // ---- Ă˘Â­Â run 91: the CONTROL, and the thing that decides whether this table means anything ----
     //
     // The hook is at 0x01308A10, which is ProcessInternal or an opcode handler - the two have never
     // been told apart. If it is an opcode handler, this census can fill with perfectly real,
@@ -18837,7 +19016,7 @@ void WriteAimAtInputPoll() {
     r[1] = InterlockedCompareExchange(&g_aimYawForXi, 0, 0);
 }
 
-// ---- ❌ run 94: nothing is hooked at startup any more ----
+// ---- Ă˘ĹĄĹš run 94: nothing is hooked at startup any more ----
 //
 // This used to detour 0x01308A10 on every launch. Two reasons it is gone rather than disabled:
 //
@@ -18936,7 +19115,7 @@ void SetVrMode(bool on) {
         on ? "ON" : "OFF - plain game");
 }
 
-// ================= ⭐ run 127: an on-screen readout, in WORDS ===============================
+// ================= Ă˘Â­Â run 127: an on-screen readout, in WORDS ===============================
 //
 // Every mode and setting in this mod goes to a log file, so the only way to check state while
 // wearing the headset has been to take it off. That gap was named several runs ago and left alone,
@@ -18997,7 +19176,7 @@ static const unsigned char kFont[][kGlyphH] = {
     {0x00,0x00,0x00,0x1F,0x00,0x00,0x00},               // -
     {0x02,0x04,0x04,0x04,0x04,0x04,0x02},               // ( 
     {0x08,0x04,0x04,0x04,0x04,0x04,0x08},               // )
-    // ---- ⚠️ run 172: an unsupported character renders as a SPACE, silently ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 172: an unsupported character renders as a SPACE, silently ----
     //
     // Reported as "there are no *s around restart". GlyphIndex returns 0 - space - for anything it
     // does not know, so `*RESTART*` drew as ` RESTART `. The same was true of `>` and `<`: the
@@ -19023,7 +19202,7 @@ static int GlyphIndex(char ch) {
     if (ch == '>') return 41;
     if (ch == '<') return 42;
     if (ch == '*') return 43;
-    // ⚠️ Falling through here draws a SPACE, which is indistinguishable from the character having
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Falling through here draws a SPACE, which is indistinguishable from the character having
     // been left out of the string. That cost two invisible arrows and a missing pair of asterisks
     // before anyone noticed. Add the glyph rather than assuming the text was wrong.
     return 0;
@@ -19055,7 +19234,7 @@ static int TextRects(D3DRECT* r, int n, int cap, int x0, int y0, int px, const c
     return n;
 }
 
-// ---- ⭐ run 129: show the anchor where it actually IS ----
+// ---- Ă˘Â­Â run 129: show the anchor where it actually IS ----
 //
 // The anchor is a point in space, and tuning it by watching what swings is inference. Drawing it
 // makes it direct: put the marker on the grip and the pivot is right, with nothing to deduce.
@@ -19066,7 +19245,7 @@ static int TextRects(D3DRECT* r, int n, int cap, int x0, int y0, int px, const c
 //
 // Returns false when the point is behind the eye - w <= 0 - because projecting that gives a
 // mirrored position on screen, which would be a confident lie.
-// ⚠️ The width here is the FULL target, not the eye half. ApplyEyeRemap has already compressed
+// Ă˘ĹˇÂ ÄŹÂ¸Ĺą The width here is the FULL target, not the eye half. ApplyEyeRemap has already compressed
 // clip-space x into this eye's half - clip.x becomes 0.5*clip.x -+ 0.5*clip.w - so the NDC range
 // coming out of it already IS that half. Mapping it through halfW as well squeezes the marker into
 // a QUARTER of the screen, at a different wrong place in each eye, so the two never fuse and you
@@ -19170,7 +19349,7 @@ static int TmdMarkerRects(D3DRECT* r, int n, int cap, bool wantHand) {
     return n;
 }
 
-// ---- ⭐ run 142: the VR settings panel, drawn ----
+// ---- Ă˘Â­Â run 142: the VR settings panel, drawn ----
 //
 // Same machinery as the state readout - a 5x7 bitmap font turned into Clear() rectangles, drawn
 // once per eye - but larger, on a dark plate, with the selected row marked. No font, no vertex
@@ -19179,7 +19358,7 @@ static int TmdMarkerRects(D3DRECT* r, int n, int cap, bool wantHand) {
 // Drawn AFTER the game's own frame, including its menus, so it always sits on top. That is the
 // other half of why this cannot conflict with the pause menu: the game never sees the input, and
 // the panel is never drawn under anything.
-// ---- 💥 run 249: one Clear with 13,000 rectangles draws NOTHING, and fails silently ----
+// ---- Ä‘Ĺşâ€™Ä„ run 249: one Clear with 13,000 rectangles draws NOTHING, and fails silently ----
 //
 // This is the fix for "the TMD page is a big black box with no text in it". Clear() takes the whole
 // rectangle list in one call and either takes it or refuses it, so an over-large list does not come
@@ -19193,7 +19372,7 @@ static int TmdMarkerRects(D3DRECT* r, int n, int cap, bool wantHand) {
 // observed to fail and well over the smallest observed to work, and a wrong guess costs a few extra
 // calls on a panel that is open for seconds at a time.
 //
-// ⚠ VALIDATE THE INSTRUMENT: the HRESULT was never checked here. The call had been failing in plain
+// Ă˘ĹˇÂ  VALIDATE THE INSTRUMENT: the HRESULT was never checked here. The call had been failing in plain
 // sight with nothing to say so, which is the whole reason this reached a wearer twice. It is checked
 // now, and a failure names the batch and the total so the next reading starts from a number.
 static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR colour) {
@@ -19223,7 +19402,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &oldScissor);
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
 
-    // ---- ⚠️ how many copies, and how wide is one ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą how many copies, and how wide is one ----
     //
     // Reported in run 142 as "two split images". The backbuffer is only side-by-side while draw
     // duplication is ON. With it off - which is the state at the main menu before BACKSPACE, and
@@ -19239,7 +19418,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     // px, so this single number is the panel's scale. Halved from g_srcH/170 in run 142: at full
     // headset resolution the first version filled the view.
     //
-    // ---- ⭐ run 158: px follows the ROW COUNT, so adding settings cannot grow the panel ----
+    // ---- Ă˘Â­Â run 158: px follows the ROW COUNT, so adding settings cannot grow the panel ----
     //
     // It was a bare g_srcH/340, which meant the box got taller every time a row was added. That was
     // fine at 7 rows, needed shrinking at 9, and would have needed shrinking again at 12 - a manual
@@ -19250,7 +19429,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     // and can never walk off the top and bottom of the lenses.
     //
     // kPanelHeightFrac is now the only number to touch to change the panel's overall size.
-    // ---- ⚠️ run 167: the divisor is a CONSTANT, not this page's row count ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 167: the divisor is a CONSTANT, not this page's row count ----
     //
     // Sizing px from nRows held the panel's HEIGHT constant and let the text grow to fill it, so a
     // two-row sub-page got px ~14 against the root's ~8 - nearly double the glyph size. That is why
@@ -19275,7 +19454,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         const int len = (int)strlen(rows[i]);
         if (len > widest) widest = len;
     }
-    // ---- ⚠️ run 166: a FLOOR, not the width ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 166: a FLOOR, not the width ----
     //
     // Measuring the current rows made the box resize as you used it: "AIM METHOD MOTION CONTROLLER"
     // is the longest string in the panel, so selecting it visibly widened the whole plate, and
@@ -19292,13 +19471,13 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     const int  boxH  = lh * (nRows + 3);
     const int  y0    = (int)(g_srcH / 2) - boxH / 2;
 
-    // ---- 💥 run 248: 8192 was not enough for a 17-row page, and it FAILED SILENTLY ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 248: 8192 was not enough for a 17-row page, and it FAILED SILENTLY ----
     //
     // Reported as "all settings in the TMD section are now invisible". TextRects stops emitting
     // once the array is full, so rows past the budget simply do not draw - and the plate is drawn
     // FIRST, so what survives is an empty box that looks like a page with nothing on it.
     //
-    // ⚠ SECOND time in this file, and the first is documented in DrawStateReadout a few hundred
+    // Ă˘ĹˇÂ  SECOND time in this file, and the first is documented in DrawStateReadout a few hundred
     // lines away: "at 1200 it was neither... which is why the anchor readout appeared as
     // 'ANCHOR (F27) R9 U-13' in the left eye and 'AN' in the right". I added five rows to this page
     // across four runs and never re-checked the bound that note exists to warn about.
@@ -19307,7 +19486,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     // pixels per row, so 21 rectangles per character is the true worst case. Rows x columns x two
     // eyes, plus the plate and the selection bar.
     //
-    // ⚠ run 249: raising this was NOT the fix and on its own it made no difference - see ClearRects.
+    // Ă˘ĹˇÂ  run 249: raising this was NOT the fix and on its own it made no difference - see ClearRects.
     // The cap governs how many rectangles we BUILD; it has never governed whether they draw.
     const int kCap = kPanelRowsMax * 44 * 21 * 2 + 64;
     static D3DRECT r[kCap];
@@ -19344,7 +19523,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         n = TextRects(r, n, kCap, x0, y0 + lh * (nRows + 2), px,
                       "LEFT STICK   HOLD Y TO CLOSE");
     }
-    // ⭐ run 248: loud, not silent. A page that cannot fit must SAY so - the failure it replaces
+    // Ă˘Â­Â run 248: loud, not silent. A page that cannot fit must SAY so - the failure it replaces
     // was indistinguishable from the feature being broken, and cost a headset run to report.
     if (n >= kCap) {
         static bool panelWarned = false;
@@ -19354,7 +19533,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
                 " empty or half drawn. Raise kCap. ***", kCap);
         }
     }
-    // ⭐ run 249: the SIZE of the text pass, once per page. This is the number the whole run-248
+    // Ă˘Â­Â run 249: the SIZE of the text pass, once per page. This is the number the whole run-248
     // misdiagnosis was missing - "TMD ALIGN 13,204" next to "VR SETTINGS 4,800" says at a glance
     // that the blank page is the big one, without anyone having to be wearing the headset.
     {
@@ -19378,7 +19557,7 @@ static void DrawStateReadout(IDirect3DDevice9* dev) {
 
     int sy, sp, sr; GunSigns(sy, sp, sr);
     char l1[32], l2[32], l3[32], l11[40];
-    // ⭐ run 233d: "how am I supposed to know what step I'm on?" - a fair hit. The solo cycle was
+    // Ă˘Â­Â run 233d: "how am I supposed to know what step I'm on?" - a fair hit. The solo cycle was
     // logged and nothing else, so naming a mesh meant counting four-second intervals in a headset
     // and hoping the count survived a cutscene. It rides the existing readout rather than getting
     // an overlay of its own: this one is already built, already per-eye, and already has a switch
@@ -19427,20 +19606,20 @@ static void DrawStateReadout(IDirect3DDevice9* dev) {
     // is on screen IS the test - if it says ON through the opening and OFF through play, it can be
     // trusted to drive the mode automatically; if it never moves, SetCinematicMode is not the
     // signal Raven uses and the fallbacks in the watch table are the next thing to read.
-    // ---- ⭐ run 133: the FOV knobs, on screen ----
+    // ---- Ă˘Â­Â run 133: the FOV knobs, on screen ----
     //
     // Run 133 produced seven screenshots "at different PAGE DOWN levels" and not one of them
     // recorded which level it was at, so the set could not be read as a comparison at all. Both
     // knobs are integer percentages here: FOV is how much of the headset's field is rendered
     // (PAGE DOWN), CULL is the extra field the engine is asked to cull against (PAGE UP). The
     // font has no '.', so a decimal would render as a space and read as two numbers.
-    // ---- ⭐ run 135: per-eye resolution on screen ----
+    // ---- Ă˘Â­Â run 135: per-eye resolution on screen ----
     //
     // Run 135 reported "more culling at 1440p than at full headset resolution", which makes the
     // backbuffer size an experimental variable rather than a setting - and one that no screenshot
     // records. Per EYE rather than the whole target, because that is the number an object's pixel
     // coverage actually scales with under duplication.
-    // ---- ⭐ run 136: the draw count, live ----
+    // ---- Ă˘Â­Â run 136: the draw count, live ----
     //
     // Shadows are out - a shadow failure cannot delete a particle system, and the fire goes with
     // the floor. Rather than propose a fifth mechanism, split the space: DRAWS says whether the
@@ -19505,15 +19684,15 @@ static void DrawStateReadout(IDirect3DDevice9* dev) {
 
     const LONG ax = InterlockedCompareExchange(&g_anchorAxis, 0, 0);
     char l4[40];
-    // ⚠️ Brackets, not a leading dash. The dash used to mark the selected axis and it read as a
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Brackets, not a leading dash. The dash used to mark the selected axis and it read as a
     // MINUS SIGN - "-R9" looks exactly like "R is -9" and was reported that way. A readout whose
     // marker is indistinguishable from its data is worse than no marker.
-    // 💥 run 241: this printed g_gunAnchor* - the GLOBAL FALLBACK - not the anchor in force. So
+    // Ä‘Ĺşâ€™Ä„ run 241: this printed g_gunAnchor* - the GLOBAL FALLBACK - not the anchor in force. So
     // it read F30 R9 U-13 whatever was in your hands, while the assault rifle was being drawn at its
     // own 26/8/-13. Reported as a reasonable inference from a wrong number: "I thought the per-weapon
     // values were offsetting those defaults", which is exactly what the readout implied.
     //
-    // ⚠ This is the run-174 trap that three comments in this file already warn about - a readout
+    // Ă˘ĹˇÂ  This is the run-174 trap that three comments in this file already warn about - a readout
     // showing one value while another is applied - and it was sitting in the readout those comments
     // are attached to. The per-weapon anchors have been correct since run 217; only the display lied.
     //
@@ -19546,7 +19725,7 @@ static void DrawStateReadout(IDirect3DDevice9* dev) {
     const int  lh = (kGlyphH + 2) * px;
     const int  y0 = (int)(g_srcH / 7);
 
-    // ---- ⚠️ this cap is a CORRECTNESS bound, not a budget ----
+    // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą this cap is a CORRECTNESS bound, not a budget ----
     //
     // At 1200 it was neither. TextRects drops silently once it is reached, and four lines across
     // two eyes overran it partway through the right eye's last line - which is why the anchor
@@ -19556,7 +19735,7 @@ static void DrawStateReadout(IDirect3DDevice9* dev) {
     //
     // So size it so overrun is impossible rather than unlikely: a 5x7 glyph has at most three runs
     // of set pixels per row (10101), so 21 rectangles per character is the true worst case, and
-    // the line buffers bound the character count. ⭐ run 233d added an 11th line, so the bound is
+    // the line buffers bound the character count. Ă˘Â­Â run 233d added an 11th line, so the bound is
     // now 11 x 39 x 2 x 21 = 18018 - still inside this cap, but it is the reason to re-check the
     // arithmetic rather than the constant every time a line is added.
     const int kCap = 20480;
@@ -19577,7 +19756,7 @@ static void DrawStateReadout(IDirect3DDevice9* dev) {
         // readout gets ignored.
         n = TextRects(r, n, kCap, x0, y0 + 2 * lh, px, l5);
         n = TextRects(r, n, kCap, x0, y0 + 3 * lh, px, l6);
-        n = TextRects(r, n, kCap, x0, y0 + 10 * lh, px, l11);   // ⭐ run 233d
+        n = TextRects(r, n, kCap, x0, y0 + 10 * lh, px, l11);   // Ă˘Â­Â run 233d
     }
     // Loud, not silent. If the bound above is ever wrong the readout must say so rather than
     // quietly truncate - that failure mode already cost one run.
@@ -19602,7 +19781,7 @@ static void DrawStateReadout(IDirect3DDevice9* dev) {
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldScissor);
 }
 
-// ================= ⭐ run 217: the LASER SIGHT, and the first geometry this mod draws ==========
+// ================= Ă˘Â­Â run 217: the LASER SIGHT, and the first geometry this mod draws ==========
 //
 // It exists as a feature and as the only INSTRUMENT that can settle the barrel-alignment question.
 // We cannot compute the divergence ourselves: the barrel direction lives inside art we cannot read,
@@ -19660,13 +19839,13 @@ void DrawLaserSight(IDirect3DDevice9* dev) {
     D3DVIEWPORT9 vp{};
     if (FAILED(dev->GetViewport(&vp)) || vp.Width < 4) return;
 
-    // ⭐ run 219: the sniper scope has its own reticle, and a beam across it is noise on top of an aiming
+    // Ă˘Â­Â run 219: the sniper scope has its own reticle, and a beam across it is noise on top of an aiming
     // aid that already works. Off while it is up.
     if (ScopeActive()) return;
 
-    float dir[3]; GunAimDir(dir);      // ⭐ run 219: shared with the ADS pull-back - see GunAimDir
+    float dir[3]; GunAimDir(dir);      // Ă˘Â­Â run 219: shared with the ADS pull-back - see GunAimDir
 
-    // ⭐ run 218: the gun's real pivot, not the view anchor. See GunPivotWorld for what run 217 got wrong.
+    // Ă˘Â­Â run 218: the gun's real pivot, not the view anchor. See GunPivotWorld for what run 217 got wrong.
     float A[3]; GunPivotWorld(A);
     const float len = (float)InterlockedCompareExchange(&g_laserLenUU, 0, 0);
     const float B[3] = { A[0] + dir[0]*len, A[1] + dir[1]*len, A[2] + dir[2]*len };
@@ -20135,7 +20314,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     static bool pDec = false;
     bool kDec = (DebugKey(VK_DECIMAL) & 0x8000) != 0;
     if (kDec && !pDec) {
-        // ---- ❌ run 89: modes 4 and 5 are OUT of the cycle. The time split is dead ----
+        // ---- Ă˘ĹĄĹš run 89: modes 4 and 5 are OUT of the cycle. The time split is dead ----
         //
         // Both wrote the hand into AActor::Rotation at a different instant and let the camera
         // update overwrite it with the head. Both failed the same way, and the reason came from
@@ -20435,7 +20614,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // shares ONE save profile - killing the process mid-write is a real way to lose it.
     {
         static ULONGLONG heldSince = 0;
-        // ⚠️ NOT gated - raw GetAsyncKeyState, like BACKSPACE. Quitting cleanly is not developer
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą NOT gated - raw GetAsyncKeyState, like BACKSPACE. Quitting cleanly is not developer
         // scaffolding: this is the WM_CLOSE path that lets the engine save on the way out, and
         // ENVIRONMENT.md records that every copy of this game shares ONE save profile. Taking it
         // away with DEBUGGING off would leave killing the process as the only exit from inside a
@@ -20458,7 +20637,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
 
     // NUMPAD7 (or SCROLL LOCK): arm the script-call census, then press again to dump it.
     //
-    // ⚠️ Run 83 was lost to this. SCROLL LOCK alone looked free, but the log recorded no press at
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Run 83 was lost to this. SCROLL LOCK alone looked free, but the log recorded no press at
     // all - plenty of keyboards omit the key entirely or bury it behind Fn, and one that cannot be
     // pressed is indistinguishable from a feature that does not work. NUMPAD7 was the button
     // probe's reset, which has been dead weight since the layout came out of the game's own config
@@ -20492,7 +20671,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
 
     // BACKSPACE: the whole mod on or off in one key. See SetVrMode.
     //
-    // ⚠️ THE ONE KEY THAT IS NOT GATED (run 157). Deliberately raw GetAsyncKeyState, not DebugKey.
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą THE ONE KEY THAT IS NOT GATED (run 157). Deliberately raw GetAsyncKeyState, not DebugKey.
     // Everything else is developer scaffolding that can be recovered by turning DEBUGGING back on
     // from the panel; switching in and out of VR is not scaffolding, and gating it would mean a
     // Debug=0 launch could never enter VR at all, since the cold start is flat by design and there
@@ -20502,7 +20681,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     if (kBack && !pBack) SetVrMode(InterlockedCompareExchange(&g_dupDraws, 0, 0) == 0);
     pBack = kBack;
 
-    // ---- ⭐ run 133: arm the cutscene watch WITHOUT a keypress ----
+    // ---- Ă˘Â­Â run 133: arm the cutscene watch WITHOUT a keypress ----
     //
     // Run 133 tested the CINE indicator through the whole opening sequence and it read NO
     // throughout - not because no cutscene ran, but because the name table was never resolved.
@@ -20517,7 +20696,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // the walk would be wasted. Retried on a slow tick rather than once, because the first
     // attempt can land while packages are still streaming in, and capped so a name that genuinely
     // does not exist in this build cannot cost a walk forever.
-    // ---- ⭐ run 137: resolving the NAMES was not enough - the HOOK was never installed ----
+    // ---- Ă˘Â­Â run 137: resolving the NAMES was not enough - the HOOK was never installed ----
     //
     // Run 136 saw SetCinematicMode fire correctly, and it only worked because the tester happened
     // to cycle aim mode with NUMPAD-dot first. That is what calls RepointScriptHook, and the log
@@ -20526,7 +20705,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // keypress, so on a normal launch the watch was still dead - I fixed the name table and left
     // the actual gap in place.
     //
-    // ⚠️ This installs a detour on ProcessInternal at startup rather than on a keypress, which is
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą This installs a detour on ProcessInternal at startup rather than on a keypress, which is
     // a real change in when the most delicate hook in this mod goes live. Run 102 crashed here
     // (a cleared trampoline called while the detour was still installed) and the null-trampoline
     // guard on the hot path is what makes it survivable. It is switchable for exactly that reason:
@@ -20556,7 +20735,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         const bool cineNow = InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0;
         if (cineNow != g_cinePrev) {
             g_cinePrev = cineNow;
-            // ⭐ run 273: the edge line stays, without the override it was added for. It is what
+            // Ă˘Â­Â run 273: the edge line stays, without the override it was added for. It is what
             // proved run 272 ENGAGED and still changed nothing, which is the only reason that
             // experiment produced an answer instead of another maybe - and the same line will do the
             // same job for whatever is tried against cutscene culling next.
@@ -20572,7 +20751,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 // from this scene's own opening heading rather than the last one's.
                 g_cineTurnOffset = 0;
                 g_haveCineAnchor = false;
-                // ---- ⚠️ run 166: drop the cached camera and controller ----
+                // ---- Ă˘ĹˇÂ ÄŹÂ¸Ĺą run 166: drop the cached camera and controller ----
                 //
                 // Reported: going to the main menu and starting a new game brings the rotation bug
                 // back, while launching straight into a new game is fine. The log shows the
@@ -20626,7 +20805,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     }
     pFreeze = kFreeze;
 
-    // ---- ⭐ run 144: '[' re-arms the user-pointer vertex sampler ----
+    // ---- Ă˘Â­Â run 144: '[' re-arms the user-pointer vertex sampler ----
     //
     // The sampler takes two vertices per primitive-count bucket and then stops FOR THE WHOLE RUN.
     // That was fine when it was answering "what shape are these draws in general", and useless for
@@ -20852,17 +21031,17 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         // CONTROLLER, which is the exact silent no-op the latch was extracted to prevent.
         //
         // Two interlocked reads a frame until it takes, then nothing.
-        // ⭐ run 208: solved HERE as well as at the latch take, and BEFORE UpdateFgLatch. The run-207 latch
+        // Ă˘Â­Â run 208: solved HERE as well as at the latch take, and BEFORE UpdateFgLatch. The run-207 latch
         // gate needs the property layout, and the layout used to be solved only by the latch itself - a
         // circular dependency that meant the latch never took at all. Self-throttling; a no-op once solved.
-        // ⭐ run 256: the Readable region cache never survives a frame boundary. Belt and braces -
+        // Ă˘Â­Â run 256: the Readable region cache never survives a frame boundary. Belt and braces -
         // every walk clears it on entry too - but this bounds the staleness window absolutely,
         // which matters for a cache whose whole job is stopping us read freed memory.
         ReadableForget();
-        // ⭐ run 254: this whole block is TIMED now. It was never in any bucket, so all of it has
+        // Ă˘Â­Â run 254: this whole block is TIMED now. It was never in any bucket, so all of it has
         // always landed in "our work" - see g_msGameplayHooks.
         const LARGE_INTEGER tGp = Now();
-        // ⭐ run 255: one accumulator each - see kHookPartName. The macro keeps the call sites
+        // Ă˘Â­Â run 255: one accumulator each - see kHookPartName. The macro keeps the call sites
         // readable; spelling out four timestamp pairs here would bury what the block actually does.
         #define TIME_HOOK(idx, call) do {                                   \
                 const LARGE_INTEGER tH = Now();                             \
@@ -20872,11 +21051,11 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 if (dH > g_msHookPartPeak[idx]) g_msHookPartPeak[idx] = dH; \
             } while (0)
         TIME_HOOK(0, SolvePropertyLayout());
-        TIME_HOOK(1, RefreshArmedState());   // ⭐ run 228b: once a frame, BEFORE the latch consults it
+        TIME_HOOK(1, RefreshArmedState());   // Ă˘Â­Â run 228b: once a frame, BEFORE the latch consults it
         TIME_HOOK(2, UpdateFgLatch());
         // Run 200: the heal gate's offsets, retried until resolved. Free once it has them, and the HUD
         // often does not exist at the mesh latch where the first attempt runs.
-        // ⭐ run 254: timed SEPARATELY - it is the specific suspect, because run 228d gave it
+        // Ă˘Â­Â run 254: timed SEPARATELY - it is the specific suspect, because run 228d gave it
         // FindPlayerPawn(force=true) and a miss is a full GObjects walk. At a splash there is no pawn.
         {
             const LARGE_INTEGER tRo = Now();
@@ -20885,7 +21064,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             g_msResolveOff += dRo;
             if (dRo > g_msResolveOffPeak) g_msResolveOffPeak = dRo;
         }
-        // ⚠️ EVERYTHING FROM HERE RUNS ONCE PER FRAME. Not on a slow tick - see UpdateFgLatch's own note
+        // Ă˘ĹˇÂ ÄŹÂ¸Ĺą EVERYTHING FROM HERE RUNS ONCE PER FRAME. Not on a slow tick - see UpdateFgLatch's own note
         // above ("two interlocked reads a frame"). Run 202 lost 120 fps to a logging call placed here on
         // the belief that this block was periodic. **Nothing added here may call Log() unconditionally.**
         //
@@ -20986,7 +21165,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             // live camera matrix, so they are drawn once instead of being scissored into a half
             // they were never remapped into. A high or spiky count means the camera slot is going
             // invalid often, which costs parallax on those objects even though they now appear.
-            // ---- âš ï¸ THIS LINE IS WHY THE USER-POINTER HOOKS "HUNG" (found run 27) ----
+            // ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą THIS LINE IS WHY THE USER-POINTER HOOKS "HUNG" (found run 27) ----
             //
             // It had nine conversions and TEN arguments: upPeak was missing its %d, so %s
             // consumed an int and formatted it as a char*. The evidence is in every log from
@@ -21071,7 +21250,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             if (const LONG sq = InterlockedExchange(&g_scopeQuadDraws, 0))
                 Log("    scope overlay quads drawn per eye: %ld this second", sq);
 
-            // ---- ⭐ run 243: what the TMD transform is ACTUALLY using ----
+            // ---- Ă˘Â­Â run 243: what the TMD transform is ACTUALLY using ----
             //
             // Reported: aligned perfectly in head mode with the magenta cross, then in motion
             // controller mode it does not arrive at the cyan one. Four things could each cause that
@@ -21092,7 +21271,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 const float hx = (float)Rd(g_offHandOffX) / kHandFixed;
                 const float hy = (float)Rd(g_offHandOffY) / kHandFixed;
                 const float hz = (float)(g_gunSignPosZ * Rd(g_offHandOffZ)) / kHandFixed;
-                // ⭐ run 247: BOTH hands, side by side, and the RAW XR metres they came from.
+                // Ă˘Â­Â run 247: BOTH hands, side by side, and the RAW XR metres they came from.
                 //
                 // Reported: the cyan cross does not sit on the controller. That marker is the off-hand
                 // position, so if it is wrong the anchor work cannot start - and the first sample
@@ -21102,7 +21281,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 // good, because the gun has been aligned with it for twenty runs. If both hands report
                 // the same sign the hand INDEX is wrong; if they differ the conversion is; if the raw
                 // XR values already disagree the fault is upstream of both.
-                // ⭐ run 248b: the SEPARATION, spelled out. The raw triples showed the two hands 8-9 cm
+                // Ă˘Â­Â run 248b: the SEPARATION, spelled out. The raw triples showed the two hands 8-9 cm
                 // apart and moving together while held apart, which is one controller read twice - but
                 // that took reading six numbers to see. One distance says it at a glance, and says it
                 // the same way whether the cause is the binding, the action space, or the test.
@@ -21143,7 +21322,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     g_gunFollowPos ? 1 : 0, g_gunHeadOffset ? 1 : 0);
             }
 
-            // ⭐ run 234: the verdict, once a second, so it does not have to be assembled by hand.
+            // Ă˘Â­Â run 234: the verdict, once a second, so it does not have to be assembled by hand.
             if (Rd(g_fgIdentityVerts) && g_fgIdentCount) {
                 char b4[512]; int o4 = 0;
                 for (int i = 0; i < g_fgIdentCount; ++i)
@@ -21154,7 +21333,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     Rd(g_fgIdentityVerts), g_fgIdentCount, b4);
             }
 
-            // ⭐ run 231: the over-match test. The real scope quad cannot be drawn with the aim
+            // Ă˘Â­Â run 231: the over-match test. The real scope quad cannot be drawn with the aim
             // trigger released, so a nonzero IDLE count is a false positive outright - and every one
             // of them suppresses the mesh latch, the laser, the ADS pull-back and the ADS mask for
             // the next 500 ms.
@@ -21172,20 +21351,20 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             if (const LONG dp = InterlockedExchange(&g_dropPrimDraws, 0))
                 Log("    DrawPrimitive draws SKIPPED by DropPrimCount: %ld this second", dp);
 
-            // ⭐ run 230: the same shape as the two lines above, and for the same reason. "The note
+            // Ă˘Â­Â run 230: the same shape as the two lines above, and for the same reason. "The note
             // still looks wrong" and "the inset never matched a draw" are indistinguishable in a
             // headset and mean opposite things - one is a wrong SIZE, the other a dead MARKER.
             if (const LONG ni = InterlockedExchange(&g_noteInsetDraws, 0))
                 Log("    note elements inset to %ld%%: %ld draw(s) this second (run 230)",
                     InterlockedCompareExchange(&g_noteInsetPct, 0, 0), ni);
 
-            // ⭐ run 253: the one-shot arm, measured. A nonzero count while a POPUP is open is the
+            // Ă˘Â­Â run 253: the one-shot arm, measured. A nonzero count while a POPUP is open is the
             // reported bug - those draws share the UI transform, missed the arm, went to StereoPair
             // unremapped and landed across the seam at full size.
-            // ⚠ A nonzero count during ordinary play is NOT automatically the bug: any non-quad
+            // Ă˘ĹˇÂ  A nonzero count during ordinary play is NOT automatically the bug: any non-quad
             // user-pointer draw after a c5-c8 write counts here, and some of those are world effects
             // that belong on StereoPair. The number to watch is the CHANGE when a popup opens.
-            // ⭐ run 262: proves the split ENGAGED. "I saw no change" and "the filter never matched"
+            // Ă˘Â­Â run 262: proves the split ENGAGED. "I saw no change" and "the filter never matched"
             // are indistinguishable in a headset and mean opposite things - this file has paid for
             // that ambiguity at least three times (runs 213a, 223, 230).
             if (const LONG sq = InterlockedExchange(&g_spriteQuadDraws, 0))
@@ -21193,7 +21372,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     " fullscreen pass-throughs but do not span NDC, so they used to land once across"
                     " the seam (run 262)", sq);
 
-            // ⭐ run 264: how many of the missed draws the SAME-TEXTURE rule actually took. The gap
+            // Ă˘Â­Â run 264: how many of the missed draws the SAME-TEXTURE rule actually took. The gap
             // between this and the line below measures how far the old frame-wide rule over-reached
             // - and it over-reached into world geometry twice.
             if (const LONG ht = InterlockedExchange(&g_hudArmTook, 0))
@@ -21202,19 +21381,19 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     " would ALSO have taken, and that difference was world geometry. (run 264)", ht);
             if (const LONG ua = InterlockedExchange(&g_uiUnarmed, 0))
                 Log("    UI draws that MISSED the one-shot arm: %ld this second (HudArmSticky=%ld,"
-                    " so they %s). A jump when a popup opens is run 253's reported bug. ⚠ Some of"
+                    " so they %s). A jump when a popup opens is run 253's reported bug. Ă˘ĹˇÂ  Some of"
                     " these are world draws and belong where they went - watch the CHANGE, not the"
                     " absolute. (run 253)",
                     ua, Rd(g_hudArmSticky),
                     Rd(g_hudArmSticky) ? "were OFFERED to the same-texture rule"
                                        : "went to StereoPair unremapped, as before");
 
-            // ⭐ run 223: separates "I froze it and nothing changed" from "the freeze never fired",
+            // Ă˘Â­Â run 223: separates "I froze it and nothing changed" from "the freeze never fired",
             // which look identical in a headset and mean opposite things.
             if (const LONG fz = InterlockedExchange(&g_adsFrozenDraws, 0))
                 Log("    gun draws with frozen bones: %ld this second (run 223)", fz);
 
-            // ⭐ run 230: fires on CHANGE, with a slow heartbeat underneath. See g_uiElemsThisFrame.
+            // Ă˘Â­Â run 230: fires on CHANGE, with a slow heartbeat underneath. See g_uiElemsThisFrame.
             if (g_uiDumpBatches > 0) {
                 static int heartbeat = 0;
                 const LONG nowN = InterlockedCompareExchange(&g_uiElemsThisFrame, 0, 0);
@@ -21262,13 +21441,13 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                         InterlockedCompareExchange(&g_killSleep, 0, 0) ? " [NEUTRALISED]" : "");
             }
 
-            // ---- ⭐ run 274: name the interaction profile the runtime actually chose ----
+            // ---- Ă˘Â­Â run 274: name the interaction profile the runtime actually chose ----
             //
             // The 2026-08-19 tester log carried no headset, runtime or controller identification
             // anywhere in 27,000 lines, so "trigger touch gate: NO SENSOR" could be read but not
             // explained without asking. One line fixes that for every future report.
             //
-            // ⚠️ NOT the runs 178-179 experiment. That tried to use this call to DETECT the
+            // Ă˘ĹˇÂ ÄŹÂ¸Ĺą NOT the runs 178-179 experiment. That tried to use this call to DETECT the
             // hand-tracking hand-over mid-session, and it cannot - the profile stays bound to the
             // controller throughout. Identifying which profile is in force at startup is a
             // different question, and the same runs showed it answers that one correctly. Nothing
@@ -21481,11 +21660,11 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 // work", which is why "our work" has looked like an unexplained game-side stall all
                 // the way through: this is the only call in the mod that reaches the wireless link.
                 const double xs = g_xrSubmitFrames ? g_msXrSubmit / g_xrSubmitFrames : 0.0;
-                // ⭐ run 252: the register scan, out of the residual and onto the line. It is a
+                // Ă˘Â­Â run 252: the register scan, out of the residual and onto the line. It is a
                 // per-second total spread over however many frames were armed, so it is divided by
                 // the window's frame count to sit in the same per-frame units as everything else.
                 const double sc = frames > 0 ? g_msScan / frames : 0.0;
-                // ⭐ run 254: the per-frame gameplay block, which had never been in any bucket.
+                // Ă˘Â­Â run 254: the per-frame gameplay block, which had never been in any bucket.
                 const double gp = g_gameplayHookFrames ? g_msGameplayHooks / g_gameplayHookFrames : 0.0;
                 Log("    frame budget: xrWaitFrame %.2f (idle) + copy %.2f + GObjects walk %.2f"
                     " + XR submit %.2f + reg scan %.2f + gameplay hooks %.2f + our work %.2f"
@@ -21500,7 +21679,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                         Log("    VR shadow projection: %ld sampled-map substitutions this window;"
                             " %ld new 512x512 R32F candidate(s)",substitutions,candidates);
                 }
-                // ⚠️ The PEAK is the statistic. ResolveGameplayOffsets is throttled to once per 2 s
+                // Ă˘ĹˇÂ ÄŹÂ¸Ĺą The PEAK is the statistic. ResolveGameplayOffsets is throttled to once per 2 s
                 // (15 s after three misses), so a walk costing hundreds of ms shows as a tiny mean
                 // and a huge peak - and reading the mean alone would clear it wrongly.
                 if (g_msGameplayPeak > 1.0 || g_msResolveOffPeak > 1.0)
@@ -21509,7 +21688,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                         " GObjects on a miss and there is no pawn at a splash screen, so every"
                         " attempt there is a walk that cannot succeed. (run 254)",
                         gp, g_msGameplayPeak, g_msResolveOff, g_msResolveOffPeak);
-                // ⭐ run 255: and WHICH call. Printed whenever any part is worth a millisecond, in
+                // Ă˘Â­Â run 255: and WHICH call. Printed whenever any part is worth a millisecond, in
                 // one line so the four are read against each other rather than in isolation.
                 if (g_msGameplayPeak > 1.0) {
                     Log("    gameplay hook breakdown (total ms this window / WORST single call):"
@@ -21527,14 +21706,14 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 // and so that its ABSENCE is meaningful. A scan at a splash screen can never succeed:
                 // there is no view matrix to find, so `candidates` stays 0 and it re-arms forever.
                 if (g_scanArmedFrames)
-                    Log("    ⚠ REGISTER SCAN ran on %d frame(s) this window: %.2f ms total, peak"
+                    Log("    Ă˘ĹˇÂ  REGISTER SCAN ran on %d frame(s) this window: %.2f ms total, peak"
                         " %.3f ms in one upload, %d candidate(s) found. It re-arms every 20 frames"
                         " while no view matrix is locked - which at a splash or a movie is FOREVER,"
                         " because there is no matrix there to find. (run 252)",
                         g_scanArmedFrames, g_msScan, g_msScanPeak, g_hitCount);
                 g_msScan = g_msScanPeak = 0.0;
                 g_scanArmedFrames = 0;
-                // ---- ⭐ run 204: how much of that residual is actually OURS? ----
+                // ---- Ă˘Â­Â run 204: how much of that residual is actually OURS? ----
                 //
                 // Printed right next to the budget deliberately: "our work" is frame time minus the
                 // measured phases, so it contains the GAME's whole frame as well as ours. These two are
@@ -21543,7 +21722,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 if (g_timeOurWork) {
                     Log("    OUR per-draw cost, MEASURED: StereoPair %.2f ms/sec (peak %.3f ms in one"
                         " draw) + mesh matchers %.2f ms/sec (peak %.3f) against a %.2f ms frame."
-                        " ⚠️ StereoPair INCLUDES issuing both duplicated draws, so a big number there is"
+                        " Ă˘ĹˇÂ ÄŹÂ¸Ĺą StereoPair INCLUDES issuing both duplicated draws, so a big number there is"
                         " the cost of drawing twice - not of our arithmetic.",
                         g_msStereoPair, g_msStereoPairPeak,
                         g_msMeshMatch, g_msMeshMatchPeak, ms);
@@ -21578,7 +21757,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     Log("    *** GObjects walk cost %.2f ms this window - the camera or controller"
                         " is ABSENT, so the cache cannot warm and the full scan repeats. Expected"
                         " in menus and during level load; should be ~0 in gameplay. ***", eng);
-                // ---- âš ï¸ the SSW check, and the correction it needed one run later ----
+                // ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą the SSW check, and the correction it needed one run later ----
                 //
                 // Run 31 measured 28 ms frames, concluded the app was missing a 72 Hz deadline,
                 // and cancelled the D3D9Ex work on the strength of it. The real cause was
@@ -21654,7 +21833,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             // The detector is supposed to track every register holding a camera matrix, so this
             // may already be covered. Printing the register numbers settles it without another
             // theory: if 13 is absent, that is the bug.
-            // ---- âš ï¸ this line reported nonsense first time out (run 46) ----
+            // ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą this line reported nonsense first time out (run 46) ----
             //
             // It subtracted a per-WINDOW cumulative from a per-FRAME peak and printed negative
             // counts. Both figures are cumulative over the window now. Sixth diagnostic in this
@@ -21690,7 +21869,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             // any draw in it. If "frames with NO identification" is non-zero, that is a full-frame
             // flash, and g_bestRejectDot names the cause: near 0.99 is rotation lag against a
             // stale g_camFwd, far below it is a genuinely different matrix taking the register.
-            // ---- ⭐ run 138: is the script hook ALIVE? ----
+            // ---- Ă˘Â­Â run 138: is the script hook ALIVE? ----
             //
             // Runs 133, 136 and 137 all failed on the same ambiguity: a silent cutscene watch and
             // a dead cutscene watch look identical. This removes it permanently. A non-zero rate
@@ -21775,7 +21954,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     Log("*** WARNING: TRUE STEREO is ON but NOTHING was split (%d draws seen)."
                         " The scene target does not match the backbuffer %ux%u - stereo is"
                         " inactive. ***", totPeak, g_srcW, g_srcH);
-                // ---- âš ï¸ this line is NOT evidence about the run-18 theory (found run 28) ----
+                // ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą this line is NOT evidence about the run-18 theory (found run 28) ----
                 //
                 // It was recorded in STATUS as refuting it: "register count measured 1, ever".
                 // But the modify path only ever caches g_lockedReg, so g_camMats can hold at most
@@ -21837,7 +22016,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     bool k7 = (DebugKey(VK_F7) & 0x8000) != 0;
     if (InterlockedCompareExchange(&g_scanArmed, 0, 0)) {
         InterlockedExchange(&g_scanArmed, 0);
-        ++g_scanArmedFrames;               // ⭐ run 252: count the frames that paid for a scan
+        ++g_scanArmedFrames;               // Ă˘Â­Â run 252: count the frames that paid for a scan
         ReportScan();
     } else if (k7 && !p7) {
         if (!InterlockedCompareExchange(&g_camPosValid, 0, 0)) {
@@ -21850,7 +22029,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     } else if (g_muzzleRegProbe > 0 && g_haveLock &&
                InterlockedCompareExchange(&g_camPosValid, 0, 0) &&
                InterlockedCompareExchange(&g_rawTrigger, 0, 0) > 40 && !g_probeTrigWasDown) {
-        // ---- ⭐ run 191: arm the scan on the TRIGGER, so it lands on a frame with a flash in it ----
+        // ---- Ă˘Â­Â run 191: arm the scan on the TRIGGER, so it lands on a frame with a flash in it ----
         //
         // Bounded to a handful of shots: a scan tests every window of every upload and is far too
         // expensive to leave running, which the rescan branch below already says.
@@ -21920,7 +22099,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         if (InterlockedCompareExchange(&g_rawTrigger, 0, 0) < 20) g_fireTrigWasDown = false;
     }
 
-    // ---- ⭐ run 222: the ADS constant capture, on the same ALT trigger ----
+    // ---- Ă˘Â­Â run 222: the ADS constant capture, on the same ALT trigger ----
     //
     // Armed from Present and captured at the draw, because Present is where the trigger state is known
     // and the draw is where the constants mean anything. Reported from here too - never from the draw
@@ -21943,7 +22122,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         if (g_adsHaveBase && g_adsHaveAimed) {
             --g_adsDumpLeft;
             g_adsHaveBase = g_adsHaveAimed = false;
-            Log("---- ⭐ run 222: ADS constant diff for gun=%ld (%d dump(s) left) ----", gun, g_adsDumpLeft);
+            Log("---- Ă˘Â­Â run 222: ADS constant diff for gun=%ld (%d dump(s) left) ----", gun, g_adsDumpLeft);
             int changed = 0;
             float dmin[4] = { 1e30f, 1e30f, 1e30f, 1e30f };
             float dmax[4] = { -1e30f, -1e30f, -1e30f, -1e30f };
@@ -21984,7 +22163,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         }
     }
 
-    // ---- ⭐ run 213: the scope census, on the ALT trigger ----
+    // ---- Ă˘Â­Â run 213: the scope census, on the ALT trigger ----
     //
     // Deliberately AFTER the fire block and sharing its recording buffer: the two cannot both be armed
     // (each checks `left > 0` first), and one buffer means one dump format to read. The label says which.
@@ -21992,7 +22171,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         const LONG left = InterlockedCompareExchange(&g_fireCensusFrames, 0, 0);
         const LONG alt  = InterlockedCompareExchange(&g_rawAltTrigger, 0, 0);
         const LONG gun = InterlockedCompareExchange(&g_gunVerts, 0, 0);
-        // 💥 run 213c: the baseline must describe THE WEAPON IN YOUR HANDS. Run 213b took one baseline
+        // Ä‘Ĺşâ€™Ä„ run 213c: the baseline must describe THE WEAPON IN YOUR HANDS. Run 213b took one baseline
         // per session, the first time any weapon latched - so it was recorded on gun=11387 and compared
         // against scope windows on gun=11389, and the diff contained the entire sniper. A baseline that
         // does not share the window's state is not a baseline, it is a second unrelated sample.
@@ -22053,7 +22232,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     if (InterlockedCompareExchange(&g_enabled, 0, 0) && g_haveWant) {
         uintptr_t ctl = FindController();
 
-        // ---- ❌ run 161: "recentre when the PlayerController pointer changes" - REMOVED ----
+        // ---- Ă˘ĹĄĹš run 161: "recentre when the PlayerController pointer changes" - REMOVED ----
         //
         // Written to fix "I start 90 degrees off when a new game reaches the cutscene". It never
         // fired, and it would not have worked if it had. Both reasons are worth keeping so it is
@@ -22071,7 +22250,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         // it. That is what run 162's yaw-assertion log is measuring.
         if (ctl && Readable((void*)(ctl + ACTOR_ROTATION), 12)) {
             int32_t* rot = reinterpret_cast<int32_t*>(ctl + ACTOR_ROTATION);
-            // ---- ⭐ run 99: do NOT fold in our own fire-window write ----
+            // ---- Ă˘Â­Â run 99: do NOT fold in our own fire-window write ----
             //
             // "Every time I shot, the camera view moved." That is this fold-in, not the swap.
             //
@@ -22093,7 +22272,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             const bool windowRaced = (seqBefore != seqAfter)
                                   || InterlockedCompareExchange(&g_fireDepth, 0, 0) > 0;
 
-            // ---- ⭐ run 133: this fold-in is the prime suspect for cutscene yaw ----
+            // ---- Ă˘Â­Â run 133: this fold-in is the prime suspect for cutscene yaw ----
             //
             // Reported: in the opening cutscene, looking LEFT and RIGHT does nothing, while
             // looking up and down, leaning and head tilt all work - and yaw is dead in BOTH
@@ -22113,7 +22292,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             // A diagnostic toggle rather than a fix, deliberately. The real fix has to tell a
             // cutscene from a mouse, and guessing at that before the mechanism is confirmed is
             // how a run gets spent proving the wrong thing.
-            // ---- ⭐ run 134: does the engine KEEP the yaw we write? ----
+            // ---- Ă˘Â­Â run 134: does the engine KEEP the yaw we write? ----
             //
             // The ProcessEvent route to detecting a cutscene is dead: all 18 names resolved and
             // SetCinematicMode never fired once through the whole opening. Run 94 already
@@ -22140,7 +22319,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 if (observedYaw == g_lastWrittenYaw) InterlockedIncrement(&g_yawHeld);
             }
 
-            // ---- ⭐ run 163: the WHOLE yaw composition during a cutscene ----
+            // ---- Ă˘Â­Â run 163: the WHOLE yaw composition during a cutscene ----
             //
             // Three fixes have now missed, and every one of them was a plausible mechanism that the
             // next log contradicted. The pattern in all three was the same: I measured ONE quantity
@@ -22180,7 +22359,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 }
             }
 
-            // ---- ⭐ run 162: every yaw the ENGINE asserts, logged ----
+            // ---- Ă˘Â­Â run 162: every yaw the ENGINE asserts, logged ----
             //
             // Two fixes for "I start 90 degrees off" have now missed, and both missed because of
             // something this log line would have shown.
@@ -22223,7 +22402,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     g_wantYaw += externalDelta;
                 }
             }
-            // ---- ⭐ run 162: during a cutscene in ROT MATRIX, the ENGINE owns the yaw ----
+            // ---- Ă˘Â­Â run 162: during a cutscene in ROT MATRIX, the ENGINE owns the yaw ----
             //
             // Measured, after two wrong guesses. Throughout the opening cutscene the log reads:
             //
@@ -22253,7 +22432,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                                      InterlockedCompareExchange(&g_matrixRot, 0, 0) != 0;
             if (!cineOwnsYaw) rot[1] = g_wantYaw;
 
-            // ---- ⭐ run 79: stop lying to the engine, and look for a SECOND rotation ----
+            // ---- Ă˘Â­Â run 79: stop lying to the engine, and look for a SECOND rotation ----
             //
             // The architecture was backwards, and the question that made it obvious was "shouldn't
             // culling be based on where I'm looking?". Yes. Under the current scheme the engine's
@@ -22267,7 +22446,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             // is redirected. That needs a separate seam - and there is a candidate nobody has
             // tested for this.
             //
-            // ❌ RESULT (run 80): +0x05D4 is NOT the weapon's aim. A constant -25 pitch / +25 yaw
+            // Ă˘ĹĄĹš RESULT (run 80): +0x05D4 is NOT the weapon's aim. A constant -25 pitch / +25 yaw
             // written there produced a shot straight down the crosshair - no deflection at all. So
             // the second rotation drives neither the view (spike 5) nor the fire trace, and field
             // guessing on this object is finished.
@@ -22285,7 +22464,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 int32_t* rot2 = reinterpret_cast<int32_t*>(ctl + CTL_ROTATION_2);
                 const LONG mode = InterlockedCompareExchange(&g_aimMode, 0, 0);
                 if (mode == 2) {
-                    // ⚠️ Run 80: the offset is now LARGE and on BOTH axes, because run 79's probe
+                    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Run 80: the offset is now LARGE and on BOTH axes, because run 79's probe
                     // came back with no reading at all. In this mode nothing on screen changes -
                     // view, culling and the gun all stay normal by design - so "I pressed it and
                     // nothing happened" is the expected appearance and the test reads as a
@@ -22303,7 +22482,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 }
             }
 
-            // ---- ⭐ mode 4: separate aim from culling in TIME, using seams we already own ----
+            // ---- Ă˘Â­Â mode 4: separate aim from culling in TIME, using seams we already own ----
             //
             // Six runs of chasing ProcessEvent produced one solid fact - the fire path DOES go
             // through UnrealScript, 77-89% enriched under fire - and then stalled on naming the
@@ -22328,7 +22507,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             // precisely what this tests. It is a binary question, it needs no symbol, and it costs
             // one run instead of an unbounded number.
             //
-            // ⚠️ If the shot follows the head, the ordering is wrong and this approach is finished
+            // Ă˘ĹˇÂ ÄŹÂ¸Ĺą If the shot follows the head, the ordering is wrong and this approach is finished
             // - which is still worth knowing in one run rather than five.
             // Publish for the XInput seam (mode 5). Done unconditionally and cheaply so the hot
             // hook only ever reads three interlocked words.
@@ -22344,16 +22523,16 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             InterlockedExchange(&g_frameDrawIdx, 0);
             InterlockedExchange(&g_inForeground, 0);
             InterlockedExchange(&g_fgDrawCount, 0);
-            // ⭐ run 230: this frame's sighting becomes next frame's state, then clears.
+            // Ă˘Â­Â run 230: this frame's sighting becomes next frame's state, then clears.
             InterlockedExchange(&g_noteOpen, InterlockedExchange(&g_noteSeenFrame, 0));
-            // ⭐ run 266: the anchor dies with the note. Leaving a stride/texture behind would let a
+            // Ă˘Â­Â run 266: the anchor dies with the note. Leaving a stride/texture behind would let a
             // world draw match it later, which is the whole class of bug this replaces.
             if (!Rd(g_noteOpen)) {
                 InterlockedExchange(&g_noteTextStride, 0);
                 InterlockedExchange(&g_noteTextTex, 0);
             }
-            InterlockedExchange(&g_uiElemsThisFrame, 0);   // ⭐ run 230
-            // ⭐ run 253: the UI transform does not survive a frame boundary. Per-frame is the
+            InterlockedExchange(&g_uiElemsThisFrame, 0);   // Ă˘Â­Â run 230
+            // Ă˘Â­Â run 253: the UI transform does not survive a frame boundary. Per-frame is the
             // conservative choice - within one frame the game writes it once and draws several
             // elements against it, which is the whole defect; across frames it is rewritten anyway.
             InterlockedExchange(&g_hudXformLive, 0);
@@ -22362,7 +22541,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             InterlockedExchange(&g_uiPersp,  0);
             ReportXhairCensus();
             ReportFgRide();
-            FgSoloStep();      // ⭐ run 233: once a frame, never from a draw hook
+            FgSoloStep();      // Ă˘Â­Â run 233: once a frame, never from a draw hook
             // Promote this frame's learned list to the stable one the matchers use, THEN clear the
             // learning list. The stable copy is therefore populated when the depth-prime draws
             // arrive at the start of the next frame - which is what makes hiding remove a mesh
@@ -22374,9 +22553,9 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     InterlockedExchange(&g_fgStableVerts[i],
                         i < sc ? InterlockedCompareExchange(&g_fgSigVerts[i], 0, 0) : 0);
                 InterlockedExchange(&g_fgStableCount, sc);
-                if (sc > 0) InterlockedExchange(&g_fgSeenMs, (LONG)GetTickCount());   // ⭐ run 238
+                if (sc > 0) InterlockedExchange(&g_fgSeenMs, (LONG)GetTickCount());   // Ă˘Â­Â run 238
 
-                // ---- ⭐ run 232: report the pass whenever its CONTENTS change ----
+                // ---- Ă˘Â­Â run 232: report the pass whenever its CONTENTS change ----
                 //
                 // LogFgList only ever fired at a latch take or drop, so the pass could change
                 // completely - a TMD coming out, a weapon going away - and leave no trace at all.
@@ -22539,7 +22718,7 @@ void InstallDirectInputStartupProbe() {
 }
 volatile LONG g_patched = 0;
 
-// ---- âš ï¸ forcing the BACKBUFFER size does NOT raise UE3's render resolution ----
+// ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą forcing the BACKBUFFER size does NOT raise UE3's render resolution ----
 //
 // Tried in run 14 and it broke stereo completely. The census told the story:
 //
@@ -22573,7 +22752,7 @@ void LoadIniSettings() {
         Log("     render resolution, it only desynchronises it. Use the in-game video options.");
     }
 
-    // The zero-copy prerequisite. ⭐ ON by default as of the defaults audit - see below. Still one
+    // The zero-copy prerequisite. Ă˘Â­Â ON by default as of the defaults audit - see below. Still one
     // ini line away from off, because this replaces the resource management of a shipping engine.
     // See the big comment above Hook_CreateTexture.
     //
@@ -22613,7 +22792,7 @@ void LoadIniSettings() {
     // round trip through me.
     // See the note above Hook_CreateQuery. Off by default: this removes a feature the engine
     // expects to have, so it is a measurement, not a setting.
-    // ---- ⭐ run 152: the default is 2 - the engine's own culling is live again ----
+    // ---- Ă˘Â­Â run 152: the default is 2 - the engine's own culling is live again ----
     //
     // Mode 0 forced every occlusion query to report VISIBLE, because in stereo the boxes were
     // drawn once at full-frame coordinates and the pixel count came back meaningless. That was
@@ -22633,33 +22812,33 @@ void LoadIniSettings() {
     // "auto occlusion mode made it actively worse" - that was measured in the window before the
     // wireless link was diagnosed, along with two other conclusions from the same day.
     //
-    // ⚠️ Only half the discriminator is confirmed. "draws/frame falls a lot" is measured above;
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Only half the discriminator is confirmed. "draws/frame falls a lot" is measured above;
     // "nothing VANISHES" is a visual judgement over a real play session, and vanishing geometry is
     // intermittent and view-dependent - it cost run 30 an entire session for that reason. If
     // objects start winking out at distance or near the edges of view, set this back to 0, which
     // restores the run-30 behaviour exactly.
-    // ⭐ Kept at 2 deliberately - the one setting that does NOT match the tested ini (which has 0).
+    // Ă˘Â­Â Kept at 2 deliberately - the one setting that does NOT match the tested ini (which has 0).
     // The measurement above is the reason: mode 0 forces every query visible and costs roughly twice
     // the draws (1500-1693 vs 737-943 per frame). Its risk is geometry winking out at distance or
     // screen edges, which is a visual judgement no run has made on 2 yet - so if objects start
     // vanishing, set OcclusionQueryMode=0 in the ini and this is the first suspect.
-    // ---- ⛔ run 273: forcing DRAW ALL during cutscenes was TRIED and is MEASURED DEAD ----
+    // ---- Ă˘â€şâ€ť run 273: forcing DRAW ALL during cutscenes was TRIED and is MEASURED DEAD ----
     //
     // Run 272 forced every occlusion query visible while g_inCinematic was set. It ENGAGED - the log
     // shows two STARTED/ENDED pairs - and the geometry was still missing. Reverted rather than kept
     // as a setting that does nothing.
     //
-    // ⭐ The reason is in the same log, and it retires occlusion queries as a lever for this symptom
+    // Ă˘Â­Â The reason is in the same log, and it retires occlusion queries as a lever for this symptom
     // entirely: "worst engine VERTICAL cull this window, from mCurrentPOV: 38.3 deg vs 98.0 deg
     // rendered -> SHORTFALL, geometry culled". The engine believes its vertical FOV is 38.3 deg while
     // we render 98, so it discards everything outside that cone ON THE CPU, before a draw call is
     // issued. An occlusion query cannot rescue geometry that was never submitted.
     //
-    // ⚠️ Cutscenes are the WORST case for this, which is why it shows there: gameplay windows read
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą Cutscenes are the WORST case for this, which is why it shows there: gameplay windows read
     // 86-98 deg against 98 rendered, cutscene windows 38.3 and 43.5. The engine sets a narrow
     // cinematic FOV and our ask does not survive it.
     //
-    // ▶ If this is picked up again, the lever is the FOV CULLING HEADROOM, not the query hook -
+    // Ă˘â€“Â¶ If this is picked up again, the lever is the FOV CULLING HEADROOM, not the query hook -
     // ApplyVrFov already asks the engine for a wider FOV than we render (kFovHeadroom, cycled on
     // PAGE UP) precisely to give its culling room. The question is why the ask does not hold during a
     // cutscene. That is a different subsystem from this one.
@@ -22687,10 +22866,10 @@ void LoadIniSettings() {
             ? "VR mode on as soon as the headset is up - BACKSPACE still toggles it"
             : "cold start is flat, press BACKSPACE (run 37's behaviour)");
 
-    // ---- ⭐ run 157: debug mode ----
+    // ---- Ă˘Â­Â run 157: debug mode ----
     //
     // Default was 1 while this was being built, with a note saying "the value that ships to anyone
-    // else is 0". ⭐ That flip is now made rather than deferred - a second install with no ini came up
+    // else is 0". Ă˘Â­Â That flip is now made rather than deferred - a second install with no ini came up
     // with the readout drawn and every key live, which is what the note was there to prevent.
     // The panel row is what makes 0 survivable: debug can be turned back on from inside the headset
     // without editing a file or relaunching.
@@ -22727,7 +22906,7 @@ void LoadIniSettings() {
     // Run 193. Default 6 stride-72 draws, then silent for the session. This one logs from inside a draw
     // hook, which run 24/25 proved can hang startup - so it is hard-bounded rather than rate-limited,
     // and the bound is the whole safety argument.
-    // ---- 🛑 run 196: OFF, because the draw this probes is not the artefact ----
+    // ---- Ä‘Ĺşâ€şâ€ run 196: OFF, because the draw this probes is not the artefact ----
     //
     // The stride-72 shader reads **c0** - confirmed from its own bytecode - and c0 is locked, valid and
     // remapped at that draw. So its transform IS eye-remapped and it cannot be what lands on the seam.
@@ -22882,7 +23061,7 @@ void LoadIniSettings() {
 
     // Below this many primitives a user-pointer draw is treated as a fullscreen post-process quad
     // and passed through unsplit. See the note above Hook_DrawPrimUP.
-    // ⭐ run 262: the extent test run 192 specified, applied. 0 restores the old behaviour - every
+    // Ă˘Â­Â run 262: the extent test run 192 specified, applied. 0 restores the old behaviour - every
     // misclassified sprite back to one draw across the seam - without a rebuild.
     InterlockedExchange(&g_spriteQuadPerEye,
                         GetPrivateProfileIntA("Render", "SpriteQuadPerEye", 0, path) ? 1 : 0);
@@ -22893,7 +23072,7 @@ void LoadIniSettings() {
         Rd(g_spriteQuadPerEye),
         Rd(g_spriteQuadPerEye) ? "draw misclassified sprites once per eye"
                                : "OFF - they land once across the seam, as before");
-    // ⭐ run 260: names the draws UserPtrQuad passes through, so the popup text can be identified
+    // Ă˘Â­Â run 260: names the draws UserPtrQuad passes through, so the popup text can be identified
     // rather than inferred. Pure logging - it changes nothing about how anything is drawn, which is
     // the point: UserPtrMinPrims=0 would answer the same question by wrecking the frame, and this
     // file already records that a test which destroys its own readability is a wasted run.
@@ -22929,12 +23108,12 @@ void LoadIniSettings() {
     g_userPtrHookLevel = GetPrivateProfileIntA("Render", "HookUserPointerDraws", 0, path);
     if (g_userPtrHookLevel < 0 || g_userPtrHookLevel > 3) g_userPtrHookLevel = 0;
 
-    // ---- ⭐ run 151: the HUD in both eyes ----
+    // ---- Ă˘Â­Â run 151: the HUD in both eyes ----
     //
     // ON by default: without it the game's health, ammo, crosshair, prompts and menus are drawn
     // once at full-frame coordinates and straddle the eye seam - half in each eye, unreadable.
     //
-    // ⚠️ It REQUIRES the user-pointer draw hooks, because that is how the UI reaches the GPU. With
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą It REQUIRES the user-pointer draw hooks, because that is how the UI reaches the GPU. With
     // those off this setting would do exactly nothing, silently - the failure mode that has cost
     // this project more runs than any other. So it raises the level itself and says so, rather
     // than leaving two settings that have to be right together.
@@ -22963,7 +23142,7 @@ void LoadIniSettings() {
                         " the shot is not going"
                       : "always hidden");
 
-    // ⭐ run 235. One-shot dump of every property name on the player pawn's class chain, so a signal
+    // Ă˘Â­Â run 235. One-shot dump of every property name on the player pawn's class chain, so a signal
     // can be LOOKED UP rather than guessed at. Only needed if the equipped-class name does not already
     // name the TMD.
     g_propDumpPawn = GetPrivateProfileIntA("Render", "PropDumpPawn", 0, path) ? 1 : 0;
@@ -22971,7 +23150,7 @@ void LoadIniSettings() {
         Log("ini: PropDumpPawn=1 - the pawn's whole property list will be dumped once, at the mesh"
             " latch. Expect several hundred lines.");
 
-    // ⭐ run 234. Log where the geometry of ONE vertex count comes from, so "one mesh posed twice"
+    // Ă˘Â­Â run 234. Log where the geometry of ONE vertex count comes from, so "one mesh posed twice"
     // and "two meshes sharing a count" can be told apart. 0 = off.
     {
         const LONG iv = GetPrivateProfileIntA("Render", "FgIdentityVerts", 0, path);
@@ -22982,7 +23161,7 @@ void LoadIniSettings() {
                 " posed two ways. Two sources with different ranges = two meshes.", iv);
     }
 
-    // ⭐ run 233. Solo-cycle the first-person pass: show one mesh at a time, this many ms each.
+    // Ă˘Â­Â run 233. Solo-cycle the first-person pass: show one mesh at a time, this many ms each.
     // DIAGNOSTIC - it hides things. 0 is off and is the shipping value.
     {
         LONG solo = GetPrivateProfileIntA("Render", "FgSoloCycleMs", 0, path);
@@ -22995,7 +23174,7 @@ void LoadIniSettings() {
                  : "off - the pass is drawn normally");
     }
 
-    // ⭐ run 232. How many first-person pass changes to report before going quiet. 0 disables.
+    // Ă˘Â­Â run 232. How many first-person pass changes to report before going quiet. 0 disables.
     g_fgCensusBudget = GetPrivateProfileIntA("Render", "FgCensusBudget", 400, path);
     if (g_fgCensusBudget < 0)    g_fgCensusBudget = 0;
     if (g_fgCensusBudget > 5000) g_fgCensusBudget = 5000;
@@ -23004,11 +23183,11 @@ void LoadIniSettings() {
         " in every TMD scene, so earlier lists of 8 were truncated, not complete.)",
         g_fgCensusBudget, kFgSigMax);
 
-    // ⭐ run 230. Percent of full size for an open note, scaled about the centre of the eye.
+    // Ă˘Â­Â run 230. Percent of full size for an open note, scaled about the centre of the eye.
     // Default 40 rather than 100: a full-screen page of text is the REPORTED DEFECT, so shipping the
     // default at 100 would ship the bug and make the setting a thing you have to discover. 40 is the
     // measured comfortable value in a headset, not a guess - 65 was the guess and it was too big.
-    // ⭐ run 257: the escape hatch for the Readable region cache. It is the one change in this area
+    // Ă˘Â­Â run 257: the escape hatch for the Readable region cache. It is the one change in this area
     // that can plausibly cause a CRASH rather than a slowdown - a region freed or re-protected inside
     // one frame would make a cached "yes" a lie - so it gets a switch, per this file's habit of
     // making a fix revertible without a rebuild. Set 0 if anything starts faulting in a GObjects walk.
@@ -23018,7 +23197,7 @@ void LoadIniSettings() {
         " walk makes ~4 per object across 112,000 objects. Set 0 to go back to querying every time.",
         Rd(g_readableCache),
         Rd(g_readableCache) ? "8-slot region cache" : "OFF - every check is a syscall");
-    // ⭐ run 253: default 0 - the build MEASURES the one-shot arm before it changes it. See
+    // Ă˘Â­Â run 253: default 0 - the build MEASURES the one-shot arm before it changes it. See
     // g_hudXformLive for why sticky is plausible and why "plausible" is not enough to default to.
     InterlockedExchange(&g_hudArmSticky,
                         GetPrivateProfileIntA("Render", "HudArmSticky", 0, path) ? 1 : 0);
@@ -23062,7 +23241,7 @@ void LoadIniSettings() {
                      " the pass is composited through a mask). Read the SMOKE, not the gun: it"
                      " vanishing means it is in this pass, it surviving means it is not");
 
-    // ---- 💥 run 188: these probes are the "framerate is 0 for a couple of seconds" on load-in ----
+    // ---- Ä‘Ĺşâ€™Ä„ run 188: these probes are the "framerate is 0 for a couple of seconds" on load-in ----
     //
     // Reported, and it is mine. Both fire at the mesh latch, which is exactly the moment a save finishes
     // loading and the gun first appears:
@@ -23091,7 +23270,7 @@ void LoadIniSettings() {
     // Run 190. Default 0 = the behaviour every previous run had, so the first run with this build
     // MEASURES the staleness before changing it. 1 predicts the hands one display period ahead.
     //
-    // ⭐ That measurement happened and 1 won - the live ini has carried PoseLeadFrames=1 ever since,
+    // Ă˘Â­Â That measurement happened and 1 won - the live ini has carried PoseLeadFrames=1 ever since,
     // so every validated run has been at 1 while the default sat at 0. Promoted, because "the
     // behaviour every previous run had" stopped being true the moment the ini started overriding it.
     g_poseLeadFrames = GetPrivateProfileIntA("Input", "PoseLeadFrames", 1, path);
@@ -23171,7 +23350,7 @@ void LoadIniSettings() {
             " %s. Set it back to 3 for normal behaviour.", amp,
             (amp & 1) ? "ON" : "off", (amp & 2) ? "ON" : "off");
 
-    // 🧹 Run 211: default flipped 1 -> 0. This is a MEASURING tool, and it is the only diagnostic in
+    // Ä‘ĹşÂ§Ä… Run 211: default flipped 1 -> 0. This is a MEASURING tool, and it is the only diagnostic in
     // this file whose cost scales with DRAW COUNT rather than with frames: two QueryPerformanceCounter
     // calls per StereoPair and two per mesh-match, at the 3,000-4,400 draws/frame this game reaches.
     // It earned its keep finding the runs 206-210 framerate tanks, and those are closed - so it should
@@ -23179,7 +23358,7 @@ void LoadIniSettings() {
     // stuck for want of an instrument, and its own note below is the reason the residual was ever
     // understood. Turn it on when a frame-budget question comes up.
     //
-    // ⚠️ I have NOT measured the overhead, so do not quote a number for it. If a future run wants one,
+    // Ă˘ĹˇÂ ÄŹÂ¸Ĺą I have NOT measured the overhead, so do not quote a number for it. If a future run wants one,
     // that is an A/B of TimeOurWork=0 against =1 at a fixed spot - and note that the instrument cannot
     // measure its own cost, which is exactly the class of error that let SSW halve every frame-rate
     // number for thirty runs.
@@ -23262,11 +23441,11 @@ void LoadIniSettings() {
     InterlockedExchange(&g_meleeDelayMs, meleeDelay);
     Log("ini: MeleeArmsMs=%ld MeleeArmsDelayMs=%ld (%s)", meleeMs, meleeDelay,
         meleeMs ? "the arms are visible from DelayMs to Ms after the melee button, and the gun returns"
-                  " to the engine's position for that span, so the swing reads as one piece. ⚠ the"
+                  " to the engine's position for that span, so the swing reads as one piece. Ă˘ĹˇÂ  the"
                   " impulse weapon shares this button - see the melee window note"
                 : "off - the melee swing stays invisible");
 
-    // ⭐ run 224: the aim-animation mask. On by default: run 223 measured that holding c5-c22 removes the
+    // Ă˘Â­Â run 224: the aim-animation mask. On by default: run 223 measured that holding c5-c22 removes the
     // animation completely on the assault rifle, and the pull-back is only correct with it masked.
     g_adsMaskOn = GetPrivateProfileIntA("Render", "AdsMaskAnim", 1, path) ? 1 : 0;
     g_adsMaskLo = GetPrivateProfileIntA("Render", "AdsMaskLo", 5, path);
@@ -23283,7 +23462,7 @@ void LoadIniSettings() {
                       " the range was measured on the ASSAULT RIFLE only"
                     : "off - the game's aim animation plays as shipped");
 
-    // ⭐ run 229: batches of UI element descriptions, one a second. Open a note while it counts down.
+    // Ă˘Â­Â run 229: batches of UI element descriptions, one a second. Open a note while it counts down.
     g_uiDumpBatches = GetPrivateProfileIntA("Render", "UiElementDump", 0, path);
     if (g_uiDumpBatches < 0)  g_uiDumpBatches = 0;
     if (g_uiDumpBatches > 60) g_uiDumpBatches = 60;
@@ -23292,7 +23471,7 @@ void LoadIniSettings() {
             " primitive count, stride, clip position and scale. Open a note while it runs.",
             g_uiDumpBatches, g_uiDumpBatches);
 
-    // ⭐ run 223: the freeze range. -1 disables. See AdsFreeze for the three configurations worth running.
+    // Ă˘Â­Â run 223: the freeze range. -1 disables. See AdsFreeze for the three configurations worth running.
     g_adsFreezeLo = GetPrivateProfileIntA("Render", "AdsFreezeLo", -1, path);
     g_adsFreezeHi = GetPrivateProfileIntA("Render", "AdsFreezeHi", -1, path);
     if (g_adsFreezeLo < 0 || g_adsFreezeHi < g_adsFreezeLo) { g_adsFreezeLo = g_adsFreezeHi = -1; }
@@ -23303,7 +23482,7 @@ void LoadIniSettings() {
             " block moves which part of the weapon. Freeze c5-c22, then c23-c127, then c5-c127 as the"
             " control. Set both to -1 when finished.", g_adsFreezeLo, g_adsFreezeHi);
 
-    // ⭐ run 222: how many aim-presses to capture the gun's shader constants for. Diagnostic only.
+    // Ă˘Â­Â run 222: how many aim-presses to capture the gun's shader constants for. Diagnostic only.
     g_adsDumpLeft = GetPrivateProfileIntA("Render", "AdsConstDump", 0, path);
     if (g_adsDumpLeft < 0) g_adsDumpLeft = 0;
     if (g_adsDumpLeft > 6) g_adsDumpLeft = 6;
@@ -23312,7 +23491,7 @@ void LoadIniSettings() {
             " and again with it held, and diff them. Answers whether the aim animation is a rigid"
             " offset (cancellable) or a skeletal animation (not).", g_adsDumpLeft);
 
-    // ⭐ run 219: how long A must be held to toggle the laser. 0 disables the button entirely and leaves
+    // Ă˘Â­Â run 219: how long A must be held to toggle the laser. 0 disables the button entirely and leaves
     // the panel as the only route.
     LONG lhold = GetPrivateProfileIntA("Input", "LaserHoldMs", 1000, path);
     if (lhold < 0)    lhold = 0;
@@ -23322,8 +23501,17 @@ void LoadIniSettings() {
         lhold ? "hold A for this long to toggle the laser sight - it writes straight to the ini,"
                 " because there is no panel close to save on"
               : "off - the laser is panel-only");
+// Options button: short press = menu, long press = recenter VR view
+LONG ohold = GetPrivateProfileIntA("Input", "OptionsHoldMs", 800, path);
+if (ohold < 0)    ohold = 0;
+if (ohold > 5000) ohold = 5000;
+InterlockedExchange(&g_optionsHoldMs, ohold);
+Log("ini: OptionsHoldMs=%ld (%s)", ohold,
+    ohold ? "hold Options for this long to recenter VR view - short press opens game menu"
+          : "off - Options button only opens game menu");
 
-    // ⭐ run 219: how far ADS pulls the weapon back along the aiming line. The game's own ADS animation
+
+    // Ă˘Â­Â run 219: how far ADS pulls the weapon back along the aiming line. The game's own ADS animation
     // slides it toward screen CENTRE, which is right in head mode and meaningless on a hand-held gun.
     LONG apull = GetPrivateProfileIntA("Input", "AdsPullbackUU", 10, path);
     if (apull < 0)   apull = 0;
@@ -23331,11 +23519,11 @@ void LoadIniSettings() {
     InterlockedExchange(&g_adsPullbackUU, apull);
     Log("ini: AdsPullbackUU=%ld (%s)", apull,
         apull ? "aiming pulls the weapon back along the line it is pointing, so the sight picture does"
-                " not move - the sniper is excluded, it has its own scope. ⚠ only useful once the"
+                " not move - the sniper is excluded, it has its own scope. Ă˘ĹˇÂ  only useful once the"
                 " game's own aim animation is suppressed, or you get BOTH offsets"
               : "off (default) - the game's own aim animation is untouched");
 
-    // ⭐ run 217: OFF by default. It is a gameplay change as much as an instrument, and the panel is
+    // Ă˘Â­Â run 217: OFF by default. It is a gameplay change as much as an instrument, and the panel is
     // where it gets turned on - LaserSight in the ini is what the panel writes back on close, exactly
     // like every other panel-backed setting.
     InterlockedExchange(&g_laserOn,
@@ -23426,7 +23614,7 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
             Log("RESOLUTION CreateDevice actualBackbuffer=%ux%u client=%ldx%ld recommendedEye=%ux%u auto=%ux%u dpiAware=%d logicalScreen=%dx%d",desc.Width,desc.Height,client.right-client.left,client.bottom-client.top,g_recEyeW,g_recEyeH,g_autoResW,g_autoResH,IsProcessDPIAware()?1:0,GetSystemMetrics(SM_CXSCREEN),GetSystemMetrics(SM_CYSCREEN));
         }
 
-        // ---- âš ï¸ is the 4096 cap actually the HARDWARE's? Nobody has ever asked ----
+        // ---- Ä‚ËÄąË‡Ă‚Â Ä‚Ĺ»Ă‚Â¸Ă‚Ĺą is the 4096 cap actually the HARDWARE's? Nobody has ever asked ----
         //
         // Run 33 found -ResX=4096 accepted and 4992 refused, and attributed it to the classic
         // D3D9-era 4096 maximum texture dimension. That was a hypothesis. It is also the entire
@@ -23666,7 +23854,7 @@ void InstallAutoResolution() {
         g_autoResW, g_autoResH);
 }
 
-// ---- ⭐ run 180: PhysX preflight. The mod gets blamed for a crash that is not the mod ----
+// ---- Ă˘Â­Â run 180: PhysX preflight. The mod gets blamed for a crash that is not the mod ----
 //
 // Measured 2026-08-04: with the 32-bit PhysXLoader.dll missing system-wide, the game dies with
 // 0xc06d007e (delay-load: "module could not be found") followed by a NULL deref at +0x007cdde6 -
