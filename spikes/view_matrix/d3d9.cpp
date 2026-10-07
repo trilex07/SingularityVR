@@ -11,6 +11,7 @@
 #include "ui_pointer.h"
 #include "menu_capture_owner.h"
 #include "recenter_chord.h"
+#include "pose_conversion.h"
 // view_matrix - Singularity VR mod, spike 9
 //
 // GOES AFTER THE ONE BLOCKING PROBLEM: camera POSITION, which gates both stereo (a per-eye
@@ -4076,6 +4077,15 @@ struct ShaderLayoutEntry { IDirect3DVertexShader9* shader; skeletal::Layout layo
 ShaderLayoutEntry g_shaderLayouts[1024]{};
 unsigned g_shaderLayoutNext=0;
 skeletal::Layout g_boundShaderLayout;
+// Opt-in first-person TMD arm evidence. Only the last relevant palette upload
+// metadata is retained; matrix reads happen in the bounded draw capture below.
+volatile LONG g_armPaletteTraceFrames=0;
+volatile LONG g_armPaletteUploadSeq=0;
+volatile LONG g_armPaletteUploadStart=-1;
+volatile LONG g_armPaletteUploadCount=0;
+volatile LONG g_armPaletteUploadFrame=-1;
+volatile LONG g_armPaletteFrameToken=0;
+volatile LONG g_armPaletteUploadCoverage[8]{};
 volatile LONG g_rtIsScene = 1;
 static unsigned ShaderLayoutHash(IDirect3DVertexShader9* shader) {
     return (unsigned)(((uintptr_t)shader >> 4) * 2654435761u) & 1023;
@@ -8329,16 +8339,12 @@ void SyncXRInput(XrTime displayTime) {
         g_handAimOrientation[i]=q;
         // The same Y-X-Z decomposition the head uses, so hand and head angles are directly
         // comparable rather than two separately-derived conventions that agree by luck.
-        float sinp = 2.0f * (q.w * q.x - q.y * q.z);
-        if (sinp >  1.0f) sinp =  1.0f;
-        if (sinp < -1.0f) sinp = -1.0f;
-        g_handPitchRad[i] = asinf(sinp);
-        g_handYawRad[i] = atan2f(2.0f * (q.w * q.y + q.z * q.x),
-                                 1.0f - 2.0f * (q.x * q.x + q.y * q.y));
+        const vrpose::EulerYXZ handAngles = vrpose::DecomposeOpenXrYXZ({q.x,q.y,q.z,q.w});
+        g_handPitchRad[i] = handAngles.pitchX;
+        g_handYawRad[i] = handAngles.yawY;
         // Run 123: the third angle of the same Y-X-Z decomposition. Without it, twisting the
         // controller does nothing to the gun - which is one of the three axes reported missing.
-        g_handRollRad[i] = atan2f(2.0f * (q.w * q.z + q.x * q.y),
-                                  1.0f - 2.0f * (q.x * q.x + q.z * q.z));
+        g_handRollRad[i] = handAngles.rollZ;
         // Held or on a desk, decided by movement. The threshold is well above sensor noise for a
         // stationary controller and far below anything a hand does, even a still one - a hand at
         // rest still drifts by millimetres a frame, and a desk does not.
@@ -9058,17 +9064,13 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         g_headFovDeg = (fabsf(views[0].fov.angleLeft) + fabsf(views[0].fov.angleRight)) * 57.2957795f;
 
         const XrQuaternionf& q = views[0].pose.orientation;
-        float sinp = 2.0f * (q.w * q.x - q.y * q.z);
-        if (sinp > 1.0f) sinp = 1.0f;
-        if (sinp < -1.0f) sinp = -1.0f;
-        float pitchRad = asinf(sinp);
-        float yawRad = atan2f(2.0f * (q.w * q.y + q.z * q.x),
-                              1.0f - 2.0f * (q.x * q.x + q.y * q.y));
+        const vrpose::EulerYXZ headAngles = vrpose::DecomposeOpenXrYXZ({q.x,q.y,q.z,q.w});
+        float pitchRad = headAngles.pitchX;
+        float yawRad = headAngles.yawY;
         // The third angle of the same Y-X-Z decomposition the two above come from, so all three
         // are consistent with each other rather than three separately-derived conventions.
         // OpenXR is Y-up with forward at -Z, so roll is the rotation about Z.
-        float rollRad = atan2f(2.0f * (q.w * q.z + q.x * q.y),
-                               1.0f - 2.0f * (q.x * q.x + q.z * q.z));
+        float rollRad = headAngles.rollZ;
         if (InterlockedExchange(&g_recenterRequested, 0)) {
             if (g_hotPathSampler.active()) InterlockedIncrement64(&g_hotRecenterGeneration);
             // Re-enter the existing centre acquisition below.  It updates the one shared XR
@@ -9262,16 +9264,12 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             // Run 123: the head position in XR space, so the hand can be expressed relative to it.
             g_headPosXR[0] = hp.x; g_headPosXR[1] = hp.y; g_headPosXR[2] = hp.z;
 
-            const float sc = sinf(g_centreYaw), cc = cosf(g_centreYaw);
-            float fwdAmt   = -(ox * sc) - (oz * cc);   // along the head's centre forward
-            float rightAmt =  (ox * cc) - (oz * sc);   // along the head's centre right
-            float upAmt    =  oy;
-
             const float baseYawRad = g_baseYaw * (6.2831853f / 65536.0f);
-            const float bc = cosf(baseYawRad), bs = sinf(baseYawRad);
-            g_hmdOffset[0] = (bc * fwdAmt - bs * rightAmt) * MetresToUU();
-            g_hmdOffset[1] = (bs * fwdAmt + bc * rightAmt) * MetresToUU();
-            g_hmdOffset[2] = upAmt * MetresToUU();
+            const vrpose::V3 hmdUU = vrpose::TrackingDeltaToWorldUU(
+                {ox, oy, oz}, g_centreYaw, baseYawRad, MetresToUU());
+            g_hmdOffset[0] = hmdUU.x;
+            g_hmdOffset[1] = hmdUU.y;
+            g_hmdOffset[2] = hmdUU.z;
 
             // ---- ⭐ run 175: is the 6-DOF offset being COMPUTED, or just not applied? ----
             //
@@ -9314,11 +9312,11 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 float dx = views[1].pose.position.x - views[0].pose.position.x;
                 float dy = views[1].pose.position.y - views[0].pose.position.y;
                 float dz = views[1].pose.position.z - views[0].pose.position.z;
-                float dFwd   = -(dx * sc) - (dz * cc);
-                float dRight =  (dx * cc) - (dz * sc);
-                g_eyeDeltaUU[0] = (bc * dFwd - bs * dRight) * MetresToUU();
-                g_eyeDeltaUU[1] = (bs * dFwd + bc * dRight) * MetresToUU();
-                g_eyeDeltaUU[2] = dy * MetresToUU();
+                const vrpose::V3 eyeUU = vrpose::TrackingDeltaToWorldUU(
+                    {dx, dy, dz}, g_centreYaw, baseYawRad, MetresToUU());
+                g_eyeDeltaUU[0] = eyeUU.x;
+                g_eyeDeltaUU[1] = eyeUU.y;
+                g_eyeDeltaUU[2] = eyeUU.z;
             }
         }
         // Published for next frame's walk-direction transform - see the note on g_headYawRad.
@@ -9384,18 +9382,14 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 const float hx = g_handLastPos[AimHand()].x - g_headPosXR[0];
                 const float hy = g_handLastPos[AimHand()].y - g_headPosXR[1];
                 const float hz = g_handLastPos[AimHand()].z - g_headPosXR[2];
-                const float sc2 = sinf(g_centreYaw), cc2 = cosf(g_centreYaw);
-                const float fwd   = -(hx * sc2) - (hz * cc2);
-                const float right =  (hx * cc2) - (hz * sc2);
                 const float byr = g_baseYaw * (6.2831853f / 65536.0f);
-                const float bc2 = cosf(byr), bs2 = sinf(byr);
+                const vrpose::V3 aimUU = vrpose::TrackingDeltaToWorldUU(
+                    {hx, hy, hz}, g_centreYaw, byr, MetresToUU());
                 // Milli-UU, and ROUNDED rather than truncated - see the note at g_handOffX. Truncation
                 // toward zero was both coarse and asymmetric about the origin.
-                InterlockedExchange(&g_handOffX,
-                    (LONG)lroundf((bc2 * fwd - bs2 * right) * MetresToUU() * kHandFixed));
-                InterlockedExchange(&g_handOffY,
-                    (LONG)lroundf((bs2 * fwd + bc2 * right) * MetresToUU() * kHandFixed));
-                InterlockedExchange(&g_handOffZ, (LONG)lroundf(hy * MetresToUU() * kHandFixed));
+                InterlockedExchange(&g_handOffX, (LONG)lroundf(aimUU.x * kHandFixed));
+                InterlockedExchange(&g_handOffY, (LONG)lroundf(aimUU.y * kHandFixed));
+                InterlockedExchange(&g_handOffZ, (LONG)lroundf(aimUU.z * kHandFixed));
             }
             InterlockedExchange(&g_handDevValid, 1);
         }
@@ -9419,16 +9413,12 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             const float ox = g_handLastPos[OffHand()].x - g_headPosXR[0];
             const float oy = g_handLastPos[OffHand()].y - g_headPosXR[1];
             const float oz = g_handLastPos[OffHand()].z - g_headPosXR[2];
-            const float osc = sinf(g_centreYaw), occ = cosf(g_centreYaw);
-            const float ofwd   = -(ox * osc) - (oz * occ);
-            const float oright =  (ox * occ) - (oz * osc);
             const float obyr = g_baseYaw * (6.2831853f / 65536.0f);
-            const float obc = cosf(obyr), obs = sinf(obyr);
-            InterlockedExchange(&g_offHandOffX,
-                (LONG)lroundf((obc * ofwd - obs * oright) * MetresToUU() * kHandFixed));
-            InterlockedExchange(&g_offHandOffY,
-                (LONG)lroundf((obs * ofwd + obc * oright) * MetresToUU() * kHandFixed));
-            InterlockedExchange(&g_offHandOffZ, (LONG)lroundf(oy * MetresToUU() * kHandFixed));
+            const vrpose::V3 offUU = vrpose::TrackingDeltaToWorldUU(
+                {ox, oy, oz}, g_centreYaw, obyr, MetresToUU());
+            InterlockedExchange(&g_offHandOffX, (LONG)lroundf(offUU.x * kHandFixed));
+            InterlockedExchange(&g_offHandOffY, (LONG)lroundf(offUU.y * kHandFixed));
+            InterlockedExchange(&g_offHandOffZ, (LONG)lroundf(offUU.z * kHandFixed));
             InterlockedExchange(&g_offHandValid, 1);
         } else {
             InterlockedExchange(&g_offHandValid, 0);
@@ -10014,6 +10004,19 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
         InvalidateCamMats();
         g_camMatrixBound = false;
         return g_origSetVSConstF(dev, startReg, data, vec4Count);
+    }
+    // The TMD shader declares BoneMatrices at c5. This is metadata only and is
+    // inactive unless the bounded arm trace is explicitly enabled in the INI.
+    if (Rd(g_armPaletteTraceFrames) > 0 && g_boundShaderLayout.bones == 5 &&
+        g_boundShaderLayout.boneRegs == 225 && startReg < 230 &&
+        startReg + vec4Count > 5) {
+        InterlockedExchange(&g_armPaletteUploadStart, (LONG)startReg);
+        InterlockedExchange(&g_armPaletteUploadCount, (LONG)vec4Count);
+        InterlockedExchange(&g_armPaletteUploadFrame, Rd(g_armPaletteFrameToken));
+        InterlockedIncrement(&g_armPaletteUploadSeq);
+        const UINT lo=startReg>5?startReg:5;
+        const UINT hi=(startReg+vec4Count)<230?(startReg+vec4Count):230;
+        for(UINT r=lo;r<hi;++r) InterlockedOr(&g_armPaletteUploadCoverage[(r-5)/32],1L<<((r-5)&31));
     }
     bool scan = InterlockedCompareExchange(&g_scanArmed, 0, 0) != 0;
     // Duplication needs the final left-eye matrix cached, which only the modify path produces.
@@ -14489,6 +14492,66 @@ static void CaptureShadowEvidence(IDirect3DDevice9* dev) {
     }
 }
 
+// Trace only the two known first-person TMD palette sections. These are the
+// audited PSK bone-to-slot maps, not identity-index guesses. The trace is off
+// by default, bounded to at most 64 distinct frames, and reads the original
+// device constants before any draw-time palette surgery.
+static void CaptureArmPaletteTrace(IDirect3DDevice9* dev, INT baseVertex, UINT minIndex,
+                                  UINT numVertices, UINT startIndex, UINT primCount) {
+    static LONG lastFrame=-1;
+    static unsigned capturedFrames=0;
+    static LONG seenSectionFrame[2]={-1,-1};
+    if (Rd(g_armPaletteTraceFrames)<=0 || numVertices!=7444 || !FgMatchWindow() ||
+        !Rd(g_rtIsScene) || g_boundShaderLayout.shadow || g_boundShaderLayout.bones!=5 ||
+        g_boundShaderLayout.boneRegs!=225 || g_boundShaderLayout.local!=230) return;
+    int section=-1;
+    if(startIndex==0 && primCount==4402)section=0;
+    if(startIndex==13206 && primCount==7704)section=1;
+    if(section<0)return;
+    const LONG frame=Rd(g_armPaletteFrameToken);
+    if(frame!=lastFrame) {
+        if(capturedFrames >= (unsigned)Rd(g_armPaletteTraceFrames))return;
+        lastFrame=frame;++capturedFrames;
+    }
+    if(seenSectionFrame[section]==frame)return;
+    seenSectionFrame[section]=frame;
+
+    IDirect3DVertexShader9* vs=nullptr;IDirect3DVertexBuffer9* vb=nullptr;
+    IDirect3DIndexBuffer9* ib=nullptr;UINT vbOffset=0,stride=0;
+    dev->GetVertexShader(&vs);dev->GetStreamSource(0,&vb,&vbOffset,&stride);dev->GetIndices(&ib);
+    float bones[225][4]{};float local[4][4]{};
+    const HRESULT hb=dev->GetVertexShaderConstantF(5,&bones[0][0],225);
+    const HRESULT hl=dev->GetVertexShaderConstantF(230,&local[0][0],4);
+    bool completeUpload=Rd(g_armPaletteUploadFrame)==frame;
+    for(int w=0;w<8;++w){const uint32_t want=w==7?0x00000001u:0xffffffffu;
+        if(((uint32_t)InterlockedCompareExchange(&g_armPaletteUploadCoverage[w],0,0)&want)!=want)completeUpload=false;}
+    Log("ArmPaletteTrace frame=%ld draw=%ld sec=%d vs=%p vb=%p ib=%p base=%d min=%u verts=%u start=%u prims=%u stride=%u vbOff=%u uploadSeq=%ld uploadFrame=%ld uploadRange=c%ld+%ld coverage225=%d read=%08lx/%08lx",
+        frame,Rd(g_frameDrawIdx),section,(void*)vs,(void*)vb,(void*)ib,baseVertex,minIndex,numVertices,
+        startIndex,primCount,stride,vbOffset,Rd(g_armPaletteUploadSeq),Rd(g_armPaletteUploadFrame),
+        Rd(g_armPaletteUploadStart),Rd(g_armPaletteUploadCount),completeUpload?1:0,(unsigned long)hb,(unsigned long)hl);
+    char matrices[3072]{};size_t used=0;
+    if(SUCCEEDED(hl))used=(size_t)_snprintf_s(matrices,sizeof(matrices),_TRUNCATE,
+        "local=[%.7g %.7g %.7g %.7g][%.7g %.7g %.7g %.7g][%.7g %.7g %.7g %.7g][%.7g %.7g %.7g %.7g]",
+        local[0][0],local[0][1],local[0][2],local[0][3],local[1][0],local[1][1],local[1][2],local[1][3],local[2][0],local[2][1],local[2][2],local[2][3],local[3][0],local[3][1],local[3][2],local[3][3]);
+    if(SUCCEEDED(hb)) {
+        // Section 0 slots: wrist 9 at slot 1, forearm 26 at 18, right wrist 51 at 19.
+        // Section 1 slots: shoulder 7 at 0, forearm2 46 at 1, elbow 8 at 2,
+        // right elbow 50 at 12, forearm 85 at 13, right shoulder 49 at 14.
+        const int slots0[]={1,18,19};const int bones0[]={9,26,51};
+        const int slots1[]={0,1,2,12,13,14};const int bones1[]={7,46,8,50,85,49};
+        const int* slots=section?slots1:slots0;const int* ids=section?bones1:bones0;
+        const int n=section?6:3;
+        for(int i=0;i<n && used<sizeof(matrices)-200;++i){const int slot=slots[i];const float* m=&bones[slot*3][0];
+            const int wrote=_snprintf_s(matrices+used,sizeof(matrices)-used,_TRUNCATE,
+                " bone%d/slot%d/c%d=[%.7g %.7g %.7g %.7g][%.7g %.7g %.7g %.7g][%.7g %.7g %.7g %.7g]",
+                ids[i],slot,5+slot*3,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11]);
+            if(wrote>0)used+=(size_t)wrote;
+        }
+    }
+    Log("ArmPaletteTraceMatrices frame=%ld draw=%ld sec=%d %s",frame,Rd(g_frameDrawIdx),section,matrices);
+    if(vs)vs->Release();if(vb)vb->Release();if(ib)ib->Release();
+}
+
 // Confirm a caster by retained buffer/range identity, not a vertex-count collision.
 // Color draws teach this bounded cache; a new weapon discards all identities.
 static fpshadow::DrawKey g_fpCasterKeys[32];
@@ -14531,6 +14594,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                                                UINT startIndex, UINT primCount) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     InterlockedIncrement(&g_frameDrawIdx);
+    CaptureArmPaletteTrace(dev,baseVertex,minIndex,numVertices,startIndex,primCount);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     if(g_boundShaderLayout.shadow)InterlockedIncrement(&g_vrCounters.fpShadowDepthDraws);
     if (TrackFpCaster(dev,baseVertex,minIndex,numVertices,startIndex,primCount)) {
@@ -22568,6 +22632,8 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             }
             InterlockedExchange(&g_dpgCount, 0);
             InterlockedExchange(&g_frameDrawIdx, 0);
+            InterlockedIncrement(&g_armPaletteFrameToken);
+            if(Rd(g_armPaletteTraceFrames)>0)for(int i=0;i<8;++i)InterlockedExchange(&g_armPaletteUploadCoverage[i],0);
             InterlockedExchange(&g_inForeground, 0);
             InterlockedExchange(&g_fgDrawCount, 0);
             // ⭐ run 230: this frame's sighting becomes next frame's state, then clears.
@@ -23341,6 +23407,10 @@ void LoadIniSettings() {
     // Run 198: the reload-arms fix. Default on - it is the reported artefact, and it cannot reach the
     // gun or the 390-vertex mesh because both are in the baseline set.
     g_renderEvidence = GetPrivateProfileIntA("Diagnostic", "RenderEvidence", 0, path) ? 1 : 0;
+    g_armPaletteTraceFrames=GetPrivateProfileIntA("Diagnostic","ArmPaletteTraceFrames",0,path);
+    if(g_armPaletteTraceFrames<0)g_armPaletteTraceFrames=0;
+    if(g_armPaletteTraceFrames>64)g_armPaletteTraceFrames=64;
+    Log("arm palette trace=%ld frame(s), exact TMD sections only; 0=off (default)",Rd(g_armPaletteTraceFrames));
     g_cameraTranslationEvidence=GetPrivateProfileIntA("Diagnostic","CameraTranslationEvidence",0,path)?1:0;
     Log("camera translation evidence=%d; passive 10Hz, 240 samples maximum; no translation override",g_cameraTranslationEvidence);
     g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",1,path)?1:0;

@@ -1,0 +1,8 @@
+/MAP:d3d9.map 
+/DEF:d3d9.def 
+/LIBPATH:"C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries" 
+/LIBPATH:. 
+"C:\Users\Trilex\vr-mods\SingularityVR-production\spikes\view_matrix\openxr_loader.lib" 
+dxgi.lib 
+user32.lib 
+shell32.lib 

@@ -1,0 +1,87 @@
+Microsoft (R) COFF/PE Dumper Version 14.51.36252.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries\openxr_loader.dll
+
+File Type: DLL
+
+  Section contains the following exports for openxr_loader.dll
+
+    00000000 characteristics
+    FFFFFFFF time date stamp
+        0.00 version
+           1 ordinal base
+          56 number of functions
+          56 number of names
+
+    ordinal hint RVA      name
+
+          1    0 00004359 xrAcquireSwapchainImage
+          2    1 00003666 xrApplyHapticFeedback
+          3    2 0000768A xrAttachSessionActionSets
+          4    3 00004228 xrBeginFrame
+          5    4 00002725 xrBeginSession
+          6    5 000089F4 xrCreateAction
+          7    6 00001D8E xrCreateActionSet
+          8    7 000056EB xrCreateActionSpace
+          9    8 00005A79 xrCreateInstance
+         10    9 0000430E xrCreateReferenceSpace
+         11    A 00006BEF xrCreateSession
+         12    B 000072D9 xrCreateSwapchain
+         13    C 00004A75 xrDestroyAction
+         14    D 00005E9D xrDestroyActionSet
+         15    E 00001997 xrDestroyInstance
+         16    F 0000B9C9 xrDestroySession
+         17   10 0000697E xrDestroySpace
+         18   11 00002D65 xrDestroySwapchain
+         19   12 00009D54 xrEndFrame
+         20   13 00009B83 xrEndSession
+         21   14 00007FEA xrEnumerateApiLayerProperties
+         22   15 00007E96 xrEnumerateBoundSourcesForAction
+         23   16 00002617 xrEnumerateEnvironmentBlendModes
+         24   17 0000BCE4 xrEnumerateInstanceExtensionProperties
+         25   18 00002C2F xrEnumerateReferenceSpaces
+         26   19 000083A5 xrEnumerateSwapchainFormats
+         27   1A 00007F9F xrEnumerateSwapchainImages
+         28   1B 000057F9 xrEnumerateViewConfigurationViews
+         29   1C 00006D11 xrEnumerateViewConfigurations
+         30   1D 00005D8A xrGetActionStateBoolean
+         31   1E 0000336E xrGetActionStateFloat
+         32   1F 00006EE7 xrGetActionStatePose
+         33   20 00007900 xrGetActionStateVector2f
+         34   21 000033AF xrGetCurrentInteractionProfile
+         35   22 00002B53 xrGetInputSourceLocalizedName
+         36   23 0000B848 xrGetInstanceProcAddr
+         37   24 0000BB4F xrGetInstanceProperties
+         38   25 00007DBA xrGetReferenceSpaceBoundsRect
+         39   26 0000742D xrGetSystem
+         40   27 0000AC7C xrGetSystemProperties
+         41   28 000091BA xrGetViewConfigurationProperties
+         42   29 000079A0 xrLocateSpace
+         43   2A 000066D1 xrLocateSpaces
+         44   2B 0000133E xrLocateViews
+         45   2C 00007275 xrPathToString
+         46   2D 00008D5F xrPollEvent
+         47   2E 00005934 xrReleaseSwapchainImage
+         48   2F 00009F9D xrRequestExitSession
+         49   30 00006F46 xrResultToString
+         50   31 0000643D xrStopHapticFeedback
+         51   32 000071D0 xrStringToPath
+         52   33 0000AB91 xrStructureTypeToString
+         53   34 00005AA6 xrSuggestInteractionProfileBindings
+         54   35 00001DCA xrSyncActions
+         55   36 000084EA xrWaitFrame
+         56   37 0000ACE0 xrWaitSwapchainImage
+
+  Summary
+
+        1000 .00cfg
+        5000 .data
+        1000 .fptable
+        2000 .idata
+       2D000 .rdata
+        D000 .reloc
+        1000 .rsrc
+      1D7000 .text
+        1000 .tls

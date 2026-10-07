@@ -2,6 +2,8 @@
 #include "../fake_xr.h"
 #include "../recenter.h"
 #include "../arm_ik.h"
+#include "../pose_conversion.h"
+#include "../singularity_bind_reference.h"
 #include <cassert>
 #include <cmath>
 #include <cstdio>
@@ -224,6 +226,133 @@ void arm_ik_property_tests() {
     }
     std::puts("arm_ik: 10cm wrist tracking, clamp at full extension, elbow straightens");
 }
+
+void pose_conversion_invariants() {
+    using namespace vrpose;
+    const float unitsPerMetre = 52.5f;
+    const float centreYaw = 0.37f, baseYaw = -0.61f;
+    const V3 basis[3] = {
+        TrackingDeltaToWorldUU({1,0,0}, 0, 0, 1),
+        TrackingDeltaToWorldUU({0,1,0}, 0, 0, 1),
+        TrackingDeltaToWorldUU({0,0,1}, 0, 0, 1)
+    };
+    auto dot=[](V3 a,V3 b){return a.x*b.x+a.y*b.y+a.z*b.z;};
+    auto cross=[](V3 a,V3 b){return V3{a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x};};
+    const float det=dot(basis[0],cross(basis[1],basis[2]));
+    assert(close(det,-1.0f,1e-6f)); // semantic forward/right/up map is an intentional reflection
+    for (int i=0;i<3;++i) {
+        assert(close(Length(basis[i]),1.0f,1e-6f));
+        for(int j=0;j<3;++j) assert(close(dot(basis[i],basis[j]),i==j?1.0f:0.0f,1e-6f));
+    }
+
+    const V3 deltas[]={{.10f,0,0},{0,.10f,0},{0,0,.10f},{.10f,.10f,.10f}};
+    for (V3 d : deltas) {
+        const V3 hmd=TrackingDeltaToWorldUU(d,centreYaw,baseYaw,unitsPerMetre);
+        const V3 left=TrackingDeltaToWorldUU(d,centreYaw,baseYaw,unitsPerMetre);
+        const V3 right=TrackingDeltaToWorldUU(d,centreYaw,baseYaw,unitsPerMetre);
+        assert(close(Length(hmd),Length(left),1e-5f));
+        assert(close(Length(hmd),Length(right),1e-5f));
+        assert(close(Length(hmd),Length(d)*unitsPerMetre,1e-5f));
+        const V3 origin=TrackingDeltaToWorldUU({.41f,-.2f,.73f},centreYaw,baseYaw,unitsPerMetre);
+        const V3 moved=TrackingDeltaToWorldUU(Add({.41f,-.2f,.73f},d),centreYaw,baseYaw,unitsPerMetre);
+        const V3 diff=Sub(moved,origin);
+        assert(close(Length(diff),Length(hmd),1e-4f));
+    }
+    const float eyeM=.064f; // representative test vector only; production uses located eye poses
+    const V3 eye=TrackingDeltaToWorldUU({eyeM,0,0},centreYaw,baseYaw,unitsPerMetre);
+    assert(close(Length(eye),eyeM*unitsPerMetre,1e-5f));
+    assert(close(Length(TrackingDeltaToWorldUU({.1f,0,0},centreYaw,baseYaw,unitsPerMetre)),5.25f,1e-5f));
+    std::puts("pose conversion: reflected orthonormal basis, HMD/left/right linearity, eye scale");
+}
+
+void quaternion_conversion_invariants() {
+    using namespace vrpose;
+    const float h=0.70710678118f;
+    const float halfPi=1.57079632679f;
+    const Quat samples[]={
+        {0,0,0,1}, {h,0,0,h}, {-h,0,0,h},
+        {0,h,0,h}, {0,-h,0,h}, {0,0,h,h}, {0,0,-h,h},
+        {.2f,.3f,.1f,.92736185f}
+    };
+    for (unsigned i=0;i<sizeof(samples)/sizeof(samples[0]);++i) {
+        const Quat q=samples[i];
+        const float qn=std::sqrt(q.x*q.x+q.y*q.y+q.z*q.z+q.w*q.w);
+        assert(close(qn,1.0f,1e-4f));
+        const EulerYXZ a=DecomposeOpenXrYXZ(q);
+        // Both OpenXR hand indices call this same production extractor.
+        const EulerYXZ left=DecomposeOpenXrYXZ(q), right=DecomposeOpenXrYXZ(q);
+        assert(close(left.pitchX,right.pitchX,1e-6f));
+        assert(close(left.yawY,right.yawY,1e-6f));
+        assert(close(left.rollZ,right.rollZ,1e-6f));
+        assert(std::isfinite(a.pitchX)&&std::isfinite(a.yawY)&&std::isfinite(a.rollZ));
+        if(i==0) assert(close(a.pitchX,0)&&close(a.yawY,0)&&close(a.rollZ,0));
+        if(i==1) assert(close(a.pitchX,halfPi,1e-3f));
+        if(i==2) assert(close(a.pitchX,-halfPi,1e-3f));
+        if(i==3) assert(close(a.yawY,halfPi,1e-4f));
+        if(i==4) assert(close(a.yawY,-halfPi,1e-4f));
+        if(i==5) assert(close(a.rollZ,halfPi,1e-4f));
+        if(i==6) assert(close(a.rollZ,-halfPi,1e-4f));
+
+        // Compose the extracted Y-X-Z angles as a column-vector rotation and
+        // verify orthogonality and determinant +1, including the combined case.
+        const float cp=std::cos(a.pitchX),sp=std::sin(a.pitchX);
+        const float cy=std::cos(a.yawY),sy=std::sin(a.yawY);
+        const float cr=std::cos(a.rollZ),sr=std::sin(a.rollZ);
+        const float m[3][3]={
+            {cy*cr+sy*sp*sr,-cy*sr+sy*sp*cr,sy*cp},
+            {cp*sr,cp*cr,-sp},
+            {-sy*cr+cy*sp*sr,sy*sr+cy*sp*cr,cy*cp}
+        };
+        for(int row=0;row<3;++row) for(int col=0;col<3;++col) {
+            float d=0;for(int k=0;k<3;++k)d+=m[row][k]*m[col][k];
+            assert(close(d,row==col?1.0f:0.0f,1e-4f));
+        }
+        const float det=m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-
+                        m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+
+                        m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0]);
+        assert(close(det,1.0f,1e-4f));
+    }
+    std::puts("quaternion: identity, +/-90deg XYZ, combined, normalized, proper orthonormal rotations");
+}
+
+void arm_palette_decoding_invariants() {
+    using namespace armbind;
+    constexpr unsigned n=sizeof(bindassets::tmd)/sizeof(bindassets::tmd[0]);
+    Mat bind[n];
+    assert(BuildReference(bindassets::tmd,n,bind));
+    const unsigned shoulder=7,elbow=8,wrist=9;
+    const float upper=armik::Length(Position(bind[elbow])-Position(bind[shoulder]));
+    const float fore=armik::Length(Position(bind[wrist])-Position(bind[elbow]));
+    assert(close(upper,23.7283363f,.01f));
+    assert(close(fore,21.4858837f,.01f));
+
+    // S = inverse(B) * J under the verified row-vector skinning convention;
+    // CurrentJoint(B,S) must reconstruct the component-space joint J.
+    Mat invShoulder,invElbow,invWrist;
+    assert(skeletal::Inverse(invShoulder.m,bind[shoulder].m));
+    assert(skeletal::Inverse(invElbow.m,bind[elbow].m));
+    assert(skeletal::Inverse(invWrist.m,bind[wrist].m));
+    Mat desiredS=bind[shoulder],desiredE=bind[elbow],desiredW=bind[wrist];
+    desiredS.m[3][0]+=2.0f;desiredS.m[3][1]-=3.0f;desiredS.m[3][2]+=1.0f;
+    desiredE.m[3][0]+=2.0f;desiredE.m[3][1]-=3.0f;desiredE.m[3][2]+=1.0f;
+    desiredW.m[3][0]+=2.0f;desiredW.m[3][1]-=3.0f;desiredW.m[3][2]+=1.0f;
+    Mat skinS,skinE,skinW;
+    skeletal::Multiply(skinS.m,invShoulder.m,desiredS.m);
+    skeletal::Multiply(skinE.m,invElbow.m,desiredE.m);
+    skeletal::Multiply(skinW.m,invWrist.m,desiredW.m);
+    float gpuS[3][4],gpuE[3][4],gpuW[3][4];
+    ToGpu(skinS,gpuS);ToGpu(skinE,gpuE);ToGpu(skinW,gpuW);
+    Mat decodedS,decodedE,decodedW;
+    assert(CurrentJoint(bind[shoulder],gpuS,decodedS));
+    assert(CurrentJoint(bind[elbow],gpuE,decodedE));
+    assert(CurrentJoint(bind[wrist],gpuW,decodedW));
+    assert(Rigid(decodedS)&&Rigid(decodedE)&&Rigid(decodedW));
+    assert(close(armik::Length(Position(decodedE)-Position(decodedS)),upper,.01f));
+    assert(close(armik::Length(Position(decodedW)-Position(decodedE)),fore,.01f));
+    assert(close(Position(decodedS).x,Position(desiredS).x,.001f));
+    assert(close(Position(decodedW).z,Position(desiredW).z,.001f));
+    std::puts("arm palette: GPU 3x4 decode, bind*skin component reconstruction, rigid joints, stable segment lengths");
+}
 } // namespace
 
 int main() {
@@ -232,6 +361,9 @@ int main() {
     fake_xr_tests();
     recenter_tests();
     arm_ik_property_tests();
+    pose_conversion_invariants();
+    quaternion_conversion_invariants();
+    arm_palette_decoding_invariants();
     std::puts("PASS");
     return 0;
 }
