@@ -72,6 +72,12 @@
 #include <openxr/openxr_platform.h>
 
 #include "MinHook.h"
+#include "hotpath_sampler.h"
+static hotpath::sampler g_hotPathSampler;
+alignas(8) static volatile LONG64 g_hotLeftPoseFrame = 0, g_hotRightPoseFrame = 0;
+alignas(8) static volatile LONG64 g_hotHmdPoseFrame = 0, g_hotInputFrame = 0;
+alignas(8) static volatile LONG64 g_hotRecenterGeneration = 0, g_hotPaletteFrame = 0;
+static XrTime g_hotPredictedDisplayTime = 0;
 
 #include <cstdio>
 #include <cstdint>
@@ -4095,6 +4101,7 @@ HRESULT STDMETHODCALLTYPE Hook_CreateVS(IDirect3DDevice9* dev,const DWORD* code,
     return hr;
 }
 HRESULT STDMETHODCALLTYPE Hook_SetVS(IDirect3DDevice9* dev,IDirect3DVertexShader9* shader) {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     const HRESULT hr=g_origSetVS(dev,shader);
     if(FAILED(hr))return hr;
     g_boundShaderLayout={};
@@ -4705,6 +4712,7 @@ void StampCaptureState(CopySlot& cap) {
 void DrawLaserSight(IDirect3DDevice9* dev);
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::d3d9_to_d3d11_copy);
     // ⭐ run 217: defined further down, next to the transforms it reuses - see DrawLaserSight.
     // The last thing added to the frame before it is handed to XR. Here rather than at a draw
     // hook because this is the one point that is provably AFTER the scene and BEFORE the copy, on both
@@ -5233,6 +5241,49 @@ static void ReportVrRuntimeCounters() {
         Rd(c.gripPressEdges),Rd(c.gripReleaseEdges),Rd(c.gripLatchCount),Rd(c.gripDetachCount),Rd(c.gripLatchWithoutGripERROR),Rd(c.fpShadowDepthDraws),Rd(c.fpShadowDepthSkipped),Rd(c.fpShadowEyeModifiedERROR));
     Log("VR counters cursor draw/suppress=%ld/%ld prompt show/hide/action=%ld/%ld/%ld icons/error=%ld/%ld; cursor/prompt hooks UNRESOLVED",
         Rd(c.nativeCursorDraws),Rd(c.nativeCursorSuppressed),Rd(c.contextPromptShow),Rd(c.contextPromptHide),Rd(c.contextPromptAction),Rd(c.psIconDraws),Rd(c.psIconDrawWithoutPromptERROR));
+}
+static void ReportHotPathSampler() {
+    char report[4096]{};
+    size_t used = 0;
+    auto append = [&](const char* format, auto... args) {
+        if (used >= sizeof(report)) return;
+        const int n = _snprintf_s(report + used, sizeof(report) - used, _TRUNCATE, format, args...);
+        if (n > 0) used += static_cast<size_t>(n);
+    };
+    append("window=%u frames, timing sample=1/%u calls; frame-token=%llu predicted=%lldns "
+           "poses[hmd/left/right]=%lld/%lld/%lld input=%lld recenter-gen=%lld palette=%lld; "
+           "xr-calls[sync/actions/views/left-space/right-space]=%llu/%llu/%llu/%llu/%llu; ",
+           hotpath::default_window_frames, hotpath::sample_stride,
+           static_cast<unsigned long long>(g_hotPathSampler.frame_token()),
+           static_cast<long long>(g_hotPredictedDisplayTime),
+           static_cast<long long>(InterlockedCompareExchange64(&g_hotHmdPoseFrame,0,0)),
+           static_cast<long long>(InterlockedCompareExchange64(&g_hotLeftPoseFrame,0,0)),
+           static_cast<long long>(InterlockedCompareExchange64(&g_hotRightPoseFrame,0,0)),
+           static_cast<long long>(InterlockedCompareExchange64(&g_hotInputFrame,0,0)),
+           static_cast<long long>(InterlockedCompareExchange64(&g_hotRecenterGeneration,0,0)),
+           static_cast<long long>(InterlockedCompareExchange64(&g_hotPaletteFrame,0,0)),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::xr_sync_actions)),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::xr_action_state)),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::xr_locate_views)),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::xr_locate_left)),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::xr_locate_right)));
+    for (unsigned i = 0; i < static_cast<unsigned>(hotpath::Family::count); ++i) {
+        const auto family = static_cast<hotpath::Family>(i);
+        const auto r = g_hotPathSampler.read(family);
+        append("%s[calls=%llu samples=%llu avg_us=%.3f est_ms/frame=%.4f] ", hotpath::name(family),
+               static_cast<unsigned long long>(r.calls), static_cast<unsigned long long>(r.samples),
+               g_hotPathSampler.microseconds_per_call(family),
+               g_hotPathSampler.milliseconds_per_frame(family, hotpath::default_window_frames));
+    }
+    const double present = g_hotPathSampler.milliseconds_per_frame(hotpath::Family::frame_total, hotpath::default_window_frames);
+    const double known =
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_wait_frame, hotpath::default_window_frames) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::pose_input_update, hotpath::default_window_frames) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::d3d9_to_d3d11_copy, hotpath::default_window_frames) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_image_work, hotpath::default_window_frames) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_submit, hotpath::default_window_frames);
+    append("present-hook residual estimate=%.4f ms/frame (inclusive stage estimates subtracted)", present-known);
+    Log("hotpath sampler complete: %s", report);
 }
 #include "native_ui_input.h"
 uipointer::TriggerGate g_vrUiTrigger[2];
@@ -8045,6 +8096,7 @@ bool InitXRInput() {
 // Turns controller state into the synthetic pad. Called once per frame from UpdateFromHeadset,
 // on the same thread as everything else that touches g_baseYaw.
 void SyncXRInput(XrTime displayTime) {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::pose_input_update);
     const bool uiMenu=Rd(g_vrUiEnabled) && Rd(g_vrUiNativeReady) && Rd(g_vrUiMenu);
     if (!g_xrInputReady) return;
 
@@ -8068,6 +8120,7 @@ void SyncXRInput(XrTime displayTime) {
     si.activeActionSets = &aas;
     LARGE_INTEGER tSync = Now();
     const int64_t diagSync = g_diagEnabled ? DiagQpc() : 0;
+    if (!pollOff) g_hotPathSampler.count(hotpath::Counter::xr_sync_actions);
     const XrResult sr = pollOff ? XR_SUCCESS : xrSyncActions(g_xrSession, &si);
     if (!pollOff) DiagPhaseAdd(DP_SYNC, diagSync);
     {
@@ -8115,6 +8168,7 @@ void SyncXRInput(XrTime displayTime) {
         XrActionStateGetInfo gi{ XR_TYPE_ACTION_STATE_GET_INFO };
         gi.action = a;
         XrActionStateVector2f st{ XR_TYPE_ACTION_STATE_VECTOR2F };
+        g_hotPathSampler.count(hotpath::Counter::xr_action_state);
         if (XR_SUCCEEDED(xrGetActionStateVector2f(g_xrSession, &gi, &st)) && st.isActive) {
             *x = st.currentState.x; *y = st.currentState.y;
             g_vrStickActive[hand] = true;
@@ -8126,6 +8180,7 @@ void SyncXRInput(XrTime displayTime) {
         XrActionStateGetInfo gi{ XR_TYPE_ACTION_STATE_GET_INFO };
         gi.action = a;
         XrActionStateFloat st{ XR_TYPE_ACTION_STATE_FLOAT };
+        g_hotPathSampler.count(hotpath::Counter::xr_action_state);
         if (XR_SUCCEEDED(xrGetActionStateFloat(g_xrSession, &gi, &st)) && st.isActive)
             return st.currentState;
         return 0.0f;
@@ -8135,6 +8190,7 @@ void SyncXRInput(XrTime displayTime) {
         XrActionStateGetInfo gi{ XR_TYPE_ACTION_STATE_GET_INFO };
         gi.action = a;
         XrActionStateBoolean st{ XR_TYPE_ACTION_STATE_BOOLEAN };
+        g_hotPathSampler.count(hotpath::Counter::xr_action_state);
         return XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) &&
                st.isActive && st.currentState;
     };
@@ -8145,6 +8201,7 @@ void SyncXRInput(XrTime displayTime) {
         gi.action = g_actGrip;
         gi.subactionPath = g_handSubPath[hand];
         XrActionStateBoolean st{ XR_TYPE_ACTION_STATE_BOOLEAN };
+        g_hotPathSampler.count(hotpath::Counter::xr_action_state);
         return XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) &&
                st.isActive && st.currentState;
     };
@@ -8258,7 +8315,11 @@ void SyncXRInput(XrTime displayTime) {
         XrSpaceLocation loc{ XR_TYPE_SPACE_LOCATION };
         // handTime, not displayTime - see the run-190 note above. With PoseLeadFrames=0 these are equal,
         // so the old behaviour is bit-identical and the A/B is honest.
+        g_hotPathSampler.count(i == 0 ? hotpath::Counter::xr_locate_left : hotpath::Counter::xr_locate_right);
         if (XR_FAILED(xrLocateSpace(g_handSpace[i], g_xrSpace, handTime, &loc))) continue;
+        if (g_hotPathSampler.active())
+            InterlockedExchange64(i == 0 ? &g_hotLeftPoseFrame : &g_hotRightPoseFrame,
+                static_cast<LONG64>(g_hotPathSampler.frame_token()));
         // TRACKED, not merely VALID. A set-down controller keeps reporting a valid last-known
         // pose long after it has stopped being tracked, so the valid bit alone cannot tell a live
         // controller from a sleeping one - which is exactly the distinction under investigation.
@@ -8307,6 +8368,7 @@ void SyncXRInput(XrTime displayTime) {
             gi.action = g_actGrasp;
             gi.subactionPath = g_handSubPath[i];
             XrActionStateBoolean st{ XR_TYPE_ACTION_STATE_BOOLEAN };
+            if (!pollOff) g_hotPathSampler.count(hotpath::Counter::xr_action_state);
             if (!pollOff && XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) && st.isActive) {
                 haveTouch = true;
                 touched = st.currentState != 0;
@@ -8679,6 +8741,7 @@ void SyncXRInput(XrTime displayTime) {
         XrActionStateGetInfo gi{ XR_TYPE_ACTION_STATE_GET_INFO };
         gi.action = a;
         XrActionStateFloat st{ XR_TYPE_ACTION_STATE_FLOAT };
+        if (!pollOff) g_hotPathSampler.count(hotpath::Counter::xr_action_state);
         if (pollOff || XR_FAILED(xrGetActionStateFloat(g_xrSession, &gi, &st))) {
             ++g_trigInactiveFrames[hand];
             return 0.0f;
@@ -8759,6 +8822,7 @@ void SyncXRInput(XrTime displayTime) {
             gi.action = g_actStickTouch;
             gi.subactionPath = g_handSubPath[hand];
             XrActionStateBoolean st{ XR_TYPE_ACTION_STATE_BOOLEAN };
+            if (!pollOff) g_hotPathSampler.count(hotpath::Counter::xr_action_state);
             if (!pollOff && XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) && st.isActive) {
                 g_stickTouchAvail[hand] = true;
                 g_stickTouch[hand] = st.currentState != 0;
@@ -8773,6 +8837,7 @@ void SyncXRInput(XrTime displayTime) {
             gi.action = g_actTrigTouch;
             gi.subactionPath = g_handSubPath[hand];
             XrActionStateBoolean st{ XR_TYPE_ACTION_STATE_BOOLEAN };
+            if (!pollOff) g_hotPathSampler.count(hotpath::Counter::xr_action_state);
             if (!pollOff && XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) && st.isActive) {
                 g_trigTouchAvail[hand] = true;
                 g_trigTouch[hand] = st.currentState != 0;
@@ -8903,13 +8968,18 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
 
     XrFrameState fs{ XR_TYPE_FRAME_STATE };
     LARGE_INTEGER tWait = Now();
+    hotpath::scope waitScope(g_hotPathSampler, hotpath::Family::xr_wait_frame);
     if (XR_FAILED(xrWaitFrame(g_xrSession, nullptr, &fs))) {
+        waitScope.finish();
         DiagPhaseAdd(DP_WAIT, tWait.QuadPart);
         // Not merely a skipped frame: returning without clearing would leave the pad latched at
         // whatever was last published, and the player walking.
         ClearPad();
         return;
     }
+    waitScope.finish();
+    if (g_hotPathSampler.active()) g_hotPredictedDisplayTime = fs.predictedDisplayTime;
+    g_hotPathSampler.next_xr_frame();
     g_msWaitFrame += MsSince(tWait);
     DiagPhaseAdd(DP_WAIT, tWait.QuadPart);
     ++g_waitFrames;
@@ -8922,6 +8992,8 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // not of an assumed 120 Hz. A hardcoded 8.33 ms would silently be wrong on a 72 or 90 Hz headset.
     if (fs.predictedDisplayPeriod > 0) g_lastDisplayPeriod = fs.predictedDisplayPeriod;
     SyncXRInput(fs.predictedDisplayTime);
+    if (g_hotPathSampler.active())
+        InterlockedExchange64(&g_hotInputFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
     if (g_padTurnAccum) {
         // Discarded rather than applied before the first centre: g_baseYaw is seeded from the
         // game's own yaw at that moment, so anything accumulated beforehand would be overwritten
@@ -8975,9 +9047,12 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     vli.displayTime = fs.predictedDisplayTime;
     vli.space = g_xrSpace;
     XrViewState vs{ XR_TYPE_VIEW_STATE };
+    g_hotPathSampler.count(hotpath::Counter::xr_locate_views);
     if (XR_SUCCEEDED(xrLocateViews(g_xrSession, &vli, &vs, 2, &n, views)) && n >= 1 &&
         (vs.viewStateFlags & XR_VIEW_STATE_ORIENTATION_VALID_BIT)) {
         // keep the per-eye poses/FOVs for the projection layer submitted below
+        if (g_hotPathSampler.active())
+            InterlockedExchange64(&g_hotHmdPoseFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
         for (uint32_t i = 0; i < n && i < 2; ++i) { g_eyePose[i] = views[i].pose; g_eyeFov[i] = views[i].fov; }
         g_haveEyes = (n >= 2);
         g_headFovDeg = (fabsf(views[0].fov.angleLeft) + fabsf(views[0].fov.angleRight)) * 57.2957795f;
@@ -8995,6 +9070,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         float rollRad = atan2f(2.0f * (q.w * q.z + q.x * q.y),
                                1.0f - 2.0f * (q.x * q.x + q.z * q.z));
         if (InterlockedExchange(&g_recenterRequested, 0)) {
+            if (g_hotPathSampler.active()) InterlockedIncrement64(&g_hotRecenterGeneration);
             // Re-enter the existing centre acquisition below.  It updates the one shared XR
             // stage reference used by HMD translation, both hands and the eye projection; the pawn
             // and its world transform are untouched.
@@ -9749,6 +9825,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     const bool cropEyes = frame && frame->dup && !frame->stereo && g_srcW >= 2;
     g_scCropped = cropEyes;
     if (frame && EnsureSwapchain(cropEyes ? g_srcW / 2 : g_srcW, g_srcH)) {
+        hotpath::scope xrImageScope(g_hotPathSampler, hotpath::Family::xr_image_work);
         // Every one of these was captured with the pixels, not read live. In pipelined mode the
         // image is a frame old, and reading `g_stereo` or `g_eyePose` here would describe the
         // frame being drawn now rather than the one being submitted.
@@ -9884,7 +9961,10 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // encode and stream, so a congested link or a backed-up compositor shows up HERE - and until
     // now it was pooled into "our work" alongside the game's own rendering.
     LARGE_INTEGER tXrEnd = Now();
+    hotpath::scope xrSubmitScope(g_hotPathSampler, hotpath::Family::xr_submit);
     xrEndFrame(g_xrSession, &fei);
+    xrSubmitScope.finish();
+    // Existing timing above covers the blocking call; this sampler records the aggregate API scope.
     DiagPhaseAdd(DP_END, tXrEnd.QuadPart);
     const double msEnd = MsSince(tXrEnd);
     g_msXrSubmit += msEnd;
@@ -9926,6 +10006,7 @@ extern bool          g_inHudRemap;
 
 HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
                                            const float* data, UINT vec4Count) {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     // The draw-time gate is too late: HMD position, rotation and projection are
     // already written here. A light/reflection view can pass the matrix shape
     // test, so exclude the same offscreen targets before learning or editing.
@@ -10434,6 +10515,7 @@ static void DpgRecord(uint8_t kind, float z0, float z1, uint32_t a, uint32_t b, 
 
 HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
                                               IDirect3DSurface9* surf) {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     HRESULT hr = g_origSetRenderTarget(dev, idx, surf);
     if (FAILED(hr)) return hr; // Failed binds leave the actual device target unchanged.
     // Run 116: which target the first-person pass draws into. If it switches at the foreground
@@ -11790,6 +11872,7 @@ void VidProbeFrameEnd() {
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                         UINT start, UINT count) {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     InterlockedIncrement(&g_frameDrawIdx);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     ++g_vidFrameDraws;
@@ -13016,6 +13099,9 @@ inline bool FgMatchWindow();
 volatile LONG g_independentLeftDraws=0;
 static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first, UINT triangles,
                                   float saved[108][4]) {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::bone_palette);
+    if (g_hotPathSampler.active())
+        InterlockedExchange64(&g_hotPaletteFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
     const LONG motionMode=Rd(g_hideMeshIdx);
     if(!g_independentHands || (motionMode!=1 && motionMode!=3) || Rd(g_fgRideAll)!=1 || !Rd(g_gunVerts) ||
        !g_camMatrixBound || !Rd(g_offHandValid) || !Rd(g_handDevValid) ||
@@ -14277,6 +14363,7 @@ PFN_SetViewport g_origSetViewport = nullptr;
 PFN_Clear       g_origClear = nullptr;
 
 HRESULT STDMETHODCALLTYPE Hook_SetViewport(IDirect3DDevice9* dev, const D3DVIEWPORT9* vp) {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     if (vp) DpgRecord(0, vp->MinZ, vp->MaxZ, vp->X, vp->Y, vp->Width, vp->Height);
     return g_origSetViewport(dev, vp);
 }
@@ -14416,6 +14503,7 @@ void ReleaseFpCasterCache() {
 }
 static bool TrackFpCaster(IDirect3DDevice9* dev,INT baseVertex,UINT minIndex,
                           UINT vertices,UINT startIndex,UINT primitives) {
+    hotpath::scope hotScope(g_hotPathSampler, (g_boundShaderLayout.shadow ? hotpath::Family::shadow_classification : hotpath::Family::foreground_classification));
     const LONG weapon=Rd(g_weaponObj);
     if(weapon!=g_fpCasterWeapon) {ReleaseFpCasterCache();g_fpCasterWeapon=weapon;}
     if(!weapon || !VrModeOn())return false;
@@ -14441,6 +14529,7 @@ static bool TrackFpCaster(IDirect3DDevice9* dev,INT baseVertex,UINT minIndex,
 HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                                INT baseVertex, UINT minIndex, UINT numVertices,
                                                UINT startIndex, UINT primCount) {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     InterlockedIncrement(&g_frameDrawIdx);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     if(g_boundShaderLayout.shadow)InterlockedIncrement(&g_vrCounters.fpShadowDepthDraws);
@@ -15779,6 +15868,7 @@ volatile LONG g_scopeMatchAim = 0, g_scopeMatchIdle = 0;   // ⭐ run 231
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                           UINT primCount, const void* vtxData, UINT vtxStride) {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     if(g_boundShaderLayout.shadow && g_origDrawPrimUP)return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
     if (primCount<=4) CaptureShadowEvidence(dev);
     if (!g_origDrawPrimUP) return D3DERR_INVALIDCALL;
@@ -15901,6 +15991,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
                                                 UINT minVtxIndex, UINT numVertices, UINT primCount,
                                                 const void* idxData, D3DFORMAT idxFormat,
                                                 const void* vtxData, UINT vtxStride) {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     if (!g_origDrawIndexedPrimUP) return D3DERR_INVALIDCALL;
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     // UP memory has no retained resource identity: do not suppress on vertex count.
@@ -16566,6 +16657,7 @@ static void ReleaseVrShadowResources() {
 // VrShadows=0 now simply logs the projection candidates without substitution.
 // Proper fix: disable first-person arm/weapon shadow casting at engine level (bCastDynamicShadow=false).
 HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDirect3DBaseTexture9* texture) {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::set_texture);
     if(stage==0) {
         bool menuSource = false;
         if (Rd(g_vrUiMenu) && !Rd(g_vrMenuProviderDrawing) && texture && Rd(g_rtIsScene)) {
@@ -16583,6 +16675,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
 }
 
 inline bool SuppressCapturedVrMenuDraw() {
+    hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::menu_classification);
     SyncVrMenuCaptureState();
     if (!g_vrCaptureOwner.CanProvide(VrMenuStateToken()) || !VrModeOn() || g_boundShaderLayout.shadow || !Rd(g_vrMenuSourceBound) || Rd(g_vrMenuProviderDrawing) || !Rd(g_vrUiMenu) || !Rd(g_rtIsScene))
         return false;
@@ -19961,6 +20054,7 @@ void DrawWristHealth(IDirect3DDevice9* dev) {
 #include "vr_menu_overlay.h"
 
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
+    hotpath::scope frameScope(g_hotPathSampler, hotpath::Family::frame_total);
     DiagStart();
     RefreshArmsAnimActive();
     // Whoever calls Present owns the device. Recorded so the user-pointer draw hooks can tell
@@ -22605,6 +22699,8 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         DiagFinish(raw, priorPacked, packed, eye);
         priorPacked = raw;
     }
+    frameScope.finish();
+    if (g_hotPathSampler.advance_frame()) ReportHotPathSampler();
     return presentResult;
 }
 
@@ -22699,6 +22795,12 @@ void LoadIniSettings() {
 
     char path[MAX_PATH]{};
     if (!IniPath(path)) return;
+
+    const bool hotPathEnabled = GetPrivateProfileIntA("Render", "HotPathSampler", 0, path) != 0;
+    g_hotPathSampler.configure(hotPathEnabled);
+    if (hotPathEnabled)
+        Log("ini: HotPathSampler=1; collecting 1200 Present frames, 1/%u timing samples, then stopping",
+            hotpath::sample_stride);
 
     if (GetPrivateProfileIntA("Render", "ResX", 0, path)) {
         Log("ini: [Render] ResX/ResY are IGNORED - forcing the backbuffer does not change UE3's");
