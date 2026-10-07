@@ -36,11 +36,14 @@ static bool UpdateMenu() {
  const uintptr_t record=ReadPointer(engine ? engine+0x148u:0);
  const uintptr_t movie=ReadPointer(record ? record+0x50u:0);
  if(movie!=cachedMovie) {
+  ReportVrRuntimeCounters();
   cachedMovie=movie;cachedMenu=false;
   char objectName[96]={}, className[96]={};
   const uintptr_t cls=ReadPointer(movie ? movie+0x34u:0);
   if(movie && NameOf(movie,objectName,sizeof(objectName)) && strncmp(objectName,"Default__",9)
      && cls && NameOf(cls,className,sizeof(className)))cachedMenu=MenuClass(className);
+  const LONG kind=!cachedMenu?0:!strcmp(className,"RvUIGFxMovie_IIS")?1:!strcmp(className,"RvUIGFxMovie_Main")?2:!strcmp(className,"RvUIGFxMovie_Pause")?3:4;
+  InterlockedExchange(&g_vrMenuClass,kind);
   Log("VR UI focus: movie=%p class=%s menu=%d",(void*)movie,className,cachedMenu?1:0);
  }
  const bool menu=cachedMenu && InterlockedCompareExchange(&g_vrUiEnabled,0,0)!=0;
@@ -57,9 +60,9 @@ static bool Coordinates(void* self,int& x,int& y) {
  if(w<64 || h<64 || w>32768 || h>32768)return false;
  LONG u=InterlockedCompareExchange(&g_vrUiU,0,0),v=InterlockedCompareExchange(&g_vrUiV,0,0);
  if(u<0 || u>1000000 || v<0 || v>1000000)return false;
- // The visual panel remains top-left (D3D9 texture convention). UE3's native viewport cursor
- // accessor consumes the opposite logical Y origin, so this is the one explicit conversion.
- return uipointer::MapCanvas(u/1000000.0f,v/1000000.0f,(unsigned)w,(unsigned)h,{},x,y);
+ // Native getter 0x011CFC40 returns ScreenToClient POINT.y unchanged (top-left).
+ // MouseY delta inversion in Drain is an axis convention, not an absolute-coordinate flip.
+ return uipointer::MapCanvas(u/1000000.0f,v/1000000.0f,(unsigned)w,(unsigned)h,g_vrMenuPanel.canvas,x,y);
 }
 static int __fastcall GetX(void* self,void*){int x,y;return Coordinates(self,x,y)?x:originalX(self);}
 static int __fastcall GetY(void* self,void*){int x,y;return Coordinates(self,x,y)?y:originalY(self);}

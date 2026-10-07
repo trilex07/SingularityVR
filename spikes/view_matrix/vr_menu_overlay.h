@@ -3,6 +3,7 @@
 static uintptr_t g_vrMenuSurface=0;
 static unsigned g_vrMenuFrame=0,g_vrMenuTextureFrame=0;
 static uipointer::Hit g_vrUiHit;
+static bool g_vrMenuPanelValid=false;
 // Kenney's CC0 PSVR2 prompt subset is packed once into a tiny BMP atlas. The atlas is loaded
 // lazily on the first menu frame and then stays resident; the pointer path never performs file I/O.
 static IDirect3DTexture9* g_vrPromptAtlas=nullptr;
@@ -101,21 +102,23 @@ void UpdateVrUiPointer(float,bool available) {
     const bool menu=Rd(g_vrUiEnabled)&&Rd(g_vrUiNativeReady)&&Rd(g_vrUiMenu);
     if(menu&&Rd(g_vrUiDesktopProbe))return; // Explicit debugger-controlled test coordinates; never staged for headset use.
     if(!available || !menu || !g_handPoseValid[1] || !g_handPositionValid[1] || !g_haveEyes || g_targetTanX<=0 || g_targetTanY<=0 || Rd(g_panelOpen)) {
+        g_vrMenuPanelValid=false;
         InterlockedExchange(&g_vrUiValid,0);InterlockedExchange(&g_vrUiDown,0);
         if(!available)for(auto& gate:g_vrUiTrigger)gate.Update(menu?uipointer::Context::Menu:uipointer::Context::Gameplay,false,false,false);
         return;
     }
     const auto& q=g_eyePose[0].orientation;
     uipointer::V head{(g_eyePose[0].position.x+g_eyePose[1].position.x)*.5f,(g_eyePose[0].position.y+g_eyePose[1].position.y)*.5f,(g_eyePose[0].position.z+g_eyePose[1].position.z)*.5f};
-    uipointer::Plane plane;uipointer::Hit hit;
+    uipointer::Hit hit;
     const auto& pos=g_handLastPos[1];
     const float inset=Rd(g_menuInsetPct)/100.f;
     const float distance=Rd(g_vrMenuDistanceMm)/1000.0f;
-    bool valid=uipointer::HeadPlane(head,VrUiRotate(q,{0,0,-1}),VrUiRotate(q,{1,0,0}),VrUiRotate(q,{0,1,0}),distance,g_targetTanX,g_targetTanY,inset,plane) &&
-        uipointer::Intersect({pos.x,pos.y,pos.z},VrUiRotate(g_handAimOrientation[1],{0,0,-1}),plane,2,2,hit);
+    g_vrMenuPanelValid=uipointer::HeadPlane(head,VrUiRotate(q,{0,0,-1}),VrUiRotate(q,{1,0,0}),VrUiRotate(q,{0,1,0}),distance,g_targetTanX,g_targetTanY,inset,g_vrMenuPanel.plane);
+    bool valid=g_vrMenuPanelValid && g_vrMenuPanel.Ray({pos.x,pos.y,pos.z},VrUiRotate(g_handAimOrientation[1],{0,0,-1}),hit);
     if(valid){
+        InterlockedIncrement(&g_vrCounters.vrPointerUpdates);
         g_vrUiHit=hit;InterlockedExchange(&g_vrUiU,(LONG)lroundf(hit.u*1000000));InterlockedExchange(&g_vrUiV,(LONG)lroundf(hit.v*1000000));
-        for(int eye=0;eye<2;++eye){uipointer::ScreenPoint c;if(VrUiProjectEye(eye,plane.centre,c))InterlockedExchange(&g_vrUiEyeCentreU[eye],(LONG)lroundf(c.u*1000000));}
+        for(int eye=0;eye<2;++eye){uipointer::ScreenPoint c;if(VrUiProjectEye(eye,g_vrMenuPanel.plane.centre,c))InterlockedExchange(&g_vrUiEyeCentreU[eye],(LONG)lroundf(c.u*1000000));}
     }
     else InterlockedExchange(&g_vrUiDown,0);
     InterlockedExchange(&g_vrUiValid,valid?1:0);
@@ -142,6 +145,8 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
         if(retained) {
             g_vrMenuSources[g_vrMenuSourceCount++]=texture;
             InterlockedIncrement(&g_vrMenuCaptured);
+            if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuCaptured);
+            if(Rd(g_vrMenuClass)==2)InterlockedIncrement(&g_vrCounters.mainMenuCaptured);
             Log("VR menu sink: private GFx candidate %ux%u registered; all matching scene draws will be suppressed",desc.Width,desc.Height);
         }
         // Prefer the candidate whose aspect is closest to the native GFx canvas.  The source list
@@ -160,6 +165,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
     surface->Release();
 }
 void ReleaseVrMenuResources(){
+    ReleaseFpCasterCache();
     if(g_vrMenuTexture){g_vrMenuTexture->Release();g_vrMenuTexture=nullptr;}
     for(unsigned i=0;i<g_vrMenuSourceCount;++i)if(g_vrMenuSources[i])g_vrMenuSources[i]->Release();
     memset(g_vrMenuSources,0,sizeof(g_vrMenuSources));g_vrMenuSourceCount=0;
@@ -171,9 +177,7 @@ void ReleaseVrMenuResources(){
 void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     ++g_vrMenuFrame;
     const bool menu = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && Rd(g_vrUiMenu);
-    const bool gameplayHints = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) &&
-                               Rd(g_vrUiNativeReady) && !Rd(g_vrUiMenu) && Rd(g_camPosValid);
-    if ((!menu && !gameplayHints) || Rd(g_panelOpen) || !g_origDrawPrimUP || !g_origSetVS || !g_origSetRenderTarget) return;
+    if (!menu || Rd(g_panelOpen) || !g_origDrawPrimUP || !g_origSetVS || !g_origSetRenderTarget) return;
 
     IDirect3DSurface9 *back = nullptr, *old = nullptr, *depth = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
@@ -206,54 +210,27 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 
     // ---- RENDER MENU QUAD ----
-    if (menu && g_vrMenuTexture) {
-        int slot = -1;
-        for (int i = 0; i < g_camMatUsed; ++i) if (g_camMats[i].valid) { slot = i; break; }
-        if (slot >= 0) {
-            const float distance = Rd(g_vrMenuDistanceMm) / 1000.0f;
-            const float inset = Rd(g_menuInsetPct) / 100.0f;
-            const auto& q = g_eyePose[0].orientation;
-            uipointer::V head{ (g_eyePose[0].position.x + g_eyePose[1].position.x) * .5f,
-                                (g_eyePose[0].position.y + g_eyePose[1].position.y) * .5f,
-                                (g_eyePose[0].position.z + g_eyePose[1].position.z) * .5f };
-            uipointer::V fwd = VrUiRotate(q, {0, 0, -1});
-            uipointer::V right = VrUiRotate(q, {1, 0, 0});
-            uipointer::V up = VrUiRotate(q, {0, 1, 0});
-            uipointer::Plane plane;
-            if (uipointer::HeadPlane(head, fwd, right, up, distance, g_targetTanX, g_targetTanY, inset, plane)) {
-                for (int eye = 0; eye < 2; ++eye) {
-                    float m[16]; memcpy(m, g_camMats[slot].m, sizeof(m)); const int conv = g_camMats[slot].conv;
-                    if (eye) ApplyOffset(reinterpret_cast<Reg4*>(m), conv, g_eyeDeltaUU);
-                    ApplyEyeRemap(reinterpret_cast<Reg4*>(m), conv, eye ? .5f : -.5f);
-
-                    // Build menu quad vertices in tracking space
-                    VrMenuVtx v[4];
-                    const uipointer::V corners[4] = {
-                        plane.centre + right * (-plane.halfWidth * inset) + up * (plane.halfHeight * inset),   // top-left
-                        plane.centre + right * (plane.halfWidth * inset) + up * (plane.halfHeight * inset),    // top-right
-                        plane.centre + right * (-plane.halfWidth * inset) + up * (-plane.halfHeight * inset),  // bottom-left
-                        plane.centre + right * (plane.halfWidth * inset) + up * (-plane.halfHeight * inset),   // bottom-right
-                    };
-                    bool visible = true;
-                    for (int k = 0; k < 4; ++k) {
-                        float clip[4]; WorldToClip(m, conv, &corners[k].x, clip);
-                        if (clip[3] <= .001f) { visible = false; break; }
-                        v[k] = { (clip[0] / clip[3] * .5f + .5f) * vp.Width + vp.X,
-                                 (.5f - clip[1] / clip[3] * .5f) * vp.Height + vp.Y,
-                                 0, 1, 0xFFFFFFFF,
-                                 (k & 1) ? 1.0f : 0.0f,  // u
-                                 (k & 2) ? 1.0f : 0.0f }; // v
-                    }
-                    if (visible) {
-                        InterlockedExchange(&g_vrMenuProviderDrawing,1);
-                        if(g_origSetTexture) g_origSetTexture(dev,0, g_vrMenuTexture); else dev->SetTexture(0, g_vrMenuTexture);
-                        dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
-                        g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(VrMenuVtx));
-                        if(g_origSetTexture) g_origSetTexture(dev,0,nullptr); else dev->SetTexture(0,nullptr);
-                        InterlockedExchange(&g_vrMenuProviderDrawing,0);
-                    }
-                }
+    if (menu && g_vrMenuTexture && g_vrMenuPanelValid) {
+        for(int eye=0;eye<2;++eye) {
+            VrMenuVtx v[4]; bool visible=true;
+            for(unsigned k=0;k<4;++k) {
+                uipointer::ScreenPoint p;
+                if(!VrUiProjectEye(eye,g_vrMenuPanel.Corner(k),p)){visible=false;break;}
+                const auto& crop=g_vrMenuPanel.canvas;
+                v[k]={(eye+p.u)*d.Width*.5f,p.v*d.Height,0,1,0xFFFFFFFF,
+                      (k&1)?crop.cropU1:crop.cropU0,(k&2)?crop.cropV1:crop.cropV0};
             }
+            if(!visible)continue;
+            InterlockedExchange(&g_vrMenuProviderDrawing,1);
+            if(g_origSetTexture)g_origSetTexture(dev,0,g_vrMenuTexture);
+            else dev->SetTexture(0,g_vrMenuTexture);
+            dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1);
+            g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(VrMenuVtx));
+            if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuProvided);
+            if(Rd(g_vrMenuClass)==2)InterlockedIncrement(&g_vrCounters.mainMenuProvided);
+            if(g_origSetTexture)g_origSetTexture(dev,0,nullptr);
+            else dev->SetTexture(0,nullptr);
+            InterlockedExchange(&g_vrMenuProviderDrawing,0);
         }
     }
 
@@ -270,12 +247,8 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
         ClearRects(dev, outline, n, 0xFF000000); ClearRects(dev, dot, n, Rd(g_vrUiDown) ? 0xFF50FF80 : 0xFFFFFFFF);
     }
 
-    // ---- PROMPT LEGEND ----
-    DrawVrPromptLegend(dev, d, gameplayHints);
-    D3DRECT text[1024]; int n = 0; const int px = std::max(1, (int)d.Height / 1000);
-    const char* labels = gameplayHints ? "FIRE   USE   JUMP   CROUCH" : "SELECT   BACK   PAUSE";
-    for (int eye = 0; eye < 2; ++eye) { int x = (int)(eye * d.Width * .5f + d.Width * .12f); int y = (int)(d.Height * .79f); n = TextRects(text, n, 1024, x, y, px, labels); }
-    ClearRects(dev, text, n, 0xFFB8FFD0);
+    // No legend: contextual icons require an observed native prompt lifecycle.
+    // Until that hook is verified, absence of a native prompt produces no PS icon.
 
     if (old) g_origSetRenderTarget(dev, 0, old);
     dev->SetDepthStencilSurface(depth);

@@ -1,10 +1,11 @@
-﻿#include "two_hand_grip.h"
+#include "two_hand_grip.h"
 #include "skeletal_palette.h"
 #include "camera_translation_evidence.h"
 #include "arm_ik.h"
 #include "arm_bind.h"
 #include "support_grip.h"
-#include "support_latch.h"
+#include "grip_latch.h"
+#include "fp_shadow.h"
 #include "camera_stabilization.h"
 #include "shadow_policy.h"
 #include "ui_pointer.h"
@@ -5206,16 +5207,37 @@ static IDirect3DTexture9* g_vrMenuTexture=nullptr;
 static IDirect3DTexture9* g_vrMenuSources[8]={};
 static unsigned g_vrMenuSourceCount=0;
 static float g_vrMenuTextureScore=1e9f;
+static uipointer::VrMenuPanel g_vrMenuPanel;
 inline bool SuppressCapturedVrMenuDraw();
+// Atomic counters only on hot paths; report through the existing async logger on transitions.
+struct VrRuntimeCounters {
+    volatile LONG bootMenuCaptured=0,bootMenuSuppressed=0,bootMenuProvided=0;
+    volatile LONG mainMenuCaptured=0,mainMenuSuppressed=0,mainMenuProvided=0,mainMenuUnknownDraws=0;
+    volatile LONG nativeCursorDraws=0,nativeCursorSuppressed=0,vrPointerUpdates=0;
+    volatile LONG gripPressEdges=0,gripReleaseEdges=0,gripLatchCount=0,gripDetachCount=0,gripLatchWithoutGripERROR=0;
+    volatile LONG contextPromptShow=0,contextPromptHide=0,contextPromptAction=0,psIconDraws=0,psIconDrawWithoutPromptERROR=0;
+    volatile LONG fpShadowDepthDraws=0,fpShadowDepthSkipped=0,fpShadowEyeModifiedERROR=0;
+} g_vrCounters;
+volatile LONG g_vrMenuClass=0; // 0 none, 1 IIS boot, 2 Main, 3 Pause, 4 other native UI.
+static void ReportVrRuntimeCounters() {
+    const auto& c=g_vrCounters;
+    Log("VR counters boot captured/suppressed/provided=%ld/%ld/%ld main=%ld/%ld/%ld unknown=%ld pointer=%ld",
+        Rd(c.bootMenuCaptured),Rd(c.bootMenuSuppressed),Rd(c.bootMenuProvided),Rd(c.mainMenuCaptured),Rd(c.mainMenuSuppressed),Rd(c.mainMenuProvided),Rd(c.mainMenuUnknownDraws),Rd(c.vrPointerUpdates));
+    Log("VR counters grip press/release/latch/detach/error=%ld/%ld/%ld/%ld/%ld shadow depth/skip/eye-error=%ld/%ld/%ld",
+        Rd(c.gripPressEdges),Rd(c.gripReleaseEdges),Rd(c.gripLatchCount),Rd(c.gripDetachCount),Rd(c.gripLatchWithoutGripERROR),Rd(c.fpShadowDepthDraws),Rd(c.fpShadowDepthSkipped),Rd(c.fpShadowEyeModifiedERROR));
+    Log("VR counters cursor draw/suppress=%ld/%ld prompt show/hide/action=%ld/%ld/%ld icons/error=%ld/%ld; cursor/prompt hooks UNRESOLVED",
+        Rd(c.nativeCursorDraws),Rd(c.nativeCursorSuppressed),Rd(c.contextPromptShow),Rd(c.contextPromptHide),Rd(c.contextPromptAction),Rd(c.psIconDraws),Rd(c.psIconDrawWithoutPromptERROR));
+}
 #include "native_ui_input.h"
 uipointer::TriggerGate g_vrUiTrigger[2];
-SupportLatch g_supportLatch;
+griplatch::GripLatch g_supportLatch;
 RecenterChord g_recenterChord;
 volatile LONG g_recenterRequested=0;
 void UpdateVrUiPointer(float rightTrigger,bool available);
 void CaptureVrMenuTarget(IDirect3DDevice9* dev);
 void DrawVrMenuPointer(IDirect3DDevice9* dev);
 void ReleaseVrMenuResources();
+void ReleaseFpCasterCache();
 bool     g_handPoseValid[2] = { false, false };
 bool g_handPositionValid[2] = { false, false };
 volatile LONG g_twoHandEnabled = 1, g_twoHandActive = 0;
@@ -8057,7 +8079,7 @@ void SyncXRInput(XrTime displayTime) {
         UpdateVrUiPointer(0,false);
         ++g_syncFailFrames;
         InterlockedExchange(&g_twoHandActive, 0);
-        g_supportLatch = SupportLatch{};
+        g_supportLatch.Reset();
         g_handPositionValid[0] = g_handPositionValid[1] = false;
         InterlockedExchange(&g_padBtns, 0);
         InterlockedExchange(&g_padLStick, PackStick(0, 0));
@@ -8325,6 +8347,30 @@ void SyncXRInput(XrTime displayTime) {
     bool panelHeld = false;
     WORD panelMask = 0;
     const bool supportGrip = getGrip(OffHand());
+    static bool priorSupportGrip=false;
+    if(supportGrip!=priorSupportGrip)InterlockedIncrement(supportGrip?&g_vrCounters.gripPressEdges:&g_vrCounters.gripReleaseEdges);
+    priorSupportGrip=supportGrip;
+    // Sample the latch once per XR update, independently of configurable XInput rows.
+    // A removed/remapped impulse row must never prevent processing Grip RELEASE.
+    const XrVector3f& primaryPos=g_handLastPos[AimHand()];
+    const XrVector3f& supportPos=g_handLastPos[OffHand()];
+    const float supportDelta[3]={supportPos.x-primaryPos.x,supportPos.y-primaryPos.y,supportPos.z-primaryPos.z};
+    const float supportYaw=g_handYawRad[AimHand()], supportPitch=g_handPitchRad[AimHand()];
+    const float supportForward[3]={-sinf(supportYaw)*cosf(supportPitch),sinf(supportPitch),-cosf(supportYaw)*cosf(supportPitch)};
+    const bool supportTracked=g_handPositionValid[AimHand()] && g_handPositionValid[OffHand()] &&
+                              g_handPoseValid[AimHand()] && g_handPoseValid[OffHand()];
+    const bool supportWeaponValid=Rd(g_twoHandEnabled) && feedGame && WeaponInHands() && !Rd(g_gamePaused) && !Rd(g_vrUiMenu);
+    const bool supportAcquire=TwoHandGripAllowed(supportDelta,supportForward,supportGrip,supportTracked,false);
+    if(!supportWeaponValid) g_supportLatch.Reset();
+    else g_supportLatch.Update(supportGrip,supportAcquire?0.f:1e9f,supportTracked,
+                               (uint32_t)Rd(g_weaponObj),GetTickCount64());
+    const bool supportActive=supportGrip && supportWeaponValid && g_supportLatch.Latched();
+    const LONG previousSupport=InterlockedExchange(&g_twoHandActive,supportActive?1:0);
+    if(g_supportLatch.Latched() && !supportGrip)InterlockedIncrement(&g_vrCounters.gripLatchWithoutGripERROR);
+    if(previousSupport!=(supportActive?1:0)) {
+        InterlockedIncrement(supportActive?&g_vrCounters.gripLatchCount:&g_vrCounters.gripDetachCount);
+        Log("two-hand grip: %s",supportActive?"ACQUIRED":"RELEASED");
+    }
     const bool triangleHeld = getBool(g_actTriangle);
     const bool l3Held = getBool(g_actL3);
     const bool r3Held = getBool(g_actR3);
@@ -8339,23 +8385,6 @@ void SyncXRInput(XrTime displayTime) {
     for (int i = 0; i < kPadButtonCount; ++i) {
         const bool down = getBool(g_padButtons[i].action);
         if (i == 6) continue; // Triangle is handled above as a single START rising edge.
-        if (g_padButtons[i].mask == XI_RSHOULDER) {
-            const XrVector3f& a=g_handLastPos[AimHand()];
-            const XrVector3f& b=g_handLastPos[OffHand()];
-            const float delta[3]={b.x-a.x,b.y-a.y,b.z-a.z};
-            const float yaw=g_handYawRad[AimHand()], pitch=g_handPitchRad[AimHand()];
-            const float forward[3]={-sinf(yaw)*cosf(pitch),sinf(pitch),-cosf(yaw)*cosf(pitch)};
-            const bool tracked = g_handPositionValid[AimHand()] && g_handPositionValid[OffHand()] &&
-                                 g_handPoseValid[AimHand()] && g_handPoseValid[OffHand()];
-            const bool weaponValid = Rd(g_twoHandEnabled) && feedGame && WeaponInHands() && !Rd(g_gamePaused);
-            const bool withinAcquire = TwoHandGripAllowed(delta,forward,supportGrip,tracked,false);
-            const bool active = UpdateSupportLatch(g_supportLatch,
-                {supportGrip, tracked, weaponValid, withinAcquire});
-            const LONG previous=InterlockedExchange(&g_twoHandActive,active?1:0);
-            if(previous!=(active?1:0)) Log("two-hand grip: %s",active?"ACQUIRED":"RELEASED");
-            // A deliberate support-hand grip belongs to the gun, not the TMD impulse action.
-            if(active) continue;
-        }
         if (down) ++g_btnHeldFrames[i];
         if (g_padButtons[i].isMenu)  { menuHeld  = down; menuMask  = g_padButtons[i].mask; continue; }
         if (g_padButtons[i].isPanel) { panelHeld = down; panelMask = g_padButtons[i].mask; continue; }
@@ -11758,6 +11787,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     InterlockedIncrement(&g_frameDrawIdx);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     ++g_vidFrameDraws;
+    if(g_boundShaderLayout.shadow)return g_origDrawPrim(dev,t,start,count);
     if (count <= 4) VidProbeRecord(dev, 0, t, count, nullptr, 0);
     // No vertex data on this path, so no bounding box - but its PRESENCE still matters. If the flash
     // turns out to be here rather than on a user-pointer path, the quad classifier is not involved at
@@ -14366,17 +14396,53 @@ static void CaptureShadowEvidence(IDirect3DDevice9* dev) {
     }
 }
 
+// Confirm a caster by retained buffer/range identity, not a vertex-count collision.
+// Color draws teach this bounded cache; a new weapon discards all identities.
+static fpshadow::DrawKey g_fpCasterKeys[32];
+static unsigned g_fpCasterCount=0;
+static LONG g_fpCasterWeapon=0;
+void ReleaseFpCasterCache() {
+    for(unsigned i=0;i<g_fpCasterCount;++i) {
+        ((IDirect3DVertexBuffer9*)g_fpCasterKeys[i].vb)->Release();
+        ((IDirect3DIndexBuffer9*)g_fpCasterKeys[i].ib)->Release();
+    }
+    g_fpCasterCount=0;g_fpCasterWeapon=0;
+}
+static bool TrackFpCaster(IDirect3DDevice9* dev,INT baseVertex,UINT minIndex,
+                          UINT vertices,UINT startIndex,UINT primitives) {
+    const LONG weapon=Rd(g_weaponObj);
+    if(weapon!=g_fpCasterWeapon) {ReleaseFpCasterCache();g_fpCasterWeapon=weapon;}
+    if(!weapon || !VrModeOn())return false;
+    const bool shadow=g_boundShaderLayout.shadow;
+    if(!shadow && !(FgMatchWindow() && FgMatchesSignature(vertices)))return false;
+    if(shadow && (Rd(g_rtIsScene) || Rd(g_vrShadows) || !g_fpCasterCount))return false;
+    IDirect3DVertexBuffer9* vb=nullptr;IDirect3DIndexBuffer9* ib=nullptr;
+    UINT offset=0,stride=0;
+    dev->GetStreamSource(0,&vb,&offset,&stride);dev->GetIndices(&ib);
+    if(!vb||!ib){if(vb)vb->Release();if(ib)ib->Release();return false;}
+    fpshadow::DrawKey key;key.verts=vertices;key.prims=primitives;key.vb=vb;key.ib=ib;
+    key.vbOffset=offset;key.stride=stride;key.baseVertex=baseVertex;key.minIndex=minIndex;
+    key.startIndex=startIndex;key.layoutShadow=shadow;key.rtIsScene=Rd(g_rtIsScene)!=0;
+    const unsigned signature=vertices;
+    const bool skip=shadow && fpshadow::IsFpShadowCasterDraw(key,&signature,1,g_fpCasterKeys,g_fpCasterCount);
+    bool known=false;
+    for(unsigned i=0;i<g_fpCasterCount;++i)if(fpshadow::SameGeometry(key,g_fpCasterKeys[i])){known=true;break;}
+    if(!shadow && !known && g_fpCasterCount<32)g_fpCasterKeys[g_fpCasterCount++]=key;
+    else {vb->Release();ib->Release();}
+    return skip;
+}
+
 HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                                INT baseVertex, UINT minIndex, UINT numVertices,
                                                UINT startIndex, UINT primCount) {
     InterlockedIncrement(&g_frameDrawIdx);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
-    if (SuppressFirstPersonShadowCaster(VrModeOn(), g_boundShaderLayout.shadow,
-                                        Rd(g_vrShadows)!=0, numVertices,
-                                        (unsigned)Rd(g_gunVerts), (unsigned)Rd(g_armsVerts))) {
-        InterlockedIncrement(&g_firstPersonShadowSkipped);
-        return D3D_OK;
+    if(g_boundShaderLayout.shadow)InterlockedIncrement(&g_vrCounters.fpShadowDepthDraws);
+    if (TrackFpCaster(dev,baseVertex,minIndex,numVertices,startIndex,primCount)) {
+        InterlockedIncrement(&g_firstPersonShadowSkipped);InterlockedIncrement(&g_vrCounters.fpShadowDepthSkipped);return D3D_OK;
     }
+    if(g_boundShaderLayout.shadow)
+        return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);
     ++g_vidFrameDraws;
     // Indexed geometry cannot expose its vertices cheaply here, so v0 stays zero on these rows -
     // the texture and render-target columns are what this path contributes.
@@ -15209,6 +15275,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // ⚠️ The ONE exit that must stay a bare draw(): with duplication off there is no stereo to fall
     // back to, and StereoPair would just return draw() anyway.
     if (!InterlockedCompareExchange(&g_dupDraws, 0, 0)) return draw();
+    if(g_boundShaderLayout.shadow)return draw();
     if (!g_hudRemap) return StereoPair(dev, draw);
     InterlockedIncrement(&g_uiSeen);          // ⭐ run 230
 
@@ -15706,6 +15773,7 @@ volatile LONG g_scopeMatchAim = 0, g_scopeMatchIdle = 0;   // ⭐ run 231
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                           UINT primCount, const void* vtxData, UINT vtxStride) {
+    if(g_boundShaderLayout.shadow && g_origDrawPrimUP)return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
     if (primCount<=4) CaptureShadowEvidence(dev);
     if (!g_origDrawPrimUP) return D3DERR_INVALIDCALL;
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
@@ -15829,12 +15897,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
                                                 const void* vtxData, UINT vtxStride) {
     if (!g_origDrawIndexedPrimUP) return D3DERR_INVALIDCALL;
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
-    if (SuppressFirstPersonShadowCaster(VrModeOn(), g_boundShaderLayout.shadow,
-                                        Rd(g_vrShadows)!=0, numVertices,
-                                        (unsigned)Rd(g_gunVerts), (unsigned)Rd(g_armsVerts))) {
-        InterlockedIncrement(&g_firstPersonShadowSkipped);
-        return D3D_OK;
-    }
+    // UP memory has no retained resource identity: do not suppress on vertex count.
+    if(g_boundShaderLayout.shadow)
+        return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
     ++g_vidFrameDraws;
     if (primCount <= 4) VidProbeRecord(dev, 3, t, primCount, vtxData, vtxStride);
     if (UserPtrInert())
@@ -16512,9 +16577,11 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
 }
 
 inline bool SuppressCapturedVrMenuDraw() {
-    if (!Rd(g_vrMenuSourceBound) || Rd(g_vrMenuProviderDrawing) || !Rd(g_vrUiMenu) || !Rd(g_rtIsScene))
+    if (!VrModeOn() || g_boundShaderLayout.shadow || !Rd(g_vrMenuSourceBound) || Rd(g_vrMenuProviderDrawing) || !Rd(g_vrUiMenu) || !Rd(g_rtIsScene))
         return false;
     InterlockedIncrement(&g_vrMenuSuppressed);
+    if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuSuppressed);
+    if(Rd(g_vrMenuClass)==2)InterlockedIncrement(&g_vrCounters.mainMenuSuppressed);
     return true;
 }
 

@@ -37,9 +37,9 @@ inline bool CanvasPixel(float u,float v,unsigned width,unsigned height,int& x,in
     if(!std::isfinite(u)||!std::isfinite(v)||u<0||u>1||v<0||v>1||width<2||height<2||width>10000000||height>10000000)return false;
     x=(int)std::lround(u*(width-1));y=(int)std::lround(v*(height-1));return true;
 }
-// The panel uses top-left texture coordinates, while the UE3 viewport cursor accessor in this
-// build consumes bottom-left logical Y. crop values are normalized to the captured GFx canvas.
-struct CanvasMap { float cropU0=0,cropV0=0,cropU1=1,cropV1=1; bool flipY=true; };
+// Both texture UV and the native GetCursorPos -> ScreenToClient getters use top-left Y.
+// See menu-cursor-disasm.txt: 0x011CFC40 returns POINT.y without a height subtraction.
+struct CanvasMap { float cropU0=0,cropV0=0,cropU1=1,cropV1=1; bool flipY=false; };
 inline bool MapCanvas(float u,float v,unsigned width,unsigned height,const CanvasMap& map,int& x,int& y){
     if(!std::isfinite(u)||!std::isfinite(v)||map.cropU1<=map.cropU0||map.cropV1<=map.cropV0)return false;
     u=map.cropU0+(map.cropU1-map.cropU0)*u;
@@ -63,6 +63,20 @@ inline bool Intersect(V origin,V direction,const Plane& p,unsigned canvasWidth,u
     h.u=std::max(0.f,std::min(1.f,h.u));h.v=std::max(0.f,std::min(1.f,h.v));
     if(!CanvasPixel(h.u,h.v,canvasWidth,canvasHeight,h.pixelX,h.pixelY))return false;out=h;return true;
 }
+// One panel owns geometry and texture crop for rendering and interaction.
+struct VrMenuPanel {
+    Plane plane;
+    CanvasMap canvas;
+    unsigned logicalWidth=0,logicalHeight=0;
+    V Corner(unsigned k) const {
+        return plane.centre + plane.right*((k&1?1.f:-1.f)*plane.halfWidth*plane.inset)
+             + plane.up*((k&2?-1.f:1.f)*plane.halfHeight*plane.inset);
+    }
+    bool Ray(V origin,V direction,Hit& hit) const {
+        return Intersect(origin,direction,plane,2,2,hit);
+    }
+};
+
 enum class Context { Gameplay, Menu };
 struct TriggerResult { bool selectPressed=false,fireHeld=false; };
 // One instance per physical trigger. Run ONCE on action update, never per eye.

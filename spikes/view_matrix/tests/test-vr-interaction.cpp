@@ -1,7 +1,7 @@
 #include "../ui_pointer.h"
 #include "../support_grip.h"
 #include "../shadow_policy.h"
-#include "../support_latch.h"
+#include "../grip_latch.h"
 #include "../recenter_chord.h"
 #include <cassert>
 #include <cmath>
@@ -43,8 +43,8 @@ static void menu_projection_tests(){
     }
     CanvasMap native;
     int px=0,py=0;
-    assert(MapCanvas(.5f,.0f,5264,2684,native,px,py)&&py==2683);
-    assert(MapCanvas(.5f,1.f,5264,2684,native,px,py)&&py==0);
+    assert(MapCanvas(.5f,.0f,5264,2684,native,px,py)&&py==0);
+    assert(MapCanvas(.5f,1.f,5264,2684,native,px,py)&&py==2683);
     native.flipY=false; assert(MapCanvas(.25f,.75f,1000,500,native,px,py)&&px==250&&py==374);
     TriggerGate gate;using C=Context;
     assert(!gate.Update(C::Gameplay,true,true,false).fireHeld);gate.Update(C::Gameplay,true,false,false);
@@ -86,18 +86,16 @@ static void shadow_tests(){
 }
 
 static void latch_tests(){
-    SupportLatch s;
-    assert(!UpdateSupportLatch(s,{true,true,true,true})); // Idle -> Searching
-    assert(UpdateSupportLatch(s,{true,true,true,false}) == false);
-    assert(UpdateSupportLatch(s,{true,true,true,true}));
-    assert(s.state==SupportLatchState::Latched);
-    assert(UpdateSupportLatch(s,{true,true,true,false})); // distance drift does not unlatch
-    assert(UpdateSupportLatch(s,{false,true,true,false}) == false);
-    assert(s.state==SupportLatchState::Idle);
-    assert(!UpdateSupportLatch(s,{true,false,true,false}));
-    for(int i=0;i<18;++i) assert(!UpdateSupportLatch(s,{true,false,true,false}));
-    assert(UpdateSupportLatch(s,{true,true,true,false})); // grace recovery
-    assert(UpdateSupportLatch(s,{false,true,true,false})==false);
+    griplatch::GripLatch s;
+    s.Update(false,0,true,1,0);assert(!s.Latched());
+    s.Update(true,0,true,1,1);assert(s.Latched());
+    s.Update(true,100,true,1,2);assert(s.Latched());
+    s.Update(false,0,true,1,3);assert(!s.Latched());
+    s.Update(true,100,false,1,4);assert(!s.Latched());
+    s.Update(true,100,true,1,5);assert(!s.Latched());
+    s.Update(true,0,true,1,6);assert(s.Latched());
+    s.Update(true,0,false,1,7);assert(s.Latched());
+    s.Update(false,0,false,1,8);assert(!s.Latched());
     RecenterChord c; c.window=24;
     assert(!c.Update(true,false)); assert(!c.Update(false,false));
     assert(!c.Update(false,true)); assert(!c.Update(false,false));
