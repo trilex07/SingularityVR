@@ -24,18 +24,24 @@ void grip_latch_tests() {
     GripLatch latch;
     const std::uint32_t pistol = 1, rifle = 2;
     std::uint64_t t = 1000;
-    // Press outside radius -> no latch.
-    assert(latch.Update(true, 0.30f, true, pistol, t) == State::Unlatched);
-    // Move inside radius while held -> latch.
+    // Establish weapon context first (new weapon on first call goes to Idle).
+    assert(latch.Update(false, 0.30f, true, pistol, t) == State::Idle);
+    // Now grip held, outside radius -> Searching.
+    t += 16;
+    assert(latch.Update(true, 0.30f, true, pistol, t) == State::Searching);
+    // Move inside radius while held -> Latched.
     t += 16;
     assert(latch.Update(true, 0.10f, true, pistol, t) == State::Latched);
     // Move far away while still held -> STILL LATCHED.
     t += 16;
     assert(latch.Update(true, 0.80f, true, pistol, t) == State::Latched);
-    // Grip release -> unlatch.
+    // Grip release -> immediate Idle.
     t += 16;
-    assert(latch.Update(false, 0.05f, true, pistol, t) == State::Unlatched);
-    // Re-latch, then brief tracking loss -> grace (preserved).
+    assert(latch.Update(false, 0.05f, true, pistol, t) == State::Idle);
+    // Still near pistol after release -> remain Idle (no sticky latch).
+    t += 16;
+    assert(latch.Update(false, 0.05f, true, pistol, t) == State::Idle);
+    // Re-latch, then brief tracking loss -> Grace (preserved).
     t += 16;
     assert(latch.Update(true, 0.10f, true, pistol, t) == State::Latched);
     t += 16;
@@ -45,26 +51,30 @@ void grip_latch_tests() {
     // Restored while held -> latch preserved.
     t += 100;
     assert(latch.Update(true, 0.40f, true, pistol, t) == State::Latched);
-    // Long loss -> timeout unlatch.
+    // Long loss -> timeout Idle.
     t += 16;
     assert(latch.Update(true, 0.10f, false, pistol, t) == State::Grace);
     t += 600;
-    assert(latch.Update(true, 0.10f, false, pistol, t) == State::Unlatched);
-    // Re-latch, then weapon switch with the new support far away -> unlatch.
+    assert(latch.Update(true, 0.10f, false, pistol, t) == State::Idle);
+    // Re-latch, then weapon switch with the new support far away -> Idle.
     t += 16;
     assert(latch.Update(true, 0.05f, true, pistol, t) == State::Latched);
     t += 16;
-    assert(latch.Update(true, 0.50f, true, rifle, t) == State::Unlatched);
+    assert(latch.Update(true, 0.50f, true, rifle, t) == State::Idle);
     // New support in radius while still held -> re-acquire under new weapon
     // (same rule as "move inside radius while held").
     t += 16;
     assert(latch.Update(true, 0.05f, true, rifle, t) == State::Latched);
-    // Release-then-press requires re-acquire (no sticky latch).
+    // No grip held at all -> Idle.
     t += 16;
-    assert(latch.Update(false, 0.05f, true, rifle, t) == State::Unlatched);
+    assert(latch.Update(false, 0.05f, true, rifle, t) == State::Idle);
+    // Grip held, untracked -> Searching (not Latched, not Idle).
     t += 16;
-    assert(latch.Update(true, 0.30f, true, rifle, t) == State::Unlatched);
-    std::puts("grip: outside/inside/far-held/release/grace/restore/timeout/switch");
+    assert(latch.Update(true, 1e9f, false, rifle, t) == State::Searching);
+    // Tracking restored while Searching -> Latched.
+    t += 16;
+    assert(latch.Update(true, 0.05f, true, rifle, t) == State::Latched);
+    std::puts("grip: outside/inside/far-held/release/idle/idle-after-release/grace/restore/timeout/switch/no-grip/searching/tracking-restore");
 }
 
 void recenter_regression_tests() {

@@ -18,14 +18,16 @@
 // the support-target distance (cf. armik::SupportTarget) and supplies it.
 //
 // Contract:
-//   Grip press outside radius            -> no latch
-//   move inside radius while held        -> latch
-//   move far away while still held       -> STILL LATCHED (until release)
-//   Grip release                         -> unlatch
-//   tracking loss (brief)                -> grace: latch preserved
-//   tracking restored while Grip held    -> latch preserved
-//   tracking loss past timeout           -> unlatch
-//   weapon switch                        -> unlatch
+//   No Grip, or press with no weapon context -> Idle (NEVER latched)
+//   Grip press outside radius               -> Searching (held, looking)
+//   move inside radius while held           -> Latched
+//   move far away while still held          -> STILL LATCHED (until release)
+//   Grip release (even still near pistol)   -> immediate Idle
+//   still near pistol after release         -> remain Idle (no sticky latch)
+//   tracking loss while held (latched)      -> grace: latch preserved
+//   tracking restored while Grip held       -> latch preserved
+//   tracking loss past timeout              -> Idle
+//   weapon switch                           -> Idle
 
 namespace griplatch {
 
@@ -34,19 +36,19 @@ struct Config {
     std::uint64_t trackingGraceMs = 500;
 };
 
-enum class State { Unlatched, Latched, Grace };
+enum class State { Idle, Searching, Latched, Grace };
 
 class GripLatch {
 public:
     explicit GripLatch(Config cfg = Config{}) : cfg_(cfg) {}
     void Reset() {
-        state_ = State::Unlatched;
+        state_ = State::Idle;
         weapon_ = 0;
         haveWeapon_ = false;
         graceStart_ = 0;
     }
     State Get() const { return state_; }
-    bool Latched() const { return state_ != State::Unlatched; }
+    bool Latched() const { return state_ == State::Latched; }
 
     State Update(bool gripHeld, float supportDistanceM, bool trackingValid,
                  std::uint32_t weaponId, std::uint64_t nowMs) {
@@ -56,37 +58,47 @@ public:
             // New session or weapon switch -> unlatch (caller re-acquires).
             weapon_ = weaponId;
             haveWeapon_ = true;
-            state_ = State::Unlatched;
+            state_ = State::Idle;
             weaponChanged = true;
         }
+        // No grip -> immediate Idle (never latched, never searching)
         if (!gripHeld) {
-            state_ = State::Unlatched; // release always unlatches
+            state_ = State::Idle;
             return state_;
         }
         // A newly selected weapon must not latch on the same input sample that invalidated
-        // the previous weapon.  Require a fresh in-range update, which also prevents a
-        // weapon swap while holding Grip from silently attaching the support hand.
+        // the previous weapon. Require a fresh in-range update.
         if (weaponChanged) return state_;
         switch (state_) {
-        case State::Unlatched:
+        case State::Idle:
             if (trackingValid && supportDistanceM <= cfg_.acquireRadius)
                 state_ = State::Latched;
+            else
+                state_ = State::Searching; // grip held but outside radius or not tracked
+            return state_;
+        case State::Searching:
+            if (!trackingValid) {
+                state_ = State::Grace;
+                graceStart_ = nowMs;
+            } else if (supportDistanceM <= cfg_.acquireRadius) {
+                state_ = State::Latched;
+            }
             return state_;
         case State::Latched:
             if (!trackingValid) {
                 state_ = State::Grace;
                 graceStart_ = nowMs;
             }
-            // NOTE: distance intentionally ignored while held — moving far
-            // away with Grip still down stays attached by design.
+            // NOTE: distance intentionally ignored while held — moving far away
+            // with Grip still down stays attached by design.
             return state_;
         case State::Grace:
             if (!gripHeld) {
-                state_ = State::Unlatched;
+                state_ = State::Idle;
             } else if (trackingValid) {
                 state_ = State::Latched; // restored while held -> preserved
             } else if (nowMs - graceStart_ >= cfg_.trackingGraceMs) {
-                state_ = State::Unlatched; // loss past timeout -> unlatch
+                state_ = State::Idle; // loss past timeout -> unlatch
             }
             return state_;
         }
@@ -95,7 +107,7 @@ public:
 
 private:
     Config cfg_;
-    State state_ = State::Unlatched;
+    State state_ = State::Idle;
     std::uint32_t weapon_ = 0;
     bool haveWeapon_ = false;
     std::uint64_t graceStart_ = 0;
