@@ -9423,6 +9423,33 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         } else {
             InterlockedExchange(&g_offHandValid, 0);
         }
+        // Fix-5/scale + fix-2/hands: 1Hz verification of the scale chain and aim/off-hand
+        // symmetry. Same rate/gating discipline as the 6dof line: VR mode only, one line
+        // per second, plain reads. Meter test: move head or controller a known distance;
+        // handOff deltas must match it in UU, eyeDelta must read ~63mm, aim/off dev must
+        // agree when both hands point the same way.
+        if (VrModeOn()) {
+            static ULONGLONG lastScaleSaid = 0;
+            const ULONGLONG nowScale = GetTickCount64();
+            if (!lastScaleSaid || nowScale - lastScaleSaid > 1000) {
+                lastScaleSaid = nowScale;
+                const float uuPerM = MetresToUU();
+                const float eyeMagUU = sqrtf(g_eyeDeltaUU[0]*g_eyeDeltaUU[0]+g_eyeDeltaUU[1]*g_eyeDeltaUU[1]+g_eyeDeltaUU[2]*g_eyeDeltaUU[2]);
+                Log("scalechain: UU/m %.3f | eyeDelta (%.2f, %.2f, %.2f) UU = %.1f mm"
+                    " | handOff aim (%+.1f, %+.1f, %+.1f) off (%+.1f, %+.1f, %+.1f) UU",
+                    uuPerM, g_eyeDeltaUU[0], g_eyeDeltaUU[1], g_eyeDeltaUU[2],
+                    uuPerM > 0.0f ? eyeMagUU / uuPerM * 1000.0f : -1.0f,
+                    Rd(g_handOffX)/1000.0f, Rd(g_handOffY)/1000.0f, Rd(g_handOffZ)/1000.0f,
+                    Rd(g_offHandOffX)/1000.0f, Rd(g_offHandOffY)/1000.0f, Rd(g_offHandOffZ)/1000.0f);
+                const float kUU2Deg = 360.0f / 65536.0f;
+                Log("handsymmetry: aim dev yaw %+ld (%.1f deg) pitch %+ld (%.1f deg) | off dev yaw %+ld (%.1f deg) pitch %+ld (%.1f deg) | valid %ld/%ld",
+                    Rd(g_handDevYawUU), Rd(g_handDevYawUU)*kUU2Deg,
+                    Rd(g_handDevPitchUU), Rd(g_handDevPitchUU)*kUU2Deg,
+                    Rd(g_offHandDevYawUU), Rd(g_offHandDevYawUU)*kUU2Deg,
+                    Rd(g_offHandDevPitchUU), Rd(g_offHandDevPitchUU)*kUU2Deg,
+                    Rd(g_handDevValid), Rd(g_offHandValid));
+            }
+        }
         if (Rd(g_twoHandActive) && g_handPositionValid[AimHand()] && g_handPositionValid[OffHand()]) {
             const XrVector3f& a=g_handLastPos[AimHand()];
             const XrVector3f& b=g_handLastPos[OffHand()];
