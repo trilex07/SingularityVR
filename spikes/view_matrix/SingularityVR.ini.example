@@ -1200,3 +1200,36 @@ WeaponFxRideGun=1
 ;                               jumps on release
 ;   AdsPullbackUU=10
 ; ---------------------------------------------------------------------------
+;
+; ---------------------------------------------------------------------------
+; [Upscaling] -- NVIDIA Image Scaling (NIS) research (research/nvidia-vr-upscaling)
+;
+; Official NIS v1.0.3 (spatial, MIT): no motion vectors, no depth, no history.
+; Runs on the D3D11 bridge per eye - never across the SBS seam.
+;
+;   Mode=Off          native copy path, no NIS resources or dispatches (default)
+;   Mode=NIS          UE3 renders at RenderScale, NIS reconstructs each eye to
+;                     the recommended OpenXR output (needs a relaunch: the UE3
+;                     resolution comes from the command line)
+;   Mode=NISSharpen   native resolution + NIS sharpening only (runtime toggle)
+;
+;   RenderScale=0.77  UE3 SBS multiplier, 0.5-1.0, same on both axes (no
+;                     distortion). 2632x2684/eye at 1.0 -> 2028x2068/eye at
+;                     0.77 (SBS 4056x2068). NEEDS RELAUNCH.
+;   OutputScale=1.0   swapchain multiplier, 1.0-1.5. Resizes the OpenXR output
+;                     only - it does NOT create native detail, it is an
+;                     experiment (try 1.2).
+;   Sharpness=0.35    0.0-1.0, clamped. Presets: soft 0.2, balanced 0.35,
+;                     sharp 0.5. Conservative default: VR ringing is unpleasant.
+;
+; Runtime: press N to cycle Off -> NIS -> NISSharpen -> Off (one log line per
+; change). RenderScale changes still need a relaunch.
+;
+; Safe fallback: any NIS failure (shader compile, UAV, resources) logs once
+; and keeps the native path - the game always launches.
+; ---------------------------------------------------------------------------
+; [Upscaling]
+; Mode=Off
+; RenderScale=1.0
+; OutputScale=1.0
+; Sharpness=0.35

@@ -69,9 +69,9 @@ static bool NisCompileShader(ID3D11Device* dev, const wchar_t* hlslPath,
         return false;
     }
     char bw[16], bh[16], tgs[16];
-    sprintf_s(bw, "%u", 32);
-    sprintf_s(bh, "%u", scaler ? 24 : 32);
-    sprintf_s(tgs, "%u", 256);
+    sprintf_s(bw, "%u", 32u);
+    sprintf_s(bh, "%u", scaler ? 24u : 32u);
+    sprintf_s(tgs, "%u", 256u);
     D3D_SHADER_MACRO macros[] = {
         { "NIS_SCALER", scaler ? "1" : "0" },
         { "NIS_HLSL", "1" },
