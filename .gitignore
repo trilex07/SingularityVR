@@ -48,3 +48,10 @@ desktop.ini
 # make-release.ps1 rebuilds both from source every run; nothing here is authored.
 packaging/staging/
 packaging/dist/
+
+# ---- external reference asset library ----
+# Keep source archives and full reference rigs local; processed metadata and the small runtime
+# prompt atlas are tracked separately.
+assets/reference/**
+assets/ui/kenney-input-prompts/kenney_input-prompts_*.zip
+assets/ui/kenney-input-prompts/source/**

@@ -1,12 +1,12 @@
 # Builds the view-rotation detour shim as x86.
 # Compiles MinHook's C sources alongside the C++ shim (no separate lib step needed).
 
-param([switch]$Install)
+param([switch]$Install, [switch]$Performance)
 
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Resolve-Path (Join-Path $here "..\..")
-$sdk  = "R:\SingularityVR-Dev\tools\openxr-sdk"
+$sdk  = if ($env:OPENXR_SDK) { $env:OPENXR_SDK } else { "R:\SingularityVR-Dev\tools\openxr-sdk" }
 $mh   = Join-Path $root "third_party\minhook"
 $devGameBin = "R:\SingularityVR-Dev\Singularity\Binaries"
 
@@ -58,10 +58,11 @@ try {
     $fatal = $anOut | Select-String -Pattern "warning C6067|warning C6063|warning C6064|warning C6066|warning C6270|warning C6271|warning C6272|warning C6273|warning C6328"
     if ($fatal) { throw "static analysis found a format-string defect - fix it before building" }
 
-    $cmd = "`"$vcvars`" x86 && cl /nologo /LD /EHsc /W3 /Zi /MD /std:c++17 " +
+    $optimization = if ($Performance) { '/O2 /DPERFORMANCE_BUILD_1 ' } else { '' }
+    $cmd = "`"$vcvars`" x86 && cl /nologo /LD /EHsc /W3 /Zi /MD /std:c++17 " + $optimization +
            "/I`"$inc`" /I`"$mh\include`" " +
            "/Fe:d3d9.dll d3d9.cpp $mhSrc " +
-           "/link /DEF:d3d9.def /LIBPATH:`"$libDir`" openxr_loader.lib dxgi.lib user32.lib shell32.lib"
+           "/link /MAP:d3d9.map /DEF:d3d9.def /LIBPATH:`"$libDir`" openxr_loader.lib dxgi.lib user32.lib shell32.lib"
     cmd /c $cmd
     if ($LASTEXITCODE -ne 0) { throw "build failed (exit $LASTEXITCODE)" }
     Write-Host ""

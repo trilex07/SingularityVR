@@ -1,3 +1,12 @@
+﻿#include "two_hand_grip.h"
+#include "skeletal_palette.h"
+#include "camera_translation_evidence.h"
+#include "arm_ik.h"
+#include "arm_bind.h"
+#include "support_grip.h"
+#include "camera_stabilization.h"
+#include "shadow_policy.h"
+#include "ui_pointer.h"
 // view_matrix - Singularity VR mod, spike 9
 //
 // GOES AFTER THE ONE BLOCKING PROBLEM: camera POSITION, which gates both stereo (a per-eye
@@ -47,9 +56,11 @@
 #define NOMINMAX
 #include <windows.h>
 #include <shlobj.h>
+#include "async_thread_snapshot.h"
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
 #include <d3d9.h>
 #include <d3d11.h>
+#include <dinput.h>
 
 #define XR_USE_PLATFORM_WIN32
 #define XR_USE_GRAPHICS_API_D3D11
@@ -61,6 +72,14 @@
 #include <cstdio>
 #include <cstdint>
 #include <cmath>
+#include <cstring>
+#include <cstdlib>
+#include <cstdarg>
+#include <initializer_list>
+#ifdef STARTUP_CRASH_CAPTURE
+#include "startup_crash_capture.h"
+#endif
+#include "async_log.h"
 #include <intrin.h>       // _ReturnAddress, for the XInput caller census
 
 #pragma comment(lib, "d3d11.lib")
@@ -191,6 +210,10 @@ void LogInit() {
 // the build on it.
 void Log(_Printf_format_string_ const char* fmt, ...) {
     if (!g_logReady) return;
+    va_list queued; va_start(queued, fmt);
+    const bool accepted = AsyncLogEnqueue(fmt, queued);
+    va_end(queued);
+    if (accepted) return;
     EnterCriticalSection(&g_lock);
     FILE* f = nullptr;
     if (fopen_s(&f, g_logPath, "a") == 0 && f) {
@@ -199,6 +222,9 @@ void Log(_Printf_format_string_ const char* fmt, ...) {
     }
     LeaveCriticalSection(&g_lock);
 }
+
+#include "input_wmi_cache.h"
+#include "missing_mouse.h"
 
 // SingularityVR.ini, always beside this DLL rather than beside the exe or in the working directory
 // - the mod is dropped in next to the game binary and nothing about it should depend on where the
@@ -226,6 +252,7 @@ inline double MsSince(const LARGE_INTEGER& t0) {
     LARGE_INTEGER now{}; QueryPerformanceCounter(&now);
     return double(now.QuadPart - t0.QuadPart) * 1000.0 / double(freq.QuadPart);
 }
+#include "diagnostic_trace.h"
 
 // ================================================================ automatic resolution (run 59)
 //
@@ -439,6 +466,7 @@ volatile LONG g_padLookTest = 0;   // NUMPAD5 - hold the look stick right
 // between the three words is one frame of mixed input at 120 Hz and is not observable; tearing
 // WITHIN a word is what would matter, and interlocked access rules it out.
 volatile LONG g_padBtns   = 0;   // low 16: wButtons          high 16: rTrigger<<8 | lTrigger
+volatile LONG g_diagRawBtns = 0; // observed XR edges, before diagnostic feed suppression
 volatile LONG g_padLStick = 0;   // low 16: sThumbLX          high 16: sThumbLY
 volatile LONG g_padRStick = 0;   // low 16: sThumbRX          high 16: sThumbRY
 
@@ -462,6 +490,7 @@ LONG PackStick(int16_t x, int16_t y) {
 volatile LONG g_rumbleL = 0, g_rumbleR = 0;   // 0..65535, as the game sends them
 
 DWORD WINAPI Hook_XInputSetState(DWORD idx, XiVibration* v) {
+    const int64_t diagStart = g_diagEnabled ? DiagQpc() : 0;
     InterlockedIncrement(&g_setStateCalls);
     if (InterlockedCompareExchange(&g_padEmu, 0, 0) && idx == 0) {
         if (v) {
@@ -470,9 +499,12 @@ DWORD WINAPI Hook_XInputSetState(DWORD idx, XiVibration* v) {
         }
         // Answered here rather than passed on, for the same reason as GetState: there is no
         // physical pad on port 0, so the real call can only fail, and slowly.
+        DiagXi(false, diagStart);
         return kXiOk;
     }
-    return g_origXInputSetState ? g_origXInputSetState(idx, v) : kXiNotConnected;
+    const DWORD result = g_origXInputSetState ? g_origXInputSetState(idx, v) : kXiNotConnected;
+    DiagXi(false, diagStart);
+    return result;
 }
 
 DWORD g_padPacket = 0;
@@ -650,6 +682,7 @@ volatile LONG g_ctlForXi = 0;
 void WriteAimAtInputPoll();
 
 DWORD WINAPI Hook_XInputGetState(DWORD idx, XiState* st) {
+    const int64_t diagStart = g_diagEnabled ? DiagQpc() : 0;
     LARGE_INTEGER tHook = Now();
 
     // ---- mode 5: write the hand at INPUT POLL time instead of at Present ----
@@ -695,6 +728,7 @@ DWORD WINAPI Hook_XInputGetState(DWORD idx, XiState* st) {
                       ? kXiNotConnected                 // exactly one pad, on port 0
                       : (g_origXInputGetState ? g_origXInputGetState(idx, st) : kXiNotConnected);
         g_msInHook += MsSince(tHook);
+        DiagXi(true, diagStart);
         return r;
     }
 
@@ -724,6 +758,7 @@ DWORD WINAPI Hook_XInputGetState(DWORD idx, XiState* st) {
     st->dwPacketNumber = g_padPacket;
     st->Gamepad = g;
     g_msInHook += MsSince(tHook);
+    DiagXi(true, diagStart);
     return kXiOk;
 }
 
@@ -897,6 +932,7 @@ extern volatile LONG64 g_healUntilMs, g_healFromMs;
 // Run 214: the melee window. Same shape, same reason the input path only ARMS it - see g_meleeArmsMs.
 extern volatile LONG   g_meleeArmsMs, g_meleeDelayMs, g_meleePending;
 extern volatile LONG64 g_meleeUntilMs, g_meleeFromMs;
+extern volatile LONG   g_armsAnimActiveCached;
 
 // The NUMPAD4/NUMPAD5 test inputs, laid OVER whatever the controllers just published.
 //
@@ -938,12 +974,14 @@ struct FRotator { int32_t pitch, yaw, roll; };
 // (this in ECX, everything else on the stack). Arg count MUST match: the callee cleans the
 // stack, so one arg too few or too many corrupts it.
 //
-// From the prologue, five stack args are read: [EBP+8] .. [EBP+0x18], the last a float.
+// Six stack args: [EBP+8] .. [EBP+0x1C], the last TWO are floats.
+// CONFIRMED 2026-10-06: caller reserves 20 bytes and pushes outRot; callee ret 0x18.
+// Omitting a6 corrupts ESP; /Od masked the defect, /O2 exposed an execute AV on the stack.
 // The caller pushes a pointer to a local FRotator as the first one and uses the returned
 // EAX as that rotator, so arg 1 is the output buffer.
 typedef FRotator* (__fastcall* PFN_CalcViewRotation)(
     void* self, void* edx_unused,
-    FRotator* outRot, uint32_t a2, uint32_t a3, uint32_t a4, float a5);
+    FRotator* outRot, uint32_t a2, uint32_t a3, uint32_t a4, float a5, float a6);
 
 const uintptr_t kCalcViewRotationAddr = 0x0104e390;   // no ASLR: file address == runtime
 PFN_CalcViewRotation g_origCalcViewRotation = nullptr;
@@ -1017,8 +1055,8 @@ float g_vrFovDeg = 0.0f;             // what ApplyVrFov decided to ask the engin
 uintptr_t g_lastCam = 0;             // camera pointer, cached by ApplyVrFov
 
 FRotator* __fastcall Hook_CalcViewRotation(void* self, void* edx,
-        FRotator* outRot, uint32_t a2, uint32_t a3, uint32_t a4, float a5) {
-    FRotator* r = g_origCalcViewRotation(self, edx, outRot, a2, a3, a4, a5);
+        FRotator* outRot, uint32_t a2, uint32_t a3, uint32_t a4, float a5, float a6) {
+    FRotator* r = g_origCalcViewRotation(self, edx, outRot, a2, a3, a4, a5, a6);
     if (!r) return r;
 
     if (++g_hookHits <= 3)
@@ -2089,34 +2127,50 @@ static uintptr_t FindPlayerPawn(bool force) {
     // only slows down callers that ask repeatedly while no pawn exists, which is exactly the splash
     // screen and exactly nothing else: in gameplay the first walk succeeds and every later call
     // returns from the cache above without reaching here.
-    static ULONGLONG lastWalk = 0;
+    // Incremental reacquisition: a complete object walk measured 319 ms in gameplay.
+    // Share one bounded slice across all callers, including forced property resolution.
+    static ULONGLONG lastWalk = 0, lastSlice = 0;
     static int consecutiveMisses = 0;
-    if (hadPawn) { consecutiveMisses = 0; lastWalk = 0; }   // ⭐ run 257: a loss is not a repeat miss
-    if (!force) {
-        const ULONGLONG nowMs = GetTickCount64();
-        const ULONGLONG waitMs = (consecutiveMisses >= 3) ? 15000 : 2000;
-        if (lastWalk && nowMs - lastWalk < waitMs) return 0;
-        lastWalk = nowMs;
-    }
-    ReadableForget();          // ⭐ run 256: never carry a region cache into a fresh walk
-    if (!Readable((void*)kGObjectsTArray, 12)) { ++consecutiveMisses; return 0; }
+    static uintptr_t scanData = 0;
+    static int32_t cursor = 0;
+    if (hadPawn) { consecutiveMisses = 0; lastWalk = 0; scanData = 0; cursor = 0; }
+    const ULONGLONG nowMs = GetTickCount64();
+    if (lastSlice && nowMs - lastSlice < 16) return 0;
+    if (!scanData && !force && lastWalk &&
+        nowMs - lastWalk < (consecutiveMisses >= 3 ? 15000ULL : 2000ULL)) return 0;
+    lastSlice = nowMs;
+    ReadableForget();
+    if (!Readable((void*)kGObjectsTArray, 12)) return 0;
     uintptr_t data = *reinterpret_cast<uintptr_t*>(kGObjectsTArray);
     int32_t count = *reinterpret_cast<int32_t*>(kGObjectsTArray + 4);
-    if (!data || count <= 0) { ++consecutiveMisses; return 0; }
-    uintptr_t* objs = reinterpret_cast<uintptr_t*>(data);
-    for (int32_t i = 0; i < count; ++i) {
-        uintptr_t o = objs[i];
-        if (!o || !Readable((void*)o, 0x40) || !IsLive(o)) continue;
-        uintptr_t cls = *reinterpret_cast<uintptr_t*>(o + OBJ_CLASS);
-        char cn[80];
-        if (!cls || !NameOf(cls, cn, sizeof(cn))) continue;
-        if (!strstr(cn, "PlayerPawn")) continue;
-        g_playerPawn = o;
-        g_playerPawnClass = cls;
-        consecutiveMisses = 0;              // ⭐ run 256: found - the backoff resets
-        Log("player pawn: 0x%08X (%s) after walking %d object(s)", (unsigned)o, cn, i + 1);
-        return o;
+    if (!data || count <= 0) return 0;
+    if (scanData != data || cursor >= count) { scanData = data; cursor = 0; }
+    LARGE_INTEGER start, now, frequency;
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&start);
+    int inspected = 0;
+    while (cursor < count) {
+        const int32_t i = cursor++;
+        uintptr_t o = Readable((void*)(data + i * sizeof(uintptr_t)), sizeof(uintptr_t))
+            ? *reinterpret_cast<uintptr_t*>(data + i * sizeof(uintptr_t)) : 0;
+        if (o && Readable((void*)o, 0x40) && IsLive(o)) {
+            uintptr_t cls = *reinterpret_cast<uintptr_t*>(o + OBJ_CLASS);
+            char cn[80];
+            if (cls && NameOf(cls, cn, sizeof(cn)) && strstr(cn, "PlayerPawn")) {
+                g_playerPawn = o;
+                g_playerPawnClass = cls;
+                consecutiveMisses = 0;
+                scanData = 0; cursor = 0;
+                Log("player pawn: 0x%08X (%s) acquired by bounded scan at index %d", (unsigned)o, cn, i);
+                return o;
+            }
+        }
+        if (++inspected >= 512) break;
+        QueryPerformanceCounter(&now);
+        if (now.QuadPart - start.QuadPart >= frequency.QuadPart / 1000) break;
     }
+    if (cursor < count) return 0;
+    scanData = 0; cursor = 0; lastWalk = nowMs;
     // ⚠️ A miss is the SPLASH-SCREEN case and it is normal there - the pawn does not exist yet. It is
     // logged once per backoff step rather than per walk so the file cannot fill with it.
     ++consecutiveMisses;
@@ -2762,6 +2816,10 @@ volatile LONG g_scanReport = 0;   // set by the scan, consumed by Present
 float g_camPos[3] = {0,0,0};
 float g_povPos[3] = {0,0,0};
 volatile LONG g_camPosValid = 0;
+int g_cameraTranslationEvidence = 0; // bounded passive decomposition, default off
+float g_vrCameraStabOffset[3] = {0,0,0};
+volatile LONG g_vrCameraStabValid = 0;
+volatile LONG g_vrTranslationStabilization = 1;
 
 // The camera's own axes, from its FRotator. These are what make the origin case decidable -
 // see the direction test below.
@@ -3008,6 +3066,9 @@ volatile LONG g_tmdOnOffHand = 1;      // ini [Input] TmdOnOffHand - the whole f
 //
 // ⚠ The 344 is a GLYPH COUNT and must never be used to recognise a note: a shorter note has fewer.
 // The two anchors at y=+1.0 are panel corners and do not depend on the text, so those are the marker.
+volatile LONG g_menuInsetPct = 70; // safe area for initial and paused menus
+extern volatile LONG g_gamePaused;
+extern volatile LONG g_menuFnHits[6];
 volatile LONG g_noteInsetPct   = 40;   // ini [Render] NoteInsetPct, and a DISPLAY panel row
 volatile LONG g_noteSeenFrame  = 0;    // a note marker was drawn THIS frame
 volatile LONG g_noteOpen       = 0;    // ...was drawn LAST frame - what the inset actually reads
@@ -3657,7 +3718,16 @@ void CamBasis(float pitchRad, float yawRad, float b[3][3]) {
 void ApplyHeadRotation(Reg4* r, int conv,
                        float pitchCur, float yawCur, float pitchDes, float yawDes) {
     float bc[3][3], bd[3][3];
-    CamBasis(pitchCur, yawCur, bc);
+    // Read the basis from the exact matrix being rendered, rather than the camera
+    // actor (which can differ from the final POV during movement/scripted cameras).
+    // This also removes engine camera roll before the real HMD roll is applied.
+    float right[3], up[3], forward[3];
+    AxisCols(r, conv, right, up, forward);
+    if (NormaliseVec3(right) && NormaliseVec3(up) && NormaliseVec3(forward)) {
+        for (int i = 0; i < 3; ++i) {
+            bc[i][0] = right[i]; bc[i][1] = up[i]; bc[i][2] = forward[i];
+        }
+    } else CamBasis(pitchCur, yawCur, bc);
     CamBasis(pitchDes, yawDes, bd);
 
     float R[3][3];
@@ -3836,6 +3906,7 @@ void PumpXR() {
 // fills them alternately. See the ALTERNATE-EYE note by g_stereo.
 XrSwapchain g_swapchain[2] = { XR_NULL_HANDLE, XR_NULL_HANDLE };
 uint32_t g_scWidth = 0, g_scHeight = 0;
+bool g_scCropped = false; // simultaneous SBS: each XR texture holds one eye
 ID3D11Texture2D** g_scImages[2] = { nullptr, nullptr };
 uint32_t g_scImageCount[2] = { 0, 0 };
 
@@ -3969,6 +4040,7 @@ CamMatSlot g_camMats[kMaxCamMats]{};
 int g_camMatUsed = 0;                // high-water mark of slots ever allocated
 int g_camMatValidPeak = 0;           // diagnostic: how many were live in a frame
 int   g_drawsTotal = 0, g_drawsDuped = 0, g_drawsDupedOffset = 0, g_drawsOffscreen = 0;
+int   g_drawsShadowDisabled = 0;
 // Draws that had no live camera matrix and so were drawn once, unsplit. These are the ones that
 // used to be scissored-but-unremapped and therefore vanished at the seam.
 int   g_drawsMonoFallback = 0;
@@ -3988,6 +4060,47 @@ int   g_drawsMonoFallback = 0;
 // Rule from here on: any path that leaves without positively re-validating must invalidate.
 inline void InvalidateCamMats() {
     for (int s = 0; s < g_camMatUsed; ++s) g_camMats[s].valid = false;
+}
+
+struct ShaderLayoutEntry { IDirect3DVertexShader9* shader; skeletal::Layout layout; };
+ShaderLayoutEntry g_shaderLayouts[1024]{};
+unsigned g_shaderLayoutNext=0;
+skeletal::Layout g_boundShaderLayout;
+volatile LONG g_rtIsScene = 1;
+static unsigned ShaderLayoutHash(IDirect3DVertexShader9* shader) {
+    return (unsigned)(((uintptr_t)shader >> 4) * 2654435761u) & 1023;
+}
+typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateVS)(IDirect3DDevice9*,const DWORD*,IDirect3DVertexShader9**);
+typedef HRESULT (STDMETHODCALLTYPE *PFN_SetVS)(IDirect3DDevice9*,IDirect3DVertexShader9*);
+PFN_CreateVS g_origCreateVS=nullptr;
+PFN_SetVS g_origSetVS=nullptr;
+HRESULT STDMETHODCALLTYPE Hook_CreateVS(IDirect3DDevice9* dev,const DWORD* code,IDirect3DVertexShader9** out) {
+    const HRESULT hr=g_origCreateVS(dev,code,out);
+    if(SUCCEEDED(hr)&&out&&*out) {
+        // Parse once at creation. No per-draw GetFunction, allocation, or retained COM reference.
+        DWORD bytes[4096];UINT size=sizeof(bytes);skeletal::Layout layout;
+        if(SUCCEEDED((*out)->GetFunction(bytes,&size)))layout=skeletal::ReadLayout(reinterpret_cast<const uint32_t*>(bytes),size/4);
+        unsigned slot=1024;
+        for(unsigned i=0;i<1024;++i) {
+            const unsigned s=(ShaderLayoutHash(*out)+i)&1023;
+            if(!g_shaderLayouts[s].shader||g_shaderLayouts[s].shader==*out){slot=s;break;}
+        }
+        if(slot==1024)slot=(g_shaderLayoutNext++)%1024;
+        g_shaderLayouts[slot]={*out,layout};
+    }
+    return hr;
+}
+HRESULT STDMETHODCALLTYPE Hook_SetVS(IDirect3DDevice9* dev,IDirect3DVertexShader9* shader) {
+    const HRESULT hr=g_origSetVS(dev,shader);
+    if(FAILED(hr))return hr;
+    g_boundShaderLayout={};
+    if(shader)for(unsigned i=0;i<1024;++i) {
+        const unsigned s=(ShaderLayoutHash(shader)+i)&1023;
+        if(!g_shaderLayouts[s].shader)break;
+        if(g_shaderLayouts[s].shader==shader){g_boundShaderLayout=g_shaderLayouts[s].layout;break;}
+    }
+    if(g_boundShaderLayout.shadow){InvalidateCamMats();g_camMatrixBound=false;}
+    return hr;
 }
 
 // ---- how often identification fails, which nothing measured before ----
@@ -4276,10 +4389,13 @@ IDirect3DSurface9*  g_sharedSurf9  = nullptr;   // its level 0, the StretchRect 
 ID3D11Texture2D*    g_sharedTex11  = nullptr;   // the same memory, opened by D3D11
 ID3D11Texture2D*    g_frameSrc11   = nullptr;   // what the submit block copies into the swapchain
 
+#include "gpu_copy_timing.h"
+
 // Create the XR swapchain lazily, sized to the game's backbuffer - we are pasting the game's
 // own image, so matching its dimensions avoids any rescale on the way in.
 bool EnsureSwapchain(UINT w, UINT h) {
     if (g_swapchain[0] != XR_NULL_HANDLE && w == g_scWidth && h == g_scHeight) return true;
+    if (g_diagEnabled) InterlockedIncrement(&g_diagSwapchainCount);
     for (int e = 0; e < 2; ++e) {
         if (g_swapchain[e] != XR_NULL_HANDLE) { xrDestroySwapchain(g_swapchain[e]); g_swapchain[e] = XR_NULL_HANDLE; }
         if (g_scImages[e]) { delete[] g_scImages[e]; g_scImages[e] = nullptr; }
@@ -4582,13 +4698,17 @@ void StampCaptureState(CopySlot& cap) {
 // Returns the slot whose pixels now sit in g_uploadTex, or nullptr if there is nothing to submit.
 // In pipelined mode the very first frame returns nullptr because nothing has been captured yet -
 // that is normal startup, not a failure.
-void DrawLaserSight(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
+void DrawLaserSight(IDirect3DDevice9* dev);
+void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     // ⭐ run 217: defined further down, next to the transforms it reuses - see DrawLaserSight.
     // The last thing added to the frame before it is handed to XR. Here rather than at a draw
     // hook because this is the one point that is provably AFTER the scene and BEFORE the copy, on both
     // the zero-copy and CPU paths - the laser cannot end up in one and not the other.
+    const bool ownOverlayScene = SUCCEEDED(dev->BeginScene());
     DrawLaserSight(dev);
+    DrawWristHealth(dev);
+    if (ownOverlayScene) dev->EndScene();
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return nullptr;
     D3DSURFACE_DESC sd{};
@@ -4986,6 +5106,7 @@ int   g_tick = 0;
 XrActionSet g_actionSet = XR_NULL_HANDLE;
 XrAction g_actMove = XR_NULL_HANDLE, g_actTurn = XR_NULL_HANDLE;
 XrAction g_actFire = XR_NULL_HANDLE, g_actAltFire = XR_NULL_HANDLE;
+XrAction g_actUiSelect=XR_NULL_HANDLE,g_actUiBack=XR_NULL_HANDLE;
 XrAction g_actHaptic = XR_NULL_HANDLE;
 XrPath   g_handSubPath[2] = { XR_NULL_PATH, XR_NULL_PATH };   // left, right
 
@@ -5020,6 +5141,10 @@ XrPath   g_handSubPath[2] = { XR_NULL_PATH, XR_NULL_PATH };   // left, right
 XrAction g_actGrasp = XR_NULL_HANDLE;
 bool g_graspAvailable = false;
 
+// Intentional squeeze used only for the support-hand weapon grip. This must stay separate from
+// g_actGrasp, whose broad capacitive signal only answers whether the controller is being held.
+XrAction g_actGrip = XR_NULL_HANDLE;
+
 // ---- ⭐ run 156: the phantom triggers, and the sensor that vetoes them ----
 //
 // A SEPARATE action from g_actGrasp, deliberately, and the distinction is the whole point. Grasp is
@@ -5041,6 +5166,8 @@ XrAction g_actStickTouch = XR_NULL_HANDLE;
 bool g_stickTouch[2] = { false, false };
 bool g_stickTouchAvail[2] = { false, false };
 float g_stickAbsMax[2] = { 0.0f, 0.0f };     // largest |x| seen this window, per hand
+bool g_vrStickActive[2] = { false, false }; // physical left/right, before SwapSticks
+float g_vrStickRaw[2][2]{};
 int   g_stickOver[2] = { 0, 0 };             // frames past the 0.7 snap threshold this window
 int   g_snapFired = 0;                       // snap turns this window, for the readout
 bool g_trigTouch[2] = { false, false };       // is a finger on this trigger
@@ -5056,7 +5183,24 @@ int  g_triggerGate = -1;                      // ini [Input] TriggerTouchGate, r
 
 XrAction g_actHandPose = XR_NULL_HANDLE;
 XrSpace  g_handSpace[2] = { XR_NULL_HANDLE, XR_NULL_HANDLE };
+XrQuaternionf g_handAimOrientation[2]={{0,0,0,1},{0,0,0,1}};
+volatile LONG g_vrUiEnabled=1,g_vrUiMenu=0,g_vrUiValid=0,g_vrUiU=500000,g_vrUiV=500000;
+volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=100;
+volatile LONG g_vrMenuDistanceMm=1200;
+volatile LONG g_vrUiEyeCentreU[2]={500000,500000};
+volatile LONG g_vrShadows=0;
+volatile LONG g_vrUiDown=0,g_vrUiBack=0,g_vrUiNativeReady=0;
+unsigned g_vrUiTargetEpoch=0;
+volatile LONG g_vrUiDesktopProbe=0; // Diagnostic-only, default off; final staging keeps it off.
+#include "native_ui_input.h"
+uipointer::TriggerGate g_vrUiTrigger[2];
+void UpdateVrUiPointer(float rightTrigger,bool available);
+void CaptureVrMenuTarget(IDirect3DDevice9* dev);
+void DrawVrMenuPointer(IDirect3DDevice9* dev);
+void ReleaseVrMenuResources();
 bool     g_handPoseValid[2] = { false, false };
+bool g_handPositionValid[2] = { false, false };
+volatile LONG g_twoHandEnabled = 1, g_twoHandActive = 0;
 // Run 190: the gun-pose timing experiment. See the long note in SyncXRInput.
 int      g_poseLeadFrames = 0;          // ini [Input] PoseLeadFrames: display periods to predict ahead
 XrTime   g_lastHandPoseTime = 0;        // what time the previous sample was predicted FOR
@@ -5245,7 +5389,7 @@ void UpdateAutoPad() {
             " (the game re-enumerates, so give it a second or two)");
     }
 }
-volatile LONG g_xrInputOff = 0;     // numpad / - kill all controller input work
+volatile LONG g_xrInputOff = 0;     // tilde - suppress synthetic XInput and effective haptics, retain XR tracking
 int g_syncFailFrames = 0;           // frames where xrSyncActions did not return XR_SUCCESS
 
 // ---- ✅ run 67 RESULT: it is ours, and now it gets timed rather than guessed at ----
@@ -5478,24 +5622,20 @@ void CpuThreadName(HANDLE h, char* out, size_t cap) {
 // Threads are discovered rather than assumed. UE3 spawns worker and streaming threads at load, so a
 // list taken once at startup would miss whichever one turns out to matter.
 void CpuRefreshThreads() {
-    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-    if (snap == INVALID_HANDLE_VALUE) return;
+    DWORD ids[256];unsigned count=0;bool overflow=false;static unsigned generation=0;
+    if(!AsyncThreadSnapshotRead(ids,count,overflow,generation))return;
 
     for (int i = 0; i < g_cpuThreadN; ++i) g_cpuThreads[i].alive = false;
 
-    const DWORD me = GetCurrentProcessId();
-    THREADENTRY32 te{};
-    te.dwSize = sizeof(te);
-    if (Thread32First(snap, &te)) {
-        do {
-            if (te.th32OwnerProcessID != me) continue;
+    for (unsigned entry=0;entry<count;++entry) {
+        const DWORD tid=ids[entry];
             // Matched only against LIVE slots. Windows recycles thread IDs, so a dead slot keyed on
             // the same TID would hand a new thread a handle to the corpse of the old one - which
             // reads as a thread that burns exactly zero CPU forever, the one failure this table
             // could not detect from its own output.
             int slot = -1;
             for (int i = 0; i < g_cpuThreadN; ++i)
-                if (!g_cpuThreads[i].dead && g_cpuThreads[i].tid == te.th32ThreadID) { slot = i; break; }
+                if (!g_cpuThreads[i].dead && g_cpuThreads[i].tid == tid) { slot = i; break; }
             if (slot < 0) {
                 if (g_cpuThreadN >= kCpuThreads) {
                     if (!g_cpuTableFull) {
@@ -5507,18 +5647,17 @@ void CpuRefreshThreads() {
                 }
                 // THREAD_QUERY_INFORMATION rather than _LIMITED_: the start address query needs it,
                 // and this is our own process, so it is grantable.
-                HANDLE h = OpenThread(THREAD_QUERY_INFORMATION, FALSE, te.th32ThreadID);
+                HANDLE h = OpenThread(THREAD_QUERY_INFORMATION, FALSE, tid);
                 if (!h) continue;
                 slot = g_cpuThreadN++;
                 g_cpuThreads[slot] = CpuThread{};
-                g_cpuThreads[slot].tid = te.th32ThreadID;
+                g_cpuThreads[slot].tid = tid;
                 g_cpuThreads[slot].h   = h;
                 CpuThreadName(h, g_cpuThreads[slot].name, sizeof(g_cpuThreads[slot].name));
             }
             g_cpuThreads[slot].alive = true;
-        } while (Thread32Next(snap, &te));
     }
-    CloseHandle(snap);
+    if(overflow) { Log("thread-cpu: asynchronous snapshot truncated; retirement deferred");return; }
 
     // The snapshot is authoritative about what exists, so anything it did not list has exited. Its
     // accumulated CPU is KEPT - that time really was spent, and dropping it would quietly shrink
@@ -5541,10 +5680,14 @@ void SampleThreadCpu() {
     }
     if (!g_cpuOn) return;
 
-    // The snapshot is the expensive part - a few hundred microseconds - so it runs every tenth
+    // The snapshot is performed on a worker (host measurement ~95 ms); request every tenth
     // interval. GetThreadTimes itself is a handful of microseconds across thirty threads.
     static int untilRefresh = 0;
-    if (--untilRefresh <= 0) { CpuRefreshThreads(); untilRefresh = 10; }
+    if (--untilRefresh <= 0) {
+        if(!AsyncThreadSnapshotRequest()) Log("thread-cpu: snapshot worker unavailable; no synchronous fallback");
+        untilRefresh = 10;
+    }
+    CpuRefreshThreads();
 
     static LARGE_INTEGER lastT{};
     static bool haveLast = false;
@@ -7008,7 +7151,7 @@ PadButtonAction g_padButtons[] = {
     { "crouch",     "Crouch",         "/user/hand/right/input/b/click",          "Crouch",     XI_B,         XR_NULL_HANDLE, false, false },
     { "use",        "Use / reload",   "/user/hand/right/input/squeeze/value",    "Use",        XI_X,         XR_NULL_HANDLE, false, false },
     { "antigrav",   "Anti-gravity",   "/user/hand/right/input/thumbstick/click", "AntiGrav",   XI_RTHUMB,    XR_NULL_HANDLE, false, false },
-    { "impulse",    "Impulse",        "/user/hand/left/input/squeeze/value",     "Impulse",    XI_RSHOULDER, XR_NULL_HANDLE, false, false },
+    { "impulse",    "Impulse",        "/user/hand/left/input/trigger/value",     "Impulse",    XI_RSHOULDER, XR_NULL_HANDLE, false, false },
     { "ageyoung",   "Age / renovate", "/user/hand/left/input/x/click",           "AgeYoung",   XI_LSHOULDER, XR_NULL_HANDLE, false, false },
     { "flashlight", "Flashlight",     "/user/hand/left/input/y/click",           "Flashlight", XI_DPAD_DOWN, XR_NULL_HANDLE, false, true  },
     { "dash",       "Dash",           "/user/hand/left/input/thumbstick/click",  "Dash",       XI_LTHUMB,    XR_NULL_HANDLE, false, false },
@@ -7155,6 +7298,7 @@ extern LONG  g_aimFieldSet;
 extern LONG  g_traceSignYaw, g_traceSignPitch;
 extern LONG  g_gunSignYaw, g_gunSignPitch, g_gunSignRoll, g_gunFollowPos;
 extern LONG  g_gunSignPosZ, g_gunAnchorFwd, g_gunAnchorRight, g_gunAnchorUp;
+extern volatile LONG g_traceFromGun;
 extern volatile LONG g_gunSignCombo;
 extern float g_aimPoseSignX, g_aimPoseSignY;
 
@@ -7283,6 +7427,10 @@ bool InitXRInput() {
             // Mode 11 trace rotation: flip if the shot deflects the wrong way.
             g_traceSignYaw   = GetPrivateProfileIntA("Input", "AimTraceSignYaw", 1, path) >= 0 ? 1 : -1;
             g_traceSignPitch = GetPrivateProfileIntA("Input", "AimTraceSignPitch", 1, path) >= 0 ? 1 : -1;
+            g_traceFromGun   = GetPrivateProfileIntA("Input", "TraceFromGun", 1, path) ? 1 : 0;
+            Log("ini: TraceFromGun=%ld (%s)", g_traceFromGun,
+                g_traceFromGun ? "weapon traces start at the hand/gun pivot for close-range parallax"
+                               : "weapon traces start at the engine eye");
             // AIM METHOD, applied rather than merely stored. Everything it drives - aim mode, the
             // gun and arms, move direction, the rot mode - has to be in the right state before the
             // first frame, not after the first panel visit. Applied last in this block, below.
@@ -7509,6 +7657,17 @@ bool InitXRInput() {
 
     {
         XrActionCreateInfo aci{ XR_TYPE_ACTION_CREATE_INFO };
+        strcpy_s(aci.actionName, "weapon_grip");
+        strcpy_s(aci.localizedActionName, "Weapon support grip");
+        aci.actionType = XR_ACTION_TYPE_BOOLEAN_INPUT;
+        aci.countSubactionPaths = 2;
+        aci.subactionPaths = g_handSubPath;
+        if (XR_FAILED(xrCreateAction(g_actionSet, &aci, &g_actGrip)))
+            g_actGrip = XR_NULL_HANDLE;
+    }
+
+    {
+        XrActionCreateInfo aci{ XR_TYPE_ACTION_CREATE_INFO };
         strcpy_s(aci.actionName, "trigtouch");
         strcpy_s(aci.localizedActionName, "Finger on the trigger");
         aci.actionType = XR_ACTION_TYPE_BOOLEAN_INPUT;
@@ -7551,6 +7710,8 @@ bool InitXRInput() {
     ok &= mkAction("turn",    "Turn",     XR_ACTION_TYPE_VECTOR2F_INPUT, &g_actTurn);
     ok &= mkAction("fire",    "Fire",     XR_ACTION_TYPE_FLOAT_INPUT,    &g_actFire);
     ok &= mkAction("altfire", "Alt fire", XR_ACTION_TYPE_FLOAT_INPUT,    &g_actAltFire);
+    ok &= mkAction("ui_select","Menu select",XR_ACTION_TYPE_BOOLEAN_INPUT,&g_actUiSelect);
+    ok &= mkAction("ui_back","Menu back",XR_ACTION_TYPE_BOOLEAN_INPUT,&g_actUiBack);
     for (int i = 0; i < kPadButtonCount; ++i)
         ok &= mkAction(g_padButtons[i].name, g_padButtons[i].localised,
                        XR_ACTION_TYPE_BOOLEAN_INPUT, &g_padButtons[i].action);
@@ -7567,10 +7728,11 @@ bool InitXRInput() {
     //
     // Now spelled one term per emission site, in the order they run, and bounds-checked at the point
     // of use so the next row that gets added fails loudly instead of scribbling on the stack.
-    static const uint32_t kMaxBinds = 4                  // fixed: move, turn, fire, altfire
+    static const uint32_t kMaxBinds = 6                  // fixed: gameplay axes/triggers + physical right UI buttons
                                     + kPadButtonCount    // one per pad button
                                     + 2                  // haptic outputs
                                     + 12                 // grasp sources
+                                    + 2                  // deliberate squeeze weapon grip
                                     + 2                  // trigtouch
                                     + 2                  // sticktouch
                                     + 2                  // hand poses
@@ -7676,6 +7838,8 @@ bool InitXRInput() {
             { g_actTurn,    "/user/hand/right/input/thumbstick",    false },
             { g_actFire,    "/user/hand/right/input/trigger/value", true  },
             { g_actAltFire, "/user/hand/left/input/trigger/value",  true  },
+            { g_actUiSelect,"/user/hand/right/input/a/click",false },
+            { g_actUiBack,"/user/hand/right/input/b/click",false },
         };
         for (auto& f : fixed) add(f.a, f.p, f.handed, false);
 
@@ -7700,6 +7864,12 @@ bool InitXRInput() {
         }
         const char* hp[2] = { "/user/hand/left/output/haptic", "/user/hand/right/output/haptic" };
         for (int i = 0; i < 2; ++i) add(g_actHaptic, hp[i], false, false);
+
+        // Unlike grasp, this is an intentional press. On Index the profile mapper translates
+        // squeeze/value to squeeze/force for button intent; on Touch it remains squeeze/value.
+        const char* wp[2] = { "/user/hand/left/input/squeeze/value",
+                              "/user/hand/right/input/squeeze/value" };
+        for (int i = 0; i < 2; ++i) add(g_actGrip, wp[i], false, false);
 
         // ⚠️ Run 82: thumbrest + trigger alone was TOO NARROW. The log caught it outright -
         // "right on desk (2346 um/frame)" is a controller being waved about while the sensors
@@ -7820,6 +7990,7 @@ bool InitXRInput() {
 // Turns controller state into the synthetic pad. Called once per frame from UpdateFromHeadset,
 // on the same thread as everything else that touches g_baseYaw.
 void SyncXRInput(XrTime displayTime) {
+    const bool uiMenu=Rd(g_vrUiEnabled) && Rd(g_vrUiNativeReady) && Rd(g_vrUiMenu);
     if (!g_xrInputReady) return;
 
     // ⚠️ INSTRUMENT BUG, run 68: this used to return here and force g_handTracked to false, which
@@ -7831,14 +8002,19 @@ void SyncXRInput(XrTime displayTime) {
     // the game. The reads are measured at 0.005 ms and were never the suspect; what the game does
     // with a live pad has never been isolated at all. This is the better experiment and it keeps
     // the state labels valid on both sides of it.
-    const bool feedGame = InterlockedCompareExchange(&g_xrInputOff, 0, 0) == 0;
+    const LONG diagMode = InterlockedCompareExchange(&g_diagMode, 0, 0);
+    const bool pollOff = InterlockedCompareExchange(&g_diagPollOff, 0, 0) != 0;
+    const bool feedGame = !pollOff && InterlockedCompareExchange(&g_xrInputOff, 0, 0) == 0 && diagMode != 2 && diagMode != 3;
+    const bool hapticsAllowed = feedGame && diagMode != 1;
 
     XrActiveActionSet aas{ g_actionSet, XR_NULL_PATH };
     XrActionsSyncInfo si{ XR_TYPE_ACTIONS_SYNC_INFO };
     si.countActiveActionSets = 1;
     si.activeActionSets = &aas;
     LARGE_INTEGER tSync = Now();
-    const XrResult sr = xrSyncActions(g_xrSession, &si);
+    const int64_t diagSync = g_diagEnabled ? DiagQpc() : 0;
+    const XrResult sr = pollOff ? XR_SUCCESS : xrSyncActions(g_xrSession, &si);
+    if (!pollOff) DiagPhaseAdd(DP_SYNC, diagSync);
     {
         const double ms = MsSince(tSync);
         g_msSyncActions += ms;
@@ -7851,7 +8027,10 @@ void SyncXRInput(XrTime displayTime) {
     // are simply inactive. Zeroing here is what stops the player walking on for ever because the
     // stick was held when the headset was taken off or a system overlay took focus.
     if (sr != XR_SUCCESS) {
+        UpdateVrUiPointer(0,false);
         ++g_syncFailFrames;
+        InterlockedExchange(&g_twoHandActive, 0);
+        g_handPositionValid[0] = g_handPositionValid[1] = false;
         InterlockedExchange(&g_padBtns, 0);
         InterlockedExchange(&g_padLStick, PackStick(0, 0));
         InterlockedExchange(&g_padRStick, PackStick(0, 0));
@@ -7873,14 +8052,21 @@ void SyncXRInput(XrTime displayTime) {
 
     auto getVec2 = [&](XrAction a, float* x, float* y) {
         *x = *y = 0.0f;
+        const int hand = a == g_actMove ? 0 : 1;
+        g_vrStickActive[hand] = false;
+        g_vrStickRaw[hand][0] = g_vrStickRaw[hand][1] = 0;
+        if (pollOff) return;
         XrActionStateGetInfo gi{ XR_TYPE_ACTION_STATE_GET_INFO };
         gi.action = a;
         XrActionStateVector2f st{ XR_TYPE_ACTION_STATE_VECTOR2F };
         if (XR_SUCCEEDED(xrGetActionStateVector2f(g_xrSession, &gi, &st)) && st.isActive) {
             *x = st.currentState.x; *y = st.currentState.y;
+            g_vrStickActive[hand] = true;
+            g_vrStickRaw[hand][0] = *x; g_vrStickRaw[hand][1] = *y;
         }
     };
     auto getFloat = [&](XrAction a) -> float {
+        if (pollOff) return 0.0f;
         XrActionStateGetInfo gi{ XR_TYPE_ACTION_STATE_GET_INFO };
         gi.action = a;
         XrActionStateFloat st{ XR_TYPE_ACTION_STATE_FLOAT };
@@ -7889,8 +8075,19 @@ void SyncXRInput(XrTime displayTime) {
         return 0.0f;
     };
     auto getBool = [&](XrAction a) -> bool {
+        if (pollOff) return false;
         XrActionStateGetInfo gi{ XR_TYPE_ACTION_STATE_GET_INFO };
         gi.action = a;
+        XrActionStateBoolean st{ XR_TYPE_ACTION_STATE_BOOLEAN };
+        return XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) &&
+               st.isActive && st.currentState;
+    };
+
+    auto getGrip = [&](int hand) -> bool {
+        if (g_actGrip == XR_NULL_HANDLE || pollOff) return false;
+        XrActionStateGetInfo gi{ XR_TYPE_ACTION_STATE_GET_INFO };
+        gi.action = g_actGrip;
+        gi.subactionPath = g_handSubPath[hand];
         XrActionStateBoolean st{ XR_TYPE_ACTION_STATE_BOOLEAN };
         return XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) &&
                st.isActive && st.currentState;
@@ -7923,6 +8120,7 @@ void SyncXRInput(XrTime displayTime) {
         if (ax > 0.7f) ++g_stickOver[th];
     }
     msStates += MsSince(tSt);
+    DiagPhaseAdd(DP_ACTIONS, tSt.QuadPart);
 
     // ⚠️ The panel navigates on the LEFT stick, and it has to use these raw values rather than
     // mx/my. By the time the panel block runs, mx/my have been rotated into the off-hand or
@@ -7998,6 +8196,7 @@ void SyncXRInput(XrTime displayTime) {
     LARGE_INTEGER tPose = Now();
     for (int i = 0; i < 2; ++i) {
         g_handPoseValid[i] = false;
+        g_handPositionValid[i] = false;
         g_handTracked[i] = false;
         if (g_handSpace[i] == XR_NULL_HANDLE) continue;
         XrSpaceLocation loc{ XR_TYPE_SPACE_LOCATION };
@@ -8010,6 +8209,7 @@ void SyncXRInput(XrTime displayTime) {
         g_handTracked[i] = (loc.locationFlags & XR_SPACE_LOCATION_ORIENTATION_TRACKED_BIT) != 0;
         if (!(loc.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)) continue;
         const XrQuaternionf& q = loc.pose.orientation;
+        g_handAimOrientation[i]=q;
         // The same Y-X-Z decomposition the head uses, so hand and head angles are directly
         // comparable rather than two separately-derived conventions that agree by luck.
         float sinp = 2.0f * (q.w * q.x - q.y * q.z);
@@ -8032,7 +8232,9 @@ void SyncXRInput(XrTime displayTime) {
             const float d = sqrtf(dx*dx + dy*dy + dz*dz);
             g_handSpeed[i] = g_handSpeed[i] * 0.95f + d * 0.05f;
         }
-        g_handLastPos[i] = loc.pose.position;
+        g_handPositionValid[i] = (loc.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) &&
+                                 (loc.locationFlags & XR_SPACE_LOCATION_POSITION_TRACKED_BIT);
+        if (g_handPositionValid[i]) g_handLastPos[i] = loc.pose.position;
         g_handHavePos[i] = true;
 
         g_handPoseValid[i] = true;
@@ -8049,7 +8251,7 @@ void SyncXRInput(XrTime displayTime) {
             gi.action = g_actGrasp;
             gi.subactionPath = g_handSubPath[i];
             XrActionStateBoolean st{ XR_TYPE_ACTION_STATE_BOOLEAN };
-            if (XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) && st.isActive) {
+            if (!pollOff && XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) && st.isActive) {
                 haveTouch = true;
                 touched = st.currentState != 0;
             }
@@ -8063,6 +8265,7 @@ void SyncXRInput(XrTime displayTime) {
         }
     }
     {
+        DiagPhaseAdd(DP_POSES, tPose.QuadPart);
         const double ms = MsSince(tPose);
         g_msPoses += ms;
         if (ms > g_pkPoses) g_pkPoses = ms;
@@ -8093,8 +8296,24 @@ void SyncXRInput(XrTime displayTime) {
     tSt = Now();
     bool panelHeld = false;
     WORD panelMask = 0;
+    const bool supportGrip = getGrip(OffHand());
     for (int i = 0; i < kPadButtonCount; ++i) {
         const bool down = getBool(g_padButtons[i].action);
+        if (g_padButtons[i].mask == XI_RSHOULDER) {
+            const XrVector3f& a=g_handLastPos[AimHand()];
+            const XrVector3f& b=g_handLastPos[OffHand()];
+            const float delta[3]={b.x-a.x,b.y-a.y,b.z-a.z};
+            const float yaw=g_handYawRad[AimHand()], pitch=g_handPitchRad[AimHand()];
+            const float forward[3]={-sinf(yaw)*cosf(pitch),sinf(pitch),-cosf(yaw)*cosf(pitch)};
+            const bool active=Rd(g_twoHandEnabled) && feedGame && WeaponInHands() && !Rd(g_gamePaused) &&
+                TwoHandGripAllowed(delta,forward,supportGrip,
+                    g_handPositionValid[AimHand()] && g_handPositionValid[OffHand()] &&
+                    g_handPoseValid[AimHand()] && g_handPoseValid[OffHand()], Rd(g_twoHandActive)!=0);
+            const LONG previous=InterlockedExchange(&g_twoHandActive,active?1:0);
+            if(previous!=(active?1:0)) Log("two-hand grip: %s",active?"ACQUIRED":"RELEASED");
+            // A deliberate support-hand grip belongs to the gun, not the TMD impulse action.
+            if(active) continue;
+        }
         if (down) ++g_btnHeldFrames[i];
         if (g_padButtons[i].isMenu)  { menuHeld  = down; menuMask  = g_padButtons[i].mask; continue; }
         if (g_padButtons[i].isPanel) { panelHeld = down; panelMask = g_padButtons[i].mask; continue; }
@@ -8112,6 +8331,7 @@ void SyncXRInput(XrTime displayTime) {
                 InterlockedExchange64(&g_meleeFromMs,  now + dly);
                 InterlockedExchange64(&g_meleeUntilMs, now + (end > dly ? end : dly + 1));
                 InterlockedExchange(&g_meleePending, 1);   // the cheap gate LAST, after the deadlines
+                if(dly==0)InterlockedExchange(&g_armsAnimActiveCached,1);
                 // The latched weapon is logged with every window on purpose. The impulse weapon shares
                 // this button, and when it finally exists this line is what says whether the two cases
                 // can be told apart at all - without it, that question needs its own run.
@@ -8197,6 +8417,7 @@ void SyncXRInput(XrTime displayTime) {
         }
     }
     msStates += MsSince(tSt);
+    DiagPhaseAdd(DP_ACTIONS, tSt.QuadPart);
 
     // ---- recentre, which had no controller binding at all ----
     //
@@ -8234,7 +8455,7 @@ void SyncXRInput(XrTime displayTime) {
     static bool stickArmed = true;
     static int  stickHold = 0;
     static WORD stickMask = 0;
-    if (fabsf(ty) > 0.7f && stickArmed) {
+    if (!uiMenu && fabsf(ty) > 0.7f && stickArmed) {
         stickMask = (ty > 0) ? g_stickUpMask : g_stickDownMask;
         stickHold = 8;
         stickArmed = false;
@@ -8270,6 +8491,7 @@ void SyncXRInput(XrTime displayTime) {
                 InterlockedExchange64(&g_healFromMs,  now + dly);
                 InterlockedExchange64(&g_healUntilMs, now + (end > dly ? end : dly + 1));
                 InterlockedExchange(&g_healPending, 1);   // arm the cheap gate LAST, after the deadlines
+                if(dly==0)InterlockedExchange(&g_armsAnimActiveCached,1);
                 Log("heal window: arms shown from +%ld ms to +%ld ms after the press%s", dly, end,
                     unknown ? " (health could NOT be read - opening on the button alone)" : "");
             }
@@ -8303,6 +8525,7 @@ void SyncXRInput(XrTime displayTime) {
             armedX = false;
         } else if (fabsf(panelX) < 0.3f) armedX = true;
 
+        UpdateVrUiPointer(0,false);
         ClearPad();
         return;                                     // no turning, no walking, no buttons
     }
@@ -8322,7 +8545,7 @@ void SyncXRInput(XrTime displayTime) {
     // separately by recentring on level load. This is the comfort/parity setting on its own terms,
     // and it is a setting rather than a rule precisely because it removes the manual correction
     // that was the only workaround before that fix existed.
-    const bool headOwnsYaw = InterlockedCompareExchange(&g_enabled, 0, 0) != 0;
+    const bool headOwnsYaw = !uiMenu && InterlockedCompareExchange(&g_enabled, 0, 0) != 0;
     // Only the TURN is affected. Not an early return - buttons still have to reach the game during
     // a cutscene, and one of them is the one that skips it.
     const bool inCine   = InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0;
@@ -8401,7 +8624,7 @@ void SyncXRInput(XrTime displayTime) {
         XrActionStateGetInfo gi{ XR_TYPE_ACTION_STATE_GET_INFO };
         gi.action = a;
         XrActionStateFloat st{ XR_TYPE_ACTION_STATE_FLOAT };
-        if (XR_FAILED(xrGetActionStateFloat(g_xrSession, &gi, &st))) {
+        if (pollOff || XR_FAILED(xrGetActionStateFloat(g_xrSession, &gi, &st))) {
             ++g_trigInactiveFrames[hand];
             return 0.0f;
         }
@@ -8481,7 +8704,7 @@ void SyncXRInput(XrTime displayTime) {
             gi.action = g_actStickTouch;
             gi.subactionPath = g_handSubPath[hand];
             XrActionStateBoolean st{ XR_TYPE_ACTION_STATE_BOOLEAN };
-            if (XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) && st.isActive) {
+            if (!pollOff && XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) && st.isActive) {
                 g_stickTouchAvail[hand] = true;
                 g_stickTouch[hand] = st.currentState != 0;
             } else {
@@ -8495,7 +8718,7 @@ void SyncXRInput(XrTime displayTime) {
             gi.action = g_actTrigTouch;
             gi.subactionPath = g_handSubPath[hand];
             XrActionStateBoolean st{ XR_TYPE_ACTION_STATE_BOOLEAN };
-            if (XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) && st.isActive) {
+            if (!pollOff && XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) && st.isActive) {
                 g_trigTouchAvail[hand] = true;
                 g_trigTouch[hand] = st.currentState != 0;
             } else {
@@ -8516,10 +8739,31 @@ void SyncXRInput(XrTime displayTime) {
         }
     }
     msStates += MsSince(tSt);
+    DiagPhaseAdd(DP_ACTIONS, tSt.QuadPart);
     // Triggers get the same treatment for the same reason: a resting trigger reporting 0.004 turns
     // into a byte that flickers between 0 and 1, and that is a state change every frame.
     if (lt < 0.10f) lt = 0.0f;
     if (rt < 0.10f) rt = 0.0f;
+    UpdateVrUiPointer(fireHand==1?rt:lt,true);
+    const auto primaryGate=g_vrUiTrigger[fireHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,rt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
+    const auto alternateGate=g_vrUiTrigger[altHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,lt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
+    if(uiMenu) {
+        const bool selectPressed=fireHand==1?primaryGate.selectPressed:alternateGate.selectPressed;
+        if(selectPressed)InterlockedExchange(&g_vrUiDown,1);
+        else if((fireHand==1?rt:lt)<=.5f || !Rd(g_vrUiValid))InterlockedExchange(&g_vrUiDown,0);
+        rt=lt=0; // Menu selection cannot publish gameplay trigger state.
+        btns&=~WORD(XI_A|XI_B);
+        if(getBool(g_actUiSelect))btns|=XI_A;
+        if(getBool(g_actUiBack))btns|=XI_B;
+        InterlockedExchange(&g_vrUiBack,0); // The game's native XInput B mapping owns cancel.
+        // Preserve native gamepad focus navigation. Pointer clicks use InputKey separately.
+        btns&=~WORD(XI_RSHOULDER|XI_LSHOULDER);
+        lookX=0;
+    } else {
+        InterlockedExchange(&g_vrUiBack,0);
+        if(!primaryGate.fireHeld)rt=0;
+        if(!alternateGate.fireHeld)lt=0;
+    }
     InterlockedExchange(&g_rawTrigger, (LONG)(rt * 255.0f));
     InterlockedExchange(&g_rawAltTrigger, (LONG)(lt * 255.0f));   // run 213 - see the scope census
     g_msActionStates += msStates;
@@ -8527,6 +8771,7 @@ void SyncXRInput(XrTime displayTime) {
     const LONG packedBtns = (LONG)btns
                           | ((LONG)(BYTE)(lt * 255.0f) << 16)
                           | ((LONG)(BYTE)(rt * 255.0f) << 24);
+    if (g_diagEnabled) InterlockedExchange(&g_diagRawBtns, packedBtns);
 
     auto toAxis = [](float v) -> int16_t {
         if (v >  1.0f) v =  1.0f;
@@ -8534,8 +8779,8 @@ void SyncXRInput(XrTime displayTime) {
         return (int16_t)(v * 32767.0f);
     };
     if (feedGame) {
-        InterlockedExchange(&g_padBtns, packedBtns);
-        InterlockedExchange(&g_padLStick, PackStick(toAxis(mx), toAxis(my)));
+        InterlockedExchange(&g_padBtns, diagMode == 4 ? (packedBtns & ~0xffffL) : packedBtns);
+        InterlockedExchange(&g_padLStick, PackStick(toAxis(uiMenu?panelX:mx), toAxis(uiMenu?panelY:my)));
         InterlockedExchange(&g_padRStick, PackStick(toAxis(lookX), 0));
     } else {
         ClearPad();
@@ -8547,6 +8792,10 @@ void SyncXRInput(XrTime displayTime) {
     // that mostly is not changing, and each one crosses into the runtime. Sent on a meaningful
     // change, and refreshed periodically so a sustained effect does not expire mid-rumble.
     LARGE_INTEGER tHap = Now();
+    if (g_diagEnabled) {
+        g_diagCurrent.rumbleL = uint32_t(InterlockedCompareExchange(&g_rumbleL, 0, 0));
+        g_diagCurrent.rumbleR = uint32_t(InterlockedCompareExchange(&g_rumbleR, 0, 0));
+    }
     if (g_actHaptic != XR_NULL_HANDLE) {
         static float lastAmp[2] = { -1.0f, -1.0f };
         static int   refresh = 0;
@@ -8558,18 +8807,22 @@ void SyncXRInput(XrTime displayTime) {
             // is a plausible source of a slow runtime call, and this mod asks for haptics every
             // time the game rumbles - which in combat is constantly. Cheap to rule out, and
             // correct on its own terms regardless: buzzing a controller on a desk helps nobody.
-            const float amp = (feedGame && g_handHeld[hand]) ? (float)raw[hand] / 65535.0f : 0.0f;
+            const float amp = (hapticsAllowed && g_handHeld[hand]) ? (float)raw[hand] / 65535.0f : 0.0f;
             const bool changed = fabsf(amp - lastAmp[hand]) > 0.02f;
             const bool expiring = amp > 0.0f && (refresh % 15) == 0;
             if (!changed && !expiring) continue;
+            if (g_diagEnabled) { ++g_diagCurrent.hapticCalls; g_diagCurrent.hapticAmplitudeMilli = uint32_t(amp * 1000.0f); }
             lastAmp[hand] = amp;
 
             XrHapticActionInfo hai{ XR_TYPE_HAPTIC_ACTION_INFO };
             hai.action = g_actHaptic;
             hai.subactionPath = g_handSubPath[hand];
+            const int64_t hapticApiStart = g_diagEnabled ? DiagQpc() : 0;
             if (amp <= 0.0f) {
+                if (g_diagEnabled) ++g_diagCurrent.hapticStopCalls;
                 xrStopHapticFeedback(g_xrSession, &hai);
             } else {
+                if (g_diagEnabled) ++g_diagCurrent.hapticApplyCalls;
                 XrHapticVibration hv{ XR_TYPE_HAPTIC_VIBRATION };
                 hv.duration  = 200LL * 1000000LL;      // 200 ms in ns - longer than the refresh
                 hv.frequency = XR_FREQUENCY_UNSPECIFIED;
@@ -8577,9 +8830,11 @@ void SyncXRInput(XrTime displayTime) {
                 xrApplyHapticFeedback(g_xrSession, &hai,
                                       reinterpret_cast<const XrHapticBaseHeader*>(&hv));
             }
+            if (g_diagEnabled) g_diagCurrent.hapticCallUs += DiagUs(hapticApiStart);
         }
     }
     {
+        DiagPhaseAdd(DP_HAPTIC, tHap.QuadPart);
         const double ms = MsSince(tHap);
         g_msHaptics += ms;
         if (ms > g_pkHaptics) g_pkHaptics = ms;
@@ -8594,12 +8849,14 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     XrFrameState fs{ XR_TYPE_FRAME_STATE };
     LARGE_INTEGER tWait = Now();
     if (XR_FAILED(xrWaitFrame(g_xrSession, nullptr, &fs))) {
+        DiagPhaseAdd(DP_WAIT, tWait.QuadPart);
         // Not merely a skipped frame: returning without clearing would leave the pad latched at
         // whatever was last published, and the player walking.
         ClearPad();
         return;
     }
     g_msWaitFrame += MsSince(tWait);
+    DiagPhaseAdd(DP_WAIT, tWait.QuadPart);
     ++g_waitFrames;
 
     // After xrWaitFrame because locating the hands needs its predicted display time, and before
@@ -8653,6 +8910,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // calls that were already being made.
     LARGE_INTEGER tXrBegin = Now();
     xrBeginFrame(g_xrSession, nullptr);
+    DiagPhaseAdd(DP_BEGIN, tXrBegin.QuadPart);
     g_msXrSubmit += MsSince(tXrBegin);
 
     XrView views[2] = { { XR_TYPE_VIEW }, { XR_TYPE_VIEW } };
@@ -9008,7 +9266,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         // the AIM state that the bullet path depends on, and threading a hand index through it would
         // put the shot at risk to serve a cosmetic feature. The duplication is bounded and this comment
         // is the pointer between them - if the sign convention above ever changes, it changes here too.
-        if (g_handPoseValid[OffHand()]) {
+        if (g_handPoseValid[OffHand()] && g_handPositionValid[OffHand()]) {
             float ovy = g_handYawRad[OffHand()] - yawRad;
             while (ovy >  3.14159265f) ovy -= 6.2831853f;
             while (ovy < -3.14159265f) ovy += 6.2831853f;
@@ -9035,6 +9293,19 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             InterlockedExchange(&g_offHandValid, 1);
         } else {
             InterlockedExchange(&g_offHandValid, 0);
+        }
+        if (Rd(g_twoHandActive) && g_handPositionValid[AimHand()] && g_handPositionValid[OffHand()]) {
+            const XrVector3f& a=g_handLastPos[AimHand()];
+            const XrVector3f& b=g_handLastPos[OffHand()];
+            const float dx=b.x-a.x,dy=b.y-a.y,dz=b.z-a.z;
+            const float length=sqrtf(dx*dx+dy*dy+dz*dz);
+            if(length>.001f) {
+                float dyaw=atan2f(-dx,-dz)-yawRad;
+                while(dyaw>3.14159265f)dyaw-=6.2831853f;
+                while(dyaw<-3.14159265f)dyaw+=6.2831853f;
+                InterlockedExchange(&g_handDevYawUU,(LONG)lroundf(g_yawSign*dyaw*kRadToUU));
+                InterlockedExchange(&g_handDevPitchUU,(LONG)lroundf(g_pitchSign*(asinf(dy/length)-pitchRad)*kRadToUU));
+            }
         }
         if (!g_handPoseValid[AimHand()]) {
             // No hand, no deviation. Falling back to zero means the shot goes where you look,
@@ -9407,10 +9678,14 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     const XrCompositionLayerBaseHeader* layers[1] = { nullptr };
     uint32_t layerCount = 0;
 
+    const int64_t diagBridge = g_diagEnabled ? DiagQpc() : 0;
     const CopySlot* frame = (fs.shouldRender && g_haveEyes && gameDev)
                           ? CopyBackbufferToD3D11(gameDev) : nullptr;
+    DiagPhaseAdd(DP_BRIDGE, diagBridge);
 
-    if (frame && EnsureSwapchain(g_srcW, g_srcH)) {
+    const bool cropEyes = frame && frame->dup && !frame->stereo && g_srcW >= 2;
+    g_scCropped = cropEyes;
+    if (frame && EnsureSwapchain(cropEyes ? g_srcW / 2 : g_srcW, g_srcH)) {
         // Every one of these was captured with the pixels, not read live. In pipelined mode the
         // image is a frame old, and reading `g_stereo` or `g_eyePose` here would describe the
         // frame being drawn now rather than the one being submitted.
@@ -9419,20 +9694,62 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
 
         uint32_t idx = 0;
         XrSwapchainImageAcquireInfo ai{ XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO };
-        if (XR_SUCCEEDED(xrAcquireSwapchainImage(g_swapchain[filled], &ai, &idx))) {
+        const int64_t diagAcquire = g_diagEnabled ? DiagQpc() : 0;
+        const XrResult acquireResult = xrAcquireSwapchainImage(g_swapchain[filled], &ai, &idx);
+        DiagPhaseAdd(DP_ACQUIRE, diagAcquire);
+        if (XR_SUCCEEDED(acquireResult)) {
             XrSwapchainImageWaitInfo wi{ XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO };
             wi.timeout = XR_INFINITE_DURATION;
-            if (XR_SUCCEEDED(xrWaitSwapchainImage(g_swapchain[filled], &wi))) {
+            const int64_t diagSwapWait = g_diagEnabled ? DiagQpc() : 0;
+            const XrResult swapWaitResult = xrWaitSwapchainImage(g_swapchain[filled], &wi);
+            DiagPhaseAdd(DP_SWAPWAIT, diagSwapWait);
+            if (XR_SUCCEEDED(swapWaitResult)) {
                 // Either the CPU-uploaded staging texture or, under zero-copy, the shared surface
                 // the GPU already wrote - both are D3D11 textures of a compatible type group, so
                 // the copy into the swapchain image is identical either way.
                 LARGE_INTEGER tUp = Now();
-                if (g_frameSrc11) g_ctx11->CopyResource(g_scImages[filled][idx], g_frameSrc11);
+                g_gpuCopyTiming.Begin(g_ctx11);
+                if (g_frameSrc11) {
+                    if (cropEyes) {
+                        const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
+                        const UINT left = swap ? g_srcW / 2 : 0;
+                        const D3D11_BOX box{ left, 0, 0, left + g_scWidth, g_scHeight, 1 };
+                        g_ctx11->CopySubresourceRegion(g_scImages[0][idx], 0, 0, 0, 0, g_frameSrc11, 0, &box);
+                    } else g_ctx11->CopyResource(g_scImages[filled][idx], g_frameSrc11);
+                }
                 g_msUpload += MsSince(tUp);
                 XrSwapchainImageReleaseInfo ri{ XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO };
+                const int64_t diagRelease = g_diagEnabled ? DiagQpc() : 0;
                 xrReleaseSwapchainImage(g_swapchain[filled], &ri);
+                DiagPhaseAdd(DP_RELEASE, diagRelease);
                 g_eyeFilled[filled] = true;
                 if (!stereo) { g_renderPose[0] = frame->pose[0]; g_renderPose[1] = frame->pose[1]; }
+
+                bool rightReady = true;
+                if (cropEyes) {
+                    uint32_t rightIndex = 0;
+                    const int64_t ta = g_diagEnabled ? DiagQpc() : 0;
+                    const XrResult ar = xrAcquireSwapchainImage(g_swapchain[1], &ai, &rightIndex);
+                    DiagPhaseAdd(DP_ACQUIRE, ta);
+                    rightReady = XR_SUCCEEDED(ar);
+                    if (rightReady) {
+                        const int64_t tw = g_diagEnabled ? DiagQpc() : 0;
+                        const XrResult wr = xrWaitSwapchainImage(g_swapchain[1], &wi);
+                        DiagPhaseAdd(DP_SWAPWAIT, tw);
+                        rightReady = XR_SUCCEEDED(wr) && g_frameSrc11;
+                        if (rightReady) {
+                            const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
+                            const UINT left = swap ? 0 : g_srcW / 2;
+                            const D3D11_BOX box{ left, 0, 0, left + g_scWidth, g_scHeight, 1 };
+                            g_ctx11->CopySubresourceRegion(g_scImages[1][rightIndex], 0, 0, 0, 0, g_frameSrc11, 0, &box);
+                        }
+                        const int64_t tr = g_diagEnabled ? DiagQpc() : 0;
+                        xrReleaseSwapchainImage(g_swapchain[1], &ri);
+                        DiagPhaseAdd(DP_RELEASE, tr);
+                    }
+                    g_eyeFilled[1] = rightReady;
+                }
+                g_gpuCopyTiming.End(g_ctx11);
 
                 // Both eyes reference the SAME image - this is the MonoTracked rung, not
                 // stereo. It reads as depth-free but correctly oriented, because the game
@@ -9451,12 +9768,12 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 // came from lets it reproject correctly instead of mismatching the two eyes.
                 const bool dupNow = frame->dup;
                 for (int i = 0; i < 2; ++i) {
-                    const int src = stereo ? i : 0;
+                    const int src = (stereo || cropEyes) ? i : 0;
                     projViews[i] = { XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW };
                     projViews[i].pose = frame->pose[i];
                     projViews[i].fov  = frame->useDerived ? frame->derived : frame->fov[i];
                     projViews[i].subImage.swapchain = g_swapchain[src];
-                    if (dupNow) {
+                    if (dupNow && !cropEyes) {
                         // Both eyes live in one image, side by side. Hand each eye its half by
                         // rect - no extra copy, and both were drawn in the same instant.
                         const int32_t halfW = (int32_t)g_scWidth / 2;
@@ -9474,7 +9791,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 }
                 // Nothing is submitted until BOTH eyes hold an image, otherwise the first
                 // stereo frame would show one eye a swapchain that has never been written.
-                if (!stereo || (g_eyeFilled[0] && g_eyeFilled[1])) {
+                if (rightReady && (!stereo || (g_eyeFilled[0] && g_eyeFilled[1]))) {
                     layer.space = g_xrSpace;
                     layer.viewCount = 2;
                     layer.views = projViews;
@@ -9484,7 +9801,9 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 }
             } else {
                 XrSwapchainImageReleaseInfo ri{ XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO };
+                const int64_t diagRelease = g_diagEnabled ? DiagQpc() : 0;
                 xrReleaseSwapchainImage(g_swapchain[filled], &ri);
+                DiagPhaseAdd(DP_RELEASE, diagRelease);
             }
         }
     }
@@ -9503,6 +9822,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // now it was pooled into "our work" alongside the game's own rendering.
     LARGE_INTEGER tXrEnd = Now();
     xrEndFrame(g_xrSession, &fei);
+    DiagPhaseAdd(DP_END, tXrEnd.QuadPart);
     const double msEnd = MsSince(tXrEnd);
     g_msXrSubmit += msEnd;
     // Peak, not just the mean: a one-second average buries a single 200 ms submission among a
@@ -9543,6 +9863,14 @@ extern bool          g_inHudRemap;
 
 HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
                                            const float* data, UINT vec4Count) {
+    // The draw-time gate is too late: HMD position, rotation and projection are
+    // already written here. A light/reflection view can pass the matrix shape
+    // test, so exclude the same offscreen targets before learning or editing.
+    if (!Rd(g_rtIsScene) || g_boundShaderLayout.shadow) {
+        InvalidateCamMats();
+        g_camMatrixBound = false;
+        return g_origSetVSConstF(dev, startReg, data, vec4Count);
+    }
     bool scan = InterlockedCompareExchange(&g_scanArmed, 0, 0) != 0;
     // Duplication needs the final left-eye matrix cached, which only the modify path produces.
     const bool dup = InterlockedCompareExchange(&g_dupDraws, 0, 0) != 0;
@@ -9795,7 +10123,15 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
         // happens to be facing.
         float o[3] = {0,0,0};
         if (inject) {
-            if (posOffset) { o[0] = g_hmdOffset[0]; o[1] = g_hmdOffset[1]; o[2] = g_hmdOffset[2]; }
+            if (posOffset) {
+                o[0] = g_hmdOffset[0]; o[1] = g_hmdOffset[1]; o[2] = g_hmdOffset[2];
+                if (VrModeOn() && Rd(g_vrTranslationStabilization) &&
+                    InterlockedCompareExchange(&g_vrCameraStabValid, 0, 0)) {
+                    o[0] += g_vrCameraStabOffset[0];
+                    o[1] += g_vrCameraStabOffset[1];
+                    o[2] += g_vrCameraStabOffset[2];
+                }
+            }
             else           { o[0] = g_camRight[0] * g_offsetUU;
                              o[1] = g_camRight[1] * g_offsetUU;
                              o[2] = g_camRight[2] * g_offsetUU; }
@@ -9956,7 +10292,6 @@ int  g_userPtrHookLevel = 0;      // 0 off, 1 patch only, 2 +counter, 3 full - a
 // reflection buffers and half-res post buffers all differ in size and are left alone.
 typedef HRESULT (STDMETHODCALLTYPE *PFN_SetRenderTarget)(IDirect3DDevice9*, DWORD, IDirect3DSurface9*);
 PFN_SetRenderTarget g_origSetRenderTarget = nullptr;
-volatile LONG g_rtIsScene = 1;
 int g_splitColourOnly = 0;    // ini SplitColourTargetsOnly - see the note in Hook_SetRenderTarget
 // One-shot budget for the shadow-pass constant dump. Only fires while SplitColourTargetsOnly=1,
 // because that is what routes those draws down the excluded path where they can be caught.
@@ -10037,40 +10372,31 @@ static void DpgRecord(uint8_t kind, float z0, float z1, uint32_t a, uint32_t b, 
 HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
                                               IDirect3DSurface9* surf) {
     HRESULT hr = g_origSetRenderTarget(dev, idx, surf);
+    if (FAILED(hr)) return hr; // Failed binds leave the actual device target unchanged.
     // Run 116: which target the first-person pass draws into. If it switches at the foreground
     // boundary the pass is composited from its own surface, and skipping its draws leaves that
     // surface at its cleared value - which would explain "black but still occluding" without any
     // second copy of the geometry existing.
     if (idx == 0) DpgRecord(3, 0.0f, 0.0f, (uint32_t)(uintptr_t)surf, 0, 0, 0);
     if (idx == 0) {
+        ++g_vrUiTargetEpoch;
         // Before the backbuffer size is known, assume scene - the initial target IS the
         // backbuffer, and refusing to split would silently disable stereo instead of failing
         // in a way anyone would notice.
-        bool scene = true;
+        bool scene = surf != nullptr;
         g_rtCurrent = -1;
         if (surf) {
             D3DSURFACE_DESC d{};
             if (SUCCEEDED(surf->GetDesc(&d))) {
                 if (g_srcW && g_srcH) scene = (d.Width == g_srcW && d.Height == g_srcH);
-                // ---- the discriminator for the one-eye shadow corruption (run 40) ----
-                //
-                // The scene test above is SIZE EQUALITY ALONE, so every scene-sized surface gets
-                // split - and the census has been flagging a THIRD one for several runs, taking
-                // 240 draws a frame, that is neither of the two colour targets it should be.
-                //
-                // A screen-space effect that reconstructs world position from depth does so with
-                // an inverse-projection constant we do NOT remap. Feed it depth from geometry we
-                // DID remap and the reconstruction lands somewhere else entirely - differently per
-                // eye, since each eye's remap differs. That is exactly "the shadow appears in one
-                // eye and is wrong in that eye".
-                //
-                // This restricts splitting to the two known scene COLOUR formats, which excludes
-                // that third surface. If the shadows change, it is implicated; if they do not, the
-                // cause is elsewhere and this costs one relaunch to find out.
-                if (scene && g_splitColourOnly &&
-                    !(d.Format == D3DFMT_A8R8G8B8 || d.Format == D3DFMT_X8R8G8B8 ||
-                      d.Format == D3DFMT_A16B16G16R16F)) {
-                    scene = false;
+                if (g_diagEnabled && scene && (d.Format == D3DFMT_A8R8G8B8 || d.Format == D3DFMT_X8R8G8B8)) {
+                    InterlockedExchange(&g_diagSceneW, LONG(d.Width));
+                    InterlockedExchange(&g_diagSceneH, LONG(d.Height));
+                }
+                if (scene && g_splitColourOnly) {
+                    scene = (d.Format == D3DFMT_A8R8G8B8 ||
+                             d.Format == D3DFMT_X8R8G8B8 ||
+                             d.Format == D3DFMT_A16B16G16R16F);
                 }
                 for (int i = 0; i < g_rtSeenCount; ++i)
                     if (g_rtSeen[i].surf == surf) { g_rtCurrent = i; break; }
@@ -10080,7 +10406,11 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
                 }
             }
         }
-        InterlockedExchange(&g_rtIsScene, scene ? 1 : 0);
+        const LONG previous = InterlockedExchange(&g_rtIsScene, scene ? 1 : 0);
+        if (!scene || previous != (scene ? 1 : 0)) {
+            InvalidateCamMats();
+            g_camMatrixBound = false;
+        }
     }
     return hr;
 }
@@ -10091,18 +10421,12 @@ void ReportRenderTargets() {
     int sceneSurfaces = 0;
     for (int i = 0; i < g_rtSeenCount; ++i) {
         if (!g_rtSeen[i].draws) continue;
-        // ---- âš ï¸ this label used to lie, and it lied about the exact surface under suspicion ----
-        //
-        // It was computed from size equality alone, so with SplitColourTargetsOnly=1 the G16R16
-        // target still printed "<- SPLIT" while it was in fact being left alone. A census that
-        // reports the rule instead of the decision is worse than no census: run 40 nearly
-        // concluded the switch had not worked from this line.
         const bool sceneSized = (g_rtSeen[i].w == g_srcW && g_rtSeen[i].h == g_srcH);
         const bool colourFmt = (g_rtSeen[i].fmt == D3DFMT_A8R8G8B8 ||
                                 g_rtSeen[i].fmt == D3DFMT_X8R8G8B8 ||
                                 g_rtSeen[i].fmt == D3DFMT_A16B16G16R16F);
         const bool isScene = sceneSized && (!g_splitColourOnly || colourFmt);
-        if (sceneSized) ++sceneSurfaces;
+        if (isScene) ++sceneSurfaces;
         Log("    %p  %5ux%-5u %-14s %6d draws  %s", (void*)g_rtSeen[i].surf,
             g_rtSeen[i].w, g_rtSeen[i].h,
             FmtName(g_rtSeen[i].fmt), g_rtSeen[i].draws,
@@ -10167,6 +10491,8 @@ template <typename DrawFn>
 HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
     ++g_drawsTotal;
     if (g_rtCurrent >= 0 && g_rtCurrent < 16) ++g_rtSeen[g_rtCurrent].draws;
+    // Shadow-map generation stays intact. VrShadows=0 neutralises only the measured sampled
+    // projection texture in Hook_SetTexture, after the light-space pass has completed.
     if (!InterlockedCompareExchange(&g_dupDraws, 0, 0)) return draw();
     // Never split a draw aimed at a shadow map or other offscreen target - see the note on
     // Hook_SetRenderTarget for what that corrupts.
@@ -10248,7 +10574,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
         ++g_drawsSkipped;
         return S_OK;
     }
-    if (!InterlockedCompareExchange(&g_rtIsScene, 0, 0)) { ++g_drawsOffscreen; return draw(); }
+    if (!InterlockedCompareExchange(&g_rtIsScene, 0, 0) || g_boundShaderLayout.shadow) { ++g_drawsOffscreen; return draw(); }
 
     D3DVIEWPORT9 full{};
     if (FAILED(dev->GetViewport(&full)) || full.Width < 4) return draw();
@@ -11892,6 +12218,7 @@ int g_hideStrayArms = 1;              // ini [Render] HideStrayArms
 // ⚠️ Kept as a toggle because the risk is real and specific: 390 rides the gun, so if it turns out to be
 // gun geometry - a sight, a magazine - hiding it removes part of the weapon. `HideExtraArms=0` restores
 // it without a rebuild, and the log names the count being hidden so a wrong call is diagnosable.
+int g_showControllerArms = 1;       // Preserve the existing animated arm mesh on the gun transform.
 int g_hideExtraArms = 1;              // ini [Render] HideExtraArms
 
 // The baseline mesh that is neither gun nor arms - the leftover hand/arm fragment.
@@ -11965,6 +12292,7 @@ volatile LONG g_meleeArmsMs = 700;     // ini [Render] MeleeArmsMs      - end, f
 volatile LONG g_meleeDelayMs = 0;      // ini [Render] MeleeArmsDelayMs - start, from the press
 volatile LONG64 g_meleeUntilMs = 0, g_meleeFromMs = 0;
 volatile LONG g_meleePending = 0;      // the cheap 32-bit gate - see HealWindowActive for why
+volatile LONG g_armsAnimActiveCached = 0;
 
 inline bool MeleeWindowActive() {
     if (!Rd(g_meleePending)) return false;         // the common case, and it costs nothing
@@ -11975,10 +12303,13 @@ inline bool MeleeWindowActive() {
     return now >= InterlockedCompareExchange64(&g_meleeFromMs, 0, 0);
 }
 
-// True while ANY first-person animation window is open. Both windows want the same two things - the
-// arms visible, and the gun back where the animation expects it - so the call sites ask one question
-// rather than growing a list that a third animation would have to be added to in three places.
-inline bool ArmsAnimActive() { return HealWindowActive() || MeleeWindowActive(); }
+// Resolve the 64-bit deadlines once at Present, then let thousands of draw-hook calls read one aligned
+// 32-bit word. The prior active-window path executed two locked cmpxchg8b operations plus
+// GetTickCount64 for every mesh draw, exactly during the knife animation where the headset regressed.
+inline void RefreshArmsAnimActive() {
+    InterlockedExchange(&g_armsAnimActiveCached,(HealWindowActive()||MeleeWindowActive())?1:0);
+}
+inline bool ArmsAnimActive() { return Rd(g_armsAnimActiveCached)!=0; }
 
 // Was this mesh on screen when the latch was taken?
 static bool FgIsBaseline(UINT verts) {
@@ -12333,6 +12664,7 @@ static void ApplyWorldMatrix(Reg4* m, int conv, const float C[4][4]) {
 LONG g_gunSignYaw = 1, g_gunSignPitch = -1, g_gunSignRoll = 1, g_gunFollowPos = 1;
 LONG g_gunSignPosZ = -1;                       // vertical translation came back flipped too
 LONG g_gunAnchorFwd = 25, g_gunAnchorRight = 8, g_gunAnchorUp = -8;   // engine units from the eye
+volatile LONG g_traceFromGun = 1;               // route weapon traces from the hand/gun pivot, not the eye
 
 static void GunSigns(int& sy, int& sp, int& sr) {
     const LONG c = InterlockedCompareExchange(&g_gunSignCombo, 0, 0);
@@ -12602,6 +12934,59 @@ static void BuildGunC(float C[4][4]) {
         H[0] - G[0], H[1] - G[1], H[2] - G[2]);
 }
 
+int g_independentHands=0; // Evidence-backed prototype, enabled explicitly in the test INI.
+inline bool FgMatchWindow();
+volatile LONG g_independentLeftDraws=0;
+static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first, UINT triangles,
+                                  float saved[108][4]) {
+    const LONG motionMode=Rd(g_hideMeshIdx);
+    if(!g_independentHands || (motionMode!=1 && motionMode!=3) || Rd(g_fgRideAll)!=1 || !Rd(g_gunVerts) ||
+       !g_camMatrixBound || !Rd(g_offHandValid) || !Rd(g_handDevValid) ||
+       !g_handPositionValid[AimHand()] ||
+       !FgMatchWindow() || ArmsAnimActive() || !WeaponInHands())return 0;
+    const auto layout=g_boundShaderLayout;
+    if(layout.shadow || layout.bones!=5 || layout.boneRegs!=225 || layout.local!=230)return 0;
+    // Exact exported section identity. Do not transfer the MP or TMD bone maps to this mesh.
+    const bool gloves=(verts==3314 || verts==2924) && first==0 && triangles==4830;
+    const bool sleeve=(verts==390 || verts==3314) && first==14490 && triangles==674;
+    const bool tmdGloves=(verts==7444 || verts==2626) && first==0 && triangles==4402;
+    const bool tmdBase=(verts==7444 || verts==4818 || verts==4781) && first==13206 && triangles==7704;
+    const bool tmdExtra=(verts==7444 || verts==37) && first==36318 && triangles==17;
+    if(!gloves&&!sleeve&&!tmdGloves&&!tmdBase&&!tmdExtra)return 0;
+    const int slots=gloves?35:sleeve?6:tmdGloves?36:tmdBase?15:2,regs=slots*3;
+    float local[4][4],primary[4][4],off[4][4],delta[4][4],changed[108][4];
+    if(FAILED(dev->GetVertexShaderConstantF(230,&local[0][0],4)) ||
+       FAILED(dev->GetVertexShaderConstantF(5,&saved[0][0],regs)))return 0;
+    BuildGunC(primary);BuildTmdC(off);
+    // During support grip, wrist orientation follows the weapon; position still follows the
+    // left controller. Releasing immediately restores its independent tracked orientation.
+    // Exact asset sections can also arrive after the broad attachment path's 64-draw
+    // sanity limit. Move their bones directly; keep that safety limit for all other geometry.
+    float base[4][4]{};
+    if(g_thisDrawMoved)memcpy(base,g_thisDrawMoved==2?off:primary,sizeof(base));
+    else for(int i=0;i<4;++i)base[i][i]=1.0f;
+    if(Rd(g_twoHandActive)) {
+        // The old path copied the weapon rotation but kept the controller's world position and
+        // then added a TMD anchor delta. That made the left hand appear beside the pistol: the
+        // orientation was weapon-relative while the translation was still controller-relative.
+        // Use the weapon-specific support point in the same row-vector frame as BuildGunC.
+        if(!ApplySupportGripTarget(off,primary,InterlockedCompareExchange(&g_gunVerts,0,0))) return 0;
+    }
+    memcpy(changed,saved,regs*4*sizeof(float));
+    float rightDelta[4][4];
+    if(!skeletal::LocalDeltaPair(delta,rightDelta,local,base,off,primary))return 0;
+    for(int b=0;b<slots;++b) {
+        const bool left=gloves?b>=18:sleeve?b>=3:tmdGloves?(b>=1&&b<=18):tmdBase?b<12:false;
+        if(!left && g_thisDrawMoved==1)continue; // Preserve the primary-hand palette exactly.
+        if(left && g_thisDrawMoved==2 && !Rd(g_twoHandActive))continue;
+        skeletal::TransformBone(&changed[b*3],&saved[b*3],left?delta:rightDelta);
+    }
+    // Internal palette writes must bypass camera/HUD upload classification.
+    if(!g_origSetVSConstF || FAILED(g_origSetVSConstF(dev,5,&changed[0][0],regs)))return 0;
+    InterlockedIncrement(&g_independentLeftDraws);
+    return regs;
+}
+
 static void ApplyWorldOffset(Reg4* m, int conv, float tx, float ty, float tz) {
     if (conv == CONV_ROW) {
         m[3].x += tx * m[0].x + ty * m[1].x + tz * m[2].x;
@@ -12658,6 +13043,7 @@ int g_fgPrimeWindow = 16;             // ini [Render] FgPrimeWindowDraws
 volatile LONG g_fgWindowRejects = 0;  // matches refused BY this rule - see the per-second report
 
 inline bool FgMatchWindow() {
+    if (!Rd(g_rtIsScene) || g_boundShaderLayout.shadow) return false;
     if (Rd(g_inForeground)) return true;                       // the real first-person pass
     if (Rd(g_frameDrawIdx) <= (LONG)g_fgPrimeWindow) return true;   // run 120's depth-prime copy
     InterlockedIncrement(&g_fgWindowRejects);
@@ -12809,6 +13195,8 @@ static void FgSoloStep() {
 }
 
 static bool FgHidden(UINT verts) {                    // arms, in modes 2 and 3
+    if (g_showControllerArms && Rd(g_gunVerts) &&
+        ((UINT)Rd(g_armsVerts) == verts || FgIsExtraArm(verts))) return false;
     // ⭐ run 233: solo overrides every rule below it, including the exemptions. That is the point -
     // an exemption that let a second mesh through would make two meshes visible and the answer
     // ambiguous, which is the one thing this measurement cannot afford.
@@ -13130,7 +13518,8 @@ static bool FgRidesGun(UINT verts) {
         const bool tmdPrime = Rd(g_tmdOnOffHand) && TmdRaised() &&
                               FgMatchesSignature(verts) && FgMatchWindow();
         if (!tmdPrime &&
-            !(PlayerArmed() == ARMED_NO && ap && (UINT)ap == verts && FgMatchWindow())) return false;
+            !(((PlayerArmed() == ARMED_NO || g_showControllerArms) && ap && (UINT)ap == verts
+               || (g_showControllerArms && FgIsExtraArm(verts))) && FgMatchWindow())) return false;
     }
     // Nothing rides during an animation window - the gun itself is not being moved, so an attachment
     // that followed the controller would be the only thing off the animation. Moved BELOW the cheap
@@ -13149,7 +13538,9 @@ static bool FgRidesGun(UINT verts) {
     // 64 is far above anything real and far below "the rest of the level". Past it we are not in
     // the first-person pass at all, whatever the flag says, and riding stops for the frame.
     // g_fgDrawCount is already incremented before either hook reaches this.
-    if (Rd(g_fgDrawCount) > kFgRideMax) {
+    const bool identifiedArm = g_showControllerArms && FgMatchWindow() &&
+        (((UINT)Rd(g_armsVerts) == verts) || FgIsExtraArm(verts));
+    if (!identifiedArm && Rd(g_fgDrawCount) > kFgRideMax) {
         InterlockedExchange(&g_fgRideBailed, 1);
         InterlockedIncrement(&g_fgRideBailCount);
         return false;
@@ -13164,7 +13555,7 @@ static bool FgRidesGun(UINT verts) {
     // hands it is tied to move to the controller.
     // ⭐ run 237: ...and with the TMD raised they must RIDE, for the same reason they are no longer
     // hidden. RideTargetFor sends them to the off hand rather than the gun hand.
-    if (a && (UINT)a == verts && PlayerArmed() != ARMED_NO &&
+    if (!g_showControllerArms && a && (UINT)a == verts && PlayerArmed() != ARMED_NO &&
         !(Rd(g_tmdOnOffHand) && TmdRaised())) return false;
     InterlockedIncrement(&g_fgRodeDraws);
     RodeLearn(verts);
@@ -13179,6 +13570,10 @@ static bool FgRidesGun(UINT verts) {
 // firing never raises it, the flash and the smoke are not in the foreground pass at all and the
 // panel toggle will look broken when it is in fact reporting an honest negative.
 void ReportFgRide() {
+    const LONG independent=InterlockedExchange(&g_independentLeftDraws,0);
+    // This used to enqueue a log record every rendered frame. The value is a steady-state counter,
+    // not an event, and the SRW lock + event wake-up became visible during jump/melee spikes.
+    (void)independent;
     const LONG n = InterlockedExchange(&g_fgRodeDraws, 0);
     // ---- ⚠️ this used to print ONCE, which hid the only thing worth knowing about it ----
     //
@@ -13554,6 +13949,8 @@ void UpdateFgLatch() {
         }
     }
 
+    if (n >= kFgSigMax) return; // Saturated census includes scene geometry: no role inference.
+
     if (gun && arms) {
         if (n == 0) return;                       // nothing being drawn: no evidence either way
 
@@ -13608,7 +14005,7 @@ void UpdateFgLatch() {
             // the weaponless case. Knowing the arms count catches it directly.
             const bool quietGun = FgIsQuiet((UINT)gun) || FgIsKnownArms((UINT)gun);
             const LONG stray = biggest;           // reported below; the name is kept for the log line
-            if (!(quietGun || biggest > gun)) wrongRole = 0;
+            if (!(quietGun || (biggest > gun && !GunAlignFind(gun)))) wrongRole = 0;
             else if (++wrongRole >= kWrongRoleFrames) {
                 wrongRole = 0;
                 InterlockedExchange(&g_gunVerts, 0);
@@ -13669,6 +14066,21 @@ void UpdateFgLatch() {
         const LONG v = InterlockedCompareExchange(&g_fgStableVerts[i], 0, 0);
         if (v > a)                 { b = a; a = v; }
         else if (v > b && v != a)  { b = v; }
+    }
+    if (armed == ARMED_YES) {
+        LONG knownGun = 0;
+        for (LONG i = 0; i < n && i < kFgSigMax; ++i) {
+            const LONG v = Rd(g_fgStableVerts[i]);
+            if (GunAlignFind(v)) { if (knownGun && knownGun != v) { steady = 0; return; } knownGun = v; }
+        }
+        if (knownGun) {
+            a = knownGun; b = 0;
+            for (LONG i = 0; i < n && i < kFgSigMax; ++i) {
+                const LONG v = Rd(g_fgStableVerts[i]);
+                if (v != a && (v == 3314 || v == 7444 || FgIsKnownArms((UINT)v))) { b = v; break; }
+            }
+            if (!b) { steady = 0; return; }
+        }
     }
     if (!a || !b) { steady = 0; return; }
     if (a != candGun || b != candArms) { candGun = a; candArms = b; steady = 0; return; }
@@ -13841,6 +14253,78 @@ void DumpDpgProbe() {
         " pass. The draws after it are the arms and the weapon.");
 }
 
+// Bounded one-shot evidence, queued through the asynchronous logger. No file I/O in a draw hook.
+volatile LONG g_renderEvidence=0;
+static void CaptureRenderEvidence(IDirect3DDevice9* dev, const char* kind, UINT verts, UINT first=0, UINT triangles=0) {
+    if(!Rd(g_renderEvidence))return;
+    struct Seen {uintptr_t vs,ps;UINT verts,first,triangles;DWORD zwrite,zfunc,colour;LONG scene;bool shadow;};
+    static Seen seen[24]{}; static int count=0;
+    if(count>=_countof(seen)) return;
+    IDirect3DVertexShader9* vs=nullptr;IDirect3DPixelShader9* ps=nullptr;
+    dev->GetVertexShader(&vs);dev->GetPixelShader(&ps);
+    if(!vs) {if(ps)ps->Release();return;}
+    DWORD zwrite=0,zfunc=0,colour=0;dev->GetRenderState(D3DRS_ZWRITEENABLE,&zwrite);
+    dev->GetRenderState(D3DRS_ZFUNC,&zfunc);dev->GetRenderState(D3DRS_COLORWRITEENABLE,&colour);
+    const LONG scene=Rd(g_rtIsScene);const bool shadow=g_boundShaderLayout.shadow;
+    for(int i=0;i<count;++i) if(seen[i].vs==(uintptr_t)vs && seen[i].ps==(uintptr_t)ps && seen[i].verts==verts &&
+        seen[i].first==first && seen[i].triangles==triangles && seen[i].zwrite==zwrite && seen[i].zfunc==zfunc &&
+        seen[i].colour==colour && seen[i].scene==scene && seen[i].shadow==shadow) {
+        vs->Release();if(ps)ps->Release();return;
+    }
+    const int id=count;seen[count++]={(uintptr_t)vs,(uintptr_t)ps,verts,first,triangles,zwrite,zfunc,colour,scene,shadow};
+    Log("RenderEvidence id=%d kind=%s vertices=%u fg=%ld fgDraw=%ld draw=%ld",id,kind,verts,Rd(g_inForeground),Rd(g_fgDrawCount),Rd(g_frameDrawIdx));
+    Log("RenderPass id=%d first=%u triangles=%u scene=%ld shadow=%d bones=c%d local=c%d zwrite=%lu zfunc=%lu colour=%lu",
+        id,first,triangles,Rd(g_rtIsScene),g_boundShaderLayout.shadow?1:0,g_boundShaderLayout.bones,g_boundShaderLayout.local,zwrite,zfunc,colour);
+    DWORD bytes[4096];
+    for(int stage=0;stage<2;++stage) {
+        UINT size=0;
+        const HRESULT hr=stage ? (ps?ps->GetFunction(nullptr,&size):E_FAIL):vs->GetFunction(nullptr,&size);
+        if(FAILED(hr)||!size||size>sizeof(bytes)) continue;
+        if(FAILED(stage?ps->GetFunction(bytes,&size):vs->GetFunction(bytes,&size)))continue;
+        Log("RenderBytecode id=%d stage=%s words=%u",id,stage?"PS":"VS",size/4);
+        for(UINT at=0;at<size/4;at+=128) {
+            char line[1600];int used=0;
+            for(UINT k=at;k<at+128 && k<size/4;++k) used+=_snprintf_s(line+used,sizeof(line)-used,_TRUNCATE," %08X",bytes[k]);
+            Log("RenderWords id=%d stage=%s at=%u%s",id,stage?"PS":"VS",at,line);
+        }
+    }
+    float constants[256][4];
+    if(SUCCEEDED(dev->GetVertexShaderConstantF(0,&constants[0][0],256))) {
+        for(int at=0;at<256;at+=8) {
+            char line[1800];int used=0;
+            for(int reg=at;reg<at+8;++reg) for(int k=0;k<4;++k)
+                used+=_snprintf_s(line+used,sizeof(line)-used,_TRUNCATE," %.9g",constants[reg][k]);
+            Log("RenderConstants id=%d at=%d%s",id,at,line);
+        }
+    }
+    IDirect3DVertexDeclaration9* declaration=nullptr;
+    if(SUCCEEDED(dev->GetVertexDeclaration(&declaration)) && declaration) {
+        D3DVERTEXELEMENT9 elements[MAXD3DDECLLENGTH+1];UINT n=_countof(elements);
+        if(SUCCEEDED(declaration->GetDeclaration(elements,&n))) for(UINT i=0;i<n;++i)
+            Log("RenderDecl id=%d stream=%u offset=%u type=%u usage=%u index=%u",id,elements[i].Stream,elements[i].Offset,elements[i].Type,elements[i].Usage,elements[i].UsageIndex);
+        declaration->Release();
+    }
+    vs->Release();if(ps)ps->Release();
+}
+
+static void CaptureShadowEvidence(IDirect3DDevice9* dev) {
+    static unsigned attempts=0,captures=0;
+    if(!Rd(g_renderEvidence) || attempts>=400 || captures>=2 || !g_playerPawn || !Rd(g_camPosValid) || !Rd(g_rtIsScene) || !Rd(g_dupDraws)) return;
+    ++attempts;
+    for(DWORD stage=0;stage<8;++stage) {
+        IDirect3DBaseTexture9* texture=nullptr;
+        if(FAILED(dev->GetTexture(stage,&texture)) || !texture)continue;
+        bool shadow=false;
+        if(texture->GetType()==D3DRTYPE_TEXTURE) {
+            D3DSURFACE_DESC desc{};
+            if(SUCCEEDED(static_cast<IDirect3DTexture9*>(texture)->GetLevelDesc(0,&desc)))
+                shadow=desc.Format==D3DFMT_R32F && desc.Width<=2048 && desc.Height<=2048;
+        }
+        texture->Release();
+        if(shadow) { ++captures; Log("RenderEvidence shadow sampler=%lu",stage); CaptureRenderEvidence(dev,"shadow",0);return; }
+    }
+}
+
 HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                                INT baseVertex, UINT minIndex, UINT numVertices,
                                                UINT startIndex, UINT primCount) {
@@ -13881,6 +14365,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // so the two matchers cannot both claim a draw.
     // ⭐ run 222: the gun's own draw is the only place these constants mean the gun. Guarded by the
     // capture state, so this is two GetVertexShaderConstantF calls in a whole session.
+    static unsigned armCaptureOffers=0;
+    if (Rd(g_renderEvidence) && armCaptureOffers<500 && FgMatchWindow() && (numVertices==3314 || numVertices==7444 || numVertices==4818)) {
+        ++armCaptureOffers; CaptureRenderEvidence(dev,"arms",numVertices,startIndex,primCount);
+    }
     const bool isGun = FgMoved(numVertices);
     if (isGun) { AdsCapture(dev); AdsFreeze(dev); AdsMask(dev); }   // ⭐ run 223: freeze before StereoPair: it only
                                                      // rewrites the camera slots, so the bones persist
@@ -13944,7 +14432,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     //
     // Sized from the derived ceiling now: kTmdBoneMax bones at three registers each, no arithmetic
     // left for anyone to get wrong, and the clamp below SAYS SO rather than quietly narrowing.
-    const int kBoneReg0 = 23, kBoneRegsPerBone = 3;
+    const int kBoneReg0 = g_boundShaderLayout.bones, kBoneRegsPerBone = 3;
     const int kMaxSaveRegs = kTmdBoneMax * kBoneRegsPerBone;
     float savedBones[kMaxSaveRegs][4];
     int   boneRegLo = 0, boneRegN = 0;
@@ -13977,7 +14465,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // ⭐ run 250: ONE test, shared with the triangle window above - see tmdSurgeryOn. It was computed
     // here and duplicated nowhere, which is precisely how the window kept the narrow gate through two
     // rounds of widening this one.
-    if (tmdSurgeryOn) {
+    if (tmdSurgeryOn && kBoneReg0 >= 0) {
         // ⭐ run 240: EVERY slot naming this mesh, unioned - not the first match. One mesh can need
         // several disjoint ranges (the right arm and the left upper arm both live in 4818), and
         // stopping at the first match made the second range unreachable.
@@ -13986,7 +14474,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         for (int sI = 0; sI < kTmdBoneSlots; ++sI) {
             const LONG m = Rd(g_tmdBoneMesh[sI]);
             const UINT target = m > 0 ? (UINT)m : ArmsMeshNow();
-            const LONG lo = Rd(g_tmdBoneLo[sI]), hi = Rd(g_tmdBoneHi[sI]);
+            const LONG lo = Rd(g_tmdBoneLo[sI]);
+            LONG hi = Rd(g_tmdBoneHi[sI]);
+            const LONG shaderLast = g_boundShaderLayout.boneRegs / 3 - 1;
+            if (lo > shaderLast) continue;
+            if (hi > shaderLast) hi = shaderLast;
             if (target != numVertices || lo < 0 || hi < lo) continue;
             if (bl < 0 || lo < bl) bl = lo;
             if (hi > bh) bh = hi;
@@ -14057,7 +14549,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                         z[i][3] = (i % 3) == 0 ? tx : (i % 3) == 1 ? ty : tz;
                     }
                 }
-                dev->SetVertexShaderConstantF(boneRegLo, &z[0][0], boneRegN);
+                g_origSetVSConstF(dev,boneRegLo, &z[0][0], boneRegN);
             } else {
                 boneRegN = 0;                          // could not read it, so do not write it
             }
@@ -14066,6 +14558,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // ⭐ run 251: one call per surviving segment, INSIDE the StereoPair lambda so each eye draws the
     // whole set. Putting the loop outside would run the per-eye setup once and the geometry twice.
     // The ordinary path is nSeg == 1 and emits exactly the call it always did.
+    float independentSaved[108][4];
+    const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(dev,numVertices,startIndex,primCount,independentSaved) : 0;
     const HRESULT dhr = StereoPair(dev, [&] {
         HRESULT hr = D3D_OK;
         for (int s = 0; s < nSeg; ++s) {
@@ -14075,7 +14569,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         }
         return hr;
     });
-    if (boneRegN) dev->SetVertexShaderConstantF(boneRegLo, &savedBones[0][0], boneRegN);
+    if(independentRegs)g_origSetVSConstF(dev,5,&independentSaved[0][0],independentRegs);
+    if (boneRegN) g_origSetVSConstF(dev,boneRegLo, &savedBones[0][0], boneRegN);
 
     // ⭐ run 241: how many bones this mesh REALLY has, so the sweep range stops being a guess.
     // Reads the whole possible block once a second and reports the last register that is not all
@@ -14088,20 +14583,19 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         const DWORD nowMs = GetTickCount();
         if (nowMs - lastCensus > 1000) {
             lastCensus = nowMs;
-            const int regs = kTmdBoneMax * kBoneRegsPerBone;
+            const int regs = g_boundShaderLayout.boneRegs < kMaxSaveRegs ? g_boundShaderLayout.boneRegs : kMaxSaveRegs;
             static float all[kTmdBoneMax * 3][4];
-            if (SUCCEEDED(dev->GetVertexShaderConstantF(kBoneReg0, &all[0][0], regs))) {
+            if (kBoneReg0 >= 0 && regs > 0 && SUCCEEDED(dev->GetVertexShaderConstantF(kBoneReg0, &all[0][0], regs))) {
                 int lastLive = -1;
-                for (int b = 0; b < kTmdBoneMax; ++b) {
+                for (int b = 0; b < regs / 3; ++b) {
                     bool live = false;
                     for (int k = 0; k < kBoneRegsPerBone && !live; ++k)
                         for (int c = 0; c < 4; ++c)
                             if (all[b * kBoneRegsPerBone + k][c] != 0.0f) { live = true; break; }
                     if (live) lastLive = b;
                 }
-                Log("bone census: mesh %u uses bones 0..%d (%d live) - sweep no further than that."
-                    " The 77 ceiling is derived: 256 vs registers, bones from c23, 3 each. (run 241)",
-                    numVertices, lastLive, lastLive + 1);
+                Log("bone census: mesh %u last nonzero palette slot %d; shader CTAB c%d, %d slots",
+                    numVertices, lastLive, kBoneReg0, regs/3);
             }
         }
     }
@@ -14725,9 +15219,6 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
                     " this is world-space UI (the diegetic main menu) and clip-space squashing"
                     " would not be valid.", r[0].w, r[1].w, r[2].w, r[3].w);
             }
-            // 💥 run 263: THE regression. World-space geometry that reaches here is not exempt from
-            // stereo - it needs the ordinary camera-register remap, which is precisely what
-            // StereoPair does. Returning draw() gave it to ONE eye.
             return StereoPair(dev, draw);
         }
     }
@@ -14836,11 +15327,33 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         }
     }
 
+    // GFx focus remains authoritative when main/options movies replace one another.
+    // SetPause history alone stops identifying the main menu after its first dialog.
+    // Apply to the complete GFx layout before eye remapping, never to world geometry.
+    const bool menuLayout=InterlockedCompareExchange(&g_vrUiMenu,0,0)!=0;
+    if (!InterlockedCompareExchange(&g_noteOpen, 0, 0) &&
+        (InterlockedCompareExchange(&g_vrUiMenu, 0, 0) ||
+         InterlockedCompareExchange(&g_gamePaused, 0, 0) ||
+         InterlockedCompareExchange(&g_menuFnHits[5], 0, 0) == 0)) {
+        const float k = InterlockedCompareExchange(&g_menuInsetPct, 0, 0) / 100.0f;
+        Reg4* q = reinterpret_cast<Reg4*>(cIn);
+        for (int i=0;i<4;++i) { q[i].x*=k; q[i].y*=k; }
+    }
+
     const LONG halfW = (LONG)vp.Width / 2;
     HRESULT hr = S_OK;
     for (int eye = 0; eye < 2; ++eye) {
         float m[16];
         memcpy(m, cIn, sizeof(m));
+        if(menuLayout) {
+            // The menu plane and the pointer use the same OpenXR projection. A zero-disparity HUD
+            // appears at infinity; shift its pre-SBS clip centre to the projected 1.2 m plane centre
+            // so the visual menu, laser endpoint and native GFx coordinates share one surface.
+            const float centre=InterlockedCompareExchange(&g_vrUiEyeCentreU[eye],0,0)/1000000.0f;
+            const float ndcShift=2.0f*(centre-.5f);
+            Reg4* q=reinterpret_cast<Reg4*>(m);
+            for(int i=0;i<4;++i)q[i].x+=ndcShift*q[i].w;
+        }
         ApplyEyeRemap(reinterpret_cast<Reg4*>(m), CONV_ROW, eye ? +0.5f : -0.5f);
         // The scissor is belt and braces: with the transform right the geometry already lands in
         // its own half, and with it wrong this stops the failure spilling across the whole frame.
@@ -15145,6 +15658,7 @@ volatile LONG g_scopeMatchAim = 0, g_scopeMatchIdle = 0;   // ⭐ run 231
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                           UINT primCount, const void* vtxData, UINT vtxStride) {
+    if (primCount<=4) CaptureShadowEvidence(dev);
     if (!g_origDrawPrimUP) return D3DERR_INVALIDCALL;
     ++g_vidFrameDraws;
     if (primCount <= 4) VidProbeRecord(dev, 2, t, primCount, vtxData, vtxStride);
@@ -15173,7 +15687,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     // ⭐ run 266: ANCHORED. The continuation must match a CONFIRMED note element's stride and
     // texture, and a note must be open. See g_noteTextStride - world geometry cannot start a chain
     // because world geometry is never a note element, and outside a note this is entirely inert.
-    bool hudArmed = hudFresh;
+    const bool menuUi=!quad && Rd(g_vrUiMenu) && Rd(g_hudXformLive);
+    bool hudArmed = hudFresh || menuUi;
     if (hudFresh) InterlockedExchange(&g_hudArmStride, (LONG)vtxStride);   // ⭐ run 269
     // ⭐ run 268: log EVERY offered draw, gate or no gate. Reported: in the runs where geometry was
     // broken the POP-UP MENUS were fixed - so the continuation draws are real and capturing them
@@ -15285,7 +15800,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // ⭐ run 266: ANCHORED. The continuation must match a CONFIRMED note element's stride and
     // texture, and a note must be open. See g_noteTextStride - world geometry cannot start a chain
     // because world geometry is never a note element, and outside a note this is entirely inert.
-    bool hudArmed = hudFresh;
+    const bool menuUi=!quad && Rd(g_vrUiMenu) && Rd(g_hudXformLive);
+    bool hudArmed = hudFresh || menuUi;
     if (hudFresh) InterlockedExchange(&g_hudArmStride, (LONG)vtxStride);   // ⭐ run 269
     // ⭐ run 268: log EVERY offered draw, gate or no gate. Reported: in the runs where geometry was
     // broken the POP-UP MENUS were fixed - so the continuation draws are real and capturing them
@@ -15893,6 +16409,54 @@ PFN_CreateVolumeTexture g_origCreateVolumeTexture = nullptr;
 PFN_CreateCubeTexture   g_origCreateCubeTexture = nullptr;
 PFN_CreateVertexBuffer  g_origCreateVertexBuffer = nullptr;
 PFN_CreateIndexBuffer   g_origCreateIndexBuffer = nullptr;
+
+// VrShadows=0 suppresses the visible projection, not shadow-map generation. The live target census
+// identified the offending first-person map as a 512x512 R32F texture sampled later by a scene
+// pass. Substituting one far-depth texel preserves lighting/world draws and avoids applying a
+// mono/light-space result as if it were an eye camera.
+typedef HRESULT (STDMETHODCALLTYPE *PFN_SetTexture)(IDirect3DDevice9*,DWORD,IDirect3DBaseTexture9*);
+PFN_SetTexture g_origSetTexture=nullptr;
+static IDirect3DTexture9* g_neutralShadowTexture=nullptr;
+struct ShadowTextureCacheEntry { IDirect3DBaseTexture9* texture=nullptr; bool projectedShadow=false; };
+static ShadowTextureCacheEntry g_shadowTextureCache[256];
+volatile LONG g_shadowMapCandidates=0,g_shadowMapSubstitutions=0;
+static bool ProjectedShadowTexture(IDirect3DBaseTexture9* texture) {
+    if(!texture||texture->GetType()!=D3DRTYPE_TEXTURE)return false;
+    const unsigned slot=((uintptr_t)texture>>4)&255u;
+    ShadowTextureCacheEntry& e=g_shadowTextureCache[slot];
+    if(e.texture==texture)return e.projectedShadow;
+    D3DSURFACE_DESC d{};
+    const bool candidate=SUCCEEDED(static_cast<IDirect3DTexture9*>(texture)->GetLevelDesc(0,&d))&&
+        IsProjectedShadowMap((unsigned)d.Format,d.Width,d.Height);
+    e.texture=texture;e.projectedShadow=candidate;
+    if(candidate)InterlockedIncrement(&g_shadowMapCandidates);
+    return candidate;
+}
+static IDirect3DTexture9* NeutralShadowTexture(IDirect3DDevice9* dev) {
+    if(g_neutralShadowTexture)return g_neutralShadowTexture;
+    IDirect3DTexture9* t=nullptr;
+    const HRESULT hr=g_origCreateTexture?
+        g_origCreateTexture(dev,1,1,1,D3DUSAGE_DYNAMIC,D3DFMT_R32F,D3DPOOL_DEFAULT,&t,nullptr):
+        dev->CreateTexture(1,1,1,D3DUSAGE_DYNAMIC,D3DFMT_R32F,D3DPOOL_DEFAULT,&t,nullptr);
+    if(FAILED(hr)||!t)return nullptr;
+    D3DLOCKED_RECT locked{};
+    if(FAILED(t->LockRect(0,&locked,nullptr,D3DLOCK_DISCARD))||!locked.pBits){t->Release();return nullptr;}
+    *reinterpret_cast<float*>(locked.pBits)=1.0f;t->UnlockRect(0);
+    g_neutralShadowTexture=t;return t;
+}
+static void ReleaseVrShadowResources() {
+    if(g_neutralShadowTexture){g_neutralShadowTexture->Release();g_neutralShadowTexture=nullptr;}
+    memset(g_shadowTextureCache,0,sizeof(g_shadowTextureCache));
+}
+HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDirect3DBaseTexture9* texture) {
+    IDirect3DBaseTexture9* selected=texture;
+    if(VrModeOn()&&!Rd(g_vrShadows)&&ProjectedShadowTexture(texture)) {
+        if(IDirect3DTexture9* neutral=NeutralShadowTexture(dev)) {
+            selected=neutral;InterlockedIncrement(&g_shadowMapSubstitutions);
+        }
+    }
+    return g_origSetTexture(dev,stage,selected);
+}
 
 // D3DUSAGE_DYNAMIC never legally coexists with MANAGED, and a DEFAULT texture that IS dynamic can
 // be locked directly - so a translated texture only needs a shadow when it is not dynamic.
@@ -17276,16 +17840,26 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                                      : (int32_t)InterlockedCompareExchange(&g_handDevYawUU, 0, 0);
                 const int32_t dPitch = scoped ? 0 : (am == 12) ? 0
                                      : (int32_t)InterlockedCompareExchange(&g_handDevPitchUU, 0, 0);
+                // The original trace starts at the engine eye. That is acceptable for a flat
+                // crosshair, but it creates measurable parallax at close range when the visible
+                // weapon is offset in the hand. Reuse the exact pivot used by the gun mesh and
+                // laser, then rotate the trace from that origin. The ini gate keeps the old path
+                // available for A/B comparison without affecting non-weapon traces.
+                if (InterlockedCompareExchange(&g_traceFromGun, 0, 0)) {
+                    float pivot[3]; GunPivotWorld(pivot);
+                    Start[0] += pivot[0]; Start[1] += pivot[1]; Start[2] += pivot[2];
+                }
                 const float bx = End[0], by = End[1], bz = End[2];
                 RotateTrace(Start, End, dYaw, dPitch);
                 const LONG n = InterlockedIncrement(&g_slcRotated);
                 if (n <= 8)
                     Log("SingleLineCheck rotated: start (%.0f %.0f %.0f) end (%.0f %.0f %.0f) ->"
                         " (%.0f %.0f %.0f)  dYaw %d dPitch %d  flags 0x%X"
-                        "  [yawSign %+d pitchSign %+d  iniYaw %+d iniPitch %+d]",
+                        "  [yawSign %+d pitchSign %+d  iniYaw %+d iniPitch %+d  origin %s]",
                         Start[0], Start[1], Start[2], bx, by, bz,
                         End[0], End[1], End[2], dYaw, dPitch, flags,
-                        g_yawSign, g_pitchSign, (int)g_traceSignYaw, (int)g_traceSignPitch);
+                        g_yawSign, g_pitchSign, (int)g_traceSignYaw, (int)g_traceSignPitch,
+                        InterlockedCompareExchange(&g_traceFromGun, 0, 0) ? "gun" : "eye");
             }
         }
     }
@@ -19071,6 +19645,8 @@ static void WorldToClip(const float* m, int conv, const float pt[3], float out[4
 
 struct LaserVtx { float x, y, z, rhw; DWORD c; };
 
+volatile LONG g_wristHealth=1;
+IDirect3DStateBlock9* g_wristState = nullptr;
 void DrawLaserSight(IDirect3DDevice9* dev) {
     if (!InterlockedCompareExchange(&g_laserOn, 0, 0)) return;
     if (!VrModeOn() || !g_origDrawPrimUP) return;
@@ -19081,7 +19657,6 @@ void DrawLaserSight(IDirect3DDevice9* dev) {
     int slot = -1;
     for (int i = 0; i < g_camMatUsed; ++i) if (g_camMats[i].valid) { slot = i; break; }
     if (slot < 0) return;
-
     D3DVIEWPORT9 vp{};
     if (FAILED(dev->GetViewport(&vp)) || vp.Width < 4) return;
 
@@ -19095,6 +19670,9 @@ void DrawLaserSight(IDirect3DDevice9* dev) {
     float A[3]; GunPivotWorld(A);
     const float len = (float)InterlockedCompareExchange(&g_laserLenUU, 0, 0);
     const float B[3] = { A[0] + dir[0]*len, A[1] + dir[1]*len, A[2] + dir[2]*len };
+
+    if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) return;
+    if (FAILED(g_wristState->Capture())) return;
 
     // Save every piece of state this touches. The game sets its own next frame, but leaving a device
     // altered from a hook is how the run 24/25 class of bug happens.
@@ -19167,9 +19745,90 @@ void DrawLaserSight(IDirect3DDevice9* dev) {
     dev->SetVertexShader(oldVS);
     if (oldPS) oldPS->Release();
     if (oldVS) oldVS->Release();
+    g_wristState->Apply(); // Also restores textures, vertex declaration and UP-draw stream state.
 }
 
+// Reused state block: no per-frame allocation and no device state leaks.
+void ReleaseWristResources() {
+    ReleaseVrMenuResources();
+    ReleaseVrShadowResources();
+    if (g_wristState) { g_wristState->Release(); g_wristState = nullptr; }
+}
+void DrawWristHealth(IDirect3DDevice9* dev) {
+    if (!Rd(g_wristHealth) || !VrModeOn() || !Rd(g_offHandValid) || !g_origDrawPrimUP ||
+        !Rd(g_dupDraws) || Rd(g_gamePaused) || g_offHealth < 0 || g_offHealthMax < 0) return;
+    const uintptr_t pawn = g_playerPawn; // Never initiate an object scan from overlay rendering.
+    if (!pawn || !Readable((void*)(pawn + g_offHealth), 4) ||
+        !Readable((void*)(pawn + g_offHealthMax), 4)) return;
+    const int hp = *reinterpret_cast<int*>(pawn + g_offHealth);
+    const int maximum = *reinterpret_cast<int*>(pawn + g_offHealthMax);
+    if (maximum <= 0) return;
+    float fraction = (float)hp / maximum;
+    if (fraction < 0) fraction = 0; if (fraction > 1) fraction = 1;
+    int slot = -1;
+    for (int i=0; i<g_camMatUsed; ++i) if (g_camMats[i].valid) { slot=i; break; }
+    if (slot < 0) return;
+    // Face the rendered eye basis so rotating the controller cannot turn the band edge-on.
+    const float* view=g_camMats[slot].m;
+    const int viewConv=g_camMats[slot].conv;
+    float right[3],up[3];float rightLen=0,upLen=0;
+    for(int i=0;i<3;++i) {
+        right[i]=view[viewConv==CONV_ROW?i*4:i];
+        up[i]=view[viewConv==CONV_ROW?i*4+1:4+i];
+        rightLen+=right[i]*right[i];upLen+=up[i]*up[i];
+    }
+    if(!std::isfinite(rightLen)||!std::isfinite(upLen)||rightLen<1e-8f||upLen<1e-8f)return;
+    rightLen=sqrtf(rightLen);upLen=sqrtf(upLen);
+    for(int i=0;i<3;++i){right[i]/=rightLen;up[i]/=upLen;}
+    D3DVIEWPORT9 vp{};
+    if (FAILED(dev->GetViewport(&vp)) || vp.Width < 4) return;
+    if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) return;
+    if (FAILED(g_wristState->Capture())) return;
+    dev->SetVertexShader(nullptr); dev->SetPixelShader(nullptr);
+    dev->SetTexture(0, nullptr); dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+    dev->SetRenderState(D3DRS_ZENABLE, FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_DIFFUSE);
+    dev->SetTextureStageState(1,D3DTSS_COLOROP,D3DTOP_DISABLE);
+    // A six-centimetre band anchored at the tracked left wrist, not at the screen.
+    const float scale = MetresToUU();
+    float centre[3] = { (float)Rd(g_offHandOffX)/kHandFixed + g_hmdOffset[0],
+                        (float)Rd(g_offHandOffY)/kHandFixed + g_hmdOffset[1],
+                        (float)(g_gunSignPosZ*Rd(g_offHandOffZ))/kHandFixed + g_hmdOffset[2] + .055f*scale };
+    for(int eye=0;eye<2;++eye) {
+        float m[16]; memcpy(m,g_camMats[slot].m,sizeof(m)); const int conv=g_camMats[slot].conv;
+        if(eye) ApplyOffset(reinterpret_cast<Reg4*>(m),conv,g_eyeDeltaUU);
+        ApplyEyeRemap(reinterpret_cast<Reg4*>(m),conv,eye?.5f:-.5f);
+        for(int layer=0;layer<2;++layer) {
+            const float halfWidth=.03f*scale, halfHeight=.006f*scale;
+            const float end = layer ? -halfWidth+2*halfWidth*fraction : halfWidth;
+            const DWORD colour=layer ? (fraction<.25f?0xFFFF3030:0xFF30E060) : 0xFF182028;
+            LaserVtx vertices[4]; bool visible=true;
+            for(int k=0;k<4;++k) {
+                const float x=(k&1)?end:-halfWidth, y=(k&2)?-halfHeight:halfHeight;
+                float point[3];for(int i=0;i<3;++i)point[i]=centre[i]+right[i]*x+up[i]*y;
+                float clip[4];WorldToClip(m,conv,point,clip);
+                if(clip[3]<=.001f) {visible=false;break;}
+                vertices[k]={(clip[0]/clip[3]*.5f+.5f)*vp.Width+vp.X,
+                             (.5f-clip[1]/clip[3]*.5f)*vp.Height+vp.Y,0,1,colour};
+            }
+            if(visible && (!layer || fraction>0)) g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,vertices,sizeof(LaserVtx));
+        }
+    }
+    g_wristState->Apply();
+}
+
+#include "vr_menu_overlay.h"
+
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
+    DiagStart();
+    RefreshArmsAnimActive();
     // Whoever calls Present owns the device. Recorded so the user-pointer draw hooks can tell
     // render-thread calls from movie-playback-thread ones and stay completely inert on the latter.
     g_mainThreadId = GetCurrentThreadId();
@@ -19180,7 +19839,9 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // NUMPAD6 still hides the readout on its own while debug mode is on.
     if (InterlockedCompareExchange(&g_debugOn, 0, 0) &&
         InterlockedCompareExchange(&g_readoutOn, 0, 0)) DrawStateReadout(s);
-    if (InterlockedCompareExchange(&g_panelOpen, 0, 0)) DrawVrPanel(s);
+    // The in-VR engineering panel is retired from user builds. It obscured the game and made
+    // headset screenshots unusable; diagnostics remain available through the log/readout gates.
+    DrawVrMenuPointer(s);
     if (InterlockedExchange(&g_initTried, 1) == 0) {
         InstallViewHook(); InstallProcessEventHook(); InitXR();
     }
@@ -19220,6 +19881,8 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // retry loop that never terminates on failure would log once per frame forever.
     static bool xiDone = false;
     if (!xiDone) xiDone = InstallXInputHook();
+    InstallInputClassificationCache();
+    ReportInputClassificationCache();
 
     static bool p9=false,p8=false,p5=false,p4=false,p2=false;
     bool k9=(DebugKey(VK_F9)&0x8000)!=0;
@@ -19412,18 +20075,31 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     }
     pMul = kMul;
 
-    // NUMPAD / : turn ALL of this mod's XR input work off. The cheap control for run 67 - if the
-    // judder survives this, it is not our input code and no amount of tuning it will help.
-    static bool pDiv = false;
-    bool kDiv = (DebugKey(VK_DIVIDE) & 0x8000) != 0;
-    if (kDiv && !pDiv) {
+    // Tilde/backtick key (under Esc): suppress synthetic XInput and effective haptics.
+    // OpenXR action synchronization and pose location continue for tracking.
+    static bool pTilde = false;
+    bool kTilde = (DebugKey(VK_OEM_3) & 0x8000) != 0;
+    if (kTilde && !pTilde) {
         LONG was = InterlockedCompareExchange(&g_xrInputOff, 0, 0);
         InterlockedExchange(&g_xrInputOff, was ? 0 : 1);
-        Log("NUMPAD/: XR controller input %s - if the judder is unchanged either way, it is NOT"
-            " this mod's input code and the runtime or the link is the place to look",
-            was ? "back ON" : "OFF (no sync, no poses, no haptics)");
+        Log("TILDE: synthetic XInput feed and effective haptics %s; XR actions and poses continue",
+            was ? "ON" : "OFF");
     }
-    pDiv = kDiv;
+    pTilde = kTilde;
+
+    // Diagnostic modes only exist when [Diagnostic] Enabled=1. Shift+F11 isolates
+    // action polling while xrLocateSpace keeps tracking hand poses.
+    if (g_diagEnabled) {
+        static bool priorF11 = false;
+        const bool f11 = (DebugKey(VK_F11) & 0x8000) != 0;
+        if (f11 && !priorF11) {
+            if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
+                InterlockedExchange(&g_diagPollOff, !InterlockedCompareExchange(&g_diagPollOff, 0, 0));
+            else
+                InterlockedExchange(&g_diagMode, (InterlockedCompareExchange(&g_diagMode, 0, 0) + 1) % 5);
+        }
+        priorF11 = f11;
+    }
 
     // NUMPAD - : freeze dwPacketNumber. Splits "the engine re-processes input on every change"
     // from "the engine costs this much simply because a pad exists". Controls stop responding
@@ -20105,6 +20781,42 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     {
         LARGE_INTEGER tEng = Now();
         RefreshCameraPosition();
+        // UE3's POV includes flat-game bob and camera shake.  Keep the pawn's
+        // locomotion/elevation, but remove that residual translation from the
+        // VR view. HMD position remains in g_hmdOffset and is never smoothed.
+        InterlockedExchange(&g_vrCameraStabValid, 0);
+        if (VrModeOn() && Rd(g_vrTranslationStabilization) && g_playerPawn &&
+            Rd(g_camPosValid) && g_offEyeHeight >= 0 &&
+            Readable((void*)(g_playerPawn + ACTOR_LOCATION), 12) &&
+            Readable((void*)(g_playerPawn + g_offEyeHeight), 4)) {
+            float pawn[3]; memcpy(pawn, (void*)(g_playerPawn + ACTOR_LOCATION), 12);
+            const float eye = *reinterpret_cast<const float*>(g_playerPawn + g_offEyeHeight);
+            if (ComputeVrCameraStabilization(g_povPos, pawn, eye, g_vrCameraStabOffset))
+                InterlockedExchange(&g_vrCameraStabValid, 1);
+        }
+        if(g_cameraTranslationEvidence) {
+            static camera_translation::Gate gate;
+            const DWORD tick=GetTickCount();
+            if(gate.Offer(true,tick,g_playerPawn && Rd(g_camPosValid))) {
+                camera_translation::Snapshot snapshot{};camera_translation::Parts parts{};
+                memcpy(snapshot.actor,g_camPos,12);memcpy(snapshot.pov,g_povPos,12);
+                memcpy(snapshot.eyeOffset,g_hmdOffset,12);memcpy(snapshot.eyeDelta,g_eyeDeltaUU,12);
+                snapshot.leftEyeBase=Rd(g_dupDraws)!=0;
+                const uintptr_t pawn=g_playerPawn;
+                snapshot.pawnValid=Readable((void*)(pawn+ACTOR_LOCATION),12);
+                if(snapshot.pawnValid)memcpy(snapshot.pawn,(void*)(pawn+ACTOR_LOCATION),12);
+                snapshot.eyeHeightValid=g_offEyeHeight>=0 && Readable((void*)(pawn+g_offEyeHeight),4);
+                if(snapshot.eyeHeightValid)memcpy(&snapshot.eyeHeight,(void*)(pawn+g_offEyeHeight),4);
+                snapshot.flags=(Rd(g_inCinematic)?1u:0u)|(ArmsAnimActive()?2u:0u)|(g_haveCentre?4u:0u);
+                if(camera_translation::Decompose(snapshot,parts))
+                    Log("CameraTranslation sample=%u tick=%lu flags=%u pawn=%d heightValid=%d eyeHeight=%.4f actor=(%.4f,%.4f,%.4f) pov=(%.4f,%.4f,%.4f) pawnLoc=(%.4f,%.4f,%.4f) povActor=(%.4f,%.4f,%.4f) povPawnEye=(%.4f,%.4f,%.4f) headMid=(%.4f,%.4f,%.4f) eyeDelta=(%.4f,%.4f,%.4f)",
+                        gate.samples,tick,snapshot.flags,snapshot.pawnValid?1:0,snapshot.eyeHeightValid?1:0,snapshot.eyeHeight,
+                        snapshot.actor[0],snapshot.actor[1],snapshot.actor[2],snapshot.pov[0],snapshot.pov[1],snapshot.pov[2],
+                        snapshot.pawn[0],snapshot.pawn[1],snapshot.pawn[2],parts.povMinusActor[0],parts.povMinusActor[1],parts.povMinusActor[2],
+                        parts.povMinusPawnEye[0],parts.povMinusPawnEye[1],parts.povMinusPawnEye[2],parts.headMidpoint[0],parts.headMidpoint[1],parts.headMidpoint[2],
+                        snapshot.eyeDelta[0],snapshot.eyeDelta[1],snapshot.eyeDelta[2]);
+            }
+        }
         ApplyVrFov();
         g_msEngineObjects += MsSince(tEng);
         ++g_engineObjectFrames;
@@ -20577,11 +21289,34 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     if (strcmp(buf, lastProf[h]) != 0) {
                         strcpy_s(lastProf[h], buf);
                         Log("    interaction profile [%s hand]: %s", h ? "right" : "left", buf);
+                        // Only on profile change, with fixed stack storage. Distinguish
+                        // an absent controller from a runtime binding that omits one action.
+                        static unsigned sourceReports = 0;
+                        if (sourceReports++ < 12) {
+                            const struct { const char* name; XrAction action; } actions[] = {
+                                {"move",g_actMove},{"turn",g_actTurn},{"handpose",g_actHandPose}
+                            };
+                            for (const auto& action : actions) {
+                                XrBoundSourcesForActionEnumerateInfo info{XR_TYPE_BOUND_SOURCES_FOR_ACTION_ENUMERATE_INFO};
+                                info.action = action.action;
+                                XrPath paths[16]{}; uint32_t count = 0;
+                                const XrResult result = xrEnumerateBoundSourcesForAction(g_xrSession,&info,16,&count,paths);
+                                Log("    XR bound sources %s: result %d, count %u",action.name,(int)result,count);
+                                if (XR_SUCCEEDED(result)) for (uint32_t i=0;i<count && i<16;++i) {
+                                    char path[XR_MAX_PATH_LENGTH]{}; uint32_t length=0;
+                                    if (XR_SUCCEEDED(xrPathToString(g_xrInstance,paths[i],sizeof(path),&length,path)))
+                                        Log("      %s",path);
+                                }
+                            }
+                        }
                     }
                 }
             }
 
             // Controller state, on the same line cadence as the frame budget, so a run where the
+            Log("    physical XR inputs: left stick %s (%.3f,%.3f), pose %d position %d; right stick %s (%.3f,%.3f), pose %d position %d; UI %d",
+                g_vrStickActive[0]?"ACTIVE":"INACTIVE",g_vrStickRaw[0][0],g_vrStickRaw[0][1],(int)g_handPoseValid[0],(int)g_handPositionValid[0],
+                g_vrStickActive[1]?"ACTIVE":"INACTIVE",g_vrStickRaw[1][0],g_vrStickRaw[1][1],(int)g_handPoseValid[1],(int)g_handPositionValid[1],(int)Rd(g_vrUiMenu));
             // controllers were picked up and set down a few times shows the correlation directly
             // instead of depending on anyone remembering when they did it.
             // Speeds in MICROMETRES per frame, printed next to the verdict they produced. The
@@ -20758,6 +21493,13 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     wf, copy, eng, xs, sc, gp, ms - wf - copy - eng - xs - sc - gp, ms,
                     g_displayPeriodMs > 0.0 ? 100.0 * ms / g_displayPeriodMs : 0.0,
                     g_displayPeriodMs);
+                {
+                    const LONG substitutions=InterlockedExchange(&g_shadowMapSubstitutions,0);
+                    const LONG candidates=InterlockedExchange(&g_shadowMapCandidates,0);
+                    if(substitutions||candidates)
+                        Log("    VR shadow projection: %ld sampled-map substitutions this window;"
+                            " %ld new 512x512 R32F candidate(s)",substitutions,candidates);
+                }
                 // ⚠️ The PEAK is the statistic. ResolveGameplayOffsets is throttled to once per 2 s
                 // (15 s after three misses), so a walk costing hundreds of ms shows as a tiny mean
                 // and a huge peak - and reading the mean alone would clear it wrongly.
@@ -21701,7 +22443,37 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     } else {
         g_haveLastWrittenYaw = false;   // stale reference once we stop steering
     }
-    return g_origPresent(s, a, b, c, d);
+    const LARGE_INTEGER realPresentBegin = Now();
+    const HRESULT presentResult = g_origPresent(s, a, b, c, d);
+    static double realPresentSum=0, realPresentMax=0;
+    static unsigned realPresentSamples=0;
+    const double realPresentMs = MsSince(realPresentBegin);
+    realPresentSum+=realPresentMs; if(realPresentMs>realPresentMax)realPresentMax=realPresentMs;
+    if(++realPresentSamples==600) {
+        Log("PerformanceBuild1 real D3D9 Present: frames=600 avg_ms=%.4f max_ms=%.4f",realPresentSum/600,realPresentMax);
+        realPresentSamples=0;realPresentSum=realPresentMax=0;
+    }
+    if (g_diagEnabled) {
+        g_diagCurrent.recEyeW=g_recEyeW; g_diagCurrent.recEyeH=g_recEyeH;
+        g_diagCurrent.autoW=g_autoResW; g_diagCurrent.autoH=g_autoResH;
+        g_diagCurrent.backW=g_srcW; g_diagCurrent.backH=g_srcH;
+        g_diagCurrent.sceneW=uint32_t(InterlockedCompareExchange(&g_diagSceneW,0,0));
+        g_diagCurrent.sceneH=uint32_t(InterlockedCompareExchange(&g_diagSceneH,0,0));
+        g_diagCurrent.sharedW=g_sharedSurf9?g_srcW:0; g_diagCurrent.sharedH=g_sharedSurf9?g_srcH:0;
+        g_diagCurrent.bridgeW=g_frameSrc11?g_srcW:0; g_diagCurrent.bridgeH=g_frameSrc11?g_srcH:0;
+        g_diagCurrent.swapW=g_scWidth; g_diagCurrent.swapH=g_scHeight;
+        g_diagCurrent.rectW=(g_dupDraws && !g_scCropped)?g_scWidth/2:g_scWidth; g_diagCurrent.rectH=g_scHeight;
+        RECT client{}; if(g_gameWindow && GetClientRect(g_gameWindow,&client)){
+            g_diagCurrent.clientW=uint32_t(client.right-client.left);g_diagCurrent.clientH=uint32_t(client.bottom-client.top);
+        }
+        static uint32_t priorPacked = 0;
+        const uint32_t packed = uint32_t(InterlockedCompareExchange(&g_padBtns, 0, 0));
+        const uint32_t raw = uint32_t(InterlockedCompareExchange(&g_diagRawBtns, 0, 0));
+        const uint32_t eye = InterlockedCompareExchange(&g_stereo, 0, 0) ? uint32_t(1 - g_renderEye) : 0;
+        DiagFinish(raw, priorPacked, packed, eye);
+        priorPacked = raw;
+    }
+    return presentResult;
 }
 
 void* PatchVTable(void* obj, int index, void* repl) {   // forward-declared up by Hook_CreateQuery
@@ -21715,7 +22487,56 @@ void* PatchVTable(void* obj, int index, void* repl) {   // forward-declared up b
 }
 
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateDevice)(IDirect3D9*, UINT, D3DDEVTYPE, HWND, DWORD, D3DPRESENT_PARAMETERS*, IDirect3DDevice9**);
+typedef HRESULT (STDMETHODCALLTYPE *PFN_ResetDevice)(IDirect3DDevice9*, D3DPRESENT_PARAMETERS*);
+typedef HRESULT (STDMETHODCALLTYPE *PFN_ResetDeviceEx)(IDirect3DDevice9Ex*, D3DPRESENT_PARAMETERS*, D3DDISPLAYMODEEX*);
+PFN_ResetDevice g_origResetDevice = nullptr;
+PFN_ResetDeviceEx g_origResetDeviceEx = nullptr;
+HRESULT STDMETHODCALLTYPE Hook_ResetDevice(IDirect3DDevice9* dev, D3DPRESENT_PARAMETERS* pp) {
+    InterlockedIncrement(&g_diagResetCount);
+    if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
+    ReleaseWristResources();
+    return g_origResetDevice(dev,pp);
+}
+HRESULT STDMETHODCALLTYPE Hook_ResetDeviceEx(IDirect3DDevice9Ex* dev, D3DPRESENT_PARAMETERS* pp, D3DDISPLAYMODEEX* dm) {
+    InterlockedIncrement(&g_diagResetCount);
+    if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
+    ReleaseWristResources();
+    return g_origResetDeviceEx(dev,pp,dm);
+}
 PFN_CreateDevice g_origCreateDevice = nullptr;
+typedef HRESULT (WINAPI *PFN_DInputCreate)(HINSTANCE,DWORD,REFIID,void**,IUnknown*);
+typedef HRESULT (STDMETHODCALLTYPE *PFN_DInputDeviceCreate)(void*,REFGUID,void**,IUnknown*);
+PFN_DInputCreate g_origDInputCreate=nullptr;
+PFN_DInputDeviceCreate g_origDInputDeviceCreate=nullptr;
+HRESULT STDMETHODCALLTYPE Hook_DInputDeviceCreate(void* self,REFGUID guid,void** out,IUnknown* outer) {
+    HRESULT hr=g_origDInputDeviceCreate(self,guid,out,outer);
+    const GUID mouse={0x6f1d2b60,0xd5a0,0x11cf,{0xbf,0xc7,0x44,0x45,0x53,0x54,0,0}};
+    if(memcmp(&guid,&mouse,sizeof(mouse)))return hr;
+    Log("startup DirectInput system mouse: hr=0x%08lX device=%p",hr,out?*out:nullptr);
+    // Preserve the real result; verified null guards skip only mouse-specific game blocks.
+    return hr;
+}
+HRESULT WINAPI Hook_DInputCreate(HINSTANCE instance,DWORD version,REFIID iid,void** out,IUnknown* outer) {
+    const HRESULT hr=g_origDInputCreate(instance,version,iid,out,outer);
+    const GUID wide8={0xbf798031,0x483a,0x4da2,{0xaa,0x99,0x5d,0x64,0xed,0x36,0x97,0}};
+    if(SUCCEEDED(hr)&&out&&*out&&!memcmp(&iid,&wide8,sizeof(wide8))) {
+        void** table=*reinterpret_cast<void***>(*out);
+        if(table[3]!=reinterpret_cast<void*>(&Hook_DInputDeviceCreate))
+            g_origDInputDeviceCreate=(PFN_DInputDeviceCreate)PatchVTable(*out,3,(void*)&Hook_DInputDeviceCreate);
+    }
+    return hr;
+}
+void InstallDirectInputStartupProbe() {
+    static bool tried=false;if(tried)return;tried=true;
+    HMODULE module=GetModuleHandleW(L"dinput8.dll");
+    if(!module)module=LoadLibraryExW(L"dinput8.dll",nullptr,LOAD_LIBRARY_SEARCH_SYSTEM32);
+    void* target=module?(void*)GetProcAddress(module,"DirectInput8Create"):nullptr;
+    if(!target)return;
+    const MH_STATUS init=MH_Initialize();
+    if(init!=MH_OK&&init!=MH_ERROR_ALREADY_INITIALIZED)return;
+    if(MH_CreateHook(target,(void*)&Hook_DInputCreate,(void**)&g_origDInputCreate)==MH_OK)
+        Log("startup DirectInput creation probe: hook status %d",(int)MH_EnableHook(target));
+}
 volatile LONG g_patched = 0;
 
 // ---- âš ï¸ forcing the BACKBUFFER size does NOT raise UE3's render resolution ----
@@ -22209,6 +23030,14 @@ void LoadIniSettings() {
         Rd(g_hudArmSticky) ? "the UI transform stays armed for the frame"
                            : "one-shot, today's behaviour - measured by 'UI draws that MISSED the"
                              " one-shot arm'");
+    LONG menuIni = GetPrivateProfileIntA("Render", "MenuInsetPct", 70, path);
+    if(menuIni<40)menuIni=40; if(menuIni>100)menuIni=100;
+    InterlockedExchange(&g_menuInsetPct,menuIni);
+    Log("ini: MenuInsetPct=%ld (initial/paused GFx menus; gameplay HUD unchanged)",menuIni);
+    LONG menuDistance=GetPrivateProfileIntA("Render","VrMenuDistanceMm",1200,path);
+    if(menuDistance<600)menuDistance=600;if(menuDistance>3000)menuDistance=3000;
+    InterlockedExchange(&g_vrMenuDistanceMm,menuDistance);
+    Log("ini: VrMenuDistanceMm=%ld (shared OpenXR menu plane for render, laser and hit test)",menuDistance);
     LONG noteIni = GetPrivateProfileIntA("Render", "NoteInsetPct", 40, path);
     if (noteIni < 25)  noteIni = 25;
     if (noteIni > 100) noteIni = 100;
@@ -22277,6 +23106,29 @@ void LoadIniSettings() {
 
     // Run 198: the reload-arms fix. Default on - it is the reported artefact, and it cannot reach the
     // gun or the 390-vertex mesh because both are in the baseline set.
+    g_renderEvidence = GetPrivateProfileIntA("Diagnostic", "RenderEvidence", 0, path) ? 1 : 0;
+    g_cameraTranslationEvidence=GetPrivateProfileIntA("Diagnostic","CameraTranslationEvidence",0,path)?1:0;
+    Log("camera translation evidence=%d; passive 10Hz, 240 samples maximum; no translation override",g_cameraTranslationEvidence);
+    g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",1,path)?1:0;
+    g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",0,path)?1:0;
+    g_vrMenuLaser=GetPrivateProfileIntA("Render","VrMenuLaser",1,path)?1:0;
+    LONG laserOpacity=GetPrivateProfileIntA("Render","VrMenuLaserOpacity",55,path);
+    LONG laserWidth=GetPrivateProfileIntA("Render","VrMenuLaserWidth",100,path);
+    if(laserOpacity<0)laserOpacity=0; if(laserOpacity>100)laserOpacity=100;
+    if(laserWidth<25)laserWidth=25; if(laserWidth>300)laserWidth=300;
+    InterlockedExchange(&g_vrMenuLaserOpacityPct,laserOpacity);
+    InterlockedExchange(&g_vrMenuLaserWidthPct,laserWidth);
+    Log("VR render: menu laser=%ld opacity=%ld%% width=%ld%%; shadows=%ld; translation stabilization=%ld",
+        Rd(g_vrMenuLaser),laserOpacity,laserWidth,Rd(g_vrShadows),Rd(g_vrTranslationStabilization));
+    g_wristHealth = GetPrivateProfileIntA("Render", "WristHealth", 1, path) ? 1 : 0;
+    Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld",Rd(g_wristHealth),Rd(g_renderEvidence));
+    g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
+    g_showControllerArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 1, path) ? 1 : 0;
+    g_independentHands = GetPrivateProfileIntA("Render", "IndependentHandsPrototype", 0, path) ? 1 : 0;
+    g_vrUiEnabled=GetPrivateProfileIntA("Input","VrMenuPointer",1,path)?1:0;
+    g_vrUiDesktopProbe=GetPrivateProfileIntA("Diagnostic","VrUiDesktopProbe",0,path)?1:0;
+    Log("VR menu pointer=%ld; native GFx viewport input; no desktop cursor movement",Rd(g_vrUiEnabled));
+    Log("independent hands prototype=%d; shader CTAB required; verified SP sections only",g_independentHands);
     g_hideStrayArms = GetPrivateProfileIntA("Render", "HideStrayArms", 1, path) ? 1 : 0;
     Log("ini: HideStrayArms=%d (%s)", g_hideStrayArms,
         g_hideStrayArms ? "hide first-person meshes that were NOT on screen when the latch was taken -"
@@ -22520,11 +23372,17 @@ void LoadIniSettings() {
 HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYPE t, HWND w, DWORD f,
                                             D3DPRESENT_PARAMETERS* pp, IDirect3DDevice9** out) {
     LoadIniSettings();
+    char diagIni[MAX_PATH]{};
+    if (IniPath(diagIni) && GetPrivateProfileIntA("Diagnostic", "Enabled", 0, diagIni)) {
+        DiagEnable();
+        Log("DIAG enabled: fixed 512-frame trace, asynchronous edge summaries; F11 cycles input modes, Shift+F11 toggles action polling");
+    }
     // Kept for the PAUSE-to-quit key. The focus window is the game's real top-level window, so
     // WM_CLOSE through it is the same shutdown path as clicking the X - the engine saves and
     // exits normally. That matters here: ENVIRONMENT.md records that every copy of the game
     // shares ONE save profile, so killing the process mid-write is a real way to lose it.
     if (w) g_gameWindow = w;
+    if (g_diagEnabled) Log("RESOLUTION CreateDevice requested=%ux%u format=%d windowed=%d refresh=%u clientWindow=%p effectiveCmdA=%s",pp?pp->BackBufferWidth:0,pp?pp->BackBufferHeight:0,pp?int(pp->BackBufferFormat):0,pp?int(pp->Windowed):-1,pp?pp->FullScreen_RefreshRateInHz:0,w,GetCommandLineA());
 
     HRESULT hr;
     if (g_d3d9ExMode && g_d3d9ex) {
@@ -22561,6 +23419,12 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
 
     if (SUCCEEDED(hr) && out && *out && InterlockedExchange(&g_patched, 1) == 0) {
         g_gameDev = *out;
+        if (g_diagEnabled) {
+            IDirect3DSurface9* back=nullptr; D3DSURFACE_DESC desc{}; RECT client{};
+            if(SUCCEEDED((*out)->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))&&back){back->GetDesc(&desc);back->Release();}
+            if(w)GetClientRect(w,&client);
+            Log("RESOLUTION CreateDevice actualBackbuffer=%ux%u client=%ldx%ld recommendedEye=%ux%u auto=%ux%u dpiAware=%d logicalScreen=%dx%d",desc.Width,desc.Height,client.right-client.left,client.bottom-client.top,g_recEyeW,g_recEyeH,g_autoResW,g_autoResH,IsProcessDPIAware()?1:0,GetSystemMetrics(SM_CXSCREEN),GetSystemMetrics(SM_CYSCREEN));
+        }
 
         // ---- âš ï¸ is the 4096 cap actually the HARDWARE's? Nobody has ever asked ----
         //
@@ -22613,9 +23477,16 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
             }
         }
         g_origPresent = (PFN_Present)PatchVTable(*out, 17, (void*)&Hook_Present);
+        if(g_diagEnabled) {
+            g_origResetDevice=(PFN_ResetDevice)PatchVTable(*out,16,(void*)&Hook_ResetDevice);
+            if(g_deviceIsEx)g_origResetDeviceEx=(PFN_ResetDeviceEx)PatchVTable(*out,132,(void*)&Hook_ResetDeviceEx);
+            Log("DIAG D3D9 Reset hooks: Reset=%p ResetEx=%p",g_origResetDevice,g_origResetDeviceEx);
+        }
         // Slot 94 = SetVertexShaderConstantF. Present at 17 already proved this vtable
         // indexing against the real interface, so 94 needs no separate verification.
         g_origSetVSConstF = (PFN_SetVSConstF)PatchVTable(*out, 94, (void*)&Hook_SetVSConstF);
+        g_origCreateVS = (PFN_CreateVS)PatchVTable(*out, 91, (void*)&Hook_CreateVS);
+        g_origSetVS = (PFN_SetVS)PatchVTable(*out, 92, (void*)&Hook_SetVS);
         // 81 = DrawPrimitive, 82 = DrawIndexedPrimitive - the two the scene passes use.
         g_origDrawPrim        = (PFN_DrawPrim)PatchVTable(*out, 81, (void*)&Hook_DrawPrim);
         g_origDrawIndexedPrim = (PFN_DrawIndexedPrim)PatchVTable(*out, 82, (void*)&Hook_DrawIndexedPrim);
@@ -22646,6 +23517,9 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
         }
         // 37 = SetRenderTarget, so draws aimed at shadow maps can be told apart from scene draws.
         g_origSetRenderTarget = (PFN_SetRenderTarget)PatchVTable(*out, 37, (void*)&Hook_SetRenderTarget);
+        // 65 = SetTexture. This catches the sampled projection map rather than deleting its
+        // light-space render pass, which was why the former VrShadows=0 still left a rectangle.
+        g_origSetTexture = (PFN_SetTexture)PatchVTable(*out,65,(void*)&Hook_SetTexture);
         // 118 = CreateQuery, the last method on IDirect3DDevice9. Counted forward from
         // SetVertexShaderConstantF at 94, which is independently confirmed working.
         g_origCreateQuery = (PFN_CreateQuery)PatchVTable(*out, 118, (void*)&Hook_CreateQuery);
@@ -22656,7 +23530,7 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
                 " and the panel's OCCLUSION row cannot do anything this run) ***");
             g_occlusionMode = 2;
         }
-        Log("Present + SetVertexShaderConstantF + Draw + SetRenderTarget hooks installed.");
+        Log("Present + SetVertexShaderConstantF + Draw + SetRenderTarget + SetTexture hooks installed.");
         Log("F7 find the matrix | F1 TRUE stereo | F12 alternate-eye | F10 6-DOF | F9 head tracking");
     }
     return hr;
@@ -22695,6 +23569,13 @@ bool LoadReal() {
 
 extern "C" {
 IDirect3D9* WINAPI Direct3DCreate9(UINT sdk) {
+#ifdef STARTUP_CRASH_CAPTURE
+    InstallStartupCrashCapture();
+#endif
+    AsyncLogInit(g_logPath);
+    InstallInputClassificationCache();
+    InstallDirectInputStartupProbe();
+    if(InstallMissingMouseCompatibility())NativeVrUi::Install();
     if (!p_C9) return nullptr;
     // The ini has to be read HERE, not in CreateDevice as everything else is: the choice between
     // a plain and an Ex factory object is made before the device exists, and it cannot be revised
