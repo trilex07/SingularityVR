@@ -10735,6 +10735,14 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
         return S_OK;
     }
     if (!InterlockedCompareExchange(&g_rtIsScene, 0, 0) || g_boundShaderLayout.shadow) { ++g_drawsOffscreen; return draw(); }
+    // Fix-3/shadows: a pass sampling the projected shadow map must not receive a remapped
+    // camera (run-41/42 mechanism: depth reconstructed with a full-frame constant from
+    // remapped depth). Count every such draw; fall back to one unremapped draw only when
+    // ShadowSampleMono=1. Default 0 = measure only, zero behaviour change.
+    if (Rd(g_shadowStageMask)) {
+        ++g_drawsWhileShadowBound;
+        if (Rd(g_shadowSampleMono)) { ++g_drawsShadowMono; return draw(); }
+    }
 
     D3DVIEWPORT9 full{};
     if (FAILED(dev->GetViewport(&full)) || full.Width < 4) return draw();
@@ -16702,6 +16710,13 @@ PFN_SetTexture g_origSetTexture=nullptr;
 struct ShadowTextureCacheEntry { IDirect3DBaseTexture9* texture=nullptr; bool projectedShadow=false; };
 static ShadowTextureCacheEntry g_shadowTextureCache[256];
 volatile LONG g_shadowMapCandidates=0;
+// Fix-3/shadows: bitmask of texture stages currently holding the projected 512x512 R32F
+// shadow map, plus an opt-in mono fallback for draws issued while it is bound. The stage
+// tracking and counting are always on and change nothing; behaviour changes only when
+// ShadowSampleMono=1 (default 0).
+volatile LONG g_shadowStageMask = 0;
+volatile LONG g_shadowSampleMono = 0;
+int g_drawsWhileShadowBound = 0, g_drawsShadowMono = 0;
 static bool ProjectedShadowTexture(IDirect3DBaseTexture9* texture) {
     if(!texture||texture->GetType()!=D3DRTYPE_TEXTURE)return false;
     const unsigned slot=((uintptr_t)texture>>4)&255u;
@@ -16734,6 +16749,12 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
     }
     if(VrModeOn() && !Rd(g_vrShadows) && ProjectedShadowTexture(texture)) {
         InterlockedIncrement(&g_shadowMapCandidates);
+    }
+    // Fix-3/shadows: record which stages hold the projected map. ProjectedShadowTexture
+    // is cached per texture (no driver query after warmup); stage<16 keeps it in one LONG.
+    if (VrModeOn() && stage < 16) {
+        if (ProjectedShadowTexture(texture)) InterlockedOr(&g_shadowStageMask, 1L << stage);
+        else InterlockedAnd(&g_shadowStageMask, ~(1L << stage));
     }
     return g_origSetTexture(dev,stage,texture);
 }
@@ -21967,6 +21988,14 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 Log("    NUMPAD0 ACTIVE: %d draws to the scene-sized non-colour target dropped"
                     " this window", g_drawsSkipped);
             g_drawsSkipped = 0;
+            // Fix-3/shadows: draws issued while the projected map was bound. A nonzero
+            // count with eye-differing square shadows confirms the sampling pass runs
+            // inside the split path; ShadowSampleMono=1 then tests the mono fallback.
+            if (g_drawsWhileShadowBound)
+                Log("    shadow-sample: %d draws while the projected map was bound, %d mono-fallback"
+                    " (ShadowSampleMono=%ld)", g_drawsWhileShadowBound, g_drawsShadowMono,
+                    Rd(g_shadowSampleMono));
+            g_drawsWhileShadowBound = 0; g_drawsShadowMono = 0;
             {
                 char regs[128] = {}; int n = 0;
                 for (int s = 0; s < g_camMatUsed && n < 100; ++s)
@@ -23415,6 +23444,7 @@ void LoadIniSettings() {
     Log("camera translation evidence=%d; passive 10Hz, 240 samples maximum; no translation override",g_cameraTranslationEvidence);
     g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",1,path)?1:0;
     g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",0,path)?1:0;
+    g_shadowSampleMono=GetPrivateProfileIntA("Render","ShadowSampleMono",0,path)?1:0;
     g_vrMenuLaser=GetPrivateProfileIntA("Render","VrMenuLaser",1,path)?1:0;
     LONG laserOpacity=GetPrivateProfileIntA("Render","VrMenuLaserOpacity",55,path);
     LONG laserWidth=GetPrivateProfileIntA("Render","VrMenuLaserWidth",100,path);
@@ -23424,6 +23454,7 @@ void LoadIniSettings() {
     InterlockedExchange(&g_vrMenuLaserWidthPct,laserWidth);
     Log("VR render: menu laser=%ld opacity=%ld%% width=%ld%%; shadows=%ld; translation stabilization=%ld",
         Rd(g_vrMenuLaser),laserOpacity,laserWidth,Rd(g_vrShadows),Rd(g_vrTranslationStabilization));
+    Log("shadow sampling: ShadowSampleMono=%ld (0=measure only, 1=mono-fallback draws while the projected map is bound)",Rd(g_shadowSampleMono));
     g_wristHealth = GetPrivateProfileIntA("Render", "WristHealth", 1, path) ? 1 : 0;
     Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld",Rd(g_wristHealth),Rd(g_renderEvidence));
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
