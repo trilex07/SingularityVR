@@ -1,0 +1,1184 @@
+{
+  "by_class": {
+    "ALBEDO": [
+      "AR_E99Rifle_alt_d",
+      "AR_shotgun_d",
+      "TMD_new2_d",
+      "ar_gatling_ammo_chain_d",
+      "ar_gatling_gun_d",
+      "ar_sniper_rifle_d",
+      "elite_beam_ammo_d",
+      "elite_beam_d",
+      "elite_beam_scope_d",
+      "grey",
+      "handgun_d",
+      "inview_glove_d",
+      "laser_d",
+      "scope_glass_d"
+    ],
+    "DETAIL": [
+      "DETAILfinepitted02a_n"
+    ],
+    "EMISSIVE": [
+      "AR_E99Rifle_alt_e",
+      "AR_shotgun_e",
+      "TMD_new_s",
+      "handgun_g"
+    ],
+    "MASK": [
+      "AR_E99RifleLens_m",
+      "AR_shotgun_rim",
+      "handgun_s",
+      "scope_glass_o"
+    ],
+    "NORMAL": [
+      "AR_E99Rifle_n",
+      "AR_shotgun_n",
+      "TMD_new_n",
+      "ar_gatling_ammo_chain_n",
+      "ar_gatling_gun_n",
+      "ar_sniper_rifle_n",
+      "elite_beam_ammo_n",
+      "elite_beam_n",
+      "elite_beam_scope_n",
+      "handgun_n",
+      "inview_glove_n",
+      "laser_n"
+    ],
+    "SPECULAR": [
+      "AR_E99Rifle_alt_s",
+      "AR_shotgun_s",
+      "TMD_new2_s",
+      "ar_gatling_ammo_chain_s",
+      "ar_gatling_gun_s",
+      "ar_sniper_rifle_s",
+      "elite_beam_ammo_s",
+      "elite_beam_s",
+      "elite_beam_scope_s",
+      "inview_glove_s",
+      "laser_s"
+    ],
+    "SPHERICAL": [
+      "matballInview"
+    ],
+    "UNKNOWN": [
+      "reddot"
+    ]
+  },
+  "textures": {
+    "AR_E99RifleLens_m": {
+      "class": "MASK",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "Mat_AR_E99Rifle_Lens_INST"
+      ],
+      "roles": [
+        {
+          "param": "ScopeMask",
+          "class": "MASK",
+          "material": "Mat_AR_E99Rifle_Lens_INST"
+        }
+      ],
+      "sha256": "f7df9b863fbae534b1a7913de22654bb696929bbd4cc67e53fa5294edb1d0da2"
+    },
+    "AR_E99Rifle_alt_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        2048,
+        1024
+      ],
+      "format": "PF_DXT5",
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "AR_E99Rifle_alt"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "AR_E99Rifle_alt"
+        }
+      ],
+      "sha256": "93ee1b484c982fa953604a9f020e01c82955c3e7e6d06786c52b4ef7df6864f4"
+    },
+    "AR_E99Rifle_alt_e": {
+      "class": "EMISSIVE",
+      "proven": true,
+      "dims": [
+        1024,
+        512
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "AR_E99Rifle_alt"
+      ],
+      "roles": [
+        {
+          "param": "emissivemap",
+          "class": "EMISSIVE",
+          "material": "AR_E99Rifle_alt"
+        }
+      ],
+      "sha256": "2fd1253fbdf8f1650a1ced6b1e25adce3fae9c10208b941b97d85e6a9107bbff"
+    },
+    "AR_E99Rifle_alt_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        2048,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "AR_E99Rifle_alt"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "AR_E99Rifle_alt"
+        }
+      ],
+      "sha256": "6d1b1d89f51f07c7d64f14409ae2a9e2287e7a11d16e3cf7c618b2aac244c3c1"
+    },
+    "AR_E99Rifle_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        2048,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "AR_E99Rifle_alt"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "AR_E99Rifle_alt"
+        }
+      ],
+      "sha256": "05bfb7f5d361e95eefc3f720bb3731d25f5be52ecf45bbf519854beac9522736"
+    },
+    "AR_shotgun_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT5",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_Shotgun"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "AR_Shotgun"
+        }
+      ],
+      "sha256": "62e4dd278e0ea9288b81c5d5f3d25fa85e3799ff73c70b3eaaf5602358030ecb"
+    },
+    "AR_shotgun_e": {
+      "class": "EMISSIVE",
+      "proven": true,
+      "dims": [
+        512,
+        512
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_Shotgun"
+      ],
+      "roles": [
+        {
+          "param": "emissivemap",
+          "class": "EMISSIVE",
+          "material": "AR_Shotgun"
+        }
+      ],
+      "sha256": "b43ebe0d10d2e3cdbc95e579e94bc715413c9014699fcae0a0e79fb402728907"
+    },
+    "AR_shotgun_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_Shotgun"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "AR_Shotgun"
+        }
+      ],
+      "sha256": "3a36fd5d3c856bb38d448dcc7f488a4a5379e83686c2e5878f8487438969510c"
+    },
+    "AR_shotgun_rim": {
+      "class": "MASK",
+      "proven": true,
+      "dims": [
+        512,
+        512
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Grayscale",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_Shotgun"
+      ],
+      "roles": [
+        {
+          "param": "RimMask",
+          "class": "MASK",
+          "material": "AR_Shotgun"
+        }
+      ],
+      "sha256": "a01d79da9467986391bfc6abf872e25ed380213d759de4a659a6a7ace734f7f2"
+    },
+    "AR_shotgun_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_Shotgun"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "AR_Shotgun"
+        }
+      ],
+      "sha256": "36b10dd3964e00c5eece154886019cebd9270eac9503d7ff9400b9b485420777"
+    },
+    "DETAILfinepitted02a_n": {
+      "class": "DETAIL",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "inview_gloves_gauze"
+      ],
+      "roles": [
+        {
+          "param": "detailmap",
+          "class": "DETAIL",
+          "material": "inview_gloves_gauze"
+        }
+      ],
+      "sha256": "41918bfac0ab61619e48388ce2233de5a2998abddc656eac33ecadbb5425dacc"
+    },
+    "TMD_new2_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        2048,
+        1024
+      ],
+      "format": "PF_DXT5",
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "tmd_base_optimized"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "tmd_base_optimized"
+        }
+      ],
+      "sha256": null
+    },
+    "TMD_new2_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        512,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "tmd_base_optimized"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "tmd_base_optimized"
+        }
+      ],
+      "sha256": "7fd294fc1189ed8e61984692d2eb79c5cc2c4295cb6a179b18bbdc4bc91bd9d5"
+    },
+    "TMD_new_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        2048,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "tmd_base_optimized"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "tmd_base_optimized"
+        }
+      ],
+      "sha256": "d95f4d7b9d5a7ca00e37313f1bfe1c06f2404164116cd33ece6b88ba46c86455"
+    },
+    "TMD_new_s": {
+      "class": "EMISSIVE",
+      "proven": true,
+      "dims": [
+        2048,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "tmd_base_optimized"
+      ],
+      "roles": [
+        {
+          "param": "emissivemask",
+          "class": "EMISSIVE",
+          "material": "tmd_base_optimized"
+        }
+      ],
+      "sha256": "f96af3a0034b2b030d812e7b54f6f5dd883d5eefcb671440416655c24bd64162"
+    },
+    "ar_gatling_ammo_chain_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        256,
+        1024
+      ],
+      "format": "PF_DXT5",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_gatling_gun_chain_ammo"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "AR_gatling_gun_chain_ammo"
+        }
+      ],
+      "sha256": null
+    },
+    "ar_gatling_ammo_chain_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        256,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_gatling_gun_chain_ammo"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "AR_gatling_gun_chain_ammo"
+        }
+      ],
+      "sha256": null
+    },
+    "ar_gatling_ammo_chain_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        256,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_gatling_gun_chain_ammo"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "AR_gatling_gun_chain_ammo"
+        }
+      ],
+      "sha256": null
+    },
+    "ar_gatling_gun_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        2048,
+        1024
+      ],
+      "format": "PF_DXT5",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_gatling_gun"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "AR_gatling_gun"
+        }
+      ],
+      "sha256": "d57ffd4c8bb8181617991169b96aa9be1befcc6c9dd553d2d7f8a5f898f93c2c"
+    },
+    "ar_gatling_gun_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        2048,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_gatling_gun"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "AR_gatling_gun"
+        }
+      ],
+      "sha256": "7a4e90bc927789897cca206fa72c45f3ff0ff392646efc4a88caac2d0ac50308"
+    },
+    "ar_gatling_gun_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        2048,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_gatling_gun"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "AR_gatling_gun"
+        }
+      ],
+      "sha256": "faa7e8503a992cfb7e1025f22a1941d1b2d4a2b158b7100f4fb80e4b2e85de12"
+    },
+    "ar_sniper_rifle_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        2048,
+        1024
+      ],
+      "format": "PF_DXT5",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_SniperRifle"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "AR_SniperRifle"
+        }
+      ],
+      "sha256": "ac7d2276fff2042fac8ea210519115cf712719f83162e914557ec7b83b7e936b"
+    },
+    "ar_sniper_rifle_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        2048,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_SniperRifle"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "AR_SniperRifle"
+        }
+      ],
+      "sha256": "1ea5f3484a3ed988015e12c69bdeb5a75687bd3e078044fe5b08b9894e744b2c"
+    },
+    "ar_sniper_rifle_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        2048,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_SniperRifle"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "AR_SniperRifle"
+        }
+      ],
+      "sha256": "daec12aba0a0d7577e90929816ab6bcec61738266d0221c62f5a61aa15b34069"
+    },
+    "elite_beam_ammo_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "elite_beam_amo_inview"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "elite_beam_amo_inview"
+        }
+      ],
+      "sha256": null
+    },
+    "elite_beam_ammo_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "elite_beam_amo_inview"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "elite_beam_amo_inview"
+        }
+      ],
+      "sha256": null
+    },
+    "elite_beam_ammo_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "elite_beam_amo_inview"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "elite_beam_amo_inview"
+        }
+      ],
+      "sha256": null
+    },
+    "elite_beam_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        2048,
+        2048
+      ],
+      "format": "PF_DXT5",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_Railgun_Inview"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "AR_Railgun_Inview"
+        }
+      ],
+      "sha256": "fe36c765158c0f2d1f1e182ffa61dfcc873673d8c4fa42585e2e6fbef737b7e2"
+    },
+    "elite_beam_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        2048,
+        2048
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_Railgun_Inview"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "AR_Railgun_Inview"
+        }
+      ],
+      "sha256": "09bd5ae8a9aefd65a489b2d5dffcb697745dfb41b1035c441276984148ee5ad0"
+    },
+    "elite_beam_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        2048,
+        2048
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_Railgun_Inview"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "AR_Railgun_Inview"
+        }
+      ],
+      "sha256": "3337938850770a9295a4b929b854cec49b6015fb9e186f3884478e13b81f6ccd"
+    },
+    "elite_beam_scope_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT5",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_Railgun_Scope_Inview"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "AR_Railgun_Scope_Inview"
+        }
+      ],
+      "sha256": null
+    },
+    "elite_beam_scope_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_Railgun_Scope_Inview"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "AR_Railgun_Scope_Inview"
+        }
+      ],
+      "sha256": null
+    },
+    "elite_beam_scope_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_Railgun_Scope_Inview"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "AR_Railgun_Scope_Inview"
+        }
+      ],
+      "sha256": null
+    },
+    "grey": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        32,
+        32
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "AR_SniperRifle_Lens"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "AR_SniperRifle_Lens"
+        },
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "AR_SniperRifle_Lens"
+        }
+      ],
+      "sha256": "83d967b8d4d605e76d23cdc0ad6eea9a29cd7ff9afb8627153133031a33e4497"
+    },
+    "handgun_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        2048,
+        2048
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "handgun"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "handgun"
+        }
+      ],
+      "sha256": null
+    },
+    "handgun_g": {
+      "class": "EMISSIVE",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "handgun"
+      ],
+      "roles": [
+        {
+          "param": "emissivemap",
+          "class": "EMISSIVE",
+          "material": "handgun"
+        }
+      ],
+      "sha256": null
+    },
+    "handgun_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        2048,
+        2048
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "handgun"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "handgun"
+        }
+      ],
+      "sha256": null
+    },
+    "handgun_s": {
+      "class": "MASK",
+      "proven": true,
+      "dims": [
+        2048,
+        2048
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "handgun"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "handgun"
+        },
+        {
+          "param": "envmask",
+          "class": "MASK",
+          "material": "handgun"
+        }
+      ],
+      "sha256": null
+    },
+    "inview_glove_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "inview_gloves_gauze"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "inview_gloves_gauze"
+        }
+      ],
+      "sha256": "f49feef3c08085e6c104fadaea93f533b0b97a7ffde6fb86e618161178125560"
+    },
+    "inview_glove_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "inview_gloves_gauze"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "inview_gloves_gauze"
+        }
+      ],
+      "sha256": "67342ce3a34cd6ba9fd4903c58efaeda2973633c576dc71dd5b78f4525a6bd23"
+    },
+    "inview_glove_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "inview_gloves_gauze"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "inview_gloves_gauze"
+        }
+      ],
+      "sha256": "3a471f56d16975eab7aacd3b775d87249392d9c53f4c2a0e6b53350c7acb72ae"
+    },
+    "laser_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "Laser"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "Laser"
+        }
+      ],
+      "sha256": "67cf75b823f5ba30d56d0c2bf8437e00db6e2464a63b41384590f6ccc05ab85f"
+    },
+    "laser_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "Laser"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "Laser"
+        }
+      ],
+      "sha256": "b085d3fa22da81c159ced8b06fc0d2647faf3821b5afe6bef6609b42c9efb31b"
+    },
+    "laser_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "Laser"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "Laser"
+        }
+      ],
+      "sha256": "abf09de72156d24f004ac4dfef1fd324e2e64cd663cf15223fc5d004ae9e3588"
+    },
+    "matballInview": {
+      "class": "SPHERICAL",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "materials": [
+        "inview_gloves_gauze"
+      ],
+      "roles": [
+        {
+          "param": "SphericalMap",
+          "class": "SPHERICAL",
+          "material": "inview_gloves_gauze"
+        }
+      ],
+      "sha256": null
+    },
+    "reddot": {
+      "class": "UNKNOWN",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "reddot_01"
+      ],
+      "roles": [
+        {
+          "param": "reddot",
+          "class": "UNKNOWN",
+          "material": "reddot_01"
+        }
+      ],
+      "sha256": "07b5a3dd6526eeca1bf354bc00fcb2e60953c899a95c0e188cff394cbfd78d8b"
+    },
+    "scope_glass_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "reddot_01"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "reddot_01"
+        }
+      ],
+      "sha256": "7578bf745700cd6f98998b20239e2fbbd1b28bb61999757645630b666882bff9"
+    },
+    "scope_glass_o": {
+      "class": "MASK",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "reddot_01"
+      ],
+      "roles": [
+        {
+          "param": "opacitymap",
+          "class": "MASK",
+          "material": "reddot_01"
+        }
+      ],
+      "sha256": "8408de669fd2a8a9005aee4b017d2321835cbd45897dc1c684526a5d868f268e"
+    }
+  }
+}

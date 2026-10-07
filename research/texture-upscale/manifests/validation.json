@@ -1,0 +1,131 @@
+{
+  "checks": [
+    {
+      "texture": "inview_glove_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "f49feef3c08085e6c104fadaea93f533b0b97a7ffde6fb86e618161178125560",
+      "new_sha256": "be5f1466d79dd4e060dbf28a606c99943d563fe7f22a55617aad4979d8dbfdbd",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "inview_glove_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "f49feef3c08085e6c104fadaea93f533b0b97a7ffde6fb86e618161178125560",
+      "new_sha256": "110e808a41e3144affeff42c8f06886e7ad4ccfc413b0b69744a1a5f069694fb",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "AR_E99Rifle_alt_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        2048,
+        1024
+      ],
+      "new_dims": [
+        4096,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 2097280,
+      "new_bytes": 11184944,
+      "orig_sha256": "93ee1b484c982fa953604a9f020e01c82955c3e7e6d06786c52b4ef7df6864f4",
+      "new_sha256": "f64e4845624245fcede506a25e014e7dbb1a5834bdf67cce120622fa638283ea",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "AR_E99Rifle_alt_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        2048,
+        1024
+      ],
+      "new_dims": [
+        4096,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 2097280,
+      "new_bytes": 11184944,
+      "orig_sha256": "93ee1b484c982fa953604a9f020e01c82955c3e7e6d06786c52b4ef7df6864f4",
+      "new_sha256": "47e46b60646d081b1247218a5c8d89db35b5cebf389045a01eb37e9de396e9a0",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "inview_glove_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "67342ce3a34cd6ba9fd4903c58efaeda2973633c576dc71dd5b78f4525a6bd23",
+      "new_sha256": "26ed4b032c0ef36d79f1a5242af94a166aa06d82971113fd8d2464e1597a187b",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "inview_glove_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "67342ce3a34cd6ba9fd4903c58efaeda2973633c576dc71dd5b78f4525a6bd23",
+      "new_sha256": "7ea4f657fa95a1cf220383b00c6e8170216a335c2f2e626df044ff0b0cea99d3",
+      "mip_level_upscaled": 0
+    }
+  ],
+  "warnings": []
+}

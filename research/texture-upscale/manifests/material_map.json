@@ -1,0 +1,284 @@
+{
+  "meshes": [
+    {
+      "mesh": "ch_inview_tmd_mesh",
+      "package": "RvGame",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "ch_inview_arms.Materials.inview_gloves_gauze",
+          "material": "inview_gloves_gauze"
+        },
+        {
+          "slot": 1,
+          "material_path": "wp_tmd.Materials.Base.tmd_base_optimized",
+          "material": "tmd_base_optimized"
+        },
+        {
+          "slot": 2,
+          "material_path": "wp_tmd.Materials.Base.tmd_base_optimized",
+          "material": "tmd_base_optimized"
+        }
+      ]
+    },
+    {
+      "mesh": "ch_inview_noTMD",
+      "package": "RvGame",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "ch_inview_arms.Materials.inview_gloves_gauze",
+          "material": "inview_gloves_gauze"
+        },
+        {
+          "slot": 1,
+          "material_path": "wp_tmd.Materials.Base.tmd_base_optimized",
+          "material": "tmd_base_optimized"
+        }
+      ]
+    },
+    {
+      "mesh": "ch_inview_machinegun_mesh",
+      "package": "RvGame",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "wp_machinegun_2010.Materials.AR_E99Rifle_alt",
+          "material": "AR_E99Rifle_alt"
+        },
+        {
+          "slot": 1,
+          "material_path": "wp_machinegun_2010.Materials.Mat_AR_E99Rifle_Lens_INST",
+          "material": "Mat_AR_E99Rifle_Lens_INST"
+        }
+      ]
+    },
+    {
+      "mesh": "ch_inview_pistol_mesh",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "wp_handgun.Materials.handgun",
+          "material": "handgun"
+        },
+        {
+          "slot": 1,
+          "material_path": "wp_handgun.Materials.Laser",
+          "material": "Laser"
+        }
+      ]
+    },
+    {
+      "mesh": "ch_inview_shotgun_mesh",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        {
+          "slot": 1,
+          "material_path": "wp_shotgun.Materials.AR_Shotgun",
+          "material": "AR_Shotgun"
+        }
+      ]
+    },
+    {
+      "mesh": "ch_inview_sniper_mesh",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "wp_sniper.Materials.AR_SniperRifle",
+          "material": "AR_SniperRifle"
+        },
+        {
+          "slot": 1,
+          "material_path": "wp_sniper.Materials.AR_SniperRifle_Lens",
+          "material": "AR_SniperRifle_Lens"
+        }
+      ]
+    },
+    {
+      "mesh": "ch_inview_gatling_mesh",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "wp_gatling.Materials.AR_gatling_gun",
+          "material": "AR_gatling_gun"
+        },
+        {
+          "slot": 1,
+          "material_path": "wp_gatling.Materials.AR_gatling_gun_chain_ammo",
+          "material": "AR_gatling_gun_chain_ammo"
+        }
+      ]
+    },
+    {
+      "mesh": "ch_inview_railgun_mesh",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "wp_railgun.Materials.AR_Railgun_Scope_Inview",
+          "material": "AR_Railgun_Scope_Inview"
+        },
+        {
+          "slot": 1,
+          "material_path": "wp_railgun.Materials.reddot_01",
+          "material": "reddot_01"
+        },
+        {
+          "slot": 2,
+          "material_path": "wp_railgun.Materials.AR_Railgun_Inview",
+          "material": "AR_Railgun_Inview"
+        },
+        {
+          "slot": 3,
+          "material_path": "wp_railgun.Materials.elite_beam_amo_inview",
+          "material": "elite_beam_amo_inview"
+        }
+      ]
+    }
+  ],
+  "materials": {
+    "inview_gloves_gauze": {
+      "material_path": "ch_inview_arms.Materials.inview_gloves_gauze",
+      "package": "RvGame",
+      "params": {
+        "SphericalMap": "matballInview",
+        "normalmap": "inview_glove_n",
+        "detailmap": "DETAILfinepitted02a_n",
+        "diffusemap": "inview_glove_d",
+        "specularmap": "inview_glove_s"
+      }
+    },
+    "tmd_base_optimized": {
+      "material_path": "wp_tmd.Materials.Base.tmd_base_optimized",
+      "package": "RvGame",
+      "params": {
+        "diffusemap": "TMD_new2_d",
+        "specularmap": "TMD_new2_s",
+        "normalmap": "TMD_new_n",
+        "emissivemask": "TMD_new_s"
+      }
+    },
+    "AR_E99Rifle_alt": {
+      "material_path": "wp_machinegun_2010.Materials.AR_E99Rifle_alt",
+      "package": "RvGame",
+      "params": {
+        "diffusemap": "AR_E99Rifle_alt_d",
+        "specularmap": "AR_E99Rifle_alt_s",
+        "normalmap": "AR_E99Rifle_n",
+        "emissivemap": "AR_E99Rifle_alt_e"
+      }
+    },
+    "Mat_AR_E99Rifle_Lens_INST": {
+      "material_path": "wp_machinegun_2010.Materials.Mat_AR_E99Rifle_Lens_INST",
+      "package": "RvGame",
+      "params": {
+        "ScopeMask": "AR_E99RifleLens_m"
+      }
+    },
+    "handgun": {
+      "material_path": "wp_handgun.Materials.handgun",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "diffusemap": "handgun_d",
+        "specularmap": "handgun_s",
+        "normalmap": "handgun_n",
+        "envmask": "handgun_s",
+        "emissivemap": "handgun_g"
+      }
+    },
+    "Laser": {
+      "material_path": "wp_handgun.Materials.Laser",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "diffusemap": "laser_d",
+        "specularmap": "laser_s",
+        "normalmap": "laser_n"
+      }
+    },
+    "AR_Shotgun": {
+      "material_path": "wp_shotgun.Materials.AR_Shotgun",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "diffusemap": "AR_shotgun_d",
+        "specularmap": "AR_shotgun_s",
+        "normalmap": "AR_shotgun_n",
+        "RimMask": "AR_shotgun_rim",
+        "emissivemap": "AR_shotgun_e"
+      }
+    },
+    "AR_SniperRifle": {
+      "material_path": "wp_sniper.Materials.AR_SniperRifle",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "diffusemap": "ar_sniper_rifle_d",
+        "specularmap": "ar_sniper_rifle_s",
+        "normalmap": "ar_sniper_rifle_n"
+      }
+    },
+    "AR_SniperRifle_Lens": {
+      "material_path": "wp_sniper.Materials.AR_SniperRifle_Lens",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "diffusemap": "grey",
+        "specularmap": "grey"
+      }
+    },
+    "AR_gatling_gun": {
+      "material_path": "wp_gatling.Materials.AR_gatling_gun",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "diffusemap": "ar_gatling_gun_d",
+        "specularmap": "ar_gatling_gun_s",
+        "normalmap": "ar_gatling_gun_n"
+      }
+    },
+    "AR_gatling_gun_chain_ammo": {
+      "material_path": "wp_gatling.Materials.AR_gatling_gun_chain_ammo",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "diffusemap": "ar_gatling_ammo_chain_d",
+        "specularmap": "ar_gatling_ammo_chain_s",
+        "normalmap": "ar_gatling_ammo_chain_n"
+      }
+    },
+    "AR_Railgun_Scope_Inview": {
+      "material_path": "wp_railgun.Materials.AR_Railgun_Scope_Inview",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "diffusemap": "elite_beam_scope_d",
+        "specularmap": "elite_beam_scope_s",
+        "normalmap": "elite_beam_scope_n"
+      }
+    },
+    "reddot_01": {
+      "material_path": "wp_railgun.Materials.reddot_01",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "opacitymap": "scope_glass_o",
+        "diffusemap": "scope_glass_d",
+        "reddot": "reddot"
+      }
+    },
+    "AR_Railgun_Inview": {
+      "material_path": "wp_railgun.Materials.AR_Railgun_Inview",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "diffusemap": "elite_beam_d",
+        "specularmap": "elite_beam_s",
+        "normalmap": "elite_beam_n"
+      }
+    },
+    "elite_beam_amo_inview": {
+      "material_path": "wp_railgun.Materials.elite_beam_amo_inview",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "diffusemap": "elite_beam_ammo_d",
+        "normalmap": "elite_beam_ammo_n",
+        "specularmap": "elite_beam_ammo_s"
+      }
+    }
+  }
+}

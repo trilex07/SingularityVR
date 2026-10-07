@@ -1,0 +1,236 @@
+{
+  "textures": {},
+  "groups": {
+    "hands_only": {
+      "orig_bytes": 2140840,
+      "new_bytes_2x": 8563368,
+      "delta_bytes": 6422528,
+      "detail": [
+        {
+          "texture": "inview_glove_d",
+          "orig_bytes": 699050,
+          "new_bytes_2x": 2796202,
+          "delta_bytes": 2097152,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "inview_glove_n",
+          "orig_bytes": 699050,
+          "new_bytes_2x": 2796202,
+          "delta_bytes": 2097152,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "inview_glove_s",
+          "orig_bytes": 699050,
+          "new_bytes_2x": 2796202,
+          "delta_bytes": 2097152,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "DETAILfinepitted02a_n",
+          "orig_bytes": 43690,
+          "new_bytes_2x": 174762,
+          "delta_bytes": 131072,
+          "format": "PF_DXT1"
+        }
+      ]
+    },
+    "hands_plus_tmd": {
+      "orig_bytes": 7820629,
+      "new_bytes_2x": 31282517,
+      "delta_bytes": 23461888,
+      "detail": [
+        {
+          "texture": "inview_glove_d",
+          "orig_bytes": 699050,
+          "new_bytes_2x": 2796202,
+          "delta_bytes": 2097152,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "inview_glove_n",
+          "orig_bytes": 699050,
+          "new_bytes_2x": 2796202,
+          "delta_bytes": 2097152,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "inview_glove_s",
+          "orig_bytes": 699050,
+          "new_bytes_2x": 2796202,
+          "delta_bytes": 2097152,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "DETAILfinepitted02a_n",
+          "orig_bytes": 43690,
+          "new_bytes_2x": 174762,
+          "delta_bytes": 131072,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "TMD_new2_d",
+          "orig_bytes": 2796203,
+          "new_bytes_2x": 11184811,
+          "delta_bytes": 8388608,
+          "format": "PF_DXT5"
+        },
+        {
+          "texture": "TMD_new_n",
+          "orig_bytes": 1398102,
+          "new_bytes_2x": 5592406,
+          "delta_bytes": 4194304,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "TMD_new2_s",
+          "orig_bytes": 87382,
+          "new_bytes_2x": 349526,
+          "delta_bytes": 262144,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "TMD_new_s",
+          "orig_bytes": 1398102,
+          "new_bytes_2x": 5592406,
+          "delta_bytes": 4194304,
+          "format": "PF_DXT1"
+        }
+      ]
+    },
+    "hands_tmd_selected_weapons": {
+      "orig_bytes": 22151170,
+      "new_bytes_2x": 88604674,
+      "delta_bytes": 66453504,
+      "detail": [
+        {
+          "texture": "inview_glove_d",
+          "orig_bytes": 699050,
+          "new_bytes_2x": 2796202,
+          "delta_bytes": 2097152,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "inview_glove_n",
+          "orig_bytes": 699050,
+          "new_bytes_2x": 2796202,
+          "delta_bytes": 2097152,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "inview_glove_s",
+          "orig_bytes": 699050,
+          "new_bytes_2x": 2796202,
+          "delta_bytes": 2097152,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "DETAILfinepitted02a_n",
+          "orig_bytes": 43690,
+          "new_bytes_2x": 174762,
+          "delta_bytes": 131072,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "TMD_new2_d",
+          "orig_bytes": 2796203,
+          "new_bytes_2x": 11184811,
+          "delta_bytes": 8388608,
+          "format": "PF_DXT5"
+        },
+        {
+          "texture": "TMD_new_n",
+          "orig_bytes": 1398102,
+          "new_bytes_2x": 5592406,
+          "delta_bytes": 4194304,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "TMD_new2_s",
+          "orig_bytes": 87382,
+          "new_bytes_2x": 349526,
+          "delta_bytes": 262144,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "TMD_new_s",
+          "orig_bytes": 1398102,
+          "new_bytes_2x": 5592406,
+          "delta_bytes": 4194304,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "AR_E99Rifle_alt_d",
+          "orig_bytes": 2796203,
+          "new_bytes_2x": 11184811,
+          "delta_bytes": 8388608,
+          "format": "PF_DXT5"
+        },
+        {
+          "texture": "AR_E99Rifle_alt_s",
+          "orig_bytes": 1398102,
+          "new_bytes_2x": 5592406,
+          "delta_bytes": 4194304,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "AR_E99Rifle_n",
+          "orig_bytes": 1398102,
+          "new_bytes_2x": 5592406,
+          "delta_bytes": 4194304,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "AR_E99Rifle_alt_e",
+          "orig_bytes": 349526,
+          "new_bytes_2x": 1398102,
+          "delta_bytes": 1048576,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "AR_shotgun_d",
+          "orig_bytes": 1398101,
+          "new_bytes_2x": 5592405,
+          "delta_bytes": 4194304,
+          "format": "PF_DXT5"
+        },
+        {
+          "texture": "AR_shotgun_s",
+          "orig_bytes": 699050,
+          "new_bytes_2x": 2796202,
+          "delta_bytes": 2097152,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "AR_shotgun_n",
+          "orig_bytes": 699050,
+          "new_bytes_2x": 2796202,
+          "delta_bytes": 2097152,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "ar_sniper_rifle_d",
+          "orig_bytes": 2796203,
+          "new_bytes_2x": 11184811,
+          "delta_bytes": 8388608,
+          "format": "PF_DXT5"
+        },
+        {
+          "texture": "ar_sniper_rifle_s",
+          "orig_bytes": 1398102,
+          "new_bytes_2x": 5592406,
+          "delta_bytes": 4194304,
+          "format": "PF_DXT1"
+        },
+        {
+          "texture": "ar_sniper_rifle_n",
+          "orig_bytes": 1398102,
+          "new_bytes_2x": 5592406,
+          "delta_bytes": 4194304,
+          "format": "PF_DXT1"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "inview_glove_d": {
+    "note": "first-person glove/hand diffuse (highest priority)",
+    "kind": "albedo",
+    "source": "inview_glove_d",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "be5f1466d79dd4e060dbf28a606c99943d563fe7f22a55617aad4979d8dbfdbd",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "110e808a41e3144affeff42c8f06886e7ad4ccfc413b0b69744a1a5f069694fb",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "AR_E99Rifle_alt_d": {
+    "note": "E99 assault rifle FP diffuse (most visible weapon)",
+    "kind": "albedo",
+    "source": "AR_E99Rifle_alt_d",
+    "object_dims": [
+      2048,
+      1024
+    ],
+    "source_dims": [
+      2048,
+      1024
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT5",
+    "dds_format": "DXT5",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          4096,
+          2048
+        ],
+        "mips": 11,
+        "dds_bytes": 11184944,
+        "sha256": "f64e4845624245fcede506a25e014e7dbb1a5834bdf67cce120622fa638283ea",
+        "alpha_min": 0,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          4096,
+          2048
+        ],
+        "mips": 11,
+        "dds_bytes": 11184944,
+        "sha256": "47e46b60646d081b1247218a5c8d89db35b5cebf389045a01eb37e9de396e9a0",
+        "alpha_min": 0,
+        "alpha_max": 255
+      }
+    }
+  },
+  "inview_glove_n": {
+    "note": "glove tangent normal - technically-correct path only",
+    "kind": "normal",
+    "source": "inview_glove_n",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "26ed4b032c0ef36d79f1a5242af94a166aa06d82971113fd8d2464e1597a187b",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "7ea4f657fa95a1cf220383b00c6e8170216a335c2f2e626df044ff0b0cea99d3",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  }
+}

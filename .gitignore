@@ -33,10 +33,26 @@ uscript/
 *.upk
 *.xxx
 
+# ---- texture-upscale research ----
+# Extracted/derived texture pixels (DDS/TGA/TFC or rendered previews) are
+# game-derived and stay in the local scratch root (default
+# C:\Users\Trilex\vr-mods\SingularityVR-assets-local). Only scripts, JSON
+# manifests and docs are tracked. These entries are a safety net.
+*.dds
+*.tga
+*.tfc
+asset-tools/textures/out/
+research/texture-upscale/local/
+research/texture-upscale/**/*.png
+
 # Claude Code local settings. Records absolute paths from this machine, including the
 # home directory, so it must never reach the remote. A global ignore covered this before
 # the remote moved; that protects one machine, not the repo.
 .claude/settings.local.json
+
+# ---- python ----
+__pycache__/
+*.pyc
 
 # ---- editor / OS ----
 .vs/

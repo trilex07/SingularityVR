@@ -1,0 +1,4 @@
+# Light dependencies only. Verified on Python 3.14 (Windows x64).
+#   python -m pip install -r asset-tools/textures/requirements.txt
+Pillow>=11
+numpy>=2
