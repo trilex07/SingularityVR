@@ -17,6 +17,7 @@
 #include <windows.h>
 #include <d3d9.h>
 #include <cstdio>
+#include <cstdlib>
 #include <cstdint>
 #include <cstring>
 #include <vector>
@@ -48,6 +49,7 @@ static char      g_texturesDir[MAX_PATH] = "texture-override";
 static bool      g_capture = false;           // dump locked mip0 of larger DXT textures
 static char      g_capturesDir[MAX_PATH] = "capture";
 static UINT      g_captureMin = 512;
+static uint64_t  g_markerHash = 0;            // if set, only dump around this texture
 static CRITICAL_SECTION g_logLock;
 static FILE*     g_log = nullptr;
 
@@ -58,6 +60,22 @@ static int       g_capturedCount = 0;
 static IDirect3DTexture9* g_capSeen[kCaptureMax * 10];
 static int       g_capSeenCount = 0;
 static SRWLOCK   g_captureLock = SRWLOCK_INIT;
+
+// marker mode: remember the last few hashed textures so that when the marker
+// (the pistol's laser texture) is seen, the weapon textures bound just before it
+// - which is what a material draw does - can be dumped and identified.
+struct CaptureRing {
+    UINT w = 0, h = 0;
+    D3DFORMAT fmt = D3DFMT_UNKNOWN;
+    uint64_t hash = 0;
+    bool valid = false;
+    std::vector<uint8_t> data;
+};
+static const int kRing = 16;
+static CaptureRing g_ring[kRing];
+static int  g_ringPos = 0;
+static bool g_markerSeen = false;
+static int  g_armed = 0;
 
 static void Log(const char* fmt, ...) {
     if (!g_log) return;
@@ -99,8 +117,12 @@ static void LoadConfig() {
     g_capture = iniInt("general", "capture", 0, ini) != 0;
     iniStr("general", "capturesdir", "capture", g_capturesDir, MAX_PATH, ini);
     g_captureMin = (UINT)iniInt("general", "capture_min", 512, ini);
-    Log("config: enabled=%d apply=%d texturesDir=%s capture=%d min=%u",
-        g_enabled ? 1 : 0, g_apply ? 1 : 0, g_texturesDir, g_capture ? 1 : 0, g_captureMin);
+    char mh[64] = "0";
+    iniStr("general", "marker_hash", "0", mh, sizeof(mh), ini);
+    g_markerHash = _strtoui64(mh, nullptr, 0);
+    Log("config: enabled=%d apply=%d texturesDir=%s capture=%d min=%u marker=%016llX",
+        g_enabled ? 1 : 0, g_apply ? 1 : 0, g_texturesDir, g_capture ? 1 : 0,
+        g_captureMin, (unsigned long long)g_markerHash);
 }
 
 // ---------------------------------------------------------------------------
@@ -257,16 +279,28 @@ static bool WriteDdsMip0(const char* path, UINT w, UINT h, D3DFORMAT fmt,
     return true;
 }
 
+static void DumpOne(UINT w, UINT h, D3DFORMAT fmt, uint64_t hv,
+                    const uint8_t* data, size_t size, const char* tag) {
+    char dir[MAX_PATH]; BuildPath(g_capturesDir, dir, sizeof(dir));
+    CreateDirectoryA(dir, nullptr);
+    const char* fc = (fmt == D3DFMT_DXT1) ? "dxt1" : "dxt5";
+    char path[MAX_PATH];
+    _snprintf_s(path, _TRUNCATE, "%s\\%s_%ux%u_%s_%016llX.dds", dir, tag, w, h, fc,
+                (unsigned long long)hv);
+    if (WriteDdsMip0(path, w, h, fmt, data, size))
+        Log("DUMP %s %ux%u %s %016llX", tag, w, h, fc, (unsigned long long)hv);
+}
+
 static void MaybeCapture(IDirect3DTexture9* t) {
     if (!g_capture || !t) return;
     // Inspect each texture pointer exactly once. If the seen-set is full, STOP
-    // capturing entirely - the previous version fell through and re-locked every
-    // unseen texture on every bind, which is what tanked the frame rate.
+    // capturing entirely - a fall-through previously re-locked every unseen
+    // texture on every bind, which is what tanked the frame rate.
     AcquireSRWLockExclusive(&g_captureLock);
     for (int i = 0; i < g_capSeenCount; ++i)
         if (g_capSeen[i] == t) { ReleaseSRWLockExclusive(&g_captureLock); return; }
     if (g_capSeenCount >= (int)(sizeof(g_capSeen) / sizeof(g_capSeen[0]))) {
-        g_capture = false;   // stop, do not rescan
+        g_capture = false;
         ReleaseSRWLockExclusive(&g_captureLock);
         Log("capture: seen-set full - capture disabled");
         return;
@@ -277,7 +311,10 @@ static void MaybeCapture(IDirect3DTexture9* t) {
     D3DSURFACE_DESC d;
     if (FAILED(t->GetLevelDesc(0, &d))) return;
     if (d.Format != D3DFMT_DXT1 && d.Format != D3DFMT_DXT5) return;
-    if (d.Width < g_captureMin || d.Height < g_captureMin) return;
+    // Marker mode hashes everything down to 256 px so the laser marker is seen;
+    // plain capture honours capture_min.
+    const UINT floor = g_markerHash ? 256 : g_captureMin;
+    if (d.Width < floor || d.Height < floor) return;
     D3DLOCKED_RECT lr;
     if (FAILED(t->LockRect(0, &lr, nullptr, D3DLOCK_READONLY))) return;
     const int blk = (d.Format == D3DFMT_DXT1) ? 8 : 16;
@@ -290,21 +327,31 @@ static void MaybeCapture(IDirect3DTexture9* t) {
     t->UnlockRect(0);
     const uint64_t hv = Fnv1a64(data.data(), data.size());
 
+    bool dumpThis = false, dumpRing = false;
     AcquireSRWLockExclusive(&g_captureLock);
-    for (int i = 0; i < g_capturedCount; ++i)
-        if (g_captured[i] == hv) { ReleaseSRWLockExclusive(&g_captureLock); return; }
-    if (g_capturedCount >= kCaptureMax) { ReleaseSRWLockExclusive(&g_captureLock); return; }
-    g_captured[g_capturedCount++] = hv;
+    if (g_markerHash) {
+        CaptureRing& r = g_ring[g_ringPos];
+        r.w = d.Width; r.h = d.Height; r.fmt = d.Format; r.hash = hv; r.valid = true;
+        r.data.assign(data.begin(), data.end());
+        g_ringPos = (g_ringPos + 1) % kRing;
+        if (hv == g_markerHash) { g_markerSeen = true; g_armed = 24; dumpRing = true; }
+        else if (g_armed > 0) { --g_armed; dumpThis = true; }
+    } else {
+        bool dup = false;
+        for (int i = 0; i < g_capturedCount; ++i) if (g_captured[i] == hv) { dup = true; break; }
+        if (!dup && g_capturedCount < kCaptureMax) { g_captured[g_capturedCount++] = hv; dumpThis = true; }
+    }
+    std::vector<CaptureRing> ringCopy;
+    if (dumpRing) { for (int i = 0; i < kRing; ++i) ringCopy.push_back(g_ring[i]); }
     ReleaseSRWLockExclusive(&g_captureLock);
 
-    char dir[MAX_PATH]; BuildPath(g_capturesDir, dir, sizeof(dir));
-    CreateDirectoryA(dir, nullptr);
-    const char* fc = (d.Format == D3DFMT_DXT1) ? "dxt1" : "dxt5";
-    char path[MAX_PATH];
-    _snprintf_s(path, _TRUNCATE, "%s\\%ux%u_%s_%016llX.dds", dir, d.Width, d.Height,
-                fc, (unsigned long long)hv);
-    if (WriteDdsMip0(path, d.Width, d.Height, d.Format, data.data(), data.size()))
-        Log("CAPTURE %ux%u %s %016llX", d.Width, d.Height, fc, (unsigned long long)hv);
+    if (dumpThis) DumpOne(d.Width, d.Height, d.Format, hv, data.data(), data.size(),
+                          g_markerHash ? "pistol" : "cap");
+    if (dumpRing) {
+        Log("MARKER %016llX - dumping %d recent textures", (unsigned long long)hv, kRing);
+        for (const CaptureRing& e : ringCopy)
+            if (e.valid) DumpOne(e.w, e.h, e.fmt, e.hash, e.data.data(), e.data.size(), "pistol");
+    }
 }
 
 // ---------------------------------------------------------------------------
