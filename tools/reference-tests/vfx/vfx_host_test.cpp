@@ -9,6 +9,7 @@
 #include "../../../spikes/view_matrix/vfx_plugin.h"
 #include "../../../spikes/view_matrix/vfx_host.h"
 #include "../../../spikes/view_matrix/vfx_draw.h"
+#include "../../../spikes/view_matrix/vfx_atlas_io.h"
 
 using namespace singularity_vfx;
 

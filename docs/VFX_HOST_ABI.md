@@ -74,6 +74,29 @@ passes either.
   position, direction, size) and returns the count (<= capacity). Bounded pool.
 * Ship an atlas manifest (next section) and a clipId -> UV mapping description.
 
+## Real atlases (already prepared)
+
+`tools/vfx-plugin-stub/make_vfx_atlases.py` builds the four atlases from the CC0
+packs into `vfx_muzzle.dds`, `vfx_smoke_white.dds`, `vfx_smoke_black.dds`,
+`vfx_blood.dds` (1024×1024 DXT5, full mip chain, 4×4 grid) plus the manifest:
+
+```powershell
+python tools/vfx-plugin-stub/make_vfx_atlases.py
+# -> C:\Users\Trilex\vr-mods\downloads\vfx-20261008\built\*.dds + manifest
+```
+
+`vfx_atlas_io.h` loads them with a tiny raw-DDS uploader (no PNG decoder, no
+D3DX):
+
+```cpp
+if (!singularity_vfx::host::BuildAtlasFromDir(dev, atlas, "<exeDir>\\vfx_atlas"))
+    singularity_vfx::host::BuildPlaceholderAtlas(dev, atlas);   // fallback
+```
+
+`build.ps1 -Install` copies `SingularityVfx.dll` to Binaries and the four DDS +
+manifest to `Binaries\vfx_atlas\`. The atlases are CC0 third-party derivatives and
+stay outside the repo (only the generator + manifest are tracked).
+
 ## Atlas manifest (produced by agent 2)
 
 Small 1024×1024 RGBA atlases (one for muzzle/additive, smoke/alpha, blood/alpha)

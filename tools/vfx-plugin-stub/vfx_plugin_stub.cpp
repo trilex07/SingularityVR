@@ -38,10 +38,10 @@ ClipParams ParamsFor(VfxClip id) {
     case VfxClip::MuzzleFireLarge:  return {3, 30.0f, 0.060f, 0.0f,  VfxBlend::Additive};
     case VfxClip::MuzzleFireHeavy:  return {3, 24.0f, 0.075f, 0.0f,  VfxBlend::Additive};
     case VfxClip::MuzzleFireEnergy: return {3, 30.0f, 0.055f, 0.0f,  VfxBlend::Additive};
-    case VfxClip::SmokeWhite:       return {25, 30.0f, 0.070f, 0.050f, VfxBlend::Alpha};
-    case VfxClip::SmokeBlack:       return {25, 30.0f, 0.085f, 0.060f, VfxBlend::Alpha};
+    case VfxClip::SmokeWhite:       return {16, 30.0f, 0.070f, 0.050f, VfxBlend::Alpha};
+    case VfxClip::SmokeBlack:       return {16, 30.0f, 0.085f, 0.060f, VfxBlend::Alpha};
     case VfxClip::BloodSplash:      return {6, 30.0f, 0.040f, 0.015f, VfxBlend::Alpha};
-    case VfxClip::BloodHitAlt:      return {16, 30.0f, 0.045f, 0.015f, VfxBlend::Alpha};
+    case VfxClip::BloodHitAlt:      return {14, 30.0f, 0.045f, 0.015f, VfxBlend::Alpha};
     default:                        return {1, 30.0f, 0.050f, 0.0f,  VfxBlend::Alpha};
     }
 }

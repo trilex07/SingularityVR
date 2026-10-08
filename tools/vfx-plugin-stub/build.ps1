@@ -4,7 +4,8 @@
 #   DLL is a clean kill-switch, but dropping one in enables the effects.
 param(
     [switch]$Install,
-    [string]$GameBin = "C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries"
+    [string]$GameBin = "C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries",
+    [string]$AtlasDir = "C:\Users\Trilex\vr-mods\downloads\vfx-20261008\built"
 )
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -28,8 +29,16 @@ try {
     if ($Install) {
         if (-not (Test-Path $GameBin)) { throw "game Binaries not found: $GameBin" }
         Copy-Item (Join-Path $here "SingularityVfx.dll") $GameBin -Force
-        Copy-Item (Join-Path $here "vfx_atlas_manifest.json") $GameBin -Force
-        Write-Host "Installed SingularityVfx.dll + vfx_atlas_manifest.json to: $GameBin"
+
+        $atlasDst = Join-Path $GameBin "vfx_atlas"
+        New-Item -ItemType Directory -Force -Path $atlasDst | Out-Null
+        $dds = Get-ChildItem $AtlasDir -Filter "vfx_*.dds" -ErrorAction SilentlyContinue
+        if (-not $dds) { throw "no atlas DDS in $AtlasDir (run make_vfx_atlases.py first)" }
+        $dds | ForEach-Object { Copy-Item $_.FullName $atlasDst -Force }
+        Copy-Item (Join-Path $here "vfx_atlas_manifest.json") $atlasDst -Force
+
+        Write-Host "Installed SingularityVfx.dll to $GameBin and $($dds.Count) atlases to $atlasDst"
+        Write-Warning "Point the host at <exeDir>\vfx_atlas (BuildAtlasFromDir) or it uses the placeholder atlas."
     }
 } finally {
     Pop-Location
