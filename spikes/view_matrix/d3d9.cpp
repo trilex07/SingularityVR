@@ -10954,6 +10954,19 @@ static void VfxCaptureEyeMat(const float* mat, int conv, int eye) {
     g_vfxEyeConv[eye] = conv;
     g_vfxEyeMatValid[eye] = true;
 }
+// VFX Present path: the game's g_camMats are INVALID by Present time (log-proven
+// slot=-1 at 5264x2684 with camUsed=1), so snapshot the base camera matrix during
+// the frame and build the per-eye matrices from it at Present, exactly as
+// DrawLaserSight does. Without this the item projection has no matrix to use.
+static float g_vfxBaseCam[16];
+static int   g_vfxBaseCamConv = CONV_ROW;
+static bool  g_vfxBaseCamValid = false;
+static void VfxCaptureBaseCam(const float* mat, int conv) {
+    if (!mat) return;
+    memcpy(g_vfxBaseCam, mat, sizeof(g_vfxBaseCam));
+    g_vfxBaseCamConv = conv;
+    g_vfxBaseCamValid = true;
+}
 
 template <typename DrawFn>
 HRESULT StereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
@@ -11160,7 +11173,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             const CamMatSlot& cs = g_camMats[slots[i]];
             memcpy(mat, cs.m, sizeof(mat));
             ApplyEyeRemap(reinterpret_cast<Reg4*>(mat), cs.conv, -0.5f);
-            if (i == 0 && !g_thisDrawMoved) VfxCaptureEyeMat(mat, cs.conv, 0);
+            if (i == 0 && !g_thisDrawMoved) { VfxCaptureEyeMat(mat, cs.conv, 0); VfxCaptureBaseCam(cs.m, cs.conv); }
             if (g_thisDrawMoved) {
                 // Pivot on the camera: the gun hangs off the view, so turning it about the eye is
                 // what makes it point where the controller points. Pivoting on the world origin
@@ -11198,7 +11211,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             // move and must happen before clip space is rescaled.
             ApplyOffset(reinterpret_cast<Reg4*>(mat), cs.conv, g_eyeDeltaUU);
             ApplyEyeRemap(reinterpret_cast<Reg4*>(mat), cs.conv, +0.5f);
-            if (i == 0 && !g_thisDrawMoved) VfxCaptureEyeMat(mat, cs.conv, 1);
+            if (i == 0 && !g_thisDrawMoved) { VfxCaptureEyeMat(mat, cs.conv, 1); VfxCaptureBaseCam(cs.m, cs.conv); }
             if (g_thisDrawMoved) {
                 // Pivot on the camera: the gun hangs off the view, so turning it about the eye is
                 // what makes it point where the controller points. Pivoting on the world origin
@@ -20931,14 +20944,38 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
     if (Rd(g_vrUiMenu) || !g_vfxAtlasBuilt) return;
     // Drain the game-thread fire mailbox here too (Present is the owner if the
     // scene path is off) and advance effect ageing.
-    if (InterlockedExchange(&g_vfxFirePending, 0)) { g_vfx.OnFire(g_vfxFireMail); InterlockedIncrement(&g_vfxFires); }
+    const bool drained = InterlockedExchange(&g_vfxFirePending, 0) != 0;
+    if (drained) { g_vfx.OnFire(g_vfxFireMail); InterlockedIncrement(&g_vfxFires); }
 
     int n = g_vfx.Collect(singularity_vfx::VfxRenderPass::Gameplay, g_vfxItems, 32);
     if (n > 32) n = 32;
-    int slot = -1;
-    for (int i = 0; i < g_camMatUsed; ++i) if (g_camMats[i].valid) { slot = i; break; }
     D3DVIEWPORT9 vp{};
     if (FAILED(dev->GetViewport(&vp)) || vp.Width < 8) return;
+    {
+        static int vfxOvLog = 0;
+        if (vfxOvLog < 12 && (drained || n > 0)) {
+            ++vfxOvLog;
+            Log("VFX overlay: n=%d baseCam=%d camUsed=%d vp=%ux%u atlas=%d", n,
+                g_vfxBaseCamValid ? 1 : 0, g_camMatUsed, (unsigned)vp.Width, (unsigned)vp.Height, g_vfxAtlas.count);
+        }
+    }
+
+    // DIAG (VfxDiag=1): fixed-screen cyan dot per eye. ClearRects needs no render
+    // state, so it stays OUTSIDE the state block below.
+    if (Rd(g_vfxDiag)) {
+        const D3DRECT dots[2] = {
+            { vp.X + (LONG)(vp.Width * 0.25f) - 14, vp.Y + (LONG)(vp.Height * 0.5f) - 14,
+              vp.X + (LONG)(vp.Width * 0.25f) + 14, vp.Y + (LONG)(vp.Height * 0.5f) + 14 },
+            { vp.X + (LONG)(vp.Width * 0.75f) - 14, vp.Y + (LONG)(vp.Height * 0.5f) - 14,
+              vp.X + (LONG)(vp.Width * 0.75f) + 14, vp.Y + (LONG)(vp.Height * 0.5f) + 14 } };
+        ClearRects(dev, dots, 2, 0xFF00FFFF);
+    }
+
+    // Nothing to draw: skip the entire state save/restore. Without this the overlay
+    // captured+applied a full D3DSBT_ALL state block EVERY frame even with zero
+    // items - a per-frame cost the laser/wrist also pay, which is why the frame got
+    // heavier. Now that cost is paid only while effects are alive.
+    if (n <= 0 || !g_vfxBaseCamValid) return;
 
     if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) return;
     if (FAILED(g_wristState->Capture())) return;
@@ -20954,7 +20991,6 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
     dev->GetRenderState(D3DRS_CULLMODE, &oldCull);
     dev->GetRenderState(D3DRS_LIGHTING, &oldLit);
     dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &oldSc);
-
     dev->SetVertexShader(nullptr); dev->SetPixelShader(nullptr);
     dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
     dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);   // over everything, like the laser
@@ -20970,29 +21006,15 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
     dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
     dev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
     dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-
-    // DIAG (VfxDiag=1): fixed-screen cyan dot in each eye, independent of items -
-    // proves THIS path draws at all before anything is blamed on position/texture.
-    if (Rd(g_vfxDiag)) {
-        const LONG cx = vp.X + (LONG)(vp.Width * 0.25f) + 0 * (LONG)(vp.Width * 0.5f);
-        const D3DRECT dots[2] = {
-            { vp.X + (LONG)(vp.Width * 0.25f) - 14, vp.Y + (LONG)(vp.Height * 0.5f) - 14,
-              vp.X + (LONG)(vp.Width * 0.25f) + 14, vp.Y + (LONG)(vp.Height * 0.5f) + 14 },
-            { vp.X + (LONG)(vp.Width * 0.75f) - 14, vp.Y + (LONG)(vp.Height * 0.5f) - 14,
-              vp.X + (LONG)(vp.Width * 0.75f) + 14, vp.Y + (LONG)(vp.Height * 0.5f) + 14 } };
-        (void)cx;
-        ClearRects(dev, dots, 2, 0xFF00FFFF);
-    }
-
-    if (n > 0 && slot >= 0) {
+    {
         const float m2u = MetresToUU();
         if (m2u > 0.0f && std::isfinite(m2u)) {
             for (int eye = 0; eye < 2; ++eye) {
-                float m[16]; memcpy(m, g_camMats[slot].m, sizeof(m));
-                const int conv = g_camMats[slot].conv;
+                float m[16]; memcpy(m, g_vfxBaseCam, sizeof(m));
+                const int conv = g_vfxBaseCamConv;
                 if (eye) ApplyOffset(reinterpret_cast<Reg4*>(m), conv, g_eyeDeltaUU);
                 ApplyEyeRemap(reinterpret_cast<Reg4*>(m), conv, eye ? +0.5f : -0.5f);
-                const float* view = g_camMats[slot].m;
+                const float* view = g_vfxBaseCam;
                 float right[3], up[3]; float rl = 0, ul = 0;
                 for (int i = 0; i < 3; ++i) {
                     right[i] = view[conv == CONV_ROW ? i * 4 : i];
