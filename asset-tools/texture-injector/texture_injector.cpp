@@ -52,10 +52,10 @@ static CRITICAL_SECTION g_logLock;
 static FILE*     g_log = nullptr;
 
 // capture state
-static const int kCaptureMax = 64;
+static const int kCaptureMax = 400;
 static uint64_t  g_captured[kCaptureMax];
 static int       g_capturedCount = 0;
-static IDirect3DTexture9* g_capSeen[kCaptureMax * 4];
+static IDirect3DTexture9* g_capSeen[kCaptureMax * 10];
 static int       g_capSeenCount = 0;
 static SRWLOCK   g_captureLock = SRWLOCK_INIT;
 
@@ -259,12 +259,19 @@ static bool WriteDdsMip0(const char* path, UINT w, UINT h, D3DFORMAT fmt,
 
 static void MaybeCapture(IDirect3DTexture9* t) {
     if (!g_capture || !t) return;
-    // only ever inspect a given texture pointer once - this runs inside SetTexture
+    // Inspect each texture pointer exactly once. If the seen-set is full, STOP
+    // capturing entirely - the previous version fell through and re-locked every
+    // unseen texture on every bind, which is what tanked the frame rate.
     AcquireSRWLockExclusive(&g_captureLock);
     for (int i = 0; i < g_capSeenCount; ++i)
         if (g_capSeen[i] == t) { ReleaseSRWLockExclusive(&g_captureLock); return; }
-    if (g_capSeenCount < (int)(sizeof(g_capSeen) / sizeof(g_capSeen[0])))
-        g_capSeen[g_capSeenCount++] = t;
+    if (g_capSeenCount >= (int)(sizeof(g_capSeen) / sizeof(g_capSeen[0]))) {
+        g_capture = false;   // stop, do not rescan
+        ReleaseSRWLockExclusive(&g_captureLock);
+        Log("capture: seen-set full - capture disabled");
+        return;
+    }
+    g_capSeen[g_capSeenCount++] = t;
     ReleaseSRWLockExclusive(&g_captureLock);
 
     D3DSURFACE_DESC d;
