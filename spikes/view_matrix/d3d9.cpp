@@ -2760,23 +2760,45 @@ void ApplyMuzzleFxSuppression() {
         static ULONGLONG lastScanMs = 0;
         static int       emptyScans = 0;
         static LONG      lastGunVerts = 0;
+        static uintptr_t scanData = 0;
+        static int32_t   scanCount = 0;
+        static int32_t   scanIndex = 0;
+        static bool      scanActive = false;
+        // A complete GObjects walk costs several milliseconds on the render
+        // thread. Spread it over a bounded number of frames so weapon FX
+        // suppression cannot create a visible hitch on the first trigger pull.
+        constexpr int32_t kScanBudget = 2048;
         const ULONGLONG nowMs = GetTickCount64();
         const LONG gv = Rd(g_gunVerts);
-        if (gv != lastGunVerts) { lastGunVerts = gv; emptyScans = 0; lastScanMs = 0; }
+        if (gv != lastGunVerts) {
+            lastGunVerts = gv; emptyScans = 0; lastScanMs = 0;
+            scanData = 0; scanCount = 0; scanIndex = 0; scanActive = false;
+        }
         const ULONGLONG waitMs = (emptyScans >= 3) ? 15000 : 2000;
-        if (lastScanMs && nowMs - lastScanMs < waitMs) return;
-        lastScanMs = nowMs;
-        g_fxN = 0;
-        InterlockedExchange(&g_fxApplied, 0);
-        if (!Readable((void*)kGObjectsTArray, 12)) return;
-        uintptr_t data = *reinterpret_cast<uintptr_t*>(kGObjectsTArray);
-        int32_t count = *reinterpret_cast<int32_t*>(kGObjectsTArray + 4);
-        if (!data || count <= 0) return;
-        uintptr_t* objs = reinterpret_cast<uintptr_t*>(data);
+        if (!scanActive) {
+            if (lastScanMs && nowMs - lastScanMs < waitMs) return;
+            lastScanMs = nowMs;
+            g_fxN = 0;
+            InterlockedExchange(&g_fxApplied, 0);
+            if (!Readable((void*)kGObjectsTArray, 12)) return;
+            scanData = *reinterpret_cast<uintptr_t*>(kGObjectsTArray);
+            scanCount = *reinterpret_cast<int32_t*>(kGObjectsTArray + 4);
+            if (!scanData || scanCount <= 0) return;
+            scanIndex = 0;
+            scanActive = true;
+        }
+        if (!Readable((void*)scanData, sizeof(uintptr_t))) {
+            scanActive = false;
+            scanData = 0; scanCount = 0; scanIndex = 0;
+            return;
+        }
+        uintptr_t* objs = reinterpret_cast<uintptr_t*>(scanData);
+        const int32_t end = (scanIndex + kScanBudget < scanCount) ?
+            scanIndex + kScanBudget : scanCount;
         const int offs[5] = { g_offMuzzle1st, g_offMuzzleLoop1st, g_offMuzzleIron,
                               g_offMuzzleLoopIron, g_offMuzzleEmitter };
-        for (int32_t i = 0; i < count && g_fxN < kFxMax; ++i) {
-            uintptr_t o = objs[i];
+        for (; scanIndex < end && g_fxN < kFxMax; ++scanIndex) {
+            uintptr_t o = objs[scanIndex];
             if (!o || !Readable((void*)o, 0x40)) continue;
             if (*reinterpret_cast<uintptr_t*>(o + OBJ_CLASS) != g_weaponFxClass) continue;
             // LIVE only. Nine of the ten RvWeaponFX objects in memory are class archetypes, and editing
@@ -2793,6 +2815,11 @@ void ApplyMuzzleFxSuppression() {
             g_fx[g_fxN].have = true;
             ++g_fxN;
         }
+        // If the pool filled, no later object can be used safely anyway. End
+        // this bounded scan now; otherwise advance to the next chunk.
+        if (g_fxN >= kFxMax) scanIndex = scanCount;
+        if (scanIndex < scanCount) return;
+        scanActive = false;
         if (g_fxN) {
             emptyScans = 0;
             Log("muzzle fx: %d live RvWeaponFX object(s) found, originals saved", g_fxN);
