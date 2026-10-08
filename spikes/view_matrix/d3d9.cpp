@@ -2119,6 +2119,7 @@ extern float g_hmdOffset[3];
 extern volatile LONG g_worldScalePct;
 extern volatile LONG g_gunScalePct;   // hub round A (defined with the gun transform)
 extern volatile LONG g_shadowMode;    // hub round 4 (defined with the shadow stage mask)
+extern volatile LONG g_shadowTest, g_shadowTestDropped;
 extern volatile LONG g_skipExtraTarget;   // hub round 4 (NUMPAD0 flag, defined with render targets)
 float MetresToUU();
 
@@ -6294,6 +6295,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_CINESTICK, PR_CINECAM, PR_SWAPSTICKS, PR_LEFTHAND, PR_WEAPONFX, PR_MUZZLEFX, PR_WORLDSCALE,
        PR_AIMPARTS,
        PR_SHADOWMODE, PR_DROPEXTRA,   // hub round 4: shadow sampling treatment + extra-target drop
+       PR_SHADOWTEST, PR_VFXORIGIN,   // reversible shadow-source + muzzle-anchor A/B tests
        PR_VFXHOST, PR_VFXDRAW, PR_VFXDIAG,   // VFX host testing rows (see DrawVfxOverlay)
        // ⭐ run 217: the laser and the per-weapon alignment rows.
        PR_LASER, PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH,
@@ -6366,14 +6368,15 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // ⭐ run 230: NOTE SIZE is the HUD-inset row this page was created expecting. It belongs here
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
-    { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE, PR_BACK },
+    { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE,
+      PR_VFXHOST, PR_VFXDIAG, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
     // (1,400 vs 3,800 draws was measured) and a cross-run comparison is worthless. That mistake cost a
     // test run and it was mine.
-    { PR_OCCLUSION, PR_WEAPONFX, PR_AIMPARTS, PR_SHADOWMODE, PR_DROPEXTRA,
-      PR_VFXHOST, PR_VFXDRAW, PR_VFXDIAG, PR_DEBUG, PR_BACK },
+    { PR_OCCLUSION, PR_WEAPONFX, PR_AIMPARTS, PR_SHADOWMODE, PR_SHADOWTEST, PR_DROPEXTRA,
+      PR_VFXDRAW, PR_VFXORIGIN, PR_DEBUG, PR_BACK },
     { PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH, PR_BACK },
     // ⭐ run 237: its own page, not a row on WEAPON ALIGN. That page's values are PER WEAPON and
     // change meaning when you switch guns; these are one object held one way, always the same.
@@ -6406,7 +6409,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
       PR_TMDHIDE, PR_BACK_TMD },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 10, 8, 3, 8, 10, 7, 10, 6, 8 };   // ⭐ run 230: DISPLAY 5 -> 6; ⭐ run 237: root 7 -> 8 and a TMD page; ⭐ run 249: TMD 17 -> 10 + two sub-pages; ⭐ run 250: TMD MESH 5 -> 7; ⭐ run 251: + TRI MODE; cutscene-flat: root 8 -> 10 (CUTSCENE VIEW, CINEMA MATTE); hub round A: DISPLAY 6 -> 7 (GUN SIZE); hub round 4: DISPLAY 7 -> 8 (MENU OVERLAY), ADVANCED 5 -> 7 (SHADOW, DROPEXTRA); VFX: ADVANCED 7 -> 10 (VFX HOST/DRAW/DIAG)
+const int kPageCount[kPanelPages] = { 10, 8, 3, 10, 10, 7, 10, 6, 8 };   // DISPLAY + VFX HOST/DIAG; ADVANCED + shadow/VFX A/B rows (10 max)
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -6471,6 +6474,7 @@ extern volatile LONG g_fgRideAll;
 extern volatile LONG g_hideMuzzleFx;
 // Defined with the VFX host block (below); declared here so the panel rows can read them.
 extern volatile LONG g_vfxHost, g_vfxDraw, g_vfxDiag;
+extern volatile LONG g_vfxMuzzleOrigin, g_shadowTest;
 // Defined beside the turn code, which is the first thing that reads them.
 extern volatile LONG g_cineStickTurn;
 extern volatile LONG g_cutsceneLockCamera;
@@ -6586,6 +6590,12 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_skipExtraTarget, 0, 0));
             WritePrivateProfileStringA("Render", "DropExtraTarget", v, path); return;
+        case PR_SHADOWTEST:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_shadowTest));
+            WritePrivateProfileStringA("Render", "ShadowTest", v, path); return;
+        case PR_VFXORIGIN:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_vfxMuzzleOrigin));
+            WritePrivateProfileStringA("Render", "VfxMuzzleOrigin", v, path); return;
         case PR_VFXHOST:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", InterlockedCompareExchange(&g_vfxHost, 0, 0));
             WritePrivateProfileStringA("Render", "VfxHost", v, path); return;
@@ -6989,6 +6999,14 @@ void PanelRowText(int row, char* out, size_t cap) {
             _snprintf_s(out, cap, _TRUNCATE, "DROP EXTRA     %s",
                         InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? "ON (TEST)" : "OFF");
             break;
+        case PR_SHADOWTEST:
+            _snprintf_s(out, cap, _TRUNCATE, "SHADOW TEST   %s",
+                        Rd(g_shadowTest) ? "DROP MAP PASSES" : "NORMAL");
+            break;
+        case PR_VFXORIGIN:
+            _snprintf_s(out, cap, _TRUNCATE, "VFX ORIGIN    %s",
+                        Rd(g_vfxMuzzleOrigin) ? "GUN PIVOT" : "CAMERA ANCHOR");
+            break;
         case PR_VFXHOST:
             _snprintf_s(out, cap, _TRUNCATE, "VFX HOST       %s",
                         InterlockedCompareExchange(&g_vfxHost, 0, 0) ? "ON" : "OFF");
@@ -7157,6 +7175,16 @@ void PanelAdjust(int row, int dir) {
             Log("DROP EXTRA -> %s (scene-sized non-colour target draws %s)",
                 InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? "ON" : "OFF",
                 InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? "DROPPED" : "drawn");
+            break;
+        case PR_SHADOWTEST:
+            InterlockedExchange(&g_shadowTest, Rd(g_shadowTest) ? 0 : 1);
+            Log("SHADOW TEST -> %ld (%s; temporary A/B, restore NORMAL after capture)",
+                Rd(g_shadowTest), Rd(g_shadowTest) ? "all classified shadow-map draws dropped" : "normal shadow draws");
+            break;
+        case PR_VFXORIGIN:
+            InterlockedExchange(&g_vfxMuzzleOrigin, Rd(g_vfxMuzzleOrigin) ? 0 : 1);
+            Log("VFX ORIGIN -> %s (GunPivotWorld follows the controller; Camera Anchor is legacy)",
+                Rd(g_vfxMuzzleOrigin) ? "GUN PIVOT" : "CAMERA ANCHOR");
             break;
         case PR_VFXHOST:
             InterlockedExchange(&g_vfxHost, Rd(g_vfxHost) ? 0 : 1);
@@ -12254,7 +12282,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     InterlockedIncrement(&g_frameDrawIdx);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     ++g_vidFrameDraws;
-    if(g_boundShaderLayout.shadow){ShadowMode3NoteGeneration(dev);return g_origDrawPrim(dev,t,start,count);}
+    if(g_boundShaderLayout.shadow){
+        if (Rd(g_shadowTest)) { InterlockedIncrement(&g_shadowTestDropped); return D3D_OK; }
+        ShadowMode3NoteGeneration(dev);return g_origDrawPrim(dev,t,start,count);
+    }
     if (count <= 4) VidProbeRecord(dev, 0, t, count, nullptr, 0);
     // No vertex data on this path, so no bounding box - but its PRESENCE still matters. If the flash
     // turns out to be here rather than on a user-pointer path, the quad classifier is not involved at
@@ -14966,7 +14997,7 @@ static bool TrackFpCaster(IDirect3DDevice9* dev,INT baseVertex,UINT minIndex,
     if(!weapon || !VrModeOn())return false;
     const bool shadow=g_boundShaderLayout.shadow;
     if(!shadow && !(FgMatchWindow() && FgMatchesSignature(vertices)))return false;
-    if(shadow && (Rd(g_rtIsScene) || Rd(g_vrShadows) || !g_fpCasterCount))return false;
+    if(shadow && (Rd(g_rtIsScene) || Rd(g_vrShadows) || Rd(g_shadowTest)==2 || !g_fpCasterCount))return false;
     IDirect3DVertexBuffer9* vb=nullptr;IDirect3DIndexBuffer9* ib=nullptr;
     UINT offset=0,stride=0;
     dev->GetStreamSource(0,&vb,&offset,&stride);dev->GetIndices(&ib);
@@ -14994,6 +15025,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     CaptureArmPaletteTrace(dev,baseVertex,minIndex,numVertices,startIndex,primCount);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     if(g_boundShaderLayout.shadow)InterlockedIncrement(&g_vrCounters.fpShadowDepthDraws);
+    if(g_boundShaderLayout.shadow && Rd(g_shadowTest)) {
+        InterlockedIncrement(&g_shadowTestDropped); return D3D_OK;
+    }
     if (TrackFpCaster(dev,baseVertex,minIndex,numVertices,startIndex,primCount)) {
         InterlockedIncrement(&g_firstPersonShadowSkipped);InterlockedIncrement(&g_vrCounters.fpShadowDepthSkipped);return D3D_OK;
     }
@@ -16345,7 +16379,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawPrimUP) return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,2,t,primCount,0,0,0,0,vtxData,vtxStride);   // fix-I census
-    if(g_boundShaderLayout.shadow && g_origDrawPrimUP){ShadowMode3NoteGeneration(dev);return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);}
+    if(g_boundShaderLayout.shadow && g_origDrawPrimUP){
+        if (Rd(g_shadowTest)) { InterlockedIncrement(&g_shadowTestDropped); return D3D_OK; }
+        ShadowMode3NoteGeneration(dev);return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
+    }
     if (primCount<=4) CaptureShadowEvidence(dev);
     if (!g_origDrawPrimUP) return D3DERR_INVALIDCALL;
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
@@ -16481,8 +16518,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     if (!g_origDrawIndexedPrimUP) return D3DERR_INVALIDCALL;
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     // UP memory has no retained resource identity: do not suppress on vertex count.
-    if(g_boundShaderLayout.shadow)
-        {ShadowMode3NoteGeneration(dev);return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);}
+    if(g_boundShaderLayout.shadow) {
+        if (Rd(g_shadowTest)) { InterlockedIncrement(&g_shadowTestDropped); return D3D_OK; }
+        ShadowMode3NoteGeneration(dev);return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
+    }
     ++g_vidFrameDraws;
     if (primCount <= 4) VidProbeRecord(dev, 3, t, primCount, vtxData, vtxStride);
     if (UserPtrInert())
@@ -17136,6 +17175,11 @@ volatile LONG g_shadowStageMask = 0;
 // measured transient (tens/second), squares persist under 1, so 0/2 are the
 // A/B arms. Supplanted the boolean ShadowSampleMono.
 volatile LONG g_shadowMode = 1;
+// Hub diagnostic only: 0 normal, 1 drop every classified shadow-layout draw.
+// Restored immediately by cycling back to 0; use briefly to test whether the
+// visible ceiling/wall pattern is generated by the engine's dynamic shadow pass.
+volatile LONG g_shadowTest = 0;
+volatile LONG g_shadowTestDropped = 0;
 int g_drawsWhileShadowBound = 0, g_drawsShadowMono = 0, g_drawsShadowDropped = 0;
 // ShadowMode=3 (feature/shadow-mode3 pattern @54dd4bd): live census of which
 // constant slots hold a light-space matrix, refreshed from each shadow-layout
@@ -17274,6 +17318,9 @@ volatile LONG g_vfxHost = 1; // ini [Render] VfxHost, 1 = host seams live (DLL a
 volatile LONG g_vfxDraw = 2;
 // VfxDiag: 0 off, 1 fixed-screen cyan dot per eye (proves the overlay path draws).
 volatile LONG g_vfxDiag = 0;
+// Fire origin selector: 0 legacy camera anchor, 1 actual controller-ridden gun
+// pivot (GunPivotWorld). Default 1; permits live A/B without a rebuild.
+volatile LONG g_vfxMuzzleOrigin = 1;
 volatile LONG g_vfxFrame = 0; // Present serial; each eye draws VFX once per frame.
 static LONG g_vfxEyeDone[2] = { -1, -1 };
 static singularity_vfx::VfxFireEvent g_vfxFireMail;
@@ -19662,7 +19709,13 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
             // only fills the mailbox; the render thread drains it in VfxEyeDraw.
             if (firedWindow && FnIdx(kFnFireFirst) >= 0 && fnIdx == FnIdx(kFnFireFirst) &&
                 Rd(g_vfxHost)) {
-                float G[3]; GunAnchorWorld(G);
+                // Origin A/B: the old anchor is camera-relative and ignores the
+                // controller translation; the gun's visible pivot follows the
+                // actual rendered weapon. Default to the pivot so fire/smoke is
+                // attached to the held gun. Hub VFX ORIGIN can restore legacy for
+                // a direct in-headset comparison.
+                float G[3];
+                if (Rd(g_vfxMuzzleOrigin)) GunPivotWorld(G); else GunAnchorWorld(G);
                 float D[3]; GunAimDir(D);
                 const float m2u = MetresToUU();
                 if (m2u > 0.0f && std::isfinite(m2u) &&
@@ -23132,6 +23185,10 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     " (ShadowMode=%ld: 0=full split 1=mono 2=drop)", g_drawsWhileShadowBound, g_drawsShadowMono,
                     g_drawsShadowDropped, Rd(g_shadowMode));
             g_drawsWhileShadowBound = 0; g_drawsShadowMono = 0; g_drawsShadowDropped = 0;
+            const LONG shadowTestDropped = InterlockedExchange(&g_shadowTestDropped, 0);
+            if (Rd(g_shadowTest) || shadowTestDropped)
+                Log("    SHADOW TEST: drop-all=%ld classified shadow draws dropped this window=%ld",
+                    Rd(g_shadowTest), shadowTestDropped);
             // ShadowMode=3: generation drawn native-once, receiver draws with light
             // slots excluded from the remap. Nonzero native with an empty census mask
             // means the generation scan held no tracked slot - report, do not guess.
@@ -24623,6 +24680,11 @@ void LoadIniSettings() {
         if (sm < 0) sm = 0; if (sm > 3) sm = 3;
         InterlockedExchange(&g_shadowMode, sm);
     }
+    {
+        LONG st = GetPrivateProfileIntA("Render","ShadowTest",0,path);
+        if (st < 0) st = 0; if (st > 1) st = 1;
+        InterlockedExchange(&g_shadowTest, st);
+    }
     g_vrMenuLaser=GetPrivateProfileIntA("Render","VrMenuLaser",1,path)?1:0;
     LONG laserOpacity=GetPrivateProfileIntA("Render","VrMenuLaserOpacity",55,path);
     LONG laserWidth=GetPrivateProfileIntA("Render","VrMenuLaserWidth",100,path);
@@ -24653,8 +24715,10 @@ void LoadIniSettings() {
         InterlockedExchange(&g_vfxDraw, vd);
     }
     g_vfxDiag=GetPrivateProfileIntA("Render","VfxDiag",0,path)?1:0;
+    g_vfxMuzzleOrigin=GetPrivateProfileIntA("Render","VfxMuzzleOrigin",1,path)?1:0;
     Log("VFX host seams=%ld (VfxHost; plugin DLL absence still no-ops everything)",Rd(g_vfxHost));
     Log("VFX draw=%ld (0=off 1=scene/mid-scene 2=present/backbuffer), diag dot=%ld",Rd(g_vfxDraw),Rd(g_vfxDiag));
+    Log("VFX muzzle origin=%ld (0=legacy camera anchor 1=GunPivotWorld); shadow test=%ld (0=normal 1=drop all shadow-layout draws)",Rd(g_vfxMuzzleOrigin),Rd(g_shadowTest));
     g_vrUiDesktopProbe=GetPrivateProfileIntA("Diagnostic","VrUiDesktopProbe",0,path)?1:0;
     Log("VR menu pointer=%ld; native GFx viewport input; no desktop cursor movement",Rd(g_vrUiEnabled));
     Log("independent hands prototype=%d; shader CTAB required; verified SP sections only",g_independentHands);
