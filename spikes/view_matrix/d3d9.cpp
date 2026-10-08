@@ -7420,6 +7420,7 @@ extern LONG  g_gunSignYaw, g_gunSignPitch, g_gunSignRoll, g_gunFollowPos;
 extern LONG  g_gunSignPosZ, g_gunAnchorFwd, g_gunAnchorRight, g_gunAnchorUp;
 extern volatile LONG g_traceFromGun;
 extern volatile LONG g_gunSignCombo;
+extern volatile LONG g_gunScalePct;   // Fix-E/gunsize (defined with the gun transform)
 extern float g_aimPoseSignX, g_aimPoseSignY;
 
 // ---- ⭐ run 274: a SECOND interaction profile, for Valve Index controllers ----
@@ -7627,6 +7628,14 @@ bool InitXRInput() {
             g_gunAnchorFwd   = GetPrivateProfileIntA("Input", "GunAnchorFwd",   30, path);
             g_gunAnchorRight   = GetPrivateProfileIntA("Input", "GunAnchorRight",    9, path);
             g_gunAnchorUp    = GetPrivateProfileIntA("Input", "GunAnchorUp",    -13, path);
+            // Fix-E/gunsize: first-person mesh size about the gun pivot, percent.
+            // 100 = engine size. World scale, eye baseline and anchors are untouched.
+            {
+                LONG gs = GetPrivateProfileIntA("Input", "GunScalePct", 100, path);
+                if (gs < 25) gs = 25; if (gs > 400) gs = 400;
+                InterlockedExchange(&g_gunScalePct, gs);
+                Log("gun scale=%ld%% (first-person gun+hands size about the pivot; 100=engine size)", gs);
+            }
             // Which sign combination to START in. Set from the ini rather than by changing the
             // sign defaults, because changing those RENUMBERS the combos - which is what made
             // "combo 2" mean two different things in two sessions and cost a run.
@@ -12890,6 +12899,7 @@ LONG g_gunSignYaw = 1, g_gunSignPitch = -1, g_gunSignRoll = 1, g_gunFollowPos = 
 LONG g_gunSignPosZ = -1;                       // vertical translation came back flipped too
 LONG g_gunAnchorFwd = 25, g_gunAnchorRight = 8, g_gunAnchorUp = -8;   // engine units from the eye
 volatile LONG g_traceFromGun = 1;               // route weapon traces from the hand/gun pivot, not the eye
+volatile LONG g_gunScalePct = 100;              // Fix-E/gunsize: first-person mesh size %, 100 = engine size
 
 static void GunSigns(int& sy, int& sp, int& sr) {
     const LONG c = InterlockedCompareExchange(&g_gunSignCombo, 0, 0);
@@ -13095,8 +13105,21 @@ static void TmdAnchorWorld(float G[3]) {
 // ⚠ The run-201 head-offset correction is applied here too. Without it the TMD would sit at
 // `engine eye + H` while you view from `engine eye + hmdOffset`, and would slide against the view as
 // you lean - the same defect, and it would read as "the TMD drifts" rather than as a missing term.
-static void BuildTmdC(float C[4][4]) {
-    float G[3]; TmdAnchorWorld(G);
+// Fix-E/gunsize: uniform first-person mesh scale about the pivot H, applied to the
+// already-built C. Gun, riding arms/fragment and TMD attachments share this C, so one
+// knob sizes the whole rig in place. Row-vector convention (translation lives in row
+// 3): v' = v*R + T  ->  H + s*(v' - H), i.e. scale rows 0-2 and re-anchor row 3.
+// s=1 (100%) is identity. The laser starts at H, so it stays glued while the muzzle
+// mesh slides slightly toward/away from it - cosmetic at sane scales.
+inline void ApplyMeshScale(float C[4][4], const float H[3]) {
+    const LONG pct = InterlockedCompareExchange(&g_gunScalePct, 0, 0);
+    if (pct == 100) return;
+    const float s = (float)pct / 100.0f;
+    if (!(s >= 0.25f && s <= 4.0f)) return;   // refuse nonsense, never mirror/collapse
+    for (int i = 0; i < 3; ++i) { C[i][0] *= s; C[i][1] *= s; C[i][2] *= s; }
+    for (int j = 0; j < 3; ++j) C[3][j] = s * C[3][j] + (1.0f - s) * H[j];
+}
+static void BuildTmdC(float C[4][4]) {    float G[3]; TmdAnchorWorld(G);
     float H[3] = { G[0], G[1], G[2] };
     if (g_gunFollowPos) {
         H[0] = (float)Rd(g_offHandOffX) / kHandFixed;
@@ -13116,6 +13139,7 @@ static void BuildTmdC(float C[4][4]) {
         (int32_t)(sr * Rd(g_offHandDevRollUU)) + trimRoll,   // ⭐ run 245
         GunViewFrame() ? g_wantYaw : 0,
         H[0] - G[0], H[1] - G[1], H[2] - G[2]);
+    ApplyMeshScale(C, H);   // Fix-E/gunsize
 }
 
 // 0 = leave it where the engine put it, 1 = the gun hand, 2 = the OFF hand.
@@ -13157,6 +13181,7 @@ static void BuildGunC(float C[4][4]) {
         // assumed.
         GunViewFrame() ? g_wantYaw : 0,
         H[0] - G[0], H[1] - G[1], H[2] - G[2]);
+    ApplyMeshScale(C, H);   // Fix-E/gunsize
 }
 
 int g_independentHands=0; // Evidence-backed prototype, enabled explicitly in the test INI.
