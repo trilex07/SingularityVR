@@ -5100,6 +5100,11 @@ int32_t ClampDev(int32_t d, int32_t maxAbs) {
 }
 float g_maxRollDeg = 0.0f;       // largest magnitude seen this report window
 bool  g_haveCentre = false;
+// Fix-D/height: set by the camera-jump transition path so the next recentre re-seeds
+// yaw/base but keeps the standing position captured at the last deliberate recentre.
+// The room does not move on a level load; a slouch during loading must not shrink
+// the player. Manual MENU-recentre and F10 never set this - they capture full pose.
+volatile LONG g_keepCentrePos = 0;
 float g_centreYaw = 0.0f;
 int32_t g_baseYaw = 0;
 int   g_tick = 0;
@@ -9156,8 +9161,19 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             const int32_t ctlYaw = (ctl && Readable((void*)(ctl + ACTOR_ROTATION), 12))
                                  ? reinterpret_cast<int32_t*>(ctl + ACTOR_ROTATION)[1] : 0;
             g_baseYaw = haveCamYaw ? camYawNow : ctlYaw;
+            // Fix-D/height: keep the standing position across transition recentres.
+            // g_haveCentrePos still holds the pre-transition validity (the jump path
+            // clears only g_haveCentre), so a kept position is never an uninitialised
+            // one. Without a prior valid position, capture fresh as before.
+            const bool keepPos = InterlockedCompareExchange(&g_keepCentrePos, 0, 0) != 0 &&
+                                 g_haveCentrePos;
+            InterlockedExchange(&g_keepCentrePos, 0);
             // Midpoint of the eyes, so neither stereo eye starts biased against the centre.
             const bool haveBoth = (n >= 2);
+            if (keepPos) {
+                Log("recentred: keeping standing position from the last deliberate recentre"
+                    " (transition re-seeds yaw only)");
+            } else {
             g_centrePos[0] = haveBoth ? (views[0].pose.position.x + views[1].pose.position.x) * 0.5f
                                       : views[0].pose.position.x;
             g_centrePos[1] = haveBoth ? (views[0].pose.position.y + views[1].pose.position.y) * 0.5f
@@ -9165,6 +9181,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             g_centrePos[2] = haveBoth ? (views[0].pose.position.z + views[1].pose.position.z) * 0.5f
                                       : views[0].pose.position.z;
             g_haveCentrePos = (vs.viewStateFlags & XR_VIEW_STATE_POSITION_VALID_BIT) != 0;
+            }
             g_haveCentre = true;
 
             // ---- ⭐ the weapon's NEUTRAL, captured here (run 78) ----
@@ -9550,6 +9567,9 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 const float kJump = 20000.0f;          // UU; gameplay never steps this far
                 if (havePrev && d2 > kJump * kJump) {
                     g_haveCentre = false;
+                    // Fix-D/height: yaw/base will be re-seeded, but the standing height
+                    // stays whatever the last deliberate recentre captured (see flag).
+                    InterlockedExchange(&g_keepCentrePos, 1);
                     Log("camera jumped %.0f UU - level or menu transition, recentring so the base"
                         " yaw comes from where you are now rather than the last level", sqrtf(d2));
                 }
@@ -16757,6 +16777,15 @@ int g_drawsWhileShadowBound = 0, g_drawsShadowMono = 0;
 int g_menuSuppressFailMask = 0;
 // Fix-B/menu: per-window stage-0 bind/match counts while a menu is focused.
 int g_menuBindsWhileMenu = 0, g_menuSourceSets = 0;
+// Fix-C/menu round 3: per-stage bound flags + match counters. Measured tens of
+// thousands of stage-0 binds while focused with 0 matches, so the captured menu
+// is sampled on other stages. Render thread only.
+volatile LONG g_vrMenuStageBound[4] = { 0, 0, 0, 0 };
+int g_menuStageSets[4] = { 0, 0, 0, 0 };
+inline bool MenuSourceBoundAny() {
+    return Rd(g_vrMenuStageBound[0]) || Rd(g_vrMenuStageBound[1]) ||
+           Rd(g_vrMenuStageBound[2]) || Rd(g_vrMenuStageBound[3]);
+}
 static bool ProjectedShadowTexture(IDirect3DBaseTexture9* texture) {
     if(!texture||texture->GetType()!=D3DRTYPE_TEXTURE)return false;
     const unsigned slot=((uintptr_t)texture>>4)&255u;
@@ -16777,19 +16806,22 @@ static void ReleaseVrShadowResources() {
 // Proper fix: disable first-person arm/weapon shadow casting at engine level (bCastDynamicShadow=false).
 HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDirect3DBaseTexture9* texture) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::set_texture);
-    if(stage==0) {
+    // Fix-C/menu round 3: match the captured menu texture(s) on stages 0-3, not
+    // only stage 0. g_vrMenuSourceBound keeps its stage-0-only meaning for existing
+    // readers; the suppress gate uses any-of-4 (see MenuSourceBoundAny).
+    if (stage < 4) {
         bool menuSource = false;
         // Fix-B/menu: count stage-0 binds seen while a menu is focused, and how many
-        // match the captured source. If binds>0 and matches==0 across a menu session,
-        // the menu texture never arrives on stage 0 and the match strategy is wrong.
-        if (Rd(g_vrUiMenu)) ++g_menuBindsWhileMenu;
+        // match the captured source. (Kept on stage 0 for continuity of the series.)
+        if (stage == 0 && Rd(g_vrUiMenu)) ++g_menuBindsWhileMenu;
         if (Rd(g_vrUiMenu) && !Rd(g_vrMenuProviderDrawing) && texture && Rd(g_rtIsScene)) {
             if (g_vrMenuTexture && texture==g_vrMenuTexture) menuSource = true;
             for (unsigned i=0; !menuSource && i<g_vrMenuSourceCount; ++i)
                 if (texture==g_vrMenuSources[i]) menuSource = true;
         }
-        InterlockedExchange(&g_vrMenuSourceBound,menuSource?1:0);
-        if (menuSource) { InterlockedIncrement(&g_vrMenuSourceMatches); ++g_menuSourceSets; }
+        InterlockedExchange(&g_vrMenuStageBound[stage],menuSource?1:0);
+        if (menuSource) { InterlockedIncrement(&g_vrMenuSourceMatches); ++g_menuStageSets[stage]; if (stage==0) ++g_menuSourceSets; }
+        if (stage == 0) InterlockedExchange(&g_vrMenuSourceBound,menuSource?1:0);
     }
     if(VrModeOn() && !Rd(g_vrShadows) && ProjectedShadowTexture(texture)) {
         InterlockedIncrement(&g_shadowMapCandidates);
@@ -16807,8 +16839,9 @@ inline bool SuppressCapturedVrMenuDraw() {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::menu_classification);
     SyncVrMenuCaptureState();
     // Not a menu draw at all - the normal case for scene geometry. Source check first,
-    // so the fail mask below only ever describes menu-source draws.
-    if (!Rd(g_vrUiMenu) || !Rd(g_vrMenuSourceBound)) return false;
+    // so the fail mask below only ever describes menu-source draws. Any-of-stages-0-3
+    // since round 3 (the captured menu is sampled off stage 0).
+    if (!Rd(g_vrUiMenu) || !MenuSourceBoundAny()) return false;
     // Fix-4/menus round 2: suppressed=0 while the provider serves frames means the scene
     // keeps its own copy (nested views). Record WHY as a sticky per-window bitmask:
     // 1=noprovide 2=flat 4=shadow 8=providing-now 16=offscreen. Same allow/deny outcome
@@ -22057,10 +22090,12 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 Log("    menu-suppress miss mask=0x%X (1=noprovide 2=flat 4=shadow 8=providing-now 16=offscreen)", g_menuSuppressFailMask);
             g_menuSuppressFailMask = 0;
             // Fix-B/menu: did the menu texture ever reach stage 0 while focused?
+            // Fix-C/round 3: matches broken out per stage 0-3.
             if (g_menuBindsWhileMenu)
-                Log("    menu-source: %d stage-0 binds while menu focused, %d matched the captured source",
-                    g_menuBindsWhileMenu, g_menuSourceSets);
+                Log("    menu-source: %d stage-0 binds while menu focused, matches by stage 0-3: %d/%d/%d/%d",
+                    g_menuBindsWhileMenu, g_menuStageSets[0], g_menuStageSets[1], g_menuStageSets[2], g_menuStageSets[3]);
             g_menuBindsWhileMenu = 0; g_menuSourceSets = 0;
+            for (int ms = 0; ms < 4; ++ms) g_menuStageSets[ms] = 0;
             {
                 char regs[128] = {}; int n = 0;
                 for (int s = 0; s < g_camMatUsed && n < 100; ++s)
