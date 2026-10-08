@@ -133,6 +133,10 @@ void SyncVrMenuCaptureState() {
     if(g_vrMenuTexture){g_vrMenuTexture->Release();g_vrMenuTexture=nullptr;}
     for(unsigned i=0;i<g_vrMenuSourceCount;++i)if(g_vrMenuSources[i])g_vrMenuSources[i]->Release();
     memset(g_vrMenuSources,0,sizeof(g_vrMenuSources));g_vrMenuSourceCount=0;
+    // Fix-H/menu: the stage-bound flags below belong to these exact textures. Without
+    // clearing, a transition leaves stale bits that misattribute the next menu's draws
+    // until every stage rebinds. Transition-only, so the per-draw cost is untouched.
+    for(int sb=0;sb<4;++sb)InterlockedExchange(&g_vrMenuStageBound[sb],0);
     g_vrMenuTextureScore=1e9f;g_vrMenuSurface=0;
     InterlockedExchange(&g_vrMenuSourceBound,0);
     g_vrCaptureOwner.Invalidate(token);
