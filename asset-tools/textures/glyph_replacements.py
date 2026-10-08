@@ -97,8 +97,11 @@ def main() -> None:
         fmt = "PF_DXT5" if dds_fmt == "DXT5" else "PF_DXT1"
 
         ps = Image.open(Path(KENNEY) / ps_file).convert("RGBA").resize((w, h), Image.LANCZOS)
+        # Write both variant suffixes so the injector's A/B switch never drops a
+        # glyph (these are direct replacements, not upscales).
         out_path = out_root / f"{name}__B_ibp.dds"
         tp.save_dds_mips(out_path, mips(ps), dds_fmt)
+        tp.save_dds_mips(out_root / f"{name}__A_lanczos.dds", mips(ps), dds_fmt)
 
         results[name] = {
             "note": f"UI glyph replacement {ps_file}",
