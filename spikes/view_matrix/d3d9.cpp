@@ -8608,6 +8608,7 @@ void SyncXRInput(XrTime displayTime) {
         g_handPoseValid[i] = false;
         g_handPositionValid[i] = false;
         g_handTracked[i] = false;
+        g_handActionActive[i] = false;
         if (g_handSpace[i] == XR_NULL_HANDLE) continue;
         if (probePoseActivity && g_actHandPose != XR_NULL_HANDLE) {
             XrActionStateGetInfo pgi{ XR_TYPE_ACTION_STATE_GET_INFO };
@@ -8656,6 +8657,10 @@ void SyncXRInput(XrTime displayTime) {
         g_handHavePos[i] = true;
 
         g_handPoseValid[i] = true;
+        // A successfully located tracked action space is stronger evidence than
+        // the optional action-state probe. Keep diagnostics truthful even when
+        // a runtime reports pose activity lazily or omits that query binding.
+        g_handActionActive[i] = true;
     }
 
     // Held, decided by the capacitive sensors and only falling back to motion when the runtime
@@ -12619,6 +12624,10 @@ volatile LONG g_fgMoveOn = 0;          // APPS selects a mesh; this says move it
 // ⭐ run 237: 0 = not moved, 1 = the gun hand, 2 = the OFF hand (the TMD).
 int g_thisDrawMoved = 0;               // set per draw on the render thread, read inside StereoPair
 volatile LONG g_fgDrawCount = 0;       // how many draws landed in the pass this frame
+// A late depth clear is also used by shadow/reflection passes.  Do not treat the
+// whole remainder of such a frame as first-person geometry until a known arm/gun
+// mesh confirms that the boundary really is the foreground pass.
+volatile LONG g_fgPassConfirmed = 0;
 
 // ---- ⭐ run 181: the weapon EFFECTS were never moved, only the weapon MESH ----
 //
@@ -13592,9 +13601,14 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     if (g_hotPathSampler.active())
         InterlockedExchange64(&g_hotPaletteFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
     const LONG motionMode=Rd(g_hideMeshIdx);
-    if(!g_independentHands || (motionMode!=1 && motionMode!=3) || Rd(g_fgRideAll)!=1 || !Rd(g_gunVerts) ||
+    // Independent hand palettes are safe in mode 0 as well: the exact SP
+    // section/range checks below and FgMatchWindow keep them inside the
+    // foreground pass. Previously this was tied to the experimental whole-mesh
+    // ride mode, so the left controller stopped moving whenever that mode was
+    // disabled or temporarily lost its latch.
+    if(!g_independentHands || (motionMode!=0 && motionMode!=1 && motionMode!=3) || Rd(g_fgRideAll)!=1 || !Rd(g_gunVerts) ||
        !g_camMatrixBound || !Rd(g_offHandValid) || !Rd(g_handDevValid) ||
-       !g_handPositionValid[AimHand()] ||
+       !g_handPositionValid[OffHand()] ||
        !FgMatchWindow() || ArmsAnimActive() || !WeaponInHands())return 0;
     const auto layout=g_boundShaderLayout;
     if(layout.shadow || layout.bones!=5 || layout.boneRegs!=225 || layout.local!=230)return 0;
@@ -13696,7 +13710,16 @@ volatile LONG g_fgWindowRejects = 0;  // matches refused BY this rule - see the 
 
 inline bool FgMatchWindow() {
     if (!Rd(g_rtIsScene) || g_boundShaderLayout.shadow) return false;
-    if (Rd(g_inForeground)) return true;                       // the real first-person pass
+    if (Rd(g_inForeground)) {
+        const LONG n = Rd(g_fgDrawCount);
+        // The measured foreground pass is six to seven draws.  A larger run is
+        // the known false-positive shape (shadow/reflection depth clear), so it
+        // must not make world draws eligible for arm/VFX transforms.
+        if (n > kFgSanePass) return false;
+        // Allow the first few draws while the known mesh is being recognised;
+        // after that, require the same-frame confirmation below.
+        return Rd(g_fgPassConfirmed) != 0 || n <= 8;
+    }
     if (Rd(g_frameDrawIdx) <= (LONG)g_fgPrimeWindow) return true;   // run 120's depth-prime copy
     InterlockedIncrement(&g_fgWindowRejects);
     return false;
@@ -14141,6 +14164,16 @@ static bool FgRidesGun(UINT verts) {
     if (m != 1 && m != 3) return false;
     // == 1 exactly. Mode 2 is the hide-the-pass test and must not also transform what it keeps.
     if (Rd(g_fgRideAll) != 1) return false;
+    // Once the foreground counter exceeds the measured pass size, the depth
+    // clear was from a shadow/reflection pass.  Stop before the old per-draw
+    // bail path can turn thousands of world draws into a frame spike.
+    if (Rd(g_inForeground) && Rd(g_fgDrawCount) > kFgRideMax) {
+        if (!Rd(g_fgRideBailed)) {
+            InterlockedExchange(&g_fgRideBailed, 1);
+            InterlockedIncrement(&g_fgRideBailCount);
+        }
+        return false;
+    }
     // ---- ⭐ run 228f: the DEPTH-PRIME copy has to ride too, or it writes a black silhouette ----
     //
     // Reported: an all-black copy of the rope, following the HEAD, while the real rope correctly
@@ -15107,6 +15140,16 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     if (InterlockedCompareExchange(&g_inForeground, 0, 0)) {
         const LONG k = InterlockedIncrement(&g_fgDrawCount);
         FgLearnSignature(numVertices);
+        // Confirm the depth-clear boundary only after a known first-person
+        // mesh arrives.  Shadow/reflection passes can clear depth too, but they
+        // do not contain the latched gun/arms signature.
+        if (k <= kFgSanePass) {
+            const LONG knownGun = Rd(g_gunVerts), knownArms = Rd(g_armsVerts);
+            if ((knownGun && (UINT)knownGun == numVertices) ||
+                (knownArms && (UINT)knownArms == numVertices) ||
+                FgIsBaseline(numVertices))
+                InterlockedExchange(&g_fgPassConfirmed, 1);
+        }
         // ⭐ run 234: only for the one vertex count under investigation, so the COM calls cost
         // nothing on every other draw in the pass.
         if (const LONG iv = Rd(g_fgIdentityVerts))
@@ -24096,6 +24139,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             if(Rd(g_armPaletteTraceFrames)>0)for(int i=0;i<8;++i)InterlockedExchange(&g_armPaletteUploadCoverage[i],0);
             InterlockedExchange(&g_inForeground, 0);
             InterlockedExchange(&g_fgDrawCount, 0);
+            InterlockedExchange(&g_fgPassConfirmed, 0);
             // ⭐ run 230: this frame's sighting becomes next frame's state, then clears.
             InterlockedExchange(&g_noteOpen, InterlockedExchange(&g_noteSeenFrame, 0));
             // ⭐ run 266: the anchor dies with the note. Leaving a stride/texture behind would let a
