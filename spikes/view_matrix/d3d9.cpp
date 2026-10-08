@@ -9345,6 +9345,16 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             g_centrePos[2] = haveBoth ? (views[0].pose.position.z + views[1].pose.position.z) * 0.5f
                                       : views[0].pose.position.z;
             g_haveCentrePos = (vs.viewStateFlags & XR_VIEW_STATE_POSITION_VALID_BIT) != 0;
+            // Fix-J/height: a centre captured below ~1 m parks the player at toddler
+            // height for the session - tracking stays 1:1 so motion feels right while
+            // everything looks giant. Usual causes: seated-mode runtime, miscalibrated
+            // guardian floor, or recentring while bent. Warn once per capture, not per
+            // frame, and only on fresh captures (kept positions were already judged).
+            if (g_haveCentrePos && g_centrePos[1] < 1.0f)
+                Log("WARNING: standing height captured as %.2f m - if you are standing, fix"
+                    " the runtime room setup (standing mode? guardian floor?) then recentre"
+                    " standing tall, or the world will keep looking oversized.",
+                    g_centrePos[1]);
             }
             g_haveCentre = true;
 
