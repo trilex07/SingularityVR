@@ -55,7 +55,7 @@ inline bool LoadDdsTexture(IDirect3DDevice9* dev, const uint8_t* b, size_t n,
     else if ((pfFlags & 0x4) && fourcc == MAKEFOURCC('D', 'X', 'T', '5')) { fmt = D3DFMT_DXT5; blk = 16; }
     else return false;
 
-    if (FAILED(dev->CreateTexture(width, height, mips, 0, fmt, D3DPOOL_MANAGED, out, nullptr)) || !*out)
+    if (FAILED(VfxCreateTextureRaw(dev, width, height, mips, 0, fmt, D3DPOOL_MANAGED, out)) || !*out)
         return false;
 
     size_t off = 128;

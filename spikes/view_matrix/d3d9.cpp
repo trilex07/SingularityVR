@@ -17237,6 +17237,9 @@ static bool VfxBuildAtlas(IDirect3DDevice9* dev, const char** source) {
 
 static void VfxHostInitDevice(IDirect3DDevice9* dev) {
     if (!dev || !Rd(g_vfxHost)) return;
+    // Atlas textures bypass the MANAGED->DEFAULT pool translation (prompt-atlas
+    // precedent); the per-mip LockRect upload path is suspect for invisibility.
+    singularity_vfx::host::VfxCreateTextureOverride() = g_origCreateTexture;
     const bool loaded = g_vfx.Load(); // no-op if the DLL is absent
     if (!g_vfxDrawer.Init(dev)) { Log("VFX host init: drawer VB failed - VFX draws off"); return; }
     if (!g_vfxAtlasBuilt && VfxBuildAtlas(dev, &g_vfxAtlasSource)) g_vfxAtlasBuilt = true;
@@ -17314,17 +17317,20 @@ static void VfxEyeDraw(IDirect3DDevice9* dev, int eye) {
     InterlockedExchange(&g_inVfxDraw, 0);
     g_vfxItemsDrawn += n;
     // Diagnostic (removable): magenta dot at item[0]'s screen position, same eye
-    // matrix + ClearRects primitive as the menu hit marker. Dot visible at the
-    // muzzle = position/matrix chain proven, blame texture/depth next. No dot =
-    // matrix/position broken. Bounded: 8 dots, then silent.
-    static int vfxDotLeft = 8;
-    if (vfxDotLeft > 0) {
-        --vfxDotLeft;
+    // matrix + ClearRects primitive as the menu hit marker. Drawn EVERY frame
+    // while effects live (the 8-dot limit was unmissable-by-design: ~4 frames).
+    // Dot visible at the muzzle = position/matrix chain proven, blame texture or
+    // depth next. No dot = matrix/position broken. NDC log stays bounded (8).
+    static int vfxDotLogLeft = 8;
+    {
         const float pt[3] = { g_vfxItems[0].position.x, g_vfxItems[0].position.y, g_vfxItems[0].position.z };
         float clip[4];
         WorldToClip(g_vfxEyeMat[eye], g_vfxEyeConv[eye], pt, clip);
-        Log("VFX dot: eye=%d clip=(%.3g %.3g %.3g %.3g) pos=(%.0f %.0f %.0f)UU size=%.3gUU",
-            eye, clip[0], clip[1], clip[2], clip[3], (double)pt[0], (double)pt[1], (double)pt[2], (double)g_vfxItems[0].size);
+        if (vfxDotLogLeft > 0) {
+            --vfxDotLogLeft;
+            Log("VFX dot: eye=%d clip=(%.3g %.3g %.3g %.3g) pos=(%.0f %.0f %.0f)UU size=%.3gUU",
+                eye, clip[0], clip[1], clip[2], clip[3], (double)pt[0], (double)pt[1], (double)pt[2], (double)g_vfxItems[0].size);
+        }
         if (clip[3] > .001f) {
             D3DVIEWPORT9 vp{};
             if (SUCCEEDED(dev->GetViewport(&vp)) && vp.Width >= 4) {

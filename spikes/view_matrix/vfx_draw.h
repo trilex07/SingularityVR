@@ -31,6 +31,25 @@ struct VfxVertex {
 };
 static const DWORD kVfxFvf = D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1;
 
+// Atlas creation bypass. d3d9.cpp sets this to its UNHOOKED CreateTexture so
+// atlas textures skip the host's MANAGED->DEFAULT pool translation (whose
+// per-mip LockRect upload path is suspect for VFX invisibility) - the prompt
+// atlas precedent. When null, plain dev->CreateTexture is used.
+using VfxCreateTextureFn = HRESULT (WINAPI*)(IDirect3DDevice9*, UINT, UINT, UINT,
+                                             DWORD, D3DFORMAT, D3DPOOL,
+                                             IDirect3DTexture9**, HANDLE*);
+inline VfxCreateTextureFn& VfxCreateTextureOverride() {
+    static VfxCreateTextureFn f = nullptr;
+    return f;
+}
+inline HRESULT VfxCreateTextureRaw(IDirect3DDevice9* dev, UINT w, UINT h, UINT levels,
+                                   DWORD usage, D3DFORMAT fmt, D3DPOOL pool,
+                                   IDirect3DTexture9** out, HANDLE* shared = nullptr) {
+    auto fn = VfxCreateTextureOverride();
+    if (fn) return fn(dev, w, h, levels, usage, fmt, pool, out, shared);
+    return dev->CreateTexture(w, h, levels, usage, fmt, pool, out, shared);
+}
+
 // Atlas description: the HOST owns this and fills it from the clip manifest the
 // plugin/atlas build produces. clipId indexes clips[].
 struct VfxAtlas {
@@ -63,7 +82,7 @@ inline bool MakeBlobTexture(IDirect3DDevice9* dev, D3DCOLOR rgb, float alphaScal
     if (out) *out = nullptr;
     if (!dev || !out || cols <= 0 || rows <= 0 || cell <= 0) return false;
     const UINT size = static_cast<UINT>(cols * cell);
-    if (FAILED(dev->CreateTexture(size, size, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
+    if (FAILED(VfxCreateTextureRaw(dev, size, size, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
                                   out, nullptr)) || !*out)
         return false;
 

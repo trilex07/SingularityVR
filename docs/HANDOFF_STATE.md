@@ -80,6 +80,10 @@
   invalidated on shadow layouts; log-proven mask=0x0 at 480 draws/window);
   VFX reentrancy guard in all 4 draw hooks + magenta-dot/NDC diagnostic
   (8 dots) to split position-vs-texture blame.
+  Round 4 DEPLOYED: atlas textures bypass the pool translation via
+  g_origCreateTexture (prompt-atlas precedent; per-mip LockRect upload suspect);
+  magenta dot now persistent while effects live (8-dot limit was ~4 frames -
+  unmissable-by-design, user saw none).
 - White ring right-eye-only (12:54:08 shot): per-eye sprite artifact, NEW instance
   of the muzzle-on-seam class. SpriteQuadPerEye=1 set in user ini; verdict pending.
 - Menu-draw census (MDG groups) flows since 315ce56. 470 groups/session typical.
