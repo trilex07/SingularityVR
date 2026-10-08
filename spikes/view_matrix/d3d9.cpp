@@ -2100,6 +2100,8 @@ void ReportEyeHeight();
 extern float g_hmdOffset[3];
 extern volatile LONG g_worldScalePct;
 extern volatile LONG g_gunScalePct;   // hub round A (defined with the gun transform)
+extern volatile LONG g_shadowMode;    // hub round 4 (defined with the shadow stage mask)
+extern volatile LONG g_skipExtraTarget;   // hub round 4 (NUMPAD0 flag, defined with render targets)
 float MetresToUU();
 
 // The live player pawn, cached and revalidated by class word like FindCamera. Rewalks at most once every
@@ -6252,6 +6254,7 @@ enum { PR_ENABLEVR = 0, PR_AIMMETHOD, PR_MOVEDIR, PR_TURNMODE, PR_TURNSPEED, PR_
        PR_TURNDIR, PR_HEADROLL, PR_CROSSHAIR, PR_OCCLUSION, PR_DEBUG,
        PR_CINESTICK, PR_CINECAM, PR_SWAPSTICKS, PR_LEFTHAND, PR_WEAPONFX, PR_MUZZLEFX, PR_WORLDSCALE,
        PR_AIMPARTS,
+       PR_SHADOWMODE, PR_DROPEXTRA,   // hub round 4: shadow sampling treatment + extra-target drop
        // ⭐ run 217: the laser and the per-weapon alignment rows.
        PR_LASER, PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH,
        PR_NOTESIZE,          // ⭐ run 230
@@ -6328,7 +6331,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
     // (1,400 vs 3,800 draws was measured) and a cross-run comparison is worthless. That mistake cost a
     // test run and it was mine.
-    { PR_OCCLUSION, PR_WEAPONFX, PR_AIMPARTS, PR_DEBUG, PR_BACK },
+    { PR_OCCLUSION, PR_WEAPONFX, PR_AIMPARTS, PR_SHADOWMODE, PR_DROPEXTRA, PR_DEBUG, PR_BACK },
     { PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH, PR_BACK },
     // ⭐ run 237: its own page, not a row on WEAPON ALIGN. That page's values are PER WEAPON and
     // change meaning when you switch guns; these are one object held one way, always the same.
@@ -6361,7 +6364,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
       PR_TMDHIDE, PR_BACK_TMD },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 8, 8, 3, 7, 5, 7, 10, 6, 8 };   // ⭐ run 230: DISPLAY 5 -> 6; ⭐ run 237: root 7 -> 8 and a TMD page; ⭐ run 249: TMD 17 -> 10 + two sub-pages; ⭐ run 250: TMD MESH 5 -> 7; ⭐ run 251: + TRI MODE; hub round A: DISPLAY 6 -> 7 (GUN SIZE)
+const int kPageCount[kPanelPages] = { 8, 8, 3, 7, 7, 7, 10, 6, 8 };   // ⭐ run 230: DISPLAY 5 -> 6; ⭐ run 237: root 7 -> 8 and a TMD page; ⭐ run 249: TMD 17 -> 10 + two sub-pages; ⭐ run 250: TMD MESH 5 -> 7; ⭐ run 251: + TRI MODE; hub round A: DISPLAY 6 -> 7 (GUN SIZE); hub round 4: ADVANCED 5 -> 7 (SHADOW, DROPEXTRA)
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -6523,6 +6526,14 @@ void PanelSaveRow(int rowId, const char* path) {
             // ⚠️ Always saved as 3. It is a diagnostic split, and a half-disabled aim method that
             // survives a relaunch is tomorrow's bug report - the same trap WEAPON FX mode 2 sprang.
             WritePrivateProfileStringA("Input", "AimModeParts", "3", path); return;
+        case PR_SHADOWMODE:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
+                        InterlockedCompareExchange(&g_shadowMode, 0, 0));
+            WritePrivateProfileStringA("Render", "ShadowMode", v, path); return;
+        case PR_DROPEXTRA:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
+                        InterlockedCompareExchange(&g_skipExtraTarget, 0, 0));
+            WritePrivateProfileStringA("Render", "DropExtraTarget", v, path); return;
         case PR_MUZZLEFX:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_hideMuzzleFx, 0, 0));
@@ -6884,6 +6895,18 @@ void PanelRowText(int row, char* out, size_t cap) {
                       : p == 1 ? "MESH ONLY (TEST)" : "NEITHER (TEST)");
             break;
         }
+        case PR_SHADOWMODE: {
+            // Worded as what the sampling pass GETS, not as numbers. SPLIT is the legacy
+            // behaviour (measure only); MONO draws it once unremapped; DROP deletes it.
+            const LONG p = InterlockedCompareExchange(&g_shadowMode, 0, 0);
+            _snprintf_s(out, cap, _TRUNCATE, "SHADOW         %s",
+                        p == 2 ? "DROP SAMPLE" : p == 1 ? "MONO SAMPLE" : "FULL SPLIT");
+            break;
+        }
+        case PR_DROPEXTRA:
+            _snprintf_s(out, cap, _TRUNCATE, "DROP EXTRA     %s",
+                        InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? "ON (TEST)" : "OFF");
+            break;
         case PR_OCCLUSION:
             // Worded as what it DOES, not as the mode number. "ENGINE CULL" is the engine's own
             // occlusion culling left alone (mode 2); "DRAW ALL" stops the engine hiding geometry
@@ -7008,6 +7031,24 @@ void PanelAdjust(int row, int dir) {
                 (p & 1) ? "ON" : "off", (p & 2) ? "ON" : "off");
             break;
         }
+        case PR_SHADOWMODE: {
+            // Clamped 0-2, not wrapped: mode 2 DELETES draws, and wrapping past it
+            // back to 0 must be a deliberate walk, not one press too many (run 143).
+            LONG p = InterlockedCompareExchange(&g_shadowMode, 0, 0) + dir;
+            if (p < 0) p = 0;
+            if (p > 2) p = 2;
+            InterlockedExchange(&g_shadowMode, p);
+            Log("SHADOW MODE -> %ld (0=full split 1=mono sample 2=drop sample)", p);
+            break;
+        }
+        case PR_DROPEXTRA:
+            // Same flag NUMPAD0 toggles; the hub makes it reachable in a headset.
+            InterlockedExchange(&g_skipExtraTarget,
+                                InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? 0 : 1);
+            Log("DROP EXTRA -> %s (scene-sized non-colour target draws %s)",
+                InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? "ON" : "OFF",
+                InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? "DROPPED" : "drawn");
+            break;
         case PR_OCCLUSION:
             // Clamped to 0-2, and mode 3 is UNREACHABLE from here on purpose: it refuses to create
             // occlusion queries at all and CRASHES this build. It survives in the ini only so that
@@ -10827,14 +10868,14 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
         return S_OK;
     }
     if (!InterlockedCompareExchange(&g_rtIsScene, 0, 0) || g_boundShaderLayout.shadow) { ++g_drawsOffscreen; return draw(); }
-    // Fix-3/shadows: a pass sampling the projected shadow map must not receive a remapped
-    // camera (run-41/42 mechanism: depth reconstructed with a full-frame constant from
-    // remapped depth). Count every such draw; fall back to one unremapped draw when
-    // ShadowSampleMono=1. Measured 33-243 such draws/sec vs tens of thousands total, so
-    // the mask is transient around the sampling pass - default ON since round 3.
+    // Fix-3/shadows, mode-selected since round 4 (see ShadowMode): the sampling pass
+    // must not receive a remapped camera (run-41/42 mechanism). 0 = split like
+    // everything else, 1 = one unremapped draw, 2 = drop the draw.
     if (Rd(g_shadowStageMask)) {
         ++g_drawsWhileShadowBound;
-        if (Rd(g_shadowSampleMono)) { ++g_drawsShadowMono; return draw(); }
+        const LONG sm = Rd(g_shadowMode);
+        if (sm == 2) { ++g_drawsShadowDropped; return S_OK; }
+        if (sm == 1) { ++g_drawsShadowMono; return draw(); }
     }
 
     D3DVIEWPORT9 full{};
@@ -16824,8 +16865,12 @@ volatile LONG g_shadowMapCandidates=0;
 // tracking and counting are always on and change nothing; behaviour changes only when
 // ShadowSampleMono=1 (default 0).
 volatile LONG g_shadowStageMask = 0;
-volatile LONG g_shadowSampleMono = 0;
-int g_drawsWhileShadowBound = 0, g_drawsShadowMono = 0;
+// Fix-E/shadows round 4: ShadowMode selects the sampling-pass treatment.
+// 0 = full split like everything else (measure only), 1 = one unremapped draw,
+// 2 = drop the draw. Default 1: measured transient (tens/second), squares persist
+// under 1, so 0/2 are the A/B arms. Supplanted the boolean ShadowSampleMono.
+volatile LONG g_shadowMode = 1;
+int g_drawsWhileShadowBound = 0, g_drawsShadowMono = 0, g_drawsShadowDropped = 0;
 // Fix-4/menus round 2: sticky per-window mask of suppression-miss reasons, set only for
 // menu-source draws (see SuppressCapturedVrMenuDraw). Render thread only, like the
 // draw counters beside it.
@@ -16857,7 +16902,7 @@ static void ReleaseVrShadowResources() {
     memset(g_shadowTextureCache,0,sizeof(g_shadowTextureCache));
 }
 // Shadow substitution disabled: the neutral-texture approach caused worse visual artifacts in headset.
-// VrShadows=0 now simply logs the projection candidates without substitution.
+// ShadowMode now selects the sampling-pass treatment instead (0/1/2); see the stage mask below.
 // Proper fix: disable first-person arm/weapon shadow casting at engine level (bCastDynamicShadow=false).
 HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDirect3DBaseTexture9* texture) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::set_texture);
@@ -22139,12 +22184,12 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             g_drawsSkipped = 0;
             // Fix-3/shadows: draws issued while the projected map was bound. A nonzero
             // count with eye-differing square shadows confirms the sampling pass runs
-            // inside the split path; ShadowSampleMono=1 then tests the mono fallback.
+            // inside the split path; ShadowMode=1 then tests the mono fallback.
             if (g_drawsWhileShadowBound)
-                Log("    shadow-sample: %d draws while the projected map was bound, %d mono-fallback"
-                    " (ShadowSampleMono=%ld)", g_drawsWhileShadowBound, g_drawsShadowMono,
-                    Rd(g_shadowSampleMono));
-            g_drawsWhileShadowBound = 0; g_drawsShadowMono = 0;
+                Log("    shadow-sample: %d draws while the projected map was bound, %d mono, %d dropped"
+                    " (ShadowMode=%ld: 0=full split 1=mono 2=drop)", g_drawsWhileShadowBound, g_drawsShadowMono,
+                    g_drawsShadowDropped, Rd(g_shadowMode));
+            g_drawsWhileShadowBound = 0; g_drawsShadowMono = 0; g_drawsShadowDropped = 0;
             // Fix-4/menus round 2: which clause kept menu-source draws unsuppressed.
             if (g_menuSuppressFailMask)
                 Log("    menu-suppress miss mask=0x%X (1=noprovide 2=flat 4=shadow 8=providing-now 16=offscreen)", g_menuSuppressFailMask);
@@ -23604,7 +23649,14 @@ void LoadIniSettings() {
     Log("camera translation evidence=%d; passive 10Hz, 240 samples maximum; no translation override",g_cameraTranslationEvidence);
     g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",1,path)?1:0;
     g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",0,path)?1:0;
-    g_shadowSampleMono=GetPrivateProfileIntA("Render","ShadowSampleMono",1,path)?1:0;
+    g_skipExtraTarget=GetPrivateProfileIntA("Render","DropExtraTarget",0,path)?1:0;
+    // Fix-E/shadows round 4: 0 = full split (measure only), 1 = mono sample, 2 = drop.
+    // Supplants ShadowSampleMono (their ini never carried the key - verified).
+    {
+        LONG sm = GetPrivateProfileIntA("Render","ShadowMode",1,path);
+        if (sm < 0) sm = 0; if (sm > 2) sm = 2;
+        InterlockedExchange(&g_shadowMode, sm);
+    }
     g_vrMenuLaser=GetPrivateProfileIntA("Render","VrMenuLaser",1,path)?1:0;
     LONG laserOpacity=GetPrivateProfileIntA("Render","VrMenuLaserOpacity",55,path);
     LONG laserWidth=GetPrivateProfileIntA("Render","VrMenuLaserWidth",100,path);
@@ -23614,7 +23666,7 @@ void LoadIniSettings() {
     InterlockedExchange(&g_vrMenuLaserWidthPct,laserWidth);
     Log("VR render: menu laser=%ld opacity=%ld%% width=%ld%%; shadows=%ld; translation stabilization=%ld",
         Rd(g_vrMenuLaser),laserOpacity,laserWidth,Rd(g_vrShadows),Rd(g_vrTranslationStabilization));
-    Log("shadow sampling: ShadowSampleMono=%ld (0=measure only, 1=mono-fallback draws while the projected map is bound; default 1)",Rd(g_shadowSampleMono));
+    Log("shadow sampling: ShadowMode=%ld (0=full split 1=mono sample 2=drop sample; hub ADVANCED page)",Rd(g_shadowMode));
     g_wristHealth = GetPrivateProfileIntA("Render", "WristHealth", 1, path) ? 1 : 0;
     Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld",Rd(g_wristHealth),Rd(g_renderEvidence));
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
