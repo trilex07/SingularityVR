@@ -955,6 +955,7 @@ extern volatile LONG64 g_healUntilMs, g_healFromMs;
 extern volatile LONG   g_meleeArmsMs, g_meleeDelayMs, g_meleePending;
 extern volatile LONG64 g_meleeUntilMs, g_meleeFromMs;
 extern volatile LONG   g_armsAnimActiveCached;
+extern volatile LONG64 g_lastMeleeEdgeMs, g_lastJumpEdgeMs;   // fix-G/perf (defined with melee state)
 
 // The NUMPAD4/NUMPAD5 test inputs, laid OVER whatever the controllers just published.
 //
@@ -8610,6 +8611,13 @@ void SyncXRInput(XrTime displayTime) {
         if (down) ++g_btnHeldFrames[i];
         if (g_padButtons[i].isMenu)  { menuHeld  = down; menuMask  = g_padButtons[i].mask; continue; }
         if (g_padButtons[i].isPanel) { panelHeld = down; panelMask = g_padButtons[i].mask; continue; }
+        // Fix-G/perf: jump-edge timestamp for spike attribution (same pattern as melee).
+        if (i == g_jumpBtnIdx) {
+            static bool jumpWasDown = false;
+            if (down && !jumpWasDown)
+                InterlockedExchange64(&g_lastJumpEdgeMs, (LONG64)GetTickCount64());
+            jumpWasDown = down;
+        }
         // ---- ⭐ run 214: the melee swing is invisible, for the run-198 reason ----
         //
         // Armed from the button WE inject, on the RISING edge, exactly as the heal window is: there is
@@ -8619,6 +8627,7 @@ void SyncXRInput(XrTime displayTime) {
             static bool wasDown = false;
             if (down && !wasDown && InterlockedCompareExchange(&g_meleeArmsMs, 0, 0) > 0) {
                 const LONG64 now = (LONG64)GetTickCount64();
+                InterlockedExchange64(&g_lastMeleeEdgeMs, now);   // fix-G/perf: edge age for spike attribution
                 const LONG dly = InterlockedCompareExchange(&g_meleeDelayMs, 0, 0);
                 const LONG end = InterlockedCompareExchange(&g_meleeArmsMs, 0, 0);
                 InterlockedExchange64(&g_meleeFromMs,  now + dly);
@@ -12667,6 +12676,9 @@ volatile LONG g_meleeDelayMs = 0;      // ini [Render] MeleeArmsDelayMs - start,
 volatile LONG64 g_meleeUntilMs = 0, g_meleeFromMs = 0;
 volatile LONG g_meleePending = 0;      // the cheap 32-bit gate - see HealWindowActive for why
 volatile LONG g_armsAnimActiveCached = 0;
+// Fix-G/perf: last press-edge timestamps (tick ms) for spike attribution. Written on
+// the input thread, read on the render thread; torn reads only age a diagnostic.
+volatile LONG64 g_lastMeleeEdgeMs = 0, g_lastJumpEdgeMs = 0;
 
 inline bool MeleeWindowActive() {
     if (!Rd(g_meleePending)) return false;         // the common case, and it costs nothing
@@ -21523,15 +21535,22 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             const int dTotal = g_drawsTotal - prevTotal;
             const int dDup = g_drawsDuped - prevDup, dMono = g_drawsMonoFallback - prevMono;
             prevTotal = g_drawsTotal; prevDup = g_drawsDuped; prevMono = g_drawsMonoFallback;
+            // Fix-G/perf: window counters reset under us; a negative delta is the reset
+            // racing the sample, not negative draws. Clamp rather than report fiction.
+            const int rTotal = dTotal < 0 ? 0 : dTotal;
+            const int rDup = dDup < 0 ? 0 : dDup, rMono = dMono < 0 ? 0 : dMono;
             const ULONGLONG nowMs = GetTickCount64();
             const double spikeAt = g_displayPeriodMs > 0.0 ? g_displayPeriodMs * 3.0 : 34.0;
             if (VrModeOn() && thisFrameMs > spikeAt && nowMs - lastSpikeMs > 2000) {
                 lastSpikeMs = nowMs;
-                Log("FRAME SPIKE %.1f ms (period %.2f): draws %d (dup %d mono %d) melee %d heal %d swapped %d nocentre %d",
-                    thisFrameMs, g_displayPeriodMs, dTotal, dDup, dMono,
+                // Fix-G/perf: edge ages pin a spike to its button (or clear both).
+                const LONG64 mAge = (LONG64)nowMs - InterlockedCompareExchange64(&g_lastMeleeEdgeMs, 0, 0);
+                const LONG64 jAge = (LONG64)nowMs - InterlockedCompareExchange64(&g_lastJumpEdgeMs, 0, 0);
+                Log("FRAME SPIKE %.1f ms (period %.2f): draws %d (dup %d mono %d) melee %d heal %d swapped %d nocentre %d meleeAge %lld jumpAge %lld",
+                    thisFrameMs, g_displayPeriodMs, rTotal, rDup, rMono,
                     MeleeWindowActive() ? 1 : 0, HealWindowActive() ? 1 : 0,
                     InterlockedCompareExchange(&g_weaponSwapped, 0, 0) ? 1 : 0,
-                    g_haveCentre ? 0 : 1);
+                    g_haveCentre ? 0 : 1, mAge, jAge);
             }
         }
 
