@@ -17,6 +17,7 @@
 #include "recenter_chord.h"
 #include "pose_conversion.h"
 #include "vr_scene_mode.h"
+#include "input_remap.h"
 
 // view_matrix - Singularity VR mod, spike 9
 //
@@ -987,10 +988,10 @@ int  g_btnProbeFrames = 0;    // frames left in the pulse
 WORD g_btnProbeMask   = 0;
 
 // The look stick's vertical axis, which turn never uses. Up cycles the weapon (Raven has only a
-// cycle, not next/prev), leaving down free for the health item - the one action with no natural
-// home on a Touch controller once the TMD powers have taken the grips and the face buttons.
+// cycle, not next/prev); down is the VR crouch gesture. Health has a physical face-button home now
+// (Circle/right B), so it no longer shares the stick direction with crouch.
 WORD g_stickUpMask   = XI_Y;         // ini StickUp   - CycleWeapon
-WORD g_stickDownMask = XI_DPAD_UP;   // ini StickDown - Health
+WORD g_stickDownMask = (WORD)vrinput::kStickDownCrouchMask; // ini StickDown - Crouch
 // Run 198's heal window. Defined with the foreground-mesh code, which is what consumes it; the input
 // path only arms it. See the note at g_healArmsMs.
 extern volatile LONG   g_healArmsMs, g_healDelayMs, g_healPending;
@@ -2494,6 +2495,33 @@ bool HealWouldDoSomething(bool* unknown) {
     if (healthKnown && healthFull) return false;
     if (packsKnown && haveNoPacks) return false;
     return true;
+}
+
+// Arms the short first-person healing animation from the Circle/Health edge.  Keeping this beside
+// HealWouldDoSomething makes the input route explicit: the stick is now crouch, while the face
+// button owns the native D-pad-up health action and this visual timing gate.
+void ArmHealWindowFromButton() {
+    if (InterlockedCompareExchange(&g_healArmsMs, 0, 0) <= 0) return;
+    bool unknown = false;
+    if (!HealWouldDoSomething(&unknown)) {
+        static ULONGLONG lastSaid = 0;
+        const ULONGLONG now = GetTickCount64();
+        if (now - lastSaid > 3000) {
+            lastSaid = now;
+            Log("heal window: SKIPPED - already at full health or no packs, so the item would do nothing"
+                " and the arms stay hidden");
+        }
+        return;
+    }
+    const LONG64 now = (LONG64)GetTickCount64();
+    const LONG dly = InterlockedCompareExchange(&g_healDelayMs, 0, 0);
+    const LONG end = InterlockedCompareExchange(&g_healArmsMs, 0, 0);
+    InterlockedExchange64(&g_healFromMs,  now + dly);
+    InterlockedExchange64(&g_healUntilMs, now + (end > dly ? end : dly + 1));
+    InterlockedExchange(&g_healPending, 1);   // arm the cheap gate LAST, after the deadlines
+    if (dly == 0) InterlockedExchange(&g_armsAnimActiveCached, 1);
+    Log("heal window: arms shown from Circle/Health +%ld ms to +%ld ms%s",
+        dly, end, unknown ? " (health could NOT be read - opening on the button alone)" : "");
 }
 
 // ---- 💥 run 208: this was one-shot ON ENTRY, and it deadlocked the mesh latch ----
@@ -6163,17 +6191,18 @@ void LogThreadCpu() {
 // `RvGame\CookedPC\Coalesced_INT.bin` is UE3's coalesced config archive, and it carries the
 // shipped binding table as UTF-16 text. No guessing was needed after all:
 //
-//     RT  Fire          LT  Aim              A  Jump        B  Crouch
+//     RT  Fire          LT  Aim              A  Jump        B  Crouch (VR remaps this to Health)
 //     X   Use/reload    Y   CycleWeapon      LB AgeYoung    RB Impulse
 //     LSt Dash          RSt AntiGrav         START ShowMenu BACK Scoreboard
 //     D-pad up  HEALTH       D-pad down  Flashlight       D-pad left/right  unassigned
 //
 // Two facts that change the mapping rather than merely confirm it:
 //
-//   - **D-pad up is the health item.** That is what the run-61 weapon-switch mapping actually hit.
+//   - **D-pad up is the health item.** That is what the run-61 weapon-switch mapping actually hit;
+//     Circle/right B now emits this native action, while right-stick down emits native Crouch/B.
 //   - **There is no next/prev weapon, only CYCLE** - one button, and the mouse wheel is bound to
 //     the same command in both directions. A two-way stick gesture would have been wrong by
-//     construction, so the stick's other direction is free and now carries health.
+//     construction, so the stick's other direction is free and now carries crouch.
 //
 // ⚠️ Method note worth more than the table: the button probe could confirm a binding but could not
 // refute one. X, Y, LB and the thumbstick clicks all read as "nothing happened" simply because
@@ -7669,7 +7698,7 @@ void PanelAdjust(int row, int dir) {
 // binding is just silently ignored.
 PadButtonAction g_padButtons[] = {
     { "jump",       "Jump",           "/user/hand/right/input/a/click",          "Jump",       XI_A,         XR_NULL_HANDLE, false, false },
-    { "crouch",     "Crouch",         "/user/hand/right/input/b/click",          "Crouch",     XI_B,         XR_NULL_HANDLE, false, false },
+    { "health",     "Health",         "/user/hand/right/input/b/click",          "Health",     (WORD)vrinput::kCircleHealthMask, XR_NULL_HANDLE, false, false },
     { "use",        "Use / reload",   "/user/hand/right/input/squeeze/value",    "Use",        XI_X,         XR_NULL_HANDLE, false, false },
     { "antigrav",   "Anti-gravity",   "/user/hand/right/input/thumbstick/click", "AntiGrav",   XI_RTHUMB,    XR_NULL_HANDLE, false, false },
     { "impulse",    "Impulse",        "/user/hand/left/input/trigger/value",     "Impulse",    XI_RSHOULDER, XR_NULL_HANDLE, false, false },
@@ -9018,8 +9047,20 @@ void SyncXRInput(XrTime displayTime) {
     // Triangle is the single game-menu edge.  It is emitted through the same synthetic XInput
     // START path as a physical pad, so the game's normal pause/options state remains authoritative.
     if (trianglePressed) btns |= XI_START;
+    static bool healthWasDown = false;
+    bool healthDown = false;
     for (int i = 0; i < kPadButtonCount; ++i) {
         const bool down = getBool(g_padButtons[i].action);
+        if (i >= 0 && !strcmp(g_padButtons[i].name, "health")) {
+            healthDown = down;
+            // Circle owns the native health action.  Arm the first-person bandage animation on
+            // its rising edge; the native D-pad-up pulse is still emitted below for the game.
+            if (down && !healthWasDown && !uiMenu && feedGame && !Rd(g_gamePaused) &&
+                !Rd(g_weaponWheelOpen) && !r3Held && !r3Released &&
+                wheelEvent != weaponwheel::Event::Commit &&
+                wheelEvent != weaponwheel::Event::Cancel)
+                ArmHealWindowFromButton();
+        }
         if (i == 6) continue; // Triangle is handled above as a single START rising edge.
         if (i == 3 && (Rd(g_weaponWheelOpen) || r3Held || r3Released ||
                        wheelEvent == weaponwheel::Event::Commit ||
@@ -9095,6 +9136,7 @@ void SyncXRInput(XrTime displayTime) {
         }
         if (down) btns |= g_padButtons[i].mask;
     }
+    healthWasDown = healthDown;
 
     // ---- ⭐ run 142: hold the panel button for two seconds to open VR settings ----
     //
@@ -9149,7 +9191,7 @@ void SyncXRInput(XrTime displayTime) {
     // recenter is the explicit L3+R3 chord above; this prevents a held system button from toggling
     // the pause state repeatedly or stealing a weapon action.
 
-    // Weapon cycle (up) and health (down) on the look stick's vertical axis. It is free in both
+    // Weapon cycle (up) and crouch (down) on the look stick's vertical axis. It is free in both
     // turn modes - smooth turn only ever feeds X to the look stick, because a thumbstick that
     // pitches the view is the one control VR reliably makes people ill with.
     //
@@ -9159,47 +9201,10 @@ void SyncXRInput(XrTime displayTime) {
     static bool stickArmed = true;
     static int  stickHold = 0;
     static WORD stickMask = 0;
-    if (!uiMenu && fabsf(ty) > 0.7f && stickArmed) {
+    if (!uiMenu && !Rd(g_weaponWheelOpen) && fabsf(ty) > 0.7f && stickArmed) {
         stickMask = (ty > 0) ? g_stickUpMask : g_stickDownMask;
         stickHold = 8;
         stickArmed = false;
-        // ---- ⭐ run 198: stick DOWN is the health item, so this is the heal signal ----
-        //
-        // Taken from the button WE inject rather than detected in the engine: there is no inference to
-        // get wrong, because we are the ones asking for the heal. The window shows the arms and puts the
-        // gun back at the engine's position for its duration - see g_healArmsMs.
-        //
-        // ---- run 199: gated on the heal being able to DO something ----
-        //
-        // At full health the button does nothing, so showing the arms is a pure misfire. Checked before
-        // the press rather than verified after it - see HealWouldDoSomething for why "wait for health to
-        // rise" is the wrong shape.
-        //
-        // ⚠️ Still fires when health is low but you have NO ITEMS. Narrower than before and the same
-        // class of miss; closing it needs the inventory count, which is more property archaeology than
-        // the remaining annoyance is worth.
-        if (ty < 0.0f && InterlockedCompareExchange(&g_healArmsMs, 0, 0) > 0) {
-            bool unknown = false;
-            if (!HealWouldDoSomething(&unknown)) {
-                static ULONGLONG lastSaid = 0;
-                const ULONGLONG now = GetTickCount64();
-                if (now - lastSaid > 3000) {
-                    lastSaid = now;
-                    Log("heal window: SKIPPED - already at full health, so the item would do nothing and"
-                        " the arms stay hidden");
-                }
-            } else {
-                const LONG64 now = (LONG64)GetTickCount64();
-                const LONG dly = InterlockedCompareExchange(&g_healDelayMs, 0, 0);
-                const LONG end = InterlockedCompareExchange(&g_healArmsMs, 0, 0);
-                InterlockedExchange64(&g_healFromMs,  now + dly);
-                InterlockedExchange64(&g_healUntilMs, now + (end > dly ? end : dly + 1));
-                InterlockedExchange(&g_healPending, 1);   // arm the cheap gate LAST, after the deadlines
-                if(dly==0)InterlockedExchange(&g_armsAnimActiveCached,1);
-                Log("heal window: arms shown from +%ld ms to +%ld ms after the press%s", dly, end,
-                    unknown ? " (health could NOT be read - opening on the button alone)" : "");
-            }
-        }
     } else if (fabsf(ty) < 0.4f) {
         stickArmed = true;
     }

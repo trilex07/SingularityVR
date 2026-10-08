@@ -51,7 +51,7 @@ Matches `d3d9.cpp:5890-5916` (run 61b) and `HISTORY.md:2966-2978`.
 | Fire (`GBA_Fire`, RT) | `g_actFire` ← `…/right/input/trigger/value` | Right trigger (R2) | verified |
 | Aim (`GBA_Aim`, LT) | `g_actAltFire` ← `…/left/input/trigger/value` | Left trigger (L2) | verified |
 | Jump (`A`) | `jump` ← `…/right/input/a/click` | × | verified binding; face equivalence UNVERIFIED from source |
-| Crouch (`B`) | `crouch` ← `…/right/input/b/click` | ○ | same |
+| Health (`D-Up`) | `health` ← `…/right/input/b/click` | ○ | remapped; emits native `CB_HEALTH` and arms the bandage animation |
 | Use/reload (`X`) | `use` ← `…/right/input/squeeze/value` | Right grip | verified; CONFLICTS with overlay legend `USE=R1` |
 | AntiGrav (`R-click`) | `antigrav` ← `…/right/input/thumbstick/click` | R3 | verified |
 | Impulse/melee (`RB`) | `impulse` ← `…/left/input/trigger/value` (thresholded) | Left trigger — SAME pull as Aim | code-verified; dual-role needs design decision |
@@ -60,7 +60,7 @@ Matches `d3d9.cpp:5890-5916` (run 61b) and `HISTORY.md:2966-2978`.
 | Dash (`L-click`) | `dash` ← `…/left/input/thumbstick/click` | L3 | verified |
 | Pause (`Start`) | `triangle_menu` ← `…/left/input/y/click` → rising edge `XI_START` | △ | implemented; held Triangle does not repeat |
 | CycleWeapon (`Y`) | stick Y>0.7 → `XI_Y` 8-frame hold | Right stick up | verified |
-| Health (`D-Up`) | stick Y<−0.7 → `XI_DPAD_UP` + heal window | Right stick down | verified |
+| Crouch (`B`) | stick Y<−0.7 → `XI_B` | Right stick down | remapped; 8-frame native crouch pulse |
 | Turn / Move | XR `turn`/`move` → snap/smooth + `g_padLStick` | Right/left stick | verified |
 | Menu select/back | trigger-gate → native mouse; `ui_select/ui_back` → `XI_A/XI_B` | R2 / ○ | verified |
 
