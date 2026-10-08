@@ -87,6 +87,55 @@ from it. No PNG decode in the frame loop.
 SmokeWhite, SmokeBlack, BloodSplash, BloodHitAlt`. Append new clips at the end
 and bump the ABI.
 
+## Turnkey integration (test immediately)
+
+`vfx_draw.h` ships `BuildPlaceholderAtlas()`, which creates four procedural
+D3D9 textures (muzzle / white smoke / black smoke / blood) in code — **no files,
+no PNG decode, no assets**. So the host can render the full flash + smoke + blood
+path the moment the seams are wired, without waiting for the real atlases. Swap
+it for the manifest-driven atlas later; the clipId mapping is identical.
+
+```cpp
+#include "vfx_host.h"   // vfx_plugin.h + vfx_host.h
+#include "vfx_draw.h"   // host::VfxDrawer, host::VfxAtlas, BuildPlaceholderAtlas
+
+static singularity_vfx::host::Plugin    g_vfx;
+static singularity_vfx::host::VfxDrawer g_vfxDrawer;
+static singularity_vfx::host::VfxAtlas  g_vfxAtlas;
+static singularity_vfx::VfxDrawItem     g_vfxItems[32];
+
+// once, after the D3D9 device exists (e.g. end of your device-created hook):
+g_vfx.Load();                                            // no-op if DLL absent
+g_vfxDrawer.Init(pDevice);
+singularity_vfx::host::BuildPlaceholderAtlas(pDevice, g_vfxAtlas);
+
+// FireAmmunition seam (after the existing aim/trace math):
+singularity_vfx::VfxFireEvent fe{};
+fe.muzzle = muzzleWorld; fe.forward = shotDirWorld;
+fe.weapon = singularity_vfx::VfxWeaponClass::Rifle;
+fe.sequence = ++g_shotSeq; fe.valid = true;
+g_vfx.OnFire(fe);
+
+// SetFlashLocation / confirmed flesh hit seam:
+singularity_vfx::VfxHitEvent he{};
+he.point = hitWorld; he.normal = hitNormal;
+he.material = singularity_vfx::VfxHitMaterial::Flesh;
+he.sequence = g_shotSeq; he.valid = true;
+g_vfx.OnHit(he);
+
+// once per frame:
+g_vfx.Tick(dtSeconds);
+
+// INSIDE EACH EYE's world draw (the existing stereo path - not beside it):
+int n = g_vfx.Collect(singularity_vfx::VfxRenderPass::Gameplay, g_vfxItems, 32);
+g_vfxDrawer.DrawItems(pDevice, g_vfxItems, n, g_vfxAtlas, eyeRight, eyeUp);
+
+// teardown:
+g_vfx.Unload(); g_vfxDrawer.Shutdown(); singularity_vfx::host::ReleaseAtlas(g_vfxAtlas);
+```
+
+Keep `HideMuzzleFx` on, or the original centred first-person flash returns.
+
 ## Reference plugin stub (hand this to the main agent)
 
 `tools/vfx-plugin-stub/` contains a working, self-contained plugin that implements

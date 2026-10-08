@@ -17,6 +17,7 @@
 
 #include <d3d9.h>
 #include <cstddef>
+#include <cmath>
 
 namespace singularity_vfx {
 namespace host {
@@ -47,6 +48,91 @@ struct VfxAtlas {
         return &clips[clipId];
     }
 };
+
+// ---------------------------------------------------------------------------
+// Procedural placeholder atlas.
+//
+// Lets the host render testable flash/smoke/blood immediately, with NO external
+// files, NO PNG decode and NO game assets. Replace with the real 1024x1024
+// atlases from the manifest when they land; the clipId mapping is identical.
+// ---------------------------------------------------------------------------
+inline bool MakeBlobTexture(IDirect3DDevice9* dev, D3DCOLOR rgb, float alphaScale,
+                            int cols, int rows, int cell, IDirect3DTexture9** out) {
+    if (out) *out = nullptr;
+    if (!dev || !out || cols <= 0 || rows <= 0 || cell <= 0) return false;
+    const UINT size = static_cast<UINT>(cols * cell);
+    if (FAILED(dev->CreateTexture(size, size, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
+                                  out, nullptr)) || !*out)
+        return false;
+
+    D3DLOCKED_RECT lr;
+    if (FAILED((*out)->LockRect(0, &lr, nullptr, 0))) {
+        (*out)->Release(); *out = nullptr; return false;
+    }
+    const int total = cols * rows;
+    const float inv = (cell > 1) ? 1.0f / static_cast<float>(cell - 1) : 0.0f;
+    for (int y = 0; y < static_cast<int>(size); ++y) {
+        DWORD* row = reinterpret_cast<DWORD*>(reinterpret_cast<BYTE*>(lr.pBits) +
+                                              static_cast<size_t>(y) * lr.Pitch);
+        const int cy = y / cell;
+        for (int x = 0; x < static_cast<int>(size); ++x) {
+            const int cx = x / cell;
+            const int frame = cy * cols + cx;
+            const float lx = static_cast<float>(x % cell) * inv * 2.0f - 1.0f;
+            const float ly = static_cast<float>(y % cell) * inv * 2.0f - 1.0f;
+            const float r = std::sqrt(lx * lx + ly * ly);
+            const float t = (total > 1) ? static_cast<float>(frame) / (total - 1) : 0.0f;
+            const float radius = 0.35f + 0.60f * t;
+            float a = 1.0f - (r - radius * 0.35f) / (radius * 0.65f);
+            if (a < 0.0f) a = 0.0f;
+            if (a > 1.0f) a = 1.0f;
+            a = a * a * (3.0f - 2.0f * a);            // smoothstep
+            const BYTE A = static_cast<BYTE>(a * 255.0f * alphaScale);
+            row[x] = (static_cast<DWORD>(A) << 24) | (rgb & 0x00FFFFFFu);
+        }
+    }
+    (*out)->UnlockRect(0);
+    return true;
+}
+
+// Builds 4 placeholder textures and fills the clip mapping. Returns false only if
+// texture creation fails (caller can then fall back to no VFX).
+inline void ReleaseAtlas(VfxAtlas& atlas);
+
+inline bool BuildPlaceholderAtlas(IDirect3DDevice9* dev, VfxAtlas& atlas) {
+    if (!dev) return false;
+    atlas = VfxAtlas{};
+    for (auto& c : atlas.clips) { c.tex = -1; c.cols = 1; c.rows = 1; }
+
+    const int cell = 64;
+    const bool ok = MakeBlobTexture(dev, D3DCOLOR_XRGB(255, 224, 150), 1.00f, 4, 4, cell, &atlas.texture[0]) &&
+                    MakeBlobTexture(dev, D3DCOLOR_XRGB(210, 210, 210), 0.55f, 5, 5, cell, &atlas.texture[1]) &&
+                    MakeBlobTexture(dev, D3DCOLOR_XRGB(38, 38, 38),    0.60f, 5, 5, cell, &atlas.texture[2]) &&
+                    MakeBlobTexture(dev, D3DCOLOR_XRGB(150, 24, 24),   0.85f, 4, 4, cell, &atlas.texture[3]);
+    if (!ok) { ReleaseAtlas(atlas); return false; }
+    atlas.count = 4;
+
+    const VfxAtlas::ClipMap muzzle{0, 4, 4};
+    const VfxAtlas::ClipMap smokeW{1, 5, 5};
+    const VfxAtlas::ClipMap smokeB{2, 5, 5};
+    const VfxAtlas::ClipMap blood{3, 4, 4};
+    atlas.clips[static_cast<int>(VfxClip::MuzzleFireSmall)]  = muzzle;
+    atlas.clips[static_cast<int>(VfxClip::MuzzleFireLarge)]  = muzzle;
+    atlas.clips[static_cast<int>(VfxClip::MuzzleFireHeavy)]  = muzzle;
+    atlas.clips[static_cast<int>(VfxClip::MuzzleFireEnergy)] = muzzle;
+    atlas.clips[static_cast<int>(VfxClip::SmokeWhite)]       = smokeW;
+    atlas.clips[static_cast<int>(VfxClip::SmokeBlack)]       = smokeB;
+    atlas.clips[static_cast<int>(VfxClip::BloodSplash)]      = blood;
+    atlas.clips[static_cast<int>(VfxClip::BloodHitAlt)]      = blood;
+    return true;
+}
+
+inline void ReleaseAtlas(VfxAtlas& atlas) {
+    for (int i = 0; i < VfxAtlas::kMaxTextures; ++i) {
+        if (atlas.texture[i]) { atlas.texture[i]->Release(); atlas.texture[i] = nullptr; }
+    }
+    atlas.count = 0;
+}
 
 struct VfxSavedState {
     DWORD rsZEnable = 0, rsZWrite = 0, rsAlphaBlend = 0;
