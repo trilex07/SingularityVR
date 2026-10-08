@@ -39,6 +39,46 @@
       }
     }
   },
+  "inview_glove_n": {
+    "note": "glove tangent normal - technically-correct path only",
+    "kind": "normal",
+    "source": "inview_glove_n",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "26ed4b032c0ef36d79f1a5242af94a166aa06d82971113fd8d2464e1597a187b",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "7ea4f657fa95a1cf220383b00c6e8170216a335c2f2e626df044ff0b0cea99d3",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
   "AR_E99Rifle_alt_d": {
     "note": "E99 assault rifle FP diffuse (most visible weapon)",
     "kind": "albedo",
@@ -79,10 +119,90 @@
       }
     }
   },
-  "inview_glove_n": {
-    "note": "glove tangent normal - technically-correct path only",
+  "AR_E99Rifle_n": {
+    "note": "E99 tangent normal",
     "kind": "normal",
-    "source": "inview_glove_n",
+    "source": "AR_E99Rifle_n",
+    "object_dims": [
+      2048,
+      1024
+    ],
+    "source_dims": [
+      2048,
+      1024
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          4096,
+          2048
+        ],
+        "mips": 11,
+        "dds_bytes": 5592536,
+        "sha256": "024cd5b0039ea1fac67784acf2d3e8e0e1a75d0a01abbb31cc5a6fa5954af3e7",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          4096,
+          2048
+        ],
+        "mips": 11,
+        "dds_bytes": 5592536,
+        "sha256": "9cf49f282afb9ec43a8e1cd3f780800788f81f6f095b4ede133e5418830d2cff",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "AR_shotgun_d": {
+    "note": "shotgun FP diffuse",
+    "kind": "albedo",
+    "source": "AR_shotgun_d",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT5",
+    "dds_format": "DXT5",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 5592528,
+        "sha256": "ababca6093d1667fae8a88978d6d598d6e7f64fbc3d73ee41f02863e36abb984",
+        "alpha_min": 0,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 5592528,
+        "sha256": "8d1865053b48f8a4ed83b2ffc374345a023884816ced3fad4e0e3f559ac9b6a0",
+        "alpha_min": 0,
+        "alpha_max": 255
+      }
+    }
+  },
+  "AR_shotgun_n": {
+    "note": "shotgun tangent normal",
+    "kind": "normal",
+    "source": "AR_shotgun_n",
     "object_dims": [
       1024,
       1024
@@ -102,7 +222,7 @@
         ],
         "mips": 10,
         "dds_bytes": 2796328,
-        "sha256": "26ed4b032c0ef36d79f1a5242af94a166aa06d82971113fd8d2464e1597a187b",
+        "sha256": "62e858e82211df955c98518cfefae8b884ac7b483f8c35b2b85b6678be25e5e6",
         "alpha_min": 255,
         "alpha_max": 255
       },
@@ -113,7 +233,287 @@
         ],
         "mips": 10,
         "dds_bytes": 2796328,
-        "sha256": "7ea4f657fa95a1cf220383b00c6e8170216a335c2f2e626df044ff0b0cea99d3",
+        "sha256": "ae29c0397023adbbc127f3d7e14b35d9b7341d2d806c0298b1108cb7acc4b7a3",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "AR_shotgun_e": {
+    "note": "shotgun emissive",
+    "kind": "emissive",
+    "source": "AR_shotgun_e",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "88779b68f4516cf77932b113e65fbcb8cc9368dda8121ceac693998a9921b1a1",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "47b8cb7d0492d30b756c3a5ded69be95ec182ed7e4ff94495054d451e4f6a9a7",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "ar_gatling_gun_d": {
+    "note": "gatling FP diffuse",
+    "kind": "albedo",
+    "source": "ar_gatling_gun_d",
+    "object_dims": [
+      2048,
+      1024
+    ],
+    "source_dims": [
+      2048,
+      1024
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT5",
+    "dds_format": "DXT5",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          4096,
+          2048
+        ],
+        "mips": 11,
+        "dds_bytes": 11184944,
+        "sha256": "1ec37f140c9c4c94c23ef846ed3f761abaa36c27b960250ef010562cfac8bb88",
+        "alpha_min": 0,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          4096,
+          2048
+        ],
+        "mips": 11,
+        "dds_bytes": 11184944,
+        "sha256": "ef3466b9fcb024fffca640bcb5ab43c9af46de3e4ff913cab4e5d5b21463979a",
+        "alpha_min": 0,
+        "alpha_max": 255
+      }
+    }
+  },
+  "ar_gatling_gun_n": {
+    "note": "gatling tangent normal",
+    "kind": "normal",
+    "source": "ar_gatling_gun_n",
+    "object_dims": [
+      2048,
+      1024
+    ],
+    "source_dims": [
+      2048,
+      1024
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          4096,
+          2048
+        ],
+        "mips": 11,
+        "dds_bytes": 5592536,
+        "sha256": "bf83debd59a4799306c24b3bc81f92c233db3543134a73c409a526cc23038191",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          4096,
+          2048
+        ],
+        "mips": 11,
+        "dds_bytes": 5592536,
+        "sha256": "244cf49ad12a0a2c63b4ea253157b1e635a445417151a70cfa670f640f84d3ee",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "ar_sniper_rifle_n": {
+    "note": "sniper tangent normal",
+    "kind": "normal",
+    "source": "ar_sniper_rifle_n",
+    "object_dims": [
+      2048,
+      1024
+    ],
+    "source_dims": [
+      2048,
+      1024
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          4096,
+          2048
+        ],
+        "mips": 11,
+        "dds_bytes": 5592536,
+        "sha256": "32b5003f620010c11ed2a96687060f1a259ec0a13868c8b6165e67b8f0239cea",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          4096,
+          2048
+        ],
+        "mips": 11,
+        "dds_bytes": 5592536,
+        "sha256": "2ca690c226a2c5cff2e3948b69c1390b743a541fc3d41e0912b3e37ac9adf7a9",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "elite_beam_n": {
+    "note": "railgun tangent normal",
+    "kind": "normal",
+    "source": "elite_beam_n",
+    "object_dims": [
+      2048,
+      2048
+    ],
+    "source_dims": [
+      2048,
+      2048
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          4096,
+          4096
+        ],
+        "mips": 11,
+        "dds_bytes": 11184936,
+        "sha256": "9d43df38ae892944e4d7c1adfb18a1e76e526efa81db77030fbf013b75be74f1",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          4096,
+          4096
+        ],
+        "mips": 11,
+        "dds_bytes": 11184936,
+        "sha256": "4921f7c5896e4156c8c1b6bed320276483968e2982517543cfb3bddb5f2a28b1",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "laser_d": {
+    "note": "pistol laser sight diffuse",
+    "kind": "albedo",
+    "source": "laser_d",
+    "object_dims": [
+      256,
+      256
+    ],
+    "source_dims": [
+      256,
+      256
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          512,
+          512
+        ],
+        "mips": 8,
+        "dds_bytes": 174888,
+        "sha256": "03070b7bc97a49ba18473f1c664cdcdd0759e3a6b16e8915f35ff9b8869969ea",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          512,
+          512
+        ],
+        "mips": 8,
+        "dds_bytes": 174888,
+        "sha256": "57109a9951a98b595ef1653930a1709023a5feaa4089d031ad58f09488792877",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "laser_n": {
+    "note": "pistol laser sight normal",
+    "kind": "normal",
+    "source": "laser_n",
+    "object_dims": [
+      256,
+      256
+    ],
+    "source_dims": [
+      256,
+      256
+    ],
+    "source_mip_level": 0,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          512,
+          512
+        ],
+        "mips": 8,
+        "dds_bytes": 174888,
+        "sha256": "b7579c8b78c0414e9a900cb181035a74e61d8d0b910940d071f61dcf8da7c625",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          512,
+          512
+        ],
+        "mips": 8,
+        "dds_bytes": 174888,
+        "sha256": "fb597690bb552fa1723945bae582a9024cfea4220f732c7b5702c2cba0f24d55",
         "alpha_min": 255,
         "alpha_max": 255
       }

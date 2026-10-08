@@ -45,19 +45,20 @@ try {
         # clear old variant files so only the chosen one is present
         Get-ChildItem $texDst -Filter *.dds -ErrorAction SilentlyContinue | Remove-Item -Force
 
-        # Variant suffix -> injector filename baked into the DLL (variant-agnostic).
+        # Every upscaled candidate for the chosen variant is deployed as <name>.dds,
+        # which is exactly the filename the injector looks up per target.
         $suffix = if ($Variant -eq "B") { "__B_ibp" } else { "__A_lanczos" }
-        $map = @{
-            "inview_glove_d$suffix.dds" = "inview_glove_d.dds"
-            "inview_glove_n$suffix.dds" = "inview_glove_n.dds"
-        }
         $up = Join-Path $LocalRoot "textures\upscaled"
-        foreach ($src in $map.Keys) {
-            $from = Join-Path $up $src
-            if (-not (Test-Path $from)) { throw "candidate missing: $from (run the pipeline 'upscale' step first)" }
-            Copy-Item $from (Join-Path $texDst $map[$src]) -Force
+        if (-not (Test-Path $up)) { throw "upscaled dir missing: $up (run the pipeline 'upscale' step first)" }
+        $strip = "$suffix.dds"
+        $count = 0
+        Get-ChildItem $up -Filter "*$suffix.dds" | ForEach-Object {
+            $base = $_.Name.Substring(0, $_.Name.Length - $strip.Length)
+            Copy-Item $_.FullName (Join-Path $texDst "$base.dds") -Force
+            $count++
         }
-        Write-Host "Variant: $Variant ($suffix)"
+        if ($count -eq 0) { throw "no '$suffix' candidates found in $up" }
+        Write-Host "Variant: $Variant ($suffix), $count texture(s) deployed"
 
         # forward to a local copy of the real dinput8 under a distinct name
         $sysDi8 = Join-Path ${env:windir} "SysWOW64\dinput8.dll"

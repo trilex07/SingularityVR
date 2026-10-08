@@ -33,13 +33,10 @@ struct Target {
     uint64_t hash;       // FNV-1a 64 of original mip0
     const char* dds;     // replacement file inside TexturesDir
 };
-// Replacement filenames are variant-agnostic: build.ps1 -Variant A|B copies the
-// chosen candidate into these names, so switching quality needs no rebuild.
-static const Target kTargets[] = {
-    { "inview_glove_d", 1024, 1024, D3DFMT_DXT1, 14169204449685679501ULL, "inview_glove_d.dds" },
-    { "inview_glove_n", 1024, 1024, D3DFMT_DXT1, 14124171308224505833ULL, "inview_glove_n.dds" },
-};
-static const int kTargetCount = (int)(sizeof(kTargets) / sizeof(kTargets[0]));
+// Target table is generated from the pipeline manifests (content hashes of the
+// original mip-0 DXT bytes). Replacement filenames are variant-agnostic:
+// build.ps1 -Variant A|B copies the chosen candidate into <name>.dds.
+#include "targets_generated.h"
 
 // ---------------------------------------------------------------------------
 // state
