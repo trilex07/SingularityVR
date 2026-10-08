@@ -94,12 +94,23 @@ inline bool BuildAtlasFromDir(IDirect3DDevice9* dev, VfxAtlas& atlas, const char
     atlas = VfxAtlas{};
     for (auto& c : atlas.clips) { c.tex = -1; c.cols = 1; c.rows = 1; }
 
+    // Muzzle flash and smoke are the primary fire path.  Blood is a separate,
+    // currently optional hit path: a missing/corrupt blood atlas must never
+    // suppress the fire effects (the old all-or-nothing load did exactly that).
     if (!LoadAtlasTexture(dev, dir, "vfx_muzzle.dds", &atlas.texture[0]) ||
         !LoadAtlasTexture(dev, dir, "vfx_smoke_white.dds", &atlas.texture[1]) ||
-        !LoadAtlasTexture(dev, dir, "vfx_smoke_black.dds", &atlas.texture[2]) ||
-        !LoadAtlasTexture(dev, dir, "vfx_blood.dds", &atlas.texture[3])) {
+        !LoadAtlasTexture(dev, dir, "vfx_smoke_black.dds", &atlas.texture[2])) {
         ReleaseAtlas(atlas);
         return false;
+    }
+    if (!LoadAtlasTexture(dev, dir, "vfx_blood.dds", &atlas.texture[3])) {
+        // Keep the ABI/clip table stable.  The procedural tile is deliberately
+        // small and is only used when the optional authored blood atlas is not
+        // available; it is never allowed to become a reason for fire failure.
+        if (!MakeBlobTexture(dev, 0xFFB01828u, 0.75f, 4, 4, 32, &atlas.texture[3])) {
+            ReleaseAtlas(atlas);
+            return false;
+        }
     }
     atlas.count = 4;
 
