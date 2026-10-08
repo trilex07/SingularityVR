@@ -137,6 +137,44 @@
           "material": "elite_beam_amo_inview"
         }
       ]
+    },
+    {
+      "mesh": "ch_revert_mesh",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        {
+          "slot": 1,
+          "material_path": "ch_revert.Materials.ch_revert_env",
+          "material": "ch_revert_env"
+        }
+      ]
+    },
+    {
+      "mesh": "ch_phase_tick_mesh",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        {
+          "slot": 1,
+          "material_path": "ch_phase_tick.Materials.phase_tick",
+          "material": "phase_tick"
+        }
+      ]
+    },
+    {
+      "mesh": "ch_MP_spetsnaz",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "ch_multiplayer.Materials.Soviet.mp_spetsnaz_grunt_head",
+          "material": "mp_spetsnaz_grunt_head"
+        },
+        {
+          "slot": 1,
+          "material_path": "ch_multiplayer.Materials.Soviet.MP_Spetsnaz_Grunt",
+          "material": "MP_Spetsnaz_Grunt"
+        }
+      ]
     }
   ],
   "materials": {
@@ -278,6 +316,51 @@
         "diffusemap": "elite_beam_ammo_d",
         "normalmap": "elite_beam_ammo_n",
         "specularmap": "elite_beam_ammo_s"
+      }
+    },
+    "ch_revert_env": {
+      "material_path": "ch_revert.Materials.ch_revert_env",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "SphericalMap": "matball05",
+        "normalmap": "revert_n2",
+        "detailmap": "DETAILrough03a_n",
+        "diffusemap": "revert_d2",
+        "SphericalMap2": "matball12",
+        "transmissionmask": "revert_t"
+      }
+    },
+    "phase_tick": {
+      "material_path": "ch_phase_tick.Materials.phase_tick",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "diffusemap": "phasetick_d",
+        "fxmap": "phasetick_e",
+        "normalmap": "phasetick_n",
+        "specularmap": "phasetick_s"
+      }
+    },
+    "mp_spetsnaz_grunt_head": {
+      "material_path": "ch_multiplayer.Materials.Soviet.mp_spetsnaz_grunt_head",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "normalmap": "Spetsnaz_MP_helmet_n",
+        "detailmap": "DETAILfinerough01a_n",
+        "diffusemap": "Spetsnaz_MP_helmet_d",
+        "agemap": "agemap_head",
+        "specularmap": "Spetsnaz_MP_helmet_s",
+        "emissivemap": "Spetsnaz_MP_helmet_e"
+      }
+    },
+    "MP_Spetsnaz_Grunt": {
+      "material_path": "ch_multiplayer.Materials.Soviet.MP_Spetsnaz_Grunt",
+      "package": "RvGameMPLoader_SF",
+      "params": {
+        "SphericalMap": "matball06",
+        "normalmap": "Spetsnaz_MP_Body_n",
+        "diffusemap": "Spetsnaz_MP_Body_d",
+        "agemap": "agemap_body",
+        "specularmap": "Spetsnaz_MP_Body_s"
       }
     }
   }

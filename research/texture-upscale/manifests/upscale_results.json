@@ -545,6 +545,552 @@
       }
     }
   },
+  "revert_d2": {
+    "note": "Revert (mutant) diffuse - 2048 -> 4096",
+    "kind": "albedo",
+    "source": "revert_d2",
+    "object_dims": [
+      2048,
+      2048
+    ],
+    "source_dims": [
+      2048,
+      2048
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\revert_d2.dds",
+    "source_fnv": 13544974987055247055,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          4096,
+          4096
+        ],
+        "mips": 11,
+        "dds_bytes": 11184936,
+        "sha256": "83623e8c2ba993a43bb6867ea051cdbedfb898faac6cbfc3782975545f7b54a0",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          4096,
+          4096
+        ],
+        "mips": 11,
+        "dds_bytes": 11184936,
+        "sha256": "5fe38c8c81a6029f261285007cb9ce39b616288fc721a8b3b19a833db44810b2",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "revert_n2": {
+    "note": "Revert tangent normal - 2048 -> 4096",
+    "kind": "normal",
+    "source": "revert_n2",
+    "object_dims": [
+      2048,
+      2048
+    ],
+    "source_dims": [
+      2048,
+      2048
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\revert_n2.dds",
+    "source_fnv": 17807392261670290024,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          4096,
+          4096
+        ],
+        "mips": 11,
+        "dds_bytes": 11184936,
+        "sha256": "b904d1446c9903acde640a5926f5c1ce460ba853af1cab247c40aefc2cdbd51a",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          4096,
+          4096
+        ],
+        "mips": 11,
+        "dds_bytes": 11184936,
+        "sha256": "c8e556884951b09f337a0a58f5da3c33f8e92ec0e4fbae373c79803526fccab9",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "revert_t": {
+    "note": "Revert secondary/detail map",
+    "kind": "albedo",
+    "source": "revert_t",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\revert_t.dds",
+    "source_fnv": 11894077424180967029,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "1fe491afb110ff2e0b17343afb2f5c65442931da4b6b0adbad2c107f4d356cc4",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "78dd22d48bd30f564128819c4ba6be9fdf1367dfe3854c67ad0f49ffbf0e1123",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "phasetick_d": {
+    "note": "Phase Tick diffuse",
+    "kind": "albedo",
+    "source": "phasetick_d",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\phasetick_d.dds",
+    "source_fnv": 6063816156848365173,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "d9dfb0fe95729749872852f1bfe8e85556fa8ceab1366f833b0687111efa30b3",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "549ef960271b6028c6bc1c3b65ee8cde5ad6c4fa75550d05ef1eecfdc79dc210",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "phasetick_n": {
+    "note": "Phase Tick tangent normal",
+    "kind": "normal",
+    "source": "phasetick_n",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\phasetick_n.dds",
+    "source_fnv": 1975627357565138212,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "d0311d81c46ce290c30132cc73c97b4c598df7ab1ff4f3350d01d3ba8017d00b",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "5b757172abb9ef6b67a1a181b0aaea2dcfcd1e92a9c091f70d56708afc66656b",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "phasetick_s": {
+    "note": "Phase Tick specular (conservative)",
+    "kind": "albedo",
+    "source": "phasetick_s",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\phasetick_s.dds",
+    "source_fnv": 2267087083260563590,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "8431088a47a5b5bf0b26cefc849bc522ddb3c24f861de07c4cb5de0c2f9b0f67",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "90265fb4932a5c6db41b65681f26369b2ab09a90e6a7f2dbe89a84b7d2395c4a",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "phasetick_e": {
+    "note": "Phase Tick emissive",
+    "kind": "emissive",
+    "source": "phasetick_e",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\phasetick_e.dds",
+    "source_fnv": 10446275587636028862,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "ae2d4cfcedab1df372b71e65ad74945b245e77d1a13cda3c1b0d8479e406e0a4",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "31e11896d5a8b5b11d9e6da87caca33e5424b3283ed4f5a7d57df4c28f3d95e0",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "Spetsnaz_MP_helmet_d": {
+    "note": "Spetsnaz helmet diffuse",
+    "kind": "albedo",
+    "source": "Spetsnaz_MP_helmet_d",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\Spetsnaz_MP_helmet_d.dds",
+    "source_fnv": 7773224157656991146,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "367271704f00af26a2608fe8cffc868465eecbbdc68aa85e46f0bdf70b585c20",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "f0a1b1cee0c17167675453ae1cceb3a66753fa56c11dd18b79c5a926433bb63c",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "Spetsnaz_MP_helmet_n": {
+    "note": "Spetsnaz helmet tangent normal",
+    "kind": "normal",
+    "source": "Spetsnaz_MP_helmet_n",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\Spetsnaz_MP_helmet_n.dds",
+    "source_fnv": 13284849330641921571,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "2acc5fd6000875f2e5392c54c41fdc71554bec94629aee255535f952271c1053",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "365270fd170bf77e5234309f52207abfa7154912b94305e87924bb85f08f0ee9",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "Spetsnaz_MP_helmet_s": {
+    "note": "Spetsnaz helmet specular (conservative)",
+    "kind": "albedo",
+    "source": "Spetsnaz_MP_helmet_s",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\Spetsnaz_MP_helmet_s.dds",
+    "source_fnv": 7595224733091788712,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "6f2449fdbfffe40926991e779edb89cae4dd11c9a170e262ef62cb7e5e4c0c8d",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "24864435d9294ddb2edb0c8041601aabc3499dc03177875b61c46cc70aff1593",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "Spetsnaz_MP_helmet_e": {
+    "note": "Spetsnaz helmet emissive",
+    "kind": "emissive",
+    "source": "Spetsnaz_MP_helmet_e",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\Spetsnaz_MP_helmet_e.dds",
+    "source_fnv": 10048127609564659584,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "97f792b9c49041a607e6cad72d3bf82429f249358c4cdbe87181ee7f18d2d0ca",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "15c016336f6c61dd701f3b9290084030c6bec0a48bc50156e7115ffe43ccfb77",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "Spetsnaz_MP_Body_d": {
+    "note": "Spetsnaz body diffuse",
+    "kind": "albedo",
+    "source": "Spetsnaz_MP_Body_d",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\Spetsnaz_MP_Body_d.dds",
+    "source_fnv": 17230285951280772806,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "39103e2fbcac994318b7dc09cb5ee7d41311a38d8768ba46a69d91cc70f0f8f4",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "1576a7f3ea4b2e6fbccff279b77fa4940c17f46b8ae89058bdac0403fba646a2",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "Spetsnaz_MP_Body_n": {
+    "note": "Spetsnaz body tangent normal",
+    "kind": "normal",
+    "source": "Spetsnaz_MP_Body_n",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\Spetsnaz_MP_Body_n.dds",
+    "source_fnv": 10007535904788740833,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "bbde8977445f736464f99e1fc258f2e1df3c55f2dfc30798e9e37b6c9398738e",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "844772dbb9decd2164af8ad59096eb3e1e89ca387710249fc055ca891ded0bcc",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
   "handgun_d": {
     "note": "First-person 2007 pistol diffuse, captured from the running game (the offline TFC path cannot reach its mip 0). 1024x1024 DXT5 at runtime.",
     "kind": "albedo",

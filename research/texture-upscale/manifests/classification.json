@@ -3,6 +3,8 @@
     "ALBEDO": [
       "AR_E99Rifle_alt_d",
       "AR_shotgun_d",
+      "Spetsnaz_MP_Body_d",
+      "Spetsnaz_MP_helmet_d",
       "TMD_new2_d",
       "ar_gatling_ammo_chain_d",
       "ar_gatling_gun_d",
@@ -14,14 +16,19 @@
       "handgun_d",
       "inview_glove_d",
       "laser_d",
+      "phasetick_d",
+      "revert_d2",
       "scope_glass_d"
     ],
     "DETAIL": [
-      "DETAILfinepitted02a_n"
+      "DETAILfinepitted02a_n",
+      "DETAILfinerough01a_n",
+      "DETAILrough03a_n"
     ],
     "EMISSIVE": [
       "AR_E99Rifle_alt_e",
       "AR_shotgun_e",
+      "Spetsnaz_MP_helmet_e",
       "TMD_new_s",
       "handgun_g"
     ],
@@ -29,11 +36,14 @@
       "AR_E99RifleLens_m",
       "AR_shotgun_rim",
       "handgun_s",
+      "revert_t",
       "scope_glass_o"
     ],
     "NORMAL": [
       "AR_E99Rifle_n",
       "AR_shotgun_n",
+      "Spetsnaz_MP_Body_n",
+      "Spetsnaz_MP_helmet_n",
       "TMD_new_n",
       "ar_gatling_ammo_chain_n",
       "ar_gatling_gun_n",
@@ -43,11 +53,15 @@
       "elite_beam_scope_n",
       "handgun_n",
       "inview_glove_n",
-      "laser_n"
+      "laser_n",
+      "phasetick_n",
+      "revert_n2"
     ],
     "SPECULAR": [
       "AR_E99Rifle_alt_s",
       "AR_shotgun_s",
+      "Spetsnaz_MP_Body_s",
+      "Spetsnaz_MP_helmet_s",
       "TMD_new2_s",
       "ar_gatling_ammo_chain_s",
       "ar_gatling_gun_s",
@@ -56,12 +70,19 @@
       "elite_beam_s",
       "elite_beam_scope_s",
       "inview_glove_s",
-      "laser_s"
+      "laser_s",
+      "phasetick_s"
     ],
     "SPHERICAL": [
+      "matball05",
+      "matball06",
       "matballInview"
     ],
     "UNKNOWN": [
+      "agemap_body",
+      "agemap_head",
+      "matball12",
+      "phasetick_e",
       "reddot"
     ]
   },
@@ -319,6 +340,213 @@
       ],
       "sha256": "41918bfac0ab61619e48388ce2233de5a2998abddc656eac33ecadbb5425dacc"
     },
+    "DETAILfinerough01a_n": {
+      "class": "DETAIL",
+      "proven": true,
+      "dims": [
+        512,
+        512
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "mp_spetsnaz_grunt_head"
+      ],
+      "roles": [
+        {
+          "param": "detailmap",
+          "class": "DETAIL",
+          "material": "mp_spetsnaz_grunt_head"
+        }
+      ],
+      "sha256": "a9c50018308376abf8dc4b81e2161bed8873f8570e04978b57fe15c2cbdd9cdc"
+    },
+    "DETAILrough03a_n": {
+      "class": "DETAIL",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "ch_revert_env"
+      ],
+      "roles": [
+        {
+          "param": "detailmap",
+          "class": "DETAIL",
+          "material": "ch_revert_env"
+        }
+      ],
+      "sha256": "95cb138a96a39f13d02a9ce75e54caa751f964464c4d15d8e0c973214c4034b2"
+    },
+    "Spetsnaz_MP_Body_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "MP_Spetsnaz_Grunt"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "MP_Spetsnaz_Grunt"
+        }
+      ],
+      "sha256": "722037ae72ee541d6e22c89d134b835825c5ed18b3b5fcdbabb3099fef8d98f6"
+    },
+    "Spetsnaz_MP_Body_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "MP_Spetsnaz_Grunt"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "MP_Spetsnaz_Grunt"
+        }
+      ],
+      "sha256": "ed45e2d6a079f40efbdfbd2de875060f3e585c1d54fd1c10a0cfe1b10391a326"
+    },
+    "Spetsnaz_MP_Body_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "MP_Spetsnaz_Grunt"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "MP_Spetsnaz_Grunt"
+        }
+      ],
+      "sha256": "5f130cb1d58475f0ed7e1a590631d25afa1675b24af57af7ade7aac5c1928ffb"
+    },
+    "Spetsnaz_MP_helmet_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "mp_spetsnaz_grunt_head"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "mp_spetsnaz_grunt_head"
+        }
+      ],
+      "sha256": "109d62995624e020e578b2e93681bc84331d30bb002fee601bab3a7a2febbe95"
+    },
+    "Spetsnaz_MP_helmet_e": {
+      "class": "EMISSIVE",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "mp_spetsnaz_grunt_head"
+      ],
+      "roles": [
+        {
+          "param": "emissivemap",
+          "class": "EMISSIVE",
+          "material": "mp_spetsnaz_grunt_head"
+        }
+      ],
+      "sha256": "cb7083198ae164fa6db6b9bd9a2fdd82e4200ec8a2b39455f71af5b7b3c0e968"
+    },
+    "Spetsnaz_MP_helmet_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "mp_spetsnaz_grunt_head"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "mp_spetsnaz_grunt_head"
+        }
+      ],
+      "sha256": "db0120e68eafe06c0a4002f5eddf02380e07ddf8ad74cb0fa66fbe169213dca8"
+    },
+    "Spetsnaz_MP_helmet_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        1024,
+        1024
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "mp_spetsnaz_grunt_head"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "mp_spetsnaz_grunt_head"
+        }
+      ],
+      "sha256": "e3493af339a00d2e44bb94fc1353115a33a065a6af67f1b519b8b4cf5be49916"
+    },
     "TMD_new2_d": {
       "class": "ALBEDO",
       "proven": true,
@@ -410,6 +638,52 @@
         }
       ],
       "sha256": "f96af3a0034b2b030d812e7b54f6f5dd883d5eefcb671440416655c24bd64162"
+    },
+    "agemap_body": {
+      "class": "UNKNOWN",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "MP_Spetsnaz_Grunt"
+      ],
+      "roles": [
+        {
+          "param": "agemap",
+          "class": "UNKNOWN",
+          "material": "MP_Spetsnaz_Grunt"
+        }
+      ],
+      "sha256": null
+    },
+    "agemap_head": {
+      "class": "UNKNOWN",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "mp_spetsnaz_grunt_head"
+      ],
+      "roles": [
+        {
+          "param": "agemap",
+          "class": "UNKNOWN",
+          "material": "mp_spetsnaz_grunt_head"
+        }
+      ],
+      "sha256": null
     },
     "ar_gatling_ammo_chain_d": {
       "class": "ALBEDO",
@@ -874,7 +1148,7 @@
           "material": "handgun"
         }
       ],
-      "sha256": null
+      "sha256": "3a982be5a8735beec2913bdd772389fd53b6b59ab191ed00adb6171ea87bf409"
     },
     "handgun_g": {
       "class": "EMISSIVE",
@@ -920,7 +1194,7 @@
           "material": "handgun"
         }
       ],
-      "sha256": null
+      "sha256": "2d0a926ddb4da150a77d94791f3faf31349bc3769f1677147ff181fb4a3dfc08"
     },
     "handgun_s": {
       "class": "MASK",
@@ -1088,6 +1362,75 @@
       ],
       "sha256": "abf09de72156d24f004ac4dfef1fd324e2e64cd663cf15223fc5d004ae9e3588"
     },
+    "matball05": {
+      "class": "SPHERICAL",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "ch_revert_env"
+      ],
+      "roles": [
+        {
+          "param": "SphericalMap",
+          "class": "SPHERICAL",
+          "material": "ch_revert_env"
+        }
+      ],
+      "sha256": "0990f76f8f01305888bd057d9b2224db79c82f35829a891eeff72dda12a3d9cc"
+    },
+    "matball06": {
+      "class": "SPHERICAL",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "MP_Spetsnaz_Grunt"
+      ],
+      "roles": [
+        {
+          "param": "SphericalMap",
+          "class": "SPHERICAL",
+          "material": "MP_Spetsnaz_Grunt"
+        }
+      ],
+      "sha256": "8fb67401ab04e78f7570fdd9b3d817545a148ebe671ef0b1075bcd0c90ebf9a2"
+    },
+    "matball12": {
+      "class": "UNKNOWN",
+      "proven": true,
+      "dims": [
+        256,
+        256
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "ch_revert_env"
+      ],
+      "roles": [
+        {
+          "param": "SphericalMap2",
+          "class": "UNKNOWN",
+          "material": "ch_revert_env"
+        }
+      ],
+      "sha256": "2958da9c5d1419ea3ae26ba48d850be810ee4cbd39a86b0f131f01848fb395d4"
+    },
     "matballInview": {
       "class": "SPHERICAL",
       "proven": true,
@@ -1111,6 +1454,98 @@
       ],
       "sha256": null
     },
+    "phasetick_d": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        512,
+        512
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "phase_tick"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "phase_tick"
+        }
+      ],
+      "sha256": "03c6f7342fc0b243437dc0f4fb083eefc3f2b11ae36727237cca2391043adaf2"
+    },
+    "phasetick_e": {
+      "class": "UNKNOWN",
+      "proven": true,
+      "dims": [
+        512,
+        512
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "phase_tick"
+      ],
+      "roles": [
+        {
+          "param": "fxmap",
+          "class": "UNKNOWN",
+          "material": "phase_tick"
+        }
+      ],
+      "sha256": "dd9fbf2ddd2be8d947a3076c8742e0583c4cebb3558517c39146513778541a60"
+    },
+    "phasetick_n": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        512,
+        512
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "phase_tick"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "phase_tick"
+        }
+      ],
+      "sha256": "f159aefd245b4afeb0ab9c0de8e33d2becc831be7ea012294007f66f152a0028"
+    },
+    "phasetick_s": {
+      "class": "SPECULAR",
+      "proven": true,
+      "dims": [
+        512,
+        512
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "phase_tick"
+      ],
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "phase_tick"
+        }
+      ],
+      "sha256": "f423355e50ff0e115e1c3bc8edd43edc2f4cb89d8a2117b4a56db3a41d0309fb"
+    },
     "reddot": {
       "class": "UNKNOWN",
       "proven": true,
@@ -1133,6 +1568,75 @@
         }
       ],
       "sha256": "07b5a3dd6526eeca1bf354bc00fcb2e60953c899a95c0e188cff394cbfd78d8b"
+    },
+    "revert_d2": {
+      "class": "ALBEDO",
+      "proven": true,
+      "dims": [
+        2048,
+        2048
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "ch_revert_env"
+      ],
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "ch_revert_env"
+        }
+      ],
+      "sha256": "ef5b55d25d294c7fc492b37164c658e3e8ed312eb3eb94e80c527c5f6ae6874d"
+    },
+    "revert_n2": {
+      "class": "NORMAL",
+      "proven": true,
+      "dims": [
+        2048,
+        2048
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "ch_revert_env"
+      ],
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "ch_revert_env"
+        }
+      ],
+      "sha256": "dd14d3a542ee5b8d404b981af73b39f3be8af9f2e0c7cca01f2185fe46589d0d"
+    },
+    "revert_t": {
+      "class": "MASK",
+      "proven": true,
+      "dims": [
+        512,
+        512
+      ],
+      "format": "PF_DXT1",
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "materials": [
+        "ch_revert_env"
+      ],
+      "roles": [
+        {
+          "param": "transmissionmask",
+          "class": "MASK",
+          "material": "ch_revert_env"
+        }
+      ],
+      "sha256": "9b7cd5afc947907aa3451bfdcddcb2ee3f200cafa672378a34087ae18116781f"
     },
     "scope_glass_d": {
       "class": "ALBEDO",

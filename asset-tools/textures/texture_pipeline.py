@@ -63,6 +63,13 @@ FP_MESHES = [
     ("RvGameMPLoader_SF", "ch_inview_railgun_mesh"),
 ]
 
+# enemy character meshes (shared with the SP campaign) - materials carry their textures
+ENEMY_MESHES = [
+    ("RvGameMPLoader_SF", "ch_revert_mesh"),
+    ("RvGameMPLoader_SF", "ch_phase_tick_mesh"),
+    ("RvGameMPLoader_SF", "ch_MP_spetsnaz"),
+]
+
 # packages tried when resolving an object by name
 PROBE_PACKAGES = ["RvGame", "RvGameMPLoader_SF", "RvGameMP"]
 
@@ -258,7 +265,7 @@ def cmd_build(a) -> None:
     # 1. dump meshes -> material list
     material_map: dict[str, dict] = {}
     mesh_records = []
-    for pkg, mesh in FP_MESHES:
+    for pkg, mesh in FP_MESHES + ENEMY_MESHES:
         text = umodel_dump(umodel, scratch, pkg, mesh)
         (logs / f"mesh-{mesh}.txt").write_text(text or "MISSING\n", encoding="utf-8")
         if not text:
@@ -586,6 +593,20 @@ EXPERIMENT_SET = [
     ("elite_beam_n", "normal", "railgun tangent normal"),
     ("laser_d", "albedo", "pistol laser sight diffuse"),
     ("laser_n", "normal", "pistol laser sight normal"),
+    # enemies (SP): Revert 2048 -> 4096 (4K), Spetsnaz 1024 -> 2048, Phase Tick 512 -> 1024
+    ("revert_d2", "albedo", "Revert (mutant) diffuse - 2048 -> 4096"),
+    ("revert_n2", "normal", "Revert tangent normal - 2048 -> 4096"),
+    ("revert_t", "albedo", "Revert secondary/detail map"),
+    ("phasetick_d", "albedo", "Phase Tick diffuse"),
+    ("phasetick_n", "normal", "Phase Tick tangent normal"),
+    ("phasetick_s", "albedo", "Phase Tick specular (conservative)"),
+    ("phasetick_e", "emissive", "Phase Tick emissive"),
+    ("Spetsnaz_MP_helmet_d", "albedo", "Spetsnaz helmet diffuse"),
+    ("Spetsnaz_MP_helmet_n", "normal", "Spetsnaz helmet tangent normal"),
+    ("Spetsnaz_MP_helmet_s", "albedo", "Spetsnaz helmet specular (conservative)"),
+    ("Spetsnaz_MP_helmet_e", "emissive", "Spetsnaz helmet emissive"),
+    ("Spetsnaz_MP_Body_d", "albedo", "Spetsnaz body diffuse"),
+    ("Spetsnaz_MP_Body_n", "normal", "Spetsnaz body tangent normal"),
 ]
 
 
@@ -687,7 +708,11 @@ def cmd_validate(a) -> None:
     up = json.loads(up_path.read_text(encoding="utf-8"))
     report = {"checks": [], "warnings": []}
     for name, entry in up.items():
-        src = local / data["textures"][name]["source_dds"]
+        tex_meta = data["textures"].get(name, {})
+        src_rel = entry.get("source_dds") or tex_meta.get("source_dds")
+        if not src_rel:
+            continue
+        src = local / src_rel
         src_dims = tuple(entry["source_dims"])
         fmt = entry["format"]
         bpp = FMT_BPP.get(fmt, 0.5)
@@ -700,7 +725,7 @@ def cmd_validate(a) -> None:
                 "orig_mips": read_dds_mipmaps(src),
                 "new_mips": c["mips"],
                 "orig_bytes": src.stat().st_size, "new_bytes": c["dds_bytes"],
-                "orig_sha256": data["textures"][name].get("sha256"),
+                "orig_sha256": tex_meta.get("sha256"),
                 "new_sha256": c["sha256"],
             }
             checks["mip_level_upscaled"] = entry.get("source_mip_level")

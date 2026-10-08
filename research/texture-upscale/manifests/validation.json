@@ -43,6 +43,48 @@
       "mip_level_upscaled": 0
     },
     {
+      "texture": "inview_glove_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "67342ce3a34cd6ba9fd4903c58efaeda2973633c576dc71dd5b78f4525a6bd23",
+      "new_sha256": "26ed4b032c0ef36d79f1a5242af94a166aa06d82971113fd8d2464e1597a187b",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "inview_glove_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "67342ce3a34cd6ba9fd4903c58efaeda2973633c576dc71dd5b78f4525a6bd23",
+      "new_sha256": "7ea4f657fa95a1cf220383b00c6e8170216a335c2f2e626df044ff0b0cea99d3",
+      "mip_level_upscaled": 0
+    },
+    {
       "texture": "AR_E99Rifle_alt_d",
       "candidate": "A_lanczos",
       "orig_dims": [
@@ -85,7 +127,91 @@
       "mip_level_upscaled": 0
     },
     {
-      "texture": "inview_glove_n",
+      "texture": "AR_E99Rifle_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        2048,
+        1024
+      ],
+      "new_dims": [
+        4096,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592536,
+      "orig_sha256": "05bfb7f5d361e95eefc3f720bb3731d25f5be52ecf45bbf519854beac9522736",
+      "new_sha256": "024cd5b0039ea1fac67784acf2d3e8e0e1a75d0a01abbb31cc5a6fa5954af3e7",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "AR_E99Rifle_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        2048,
+        1024
+      ],
+      "new_dims": [
+        4096,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592536,
+      "orig_sha256": "05bfb7f5d361e95eefc3f720bb3731d25f5be52ecf45bbf519854beac9522736",
+      "new_sha256": "9cf49f282afb9ec43a8e1cd3f780800788f81f6f095b4ede133e5418830d2cff",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "AR_shotgun_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592528,
+      "orig_sha256": "62e4dd278e0ea9288b81c5d5f3d25fa85e3799ff73c70b3eaaf5602358030ecb",
+      "new_sha256": "ababca6093d1667fae8a88978d6d598d6e7f64fbc3d73ee41f02863e36abb984",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "AR_shotgun_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592528,
+      "orig_sha256": "62e4dd278e0ea9288b81c5d5f3d25fa85e3799ff73c70b3eaaf5602358030ecb",
+      "new_sha256": "8d1865053b48f8a4ed83b2ffc374345a023884816ced3fad4e0e3f559ac9b6a0",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "AR_shotgun_n",
       "candidate": "A_lanczos",
       "orig_dims": [
         1024,
@@ -101,12 +227,12 @@
       "new_mips": 10,
       "orig_bytes": 524416,
       "new_bytes": 2796328,
-      "orig_sha256": "67342ce3a34cd6ba9fd4903c58efaeda2973633c576dc71dd5b78f4525a6bd23",
-      "new_sha256": "26ed4b032c0ef36d79f1a5242af94a166aa06d82971113fd8d2464e1597a187b",
+      "orig_sha256": "3a36fd5d3c856bb38d448dcc7f488a4a5379e83686c2e5878f8487438969510c",
+      "new_sha256": "62e858e82211df955c98518cfefae8b884ac7b483f8c35b2b85b6678be25e5e6",
       "mip_level_upscaled": 0
     },
     {
-      "texture": "inview_glove_n",
+      "texture": "AR_shotgun_n",
       "candidate": "B_ibp",
       "orig_dims": [
         1024,
@@ -122,10 +248,943 @@
       "new_mips": 10,
       "orig_bytes": 524416,
       "new_bytes": 2796328,
-      "orig_sha256": "67342ce3a34cd6ba9fd4903c58efaeda2973633c576dc71dd5b78f4525a6bd23",
-      "new_sha256": "7ea4f657fa95a1cf220383b00c6e8170216a335c2f2e626df044ff0b0cea99d3",
+      "orig_sha256": "3a36fd5d3c856bb38d448dcc7f488a4a5379e83686c2e5878f8487438969510c",
+      "new_sha256": "ae29c0397023adbbc127f3d7e14b35d9b7341d2d806c0298b1108cb7acc4b7a3",
       "mip_level_upscaled": 0
+    },
+    {
+      "texture": "AR_shotgun_e",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "b43ebe0d10d2e3cdbc95e579e94bc715413c9014699fcae0a0e79fb402728907",
+      "new_sha256": "88779b68f4516cf77932b113e65fbcb8cc9368dda8121ceac693998a9921b1a1",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "AR_shotgun_e",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "b43ebe0d10d2e3cdbc95e579e94bc715413c9014699fcae0a0e79fb402728907",
+      "new_sha256": "47b8cb7d0492d30b756c3a5ded69be95ec182ed7e4ff94495054d451e4f6a9a7",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "ar_gatling_gun_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        2048,
+        1024
+      ],
+      "new_dims": [
+        4096,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 2097280,
+      "new_bytes": 11184944,
+      "orig_sha256": "d57ffd4c8bb8181617991169b96aa9be1befcc6c9dd553d2d7f8a5f898f93c2c",
+      "new_sha256": "1ec37f140c9c4c94c23ef846ed3f761abaa36c27b960250ef010562cfac8bb88",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "ar_gatling_gun_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        2048,
+        1024
+      ],
+      "new_dims": [
+        4096,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 2097280,
+      "new_bytes": 11184944,
+      "orig_sha256": "d57ffd4c8bb8181617991169b96aa9be1befcc6c9dd553d2d7f8a5f898f93c2c",
+      "new_sha256": "ef3466b9fcb024fffca640bcb5ab43c9af46de3e4ff913cab4e5d5b21463979a",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "ar_gatling_gun_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        2048,
+        1024
+      ],
+      "new_dims": [
+        4096,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592536,
+      "orig_sha256": "7a4e90bc927789897cca206fa72c45f3ff0ff392646efc4a88caac2d0ac50308",
+      "new_sha256": "bf83debd59a4799306c24b3bc81f92c233db3543134a73c409a526cc23038191",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "ar_gatling_gun_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        2048,
+        1024
+      ],
+      "new_dims": [
+        4096,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592536,
+      "orig_sha256": "7a4e90bc927789897cca206fa72c45f3ff0ff392646efc4a88caac2d0ac50308",
+      "new_sha256": "244cf49ad12a0a2c63b4ea253157b1e635a445417151a70cfa670f640f84d3ee",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "ar_sniper_rifle_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        2048,
+        1024
+      ],
+      "new_dims": [
+        4096,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592536,
+      "orig_sha256": "1ea5f3484a3ed988015e12c69bdeb5a75687bd3e078044fe5b08b9894e744b2c",
+      "new_sha256": "32b5003f620010c11ed2a96687060f1a259ec0a13868c8b6165e67b8f0239cea",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "ar_sniper_rifle_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        2048,
+        1024
+      ],
+      "new_dims": [
+        4096,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592536,
+      "orig_sha256": "1ea5f3484a3ed988015e12c69bdeb5a75687bd3e078044fe5b08b9894e744b2c",
+      "new_sha256": "2ca690c226a2c5cff2e3948b69c1390b743a541fc3d41e0912b3e37ac9adf7a9",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "elite_beam_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        2048,
+        2048
+      ],
+      "new_dims": [
+        4096,
+        4096
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 2097280,
+      "new_bytes": 11184936,
+      "orig_sha256": "09bd5ae8a9aefd65a489b2d5dffcb697745dfb41b1035c441276984148ee5ad0",
+      "new_sha256": "9d43df38ae892944e4d7c1adfb18a1e76e526efa81db77030fbf013b75be74f1",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "elite_beam_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        2048,
+        2048
+      ],
+      "new_dims": [
+        4096,
+        4096
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 2097280,
+      "new_bytes": 11184936,
+      "orig_sha256": "09bd5ae8a9aefd65a489b2d5dffcb697745dfb41b1035c441276984148ee5ad0",
+      "new_sha256": "4921f7c5896e4156c8c1b6bed320276483968e2982517543cfb3bddb5f2a28b1",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "laser_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        256,
+        256
+      ],
+      "new_dims": [
+        512,
+        512
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 8,
+      "orig_bytes": 32896,
+      "new_bytes": 174888,
+      "orig_sha256": "67cf75b823f5ba30d56d0c2bf8437e00db6e2464a63b41384590f6ccc05ab85f",
+      "new_sha256": "03070b7bc97a49ba18473f1c664cdcdd0759e3a6b16e8915f35ff9b8869969ea",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "laser_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        256,
+        256
+      ],
+      "new_dims": [
+        512,
+        512
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 8,
+      "orig_bytes": 32896,
+      "new_bytes": 174888,
+      "orig_sha256": "67cf75b823f5ba30d56d0c2bf8437e00db6e2464a63b41384590f6ccc05ab85f",
+      "new_sha256": "57109a9951a98b595ef1653930a1709023a5feaa4089d031ad58f09488792877",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "laser_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        256,
+        256
+      ],
+      "new_dims": [
+        512,
+        512
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 8,
+      "orig_bytes": 32896,
+      "new_bytes": 174888,
+      "orig_sha256": "b085d3fa22da81c159ced8b06fc0d2647faf3821b5afe6bef6609b42c9efb31b",
+      "new_sha256": "b7579c8b78c0414e9a900cb181035a74e61d8d0b910940d071f61dcf8da7c625",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "laser_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        256,
+        256
+      ],
+      "new_dims": [
+        512,
+        512
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 8,
+      "orig_bytes": 32896,
+      "new_bytes": 174888,
+      "orig_sha256": "b085d3fa22da81c159ced8b06fc0d2647faf3821b5afe6bef6609b42c9efb31b",
+      "new_sha256": "fb597690bb552fa1723945bae582a9024cfea4220f732c7b5702c2cba0f24d55",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "revert_d2",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        2048,
+        2048
+      ],
+      "new_dims": [
+        4096,
+        4096
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 2097280,
+      "new_bytes": 11184936,
+      "orig_sha256": "ef5b55d25d294c7fc492b37164c658e3e8ed312eb3eb94e80c527c5f6ae6874d",
+      "new_sha256": "83623e8c2ba993a43bb6867ea051cdbedfb898faac6cbfc3782975545f7b54a0",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "revert_d2",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        2048,
+        2048
+      ],
+      "new_dims": [
+        4096,
+        4096
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 2097280,
+      "new_bytes": 11184936,
+      "orig_sha256": "ef5b55d25d294c7fc492b37164c658e3e8ed312eb3eb94e80c527c5f6ae6874d",
+      "new_sha256": "5fe38c8c81a6029f261285007cb9ce39b616288fc721a8b3b19a833db44810b2",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "revert_n2",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        2048,
+        2048
+      ],
+      "new_dims": [
+        4096,
+        4096
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 2097280,
+      "new_bytes": 11184936,
+      "orig_sha256": "dd14d3a542ee5b8d404b981af73b39f3be8af9f2e0c7cca01f2185fe46589d0d",
+      "new_sha256": "b904d1446c9903acde640a5926f5c1ce460ba853af1cab247c40aefc2cdbd51a",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "revert_n2",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        2048,
+        2048
+      ],
+      "new_dims": [
+        4096,
+        4096
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 11,
+      "orig_bytes": 2097280,
+      "new_bytes": 11184936,
+      "orig_sha256": "dd14d3a542ee5b8d404b981af73b39f3be8af9f2e0c7cca01f2185fe46589d0d",
+      "new_sha256": "c8e556884951b09f337a0a58f5da3c33f8e92ec0e4fbae373c79803526fccab9",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "revert_t",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "9b7cd5afc947907aa3451bfdcddcb2ee3f200cafa672378a34087ae18116781f",
+      "new_sha256": "1fe491afb110ff2e0b17343afb2f5c65442931da4b6b0adbad2c107f4d356cc4",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "revert_t",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "9b7cd5afc947907aa3451bfdcddcb2ee3f200cafa672378a34087ae18116781f",
+      "new_sha256": "78dd22d48bd30f564128819c4ba6be9fdf1367dfe3854c67ad0f49ffbf0e1123",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "phasetick_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "03c6f7342fc0b243437dc0f4fb083eefc3f2b11ae36727237cca2391043adaf2",
+      "new_sha256": "d9dfb0fe95729749872852f1bfe8e85556fa8ceab1366f833b0687111efa30b3",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "phasetick_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "03c6f7342fc0b243437dc0f4fb083eefc3f2b11ae36727237cca2391043adaf2",
+      "new_sha256": "549ef960271b6028c6bc1c3b65ee8cde5ad6c4fa75550d05ef1eecfdc79dc210",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "phasetick_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "f159aefd245b4afeb0ab9c0de8e33d2becc831be7ea012294007f66f152a0028",
+      "new_sha256": "d0311d81c46ce290c30132cc73c97b4c598df7ab1ff4f3350d01d3ba8017d00b",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "phasetick_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "f159aefd245b4afeb0ab9c0de8e33d2becc831be7ea012294007f66f152a0028",
+      "new_sha256": "5b757172abb9ef6b67a1a181b0aaea2dcfcd1e92a9c091f70d56708afc66656b",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "phasetick_s",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "f423355e50ff0e115e1c3bc8edd43edc2f4cb89d8a2117b4a56db3a41d0309fb",
+      "new_sha256": "8431088a47a5b5bf0b26cefc849bc522ddb3c24f861de07c4cb5de0c2f9b0f67",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "phasetick_s",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "f423355e50ff0e115e1c3bc8edd43edc2f4cb89d8a2117b4a56db3a41d0309fb",
+      "new_sha256": "90265fb4932a5c6db41b65681f26369b2ab09a90e6a7f2dbe89a84b7d2395c4a",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "phasetick_e",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "dd9fbf2ddd2be8d947a3076c8742e0583c4cebb3558517c39146513778541a60",
+      "new_sha256": "ae2d4cfcedab1df372b71e65ad74945b245e77d1a13cda3c1b0d8479e406e0a4",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "phasetick_e",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "dd9fbf2ddd2be8d947a3076c8742e0583c4cebb3558517c39146513778541a60",
+      "new_sha256": "31e11896d5a8b5b11d9e6da87caca33e5424b3283ed4f5a7d57df4c28f3d95e0",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "Spetsnaz_MP_helmet_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "109d62995624e020e578b2e93681bc84331d30bb002fee601bab3a7a2febbe95",
+      "new_sha256": "367271704f00af26a2608fe8cffc868465eecbbdc68aa85e46f0bdf70b585c20",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "Spetsnaz_MP_helmet_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "109d62995624e020e578b2e93681bc84331d30bb002fee601bab3a7a2febbe95",
+      "new_sha256": "f0a1b1cee0c17167675453ae1cceb3a66753fa56c11dd18b79c5a926433bb63c",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "Spetsnaz_MP_helmet_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "db0120e68eafe06c0a4002f5eddf02380e07ddf8ad74cb0fa66fbe169213dca8",
+      "new_sha256": "2acc5fd6000875f2e5392c54c41fdc71554bec94629aee255535f952271c1053",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "Spetsnaz_MP_helmet_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "db0120e68eafe06c0a4002f5eddf02380e07ddf8ad74cb0fa66fbe169213dca8",
+      "new_sha256": "365270fd170bf77e5234309f52207abfa7154912b94305e87924bb85f08f0ee9",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "Spetsnaz_MP_helmet_s",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "e3493af339a00d2e44bb94fc1353115a33a065a6af67f1b519b8b4cf5be49916",
+      "new_sha256": "6f2449fdbfffe40926991e779edb89cae4dd11c9a170e262ef62cb7e5e4c0c8d",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "Spetsnaz_MP_helmet_s",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "e3493af339a00d2e44bb94fc1353115a33a065a6af67f1b519b8b4cf5be49916",
+      "new_sha256": "24864435d9294ddb2edb0c8041601aabc3499dc03177875b61c46cc70aff1593",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "Spetsnaz_MP_helmet_e",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "cb7083198ae164fa6db6b9bd9a2fdd82e4200ec8a2b39455f71af5b7b3c0e968",
+      "new_sha256": "97f792b9c49041a607e6cad72d3bf82429f249358c4cdbe87181ee7f18d2d0ca",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "Spetsnaz_MP_helmet_e",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "cb7083198ae164fa6db6b9bd9a2fdd82e4200ec8a2b39455f71af5b7b3c0e968",
+      "new_sha256": "15c016336f6c61dd701f3b9290084030c6bec0a48bc50156e7115ffe43ccfb77",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "Spetsnaz_MP_Body_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "722037ae72ee541d6e22c89d134b835825c5ed18b3b5fcdbabb3099fef8d98f6",
+      "new_sha256": "39103e2fbcac994318b7dc09cb5ee7d41311a38d8768ba46a69d91cc70f0f8f4",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "Spetsnaz_MP_Body_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "722037ae72ee541d6e22c89d134b835825c5ed18b3b5fcdbabb3099fef8d98f6",
+      "new_sha256": "1576a7f3ea4b2e6fbccff279b77fa4940c17f46b8ae89058bdac0403fba646a2",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "Spetsnaz_MP_Body_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "ed45e2d6a079f40efbdfbd2de875060f3e585c1d54fd1c10a0cfe1b10391a326",
+      "new_sha256": "bbde8977445f736464f99e1fc258f2e1df3c55f2dfc30798e9e37b6c9398738e",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "Spetsnaz_MP_Body_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "ed45e2d6a079f40efbdfbd2de875060f3e585c1d54fd1c10a0cfe1b10391a326",
+      "new_sha256": "844772dbb9decd2164af8ad59096eb3e1e89ca387710249fc055ca891ded0bcc",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "handgun_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592528,
+      "orig_sha256": "3a982be5a8735beec2913bdd772389fd53b6b59ab191ed00adb6171ea87bf409",
+      "new_sha256": "5a49c073d33b2f270878e29e89709c082dfb8c97d4a370ddb7cb8534a319d448",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "handgun_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592528,
+      "orig_sha256": "3a982be5a8735beec2913bdd772389fd53b6b59ab191ed00adb6171ea87bf409",
+      "new_sha256": "29265a9764818995d74c7a67f0909943be5cf78dca52fca318fb5779b5230184",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "handgun_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "2d0a926ddb4da150a77d94791f3faf31349bc3769f1677147ff181fb4a3dfc08",
+      "new_sha256": "e1417a4798d89da5cdfd26dcaa38a5f46d12b3338aaa467150c1a52e7616933f",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "handgun_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": "2d0a926ddb4da150a77d94791f3faf31349bc3769f1677147ff181fb4a3dfc08",
+      "new_sha256": "465ae06ee043994a66a5671f7783fa1ed406c3f7cb36ff2f2778f6c32e430eed",
+      "mip_level_upscaled": 1
     }
   ],
-  "warnings": []
+  "warnings": [
+    "Spetsnaz_MP_helmet_s/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [1024, 1024]",
+    "Spetsnaz_MP_helmet_s/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [1024, 1024]",
+    "Spetsnaz_MP_helmet_e/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [1024, 1024]",
+    "Spetsnaz_MP_helmet_e/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [1024, 1024]",
+    "handgun_d/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "handgun_d/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "handgun_n/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "handgun_n/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]"
+  ]
 }
