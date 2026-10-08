@@ -6,7 +6,7 @@ This work continues from the exported session `SingularityVR/naprawa-menu-vr-w-g
 
 - `SHADOW TEST = DROP MAP PASSES` removed roughly 800–840 classified shadow-layout draws per window while the ceiling/wall pattern remained. The pattern therefore is not proven to come from the ordinary shadow-map generation pass.
 - The live `ShadowMode=3` census reports the depth shader reading `c0,c5–c14`, but the camera-slot mask stays `0x0`; only `c0` is tracked as a camera slot and is explicitly exempt. The mode-3 unit test is valid mathematically, but the game-side receiver mapping is still unproven.
-- The safe baseline remains `VrShadows=0`: first-person caster suppression and projected-shadow neutralisation stay active. A test that changes this and `ShadowMode` together is not a valid comparison.
+- The safe baseline is `ShadowMode=1` + `VrShadows=0`: first-person caster suppression and projected-shadow neutralisation stay active. A test that changes this and `ShadowMode` together is not a valid comparison.
 - Dishonored/KHARVOX references do not provide a stereo shadow-map implementation for this UE3 path. Do not remap light-space matrices by guessed register numbers.
 
 ## SFX change in this handoff
@@ -21,7 +21,9 @@ Directory: `C:\Users\Trilex\vr-mods\deployment\shadow-sfx-clean-20261008`
 
 - `d3d9.dll` — x86 PE32, SHA-256 `BA5826566B00C0943A73F08FC1B8FBB16EEAB73A6CA0F4721498C15207D81489`
 - `SingularityVfx.dll` — SHA-256 `2F2A6D23F2EA9B13E4C335571E5B8B7A1C9FA04EF2ACC623B40CB062C8B3C363`
-- `SingularityVR.ini` — one `[Render]` section, `ShadowMode=3`, `VrShadows=0`, `VfxDiag=0`, `VfxDraw=2`, `DropExtraTarget=0`
+- `SingularityVR.ini` — safe baseline: one `[Render]` section, `ShadowMode=1`, `VrShadows=0`, `VfxDiag=0`, `VfxDraw=2`, `DropExtraTarget=0`
+- `shadow-mode3-test.ini` — isolated `ShadowMode=3` A/B, with `VrShadows=0`
+- `screen-fx-test.ini` — isolated `DropExtraTarget=1` A/B, with `ShadowMode=1`
 
 This folder is a side candidate only. It has not been copied into the Steam game directory and does not overwrite the main agent's deployment.
 
@@ -38,9 +40,9 @@ This folder is a side candidate only. It has not been copied into the Steam game
 
 Use the candidate only after preserving the current Steam DLL. Compare the same room and weapon in this order:
 
-1. `ShadowMode=3`, `VrShadows=0`, `DropExtraTarget=0`, `VfxDiag=0`.
-2. Without changing anything else, toggle `SCREEN FX TEST`/`DropExtraTarget=1`.
-3. Restore `DropExtraTarget=0`; test the same scene with the game's **High Quality Decals = OFF** as the single game-side variable.
+1. Baseline: `ShadowMode=1`, `VrShadows=0`, `DropExtraTarget=0`, `VfxDiag=0`.
+2. Without changing anything else, test `shadow-mode3-test.ini` (`ShadowMode=3`, still `VrShadows=0`).
+3. Restore the baseline, then test `screen-fx-test.ini` (`DropExtraTarget=1`) as a separate variable. After that, test the game's **High Quality Decals = OFF** separately.
 4. Fire once with `VfxLook=SOFT MIST`, then once with `NORMAL`; note whether the flash and smoke are at the muzzle and whether the blood fallback appears only on a proven hit seam.
 
 Record `ShadowMode3`, `VFX host`, `VFX overlay`, and any `VFX dot` lines from `%LOCALAPPDATA%\SingularityVR\view_matrix.log`. Do not use the diagnostic VFX dot in normal play; it is explicitly disabled in this candidate.
