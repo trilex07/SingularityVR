@@ -24,7 +24,7 @@
 |---|---|---|
 | Production d3d9.cpp runtime | main agent (this branch) | small commits, provenance gate |
 | Left-hand rendered wrist / palette / IK | other agent (hand/scale audit) | live IK UNSAFE until bone-slot map proven; data path proven by logs |
-| Muzzle/smoke/blood VFX plugin | VFX agent (plugin) + main agent (HOST loader/ABI/draw, QUEUED, not started) | no VFX DLL to Steam until desktop tests pass |
+| Muzzle/smoke/blood VFX plugin | VFX agent (plugin) + main agent (HOST loader/ABI/draw, CODED+DEPLOYED, desktop PASS, plugin+atlases installed) | desktop PASS done, installed to Binaries |
 | Cutscene flat/matte | cutscene agent (merged d93e2db+c94d832) | default ON; matte + flat share one gate; HUD paths do NOT honor flat (known flaw) |
 | Polish localization | loc agent (feature/polish-localization) | draft 7056 (283 good); no game files touched; no .int files exist in install |
 | Perf sampler ownership | main agent (tools: perf_compare.py) | sampler families all ≤0.7ms; game user-CPU ~9.5ms is the wall |
@@ -53,8 +53,23 @@
   hand + a light matching the normal menu stays visible. Revised prime suspect:
   latched FP gun/arms rendering over the menu (engine-camera = centre-screen
   black diamond; ridden to controller = drags station view with hand).
-  Fix-M coded on this branch (HideFpInMenu=1 default, counter g_vrMenuFpHidden):
+  Fix-M coded + DEPLOYED on this branch (HideFpInMenu=1 default, counter g_vrMenuFpHidden):
   drops latched FP gun/arm indexed draws while ANY menu focused. Awaiting user run.
+- ShadowMode=3 protect light-space CODED + DEPLOYED on this branch (pattern
+  feature/shadow-mode3 @54dd4bd): generation draws native-once with census
+  refresh (log `ShadowMode3 census`), light slots excluded from per-eye remap,
+  hub SHADOW row extended 0-3 (`3 PROTECT LIGHT`), ini clamp 0-3, window report
+  `ShadowMode3: N generation / M protected`. Default stays 1. Squares verdict
+  pending user run.
+- VFX host (Variant A) CODED + DEPLOYED on this branch (pattern
+  feature/vfx-host-abi @702ce5c): Plugin/Drawer/Atlas seams, FireAmmunition
+  entry -> OnFire mailbox (muzzle = GunAnchorWorld UU->m, dir = GunAimDir,
+  weapon = Unknown -> stub alternates clips), Tick per Present (clamped dt),
+  per-eye Collect(Gameplay)+DrawItems inside StereoPairBody with wrist-proven
+  billboard basis, m->UU scaling via MetresToUU, HideMuzzleFx untouched (still
+  default 1). OnHit NOT wired (no proven hit-point offsets - blood pending).
+  Desktop tests PASS (host no-op/kill-switch, round-trip flash/smoke/blood).
+  Plugin + 4 real DDS atlases INSTALLED to Binaries after desktop PASS.
 - White ring right-eye-only (12:54:08 shot): per-eye sprite artifact, NEW instance
   of the muzzle-on-seam class. SpriteQuadPerEye=1 set in user ini; verdict pending.
 - Menu-draw census (MDG groups) flows since 315ce56. 470 groups/session typical.

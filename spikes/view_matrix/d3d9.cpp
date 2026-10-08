@@ -8,6 +8,7 @@
 #include "fp_shadow.h"
 #include "camera_stabilization.h"
 #include "shadow_policy.h"
+#include "shadow_mode3.h"
 #include "ui_pointer.h"
 #include "menu_capture_owner.h"
 #include "recenter_chord.h"
@@ -75,6 +76,11 @@
 #include <openxr/openxr_platform.h>
 
 #include "MinHook.h"
+// VFX host AFTER windows.h/NOMINMAX: vfx_host.h pulls <windows.h> itself, and
+// without NOMINMAX its min/max macros break std::min/std::max below.
+#include "vfx_host.h"
+#include "vfx_draw.h"
+#include "vfx_atlas_io.h"
 #include "hotpath_sampler.h"
 static hotpath::sampler g_hotPathSampler;
 alignas(8) static volatile LONG64 g_hotLeftPoseFrame = 0, g_hotRightPoseFrame = 0;
@@ -6957,9 +6963,11 @@ void PanelRowText(int row, char* out, size_t cap) {
         case PR_SHADOWMODE: {
             // Worded as what the sampling pass GETS, not as numbers. SPLIT is the legacy
             // behaviour (measure only); MONO draws it once unremapped; DROP deletes it.
+            // 3 PROTECT keeps the light-space matrix native (generation once, receivers
+            // share the native light matrix) - see shadow_mode3.h.
             const LONG p = InterlockedCompareExchange(&g_shadowMode, 0, 0);
             _snprintf_s(out, cap, _TRUNCATE, "SHADOW         %s",
-                        p == 2 ? "DROP SAMPLE" : p == 1 ? "MONO SAMPLE" : "FULL SPLIT");
+                        p == 3 ? "3 PROTECT LIGHT" : p == 2 ? "DROP SAMPLE" : p == 1 ? "MONO SAMPLE" : "FULL SPLIT");
             break;
         }
         case PR_DROPEXTRA:
@@ -7104,13 +7112,13 @@ void PanelAdjust(int row, int dir) {
             break;
         }
         case PR_SHADOWMODE: {
-            // Clamped 0-2, not wrapped: mode 2 DELETES draws, and wrapping past it
+            // Clamped 0-3, not wrapped: mode 2 DELETES draws, and wrapping past it
             // back to 0 must be a deliberate walk, not one press too many (run 143).
             LONG p = InterlockedCompareExchange(&g_shadowMode, 0, 0) + dir;
             if (p < 0) p = 0;
-            if (p > 2) p = 2;
+            if (p > 3) p = 3;
             InterlockedExchange(&g_shadowMode, p);
-            Log("SHADOW MODE -> %ld (0=full split 1=mono sample 2=drop sample)", p);
+            Log("SHADOW MODE -> %ld (0=full split 1=mono sample 2=drop sample 3=protect light-space)", p);
             break;
         }
         case PR_DROPEXTRA:
@@ -10873,6 +10881,10 @@ void ReportRenderTargets() {
 template <typename DrawFn>
 HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw);
 
+// VFX host per-eye draw (defined with the VFX host block); called from inside
+// each eye of StereoPairBody while that eye's matrices are still bound.
+static void VfxEyeDraw(IDirect3DDevice9* dev, int eye);
+
 template <typename DrawFn>
 HRESULT StereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
     if (!g_timeOurWork) return StereoPairBody(dev, draw);
@@ -10976,10 +10988,29 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
         ++g_drawsSkipped;
         return S_OK;
     }
+    // ShadowMode=3 (see shadow_mode3.h; pattern feature/shadow-mode3 @54dd4bd):
+    // the light-space generation pass is drawn ONCE, native, never split. The slots
+    // holding a matrix in THIS scan are light-space by construction (a shadow shader's
+    // matrices are light matrices), so the census refreshes from this scan - never
+    // guessed. Receiver draws below read it via SlotMayRemap.
+    if (Rd(g_shadowMode) == 3 && g_boundShaderLayout.shadow) {
+        g_shadowRegs.Clear();
+        if (g_origSetVSConstF)
+            for (int s = 0; s < g_camMatUsed; ++s)
+                if (g_camMats[s].valid) g_shadowRegs.Mark((std::uint32_t)s);
+        ++g_drawsShadowNative;
+        if (g_shadowRegs.Mask() != g_shadowRegsLogged) {
+            g_shadowRegsLogged = g_shadowRegs.Mask();
+            Log("ShadowMode3 census: generation pass, light-space slots mask=0x%X", g_shadowRegs.Mask());
+        }
+        return draw();
+    }
     if (!InterlockedCompareExchange(&g_rtIsScene, 0, 0) || g_boundShaderLayout.shadow) { ++g_drawsOffscreen; return draw(); }
     // Fix-3/shadows, mode-selected since round 4 (see ShadowMode): the sampling pass
     // must not receive a remapped camera (run-41/42 mechanism). 0 = split like
     // everything else, 1 = one unremapped draw, 2 = drop the draw.
+    // 3 = protect light-space: falls through to the split path, where the census
+    // keeps light slots out of the per-eye remap (see slots[] below).
     if (Rd(g_shadowStageMask)) {
         ++g_drawsWhileShadowBound;
         const LONG sm = Rd(g_shadowMode);
@@ -10996,10 +11027,21 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
     // Collect every register currently holding a camera matrix. Each needs its own per-eye version
     // uploaded, or geometry driven by an untouched register keeps full-frame coordinates and gets
     // scissored away at the seam - the run-18 vanishing-monster bug.
+    // ShadowMode=3: light-space slots (census, refreshed from generation scans) are
+    // NOT collected - remapping a light matrix per eye shifts the shadow lookup and
+    // is exactly the blocky/flicker/one-eye corruption. Both eyes then sample the
+    // native light matrix for the same world point.
     int slots[kMaxCamMats]; int nSlots = 0;
+    const bool mode3 = Rd(g_shadowMode) == 3;
+    int shadowSkipped = 0;
     if (g_origSetVSConstF)
         for (int s = 0; s < g_camMatUsed && nSlots < kMaxCamMats; ++s)
-            if (g_camMats[s].valid) slots[nSlots++] = s;
+            if (g_camMats[s].valid &&
+                (!mode3 || singularity::shadow::SlotMayRemap(g_shadowRegs, (std::uint32_t)s, true)))
+                slots[nSlots++] = s;
+            else if (mode3 && g_camMats[s].valid)
+                ++shadowSkipped;
+    if (shadowSkipped) ++g_drawsShadowProtected;
     if (nSlots > g_camMatValidPeak) g_camMatValidPeak = nSlots;
 
     // If we cannot remap this draw, do NOT split it either - draw it once, full frame, untouched.
@@ -11079,6 +11121,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             g_origSetVSConstF(dev, cs.reg, mat, 4);
         }
         hr = draw();
+        VfxEyeDraw(dev, 0); // host VFX, left eye: matrices for this eye still bound
     }
 
     if (dbg != 1) {
@@ -11104,6 +11147,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
         }
         HRESULT hr2 = draw();
         if (dbg == 2) hr = hr2;
+        VfxEyeDraw(dev, 1); // host VFX, right eye: matrices for this eye still bound
     }
 
     // Put back exactly what the engine had set, for every register we disturbed.
@@ -17002,10 +17046,144 @@ volatile LONG g_shadowMapCandidates=0;
 volatile LONG g_shadowStageMask = 0;
 // Fix-E/shadows round 4: ShadowMode selects the sampling-pass treatment.
 // 0 = full split like everything else (measure only), 1 = one unremapped draw,
-// 2 = drop the draw. Default 1: measured transient (tens/second), squares persist
-// under 1, so 0/2 are the A/B arms. Supplanted the boolean ShadowSampleMono.
+// 2 = drop the draw, 3 = protect light-space (generation native-once, light
+// slots excluded from the per-eye remap - see shadow_mode3.h). Default 1:
+// measured transient (tens/second), squares persist under 1, so 0/2 are the
+// A/B arms. Supplanted the boolean ShadowSampleMono.
 volatile LONG g_shadowMode = 1;
 int g_drawsWhileShadowBound = 0, g_drawsShadowMono = 0, g_drawsShadowDropped = 0;
+// ShadowMode=3 (feature/shadow-mode3 pattern @54dd4bd): live census of which
+// constant slots hold a light-space matrix, refreshed from each shadow-layout
+// generation scan - never guessed. Render thread only, like the neighbours.
+singularity::shadow::ShadowRegisterCensus g_shadowRegs;
+int g_drawsShadowNative = 0, g_drawsShadowProtected = 0;
+static std::uint32_t g_shadowRegsLogged = 0xFFFFFFFFu;
+
+// ---- VFX host (Variant A, pattern feature/vfx-host-abi @702ce5c) ----
+//
+// The HOST owns D3D9, the per-eye matrices, the muzzle transform and the event
+// seams; the PLUGIN (SingularityVfx.dll, optional) owns effect lifetimes and
+// the DrawItem list. Plugin absent = clean kill-switch, every seam a no-op.
+//
+// Threading: the script hook (FireAmmunition) runs on the GAME thread, but all
+// plugin calls happen on the RENDER thread. The game thread only fills a
+// single-slot mailbox; the render thread drains it inside VfxEyeDraw. A second
+// shot arriving before the drain counts an overrun and keeps the latest event.
+// The stub plugin keeps plain globals with no locks, so this split is load-
+// bearing, not style.
+//
+// Units: the plugin works in METRES (stub sizes 0.045 = 4.5cm flash). The
+// renderer draws in engine UU. Muzzle events are converted UU->m on fill;
+// collected items are converted m->UU before DrawItems, via MetresToUU().
+//
+// OnHit is NOT wired yet: there is no proven FCheckResult-offset or
+// SetFlashLocation hook in this TU, and guessing offsets is forbidden. The
+// stub's flash + both smoke puffs are fire-driven, so they work without it;
+// flesh-only blood waits for the hit-point evidence (handoff).
+static singularity_vfx::host::Plugin g_vfx;
+static singularity_vfx::host::VfxDrawer g_vfxDrawer;
+static singularity_vfx::host::VfxAtlas g_vfxAtlas;
+static bool g_vfxAtlasBuilt = false;
+static const char* g_vfxAtlasSource = "none";
+static singularity_vfx::VfxDrawItem g_vfxItems[32];
+volatile LONG g_vfxHost = 1; // ini [Render] VfxHost, 1 = host seams live (DLL absence still no-ops).
+volatile LONG g_vfxFrame = 0; // Present serial; each eye draws VFX once per frame.
+static LONG g_vfxEyeDone[2] = { -1, -1 };
+static singularity_vfx::VfxFireEvent g_vfxFireMail;
+volatile LONG g_vfxFirePending = 0;
+volatile LONG g_vfxShotSeq = 0;
+volatile LONG g_vfxFires = 0, g_vfxFireOverruns = 0, g_vfxItemsDrawn = 0;
+static DWORD g_vfxLastTickMs = 0;
+
+static bool VfxBuildAtlas(IDirect3DDevice9* dev, const char** source) {
+    if (!dev) return false;
+    char dir[MAX_PATH] = {}; char atlasDir[MAX_PATH] = {};
+    if (singularity_vfx::host::GetExeDir(dir, sizeof(dir))) {
+        _snprintf_s(atlasDir, _TRUNCATE, "%s\\vfx_atlas", dir);
+        if (singularity_vfx::host::BuildAtlasFromDir(dev, g_vfxAtlas, atlasDir)) {
+            if (source) *source = "vfx_atlas dir";
+            return true;
+        }
+    }
+    if (singularity_vfx::host::BuildPlaceholderAtlas(dev, g_vfxAtlas)) {
+        if (source) *source = "procedural placeholder";
+        return true;
+    }
+    return false;
+}
+
+static void VfxHostInitDevice(IDirect3DDevice9* dev) {
+    if (!dev || !Rd(g_vfxHost)) return;
+    const bool loaded = g_vfx.Load(); // no-op if the DLL is absent
+    if (!g_vfxDrawer.Init(dev)) { Log("VFX host init: drawer VB failed - VFX draws off"); return; }
+    if (!g_vfxAtlasBuilt && VfxBuildAtlas(dev, &g_vfxAtlasSource)) g_vfxAtlasBuilt = true;
+    Log("VFX host init: plugin=%s drawer=ok atlas=%s (VfxHost=%ld)",
+        loaded ? "loaded" : "absent (kill-switch, seams no-op)",
+        g_vfxAtlasBuilt ? g_vfxAtlasSource : "FAILED - draws skipped",
+        Rd(g_vfxHost));
+}
+
+static void ReleaseVfxHost() {
+    g_vfxDrawer.Shutdown();
+    singularity_vfx::host::ReleaseAtlas(g_vfxAtlas);
+    g_vfxAtlasBuilt = false;
+    g_vfxAtlasSource = "none";
+    g_vfxEyeDone[0] = g_vfxEyeDone[1] = -1;
+}
+
+static void VfxEyeDraw(IDirect3DDevice9* dev, int eye) {
+    if (!Rd(g_vfxHost) || !dev || eye < 0 || eye > 1) return;
+    if (Rd(g_vrUiMenu)) return; // never draw into menu passes (Collect refuses them too)
+    if (g_thisDrawMoved) return; // FP-ridden draw: bound matrices are gun-shifted
+    const LONG frame = Rd(g_vfxFrame);
+    if (g_vfxEyeDone[eye] == frame) return;
+    g_vfxEyeDone[eye] = frame;
+    // Self-healing across Reset: the Reset hooks only run with diagnostics on,
+    // so a lost DEFAULT-pool VB/atlas is detected here instead (2 calls/frame).
+    // After Reset completes the lazy path below rebuilds everything.
+    const HRESULT coop = dev->TestCooperativeLevel();
+    if (coop == D3DERR_DEVICELOST) return;
+    if (coop == D3DERR_DEVICENOTRESET) { ReleaseVfxHost(); return; }
+    // Drain the game-thread fire mailbox. Render thread owns all plugin calls.
+    if (InterlockedExchange(&g_vfxFirePending, 0)) {
+        g_vfx.OnFire(g_vfxFireMail);
+        InterlockedIncrement(&g_vfxFires);
+    }
+    if (!g_vfxAtlasBuilt) {
+        if (!g_vfxDrawer.Init(dev)) return;
+        if (!VfxBuildAtlas(dev, &g_vfxAtlasSource)) return; // textures failed; retry next reset
+        g_vfxAtlasBuilt = true;
+        Log("VFX host atlas (lazy): %s", g_vfxAtlasSource);
+    }
+    int n = g_vfx.Collect(singularity_vfx::VfxRenderPass::Gameplay, g_vfxItems, 32);
+    if (n <= 0) return;
+    if (n > 32) n = 32;
+    // Billboard basis from the first live camera slot - the exact extraction the
+    // wrist band uses (ROW/column aware, normalised, finite-checked).
+    int bslot = -1;
+    for (int i = 0; i < g_camMatUsed; ++i) if (g_camMats[i].valid) { bslot = i; break; }
+    if (bslot < 0) return;
+    const float* view = g_camMats[bslot].m; const int vc = g_camMats[bslot].conv;
+    float right[3], up[3]; float rl = 0, ul = 0;
+    for (int i = 0; i < 3; ++i) {
+        right[i] = view[vc == CONV_ROW ? i * 4 : i];
+        up[i] = view[vc == CONV_ROW ? i * 4 + 1 : 4 + i];
+        rl += right[i] * right[i]; ul += up[i] * up[i];
+    }
+    if (!std::isfinite(rl) || !std::isfinite(ul) || rl < 1e-8f || ul < 1e-8f) return;
+    rl = sqrtf(rl); ul = sqrtf(ul);
+    for (int i = 0; i < 3; ++i) { right[i] /= rl; up[i] /= ul; }
+    // Plugin metres -> engine UU. g_vfxItems is refilled by Collect every eye,
+    // so in-place scaling never compounds across eyes.
+    const float m2u = MetresToUU();
+    if (!(m2u > 0.0f) || !std::isfinite(m2u)) return;
+    for (int i = 0; i < n; ++i) {
+        g_vfxItems[i].position.x *= m2u; g_vfxItems[i].position.y *= m2u; g_vfxItems[i].position.z *= m2u;
+        g_vfxItems[i].size *= m2u;
+    }
+    g_vfxDrawer.DrawItems(dev, g_vfxItems, n, g_vfxAtlas, right, up);
+    g_vfxItemsDrawn += n;
+}
 // Fix-4/menus round 2: sticky per-window mask of suppression-miss reasons, set only for
 // menu-source draws (see SuppressCapturedVrMenuDraw). Render thread only, like the
 // draw counters beside it.
@@ -19231,6 +19409,28 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
             // Cap raised to 24: run 96 capped at 6 and spent them all on StartFire/BeginFire, so
             // the log could not show whether FireAmmunition - the one that actually matters - ever
             // opened the window at all.
+            // VFX host: FireAmmunition (and only it - not Begin/StartFire) is the
+            // OnFire seam. Muzzle = proven gun anchor (world UU -> m), forward =
+            // proven shot direction. Weapon class has no proven mapping, so the
+            // stub alternates clips by sequence (its Unknown default). Game thread
+            // only fills the mailbox; the render thread drains it in VfxEyeDraw.
+            if (firedWindow && FnIdx(kFnFireFirst) >= 0 && fnIdx == FnIdx(kFnFireFirst) &&
+                Rd(g_vfxHost)) {
+                float G[3]; GunAnchorWorld(G);
+                float D[3]; GunAimDir(D);
+                const float m2u = MetresToUU();
+                if (m2u > 0.0f && std::isfinite(m2u) &&
+                    std::isfinite(G[0] + G[1] + G[2]) && std::isfinite(D[0] + D[1] + D[2])) {
+                    singularity_vfx::VfxFireEvent fe{};
+                    fe.muzzle.x = G[0] / m2u; fe.muzzle.y = G[1] / m2u; fe.muzzle.z = G[2] / m2u;
+                    fe.forward.x = D[0]; fe.forward.y = D[1]; fe.forward.z = D[2];
+                    fe.weapon = singularity_vfx::VfxWeaponClass::Unknown;
+                    fe.sequence = (uint32_t)InterlockedIncrement(&g_vfxShotSeq);
+                    fe.valid = true;
+                    g_vfxFireMail = fe;
+                    if (InterlockedExchange(&g_vfxFirePending, 1)) InterlockedIncrement(&g_vfxFireOverruns);
+                }
+            }
             static volatile LONG shots = 0;
             if (InterlockedIncrement(&shots) <= 24) {
                 char nm[96]{};
@@ -20624,6 +20824,17 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // any matte/overlay is emitted, so presentation policy and diagnostics use
     // the same frame boundary.
     UpdateSceneModeFrame();
+    // VFX host: frame serial for once-per-eye draws + effect aging. Render
+    // thread owns all plugin calls (game thread only fills the fire mailbox).
+    InterlockedIncrement(&g_vfxFrame);
+    if (Rd(g_vfxHost)) {
+        const DWORD nowMs = GetTickCount();
+        if (!g_vfxLastTickMs) g_vfxLastTickMs = nowMs;
+        float dt = (float)(nowMs - g_vfxLastTickMs) / 1000.0f; // DWORD wrap-safe
+        g_vfxLastTickMs = nowMs;
+        if (dt < 0.0005f) dt = 0.0005f; if (dt > 0.25f) dt = 0.25f;
+        g_vfx.Tick(dt); // no-op without a plugin
+    }
     DrawCutsceneCinemaMask(s);
     // Age the menu indicator once per frame. Without this a name that fired a minute ago looks
     // identical to one firing right now, which is the whole distinction the readout exists to show.
@@ -22514,6 +22725,21 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     " (ShadowMode=%ld: 0=full split 1=mono 2=drop)", g_drawsWhileShadowBound, g_drawsShadowMono,
                     g_drawsShadowDropped, Rd(g_shadowMode));
             g_drawsWhileShadowBound = 0; g_drawsShadowMono = 0; g_drawsShadowDropped = 0;
+            // ShadowMode=3: generation drawn native-once, receiver draws with light
+            // slots excluded from the remap. Nonzero native with an empty census mask
+            // means the generation scan held no tracked slot - report, do not guess.
+            if (g_drawsShadowNative || g_drawsShadowProtected)
+                Log("    ShadowMode3: %d generation draws native-once (light slots mask=0x%X), %d receiver draws with light slots protected",
+                    g_drawsShadowNative, g_shadowRegs.Mask(), g_drawsShadowProtected);
+            g_drawsShadowNative = 0; g_drawsShadowProtected = 0;
+            // VFX host: fire-mailbox drains, overruns (two shots, no render between),
+            // and drawn items this window. Fires with 0 items = plugin absent or all
+            // effects expired - both normal.
+            if (g_vfxFires || g_vfxFireOverruns || g_vfxItemsDrawn)
+                Log("    VFX host: fires=%ld overruns=%ld items=%ld (VfxHost=%ld plugin=%s atlas=%s)",
+                    Rd(g_vfxFires), Rd(g_vfxFireOverruns), Rd(g_vfxItemsDrawn), Rd(g_vfxHost),
+                    g_vfx.loaded() ? "loaded" : "absent", g_vfxAtlasBuilt ? g_vfxAtlasSource : "none");
+            g_vfxFires = 0; g_vfxFireOverruns = 0; g_vfxItemsDrawn = 0;
             // Fix-4/menus round 2: which clause kept menu-source draws unsuppressed.
             if (g_menuSuppressFailMask)
                 Log("    menu-suppress miss mask=0x%X (1=noprovide 2=flat 4=shadow 8=providing-now 16=offscreen)", g_menuSuppressFailMask);
@@ -23347,12 +23573,14 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDevice(IDirect3DDevice9* dev, D3DPRESENT_PAR
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     ReleaseWristResources();
+    ReleaseVfxHost(); // drawer VB + atlas are device-bound; rebuilt lazily
     return g_origResetDevice(dev,pp);
 }
 HRESULT STDMETHODCALLTYPE Hook_ResetDeviceEx(IDirect3DDevice9Ex* dev, D3DPRESENT_PARAMETERS* pp, D3DDISPLAYMODEEX* dm) {
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     ReleaseWristResources();
+    ReleaseVfxHost(); // drawer VB + atlas are device-bound; rebuilt lazily
     return g_origResetDeviceEx(dev,pp,dm);
 }
 PFN_CreateDevice g_origCreateDevice = nullptr;
@@ -23980,10 +24208,12 @@ void LoadIniSettings() {
     g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",0,path)?1:0;
     g_skipExtraTarget=GetPrivateProfileIntA("Render","DropExtraTarget",0,path)?1:0;
     // Fix-E/shadows round 4: 0 = full split (measure only), 1 = mono sample, 2 = drop.
-    // Supplants ShadowSampleMono (their ini never carried the key - verified).
+    // ShadowMode=3: protect light-space (generation native-once, light slots out
+    // of the per-eye remap - see shadow_mode3.h). Supplants ShadowSampleMono
+    // (their ini never carried the key - verified).
     {
         LONG sm = GetPrivateProfileIntA("Render","ShadowMode",1,path);
-        if (sm < 0) sm = 0; if (sm > 2) sm = 2;
+        if (sm < 0) sm = 0; if (sm > 3) sm = 3;
         InterlockedExchange(&g_shadowMode, sm);
     }
     g_vrMenuLaser=GetPrivateProfileIntA("Render","VrMenuLaser",1,path)?1:0;
@@ -23995,7 +24225,7 @@ void LoadIniSettings() {
     InterlockedExchange(&g_vrMenuLaserWidthPct,laserWidth);
     Log("VR render: menu laser=%ld opacity=%ld%% width=%ld%%; shadows=%ld; translation stabilization=%ld",
         Rd(g_vrMenuLaser),laserOpacity,laserWidth,Rd(g_vrShadows),Rd(g_vrTranslationStabilization));
-    Log("shadow sampling: ShadowMode=%ld (0=full split 1=mono sample 2=drop sample; hub ADVANCED page)",Rd(g_shadowMode));
+    Log("shadow sampling: ShadowMode=%ld (0=full split 1=mono sample 2=drop sample 3=protect light-space; hub ADVANCED page)",Rd(g_shadowMode));
     g_wristHealth = GetPrivateProfileIntA("Render", "WristHealth", 1, path) ? 1 : 0;
     Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld, scene trace=%ld",
         Rd(g_wristHealth),Rd(g_renderEvidence),Rd(g_sceneModeTrace));
@@ -24009,6 +24239,8 @@ void LoadIniSettings() {
     g_vrMenuOverlay=GetPrivateProfileIntA("Render","MenuOverlay",1,path)?1:0;
     g_hideFpInMenu=GetPrivateProfileIntA("Render","HideFpInMenu",1,path)?1:0;
     Log("VR menu FP hide=%ld (HideFpInMenu; drops latched gun/arm draws while a GFx menu is focused)",Rd(g_hideFpInMenu));
+    g_vfxHost=GetPrivateProfileIntA("Render","VfxHost",1,path)?1:0;
+    Log("VFX host seams=%ld (VfxHost; plugin DLL absence still no-ops everything)",Rd(g_vfxHost));
     g_vrUiDesktopProbe=GetPrivateProfileIntA("Diagnostic","VrUiDesktopProbe",0,path)?1:0;
     Log("VR menu pointer=%ld; native GFx viewport input; no desktop cursor movement",Rd(g_vrUiEnabled));
     Log("independent hands prototype=%d; shader CTAB required; verified SP sections only",g_independentHands);
@@ -24415,6 +24647,7 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
         }
         Log("Present + SetVertexShaderConstantF + Draw + SetRenderTarget + SetTexture hooks installed.");
         Log("F7 find the matrix | F1 TRUE stereo | F12 alternate-eye | F10 6-DOF | F9 head tracking");
+        if (out && *out) VfxHostInitDevice(*out); // plugin Load + drawer + atlas (absent DLL = no-op)
     }
     return hr;
 }
