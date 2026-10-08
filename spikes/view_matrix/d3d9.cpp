@@ -17383,6 +17383,14 @@ volatile LONG g_vfxLook = 0;
 // Forward offset from the held-gun pivot to the muzzle, in millimetres. A small
 // live A/B range lets the user align the plugin effects to the rendered barrel.
 volatile LONG g_vfxMuzzleOffsetMm = 100;
+// The original UE3 first-person emitter contains both flash and smoke.  The
+// replacement candidate deliberately keeps smoke out of the headset path: it
+// is expensive, was the source of the old centre/SBS artefact, and has no
+// proven muzzle socket yet.  The fire event still carries the muzzle point so
+// the short barrel flash and the screen flash share one calibrated origin.
+volatile LONG g_vfxSmoke = 0;
+volatile LONG g_vfxScreenFlash = 1;
+volatile LONG g_vfxFlashUntilMs = 0;
 volatile LONG g_vfxFrame = 0; // Present serial; each eye draws VFX once per frame.
 static LONG g_vfxEyeDone[2] = { -1, -1 };
 static singularity_vfx::VfxFireEvent g_vfxFireMail;
@@ -17390,6 +17398,25 @@ volatile LONG g_vfxFirePending = 0;
 volatile LONG g_vfxShotSeq = 0;
 volatile LONG g_vfxFires = 0, g_vfxFireOverruns = 0, g_vfxItemsDrawn = 0;
 static DWORD g_vfxLastTickMs = 0;
+
+static void VfxMarkScreenFlash() {
+    if (!Rd(g_vfxScreenFlash)) return;
+    // 40 ms is long enough to be visible at 90 Hz (3--4 frames), but short
+    // enough that automatic fire does not leave a permanent white veil.
+    InterlockedExchange(&g_vfxFlashUntilMs, (LONG)(GetTickCount() + 40u));
+}
+
+static int VfxFilterItems(int n) {
+    if (n <= 0 || Rd(g_vfxSmoke)) return n;
+    int kept = 0;
+    for (int i = 0; i < n; ++i) {
+        if (g_vfxItems[i].kind == (uint8_t)singularity_vfx::VfxKind::MuzzleSmoke)
+            continue;
+        if (kept != i) g_vfxItems[kept] = g_vfxItems[i];
+        ++kept;
+    }
+    return kept;
+}
 
 static bool VfxBuildAtlas(IDirect3DDevice9* dev, const char** source) {
     if (!dev) return false;
@@ -17453,6 +17480,7 @@ static void VfxEyeDraw(IDirect3DDevice9* dev, int eye) {
     // Drain the game-thread fire mailbox. Render thread owns all plugin calls.
     if (InterlockedExchange(&g_vfxFirePending, 0)) {
         g_vfx.OnFire(g_vfxFireMail);
+        VfxMarkScreenFlash();
         InterlockedIncrement(&g_vfxFires);
     }
     if (!g_vfxAtlasBuilt) {
@@ -17482,6 +17510,8 @@ static void VfxEyeDraw(IDirect3DDevice9* dev, int eye) {
     int n = g_vfx.Collect(singularity_vfx::VfxRenderPass::Gameplay, g_vfxItems, 32);
     if (n <= 0) return;
     if (n > 32) n = 32;
+    n = VfxFilterItems(n);
+    if (n <= 0) return;
     // Without the live per-eye view*proj the fixed-function quads inherit stale
     // engine transforms and land outside clip space (log-proven invisible).
     if (!g_vfxEyeMatValid[eye]) return;
@@ -21062,10 +21092,15 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
     // Drain the game-thread fire mailbox here too (Present is the owner if the
     // scene path is off) and advance effect ageing.
     const bool drained = InterlockedExchange(&g_vfxFirePending, 0) != 0;
-    if (drained) { g_vfx.OnFire(g_vfxFireMail); InterlockedIncrement(&g_vfxFires); }
+    if (drained) {
+        g_vfx.OnFire(g_vfxFireMail);
+        VfxMarkScreenFlash();
+        InterlockedIncrement(&g_vfxFires);
+    }
 
     int n = g_vfx.Collect(singularity_vfx::VfxRenderPass::Gameplay, g_vfxItems, 32);
     if (n > 32) n = 32;
+    n = VfxFilterItems(n);
     D3DVIEWPORT9 vp{};
     if (FAILED(dev->GetViewport(&vp)) || vp.Width < 8) return;
     {
@@ -21141,6 +21176,43 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
                 if (!(rl > 1e-8f) || !(ul > 1e-8f)) continue;
                 rl = sqrtf(rl); ul = sqrtf(ul);
                 for (int i = 0; i < 3; ++i) { right[i] /= rl; up[i] /= ul; }
+
+                // A very short, low-alpha white lift is the replacement for
+                // the original full-screen first-person emitter.  It is
+                // drawn once per eye in its own SBS half and only while a
+                // FireAmmunition event is inside the 40 ms window.  The state
+                // block restores the texture-stage changes before returning.
+                const DWORD nowMs = GetTickCount();
+                const LONG untilMs = InterlockedCompareExchange(&g_vfxFlashUntilMs, 0, 0);
+                const LONG remaining = (LONG)((DWORD)untilMs - nowMs);
+                if (Rd(g_vfxScreenFlash) && remaining > 0) {
+                    const float t = (float)remaining / 40.0f;
+                    const BYTE alpha = (BYTE)(18.0f + 34.0f * (t > 1.0f ? 1.0f : t));
+                    const float x0 = (float)vp.X + (eye ? vp.Width * 0.5f : 0.0f);
+                    const float x1 = (float)vp.X + (eye ? vp.Width : vp.Width * 0.5f);
+                    const D3DCOLOR col = D3DCOLOR_ARGB(alpha, 255, 255, 255);
+                    const VfxOverlayVtx q[4] = {
+                        { x0, (float)vp.Y, 0.0f, 1.0f, col, 0.0f, 0.0f },
+                        { x1, (float)vp.Y, 0.0f, 1.0f, col, 1.0f, 0.0f },
+                        { x0, (float)(vp.Y + vp.Height), 0.0f, 1.0f, col, 0.0f, 1.0f },
+                        { x1, (float)(vp.Y + vp.Height), 0.0f, 1.0f, col, 1.0f, 1.0f },
+                    };
+                    dev->SetTexture(0, nullptr);
+                    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG2);
+                    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG2);
+                    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+                    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+                    g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, q, sizeof(VfxOverlayVtx));
+                    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+                    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                    ++g_vfxItemsDrawn;
+                }
 
                 for (int it = 0; it < n; ++it) {
                     const singularity_vfx::VfxDrawItem& d = g_vfxItems[it];
@@ -24792,6 +24864,8 @@ void LoadIniSettings() {
     }
     g_vfxDiag=GetPrivateProfileIntA("Render","VfxDiag",0,path)?1:0;
     g_vfxMuzzleOrigin=GetPrivateProfileIntA("Render","VfxMuzzleOrigin",1,path)?1:0;
+    g_vfxSmoke=GetPrivateProfileIntA("Render","VfxSmoke",0,path)?1:0;
+    g_vfxScreenFlash=GetPrivateProfileIntA("Render","VfxScreenFlash",1,path)?1:0;
     {
         LONG look = GetPrivateProfileIntA("Render","VfxLook",0,path);
         if (look < 0) look = 0; if (look > 2) look = 2;
@@ -24806,7 +24880,8 @@ void LoadIniSettings() {
     Log("VFX host seams=%ld (VfxHost; plugin DLL absence still no-ops everything)",Rd(g_vfxHost));
     Log("VFX draw=%ld (0=off 1=scene/mid-scene 2=present/backbuffer), diag dot=%ld",Rd(g_vfxDraw),Rd(g_vfxDiag));
     Log("VFX muzzle origin=%ld (0=legacy camera anchor 1=GunPivotWorld); shadow test=%ld (0=normal 1=drop all shadow-layout draws)",Rd(g_vfxMuzzleOrigin),Rd(g_shadowTest));
-    Log("VFX look=%ld (0=soft mist 1=normal 2=large ref), muzzle forward offset=%ldmm",Rd(g_vfxLook),Rd(g_vfxMuzzleOffsetMm));
+    Log("VFX look=%ld (0=soft mist 1=normal 2=large ref), muzzle forward offset=%ldmm; smoke=%ld screen-flash=%ld",
+        Rd(g_vfxLook),Rd(g_vfxMuzzleOffsetMm),Rd(g_vfxSmoke),Rd(g_vfxScreenFlash));
     g_vrUiDesktopProbe=GetPrivateProfileIntA("Diagnostic","VrUiDesktopProbe",0,path)?1:0;
     Log("VR menu pointer=%ld; native GFx viewport input; no desktop cursor movement",Rd(g_vrUiEnabled));
     Log("independent hands prototype=%d; shader CTAB required; verified SP sections only",g_independentHands);
