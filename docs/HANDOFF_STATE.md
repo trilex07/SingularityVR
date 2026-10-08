@@ -70,6 +70,11 @@
   default 1). OnHit NOT wired (no proven hit-point offsets - blood pending).
   Desktop tests PASS (host no-op/kill-switch, round-trip flash/smoke/blood).
   Plugin + 4 real DDS atlases INSTALLED to Binaries after desktop PASS.
+  Round 2 fixes DEPLOYED (same branch): shadow census moved into the draw-hook
+  shadow early-outs (StereoPairBody gate was dead - indexed/non-indexed shadow
+  draws return before it; log-proven zero census lines with mode 3 live);
+  VFX quads now get the live per-eye view*proj into fixed-function PROJECTION
+  (stale engine transforms made them land outside clip = invisible).
 - White ring right-eye-only (12:54:08 shot): per-eye sprite artifact, NEW instance
   of the muzzle-on-seam class. SpriteQuadPerEye=1 set in user ini; verdict pending.
 - Menu-draw census (MDG groups) flows since 315ce56. 470 groups/session typical.

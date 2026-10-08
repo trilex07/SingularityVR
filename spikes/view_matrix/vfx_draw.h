@@ -148,6 +148,12 @@ struct VfxSavedState {
     IDirect3DVertexBuffer9* stream = nullptr;
     UINT streamOffset = 0, streamStride = 0;
     DWORD fvf = 0;
+    // Fixed-function transforms. The engine draws with shaders and leaves these
+    // stale/identity, so untransformed XYZ quads would land nowhere without them.
+    // Production divergence from the pattern worktree: the host passes the live
+    // per-eye view*proj here (row-major D3DMATRIX).
+    D3DMATRIX world, view, proj;
+    bool haveTransforms = false;
 };
 
 inline void SaveVfxState(IDirect3DDevice9* dev, VfxSavedState& s) {
@@ -179,6 +185,9 @@ inline void SaveVfxState(IDirect3DDevice9* dev, VfxSavedState& s) {
     dev->GetVertexDeclaration(&s.decl);
     dev->GetStreamSource(0, &s.stream, &s.streamOffset, &s.streamStride);
     dev->GetFVF(&s.fvf);
+    s.haveTransforms = SUCCEEDED(dev->GetTransform(D3DTS_WORLD, &s.world)) &&
+                       SUCCEEDED(dev->GetTransform(D3DTS_VIEW, &s.view)) &&
+                       SUCCEEDED(dev->GetTransform(D3DTS_PROJECTION, &s.proj));
 }
 
 inline void RestoreVfxState(IDirect3DDevice9* dev, const VfxSavedState& s) {
@@ -210,6 +219,11 @@ inline void RestoreVfxState(IDirect3DDevice9* dev, const VfxSavedState& s) {
     dev->SetVertexDeclaration(s.decl);
     dev->SetStreamSource(0, s.stream, s.streamOffset, s.streamStride);
     dev->SetFVF(s.fvf);
+    if (s.haveTransforms) {
+        dev->SetTransform(D3DTS_WORLD, &s.world);
+        dev->SetTransform(D3DTS_VIEW, &s.view);
+        dev->SetTransform(D3DTS_PROJECTION, &s.proj);
+    }
     if (s.tex[0]) s.tex[0]->Release();
     if (s.tex[1]) s.tex[1]->Release();
     if (s.vs) s.vs->Release();
@@ -241,11 +255,22 @@ public:
     }
 
     void DrawItems(IDirect3DDevice9* dev, const VfxDrawItem* items, int count,
-                   const VfxAtlas& atlas, const float camRight[3], const float camUp[3]) {
-        if (!dev || !items || count <= 0 || !vb_) return;
+                   const VfxAtlas& atlas, const float camRight[3], const float camUp[3],
+                   const float eyeProj[16]) {
+        if (!dev || !items || count <= 0 || !vb_ || !eyeProj) return;
 
         VfxSavedState saved;
         SaveVfxState(dev, saved);
+
+        // World-space quads need world-space transforms. The engine draws with
+        // vertex-shader constants and leaves the fixed-function matrices stale,
+        // so without this every quad lands outside clip space (invisible).
+        // WORLD and VIEW stay identity; the live per-eye view*proj (row-major,
+        // captured from the eye block that called us) goes into PROJECTION.
+        static const D3DMATRIX kIdentity = {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1};
+        dev->SetTransform(D3DTS_WORLD, &kIdentity);
+        dev->SetTransform(D3DTS_VIEW, &kIdentity);
+        dev->SetTransform(D3DTS_PROJECTION, reinterpret_cast<const D3DMATRIX*>(eyeProj));
 
         dev->SetVertexShader(nullptr);
         dev->SetPixelShader(nullptr);

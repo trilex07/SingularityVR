@@ -10885,6 +10885,27 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw);
 // each eye of StereoPairBody while that eye's matrices are still bound.
 static void VfxEyeDraw(IDirect3DDevice9* dev, int eye);
 
+// ShadowMode=3 census refresh (defined with the shadow globals); called from the
+// draw-hook shadow early-outs, which run before StereoPairBody.
+inline void ShadowMode3NoteGeneration();
+
+// VFX per-eye view*proj capture for the fixed-function quad path (row-major
+// D3DMATRIX layout; transposed when the tracked slot is column-convention).
+// Skipped for gun-ridden draws (matrices gun-shifted); VfxEyeDraw applies the
+// same skip, so the two never disagree about which frame the matrix is from.
+static float g_vfxEyeMat[2][16];
+static bool g_vfxEyeMatValid[2] = { false, false };
+static void VfxCaptureEyeMat(const float* mat, int conv, int eye) {
+    if (eye < 0 || eye > 1 || !mat) return;
+    if (conv == CONV_ROW) {
+        memcpy(g_vfxEyeMat[eye], mat, sizeof(g_vfxEyeMat[eye]));
+    } else {
+        for (int r = 0; r < 4; ++r)
+            for (int c = 0; c < 4; ++c) g_vfxEyeMat[eye][r * 4 + c] = mat[c * 4 + r];
+    }
+    g_vfxEyeMatValid[eye] = true;
+}
+
 template <typename DrawFn>
 HRESULT StereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
     if (!g_timeOurWork) return StereoPairBody(dev, draw);
@@ -10989,20 +11010,12 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
         return S_OK;
     }
     // ShadowMode=3 (see shadow_mode3.h; pattern feature/shadow-mode3 @54dd4bd):
-    // the light-space generation pass is drawn ONCE, native, never split. The slots
-    // holding a matrix in THIS scan are light-space by construction (a shadow shader's
-    // matrices are light matrices), so the census refreshes from this scan - never
-    // guessed. Receiver draws below read it via SlotMayRemap.
+    // the light-space generation pass is drawn ONCE, native, never split. The
+    // hook early-outs above already return generation draws before StereoPairBody,
+    // so the census refresh lives in ShadowMode3NoteGeneration() there; this gate
+    // covers any shadow-layout draw that still reaches the seam.
     if (Rd(g_shadowMode) == 3 && g_boundShaderLayout.shadow) {
-        g_shadowRegs.Clear();
-        if (g_origSetVSConstF)
-            for (int s = 0; s < g_camMatUsed; ++s)
-                if (g_camMats[s].valid) g_shadowRegs.Mark((std::uint32_t)s);
-        ++g_drawsShadowNative;
-        if (g_shadowRegs.Mask() != g_shadowRegsLogged) {
-            g_shadowRegsLogged = g_shadowRegs.Mask();
-            Log("ShadowMode3 census: generation pass, light-space slots mask=0x%X", g_shadowRegs.Mask());
-        }
+        ShadowMode3NoteGeneration();
         return draw();
     }
     if (!InterlockedCompareExchange(&g_rtIsScene, 0, 0) || g_boundShaderLayout.shadow) { ++g_drawsOffscreen; return draw(); }
@@ -11098,6 +11111,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             const CamMatSlot& cs = g_camMats[slots[i]];
             memcpy(mat, cs.m, sizeof(mat));
             ApplyEyeRemap(reinterpret_cast<Reg4*>(mat), cs.conv, -0.5f);
+            if (i == 0 && !g_thisDrawMoved) VfxCaptureEyeMat(mat, cs.conv, 0);
             if (g_thisDrawMoved) {
                 // Pivot on the camera: the gun hangs off the view, so turning it about the eye is
                 // what makes it point where the controller points. Pivoting on the world origin
@@ -11135,6 +11149,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             // move and must happen before clip space is rescaled.
             ApplyOffset(reinterpret_cast<Reg4*>(mat), cs.conv, g_eyeDeltaUU);
             ApplyEyeRemap(reinterpret_cast<Reg4*>(mat), cs.conv, +0.5f);
+            if (i == 0 && !g_thisDrawMoved) VfxCaptureEyeMat(mat, cs.conv, 1);
             if (g_thisDrawMoved) {
                 // Pivot on the camera: the gun hangs off the view, so turning it about the eye is
                 // what makes it point where the controller points. Pivoting on the world origin
@@ -12175,7 +12190,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     InterlockedIncrement(&g_frameDrawIdx);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     ++g_vidFrameDraws;
-    if(g_boundShaderLayout.shadow)return g_origDrawPrim(dev,t,start,count);
+    if(g_boundShaderLayout.shadow){ShadowMode3NoteGeneration();return g_origDrawPrim(dev,t,start,count);}
     if (count <= 4) VidProbeRecord(dev, 0, t, count, nullptr, 0);
     // No vertex data on this path, so no bounding box - but its PRESENCE still matters. If the flash
     // turns out to be here rather than on a user-pointer path, the quad classifier is not involved at
@@ -14917,7 +14932,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         InterlockedIncrement(&g_firstPersonShadowSkipped);InterlockedIncrement(&g_vrCounters.fpShadowDepthSkipped);return D3D_OK;
     }
     if(g_boundShaderLayout.shadow)
-        return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);
+        {ShadowMode3NoteGeneration();return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);}
     ++g_vidFrameDraws;
     // Indexed geometry cannot expose its vertices cheaply here, so v0 stays zero on these rows -
     // the texture and render-target columns are what this path contributes.
@@ -17059,6 +17074,24 @@ singularity::shadow::ShadowRegisterCensus g_shadowRegs;
 int g_drawsShadowNative = 0, g_drawsShadowProtected = 0;
 static std::uint32_t g_shadowRegsLogged = 0xFFFFFFFFu;
 
+// ShadowMode=3: refresh the light-space census from a shadow-generation draw.
+// Called from the draw-hook shadow early-outs, which return the original draw
+// BEFORE StereoPairBody - so a gate inside StereoPairBody alone never observes
+// generation (log-proven: zero census lines with mode 3 live). The slots holding
+// a matrix in a shadow-layout scan are light-space by construction, so the
+// census refreshes from this scan - never guessed.
+inline void ShadowMode3NoteGeneration() {
+    if (Rd(g_shadowMode) != 3) return;
+    g_shadowRegs.Clear();
+    for (int s = 0; s < g_camMatUsed; ++s)
+        if (g_camMats[s].valid) g_shadowRegs.Mark((std::uint32_t)s);
+    ++g_drawsShadowNative;
+    if (g_shadowRegs.Mask() != g_shadowRegsLogged) {
+        g_shadowRegsLogged = g_shadowRegs.Mask();
+        Log("ShadowMode3 census: generation pass, light-space slots mask=0x%X", g_shadowRegs.Mask());
+    }
+}
+
 // ---- VFX host (Variant A, pattern feature/vfx-host-abi @702ce5c) ----
 //
 // The HOST owns D3D9, the per-eye matrices, the muzzle transform and the event
@@ -17129,6 +17162,7 @@ static void ReleaseVfxHost() {
     g_vfxAtlasBuilt = false;
     g_vfxAtlasSource = "none";
     g_vfxEyeDone[0] = g_vfxEyeDone[1] = -1;
+    g_vfxEyeMatValid[0] = g_vfxEyeMatValid[1] = false;
 }
 
 static void VfxEyeDraw(IDirect3DDevice9* dev, int eye) {
@@ -17158,6 +17192,9 @@ static void VfxEyeDraw(IDirect3DDevice9* dev, int eye) {
     int n = g_vfx.Collect(singularity_vfx::VfxRenderPass::Gameplay, g_vfxItems, 32);
     if (n <= 0) return;
     if (n > 32) n = 32;
+    // Without the live per-eye view*proj the fixed-function quads inherit stale
+    // engine transforms and land outside clip space (log-proven invisible).
+    if (!g_vfxEyeMatValid[eye]) return;
     // Billboard basis from the first live camera slot - the exact extraction the
     // wrist band uses (ROW/column aware, normalised, finite-checked).
     int bslot = -1;
@@ -17181,7 +17218,7 @@ static void VfxEyeDraw(IDirect3DDevice9* dev, int eye) {
         g_vfxItems[i].position.x *= m2u; g_vfxItems[i].position.y *= m2u; g_vfxItems[i].position.z *= m2u;
         g_vfxItems[i].size *= m2u;
     }
-    g_vfxDrawer.DrawItems(dev, g_vfxItems, n, g_vfxAtlas, right, up);
+    g_vfxDrawer.DrawItems(dev, g_vfxItems, n, g_vfxAtlas, right, up, g_vfxEyeMat[eye]);
     g_vfxItemsDrawn += n;
 }
 // Fix-4/menus round 2: sticky per-window mask of suppression-miss reasons, set only for
