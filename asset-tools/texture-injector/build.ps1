@@ -4,6 +4,8 @@
 # deployed items to restore vanilla. See README.md.
 param(
     [switch]$Install,
+    [ValidateSet("A", "B")]
+    [string]$Variant = "A",
     [string]$GameBin = "C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries",
     [string]$LocalRoot = "C:\Users\Trilex\vr-mods\SingularityVR-assets-local"
 )
@@ -40,11 +42,14 @@ try {
 
         $texDst = Join-Path $GameBin "texture-override"
         New-Item -ItemType Directory -Force -Path $texDst | Out-Null
+        # clear old variant files so only the chosen one is present
+        Get-ChildItem $texDst -Filter *.dds -ErrorAction SilentlyContinue | Remove-Item -Force
 
-        # Map the chosen candidate -> injector filename baked into the DLL.
+        # Variant suffix -> injector filename baked into the DLL (variant-agnostic).
+        $suffix = if ($Variant -eq "B") { "__B_ibp" } else { "__A_lanczos" }
         $map = @{
-            "inview_glove_d__A_lanczos.dds" = "inview_glove_d.A.dds"
-            "inview_glove_n__A_lanczos.dds" = "inview_glove_n.A.dds"
+            "inview_glove_d$suffix.dds" = "inview_glove_d.dds"
+            "inview_glove_n$suffix.dds" = "inview_glove_n.dds"
         }
         $up = Join-Path $LocalRoot "textures\upscaled"
         foreach ($src in $map.Keys) {
@@ -52,6 +57,7 @@ try {
             if (-not (Test-Path $from)) { throw "candidate missing: $from (run the pipeline 'upscale' step first)" }
             Copy-Item $from (Join-Path $texDst $map[$src]) -Force
         }
+        Write-Host "Variant: $Variant ($suffix)"
 
         # forward to a local copy of the real dinput8 under a distinct name
         $sysDi8 = Join-Path ${env:windir} "SysWOW64\dinput8.dll"

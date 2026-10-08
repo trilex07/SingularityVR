@@ -31,13 +31,20 @@ extracted originals exactly.
 ## Deploy / restore
 
 ```powershell
-# build + install (adds dinput8.dll, dinput8_orig.dll, texture_override.ini,
-# texture-override\*.dds to the game's Binaries; nothing is overwritten)
-powershell -ExecutionPolicy Bypass -File asset-tools/texture-injector/build.ps1 -Install
+# build + install a candidate set (adds dinput8.dll, dinput8_orig.dll,
+# texture_override.ini, texture-override\*.dds to the game's Binaries; nothing
+# existing is overwritten)
+powershell -ExecutionPolicy Bypass -File asset-tools/texture-injector/build.ps1 -Install -Variant A   # Lanczos (safest)
+powershell -ExecutionPolicy Bypass -File asset-tools/texture-injector/build.ps1 -Install -Variant B   # IBP (sharper)
 
 # remove everything and return to vanilla
 powershell -ExecutionPolicy Bypass -File asset-tools/texture-injector/restore.ps1
 ```
+
+`-Variant` only changes which candidate DDS is copied into `texture-override\`;
+the DLL is variant-agnostic, so switching needs no rebuild of the plugin logic
+(it does rewrite the same `dinput8.dll`). Replacement files are always deployed
+as `inview_glove_d.dds` / `inview_glove_n.dds`.
 
 ## Config (`texture_override.ini`, next to the DLL)
 
@@ -54,8 +61,10 @@ powershell -ExecutionPolicy Bypass -File asset-tools/texture-injector/restore.ps
 
 | texture | usage | original | replacement |
 | --- | --- | --- | --- |
-| `inview_glove_d` | first-person glove/hand diffuse | 1024² DXT1 | 2048² DXT1 (candidate A, Lanczos) |
-| `inview_glove_n` | first-person glove normal | 1024² DXT1 | 2048² DXT1 (candidate A, renormalised) |
+| `inview_glove_d` | first-person glove/hand diffuse | 1024² DXT1 | 2048² DXT1 (variant A Lanczos / B IBP) |
+| `inview_glove_n` | first-person glove normal | 1024² DXT1 | 2048² DXT1 (variant A / B, renormalised) |
+
+Currently deployed: **variant B (IBP)**.
 
 ## Risks / notes
 
