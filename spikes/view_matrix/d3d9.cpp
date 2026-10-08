@@ -1994,8 +1994,14 @@ static void LogEquippedClass(uintptr_t w) {
 
 static void RefreshArmedState() {
     ArmedState st = ARMED_UNKNOWN;
+    // Fix-A/perf: ONE pawn lookup per frame. This used to call FindPlayerPawn() twice
+    // (once per block below); on a cache miss each call burns up to a 1ms/512-object
+    // bounded slice, so a lost pawn cost ~2ms/frame plus the reacquisition. Single call
+    // halves the miss-path cost; full rescan takes twice as many frames instead, which
+    // only matters across level transitions where frames are already slow.
+    const uintptr_t pawn = FindPlayerPawn();
     if (g_offWeapon >= 0) {
-        if (const uintptr_t pawn = FindPlayerPawn()) {
+        if (pawn) {
             if (Readable((void*)(pawn + g_offWeapon), sizeof(uintptr_t))) {
                 const uintptr_t w = *reinterpret_cast<const uintptr_t*>(pawn + g_offWeapon);
                 st = w ? ARMED_YES : ARMED_NO;
@@ -2037,7 +2043,7 @@ static void RefreshArmedState() {
     }
     // ⭐ run 236: both read from the pawn we already have, on the same once-a-frame path - never per
     // draw. Logged on CHANGE, so raising and lowering the TMD writes two lines and idling writes none.
-    if (const uintptr_t pawn = FindPlayerPawn()) {
+    if (pawn) {
         if (g_offHandsStatus >= 0 && Readable((void*)(pawn + g_offHandsStatus), 4)) {
             const LONG v = *reinterpret_cast<const int32_t*>(pawn + g_offHandsStatus);
             if (v != Rd(g_handsStatus)) {
@@ -16749,6 +16755,8 @@ int g_drawsWhileShadowBound = 0, g_drawsShadowMono = 0;
 // menu-source draws (see SuppressCapturedVrMenuDraw). Render thread only, like the
 // draw counters beside it.
 int g_menuSuppressFailMask = 0;
+// Fix-B/menu: per-window stage-0 bind/match counts while a menu is focused.
+int g_menuBindsWhileMenu = 0, g_menuSourceSets = 0;
 static bool ProjectedShadowTexture(IDirect3DBaseTexture9* texture) {
     if(!texture||texture->GetType()!=D3DRTYPE_TEXTURE)return false;
     const unsigned slot=((uintptr_t)texture>>4)&255u;
@@ -16771,13 +16779,17 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::set_texture);
     if(stage==0) {
         bool menuSource = false;
+        // Fix-B/menu: count stage-0 binds seen while a menu is focused, and how many
+        // match the captured source. If binds>0 and matches==0 across a menu session,
+        // the menu texture never arrives on stage 0 and the match strategy is wrong.
+        if (Rd(g_vrUiMenu)) ++g_menuBindsWhileMenu;
         if (Rd(g_vrUiMenu) && !Rd(g_vrMenuProviderDrawing) && texture && Rd(g_rtIsScene)) {
             if (g_vrMenuTexture && texture==g_vrMenuTexture) menuSource = true;
             for (unsigned i=0; !menuSource && i<g_vrMenuSourceCount; ++i)
                 if (texture==g_vrMenuSources[i]) menuSource = true;
         }
         InterlockedExchange(&g_vrMenuSourceBound,menuSource?1:0);
-        if (menuSource) InterlockedIncrement(&g_vrMenuSourceMatches);
+        if (menuSource) { InterlockedIncrement(&g_vrMenuSourceMatches); ++g_menuSourceSets; }
     }
     if(VrModeOn() && !Rd(g_vrShadows) && ProjectedShadowTexture(texture)) {
         InterlockedIncrement(&g_shadowMapCandidates);
@@ -22044,6 +22056,11 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             if (g_menuSuppressFailMask)
                 Log("    menu-suppress miss mask=0x%X (1=noprovide 2=flat 4=shadow 8=providing-now 16=offscreen)", g_menuSuppressFailMask);
             g_menuSuppressFailMask = 0;
+            // Fix-B/menu: did the menu texture ever reach stage 0 while focused?
+            if (g_menuBindsWhileMenu)
+                Log("    menu-source: %d stage-0 binds while menu focused, %d matched the captured source",
+                    g_menuBindsWhileMenu, g_menuSourceSets);
+            g_menuBindsWhileMenu = 0; g_menuSourceSets = 0;
             {
                 char regs[128] = {}; int n = 0;
                 for (int s = 0; s < g_camMatUsed && n < 100; ++s)
