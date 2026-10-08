@@ -6042,6 +6042,12 @@ volatile LONG g_panelOpen = 0;
 int  g_panelRow = 0;
 bool g_panelDirty = false;      // has anything changed since it was opened?
 
+// Scene presentation controls are owned by the cutscene-flat workstream.  The
+// panel only exposes these atomics; rendering reads the same values at frame
+// boundaries, so changing them never touches the production hand/weapon path.
+extern volatile LONG g_sceneFlatEnabled;
+extern volatile LONG g_sceneCinemaMask;
+
 // ---- ⭐ run 157: DEBUGGING ----
 //
 // Everything this mod grew while being built - the on-screen state readout and forty-odd hotkeys -
@@ -6247,7 +6253,7 @@ static bool GunViewFrame() { return (InterlockedCompareExchange(&g_gunSignCombo,
 // Only settings that are consulted EVERY FRAME from a global belong here. Anything read once at
 // device creation - D3D9ExMode, ZeroCopy, the resolution - would appear to change and silently do
 // nothing until a relaunch, which is worse than not offering it. Those stay ini-only.
-enum { PR_ENABLEVR = 0, PR_AIMMETHOD, PR_MOVEDIR, PR_TURNMODE, PR_TURNSPEED, PR_SNAPANGLE,
+enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDIR, PR_TURNMODE, PR_TURNSPEED, PR_SNAPANGLE,
        PR_TURNDIR, PR_HEADROLL, PR_CROSSHAIR, PR_OCCLUSION, PR_DEBUG,
        PR_CINESTICK, PR_CINECAM, PR_SWAPSTICKS, PR_LEFTHAND, PR_WEAPONFX, PR_MUZZLEFX, PR_WORLDSCALE,
        PR_AIMPARTS,
@@ -6303,8 +6309,8 @@ enum { PR_ENABLEVR = 0, PR_AIMMETHOD, PR_MOVEDIR, PR_TURNMODE, PR_TURNSPEED, PR_
 const int kPanelPages    = 9;      // ⭐ run 237: + TMD ALIGN; ⭐ run 249: + TMD BONES, TMD MESH
 const int kPanelRowsMax  = 10;     // ⚠ a page longer than this cannot be declared - see kPageRows
 const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
-    { PR_ENABLEVR, PR_AIMMETHOD, PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV,
-      PR_GOTO_WEAPON, PR_GOTO_TMD },
+    { PR_ENABLEVR, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_GOTO_CTRL, PR_GOTO_COMFORT,
+      PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_GOTO_TMD },
     { PR_TURNMODE, PR_TURNSPEED, PR_SNAPANGLE, PR_TURNDIR, PR_MOVEDIR, PR_SWAPSTICKS,
       PR_LEFTHAND, PR_BACK },
     { PR_CINESTICK, PR_CINECAM, PR_BACK },
@@ -6359,7 +6365,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
       PR_TMDHIDE, PR_BACK_TMD },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 8, 8, 3, 6, 5, 7, 10, 6, 8 };   // ⭐ run 230: DISPLAY 5 -> 6; ⭐ run 237: root 7 -> 8 and a TMD page; ⭐ run 249: TMD 17 -> 10 + two sub-pages; ⭐ run 250: TMD MESH 5 -> 7; ⭐ run 251: + TRI MODE
+const int kPageCount[kPanelPages] = { 10, 8, 3, 6, 5, 7, 10, 6, 8 };
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -6454,6 +6460,14 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_ENABLEVR:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%d", VrModeOn() ? 1 : 0);
             WritePrivateProfileStringA("Render", "StartInVr", v, path); return;
+        case PR_CUTSCENEVIEW:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
+                        InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) ? 1 : 0);
+            WritePrivateProfileStringA("Render", "CutsceneFlatMode", v, path); return;
+        case PR_CINEMAMATTE:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
+                        InterlockedCompareExchange(&g_sceneCinemaMask, 0, 0) ? 1 : 0);
+            WritePrivateProfileStringA("Render", "CutsceneCinemaMask", v, path); return;
         case PR_AIMMETHOD:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_aimMethod, 0, 0));
@@ -6662,6 +6676,15 @@ void PanelRowText(int row, char* out, size_t cap) {
     switch (row) {
         case PR_ENABLEVR:
             _snprintf_s(out, cap, _TRUNCATE, "VR MODE        %s", VrModeOn() ? "ON" : "OFF");
+            break;
+        case PR_CUTSCENEVIEW:
+            _snprintf_s(out, cap, _TRUNCATE, "CUTSCENE VIEW  %s",
+                        InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0)
+                            ? "FLAT CINEMA" : "ALWAYS VR");
+            break;
+        case PR_CINEMAMATTE:
+            _snprintf_s(out, cap, _TRUNCATE, "CINEMA MATTE   %s",
+                        InterlockedCompareExchange(&g_sceneCinemaMask, 0, 0) ? "ON" : "OFF");
             break;
         case PR_LASER:
             _snprintf_s(out, cap, _TRUNCATE, "LASER SIGHT    %s",
@@ -6932,6 +6955,19 @@ void PanelAdjust(int row, int dir) {
             // safe: the panel is drawn into whichever frame layout is live, mono or split, and it
             // is opened and driven by the controller - so it is still reachable to turn back on.
             SetVrMode(!VrModeOn());
+            break;
+        case PR_CUTSCENEVIEW:
+            InterlockedExchange(&g_sceneFlatEnabled,
+                                InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) ? 0 : 1);
+            Log("VR panel: cutscene presentation %s",
+                InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0)
+                    ? "FLAT CINEMA" : "ALWAYS VR");
+            break;
+        case PR_CINEMAMATTE:
+            InterlockedExchange(&g_sceneCinemaMask,
+                                InterlockedCompareExchange(&g_sceneCinemaMask, 0, 0) ? 0 : 1);
+            Log("VR panel: cinema matte %s",
+                InterlockedCompareExchange(&g_sceneCinemaMask, 0, 0) ? "ON" : "OFF");
             break;
         case PR_AIMMETHOD:
             InterlockedExchange(&g_aimMethod,
@@ -10665,7 +10701,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
     // CutsceneFlat/VideoFlat deliberately execute the original draw once. The
     // authored camera is therefore not independently remapped for two eyes;
     // gameplay returns to StereoPair automatically after hysteresis clears.
-    if (g_sceneMode.Flat()) return draw();
+    if (InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) && g_sceneMode.Flat()) return draw();
     // Shadow-map generation stays intact. VrShadows=0 neutralises only the measured sampled
     // projection texture in Hook_SetTexture, after the light-space pass has completed.
     if (!InterlockedCompareExchange(&g_dupDraws, 0, 0)) return draw();
@@ -11860,8 +11896,6 @@ void VidProbeRecord(IDirect3DDevice9* dev, uint8_t src, D3DPRIMITIVETYPE t, UINT
 // Called once per frame from Present. Dumps only for frames that look like video or a splash -
 // almost no 3D geometry - so gameplay is never printed and the log stays readable.
 void VidProbeFrameEnd() {
-    // One scene-mode sample per presented frame, rather than per draw call.
-    UpdateSceneModeFrame();
     const int draws = g_vidFrameDraws;
     // Published for IsVideoQuad, which needs "was the last frame video-only" and cannot ask about
     // the current one from inside a draw. See the note there.
@@ -16047,7 +16081,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
             // existing setting still controls the legacy per-eye rewrite.
             InterlockedExchange(&g_sceneVideoSeen, 1);
         }
-        if (InterlockedCompareExchange(&g_videoStereo, 0, 0) && videoQuad) {
+        if (InterlockedCompareExchange(&g_videoStereo, 0, 0) &&
+            InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) && videoQuad) {
             static bool said = false;
             if (!said) {
                 said = true;
@@ -17575,6 +17610,8 @@ vrscene::Controller g_sceneMode;
 volatile LONG g_sceneModeTrace = 0;
 volatile LONG g_sceneVideoSeen = 0;
 volatile LONG g_sceneModeFrame = 0;
+volatile LONG g_sceneFlatEnabled = 1;   // ini [Render] CutsceneFlatMode
+volatile LONG g_sceneCinemaMask = 1;   // ini [Render] CutsceneCinemaMask
 
 static LONG FnIdx(int i) { return InterlockedCompareExchange(&g_scriptFns[i].idx, 0, 0); }
 
@@ -20166,6 +20203,59 @@ void DrawWristHealth(IDirect3DDevice9* dev) {
 
 #include "vr_menu_overlay.h"
 
+// A flat cutscene should read as a cinema screen, not as a full-field texture
+// glued to the user's face.  The game has already rendered the mono image once
+// into the SBS target; this inexpensive matte clears the area around a centered
+// 16:9 window while leaving the image itself untouched.  It is deliberately a
+// Present-time overlay, so it cannot affect world depth, hand palettes, or the
+// next eye/pass.
+static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
+    if (!dev || !VrModeOn() || !InterlockedCompareExchange(&g_dupDraws, 0, 0) ||
+        !InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) ||
+        !InterlockedCompareExchange(&g_sceneCinemaMask, 0, 0) || !g_sceneMode.Flat()) return;
+
+    IDirect3DSurface9* back = nullptr;
+    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
+    D3DSURFACE_DESC d{};
+    if (FAILED(back->GetDesc(&d)) || d.Width < 8 || d.Height < 8) {
+        back->Release();
+        return;
+    }
+    IDirect3DSurface9* old = nullptr;
+    IDirect3DSurface9* depth = nullptr;
+    dev->GetRenderTarget(0, &old);
+    dev->GetDepthStencilSurface(&depth);
+    dev->SetDepthStencilSurface(nullptr);
+    if (g_origSetRenderTarget) g_origSetRenderTarget(dev, 0, back);
+
+    const LONG halfW = (LONG)d.Width / 2;
+    const int eyes = 2;
+    const LONG screenW = (LONG)(halfW * 0.84f);
+    const LONG screenH = (LONG)(d.Height * 0.70f);
+    const LONG marginX = (halfW - screenW) / 2;
+    const LONG marginY = ((LONG)d.Height - screenH) / 2;
+    D3DRECT r[8]{};
+    int n = 0;
+    for (int eye = 0; eye < eyes; ++eye) {
+        const LONG x0 = eye * halfW;
+        const LONG x1 = x0 + halfW;
+        const LONG sx0 = x0 + marginX;
+        const LONG sx1 = x1 - marginX;
+        const LONG sy0 = marginY;
+        const LONG sy1 = (LONG)d.Height - marginY;
+        r[n++] = { x0, 0, x1, sy0 };
+        r[n++] = { x0, sy1, x1, (LONG)d.Height };
+        r[n++] = { x0, sy0, sx0, sy1 };
+        r[n++] = { sx1, sy0, x1, sy1 };
+    }
+    ClearRects(dev, r, n, D3DCOLOR_XRGB(0, 0, 0));
+    if (g_origSetRenderTarget && old) g_origSetRenderTarget(dev, 0, old);
+    dev->SetDepthStencilSurface(depth);
+    if (old) old->Release();
+    if (depth) depth->Release();
+    back->Release();
+}
+
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
     hotpath::scope frameScope(g_hotPathSampler, hotpath::Family::frame_total);
     DiagStart();
@@ -20173,6 +20263,11 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // Whoever calls Present owns the device. Recorded so the user-pointer draw hooks can tell
     // render-thread calls from movie-playback-thread ones and stay completely inert on the latter.
     g_mainThreadId = GetCurrentThreadId();
+    // Sample after the frame's draws have populated the Bink signal and before
+    // any matte/overlay is emitted, so presentation policy and diagnostics use
+    // the same frame boundary.
+    UpdateSceneModeFrame();
+    DrawCutsceneCinemaMask(s);
     // Age the menu indicator once per frame. Without this a name that fired a minute ago looks
     // identical to one firing right now, which is the whole distinction the readout exists to show.
     InterlockedIncrement(&g_lastMenuAge);
@@ -20181,8 +20276,10 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     if (InterlockedCompareExchange(&g_debugOn, 0, 0) &&
         InterlockedCompareExchange(&g_readoutOn, 0, 0)) DrawStateReadout(s);
     // The in-VR engineering panel is retired from user builds. It obscured the game and made
-    // headset screenshots unusable; diagnostics remain available through the log/readout gates.
+    // headset screenshots unusable in the production DLL. This isolated options DLL exposes it
+    // again because the cutscene presentation choice must be reachable without editing the INI.
     DrawVrMenuPointer(s);
+    if (InterlockedCompareExchange(&g_panelOpen, 0, 0)) DrawVrPanel(s);
     if (InterlockedExchange(&g_initTried, 1) == 0) {
         InstallViewHook(); InstallProcessEventHook(); InitXR();
     }
@@ -23457,6 +23554,10 @@ void LoadIniSettings() {
     // gun or the 390-vertex mesh because both are in the baseline set.
     g_renderEvidence = GetPrivateProfileIntA("Diagnostic", "RenderEvidence", 0, path) ? 1 : 0;
     g_sceneModeTrace = GetPrivateProfileIntA("Diagnostic", "SceneModeTrace", 0, path) ? 1 : 0;
+    InterlockedExchange(&g_sceneFlatEnabled,
+                        GetPrivateProfileIntA("Render", "CutsceneFlatMode", 1, path) ? 1 : 0);
+    InterlockedExchange(&g_sceneCinemaMask,
+                        GetPrivateProfileIntA("Render", "CutsceneCinemaMask", 1, path) ? 1 : 0);
     g_armPaletteTraceFrames=GetPrivateProfileIntA("Diagnostic","ArmPaletteTraceFrames",0,path);
     if(g_armPaletteTraceFrames<0)g_armPaletteTraceFrames=0;
     if(g_armPaletteTraceFrames>64)g_armPaletteTraceFrames=64;
@@ -23477,6 +23578,9 @@ void LoadIniSettings() {
     g_wristHealth = GetPrivateProfileIntA("Render", "WristHealth", 1, path) ? 1 : 0;
     Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld, scene trace=%ld",
         Rd(g_wristHealth),Rd(g_renderEvidence),Rd(g_sceneModeTrace));
+    Log("cutscene presentation: %s, cinema matte=%s (VR panel rows)",
+        Rd(g_sceneFlatEnabled) ? "FLAT CINEMA" : "ALWAYS VR",
+        Rd(g_sceneCinemaMask) ? "ON" : "OFF");
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
     g_showControllerArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 1, path) ? 1 : 0;
     g_independentHands = GetPrivateProfileIntA("Render", "IndependentHandsPrototype", 0, path) ? 1 : 0;
