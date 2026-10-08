@@ -10764,8 +10764,9 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
     if (!InterlockedCompareExchange(&g_rtIsScene, 0, 0) || g_boundShaderLayout.shadow) { ++g_drawsOffscreen; return draw(); }
     // Fix-3/shadows: a pass sampling the projected shadow map must not receive a remapped
     // camera (run-41/42 mechanism: depth reconstructed with a full-frame constant from
-    // remapped depth). Count every such draw; fall back to one unremapped draw only when
-    // ShadowSampleMono=1. Default 0 = measure only, zero behaviour change.
+    // remapped depth). Count every such draw; fall back to one unremapped draw when
+    // ShadowSampleMono=1. Measured 33-243 such draws/sec vs tens of thousands total, so
+    // the mask is transient around the sampling pass - default ON since round 3.
     if (Rd(g_shadowStageMask)) {
         ++g_drawsWhileShadowBound;
         if (Rd(g_shadowSampleMono)) { ++g_drawsShadowMono; return draw(); }
@@ -23491,7 +23492,7 @@ void LoadIniSettings() {
     Log("camera translation evidence=%d; passive 10Hz, 240 samples maximum; no translation override",g_cameraTranslationEvidence);
     g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",1,path)?1:0;
     g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",0,path)?1:0;
-    g_shadowSampleMono=GetPrivateProfileIntA("Render","ShadowSampleMono",0,path)?1:0;
+    g_shadowSampleMono=GetPrivateProfileIntA("Render","ShadowSampleMono",1,path)?1:0;
     g_vrMenuLaser=GetPrivateProfileIntA("Render","VrMenuLaser",1,path)?1:0;
     LONG laserOpacity=GetPrivateProfileIntA("Render","VrMenuLaserOpacity",55,path);
     LONG laserWidth=GetPrivateProfileIntA("Render","VrMenuLaserWidth",100,path);
@@ -23501,7 +23502,7 @@ void LoadIniSettings() {
     InterlockedExchange(&g_vrMenuLaserWidthPct,laserWidth);
     Log("VR render: menu laser=%ld opacity=%ld%% width=%ld%%; shadows=%ld; translation stabilization=%ld",
         Rd(g_vrMenuLaser),laserOpacity,laserWidth,Rd(g_vrShadows),Rd(g_vrTranslationStabilization));
-    Log("shadow sampling: ShadowSampleMono=%ld (0=measure only, 1=mono-fallback draws while the projected map is bound)",Rd(g_shadowSampleMono));
+    Log("shadow sampling: ShadowSampleMono=%ld (0=measure only, 1=mono-fallback draws while the projected map is bound; default 1)",Rd(g_shadowSampleMono));
     g_wristHealth = GetPrivateProfileIntA("Render", "WristHealth", 1, path) ? 1 : 0;
     Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld",Rd(g_wristHealth),Rd(g_renderEvidence));
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
