@@ -272,6 +272,41 @@ bool IniPath(char* out /*MAX_PATH*/) {
     return true;
 }
 
+// GetPrivateProfileIntA returns an unsigned UINT.  Passing a negative default
+// (or reading a negative value and then assigning through the UINT return type)
+// therefore turns a signed body-relative offset into a huge positive number.
+// Keep signed motion-controller offsets signed by parsing the profile string
+// explicitly.  This tiny parser intentionally avoids CRT/locale calls because
+// LoadIniSettings also runs on the DLL's early startup path under loader lock.
+// The rest of the legacy INI reads retain their original behaviour.
+LONG IniSignedInt(const char* section, const char* key, LONG fallback, const char* path) {
+    char value[64] = {};
+    if (!GetPrivateProfileStringA(section, key, "", value, sizeof(value), path))
+        return fallback;
+
+    const char* p = value;
+    while (*p == ' ' || *p == '\t') ++p;
+    bool negative = false;
+    if (*p == '+' || *p == '-') { negative = (*p == '-'); ++p; }
+    if (*p < '0' || *p > '9') return fallback;
+
+    // Holster offsets are small, but clamp malformed INI values instead of
+    // allowing signed overflow to wrap into an unrelated body position.
+    unsigned long magnitude = 0;
+    while (*p >= '0' && *p <= '9') {
+        const unsigned long digit = (unsigned long)(*p - '0');
+        if (magnitude > 214748364UL ||
+            (magnitude == 214748364UL && digit > (negative ? 8UL : 7UL)))
+            return negative ? (LONG)0x80000000UL : (LONG)0x7FFFFFFFUL;
+        magnitude = magnitude * 10UL + digit;
+        ++p;
+    }
+    while (*p == ' ' || *p == '\t') ++p;
+    if (*p != '\0') return fallback;
+    if (!negative) return (LONG)magnitude;
+    return magnitude == 2147483648UL ? (LONG)0x80000000UL : -(LONG)magnitude;
+}
+
 // ---------------------------------------------------------------- timing primitives
 // Up here rather than beside the frame-copy code that first needed them: the XInput hook times
 // itself now, and that runs long before any of the render timing does.
@@ -25334,10 +25369,10 @@ void LoadIniSettings() {
         Rd(g_sceneCinemaMask) ? "ON" : "OFF");
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
     g_holsterEnabled = GetPrivateProfileIntA("Input", "HolsterEnabled", 1, path) ? 1 : 0;
-    g_holsterConfig.fwd = (float)GetPrivateProfileIntA("Input", "HolsterFwd", 4, path);
-    g_holsterConfig.right = (float)GetPrivateProfileIntA("Input", "HolsterRight", 18, path);
-    g_holsterConfig.up = (float)GetPrivateProfileIntA("Input", "HolsterUp", -24, path);
-    g_holsterConfig.radius = (float)GetPrivateProfileIntA("Input", "HolsterRadius", 12, path);
+    g_holsterConfig.fwd = (float)IniSignedInt("Input", "HolsterFwd", 4, path);
+    g_holsterConfig.right = (float)IniSignedInt("Input", "HolsterRight", 18, path);
+    g_holsterConfig.up = (float)IniSignedInt("Input", "HolsterUp", -24, path);
+    g_holsterConfig.radius = (float)IniSignedInt("Input", "HolsterRadius", 12, path);
     if (g_holsterConfig.radius < 2.0f) g_holsterConfig.radius = 2.0f;
     if (g_holsterConfig.radius > 48.0f) g_holsterConfig.radius = 48.0f;
     Log("weapon holster=%d; hip fwd/right/up=(%.0f,%.0f,%.0f) UU radius=%.0f UU; right grip rising edge toggles",

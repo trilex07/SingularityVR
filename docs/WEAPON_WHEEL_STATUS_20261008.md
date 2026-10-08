@@ -30,3 +30,15 @@ only while the wheel is held, from the existing Present-time state-block path.
 
 The candidate DLL and INI are in
 `C:\Users\Trilex\vr-mods\deployment\weapon-holster-candidate-20261008\`.
+
+## Steam smoke test
+
+The Steam-installed build was rebuilt as PE32 `/O2` and launched from the
+installed `Binaries` directory.  The startup log reached D3D9Ex creation and
+settled at the desktop XRSim frame loop without an exception.  The signed INI
+parser now reports `hip fwd/right/up=(4,18,-24)`; the old `GetPrivateProfileIntA`
+path incorrectly printed a wrapped unsigned value for `HolsterUp=-24`.
+
+The smoke run validates startup and frame pacing only.  It does not claim an
+R3 open/selection event because no physical Sense controller was present and
+`DesktopAutomation=0`; the first headset test remains the interaction proof.
