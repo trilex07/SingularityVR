@@ -1,6 +1,6 @@
 [CmdletBinding(SupportsShouldProcess)]
 param(
-    [ValidateSet('vfx','shadow3','vfx-shadow3')]
+    [ValidateSet('vfx','shadow1','shadow3','vfx-shadow3')]
     [string]$Candidate = 'vfx',
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam',
     [string]$RuntimeManifest = 'C:\Users\Trilex\vr-mods\xrsim-scratch-run\dvr_xrsim32.json',
@@ -18,6 +18,7 @@ Set-StrictMode -Version Latest
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $candidateDir = switch ($Candidate) {
     'vfx'        { Join-Path $repoRoot 'deployment\vfx-stereo-eye-fix-20261008' }
+    'shadow1'    { Join-Path $repoRoot 'deployment\shadow1-ab-20261008' }
     'shadow3'    { Join-Path $repoRoot 'deployment\shadow-mode3-ab-20261008' }
     'vfx-shadow3' { Join-Path $repoRoot 'deployment\vfx-shadow3-latest-20261008' }
 }
