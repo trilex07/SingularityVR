@@ -5,6 +5,16 @@ weapon, IK, and menu-input work.  The runtime state machine is in
 `spikes/view_matrix/vr_scene_mode.h` and is sampled once from the existing
 Present path.
 
+The options DLL adds two rows to the existing VR settings panel:
+
+* `CUTSCENE VIEW`: `FLAT CINEMA` or `ALWAYS VR`.
+* `CINEMA MATTE`: `ON` or `OFF`.
+
+The values are saved as `Render.CutsceneFlatMode` and
+`Render.CutsceneCinemaMask` when the panel closes.  The flat choice remains
+available without editing the INI; `ALWAYS VR` leaves the scene classified for
+diagnostics but bypasses the flat draw path.
+
 ## Signals
 
 * `SetCinematicMode` is the existing UE3 script hook.  Its first frame-local
@@ -42,6 +52,12 @@ stereo duplication resumes automatically after the clear hysteresis window.
 The existing video-specific rewrite still runs only for the classifier's own
 quad; it cannot be armed by an unrelated fullscreen draw in the same frame.
 
+With `CINEMA MATTE=ON`, a Present-time overlay clears the outer 8% of each
+eye horizontally and 15% vertically, leaving a centered 84% x 70% window with
+black surround.  This is a cheap screen-in-front effect over the already flat
+render and does not alter depth, hand palettes, or world geometry.  The Bink
+path retains its measured 16:9 per-eye letterboxing.
+
 No hand palette, arm IK, grip, weapon, controller, or input code is changed by
 this branch.  The only shared rendering touch points are the Present-time
 sample, the stereo-pair gate, and the existing video-quad classifier.
@@ -56,8 +72,8 @@ menu classification.  It passes with:
 PASS: cinematic hysteresis, video mono, noisy signal, menu classification
 ```
 
-The DLL is built for x86 with `/O2` and the PE header is `machine=0x14c`,
-`optional=0x10b` (PE32).  A headset validation is still required to confirm
+The separate options DLL is built for x86 with `/O2` and the PE header is
+`machine=0x14c`, `optional=0x10b` (PE32).  A headset validation is still required to confirm
 that the actual game cutscene and Bink paths trigger the transitions and that
 the SBS compositor presents the intended mono image on both eyes.
 
