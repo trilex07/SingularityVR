@@ -45,8 +45,17 @@ static HMODULE   g_self = nullptr;
 static bool      g_enabled = true;
 static bool      g_apply = true;              // false = log only
 static char      g_texturesDir[MAX_PATH] = "texture-override";
+static bool      g_capture = false;           // dump locked mip0 of larger DXT textures
+static char      g_capturesDir[MAX_PATH] = "capture";
+static UINT      g_captureMin = 512;
 static CRITICAL_SECTION g_logLock;
 static FILE*     g_log = nullptr;
+
+// capture state
+static const int kCaptureMax = 64;
+static uint64_t  g_captured[kCaptureMax];
+static int       g_capturedCount = 0;
+static SRWLOCK   g_captureLock = SRWLOCK_INIT;
 
 static void Log(const char* fmt, ...) {
     if (!g_log) return;
@@ -85,8 +94,11 @@ static void LoadConfig() {
     g_enabled = iniInt("general", "enabled", 1, ini) != 0;
     g_apply   = iniInt("general", "mode_apply", 1, ini) != 0;
     iniStr("general", "texturesdir", "texture-override", g_texturesDir, MAX_PATH, ini);
-    Log("config: enabled=%d apply=%d texturesDir=%s", g_enabled ? 1 : 0,
-        g_apply ? 1 : 0, g_texturesDir);
+    g_capture = iniInt("general", "capture", 0, ini) != 0;
+    iniStr("general", "capturesdir", "capture", g_capturesDir, MAX_PATH, ini);
+    g_captureMin = (UINT)iniInt("general", "capture_min", 512, ini);
+    Log("config: enabled=%d apply=%d texturesDir=%s capture=%d min=%u",
+        g_enabled ? 1 : 0, g_apply ? 1 : 0, g_texturesDir, g_capture ? 1 : 0, g_captureMin);
 }
 
 // ---------------------------------------------------------------------------
@@ -215,6 +227,70 @@ static bool CreateReplacement(IDirect3DDevice9* dev, const DDSImage& img,
 }
 
 // ---------------------------------------------------------------------------
+// runtime capture: dump the mip0 the engine actually uploads (the offline TFC
+// path cannot reach some textures, e.g. the first-person pistol)
+// ---------------------------------------------------------------------------
+static bool WriteDdsMip0(const char* path, UINT w, UINT h, D3DFORMAT fmt,
+                         const uint8_t* data, size_t size) {
+    FILE* f = nullptr;
+    if (fopen_s(&f, path, "wb") != 0 || !f) return false;
+    uint8_t hdr[128] = {0};
+    memcpy(hdr, "DDS ", 4);
+    uint32_t dwSize = 124, flags = 0x1 | 0x2 | 0x4 | 0x1000 | 0x80000;
+    uint32_t zero = 0, mips = 1, pfSize = 32, pfFlags = 0x4, caps = 0x1000;
+    memcpy(hdr + 4, &dwSize, 4);
+    memcpy(hdr + 8, &flags, 4);
+    memcpy(hdr + 12, &h, 4);
+    memcpy(hdr + 16, &w, 4);
+    memcpy(hdr + 20, &zero, 4);
+    memcpy(hdr + 24, &zero, 4);
+    memcpy(hdr + 28, &mips, 4);
+    memcpy(hdr + 76, &pfSize, 4);
+    memcpy(hdr + 80, &pfFlags, 4);
+    memcpy(hdr + 84, (fmt == D3DFMT_DXT1) ? "DXT1" : "DXT5", 4);
+    memcpy(hdr + 108, &caps, 4);
+    fwrite(hdr, 1, 128, f);
+    fwrite(data, 1, size, f);
+    fclose(f);
+    return true;
+}
+
+static void MaybeCapture(IDirect3DTexture9* t) {
+    if (!g_capture || !t) return;
+    D3DSURFACE_DESC d;
+    if (FAILED(t->GetLevelDesc(0, &d))) return;
+    if (d.Format != D3DFMT_DXT1 && d.Format != D3DFMT_DXT5) return;
+    if (d.Width < g_captureMin || d.Height < g_captureMin) return;
+    D3DLOCKED_RECT lr;
+    if (FAILED(t->LockRect(0, &lr, nullptr, D3DLOCK_READONLY))) return;
+    const int blk = (d.Format == D3DFMT_DXT1) ? 8 : 16;
+    const size_t rowbytes = (size_t)((d.Width + 3) / 4) * blk;
+    const UINT rows = (d.Height + 3) / 4;
+    std::vector<uint8_t> data(rowbytes * rows);
+    for (UINT y = 0; y < rows; ++y)
+        memcpy(data.data() + (size_t)y * rowbytes,
+               (const uint8_t*)lr.pBits + (size_t)y * lr.Pitch, rowbytes);
+    t->UnlockRect(0);
+    const uint64_t hv = Fnv1a64(data.data(), data.size());
+
+    AcquireSRWLockExclusive(&g_captureLock);
+    for (int i = 0; i < g_capturedCount; ++i)
+        if (g_captured[i] == hv) { ReleaseSRWLockExclusive(&g_captureLock); return; }
+    if (g_capturedCount >= kCaptureMax) { ReleaseSRWLockExclusive(&g_captureLock); return; }
+    g_captured[g_capturedCount++] = hv;
+    ReleaseSRWLockExclusive(&g_captureLock);
+
+    char dir[MAX_PATH]; BuildPath(g_capturesDir, dir, sizeof(dir));
+    CreateDirectoryA(dir, nullptr);
+    const char* fc = (d.Format == D3DFMT_DXT1) ? "dxt1" : "dxt5";
+    char path[MAX_PATH];
+    _snprintf_s(path, _TRUNCATE, "%s\\%ux%u_%s_%016llX.dds", dir, d.Width, d.Height,
+                fc, (unsigned long long)hv);
+    if (WriteDdsMip0(path, d.Width, d.Height, d.Format, data.data(), data.size()))
+        Log("CAPTURE %ux%u %s %016llX", d.Width, d.Height, fc, (unsigned long long)hv);
+}
+
+// ---------------------------------------------------------------------------
 // hooks
 // ---------------------------------------------------------------------------
 typedef IDirect3D9* (WINAPI* PFN_CREATE9)(UINT);
@@ -299,6 +375,7 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
         return RealSetTexture(dev, stage, tex);
 
     IDirect3DTexture9* t = static_cast<IDirect3DTexture9*>(tex);
+    MaybeCapture(t);
     AcquireSRWLockShared(&g_cacheLock);
     Entry* e = CacheFind(t);
     if (e && e->replacement) {
