@@ -2,6 +2,7 @@
 #include "../fake_xr.h"
 #include "../recenter.h"
 #include "../arm_ik.h"
+#include "../arm_natural.h"
 #include "../pose_conversion.h"
 #include "../singularity_bind_reference.h"
 #include <cassert>
@@ -353,6 +354,25 @@ void arm_palette_decoding_invariants() {
     assert(close(Position(decodedW).z,Position(desiredW).z,.001f));
     std::puts("arm palette: GPU 3x4 decode, bind*skin component reconstruction, rigid joints, stable segment lengths");
 }
+
+void natural_arm_adapter_invariants() {
+    float identity[4][4]={{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
+    armbind::Deltas left{}, right{};
+    assert(armnatural::Build(false, identity, left));
+    assert(armnatural::Build(true, identity, right));
+    assert(left.solution.targetError < .01f && right.solution.targetError < .01f);
+    float original[15][3][4]{};
+    float changed[15][3][4]{};
+    for (int s=0;s<15;++s) for (int r=0;r<3;++r) {
+        changed[s][r][r]=1.0f;
+        original[s][r][r]=1.0f;
+    }
+    armnatural::Apply(changed, original, 15, false, left);
+    armnatural::Apply(changed, original, 15, true, right);
+    for (int s=0;s<15;++s) for (int r=0;r<3;++r) for (int c=0;c<4;++c)
+        assert(std::isfinite(changed[s][r][c]));
+    std::puts("natural arm adapter: TMD bind, controller target, left/right section slots, finite deltas");
+}
 } // namespace
 
 int main() {
@@ -364,6 +384,7 @@ int main() {
     pose_conversion_invariants();
     quaternion_conversion_invariants();
     arm_palette_decoding_invariants();
+    natural_arm_adapter_invariants();
     std::puts("PASS");
     return 0;
 }

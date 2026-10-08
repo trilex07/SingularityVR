@@ -3,6 +3,7 @@
 #include "camera_translation_evidence.h"
 #include "arm_ik.h"
 #include "arm_bind.h"
+#include "arm_natural.h"
 #include "support_grip.h"
 #include "grip_latch.h"
 #include "fp_shadow.h"
@@ -12928,6 +12929,10 @@ int g_hideStrayArms = 1;              // ini [Render] HideStrayArms
 // it without a rebuild, and the log names the count being hidden so a wrong call is diagnosable.
 int g_showControllerArms = 1;       // Preserve the existing animated arm mesh on the gun transform.
 int g_hideExtraArms = 1;              // ini [Render] HideExtraArms
+// 0 = existing native animation/palette path, 1 = bounded TMD two-bone IK.
+// The IK path is deliberately opt-in until a headset confirms the final elbow
+// bend in the deployed asset; it never changes non-TMD meshes.
+int g_armIkMode = 0;                  // ini [Render] ArmIKMode
 
 // The baseline mesh that is neither gun nor arms - the leftover hand/arm fragment.
 static bool FgIsExtraArm(UINT verts) {
@@ -13715,6 +13720,21 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         if(!left && g_thisDrawMoved==1)continue; // Preserve the primary-hand palette exactly.
         if(left && g_thisDrawMoved==2 && !Rd(g_twoHandActive))continue;
         skeletal::TransformBone(&changed[b*3],&saved[b*3],left?delta:rightDelta);
+    }
+    // Native arms are kept as the default.  When explicitly enabled, only the
+    // audited TMD arm sections receive constrained two-bone deltas.  Fingers
+    // and unknown slots retain the established independent-hand transform.
+    if (g_armIkMode == 1 && (tmdBase || tmdGloves)) {
+        armbind::Deltas leftIk{}, rightIk{};
+        const bool haveLeft = armnatural::Build(false, delta, leftIk);
+        const bool haveRight = armnatural::Build(true, rightDelta, rightIk);
+        if (tmdBase) {
+            if (haveLeft)  armnatural::Apply(reinterpret_cast<float (*)[3][4]>(changed), reinterpret_cast<const float (*)[3][4]>(saved), slots, false, leftIk);
+            if (haveRight) armnatural::Apply(reinterpret_cast<float (*)[3][4]>(changed), reinterpret_cast<const float (*)[3][4]>(saved), slots, true, rightIk);
+        } else if (tmdGloves) {
+            if (haveLeft)  armnatural::ApplySection0(reinterpret_cast<float (*)[3][4]>(changed), reinterpret_cast<const float (*)[3][4]>(saved), slots, false, leftIk);
+            if (haveRight) armnatural::ApplySection0(reinterpret_cast<float (*)[3][4]>(changed), reinterpret_cast<const float (*)[3][4]>(saved), slots, true, rightIk);
+        }
     }
     // Internal palette writes must bypass camera/HUD upload classification.
     if(!g_origSetVSConstF || FAILED(g_origSetVSConstF(dev,5,&changed[0][0],regs)))return 0;
@@ -15284,6 +15304,15 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // window is what has kept every count-matched rule in this file off the level.
     const bool tmdSurgeryOn = InterlockedCompareExchange(&g_tmdOnOffHand, 0, 0) != 0 &&
                               TmdRaised() && FgMatchWindow();
+    // ArmIKMode=2 is the explicit visual fallback: suppress only the audited
+    // TMD arm section while keeping the section-0 glove/hand draw alive.
+    // The exact range gate prevents this from touching world geometry or a
+    // different first-person mesh that happens to share a vertex count.
+    const bool tmdArmSection = numVertices==7444 && startIndex==13206 && primCount==7704;
+    if (g_armIkMode == 2 && tmdSurgeryOn && tmdArmSection) {
+        g_thisDrawMoved = 0;
+        return D3D_OK;
+    }
     // ⭐ run 237c: clip a mesh to a range of its triangles, and ⭐ run 251: to SEVERAL ranges. The
     // lambda captures by reference, so filling these in before the call is all it takes.
     //
@@ -25068,6 +25097,8 @@ void LoadIniSettings() {
         Rd(g_sceneCinemaMask) ? "ON" : "OFF");
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
     g_showControllerArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 1, path) ? 1 : 0;
+    g_armIkMode = GetPrivateProfileIntA("Render", "ArmIKMode", 0, path);
+    if (g_armIkMode < 0 || g_armIkMode > 2) g_armIkMode = 0;
     g_independentHands = GetPrivateProfileIntA("Render", "IndependentHandsPrototype", 0, path) ? 1 : 0;
     g_vrUiEnabled=GetPrivateProfileIntA("Input","VrMenuPointer",1,path)?1:0;
     g_vrMenuOverlay=GetPrivateProfileIntA("Render","MenuOverlay",1,path)?1:0;
@@ -25101,7 +25132,8 @@ void LoadIniSettings() {
         Rd(g_vfxLook),Rd(g_vfxMuzzleOffsetMm),Rd(g_vfxSmoke),Rd(g_vfxScreenFlash));
     g_vrUiDesktopProbe=GetPrivateProfileIntA("Diagnostic","VrUiDesktopProbe",0,path)?1:0;
     Log("VR menu pointer=%ld; native GFx viewport input; no desktop cursor movement",Rd(g_vrUiEnabled));
-    Log("independent hands prototype=%d; shader CTAB required; verified SP sections only",g_independentHands);
+    Log("independent hands prototype=%d; arm IK mode=%d (0=native, 1=bounded TMD two-bone, 2=TMD gloves-only); shader CTAB required; verified SP sections only",
+        g_independentHands, g_armIkMode);
     g_hideStrayArms = GetPrivateProfileIntA("Render", "HideStrayArms", 1, path) ? 1 : 0;
     Log("ini: HideStrayArms=%d (%s)", g_hideStrayArms,
         g_hideStrayArms ? "hide first-person meshes that were NOT on screen when the latch was taken -"
