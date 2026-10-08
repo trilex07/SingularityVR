@@ -1072,6 +1072,429 @@
       "decoded_mode": "RGBA",
       "file_size": 16512
     },
+    "door_blastdoorN_d": {
+      "size_x": 1024,
+      "size_y": 512,
+      "format": "PF_DXT1",
+      "mip_tail": 10,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "SP_VI_Intro_Zone01_XSA",
+      "exported_dims": [
+        1024,
+        512
+      ],
+      "exported_mip_level": 0,
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "door_blastdoorN"
+        }
+      ],
+      "materials": [
+        "door_blastdoorN"
+      ],
+      "source_dds": "textures\\original\\SP_VI_Intro_Zone01_XSA\\Texture2D\\door_blastdoorN_d.dds",
+      "sha256": "a2affce4b417260bfc96b19341c5235f41ba93971fdcf1a2f66cd34cf5f4100a",
+      "decoded_size": [
+        1024,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 262272
+    },
+    "door_blastdoorN_n": {
+      "size_x": 1024,
+      "size_y": 512,
+      "format": "PF_DXT1",
+      "mip_tail": 10,
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "SP_VI_Intro_Zone01_XSA",
+      "exported_dims": [
+        1024,
+        512
+      ],
+      "exported_mip_level": 0,
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "door_blastdoorN"
+        }
+      ],
+      "materials": [
+        "door_blastdoorN"
+      ],
+      "source_dds": "textures\\original\\SP_VI_Intro_Zone01_XSA\\Texture2D\\door_blastdoorN_n.dds",
+      "sha256": "1fe6c4e596009417553e6b5000e2f8cf75e75a793ef8076e3f2827224a3a1068",
+      "decoded_size": [
+        1024,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 262272
+    },
+    "door_blastdoorN_s": {
+      "size_x": 512,
+      "size_y": 256,
+      "format": "PF_DXT1",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "SP_VI_Intro_Zone01_XSA",
+      "exported_dims": [
+        256,
+        128
+      ],
+      "exported_mip_level": 1,
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "door_blastdoorN"
+        }
+      ],
+      "materials": [
+        "door_blastdoorN"
+      ],
+      "source_dds": "textures\\original\\SP_VI_Intro_Zone01_XSA\\Texture2D\\door_blastdoorN_s.dds",
+      "sha256": "af7f65b1cb78adbf5853d6af5a85b464419953387e3da8b70e51759212bf8f70",
+      "decoded_size": [
+        256,
+        128
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 16512
+    },
+    "door_industrial_04_S1_d": {
+      "size_x": 1024,
+      "size_y": 1024,
+      "format": "PF_DXT1",
+      "mip_tail": 10,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "SP_VI2_zone02a_XSA",
+      "exported_dims": [
+        512,
+        512
+      ],
+      "exported_mip_level": 1,
+      "roles": [
+        {
+          "param": "diffusemap_shifted",
+          "class": "UNKNOWN",
+          "material": "door_industrial_04_S1"
+        },
+        {
+          "param": "specularmap_shifted",
+          "class": "UNKNOWN",
+          "material": "door_industrial_04_S1"
+        }
+      ],
+      "materials": [
+        "door_industrial_04_S1"
+      ]
+    },
+    "door_industrial_04_S1_n": {
+      "size_x": 1024,
+      "size_y": 1024,
+      "format": "PF_DXT1",
+      "mip_tail": 10,
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "SP_VI2_zone02a_XSA",
+      "exported_dims": [
+        512,
+        512
+      ],
+      "exported_mip_level": 1,
+      "roles": [
+        {
+          "param": "normalmap_shifted",
+          "class": "UNKNOWN",
+          "material": "door_industrial_04_S1"
+        }
+      ],
+      "materials": [
+        "door_industrial_04_S1"
+      ]
+    },
+    "door_industrial_04_S2_d": {
+      "size_x": 1024,
+      "size_y": 1024,
+      "format": "PF_DXT1",
+      "mip_tail": 10,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "SP_VI2_zone02a_XSA",
+      "exported_dims": [
+        512,
+        512
+      ],
+      "exported_mip_level": 1,
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "door_industrial_04_S1"
+        },
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "door_industrial_04_S1"
+        }
+      ],
+      "materials": [
+        "door_industrial_04_S1"
+      ]
+    },
+    "door_industrial_04_S2_n": {
+      "size_x": 1024,
+      "size_y": 1024,
+      "format": "PF_DXT1",
+      "mip_tail": 10,
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "SP_VI2_zone02a_XSA",
+      "exported_dims": [
+        512,
+        512
+      ],
+      "exported_mip_level": 1,
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "door_industrial_04_S1"
+        }
+      ],
+      "materials": [
+        "door_industrial_04_S1"
+      ]
+    },
+    "door_locked_al_N_d": {
+      "size_x": 512,
+      "size_y": 1024,
+      "format": "PF_DXT1",
+      "mip_tail": 10,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "SP_VI2_zone02a_XSA",
+      "exported_dims": [
+        256,
+        512
+      ],
+      "exported_mip_level": 1,
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "door_locked_N"
+        },
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "door_locked_N"
+        }
+      ],
+      "materials": [
+        "door_locked_N"
+      ]
+    },
+    "door_locked_al_N_n": {
+      "size_x": 512,
+      "size_y": 1024,
+      "format": "PF_DXT1",
+      "mip_tail": 10,
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "SP_VI2_zone02a_XSA",
+      "exported_dims": [
+        256,
+        512
+      ],
+      "exported_mip_level": 1,
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "door_locked_N"
+        }
+      ],
+      "materials": [
+        "door_locked_N"
+      ]
+    },
+    "door_prison_gate_N_d": {
+      "size_x": 1024,
+      "size_y": 1024,
+      "format": "PF_DXT1",
+      "mip_tail": 10,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "SP_VI_Intro_Zone01_XSA",
+      "exported_dims": [
+        512,
+        512
+      ],
+      "exported_mip_level": 1,
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "door_prison_gate_N_OPT"
+        }
+      ],
+      "materials": [
+        "door_prison_gate_N_OPT"
+      ]
+    },
+    "door_prison_gate_N_n": {
+      "size_x": 1024,
+      "size_y": 1024,
+      "format": "PF_DXT1",
+      "mip_tail": 10,
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P0",
+      "package": "SP_VI_Intro_Zone01_XSA",
+      "exported_dims": [
+        512,
+        512
+      ],
+      "exported_mip_level": 1,
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "door_prison_gate_N_OPT"
+        }
+      ],
+      "materials": [
+        "door_prison_gate_N_OPT"
+      ]
+    },
+    "door_prison_gate_N_s": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT1",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "SP_VI_Intro_Zone01_XSA",
+      "exported_dims": [
+        256,
+        256
+      ],
+      "exported_mip_level": 1,
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "door_prison_gate_N_OPT"
+        }
+      ],
+      "materials": [
+        "door_prison_gate_N_OPT"
+      ]
+    },
+    "door_rollingT_d": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT1",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P1",
+      "package": "SP_WL1_zone01_XSA",
+      "exported_dims": [
+        512,
+        512
+      ],
+      "exported_mip_level": 0,
+      "roles": [
+        {
+          "param": "diffusemap",
+          "class": "ALBEDO",
+          "material": "door_rolling_A_t_ageable"
+        }
+      ],
+      "materials": [
+        "door_rolling_A_t_ageable"
+      ],
+      "source_dds": "textures\\original\\SP_WL1_zone01_XSA\\Texture2D\\door_rollingT_d.dds",
+      "sha256": "da7198c21e678ef988e03a53c2361602abd98a29dcbbddc17b10727ed31321df",
+      "decoded_size": [
+        512,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 131200
+    },
+    "door_rollingT_n": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT1",
+      "mip_tail": 9,
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P1",
+      "package": "SP_WL1_zone01_XSA",
+      "exported_dims": [
+        512,
+        512
+      ],
+      "exported_mip_level": 0,
+      "roles": [
+        {
+          "param": "normalmap",
+          "class": "NORMAL",
+          "material": "door_rolling_A_t_ageable"
+        }
+      ],
+      "materials": [
+        "door_rolling_A_t_ageable"
+      ],
+      "source_dds": "textures\\original\\SP_WL1_zone01_XSA\\Texture2D\\door_rollingT_n.dds",
+      "sha256": "14c5a81ebf3ebbd87bf10769941a1ed974ec1d1a68b6ce5dd3ff34f7cdbcf662",
+      "decoded_size": [
+        512,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 131200
+    },
+    "door_rollingT_s": {
+      "size_x": 256,
+      "size_y": 256,
+      "format": "PF_DXT1",
+      "mip_tail": 8,
+      "compression": "TC_Default",
+      "cache": "Textures_P1",
+      "package": "SP_WL1_zone01_XSA",
+      "exported_dims": [
+        256,
+        256
+      ],
+      "exported_mip_level": 0,
+      "roles": [
+        {
+          "param": "specularmap",
+          "class": "SPECULAR",
+          "material": "door_rolling_A_t_ageable"
+        }
+      ],
+      "materials": [
+        "door_rolling_A_t_ageable"
+      ],
+      "source_dds": "textures\\original\\SP_WL1_zone01_XSA\\Texture2D\\door_rollingT_s.dds",
+      "sha256": "d210d68fdf22b928d938e2b94163dcbaeceb902a959308c430d050b77fd2d220",
+      "decoded_size": [
+        256,
+        256
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 32896
+    },
     "elite_beam_ammo_d": {
       "size_x": 1024,
       "size_y": 1024,
@@ -2408,6 +2831,141 @@
       "dims": [
         256,
         128
+      ]
+    },
+    "door_blastdoorN_d": {
+      "found": true,
+      "ok": true,
+      "mip_level": 0,
+      "dims": [
+        1024,
+        512
+      ]
+    },
+    "door_blastdoorN_n": {
+      "found": true,
+      "ok": true,
+      "mip_level": 0,
+      "dims": [
+        1024,
+        512
+      ]
+    },
+    "door_blastdoorN_s": {
+      "found": true,
+      "ok": true,
+      "mip_level": 1,
+      "dims": [
+        256,
+        128
+      ]
+    },
+    "door_industrial_04_S1_d": {
+      "found": true,
+      "ok": false,
+      "mip_level": 1,
+      "dims": [
+        512,
+        512
+      ]
+    },
+    "door_industrial_04_S1_n": {
+      "found": true,
+      "ok": false,
+      "mip_level": 1,
+      "dims": [
+        512,
+        512
+      ]
+    },
+    "door_industrial_04_S2_d": {
+      "found": true,
+      "ok": false,
+      "mip_level": 1,
+      "dims": [
+        512,
+        512
+      ]
+    },
+    "door_industrial_04_S2_n": {
+      "found": true,
+      "ok": false,
+      "mip_level": 1,
+      "dims": [
+        512,
+        512
+      ]
+    },
+    "door_locked_al_N_d": {
+      "found": true,
+      "ok": false,
+      "mip_level": 1,
+      "dims": [
+        256,
+        512
+      ]
+    },
+    "door_locked_al_N_n": {
+      "found": true,
+      "ok": false,
+      "mip_level": 1,
+      "dims": [
+        256,
+        512
+      ]
+    },
+    "door_prison_gate_N_d": {
+      "found": true,
+      "ok": false,
+      "mip_level": 1,
+      "dims": [
+        512,
+        512
+      ]
+    },
+    "door_prison_gate_N_n": {
+      "found": true,
+      "ok": false,
+      "mip_level": 1,
+      "dims": [
+        512,
+        512
+      ]
+    },
+    "door_prison_gate_N_s": {
+      "found": true,
+      "ok": false,
+      "mip_level": 1,
+      "dims": [
+        256,
+        256
+      ]
+    },
+    "door_rollingT_d": {
+      "found": true,
+      "ok": true,
+      "mip_level": 0,
+      "dims": [
+        512,
+        512
+      ]
+    },
+    "door_rollingT_n": {
+      "found": true,
+      "ok": true,
+      "mip_level": 0,
+      "dims": [
+        512,
+        512
+      ]
+    },
+    "door_rollingT_s": {
+      "found": true,
+      "ok": true,
+      "mip_level": 0,
+      "dims": [
+        256,
+        256
       ]
     },
     "elite_beam_ammo_d": {

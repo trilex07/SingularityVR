@@ -12,5 +12,35 @@
     "kind": "normal",
     "mip": 1,
     "note": "First-person 2007 pistol tangent normal, runtime capture. 1024x1024 DXT1."
+  },
+  {
+    "name": "env_door_a_d",
+    "dds": "textures/original/captured/env_door_a_d.dds",
+    "kind": "albedo",
+    "note": "Environment: locked double door diffuse, runtime capture 512x512 DXT1."
+  },
+  {
+    "name": "env_door_a_n",
+    "dds": "textures/original/captured/env_door_a_n.dds",
+    "kind": "normal",
+    "note": "Environment: locked double door tangent normal, runtime capture 512x512 DXT1."
+  },
+  {
+    "name": "env_door_b_d",
+    "dds": "textures/original/captured/env_door_b_d.dds",
+    "kind": "albedo",
+    "note": "Environment: weathered double door diffuse, runtime capture 512x512 DXT1."
+  },
+  {
+    "name": "env_door_b_n",
+    "dds": "textures/original/captured/env_door_b_n.dds",
+    "kind": "normal",
+    "note": "Environment: weathered double door tangent normal, runtime capture 512x512 DXT1."
+  },
+  {
+    "name": "env_shutter_d",
+    "dds": "textures/original/captured/env_shutter_d.dds",
+    "kind": "albedo",
+    "note": "Environment: metal shutter/panel surface diffuse, runtime capture 512x1024 DXT1."
   }
 ]

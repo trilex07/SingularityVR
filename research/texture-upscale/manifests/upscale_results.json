@@ -1091,6 +1091,258 @@
       }
     }
   },
+  "door_rollingT_d": {
+    "note": "rolling door diffuse",
+    "kind": "albedo",
+    "source": "door_rollingT_d",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\SP_WL1_zone01_XSA\\Texture2D\\door_rollingT_d.dds",
+    "source_fnv": 6492888565812934941,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "2a08cc00a715416227f7c4dec62634e573bd27e859f0b5b1f2402df47e20f5b5",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "9c0dbbc09c74ea3fe1f99d38c186c1111b9ccf71a4b43d1dd68a4531498d9035",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "door_rollingT_n": {
+    "note": "rolling door normal",
+    "kind": "normal",
+    "source": "door_rollingT_n",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\SP_WL1_zone01_XSA\\Texture2D\\door_rollingT_n.dds",
+    "source_fnv": 13090093012117832429,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "0bde4b63af8850408c3c40fc47949a4085897535ee3221a50b485a62c72c8eb0",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "51c4633e99c2f6c2ecc77a2e20f408d845425137fecb86f32ea906f6ea1a22e6",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "door_rollingT_s": {
+    "note": "rolling door specular",
+    "kind": "albedo",
+    "source": "door_rollingT_s",
+    "object_dims": [
+      256,
+      256
+    ],
+    "source_dims": [
+      256,
+      256
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\SP_WL1_zone01_XSA\\Texture2D\\door_rollingT_s.dds",
+    "source_fnv": 1897785315766383748,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          512,
+          512
+        ],
+        "mips": 8,
+        "dds_bytes": 174888,
+        "sha256": "a682e1ae4d2c4466acbc1ec3e1eccafec3eb74542291e1c02884ef370e0c01a9",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          512,
+          512
+        ],
+        "mips": 8,
+        "dds_bytes": 174888,
+        "sha256": "5f5cfc34637b6a4d1534000dedf08b1e97d17f2456da770d50c38a463160e56f",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "door_blastdoorN_d": {
+    "note": "blast door diffuse",
+    "kind": "albedo",
+    "source": "door_blastdoorN_d",
+    "object_dims": [
+      1024,
+      512
+    ],
+    "source_dims": [
+      1024,
+      512
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\SP_VI_Intro_Zone01_XSA\\Texture2D\\door_blastdoorN_d.dds",
+    "source_fnv": 3085875096892879354,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          1024
+        ],
+        "mips": 10,
+        "dds_bytes": 1398232,
+        "sha256": "9c4e44957508705c21ecf0904bdc89b6fb5ba9469e37ab074ba5e329b03e95a2",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          1024
+        ],
+        "mips": 10,
+        "dds_bytes": 1398232,
+        "sha256": "c98259526d7b0e80d018bd4ebb82c559798bdfaacc9013e0405870c150625b49",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "door_blastdoorN_n": {
+    "note": "blast door normal",
+    "kind": "normal",
+    "source": "door_blastdoorN_n",
+    "object_dims": [
+      1024,
+      512
+    ],
+    "source_dims": [
+      1024,
+      512
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\SP_VI_Intro_Zone01_XSA\\Texture2D\\door_blastdoorN_n.dds",
+    "source_fnv": 12693714519537856089,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          1024
+        ],
+        "mips": 10,
+        "dds_bytes": 1398232,
+        "sha256": "fec8051a312df3fb53958b35cb8ea4dab23c7563e823da00070dd1a36cf25750",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          1024
+        ],
+        "mips": 10,
+        "dds_bytes": 1398232,
+        "sha256": "106a5883fd691a898b548b7d8b9105cab226e53dc56745478c5a3b6960f63d37",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "door_blastdoorN_s": {
+    "note": "blast door specular",
+    "kind": "albedo",
+    "source": "door_blastdoorN_s",
+    "object_dims": [
+      512,
+      256
+    ],
+    "source_dims": [
+      256,
+      128
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures\\original\\SP_VI_Intro_Zone01_XSA\\Texture2D\\door_blastdoorN_s.dds",
+    "source_fnv": 12144012906447601795,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          512,
+          256
+        ],
+        "mips": 8,
+        "dds_bytes": 87512,
+        "sha256": "a41e20d3871c98e79482d23b65941f97e672827a70b1e62168fbdcb822626709",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          512,
+          256
+        ],
+        "mips": 8,
+        "dds_bytes": 87512,
+        "sha256": "5e2f2873d8e2a086f6c5084ca3d855bc167ad4d90a8f995aaf14048c4f5f8551",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
   "handgun_d": {
     "note": "First-person 2007 pistol diffuse, captured from the running game (the offline TFC path cannot reach its mip 0). 1024x1024 DXT5 at runtime.",
     "kind": "albedo",
@@ -1170,6 +1422,216 @@
         "mips": 10,
         "dds_bytes": 2796328,
         "sha256": "465ae06ee043994a66a5671f7783fa1ed406c3f7cb36ff2f2778f6c32e430eed",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_door_a_d": {
+    "note": "Environment: locked double door diffuse, runtime capture 512x512 DXT1.",
+    "kind": "albedo",
+    "source": "env_door_a_d",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_door_a_d.dds",
+    "source_fnv": 746385033390875023,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "93c261fa731b072d0552b782d0cced3d42430d5a6841662cd80964a9d3605452",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "5309b0692a4c8ab316c6f72a3a0a08fe82ace9832347733bce94ed7f8683080b",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_door_a_n": {
+    "note": "Environment: locked double door tangent normal, runtime capture 512x512 DXT1.",
+    "kind": "normal",
+    "source": "env_door_a_n",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_door_a_n.dds",
+    "source_fnv": 150223980969544687,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "d9af690445c1e1b33604215cf3408382569c418778b43cb752f923a2ffd765a7",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "724c7831dfb9e713b7ecd9935f124667710d9b3508bf6bce28a6b4161b694488",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_door_b_d": {
+    "note": "Environment: weathered double door diffuse, runtime capture 512x512 DXT1.",
+    "kind": "albedo",
+    "source": "env_door_b_d",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_door_b_d.dds",
+    "source_fnv": 12790432445910654460,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "0d3c7aec3b7903233a5dc4c0a97341b48477c82f0fb3286874dd314ed3e10f56",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "6ed841df105dfee015d83b488da392e502c299b04330c09d019b6cf1db3f7723",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_door_b_n": {
+    "note": "Environment: weathered double door tangent normal, runtime capture 512x512 DXT1.",
+    "kind": "normal",
+    "source": "env_door_b_n",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_door_b_n.dds",
+    "source_fnv": 14754591261643191921,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "70cdbc2f436838866f2fb1fc212d76745ad61f98d5eb92d9498161b1d3f462b4",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "8b551d584fbc63aaac864a74cdd7d14c3fe1056491eafd28de084f45f056784f",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_shutter_d": {
+    "note": "Environment: metal shutter/panel surface diffuse, runtime capture 512x1024 DXT1.",
+    "kind": "albedo",
+    "source": "env_shutter_d",
+    "object_dims": [
+      512,
+      1024
+    ],
+    "source_dims": [
+      512,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_shutter_d.dds",
+    "source_fnv": 16080968191737983292,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 1398232,
+        "sha256": "2f3ecc1109fc28a43853790276701ccec4ca3789ba0687b154a642dd3940f10e",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 1398232,
+        "sha256": "599e8d7698b209c49d24a3b93ce18e14dc62d06aeb4a8996e70cf6f99f941751",
         "alpha_min": 255,
         "alpha_max": 255
       }

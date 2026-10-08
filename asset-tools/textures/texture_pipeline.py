@@ -70,6 +70,16 @@ ENEMY_MESHES = [
     ("RvGameMPLoader_SF", "ch_MP_spetsnaz"),
 ]
 
+# environment meshes (doors first): static meshes live in the streaming _XSA packages
+ENV_MESHES = [
+    ("SP_VI2_zone02a_XSA", "dbl_door_locked_al"),
+    ("SP_VI2_zone02a_XSA", "door_industrial_04_frame"),
+    ("SP_WL1_zone01_XSA", "door_rolling_A_t"),
+    ("SP_WL1_zone01_XSA", "door_locked_al"),
+    ("SP_VI_Intro_Zone01_XSA", "door_prison_gate_s1"),
+    ("SP_VI_Intro_Zone01_XSA", "doorframe_Blastdoor_B"),
+]
+
 # packages tried when resolving an object by name
 PROBE_PACKAGES = ["RvGame", "RvGameMPLoader_SF", "RvGameMP"]
 
@@ -139,10 +149,11 @@ def ensure_scratch(game: Path, scratch: Path, umodel: Path) -> None:
         raise SystemExit(f"coalesced.tfc not found in {cooked}")
     scratch.mkdir(parents=True, exist_ok=True)
     linked = 0
-    for name in SCRATCH_PACKAGES:
-        src = cooked / name
-        dst = scratch / name
-        if src.exists() and not dst.exists():
+    # Full hard-link mirror of every package so UModel can resolve any import
+    # (environment meshes live in the streaming _XSA packages).
+    for src in cooked.glob("*.xxx"):
+        dst = scratch / src.name
+        if not dst.exists():
             try:
                 os.link(src, dst)
             except OSError:
@@ -213,11 +224,19 @@ PARAM_NAME_RE = re.compile(r"^\s*ParameterName = (\S+)", re.M)
 TEXTURE_LOAD_RE = re.compile(r"Loading Texture2D (\w+) from package (\S+?)(?:\.xxx)?$", re.M)
 
 
+STATIC_MATERIAL_RE = re.compile(r"^\s*Material = MaterialInstanceConstant'([^']+)'", re.M)
+
+
 def parse_mesh_materials(text: str) -> list[dict]:
     mats = []
     for idx, path in MATERIAL_RE.findall(text):
         mats.append({"slot": int(idx), "material_path": path,
                      "material": path.rsplit(".", 1)[-1]})
+    if not mats:
+        # Static meshes list one "Material = MaterialInstanceConstant'...'" per slot.
+        for slot, path in enumerate(STATIC_MATERIAL_RE.findall(text)):
+            mats.append({"slot": slot, "material_path": path,
+                         "material": path.rsplit(".", 1)[-1]})
     mats.sort(key=lambda m: m["slot"])
     return mats
 
@@ -265,7 +284,7 @@ def cmd_build(a) -> None:
     # 1. dump meshes -> material list
     material_map: dict[str, dict] = {}
     mesh_records = []
-    for pkg, mesh in FP_MESHES + ENEMY_MESHES:
+    for pkg, mesh in FP_MESHES + ENEMY_MESHES + ENV_MESHES:
         text = umodel_dump(umodel, scratch, pkg, mesh)
         (logs / f"mesh-{mesh}.txt").write_text(text or "MISSING\n", encoding="utf-8")
         if not text:
@@ -278,11 +297,15 @@ def cmd_build(a) -> None:
         for m in mats:
             material_map.setdefault(m["material"], {"material_path": m["material_path"]})
 
+    # resolve objects by trying the mesh packages first, then the defaults
+    probe_pkgs = list(dict.fromkeys(
+        [m["package"] for m in mesh_records] + PROBE_PACKAGES))
+
     # 2. dump materials -> param -> texture
     for mat, info in material_map.items():
         pkg = None
         text = None
-        for cand in PROBE_PACKAGES:
+        for cand in probe_pkgs:
             text = umodel_dump(umodel, scratch, cand, mat)
             if text:
                 pkg = cand
@@ -304,7 +327,7 @@ def cmd_build(a) -> None:
     for t in tex_names:
         pkg = None
         text = None
-        for cand in PROBE_PACKAGES:
+        for cand in probe_pkgs:
             text = umodel_dump(umodel, scratch, cand, t)
             if text:
                 pkg = cand
@@ -607,6 +630,22 @@ EXPERIMENT_SET = [
     ("Spetsnaz_MP_helmet_e", "emissive", "Spetsnaz helmet emissive"),
     ("Spetsnaz_MP_Body_d", "albedo", "Spetsnaz body diffuse"),
     ("Spetsnaz_MP_Body_n", "normal", "Spetsnaz body tangent normal"),
+    # environment: doors
+    ("door_locked_al_N_d", "albedo", "locked door diffuse"),
+    ("door_locked_al_N_n", "normal", "locked door normal"),
+    ("door_industrial_04_S1_d", "albedo", "industrial door S1 diffuse"),
+    ("door_industrial_04_S1_n", "normal", "industrial door S1 normal"),
+    ("door_industrial_04_S2_d", "albedo", "industrial door S2 diffuse"),
+    ("door_industrial_04_S2_n", "normal", "industrial door S2 normal"),
+    ("door_rollingT_d", "albedo", "rolling door diffuse"),
+    ("door_rollingT_n", "normal", "rolling door normal"),
+    ("door_rollingT_s", "albedo", "rolling door specular"),
+    ("door_prison_gate_N_d", "albedo", "prison gate diffuse"),
+    ("door_prison_gate_N_n", "normal", "prison gate normal"),
+    ("door_prison_gate_N_s", "albedo", "prison gate specular"),
+    ("door_blastdoorN_d", "albedo", "blast door diffuse"),
+    ("door_blastdoorN_n", "normal", "blast door normal"),
+    ("door_blastdoorN_s", "albedo", "blast door specular"),
 ]
 
 
@@ -620,7 +659,11 @@ def cmd_upscale(a) -> None:
         if name not in textures:
             log(f"skip {name}: no metadata")
             continue
-        src = local / textures[name]["source_dds"]
+        src_rel = textures[name].get("source_dds")
+        if not src_rel:
+            log(f"skip {name}: export failed (no source dds)")
+            continue
+        src = local / src_rel
         if not src.exists():
             log(f"skip {name}: source dds missing ({src})")
             continue

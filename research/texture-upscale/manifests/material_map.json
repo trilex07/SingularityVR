@@ -175,6 +175,72 @@
           "material": "MP_Spetsnaz_Grunt"
         }
       ]
+    },
+    {
+      "mesh": "dbl_door_locked_al",
+      "package": "SP_VI2_zone02a_XSA",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "env_arch_doors.Materials.door_locked_N",
+          "material": "door_locked_N"
+        }
+      ]
+    },
+    {
+      "mesh": "door_industrial_04_frame",
+      "package": "SP_VI2_zone02a_XSA",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "env_arch_doors.Materials.door_industrial_04_S1",
+          "material": "door_industrial_04_S1"
+        }
+      ]
+    },
+    {
+      "mesh": "door_rolling_A_t",
+      "package": "SP_WL1_zone01_XSA",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "env_arch_doors.Materials.door_rolling_A_t_ageable",
+          "material": "door_rolling_A_t_ageable"
+        }
+      ]
+    },
+    {
+      "mesh": "door_locked_al",
+      "package": "SP_WL1_zone01_XSA",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "env_arch_doors.Materials.door_locked_N",
+          "material": "door_locked_N"
+        }
+      ]
+    },
+    {
+      "mesh": "door_prison_gate_s1",
+      "package": "SP_VI_Intro_Zone01_XSA",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "env_arch_doors.Materials.door_prison_gate_N_OPT",
+          "material": "door_prison_gate_N_OPT"
+        }
+      ]
+    },
+    {
+      "mesh": "doorframe_Blastdoor_B",
+      "package": "SP_VI_Intro_Zone01_XSA",
+      "materials": [
+        {
+          "slot": 0,
+          "material_path": "env_arch_doors.Materials.door_blastdoorN",
+          "material": "door_blastdoorN"
+        }
+      ]
     }
   ],
   "materials": {
@@ -361,6 +427,54 @@
         "diffusemap": "Spetsnaz_MP_Body_d",
         "agemap": "agemap_body",
         "specularmap": "Spetsnaz_MP_Body_s"
+      }
+    },
+    "door_locked_N": {
+      "material_path": "env_arch_doors.Materials.door_locked_N",
+      "package": "SP_VI2_zone02a_XSA",
+      "params": {
+        "diffusemap": "door_locked_al_N_d",
+        "specularmap": "door_locked_al_N_d",
+        "normalmap": "door_locked_al_N_n"
+      }
+    },
+    "door_industrial_04_S1": {
+      "material_path": "env_arch_doors.Materials.door_industrial_04_S1",
+      "package": "SP_VI2_zone02a_XSA",
+      "params": {
+        "diffusemap": "door_industrial_04_S2_d",
+        "diffusemap_shifted": "door_industrial_04_S1_d",
+        "specularmap": "door_industrial_04_S2_d",
+        "specularmap_shifted": "door_industrial_04_S1_d",
+        "normalmap": "door_industrial_04_S2_n",
+        "normalmap_shifted": "door_industrial_04_S1_n"
+      }
+    },
+    "door_rolling_A_t_ageable": {
+      "material_path": "env_arch_doors.Materials.door_rolling_A_t_ageable",
+      "package": "SP_WL1_zone01_XSA",
+      "params": {
+        "diffusemap": "door_rollingT_d",
+        "specularmap": "door_rollingT_s",
+        "normalmap": "door_rollingT_n"
+      }
+    },
+    "door_prison_gate_N_OPT": {
+      "material_path": "env_arch_doors.Materials.door_prison_gate_N_OPT",
+      "package": "SP_VI_Intro_Zone01_XSA",
+      "params": {
+        "diffusemap": "door_prison_gate_N_d",
+        "specularmap": "door_prison_gate_N_s",
+        "normalmap": "door_prison_gate_N_n"
+      }
+    },
+    "door_blastdoorN": {
+      "material_path": "env_arch_doors.Materials.door_blastdoorN",
+      "package": "SP_VI_Intro_Zone01_XSA",
+      "params": {
+        "diffusemap": "door_blastdoorN_d",
+        "normalmap": "door_blastdoorN_n",
+        "specularmap": "door_blastdoorN_s"
       }
     }
   }
