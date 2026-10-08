@@ -9,7 +9,8 @@
   shadow stage-track + ShadowMode (0/1/2), height keep-on-transition, GunScalePct,
   hub (GUN SIZE, SHADOW, DROPEXTRA, MENU OVERLAY rows), Square-hold opens hub,
   cutscene-flat cherry-picks (d93e2db, c94d832), spike reporter (DEFAULT OFF),
-  menu-draw census wiring, L3+R3 BMP capture.
+  menu-draw census wiring, L3+R3 BMP capture, Fix-M station-menu FP hide (b623942,
+  DEPLOYED 2026-10-08 ~13:46, sha8=8cb21258, BUILD==DEPLOYED: YES).
 - Verify any DLL with: `code-tools\build_provenance.ps1 -Repo <prod> -BuildDll <dll>`
   (in SingularityVR-tools). `BUILD == DEPLOYED: YES` or it didn't happen.
 - After EVERY build: grep the binary for a NEW string literal (comments don't
