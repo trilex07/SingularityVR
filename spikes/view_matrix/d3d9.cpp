@@ -6447,6 +6447,10 @@ inline int PanelRowId(int i) {
 // is not "was tested now", and one launch settles it. `StartInVr=0` restores run 37's cold start
 // exactly, with no rebuild.
 volatile LONG g_startInVr = 1;      // ini [Render] StartInVr
+// Diagnostic-only desktop HMD: exercise stereo/backbuffer hooks without an XR system.
+// This never changes normal PSVR2 startup behavior unless explicitly enabled in [Diagnostic].
+volatile LONG g_forceDesktopVr = 0; // ini [Diagnostic] ForceDesktopVr
+volatile LONG g_forceDesktopCapture = 0; // ini [Diagnostic] DesktopCapture
 void SetVrMode(bool on);            // defined with the other Present-time state
 
 // First row, because it is the one that changes the most: MOVE DIRECTION and CROSSHAIR both follow
@@ -21584,11 +21588,13 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     {
         static bool done = false;
         if (!done && InterlockedCompareExchange(&g_startInVr, 0, 0)) {
-            if (g_xrSession != XR_NULL_HANDLE) {
+            if (g_xrSession != XR_NULL_HANDLE ||
+                InterlockedCompareExchange(&g_forceDesktopVr, 0, 0)) {
                 done = true;
                 SetVrMode(true);
-                Log("StartInVr: VR mode ON at startup. BACKSPACE toggles it, and VR MODE on the"
-                    " panel is the same switch.");
+                Log("StartInVr: VR mode ON at startup%s. BACKSPACE toggles it, and VR MODE on the"
+                    " panel is the same switch.",
+                    g_xrSession != XR_NULL_HANDLE ? "" : " (desktop HMD diagnostic; no XR submit)");
             } else {
                 static int waited = 0;
                 if (++waited == 600) {          // ~5 s of frames with no session
@@ -21597,6 +21603,21 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                         " flat. Connect the headset and press BACKSPACE.");
                 }
             }
+        }
+    }
+
+    // One-shot desktop capture for the synthetic-HMD audit. It captures the actual
+    // SBS backbuffer after the stereo/VFX/shadow hooks have run, without adding any
+    // per-frame readback cost once the image is written.
+    {
+        static LONG frames = 0;
+        static bool captured = false;
+        if (InterlockedCompareExchange(&g_forceDesktopVr, 0, 0) &&
+            InterlockedCompareExchange(&g_forceDesktopCapture, 0, 0) && !captured &&
+            ++frames >= 180) {
+            captured = true;
+            InterlockedExchange(&g_captureRequested, 1);
+            Log("desktop HMD diagnostic: requesting one SBS backbuffer capture");
         }
     }
 
@@ -24913,6 +24934,13 @@ void LoadIniSettings() {
     // Run 198: the reload-arms fix. Default on - it is the reported artefact, and it cannot reach the
     // gun or the 390-vertex mesh because both are in the baseline set.
     g_renderEvidence = GetPrivateProfileIntA("Diagnostic", "RenderEvidence", 0, path) ? 1 : 0;
+    InterlockedExchange(&g_forceDesktopVr,
+                        GetPrivateProfileIntA("Diagnostic", "ForceDesktopVr", 0, path) ? 1 : 0);
+    InterlockedExchange(&g_forceDesktopCapture,
+                        GetPrivateProfileIntA("Diagnostic", "DesktopCapture", 0, path) ? 1 : 0);
+    Log("desktop HMD diagnostic=%ld, one-shot capture=%ld (diagnostic only)",
+        InterlockedCompareExchange(&g_forceDesktopVr, 0, 0),
+        InterlockedCompareExchange(&g_forceDesktopCapture, 0, 0));
     g_sceneModeTrace = GetPrivateProfileIntA("Diagnostic", "SceneModeTrace", 0, path) ? 1 : 0;
     InterlockedExchange(&g_sceneFlatEnabled,
                         GetPrivateProfileIntA("Render", "CutsceneFlatMode", 1, path) ? 1 : 0);

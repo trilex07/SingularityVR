@@ -59,10 +59,12 @@ try {
     if ($fatal) { throw "static analysis found a format-string defect - fix it before building" }
 
     $optimization = if ($Performance) { '/O2 /DPERFORMANCE_BUILD_1 ' } else { '' }
-    $cmd = "`"$vcvars`" x86 && cl /nologo /LD /EHsc /W3 /Zi /MD /std:c++17 " + $optimization +
+    # /Z7 keeps debug records in the object and avoids the shared vc140.pdb
+    # writer, which is broken in some side-by-side VS installations (LNK1101).
+    $cmd = "`"$vcvars`" x86 && cl /nologo /LD /EHsc /W3 /Z7 /MD /std:c++17 " + $optimization +
            "/I`"$inc`" /I`"$mh\include`" " +
            "/Fe:d3d9.dll d3d9.cpp $mhSrc " +
-           "/link /MAP:d3d9.map /DEF:d3d9.def /LIBPATH:`"$libDir`" openxr_loader.lib dxgi.lib user32.lib shell32.lib"
+           "/link /DEBUG:NONE /MAP:d3d9.map /DEF:d3d9.def /LIBPATH:`"$libDir`" openxr_loader.lib dxgi.lib user32.lib shell32.lib"
     cmd /c $cmd
     if ($LASTEXITCODE -ne 0) { throw "build failed (exit $LASTEXITCODE)" }
     Write-Host ""

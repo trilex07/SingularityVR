@@ -1,11 +1,13 @@
 [CmdletBinding(SupportsShouldProcess)]
 param(
-    [ValidateSet('vfx','shadow1','shadow3','vfx-shadow3')]
+    [ValidateSet('vfx','shadow1','shadow3','vfx-shadow3','desktop-hmd','desktop-hmd-shadow1')]
     [string]$Candidate = 'vfx',
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam',
     [string]$RuntimeManifest = 'C:\Users\Trilex\vr-mods\xrsim-scratch-run\dvr_xrsim32.json',
     [int]$WaitSeconds = 90,
     [switch]$StopSteamVR,
+    [switch]$LaunchViaSteam,
+    [switch]$RestartSteam,
     [switch]$KeepCandidate,
     [switch]$SkipLaunch,
     [switch]$NoRestore,
@@ -21,6 +23,8 @@ $candidateDir = switch ($Candidate) {
     'shadow1'    { Join-Path $repoRoot 'deployment\shadow1-ab-20261008' }
     'shadow3'    { Join-Path $repoRoot 'deployment\shadow-mode3-ab-20261008' }
     'vfx-shadow3' { Join-Path $repoRoot 'deployment\vfx-shadow3-latest-20261008' }
+    'desktop-hmd' { Join-Path $repoRoot 'deployment\desktop-hmd-diagnostic-20261008' }
+    'desktop-hmd-shadow1' { Join-Path $repoRoot 'deployment\desktop-hmd-shadow1-20261008' }
 }
 $gameDir = Join-Path $SteamRoot 'steamapps\common\Singularity\Binaries'
 $gameExe = Join-Path $gameDir 'Singularity.exe'
@@ -253,9 +257,26 @@ try {
         $env:XR_RUNTIME_JSON = $RuntimeManifest
         $env:DVR_XRSIM_DIR = Split-Path -Parent $RuntimeManifest
         $logBefore = Get-NewestLog $startedAt
-        $gameProcess = Start-Process -FilePath $gameExe -WorkingDirectory $gameDir -ArgumentList @('-windowed','-ResX=1280','-ResY=720') -PassThru
+        if ($LaunchViaSteam) {
+            $steamExe = Join-Path $SteamRoot 'steam.exe'
+            if (-not (Test-Path -LiteralPath $steamExe)) { throw "Steam executable not found: $steamExe" }
+            if ($RestartSteam) {
+                Write-Runner 'RestartSteam requested: asking the Steam client to shut down before applaunch.'
+                $shutdown = Start-Process -FilePath $steamExe -ArgumentList @('-shutdown') -PassThru -Wait
+                Start-Sleep -Seconds 5
+            }
+            if (-not (Get-Process -Name steam -ErrorAction SilentlyContinue)) {
+                $steamBoot = Start-Process -FilePath $steamExe -WorkingDirectory $SteamRoot -ArgumentList @('-silent') -PassThru
+                Write-Runner "Started Steam client PID $($steamBoot.Id); waiting for app registry."
+                Start-Sleep -Seconds 12
+            }
+            $gameProcess = Start-Process -FilePath $steamExe -WorkingDirectory $SteamRoot -ArgumentList @('-applaunch','42670') -PassThru
+            Write-Runner "Started Steam applaunch 42670 (launcher PID $($gameProcess.Id))."
+        } else {
+            $gameProcess = Start-Process -FilePath $gameExe -WorkingDirectory $gameDir -ArgumentList @('-windowed','-ResX=1280','-ResY=720') -PassThru
+            Write-Runner "Started Singularity PID $($gameProcess.Id) with dvr-xrsim."
+        }
         $report.launched = $true
-        Write-Runner "Started Singularity PID $($gameProcess.Id) with dvr-xrsim."
         $deadline = (Get-Date).AddSeconds($WaitSeconds)
         do {
             $log = Get-NewestLog $startedAt
