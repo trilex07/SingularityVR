@@ -5329,6 +5329,12 @@ uipointer::TriggerGate g_vrUiTrigger[2];
 griplatch::GripLatch g_supportLatch;
 RecenterChord g_recenterChord;
 volatile LONG g_recenterRequested=0;
+// Fix-H/capture: L3+R3 also requests a backbuffer BMP next to the log (debounced in
+// Present). Set on the input thread, consumed once on the render thread.
+volatile LONG g_captureRequested=0;
+// Fix-G/perf off-switch: the spike reporter below costs nothing when idle, but the user
+// asked it off until the menu/hand round lands. Default 0.
+volatile LONG g_frameSpikeReport=0;
 void UpdateVrUiPointer(float rightTrigger,bool available);
 void CaptureVrMenuTarget(IDirect3DDevice9* dev);
 void DrawVrMenuPointer(IDirect3DDevice9* dev);
@@ -8597,8 +8603,12 @@ void SyncXRInput(XrTime displayTime) {
     const bool triangleHeld = getBool(g_actTriangle);
     const bool l3Held = getBool(g_actL3);
     const bool r3Held = getBool(g_actR3);
-    if (g_recenterChord.Update(l3Held, r3Held))
+    if (g_recenterChord.Update(l3Held, r3Held)) {
         InterlockedExchange(&g_recenterRequested, 1);
+        // Fix-H/capture: same chord doubles as the screenshot trigger (user asked).
+        // Recentre still fires as before; capture is debounced at the consumer.
+        InterlockedExchange(&g_captureRequested, 1);
+    }
     static bool triangleWasHeld = false;
     const bool trianglePressed = triangleHeld && !triangleWasHeld;
     triangleWasHeld = triangleHeld;
@@ -19991,6 +20001,72 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldScissor);
 }
 
+// Fix-H/capture: L3+R3 backbuffer screenshot next to the log, for remote diagnosis.
+// Explicit user trigger only; debounced 3 s. One fullscreen readback stalls the GPU
+// briefly (expect a visible hitch on the capture frame) - that is the price of
+// GetRenderTargetData, not a bug. Multisampled or exotic formats are skipped, never
+// forced. Render thread only; touches no device state, only reads target 0.
+static void SaveBackbufferCapture(IDirect3DDevice9* dev) {
+    static ULONGLONG lastMs = 0;
+    const ULONGLONG now = GetTickCount64();
+    if (now - lastMs < 3000) return;
+    lastMs = now;
+    IDirect3DSurface9* rt = nullptr;
+    if (FAILED(dev->GetRenderTarget(0, &rt)) || !rt) { Log("capture: no render target"); return; }
+    D3DSURFACE_DESC d{};
+    if (FAILED(rt->GetDesc(&d))) { rt->Release(); Log("capture: no desc"); return; }
+    if (d.MultiSampleType != D3DMULTISAMPLE_NONE) {
+        rt->Release(); Log("capture: multisampled target, skipping"); return;
+    }
+    if (d.Format != D3DFMT_X8R8G8B8 && d.Format != D3DFMT_A8R8G8B8) {
+        rt->Release(); Log("capture: format %d unsupported, skipping", (int)d.Format); return;
+    }
+    IDirect3DSurface9* sys = nullptr;
+    if (FAILED(dev->CreateOffscreenPlainSurface(d.Width, d.Height, d.Format,
+                                                D3DPOOL_SYSTEMMEM, &sys, nullptr))) {
+        rt->Release(); Log("capture: offscreen alloc failed"); return;
+    }
+    if (FAILED(dev->GetRenderTargetData(rt, sys))) {
+        sys->Release(); rt->Release(); Log("capture: readback failed"); return;
+    }
+    D3DLOCKED_RECT lr{};
+    if (FAILED(sys->LockRect(&lr, nullptr, D3DLOCK_READONLY))) {
+        sys->Release(); rt->Release(); Log("capture: lock failed"); return;
+    }
+    char path[MAX_PATH]{};
+    const char* logp = g_logPath;
+    const char* slash = strrchr(logp, '\\');
+    size_t dirlen = slash ? (size_t)(slash - logp + 1) : 0;
+    if (dirlen >= sizeof(path) - 64) dirlen = 0;
+    memcpy(path, logp, dirlen);
+    SYSTEMTIME st{}; GetLocalTime(&st);
+    _snprintf_s(path + dirlen, sizeof(path) - dirlen, _TRUNCATE,
+                "capture_%04u-%02u-%02u_%02u-%02u-%02u.bmp",
+                st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+    const uint32_t rowBytes = (uint32_t)d.Width * 4u;
+    const uint32_t imgBytes = rowBytes * (uint32_t)d.Height;
+#pragma pack(push, 1)
+    struct BmpHead { uint16_t sig; uint32_t fileSize; uint16_t r1, r2; uint32_t dataOff; } h{};
+    struct BmpInfo { uint32_t size; int32_t w, h; uint16_t planes, bpp; uint32_t comp;
+                     uint32_t imgSize; int32_t xppm, yppm; uint32_t clrUsed, clrImp; } bi{};
+#pragma pack(pop)
+    h.sig = 0x4D42; h.fileSize = 54 + imgBytes; h.dataOff = 54;
+    bi.size = 40; bi.w = (int32_t)d.Width; bi.h = (int32_t)d.Height;
+    bi.planes = 1; bi.bpp = 32; bi.imgSize = imgBytes;
+    FILE* f = nullptr;
+    bool ok = false;
+    if (fopen_s(&f, path, "wb") == 0 && f) {
+        ok = fwrite(&h, sizeof(h), 1, f) == 1 && fwrite(&bi, sizeof(bi), 1, f) == 1;
+        // BMP is bottom-up: last row first. Pitch may exceed row bytes - copy packed.
+        for (int32_t y = (int32_t)d.Height - 1; y >= 0 && ok; --y)
+            ok = fwrite((const char*)lr.pBits + (size_t)y * (size_t)lr.Pitch, rowBytes, 1, f) == 1;
+        fclose(f);
+    }
+    sys->UnlockRect();
+    sys->Release(); rt->Release();
+    Log("capture: %s %s (%ux%u)", ok ? "saved" : "FAILED", path, d.Width, d.Height);
+}
+
 static void DrawStateReadout(IDirect3DDevice9* dev) {
     if (!dev || !g_srcW || !g_srcH) return;
     const LONG combo = InterlockedCompareExchange(&g_gunSignCombo, 0, 0);
@@ -20524,6 +20600,9 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // the linker dropped it with all its row strings. Drawn here, with the game input
     // already owned by the panel (ClearPad) while it is open. Exactly one call.
     if (InterlockedCompareExchange(&g_panelOpen, 0, 0)) DrawVrPanel(s);
+    // Fix-H/capture: consume a pending L3+R3 screenshot request (set on the input
+    // thread). One interlocked op per frame; the BMP itself only on request.
+    if (InterlockedExchange(&g_captureRequested, 0)) SaveBackbufferCapture(s);
     // The in-VR engineering panel is retired from user builds. It obscured the game and made
     // headset screenshots unusable in the production DLL. This isolated options DLL exposes it
     // again because the cutscene presentation choice must be reachable without editing the INI.
@@ -21541,7 +21620,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             const int rDup = dDup < 0 ? 0 : dDup, rMono = dMono < 0 ? 0 : dMono;
             const ULONGLONG nowMs = GetTickCount64();
             const double spikeAt = g_displayPeriodMs > 0.0 ? g_displayPeriodMs * 3.0 : 34.0;
-            if (VrModeOn() && thisFrameMs > spikeAt && nowMs - lastSpikeMs > 2000) {
+            if (Rd(g_frameSpikeReport) && VrModeOn() && thisFrameMs > spikeAt && nowMs - lastSpikeMs > 2000) {
                 lastSpikeMs = nowMs;
                 // Fix-G/perf: edge ages pin a spike to its button (or clear both).
                 const LONG64 mAge = (LONG64)nowMs - InterlockedCompareExchange64(&g_lastMeleeEdgeMs, 0, 0);
@@ -23854,8 +23933,8 @@ void LoadIniSettings() {
                         GetPrivateProfileIntA("Render", "CutsceneFlatMode", 1, path) ? 1 : 0);
     InterlockedExchange(&g_sceneCinemaMask,
                         GetPrivateProfileIntA("Render", "CutsceneCinemaMask", 1, path) ? 1 : 0);
-    g_armPaletteTraceFrames=GetPrivateProfileIntA("Diagnostic","ArmPaletteTraceFrames",0,path);
-    if(g_armPaletteTraceFrames<0)g_armPaletteTraceFrames=0;
+    g_armPaletteTraceFrames=GetPrivateProfileIntA("Diagnostic","ArmPaletteTraceFrames",0,path);    if(g_armPaletteTraceFrames<0)g_armPaletteTraceFrames=0;
+    g_frameSpikeReport=GetPrivateProfileIntA("Diagnostic","FrameSpikeReport",0,path)?1:0;
     if(g_armPaletteTraceFrames>64)g_armPaletteTraceFrames=64;
     Log("arm palette trace=%ld frame(s), exact TMD sections only; 0=off (default)",Rd(g_armPaletteTraceFrames));
     g_cameraTranslationEvidence=GetPrivateProfileIntA("Diagnostic","CameraTranslationEvidence",0,path)?1:0;
