@@ -38,10 +38,14 @@ The deterministic tests pass after the adapter was added:
   `test-vfx-eye-scale.exe`, `test-foreground-boundary.exe` — PASS.
 * `validate-runtime-policy.ps1` — PASS.
 
-A short desktop Steam probe was attempted. It reached the game-window focus step
-but did not produce a new runtime log, so it is not treated as proof of visual
-arm placement. The Steam install was restored from the probe backup and is back
-on the prior safe DLL (`86FA0B0EFC1D62DA7E1303CF145DB985CE31EE3D43C954D7457CE141B4CCF930`).
+A Steam desktop/XR probe loaded the candidate successfully. The valid runtime log
+is `C:\Users\Trilex\AppData\Local\SingularityVR\view_matrix_2026-10-08_22-24-28.log`:
+it records `arm IK mode=1`, `OpenXR ready`, the first frame submitted to the
+headset runtime, desktop automation, and the TMD being acquired. It does not
+contain a per-draw IK counter or a headset screenshot, so it proves loading and
+runtime stability, not final elbow appearance. The Steam install was restored
+from the probe backup and is back on the prior safe DLL
+(`86FA0B0EFC1D62DA7E1303CF145DB985CE31EE3D43C954D7457CE141B4CCF930`).
 
 ## Candidate
 
