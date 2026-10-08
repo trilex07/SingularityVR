@@ -8969,6 +8969,7 @@ void SyncXRInput(XrTime displayTime) {
     // R3 owns the weapon wheel in gameplay. L3+R3 remains the explicit
     // recenter/screenshot chord, so opening is vetoed while L3 is held.  The
     // same edge state is also used by the deterministic desktop simulator.
+    const bool r3Released = !r3Held && g_weaponWheelState.priorR3;
     const weaponwheel::Event wheelEvent = weaponwheel::Update(
         g_weaponWheelState, r3Held, l3Held, !uiMenu && feedGame && !Rd(g_gamePaused),
         WeaponInHands(), Rd(g_weaponHolstered), tx, ty, (int)g_weaponWheelSlots);
@@ -9000,7 +9001,7 @@ void SyncXRInput(XrTime displayTime) {
     for (int i = 0; i < kPadButtonCount; ++i) {
         const bool down = getBool(g_padButtons[i].action);
         if (i == 6) continue; // Triangle is handled above as a single START rising edge.
-        if (i == 3 && (Rd(g_weaponWheelOpen) || r3Held ||
+        if (i == 3 && (Rd(g_weaponWheelOpen) || r3Held || r3Released ||
                        wheelEvent == weaponwheel::Event::Commit ||
                        wheelEvent == weaponwheel::Event::Cancel)) continue; // R3 -> wheel
         if (down) ++g_btnHeldFrames[i];
