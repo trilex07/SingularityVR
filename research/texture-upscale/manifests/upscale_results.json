@@ -1636,5 +1636,845 @@
         "alpha_max": 255
       }
     }
+  },
+  "env_fd6cfc72": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_fd6cfc72",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_fd6cfc72.dds",
+    "source_fnv": 18261248159914377026,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "8096a61c87ceb94a38818dcf8abd853f3c7e78dd88785f1836e18f0c3485141e",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "cb357d8b053f1523a02dfb243327237ffe371732820397d458a03d05c271d068",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_f9edf63b": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_f9edf63b",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_f9edf63b.dds",
+    "source_fnv": 18009321218995421230,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "7a3fbf4c5d4b1026ab16c9393e81bcc29b1ededfe5c497ff902888c8f7fba277",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "5b4f3a8e99ec7a80449dc1952c2ff09a83581ed0479a47c4ff19a834820bab68",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_f91c88e4": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_f91c88e4",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_f91c88e4.dds",
+    "source_fnv": 17950372730505230373,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "d39880c3742cc1033f7e56c611f2d8c964c970f819718f4c67ec9a5988157fc7",
+        "alpha_min": 0,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "72916f3be41c66867c26483424a75f5e1c4804fd9b4caaafb64e9e4bdd895c91",
+        "alpha_min": 0,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_f5ae0f66": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_f5ae0f66",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_f5ae0f66.dds",
+    "source_fnv": 17703104119051171208,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "65d818ac7bf553d17d18ad7696a35edfabb273498429fd0c3d14576bbf763d2c",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "3c4c6499c75bff90c9403806ee065ebbdbdbb384ae7a2a1c45538a77bba80459",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_ebec4c31": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_ebec4c31",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_ebec4c31.dds",
+    "source_fnv": 17000046469725249940,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "dc98270d14ce52ac1dbf8a84992e679ab5240c9505f113060e3caf33f5b9736b",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "83517c33926b7453efa093382e5d6279c409addf9d71c10bd54ec9cddd1fc473",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_e62e9393": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_e62e9393",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_e62e9393.dds",
+    "source_fnv": 16586356737489597082,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "17b80023be749c5a2fc15309ecc25a38a13a2af8bacdac2aaff16c4a607eadd6",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "0720d7ba6c16b7d2d1f5aac981bf9c100ed8fa5a4edf200f99c9cb5bb5c4eef7",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_e4ef7a7c": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_e4ef7a7c",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_e4ef7a7c.dds",
+    "source_fnv": 16496538636158526134,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "15c924345612c2373ed3a914b916745b0ed16b196b06cb54760cc8c2550be7ef",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "5a19dc2438d05ef9d59472294f12f23aaa4b2f115bc4c8654ddc4a41f43d005e",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_e10d5285": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_e10d5285",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_e10d5285.dds",
+    "source_fnv": 16216708566003577508,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "101b5a6d11dbc29bbb0b100efec5b3efd164b0a437a1ace96b391ecc39df39f6",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "ddd00e593d62df3afc3fba4b202b2998b2c3e231abcc1cd8b81a38f835d5b19a",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_d8ca70b7": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_d8ca70b7",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_d8ca70b7.dds",
+    "source_fnv": 15621422191525684731,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "b5d56089115f0c8aaf5d00d04a64f420d78de4f977871cc6e3baaa352c7854c5",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "f0e730b32c1d1b1ef83f984fed64ab4a749d760c6e14e736c2d35f6f78b5fcf8",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_cd7d78b2": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_cd7d78b2",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_cd7d78b2.dds",
+    "source_fnv": 14807123856447102814,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "69fc308ce7ce1b83a22ed424a7463ff8b4fa234d9fc4c2bc6bc82d2fcc792d16",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "577e083b346e690cc08fb5f6a5c0638bee869cee91632d58ee08f959b250fa27",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_cbb23dbc": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_cbb23dbc",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_cbb23dbc.dds",
+    "source_fnv": 14677862016354312449,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "da139f717be2ea4e9b631e54e8e9b935cb57305473f7b0b563bb742787fb22f4",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "74d71eba381a6b31f5c82505b2d8f347a2728c46575520b92330abe592b0ed69",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_c2af18bc": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_c2af18bc",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_c2af18bc.dds",
+    "source_fnv": 14028458564028762616,
+    "format": "PF_DXT5",
+    "dds_format": "DXT5",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 5592528,
+        "sha256": "d6b329fcbe4e4e9147e1258f8e092cb4746b3703853c89f13d9ee1ef6eac79f9",
+        "alpha_min": 0,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 5592528,
+        "sha256": "84c17d1eca49ee3a8e3675e569997c25afe4c14a48634d648c80960acb456221",
+        "alpha_min": 0,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_c21c15fb": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_c21c15fb",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_c21c15fb.dds",
+    "source_fnv": 13987078712840174125,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "3c706e3609c5f39b24ce0789e76d7f8befbf5df8e9aa6429157663e77ba87ed3",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "20890ef47a07ad29adf881993868e49f376d262265847414e1adf8482f01d033",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_bffa5bba": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_bffa5bba",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_bffa5bba.dds",
+    "source_fnv": 13833470063051562551,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "11ba87db484692b2e856d679057e74b141cef0fa92da54f0f8284a06beea828c",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "891b4945369a9eabfc1610f192e7ec90dd67b305bc60a1228edfe7e3f4dea112",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_b92bcf1e": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_b92bcf1e",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_b92bcf1e.dds",
+    "source_fnv": 13342986051818298455,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "92393203acfc4cb851d167051c1827957de5c0548b9c07565b68c672b508de7b",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "bbd0d2efd9b08e1599566eec21a8fd06a80e38f5a93a32e039cc46dd3b0991ae",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_a3318b61": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_a3318b61",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_a3318b61.dds",
+    "source_fnv": 11759333353299154097,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "5d7d5be93daa310e402130530bec73d9b556156fe7bbe2a61a55ae766a10b71d",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "d9ae25d56ce3943ddc0fbb96fe1d8db85472d6a8076afbad6484d6096d8befda",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_9bee23d5": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_9bee23d5",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_9bee23d5.dds",
+    "source_fnv": 11235957519440242349,
+    "format": "PF_DXT5",
+    "dds_format": "DXT5",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 5592528,
+        "sha256": "d9dfe8d17129a2980ef13a517724b95771cbbea053ce7565a2dfbeb133788208",
+        "alpha_min": 0,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 5592528,
+        "sha256": "7d619711cf058d8930aef6a1379bbe59950cf607c5f62d4e168650c1b4d223e0",
+        "alpha_min": 0,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_99dffd7c": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_99dffd7c",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_99dffd7c.dds",
+    "source_fnv": 11087859518670071162,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "c3d9e11da294fae0ab8336713d5692e7c8a0d2040074dbdd3b4f92985f446c57",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "d47503cf9ce9029890d3f72c33ddf412356f320dc258b8b98707ec4a81d7f0c5",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_7e3337ff": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_7e3337ff",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_7e3337ff.dds",
+    "source_fnv": 9093673644766406045,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "ceae9869dbe32c35e1af9a91bdd5a5e7da1311f1496af53cfa85cc2d388f4cb5",
+        "alpha_min": 0,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "371c53db47cc3c450cc48ce5ae9aeb98761a58a4d3c3fa0e55e99fceedd98e3b",
+        "alpha_min": 0,
+        "alpha_max": 255
+      }
+    }
+  },
+  "env_78b5942e": {
+    "note": "Environment surface, runtime capture 1024x1024.",
+    "kind": "albedo",
+    "source": "env_78b5942e",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/env_78b5942e.dds",
+    "source_fnv": 8698021180833439478,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "f4a054afdb35b51142a72a4627fd24920dd95d3ac1857b00e6782135fbffb70e",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "84647456b980128ca538995cce3128cc66ecf6578d863f7ce5257c26f738d4a0",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
   }
 }
