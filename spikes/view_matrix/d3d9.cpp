@@ -8729,7 +8729,12 @@ void SyncXRInput(XrTime displayTime) {
     const bool supportTracked=g_handPositionValid[AimHand()] && g_handPositionValid[OffHand()] &&
                               g_handPoseValid[AimHand()] && g_handPoseValid[OffHand()];
     const bool supportWeaponValid=Rd(g_twoHandEnabled) && feedGame && WeaponInHands() && !Rd(g_gamePaused) && !Rd(g_vrUiMenu);
-    const bool supportAcquire=TwoHandGripAllowed(supportDelta,supportForward,supportGrip,supportTracked,false);
+    // Pistol support is a close side-by-side grip, not a fore-end grip. The authored
+    // pistol pair (5799 vertices) is keyed in support_grip.h; use the relaxed acquisition
+    // gate only for that known mesh and keep long-gun alignment unchanged.
+    const bool pistolSupport = InterlockedCompareExchange(&g_gunVerts, 0, 0) == 5799;
+    const bool supportAcquire=TwoHandGripAllowed(supportDelta,supportForward,supportGrip,
+                                                  supportTracked,false,pistolSupport);
     if(!supportWeaponValid) g_supportLatch.Reset();
     else g_supportLatch.Update(supportGrip,supportAcquire?0.f:1e9f,supportTracked,
                                (uint32_t)Rd(g_weaponObj),GetTickCount64());
@@ -17821,6 +17826,36 @@ void ReportPoolTranslation() {
     }
 }
 
+// A death/load transition can briefly leave UE3 with no live RvPlayerCamera while the
+// D3D device itself remains valid. Keeping the previous camera matrices, centre and hand
+// poses through that gap produces the familiar post-load split/warped image and can leave
+// the support grip attached to a destroyed weapon. Reset only the VR-side caches here; the
+// game owns the camera and will repopulate them on the next valid frame.
+static void ResetVrAfterCameraLoss(const char* reason) {
+    InvalidateCamMats();
+    g_camMatrixBound = false;
+    g_haveCentre = false;
+    g_haveCentrePos = false;
+    g_lastHandPoseTime = 0;
+    g_poseStaleNs = 0.0;
+    for (int i = 0; i < 2; ++i) {
+        g_handPoseValid[i] = false;
+        g_handPositionValid[i] = false;
+        g_handTracked[i] = false;
+        g_handHavePos[i] = false;
+        g_handSpeed[i] = 0.0f;
+    }
+    InterlockedExchange(&g_offHandValid, 0);
+    InterlockedExchange(&g_handDevValid, 0);
+    InterlockedExchange(&g_twoHandActive, 0);
+    g_supportLatch.Reset();
+    InterlockedExchange(&g_vrUiValid, 0);
+    InterlockedExchange(&g_vrUiDown, 0);
+    InterlockedExchange(&g_vrUiBack, 0);
+    Log("VR transition reset: camera unavailable (%s); cleared camera matrices, centre, hand poses and grip latch",
+        reason ? reason : "unknown");
+}
+
 // Refresh the camera position the detector substitutes. Runs once per frame in Present.
 void RefreshCameraPosition() {
     // FindCamera is cheap once it has a live instance cached - it just revalidates the
@@ -17828,9 +17863,26 @@ void RefreshCameraPosition() {
     // happens on every menu frame, so retry the search only occasionally while there is no
     // camera. Once found, the per-frame revalidation keeps it current for free.
     static int missTick = 0;
+    static int liveCheckTick = 0;
     if (!g_camera && (++missTick % 30) != 1) { InterlockedExchange(&g_camPosValid, 0); return; }
     uintptr_t cam = FindCamera();
-    if (!cam) { InterlockedExchange(&g_camPosValid, 0); return; }
+    if (!cam) {
+        const bool wasValid = InterlockedCompareExchange(&g_camPosValid, 0, 0) != 0;
+        InterlockedExchange(&g_camPosValid, 0);
+        if (wasValid) {
+            ResetVrAfterCameraLoss("no live camera");
+        }
+        return;
+    }
+    // FindCamera normally performs this liveness check itself. A fallback pointer is
+    // intentionally returned when the scan has no live match, though, so sample it here
+    // at the same bounded cadence and flush stale VR state instead of rendering through a
+    // dead level camera.
+    if (InterlockedCompareExchange(&g_camPosValid, 0, 0) && (++liveCheckTick % 15) == 0 && !IsLive(cam)) {
+        InterlockedExchange(&g_camPosValid, 0);
+        ResetVrAfterCameraLoss("camera failed liveness check");
+        return;
+    }
 
     // ---- ⭐ run 211: clear level-scoped cutscene state on a level transition ----
     //
@@ -17850,6 +17902,7 @@ void RefreshCameraPosition() {
                 InterlockedCompareExchange(&g_inCinematic, 0, 0) ? "ON" : "OFF",
                 InterlockedCompareExchange(&g_inCinematic, 0, 0) ? " - clearing it" : "");
             InterlockedExchange(&g_inCinematic, 0);
+            ResetVrAfterCameraLoss("camera instance changed");
         }
         s_lastCam = cam;
     }
