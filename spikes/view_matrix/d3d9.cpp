@@ -10634,6 +10634,12 @@ PFN_DrawPrim           g_origDrawPrim = nullptr;
 PFN_DrawIndexedPrim    g_origDrawIndexedPrim = nullptr;
 PFN_DrawPrimUP         g_origDrawPrimUP = nullptr;
 PFN_DrawIndexedPrimUP  g_origDrawIndexedPrimUP = nullptr;
+// Fix-I/menu census: wire the dormant MenuDrawTrace recorder into the four draw hooks
+// (calls below) with path masks in StereoPairBody (1) and HudStereoPair (2); provider
+// draws already carry bit 4 via g_vrMenuProviderDrawing. Records only menu-generation
+// frames 20-27; outside them each call is a flag read plus a counter. Identifies which
+// path draws the black-quad / second menu copy (RT size, texture, verts, projection).
+#include "menu_draw_trace.h"
 int g_drawsUP = 0;           // how many draws came through the user-pointer forms
 bool g_hookUserPtrDraws = false;  // ini-switchable; see LoadIniSettings for why it must be
 int  g_userPtrHookLevel = 0;      // 0 off, 1 patch only, 2 +counter, 3 full - a bisection ladder
@@ -10866,6 +10872,7 @@ HRESULT StereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
 
 template <typename DrawFn>
 HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
+    MenuTracePath menuPath(1);   // fix-I census: this draw went through the stereo path
     ++g_drawsTotal;
     if (g_rtCurrent >= 0 && g_rtCurrent < 16) ++g_rtSeen[g_rtCurrent].draws;
     // CutsceneFlat/VideoFlat deliberately execute the original draw once. The
@@ -12106,6 +12113,7 @@ void VidProbeFrameEnd() {
 HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                         UINT start, UINT count) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
+    MenuDrawTraceRecord(dev,0,t,count,0,start,0,0,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     ++g_vidFrameDraws;
@@ -14842,6 +14850,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                                                INT baseVertex, UINT minIndex, UINT numVertices,
                                                UINT startIndex, UINT primCount) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
+    MenuDrawTraceRecord(dev,1,t,primCount,numVertices,startIndex,minIndex,baseVertex,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
     CaptureArmPaletteTrace(dev,baseVertex,minIndex,numVertices,startIndex,primCount);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
@@ -15680,6 +15689,7 @@ int g_hudRemap = 0;
 // that every exit from this function goes through one place.
 template <typename DrawFn>
 HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn&& draw) {
+    MenuTracePath menuPath(2);   // fix-I census: this draw went through the HUD path
     // ⚠️ The ONE exit that must stay a bare draw(): with duplication off there is no stereo to fall
     // back to, and StereoPair would just return draw() anyway.
     if (!InterlockedCompareExchange(&g_dupDraws, 0, 0)) return draw();
@@ -16182,6 +16192,7 @@ volatile LONG g_scopeMatchAim = 0, g_scopeMatchIdle = 0;   // ⭐ run 231
 HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                           UINT primCount, const void* vtxData, UINT vtxStride) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
+    MenuDrawTraceRecord(dev,2,t,primCount,0,0,0,0,vtxData,vtxStride);   // fix-I census
     if(g_boundShaderLayout.shadow && g_origDrawPrimUP)return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
     if (primCount<=4) CaptureShadowEvidence(dev);
     if (!g_origDrawPrimUP) return D3DERR_INVALIDCALL;
@@ -16312,6 +16323,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
                                                 const void* idxData, D3DFORMAT idxFormat,
                                                 const void* vtxData, UINT vtxStride) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
+    MenuDrawTraceRecord(dev,3,t,primCount,numVertices,0,minVtxIndex,0,vtxData,vtxStride);   // fix-I census
     if (!g_origDrawIndexedPrimUP) return D3DERR_INVALIDCALL;
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     // UP memory has no retained resource identity: do not suppress on vertex count.
