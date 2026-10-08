@@ -74,6 +74,15 @@ def main() -> int:
     if encode(records) != data:
         raise SystemExit("FAIL: untouched Coalesced round-trip is not byte-identical")
     entries = [make_entry(*entry) for entry in iter_entries(records)]
+    # Unreal localization files legitimately reuse a key in one section. Keep
+    # the readable base ID for unique keys and add a deterministic occurrence
+    # suffix only when a duplicate would otherwise make a batch ambiguous.
+    occurrences: dict[str, int] = {}
+    for item in entries:
+        base = item["id"]
+        occurrences[base] = occurrences.get(base, 0) + 1
+        if occurrences[base] > 1:
+            item["id"] = f"{base}#{occurrences[base]}"
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", encoding="utf-8", newline="\n") as handle:
         for item in entries:
