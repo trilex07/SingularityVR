@@ -17237,9 +17237,11 @@ static bool VfxBuildAtlas(IDirect3DDevice9* dev, const char** source) {
 
 static void VfxHostInitDevice(IDirect3DDevice9* dev) {
     if (!dev || !Rd(g_vfxHost)) return;
-    // Atlas textures bypass the MANAGED->DEFAULT pool translation (prompt-atlas
-    // precedent); the per-mip LockRect upload path is suspect for invisibility.
-    singularity_vfx::host::VfxCreateTextureOverride() = g_origCreateTexture;
+    // NOTE: atlas creation MUST go through the hooked dev->CreateTexture
+    // (MANAGED->DEFAULT translation). Bypassing with g_origCreateTexture failed:
+    // this is a D3D9Ex device and real CreateTexture REJECTS D3DPOOL_MANAGED
+    // (D3DERR_INVALIDCALL) - that translation is exactly why the wrapper exists.
+    // Round 3 proved the translated path builds atlases fine (atlas=vfx_atlas dir).
     const bool loaded = g_vfx.Load(); // no-op if the DLL is absent
     if (!g_vfxDrawer.Init(dev)) { Log("VFX host init: drawer VB failed - VFX draws off"); return; }
     if (!g_vfxAtlasBuilt && VfxBuildAtlas(dev, &g_vfxAtlasSource)) g_vfxAtlasBuilt = true;
