@@ -17815,14 +17815,12 @@ volatile LONG g_inCinematic = 0;
 
 static void UpdateSceneModeFrame() {
     const bool video = InterlockedExchange(&g_sceneVideoSeen, 0) != 0;
-    // Hub round 4b: a knife attack drives an authored camera like a cutscene, so it
-    // rides the cinematic signal into the same flat presentation (enter 2 / exit 4
-    // frames of hysteresis keeps a 700 ms swing from flickering). MeleeWindowActive
-    // is time-bounded and cheap-gated; no header change needed. Trace shows it as
-    // cinematic=1 - the window timestamps tell melee apart from real cutscenes.
-    const bool melee = MeleeWindowActive();
+    // REVERTED hub round 4b (melee->flat looked bad + different images per eye):
+    // the flat gate lives only in StereoPairBody, so HUD/user-pointer draws kept
+    // their per-eye remap over a mono world. Either the gate must cover every path
+    // or melee stays stereo. Reverting to stereo until decided with measurements.
     const vrscene::Signals signals{
-        (InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0) || melee,
+        InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0,
         video,
         InterlockedCompareExchange(&g_vrUiMenu, 0, 0) != 0,
         InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
