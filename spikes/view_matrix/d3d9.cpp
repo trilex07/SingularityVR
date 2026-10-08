@@ -5247,6 +5247,8 @@ volatile LONG g_vrUiDesktopProbe=0; // Diagnostic-only, default off; final stagi
 volatile LONG g_vrMenuSourceBound=0;
 volatile LONG g_vrMenuProviderDrawing=0;
 volatile LONG g_vrMenuCaptured=0,g_vrMenuSuppressed=0;
+volatile LONG g_vrMenuFpHidden=0; // Fix-M/menu-station: FP gun/arm draws dropped while a menu is focused.
+volatile LONG g_hideFpInMenu=1; // ini [Render] HideFpInMenu, 1 = hide FP gun/arms over GFx menus (default on).
 volatile LONG g_vrMenuSourceMatches=0;
 volatile LONG g_firstPersonShadowSkipped=0;
 // Defined here so the SetTexture hook can identify the private GFx sink before the overlay header
@@ -5280,6 +5282,8 @@ static void ReportVrRuntimeCounters() {
         Rd(c.gripPressEdges),Rd(c.gripReleaseEdges),Rd(c.gripLatchCount),Rd(c.gripDetachCount),Rd(c.gripLatchWithoutGripERROR),Rd(c.fpShadowDepthDraws),Rd(c.fpShadowDepthSkipped),Rd(c.fpShadowEyeModifiedERROR));
     Log("VR counters cursor draw/suppress=%ld/%ld prompt show/hide/action=%ld/%ld/%ld icons/error=%ld/%ld; cursor/prompt hooks UNRESOLVED",
         Rd(c.nativeCursorDraws),Rd(c.nativeCursorSuppressed),Rd(c.contextPromptShow),Rd(c.contextPromptHide),Rd(c.contextPromptAction),Rd(c.psIconDraws),Rd(c.psIconDrawWithoutPromptERROR));
+    Log("Fix-M/menu-station: FP gun/arm draws hidden over menus=%ld (HideFpInMenu=%ld; station black-diamond gate)",
+        Rd(g_vrMenuFpHidden),Rd(g_hideFpInMenu));
 }
 static void ReportHotPathSampler() {
     char report[4096]{};
@@ -14914,7 +14918,18 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     if (isGun) { AdsCapture(dev); AdsFreeze(dev); AdsMask(dev); }   // ⭐ run 223: freeze before StereoPair: it only
                                                      // rewrites the camera slots, so the bones persist
                                                      // across both eye draws
-    g_thisDrawMoved = isGun ? 1 : RideTargetFor(numVertices);   // ⭐ run 237
+    const int rideTo = isGun ? 1 : RideTargetFor(numVertices);   // ⭐ run 237
+    // Fix-M/menu-station: UseStation/WeaponLocker GFx menus (class 4) keep the world
+    // visible behind a window while g_vrUiMenu=1. The latched FP gun/arms have no
+    // business rendering over that menu: at the engine camera they read as a
+    // centre-screen black diamond, and ridden to the controller they drag the
+    // station view along with the hand. Drop them while any menu is focused; the
+    // head-relative overlay serves the menu. HideFpInMenu=0 restores the old path.
+    if (Rd(g_hideFpInMenu) && Rd(g_vrUiMenu) && (isGun || rideTo != 0)) {
+        InterlockedIncrement(&g_vrMenuFpHidden);
+        return D3D_OK;
+    }
+    g_thisDrawMoved = rideTo;   // ⭐ run 237
     if (g_timeOurWork) {
         const double dm = MsSince(tMatch);
         g_msMeshMatch += dm;
@@ -23992,6 +24007,8 @@ void LoadIniSettings() {
     g_independentHands = GetPrivateProfileIntA("Render", "IndependentHandsPrototype", 0, path) ? 1 : 0;
     g_vrUiEnabled=GetPrivateProfileIntA("Input","VrMenuPointer",1,path)?1:0;
     g_vrMenuOverlay=GetPrivateProfileIntA("Render","MenuOverlay",1,path)?1:0;
+    g_hideFpInMenu=GetPrivateProfileIntA("Render","HideFpInMenu",1,path)?1:0;
+    Log("VR menu FP hide=%ld (HideFpInMenu; drops latched gun/arm draws while a GFx menu is focused)",Rd(g_hideFpInMenu));
     g_vrUiDesktopProbe=GetPrivateProfileIntA("Diagnostic","VrUiDesktopProbe",0,path)?1:0;
     Log("VR menu pointer=%ld; native GFx viewport input; no desktop cursor movement",Rd(g_vrUiEnabled));
     Log("independent hands prototype=%d; shader CTAB required; verified SP sections only",g_independentHands);

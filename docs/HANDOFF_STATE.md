@@ -47,6 +47,13 @@
 - Spike reporter: DEFAULT OFF now (FrameSpikeReport=0). Re-enable per need.
 - Black diamond quad (marked screenshots): NOT the provider overlay (survives its
   OFF). Prime suspect: diegetic in-world monitor mesh rendering black. NOT proven.
+  NEW user report 08.10: diamond appears ONLY in station menus (UseStation/
+  WeaponLocker, class 4) + world behind the station window slides with the RIGHT
+  hand + a light matching the normal menu stays visible. Revised prime suspect:
+  latched FP gun/arms rendering over the menu (engine-camera = centre-screen
+  black diamond; ridden to controller = drags station view with hand).
+  Fix-M coded on this branch (HideFpInMenu=1 default, counter g_vrMenuFpHidden):
+  drops latched FP gun/arm indexed draws while ANY menu focused. Awaiting user run.
 - White ring right-eye-only (12:54:08 shot): per-eye sprite artifact, NEW instance
   of the muzzle-on-seam class. SpriteQuadPerEye=1 set in user ini; verdict pending.
 - Menu-draw census (MDG groups) flows since 315ce56. 470 groups/session typical.
@@ -61,6 +68,10 @@
    menu, or persist? Log ends healthy last time (=transient).
 3. Black diamond identity: USER: hand still, move HEAD — diamond world-fixed or
    following? + which menu (pause/dialog/main) + L3+R3 burst staring at it.
+   SUPERSEDED by Fix-M build on this branch: open ANY station menu (upgrade/
+   weapon locker) with the new DLL — diamond gone + window world stable = fix
+   confirmed (log line `Fix-M/menu-station` proves the counter). Diamond still
+   there = diegetic-monitor theory back on, L3+R3 burst staring at it.
 4. Ring artifact: USER: SpriteQuadPerEye=1 verdict (both eyes now?).
 5. Height: USER: guardian floor + recentre standing tall (only if 0.58 returns
    while standing).
