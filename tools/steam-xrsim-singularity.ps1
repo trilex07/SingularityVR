@@ -1,6 +1,6 @@
 [CmdletBinding(SupportsShouldProcess)]
 param(
-    [ValidateSet('vfx','shadow3')]
+    [ValidateSet('vfx','shadow3','vfx-shadow3')]
     [string]$Candidate = 'vfx',
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam',
     [string]$RuntimeManifest = 'C:\Users\Trilex\vr-mods\xrsim-scratch-run\dvr_xrsim32.json',
@@ -16,10 +16,10 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$candidateDir = if ($Candidate -eq 'vfx') {
-    Join-Path $repoRoot 'deployment\vfx-stereo-eye-fix-20261008'
-} else {
-    Join-Path $repoRoot 'deployment\shadow-mode3-ab-20261008'
+$candidateDir = switch ($Candidate) {
+    'vfx'        { Join-Path $repoRoot 'deployment\vfx-stereo-eye-fix-20261008' }
+    'shadow3'    { Join-Path $repoRoot 'deployment\shadow-mode3-ab-20261008' }
+    'vfx-shadow3' { Join-Path $repoRoot 'deployment\vfx-shadow3-latest-20261008' }
 }
 $gameDir = Join-Path $SteamRoot 'steamapps\common\Singularity\Binaries'
 $gameExe = Join-Path $gameDir 'Singularity.exe'
@@ -100,7 +100,7 @@ function Copy-Unlocked([string]$Source, [string]$Destination, [int]$Attempts = 1
         Remove-Item -LiteralPath $quarantine -Force -ErrorAction SilentlyContinue
         return
     } catch {
-        if (Test-Path -LiteralPath $quarantine -and -not (Test-Path -LiteralPath $Destination)) {
+        if ((Test-Path -LiteralPath $quarantine) -and -not (Test-Path -LiteralPath $Destination)) {
             Rename-Item -LiteralPath $quarantine -NewName (Split-Path -Leaf $Destination) -Force -ErrorAction SilentlyContinue
         }
     }
@@ -143,6 +143,18 @@ function Get-NewestLog([datetime]$Since) {
         if ($log.LastWriteTime -ge $Since.AddSeconds(-2)) { return $log }
     }
     return $null
+}
+
+function Get-BestRunLog([datetime]$Since) {
+    if (-not (Test-Path -LiteralPath $logRoot)) { return $null }
+    $logs = @(Get-ChildItem -LiteralPath $logRoot -Filter 'view_matrix_*.log' -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.LastWriteTime -ge $Since.AddSeconds(-2) } |
+        Sort-Object -Property @{Expression='Length';Descending=$true}, @{Expression='LastWriteTime';Descending=$true})
+    foreach ($log in $logs) {
+        $head = Get-Content -LiteralPath $log.FullName -Raw -ErrorAction SilentlyContinue
+        if ($head -match 'Direct3DCreate9Ex|D3D9Ex device created|input-device cache ACTIVE') { return $log }
+    }
+    return ($logs | Select-Object -First 1)
 }
 
 function Read-RunEvidence([string]$LogPath) {
@@ -248,11 +260,14 @@ try {
             $log = Get-NewestLog $startedAt
             if ($log) {
                 $tail = Get-Content -LiteralPath $log.FullName -Raw -ErrorAction SilentlyContinue
-                if ($tail -match 'dvr-xrsim|READY|FOCUSED|pipeline') { break }
+                # The first DLL attach log can be only a few hundred bytes.  Wait for
+                # the D3D9 device marker so a later full log from the restarted game
+                # is not mistaken for the completed run.
+                if ($tail -match 'Direct3DCreate9Ex|D3D9Ex device created|input-device cache ACTIVE') { break }
             }
             Start-Sleep -Milliseconds 500
         } while ((Get-Date) -lt $deadline)
-        if (-not $log) { $log = Get-NewestLog $startedAt }
+        $log = Get-BestRunLog $startedAt
         $report.evidence = Read-RunEvidence $(if ($log) { $log.FullName } else { $null })
         $report.process_exit = $false
         if ($gameProcess.HasExited) { $report.process_exit = $true; $report.exit_code = $gameProcess.ExitCode }
