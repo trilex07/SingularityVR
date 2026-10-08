@@ -17284,6 +17284,24 @@ static void VfxEyeDraw(IDirect3DDevice9* dev, int eye) {
         g_vfxAtlasBuilt = true;
         Log("VFX host atlas (lazy): %s", g_vfxAtlasSource);
     }
+    // DECISIVE diagnostic (removable): a fixed-SCREEN cyan dot at each eye's
+    // centre, drawn EVERY frame for the first ~2 minutes, independent of items.
+    // It proves whether mid-scene ClearRects is visible at all. Cyan dot visible
+    // = mid-scene ClearRects works -> blame muzzle position / textured quads.
+    // Cyan dot absent = ClearRects-into-scene is being overwritten -> draw at
+    // Present like the menu marker instead. Bounded so it cannot linger forever.
+    {
+        static LONG fixedDotFrames = 0;
+        if (InterlockedIncrement(&fixedDotFrames) < 7200) {
+            D3DVIEWPORT9 vp{};
+            if (SUCCEEDED(dev->GetViewport(&vp)) && vp.Width >= 16) {
+                const LONG cx = vp.X + (LONG)(vp.Width * 0.25f) + eye * (LONG)(vp.Width * 0.5f);
+                const LONG cy = vp.Y + (LONG)(vp.Height * 0.50f);
+                const D3DRECT r = { cx - 14, cy - 14, cx + 14, cy + 14 };
+                ClearRects(dev, &r, 1, 0xFF00FFFF);   // cyan
+            }
+        }
+    }
     int n = g_vfx.Collect(singularity_vfx::VfxRenderPass::Gameplay, g_vfxItems, 32);
     if (n <= 0) return;
     if (n > 32) n = 32;

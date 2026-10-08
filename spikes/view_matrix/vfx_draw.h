@@ -309,7 +309,7 @@ public:
         dev->SetRenderState(D3DRS_LIGHTING, FALSE);
         dev->SetRenderState(D3DRS_FOGENABLE, FALSE);
         dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-        dev->SetRenderState(D3DRS_ZENABLE, TRUE);
+        dev->SetRenderState(D3DRS_ZENABLE, FALSE);
         dev->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
         dev->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
         dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
