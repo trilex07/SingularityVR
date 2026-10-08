@@ -21182,6 +21182,15 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
     // heavier. Now that cost is paid only while effects are alive.
     if (n <= 0 || !g_vfxBaseCamValid) return;
 
+    // Collect returns metres.  Keep that result immutable while drawing both eyes.
+    // The old code multiplied g_vfxItems in place inside the eye loop, so the right
+    // eye converted already-converted values a second time.  At 52.5 UU/m that made
+    // the right-eye billboard roughly 52.5x too large and produced the white stretched
+    // quads seen in the SBS capture.  Each eye now starts from the same metre-space
+    // sample and converts it exactly once.
+    singularity_vfx::VfxDrawItem baseItems[32]{};
+    memcpy(baseItems, g_vfxItems, sizeof(baseItems[0]) * (size_t)n);
+
     if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) return;
     if (FAILED(g_wristState->Capture())) return;
 
@@ -21215,6 +21224,8 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
         const float m2u = MetresToUU();
         if (m2u > 0.0f && std::isfinite(m2u)) {
             for (int eye = 0; eye < 2; ++eye) {
+                singularity_vfx::VfxDrawItem eyeItems[32]{};
+                memcpy(eyeItems, baseItems, sizeof(baseItems[0]) * (size_t)n);
                 float m[16]; memcpy(m, g_vfxBaseCam, sizeof(m));
                 const int conv = g_vfxBaseCamConv;
                 if (eye) ApplyOffset(reinterpret_cast<Reg4*>(m), conv, g_eyeDeltaUU);
@@ -21268,7 +21279,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
                 }
 
                 for (int it = 0; it < n; ++it) {
-                    const singularity_vfx::VfxDrawItem& d = g_vfxItems[it];
+                    singularity_vfx::VfxDrawItem& d = eyeItems[it];
                     const auto* clip = g_vfxAtlas.Lookup(d.clipId);
                     if (!clip || clip->tex < 0 || clip->tex >= g_vfxAtlas.count) continue;
                     IDirect3DTexture9* tex = g_vfxAtlas.texture[clip->tex];
