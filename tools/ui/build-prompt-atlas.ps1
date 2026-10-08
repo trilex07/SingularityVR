@@ -1,0 +1,145 @@
+# Builds the PlayStation prompt icon atlas (Kenney Input Prompts 1.5, CC0).
+#
+# Outputs, under assets/processed/ui:
+#   playstation_*.png            the copied source icons
+#   runtime/vr_prompt_atlas.bmp  32bpp ARGB, one 64px row, one cell per icon
+#   psvr2-input-icons.json       icon name -> UV rect + action roles
+# and, under spikes/view_matrix:
+#   prompt_atlas_generated.h     the same UV table as a C++ header
+#
+# The runtime loader validates the BMP size, so the atlas geometry is emitted
+# here as the single source of truth (see vr_menu_overlay.h).
+param(
+    [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path,
+    [string]$SourceRoot = "C:\Users\Trilex\vr-mods\singularity-vr-mod\assets\ui\kenney-input-prompts\source\PlayStation Series\Default"
+)
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.Drawing
+
+$processed = Join-Path $ProjectRoot 'assets\processed\ui'
+$runtime = Join-Path $processed 'runtime'
+$header = Join-Path $ProjectRoot 'spikes\view_matrix\prompt_atlas_generated.h'
+New-Item -ItemType Directory -Force -Path $runtime | Out-Null
+
+# Ordered icon set. The first five keep their original UV order so a stale legend
+# still maps the same first icons; the rest extend the set.
+$icons = [ordered]@{
+    R2       = 'playstation_trigger_r2.png'
+    Circle   = 'playstation_button_circle.png'
+    Cross    = 'playstation_button_cross.png'
+    R1       = 'playstation_trigger_r1.png'
+    Options  = 'playstation5_button_options.png'
+    L1       = 'playstation_trigger_l1.png'
+    L2       = 'playstation_trigger_l2.png'
+    Square   = 'playstation_button_square.png'
+    Triangle = 'playstation_button_triangle.png'
+    L3       = 'playstation_button_l3.png'
+    R3       = 'playstation_button_r3.png'
+    DpadUp    = 'playstation_dpad_up.png'
+    DpadDown  = 'playstation_dpad_down.png'
+    DpadLeft  = 'playstation_dpad_left.png'
+    DpadRight = 'playstation_dpad_right.png'
+    DpadAll   = 'playstation_dpad_all.png'
+    StickL    = 'playstation_stick_l.png'
+    StickR    = 'playstation_stick_r.png'
+    Create    = 'playstation5_button_create.png'
+    Touchpad  = 'playstation5_touchpad.png'
+}
+
+$cell = 64
+$n = $icons.Count
+$width = $cell * $n
+$height = $cell
+
+$atlas = New-Object System.Drawing.Bitmap($width,$height,[System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$g = [System.Drawing.Graphics]::FromImage($atlas)
+$g.Clear([System.Drawing.Color]::Transparent)
+$g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::NearestNeighbor
+$g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::Half
+
+$regions = [ordered]@{}
+$x = 0
+foreach ($entry in $icons.GetEnumerator()) {
+    $srcPath = Join-Path $SourceRoot $entry.Value
+    if (!(Test-Path $srcPath)) { throw "Missing Kenney icon: $srcPath" }
+    Copy-Item $srcPath (Join-Path $processed $entry.Value) -Force
+    $img = [System.Drawing.Image]::FromFile($srcPath)
+    try { $g.DrawImage($img, $x, 0, $cell, $cell) } finally { $img.Dispose() }
+    $regions[$entry.Key] = [ordered]@{
+        index = ($x / $cell); x = $x; y = 0; width = $cell; height = $cell
+        u0 = $x / $width; v0 = 0.0; u1 = ($x + $cell) / $width; v1 = 1.0
+    }
+    $x += $cell
+}
+$g.Dispose()
+
+$atlasPath = Join-Path $runtime 'vr_prompt_atlas.bmp'
+$atlas.Save($atlasPath, [System.Drawing.Imaging.ImageFormat]::Bmp)
+$atlas.Dispose()
+
+$hash = (Get-FileHash $atlasPath -Algorithm SHA256).Hash
+
+# action -> icon name (grounded in docs/PSVR2_PROMPT_MAP.md native aliases)
+$actions = [ordered]@{
+    confirm      = 'Cross'      # Enter / A (jump-confirm)
+    back         = 'Circle'
+    fire         = 'R2'         # RT
+    aim          = 'L2'         # LT
+    interact     = 'R1'
+    jump         = 'Cross'      # A
+    crouch       = 'Circle'     # B
+    age          = 'Square'     # X button
+    cycleweapon  = 'Triangle'   # Y button
+    impulse      = 'L1'         # RB
+    dash         = 'L3'         # L-click
+    antigrav     = 'R3'         # R-click
+    flashlight   = 'DpadDown'
+    health       = 'DpadUp'
+    pause        = 'Options'    # Start
+    create       = 'Create'
+    move         = 'StickL'
+    look         = 'StickR'
+    touchpad     = 'Touchpad'
+}
+
+$manifest = [ordered]@{
+    source = 'Kenney Input Prompts 1.5'
+    license = 'CC0-1.0'
+    source_url = 'https://kenney.nl/assets/input-prompts'
+    atlas = 'runtime/vr_prompt_atlas.bmp'
+    width = $width; height = $height; cell = $cell
+    format = 'BMP/32bpp ARGB'; sha256 = $hash
+    icons = $regions
+    actions = $actions
+    runtime_roles = [ordered]@{
+        menu_select = 'Cross'; menu_back = 'Circle'; menu_pause = 'Options'
+        gameplay_fire = 'R2'; gameplay_aim = 'L2'; gameplay_interact = 'R1'
+        gameplay_jump = 'Cross'; gameplay_crouch = 'Circle'
+    }
+}
+$manifest | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $processed 'psvr2-input-icons.json') -Encoding UTF8
+
+# C++ UV table (single source of truth for the runtime loader/legend).
+$lines = @()
+$lines += '// AUTO-GENERATED by tools/ui/build-prompt-atlas.ps1 - do not edit.'
+$lines += "#pragma once"
+$lines += "static const int kVrPromptAtlasWidth = $width;"
+$lines += "static const int kVrPromptAtlasHeight = $height;"
+$lines += "static const int kVrPromptIconPx = $cell;"
+$lines += "static const int kVrPromptIconCount = $n;"
+$lines += "struct VrPromptIconUv { const char* name; float u0, v0, u1, v1; };"
+$lines += "static const VrPromptIconUv kVrPromptIconUv[] = {"
+$inv = [System.Globalization.CultureInfo]::InvariantCulture
+foreach ($k in $regions.Keys) {
+    $r = $regions[$k]
+    $u0 = ([double]$r.u0).ToString('0.000000', $inv)
+    $v0 = ([double]$r.v0).ToString('0.000000', $inv)
+    $u1 = ([double]$r.u1).ToString('0.000000', $inv)
+    $v1 = ([double]$r.v1).ToString('0.000000', $inv)
+    $lines += "    { `"$k`", ${u0}f, ${v0}f, ${u1}f, ${v1}f },"
+}
+$lines += "};"
+$lines | Set-Content $header -Encoding UTF8
+
+Write-Host "Atlas: $atlasPath  ($width x $height, $n icons, sha256 $hash)"
+Write-Host "Header: $header"

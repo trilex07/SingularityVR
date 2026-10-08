@@ -1,6 +1,8 @@
 #pragma once
 // Included after the D3D state/overlay helpers. No per-frame allocation or scan.
 #include "menu_draw_trace.h"
+#include "prompt_roles.h"
+#include "prompt_atlas_generated.h"
 static uintptr_t g_vrMenuSurface=0;
 static unsigned g_vrMenuFrame=0,g_vrMenuTextureFrame=0;
 static uipointer::Hit g_vrUiHit;
@@ -26,20 +28,37 @@ static bool LoadVrPromptAtlas(IDirect3DDevice9* dev) {
     if(!ok){free(bytes);return false;}
     const BITMAPFILEHEADER* fh=(const BITMAPFILEHEADER*)bytes;
     const BITMAPINFOHEADER* ih=(const BITMAPINFOHEADER*)(bytes+sizeof(BITMAPFILEHEADER));
-    if(fh->bfType!=0x4D42||ih->biSize<sizeof(BITMAPINFOHEADER)||ih->biWidth!=320||ih->biHeight!=64||ih->biBitCount!=32||ih->biCompression!=BI_RGB||fh->bfOffBits>=size){free(bytes);return false;}
+    // Geometry is validated from the BMP header and must match the generated
+    // atlas (prompt_atlas_generated.h): a single 64px row whose width is a
+    // multiple of 64. The set may grow without a code change on the packing side.
+    const unsigned tw=(unsigned)ih->biWidth, th=(unsigned)ih->biHeight;
+    if(fh->bfType!=0x4D42||ih->biSize<sizeof(BITMAPINFOHEADER)||ih->biBitCount!=32||ih->biCompression!=BI_RGB||
+       th!=(unsigned)kVrPromptAtlasHeight||tw<(unsigned)kVrPromptIconPx||tw>(unsigned)kVrPromptAtlasWidth||
+       (tw%(unsigned)kVrPromptIconPx)!=0||fh->bfOffBits>=size){free(bytes);return false;}
     IDirect3DTexture9* tex=nullptr;
-    HRESULT hr=g_origCreateTexture ? g_origCreateTexture(dev,320,64,1,D3DUSAGE_DYNAMIC,D3DFMT_A8R8G8B8,D3DPOOL_DEFAULT,&tex,nullptr) : dev->CreateTexture(320,64,1,D3DUSAGE_DYNAMIC,D3DFMT_A8R8G8B8,D3DPOOL_DEFAULT,&tex,nullptr);
+    HRESULT hr=g_origCreateTexture ? g_origCreateTexture(dev,tw,th,1,D3DUSAGE_DYNAMIC,D3DFMT_A8R8G8B8,D3DPOOL_DEFAULT,&tex,nullptr) : dev->CreateTexture(tw,th,1,D3DUSAGE_DYNAMIC,D3DFMT_A8R8G8B8,D3DPOOL_DEFAULT,&tex,nullptr);
     if(FAILED(hr)||!tex){free(bytes);Log("VR prompt atlas texture creation failed: 0x%08lX",hr);return false;}
     D3DLOCKED_RECT lock{};
     if(FAILED(tex->LockRect(0,&lock,nullptr,0))){tex->Release();free(bytes);return false;}
     const unsigned char* src=bytes+fh->bfOffBits;
-    for(int y=0;y<64;++y) memcpy((unsigned char*)lock.pBits+y*lock.Pitch,src+(63-y)*320*4,320*4);
+    for(unsigned y=0;y<th;++y) memcpy((unsigned char*)lock.pBits+y*lock.Pitch,src+(th-1-y)*tw*4,tw*4);
     tex->UnlockRect(0); free(bytes); g_vrPromptAtlas=tex;
     Log("VR prompt atlas loaded: %s",path); return true;
 }
 static void DrawVrPromptIcon(IDirect3DDevice9* dev,float x,float y,float size,float u0,float u1) {
     VrPromptVtx v[4]={{x,y,0,1,0xFFFFFFFF,u0,0},{x+size,y,0,1,0xFFFFFFFF,u1,0},{x,y+size,0,1,0xFFFFFFFF,u0,1},{x+size,y+size,0,1,0xFFFFFFFF,u1,1}};
     g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(VrPromptVtx));
+}
+// Resolve an icon name to its atlas UVs (generated table).
+static bool PromptIconUv(const char* name,float& u0,float& u1) {
+    for(int i=0;i<kVrPromptIconCount;++i)
+        if(strcmp(kVrPromptIconUv[i].name,name)==0){u0=kVrPromptIconUv[i].u0;u1=kVrPromptIconUv[i].u1;return true;}
+    return false;
+}
+static void DrawPromptRole(IDirect3DDevice9* dev,float x,float y,float size,promptroles::Action a) {
+    float u0=0.f,u1=0.f;
+    if(!PromptIconUv(promptroles::IconName(a),u0,u1)) return;
+    DrawVrPromptIcon(dev,x,y,size,u0,u1);
 }
 static void DrawVrPromptLegend(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,bool gameplay) {
     if(!LoadVrPromptAtlas(dev)) return;
@@ -51,16 +70,20 @@ static void DrawVrPromptLegend(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,bo
     // visible panel on the 2684px SBS target; keeping both coordinates normalized makes this
     // independent of the current eye resolution and crop.
     const float eyeW=d.Width*.5f, size=std::max(22.f,d.Height*.035f), y=d.Height*.72f;
+    using promptroles::Action;
     for(int eye=0;eye<2;++eye){
         const float base=eye*eyeW+eyeW*.12f;
-        DrawVrPromptIcon(dev,base,y,size,0.f,.2f);
         if(gameplay) {
-            DrawVrPromptIcon(dev,base+eyeW*.22f,y,size,.6f,.8f);
-            DrawVrPromptIcon(dev,base+eyeW*.44f,y,size,.4f,.6f);
-            DrawVrPromptIcon(dev,base+eyeW*.66f,y,size,.2f,.4f);
+            // Interact (R1), Fire (R2), Aim (L2), Confirm (Cross).
+            DrawPromptRole(dev,base,y,size,Action::Interact);
+            DrawPromptRole(dev,base+eyeW*.22f,y,size,Action::Fire);
+            DrawPromptRole(dev,base+eyeW*.44f,y,size,Action::Aim);
+            DrawPromptRole(dev,base+eyeW*.66f,y,size,Action::Confirm);
         } else {
-            DrawVrPromptIcon(dev,base+eyeW*.25f,y,size,.2f,.4f);
-            DrawVrPromptIcon(dev,base+eyeW*.50f,y,size,.8f,1.f);
+            // Confirm (Cross, i.e. Enter), Back (Circle), Pause (Options).
+            DrawPromptRole(dev,base,y,size,Action::Confirm);
+            DrawPromptRole(dev,base+eyeW*.25f,y,size,Action::Back);
+            DrawPromptRole(dev,base+eyeW*.50f,y,size,Action::Pause);
         }
     }
     dev->SetTexture(0,nullptr); dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE);
