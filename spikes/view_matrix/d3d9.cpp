@@ -5355,6 +5355,7 @@ void ReleaseVrMenuResources();
 void ReleaseFpCasterCache();
 bool     g_handPoseValid[2] = { false, false };
 bool g_handPositionValid[2] = { false, false };
+bool g_handActionActive[2] = { false, false };
 volatile LONG g_twoHandEnabled = 1, g_twoHandActive = 0;
 // Run 190: the gun-pose timing experiment. See the long note in SyncXRInput.
 int      g_poseLeadFrames = 0;          // ini [Input] PoseLeadFrames: display periods to predict ahead
@@ -8115,7 +8116,7 @@ bool InitXRInput() {
                                     + 2                  // deliberate squeeze weapon grip
                                     + 2                  // trigtouch
                                     + 2                  // sticktouch
-                                    + 2                  // hand poses
+                                    + 4                  // hand poses: aim + grip for each hand
                                     + 2;                 // per-profile extras (Index trackpad/touch)
     XrActionSuggestedBinding binds[kMaxBinds]{};
     uint32_t nb = 0;
@@ -8185,13 +8186,21 @@ bool InitXRInput() {
         const char* path;
         const char* (*map)(const char*, bool, char*, size_t);
         const char* extraGrasp[2];   // profile-only grasp sources; nullptr entries are skipped
+        bool poseOnly;               // generic fallback: suggest only pose bindings
     } kProfiles[] = {
-        { "/interaction_profiles/oculus/touch_controller", TouchBindingPath, { nullptr, nullptr } },
+        { "/interaction_profiles/oculus/touch_controller", TouchBindingPath, { nullptr, nullptr }, false },
         { "/interaction_profiles/valve/index_controller",  IndexBindingPath,
           // Index has a trackpad where Touch has a thumbrest. A thumb parked on it is exactly the
           // "somebody is holding this" signal run 82 widened grasp to catch, so it belongs here for
           // the same reason thumbrest/touch does on Touch.
-          { "/user/hand/left/input/trackpad/touch", "/user/hand/right/input/trackpad/touch" } },
+          { "/user/hand/left/input/trackpad/touch", "/user/hand/right/input/trackpad/touch" }, false },
+        // PSVR2 Sense is exposed by SteamVR through a runtime-selected compatibility profile.
+        // Some runtime versions do not advertise Touch/Index for the left Sense controller, but do
+        // expose the standard generic pose paths. Keep this profile deliberately pose-only: a
+        // generic profile's face-button vocabulary is not uniform, so it must never poison the full
+        // button suggestion with paths the runtime does not implement.
+        { "/interaction_profiles/khr/generic_controller", TouchBindingPath,
+          { nullptr, nullptr }, true },
     };
 
     int profilesAccepted = 0;
@@ -8225,9 +8234,10 @@ bool InitXRInput() {
             { g_actL3,"/user/hand/left/input/thumbstick/click",false },
             { g_actR3,"/user/hand/right/input/thumbstick/click",false },
         };
-        for (auto& f : fixed) add(f.a, f.p, f.handed, false);
+        if (!prof.poseOnly)
+            for (auto& f : fixed) add(f.a, f.p, f.handed, false);
 
-        for (int i = 0; i < kPadButtonCount; ++i) {
+        for (int i = 0; !prof.poseOnly && i < kPadButtonCount; ++i) {
             // Printed only in left-handed mode, and only because the suggest call is ALL-OR-NOTHING:
             // when it fails there is no way to tell which of the paths was the bad one, which is
             // exactly the position run 172 was in. A dozen lines once at startup is worth not being
@@ -8247,13 +8257,13 @@ bool InitXRInput() {
             add(g_padButtons[i].action, g_padButtons[i].path, true, false);
         }
         const char* hp[2] = { "/user/hand/left/output/haptic", "/user/hand/right/output/haptic" };
-        for (int i = 0; i < 2; ++i) add(g_actHaptic, hp[i], false, false);
+        if (!prof.poseOnly) for (int i = 0; i < 2; ++i) add(g_actHaptic, hp[i], false, false);
 
         // Unlike grasp, this is an intentional press. On Index the profile mapper translates
         // squeeze/value to squeeze/force for button intent; on Touch it remains squeeze/value.
         const char* wp[2] = { "/user/hand/left/input/squeeze/value",
                               "/user/hand/right/input/squeeze/value" };
-        for (int i = 0; i < 2; ++i) add(g_actGrip, wp[i], false, false);
+        if (!prof.poseOnly) for (int i = 0; i < 2; ++i) add(g_actGrip, wp[i], false, false);
 
         // ⚠️ Run 82: thumbrest + trigger alone was TOO NARROW. The log caught it outright -
         // "right on desk (2346 um/frame)" is a controller being waved about while the sensors
@@ -8280,8 +8290,10 @@ bool InitXRInput() {
                                "/user/hand/right/input/b/touch",
                                "/user/hand/left/input/squeeze/value",
                                "/user/hand/right/input/squeeze/value" };
-        for (int i = 0; i < 12; ++i) add(g_actGrasp, gp[i], false, true);
-        for (auto& xg : prof.extraGrasp) add(g_actGrasp, xg, false, true);
+        if (!prof.poseOnly) {
+            for (int i = 0; i < 12; ++i) add(g_actGrasp, gp[i], false, true);
+            for (auto& xg : prof.extraGrasp) add(g_actGrasp, xg, false, true);
+        }
 
         // Exactly two sources, and nothing else may be added here. The moment this accepts a second
         // surface it stops meaning "a finger is on the trigger" and becomes another copy of grasp.
@@ -8290,18 +8302,20 @@ bool InitXRInput() {
         // the run-156 veto was inert on that hardware because this action had no fallback.
         const char* tp[2] = { "/user/hand/left/input/trigger/touch",
                               "/user/hand/right/input/trigger/touch" };
-        for (int i = 0; i < 2; ++i) add(g_actTrigTouch, tp[i], false, true);
+        if (!prof.poseOnly) for (int i = 0; i < 2; ++i) add(g_actTrigTouch, tp[i], false, true);
 
         // Same rule as trigtouch above: exactly two sources. One question, one sensor, one hand.
         const char* sp[2] = { "/user/hand/left/input/thumbstick/touch",
                               "/user/hand/right/input/thumbstick/touch" };
-        for (int i = 0; i < 2; ++i) add(g_actStickTouch, sp[i], false, true);
+        if (!prof.poseOnly) for (int i = 0; i < 2; ++i) add(g_actStickTouch, sp[i], false, true);
 
-        // `aim`, not `grip`: aim is the runtime's own pointing ray for the controller, which is
-        // what a weapon direction wants. grip is where the hand holds it, and using that would
-        // mean re-deriving the pointing axis ourselves for no gain.
-        const char* pp[2] = { "/user/hand/left/input/aim/pose", "/user/hand/right/input/aim/pose" };
-        for (int i = 0; i < 2; ++i) add(g_actHandPose, pp[i], false, false);
+        // Prefer the runtime's controller aim pose, but accept grip pose as a fallback. SteamVR's
+        // PSVR2 bridge has shipped versions where the left Sense controller exposed grip pose while
+        // its aim source stayed inactive. The action space then remains live instead of freezing the
+        // independent left hand at its last sample.
+        const char* pp[4] = { "/user/hand/left/input/aim/pose", "/user/hand/right/input/aim/pose",
+                              "/user/hand/left/input/grip/pose", "/user/hand/right/input/grip/pose" };
+        for (int i = 0; i < 4; ++i) add(g_actHandPose, pp[i], false, false);
 
         if (overflow) {
             // Cannot happen with the table as it stands - kMaxBinds is spelled one term per site.
@@ -8589,7 +8603,16 @@ void SyncXRInput(XrTime displayTime) {
         g_handPoseValid[i] = false;
         g_handPositionValid[i] = false;
         g_handTracked[i] = false;
+        g_handActionActive[i] = false;
         if (g_handSpace[i] == XR_NULL_HANDLE) continue;
+        if (!pollOff && g_actHandPose != XR_NULL_HANDLE) {
+            XrActionStateGetInfo pgi{ XR_TYPE_ACTION_STATE_GET_INFO };
+            pgi.action = g_actHandPose;
+            pgi.subactionPath = g_handSubPath[i];
+            XrActionStatePose pst{ XR_TYPE_ACTION_STATE_POSE };
+            if (XR_SUCCEEDED(xrGetActionStatePose(g_xrSession, &pgi, &pst)))
+                g_handActionActive[i] = pst.isActive != XR_FALSE;
+        }
         XrSpaceLocation loc{ XR_TYPE_SPACE_LOCATION };
         // handTime, not displayTime - see the run-190 note above. With PoseLeadFrames=0 these are equal,
         // so the old behaviour is bit-identical and the A/B is honest.
@@ -22862,9 +22885,12 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             }
 
             // Controller state, on the same line cadence as the frame budget, so a run where the
-            Log("    physical XR inputs: left stick %s (%.3f,%.3f), pose %d position %d; right stick %s (%.3f,%.3f), pose %d position %d; UI %d",
-                g_vrStickActive[0]?"ACTIVE":"INACTIVE",g_vrStickRaw[0][0],g_vrStickRaw[0][1],(int)g_handPoseValid[0],(int)g_handPositionValid[0],
-                g_vrStickActive[1]?"ACTIVE":"INACTIVE",g_vrStickRaw[1][0],g_vrStickRaw[1][1],(int)g_handPoseValid[1],(int)g_handPositionValid[1],(int)Rd(g_vrUiMenu));
+            Log("    physical XR inputs: left stick %s (%.3f,%.3f), action %d pose %d position %d;"
+                " right stick %s (%.3f,%.3f), action %d pose %d position %d; UI %d",
+                g_vrStickActive[0]?"ACTIVE":"INACTIVE",g_vrStickRaw[0][0],g_vrStickRaw[0][1],
+                (int)g_handActionActive[0],(int)g_handPoseValid[0],(int)g_handPositionValid[0],
+                g_vrStickActive[1]?"ACTIVE":"INACTIVE",g_vrStickRaw[1][0],g_vrStickRaw[1][1],
+                (int)g_handActionActive[1],(int)g_handPoseValid[1],(int)g_handPositionValid[1],(int)Rd(g_vrUiMenu));
             // controllers were picked up and set down a few times shows the correlation directly
             // instead of depending on anyone remembering when they did it.
             // Speeds in MICROMETRES per frame, printed next to the verdict they produced. The
