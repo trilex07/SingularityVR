@@ -56,3 +56,12 @@ packaging/dist/
 assets/reference/**
 assets/ui/kenney-input-prompts/kenney_input-prompts_*.zip
 assets/ui/kenney-input-prompts/source/**
+
+# ---- localization bulk data ----
+# Full extracted game text and generated package-sized data stay outside Git.
+SingularityVR-localization-local/
+localization-local/
+build/localization/
+tools/**/uepkg.exe
+tools/**/uedecompress.exe
+tools/**/*.obj

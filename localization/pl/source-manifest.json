@@ -1,0 +1,11 @@
+{
+  "format": "singularity-localization-source-v1",
+  "containers": {
+    "INT": {"size": 1524032, "sha1": "ffa326e7392129e7d11b090a831bf72db9547f28", "records": 33, "entries": 13108},
+    "ESN": {"size": 1053424, "sha1": "380c304a730f3d6097b509deb0d86421f0f59177", "records": 20, "entries": 8769},
+    "FRA": {"size": 1062880, "sha1": "df17202d2609ed5630c8335605c4c49b17e59140", "records": 20, "entries": 8769},
+    "ITA": {"size": 1052948, "sha1": "37053f91e379d1ce634b26df3ed938e231fa3ead", "records": 20, "entries": 8769}
+  },
+  "roundtrip": "PASS for all four containers",
+  "bulk_inventory": "external:SingularityVR-localization-local/inventory/"
+}

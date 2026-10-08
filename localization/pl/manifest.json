@@ -1,0 +1,10 @@
+{
+  "locale": "pl",
+  "status": "research-and-first-batch",
+  "source_locales": ["INT", "ESN", "FRA", "ITA"],
+  "source_coalesced_int_sha1": "ffa326e7392129e7d11b090a831bf72db9547f28",
+  "first_batch": "localization/pl/ui_batch.json",
+  "first_batch_entries": 41,
+  "package_generation": "disabled",
+  "install": "not performed"
+}
