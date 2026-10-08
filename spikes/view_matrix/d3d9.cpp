@@ -21512,6 +21512,28 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         }
         last = now;
         if (g_drawsTotal > totPeak) totPeak = g_drawsTotal;
+        // Fix-F/perf: spike reporter for jump/knife dips. Fires at most once per 2 s
+        // and only in VR mode, so loading screens cannot spam it. Deltas (not window
+        // totals) so the numbers describe THE slow frame. nocentre=1 implicates a
+        // recent camera-jump recentre; swapped=1 a weapon edge; melee/heal the arm
+        // windows. Plain-int counters are render-thread-only, like their owners.
+        {
+            static ULONGLONG lastSpikeMs = 0;
+            static int prevTotal = 0, prevDup = 0, prevMono = 0;
+            const int dTotal = g_drawsTotal - prevTotal;
+            const int dDup = g_drawsDuped - prevDup, dMono = g_drawsMonoFallback - prevMono;
+            prevTotal = g_drawsTotal; prevDup = g_drawsDuped; prevMono = g_drawsMonoFallback;
+            const ULONGLONG nowMs = GetTickCount64();
+            const double spikeAt = g_displayPeriodMs > 0.0 ? g_displayPeriodMs * 3.0 : 34.0;
+            if (VrModeOn() && thisFrameMs > spikeAt && nowMs - lastSpikeMs > 2000) {
+                lastSpikeMs = nowMs;
+                Log("FRAME SPIKE %.1f ms (period %.2f): draws %d (dup %d mono %d) melee %d heal %d swapped %d nocentre %d",
+                    thisFrameMs, g_displayPeriodMs, dTotal, dDup, dMono,
+                    MeleeWindowActive() ? 1 : 0, HealWindowActive() ? 1 : 0,
+                    InterlockedCompareExchange(&g_weaponSwapped, 0, 0) ? 1 : 0,
+                    g_haveCentre ? 0 : 1);
+            }
+        }
 
         // Counted unconditionally and consumed by SampleThreadCpu, so the CPU census divides by the
         // frames IT saw rather than by the 120 the report block happens to fire on.
