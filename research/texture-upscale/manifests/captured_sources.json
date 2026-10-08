@@ -4,14 +4,14 @@
     "dds": "textures/original/captured/handgun_d.dds",
     "kind": "albedo",
     "mip": 1,
-    "note": "First-person 2007 pistol diffuse, captured from the running game (the offline TFC path cannot reach its mip 0). 1024x1024 DXT5 at runtime."
+    "note": "First-person 2007 pistol diffuse, runtime capture."
   },
   {
     "name": "handgun_n",
     "dds": "textures/original/captured/handgun_n.dds",
     "kind": "normal",
     "mip": 1,
-    "note": "First-person 2007 pistol tangent normal, runtime capture. 1024x1024 DXT1."
+    "note": "First-person 2007 pistol tangent normal, runtime capture."
   },
   {
     "name": "env_door_a_d",
@@ -44,123 +44,213 @@
     "note": "Environment: metal shutter/panel surface diffuse, runtime capture 512x1024 DXT1."
   },
   {
-    "name": "env_fd6cfc72",
-    "dds": "textures/original/captured/env_fd6cfc72.dds",
+    "name": "env_783d13f7",
+    "dds": "textures/original/captured/env_783d13f7.dds",
     "kind": "albedo",
     "note": "Environment surface, runtime capture 1024x1024."
   },
   {
-    "name": "env_f9edf63b",
-    "dds": "textures/original/captured/env_f9edf63b.dds",
+    "name": "env_76306a2d",
+    "dds": "textures/original/captured/env_76306a2d.dds",
     "kind": "albedo",
     "note": "Environment surface, runtime capture 1024x1024."
   },
   {
-    "name": "env_f91c88e4",
-    "dds": "textures/original/captured/env_f91c88e4.dds",
+    "name": "env_6201ffb9",
+    "dds": "textures/original/captured/env_6201ffb9.dds",
     "kind": "albedo",
     "note": "Environment surface, runtime capture 1024x1024."
   },
   {
-    "name": "env_f5ae0f66",
-    "dds": "textures/original/captured/env_f5ae0f66.dds",
+    "name": "env_5bca8499",
+    "dds": "textures/original/captured/env_5bca8499.dds",
     "kind": "albedo",
     "note": "Environment surface, runtime capture 1024x1024."
   },
   {
-    "name": "env_ebec4c31",
-    "dds": "textures/original/captured/env_ebec4c31.dds",
+    "name": "env_3657a320",
+    "dds": "textures/original/captured/env_3657a320.dds",
     "kind": "albedo",
     "note": "Environment surface, runtime capture 1024x1024."
   },
   {
-    "name": "env_e62e9393",
-    "dds": "textures/original/captured/env_e62e9393.dds",
+    "name": "env_2f09c1bc",
+    "dds": "textures/original/captured/env_2f09c1bc.dds",
     "kind": "albedo",
     "note": "Environment surface, runtime capture 1024x1024."
   },
   {
-    "name": "env_e4ef7a7c",
-    "dds": "textures/original/captured/env_e4ef7a7c.dds",
+    "name": "env_252c3df4",
+    "dds": "textures/original/captured/env_252c3df4.dds",
     "kind": "albedo",
     "note": "Environment surface, runtime capture 1024x1024."
   },
   {
-    "name": "env_e10d5285",
-    "dds": "textures/original/captured/env_e10d5285.dds",
+    "name": "env_2177e137",
+    "dds": "textures/original/captured/env_2177e137.dds",
     "kind": "albedo",
     "note": "Environment surface, runtime capture 1024x1024."
   },
   {
-    "name": "env_d8ca70b7",
-    "dds": "textures/original/captured/env_d8ca70b7.dds",
+    "name": "env_1f161de7",
+    "dds": "textures/original/captured/env_1f161de7.dds",
     "kind": "albedo",
     "note": "Environment surface, runtime capture 1024x1024."
   },
   {
-    "name": "env_cd7d78b2",
-    "dds": "textures/original/captured/env_cd7d78b2.dds",
+    "name": "env_1a86a04b",
+    "dds": "textures/original/captured/env_1a86a04b.dds",
     "kind": "albedo",
     "note": "Environment surface, runtime capture 1024x1024."
   },
   {
-    "name": "env_cbb23dbc",
-    "dds": "textures/original/captured/env_cbb23dbc.dds",
+    "name": "env_0d582fd6",
+    "dds": "textures/original/captured/env_0d582fd6.dds",
     "kind": "albedo",
     "note": "Environment surface, runtime capture 1024x1024."
   },
   {
-    "name": "env_c2af18bc",
-    "dds": "textures/original/captured/env_c2af18bc.dds",
+    "name": "env_03b581da",
+    "dds": "textures/original/captured/env_03b581da.dds",
     "kind": "albedo",
     "note": "Environment surface, runtime capture 1024x1024."
   },
   {
-    "name": "env_c21c15fb",
-    "dds": "textures/original/captured/env_c21c15fb.dds",
+    "name": "env_dc94648c",
+    "dds": "textures/original/captured/env_dc94648c.dds",
     "kind": "albedo",
-    "note": "Environment surface, runtime capture 1024x1024."
+    "note": "Environment surface, runtime capture 1024x512."
   },
   {
-    "name": "env_bffa5bba",
-    "dds": "textures/original/captured/env_bffa5bba.dds",
+    "name": "env_d83b3c3a",
+    "dds": "textures/original/captured/env_d83b3c3a.dds",
     "kind": "albedo",
-    "note": "Environment surface, runtime capture 1024x1024."
+    "note": "Environment surface, runtime capture 512x1024."
   },
   {
-    "name": "env_b92bcf1e",
-    "dds": "textures/original/captured/env_b92bcf1e.dds",
+    "name": "env_d3287886",
+    "dds": "textures/original/captured/env_d3287886.dds",
     "kind": "albedo",
-    "note": "Environment surface, runtime capture 1024x1024."
+    "note": "Environment surface, runtime capture 1024x512."
   },
   {
-    "name": "env_a3318b61",
-    "dds": "textures/original/captured/env_a3318b61.dds",
+    "name": "env_bd9cf530",
+    "dds": "textures/original/captured/env_bd9cf530.dds",
     "kind": "albedo",
-    "note": "Environment surface, runtime capture 1024x1024."
+    "note": "Environment surface, runtime capture 1024x512."
   },
   {
-    "name": "env_9bee23d5",
-    "dds": "textures/original/captured/env_9bee23d5.dds",
+    "name": "env_7d21f673",
+    "dds": "textures/original/captured/env_7d21f673.dds",
     "kind": "albedo",
-    "note": "Environment surface, runtime capture 1024x1024."
+    "note": "Environment surface, runtime capture 1024x512."
   },
   {
-    "name": "env_99dffd7c",
-    "dds": "textures/original/captured/env_99dffd7c.dds",
+    "name": "env_6489c88e",
+    "dds": "textures/original/captured/env_6489c88e.dds",
     "kind": "albedo",
-    "note": "Environment surface, runtime capture 1024x1024."
+    "note": "Environment surface, runtime capture 512x1024."
   },
   {
-    "name": "env_7e3337ff",
-    "dds": "textures/original/captured/env_7e3337ff.dds",
+    "name": "env_63b3ec8d",
+    "dds": "textures/original/captured/env_63b3ec8d.dds",
     "kind": "albedo",
-    "note": "Environment surface, runtime capture 1024x1024."
+    "note": "Environment surface, runtime capture 1024x512."
   },
   {
-    "name": "env_78b5942e",
-    "dds": "textures/original/captured/env_78b5942e.dds",
+    "name": "env_4741d8cd",
+    "dds": "textures/original/captured/env_4741d8cd.dds",
     "kind": "albedo",
-    "note": "Environment surface, runtime capture 1024x1024."
+    "note": "Environment surface, runtime capture 1024x512."
+  },
+  {
+    "name": "env_37469b7a",
+    "dds": "textures/original/captured/env_37469b7a.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 1024x512."
+  },
+  {
+    "name": "env_23077af2",
+    "dds": "textures/original/captured/env_23077af2.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 1024x512."
+  },
+  {
+    "name": "env_0e7a4cce",
+    "dds": "textures/original/captured/env_0e7a4cce.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 1024x512."
+  },
+  {
+    "name": "env_0b27b3ce",
+    "dds": "textures/original/captured/env_0b27b3ce.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 1024x512."
+  },
+  {
+    "name": "env_00adab7c",
+    "dds": "textures/original/captured/env_00adab7c.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 1024x512."
+  },
+  {
+    "name": "env_ff0916dd",
+    "dds": "textures/original/captured/env_ff0916dd.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 512x512."
+  },
+  {
+    "name": "env_f51f572e",
+    "dds": "textures/original/captured/env_f51f572e.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 512x512."
+  },
+  {
+    "name": "env_f42d9038",
+    "dds": "textures/original/captured/env_f42d9038.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 512x512."
+  },
+  {
+    "name": "env_eed86f3c",
+    "dds": "textures/original/captured/env_eed86f3c.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 512x512."
+  },
+  {
+    "name": "env_eb3e6425",
+    "dds": "textures/original/captured/env_eb3e6425.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 512x512."
+  },
+  {
+    "name": "env_e8a7a177",
+    "dds": "textures/original/captured/env_e8a7a177.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 512x512."
+  },
+  {
+    "name": "env_e70c80ab",
+    "dds": "textures/original/captured/env_e70c80ab.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 512x512."
+  },
+  {
+    "name": "env_e1390108",
+    "dds": "textures/original/captured/env_e1390108.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 512x512."
+  },
+  {
+    "name": "env_e1062625",
+    "dds": "textures/original/captured/env_e1062625.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 512x512."
+  },
+  {
+    "name": "env_e00a5e0e",
+    "dds": "textures/original/captured/env_e00a5e0e.dds",
+    "kind": "albedo",
+    "note": "Environment surface, runtime capture 512x512."
   }
 ]

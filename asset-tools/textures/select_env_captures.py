@@ -46,7 +46,9 @@ def main() -> None:
     ap.add_argument("--header", default=r"C:\Users\Trilex\vr-mods\SingularityVR-assets\asset-tools\texture-injector\targets_generated.h")
     ap.add_argument("--max", type=int, default=30)
     ap.add_argument("--min", type=int, default=512)
+    ap.add_argument("--dims", default="", help="comma list like 512x512,1024x512 to restrict sizes")
     a = ap.parse_args()
+    dims_filter = {d.strip() for d in a.dims.split(",") if d.strip()}
 
     capture = Path(a.capture)
     local = Path(a.local_root)
@@ -76,6 +78,8 @@ def main() -> None:
         except Exception:
             continue
         if min(w, hh) < a.min:
+            continue
+        if dims_filter and f"{w}x{hh}" not in dims_filter and f"{hh}x{w}" not in dims_filter:
             continue
         if int(h, 16) in targets:
             continue
