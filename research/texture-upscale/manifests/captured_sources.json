@@ -1,0 +1,16 @@
+[
+  {
+    "name": "handgun_d",
+    "dds": "textures/original/captured/handgun_d.dds",
+    "kind": "albedo",
+    "mip": 1,
+    "note": "First-person 2007 pistol diffuse, captured from the running game (the offline TFC path cannot reach its mip 0). 1024x1024 DXT5 at runtime."
+  },
+  {
+    "name": "handgun_n",
+    "dds": "textures/original/captured/handgun_n.dds",
+    "kind": "normal",
+    "mip": 1,
+    "note": "First-person 2007 pistol tangent normal, runtime capture. 1024x1024 DXT1."
+  }
+]

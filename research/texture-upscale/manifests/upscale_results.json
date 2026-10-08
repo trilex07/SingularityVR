@@ -12,6 +12,8 @@
       1024
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGame\\Texture2D\\inview_glove_d.dds",
+    "source_fnv": 14169204449685679501,
     "format": "PF_DXT1",
     "dds_format": "DXT1",
     "candidates": {
@@ -52,6 +54,8 @@
       1024
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGame\\Texture2D\\inview_glove_n.dds",
+    "source_fnv": 14124171308224505833,
     "format": "PF_DXT1",
     "dds_format": "DXT1",
     "candidates": {
@@ -92,6 +96,8 @@
       1024
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGame\\Texture2D\\AR_E99Rifle_alt_d.dds",
+    "source_fnv": 16160022635740620080,
     "format": "PF_DXT5",
     "dds_format": "DXT5",
     "candidates": {
@@ -132,6 +138,8 @@
       1024
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGame\\Texture2D\\AR_E99Rifle_n.dds",
+    "source_fnv": 185541836161454253,
     "format": "PF_DXT1",
     "dds_format": "DXT1",
     "candidates": {
@@ -172,6 +180,8 @@
       1024
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\AR_shotgun_d.dds",
+    "source_fnv": 5337964157207211514,
     "format": "PF_DXT5",
     "dds_format": "DXT5",
     "candidates": {
@@ -212,6 +222,8 @@
       1024
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\AR_shotgun_n.dds",
+    "source_fnv": 10487084446201973189,
     "format": "PF_DXT1",
     "dds_format": "DXT1",
     "candidates": {
@@ -252,6 +264,8 @@
       512
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\AR_shotgun_e.dds",
+    "source_fnv": 16802150620087858708,
     "format": "PF_DXT1",
     "dds_format": "DXT1",
     "candidates": {
@@ -292,6 +306,8 @@
       1024
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\ar_gatling_gun_d.dds",
+    "source_fnv": 11271628360968536064,
     "format": "PF_DXT5",
     "dds_format": "DXT5",
     "candidates": {
@@ -332,6 +348,8 @@
       1024
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\ar_gatling_gun_n.dds",
+    "source_fnv": 7575541430910006941,
     "format": "PF_DXT1",
     "dds_format": "DXT1",
     "candidates": {
@@ -372,6 +390,8 @@
       1024
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\ar_sniper_rifle_n.dds",
+    "source_fnv": 10616915492120553037,
     "format": "PF_DXT1",
     "dds_format": "DXT1",
     "candidates": {
@@ -412,6 +432,8 @@
       2048
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\elite_beam_n.dds",
+    "source_fnv": 10948678980300156221,
     "format": "PF_DXT1",
     "dds_format": "DXT1",
     "candidates": {
@@ -452,6 +474,8 @@
       256
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\laser_d.dds",
+    "source_fnv": 9480852095134046573,
     "format": "PF_DXT1",
     "dds_format": "DXT1",
     "candidates": {
@@ -492,6 +516,8 @@
       256
     ],
     "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\laser_n.dds",
+    "source_fnv": 6733662572201863386,
     "format": "PF_DXT1",
     "dds_format": "DXT1",
     "candidates": {
@@ -514,6 +540,90 @@
         "mips": 8,
         "dds_bytes": 174888,
         "sha256": "fb597690bb552fa1723945bae582a9024cfea4220f732c7b5702c2cba0f24d55",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "handgun_d": {
+    "note": "First-person 2007 pistol diffuse, captured from the running game (the offline TFC path cannot reach its mip 0). 1024x1024 DXT5 at runtime.",
+    "kind": "albedo",
+    "source": "handgun_d",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/handgun_d.dds",
+    "source_fnv": 5208987696962520514,
+    "format": "PF_DXT5",
+    "dds_format": "DXT5",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 5592528,
+        "sha256": "5a49c073d33b2f270878e29e89709c082dfb8c97d4a370ddb7cb8534a319d448",
+        "alpha_min": 0,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 5592528,
+        "sha256": "29265a9764818995d74c7a67f0909943be5cf78dca52fca318fb5779b5230184",
+        "alpha_min": 0,
+        "alpha_max": 255
+      }
+    }
+  },
+  "handgun_n": {
+    "note": "First-person 2007 pistol tangent normal, runtime capture. 1024x1024 DXT1.",
+    "kind": "normal",
+    "source": "handgun_n",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": 1,
+    "source_dds": "textures/original/captured/handgun_n.dds",
+    "source_fnv": 6877428834008494221,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "e1417a4798d89da5cdfd26dcaa38a5f46d12b3338aaa467150c1a52e7616933f",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 2796328,
+        "sha256": "465ae06ee043994a66a5671f7783fa1ed406c3f7cb36ff2f2778f6c32e430eed",
         "alpha_min": 255,
         "alpha_max": 255
       }

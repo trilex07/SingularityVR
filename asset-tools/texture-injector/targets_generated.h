@@ -10,6 +10,8 @@ static const Target kTargets[] = {
     { "ar_gatling_gun_n", 2048u, 1024u, D3DFMT_DXT1, 7575541430910006941ULL, "ar_gatling_gun_n.dds" },
     { "ar_sniper_rifle_n", 2048u, 1024u, D3DFMT_DXT1, 10616915492120553037ULL, "ar_sniper_rifle_n.dds" },
     { "elite_beam_n", 2048u, 2048u, D3DFMT_DXT1, 10948678980300156221ULL, "elite_beam_n.dds" },
+    { "handgun_d", 1024u, 1024u, D3DFMT_DXT5, 5208987696962520514ULL, "handgun_d.dds" },
+    { "handgun_n", 1024u, 1024u, D3DFMT_DXT1, 6877428834008494221ULL, "handgun_n.dds" },
     { "inview_glove_d", 1024u, 1024u, D3DFMT_DXT1, 14169204449685679501ULL, "inview_glove_d.dds" },
     { "inview_glove_n", 1024u, 1024u, D3DFMT_DXT1, 14124171308224505833ULL, "inview_glove_n.dds" },
     { "laser_d", 256u, 256u, D3DFMT_DXT1, 9480852095134046573ULL, "laser_d.dds" },
