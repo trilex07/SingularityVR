@@ -20288,6 +20288,11 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // NUMPAD6 still hides the readout on its own while debug mode is on.
     if (InterlockedCompareExchange(&g_debugOn, 0, 0) &&
         InterlockedCompareExchange(&g_readoutOn, 0, 0)) DrawStateReadout(s);
+    // Hub round A: the VR settings panel. It was adjustable blind (values changed and
+    // saved) but never drawn - DrawVrPanel had no call site, so the linker dropped it
+    // with all its row strings. Drawn here, with the game input already owned by the
+    // panel (ClearPad) while it is open.
+    if (InterlockedCompareExchange(&g_panelOpen, 0, 0)) DrawVrPanel(s);
     // The in-VR engineering panel is retired from user builds. It obscured the game and made
     // headset screenshots unusable; diagnostics remain available through the log/readout gates.
     DrawVrMenuPointer(s);
