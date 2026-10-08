@@ -6296,7 +6296,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_AIMPARTS,
        PR_SHADOWMODE, PR_DROPEXTRA,   // hub round 4: shadow sampling treatment + extra-target drop
        PR_SHADOWTEST, PR_VFXORIGIN,   // reversible shadow-source + muzzle-anchor A/B tests
-       PR_VFXHOST, PR_VFXDRAW, PR_VFXDIAG,   // VFX host testing rows (see DrawVfxOverlay)
+       PR_VFXHOST, PR_VFXDRAW, PR_VFXDIAG, PR_VFXLOOK, PR_VFXOFFSET, // VFX test/tuning rows
        // ⭐ run 217: the laser and the per-weapon alignment rows.
        PR_LASER, PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH,
        PR_NOTESIZE,          // ⭐ run 230
@@ -6369,14 +6369,14 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
     { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE,
-      PR_VFXHOST, PR_VFXDIAG, PR_BACK },
+      PR_VFXHOST, PR_VFXLOOK, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
     // (1,400 vs 3,800 draws was measured) and a cross-run comparison is worthless. That mistake cost a
     // test run and it was mine.
     { PR_OCCLUSION, PR_WEAPONFX, PR_AIMPARTS, PR_SHADOWMODE, PR_SHADOWTEST, PR_DROPEXTRA,
-      PR_VFXDRAW, PR_VFXORIGIN, PR_DEBUG, PR_BACK },
+      PR_VFXORIGIN, PR_VFXOFFSET, PR_DEBUG, PR_BACK },
     { PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH, PR_BACK },
     // ⭐ run 237: its own page, not a row on WEAPON ALIGN. That page's values are PER WEAPON and
     // change meaning when you switch guns; these are one object held one way, always the same.
@@ -6474,7 +6474,7 @@ extern volatile LONG g_fgRideAll;
 extern volatile LONG g_hideMuzzleFx;
 // Defined with the VFX host block (below); declared here so the panel rows can read them.
 extern volatile LONG g_vfxHost, g_vfxDraw, g_vfxDiag;
-extern volatile LONG g_vfxMuzzleOrigin, g_shadowTest;
+extern volatile LONG g_vfxMuzzleOrigin, g_vfxMuzzleOffsetMm, g_vfxLook, g_shadowTest;
 // Defined beside the turn code, which is the first thing that reads them.
 extern volatile LONG g_cineStickTurn;
 extern volatile LONG g_cutsceneLockCamera;
@@ -6596,6 +6596,12 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_VFXORIGIN:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_vfxMuzzleOrigin));
             WritePrivateProfileStringA("Render", "VfxMuzzleOrigin", v, path); return;
+        case PR_VFXLOOK:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_vfxLook));
+            WritePrivateProfileStringA("Render", "VfxLook", v, path); return;
+        case PR_VFXOFFSET:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_vfxMuzzleOffsetMm));
+            WritePrivateProfileStringA("Render", "VfxMuzzleOffsetMm", v, path); return;
         case PR_VFXHOST:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", InterlockedCompareExchange(&g_vfxHost, 0, 0));
             WritePrivateProfileStringA("Render", "VfxHost", v, path); return;
@@ -6996,7 +7002,7 @@ void PanelRowText(int row, char* out, size_t cap) {
             break;
         }
         case PR_DROPEXTRA:
-            _snprintf_s(out, cap, _TRUNCATE, "DROP EXTRA     %s",
+            _snprintf_s(out, cap, _TRUNCATE, "SCREEN FX TEST %s",
                         InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? "ON (TEST)" : "OFF");
             break;
         case PR_SHADOWTEST:
@@ -7006,6 +7012,15 @@ void PanelRowText(int row, char* out, size_t cap) {
         case PR_VFXORIGIN:
             _snprintf_s(out, cap, _TRUNCATE, "VFX ORIGIN    %s",
                         Rd(g_vfxMuzzleOrigin) ? "GUN PIVOT" : "CAMERA ANCHOR");
+            break;
+        case PR_VFXLOOK: {
+            const LONG look = Rd(g_vfxLook);
+            _snprintf_s(out, cap, _TRUNCATE, "VFX LOOK      %s",
+                        look == 0 ? "SOFT MIST" : look == 1 ? "NORMAL" : "LARGE REF");
+            break;
+        }
+        case PR_VFXOFFSET:
+            _snprintf_s(out, cap, _TRUNCATE, "VFX MUZZLE    %ldMM", Rd(g_vfxMuzzleOffsetMm));
             break;
         case PR_VFXHOST:
             _snprintf_s(out, cap, _TRUNCATE, "VFX HOST       %s",
@@ -7172,7 +7187,7 @@ void PanelAdjust(int row, int dir) {
             // Same flag NUMPAD0 toggles; the hub makes it reachable in a headset.
             InterlockedExchange(&g_skipExtraTarget,
                                 InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? 0 : 1);
-            Log("DROP EXTRA -> %s (scene-sized non-colour target draws %s)",
+            Log("SCREEN FX TEST -> %s (scene-sized non-colour target draws %s)",
                 InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? "ON" : "OFF",
                 InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? "DROPPED" : "drawn");
             break;
@@ -7186,6 +7201,20 @@ void PanelAdjust(int row, int dir) {
             Log("VFX ORIGIN -> %s (GunPivotWorld follows the controller; Camera Anchor is legacy)",
                 Rd(g_vfxMuzzleOrigin) ? "GUN PIVOT" : "CAMERA ANCHOR");
             break;
+        case PR_VFXLOOK: {
+            LONG look = (Rd(g_vfxLook) + dir + 3) % 3;
+            InterlockedExchange(&g_vfxLook, look);
+            Log("VFX LOOK -> %ld (%s)", look, look == 0 ? "SOFT MIST" : look == 1 ? "NORMAL" : "LARGE REFERENCE");
+            break;
+        }
+        case PR_VFXOFFSET: {
+            const LONG steps = 5; // 0, 50, 100, 150, 200 mm along the verified shot direction
+            LONG step = Rd(g_vfxMuzzleOffsetMm) / 50 + dir;
+            if (step < 0) step = 0; if (step >= steps) step = steps - 1;
+            InterlockedExchange(&g_vfxMuzzleOffsetMm, step * 50);
+            Log("VFX MUZZLE OFFSET -> %ld mm along GunAimDir", Rd(g_vfxMuzzleOffsetMm));
+            break;
+        }
         case PR_VFXHOST:
             InterlockedExchange(&g_vfxHost, Rd(g_vfxHost) ? 0 : 1);
             Log("VFX HOST -> %ld", Rd(g_vfxHost));
@@ -17321,6 +17350,12 @@ volatile LONG g_vfxDiag = 0;
 // Fire origin selector: 0 legacy camera anchor, 1 actual controller-ridden gun
 // pivot (GunPivotWorld). Default 1; permits live A/B without a rebuild.
 volatile LONG g_vfxMuzzleOrigin = 1;
+// 0 soft mist, 1 normal, 2 large reference. This scales smoke separately from
+// the flash; the flash remains bright in soft-mist mode.
+volatile LONG g_vfxLook = 0;
+// Forward offset from the held-gun pivot to the muzzle, in millimetres. A small
+// live A/B range lets the user align the plugin effects to the rendered barrel.
+volatile LONG g_vfxMuzzleOffsetMm = 100;
 volatile LONG g_vfxFrame = 0; // Present serial; each eye draws VFX once per frame.
 static LONG g_vfxEyeDone[2] = { -1, -1 };
 static singularity_vfx::VfxFireEvent g_vfxFireMail;
@@ -19720,6 +19755,8 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
                 const float m2u = MetresToUU();
                 if (m2u > 0.0f && std::isfinite(m2u) &&
                     std::isfinite(G[0] + G[1] + G[2]) && std::isfinite(D[0] + D[1] + D[2])) {
+                    const float muzzleOffsetUU = (float)Rd(g_vfxMuzzleOffsetMm) * 0.001f * m2u;
+                    for (int c = 0; c < 3; ++c) G[c] += D[c] * muzzleOffsetUU;
                     singularity_vfx::VfxFireEvent fe{};
                     fe.muzzle.x = G[0] / m2u; fe.muzzle.y = G[1] / m2u; fe.muzzle.z = G[2] / m2u;
                     fe.forward.x = D[0]; fe.forward.y = D[1]; fe.forward.z = D[2];
@@ -21084,7 +21121,15 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
                     if (!clip || clip->tex < 0 || clip->tex >= g_vfxAtlas.count) continue;
                     IDirect3DTexture9* tex = g_vfxAtlas.texture[clip->tex];
                     if (!tex) continue;
-                    const float w = d.size * m2u;                 // half-extent, UU
+                    const LONG look = Rd(g_vfxLook);
+                    const bool smoke = d.kind == (uint8_t)singularity_vfx::VfxKind::MuzzleSmoke;
+                    // The reference smoke was a large cartoon puff. SOFT MIST
+                    // shrinks only smoke and reduces its alpha; keep muzzle flash
+                    // full-bright so a smoke-style change cannot hide the shot.
+                    const float sizeScale = smoke
+                        ? (look == 0 ? 0.32f : look == 1 ? 0.72f : 1.25f)
+                        : (look == 2 ? 1.20f : 1.0f);
+                    const float w = d.size * sizeScale * m2u;       // half-extent, UU
                     if (!(w > 0.0f)) continue;
                     const float C[3] = { d.position.x * m2u, d.position.y * m2u, d.position.z * m2u };
                     float cc[4]; WorldToClip(m, conv, C, cc);
@@ -21104,7 +21149,8 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
                     const float du = 1.0f / cols, dv = 1.0f / rows;
                     auto SX = [&](const float* c) { return (c[0]/c[3]*0.5f + 0.5f) * (float)vp.Width + (float)vp.X; };
                     auto SY = [&](const float* c) { return (0.5f - c[1]/c[3]*0.5f) * (float)vp.Height + (float)vp.Y; };
-                    const D3DCOLOR col = 0xFFFFFFFF;
+                    const BYTE alpha = smoke ? (BYTE)(look == 0 ? 90 : look == 1 ? 170 : 255) : 255;
+                    const D3DCOLOR col = D3DCOLOR_ARGB(alpha, 255, 255, 255);
                     VfxOverlayVtx v[4] = {
                         { SX(cl[0]), SY(cl[0]), 0, 1, col, u0,      v0 + dv },
                         { SX(cl[1]), SY(cl[1]), 0, 1, col, u0 + du, v0 + dv },
@@ -24716,9 +24762,21 @@ void LoadIniSettings() {
     }
     g_vfxDiag=GetPrivateProfileIntA("Render","VfxDiag",0,path)?1:0;
     g_vfxMuzzleOrigin=GetPrivateProfileIntA("Render","VfxMuzzleOrigin",1,path)?1:0;
+    {
+        LONG look = GetPrivateProfileIntA("Render","VfxLook",0,path);
+        if (look < 0) look = 0; if (look > 2) look = 2;
+        InterlockedExchange(&g_vfxLook, look);
+    }
+    {
+        LONG offset = GetPrivateProfileIntA("Render","VfxMuzzleOffsetMm",100,path);
+        if (offset < 0) offset = 0; if (offset > 200) offset = 200;
+        offset = (offset / 50) * 50;
+        InterlockedExchange(&g_vfxMuzzleOffsetMm, offset);
+    }
     Log("VFX host seams=%ld (VfxHost; plugin DLL absence still no-ops everything)",Rd(g_vfxHost));
     Log("VFX draw=%ld (0=off 1=scene/mid-scene 2=present/backbuffer), diag dot=%ld",Rd(g_vfxDraw),Rd(g_vfxDiag));
     Log("VFX muzzle origin=%ld (0=legacy camera anchor 1=GunPivotWorld); shadow test=%ld (0=normal 1=drop all shadow-layout draws)",Rd(g_vfxMuzzleOrigin),Rd(g_shadowTest));
+    Log("VFX look=%ld (0=soft mist 1=normal 2=large ref), muzzle forward offset=%ldmm",Rd(g_vfxLook),Rd(g_vfxMuzzleOffsetMm));
     g_vrUiDesktopProbe=GetPrivateProfileIntA("Diagnostic","VrUiDesktopProbe",0,path)?1:0;
     Log("VR menu pointer=%ld; native GFx viewport input; no desktop cursor movement",Rd(g_vrUiEnabled));
     Log("independent hands prototype=%d; shader CTAB required; verified SP sections only",g_independentHands);
