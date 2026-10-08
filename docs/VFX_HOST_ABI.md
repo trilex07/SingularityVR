@@ -159,6 +159,16 @@ g_vfx.Unload(); g_vfxDrawer.Shutdown(); singularity_vfx::host::ReleaseAtlas(g_vf
 
 Keep `HideMuzzleFx` on, or the original centred first-person flash returns.
 
+### Blood is a surface decal, not a billboard
+
+For `VfxKind::BloodImpact` the host draws a **normal-aligned** quad
+(`vfx_blood.h::BuildSurfaceBasis`, used by `vfx_draw.h`) instead of a
+camera-facing billboard, so the splash lies in the surface plane and the same
+world corners project for both eyes. The plugin passes `position = hit +
+normal * epsilon` (anti z-fighting) and `direction = hit normal`; the host builds
+the plane basis with a deterministic fallback when the normal is parallel to the
+camera-right hint. Muzzle flash and smoke stay camera-facing billboards.
+
 ## Reference plugin stub (hand this to the main agent)
 
 `tools/vfx-plugin-stub/` contains a working, self-contained plugin that implements

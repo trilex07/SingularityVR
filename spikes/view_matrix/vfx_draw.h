@@ -14,6 +14,7 @@
 // =============================================================================
 
 #include "vfx_plugin.h"
+#include "vfx_blood.h"
 
 #include <d3d9.h>
 #include <cstddef>
@@ -322,8 +323,23 @@ public:
             const float du = 1.0f / cols, dv = 1.0f / rows;
 
             const float s = it.size <= 0.0f ? 1.0f : it.size;
-            const float rx = camRight[0] * s, ry = camRight[1] * s, rz = camRight[2] * s;
-            const float ux = camUp[0] * s, uy = camUp[1] * s, uz = camUp[2] * s;
+            float br[3], bu[3];
+            if (static_cast<VfxKind>(it.kind) == VfxKind::BloodImpact) {
+                // Surface decal: align the quad to the hit normal, stable fallback
+                // when the normal is parallel to the camera-right hint.
+                VfxVec3 r{}, u{};
+                if (!BuildSurfaceBasis(it.direction,
+                                       VfxVec3{camRight[0], camRight[1], camRight[2]}, r, u))
+                    continue;
+                br[0] = r.x * s; br[1] = r.y * s; br[2] = r.z * s;
+                bu[0] = u.x * s; bu[1] = u.y * s; bu[2] = u.z * s;
+            } else {
+                // Camera-facing billboard for muzzle flash and smoke.
+                br[0] = camRight[0] * s; br[1] = camRight[1] * s; br[2] = camRight[2] * s;
+                bu[0] = camUp[0] * s;    bu[1] = camUp[1] * s;    bu[2] = camUp[2] * s;
+            }
+            const float rx = br[0], ry = br[1], rz = br[2];
+            const float ux = bu[0], uy = bu[1], uz = bu[2];
             const float px = it.position.x, py = it.position.y, pz = it.position.z;
             const D3DCOLOR c = D3DCOLOR_ARGB(255, 255, 255, 255);
 
