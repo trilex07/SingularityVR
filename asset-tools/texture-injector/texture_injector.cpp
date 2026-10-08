@@ -71,7 +71,7 @@ struct CaptureRing {
     bool valid = false;
     std::vector<uint8_t> data;
 };
-static const int kRing = 16;
+static const int kRing = 24;
 static CaptureRing g_ring[kRing];
 static int  g_ringPos = 0;
 static bool g_markerSeen = false;
@@ -334,7 +334,7 @@ static void MaybeCapture(IDirect3DTexture9* t) {
         r.w = d.Width; r.h = d.Height; r.fmt = d.Format; r.hash = hv; r.valid = true;
         r.data.assign(data.begin(), data.end());
         g_ringPos = (g_ringPos + 1) % kRing;
-        if (hv == g_markerHash) { g_markerSeen = true; g_armed = 24; dumpRing = true; }
+        if (hv == g_markerHash) { g_markerSeen = true; g_armed = 48; dumpRing = true; }
         else if (g_armed > 0) { --g_armed; dumpThis = true; }
     } else {
         bool dup = false;
