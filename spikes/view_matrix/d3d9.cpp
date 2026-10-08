@@ -2099,6 +2099,7 @@ void ReportEyeHeight();
 // All three are defined with the 6-DOF code, which sits below this census.
 extern float g_hmdOffset[3];
 extern volatile LONG g_worldScalePct;
+extern volatile LONG g_gunScalePct;   // hub round A (defined with the gun transform)
 float MetresToUU();
 
 // The live player pawn, cached and revalidated by class word like FindCamera. Rewalks at most once every
@@ -6254,6 +6255,7 @@ enum { PR_ENABLEVR = 0, PR_AIMMETHOD, PR_MOVEDIR, PR_TURNMODE, PR_TURNSPEED, PR_
        // ⭐ run 217: the laser and the per-weapon alignment rows.
        PR_LASER, PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH,
        PR_NOTESIZE,          // ⭐ run 230
+       PR_GUNSCALE,          // hub round A: first-person gun+hands size, live-tuned like world scale
        PR_TMDON, PR_TMDFWD, PR_TMDRIGHT, PR_TMDUP, PR_TMDYAW, PR_TMDPITCH,   // ⭐ run 237
        PR_TMDARMFROM, PR_TMDARMTO, PR_TMDARMSTEP,   // ⭐ run 237c, un-retired in 247b
        PR_TMDARMSLOT, PR_TMDARMMESH,                // ⭐ run 250
@@ -6320,7 +6322,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // ⭐ run 230: NOTE SIZE is the HUD-inset row this page was created expecting. It belongs here
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
-    { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_NOTESIZE, PR_BACK },
+    { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_NOTESIZE, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
@@ -6359,7 +6361,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
       PR_TMDHIDE, PR_BACK_TMD },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 8, 8, 3, 6, 5, 7, 10, 6, 8 };   // ⭐ run 230: DISPLAY 5 -> 6; ⭐ run 237: root 7 -> 8 and a TMD page; ⭐ run 249: TMD 17 -> 10 + two sub-pages; ⭐ run 250: TMD MESH 5 -> 7; ⭐ run 251: + TRI MODE
+const int kPageCount[kPanelPages] = { 8, 8, 3, 7, 5, 7, 10, 6, 8 };   // ⭐ run 230: DISPLAY 5 -> 6; ⭐ run 237: root 7 -> 8 and a TMD page; ⭐ run 249: TMD 17 -> 10 + two sub-pages; ⭐ run 250: TMD MESH 5 -> 7; ⭐ run 251: + TRI MODE; hub round A: DISPLAY 6 -> 7 (GUN SIZE)
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -6533,6 +6535,10 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_noteInsetPct, 0, 0));
             WritePrivateProfileStringA("Render", "NoteInsetPct", v, path); return;
+        case PR_GUNSCALE:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
+                        InterlockedCompareExchange(&g_gunScalePct, 0, 0));
+            WritePrivateProfileStringA("Input", "GunScalePct", v, path); return;
         // ⭐ run 237: ONE case writes the whole TMD block, so no row can be adjustable and persist
         // nowhere - the defect PanelSaveRow was restructured to prevent.
         case PR_TMDON: {
@@ -6863,6 +6869,14 @@ void PanelRowText(int row, char* out, size_t cap) {
                                       p > 100 ? "BIGGER" : "SMALLER");
             break;
         }
+        case PR_GUNSCALE: {
+            // Same shape as world scale: percent with 100 marked as the neutral value,
+            // so a tuned 80 reads as a deliberate choice rather than a default.
+            const LONG p = InterlockedCompareExchange(&g_gunScalePct, 0, 0);
+            if (p == 100) _snprintf_s(out, cap, _TRUNCATE, "GUN SIZE       100%% (ENGINE)");
+            else          _snprintf_s(out, cap, _TRUNCATE, "GUN SIZE       %ld%%", p);
+            break;
+        }
         case PR_AIMPARTS: {
             const LONG p = InterlockedCompareExchange(&g_aimModeParts, 0, 0);
             _snprintf_s(out, cap, _TRUNCATE, "AIM PARTS      %s",
@@ -7186,6 +7200,14 @@ void PanelAdjust(int row, int dir) {
             InterlockedExchange(&g_worldScalePct, p);
             break;
         }
+        case PR_GUNSCALE: {
+            // Same 5%-a-press discipline as world scale, same clamp as the ini loader (25-400).
+            LONG p = InterlockedCompareExchange(&g_gunScalePct, 0, 0) + dir * 5;
+            if (p < 25)  p = 25;
+            if (p > 400) p = 400;
+            InterlockedExchange(&g_gunScalePct, p);
+            break;
+        }
         case PR_WEAPONFX: {
             // Clamped, not wrapped - run 143's lesson. Wrapping would put one press past RIDE GUN
             // into a state that blacks out the weapon, which reads as a crash rather than a setting.
@@ -7270,7 +7292,7 @@ PadButtonAction g_padButtons[] = {
     { "use",        "Use / reload",   "/user/hand/right/input/squeeze/value",    "Use",        XI_X,         XR_NULL_HANDLE, false, false },
     { "antigrav",   "Anti-gravity",   "/user/hand/right/input/thumbstick/click", "AntiGrav",   XI_RTHUMB,    XR_NULL_HANDLE, false, false },
     { "impulse",    "Impulse",        "/user/hand/left/input/trigger/value",     "Impulse",    XI_RSHOULDER, XR_NULL_HANDLE, false, false },
-    { "ageyoung",   "Age / renovate", "/user/hand/left/input/x/click",           "AgeYoung",   XI_LSHOULDER, XR_NULL_HANDLE, false, false },
+    { "ageyoung",   "Age / renovate", "/user/hand/left/input/x/click",           "AgeYoung",   XI_LSHOULDER, XR_NULL_HANDLE, false, true },
     // Left Y is Triangle/menu.  Keep the legacy row for profile compatibility, but do not let it
     // become the old flashlight/panel action or leak D-pad input into the native pause menu.
     { "flashlight", "Flashlight",     "/user/hand/left/input/y/click",           "Flashlight", 0,          XR_NULL_HANDLE, false, false },
