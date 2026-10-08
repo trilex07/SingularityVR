@@ -8599,13 +8599,17 @@ void SyncXRInput(XrTime displayTime) {
 
     // ---- where the hands are ----
     LARGE_INTEGER tPose = Now();
+    // Action-state activity is diagnostic context, not a pose dependency. Sample it at 1 Hz so
+    // the left-controller fallback adds no per-frame action-query cost to the 90 Hz path.
+    static unsigned poseActivityProbe = 0;
+    const bool probePoseActivity = !pollOff && (++poseActivityProbe >= 60);
+    if (probePoseActivity) poseActivityProbe = 0;
     for (int i = 0; i < 2; ++i) {
         g_handPoseValid[i] = false;
         g_handPositionValid[i] = false;
         g_handTracked[i] = false;
-        g_handActionActive[i] = false;
         if (g_handSpace[i] == XR_NULL_HANDLE) continue;
-        if (!pollOff && g_actHandPose != XR_NULL_HANDLE) {
+        if (probePoseActivity && g_actHandPose != XR_NULL_HANDLE) {
             XrActionStateGetInfo pgi{ XR_TYPE_ACTION_STATE_GET_INFO };
             pgi.action = g_actHandPose;
             pgi.subactionPath = g_handSubPath[i];
