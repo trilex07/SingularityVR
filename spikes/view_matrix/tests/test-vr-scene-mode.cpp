@@ -1,0 +1,41 @@
+#include "../vr_scene_mode.h"
+#include <cassert>
+#include <cstdio>
+
+using vrscene::Controller;
+using vrscene::Mode;
+using vrscene::Signals;
+
+int main() {
+    Controller c;
+    Signals gameplay{};
+    assert(c.Current() == Mode::GameplayStereo);
+    assert(!c.Advance({true,false,false,false}).changed);
+    auto enter = c.Advance({true,false,false,false});
+    assert(enter.changed && enter.to == Mode::CutsceneFlat && c.Flat());
+    assert(!c.Advance({true,false,false,false}).changed);
+    assert(!c.Advance({false,false,false,false}).changed);
+    assert(!c.Advance({false,false,false,false}).changed);
+    assert(!c.Advance({false,false,false,false}).changed);
+    auto exit = c.Advance({false,false,false,false});
+    assert(exit.changed && exit.to == Mode::GameplayStereo && !c.Flat());
+
+    Controller noisy;
+    assert(!noisy.Advance({true,false,false,false}).changed);
+    assert(noisy.Advance({false,false,false,false}).to == Mode::GameplayStereo);
+    assert(!noisy.Advance({true,false,false,false}).changed);
+
+    Controller video;
+    auto v = video.Advance({false,true,false,false});
+    assert(v.changed && v.to == Mode::VideoFlat && video.Flat());
+    for (unsigned i=0; i<Controller::kExitFrames-1; ++i)
+        assert(!video.Advance(gameplay).changed);
+    assert(video.Advance(gameplay).to == Mode::GameplayStereo);
+
+    Controller menu;
+    auto m = menu.Advance({false,false,true,true});
+    assert(m.changed && m.to == Mode::MenuFlat && !menu.Flat());
+    auto g = menu.Advance(gameplay);
+    assert(g.changed && g.to == Mode::GameplayStereo);
+    std::puts("PASS: cinematic hysteresis, video mono, noisy signal, menu classification");
+}

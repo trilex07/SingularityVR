@@ -12,6 +12,8 @@
 #include "menu_capture_owner.h"
 #include "recenter_chord.h"
 #include "pose_conversion.h"
+#include "vr_scene_mode.h"
+
 // view_matrix - Singularity VR mod, spike 9
 //
 // GOES AFTER THE ONE BLOCKING PROBLEM: camera POSITION, which gates both stereo (a per-eye
@@ -96,6 +98,15 @@ static XrTime g_hotPredictedDisplayTime = 0;
 #pragma comment(lib, "d3d11.lib")
 
 namespace {
+
+// Scene-mode state is defined with the other runtime state below.  Keep the
+// declarations here so the Present/video probe code can sample it without
+// moving the older script-state block.
+extern vrscene::Controller g_sceneMode;
+extern volatile LONG g_sceneModeTrace;
+extern volatile LONG g_sceneVideoSeen;
+extern volatile LONG g_sceneModeFrame;
+static void UpdateSceneModeFrame();
 
 // ---------------------------------------------------------------- logging
 CRITICAL_SECTION g_lock;
@@ -10651,6 +10662,10 @@ template <typename DrawFn>
 HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
     ++g_drawsTotal;
     if (g_rtCurrent >= 0 && g_rtCurrent < 16) ++g_rtSeen[g_rtCurrent].draws;
+    // CutsceneFlat/VideoFlat deliberately execute the original draw once. The
+    // authored camera is therefore not independently remapped for two eyes;
+    // gameplay returns to StereoPair automatically after hysteresis clears.
+    if (g_sceneMode.Flat()) return draw();
     // Shadow-map generation stays intact. VrShadows=0 neutralises only the measured sampled
     // projection texture in Hook_SetTexture, after the light-space pass has completed.
     if (!InterlockedCompareExchange(&g_dupDraws, 0, 0)) return draw();
@@ -11845,6 +11860,8 @@ void VidProbeRecord(IDirect3DDevice9* dev, uint8_t src, D3DPRIMITIVETYPE t, UINT
 // Called once per frame from Present. Dumps only for frames that look like video or a splash -
 // almost no 3D geometry - so gameplay is never printed and the log stays readable.
 void VidProbeFrameEnd() {
+    // One scene-mode sample per presented frame, rather than per draw call.
+    UpdateSceneModeFrame();
     const int draws = g_vidFrameDraws;
     // Published for IsVideoQuad, which needs "was the last frame video-only" and cannot ask about
     // the current one from inside a draw. See the note there.
@@ -16023,8 +16040,14 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     if (quad) {
         // The one fullscreen quad that must NOT simply pass through. Gated on VR mode: flat, the
         // quad already covers the whole frame correctly and there is nothing to split.
-        if (InterlockedCompareExchange(&g_videoStereo, 0, 0) && VrModeOn() &&
-            IsVideoQuad(dev, primCount)) {
+        const bool videoQuad = VrModeOn() && IsVideoQuad(dev, primCount);
+        if (videoQuad) {
+            // The classifier is an explicit full-frame Bink observation. It
+            // is a scene-mode signal even when VideoStereo is disabled; the
+            // existing setting still controls the legacy per-eye rewrite.
+            InterlockedExchange(&g_sceneVideoSeen, 1);
+        }
+        if (InterlockedCompareExchange(&g_videoStereo, 0, 0) && videoQuad) {
             static bool said = false;
             if (!said) {
                 said = true;
@@ -17526,6 +17549,32 @@ volatile LONG g_cineCalls[3] = { 0, 0, 0 };
 // the state backwards.
 volatile LONG g_cineArgRaw = 0;
 volatile LONG g_inCinematic = 0;
+
+static void UpdateSceneModeFrame() {
+    const bool video = InterlockedExchange(&g_sceneVideoSeen, 0) != 0;
+    const vrscene::Signals signals{
+        InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0,
+        video,
+        InterlockedCompareExchange(&g_vrUiMenu, 0, 0) != 0,
+        InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
+    };
+    const vrscene::Transition t = g_sceneMode.Advance(signals);
+    if (t.changed && InterlockedCompareExchange(&g_sceneModeTrace, 0, 0)) {
+        Log("SceneMode: %s -> %s reason=%lu cinematic=%d video=%d menu=%d paused=%d frame=%ld",
+            vrscene::Name(t.from), vrscene::Name(t.to), (unsigned long)t.reason,
+            signals.cinematic ? 1 : 0, signals.video ? 1 : 0,
+            signals.menu ? 1 : 0, signals.paused ? 1 : 0,
+            InterlockedCompareExchange(&g_sceneModeFrame, 0, 0));
+    }
+    InterlockedIncrement(&g_sceneModeFrame);
+}
+// Scene presentation is a separate, conservative layer. Existing UE3
+// SetCinematicMode and Bink classifiers provide the signals; this controller
+// owns only the stereo/flat decision and never changes hand or weapon state.
+vrscene::Controller g_sceneMode;
+volatile LONG g_sceneModeTrace = 0;
+volatile LONG g_sceneVideoSeen = 0;
+volatile LONG g_sceneModeFrame = 0;
 
 static LONG FnIdx(int i) { return InterlockedCompareExchange(&g_scriptFns[i].idx, 0, 0); }
 
@@ -23407,6 +23456,7 @@ void LoadIniSettings() {
     // Run 198: the reload-arms fix. Default on - it is the reported artefact, and it cannot reach the
     // gun or the 390-vertex mesh because both are in the baseline set.
     g_renderEvidence = GetPrivateProfileIntA("Diagnostic", "RenderEvidence", 0, path) ? 1 : 0;
+    g_sceneModeTrace = GetPrivateProfileIntA("Diagnostic", "SceneModeTrace", 0, path) ? 1 : 0;
     g_armPaletteTraceFrames=GetPrivateProfileIntA("Diagnostic","ArmPaletteTraceFrames",0,path);
     if(g_armPaletteTraceFrames<0)g_armPaletteTraceFrames=0;
     if(g_armPaletteTraceFrames>64)g_armPaletteTraceFrames=64;
@@ -23425,7 +23475,8 @@ void LoadIniSettings() {
     Log("VR render: menu laser=%ld opacity=%ld%% width=%ld%%; shadows=%ld; translation stabilization=%ld",
         Rd(g_vrMenuLaser),laserOpacity,laserWidth,Rd(g_vrShadows),Rd(g_vrTranslationStabilization));
     g_wristHealth = GetPrivateProfileIntA("Render", "WristHealth", 1, path) ? 1 : 0;
-    Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld",Rd(g_wristHealth),Rd(g_renderEvidence));
+    Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld, scene trace=%ld",
+        Rd(g_wristHealth),Rd(g_renderEvidence),Rd(g_sceneModeTrace));
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
     g_showControllerArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 1, path) ? 1 : 0;
     g_independentHands = GetPrivateProfileIntA("Render", "IndependentHandsPrototype", 0, path) ? 1 : 0;
