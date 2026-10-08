@@ -16744,6 +16744,10 @@ volatile LONG g_shadowMapCandidates=0;
 volatile LONG g_shadowStageMask = 0;
 volatile LONG g_shadowSampleMono = 0;
 int g_drawsWhileShadowBound = 0, g_drawsShadowMono = 0;
+// Fix-4/menus round 2: sticky per-window mask of suppression-miss reasons, set only for
+// menu-source draws (see SuppressCapturedVrMenuDraw). Render thread only, like the
+// draw counters beside it.
+int g_menuSuppressFailMask = 0;
 static bool ProjectedShadowTexture(IDirect3DBaseTexture9* texture) {
     if(!texture||texture->GetType()!=D3DRTYPE_TEXTURE)return false;
     const unsigned slot=((uintptr_t)texture>>4)&255u;
@@ -16789,8 +16793,20 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
 inline bool SuppressCapturedVrMenuDraw() {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::menu_classification);
     SyncVrMenuCaptureState();
-    if (!g_vrCaptureOwner.CanProvide(VrMenuStateToken()) || !VrModeOn() || g_boundShaderLayout.shadow || !Rd(g_vrMenuSourceBound) || Rd(g_vrMenuProviderDrawing) || !Rd(g_vrUiMenu) || !Rd(g_rtIsScene))
-        return false;
+    // Not a menu draw at all - the normal case for scene geometry. Source check first,
+    // so the fail mask below only ever describes menu-source draws.
+    if (!Rd(g_vrUiMenu) || !Rd(g_vrMenuSourceBound)) return false;
+    // Fix-4/menus round 2: suppressed=0 while the provider serves frames means the scene
+    // keeps its own copy (nested views). Record WHY as a sticky per-window bitmask:
+    // 1=noprovide 2=flat 4=shadow 8=providing-now 16=offscreen. Same allow/deny outcome
+    // as the old single condition, only the reason is now visible.
+    int fail = 0;
+    if (!g_vrCaptureOwner.CanProvide(VrMenuStateToken())) fail |= 1;
+    if (!VrModeOn()) fail |= 2;
+    if (g_boundShaderLayout.shadow) fail |= 4;
+    if (Rd(g_vrMenuProviderDrawing)) fail |= 8;
+    if (!Rd(g_rtIsScene)) fail |= 16;
+    if (fail) { g_menuSuppressFailMask |= fail; return false; }
     InterlockedIncrement(&g_vrMenuSuppressed);
     if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuSuppressed);
     if(Rd(g_vrMenuClass)==2)InterlockedIncrement(&g_vrCounters.mainMenuSuppressed);
@@ -22023,6 +22039,10 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     " (ShadowSampleMono=%ld)", g_drawsWhileShadowBound, g_drawsShadowMono,
                     Rd(g_shadowSampleMono));
             g_drawsWhileShadowBound = 0; g_drawsShadowMono = 0;
+            // Fix-4/menus round 2: which clause kept menu-source draws unsuppressed.
+            if (g_menuSuppressFailMask)
+                Log("    menu-suppress miss mask=0x%X (1=noprovide 2=flat 4=shadow 8=providing-now 16=offscreen)", g_menuSuppressFailMask);
+            g_menuSuppressFailMask = 0;
             {
                 char regs[128] = {}; int n = 0;
                 for (int s = 0; s < g_camMatUsed && n < 100; ++s)
