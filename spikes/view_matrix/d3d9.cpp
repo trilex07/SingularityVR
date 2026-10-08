@@ -5,6 +5,7 @@
 #include "arm_bind.h"
 #include "arm_natural.h"
 #include "support_grip.h"
+#include "weapon_holster.h"
 #include "grip_latch.h"
 #include "fp_shadow.h"
 #include "camera_stabilization.h"
@@ -1992,6 +1993,15 @@ volatile LONG g_weaponObj     = 0;
 volatile LONG g_weaponSwapped = 0;
 volatile LONG g_weaponSwapDrop = 1;   // ini [Input] WeaponSwapDrop - 0 falls back to the 240-frame wait
 
+// Motion-controller holster state. The hand remains free after STORE; the gun mesh,
+// muzzle origin and laser all use the fixed hip pivot until a new grip rising edge
+// is made inside the hip radius.
+volatile LONG g_weaponHolstered = 0;
+volatile LONG g_holsterYawUU = 0, g_holsterPitchUU = 0, g_holsterRollUU = 0;
+int g_holsterEnabled = 1;
+weaponholster::Config g_holsterConfig{};
+weaponholster::State g_holsterState{};
+
 inline ArmedState PlayerArmed() { return (ArmedState)Rd(g_armedState); }
 
 // The expensive half. Present only - never a draw hook.
@@ -2090,8 +2100,12 @@ static void RefreshArmedState() {
                 // the gun while the TMD is up: the weapon is HIDDEN, not swapped. That is exactly the
                 // false positive a draw-derived signal would have produced.
                 const LONG wl = (LONG)w;
-                if (w && wl != Rd(g_weaponObj) && Rd(g_weaponObj) != 0)
+                if (w && wl != Rd(g_weaponObj) && Rd(g_weaponObj) != 0) {
                     InterlockedExchange(&g_weaponSwapped, 1);
+                    // A holster belongs to one equipped weapon. The next XR
+                    // sample will also reset the pure state object by identity.
+                    InterlockedExchange(&g_weaponHolstered, 0);
+                }
                 if (wl != Rd(g_weaponObj)) InterlockedExchange(&g_weaponObj, wl);
             }
         }
@@ -5417,6 +5431,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev);
 void DrawVrMenuPointer(IDirect3DDevice9* dev);
 void ReleaseVrMenuResources();
 void ReleaseFpCasterCache();
+static void HolsterHipWorld(float H[3], bool includeHmdOffset = true);
 bool     g_handPoseValid[2] = { false, false };
 bool g_handPositionValid[2] = { false, false };
 bool g_handActionActive[2] = { false, false };
@@ -8803,7 +8818,8 @@ void SyncXRInput(XrTime displayTime) {
     const float supportForward[3]={-sinf(supportYaw)*cosf(supportPitch),sinf(supportPitch),-cosf(supportYaw)*cosf(supportPitch)};
     const bool supportTracked=g_handPositionValid[AimHand()] && g_handPositionValid[OffHand()] &&
                               g_handPoseValid[AimHand()] && g_handPoseValid[OffHand()];
-    const bool supportWeaponValid=Rd(g_twoHandEnabled) && feedGame && WeaponInHands() && !Rd(g_gamePaused) && !Rd(g_vrUiMenu);
+    const bool supportWeaponValid=Rd(g_twoHandEnabled) && feedGame && WeaponInHands() &&
+                                  !Rd(g_weaponHolstered) && !Rd(g_gamePaused) && !Rd(g_vrUiMenu);
     // Pistol support is a close side-by-side grip, not a fore-end grip. The authored
     // pistol pair (5799 vertices) is keyed in support_grip.h; use the relaxed acquisition
     // gate only for that known mesh and keep long-gun alignment unchanged.
@@ -8819,6 +8835,47 @@ void SyncXRInput(XrTime displayTime) {
     if(previousSupport!=(supportActive?1:0)) {
         InterlockedIncrement(supportActive?&g_vrCounters.gripLatchCount:&g_vrCounters.gripDetachCount);
         Log("two-hand grip: %s",supportActive?"ACQUIRED":"RELEASED");
+    }
+
+    // ---- motion-controller weapon holster ---------------------------------
+    // The primary grip is sampled separately from the support-grip latch. A
+    // rising edge at the body-relative hip toggles the equipped weapon; the
+    // trigger is suppressed while stored, so a hand reaching for the holster
+    // cannot fire through the menu/gameplay input path.
+    const bool primaryGrip = getGrip(AimHand());
+    static bool priorPrimaryGrip = false;
+    const bool primaryGripRising = primaryGrip && !priorPrimaryGrip;
+    priorPrimaryGrip = primaryGrip;
+    const LONG holsterWeapon = Rd(g_gunVerts);
+    const LONG holsterIdentity = Rd(g_weaponObj);
+    const bool holsterValid = g_holsterEnabled && feedGame && WeaponInHands() &&
+                              g_handPositionValid[AimHand()] && g_handPoseValid[AimHand()] &&
+                              holsterWeapon != 0 && holsterIdentity != 0;
+    float holsterHip[3]{};
+    HolsterHipWorld(holsterHip, false); // handOff is relative to the current head
+    const float handX = (float)Rd(g_handOffX) / kHandFixed;
+    const float handY = (float)Rd(g_handOffY) / kHandFixed;
+    const float handZ = (float)(g_gunSignPosZ * Rd(g_handOffZ)) / kHandFixed;
+    const weaponholster::Event holsterEvent = weaponholster::Update(
+        g_holsterState, primaryGripRising && !uiMenu && !Rd(g_gamePaused), holsterValid, feedGame,
+        (uint32_t)holsterIdentity, {handX, handY, handZ},
+        {holsterHip[0], holsterHip[1], holsterHip[2]}, g_holsterConfig);
+    if (holsterEvent == weaponholster::Event::Stored ||
+        holsterEvent == weaponholster::Event::Drawn) {
+        InterlockedExchange(&g_weaponHolstered, g_holsterState.active ? 1 : 0);
+        InterlockedExchange(&g_holsterYawUU, Rd(g_handDevYawUU));
+        InterlockedExchange(&g_holsterPitchUU, Rd(g_handDevPitchUU));
+        InterlockedExchange(&g_holsterRollUU, Rd(g_handDevRollUU));
+        Log("weapon holster: %s weapon=%ld hand=(%.1f,%.1f,%.1f) hip=(%.1f,%.1f,%.1f) radius=%.1f",
+            holsterEvent == weaponholster::Event::Stored ? "STORED" : "DRAWN",
+            holsterIdentity, handX, handY, handZ,
+            holsterHip[0], holsterHip[1], holsterHip[2], g_holsterConfig.radius);
+    } else if (holsterEvent == weaponholster::Event::Reset) {
+        InterlockedExchange(&g_weaponHolstered, 0);
+        InterlockedExchange(&g_holsterYawUU, 0);
+        InterlockedExchange(&g_holsterPitchUU, 0);
+        InterlockedExchange(&g_holsterRollUU, 0);
+        Log("weapon holster: RESET (tracking/gameplay/weapon gate)");
     }
     const bool triangleHeld = getBool(g_actTriangle);
     const bool l3Held = getBool(g_actL3);
@@ -9265,6 +9322,7 @@ void SyncXRInput(XrTime displayTime) {
     // into a byte that flickers between 0 and 1, and that is a state change every frame.
     if (lt < 0.10f) lt = 0.0f;
     if (rt < 0.10f) rt = 0.0f;
+    if (Rd(g_weaponHolstered) && !uiMenu) rt = 0.0f;
     UpdateVrUiPointer(fireHand==1?rt:lt,true);
     const auto primaryGate=g_vrUiTrigger[fireHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,rt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
     const auto alternateGate=g_vrUiTrigger[altHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,lt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
@@ -13453,6 +13511,22 @@ static void BuildGunTransform(float C[4][4], const float p[3],
 //
 // So the offset is now rotated by the view's full orientation - yaw AND pitch - which is also the
 // more intuitive thing to tune against: "forward from where I am looking".
+//
+// The holster is different: it belongs to the player's body, not the view. Keep
+// its forward/right axes on the same body-yaw frame used by TrackingDeltaToWorldUU
+// for controller positions. This lets the hand and hip distance remain stable while
+// the player looks around, then add the existing 6-DOF head offset when rendering.
+static void HolsterHipWorld(float H[3], bool includeHmdOffset) {
+    const float y = g_baseYaw * (6.2831853f / 65536.0f);
+    const weaponholster::V3 hip = weaponholster::HipPoint(g_holsterConfig, y);
+    H[0] = hip.x; H[1] = hip.y; H[2] = hip.z;
+    if (includeHmdOffset && g_gunHeadOffset) {
+        H[0] += g_hmdOffset[0];
+        H[1] += g_hmdOffset[1];
+        H[2] += g_hmdOffset[2];
+    }
+}
+
 static void GunAnchorWorld(float G[3]) {
     const float kUUToRad = 6.2831853f / 65536.0f;
     const float y = g_wantYaw   * kUUToRad;
@@ -13507,6 +13581,12 @@ volatile LONG g_adsPullbackUU = 10;   // ini [Input] AdsPullbackUU
 // this file has a run-192 note about exactly that class of duplication.
 static void GunPivotWorld(float H[3]) {
     float G[3]; GunAnchorWorld(G);
+    if (Rd(g_weaponHolstered)) {
+        // A stored weapon is body-locked at the hip. Do not run controller
+        // follow, ADS pullback or HMD-relative hand translation on this path.
+        HolsterHipWorld(H);
+        return;
+    }
     H[0] = G[0]; H[1] = G[1]; H[2] = G[2];      // no position following -> translation cancels
     if (g_gunFollowPos) {
         // Milli-UU back to UU. This is the read side of the run-190 stepping fix.
@@ -13654,10 +13734,13 @@ static void BuildGunC(float C[4][4]) {
     const GunAlignSlot* al = GunAlignFind(InterlockedCompareExchange(&g_gunVerts, 0, 0));
     const int32_t trimYaw   = al ? (int32_t)(al->yawTenths   * 18.2044f) : 0;
     const int32_t trimPitch = al ? (int32_t)(al->pitchTenths * 18.2044f) : 0;
+    const LONG poseYaw = Rd(g_weaponHolstered) ? Rd(g_holsterYawUU) : Rd(g_handDevYawUU);
+    const LONG posePitch = Rd(g_weaponHolstered) ? Rd(g_holsterPitchUU) : Rd(g_handDevPitchUU);
+    const LONG poseRoll = Rd(g_weaponHolstered) ? Rd(g_holsterRollUU) : Rd(g_handDevRollUU);
     BuildGunTransform(C, G,
-        (int32_t)(sy * InterlockedCompareExchange(&g_handDevYawUU, 0, 0)) + trimYaw,
-        (int32_t)(sp * InterlockedCompareExchange(&g_handDevPitchUU, 0, 0)) + trimPitch,
-        (int32_t)(sr * InterlockedCompareExchange(&g_handDevRollUU, 0, 0)),
+        (int32_t)(sy * poseYaw) + trimYaw,
+        (int32_t)(sp * posePitch) + trimPitch,
+        (int32_t)(sr * poseRoll),
         // The gun faces along the view, so the view yaw is the frame its pitch and roll belong in -
         // unless the cycle has it switched off, which is what makes run 125 testable rather than
         // assumed.
@@ -17989,6 +18072,11 @@ static void ResetVrAfterCameraLoss(const char* reason) {
     InterlockedExchange(&g_offHandValid, 0);
     InterlockedExchange(&g_handDevValid, 0);
     InterlockedExchange(&g_twoHandActive, 0);
+    InterlockedExchange(&g_weaponHolstered, 0);
+    InterlockedExchange(&g_holsterYawUU, 0);
+    InterlockedExchange(&g_holsterPitchUU, 0);
+    InterlockedExchange(&g_holsterRollUU, 0);
+    g_holsterState = {};
     g_supportLatch.Reset();
     InterlockedExchange(&g_vrUiValid, 0);
     InterlockedExchange(&g_vrUiDown, 0);
@@ -25096,6 +25184,16 @@ void LoadIniSettings() {
         Rd(g_sceneFlatEnabled) ? "FLAT CINEMA" : "ALWAYS VR",
         Rd(g_sceneCinemaMask) ? "ON" : "OFF");
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
+    g_holsterEnabled = GetPrivateProfileIntA("Input", "HolsterEnabled", 1, path) ? 1 : 0;
+    g_holsterConfig.fwd = (float)GetPrivateProfileIntA("Input", "HolsterFwd", 4, path);
+    g_holsterConfig.right = (float)GetPrivateProfileIntA("Input", "HolsterRight", 18, path);
+    g_holsterConfig.up = (float)GetPrivateProfileIntA("Input", "HolsterUp", -24, path);
+    g_holsterConfig.radius = (float)GetPrivateProfileIntA("Input", "HolsterRadius", 12, path);
+    if (g_holsterConfig.radius < 2.0f) g_holsterConfig.radius = 2.0f;
+    if (g_holsterConfig.radius > 48.0f) g_holsterConfig.radius = 48.0f;
+    Log("weapon holster=%d; hip fwd/right/up=(%.0f,%.0f,%.0f) UU radius=%.0f UU; right grip rising edge toggles",
+        g_holsterEnabled, g_holsterConfig.fwd, g_holsterConfig.right,
+        g_holsterConfig.up, g_holsterConfig.radius);
     g_showControllerArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 1, path) ? 1 : 0;
     g_armIkMode = GetPrivateProfileIntA("Render", "ArmIKMode", 0, path);
     if (g_armIkMode < 0 || g_armIkMode > 2) g_armIkMode = 0;
