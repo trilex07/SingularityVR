@@ -99,6 +99,38 @@ static void DrawVrMenuLaser(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d) {
         g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(LaserVtx));
     }
 }
+static uipointer::V PauseVrSettingsWorld(float u, float v) {
+    const float x = (u - .5f) * 2.0f * g_vrMenuPanel.plane.halfWidth * g_vrMenuPanel.plane.inset;
+    const float y = (.5f - v) * 2.0f * g_vrMenuPanel.plane.halfHeight * g_vrMenuPanel.plane.inset;
+    return g_vrMenuPanel.plane.centre + g_vrMenuPanel.plane.right * x + g_vrMenuPanel.plane.up * y;
+}
+static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d) {
+    if (!dev || Rd(g_vrMenuClass) != 3 || !g_vrMenuPanelValid || !g_origDrawPrimUP) return;
+    const bool hovered = Rd(g_vrUiValid) && pausevrsettings::Hit(
+        Rd(g_vrUiU) / 1000000.0f, Rd(g_vrUiV) / 1000000.0f);
+    const float halfW = d.Width * .5f;
+    const int px = std::max(2, (int)d.Height / 420);
+    const int textW = 10 * (kGlyphW + 1) * px;
+    const int textH = kGlyphH * px;
+    D3DRECT text[128];
+    for (int eye = 0; eye < 2; ++eye) {
+        uipointer::ScreenPoint a,b,c;
+        if (!VrUiProjectEye(eye, PauseVrSettingsWorld(pausevrsettings::kU0, pausevrsettings::kV0), a) ||
+            !VrUiProjectEye(eye, PauseVrSettingsWorld(pausevrsettings::kU1, pausevrsettings::kV1), b) ||
+            !VrUiProjectEye(eye, PauseVrSettingsWorld(.5f, .905f), c)) continue;
+        const int x0 = (int)lroundf((eye + std::min(a.u,b.u)) * halfW);
+        const int x1 = (int)lroundf((eye + std::max(a.u,b.u)) * halfW);
+        const int y0 = (int)lroundf(std::min(a.v,b.v) * d.Height);
+        const int y1 = (int)lroundf(std::max(a.v,b.v) * d.Height);
+        const D3DRECT box = { x0, y0, x1, y1 };
+        ClearRects(dev, &box, 1, hovered ? 0xD0507040 : 0xB0081218);
+        const int cx = (int)lroundf((eye + c.u) * halfW);
+        const int cy = (int)lroundf(c.v * d.Height);
+        const int n = TextRects(text, 0, (int)(sizeof(text) / sizeof(text[0])),
+                                cx - textW / 2, cy - textH / 2, px, "VR SETTINGS");
+        ClearRects(dev, text, n, hovered ? 0xFFFFFFFF : 0xFF50FF90);
+    }
+}
 void UpdateVrUiPointer(float,bool available) {
     const bool menu=Rd(g_vrUiEnabled)&&Rd(g_vrUiNativeReady)&&Rd(g_vrUiMenu);
     if(menu&&Rd(g_vrUiDesktopProbe))return; // Explicit debugger-controlled test coordinates; never staged for headset use.
@@ -257,6 +289,10 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
             InterlockedExchange(&g_vrMenuProviderDrawing,0);
         }
     }
+
+    // The synthetic row stays visible even when the controller ray is currently
+    // outside the menu plane; only hover/click feedback depends on a valid hit.
+    if (menu) DrawPauseVrSettingsRow(dev, d);
 
     // ---- LASER + HIT MARKER ----
     if (menu && Rd(g_vrUiValid)) {

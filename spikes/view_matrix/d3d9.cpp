@@ -5463,6 +5463,7 @@ static void ReportHotPathSampler() {
     append("present-hook residual estimate=%.4f ms/frame (inclusive stage estimates subtracted)", present-known);
     Log("hotpath sampler complete: %s", report);
 }
+#include "pause_vr_settings.h"
 #include "native_ui_input.h"
 uipointer::TriggerGate g_vrUiTrigger[2];
 griplatch::GripLatch g_supportLatch;
@@ -6207,6 +6208,25 @@ struct PadButtonAction {
 volatile LONG g_panelOpen = 0;
 int  g_panelRow = 0;
 bool g_panelDirty = false;      // has anything changed since it was opened?
+extern int g_panelPage;
+
+// The settings screen is now reached from the final synthetic row in the native
+// pause menu.  Keep the old panel implementation and persistence intact, but do
+// not expose a second in-world button/hold gesture during gameplay.
+bool PauseVrSettingsHitNormalized(LONG u, LONG v) {
+    if (InterlockedCompareExchange(&g_vrMenuClass, 0, 0) != 3) return false;
+    return pausevrsettings::Hit((float)u / 1000000.0f, (float)v / 1000000.0f);
+}
+void OpenVrSettingsFromPause() {
+    if (InterlockedCompareExchange(&g_vrMenuClass, 0, 0) != 3) return;
+    if (!InterlockedCompareExchange(&g_panelOpen, 0, 0)) {
+        g_panelPage = 0;
+        g_panelRow = 0;
+        g_panelDirty = false;
+        InterlockedExchange(&g_panelOpen, 1);
+        Log("VR settings: opened from pause-menu row");
+    }
+}
 
 // Scene presentation controls are owned by the cutscene-flat workstream.  The
 // panel only exposes these atomics; rendering reads the same values at frame
@@ -7653,7 +7673,7 @@ PadButtonAction g_padButtons[] = {
     { "use",        "Use / reload",   "/user/hand/right/input/squeeze/value",    "Use",        XI_X,         XR_NULL_HANDLE, false, false },
     { "antigrav",   "Anti-gravity",   "/user/hand/right/input/thumbstick/click", "AntiGrav",   XI_RTHUMB,    XR_NULL_HANDLE, false, false },
     { "impulse",    "Impulse",        "/user/hand/left/input/trigger/value",     "Impulse",    XI_RSHOULDER, XR_NULL_HANDLE, false, false },
-    { "ageyoung",   "Age / renovate", "/user/hand/left/input/x/click",           "AgeYoung",   XI_LSHOULDER, XR_NULL_HANDLE, false, true },
+    { "ageyoung",   "Age / renovate", "/user/hand/left/input/x/click",           "AgeYoung",   XI_LSHOULDER, XR_NULL_HANDLE, false, false },
     // Left Y is Triangle/menu.  Keep the legacy row for profile compatibility, but do not let it
     // become the old flashlight/panel action or leak D-pad input into the native pause menu.
     { "flashlight", "Flashlight",     "/user/hand/left/input/y/click",           "Flashlight", 0,          XR_NULL_HANDLE, false, false },
@@ -9210,6 +9230,18 @@ void SyncXRInput(XrTime displayTime) {
     // main menu and the player all see a controller that is not being touched.
     if (InterlockedCompareExchange(&g_panelOpen, 0, 0)) {
         static bool armedY = true, armedX = true;
+        static bool panelBackWasHeld = false;
+        const bool panelBackHeld = getBool(g_actUiBack);
+        if (panelBackHeld && !panelBackWasHeld) {
+            if (g_panelDirty) PanelSave();
+            g_panelDirty = false;
+            InterlockedExchange(&g_panelOpen, 0);
+            Log("VR settings: closed with O/back");
+            panelBackWasHeld = panelBackHeld;
+            ClearPad();
+            return;
+        }
+        panelBackWasHeld = panelBackHeld;
         if (fabsf(panelY) > 0.6f && armedY) {
             g_panelRow += (panelY > 0) ? -1 : 1;    // stick up moves UP the list
             if (g_panelRow < 0) g_panelRow = PanelRowCount() - 1;

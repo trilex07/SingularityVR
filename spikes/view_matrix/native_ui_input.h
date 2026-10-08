@@ -1,6 +1,8 @@
 #pragma once
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
+bool PauseVrSettingsHitNormalized(LONG u, LONG v);
+void OpenVrSettingsFromPause();
 void* PatchVTable(void* obj,int index,void* repl);
 namespace NativeVrUi {
 struct Name { unsigned index, number; };
@@ -120,10 +122,22 @@ static void Drain(float dt) {
   lastX=x;lastY=y;
  }else lastX=lastY=-1;
  const bool down=valid&&InterlockedCompareExchange(&g_vrUiDown,0,0)!=0;
+ const bool pauseSettingsRow=valid && PauseVrSettingsHitNormalized(
+     InterlockedCompareExchange(&g_vrUiU,0,0), InterlockedCompareExchange(&g_vrUiV,0,0));
  if(down!=held) {
-  ((KeyFn)vt[4])((void*)client,viewport,0,left,down?0:1,1.f,0);
-  static unsigned logged=0;if(logged++<16)Log("VR UI native click: %s viewport=(%d,%d) normalized=(%ld,%ld)",down?"down":"up",lastX,lastY,InterlockedCompareExchange(&g_vrUiU,0,0),InterlockedCompareExchange(&g_vrUiV,0,0));
-  held=down;
+  if (pauseSettingsRow) {
+   // This row is supplied by the mod, so it has no native GFx widget to receive
+   // the click. Consume the edge before the original movie sees it and open the
+   // existing settings panel on the game's input thread.
+   if (down) {
+    OpenVrSettingsFromPause();
+    held=false; // no synthetic mouse-up should leak after the panel takes ownership
+   }
+  } else {
+   ((KeyFn)vt[4])((void*)client,viewport,0,left,down?0:1,1.f,0);
+   static unsigned logged=0;if(logged++<16)Log("VR UI native click: %s viewport=(%d,%d) normalized=(%ld,%ld)",down?"down":"up",lastX,lastY,InterlockedCompareExchange(&g_vrUiU,0,0),InterlockedCompareExchange(&g_vrUiV,0,0));
+   held=down;
+  }
  }
  InterlockedIncrement(&ticks);
 }
