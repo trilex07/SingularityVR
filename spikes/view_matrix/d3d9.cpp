@@ -1001,6 +1001,7 @@ extern volatile LONG64 g_meleeUntilMs, g_meleeFromMs;
 extern volatile LONG   g_armsAnimActiveCached;
 extern volatile LONG64 g_lastMeleeEdgeMs, g_lastJumpEdgeMs;   // fix-G/perf (defined with melee state)
 extern volatile LONG g_forceDesktopAutomation;                // defined with desktop-HMD diagnostics
+volatile LONG g_desktopAutomationFrame = 0;                   // shared deterministic input-script clock
 
 // The NUMPAD4/NUMPAD5 test inputs, laid OVER whatever the controllers just published.
 //
@@ -1013,9 +1014,8 @@ void ApplyPadTestOverrides() {
     // Diagnostic-only desktop-HMD gameplay sequence, published through the existing XInput seam.
     // Hold A for the boot/menu, walk forward, then hold the right trigger for FireAmmunition/VFX.
     if (InterlockedCompareExchange(&g_forceDesktopAutomation, 0, 0)) {
-        static LONG autoFrame = 0;
         static LONG autoPhase = -1;
-        const LONG f = InterlockedIncrement(&autoFrame);
+        const LONG f = InterlockedIncrement(&g_desktopAutomationFrame);
         InterlockedExchange(&g_padEmu, 1);
         LONG packed = 0;
         LONG stick = 0;
@@ -2045,6 +2045,7 @@ volatile LONG g_weaponWheelOpen = 0;
 volatile LONG g_weaponWheelSelection = 0;
 volatile LONG g_weaponWheelCommit = 0;
 volatile LONG g_weaponWheelPulseGap = 0;
+weaponwheel::State g_weaponWheelState{};
 LONG g_weaponWheelSlots = 4;
 
 inline ArmedState PlayerArmed() { return (ArmedState)Rd(g_armedState); }
@@ -8649,6 +8650,35 @@ void SyncXRInput(XrTime displayTime) {
         mx = tx; my = ty;
         tx = sx; ty = sy;
     }
+
+    // DesktopAutomation is also the deterministic no-headset input harness.  Keep the
+    // controller action override here, after the optional stick swap, so the synthetic
+    // right-stick direction always means the same wheel sector as a real right Sense stick.
+    // The sequence deliberately exercises the complete R3 edge contract:
+    // hold R3 (wheel opens), move the stick (selection changes), release R3 (commit).
+    bool desktopAutomationR3 = false;
+    float desktopAutomationTx = 0.0f, desktopAutomationTy = 0.0f;
+    if (InterlockedCompareExchange(&g_forceDesktopAutomation, 0, 0)) {
+        const LONG f = InterlockedCompareExchange(&g_desktopAutomationFrame, 0, 0);
+        if (f >= 2960 && f < 3020) {
+            desktopAutomationR3 = true;
+            desktopAutomationTy = -1.0f; // sector 0: up/current weapon
+        } else if (f >= 3020 && f < 3080) {
+            desktopAutomationR3 = true;
+            desktopAutomationTx = 1.0f;  // sector 1: right/next weapon
+        }
+        if (desktopAutomationR3) {
+            tx = desktopAutomationTx;
+            ty = desktopAutomationTy;
+        }
+        static bool previousAutomationR3 = false;
+        if (desktopAutomationR3 != previousAutomationR3) {
+            previousAutomationR3 = desktopAutomationR3;
+            Log("desktop automation: R3 %s (right-stick %.1f,%.1f)",
+                desktopAutomationR3 ? "DOWN / wheel hold" : "UP / wheel release",
+                tx, ty);
+        }
+    }
     // run 180: census on the turn stick, so a reported phantom snap has numbers behind it. Recorded
     // AFTER the swap, so it always describes the stick that actually drives turning.
     {
@@ -8927,7 +8957,9 @@ void SyncXRInput(XrTime displayTime) {
     }
     const bool triangleHeld = getBool(g_actTriangle);
     const bool l3Held = getBool(g_actL3);
-    const bool r3Held = getBool(g_actR3);
+    bool r3Held = getBool(g_actR3);
+    if (InterlockedCompareExchange(&g_forceDesktopAutomation, 0, 0))
+        r3Held = desktopAutomationR3;
     if (g_recenterChord.Update(l3Held, r3Held)) {
         InterlockedExchange(&g_recenterRequested, 1);
         // Fix-H/capture: same chord doubles as the screenshot trigger (user asked).
@@ -8935,37 +8967,29 @@ void SyncXRInput(XrTime displayTime) {
         InterlockedExchange(&g_captureRequested, 1);
     }
     // R3 owns the weapon wheel in gameplay. L3+R3 remains the explicit
-    // recenter/screenshot chord, so opening is vetoed while L3 is held.
-    static bool priorR3 = false;
-    const bool r3Pressed = r3Held && !priorR3;
-    const bool r3Released = !r3Held && priorR3;
-    priorR3 = r3Held;
-    if (l3Held && Rd(g_weaponWheelOpen)) {
-        InterlockedExchange(&g_weaponWheelOpen, 0);
-        InterlockedExchange(&g_weaponWheelCommit, 0);
-    }
-    if (!uiMenu && feedGame && WeaponInHands() && !Rd(g_weaponHolstered) &&
-        r3Pressed && !l3Held) {
+    // recenter/screenshot chord, so opening is vetoed while L3 is held.  The
+    // same edge state is also used by the deterministic desktop simulator.
+    const weaponwheel::Event wheelEvent = weaponwheel::Update(
+        g_weaponWheelState, r3Held, l3Held, !uiMenu && feedGame && !Rd(g_gamePaused),
+        WeaponInHands(), Rd(g_weaponHolstered), tx, ty, (int)g_weaponWheelSlots);
+    if (wheelEvent == weaponwheel::Event::Open) {
         InterlockedExchange(&g_weaponWheelOpen, 1);
         InterlockedExchange(&g_weaponWheelSelection, 0);
         InterlockedExchange(&g_weaponWheelCommit, 0);
         InterlockedExchange(&g_weaponWheelPulseGap, 0);
         Log("weapon wheel: OPEN slots=%ld (R3 held; right stick selects, release commits)",
             g_weaponWheelSlots);
-    }
-    if (Rd(g_weaponWheelOpen)) {
-        if (!r3Held || uiMenu || !feedGame || !WeaponInHands() || Rd(g_weaponHolstered)) {
-            const LONG selection = InterlockedCompareExchange(&g_weaponWheelSelection, 0, 0);
-            InterlockedExchange(&g_weaponWheelOpen, 0);
-            if (r3Released && selection > 0 && !uiMenu && feedGame) {
-                InterlockedExchange(&g_weaponWheelCommit, selection);
-                InterlockedExchange(&g_weaponWheelPulseGap, 0);
-                Log("weapon wheel: COMMIT offset=%ld (native cycle pulses)", selection);
-            }
-        } else {
-            const int sector = weaponwheel::SectorForStick(tx, ty, (int)g_weaponWheelSlots);
-            if (sector >= 0) InterlockedExchange(&g_weaponWheelSelection, sector);
-        }
+    } else if (wheelEvent == weaponwheel::Event::SelectionChanged) {
+        InterlockedExchange(&g_weaponWheelSelection, g_weaponWheelState.selection);
+    } else if (wheelEvent == weaponwheel::Event::Commit) {
+        InterlockedExchange(&g_weaponWheelOpen, 0);
+        InterlockedExchange(&g_weaponWheelCommit, g_weaponWheelState.selection);
+        InterlockedExchange(&g_weaponWheelPulseGap, 0);
+        Log("weapon wheel: COMMIT offset=%ld (native cycle pulses)",
+            g_weaponWheelState.selection);
+    } else if (wheelEvent == weaponwheel::Event::Cancel) {
+        InterlockedExchange(&g_weaponWheelOpen, 0);
+        InterlockedExchange(&g_weaponWheelCommit, 0);
     }
     static bool triangleWasHeld = false;
     const bool trianglePressed = triangleHeld && !triangleWasHeld;
@@ -8976,7 +9000,9 @@ void SyncXRInput(XrTime displayTime) {
     for (int i = 0; i < kPadButtonCount; ++i) {
         const bool down = getBool(g_padButtons[i].action);
         if (i == 6) continue; // Triangle is handled above as a single START rising edge.
-        if (i == 3 && (Rd(g_weaponWheelOpen) || r3Held || r3Released)) continue; // R3 -> wheel
+        if (i == 3 && (Rd(g_weaponWheelOpen) || r3Held ||
+                       wheelEvent == weaponwheel::Event::Commit ||
+                       wheelEvent == weaponwheel::Event::Cancel)) continue; // R3 -> wheel
         if (down) ++g_btnHeldFrames[i];
         if (g_padButtons[i].isMenu)  { menuHeld  = down; menuMask  = g_padButtons[i].mask; continue; }
         if (g_padButtons[i].isPanel) { panelHeld = down; panelMask = g_padButtons[i].mask; continue; }
@@ -18181,6 +18207,7 @@ static void ResetVrAfterCameraLoss(const char* reason) {
     InterlockedExchange(&g_weaponWheelOpen, 0);
     InterlockedExchange(&g_weaponWheelCommit, 0);
     InterlockedExchange(&g_weaponWheelPulseGap, 0);
+    g_weaponWheelState = {};
     g_supportLatch.Reset();
     InterlockedExchange(&g_vrUiValid, 0);
     InterlockedExchange(&g_vrUiDown, 0);

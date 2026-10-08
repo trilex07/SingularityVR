@@ -42,3 +42,10 @@ path incorrectly printed a wrapped unsigned value for `HolsterUp=-24`.
 The smoke run validates startup and frame pacing only.  It does not claim an
 R3 open/selection event because no physical Sense controller was present and
 `DesktopAutomation=0`; the first headset test remains the interaction proof.
+
+The runtime now shares an edge-driven `weaponwheel::State` with the desktop
+input harness.  With `DesktopAutomation=1`, the harness sends R3 down, holds
+it while driving the right stick up and right, then sends R3 up; the automated
+test asserts one `Open`, one selection change, one `Commit`, and an L3 cancel
+without a leaked click.  The Steam INI is restored to `DesktopAutomation=0`
+after each run.
