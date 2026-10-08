@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // =============================================================================
 // Blood impact geometry (HOST side).
@@ -58,3 +58,4 @@ inline bool BuildSurfaceBasis(const VfxVec3& normal, const VfxVec3& tangentHint,
 }
 
 } // namespace singularity_vfx
+// probe

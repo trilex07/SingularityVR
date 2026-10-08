@@ -78,9 +78,9 @@
 #include "MinHook.h"
 // VFX host AFTER windows.h/NOMINMAX: vfx_host.h pulls <windows.h> itself, and
 // without NOMINMAX its min/max macros break std::min/std::max below.
-#include "vfx_host.h"
-#include "vfx_draw.h"
-#include "vfx_atlas_io.h"
+#include "vfx/vfx_host.h"
+#include "vfx/vfx_draw.h"
+#include "vfx/vfx_atlas_io.h"
 #include "hotpath_sampler.h"
 static hotpath::sampler g_hotPathSampler;
 alignas(8) static volatile LONG64 g_hotLeftPoseFrame = 0, g_hotRightPoseFrame = 0;
@@ -4748,6 +4748,7 @@ void StampCaptureState(CopySlot& cap) {
 // that is normal startup, not a failure.
 void DrawLaserSight(IDirect3DDevice9* dev);
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
+void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::d3d9_to_d3d11_copy);
     // ⭐ run 217: defined further down, next to the transforms it reuses - see DrawLaserSight.
@@ -4757,6 +4758,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     const bool ownOverlayScene = SUCCEEDED(dev->BeginScene());
     DrawLaserSight(dev);
     DrawWristHealth(dev);
+    DrawVfxOverlay(dev);
     if (ownOverlayScene) dev->EndScene();
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return nullptr;
@@ -6292,6 +6294,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_CINESTICK, PR_CINECAM, PR_SWAPSTICKS, PR_LEFTHAND, PR_WEAPONFX, PR_MUZZLEFX, PR_WORLDSCALE,
        PR_AIMPARTS,
        PR_SHADOWMODE, PR_DROPEXTRA,   // hub round 4: shadow sampling treatment + extra-target drop
+       PR_VFXHOST, PR_VFXDRAW, PR_VFXDIAG,   // VFX host testing rows (see DrawVfxOverlay)
        // ⭐ run 217: the laser and the per-weapon alignment rows.
        PR_LASER, PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH,
        PR_NOTESIZE,          // ⭐ run 230
@@ -6369,7 +6372,8 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
     // (1,400 vs 3,800 draws was measured) and a cross-run comparison is worthless. That mistake cost a
     // test run and it was mine.
-    { PR_OCCLUSION, PR_WEAPONFX, PR_AIMPARTS, PR_SHADOWMODE, PR_DROPEXTRA, PR_DEBUG, PR_BACK },
+    { PR_OCCLUSION, PR_WEAPONFX, PR_AIMPARTS, PR_SHADOWMODE, PR_DROPEXTRA,
+      PR_VFXHOST, PR_VFXDRAW, PR_VFXDIAG, PR_DEBUG, PR_BACK },
     { PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH, PR_BACK },
     // ⭐ run 237: its own page, not a row on WEAPON ALIGN. That page's values are PER WEAPON and
     // change meaning when you switch guns; these are one object held one way, always the same.
@@ -6402,7 +6406,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
       PR_TMDHIDE, PR_BACK_TMD },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 10, 8, 3, 8, 7, 7, 10, 6, 8 };   // ⭐ run 230: DISPLAY 5 -> 6; ⭐ run 237: root 7 -> 8 and a TMD page; ⭐ run 249: TMD 17 -> 10 + two sub-pages; ⭐ run 250: TMD MESH 5 -> 7; ⭐ run 251: + TRI MODE; cutscene-flat: root 8 -> 10 (CUTSCENE VIEW, CINEMA MATTE); hub round A: DISPLAY 6 -> 7 (GUN SIZE); hub round 4: DISPLAY 7 -> 8 (MENU OVERLAY), ADVANCED 5 -> 7 (SHADOW, DROPEXTRA)
+const int kPageCount[kPanelPages] = { 10, 8, 3, 8, 10, 7, 10, 6, 8 };   // ⭐ run 230: DISPLAY 5 -> 6; ⭐ run 237: root 7 -> 8 and a TMD page; ⭐ run 249: TMD 17 -> 10 + two sub-pages; ⭐ run 250: TMD MESH 5 -> 7; ⭐ run 251: + TRI MODE; cutscene-flat: root 8 -> 10 (CUTSCENE VIEW, CINEMA MATTE); hub round A: DISPLAY 6 -> 7 (GUN SIZE); hub round 4: DISPLAY 7 -> 8 (MENU OVERLAY), ADVANCED 5 -> 7 (SHADOW, DROPEXTRA); VFX: ADVANCED 7 -> 10 (VFX HOST/DRAW/DIAG)
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -6411,7 +6415,7 @@ const int kPageCount[kPanelPages] = { 10, 8, 3, 8, 7, 7, 10, 6, 8 };   // ⭐ ru
 // plate. The widest strings are "AIM METHOD MOTION CONTROLLER" and "MOVE DIRECTION HAND (NO
 // TRACKING)", which is why those two pages are the broad ones.
 // ⭐ run 249: TMD BONES is 30 for "BONE MODE      NUDGE (find it)", its longest reachable value.
-const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 28, 30, 30, 30, 30 };   // ⭐ run 230: DISPLAY 28 -> 33 for "NOTE SIZE      100% (FULL SCREEN)"
+const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 32, 30, 30, 30, 30 };   // ⭐ run 230: DISPLAY 28 -> 33 for "NOTE SIZE      100% (FULL SCREEN)"; VFX: ADVANCED 28 -> 32 for "VFX DRAW       PRESENT (WORKS)"
 const char* kPageName[kPanelPages] = { "VR SETTINGS", "CONTROLLER", "COMFORT", "DISPLAY",
                                        "ADVANCED", "WEAPON ALIGN", "TMD ALIGN",
                                        "TMD BONES", "TMD MESH" };
@@ -6465,6 +6469,8 @@ extern volatile LONG g_fgRideAll;
 // Defined with the component-write test (run 187). Diagnostic; deliberately never persisted.
 // Defined with the muzzle-FX suppression (run 189). Same 0/1/2 vocabulary as HideCrosshair.
 extern volatile LONG g_hideMuzzleFx;
+// Defined with the VFX host block (below); declared here so the panel rows can read them.
+extern volatile LONG g_vfxHost, g_vfxDraw, g_vfxDiag;
 // Defined beside the turn code, which is the first thing that reads them.
 extern volatile LONG g_cineStickTurn;
 extern volatile LONG g_cutsceneLockCamera;
@@ -6580,6 +6586,15 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_skipExtraTarget, 0, 0));
             WritePrivateProfileStringA("Render", "DropExtraTarget", v, path); return;
+        case PR_VFXHOST:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", InterlockedCompareExchange(&g_vfxHost, 0, 0));
+            WritePrivateProfileStringA("Render", "VfxHost", v, path); return;
+        case PR_VFXDRAW:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", InterlockedCompareExchange(&g_vfxDraw, 0, 0));
+            WritePrivateProfileStringA("Render", "VfxDraw", v, path); return;
+        case PR_VFXDIAG:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", InterlockedCompareExchange(&g_vfxDiag, 0, 0));
+            WritePrivateProfileStringA("Render", "VfxDiag", v, path); return;
         case PR_MUZZLEFX:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_hideMuzzleFx, 0, 0));
@@ -6974,6 +6989,20 @@ void PanelRowText(int row, char* out, size_t cap) {
             _snprintf_s(out, cap, _TRUNCATE, "DROP EXTRA     %s",
                         InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? "ON (TEST)" : "OFF");
             break;
+        case PR_VFXHOST:
+            _snprintf_s(out, cap, _TRUNCATE, "VFX HOST       %s",
+                        InterlockedCompareExchange(&g_vfxHost, 0, 0) ? "ON" : "OFF");
+            break;
+        case PR_VFXDRAW: {
+            const LONG d = InterlockedCompareExchange(&g_vfxDraw, 0, 0);
+            _snprintf_s(out, cap, _TRUNCATE, "VFX DRAW       %s",
+                        d == 2 ? "PRESENT (WORKS)" : d == 1 ? "SCENE (BROKEN)" : "OFF");
+            break;
+        }
+        case PR_VFXDIAG:
+            _snprintf_s(out, cap, _TRUNCATE, "VFX DIAG DOT   %s",
+                        InterlockedCompareExchange(&g_vfxDiag, 0, 0) ? "ON" : "OFF");
+            break;
         case PR_OCCLUSION:
             // Worded as what it DOES, not as the mode number. "ENGINE CULL" is the engine's own
             // occlusion culling left alone (mode 2); "DRAW ALL" stops the engine hiding geometry
@@ -7128,6 +7157,21 @@ void PanelAdjust(int row, int dir) {
             Log("DROP EXTRA -> %s (scene-sized non-colour target draws %s)",
                 InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? "ON" : "OFF",
                 InterlockedCompareExchange(&g_skipExtraTarget, 0, 0) ? "DROPPED" : "drawn");
+            break;
+        case PR_VFXHOST:
+            InterlockedExchange(&g_vfxHost, Rd(g_vfxHost) ? 0 : 1);
+            Log("VFX HOST -> %ld", Rd(g_vfxHost));
+            break;
+        case PR_VFXDRAW: {
+            LONG d = Rd(g_vfxDraw) + dir;
+            if (d < 0) d = 0; if (d > 2) d = 2;
+            InterlockedExchange(&g_vfxDraw, d);
+            Log("VFX DRAW -> %ld (0=off 1=scene/mid-scene 2=present/backbuffer)", d);
+            break;
+        }
+        case PR_VFXDIAG:
+            InterlockedExchange(&g_vfxDiag, Rd(g_vfxDiag) ? 0 : 1);
+            Log("VFX DIAG DOT -> %ld", Rd(g_vfxDiag));
             break;
         case PR_OCCLUSION:
             // Clamped to 0-2, and mode 3 is UNREACHABLE from here on purpose: it refuses to create
@@ -17210,6 +17254,13 @@ static bool g_vfxAtlasBuilt = false;
 static const char* g_vfxAtlasSource = "none";
 static singularity_vfx::VfxDrawItem g_vfxItems[32];
 volatile LONG g_vfxHost = 1; // ini [Render] VfxHost, 1 = host seams live (DLL absence still no-ops).
+// VfxDraw: 1 = mid-scene (StereoPairBody, proved invisible - the scene target is
+// consumed by post), 2 = Present/backbuffer (the pattern the laser+wrist use and
+// the only path that reaches the headset). Default 2. Exposed in the hub so the
+// two paths can be A/B'd in one session.
+volatile LONG g_vfxDraw = 2;
+// VfxDiag: 0 off, 1 fixed-screen cyan dot per eye (proves the overlay path draws).
+volatile LONG g_vfxDiag = 0;
 volatile LONG g_vfxFrame = 0; // Present serial; each eye draws VFX once per frame.
 static LONG g_vfxEyeDone[2] = { -1, -1 };
 static singularity_vfx::VfxFireEvent g_vfxFireMail;
@@ -17262,6 +17313,10 @@ static void ReleaseVfxHost() {
 
 static void VfxEyeDraw(IDirect3DDevice9* dev, int eye) {
     if (!Rd(g_vfxHost) || !dev || eye < 0 || eye > 1) return;
+    // Draw-path select: mid-scene path only when VfxDraw==1. Default is 2
+    // (Present/backbuffer), because the scene target proved invisible (log-proven:
+    // cyan dot + muzzle dot both drawn, neither reached the headset).
+    if (Rd(g_vfxDraw) != 1) return;
     if (Rd(g_vrUiMenu)) return; // never draw into menu passes (Collect refuses them too)
     if (g_thisDrawMoved) return; // FP-ridden draw: bound matrices are gun-shifted
     const LONG frame = Rd(g_vfxFrame);
@@ -20860,6 +20915,158 @@ void DrawLaserSight(IDirect3DDevice9* dev) {
     g_wristState->Apply(); // Also restores textures, vertex declaration and UP-draw stream state.
 }
 
+// ---- VFX host, Present/backbuffer path (the only path that reaches the headset) ----
+//
+// Why here and not mid-scene: VfxEyeDraw draws inside StereoPairBody, into the
+// offscreen scene target, and neither its textured quads NOR a raw Clear() landed
+// on screen (log-proven: muzzle dot + cyan dot both "drawn", neither visible). This
+// runs in the same BeginScene block as DrawLaserSight/DrawWristHealth, on the
+// backbuffer, immediately before the frame is copied to XR - the pattern that works.
+// Items arrive in METRES (plugin units); multiply by MetresToUU to reach engine UU.
+struct VfxOverlayVtx { float x, y, z, rhw; DWORD c; float u, v; };
+void DrawVfxOverlay(IDirect3DDevice9* dev) {
+    if (!Rd(g_vfxHost) || !dev || !g_origDrawPrimUP) return;
+    if (Rd(g_vfxDraw) != 2) return;                 // 1 = mid-scene path, 0 = off
+    if (!VrModeOn() || !Rd(g_dupDraws)) return;
+    if (Rd(g_vrUiMenu) || !g_vfxAtlasBuilt) return;
+    // Drain the game-thread fire mailbox here too (Present is the owner if the
+    // scene path is off) and advance effect ageing.
+    if (InterlockedExchange(&g_vfxFirePending, 0)) { g_vfx.OnFire(g_vfxFireMail); InterlockedIncrement(&g_vfxFires); }
+
+    int n = g_vfx.Collect(singularity_vfx::VfxRenderPass::Gameplay, g_vfxItems, 32);
+    if (n > 32) n = 32;
+    int slot = -1;
+    for (int i = 0; i < g_camMatUsed; ++i) if (g_camMats[i].valid) { slot = i; break; }
+    D3DVIEWPORT9 vp{};
+    if (FAILED(dev->GetViewport(&vp)) || vp.Width < 8) return;
+
+    if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) return;
+    if (FAILED(g_wristState->Capture())) return;
+
+    IDirect3DVertexShader9* oldVS = nullptr; dev->GetVertexShader(&oldVS);
+    IDirect3DPixelShader9*  oldPS = nullptr; dev->GetPixelShader(&oldPS);
+    DWORD oldFVF = 0, oldZ = 0, oldAB = 0, oldSRC = 0, oldDST = 0, oldCull = 0, oldLit = 0, oldSc = 0;
+    dev->GetFVF(&oldFVF);
+    dev->GetRenderState(D3DRS_ZENABLE, &oldZ);
+    dev->GetRenderState(D3DRS_ALPHABLENDENABLE, &oldAB);
+    dev->GetRenderState(D3DRS_SRCBLEND, &oldSRC);
+    dev->GetRenderState(D3DRS_DESTBLEND, &oldDST);
+    dev->GetRenderState(D3DRS_CULLMODE, &oldCull);
+    dev->GetRenderState(D3DRS_LIGHTING, &oldLit);
+    dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &oldSc);
+
+    dev->SetVertexShader(nullptr); dev->SetPixelShader(nullptr);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);   // over everything, like the laser
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+    dev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+    dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+
+    // DIAG (VfxDiag=1): fixed-screen cyan dot in each eye, independent of items -
+    // proves THIS path draws at all before anything is blamed on position/texture.
+    if (Rd(g_vfxDiag)) {
+        const LONG cx = vp.X + (LONG)(vp.Width * 0.25f) + 0 * (LONG)(vp.Width * 0.5f);
+        const D3DRECT dots[2] = {
+            { vp.X + (LONG)(vp.Width * 0.25f) - 14, vp.Y + (LONG)(vp.Height * 0.5f) - 14,
+              vp.X + (LONG)(vp.Width * 0.25f) + 14, vp.Y + (LONG)(vp.Height * 0.5f) + 14 },
+            { vp.X + (LONG)(vp.Width * 0.75f) - 14, vp.Y + (LONG)(vp.Height * 0.5f) - 14,
+              vp.X + (LONG)(vp.Width * 0.75f) + 14, vp.Y + (LONG)(vp.Height * 0.5f) + 14 } };
+        (void)cx;
+        ClearRects(dev, dots, 2, 0xFF00FFFF);
+    }
+
+    if (n > 0 && slot >= 0) {
+        const float m2u = MetresToUU();
+        if (m2u > 0.0f && std::isfinite(m2u)) {
+            for (int eye = 0; eye < 2; ++eye) {
+                float m[16]; memcpy(m, g_camMats[slot].m, sizeof(m));
+                const int conv = g_camMats[slot].conv;
+                if (eye) ApplyOffset(reinterpret_cast<Reg4*>(m), conv, g_eyeDeltaUU);
+                ApplyEyeRemap(reinterpret_cast<Reg4*>(m), conv, eye ? +0.5f : -0.5f);
+                const float* view = g_camMats[slot].m;
+                float right[3], up[3]; float rl = 0, ul = 0;
+                for (int i = 0; i < 3; ++i) {
+                    right[i] = view[conv == CONV_ROW ? i * 4 : i];
+                    up[i]    = view[conv == CONV_ROW ? i * 4 + 1 : 4 + i];
+                    rl += right[i] * right[i]; ul += up[i] * up[i];
+                }
+                if (!(rl > 1e-8f) || !(ul > 1e-8f)) continue;
+                rl = sqrtf(rl); ul = sqrtf(ul);
+                for (int i = 0; i < 3; ++i) { right[i] /= rl; up[i] /= ul; }
+
+                for (int it = 0; it < n; ++it) {
+                    const singularity_vfx::VfxDrawItem& d = g_vfxItems[it];
+                    const auto* clip = g_vfxAtlas.Lookup(d.clipId);
+                    if (!clip || clip->tex < 0 || clip->tex >= g_vfxAtlas.count) continue;
+                    IDirect3DTexture9* tex = g_vfxAtlas.texture[clip->tex];
+                    if (!tex) continue;
+                    const float w = d.size * m2u;                 // half-extent, UU
+                    if (!(w > 0.0f)) continue;
+                    const float C[3] = { d.position.x * m2u, d.position.y * m2u, d.position.z * m2u };
+                    float cc[4]; WorldToClip(m, conv, C, cc);
+                    if (cc[3] <= 0.001f) continue;                 // behind the eye
+                    float pt[4][3];
+                    const float sgn[4][2] = {{-1,-1},{+1,-1},{-1,+1},{+1,+1}};
+                    for (int k = 0; k < 4; ++k)
+                        for (int c = 0; c < 3; ++c)
+                            pt[k][c] = C[c] + sgn[k][0]*right[c]*w + sgn[k][1]*up[c]*w;
+                    float cl[4][4]; bool ok = true;
+                    for (int k = 0; k < 4 && ok; ++k) { WorldToClip(m, conv, pt[k], cl[k]); if (cl[k][3] <= 0.001f) ok = false; }
+                    if (!ok) continue;
+                    const int cols = clip->cols > 0 ? clip->cols : 1;
+                    const int rows = clip->rows > 0 ? clip->rows : 1;
+                    int fr = d.frame; if (fr < 0) fr = 0; if (fr >= cols*rows) fr = cols*rows - 1;
+                    const float u0 = (float)(fr % cols) / cols, v0 = (float)(fr / cols) / rows;
+                    const float du = 1.0f / cols, dv = 1.0f / rows;
+                    auto SX = [&](const float* c) { return (c[0]/c[3]*0.5f + 0.5f) * (float)vp.Width + (float)vp.X; };
+                    auto SY = [&](const float* c) { return (0.5f - c[1]/c[3]*0.5f) * (float)vp.Height + (float)vp.Y; };
+                    const D3DCOLOR col = 0xFFFFFFFF;
+                    VfxOverlayVtx v[4] = {
+                        { SX(cl[0]), SY(cl[0]), 0, 1, col, u0,      v0 + dv },
+                        { SX(cl[1]), SY(cl[1]), 0, 1, col, u0 + du, v0 + dv },
+                        { SX(cl[2]), SY(cl[2]), 0, 1, col, u0,      v0 },
+                        { SX(cl[3]), SY(cl[3]), 0, 1, col, u0 + du, v0 },
+                    };
+                    if (d.blend == (uint8_t)singularity_vfx::VfxBlend::Additive) {
+                        dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+                        dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+                    } else {
+                        dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+                        dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+                    }
+                    dev->SetTexture(0, tex);
+                    g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(VfxOverlayVtx));
+                    ++g_vfxItemsDrawn;
+                }
+            }
+        }
+    }
+    dev->SetTexture(0, nullptr);
+
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldSc);
+    dev->SetRenderState(D3DRS_LIGHTING, oldLit);
+    dev->SetRenderState(D3DRS_CULLMODE, oldCull);
+    dev->SetRenderState(D3DRS_DESTBLEND, oldDST);
+    dev->SetRenderState(D3DRS_SRCBLEND, oldSRC);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, oldAB);
+    dev->SetRenderState(D3DRS_ZENABLE, oldZ);
+    dev->SetFVF(oldFVF);
+    dev->SetPixelShader(oldPS);
+    dev->SetVertexShader(oldVS);
+    if (oldPS) oldPS->Release();
+    if (oldVS) oldVS->Release();
+    g_wristState->Apply();
+}
+
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
     ReleaseVrMenuResources();
@@ -24418,7 +24625,14 @@ void LoadIniSettings() {
     g_hideFpInMenu=GetPrivateProfileIntA("Render","HideFpInMenu",1,path)?1:0;
     Log("VR menu FP hide=%ld (HideFpInMenu; drops latched gun/arm draws while a GFx menu is focused)",Rd(g_hideFpInMenu));
     g_vfxHost=GetPrivateProfileIntA("Render","VfxHost",1,path)?1:0;
+    {
+        LONG vd = GetPrivateProfileIntA("Render","VfxDraw",2,path);
+        if (vd < 0) vd = 0; if (vd > 2) vd = 2;
+        InterlockedExchange(&g_vfxDraw, vd);
+    }
+    g_vfxDiag=GetPrivateProfileIntA("Render","VfxDiag",0,path)?1:0;
     Log("VFX host seams=%ld (VfxHost; plugin DLL absence still no-ops everything)",Rd(g_vfxHost));
+    Log("VFX draw=%ld (0=off 1=scene/mid-scene 2=present/backbuffer), diag dot=%ld",Rd(g_vfxDraw),Rd(g_vfxDiag));
     g_vrUiDesktopProbe=GetPrivateProfileIntA("Diagnostic","VrUiDesktopProbe",0,path)?1:0;
     Log("VR menu pointer=%ld; native GFx viewport input; no desktop cursor movement",Rd(g_vrUiEnabled));
     Log("independent hands prototype=%d; shader CTAB required; verified SP sections only",g_independentHands);

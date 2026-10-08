@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // =============================================================================
 // HOST-side D3D9 drawing for VFX DrawItems.
@@ -432,3 +432,4 @@ private:
 
 } // namespace host
 } // namespace singularity_vfx
+// probe
