@@ -8577,10 +8577,17 @@ void SyncXRInput(XrTime displayTime) {
         static LARGE_INTEGER heldSince{};
         static bool consumed = false;
         static int  tapPulse = 0;
+        static bool halfLogged = false;
         // ⭐ run 219: 1.3 -> 1.0 on request. 2.0 was tried first and felt like waiting.
         const double kHoldSeconds = 1.0;
         if (panelHeld) {
             if (!heldSince.QuadPart) QueryPerformanceCounter(&heldSince);
+            // Hub round A2: log mid-hold (taps never reach 0.5 s), so a dead button
+            // is distinguishable from a broken toggle. Once per hold, never per frame.
+            if (!halfLogged && MsSince(heldSince) >= 500.0) {
+                halfLogged = true;
+                Log("VR panel hold 0.5 s (panel button alive; keep holding to toggle)");
+            }
             if (!consumed && MsSince(heldSince) >= kHoldSeconds * 1000.0) {
                 const LONG was = InterlockedCompareExchange(&g_panelOpen, 0, 0);
                 InterlockedExchange(&g_panelOpen, was ? 0 : 1);
@@ -8594,6 +8601,7 @@ void SyncXRInput(XrTime displayTime) {
             if (heldSince.QuadPart && !consumed) tapPulse = 8;
             heldSince.QuadPart = 0;
             consumed = false;
+            halfLogged = false;
         }
         // While the panel is open the button belongs to the panel, so the tap never reaches the
         // game either - otherwise closing it would flash the torch.
