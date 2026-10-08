@@ -196,7 +196,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     ++g_vrMenuFrame;
     SyncVrMenuCaptureState();
     MenuDrawTraceFrame();
-    const bool menu = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && Rd(g_vrUiMenu);
+    const bool menu = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && Rd(g_vrUiMenu) && Rd(g_vrMenuOverlay);
     if (!menu || Rd(g_panelOpen) || !g_origDrawPrimUP || !g_origSetVS || !g_origSetRenderTarget) return;
 
     IDirect3DSurface9 *back = nullptr, *old = nullptr, *depth = nullptr;

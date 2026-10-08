@@ -5222,6 +5222,9 @@ XrAction g_actHandPose = XR_NULL_HANDLE;
 XrSpace  g_handSpace[2] = { XR_NULL_HANDLE, XR_NULL_HANDLE };
 XrQuaternionf g_handAimOrientation[2]={{0,0,0,1},{0,0,0,1}};
 volatile LONG g_vrUiEnabled=1,g_vrUiMenu=0,g_vrUiValid=0,g_vrUiU=500000,g_vrUiV=500000;
+// Hub round 4: provider-overlay kill switch for A/B (black-quad diagnosis). The in-scene
+// menu copy stays, so menus remain visible; only our head-locked overlay+laser go away.
+volatile LONG g_vrMenuOverlay=1;
 volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=100;
 volatile LONG g_vrMenuDistanceMm=1200;
 volatile LONG g_vrUiEyeCentreU[2]={500000,500000};
@@ -6259,6 +6262,7 @@ enum { PR_ENABLEVR = 0, PR_AIMMETHOD, PR_MOVEDIR, PR_TURNMODE, PR_TURNSPEED, PR_
        PR_LASER, PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH,
        PR_NOTESIZE,          // ⭐ run 230
        PR_GUNSCALE,          // hub round A: first-person gun+hands size, live-tuned like world scale
+       PR_MENUOVERLAY,       // hub round 4: overlay kill switch (black-quad diagnosis)
        PR_TMDON, PR_TMDFWD, PR_TMDRIGHT, PR_TMDUP, PR_TMDYAW, PR_TMDPITCH,   // ⭐ run 237
        PR_TMDARMFROM, PR_TMDARMTO, PR_TMDARMSTEP,   // ⭐ run 237c, un-retired in 247b
        PR_TMDARMSLOT, PR_TMDARMMESH,                // ⭐ run 250
@@ -6325,7 +6329,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // ⭐ run 230: NOTE SIZE is the HUD-inset row this page was created expecting. It belongs here
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
-    { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_NOTESIZE, PR_BACK },
+    { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
@@ -6364,7 +6368,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
       PR_TMDHIDE, PR_BACK_TMD },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 8, 8, 3, 7, 7, 7, 10, 6, 8 };   // ⭐ run 230: DISPLAY 5 -> 6; ⭐ run 237: root 7 -> 8 and a TMD page; ⭐ run 249: TMD 17 -> 10 + two sub-pages; ⭐ run 250: TMD MESH 5 -> 7; ⭐ run 251: + TRI MODE; hub round A: DISPLAY 6 -> 7 (GUN SIZE); hub round 4: ADVANCED 5 -> 7 (SHADOW, DROPEXTRA)
+const int kPageCount[kPanelPages] = { 8, 8, 3, 8, 7, 7, 10, 6, 8 };   // ⭐ run 230: DISPLAY 5 -> 6; ⭐ run 237: root 7 -> 8 and a TMD page; ⭐ run 249: TMD 17 -> 10 + two sub-pages; ⭐ run 250: TMD MESH 5 -> 7; ⭐ run 251: + TRI MODE; hub round A: DISPLAY 6 -> 7 (GUN SIZE); hub round 4: DISPLAY 7 -> 8 (MENU OVERLAY), ADVANCED 5 -> 7 (SHADOW, DROPEXTRA)
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -6550,6 +6554,10 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_gunScalePct, 0, 0));
             WritePrivateProfileStringA("Input", "GunScalePct", v, path); return;
+        case PR_MENUOVERLAY:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
+                        InterlockedCompareExchange(&g_vrMenuOverlay, 0, 0));
+            WritePrivateProfileStringA("Render", "MenuOverlay", v, path); return;
         // ⭐ run 237: ONE case writes the whole TMD block, so no row can be adjustable and persist
         // nowhere - the defect PanelSaveRow was restructured to prevent.
         case PR_TMDON: {
@@ -6888,6 +6896,12 @@ void PanelRowText(int row, char* out, size_t cap) {
             else          _snprintf_s(out, cap, _TRUNCATE, "GUN SIZE       %ld%%", p);
             break;
         }
+        case PR_MENUOVERLAY:
+            // Worded as what you SEE, not as the flag. OFF leaves the in-scene menu
+            // copy, so menus stay usable while the overlay is out of the picture.
+            _snprintf_s(out, cap, _TRUNCATE, "MENU OVERLAY   %s",
+                        InterlockedCompareExchange(&g_vrMenuOverlay, 0, 0) ? "ON" : "OFF");
+            break;
         case PR_AIMPARTS: {
             const LONG p = InterlockedCompareExchange(&g_aimModeParts, 0, 0);
             _snprintf_s(out, cap, _TRUNCATE, "AIM PARTS      %s",
@@ -7249,6 +7263,10 @@ void PanelAdjust(int row, int dir) {
             InterlockedExchange(&g_gunScalePct, p);
             break;
         }
+        case PR_MENUOVERLAY:
+            InterlockedExchange(&g_vrMenuOverlay,
+                                InterlockedCompareExchange(&g_vrMenuOverlay, 0, 0) ? 0 : 1);
+            break;
         case PR_WEAPONFX: {
             // Clamped, not wrapped - run 143's lesson. Wrapping would put one press past RIDE GUN
             // into a state that blacks out the weapon, which reads as a crash rather than a setting.
@@ -23673,6 +23691,7 @@ void LoadIniSettings() {
     g_showControllerArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 1, path) ? 1 : 0;
     g_independentHands = GetPrivateProfileIntA("Render", "IndependentHandsPrototype", 0, path) ? 1 : 0;
     g_vrUiEnabled=GetPrivateProfileIntA("Input","VrMenuPointer",1,path)?1:0;
+    g_vrMenuOverlay=GetPrivateProfileIntA("Render","MenuOverlay",1,path)?1:0;
     g_vrUiDesktopProbe=GetPrivateProfileIntA("Diagnostic","VrUiDesktopProbe",0,path)?1:0;
     Log("VR menu pointer=%ld; native GFx viewport input; no desktop cursor movement",Rd(g_vrUiEnabled));
     Log("independent hands prototype=%d; shader CTAB required; verified SP sections only",g_independentHands);
