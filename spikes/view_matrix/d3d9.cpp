@@ -10889,20 +10889,17 @@ static void VfxEyeDraw(IDirect3DDevice9* dev, int eye);
 // draw-hook shadow early-outs, which run before StereoPairBody.
 inline void ShadowMode3NoteGeneration();
 
-// VFX per-eye view*proj capture for the fixed-function quad path (row-major
-// D3DMATRIX layout; transposed when the tracked slot is column-convention).
+// VFX per-eye view*proj capture for the fixed-function quad path. Stored raw
+// with its convention; vfx_draw.h::MakeRowMajorVP transposes when needed.
 // Skipped for gun-ridden draws (matrices gun-shifted); VfxEyeDraw applies the
 // same skip, so the two never disagree about which frame the matrix is from.
 static float g_vfxEyeMat[2][16];
+static int g_vfxEyeConv[2] = { CONV_ROW, CONV_ROW };
 static bool g_vfxEyeMatValid[2] = { false, false };
 static void VfxCaptureEyeMat(const float* mat, int conv, int eye) {
     if (eye < 0 || eye > 1 || !mat) return;
-    if (conv == CONV_ROW) {
-        memcpy(g_vfxEyeMat[eye], mat, sizeof(g_vfxEyeMat[eye]));
-    } else {
-        for (int r = 0; r < 4; ++r)
-            for (int c = 0; c < 4; ++c) g_vfxEyeMat[eye][r * 4 + c] = mat[c * 4 + r];
-    }
+    memcpy(g_vfxEyeMat[eye], mat, sizeof(g_vfxEyeMat[eye]));
+    g_vfxEyeConv[eye] = conv;
     g_vfxEyeMatValid[eye] = true;
 }
 
@@ -17218,7 +17215,8 @@ static void VfxEyeDraw(IDirect3DDevice9* dev, int eye) {
         g_vfxItems[i].position.x *= m2u; g_vfxItems[i].position.y *= m2u; g_vfxItems[i].position.z *= m2u;
         g_vfxItems[i].size *= m2u;
     }
-    g_vfxDrawer.DrawItems(dev, g_vfxItems, n, g_vfxAtlas, right, up, g_vfxEyeMat[eye]);
+    g_vfxDrawer.DrawItems(dev, g_vfxItems, n, g_vfxAtlas, right, up,
+                          g_vfxEyeMat[eye], g_vfxEyeConv[eye] == CONV_ROW);
     g_vfxItemsDrawn += n;
 }
 // Fix-4/menus round 2: sticky per-window mask of suppression-miss reasons, set only for

@@ -14,10 +14,12 @@
 // =============================================================================
 
 #include "vfx_plugin.h"
+#include "vfx_blood.h"
 
 #include <d3d9.h>
 #include <cstddef>
 #include <cmath>
+#include <cstring>
 
 namespace singularity_vfx {
 namespace host {
@@ -134,6 +136,15 @@ inline void ReleaseAtlas(VfxAtlas& atlas) {
     atlas.count = 0;
 }
 
+// D3D9 SetTransform wants a row-major matrix; the game's matrices may be
+// row-major (D3D9 native) or column-major. Transpose when needed.
+inline void MakeRowMajorVP(const float* m, bool rowMajor, float out[16]) {
+    if (!m) { for (int i = 0; i < 16; ++i) out[i] = (i % 5 == 0) ? 1.0f : 0.0f; return; }
+    for (int r = 0; r < 4; ++r)
+        for (int c = 0; c < 4; ++c)
+            out[r * 4 + c] = rowMajor ? m[r * 4 + c] : m[c * 4 + r];
+}
+
 struct VfxSavedState {
     DWORD rsZEnable = 0, rsZWrite = 0, rsAlphaBlend = 0;
     DWORD rsSrcBlend = 0, rsDestBlend = 0, rsCull = 0;
@@ -148,12 +159,7 @@ struct VfxSavedState {
     IDirect3DVertexBuffer9* stream = nullptr;
     UINT streamOffset = 0, streamStride = 0;
     DWORD fvf = 0;
-    // Fixed-function transforms. The engine draws with shaders and leaves these
-    // stale/identity, so untransformed XYZ quads would land nowhere without them.
-    // Production divergence from the pattern worktree: the host passes the live
-    // per-eye view*proj here (row-major D3DMATRIX).
-    D3DMATRIX world, view, proj;
-    bool haveTransforms = false;
+    D3DMATRIX world{}, view{}, proj{};
 };
 
 inline void SaveVfxState(IDirect3DDevice9* dev, VfxSavedState& s) {
@@ -185,9 +191,9 @@ inline void SaveVfxState(IDirect3DDevice9* dev, VfxSavedState& s) {
     dev->GetVertexDeclaration(&s.decl);
     dev->GetStreamSource(0, &s.stream, &s.streamOffset, &s.streamStride);
     dev->GetFVF(&s.fvf);
-    s.haveTransforms = SUCCEEDED(dev->GetTransform(D3DTS_WORLD, &s.world)) &&
-                       SUCCEEDED(dev->GetTransform(D3DTS_VIEW, &s.view)) &&
-                       SUCCEEDED(dev->GetTransform(D3DTS_PROJECTION, &s.proj));
+    dev->GetTransform(D3DTS_WORLD, &s.world);
+    dev->GetTransform(D3DTS_VIEW, &s.view);
+    dev->GetTransform(D3DTS_PROJECTION, &s.proj);
 }
 
 inline void RestoreVfxState(IDirect3DDevice9* dev, const VfxSavedState& s) {
@@ -219,11 +225,9 @@ inline void RestoreVfxState(IDirect3DDevice9* dev, const VfxSavedState& s) {
     dev->SetVertexDeclaration(s.decl);
     dev->SetStreamSource(0, s.stream, s.streamOffset, s.streamStride);
     dev->SetFVF(s.fvf);
-    if (s.haveTransforms) {
-        dev->SetTransform(D3DTS_WORLD, &s.world);
-        dev->SetTransform(D3DTS_VIEW, &s.view);
-        dev->SetTransform(D3DTS_PROJECTION, &s.proj);
-    }
+    dev->SetTransform(D3DTS_WORLD, &s.world);
+    dev->SetTransform(D3DTS_VIEW, &s.view);
+    dev->SetTransform(D3DTS_PROJECTION, &s.proj);
     if (s.tex[0]) s.tex[0]->Release();
     if (s.tex[1]) s.tex[1]->Release();
     if (s.vs) s.vs->Release();
@@ -254,23 +258,31 @@ public:
         if (vb_) { vb_->Release(); vb_ = nullptr; }
     }
 
+    // `worldToClip` is the game's current per-eye view-projection matrix (the same
+    // camera matrix the stereo path remaps and uploads). UE3 drives its vertex
+    // shaders from constants, so the fixed-function D3DTS_* transforms are NOT
+    // set during scene draws; without supplying this matrix here the quad is
+    // transformed by a stale/identity pipeline and is clipped away - which is why
+    // nothing appeared even though the host was drawing. `rowMajor` says whether
+    // the supplied matrix is row-major (D3D9 native) or needs transposing.
     void DrawItems(IDirect3DDevice9* dev, const VfxDrawItem* items, int count,
                    const VfxAtlas& atlas, const float camRight[3], const float camUp[3],
-                   const float eyeProj[16]) {
-        if (!dev || !items || count <= 0 || !vb_ || !eyeProj) return;
+                   const float* worldToClip, bool rowMajor) {
+        if (!dev || !items || count <= 0 || !vb_) return;
 
         VfxSavedState saved;
         SaveVfxState(dev, saved);
 
-        // World-space quads need world-space transforms. The engine draws with
-        // vertex-shader constants and leaves the fixed-function matrices stale,
-        // so without this every quad lands outside clip space (invisible).
-        // WORLD and VIEW stay identity; the live per-eye view*proj (row-major,
-        // captured from the eye block that called us) goes into PROJECTION.
-        static const D3DMATRIX kIdentity = {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1};
-        dev->SetTransform(D3DTS_WORLD, &kIdentity);
-        dev->SetTransform(D3DTS_VIEW, &kIdentity);
-        dev->SetTransform(D3DTS_PROJECTION, reinterpret_cast<const D3DMATRIX*>(eyeProj));
+        if (worldToClip) {
+            float vp[16];
+            MakeRowMajorVP(worldToClip, rowMajor, vp);
+            D3DMATRIX vpm{}, ident{};
+            std::memcpy(&vpm, vp, sizeof(vpm));
+            ident._11 = ident._22 = ident._33 = ident._44 = 1.0f;
+            dev->SetTransform(D3DTS_WORLD, &vpm);       // vertex (world) -> clip
+            dev->SetTransform(D3DTS_VIEW, &ident);
+            dev->SetTransform(D3DTS_PROJECTION, &ident);
+        }
 
         dev->SetVertexShader(nullptr);
         dev->SetPixelShader(nullptr);
@@ -347,8 +359,23 @@ public:
             const float du = 1.0f / cols, dv = 1.0f / rows;
 
             const float s = it.size <= 0.0f ? 1.0f : it.size;
-            const float rx = camRight[0] * s, ry = camRight[1] * s, rz = camRight[2] * s;
-            const float ux = camUp[0] * s, uy = camUp[1] * s, uz = camUp[2] * s;
+            float br[3], bu[3];
+            if (static_cast<VfxKind>(it.kind) == VfxKind::BloodImpact) {
+                // Surface decal: align the quad to the hit normal, stable fallback
+                // when the normal is parallel to the camera-right hint.
+                VfxVec3 r{}, u{};
+                if (!BuildSurfaceBasis(it.direction,
+                                       VfxVec3{camRight[0], camRight[1], camRight[2]}, r, u))
+                    continue;
+                br[0] = r.x * s; br[1] = r.y * s; br[2] = r.z * s;
+                bu[0] = u.x * s; bu[1] = u.y * s; bu[2] = u.z * s;
+            } else {
+                // Camera-facing billboard for muzzle flash and smoke.
+                br[0] = camRight[0] * s; br[1] = camRight[1] * s; br[2] = camRight[2] * s;
+                bu[0] = camUp[0] * s;    bu[1] = camUp[1] * s;    bu[2] = camUp[2] * s;
+            }
+            const float rx = br[0], ry = br[1], rz = br[2];
+            const float ux = bu[0], uy = bu[1], uz = bu[2];
             const float px = it.position.x, py = it.position.y, pz = it.position.z;
             const D3DCOLOR c = D3DCOLOR_ARGB(255, 255, 255, 255);
 
