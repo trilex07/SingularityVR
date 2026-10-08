@@ -6,6 +6,7 @@
 #include "arm_natural.h"
 #include "support_grip.h"
 #include "weapon_holster.h"
+#include "weapon_wheel.h"
 #include "grip_latch.h"
 #include "fp_shadow.h"
 #include "camera_stabilization.h"
@@ -2001,6 +2002,15 @@ volatile LONG g_holsterYawUU = 0, g_holsterPitchUU = 0, g_holsterRollUU = 0;
 int g_holsterEnabled = 1;
 weaponholster::Config g_holsterConfig{};
 weaponholster::State g_holsterState{};
+
+// R3 weapon wheel. Selection is an offset from the currently equipped weapon;
+// commit pulses the game's existing cycle-weapon action, so no inventory scan
+// or new engine-side weapon API is needed.
+volatile LONG g_weaponWheelOpen = 0;
+volatile LONG g_weaponWheelSelection = 0;
+volatile LONG g_weaponWheelCommit = 0;
+volatile LONG g_weaponWheelPulseGap = 0;
+LONG g_weaponWheelSlots = 4;
 
 inline ArmedState PlayerArmed() { return (ArmedState)Rd(g_armedState); }
 
@@ -4827,6 +4837,7 @@ void StampCaptureState(CopySlot& cap) {
 // that is normal startup, not a failure.
 void DrawLaserSight(IDirect3DDevice9* dev);
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
+void DrawWeaponWheel(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::d3d9_to_d3d11_copy);
@@ -4837,6 +4848,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     const bool ownOverlayScene = SUCCEEDED(dev->BeginScene());
     DrawLaserSight(dev);
     DrawWristHealth(dev);
+    DrawWeaponWheel(dev);
     DrawVfxOverlay(dev);
     if (ownOverlayScene) dev->EndScene();
     IDirect3DSurface9* back = nullptr;
@@ -5432,6 +5444,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev);
 void ReleaseVrMenuResources();
 void ReleaseFpCasterCache();
 static void HolsterHipWorld(float H[3], bool includeHmdOffset = true);
+void DrawWeaponWheel(IDirect3DDevice9* dev);
 bool     g_handPoseValid[2] = { false, false };
 bool g_handPositionValid[2] = { false, false };
 bool g_handActionActive[2] = { false, false };
@@ -8886,6 +8899,39 @@ void SyncXRInput(XrTime displayTime) {
         // Recentre still fires as before; capture is debounced at the consumer.
         InterlockedExchange(&g_captureRequested, 1);
     }
+    // R3 owns the weapon wheel in gameplay. L3+R3 remains the explicit
+    // recenter/screenshot chord, so opening is vetoed while L3 is held.
+    static bool priorR3 = false;
+    const bool r3Pressed = r3Held && !priorR3;
+    const bool r3Released = !r3Held && priorR3;
+    priorR3 = r3Held;
+    if (l3Held && Rd(g_weaponWheelOpen)) {
+        InterlockedExchange(&g_weaponWheelOpen, 0);
+        InterlockedExchange(&g_weaponWheelCommit, 0);
+    }
+    if (!uiMenu && feedGame && WeaponInHands() && !Rd(g_weaponHolstered) &&
+        r3Pressed && !l3Held) {
+        InterlockedExchange(&g_weaponWheelOpen, 1);
+        InterlockedExchange(&g_weaponWheelSelection, 0);
+        InterlockedExchange(&g_weaponWheelCommit, 0);
+        InterlockedExchange(&g_weaponWheelPulseGap, 0);
+        Log("weapon wheel: OPEN slots=%ld (R3 held; right stick selects, release commits)",
+            g_weaponWheelSlots);
+    }
+    if (Rd(g_weaponWheelOpen)) {
+        if (!r3Held || uiMenu || !feedGame || !WeaponInHands() || Rd(g_weaponHolstered)) {
+            const LONG selection = InterlockedCompareExchange(&g_weaponWheelSelection, 0, 0);
+            InterlockedExchange(&g_weaponWheelOpen, 0);
+            if (r3Released && selection > 0 && !uiMenu && feedGame) {
+                InterlockedExchange(&g_weaponWheelCommit, selection);
+                InterlockedExchange(&g_weaponWheelPulseGap, 0);
+                Log("weapon wheel: COMMIT offset=%ld (native cycle pulses)", selection);
+            }
+        } else {
+            const int sector = weaponwheel::SectorForStick(tx, ty, (int)g_weaponWheelSlots);
+            if (sector >= 0) InterlockedExchange(&g_weaponWheelSelection, sector);
+        }
+    }
     static bool triangleWasHeld = false;
     const bool trianglePressed = triangleHeld && !triangleWasHeld;
     triangleWasHeld = triangleHeld;
@@ -8895,6 +8941,7 @@ void SyncXRInput(XrTime displayTime) {
     for (int i = 0; i < kPadButtonCount; ++i) {
         const bool down = getBool(g_padButtons[i].action);
         if (i == 6) continue; // Triangle is handled above as a single START rising edge.
+        if (i == 3 && (Rd(g_weaponWheelOpen) || r3Held || r3Released)) continue; // R3 -> wheel
         if (down) ++g_btnHeldFrames[i];
         if (g_padButtons[i].isMenu)  { menuHeld  = down; menuMask  = g_padButtons[i].mask; continue; }
         if (g_padButtons[i].isPanel) { panelHeld = down; panelMask = g_padButtons[i].mask; continue; }
@@ -9075,6 +9122,19 @@ void SyncXRInput(XrTime displayTime) {
         stickArmed = true;
     }
     if (stickHold > 0) { btns |= stickMask; --stickHold; }
+    // A committed wheel sector is expressed through the game's own
+    // cycle-weapon button. Keep each pulse long enough for Raven's
+    // PressChainButton/ReleaseChainButton pair, with a short release gap
+    // between successive sectors.
+    if (Rd(g_weaponWheelPulseGap) > 0 && stickHold == 0)
+        InterlockedDecrement(&g_weaponWheelPulseGap);
+    if (!uiMenu && !Rd(g_weaponWheelOpen) && stickHold == 0 &&
+        Rd(g_weaponWheelPulseGap) == 0 && Rd(g_weaponWheelCommit) > 0) {
+        stickMask = g_stickUpMask;
+        stickHold = 8;
+        InterlockedDecrement(&g_weaponWheelCommit);
+        if (Rd(g_weaponWheelCommit) > 0) InterlockedExchange(&g_weaponWheelPulseGap, 3);
+    }
 
     // ---- turn ----
     //
@@ -9129,6 +9189,7 @@ void SyncXRInput(XrTime displayTime) {
     const bool cineGame = inCine && cineTurn == 1;
     if (cineOff || cineGame) { g_padTurnAccum = 0; g_smoothTurnRem = 0.0f; }
     float lookX = 0.0f;
+    if (Rd(g_weaponWheelOpen)) lookX = 0.0f; // right stick belongs to the wheel
     if (cineOff) {
         // lookX stays 0, so mode 0's pass-through to the engine's look axis is silenced too.
     } else if (cineGame) {
@@ -9189,6 +9250,11 @@ void SyncXRInput(XrTime displayTime) {
         }
     } else {
         lookX = tx;
+    }
+    if (Rd(g_weaponWheelOpen)) {
+        g_padTurnAccum = 0;
+        g_smoothTurnRem = 0.0f;
+        lookX = 0.0f;
     }
 
     tSt = Now();
@@ -18077,6 +18143,9 @@ static void ResetVrAfterCameraLoss(const char* reason) {
     InterlockedExchange(&g_holsterPitchUU, 0);
     InterlockedExchange(&g_holsterRollUU, 0);
     g_holsterState = {};
+    InterlockedExchange(&g_weaponWheelOpen, 0);
+    InterlockedExchange(&g_weaponWheelCommit, 0);
+    InterlockedExchange(&g_weaponWheelPulseGap, 0);
     g_supportLatch.Reset();
     InterlockedExchange(&g_vrUiValid, 0);
     InterlockedExchange(&g_vrUiDown, 0);
@@ -21666,6 +21735,86 @@ void DrawWristHealth(IDirect3DDevice9* dev) {
 
 #include "vr_menu_overlay.h"
 
+// R3 weapon selector. This is intentionally a tiny screen-space overlay: the
+// anchor is projected from the tracked right-controller pose, while the sector
+// cards are cheap Clear() rectangles and numeric glyphs. The actual selection
+// still commits through the game's native cycle-weapon input above.
+void DrawWeaponWheel(IDirect3DDevice9* dev) {
+    if (!dev || !VrModeOn() || !Rd(g_dupDraws) || !Rd(g_weaponWheelOpen) ||
+        !g_handPositionValid[1] || !g_haveEyes || !g_origSetRenderTarget) return;
+    IDirect3DSurface9* back = nullptr;
+    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
+    D3DSURFACE_DESC d{};
+    if (FAILED(back->GetDesc(&d)) || d.Width < 8 || d.Height < 8) {
+        back->Release();
+        return;
+    }
+    IDirect3DSurface9* old = nullptr;
+    IDirect3DSurface9* depth = nullptr;
+    dev->GetRenderTarget(0, &old);
+    dev->GetDepthStencilSurface(&depth);
+    if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) {
+        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    if (FAILED(g_wristState->Capture())) {
+        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    dev->SetDepthStencilSurface(nullptr);
+    g_origSetRenderTarget(dev, 0, back);
+    D3DVIEWPORT9 vp{0, 0, d.Width, d.Height, 0.0f, 1.0f};
+    dev->SetViewport(&vp);
+    dev->SetTexture(0, nullptr);
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetRenderState(D3DRS_ZENABLE, FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
+
+    const int slots = weaponwheel::ClampSlots((int)g_weaponWheelSlots);
+    const int selected = std::max(0, std::min(slots - 1,
+        (int)InterlockedCompareExchange(&g_weaponWheelSelection, 0, 0)));
+    const uipointer::V hand{g_handLastPos[1].x, g_handLastPos[1].y + 0.12f,
+                            g_handLastPos[1].z};
+    const float pi = 3.14159265358979323846f;
+    for (int eye = 0; eye < 2; ++eye) {
+        uipointer::ScreenPoint p;
+        if (!VrUiProjectEye(eye, hand, p)) continue;
+        const int cx = (int)lroundf((eye + p.u) * d.Width * 0.5f);
+        const int cy = (int)lroundf(p.v * d.Height);
+        const int radius = std::max(32, (int)(d.Height * 0.070f));
+        const int card = std::max(18, (int)(d.Height * 0.026f));
+        D3DRECT centre = {cx - card, cy - card, cx + card, cy + card};
+        ClearRects(dev, &centre, 1, 0xC0182028);
+        for (int i = 0; i < slots; ++i) {
+            const float a = -pi * 0.5f + 2.0f * pi * (float)i / (float)slots;
+            const int x = (int)lroundf(cx + cosf(a) * radius);
+            const int y = (int)lroundf(cy + sinf(a) * radius);
+            D3DRECT r = {x - card, y - card, x + card, y + card};
+            ClearRects(dev, &r, 1, i == selected ? 0xE0FFD040 : 0xB0304050);
+            char label[8]; _snprintf_s(label, sizeof(label), _TRUNCATE, "W%d", i + 1);
+            D3DRECT text[64];
+            const int px = std::max(2, card / 8);
+            const int tw = (int)strlen(label) * (kGlyphW + 1) * px;
+            const int th = kGlyphH * px;
+            const int n = TextRects(text, 0, (int)(sizeof(text) / sizeof(text[0])),
+                                    x - tw / 2, y - th / 2, px, label);
+            ClearRects(dev, text, n, i == selected ? 0xFF101010 : 0xFFE8EEF8);
+        }
+    }
+    static bool said = false;
+    if (!said) { said = true; Log("weapon wheel: overlay active (right-hand anchor, %d sectors)", slots); }
+    g_wristState->Apply();
+    if (old) g_origSetRenderTarget(dev, 0, old);
+    dev->SetDepthStencilSurface(depth);
+    if (old) old->Release(); if (depth) depth->Release(); back->Release();
+}
+
 // A flat cutscene should read as a cinema screen, not as a full-field texture
 // glued to the user's face.  The game has already rendered the mono image once
 // into the SBS target; this inexpensive matte clears the area around a centered
@@ -25194,6 +25343,11 @@ void LoadIniSettings() {
     Log("weapon holster=%d; hip fwd/right/up=(%.0f,%.0f,%.0f) UU radius=%.0f UU; right grip rising edge toggles",
         g_holsterEnabled, g_holsterConfig.fwd, g_holsterConfig.right,
         g_holsterConfig.up, g_holsterConfig.radius);
+    g_weaponWheelSlots = GetPrivateProfileIntA("Input", "WeaponWheelSlots", 4, path);
+    if (g_weaponWheelSlots < 2) g_weaponWheelSlots = 2;
+    if (g_weaponWheelSlots > 8) g_weaponWheelSlots = 8;
+    Log("weapon wheel: R3 hold, right stick sectors=%ld, release commits native cycle-weapon pulses",
+        g_weaponWheelSlots);
     g_showControllerArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 1, path) ? 1 : 0;
     g_armIkMode = GetPrivateProfileIntA("Render", "ArmIKMode", 0, path);
     if (g_armIkMode < 0 || g_armIkMode > 2) g_armIkMode = 0;
