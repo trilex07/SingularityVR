@@ -65,3 +65,5 @@ build/localization/
 tools/**/uepkg.exe
 tools/**/uedecompress.exe
 tools/**/*.obj
+__pycache__/
+*.py[cod]
