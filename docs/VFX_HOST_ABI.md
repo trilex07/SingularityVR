@@ -151,7 +151,12 @@ g_vfx.Tick(dtSeconds);
 
 // INSIDE EACH EYE's world draw (the existing stereo path - not beside it):
 int n = g_vfx.Collect(singularity_vfx::VfxRenderPass::Gameplay, g_vfxItems, 32);
-g_vfxDrawer.DrawItems(pDevice, g_vfxItems, n, g_vfxAtlas, eyeRight, eyeUp);
+// Pass the CURRENT eye's world->clip matrix (the same camera matrix the stereo
+// path remaps/uploads) and whether it is row-major. UE3 drives VS constants, so
+// the fixed-function D3DTS_* transforms are otherwise stale and the quads get
+// clipped away - this argument is what makes them visible.
+g_vfxDrawer.DrawItems(pDevice, g_vfxItems, n, g_vfxAtlas, eyeRight, eyeUp,
+                      eyeWorldToClip, /*rowMajor=*/true);
 
 // teardown:
 g_vfx.Unload(); g_vfxDrawer.Shutdown(); singularity_vfx::host::ReleaseAtlas(g_vfxAtlas);
