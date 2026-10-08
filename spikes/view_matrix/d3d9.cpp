@@ -9228,6 +9228,13 @@ void SyncXRInput(XrTime displayTime) {
     // Navigation is read here and the game is given NOTHING - see the ClearPad below. That is what
     // makes the panel unable to conflict with whatever is on screen behind it: the pause menu, the
     // main menu and the player all see a controller that is not being touched.
+    if (InterlockedCompareExchange(&g_panelOpen, 0, 0) &&
+        InterlockedCompareExchange(&g_vrMenuClass, 0, 0) != 3) {
+        if (g_panelDirty) PanelSave();
+        g_panelDirty = false;
+        InterlockedExchange(&g_panelOpen, 0);
+        Log("VR settings: auto-closed when pause menu lost focus");
+    }
     if (InterlockedCompareExchange(&g_panelOpen, 0, 0)) {
         static bool armedY = true, armedX = true;
         static bool panelBackWasHeld = false;
