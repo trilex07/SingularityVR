@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "abi": 1,
+  "note": "VFX atlas manifest stub. The HOST builds VfxAtlas from this; the PLUGIN only emits clipId. Replace the texture files with the real atlases (1024x1024 RGBA) when wired.",
+  "atlases": [
+    { "id": "muzzle", "file": "vfx_muzzle.png", "blend": "additive" },
+    { "id": "smoke",  "file": "vfx_smoke.png",  "blend": "alpha" },
+    { "id": "blood",  "file": "vfx_blood.png",  "blend": "alpha" }
+  ],
+  "clips": [
+    { "name": "MuzzleFireSmall",  "clipId": 0, "atlas": "muzzle", "grid": [4, 4], "frames": 3,  "fps": 30, "blend": "additive", "pivot": [0.5, 0.5] },
+    { "name": "MuzzleFireLarge",  "clipId": 1, "atlas": "muzzle", "grid": [4, 4], "frames": 3,  "fps": 30, "blend": "additive", "pivot": [0.5, 0.5] },
+    { "name": "MuzzleFireHeavy",  "clipId": 2, "atlas": "muzzle", "grid": [4, 4], "frames": 3,  "fps": 24, "blend": "additive", "pivot": [0.5, 0.5] },
+    { "name": "MuzzleFireEnergy", "clipId": 3, "atlas": "muzzle", "grid": [4, 4], "frames": 3,  "fps": 30, "blend": "additive", "pivot": [0.5, 0.5] },
+    { "name": "SmokeWhite",       "clipId": 4, "atlas": "smoke",  "grid": [5, 5], "frames": 25, "fps": 30, "blend": "alpha",    "pivot": [0.5, 0.5] },
+    { "name": "SmokeBlack",       "clipId": 5, "atlas": "smoke",  "grid": [5, 5], "frames": 25, "fps": 30, "blend": "alpha",    "pivot": [0.5, 0.5] },
+    { "name": "BloodSplash",      "clipId": 6, "atlas": "blood",  "grid": [3, 2], "frames": 6,  "fps": 30, "blend": "alpha",    "pivot": [0.5, 0.5] },
+    { "name": "BloodHitAlt",      "clipId": 7, "atlas": "blood",  "grid": [4, 4], "frames": 16, "fps": 30, "blend": "alpha",    "pivot": [0.5, 0.5] }
+  ]
+}

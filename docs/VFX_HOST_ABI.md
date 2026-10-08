@@ -87,15 +87,41 @@ from it. No PNG decode in the frame loop.
 SmokeWhite, SmokeBlack, BloodSplash, BloodHitAlt`. Append new clips at the end
 and bump the ABI.
 
+## Reference plugin stub (hand this to the main agent)
+
+`tools/vfx-plugin-stub/` contains a working, self-contained plugin that implements
+the frozen ABI (bounded pool, flash + 2 smoke puffs, flesh-only blood, per-pass
+gating). It contains no D3D9 and no engine hooks — the VFX agent replaces its
+logic and atlas, keeping the exports.
+
+| file | contents |
+| --- | --- |
+| `vfx_plugin_stub.cpp` | the ABI exports + effect logic |
+| `vfx_atlas_manifest.json` | clipId -> atlas/grid/frames/fps/blend/pivot |
+| `build.ps1` | builds `SingularityVfx.dll` (x86, /MD, C++17); `-Install` drops it + the manifest into Binaries |
+
+```powershell
+# build the plugin DLL (do NOT -Install until desktop tests pass)
+powershell -File tools/vfx-plugin-stub/build.ps1
+
+# optional, later: put it live in the game
+powershell -File tools/vfx-plugin-stub/build.ps1 -Install
+```
+
 ## Build / test
 
-```
-# host header test (x86, /O2, /std:c++17)
+```powershell
+# 1) host header test (x86, /O2, /std:c++17)
 cl /nologo /EHsc /W4 /O2 /std:c++17 \
    /Fe:vfx_host_test.exe tools/reference-tests/vfx/vfx_host_test.cpp
-```
+# expected: PASS: VFX ABI layout stable, host seams no-op without plugin, kill-switch clean
 
-Expected: `PASS: VFX ABI layout stable, host seams no-op without plugin, kill-switch clean`
+# 2) host<->plugin round-trip: build the stub, copy it beside this test as
+#    SingularityVfx.dll, then run
+cl /nologo /EHsc /W4 /O2 /std:c++17 /Fe:vfx_plugin_roundtrip_test.exe \
+   tools/reference-tests/vfx/vfx_plugin_roundtrip_test.cpp
+# expected: PASS: host<->plugin round-trip (flash/smoke/blood, gating, expiry, kill-switch)
+```
 
 The full `d3d9.dll` build needs the OpenXR SDK and is out of scope here.
 
