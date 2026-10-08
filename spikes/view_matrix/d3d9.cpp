@@ -962,6 +962,7 @@ extern volatile LONG   g_meleeArmsMs, g_meleeDelayMs, g_meleePending;
 extern volatile LONG64 g_meleeUntilMs, g_meleeFromMs;
 extern volatile LONG   g_armsAnimActiveCached;
 extern volatile LONG64 g_lastMeleeEdgeMs, g_lastJumpEdgeMs;   // fix-G/perf (defined with melee state)
+extern volatile LONG g_forceDesktopAutomation;                // defined with desktop-HMD diagnostics
 
 // The NUMPAD4/NUMPAD5 test inputs, laid OVER whatever the controllers just published.
 //
@@ -971,6 +972,34 @@ extern volatile LONG64 g_lastMeleeEdgeMs, g_lastJumpEdgeMs;   // fix-G/perf (def
 // reason - UpdateFromHeadset returns early on half a dozen paths, and a test that only works when
 // the headset happens to be running is not a control.
 void ApplyPadTestOverrides() {
+    // Diagnostic-only desktop-HMD gameplay sequence, published through the existing XInput seam.
+    // Hold A for the boot/menu, walk forward, then hold the right trigger for FireAmmunition/VFX.
+    if (InterlockedCompareExchange(&g_forceDesktopAutomation, 0, 0)) {
+        static LONG autoFrame = 0;
+        static LONG autoPhase = -1;
+        const LONG f = InterlockedIncrement(&autoFrame);
+        InterlockedExchange(&g_padEmu, 1);
+        LONG packed = 0;
+        LONG stick = 0;
+        // Desktop HMD launches can spend tens of seconds in the UE3 intro/logo chain.
+        // Keep A asserted long enough to skip it and activate Start/Continue, then walk and
+        // fire only after the menu has had a chance to hand control to the player.
+        const LONG phase = f < 1500 ? 0 : (f < 2700 ? 1 : (f < 3050 ? 2 : 3));
+        if (phase != autoPhase) {
+            autoPhase = phase;
+            Log("desktop automation: phase=%ld frame=%ld (%s)", phase, f,
+                phase == 0 ? "A start/continue" :
+                phase == 1 ? "left stick forward" :
+                phase == 2 ? "right trigger fire" : "released");
+        }
+        if (phase == 0) packed = (LONG)XI_A;
+        else if (phase == 1) stick = PackStick(0, 24000);
+        else if (phase == 2) packed = (LONG(255) << 24);
+        InterlockedExchange(&g_padBtns, packed);
+        InterlockedExchange(&g_padLStick, stick);
+        InterlockedExchange(&g_padRStick, PackStick(0, 0));
+        return;
+    }
     const bool walk = InterlockedCompareExchange(&g_padWalkTest, 0, 0) != 0;
     const bool look = InterlockedCompareExchange(&g_padLookTest, 0, 0) != 0;
     const bool probe = g_btnProbeFrames > 0;
@@ -6451,6 +6480,8 @@ volatile LONG g_startInVr = 1;      // ini [Render] StartInVr
 // This never changes normal PSVR2 startup behavior unless explicitly enabled in [Diagnostic].
 volatile LONG g_forceDesktopVr = 0; // ini [Diagnostic] ForceDesktopVr
 volatile LONG g_forceDesktopCapture = 0; // ini [Diagnostic] DesktopCapture
+volatile LONG g_forceDesktopCaptureFrames = 180; // ini [Diagnostic] DesktopCaptureFrames
+volatile LONG g_forceDesktopAutomation = 0; // ini [Diagnostic] DesktopAutomation
 void SetVrMode(bool on);            // defined with the other Present-time state
 
 // First row, because it is the one that changes the most: MOVE DIRECTION and CROSSHAIR both follow
@@ -19922,6 +19953,14 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
                     fe.valid = true;
                     g_vfxFireMail = fe;
                     if (InterlockedExchange(&g_vfxFirePending, 1)) InterlockedIncrement(&g_vfxFireOverruns);
+                    // Diagnostic-only gameplay capture: when the synthetic desktop-HMD probe
+                    // fires, capture the very next SBS backbuffer so the muzzle effect can be
+                    // inspected in context instead of on the boot splash.
+                    if (InterlockedCompareExchange(&g_forceDesktopVr, 0, 0) &&
+                        InterlockedCompareExchange(&g_forceDesktopCapture, 0, 0)) {
+                        InterlockedExchange(&g_captureRequested, 1);
+                        Log("desktop HMD diagnostic: capture requested on FireAmmunition");
+                    }
                 }
             }
             static volatile LONG shots = 0;
@@ -21614,7 +21653,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         static bool captured = false;
         if (InterlockedCompareExchange(&g_forceDesktopVr, 0, 0) &&
             InterlockedCompareExchange(&g_forceDesktopCapture, 0, 0) && !captured &&
-            ++frames >= 180) {
+            ++frames >= InterlockedCompareExchange(&g_forceDesktopCaptureFrames, 180, 180)) {
             captured = true;
             InterlockedExchange(&g_captureRequested, 1);
             Log("desktop HMD diagnostic: requesting one SBS backbuffer capture");
@@ -24938,9 +24977,17 @@ void LoadIniSettings() {
                         GetPrivateProfileIntA("Diagnostic", "ForceDesktopVr", 0, path) ? 1 : 0);
     InterlockedExchange(&g_forceDesktopCapture,
                         GetPrivateProfileIntA("Diagnostic", "DesktopCapture", 0, path) ? 1 : 0);
-    Log("desktop HMD diagnostic=%ld, one-shot capture=%ld (diagnostic only)",
+    LONG captureFrames = GetPrivateProfileIntA("Diagnostic", "DesktopCaptureFrames", 180, path);
+    if (captureFrames < 1) captureFrames = 1;
+    if (captureFrames > 10000) captureFrames = 10000;
+    InterlockedExchange(&g_forceDesktopCaptureFrames, captureFrames);
+    InterlockedExchange(&g_forceDesktopAutomation,
+                        GetPrivateProfileIntA("Diagnostic", "DesktopAutomation", 0, path) ? 1 : 0);
+    Log("desktop HMD diagnostic=%ld, one-shot capture=%ld at frame %ld, automation=%ld (diagnostic only)",
         InterlockedCompareExchange(&g_forceDesktopVr, 0, 0),
-        InterlockedCompareExchange(&g_forceDesktopCapture, 0, 0));
+        InterlockedCompareExchange(&g_forceDesktopCapture, 0, 0),
+        InterlockedCompareExchange(&g_forceDesktopCaptureFrames, 180, 180),
+        InterlockedCompareExchange(&g_forceDesktopAutomation, 0, 0));
     g_sceneModeTrace = GetPrivateProfileIntA("Diagnostic", "SceneModeTrace", 0, path) ? 1 : 0;
     InterlockedExchange(&g_sceneFlatEnabled,
                         GetPrivateProfileIntA("Render", "CutsceneFlatMode", 1, path) ? 1 : 0);
