@@ -21,7 +21,7 @@ The deployment INI used for this candidate has:
 
 ```ini
 IndependentHandsPrototype=1
-ShadowMode=1
+ShadowMode=2
 VrShadows=0
 VfxHost=0
 VfxDiag=0
