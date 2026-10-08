@@ -984,17 +984,24 @@ void ApplyPadTestOverrides() {
         // Desktop HMD launches can spend tens of seconds in the UE3 intro/logo chain.
         // Keep A asserted long enough to skip it and activate Start/Continue, then walk and
         // fire only after the menu has had a chance to hand control to the player.
-        const LONG phase = f < 1500 ? 0 : (f < 2700 ? 1 : (f < 3050 ? 2 : 3));
+        // Keep the diagnostic sequence deterministic: start/menu, walk, fire, then a
+        // short isolated impulse/melee edge.  The melee phase is deliberately separated
+        // from the trigger phase so a spike report can attribute the cost to the attack
+        // path rather than to simultaneous weapon fire.
+        const LONG phase = f < 1500 ? 0 : (f < 2700 ? 1 :
+                             (f < 2900 ? 2 : (f < 2960 ? 3 : 4)));
         if (phase != autoPhase) {
             autoPhase = phase;
             Log("desktop automation: phase=%ld frame=%ld (%s)", phase, f,
                 phase == 0 ? "A start/continue" :
                 phase == 1 ? "left stick forward" :
-                phase == 2 ? "right trigger fire" : "released");
+                phase == 2 ? "right trigger fire" :
+                phase == 3 ? "impulse/melee" : "released");
         }
         if (phase == 0) packed = (LONG)XI_A;
         else if (phase == 1) stick = PackStick(0, 24000);
         else if (phase == 2) packed = (LONG(255) << 24);
+        else if (phase == 3) packed = (LONG)XI_RSHOULDER;
         InterlockedExchange(&g_padBtns, packed);
         InterlockedExchange(&g_padLStick, stick);
         InterlockedExchange(&g_padRStick, PackStick(0, 0));
