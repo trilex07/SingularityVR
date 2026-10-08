@@ -75,6 +75,11 @@
   draws return before it; log-proven zero census lines with mode 3 live);
   VFX quads now get the live per-eye view*proj into fixed-function PROJECTION
   (stale engine transforms made them land outside clip = invisible).
+  Round 3 DEPLOYED: shadow census asks the depth shader (bytecode, run-196
+  method) which const regs it reads - old slot-scan read nothing (camMats are
+  invalidated on shadow layouts; log-proven mask=0x0 at 480 draws/window);
+  VFX reentrancy guard in all 4 draw hooks + magenta-dot/NDC diagnostic
+  (8 dots) to split position-vs-texture blame.
 - White ring right-eye-only (12:54:08 shot): per-eye sprite artifact, NEW instance
   of the muzzle-on-seam class. SpriteQuadPerEye=1 set in user ini; verdict pending.
 - Menu-draw census (MDG groups) flows since 315ce56. 470 groups/session typical.

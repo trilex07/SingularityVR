@@ -10887,7 +10887,15 @@ static void VfxEyeDraw(IDirect3DDevice9* dev, int eye);
 
 // ShadowMode=3 census refresh (defined with the shadow globals); called from the
 // draw-hook shadow early-outs, which run before StereoPairBody.
-inline void ShadowMode3NoteGeneration();
+inline void ShadowMode3NoteGeneration(IDirect3DDevice9* dev);
+static void WorldToClip(const float* m, int conv, const float pt[3], float out[4]);
+static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR colour);
+// VFX reentrancy: DrawItems draws through the vtable, so our own per-eye quads
+// re-enter the draw hooks. While set, hooks forward straight to the original.
+static volatile LONG g_inVfxDraw = 0;
+// Present serial, owned by the VFX block below; the shadow census borrows it as
+// its per-frame epoch (generation OR-accumulates within a frame).
+extern volatile LONG g_vfxFrame;
 
 // VFX per-eye view*proj capture for the fixed-function quad path. Stored raw
 // with its convention; vfx_draw.h::MakeRowMajorVP transposes when needed.
@@ -11012,7 +11020,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
     // so the census refresh lives in ShadowMode3NoteGeneration() there; this gate
     // covers any shadow-layout draw that still reaches the seam.
     if (Rd(g_shadowMode) == 3 && g_boundShaderLayout.shadow) {
-        ShadowMode3NoteGeneration();
+        ShadowMode3NoteGeneration(dev);
         return draw();
     }
     if (!InterlockedCompareExchange(&g_rtIsScene, 0, 0) || g_boundShaderLayout.shadow) { ++g_drawsOffscreen; return draw(); }
@@ -12182,12 +12190,14 @@ void VidProbeFrameEnd() {
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                         UINT start, UINT count) {
+    // VFX reentrancy: our own per-eye quads draw through the vtable.
+    if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0)) return g_origDrawPrim(dev,t,start,count);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,0,t,count,0,start,0,0,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     ++g_vidFrameDraws;
-    if(g_boundShaderLayout.shadow){ShadowMode3NoteGeneration();return g_origDrawPrim(dev,t,start,count);}
+    if(g_boundShaderLayout.shadow){ShadowMode3NoteGeneration(dev);return g_origDrawPrim(dev,t,start,count);}
     if (count <= 4) VidProbeRecord(dev, 0, t, count, nullptr, 0);
     // No vertex data on this path, so no bounding box - but its PRESENCE still matters. If the flash
     // turns out to be here rather than on a user-pointer path, the quad classifier is not involved at
@@ -14919,6 +14929,8 @@ static bool TrackFpCaster(IDirect3DDevice9* dev,INT baseVertex,UINT minIndex,
 HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                                INT baseVertex, UINT minIndex, UINT numVertices,
                                                UINT startIndex, UINT primCount) {
+    // VFX reentrancy: our own per-eye quads draw through the vtable.
+    if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0)) return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,1,t,primCount,numVertices,startIndex,minIndex,baseVertex,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
@@ -14929,7 +14941,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         InterlockedIncrement(&g_firstPersonShadowSkipped);InterlockedIncrement(&g_vrCounters.fpShadowDepthSkipped);return D3D_OK;
     }
     if(g_boundShaderLayout.shadow)
-        {ShadowMode3NoteGeneration();return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);}
+        {ShadowMode3NoteGeneration(dev);return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);}
     ++g_vidFrameDraws;
     // Indexed geometry cannot expose its vertices cheaply here, so v0 stays zero on these rows -
     // the texture and render-target columns are what this path contributes.
@@ -16272,9 +16284,11 @@ volatile LONG g_scopeMatchAim = 0, g_scopeMatchIdle = 0;   // ⭐ run 231
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                           UINT primCount, const void* vtxData, UINT vtxStride) {
+    // VFX reentrancy: our own per-eye quads draw through the vtable.
+    if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawPrimUP) return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,2,t,primCount,0,0,0,0,vtxData,vtxStride);   // fix-I census
-    if(g_boundShaderLayout.shadow && g_origDrawPrimUP)return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
+    if(g_boundShaderLayout.shadow && g_origDrawPrimUP){ShadowMode3NoteGeneration(dev);return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);}
     if (primCount<=4) CaptureShadowEvidence(dev);
     if (!g_origDrawPrimUP) return D3DERR_INVALIDCALL;
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
@@ -16403,13 +16417,15 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
                                                 UINT minVtxIndex, UINT numVertices, UINT primCount,
                                                 const void* idxData, D3DFORMAT idxFormat,
                                                 const void* vtxData, UINT vtxStride) {
+    // VFX reentrancy: our own per-eye quads draw through the vtable.
+    if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawIndexedPrimUP) return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,3,t,primCount,numVertices,0,minVtxIndex,0,vtxData,vtxStride);   // fix-I census
     if (!g_origDrawIndexedPrimUP) return D3DERR_INVALIDCALL;
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     // UP memory has no retained resource identity: do not suppress on vertex count.
     if(g_boundShaderLayout.shadow)
-        return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
+        {ShadowMode3NoteGeneration(dev);return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);}
     ++g_vidFrameDraws;
     if (primCount <= 4) VidProbeRecord(dev, 3, t, primCount, vtxData, vtxStride);
     if (UserPtrInert())
@@ -17071,21 +17087,98 @@ singularity::shadow::ShadowRegisterCensus g_shadowRegs;
 int g_drawsShadowNative = 0, g_drawsShadowProtected = 0;
 static std::uint32_t g_shadowRegsLogged = 0xFFFFFFFFu;
 
+// ShadowMode=3: which constant registers does this vertex shader READ?
+// Same token walk as the run-196 census (authoritative: the bytecode names every
+// constant it references). Pure query, bounded static buffer, no logging here.
+// Returns false for SM 1.x (no length field - would report nonsense), oversized
+// shaders, and relative addressing (not statically knowable).
+static bool ShadowVsReadRegs(IDirect3DVertexShader9* vs, uint32_t outMask[3]) {
+    outMask[0] = outMask[1] = outMask[2] = 0;
+    if (!vs) return false;
+    UINT size = 0;
+    if (FAILED(vs->GetFunction(nullptr, &size)) || size < 8) return false;
+    static DWORD buf[4096];
+    if (size > sizeof(buf)) return false;
+    if (FAILED(vs->GetFunction(buf, &size))) return false;
+    const DWORD nTok = size / 4;
+    if ((((buf[0] >> 8) & 0xFF)) < 2) return false;
+    DWORD i = 1, guard = 0;
+    while (i < nTok) {
+        if (++guard > 8192) return false;
+        const DWORD tok = buf[i], op = tok & 0xFFFF;
+        if (op == 0xFFFF) break;
+        if (op == 0xFFFE) { i += 1 + ((tok >> 16) & 0x7FFF); continue; }
+        const DWORD len = (tok >> 24) & 0x0F;
+        ++i;
+        if (op == 81 || op == 48 || op == 49) { i += len; continue; }
+        for (DWORD k = 0; k < len && i + k < nTok; ++k) {
+            const DWORD t = buf[i + k];
+            if (!(t & 0x80000000)) continue;
+            const DWORD rt = ((t & 0x70000000) >> 28) | ((t & 0x00001800) >> 8);
+            if (rt != kSprConst) continue;
+            if (t & 0x00002000) return false;
+            const DWORD rn = t & 0x7FF;
+            if (rn < 96) outMask[rn / 32] |= (1u << (rn % 32));
+        }
+        i += len;
+    }
+    return true;
+}
+
+// Depth-shader read-sets, cached by shader pointer (bounded: 8 entries, then
+// unknown shaders are skipped - safe direction, no exclusion). NOTE: no AddRef
+// is held; UE3 creates shaders at load and rarely frees mid-level (same class
+// as the existing texture-cache slot hazard).
+struct ShadowVsEntry { IDirect3DVertexShader9* vs; uint32_t mask[3]; };
+static ShadowVsEntry g_shadowVsCache[8] = {};
+static int g_shadowVsCount = 0;
+
 // ShadowMode=3: refresh the light-space census from a shadow-generation draw.
-// Called from the draw-hook shadow early-outs, which return the original draw
-// BEFORE StereoPairBody - so a gate inside StereoPairBody alone never observes
-// generation (log-proven: zero census lines with mode 3 live). The slots holding
-// a matrix in a shadow-layout scan are light-space by construction, so the
-// census refreshes from this scan - never guessed.
-inline void ShadowMode3NoteGeneration() {
-    if (Rd(g_shadowMode) != 3) return;
-    g_shadowRegs.Clear();
-    for (int s = 0; s < g_camMatUsed; ++s)
-        if (g_camMats[s].valid) g_shadowRegs.Mark((std::uint32_t)s);
+// The camera scan is deliberately invalidated on shadow layouts, so the old
+// "mark valid slots" read NOTHING (log-proven mask=0x0 with 480 draws/window).
+// Instead the bound depth shader is ASKED (bytecode, run-196 method) which
+// constant registers it reads; array slots whose register is read - except the
+// locked camera register (shared reuse would mono-ize the scene) - are light.
+inline void ShadowMode3NoteGeneration(IDirect3DDevice9* dev) {
+    if (Rd(g_shadowMode) != 3 || !dev) return;
     ++g_drawsShadowNative;
+    IDirect3DVertexShader9* vs = nullptr;
+    if (FAILED(dev->GetVertexShader(&vs))) return;
+    uint32_t* found = nullptr;
+    for (int i = 0; i < g_shadowVsCount; ++i)
+        if (g_shadowVsCache[i].vs == vs) { found = g_shadowVsCache[i].mask; break; }
+    if (!found) {
+        if (g_shadowVsCount >= 8) { if (vs) vs->Release(); return; }
+        uint32_t local[3];
+        if (!ShadowVsReadRegs(vs, local)) { if (vs) vs->Release(); return; }
+        g_shadowVsCache[g_shadowVsCount].vs = vs;
+        memcpy(g_shadowVsCache[g_shadowVsCount].mask, local, sizeof(local));
+        found = g_shadowVsCache[g_shadowVsCount].mask;
+        ++g_shadowVsCount;
+        char regs[192]; int o = 0, nm = 0;
+        for (int r = 0; r < 96 && o >= 0 && o < 170; ++r)
+            if (found[r / 32] & (1u << (r % 32))) {
+                const int n = _snprintf_s(regs + o, sizeof(regs) - o, _TRUNCATE, "%sc%d", nm ? " " : "", r);
+                if (n < 0) break;
+                o += n; ++nm;
+            }
+        regs[o >= 0 && o < (int)sizeof(regs) ? o : 0] = 0;
+        Log("ShadowMode3: depth VS %p reads %d const regs:%s", (void*)vs, nm, regs);
+    }
+    if (vs) vs->Release();
+    // OR-accumulate within the frame (several cascades may generate); cleared on
+    // the first generation draw of each frame via the Present serial.
+    static LONG genFrame = -1;
+    const LONG f = Rd(g_vfxFrame);
+    if (f != genFrame) { genFrame = f; g_shadowRegs.Clear(); }
+    for (int s = 0; s < g_camMatUsed; ++s) {
+        const UINT reg = g_camMats[s].reg;
+        if (reg < 96 && (found[reg / 32] & (1u << (reg % 32))) && reg != g_lockedReg)
+            g_shadowRegs.Mark((uint32_t)s);
+    }
     if (g_shadowRegs.Mask() != g_shadowRegsLogged) {
         g_shadowRegsLogged = g_shadowRegs.Mask();
-        Log("ShadowMode3 census: generation pass, light-space slots mask=0x%X", g_shadowRegs.Mask());
+        Log("ShadowMode3 census: light-space slots mask=0x%X (locked c%u exempt)", g_shadowRegs.Mask(), g_lockedReg);
     }
 }
 
@@ -17215,9 +17308,33 @@ static void VfxEyeDraw(IDirect3DDevice9* dev, int eye) {
         g_vfxItems[i].position.x *= m2u; g_vfxItems[i].position.y *= m2u; g_vfxItems[i].position.z *= m2u;
         g_vfxItems[i].size *= m2u;
     }
+    InterlockedExchange(&g_inVfxDraw, 1);
     g_vfxDrawer.DrawItems(dev, g_vfxItems, n, g_vfxAtlas, right, up,
                           g_vfxEyeMat[eye], g_vfxEyeConv[eye] == CONV_ROW);
+    InterlockedExchange(&g_inVfxDraw, 0);
     g_vfxItemsDrawn += n;
+    // Diagnostic (removable): magenta dot at item[0]'s screen position, same eye
+    // matrix + ClearRects primitive as the menu hit marker. Dot visible at the
+    // muzzle = position/matrix chain proven, blame texture/depth next. No dot =
+    // matrix/position broken. Bounded: 8 dots, then silent.
+    static int vfxDotLeft = 8;
+    if (vfxDotLeft > 0) {
+        --vfxDotLeft;
+        const float pt[3] = { g_vfxItems[0].position.x, g_vfxItems[0].position.y, g_vfxItems[0].position.z };
+        float clip[4];
+        WorldToClip(g_vfxEyeMat[eye], g_vfxEyeConv[eye], pt, clip);
+        Log("VFX dot: eye=%d clip=(%.3g %.3g %.3g %.3g) pos=(%.0f %.0f %.0f)UU size=%.3gUU",
+            eye, clip[0], clip[1], clip[2], clip[3], (double)pt[0], (double)pt[1], (double)pt[2], (double)g_vfxItems[0].size);
+        if (clip[3] > .001f) {
+            D3DVIEWPORT9 vp{};
+            if (SUCCEEDED(dev->GetViewport(&vp)) && vp.Width >= 4) {
+                const LONG sx = (LONG)((clip[0] / clip[3] * .5f + .5f) * vp.Width + vp.X);
+                const LONG sy = (LONG)((.5f - clip[1] / clip[3] * .5f) * vp.Height + vp.Y);
+                const D3DRECT r = { sx - 3, sy - 3, sx + 4, sy + 4 };
+                ClearRects(dev, &r, 1, 0xFFFF00FF);
+            }
+        }
+    }
 }
 // Fix-4/menus round 2: sticky per-window mask of suppression-miss reasons, set only for
 // menu-source draws (see SuppressCapturedVrMenuDraw). Render thread only, like the
