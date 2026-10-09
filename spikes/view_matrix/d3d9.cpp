@@ -6537,7 +6537,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_CINESTICK, PR_CINECAM, PR_SWAPSTICKS, PR_LEFTHAND, PR_WEAPONFX, PR_MUZZLEFX, PR_WORLDSCALE,
        PR_AIMPARTS,
        PR_SHADOWMODE, PR_DROPEXTRA,   // hub round 4: shadow sampling treatment + extra-target drop
-       PR_SHADOWTEST, PR_VFXORIGIN,   // reversible shadow-source + muzzle-anchor A/B tests
+       PR_SHADOWTEST, PR_VRSHADOWS, PR_VFXORIGIN,   // reversible shadow-source + visible projection A/B
        PR_VFXHOST, PR_VFXDRAW, PR_VFXDIAG, PR_VFXLOOK, PR_VFXOFFSET, // VFX test/tuning rows
        PR_GLOVEONLY,
        // ⭐ run 217: the laser and the per-weapon alignment rows.
@@ -6619,8 +6619,8 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
     // (1,400 vs 3,800 draws was measured) and a cross-run comparison is worthless. That mistake cost a
     // test run and it was mine.
-    { PR_OCCLUSION, PR_WEAPONFX, PR_AIMPARTS, PR_SHADOWMODE, PR_SHADOWTEST, PR_DROPEXTRA,
-      PR_VFXORIGIN, PR_VFXOFFSET, PR_DEBUG, PR_BACK },
+    { PR_OCCLUSION, PR_WEAPONFX, PR_AIMPARTS, PR_SHADOWMODE, PR_SHADOWTEST, PR_VRSHADOWS,
+      PR_DROPEXTRA, PR_VFXORIGIN, PR_VFXOFFSET, PR_BACK },
     { PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH, PR_BACK },
     // ⭐ run 237: its own page, not a row on WEAPON ALIGN. That page's values are PER WEAPON and
     // change meaning when you switch guns; these are one object held one way, always the same.
@@ -6844,6 +6844,9 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_SHADOWTEST:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_shadowTest));
             WritePrivateProfileStringA("Render", "ShadowTest", v, path); return;
+        case PR_VRSHADOWS:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_vrShadows));
+            WritePrivateProfileStringA("Render", "VrShadows", v, path); return;
         case PR_VFXORIGIN:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_vfxMuzzleOrigin));
             WritePrivateProfileStringA("Render", "VfxMuzzleOrigin", v, path); return;
@@ -7272,6 +7275,10 @@ void PanelRowText(int row, char* out, size_t cap) {
             _snprintf_s(out, cap, _TRUNCATE, "SHADOW TEST   %s",
                         Rd(g_shadowTest) ? "DROP MAP PASSES" : "NORMAL");
             break;
+        case PR_VRSHADOWS:
+            _snprintf_s(out, cap, _TRUNCATE, "VR SHADOWS    %s",
+                        Rd(g_vrShadows) ? "ON" : "OFF");
+            break;
         case PR_VFXORIGIN:
             _snprintf_s(out, cap, _TRUNCATE, "VFX ORIGIN    %s",
                         Rd(g_vfxMuzzleOrigin) ? "GUN PIVOT" : "CAMERA ANCHOR");
@@ -7467,6 +7474,11 @@ void PanelAdjust(int row, int dir) {
             InterlockedExchange(&g_shadowTest, Rd(g_shadowTest) ? 0 : 1);
             Log("SHADOW TEST -> %ld (%s; temporary A/B, restore NORMAL after capture)",
                 Rd(g_shadowTest), Rd(g_shadowTest) ? "all classified shadow-map draws dropped" : "normal shadow draws");
+            break;
+        case PR_VRSHADOWS:
+            InterlockedExchange(&g_vrShadows, Rd(g_vrShadows) ? 0 : 1);
+            Log("VR SHADOWS -> %ld (projected shadow sampling %s)",
+                Rd(g_vrShadows), Rd(g_vrShadows) ? "enabled" : "disabled");
             break;
         case PR_VFXORIGIN:
             InterlockedExchange(&g_vfxMuzzleOrigin, Rd(g_vfxMuzzleOrigin) ? 0 : 1);
@@ -25650,6 +25662,8 @@ void LoadIniSettings() {
     Log("weapon wheel: R3 hold, right stick sectors=%ld, release commits native cycle-weapon pulses",
         g_weaponWheelSlots);
     g_showControllerArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 0, path) ? 1 : 0;
+    Log("controller arms: %s (ShowControllerArms; glove-only is the stable default)",
+        g_showControllerArms ? "animated mesh" : "gloves only");
     g_armIkMode = GetPrivateProfileIntA("Render", "ArmIKMode", 0, path);
     if (g_armIkMode < 0 || g_armIkMode > 2) g_armIkMode = 0;
     g_independentHands = GetPrivateProfileIntA("Render", "IndependentHandsPrototype", 0, path) ? 1 : 0;

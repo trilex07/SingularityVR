@@ -12,6 +12,11 @@ The gameplay context prompt overlay now advertises **R1** (right grip), which
 matches the runtime use/reload action. Enter/Esc labels in the Scaleform text
 path continue to map to Cross/Circle for notes and menus.
 
+The Advanced page now exposes `VR SHADOWS` as a live A/B switch. It controls
+the projected-shadow sampling gate only; `SHADOW` (the light-space treatment)
+and `SHADOW TEST` remain separate rows so a comparison changes one variable at
+a time.
+
 Full arm deformation is still opt-in. The shipped default is
 `ShowControllerArms=0`, so the stable tracked gloves remain visible while the
 animated arm mesh is not drawn. The VR panel can re-enable the arm mesh for a
