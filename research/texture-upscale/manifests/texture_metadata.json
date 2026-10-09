@@ -2515,6 +2515,568 @@
       ],
       "decoded_mode": "RGBA",
       "file_size": 32896
+    },
+    "t_blood_splat01_d": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT5",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        256,
+        256
+      ],
+      "exported_mip_level": 1
+    },
+    "t_blood_splat01_n": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT1",
+      "mip_tail": 9,
+      "compression": "TC_Normalmap",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "normal",
+      "exported_dims": [
+        256,
+        256
+      ],
+      "exported_mip_level": 1
+    },
+    "t_blood_splat02_d": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT5",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        256,
+        256
+      ],
+      "exported_mip_level": 1,
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\t_blood_splat02_d.dds",
+      "sha256": "87f1db2dc42b385ed5076edc5157ebde6f09b7514fd20331f3fcfa702101e286",
+      "decoded_size": [
+        256,
+        256
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 65664
+    },
+    "bsplat3_d": {
+      "size_x": 256,
+      "size_y": 256,
+      "format": "PF_DXT5",
+      "mip_tail": 8,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        256,
+        256
+      ],
+      "exported_mip_level": 0,
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\bsplat3_d.dds",
+      "sha256": "772232ad3fd9d1899f3178ab08878c421c11cf0967e8d67233c18223d1f6245c",
+      "decoded_size": [
+        256,
+        256
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 65664
+    },
+    "bsplat_decal_d": {
+      "size_x": 256,
+      "size_y": 256,
+      "format": "PF_DXT1",
+      "mip_tail": 8,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        128,
+        128
+      ],
+      "exported_mip_level": 1,
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\bsplat_decal_d.dds",
+      "sha256": "b531d7bc45f52738e533e914c436d957489815b98714ab31519c9d04e06d19a8",
+      "decoded_size": [
+        128,
+        128
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 8320
+    },
+    "bulletImpactFlesh_d": {
+      "size_x": 128,
+      "size_y": 128,
+      "format": "PF_DXT1",
+      "mip_tail": 7,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\bulletImpactFlesh_d.dds",
+      "sha256": "2f5bb768cf63b9bd56d94c112ba844ba1ae12cb0d2bb911e723b43d08f36762b",
+      "decoded_size": [
+        64,
+        64
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 2176
+    },
+    "bulletImpactFlesh_n": {
+      "size_x": 128,
+      "size_y": 128,
+      "format": "PF_DXT1",
+      "mip_tail": 7,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "normal",
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\bulletImpactFlesh_n.dds",
+      "sha256": "8f395207470260433b7afdd537011b88f3503c04b13aae67a8981a216db9c113",
+      "decoded_size": [
+        64,
+        64
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 2176
+    },
+    "blood_spray_n": {
+      "size_x": 1024,
+      "size_y": 1024,
+      "format": "PF_DXT5",
+      "mip_tail": 10,
+      "compression": "TC_NormalmapAlpha",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "normal",
+      "exported_dims": [
+        512,
+        512
+      ],
+      "exported_mip_level": 1
+    },
+    "blood_drops_n": {
+      "size_x": 256,
+      "size_y": 256,
+      "format": "PF_DXT5",
+      "mip_tail": 8,
+      "compression": "TC_NormalmapAlpha",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "normal",
+      "exported_dims": [
+        128,
+        128
+      ],
+      "exported_mip_level": 1
+    },
+    "corpse_gibs_d": {
+      "size_x": 1024,
+      "size_y": 1024,
+      "format": "PF_DXT1",
+      "mip_tail": 10,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        256,
+        256
+      ],
+      "exported_mip_level": 2
+    },
+    "muzzleflashCenter": {
+      "size_x": 256,
+      "size_y": 256,
+      "format": "PF_DXT1",
+      "mip_tail": 8,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        128,
+        256
+      ],
+      "exported_mip_level": 0,
+      "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\muzzleflashCenter.dds",
+      "sha256": "ed9caf8b7fccd9978013dcac71e500712db32958408f0918568bd4aa4961223e",
+      "decoded_size": [
+        256,
+        256
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 32896
+    },
+    "muzzleFlashDir_01": {
+      "size_x": 128,
+      "size_y": 256,
+      "format": "PF_DXT1",
+      "mip_tail": 8,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        128,
+        256
+      ],
+      "exported_mip_level": 0,
+      "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\muzzleFlashDir_01.dds",
+      "sha256": "937fa002b4b433c3ec0be8e8ba57f80474e8c7c16f2e88995da05a8dc38a7c35",
+      "decoded_size": [
+        128,
+        256
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 16512
+    },
+    "brightFlash_01": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT1",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        512,
+        512
+      ],
+      "exported_mip_level": 0,
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\brightFlash_01.dds",
+      "sha256": "848d36e4db2df9680fadc86bc1c05e16ad3a9e7f4f6ae39581b710e9d7c1bfee",
+      "decoded_size": [
+        512,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 131200
+    },
+    "smoke_dark_subUV": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT5",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        256,
+        256
+      ],
+      "exported_mip_level": 1
+    },
+    "smoke_trail_01": {
+      "size_x": 128,
+      "size_y": 1024,
+      "format": "PF_DXT5",
+      "mip_tail": 10,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        64,
+        512
+      ],
+      "exported_mip_level": 1,
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\smoke_trail_01.dds",
+      "sha256": "deab63fafbbbbb8fb8c81ab026c442d4cac13deef20f6ca546d888b500d84fb8",
+      "decoded_size": [
+        64,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 32896
+    },
+    "smoke_trail_02": {
+      "size_x": 128,
+      "size_y": 512,
+      "format": "PF_DXT5",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        64,
+        512
+      ],
+      "exported_mip_level": 1,
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\smoke_trail_02.dds",
+      "sha256": "77743ad246393560945d2d2ba1ddee725c5d9c40b355e9dd88d45211b59ae0de",
+      "decoded_size": [
+        64,
+        256
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 16512
+    },
+    "smoke_wispy_01": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT1",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        256,
+        256
+      ],
+      "exported_mip_level": 1
+    },
+    "smoke_8": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT5",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        256,
+        256
+      ],
+      "exported_mip_level": 1
+    },
+    "smoketrail_01": {
+      "size_x": 128,
+      "size_y": 64,
+      "format": "PF_DXT1",
+      "mip_tail": 7,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "fx_kind": "albedo",
+      "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\smoketrail_01.dds",
+      "sha256": "b678d621e9497fe8587631de3af4d75aa782068cb8288d2297e831cba4aa9897",
+      "decoded_size": [
+        64,
+        32
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 1152
+    },
+    "fireball_base_intense_02": {
+      "size_x": 1024,
+      "size_y": 1024,
+      "format": "PF_DXT5",
+      "mip_tail": 10,
+      "compression": "TC_Default",
+      "cache": "None",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\fireball_base_intense_02.dds",
+      "sha256": "11047c6377ac64687b83ebd951565545376a79975911fddd30706c3b51e460d6",
+      "decoded_size": [
+        1024,
+        1024
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 1048704
+    },
+    "fire6c": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT1",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        256,
+        256
+      ],
+      "exported_mip_level": 1,
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\fire6c.dds",
+      "sha256": "bd53e875003f4b212c9363618d6cddaf243fdc09ce4f6a513793edb90ca386d0",
+      "decoded_size": [
+        256,
+        256
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 32896
+    },
+    "fire_op_particle": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT1",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        256,
+        256
+      ],
+      "exported_mip_level": 1
+    },
+    "spark_hit01": {
+      "size_x": 512,
+      "size_y": 512,
+      "format": "PF_DXT1",
+      "mip_tail": 9,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        512,
+        512
+      ],
+      "exported_mip_level": 0,
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\spark_hit01.dds",
+      "sha256": "83c871349da07d5255ef6041fec66ab350ea8ec9a5f9059a6e49b440061e948a",
+      "decoded_size": [
+        512,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 131200
+    },
+    "sparks1_subuv": {
+      "size_x": 32,
+      "size_y": 64,
+      "format": "PF_DXT1",
+      "mip_tail": 6,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\sparks1_subuv.dds",
+      "sha256": "e3bac1a0970c49f1cd24d66520b5a053d271bbe7a2bf4192f6f0eb6d383e1f78",
+      "decoded_size": [
+        32,
+        64
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 1152
+    },
+    "tracer2": {
+      "size_x": 32,
+      "size_y": 128,
+      "format": "PF_DXT1",
+      "mip_tail": 7,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "fx_kind": "albedo",
+      "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\tracer2.dds",
+      "sha256": "8a32336de783c36ff5c2c06faf8e0c120c279b916508a0ad912cfd5eea493bf7",
+      "decoded_size": [
+        16,
+        64
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 640
+    },
+    "tracer_sprite_vert": {
+      "size_x": 32,
+      "size_y": 256,
+      "format": "PF_DXT1",
+      "mip_tail": 8,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        16,
+        128
+      ],
+      "exported_mip_level": 1
+    },
+    "explosion": {
+      "size_x": 64,
+      "size_y": 64,
+      "format": "PF_DXT5",
+      "mip_tail": 6,
+      "compression": "TC_Default",
+      "cache": "None",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\explosion.dds",
+      "sha256": "511c750006c4f86c564d91cf3d38bc15cac5747935c01e43290f354a1142e995",
+      "decoded_size": [
+        64,
+        64
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 4224
+    },
+    "radionExplosion_01": {
+      "size_x": 1024,
+      "size_y": 1024,
+      "format": "PF_DXT5",
+      "mip_tail": 10,
+      "compression": "TC_Default",
+      "cache": "Textures_P0",
+      "package": "RvGameMPLoader_SF",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        512,
+        512
+      ],
+      "exported_mip_level": 1
+    },
+    "t_decal_metal_d_v4": {
+      "size_x": 128,
+      "size_y": 128,
+      "format": "PF_DXT5",
+      "mip_tail": 7,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "exported_dims": [
+        128,
+        128
+      ],
+      "exported_mip_level": 0,
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\t_decal_metal_d_v4.dds",
+      "sha256": "c9c93955b9e98de380d9e2543a805bfca712447b16086323c5da254a9b75c1f9",
+      "decoded_size": [
+        128,
+        128
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 16512
+    },
+    "t_decal_stone_d_v1": {
+      "size_x": 128,
+      "size_y": 128,
+      "format": "PF_DXT5",
+      "mip_tail": 7,
+      "compression": "TC_Default",
+      "cache": "Textures_P3",
+      "package": "RvGame",
+      "fx_kind": "albedo",
+      "source_dds": "textures\\original\\RvGame\\Texture2D\\t_decal_stone_d_v1.dds",
+      "sha256": "fd5f1eaa37af87c5c1f96c202b650db5462f045c42aa88e369a5eacd355d60a1",
+      "decoded_size": [
+        64,
+        64
+      ],
+      "decoded_mode": "RGBA",
+      "file_size": 4224
     }
   },
   "export_status": {

@@ -45,20 +45,32 @@ try {
         # clear old variant files so only the chosen one is present
         Get-ChildItem $texDst -Filter *.dds -ErrorAction SilentlyContinue | Remove-Item -Force
 
-        # Every upscaled candidate for the chosen variant is deployed as <name>.dds,
-        # which is exactly the filename the injector looks up per target.
+        # Deploy ONLY the filenames listed in targets_generated.h (the injector's
+        # lookup table). Stale candidates from earlier runs must never ship:
+        # a file without a target either matches nothing or, worse, matches a
+        # texture whose source was only a lower mip.
         $suffix = if ($Variant -eq "B") { "__B_ibp" } else { "__A_lanczos" }
         $up = Join-Path $LocalRoot "textures\upscaled"
         if (-not (Test-Path $up)) { throw "upscaled dir missing: $up (run the pipeline 'upscale' step first)" }
+        $gen = Join-Path $here "targets_generated.h"
+        if (-not (Test-Path $gen)) { throw "targets_generated.h missing (run the pipeline 'targets' step first)" }
+        $wanted = Select-String -Path $gen -Pattern '"([^"]+)\.dds"' -AllMatches |
+            ForEach-Object { $_.Matches } | ForEach-Object { $_.Groups[1].Value } |
+            Sort-Object -Unique
         $strip = "$suffix.dds"
-        $count = 0
-        Get-ChildItem $up -Filter "*$suffix.dds" | ForEach-Object {
-            $base = $_.Name.Substring(0, $_.Name.Length - $strip.Length)
-            Copy-Item $_.FullName (Join-Path $texDst "$base.dds") -Force
-            $count++
+        $count = 0; $missing = @()
+        foreach ($base in $wanted) {
+            $from = Join-Path $up "$base$strip"
+            if (Test-Path $from) {
+                Copy-Item $from (Join-Path $texDst "$base.dds") -Force
+                $count++
+            } else {
+                $missing += "$base$strip"
+            }
         }
         if ($count -eq 0) { throw "no '$suffix' candidates found in $up" }
-        Write-Host "Variant: $Variant ($suffix), $count texture(s) deployed"
+        if ($missing.Count -gt 0) { Write-Warning ("missing candidates: " + ($missing -join ", ")) }
+        Write-Host "Variant: $Variant ($suffix), $count of $($wanted.Count) target(s) deployed"
 
         # forward to a local copy of the real dinput8 under a distinct name
         $sysDi8 = Join-Path ${env:windir} "SysWOW64\dinput8.dll"

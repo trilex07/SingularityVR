@@ -581,7 +581,10 @@ def up_normal(img: Image.Image, scale: int, method: str = "lanczos") -> Image.Im
     else:
         up = up_lanczos(img, scale)
     arr = normal_reconstruct(np.asarray(up.convert("RGB")))
-    return Image.fromarray(arr, "RGB").convert("RGBA")
+    res = Image.fromarray(arr, "RGB").convert("RGBA")
+    # TC_NormalmapAlpha (DXT5): alpha carries data - keep it, Lanczos-resampled.
+    res.putalpha(img.convert("RGBA").getchannel("A").resize(res.size, Image.LANCZOS))
+    return res
 
 
 def make_mips(img: Image.Image, is_normal: bool, min_size: int = 4) -> list[Image.Image]:
@@ -646,7 +649,114 @@ EXPERIMENT_SET = [
     ("door_blastdoorN_d", "albedo", "blast door diffuse"),
     ("door_blastdoorN_n", "normal", "blast door normal"),
     ("door_blastdoorN_s", "albedo", "blast door specular"),
+    # effects: blood / muzzle / smoke / fire / sparks / tracers / decals
+    ("t_blood_splat01_d", "albedo", "blood splat diffuse"),
+    ("t_blood_splat01_n", "normal", "blood splat normal"),
+    ("t_blood_splat02_d", "albedo", "blood splat 2 diffuse"),
+    ("bsplat3_d", "albedo", "blood splatter diffuse"),
+    ("bsplat_decal_d", "albedo", "blood splatter decal"),
+    ("bulletImpactFlesh_d", "albedo", "flesh impact diffuse"),
+    ("bulletImpactFlesh_n", "normal", "flesh impact normal"),
+    ("blood_spray_n", "normal", "blood spray normal+alpha"),
+    ("blood_drops_n", "normal", "blood drops normal+alpha"),
+    ("corpse_gibs_d", "albedo", "gib flesh diffuse"),
+    ("muzzleflashCenter", "albedo", "muzzle flash center"),
+    ("muzzleFlashDir_01", "albedo", "directional muzzle flash"),
+    ("brightFlash_01", "albedo", "bright flash"),
+    ("smoke_dark_subUV", "albedo", "dark smoke flipbook"),
+    ("smoke_trail_01", "albedo", "smoke trail"),
+    ("smoke_trail_02", "albedo", "smoke trail 2"),
+    ("smoke_wispy_01", "albedo", "wispy smoke"),
+    ("smoke_8", "albedo", "smoke puff"),
+    ("smoketrail_01", "albedo", "smoke trail small"),
+    ("fireball_base_intense_02", "albedo", "fireball"),
+    ("fire6c", "albedo", "fire flipbook"),
+    ("fire_op_particle", "albedo", "fire particle"),
+    ("spark_hit01", "albedo", "spark hit"),
+    ("sparks1_subuv", "albedo", "spark flipbook"),
+    ("tracer2", "albedo", "tracer round"),
+    ("tracer_sprite_vert", "albedo", "vertical tracer sprite"),
+    ("explosion", "albedo", "explosion flash"),
+    ("radionExplosion_01", "albedo", "radion explosion"),
+    ("t_decal_metal_d_v4", "albedo", "metal impact decal"),
+    ("t_decal_stone_d_v1", "albedo", "stone impact decal"),
 ]
+
+
+# Standalone effect textures (particle sprites, decals, flashes - referenced by
+# particle systems, not by the probed materials). (texture, package, kind)
+FX_TEXTURES = [
+    ("t_blood_splat01_d", "RvGame", "albedo"),
+    ("t_blood_splat01_n", "RvGame", "normal"),
+    ("t_blood_splat02_d", "RvGame", "albedo"),
+    ("bsplat3_d", "RvGame", "albedo"),
+    ("bsplat_decal_d", "RvGame", "albedo"),
+    ("bulletImpactFlesh_d", "RvGame", "albedo"),
+    ("bulletImpactFlesh_n", "RvGame", "normal"),
+    ("blood_spray_n", "RvGame", "normal"),
+    ("blood_drops_n", "RvGame", "normal"),
+    ("corpse_gibs_d", "RvGame", "albedo"),
+    ("muzzleflashCenter", "RvGameMPLoader_SF", "albedo"),
+    ("muzzleFlashDir_01", "RvGameMPLoader_SF", "albedo"),
+    ("brightFlash_01", "RvGame", "albedo"),
+    ("smoke_dark_subUV", "RvGame", "albedo"),
+    ("smoke_trail_01", "RvGame", "albedo"),
+    ("smoke_trail_02", "RvGame", "albedo"),
+    ("smoke_wispy_01", "RvGame", "albedo"),
+    ("smoke_8", "RvGameMPLoader_SF", "albedo"),
+    ("smoketrail_01", "RvGameMPLoader_SF", "albedo"),
+    ("fireball_base_intense_02", "RvGame", "albedo"),
+    ("fire6c", "RvGame", "albedo"),
+    ("fire_op_particle", "RvGame", "albedo"),
+    ("spark_hit01", "RvGame", "albedo"),
+    ("sparks1_subuv", "RvGame", "albedo"),
+    ("tracer2", "RvGameMPLoader_SF", "albedo"),
+    ("tracer_sprite_vert", "RvGameMPLoader_SF", "albedo"),
+    ("explosion", "RvGame", "albedo"),
+    ("radionExplosion_01", "RvGameMPLoader_SF", "albedo"),
+    ("t_decal_metal_d_v4", "RvGame", "albedo"),
+    ("t_decal_stone_d_v1", "RvGame", "albedo"),
+]
+
+
+def cmd_build_fx(a) -> None:
+    local, umodel = Path(a.local_root), Path(a.umodel)
+    scratch = local / "cooked"
+    logs = local / "logs"
+    dds_dir = local / "textures" / "original"
+    for p in (logs, dds_dir):
+        p.mkdir(parents=True, exist_ok=True)
+    ensure_scratch(Path(a.game), scratch, umodel)
+    meta_path = MANIFEST_DIR / "texture_metadata.json"
+    data = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {"textures": {}}
+    textures = data.setdefault("textures", {})
+    for name, pkg, kind in FX_TEXTURES:
+        text = umodel_dump(umodel, scratch, pkg, name)
+        if not text:
+            log(f"fx {name}: not found in {pkg}")
+            continue
+        (logs / "tex" / f"{name}.txt").parent.mkdir(parents=True, exist_ok=True)
+        (logs / "tex" / f"{name}.txt").write_text(text, encoding="utf-8")
+        meta = parse_texture_dump(text)
+        meta["package"] = pkg
+        meta["fx_kind"] = kind
+        dds_info = umodel_export(umodel, scratch, dds_dir, pkg, name, "dds")
+        if dds_info.get("dims"):
+            meta["exported_dims"] = dds_info["dims"]
+            meta["exported_mip_level"] = dds_info["mip_level"]
+        textures[name] = meta
+        src = next(iter(dds_dir.rglob(f"{name}.dds")), None)
+        if src:
+            meta["source_dds"] = str(src.relative_to(local))
+            meta["sha256"] = sha256_file(src)
+            with Image.open(src) as im:
+                meta["decoded_size"] = list(im.size)
+                meta["decoded_mode"] = im.mode
+            meta["file_size"] = src.stat().st_size
+        log(f"fx {name}: object {meta.get('size_x')}x{meta.get('size_y')} "
+            f"{meta.get('format')} -> exported {dds_info.get('dims')} "
+            f"(mip {dds_info.get('mip_level')}) dds={dds_info['ok']}")
+    write_json(meta_path, data)
 
 
 def cmd_upscale(a) -> None:
@@ -666,6 +776,15 @@ def cmd_upscale(a) -> None:
         src = local / src_rel
         if not src.exists():
             log(f"skip {name}: source dds missing ({src})")
+            continue
+        # Never fake-upscale a lower mip: a true 2x needs the object mip0.
+        # (Runtime captures are the exception - they carry what the engine
+        # uploads - and go through upscale_captured instead.)
+        t0 = textures[name]
+        exp = t0.get("decoded_size") or t0.get("exported_dims")
+        obj = [t0.get("size_x"), t0.get("size_y")]
+        if exp != obj:
+            log(f"skip {name}: exported {exp} != object {obj}, needs capture")
             continue
         fmt = fmt_from_fourcc(dds_fourcc(src), textures[name].get("format"))
         dds_fmt = "DXT5" if fmt == "PF_DXT5" else "DXT1"
@@ -948,7 +1067,8 @@ def main() -> None:
     ap.add_argument("--local-root", default=str(DEFAULT_LOCAL))
     ap.add_argument("--umodel", default=str(DEFAULT_UMODEL))
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name, fn in (("build", cmd_build), ("classify", cmd_classify),
+    for name, fn in (("build", cmd_build), ("build_fx", cmd_build_fx),
+                     ("classify", cmd_classify),
                      ("upscale", cmd_upscale), ("validate", cmd_validate),
                      ("vram", cmd_vram), ("targets", cmd_targets),
                      ("upscale_captured", cmd_upscale_captured),
@@ -964,7 +1084,8 @@ def main() -> None:
         cmd_vram(a)
         cmd_targets(a)
         return
-    {"build": cmd_build, "classify": cmd_classify, "upscale": cmd_upscale,
+    {"build": cmd_build, "build_fx": cmd_build_fx, "classify": cmd_classify,
+     "upscale": cmd_upscale,
      "validate": cmd_validate, "vram": cmd_vram, "targets": cmd_targets,
      "upscale_captured": cmd_upscale_captured}[a.cmd](a)
 

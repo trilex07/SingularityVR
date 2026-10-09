@@ -923,90 +923,6 @@
       }
     }
   },
-  "Spetsnaz_MP_helmet_s": {
-    "note": "Spetsnaz helmet specular (conservative)",
-    "kind": "albedo",
-    "source": "Spetsnaz_MP_helmet_s",
-    "object_dims": [
-      1024,
-      1024
-    ],
-    "source_dims": [
-      512,
-      512
-    ],
-    "source_mip_level": 1,
-    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\Spetsnaz_MP_helmet_s.dds",
-    "source_fnv": 7595224733091788712,
-    "format": "PF_DXT1",
-    "dds_format": "DXT1",
-    "candidates": {
-      "A_lanczos": {
-        "dims": [
-          1024,
-          1024
-        ],
-        "mips": 9,
-        "dds_bytes": 699176,
-        "sha256": "6f2449fdbfffe40926991e779edb89cae4dd11c9a170e262ef62cb7e5e4c0c8d",
-        "alpha_min": 255,
-        "alpha_max": 255
-      },
-      "B_ibp": {
-        "dims": [
-          1024,
-          1024
-        ],
-        "mips": 9,
-        "dds_bytes": 699176,
-        "sha256": "24864435d9294ddb2edb0c8041601aabc3499dc03177875b61c46cc70aff1593",
-        "alpha_min": 255,
-        "alpha_max": 255
-      }
-    }
-  },
-  "Spetsnaz_MP_helmet_e": {
-    "note": "Spetsnaz helmet emissive",
-    "kind": "emissive",
-    "source": "Spetsnaz_MP_helmet_e",
-    "object_dims": [
-      1024,
-      1024
-    ],
-    "source_dims": [
-      512,
-      512
-    ],
-    "source_mip_level": 1,
-    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\Spetsnaz_MP_helmet_e.dds",
-    "source_fnv": 10048127609564659584,
-    "format": "PF_DXT1",
-    "dds_format": "DXT1",
-    "candidates": {
-      "A_lanczos": {
-        "dims": [
-          1024,
-          1024
-        ],
-        "mips": 9,
-        "dds_bytes": 699176,
-        "sha256": "97f792b9c49041a607e6cad72d3bf82429f249358c4cdbe87181ee7f18d2d0ca",
-        "alpha_min": 255,
-        "alpha_max": 255
-      },
-      "B_ibp": {
-        "dims": [
-          1024,
-          1024
-        ],
-        "mips": 9,
-        "dds_bytes": 699176,
-        "sha256": "15c016336f6c61dd701f3b9290084030c6bec0a48bc50156e7115ffe43ccfb77",
-        "alpha_min": 255,
-        "alpha_max": 255
-      }
-    }
-  },
   "Spetsnaz_MP_Body_d": {
     "note": "Spetsnaz body diffuse",
     "kind": "albedo",
@@ -1301,44 +1217,380 @@
       }
     }
   },
-  "door_blastdoorN_s": {
-    "note": "blast door specular",
+  "bsplat3_d": {
+    "note": "blood splatter diffuse",
     "kind": "albedo",
-    "source": "door_blastdoorN_s",
+    "source": "bsplat3_d",
     "object_dims": [
-      512,
+      256,
       256
     ],
     "source_dims": [
       256,
-      128
+      256
     ],
-    "source_mip_level": 1,
-    "source_dds": "textures\\original\\SP_VI_Intro_Zone01_XSA\\Texture2D\\door_blastdoorN_s.dds",
-    "source_fnv": 12144012906447601795,
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGame\\Texture2D\\bsplat3_d.dds",
+    "source_fnv": 5627902033149582049,
+    "format": "PF_DXT5",
+    "dds_format": "DXT5",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          512,
+          512
+        ],
+        "mips": 8,
+        "dds_bytes": 349648,
+        "sha256": "92f1ae0a0eac2f718b0009a76b1c1534c819d520096e8f288c3978389a7f6e05",
+        "alpha_min": 178,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          512,
+          512
+        ],
+        "mips": 8,
+        "dds_bytes": 349648,
+        "sha256": "1f1bbb428a6fa31fd975a83a38412944f934276b60ea8562a8d5b213a9aeaa78",
+        "alpha_min": 178,
+        "alpha_max": 255
+      }
+    }
+  },
+  "muzzleflashCenter": {
+    "note": "muzzle flash center",
+    "kind": "albedo",
+    "source": "muzzleflashCenter",
+    "object_dims": [
+      256,
+      256
+    ],
+    "source_dims": [
+      256,
+      256
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\muzzleflashCenter.dds",
+    "source_fnv": 12245168062536551479,
     "format": "PF_DXT1",
     "dds_format": "DXT1",
     "candidates": {
       "A_lanczos": {
         "dims": [
           512,
-          256
+          512
         ],
         "mips": 8,
-        "dds_bytes": 87512,
-        "sha256": "a41e20d3871c98e79482d23b65941f97e672827a70b1e62168fbdcb822626709",
+        "dds_bytes": 174888,
+        "sha256": "7df5c94e0e917771512e365800b07ffc9aaa298b646b7896eda0d86d090b986e",
         "alpha_min": 255,
         "alpha_max": 255
       },
       "B_ibp": {
         "dims": [
           512,
-          256
+          512
+        ],
+        "mips": 8,
+        "dds_bytes": 174888,
+        "sha256": "5fd6e354ff3f9328965fc766d8877dcd08d75c32c3d10be55791e15e55643089",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "muzzleFlashDir_01": {
+    "note": "directional muzzle flash",
+    "kind": "albedo",
+    "source": "muzzleFlashDir_01",
+    "object_dims": [
+      128,
+      256
+    ],
+    "source_dims": [
+      128,
+      256
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGameMPLoader_SF\\Texture2D\\muzzleFlashDir_01.dds",
+    "source_fnv": 10943231596456805812,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          256,
+          512
         ],
         "mips": 8,
         "dds_bytes": 87512,
-        "sha256": "5e2f2873d8e2a086f6c5084ca3d855bc167ad4d90a8f995aaf14048c4f5f8551",
+        "sha256": "444eb17c5feb2f443951a27e712791f3d1898e5e5d51aa4e54557e8e7fb083ff",
         "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          256,
+          512
+        ],
+        "mips": 8,
+        "dds_bytes": 87512,
+        "sha256": "d0304e17da636324bb96a5d8e0f251f987af7fc64a4dec6d30b266d1114f7d08",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "brightFlash_01": {
+    "note": "bright flash",
+    "kind": "albedo",
+    "source": "brightFlash_01",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGame\\Texture2D\\brightFlash_01.dds",
+    "source_fnv": 5369144333500254618,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "09b600c8067bb9737fd1515ad392ed50e9e0a8f47cc364061b0538c99e098fc2",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "1ebae38dbb025b58d69d98e0531a155dfaf3d115a5a2be2a8cba4a12a70a73b9",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "fireball_base_intense_02": {
+    "note": "fireball",
+    "kind": "albedo",
+    "source": "fireball_base_intense_02",
+    "object_dims": [
+      1024,
+      1024
+    ],
+    "source_dims": [
+      1024,
+      1024
+    ],
+    "source_mip_level": null,
+    "source_dds": "textures\\original\\RvGame\\Texture2D\\fireball_base_intense_02.dds",
+    "source_fnv": 18034708712803415938,
+    "format": "PF_DXT5",
+    "dds_format": "DXT5",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 5592528,
+        "sha256": "f2ee1292d563d6ae9d51688d5a8fbafa627df8aed32c6f54ec5bff36e9d7cbde",
+        "alpha_min": 0,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          2048,
+          2048
+        ],
+        "mips": 10,
+        "dds_bytes": 5592528,
+        "sha256": "759269661dc10b30a6bcd3259aefc7c5b60d57498f25c499758ef25905aede5a",
+        "alpha_min": 0,
+        "alpha_max": 255
+      }
+    }
+  },
+  "spark_hit01": {
+    "note": "spark hit",
+    "kind": "albedo",
+    "source": "spark_hit01",
+    "object_dims": [
+      512,
+      512
+    ],
+    "source_dims": [
+      512,
+      512
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGame\\Texture2D\\spark_hit01.dds",
+    "source_fnv": 9295590768409729334,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "06d0defdda94e3d5d160189f50dccdb5139d0c67262a3a64e9904267d8f14c62",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          1024,
+          1024
+        ],
+        "mips": 9,
+        "dds_bytes": 699176,
+        "sha256": "c4758d90dfd16675f812829d42241270dba51469efc7485a4654e8e642c251e8",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "sparks1_subuv": {
+    "note": "spark flipbook",
+    "kind": "albedo",
+    "source": "sparks1_subuv",
+    "object_dims": [
+      32,
+      64
+    ],
+    "source_dims": [
+      32,
+      64
+    ],
+    "source_mip_level": null,
+    "source_dds": "textures\\original\\RvGame\\Texture2D\\sparks1_subuv.dds",
+    "source_fnv": 4011618080145910416,
+    "format": "PF_DXT1",
+    "dds_format": "DXT1",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          64,
+          128
+        ],
+        "mips": 6,
+        "dds_bytes": 5592,
+        "sha256": "8b955adea3f4671a3bef8b85cd51837e153c777ad5c71b87cfdf2266f264c533",
+        "alpha_min": 255,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          64,
+          128
+        ],
+        "mips": 6,
+        "dds_bytes": 5592,
+        "sha256": "e8f186398c1a7c94f431529d983b6fafad90925c6ce735edb6d627f61d543ff0",
+        "alpha_min": 255,
+        "alpha_max": 255
+      }
+    }
+  },
+  "explosion": {
+    "note": "explosion flash",
+    "kind": "albedo",
+    "source": "explosion",
+    "object_dims": [
+      64,
+      64
+    ],
+    "source_dims": [
+      64,
+      64
+    ],
+    "source_mip_level": null,
+    "source_dds": "textures\\original\\RvGame\\Texture2D\\explosion.dds",
+    "source_fnv": 14345990525357432423,
+    "format": "PF_DXT5",
+    "dds_format": "DXT5",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          128,
+          128
+        ],
+        "mips": 6,
+        "dds_bytes": 21968,
+        "sha256": "679cbbfe4980aba70ddc765fcad716e371d9e79f4f8f04354affbac1f791f93e",
+        "alpha_min": 0,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          128,
+          128
+        ],
+        "mips": 6,
+        "dds_bytes": 21968,
+        "sha256": "bae928f2e75ea3c4256034f222ace0f9de137ed676afe51b317049c3b9667286",
+        "alpha_min": 0,
+        "alpha_max": 255
+      }
+    }
+  },
+  "t_decal_metal_d_v4": {
+    "note": "metal impact decal",
+    "kind": "albedo",
+    "source": "t_decal_metal_d_v4",
+    "object_dims": [
+      128,
+      128
+    ],
+    "source_dims": [
+      128,
+      128
+    ],
+    "source_mip_level": 0,
+    "source_dds": "textures\\original\\RvGame\\Texture2D\\t_decal_metal_d_v4.dds",
+    "source_fnv": 7064741585614937927,
+    "format": "PF_DXT5",
+    "dds_format": "DXT5",
+    "candidates": {
+      "A_lanczos": {
+        "dims": [
+          256,
+          256
+        ],
+        "mips": 7,
+        "dds_bytes": 87504,
+        "sha256": "03c490ea85107a4956244e85bf9c18761dc5a0ebdf40399883363e6f43fbc7a2",
+        "alpha_min": 0,
+        "alpha_max": 255
+      },
+      "B_ibp": {
+        "dims": [
+          256,
+          256
+        ],
+        "mips": 7,
+        "dds_bytes": 87504,
+        "sha256": "c04e835d98852a940530efefc22b7da3c8be01c439e8d5b2f8e3a84721c45fc2",
+        "alpha_min": 0,
         "alpha_max": 255
       }
     }
@@ -3104,557 +3356,6 @@
         "sha256": "eb55ae871f44373b484b95d9934cef85e2b0a73923ef6c7139532d22f47de605",
         "alpha_min": 255,
         "alpha_max": 255
-      }
-    }
-  },
-  "360_A": {
-    "note": "UI glyph replacement playstation_button_cross.png",
-    "kind": "glyph",
-    "source": "360_A",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_A.dds",
-    "source_fnv": 4291766676648265692,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "7c13bc3ed200a14ff4aa389cb240df08d6dbab468335a4a3d6cb058fe26303c7"
-      }
-    }
-  },
-  "360_B": {
-    "note": "UI glyph replacement playstation_button_circle.png",
-    "kind": "glyph",
-    "source": "360_B",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_B.dds",
-    "source_fnv": 3724383726723799037,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "aa4957fb4b2dca6c22da257cb443ca26a3eb86d4c28560220caa41dfc8d5a007"
-      }
-    }
-  },
-  "360_X": {
-    "note": "UI glyph replacement playstation_button_square.png",
-    "kind": "glyph",
-    "source": "360_X",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_X.dds",
-    "source_fnv": 7509040392607879835,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "f0def1d936e4dd6b6b10b3f28bdcee0c4d8f7d6813634ed20640507492536174"
-      }
-    }
-  },
-  "360_Y": {
-    "note": "UI glyph replacement playstation_button_triangle.png",
-    "kind": "glyph",
-    "source": "360_Y",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_Y.dds",
-    "source_fnv": 697700576386392257,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "7234ba034be5be8e152a1a56489f5fa7d94654fcfbe15a5146ac35d79abaaeb4"
-      }
-    }
-  },
-  "360_LB": {
-    "note": "UI glyph replacement playstation_trigger_l1.png",
-    "kind": "glyph",
-    "source": "360_LB",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_LB.dds",
-    "source_fnv": 6636979186863399307,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "aa73407197343101fc104d63aae97ce61a8f98aaea60f3df47300c124fcd8c65"
-      }
-    }
-  },
-  "360_RB": {
-    "note": "UI glyph replacement playstation_trigger_r1.png",
-    "kind": "glyph",
-    "source": "360_RB",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_RB.dds",
-    "source_fnv": 8397077139269917918,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "89063d258cced80146d9af6b2ab34f66eb75f4789bebce0a54853f74bae37e2f"
-      }
-    }
-  },
-  "360_LT": {
-    "note": "UI glyph replacement playstation_trigger_l2.png",
-    "kind": "glyph",
-    "source": "360_LT",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_LT.dds",
-    "source_fnv": 1962560932692967098,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "3646cd9a85ab44af190a405d82a194e0ec11e928bf8ac4dd1ee799f53e1fcb7f"
-      }
-    }
-  },
-  "360_RT": {
-    "note": "UI glyph replacement playstation_trigger_r2.png",
-    "kind": "glyph",
-    "source": "360_RT",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_RT.dds",
-    "source_fnv": 7336240902671667626,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "31dffb1ddd96401b58ea3906ccc20a2b9dd50a16ef25bfcf9600ab1120b19029"
-      }
-    }
-  },
-  "360_L3": {
-    "note": "UI glyph replacement playstation_button_l3.png",
-    "kind": "glyph",
-    "source": "360_L3",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_L3.dds",
-    "source_fnv": 15347588572642432530,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "609ad84ba20e94c56ffdcb3f947a2383d7839d6aabe540102585d4afd0514e1a"
-      }
-    }
-  },
-  "360_R3": {
-    "note": "UI glyph replacement playstation_button_r3.png",
-    "kind": "glyph",
-    "source": "360_R3",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_R3.dds",
-    "source_fnv": 4043048161657275761,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "01589971b96517079094ec158a15167d4c160458d3322502d40ee7dca3631f67"
-      }
-    }
-  },
-  "360_LS": {
-    "note": "UI glyph replacement playstation_stick_l.png",
-    "kind": "glyph",
-    "source": "360_LS",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_LS.dds",
-    "source_fnv": 12801093522479652153,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "ef6cbcc32810dc7a47c528d4cf6247a8a560c294b64932550e90d0968bc85c8a"
-      }
-    }
-  },
-  "360_RS": {
-    "note": "UI glyph replacement playstation_stick_r.png",
-    "kind": "glyph",
-    "source": "360_RS",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_RS.dds",
-    "source_fnv": 15472517208239007757,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "75eed4f87ed525e1ea1a19eac975c90e22017e17dc1c60c4039aebb5fc847a49"
-      }
-    }
-  },
-  "360_DPad": {
-    "note": "UI glyph replacement playstation_dpad_all.png",
-    "kind": "glyph",
-    "source": "360_DPad",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_DPad.dds",
-    "source_fnv": 10502900253217393946,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "b7ff61d14f48f0a492764afd742cfaf03bbe2a8b92ac10282a8821d7c79b63a8"
-      }
-    }
-  },
-  "360_DPAD_U": {
-    "note": "UI glyph replacement playstation_dpad_up.png",
-    "kind": "glyph",
-    "source": "360_DPAD_U",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_DPAD_U.dds",
-    "source_fnv": 3490606650668211118,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "7364e8e6a48465e0f485095182f934b8f9f785de3500071a6898b51743afbee3"
-      }
-    }
-  },
-  "360_DPAD_D": {
-    "note": "UI glyph replacement playstation_dpad_down.png",
-    "kind": "glyph",
-    "source": "360_DPAD_D",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_DPAD_D.dds",
-    "source_fnv": 7482394029524649721,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "39e3a27c8c6d6bef55c645d7e88e683379b5dafb089dfd84622599a2faa4266b"
-      }
-    }
-  },
-  "360_DPAD_L": {
-    "note": "UI glyph replacement playstation_dpad_left.png",
-    "kind": "glyph",
-    "source": "360_DPAD_L",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_DPAD_L.dds",
-    "source_fnv": 12827209313862150848,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "cb8c3e478d249f5f3d379f0b983b7fb5c11f4ec301fb749c8e44a034b2a3f71e"
-      }
-    }
-  },
-  "360_DPAD_R": {
-    "note": "UI glyph replacement playstation_dpad_right.png",
-    "kind": "glyph",
-    "source": "360_DPAD_R",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_DPAD_R.dds",
-    "source_fnv": 13241286034540120491,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "1dbcafdb5931031bf059187842a43c8a671e0daea0b9c7413239b2a3fd3fa04b"
-      }
-    }
-  },
-  "360_Start": {
-    "note": "UI glyph replacement playstation5_button_options.png",
-    "kind": "glyph",
-    "source": "360_Start",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_Start.dds",
-    "source_fnv": 12710149678372822640,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "c4969d58fcfbf1bb696247c09509a948576fe05b85aec2c8ed841ea3d54d9ccb"
-      }
-    }
-  },
-  "360_Back": {
-    "note": "UI glyph replacement playstation5_button_create.png",
-    "kind": "glyph",
-    "source": "360_Back",
-    "object_dims": [
-      64,
-      64
-    ],
-    "source_dims": [
-      64,
-      64
-    ],
-    "source_mip_level": 0,
-    "source_dds": "textures\\original\\ui_icons_360_SF\\Texture2D\\360_Back.dds",
-    "source_fnv": 14855466518115834525,
-    "format": "PF_DXT5",
-    "dds_format": "DXT5",
-    "candidates": {
-      "B_ibp": {
-        "dims": [
-          64,
-          64
-        ],
-        "mips": 5,
-        "dds_bytes": 5584,
-        "sha256": "e589d0c8142e6a8ebf0dcf552c0674b0b5783f2657b4bc35fbb96d367fd50d0e"
       }
     }
   }

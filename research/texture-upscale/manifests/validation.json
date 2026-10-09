@@ -925,90 +925,6 @@
       "mip_level_upscaled": 0
     },
     {
-      "texture": "Spetsnaz_MP_helmet_s",
-      "candidate": "A_lanczos",
-      "orig_dims": [
-        512,
-        512
-      ],
-      "new_dims": [
-        1024,
-        1024
-      ],
-      "orig_format": "PF_DXT1",
-      "new_format": "DXT1",
-      "orig_mips": 0,
-      "new_mips": 9,
-      "orig_bytes": 131200,
-      "new_bytes": 699176,
-      "orig_sha256": "e3493af339a00d2e44bb94fc1353115a33a065a6af67f1b519b8b4cf5be49916",
-      "new_sha256": "6f2449fdbfffe40926991e779edb89cae4dd11c9a170e262ef62cb7e5e4c0c8d",
-      "mip_level_upscaled": 1
-    },
-    {
-      "texture": "Spetsnaz_MP_helmet_s",
-      "candidate": "B_ibp",
-      "orig_dims": [
-        512,
-        512
-      ],
-      "new_dims": [
-        1024,
-        1024
-      ],
-      "orig_format": "PF_DXT1",
-      "new_format": "DXT1",
-      "orig_mips": 0,
-      "new_mips": 9,
-      "orig_bytes": 131200,
-      "new_bytes": 699176,
-      "orig_sha256": "e3493af339a00d2e44bb94fc1353115a33a065a6af67f1b519b8b4cf5be49916",
-      "new_sha256": "24864435d9294ddb2edb0c8041601aabc3499dc03177875b61c46cc70aff1593",
-      "mip_level_upscaled": 1
-    },
-    {
-      "texture": "Spetsnaz_MP_helmet_e",
-      "candidate": "A_lanczos",
-      "orig_dims": [
-        512,
-        512
-      ],
-      "new_dims": [
-        1024,
-        1024
-      ],
-      "orig_format": "PF_DXT1",
-      "new_format": "DXT1",
-      "orig_mips": 0,
-      "new_mips": 9,
-      "orig_bytes": 131200,
-      "new_bytes": 699176,
-      "orig_sha256": "cb7083198ae164fa6db6b9bd9a2fdd82e4200ec8a2b39455f71af5b7b3c0e968",
-      "new_sha256": "97f792b9c49041a607e6cad72d3bf82429f249358c4cdbe87181ee7f18d2d0ca",
-      "mip_level_upscaled": 1
-    },
-    {
-      "texture": "Spetsnaz_MP_helmet_e",
-      "candidate": "B_ibp",
-      "orig_dims": [
-        512,
-        512
-      ],
-      "new_dims": [
-        1024,
-        1024
-      ],
-      "orig_format": "PF_DXT1",
-      "new_format": "DXT1",
-      "orig_mips": 0,
-      "new_mips": 9,
-      "orig_bytes": 131200,
-      "new_bytes": 699176,
-      "orig_sha256": "cb7083198ae164fa6db6b9bd9a2fdd82e4200ec8a2b39455f71af5b7b3c0e968",
-      "new_sha256": "15c016336f6c61dd701f3b9290084030c6bec0a48bc50156e7115ffe43ccfb77",
-      "mip_level_upscaled": 1
-    },
-    {
       "texture": "Spetsnaz_MP_Body_d",
       "candidate": "A_lanczos",
       "orig_dims": [
@@ -1090,6 +1006,594 @@
       "new_bytes": 2796328,
       "orig_sha256": "ed45e2d6a079f40efbdfbd2de875060f3e585c1d54fd1c10a0cfe1b10391a326",
       "new_sha256": "844772dbb9decd2164af8ad59096eb3e1e89ca387710249fc055ca891ded0bcc",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "door_rollingT_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "da7198c21e678ef988e03a53c2361602abd98a29dcbbddc17b10727ed31321df",
+      "new_sha256": "2a08cc00a715416227f7c4dec62634e573bd27e859f0b5b1f2402df47e20f5b5",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "door_rollingT_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "da7198c21e678ef988e03a53c2361602abd98a29dcbbddc17b10727ed31321df",
+      "new_sha256": "9c0dbbc09c74ea3fe1f99d38c186c1111b9ccf71a4b43d1dd68a4531498d9035",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "door_rollingT_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "14c5a81ebf3ebbd87bf10769941a1ed974ec1d1a68b6ce5dd3ff34f7cdbcf662",
+      "new_sha256": "0bde4b63af8850408c3c40fc47949a4085897535ee3221a50b485a62c72c8eb0",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "door_rollingT_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "14c5a81ebf3ebbd87bf10769941a1ed974ec1d1a68b6ce5dd3ff34f7cdbcf662",
+      "new_sha256": "51c4633e99c2f6c2ecc77a2e20f408d845425137fecb86f32ea906f6ea1a22e6",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "door_rollingT_s",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        256,
+        256
+      ],
+      "new_dims": [
+        512,
+        512
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 8,
+      "orig_bytes": 32896,
+      "new_bytes": 174888,
+      "orig_sha256": "d210d68fdf22b928d938e2b94163dcbaeceb902a959308c430d050b77fd2d220",
+      "new_sha256": "a682e1ae4d2c4466acbc1ec3e1eccafec3eb74542291e1c02884ef370e0c01a9",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "door_rollingT_s",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        256,
+        256
+      ],
+      "new_dims": [
+        512,
+        512
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 8,
+      "orig_bytes": 32896,
+      "new_bytes": 174888,
+      "orig_sha256": "d210d68fdf22b928d938e2b94163dcbaeceb902a959308c430d050b77fd2d220",
+      "new_sha256": "5f5cfc34637b6a4d1534000dedf08b1e97d17f2456da770d50c38a463160e56f",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "door_blastdoorN_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": "a2affce4b417260bfc96b19341c5235f41ba93971fdcf1a2f66cd34cf5f4100a",
+      "new_sha256": "9c4e44957508705c21ecf0904bdc89b6fb5ba9469e37ab074ba5e329b03e95a2",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "door_blastdoorN_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": "a2affce4b417260bfc96b19341c5235f41ba93971fdcf1a2f66cd34cf5f4100a",
+      "new_sha256": "c98259526d7b0e80d018bd4ebb82c559798bdfaacc9013e0405870c150625b49",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "door_blastdoorN_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": "1fe6c4e596009417553e6b5000e2f8cf75e75a793ef8076e3f2827224a3a1068",
+      "new_sha256": "fec8051a312df3fb53958b35cb8ea4dab23c7563e823da00070dd1a36cf25750",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "door_blastdoorN_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": "1fe6c4e596009417553e6b5000e2f8cf75e75a793ef8076e3f2827224a3a1068",
+      "new_sha256": "106a5883fd691a898b548b7d8b9105cab226e53dc56745478c5a3b6960f63d37",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "bsplat3_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        256,
+        256
+      ],
+      "new_dims": [
+        512,
+        512
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 8,
+      "orig_bytes": 65664,
+      "new_bytes": 349648,
+      "orig_sha256": "772232ad3fd9d1899f3178ab08878c421c11cf0967e8d67233c18223d1f6245c",
+      "new_sha256": "92f1ae0a0eac2f718b0009a76b1c1534c819d520096e8f288c3978389a7f6e05",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "bsplat3_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        256,
+        256
+      ],
+      "new_dims": [
+        512,
+        512
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 8,
+      "orig_bytes": 65664,
+      "new_bytes": 349648,
+      "orig_sha256": "772232ad3fd9d1899f3178ab08878c421c11cf0967e8d67233c18223d1f6245c",
+      "new_sha256": "1f1bbb428a6fa31fd975a83a38412944f934276b60ea8562a8d5b213a9aeaa78",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "muzzleflashCenter",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        256,
+        256
+      ],
+      "new_dims": [
+        512,
+        512
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 8,
+      "orig_bytes": 32896,
+      "new_bytes": 174888,
+      "orig_sha256": "ed9caf8b7fccd9978013dcac71e500712db32958408f0918568bd4aa4961223e",
+      "new_sha256": "7df5c94e0e917771512e365800b07ffc9aaa298b646b7896eda0d86d090b986e",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "muzzleflashCenter",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        256,
+        256
+      ],
+      "new_dims": [
+        512,
+        512
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 8,
+      "orig_bytes": 32896,
+      "new_bytes": 174888,
+      "orig_sha256": "ed9caf8b7fccd9978013dcac71e500712db32958408f0918568bd4aa4961223e",
+      "new_sha256": "5fd6e354ff3f9328965fc766d8877dcd08d75c32c3d10be55791e15e55643089",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "muzzleFlashDir_01",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        128,
+        256
+      ],
+      "new_dims": [
+        256,
+        512
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 8,
+      "orig_bytes": 16512,
+      "new_bytes": 87512,
+      "orig_sha256": "937fa002b4b433c3ec0be8e8ba57f80474e8c7c16f2e88995da05a8dc38a7c35",
+      "new_sha256": "444eb17c5feb2f443951a27e712791f3d1898e5e5d51aa4e54557e8e7fb083ff",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "muzzleFlashDir_01",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        128,
+        256
+      ],
+      "new_dims": [
+        256,
+        512
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 8,
+      "orig_bytes": 16512,
+      "new_bytes": 87512,
+      "orig_sha256": "937fa002b4b433c3ec0be8e8ba57f80474e8c7c16f2e88995da05a8dc38a7c35",
+      "new_sha256": "d0304e17da636324bb96a5d8e0f251f987af7fc64a4dec6d30b266d1114f7d08",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "brightFlash_01",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "848d36e4db2df9680fadc86bc1c05e16ad3a9e7f4f6ae39581b710e9d7c1bfee",
+      "new_sha256": "09b600c8067bb9737fd1515ad392ed50e9e0a8f47cc364061b0538c99e098fc2",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "brightFlash_01",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "848d36e4db2df9680fadc86bc1c05e16ad3a9e7f4f6ae39581b710e9d7c1bfee",
+      "new_sha256": "1ebae38dbb025b58d69d98e0531a155dfaf3d115a5a2be2a8cba4a12a70a73b9",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "fireball_base_intense_02",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592528,
+      "orig_sha256": "11047c6377ac64687b83ebd951565545376a79975911fddd30706c3b51e460d6",
+      "new_sha256": "f2ee1292d563d6ae9d51688d5a8fbafa627df8aed32c6f54ec5bff36e9d7cbde",
+      "mip_level_upscaled": null
+    },
+    {
+      "texture": "fireball_base_intense_02",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 10,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592528,
+      "orig_sha256": "11047c6377ac64687b83ebd951565545376a79975911fddd30706c3b51e460d6",
+      "new_sha256": "759269661dc10b30a6bcd3259aefc7c5b60d57498f25c499758ef25905aede5a",
+      "mip_level_upscaled": null
+    },
+    {
+      "texture": "spark_hit01",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "83c871349da07d5255ef6041fec66ab350ea8ec9a5f9059a6e49b440061e948a",
+      "new_sha256": "06d0defdda94e3d5d160189f50dccdb5139d0c67262a3a64e9904267d8f14c62",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "spark_hit01",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": "83c871349da07d5255ef6041fec66ab350ea8ec9a5f9059a6e49b440061e948a",
+      "new_sha256": "c4758d90dfd16675f812829d42241270dba51469efc7485a4654e8e642c251e8",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "sparks1_subuv",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        32,
+        64
+      ],
+      "new_dims": [
+        64,
+        128
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 6,
+      "orig_bytes": 1152,
+      "new_bytes": 5592,
+      "orig_sha256": "e3bac1a0970c49f1cd24d66520b5a053d271bbe7a2bf4192f6f0eb6d383e1f78",
+      "new_sha256": "8b955adea3f4671a3bef8b85cd51837e153c777ad5c71b87cfdf2266f264c533",
+      "mip_level_upscaled": null
+    },
+    {
+      "texture": "sparks1_subuv",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        32,
+        64
+      ],
+      "new_dims": [
+        64,
+        128
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 0,
+      "new_mips": 6,
+      "orig_bytes": 1152,
+      "new_bytes": 5592,
+      "orig_sha256": "e3bac1a0970c49f1cd24d66520b5a053d271bbe7a2bf4192f6f0eb6d383e1f78",
+      "new_sha256": "e8f186398c1a7c94f431529d983b6fafad90925c6ce735edb6d627f61d543ff0",
+      "mip_level_upscaled": null
+    },
+    {
+      "texture": "explosion",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        64,
+        64
+      ],
+      "new_dims": [
+        128,
+        128
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 6,
+      "orig_bytes": 4224,
+      "new_bytes": 21968,
+      "orig_sha256": "511c750006c4f86c564d91cf3d38bc15cac5747935c01e43290f354a1142e995",
+      "new_sha256": "679cbbfe4980aba70ddc765fcad716e371d9e79f4f8f04354affbac1f791f93e",
+      "mip_level_upscaled": null
+    },
+    {
+      "texture": "explosion",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        64,
+        64
+      ],
+      "new_dims": [
+        128,
+        128
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 6,
+      "orig_bytes": 4224,
+      "new_bytes": 21968,
+      "orig_sha256": "511c750006c4f86c564d91cf3d38bc15cac5747935c01e43290f354a1142e995",
+      "new_sha256": "bae928f2e75ea3c4256034f222ace0f9de137ed676afe51b317049c3b9667286",
+      "mip_level_upscaled": null
+    },
+    {
+      "texture": "t_decal_metal_d_v4",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        128,
+        128
+      ],
+      "new_dims": [
+        256,
+        256
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 7,
+      "orig_bytes": 16512,
+      "new_bytes": 87504,
+      "orig_sha256": "c9c93955b9e98de380d9e2543a805bfca712447b16086323c5da254a9b75c1f9",
+      "new_sha256": "03c490ea85107a4956244e85bf9c18761dc5a0ebdf40399883363e6f43fbc7a2",
+      "mip_level_upscaled": 0
+    },
+    {
+      "texture": "t_decal_metal_d_v4",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        128,
+        128
+      ],
+      "new_dims": [
+        256,
+        256
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 0,
+      "new_mips": 7,
+      "orig_bytes": 16512,
+      "new_bytes": 87504,
+      "orig_sha256": "c9c93955b9e98de380d9e2543a805bfca712447b16086323c5da254a9b75c1f9",
+      "new_sha256": "c04e835d98852a940530efefc22b7da3c8be01c439e8d5b2f8e3a84721c45fc2",
       "mip_level_upscaled": 0
     },
     {
@@ -1175,16 +1679,1772 @@
       "orig_sha256": "2d0a926ddb4da150a77d94791f3faf31349bc3769f1677147ff181fb4a3dfc08",
       "new_sha256": "465ae06ee043994a66a5671f7783fa1ed406c3f7cb36ff2f2778f6c32e430eed",
       "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_door_a_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "93c261fa731b072d0552b782d0cced3d42430d5a6841662cd80964a9d3605452",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_door_a_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "5309b0692a4c8ab316c6f72a3a0a08fe82ace9832347733bce94ed7f8683080b",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_door_a_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "d9af690445c1e1b33604215cf3408382569c418778b43cb752f923a2ffd765a7",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_door_a_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "724c7831dfb9e713b7ecd9935f124667710d9b3508bf6bce28a6b4161b694488",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_door_b_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "0d3c7aec3b7903233a5dc4c0a97341b48477c82f0fb3286874dd314ed3e10f56",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_door_b_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "6ed841df105dfee015d83b488da392e502c299b04330c09d019b6cf1db3f7723",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_door_b_n",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "70cdbc2f436838866f2fb1fc212d76745ad61f98d5eb92d9498161b1d3f462b4",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_door_b_n",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "8b551d584fbc63aaac864a74cdd7d14c3fe1056491eafd28de084f45f056784f",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_shutter_d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        1024
+      ],
+      "new_dims": [
+        1024,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "2f3ecc1109fc28a43853790276701ccec4ca3789ba0687b154a642dd3940f10e",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_shutter_d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        1024
+      ],
+      "new_dims": [
+        1024,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "599e8d7698b209c49d24a3b93ce18e14dc62d06aeb4a8996e70cf6f99f941751",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_783d13f7",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "1c98e83a0f21d6652541766436861392761cfc1bb7db34c66c575bb20c4424c8",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_783d13f7",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "3a62f98b94266eb637ce2dcfeb655bf76697ed3700d8e85d01b5c284bdba515b",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_76306a2d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "65737bc149194aee1bd41d088915523ae17f8a74ee2fa77b9d51a3efde9cf9dd",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_76306a2d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "c2a885c3d973b95fd1f1f2c93e467321c4ab09e09204655d27c1b77da7d45d8e",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_6201ffb9",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "8067c1acb4824acaf764fcf7756bb83b2dd3c7c0f00a109c0e953e4375670b7f",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_6201ffb9",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "fa9807dbd16e12a09a054ab35fc01f950ac58750000ad8eb927ba66744a7e67a",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_5bca8499",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "8f7b0ce2c5202ced134bdb56d58ef95fbff72278b0f510f3f3cedad81d9d33b3",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_5bca8499",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "8e327c57698d3e3eb5754322058ddc3bcf28ae01ef21ea15c19a5137448ac183",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_3657a320",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592528,
+      "orig_sha256": null,
+      "new_sha256": "8df4739cab836fa7e0c78a7454ce27fbadb5f715472e0271c9664d90ded0642d",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_3657a320",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592528,
+      "orig_sha256": null,
+      "new_sha256": "1ca69963d918e91949b8e62143b6b5826f4223638e3f4f765bce617cdfaf5481",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_2f09c1bc",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "4b14e4ad91e4b34645dc7cc7694214a61fdf1b6335808e35384d0ca14d9a7db5",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_2f09c1bc",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "c9601a8cbe8a14603c07315290ad607df42597a315f1ce6fcadeacd6e61289ab",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_252c3df4",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "e2933078651ba8b171e6aa646d5177d08b5045286b0c9ed4bbb0cef2e6623233",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_252c3df4",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "cefcb2f8360db1b463d1c86774278b552b4c0ed3deeb3a4155407055ea637d55",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_2177e137",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "a4abd7ca86806c1db910723afe8e55ebcd5da6824df77d9fdb1553edddfb5358",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_2177e137",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "05f1a18d59065379809727a1335623fd411358471ab6caf1344f3d2662011787",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_1f161de7",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "3af86082bf57a43ae474a65360dc14f5fe65122e604ca1135776b2cd200fc2fb",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_1f161de7",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "d72ce11a86438e20dc2372e8960dae9c35c739c9977b35b58c305aba06bba278",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_1a86a04b",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592528,
+      "orig_sha256": null,
+      "new_sha256": "ec5add2cfeedb6454891a539ed87e110a0a92ac8f57487667cb6a2e7b0a8f875",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_1a86a04b",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592528,
+      "orig_sha256": null,
+      "new_sha256": "4cd8bbb731e6d00db3c3bf1781a86bba421a7fff7d873e897a428b7b17527f39",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_0d582fd6",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "dc62df77f2ce7e55d55fb251ca4c0e25ca0080c1921e47e609bdb6742a61d3bd",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_0d582fd6",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796328,
+      "orig_sha256": null,
+      "new_sha256": "229854447bccb729c6bbd0204bb00265253da495b197abc04eb7e4f49560c62b",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_03b581da",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592528,
+      "orig_sha256": null,
+      "new_sha256": "c1ec10e94f143a0d24aa138860a6592a4fd5adfbfcd0769b6459343fb7c37132",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_03b581da",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        1024
+      ],
+      "new_dims": [
+        2048,
+        2048
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 1048704,
+      "new_bytes": 5592528,
+      "orig_sha256": null,
+      "new_sha256": "18247c4155ecdd8abcc6e07de32614c6e041380ccf22f78bcd7745925cb057a6",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_dc94648c",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "2a411c8c45b1d233cc2a5cce4b9bc161b0c1567f94d6e7801e15b2a3a5f396f7",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_dc94648c",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "8b6105302481a488bd4740327069f69a6ea08805ef2cb32bae5e1090d7dd455c",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_d83b3c3a",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        1024
+      ],
+      "new_dims": [
+        1024,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "3b3df3855ffaf8b5014da465700e0d6fd9677974f4234c3271ce7bdf6c5626e1",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_d83b3c3a",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        1024
+      ],
+      "new_dims": [
+        1024,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "19c4d6cdf1076352bffd927d2c9cc3039247c3aa655466d941f38e0960587a38",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_d3287886",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "b719105119a75554f1b96ade0c2cf7112581c1c275c755d41079db03343699fa",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_d3287886",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "deba7c4998276754bb9d250c658fc7b2b5f56d3c8a7aef8d6bdd9fd03ed0908f",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_bd9cf530",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "55ed315794dc2b908c76dfecd4eac25ca9e927d535a74f8b24b146c26e1baca2",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_bd9cf530",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "4dcae522fcada372b46e55b8de5b3df56a63dff87cab285f9a7664ed825c5456",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_7d21f673",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "8cf14c0bced14291da90ed712ff66eb08b7cf2b370308cdbc9b8b86b45acf6cb",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_7d21f673",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "51f46569d5a8300c05bfdbf2d1506f170c0c59d158d5e69bd5774a68ebc1e97e",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_6489c88e",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        1024
+      ],
+      "new_dims": [
+        1024,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "71c774ec77a001c07225ba768d9a23f1afddf11141dc040b66ee31ce999a9d04",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_6489c88e",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        1024
+      ],
+      "new_dims": [
+        1024,
+        2048
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "226e19f11c9458f6289bd60b200776c4741caee78048e7b01e53633b7c7bb6ec",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_63b3ec8d",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796336,
+      "orig_sha256": null,
+      "new_sha256": "b4a18007589af484569740933e55641875f59faad35bc4d774803f24c17157d6",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_63b3ec8d",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796336,
+      "orig_sha256": null,
+      "new_sha256": "8af2ca0a4904d29b3bc8ff8bdd96f194a3bf5c897e136c4cd09bc667c0de1ef0",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_4741d8cd",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796336,
+      "orig_sha256": null,
+      "new_sha256": "f9b3071a84b0c0b80ac3648eb5111cefe1b9c377176b7aa13e04e46fa3fa1795",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_4741d8cd",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 524416,
+      "new_bytes": 2796336,
+      "orig_sha256": null,
+      "new_sha256": "232c18f07c81afc0fad2f8df0f99043e42cb11b3444ef47bb28120cec5e0bcb1",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_37469b7a",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "99a4d8866053ad46b0e0e791bd88e7ada48a9a7f03c476e6712ef7d7bf43b801",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_37469b7a",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "c5f867108ca7bb38c6b28c8d89a0e0019ddd68f5438d2a5193ac66e03dba8f06",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_23077af2",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "93dc2fc34df708511b58b00f821b9910a71d454095d23e9b4fbc160b6053ba2c",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_23077af2",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "c70cd609bf8d00d9cb2eab0748a569525ff441811070e6d5002b3e458bb10d0e",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_0e7a4cce",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "09c5b28ec8db2993687a4a4625d4f333ce7e0f6c57312550f00ebba0239589d5",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_0e7a4cce",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "4565fe703a418f47a05d6f58aec82f652bd716533359a2151b552fb309e3ff84",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_0b27b3ce",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "1b6c5eb187d2dcc3aa94bb1d969397d27d3482bf81edf747e55f81cc61c82a09",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_0b27b3ce",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "5f9284ae25799331943349b826659694a24c723f63c7b8c67d4f71a69a879ba0",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_00adab7c",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "407da174d3c9189a97f2d61bddbf61f74c16a6ffd04aeef6d52da86fceef3d7f",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_00adab7c",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        1024,
+        512
+      ],
+      "new_dims": [
+        2048,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 10,
+      "orig_bytes": 262272,
+      "new_bytes": 1398232,
+      "orig_sha256": null,
+      "new_sha256": "8eb0a50a7429b70e75a2cbc27d7e0e69dc3c78162fbb0755c8968094b663c1f3",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_ff0916dd",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "17f2820c60484a374a66402facbe2aac08d5ee2e9a742074b7dfa1d76c27d369",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_ff0916dd",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "987d534ddddc7bec2b1239b9594d908e5e5402ef50838241e63fff639246b98e",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_f51f572e",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "add36d1d7ed6ac2c65a9034150a3b0dfe8f0ec63dc7dd1bbb4f45f7be1449d50",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_f51f572e",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "4f18eddc59d60122e542393bcfb46c5f15d79e069cb22e4c1b8339f928119a03",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_f42d9038",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "3daa12d5904b6bebc0c8c90afcd2312c5c11ea68fedb558e72ab4add180ba3fb",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_f42d9038",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "64d90d993eb343a4d52ceb457edfee2a04b1a51f5efb72d6b81cb03ce8662578",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_eed86f3c",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "5f7938c3354ca589b335d4d887e2af49e7d4f84229ab1ffb143998b0a81a268e",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_eed86f3c",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "b71ba2dc30304e402cfa8642c4d19ec4f92421d00cb05c67f4de21c539aeba9f",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_eb3e6425",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "2a59182f8477ff92f3f176cd876b2e6cde54acf217904d8047faca8daea49ea0",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_eb3e6425",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "439551a962c014954a3fbd6981c99ba67fdc7473384aab848a04f4727dbfaec8",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_e8a7a177",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 262272,
+      "new_bytes": 1398224,
+      "orig_sha256": null,
+      "new_sha256": "c8f07fe0583f2e61c3749325144f844d858bc3cbea4cd18063cf5f949c568b14",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_e8a7a177",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT5",
+      "new_format": "DXT5",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 262272,
+      "new_bytes": 1398224,
+      "orig_sha256": null,
+      "new_sha256": "9fd611ba95ea010e6e7ba5c54691a5488f1c6c2fef849c6b31493e3962d97806",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_e70c80ab",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "d26d4f6d369d678ef1eb02ddc1c522ad2cd510a6a722c81a63fce16e7792638e",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_e70c80ab",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "df63f25e20352fd05e8ff955739fcf69a66b1da5231d6f9326c999621cdc0b28",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_e1390108",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "25e8765d905811e706babd60063dd3f1068f2b19a2102101b7590656289533b7",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_e1390108",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "5c9c976d1488597f44fa987285d82695ea8b9603ff031d28b46f42bbaf65c1f9",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_e1062625",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "b2ae7ff05263a6f5e21fb4a02d633058933959a1361d0f3b32e5a2a8f88b6f86",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_e1062625",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "1301875ff5d9505444ee11672142951833cd3679f1db03446ea20812db83afe9",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_e00a5e0e",
+      "candidate": "A_lanczos",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "cc9b241a57a702e82530b65cb2da9f1c536c0086405f0b36d09fe0cdcad0683b",
+      "mip_level_upscaled": 1
+    },
+    {
+      "texture": "env_e00a5e0e",
+      "candidate": "B_ibp",
+      "orig_dims": [
+        512,
+        512
+      ],
+      "new_dims": [
+        1024,
+        1024
+      ],
+      "orig_format": "PF_DXT1",
+      "new_format": "DXT1",
+      "orig_mips": 1,
+      "new_mips": 9,
+      "orig_bytes": 131200,
+      "new_bytes": 699176,
+      "orig_sha256": null,
+      "new_sha256": "eb55ae871f44373b484b95d9934cef85e2b0a73923ef6c7139532d22f47de605",
+      "mip_level_upscaled": 1
     }
   ],
   "warnings": [
-    "Spetsnaz_MP_helmet_s/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [1024, 1024]",
-    "Spetsnaz_MP_helmet_s/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [1024, 1024]",
-    "Spetsnaz_MP_helmet_e/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [1024, 1024]",
-    "Spetsnaz_MP_helmet_e/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [1024, 1024]",
     "handgun_d/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
     "handgun_d/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
     "handgun_n/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
-    "handgun_n/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]"
+    "handgun_n/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_door_a_d/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_door_a_d/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_door_a_n/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_door_a_n/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_door_b_d/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_door_b_d/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_door_b_n/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_door_b_n/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_shutter_d/A_lanczos: upscaled from mip 1 ((512, 1024)), NOT object mip0 [512, 1024]",
+    "env_shutter_d/B_ibp: upscaled from mip 1 ((512, 1024)), NOT object mip0 [512, 1024]",
+    "env_783d13f7/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_783d13f7/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_76306a2d/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_76306a2d/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_6201ffb9/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_6201ffb9/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_5bca8499/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_5bca8499/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_3657a320/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_3657a320/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_2f09c1bc/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_2f09c1bc/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_252c3df4/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_252c3df4/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_2177e137/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_2177e137/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_1f161de7/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_1f161de7/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_1a86a04b/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_1a86a04b/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_0d582fd6/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_0d582fd6/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_03b581da/A_lanczos: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_03b581da/B_ibp: upscaled from mip 1 ((1024, 1024)), NOT object mip0 [1024, 1024]",
+    "env_dc94648c/A_lanczos: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_dc94648c/B_ibp: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_d83b3c3a/A_lanczos: upscaled from mip 1 ((512, 1024)), NOT object mip0 [512, 1024]",
+    "env_d83b3c3a/B_ibp: upscaled from mip 1 ((512, 1024)), NOT object mip0 [512, 1024]",
+    "env_d3287886/A_lanczos: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_d3287886/B_ibp: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_bd9cf530/A_lanczos: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_bd9cf530/B_ibp: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_7d21f673/A_lanczos: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_7d21f673/B_ibp: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_6489c88e/A_lanczos: upscaled from mip 1 ((512, 1024)), NOT object mip0 [512, 1024]",
+    "env_6489c88e/B_ibp: upscaled from mip 1 ((512, 1024)), NOT object mip0 [512, 1024]",
+    "env_63b3ec8d/A_lanczos: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_63b3ec8d/B_ibp: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_4741d8cd/A_lanczos: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_4741d8cd/B_ibp: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_37469b7a/A_lanczos: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_37469b7a/B_ibp: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_23077af2/A_lanczos: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_23077af2/B_ibp: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_0e7a4cce/A_lanczos: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_0e7a4cce/B_ibp: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_0b27b3ce/A_lanczos: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_0b27b3ce/B_ibp: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_00adab7c/A_lanczos: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_00adab7c/B_ibp: upscaled from mip 1 ((1024, 512)), NOT object mip0 [1024, 512]",
+    "env_ff0916dd/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_ff0916dd/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_f51f572e/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_f51f572e/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_f42d9038/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_f42d9038/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_eed86f3c/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_eed86f3c/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_eb3e6425/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_eb3e6425/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_e8a7a177/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_e8a7a177/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_e70c80ab/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_e70c80ab/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_e1390108/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_e1390108/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_e1062625/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_e1062625/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_e00a5e0e/A_lanczos: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]",
+    "env_e00a5e0e/B_ibp: upscaled from mip 1 ((512, 512)), NOT object mip0 [512, 512]"
   ]
 }
