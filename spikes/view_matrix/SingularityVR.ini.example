@@ -1080,6 +1080,12 @@ SwapSticks=0
 ; toggled by the screenshot/recentre chord.
 RecenterChord=1
 
+[Diagnostic]
+; These are test-only switches. Normal Steam/PSVR2 use must leave them off.
+ForceDesktopVr=0
+DesktopCapture=0
+DesktopAutomation=0
+
 ; ---------------------------------------------------------------------------
 ; [Render] WeaponFxRideGun -- the muzzle flash and barrel smoke (run 181)
 ;
