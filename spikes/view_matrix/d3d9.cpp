@@ -22026,13 +22026,14 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // the linker dropped it with all its row strings. Drawn here, with the game input
     // already owned by the panel (ClearPad) while it is open. Exactly one call.
     if (InterlockedCompareExchange(&g_panelOpen, 0, 0)) DrawVrPanel(s);
-    // Fix-H/capture: consume a pending L3+R3 screenshot request (set on the input
-    // thread). One interlocked op per frame; the BMP itself only on request.
-    if (InterlockedExchange(&g_captureRequested, 0)) SaveBackbufferCapture(s);
     // The in-VR engineering panel is retired from user builds. It obscured the game and made
     // headset screenshots unusable in the production DLL. This isolated options DLL exposes it
     // again because the cutscene presentation choice must be reachable without editing the INI.
     DrawVrMenuPointer(s);
+    // Fix-H/capture: consume a pending L3+R3 screenshot request (set on the input
+    // thread) after the menu/prompt overlays have been drawn. This makes diagnostic
+    // captures represent the actual submitted eye image, including PS prompt icons.
+    if (InterlockedExchange(&g_captureRequested, 0)) SaveBackbufferCapture(s);
     if (InterlockedExchange(&g_initTried, 1) == 0) {
         InstallViewHook(); InstallProcessEventHook(); InitXR();
     }
