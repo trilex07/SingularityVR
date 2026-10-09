@@ -30,6 +30,39 @@ Najważniejsza luka: obecne dowody potwierdzają stan runtime i część obrazó
 ale nie łączą jeszcze w jeden automatyczny verdict: event → render pass →
 fresh L/R pixels → brak regresji frametime.
 
+## Implemented in this branch
+
+- `tools/vr_capture_oracle.py` implements a dependency-free PNG/BMP oracle.
+  It validates the `singularityvr.capture.v1` identity contract, image hashes,
+  non-empty eyes, ROI metrics, MAD, SSIM, duplicate/stale captures, baseline
+  pairing and explicit `PASS`/`FAIL`/`INCONCLUSIVE` exit codes.
+- `tools/singularityvr-test-bridge.ps1` remains the entry point. `Preflight`
+  is read-only, `Collect` converts only a coherent xrsim capture plus matching
+  acknowledgement/state into a manifest, and `VerifyCapture` invokes the
+  oracle. `Collect` refuses a capture if the acknowledged command frame,
+  eye-release frame, or source images do not agree.
+- `tools/tests/test_vr_capture_oracle.py` covers the five mandatory synthetic
+  cases: PASS, stale FAIL, swapped-eye FAIL, missing-effect FAIL against a
+  trusted baseline, and unknown-baseline INCONCLUSIVE.
+
+Example verification command:
+
+```powershell
+pwsh -NoProfile -File .\tools\singularityvr-test-bridge.ps1 `
+  -Action VerifyCapture `
+  -Manifest .\run\capture.capture.json `
+  -Baseline .\baseline\capture.capture.json `
+  -Previous .\run\previous.capture.json `
+  -Roi effect=100,100,300,300 `
+  -EffectRoi effect `
+  -Report .\run\oracle.json
+```
+
+The oracle does not infer “hand”, “shadow”, “prompt”, or “VFX” from bright
+pixels. An effect assertion means only that a declared ROI changed in both
+eyes relative to a trusted same-scene baseline. Semantic identity remains
+`INCONCLUSIVE` until a stronger scene/event oracle is supplied.
+
 ## TOP 5 ulepszeń Test Lab
 
 ### T1 — Frame-identity capture contract (P0)
@@ -184,4 +217,3 @@ Separate follow-up task: if existing `dvr-xrsim` cannot expose T1 metadata or
   existing Dishonored-derived `dvr-xrsim` path and has local probe/replay
   evidence. Full compatibility with BioShock's xrsim ABI and complete
   visual proof of hands/shadows/VFX is **not confirmed**.
-
