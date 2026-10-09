@@ -13297,7 +13297,7 @@ int g_hideStrayArms = 1;              // ini [Render] HideStrayArms
 // ⚠️ Kept as a toggle because the risk is real and specific: 390 rides the gun, so if it turns out to be
 // gun geometry - a sight, a magazine - hiding it removes part of the weapon. `HideExtraArms=0` restores
 // it without a rebuild, and the log names the count being hidden so a wrong call is diagnosable.
-int g_showControllerArms = 1;       // Preserve the existing animated arm mesh on the gun transform.
+int g_showControllerArms = 0;       // Default to glove-only until arm deformation is proven stable.
 int g_hideExtraArms = 1;              // ini [Render] HideExtraArms
 // 0 = existing native animation/palette path, 1 = bounded TMD two-bone IK.
 // The IK path is deliberately opt-in until a headset confirms the final elbow
@@ -25649,7 +25649,7 @@ void LoadIniSettings() {
     if (g_weaponWheelSlots > 8) g_weaponWheelSlots = 8;
     Log("weapon wheel: R3 hold, right stick sectors=%ld, release commits native cycle-weapon pulses",
         g_weaponWheelSlots);
-    g_showControllerArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 1, path) ? 1 : 0;
+    g_showControllerArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 0, path) ? 1 : 0;
     g_armIkMode = GetPrivateProfileIntA("Render", "ArmIKMode", 0, path);
     if (g_armIkMode < 0 || g_armIkMode > 2) g_armIkMode = 0;
     g_independentHands = GetPrivateProfileIntA("Render", "IndependentHandsPrototype", 0, path) ? 1 : 0;

@@ -122,12 +122,12 @@ void DrawVrContextPrompt(IDirect3DDevice9* dev) {
     const float y=(float)d.Height*.62f;
     for(int eye=0;eye<2;++eye) {
         const float x=eye*halfW+(halfW-size)*.5f;
-        // The geometry hook currently tells us that a native gameplay prompt
-        // is present, but it does not expose the original GFx label.  Confirm
-        // is the safe fallback for the game's Enter-style pickup prompts
-        // (notes, interactables); the label table still provides exact
-        // PAD3/PAD11 mappings once a text hook supplies the label.
-        DrawPromptRole(dev,x,y,size,promptroles::Action::Confirm);
+        // The geometry hook identifies the gameplay interaction prompt but
+        // does not expose the original GFx label.  This path is used by
+        // reload/chest/fountain interactions, whose native VR action is the
+        // right-hand grip (R1).  Enter-style note pickup has a separate GFx
+        // path and is still handled by the label rewrite table.
+        DrawPromptRole(dev,x,y,size,promptroles::Action::Interact);
         InterlockedIncrement(&g_vrCounters.psIconDraws);
     }
     dev->SetTexture(0,nullptr);
