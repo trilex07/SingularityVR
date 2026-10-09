@@ -30,6 +30,29 @@
 //     draw interacting with an eye-remapped pass; needs headset-verified
 //     capture, not assumption.
 //
+// CAPTURED (2026-10-09, from review-screens/capture_2026-10-08_14-42-37.jpg and
+// _14-12-54.jpg; full analysis + test plan in docs/SHADOW_ARTIFACT_CAPTURE_20261009.md).
+// The "headset-verified capture" the SPECULATIVE note was waiting for now exists, so
+// that note is downgraded from open question to observed fact on the following points
+// ONLY - the FP-mesh hypothesis itself is still unproven:
+//   - The artifact is real, and it is strictly ONE EYE. Two manifestations, each in a
+//     single eye with the other eye clean at the same eye-relative region:
+//       14-42-37  LEFT  : a shadow silhouette on the floor filled with evenly spaced
+//                         parallel diagonal bands (hatching), right eye clean.
+//       14-12-54  RIGHT : thin near-vertical dark lines crossing floor tiles and
+//                         debris, left eye clean.
+//   - The bands hold a constant angle and spacing ACROSS a floor that is converging in
+//     perspective, so the pattern is not world-locked - consistent with a screen-space
+//     or wrap-around lookup error rather than a solid mis-placed shadow volume.
+//   - The shape around the bands still follows a shadow-like silhouette, and the game's
+//     own "High Quality Decals = OFF" removes the visual entirely (recorded in the
+//     run-44 note in d3d9.cpp), so "decal-like projected lookup" is the leading reading.
+// Still OPEN (do not treat as answered): which pass emits it, and whether the FP
+// depth/shadow draw is involved at all. The render-target census reports THREE
+// scene-sized surfaces split where only LDR+HDR scene colour are expected, and the
+// constant dump that would identify the reconstruction matrix cannot currently fire -
+// both are written up in the capture doc above.
+//
 // This predicate identifies "first-person arm/weapon shadow-caster draw
 // ONLY" as a conjunction (Dishonored-VR ghost-sibling rule precedent:
 // src/legacy/vr33/weapon_primitive_sibling_state.inc — a depth/shadow pass
