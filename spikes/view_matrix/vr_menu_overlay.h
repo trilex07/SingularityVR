@@ -122,7 +122,12 @@ void DrawVrContextPrompt(IDirect3DDevice9* dev) {
     const float y=(float)d.Height*.62f;
     for(int eye=0;eye<2;++eye) {
         const float x=eye*halfW+(halfW-size)*.5f;
-        DrawPromptRole(dev,x,y,size,promptroles::Action::Interact);
+        // The geometry hook currently tells us that a native gameplay prompt
+        // is present, but it does not expose the original GFx label.  Confirm
+        // is the safe fallback for the game's Enter-style pickup prompts
+        // (notes, interactables); the label table still provides exact
+        // PAD3/PAD11 mappings once a text hook supplies the label.
+        DrawPromptRole(dev,x,y,size,promptroles::Action::Confirm);
         InterlockedIncrement(&g_vrCounters.psIconDraws);
     }
     dev->SetTexture(0,nullptr);
@@ -372,14 +377,9 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
         ClearRects(dev, outline, n, 0xFF000000); ClearRects(dev, dot, n, Rd(g_vrUiDown) ? 0xFF50FF80 : 0xFFFFFFFF);
     }
 
-    // The native GFx prompt hook is intentionally separate from this overlay.
-    // Keep a small PS legend available in menu mode so the controller mapping is
-    // visible while the native contextual prompt lifecycle is being observed.
-    if (menu) DrawVrPromptLegend(dev, d, false);
-
-    // Contextual gameplay prompts are drawn by DrawVrContextPrompt after the
-    // measured native text batch is seen; menu icons above remain available even
-    // when a menu has no native button-label row.
+    // Menu legends are intentionally omitted.  PS icons are reserved for
+    // contextual gameplay prompts (for example Enter -> Cross when picking up
+    // a note) so the menu remains the game's native layout.
 
     if (old) g_origSetRenderTarget(dev, 0, old);
     dev->SetDepthStencilSurface(depth);
