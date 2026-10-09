@@ -176,7 +176,25 @@ static uipointer::V PauseVrSettingsWorld(float u, float v) {
 }
 static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d) {
     const LONG menuClass = Rd(g_vrMenuClass);
-    if (!dev || (menuClass != 2 && menuClass != 3) || !g_vrMenuPanelValid || !g_origDrawPrimUP) return;
+    if (!dev || (menuClass != 2 && menuClass != 3) || !g_origDrawPrimUP) return;
+    // The native input hook can discover the pause movie a tick before the
+    // pointer update has built the head-relative plane.  Do not suppress the
+    // settings entry in that window; build the same plane here as a bounded
+    // fallback so the row is always visible when a menu is visible.
+    if (!g_vrMenuPanelValid) {
+        if (!g_haveEyes || g_targetTanX <= 0 || g_targetTanY <= 0) return;
+        const auto& q = g_eyePose[0].orientation;
+        const uipointer::V head{
+            (g_eyePose[0].position.x + g_eyePose[1].position.x) * .5f,
+            (g_eyePose[0].position.y + g_eyePose[1].position.y) * .5f,
+            (g_eyePose[0].position.z + g_eyePose[1].position.z) * .5f};
+        g_vrMenuPanelValid = uipointer::HeadPlane(
+            head, VrUiRotate(q, {0,0,-1}), VrUiRotate(q, {1,0,0}),
+            VrUiRotate(q, {0,1,0}), Rd(g_vrMenuDistanceMm) / 1000.0f,
+            g_targetTanX, g_targetTanY, Rd(g_menuInsetPct) / 100.0f,
+            g_vrMenuPanel.plane);
+        if (!g_vrMenuPanelValid) return;
+    }
     static LONG lastLoggedClass = -1;
     if (lastLoggedClass != menuClass) {
         lastLoggedClass = menuClass;
@@ -315,8 +333,10 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     SyncVrMenuCaptureState();
     MenuDrawTraceFrame();
     const bool nativeMenu = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && Rd(g_vrUiMenu) && Rd(g_vrMenuOverlay);
+    const bool menuRow = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) &&
+                         (Rd(g_vrMenuClass) == 2 || Rd(g_vrMenuClass) == 3);
     const bool panel = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && Rd(g_panelOpen);
-    const bool menu = nativeMenu || panel;
+    const bool menu = nativeMenu || menuRow || panel;
     if (!menu || !g_origDrawPrimUP || !g_origSetVS || !g_origSetRenderTarget) return;
 
     IDirect3DSurface9 *back = nullptr, *old = nullptr, *depth = nullptr;
@@ -376,7 +396,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
 
     // The synthetic row stays visible even when the controller ray is currently
     // outside the menu plane; only hover/click feedback depends on a valid hit.
-    if (panel) DrawPauseVrSettingsRow(dev, d);
+    if (menuRow && !panel) DrawPauseVrSettingsRow(dev, d);
 
     // ---- LASER + HIT MARKER ----
     if (menu && Rd(g_vrUiValid)) {
