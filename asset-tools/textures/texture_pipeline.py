@@ -604,6 +604,19 @@ def make_mips(img: Image.Image, is_normal: bool, min_size: int = 4) -> list[Imag
 # --------------------------------------------------------------------------- #
 # command: upscale + experiment
 # --------------------------------------------------------------------------- #
+def is_true_mip0(meta: dict) -> bool:
+    """True only when the exported file really is the object mip0.
+
+    Regression guard for the door_blastdoorN_s incident: UModel sometimes
+    exports a lower mip (or nothing parseable) while a stale/partial file is
+    still on disk. Upscaling that would ship a fake 2x, so such entries must
+    go through runtime capture instead. Prefers decoded_size (the actual file)
+    over exported_dims (the log parse).
+    """
+    exp = meta.get("decoded_size") or meta.get("exported_dims")
+    return exp == [meta.get("size_x"), meta.get("size_y")]
+
+
 EXPERIMENT_SET = [
     # texture, kind, note
     ("inview_glove_d", "albedo", "first-person glove/hand diffuse (highest priority)"),
@@ -780,11 +793,10 @@ def cmd_upscale(a) -> None:
         # Never fake-upscale a lower mip: a true 2x needs the object mip0.
         # (Runtime captures are the exception - they carry what the engine
         # uploads - and go through upscale_captured instead.)
-        t0 = textures[name]
-        exp = t0.get("decoded_size") or t0.get("exported_dims")
-        obj = [t0.get("size_x"), t0.get("size_y")]
-        if exp != obj:
-            log(f"skip {name}: exported {exp} != object {obj}, needs capture")
+        if not is_true_mip0(textures[name]):
+            t0 = textures[name]
+            log(f"skip {name}: exported {t0.get('decoded_size') or t0.get('exported_dims')} "
+                f"!= object {[t0.get('size_x'), t0.get('size_y')]}, needs capture")
             continue
         fmt = fmt_from_fourcc(dds_fourcc(src), textures[name].get("format"))
         dds_fmt = "DXT5" if fmt == "PF_DXT5" else "DXT1"
