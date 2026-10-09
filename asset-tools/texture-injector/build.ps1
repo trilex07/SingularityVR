@@ -29,7 +29,9 @@ try {
         "`"$mh\src\hde\hde32.c`""
     ) -join " "
 
-    $cmd = "`"$vcvars`" x86 && cl /nologo /LD /EHsc /W3 /MD /std:c++17 " +
+    # /O2 is required (verification preflight proves it); keep flags in sync
+    # with the documented build or the sandbox SHA check is meaningless.
+    $cmd = "`"$vcvars`" x86 && cl /nologo /LD /EHsc /W3 /O2 /MD /std:c++17 " +
            "/I`"$mh\include`" " +
            "/Fe:dinput8.dll texture_injector.cpp $mhSrc " +
            "/link /DEF:dinput8.def user32.lib"
