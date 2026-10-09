@@ -5,9 +5,13 @@ param(
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam',
     [string]$RepoRoot = '',
     [string]$ArtifactDir = '',
-    [string]$XInputDllPath = '',
+    [string]$AssetsRoot = '',
+    [string]$AssetsLocalRoot = '',
+    [ValidateSet('A', 'B')]
+    [string]$TextureVariant = 'B',
     [string]$BackupPath = '',
     [switch]$KeepIni,
+    [switch]$SkipTextures,
     [switch]$StopGame
 )
 
@@ -105,8 +109,66 @@ function New-Backup([string]$TargetDir, [string[]]$Targets) {
             }
         }
         $entries | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $path 'manifest.json') -Encoding UTF8
+        $metadata = [pscustomobject]@{
+            Files = @($Targets | ForEach-Object {
+                [pscustomobject]@{
+                    Name = [System.IO.Path]::GetFileName($_)
+                    Existed = (Test-Path -LiteralPath $_ -PathType Leaf)
+                    Sha256 = if (Test-Path -LiteralPath $_ -PathType Leaf) { Get-Sha256 $_ } else { $null }
+                }
+            })
+            Directories = @()
+        }
+        $metadata | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $path 'backup_metadata.json') -Encoding UTF8
     }
     return $path
+}
+
+function Add-DirectoryBackup([string]$Backup, [string]$Target) {
+    $name = [System.IO.Path]::GetFileName($Target.TrimEnd('\'))
+    $destination = Join-Path $Backup $name
+    $existed = Test-Path -LiteralPath $Target -PathType Container
+    if ($existed -and $PSCmdlet.ShouldProcess($destination, 'Back up texture directory')) {
+        Copy-Item -LiteralPath $Target -Destination $destination -Recurse -Force
+    }
+    [pscustomobject]@{ Name = $name; Existed = $existed }
+}
+
+function Set-DirectoryMetadata([string]$Backup, [object[]]$Directories) {
+    $metadataPath = Join-Path $Backup 'backup_metadata.json'
+    $metadata = if (Test-Path -LiteralPath $metadataPath -PathType Leaf) {
+        Get-Content -LiteralPath $metadataPath -Raw | ConvertFrom-Json
+    } else {
+        [pscustomobject]@{ Files = @(); Directories = @() }
+    }
+    $metadata.Directories = @($Directories)
+    $metadata | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $metadataPath -Encoding UTF8
+}
+
+function Copy-Directory([string]$Source, [string]$Target) {
+    if (-not (Test-Path -LiteralPath $Source -PathType Container)) { throw "Missing directory source: $Source" }
+    if ($PSCmdlet.ShouldProcess($Target, "Install texture directory $([System.IO.Path]::GetFileName($Source))")) {
+        New-Item -ItemType Directory -Path $Target -Force | Out-Null
+        Get-ChildItem -LiteralPath $Target -File -Filter '*.dds' -ErrorAction SilentlyContinue | Remove-Item -Force
+        Get-ChildItem -LiteralPath $Source -File -Filter '*.dds' | ForEach-Object {
+            Copy-Verified $_.FullName (Join-Path $Target $_.Name) | Out-Null
+        }
+    }
+}
+
+function Get-TextureSources([string]$LocalRoot) {
+    $upscaled = Join-Path $LocalRoot 'textures\upscaled'
+    if (-not (Test-Path -LiteralPath $upscaled -PathType Container)) {
+        throw "Upscaled texture directory not found: $upscaled"
+    }
+    $suffix = if ($TextureVariant -eq 'B') { '__B_ibp' } else { '__A_lanczos' }
+    $strip = "$suffix.dds"
+    $sources = @(Get-ChildItem -LiteralPath $upscaled -File -Filter "*$strip")
+    if ($sources.Count -eq 0) { throw "No $TextureVariant texture candidates found in $upscaled" }
+    return @($sources | ForEach-Object {
+        $base = $_.Name.Substring(0, $_.Name.Length - $strip.Length)
+        [pscustomobject]@{ Source = $_.FullName; Name = "$base.dds" }
+    })
 }
 
 function Resolve-Source([string]$Name, [string]$Stage, [string]$Fallback) {
@@ -117,24 +179,41 @@ function Resolve-Source([string]$Name, [string]$Stage, [string]$Fallback) {
 }
 
 $root = if ($RepoRoot) { Get-AbsolutePath $RepoRoot } else { (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
-$gameBin = Join-Path $SteamRoot 'steamapps\common\Singularity\Binaries'
+$steamRootAbs = Get-AbsolutePath $SteamRoot
+$gameBin = Join-Path $steamRootAbs 'steamapps\common\Singularity\Binaries'
 $sourceDll = Join-Path $root 'spikes\view_matrix\d3d9.dll'
 $sourceIni = Join-Path $root 'spikes\view_matrix\SingularityVR.ini'
 $stage = if ($ArtifactDir) { Get-AbsolutePath $ArtifactDir } else { Join-Path $root 'deployment\vr-recorder-20261009' }
 $stageDll = Resolve-Source 'd3d9.dll' $stage $sourceDll
 $stageIni = Resolve-Source 'SingularityVR.ini' $stage $sourceIni
+$assets = if ($AssetsRoot) { Get-AbsolutePath $AssetsRoot } else { Join-Path (Split-Path $root -Parent) 'SingularityVR-assets' }
+$assetsLocal = if ($AssetsLocalRoot) { Get-AbsolutePath $AssetsLocalRoot } else { Join-Path (Split-Path $root -Parent) 'SingularityVR-assets-local' }
+$dinputSource = Join-Path $assets 'asset-tools\texture-injector\dinput8.dll'
+$textureIniSource = Join-Path $assets 'asset-tools\texture-injector\texture_override.ini'
+$dinputOrigSource = Join-Path $env:windir 'SysWOW64\dinput8.dll'
 $targetDll = Join-Path $gameBin 'd3d9.dll'
 $targetIni = Join-Path $gameBin 'SingularityVR.ini'
+$targetDinput = Join-Path $gameBin 'dinput8.dll'
+$targetDinputOrig = Join-Path $gameBin 'dinput8_orig.dll'
+$targetTextureIni = Join-Path $gameBin 'texture_override.ini'
+$targetTextures = Join-Path $gameBin 'texture-override'
 
 if ($Action -eq 'Status') {
     $state = @(
         Get-FileState $targetDll
         Get-FileState $targetIni
+        Get-FileState $targetDinput
+        Get-FileState $targetDinputOrig
+        Get-FileState $targetTextureIni
     )
     $state | Format-Table -AutoSize
     if (Test-Path -LiteralPath $targetDll -PathType Leaf) {
         $pe = Get-PeIdentity $targetDll
         Write-Host ("DLL PE32: {0} (machine {1}, optional {2})" -f $pe.IsPe32, $pe.Machine, $pe.OptionalMagic)
+    }
+    if (Test-Path -LiteralPath $targetTextures -PathType Container) {
+        $textureCount = @(Get-ChildItem -LiteralPath $targetTextures -File -Filter '*.dds').Count
+        Write-Host "Texture override DDS files: $textureCount"
     }
     exit 0
 }
@@ -149,10 +228,34 @@ if ($Action -eq 'Rollback') {
     $manifest = Join-Path $backup 'manifest.json'
     if (-not (Test-Path -LiteralPath $manifest -PathType Leaf)) { throw "Backup manifest not found: $manifest" }
     Stop-GameIfRequested
-    foreach ($file in @('d3d9.dll', 'SingularityVR.ini', 'xinput1_3.dll')) {
-        $src = Join-Path $backup $file
-        $dst = Join-Path $gameBin $file
-        if (Test-Path -LiteralPath $src -PathType Leaf) { Copy-Verified $src $dst | Out-Null }
+    $metadataPath = Join-Path $backup 'backup_metadata.json'
+    if (Test-Path -LiteralPath $metadataPath -PathType Leaf) {
+        $metadata = Get-Content -LiteralPath $metadataPath -Raw | ConvertFrom-Json
+        foreach ($entry in @($metadata.Files)) {
+            $src = Join-Path $backup $entry.Name
+            $dst = Join-Path $gameBin $entry.Name
+            if ($entry.Existed) {
+                if (Test-Path -LiteralPath $src -PathType Leaf) { Copy-Verified $src $dst | Out-Null }
+            } elseif (Test-Path -LiteralPath $dst -PathType Leaf) {
+                if ($PSCmdlet.ShouldProcess($dst, 'Remove file that did not exist before deployment')) { Remove-Item -LiteralPath $dst -Force }
+            }
+        }
+        foreach ($entry in @($metadata.Directories)) {
+            $dst = Join-Path $gameBin $entry.Name
+            if (Test-Path -LiteralPath $dst -PathType Container) {
+                if ($PSCmdlet.ShouldProcess($dst, 'Remove installed texture directory before rollback')) { Remove-Item -LiteralPath $dst -Recurse -Force }
+            }
+            $src = Join-Path $backup $entry.Name
+            if ($entry.Existed -and (Test-Path -LiteralPath $src -PathType Container)) {
+                if ($PSCmdlet.ShouldProcess($dst, 'Restore texture directory')) { Copy-Item -LiteralPath $src -Destination $dst -Recurse -Force }
+            }
+        }
+    } else {
+        foreach ($file in @('d3d9.dll', 'SingularityVR.ini', 'dinput8.dll', 'dinput8_orig.dll', 'texture_override.ini')) {
+            $src = Join-Path $backup $file
+            $dst = Join-Path $gameBin $file
+            if (Test-Path -LiteralPath $src -PathType Leaf) { Copy-Verified $src $dst | Out-Null }
+        }
     }
     Write-Host "Rollback complete from $backup"
     exit 0
@@ -160,25 +263,38 @@ if ($Action -eq 'Rollback') {
 
 if (-not $stageDll) { throw 'No d3d9.dll source found in the selected artifact directory or source tree.' }
 if (-not $stageIni -and -not $KeepIni) { throw 'No SingularityVR.ini source found; use -KeepIni only if preserving the installed INI is intentional.' }
+if (-not (Test-Path -LiteralPath $dinputSource -PathType Leaf)) { throw "Texture injector dinput8.dll not found: $dinputSource" }
+if (-not (Test-Path -LiteralPath $textureIniSource -PathType Leaf)) { throw "Texture injector config not found: $textureIniSource" }
+if (-not (Test-Path -LiteralPath $dinputOrigSource -PathType Leaf)) { throw "System dinput8.dll not found: $dinputOrigSource" }
 $pe = Get-PeIdentity $stageDll
 if (-not $pe.IsPe32) { throw "The deployment DLL is not PE32 x86: $stageDll" }
+$dinputPe = Get-PeIdentity $dinputSource
+if (-not $dinputPe.IsPe32) { throw "The texture injector dinput8.dll is not PE32 x86: $dinputSource" }
 
-$targets = @($targetDll)
+$targets = @($targetDll, $targetDinput, $targetDinputOrig, $targetTextureIni)
 if (-not $KeepIni) { $targets += $targetIni }
-$xinputSource = $null
-if ($XInputDllPath) {
-    $xinputSource = Get-AbsolutePath $XInputDllPath
-    if (-not (Test-Path -LiteralPath $xinputSource -PathType Leaf)) { throw "XInput DLL not found: $xinputSource" }
-    $targets += (Join-Path $gameBin ([System.IO.Path]::GetFileName($xinputSource)))
-}
+$textureSources = @()
+if (-not $SkipTextures) { $textureSources = @(Get-TextureSources $assetsLocal) }
 $backupRoot = Join-Path $root 'deployment\install-backups'
 New-Item -ItemType Directory -Path $backupRoot -Force | Out-Null
 Stop-GameIfRequested
 $backup = New-Backup $backupRoot $targets
+$directoryBackups = @()
+if (-not $SkipTextures) { $directoryBackups += Add-DirectoryBackup $backup $targetTextures }
+Set-DirectoryMetadata $backup $directoryBackups
 $installed = @()
 $installed += Copy-Verified $stageDll $targetDll
 if (-not $KeepIni) { $installed += Copy-Verified $stageIni $targetIni }
-if ($xinputSource) { $installed += Copy-Verified $xinputSource (Join-Path $gameBin ([System.IO.Path]::GetFileName($xinputSource))) }
+$installed += Copy-Verified $dinputSource $targetDinput
+$installed += Copy-Verified $dinputOrigSource $targetDinputOrig
+$installed += Copy-Verified $textureIniSource $targetTextureIni
+if (-not $SkipTextures) {
+    New-Item -ItemType Directory -Path $targetTextures -Force | Out-Null
+    Get-ChildItem -LiteralPath $targetTextures -File -Filter '*.dds' -ErrorAction SilentlyContinue | Remove-Item -Force
+    foreach ($texture in $textureSources) {
+        $installed += Copy-Verified $texture.Source (Join-Path $targetTextures $texture.Name)
+    }
+}
 
 $reportDir = Join-Path $root 'deployment\install-reports'
 New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
@@ -188,11 +304,16 @@ $report = [pscustomobject]@{
     GameBin = $gameBin
     BackupPath = $backup
     Pe32 = $pe.IsPe32
+    DInput8Pe32 = $dinputPe.IsPe32
     Installed = @($installed)
-    XInput = if ($xinputSource) { $xinputSource } else { 'not supplied; no xinput DLL copied' }
+    TextureVariant = if ($SkipTextures) { 'skipped' } else { $TextureVariant }
+    TextureCount = if ($SkipTextures) { 0 } else { $textureSources.Count }
     FinalState = @(
         Get-FileState $targetDll
         Get-FileState $targetIni
+        Get-FileState $targetDinput
+        Get-FileState $targetDinputOrig
+        Get-FileState $targetTextureIni
     )
 }
 $reportPath = Join-Path $reportDir ((Get-Date -Format 'yyyyMMdd-HHmmss') + '.json')
@@ -202,4 +323,5 @@ Write-Host "Game directory: $gameBin"
 Write-Host "Backup: $backup"
 Write-Host "Report: $reportPath"
 Write-Host ("d3d9.dll SHA-256: {0}" -f (Get-Sha256 $targetDll))
-if (-not $xinputSource) { Write-Warning 'No xinput DLL was supplied or present in the current repository; no xinput file was copied.' }
+Write-Host ("dinput8.dll SHA-256: {0}" -f (Get-Sha256 $targetDinput))
+if (-not $SkipTextures) { Write-Host ("Texture variant {0}: {1} DDS file(s)" -f $TextureVariant, $textureSources.Count) }
