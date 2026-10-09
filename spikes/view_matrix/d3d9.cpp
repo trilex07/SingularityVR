@@ -6329,11 +6329,16 @@ extern int g_panelPage;
 // pause menu.  Keep the old panel implementation and persistence intact, but do
 // not expose a second in-world button/hold gesture during gameplay.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v) {
-    if (InterlockedCompareExchange(&g_vrMenuClass, 0, 0) != 3) return false;
+    const LONG menuClass = InterlockedCompareExchange(&g_vrMenuClass, 0, 0);
+    // Expose the entry on both the pause movie and the boot/main movie.  The
+    // settings are useful before starting a game, and the main movie was the
+    // reason the old pause-only row appeared to be missing entirely.
+    if (menuClass != 2 && menuClass != 3) return false;
     return pausevrsettings::Hit((float)u / 1000000.0f, (float)v / 1000000.0f);
 }
 void OpenVrSettingsFromPause() {
-    if (InterlockedCompareExchange(&g_vrMenuClass, 0, 0) != 3) return;
+    const LONG menuClass = InterlockedCompareExchange(&g_vrMenuClass, 0, 0);
+    if (menuClass != 2 && menuClass != 3) return;
     if (!InterlockedCompareExchange(&g_panelOpen, 0, 0)) {
         g_panelPage = 0;
         g_panelRow = 0;
@@ -9388,11 +9393,12 @@ void SyncXRInput(XrTime displayTime) {
     // makes the panel unable to conflict with whatever is on screen behind it: the pause menu, the
     // main menu and the player all see a controller that is not being touched.
     if (InterlockedCompareExchange(&g_panelOpen, 0, 0) &&
+        InterlockedCompareExchange(&g_vrMenuClass, 0, 0) != 2 &&
         InterlockedCompareExchange(&g_vrMenuClass, 0, 0) != 3) {
         if (g_panelDirty) PanelSave();
         g_panelDirty = false;
         InterlockedExchange(&g_panelOpen, 0);
-        Log("VR settings: auto-closed when pause menu lost focus");
+        Log("VR settings: auto-closed when main/pause menu lost focus");
     }
     if (InterlockedCompareExchange(&g_panelOpen, 0, 0)) {
         static bool armedY = true, armedX = true;

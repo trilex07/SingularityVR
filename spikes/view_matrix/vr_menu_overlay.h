@@ -175,7 +175,14 @@ static uipointer::V PauseVrSettingsWorld(float u, float v) {
     return g_vrMenuPanel.plane.centre + g_vrMenuPanel.plane.right * x + g_vrMenuPanel.plane.up * y;
 }
 static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d) {
-    if (!dev || Rd(g_vrMenuClass) != 3 || !g_vrMenuPanelValid || !g_origDrawPrimUP) return;
+    const LONG menuClass = Rd(g_vrMenuClass);
+    if (!dev || (menuClass != 2 && menuClass != 3) || !g_vrMenuPanelValid || !g_origDrawPrimUP) return;
+    static LONG lastLoggedClass = -1;
+    if (lastLoggedClass != menuClass) {
+        lastLoggedClass = menuClass;
+        Log("VR settings row: visible in %s menu at normalized V %.2f-%.2f",
+            menuClass == 2 ? "main" : "pause", pausevrsettings::kV0, pausevrsettings::kV1);
+    }
     const bool hovered = Rd(g_vrUiValid) && pausevrsettings::Hit(
         Rd(g_vrUiU) / 1000000.0f, Rd(g_vrUiV) / 1000000.0f);
     const float halfW = d.Width * .5f;
