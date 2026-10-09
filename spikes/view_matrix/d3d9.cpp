@@ -6539,6 +6539,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_SHADOWMODE, PR_DROPEXTRA,   // hub round 4: shadow sampling treatment + extra-target drop
        PR_SHADOWTEST, PR_VFXORIGIN,   // reversible shadow-source + muzzle-anchor A/B tests
        PR_VFXHOST, PR_VFXDRAW, PR_VFXDIAG, PR_VFXLOOK, PR_VFXOFFSET, // VFX test/tuning rows
+       PR_GLOVEONLY,
        // ⭐ run 217: the laser and the per-weapon alignment rows.
        PR_LASER, PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH,
        PR_NOTESIZE,          // ⭐ run 230
@@ -6612,7 +6613,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
     { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE,
-      PR_VFXHOST, PR_VFXLOOK, PR_BACK },
+      PR_GLOVEONLY, PR_VFXLOOK, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
@@ -6724,6 +6725,7 @@ extern volatile LONG g_hideMuzzleFx;
 // Defined with the VFX host block (below); declared here so the panel rows can read them.
 extern volatile LONG g_vfxHost, g_vfxDraw, g_vfxDiag;
 extern volatile LONG g_vfxMuzzleOrigin, g_vfxMuzzleOffsetMm, g_vfxLook, g_shadowTest;
+extern int g_showControllerArms;
 // Defined beside the turn code, which is the first thing that reads them.
 extern volatile LONG g_cineStickTurn;
 extern volatile LONG g_cutsceneLockCamera;
@@ -6880,6 +6882,9 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_vrMenuOverlay, 0, 0));
             WritePrivateProfileStringA("Render", "MenuOverlay", v, path); return;
+        case PR_GLOVEONLY:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", g_showControllerArms ? 0L : 1L);
+            WritePrivateProfileStringA("Render", "ShowControllerArms", v, path); return;
         // ⭐ run 237: ONE case writes the whole TMD block, so no row can be adjustable and persist
         // nowhere - the defect PanelSaveRow was restructured to prevent.
         case PR_TMDON: {
@@ -7237,6 +7242,10 @@ void PanelRowText(int row, char* out, size_t cap) {
             // copy, so menus stay usable while the overlay is out of the picture.
             _snprintf_s(out, cap, _TRUNCATE, "MENU OVERLAY   %s",
                         InterlockedCompareExchange(&g_vrMenuOverlay, 0, 0) ? "ON" : "OFF");
+            break;
+        case PR_GLOVEONLY:
+            _snprintf_s(out, cap, _TRUNCATE, "GLOVE ONLY     %s",
+                        g_showControllerArms ? "OFF" : "ON");
             break;
         case PR_AIMPARTS: {
             const LONG p = InterlockedCompareExchange(&g_aimModeParts, 0, 0);
@@ -7696,6 +7705,10 @@ void PanelAdjust(int row, int dir) {
         case PR_MENUOVERLAY:
             InterlockedExchange(&g_vrMenuOverlay,
                                 InterlockedCompareExchange(&g_vrMenuOverlay, 0, 0) ? 0 : 1);
+            break;
+        case PR_GLOVEONLY:
+            g_showControllerArms = g_showControllerArms ? 0 : 1;
+            Log("VR panel: glove-only visual %s", g_showControllerArms ? "OFF" : "ON");
             break;
         case PR_WEAPONFX: {
             // Clamped, not wrapped - run 143's lesson. Wrapping would put one press past RIDE GUN
