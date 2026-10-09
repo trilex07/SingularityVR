@@ -1,7 +1,7 @@
 # SingularityVR deployment — 2026-10-09
 
 The current branch is `fix/vr-menu-input-grip-performance` at commit
-`7107d04`. The deployed DLL is the x86 PE32 build with SHA-256
+`29d43d0`. The deployed DLL is the x86 PE32 build with SHA-256
 `53BCD9CA3AECFF8236EEF1EB9F4CA8ED82AC32153D5176E35F053688B1224AF7`.
 
 Deployment target:
