@@ -12,6 +12,7 @@ These rules apply to all work in this repository and override generic skill defa
 - Do not guess engine addresses, offsets, register ownership, or pass identity. Require source evidence plus a falsification path; use one runtime variable at a time when debugging.
 - Keep diagnostics bounded: no per-draw allocations, filesystem writes, or unbounded logs. Aggregate counters and cap captures.
 - Review skill-bundled helper scripts before execution. Prefer read-only checks on project-controlled artifacts; do not run helpers on user saves or unknown binaries without explicit authorization.
+- Every side agent must work in its own worktree and sandbox/data directory. Side agents must not deploy or replace DLLs in Steam, alter the OpenXR registry, or reuse another agent's xrsim/log/capture directory; only the primary agent owns Steam deployment.
 
 ## Evidence gates
 
@@ -25,3 +26,15 @@ These rules apply to all work in this repository and override generic skill defa
 - Read `docs/VR_STATUS.md` and `docs/VR_FEATURE_GAP_ANALYSIS.md` first. For engine-specific work read `ENGINE_NOTES.md`; search `HISTORY.md` for the evidence behind inherited claims rather than reading it cold.
 - Prefer fixes for P0 lifecycle/performance, P1 stereo/render correctness, P2 hands/weapons, and P3 contextual interaction before optional polish.
 - Protect the user's existing working tree. Make focused changes and report exact evidence and remaining limits.
+
+## Skill routing
+
+Project-local skills are in `.agents/skills/<name>/SKILL.md`, which is the repository-local Agent Skills location detected by Codex and OpenCode. Use the narrowest matching skill automatically:
+
+- `ue3-d3d9-openxr` for UE3/D3D9 reverse engineering, stereo, shaders, shadows, VFX, per-eye state, and x86 OpenXR invariants.
+- `openxr-native` for loader/session/actions/reference spaces and 32-bit runtime selection.
+- `vr-session-evidence` for xrsim, `.vrrec`, per-eye capture, replay, frame pacing, and evidence manifests.
+- `singularityvr-agent-test-bridge` for every runtime-affecting change and all L1–L4 evidence gates.
+- `mod-reverse-engineering` for static/dynamic engine analysis; `game-automation` for controlled game driving; `xr-performance` for frame-budget investigations; `vr-mod-workflow` for staged VR implementation and regression planning.
+
+Do not call a feature `FIXED` unless the required L1/L2/L3 evidence exists; L4 is required only for claims that cannot be proven autonomously. The primary agent must use the test bridge without waiting for an additional prompt.
