@@ -5,13 +5,42 @@ description: Mandatory evidence workflow for SingularityVR runtime, OpenXR, rend
 
 # SingularityVR agent test bridge
 
-Use this skill for every change that can affect the running mod. Start at the production worktree and preserve its existing diff.
+Use this skill for every change that can affect the running mod. The ownership
+boundary is strict: sub-agents produce L1/L2 evidence; only the main agent may
+perform L3 on the main Steam installation.
 
-1. Read `AGENTS.md`, `docs/VR_STATUS.md`, the target feature's evidence, and the current `d3d9.cpp` path.
-2. Run `tools/singularityvr-test-bridge.ps1 -Action Preflight`. Require the source-built DLL and installed Steam DLL to have identical SHA-256, and require x86 PE32. Record branch and commit. If the build flags cannot be proven to include `/O2`, rebuild before runtime testing.
-3. Run the narrowest relevant deterministic test/replay first. Preserve source recordings; use `vr_session_dump.py` and `vr_session_replay.py` offline. For an installed-game simulated OpenXR route, use `steam-xrsim-singularity.ps1` with an explicit `-CandidateDirectory`, `-LaunchViaSteam`, and `-RestartSteam`; pass `-LogRoot` to capture the user's actual runtime directory. Replay `.vrrec` only after the xrsim state reports `FOCUSED` and two projection views.
-4. For a physical SteamVR route, use `tools/singularityvr-test-bridge.ps1 -Action Launch` only after preflight passes. Keep runtime experiments to one variable. Do not deploy while the game is running. An xrsim pass proves installed-game integration, not physical headset behavior.
-5. Collect evidence with `tools/singularityvr-test-bridge.ps1 -Action Collect -LogRoot <runtime-log-dir> -XrSimDirectory <xrsim-dir>`. Keep bounded captures, current log, xrsim state/log, process/build provenance, and a manifest together. Do not collect whole log directories or create per-draw output.
-6. Compare against the same scene/recording, report L1/L2/L3 separately, and update `docs/VR_STATUS.md`. Mark physical acceptance ready only after autonomous tests pass; never mark physically verified without an actual headset result.
+## Sub-agent route: L1/L2 handoff
 
-The bridge is read-only for preflight and collection. Steam launch is an explicit separate action and must not replace the user's deployed DLL or INI.
+1. Read `AGENTS.md`, `docs/VR_STATUS.md`, and the target evidence.
+2. Run `tools/agent-l1-l2-handoff.ps1 -Action L1` with the recording and
+   isolated xrsim directory when a replay dry-run is relevant.
+3. Inspect the candidate artifact with
+   `tools/agent-l1-l2-handoff.ps1 -Action L2 -Artifact <dll> -BuildManifest <manifest>`.
+   Require x86 PE32, `/O2`, matching build SHA, and a recorded commit.
+4. Package the reports with `-Action Package`. Send the handoff manifest,
+   commit, artifact path, SHA, and report directory to the main agent.
+5. Do not launch Singularity, write Steam, deploy a DLL, stop another agent,
+   or invoke a main-install runtime from a sub-agent.
+
+## Main-agent route: explicit L3
+
+The main agent reviews the handoff, then consciously performs the following:
+
+1. Verify the artifact without deployment:
+   `tools/l3-steam-guard.ps1 -Action Verify -Artifact <dll> -ExpectedSha256 <sha>`.
+2. Back up the current main-install DLL/INI/VFX:
+   `tools/l3-steam-guard.ps1 -Action Backup -SteamRoot <steam-root> -BackupDirectory <new-backup>`.
+3. Explicitly deploy the reviewed artifact using the existing project deployment
+   procedure. This skill and the handoff tools do not perform that action.
+4. Launch the main Steam installation with the existing `dvr-xrsim` manifest,
+   wait for the exact game PID to report `FOCUSED` and two projection views,
+   then replay the canonical `.vrrec`.
+5. Collect only fresh L/R/SBS capture, xrsim state, ack, log, PID and DLL SHA;
+   run `Collect` and `VerifyCapture` from `tools/singularityvr-test-bridge.ps1`.
+6. On failure or after the bounded test, stop the exact game PID and use the
+   explicit guard rollback:
+   `tools/l3-steam-guard.ps1 -Action Rollback ... -ConfirmRollback`.
+
+The L3 verdict is PASS/FAIL/INCONCLUSIVE from fresh evidence, not from a
+build, ABI match, draw counter, or simulator initialization line. L3 proves
+main-install integration; L4 still requires the physical PSVR2.

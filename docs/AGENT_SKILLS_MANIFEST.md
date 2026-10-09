@@ -17,3 +17,9 @@ Project-local skills are discovered from `.agents/skills/<name>/SKILL.md` by Cod
 The upstream source checkouts and detailed revision record are maintained outside this production worktree under `agent-skills-sources/`; they are not runtime dependencies. The source safety review is copied into [`AGENT_SKILLS_SECURITY_REVIEW.md`](AGENT_SKILLS_SECURITY_REVIEW.md) so future agents can review the installed set without that staging directory.
 
 Validation on 2026-10-09: all nine project skill directories have a `SKILL.md`; every frontmatter `name` matches its directory name and every skill has a non-empty `description`. OpenCode CLI is not installed here, so CLI-level discovery has not been exercised; restart/reload a Codex/OpenCode session after changing skill metadata.
+
+## Test ownership
+
+Sub-agents use `agent-l1-l2-handoff.ps1` for L1/L2 evidence only. L3 is
+main-agent-only on the main Steam installation. `l3-steam-guard.ps1` verifies
+artifacts and provides explicit backup/rollback, but has no deployment action.

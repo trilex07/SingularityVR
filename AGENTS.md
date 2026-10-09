@@ -13,10 +13,19 @@ These rules apply to all work in this repository and override generic skill defa
 - Keep diagnostics bounded: no per-draw allocations, filesystem writes, or unbounded logs. Aggregate counters and cap captures.
 - Review skill-bundled helper scripts before execution. Prefer read-only checks on project-controlled artifacts; do not run helpers on user saves or unknown binaries without explicit authorization.
 
+## Agent ownership and L3 boundary
+
+- Sub-agents may run L1 and L2 only: unit/synthetic/replay dry-runs, build inspection, PE32/O2/SHA checks, and evidence packaging.
+- Only the main agent may perform L3 on the main Steam installation. L3 means the real Singularity process, `dvr-xrsim`, `.vrrec` replay, L/R capture, `Collect`, and `VerifyCapture`.
+- Sub-agents must never write under `Steam\steamapps\common\Singularity`, replace a DLL, launch the main-install game, stop another agent's process, or change Steam/OpenXR system state.
+- `tools/agent-l1-l2-handoff.ps1` produces the commit, artifact SHA, L1/L2 reports, and a handoff manifest. It has no deployment action.
+- `tools/l3-steam-guard.ps1` has only `Verify`, `Backup`, and explicitly confirmed `Rollback`; it intentionally has no deploy or launch action. Deployment is a conscious main-agent action after the guard passes.
+- A handoff, build, SHA, simulator run, or capture counter is not an L3 result. Do not claim `L3_PASS` until the main agent has a fresh main-install runtime bundle with frame identity and oracle verdict.
+
 ## Evidence gates
 
 - Track features as `UNKNOWN`, `BROKEN`, `IMPLEMENTED_NOT_VERIFIED`, `L1_PASS`, `L2_PASS`, `L3_PASS`, `READY_FOR_PHYSICAL_ACCEPTANCE`, `PHYSICALLY_VERIFIED`, or `BLOCKED` in `docs/VR_STATUS.md`.
-- L1 covers deterministic math/synthetic checks; L2 covers build, tests, PE32, `/O2`, provenance and SHA; L3 uses the installed Steam game and the verified deployed DLL; L4 is the physical headset pass after autonomous gates pass.
+- L1 covers deterministic math/synthetic checks and replay dry-runs; L2 covers build, tests, PE32, `/O2`, provenance and SHA; L3 uses the installed Steam game and the verified deployed DLL **only by the main agent**; L4 is the physical headset pass after autonomous gates pass.
 - A compile, counter, initialization line, deployment, simulator run, or plausible code path cannot establish real runtime behavior by itself. Do not call a feature fixed without the evidence required by its gate.
 - Use the test bridge and `vr-mod-workflow` skill for runtime work. Do not make the user the first-line debugger. Reserve a short, concrete headset script for perceptual questions that cannot be answered autonomously.
 

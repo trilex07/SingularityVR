@@ -15,3 +15,15 @@ This project is a native UE3/D3D9 x86 VR conversion. Treat `AGENTS.md`, `docs/VR
 - Verify the complete path: event/input → game hook → state/policy → render or backend → submitted stereo output. A valid pose or successful call is not visual proof.
 - Recheck the relevant lifecycle: boot, gameplay, pause/resume, return to menu, re-enter gameplay, transitions, and shutdown as applicable.
 - Keep statuses exact and evidence-linked. If a perceptual fact remains, finish all autonomous levels before handing over a short, binary headset check.
+
+## Test ownership
+
+- A sub-agent's deliverable is L1/L2: deterministic tests, replay dry-run,
+  PE32/O2/SHA/provenance, and a handoff manifest. It never modifies the Steam
+  installation or launches the main-install game.
+- L3 belongs only to the main agent and uses the main Steam installation with
+  explicit backup, deliberate deployment, dvr-xrsim, canonical `.vrrec`, fresh
+  L/R capture, and `vr_capture_oracle.py`.
+- Use `tools/l3-steam-guard.ps1` for artifact verification and backup/rollback.
+  It has no deployment action. Never turn a sub-agent handoff into an implicit
+  DLL install.
