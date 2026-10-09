@@ -202,7 +202,12 @@ static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& 
     }
 }
 void UpdateVrUiPointer(float,bool available) {
-    const bool menu=Rd(g_vrUiEnabled)&&Rd(g_vrUiNativeReady)&&Rd(g_vrUiMenu);
+    // The in-game GFx menu and the mod-owned VR Settings panel share one
+    // controller ray.  The panel is deliberately not marked as g_vrUiMenu
+    // (that flag suppresses native menu capture), so include it explicitly or
+    // the panel can only be driven by the stick and never receives laser hits.
+    const bool panel=Rd(g_panelOpen)!=0;
+    const bool menu=Rd(g_vrUiEnabled)&&Rd(g_vrUiNativeReady)&&(Rd(g_vrUiMenu)||panel);
     if(menu&&Rd(g_vrUiDesktopProbe))return; // Explicit debugger-controlled test coordinates; never staged for headset use.
     if(!available || !menu || !g_handPoseValid[1] || !g_handPositionValid[1] || !g_haveEyes || g_targetTanX<=0 || g_targetTanY<=0) {
         g_vrMenuPanelValid=false;
@@ -302,8 +307,10 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     ++g_vrMenuFrame;
     SyncVrMenuCaptureState();
     MenuDrawTraceFrame();
-    const bool menu = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && Rd(g_vrUiMenu) && Rd(g_vrMenuOverlay);
-    if (!menu || Rd(g_panelOpen) || !g_origDrawPrimUP || !g_origSetVS || !g_origSetRenderTarget) return;
+    const bool nativeMenu = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && Rd(g_vrUiMenu) && Rd(g_vrMenuOverlay);
+    const bool panel = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && Rd(g_panelOpen);
+    const bool menu = nativeMenu || panel;
+    if (!menu || !g_origDrawPrimUP || !g_origSetVS || !g_origSetRenderTarget) return;
 
     IDirect3DSurface9 *back = nullptr, *old = nullptr, *depth = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
@@ -336,7 +343,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 
     // ---- RENDER MENU QUAD ----
-    if (menu && g_vrMenuTexture && g_vrMenuPanelValid && g_vrCaptureOwner.CanProvide(VrMenuStateToken())) {
+    if (nativeMenu && g_vrMenuTexture && g_vrMenuPanelValid && g_vrCaptureOwner.CanProvide(VrMenuStateToken())) {
         for(int eye=0;eye<2;++eye) {
             VrMenuVtx v[4]; bool visible=true;
             for(unsigned k=0;k<4;++k) {
@@ -362,7 +369,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
 
     // The synthetic row stays visible even when the controller ray is currently
     // outside the menu plane; only hover/click feedback depends on a valid hit.
-    if (menu) DrawPauseVrSettingsRow(dev, d);
+    if (panel) DrawPauseVrSettingsRow(dev, d);
 
     // ---- LASER + HIT MARKER ----
     if (menu && Rd(g_vrUiValid)) {

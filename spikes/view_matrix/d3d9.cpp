@@ -3073,9 +3073,9 @@ const float kMetresToUU = 52.5f;
 // reads and how far you travel through it. A player who feels the wrong height is describing a different
 // problem from one who feels the wrong scale, and this knob only addresses the second.
 //
-// 100 is not a guess: 16 units per foot is UE3's documented scale and 52.5 UU/m follows from it exactly.
-// The default should stay 100 unless the headset says otherwise.
-volatile LONG g_worldScalePct = 100;    // ini [Render] WorldScalePct, and a DISPLAY panel row
+// 100 is the original flat-game scale: 16 units per foot and 52.5 UU/m.
+// The shipped VR preference is 80%, while the panel/INI can restore 100 when needed.
+volatile LONG g_worldScalePct = 80;     // ini [Render] WorldScalePct, and a DISPLAY panel row
 
 // ⭐ run 237: the TMD's anchor on the OFF hand. Declared HERE, well above BuildTmdC which uses them,
 // because the panel and the ini loader read them and both are earlier in this single translation unit.
@@ -5534,7 +5534,7 @@ RecenterChord g_recenterChord;
 volatile LONG g_recenterRequested=0;
 // The chord is deliberately independent from recording.  A capture shortcut
 // must never stop or restart a session that is collecting physical movements.
-volatile LONG g_recenterChordEnabled=1; // ini [Input] RecenterChord
+volatile LONG g_recenterChordEnabled=0; // ini [Input] RecenterChord; L3+R3 remains capture-only by default
 vrrec::Recorder g_vrRecorder;
 volatile LONG g_vrRecording=0;
 std::uint64_t g_vrRecordFrame=0;
@@ -7360,7 +7360,7 @@ void PanelRowText(int row, char* out, size_t cap) {
                         InterlockedCompareExchange(&g_cutsceneLockCamera, 0, 0) ? "LOCKED"
                                                                                 : "FOLLOWS SCENE");
             break;
-        case PR_GOTO_CTRL:    _snprintf_s(out, cap, _TRUNCATE, "CONTROLLER         >"); break;
+        case PR_GOTO_CTRL:    _snprintf_s(out, cap, _TRUNCATE, "CONTROLLER / RECENTER >"); break;
         case PR_GOTO_COMFORT: _snprintf_s(out, cap, _TRUNCATE, "COMFORT            >"); break;
         case PR_SWAPSTICKS:
             _snprintf_s(out, cap, _TRUNCATE, "SWAP STICKS    %s",
@@ -8208,7 +8208,7 @@ bool InitXRInput() {
             // Fix-E/gunsize: first-person mesh size about the gun pivot, percent.
             // 100 = engine size. World scale, eye baseline and anchors are untouched.
             {
-                LONG gs = GetPrivateProfileIntA("Input", "GunScalePct", 100, path);
+                LONG gs = GetPrivateProfileIntA("Input", "GunScalePct", 75, path);
                 if (gs < 25) gs = 25; if (gs > 400) gs = 400;
                 InterlockedExchange(&g_gunScalePct, gs);
                 Log("gun scale=%ld%% (first-person gun+hands size about the pivot; 100=engine size)", gs);
@@ -8234,7 +8234,7 @@ bool InitXRInput() {
             g_handStillFramesToDisable =
                 GetPrivateProfileIntA("Input", "AutoPadStillFrames", 600, path);
             InterlockedExchange(&g_recenterChordEnabled,
-                GetPrivateProfileIntA("Input", "RecenterChord", 1, path) ? 1 : 0);
+                GetPrivateProfileIntA("Input", "RecenterChord", 0, path) ? 1 : 0);
             Log("ini: RecenterChord=%ld (L3+R3 %s; recording is controlled separately in VR Settings)",
                 Rd(g_recenterChordEnabled), Rd(g_recenterChordEnabled) ? "recenters" : "does not recenter");
             InterlockedExchange(&g_cineStickTurn,
@@ -13846,7 +13846,7 @@ LONG g_gunSignYaw = 1, g_gunSignPitch = -1, g_gunSignRoll = 1, g_gunFollowPos = 
 LONG g_gunSignPosZ = -1;                       // vertical translation came back flipped too
 LONG g_gunAnchorFwd = 25, g_gunAnchorRight = 8, g_gunAnchorUp = -8;   // engine units from the eye
 volatile LONG g_traceFromGun = 1;               // route weapon traces from the hand/gun pivot, not the eye
-volatile LONG g_gunScalePct = 100;              // Fix-E/gunsize: first-person mesh size %, 100 = engine size
+volatile LONG g_gunScalePct = 75;               // Fix-E/gunsize: first-person mesh size %, 100 = engine size
 
 static void GunSigns(int& sy, int& sp, int& sr) {
     const LONG c = InterlockedCompareExchange(&g_gunSignCombo, 0, 0);
@@ -25743,7 +25743,7 @@ void LoadIniSettings() {
     g_cameraTranslationEvidence=GetPrivateProfileIntA("Diagnostic","CameraTranslationEvidence",0,path)?1:0;
     Log("camera translation evidence=%d; passive 10Hz, 240 samples maximum; no translation override",g_cameraTranslationEvidence);
     g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",1,path)?1:0;
-    g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",0,path)?1:0;
+    g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",1,path)?1:0;
     g_skipExtraTarget=GetPrivateProfileIntA("Render","DropExtraTarget",0,path)?1:0;
     // Fix-E/shadows round 4: 0 = full split (measure only), 1 = mono sample, 2 = drop.
     // ShadowMode=3: protect light-space (generation native-once, light slots out
@@ -25777,9 +25777,9 @@ void LoadIniSettings() {
         Rd(g_sceneCinemaMask) ? "ON" : "OFF");
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
     g_holsterEnabled = GetPrivateProfileIntA("Input", "HolsterEnabled", 1, path) ? 1 : 0;
-    g_holsterConfig.fwd = (float)IniSignedInt("Input", "HolsterFwd", 4, path);
-    g_holsterConfig.right = (float)IniSignedInt("Input", "HolsterRight", 18, path);
-    g_holsterConfig.up = (float)IniSignedInt("Input", "HolsterUp", -24, path);
+    g_holsterConfig.fwd = (float)IniSignedInt("Input", "HolsterFwd", 8, path);
+    g_holsterConfig.right = (float)IniSignedInt("Input", "HolsterRight", 12, path);
+    g_holsterConfig.up = (float)IniSignedInt("Input", "HolsterUp", -30, path);
     g_holsterConfig.radius = (float)IniSignedInt("Input", "HolsterRadius", 12, path);
     if (g_holsterConfig.radius < 2.0f) g_holsterConfig.radius = 2.0f;
     if (g_holsterConfig.radius > 48.0f) g_holsterConfig.radius = 48.0f;
@@ -25854,7 +25854,7 @@ void LoadIniSettings() {
         g_gunHeadOffset ? "the gun is anchored to YOUR head, so leaning and recentring do not move it"
                         : "off - the gun is anchored to the engine's eye and will shift as you lean");
 
-    LONG wsp = GetPrivateProfileIntA("Render", "WorldScalePct", 100, path);
+    LONG wsp = GetPrivateProfileIntA("Render", "WorldScalePct", 80, path);
     if (wsp < 50)  wsp = 50;
     if (wsp > 200) wsp = 200;
     InterlockedExchange(&g_worldScalePct, wsp);
