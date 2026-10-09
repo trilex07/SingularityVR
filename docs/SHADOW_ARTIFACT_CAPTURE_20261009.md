@@ -120,7 +120,38 @@ Taken from the repo's own record, so the same ground is not re-trodden:
 - Do not treat "exclude the third target" as a fix on its own — run 41 already showed
   it moves the artifact from one eye to both.
 
-## Fix attempt 1 — `ExtraCamReg=13` (2026-10-09)
+## ~~Fix attempt 1 — `ExtraCamReg=13`~~ → **RETRACTED (same day)**
+
+> ### ⛔ This attempt was already run — and failed. Do not re-arm `13`.
+>
+> `SingularityVR.ini.example` (committed) records **run 43** having tried exactly this:
+>
+> > *"Setting this to 13 remaps it too. Result: **geometry stretched to the edge of the
+> > screen AND the shadows were unchanged.** … the shadows not moving at all argues
+> > **c13 is NOT the carrier** for the mis-projected shadow geometry, so **the shadow's
+> > cause is elsewhere.**"*
+> > `;   13 = also remap vs c13 (reproduces the run-43 failure)`
+>
+> **What went wrong in the analysis below.** The claim *"never enabled before"* was
+> verified against the **INI files** and the **runtime log** — both genuinely `-1` —
+> but **not** against `SingularityVR.ini.example`, which is where trial history is
+> recorded for this project. Absence from current configuration is not absence of a
+> past experiment. Every supporting fact below remains true (c13 is a real unremapped
+> camera matrix; `mono-fallback=0` normally), but they established *c13 is unremapped*,
+> not *c13 carries this artifact* — and run 43 had already falsified that second step
+> **by direct experiment**. Experiment beats inference.
+>
+> **Net:** arming `13` costs a visible regression (geometry stretched to screen edge)
+> and buys no shadow change. Deployed INI is back to `ExtraCamReg=-1`.
+>
+> **Still open:** the one-eye shadow-floor artifact. Run 43 only ruled out c13; §"Two
+> code findings that are blocking the next step" and the test plan above were **not**
+> invalidated. New experiments may supersede run 43, but must be recorded in
+> `.example` before being treated as evidence.
+>
+> Retained below as the analysis trail.
+
+### The lead (historical — superseded by the retraction above)
 
 ### The lead
 
