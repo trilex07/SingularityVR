@@ -184,8 +184,10 @@ $gameBin = Join-Path $steamRootAbs 'steamapps\common\Singularity\Binaries'
 $sourceDll = Join-Path $root 'spikes\view_matrix\d3d9.dll'
 $sourceIni = Join-Path $root 'spikes\view_matrix\SingularityVR.ini'
 $stage = if ($ArtifactDir) { Get-AbsolutePath $ArtifactDir } else { Join-Path $root 'deployment\vr-recorder-20261009' }
-$stageDll = Resolve-Source 'd3d9.dll' $stage $sourceDll
-$stageIni = Resolve-Source 'SingularityVR.ini' $stage $sourceIni
+# The source tree is authoritative for the normal path. An explicitly supplied
+# -ArtifactDir is allowed to override it for a deliberate rollback/candidate install.
+$stageDll = if ($ArtifactDir) { Resolve-Source 'd3d9.dll' $stage $sourceDll } else { Resolve-Source 'd3d9.dll' $null $sourceDll }
+$stageIni = if ($ArtifactDir) { Resolve-Source 'SingularityVR.ini' $stage $sourceIni } else { Resolve-Source 'SingularityVR.ini' $null $sourceIni }
 $assets = if ($AssetsRoot) { Get-AbsolutePath $AssetsRoot } else { Join-Path (Split-Path $root -Parent) 'SingularityVR-assets' }
 $assetsLocal = if ($AssetsLocalRoot) { Get-AbsolutePath $AssetsLocalRoot } else { Join-Path (Split-Path $root -Parent) 'SingularityVR-assets-local' }
 $dinputSource = Join-Path $assets 'asset-tools\texture-injector\dinput8.dll'
