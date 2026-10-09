@@ -3297,6 +3297,15 @@ static inline bool NoteMarker(UINT stride, UINT prims, float x, float y) {
     return false;
 }
 
+// Native interaction prompts are centred stride-20 text batches.  The measured
+// anchor is stable across the crate/pickup prompts, while menus and notes have
+// separate markers.  Keep this classifier conservative: it only arms the PS
+// icon overlay and never suppresses the original game prompt.
+static inline bool LooksLikeContextPrompt(UINT stride, UINT prims, float x, float y) {
+    return stride == 20 && prims >= 16 && prims <= 40 &&
+           fabsf(x) < 0.24f && y > -0.25f && y < -0.05f;
+}
+
 // Run 201: does the gun follow the 6-DOF head displacement? It must - see the note in BuildGunC. Kept as
 // an escape hatch rather than hardcoded, because the SIGN of a position fix is the kind of thing this
 // project has had to flip more than once, and reverting should not need a rebuild.
@@ -4903,6 +4912,7 @@ void DrawLaserSight(IDirect3DDevice9* dev);
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
+void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
 const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::d3d9_to_d3d11_copy);
     // ⭐ run 217: defined further down, next to the transforms it reuses - see DrawLaserSight.
@@ -4914,6 +4924,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawWristHealth(dev);
     DrawWeaponWheel(dev);
     DrawVfxOverlay(dev);
+    DrawVrContextPrompt(dev);
     if (ownOverlayScene) dev->EndScene();
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return nullptr;
@@ -5437,6 +5448,7 @@ static menucapture::Owner g_vrCaptureOwner;
 volatile LONG g_vrStaleRejected=0;
 void SyncVrMenuCaptureState();
 volatile LONG g_vrMenuClass=0; // 0 none, 1 IIS boot, 2 Main, 3 Pause, 4 other native UI.
+volatile LONG g_contextPromptVisible=0; // set by the measured native pickup/use prompt draw
 static void ReportVrRuntimeCounters() {
     const auto& c=g_vrCounters;
     Log("VR counters boot captured/suppressed/provided=%ld/%ld/%ld main=%ld/%ld/%ld unknown=%ld pointer=%ld",
@@ -16440,6 +16452,10 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         const bool aimIsController =
             InterlockedCompareExchange(&g_aimMethod, 0, 0) != 0 && VrModeOn();
         const bool isXhair = LooksLikeCrosshair(stride, r[3].x, r[3].y);
+        if (LooksLikeContextPrompt(stride, primCount, r[3].x, r[3].y)) {
+            if (InterlockedExchange(&g_contextPromptVisible, 1) == 0)
+                InterlockedIncrement(&g_vrCounters.contextPromptShow);
+        }
         const bool dropIt  = hide && isXhair && (hide == 2 || aimIsController);
         // Census before the drop, and over every stride-8 element rather than only the matches -
         // a rule that only counts its own hits cannot report a miss. See g_xh8Seen.

@@ -1,6 +1,8 @@
 #pragma once
 // Included after the D3D state/overlay helpers. No per-frame allocation or scan.
 #include "menu_draw_trace.h"
+#include "prompt_roles.h"
+#include "prompt_atlas_generated.h"
 static uintptr_t g_vrMenuSurface=0;
 static unsigned g_vrMenuFrame=0,g_vrMenuTextureFrame=0;
 static uipointer::Hit g_vrUiHit;
@@ -26,20 +28,36 @@ static bool LoadVrPromptAtlas(IDirect3DDevice9* dev) {
     if(!ok){free(bytes);return false;}
     const BITMAPFILEHEADER* fh=(const BITMAPFILEHEADER*)bytes;
     const BITMAPINFOHEADER* ih=(const BITMAPINFOHEADER*)(bytes+sizeof(BITMAPFILEHEADER));
-    if(fh->bfType!=0x4D42||ih->biSize<sizeof(BITMAPINFOHEADER)||ih->biWidth!=320||ih->biHeight!=64||ih->biBitCount!=32||ih->biCompression!=BI_RGB||fh->bfOffBits>=size){free(bytes);return false;}
+    const unsigned tw=(unsigned)ih->biWidth, th=(unsigned)ih->biHeight;
+    if(fh->bfType!=0x4D42||ih->biSize<sizeof(BITMAPINFOHEADER)||ih->biBitCount!=32||ih->biCompression!=BI_RGB||
+       th!=(unsigned)kVrPromptAtlasHeight||tw<(unsigned)kVrPromptIconPx||tw>(unsigned)kVrPromptAtlasWidth||
+       (tw%(unsigned)kVrPromptIconPx)!=0||fh->bfOffBits>=size){free(bytes);return false;}
     IDirect3DTexture9* tex=nullptr;
-    HRESULT hr=g_origCreateTexture ? g_origCreateTexture(dev,320,64,1,D3DUSAGE_DYNAMIC,D3DFMT_A8R8G8B8,D3DPOOL_DEFAULT,&tex,nullptr) : dev->CreateTexture(320,64,1,D3DUSAGE_DYNAMIC,D3DFMT_A8R8G8B8,D3DPOOL_DEFAULT,&tex,nullptr);
+    HRESULT hr=g_origCreateTexture ? g_origCreateTexture(dev,tw,th,1,D3DUSAGE_DYNAMIC,D3DFMT_A8R8G8B8,D3DPOOL_DEFAULT,&tex,nullptr) : dev->CreateTexture(tw,th,1,D3DUSAGE_DYNAMIC,D3DFMT_A8R8G8B8,D3DPOOL_DEFAULT,&tex,nullptr);
     if(FAILED(hr)||!tex){free(bytes);Log("VR prompt atlas texture creation failed: 0x%08lX",hr);return false;}
     D3DLOCKED_RECT lock{};
     if(FAILED(tex->LockRect(0,&lock,nullptr,0))){tex->Release();free(bytes);return false;}
     const unsigned char* src=bytes+fh->bfOffBits;
-    for(int y=0;y<64;++y) memcpy((unsigned char*)lock.pBits+y*lock.Pitch,src+(63-y)*320*4,320*4);
+    for(unsigned y=0;y<th;++y) memcpy((unsigned char*)lock.pBits+y*lock.Pitch,src+(th-1-y)*tw*4,tw*4);
     tex->UnlockRect(0); free(bytes); g_vrPromptAtlas=tex;
     Log("VR prompt atlas loaded: %s",path); return true;
 }
 static void DrawVrPromptIcon(IDirect3DDevice9* dev,float x,float y,float size,float u0,float u1) {
     VrPromptVtx v[4]={{x,y,0,1,0xFFFFFFFF,u0,0},{x+size,y,0,1,0xFFFFFFFF,u1,0},{x,y+size,0,1,0xFFFFFFFF,u0,1},{x+size,y+size,0,1,0xFFFFFFFF,u1,1}};
     g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(VrPromptVtx));
+}
+static bool PromptIconUv(const char* name,float& u0,float& u1) {
+    if(!name) return false;
+    for(int i=0;i<kVrPromptIconCount;++i) {
+        if(strcmp(kVrPromptIconUv[i].name,name)==0) {
+            u0=kVrPromptIconUv[i].u0; u1=kVrPromptIconUv[i].u1; return true;
+        }
+    }
+    return false;
+}
+static void DrawPromptRole(IDirect3DDevice9* dev,float x,float y,float size,promptroles::Action action) {
+    float u0=0.f,u1=0.f;
+    if(PromptIconUv(promptroles::IconName(action),u0,u1)) DrawVrPromptIcon(dev,x,y,size,u0,u1);
 }
 static void DrawVrPromptLegend(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,bool gameplay) {
     if(!LoadVrPromptAtlas(dev)) return;
@@ -53,17 +71,64 @@ static void DrawVrPromptLegend(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,bo
     const float eyeW=d.Width*.5f, size=std::max(22.f,d.Height*.035f), y=d.Height*.72f;
     for(int eye=0;eye<2;++eye){
         const float base=eye*eyeW+eyeW*.12f;
-        DrawVrPromptIcon(dev,base,y,size,0.f,.2f);
         if(gameplay) {
-            DrawVrPromptIcon(dev,base+eyeW*.22f,y,size,.6f,.8f);
-            DrawVrPromptIcon(dev,base+eyeW*.44f,y,size,.4f,.6f);
-            DrawVrPromptIcon(dev,base+eyeW*.66f,y,size,.2f,.4f);
+            DrawPromptRole(dev,base,y,size,promptroles::Action::Interact);
+            DrawPromptRole(dev,base+eyeW*.22f,y,size,promptroles::Action::Fire);
+            DrawPromptRole(dev,base+eyeW*.44f,y,size,promptroles::Action::Aim);
+            DrawPromptRole(dev,base+eyeW*.66f,y,size,promptroles::Action::Confirm);
         } else {
-            DrawVrPromptIcon(dev,base+eyeW*.25f,y,size,.2f,.4f);
-            DrawVrPromptIcon(dev,base+eyeW*.50f,y,size,.8f,1.f);
+            DrawPromptRole(dev,base,y,size,promptroles::Action::Confirm);
+            DrawPromptRole(dev,base+eyeW*.25f,y,size,promptroles::Action::Back);
+            DrawPromptRole(dev,base+eyeW*.50f,y,size,promptroles::Action::Pause);
         }
     }
     dev->SetTexture(0,nullptr); dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE);
+}
+extern volatile LONG g_contextPromptVisible;
+void DrawVrContextPrompt(IDirect3DDevice9* dev) {
+    const LONG active=InterlockedExchange(&g_contextPromptVisible,0);
+    if(!active || !dev || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_vrUiMenu) || !g_origDrawPrimUP) return;
+    IDirect3DSurface9* back=nullptr;
+    if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
+    D3DSURFACE_DESC d{}; back->GetDesc(&d); back->Release();
+    if(d.Width<8||d.Height<8||!LoadVrPromptAtlas(dev))return;
+    if(!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL,&g_wristState)))return;
+    if(FAILED(g_wristState->Capture()))return;
+    IDirect3DSurface9* depth=nullptr;
+    dev->GetDepthStencilSurface(&depth);
+    dev->SetDepthStencilSurface(nullptr);
+    if(g_origSetVS)g_origSetVS(dev,nullptr); else dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetRenderState(D3DRS_ZENABLE,FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING,FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
+    dev->SetRenderState(D3DRS_COLORWRITEENABLE,15);
+    dev->SetTexture(0,g_vrPromptAtlas);
+    dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_MODULATE);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG2,D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_MODULATE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG2,D3DTA_DIFFUSE);
+    dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_POINT);
+    dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_POINT);
+    const float halfW=(float)d.Width*.5f;
+    const float size=std::max(28.f,(float)d.Height*.045f);
+    const float y=(float)d.Height*.62f;
+    for(int eye=0;eye<2;++eye) {
+        const float x=eye*halfW+(halfW-size)*.5f;
+        DrawPromptRole(dev,x,y,size,promptroles::Action::Interact);
+        InterlockedIncrement(&g_vrCounters.psIconDraws);
+    }
+    dev->SetTexture(0,nullptr);
+    g_wristState->Apply();
+    dev->SetDepthStencilSurface(depth);
+    if(depth) depth->Release();
 }
 static uipointer::V VrUiRotate(const XrQuaternionf& q,uipointer::V v) {
     const uipointer::V axis{q.x,q.y,q.z};
@@ -307,8 +372,14 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
         ClearRects(dev, outline, n, 0xFF000000); ClearRects(dev, dot, n, Rd(g_vrUiDown) ? 0xFF50FF80 : 0xFFFFFFFF);
     }
 
-    // No legend: contextual icons require an observed native prompt lifecycle.
-    // Until that hook is verified, absence of a native prompt produces no PS icon.
+    // The native GFx prompt hook is intentionally separate from this overlay.
+    // Keep a small PS legend available in menu mode so the controller mapping is
+    // visible while the native contextual prompt lifecycle is being observed.
+    if (menu) DrawVrPromptLegend(dev, d, false);
+
+    // Contextual gameplay prompts are drawn by DrawVrContextPrompt after the
+    // measured native text batch is seen; menu icons above remain available even
+    // when a menu has no native button-label row.
 
     if (old) g_origSetRenderTarget(dev, 0, old);
     dev->SetDepthStencilSurface(depth);
