@@ -103,6 +103,7 @@ static XrTime g_hotPredictedDisplayTime = 0;
 #include "startup_crash_capture.h"
 #endif
 #include "async_log.h"
+#include "vr_session_recorder.h"
 #include <intrin.h>       // _ReturnAddress, for the XInput caller census
 
 #pragma comment(lib, "d3d11.lib")
@@ -5509,6 +5510,14 @@ uipointer::TriggerGate g_vrUiTrigger[2];
 griplatch::GripLatch g_supportLatch;
 RecenterChord g_recenterChord;
 volatile LONG g_recenterRequested=0;
+// The chord is deliberately independent from recording.  A capture shortcut
+// must never stop or restart a session that is collecting physical movements.
+volatile LONG g_recenterChordEnabled=1; // ini [Input] RecenterChord
+vrrec::Recorder g_vrRecorder;
+volatile LONG g_vrRecording=0;
+std::uint64_t g_vrRecordFrame=0;
+volatile LONG g_vrRecorderEventFlags=0;
+float g_vrRecorderMuzzle[3]={0,0,0};
 // Fix-H/capture: L3+R3 also requests a backbuffer BMP next to the log (debounced in
 // Present). Set on the input thread, consumed once on the render thread.
 volatile LONG g_captureRequested=0;
@@ -5516,11 +5525,13 @@ volatile LONG g_captureRequested=0;
 // asked it off until the menu/hand round lands. Default 0.
 volatile LONG g_frameSpikeReport=0;
 void UpdateVrUiPointer(float rightTrigger,bool available);
+bool VrPanelHitNormalized(LONG u, LONG v, int* rowIndex);
 void CaptureVrMenuTarget(IDirect3DDevice9* dev);
 void DrawVrMenuPointer(IDirect3DDevice9* dev);
 void ReleaseVrMenuResources();
 void ReleaseFpCasterCache();
 static void HolsterHipWorld(float H[3], bool includeHmdOffset = true);
+static void GunPivotWorld(float H[3]);
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 bool     g_handPoseValid[2] = { false, false };
 bool g_handPositionValid[2] = { false, false };
@@ -5602,6 +5613,47 @@ float g_handSpeed[2] = { 0.0f, 0.0f };      // smoothed metres/frame
 bool  g_handHeld[2] = { false, false };
 XrVector3f g_handLastPos[2]{};
 bool  g_handHavePos[2] = { false, false };
+extern volatile LONG g_panelOpen;
+
+static void RecordVrSample(float lt, float rt, float sx, float sy, float tx, float ty) {
+    if (!g_vrRecorder.Active()) return;
+    vrrec::Sample s{};
+    s.frame = ++g_vrRecordFrame;
+    s.timeMs = (std::uint32_t)GetTickCount();
+    s.flags |= (std::uint32_t)InterlockedExchange(&g_vrRecorderEventFlags, 0);
+    if (InGameplay()) s.flags |= vrrec::Gameplay;
+    if (Rd(g_vrUiMenu)) s.flags |= vrrec::Menu;
+    if (Rd(g_panelOpen)) s.flags |= vrrec::Panel;
+    if (Rd(g_vrUiValid)) s.flags |= vrrec::UiValid;
+    if (Rd(g_vrUiDown)) s.flags |= vrrec::UiDown;
+    if (Rd(g_weaponHolstered)) s.flags |= vrrec::WeaponHolstered;
+    if (Rd(g_twoHandActive)) s.flags |= vrrec::TwoHand;
+    if (Rd(g_contextPromptVisible)) s.flags |= vrrec::Prompt;
+    if (Rd(g_vrShadows)) s.flags |= vrrec::Shadow;
+    s.headPos[0]=g_headPosXR[0]; s.headPos[1]=g_headPosXR[1]; s.headPos[2]=g_headPosXR[2];
+    s.headYaw=g_headYawRad; s.headRoll=g_headRollRad;
+    for (int h=0; h<2; ++h) {
+        s.handPos[h][0]=g_handLastPos[h].x; s.handPos[h][1]=g_handLastPos[h].y; s.handPos[h][2]=g_handLastPos[h].z;
+        s.handYaw[h]=g_handYawRad[h]; s.handPitch[h]=g_handPitchRad[h]; s.handRoll[h]=g_handRollRad[h];
+    }
+    s.trigger[0]=lt; s.trigger[1]=rt; s.grip[0]=Rd(g_twoHandActive)?1.0f:0.0f; s.grip[1]=0.0f;
+    s.stick[0][0]=sx; s.stick[0][1]=sy; s.stick[1][0]=tx; s.stick[1][1]=ty;
+    s.uiU=Rd(g_vrUiU)/1000000.0f; s.uiV=Rd(g_vrUiV)/1000000.0f;
+    s.muzzle[0]=g_vrRecorderMuzzle[0]; s.muzzle[1]=g_vrRecorderMuzzle[1]; s.muzzle[2]=g_vrRecorderMuzzle[2];
+    s.weapon=(std::uint32_t)std::max<LONG>(0,Rd(g_gunVerts));
+    s.promptAction=(std::uint32_t)std::max<LONG>(0,Rd(g_vrCounters.contextPromptAction));
+    g_vrRecorder.Tick(s);
+}
+
+static float ReadPanelTrigger(XrAction action, int hand, bool pollOff) {
+    if (pollOff || action == XR_NULL_HANDLE) return 0.0f;
+    XrActionStateGetInfo gi{ XR_TYPE_ACTION_STATE_GET_INFO };
+    gi.action = action;
+    gi.subactionPath = g_handSubPath[hand];
+    XrActionStateFloat st{ XR_TYPE_ACTION_STATE_FLOAT };
+    if (XR_FAILED(xrGetActionStateFloat(g_xrSession, &gi, &st)) || !st.isActive) return 0.0f;
+    return st.currentState;
+}
 
 // ---- ❌ run 74: the governor is dead too, and the approach changes ----
 //
@@ -6497,6 +6549,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_TMDARMSLOT, PR_TMDARMMESH,                // ⭐ run 250
        PR_TMDARMMODE,                               // ⭐ run 251
        PR_TMDHIDE,                   // ⭐ run 237d
+       PR_RECENTERCHORD, PR_RECORDING, // controller-safe diagnostics; never bound to screenshot chord
        PR_TMDBONELO, PR_TMDBONEHI, PR_TMDBONEMESH, PR_TMDBONESLOT,   // ⭐ run 239
        PR_TMDBONEMODE,               // ⭐ run 241
        PR_TMDROLL,                   // ⭐ run 245
@@ -6544,7 +6597,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_ENABLEVR, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_GOTO_CTRL, PR_GOTO_COMFORT,
       PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_GOTO_TMD },
     { PR_TURNMODE, PR_TURNSPEED, PR_SNAPANGLE, PR_TURNDIR, PR_MOVEDIR, PR_SWAPSTICKS,
-      PR_LEFTHAND, PR_BACK },
+      PR_LEFTHAND, PR_RECENTERCHORD, PR_RECORDING, PR_BACK },
     { PR_CINESTICK, PR_CINECAM, PR_BACK },
     // MUZZLE FX joins CROSSHAIR here rather than going on ADVANCED: both are "the game draws something
     // at the centre of your view that VR makes wrong", both are things a player judges by looking, and
@@ -6599,7 +6652,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
       PR_TMDHIDE, PR_BACK_TMD },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 10, 8, 3, 10, 10, 7, 10, 6, 8 };   // DISPLAY + VFX HOST/DIAG; ADVANCED + shadow/VFX A/B rows (10 max)
+const int kPageCount[kPanelPages] = { 10, 10, 3, 10, 10, 7, 10, 6, 8 };   // DISPLAY + VFX HOST/DIAG; ADVANCED + shadow/VFX A/B rows (10 max)
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -6918,6 +6971,11 @@ void PanelSaveRow(int rowId, const char* path) {
             // The PENDING value, not the live one - see the LEFT HANDED row.
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%d", g_leftHandedPending);
             WritePrivateProfileStringA("Input", "LeftHanded", v, path); return;
+        case PR_RECENTERCHORD:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_recenterChordEnabled));
+            WritePrivateProfileStringA("Input", "RecenterChord", v, path); return;
+        case PR_RECORDING:
+            return; // a session is an explicit runtime artifact, never persisted as ON
 
         // ⭐ run 249: the navigation rows are listed in FULL now. PR_GOTO_WEAPON and PR_GOTO_TMD were
         // missing, so every close logged two "row N has NO PanelSave entry" warnings about rows that
@@ -7276,6 +7334,15 @@ void PanelRowText(int row, char* out, size_t cap) {
             _snprintf_s(out, cap, _TRUNCATE, "LEFT HANDED    %s%s",
                         g_leftHandedPending ? "ON" : "OFF",
                         (g_leftHandedPending != g_leftHanded) ? "  *RESTART*" : "");
+            break;
+        case PR_RECENTERCHORD:
+            _snprintf_s(out, cap, _TRUNCATE, "RECENTER L3+R3 %s",
+                        Rd(g_recenterChordEnabled) ? "ON" : "OFF");
+            break;
+        case PR_RECORDING:
+            _snprintf_s(out, cap, _TRUNCATE, "RECORD SESSION %s%s",
+                        g_vrRecorder.Active() ? "ON" : "OFF",
+                        g_vrRecorder.Active() ? "  (R2 STOP)" : "  (R2 START)");
             break;
         case PR_GOTO_DISPLAY: _snprintf_s(out, cap, _TRUNCATE, "DISPLAY            >"); break;
         case PR_GOTO_ADV:     _snprintf_s(out, cap, _TRUNCATE, "ADVANCED           >"); break;
@@ -7662,6 +7729,25 @@ void PanelAdjust(int row, int dir) {
             // Moves the PENDING value only. g_leftHanded is untouched until the next launch reads
             // it back, because the button bindings it controls are frozen at attach.
             g_leftHandedPending = g_leftHandedPending ? 0 : 1;
+            break;
+        case PR_RECENTERCHORD:
+            InterlockedExchange(&g_recenterChordEnabled,
+                                Rd(g_recenterChordEnabled) ? 0 : 1);
+            Log("VR panel: L3+R3 recenter %s",
+                Rd(g_recenterChordEnabled) ? "ON" : "OFF");
+            break;
+        case PR_RECORDING:
+            if (g_vrRecorder.Active()) {
+                g_vrRecorder.Stop();
+                InterlockedExchange(&g_vrRecording, 0);
+                Log("VR session recorder: STOPPED");
+            } else if (g_vrRecorder.StartDefault()) {
+                g_vrRecordFrame = 0;
+                InterlockedExchange(&g_vrRecording, 1);
+                Log("VR session recorder: STARTED (L3+R3 remains screenshot/recenter only)");
+            } else {
+                Log("VR session recorder: START FAILED");
+            }
             break;
         case PR_GOTO_DISPLAY: g_panelPage = 3; g_panelRow = 0; return;
         case PR_GOTO_ADV:     g_panelPage = 4; g_panelRow = 0; return;
@@ -8100,6 +8186,10 @@ bool InitXRInput() {
                 GetPrivateProfileIntA("Input", "GunSignCombo", 2, path) & 15);
             g_handStillFramesToDisable =
                 GetPrivateProfileIntA("Input", "AutoPadStillFrames", 600, path);
+            InterlockedExchange(&g_recenterChordEnabled,
+                GetPrivateProfileIntA("Input", "RecenterChord", 1, path) ? 1 : 0);
+            Log("ini: RecenterChord=%ld (L3+R3 %s; recording is controlled separately in VR Settings)",
+                Rd(g_recenterChordEnabled), Rd(g_recenterChordEnabled) ? "recenters" : "does not recenter");
             InterlockedExchange(&g_cineStickTurn,
                 GetPrivateProfileIntA("Input", "CutsceneStickTurn", 2, path) & 3);
             InterlockedExchange(&g_cutsceneLockCamera,
@@ -9022,10 +9112,14 @@ void SyncXRInput(XrTime displayTime) {
     if (InterlockedCompareExchange(&g_forceDesktopAutomation, 0, 0))
         r3Held = desktopAutomationR3;
     if (g_recenterChord.Update(l3Held, r3Held)) {
-        InterlockedExchange(&g_recenterRequested, 1);
+        if (Rd(g_recenterChordEnabled)) InterlockedExchange(&g_recenterRequested, 1);
         // Fix-H/capture: same chord doubles as the screenshot trigger (user asked).
-        // Recentre still fires as before; capture is debounced at the consumer.
+        // It never toggles recording.  The screenshot remains an explicit visual diagnostic.
         InterlockedExchange(&g_captureRequested, 1);
+        InterlockedOr(&g_vrRecorderEventFlags, vrrec::Recenter);
+        Log("L3+R3 chord: recenter=%s capture=requested recording=%s",
+            Rd(g_recenterChordEnabled) ? "requested" : "disabled",
+            g_vrRecorder.Active() ? "continues" : "off");
     }
     // R3 owns the weapon wheel in gameplay. L3+R3 remains the explicit
     // recenter/screenshot chord, so opening is vetoed while L3 is held.  The
@@ -9095,6 +9189,7 @@ void SyncXRInput(XrTime displayTime) {
         if (i == g_impulseBtnIdx) {
             static bool wasDown = false;
             if (down && !wasDown && InterlockedCompareExchange(&g_meleeArmsMs, 0, 0) > 0) {
+                InterlockedOr(&g_vrRecorderEventFlags, vrrec::Melee);
                 const LONG64 now = (LONG64)GetTickCount64();
                 InterlockedExchange64(&g_lastMeleeEdgeMs, now);   // fix-G/perf: edge age for spike attribution
                 const LONG dly = InterlockedCompareExchange(&g_meleeDelayMs, 0, 0);
@@ -9278,7 +9373,26 @@ void SyncXRInput(XrTime displayTime) {
             armedX = false;
         } else if (fabsf(panelX) < 0.3f) armedX = true;
 
-        UpdateVrUiPointer(0,false);
+        // The panel is a mod-rendered screen, so it must use the same controller
+        // ray as native GFx.  The old false/invalid call made this path stick-only.
+        const int panelFireHand = AimHand();
+        const float panelRt = ReadPanelTrigger(g_actFire, panelFireHand, pollOff);
+        const float panelLt = ReadPanelTrigger(g_actAltFire, 1 - panelFireHand, pollOff);
+        const bool panelPointerHeld = (panelFireHand == 1 ? panelRt : panelLt) > 0.5f || getBool(g_actUiSelect);
+        static bool panelPointerWasHeld = false;
+        const bool panelPointerPressed = panelPointerHeld && !panelPointerWasHeld;
+        panelPointerWasHeld = panelPointerHeld;
+        UpdateVrUiPointer(panelPointerHeld ? 1.0f : 0.0f, true);
+        InterlockedExchange(&g_vrUiDown, panelPointerHeld ? 1 : 0);
+        if (panelPointerPressed && Rd(g_vrUiValid)) {
+            int hitRow = -1;
+            if (VrPanelHitNormalized(Rd(g_vrUiU), Rd(g_vrUiV), &hitRow)) {
+                g_panelRow = hitRow;
+                PanelAdjust(PanelRowId(hitRow), +1);
+                Log("VR settings laser click: row=%d id=%d", hitRow, PanelRowId(hitRow));
+            }
+        }
+        RecordVrSample(panelLt, panelRt, panelX, panelY, 0.0f, 0.0f);
         ClearPad();
         return;                                     // no turning, no walking, no buttons
     }
@@ -9548,6 +9662,7 @@ void SyncXRInput(XrTime displayTime) {
     } else {
         ClearPad();
     }
+    RecordVrSample(lt, rt, mx, my, lookX, ty);
 
     // ---- play whatever rumble the game asked for ----
     //
@@ -14520,6 +14635,16 @@ static bool FgRidesGun(UINT verts) {
     if (m != 1 && m != 3) return false;
     // == 1 exactly. Mode 2 is the hide-the-pass test and must not also transform what it keeps.
     if (Rd(g_fgRideAll) != 1) return false;
+    // Holstering is a weapon-only transform. Reusing the gun pivot for the
+    // arm-role mesh dragged the right hand to the hip and made reacquisition
+    // impossible. Leave arm/glove draws on their native path while the latched
+    // gun alone follows HolsterHipWorld().
+    if (Rd(g_weaponHolstered) &&
+        ((Rd(g_armsVerts) && (UINT)Rd(g_armsVerts) == verts) || FgIsExtraArm(verts))) {
+        static bool said = false;
+        if (!said) { said = true; Log("weapon holster: arm/glove draw kept independent; weapon-only hip transform"); }
+        return false;
+    }
     // Once the foreground counter exceeds the measured pass size, the depth
     // clear was from a shadow/reflection pass.  Stop before the old per-draw
     // bail path can turn thousands of world draws into a frame spike.
@@ -20202,6 +20327,8 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         for (int fk = kFnFireFirst; fk <= kFnFireLast; ++fk)
             if (FnIdx(fk) >= 0 && fnIdx == FnIdx(fk)) { isFireFn = true; break; }
         if (isFireFn) {
+            InterlockedOr(&g_vrRecorderEventFlags, vrrec::Fire);
+            GunPivotWorld(g_vrRecorderMuzzle);
             const int32_t hp = InterlockedCompareExchange(&g_aimPitchForXi, 0, 0);
             const int32_t hy = InterlockedCompareExchange(&g_aimYawForXi, 0, 0);
             fireCtl = (uintptr_t)InterlockedCompareExchange(&g_ctlForXi, 0, 0);
@@ -21111,6 +21238,43 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     ClearRects(dev, r, n, D3DCOLOR_XRGB(0, 255, 90));
 
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldScissor);
+}
+
+// Hit-test the exact pixel geometry used by DrawVrPanel.  Keeping this math
+// beside the renderer avoids the old hard-coded 1920x1080/menu assumptions and
+// keeps pointer clicks correct for mono and SBS backbuffers.
+bool VrPanelHitNormalized(LONG uInt, LONG vInt, int* rowIndex) {
+    if (!rowIndex || !g_srcW || !g_srcH || !Rd(g_panelOpen)) return false;
+    const bool dup = Rd(g_dupDraws) != 0;
+    const float u = std::max(0.0f, std::min(1.0f, (float)uInt / 1000000.0f));
+    const float v = std::max(0.0f, std::min(1.0f, (float)vInt / 1000000.0f));
+    const int nRows = PanelRowCount();
+    int px = (int)((g_srcH * 0.30) / ((kGlyphH + 4) * (kPanelRowsMax + 3)));
+    if (px < 3) px = 3;
+    const int lh = (kGlyphH + 4) * px;
+    char row[40] = {};
+    int widest = 0;
+    for (int i = 0; i < nRows; ++i) {
+        PanelRowText(PanelRowId(i), row, sizeof(row));
+        const int len = (int)strlen(row); if (len > widest) widest = len;
+    }
+    const int colsMin = kPageCols[g_panelPage];
+    const int cols = (widest + 2 > colsMin) ? widest + 2 : colsMin;
+    const int halfW = dup ? (int)g_srcW / 2 : (int)g_srcW;
+    const int boxW = cols * (kGlyphW + 1) * px;
+    const int boxH = lh * (nRows + 3);
+    const int y0 = (int)g_srcH / 2 - boxH / 2;
+    const float localU = dup ? (u * 2.0f - (u >= 0.5f ? 1.0f : 0.0f)) : u;
+    const float x = localU * (float)halfW;
+    const float cx = (float)halfW * 0.5f;
+    if (x < cx - boxW * 0.5f || x > cx + boxW * 0.5f) return false;
+    const float py = v * (float)g_srcH;
+    for (int i = 0; i < nRows; ++i) {
+        const float top = (float)y0 + lh * (2 + i);
+        const float bottom = top + (kGlyphH + 1) * px;
+        if (py >= top && py <= bottom) { *rowIndex = i; return true; }
+    }
+    return false;
 }
 
 // Fix-H/capture: L3+R3 backbuffer screenshot next to the log, for remote diagnosis.
@@ -26121,6 +26285,8 @@ BOOL APIENTRY DllMain(HMODULE m, DWORD reason, LPVOID) {
         // first Present is already too late. If XINPUT1_3.dll is not mapped yet this does nothing
         // and Present retries.
         InstallXInputHook();
+    } else if (reason == DLL_PROCESS_DETACH) {
+        g_vrRecorder.Stop();
     }
     return TRUE;
 }

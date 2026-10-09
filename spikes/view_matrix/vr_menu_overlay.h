@@ -204,7 +204,7 @@ static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& 
 void UpdateVrUiPointer(float,bool available) {
     const bool menu=Rd(g_vrUiEnabled)&&Rd(g_vrUiNativeReady)&&Rd(g_vrUiMenu);
     if(menu&&Rd(g_vrUiDesktopProbe))return; // Explicit debugger-controlled test coordinates; never staged for headset use.
-    if(!available || !menu || !g_handPoseValid[1] || !g_handPositionValid[1] || !g_haveEyes || g_targetTanX<=0 || g_targetTanY<=0 || Rd(g_panelOpen)) {
+    if(!available || !menu || !g_handPoseValid[1] || !g_handPositionValid[1] || !g_haveEyes || g_targetTanX<=0 || g_targetTanY<=0) {
         g_vrMenuPanelValid=false;
         InterlockedExchange(&g_vrUiValid,0);InterlockedExchange(&g_vrUiDown,0);
         if(!available)for(auto& gate:g_vrUiTrigger)gate.Update(menu?uipointer::Context::Menu:uipointer::Context::Gameplay,false,false,false);

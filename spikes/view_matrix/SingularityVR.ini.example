@@ -1073,6 +1073,9 @@ CutsceneLockCamera=0
 ; ---------------------------------------------------------------------------
 LeftHanded=0
 SwapSticks=0
+; L3+R3 recentre chord. Recording is a separate VR Settings action and is never
+; toggled by the screenshot/recentre chord.
+RecenterChord=1
 
 ; ---------------------------------------------------------------------------
 ; [Render] WeaponFxRideGun -- the muzzle flash and barrel smoke (run 181)

@@ -3,6 +3,7 @@
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
 void OpenVrSettingsFromPause();
+extern volatile LONG g_panelOpen;
 void* PatchVTable(void* obj,int index,void* repl);
 namespace NativeVrUi {
 struct Name { unsigned index, number; };
@@ -110,6 +111,12 @@ static void Drain(float dt) {
  void** vt=*reinterpret_cast<void***>(client);
  if(!Readable(vt,15*4)||!Readable((void*)0x01CF566Cu,0x30))return;
  const bool menu=InterlockedCompareExchange(&g_vrUiMenu,0,0)!=0;
+ if(InterlockedCompareExchange(&g_panelOpen,0,0)) {
+  // The VR settings panel is owned by the mod-rendered hit-test path. Do not
+  // leak its R2 edge into the paused GFx movie behind it.
+  lastX=lastY=-1;
+  return;
+ }
  int x,y;const bool valid=menu&&Coordinates(viewport,x,y);
  const Name mouseX=*reinterpret_cast<Name*>(0x01CF566Cu),mouseY=*reinterpret_cast<Name*>(0x01CF5674u);
  const Name left=*reinterpret_cast<Name*>(0x01CF568Cu);
