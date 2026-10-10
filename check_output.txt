@@ -1,0 +1,9 @@
+Line 3: (Nazwa=Core.HelloWorldCommandlet,Class=Class,MetaClass=Core.Commandlet)
+Line 5: Aborted
+Line 6: B┼é─ůd eksportowanie `~: nie mo┼╝e open plik '`~'
+Line 34: Can't find `~ in file '`~'
+Line 35: B┼é─ůd zapisywanie plik '`~': `~
+Line 44: Failed to read file '`~' for import
+Line 45: B┼é─ůd pozycjonowanie plik
+Line 46: B┼é─ůd otwieranie plik '`~' (`~).
+Line 55: Assertion failed: `~ [File:`~] [Line: `~]

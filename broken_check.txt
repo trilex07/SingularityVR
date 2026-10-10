@@ -1,0 +1,18 @@
+Line 4: BROKEN: Unknown B┼é─ůd
+Line 6: BROKEN: B┼é─ůd eksportowanie `~: nie mo┼╝e open plik '`~'
+Line 7: BROKEN: B┼é─ůd eksportowanie `~: nie mo┼╝e write plik '`~'
+Line 35: BROKEN: B┼é─ůd zapisywanie plik '`~': `~
+Line 36: BROKEN: B┼é─ůd zapisywanie '`~'
+Line 45: BROKEN: B┼é─ůd pozycjonowanie plik
+Line 46: BROKEN: B┼é─ůd otwieranie plik '`~' (`~).
+Line 47: BROKEN: B┼é─ůd zapisywanie to plik
+Line 56: BROKEN: Debugowanie: asercja nie powiod┼éa si─Ö: `~ [Plik:`~] [Line: `~]
+Line 4: BROKEN: Unknown B┼é─ůd
+Line 6: BROKEN: B┼é─ůd eksportowanie `~: nie mo┼╝e open plik '`~'
+Line 7: BROKEN: B┼é─ůd eksportowanie `~: nie mo┼╝e write plik '`~'
+Line 35: BROKEN: B┼é─ůd zapisywanie plik '`~': `~
+Line 36: BROKEN: B┼é─ůd zapisywanie '`~'
+Line 45: BROKEN: B┼é─ůd pozycjonowanie plik
+Line 46: BROKEN: B┼é─ůd otwieranie plik '`~' (`~).
+Line 47: BROKEN: B┼é─ůd zapisywanie to plik
+Line 56: BROKEN: Debugowanie: asercja nie powiod┼éa si─Ö: `~ [Plik:`~] [Line: `~]

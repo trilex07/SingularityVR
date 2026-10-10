@@ -1,0 +1,20 @@
+| Filename | PL Text | EN Text | TTS Text |
+|----------|---------|---------|----------|
+| 0011_43166fba7ce1.wav | Wynik remisowy po regulaminowym czasie. Dogrywka do nag┼éej ┼Ťmierci!!! | Score tied at the end of regulation. Sudden Death Overtime!!! | Wynik remisowy po regulaminowym czasie. Dogrywka do nag┼éej ┼Ťmierci!!! |
+| 0018_1e4d181c0a7a.wav | - Wyeliminuj wrogi gatunek.
+- Wygrywa dru┼╝yna z najwi─Öksz─ů liczb─ů zab├│jstw. | - Eliminate the opposing species.
+- Win goes to the team with highest number of  | - Wyeliminuj wrogi gatunek.
+- Wygrywa dru┼╝yna z najwi─Öksz─ů liczb─ů zab├│jstw. |
+| 0102_da8e7a134316.wav | Wymagany Kod Aktywacyjny Do Na┼éadowania Bomby E 99 | Activation Code Required To Charge E99 Bomb | Wymagany Kod Aktywacyjny Do Na┼éadowania Bomby e dziewi─Ö─çdziesi─ůt dziewi─Ö─ç |
+| 0171_e58a6aacfe65.wav | Naci┼Ťnij [age], aby rozstroi─ç Zeki w czasie. To kosztuje energi─Ö E 99. | Press [age] to decay Mutants. This costs E99 Energy | Naci┼Ťnij klucz wiek, aby rozstroi─ç Zeki w czasie. To kosztuje energi─Ö e dziewi─Ö─çdziesi─ůt dziew |
+| 0172_0005fcf47156.wav | Naci┼Ťnij [age], aby postarzy─ç Revert├│w, przyspieszy─ç ich rozpad i doprowadzi─ç do wybuchu. To ko | Press [age] to age Reverts, forcing them to decay rapidly and explode.  This cos | Naci┼Ťnij klucz wiek, aby postarzy─ç Revert├│w, przyspieszy─ç ich rozpad i doprowadzi─ç do wybuchu.  |
+| 0174_e63b02880451.wav | Postarzanie [age] lub Impulsowanie [impulse] Fazowych Kleszczy to bardzo skuteczna strategia. | Aging [age] or Impulsing [impulse] Phase Ticks is a very effective strategy. | Postarzanie klucz wiek lub Impulsowanie klucz impuls Fazowych Kleszczy to bardzo skuteczna strategia |
+| 0175_a8ea3b99ffff.wav | Naci┼Ťnij [age], aby rozstroi─ç Zeki w czasie. To kosztuje energi─Ö E 99. | Press [age] to age Zeks, forcing them out of sync with time. This costs E99 ener | Naci┼Ťnij klucz wiek, aby rozstroi─ç Zeki w czasie. To kosztuje energi─Ö e dziewi─Ö─çdziesi─ůt dziew |
+| 0176_8775dc4ee866.wav | Podnie┼Ť dodatkow─ů amunicj─Ö, przechodz─ůc po upuszczonej broni lub pakach z amunicj─ů. | Pick up additional ammo by running over dropped weapons or ammo pickups. | Podnie┼Ť dodatkow─ů amunicj─Ö, przechodz─ůc po upuszczonej broni lub pakach z amunicj─ů. |
+| 0177_498900210f5f.wav | Naci┼Ťnij klucz wiek, aby odnowi─ç skrzynie z amunicj─ů. W ┼Ťrodku znajdziesz du┼╝y zapas amunicji d | Press [age] to renew ammo crates. Inside you'll find a large ammo stash for all  | Naci┼Ťnij klucz wiek, aby odnowi─ç skrzynie z amunicj─ů. W ┼Ťrodku znajdziesz du┼╝y zapas amunicji d |
+| 0178_674ff92ad51e.wav | Naci┼Ťnij klucz wiek, aby odnowi─ç apteczki i odzyska─ç znajduj─ůce si─Ö w nich pakiety zdrowia. | Press [age] to renew medkits and retrieve the health packs inside. | Naci┼Ťnij klucz wiek, aby odnowi─ç apteczki i odzyska─ç znajduj─ůce si─Ö w nich pakiety zdrowia. |
+| 0180_646e1432951a.wav | U┼╝yj zbiornik├│w kriogenicznych, aby zamrozi─ç wrog├│w na kr├│tki czas. | Use Cryo-Tanks to freeze enemies for a short time. | U┼╝yj zbiornik├│w kryogenicznych, aby zamrozi─ç wrog├│w na kr├│tki czas. |
+| 0181_6f088a2dbaa7.wav | Naci┼Ťnij i przytrzymaj klucz chwyt, aby na┼éadowa─ç dedlok i spowolni─ç czas wok├│┼é wrog├│w. | Press and Hold [grab] to charge a deadlock and slow the time around enemies | Naci┼Ťnij i przytrzymaj klucz-chwyt, aby na┼éadowa─ç ded lok i spowolni─ç czas wok├│┼é wrog├│w. |
+| 0182_e2c3a7f502e0.wav | Grawitacyjny chwyt klucz chwyt pozwala ┼éapa─ç beczki rzucone w twoj─ů stron─Ö. | Anti-gravity [grab] can be used to grab barrels thrown at you | Grawitacyjny chwyt klucz-chwyt pozwala ┼éapa─ç beczki rzucone w twoj─ů stron─Ö. |
+| 0186_c53fea8fb9e2.wav | Gdy wrogowie s─ů poza faz─ů, s─ů niewra┼╝liwi na obra┼╝enia. | When phased out, enemies are invulnerable to damage. | Gdy wrogowie s─ů poza faz─ů, s─ů niewra┼╝liwi na obra┼╝enia. |
+| 0190_0fbab60ac913.wav | Przejd┼║ po upuszczonej broni, aby zdoby─ç do niej amunicj─Ö. | Walk over dropped weapons to acquire its ammo. | Przejd┼║ po upuszczonej broni, aby zdoby─ç do niej amunicj─Ö. |
