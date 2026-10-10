@@ -10,12 +10,16 @@ Scope change: finger posing was removed from this branch at the user's request
 
 ## What it does
 
-Hides the stiff forearm/upper-arm flesh and sleeve by collapsing their palette
-matrices onto the live wrist center (`S' = S * D`, `D = T(-w)*Scale(0)*T(w)`).
-PSK weight census: tmd mat0 has 611 ARM-weighted verts (991 all-arm tris),
-noTMD mat0 has 992 (1598 tris) — those collapse to the wrist point, wrist and
-finger vertices are untouched, boundary triangles degenerate. No index-buffer
-surgery, so no dependence on runtime triangle order.
+Hides the stiff forearm/upper-arm flesh and sleeve by shrinking their palette
+matrices toward the live wrist center (`S' = S * D`, `D = T(-w)*Scale(s)*T(w)`,
+default `s = 0.12`). PSK weight census: tmd mat0 has 611 ARM-weighted verts
+(991 all-arm tris), noTMD mat0 has 992 (1598 tris).
+
+`s = 0` (old behavior) is BANNED by simulation: it kills 730/4402 triangles
+around the wrist — over-cut rim + see-through palm. `s = 0.12` keeps a small
+stump that plugs the opening with 0 dead tris (verified on the real PSK
+weights). Tune via ini (`GloveStumpScale`); `s = 1` disables the cut.
+No index-buffer surgery, so no dependence on runtime triangle order.
 
 Kept by user decision: the gloves (wrist + finger bones, both hands) and the
 TMD device bones (`tmd_base`, `hinge*`, `rail*`, `disc*`, `nixie*`,

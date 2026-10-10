@@ -86,15 +86,28 @@ inline int HandSide(const char* name) {
 // the mod's Mat. A post-transform D composes as S' = S * D, i.e.
 // out[r][c] = sum_k s[r][k] * d[k][c].
 //
-// Collapse delta D = T(-w) * Scale(0) * T(w): row 3 = (w, 1), rest 0.
-// For a rigid S, S' has rows 0..2 = 0 and row 3 = (w, 1), so every skinned
-// vertex maps exactly onto the wrist center w (boundary triangles degenerate).
+// Collapse delta D = T(-w) * Scale(s) * T(w): diagonal s, row 3 = w*(1-s).
+// For a rigid S, every skinned vertex maps to s*v + (1-s)*w.
+//
+// keepScale MUST stay above zero. s = 0 collapses the forearm onto a single
+// point and kills every triangle touching it (730/4402 dead tris on the real
+// tmd mesh: over-cut wrist rim + see-through palm). s = 0.12 keeps a small
+// stump around the wrist that plugs the opening: 0 dead tris, wrist rim
+// intact (verified on the real PSK weights). s = 1 is identity (no cut).
+// Tune via ini (GloveStumpScale).
 struct Mat4 { float m[4][4]; };
 
-inline void CollapseDelta(const float w[3], Mat4& out) {
+inline void CollapseDelta(const float w[3], Mat4& out, float keepScale = 0.12f) {
+    float s = keepScale;
+    if (!(s >= 0.0f)) s = 0.0f;   // NaN -> legacy point collapse
+    if (s > 1.0f) s = 1.0f;
     for (int r = 0; r < 4; ++r)
         for (int c = 0; c < 4; ++c) out.m[r][c] = 0.0f;
-    out.m[3][0] = w[0]; out.m[3][1] = w[1]; out.m[3][2] = w[2]; out.m[3][3] = 1.0f;
+    out.m[0][0] = s; out.m[1][1] = s; out.m[2][2] = s;
+    out.m[3][0] = w[0] * (1.0f - s);
+    out.m[3][1] = w[1] * (1.0f - s);
+    out.m[3][2] = w[2] * (1.0f - s);
+    out.m[3][3] = 1.0f;
 }
 
 inline void ApplyDelta(const float s[4][4], const Mat4& d, float out[4][4]) {
