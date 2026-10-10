@@ -1,10 +1,16 @@
 [CmdletBinding(SupportsShouldProcess)]
 param(
-    [ValidateSet('vfx','shadow1','shadow3','vfx-shadow3','desktop-hmd','desktop-hmd-shadow1')]
+    [ValidateSet('vfx','shadow1','shadow3','vfx-shadow3','desktop-hmd','desktop-hmd-shadow1','desktop-hmd-current','desktop-hmd-interactive')]
     [string]$Candidate = 'vfx',
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam',
+    [string]$CandidateDirectory = '',
+    [string]$LogRoot = '',
     [string]$RuntimeManifest = 'C:\Users\Trilex\vr-mods\xrsim-scratch-run\dvr_xrsim32.json',
     [int]$WaitSeconds = 90,
+    [int]$PostReadyHoldSeconds = 0,
+    [switch]$Windowed,
+    [ValidateRange(640, 7680)][int]$WindowWidth = 1280,
+    [ValidateRange(480, 4320)][int]$WindowHeight = 720,
     [switch]$StopSteamVR,
     [switch]$LaunchViaSteam,
     [switch]$RestartSteam,
@@ -17,7 +23,8 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$RuntimeManifest = [System.IO.Path]::GetFullPath($RuntimeManifest)
 $candidateDir = switch ($Candidate) {
     'vfx'        { Join-Path $repoRoot 'deployment\vfx-stereo-eye-fix-20261008' }
     'shadow1'    { Join-Path $repoRoot 'deployment\shadow1-ab-20261008' }
@@ -25,7 +32,11 @@ $candidateDir = switch ($Candidate) {
     'vfx-shadow3' { Join-Path $repoRoot 'deployment\vfx-shadow3-latest-20261008' }
     'desktop-hmd' { Join-Path $repoRoot 'deployment\desktop-hmd-diagnostic-20261008' }
     'desktop-hmd-shadow1' { Join-Path $repoRoot 'deployment\desktop-hmd-shadow1-20261008' }
+    'desktop-hmd-current' { Join-Path $repoRoot 'deployment\desktop-hmd-current-20261009' }
+    'desktop-hmd-interactive' { Join-Path $repoRoot 'deployment\desktop-hmd-interactive-20261009' }
 }
+if ($CandidateDirectory) { $candidateDir = [System.IO.Path]::GetFullPath($CandidateDirectory) }
+$candidateLabel = if ($CandidateDirectory) { Split-Path -Leaf $candidateDir } else { $Candidate }
 $gameDir = Join-Path $SteamRoot 'steamapps\common\Singularity\Binaries'
 $gameExe = Join-Path $gameDir 'Singularity.exe'
 $dllPath = Join-Path $gameDir 'd3d9.dll'
@@ -34,7 +45,7 @@ $vfxPath = Join-Path $gameDir 'SingularityVfx.dll'
 $runStamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $backupDir = Join-Path $candidateDir "runner-backup-$runStamp"
 $reportPath = Join-Path $ReportDirectory "steam-xrsim-run-$runStamp.json"
-$logRoot = Join-Path $env:LOCALAPPDATA 'SingularityVR'
+$logRoot = if ($LogRoot) { $LogRoot } else { Join-Path $env:LOCALAPPDATA 'SingularityVR' }
 
 function Write-Runner([string]$Message) {
     Write-Host ("[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'), $Message)
@@ -79,6 +90,7 @@ function Get-LockEvidence([string]$Path) {
 
 function Copy-Unlocked([string]$Source, [string]$Destination, [int]$Attempts = 12) {
     if (-not (Test-Path -LiteralPath $Source)) { throw "Source file not found: $Source" }
+    $lastFailure = $null
     for ($i = 1; $i -le $Attempts; $i++) {
         if (Test-FileFree $Destination) {
             try {
@@ -88,8 +100,11 @@ function Copy-Unlocked([string]$Source, [string]$Destination, [int]$Attempts = 1
                 if ($srcHash -ne $dstHash) { throw "Copy hash differs from candidate." }
                 return
             } catch {
+                $lastFailure = $_.Exception.Message
                 if ($i -eq $Attempts) { throw }
             }
+        } else {
+            $lastFailure = 'Exclusive read/write access was denied.'
         }
         Start-Sleep -Milliseconds 350
     }
@@ -105,13 +120,14 @@ function Copy-Unlocked([string]$Source, [string]$Destination, [int]$Attempts = 1
         Remove-Item -LiteralPath $quarantine -Force -ErrorAction SilentlyContinue
         return
     } catch {
+        $lastFailure = $_.Exception.Message
         if ((Test-Path -LiteralPath $quarantine) -and -not (Test-Path -LiteralPath $Destination)) {
             Rename-Item -LiteralPath $quarantine -NewName (Split-Path -Leaf $Destination) -Force -ErrorAction SilentlyContinue
         }
     }
     $owners = @(Get-LockEvidence $Destination)
     $detail = if ($owners.Count) { ($owners -join "`n") } else { 'openfiles did not report an owner.' }
-    throw "File is still locked: $Destination`n$detail"
+    throw "Unable to replace file (sharing, access, or path failure): $Destination`nLast operation: $lastFailure`n$detail"
 }
 
 function Save-Backup {
@@ -142,7 +158,7 @@ function Restore-Backup {
 
 function Get-NewestLog([datetime]$Since) {
     if (-not (Test-Path -LiteralPath $logRoot)) { return $null }
-    $logs = @(Get-ChildItem -LiteralPath $logRoot -Filter 'view_matrix_*.log' -File -ErrorAction SilentlyContinue |
+    $logs = @(Get-ChildItem -LiteralPath $logRoot -Filter 'view_matrix*.log' -File -ErrorAction SilentlyContinue |
         Sort-Object LastWriteTime -Descending)
     foreach ($log in $logs) {
         if ($log.LastWriteTime -ge $Since.AddSeconds(-2)) { return $log }
@@ -152,7 +168,7 @@ function Get-NewestLog([datetime]$Since) {
 
 function Get-BestRunLog([datetime]$Since) {
     if (-not (Test-Path -LiteralPath $logRoot)) { return $null }
-    $logs = @(Get-ChildItem -LiteralPath $logRoot -Filter 'view_matrix_*.log' -File -ErrorAction SilentlyContinue |
+    $logs = @(Get-ChildItem -LiteralPath $logRoot -Filter 'view_matrix*.log' -File -ErrorAction SilentlyContinue |
         Where-Object { $_.LastWriteTime -ge $Since.AddSeconds(-2) } |
         Sort-Object -Property @{Expression='Length';Descending=$true}, @{Expression='LastWriteTime';Descending=$true})
     foreach ($log in $logs) {
@@ -162,14 +178,56 @@ function Get-BestRunLog([datetime]$Since) {
     return ($logs | Select-Object -First 1)
 }
 
-function Read-RunEvidence([string]$LogPath) {
+function Get-XrSimReadiness([string]$Directory, [int]$GameProcessId, [datetime]$Since) {
+    $statePath = Join-Path $Directory 'state.json'
+    if (-not (Test-Path -LiteralPath $statePath -PathType Leaf)) { return $null }
+    try {
+        $file = Get-Item -LiteralPath $statePath
+        $state = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
+        $fresh = $file.LastWriteTimeUtc -ge $Since.ToUniversalTime().AddSeconds(-2)
+        $focused = $state.sessionState -in @('FOCUSED','VISIBLE')
+        $running = [bool]$state.sessionRunning
+        $stereo = [int]$state.projectionViews -eq 2
+        $pidMatches = [int]$state.pid -eq $GameProcessId -and $GameProcessId -gt 0
+        [pscustomobject]@{
+            ready = [bool]($fresh -and $pidMatches -and $running -and $focused -and $stereo -and [int]$state.errors -eq 0)
+            fresh = $fresh
+            pid_matches = $pidMatches
+            session_running = $running
+            session_state = [string]$state.sessionState
+            projection_views = [int]$state.projectionViews
+            errors = [int]$state.errors
+            path = $statePath
+        }
+    } catch {
+        return $null
+    }
+}
+
+function Read-RunEvidence([string]$LogPath, [int]$GameProcessId, [datetime]$RunStartedAt) {
     $text = if ($LogPath -and (Test-Path -LiteralPath $LogPath)) { Get-Content -LiteralPath $LogPath -Raw } else { '' }
     $statePath = Join-Path $env:USERPROFILE 'xrsim-state.json'
     $state = Join-Path (Split-Path -Parent $RuntimeManifest) 'state.json'
+    $runtimeState = $null
+    $runtimeStateFile = if (Test-Path -LiteralPath $state) { Get-Item -LiteralPath $state } else { $null }
+    if ($runtimeStateFile) {
+        try { $runtimeState = Get-Content -LiteralPath $state -Raw | ConvertFrom-Json } catch { }
+    }
+    $runtimeStatePid = if ($runtimeState -and $null -ne $runtimeState.pid) { [int]$runtimeState.pid } else { $null }
+    $runtimeStateUpdated = if ($runtimeStateFile) { $runtimeStateFile.LastWriteTimeUtc.ToString('o') } else { $null }
+    $runtimeStateFresh = [bool]($runtimeState -and $runtimeStatePid -eq $GameProcessId -and
+        $GameProcessId -gt 0 -and $runtimeStateFile.LastWriteTimeUtc -ge $RunStartedAt.ToUniversalTime().AddSeconds(-2))
+    $logRuntimeReady = [bool]($text -match 'dvr-xrsim' -and $text -match 'READY|FOCUSED|pipeline')
+    $stateRuntimeReady = [bool]($runtimeStateFresh -and $runtimeState.sessionState -eq 'FOCUSED' -and
+        $runtimeState.projectionViews -eq 2 -and $runtimeState.errors -eq 0)
     [ordered]@{
         log_path = $LogPath
         runtime_manifest = $RuntimeManifest
-        runtime_ready = ($text -match 'dvr-xrsim' -and $text -match 'READY|FOCUSED|pipeline')
+        game_process_id = $GameProcessId
+        runtime_state_pid = $runtimeStatePid
+        runtime_state_updated_utc = $runtimeStateUpdated
+        runtime_state_fresh = $runtimeStateFresh
+        runtime_ready = [bool]($logRuntimeReady -or $stateRuntimeReady)
         missing_mouse_path = ($text -match 'mouse|DirectInput' -and $text -match 'compat|skip|null')
         foreground_boundary = ($text -match 'foreground|FgMatch|boundary')
         shadow_path = ($text -match 'shadow')
@@ -187,6 +245,9 @@ function Write-ReportFile {
             finished = [string]$report.finished
             candidate = [string]$report.candidate
             candidate_dir = [string]$report.candidate_dir
+            launch_mode = [string]$report.launch_mode
+            requested_windowed = [bool]$report.requested_windowed
+            window_resolution = [string]$report.window_resolution
             game_exe = [string]$report.game_exe
             dll_before = [string]$report.dll_before
             dll_candidate = [string]$report.dll_candidate
@@ -197,6 +258,12 @@ function Write-ReportFile {
             restore_error = [string]$report.restore_error
             log_path = if ($report.evidence -and $report.evidence.log_path) { [string]$report.evidence.log_path } else { $null }
             runtime_ready = if ($report.evidence) { [bool]$report.evidence.runtime_ready } else { $false }
+            game_process_id = if ($report.evidence) { $report.evidence.game_process_id } else { $null }
+            runtime_state_pid = if ($report.evidence) { $report.evidence.runtime_state_pid } else { $null }
+            runtime_state_updated_utc = if ($report.evidence) { $report.evidence.runtime_state_updated_utc } else { $null }
+            runtime_state_fresh = if ($report.evidence) { [bool]$report.evidence.runtime_state_fresh } else { $false }
+            process_exit = [bool]$report.process_exit
+            exit_code = $report.exit_code
             missing_mouse_path = if ($report.evidence) { [bool]$report.evidence.missing_mouse_path } else { $false }
             foreground_boundary = if ($report.evidence) { [bool]$report.evidence.foreground_boundary } else { $false }
             shadow_path = if ($report.evidence) { [bool]$report.evidence.shadow_path } else { $false }
@@ -225,8 +292,11 @@ $gameProcess = $null
 $log = $null
 $report = [ordered]@{
     timestamp = $startedAt.ToString('o')
-    candidate = $Candidate
+    candidate = $candidateLabel
     candidate_dir = $candidateDir
+    launch_mode = if ($LaunchViaSteam) { 'Steam' } else { 'direct' }
+    requested_windowed = [bool]$Windowed
+    window_resolution = "${WindowWidth}x${WindowHeight}"
     game_exe = $gameExe
     dll_before = if (Test-Path -LiteralPath $dllPath) { (Get-FileHash $dllPath -Algorithm SHA256).Hash } else { $null }
     dll_candidate = (Get-FileHash (Join-Path $candidateDir 'd3d9.dll') -Algorithm SHA256).Hash
@@ -235,6 +305,7 @@ $report = [ordered]@{
     error = $null
     restore_error = $null
     dll_after_install = $null
+    runtime_required = [bool](Test-Path -LiteralPath $RuntimeManifest -PathType Leaf)
     evidence = $null
     process_exit = $false
     exit_code = $null
@@ -251,49 +322,84 @@ try {
     if (Test-Path -LiteralPath $candidateVfx) { Copy-Unlocked $candidateVfx $vfxPath }
     elseif (Test-Path -LiteralPath $vfxPath) { Remove-Item -LiteralPath $vfxPath -Force }
     $report.dll_after_install = (Get-FileHash $dllPath -Algorithm SHA256).Hash
-    Write-Runner "Installed candidate $Candidate ($($report.dll_after_install))."
+    Write-Runner "Installed candidate $candidateLabel ($($report.dll_after_install))."
 
     if (-not $SkipLaunch) {
+        $testBridge = Join-Path $repoRoot 'tools\singularityvr-test-bridge.ps1'
+        Write-Runner 'Running mandatory test-bridge Preflight before launch.'
+        & $testBridge -Action Preflight -SteamRoot $SteamRoot -LogRoot $logRoot `
+            -XrSimDirectory (Split-Path -Parent $RuntimeManifest) | Out-Host
         $env:XR_RUNTIME_JSON = $RuntimeManifest
         $env:DVR_XRSIM_DIR = Split-Path -Parent $RuntimeManifest
         $logBefore = Get-NewestLog $startedAt
         if ($LaunchViaSteam) {
             $steamExe = Join-Path $SteamRoot 'steam.exe'
             if (-not (Test-Path -LiteralPath $steamExe)) { throw "Steam executable not found: $steamExe" }
-            if ($RestartSteam) {
-                Write-Runner 'RestartSteam requested: asking the Steam client to shut down before applaunch.'
+            # An already-running Steam client does not inherit XR_RUNTIME_JSON from this
+            # PowerShell process.  When a runtime manifest is supplied, restarting Steam is
+            # therefore mandatory; otherwise the game silently uses SteamVR/OpenXR instead of
+            # dvr-xrsim and the replay is sent to an unrelated pipe.
+            $restartForRuntime = $RestartSteam -or (Test-Path -LiteralPath $RuntimeManifest -PathType Leaf)
+            if ($restartForRuntime -and (Get-Process -Name steam -ErrorAction SilentlyContinue)) {
+                Write-Runner 'XR simulator requested: restarting Steam so it inherits XR_RUNTIME_JSON.'
                 $shutdown = Start-Process -FilePath $steamExe -ArgumentList @('-shutdown') -PassThru -Wait
-                Start-Sleep -Seconds 5
+                $steamDeadline = (Get-Date).AddSeconds(20)
+                while ((Get-Date) -lt $steamDeadline -and (Get-Process -Name steam -ErrorAction SilentlyContinue)) {
+                    Start-Sleep -Milliseconds 250
+                }
+                Start-Sleep -Seconds 2
             }
             if (-not (Get-Process -Name steam -ErrorAction SilentlyContinue)) {
                 $steamBoot = Start-Process -FilePath $steamExe -WorkingDirectory $SteamRoot -ArgumentList @('-silent') -PassThru
                 Write-Runner "Started Steam client PID $($steamBoot.Id); waiting for app registry."
                 Start-Sleep -Seconds 12
             }
-            $gameProcess = Start-Process -FilePath $steamExe -WorkingDirectory $SteamRoot -ArgumentList @('-applaunch','42670') -PassThru
-            Write-Runner "Started Steam applaunch 42670 (launcher PID $($gameProcess.Id))."
+            $steamArguments = @('-applaunch','42670')
+            if ($Windowed) {
+                $steamArguments += @('-windowed', "-ResX=$WindowWidth", "-ResY=$WindowHeight")
+            }
+            $steamLaunchProcess = Start-Process -FilePath $steamExe -WorkingDirectory $SteamRoot -ArgumentList $steamArguments -PassThru
+            Write-Runner "Started Steam applaunch 42670 (launcher PID $($steamLaunchProcess.Id)); windowed=$([bool]$Windowed) resolution=${WindowWidth}x${WindowHeight}."
         } else {
             $gameProcess = Start-Process -FilePath $gameExe -WorkingDirectory $gameDir -ArgumentList @('-windowed','-ResX=1280','-ResY=720') -PassThru
             Write-Runner "Started Singularity PID $($gameProcess.Id) with dvr-xrsim."
         }
         $report.launched = $true
         $deadline = (Get-Date).AddSeconds($WaitSeconds)
+        $runtimeDir = Split-Path -Parent $RuntimeManifest
+        $runtimeReady = $false
         do {
+            if ($LaunchViaSteam) {
+                $runningGame = Get-Process -Name 'Singularity' -ErrorAction SilentlyContinue |
+                    Where-Object { $_.StartTime -ge $startedAt.AddSeconds(-2) } |
+                    Select-Object -First 1
+                if ($runningGame) { $gameProcess = $runningGame }
+            }
             $log = Get-NewestLog $startedAt
             if ($log) {
                 $tail = Get-Content -LiteralPath $log.FullName -Raw -ErrorAction SilentlyContinue
-                # The first DLL attach log can be only a few hundred bytes.  Wait for
-                # the D3D9 device marker so a later full log from the restarted game
-                # is not mistaken for the completed run.
-                if ($tail -match 'Direct3DCreate9Ex|D3D9Ex device created|input-device cache ACTIVE') { break }
+                $openXrReady = $tail -match 'OpenXR ready'
+                $runtime = if ($RuntimeManifest) { Get-XrSimReadiness $runtimeDir $(if ($gameProcess) { $gameProcess.Id } else { 0 }) $startedAt } else { $null }
+                $runtimeReady = [bool]($runtime -and $runtime.ready)
+                # A simulator run is not ready at DLL attach or OpenXR loader init.  Require the
+                # fresh state.json for the exact game PID, focused session and two projection views.
+                # Native SteamVR runs may use the lighter OpenXR-ready condition.
+                if ($gameProcess -and (($RuntimeManifest -and $runtimeReady) -or (-not $RuntimeManifest -and $openXrReady))) { break }
             }
             Start-Sleep -Milliseconds 500
         } while ((Get-Date) -lt $deadline)
         $log = Get-BestRunLog $startedAt
-        $report.evidence = Read-RunEvidence $(if ($log) { $log.FullName } else { $null })
+        $report.evidence = Read-RunEvidence $(if ($log) { $log.FullName } else { $null }) $(if ($gameProcess) { $gameProcess.Id } else { 0 }) $startedAt
+        if ($RuntimeManifest -and -not $runtimeReady) {
+            throw "dvr-xrsim did not become ready for the fresh game PID within ${WaitSeconds}s; refuse to call this a runtime test."
+        }
         $report.process_exit = $false
-        if ($gameProcess.HasExited) { $report.process_exit = $true; $report.exit_code = $gameProcess.ExitCode }
+        if ($gameProcess -and $gameProcess.HasExited) { $report.process_exit = $true; $report.exit_code = $gameProcess.ExitCode }
         Write-Runner "Collected log: $($(if ($log) { $log.FullName } else { 'no new log' }))"
+        if ($PostReadyHoldSeconds -gt 0 -and $gameProcess -and -not $gameProcess.HasExited) {
+            Write-Runner "Holding game process for ${PostReadyHoldSeconds}s for an external deterministic replay."
+            Start-Sleep -Seconds $PostReadyHoldSeconds
+        }
     }
 } catch {
     $report.error = $_.Exception.Message
@@ -301,6 +407,23 @@ try {
     throw
 } finally {
     Write-Runner "Cleanup begin"
+    if ($report.launched -and $log) {
+        $report.evidence = Read-RunEvidence $log.FullName $(if ($gameProcess) { $gameProcess.Id } else { 0 }) $startedAt
+        if ($gameProcess -and $gameProcess.HasExited) {
+            $report.process_exit = $true
+            $report.exit_code = $gameProcess.ExitCode
+        }
+    }
+    if ($report.launched) {
+        $testBridge = Join-Path $repoRoot 'tools\singularityvr-test-bridge.ps1'
+        try {
+            Write-Runner 'Collecting runtime log, captures, xrsim state, and manifest through the test bridge.'
+            & $testBridge -Action Collect -SteamRoot $SteamRoot -LogRoot $logRoot `
+                -XrSimDirectory (Split-Path -Parent $RuntimeManifest) | Out-Host
+        } catch {
+            Write-Runner "Test-bridge collection failed: $($_.Exception.Message)"
+        }
+    }
     $env:XR_RUNTIME_JSON = $oldRuntime
     $env:DVR_XRSIM_DIR = $oldXrsimDir
     $report.finished = (Get-Date).ToString('o')
@@ -310,7 +433,11 @@ try {
         try { Restore-Backup; $report.restored = $true }
         catch { $report.restore_error = $_.Exception.Message; Write-Runner "Restore error: $($_.Exception.Message)" }
     }
-    Write-Runner "Cleanup restore complete"
+    if (-not $KeepCandidate -and -not $NoRestore -and (Test-Path -LiteralPath $backupDir)) {
+        Write-Runner "Cleanup restore complete"
+    } else {
+        Write-Runner "Cleanup restore skipped by -NoRestore or -KeepCandidate"
+    }
     $report.finished = (Get-Date).ToString('o')
     Write-ReportFile
 }
