@@ -1,0 +1,1257 @@
+; Singularity VR mod - settings
+;
+; ---------------------------------------------------------------------------
+; HookUserPointerDraws
+;
+; UE3 submits dynamic geometry (particles, decals, sprites) through
+; DrawPrimitiveUP / DrawIndexedPrimitiveUP. Those draws are not split per eye,
+; so a centred one lands on the seam between the eye halves and disappears -
+; the suspected cause of the chest and similar objects vanishing.
+;
+; Hooking them stopped the game reaching its menus, and a bisection found that
+; level 1 (patch installed, forward immediately) works while level 2 (identical
+; plus a single counter increment) does not.
+;
+; ---- run 27: the cause was found, and it was not threading ----
+;
+; The per-second perf log line had nine printf conversions and TEN arguments -
+; the user-pointer counter was missing its %d, so %s formatted an int as a
+; char*. That is harmless while the counter is zero and an access violation the
+; moment it is not, which is exactly at level 2. The fault happened inside
+; Log(), inside a held critical section, so the lock was never released and
+; every later log call blocked - a hang, not a crash.
+;
+; The evidence had been in every log since run 23: "mono-fallback 0(null)".
+;
+; So level 3 should now simply work. The thread guard is kept regardless -
+; issuing device state changes from a thread that does not own the device is
+; wrong either way - and the log now reports whether these calls really do
+; arrive off the render thread, which was only ever inferred.
+;
+;   0 = not hooked
+;   1 = hooked, forwards immediately
+;   2 = level 1 plus a counter        <- this is the one that used to hang
+;   3 = full per-eye treatment        <- try this
+;
+; If it still hangs, set back to 0 and relaunch. No rebuild needed.
+; ---------------------------------------------------------------------------
+
+[Render]
+; Bounded CPU hook sampler for diagnostics. It samples 1,200 Present frames and
+; then disables itself. Delay is measured in Present frames (0 starts immediately).
+; Leave disabled in normal play; use a delay to target a later transition window.
+;HotPathSampler=1
+;HotPathSamplerDelayFrames=5300
+ShowControllerArms=0
+VfxSmoke=0
+VfxScreenFlash=1
+; ShadowMode: 0=split shadow sampling (debug), 1=mono sample, 2=drop, 3=protect light-space (default).
+ShadowMode=3
+; GloveIsolate: 0=off, 1=census only, 2=collapse arm flesh + hide stray sleeve section (default).
+GloveIsolate=2
+; 0 = full glove mesh (recommended). 1 = 2922-tri subset from PSK audit (may crop palms).
+GloveFaceFilter=0
+; Independent hands on tracked controllers (required for glove face filter + palette path).
+IndependentHandsPrototype=1
+
+[PSVR2]
+; Opt-in only. Requires tools/psvr2-bridge/run-session.ps1 and a working SteamVR PSVR2 driver.
+AdaptiveTriggers=0
+
+; ---------------------------------------------------------------------------
+; AutoResolution   -- inherit the resolution from the headset (run 59)
+;
+; Every other VR title takes its resolution from the headset. This one needed a
+; hand-typed -ResX/-ResY from run 17 until now. With this on, you just launch
+; the game.
+;
+;   Singularity.exe          <- that is the whole command
+;
+; ---- YOUR COMMAND LINE ALWAYS WINS ----
+;
+; If you pass -ResX yourself, nothing is injected and your value is used. The
+; log says so explicitly:
+;
+;   auto-resolution: not injecting (you passed -ResX yourself, which always wins)
+;
+; ---- how it works, and why it is a CACHE ----
+;
+; This DLL is a d3d9.dll proxy, so the loader runs its DllMain before the exe's
+; entry point - before the CRT reads GetCommandLineW and before UE3 parses it.
+; A detour installed there is in place in time; anything later is not, because
+; the engine has already read it.
+;
+; The size itself comes from the PREVIOUS run. The mod queries the headset every
+; launch and writes the answer to AutoResX/AutoResY below; the next launch
+; injects it. The alternative was spinning up a temporary OpenXR instance inside
+; DllMain to ask live, which is possible but puts XR initialisation in the
+; process startup path - where a failure means THE GAME DOES NOT LAUNCH.
+;
+; So: change your headset's render scale and the first run afterwards uses the
+; old size, the next one is correct. One stale run beats a game that won't boot.
+;
+; The first ever run injects nothing, because there is no cache yet. Launch once
+; with your own -ResX, or just launch and let it write the cache, then relaunch.
+;
+; Every failure path leaves the command line untouched: no cache, a nonsense
+; value, a failed hook, or -ResX already present.
+;
+; Why the command line and not the backbuffer: run 14 proved that overriding the
+; D3D9 backbuffer does NOT raise UE3's render resolution. The engine sizes its
+; scene targets from its own config, so forcing the backbuffer desynchronises
+; the two and breaks stereo. The resolution has to reach UE3's own settings.
+;
+;   1 = inject the cached headset size when you did not specify one <- default
+;   0 = never touch the command line
+; ---------------------------------------------------------------------------
+AutoResolution=1
+
+; Written by the mod, not by you. The headset's per-eye width x2 (side by side)
+; and its height, cached from the last run. Delete these to force a re-cache.
+; Overwritten only when the headset's answer actually changes.
+;AutoResX=4992
+;AutoResY=2688
+
+; ---------------------------------------------------------------------------
+; The cold start is flat, as always - no head tracking, no 6-DOF, mono. Press
+; F9, F10 and F1 individually as before, OR press BACKSPACE once for all three
+; at once (and again to drop back to flat). BACKSPACE is just a shortcut for
+; the same three keys; it changes nothing about how the game looks on launch.
+; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; D3D9ExMode   -- the zero-copy prerequisite (run 38). OFF until proven.
+;
+; OpenXR has no D3D9 binding, so every frame must reach D3D11. Doing that
+; without the CPU round-trip needs a SHARED SURFACE, which needs a D3D9Ex
+; device, and D3D9Ex rejects D3DPOOL_MANAGED - which UE3 uses for essentially
+; everything (spike 2: 10,454 MANAGED allocations against 47 DEFAULT).
+;
+; So this upgrades the device to Ex and translates the pool:
+;
+;   vertex + index buffers (7,149)   pool swap only. D3D9 allows Lock() on a
+;                                    DEFAULT buffer - it stalls, but these are
+;                                    locked once at load, not per frame.
+;   textures/cube/volume (3,305)     pool swap PLUS a SYSTEMMEM shadow, because
+;                                    LockRect on a DEFAULT texture genuinely
+;                                    fails. The game is handed the DEFAULT
+;                                    texture and its Lock/Unlock are redirected
+;                                    to the shadow, which is uploaded with
+;                                    UpdateTexture when unlocked after a write.
+;
+; What makes this safe rather than merely possible: D3D9Ex does NOT lose
+; D3DPOOL_DEFAULT resources on Reset. On a plain device this translation would
+; mean rebuilding every resource on every device-lost event.
+;
+; THIS IS STAGE 1. It changes only how resources are allocated - the frame is
+; still delivered by the old CPU copy, so if it works the game should look and
+; perform EXACTLY as before. That is the point: it isolates "does the wrapper
+; work" from "does zero-copy work". Stage 2 switches the frame path.
+;
+; What to check in the log:
+;
+;   D3D9Ex pool translation: 3276 textures, 26 cube, 3 volume, 6258 vertex buf,
+;     891 index buf | shadows 3305 (~NNN MB), shadow failures 0,
+;     create failures 0, GetSurfaceLevel-on-shadowed 0
+;
+; Counts should land near spike 2's census. Any "failures" above zero, or
+; GetSurfaceLevel-on-shadowed climbing, names the problem directly - the last
+; one is the known gap: the engine locking a surface instead of the texture
+; would bypass the shadow entirely.
+;
+;   0 = plain D3D9, MANAGED untouched - the CPU frame copy, ~9.8 ms of a ~16 ms
+;       frame at 4K. This is the ESCAPE HATCH, not the good path.
+;   1 = D3D9Ex + pool translation, and the prerequisite for ZeroCopy   <- default
+;
+; ⭐ The default was 0 for a long time, on the strength of run 137's finding that
+; the wrapper corrupted textures - the soldier's colours, the black dock floor and
+; the vanishing fire. Run 139 FIXED that (the shadow was never marked dirty, so
+; UpdateTexture copied too little and returned S_OK), and D3D9ExMode=1 has been on
+; par with 0 visually ever since. The default simply never got revisited.
+;
+; If the game fails to start, set this to 0. No rebuild needed.
+; ---------------------------------------------------------------------------
+D3D9ExMode=1
+
+; ---------------------------------------------------------------------------
+; ZeroCopy   -- stage 2: what the D3D9Ex upgrade was FOR (run 39)
+;
+; Only takes effect when D3D9ExMode=1 - a shared surface cannot be created on a
+; plain D3D9 device - so leaving this at 1 changes nothing on its own.
+;
+;   before   GetRenderTargetData (GPU->sysmem, blocks) + LockRect (DMA lands)
+;            + memcpy 35 MB + Map + CopyResource        ~9.8 ms at 4096x2160
+;   after    StretchRect backbuffer -> shared RT (GPU->GPU)
+;            + CopyResource shared -> XR swapchain      target: under 1 ms
+;
+; The frame never touches the CPU. Spike 1 proved every link in a 32-bit
+; process: a D3D9Ex texture with a shared handle, opened by D3D11's
+; OpenSharedResource, pixels intact.
+;
+; Synchronisation is the only genuinely new problem. D3D9 has no counterpart to
+; D3D11's keyed mutex, so nothing makes the D3D11 read wait for the D3D9 write.
+; A D3DQUERYTYPE_EVENT fence issued AFTER the StretchRect and waited on before
+; the D3D11 copy is what spike 1 used and what is used here. That wait is not
+; new overhead - run 35 measured it at 2-4 ms of genuine rendering, and a frame
+; cannot be shown before it is drawn. What disappears is the ~9.4 ms of
+; transfer and memcpy piled on top.
+;
+; The A/B is D3D9ExMode=1 with ZeroCopy=0 against ZeroCopy=1.
+;
+; Note the cull-band diagnostic goes inert under zero-copy - there are no
+; CPU-readable pixels any more. Set ZeroCopy=0 if you need to measure it.
+;
+;   1 = shared surface, GPU->GPU                                  <- default
+;   0 = CPU round-trip through system memory
+; ---------------------------------------------------------------------------
+ZeroCopy=1
+
+; ---------------------------------------------------------------------------
+; SplitColourTargetsOnly   -- the one-eye shadow test (run 40)
+;
+; Shadows appear in one eye only and are wrong in that eye. The render-target
+; census has been flagging the likely cause for several runs:
+;
+;   2A330540  4096x2160  A16B16G16R16F   9337 draws  <- SPLIT
+;   2A330240  4096x2160  A8R8G8B8         740 draws  <- SPLIT
+;   2A330840  4096x2160  other            240 draws  <- SPLIT
+;   ^ 3 SCENE-SIZED surfaces split. Only the two colour targets should be.
+;
+; The scene test is SIZE EQUALITY alone, so a third scene-sized surface -
+; neither colour target - gets split 240 times a frame.
+;
+; Why that would break shadows specifically: a screen-space effect that
+; reconstructs world position from DEPTH uses an inverse-projection constant we
+; do not remap. Feed it depth from geometry we DID remap and the reconstruction
+; lands somewhere else - differently per eye, since each eye's remap differs.
+; Which is exactly the reported symptom.
+;
+; Setting this to 1 splits only the two known scene colour formats, excluding
+; that third surface. If the shadows change, it is implicated. If they do not,
+; the cause is elsewhere and this cost one relaunch.
+;
+;   0 = split every scene-sized target, as before                 <- default
+;   1 = split only the two scene colour targets
+; ---------------------------------------------------------------------------
+SplitColourTargetsOnly=0
+
+; ---------------------------------------------------------------------------
+; ExtraCamReg   -- TRIED AND FAILED (run 43). Kept so the result is reproducible.
+;
+; Everything in the matrix path keys off ONE locked register, so exactly one
+; view-projection is ever remapped per eye. Run 42's constant dump found a
+; second one at vs c13 - identical projection columns to c0-c3, but a
+; world-space translation where c3 is translated-world and small.
+;
+; Setting this to 13 remaps it too. Result: geometry stretched to the edge of
+; the screen AND the shadows were unchanged.
+;
+; Both halves are informative. The stretching proves c13 really does drive
+; on-screen vertices - it is not a dead register or a light's transform. But the
+; shadows not moving at all argues c13 is NOT the carrier for the mis-projected
+; shadow geometry, so the shadow's cause is elsewhere.
+;
+; The stretch itself is explainable: the remap assumes c13 shares c0's storage
+; convention and skips ApplyProjection. Either could be wrong, and a world-space
+; matrix may not accept clip-space eye remapping the way a translated-world one
+; does. Sorting that out is its own project.
+;
+;   -1 = off                                                      <- default
+;   13 = also remap vs c13 (reproduces the run-43 failure)
+;
+; If head tracking or geometry ever looks wrong, set this to -1 and relaunch.
+; ---------------------------------------------------------------------------
+ExtraCamReg=-1
+
+HookUserPointerDraws=0
+
+; ---------------------------------------------------------------------------
+; HeadRoll   -- the third rotation axis, finally written
+;
+; F9 drove pitch and yaw only. Roll was never written anywhere, so tilting your
+; head sideways left the horizon glued to the headset - the last missing piece
+; of a real head pose.
+;
+; It does NOT go through the engine's rotation. The detour owns pitch, yaw needs
+; a direct write to the controller, and UE3 zeroes camera roll in several
+; places - three seams to fight for an angle we already own outright, since the
+; view matrix is ours by the time it reaches the GPU. Roll is applied there, as
+; a rotation of clip x/y, after the forced projection and before the per-eye
+; half-frame remap.
+;
+; ---- why the compositor does not already do this ----
+;
+; The submitted projection layer carries the head's full orientation, roll
+; included, so it looks like the runtime should be rotating the image for us. It
+; does not: a projection layer is reprojected by the DELTA between the pose we
+; claim and the pose the display is at. Claim a rolled pose for an unrolled
+; render while the head is at that same roll, the delta is zero, and the image
+; is presented straight - exactly the symptom. Baking roll into the render is
+; what makes the claimed pose true.
+;
+; Costs nothing measurable: about 16 multiply-adds on the camera-matrix uploads
+; only, and it allocates nothing. Confirmed in the headset at up to 43 degrees
+; of tilt with no corner dropout.
+;
+; NUMPAD1 toggles it live. NUMPAD2 flips the sign. The default of -1 was
+; MEASURED - +1 tilted the horizon the wrong way - and it is the third axis
+; where OpenXR's handedness comes out negative against the game's, which is what
+; F4 and F5 exist for on pitch and yaw.
+;
+; The maths is verified as arithmetic rather than by eye: spikes/roll_math
+; asserts the rotation is exact, does not shear despite tanX != tanY, and
+; composes with the eye remap. Run .\spikes\roll_math\build.ps1 - no game and no
+; headset needed.
+;
+; Known interaction, not yet a problem: the engine culls with an UNROLLED
+; frustum, so a rolled view's corners reach outside it. Nothing was observed at
+; 43 degrees; PAGE UP is the lever if it ever shows up.
+;
+;   1 = tilting your head tilts the view                           <- default
+;   0 = off, the horizon stays locked to the headset
+; ---------------------------------------------------------------------------
+HeadRoll=1
+
+; ---------------------------------------------------------------------------
+; OcclusionQueryMode   -- THIS IS THE FIX FOR THE VANISHING OBJECTS (run 30)
+;
+; UE3 draws a bounding box per primitive inside an occlusion query, reads the
+; pixel count back, and skips drawing that primitive later if it came back
+; zero. In true stereo that readback is wrong, and it was wrong on a huge
+; scale: with the results forced to "visible", draws per frame went from ~1000
+; to 2100-3800 and every reported object came back solid. The engine was
+; throwing away 50-70% of its own draw calls.
+;
+; "Visible" is conservative: it can never wrongly delete geometry, it can only
+; fail to save work. It is however BRUTE FORCE - a proper fix exists and is
+; written up in STATUS.md. Do not read this as the final design.
+;
+; The cost is small and measured, for now. Frame rate held at 37-40 fps with
+; peaks of 70, unchanged, because this build is bottlenecked on the CPU frame
+; copy rather than on draw calls. Once the D3D9Ex zero-copy path removes that
+; bottleneck, ~7,600 real draw calls a frame will matter and this should be
+; revisited.
+;
+;   0 = auto: report visible while true stereo is on, normal in mono  <- default
+;   1 = always report visible
+;   2 = never override; the engine's own occlusion culling stays live
+;   3 = refuse to create them                   ** CRASHES THIS BUILD **
+;
+; Mode 3 returns D3DERR_NOTAVAILABLE, the documented answer for an unsupported
+; query type and the path UE3 takes on hardware without the feature. Run 30
+; tried it and the game died between the splash screens and the main menu -
+; consistent with the unchecked-NULL-from-a-factory habit already recorded for
+; Raven's code. Kept only so nobody retries it.
+;
+; ---- run 157: ON THE VR PANEL, and modes 0-2 only ----
+;
+; Tested across the opening area, mode 2 dropped more frames than mode 0 - a
+; comparison that can only be made by playing the same stretch both ways, which
+; is why it moved to the panel. OCCLUSION reads AUTO / DRAW ALL / ENGINE CULL
+; for modes 0, 1 and 2. Mode 3 is unreachable from the panel because it crashes;
+; it is settable here only so the fact stays recorded.
+;
+; ⚠️ The GetData vtable patch is now installed UNCONDITIONALLY. It used to be
+; skipped when this started at 2, which meant switching to 0 or 1 later did
+; nothing at all - the hook the new mode needs was never installed, and there is
+; no second chance. On mode 2 the patch is a plain pass-through and costs
+; nothing. If either patch fails, the mode is forced to 2 and the log says so,
+; because with no hook the engine's own culling is what is actually running and
+; the panel must not display a mode that cannot happen.
+; ---------------------------------------------------------------------------
+OcclusionQueryMode=2
+
+; ---------------------------------------------------------------------------
+; Debug   -- the developer scaffolding, on/off (run 157)
+;
+; Everything this mod grew while being built: the on-screen state readout, and
+; forty-odd hotkeys for toggling and tuning. None of it belongs in front of
+; someone playing the game.
+;
+;   1 = readout drawn, every keyboard key live                   <- default
+;   0 = readout hidden, keyboard inert except BACKSPACE
+;
+; Only an advanced user needs any of those keys, and for everyone else the
+; controller is the whole interface. The VR panel is unaffected: it is opened by
+; HOLDING a controller button and driven by the thumbstick, so it never went
+; through the keyboard gate, and DEBUGGING on the panel turns this back on from
+; inside the headset without editing a file or relaunching.
+;
+; ⚠️ EXACTLY ONE KEY IS EXEMPT: **BACKSPACE**, VR mode on/off. Every other key is
+; recoverable - turn DEBUGGING back on and they return - but switching in and out
+; of VR is not scaffolding, and the cold start is flat by design (run 37 reverted
+; default-on) with no ENABLE VR setting yet, so gating it would leave a Debug=0
+; launch unable to enter VR at all.
+;
+; F8 is NOT exempt. The controller's MENU tap already recentres, so losing it
+; costs nothing.
+;
+; Implemented as one gate, not a conditional wrapped round eight hundred lines:
+; every key reads through DebugKey() instead of GetAsyncKeyState(). There is one
+; exception inside Present and it is BACKSPACE, so any other raw GetAsyncKeyState
+; there is a bug and greps as one.
+;
+; ⭐ Ships as 0: readout hidden, keyboard inert except BACKSPACE. The VR settings
+; panel has a Debug row, so it can be turned back on from inside the headset
+; without editing this file or relaunching. Set it to 1 here if you are tuning.
+; ---------------------------------------------------------------------------
+Debug=0
+
+; ---------------------------------------------------------------------------
+; FrameCopyMode   -- the performance measurement (run 31)
+;
+; Getting the game's frame from D3D9 into D3D11 is a CPU round-trip, and it has
+; been called this project's bottleneck since spike 2 without ever being
+; broken down. It is three costs, not one:
+;
+;   readback      GetRenderTargetData, GPU -> system memory
+;   lock/memcpy   system memory -> the D3D11 upload texture, ~14 MB at 1440p
+;   upload        CPU -> GPU again, into the OpenXR swapchain image
+;
+; Only the FIRST is what D3D9Ex + a D3DPOOL_MANAGED wrapper would remove, and
+; that wrapper is a large job - spike 2 measured 10,454 MANAGED allocations in
+; one session, every one needing a backing store we own. So it is worth knowing
+; which of the three actually costs before writing it.
+;
+; The per-second "frame copy" log line now reports all three plus the residual
+; (frame time minus the copy). Read it before touching anything else.
+;
+;   0 = pipelined: issue this frame's readback, consume the one from last
+;       frame. Costs one frame of latency. MEASURED SLOWER - see below.
+;   1 = immediate: capture and consume in the same Present.        <- default
+;
+; ---- run 32 measured this, and pipelining lost ----
+;
+;     draws   pipelined            immediate
+;       367   107.0 fps (9.34ms)   109.7 fps (9.12ms)
+;       444   111.0 fps (9.01ms)   111.3 fps (8.98ms)
+;       138   114.5 fps (8.74ms)   117.5 fps (8.51ms)
+;
+; Immediate is equal or better every time AND has no added latency, so it is
+; the default. Mode 0 is kept only so the result can be reproduced.
+;
+; The interesting part is WHY. Pipelining did not remove the readback stall,
+; it relocated it - pipelined reports copy 0.89ms + "our work" 9.4ms, immediate
+; reports copy 4.2ms + "our work" 3.7ms, same total. Issuing
+; GetRenderTargetData without locking its result lets the call return at once,
+; so the phase timer sees nothing, but the driver still owes the transfer and
+; it surfaces later inside work that is not broken out. Moving a stall out of
+; an instrument's view is not an optimisation.
+;
+; The latency in mode 0 is handled honestly: each captured frame carries the
+; eye, head pose and projection it was actually drawn with, and those are what
+; get submitted. Do not "simplify" that by reading the live pose at submit
+; time - handing the compositor a fresh pose for a stale image makes
+; reprojection correct towards a position the frame never rendered from, which
+; reads as swim rather than as lag.
+; ---------------------------------------------------------------------------
+FrameCopyMode=1
+
+; ---------------------------------------------------------------------------
+; GpuFenceProbe   -- does the MANAGED wrapper actually buy anything? (run 34)
+;
+; The "copy" figure is NOT all round-trip. GetRenderTargetData does not just
+; transfer, it SYNCHRONISES - it cannot return until the GPU has finished
+; rendering the frame. So the number is really:
+;
+;     (wait for the GPU to finish)  +  (the actual GPU->CPU transfer)
+;
+; Only the second is what a zero-copy D3D9Ex path removes. The first is real
+; rendering work that would still have to be waited for, just inside the
+; compositor instead of inside us.
+;
+; This matters because the entire case for the D3DPOOL_MANAGED wrapper - weeks
+; of work, 10,454 allocations, failure mode "the game will not start" - rests
+; on which of the two the ~12.5 ms at 4096x2160 actually is. They cannot be
+; told apart from a single merged number.
+;
+; With this on, an EVENT fence is issued and waited on BEFORE the readback, so
+; the sync is paid somewhere it can be timed. The log then reports:
+;
+;   round-trip split: gpu wait 8.10 ms (rendering - NOT recoverable)
+;     | transfer 2.90 + memcpy 2.30 + upload 0.00 = 5.20 ms RECOVERABLE
+;     -> zero-copy ceiling 10.80 ms/frame (93 fps)
+;
+; RECOVERABLE is a CEILING on what the wrapper can buy, not a promise - the
+; compositor still has to consume the shared surface.
+;
+; This adds no work; GetRenderTargetData was going to wait for the GPU anyway.
+; It only moves the wait where it can be seen. If total frame time changes when
+; you toggle this, the probe is lying - and that is exactly the failure that
+; caught out FrameCopyMode, where a stall left the instrument without ever
+; leaving the frame.
+;
+;   1 = split gpu wait from transfer                               <- default
+;   0 = off, copy stays one merged number
+; ---------------------------------------------------------------------------
+GpuFenceProbe=1
+
+; ---------------------------------------------------------------------------
+; TimeOurWork -- what does OUR code actually cost? (runs 206-211)
+;
+; Times StereoPair and the mesh matchers and reports both beside the frame
+; budget. This is the tool that found the runs 206-210 framerate tanks, and it
+; is kept for the next frame-budget question.
+;
+; ⚠️ OFF by default, and deliberately: it is the only diagnostic here whose cost
+; scales with DRAW COUNT rather than with frames -- two QueryPerformanceCounter
+; calls per StereoPair and two per mesh-match, at the 3,000-4,400 draws/frame
+; this game reaches. A closed investigation should not charge rent on every run.
+;
+; ⚠️ The overhead has NOT been measured, so do not quote a figure. Measuring it
+; means an A/B of 0 against 1 at a fixed spot -- the instrument cannot measure
+; its own cost, which is the same class of error that let SSW silently halve
+; every frame-rate number for thirty runs.
+;
+; ⚠️ Read "our work" in the budget as a RESIDUAL, not a measurement. It absorbs
+; anyone's latency, including the game's whole frame, while looking exactly like
+; our own bug.
+;
+;   0 = off                                                       <- default
+;   1 = time StereoPair and the mesh matchers
+; ---------------------------------------------------------------------------
+TimeOurWork=0
+
+; ---------------------------------------------------------------------------
+; 🚨 BEFORE TRUSTING ANY PERFORMANCE NUMBER: TURN OFF SSW
+;
+; Virtual Desktop's Synchronous Spacewarp (and Meta's ASW) pins the application
+; at HALF the headset refresh rate on purpose and synthesises the frames in
+; between. Nothing in the log looks wrong when it is on - the timings are
+; honest, the frame itself is synthetic.
+;
+; It cost this project thirty runs. Every frame-rate figure recorded before run
+; 32 - "~37 fps at 1440p", the bimodal distribution, the CPU-bound-stall
+; diagnosis, and run 31's decision to cancel the D3D9Ex work - was measured
+; through that halving. With SSW off at 120 Hz the same build runs at 105-118
+; fps and there was no performance problem at all.
+;
+; The build now logs the display period on the first frame and warns when the
+; frame time sits at ~2x it. Check for that line before reading anything else:
+;
+;   headset display period 8.33 ms (120.0 Hz)
+;   *** frame time is 2.00x the display period. SUSPECT SSW/ASW ... ***
+;
+; Record the refresh rate and the SSW setting next to any number worth keeping.
+; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; There is deliberately no resolution setting here.
+;
+; Forcing the D3D9 backbuffer does NOT raise UE3's render resolution - the
+; engine sizes its scene targets from its own configured resolution, so
+; overriding the backbuffer only desynchronises the two and switches stereo off.
+;
+; Pass it on the command line instead, which the engine reads into its own
+; system settings:
+;
+;   Singularity.exe -ResX=3840 -ResY=2160 -windowed
+;
+; -windowed is required because fullscreen clamps to real display modes.
+; 4992x2688 is refused; the cap appears to be near 4096.
+
+; ---------------------------------------------------------------------------
+; [Input] - aim mode 7's gun pose (the two numbers that need calibrating)
+;
+; Aim mode 7 (NUMPAD . once from off) is route 2 in full: the bullet follows
+; your controller via GetAdjustedAim's return value, and the GUN follows it via
+; SetAim's two float parameters, which feed the in-view arms AnimTree. The
+; engine's own rotation is never written, so culling, LOD and draw distance
+; stay on your head - pointing your hand at the floor cannot black out the
+; ceiling the way aim mode 1 does.
+;
+; SetAim takes a normalised aim offset, conventionally +-1 over a range that is
+; authored per-profile inside the AnimTree. That range is not readable from
+; here, so these three are a GUESS with a calibration path rather than a
+; setting anyone got right in advance.
+;
+; The log prints the game's own X and Y next to the view pitch that produced
+; them, on every mode 7 run:
+;
+;   aim pose #7: game (0.000, 0.412) view pitch 5210 -> wrote (0.153, 0.412) ...
+;
+; The game's own Y divided by its own view pitch IS the units-per-1.0 wanted,
+; so one run's log sets AimPoseUUPer1 exactly. Symptoms:
+;
+;   gun swings too far / not far enough  -> AimPoseUUPer1 (bigger = less swing)
+;   gun swings the WRONG WAY             -> AimPoseSignX or AimPoseSignY = -1
+;
+; [Input]
+; AimPoseUUPer1=16384      ; engine rotation units per 1.0 of aim offset (16384 = 90 deg)
+; AimPoseSignX=1           ; -1 to mirror the horizontal swing
+; AimPoseSignY=1           ; -1 to mirror the vertical swing
+; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; [Input] AimFieldSet - which fields aim mode 9 may write during a shot
+;
+; Run 99 wrote all seven scanned rotation fields and the bullet followed the
+; controller in PITCH for the first time - but the camera moved on every shot.
+; Both are the same story: yaw is very likely decoupling too and cannot be
+; seen, because the camera jumps to the hand's yaw at the instant of the shot,
+; so the bullet lands on the crosshair because the CROSSHAIR MOVED. Pitch
+; survives because the mod's external-delta fold-in is yaw-only.
+;
+; The camera movement is not a race - it survived the seqlock. It is a write
+; the engine ACTS on: the camera has mDesiredRotationInterpRate, so a
+; desired-rotation field written even briefly makes the camera interpolate
+; toward the hand over the following frames.
+;
+;   AimFieldSet=0   controller only: +0x0060 and +0x05D4, no camera writes
+;   AimFieldSet=1   the above plus mCurrentPOV.Rotation (camera +0x042C)
+;   AimFieldSet=2   every scanned field - this is run 99's behaviour, and the
+;                   one that moves the camera
+;
+; Start at 0. If the bullet stops tracking pitch there, the aim is carried by
+; a camera field and 1 then 2 narrow which one.
+;
+; [Input]
+; AimFieldSet=0
+; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; [Input] - the gun visual (aim mode 11/12 + APPS)
+;
+; These are DEFAULTS IN CODE, so a missing key is not a bug - it just means the
+; built-in value is used. They are listed here because tuning them is easier
+; when they exist in the file to edit.
+;
+; Signs are 1 or -1. Do NOT hunt them by editing and restarting: CAPS LOCK
+; cycles all eight rotation-sign combinations at runtime and logs each one, so
+; the right combination is found inside a single session and written here
+; afterwards to make it stick.
+;
+; [Input]
+; GunSignYaw=1
+; GunSignPitch=1     ; run 125, found with CAPS LOCK - but ONLY with GunSignCombo=2
+; GunSignRoll=1
+; GunSignPosZ=-1
+; GunFollowPosition=1     ; 0 freezes position, so rotation can be tuned alone
+;
+; ⚠️ GunSignPitch and GunSignCombo are HALVES OF ONE SETTING. Combo 2 has bit 1
+; set, and that bit NEGATES pitch. Copy the pair or copy neither: an ini that
+; sets pitch=1 and leaves the combo at 0 gets the sign BACKWARDS. This is the
+; renumbering hazard the comment at g_gunSignCombo describes, in its most
+; easily-tripped form.
+;
+; The code defaults are now GunSignPitch=1 + GunSignCombo=2 - the same pair the
+; tuned runs used, so CAPS LOCK cycles from the same origin they did. An earlier
+; pass shipped -1 + combo 0 on the argument that it resolved to the same effective
+; signs. Reading GunSigns() still says that, and it was still wrong to ship:
+; every run that worked was on 1/2 and every run that swivelled was on -1/0.
+;
+; The anchor is where the gun sits relative to your eye, in engine units
+; (1 unit is about 1.9 cm), measured forward / right / up. It is the point the
+; gun ROTATES ABOUT. Getting it near the grip is what stops the gun swinging
+; through an arc when you turn your wrist - rotating about the eye instead of
+; the handle was run 124's bug.
+;
+;   gun orbits a point IN FRONT of it  -> increase GunAnchorFwd
+;   gun orbits a point BEHIND it       -> decrease GunAnchorFwd
+;
+; These three are now the CODE DEFAULTS, so a fresh install gets the tuned pose
+; without an ini. They are listed here to document the pose and to give you a
+; starting point for per-user trim, not because they need setting.
+;
+; GunAnchorFwd=30      ; tuned by eye in run 131 with the on-screen marker
+; GunAnchorRight=9
+; GunAnchorUp=-13
+; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; [Input] - turning with the right thumbstick
+;
+; TurnMode picks HOW the stick turns you. All three are motion-controller
+; turning; they differ in who owns the rate.
+;
+;   0  hand the stick to the engine's own look axis. Smooth, but the speed is
+;      Raven's sensitivity curve, which this mod cannot see or set - so
+;      TurnSpeed does nothing in this mode.
+;   1  SNAP (default). Flick the stick, jump TurnAngle degrees. The most
+;      comfortable option for most people, and the one to keep if you are at
+;      all prone to motion sickness.
+;   2  SMOOTH, done by the mod at exactly TurnSpeed degrees per second. Frame
+;      rate independent, and it keeps working during cutscenes - modes 0 and 1
+;      both go through paths the engine ignores while a scripted camera runs.
+;
+; Stick deflection is squared in mode 2, so a small push turns slowly and the
+; top of the stick gives the full rate. TurnSpeed is clamped to 10-360.
+;
+; TurnSign=-1 if right turns you left. It applies to all three modes.
+;
+; [Input]
+; TurnMode=1
+; TurnAngle=30       ; degrees per flick, mode 1 only
+; TurnSpeed=120      ; degrees per second, mode 2 only
+; TurnSign=1
+; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; HudStereo  -- the game's HUD and menus in BOTH eyes (run 151)
+;
+; Without it, health, ammo, the crosshair, pickup prompts and the menus are
+; drawn ONCE at full-frame coordinates, so half lands in each eye and none of
+; it is readable in the headset.
+;
+; The UI is Scaleform, submitted through DrawPrimitiveUP with its stage->clip
+; matrix in vs c5-c8. This applies the same per-eye clip-space squash the scene
+; geometry gets to those four registers and issues the draw once per eye.
+;
+; Two things are deliberately EXCLUDED, and both were learned by breaking them:
+;   * fullscreen quads - remapping the scene's composite quad puts the whole
+;     side-by-side frame into each half, i.e. four panels.
+;   * offscreen render targets - the main menu is diegetic, rendered into a
+;     texture and mapped onto a monitor in the scene. Squashing that put two
+;     menus inside the texture.
+;
+; Costs 12-31 extra draw calls a frame against 700-1800, i.e. nothing.
+;
+; ⚠️ Requires HookUserPointerDraws=3 - that is how the UI reaches us at all -
+; and raises it automatically rather than silently doing nothing.
+;
+;   1 = HUD and menus in both eyes                                <- default
+;   0 = off, the UI spans the seam
+; ---------------------------------------------------------------------------
+; HudStereo=1
+
+; ---------------------------------------------------------------------------
+; [Input] TriggerTouchGate -- the phantom trigger fix (run 156). THIS is the
+;                             one that matters; AutoPad below is its fossil.
+;
+; ---- what was happening ----
+;
+; A Touch controller that has been set down and left to rest reports a
+; SUSTAINED PARTIAL TRIGGER PULL - measured at left 0.34-0.43 and right
+; 0.23-0.28, held for seconds, with isActive true on all 120 frames of every
+; sample. It sails past the 0.10 deadzone and reaches the game as LT ~97 /
+; RT ~64, and Raven's 360 layout maps those to AIM and FIRE. So the gun fires
+; and aims by itself, and the engine does exactly what it was told.
+;
+; The frame-rate cost, from a session where the two states separate cleanly:
+;
+;   neither trigger        120 fps
+;   right only (fire)       98 fps
+;   both (fire + aim)       77 fps
+;
+; Over a whole session the correlation is total: every second with a nonzero
+; trigger is 68-98 fps, every second without one is 109-120.
+;
+; ⚠️ A BIGGER DEADZONE IS NOT THE FIX, and it was considered and dropped. Real
+; pulls read a hard 1.00 - nobody lingers at partial deflection - so a
+; threshold near 0.6 would work today. But the phantom is not noise: it is a
+; plausible number with no finger behind it, and it has been seen as high as
+; 0.83. Any threshold that caught that would eat real input.
+;
+; ---- what the gate does ----
+;
+; Pulling a trigger requires touching it. `trigger/touch` is a capacitive
+; sensor on the trigger itself, so if no finger is on it, the analog value did
+; not come from the player whatever it claims. Bound to exactly two sources,
+; per hand, and nothing else may ever be added - the moment it accepts a second
+; surface it stops meaning "a finger is on the trigger" and becomes another
+; copy of the broad `grasp` signal, which answers a different question.
+;
+; Where the binding does not resolve, values pass through unchanged: a runtime
+; without the sensor keeps the old behaviour rather than losing its triggers.
+; The log prints the veto count every second, so a run where the judder is gone
+; and the count reads 0 means something ELSE fixed it.
+;
+;   TriggerTouchGate=1     on                                   <- default
+;   TriggerTouchGate=0     off, for re-measuring the phantom
+;
+; ---- AutoPad: obsolete since run 156, and OFF by default ----
+;
+; Runs 67-75 chased this same judder for nine runs and never named it. Five
+; mechanisms were proposed and all five died: OpenXR input cost, sleeping-
+; controller runtime stalls, dwPacketNumber churn, XInput poll rate, and
+; bSmoothFrameRate. The fallback was AutoPad - unplug the virtual pad once
+; neither controller had been touched for AutoPadStillFrames frames, and plug
+; it back the instant one was.
+;
+; It worked, for the reason now obvious: unplugging the pad is one way to stop
+; the phantom trigger reaching the game. But it cost 1-2 SECONDS OF DEAD
+; CONTROLS on every genuine pick-up, because UE3 enumerates XInput ports
+; round-robin at about one per second. That latency was the whole reason this
+; was reopened, and it is now simply gone.
+;
+; Kept in the build, not deleted: on a runtime where `trigger/touch` does not
+; resolve, the veto cannot help and auto-pad is still the best answer there is.
+;
+;   AutoPad=0              off - the cause is fixed upstream    <- default
+;   AutoPad=1              restore the old unplug/replug workaround
+;   AutoPadStillFrames=600 ~5 s at 120 fps, only read when AutoPad=1
+;
+; ---- ThreadCpu: per-thread CPU census, bucketed by frame time ----
+;
+; Prints per-thread CPU time once a second, split into FAST (>=105 fps) and
+; SLOW (<=90 fps) intervals, with the thread's start address as module+offset
+; so it can be looked up in Ghidra. It answers "when the frame is slow, is the
+; time BURNED or WAITED FOR" - a blocked thread accrues no CPU time.
+;
+; ⚠️ It was bucketed on the CONTROLLER STATE first, and that version reported
+; "no difference" on a run where the user was watching the drop happen. The
+; label was derived from the capacitive `grasp` sensor, which read `on desk`
+; through ninety seconds of deliberately holding both controllers - one sample
+; has a hand moving at 1331 um/frame and still reporting `on desk`. Both
+; buckets held both states and the difference averaged away. Keying on the
+; frame time itself removes every sensor from the loop.
+;
+;   ThreadCpu=1            on, costs a few microseconds a second <- default
+;   ThreadCpu=0            off
+; ---------------------------------------------------------------------------
+; [Input]
+; TriggerTouchGate=1
+; AutoPad=0
+; ThreadCpu=1
+
+; ---------------------------------------------------------------------------
+; [Input] AimMethod   -- the one control the other four follow (run 158)
+;
+;   0 = HEAD               aim mode 0, arms visible, gun in front of your face,
+;                          crosshair meaningful                     <- default
+;   1 = MOTION CONTROLLER  aim mode 11, arms hidden, gun on the controller,
+;                          crosshair meaningless
+;
+; On the VR panel as AIM METHOD, first row, because MOVE DIRECTION and CROSSHAIR
+; both follow from it and it reads top-down as cause before effect.
+;
+; Every piece of this already worked. What was missing was one place to say which
+; arrangement you want, and any way at all to say it without a keyboard - the aim
+; mode was never read from the ini, so every session started at 0 and had to be
+; walked back to 11 by hand.
+;
+; ---- what it deliberately does NOT touch ----
+;
+; It is not an input-device switch. Both methods take keyboard, mouse, a real 360
+; pad, or the Touch controllers acting as one, and Raven's own input code handles
+; all of them. Three behaviours that look like they belong here fall out for free
+; and are left alone:
+;
+;   * Mouse pitch does nothing in either method, and no code makes that happen.
+;     g_wantPitch is recomputed from the headset every frame and written over
+;     whatever the mouse did. Yaw survives only because the yaw fold-in adds
+;     external deltas into g_baseYaw, and there is no pitch fold-in.
+;   * TurnMode already only affects controller play. g_padTurnAccum is fed from
+;     the XR turn action's X axis alone; the mouse reaches the view through the
+;     fold-in and never touches it.
+;   * Snap turn works in HEAD too, because turning runs into g_baseYaw without
+;     consulting the aim mode. Touch controllers as an untracked gamepad with
+;     snap turn is a supported combination, not an accident.
+;
+; The right stick's vertical axis is not a look axis in either method: up is
+; StickUp (CycleWeapon) and down is StickDown (Health), both configurable.
+;
+; ---- WalkDirection is PRESET, not forced ----
+;
+; Choosing HEAD sets MOVE DIRECTION to HEAD, because off-hand-relative movement
+; is meaningless when you are not aiming with a hand. It is applied when you
+; CHANGE the method and NOT when the ini is read - otherwise a saved
+; WalkDirection would be overwritten on every launch and "preset" would be a lie.
+;
+; ---- cutscenes ----
+;
+; Both methods want ROT ENGINE with the yaw fold-in on, which is cutscene mode 1,
+; the shipped arrangement. The cutscene auto-switch saves whatever mode it finds,
+; forces mode 3 so head yaw survives the scripted camera, and restores on exit -
+; so it is agnostic to the aim method and neither one changes it.
+;
+; ⚠️ Changing AIM METHOD *during* a cutscene writes the SAVED mode rather than the
+; live one. Writing the live mode would be overwritten seconds later by the
+; restore, and the setting would look like it had not stuck.
+;
+; ---- ⚠️ the mesh latch, which is what makes this work at all ----
+;
+; The gun and arms are identified by VERTEX COUNT, latched from the foreground
+; pass. That latch used to run only when the APPS cycle passed through mode 1, so
+; selecting a mode directly left the counts at zero, FgHidden and FgMoved both
+; returned false, and the arms stayed visible while the panel reported MOTION
+; CONTROLLER. Silent no-op.
+;
+; It is now its own function, called on any nonzero mode and RETRIED every frame
+; until it takes - necessary because AimMethod=1 is applied from the ini long
+; before any foreground pass has been drawn. The log prints "mesh latch: gun=N
+; verts, arms=N verts" on the frame it succeeds. If that line never appears while
+; MOTION CONTROLLER is selected, the gun and arms are not being touched at all.
+; ---------------------------------------------------------------------------
+; [Input]
+; AimMethod=0
+;
+; ---- BACKSPACE hands the game back completely ----
+;
+; AimMethod is the SETTING; whether it APPLIES is gated on VR mode. With VR mode
+; off, aim mode returns to 0 and the arms and gun to normal, so the plain game is
+; genuinely plain - mouse, keyboard and pad all behave as they always did, and the
+; crosshair comes back even on AUTO. BACKSPACE again restores whichever method you
+; chose. The setting is never cleared, so there is nothing to re-select.
+;
+; This was broken until run 158b: SetVrMode wrote head tracking, 6-DOF, stereo and
+; projection and left aim mode 11 and the hidden arms in place. Flat mode ran with
+; missing arms, a gun transformed onto a controller possibly sitting on a desk, and
+; shots that did not go through the crosshair - and nothing said so. The restore
+; now falls out of the same function that applies it, called from SetVrMode in both
+; directions, so there is no separate teardown that can drift out of step.
+
+; ---------------------------------------------------------------------------
+; StartInVr   -- VR mode on at launch, without pressing BACKSPACE (run 159)
+;
+;   1 = VR mode on as soon as the headset is up                   <- default
+;   0 = cold start is flat, press BACKSPACE (run 37's behaviour)
+;
+; Also on the VR panel as VR MODE, which is the same switch BACKSPACE throws.
+; BACKSPACE still works and is one of the two keys exempt from Debug.
+;
+; ---- ⚠️ this is run 36 again, and run 37 reverted run 36 ----
+;
+; Run 36 made VR mode default-on and run 37 reverted it, for a good reason worth
+; repeating: default-on meant THE MAIN MENU WAS RENDERED FRAME-SPLIT for the
+; first time ever, completely untested, on every launch.
+;
+; What changed is specific rather than a change of mind. Run 151 put the game's
+; HUD and menus into both eyes - the pause menu and prompts are explicitly on
+; that list - so the thing run 37 objected to is the thing run 151 built. The
+; premise went stale rather than the decision being wrong, which is the first
+; lesson at the top of STATUS.
+;
+; But "should work now" is not "was tested now". If the menus look wrong at
+; launch, StartInVr=0 restores run 37's cold start exactly, with no rebuild.
+;
+; ---- no headset, no split ----
+;
+; Applied at the first Present and gated on an OpenXR session EXISTING, not at
+; device creation. With no headset connected there is no session, and turning VR
+; mode on anyway would split the frame side-by-side on the desktop with nothing
+; to send it to - the run-36 failure in a different costume, on a machine where
+; nothing can fix it. A missing headset leaves the game flat and logs:
+;
+;   StartInVr=1 but there is no OpenXR session after 600 frames - staying flat.
+;
+; ---- what saves it, and what does not ----
+;
+; The panel's VR MODE row saves on close, so the state you leave it in is the
+; next cold start. BACKSPACE does NOT save: it is a toggle, not a setting, and a
+; key you press to peek at the flat game should not silently change how the game
+; launches tomorrow.
+; ---------------------------------------------------------------------------
+StartInVr=1
+; Keep UE3 cinematic geometry in the OpenXR stereo path. VideoStereo still
+; presents authored Bink video as a flat image per eye.
+CutsceneFlatMode=0
+
+; ---------------------------------------------------------------------------
+; VideoStereo   -- Bink video in both eyes, correctly (run 160)
+;
+;   1 = video drawn once per eye                                 <- default
+;   0 = off: video spans the seam, i.e. double vision + over-zoom
+;
+; ---- the symptom, which was two reports of one bug ----
+;
+; The splash screens showed DOUBLE VISION and the opening cutscene was "way too
+; zoomed in". Same artifact. A fullscreen quad is passed through untouched, which
+; is right for UE3's post-process quads because their source ALREADY holds the
+; side-by-side frame. A Bink frame is a SINGLE image, so passed through it covers
+; both halves with one copy: left eye gets the left half, right eye the right
+; half. Different content per eye, each stretched over a whole eye.
+;
+; ---- the classifier, measured rather than guessed ----
+;
+; Every video frame in the probe read identically:
+;
+;   DrawPrimUP type 5 prims 2 stride 24 v0 (-0.957,+1.000)
+;              tex 1280x720 fmt 50  rt 4992x2688     ... 1 draw(s) this frame
+;
+; fmt 50 is D3DFMT_L8 - Bink decodes to Y/U/V planes as luminance textures and
+; combines them in a pixel shader.
+;
+; THREE conditions, all required. "Texture smaller than the render target" alone
+; is WRONG: it also matches every bloom and depth-of-field downsample pass, which
+; are fullscreen quads over half-res buffers. What excludes those is FIRST DRAW
+; OF THE FRAME - a post-process pass runs after hundreds of scene draws, and a
+; video frame contains exactly one draw.
+;
+;   1. first draw of the frame
+;   2. 2-primitive quad in NDC (the existing UserPtrQuad classifier, reused)
+;   3. stage-0 texture dimensions != render target dimensions
+;
+; ---- why BOTH axes are halved ----
+;
+; x' = x/2 + eyeOffset puts the quad in one half. y' = y/2 is NOT optional: each
+; half is 2496x2688, nearly portrait, so halving x alone would squash 16:9 to
+; 8:9. With both halved the pixels go 4777x2688 -> 2389x1344, still exactly 16:9,
+; centred with black above and below. A flat screen in front of you, which is how
+; 2D video should read in a headset.
+;
+; If the vertex layout is not one this can rewrite, it falls through and draws the
+; quad exactly as before - an uncorrected video beats no video.
+;
+; ---- how to tell if it misfires ----
+;
+; The detection line is logged ONCE, which proves it fired and says nothing about
+; where. The per-second count is the real instrument:
+;
+;   video quads drawn per eye: 120 this second
+;
+; In a cutscene that is expected. IN GAMEPLAY IT IS A MISCLASSIFICATION - a post
+; process quad taken for video - and the line says so in as many words. That is
+; the one way this can break gameplay, and VideoStereo=0 disables it without a
+; rebuild.
+; ---------------------------------------------------------------------------
+VideoStereo=1
+
+; ---------------------------------------------------------------------------
+; [Input] CutsceneStickTurn -- stick turning during cutscenes (runs 161, 165)
+;
+; Renamed from CutsceneLockTurn, which was a double negative - "LockTurn=0" reads
+; as both "no lock" and "turning locked off", and both readings came up in one
+; conversation. This says what it does. On the VR panel under COMFORT.
+;
+;   0 OFF    no stick turning. Reorient by turning your body; physical rotation
+;            does not cause the vection artificial rotation does, which matters
+;            most in exactly these scenes where the camera is already moving you.
+;   1 GAME   the stick is handed to the ENGINE's look axis for the duration, so
+;            it goes down the same path as the mouse and inherits the scene's own
+;            clamp. Overrides TurnMode for the cutscene only, so you keep snap
+;            turn in gameplay and still get vanilla-consistent turning in scenes -
+;            a combination that was not reachable before.
+;   2 FREE   your normal TurnMode applies. Snap and smooth are mod-side and
+;            therefore UNCLAMPED, which lets a standing player turn past what the
+;            scene intended.                                       <- default
+;
+; HEAD LOOK IS UNAFFECTED at every setting - it comes from the mod's forced
+; matrix and never touches the turn code.
+;
+; ⚠️ Applies to the STICK only, in both aim methods. The mouse is the game's own
+; input and never passes through here. Naming it a "controller aim" setting would
+; have made it silently inert while holding Touch controllers in head aim mode,
+; which is a perfectly reachable combination.
+;
+; ⚠️ THE CLAMP DEPENDS ON TURN MODE, not on aim method. Mouse and TurnMode 0 both
+; go through the engine's look axis and inherit the matinee's limits; TurnMode
+; 1/2 are mod-side and do not. A 360 pad in head aim behaves like the mouse on
+; GAME TURN and does not on snap or smooth.
+;
+; OFF is suppressed at the ACCUMULATOR and cleared, not at the point it is
+; applied: blocking only the application would let deflection pile up for the
+; length of the cutscene and dump it as one jump on exit. And not as an early
+; return - buttons must still reach the game, one of them being the skip.
+;
+; ⚠️ None of this is what fixed starting a cutscene rotated 90 degrees. That was
+; a base heading captured at the main menu, fixed in run 163 by anchoring it to
+; the scripted camera.
+;
+; ---------------------------------------------------------------------------
+; [Input] CutsceneLockCamera -- stop the scene rotating you (run 164)
+;
+;   0 = the base tracks the scripted camera, so the scene's pan carries you and
+;       keeps its subject framed                                  <- default
+;   1 = the base is frozen at the heading the cutscene STARTED on, so the scene
+;       rotates around you instead
+;
+; The tradeoff, plainly: if you are sitting in a helicopter and you lock the
+; camera, the helicopter moves around you. That is a fair trade for anyone who
+; does not want to be swung about by an intense scene, and a bad default for
+; everyone else - which is why it is off.
+;
+; The anchor latches on the first frame of the scene, NOT on the transition edge:
+; the run-162 log caught the camera swinging -77 then +98 degrees within two
+; frames of the edge, so latching there would freeze you to a transient.
+;
+; Applies to cutscenes only. Menus follow the camera unconditionally - freezing
+; there would reintroduce the rotation run 168 fixed.
+; ---------------------------------------------------------------------------
+CutsceneStickTurn=2
+CutsceneLockCamera=0
+
+; ---------------------------------------------------------------------------
+; [Input] LeftHanded / SwapSticks -- handedness, as TWO settings (run 170)
+;
+; Split deliberately. Half-Life: Alyx shipped them welded together, players said
+; it forced them to aim or move with the wrong hand, and Valve separated them in
+; Update 1.2. This copies the fixed version, not the shipped one.
+;
+;   LeftHanded=0    gun, aim, triggers, grips and face buttons mirror to the
+;                   other hand. STICKS DO NOT.                    <- default
+;   SwapSticks=0    movement and turning trade sticks. Nothing else changes.
+;
+; LeftHanded needs a RELAUNCH and the panel row says so. OpenXR binding
+; suggestions are frozen when the action set is attached, so a live toggle would
+; move the gun and leave the buttons where they were. SwapSticks is live - it is
+; four floats swapped at read time.
+;
+; ⚠️ MENU CANNOT MIRROR. `menu/click` exists on the LEFT hand only in the Touch
+; profile and `system/click` on the right is reserved by the runtime - confirmed
+; against the interaction profile. So the pause tap and the recentre long-press
+; stay on the left thumb in both modes, and the startup log says so.
+;
+; The face buttons mirror as PAIRS - x<->a and y<->b - so jump/crouch and
+; age/flashlight trade places with no collision. A mirror that swaps only the
+; HAND produces /user/hand/left/input/a/click, which does not exist, and
+; xrSuggestInteractionProfileBindings is all-or-nothing: one bad path silently
+; kills every binding. That is why left-handed mode logs each mirrored path.
+;
+; ⚠️ GunAnchorRight is NOT mirrored. It was tuned with the gun attached to the
+; ARMS, so it describes where the game's own gun mesh sits relative to your eye -
+; and the game has no left-handed arms. Two attempts to mirror it were removed.
+; If the gun swings through an arc with position frozen (TAB), the anchor is a
+; PIVOT in the wrong place, not an offset with the wrong sign.
+; ---------------------------------------------------------------------------
+LeftHanded=0
+SwapSticks=0
+; L3+R3 recentre chord. Recording is a separate VR Settings action and is never
+; toggled by the screenshot/recentre chord.
+RecenterChord=1
+
+[Diagnostic]
+; These are test-only switches. Normal Steam/PSVR2 use must leave them off.
+ForceDesktopVr=0
+DesktopCapture=0
+DesktopAutomation=0
+; One-shot screenshot on the first native context-prompt geometry match; diagnostic only.
+CaptureFirstContextPrompt=0
+
+; ---------------------------------------------------------------------------
+; [Render] WeaponFxRideGun -- the muzzle flash and barrel smoke (run 181)
+;
+;   1 = every draw in the first-person pass rides the same transform as the gun
+;       - flash, barrel smoke, ejected shells                     <- default
+;   0 = only the gun mesh moves; the effects stay where the engine put them
+;   2 = TEST. Drops the whole first-person pass. The gun goes BLACK, which is
+;       correct (run 117: the pass is composited through a mask, so removing the
+;       geometry leaves the mask nothing to show). Read the SMOKE, not the gun -
+;       it vanishing means it is in this pass, it surviving means it is not.
+;
+; ---- 🔬 run 181 result: engaged, and the barrel smoke was not in it ----
+;
+; `weapon fx: N ... (new peak)` climbed 0 -> 2 -> 3 -> 4, so draws beyond the gun
+; mesh are in the pass and did ride the transform. The barrel smoke stayed at
+; screen centre anyway; the impact smoke correctly did not move. So the widening
+; is right as far as it goes and the smoke is somewhere else. Mode 2 exists to
+; settle that by construction rather than by inference.
+;
+; Reported as "the smoke that should come out of the barrel is stuck in the
+; middle of the screen", and it is not a bug in the gun transform - it is the
+; transform's reach. Route 2 deliberately never moves the engine's own weapon
+; (that is why culling and LOD cost nothing), so a muzzle effect spawns at the
+; engine's muzzle, which is the centre of your view, while the mesh it is
+; supposed to be leaving sits over on your controller.
+;
+; The rule: the foreground pass IS the first-person weapon pass. The engine
+; separated that geometry for us in run 114, so everything in it belongs on the
+; controller. Matching a single vertex count was always narrower than the thing
+; being described. The arms remain the one exception - they are hidden, not
+; moved.
+;
+; ⚠️ Nothing rides until the gun is LATCHED. Moving the effects onto the
+; controller while the gun is still at the engine's position would separate them
+; from the very mesh they are attached to, which looks worse than the bug.
+;
+; This is also the A/B, and BOTH answers mean something:
+;
+;   smoke follows the gun at 1 and returns to centre at 0
+;       -> the effects are in the foreground pass and this is the fix.
+;   no difference either way
+;       -> they are drawn somewhere else, no transform on this path can reach
+;          them, and the next seam is SetFlashLocation - which the run-95 census
+;          already measured at 88.9% enrichment under fire.
+;
+; The log line `weapon fx: N foreground draw(s) rode the gun transform in one
+; frame (new peak)` separates those two: N staying at its baseline through a
+; magazine means the mechanism found nothing, not that the transform is wrong.
+;
+; ⚠️ The premise this replaces named the wrong effect, and chasing it cost
+; sixty-odd runs. STATUS said "barrel smoke IS correctly aligned, so find what it
+; rides on that the flash does not". The aligned smoke was the IMPACT smoke off
+; the wall:
+;
+;   impact smoke   spawned in WORLD space at the trace hit point. Route 2 rotates
+;                  the trace, so the hit point is right and so is the puff - free.
+;   flash + barrel
+;   smoke          attached to the FIRST-PERSON WEAPON, which the engine still
+;                  has at the camera and route 2 never moves.
+;
+; So the flash and the barrel smoke are one system and always were. The asymmetry
+; is real but it is world-space vs view-space, which is the first question to ask
+; about any effect that lands in the wrong place.
+;
+; ⚠️ Impact smoke must therefore NOT move when this is on. It is world geometry in
+; the main scene, not in the foreground pass, so it should be untouched - and it
+; moving onto the gun would mean this setting is reaching further than the pass.
+; ---------------------------------------------------------------------------
+WeaponFxRideGun=1
+
+; ---------------------------------------------------------------------------
+; WEAPON ALIGNMENT and the LASER SIGHT  (runs 217-225)
+;
+; Every key below is COMMENTED OUT on purpose. The tuned values ship in the DLL
+; - assault rifle, shotgun and pistol were measured in the headset against the
+; laser - so a fresh install is already aligned and needs none of this.
+;
+; Uncomment only to override a weapon on YOUR copy. An ini slot wins over the
+; built-in one for the same weapon, matched by vertex count rather than by slot
+; number, so you can use any free slot.
+;
+; The panel writes these for you: hold Y, WEAPON ALIGN, adjust with the stick,
+; close the panel. Hand-editing is for people who prefer a text editor.
+;
+;   GunAlign0Verts=11387        which weapon: its first-person vertex count
+;   GunAlign0Fwd=26             anchor, engine units from the eye
+;   GunAlign0Right=8
+;   GunAlign0Up=-13
+;   GunAlign0YawTenths=30       barrel trim, TENTHS of a degree (30 = +3.0)
+;   GunAlign0PitchTenths=-28
+;
+; The laser sight. OFF by default: it is a gameplay change as much as an aiming
+; aid. Turn it on from the panel's DISPLAY page, or hold A for a second in game -
+; either route writes it back here.
+;
+;   LaserSight=0
+;   LaserLengthUU=4000
+;   LaserHoldMs=1000            hold A this long to toggle it. 0 = panel only
+;
+; Aiming. The game's own aim animation slides the weapon toward screen CENTRE,
+; which is right in head mode and meaningless on a hand-held gun. AdsMaskAnim
+; holds it still and AdsPullbackUU replaces it with a pull back along the line
+; the gun is already pointing.
+;
+; NOTE the mask suppresses recoil and reload motion WHILE AIMING - that is the
+; trade, not a bug. AdsMaskAnim=0 restores the game's behaviour.
+;
+;   AdsMaskAnim=1
+;   AdsMaskLo=5                 measured on the ASSAULT RIFLE only
+;   AdsMaskHi=22
+;   AdsMaskTailMs=400           holds through the animation's return, or the gun
+;                               jumps on release
+;   AdsPullbackUU=10
+; ---------------------------------------------------------------------------
+;
+; ---------------------------------------------------------------------------
+; [Upscaling] -- NVIDIA Image Scaling (NIS) research (research/nvidia-vr-upscaling)
+;
+; Official NIS v1.0.3 (spatial, MIT): no motion vectors, no depth, no history.
+; Runs on the D3D11 bridge per eye - never across the SBS seam.
+;
+;   Mode=Off          native copy path, no NIS resources or dispatches (default)
+;   Mode=NIS          UE3 renders at RenderScale, NIS reconstructs each eye to
+;                     the recommended OpenXR output (needs a relaunch: the UE3
+;                     resolution comes from the command line)
+;   Mode=NISSharpen   native resolution + NIS sharpening only (runtime toggle)
+;
+;   RenderScale=0.77  UE3 SBS multiplier, 0.5-1.0, same on both axes (no
+;                     distortion). 2632x2684/eye at 1.0 -> 2028x2068/eye at
+;                     0.77 (SBS 4056x2068). NEEDS RELAUNCH.
+;   OutputScale=1.0   swapchain multiplier, 1.0-1.5. Resizes the OpenXR output
+;                     only - it does NOT create native detail, it is an
+;                     experiment (try 1.2).
+;   Sharpness=0.35    0.0-1.0, clamped. Presets: soft 0.2, balanced 0.35,
+;                     sharp 0.5. Conservative default: VR ringing is unpleasant.
+;
+; Runtime: press N to cycle Off -> NIS -> NISSharpen -> Off (one log line per
+; change). RenderScale changes still need a relaunch.
+;
+; Safe fallback: any NIS failure (shader compile, UAV, resources) logs once
+; and keeps the native path - the game always launches.
+; ---------------------------------------------------------------------------
+; [Upscaling]
+; Mode=Off
+; RenderScale=1.0
+; OutputScale=1.0
+; Sharpness=0.35

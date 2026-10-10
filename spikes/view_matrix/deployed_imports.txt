@@ -1,0 +1,289 @@
+Microsoft (R) COFF/PE Dumper Version 14.51.36252.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries\d3d9.dll
+
+File Type: DLL
+
+  Section contains the following imports:
+
+    openxr_loader.dll
+              102D24B0 Import Address Table
+              102D2B50 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                   29 xrLocateSpace
+                   1B xrEnumerateViewConfigurationViews
+                   19 xrEnumerateSwapchainFormats
+                    B xrCreateSwapchain
+                   11 xrDestroySwapchain
+                   1A xrEnumerateSwapchainImages
+                    0 xrAcquireSwapchainImage
+                   37 xrWaitSwapchainImage
+                   2E xrReleaseSwapchainImage
+                    4 xrBeginSession
+                   13 xrEndSession
+                   36 xrWaitFrame
+                    3 xrBeginFrame
+                   12 xrEndFrame
+                   2B xrLocateViews
+                   32 xrStringToPath
+                    7 xrCreateActionSpace
+                    6 xrCreateActionSet
+                    5 xrCreateAction
+                   34 xrSuggestInteractionProfileBindings
+                    2 xrAttachSessionActionSets
+                   21 xrGetCurrentInteractionProfile
+                   1D xrGetActionStateBoolean
+                   1E xrGetActionStateFloat
+                   20 xrGetActionStateVector2f
+                   35 xrSyncActions
+                   15 xrEnumerateBoundSourcesForAction
+                    A xrCreateSession
+                   26 xrGetSystem
+                   2D xrPollEvent
+                    1 xrApplyHapticFeedback
+                   31 xrStopHapticFeedback
+                    8 xrCreateInstance
+                   2C xrPathToString
+                    9 xrCreateReferenceSpace
+                   23 xrGetInstanceProcAddr
+
+    dxgi.dll
+              102D2480 Import Address Table
+              102D2B20 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                    4 CreateDXGIFactory1
+
+    USER32.dll
+              102D21C8 Import Address Table
+              102D2868 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                  28E MessageBoxA
+                  138 GetClientRect
+                  1D3 GetSystemMetrics
+                  128 GetAsyncKeyState
+                  2B9 PostQuitMessage
+                  2B7 PostMessageA
+                  246 IsProcessDPIAware
+
+    SHELL32.dll
+              102D2198 Import Address Table
+              102D2838 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                  14C SHGetFolderPathA
+
+    d3d11.dll
+              102D2450 Import Address Table
+              102D2AF0 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                    6 D3D11CreateDevice
+
+    KERNEL32.dll
+              102D2000 Import Address Table
+              102D26A0 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                  3F3 LoadLibraryExW
+                  5D9 Thread32Next
+                  5D8 Thread32First
+                  119 CreateToolhelp32Snapshot
+                  420 MultiByteToWideChar
+                  18C FileTimeToSystemTime
+                  417 MoveFileA
+                  654 WritePrivateProfileStringA
+                  2CC GetPrivateProfileIntA
+                  3F4 LoadLibraryW
+                  3F1 LoadLibraryA
+                  2D6 GetProcAddress
+                  29E GetModuleHandleExW
+                  29D GetModuleHandleExA
+                  29F GetModuleHandleW
+                  29C GetModuleHandleA
+                  29A GetModuleFileNameA
+                  13E DisableThreadLibraryCalls
+                  60B VirtualQuery
+                  609 VirtualProtect
+                  309 GetSystemDirectoryA
+                  336 GetTickCount64
+                  391 InitializeSListHead
+                  313 GetSystemTimeAsFileTime
+                  2FA GetStartupInfoW
+                  5A8 SetUnhandledExceptionFilter
+                  3B5 IsProcessorFeaturePresent
+                  1C3 FlushInstructionCache
+                  58E SetThreadContext
+                  323 GetThreadContext
+                  503 ResumeThread
+                  5C1 SuspendThread
+                  23B GetCurrentProcess
+                  5B8 Sleep
+                  377 HeapFree
+                  37A HeapReAlloc
+                  373 HeapAlloc
+                  376 HeapDestroy
+                  375 HeapCreate
+                  335 GetTickCount
+                  288 GetLocalTime
+                  333 GetThreadTimes
+                  598 SetThreadPriority
+                  443 OpenThread
+                  240 GetCurrentThreadId
+                  23F GetCurrentThread
+                  110 CreateThread
+                  23C GetCurrentProcessId
+                  612 WaitForMultipleObjects
+                  287 GetLastError
+                  606 VirtualFree
+                  1F9 GetCommandLineA
+                  25C GetEnvironmentVariableA
+                  50D SearchPathA
+                   CF CreateDirectoryA
+                   DE CreateFileA
+                  18B FileTimeToLocalFileTime
+                  264 GetFileAttributesA
+                  265 GetFileAttributesExA
+                  4A5 ReadFile
+                   9D CloseHandle
+                  47E QueryPerformanceCounter
+                  47F QueryPerformanceFrequency
+                  4E6 ReleaseSRWLockExclusive
+                  4E7 ReleaseSRWLockShared
+                    0 AcquireSRWLockExclusive
+                    1 AcquireSRWLockShared
+                  38C InitializeCriticalSection
+                  153 EnterCriticalSection
+                  3ED LeaveCriticalSection
+                  12E DeleteCriticalSection
+                  54C SetEvent
+                  614 WaitForSingleObject
+                   D6 CreateEventA
+                   D9 CreateEventW
+                  603 VirtualAlloc
+
+    VCRUNTIME140.dll
+              102D2214 Import Address Table
+              102D28B4 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                   4C strstr
+                   44 memchr
+                   46 memcpy
+                   4B strrchr
+                   4A strchr
+                   35 _except_handler4_common
+                   1C __current_exception
+                   1D __current_exception_context
+                   25 __std_type_info_destroy_list
+                    1 _CxxThrowException
+                   21 __std_exception_copy
+                   22 __std_exception_destroy
+                   48 memset
+
+    api-ms-win-crt-math-l1-1-0.dll
+              102D22E8 Import Address Table
+              102D2988 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                   6A _libm_sse2_sin_precise
+                   42 _fdclass
+                   63 _libm_sse2_asin_precise
+                   64 _libm_sse2_atan_precise
+                   65 _libm_sse2_cos_precise
+                   6B _libm_sse2_sqrt_precise
+                   6C _libm_sse2_tan_precise
+                  109 lroundf
+                    3 _CIatan2
+                   40 _except1
+
+    api-ms-win-crt-convert-l1-1-0.dll
+              102D227C Import Address Table
+              102D291C Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                   64 strtoul
+                   5E strtod
+
+    api-ms-win-crt-string-l1-1-0.dll
+              102D2408 Import Address Table
+              102D2AA8 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                   34 _strnicmp
+                   89 strcpy_s
+                   85 strcat_s
+                   90 strncpy_s
+                   2A _stricmp
+                   8E strncmp
+
+    api-ms-win-crt-stdio-l1-1-0.dll
+              102D23A8 Import Address Table
+              102D2A48 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                   7A fgets
+                   74 fclose
+                   7F fputc
+                   7E fopen_s
+                   10 __stdio_common_vsscanf
+                    B __stdio_common_vsnprintf_s
+                    F __stdio_common_vsprintf_s
+                    3 __stdio_common_vfprintf
+                   31 _fsopen
+                   80 fputs
+                   77 fflush
+
+    api-ms-win-crt-runtime-l1-1-0.dll
+              102D2344 Import Address Table
+              102D29E4 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                   1E _crt_at_quick_exit
+                   1F _crt_atexit
+                   24 _execute_onexit_table
+                   38 _initterm
+                   36 _initialize_onexit_table
+                   35 _initialize_narrow_environment
+                   19 _configure_narrow_argv
+                   41 _seh_filter_dll
+                   39 _initterm_e
+                   6A terminate
+                   17 _cexit
+                   3E _register_onexit_function
+
+    api-ms-win-crt-heap-l1-1-0.dll
+              102D22B0 Import Address Table
+              102D2950 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                   18 free
+                   19 malloc
+                    8 _callnewh
+
+  Summary
+
+        1000 .00cfg
+      25A000 .data
+        2000 .idata
+       1F000 .rdata
+        9000 .reloc
+       58000 .text
+        2000 .tls

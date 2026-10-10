@@ -1,0 +1,1232 @@
+# STATUS — session handoff
+
+Last updated **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
+Read this first, then `ENGINE_NOTES.md`.
+
+**This file is current state only.** The run-by-run log moved to `HISTORY.md` on 2026-08-04 — you
+do not need it cold, but go there before building on any premise you inherited.
+It also flags, with ⛔ banners, the status claims that had gone stale in place.
+
+> ### ⭐ Run 180: UE3 yaw deltas were never wrapped, and it cost months of misattribution
+>
+> `camYaw - ctlYaw` on `int32_t` does **not** wrap. UE3 is 65536 units per turn, so two headings
+> **0.3° apart** differ by 65590 units and read as **360.3°**. Two sites did this and both carried
+> a comment saying `// wraps correctly`.
+>
+> Measured in one 8,476-line run: **20** false `camera handed to the GAME (360.3 deg from the
+> pawn)` events, each re-anchoring `g_baseYaw` to the camera and yanking the view. Reported for
+> months as phantom snap turns — there were no snap turns; the run was `TurnMode=2` and fired
+> **zero**. After the fix, same conditions under heavy turning: **0 handoffs**, and the drift log
+> reports `-5.0 / +89.5` instead of `±360`.
+>
+> **Cast the difference to `int16_t`** — 65536 units *is* 2¹⁶, so truncation gives the shortest
+> signed path for free. Use `YawDelta()` / `YawDeltaDeg()`; a raw subtraction is only safe if both
+> sides are provably normalised, and nothing here normalises them.
+>
+> ⚠️ **Several other sites still subtract yaws raw**, including one at the FRotator write path
+> carrying the same `int32 wrap is correct` claim. No measured evidence yet. Audit them next.
+
+> # ✅ The ladder is complete. Every rung, including controller input.
+>
+> **Full resolution parity at a locked 120 fps, inherited automatically from the headset.**
+> Launch `Singularity.exe` with no arguments. That is the whole procedure — it **starts in VR**
+> (`StartInVr=1`, the default since run 159). No keypress, no command line.
+>
+> ```
+> auto-resolution: injecting -ResX=4992 -ResY=2688 -windowed (cached from the headset last run)
+>     requested 4992x2688 -> got 4992x2688   *** ACCEPTED ***
+>     per eye 2496x2688 against the headset's 2496x2688 -> 100% horizontal, 100% vertical
+>
+> fps median 119.9   our work 3.02 ms   xrWaitFrame 4.35 ms IDLE   XR submit 0.94 ms
+> ```
+
+## TL;DR — where we stand
+
+A **working, wearable VR mod** for Singularity (2010, UE3, D3D9, x86), shipping as one `d3d9.dll`
+dropped beside the game exe. No game files modified.
+
+| rung | state |
+|---|---|
+| Head-tracked image, sRGB colours | ✅ |
+| **6-DOF positional tracking** | ✅ camera position solved via the view matrix |
+| **Head roll** | ✅ run 59 — applied in the view matrix, `NUMPAD1`/`NUMPAD2` |
+| **True stereo**, real per-eye parallax | ✅ draw-call duplication; eyes align, depth correct |
+| **FOV / aspect / resolution** | ✅ **100% of the headset's pixels, automatic** |
+| **Performance** | ✅ **120 fps locked**, 4.35 ms idle per frame |
+| **Controller input** | ✅ **working** — Touch and Valve Index mappings, menus, haptics, snap turn, off-hand movement |
+| **Aim decoupling** | ✅ **SOLVED via route 2** — the bullet follows the controller, the view never moves, and it costs NOTHING in culling or LOD. Aim mode 11 |
+| **Gun follows the controller** | ✅ **working** — 6-DOF, arms hidden, anchor tuned. APPS toggles it |
+| **Cutscene head tracking** | ✅ **working, automatic** — run 138. `SetCinematicMode` drives it; look around freely during a cutscene, normal turning restored on exit |
+| **`D3D9ExMode=1` texture corruption** | ✅ **fixed** — run 139. Zero-copy is usable again; visuals match `D3D9ExMode=0` |
+| **Smooth turning** | ✅ run 140 — `TurnMode=2`, degrees per second, works during cutscenes |
+| **VR settings panel** | ✅ run 142 — hold Y **1 s** anywhere (1.3 s until run 219); live changes, saved to the ini on close. ⚠️ **No page may exceed `kPanelRowsMax` (10) rows** — run 249 |
+| **The game's HUD and menus in both eyes** | ✅ run 151 — health, ammo, crosshair, prompts, pause menu. `HudStereo=1` |
+| **The sniper scope in both eyes** | ✅ run 213 — whole scope per eye, world once, circle round. `ScopeQuadPerEye=1` |
+| **Shipping defaults = the tested configuration** | ✅ 2026-08-08 — a fresh install with no ini now behaves like the tuned dev machine. See below |
+
+### ⭐ The code defaults ARE the tested configuration (2026-08-08)
+
+Every validated run in this project's history ran against the dev machine's `SingularityVR.ini`.
+Nothing had ever run on the **code defaults** — the configuration a new user actually gets. A second
+install exposed the gap: with no ini, the gun swivelled about the wrong point, the debug readout was
+drawn, and the D3D9Ex wrapper was off so the frame took the ~9.8 ms CPU copy.
+
+All 48 keys were diffed mechanically against the source. These defaults were promoted to the tested
+values, and `SingularityVR.ini.example` — which shipped `D3D9ExMode=0` and `Debug=1` **uncommented**,
+overriding whatever the code said — was corrected to match:
+
+`GunAnchorFwd/Right/Up` 30/9/−13 · `GunSignPitch` 1 · `GunSignCombo` 2 · `D3D9ExMode` 1 ·
+`Debug` 0 · `PoseLeadFrames` 1 · `AimMethod` 1 · `AimFieldSet` 1 · `TurnMode` 2
+
+**`OcclusionQueryMode=2` is now the tested value, and `SingularityVR.ini.example` was still shipping
+`0`.** Mode 0 forces every query visible and costs roughly twice the draws (1500–1693 vs 737–943 per
+frame). Mode 2 was carried for a long time as "never played on for a full session" — it since has
+been, across many, and run 215 cleared it of the vanishing-floor report outright (that was the mesh
+matchers, not culling). The example ini has been corrected to match the code.
+⚠ Its residual risk is still **geometry winking out** at distance or screen edges rather than frame
+rate, so `OcclusionQueryMode=0` remains the first suspect if that ever appears.
+
+⚠️ **`AutoResX`/`AutoResY` must never be shipped or hand-edited.** They are the mod's own cache of
+*this* headset's size. A shipped value injects one machine's resolution into everyone's first launch.
+
+**Two method notes this cost.** A comment describing a defect fixed a day later was quoted as current
+a week on, which is why the wrapper default stayed wrong — `HISTORY.md` now carries a ⛔ banner there.
+And the `GunSignPitch`/`GunSignCombo` pair was left unmatched on the argument that `GunSigns()`
+resolves −1/combo 0 and 1/combo 2 to identical signs. That reading may be correct; shipping on it was
+not. Every working run was on 1/2 and every broken one on −1/0, and a code argument was used to
+discount a perfect empirical correlation. **Matching a tested value costs nothing when you are right.**
+
+### If you are picking this up cold, read these three things
+
+1. **Almost every hard problem here was a stale premise, not a hard problem.** Parity was recorded
+   as "arithmetically unreachable" for a dozen runs because a 2010-era cap was measured once on a
+   device that later changed. 120 fps was blocked by a wireless link nobody had timed. The frame
+   rate was wrong for thirty runs because SSW was halving it. **Re-test the premise before building
+   on it**, especially one you inherited from an earlier run.
+2. **"our work" in the frame budget is not a measurement.** It is the residual — everything not yet
+   broken out — and it will absorb any amount of someone else's latency while looking exactly like
+   your own bug. `xrEndFrame` hid a **189 ms** stall in there for an entire day.
+3. **The cheap control first.** Rename `d3d9.dll` to `d3d9.dll.off` and run the game unmodded at the
+   same resolution. One minute, and it settles "is this us at all" before any bisection starts.
+
+### ⚠️ SHIPPED, NOT YET FLOWN (run 274) — Valve Index bindings, and the trigger veto was dead on non-Touch hardware
+
+A tester's log (Pimax Dream + Index controllers) read `trigger touch gate ON: LEFT NO SENSOR
+(values pass through unchanged), RIGHT NO SENSOR — vetoed 0/120` in **every one of its 289
+windows**. The mod suggested bindings for `oculus/touch_controller` and nothing else, so every
+non-Touch runtime got its own compatibility remap. `grasp` survived that remap because it is bound
+to twelve surfaces; `trigtouch` is bound to exactly two on purpose and got neither. **The run-156
+veto — the fix for the original framerate tank — had been switching itself off about 50 seconds
+into every session on that hardware** (`kTrigGateGrace`), and the log line for it reads like a
+benign capability report rather than a disabled safety net.
+
+Shipped:
+
+- **`valve/index_controller` bindings**, suggested in their own call. The suggest call is
+  all-or-nothing *per profile*, so a rejected profile now costs only itself — Touch still stands
+  and the runtime falls back to exactly the old behaviour. Every path checked against the Khronos
+  spec source, not from memory; run 172 lost 31 bindings to one bad string.
+- **`use` and `impulse` move to `squeeze/force` on Index.** On Touch a single `squeeze/value` feeds
+  both `grasp` (wants to be sensitive — "is anyone holding this") and the two grip buttons (want to
+  be deliberate — "did they press it"). Index splits them. This is the **suspected cause of the
+  reported lag**: tightening your hand to reach a face button raises `squeeze/value`, the runtime
+  thresholds it true, and X / RSHOULDER latch on — Use/reload and the impulse weapon held down for
+  as long as you are gripping.
+- **`x`/`y` → `a`/`b`** (Index has a/b on both hands, no x/y), **menu → `trackpad/force`** (Index
+  has no menu button; `system/click` is reserved by SteamVR). The run-170 left-handed mirror runs
+  first in Touch vocabulary and composes with the translation to give a plain hand swap.
+- **The interaction profile is now named in the log**, per hand, on change. The tester log carried
+  no headset, runtime or controller identification in 27,000 lines. ⚠️ Not the runs 178–179
+  experiment — that tried to use this call to *detect* the hand-tracking hand-over and cannot.
+  Nothing branches on it.
+- **A per-button held-frame census.** The two triggers have had a detailed instrument since run
+  156; the nine buttons had none at all, which is why the lag report could be narrowed to "input
+  activity, not the stick, not the draw count" and no further.
+- **`binds[]` was two entries too short** and had been since run 180 — 33 emissions into `binds[31]`,
+  written past the end of the array on every successful startup. Now spelled one term per emission
+  site and bounds-checked.
+
+**What would fool this test:** the tester reporting "better" tells us nothing on its own, because
+two things changed. Read the log instead — `trigger touch gate` should now name a real sensor
+state, and `buttons held` should show `use`/`impulse` at low counts rather than whole windows. If
+the gate still says `NO SENSOR`, the Index profile was rejected and the `xrinput:` line at startup
+says so. **Nobody here can test this**; it is built, not flown.
+
+### ⚠️ SHIPPED, NOT YET FLOWN (run 250) — the triangle window had the run-244 gate defect too
+
+Reported as *"the triangle range selector is only the hand, not the arms"*, while wanting to check
+the triangles of mesh **4818**. Two independent reasons it could not do either, and the first is a
+defect this feature has now had **three times**:
+
+- **It was gated on `g_thisDrawMoved == 2`** — draws riding the off-hand controller. That is the
+  exact gate run 244 removed from the **bone collapse**, for the exact reason it is wrong here: the
+  left arm is drawn by something `FgRidesGun` rejects, so the draw the window most needs never
+  reached it. Both tools now share one hoisted `tmdSurgeryOn` test (`TmdOnOffHand && TmdRaised() &&
+  FgMatchWindow()`), so the next widening cannot fix one and leave the other behind.
+- **Its mesh came from the BONE slot** (run 246b, deliberately). Sound while the two were one page
+  and one job; it meant that pointing the window at 4818 silently retargeted the bone sweep too.
+
+The window now has **its own four slots** of `{mesh, from, to}` and its own `TRI MESH` row, mirroring
+the bone slots. Panel → `TMD ALIGN` → `TRIANGLE WINDOW`: `TRI SLOT`, `TRI MESH`, `TRI FROM`,
+`TRI TO`, `TRI STEP`, `HIDE MESH`. Saved per slot as `TmdArmMesh%d` / `TmdArmFrom%d` / `TmdArmTo%d`;
+slot 0 inherits the old single `TmdArmFrom`/`TmdArmTo` so an existing ini keeps its parked window.
+
+⛔ **The "one contiguous window per mesh" limit is GONE (run 251)** — see below. Run 250 shipped it
+with a comment explaining why two windows would need two draw calls, and the first sweep with it
+found the case that needs exactly that.
+
+### ✅ FIXED and VERIFIED (run 258) — the mesh latch drops on the SWAP, not 240 frames later
+
+Reported as *"switch weapons, see nothing for a while, then the gun appears with the arms and snaps
+to the controller"* — and it was **270 frames, not a 2 s timer**: `kLatchMiss` 240 + `kLatchSteady`
+30, so 2.25 s at 120 fps and **longer whenever the frame rate is lower**. The "nothing" phase is the
+new gun being hidden as a stray, because it is outside the *old* baseline.
+
+`RefreshArmedState` already read `Pawn.Weapon` **every frame** and collapsed it to a bool. The
+pointer is the weapon's identity, and it was already measured twice: run 235b named the object as
+the identity, run 235c watched it move across `ARMachineGun → ARShotgun → ARMachineGun` and **not**
+move for the TMD (which is *hidden*, not swapped — exactly the false positive a draw-derived signal
+would trip on). The latch now drops on the frame the pointer changes.
+
+**Verified:** 10 × `Pawn.Weapon CHANGED` against 1 × the old frame-count path, and user-confirmed in
+play. It is a **pointer compare** — no name, class or vertex count — so it is weapon-agnostic and
+needs no per-weapon entry the way `GunAlign` does.
+
+⚠️ **The one fallback was the FIRST swap of the session**, because `Pawn.Weapon`'s offset had not
+resolved yet (`ResolveGameplayOffsets` is throttled to once per 2 s). `kLatchMiss` stays as the
+fallback for exactly that. Fixable by resolving that offset sooner if one slow first swap matters.
+
+⚠️ **`RvWeaponShared` is NOT shared by every weapon** — the shotgun is `RvWeaponShared_Shotgun`. That
+claim was measured wrong once, was still in a comment *and in a log line*, and got repeated into the
+run-258 comment before being corrected. **Classes vary and can also be shared; the object pointer is
+the only key with neither failure mode.**
+
+### ⛔ MEASURED DEAD and REVERTED (runs 272–273) — occlusion queries cannot fix cutscene culling
+
+Forcing `DRAW ALL` for the duration of a cutscene **engaged** — the log shows two `STARTED`/`ENDED`
+pairs — **and the geometry was still missing.** Reverted rather than kept as a setting that does
+nothing. ⚠️ **The reverted experiment is the valuable part**, because it retires an entire lever.
+
+**The mechanism, from the same log:**
+
+```
+worst engine VERTICAL cull this window, from mCurrentPOV: 38.3 deg vs 98.0 deg rendered -> SHORTFALL, geometry culled
+```
+
+The engine believes its vertical FOV is **38.3°** while we render **98°**, so it discards everything
+outside that cone **on the CPU, before a draw call is issued**. An occlusion query cannot rescue
+geometry that was never submitted — the query hook is downstream of the decision.
+
+⚠️ **Cutscenes are the worst case, which is why it shows there.** Gameplay windows read 86–98° against
+98° rendered; cutscene windows read **38.3°** and **43.5°**. The engine sets a narrow cinematic FOV
+and our ask does not survive it.
+
+**▶ If picked up again, the lever is the FOV CULLING HEADROOM, not the query hook.** `ApplyVrFov`
+already asks the engine for a wider FOV than we render (`kFovHeadroom`, cycled on PAGE UP) precisely
+to give its culling room — `asked the engine for 127.9 deg (culling headroom x1.00)`. The question is
+**why that ask does not hold during a cutscene**, and that is a different subsystem.
+
+⚠️ **The cutscene edge line was KEPT** (`cutscene STARTED / ENDED`). It is what proved the override
+ran and still changed nothing — without it this would have been another "maybe it didn't fire" — and
+it will do the same job for whatever is tried against cutscene culling next.
+
+### ✅ FIXED and VERIFIED (run 271) — the sniper scope was OFF BY CONFIGURATION, since run 231
+
+Reported as *"the rifle is still broken"*. It was not a regression: **`ScopeQuadPerEye=0`** had been
+in the ini since run 231, and that key's own comment states the cost — *"the sniper scope goes back
+to being drawn once across the whole frame."*
+
+**Why it was turned off, and the fix.** The matcher is a pure **shape** test — prim type, prim count,
+`dupDraws`, `rtIsScene` — with **no aim gate**, so it fires on ordinary post-process quads:
+`scope quad matches: 0 while AIMING, 120 while NOT aiming`, 172 times in one run. Every false match
+sets `g_scopeUpMs`, and `ScopeActive()` gates **four** things — the mesh latch, the laser, the ADS
+pull-back and the ADS mask — which is run 231's *"my gun was not attached to the controller"*.
+
+⭐ **The fix was already written as a comment directly above the code that ignored it:** *"the real
+scope quad can only be drawn while you are AIMING. A match with the aim trigger released is a false
+positive with no other possible reading."* The trigger was read, counted, and never used as the gate.
+It is now, and `ScopeQuadPerEye` is back to **1**.
+
+⚠️ **The ACTION is gated, not the shape test** — the dump and both counters still run, because run
+231's note is explicit that turning the bug off must not turn off the instrument that identifies it.
+**Verification is `0 while AIMING, 0 while NOT aiming` in ordinary play**, with a non-zero AIMING
+count only while scoped.
+
+⛔ **`SpriteQuadPerEye` is REJECTED and defaults 0.** Shipped in run 262 on run 192's extent theory;
+its own counter proved it engaged on 104 draws/sec and the artefact it targeted did not change. It
+also splits the scope overlay (a centred quad that does not span NDC) while doing **none** of the
+other two things run 213 proved are required — `c1 ScreenPositionScaleBias` and the halved aspect.
+⚠️ It was wrongly blamed for the rifle first; disabling it did **not** restore the scope.
+
+### ✅ FIXED and VERIFIED (runs 253–269) — popup/note text drawn once across the seam
+
+**`HudArmSticky=1`.** Long popup and note body text now lands correctly in both eyes.
+
+**The bug.** `g_hudConstsWritten` is consumed by the **first** user-pointer draw after a `c5`–`c8`
+write, but one UI transform serves a whole batch. A glyph run that **fits in one draw** was armed and
+correct; one that **spilled into two** had its remainder go to `StereoPair` unremapped — drawn at
+full-frame coordinates, each eye's scissor keeping half. It also missed the note inset, so the stray
+text was *larger*. Both symptoms, one flag.
+
+⭐ **The reported length dependence is what solved it** — *"if the menu text is short we get the whole
+thing; if it's longer it looks like this."* A length threshold is a **batch boundary**, not a
+transform difference, which is why every transform-keyed remedy missed.
+
+**Two changes make it work, and the second is what four earlier attempts lacked:**
+
+- The continuation must match the **stride** of the draw that consumed the arm.
+- **The arm is narrowed by SHAPE**: `startReg >= 4 && startReg + count <= 16`. Measured — it **arms**
+  on writes of 1, 3, 4, 6, 9 vec4s at `c5`/`c8` (targeted UI transforms) and **rejects** 18, 24, 33,
+  45, 54, 57, 63, 69, 90, 105, 108, 183, 210, 219 (bulk scene uploads).
+
+⚠️ **That is the whole story of the four failures.** Run 149 recorded that scene uploads overlap
+`c5`–`c8`; nobody followed it through. The arm was never a UI signal, so extending it captured world
+geometry, which got squashed in clip space and read as *"a lot of geometry culled out — DRAW ALL is
+fine, ENGINE CULL has a lot missing."* **The occlusion setting was never involved.** The one-shot
+limit had been containing the damage, not preventing it.
+
+⚠️ **Rejected remedies, so they are not retried:** a frame-long arm (captures world draws);
+content-matching `c5`–`c8` (those draws never wrote the registers, so the values still match);
+matching the **texture** (a long run spills *because* it needs a second glyph atlas page, so the
+continuation carries a different texture by construction); anchoring on `NoteMarker` (it recognises
+**notes**, and a pop-up menu is not one — `note elements inset: 0` while a popup is on screen means
+the detector did not recognise it, **not** that no popup was open).
+
+**A latent stereo bug fell out of this and is fixed independently:** `HudStereoPair`'s four rejection
+paths all did `return draw()` — one draw, **no stereo split at all**. A draw that turns out not to be
+insettable UI is not exempt from stereo; they now fall back to `StereoPair`.
+
+### ✅ FIXED and VERIFIED (runs 252–257) — the splash regression was a failing `GObjects` walk
+
+**`RefreshArmedState` cost 1365 ms in a SINGLE call**, four times per window, on a frame with zero
+draws. One call is a `FindPlayerPawn` walk over **112,565 objects**, and the walk calls `Readable()`
+per object — plus more inside `NameOf` — where `Readable` is a **`VirtualQuery` syscall**. Hundreds
+of thousands of kernel transitions per walk.
+
+Two fixes, and **the log says which one worked**:
+
+| change | result |
+|---|---|
+| Miss throttle **frame-based → time-based** with backoff (2 s, then 15 s) | ✅ splash **8 → 17–28 fps** |
+| `Readable` region cache, **1 slot** | ❌ **no change** — 1365 → 1275 ms |
+| `Readable` region cache, **8 slots** | ✅ **1275 → 351 ms**, 3.8× |
+
+⚠️ **A frame count is not a rate limit when frames are the casualty.** `(++missTick % 30)` fired every
+30 frames whatever a frame cost — at 8 fps that is every 3.7 s with each walk costing 1.36 s, so over
+a third of all wall-clock went into a search that *cannot succeed* at a splash, and the slower it got
+the bigger its share grew.
+
+⚠️ **One cache slot hit approximately never, and the reasoning sounded right.** "Consecutive objects
+share a region" is true and irrelevant: per object the loop reads the object, its class, `GNames`,
+then the name data — three or four regions in rotation, so one slot is evicted by the next lookup.
+**It measured identical and was nearly kept on the strength of the argument.**
+
+**Why it was a staircase** (~27 → ~18 → ~13 → ~8 fps over Aug 5–15): every commit that added a
+property lookup or removed a throttle added another failing walk to the one screen where nothing it
+seeks can exist. Both recent steps land within minutes of such a commit.
+
+⚠️ **`ReadableCache=0` reverts the cache without a rebuild** — it is the one change here that can
+plausibly *crash* rather than slow down, since a region freed inside a frame makes a cached "yes" a
+lie. Bounded to positive results only, thread-local, cleared every walk and every frame.
+
+⚠️ **A lost pawn resets the backoff rather than advancing it.** Without that, a level transition
+inherited the splash's escalated backoff — up to **15 s of `PlayerArmed()` reading UNKNOWN**, which
+feeds the run-227/228 weapon check that decides the arms/gun roles. Caught before it shipped to play.
+
+**Residual:** the walk is still 351 ms every 15 s at a splash. User-reported as "okey dokey"; not
+pursued further. `player pawn: … after walking N object(s)` is the number any future attempt must beat.
+
+<details><summary>The original run-252 investigation, kept for the method</summary>
+
+### 📉 MEASURED (run 252) — the splash screen has degraded in FOUR STEPS since Aug 5
+
+Reported as *"the game is lagging to all heck now, even in the splash screens"*. Taking the **first
+perf window** of all 149 archived runs — the splash, before any gameplay — gives a staircase, not
+noise. Each step persists until the next one:
+
+| period | splash fps |
+|---|---|
+| Aug 4–5 | **~27** |
+| Aug 6–13 | **~18** |
+| Aug 14, from 22:36 | **~13** |
+| Aug 15, from 19:08 → today | **~8** |
+
+**It is not today's build.** Today's runs, cumulatively: 119.2 / 118.0 / 114.5 / 115.6 / **92.1** /
+103.8 fps — the worst was the run *before* the panel fix, and the panel code cannot execute with the
+panel closed.
+
+**All of it is in `our work`**, which STATUS has warned for months is a *residual, not a
+measurement*. Splash-window budget, oldest to newest: `our work` **35.9 → 51.0 → 51.9 → 121.2 →
+121.2 ms**, while `GObjects walk` stays flat at **1.86 ms** and XR is idle throughout. Log volume
+does *not* correlate (391/226/437/238/258 lines before the first perf line), so it is not the
+run-24/25 logging trap.
+
+**Both recent step boundaries land on pawn/property resolution**, within minutes:
+- Aug 14 22:30–22:36 — `52c6acf` (the Weapon lookup was unreachable) and **`4b96043`, which removed
+  a throttle**: `ResolveGameplayOffsets` now calls `FindPlayerPawn(force=true)`, skipping the 1-in-30
+  miss throttle. A miss is a full `GObjects` walk, and **at a splash screen there is no pawn**.
+- Aug 15 19:00–19:18 — the property dump and `g_wantNames` registration commits.
+
+**▶ First suspect, and it is structural: the auto-rescan can NEVER succeed at a splash screen.**
+It fires whenever `!g_haveLock && g_camPosValid && dupDraws`, and a splash satisfies all three —
+there *is* a camera position, VR mode is on from startup (run 159), and there is **no view matrix to
+find**, so the lock is never acquired and it re-arms every 20 frames forever. The log shows it
+plainly, repeatedly: `--- scan complete: 0 candidate window(s) ... no window even had a plausible
+forward vector`. The scan's own comment: *"a scan tests every window of every upload and is far too
+expensive to leave running"*.
+
+**⚠️ TIMED, NOT FIXED.** `reg scan` is now its own term on the frame-budget line, subtracted from the
+residual, plus a `⚠ REGISTER SCAN ran on N frame(s)` line with the total, the peak and the candidate
+count. Rate-limiting the rescan in the same build would have shipped two changes and one
+measurement. **If the number comes back small the scan is exonerated** and the staircase is
+elsewhere — which is the point of measuring it.
+
+⚠️ Not gated on `TimeOurWork`: it only takes a timestamp on frames the scan is armed for, and a
+diagnostic nobody switches on cannot answer a question that shows up on someone else's machine.
+
+**Outcome: the scan measured `0.00 ms` and was innocent.** So were resolution (anti-correlated — the
+fastest splash ran the *largest* frame) and log volume. Three suspects killed by measurement, and the
+answer was in the block that had never been in any bucket at all. **The value of timing the wrong
+thing is that it stops you fixing the wrong thing** — a rate-limited rescan would have changed
+nothing and been called a fix.
+
+</details>
+
+### ⚠️ SHIPPED, NOT YET FLOWN (run 251) — a slot is KEEP or CUT, and the mesh draws as SEGMENTS
+
+Reported after the first sweep: *"90-1000 cuts away a lot of what I want to get rid of but keeps
+the rest. What I actually found ideal is keeping 0-29, trimming 30-89, and keeping 90-1000."* That
+is two kept ranges with a hole between them — precisely what run 250 documented as out of reach.
+
+Each slot now carries a **mode**: `KEEP` draws only its range, `CUT` removes its range from whatever
+survived the keeps. The result is a list of disjoint segments and **the draw lambda emits one call
+per segment**, inside `StereoPair` so each eye draws the whole set. The ordinary path is one segment
+and emits exactly the call it always did. The reported case is a single `CUT 30–89` slot.
+
+Panel → `TMD ALIGN` → `TRIANGLE WINDOW`: `TRI SLOT`, `TRI MESH`, **`TRI MODE`**, `TRI FROM`,
+`TRI TO`, `TRI STEP`, `HIDE MESH`. Saved as `TmdArmMode%d`.
+
+- **Keeps are unioned and merged**, so two overlapping keeps cannot draw their overlap twice.
+- ⚠️ **Inert is mode-dependent.** `KEEP 0–1000` keeps everything; `CUT 0–1000` **deletes the mesh**.
+  Same two numbers, opposite results — so switching mode resets the range to that mode's inert value,
+  and the rows say `OFF (FULL MESH)` or `OFF (NO CUT)` rather than showing numbers that do nothing.
+- ⚠️ **Cutting everything draws nothing, and does NOT early-return.** The bone palette still has to
+  be restored and `g_thisDrawMoved` cleared; a return that skips those leaves a zeroed bone behind
+  for the next draw, which this file already warns about three times.
+
+The rows also **say `OFF (FULL MESH)`** when the window is inert (0/1000). Two rows reading `0` and
+`1000` look like settings while doing nothing, which is how run 237f's measured-dead window got
+re-reported as broken.
+
+### ⚠️ SHIPPED, NOT YET FLOWN (run 249) — the TMD panel page drew no text at all
+
+Reported twice: the TMD page is a dark plate with the selection bar visible and **every glyph
+missing, the page title included**. Run 248 read that as rows being dropped past the rectangle cap
+and raised the cap; the page stayed blank and **the overrun warning that fix added never fired
+once**, which is how it was ruled out this time.
+
+The panel draws its text as a **single `Clear()` with one rectangle per run of set pixels**, and a
+17-row page asks for roughly 13,000 of them. That call fails as a **unit**, so nothing lands —
+which is exactly why the *title* went missing along with the rows, while the plate (2 rects) and
+the bar (1 rect) survived. Working pages sat at ~5,000 and drew, which is what made this look
+specific to the TMD page rather than to the panel. **The HRESULT had never been checked**, so the
+refusal was invisible.
+
+Three changes, and the mechanism is *not* yet confirmed — see the risk note below:
+
+- `ClearRects()` **batches at 1024**, so no single call can be large enough to be refused, and a
+  failure now **logs the HRESULT, the batch and the total**. This is the actual fix.
+- **`kPanelRowsMax` is back down to 10** and TMD ALIGN is split into three pages — `TMD ALIGN`
+  (the 7 pose rows, still one press from the root), `TMD BONES`, `TMD MESH`. `px` is derived from
+  that constant, so at 17 rows the glyph had hit its floor of 3, which the code's own comment calls
+  unreadable through a lens; at 10 it is 5.
+- The panel logs **`page N (NAME), R row(s), X text rect(s) in B batch(es), px P`** on every page
+  change. That number is what the whole misdiagnosis was missing.
+
+⚠️ **A working page will NOT by itself confirm the diagnosis.** The page is now both batched *and*
+short, so either change alone could account for it. The log settles it: the per-page rect count
+says how big the call would have been, and a `Clear() REFUSED` line says whether any batch was
+still turned away.
+
+**Also fixed on that page, and unrelated:** `ARM FROM`, `ARM TO` and `ARM STEP` had **no
+`PanelRowText` case**, so all three fell through to the `default` arm and rendered as *"DEBUGGING
+ON"*; `ARM STEP` had no `PanelAdjust` case either, so **adjusting it toggled the DEBUG setting**.
+Both shipped in run 247b and were invisible only because the page was blank. `TmdArmStep` was also
+adjustable-but-never-saved. ⚠️ **A `default` arm that quietly does something plausible is why a
+missing case reads as a row that works.**
+
+### Next session, in order
+
+**A. ✅ Runs 181–190 are FLOWN and four fixes are verified.** Details at items 1, 3, 4 and 5.
+
+| fix | state |
+|---|---|
+| Crosshair jump-spread no longer escapes the hide rule | ✅ **verified** — two frames at `r=0.167` / `r=0.151`, past the old `0.15` box, `8 seen 8 dropped`. The case was genuinely exercised |
+| Gun stepping on slow movement (1.9 cm lattice) | ✅ **verified** — integer truncation of the hand offset; now milli-UU |
+| Gun pose one full frame stale | ✅ **measured** 8.33 ms → **0.00 ms** with `PoseLeadFrames=1` |
+| Muzzle flash + barrel smoke at screen centre | ✅ **suppressed** (`HideMuzzleFx=1`); ⚠️ the real cause is the stereo seam — see item 3 |
+
+**Still owed from run 180, and none of these has had its condition occur yet:**
+
+- **The trigger veto now fails CLOSED at startup.** It used to pass everything through until
+  `trigger/touch` resolved, which is the load-in phantom melee and the gun attached to nothing.
+  It is a **race**: measured at 2, 0 and 9 unprotected gate-windows across three runs of one
+  build, so a clean load-in proves nothing. **Verify by finding a run whose log says
+  `NO SENSOR YET (vetoing - startup grace)`.** Both runs since the fix resolved instantly and
+  never exercised it.
+- **The turn stick now has a narrow `thumbstick/touch` sensor and a per-window census.**
+  Measuring only — nothing is vetoed. It was added to catch phantom snaps and instead proved
+  they were not snaps at all. Left in because the stick had *no* instrument before.
+- **The mesh-latch census** logs the whole foreground list at take and drop. It has not yet
+  caught a drop. Needs a long session — every run that dropped the latch was 11,000+ lines,
+  every run that did not was under 3,100.
+
+**B. 📋 Audit the remaining raw yaw subtractions.** Same class as the run-180 fix, no evidence yet.
+`YawDelta()` exists now. The one at the FRotator write path carries the same false
+`int32 wrap is correct` comment and is the first to check.
+
+**C. ✅ RESOLVED — and the "exit never arrives" claim below is STALE (measured 2026-08-17).**
+`SetCinematicMode` **does** report the exit now: **92 × `arg raw 0x00000001 -> CINE ON` against
+88 × `arg raw 0x00000000 -> CINE OFF`** across one session's logs — a near-balance is exactly what
+enter/exit pairs look like — and every `view drift` line reads `cine off`, zero `cine ON`. The flag
+is a usable per-cutscene signal, and run 272 builds the occlusion override on it.
+
+⚠️ **Re-test a premise before building on it.** This note said the signal was one-way, which would
+have latched `DRAW ALL` on for a whole level. Checking cost one grep. The historical text follows.
+
+**C(historical). ⚠️ PARTLY FIXED (run 211) — `g_inCinematic` latched ON permanently.** `SetCinematicMode` was
+only ever *observed* with `arg raw 0x00000001`: the run-95 script hook sees native→script entry
+points and the cutscene **exit was not one of them**, so a `0` never arrived. Everything gated on
+the flag then leaked out of cutscenes, which is why the two cutscene comfort settings were seen
+affecting normal gameplay. Both settings gate on it *correctly*; the flag was the bug.
+
+Fixed from the other end rather than by finding the exit event: `RefreshCameraPosition` clears the
+flag when the camera **instance** changes, which is an unambiguous level transition. Verified —
+the flag now alternates (29 OFF / 11 ON / 51 OFF / 2 ON / 28 OFF in one run) instead of sticking,
+all `view drift` lines read `cine off`, and `engine-vs-asked residual` is back to 0.10–1.03° from
+a 3.5° mean with a standing 21.5° drift. User-confirmed: turning behaves after a reload.
+
+**⚠️ Still not a true fix.** A cutscene that ends *without* a level change keeps the flag set
+until the next transition. The exit event remains invisible.
+
+The tabled **menu rotation bug** is still open and was NOT this — repro: free/follows → enter game
+→ pause → free/locked → exit to main menu → start game → menu is rotated. Do not confuse it with
+the run-211 menu *double vision*, which was a different bug and is fixed (see D).
+
+**D. ✅ FIXED and VERIFIED (run 211) — menu double vision after returning from gameplay.**
+Readability is not liveness. A level transition leaves the previous level's `RvPlayerCamera` in
+`GObjects` with its memory mapped and its class pointer intact, so both tests `FindCamera` applied
+— `Readable` plus a class compare — passed on a **dead** object; the walk took the first
+non-archetype match in `GObjects` order, so the stale camera could win and then be revalidated
+forever.
+
+Diagnosed entirely from `view_matrix.log`, no new instrument needed: the post-transition main menu
+reported `identification: 36 of 120 frames lost the matrix entirely; best rejected dotFwd +0.6964
+(gate 0.80)`. dotFwd 0.696 is 45.9°, and the camera being read reported yaw **+44.5°** while the
+matrix carried ~0° — two different cameras. Every rejection invalidates the register slot, so the
+menu ran at `split 0, mono-fallback 399`: every draw unsplit across the full side-by-side frame,
+i.e. one image with each eye seeing a different half. The boot menu was fine only because just one
+camera existed at that point, which is what made this look like a regression.
+
+`FindCamera` now **prefers a live instance and falls back to the first match**, so it can never
+return less than before — a false negative from `IsLive` costs a periodic re-walk, not the camera.
+The liveness recheck is throttled to every 15 frames (~0.125 s), because the condition only arises
+at a transition. After: `split 334 (334 with parallax), mono-fallback 0` at 120 fps in the same
+menu, and no window in the run carries the broken `peak live in a frame 0` signature except four
+splash-screen windows that read `registers tracked: none` — before any camera exists.
+
+**Known residue:** three windows still show heavy mono-fallback (549, 1340, 4386) at 38/29/37 fps,
+all landing exactly on load/transition moments while the camera is being replaced. Expected, but
+recorded rather than filtered out, because a long enough transient reads as a visible flash.
+
+0. **📋 The BACKSPACE keyboard exemption can now go** — `VR MODE` is on the panel as of run 159, so the last reason to keep it live under `Debug=0` is gone.
+   Run 157's `[Render] Debug` makes every keyboard key inert except **BACKSPACE** (VR mode on/off)
+   and **PAUSE** (hold to quit, which is the `WM_CLOSE` path that lets the engine save — and every
+   copy of this game shares one save profile). Both are marked at their call sites as the only
+   places a raw `GetAsyncKeyState` is legitimate. A panel row retires the BACKSPACE one; PAUSE
+   probably has to stay, since quitting cannot depend on the thing you are quitting.
+
+1. **✅ FIXED and VERIFIED (run 181) — the crosshair's JUMP SPREAD escaped the hide rule.**
+   Confirmed by measurement, not by looking: `8 stride-8 elements, 8 dropped` throughout, with two
+   frames reaching `r=0.167` and `r=0.151` — both **past** the old `0.15` box, so the spread really did
+   exceed it and the case really was exercised. Not a false pass.
+   Reported: with the crosshair hidden, **two** crosshair lines come back while the player is
+   jumping. Spread pushes the four ticks outward and the test was a **square** box — `|cx| < 0.15`
+   and `|cy| < 0.15` — in a space where x and y are not the same scale.
+   - Clip x spans the frame's full **width** and clip y its full **height**, so one tick at a given
+     *pixel* radius reads 16/9 = **1.8× larger in y**. That ratio was already sitting in the
+     measurement and was read straight past: `0.045 / 0.025 = 1.8`. The vertical pair therefore
+     leaves a square box **first and alone** — two lines, which is the report down to the count.
+   - The fix uses the part of the measurement the box discarded: **each tick sits ON a centre
+     axis.** `LooksLikeCrosshair` now tests "on an axis, within reach of centre" (`kXhairAxis`
+     0.006, `kXhairReach` 0.60) — *tighter* across the axis than the old box, looser along it,
+     which is the only direction spread can move a tick.
+   - **Verify with the census, not by looking.** `crosshair census: N stride-8 element(s) this
+     frame, M dropped, furthest at r=…` prints from Present on change. **Resting truth is 8 seen,
+     8 dropped** (four ticks, each drawn twice). *Seen above dropped is the bug*, in whatever form
+     it returns. **The false pass: not jumping hard enough to spread the reticle at all** — a run
+     with no line above `r=0.045` never exercised this.
+   - **⚠️ STATUS carried a stale version of this item for twenty-odd runs**, and so did the comment
+     at `g_hideCrosshair`: both said mode 1 *flickered* because `g_handHeld[1]` is a capacitive
+     sensor, and that `HideCrosshair=2` was "the setting that behaves". **Run 158 replaced that
+     signal with AIM METHOD** — deterministic, no flicker — and neither note was updated. Modes
+     0, 1 and 2 are all sound. Both texts are corrected; the code comment keeps the warning.
+   - `g_handHeld` is still not to be trusted if anything else ever wants it. Run 155: `g_handHeld[0]`
+     read `on desk` through a whole session including ninety seconds of deliberately holding both
+     controllers, one sample moving at **1331 µm/frame**. Unreliable in *both* directions, and it
+     has no per-frame consumers left.
+   - **The crosshair signature, measured** (bare view, nothing else on screen): four ticks around
+     centre, each drawn twice, `stride=8` at `(±0.025, 0)` and `(0, ±0.045)`. **Stride 8 is unique
+     to it** — everything else is stride 4, 12 or 20, and centred *prompts* are stride 20 at
+     `y = -0.138`. Deliberately NOT keyed on primitive count: 10 is what these ticks happen to be,
+     and another weapon's reticle will differ. Re-measure if a later weapon's crosshair persists.
+2. **📋 BETA: the HUD sits too close to the edge to see in the headset.** Health and ammo duplicate
+   correctly per eye since run 151, but they are anchored to the corners of a 16:9 frame and a
+   headset cannot see its own corners — the eye's usable area is a circle inside that rectangle.
+   They need pulling inward toward the centre.
+   - The mechanism is already in hand: the UI's stage-to-clip matrix is `c5`–`c8`, and
+     `HudStereoPair` already rewrites it per eye. Insetting is a scale-about-centre on the same
+     registers rather than a new system.
+   - Wants to be a panel setting (HUD inset / safe area), not a constant — how far in is
+     comfortable depends on the headset's optics and the player's IPD.
+   - ⭐ **Run 230 built and shipped that mechanism for NOTES** (`NoteInsetPct`, **default 40**,
+     DISPLAY page, `NOTE SIZE`). Confirmed in a headset: 480 draws/second = the 4 non-exempt
+     elements at 120 fps, with the backing correctly left alone. Extending it to health and ammo is now a matter of choosing what to match, not
+     of writing anything: the scale-about-centre and its per-eye composition are done and proven.
+     ⚠️ **The inset must be applied BEFORE `ApplyEyeRemap`, never after** — the eye remap shifts x
+     by ±0.5, and scaling about zero after that shift drags the eye centre, throwing the two eyes
+     off in opposite directions.
+   - ⚠️ Whatever gets inset needs the same **corner exemption** notes use: an element anchored at
+     `|clip.x| >= 1` is a full-screen backdrop, and shrinking one leaves the world showing in a
+     ring around it.
+3. **⭐ The muzzle flash and barrel smoke draw on the STEREO SEAM — and it is OUR bug, not the
+   engine's.** Suppressed for now: `MUZZLE FX` on the panel's DISPLAY page, `HideMuzzleFx=1`, default
+   hidden. The real fix is queued and should retire that setting entirely.
+   - **They are ONE particle system.** `RvGame.u` lists no smoke property at all — the barrel smoke is
+     an emitter inside the muzzle-flash asset. Reported as two separate bugs for sixty runs; nulling
+     `mMuzzleFlash1stPerson` plus the looping and ironsights variants kills both.
+   - **The diagnosis came from the flat monitor and it is decisive.** The effect sits at the dead centre
+     of the *monitor*, on the seam between the two eye images. World geometry goes through `StereoPair`
+     and is drawn **twice**, once per scissored half — so a merely mis-placed effect would appear
+     **twice**, once near each gun. Seeing **one**, straddling the middle, means its clip position is
+     `(0,0)` in the *full side-by-side frame*: each eye's scissor keeps the half that falls in its
+     region, and the halves meet at the seam.
+   - **Therefore the aim method cannot matter**, because the effect never receives a per-eye position at
+     all. Confirmed identical in HEAD and MOTION CONTROLLER. That is why the setting is binary — an AUTO
+     that cannot differ from ALWAYS is a setting lying about having a reason to exist.
+   - **📋 TABLED at run 194, with the draw identified.** Four facts are nailed down and should not be
+     re-derived; the remaining step is small but my instruments kept eating the runs.
+     | fact | how |
+     |---|---|
+     | The draw is **`DrawIndexedPrimitiveUP`, stride 72**, ~16–18 prims, ~7 per shot | run 192's baseline-vs-fire census; stride 72 appears in every fire window and never in baseline |
+     | It **is** already split per eye | same census — so the split works and only the transform is unremapped |
+     | Its vertices are **world-space**, not pre-transformed screen space (box `x[260..860]`) | so it is not a screen-space quad, and the Bink-quad fix does not apply |
+     | It has a **vertex shader**, and **`c5..c8` is its local→world matrix** (w column `(0,0,0,1)`; translation drifts frame to frame as the particle moves) | run 193's per-draw write-mask dump |
+     | Pass-throughs are **104/frame in baseline and in fire alike** | firing adds no fullscreen-quad pass-through, so the quad classifier is not involved |
+   - **What is still unknown:** which register carries the draw's *clip* transform. `c5..c8` is affine,
+     so something else projects it. Registers written just before the draw are
+     **`c5`–`c12`, `c15`–`c18`, `c20`–`c25`**. A view matrix (unit axes + translation) is visible around
+     **`c26`** in the `c24..c27` dump.
+   - **🛑 The stride-72 identification is UNVALIDATED and probably wrong (run 196).** Its shader's own
+     bytecode says it **reads `c0`** — and `c0` was confirmed locked, valid and remapped at that very
+     draw. So that draw's transform *is* eye-remapped and it cannot be what lands on the seam. Run 192
+     was right that stride 72 is *shot geometry*; the error was reading "unique to firing" as "is the
+     muzzle flash". A tracer, a casing or an impact effect all appear only when firing and all render
+     correctly.
+   - **🛑 CONFIRMED WRONG (run 197). `MuzzleFxDropStride=72` with the flash visible: the artefact
+     REMAINED.** Stride 72 was never the muzzle flash — it is some other shot geometry (tracer, casing
+     or impact). **Runs 193–196 measured the wrong draw from beginning to end.** The `c0` reading, the
+     write masks, the block dumps and the bytecode all describe a draw that was never the artefact.
+   - **▶ NEXT STEP if resumed: identify by SHADER, not by primitive count.** The flash is on an
+     **indexed** path (`DrawIdxPrim` rose ~1600 during fire — the observation dismissed in run 192 as
+     confounded, and the only surviving lead). Indexed draws cannot be told apart by primitive count —
+     that is exactly what saturated run 192's table with twenty rows of zeros — so the handle has to be
+     something else, and the shader pointer is the natural one:
+     1. Record the **set of vertex shaders** used in a baseline window and in a fire window. The ones
+        unique to firing are the shot's own. `GetVertexShader` returns a comparable pointer, and run 196
+        already built a bytecode reader for whatever it finds.
+     2. Add an ini key to **drop draws using shader N**, then walk N until the artefact disappears.
+        That is identification *by construction* rather than by inference — one build, then cheap
+        relaunches, instead of a run per instrument.
+   - **Do not skip step 2 for step 1's convenience.** That is precisely the mistake of runs 193–196:
+     a plausible label taken as identified, then three instruments built on it.
+   - **⛔ Confirm what a thing IS before measuring its properties.** Three instruments (runs 193–196)
+     were built on an identification nothing had tested. The bytecode dump was the first measurement
+     capable of contradicting it, and did — after three runs. The one-line drop test was available the
+     whole time.
+   - **⚠️ A cheaper hypothesis to check FIRST, and it costs one log line:** the flash may ride the
+     scene's own `c0` and simply arrive when **no `g_camMats` slot is valid** — `g_camMatrixBound` is
+     cleared whenever a shadow or post pass takes the tracked register, and `InvalidateCamMats()` fires
+     on partial overlaps. A duplicated draw with nothing to remap lands identically in both halves,
+     which is exactly this artefact. **Log how many slots are valid at a stride-72 draw before hunting
+     any further for a register.**
+   - **⛔ Four runs were lost to my own instruments, not to the problem.** Recorded because the shape
+     repeats: run 183's owner cap filled with archetypes before reaching the live weapon; run 192's
+     table saturated on indexed draws; run 193 `break`'d after the first constant block; run 194 added a
+     4-alignment filter that **excluded `c5`, the block already confirmed**. Every one was a bound
+     chosen for tidiness that silently excluded the answer. **Shader constants have no alignment
+     requirement — a compiler packs them wherever they fit.** When the question is "which of these is
+     it", do not cap the list at one.
+   - ⛔ **Runs 182–188 chased a phantom.** They assumed the effect was correctly drawn at a wrong
+     *engine* position and went after moving the weapon mesh in the engine. The engine position may have
+     been right all along. What survives is in `ENGINE_NOTES.md` and is genuinely useful: the UObject
+     property-offset layout, and the measured negative that writing a component `Translation` does
+     nothing without a reattach.
+   - ⛔ **An earlier premise named the wrong effect**, and this item chased *"find what the smoke rides
+     on that the flash does not"* for sixty-odd runs. The aligned smoke was the **impact** smoke off the
+     wall: spawned in world space at the trace hit point, which route 2 already rotates, so it is right
+     for free. Two grey puffs appear near your aim within a second of each other — one on the wall, one
+     on the gun. Easy to conflate in a headset, expensive to write down, because it then reads as a
+     measurement.
+
+4. **✅ FIXED (run 190) — the gun no longer moves in STEPS. The cause was integer truncation.**
+   Reported first as jitter, then **redescribed as "moving in steps, like a deadzone — if I move the
+   controller very slowly I can see it jumping."** That redescription is what solved it: latency shifts
+   smooth motion in time and **cannot** turn it into stairs.
+   - `g_handOffX/Y/Z` held the hand-minus-head offset in **whole unreal units**. Eye separation is a
+     measured 3.32 UU = 6.3 cm, so **1 UU ≈ 1.9 cm** — the gun could only ever sit on a 1.9 cm lattice.
+     `(LONG)` also **truncates toward zero**, so the step was asymmetric about the origin.
+   - Now milli-UU with `lroundf`: **19 µm**, far below the controller's own noise floor. Both read sites
+     divide by the same constant, including the on-screen anchor marker — run 174's trap was a readout
+     in different units from the thing it described.
+   - **The rotation was never involved and was deliberately left alone.** `g_handDev*UU` are engine
+     rotation units at 65536/turn = 0.0055° per step. Fixing both would have hidden which one mattered.
+   - **Method note, and it is the useful part.** A *confirmed measurement pointed the wrong way*.
+     `pose lead` correctly read 8.33 ms of staleness; acting on that alone would have produced a small
+     improvement and a false "fixed". **The redescription ruled out the entire latency class by
+     itself.** When a symptom is described as *stepping*, suspect quantisation before timing, whatever
+     the instruments say.
+
+5. **✅ The gun's pose was ALSO a full frame stale — fixed separately (`PoseLeadFrames=1`).**
+   Measured **8.33 ms**, exactly one display period at 120 Hz, then **0.00 ms** with the fix.
+   - **Why the head hides it:** the head is submitted as the projection layer's pose and the compositor
+     **reprojects** the image at scan-out, correcting late error in hardware. The gun is baked into
+     **geometry** by `BuildGunC`, and reprojection cannot move a vertex. D3D9 renders *then* Presents,
+     so the pose sampled at Present N is consumed by frame N+1's draws — one period late.
+   - The fix is one term: locate the hand spaces at `predictedDisplayTime + predictedDisplayPeriod`. The
+     period comes from `xrWaitFrame` rather than a hardcoded 8.33 ms, so it is correct at 72 and 90 Hz.
+   - ⚠️ **The head's layer pose is deliberately NOT shifted.** It is already correct, and moving it would
+     hand the compositor a pose for a frame it is not displaying.
+   - ⚠️ **`0.00 ms` is bookkeeping, not tracking quality.** With pacing locked the metric is
+     arithmetically exact and is measuring its own arithmetic. It proves the timestamp we ask for matches
+     the frame the geometry lands in; it says nothing about whether the runtime's *prediction* at that
+     timestamp is good. The remaining risk is **overshoot on sharp reversals**, since prediction error
+     grows with lead time — judged in the headset, not in the log.
+6. **✅ WORLD SCALE is adjustable (run 201).** Panel → `DISPLAY` → `WORLD SCALE`, live, 5% steps,
+   50–200%, saved as `WorldScalePct`. Above 100% the world feels **bigger**.
+   - **One constant governs scale and that is why one knob is correct**: `kMetresToUU = 52.5`, which is
+     not a guess — UE3's documented 16 units per foot gives 52.5 UU/m exactly. Everything real-world
+     flows through `MetresToUU()`: the **stereo baseline** (apparent size), the **6-DOF translation**
+     (distance travelled per step), and the **hand position** the gun rides.
+   - ⚠️ **All three must scale together.** Scaling the IPD alone changes how big things look but not how
+     far you walk, which reads as the world resizing *as you move* — the exact complaint the slider
+     exists to fix. Scaling head but not hand slides the gun around your body.
+   - ⚠️ **It cannot change EYE HEIGHT** — the game owns that. A player who feels the wrong height is
+     describing a different problem from one who feels the wrong scale.
+
+7. **✅ FIXED (run 201) — the gun was anchored to the ENGINE's eye, not to yours.** Reported as *"when I
+   recentered, the gun came closer to me."*
+   - 6-DOF folds `g_hmdOffset` into the **camera matrix**, so you view from `engine eye + g_hmdOffset`.
+     But `BuildGunC` applied `H = (hand − head)` relative to the origin of translated-world space — the
+     **engine's** eye — which never received that displacement. The gun's apparent position was therefore
+     wrong by however far you had drifted from the recentre point, and recentring zeroed the drift so it
+     jumped. Direction depended on which way you had moved, which is why it was not obviously diagnostic.
+   - Fixed by adding `g_hmdOffset` to `H`. Applied unconditionally, including with position-following
+     off: the gun should stay glued to the view exactly as the flat game's does.
+   - `GunFollowsHeadOffset=0` reverts without a rebuild — the *sign* of a position fix is something this
+     project has had to flip more than once.
+   - **Method note: no instrument in the session would have caught this.** The eye-height probe read
+     `+0.0 UU` right after recentring and looked like a clean pass. A symptom that only exists when two
+     things which should share a reference frame don't, needs someone wearing the headset.
+
+8. **📋 Eye height: measured, and probably NOT a problem.** `Pawn.BaseEyeHeight = 70.0` (stable),
+   `EyeHeight` 67.4–71.4 with bob and crouch. Offsets in `ENGINE_NOTES.md`, and both are writable if a
+   knob is ever wanted.
+   - ⚠️ **`BaseEyeHeight` is measured from the actor's Location — the CENTRE of the collision cylinder,
+     not the floor.** So 70 UU is not eye height above ground and converting it to 133 cm invites the
+     wrong conclusion that the character is child-sized. Log `CollisionHeight` before comparing to a
+     human.
+   - **Recentre is confirmed working from seated** (offset `+0.0 UU` immediately after). Sitting versus
+     standing is handled by recentring, not by a setting: **hold MENU ~1 s**, which re-zeroes yaw, lean
+     and height together. If the view ever feels too low or high mid-session, hold MENU before assuming
+     a bug.
+
+9. **Shadows are broken when High Quality Decals is ON, and run 139 found a new clue.** With that
+   option on, **the hidden arms turn BLACK instead of staying invisible.** So whatever hides the
+   first-person meshes is not reaching the pass that HQ Decals enables — the arms are still being
+   drawn there, at their original position. That is a much sharper lead than "decals are broken":
+   it says the mesh-hiding rides on the locked view-projection register and this pass does not.
+   Connects directly to the unidentified **third scene-sized surface** and to `ExtraCamReg` (`vs
+   c13`), both of which are passes we do not remap. Workaround remains free: leave High Quality
+   Decals off.
+
+> ## ✅ FIXED (run 139): the texture wrapper. `D3D9ExMode=1` is now on par with `0`.
+>
+> One defect, three symptoms — the soldier's colours, the black dock floor and the vanishing fire.
+> `UpdateTexture` copies the source's **dirty regions**, not the source; ours did not cover what
+> had been written, so it copied too little and returned `S_OK`. Marking the shadow fully dirty at
+> every unlock (`AddDirtyRect(NULL)`, per-face for cubes, `AddDirtyBox` for volumes) fixes it.
+>
+> ⚠️ **The fix is confirmed. The mechanism is NOT, and the first explanation was wrong.** The
+> diagnosis was `D3DLOCK_NO_DIRTY_UPDATE`; the counter added to prove it measured **0 of 6716
+> locks**. The engine never passes that flag. Do not repeat that story — it is written up here
+> only so nobody re-derives it.
+>
+> Still true and still worth suspecting if this resurfaces:
+> - `AddDirtyRect` was never hooked and never called anywhere in the file.
+> - **`e->dirty` is one flag for the whole texture while locks are per-LEVEL**, and `FlushShadow`
+>   clears it after any copy — so a texture locked on several levels before any unlock copies once
+>   and silently skips the rest. A real defect on inspection, whether or not it was the one biting.
+> - `UpdateTexture` clears the source's dirty regions as it copies.
+>
+> **Cost not yet measured.** `AddDirtyRect(NULL)` marks the whole level, so streaming copies more
+> than it needs to. The locked rect is already recorded if it wants narrowing.
+
+> **Why it took five runs, kept because the reasoning error is the useful part.**
+> - **Why it looked like culling.** UE3 selects texture mips by projected screen size in *pixels*,
+>   so which mips get requested moves with FOV, with resolution and with distance — all three of
+>   the levers that looked like rendering knobs. Every one of those uploads goes through the
+>   wrapper.
+> - **Why the symptoms differ by surface.** Fire is **additively blended**, so an unwritten upload
+>   contributes nothing and the effect is *invisible* rather than miscoloured. The deck is opaque,
+>   so the same failure renders **black**.
+> - **The dismissal that cost the most.** The wrapper was ruled out in run 135 because *"the effect
+>   is FOV-dependent and a dropped upload wouldn't care about FOV"*. Mip selection **is**
+>   FOV-dependent, so the one fact that felt exculpatory was the one that most implicated it — and
+>   the wrapper had already been proven defective on the soldier by then. **An independently
+>   confirmed defect should not be dismissed on a one-line argument.**
+
+10. **✅ FIXED (run 199) — the "reload arms" were never reload geometry.** `HideExtraArms=1`. Reload now
+   looks natural.
+   - ⛔ **Carried as a reload/latching problem from run 122 to run 198, and it was neither.** Reported
+     correctly at last: *"they're actually always there during gameplay but hidden under where the player
+     could normally see... and they move with the gun, so when I move the controller up they're pretty
+     visible. And no, they don't disappear when I reload."*
+   - **It is the 390-vertex mesh.** The baseline set is `[5799 gun, 3314 arms, 390]` and run 181's rider
+     census reads `vertex counts seen riding: 390`. So it is **in** the baseline — which is why run 198's
+     "hide what was not in the baseline" rule could not reach it — and it **rides the gun transform**,
+     which is why it tracks the controller.
+   - **A defect the mod created**, which is why sixty runs never saw it: the fragment sits below the
+     bottom of a 16:9 frame, and VR's much taller field of view plus a gun that follows your hand brings
+     it into view.
+   - Hidden by **role** — "the baseline mesh that is neither the gun nor the arms" — not as the literal
+     390, so another weapon's fragment is covered. ⚠️ It rides the gun, so if a weapon's third baseline
+     mesh turns out to be a sight or magazine this would remove it; `HideExtraArms=0` reverts.
+   - **Method note:** run 198 fixed a problem nobody had (stray animation meshes) because the label on
+     the report was taken as the diagnosis. The user's description contained the answer — *always
+     present*, *moves with the gun* — and both facts were already in the logs.
+
+10b. **✅ FIXED and VERIFIED (run 212) — the run-207 role shift came back past `MinFgMeshes`.**
+   `VetoQuietGun=1`, `RelatchWrongRoles=1`.
+   - **Verified, and the case was genuinely exercised** — this is not a clean-run false pass. In a
+     161,376-line playthrough from the beginning, `view_matrix.log` line 17471 logs the veto firing on
+     `fg census (at the REFUSED take): 3 entries: [0]=3314 [1]=390 [2]=662` — **the identical signature
+     to the Aug 7 failure**, including the same 662 mesh. The pistol then latched correctly at line
+     35663, `[5799 3314 390]`. User-confirmed in play.
+   - **Reported:** playing **from the very beginning** to the pistol, the arms are visible (low, where
+     the flat game never shows them) and **the pistol is invisible**. Loading the save just before the
+     pistol works. The differentiator was the diagnosis: the two runs traverse different states.
+   - **Cause.** A stray 662-vertex mesh joined the weaponless pass, `n` reached 3, `MinFgMeshes` passed,
+     and the arms took the gun role. `MinFgMeshes` is a **floor** — an extra mesh satisfies it as well
+     as a weapon does. Named in `view_matrix_2026-08-07_23-11-44.log` line 37863.
+   - ⚠️ **662 appears in exactly one census line of an 88,575-line log.** The gate is evaluated only on
+     the frame the settle completes, so one frame of a stray prop poisons the session.
+   - **Fix:** the gun cannot be a mesh that is drawn when you have no gun. The weaponless pass is
+     already detected by the `MinFgMeshes` branch, so record it and refuse the gun role to anything in
+     it. Plus a backstop that drops a latch whose gun role is contradicted — see `HISTORY.md`.
+   - **Verified against data, not reasoning:** 71 takes across every log kept, **0 of 54 good latches
+     affected**, and the one bad take blocked. Also confirmed a no-op on the working save-load path,
+     which already records the weaponless set before latching 5799.
+   - ⚠️ The run-158d **menu** latch (`[4 251 745 …]`, 8 meshes) is **not** covered and is still open.
+   - **✅ Weapon swapping is now measured, and works.** The same run cycled **four** weapons — `5799`,
+     `8297`, `11387`, `11389` — through **21 drop/re-take pairs**, every one re-taking the correct gun.
+     The old "is 11387 a second weapon or one mesh in two states" question is settled by
+     `[0]=11387 … [3]=9` and `[0]=8297 …` coexisting in one session as distinct weapons.
+   - **The `RelatchWrongRoles` backstop never fired**, so the `bigger` misfire I flagged as possible did
+     not occur across 161k lines and four weapons. It also cannot pre-empt a swap: the normal drop needs
+     240 frames and the backstop 600, so the normal drop always wins that race. Confirmed — 21 swaps,
+     zero backstop firings.
+   - ⚠️ **The ~2 s of hidden gun after a swap is still neither confirmed nor refuted.** The mechanism is
+     unchanged and still there in the code (the new weapon is outside the old baseline, so
+     `HideStrayArms` hides it until the 240-frame drop), but the drop line marks the *end* of that
+     window so the log cannot size it, and the user did not report seeing it across 21 swaps. Open.
+   - **✅ CLOSED by run 216.** This recorded `gun=11389, arms=97` as a latent misassignment and named
+     the cause correctly — "slot [1] is the arms" was the weak rule. It was left unfixed because it
+     changed nothing visible. It later bit hard: the same positional rule put the **arms** in the gun
+     role after scope use. Roles are assigned **by size** now, which fixes both. **A known-weak rule
+     left alone because its current symptom is invisible is a bug waiting for a louder symptom.**
+
+10f. **✅ FIXED and VERIFIED (runs 227-228) - the mesh latch now ASKS whether a weapon is equipped.**
+   - Reported as a missing rope in a hands-tied scene. With no weapon the largest mesh in the pass is
+     the ARMS, so run 216's size rule gave them the gun role, the rope inherited the arms role, and it
+     was hidden. Pressing the heal button revealed it, which named `FgHidden` as the culprit outright.
+   - **Four proxies for "is there a weapon" were each defeated by that one scene** - `MinFgMeshes`,
+     `VetoQuietGun`, `RelatchWrongRoles`, `FgRememberArms`. Every one waits to be told what normal
+     looks like, and a save can start you somewhere that never tells it. **`Pawn.Weapon +0x3D4`
+     answers it directly**, resolved once by the existing property solver and read from a cached
+     pointer once a frame.
+   - ⚠ **Resolve it ONCE A FRAME, never per draw.** `FindPlayerPawn` walks `GObjects` on a miss, and
+     the first version called it from `FgHidden`, which runs per draw. That is run 209's defect.
+   - With no weapon: the arms-role mesh is not hidden (it is whatever is on your hands), it rides the
+     gun transform, and its **depth-prime copy rides too** - without that it writes run 120's black
+     silhouette at the engine position. The 390 fragment stays hidden either way.
+   - 📝 **`VetoQuietGun`, `RelatchWrongRoles` and `FgRememberArms` are now redundant weight** -
+     they exist to guess at exactly what the engine now answers. Left in place, not yet retired.
+
+10h. **✅ FOUND (run 236) - `RvPlayerPawn.mPlayerHandsStatus` says whether the TMD is raised.**
+   `+0x105C`, depth 1, right beside `mTMD` (`+0x1058`). **0 = neither, 1 = TMD RAISED, 2 = weapon.**
+   - Decoded by correlating every change against the MESH CENSUS, not against anyone's memory of what
+     they were holding: six deployments, no exceptions either way, correct across a weapon switch.
+   - ⭐ **It LEADS the render** - the value changes a frame or two before the TMD's meshes appear, so a
+     draw-time decision on it is right on the frame the geometry arrives.
+   - ⛔ Two dead ends on the way, both worth not repeating: the TMD is **not** an inventory weapon
+     (`Pawn.Weapon` never points at it - it stays on the gun, which is HIDDEN not swapped), and
+     `IsTMD_Equipped` in the dump is a FUNCTION, not a readable property.
+   - ⚠ **A new property needs registering in `g_wantNames`.** `WantedIdx` searches only that table, so
+     an unregistered name fails before a single class is walked and reports as "not found at depth 13".
+     The property DUMP does not share that step - it reads names off each property directly - so the
+     two are not independent, and a "not found" from the resolver often means "not in the table".
+
+10g. **📏 MEASURED (run 234) - the arms are ONE mesh, so two-handed VR is not reachable by
+   transform.** 7444 verts, 4402 triangles, from a single vertex/index buffer at `base 0, startIdx 0`
+   - it owns its buffer outright. Identical across **27,279 draws** with a weapon and with the TMD, so
+   the one-hand/two-hand difference the wearer sees is POSE, not a second mesh.
+   - ⛔ Both arms arrive in **one draw call**, which takes one world matrix. Splitting them needs
+     bone-level control. `AdsFreeze` proves we can write the bone palette; the bone map and bind pose
+     are what we do not have, and D3D9 does not expose them.
+   - ⚠ **The mesh census cannot answer questions like this** - `FgLearnSignature` dedupes by vertex
+     count, so two distinct meshes sharing a count collapse into one entry. Use the draw-call identity
+     probe (`FgIdentityVerts`) instead: buffers plus range, which pose does not change.
+   - ✅ The TMD gauntlet (4818) IS its own mesh, correctly posed on the left forearm, and is drawn at
+     the same time as the weapon. Putting it on the left hand is cheap and does not need any of the above.
+
+10e. **✅ FIXED and VERIFIED (run 216) — the scope reorders the pass, and the roles were positional.**
+   - Reported: after using the sniper scope, the arms are on the controller and the gun is invisible,
+     surviving a weapon switch. The run-207 role shift by a route neither run-212 defence covered.
+   - **The scope draws the arms FIRST** — `[3314, 390, 11389, 97]` against the normal
+     `[11389, 97, 3314, 390]` — so a re-latch while scoped took slot[0]=3314 as the gun.
+   - **Unrecoverable by design flaw:** a latch taken from a scoped pass captures a baseline containing
+     the real gun, so `FgIsExtraArm` hid it *and* run 212's recovery — which required a larger mesh
+     **outside** the baseline — never saw a contradiction.
+   - **Fixed by size:** the gun is the largest mesh in the pass, the arms the second largest. True of
+     every census on disk, and invariant under draw order. Plus: no latch from a scoped pass, and the
+     recovery's baseline requirement dropped.
+   - **Verified, and the case was genuinely exercised** — two takes from the arms-first list, both
+     correct: `[0]=3314 [1]=390 [2]=11387 [3]=9` gives `gun=11387 arms=3314`, and
+     `[0]=3314 [1]=390 [2]=11389 [3]=97` gives `gun=11389 arms=3314`. Under the old rule both would
+     have been the bug. No recovery firing was needed.
+
+10c. **✅ FIXED and VERIFIED (run 213) — the sniper scope was drawn once across the whole frame.**
+   `ScopeQuadPerEye=1`, `ScopeScenePsReg=1`, `ScopeAspectPsReg=0`, `ScopeHeadAim=1`.
+   - The overlay is `DrawPrimitive, triangle strip, 2 prims` — a fullscreen quad from a bound vertex
+     buffer. `StereoPair` remaps the **camera registers**, and a clip-space quad reads none, so both
+     copies landed at full-frame coordinates and each eye got half a circle. Same reason the HUD was
+     always fine: `HudStereoPair` transforms `c5`–`c8`, which the HUD shader does read.
+   - **Three parts, all required:** per-eye **viewport** (no vertex pointer exists to rewrite);
+     `c1 ScreenPositionScaleBias` **X only** (the scene read comes from the projected position, not the
+     geometry); `c0 ScreenAspectRatio` halved (each half is 1280×1440, not 2560×1440).
+   - Verified in the log, not just by eye: `scope overlay quads drawn per eye: 120` — one per frame
+     while scoped, absent otherwise. User-confirmed in play.
+   - ⚠️ **Four fixes were written on inference first, and all four were wrong.** The full autopsy is in
+     `HISTORY.md`; the short version is that the pixel shader carries a **CTAB symbol table** naming
+     every constant and sampler, and reading it settled in one look what three censuses could not.
+   - ⚠️ The counter reads **240** in a few windows — the overlay is drawn twice a frame in some state.
+     Harmless as observed, but it means "once per frame" is not universal.
+   - **`ScopeHeadAim=1` shipped alongside**: while the scope overlay is on screen the shot follows the
+     HEAD, not the controller, at both trace sites. Gated on the overlay being drawn rather than on the
+     alt trigger, which means something different on every other weapon.
+     ✅ **Confirmed in play (run 216)** — the shot follows the reticle, not the controller pose.
+
+10d. **✅ FIXED and VERIFIED (run 215) — the mesh matchers hid WORLD geometry.** `FgPrimeWindowDraws=16`.
+   - Reported as a hole in the floor with water and a basement visible through it. Bisected on ini keys:
+     absent unmodded → it is us; HEAD mode fixes it → the mesh path; `HideExtraArms=0` fixes it →
+     `FgIsExtraArm`.
+   - **`fgDrawCount > kFgSanePass` never fires outside the first-person pass**, because the counter it
+     reads is 0 there — so `0 > 64` is false and the vertex-count match proceeded **frame-wide**. With
+     `9` in the baseline set, every 9-vertex draw in the frame was hidden.
+   - Fixed with a window: **inside the pass, OR within the first few draws of the frame**. Gating on the
+     pass alone would have restored run 120's black silhouette, since the depth prime is drawn at
+     draws 2–3. Applied to the MOVE path too.
+   - **Measured ~4 refusals per frame across a whole run** — this was pervasive, not room-specific. It
+     had been removing small world meshes all along and only became visible on a floor.
+   - ⚠️ If a hidden mesh ever leaves a **black silhouette**, the window is too narrow — raise
+     `FgPrimeWindowDraws`. That is run 120's failure mode and needs no rebuild.
+
+11b. **✅ FIXED and VERIFIED (run 214) — the melee swing was invisible.** `MeleeArmsMs=700`,
+   `MeleeArmsDelayMs=0`.
+   - Same cause and same remedy as the heal: the animation is performed by the arms the mod hides. The
+     window shows the arms **and returns the gun to the engine's position**, because moving the gun onto
+     the controller mid-animation tears it in half (run 198).
+   - The heal and melee sites now share `ArmsAnimActive()` — a third animation extends one function
+     rather than three call sites. Both keep the run-203 cheap-gate shape on the hot path.
+   - Verified in the log: **12 windows, one per press**, none double-armed.
+   - ✅ **700 ms is CONFIRMED, first flight** — reported as "the timing was perfect", no tuning needed.
+     Unlike `HealArmsMs`, which took a round. Still an ini value in case another weapon's swing differs,
+     not because this one is unverified.
+   - ⚠️ **The impulse weapon shares this button** and that case is unmeasured. Every window logs the
+     latched weapon (`gun=…`) so one ordinary run settles it once the weapon exists. `MeleeArmsMs=0`
+     disables it without a rebuild.
+
+11. **✅ The arms reappear for the health injector animation (run 198–199).** `HealArmsMs=2150`,
+   `HealArmsDelayMs=100`.
+   - The arms are shown **and the gun is returned to the engine's position** for the window — moving the
+     gun onto the controller while the arms animate at the engine position tears one animation in half.
+   - **Gated on the heal being able to do anything.** Reads `Pawn.Health` / `Pawn.HealthMax` (see
+     `ENGINE_NOTES.md`) at the press, so at full health the arms never appear.
+   - ⚠️ **Do NOT "verify" by waiting for health to rise.** Health is applied by the animation, possibly
+     at its end, so the confirmation arrives *late* and a window opened then runs on past the animation
+     it was meant to cover. Asking "could this heal do anything" *before* the press has no timing
+     dependency.
+   - Both edges are knobs measured from the press, because they were reported separately and move
+     independently: shortening the duration to fix a late finish would also have made it start early.
+   - **✅ The no-items case is closed too (run 200).** Also reads `RvGameSharedHUD.mHealthPackCount`, so
+     the window is skipped when the player has no packs. Both reasons a heal does nothing are now checked.
+   - ⚠️ **Chose the HUD's count over `RvGameSharedInventoryManager.mCounts` deliberately.** `mCounts` is
+     an array indexed by an `ERvCountItem` enum, so using it means guessing which slot is the health pack.
+     `mHealthPackCount` is a single int whose name states what it holds, and a frame of HUD lag cannot
+     matter for a check made once at a button press.
+   - ⚠️ **Both checks fail OPEN.** If either property cannot be read the window opens anyway and the log
+     says so — a *missing* animation is a worse failure than a spurious one.
+12. **The TMD**, when the game reaches it. Left-hand device, so it needs the same treatment driven
+   by `g_handPoseValid[0]` instead of `[1]`. Everything generalises; it is unverifiable until that
+   point in the game, and `Singularity.exe <map>` makes reaching one practical.
+13. **Decals — leave alone unless it bothers you.** Five theories are dead (shadows, `G16R16`,
+   `ScreenPositionScaleBias`, `vs c13`, unhooked user-pointer draws) and the workaround is free:
+   turn **High Quality Decals** off in the in-game video options.
+14. 📋 **OPEN — has SteamVR or OpenVR actually been tried against this mod? No.** Every run in
+   this project's history has been on VDXR. "SteamVR/OpenVR has no 32-bit runtime" was inherited
+   from the same assumption on the sibling Mirror's Edge mod — and a modder there has since
+   reportedly gotten it running via SteamVR, mentioning OpenVR as well. Neither claim is confirmed
+   here first-hand; that cuts both ways, and it does not prove either runtime works with *this*
+   mod. It does mean the "no 32-bit runtime" line was never independently tested for Singularity.
+   Worth an actual attempt before it gets repeated as fact again. Not started.
+
+> **RETRACTED (run 136).** This list used to end with *"one object still culls early at distance —
+> PAGE DOWN fixes it, which points at the run-21 mechanism: FOV inflation makes objects project
+> 3.4× smaller than the engine expects."* The run-21 mechanism is **not** the cause. Two
+> measurements kill it: sweeping the engine's asked FOV over 0.35×–6× changed nothing while the
+> engine demonstrably took the request, and the draw count is identical at two resolutions that
+> look completely different. PAGE DOWN "fixing" it was the coincidence that kept this alive —
+> PAGE DOWN changes the forced matrix as well as the ask, and it is the forced matrix that matters.
+
+**Watch this one:** MinHook now initialises in `DllMain` (run 59, for the command-line detour)
+rather than at first `Present`. `InstallViewHook` tolerates `MH_ERROR_ALREADY_INITIALIZED`
+accordingly — treating it as a failure would silently kill head tracking. It is the newest
+structural change in the build and the first thing to suspect if tracking ever misbehaves.
+
+## Measured, so it does not have to be re-derived
+
+| Quantity | Value |
+|---|---|
+| View matrix | `c0`, **ROW** storage, **translated-world** space |
+| Eye separation | 3.32 UU = 6.3 cm (correct IPD), stable |
+| Headset wants | **2496×2688 per eye** → 4992 wide for side-by-side |
+| Per eye at 2560×1440 | 1280×1440 — 51% of the panel |
+| Per eye at 3840×2160 | 1920×2160 — 77% of the panel |
+| Resolution cap | **RETRACTED — there isn't one at these sizes.** 4096 ✅ · 4608 ✅ · **4992 ✅** (run 58), with `D3D9ExMode=1`; the scene targets follow every time. Run 33 measured its refusal on the *plain* D3D9 device, before the Ex upgrade |
+| Per eye at 4992×2688 | **2496×2688 — 100% of what the headset asks for.** Parity reached in side-by-side; no per-eye targets needed |
+| Frame aspect | Keep per-eye ≈ **0.93** (2496/2688). A taller frame at fixed width narrows the horizontal field — 4096×2688 renders 82.5° vs 95° at 4096×2160 — and the shortfall shows as **black bars at the sides** |
+| Frame rate | **120.0 fps LOCKED at 4992×2688 (full parity)** — median 8.34 ms, `our work` 3.02 ms, **4.35 ms idle**. Needed both zero-copy (run 39) and a **dedicated router** (run 56). SSW **off**, 120 Hz. Every figure before run 32 was SSW halving the rate and is void |
+| Frame copy | **0.00 ms** under zero-copy. Was ~9.8 ms of a ~16 ms frame at 4K on the CPU path |
+| XR submit (`xrBeginFrame`+`xrEndFrame`) | **0.08–1.28 ms** on a dedicated router. Was **20.94 ms mean / 189 ms worst** on shared WiFi — and it was pooled into "our work", where it looked like a game-side stall for a whole day (run 56) |
+| Engine FOV | horizontal at 16:9, dips to its 65° default ~7% of samples |
+| Scene targets | 2× scene-sized (A8R8G8B8 + A16B16G16R16F), shadow map 512×512 R32F |
+
+## ⚠ The ini takes the FIRST key of a duplicated name, silently
+
+Hand-editing `SingularityVR.ini` can leave two lines with the same key. `GetPrivateProfileInt` returns
+the **first** and reports nothing about the second, so the file reads as if the change was made and the
+mod behaves as if it was not. This cost a run at 219b: `ScopeDrawCensus` appeared twice, the first was
+`0`, and a census that was believed armed recorded nothing.
+
+`PanelSave` is not affected — `WritePrivateProfileString` edits in place — so this only bites
+hand-edits. Check before trusting one:
+
+```bash
+awk -F= '/^[A-Za-z]/ {print $1}' SingularityVR.ini | sort | uniq -d
+```
+
+Anything printed is a key whose later copies are dead. And the log settles it either way: every setting
+prints its **effective** value at startup, so `ini: ScopeDrawCensus=0` next to a file saying `3` is the
+duplicate announcing itself.
+
+## Quick start
+
+**The live build is `spikes/view_matrix/`** (spike 9). **`spikes/vr_render/`** (spike 8) is the
+known-good fallback if spike 9 misbehaves. Earlier spikes are kept deliberately — several
+document approaches that did *not* work, which is most of their value.
+
+```powershell
+.\spikes\view_matrix\build.ps1 -Install     # builds x86, copies into the dev game copy
+```
+
+Connect **Virtual Desktop** first — VDXR is what every tested run here has used, and Meta's own
+runtime crashes in `xrCreateSession`. ⚠️ **"SteamVR/OpenVR has no 32-bit runtime" was carried here
+as settled fact and it is not.** Nobody has tried either against this mod. See item 14 below, and
+re-read *"Almost every hard problem here was a stale premise"* at the top of this file before
+repeating the claim again. Then launch:
+
+```
+R:\SingularityVR-Dev\Singularity\Binaries\Singularity.exe
+```
+
+**No arguments needed** since run 59 — the resolution is inherited from the headset. Pass `-ResX`
+only to override it deliberately.
+
+> ### 🛜 Virtual Desktop needs a dedicated router, and this is not optional
+>
+> On a shared WiFi network `xrEndFrame` blocked for up to **189 ms**, which read as seconds-long
+> stalls and cost an entire session of misdiagnosis. With a dedicated router and the PC on
+> **ethernet** to it, XR submit is **0.08–1.28 ms** and the frame locks to 120 fps.
+>
+> The `XR submit` figure in the frame budget is the check. If it is anything but small, the link is
+> the problem and **nothing in the render code will help** — see run 56.
+
+**The cold start is VR** since run 159 — `StartInVr=1` is the default, applied at the first Present
+and gated on an OpenXR session existing, so a machine with no headset still comes up flat rather
+than frame-split. `VR MODE` is the first panel row and it saves.
+
+**BACKSPACE is now only a toggle**, for peeking at the flat game — it deliberately does *not*
+save, because a key you press to look at something should not change how the game launches
+tomorrow. Toggling off drops the forced projection with it; a mono image stretched to 98° looks
+broken rather than standard, which is expected.
+
+> Run 37 reverted run 36's default-on because it rendered the untested main menu frame-split on
+> every launch. Run 159 reinstated it on a checkable change, not a change of mind: **run 151 put
+> the HUD and menus into both eyes**, so the thing run 37 objected to is the thing run 151 built.
+> `StartInVr=0` restores the flat cold start with no rebuild.
+
+Individual toggles, unchanged: **F9** head tracking · **F10** 6-DOF head position · **F1** true
+stereo (draw duplication) · **F12** alternate-eye stereo ·
+**F6** VR-correct projection · **F8** recentre · **F5/F4** flip yaw/pitch sign ·
+**F7** scan for the view matrix · **F3** constant offset probe · **F11** offset amount ·
+**INSERT** blank one eye half (mapping test) · **DELETE** swap eye/half assignment ·
+**PAGE UP** cycle culling headroom (now runs *down* from 1.0) · **PAGE DOWN** cycle how much of
+the headset's FOV we render · **HOME** scissor off (drawn-then-clipped vs never-drawn) ·
+**END** clip out everything driven by the tracked register (remapped vs unremapped) ·
+**NUMPAD1** head roll on/off · **NUMPAD2** flip the roll sign ·
+**NUMPAD3** gamepad emulation (on by default since run 61) · **NUMPAD4** walk-forward test ·
+**NUMPAD5** stick-look test.
+
+Controller settings live in an `[Input]` section of `Binaries\SingularityVR.ini`: `Gamepad`,
+`TurnMode` (0 smooth / 1 snap), `TurnAngle`, `TurnSign`, and a 360 button mask per action
+(`Jump`, `Crouch`, `Reload`, `Use`, `Menu`, `Sprint`, `LeftX`, `LeftY`, `Melee`). Raven's own
+console layout is not documented anywhere, so the masks are a first guess kept editable rather
+than a rebuild.
+
+**Do not press F12 after F1.** F1 clears alternate-eye, but F12 does *not* clear duplication, so
+that order leaves both stereo modes running at once. F12 before F1 is harmless and pointless.
+
+Mouse and head tracking now **add** rather than fight — turning with the mouse no longer snaps
+back, and the same fix is what stick-turning will need in the shipped mod.
+Log: `C:\Users\<you>\AppData\Local\SingularityVR\view_matrix.log` — **read it directly from disk**;
+it does not need pasting into chat, and it must never be pasted into this file. Truncated at each
+attach and stamped with the run's date and time on line 1, so a stale file is obvious at a glance.
+
+**Every run is kept, named for when it started.** The live run is always `view_matrix.log`; at
+the next attach it is renamed to `view_matrix_YYYY-MM-DD_HH-MM-SS.log`, the stamp read back out
+of its own line-1 header. Newest archive = most recent finished run. Nothing is ever evicted, so
+**a reference to a specific log stays valid permanently** — cite them by name in notes.
+
+The old `view_matrix.prevN.log` files are the previous scheme and are left alone; `prevN` named a
+*position*, so those names meant something different after every launch. Pruning is manual and
+deliberate — nothing deletes logs automatically, including the 24-line ones, which are the
+evidence when the question is "why did it die at startup". Uninstall = delete `d3d9.dll`.
+
+Paths, toolchain and game copies: `ENVIRONMENT.md`. Nothing is tied to the repo location.
+
+## What works, and how
+
+| Piece | Mechanism |
+|---|---|
+| Frame into the headset | backbuffer → `GetRenderTargetData` → SYSTEMMEM → D3D11 → XR swapchain |
+| View **pitch** | MinHook detour on `FUN_0104e390`, the view-rotation source |
+| View **yaw** | direct write to the live controller `+0x64` (the detour's seam carries pitch only) |
+| FOV | write to `mCurrentPOV` FOV, `+0x0438` |
+| Finding live objects | `GObjects` walk; live actor = `Outer == PersistentLevel`, name lacks `Default__` |
+
+## ✅ Camera POSITION — solved 2026-07-29
+
+This was the blocker for **both 6-DOF and stereo**, and it is now controllable. Not through the
+engine's object model — three attempts at that failed — but by intercepting the **world→clip
+matrix** on its way to the GPU and pre-multiplying a translation into it. Confirmed live: the
+view moved.
+
+| Fact | Value |
+|---|---|
+| Where | `SetVertexShaderConstantF`, device vtable slot 94 |
+| Register | `c0`, ROW storage (registers are matrix rows) |
+| Space | **translated-world** — UE3 pre-subtracts the view origin on the CPU |
+| To move by `o` | `row3 -= o.x*row0 + o.y*row1 + o.z*row2` |
+
+Findings from the same runs, all in `ENGINE_NOTES.md`:
+
+- **The engine renders in translated-world space.** Probing the world camera position alone
+  would have found nothing; the origin probe is what made the scan work.
+- **The convention was settled by a direction test**, not the position test — `c0` read as ROW
+  gives `dotFwd = +1.0000`, read as COL gives `+0.0023`, from identical bytes.
+- **CPU frustum culling is a non-issue at stereo scale.** Measured from the backbuffer: a
+  1.4–2.9% band at 300 UU, and **0 px at 100 UU and below**. The planned FOV-widening job is
+  therefore **dropped** — a real IPD is a few UU.
+
+## ✅ 6-DOF — working, confirmed 2026-07-29
+
+The headset's real position drives the view (F10). Leaning and ducking move the camera.
+
+## VR-correct projection — what it does
+
+Scale could not be judged in the headset because the projection layer was claiming the
+**headset's** FOV for an image the game rendered at a different one — a uniform stretch that
+made head movement, world scale and object size all wrong together, so none could be measured
+against another. Now the submitted frustum is *derived from the matrix* (read, not assumed) and
+the game is asked for a vertical FOV matching the headset so that truth also fills the view.
+Toggle with **F6**.
+
+## Method notes that earned their keep
+
+- **Validate the test environment before trusting the instrument.** SSW halved every frame-rate
+  number this project recorded for thirty runs, and nothing in the log looked wrong — the timings
+  were honest, the frame itself was synthetic. Run 31 built a correct instrument, measured
+  carefully, and drew a confident conclusion that was wrong at the input. **A measurement is only
+  as good as the thing being measured is real.** Check pacing, refresh, reprojection and frame
+  generation *first*, and record them next to the numbers.
+- **Measure the thing before building what the measurement justifies.** "The frame copy is the
+  bottleneck" survived thirty runs and became the top-priority work item without anyone timing it.
+  That instinct was right — but see above, because the first attempt to act on it still produced a
+  wrong answer, and being right about *method* did not save it.
+- **A stall that leaves your instrument has not left your frame.** Pipelining the readback took the
+  copy phase from 4.2 ms to 0.89 ms and moved every one of those milliseconds into unmeasured work,
+  for no net gain. Any phase timing that improves while the total does not has probably relocated a
+  cost rather than removed one.
+- **Rotate logs that are truncated on attach.** Every measurement here is an A/B across launches,
+  so a log that truncates destroys the run being compared against — silently, since the file still
+  looks complete. Run 31 lost two of three tests that way.
+- **Audit the instruments before proposing another mechanism.** Six theories died on their own
+  diagnostics; the seventh was found only after run 27 checked whether the diagnostics could
+  report anything at all. Three could not: `remapKnown` was `const bool ... = true`, the perf
+  line's `%s` was eating an integer argument, and `camera matrices tracked` is capped at 1 by
+  construction. Two of those had been quoted in this document as *evidence*.
+- **Build discriminators, not hypotheses.** A test that separates two whole classes
+  (drawn-then-clipped vs never-drawn; remapped vs unremapped) retires more in one session than
+  three rounds of argument. Every step from run 28 on was one of these, and each killed a class.
+- **Narrow by causality, not by symptom.** The answer was named before it was tested: the object
+  not being drawn is a CPU decision, both of our CPU-side influences were already eliminated, and
+  query readback is the only route by which a GPU-side change can reach a CPU decision.
+- **A test that destroys its own readability is a wasted run.** Collapsing `c0` to a point piled
+  every triangle onto a few pixels and let bloom smear the result over everything. Clipping the
+  geometry instead — same intent, legible frame — answered it immediately.
+- **Override the answer, not the availability.** Refusing to create the occlusion query crashed
+  the game; patching `GetData` to lie ran the identical experiment with the engine's control flow
+  untouched. Prefer the intervention that leaves the program on its normal path.
+- **Check which rows of the log you are reading.** The 51.1° culling figure that briefly revived
+  the shortfall theory came from a pre-gameplay frame. The instrument was right; the row was
+  wrong.
+
+- **Verify by writing, not by reading.** A struct holding plausible live values is not proof the
+  renderer uses it. `mCurrentPOV` looked exactly like the camera and steers only FOV.
+- **When guessing fails twice, change tools.** A hardware write breakpoint found the rotation
+  source immediately after seven failed guesses.
+- **Shotgun, then narrow.** Testing candidates one at a time behind a hotkey let a working case
+  get cycled past unseen.
+- **Doc errors become code bugs.** `ENGINE_NOTES` recorded the backbuffer as `X8R8G8B8`; it is
+  `A8R8G8B8`, and that mistake propagated straight into a `D3DERR_INVALIDCALL`.

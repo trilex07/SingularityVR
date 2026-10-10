@@ -1,0 +1,1083 @@
+{
+  "source": "Free Pack - VR Hands (Rigged)",
+  "source_files": [
+    "free_pack_vr_hands_rigged.glb",
+    "free_pack_vr_hands_rigged.ma"
+  ],
+  "license_status": "No license/readme file was included in the supplied files; REFERENCE ONLY - DO NOT DISTRIBUTE",
+  "glb": {
+    "format": "glb",
+    "file": "free_pack_vr_hands_rigged.glb",
+    "generator": "fab-model-conversion",
+    "node_count": 52,
+    "joint_count": 34,
+    "joints": [
+      "J_Right_43",
+      "J_Right_Hand_42",
+      "J_Right_HandThumb1_25",
+      "J_Right_HandRing1_37",
+      "J_Right_HandRing2_36",
+      "J_Right_HandMiddle1_33",
+      "J_Right_HandMiddle2_32",
+      "J_Right_HandIndex1_29",
+      "J_Right_HandIndex2_28",
+      "J_Right_HandPinky1_41",
+      "J_Right_HandPinky2_40",
+      "J_Right_HandThumb2_24",
+      "J_Right_HandRing3_35",
+      "J_Right_HandMiddle3_31",
+      "J_Right_HandIndex3_27",
+      "J_Right_HandPinky3_39",
+      "J_Right_HandThumb3_23",
+      "J_Left_21",
+      "J_Left_Hand_20",
+      "J_Left_HandThumb1_3",
+      "J_Left_HandRing1_15",
+      "J_Left_HandRing2_14",
+      "J_Left_HandMiddle1_11",
+      "J_Left_HandMiddle2_10",
+      "J_Left_HandIndex1_7",
+      "J_Left_HandIndex2_6",
+      "J_Left_HandPinky1_19",
+      "J_Left_HandPinky2_18",
+      "J_Left_HandThumb2_2",
+      "J_Left_HandRing3_13",
+      "J_Left_HandMiddle3_9",
+      "J_Left_HandIndex3_5",
+      "J_Left_HandPinky3_17",
+      "J_Left_HandThumb3_1"
+    ],
+    "hierarchy": {
+      "J_Right_43": [
+        "J_Right_Hand_42"
+      ],
+      "J_Right_Hand_42": [
+        "J_Right_HandThumb1_25",
+        "J_Right_HandIndex1_29",
+        "J_Right_HandMiddle1_33",
+        "J_Right_HandRing1_37",
+        "J_Right_HandPinky1_41"
+      ],
+      "J_Right_HandThumb1_25": [
+        "J_Right_HandThumb2_24"
+      ],
+      "J_Right_HandRing1_37": [
+        "J_Right_HandRing2_36"
+      ],
+      "J_Right_HandRing2_36": [
+        "J_Right_HandRing3_35"
+      ],
+      "J_Right_HandMiddle1_33": [
+        "J_Right_HandMiddle2_32"
+      ],
+      "J_Right_HandMiddle2_32": [
+        "J_Right_HandMiddle3_31"
+      ],
+      "J_Right_HandIndex1_29": [
+        "J_Right_HandIndex2_28"
+      ],
+      "J_Right_HandIndex2_28": [
+        "J_Right_HandIndex3_27"
+      ],
+      "J_Right_HandPinky1_41": [
+        "J_Right_HandPinky2_40"
+      ],
+      "J_Right_HandPinky2_40": [
+        "J_Right_HandPinky3_39"
+      ],
+      "J_Right_HandThumb2_24": [
+        "J_Right_HandThumb3_23"
+      ],
+      "J_Right_HandRing3_35": [
+        "J_Right_HandRing4_34"
+      ],
+      "J_Right_HandMiddle3_31": [
+        "J_Right_HandMiddle4_30"
+      ],
+      "J_Right_HandIndex3_27": [
+        "J_Right_HandIndex4_26"
+      ],
+      "J_Right_HandPinky3_39": [
+        "J_Right_HandPinky4_38"
+      ],
+      "J_Right_HandThumb3_23": [
+        "J_Right_HandThumb4_22"
+      ],
+      "J_Left_21": [
+        "J_Left_Hand_20"
+      ],
+      "J_Left_Hand_20": [
+        "J_Left_HandThumb1_3",
+        "J_Left_HandIndex1_7",
+        "J_Left_HandMiddle1_11",
+        "J_Left_HandRing1_15",
+        "J_Left_HandPinky1_19"
+      ],
+      "J_Left_HandThumb1_3": [
+        "J_Left_HandThumb2_2"
+      ],
+      "J_Left_HandRing1_15": [
+        "J_Left_HandRing2_14"
+      ],
+      "J_Left_HandRing2_14": [
+        "J_Left_HandRing3_13"
+      ],
+      "J_Left_HandMiddle1_11": [
+        "J_Left_HandMiddle2_10"
+      ],
+      "J_Left_HandMiddle2_10": [
+        "J_Left_HandMiddle3_9"
+      ],
+      "J_Left_HandIndex1_7": [
+        "J_Left_HandIndex2_6"
+      ],
+      "J_Left_HandIndex2_6": [
+        "J_Left_HandIndex3_5"
+      ],
+      "J_Left_HandPinky1_19": [
+        "J_Left_HandPinky2_18"
+      ],
+      "J_Left_HandPinky2_18": [
+        "J_Left_HandPinky3_17"
+      ],
+      "J_Left_HandThumb2_2": [
+        "J_Left_HandThumb3_1"
+      ],
+      "J_Left_HandRing3_13": [
+        "J_Left_HandRing4_12"
+      ],
+      "J_Left_HandMiddle3_9": [
+        "J_Left_HandMiddle4_8"
+      ],
+      "J_Left_HandIndex3_5": [
+        "J_Left_HandIndex4_4"
+      ],
+      "J_Left_HandPinky3_17": [
+        "J_Left_HandPinky4_16"
+      ],
+      "J_Left_HandThumb3_1": [
+        "J_Left_HandThumb4_0"
+      ]
+    },
+    "animations": [],
+    "root_matrices": {
+      "FAB converted model": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "GLTF_SceneRootNode": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.220446049250313e-16,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "Armature_46": [
+        0.009999999776482582,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.009999999776482582,
+        0.0,
+        0.0,
+        -0.009999999776482582,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "coordinate_notes": [
+      "The exported armature contains separate J_Left/J_Right chains.",
+      "The first matrix is an exporter axis conversion; use the native OpenXR conversion as the runtime authority."
+    ]
+  },
+  "maya": {
+    "format": "maya_ascii",
+    "file": "free_pack_vr_hands_rigged.ma",
+    "joint_count": 45,
+    "joints": [
+      "Root",
+      "J_Left",
+      "J_Left_Hand",
+      "J_Left_HandThumb1",
+      "J_Left_HandThumb2",
+      "J_Left_HandThumb3",
+      "J_Left_HandThumb4",
+      "J_Left_HandIndex1",
+      "J_Left_HandIndex2",
+      "J_Left_HandIndex3",
+      "J_Left_HandIndex4",
+      "J_Left_HandMiddle1",
+      "J_Left_HandMiddle2",
+      "J_Left_HandMiddle3",
+      "J_Left_HandMiddle4",
+      "J_Left_HandRing1",
+      "J_Left_HandRing2",
+      "J_Left_HandRing3",
+      "J_Left_HandRing4",
+      "J_Left_HandPinky1",
+      "J_Left_HandPinky2",
+      "J_Left_HandPinky3",
+      "J_Left_HandPinky4",
+      "J_Right",
+      "J_Right_Hand",
+      "J_Right_HandThumb1",
+      "J_Right_HandThumb2",
+      "J_Right_HandThumb3",
+      "J_Right_HandThumb4",
+      "J_Right_HandIndex1",
+      "J_Right_HandIndex2",
+      "J_Right_HandIndex3",
+      "J_Right_HandIndex4",
+      "J_Right_HandMiddle1",
+      "J_Right_HandMiddle2",
+      "J_Right_HandMiddle3",
+      "J_Right_HandMiddle4",
+      "J_Right_HandRing1",
+      "J_Right_HandRing2",
+      "J_Right_HandRing3",
+      "J_Right_HandRing4",
+      "J_Right_HandPinky1",
+      "J_Right_HandPinky2",
+      "J_Right_HandPinky3",
+      "J_Right_HandPinky4"
+    ],
+    "parent": {
+      "Root": null,
+      "J_Left": "Root",
+      "J_Left_Hand": "J_Left",
+      "J_Left_HandThumb1": "J_Left_Hand",
+      "J_Left_HandThumb2": "J_Left_HandThumb1",
+      "J_Left_HandThumb3": "J_Left_HandThumb2",
+      "J_Left_HandThumb4": "J_Left_HandThumb3",
+      "J_Left_HandIndex1": "J_Left_Hand",
+      "J_Left_HandIndex2": "J_Left_HandIndex1",
+      "J_Left_HandIndex3": "J_Left_HandIndex2",
+      "J_Left_HandIndex4": "J_Left_HandIndex3",
+      "J_Left_HandMiddle1": "J_Left_Hand",
+      "J_Left_HandMiddle2": "J_Left_HandMiddle1",
+      "J_Left_HandMiddle3": "J_Left_HandMiddle2",
+      "J_Left_HandMiddle4": "J_Left_HandMiddle3",
+      "J_Left_HandRing1": "J_Left_Hand",
+      "J_Left_HandRing2": "J_Left_HandRing1",
+      "J_Left_HandRing3": "J_Left_HandRing2",
+      "J_Left_HandRing4": "J_Left_HandRing3",
+      "J_Left_HandPinky1": "J_Left_Hand",
+      "J_Left_HandPinky2": "J_Left_HandPinky1",
+      "J_Left_HandPinky3": "J_Left_HandPinky2",
+      "J_Left_HandPinky4": "J_Left_HandPinky3",
+      "J_Right": "Root",
+      "J_Right_Hand": "J_Right",
+      "J_Right_HandThumb1": "J_Right_Hand",
+      "J_Right_HandThumb2": "J_Right_HandThumb1",
+      "J_Right_HandThumb3": "J_Right_HandThumb2",
+      "J_Right_HandThumb4": "J_Right_HandThumb3",
+      "J_Right_HandIndex1": "J_Right_Hand",
+      "J_Right_HandIndex2": "J_Right_HandIndex1",
+      "J_Right_HandIndex3": "J_Right_HandIndex2",
+      "J_Right_HandIndex4": "J_Right_HandIndex3",
+      "J_Right_HandMiddle1": "J_Right_Hand",
+      "J_Right_HandMiddle2": "J_Right_HandMiddle1",
+      "J_Right_HandMiddle3": "J_Right_HandMiddle2",
+      "J_Right_HandMiddle4": "J_Right_HandMiddle3",
+      "J_Right_HandRing1": "J_Right_Hand",
+      "J_Right_HandRing2": "J_Right_HandRing1",
+      "J_Right_HandRing3": "J_Right_HandRing2",
+      "J_Right_HandRing4": "J_Right_HandRing3",
+      "J_Right_HandPinky1": "J_Right_Hand",
+      "J_Right_HandPinky2": "J_Right_HandPinky1",
+      "J_Right_HandPinky3": "J_Right_HandPinky2",
+      "J_Right_HandPinky4": "J_Right_HandPinky3"
+    },
+    "rest_pose": {
+      "Root": {
+        "translation_cm": [
+          0.0,
+          12.0,
+          -2.0
+        ]
+      },
+      "J_Left": {
+        "translation_cm": [
+          26.870422885701412,
+          0.19924696443226253,
+          1.9493438144081372
+        ],
+        "rotation_deg": [
+          41.81048574327013,
+          0.509987056970619,
+          -12.880992390372096
+        ],
+        "joint_orient_deg": [
+          74.57931315660596,
+          78.63143909929106,
+          -63.20067840012407
+        ]
+      },
+      "J_Left_Hand": {
+        "translation_cm": [
+          0.0053236046661298,
+          5.659482012266233,
+          -0.08576341110869379
+        ],
+        "rotation_deg": [
+          -11.43137050429494,
+          17.694949232219066,
+          -7.0764968023414925
+        ],
+        "joint_orient_deg": [
+          11.146908058172214,
+          -18.31918482371657,
+          3.533165046191653
+        ]
+      },
+      "J_Left_HandThumb1": {
+        "translation_cm": [
+          -3.5862550685696775,
+          0.7716284390974701,
+          1.1143436567281988
+        ],
+        "rotation_deg": [
+          -42.05294412748028,
+          53.07581966974445,
+          -35.79725066715245
+        ],
+        "joint_orient_deg": [
+          12.415590828789218,
+          2.432147698816995e-07,
+          32.540683453434205
+        ]
+      },
+      "J_Left_HandThumb2": {
+        "translation_cm": [
+          -0.2551132727114166,
+          2.928236924603688,
+          -0.3570595408943018
+        ],
+        "rotation_deg": [
+          -4.263421246771676,
+          0.1229439484617994,
+          -0.07451244926133281
+        ],
+        "joint_orient_deg": [
+          12.94880730272604,
+          -7.951386703658792e-16,
+          0.0
+        ]
+      },
+      "J_Left_HandThumb3": {
+        "translation_cm": [
+          -0.21663599969191694,
+          4.037098966281365,
+          -0.4207500363540966
+        ],
+        "rotation_deg": [
+          5.277690651960621,
+          -1.2482607885090374e-14,
+          1.15629743201593e-15
+        ],
+        "joint_orient_deg": [
+          -9.404960721011259,
+          -5.963540027744093e-16,
+          0.0
+        ]
+      },
+      "J_Left_HandThumb4": {
+        "translation_cm": [
+          -0.23343620610366855,
+          3.000863402448406,
+          0.05237214577618232
+        ],
+        "joint_orient_deg": [
+          5.73988058929513e-07,
+          -7.951386632438451e-15,
+          -3.1805546529753805e-15
+        ]
+      },
+      "J_Left_HandIndex1": {
+        "translation_cm": [
+          -3.6665234045723825,
+          7.560744237022243,
+          -1.9295231785246472
+        ],
+        "rotation_deg": [
+          2.782985346280577e-15,
+          -8.23240254243208e-16,
+          1.352778172097778e-15
+        ],
+        "joint_orient_deg": [
+          1.7427014436690984,
+          2.9919147950351863e-06,
+          6.260504991900815
+        ]
+      },
+      "J_Left_HandIndex2": {
+        "translation_cm": [
+          -0.3218327448828724,
+          4.691822540370595,
+          0.1282470009152128
+        ],
+        "rotation_deg": [
+          3.1805546814635168e-15,
+          1.6805058561420644e-15,
+          1.4946116914978204e-15
+        ],
+        "joint_orient_deg": [
+          3.3506811013863107,
+          -3.1805546814635176e-15,
+          -3.1805546814635176e-15
+        ]
+      },
+      "J_Left_HandIndex3": {
+        "translation_cm": [
+          -0.10837000043260048,
+          2.7267523379586125,
+          0.27497424482902844
+        ],
+        "rotation_deg": [
+          3.1805546814635176e-15,
+          -2.3393008257000113e-15,
+          9.220231548022136e-16
+        ],
+        "joint_orient_deg": [
+          3.076670503965071,
+          0.0,
+          0.0
+        ]
+      },
+      "J_Left_HandIndex4": {
+        "translation_cm": [
+          -0.0858977940583383,
+          2.1812092747615646,
+          0.07124625053346278
+        ],
+        "joint_orient_deg": [
+          -1.7683822759697147e-07,
+          -1.5902773464448673e-15,
+          1.2722218771558939e-14
+        ]
+      },
+      "J_Left_HandMiddle1": {
+        "translation_cm": [
+          -1.2568167479720425,
+          7.651179934368031,
+          -2.0708924141467335
+        ],
+        "rotation_deg": [
+          2.5842006786891076e-15,
+          -6.838049549138919e-16,
+          9.903416995365355e-16
+        ],
+        "joint_orient_deg": [
+          1.0793326978185054,
+          2.5006474335643114e-06,
+          -0.069589435389456
+        ]
+      },
+      "J_Left_HandMiddle2": {
+        "translation_cm": [
+          -0.37020000450897506,
+          5.342914206501738,
+          0.5595087221072106
+        ],
+        "rotation_deg": [
+          4.770832022195274e-15,
+          -5.782309934402863e-16,
+          4.0142136075617725e-15
+        ],
+        "joint_orient_deg": [
+          8.90588945814794,
+          0.0,
+          -3.1805546814635168e-15
+        ]
+      },
+      "J_Left_HandMiddle3": {
+        "translation_cm": [
+          -0.265906228983658,
+          3.3225096919737314,
+          0.31471491980018484
+        ],
+        "rotation_deg": [
+          11.077106115434152,
+          7.251104810399934e-16,
+          1.0461089317721393e-15
+        ],
+        "joint_orient_deg": [
+          -3.932040590913482,
+          -1.5902773407317584e-15,
+          0.0
+        ]
+      },
+      "J_Left_HandMiddle4": {
+        "translation_cm": [
+          -0.16748001162738468,
+          2.1745996362745403,
+          0.09740553377046268
+        ],
+        "joint_orient_deg": [
+          3.0084758386491214e-07,
+          0.0,
+          -9.541664112395625e-15
+        ]
+      },
+      "J_Left_HandRing1": {
+        "translation_cm": [
+          1.0622790550799164,
+          7.513143516956715,
+          -1.2814954300030905
+        ],
+        "rotation_deg": [
+          2.3854160110976384e-15,
+          -4.969616689786746e-16,
+          8.366023411914798
+        ],
+        "joint_orient_deg": [
+          2.278786607370114,
+          3.2155534491380344e-06,
+          -11.560562426810078
+        ]
+      },
+      "J_Left_HandRing2": {
+        "translation_cm": [
+          -0.04200292665945349,
+          4.72860013715372,
+          0.12401481920155177
+        ],
+        "rotation_deg": [
+          4.770832022195275e-15,
+          -4.831417730579202e-15,
+          -2.4287357460289433e-15
+        ],
+        "joint_orient_deg": [
+          9.338866931832824,
+          3.1805546814635168e-15,
+          0.0
+        ]
+      },
+      "J_Left_HandRing3": {
+        "translation_cm": [
+          0.10694923814233825,
+          2.7839442933991645,
+          0.23019179139715007
+        ],
+        "rotation_deg": [
+          0.011555013697848135,
+          0.21375472421988553,
+          -1.670884797019976
+        ],
+        "joint_orient_deg": [
+          -2.298294427895709,
+          0.0,
+          1.5902773407317584e-15
+        ]
+      },
+      "J_Left_HandRing4": {
+        "translation_cm": [
+          -0.14423682548369898,
+          2.462902300769843,
+          0.042984460592165874
+        ],
+        "joint_orient_deg": [
+          1.9340287161679783e-07,
+          9.541664225576319e-15,
+          -4.770832112788159e-15
+        ]
+      },
+      "J_Left_HandPinky1": {
+        "translation_cm": [
+          2.882901733134542,
+          6.733603112410773,
+          -0.07654611626112029
+        ],
+        "rotation_deg": [
+          0.10052556529413509,
+          1.5943211532518153,
+          8.911970665087939
+        ],
+        "joint_orient_deg": [
+          9.639715237356391,
+          2.2644665409984835e-06,
+          -18.897223949432245
+        ]
+      },
+      "J_Left_HandPinky2": {
+        "translation_cm": [
+          0.14209081052383032,
+          3.8278298993887674,
+          -0.20524070440162134
+        ],
+        "rotation_deg": [
+          3.975693351829397e-15,
+          3.4787316828507225e-16,
+          -2.5224280567050927
+        ],
+        "joint_orient_deg": [
+          6.681500195559359,
+          0.0,
+          0.0
+        ]
+      },
+      "J_Left_HandPinky3": {
+        "translation_cm": [
+          -0.24311032825956347,
+          2.3337664181286453,
+          -0.003548242237034316
+        ],
+        "rotation_deg": [
+          -0.6432342710232318,
+          0.042158814536012765,
+          3.7497550305369622
+        ],
+        "joint_orient_deg": [
+          2.4949037207155484,
+          0.0,
+          0.0
+        ]
+      },
+      "J_Left_HandPinky4": {
+        "translation_cm": [
+          -0.026773364200578964,
+          1.8906164821717195,
+          -0.032748480657655676
+        ],
+        "joint_orient_deg": [
+          -4.883340760691422e-07,
+          3.1805545187573472e-15,
+          -2.385415889068011e-15
+        ]
+      },
+      "J_Right": {
+        "translation_cm": [
+          -26.8704,
+          0.19919999999999938,
+          1.9493438
+        ],
+        "rotation_deg": [
+          41.810485743270135,
+          0.5099870569706039,
+          -12.880992390372109
+        ],
+        "joint_orient_deg": [
+          -105.42068684339415,
+          -78.63143909929104,
+          63.20067840012409
+        ]
+      },
+      "J_Right_Hand": {
+        "translation_cm": [
+          -0.0053206395076970114,
+          -5.659434543575306,
+          0.08581433600554789
+        ],
+        "rotation_deg": [
+          -11.431370504294915,
+          17.69494923221906,
+          -7.076496802341463
+        ],
+        "joint_orient_deg": [
+          11.146908058172166,
+          -18.31918482371654,
+          3.533165046191655
+        ]
+      },
+      "J_Right_HandThumb1": {
+        "translation_cm": [
+          3.5862538840525753,
+          -0.7716245364566907,
+          -1.114343341535779
+        ],
+        "rotation_deg": [
+          -42.0529441274803,
+          53.07581966974444,
+          -35.79725066715248
+        ],
+        "joint_orient_deg": [
+          12.415590828789234,
+          -1.5902773407317587e-14,
+          32.54068345343421
+        ]
+      },
+      "J_Right_HandThumb2": {
+        "translation_cm": [
+          0.25516161362774525,
+          -2.928225824629707,
+          0.3570290315962481
+        ],
+        "rotation_deg": [
+          -4.263421246771672,
+          0.12294394846177467,
+          -0.07451244926133006
+        ],
+        "joint_orient_deg": [
+          12.94880730272611,
+          3.4826201730787448e-15,
+          1.117096859250447e-15
+        ]
+      },
+      "J_Right_HandThumb3": {
+        "translation_cm": [
+          0.2165813262119194,
+          -4.037111077047374,
+          0.4207865024471289
+        ],
+        "rotation_deg": [
+          5.277690651960619,
+          5.693742905050621e-15,
+          4.433797150297278e-15
+        ],
+        "joint_orient_deg": [
+          -9.404960721011445,
+          -3.161185938986651e-15,
+          -2.632210577115651e-16
+        ]
+      },
+      "J_Right_HandThumb4": {
+        "translation_cm": [
+          0.23346852503758697,
+          -3.000853526913139,
+          -0.05239127860414783
+        ],
+        "rotation_deg": [
+          -1.5807562737223604e-15,
+          6.361109094826319e-15,
+          3.1805544803879854e-15
+        ],
+        "joint_orient_deg": [
+          1.2074182697257333e-06,
+          3.351258901444192e-22,
+          6.702518170125387e-23
+        ]
+      },
+      "J_Right_HandIndex1": {
+        "translation_cm": [
+          3.66652431029146,
+          -7.560745251422114,
+          1.9295374269567844
+        ],
+        "rotation_deg": [
+          -6.162324695335564e-15,
+          -1.9147170404261117e-15,
+          6.785426971213752e-16
+        ],
+        "joint_orient_deg": [
+          1.7427014436691437,
+          2.991914792113645e-06,
+          6.260504991900845
+        ]
+      },
+      "J_Right_HandIndex2": {
+        "translation_cm": [
+          0.32183001079408236,
+          -4.6918190811265,
+          -0.12829610995486007
+        ],
+        "rotation_deg": [
+          -7.553817368475852e-15,
+          -5.651408682765449e-16,
+          -7.320958240737355e-16
+        ],
+        "joint_orient_deg": [
+          3.3506811013864963,
+          -1.0688914467044604e-15,
+          -3.1263519485891524e-17
+        ]
+      },
+      "J_Right_HandIndex3": {
+        "translation_cm": [
+          0.10837178634510636,
+          -2.726751344026422,
+          -0.27492720486423394
+        ],
+        "rotation_deg": [
+          -3.578124016646457e-15,
+          -6.496671748137771e-16,
+          -1.5514764027901604e-15
+        ],
+        "joint_orient_deg": [
+          3.0766705039647926,
+          -1.024817786483645e-15,
+          -6.168140280369821e-18
+        ]
+      },
+      "J_Right_HandIndex4": {
+        "translation_cm": [
+          0.0858992916677046,
+          -2.1812207188208443,
+          -0.07127093080389102
+        ],
+        "joint_orient_deg": [
+          8.537736462515938e-07,
+          -2.8436374816463367e-22,
+          2.665909925313822e-23
+        ]
+      },
+      "J_Right_HandMiddle1": {
+        "translation_cm": [
+          1.2568170159334071,
+          -7.651176634082811,
+          2.07084759165728
+        ],
+        "rotation_deg": [
+          -5.367186024969685e-15,
+          -2.1637355119749365e-15,
+          -1.7248866258791617e-15
+        ],
+        "joint_orient_deg": [
+          1.0793326978190239,
+          2.500647398416231e-06,
+          -0.06958943538755796
+        ]
+      },
+      "J_Right_HandMiddle2": {
+        "translation_cm": [
+          0.3701949416822332,
+          -5.34291625418749,
+          -0.5595038323300479
+        ],
+        "rotation_deg": [
+          -3.1805546814635176e-15,
+          2.8934426251307656e-13,
+          -2.4105137161173578e-14
+        ],
+        "joint_orient_deg": [
+          8.905889458147671,
+          -2.923706642278463e-13,
+          -2.2768483515655546e-14
+        ]
+      },
+      "J_Right_HandMiddle3": {
+        "translation_cm": [
+          0.26591093019299006,
+          -3.3225146996090578,
+          -0.3147087157764048
+        ],
+        "rotation_deg": [
+          11.077106115434141,
+          -1.3051991585603972e-13,
+          1.4347616087031843e-14
+        ],
+        "joint_orient_deg": [
+          -3.9320405909137737,
+          1.2724097482075185e-13,
+          -2.4456719203775834e-14
+        ]
+      },
+      "J_Right_HandMiddle4": {
+        "translation_cm": [
+          0.16748485595641283,
+          -2.174576353503178,
+          -0.097381203063442
+        ],
+        "joint_orient_deg": [
+          8.537736462515939e-07,
+          -2.7044177338515938e-20,
+          7.784457399074644e-21
+        ]
+      },
+      "J_Right_HandRing1": {
+        "translation_cm": [
+          -1.0622767504809978,
+          -7.513139674733477,
+          1.281480204864888
+        ],
+        "rotation_deg": [
+          -4.770832022195275e-15,
+          -2.286023677301903e-15,
+          8.366023411914794
+        ],
+        "joint_orient_deg": [
+          2.2787866073704364,
+          3.2155534553827835e-06,
+          -11.560562426810074
+        ]
+      },
+      "J_Right_HandRing2": {
+        "translation_cm": [
+          0.04200169000467646,
+          -4.728605480152191,
+          -0.12403347455998315
+        ],
+        "rotation_deg": [
+          -3.1805546814635168e-15,
+          -2.2363040975015684e-15,
+          6.19887181497876e-15
+        ],
+        "joint_orient_deg": [
+          9.338866931832662,
+          8.271587189799567e-16,
+          -6.94652685903276e-15
+        ]
+      },
+      "J_Right_HandRing3": {
+        "translation_cm": [
+          -0.10695771966909362,
+          -2.783949706591401,
+          -0.23023003186563074
+        ],
+        "rotation_deg": [
+          0.011555013697838195,
+          0.2137547242198843,
+          -1.6708847970199754
+        ],
+        "joint_orient_deg": [
+          -2.298294427895839,
+          2.577462020391605e-16,
+          1.7174039142376477e-15
+        ]
+      },
+      "J_Right_HandRing4": {
+        "translation_cm": [
+          0.14424967655209087,
+          -2.4628960291124673,
+          -0.042905078914344585
+        ],
+        "joint_orient_deg": [
+          1.2074182697257331e-06,
+          -5.026887418183715e-23,
+          -8.96461758555142e-22
+        ]
+      },
+      "J_Right_HandPinky1": {
+        "translation_cm": [
+          -2.882897219295372,
+          -6.733603609453113,
+          0.0765447593980575
+        ],
+        "rotation_deg": [
+          0.1005255652941287,
+          1.5943211532518125,
+          8.911970665087937
+        ],
+        "joint_orient_deg": [
+          9.63971523735647,
+          2.264466555327875e-06,
+          -18.897223949432252
+        ]
+      },
+      "J_Right_HandPinky2": {
+        "translation_cm": [
+          -0.1420951717295258,
+          -3.8278304417638953,
+          0.2052472720835823
+        ],
+        "rotation_deg": [
+          -7.951386703658796e-16,
+          -3.975693351829397e-16,
+          -2.522428056705089
+        ],
+        "joint_orient_deg": [
+          6.68150019555938,
+          1.8880911157025572e-15,
+          -5.39593624623512e-16
+        ]
+      },
+      "J_Right_HandPinky3": {
+        "translation_cm": [
+          0.24310788365493408,
+          -2.333780741771146,
+          0.003505116678891085
+        ],
+        "rotation_deg": [
+          -0.6432342710232404,
+          0.04215881453601364,
+          3.7497550305369662
+        ],
+        "joint_orient_deg": [
+          2.494903720715461,
+          7.660039667712761e-16,
+          -1.9109511496372959e-16
+        ]
+      },
+      "J_Right_HandPinky4": {
+        "translation_cm": [
+          0.026778622010183994,
+          -1.8906062782777575,
+          0.032758759744112353
+        ],
+        "rotation_deg": [
+          1.785340634741513e-15,
+          2.385415559609551e-15,
+          -7.951385882771303e-16
+        ],
+        "joint_orient_deg": [
+          1.4787793334710982e-06,
+          4.309659037481977e-22,
+          -1.4365529506993042e-22
+        ]
+      }
+    }
+  },
+  "finger_chains": {
+    "left": [
+      "J_Left_HandThumb1_3",
+      "J_Left_HandRing1_15",
+      "J_Left_HandRing2_14",
+      "J_Left_HandMiddle1_11",
+      "J_Left_HandMiddle2_10",
+      "J_Left_HandIndex1_7",
+      "J_Left_HandIndex2_6",
+      "J_Left_HandPinky1_19",
+      "J_Left_HandPinky2_18",
+      "J_Left_HandThumb2_2",
+      "J_Left_HandRing3_13",
+      "J_Left_HandMiddle3_9",
+      "J_Left_HandIndex3_5",
+      "J_Left_HandPinky3_17",
+      "J_Left_HandThumb3_1"
+    ],
+    "right": [
+      "J_Right_HandThumb1_25",
+      "J_Right_HandRing1_37",
+      "J_Right_HandRing2_36",
+      "J_Right_HandMiddle1_33",
+      "J_Right_HandMiddle2_32",
+      "J_Right_HandIndex1_29",
+      "J_Right_HandIndex2_28",
+      "J_Right_HandPinky1_41",
+      "J_Right_HandPinky2_40",
+      "J_Right_HandThumb2_24",
+      "J_Right_HandRing3_35",
+      "J_Right_HandMiddle3_31",
+      "J_Right_HandIndex3_27",
+      "J_Right_HandPinky3_39",
+      "J_Right_HandThumb3_23"
+    ]
+  },
+  "ik_or_control_bones": [],
+  "animations_present": false,
+  "applied_reference": [
+    "separate wrist targets",
+    "four-joint finger chains",
+    "controller-forward calibration should be measured against the native hand bind pose"
+  ]
+}

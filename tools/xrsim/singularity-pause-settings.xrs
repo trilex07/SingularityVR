@@ -1,0 +1,39 @@
+# Reach the cockpit main menu the same way the title capture did, then one more Enter.
+reset
+@frames 240
+@assert sessionState eq FOCUSED
+@assert projectionViews ge 2
+@shot boot
+@key Enter 1 2500
+@frames 150
+@key Enter 1 2500
+@frames 150
+@key Enter 1 2500
+@frames 150
+@key Enter 1 2500
+@frames 150
+@key Enter 1 2500
+@frames 150
+@key Enter 1 2500
+@frames 200
+@shot still-title
+@key Enter 1 2500
+@frames 400
+@shot cockpit-menu
+@key Enter 1 2500
+@frames 400
+@shot cockpit-menu-2
+@frames 600
+@xr hand r point 0 15
+@frames 30
+@xr trigger r 1
+@frames 45
+@shot vr-settings-a
+@xr trigger r 0
+@frames 20
+@xr hand r point 0 -15
+@frames 30
+@xr trigger r 1
+@frames 45
+@shot vr-settings-b
+@xr trigger r 0

@@ -1,0 +1,12 @@
+# Fallback keyboard path only (splash is long; prefer vrrec replay in run-singularity-dish-xrsim.ps1).
+reset
+@frames 240
+@assert sessionState eq FOCUSED
+@assert projectionViews ge 2
+@shot steam-intro-splash
+@key Enter 20 400
+@frames 480
+@shot steam-menu-after-enter
+@key Enter 10 500
+@frames 360
+@shot steam-gameplay-hands-shadows

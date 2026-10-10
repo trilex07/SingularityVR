@@ -1,0 +1,17 @@
+{
+  "native": {
+    "left": {"clavicle": 6, "shoulder": 7, "elbow": 8, "wrist": 9, "forearm": 26, "forearm2": 46, "bicep": 47, "fingers": "10-25"},
+    "right": {"clavicle": 48, "shoulder": 49, "elbow": 50, "wrist": 51, "forearm": 85, "bicep": 86, "fingers": "70-84"},
+    "weapon": {"cog_gun": 52, "left_hand_ik": 53, "ik_hand_root": 1, "ik_gun": 2, "right_hand_ik": 3}
+  },
+  "fps_arms_reference": {
+    "roles": ["upper_arm.L/R", "forearm.L/R", "hand.L/R", "hand.L/R.control"],
+    "useful_concepts": ["separate arm chains", "explicit hand control targets", "weapon handle/control-bone relationship"],
+    "not_copied": ["mesh", "materials", "animations", "bone transforms"]
+  },
+  "implementation_notes": [
+    "Use the native wrist/controller targets and preserved native finger animation.",
+    "Use the reference only to validate constrained two-segment IK and support-grip target naming.",
+    "Do not bind both native arms to a shared HMD or weapon transform."
+  ]
+}
