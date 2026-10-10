@@ -36,6 +36,14 @@ public:
 
     Mode Current() const { return mode_; }
     bool Flat() const { return mode_ == Mode::CutsceneFlat || mode_ == Mode::VideoFlat; }
+    // A menu/loading/video source must be presented as the same image in both
+    // SBS eye halves. This remains distinct from Flat(): offscreen UI targets
+    // still have to be rendered exactly once.
+    bool NeedsMonoPair() const {
+        // Bink/intro uses DrawVideoQuadPerEye; MonoPair on the scene RT here
+        // stacks with that and reads as doubled/cropped video in the headset.
+        return mode_ == Mode::CutsceneFlat || mode_ == Mode::MenuFlat;
+    }
     std::uint32_t StableFrames() const { return stable_; }
 
     Transition Advance(const Signals& s) {

@@ -37,9 +37,26 @@
 ; ---------------------------------------------------------------------------
 
 [Render]
+; Bounded CPU hook sampler for diagnostics. It samples 1,200 Present frames and
+; then disables itself. Delay is measured in Present frames (0 starts immediately).
+; Leave disabled in normal play; use a delay to target a later transition window.
+;HotPathSampler=1
+;HotPathSamplerDelayFrames=5300
 ShowControllerArms=0
 VfxSmoke=0
 VfxScreenFlash=1
+; ShadowMode: 0=split shadow sampling (debug), 1=mono sample, 2=drop, 3=protect light-space (default).
+ShadowMode=3
+; GloveIsolate: 0=off, 1=census only, 2=collapse arm flesh + hide stray sleeve section (default).
+GloveIsolate=2
+; 0 = full glove mesh (recommended). 1 = 2922-tri subset from PSK audit (may crop palms).
+GloveFaceFilter=0
+; Independent hands on tracked controllers (required for glove face filter + palette path).
+IndependentHandsPrototype=1
+
+[PSVR2]
+; Opt-in only. Requires tools/psvr2-bridge/run-session.ps1 and a working SteamVR PSVR2 driver.
+AdaptiveTriggers=0
 
 ; ---------------------------------------------------------------------------
 ; AutoResolution   -- inherit the resolution from the headset (run 59)
@@ -916,6 +933,9 @@ TimeOurWork=0
 ; launches tomorrow.
 ; ---------------------------------------------------------------------------
 StartInVr=1
+; Keep UE3 cinematic geometry in the OpenXR stereo path. VideoStereo still
+; presents authored Bink video as a flat image per eye.
+CutsceneFlatMode=0
 
 ; ---------------------------------------------------------------------------
 ; VideoStereo   -- Bink video in both eyes, correctly (run 160)
@@ -1085,6 +1105,8 @@ RecenterChord=1
 ForceDesktopVr=0
 DesktopCapture=0
 DesktopAutomation=0
+; One-shot screenshot on the first native context-prompt geometry match; diagnostic only.
+CaptureFirstContextPrompt=0
 
 ; ---------------------------------------------------------------------------
 ; [Render] WeaponFxRideGun -- the muzzle flash and barrel smoke (run 181)

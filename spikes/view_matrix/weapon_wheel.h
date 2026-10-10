@@ -40,7 +40,7 @@ inline Event Update(State& state, bool r3Held, bool l3Held, bool gameplay,
     const bool pressed = r3Held && !state.priorR3;
     const bool released = !r3Held && state.priorR3;
     state.priorR3 = r3Held;
-    const bool valid = gameplay && weaponInHands && !holstered;
+    const bool valid = gameplay && weaponInHands;
 
     if (l3Held) {
         if (state.open) {

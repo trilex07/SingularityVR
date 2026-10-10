@@ -50,6 +50,10 @@ desktop.ini
 packaging/staging/
 packaging/dist/
 
+# ---- machine-specific build provenance ----
+# Generated on each local build; repository paths and local working-tree state are embedded.
+spikes/view_matrix/d3d9.build.json
+
 # ---- external reference asset library ----
 # Keep source archives and full reference rigs local; processed metadata and the small runtime
 # prompt atlas are tracked separately.

@@ -1,0 +1,33 @@
+# Stop on the cockpit main menu and click the VR SETTINGS row.
+reset
+@frames 240
+@assert sessionState eq FOCUSED
+@assert projectionViews ge 2
+@key Enter 1 2500
+@frames 150
+@key Enter 1 2500
+@frames 150
+@key Enter 1 2500
+@frames 150
+@key Enter 1 2500
+@frames 150
+@key Enter 1 2500
+@frames 150
+@key Enter 1 2500
+@frames 220
+@shot menu-before-click
+@xr hand r point 0 18
+@frames 40
+@shot aim-18
+@xr trigger r 1
+@frames 50
+@shot click-18
+@xr trigger r 0
+@frames 20
+@xr hand r point 0 -18
+@frames 40
+@shot aim-m18
+@xr trigger r 1
+@frames 50
+@shot click-m18
+@xr trigger r 0

@@ -84,9 +84,14 @@ private:
 };
 
 // Decide whether a register slot may receive the per-eye upload.
+// carryMask: light-space slots learned on the previous frame (see Present);
+// protects early scene draws before this frame's shadow generation runs.
 inline bool SlotMayRemap(const ShadowRegisterCensus& census, std::uint32_t slot,
-                         bool isCameraMatrix) {
-    return ShouldRemapRegister(isCameraMatrix, census.IsShadow(slot));
+                         bool isCameraMatrix, std::uint32_t carryMask = 0) {
+    if (!isCameraMatrix) return false;
+    if (census.IsShadow(slot)) return false;
+    if (slot < 32 && (carryMask & (1u << slot)) != 0) return false;
+    return true;
 }
 
 // --- optional: compensation if a future path offsets WORLD positions --------

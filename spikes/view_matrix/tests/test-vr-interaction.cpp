@@ -77,6 +77,9 @@ static void shadow_tests(){
     assert(IsProjectedShadowMap(114,512,512));
     assert(!IsProjectedShadowMap(114,256,256));assert(!IsProjectedShadowMap(114,512,1024));
     assert(!IsProjectedShadowMap(21,512,512));
+    assert(IsProjectedShadowRenderTarget(21,512,512,1));
+    assert(!IsProjectedShadowRenderTarget(21,512,512,0));
+    assert(!IsProjectedShadowRenderTarget(21,1024,1024,1));
     assert(!SuppressVrShadow(false,false,true));assert(!SuppressVrShadow(true,true,true));
     std::puts("shadow: exact sampled 512x512 R32F projection classification");
     assert(SuppressFirstPersonShadowCaster(true,true,false,5799,5799,3314));

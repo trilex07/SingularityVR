@@ -1,0 +1,27 @@
+# Step through splash to the title menu. One Enter per screen, shot after each.
+reset
+@frames 240
+@assert sessionState eq FOCUSED
+@assert projectionViews ge 2
+@shot menu-00-boot
+@key Enter 1 2500
+@frames 90
+@shot menu-01
+@key Enter 1 2500
+@frames 90
+@shot menu-02
+@key Enter 1 2500
+@frames 90
+@shot menu-03
+@key Enter 1 2500
+@frames 90
+@shot menu-04
+@key Enter 1 2500
+@frames 90
+@shot menu-05
+@key Enter 1 2500
+@frames 120
+@shot menu-06
+@key Enter 1 2500
+@frames 150
+@shot menu-07-title

@@ -41,4 +41,22 @@ int main() {
     assert(!s.advance_frame());
     assert(s.advance_frame());
     assert(s.next_xr_frame() == 2);
+
+    s.configure(true, 2, 3);
+    assert(!s.active());
+    for (int frame = 0; frame < 2; ++frame) {
+        { hotpath::scope ignored(s, hotpath::Family::draw_hook); }
+        assert(!s.advance_frame());
+        assert(!s.active());
+    }
+    { hotpath::scope ignored(s, hotpath::Family::draw_hook); }
+    assert(!s.advance_frame()); // third delay frame arms the measurement window
+    assert(s.active());
+    assert(s.read(hotpath::Family::draw_hook).calls == 0);
+    for (int frame = 0; frame < 2; ++frame) {
+        { hotpath::scope measured(s, hotpath::Family::draw_hook); }
+        assert(s.advance_frame() == (frame == 1));
+    }
+    assert(!s.active());
+    assert(s.read(hotpath::Family::draw_hook).calls == 2);
 }

@@ -11,6 +11,7 @@ param(
     [string]$TextureVariant = 'B',
     [string]$BackupPath = '',
     [switch]$KeepIni,
+    [switch]$DllOnly,
     [switch]$SkipTextures,
     [switch]$StopGame
 )
@@ -191,6 +192,16 @@ $stageIni = if ($ArtifactDir) { Resolve-Source 'SingularityVR.ini' $stage $sourc
 $assets = if ($AssetsRoot) { Get-AbsolutePath $AssetsRoot } else { Join-Path (Split-Path $root -Parent) 'SingularityVR-assets' }
 $assetsLocal = if ($AssetsLocalRoot) { Get-AbsolutePath $AssetsLocalRoot } else { Join-Path (Split-Path $root -Parent) 'SingularityVR-assets-local' }
 $dinputSource = Join-Path $assets 'asset-tools\texture-injector\dinput8.dll'
+$dinputStable = Join-Path $root 'deployment\install-backups\20261009-114517\dinput8.dll'
+if (Test-Path -LiteralPath $dinputSource -PathType Leaf) {
+    $dinputHash = (Get-FileHash -LiteralPath $dinputSource -Algorithm SHA256).Hash.ToUpperInvariant()
+    # 37376-byte asset-tools build (B810…) has crashed at startup with current d3d9; keep 54784 (939E…).
+    if ($dinputHash -eq 'B810FA5256287A293382FF30DA9D0CC906D317F3570BCC7F3CA920B058AC9FDB' -and
+        (Test-Path -LiteralPath $dinputStable -PathType Leaf)) {
+        Write-Warning 'dinput8: using stable 54784-byte backup instead of 37376-byte asset-tools build.'
+        $dinputSource = $dinputStable
+    }
+}
 $textureIniSource = Join-Path $assets 'asset-tools\texture-injector\texture_override.ini'
 $dinputOrigSource = Join-Path $env:windir 'SysWOW64\dinput8.dll'
 $targetDll = Join-Path $gameBin 'd3d9.dll'
@@ -264,33 +275,38 @@ if ($Action -eq 'Rollback') {
 }
 
 if (-not $stageDll) { throw 'No d3d9.dll source found in the selected artifact directory or source tree.' }
-if (-not $stageIni -and -not $KeepIni) { throw 'No SingularityVR.ini source found; use -KeepIni only if preserving the installed INI is intentional.' }
-if (-not (Test-Path -LiteralPath $dinputSource -PathType Leaf)) { throw "Texture injector dinput8.dll not found: $dinputSource" }
-if (-not (Test-Path -LiteralPath $textureIniSource -PathType Leaf)) { throw "Texture injector config not found: $textureIniSource" }
-if (-not (Test-Path -LiteralPath $dinputOrigSource -PathType Leaf)) { throw "System dinput8.dll not found: $dinputOrigSource" }
+if (-not $DllOnly -and -not $stageIni -and -not $KeepIni) { throw 'No SingularityVR.ini source found; use -KeepIni only if preserving the installed INI is intentional.' }
+if (-not $DllOnly -and -not (Test-Path -LiteralPath $dinputSource -PathType Leaf)) { throw "Texture injector dinput8.dll not found: $dinputSource" }
+if (-not $DllOnly -and -not (Test-Path -LiteralPath $textureIniSource -PathType Leaf)) { throw "Texture injector config not found: $textureIniSource" }
+if (-not $DllOnly -and -not (Test-Path -LiteralPath $dinputOrigSource -PathType Leaf)) { throw "System dinput8.dll not found: $dinputOrigSource" }
 $pe = Get-PeIdentity $stageDll
 if (-not $pe.IsPe32) { throw "The deployment DLL is not PE32 x86: $stageDll" }
-$dinputPe = Get-PeIdentity $dinputSource
-if (-not $dinputPe.IsPe32) { throw "The texture injector dinput8.dll is not PE32 x86: $dinputSource" }
+$dinputPe = if ($DllOnly) { $null } else { Get-PeIdentity $dinputSource }
+if (-not $DllOnly -and -not $dinputPe.IsPe32) { throw "The texture injector dinput8.dll is not PE32 x86: $dinputSource" }
 
-$targets = @($targetDll, $targetDinput, $targetDinputOrig, $targetTextureIni)
-if (-not $KeepIni) { $targets += $targetIni }
+$targets = @($targetDll)
+if (-not $DllOnly) {
+    $targets += @($targetDinput, $targetDinputOrig, $targetTextureIni)
+    if (-not $KeepIni) { $targets += $targetIni }
+}
 $textureSources = @()
-if (-not $SkipTextures) { $textureSources = @(Get-TextureSources $assetsLocal) }
+if (-not $DllOnly -and -not $SkipTextures) { $textureSources = @(Get-TextureSources $assetsLocal) }
 $backupRoot = Join-Path $root 'deployment\install-backups'
 New-Item -ItemType Directory -Path $backupRoot -Force | Out-Null
 Stop-GameIfRequested
 $backup = New-Backup $backupRoot $targets
 $directoryBackups = @()
-if (-not $SkipTextures) { $directoryBackups += Add-DirectoryBackup $backup $targetTextures }
+if (-not $DllOnly -and -not $SkipTextures) { $directoryBackups += Add-DirectoryBackup $backup $targetTextures }
 Set-DirectoryMetadata $backup $directoryBackups
 $installed = @()
 $installed += Copy-Verified $stageDll $targetDll
-if (-not $KeepIni) { $installed += Copy-Verified $stageIni $targetIni }
-$installed += Copy-Verified $dinputSource $targetDinput
-$installed += Copy-Verified $dinputOrigSource $targetDinputOrig
-$installed += Copy-Verified $textureIniSource $targetTextureIni
-if (-not $SkipTextures) {
+if (-not $DllOnly) {
+    if (-not $KeepIni) { $installed += Copy-Verified $stageIni $targetIni }
+    $installed += Copy-Verified $dinputSource $targetDinput
+    $installed += Copy-Verified $dinputOrigSource $targetDinputOrig
+    $installed += Copy-Verified $textureIniSource $targetTextureIni
+}
+if (-not $DllOnly -and -not $SkipTextures) {
     New-Item -ItemType Directory -Path $targetTextures -Force | Out-Null
     Get-ChildItem -LiteralPath $targetTextures -File -Filter '*.dds' -ErrorAction SilentlyContinue | Remove-Item -Force
     foreach ($texture in $textureSources) {
@@ -306,10 +322,11 @@ $report = [pscustomobject]@{
     GameBin = $gameBin
     BackupPath = $backup
     Pe32 = $pe.IsPe32
-    DInput8Pe32 = $dinputPe.IsPe32
+    DllOnly = [bool]$DllOnly
+    DInput8Pe32 = if ($dinputPe) { $dinputPe.IsPe32 } else { $null }
     Installed = @($installed)
-    TextureVariant = if ($SkipTextures) { 'skipped' } else { $TextureVariant }
-    TextureCount = if ($SkipTextures) { 0 } else { $textureSources.Count }
+    TextureVariant = if ($DllOnly -or $SkipTextures) { 'skipped' } else { $TextureVariant }
+    TextureCount = if ($DllOnly -or $SkipTextures) { 0 } else { $textureSources.Count }
     FinalState = @(
         Get-FileState $targetDll
         Get-FileState $targetIni
@@ -325,5 +342,5 @@ Write-Host "Game directory: $gameBin"
 Write-Host "Backup: $backup"
 Write-Host "Report: $reportPath"
 Write-Host ("d3d9.dll SHA-256: {0}" -f (Get-Sha256 $targetDll))
-Write-Host ("dinput8.dll SHA-256: {0}" -f (Get-Sha256 $targetDinput))
-if (-not $SkipTextures) { Write-Host ("Texture variant {0}: {1} DDS file(s)" -f $TextureVariant, $textureSources.Count) }
+if (-not $DllOnly) { Write-Host ("dinput8.dll SHA-256: {0}" -f (Get-Sha256 $targetDinput)) }
+if (-not $DllOnly -and -not $SkipTextures) { Write-Host ("Texture variant {0}: {1} DDS file(s)" -f $TextureVariant, $textureSources.Count) }

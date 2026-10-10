@@ -14,6 +14,7 @@ enum class Family : unsigned {
 	menu_classification,
 	foreground_classification,
 	shadow_classification,
+	track_fp_caster,
 	ik_arm_solve,
 	bone_palette,
 	set_texture,
@@ -33,6 +34,14 @@ enum class Counter : unsigned {
 	xr_locate_views,
 	xr_locate_left,
 	xr_locate_right,
+	track_fp_candidate,
+	track_fp_get_stream_source,
+	track_fp_get_indices,
+	track_fp_vb_ref_acquired,
+	track_fp_ib_ref_acquired,
+	track_fp_matched_caster,
+	track_fp_vb_release,
+	track_fp_ib_release,
 	count
 };
 
@@ -54,15 +63,20 @@ struct result {
 
 class sampler {
 	volatile LONG active_{};
+	volatile LONG armed_{};
 	volatile LONG frames_left_{};
+	volatile LONG delay_left_{};
+	unsigned window_frames_{default_window_frames};
+	unsigned delay_frames_{};
 	alignas(8) volatile LONG64 frame_token_{};
 	alignas(8) volatile LONG64 counters_[static_cast<unsigned>(Counter::count)]{};
 	record records_[static_cast<unsigned>(Family::count)]{};
 	LARGE_INTEGER frequency_{};
 
 public:
-	void configure(bool enabled, unsigned frames = default_window_frames) noexcept {
+	void configure(bool enabled, unsigned frames = default_window_frames, unsigned delay_frames = 0) noexcept {
 		InterlockedExchange(&active_, 0);
+		InterlockedExchange(&armed_, enabled ? 1 : 0);
 		for (auto& r : records_) {
 			InterlockedExchange64(&r.calls, 0);
 			InterlockedExchange64(&r.samples, 0);
@@ -72,8 +86,11 @@ public:
 		for (auto& c : counters_) InterlockedExchange64(&c, 0);
 		InterlockedExchange64(&frame_token_, 0);
 		QueryPerformanceFrequency(&frequency_);
-		InterlockedExchange(&frames_left_, enabled ? static_cast<LONG>(frames ? frames : 1) : 0);
-		InterlockedExchange(&active_, enabled ? 1 : 0);
+		window_frames_ = frames ? frames : 1;
+		delay_frames_ = delay_frames;
+		InterlockedExchange(&frames_left_, enabled && delay_frames == 0 ? static_cast<LONG>(window_frames_) : 0);
+		InterlockedExchange(&delay_left_, enabled ? static_cast<LONG>(delay_frames) : 0);
+		InterlockedExchange(&active_, enabled && delay_frames == 0 ? 1 : 0);
 	}
 
 	bool active() const noexcept { return InterlockedCompareExchange(const_cast<volatile LONG*>(&active_), 0, 0) != 0; }
@@ -88,9 +105,24 @@ public:
 
 	// Called once from Present. Returns true exactly when the bounded window ends.
 	bool advance_frame() noexcept {
-		if (!active()) return false;
+		if (!active()) {
+			if (!InterlockedCompareExchange(&armed_, 0, 0)) return false;
+			if (InterlockedDecrement(&delay_left_) > 0) return false;
+			for (auto& r : records_) {
+				InterlockedExchange64(&r.calls, 0);
+				InterlockedExchange64(&r.samples, 0);
+				InterlockedExchange64(&r.ticks, 0);
+				InterlockedExchange(&r.sequence, 0);
+			}
+			for (auto& c : counters_) InterlockedExchange64(&c, 0);
+			InterlockedExchange64(&frame_token_, 0);
+			InterlockedExchange(&frames_left_, static_cast<LONG>(window_frames_));
+			InterlockedExchange(&active_, 1);
+			return false;
+		}
 		if (InterlockedDecrement(&frames_left_) > 0) return false;
 		InterlockedExchange(&active_, 0);
+		InterlockedExchange(&armed_, 0);
 		return true;
 	}
 
@@ -134,7 +166,8 @@ public:
 		if (!r.samples || !frequency_.QuadPart) return 0.0;
 		return (double(r.ticks) / double(r.samples)) * 1000000.0 / double(frequency_.QuadPart);
 	}
-	unsigned configured_frames() const noexcept { return default_window_frames; }
+	unsigned configured_frames() const noexcept { return window_frames_; }
+	unsigned configured_delay_frames() const noexcept { return delay_frames_; }
 };
 
 class scope {
@@ -176,6 +209,7 @@ inline const char* name(Family f) noexcept {
 	case Family::menu_classification: return "menu";
 	case Family::foreground_classification: return "foreground";
 	case Family::shadow_classification: return "shadow";
+	case Family::track_fp_caster: return "TrackFpCaster";
 	case Family::ik_arm_solve: return "ik";
 	case Family::bone_palette: return "palette";
 	case Family::set_texture: return "set_texture";

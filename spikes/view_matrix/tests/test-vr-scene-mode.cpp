@@ -28,6 +28,7 @@ int main() {
     Controller video;
     auto v = video.Advance({false,true,false,false});
     assert(v.changed && v.to == Mode::VideoFlat && video.Flat());
+    assert(!video.NeedsMonoPair());
     for (unsigned i=0; i<Controller::kExitFrames-1; ++i)
         assert(!video.Advance(gameplay).changed);
     assert(video.Advance(gameplay).to == Mode::GameplayStereo);
@@ -35,7 +36,9 @@ int main() {
     Controller menu;
     auto m = menu.Advance({false,false,true,true});
     assert(m.changed && m.to == Mode::MenuFlat && !menu.Flat());
+    assert(menu.NeedsMonoPair());
     auto g = menu.Advance(gameplay);
     assert(g.changed && g.to == Mode::GameplayStereo);
+    assert(!menu.NeedsMonoPair());
     std::puts("PASS: cinematic hysteresis, video mono, noisy signal, menu classification");
 }

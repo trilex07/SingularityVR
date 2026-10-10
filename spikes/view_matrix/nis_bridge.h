@@ -29,7 +29,9 @@ struct NisBridge {
     NisRuntime rt;
     volatile LONG mode = 0;          // nis_upscale::Mode as LONG (0 Off, 1 NIS, 2 NISSharpen)
     float outputScale = 1.0f;        // swapchain multiplier (recommended-based)
-    float sharpness = 0.35f;         // NIS sharpness 0..1
+    float sharpness = 0.20f;         // NIS sharpness 0..1. VR default is
+    // gentle: the official curve hits USM strength ~1.1 at 0.35, which
+    // reads as haloing through the lenses. Live-tuned from the panel.
     // NOTE: renderScale lives in d3d9.cpp as g_nisRenderScaleF (needed at
     // DllMain-time for the command-line hook, before any bridge exists) -
     // deliberately NOT duplicated here.

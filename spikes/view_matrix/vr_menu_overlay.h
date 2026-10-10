@@ -88,6 +88,9 @@ extern volatile LONG g_contextPromptVisible;
 void DrawVrContextPrompt(IDirect3DDevice9* dev) {
     const LONG active=InterlockedExchange(&g_contextPromptVisible,0);
     if(!active || !dev || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_vrUiMenu) || !g_origDrawPrimUP) return;
+    static LONG contextIconLogCount=0;
+    LONG cil=InterlockedIncrement(&contextIconLogCount);
+    if(cil<=16) Log("context prompt ICON DRAW: active=%ld menu=%ld dup=%ld",active,Rd(g_vrUiMenu),Rd(g_dupDraws));
     IDirect3DSurface9* back=nullptr;
     if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
     D3DSURFACE_DESC d{}; back->GetDesc(&d); back->Release();
@@ -101,6 +104,15 @@ void DrawVrContextPrompt(IDirect3DDevice9* dev) {
     dev->SetPixelShader(nullptr);
     dev->SetRenderState(D3DRS_ZENABLE,FALSE);
     dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+    // GFx leaves alpha-test and texture-coordinate state enabled on some
+    // gameplay HUD passes.  The prompt atlas contains antialiased alpha, so
+    // inheriting that state can discard the entire glyph while the draw call
+    // still succeeds.  Establish the complete fixed-function contract here.
+    dev->SetRenderState(D3DRS_ALPHATESTENABLE,FALSE);
+    dev->SetRenderState(D3DRS_FOGENABLE,FALSE);
+    dev->SetRenderState(D3DRS_RANGEFOGENABLE,FALSE);
+    dev->SetRenderState(D3DRS_DITHERENABLE,FALSE);
+    dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE,FALSE);
     dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
     dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
     dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
@@ -115,8 +127,14 @@ void DrawVrContextPrompt(IDirect3DDevice9* dev) {
     dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_MODULATE);
     dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
     dev->SetTextureStageState(0,D3DTSS_ALPHAARG2,D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0,D3DTSS_TEXCOORDINDEX,0);
+    dev->SetTextureStageState(0,D3DTSS_TEXTURETRANSFORMFLAGS,D3DTTFF_DISABLE);
+    dev->SetTextureStageState(1,D3DTSS_COLOROP,D3DTOP_DISABLE);
+    dev->SetTextureStageState(1,D3DTSS_ALPHAOP,D3DTOP_DISABLE);
     dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_POINT);
     dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_POINT);
+    dev->SetSamplerState(0,D3DSAMP_ADDRESSU,D3DTADDRESS_CLAMP);
+    dev->SetSamplerState(0,D3DSAMP_ADDRESSV,D3DTADDRESS_CLAMP);
     const float halfW=(float)d.Width*.5f;
     const float size=std::max(28.f,(float)d.Height*.045f);
     const float y=(float)d.Height*.62f;
@@ -191,7 +209,10 @@ static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& 
         g_vrMenuPanelValid = uipointer::HeadPlane(
             head, VrUiRotate(q, {0,0,-1}), VrUiRotate(q, {1,0,0}),
             VrUiRotate(q, {0,1,0}), Rd(g_vrMenuDistanceMm) / 1000.0f,
-            g_targetTanX, g_targetTanY, Rd(g_menuInsetPct) / 100.0f,
+            g_targetTanX, g_targetTanY,
+            (menuClass == 2 || menuClass == 3)
+                ? std::min(0.84f, Rd(g_menuInsetPct) / 100.0f)
+                : Rd(g_menuInsetPct) / 100.0f,
             g_vrMenuPanel.plane);
         if (!g_vrMenuPanelValid) return;
     }
@@ -212,7 +233,7 @@ static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& 
         uipointer::ScreenPoint a,b,c;
         if (!VrUiProjectEye(eye, PauseVrSettingsWorld(pausevrsettings::kU0, pausevrsettings::kV0), a) ||
             !VrUiProjectEye(eye, PauseVrSettingsWorld(pausevrsettings::kU1, pausevrsettings::kV1), b) ||
-            !VrUiProjectEye(eye, PauseVrSettingsWorld(.5f, .905f), c)) continue;
+            !VrUiProjectEye(eye, PauseVrSettingsWorld(.5f, (pausevrsettings::kV0 + pausevrsettings::kV1) * .5f), c)) continue;
         const int x0 = (int)lroundf((eye + std::min(a.u,b.u)) * halfW);
         const int x1 = (int)lroundf((eye + std::max(a.u,b.u)) * halfW);
         const int y0 = (int)lroundf(std::min(a.v,b.v) * d.Height);
@@ -232,7 +253,10 @@ void UpdateVrUiPointer(float,bool available) {
     // (that flag suppresses native menu capture), so include it explicitly or
     // the panel can only be driven by the stick and never receives laser hits.
     const bool panel=Rd(g_panelOpen)!=0;
-    const bool menu=Rd(g_vrUiEnabled)&&Rd(g_vrUiNativeReady)&&(Rd(g_vrUiMenu)||panel);
+    // The mod-owned panel is usable even while the native GFx hook is not ready.
+    // Requiring g_vrUiNativeReady here made the laser disappear exactly when the
+    // user opened VR Settings during the early menu frames.
+    const bool menu=Rd(g_vrUiEnabled)&&(panel || Rd(g_vrUiNativeReady))&&(Rd(g_vrUiMenu)||panel);
     if(menu&&Rd(g_vrUiDesktopProbe))return; // Explicit debugger-controlled test coordinates; never staged for headset use.
     if(!available || !menu || !g_handPoseValid[1] || !g_handPositionValid[1] || !g_haveEyes || g_targetTanX<=0 || g_targetTanY<=0) {
         g_vrMenuPanelValid=false;
@@ -244,7 +268,9 @@ void UpdateVrUiPointer(float,bool available) {
     uipointer::V head{(g_eyePose[0].position.x+g_eyePose[1].position.x)*.5f,(g_eyePose[0].position.y+g_eyePose[1].position.y)*.5f,(g_eyePose[0].position.z+g_eyePose[1].position.z)*.5f};
     uipointer::Hit hit;
     const auto& pos=g_handLastPos[1];
-    const float inset=Rd(g_menuInsetPct)/100.f;
+    float inset=Rd(g_menuInsetPct)/100.f;
+    const LONG menuClass=Rd(g_vrMenuClass);
+    if ((menuClass==2 || menuClass==3) && inset>0.84f) inset=0.84f;
     const float distance=Rd(g_vrMenuDistanceMm)/1000.0f;
     g_vrMenuPanelValid=uipointer::HeadPlane(head,VrUiRotate(q,{0,0,-1}),VrUiRotate(q,{1,0,0}),VrUiRotate(q,{0,1,0}),distance,g_targetTanX,g_targetTanY,inset,g_vrMenuPanel.plane);
     bool valid=g_vrMenuPanelValid && g_vrMenuPanel.Ray({pos.x,pos.y,pos.z},VrUiRotate(g_handAimOrientation[1],{0,0,-1}),hit);
@@ -332,10 +358,11 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     ++g_vrMenuFrame;
     SyncVrMenuCaptureState();
     MenuDrawTraceFrame();
-    const bool nativeMenu = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && Rd(g_vrUiMenu) && Rd(g_vrMenuOverlay);
+    const bool nativeMenu = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) &&
+                            Rd(g_vrUiMenu) && Rd(g_vrMenuOverlay) && !Rd(g_panelOpen);
     const bool menuRow = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) &&
                          (Rd(g_vrMenuClass) == 2 || Rd(g_vrMenuClass) == 3);
-    const bool panel = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) && Rd(g_panelOpen);
+    const bool panel = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_panelOpen);
     const bool menu = nativeMenu || menuRow || panel;
     if (!menu || !g_origDrawPrimUP || !g_origSetVS || !g_origSetRenderTarget) return;
 

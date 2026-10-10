@@ -4,10 +4,9 @@
 // gloves (wrist subtree) and the TMD device.
 //
 // Method: per-bone collapse. Every palette entry whose bone is in the collapse
-// set is replaced by D * S, where D = T(w) * Scale(0) * T(-w) collapses space
-// onto the CURRENT wrist center w. Forearm-weighted vertices (611 in tmd mat0,
-// 992 in noTMD mat0, counted from the PSK weights) shrink to the wrist point;
-// wrist/finger-weighted vertices are untouched; boundary triangles degenerate.
+// set is replaced by D * S, where D = T(w) * Scale(s) * T(-w) collapses space
+// toward the CURRENT wrist center w. Forearm-weighted vertices shrink toward the
+// wrist; wrist/finger-weighted vertices are untouched.
 // No index-buffer surgery, so no dependence on runtime triangle order.
 //
 // Kept by design (user decision): the TMD device bones (tmd_base, hinge,
@@ -16,11 +15,29 @@
 //
 // This header is pure logic + name tables. The main agent feeds it the live
 // palette (original + output arrays, section bone map, wrist centers) from the
-// existing arm-draw seam. Modes: 0 = off, 1 = census/log-only, 2 = apply.
+// existing arm-draw seam. Modes: 0 = off, 1 = census/log-only, 2 = gloves on controllers
+// (hide forearm draws; no palette collapse). 3 = legacy wrist collapse (stretchy; avoid).
 
 #include <cstring>
 
 namespace gloveisolate {
+
+// The pistol foreground pass contains one separately submitted 390-vertex
+// sleeve/finger fragment (first index 14490, 674 triangles). In the
+// gloves-only path this is not part of the wrist subtree: collapsing its
+// palette leaves a detached finger-shaped island in the world. Keep the
+// signature here so the render guard and the L1 test share the same narrow,
+// engine-observed rule instead of a vertex-count-only heuristic.
+inline bool IsStrayFingerSection(unsigned verts, unsigned first, unsigned triangles) {
+    return (verts == 390u || verts == 3314u) && first == 14490u && triangles == 674u;
+}
+
+// Skinned forearm section (7704 tris @ first 13206). Hidden in gloves-only mode instead
+// of collapsing palette entries (collapse stretches blended vertices).
+inline bool IsArmFleshSection(unsigned verts, unsigned first, unsigned triangles) {
+    return (verts == 7444u || verts == 4818u || verts == 4781u) && first == 13206u &&
+           triangles == 7704u;
+}
 
 inline bool NameContains(const char* name, const char* part) {
     if (!name || !part) return false;
@@ -82,19 +99,43 @@ inline int HandSide(const char* name) {
     return -1;
 }
 
+// Return which of the two independent controller deltas a model-side bone
+// consumes.  The result is deliberately expressed in delta-space rather than
+// physical-side space: 0 is the off-hand delta and 1 is the aim-hand delta.
+// This keeps LeftHanded mode correct without duplicating a second l/r table in
+// the D3D9 draw hook.
+inline int ControllerDeltaForBone(const char* name, int offHand) {
+    const int side = HandSide(name);
+    if ((side != 0 && side != 1) || (offHand != 0 && offHand != 1)) return -1;
+    return side == offHand ? 0 : 1;
+}
+
 // Palette convention is row-vector (translation in row 3, v' = v * S), same as
 // the mod's Mat. A post-transform D composes as S' = S * D, i.e.
 // out[r][c] = sum_k s[r][k] * d[k][c].
 //
-// Collapse delta D = T(-w) * Scale(0) * T(w): row 3 = (w, 1), rest 0.
-// For a rigid S, S' has rows 0..2 = 0 and row 3 = (w, 1), so every skinned
-// vertex maps exactly onto the wrist center w (boundary triangles degenerate).
+// Collapse delta D = T(-w) * Scale(s) * T(w): diagonal s, row 3 = w*(1-s).
+// For a rigid S, every skinned vertex maps to s*v + (1-s)*w.
+//
+// keepScale MUST stay above zero. s = 0 collapses the forearm onto a single
+// point and kills every triangle touching it (730/4402 dead tris on the real
+// tmd mesh: over-cut wrist rim + see-through palm). s = 0.12 keeps a small
+// stump around the wrist that plugs the opening: 0 dead tris, wrist rim
+// intact (verified on the real PSK weights). s = 1 is identity (no cut).
+// Tune via ini (GloveStumpScale).
 struct Mat4 { float m[4][4]; };
 
-inline void CollapseDelta(const float w[3], Mat4& out) {
+inline void CollapseDelta(const float w[3], Mat4& out, float keepScale = 0.12f) {
+    float s = keepScale;
+    if (!(s >= 0.0f)) s = 0.0f;   // NaN -> legacy point collapse
+    if (s > 1.0f) s = 1.0f;
     for (int r = 0; r < 4; ++r)
         for (int c = 0; c < 4; ++c) out.m[r][c] = 0.0f;
-    out.m[3][0] = w[0]; out.m[3][1] = w[1]; out.m[3][2] = w[2]; out.m[3][3] = 1.0f;
+    out.m[0][0] = s; out.m[1][1] = s; out.m[2][2] = s;
+    out.m[3][0] = w[0] * (1.0f - s);
+    out.m[3][1] = w[1] * (1.0f - s);
+    out.m[3][2] = w[2] * (1.0f - s);
+    out.m[3][3] = 1.0f;
 }
 
 inline void ApplyDelta(const float s[4][4], const Mat4& d, float out[4][4]) {

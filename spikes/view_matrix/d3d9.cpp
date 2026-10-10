@@ -8,6 +8,7 @@
 #include "weapon_holster.h"
 #include "weapon_wheel.h"
 #include "grip_latch.h"
+#include "glove_isolate.h"
 #include "fp_shadow.h"
 #include "camera_stabilization.h"
 #include "shadow_policy.h"
@@ -18,6 +19,7 @@
 #include "pose_conversion.h"
 #include "vr_scene_mode.h"
 #include "input_remap.h"
+#include "polish_localization.h"
 
 // view_matrix - Singularity VR mod, spike 9
 //
@@ -4291,6 +4293,10 @@ volatile LONG g_armPaletteUploadFrame=-1;
 volatile LONG g_armPaletteFrameToken=0;
 volatile LONG g_armPaletteUploadCoverage[8]{};
 volatile LONG g_rtIsScene = 1;
+// Scene-sized is not the backbuffer. The diegetic menu renders into a private
+// colour target of the same size; eye-remapping that target bakes both halves
+// into the texture the monitor displays.
+volatile LONG g_rtIsBackbuffer = 1;
 static unsigned ShaderLayoutHash(IDirect3DVertexShader9* shader) {
     return (unsigned)(((uintptr_t)shader >> 4) * 2654435761u) & 1023;
 }
@@ -4545,6 +4551,7 @@ struct CopySlot {
     int     eye = 0;                     // g_renderEye at capture (alternate-eye mode)
     bool    stereo = false;              // alternate-eye active for this frame
     bool    dup = false;                 // draw duplication active for this frame
+    bool    menuFlat = false;            // native GFx menu: XR bridge crops one half to both eyes
     XrPosef pose[2]{};                   // where the head was when these pixels were drawn
     XrFovf  fov[2]{};
     bool    useDerived = false;
@@ -4897,6 +4904,8 @@ void MeasureCullBand(const uint8_t* bits, int pitch, UINT w, UINT h) {
     }
 }
 
+static bool VrXrSubmitMenuFlat(); // defined after g_vrUiMenu / g_vrMenuClass
+
 // Stamp the slot with the state its pixels were drawn under. Everything the submission needs is
 // captured at the moment of capture, so a frame consumed later cannot be submitted with a pose or
 // a projection it was never rendered from. Shared by both the CPU and zero-copy paths - the two
@@ -4904,6 +4913,11 @@ void MeasureCullBand(const uint8_t* bits, int pitch, UINT w, UINT h) {
 void StampCaptureState(CopySlot& cap) {
     cap.stereo = InterlockedCompareExchange(&g_stereo, 0, 0) != 0;
     cap.dup    = InterlockedCompareExchange(&g_dupDraws, 0, 0) != 0;
+    cap.menuFlat = VrXrSubmitMenuFlat();
+    if (cap.menuFlat) {
+        cap.stereo = false;
+        cap.dup = true;
+    }
     // The backbuffer just captured was drawn with the offset chosen at the END of the previous
     // frame, so it belongs to g_renderEye - not to whichever eye is about to be switched to.
     cap.eye    = cap.stereo ? g_renderEye : 0;
@@ -5471,6 +5485,13 @@ static menucapture::Owner g_vrCaptureOwner;
 volatile LONG g_vrStaleRejected=0;
 void SyncVrMenuCaptureState();
 volatile LONG g_vrMenuClass=0; // 0 none, 1 IIS boot, 2 Main, 3 Pause, 4 other native UI.
+// XR bridge: crop one SBS half to both eyes for native GFx menus only (not Bink/intro).
+static bool VrXrSubmitMenuFlat() {
+    if (Rd(g_vrUiMenu)) return true;
+    const LONG menuClass = InterlockedCompareExchange(&g_vrMenuClass, 0, 0);
+    if (menuClass >= 1 && menuClass <= 4) return true;
+    return false;
+}
 volatile LONG g_contextPromptVisible=0; // set by the measured native pickup/use prompt draw
 static void ReportVrRuntimeCounters() {
     const auto& c=g_vrCounters;
@@ -6567,9 +6588,11 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_SHADOWTEST, PR_VRSHADOWS, PR_VFXORIGIN,   // reversible shadow-source + visible projection A/B
        PR_VFXHOST, PR_VFXDRAW, PR_VFXDIAG, PR_VFXLOOK, PR_VFXOFFSET, // VFX test/tuning rows
        PR_GLOVEONLY,
+       PR_GLOVEISOLATE, PR_GLOVEFACE, PR_GLOVESTUMP, PR_GLOVELEFT, PR_GOTO_HANDS,
        // ⭐ run 217: the laser and the per-weapon alignment rows.
        PR_LASER, PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH,
        PR_NOTESIZE,          // ⭐ run 230
+       PR_POLISH,            // Polish localization toggle
        PR_GUNSCALE,          // hub round A: first-person gun+hands size, live-tuned like world scale
        PR_MENUOVERLAY,       // hub round 4: overlay kill switch (black-quad diagnosis)
        PR_TMDON, PR_TMDFWD, PR_TMDRIGHT, PR_TMDUP, PR_TMDYAW, PR_TMDPITCH,   // ⭐ run 237
@@ -6619,11 +6642,11 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
 //   - No page is longer than 10 rows, which keeps every page inside the range that was drawing
 //     before any of this. It also nearly DOUBLES the glyph - px is derived from this number, and at
 //     17 it had hit the floor of 3 that the comment below calls unreadable through a lens.
-const int kPanelPages    = 9;      // ⭐ run 237: + TMD ALIGN; ⭐ run 249: + TMD BONES, TMD MESH
-const int kPanelRowsMax  = 10;     // ⚠ a page longer than this cannot be declared - see kPageRows
+const int kPanelPages    = 10;     // + HANDS (glove knobs that used to be ini-only)
+const int kPanelRowsMax  = 12;     // ⚠ a page longer than this cannot be declared - see kPageRows
 const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_ENABLEVR, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_GOTO_CTRL, PR_GOTO_COMFORT,
-      PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_GOTO_TMD },
+      PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_GOTO_TMD, PR_GOTO_HANDS },
     { PR_TURNMODE, PR_TURNSPEED, PR_SNAPANGLE, PR_TURNDIR, PR_MOVEDIR, PR_SWAPSTICKS,
       PR_LEFTHAND, PR_RECENTERCHORD, PR_RECORDING, PR_BACK },
     { PR_CINESTICK, PR_CINECAM, PR_BACK },
@@ -6640,7 +6663,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
     { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE,
-      PR_GLOVEONLY, PR_VFXLOOK, PR_BACK },
+      PR_POLISH, PR_GLOVEONLY, PR_VFXLOOK, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
@@ -6678,9 +6701,10 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // the muscle memory should transfer.
     { PR_TMDARMSLOT, PR_TMDARMMESH, PR_TMDARMMODE, PR_TMDARMFROM, PR_TMDARMTO, PR_TMDARMSTEP,
       PR_TMDHIDE, PR_BACK_TMD },
+    { PR_GLOVEISOLATE, PR_GLOVEFACE, PR_GLOVESTUMP, PR_GLOVELEFT, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 10, 10, 3, 10, 10, 7, 10, 6, 8 };   // DISPLAY + VFX HOST/DIAG; ADVANCED + shadow/VFX A/B rows (10 max)
+const int kPageCount[kPanelPages] = { 11, 10, 3, 11, 10, 7, 10, 6, 8, 5 };
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -6689,10 +6713,10 @@ const int kPageCount[kPanelPages] = { 10, 10, 3, 10, 10, 7, 10, 6, 8 };   // DIS
 // plate. The widest strings are "AIM METHOD MOTION CONTROLLER" and "MOVE DIRECTION HAND (NO
 // TRACKING)", which is why those two pages are the broad ones.
 // ⭐ run 249: TMD BONES is 30 for "BONE MODE      NUDGE (find it)", its longest reachable value.
-const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 32, 30, 30, 30, 30 };   // ⭐ run 230: DISPLAY 28 -> 33 for "NOTE SIZE      100% (FULL SCREEN)"; VFX: ADVANCED 28 -> 32 for "VFX DRAW       PRESENT (WORKS)"
+const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 32, 30, 30, 30, 30, 32 };
 const char* kPageName[kPanelPages] = { "VR SETTINGS", "CONTROLLER", "COMFORT", "DISPLAY",
                                        "ADVANCED", "WEAPON ALIGN", "TMD ALIGN",
-                                       "TMD BONES", "TMD MESH" };
+                                       "TMD BONES", "TMD MESH", "HANDS" };
 
 int g_panelPage = 0;
 inline int PanelRowCount() { return kPageCount[g_panelPage]; }
@@ -6753,6 +6777,7 @@ extern volatile LONG g_hideMuzzleFx;
 extern volatile LONG g_vfxHost, g_vfxDraw, g_vfxDiag;
 extern volatile LONG g_vfxMuzzleOrigin, g_vfxMuzzleOffsetMm, g_vfxLook, g_shadowTest;
 extern int g_showControllerArms;
+extern volatile LONG g_gloveIsolate, g_gloveFaceFilter, g_gloveStumpScalePct, g_gloveLeftShiftUU;
 // Defined beside the turn code, which is the first thing that reads them.
 extern volatile LONG g_cineStickTurn;
 extern volatile LONG g_cutsceneLockCamera;
@@ -6912,9 +6937,24 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_vrMenuOverlay, 0, 0));
             WritePrivateProfileStringA("Render", "MenuOverlay", v, path); return;
+        case PR_POLISH:
+            WritePrivateProfileStringA("Localization", "PolishLanguage",
+                PolishLocalization::PL().IsPolishEnabled() ? "1" : "0", path); return;
         case PR_GLOVEONLY:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", g_showControllerArms ? 0L : 1L);
             WritePrivateProfileStringA("Render", "ShowControllerArms", v, path); return;
+        case PR_GLOVEISOLATE:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_gloveIsolate));
+            WritePrivateProfileStringA("Render", "GloveIsolate", v, path); return;
+        case PR_GLOVEFACE:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_gloveFaceFilter));
+            WritePrivateProfileStringA("Render", "GloveFaceFilter", v, path); return;
+        case PR_GLOVESTUMP:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_gloveStumpScalePct));
+            WritePrivateProfileStringA("Render", "GloveStumpScale", v, path); return;
+        case PR_GLOVELEFT:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_gloveLeftShiftUU));
+            WritePrivateProfileStringA("Render", "GloveLeftShift", v, path); return;
         // ⭐ run 237: ONE case writes the whole TMD block, so no row can be adjustable and persist
         // nowhere - the defect PanelSaveRow was restructured to prevent.
         case PR_TMDON: {
@@ -7018,6 +7058,7 @@ void PanelSaveRow(int rowId, const char* path) {
         // day it names a real one.
         case PR_GOTO_CTRL: case PR_GOTO_COMFORT: case PR_GOTO_DISPLAY: case PR_GOTO_ADV:
         case PR_GOTO_WEAPON: case PR_GOTO_TMD: case PR_GOTO_TMDBONE: case PR_GOTO_TMDMESH:
+        case PR_GOTO_HANDS:
         case PR_BACK: case PR_BACK_TMD:
             return;                                   // navigation, nothing to persist
 
@@ -7273,9 +7314,32 @@ void PanelRowText(int row, char* out, size_t cap) {
             _snprintf_s(out, cap, _TRUNCATE, "MENU OVERLAY   %s",
                         InterlockedCompareExchange(&g_vrMenuOverlay, 0, 0) ? "ON" : "OFF");
             break;
+        case PR_POLISH:
+            _snprintf_s(out, cap, _TRUNCATE, "POLISH LANG    %s",
+                        PolishLocalization::PL().IsPolishEnabled() ? "ON" : "OFF");
+            break;
         case PR_GLOVEONLY:
             _snprintf_s(out, cap, _TRUNCATE, "GLOVE ONLY     %s",
                         g_showControllerArms ? "OFF" : "ON");
+            break;
+        case PR_GLOVEISOLATE: {
+            const LONG m = Rd(g_gloveIsolate);
+            _snprintf_s(out, cap, _TRUNCATE, "GLOVE ISOLATE  %s",
+                        m <= 0 ? "OFF" : m == 1 ? "CENSUS" : "STUMP");
+            break;
+        }
+        case PR_GLOVEFACE:
+            _snprintf_s(out, cap, _TRUNCATE, "FACE FILTER    %s",
+                        Rd(g_gloveFaceFilter) ? "WRIST CLIP" : "OFF");
+            break;
+        case PR_GLOVESTUMP:
+            _snprintf_s(out, cap, _TRUNCATE, "STUMP KEEP     %ld PCT", Rd(g_gloveStumpScalePct));
+            break;
+        case PR_GLOVELEFT:
+            _snprintf_s(out, cap, _TRUNCATE, "LEFT ARM       %+ld UU", Rd(g_gloveLeftShiftUU));
+            break;
+        case PR_GOTO_HANDS:
+            _snprintf_s(out, cap, _TRUNCATE, "HANDS              >");
             break;
         case PR_AIMPARTS: {
             const LONG p = InterlockedCompareExchange(&g_aimModeParts, 0, 0);
@@ -7745,10 +7809,45 @@ void PanelAdjust(int row, int dir) {
             InterlockedExchange(&g_vrMenuOverlay,
                                 InterlockedCompareExchange(&g_vrMenuOverlay, 0, 0) ? 0 : 1);
             break;
+        case PR_POLISH: {
+            const bool on = !PolishLocalization::PL().IsPolishEnabled();
+            PolishLocalization::PL().SetPolishLanguage(on);
+            Log("VR panel: Polish language %s", on ? "ON" : "OFF");
+            break;
+        }
         case PR_GLOVEONLY:
             g_showControllerArms = g_showControllerArms ? 0 : 1;
             Log("VR panel: glove-only visual %s", g_showControllerArms ? "OFF" : "ON");
             break;
+        case PR_GLOVEISOLATE: {
+            LONG m = Rd(g_gloveIsolate) + dir;
+            if (m < 0) m = 0;
+            if (m > 2) m = 2;
+            InterlockedExchange(&g_gloveIsolate, m);
+            Log("VR panel: GloveIsolate=%ld (0=off 1=census 2=stump)", m);
+            break;
+        }
+        case PR_GLOVEFACE:
+            InterlockedExchange(&g_gloveFaceFilter, Rd(g_gloveFaceFilter) ? 0 : 1);
+            Log("VR panel: GloveFaceFilter=%ld", Rd(g_gloveFaceFilter));
+            break;
+        case PR_GLOVESTUMP: {
+            LONG s = Rd(g_gloveStumpScalePct) + dir * 4;
+            if (s < 0) s = 0;
+            if (s > 100) s = 100;
+            InterlockedExchange(&g_gloveStumpScalePct, s);
+            Log("VR panel: GloveStumpScale=%ld", s);
+            break;
+        }
+        case PR_GLOVELEFT: {
+            LONG s = Rd(g_gloveLeftShiftUU) + dir * 2;
+            if (s < -40) s = -40;
+            if (s > 40) s = 40;
+            InterlockedExchange(&g_gloveLeftShiftUU, s);
+            Log("VR panel: GloveLeftShift=%ld UU (mesh +X, left arm)", s);
+            break;
+        }
+        case PR_GOTO_HANDS: g_panelPage = 9; g_panelRow = 0; return;
         case PR_WEAPONFX: {
             // Clamped, not wrapped - run 143's lesson. Wrapping would put one press past RIDE GUN
             // into a state that blacks out the weapon, which reads as a crash rather than a setting.
@@ -10669,7 +10768,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                           ? CopyBackbufferToD3D11(gameDev) : nullptr;
     DiagPhaseAdd(DP_BRIDGE, diagBridge);
 
-    const bool cropEyes = frame && frame->dup && !frame->stereo && g_srcW >= 2;
+    const bool cropEyes = frame && frame->dup && !frame->stereo && frame->menuFlat && g_srcW >= 2;
     g_scCropped = cropEyes;
     // research/nvidia-vr-upscaling: NIS engages only on the SBS true-stereo
     // path (two independent eye viewports, seam never in the kernel). Mono and
@@ -10781,7 +10880,15 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                                 g_ctx11->CopyResource(g_scImages[1][rightIndex],
                                     g_nis.rt.outTex[swap ? 0 : 1]);
                             } else if (g_frameSrc11) {
-                                const UINT left = swap ? 0 : g_srcW / 2;
+                                const UINT left = frame->menuFlat
+                                    ? (swap ? g_srcW / 2 : 0)
+                                    : (swap ? 0 : g_srcW / 2);
+                                if (frame->menuFlat) {
+                                    static LONG reportedMenuBridge = 0;
+                                    if (InterlockedCompareExchange(&reportedMenuBridge, 1, 0) == 0)
+                                        Log("menu: XR bridge submits one identical source crop to both eyes (%ux%u)",
+                                            g_scWidth, g_scHeight);
+                                }
                                 const D3D11_BOX box{ left, 0, 0, left + g_scWidth, g_scHeight, 1 };
                                 g_ctx11->CopySubresourceRegion(g_scImages[1][rightIndex], 0, 0, 0, 0, g_frameSrc11, 0, &box);
                             } else {
@@ -11479,6 +11586,15 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
             }
         }
         const LONG previous = InterlockedExchange(&g_rtIsScene, scene ? 1 : 0);
+        bool backbuffer = false;
+        if (surf) {
+            IDirect3DSurface9* bb = nullptr;
+            if (SUCCEEDED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &bb)) && bb) {
+                backbuffer = (surf == bb);
+                bb->Release();
+            }
+        }
+        InterlockedExchange(&g_rtIsBackbuffer, backbuffer ? 1 : 0);
         if (!scene || previous != (scene ? 1 : 0)) {
             InvalidateCamMats();
             g_camMatrixBound = false;
@@ -11881,7 +11997,7 @@ extern volatile LONG g_inForeground, g_hideMeshIdx, g_fgDrawCount;
 // Defined with the foreground-mesh code. StereoPair reads it; the non-indexed draw hook above sets
 // it as of run 181, and that hook comes before the definition.
 extern int g_thisDrawMoved;   // ⭐ run 237: 0 none, 1 gun hand, 2 off hand
-static bool FgHidden(UINT verts);
+static bool FgHidden(UINT verts, UINT first, UINT triangles);
 static bool FgRidesGun(UINT verts);
 static bool FgMatchesSignature(UINT verts);   // ⭐ run 237c: used by the depth-prime exemption
 static int  RideTargetFor(UINT verts);   // ⭐ run 237: 0 none, 1 gun hand, 2 off hand
@@ -13404,6 +13520,13 @@ int g_hideExtraArms = 1;              // ini [Render] HideExtraArms
 // The IK path is deliberately opt-in until a headset confirms the final elbow
 // bend in the deployed asset; it never changes non-TMD meshes.
 int g_armIkMode = 0;                  // ini [Render] ArmIKMode
+volatile LONG g_gloveIsolate = 2;     // ini [Render] GloveIsolate
+volatile LONG g_gloveFaceFilter = 0;  // ini [Render] GloveFaceFilter
+volatile LONG g_gloveStumpScalePct = 20; // ini [Render] GloveStumpScale
+// Mesh-space +X is the bind-pose left axis (left wrist +49, right wrist -49).
+// Positive pushes the left arm further left of the tracked wrist. Live from the pause hub.
+volatile LONG g_gloveLeftShiftUU = 12; // ini [Render] GloveLeftShift
+volatile LONG g_independentHandsAudit = 0;
 
 // The baseline mesh that is neither gun nor arms - the leftover hand/arm fragment.
 static bool FgIsExtraArm(UINT verts) {
@@ -14162,38 +14285,400 @@ static void BuildGunC(float C[4][4]) {
     ApplyMeshScale(C, H);   // Fix-E/gunsize
 }
 
+// Independent glove palettes always follow live controllers. BuildGunC freezes aim-hand
+// orientation at the hip when holstered; using it here dragged the whole glove rig to the holster.
+static void BuildLiveControllerC(float C[4][4], bool aimHand) {
+    float G[3];
+    GunAnchorWorld(G);
+    float H[3] = { G[0], G[1], G[2] };
+    if (g_gunFollowPos) {
+        if (aimHand) {
+            H[0] = (float)InterlockedCompareExchange(&g_handOffX, 0, 0) / kHandFixed;
+            H[1] = (float)InterlockedCompareExchange(&g_handOffY, 0, 0) / kHandFixed;
+            H[2] = (float)(g_gunSignPosZ * InterlockedCompareExchange(&g_handOffZ, 0, 0)) / kHandFixed;
+        } else {
+            H[0] = (float)InterlockedCompareExchange(&g_offHandOffX, 0, 0) / kHandFixed;
+            H[1] = (float)InterlockedCompareExchange(&g_offHandOffY, 0, 0) / kHandFixed;
+            H[2] = (float)(g_gunSignPosZ * InterlockedCompareExchange(&g_offHandOffZ, 0, 0)) / kHandFixed;
+        }
+    }
+    if (g_gunHeadOffset) {
+        H[0] += g_hmdOffset[0];
+        H[1] += g_hmdOffset[1];
+        H[2] += g_hmdOffset[2];
+    }
+    int sy, sp, sr;
+    GunSigns(sy, sp, sr);
+    const LONG yawUU = aimHand ? Rd(g_handDevYawUU) : Rd(g_offHandDevYawUU);
+    const LONG pitchUU = aimHand ? Rd(g_handDevPitchUU) : Rd(g_offHandDevPitchUU);
+    const LONG rollUU = aimHand ? Rd(g_handDevRollUU) : Rd(g_offHandDevRollUU);
+    int32_t trimYaw = 0, trimPitch = 0;
+    if (aimHand) {
+        const GunAlignSlot* al = GunAlignFind(InterlockedCompareExchange(&g_gunVerts, 0, 0));
+        if (al) {
+            trimYaw = (int32_t)(al->yawTenths * 18.2044f);
+            trimPitch = (int32_t)(al->pitchTenths * 18.2044f);
+        }
+    }
+    BuildGunTransform(C, G,
+        (int32_t)(sy * yawUU) + trimYaw,
+        (int32_t)(sp * pitchUU) + trimPitch,
+        (int32_t)(sr * rollUU),
+        GunViewFrame() ? g_wantYaw : 0,
+        H[0] - G[0], H[1] - G[1], H[2] - G[2]);
+    ApplyMeshScale(C, H);
+}
+
 int g_independentHands=0; // Evidence-backed prototype, enabled explicitly in the test INI.
 inline bool FgMatchWindow();
+static bool IsIndependentHandSection(UINT verts, UINT first, UINT triangles);
 volatile LONG g_independentLeftDraws=0;
+enum IndependentAuditCounter {
+    IHA_CALLS, IHA_CONTEXT_PASS, IHA_DISABLED, IHA_MOTION, IHA_RIDE, IHA_GUN,
+    IHA_CAMERA, IHA_OFFHAND, IHA_POSITION, IHA_WINDOW, IHA_ANIMATION, IHA_WEAPON,
+    IHA_SHADER, IHA_SECTION, IHA_MAP, IHA_PALETTE, IHA_SUCCESS, IHA_COUNTER_COUNT
+};
+volatile LONG g_independentAuditCounters[IHA_COUNTER_COUNT]{};
+
+static void IndependentAuditCount(int counter, bool enabled) {
+    if (enabled && counter >= 0 && counter < IHA_COUNTER_COUNT)
+        InterlockedIncrement(&g_independentAuditCounters[counter]);
+}
+
+static bool IndependentAuditCandidate(UINT verts) {
+    return verts==3314 || verts==2924 || verts==390 || verts==7444 ||
+           verts==2626 || verts==4818 || verts==4781 || verts==37;
+}
+
+// Bone maps are the exported section maps for the two first-person hand
+// meshes.  They are deliberately explicit: a 3x4 GPU palette slot is not an
+// identity-indexed copy of the PSK skeleton.  Keeping the maps here makes the
+// collapse/finger path fail closed if a new section signature is introduced.
+static const unsigned kNoTmdGloveMap[35] = {
+    85,51,70,71,72,79,80,76,73,74,82,83,77,84,81,78,75,50,
+    9,10,11,12,16,27,23,24,20,17,18,14,15,21,25,22,19
+};
+static const unsigned kNoTmdSleeveMap[6] = { 50,85,49,27,8,7 };
+static const unsigned kTmdGloveMap[36] = {
+    85,9,10,11,12,23,24,20,17,18,14,13,15,21,16,25,22,19,
+    26,51,70,71,72,79,80,76,73,74,82,83,77,84,81,78,75,50
+};
+static const unsigned kTmdBaseMap[15] = { 7,46,8,27,43,41,44,45,42,29,28,30,50,85,49 };
+static const unsigned kTmdExtraMap[2] = { 85,50 };
+
+static const char* const kTmdBoneNames[89] = {
+    "Root", "IK_hand_root", "IK_gun", "r_hand_IK", "Spine_3", "Spine_4",
+    "l_arm_clavicle", "l_arm_shoulder", "l_arm_elbow", "l_arm_wrist",
+    "l_thumb_1", "l_thumb_2", "l_thumb_3", "l_pinky_cup", "l_pinky_1",
+    "l_pinky_2", "l_pinky_3", "l_ring_1", "l_ring_2", "l_ring_3",
+    "l_middle_1", "l_middle_2", "l_middle_3", "l_index_1", "l_index_2",
+    "l_index_3", "l_arm_forearm", "tmd_base", "hinge1", "hinge2", "rail",
+    "rail_rot", "disc1", "nub_a", "nub_b", "nixie_rot1", "nixie1", "nixie_rot2",
+    "nixie2", "faceplate", "wheel1", "sleeve_fix_5", "sleeve_fix_4", "sleeve_fix_1",
+    "sleeve_fix_2", "sleeve_fix_3", "l_arm_forearm2", "l_arm_bicep",
+    "r_arm_clavicle", "r_arm_shoulder", "r_arm_elbow", "r_arm_wrist", "cog_gun",
+    "l_hand_IK",
+    "cog_grenade", "cog_machinegun", "cog_shotgun", "cog_sniper", "cog_alt_pistol",
+    "cog_e99_steerable", "cog_rocketlauncher", "cog_beam", "cog_grenade_launcher",
+    "cog_pistol", "cog_knife", "cog_deadlock", "cog_gatling", "cog_tripwire",
+    "cog_hammer_sickle", "cog_railgun", "r_thumb_1", "r_thumb_2", "r_thumb_3",
+    "r_ring_1", "r_ring_2", "r_ring_3", "r_middle_1", "r_middle_2", "r_middle_3",
+    "r_index_1", "r_index_2", "r_index_3", "r_pinky_1", "r_pinky_2", "r_pinky_3",
+    "r_arm_forearm", "r_arm_bicep", "inview_camera", "inview_sound"
+};
+
+struct GloveRefBone { const char* name; int parent; };
+
+static const GloveRefBone* GloveRefs() {
+    static GloveRefBone refs[89]{};
+    static bool ready = false;
+    if (!ready) {
+        for (unsigned i = 0; i < 89; ++i) {
+            refs[i].name = kTmdBoneNames[i];
+            refs[i].parent = bindassets::tmd[i].parent;
+        }
+        ready = true;
+    }
+    return refs;
+}
+
+static int GloveFindSlot(const unsigned* map, unsigned slots, const GloveRefBone* refs,
+                         unsigned count, const char* name) {
+    if (!map || !refs || !name) return -1;
+    for (unsigned slot = 0; slot < slots; ++slot) {
+        const unsigned bone = map[slot];
+        if (bone < count && refs[bone].name && std::strcmp(refs[bone].name, name) == 0)
+            return (int)slot;
+    }
+    return -1;
+}
+
+static bool GloveIsDescendantOrSelf(unsigned bone, unsigned ancestor,
+                                    const GloveRefBone* refs, unsigned count) {
+    if (!refs || bone >= count || ancestor >= count) return false;
+    for (unsigned n = 0; n < count; ++n) {
+        if (bone == ancestor) return true;
+        if (bone == 0 || refs[bone].parent < 0 || (unsigned)refs[bone].parent >= bone)
+            return false;
+        bone = (unsigned)refs[bone].parent;
+    }
+    return false;
+}
+
+static const unsigned* GloveMap(bool gloves, bool sleeve, bool tmdGloves,
+                                bool tmdBase, bool tmdExtra, int& slots) {
+    if (gloves)      { slots = (int)_countof(kNoTmdGloveMap); return kNoTmdGloveMap; }
+    if (sleeve)      { slots = (int)_countof(kNoTmdSleeveMap); return kNoTmdSleeveMap; }
+    if (tmdGloves)   { slots = (int)_countof(kTmdGloveMap); return kTmdGloveMap; }
+    if (tmdBase)     { slots = (int)_countof(kTmdBaseMap); return kTmdBaseMap; }
+    if (tmdExtra)    { slots = (int)_countof(kTmdExtraMap); return kTmdExtraMap; }
+    slots = 0;
+    return nullptr;
+}
+
+static float g_gloveWristCenter[2][3]{};
+static bool g_gloveWristValid[2] = { false, false };
+
+static bool PaletteMat(const float gpu[3][4], armbind::Mat& out) {
+    return armbind::FromGpu(gpu, out);
+}
+
+static void UpdateGloveWristCenters(float changed[108][4], const unsigned* map, int slots) {
+    const GloveRefBone* refs = GloveRefs();
+    for (int hand = 0; hand < 2; ++hand) {
+        const char* name = hand == 0 ? "l_arm_wrist" : "r_arm_wrist";
+        const int slot = GloveFindSlot(map, (unsigned)slots, refs, 89, name);
+        if (slot < 0 || slot >= slots) continue;
+        armbind::Mat m;
+        if (!PaletteMat(reinterpret_cast<const float (*)[4]>(&changed[slot * 3]), m)) continue;
+        const armik::V p = armbind::Position(m);
+        if (!armik::Finite(p)) continue;
+        g_gloveWristCenter[hand][0] = p.x;
+        g_gloveWristCenter[hand][1] = p.y;
+        g_gloveWristCenter[hand][2] = p.z;
+        g_gloveWristValid[hand] = true;
+    }
+}
+
+static void NudgeComponentX(float slot[3][4], float dx) {
+    if (!slot || dx == 0.0f) return;
+    armbind::Mat m;
+    if (!PaletteMat(slot, m)) return;
+    m.m[3][0] += dx;
+    armbind::ToGpu(m, slot);
+}
+
+// Finger slots must keep the same 3x3 scale the wrist delta produced. A stump
+// scale on a finger (wrong name, wrong parent) stretches the blend.
+static bool SlotScaleStable(const float before[3][4], const float after[3][4]) {
+    for (int axis = 0; axis < 3; ++axis) {
+        double b2 = 0.0, a2 = 0.0;
+        for (int r = 0; r < 3; ++r) {
+            b2 += (double)before[r][axis] * before[r][axis];
+            a2 += (double)after[r][axis] * after[r][axis];
+        }
+        if (b2 < 1e-8) continue;
+        const double ratio = std::sqrt(a2 / b2);
+        if (ratio < 0.90 || ratio > 1.10) return false;
+    }
+    return true;
+}
+
+static void ApplyGloveIsolation(float changed[108][4], const unsigned* map, int slots,
+                                int mode) {
+    if (mode <= 0 || !map || slots <= 0) return;
+    const GloveRefBone* refs = GloveRefs();
+    const int wristSlot[2] = {
+        GloveFindSlot(map, (unsigned)slots, refs, 89, "l_arm_wrist"),
+        GloveFindSlot(map, (unsigned)slots, refs, 89, "r_arm_wrist"),
+    };
+    int wouldCollapse[2] = { 0, 0 };
+    int collapsed[2] = { 0, 0 };
+    for (int slot = 0; slot < slots; ++slot) {
+        const unsigned bone = map[slot];
+        if (bone >= 89) continue;
+        const char* name = refs[bone].name;
+        if (gloveisolate::Classify(name) != gloveisolate::BoneRole::Collapse) continue;
+        const int side = gloveisolate::HandSide(name);
+        if (side < 0 || side > 1) continue;
+        if (wristSlot[side] >= 0) {
+            const unsigned wrist = map[wristSlot[side]];
+            if (bone != wrist && GloveIsDescendantOrSelf(bone, wrist, refs, 89)) {
+                static LONG saidFingerScale = 0;
+                if (InterlockedCompareExchange(&saidFingerScale, 1, 0) == 0)
+                    Log("GloveIsolation: refused stump scale on wrist descendant bone=%u %s",
+                        bone, name ? name : "?");
+                continue;
+            }
+        }
+        ++wouldCollapse[side];
+        // Mode >= 2: stump collapse (keepScale) so the cuff sits behind the wrist
+        // instead of a point-collapse or a face clip flush with the glove.
+        if (mode < 2 || !g_gloveWristValid[side]) continue;
+        armbind::Mat s;
+        if (!PaletteMat(reinterpret_cast<const float (*)[4]>(&changed[slot * 3]), s)) continue;
+        gloveisolate::Mat4 d;
+        const float stump = (float)InterlockedCompareExchange(&g_gloveStumpScalePct, 0, 0) / 100.0f;
+        gloveisolate::CollapseDelta(g_gloveWristCenter[side], d, stump);
+        float out[4][4];
+        gloveisolate::ApplyDelta(s.m, d, out);
+        armbind::Mat result{};
+        std::memcpy(result.m, out, sizeof(out));
+        armbind::ToGpu(result, reinterpret_cast<float (*)[4]>(&changed[slot * 3]));
+        ++collapsed[side];
+    }
+    static DWORD lastLog = 0;
+    const DWORD now = GetTickCount();
+    if (now - lastLog >= 1000 && (wouldCollapse[0] || wouldCollapse[1])) {
+        lastLog = now;
+        Log("GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=%ld Eye=shared WorldScale=%ld CurrentPass=arms MenuState=%ld mode=%d left=%d/%d right=%d/%d",
+            Rd(g_armPaletteFrameToken), Rd(g_worldScalePct), Rd(g_vrUiMenu), mode,
+            wouldCollapse[0], collapsed[0], wouldCollapse[1], collapsed[1]);
+    }
+}
+
 static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first, UINT triangles,
                                   float saved[108][4]) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::bone_palette);
     if (g_hotPathSampler.active())
         InterlockedExchange64(&g_hotPaletteFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
     const LONG motionMode=Rd(g_hideMeshIdx);
+    const bool audit = Rd(g_independentHandsAudit) != 0 && IndependentAuditCandidate(verts);
+    IndependentAuditCount(IHA_CALLS, audit);
     // Independent hand palettes are safe in mode 0 as well: the exact SP
     // section/range checks below and FgMatchWindow keep them inside the
     // foreground pass. Previously this was tied to the experimental whole-mesh
     // ride mode, so the left controller stopped moving whenever that mode was
     // disabled or temporarily lost its latch.
-    if(!g_independentHands || (motionMode!=0 && motionMode!=1 && motionMode!=3) || Rd(g_fgRideAll)!=1 || !Rd(g_gunVerts) ||
-       !g_camMatrixBound || !Rd(g_offHandValid) || !Rd(g_handDevValid) ||
-       !g_handPositionValid[OffHand()] ||
-       !FgMatchWindow() || ArmsAnimActive() || !WeaponInHands())return 0;
+    // The support hand is an independent tracked object. Requiring the primary
+    // aim hand's deviation here made the left hand disappear whenever the right
+    // pose briefly lost tracking (and after a menu/load transition), even though
+    // the left pose and position were still valid. The primary-hand validity is
+    // only needed by BuildGunC; it must not gate this draw.
+    if(!g_independentHands) { IndependentAuditCount(IHA_DISABLED,audit); return 0; }
+    if(motionMode!=0 && motionMode!=1 && motionMode!=3) { IndependentAuditCount(IHA_MOTION,audit); return 0; }
+    // Hand tracking is independent of the optional weapon-FX ride path.  The
+    // latter only decides whether muzzle/smoke draws inherit the gun transform;
+    // making it a prerequisite here made gloves disappear whenever that
+    // unrelated diagnostic/compatibility setting was off or transiently
+    // changed.  Keep the hand palette path on its own exact-section gates.
+    // The hand palette is a bone-space transform.  It does not require the
+    // camera constant hook to be bound; that hook owns view matrices, while
+    // this path consumes the already-uploaded skeletal palette.  Keeping the
+    // camera gate made valid gloves disappear during camera/cutscene phases.
+    // Do not make the right/aim hand depend on the left/off-hand telemetry.
+    // The old gate returned before reading the palette whenever the support
+    // controller had one invalid sample, so one transient left-pad dropout
+    // hid both independent hands.  Each model-side section below now keeps
+    // its own controller validity and the other side can continue to move.
+    const bool handValid[2] = {
+        g_handPoseValid[0] && g_handPositionValid[0],
+        g_handPoseValid[1] && g_handPositionValid[1]
+    };
+    if(!handValid[0] && !handValid[1]) { IndependentAuditCount(IHA_POSITION,audit); return 0; }
+    if(ArmsAnimActive()) { IndependentAuditCount(IHA_ANIMATION,audit); return 0; }
+    // A stored weapon still owns the same first-person hand mesh.  Keep
+    // driving the tracked hands while the gun is at the hip; the weapon-only
+    // transform is handled by GunPivotWorld/FgMoved separately.  This mirrors
+    // the reference VR implementations' per-hand release/drive policy.
+    IndependentAuditCount(IHA_CONTEXT_PASS,audit);
     const auto layout=g_boundShaderLayout;
-    if(layout.shadow || layout.bones!=5 || layout.boneRegs!=225 || layout.local!=230)return 0;
     // Exact exported section identity. Do not transfer the MP or TMD bone maps to this mesh.
     const bool gloves=(verts==3314 || verts==2924) && first==0 && triangles==4830;
     const bool sleeve=(verts==390 || verts==3314) && first==14490 && triangles==674;
+    if (sleeve && InterlockedCompareExchange(&g_gloveIsolate, 0, 0) >= 2)
+        return 0;
     const bool tmdGloves=(verts==7444 || verts==2626) && first==0 && triangles==4402;
     const bool tmdBase=(verts==7444 || verts==4818 || verts==4781) && first==13206 && triangles==7704;
     const bool tmdExtra=(verts==7444 || verts==37) && first==36318 && triangles==17;
-    if(!gloves&&!sleeve&&!tmdGloves&&!tmdBase&&!tmdExtra)return 0;
-    const int slots=gloves?35:sleeve?6:tmdGloves?36:tmdBase?15:2,regs=slots*3;
+    if (tmdBase && InterlockedCompareExchange(&g_gloveIsolate, 0, 0) >= 2)
+        return 0;
+    // These exact sections contain both model-side hands.  They must receive
+    // both controller deltas even if the surrounding foreground classifier
+    // temporarily labels the draw as riding the gun/off-hand transform.
+    // Otherwise one side stays on the game's native pose, producing the
+    // crossed-hand/long-finger appearance while tracking itself is valid.
+    const bool independentBothHands = gloves || sleeve || tmdGloves || tmdBase || tmdExtra;
+    if(!gloves&&!sleeve&&!tmdGloves&&!tmdBase&&!tmdExtra) {
+        IndependentAuditCount(IHA_SECTION,audit);
+        if(audit) {
+            struct AuditSectionSig { UINT verts, first, triangles; };
+            static AuditSectionSig seen[64]{};
+            static unsigned seenCount=0;
+            bool known=false;
+            for(unsigned i=0;i<seenCount;++i) {
+                if(seen[i].verts==verts && seen[i].first==first && seen[i].triangles==triangles) {
+                    known=true;
+                    break;
+                }
+            }
+            if(!known && seenCount<_countof(seen)) {
+                seen[seenCount++]={verts,first,triangles};
+                Log("IndependentHandsSectionReject verts=%u first=%u tris=%u arms=%ld scene=%ld shadow=%d",
+                    verts, first, triangles, Rd(g_armsVerts), Rd(g_rtIsScene), layout.shadow ? 1 : 0);
+            }
+        }
+        return 0;
+    }
+    if(layout.shadow || layout.bones!=5 || layout.boneRegs!=225 || layout.local!=230) {
+        IndependentAuditCount(IHA_SHADER,audit);
+        if(audit) {
+            static ULONGLONG lastShaderAudit=0;
+            const ULONGLONG now=GetTickCount64();
+            if(!lastShaderAudit || now-lastShaderAudit>=1000) {
+                lastShaderAudit=now;
+                Log("IndependentHandsShader verts=%u first=%u tris=%u scene=%ld shadow=%d bones=%d boneRegs=%d local=%d",
+                    verts, first, triangles, Rd(g_rtIsScene), layout.shadow ? 1 : 0,
+                    layout.bones, layout.boneRegs, layout.local);
+            }
+        }
+        return 0;
+    }
+    // Measured in gameplay: the foreground classifier stays false after its draw-count
+    // window closes (inForeground=0, fgDraw~600), even on the exact latched arms mesh.
+    // Permit only those known glove/arm index ranges when the latched arm vertex count,
+    // scene render target, and non-shadow five-bone layout all agree. Every other mesh
+    // still requires the normal foreground window, so shared world vertex counts stay gated.
+    const LONG armsVerts=Rd(g_armsVerts);
+    const bool exactLatchedArmSection=armsVerts!=0 && (UINT)armsVerts==verts;
+    const bool exactIndependentSection=IsIndependentHandSection(verts, first, triangles);
+    const bool exactSectionWindow=exactIndependentSection && Rd(g_inForeground) &&
+        Rd(g_fgDrawCount) <= kFgSanePass && Rd(g_rtIsScene) && !layout.shadow;
+    const bool handWindow=FgMatchWindow() ||
+        (exactLatchedArmSection && Rd(g_rtIsScene) && !layout.shadow) ||
+        exactSectionWindow;
+    if(!handWindow) {
+        IndependentAuditCount(IHA_WINDOW,audit);
+        if (audit) {
+            static ULONGLONG lastWindowAudit=0;
+            const ULONGLONG now=GetTickCount64();
+            if (!lastWindowAudit || now-lastWindowAudit>=1000) {
+                lastWindowAudit=now;
+                Log("IndependentHandsWindow verts=%u first=%u tris=%u scene=%ld shadow=%d arms=%ld inForeground=%ld fgDraw=%ld confirmed=%ld frameDraw=%ld",
+                    verts, first, triangles, Rd(g_rtIsScene), layout.shadow ? 1 : 0, armsVerts,
+                    Rd(g_inForeground), Rd(g_fgDrawCount), Rd(g_fgPassConfirmed), Rd(g_frameDrawIdx));
+            }
+        }
+        return 0;
+    }
+    if(audit && exactLatchedArmSection && !FgMatchWindow()) {
+        static ULONGLONG lastExactArmOverride=0;
+        const ULONGLONG now=GetTickCount64();
+        if(!lastExactArmOverride || now-lastExactArmOverride>=1000) {
+            lastExactArmOverride=now;
+            Log("IndependentHandsWindow exact-latched-arm section override verts=%u first=%u tris=%u scene=%ld",
+                verts, first, triangles, Rd(g_rtIsScene));
+        }
+    }
+    int slots = 0;
+    const unsigned* sectionMap = GloveMap(gloves, sleeve, tmdGloves, tmdBase, tmdExtra, slots);
+    if (!sectionMap || slots <= 0 || slots > 36) { IndependentAuditCount(IHA_MAP,audit); return 0; }
+    const int regs=slots*3;
     float local[4][4],primary[4][4],off[4][4],delta[4][4],changed[108][4];
     if(FAILED(dev->GetVertexShaderConstantF(230,&local[0][0],4)) ||
-       FAILED(dev->GetVertexShaderConstantF(5,&saved[0][0],regs)))return 0;
-    BuildGunC(primary);BuildTmdC(off);
+       FAILED(dev->GetVertexShaderConstantF(5,&saved[0][0],regs))) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
+    BuildLiveControllerC(primary, true);
+    BuildLiveControllerC(off, false);
     // During support grip, wrist orientation follows the weapon; position still follows the
     // left controller. Releasing immediately restores its independent tracked orientation.
     // Exact asset sections can also arrive after the broad attachment path's 64-draw
@@ -14206,20 +14691,47 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         // then added a TMD anchor delta. That made the left hand appear beside the pistol: the
         // orientation was weapon-relative while the translation was still controller-relative.
         // Use the weapon-specific support point in the same row-vector frame as BuildGunC.
-        if(!ApplySupportGripTarget(off,primary,InterlockedCompareExchange(&g_gunVerts,0,0))) return 0;
+        if(!ApplySupportGripTarget(off,primary,InterlockedCompareExchange(&g_gunVerts,0,0))) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
     }
     memcpy(changed,saved,regs*4*sizeof(float));
     float rightDelta[4][4];
-    if(!skeletal::LocalDeltaPair(delta,rightDelta,local,base,off,primary))return 0;
+    if(!skeletal::LocalDeltaPair(delta,rightDelta,local,base,off,primary)) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
+    const GloveRefBone* refs = GloveRefs();
+    const int wristSlot[2] = {
+        GloveFindSlot(sectionMap, slots, refs, 89, "l_arm_wrist"),
+        GloveFindSlot(sectionMap, slots, refs, 89, "r_arm_wrist"),
+    };
+    const unsigned wristBone[2] = {
+        wristSlot[0] >= 0 ? sectionMap[wristSlot[0]] : 89u,
+        wristSlot[1] >= 0 ? sectionMap[wristSlot[1]] : 89u,
+    };
     for(int b=0;b<slots;++b) {
-        const bool left=gloves?b>=18:sleeve?b>=3:tmdGloves?(b>=1&&b<=18):tmdBase?b<12:false;
-        if(!left && g_thisDrawMoved==1)continue; // Preserve the primary-hand palette exactly.
-        if(left && g_thisDrawMoved==2 && !Rd(g_twoHandActive))continue;
-        skeletal::TransformBone(&changed[b*3],&saved[b*3],left?delta:rightDelta);
+        const unsigned bone = sectionMap[b];
+        const char* boneName = bone < 89 ? refs[bone].name : nullptr;
+        if (gloveisolate::IsTmdDevice(boneName)) continue;
+        {
+            const int namedSide = gloveisolate::HandSide(boneName);
+            const bool finger = namedSide >= 0 && namedSide <= 1 && wristSlot[namedSide] >= 0 &&
+                GloveIsDescendantOrSelf(bone, wristBone[namedSide], refs, 89);
+            if (gloveisolate::Classify(boneName) == gloveisolate::BoneRole::Collapse && !finger)
+                continue;
+            if (!finger && gloveisolate::Classify(boneName) != gloveisolate::BoneRole::Keep &&
+                gloveisolate::Classify(boneName) != gloveisolate::BoneRole::Collapse)
+                continue;
+        }
+        if (!boneName) continue;
+        const int physicalSide = gloveisolate::HandSide(boneName);
+        if (physicalSide < 0 || physicalSide > 1 || wristSlot[physicalSide] < 0) continue;
+        if (!GloveIsDescendantOrSelf(bone, wristBone[physicalSide], refs, 89)) continue;
+        const int deltaSide = gloveisolate::ControllerDeltaForBone(boneName, OffHand());
+        if (deltaSide < 0) continue; // utility/review entries stay native.
+        if (!handValid[physicalSide]) continue; // preserve the last native palette for a lost pad.
+        if(!independentBothHands && g_thisDrawMoved==1 && physicalSide != AimHand()) continue;
+        if(!independentBothHands && g_thisDrawMoved==2 && !Rd(g_twoHandActive) && physicalSide != OffHand()) continue;
+        skeletal::TransformBone(&changed[b*3],&saved[b*3],deltaSide == 0 ? delta : rightDelta);
     }
-    // Native arms are kept as the default.  When explicitly enabled, only the
-    // audited TMD arm sections receive constrained two-bone deltas.  Fingers
-    // and unknown slots retain the established independent-hand transform.
+    // Native arms are kept as the default. When explicitly enabled, only the
+    // audited TMD arm sections receive constrained two-bone deltas.
     if (g_armIkMode == 1 && (tmdBase || tmdGloves)) {
         armbind::Deltas leftIk{}, rightIk{};
         const bool haveLeft = armnatural::Build(false, delta, leftIk);
@@ -14232,9 +14744,60 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             if (haveRight) armnatural::ApplySection0(reinterpret_cast<float (*)[3][4]>(changed), reinterpret_cast<const float (*)[3][4]>(saved), slots, true, rightIk);
         }
     }
+    // Bind-pose left is mesh +X (left wrist +49, right wrist -49). Shift the left
+    // wrist subtree and the left shoulder/elbow/forearm so the arm sits further
+    // left than the native gun-hold, while the right hand stays on its controller.
+    const float leftShift = (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
+    if (leftShift != 0.0f) {
+        for (int b = 0; b < slots; ++b) {
+            const unsigned bone = sectionMap[b];
+            const char* boneName = bone < 89 ? refs[bone].name : nullptr;
+            if (gloveisolate::HandSide(boneName) != 0 || gloveisolate::IsTmdDevice(boneName)) continue;
+            const bool finger = wristSlot[0] >= 0 &&
+                GloveIsDescendantOrSelf(bone, wristBone[0], refs, 89);
+            const bool arm = gloveisolate::Classify(boneName) == gloveisolate::BoneRole::Collapse;
+            if (!finger && !arm) continue;
+            NudgeComponentX(reinterpret_cast<float(*)[4]>(&changed[b * 3]), leftShift);
+        }
+    }
+    float posed[108][4];
+    memcpy(posed, changed, (size_t)regs * 4 * sizeof(float));
+    // The wrist centers are taken from the live, post-IK palette.  Section 0
+    // contains both wrists and seeds the cache used by the arm-only section;
+    // never fabricate a center for a section that has no wrist slot.
+    UpdateGloveWristCenters(changed, sectionMap, slots);
+    int gloveMode = InterlockedCompareExchange(&g_gloveIsolate, 0, 0);
+    ApplyGloveIsolation(changed, sectionMap, slots, gloveMode);
+    int fingerScaleRejected = 0;
+    for (int b = 0; b < slots; ++b) {
+        const unsigned bone = sectionMap[b];
+        const char* boneName = bone < 89 ? refs[bone].name : nullptr;
+        const int side = gloveisolate::HandSide(boneName);
+        if (side < 0 || side > 1 || wristSlot[side] < 0) continue;
+        if (bone == wristBone[side]) continue;
+        if (!GloveIsDescendantOrSelf(bone, wristBone[side], refs, 89)) continue;
+        float (*slot)[4] = reinterpret_cast<float(*)[4]>(&changed[b * 3]);
+        const float (*prior)[4] = reinterpret_cast<const float(*)[4]>(&posed[b * 3]);
+        if (SlotScaleStable(prior, slot)) continue;
+        memcpy(slot, prior, 3 * 4 * sizeof(float));
+        ++fingerScaleRejected;
+        static LONG saidScale = 0;
+        if (InterlockedCompareExchange(&saidScale, 1, 0) == 0)
+            Log("FingerScale fail-closed bone=%u %s slot=%d (stump scale reverted, no stretch)",
+                bone, boneName ? boneName : "?", b);
+    }
+    if (fingerScaleRejected) {
+        static DWORD lastScaleLog = 0;
+        const DWORD nowScale = GetTickCount();
+        if (nowScale - lastScaleLog >= 1000) {
+            lastScaleLog = nowScale;
+            Log("FingerScale fail-closed slots=%d (wrist descendants kept rigid)", fingerScaleRejected);
+        }
+    }
     // Internal palette writes must bypass camera/HUD upload classification.
-    if(!g_origSetVSConstF || FAILED(g_origSetVSConstF(dev,5,&changed[0][0],regs)))return 0;
+    if(!g_origSetVSConstF || FAILED(g_origSetVSConstF(dev,5,&changed[0][0],regs))) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
     InterlockedIncrement(&g_independentLeftDraws);
+    IndependentAuditCount(IHA_SUCCESS,audit);
     return regs;
 }
 
@@ -14454,7 +15017,53 @@ static void FgSoloStep() {
         pick, at, m2, b3);
 }
 
-static bool FgHidden(UINT verts) {                    // arms, in modes 2 and 3
+// With ShowControllerArms=0 the native arms classifier would normally drop the
+// exact arm meshes before the independent glove palette gets a chance to run.
+static bool IsIndependentHandSection(UINT verts, UINT first, UINT triangles) {
+    return ((verts==3314 || verts==2924) && first==0 && triangles==4830) ||
+           ((verts==390 || verts==3314) && first==14490 && triangles==674) ||
+           ((verts==7444 || verts==2626) && first==0 && triangles==4402) ||
+           ((verts==7444 || verts==4818 || verts==4781) && first==13206 && triangles==7704) ||
+           ((verts==7444 || verts==37) && first==36318 && triangles==17);
+}
+
+static bool FgIndependentHandsCandidate(UINT verts, UINT first, UINT triangles) {
+    const bool exactSection=IsIndependentHandSection(verts, first, triangles);
+    const bool exactSectionWindow=exactSection && Rd(g_inForeground) &&
+        Rd(g_fgDrawCount) <= kFgSanePass && Rd(g_rtIsScene) && !g_boundShaderLayout.shadow;
+    return !g_showControllerArms && g_independentHands && Rd(g_gloveIsolate)>=2 &&
+           exactSection && (FgMatchWindow() || exactSectionWindow);
+}
+
+static bool FgHidden(UINT verts, UINT first, UINT triangles) {                    // arms, in modes 2 and 3
+    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2 &&
+        gloveisolate::IsStrayFingerSection(verts, first, triangles)) {
+        static LONG saidStray = 0;
+        if (InterlockedCompareExchange(&saidStray, 1, 0) == 0)
+            Log("GloveIsolation: suppressed detached sleeve/finger section verts=%u first=%u tris=%u",
+                verts, first, triangles);
+        return true;
+    }
+    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2 &&
+        gloveisolate::IsArmFleshSection(verts, first, triangles)) {
+        static LONG saidArmFlesh = 0;
+        if (InterlockedCompareExchange(&saidArmFlesh, 1, 0) == 0)
+            Log("GloveIsolation: hid native forearm section (gloves+wrist only) verts=%u first=%u tris=%u",
+                verts, first, triangles);
+        return FgMatchWindow();
+    }
+    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2 && FgMatchWindow() &&
+        (verts == 4818 || verts == 4781 || verts == 1368)) {
+        static LONG saidGauntlet = 0;
+        if (InterlockedCompareExchange(&saidGauntlet, 1, 0) == 0)
+            Log("Gloves-only: hid gauntlet/arm satellite mesh verts=%u first=%u tris=%u",
+                verts, first, triangles);
+        return true;
+    }
+    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2 &&
+        ((verts == 7444 || verts == 37) && first == 36318 && triangles == 17)) {
+        return FgMatchWindow();
+    }
     if (g_showControllerArms && Rd(g_gunVerts) &&
         ((UINT)Rd(g_armsVerts) == verts || FgIsExtraArm(verts))) return false;
     // ⭐ run 233: solo overrides every rule below it, including the exemptions. That is the point -
@@ -14469,6 +15078,27 @@ static bool FgHidden(UINT verts) {                    // arms, in modes 2 and 3
     if (const LONG solo = Rd(g_fgSoloVerts)) {
         if (Rd(g_fgDrawCount) > kFgSanePass) return false;
         return (UINT)solo != verts && FgMatchWindow();
+    }
+
+    if (FgIndependentHandsCandidate(verts, first, triangles)) return false;
+
+    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2) {
+        const LONG arms = Rd(g_armsVerts);
+        if (arms && (UINT)arms == verts && !IsIndependentHandSection(verts, first, triangles)) {
+            static LONG saidGlovesOnlyArm = 0;
+            if (InterlockedCompareExchange(&saidGlovesOnlyArm, 1, 0) == 0)
+                Log("gloves-only: suppressed latched native arm mesh verts=%u first=%u tris=%u",
+                    verts, first, triangles);
+            return FgMatchWindow();
+        }
+    }
+
+    if (g_showControllerArms && (Rd(g_hideMeshIdx) == 2 || Rd(g_hideMeshIdx) == 3) &&
+        FgMatchWindow()) {
+        static LONG said = 0;
+        if (InterlockedCompareExchange(&said, 1, 0) == 0)
+            Log("controller arms: stale foreground baseline bypassed; preserving all bounded FP arm meshes");
+        return false;
     }
 
     // ---- 💥 run 237b: with the TMD up, hide NOTHING in the first-person pass ----
@@ -14850,6 +15480,25 @@ static bool FgRidesGun(UINT verts) {
 // firing never raises it, the flash and the smoke are not in the foreground pass at all and the
 // panel toggle will look broken when it is in fact reporting an honest negative.
 void ReportFgRide() {
+    if (Rd(g_independentHandsAudit)) {
+        static ULONGLONG auditAt=0;
+        const ULONGLONG now=GetTickCount64();
+        if (!auditAt) auditAt=now;
+        else if (now-auditAt>=1000) {
+            auditAt=now;
+            LONG c[IHA_COUNTER_COUNT]{};
+            LONG total=0;
+            for (int i=0;i<IHA_COUNTER_COUNT;++i) {
+                c[i]=InterlockedExchange(&g_independentAuditCounters[i],0);
+                total+=c[i];
+            }
+            if (total) Log("IndependentHandsAudit candidates=%ld context=%ld blocked=%ld/%ld/%ld/%ld/%ld/%ld/%ld/%ld/%ld/%ld shader=%ld section=%ld map=%ld palette=%ld success=%ld (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)",
+                c[IHA_CALLS],c[IHA_CONTEXT_PASS],c[IHA_DISABLED],c[IHA_MOTION],c[IHA_RIDE],
+                c[IHA_GUN],c[IHA_CAMERA],c[IHA_OFFHAND],c[IHA_POSITION],c[IHA_WINDOW],
+                c[IHA_ANIMATION],c[IHA_WEAPON],c[IHA_SHADER],c[IHA_SECTION],c[IHA_MAP],
+                c[IHA_PALETTE],c[IHA_SUCCESS]);
+        }
+    }
     const LONG independent=InterlockedExchange(&g_independentLeftDraws,0);
     // This used to enqueue a log record every rendered frame. The value is a steady-state counter,
     // not an event, and the SRW lock + event wake-up became visible during jump/melee spikes.
@@ -15753,12 +16402,12 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         DpgRecord(2, 0.0f, 0.0f, (uint32_t)k, numVertices, primCount, (uint32_t)t);
         // WEAPON FX = HIDE PASS. Deliberately after the learn, per the note above and FgHideWholePass.
         if (FgHideWholePass()) return D3D_OK;
-        if (FgHidden(numVertices)) return D3D_OK;
+        if (FgHidden(numVertices, startIndex, primCount)) return D3D_OK;
         // Returning S_OK without drawing is how the mod already drops draws elsewhere - the
         // device state is untouched, so the next draw behaves normally.
     } else if (FgMatchesSignature(numVertices)) {
         // Outside the pass, but the same mesh - the near-plane depth prime at draws 2-3.
-        if (FgHidden(numVertices)) return D3D_OK;
+        if (FgHidden(numVertices, startIndex, primCount)) return D3D_OK;
         // The same mesh, drawn OUTSIDE the foreground pass. This is the whole question.
         DpgRecord(4, 0.0f, 0.0f, (uint32_t)InterlockedCompareExchange(&g_frameDrawIdx, 0, 0),
                   numVertices, primCount, 0);
@@ -15983,8 +16632,45 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // The ordinary path is nSeg == 1 and emits exactly the call it always did.
     float independentSaved[108][4];
     const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(dev,numVertices,startIndex,primCount,independentSaved) : 0;
+    if(FgIndependentHandsCandidate(numVertices, startIndex, primCount) && !independentRegs) {
+        nSeg=0;
+        static LONG saidIndependentSuppressed=0;
+        if(InterlockedCompareExchange(&saidIndependentSuppressed,1,0)==0)
+            Log("IndependentHandsSuppressed verts=%u first=%u prim=%u type=%u (palette section not transformed)",
+                numVertices,startIndex,primCount,(unsigned)t);
+    }
+    struct FaceRun { UINT first, last; };
+    static constexpr FaceRun kNoTmdHandFaces[] = {
+        {272,274},{278,291},{392,398},{400,405},{410,681},{783,843},
+        {1017,1433},{1439,1444},{1452,1454},{1460,1470},{1475,1480},
+        {1488,1495},{1501,1631},{1806,1976},{1986,1988},{1992,1996},
+        {1998,2012},{2024,2026},{2028,2029},{2038,2131},{2173,2173},
+        {2183,2183},{2194,2284},{2286,2298},{2314,2351},{2353,2681},
+        {2683,2717},{2720,2778},{2781,2947},{3410,3410},{3431,3431},
+        {3435,3436},{3443,3444},{3575,4055},{4057,4188},{4193,4197},
+        {4210,4252},{4256,4268},{4322,4425},{4428,4429},{4457,4507},
+        {4644,4663},{4674,4707},{4709,4718},
+        {4738,4741},{4744,4751},{4783,4805},{4818,4827}
+    };
+    const bool isolateNoTmdFaces = independentRegs && g_independentHands && Rd(g_gloveFaceFilter) &&
+        t == D3DPT_TRIANGLELIST && (numVertices == 3314 || numVertices == 2924) &&
+        startIndex == 0 && primCount == 4830 && nSeg == 1 &&
+        segStart[0] == 0 && segPrims[0] == 4830;
+    if (isolateNoTmdFaces) {
+        static LONG reportedFaces = 0;
+        if (InterlockedCompareExchange(&reportedFaces, 1, 0) == 0)
+            Log("GloveIsolation: drawing 2,922 glove-only faces from audited noTMD section");
+    }
     const HRESULT dhr = StereoPair(dev, [&] {
         HRESULT hr = D3D_OK;
+        if (isolateNoTmdFaces) {
+            for (const FaceRun& run : kNoTmdHandFaces) {
+                const HRESULT h = g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
+                    startIndex + run.first * 3, run.last - run.first + 1);
+                if (FAILED(h) && SUCCEEDED(hr)) hr = h;
+            }
+            return hr;
+        }
         for (int s = 0; s < nSeg; ++s) {
             const HRESULT h = g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
                                                     segStart[s], segPrims[s]);
@@ -16760,13 +17446,40 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // SetPause history alone stops identifying the main menu after its first dialog.
     // Apply to the complete GFx layout before eye remapping, never to world geometry.
     const bool menuLayout=InterlockedCompareExchange(&g_vrUiMenu,0,0)!=0;
+    const LONG menuClassNow = InterlockedCompareExchange(&g_vrMenuClass, 0, 0);
+    // Main/pause GFx is drawn into a scene-sized texture the cockpit monitor
+    // shows whole. Remapping both eyes into that texture is the doubled menu.
+    // The backbuffer path (title / IIS) stays split, then the XR crop shows one
+    // half in each eye. Bink never reaches this function.
+    if ((menuClassNow == 2 || menuClassNow == 3) &&
+        !InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
+        static LONG saidMono = 0;
+        if (InterlockedCompareExchange(&saidMono, 1, 0) == 0)
+            Log("menu mono: class=%ld one draw into the diegetic target", menuClassNow);
+        dev->SetVertexShaderConstantF(5, c, 4);
+        dev->SetScissorRect(&oldRect);
+        dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
+        g_inHudRemap = false;
+        return draw();
+    }
+    // Title corner labels only. Boot/Bink stay on their own path (class 1 scale
+    // is the IIS title, which is not the video quad).
+    const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3;
     if (!InterlockedCompareExchange(&g_noteOpen, 0, 0) &&
-        (InterlockedCompareExchange(&g_vrUiMenu, 0, 0) ||
+        (menuSafe ||
          InterlockedCompareExchange(&g_gamePaused, 0, 0) ||
          InterlockedCompareExchange(&g_menuFnHits[5], 0, 0) == 0)) {
-        const float k = InterlockedCompareExchange(&g_menuInsetPct, 0, 0) / 100.0f;
+        float k = InterlockedCompareExchange(&g_menuInsetPct, 0, 0) / 100.0f;
+        // ini 100 leaves Start/Quit on the clip edge. 0.84 keeps that corner inside the eye.
+        if (menuSafe && k > 0.84f) k = 0.84f;
         Reg4* q = reinterpret_cast<Reg4*>(cIn);
         for (int i=0;i<4;++i) { q[i].x*=k; q[i].y*=k; }
+        if (menuSafe) {
+            static LONG saidSafe = 0;
+            if (InterlockedCompareExchange(&saidSafe, 1, 0) == 0)
+                Log("menu safe: class=%ld scale=%.2f (corner labels inside the eye half)",
+                    menuClassNow, k);
+        }
     }
 
     const LONG halfW = (LONG)vp.Width / 2;
@@ -16779,7 +17492,10 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
             // appears at infinity; shift its pre-SBS clip centre to the projected 1.2 m plane centre
             // so the visual menu, laser endpoint and native GFx coordinates share one surface.
             const float centre=InterlockedCompareExchange(&g_vrUiEyeCentreU[eye],0,0)/1000000.0f;
-            const float ndcShift=2.0f*(centre-.5f);
+            // A bad plane centre used to shove the whole menu off the left of the eye.
+            float ndcShift=2.0f*(centre-.5f);
+            if (ndcShift > 0.04f) ndcShift = 0.04f;
+            if (ndcShift < -0.04f) ndcShift = -0.04f;
             Reg4* q=reinterpret_cast<Reg4*>(m);
             for(int i=0;i<4;++i)q[i].x+=ndcShift*q[i].w;
         }
@@ -16898,7 +17614,11 @@ bool IsVideoQuad(IDirect3DDevice9* dev, UINT primCount) {
         if (SUCCEEDED(rt->GetDesc(&d))) { rtW = d.Width; rtH = d.Height; }
         rt->Release();
     }
-    return texW && texH && rtW && rtH && (texW != rtW || texH != rtH);
+    // At the game's native res the Bink plane often matches the RT size (1280x720 windowed).
+    // L8 + sole draw in the frame is still a reliable Bink signal; without it VideoStereo never
+    // runs and the intro logo is stereo-split across eyes.
+    return texW && texH && rtW && rtH &&
+           (texFmt == kFmtL8 || texW != rtW || texH != rtH);
 }
 
 // ---- ⭐ run 262: the EXTENT test run 192 specified, and the remedy it named ----
@@ -17191,13 +17911,14 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
             // existing setting still controls the legacy per-eye rewrite.
             InterlockedExchange(&g_sceneVideoSeen, 1);
         }
-        if (InterlockedCompareExchange(&g_videoStereo, 0, 0) &&
-            InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) && videoQuad) {
+        if (InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) && videoQuad &&
+            (VrModeOn() || InterlockedCompareExchange(&g_videoStereo, 0, 0))) {
             static bool said = false;
             if (!said) {
                 said = true;
-                Log("video: Bink quad detected (2 prims, NDC, texture != render target, only draw"
-                    " in the frame) - drawing it once per eye from here");
+                Log("video: Bink quad detected (2 prims, L8, sole draw in frame) - drawing once per"
+                    " eye%s",
+                    VrModeOn() ? " (VR mode)" : " (VideoStereo ini)");
             }
             if (DrawVideoQuadPerEye(dev, t, primCount, vtxData, vtxStride)) {
                 InterlockedIncrement(&g_videoQuadDraws);
@@ -19458,6 +20179,190 @@ void FindProcessInternal() {
     }
 }
 
+// Native UObject::execLocalize. The original writes an FString (TArray<wchar_t>) into Result.
+// Polish is written into that buffer only when it already has room. No engine allocator.
+typedef void (__fastcall *ExecLocalizeFn)(void* self, void* edx, void* stack, void* result);
+static ExecLocalizeFn g_origLocalize = nullptr;
+static char g_polishAudioDir[MAX_PATH]{};
+static char g_polishStoryAudioDir[MAX_PATH]{};
+
+static void PolishMaybeSpeak(const char* english, const wchar_t* shown, int chars) {
+    if (chars < 40 || !g_polishAudioDir[0] || !english || !shown) return;
+    char file[160]{};
+    if (!PolishLocalization::PL().WavForEnglish(english, file, sizeof(file))) return;
+    wchar_t wfile[160]{}, path[MAX_PATH]{};
+    if (MultiByteToWideChar(CP_UTF8, 0, file, -1, wfile, 160) <= 0) return;
+    _snwprintf_s(path, _TRUNCATE, L"%hs\\%s", g_polishAudioDir, wfile);
+    if (GetFileAttributesW(path) == INVALID_FILE_ATTRIBUTES) {
+        if (!g_polishStoryAudioDir[0]) return;
+        _snwprintf_s(path, _TRUNCATE, L"%hs\\%s", g_polishStoryAudioDir, wfile);
+        if (GetFileAttributesW(path) == INVALID_FILE_ATTRIBUTES) return;
+    }
+    static DWORD lastTick = 0;
+    static wchar_t lastText[48]{};
+    const DWORD now = GetTickCount();
+    if (lastText[0] && now - lastTick < 4000 && wcsncmp(lastText, shown, 40) == 0) return;
+    lastTick = now;
+    wcsncpy_s(lastText, shown, _TRUNCATE);
+    static BOOL (WINAPI *play)(LPCWSTR, HMODULE, DWORD) = nullptr;
+    if (!play) {
+        HMODULE winmm = LoadLibraryA("winmm.dll");
+        if (winmm) play = reinterpret_cast<BOOL (WINAPI*)(LPCWSTR, HMODULE, DWORD)>(
+            GetProcAddress(winmm, "PlaySoundW"));
+    }
+    if (!play) return;
+    play(path, nullptr, 0x00020001); // SND_FILENAME | SND_ASYNC
+    static int said = 0;
+    if (said < 8) { ++said; Log("polish voice: %s", file); }
+}
+
+static uintptr_t g_fstringAssign = 0;
+
+static void PolishRewriteFString(void* result) {
+    if (!result || !PolishLocalization::PL().IsPolishEnabled()) return;
+    if (!Readable(result, 12)) return;
+    wchar_t* data = *reinterpret_cast<wchar_t**>(result);
+    const int num = *reinterpret_cast<int*>(reinterpret_cast<char*>(result) + 4);
+    const int mx = *reinterpret_cast<int*>(reinterpret_cast<char*>(result) + 8);
+    if (!data || num < 2 || num > 480 || mx < num || mx > 2048) {
+        static int shape = 0;
+        if (shape < 6) {
+            ++shape;
+            Log("polish localize shape data=%p num=%d mx=%d", data, num, mx);
+        }
+        return;
+    }
+    if (!Readable(data, (size_t)num * sizeof(wchar_t)) || data[num - 1] != 0) return;
+    char en[1024]{};
+    if (WideCharToMultiByte(CP_UTF8, 0, data, num - 1, en, (int)sizeof(en) - 1, nullptr, nullptr) <= 0)
+        return;
+    char pl[1024]{};
+    static int seen = 0;
+    if (seen < 12) {
+        ++seen;
+        Log("polish localize saw: \"%s\"", en);
+    }
+    if (!PolishLocalization::PL().PolishForEnglish(en, pl, sizeof(pl))) return;
+    wchar_t wide[480]{};
+    const int wn = MultiByteToWideChar(CP_UTF8, 0, pl, -1, wide, 480);
+    if (wn <= 1) return;
+    if (wn > mx) {
+        if (!g_fstringAssign) {
+            static int tight = 0;
+            if (tight < 4) {
+                ++tight;
+                Log("polish localize: no room for \"%s\" (need %d wchar, max %d)", en, wn, mx);
+            }
+            return;
+        }
+        struct { wchar_t* data; int num; int mx; } src{ wide, wn, wn };
+        reinterpret_cast<void (__fastcall*)(void*, void*, void*)>(g_fstringAssign)(result, nullptr, &src);
+        static int grown = 0;
+        if (grown < 8) { ++grown; Log("polish localize: \"%s\" -> \"%s\" (grown)", en, pl); }
+        PolishMaybeSpeak(en, wide, wn - 1);
+        return;
+    }
+    memcpy(data, wide, (size_t)wn * sizeof(wchar_t));
+    *reinterpret_cast<int*>(reinterpret_cast<char*>(result) + 4) = wn;
+    static int nrep = 0;
+    if (nrep < 8) { ++nrep; Log("polish localize: \"%s\" -> \"%s\"", en, pl); }
+    PolishMaybeSpeak(en, wide, wn - 1);
+}
+
+static void __fastcall Hook_ExecLocalize(void* self, void* edx, void* stack, void* result) {
+    if (g_origLocalize) g_origLocalize(self, edx, stack, result);
+    PolishRewriteFString(result);
+}
+
+typedef void* (__cdecl *CppLocalizeFn)(void* out, const wchar_t* section, const wchar_t* key,
+                                       const wchar_t* package, const wchar_t* lang, int optional);
+static CppLocalizeFn g_origCppLocalize = nullptr;
+
+static void* __cdecl Hook_CppLocalize(void* out, const wchar_t* section, const wchar_t* key,
+                                      const wchar_t* package, const wchar_t* lang, int optional) {
+    void* ret = g_origCppLocalize
+        ? g_origCppLocalize(out, section, key, package, lang, optional)
+        : out;
+    PolishRewriteFString(out);
+    return ret;
+}
+
+static void InstallPolishLocalizeHook() {
+    static volatile LONG armed = 0;
+    if (g_origLocalize) return;
+    if (g_funcOffset < 0 || !g_processInternal) return;
+    if (InterlockedCompareExchange(&armed, 1, 0) != 0) return;
+    if (!Readable((void*)kGObjectsTArray, 12)) { InterlockedExchange(&armed, 0); return; }
+    const uintptr_t data = *reinterpret_cast<uintptr_t*>(kGObjectsTArray);
+    const int32_t count = *reinterpret_cast<int32_t*>(kGObjectsTArray + 4);
+    if (!data || count < 100) { InterlockedExchange(&armed, 0); return; }
+    auto* objs = reinterpret_cast<uintptr_t*>(data);
+    uintptr_t best = 0;
+    char nm[96]{}, on[96]{};
+    for (int i = 0; i < count; ++i) {
+        if (!Readable((void*)(data + (uintptr_t)i * 4), 4)) continue;
+        const uintptr_t o = objs[i];
+        if (!o || !Readable((void*)o, (size_t)g_funcOffset + 4)) continue;
+        if (!NameOf(o, nm, sizeof(nm)) || strcmp(nm, "Localize") != 0) continue;
+        const uintptr_t func = *reinterpret_cast<uintptr_t*>(o + g_funcOffset);
+        if (!func || func == g_processInternal || func < g_textLo || func >= g_textHi) continue;
+        const uintptr_t ou = *reinterpret_cast<uintptr_t*>(o + OBJ_OUTER);
+        on[0] = 0;
+        if (ou) NameOf(ou, on, sizeof(on));
+        Log("polish localize candidate Func=0x%08X outer=%s", (unsigned)func, on);
+        if (!best || _stricmp(on, "Object") == 0) best = func;
+    }
+    if (!best || !Readable((void*)best, 3)) {
+        Log("polish localize: native Localize not in GObjects yet");
+        InterlockedExchange(&armed, 0);
+        return;
+    }
+    const uint8_t* c = reinterpret_cast<const uint8_t*>(best);
+    if (Readable((void*)(best + 237), 5) && c[237] == 0xE8) {
+        const int32_t rel = *reinterpret_cast<const int32_t*>(c + 238);
+        const uintptr_t tgt = best + 237 + 5 + rel;
+        const uint8_t* p = reinterpret_cast<const uint8_t*>(tgt);
+        const bool prologue = Readable((void*)tgt, 3) && p[0] == 0x55 && p[1] == 0x8B && p[2] == 0xEC;
+        if (tgt >= g_textLo && tgt < g_textHi && prologue) {
+            const MH_STATUS cst = MH_CreateHook(reinterpret_cast<void*>(tgt), (void*)&Hook_CppLocalize,
+                                                (void**)&g_origCppLocalize);
+            if (cst == MH_OK && MH_EnableHook(reinterpret_cast<void*>(tgt)) == MH_OK)
+                Log("polish localize: C++ Localize live at 0x%08X", (unsigned)tgt);
+            else {
+                Log("polish localize: C++ hook failed status %d", (int)cst);
+                g_origCppLocalize = nullptr;
+            }
+        } else if (Readable((void*)tgt, 3)) {
+            Log("polish localize: C++ target 0x%08X prologue %02X %02X %02X",
+                (unsigned)tgt, p[0], p[1], p[2]);
+        }
+    }
+    if (Readable((void*)(best + 253), 5) && c[253] == 0xE8) {
+        const int32_t rel = *reinterpret_cast<const int32_t*>(c + 254);
+        const uintptr_t asn = best + 253 + 5 + rel;
+        const uint8_t* ap = reinterpret_cast<const uint8_t*>(asn);
+        if (asn >= g_textLo && asn < g_textHi && Readable((void*)asn, 3) &&
+            ap[0] == 0x55 && ap[1] == 0x8B && ap[2] == 0xEC) {
+            g_fstringAssign = asn;
+            Log("polish localize: FString assign at 0x%08X", (unsigned)asn);
+        }
+    }
+    if (c[0] != 0x55 || c[1] != 0x8B || c[2] != 0xEC) {
+        Log("polish localize: 0x%08X prologue is %02X %02X %02X - not hooked",
+            (unsigned)best, c[0], c[1], c[2]);
+        return;
+    }
+    const MH_STATUS st = MH_CreateHook(reinterpret_cast<void*>(best), (void*)&Hook_ExecLocalize,
+                                       (void**)&g_origLocalize);
+    if (st != MH_OK || MH_EnableHook(reinterpret_cast<void*>(best)) != MH_OK) {
+        Log("polish localize: hook failed status %d", (int)st);
+        g_origLocalize = nullptr;
+        return;
+    }
+    Log("polish localize: native hook live at 0x%08X (in-place FString, voice for long lines)",
+        (unsigned)best);
+}
+
 // ================= ⭐ run 103: find the native trace, and what it calls =======================
 //
 // Route 2 continued. Field-swapping is dead - the null window proved every field carrying the aim
@@ -21199,6 +22104,22 @@ static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR 
 static void DrawVrPanel(IDirect3DDevice9* dev) {
     if (!dev || !g_srcW || !g_srcH) return;
 
+    // Clear() is clipped to the current viewport. Present often still has a
+    // half-size or offscreen viewport bound, which dropped the panel or left
+    // a second copy in the other eye's half. Draw on the backbuffer, full frame.
+    IDirect3DSurface9* panelBack = nullptr;
+    IDirect3DSurface9* panelOldRt = nullptr;
+    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &panelBack)) || !panelBack) return;
+    D3DSURFACE_DESC panelDesc{};
+    panelBack->GetDesc(&panelDesc);
+    dev->GetRenderTarget(0, &panelOldRt);
+    if (g_origSetRenderTarget) g_origSetRenderTarget(dev, 0, panelBack);
+    else dev->SetRenderTarget(0, panelBack);
+    if (panelDesc.Width >= 4 && panelDesc.Height >= 4) {
+        D3DVIEWPORT9 panelVp{0, 0, panelDesc.Width, panelDesc.Height, 0.0f, 1.0f};
+        dev->SetViewport(&panelVp);
+    }
+
     const int nRows = PanelRowCount();
     char rows[kPanelRowsMax][40];
     for (int i = 0; i < nRows; ++i) PanelRowText(PanelRowId(i), rows[i], sizeof(rows[i]));
@@ -21216,9 +22137,6 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     //
     // So the number of copies and the width of one both follow duplication. The state readout has
     // exactly the same bug; it was never noticed because it is only ever read with VR mode on.
-    const bool dup   = InterlockedCompareExchange(&g_dupDraws, 0, 0) != 0;
-    const int  eyes  = dup ? 2 : 1;
-    const LONG halfW = dup ? (LONG)g_srcW / 2 : (LONG)g_srcW;
     // Everything below - line height, box width and height, the highlight bar - is derived from
     // px, so this single number is the panel's scale. Halved from g_srcH/170 in run 142: at full
     // headset resolution the first version filled the view.
@@ -21243,14 +22161,24 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     //
     // Sizing from kPanelRowsMax keeps the TEXT the same on every page and lets short pages simply
     // be short boxes, which is what a settings menu does.
-    const double kPanelHeightFrac = 0.30;
-    int px = (int)((g_srcH * kPanelHeightFrac) / ((kGlyphH + 4) * (kPanelRowsMax + 3)));
+    const double kPanelHeightFrac = 0.28;
+    int px = (int)((g_srcH * kPanelHeightFrac) / ((kGlyphH + 6) * (kPanelRowsMax + 3)));
     // Floor of 3, not 1. A 5x7 glyph at px=1 is five pixels across on a 2688-tall display: present
     // in the frame, unreadable through a lens, and indistinguishable from the panel being broken.
     // Past roughly 20 rows this floor wins and the panel starts growing again, which is the point at
     // which it wants pages or columns rather than a smaller font.
     if (px < 3) px = 3;
-    const int  lh    = (kGlyphH + 4) * px;
+    const bool dup   = InterlockedCompareExchange(&g_dupDraws, 0, 0) != 0;
+    const int  eyes  = dup ? 2 : 1;
+    const LONG halfW = dup ? (LONG)g_srcW / 2 : (LONG)g_srcW;
+    // Keep one panel inside its eye half. A plate wider than the half spills
+    // into the other eye and the cropped submit shows two partial panels.
+    for (;;) {
+        const int trialW = (kPageCols[g_panelPage] + 2) * (kGlyphW + 1) * px;
+        if (trialW <= (int)(halfW * 9 / 10) || px <= 2) break;
+        --px;
+    }
+    const int  lh    = (kGlyphH + 6) * px;
     // Measured, not assumed. This was a hardcoded 30 "widest row plus margin", which silently
     // becomes too narrow the first time a row is added with a longer label - and the failure is
     // text spilling past the plate, not a compile error. +2 for the margin the constant included.
@@ -21298,13 +22226,13 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
 
     // The plate first, as one rectangle per eye.
     int n = 0;
-    for (int eye = 0; eye < 2 && n < kCap; ++eye) {
+    for (int eye = 0; eye < eyes && n < kCap; ++eye) {
         const int cx = (int)(eye * halfW + halfW / 2);
         r[n].x1 = cx - boxW / 2 - px * 4; r[n].y1 = y0 - px * 4;
         r[n].x2 = cx + boxW / 2 + px * 4; r[n].y2 = y0 + boxH + px * 4;
         ++n;
     }
-    ClearRects(dev, r, n, D3DCOLOR_XRGB(8, 12, 16));
+    ClearRects(dev, r, n, D3DCOLOR_XRGB(8, 12, 20));
 
     // The selected row's highlight bar, so the cursor is visible without a glyph for it.
     n = 0;
@@ -21315,7 +22243,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         r[n].x2 = cx + boxW / 2 + px * 2; r[n].y2 = ry + (kGlyphH + 1) * px;
         ++n;
     }
-    ClearRects(dev, r, n, D3DCOLOR_XRGB(0, 60, 40));
+    ClearRects(dev, r, n, D3DCOLOR_XRGB(18, 52, 88));
 
     // Title, rows, and the key hint - the hint matters because nothing else on screen says how to
     // get out, and a panel you cannot close is worse than no panel.
@@ -21323,11 +22251,24 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     for (int eye = 0; eye < eyes; ++eye) {
         const int x0 = (int)(eye * halfW + halfW / 2) - boxW / 2;
         n = TextRects(r, n, kCap, x0, y0, px, kPageName[g_panelPage]);
+    }
+    ClearRects(dev, r, n, D3DCOLOR_XRGB(150, 205, 255));
+    n = 0;
+    for (int eye = 0; eye < eyes; ++eye) {
+        const int x0 = (int)(eye * halfW + halfW / 2) - boxW / 2;
         for (int i = 0; i < nRows; ++i)
             n = TextRects(r, n, kCap, x0, y0 + lh * (2 + i), px, rows[i]);
+    }
+    ClearRects(dev, r, n, D3DCOLOR_XRGB(236, 244, 252));
+    const int bodyRects = n;
+    n = 0;
+    for (int eye = 0; eye < eyes; ++eye) {
+        const int x0 = (int)(eye * halfW + halfW / 2) - boxW / 2;
         n = TextRects(r, n, kCap, x0, y0 + lh * (nRows + 2), px,
                       "LEFT STICK   HOLD Y TO CLOSE");
     }
+    ClearRects(dev, r, n, D3DCOLOR_XRGB(168, 178, 190));
+    n += bodyRects;
     // ⭐ run 248: loud, not silent. A page that cannot fit must SAY so - the failure it replaces
     // was indistinguishable from the feature being broken, and cost a headset run to report.
     if (n >= kCap) {
@@ -21345,13 +22286,17 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         static int lastLogged = -1;
         if (g_panelPage != lastLogged) {
             lastLogged = g_panelPage;
-            Log("VR panel: page %d (%s), %d row(s), %d text rect(s) in %d Clear batch(es), px %d",
-                g_panelPage, kPageName[g_panelPage], nRows, n, (n + 1023) / 1024, px);
+            Log("VR panel: page %d (%s), %d row(s), %d text rect(s) in %d Clear batch(es), px %d eyes %d half %ld",
+                g_panelPage, kPageName[g_panelPage], nRows, n, (n + 1023) / 1024, px, eyes, halfW);
         }
     }
-    ClearRects(dev, r, n, D3DCOLOR_XRGB(0, 255, 90));
-
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldScissor);
+    if (panelOldRt) {
+        if (g_origSetRenderTarget) g_origSetRenderTarget(dev, 0, panelOldRt);
+        else dev->SetRenderTarget(0, panelOldRt);
+        panelOldRt->Release();
+    }
+    panelBack->Release();
 }
 
 // Hit-test the exact pixel geometry used by DrawVrPanel.  Keeping this math
@@ -21363,9 +22308,9 @@ bool VrPanelHitNormalized(LONG uInt, LONG vInt, int* rowIndex) {
     const float u = std::max(0.0f, std::min(1.0f, (float)uInt / 1000000.0f));
     const float v = std::max(0.0f, std::min(1.0f, (float)vInt / 1000000.0f));
     const int nRows = PanelRowCount();
-    int px = (int)((g_srcH * 0.30) / ((kGlyphH + 4) * (kPanelRowsMax + 3)));
+    int px = (int)((g_srcH * 0.28) / ((kGlyphH + 6) * (kPanelRowsMax + 3)));
     if (px < 3) px = 3;
-    const int lh = (kGlyphH + 4) * px;
+    const int lh = (kGlyphH + 6) * px;
     char row[40] = {};
     int widest = 0;
     for (int i = 0; i < nRows; ++i) {
@@ -23060,6 +24005,14 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             hooked = true;
             Log("cutscene watch: script hook installed automatically - CINE is live from startup"
                 " rather than from the first NUMPAD-dot press");
+        }
+        {
+            static int plTick = 0, plTries = 0;
+            if (!g_origLocalize && plTries < 60 && (++plTick % 10) == 1) {
+                ++plTries;
+                FindProcessInternal();
+                InstallPolishLocalizeHook();
+            }
         }
 
         // ---- the edge, and only the edge ----
@@ -25183,6 +26136,35 @@ void LoadIniSettings() {
         Log("ini: HotPathSampler=1; collecting 1200 Present frames, 1/%u timing samples, then stopping",
             hotpath::sample_stride);
 
+    // ---- Polish Localization initialization ----
+    // Initialize Polish localization manager and read PolishLanguage from INI
+    // Paths are relative to the game Binaries directory where the DLL lives
+    {
+        char polishTextPath[MAX_PATH];
+        char polishVoicePath[MAX_PATH];
+        char polishStoryPath[MAX_PATH];
+        char* slash = strrchr(path, '\\');
+        if (slash) {
+            *slash = '\0';
+            _snprintf_s(polishTextPath, MAX_PATH, _TRUNCATE, "%s\\vr-assets\\localization\\pl\\polish_text.jsonl", path);
+            _snprintf_s(polishVoicePath, MAX_PATH, _TRUNCATE, "%s\\vr-assets\\localization\\pl\\polish_voice.jsonl", path);
+            _snprintf_s(polishStoryPath, MAX_PATH, _TRUNCATE, "%s\\vr-assets\\localization\\pl\\polish_story_voice.jsonl", path);
+            _snprintf_s(g_polishAudioDir, MAX_PATH, _TRUNCATE, "%s\\vr-assets\\audio\\polish\\ui", path);
+            _snprintf_s(g_polishStoryAudioDir, MAX_PATH, _TRUNCATE, "%s\\vr-assets\\audio\\polish\\story", path);
+            *slash = '\\';
+        }
+        bool polishInit = PolishLocalization::PL().Initialize(polishTextPath, polishVoicePath, polishStoryPath);
+        if (polishInit) {
+            LONG plLang = GetPrivateProfileIntA("Localization", "PolishLanguage", 0, path);
+            if (plLang != 0) PolishLocalization::PL().SetPolishLanguage(true);
+            LONG plFallback = GetPrivateProfileIntA("Localization", "PolishFallbackToEnglish", 1, path);
+            PolishLocalization::PL().SetFallbackToEnglish(plFallback != 0);
+            Log("ini: Polish localization %s (PolishLanguage=%ld, Fallback=%ld)", polishInit ? "initialized" : "FAILED", plLang, plFallback);
+        } else {
+            Log("ini: Polish localization FAILED (%s)", polishTextPath);
+        }
+    }
+
     if (GetPrivateProfileIntA("Render", "ResX", 0, path)) {
         Log("ini: [Render] ResX/ResY are IGNORED - forcing the backbuffer does not change UE3's");
         Log("     render resolution, it only desynchronises it. Use the in-game video options.");
@@ -25802,6 +26784,26 @@ void LoadIniSettings() {
         g_showControllerArms ? "animated mesh" : "gloves only");
     g_armIkMode = GetPrivateProfileIntA("Render", "ArmIKMode", 0, path);
     if (g_armIkMode < 0 || g_armIkMode > 2) g_armIkMode = 0;
+    LONG gloveMode = GetPrivateProfileIntA("Render", "GloveIsolate", 2, path);
+    if (gloveMode < 0 || gloveMode > 2) gloveMode = 2;
+    InterlockedExchange(&g_gloveIsolate, gloveMode);
+    InterlockedExchange(&g_gloveFaceFilter,
+        GetPrivateProfileIntA("Render", "GloveFaceFilter", 0, path) ? 1 : 0);
+    {
+        LONG stump = GetPrivateProfileIntA("Render", "GloveStumpScale", 20, path);
+        if (stump < 0) stump = 0;
+        if (stump > 100) stump = 100;
+        InterlockedExchange(&g_gloveStumpScalePct, stump);
+        Log("ini: GloveStumpScale=%ld (forearm collapse keep; 12=0.12 wrist stump, 100=no cut)", stump);
+    }
+    {
+        LONG shift = GetPrivateProfileIntA("Render", "GloveLeftShift", 12, path);
+        if (shift < -40) shift = -40;
+        if (shift > 40) shift = 40;
+        InterlockedExchange(&g_gloveLeftShiftUU, shift);
+        Log("ini: GloveLeftShift=%ld UU (mesh +X on the left arm; 0 keeps the tracked wrist)", shift);
+    }
+    g_independentHandsAudit = GetPrivateProfileIntA("Diagnostic", "IndependentHandsAudit", 0, path) ? 1 : 0;
     g_independentHands = GetPrivateProfileIntA("Render", "IndependentHandsPrototype", 0, path) ? 1 : 0;
     g_vrUiEnabled=GetPrivateProfileIntA("Input","VrMenuPointer",1,path)?1:0;
     g_vrMenuOverlay=GetPrivateProfileIntA("Render","MenuOverlay",1,path)?1:0;
@@ -25837,6 +26839,8 @@ void LoadIniSettings() {
     Log("VR menu pointer=%ld; native GFx viewport input; no desktop cursor movement",Rd(g_vrUiEnabled));
     Log("independent hands prototype=%d; arm IK mode=%d (0=native, 1=bounded TMD two-bone, 2=TMD gloves-only); shader CTAB required; verified SP sections only",
         g_independentHands, g_armIkMode);
+    Log("glove isolation=%ld (0=off, 1=census, 2=stump-collapse forearm behind the wrist; GloveStumpScale)",
+        Rd(g_gloveIsolate));
     g_hideStrayArms = GetPrivateProfileIntA("Render", "HideStrayArms", 1, path) ? 1 : 0;
     Log("ini: HideStrayArms=%d (%s)", g_hideStrayArms,
         g_hideStrayArms ? "hide first-person meshes that were NOT on screen when the latch was taken -"

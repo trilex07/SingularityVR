@@ -4,6 +4,7 @@
 #include "../arm_ik.h"
 #include "../arm_natural.h"
 #include "../pose_conversion.h"
+#include "../skeletal_palette.h"
 #include "../singularity_bind_reference.h"
 #include <cassert>
 #include <cmath>
@@ -373,6 +374,45 @@ void natural_arm_adapter_invariants() {
         assert(std::isfinite(changed[s][r][c]));
     std::puts("natural arm adapter: TMD bind, controller target, left/right section slots, finite deltas");
 }
+
+void independent_hand_delta_invariants() {
+    float local[4][4]={{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
+    float current[4][4]={{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
+    float leftTarget[4][4]={{1,0,0,0},{0,1,0,0},{0,0,1,0},{12,3,-2,1}};
+    float rightTarget[4][4]={{1,0,0,0},{0,1,0,0},{0,0,1,0},{-7,5,4,1}};
+    float leftDelta[4][4]{},rightDelta[4][4]{};
+    assert(skeletal::LocalDeltaPair(leftDelta,rightDelta,local,current,leftTarget,rightTarget));
+
+    // Apply the same production palette transform to separate wrist bones.
+    float wrist[3][4]={{1,0,0,0},{0,1,0,0},{0,0,1,0}};
+    float movedLeft[3][4]{},movedRight[3][4]{};
+    skeletal::TransformBone(movedLeft,wrist,leftDelta);
+    skeletal::TransformBone(movedRight,wrist,rightDelta);
+    assert(close(movedLeft[0][3],12.0f) && close(movedLeft[1][3],3.0f) && close(movedLeft[2][3],-2.0f));
+    assert(close(movedRight[0][3],-7.0f) && close(movedRight[1][3],5.0f) && close(movedRight[2][3],4.0f));
+
+    // Moving one controller target leaves the other hand's delta unchanged.
+    float movedRightTarget[4][4];
+    std::memcpy(movedRightTarget,rightTarget,sizeof(rightTarget));
+    movedRightTarget[3][0] += 19.0f;
+    float leftAfterRightMove[4][4]{},rightAfterRightMove[4][4]{};
+    assert(skeletal::LocalDeltaPair(leftAfterRightMove,rightAfterRightMove,
+                                    local,current,leftTarget,movedRightTarget));
+    for(int r=0;r<4;++r) for(int c=0;c<4;++c)
+        assert(close(leftAfterRightMove[r][c],leftDelta[r][c]));
+    assert(!close(rightAfterRightMove[3][0],rightDelta[3][0]));
+
+    float movedLeftTarget[4][4];
+    std::memcpy(movedLeftTarget,leftTarget,sizeof(leftTarget));
+    movedLeftTarget[3][1] -= 13.0f;
+    float leftAfterLeftMove[4][4]{},rightAfterLeftMove[4][4]{};
+    assert(skeletal::LocalDeltaPair(leftAfterLeftMove,rightAfterLeftMove,
+                                    local,current,movedLeftTarget,rightTarget));
+    for(int r=0;r<4;++r) for(int c=0;c<4;++c)
+        assert(close(rightAfterLeftMove[r][c],rightDelta[r][c]));
+    assert(!close(leftAfterLeftMove[3][1],leftDelta[3][1]));
+    std::puts("independent hands: distinct left/right wrist targets; moving either target preserves the other delta");
+}
 } // namespace
 
 int main() {
@@ -385,6 +425,7 @@ int main() {
     quaternion_conversion_invariants();
     arm_palette_decoding_invariants();
     natural_arm_adapter_invariants();
+    independent_hand_delta_invariants();
     std::puts("PASS");
     return 0;
 }
