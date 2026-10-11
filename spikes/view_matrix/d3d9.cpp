@@ -5519,16 +5519,20 @@ static void NoteMenuSubmit(const CopySlot* frame, bool cropEyes) {
     if (cropEyes) g_menuSubmitDiag.crop[cls]++;
     if (frame->dup && !cropEyes) g_menuSubmitDiag.half[cls]++;
     if (frame->stereo || cropEyes) g_menuSubmitDiag.perEye[cls]++;
+    static LONG loggedClass = -2;
+    if (cls != loggedClass) {
+        loggedClass = cls;
+        Log("menu-submit-edge: class=%d focus=%d flat=%d crop=%d half=%d perEye=%d",
+            cls, Rd(g_vrUiMenu) ? 1 : 0, frame->menuFlat ? 1 : 0, cropEyes ? 1 : 0,
+            (frame->dup && !cropEyes) ? 1 : 0, (frame->stereo || cropEyes) ? 1 : 0);
+    }
     const ULONGLONG now = GetTickCount64();
     if (g_menuSubmitDiag.lastMs == 0) g_menuSubmitDiag.lastMs = now;
     if (now - g_menuSubmitDiag.lastMs < 1000) return;
     g_menuSubmitDiag.lastMs = now;
-    LONG menuFrames = 0;
-    for (int i = 1; i <= 4; ++i) menuFrames += g_menuSubmitDiag.frames[i];
-    if (menuFrames > 0) {
-        Log("menu-submit: c1 f/focus/flat/crop/half/perEye=%ld/%ld/%ld/%ld/%ld/%ld"
-            " c2=%ld/%ld/%ld/%ld/%ld/%ld c3=%ld/%ld/%ld/%ld/%ld/%ld"
-            " c4=%ld/%ld/%ld/%ld/%ld/%ld c0=%ld/%ld/%ld/%ld/%ld/%ld",
+    Log("menu-submit: c1 f/focus/flat/crop/half/perEye=%ld/%ld/%ld/%ld/%ld/%ld"
+        " c2=%ld/%ld/%ld/%ld/%ld/%ld c3=%ld/%ld/%ld/%ld/%ld/%ld"
+        " c4=%ld/%ld/%ld/%ld/%ld/%ld c0=%ld/%ld/%ld/%ld/%ld/%ld",
             g_menuSubmitDiag.frames[1], g_menuSubmitDiag.focus[1], g_menuSubmitDiag.flat[1],
             g_menuSubmitDiag.crop[1], g_menuSubmitDiag.half[1], g_menuSubmitDiag.perEye[1],
             g_menuSubmitDiag.frames[2], g_menuSubmitDiag.focus[2], g_menuSubmitDiag.flat[2],
@@ -5539,7 +5543,6 @@ static void NoteMenuSubmit(const CopySlot* frame, bool cropEyes) {
             g_menuSubmitDiag.crop[4], g_menuSubmitDiag.half[4], g_menuSubmitDiag.perEye[4],
             g_menuSubmitDiag.frames[0], g_menuSubmitDiag.focus[0], g_menuSubmitDiag.flat[0],
             g_menuSubmitDiag.crop[0], g_menuSubmitDiag.half[0], g_menuSubmitDiag.perEye[0]);
-    }
     for (int i = 0; i < 5; ++i) {
         g_menuSubmitDiag.frames[i] = g_menuSubmitDiag.focus[i] = 0;
         g_menuSubmitDiag.flat[i] = g_menuSubmitDiag.crop[i] = 0;
