@@ -1,6 +1,8 @@
 #pragma once
 // Included after the D3D state/overlay helpers. No per-frame allocation or scan.
 #include "menu_draw_trace.h"
+#include "pause_gfx_dispatch.h"
+#include "pause_gfx_signature.h"
 #include "pause_menu_head_overlay.h"
 #include "prompt_roles.h"
 #include "prompt_atlas_generated.h"
@@ -53,6 +55,41 @@ static void PauseHeadRestoreD3d9(IDirect3DDevice9* dev, const PauseHeadSavedD3d9
     if (s.haveScissor) dev->SetScissorRect(&s.scissor);
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, s.scissorOn);
 }
+static void RegisterPauseHeadPoolAsMenuSource() {
+    if (!g_pauseHeadPoolTex || !g_pauseHeadPoolSurf) return;
+    const auto token = VrMenuStateToken();
+    bool known = false;
+    for (unsigned i = 0; i < g_vrMenuSourceCount; ++i)
+        if (g_vrMenuSources[i] == g_pauseHeadPoolTex) {
+            known = true;
+            break;
+        }
+    if (!known && g_vrMenuSourceCount < 8) {
+        g_pauseHeadPoolTex->AddRef();
+        g_vrMenuSources[g_vrMenuSourceCount++] = g_pauseHeadPoolTex;
+        InterlockedIncrement(&g_vrMenuCaptured);
+        InterlockedIncrement(&g_vrCounters.pauseMenuCaptured);
+        Log("VR menu sink: pause head pool %ux%u registered (explicit; SetRenderTarget hook bypassed)",
+            pausehead::kPoolWidth, pausehead::kPoolHeight);
+    }
+    if (g_vrMenuTexture != g_pauseHeadPoolTex) {
+        if (g_vrMenuTexture) g_vrMenuTexture->Release();
+        g_pauseHeadPoolTex->AddRef();
+        g_vrMenuTexture = g_pauseHeadPoolTex;
+        g_vrMenuSurface = (uintptr_t)g_pauseHeadPoolSurf;
+        g_vrMenuTextureScore = 0.0f;
+    }
+    g_vrCaptureOwner.Capture(token, (uintptr_t)g_pauseHeadPoolSurf);
+    g_vrMenuTextureFrame = g_vrMenuFrame + 1;
+}
+
+static bool PauseHeadRedirectContextActive() {
+    return pausehead::IniEnabled((int)Rd(g_pauseHeadMenu)) && VrModeOn() && Rd(g_vrMenuOverlay) &&
+           !Rd(g_panelOpen) && Rd(g_vrMenuClass) == 3 && Rd(g_vrUiMenu) &&
+           Rd(g_vrUiNativeReady) && Rd(g_gamePaused) && !Rd(g_noteOpen) && Rd(g_rtIsScene) &&
+           !Rd(g_rtIsBackbuffer);
+}
+
 static bool EnsurePauseHeadPool(IDirect3DDevice9* dev) {
     if (g_pauseHeadPoolTex && g_pauseHeadPoolSurf) return true;
     IDirect3DTexture9* tex=nullptr;
@@ -69,38 +106,64 @@ static bool EnsurePauseHeadPool(IDirect3DDevice9* dev) {
     return true;
 }
 template<typename DrawFn>
-static HRESULT PauseHeadOverlayHudDraw(IDirect3DDevice9* dev,DrawFn draw,unsigned frameClearKey) {
-    const pausehead::RedirectPlan plan=pausehead::PlanGfxRedirect(
+static HRESULT PauseHeadExecutePooledDraw(IDirect3DDevice9* dev, DrawFn&& draw, unsigned frameClearKey,
+                                          bool scaleGfxConstants) {
+    const pausehead::RedirectPlan plan = pausehead::PlanGfxRedirect(
         g_pauseHeadPoolClearFrame, frameClearKey, true, EnsurePauseHeadPool(dev));
     if (!plan.attemptRedirect) return draw();
     PauseHeadSavedD3d9 saved{};
     if (!PauseHeadSaveD3d9(dev, saved)) return draw();
-    pausehead::BindStep bindStep=pausehead::BindStep::Ok;
-    if (FAILED(g_origSetRenderTarget(dev,0,g_pauseHeadPoolSurf)))
-        bindStep=pausehead::BindStep::SetRenderTargetFailed;
-    if (bindStep==pausehead::BindStep::Ok) dev->SetDepthStencilSurface(nullptr);
-    D3DVIEWPORT9 vp{0,0,pausehead::kPoolWidth,pausehead::kPoolHeight,0,1};
-    if (bindStep==pausehead::BindStep::Ok && FAILED(dev->SetViewport(&vp)))
-        bindStep=pausehead::BindStep::SetViewportFailed;
-    if (bindStep==pausehead::BindStep::Ok) {
-        dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
-        if (plan.clearPool &&
-            FAILED(dev->Clear(0,nullptr,D3DCLEAR_TARGET,D3DCOLOR_ARGB(0,0,0,0),1.f,0)))
-            bindStep=pausehead::BindStep::ClearFailed;
+    float origC[16]{};
+    const bool haveOrigC =
+        scaleGfxConstants && SUCCEEDED(dev->GetVertexShaderConstantF(5, origC, 4));
+    const float fromW = (float)saved.vp.Width;
+    const float fromH = (float)saved.vp.Height;
+    const float toW = (float)pausehead::kPoolWidth;
+    const float toH = (float)pausehead::kPoolHeight;
+    if (haveOrigC) {
+        float scaledC[16];
+        memcpy(scaledC, origC, sizeof(scaledC));
+        pausegfx::ScaleGfxRowConstantsForViewport(scaledC, fromW, fromH, toW, toH);
+        dev->SetVertexShaderConstantF(5, scaledC, 4);
     }
-    if (bindStep!=pausehead::BindStep::Ok) {
+    pausehead::BindStep bindStep = pausehead::BindStep::Ok;
+    if (FAILED(g_origSetRenderTarget(dev, 0, g_pauseHeadPoolSurf)))
+        bindStep = pausehead::BindStep::SetRenderTargetFailed;
+    if (bindStep == pausehead::BindStep::Ok) dev->SetDepthStencilSurface(nullptr);
+    D3DVIEWPORT9 vp{0, 0, pausehead::kPoolWidth, pausehead::kPoolHeight, 0, 1};
+    if (bindStep == pausehead::BindStep::Ok && FAILED(dev->SetViewport(&vp)))
+        bindStep = pausehead::BindStep::SetViewportFailed;
+    if (bindStep == pausehead::BindStep::Ok && saved.haveScissor && saved.scissorOn) {
+        RECT sc = saved.scissor;
+        pausegfx::ScaleScissorRect(sc, toW / fromW, toH / fromH);
+        dev->SetScissorRect(&sc);
+        dev->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
+    } else if (bindStep == pausehead::BindStep::Ok) {
+        dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    }
+    if (bindStep == pausehead::BindStep::Ok && plan.clearPool &&
+        FAILED(dev->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.f, 0)))
+        bindStep = pausehead::BindStep::ClearFailed;
+    if (bindStep != pausehead::BindStep::Ok) {
+        if (haveOrigC) dev->SetVertexShaderConstantF(5, origC, 4);
         PauseHeadRestoreD3d9(dev, saved);
         return draw();
     }
-    if (plan.clearPool) g_pauseHeadPoolClearFrame=frameClearKey;
-    const HRESULT drawHr=draw();
-    if (pausehead::CaptureAfterDrawAllowed(bindStep,SUCCEEDED(drawHr))) {
-        CaptureVrMenuTarget(dev);
+    if (plan.clearPool) g_pauseHeadPoolClearFrame = frameClearKey;
+    const HRESULT drawHr = draw();
+    if (haveOrigC) dev->SetVertexShaderConstantF(5, origC, 4);
+    if (pausehead::CaptureAfterDrawAllowed(bindStep, SUCCEEDED(drawHr))) {
+        RegisterPauseHeadPoolAsMenuSource();
         if (g_vrCaptureOwner.CanProvide(VrMenuStateToken()) && g_vrMenuTexture)
             InterlockedIncrement(&g_vrCounters.pauseMenuRedirectDraws);
     }
     PauseHeadRestoreD3d9(dev, saved);
     return drawHr;
+}
+
+template<typename DrawFn>
+static HRESULT PauseHeadOverlayHudDraw(IDirect3DDevice9* dev, DrawFn draw, unsigned frameClearKey) {
+    return PauseHeadExecutePooledDraw(dev, draw, frameClearKey, true);
 }
 static void ReleasePauseHeadPool() {
     if (g_pauseHeadPoolSurf) { g_pauseHeadPoolSurf->Release(); g_pauseHeadPoolSurf=nullptr; }
@@ -389,6 +452,7 @@ void UpdateVrUiPointer(float,bool available) {
 void SyncVrMenuCaptureState() {
     const auto token=VrMenuStateToken();
     if(g_vrCaptureOwner.state==token)return;
+    pausegfx::ResetLearnedFlashPs();
     if(g_vrMenuTexture)InterlockedIncrement(&g_vrStaleRejected);
     Log("MenuCapture transition old=%llu source=%p texture=%p new=%llu staleRejected=%ld",
         g_vrCaptureOwner.state,(void*)g_vrCaptureOwner.source,(void*)g_vrMenuTexture,token,Rd(g_vrStaleRejected));
@@ -522,7 +586,10 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
             g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(VrMenuVtx));
             if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuProvided);
             if(Rd(g_vrMenuClass)==2)InterlockedIncrement(&g_vrCounters.mainMenuProvided);
-            if(Rd(g_vrMenuClass)==3)InterlockedIncrement(&g_vrCounters.pauseMenuProvided);
+            if(Rd(g_vrMenuClass)==3){
+                InterlockedIncrement(&g_vrCounters.pauseMenuProvided);
+                InterlockedIncrement(&g_pauseGfxDispatch.providerPauseProvided);
+            }
             if(g_origSetTexture)g_origSetTexture(dev,0,nullptr);
             else dev->SetTexture(0,nullptr);
             InterlockedExchange(&g_vrMenuProviderDrawing,0);
@@ -554,4 +621,33 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     dev->SetDepthStencilSurface(depth);
     g_wristState->Apply();
     if (old) old->Release(); if (depth) depth->Release(); back->Release();
+}
+
+inline bool PauseHeadRedirectDrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
+                                               UINT minVtxIndex, UINT numVertices, UINT primCount,
+                                               const void* idxData, D3DFORMAT idxFormat,
+                                               const void* vtxData, UINT vtxStride) {
+    if (!pausegfx::FlashDrawIndexedPrimUP(dev, vtxStride, primCount)) return false;
+    InterlockedIncrement(&g_pauseGfxDispatch.flashSignatureSeen);
+    if (!PauseHeadRedirectContextActive()) {
+        InterlockedIncrement(&g_pauseGfxDispatch.flashSceneCommitted);
+        return false;
+    }
+    float c[16]{};
+    if (FAILED(dev->GetVertexShaderConstantF(5, c, 4))) return false;
+    if (!pausehead::GfxOrthoClipLooksLikePauseMenu(c[12], c[13])) return false;
+    InterlockedIncrement(&g_pauseGfxDispatch.redirectEligible);
+    if (!g_origDrawIndexedPrimUP) return false;
+    const HRESULT hr = PauseHeadExecutePooledDraw(
+        dev,
+        [&] {
+            return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount, idxData,
+                                             idxFormat, vtxData, vtxStride);
+        },
+        (unsigned)Rd(g_vfxFrame), true);
+    if (SUCCEEDED(hr))
+        InterlockedIncrement(&g_pauseGfxDispatch.redirectPooledOk);
+    else
+        InterlockedIncrement(&g_pauseGfxDispatch.redirectPooledFail);
+    return true;
 }

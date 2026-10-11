@@ -5458,6 +5458,11 @@ volatile LONG g_vrUiEnabled=1,g_vrUiMenu=0,g_vrUiValid=0,g_vrUiU=500000,g_vrUiV=
 // menu copy stays, so menus remain visible; only our head-locked overlay+laser go away.
 volatile LONG g_vrMenuOverlay=1;
 volatile LONG g_pauseHeadMenu=0; // ini [Render] PauseHeadMenu — class-3 GFx redirect (off until accepted)
+#include "pause_gfx_dispatch.h"
+PauseGfxDispatchCounters g_pauseGfxDispatch;
+bool PauseHeadRedirectDrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t, UINT minVtxIndex,
+                                        UINT numVertices, UINT primCount, const void* idxData,
+                                        D3DFORMAT idxFormat, const void* vtxData, UINT vtxStride);
 volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=100;
 volatile LONG g_vrMenuDistanceMm=1200;
 volatile LONG g_vrUiEyeCentreU[2]={500000,500000};
@@ -5595,8 +5600,8 @@ static void NoteXrHeartbeat(int shouldRender, int layerCount) {
 volatile LONG g_contextPromptVisible=0; // set by the measured native pickup/use prompt draw
 static void ReportVrRuntimeCounters() {
     const auto& c=g_vrCounters;
-    Log("VR counters boot captured/suppressed/provided=%ld/%ld/%ld main=%ld/%ld/%ld unknown=%ld pointer=%ld",
-        Rd(c.bootMenuCaptured),Rd(c.bootMenuSuppressed),Rd(c.bootMenuProvided),Rd(c.mainMenuCaptured),Rd(c.mainMenuSuppressed),Rd(c.mainMenuProvided),Rd(c.mainMenuUnknownDraws),Rd(c.vrPointerUpdates));
+    Log("VR counters boot captured/suppressed/provided=%ld/%ld/%ld main=%ld/%ld/%ld pause=%ld/%ld/%ld redirect=%ld unknown=%ld pointer=%ld",
+        Rd(c.bootMenuCaptured),Rd(c.bootMenuSuppressed),Rd(c.bootMenuProvided),Rd(c.mainMenuCaptured),Rd(c.mainMenuSuppressed),Rd(c.mainMenuProvided),Rd(c.pauseMenuCaptured),Rd(c.pauseMenuSuppressed),Rd(c.pauseMenuProvided),Rd(c.pauseMenuRedirectDraws),Rd(c.mainMenuUnknownDraws),Rd(c.vrPointerUpdates));
     Log("VR counters grip press/release/latch/detach/error=%ld/%ld/%ld/%ld/%ld shadow depth/skip/eye-error=%ld/%ld/%ld",
         Rd(c.gripPressEdges),Rd(c.gripReleaseEdges),Rd(c.gripLatchCount),Rd(c.gripDetachCount),Rd(c.gripLatchWithoutGripERROR),Rd(c.fpShadowDepthDraws),Rd(c.fpShadowDepthSkipped),Rd(c.fpShadowEyeModifiedERROR));
     Log("VR counters cursor draw/suppress=%ld/%ld prompt show/hide/action=%ld/%ld/%ld icons/error=%ld/%ld; cursor/prompt hooks UNRESOLVED",
@@ -13108,6 +13113,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0)) return g_origDrawPrim(dev,t,start,count);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
+    if (Rd(g_vrMenuClass) == 3) InterlockedIncrement(&g_pauseGfxDispatch.hookDrawPrim);
     MenuDrawTraceRecord(dev,0,t,count,0,start,0,0,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
@@ -16465,6 +16471,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0)) return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
+    if (Rd(g_vrMenuClass) == 3) InterlockedIncrement(&g_pauseGfxDispatch.hookDrawIndexedPrim);
     MenuDrawTraceRecord(dev,1,t,primCount,numVertices,startIndex,minIndex,baseVertex,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
     CaptureArmPaletteTrace(dev,baseVertex,minIndex,numVertices,startIndex,primCount);
@@ -17374,6 +17381,8 @@ int g_hudRemap = 0;
 // that every exit from this function goes through one place.
 template <typename DrawFn>
 HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn&& draw) {
+    if (InterlockedCompareExchange(&g_vrMenuClass, 0, 0) == 3)
+        InterlockedIncrement(&g_pauseGfxDispatch.hudStereoEnter);
     MenuTracePath menuPath(2);   // fix-I census: this draw went through the HUD path
     // ⚠️ The ONE exit that must stay a bare draw(): with duplication off there is no stereo to fall
     // back to, and StereoPair would just return draw() anyway.
@@ -17929,6 +17938,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawPrimUP) return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
+    if (Rd(g_vrMenuClass) == 3) InterlockedIncrement(&g_pauseGfxDispatch.hookDrawPrimUP);
     MenuDrawTraceRecord(dev,2,t,primCount,0,0,0,0,vtxData,vtxStride);   // fix-I census
     if(g_boundShaderLayout.shadow && g_origDrawPrimUP){
         if (Rd(g_shadowTest)) { InterlockedIncrement(&g_shadowTestDropped); return D3D_OK; }
@@ -18066,6 +18076,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawIndexedPrimUP) return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
+    if (Rd(g_vrMenuClass) == 3) InterlockedIncrement(&g_pauseGfxDispatch.hookDrawIndexedPrimUP);
     MenuDrawTraceRecord(dev,3,t,primCount,numVertices,0,minVtxIndex,0,vtxData,vtxStride);   // fix-I census
     if (!g_origDrawIndexedPrimUP) return D3DERR_INVALIDCALL;
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
@@ -18152,6 +18163,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // The identification test - see g_dropStride. Returning S_OK without drawing is how the mod drops
     // draws everywhere else: device state untouched, so the next draw behaves normally.
     if (g_dropStride && vtxStride == (UINT)g_dropStride) return D3D_OK;
+    if (PauseHeadRedirectDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount, idxData,
+                                           idxFormat, vtxData, vtxStride))
+        return D3D_OK;
     if (hudArmed && g_hudRemap && !quad)
         return HudStereoPair(dev, primCount, vtxStride, [&] {
             return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
@@ -25360,6 +25374,16 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     g_menuBindsWhileMenu, g_menuStageSets[0], g_menuStageSets[1], g_menuStageSets[2], g_menuStageSets[3]);
             g_menuBindsWhileMenu = 0; g_menuSourceSets = 0;
             for (int ms = 0; ms < 4; ++ms) g_menuStageSets[ms] = 0;
+            if (InterlockedCompareExchange(&g_vrMenuClass, 0, 0) == 3) {
+                const PauseGfxDispatchCounters pg = g_pauseGfxDispatch;
+                Log("    PauseGfx dispatch (class=3, 1s): hook DIP/DIP/DIPUP/IDIPUP=%ld/%ld/%ld/%ld hudStereo=%ld"
+                    " elig=%ld poolOk=%ld poolFail=%ld flashSeen=%ld flashScene=%ld provider=%ld",
+                    Rd(pg.hookDrawPrim), Rd(pg.hookDrawIndexedPrim), Rd(pg.hookDrawPrimUP),
+                    Rd(pg.hookDrawIndexedPrimUP), Rd(pg.hudStereoEnter), Rd(pg.redirectEligible),
+                    Rd(pg.redirectPooledOk), Rd(pg.redirectPooledFail), Rd(pg.flashSignatureSeen),
+                    Rd(pg.flashSceneCommitted), Rd(pg.providerPauseProvided));
+                PauseGfxDispatchResetWindow();
+            }
             {
                 char regs[128] = {}; int n = 0;
                 for (int s = 0; s < g_camMatUsed && n < 100; ++s)
