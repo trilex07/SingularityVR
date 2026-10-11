@@ -71,6 +71,7 @@
 #include <windows.h>
 #include "script_node_candidate.h"
 #include "menu_submit_policy.h"
+#include "menu_hud_scale.h"
 #include <shlobj.h>
 #include "async_thread_snapshot.h"
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
@@ -17572,9 +17573,11 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         (menuSafe ||
          InterlockedCompareExchange(&g_gamePaused, 0, 0) ||
          InterlockedCompareExchange(&g_menuFnHits[5], 0, 0) == 0)) {
-        float k = InterlockedCompareExchange(&g_menuInsetPct, 0, 0) / 100.0f;
-        // ini 100 leaves Start/Quit on the clip edge. 0.84 keeps that corner inside the eye.
-        if (menuSafe && k > 0.84f) k = 0.84f;
+        // Class 1 only: the captured log used MenuInsetPct=100 and landed on
+        // the shared 0.84 clamp, which still put the IIS title on the eye edge.
+        // Classes 2 and 3 keep 0.84. Distance and ndcShift are untouched.
+        const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
+        const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
         Reg4* q = reinterpret_cast<Reg4*>(cIn);
         for (int i=0;i<4;++i) { q[i].x*=k; q[i].y*=k; }
         if (menuSafe) {
