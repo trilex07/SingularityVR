@@ -4,7 +4,7 @@ Date: 2026-10-11 18:14 +02:00. This audit does not change VR behavior. It record
 
 Source commit: `f74210eb0a4f0ed3b7ddb52181f7448aa5f0ddaa` (`feat(vr): first playable version`, 2026-10-11 00:55 +02:00).
 
-Worktree: `C:\Users\Trilex\vr-mods\SingularityVR-audit-baseline`, branch `audit/production-baseline`, created from `origin/main`. No other worktree was reset, checked out, or overwritten. The dirty `SingularityVR-production` tree on `fix/vr-menu-input-grip-performance` was left untouched.
+Branch `audit/production-baseline` was created from `origin/main` in an isolated worktree. No other worktree was reset, checked out, or overwritten. The dirty production worktree on `fix/vr-menu-input-grip-performance` was left untouched.
 
 ## Tools that exist on this commit
 
@@ -19,8 +19,8 @@ Deployment and rollback used `tools/deploy-singularityvr.ps1`, which is present.
 | AppID | 42670 |
 | Manifest `buildid` | 21300 |
 | `Singularity.exe` | PE32 x86, 27,444,736 bytes, SHA-256 `BD459ACD87D4B82693928DEE4ED437C086D5928A8E0428F3AD54B6FC114C0F51`, version reported by Windows Error Reporting `1.1.0.49069` |
-| OpenXR ActiveRuntime (HKLM) | `C:\Program Files (x86)\Steam\steamapps\common\SteamVR\steamxr_win64.json` |
-| OpenXR ActiveRuntime (WOW6432Node) | `C:\Program Files (x86)\Steam\steamapps\common\SteamVR\steamxr_win32.json` |
+| OpenXR ActiveRuntime (HKLM) | SteamVR `steamxr_win64.json` |
+| OpenXR ActiveRuntime (WOW6432Node) | SteamVR `steamxr_win32.json` |
 
 Preserved at 2026-10-11 18:10:40 +02:00, before the candidate was copied, into `deployment/preserved-working-install/`. Copy hashes matched the live files. The deploy tool then made its own backup at `deployment/install-backups/20261011-181147` and restored from that backup after the crash.
 
@@ -40,7 +40,7 @@ Texture override DDS count at status time: 107. Those files were not replaced.
 
 ## Build of this commit
 
-`spikes/view_matrix/build.ps1` with `OPENXR_SDK=C:\Users\Trilex\vr-mods\dependencies\openxr-local`. The script forces `/O2` for every production DLL. Independent check of the output:
+`spikes/view_matrix/build.ps1` with `OPENXR_SDK` pointed at the local OpenXR SDK. The script forces `/O2` for every production DLL. Independent check of the output:
 
 | Check | Result |
 |---|---|
@@ -74,8 +74,8 @@ These come from the process, the Windows Application log, and `%LOCALAPPDATA%\Si
 - INI echo includes `HudStereo=1`, `independent hands prototype=1`, `glove isolation=2`, `controller arms: gloves only`.
 - Later in the same run the log records `hook hit #1: engine returned pitch=0 yaw=0 roll=0`, `IndependentHandsSuppressed verts=3314 first=0 prim=4830 type=4`, `GloveIsolation: suppressed detached sleeve/finger section verts=390 first=14490 tris=674`, polish text `AR9 Valkyrie`, and `RvPlayerPawnSP` / `SpawnDefaultPawnFor` process-event scans.
 - The only `TRUE STEREO` string in the log is the hotkey help line `F1 TRUE stereo`. Stereo submission was not active.
-- The process crashed at 18:14:15, about 40 seconds after attach. Application Error: `Singularity.exe` `1.1.0.49069`, faulting module `C:\Program Files (x86)\Steam\steamapps\common\Singularity\binaries\d3d9.dll` version `0.0.0.0`, timestamp `0x6acbb514` (matches this build), exception `0xc0000005`, offset `0x00043ca7`, PID `0x92C8`.
-- No paired rerun of the preserved DLL was done. The crash is a property of this candidate in this no-headset launch. It is not an A/B against `59078811…`.
+- The process crashed at 18:14:15, about 40 seconds after attach. Application Error: `Singularity.exe` `1.1.0.49069`, faulting module the game `Binaries\d3d9.dll` version `0.0.0.0`, timestamp `0x6acbb514` (matches this build), exception `0xc0000005`, offset `0x00043ca7`, PID `0x92C8`.
+- No paired rerun of the preserved DLL was done. The candidate crashed. That is not an A/B against `59078811…`, and it is not by itself a proven regression.
 
 ### Not physically verified
 
@@ -90,7 +90,7 @@ Nobody wore a headset for this run, and SteamVR reported no HMD. The following a
 
 ## Rollback
 
-The candidate regressed: it access-violated inside its own `d3d9.dll` during this launch. `deploy-singularityvr.ps1 -Action Rollback -BackupPath deployment\install-backups\20261011-181147 -StopGame` restored the previous DLL.
+The candidate crashed, so the previous install was restored. There was no paired run of the preserved DLL. `deploy-singularityvr.ps1 -Action Rollback -BackupPath deployment\install-backups\20261011-181147 -StopGame` restored that DLL. The restored install was not modified again.
 
 Post-rollback live hashes:
 
@@ -101,7 +101,7 @@ SteamVR processes started for this audit (`vrmonitor` 46200, `vrserver` 17792) w
 
 ## Remaining problems
 
-- `origin/main` built as x86 `/O2` (`A555AF4E…`) crashes in the real Steam game with `0xc0000005` at `d3d9.dll+0x43ca7` when no headset is present. The faulting timestamp matches this build.
+- Candidate `A555AF4E…` crashed once in the real Steam game with `0xc0000005` at `d3d9.dll+0x43ca7`. No paired launch of `59078811…` was done. The faulting instruction bytes are identical in that preserved DLL, so this crash does not show a code change at the fault site.
 - That same launch never created an OpenXR session. SteamVR state was HMD not found (108), so stereo, tracked controllers, and a headset menu were not exercised.
 - The DLL that is installed and preserved (`59078811…`) is not a build of `f74210eb`. The installed INI does not match the INI in this commit.
 - `AGENTS.md` still points at `tools/singularityvr-test-bridge.ps1` and `docs/VR_STATUS.md`, which are not in this tree.
@@ -111,5 +111,23 @@ SteamVR processes started for this audit (`vrmonitor` 46200, `vrserver` 17792) w
 - A connected PSVR2 so SteamVR leaves `NotReady` and `vrcompositor` starts.
 - A log from that session that contains `OpenXR ready` and `session running`, plus whether `[TRUE STEREO ON]` and non-zero split/parallax draws appear.
 - Headset observation of the menu, both controllers, and the gloves. Log lines about glove isolation are not that observation.
-- Whether `A555AF4E…` still crashes once a headset session exists. This run only shows the crash with no HMD.
+- Whether this candidate still crashes once a headset session exists. This run only shows the crash with no HMD. Headset acceptance is not part of this documentation change.
 - A comfort and frame-time check on the headset. The flat 28 fps samples do not answer that.
+
+## Crash site (no source change)
+
+The candidate DLL, its map, and `d3d9.build.json` were copied aside before any further build. DLL SHA-256 remains `A555AF4E7736357826CCC826EB6B8BE3F20313F09CFFEC8D465CDC1D510D6E91`. Map SHA-256 is `118D1EA5FC0DC136BA4772EAFCB0394DB7CC155DB153585AFBA12BFCEC1A2126`.
+
+Map preferred base `0x10000000`. RVA `0x43CA7` is inside `.text` and inside `ScriptFuncNameIdx(void*)` (`?ScriptFuncNameIdx@?A0xa1a5c8b3@@YAHPAX@Z` in `d3d9.obj`), which starts at RVA `0x43BD0`. The next symbol is `SetCutsceneMode` at RVA `0x43E20`. Source is `spikes/view_matrix/d3d9.cpp`, the function at the `ScriptFuncNameIdx` definition. The fault is `0xD7` bytes into that function.
+
+The local crash dump for PID 37576 records a read of `0xC0000005` at address `0x3E0ED13D`. The image bytes at the exception address are `83 7E 2C 00 7E 31` (`cmp dword ptr [esi+2Ch], 0` / `jle`). Context `ESI` is `0x3E0ED111`, and `0x3E0ED111 + 0x2C = 0x3E0ED13D`. That page is not in the dump. The fault thread stack contains return address RVA `0x290B3`, the instruction after `call ScriptFuncNameIdx` at RVA `0x290AE`. Both addresses are inside `Hook_ProcessEvent`. The module timestamp in the dump is `0x6ACBB514`.
+
+`0x2C` is `OBJ_NAME`. The instruction is the learning-loop load `*(int32_t*)(v + OBJ_NAME)`, which runs only while `g_nodeOffset` is still negative (the first 300 samples). The decided path rejects `(node & 3)`. The learning path does not. `ESI` is not 4-byte aligned. `Readable(v, OBJ_NAME + 4)` returned true immediately before the load; its implementation can return true from the thread-local region cache. `ReadableForget()` is not called on the `ProcessEvent` path.
+
+The preserved DLL `59078811…` has the same 32 bytes at the same file offset, including `83 7E 2C 00`. The binaries differ in 41,142 bytes elsewhere. This crash was not compared by launching that DLL.
+
+Hypothesis: the learning loop treated unaligned slot `0x3E0ED111` as a UObject and read `+0x2C` after `Readable` said the range was safe. The no-HMD log explains why the process was still in flat startup. It is not the faulting function. OpenXR init is not on this stack.
+
+Falsification, without another Steam launch: evaluate the learning-loop predicate on `0x3E0ED111`. Current source does not reject it and does perform the `OBJ_NAME` load. Adding `if (v & 3) continue;` rejects this recorded slot before that load. An aligned `ESI` at this same instruction would falsify that as a sufficient fix and leave the `Readable` cache as the next suspect.
+
+No C++ change is included here. The restored install was left as rolled back.
