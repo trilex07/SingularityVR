@@ -1,5 +1,7 @@
 # Singularity VR mod — working notes for Claude
 
+`AGENTS.md` is the authoritative workflow. MAIN owns Steam deployment/integration testing; side agents work in isolated worktrees and never launch or deploy the Steam game (L1/L2 only). Headset testing below is physical PSVR2 acceptance only, separate from automatic tests — never mark headset-verified without an actual headset result.
+
 A VR mod for Singularity (2010, Unreal Engine 3, D3D9, x86), shipping as one `d3d9.dll` dropped
 beside the game exe. No game files are modified.
 
@@ -39,9 +41,9 @@ did not work.
 - Never paste log contents into `STATUS.md` or `HISTORY.md`. The docs stay prose; the logs stay
   on disk. (`STATUS.md` reached 240 KB without this happening — don't start.)
 
-## Testing happens in a VR headset
+## Testing happens in a VR headset (physical acceptance only, separate from automatic tests)
 
-The user is wearing a headset and cannot read the screen during a test.
+Side agents do not run headset or Steam tests. When MAIN needs a physical PSVR2 check, the user is wearing a headset and cannot read the screen during that test.
 
 1. **Give numbered keypresses first.** Reasoning comes after, or not at all.
 2. **State what would fool the test**, next to the steps — name the false-pass mode explicitly.

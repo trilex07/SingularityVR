@@ -1,5 +1,7 @@
 # Steam / dvr-xrsim: powtarzalny test i rollback
 
+> Ownership: MAIN only. Side agents never run this runner against the Steam installation; they verify with L1/L2 only. The xrsim/Steam stage is optional integration evidence, not a mandatory gate. `vr_capture_oracle.py` is not checked in; where named below it is optional. `deployment/stable/...` and `deployment/candidate` paths are historical examples, not required directories.
+
 ## Dlaczego wcześniejsze uruchomienia były mylące
 
 `XR_RUNTIME_JSON` jest dziedziczone przez proces, który uruchamia grę. Jeżeli
