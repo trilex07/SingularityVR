@@ -302,9 +302,6 @@ void SyncVrMenuCaptureState() {
 void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
     SyncVrMenuCaptureState();
     const auto captureState=VrMenuStateToken();
-    // A pause generation that already owns its movie must not be replaced by a
-    // later candidate. Class 2 still scores and replaces inside this function.
-    if(Rd(g_vrMenuClass)==3 && g_vrCaptureOwner.CanProvide(captureState))return;
     if(!Rd(g_vrUiEnabled)||!Rd(g_vrUiMenu)||!Rd(g_vrUiNativeReady)||g_boundShaderLayout.shadow)return;
     // GFx menu surfaces are not guaranteed to carry the identity c5 orthographic constants.
     // Requiring that matrix silently missed the live menu and left only its lower-right diegetic
