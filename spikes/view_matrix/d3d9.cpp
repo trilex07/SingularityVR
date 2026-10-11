@@ -6453,7 +6453,7 @@ bool PauseVrSettingsHitNormalized(LONG u, LONG v) {
     // settings are useful before starting a game, and the main movie was the
     // reason the old pause-only row appeared to be missing entirely.
     if (menuClass != 2 && menuClass != 3) return false;
-    return pausevrsettings::Hit((float)u / 1000000.0f, (float)v / 1000000.0f);
+    return pausevrsettings::Hit((int)menuClass, (float)u / 1000000.0f, (float)v / 1000000.0f);
 }
 void OpenVrSettingsFromPause() {
     const LONG menuClass = InterlockedCompareExchange(&g_vrMenuClass, 0, 0);

@@ -216,14 +216,16 @@ static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& 
             g_vrMenuPanel.plane);
         if (!g_vrMenuPanelValid) return;
     }
+    float rowV0 = 0.0f, rowV1 = 0.0f;
+    if (!pausevrsettings::Row((int)menuClass, rowV0, rowV1)) return;
     static LONG lastLoggedClass = -1;
     if (lastLoggedClass != menuClass) {
         lastLoggedClass = menuClass;
         Log("VR settings row: visible in %s menu at normalized V %.2f-%.2f",
-            menuClass == 2 ? "main" : "pause", pausevrsettings::kV0, pausevrsettings::kV1);
+            menuClass == 2 ? "main" : "pause", rowV0, rowV1);
     }
     const bool hovered = Rd(g_vrUiValid) && pausevrsettings::Hit(
-        Rd(g_vrUiU) / 1000000.0f, Rd(g_vrUiV) / 1000000.0f);
+        (int)menuClass, Rd(g_vrUiU) / 1000000.0f, Rd(g_vrUiV) / 1000000.0f);
     const float halfW = d.Width * .5f;
     const int px = std::max(2, (int)d.Height / 420);
     const int textW = 10 * (kGlyphW + 1) * px;
@@ -231,9 +233,9 @@ static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& 
     D3DRECT text[128];
     for (int eye = 0; eye < 2; ++eye) {
         uipointer::ScreenPoint a,b,c;
-        if (!VrUiProjectEye(eye, PauseVrSettingsWorld(pausevrsettings::kU0, pausevrsettings::kV0), a) ||
-            !VrUiProjectEye(eye, PauseVrSettingsWorld(pausevrsettings::kU1, pausevrsettings::kV1), b) ||
-            !VrUiProjectEye(eye, PauseVrSettingsWorld(.5f, (pausevrsettings::kV0 + pausevrsettings::kV1) * .5f), c)) continue;
+        if (!VrUiProjectEye(eye, PauseVrSettingsWorld(pausevrsettings::kU0, rowV0), a) ||
+            !VrUiProjectEye(eye, PauseVrSettingsWorld(pausevrsettings::kU1, rowV1), b) ||
+            !VrUiProjectEye(eye, PauseVrSettingsWorld(.5f, (rowV0 + rowV1) * .5f), c)) continue;
         const int x0 = (int)lroundf((eye + std::min(a.u,b.u)) * halfW);
         const int x1 = (int)lroundf((eye + std::max(a.u,b.u)) * halfW);
         const int y0 = (int)lroundf(std::min(a.v,b.v) * d.Height);
