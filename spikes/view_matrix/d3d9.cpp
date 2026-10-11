@@ -70,6 +70,7 @@
 #define NOMINMAX
 #include <windows.h>
 #include "script_node_candidate.h"
+#include "menu_submit_policy.h"
 #include <shlobj.h>
 #include "async_thread_snapshot.h"
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
@@ -5489,12 +5490,59 @@ static menucapture::Owner g_vrCaptureOwner;
 volatile LONG g_vrStaleRejected=0;
 void SyncVrMenuCaptureState();
 volatile LONG g_vrMenuClass=0; // 0 none, 1 IIS boot, 2 Main, 3 Pause, 4 other native UI.
-// XR bridge: crop one SBS half to both eyes for native GFx menus only (not Bink/intro).
+// XR bridge: crop one SBS half to both eyes only for the IIS boot/title menu.
+// Classes 2-4 keep whatever stereo/dup the scene already captured.
 static bool VrXrSubmitMenuFlat() {
-    if (Rd(g_vrUiMenu)) return true;
-    const LONG menuClass = InterlockedCompareExchange(&g_vrMenuClass, 0, 0);
-    if (menuClass >= 1 && menuClass <= 4) return true;
-    return false;
+    return MenuSubmitForcesFlat((int)Rd(g_vrMenuClass));
+}
+
+struct MenuSubmitDiag {
+    LONG frames[5];
+    LONG focus[5];
+    LONG flat[5];
+    LONG crop[5];
+    LONG half[5];
+    LONG perEye[5];
+    ULONGLONG lastMs;
+};
+static MenuSubmitDiag g_menuSubmitDiag{};
+
+static void NoteMenuSubmit(const CopySlot* frame, bool cropEyes) {
+    if (!frame) return;
+    const LONG clsRaw = Rd(g_vrMenuClass);
+    const int cls = (clsRaw >= 0 && clsRaw <= 4) ? (int)clsRaw : 0;
+    if (Rd(g_vrUiMenu)) g_menuSubmitDiag.focus[cls]++;
+    g_menuSubmitDiag.frames[cls]++;
+    if (frame->menuFlat) g_menuSubmitDiag.flat[cls]++;
+    if (cropEyes) g_menuSubmitDiag.crop[cls]++;
+    if (frame->dup && !cropEyes) g_menuSubmitDiag.half[cls]++;
+    if (frame->stereo || cropEyes) g_menuSubmitDiag.perEye[cls]++;
+    const ULONGLONG now = GetTickCount64();
+    if (g_menuSubmitDiag.lastMs == 0) g_menuSubmitDiag.lastMs = now;
+    if (now - g_menuSubmitDiag.lastMs < 1000) return;
+    g_menuSubmitDiag.lastMs = now;
+    LONG menuFrames = 0;
+    for (int i = 1; i <= 4; ++i) menuFrames += g_menuSubmitDiag.frames[i];
+    if (menuFrames > 0) {
+        Log("menu-submit: c1 f/focus/flat/crop/half/perEye=%ld/%ld/%ld/%ld/%ld/%ld"
+            " c2=%ld/%ld/%ld/%ld/%ld/%ld c3=%ld/%ld/%ld/%ld/%ld/%ld"
+            " c4=%ld/%ld/%ld/%ld/%ld/%ld c0=%ld/%ld/%ld/%ld/%ld/%ld",
+            g_menuSubmitDiag.frames[1], g_menuSubmitDiag.focus[1], g_menuSubmitDiag.flat[1],
+            g_menuSubmitDiag.crop[1], g_menuSubmitDiag.half[1], g_menuSubmitDiag.perEye[1],
+            g_menuSubmitDiag.frames[2], g_menuSubmitDiag.focus[2], g_menuSubmitDiag.flat[2],
+            g_menuSubmitDiag.crop[2], g_menuSubmitDiag.half[2], g_menuSubmitDiag.perEye[2],
+            g_menuSubmitDiag.frames[3], g_menuSubmitDiag.focus[3], g_menuSubmitDiag.flat[3],
+            g_menuSubmitDiag.crop[3], g_menuSubmitDiag.half[3], g_menuSubmitDiag.perEye[3],
+            g_menuSubmitDiag.frames[4], g_menuSubmitDiag.focus[4], g_menuSubmitDiag.flat[4],
+            g_menuSubmitDiag.crop[4], g_menuSubmitDiag.half[4], g_menuSubmitDiag.perEye[4],
+            g_menuSubmitDiag.frames[0], g_menuSubmitDiag.focus[0], g_menuSubmitDiag.flat[0],
+            g_menuSubmitDiag.crop[0], g_menuSubmitDiag.half[0], g_menuSubmitDiag.perEye[0]);
+    }
+    for (int i = 0; i < 5; ++i) {
+        g_menuSubmitDiag.frames[i] = g_menuSubmitDiag.focus[i] = 0;
+        g_menuSubmitDiag.flat[i] = g_menuSubmitDiag.crop[i] = 0;
+        g_menuSubmitDiag.half[i] = g_menuSubmitDiag.perEye[i] = 0;
+    }
 }
 volatile LONG g_contextPromptVisible=0; // set by the measured native pickup/use prompt draw
 static void ReportVrRuntimeCounters() {
@@ -10773,6 +10821,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     DiagPhaseAdd(DP_BRIDGE, diagBridge);
 
     const bool cropEyes = frame && frame->dup && !frame->stereo && frame->menuFlat && g_srcW >= 2;
+    NoteMenuSubmit(frame, cropEyes);
     g_scCropped = cropEyes;
     // research/nvidia-vr-upscaling: NIS engages only on the SBS true-stereo
     // path (two independent eye viewports, seam never in the kernel). Mono and
