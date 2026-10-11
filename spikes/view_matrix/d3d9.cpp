@@ -69,6 +69,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
+#include "script_node_candidate.h"
 #include <shlobj.h>
 #include "async_thread_snapshot.h"
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
@@ -1270,6 +1271,9 @@ void ReadableForget() {
 bool Readable(const void* p, size_t n) {
     const uintptr_t a = reinterpret_cast<uintptr_t>(p);
     const bool useCache = Rd(g_readableCache) != 0;
+    // A hit stays until ReadableForget(). ProcessEvent does not call that, so a
+    // cached yes can name a page that has already been released. Candidate loads
+    // use TryLoadAlignedI32 instead of trusting this cache.
     if (useCache)
         for (int i = 0; i < kReadCacheSlots; ++i)
             if (g_readOk[i].end && a >= g_readOk[i].base && (a + n) <= g_readOk[i].end) return true;
@@ -19668,6 +19672,18 @@ volatile LONG g_nodeSamples = 0;
 volatile LONG g_nodeVotes[kNodeSlots] = {};
 volatile LONG g_nodeDecided = 0;
 
+static bool GuardedNameOf(uintptr_t obj, char* buf, size_t cap) {
+    if (!buf || cap == 0) return false;
+    buf[0] = 0;
+    if ((obj & 3u) != 0) return false;
+    __try {
+        return NameOf(obj, buf, cap);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        buf[0] = 0;
+        return false;
+    }
+}
+
 static int32_t ScriptFuncNameIdx(void* frame) {
     if (!frame) return -1;
     const uintptr_t f = reinterpret_cast<uintptr_t>(frame);
@@ -19683,9 +19699,10 @@ static int32_t ScriptFuncNameIdx(void* frame) {
         // engine is actively using, so if it were unreadable the game would already be dead.
         // The node gets a cheap range test instead, the same bound the vote used to accept it.
         const uintptr_t node = *reinterpret_cast<const uintptr_t*>(f + off);
-        if (node < 0x01000000 || node > 0x7FFF0000 || (node & 3)) return -1;
-        const int32_t idx = *reinterpret_cast<const int32_t*>(node + OBJ_NAME);
-        return idx > 0 ? idx : -1;
+        if (!ScriptNodeCandidate(node, 0)) return -1;
+        int32_t idx = 0;
+        if (!TryLoadAlignedI32(node + OBJ_NAME, &idx) || idx <= 0) return -1;
+        return idx;
     }
     if (!Readable(frame, kNodeSlots * 4)) return -1;   // learning phase only, 300 calls
 
@@ -19695,12 +19712,11 @@ static int32_t ScriptFuncNameIdx(void* frame) {
         const uint32_t* w = reinterpret_cast<const uint32_t*>(f);
         for (int i = 0; i < kNodeSlots; ++i) {
             const uintptr_t v = w[i];
-            if (v < 0x01000000 || v > 0x7FFF0000) continue;
-            if (v > f - 0x10000 && v < f + 0x10000) continue;      // a stack address, not a UObject
-            if (!Readable((void*)v, OBJ_NAME + 4)) continue;
-            if (*reinterpret_cast<const int32_t*>(v + OBJ_NAME) <= 0) continue;   // 'None' is noise
+            if (!ScriptNodeCandidate(v, f)) continue;
+            int32_t nameIdx = 0;
+            if (!TryLoadAlignedI32(v + OBJ_NAME, &nameIdx) || nameIdx <= 0) continue;
             char nm[64]{};
-            if (NameOf(v, nm, sizeof(nm)) && nm[0]) InterlockedIncrement(&g_nodeVotes[i]);
+            if (GuardedNameOf(v, nm, sizeof(nm)) && nm[0]) InterlockedIncrement(&g_nodeVotes[i]);
         }
         return -1;
     }
@@ -20996,13 +21012,11 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
                 const uintptr_t selfAddr = reinterpret_cast<uintptr_t>(cands[c].p);
                 for (int i = 0; i < 16; ++i) {
                     const uintptr_t v = w[i];
-                    if (v < 0x01000000 || v > 0x7FFF0000) continue;
-                    if (v > selfAddr - 0x10000 && v < selfAddr + 0x10000) continue;   // stack
-                    if (!Readable((void*)v, 0x40)) continue;
-                    const int32_t ni = *reinterpret_cast<const int32_t*>(v + OBJ_NAME);
-                    if (ni <= 0) continue;                                            // 'None'
+                    if (!ScriptNodeCandidate(v, selfAddr)) continue;
+                    int32_t ni = 0;
+                    if (!TryLoadAlignedI32(v + OBJ_NAME, &ni) || ni <= 0) continue;
                     char nm[64]{};
-                    if (NameOf(v, nm, sizeof(nm)) && nm[0])
+                    if (GuardedNameOf(v, nm, sizeof(nm)) && nm[0])
                         m += _snprintf_s(line + m, sizeof(line) - m, _TRUNCATE,
                                          " +0x%02X->'%s'", i * 4, nm);
                 }
