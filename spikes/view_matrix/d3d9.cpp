@@ -4557,6 +4557,8 @@ struct CopySlot {
     bool    stereo = false;              // alternate-eye active for this frame
     bool    dup = false;                 // draw duplication active for this frame
     bool    menuFlat = false;            // native GFx menu: XR bridge crops one half to both eyes
+    int     menuClass = 0;               // 0-4, snapshotted with these pixels
+    bool    uiFocus = false;             // g_vrUiMenu at capture, not at a later submit
     XrPosef pose[2]{};                   // where the head was when these pixels were drawn
     XrFovf  fov[2]{};
     bool    useDerived = false;
@@ -4910,7 +4912,7 @@ void MeasureCullBand(const uint8_t* bits, int pitch, UINT w, UINT h) {
 }
 
 static bool VrXrSubmitMenuFlat(); // defined after g_vrUiMenu / g_vrMenuClass
-static void NoteMenuSubmit(const CopySlot* frame, bool cropEyes);
+static void SnapshotMenuOnSlot(CopySlot& cap);
 
 // Stamp the slot with the state its pixels were drawn under. Everything the submission needs is
 // captured at the moment of capture, so a frame consumed later cannot be submitted with a pose or
@@ -4919,12 +4921,11 @@ static void NoteMenuSubmit(const CopySlot* frame, bool cropEyes);
 void StampCaptureState(CopySlot& cap) {
     cap.stereo = InterlockedCompareExchange(&g_stereo, 0, 0) != 0;
     cap.dup    = InterlockedCompareExchange(&g_dupDraws, 0, 0) != 0;
-    cap.menuFlat = VrXrSubmitMenuFlat();
+    SnapshotMenuOnSlot(cap);
     if (cap.menuFlat) {
         cap.stereo = false;
         cap.dup = true;
     }
-    NoteMenuSubmit(&cap, cap.dup && !cap.stereo && cap.menuFlat && g_srcW >= 2);
     // The backbuffer just captured was drawn with the offset chosen at the END of the previous
     // frame, so it belongs to g_renderEye - not to whichever eye is about to be switched to.
     cap.eye    = cap.stereo ? g_renderEye : 0;
@@ -5498,55 +5499,94 @@ static bool VrXrSubmitMenuFlat() {
     return MenuSubmitForcesFlat((int)Rd(g_vrMenuClass));
 }
 
+static void SnapshotMenuOnSlot(CopySlot& cap) {
+    int cls = (int)Rd(g_vrMenuClass);
+    if (cls < 0 || cls > 4) cls = 0;
+    cap.menuClass = cls;
+    cap.uiFocus = Rd(g_vrUiMenu) != 0;
+    cap.menuFlat = MenuSubmitForcesFlat(cap.menuClass);
+}
+
 struct MenuSubmitDiag {
-    LONG frames[5];
-    LONG focus[5];
-    LONG flat[5];
+    LONG submitted[5];
+    LONG focusSubmit[5];
     LONG crop[5];
     LONG half[5];
-    LONG perEye[5];
+    LONG stereo[5];
+    LONG mono[5];
+    LONG captureAttempts;
+    LONG validCaptures;
+    LONG failedCaptures;
+    LONG missingLayers;
+    LONG xrTicks;
     ULONGLONG lastMs;
+    int copyAtLog;
+    int submitAtLog;
 };
 static MenuSubmitDiag g_menuSubmitDiag{};
 
-static void NoteMenuSubmit(const CopySlot* frame, bool cropEyes) {
+static int MenuClassBucket(int cls) {
+    return (cls >= 0 && cls <= 4) ? cls : 0;
+}
+
+static void NoteMenuLayerSubmitted(const CopySlot* frame, bool cropEyes) {
     if (!frame) return;
-    const LONG clsRaw = Rd(g_vrMenuClass);
-    const int cls = (clsRaw >= 0 && clsRaw <= 4) ? (int)clsRaw : 0;
-    if (Rd(g_vrUiMenu)) g_menuSubmitDiag.focus[cls]++;
-    g_menuSubmitDiag.frames[cls]++;
-    if (frame->menuFlat) g_menuSubmitDiag.flat[cls]++;
-    if (cropEyes) g_menuSubmitDiag.crop[cls]++;
-    if (frame->dup && !cropEyes) g_menuSubmitDiag.half[cls]++;
-    if (frame->stereo || cropEyes) g_menuSubmitDiag.perEye[cls]++;
-    static LONG loggedClass = -2;
+    const int cls = MenuClassBucket(frame->menuClass);
+    const int kind = MenuSubmitKind(cropEyes, frame->dup, frame->stereo);
+    g_menuSubmitDiag.submitted[cls]++;
+    if (frame->uiFocus) g_menuSubmitDiag.focusSubmit[cls]++;
+    if (kind == 1) g_menuSubmitDiag.crop[cls]++;
+    else if (kind == 2) g_menuSubmitDiag.half[cls]++;
+    else if (kind == 3) g_menuSubmitDiag.stereo[cls]++;
+    else g_menuSubmitDiag.mono[cls]++;
+    static int loggedClass = -2;
     if (cls != loggedClass) {
         loggedClass = cls;
-        Log("menu-submit-edge: class=%d focus=%d flat=%d crop=%d half=%d perEye=%d",
-            cls, Rd(g_vrUiMenu) ? 1 : 0, frame->menuFlat ? 1 : 0, cropEyes ? 1 : 0,
-            (frame->dup && !cropEyes) ? 1 : 0, (frame->stereo || cropEyes) ? 1 : 0);
+        Log("menu-submit-edge: class=%d focus=%d flat=%d crop=%d kind=%d",
+            cls, frame->uiFocus ? 1 : 0, frame->menuFlat ? 1 : 0, cropEyes ? 1 : 0, kind);
     }
+}
+
+static void NoteXrHeartbeat(int shouldRender, int layerCount) {
+    g_menuSubmitDiag.xrTicks++;
+    if (layerCount == 0) g_menuSubmitDiag.missingLayers++;
     const ULONGLONG now = GetTickCount64();
     if (g_menuSubmitDiag.lastMs == 0) g_menuSubmitDiag.lastMs = now;
     if (now - g_menuSubmitDiag.lastMs < 1000) return;
     g_menuSubmitDiag.lastMs = now;
-    Log("menu-submit: c1 f/focus/flat/crop/half/perEye=%ld/%ld/%ld/%ld/%ld/%ld"
+    const int copyNow = g_copyFrames;
+    const int submitNow = g_framesSubmitted;
+    Log("xr-heartbeat: session=%d running=%d shouldRender=%d haveEyes=%d ticks=%ld "
+        "copy=%d (+%d) submit=%d (+%d) captureTry=%ld validCapture=%ld failedCapture=%ld missingLayer=%ld",
+        (int)g_xrSessionState, g_xrRunning ? 1 : 0, shouldRender, g_haveEyes ? 1 : 0,
+        g_menuSubmitDiag.xrTicks, copyNow, copyNow - g_menuSubmitDiag.copyAtLog,
+        submitNow, submitNow - g_menuSubmitDiag.submitAtLog,
+        g_menuSubmitDiag.captureAttempts, g_menuSubmitDiag.validCaptures,
+        g_menuSubmitDiag.failedCaptures, g_menuSubmitDiag.missingLayers);
+    Log("menu-submit: c1 sub/focus/crop/half/stereo/mono=%ld/%ld/%ld/%ld/%ld/%ld"
         " c2=%ld/%ld/%ld/%ld/%ld/%ld c3=%ld/%ld/%ld/%ld/%ld/%ld"
         " c4=%ld/%ld/%ld/%ld/%ld/%ld c0=%ld/%ld/%ld/%ld/%ld/%ld",
-            g_menuSubmitDiag.frames[1], g_menuSubmitDiag.focus[1], g_menuSubmitDiag.flat[1],
-            g_menuSubmitDiag.crop[1], g_menuSubmitDiag.half[1], g_menuSubmitDiag.perEye[1],
-            g_menuSubmitDiag.frames[2], g_menuSubmitDiag.focus[2], g_menuSubmitDiag.flat[2],
-            g_menuSubmitDiag.crop[2], g_menuSubmitDiag.half[2], g_menuSubmitDiag.perEye[2],
-            g_menuSubmitDiag.frames[3], g_menuSubmitDiag.focus[3], g_menuSubmitDiag.flat[3],
-            g_menuSubmitDiag.crop[3], g_menuSubmitDiag.half[3], g_menuSubmitDiag.perEye[3],
-            g_menuSubmitDiag.frames[4], g_menuSubmitDiag.focus[4], g_menuSubmitDiag.flat[4],
-            g_menuSubmitDiag.crop[4], g_menuSubmitDiag.half[4], g_menuSubmitDiag.perEye[4],
-            g_menuSubmitDiag.frames[0], g_menuSubmitDiag.focus[0], g_menuSubmitDiag.flat[0],
-            g_menuSubmitDiag.crop[0], g_menuSubmitDiag.half[0], g_menuSubmitDiag.perEye[0]);
+        g_menuSubmitDiag.submitted[1], g_menuSubmitDiag.focusSubmit[1], g_menuSubmitDiag.crop[1],
+        g_menuSubmitDiag.half[1], g_menuSubmitDiag.stereo[1], g_menuSubmitDiag.mono[1],
+        g_menuSubmitDiag.submitted[2], g_menuSubmitDiag.focusSubmit[2], g_menuSubmitDiag.crop[2],
+        g_menuSubmitDiag.half[2], g_menuSubmitDiag.stereo[2], g_menuSubmitDiag.mono[2],
+        g_menuSubmitDiag.submitted[3], g_menuSubmitDiag.focusSubmit[3], g_menuSubmitDiag.crop[3],
+        g_menuSubmitDiag.half[3], g_menuSubmitDiag.stereo[3], g_menuSubmitDiag.mono[3],
+        g_menuSubmitDiag.submitted[4], g_menuSubmitDiag.focusSubmit[4], g_menuSubmitDiag.crop[4],
+        g_menuSubmitDiag.half[4], g_menuSubmitDiag.stereo[4], g_menuSubmitDiag.mono[4],
+        g_menuSubmitDiag.submitted[0], g_menuSubmitDiag.focusSubmit[0], g_menuSubmitDiag.crop[0],
+        g_menuSubmitDiag.half[0], g_menuSubmitDiag.stereo[0], g_menuSubmitDiag.mono[0]);
+    g_menuSubmitDiag.copyAtLog = copyNow;
+    g_menuSubmitDiag.submitAtLog = submitNow;
+    g_menuSubmitDiag.xrTicks = 0;
+    g_menuSubmitDiag.missingLayers = 0;
+    g_menuSubmitDiag.captureAttempts = 0;
+    g_menuSubmitDiag.validCaptures = 0;
+    g_menuSubmitDiag.failedCaptures = 0;
     for (int i = 0; i < 5; ++i) {
-        g_menuSubmitDiag.frames[i] = g_menuSubmitDiag.focus[i] = 0;
-        g_menuSubmitDiag.flat[i] = g_menuSubmitDiag.crop[i] = 0;
-        g_menuSubmitDiag.half[i] = g_menuSubmitDiag.perEye[i] = 0;
+        g_menuSubmitDiag.submitted[i] = g_menuSubmitDiag.focusSubmit[i] = 0;
+        g_menuSubmitDiag.crop[i] = g_menuSubmitDiag.half[i] = 0;
+        g_menuSubmitDiag.stereo[i] = g_menuSubmitDiag.mono[i] = 0;
     }
 }
 volatile LONG g_contextPromptVisible=0; // set by the measured native pickup/use prompt draw
@@ -9929,9 +9969,9 @@ void SyncXRInput(XrTime displayTime) {
 }
 
 void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
-    if (!g_xrReady) return;
+    if (!g_xrReady) { NoteXrHeartbeat(-1, -1); return; }
     PumpXR();
-    if (!g_xrRunning) return;
+    if (!g_xrRunning) { NoteXrHeartbeat(-1, -1); return; }
 
     XrFrameState fs{ XR_TYPE_FRAME_STATE };
     LARGE_INTEGER tWait = Now();
@@ -9939,9 +9979,8 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     if (XR_FAILED(xrWaitFrame(g_xrSession, nullptr, &fs))) {
         waitScope.finish();
         DiagPhaseAdd(DP_WAIT, tWait.QuadPart);
-        // Not merely a skipped frame: returning without clearing would leave the pad latched at
-        // whatever was last published, and the player walking.
         ClearPad();
+        NoteXrHeartbeat(-1, -1);
         return;
     }
     waitScope.finish();
@@ -10821,8 +10860,13 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     uint32_t layerCount = 0;
 
     const int64_t diagBridge = g_diagEnabled ? DiagQpc() : 0;
-    const CopySlot* frame = (fs.shouldRender && g_haveEyes && gameDev)
-                          ? CopyBackbufferToD3D11(gameDev) : nullptr;
+    const bool captureRequested = fs.shouldRender && g_haveEyes && gameDev;
+    if (captureRequested) g_menuSubmitDiag.captureAttempts++;
+    const CopySlot* frame = captureRequested ? CopyBackbufferToD3D11(gameDev) : nullptr;
+    if (captureRequested) {
+        if (frame) g_menuSubmitDiag.validCaptures++;
+        else g_menuSubmitDiag.failedCaptures++;
+    }
     DiagPhaseAdd(DP_BRIDGE, diagBridge);
 
     const bool cropEyes = frame && frame->dup && !frame->stereo && frame->menuFlat && g_srcW >= 2;
@@ -11006,6 +11050,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                     layer.views = projViews;
                     layers[0] = reinterpret_cast<const XrCompositionLayerBaseHeader*>(&layer);
                     layerCount = 1;
+                    NoteMenuLayerSubmitted(frame, cropEyes);
                     if (++g_framesSubmitted == 1) Log("*** FIRST FRAME SUBMITTED TO THE HEADSET ***");
                 }
             } else {
@@ -11041,6 +11086,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // hundred fast ones, and one stall that long IS a visible dip.
     if (msEnd > g_msXrSubmitPeak) g_msXrSubmitPeak = msEnd;
     ++g_xrSubmitFrames;
+    NoteXrHeartbeat(fs.shouldRender ? 1 : 0, (int)layerCount);
     // research/nvidia-vr-upscaling: harvest NIS GPU timestamps without
     // stalling (MEASURED dispatch time, not CPU Dispatch call time).
     NisBridge_PollTiming(&g_nis, g_ctx11);

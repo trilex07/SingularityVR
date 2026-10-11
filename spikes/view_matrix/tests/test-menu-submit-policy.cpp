@@ -20,5 +20,10 @@ int main() {
     Expect(!MenuSubmitForcesFlat(4), "class 4 station/dialog does not force flat");
     Expect(!MenuSubmitForcesFlat(5), "unknown class does not force flat");
     Expect(!MenuSubmitForcesFlat(-1), "negative class does not force flat");
+    Expect(MenuSubmitKind(true, true, false) == 1, "crop submission is its own kind");
+    Expect(MenuSubmitKind(false, true, false) == 2, "side-by-side halves are not a crop");
+    Expect(MenuSubmitKind(false, true, true) == 2, "duplicated stereo still uses half rects");
+    Expect(MenuSubmitKind(false, false, true) == 3, "stereo without duplication is per-eye");
+    Expect(MenuSubmitKind(false, false, false) == 4, "neither flag is mono");
     return g_fails == 0 ? 0 : 1;
 }
