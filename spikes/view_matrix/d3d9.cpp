@@ -17723,15 +17723,6 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // shows whole. Remapping both eyes into that texture is the doubled menu.
     // The backbuffer path (title / IIS) stays split, then the XR crop shows one
     // half in each eye. Bink never reaches this function.
-    if (menuClassNow == 3 && PauseHeadOverlayActive() &&
-        !InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
-        dev->SetVertexShaderConstantF(5, c, 4);
-        const HRESULT hr = PauseHeadOverlayHudDraw(dev, draw);
-        dev->SetScissorRect(&oldRect);
-        dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
-        g_inHudRemap = false;
-        return hr;
-    }
     if ((menuClassNow == 2 || menuClassNow == 3) &&
         !InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
         D3DVIEWPORT9 vpMenu{};
@@ -17788,10 +17779,16 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         if (InterlockedCompareExchange(&saidMono, 1, 0) == 0)
             Log("menu mono: class=%ld one draw into the diegetic target", menuClassNow);
         dev->SetVertexShaderConstantF(5, c, 4);
+        HRESULT hr = S_OK;
+        if (menuClassNow == 3 && PauseHeadGfxBatchEligible(menuLayout)) {
+            hr = PauseHeadOverlayHudDraw(dev, draw, (unsigned)Rd(g_vfxFrame));
+        } else {
+            hr = draw();
+        }
         dev->SetScissorRect(&oldRect);
         dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
         g_inHudRemap = false;
-        return draw();
+        return hr;
     }
     if (pausemenuspace::PauseBackbufferCanvasRoute((unsigned)menuClassNow,
             InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0) != 0, c)) {

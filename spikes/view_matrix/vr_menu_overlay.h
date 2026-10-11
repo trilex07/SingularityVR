@@ -5,13 +5,19 @@
 #include "prompt_roles.h"
 #include "prompt_atlas_generated.h"
 extern volatile LONG g_pauseHeadMenu;
+extern volatile LONG g_gamePaused;
+extern volatile LONG g_vfxFrame;
+static uintptr_t g_vrMenuSurface=0;
+static unsigned g_vrMenuFrame=0,g_vrMenuTextureFrame=0;
 static IDirect3DTexture9* g_pauseHeadPoolTex=nullptr;
 static IDirect3DSurface9* g_pauseHeadPoolSurf=nullptr;
 static unsigned g_pauseHeadPoolClearFrame=~0u;
-inline bool PauseHeadOverlayActive() {
-    return pausehead::RedirectOrthoDraws((int)Rd(g_vrMenuClass), pausehead::IniEnabled((int)Rd(g_pauseHeadMenu)),
-                                         VrModeOn(), Rd(g_vrUiMenu) != 0, Rd(g_vrMenuOverlay) != 0,
-                                         Rd(g_panelOpen) != 0);
+inline bool PauseHeadGfxBatchEligible(bool menuLayout) {
+    return pausehead::GfxPauseMenuMonoBatch((int)Rd(g_vrMenuClass), menuLayout,
+                                            Rd(g_vrUiNativeReady) != 0, Rd(g_gamePaused) != 0,
+                                            Rd(g_rtIsScene) != 0, Rd(g_rtIsBackbuffer) != 0,
+                                            pausehead::IniEnabled((int)Rd(g_pauseHeadMenu)), VrModeOn(),
+                                            Rd(g_vrMenuOverlay) != 0, Rd(g_panelOpen) != 0);
 }
 static bool EnsurePauseHeadPool(IDirect3DDevice9* dev) {
     if (g_pauseHeadPoolTex && g_pauseHeadPoolSurf) return true;
@@ -29,36 +35,49 @@ static bool EnsurePauseHeadPool(IDirect3DDevice9* dev) {
     return true;
 }
 template<typename DrawFn>
-static HRESULT PauseHeadOverlayHudDraw(IDirect3DDevice9* dev,DrawFn draw) {
-    if (!EnsurePauseHeadPool(dev)) return draw();
+static HRESULT PauseHeadOverlayHudDraw(IDirect3DDevice9* dev,DrawFn draw,unsigned frameClearKey) {
+    const pausehead::RedirectPlan plan=pausehead::PlanGfxRedirect(
+        g_pauseHeadPoolClearFrame, frameClearKey, true, EnsurePauseHeadPool(dev));
+    if (!plan.attemptRedirect) return draw();
     IDirect3DSurface9* oldRt=nullptr;
-    dev->GetRenderTarget(0,&oldRt);
+    if (FAILED(dev->GetRenderTarget(0,&oldRt)) || !oldRt) return draw();
     D3DVIEWPORT9 oldVp{};
-    dev->GetViewport(&oldVp);
-    g_origSetRenderTarget(dev,0,g_pauseHeadPoolSurf);
-    D3DVIEWPORT9 vp{0,0,pausehead::kPoolWidth,pausehead::kPoolHeight,0,1};
-    dev->SetViewport(&vp);
-    if (g_pauseHeadPoolClearFrame!=g_vrMenuFrame) {
-        dev->Clear(0,nullptr,D3DCLEAR_TARGET,D3DCOLOR_ARGB(0,0,0,0),1.f,0);
-        g_pauseHeadPoolClearFrame=g_vrMenuFrame;
-    }
-    const HRESULT hr=draw();
-    CaptureVrMenuTarget(dev);
-    InterlockedIncrement(&g_vrCounters.pauseMenuRedirectDraws);
-    if (oldRt) {
-        g_origSetRenderTarget(dev,0,oldRt);
+    if (FAILED(dev->GetViewport(&oldVp))) {
         oldRt->Release();
+        return draw();
     }
+    pausehead::BindStep bindStep=pausehead::BindStep::Ok;
+    if (FAILED(g_origSetRenderTarget(dev,0,g_pauseHeadPoolSurf)))
+        bindStep=pausehead::BindStep::SetRenderTargetFailed;
+    D3DVIEWPORT9 vp{0,0,pausehead::kPoolWidth,pausehead::kPoolHeight,0,1};
+    if (bindStep==pausehead::BindStep::Ok && FAILED(dev->SetViewport(&vp)))
+        bindStep=pausehead::BindStep::SetViewportFailed;
+    if (bindStep==pausehead::BindStep::Ok && plan.clearPool &&
+        FAILED(dev->Clear(0,nullptr,D3DCLEAR_TARGET,D3DCOLOR_ARGB(0,0,0,0),1.f,0)))
+        bindStep=pausehead::BindStep::ClearFailed;
+    if (bindStep!=pausehead::BindStep::Ok) {
+        g_origSetRenderTarget(dev,0,oldRt);
+        dev->SetViewport(&oldVp);
+        oldRt->Release();
+        return draw();
+    }
+    if (plan.clearPool) g_pauseHeadPoolClearFrame=frameClearKey;
+    const HRESULT drawHr=draw();
+    if (pausehead::CaptureAfterDrawAllowed(bindStep,SUCCEEDED(drawHr))) {
+        CaptureVrMenuTarget(dev);
+        if (g_vrCaptureOwner.CanProvide(VrMenuStateToken()) && g_vrMenuTexture)
+            InterlockedIncrement(&g_vrCounters.pauseMenuRedirectDraws);
+    }
+    g_origSetRenderTarget(dev,0,oldRt);
     dev->SetViewport(&oldVp);
-    return hr;
+    oldRt->Release();
+    return drawHr;
 }
 static void ReleasePauseHeadPool() {
     if (g_pauseHeadPoolSurf) { g_pauseHeadPoolSurf->Release(); g_pauseHeadPoolSurf=nullptr; }
     if (g_pauseHeadPoolTex) { g_pauseHeadPoolTex->Release(); g_pauseHeadPoolTex=nullptr; }
     g_pauseHeadPoolClearFrame=~0u;
 }
-static uintptr_t g_vrMenuSurface=0;
-static unsigned g_vrMenuFrame=0,g_vrMenuTextureFrame=0;
 static uipointer::Hit g_vrUiHit;
 static bool g_vrMenuPanelValid=false;
 // Kenney's CC0 PSVR2 prompt subset is packed once into a tiny BMP atlas. The atlas is loaded
