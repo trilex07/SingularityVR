@@ -18,15 +18,24 @@ beside the game exe. No game files are modified.
 there for one job: before building on a premise you inherited, check what actually measured it.
 Sections carrying a ⛔ **SUPERSEDED** banner are wrong-but-kept; never quote them as current.
 
-## The build
+## The build (safe production workflow)
 
 ```powershell
-.\spikes\view_matrix\build.ps1 -Install
+.\spikes\view_matrix\build.ps1
 ```
 
 `spikes/view_matrix/` is the live build (a single ~14,500-line `d3d9.cpp`). `spikes/vr_render/`
 is the known-good fallback. Earlier spikes are kept on purpose — several record approaches that
 did not work.
+
+Do not use `build.ps1 -Install`: it copies into a game directory without the
+production backup/verify path. The safe flow is build, then verify the
+artifact (x86 PE32, `/O2` provenance, record branch/commit and SHA-256),
+and only MAIN deploys to Steam through `tools/deploy-singularityvr.ps1`,
+which creates a timestamped backup and verifies SHA-256 after each copy.
+If the deployed result is wrong, MAIN rolls back with
+`tools/deploy-singularityvr.ps1 -Action Rollback -BackupPath <timestamp>`.
+Side agents build and verify only; they never deploy.
 
 ## The log
 

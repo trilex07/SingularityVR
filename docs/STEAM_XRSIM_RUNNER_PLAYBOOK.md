@@ -1,6 +1,6 @@
 # Steam / dvr-xrsim: powtarzalny test i rollback
 
-> Ownership: MAIN only. Side agents never run this runner against the Steam installation; they verify with L1/L2 only. The xrsim/Steam stage is optional integration evidence, not a mandatory gate. `vr_capture_oracle.py` is not checked in; where named below it is optional. `deployment/stable/...` and `deployment/candidate` paths are historical examples, not required directories.
+> Ownership: MAIN only. Side agents never run this runner against the Steam installation; they verify with L1/L2 only. Default L3 is a direct real-Steam test (deploy via `tools/deploy-singularityvr.ps1`, test, rollback); the xrsim variant below is explicitly optional, not a mandatory gate. `tools/singularityvr-test-bridge.ps1` and `vr_capture_oracle.py` do not exist in this tree — marked ⛔ OBSOLETE where named below, never required. `deployment/stable/...` and `deployment/candidate` paths are historical examples, not required directories.
 
 ## Dlaczego wcześniejsze uruchomienia były mylące
 
@@ -48,13 +48,16 @@ Katalogi są lokalnymi artefaktami regresji. Przed integracją należy zachować
 ich pliki dowodowe albo przenieść je do zatwierdzonego magazynu artefaktów;
 nie należy kopiować DLL do Steama przez skrypt automatycznie.
 
-## Standardowy L3 dla głównego agenta
+## Standardowy L3 dla głównego agenta (domyślnie bezpośredni test Steam; xrsim opcjonalny)
 
-Poboczny agent wykonuje tylko L1/L2. L3 może wykonać główny agent na głównej
-instalacji Steam:
+Poboczny agent wykonuje tylko L1/L2. L3 wykonuje główny agent na głównej
+instalacji Steam, domyślnie jako bezpośredni test rzeczywistego Steama:
+zbuduj, zweryfikuj SHA/PE32, wykonaj backup i wdróż przez
+`tools/deploy-singularityvr.ps1`, przetestuj, a w razie potrzeby wycofaj
+przez `-Action Rollback`. Wariant xrsim poniżej jest jawnie opcjonalny
+i nie jest warunkiem zaliczenia L3:
 
 ```powershell
-$env:OPENXR_SDK='C:\Users\Trilex\vr-mods\dependencies\openxr-local'
 & .\tools\steam-xrsim-singularity.ps1 `
   -CandidateDirectory .\deployment\candidate `
   -RuntimeManifest .\deployment\candidate\dvr_xrsim32.json `
@@ -76,9 +79,14 @@ Uruchamiaj tylko jeden replay dla danego PID. Dwa procesy replay równocześnie
 dzielą ten sam kanał komend i mogą celowo wywołać odrzucenie sekwencji; jest to
 test integralności mostka, ale nie jest ważnym wynikiem scenariusza gry.
 
-Po replayu używa test bridge `Collect`, a następnie `vr_capture_oracle.py` dla
-pary L/R. `PASS` wymaga świeżego PID/state/capture i zgodnego SHA; sam licznik
-drawów albo pojedynczy screenshot nie dowodzi poprawnej stereoskopii.
+Po replayu zbierz dowody logami/capturami i manifestem; `PASS` wymaga świeżego
+PID/state/capture i zgodnego SHA; sam licznik drawów albo pojedynczy
+screenshot nie dowodzi poprawnej stereoskopii.
+
+> ⛔ OBSOLETE: `tools/singularityvr-test-bridge.ps1 -Action Collect` nie
+> istnieje w tym drzewie — nie używać. ⛔ OBSOLETE: `vr_capture_oracle.py`
+> nie jest w repo — nie wymagać; porównanie L/R wykonaj istniejącymi
+> capturami z tego samego frame identity.
 
 ## Procedura przy regresji rękawic lub artefaktu palca
 
@@ -100,9 +108,13 @@ drawów albo pojedynczy screenshot nie dowodzi poprawnej stereoskopii.
 - **L1:** test `tools/reference-tests/hands/glove_isolate_test.exe` oraz testy
   matematyczne/unit.
 - **L2:** build x86 PE32 `/O2`, SHA artefaktu i zgodność z manifestem.
-- **L3:** świeży proces Steam + `dvr-xrsim`, replay, capture L/R, oracle i log.
+- **L3 (domyślnie):** bezpośredni test głównego agenta na zainstalowanym
+  Steam (deploy przez `tools/deploy-singularityvr.ps1`, świeży proces gry,
+  log, rollback po teście). Wariant xrsim (`dvr-xrsim`, replay, capture
+  L/R, log) jest jawnie opcjonalnym dowodem integracyjnym, nie warunkiem L3.
 - **L4:** fizyczny PSVR2, gdy pozostaje kwestia odczucia kontrolera, komfortu
   albo zachowania sprzętowego.
 
-Nie ogłaszaj `FIXED` bez właściwej bramki. Gdy runner zgłasza brak świeżego
-simulatora, status to `BLOCKED`, a nie sukces funkcji VR.
+Nie ogłaszaj `FIXED` bez właściwej bramki. Brak dostępnego symulatora nie
+blokuje L3, gdy bezpośredni test Steam przeszedł; jako `BLOCKED` traktuj
+jedynie brak wymaganego dowodu dla danej bramki.
