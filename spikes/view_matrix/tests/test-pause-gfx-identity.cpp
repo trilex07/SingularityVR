@@ -22,6 +22,11 @@ int main() {
 
     ResetLearnedFlashIdentity();
     assert(!FlashIdentityMatchSlot(0, psA, vsA, declA, false));
+    assert(!FlashLearnAllowed(true, true, true, false));
+    assert(!FlashLearnAllowed(true, false, true, true));
+    assert(!FlashLearnAllowed(true, true, false, true));
+    assert(!FlashLearnAllowed(false, true, true, true));
+    assert(FlashLearnAllowed(true, true, true, true));
 
     std::puts("pause gfx identity: learn gated, ps+vs+decl triplet per stride");
     return 0;

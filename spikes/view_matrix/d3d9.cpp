@@ -5462,7 +5462,8 @@ volatile LONG g_pauseHeadMenu=0; // ini [Render] PauseHeadMenu — class-3 GFx r
 PauseGfxDispatchCounters g_pauseGfxDispatch;
 bool PauseHeadRedirectDrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t, UINT minVtxIndex,
                                         UINT numVertices, UINT primCount, const void* idxData,
-                                        D3DFORMAT idxFormat, const void* vtxData, UINT vtxStride);
+                                        D3DFORMAT idxFormat, const void* vtxData, UINT vtxStride,
+                                        HRESULT* outHr);
 volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=100;
 volatile LONG g_vrMenuDistanceMm=1200;
 volatile LONG g_vrUiEyeCentreU[2]={500000,500000};
@@ -18163,9 +18164,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // The identification test - see g_dropStride. Returning S_OK without drawing is how the mod drops
     // draws everywhere else: device state untouched, so the next draw behaves normally.
     if (g_dropStride && vtxStride == (UINT)g_dropStride) return D3D_OK;
+    HRESULT pauseHeadHr = D3D_OK;
     if (PauseHeadRedirectDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount, idxData,
-                                           idxFormat, vtxData, vtxStride))
-        return D3D_OK;
+                                           idxFormat, vtxData, vtxStride, &pauseHeadHr))
+        return pauseHeadHr;
     if (hudArmed && g_hudRemap && !quad)
         return HudStereoPair(dev, primCount, vtxStride, [&] {
             return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
@@ -25377,11 +25379,12 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             if (InterlockedCompareExchange(&g_vrMenuClass, 0, 0) == 3) {
                 const PauseGfxDispatchCounters pg = g_pauseGfxDispatch;
                 Log("    PauseGfx dispatch (class=3, 1s): hook DIP/DIP/DIPUP/IDIPUP=%ld/%ld/%ld/%ld hudStereo=%ld"
-                    " elig=%ld poolOk=%ld poolFail=%ld poolFallback=%ld flashSeen=%ld flashScene=%ld provider=%ld",
+                    " elig=%ld poolOk=%ld poolFail=%ld poolFallback=%ld stateFail=%ld flashSeen=%ld flashScene=%ld provider=%ld",
                     Rd(pg.hookDrawPrim), Rd(pg.hookDrawIndexedPrim), Rd(pg.hookDrawPrimUP),
                     Rd(pg.hookDrawIndexedPrimUP), Rd(pg.hudStereoEnter), Rd(pg.redirectEligible),
                     Rd(pg.redirectPooledOk), Rd(pg.redirectPooledFail), Rd(pg.redirectPoolFallback),
-                    Rd(pg.flashSignatureSeen), Rd(pg.flashSceneCommitted), Rd(pg.providerPauseProvided));
+                    Rd(pg.redirectStateFail), Rd(pg.flashSignatureSeen), Rd(pg.flashSceneCommitted),
+                    Rd(pg.providerPauseProvided));
                 PauseGfxDispatchResetWindow();
             }
             {

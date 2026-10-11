@@ -44,6 +44,9 @@ enum class BindStep : int {
     SetRenderTargetFailed,
     SetViewportFailed,
     ClearFailed,
+    SetDepthFailed,
+    SetScissorFailed,
+    SetConstantFailed,
 };
 
 struct RedirectPlan {
@@ -67,6 +70,9 @@ inline bool MustRestoreAfterBindFailure(BindStep step) {
         case BindStep::SetRenderTargetFailed:
         case BindStep::SetViewportFailed:
         case BindStep::ClearFailed:
+        case BindStep::SetDepthFailed:
+        case BindStep::SetScissorFailed:
+        case BindStep::SetConstantFailed:
             return true;
         default:
             return false;

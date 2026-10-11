@@ -71,7 +71,12 @@ inline bool FlashIdentityMatchSlot(int slot, LONG ps, LONG vs, LONG decl, bool a
     return gotPs == ps && gotVs == vs && gotDecl == decl;
 }
 
-// allowLearn: true only when PauseHeadRedirectContextActive — never learn from main menu / gameplay.
+// Every non-learning gate must already be true. Callers pass false until structural match,
+// FlashMatrixShape, the pause clip gate, and redirect context have all passed.
+inline bool FlashLearnAllowed(bool structural, bool matrixShape, bool clipCentered, bool redirectContext) {
+    return structural && matrixShape && clipCentered && redirectContext;
+}
+
 inline bool FlashIdentityMatchesOrLearn(IDirect3DDevice9* dev, UINT stride, bool allowLearn) {
     LONG ps = 0, vs = 0, decl = 0;
     if (!ReadFlashShaders(dev, ps, vs, decl)) return false;
