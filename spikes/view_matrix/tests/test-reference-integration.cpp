@@ -362,6 +362,13 @@ void natural_arm_adapter_invariants() {
     assert(armnatural::Build(false, identity, left));
     assert(armnatural::Build(true, identity, right));
     assert(left.solution.targetError < .01f && right.solution.targetError < .01f);
+
+    // Bend must come from the authored shoulder/elbow/wrist plane, not the
+    // historical world-Z fallback.  This intentionally asymmetric chain has
+    // a +Y bend normal, making a mistaken fallback unambiguous.
+    armik::V bend;
+    assert(armnatural::PreferredBend({0,0,0}, {0.2f,1.0f,0}, {1,0,0}, bend));
+    assert(close(bend.x, 0.0f) && close(bend.y, 1.0f) && close(bend.z, 0.0f));
     float original[15][3][4]{};
     float changed[15][3][4]{};
     for (int s=0;s<15;++s) for (int r=0;r<3;++r) {

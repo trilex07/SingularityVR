@@ -31,6 +31,15 @@ inline V TransformPoint(const V p, const float m[4][4]) {
     };
 }
 
+// Seed a new two-bone solve from the authored bend plane.  The reach axis is
+// shoulder->wrist; using shoulder->elbow here would project the vector against
+// itself and always select a world-space fallback.
+inline bool PreferredBend(const V shoulder, const V elbow, const V wrist, V& out) {
+    V reach;
+    if (!armik::Unit(wrist - shoulder, reach)) return false;
+    return armik::Unit((elbow - shoulder) - reach * armik::Dot(elbow - shoulder, reach), out);
+}
+
 // Build deltas against the exported reference pose.  meshDelta is the already
 // established local->controller transform used by the existing hand path, so
 // this keeps the coordinate convention identical to the weapon and fingers.
@@ -45,8 +54,10 @@ inline bool Build(bool right, const float meshDelta[4][4], armbind::Deltas& out)
     const float upper = armik::Length(ep - sp), fore = armik::Length(wp - ep);
     if (!(upper > 1e-3f && fore > 1e-3f)) return false;
 
-    V line; if (!armik::Unit(ep-sp, line)) return false;
-    V bend; if (!armik::Unit((ep-sp) - line*armik::Dot(ep-sp,line), bend)) bend = {0,0,1};
+    // A degenerate bind chain may still use the stable solver fallback, but
+    // ordinary TMD arms retain their own authored elbow side.
+    V bend;
+    if (!PreferredBend(sp, ep, wp, bend)) bend = {0,0,1};
     armik::State state{};
     armik::Solution solved;
     const V target = TransformPoint(wp, meshDelta);
