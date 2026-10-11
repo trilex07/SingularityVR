@@ -1,5 +1,4 @@
 #pragma once
-#include "pause_menu_capture.h"
 // Included after the D3D state/overlay helpers. No per-frame allocation or scan.
 #include "menu_draw_trace.h"
 #include "prompt_roles.h"
@@ -345,58 +344,6 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
         if(known || !retained) texture->Release(); // retained entries own the GetContainer reference
         g_vrMenuTextureFrame=g_vrMenuFrame+1;
     }
-    surface->Release();
-}
-void CapturePauseDiegeticTarget(IDirect3DDevice9* dev) {
-    if(Rd(g_vrMenuClass)!=3)return;
-    SyncVrMenuCaptureState();
-    const auto token=VrMenuStateToken();
-    if(g_vrCaptureOwner.CanProvide(token))return;
-    if(!Rd(g_vrUiEnabled)||!Rd(g_vrUiMenu)||!Rd(g_vrUiNativeReady)||g_boundShaderLayout.shadow)return;
-    IDirect3DSurface9* surface=nullptr;
-    if(FAILED(dev->GetRenderTarget(0,&surface))||!surface)return;
-    bool backbuffer=false;
-    IDirect3DSurface9* back=nullptr;
-    if(SUCCEEDED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))&&back){
-        backbuffer=(surface==back);
-        back->Release();
-    }
-    D3DSURFACE_DESC desc{};
-    const bool got=SUCCEEDED(surface->GetDesc(&desc));
-    pausecapture::Offer offer;
-    offer.menuClass=3;
-    offer.backbuffer=backbuffer;
-    offer.colour=got && (desc.Format==D3DFMT_A8R8G8B8 || desc.Format==D3DFMT_X8R8G8B8);
-    offer.width=got?(int)desc.Width:0;
-    offer.height=got?(int)desc.Height:0;
-    offer.surface=(uintptr_t)surface;
-    offer.token=token;
-    if(pausecapture::Decide(offer,g_vrCaptureOwner)!=pausecapture::Decision::Accept){
-        surface->Release();
-        return;
-    }
-    IDirect3DTexture9* texture=nullptr;
-    if(FAILED(surface->GetContainer(__uuidof(IDirect3DTexture9),(void**)&texture))||!texture){
-        surface->Release();
-        return;
-    }
-    bool known=false;
-    for(unsigned i=0;i<g_vrMenuSourceCount;++i) if(g_vrMenuSources[i]==texture){known=true;break;}
-    const bool retained=!known && g_vrMenuSourceCount<8;
-    if(!known && !retained){texture->Release();surface->Release();return;}
-    if(retained){
-        g_vrMenuSources[g_vrMenuSourceCount++]=texture;
-        InterlockedIncrement(&g_vrMenuCaptured);
-    }
-    if(g_vrMenuTexture)g_vrMenuTexture->Release();
-    texture->AddRef();
-    g_vrMenuTexture=texture;
-    g_vrMenuSurface=(uintptr_t)surface;
-    g_vrMenuTextureScore=0;
-    g_vrMenuTextureFrame=g_vrMenuFrame+1;
-    g_vrCaptureOwner.Capture(token,(uintptr_t)surface);
-    Log("pause menu sink: %ux%u surface=%p token=%llu",desc.Width,desc.Height,(void*)surface,token);
-    if(!retained)texture->Release();
     surface->Release();
 }
 void ReleaseVrMenuResources(){

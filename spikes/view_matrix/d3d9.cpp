@@ -5668,7 +5668,6 @@ volatile LONG g_frameSpikeReport=0;
 void UpdateVrUiPointer(float rightTrigger,bool available);
 bool VrPanelHitNormalized(LONG u, LONG v, int* rowIndex);
 void CaptureVrMenuTarget(IDirect3DDevice9* dev);
-void CapturePauseDiegeticTarget(IDirect3DDevice9* dev);
 void DrawVrMenuPointer(IDirect3DDevice9* dev);
 void ReleaseVrMenuResources();
 void ReleaseFpCasterCache();
@@ -17561,11 +17560,9 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         static LONG saidMono = 0;
         if (InterlockedCompareExchange(&saidMono, 1, 0) == 0)
             Log("menu mono: class=%ld one draw into the diegetic target", menuClassNow);
-        // Class 3 only. The pause movie's target is scene-sized, so the
-        // SetRenderTarget gate never registers a replacement after the focus
-        // token drops the previous texture. Class 2 keeps its 1280x720 path.
-        if (menuClassNow == 3)
-            CapturePauseDiegeticTarget(dev);
+        // No pause capture here. The non-scene guard above already returned,
+        // so this target is scene-classified. The saved class-3 trace only
+        // contains 5264x2684 scene surfaces, which is not pause-movie identity.
         dev->SetVertexShaderConstantF(5, c, 4);
         dev->SetScissorRect(&oldRect);
         dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);

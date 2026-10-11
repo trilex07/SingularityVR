@@ -2,16 +2,17 @@
 #include "menu_capture_owner.h"
 #include <cstdint>
 
-// Class 3 (RvUIGFxMovie_Pause) renders into a scene-sized private colour
-// target. Hook_SetRenderTarget only calls CaptureVrMenuTarget when the target
-// is not scene-sized, so the focus-token change releases the previous texture
-// and nothing replaces it. This decision is the class-3 exception.
+// Pause registration gate.
 //
-// Class 2 is Ignore: the 1280x720 main-menu provider is unchanged.
-// A hold whose token does not match the offer is Reject, so a texture captured
-// for an earlier movie cannot be provided after the token changes.
-// Keep means this pause generation already owns a surface; a later target must
-// not replace it.
+// HudStereoPair reaches its class-3 draw only after the non-scene guard has
+// already returned, so the current target is scene-classified. The saved
+// headset trace for RvUIGFxMovie_Pause (frames 20-27 of that focus token)
+// contains only 5264x2684 scene targets. The private GFx texture that the
+// main menu registers is 1280x720 and is not scene-classified, and it does
+// not appear in the pause sample. Size, colour format and class-3 focus do
+// not identify a pause movie. identifiedPauseMovie must be set by a caller
+// that has already proved the surface is that movie. Nothing in the runtime
+// has that proof, so the live capture path is not registered.
 namespace pausecapture {
 
 enum class Decision {
@@ -25,6 +26,8 @@ struct Offer {
     int menuClass = 0;
     bool backbuffer = false;
     bool colour = false;
+    bool sceneClassified = false;
+    bool identifiedPauseMovie = false;
     int width = 0;
     int height = 0;
     std::uintptr_t surface = 0;
@@ -36,12 +39,14 @@ inline Decision Decide(const Offer& offer, const menucapture::Owner& owner) {
     if ((offer.token & 0xffffffffu) != 3u) return Decision::Reject;
     if (owner.state != offer.token) return Decision::Reject;
     if (owner.CanProvide(offer.token)) return Decision::Keep;
-    if (offer.backbuffer || !offer.colour || offer.surface == 0) return Decision::Reject;
-    if (offer.width < 640 || offer.height < 360) return Decision::Reject;
+    // The framebuffer, its SBS image, and any other scene-sized target.
+    if (offer.sceneClassified || offer.backbuffer) return Decision::Reject;
+    // Class, dimensions and format are not texture identity.
+    if (!offer.identifiedPauseMovie || !offer.colour || offer.surface == 0) return Decision::Reject;
+    if (offer.width < 640 || offer.height < 360 || offer.width > 2048 || offer.height > 1536)
+        return Decision::Reject;
     const float aspect = (float)offer.width / (float)offer.height;
-    // 1280x720 is 1.78. The live scene-sized pause target (5264x2684) is 1.96.
-    // The class-2 gate stops at 2048x1536, which is why that target never registered.
-    if (aspect <= 1.20f || aspect >= 2.40f) return Decision::Reject;
+    if (aspect <= 1.20f || aspect >= 2.20f) return Decision::Reject;
     return Decision::Accept;
 }
 
