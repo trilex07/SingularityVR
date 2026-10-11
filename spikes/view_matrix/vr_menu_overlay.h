@@ -1,8 +1,62 @@
 #pragma once
 // Included after the D3D state/overlay helpers. No per-frame allocation or scan.
 #include "menu_draw_trace.h"
+#include "pause_menu_head_overlay.h"
 #include "prompt_roles.h"
 #include "prompt_atlas_generated.h"
+extern volatile LONG g_pauseHeadMenu;
+static IDirect3DTexture9* g_pauseHeadPoolTex=nullptr;
+static IDirect3DSurface9* g_pauseHeadPoolSurf=nullptr;
+static unsigned g_pauseHeadPoolClearFrame=~0u;
+inline bool PauseHeadOverlayActive() {
+    return pausehead::RedirectOrthoDraws((int)Rd(g_vrMenuClass), pausehead::IniEnabled((int)Rd(g_pauseHeadMenu)),
+                                         VrModeOn(), Rd(g_vrUiMenu) != 0, Rd(g_vrMenuOverlay) != 0,
+                                         Rd(g_panelOpen) != 0);
+}
+static bool EnsurePauseHeadPool(IDirect3DDevice9* dev) {
+    if (g_pauseHeadPoolTex && g_pauseHeadPoolSurf) return true;
+    IDirect3DTexture9* tex=nullptr;
+    const HRESULT hr=g_origCreateTexture
+        ? g_origCreateTexture(dev,pausehead::kPoolWidth,pausehead::kPoolHeight,1,D3DUSAGE_RENDERTARGET,
+                              D3DFMT_A8R8G8B8,D3DPOOL_DEFAULT,&tex,nullptr)
+        : dev->CreateTexture(pausehead::kPoolWidth,pausehead::kPoolHeight,1,D3DUSAGE_RENDERTARGET,
+                             D3DFMT_A8R8G8B8,D3DPOOL_DEFAULT,&tex,nullptr);
+    if (FAILED(hr) || !tex) return false;
+    IDirect3DSurface9* surf=nullptr;
+    if (FAILED(tex->GetSurfaceLevel(0,&surf))) { tex->Release(); return false; }
+    g_pauseHeadPoolTex=tex; g_pauseHeadPoolSurf=surf;
+    Log("PauseHeadMenu: pooled GFx target %ux%u ready",pausehead::kPoolWidth,pausehead::kPoolHeight);
+    return true;
+}
+template<typename DrawFn>
+static HRESULT PauseHeadOverlayHudDraw(IDirect3DDevice9* dev,DrawFn draw) {
+    if (!EnsurePauseHeadPool(dev)) return draw();
+    IDirect3DSurface9* oldRt=nullptr;
+    dev->GetRenderTarget(0,&oldRt);
+    D3DVIEWPORT9 oldVp{};
+    dev->GetViewport(&oldVp);
+    g_origSetRenderTarget(dev,0,g_pauseHeadPoolSurf);
+    D3DVIEWPORT9 vp{0,0,pausehead::kPoolWidth,pausehead::kPoolHeight,0,1};
+    dev->SetViewport(&vp);
+    if (g_pauseHeadPoolClearFrame!=g_vrMenuFrame) {
+        dev->Clear(0,nullptr,D3DCLEAR_TARGET,D3DCOLOR_ARGB(0,0,0,0),1.f,0);
+        g_pauseHeadPoolClearFrame=g_vrMenuFrame;
+    }
+    const HRESULT hr=draw();
+    CaptureVrMenuTarget(dev);
+    InterlockedIncrement(&g_vrCounters.pauseMenuRedirectDraws);
+    if (oldRt) {
+        g_origSetRenderTarget(dev,0,oldRt);
+        oldRt->Release();
+    }
+    dev->SetViewport(&oldVp);
+    return hr;
+}
+static void ReleasePauseHeadPool() {
+    if (g_pauseHeadPoolSurf) { g_pauseHeadPoolSurf->Release(); g_pauseHeadPoolSurf=nullptr; }
+    if (g_pauseHeadPoolTex) { g_pauseHeadPoolTex->Release(); g_pauseHeadPoolTex=nullptr; }
+    g_pauseHeadPoolClearFrame=~0u;
+}
 static uintptr_t g_vrMenuSurface=0;
 static unsigned g_vrMenuFrame=0,g_vrMenuTextureFrame=0;
 static uipointer::Hit g_vrUiHit;
@@ -327,6 +381,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
             InterlockedIncrement(&g_vrMenuCaptured);
             if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuCaptured);
             if(Rd(g_vrMenuClass)==2)InterlockedIncrement(&g_vrCounters.mainMenuCaptured);
+            if(Rd(g_vrMenuClass)==3)InterlockedIncrement(&g_vrCounters.pauseMenuCaptured);
             Log("VR menu sink: private GFx candidate %ux%u registered; all matching scene draws will be suppressed",desc.Width,desc.Height);
         }
         // Prefer the candidate whose aspect is closest to the native GFx canvas.  The source list
@@ -347,6 +402,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
 }
 void ReleaseVrMenuResources(){
     g_vrCaptureOwner.Invalidate(VrMenuStateToken());
+    ReleasePauseHeadPool();
     ReleaseFpCasterCache();
     if(g_vrMenuTexture){g_vrMenuTexture->Release();g_vrMenuTexture=nullptr;}
     for(unsigned i=0;i<g_vrMenuSourceCount;++i)if(g_vrMenuSources[i])g_vrMenuSources[i]->Release();
@@ -417,6 +473,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
             g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(VrMenuVtx));
             if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuProvided);
             if(Rd(g_vrMenuClass)==2)InterlockedIncrement(&g_vrCounters.mainMenuProvided);
+            if(Rd(g_vrMenuClass)==3)InterlockedIncrement(&g_vrCounters.pauseMenuProvided);
             if(g_origSetTexture)g_origSetTexture(dev,0,nullptr);
             else dev->SetTexture(0,nullptr);
             InterlockedExchange(&g_vrMenuProviderDrawing,0);
