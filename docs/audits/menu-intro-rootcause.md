@@ -145,23 +145,31 @@ If the two halves of the SBS backbuffer are identical, the two modes are visuall
 
 `HeadPlane` builds one plane centred at the midpoint of the two eyes, using the **symmetric** tangents `g_targetTanX` / `g_targetTanY` derived from the headset FOV (`d3d9.cpp` lines 19349–19351). `VrUiProjectEye` projects that centre through each eye's actual pose.
 
-For a head-relative plane at distance `D` and half-IPD `d`, the angular offset of the plane centre as seen from one eye is approximately `arctan(d / D)`.
-
-Example, IPD = 0.063 m → `d = 0.0315 m`, `D = 1.2 m`:
+For a head-relative plane at distance `D` and half-IPD `d`, the projection formula from `ui_pointer.h` `ProjectPoint` gives:
 
 ```
-θ ≈ atan(0.0315 / 1.2) ≈ 0.0262 rad ≈ 1.5°
+U = 0.5 + 0.5 * d / (D * tanHalfX)
+ndcShift = 2 * (U - 0.5) = d / (D * tanHalfX)
 ```
 
-The symmetric horizontal field is `2 * atan(g_targetTanX)`. For a 90° total horizontal FOV, `atan(g_targetTanX) ≈ 0.785 rad`, so the half-field width is `0.785 rad`. The screen-U offset is:
+where `tanHalfX` is the symmetric horizontal tangent (`g_targetTanX`) derived from the headset FOV.
 
-```
-ΔU ≈ θ / (2 * atan(g_targetTanX)) ≈ 0.0262 / 1.571 ≈ 0.0167
-```
+Example with the shipped menu distance `D = 0.95 m`, IPD = 0.063 m → `d = 0.0315 m`:
 
-`ndcShift = 2 * (U - 0.5)`, so for this example `ndcShift ≈ 0.033`, which is **inside** the ±0.04 clamp. At `D = 0.8 m` with the same IPD, `ndcShift ≈ 0.056`, which would hit the clamp. Closer distances or larger IPDs could bind.
+- 90° horizontal FOV: `tanHalfX = tan(45°) = 1.0`
+  - `ndcShift = 0.0315 / (0.95 * 1.0) ≈ 0.033`
+- 80° horizontal FOV: `tanHalfX = tan(40°) ≈ 0.839`
+  - `ndcShift = 0.0315 / (0.95 * 0.839) ≈ 0.0395`
+- 70° horizontal FOV: `tanHalfX = tan(35°) ≈ 0.700`
+  - `ndcShift = 0.0315 / (0.95 * 0.700) ≈ 0.047`
 
-**Status:** the clamp is a bounded correction, not an unbounded error. Whether it causes visible misalignment depends on the user's configured `VrMenuDistanceMm`, actual IPD, and headset FOV. No measured misalignment values exist in `HISTORY.md` or the source, so this is a **hypothesis to test**, not a confirmed defect.
+With a wider IPD of 0.070 m (`d = 0.035 m`) at the same 0.95 m distance:
+
+- 90° FOV: `ndcShift ≈ 0.037`
+- 80° FOV: `ndcShift ≈ 0.044` (> 0.04 clamp)
+- 70° FOV: `ndcShift ≈ 0.053` (> 0.04 clamp)
+
+**Status:** the ±0.04 NDC clamp is within reach of common configurations at the shipped 950 mm distance, but whether it causes visible misalignment depends on the user's actual IPD and headset FOV. No measured misalignment values exist in `HISTORY.md` or the source, so this is a **hypothesis to test**, not a confirmed defect.
 
 ### 3.5 `VideoStereo=0` does not disable the rewrite while VR mode is active
 
@@ -265,7 +273,7 @@ static bool VrXrSubmitMenuFlat() {
 **Expected effects:**
 
 - **Classes 2–4 without provider active:** the diegetic scene is submitted in stereo (each eye gets its own half). This is the desired outcome for the reported duplication/flattening symptom.
-- **Classes 2–4 with provider active:** the provider draws the same flat quad into both halves of the SBS buffer. With `menuFlat=false`, the submission uses one shared swapchain with half-rects per eye. Because both halves are identical, the visual result is the same; only the copy path differs.
+- **Classes 2–4 with provider active:** `DrawVrMenuPointer` projects the same captured texture onto the head-relative plane **per eye** using `VrUiProjectEye`. Because each eye has a different position, the projected quad vertices differ slightly, so the two SBS halves are **not guaranteed to be pixel-identical**. With `menuFlat=false`, the submission uses one shared swapchain with half-rects per eye, so each eye receives its own projected view. With `menuFlat=true`, both eyes receive the same cropped half, discarding the provider's per-eye parallax. The correct behavior depends on whether the provider is intended to be a flat screen or a stereo quad.
 - **Class 1:** remains `menuFlat=true`, so the boot/title screen continues to be copied from one half to both eyes.
 
 **Possible regressions:**
@@ -302,12 +310,12 @@ Testing can use the Steam XR simulator (`docs/STEAM_XRSIM_RUNNER_PLAYBOOK.md`) w
    - main menu (class 2),
    - pause menu (class 3),
    - a use-station / weapon-locker (class 4).
-3. Capture:
+3. Capture per-frame state:
    - `VR UI focus: ... class=... menu=...`
    - `SceneMode: ... -> ... menu=...`
-   - `menu: XR bridge submits one identical source crop to both eyes ...`
+   - The static log `"menu: XR bridge submits one identical source crop to both eyes"` is **one-shot** (`reportedMenuBridge` at `d3d9.cpp:10888`) and cannot be used to validate individual classes.
 
-**Acceptance for the experiment:** the bridge log appears for class 1; it must **not** appear for classes 2–4 (`cropEyes=false`).
+**Acceptance for the experiment:** add bounded per-class counters (e.g., `menuFlatFrames[class]`) and verify that `cropEyes` is set for class 1 and cleared for classes 2–4 across a representative set of frames. Use frame capture or log sampling, not the one-shot bridge message.
 
 ### 7.3 Gate 3: simulator / runtime — intro video
 
