@@ -17565,8 +17565,12 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
             Log("menu mono: class=%ld one draw into the diegetic target", menuClassNow);
         dev->SetVertexShaderConstantF(5, c, 4);
         HRESULT hr = S_OK;
-        if (menuClassNow == 3 && PauseHeadGfxBatchEligible(menuLayout)) {
-            hr = PauseHeadOverlayHudDraw(dev, draw, (unsigned)Rd(g_vfxFrame));
+        if (menuClassNow == 3) {
+            const Reg4* rr = reinterpret_cast<const Reg4*>(c);
+            if (PauseHeadGfxBatchEligible(menuLayout, rr[3].x, rr[3].y))
+                hr = PauseHeadOverlayHudDraw(dev, draw, (unsigned)Rd(g_vfxFrame));
+            else
+                hr = draw();
         } else {
             hr = draw();
         }

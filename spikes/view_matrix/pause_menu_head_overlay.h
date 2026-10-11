@@ -1,11 +1,14 @@
 #pragma once
-// Pause GFx (class 3) ortho batches that reach the diegetic menu-mono path can be redirected
-// into a pooled GFx-sized RT when PauseHeadMenu=1. Off by default until headset acceptance.
+// Pause GFx (class 3) ortho batches on the diegetic menu-mono path can redirect into a
+// pooled 1280x720 RT when PauseHeadMenu=1. Default off until headset acceptance.
+#include <cmath>
 #include <cstdint>
 
 namespace pausehead {
 constexpr unsigned kPoolWidth = 1280;
 constexpr unsigned kPoolHeight = 720;
+// Interactive pause GFx sits in the panel; corner/status HUD uses clip positions near the edges.
+constexpr float kPauseGfxClipEdge = 0.88f;
 
 inline bool IniEnabled(int iniValue) { return iniValue != 0; }
 
@@ -15,12 +18,18 @@ inline bool RedirectOrthoDraws(int menuClass, bool iniEnabled, bool vrMode, bool
     return menuClass == 3;
 }
 
-// Same eligibility as the legacy class-2/3 menu-mono branch, plus native GFx focus and pause.
+inline bool GfxOrthoClipLooksLikePauseMenu(float clipX, float clipY) {
+    return std::fabs(clipX) <= kPauseGfxClipEdge && std::fabs(clipY) <= kPauseGfxClipEdge;
+}
+
+// Legacy class-2/3 menu-mono branch, native GFx focus, paused, plus centered clip (not corner HUD).
 inline bool GfxPauseMenuMonoBatch(int menuClass, bool menuLayout, bool nativeReady, bool gamePaused,
-                                  bool rtIsScene, bool rtIsBackbuffer, bool iniEnabled, bool vrMode,
-                                  bool menuOverlay, bool panelOpen) {
+                                  bool noteOpen, bool rtIsScene, bool rtIsBackbuffer, float clipX,
+                                  float clipY, bool iniEnabled, bool vrMode, bool menuOverlay,
+                                  bool panelOpen) {
     if (menuClass != 3 || rtIsBackbuffer || !rtIsScene) return false;
-    if (!menuLayout || !nativeReady || !gamePaused) return false;
+    if (!menuLayout || !nativeReady || !gamePaused || noteOpen) return false;
+    if (!GfxOrthoClipLooksLikePauseMenu(clipX, clipY)) return false;
     return RedirectOrthoDraws(menuClass, iniEnabled, vrMode, menuLayout, menuOverlay, panelOpen);
 }
 
@@ -31,8 +40,7 @@ inline bool ShouldClearPool(unsigned clearedForFrame, unsigned frameKey) {
 enum class BindStep : int {
     Ok = 0,
     PoolUnavailable,
-    GetRenderTargetFailed,
-    GetViewportFailed,
+    SaveStateFailed,
     SetRenderTargetFailed,
     SetViewportFailed,
     ClearFailed,
@@ -53,10 +61,9 @@ inline RedirectPlan PlanGfxRedirect(unsigned clearedForFrame, unsigned frameKey,
     return p;
 }
 
-// After a failed bind/clear, caller must not draw to the pool and should restore D3D9 state.
 inline bool MustRestoreAfterBindFailure(BindStep step) {
     switch (step) {
-        case BindStep::GetViewportFailed:
+        case BindStep::SaveStateFailed:
         case BindStep::SetRenderTargetFailed:
         case BindStep::SetViewportFailed:
         case BindStep::ClearFailed:
@@ -68,5 +75,28 @@ inline bool MustRestoreAfterBindFailure(BindStep step) {
 
 inline bool CaptureAfterDrawAllowed(BindStep bindStep, bool drawSucceeded) {
     return bindStep == BindStep::Ok && drawSucceeded;
+}
+
+// Mirrors D3D9 fields saved around the pooled pass (L1 policy tests only).
+struct DeviceStateFields {
+    bool haveRt = false;
+    bool haveVp = false;
+    bool haveScissor = false;
+    bool haveDepth = false;
+    bool poolBound = false;
+};
+
+inline DeviceStateFields PlanDeviceRestore(BindStep step, bool savedState) {
+    DeviceStateFields f{};
+    f.haveRt = savedState;
+    f.haveVp = savedState;
+    f.haveScissor = savedState;
+    f.haveDepth = savedState;
+    f.poolBound = step == BindStep::Ok;
+    return f;
+}
+
+inline bool MustRestoreDeviceState(const DeviceStateFields& f) {
+    return f.haveRt || f.haveVp || f.haveScissor || f.haveDepth || f.poolBound;
 }
 }  // namespace pausehead
