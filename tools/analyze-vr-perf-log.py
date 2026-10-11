@@ -234,29 +234,17 @@ def classify_spike(s: Spike) -> List[str]:
     return tags
 
 
-def spikes_near_menu_traces(spikes: List[Spike], traces: List[MenuTraceEvent], window_lines: int = 200) -> int:
-    """Count spikes whose line number is within window_lines of any MenuDrawTrace flush."""
-    if not spikes or not traces:
-        return 0
-    trace_lines = sorted(t.line for t in traces)
-    count = 0
-    for s in spikes:
-        # binary search for nearest trace line
-        lo, hi = 0, len(trace_lines)
-        while lo < hi:
-            mid = (lo + hi) // 2
-            if trace_lines[mid] < s.line:
-                lo = mid + 1
-            else:
-                hi = mid
-        nearest = None
-        if lo < len(trace_lines):
-            nearest = trace_lines[lo]
-        if lo > 0 and (nearest is None or abs(trace_lines[lo - 1] - s.line) < abs(nearest - s.line)):
-            nearest = trace_lines[lo - 1]
-        if nearest is not None and abs(nearest - s.line) <= window_lines:
-            count += 1
-    return count
+def estimate_menu_trace_queries(traces: List[MenuTraceEvent], draws_per_frame: int = 1000) -> int:
+    """Bounded estimate of D3D9 state queries issued during trace sampling windows.
+
+    MenuDrawTraceRecord issues roughly 20 D3D9 Get*/query calls per sampled draw
+    during its 8-frame window (frames 20-27 after a menu state change).  This is a
+    static upper-bound estimate, not a runtime measurement.
+    """
+    queries_per_draw = 20
+    frames_per_window = 8
+    total_windows = len(traces)
+    return total_windows * frames_per_window * draws_per_frame * queries_per_draw
 
 
 def render_report(r: PerfReport) -> str:
@@ -346,16 +334,18 @@ def render_report(r: PerfReport) -> str:
     if r.menu_traces:
         total_groups = sum(t.groups for t in r.menu_traces)
         total_dropped = sum(t.dropped for t in r.menu_traces)
+        estimated_queries = estimate_menu_trace_queries(r.menu_traces)
         lines.append("## Menu draw trace activity")
         lines.append("")
         lines.append(f"- Trace flush events: {len(r.menu_traces)}")
         lines.append(f"- Total trace groups emitted: {total_groups}")
         lines.append(f"- Total dropped groups: {total_dropped}")
+        lines.append(f"- Bounded D3D9 query estimate (@1000 draws/frame, 8-frame window, ~20 queries/draw): {estimated_queries:,}")
         if r.spikes:
-            near = spikes_near_menu_traces(r.spikes, r.menu_traces)
-            lines.append(f"- Spikes within 200 lines of a trace flush: {near} of {len(r.spikes)}")
-            if near:
-                lines.append("  - *If these coincide temporally, the 8-frame trace sampling window may be contributing to transition hitches.*")
+            lines.append(f"- Spike count in log: {len(r.spikes)}")
+            lines.append("  - *Correlation between spikes and trace windows is NOT available from line distance alone.*")
+            lines.append("    FRAME SPIKE lines and MenuDrawTrace flushes carry no shared frame ID or timestamp,")
+            lines.append("    and flushes are emitted after the 8-frame sampling window ends.")
         lines.append("")
 
     if r.sleep_calls:
@@ -375,9 +365,7 @@ def render_report(r: PerfReport) -> str:
     lines.append("  different from jump/combat hitches and should not be treated as the same root cause.")
     lines.append("- **Jump/combat hitches** are identified by `FRAME SPIKE` lines carrying")
     lines.append("  `jump-recent`, `melee-recent`, `melee-window` or `weapon-swap` tags.")
-    lines.append("- **Menu transition hitches** may correlate with `MenuDrawTrace` flush lines; the")
-    lines.append("  trace samples frames 20-27 after every menu state change and issues many D3D")
-    lines.append("  queries per draw during that window.")
+
     lines.append("- Tags are heuristic: `jump-recent` / `melee-recent` use the 500 ms age window")
     lines.append("  from the spike reporter.")
     lines.append("")

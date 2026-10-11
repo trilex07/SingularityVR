@@ -13,9 +13,9 @@ This audit uses the existing bounded hot-path sampler and one-shot spike reporte
 
 **Key finding:** the largest *measured* mod-side stalls are **splash/transition stalls** in `Hook_Present` (`FindPlayerPawn` GObjects walks and camera register scans). These are structurally different from the **jump/combat hitches** reported by the `FRAME SPIKE` reporter, which carry `meleeAge`/`jumpAge` tags and occur during gameplay.
 
-Per-draw hook overhead is smaller on average, but one path has a clear measurable cost: `MenuDrawTraceRecord` samples frames 20–27 after every menu state change and issues many D3D9 `Get*` queries per draw during that window.
+The most expensive per-draw path is `MenuDrawTraceRecord`, which issues roughly **20 D3D9 state queries per draw** during an 8-frame sampling window after every menu state change. With ~1,000 draws/frame, that is a bounded **~160,000 D3D9 queries per menu transition**.
 
-The **smallest justified optimization** is to add a cheap early-out guard that skips only `SuppressCapturedVrMenuDraw` when no menu is focused and no capture is active, while preserving `MenuDrawTraceRecord` for MAIN's pause-menu investigation.
+The **primary optimization** (safe only after MAIN finishes pause-menu diagnosis) is to make `MenuDrawTrace` **opt-in/default-off**. The **secondary optimization** is a carefully split menu-suppression early-out that preserves `SyncVrMenuCaptureState()` for capture cleanup on menu close and focus transitions.
 
 ---
 
@@ -36,7 +36,8 @@ The **smallest justified optimization** is to add a cheap early-out guard that s
 - `tools/analyze-vr-perf-log.py` — parses `view_matrix.log` and ranks hot-path families, lists frame spikes, and counts GObjects/register-scan events.
 - `tools/scan-hotpath-patterns.py` — static read-only scan of `d3d9.cpp` that flags D3D `Get*` queries, `Readable()` / GObjects walks, `Log()` calls, allocations and interlocked operations inside hook functions.
 - `spikes/view_matrix/tests/test-hotpath-sampler.cpp` — deterministic unit tests for the sampler math (sampling stride, counter aggregation, window boundaries, scaling).
-- `spikes/view_matrix/tests/test-menu-suppress-policy.cpp` — policy helper for the proposed menu-suppression early-out, verified against the state combinations in `native_ui_input.h`.
+- `spikes/view_matrix/tests/test-menu-suppress-policy.cpp` — policy helper for the proposed menu-suppression early-out, including menu-close and stale-capture transition cases.
+- `spikes/view_matrix/tests/test-menu-trace-policy.cpp` — regression tests for the opt-in/default-off MenuDrawTrace policy.
 
 No production C++ file was modified.
 
@@ -129,25 +130,26 @@ This preserves the current fallback behavior while eliminating the periodic fail
 
 These are captured by the one-shot `FRAME SPIKE` reporter and tagged with `meleeAge`, `jumpAge`, `weaponSwapped` and `nocentre`.
 
-#### B.1 #1 — Menu draw trace sampling window (mod-hook overhead during menu transitions)
+#### B.1 #1 — Menu draw trace sampling window (the actual expensive path)
 
 **Evidence:**
 - `menu_draw_trace.h:55-91`: `MenuDrawTraceRecord` runs on every draw hook when `g_menuDrawTrace` is set (default **1**).
-- During its 8-frame sampling window (frames 20–27 after a menu state change) it issues **~20 D3D9 queries per draw**: `GetRenderTarget`, `GetDepthStencilSurface`, `GetVertexShader`, `GetPixelShader`, `GetVertexDeclaration`, `GetTexture`, `GetViewport`, `GetScissorRect`, `GetStreamSource`, `GetIndices`, `GetLevelDesc`, `GetSurfaceLevel`, seven `GetRenderState` calls, and `GetVertexShaderConstantF`.
-- With ~1,000 draws/frame that is **~20,000 extra D3D queries per frame** for 8 frames after every pause/main-menu/station open or close.
+- During its 8-frame sampling window (frames 20–27 after a menu state change) it issues **~20 D3D9 state queries per draw**: `GetRenderTarget`, `GetDepthStencilSurface`, `GetVertexShader`, `GetPixelShader`, `GetVertexDeclaration`, `GetTexture`, `GetViewport`, `GetScissorRect`, `GetStreamSource`, `GetIndices`, `GetLevelDesc`, `GetSurfaceLevel`, seven `GetRenderState` calls, and `GetVertexShaderConstantF`.
 - Log marker: `MenuDrawTrace state=... class=... groups=... dropped=...`.
 
-**Why it hitches:** D3D9 `Get*` calls are not free; they serialize state and can stall the command buffer. A pause-menu open/close happens exactly when the user is sensitive to a hitch.
+**Bounded overhead estimate:**
 
-**Correlated timing evidence required:** use `tools/analyze-vr-perf-log.py`; it reports how many `FRAME SPIKE` lines fall within 200 log lines of a `MenuDrawTrace` flush. If the number is high, the trace window is a measurable contributor to transition hitches.
+```
+per transition ≈ 8 frames × 1,000 draws/frame × 20 queries/draw ≈ 160,000 D3D9 queries
+```
 
-**Removable without changing behavior:** the trace is required by MAIN for pause-menu investigation, so it must not be disabled. Two measured-preserving options exist:
-- **Shrink the window** from frames 20–27 to frames 20–23 if MAIN only needs the first few frames after transition.
-- **Throttle repeat triggers**: if the same menu state token flushes repeatedly within a short interval, skip alternate windows until MAIN's investigation is complete.
+This is a **static upper bound**, not a measured runtime value. The actual cost depends on how many draws fall inside the window and how the D3D9 runtime caches state. It is, however, the most expensive per-draw diagnostic path in the mod.
 
-Both preserve the diagnostic data while reducing the worst-case query load.
+**Why it is the priority:** D3D9 `Get*` calls serialize state and can stall the command buffer. A pause/main-menu/station open or close happens exactly when the user is sensitive to a hitch.
 
-#### B.2 #2 — Per-draw menu suppression checks (mod-hook overhead)
+**Causation cannot be claimed from log line distance:** `FRAME SPIKE` lines and `MenuDrawTrace` flush lines carry no shared frame ID or timestamp, and flushes are emitted **after** the 8-frame sampling window ends. The analyzer therefore reports counts separately and explicitly marks correlation as unavailable.
+
+#### B.2 #2 — Per-draw menu suppression checks (mod-hook overhead, lower priority)
 
 **Evidence:**
 - `SuppressCapturedVrMenuDraw` is called from the four draw hooks.
@@ -156,7 +158,14 @@ Both preserve the diagnostic data while reducing the worst-case query load.
 
 **Why it hitches:** each call is cheap, but with **1,000–1,500 draws/frame** the aggregate is non-zero. The risk spikes during menu transitions when `SyncVrMenuCaptureState` actually invalidates and releases textures.
 
-**Removable without changing behavior:** add a cheap guard that skips only `SuppressCapturedVrMenuDraw` when no menu is focused and no capture is active. `MenuDrawTraceRecord` must remain callable because `g_menuDrawTrace` defaults to 1 and MAIN needs the trace.
+**Safety caveat:** `SuppressCapturedVrMenuDraw` calls `SyncVrMenuCaptureState()` **before** its early return. Skipping the whole call delays token invalidation and captured-texture cleanup until the next `CaptureVrMenuTarget` attempt. This affects:
+- **Menu close:** the captured texture from the closed menu may persist for frames after the token changes.
+- **Focus transitions:** switching from pause to main menu changes the token; stale capture cleanup must happen promptly.
+- **Stale capture ownership:** `g_vrCaptureOwner.CanProvide(VrMenuStateToken())` returns false after invalidation; delaying `SyncVrMenuCaptureState` can keep the owner claiming it provides the old token.
+
+A safe implementation must therefore either (a) still call `SyncVrMenuCaptureState` on every draw and only skip the suppression logic, or (b) explicitly invalidate on the frame the token changes. Option (a) is the smaller change.
+
+**Removable without changing behavior:** add a cheap guard that skips only the body of `SuppressCapturedVrMenuDraw` after `SyncVrMenuCaptureState()` has run. `MenuDrawTraceRecord` must remain callable because `g_menuDrawTrace` defaults to 1 and MAIN needs the trace.
 
 ### 5.4 #4 — Foreground / shadow classification per draw (mod-hook overhead)
 
@@ -211,72 +220,39 @@ Both preserve the diagnostic data while reducing the worst-case query load.
 
 ---
 
-## 6. Proposed smallest justified optimization
+## 6. Proposed optimizations
 
-Implement a **menu-suppression early-out guard** that skips only `SuppressCapturedVrMenuDraw`, while leaving `MenuDrawTraceRecord` untouched. This is the best first optimization because:
+### 6.1 Primary — opt-in/default-off menu trace policy (suitable after MAIN finishes pause diagnosis)
 
-1. **Small code footprint** — one condition before the suppression call in four hook functions.
-2. **No behavior change** — `SuppressCapturedVrMenuDraw` already returns `false` in this state after `SyncVrMenuCaptureState()` and `MenuSourceBoundAny()`.
-3. **Preserves diagnostics** — `MenuDrawTraceRecord` remains on the hot path so MAIN's pause-menu investigation is unaffected.
-4. **Low risk** — does not touch GObjects walks, camera scans, shadow classification, or trace collection.
+Once MAIN's pause-menu investigation is complete, make `g_menuDrawTrace` **default to 0** and expose an opt-in toggle (e.g., INI key `MenuDrawTrace=1` or a panel row). This is the highest-impact change because it removes the ~160,000 D3D9 queries per menu transition entirely when diagnostics are not needed.
 
-### 6.1 Helper and test
+**Preservation of behavior:**
+- `MenuDrawTraceRecord` returns immediately when `g_menuDrawTrace == 0` (`menu_draw_trace.h:55`).
+- Capture cleanup, suppression, main menu, pause menu and all native UI rendering are unaffected; the trace is a pure diagnostic consumer.
+- The one-line return does not change any render state or skip any production draw path.
 
-A standalone helper is added in `spikes/view_matrix/tests/test-menu-suppress-policy.cpp`:
+**Regression test added:** `spikes/view_matrix/tests/test-menu-trace-policy.cpp` models the trace enable/disable gate and verifies that disabled traces produce zero recorded groups.
 
-```cpp
-inline bool ShouldSkipMenuSuppression(bool vrUiMenu, int menuClass,
-                                      bool captureCanProvide) {
-    return !vrUiMenu && menuClass == 0 && !captureCanProvide;
-}
-```
+### 6.2 Secondary — safe menu-suppression early-out (with SyncVrMenuCaptureState preserved)
 
-The test exercises all combinations:
-
-| `vrUiMenu` | `menuClass` | `captureCanProvide` | skip suppression? |
-|---|---|---|---|
-| false | 0 | false | **true** (gameplay default) |
-| false | 0 | true | false (provider still drawing) |
-| true | 0 | false | false (menu focused) |
-| false | 1 | false | false (class-1 boot menu) |
-
-### 6.2 Where the guard would go
-
-The guard would wrap only `SuppressCapturedVrMenuDraw` in:
-
-- `Hook_DrawPrim` (`d3d9.cpp:13107`)
-- `Hook_DrawPrimUP` (`d3d9.cpp:17918`)
-- `Hook_DrawIndexedPrim` (`d3d9.cpp:16464`)
-- `Hook_DrawIndexedPrimUP` (`d3d9.cpp:18055`)
-
-Before:
+After the trace policy, the next small win is to avoid the `MenuSourceBoundAny()` and suppression-body work during gameplay. Because `SyncVrMenuCaptureState()` must still run to keep capture ownership correct, the safe shape is to split the existing function rather than skip it entirely:
 
 ```cpp
-hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
-MenuDrawTraceRecord(dev, ...);
-if (SuppressCapturedVrMenuDraw()) return D3D_OK;
-```
+// Called from every draw hook, before SuppressCapturedVrMenuDraw.
+SyncVrMenuCaptureState();
 
-After:
-
-```cpp
-hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
-MenuDrawTraceRecord(dev, ...);
 if (!ShouldSkipMenuSuppression(Rd(g_vrUiMenu), Rd(g_vrMenuClass),
                                g_vrCaptureOwner.CanProvide(VrMenuStateToken()))) {
-    if (SuppressCapturedVrMenuDraw()) return D3D_OK;
+    if (SuppressCapturedVrMenuDrawBody()) return D3D_OK;
 }
 ```
 
-`MenuDrawTraceRecord` is **not** guarded, so its 8-frame sampling window and per-draw diagnostic state remain intact.
+Where `SuppressCapturedVrMenuDrawBody` is the current function minus the leading `SyncVrMenuCaptureState()` call. This preserves:
+- **Menu close / focus transitions:** token invalidation and texture release happen on the first draw after the token changes.
+- **Stale capture ownership:** `g_vrCaptureOwner` is updated immediately, so provider draws do not use stale sources.
+- **Main menu / pause / station UI:** suppression still fires whenever a menu is focused or a provider is active.
 
-### 6.3 Expected effect
-
-- During normal gameplay: avoids `SyncVrMenuCaptureState()`, `MenuSourceBoundAny()` and the `menu_classification` hot-path scope entry on ~1,000+ draws per frame.
-- During menus / provider activity: no change; the branch is not taken.
-- During transitions: briefly not skipped until the capture owner invalidates, which matches the existing behavior.
-
-This is a **few-line change with measurable per-draw savings** and no functional risk.
+The helper in `spikes/view_matrix/tests/test-menu-suppress-policy.cpp` is unchanged; it now documents that the predicate must be evaluated **after** `SyncVrMenuCaptureState` has run.
 
 ---
 
@@ -284,7 +260,7 @@ This is a **few-line change with measurable per-draw savings** and no functional
 
 ### L1 — deterministic / synthetic
 
-1. Run `test-hotpath-sampler.cpp`, `test-hotpath-sampler-scaling.cpp` and `test-menu-suppress-policy.cpp` with `/O2`.
+1. Run `test-hotpath-sampler.cpp`, `test-hotpath-sampler-scaling.cpp`, `test-menu-suppress-policy.cpp` and `test-menu-trace-policy.cpp` with `/O2`.
 2. Run `scan-hotpath-patterns.py` against `d3d9.cpp` and confirm the ranked table.
 
 ### L2 — build / test
@@ -323,7 +299,8 @@ This is a **few-line change with measurable per-draw savings** and no functional
 | `tools/scan-hotpath-patterns.py` | Static risk scan of hook functions. |
 | `spikes/view_matrix/tests/test-hotpath-sampler.cpp` | Sampler math unit tests. |
 | `spikes/view_matrix/tests/test-hotpath-sampler-scaling.cpp` | Deterministic scaling tests for sampler math. |
-| `spikes/view_matrix/tests/test-menu-suppress-policy.cpp` | Policy helper for proposed suppression early-out. |
+| `spikes/view_matrix/tests/test-menu-suppress-policy.cpp` | Policy helper for proposed suppression early-out, including transition cases. |
+| `spikes/view_matrix/tests/test-menu-trace-policy.cpp` | Regression tests for opt-in/default-off MenuDrawTrace policy. |
 
 No production source file was changed.
 
@@ -331,9 +308,9 @@ No production source file was changed.
 
 ## 10. Recommended next steps
 
-1. **Measure menu-trace correlation** in a real log: count `FRAME SPIKE` lines within 200 lines of a `MenuDrawTrace` flush. If the count is high, the 8-frame trace window is a measurable contributor to transition hitches.
-2. **Apply the menu-suppression early-out** in a follow-up branch and measure `menu_classification` `est_ms/frame` in gameplay. `MenuDrawTraceRecord` output must remain unchanged.
-3. **Event-drive `FindPlayerPawn`** off the `Pawn.Weapon` change signal instead of the 2 s / 15 s backoff, but only after confirming that splash/transition stalls are the target (not jump/combat hitches).
+1. **After MAIN finishes pause-menu diagnosis, change `g_menuDrawTrace` default from 1 to 0** and add an opt-in toggle (INI key or panel row). This removes the bounded ~160,000 D3D9 queries per menu transition when diagnostics are not needed.
+2. **If applying the menu-suppression early-out, split `SuppressCapturedVrMenuDraw`** so that `SyncVrMenuCaptureState()` still runs on every draw and only the suppression body is skipped. This preserves capture cleanup on menu close and focus transitions.
+3. **Event-drive `FindPlayerPawn`** off the `Pawn.Weapon` change signal instead of the 2 s / 15 s backoff, but only for splash/transition stalls, not jump/combat hitches.
 4. **Gate register scans** on scene-target validity so splash screens do not arm them.
 5. **Cache `HudStereoPair` constant reads** when `g_hudConstsWritten` has not changed.
 6. Keep the analyzer scripts checked in so future regressions can be diagnosed from logs without new instrumentation.

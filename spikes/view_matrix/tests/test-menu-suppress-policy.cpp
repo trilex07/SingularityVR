@@ -56,6 +56,32 @@ static void test_provider_active_never_skips() {
           "active provider capture must not skip suppression");
 }
 
+static void test_menu_close_transition() {
+    // Immediately after a menu closes: vrUiMenu may already be false, but the capture
+    // owner still holds the previous token.  Skipping SuppressCapturedVrMenuDraw entirely
+    // would delay SyncVrMenuCaptureState.  The safe implementation calls
+    // SyncVrMenuCaptureState first, then evaluates this predicate.
+    CHECK(!ShouldSkipMenuSuppression(false, 0, true),
+          "menu-close transition must not skip suppression while capture owner is stale");
+}
+
+static void test_focus_transition_between_menus() {
+    // Switching from pause (class 3) to main menu (class 2): class is non-zero
+    // throughout, so suppression must remain active.
+    for (int cls = 1; cls <= 4; ++cls) {
+        CHECK(!ShouldSkipMenuSuppression(true, cls, false),
+              "focus transition with non-zero class must not skip suppression");
+    }
+}
+
+static void test_stale_capture_requires_sync() {
+    // The predicate is evaluated AFTER SyncVrMenuCaptureState.  If the owner can
+    // provide the old token, the old capture is still live and must be allowed to
+    // draw / be suppressed until invalidated.
+    CHECK(!ShouldSkipMenuSuppression(false, 0, true),
+          "stale capture owner must not be skipped");
+}
+
 static void test_all_combinations_exhaustively() {
     // truth table: vrUiMenu ∈ {false,true}, menuClass ∈ {0,1,2,3,4}, capture ∈ {false,true}
     int skipCount = 0;
@@ -82,6 +108,9 @@ int main() {
     test_gameplay_default_skips_suppression();
     test_focused_menu_never_skips();
     test_provider_active_never_skips();
+    test_menu_close_transition();
+    test_focus_transition_between_menus();
+    test_stale_capture_requires_sync();
     test_all_combinations_exhaustively();
 
     if (g_failures == 0) {
