@@ -11,14 +11,11 @@
 
 This audit uses the existing bounded hot-path sampler and one-shot spike reporter in `spikes/view_matrix/d3d9.cpp` plus a new static analyzer to separate the sources of intermittent long frames around **jump/input, combat and scene transitions**. The dominant measured hazards are already known; this work ranks them, quantifies their frequency, and identifies the smallest behavioral-preserving optimization that can be justified from the source alone.
 
-**Key finding:** the largest mod-side stalls live in `Hook_Present`, not in the per-draw hooks. Two specific Present-time paths account for the intermittent hitches:
+**Key finding:** the largest *measured* mod-side stalls are **splash/transition stalls** in `Hook_Present` (`FindPlayerPawn` GObjects walks and camera register scans). These are structurally different from the **jump/combat hitches** reported by the `FRAME SPIKE` reporter, which carry `meleeAge`/`jumpAge` tags and occur during gameplay.
 
-1. **`FindPlayerPawn` GObjects walks** (up to ~1.4 s per call on a splash, now throttled but still ~350 ms every 15 s).
-2. **Register re-scans** when no camera matrix lock exists, which fire every 20 frames at splash screens where no view matrix exists.
+Per-draw hook overhead is smaller on average, but one path has a clear measurable cost: `MenuDrawTraceRecord` samples frames 20–27 after every menu state change and issues many D3D9 `Get*` queries per draw during that window.
 
-Per-draw hook overhead (`SuppressCapturedVrMenuDraw`, foreground/shadow classification, `HudStereoPair`) is measurable but an order of magnitude smaller on average; its main risk is **spikes** when combined with state transitions.
-
-The **smallest justified optimization** is to add a cheap early-out guard before `SuppressCapturedVrMenuDraw` / `MenuDrawTraceRecord` when no menu is focused and no capture is active. This removes per-draw menu-classification work from the dominant gameplay path without changing suppression behavior.
+The **smallest justified optimization** is to add a cheap early-out guard that skips only `SuppressCapturedVrMenuDraw` when no menu is focused and no capture is active, while preserving `MenuDrawTraceRecord` for MAIN's pause-menu investigation.
 
 ---
 
@@ -39,7 +36,7 @@ The **smallest justified optimization** is to add a cheap early-out guard before
 - `tools/analyze-vr-perf-log.py` — parses `view_matrix.log` and ranks hot-path families, lists frame spikes, and counts GObjects/register-scan events.
 - `tools/scan-hotpath-patterns.py` — static read-only scan of `d3d9.cpp` that flags D3D `Get*` queries, `Readable()` / GObjects walks, `Log()` calls, allocations and interlocked operations inside hook functions.
 - `spikes/view_matrix/tests/test-hotpath-sampler.cpp` — deterministic unit tests for the sampler math (sampling stride, counter aggregation, window boundaries, scaling).
-- `spikes/view_matrix/tests/test-menu-classify-policy.cpp` — policy helper for the proposed menu-classification early-out, verified against the state combinations in `native_ui_input.h`.
+- `spikes/view_matrix/tests/test-menu-suppress-policy.cpp` — policy helper for the proposed menu-suppression early-out, verified against the state combinations in `native_ui_input.h`.
 
 No production C++ file was modified.
 
@@ -95,7 +92,11 @@ The absolute score is a heuristic, but the gap is decisive: **Present is ~22× m
 
 ## 5. Root-cause ranking
 
-### 5.1 #1 — `FindPlayerPawn` GObjects walks in Present (game-thread, mod-side)
+### Category A — Splash / transition stalls (distinct from jump/combat hitches)
+
+These show up in `Hook_Present` and are tied to level loads, splash screens and death/reloads. They are **not** the same phenomenon as the jump/combat hitches flagged by `FRAME SPIKE`.
+
+#### A.1 #1 — `FindPlayerPawn` GObjects walks in Present (game-thread, mod-side)
 
 **Evidence:**
 - `STATUS.md` run 252-257: `RefreshArmedState` → `FindPlayerPawn(force=true)` cost **1,365 ms in a single call** when no pawn existed (splash screen).
@@ -105,6 +106,8 @@ The absolute score is a heuristic, but the gap is decisive: **Present is ~22× m
 
 **Why it hitches:** a 350 ms stall every 15 s at 120 fps is a **42-frame freeze**. It is most visible at level loads / splash screens because the pawn does not exist, so the walk can never succeed.
 
+**Correlated timing evidence required:** a `FRAME SPIKE` line with `nocentre=1` or `weapon-swap=1` and a `player pawn: … after walking N object(s)` line within the same 1–2 s window would link the walk to a gameplay hitch. Without that correlation, this remains a **splash/transition stall**, not a jump/combat stall.
+
 **Removable without changing behavior:** make the walk event-driven instead of polling. The pawn pointer is already observed to change only on weapon swap / level load (`RefreshArmedState` reads `Pawn.Weapon` every frame). A safe, minimal change is to:
 - Cache the last successful pawn pointer.
 - Only re-walk when the cached pointer fails `IsLive()` **or** when `Pawn.Weapon` changes (which is already detected every frame).
@@ -112,7 +115,7 @@ The absolute score is a heuristic, but the gap is decisive: **Present is ~22× m
 
 This preserves the current fallback behavior while eliminating the periodic failing walks.
 
-### 5.2 #2 — Camera register re-scan at splash / no-lock (game-thread, mod-side)
+#### A.2 #2 — Camera register re-scan at splash / no-lock (game-thread, mod-side)
 
 **Evidence:**
 - `d3d9.cpp:25507-25518`: `g_scanArmed` fires when `!g_haveLock && g_camPosValid && dupDraws`.
@@ -120,28 +123,40 @@ This preserves the current fallback behavior while eliminating the periodic fail
 - Log marker: `--- scan complete: 0 candidate window(s) ... no window even had a plausible forward vector`.
 - `STATUS.md` run 252 measured the scan at **0.00 ms** and exonerated it for the splash staircase, but it remains a periodic expense when the lock is lost.
 
-**Why it hitches:** a one-frame scan tests every constant upload. The cost is small when it succeeds quickly, but if armed repeatedly it adds up.
-
 **Removable without changing behavior:** gate the scan on a scene-target validity flag. If the current render target is not the scene target (splash / menu / video), do not arm the scan. The matrix cannot be usefully located unless real scene geometry is being uploaded.
 
-### 5.3 #3 — Per-draw menu classification (mod-hook overhead)
+### Category B — Gameplay hitches around jump / input / combat
+
+These are captured by the one-shot `FRAME SPIKE` reporter and tagged with `meleeAge`, `jumpAge`, `weaponSwapped` and `nocentre`.
+
+#### B.1 #1 — Menu draw trace sampling window (mod-hook overhead during menu transitions)
 
 **Evidence:**
-- `SuppressCapturedVrMenuDraw` is called from `Hook_DrawPrim`, `Hook_DrawPrimUP`, `Hook_DrawIndexedPrim`, `Hook_DrawIndexedPrimUP`.
-- It enters the `menu_classification` hot-path family and calls `SyncVrMenuCaptureState()` before the `!g_vrUiMenu` early-out.
+- `menu_draw_trace.h:55-91`: `MenuDrawTraceRecord` runs on every draw hook when `g_menuDrawTrace` is set (default **1**).
+- During its 8-frame sampling window (frames 20–27 after a menu state change) it issues **~20 D3D9 queries per draw**: `GetRenderTarget`, `GetDepthStencilSurface`, `GetVertexShader`, `GetPixelShader`, `GetVertexDeclaration`, `GetTexture`, `GetViewport`, `GetScissorRect`, `GetStreamSource`, `GetIndices`, `GetLevelDesc`, `GetSurfaceLevel`, seven `GetRenderState` calls, and `GetVertexShaderConstantF`.
+- With ~1,000 draws/frame that is **~20,000 extra D3D queries per frame** for 8 frames after every pause/main-menu/station open or close.
+- Log marker: `MenuDrawTrace state=... class=... groups=... dropped=...`.
+
+**Why it hitches:** D3D9 `Get*` calls are not free; they serialize state and can stall the command buffer. A pause-menu open/close happens exactly when the user is sensitive to a hitch.
+
+**Correlated timing evidence required:** use `tools/analyze-vr-perf-log.py`; it reports how many `FRAME SPIKE` lines fall within 200 log lines of a `MenuDrawTrace` flush. If the number is high, the trace window is a measurable contributor to transition hitches.
+
+**Removable without changing behavior:** the trace is required by MAIN for pause-menu investigation, so it must not be disabled. Two measured-preserving options exist:
+- **Shrink the window** from frames 20–27 to frames 20–23 if MAIN only needs the first few frames after transition.
+- **Throttle repeat triggers**: if the same menu state token flushes repeatedly within a short interval, skip alternate windows until MAIN's investigation is complete.
+
+Both preserve the diagnostic data while reducing the worst-case query load.
+
+#### B.2 #2 — Per-draw menu suppression checks (mod-hook overhead)
+
+**Evidence:**
+- `SuppressCapturedVrMenuDraw` is called from the four draw hooks.
+- It enters the `menu_classification` hot-path family and calls `SyncVrMenuCaptureState()` before its `!g_vrUiMenu` early-out.
 - `Hook_SetTexture` checks `stage < 4` and `g_vrUiMenu` for every texture bind.
-- `MenuDrawTraceRecord` runs on every draw when enabled; even when disabled it is a function call in the hook.
 
 **Why it hitches:** each call is cheap, but with **1,000–1,500 draws/frame** the aggregate is non-zero. The risk spikes during menu transitions when `SyncVrMenuCaptureState` actually invalidates and releases textures.
 
-**Removable without changing behavior:** add a unified cheap guard at the top of every draw hook:
-
-```cpp
-if (!g_vrUiMenu && g_vrMenuClass == 0 && !g_vrCaptureOwner.CanProvide(VrMenuStateToken()))
-    return; // no menu work needed this draw
-```
-
-This skips `MenuDrawTraceRecord` and `SuppressCapturedVrMenuDraw` entirely during normal gameplay. The existing early-out inside `SuppressCapturedVrMenuDraw` keeps the behavior unchanged; this just moves the guard earlier.
+**Removable without changing behavior:** add a cheap guard that skips only `SuppressCapturedVrMenuDraw` when no menu is focused and no capture is active. `MenuDrawTraceRecord` must remain callable because `g_menuDrawTrace` defaults to 1 and MAIN needs the trace.
 
 ### 5.4 #4 — Foreground / shadow classification per draw (mod-hook overhead)
 
@@ -198,27 +213,27 @@ This skips `MenuDrawTraceRecord` and `SuppressCapturedVrMenuDraw` entirely durin
 
 ## 6. Proposed smallest justified optimization
 
-Implement a **menu-classification early-out guard** in the draw hooks. This is the best first optimization because:
+Implement a **menu-suppression early-out guard** that skips only `SuppressCapturedVrMenuDraw`, while leaving `MenuDrawTraceRecord` untouched. This is the best first optimization because:
 
-1. **Small code footprint** — one condition at the top of four hook functions.
-2. **No behavior change** — the existing `SuppressCapturedVrMenuDraw` early-out already returns `false` in exactly this state; we just avoid entering the function.
-3. **Large coverage** — gameplay has no menu focused most of the time, so this skips work on ~1,000+ draws per frame.
-4. **Low risk** — does not touch GObjects walks, camera scans, or shadow classification, which have more complex invalidation requirements.
+1. **Small code footprint** — one condition before the suppression call in four hook functions.
+2. **No behavior change** — `SuppressCapturedVrMenuDraw` already returns `false` in this state after `SyncVrMenuCaptureState()` and `MenuSourceBoundAny()`.
+3. **Preserves diagnostics** — `MenuDrawTraceRecord` remains on the hot path so MAIN's pause-menu investigation is unaffected.
+4. **Low risk** — does not touch GObjects walks, camera scans, shadow classification, or trace collection.
 
 ### 6.1 Helper and test
 
-A standalone helper is added in `spikes/view_matrix/tests/test-menu-classify-policy.cpp`:
+A standalone helper is added in `spikes/view_matrix/tests/test-menu-suppress-policy.cpp`:
 
 ```cpp
-inline bool ShouldSkipMenuClassification(bool vrUiMenu, int menuClass,
-                                          bool captureCanProvide) {
+inline bool ShouldSkipMenuSuppression(bool vrUiMenu, int menuClass,
+                                      bool captureCanProvide) {
     return !vrUiMenu && menuClass == 0 && !captureCanProvide;
 }
 ```
 
 The test exercises all combinations:
 
-| `vrUiMenu` | `menuClass` | `captureCanProvide` | expected skip |
+| `vrUiMenu` | `menuClass` | `captureCanProvide` | skip suppression? |
 |---|---|---|---|
 | false | 0 | false | **true** (gameplay default) |
 | false | 0 | true | false (provider still drawing) |
@@ -227,7 +242,7 @@ The test exercises all combinations:
 
 ### 6.2 Where the guard would go
 
-The guard would be inserted at the very top of:
+The guard would wrap only `SuppressCapturedVrMenuDraw` in:
 
 - `Hook_DrawPrim` (`d3d9.cpp:13107`)
 - `Hook_DrawPrimUP` (`d3d9.cpp:17918`)
@@ -245,23 +260,21 @@ if (SuppressCapturedVrMenuDraw()) return D3D_OK;
 After:
 
 ```cpp
-if (ShouldSkipMenuClassification(Rd(g_vrUiMenu), Rd(g_vrMenuClass),
-                                 g_vrCaptureOwner.CanProvide(VrMenuStateToken()))) {
-    // No menu focused, no capture active: skip menu classification entirely.
-} else {
-    MenuDrawTraceRecord(dev, ...);
+hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
+MenuDrawTraceRecord(dev, ...);
+if (!ShouldSkipMenuSuppression(Rd(g_vrUiMenu), Rd(g_vrMenuClass),
+                               g_vrCaptureOwner.CanProvide(VrMenuStateToken()))) {
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
 }
-hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
 ```
 
-Note that `MenuDrawTraceRecord` must remain inside the menu-active branch because it is a diagnostic for menu-source draws.
+`MenuDrawTraceRecord` is **not** guarded, so its 8-frame sampling window and per-draw diagnostic state remain intact.
 
 ### 6.3 Expected effect
 
-- During normal gameplay: eliminates one function call, one hot-path family entry, and the `SyncVrMenuCaptureState` cheap compare per draw.
-- During menus: no change; the branch is not taken.
-- During transitions: briefly not skipped until the capture owner invalidates, which is correct.
+- During normal gameplay: avoids `SyncVrMenuCaptureState()`, `MenuSourceBoundAny()` and the `menu_classification` hot-path scope entry on ~1,000+ draws per frame.
+- During menus / provider activity: no change; the branch is not taken.
+- During transitions: briefly not skipped until the capture owner invalidates, which matches the existing behavior.
 
 This is a **few-line change with measurable per-draw savings** and no functional risk.
 
@@ -271,7 +284,7 @@ This is a **few-line change with measurable per-draw savings** and no functional
 
 ### L1 — deterministic / synthetic
 
-1. Run `test-hotpath-sampler.cpp` and `test-menu-classify-policy.cpp` with `/O2`.
+1. Run `test-hotpath-sampler.cpp`, `test-hotpath-sampler-scaling.cpp` and `test-menu-suppress-policy.cpp` with `/O2`.
 2. Run `scan-hotpath-patterns.py` against `d3d9.cpp` and confirm the ranked table.
 
 ### L2 — build / test
@@ -284,8 +297,9 @@ This is a **few-line change with measurable per-draw savings** and no functional
 1. Capture a `view_matrix.log` through a jump/combat/transition session.
 2. Run `tools/analyze-vr-perf-log.py` and confirm:
    - `Hook_Present` residual is the largest bucket.
-   - GObjects walk events coincide with transition moments.
-   - After applying the menu early-out, `menu_classification` `est_ms/frame` drops during gameplay.
+   - GObjects walk events coincide with **transition** moments, not `FRAME SPIKE` jump/combat events.
+   - `FRAME SPIKE` lines near `MenuDrawTrace` flushes indicate trace-sampling transition hitches.
+   - After applying the menu-suppression early-out, `menu_classification` `est_ms/frame` drops during gameplay while `MenuDrawTrace` output remains intact.
 
 ---
 
@@ -308,7 +322,8 @@ This is a **few-line change with measurable per-draw savings** and no functional
 | `tools/analyze-vr-perf-log.py` | Parses existing logs into a ranked report. |
 | `tools/scan-hotpath-patterns.py` | Static risk scan of hook functions. |
 | `spikes/view_matrix/tests/test-hotpath-sampler.cpp` | Sampler math unit tests. |
-| `spikes/view_matrix/tests/test-menu-classify-policy.cpp` | Policy helper for proposed early-out. |
+| `spikes/view_matrix/tests/test-hotpath-sampler-scaling.cpp` | Deterministic scaling tests for sampler math. |
+| `spikes/view_matrix/tests/test-menu-suppress-policy.cpp` | Policy helper for proposed suppression early-out. |
 
 No production source file was changed.
 
@@ -316,8 +331,9 @@ No production source file was changed.
 
 ## 10. Recommended next steps
 
-1. **Apply the menu-classification early-out** in a follow-up branch and measure `menu_classification` `est_ms/frame` in gameplay.
-2. **Event-drive `FindPlayerPawn`** off the `Pawn.Weapon` change signal instead of the 2 s / 15 s backoff.
-3. **Gate register scans** on scene-target validity so splash screens do not arm them.
-4. **Cache `HudStereoPair` constant reads** when `g_hudConstsWritten` has not changed.
-5. Keep the analyzer scripts checked in so future regressions can be diagnosed from logs without new instrumentation.
+1. **Measure menu-trace correlation** in a real log: count `FRAME SPIKE` lines within 200 lines of a `MenuDrawTrace` flush. If the count is high, the 8-frame trace window is a measurable contributor to transition hitches.
+2. **Apply the menu-suppression early-out** in a follow-up branch and measure `menu_classification` `est_ms/frame` in gameplay. `MenuDrawTraceRecord` output must remain unchanged.
+3. **Event-drive `FindPlayerPawn`** off the `Pawn.Weapon` change signal instead of the 2 s / 15 s backoff, but only after confirming that splash/transition stalls are the target (not jump/combat hitches).
+4. **Gate register scans** on scene-target validity so splash screens do not arm them.
+5. **Cache `HudStereoPair` constant reads** when `g_hudConstsWritten` has not changed.
+6. Keep the analyzer scripts checked in so future regressions can be diagnosed from logs without new instrumentation.

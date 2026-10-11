@@ -35,6 +35,7 @@ class FrameBudget:
 
 @dataclass
 class Spike:
+    line: int
     frame_ms: float
     period_ms: float
     draws_total: int
@@ -64,12 +65,21 @@ class WalkEvent:
 
 
 @dataclass
+class MenuTraceEvent:
+    line: int
+    state: int
+    groups: int
+    dropped: int
+
+
+@dataclass
 class PerfReport:
     budgets: List[FrameBudget] = field(default_factory=list)
     spikes: List[Spike] = field(default_factory=list)
     hotpath: Dict[str, HotpathFamily] = field(default_factory=dict)
     gobjects_walks: List[WalkEvent] = field(default_factory=list)
     scans: List[WalkEvent] = field(default_factory=list)
+    menu_traces: List[MenuTraceEvent] = field(default_factory=list)
     sleep_calls: int = 0
     sleep_ms: int = 0
     sleep_neutralised: bool = False
@@ -92,7 +102,7 @@ def parse_budget_line(line: str) -> Optional[FrameBudget]:
     )
 
 
-def parse_spike_line(line: str) -> Optional[Spike]:
+def parse_spike_line(line: str, line_no: int) -> Optional[Spike]:
     m = re.search(
         r"FRAME SPIKE\s+([0-9.]+)\s+ms\s+\(period\s+([0-9.]+)\):\s+draws\s+(\d+)\s+\(dup\s+(\d+)\s+mono\s+(\d+)\)\s+melee\s+(\d+)\s+heal\s+(\d+)\s+swapped\s+(\d+)\s+nocentre\s+(\d+)\s+meleeAge\s+(-?\d+)\s+jumpAge\s+(-?\d+)",
         line,
@@ -100,6 +110,7 @@ def parse_spike_line(line: str) -> Optional[Spike]:
     if not m:
         return None
     return Spike(
+        line=line_no,
         frame_ms=float(m.group(1)),
         period_ms=float(m.group(2)),
         draws_total=int(m.group(3)),
@@ -147,6 +158,17 @@ def parse_scan_line(line: str) -> Optional[WalkEvent]:
     return None
 
 
+def parse_menu_trace_line(line: str, line_no: int) -> Optional[MenuTraceEvent]:
+    # MenuDrawTrace state=123456789 class=2 groups=47 dropped=0 sample=frames20..27 path=1:stereo,2:hud,4:provider
+    m = re.search(
+        r"MenuDrawTrace state=(\d+)\s+class=(\d+)\s+groups=(\d+)\s+dropped=(\d+)",
+        line,
+    )
+    if not m:
+        return None
+    return MenuTraceEvent(line=line_no, state=int(m.group(1)), groups=int(m.group(3)), dropped=int(m.group(4)))
+
+
 def parse_sleep_line(line: str) -> Tuple[int, int, bool]:
     m = re.search(
         r"frame-rate governor:\s+(\d+)\s+render-thread sleeps totalling\s+(\d+)\s+ms",
@@ -160,12 +182,12 @@ def parse_sleep_line(line: str) -> Tuple[int, int, bool]:
 
 def parse_log(text: str) -> PerfReport:
     report = PerfReport()
-    for line in text.splitlines():
+    for line_no, line in enumerate(text.splitlines(), start=1):
         b = parse_budget_line(line)
         if b:
             report.budgets.append(b)
             continue
-        s = parse_spike_line(line)
+        s = parse_spike_line(line, line_no)
         if s:
             report.spikes.append(s)
             continue
@@ -180,6 +202,10 @@ def parse_log(text: str) -> PerfReport:
         sc = parse_scan_line(line)
         if sc:
             report.scans.append(sc)
+            continue
+        mt = parse_menu_trace_line(line, line_no)
+        if mt:
+            report.menu_traces.append(mt)
             continue
         scalls, sms, sneu = parse_sleep_line(line)
         if scalls:
@@ -206,6 +232,31 @@ def classify_spike(s: Spike) -> List[str]:
     if s.draws_mono > s.draws_dup:
         tags.append("mono-fallback-heavy")
     return tags
+
+
+def spikes_near_menu_traces(spikes: List[Spike], traces: List[MenuTraceEvent], window_lines: int = 200) -> int:
+    """Count spikes whose line number is within window_lines of any MenuDrawTrace flush."""
+    if not spikes or not traces:
+        return 0
+    trace_lines = sorted(t.line for t in traces)
+    count = 0
+    for s in spikes:
+        # binary search for nearest trace line
+        lo, hi = 0, len(trace_lines)
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if trace_lines[mid] < s.line:
+                lo = mid + 1
+            else:
+                hi = mid
+        nearest = None
+        if lo < len(trace_lines):
+            nearest = trace_lines[lo]
+        if lo > 0 and (nearest is None or abs(trace_lines[lo - 1] - s.line) < abs(nearest - s.line)):
+            nearest = trace_lines[lo - 1]
+        if nearest is not None and abs(nearest - s.line) <= window_lines:
+            count += 1
+    return count
 
 
 def render_report(r: PerfReport) -> str:
@@ -292,6 +343,21 @@ def render_report(r: PerfReport) -> str:
         lines.append(f"- Scan events: {len(r.scans)} ({zero_candidate} with zero candidates)")
         lines.append("")
 
+    if r.menu_traces:
+        total_groups = sum(t.groups for t in r.menu_traces)
+        total_dropped = sum(t.dropped for t in r.menu_traces)
+        lines.append("## Menu draw trace activity")
+        lines.append("")
+        lines.append(f"- Trace flush events: {len(r.menu_traces)}")
+        lines.append(f"- Total trace groups emitted: {total_groups}")
+        lines.append(f"- Total dropped groups: {total_dropped}")
+        if r.spikes:
+            near = spikes_near_menu_traces(r.spikes, r.menu_traces)
+            lines.append(f"- Spikes within 200 lines of a trace flush: {near} of {len(r.spikes)}")
+            if near:
+                lines.append("  - *If these coincide temporally, the 8-frame trace sampling window may be contributing to transition hitches.*")
+        lines.append("")
+
     if r.sleep_calls:
         lines.append("## Frame-rate governor")
         lines.append("")
@@ -304,8 +370,14 @@ def render_report(r: PerfReport) -> str:
     lines.append("- XR `wait_frame` is mostly runtime idle time, not mod work.")
     lines.append("- `our work` is a residual bucket: it absorbs any unmeasured latency, so a")
     lines.append("  spike there needs the hot-path ranking below it to locate the cause.")
-    lines.append("- GObjects walks and register scans are mod-side CPU work that can stall the")
-    lines.append("  render thread; their frequency matters more than their average.")
+    lines.append("- **Splash/transition stalls** are identified by `player pawn: ... after walking N")
+    lines.append("  object(s)` and `scan complete: 0 candidate window(s)`. These are structurally")
+    lines.append("  different from jump/combat hitches and should not be treated as the same root cause.")
+    lines.append("- **Jump/combat hitches** are identified by `FRAME SPIKE` lines carrying")
+    lines.append("  `jump-recent`, `melee-recent`, `melee-window` or `weapon-swap` tags.")
+    lines.append("- **Menu transition hitches** may correlate with `MenuDrawTrace` flush lines; the")
+    lines.append("  trace samples frames 20-27 after every menu state change and issues many D3D")
+    lines.append("  queries per draw during that window.")
     lines.append("- Tags are heuristic: `jump-recent` / `melee-recent` use the 500 ms age window")
     lines.append("  from the spike reporter.")
     lines.append("")
