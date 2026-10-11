@@ -69,6 +69,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
+#include "script_node_candidate.h"
 #include <shlobj.h>
 #include "async_thread_snapshot.h"
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
@@ -1270,6 +1271,9 @@ void ReadableForget() {
 bool Readable(const void* p, size_t n) {
     const uintptr_t a = reinterpret_cast<uintptr_t>(p);
     const bool useCache = Rd(g_readableCache) != 0;
+    // A hit stays until ReadableForget(). ProcessEvent does not call that, so a
+    // cached yes can name a page that has already been released. Candidate loads
+    // use TryLoadAlignedI32 instead of trusting this cache.
     if (useCache)
         for (int i = 0; i < kReadCacheSlots; ++i)
             if (g_readOk[i].end && a >= g_readOk[i].base && (a + n) <= g_readOk[i].end) return true;
@@ -19668,6 +19672,18 @@ volatile LONG g_nodeSamples = 0;
 volatile LONG g_nodeVotes[kNodeSlots] = {};
 volatile LONG g_nodeDecided = 0;
 
+static bool GuardedNameOf(uintptr_t obj, char* buf, size_t cap) {
+    if (!buf || cap == 0) return false;
+    buf[0] = 0;
+    if ((obj & 3u) != 0) return false;
+    __try {
+        return NameOf(obj, buf, cap);
+    } __except (MemoryFaultFilter(GetExceptionCode())) {
+        buf[0] = 0;
+        return false;
+    }
+}
+
 static int32_t ScriptFuncNameIdx(void* frame) {
     if (!frame) return -1;
     const uintptr_t f = reinterpret_cast<uintptr_t>(frame);
@@ -19682,25 +19698,23 @@ static int32_t ScriptFuncNameIdx(void* frame) {
         // something else entirely. The frame itself needs no check at all: it is a reference the
         // engine is actively using, so if it were unreadable the game would already be dead.
         // The node gets a cheap range test instead, the same bound the vote used to accept it.
-        const uintptr_t node = *reinterpret_cast<const uintptr_t*>(f + off);
-        if (node < 0x01000000 || node > 0x7FFF0000 || (node & 3)) return -1;
-        const int32_t idx = *reinterpret_cast<const int32_t*>(node + OBJ_NAME);
-        return idx > 0 ? idx : -1;
+        int32_t idx = 0;
+        if (!TryLoadNodeName(f, off, OBJ_NAME, &idx) || idx <= 0) return -1;
+        return idx;
     }
-    if (!Readable(frame, kNodeSlots * 4)) return -1;   // learning phase only, 300 calls
 
     // ---- learning phase ----
     const LONG n = InterlockedIncrement(&g_nodeSamples);
     if (n <= kNodeSampleTarget) {
-        const uint32_t* w = reinterpret_cast<const uint32_t*>(f);
+        uint32_t slots[kNodeSlots];
+        if (!TryLoadFrameSlots(f, slots, kNodeSlots)) return -1;
         for (int i = 0; i < kNodeSlots; ++i) {
-            const uintptr_t v = w[i];
-            if (v < 0x01000000 || v > 0x7FFF0000) continue;
-            if (v > f - 0x10000 && v < f + 0x10000) continue;      // a stack address, not a UObject
-            if (!Readable((void*)v, OBJ_NAME + 4)) continue;
-            if (*reinterpret_cast<const int32_t*>(v + OBJ_NAME) <= 0) continue;   // 'None' is noise
+            const uintptr_t v = slots[i];
+            if (!ScriptNodeCandidate(v, f)) continue;
+            int32_t nameIdx = 0;
+            if (!TryLoadAlignedI32(v + OBJ_NAME, &nameIdx) || nameIdx <= 0) continue;
             char nm[64]{};
-            if (NameOf(v, nm, sizeof(nm)) && nm[0]) InterlockedIncrement(&g_nodeVotes[i]);
+            if (GuardedNameOf(v, nm, sizeof(nm)) && nm[0]) InterlockedIncrement(&g_nodeVotes[i]);
         }
         return -1;
     }
@@ -20960,14 +20974,14 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         if (InterlockedIncrement(&probed) <= 30) {
             struct { const char* tag; void* p; } cands[2] = { { "this", self }, { "arg1", Stack } };
             for (int c = 0; c < 2; ++c) {
-                if (!cands[c].p || !Readable(cands[c].p, 0x40)) {
+                uint32_t probedSlots[16];
+                if (!cands[c].p || !TryLoadFrameSlots(reinterpret_cast<uintptr_t>(cands[c].p), probedSlots, 16)) {
                     Log("PE scan %s=%p  <unreadable>", cands[c].tag, cands[c].p);
                     continue;
                 }
-                const uint32_t* w = reinterpret_cast<const uint32_t*>(cands[c].p);
                 char hex[260]; int n = 0;
                 for (int i = 0; i < 16; ++i)
-                    n += _snprintf_s(hex + n, sizeof(hex) - n, _TRUNCATE, "%08X ", w[i]);
+                    n += _snprintf_s(hex + n, sizeof(hex) - n, _TRUNCATE, "%08X ", probedSlots[i]);
                 Log("PE scan %s=%p  %s", cands[c].tag, cands[c].p, hex);
                 // ---- run 86: resolve POINTER fields as objects, not ints as name indices ----
                 //
@@ -20995,14 +21009,12 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
                 char line[400]; int m = 0;
                 const uintptr_t selfAddr = reinterpret_cast<uintptr_t>(cands[c].p);
                 for (int i = 0; i < 16; ++i) {
-                    const uintptr_t v = w[i];
-                    if (v < 0x01000000 || v > 0x7FFF0000) continue;
-                    if (v > selfAddr - 0x10000 && v < selfAddr + 0x10000) continue;   // stack
-                    if (!Readable((void*)v, 0x40)) continue;
-                    const int32_t ni = *reinterpret_cast<const int32_t*>(v + OBJ_NAME);
-                    if (ni <= 0) continue;                                            // 'None'
+                    const uintptr_t v = probedSlots[i];
+                    if (!ScriptNodeCandidate(v, selfAddr)) continue;
+                    int32_t ni = 0;
+                    if (!TryLoadAlignedI32(v + OBJ_NAME, &ni) || ni <= 0) continue;
                     char nm[64]{};
-                    if (NameOf(v, nm, sizeof(nm)) && nm[0])
+                    if (GuardedNameOf(v, nm, sizeof(nm)) && nm[0])
                         m += _snprintf_s(line + m, sizeof(line) - m, _TRUNCATE,
                                          " +0x%02X->'%s'", i * 4, nm);
                 }
