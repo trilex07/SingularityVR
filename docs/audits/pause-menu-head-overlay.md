@@ -21,7 +21,7 @@ Pause path: orthographic GFx batches reach `HudStereoPair` on the **scene-sized*
 
 When `[Render] PauseHeadMenu=1` (default **0** until headset acceptance):
 
-1. For `g_vrMenuClass == 3` only, intercept the **same** `HudStereoPair` branch as legacy menu mono (`class 2 || 3`, scene colour, not backbuffer), gated by `g_vrUiMenu`, `g_vrUiNativeReady`, and `g_gamePaused` so unrelated scene draws stay on the legacy path.
+1. For `g_vrMenuClass == 3` only, intercept the **same** `HudStereoPair` branch as legacy menu mono (`class 2 || 3`, scene colour, not backbuffer), gated by `g_vrUiMenu`, `g_vrUiNativeReady`, `g_gamePaused`, `!g_noteOpen`, and centered ortho clip (`|c8.x|,|c8.y| ≤ 0.88`) so corner HUD/status draws stay on the legacy path.
 2. Redirect those draws into a **pooled `1280x720`** render target (GFx canvas size, not scene dimensions).
 3. Reuse **`CaptureVrMenuTarget` + `DrawVrMenuPointer` native quad** + **`SuppressCapturedVrMenuDraw`** — same laser, stereo submission, and input mapping as main menu. Redirect only runs after successful `GetRenderTarget` / `GetViewport` / `SetRenderTarget` / `SetViewport`; failed binds restore RT and viewport before falling back to the legacy mono draw. Pool clear is keyed to `g_vfxFrame` (one clear per engine frame). `CaptureVrMenuTarget` runs only after a successful pooled draw **and** `CanProvide` for the current menu token.
 4. Set `PauseHeadMenu=0` to restore legacy diegetic-only pause instantly.
