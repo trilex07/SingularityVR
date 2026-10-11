@@ -4910,6 +4910,7 @@ void MeasureCullBand(const uint8_t* bits, int pitch, UINT w, UINT h) {
 }
 
 static bool VrXrSubmitMenuFlat(); // defined after g_vrUiMenu / g_vrMenuClass
+static void NoteMenuSubmit(const CopySlot* frame, bool cropEyes);
 
 // Stamp the slot with the state its pixels were drawn under. Everything the submission needs is
 // captured at the moment of capture, so a frame consumed later cannot be submitted with a pose or
@@ -4923,6 +4924,7 @@ void StampCaptureState(CopySlot& cap) {
         cap.stereo = false;
         cap.dup = true;
     }
+    NoteMenuSubmit(&cap, cap.dup && !cap.stereo && cap.menuFlat && g_srcW >= 2);
     // The backbuffer just captured was drawn with the offset chosen at the END of the previous
     // frame, so it belongs to g_renderEye - not to whichever eye is about to be switched to.
     cap.eye    = cap.stereo ? g_renderEye : 0;
@@ -10821,7 +10823,6 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     DiagPhaseAdd(DP_BRIDGE, diagBridge);
 
     const bool cropEyes = frame && frame->dup && !frame->stereo && frame->menuFlat && g_srcW >= 2;
-    NoteMenuSubmit(frame, cropEyes);
     g_scCropped = cropEyes;
     // research/nvidia-vr-upscaling: NIS engages only on the SBS true-stereo
     // path (two independent eye viewports, seam never in the kernel). Mono and
