@@ -5531,6 +5531,7 @@ volatile LONG g_vrUiEnabled=1,g_vrUiMenu=0,g_vrUiValid=0,g_vrUiU=500000,g_vrUiV=
 // Hub round 4: provider-overlay kill switch for A/B (black-quad diagnosis). The in-scene
 // menu copy stays, so menus remain visible; only our head-locked overlay+laser go away.
 volatile LONG g_vrMenuOverlay=1;
+volatile LONG g_pauseHeadMenu=0; // ini [Render] PauseHeadMenu — class-3 GFx redirect (off until accepted)
 volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=100;
 volatile LONG g_vrMenuDistanceMm=1200;
 volatile LONG g_vrUiEyeCentreU[2]={500000,500000};
@@ -5557,6 +5558,7 @@ inline bool SuppressCapturedVrMenuDraw();
 struct VrRuntimeCounters {
     volatile LONG bootMenuCaptured=0,bootMenuSuppressed=0,bootMenuProvided=0;
     volatile LONG mainMenuCaptured=0,mainMenuSuppressed=0,mainMenuProvided=0,mainMenuUnknownDraws=0;
+    volatile LONG pauseMenuCaptured=0,pauseMenuSuppressed=0,pauseMenuProvided=0,pauseMenuRedirectDraws=0;
     volatile LONG nativeCursorDraws=0,nativeCursorSuppressed=0,vrPointerUpdates=0;
     volatile LONG gripPressEdges=0,gripReleaseEdges=0,gripLatchCount=0,gripDetachCount=0,gripLatchWithoutGripERROR=0;
     volatile LONG contextPromptShow=0,contextPromptHide=0,contextPromptAction=0,psIconDraws=0,psIconDrawWithoutPromptERROR=0;
@@ -5720,6 +5722,7 @@ static void ReportHotPathSampler() {
     Log("hotpath sampler complete: %s", report);
 }
 #include "pause_vr_settings.h"
+#include "pause_menu_head_overlay.h"
 #include "native_ui_input.h"
 uipointer::TriggerGate g_vrUiTrigger[2];
 griplatch::GripLatch g_supportLatch;
@@ -17720,6 +17723,15 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // shows whole. Remapping both eyes into that texture is the doubled menu.
     // The backbuffer path (title / IIS) stays split, then the XR crop shows one
     // half in each eye. Bink never reaches this function.
+    if (menuClassNow == 3 && PauseHeadOverlayActive() &&
+        !InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
+        dev->SetVertexShaderConstantF(5, c, 4);
+        const HRESULT hr = PauseHeadOverlayHudDraw(dev, draw);
+        dev->SetScissorRect(&oldRect);
+        dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
+        g_inHudRemap = false;
+        return hr;
+    }
     if ((menuClassNow == 2 || menuClassNow == 3) &&
         !InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
         D3DVIEWPORT9 vpMenu{};
@@ -19404,6 +19416,7 @@ inline bool SuppressCapturedVrMenuDraw() {
     InterlockedIncrement(&g_vrMenuSuppressed);
     if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuSuppressed);
     if(Rd(g_vrMenuClass)==2)InterlockedIncrement(&g_vrCounters.mainMenuSuppressed);
+    if(Rd(g_vrMenuClass)==3)InterlockedIncrement(&g_vrCounters.pauseMenuSuppressed);
     return true;
 }
 
@@ -27192,6 +27205,9 @@ void LoadIniSettings() {
     g_independentHands = GetPrivateProfileIntA("Render", "IndependentHandsPrototype", 0, path) ? 1 : 0;
     g_vrUiEnabled=GetPrivateProfileIntA("Input","VrMenuPointer",1,path)?1:0;
     g_vrMenuOverlay=GetPrivateProfileIntA("Render","MenuOverlay",1,path)?1:0;
+    g_pauseHeadMenu=GetPrivateProfileIntA("Render","PauseHeadMenu",0,path)?1:0;
+    Log("ini: PauseHeadMenu=%ld (class-3 GFx ortho -> pooled %ux%u for head overlay; 0=legacy diegetic monitor)",
+        Rd(g_pauseHeadMenu), pausehead::kPoolWidth, pausehead::kPoolHeight);
     g_hideFpInMenu=GetPrivateProfileIntA("Render","HideFpInMenu",1,path)?1:0;
     Log("VR menu FP hide=%ld (HideFpInMenu; drops latched gun/arm draws while a GFx menu is focused)",Rd(g_hideFpInMenu));
     g_vfxHost=GetPrivateProfileIntA("Render","VfxHost",1,path)?1:0;
