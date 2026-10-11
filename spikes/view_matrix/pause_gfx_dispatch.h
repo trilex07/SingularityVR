@@ -11,6 +11,7 @@ struct PauseGfxDispatchCounters {
     volatile LONG redirectEligible = 0;
     volatile LONG redirectPooledOk = 0;
     volatile LONG redirectPooledFail = 0;
+    volatile LONG redirectPoolFallback = 0;
     volatile LONG flashSignatureSeen = 0;
     volatile LONG flashSceneCommitted = 0;
     volatile LONG providerPauseProvided = 0;

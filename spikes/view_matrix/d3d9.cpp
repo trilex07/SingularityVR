@@ -25377,11 +25377,11 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             if (InterlockedCompareExchange(&g_vrMenuClass, 0, 0) == 3) {
                 const PauseGfxDispatchCounters pg = g_pauseGfxDispatch;
                 Log("    PauseGfx dispatch (class=3, 1s): hook DIP/DIP/DIPUP/IDIPUP=%ld/%ld/%ld/%ld hudStereo=%ld"
-                    " elig=%ld poolOk=%ld poolFail=%ld flashSeen=%ld flashScene=%ld provider=%ld",
+                    " elig=%ld poolOk=%ld poolFail=%ld poolFallback=%ld flashSeen=%ld flashScene=%ld provider=%ld",
                     Rd(pg.hookDrawPrim), Rd(pg.hookDrawIndexedPrim), Rd(pg.hookDrawPrimUP),
                     Rd(pg.hookDrawIndexedPrimUP), Rd(pg.hudStereoEnter), Rd(pg.redirectEligible),
-                    Rd(pg.redirectPooledOk), Rd(pg.redirectPooledFail), Rd(pg.flashSignatureSeen),
-                    Rd(pg.flashSceneCommitted), Rd(pg.providerPauseProvided));
+                    Rd(pg.redirectPooledOk), Rd(pg.redirectPooledFail), Rd(pg.redirectPoolFallback),
+                    Rd(pg.flashSignatureSeen), Rd(pg.flashSceneCommitted), Rd(pg.providerPauseProvided));
                 PauseGfxDispatchResetWindow();
             }
             {
