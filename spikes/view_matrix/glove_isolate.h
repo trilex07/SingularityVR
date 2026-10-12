@@ -168,7 +168,7 @@ inline void TransformPoint(const float m[4][4], const float p[3], float out[3]) 
 inline constexpr unsigned kNoTmdGlovePaletteBoneCount = 45;
 inline constexpr unsigned kNoTmdGlovePalette[kNoTmdGlovePaletteBoneCount] = {
     85, 51, 70, 71, 72, 79, 80, 76, 73, 74, 82, 83, 77, 84, 81, 78, 75, 50,
-    6, 7, 8, 9, 10, 11, 12, 16, 27, 23, 24, 20, 17, 18, 14, 15, 21, 25, 22, 19,
+    6, 7, 8, 9, 10, 11, 12, 16, 26, 23, 24, 20, 17, 18, 14, 15, 21, 25, 22, 19,
     41, 42, 43, 44, 45, 46, 47,
 };
 

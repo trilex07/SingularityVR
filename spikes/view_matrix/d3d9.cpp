@@ -17593,34 +17593,11 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         D3DVIEWPORT9 vpMenu{};
         dev->GetViewport(&vpMenu);
         const unsigned sceneW = (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0);
-        const bool monoStage =
-            pausemenuspace::PauseOffscreenMonoStage((unsigned)menuClassNow, vpMenu.Width, sceneW);
         const bool perEyeCanvas =
-            !monoStage && pausemenuspace::DiegeticMenuCanvas(c, vpMenu.Width, sceneW);
-        const int compose = monoStage ? 3 : (perEyeCanvas ? 1 : 0);
+            pausemenuspace::DiegeticMenuCanvas(c, vpMenu.Width, sceneW);
+        const int compose = perEyeCanvas ? 1 : 0;
         menumono::NoteDraw((int)menuClassNow, false, vpMenu.Width, vpMenu.Height, sceneW, c,
                            compose);
-        if (monoStage) {
-            static LONG saidMonoStage = 0;
-            if (InterlockedCompareExchange(&saidMonoStage, 1, 0) == 0)
-                Log("menu mono: class=3 centered mono viewport into scene-sized GFx target"
-                    " (%ux%u sceneW=%u)",
-                    vpMenu.Width, vpMenu.Height, sceneW);
-            D3DVIEWPORT9 stage = vpMenu;
-            stage.X = vpMenu.X + sceneW / 4;
-            stage.Width = sceneW / 2;
-            RECT sc = { (LONG)stage.X, (LONG)stage.Y,
-                        (LONG)(stage.X + stage.Width), (LONG)(stage.Y + stage.Height) };
-            dev->SetViewport(&stage);
-            dev->SetScissorRect(&sc);
-            dev->SetVertexShaderConstantF(5, c, 4);
-            const HRESULT hrMono = draw();
-            dev->SetViewport(&vpMenu);
-            dev->SetScissorRect(&oldRect);
-            dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
-            g_inHudRemap = false;
-            return hrMono;
-        }
         const LONG halfW = (LONG)vpMenu.Width / 2;
         if (perEyeCanvas) {
             static LONG saidCompose = 0;

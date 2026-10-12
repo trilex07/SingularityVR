@@ -2,6 +2,12 @@
 
 Status: IMPLEMENTED_NOT_VERIFIED after PSVR2 re-test candidate. L1 covers rigid-glove policy, diegetic menu composition, and clip math. L2 build/tests pass on the branch. L3 smoke (Steam, no restore) and L4 headset are separate gates.
 
+## PSVR2 visual fail on `05a5f55` / `8D2CF0AB…` (2026-10-12)
+
+- **Right glove / VR Settings:** unchanged PASS.
+- **Left glove:** FAIL — stretch persists after 6–8/41–47 palette expansion; slot that held skeleton **27** (`tmd_base`) likely should be **26** (`l_arm_forearm`) for cuff weights (right side uses **85**).
+- **In-game pause:** FAIL — **not visible** (worse than clipped). `PauseOffscreenMonoStage` centered viewport on the scene RT blanked GFx; reverted to single full-width offscreen draw.
+
 ## PSVR2 visual fail on `1e2e72b` (2026-10-12)
 
 - **Right glove:** PASS (preserve).

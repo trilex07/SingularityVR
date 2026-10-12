@@ -84,11 +84,5 @@ int main() {
     Expect(!pausemenuspace::PauseBackbufferCanvasRoute(3, false, bbCanvas),
            "offscreen pause canvas is not the backbuffer route");
 
-    Expect(pausemenuspace::PauseOffscreenMonoStage(3, 5264, 5264),
-           "in-game pause on scene-sized RT uses mono stage viewport");
-    Expect(!pausemenuspace::PauseOffscreenMonoStage(2, 5264, 5264),
-           "main menu does not take pause mono stage");
-    Expect(!pausemenuspace::PauseOffscreenMonoStage(3, 512, 5264),
-           "sub-rect monitor RT is not pause mono stage");
     return g_fails == 0 ? 0 : 1;
 }

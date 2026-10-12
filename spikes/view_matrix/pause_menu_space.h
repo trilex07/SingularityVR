@@ -44,14 +44,6 @@ inline bool DiegeticMenuCanvas(const float m[16], unsigned rtWidth, unsigned sce
     return rtWidth >= sceneWidth;
 }
 
-// In-game pause GFx on the scene-sized offscreen target: one full-SBS-width draw
-// parks columns in left/right halves. Use a centered mono-width viewport (single
-// draw, c5 unchanged) so Scaleform lays out one panel both eyes can read.
-inline bool PauseOffscreenMonoStage(unsigned menuClass, unsigned rtWidth, unsigned sceneWidth) {
-    if (menuClass != 3 || sceneWidth < 640) return false;
-    return rtWidth >= sceneWidth;
-}
-
 // Canvas-ortho pause text on the backbuffer must use per-eye c5 inset/remap,
 // not the generic menuSafe scale on a world-sized matrix.
 inline bool PauseBackbufferCanvasRoute(unsigned menuClass, bool backbuffer, const float m[16]) {

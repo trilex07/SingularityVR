@@ -42,7 +42,9 @@ int main() {
     Expect(gloveisolate::NoTmdGlovePaletteCovers(7), "left shoulder is in the glove palette");
     Expect(gloveisolate::NoTmdGlovePaletteCovers(8), "left elbow is in the glove palette");
     Expect(gloveisolate::NoTmdGlovePaletteCovers(9), "left wrist is in the glove palette");
-    Expect(gloveisolate::NoTmdGlovePaletteCovers(27), "left forearm is in the glove palette");
+    Expect(gloveisolate::NoTmdGlovePaletteCovers(26), "left forearm is in the glove palette");
+    Expect(!gloveisolate::NoTmdGlovePaletteCovers(27),
+           "tmd_base is not wired into the pistol glove palette slot");
     Expect(gloveisolate::NoTmdGlovePaletteCovers(41), "left sleeve_fix is in the glove palette");
     Expect(gloveisolate::NoTmdGlovePaletteCovers(46), "left forearm2 is in the glove palette");
     Expect(gloveisolate::NoTmdGlovePaletteCovers(47), "left bicep is in the glove palette");

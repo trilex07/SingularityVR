@@ -6,7 +6,7 @@
 
 namespace menumono {
 
-// compose: 0=single full-width, 1=canvas c5 per-eye, 2=pause half-viewport (no c5 change)
+// compose: 0=single full-width, 1=canvas c5 per-eye
 inline void NoteDraw(int menuClass, bool backbuffer, unsigned rtW, unsigned rtH,
                      unsigned srcW, const float c5[16], int compose) {
     if (menuClass != 2 && menuClass != 3) return;

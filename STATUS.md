@@ -1,16 +1,14 @@
 # STATUS — session handoff
 
-Last updated **2026-10-12**. Left arm-chain palette + pause routing fix are
-`IMPLEMENTED_NOT_VERIFIED` on `feature/hands-only-gloves` (`376d359`,
-`05a5f55`). PSVR2 at `80398df`: right glove PASS, left glove FAIL, pause
-not visible after compose=2; VR Settings PASS. See
+Last updated **2026-10-12**. PSVR2 on `05a5f55` / `8D2CF0AB…`: (1) left glove
+FAIL stretch, (2) pause FAIL not visible (offscreen mono viewport), (3) VR
+Settings PASS. Follow-up on branch: map bone **26** (`l_arm_forearm`) instead
+of **27** in the pistol glove palette; revert pause mono viewport to single
+offscreen draw. `IMPLEMENTED_NOT_VERIFIED` until redeploy + headset. See
 `docs/audits/hands-only-and-pause.md`.
 
-**Steam install (MAIN, leave until headset sign-off or explicit rollback):**
-branch `feature/hands-only-gloves`, commit `05a5f55`, DLL SHA-256
-`8D2CF0ABED46A288A2B01DD195720759E67288158AE9E181A454561152A637DE`, INI
-preserved (`AA89218B…`). Pre-deploy backup:
-`deployment/install-backups/20261012-105752` (DLL). Deploy workflow:
+**Steam install:** still `05a5f55` until MAIN redeploys the next candidate.
+Rollback: `deployment/install-backups/20261012-105752`. Workflow:
 `docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
 
 Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
