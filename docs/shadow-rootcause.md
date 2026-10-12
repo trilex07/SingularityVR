@@ -40,3 +40,10 @@ SetPixelShader slot 107 verified from Windows SDK d3d9.h alongside known slots
 Flag is presence of explicit shadow-pass.request in runtime log directory;
 no request = inactive. Request tool labels observations but does NOT change HQ
 decals or establish the option state. The human must set ON/OFF separately.
+
+L1 COM/default-OFF/bytecode negotiation tests PASS. First Steam trace on
+7A8BA664...B7B1CCD: session 5, valid XR gameplay, 1808 final calls, 192 groups,
+728 overflow; only phase 0 world groups were covered. Therefore incomplete,
+not proof of producer or absence of first-person participation. User then
+confirmed HQ decals ON. Increase fixed group/shader budget to 1024/192 while
+retaining one-frame/24000-call/four-request limits; no renderer changes.

@@ -3,7 +3,7 @@
 // No bytecode query, allocation or disk logging in the draw path. COM references
 // retained only for bounded unique groups and released by Present/reset.
 namespace shadowtrace {
-constexpr unsigned kGroups=192, kDraws=24000, kShaders=48;
+constexpr unsigned kGroups=1024, kDraws=24000, kShaders=192;
 struct Key {
     IDirect3DVertexShader9* vs=nullptr;
     IDirect3DPixelShader9* ps=nullptr;
