@@ -27,8 +27,9 @@ int main(){
  assert(!inputenumthrottle::Defer(false,true,true,100,0));
  assert(!inputenumthrottle::Defer(true,false,true,100,0));
  assert(!inputenumthrottle::Defer(true,true,false,100,0));
- assert(inputenumthrottle::Defer(true,true,true,499,0));
- assert(!inputenumthrottle::Defer(true,true,true,500,0));
+ assert(inputenumthrottle::ScanIntervalMs==2000u);
+ assert(inputenumthrottle::Defer(true,true,true,1999,0));
+ assert(!inputenumthrottle::Defer(true,true,true,2000,0));
  assert(inputenumthrottle::Defer(true,true,true,20,0xfffffff0u));
  NativeGamepadEnumProbe::SetContext(true);
  InterlockedExchange(&inputenumthrottle::enabled,1);

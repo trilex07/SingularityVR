@@ -209,6 +209,32 @@ both shadow experiments OFF, restore accepted DLL after test. Do not mark fixed
 from offline tests. If FPS improves but periodic scan hitches remain,500ms gate
 is diagnostic progress, not final performance solution.
 
+## Input throttle runtime PID38556 / C24B3BB7
+
+Same-session OFF then500ms ON: exact runtime enable confirmed. OFF intervals
+13–15 native scans/s; ON held-input intervals1–2 native/s with14–20 deferred/s.
+Physical user reports smaller drops to approximately75–80FPS and confirms
+tested actions, stereo and weapon tracking remain normal. Runtime examples
+79.6–86.2FPS while scans deferred. Partial benefit, NOT a complete fix or
+production/hotplug acceptance. Both shadow experiments OFF; squares unresolved.
+
+Full3600 frame timer completed:129 native scans, every scan timed, mean
+75383.093us. This timer window is not a clean ON/OFF partition: do not use its
+cumulative2.7012ms/frame as a matched per-condition average or claim the75ms
+cost was measured separately in ON. Native/deferred once-second counters cover
+ON after timing ends. Private final log runtime-38556-input-throttle-final.log.
+Guard exited/restored acceptedDLL9FBA308C; actual UI5B2EA469 and INI568E2BB5
+verified. INI differs from pre-test61AEC56C (LaserSight1->0), preserved.
+
+Next falsifiable one-variable test: keep same native helper, successful return
+cache, owner-thread/gameplay gates and defaultOFF; increase interval500->2000ms.
+New exact owned payload v2 2000ms prevents accidental activation by old flag.
+Hypothesis: remaining periodic75ms scans explain much of residual drop. Expected
+lower scan frequency and fewer hitches; falsifier is unchanged drops despite
+suppression or action/menu regression. Hotplug/callback latency may increase to
+2s; this is diagnostic only, not a production fix. No background DirectInput
+thread, guessed UE3 field edit, button filtering or shader/pose changes.
+
 ## Evidence, real Steam PID5260 / DLL6D147048
 
 Focused capture 2: 1329 final calls, 322 state-qualified groups, zero overflow,

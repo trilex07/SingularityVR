@@ -3,7 +3,7 @@
 // Runtime stack/disassembly evidence: exact no-argument native helper forwards
 // IDirectInput8W::EnumDevices(GAMECTRL, callback011D2180, nullptr, ATTACHEDONLY).
 // OFF preserves EAX, arguments and callbacks. Opt-in throttle defers callbacks
-// inside a 500ms scan interval, reusing only a successful prior return value.
+// inside the explicitly flagged scan interval, reusing only a successful prior return value.
 namespace NativeGamepadEnumProbe {
 using Fn=DWORD (__cdecl*)();
 static Fn original=nullptr;

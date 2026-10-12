@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+Input enumeration: Steam PID38556 / DLL C24B3BB7 same-session OFF/500ms ON
+is L3_PASS for scan suppression and PHYSICALLY_VERIFIED for partial FPS benefit
+and retained tested actions/stereo/weapon tracking. User reports ~75–80FPS,
+not a complete fix. Scans fell from13–15/s to1–2/s. Next default-OFF 2000ms
+candidate is IMPLEMENTED_NOT_VERIFIED. Shadow squares remain BROKEN.
+After game exit accepted DLL9FBA308C and UI5B2EA469 verified restored/retained;
+user INI568E2BB5 retained (LaserSight changed), not overwritten with backup.
+See docs/shadow-clear-gate-experiment.md for timing limitations and next gate.
+
 Resumed shadow task: real Steam/OpenXR capture PID5260 on 6D147048... completed
 (1329 calls / 322 groups / 11 clears / overflow0). Accepted3 hashes restored
 and verified after exit. Pixel/shadow fix remains BROKEN, not visually accepted.
