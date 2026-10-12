@@ -60,3 +60,7 @@ spikes/view_matrix/d3d9.build.json
 assets/reference/**
 assets/ui/kenney-input-prompts/kenney_input-prompts_*.zip
 assets/ui/kenney-input-prompts/source/**
+
+# ---- python ----
+__pycache__/
+

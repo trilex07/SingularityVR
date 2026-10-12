@@ -1,0 +1,332 @@
+{
+  "asset": "inview_glove",
+  "material": "inview_gloves_gauze",
+  "type": "glove",
+  "package": "RvGame",
+  "detail": "first-person tactical glove fabric",
+  "maps": {
+    "diffuse": {
+      "source_file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\original\\RvGame\\Texture2D\\inview_glove_d.dds",
+      "source_sha256": "f49feef3c08085e6c104fadaea93f533b0b97a7ffde6fb86e618161178125560",
+      "source_mip0_fnv1a64": 14169204449685679501,
+      "source_width": 1024,
+      "source_height": 1024,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 524416,
+      "object_mip0_expected": [
+        1024,
+        1024
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "output_file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\inview_glove_diffuse_2x.dds",
+      "output_sha256": "e702e96cbae6ae73b24bf8e01969d0af41f15bcf1e04ccab2b8508435faff026",
+      "output_header": {
+        "width": 1024,
+        "height": 1024,
+        "mip_count": 11,
+        "fourcc": "DXT1",
+        "file_size": 699192
+      },
+      "validation": {
+        "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\inview_glove_diffuse_2x.dds",
+        "width": 1024,
+        "height": 1024,
+        "fourcc": "DXT1",
+        "mip_count": 11,
+        "file_bytes": 699192,
+        "pixel_data_bytes": 699064,
+        "declared_mip_bytes": 699064,
+        "video_memory_bytes": 699064,
+        "decoded_size": [
+          1024,
+          1024
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 93.223,
+        "seam_col_mean_abs": 8.193,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 5.839,
+          "max_abs_diff": 31,
+          "pct_pixels_changed_over_4": 58.002,
+          "pct_pixels_changed_over_16": 2.282
+        },
+        "detail_high_frequency_energy": {
+          "source": 249.09,
+          "enhanced": 285.477,
+          "ratio": 1.1461
+        },
+        "status": "VERIFIED"
+      }
+    },
+    "normal": {
+      "source_file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\original\\RvGame\\Texture2D\\inview_glove_n.dds",
+      "source_sha256": "67342ce3a34cd6ba9fd4903c58efaeda2973633c576dc71dd5b78f4525a6bd23",
+      "source_mip0_fnv1a64": 14124171308224505833,
+      "source_width": 1024,
+      "source_height": 1024,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 524416,
+      "object_mip0_expected": [
+        1024,
+        1024
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "output_file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\inview_glove_normal_2x.dds",
+      "output_sha256": "754c1b0617db838421c6e4b85fe0a9fbdfccfd14b7dd886a8cf516497c2cf3ca",
+      "output_header": {
+        "width": 1024,
+        "height": 1024,
+        "mip_count": 11,
+        "fourcc": "DXT1",
+        "file_size": 699192
+      },
+      "validation": {
+        "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\inview_glove_normal_2x.dds",
+        "width": 1024,
+        "height": 1024,
+        "fourcc": "DXT1",
+        "mip_count": 11,
+        "file_bytes": 699192,
+        "pixel_data_bytes": 699064,
+        "declared_mip_bytes": 699064,
+        "video_memory_bytes": 699064,
+        "decoded_size": [
+          1024,
+          1024
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 11.824,
+        "seam_col_mean_abs": 13.01,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 6.26,
+          "max_abs_diff": 179,
+          "pct_pixels_changed_over_4": 40.348,
+          "pct_pixels_changed_over_16": 9.321
+        },
+        "normal_map_check": {
+          "alpha_min": 255,
+          "alpha_max": 255,
+          "x_mean": 129.477,
+          "y_mean": 123.457,
+          "z_mean": 243.328,
+          "unit_length_min": 0.728642,
+          "unit_length_max": 1.058119,
+          "pct_outside_0p98_1p02": 28.9173,
+          "fourcc": "DXT1"
+        },
+        "status": "VERIFIED"
+      }
+    },
+    "specular": {
+      "source_file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\original\\RvGame\\Texture2D\\inview_glove_s.dds",
+      "source_sha256": "3a471f56d16975eab7aacd3b775d87249392d9c53f4c2a0e6b53350c7acb72ae",
+      "source_mip0_fnv1a64": 6309554667754947167,
+      "source_width": 256,
+      "source_height": 256,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 32896,
+      "object_mip0_expected": [
+        1024,
+        1024
+      ],
+      "is_true_mip0": false,
+      "mip0_gate_enforced": false,
+      "substituted": false,
+      "output_file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\inview_glove_specular_review.dds",
+      "output_sha256": "6668bd2d664a3e4424d80bb33521813137ce6580fdc4908a151bad18174da0c7",
+      "output_header": {
+        "width": 256,
+        "height": 256,
+        "mip_count": 9,
+        "fourcc": "DXT1",
+        "file_size": 43832
+      },
+      "validation": {
+        "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\inview_glove_specular_review.dds",
+        "width": 256,
+        "height": 256,
+        "fourcc": "DXT1",
+        "mip_count": 9,
+        "file_bytes": 43832,
+        "pixel_data_bytes": 43704,
+        "declared_mip_bytes": 43704,
+        "video_memory_bytes": 43704,
+        "decoded_size": [
+          256,
+          256
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 33.647,
+        "seam_col_mean_abs": 3.725,
+        "fidelity_vs_source": {
+          "compared_pixels": 65536,
+          "mean_abs_diff": 2.073,
+          "max_abs_diff": 12,
+          "pct_pixels_changed_over_4": 14.795,
+          "pct_pixels_changed_over_16": 0.0
+        },
+        "status": "VERIFIED"
+      }
+    }
+  },
+  "newly_authored": [
+    "fabric weave, thread pitch 21x21px, 11% of local luminance",
+    "thread slub irregularity, 4% of local luminance",
+    "stitch rows every 85px, 18% darker than base",
+    "abrasion patches, 9% local darkening",
+    "micro relief from enhanced diffuse high-pass, slope amplitude 0.55",
+    "original macro normals preserved and renormalised to unit length",
+    "alpha channel set to constant 255 (matches shipped DXT1 normal maps)",
+    "original mean preserved (25.5) before variation",
+    "specular variation 0.85-1.15x, 3 octaves (fabric sheen)"
+  ],
+  "recovered_from_source": [
+    "mip0 diffuse bytes, sha256 f49feef3c08085e6",
+    "mip0 normal bytes, sha256 67342ce3a34cd6ba"
+  ],
+  "preserved_from_original": [
+    "original mip0 resolution for every substituted map (no upscaling)",
+    "original UV layout and texture orientation (pixels are edited in place)",
+    "original DXT container format (DXT1 stays DXT1, DXT5 stays DXT5)",
+    "original mip0 alpha semantics (transparency mask / constant alpha)",
+    "original colour palette: detail is added as a fraction of local luminance"
+  ],
+  "notes": [
+    "specular source is not the texture object's mip0 (UModel exports a lower mip for it), so it is produced for review only and is NOT wired into the injector"
+  ],
+  "validation": {
+    "diffuse": {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\inview_glove_diffuse_2x.dds",
+      "width": 1024,
+      "height": 1024,
+      "fourcc": "DXT1",
+      "mip_count": 11,
+      "file_bytes": 699192,
+      "pixel_data_bytes": 699064,
+      "declared_mip_bytes": 699064,
+      "video_memory_bytes": 699064,
+      "decoded_size": [
+        1024,
+        1024
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 93.223,
+      "seam_col_mean_abs": 8.193,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 5.839,
+        "max_abs_diff": 31,
+        "pct_pixels_changed_over_4": 58.002,
+        "pct_pixels_changed_over_16": 2.282
+      },
+      "detail_high_frequency_energy": {
+        "source": 249.09,
+        "enhanced": 285.477,
+        "ratio": 1.1461
+      },
+      "status": "VERIFIED"
+    },
+    "normal": {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\inview_glove_normal_2x.dds",
+      "width": 1024,
+      "height": 1024,
+      "fourcc": "DXT1",
+      "mip_count": 11,
+      "file_bytes": 699192,
+      "pixel_data_bytes": 699064,
+      "declared_mip_bytes": 699064,
+      "video_memory_bytes": 699064,
+      "decoded_size": [
+        1024,
+        1024
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 11.824,
+      "seam_col_mean_abs": 13.01,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 6.26,
+        "max_abs_diff": 179,
+        "pct_pixels_changed_over_4": 40.348,
+        "pct_pixels_changed_over_16": 9.321
+      },
+      "normal_map_check": {
+        "alpha_min": 255,
+        "alpha_max": 255,
+        "x_mean": 129.477,
+        "y_mean": 123.457,
+        "z_mean": 243.328,
+        "unit_length_min": 0.728642,
+        "unit_length_max": 1.058119,
+        "pct_outside_0p98_1p02": 28.9173,
+        "fourcc": "DXT1"
+      },
+      "status": "VERIFIED"
+    },
+    "specular": {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\inview_glove_specular_review.dds",
+      "width": 256,
+      "height": 256,
+      "fourcc": "DXT1",
+      "mip_count": 9,
+      "file_bytes": 43832,
+      "pixel_data_bytes": 43704,
+      "declared_mip_bytes": 43704,
+      "video_memory_bytes": 43704,
+      "decoded_size": [
+        256,
+        256
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 33.647,
+      "seam_col_mean_abs": 3.725,
+      "fidelity_vs_source": {
+        "compared_pixels": 65536,
+        "mean_abs_diff": 2.073,
+        "max_abs_diff": 12,
+        "pct_pixels_changed_over_4": 14.795,
+        "pct_pixels_changed_over_16": 0.0
+      },
+      "status": "VERIFIED"
+    }
+  },
+  "video_memory": {
+    "source_mip0_bytes": 1081344,
+    "replacement_total_bytes": 1441832,
+    "source_note": "sum of mip0 blocks over the three source files",
+    "replacement_note": "sum over every mip level of every produced DDS, measured from the files",
+    "origin": "ESTIMATED (computed from measured DDS headers and file contents)"
+  },
+  "evidence": {
+    "true_mip0_per_substituted_map": "VERIFIED (DDS header dimensions compared against the object's mip0 size)",
+    "dds_written_and_decoded_back": "VERIFIED (every produced file re-opened and decoded)",
+    "dds_dimensions_format_mips_channels": "VERIFIED (recorded per file in validation)",
+    "normal_map_channel_conventions": "VERIFIED (alpha constant, X/Y centred, unit length ranged)",
+    "fidelity_vs_source": "VERIFIED (measured mean/max absolute difference against the original)",
+    "checksums": "VERIFIED (sha256 of every source and produced file)",
+    "video_memory_figures": "ESTIMATED (block arithmetic over measured DDS headers)",
+    "visual_result_in_game": "NOT TESTED (needs MAIN-owned runtime deployment)",
+    "gpu_frame_cost": "NOT TESTED (needs a profiled run)",
+    "anisotropic_filtering": "NOT TESTED (research only, not deployed)"
+  },
+  "comparisons": [
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\comparison\\inview_glove_diffuse_compare.png",
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\comparison\\inview_glove_normal_compare.png",
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\comparison\\inview_glove_specular_compare.png"
+  ]
+}

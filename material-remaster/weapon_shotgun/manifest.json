@@ -1,0 +1,332 @@
+{
+  "asset": "AR_shotgun",
+  "material": "AR_Shotgun",
+  "type": "weapon",
+  "package": "RvGameMPLoader_SF",
+  "detail": "metal shotgun receiver, barrel and stock surfaces",
+  "maps": {
+    "diffuse": {
+      "source_file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\original\\RvGameMPLoader_SF\\Texture2D\\AR_shotgun_d.dds",
+      "source_sha256": "62e4dd278e0ea9288b81c5d5f3d25fa85e3799ff73c70b3eaaf5602358030ecb",
+      "source_mip0_fnv1a64": 5337964157207211514,
+      "source_width": 1024,
+      "source_height": 1024,
+      "source_fourcc": "DXT5",
+      "source_mip_count": 1,
+      "source_file_bytes": 1048704,
+      "object_mip0_expected": [
+        1024,
+        1024
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "output_file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\AR_shotgun_diffuse_2x.dds",
+      "output_sha256": "6340e3245854c8cfa9d32dc9df3b82e7ba41dcf035b0c37219c08fe9a9983c65",
+      "output_header": {
+        "width": 1024,
+        "height": 1024,
+        "mip_count": 11,
+        "fourcc": "DXT5",
+        "file_size": 1398256
+      },
+      "validation": {
+        "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\AR_shotgun_diffuse_2x.dds",
+        "width": 1024,
+        "height": 1024,
+        "fourcc": "DXT5",
+        "mip_count": 11,
+        "file_bytes": 1398256,
+        "pixel_data_bytes": 1398128,
+        "declared_mip_bytes": 1398128,
+        "video_memory_bytes": 1398128,
+        "decoded_size": [
+          1024,
+          1024
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 0.438,
+        "seam_col_mean_abs": 0.526,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 4.544,
+          "max_abs_diff": 88,
+          "pct_pixels_changed_over_4": 39.737,
+          "pct_pixels_changed_over_16": 3.671
+        },
+        "detail_high_frequency_energy": {
+          "source": 94.515,
+          "enhanced": 116.17,
+          "ratio": 1.2291
+        },
+        "status": "VERIFIED"
+      }
+    },
+    "normal": {
+      "source_file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\original\\RvGameMPLoader_SF\\Texture2D\\AR_shotgun_n.dds",
+      "source_sha256": "3a36fd5d3c856bb38d448dcc7f488a4a5379e83686c2e5878f8487438969510c",
+      "source_mip0_fnv1a64": 10487084446201973189,
+      "source_width": 1024,
+      "source_height": 1024,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 524416,
+      "object_mip0_expected": [
+        1024,
+        1024
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "output_file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\AR_shotgun_normal_2x.dds",
+      "output_sha256": "76a7d6ee4f44682880f28b7e1ed5c76130fe6015162d1af2cf0872401b770834",
+      "output_header": {
+        "width": 1024,
+        "height": 1024,
+        "mip_count": 11,
+        "fourcc": "DXT1",
+        "file_size": 699192
+      },
+      "validation": {
+        "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\AR_shotgun_normal_2x.dds",
+        "width": 1024,
+        "height": 1024,
+        "fourcc": "DXT1",
+        "mip_count": 11,
+        "file_bytes": 699192,
+        "pixel_data_bytes": 699064,
+        "declared_mip_bytes": 699064,
+        "video_memory_bytes": 699064,
+        "decoded_size": [
+          1024,
+          1024
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 0.635,
+        "seam_col_mean_abs": 0.942,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 3.021,
+          "max_abs_diff": 195,
+          "pct_pixels_changed_over_4": 20.343,
+          "pct_pixels_changed_over_16": 2.774
+        },
+        "normal_map_check": {
+          "alpha_min": 255,
+          "alpha_max": 255,
+          "x_mean": 129.32,
+          "y_mean": 130.279,
+          "z_mean": 243.959,
+          "unit_length_min": 0.684401,
+          "unit_length_max": 1.0587,
+          "pct_outside_0p98_1p02": 18.2843,
+          "fourcc": "DXT1"
+        },
+        "status": "VERIFIED"
+      }
+    },
+    "specular": {
+      "source_file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\original\\RvGameMPLoader_SF\\Texture2D\\AR_shotgun_s.dds",
+      "source_sha256": "36b10dd3964e00c5eece154886019cebd9270eac9503d7ff9400b9b485420777",
+      "source_mip0_fnv1a64": 12714751330109729732,
+      "source_width": 512,
+      "source_height": 512,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 131200,
+      "object_mip0_expected": [
+        1024,
+        1024
+      ],
+      "is_true_mip0": false,
+      "mip0_gate_enforced": false,
+      "substituted": false,
+      "output_file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\AR_shotgun_specular_review.dds",
+      "output_sha256": "5eff39d100e55fa5cfb8bfbca9723ae3fa9d8899cace445d2a0cd0711c85d237",
+      "output_header": {
+        "width": 512,
+        "height": 512,
+        "mip_count": 10,
+        "fourcc": "DXT1",
+        "file_size": 174904
+      },
+      "validation": {
+        "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\AR_shotgun_specular_review.dds",
+        "width": 512,
+        "height": 512,
+        "fourcc": "DXT1",
+        "mip_count": 10,
+        "file_bytes": 174904,
+        "pixel_data_bytes": 174776,
+        "declared_mip_bytes": 174776,
+        "video_memory_bytes": 174776,
+        "decoded_size": [
+          512,
+          512
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 0.016,
+        "seam_col_mean_abs": 0.008,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 1.575,
+          "max_abs_diff": 37,
+          "pct_pixels_changed_over_4": 14.64,
+          "pct_pixels_changed_over_16": 0.132
+        },
+        "status": "VERIFIED"
+      }
+    }
+  },
+  "newly_authored": [
+    "isotropic machining grain, 4 octaves, 10% of local luminance",
+    "87 cross-grain scuffs, 12% of local luminance",
+    "174 procedural scratch strokes, 30% of local luminance (darkening: worn grooves)",
+    "low-frequency grime patches with cool tint, 3 octaves",
+    "micro relief from enhanced diffuse high-pass, slope amplitude 0.65",
+    "original macro normals preserved and renormalised to unit length",
+    "alpha channel set to constant 255 (matches shipped DXT1 normal maps)",
+    "original mean preserved (30.0) before variation",
+    "specular variation 0.90-1.10x, 3 octaves (machined metal)"
+  ],
+  "recovered_from_source": [
+    "mip0 diffuse bytes, sha256 62e4dd278e0ea928",
+    "mip0 normal bytes, sha256 3a36fd5d3c856bb3"
+  ],
+  "preserved_from_original": [
+    "original mip0 resolution for every substituted map (no upscaling)",
+    "original UV layout and texture orientation (pixels are edited in place)",
+    "original DXT container format (DXT1 stays DXT1, DXT5 stays DXT5)",
+    "original mip0 alpha semantics (transparency mask / constant alpha)",
+    "original colour palette: detail is added as a fraction of local luminance"
+  ],
+  "notes": [
+    "specular source is not the texture object's mip0 (UModel exports a lower mip for it), so it is produced for review only and is NOT wired into the injector"
+  ],
+  "validation": {
+    "diffuse": {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\AR_shotgun_diffuse_2x.dds",
+      "width": 1024,
+      "height": 1024,
+      "fourcc": "DXT5",
+      "mip_count": 11,
+      "file_bytes": 1398256,
+      "pixel_data_bytes": 1398128,
+      "declared_mip_bytes": 1398128,
+      "video_memory_bytes": 1398128,
+      "decoded_size": [
+        1024,
+        1024
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 0.438,
+      "seam_col_mean_abs": 0.526,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 4.544,
+        "max_abs_diff": 88,
+        "pct_pixels_changed_over_4": 39.737,
+        "pct_pixels_changed_over_16": 3.671
+      },
+      "detail_high_frequency_energy": {
+        "source": 94.515,
+        "enhanced": 116.17,
+        "ratio": 1.2291
+      },
+      "status": "VERIFIED"
+    },
+    "normal": {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\AR_shotgun_normal_2x.dds",
+      "width": 1024,
+      "height": 1024,
+      "fourcc": "DXT1",
+      "mip_count": 11,
+      "file_bytes": 699192,
+      "pixel_data_bytes": 699064,
+      "declared_mip_bytes": 699064,
+      "video_memory_bytes": 699064,
+      "decoded_size": [
+        1024,
+        1024
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 0.635,
+      "seam_col_mean_abs": 0.942,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 3.021,
+        "max_abs_diff": 195,
+        "pct_pixels_changed_over_4": 20.343,
+        "pct_pixels_changed_over_16": 2.774
+      },
+      "normal_map_check": {
+        "alpha_min": 255,
+        "alpha_max": 255,
+        "x_mean": 129.32,
+        "y_mean": 130.279,
+        "z_mean": 243.959,
+        "unit_length_min": 0.684401,
+        "unit_length_max": 1.0587,
+        "pct_outside_0p98_1p02": 18.2843,
+        "fourcc": "DXT1"
+      },
+      "status": "VERIFIED"
+    },
+    "specular": {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\AR_shotgun_specular_review.dds",
+      "width": 512,
+      "height": 512,
+      "fourcc": "DXT1",
+      "mip_count": 10,
+      "file_bytes": 174904,
+      "pixel_data_bytes": 174776,
+      "declared_mip_bytes": 174776,
+      "video_memory_bytes": 174776,
+      "decoded_size": [
+        512,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 0.016,
+      "seam_col_mean_abs": 0.008,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 1.575,
+        "max_abs_diff": 37,
+        "pct_pixels_changed_over_4": 14.64,
+        "pct_pixels_changed_over_16": 0.132
+      },
+      "status": "VERIFIED"
+    }
+  },
+  "video_memory": {
+    "source_mip0_bytes": 1703936,
+    "replacement_total_bytes": 2271968,
+    "source_note": "sum of mip0 blocks over the three source files",
+    "replacement_note": "sum over every mip level of every produced DDS, measured from the files",
+    "origin": "ESTIMATED (computed from measured DDS headers and file contents)"
+  },
+  "evidence": {
+    "true_mip0_per_substituted_map": "VERIFIED (DDS header dimensions compared against the object's mip0 size)",
+    "dds_written_and_decoded_back": "VERIFIED (every produced file re-opened and decoded)",
+    "dds_dimensions_format_mips_channels": "VERIFIED (recorded per file in validation)",
+    "normal_map_channel_conventions": "VERIFIED (alpha constant, X/Y centred, unit length ranged)",
+    "fidelity_vs_source": "VERIFIED (measured mean/max absolute difference against the original)",
+    "checksums": "VERIFIED (sha256 of every source and produced file)",
+    "video_memory_figures": "ESTIMATED (block arithmetic over measured DDS headers)",
+    "visual_result_in_game": "NOT TESTED (needs MAIN-owned runtime deployment)",
+    "gpu_frame_cost": "NOT TESTED (needs a profiled run)",
+    "anisotropic_filtering": "NOT TESTED (research only, not deployed)"
+  },
+  "comparisons": [
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\comparison\\AR_shotgun_diffuse_compare.png",
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\comparison\\AR_shotgun_normal_compare.png",
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\comparison\\AR_shotgun_specular_compare.png"
+  ]
+}
