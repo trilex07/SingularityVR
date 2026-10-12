@@ -17538,6 +17538,11 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // back to, and StereoPair would just return draw() anyway.
     if (!InterlockedCompareExchange(&g_dupDraws, 0, 0)) return draw();
     if(g_boundShaderLayout.shadow)return draw();
+    // This canonical path already identifies GFx canvas batches. Once the
+    // complete native pause RTT has successfully reached both eyes, remove
+    // only its old scene/backbuffer canvas copy. Never suppress the RTT producer.
+    if (Rd(g_vrMenuClass) == 3 && Rd(g_rtIsScene) && !Rd(g_vrMenuProviderDrawing) &&
+        PauseRttProbe::Presented()) return D3D_OK;
     if (!g_hudRemap) return StereoPair(dev, draw);
     InterlockedIncrement(&g_uiSeen);          // ⭐ run 230
 

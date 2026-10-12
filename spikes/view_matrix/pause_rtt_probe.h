@@ -20,12 +20,23 @@ static unsigned drawAttempts = 0, completedEpoch = 0, sampledEpoch = 0;
 static bool contentBound = false, mainDumped = false;
 static unsigned dumpCount = 0;
 static ULONGLONG lastDumpTime = 0;
+static unsigned long long presentedToken = 0;
+static unsigned long long expectedToken = 0;
+static uintptr_t expectedSurface = 0, expectedTexture = 0;
+
+static bool Ready() {
+    return contentTexture && contentSurface && (unsigned)contentToken == 3 &&
+        contentToken == VrMenuStateToken() && !contentBound && completedEpoch && drawAttempts;
+}
+static bool Presented() { return Ready() && presentedToken == contentToken; }
 
 static void ReleaseContent() {
     if (contentTexture) contentTexture->Release();
     if (contentSurface) contentSurface->Release();
     contentTexture = nullptr; contentSurface = nullptr;
     contentBound = false; contentToken = 0;
+    presentedToken = 0;
+    expectedToken = 0; expectedSurface = expectedTexture = 0;
     drawAttempts = completedEpoch = sampledEpoch = 0;
 }
 static bool SafeRange(uintptr_t address, size_t bytes) {
@@ -73,14 +84,31 @@ static void ContentBind(IDirect3DSurface9* surface) {
         contentBound = false;
         if (drawAttempts) ++completedEpoch;
     }
-    if (!surface || dumpCount >= 4) return;
+    if (!surface) return;
     const uintptr_t resource = (uintptr_t)InterlockedCompareExchange(&resourceCandidate, 0, 0);
     const uintptr_t target = (uintptr_t)InterlockedCompareExchange(&targetIdentity, 0, 0);
     if (!target || !resource) return;
+    if (expectedToken != token) { expectedToken = token; expectedSurface = expectedTexture = 0; }
+    if (!expectedSurface) {
+        __try {
+            const uintptr_t surfaceRhi = Pointer(resource + 0x48), textureRhi = Pointer(resource + 0x64);
+            const uintptr_t image = (uintptr_t)GetModuleHandleA(nullptr);
+            if (NativeResourceContract(target, resource) && surfaceRhi >= 12 && textureRhi >= 12 &&
+                Pointer(surfaceRhi - 12) == image + 0x013B4474 &&
+                Pointer(textureRhi - 12) == image + 0x013B441C) {
+                expectedSurface = Pointer(surfaceRhi - 4);
+                expectedTexture = Pointer(textureRhi - 4);
+            }
+        } __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION
+                  ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) { }
+    }
+    // Cold reflection/signature checks happen only once per movie generation.
+    // Other engine targets cost a pointer compare and no COM/resource queries.
+    if ((uintptr_t)surface != expectedSurface || !expectedTexture) return;
     IDirect3DTexture9* texture = nullptr;
     if (FAILED(surface->GetContainer(__uuidof(IDirect3DTexture9), (void**)&texture)) || !texture) return;
     bool exact = false;
-    __try { exact = ExactTexture(target, resource, texture, surface); }
+    __try { exact = (uintptr_t)texture == expectedTexture; }
     __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION
                   ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) { }
     if (exact && !contentSurface) {
@@ -93,7 +121,7 @@ static void ContentBind(IDirect3DSurface9* surface) {
     texture->Release();
 }
 
-static void DrawAttempt() { if (contentBound && dumpCount < 4) ++drawAttempts; }
+static void DrawAttempt() { if (contentBound) ++drawAttempts; }
 static void Sample(IDirect3DBaseTexture9* texture) {
     if (texture && texture == contentTexture && !contentBound && completedEpoch)
         sampledEpoch = completedEpoch;
@@ -325,6 +353,21 @@ static void Observe(uintptr_t movie, bool relevant) {
         InterlockedExchange(&targetIdentity, 0);
         snapshots = 0;
         nextSnapshot = 0;
+        // Provider identity must survive the finite diagnostic log budget.
+        // Resolve once per focus transition, never through a draw/object walk.
+        if (movie && relevant) {
+            __try {
+                const uintptr_t cls = Pointer(movie + OBJ_CLASS);
+                const int offset = Property(cls, "RenderTexture", "ObjectProperty");
+                const uintptr_t target = offset >= 0 ? Pointer(movie + offset) : 0;
+                const uintptr_t resource = target ? Pointer(target + 0xA4) : 0;
+                if (target && resource && NativeResourceContract(target, resource)) {
+                    InterlockedExchange(&targetIdentity, (LONG)target);
+                    InterlockedExchange(&resourceCandidate, (LONG)resource);
+                }
+            } __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION
+                  ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) { }
+        }
     }
     if (!movie || !relevant || snapshots >= 3 || totalSnapshots >= 24) return;
     const ULONGLONG now = GetTickCount64();
