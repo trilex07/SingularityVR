@@ -13,6 +13,18 @@ static unsigned bindingCount = 0;
 static unsigned totalBindings = 0;
 static uintptr_t bindingResource = 0;
 static uintptr_t Pointer(uintptr_t address);
+static bool SafeRange(uintptr_t address, size_t bytes) {
+    if (address < 0x10000 || bytes > UINTPTR_MAX - address) return false;
+    MEMORY_BASIC_INFORMATION info = {};
+    if (!VirtualQuery((void*)address, &info, sizeof(info)) || info.State != MEM_COMMIT ||
+        (info.Protect & (PAGE_GUARD | PAGE_NOACCESS))) return false;
+    const DWORD protection = info.Protect & 0xFF;
+    if (protection != PAGE_READONLY && protection != PAGE_READWRITE &&
+        protection != PAGE_WRITECOPY && protection != PAGE_EXECUTE_READ &&
+        protection != PAGE_EXECUTE_READWRITE && protection != PAGE_EXECUTE_WRITECOPY) return false;
+    return address - (uintptr_t)info.BaseAddress <= info.RegionSize &&
+        bytes <= info.RegionSize - (address - (uintptr_t)info.BaseAddress);
+}
 
 // Observed pointer provenance only. A backlink identifies an owner candidate;
 // an exact COM match narrows its fields. Neither permits presentation yet.
@@ -22,14 +34,13 @@ static void FindOwnerResource(uintptr_t target, unsigned objectBytes) {
     unsigned matches = 0;
     uintptr_t selected = 0;
     const uintptr_t image = (uintptr_t)GetModuleHandleA(nullptr);
-    const IMAGE_DOS_HEADER* dos = (const IMAGE_DOS_HEADER*)image;
-    const IMAGE_NT_HEADERS* nt = (const IMAGE_NT_HEADERS*)(image + dos->e_lfanew);
-    const uintptr_t imageEnd = image + nt->OptionalHeader.SizeOfImage;
     for (unsigned offset = 0x3C; offset + 4 <= objectBytes; offset += 4) {
         const uintptr_t node = Pointer(target + offset);
-        if (!node || node == target || !Readable((void*)node, 0x100)) continue;
+        if (!node || node == target || !SafeRange(node, 0x100)) continue;
         const uintptr_t vtable = Pointer(node);
-        if (vtable < image || vtable >= imageEnd) continue;
+        MEMORY_BASIC_INFORMATION tableInfo = {};
+        if (!VirtualQuery((void*)vtable, &tableInfo, sizeof(tableInfo)) ||
+            tableInfo.Type != MEM_IMAGE || (uintptr_t)tableInfo.AllocationBase != image) continue;
         for (unsigned ownerOffset = 4; ownerOffset < 0x100; ownerOffset += 4) {
             if (Pointer(node + ownerOffset) != target) continue;
             Log("pause-rtt owner-candidate target=%p targetOffset=0x%X node=%p vtable=%p backlinkOffset=0x%X association=UNVERIFIED",
@@ -54,7 +65,7 @@ static void MatchBinding(uintptr_t resource, uintptr_t target, IDirect3DSurface9
             ++matches;
         }
         if (!value || value == target || value == resource ||
-            value == (uintptr_t)surface || value == (uintptr_t)texture || !Readable((void*)value, 0x80)) continue;
+            value == (uintptr_t)surface || value == (uintptr_t)texture || !SafeRange(value, 0x80)) continue;
         for (unsigned second = 0; second < 0x80; second += 4) {
             const uintptr_t nested = Pointer(value + second);
             if (nested != (uintptr_t)surface && (!texture || nested != (uintptr_t)texture)) continue;
@@ -90,7 +101,7 @@ static void Bind(IDirect3DSurface9* surface) {
 }
 
 static uintptr_t Pointer(uintptr_t address) {
-    return address && Readable((void*)address, sizeof(uintptr_t))
+    return SafeRange(address, sizeof(uintptr_t))
         ? *reinterpret_cast<const uintptr_t*>(address) : 0;
 }
 
