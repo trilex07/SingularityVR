@@ -77,6 +77,14 @@ This distinguishes actual depth-alpha producers from non-writing volumes and
 captures different receiver coverage/state instead of silently grouping them.
 No new matrix correction until producer/depth/coverage semantics are verified.
 After A/B exit accepted DLL/INI/UI hashes were all restored and verified.
+The same candidate records <=128 native StretchRect copies and <=32 actual
+Clear calls, ordered by final-draw serial. Source/destination owners identify
+non-draw depth resolves/copies that the prior graph omitted. SDK confirms device
+slots 34 (StretchRect) and 43 (Clear); wrappers forward all arguments and HRESULTs
+unchanged, retain bounded COM references only in an active trace, release at
+Present/reset, and perform no queries/logging/allocation when inactive. Clear
+recording wraps the existing native leaf pointer after the accepted hook policy,
+not before it. Capture does not change clear flags or copy rectangles/filter.
 
 Next controlled candidate is read-only: correction flag remains OFF, trace key
 includes moved context, repeated 8/12 volume draws retain last VS c0..3 and PS

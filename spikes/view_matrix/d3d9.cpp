@@ -11664,6 +11664,13 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceIndexedUP(IDirect3DDevice9* dev,D3DP
     const HRESULT hr=shadowNativeIndexedUP(dev,t,min,verts,prims,indices,format,data,stride);shadowtrace::After(id,hr);return hr;
 }
 typedef HRESULT (STDMETHODCALLTYPE *ShadowSetPS)(IDirect3DDevice9*,IDirect3DPixelShader9*);
+typedef HRESULT (STDMETHODCALLTYPE *ShadowStretch)(IDirect3DDevice9*,IDirect3DSurface9*,const RECT*,IDirect3DSurface9*,const RECT*,D3DTEXTUREFILTERTYPE);
+static ShadowStretch shadowOriginalStretch=nullptr;
+static HRESULT STDMETHODCALLTYPE ShadowTraceStretch(IDirect3DDevice9* dev,IDirect3DSurface9* src,const RECT* from,IDirect3DSurface9* dst,const RECT* to,D3DTEXTUREFILTERTYPE filter) {
+    if(!shadowOriginalStretch)return D3DERR_INVALIDCALL;
+    const HRESULT hr=shadowOriginalStretch(dev,src,from,dst,to,filter);
+    shadowtrace::NoteCopy(src,from,dst,to,filter,hr);return hr;
+}
 static ShadowSetPS shadowOriginalPS=nullptr;
 static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
     const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);}return hr;
@@ -16433,6 +16440,11 @@ typedef HRESULT (STDMETHODCALLTYPE *PFN_Clear)(IDirect3DDevice9*, DWORD, const D
                                                D3DCOLOR, float, DWORD);
 PFN_SetViewport g_origSetViewport = nullptr;
 PFN_Clear       g_origClear = nullptr;
+static PFN_Clear shadowNativeClear=nullptr;
+static HRESULT STDMETHODCALLTYPE ShadowTraceClear(IDirect3DDevice9* dev,DWORD count,const D3DRECT* rects,DWORD flags,D3DCOLOR colour,float z,DWORD stencil) {
+    const HRESULT hr=shadowNativeClear(dev,count,rects,flags,colour,z,stencil);
+    shadowtrace::NoteClear(dev,count,flags,colour,z,stencil,hr);return hr;
+}
 
 HRESULT STDMETHODCALLTYPE Hook_SetViewport(IDirect3DDevice9* dev, const D3DVIEWPORT9* vp) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
@@ -27757,6 +27769,8 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
         shadowNativeUP=g_origDrawPrimUP; if(shadowNativeUP)g_origDrawPrimUP=&ShadowTraceUP;
         shadowNativeIndexedUP=g_origDrawIndexedPrimUP; if(shadowNativeIndexedUP)g_origDrawIndexedPrimUP=&ShadowTraceIndexedUP;
         shadowOriginalPS=(ShadowSetPS)PatchVTable(*out,107,(void*)&ShadowTraceSetPS);
+        shadowOriginalStretch=(ShadowStretch)PatchVTable(*out,34,(void*)&ShadowTraceStretch); // SDK-confirmed device slot.
+        shadowNativeClear=g_origClear;if(shadowNativeClear)g_origClear=&ShadowTraceClear;
         Log("Present + SetVertexShaderConstantF + Draw + SetRenderTarget + SetTexture hooks installed.");
         Log("F7 find the matrix | F1 TRUE stereo | F12 alternate-eye | F10 6-DOF | F9 head tracking");
         if (out && *out) VfxHostInitDevice(*out); // plugin Load + drawer + atlas (absent DLL = no-op)

@@ -16,9 +16,14 @@ def read_trace(path, shader_out=None):
     if not header:
         raise ValueError("Not a shadow-pass-trace-v1 file")
     groups, shaders = {}, {}
+    copies, clears = [], []
     lines = text.splitlines()
     for i, line in enumerate(lines):
-        if line.startswith("group="):
+        if line.startswith("copy "):
+            copies.append(dict(re.findall(r"(\w+)=([^ ]+)",line)))
+        elif line.startswith("clear "):
+            clears.append(dict(re.findall(r"(\w+)=([^ ]+)",line)))
+        elif line.startswith("group="):
             data = dict(re.findall(r"(\w+)=([^ ]+)", line))
             data["textures"] = {}
             groups[int(data["group"])] = data
@@ -80,7 +85,7 @@ def read_trace(path, shader_out=None):
         "path": str(Path(path).resolve()), "draws": int(header[1]),
         "group_count": int(header[2]), "overflow": int(header[3]),
         "complete_budget": int(header[3]) == 0, "shaders": shaders,
-        "groups": groups, "candidate_edges": edges,
+        "groups": groups, "candidate_edges": edges, "copies": copies, "clears": clears,
     }
 
 

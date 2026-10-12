@@ -34,7 +34,26 @@ static Group groups[kGroups];
 static unsigned count=0,draws=0,overflow=0,sequence=0,tailReads=0;
 static bool active=false;
 static bool pending=false;
+struct Copy { IDirect3DSurface9* src=nullptr;IDirect3DSurface9* dst=nullptr;unsigned draw=0;
+    RECT from{},to{};bool fromRect=false,toRect=false;D3DTEXTUREFILTERTYPE filter{};HRESULT hr=E_FAIL; };
+struct Clear { IDirect3DSurface9* rt=nullptr;IDirect3DSurface9* depth=nullptr;unsigned draw=0;
+    DWORD rects=0,flags=0,colour=0,stencil=0;float z=0;HRESULT hr=E_FAIL; };
+static Copy copies[128];static Clear clears[32];static unsigned copyCount=0,clearCount=0;
+inline void NoteCopy(IDirect3DSurface9* src,const RECT* from,IDirect3DSurface9* dst,const RECT* to,D3DTEXTUREFILTERTYPE filter,HRESULT hr) {
+    if(!active)return;if(copyCount==128){++overflow;return;}
+    auto& c=copies[copyCount++];c={};c.src=src;c.dst=dst;c.draw=draws;c.hr=hr;c.filter=filter;
+    if(src)src->AddRef();if(dst)dst->AddRef();
+    if(from){c.from=*from;c.fromRect=true;}if(to){c.to=*to;c.toRect=true;}
+}
+inline void NoteClear(IDirect3DDevice9* dev,DWORD rects,DWORD flags,DWORD colour,float z,DWORD stencil,HRESULT hr) {
+    if(!active)return;if(clearCount==32){++overflow;return;}
+    auto& c=clears[clearCount++];c={};c.rt=bound.rt;if(c.rt)c.rt->AddRef();
+    dev->GetDepthStencilSurface(&c.depth);c.draw=draws;c.rects=rects;c.flags=flags;c.colour=colour;c.z=z;c.stencil=stencil;c.hr=hr;
+}
 inline void Release() {
+    for(unsigned i=0;i<copyCount;++i){if(copies[i].src)copies[i].src->Release();if(copies[i].dst)copies[i].dst->Release();}
+    for(unsigned i=0;i<clearCount;++i){if(clears[i].rt)clears[i].rt->Release();if(clears[i].depth)clears[i].depth->Release();}
+    copyCount=clearCount=0;
     for(unsigned i=0;i<count;++i) {
         auto& g=groups[i];
         if(g.key.vs)g.key.vs->Release(); if(g.key.ps)g.key.ps->Release();
@@ -97,6 +116,16 @@ inline void WriteShader(FILE* f,IUnknown* shader,bool pixel) {
 inline void Dump(const char* path) {
     FILE* f=nullptr;if(fopen_s(&f,path,"wb")||!f)return;
     fprintf(f,"shadow-pass-trace-v1 draws=%u groups=%u overflow=%u\n",draws,count,overflow);
+    for(unsigned i=0;i<copyCount;++i){const auto& c=copies[i];IDirect3DTexture9* src=nullptr;IDirect3DTexture9* dst=nullptr;
+        if(c.src)c.src->GetContainer(__uuidof(IDirect3DTexture9),(void**)&src);
+        if(c.dst)c.dst->GetContainer(__uuidof(IDirect3DTexture9),(void**)&dst);
+        fprintf(f,"copy index=%u afterDraw=%u src=%p srcOwner=%p dst=%p dstOwner=%p filter=%u hr=%08lX fromRect=%u from=%ld,%ld,%ld,%ld toRect=%u to=%ld,%ld,%ld,%ld\n",
+            i,c.draw,c.src,src,c.dst,dst,(unsigned)c.filter,c.hr,c.fromRect?1:0,c.from.left,c.from.top,c.from.right,c.from.bottom,
+            c.toRect?1:0,c.to.left,c.to.top,c.to.right,c.to.bottom);
+        if(src)src->Release();if(dst)dst->Release();
+    }
+    for(unsigned i=0;i<clearCount;++i){const auto& c=clears[i];fprintf(f,"clear index=%u afterDraw=%u RT=%p depth=%p rects=%lu flags=%lu colour=%08lX z=%.9g stencil=%lu hr=%08lX\n",
+        i,c.draw,c.rt,c.depth,c.rects,c.flags,c.colour,c.z,c.stencil,c.hr);}
     IUnknown* shaders[kShaders]{};unsigned sn=0;
     for(unsigned i=0;i<count;++i) {
         const auto& g=groups[i]; D3DSURFACE_DESC d{};if(g.key.rt)g.key.rt->GetDesc(&d);
