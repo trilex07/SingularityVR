@@ -22,7 +22,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/enemy_revert/revert_d2_diffuse_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 13544974987055247055,
+        "table_file": "revert_d2.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "revert_d2_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_revert/revert_d2_2x.dds",
       "output_sha256": "11d0f80da648bc33ba3dd0ab51bf5e8353903cde75737e9de2c2cd53e5456fe9",
       "validation": {
         "width": 2048,
@@ -72,7 +79,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/enemy_revert/revert_d2_normal_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 17807392261670290024,
+        "table_file": "revert_n2.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "revert_n2_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_revert/revert_n2_2x.dds",
       "output_sha256": "7b152cc4230c0df85f8896f6dee1266c90992e99ddfe27010a9de5e16cbe943e",
       "validation": {
         "width": 2048,

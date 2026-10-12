@@ -50,6 +50,13 @@ OUT = LOCAL_ROOT / "material-remaster-batch2"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SAFE_OUT = REPO_ROOT / "material-remaster-batch2" / "manifests"
 
+# Injector target table (content hashes + replacement filenames the runtime
+# looks up). Committed safe metadata extracted from the v2 branch injector.
+# The runtime resolves "<target-stem>_2x.dds", so substituted outputs use
+# exactly that name and are drop-in deployable.
+TARGETS = json.loads((REPO_ROOT / "asset-tools" / "textures" / "target_map.json")
+                     .read_text(encoding="utf-8"))["targets"]
+
 
 def _p(*parts: str) -> Path:
     return ORIG.joinpath(*parts)
@@ -261,6 +268,36 @@ def enhance_diffuse(kind: str, img: Image.Image):
     return M.enhance_diffuse(img, kind)  # weapon / environment reuse batch 1
 
 
+def enhance_normal_procedural(img: Image.Image, kind: str) -> tuple[Image.Image, list[str]]:
+    """Micro relief without diffuse coupling (for normal-only assets).
+
+    Used only where no true-mip0 diffuse exists to derive detail from. The
+    perturbation is procedural fbm noise, renormalised per texel. Weaker
+    provenance than diffuse-coupled relief - labelled as such in manifests.
+    """
+    import math
+    from dds_io import normal_to_signed, signed_to_normal
+    signed = normal_to_signed(np.asarray(img.convert("RGBA"))).astype(np.float32)
+    h, w = signed.shape[:2]
+    # deliberately gentler than diffuse-coupled relief: without a diffuse map
+    # anchoring the detail, a strong global perturbation would rewrite the
+    # material instead of refining it
+    amp = {"weapon": 0.28, "device": 0.25}.get(kind, 0.25)
+    dx = (M.fbm((h, w), 4, 8001, 0.10) - 0.5) * 2.0 * amp
+    dy = (M.fbm((h, w), 4, 8002, 0.10) - 0.5) * 2.0 * amp
+    signed[:, :, 0] = np.clip(signed[:, :, 0] + dx, -1, 1)
+    signed[:, :, 1] = np.clip(signed[:, :, 1] + dy, -1, 1)
+    out = signed_to_normal(signed)
+    out[:, :, 3] = 255
+    notes = [
+        "procedural-only micro relief (fbm, 4 octaves) - NOT coupled to diffuse",
+        "weaker provenance than diffuse-coupled relief; see manifest",
+        "original macro normals preserved and renormalised to unit length",
+        "alpha channel set to constant 255 (matches shipped DXT1 normal maps)",
+    ]
+    return Image.fromarray(out, "RGBA"), notes
+
+
 def signed_upsample_2x(img: Image.Image) -> Image.Image:
     """Genuine 2x upscale of a normal map: LANCZOS in signed space + renorm."""
     from dds_io import normal_to_signed, signed_to_normal
@@ -336,6 +373,29 @@ def process_asset(key: str, spec: dict) -> dict:
         print(f"  {map_type:9s} {hdr['width']}x{hdr['height']} {hdr['fourcc']} "
               f"true_mip0={is_true_mip0} substituted={entry['substituted']}", flush=True)
 
+        # injector deploy name: the runtime looks up "<target-stem>_2x.dds"
+        # (see texq naming on the injector side), so substituted outputs use
+        # exactly that filename and are drop-in deployable. Maps with no
+        # injector target keep a descriptive name and are flagged below.
+        tex_name = Path(path).stem
+        target = TARGETS.get(tex_name)
+        if entry["substituted"]:
+            entry["injector_target"] = {
+                "present": target is not None,
+                "table_hash": target["fnv1a64"] if target else None,
+                "table_file": target["file"] if target else None,
+                "hash_match": (target is not None
+                               and target["fnv1a64"] == entry["source_mip0_fnv1a64"]),
+            }
+            if target is not None:
+                deploy_name = Path(target["file"]).stem + "_2x.dds"
+            else:
+                deploy_name = f"{spec['asset']}_{map_type}_2x.nodesc.dds"
+                result["notes"].append(
+                    f"{tex_name} has no injector target-table entry: the file is "
+                    f"produced for review only until MAIN adds the target")
+            entry["deploy_filename"] = deploy_name
+
         if map_type in spec["substitute"]:
             if map_type == "diffuse":
                 enhanced, notes = enhance_diffuse(spec["kind"], img)
@@ -344,20 +404,26 @@ def process_asset(key: str, spec: dict) -> dict:
                 fourcc = hdr["fourcc"]
                 a = np.asarray(enhanced)
                 payload = enhanced if a[:, :, 3].min() < 255 else enhanced.convert("RGB")
-                out_dds = out_dir / f"{spec['asset']}_{map_type}_2x.dds"
+                out_dds = out_dir / entry["deploy_filename"]
                 written = save_dds(out_dds, payload, fourcc)
             elif map_type == "normal":
                 if enhanced_diffuse is None:
-                    raise RuntimeError("normal processed before diffuse")
-                enhanced, notes = M.enhance_normal(img, enhanced_diffuse, spec["kind"])
-                result["newly_authored"].extend(notes)
-                out_dds = out_dir / f"{spec['asset']}_{map_type}_2x.dds"
+                    if spec.get("relief") == "procedural":
+                        enhanced, notes = enhance_normal_procedural(img, spec["kind"])
+                        result["newly_authored"].extend(notes)
+                    else:
+                        raise RuntimeError("normal processed before diffuse")
+                else:
+                    enhanced, notes = M.enhance_normal(img, enhanced_diffuse,
+                                                       spec["kind"])
+                    result["newly_authored"].extend(notes)
+                out_dds = out_dir / entry["deploy_filename"]
                 written = save_normal_dds(out_dds, enhanced)
             elif map_type == "specular":
                 # only reached when the specular source IS true mip0
                 enhanced, notes = M.enhance_specular(img, spec["kind"])
                 result["newly_authored"].extend(notes)
-                out_dds = out_dir / f"{spec['asset']}_{map_type}_2x.dds"
+                out_dds = out_dir / entry["deploy_filename"]
                 a = np.asarray(enhanced)
                 payload = enhanced if a[:, :, 3].min() < 255 else enhanced.convert("RGB")
                 written = save_dds(out_dds, payload, hdr["fourcc"])

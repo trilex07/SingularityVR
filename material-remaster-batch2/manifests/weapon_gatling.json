@@ -22,7 +22,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/weapon_gatling/ar_gatling_gun_diffuse_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 11271628360968536064,
+        "table_file": "ar_gatling_gun_d.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "ar_gatling_gun_d_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/weapon_gatling/ar_gatling_gun_d_2x.dds",
       "output_sha256": "623aaf13872db36ffa6d05c291c6bbad28c44ba5abb6404510625ac3bdc794cf",
       "validation": {
         "width": 2048,
@@ -72,7 +79,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/weapon_gatling/ar_gatling_gun_normal_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 7575541430910006941,
+        "table_file": "ar_gatling_gun_n.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "ar_gatling_gun_n_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/weapon_gatling/ar_gatling_gun_n_2x.dds",
       "output_sha256": "6b1f7d8a8471edf73e62f718cc8fd0c9aada027a98b0d4efdd1a3aa2ebd401d5",
       "validation": {
         "width": 2048,

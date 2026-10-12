@@ -1,0 +1,152 @@
+{
+  "batch": 3,
+  "asset": "elite_beam_n",
+  "material": "AR_Railgun_Inview",
+  "kind": "weapon",
+  "package": "RvGameMPLoader_SF",
+  "detail": "railgun normal relief only (diffuse is a lower mip)",
+  "maps": {
+    "normal": {
+      "source_file": "<assets-local>/textures/original/RvGameMPLoader_SF/Texture2D/elite_beam_n.dds",
+      "source_sha256": "09bd5ae8a9aefd65a489b2d5dffcb697745dfb41b1035c441276984148ee5ad0",
+      "source_mip0_fnv1a64": 10948678980300156221,
+      "source_width": 2048,
+      "source_height": 2048,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 2097280,
+      "object_mip0_expected": [
+        2048,
+        2048
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "injector_target": {
+        "present": true,
+        "table_hash": 10948678980300156221,
+        "table_file": "elite_beam_n.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "elite_beam_n_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch3/weapon_railgun_normal/elite_beam_n_2x.dds",
+      "output_sha256": "0a159266274c4feaa7e22e9099f53754e791484ad3ab5823d1085387e9e76a97",
+      "validation": {
+        "width": 2048,
+        "height": 2048,
+        "fourcc": "DXT1",
+        "mip_count": 12,
+        "file_bytes": 2796344,
+        "pixel_data_bytes": 2796216,
+        "declared_mip_bytes": 2796216,
+        "video_memory_bytes": 2796216,
+        "decoded_size": [
+          2048,
+          2048
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 29.166,
+        "seam_col_mean_abs": 26.045,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 8.321,
+          "max_abs_diff": 239,
+          "pct_pixels_changed_over_4": 78.474,
+          "pct_pixels_changed_over_16": 6.476
+        },
+        "normal_map_check": {
+          "alpha_min": 255,
+          "alpha_max": 255,
+          "x_mean": 129.717,
+          "y_mean": 127.61,
+          "z_mean": 233.645,
+          "unit_length_min": 0.524186,
+          "unit_length_max": 1.060268,
+          "pct_outside_0p98_1p02": 19.315,
+          "fourcc": "DXT1"
+        },
+        "status": "VERIFIED"
+      }
+    }
+  },
+  "newly_authored": [
+    "procedural-only micro relief (fbm, 4 octaves) - NOT coupled to diffuse",
+    "weaker provenance than diffuse-coupled relief; see manifest",
+    "original macro normals preserved and renormalised to unit length",
+    "alpha channel set to constant 255 (matches shipped DXT1 normal maps)"
+  ],
+  "recovered_from_source": [
+    "mip0 normal bytes, sha256 09bd5ae8a9aefd65"
+  ],
+  "preserved_from_original": [
+    "original mip0 resolution for every substituted map (no upscaling)",
+    "original UV layout and texture orientation (pixels edited in place)",
+    "original DXT container format (DXT1 stays DXT1, DXT5 stays DXT5)",
+    "original mip0 alpha semantics",
+    "original colour palette: detail added as a fraction of local luminance"
+  ],
+  "notes": [],
+  "status": "OFFLINE ONLY - NOT VR TESTED",
+  "validation": {
+    "normal": {
+      "width": 2048,
+      "height": 2048,
+      "fourcc": "DXT1",
+      "mip_count": 12,
+      "file_bytes": 2796344,
+      "pixel_data_bytes": 2796216,
+      "declared_mip_bytes": 2796216,
+      "video_memory_bytes": 2796216,
+      "decoded_size": [
+        2048,
+        2048
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 29.166,
+      "seam_col_mean_abs": 26.045,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 8.321,
+        "max_abs_diff": 239,
+        "pct_pixels_changed_over_4": 78.474,
+        "pct_pixels_changed_over_16": 6.476
+      },
+      "normal_map_check": {
+        "alpha_min": 255,
+        "alpha_max": 255,
+        "x_mean": 129.717,
+        "y_mean": 127.61,
+        "z_mean": 233.645,
+        "unit_length_min": 0.524186,
+        "unit_length_max": 1.060268,
+        "pct_outside_0p98_1p02": 19.315,
+        "fourcc": "DXT1"
+      },
+      "status": "VERIFIED"
+    }
+  },
+  "video_memory": {
+    "source_mip0_bytes_substituted": 2097152,
+    "replacement_total_bytes_substituted": 2796216,
+    "origin": "ESTIMATED (computed from measured DDS headers and file contents)"
+  },
+  "evidence": {
+    "true_mip0_per_substituted_map": "VERIFIED (DDS header vs object mip0 size)",
+    "dds_written_and_decoded_back": "VERIFIED (every file re-opened and decoded)",
+    "dds_dimensions_format_mips_channels": "VERIFIED (per file in validation)",
+    "normal_map_channel_conventions": "VERIFIED (alpha constant, X/Y centred, unit length ranged)",
+    "fidelity_vs_source": "VERIFIED (measured mean/max absolute difference)",
+    "checksums": "VERIFIED (sha256 of every source and produced file)",
+    "video_memory_figures": "ESTIMATED (block arithmetic over measured headers)",
+    "visual_result_in_game": "NOT TESTED (no Steam run, no deploy, no headset)",
+    "gpu_frame_cost": "NOT TESTED (needs a profiled run)"
+  },
+  "unprocessed": {
+    "elite_beam_d": "diffuse exported at 1024x1024 (object 2048x2048, mip1) - not processed, not substituted"
+  },
+  "comparisons_local_only": [
+    "<assets-local>/material-remaster-batch3/weapon_railgun_normal/comparison/elite_beam_n_normal_compare.png"
+  ]
+}

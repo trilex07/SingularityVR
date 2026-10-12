@@ -22,7 +22,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/env_rollingdoor/door_rollingT_diffuse_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 6492888565812934941,
+        "table_file": "door_rollingT_d.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "door_rollingT_d_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/env_rollingdoor/door_rollingT_d_2x.dds",
       "output_sha256": "60a54ca6816170fdd22e8f4af445ba30fd34620093b7116c14ebfcdd0c9bb831",
       "validation": {
         "width": 512,
@@ -72,7 +79,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/env_rollingdoor/door_rollingT_normal_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 13090093012117832429,
+        "table_file": "door_rollingT_n.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "door_rollingT_n_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/env_rollingdoor/door_rollingT_n_2x.dds",
       "output_sha256": "b584cf4d216556bc15bda4fe7285cc7508ebf38a1c7f5b4f38f32666dd485cfc",
       "validation": {
         "width": 512,

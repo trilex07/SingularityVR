@@ -1,0 +1,566 @@
+{
+ "source": "feature/material-remaster-v2@1de57f7:asset-tools/texture-injector/targets_generated.h",
+ "count": 80,
+ "targets": {
+  "AR_E99Rifle_alt_d": {
+   "width": 2048,
+   "height": 1024,
+   "format": "DXT5",
+   "fnv1a64": 16160022635740620080,
+   "file": "AR_E99Rifle_alt_d.dds"
+  },
+  "AR_E99Rifle_n": {
+   "width": 2048,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 185541836161454253,
+   "file": "AR_E99Rifle_n.dds"
+  },
+  "AR_shotgun_d": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT5",
+   "fnv1a64": 5337964157207211514,
+   "file": "AR_shotgun_d.dds"
+  },
+  "AR_shotgun_e": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 16802150620087858708,
+   "file": "AR_shotgun_e.dds"
+  },
+  "AR_shotgun_n": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 10487084446201973189,
+   "file": "AR_shotgun_n.dds"
+  },
+  "Spetsnaz_MP_Body_d": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 17230285951280772806,
+   "file": "Spetsnaz_MP_Body_d.dds"
+  },
+  "Spetsnaz_MP_Body_n": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 10007535904788740833,
+   "file": "Spetsnaz_MP_Body_n.dds"
+  },
+  "Spetsnaz_MP_helmet_d": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 7773224157656991146,
+   "file": "Spetsnaz_MP_helmet_d.dds"
+  },
+  "Spetsnaz_MP_helmet_n": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 13284849330641921571,
+   "file": "Spetsnaz_MP_helmet_n.dds"
+  },
+  "ar_gatling_gun_d": {
+   "width": 2048,
+   "height": 1024,
+   "format": "DXT5",
+   "fnv1a64": 11271628360968536064,
+   "file": "ar_gatling_gun_d.dds"
+  },
+  "ar_gatling_gun_n": {
+   "width": 2048,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 7575541430910006941,
+   "file": "ar_gatling_gun_n.dds"
+  },
+  "ar_sniper_rifle_n": {
+   "width": 2048,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 10616915492120553037,
+   "file": "ar_sniper_rifle_n.dds"
+  },
+  "brightFlash_01": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 5369144333500254618,
+   "file": "brightFlash_01.dds"
+  },
+  "bsplat3_d": {
+   "width": 256,
+   "height": 256,
+   "format": "DXT5",
+   "fnv1a64": 5627902033149582049,
+   "file": "bsplat3_d.dds"
+  },
+  "door_blastdoorN_d": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 3085875096892879354,
+   "file": "door_blastdoorN_d.dds"
+  },
+  "door_blastdoorN_n": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 12693714519537856089,
+   "file": "door_blastdoorN_n.dds"
+  },
+  "door_rollingT_d": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 6492888565812934941,
+   "file": "door_rollingT_d.dds"
+  },
+  "door_rollingT_n": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 13090093012117832429,
+   "file": "door_rollingT_n.dds"
+  },
+  "door_rollingT_s": {
+   "width": 256,
+   "height": 256,
+   "format": "DXT1",
+   "fnv1a64": 1897785315766383748,
+   "file": "door_rollingT_s.dds"
+  },
+  "elite_beam_n": {
+   "width": 2048,
+   "height": 2048,
+   "format": "DXT1",
+   "fnv1a64": 10948678980300156221,
+   "file": "elite_beam_n.dds"
+  },
+  "env_00adab7c": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 48883722085732915,
+   "file": "env_00adab7c.dds"
+  },
+  "env_03b581da": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT5",
+   "fnv1a64": 267262530362525829,
+   "file": "env_03b581da.dds"
+  },
+  "env_0b27b3ce": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 803808757296134228,
+   "file": "env_0b27b3ce.dds"
+  },
+  "env_0d582fd6": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 961571117931560024,
+   "file": "env_0d582fd6.dds"
+  },
+  "env_0e7a4cce": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 1043230715613774119,
+   "file": "env_0e7a4cce.dds"
+  },
+  "env_1a86a04b": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT5",
+   "fnv1a64": 1911391339596801891,
+   "file": "env_1a86a04b.dds"
+  },
+  "env_1f161de7": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 2240010744989443259,
+   "file": "env_1f161de7.dds"
+  },
+  "env_2177e137": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 2411643754708652974,
+   "file": "env_2177e137.dds"
+  },
+  "env_23077af2": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 2524121297322494310,
+   "file": "env_23077af2.dds"
+  },
+  "env_252c3df4": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 2678583998105174801,
+   "file": "env_252c3df4.dds"
+  },
+  "env_2f09c1bc": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 3389453211008964705,
+   "file": "env_2f09c1bc.dds"
+  },
+  "env_3657a320": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT5",
+   "fnv1a64": 3915777762582391835,
+   "file": "env_3657a320.dds"
+  },
+  "env_37469b7a": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 3983041871343509586,
+   "file": "env_37469b7a.dds"
+  },
+  "env_4741d8cd": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT5",
+   "fnv1a64": 5134623428195192601,
+   "file": "env_4741d8cd.dds"
+  },
+  "env_5bca8499": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 6614244795445315126,
+   "file": "env_5bca8499.dds"
+  },
+  "env_6201ffb9": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 7062206862943438548,
+   "file": "env_6201ffb9.dds"
+  },
+  "env_63b3ec8d": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT5",
+   "fnv1a64": 7184345922265266531,
+   "file": "env_63b3ec8d.dds"
+  },
+  "env_6489c88e": {
+   "width": 512,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 7244541987938449985,
+   "file": "env_6489c88e.dds"
+  },
+  "env_76306a2d": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 8516423640856410738,
+   "file": "env_76306a2d.dds"
+  },
+  "env_783d13f7": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 8664103211226911739,
+   "file": "env_783d13f7.dds"
+  },
+  "env_7d21f673": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 9016758903766226123,
+   "file": "env_7d21f673.dds"
+  },
+  "env_bd9cf530": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 13663064957898135323,
+   "file": "env_bd9cf530.dds"
+  },
+  "env_d3287886": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 15215543861052911272,
+   "file": "env_d3287886.dds"
+  },
+  "env_d83b3c3a": {
+   "width": 512,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 15581113556472726702,
+   "file": "env_d83b3c3a.dds"
+  },
+  "env_dc94648c": {
+   "width": 1024,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 15894439539172661435,
+   "file": "env_dc94648c.dds"
+  },
+  "env_door_a_d": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 746385033390875023,
+   "file": "env_door_a_d.dds"
+  },
+  "env_door_a_n": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 150223980969544687,
+   "file": "env_door_a_n.dds"
+  },
+  "env_door_b_d": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 12790432445910654460,
+   "file": "env_door_b_d.dds"
+  },
+  "env_door_b_n": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 14754591261643191921,
+   "file": "env_door_b_n.dds"
+  },
+  "env_e00a5e0e": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 16143819230016276340,
+   "file": "env_e00a5e0e.dds"
+  },
+  "env_e1062625": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 16214689451160327672,
+   "file": "env_e1062625.dds"
+  },
+  "env_e1390108": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 16229003867503383846,
+   "file": "env_e1390108.dds"
+  },
+  "env_e70c80ab": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 16648823397834935287,
+   "file": "env_e70c80ab.dds"
+  },
+  "env_e8a7a177": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT5",
+   "fnv1a64": 16764545673790338416,
+   "file": "env_e8a7a177.dds"
+  },
+  "env_eb3e6425": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 16951096161067069218,
+   "file": "env_eb3e6425.dds"
+  },
+  "env_eed86f3c": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 17210628283708749514,
+   "file": "env_eed86f3c.dds"
+  },
+  "env_f42d9038": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 17594877891780980717,
+   "file": "env_f42d9038.dds"
+  },
+  "env_f51f572e": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 17662932121904122214,
+   "file": "env_f51f572e.dds"
+  },
+  "env_ff0916dd": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 18377244894712135485,
+   "file": "env_ff0916dd.dds"
+  },
+  "env_shutter_d": {
+   "width": 512,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 16080968191737983292,
+   "file": "env_shutter_d.dds"
+  },
+  "explosion": {
+   "width": 64,
+   "height": 64,
+   "format": "DXT5",
+   "fnv1a64": 14345990525357432423,
+   "file": "explosion.dds"
+  },
+  "fireball_base_intense_02": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT5",
+   "fnv1a64": 18034708712803415938,
+   "file": "fireball_base_intense_02.dds"
+  },
+  "handgun_d": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT5",
+   "fnv1a64": 5208987696962520514,
+   "file": "handgun_d.dds"
+  },
+  "handgun_n": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 6877428834008494221,
+   "file": "handgun_n.dds"
+  },
+  "inview_glove_d": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 14169204449685679501,
+   "file": "inview_glove_d.dds"
+  },
+  "inview_glove_n": {
+   "width": 1024,
+   "height": 1024,
+   "format": "DXT1",
+   "fnv1a64": 14124171308224505833,
+   "file": "inview_glove_n.dds"
+  },
+  "laser_d": {
+   "width": 256,
+   "height": 256,
+   "format": "DXT1",
+   "fnv1a64": 9480852095134046573,
+   "file": "laser_d.dds"
+  },
+  "laser_n": {
+   "width": 256,
+   "height": 256,
+   "format": "DXT1",
+   "fnv1a64": 6733662572201863386,
+   "file": "laser_n.dds"
+  },
+  "muzzleFlashDir_01": {
+   "width": 128,
+   "height": 256,
+   "format": "DXT1",
+   "fnv1a64": 10943231596456805812,
+   "file": "muzzleFlashDir_01.dds"
+  },
+  "muzzleflashCenter": {
+   "width": 256,
+   "height": 256,
+   "format": "DXT1",
+   "fnv1a64": 12245168062536551479,
+   "file": "muzzleflashCenter.dds"
+  },
+  "phasetick_d": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 6063816156848365173,
+   "file": "phasetick_d.dds"
+  },
+  "phasetick_e": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 10446275587636028862,
+   "file": "phasetick_e.dds"
+  },
+  "phasetick_n": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 1975627357565138212,
+   "file": "phasetick_n.dds"
+  },
+  "phasetick_s": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 2267087083260563590,
+   "file": "phasetick_s.dds"
+  },
+  "revert_d2": {
+   "width": 2048,
+   "height": 2048,
+   "format": "DXT1",
+   "fnv1a64": 13544974987055247055,
+   "file": "revert_d2.dds"
+  },
+  "revert_n2": {
+   "width": 2048,
+   "height": 2048,
+   "format": "DXT1",
+   "fnv1a64": 17807392261670290024,
+   "file": "revert_n2.dds"
+  },
+  "revert_t": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 11894077424180967029,
+   "file": "revert_t.dds"
+  },
+  "spark_hit01": {
+   "width": 512,
+   "height": 512,
+   "format": "DXT1",
+   "fnv1a64": 9295590768409729334,
+   "file": "spark_hit01.dds"
+  },
+  "sparks1_subuv": {
+   "width": 32,
+   "height": 64,
+   "format": "DXT1",
+   "fnv1a64": 4011618080145910416,
+   "file": "sparks1_subuv.dds"
+  },
+  "t_decal_metal_d_v4": {
+   "width": 128,
+   "height": 128,
+   "format": "DXT5",
+   "fnv1a64": 7064741585614937927,
+   "file": "t_decal_metal_d_v4.dds"
+  }
+ }
+}

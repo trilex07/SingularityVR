@@ -25,6 +25,14 @@ on `feature/material-remaster-v2` and is not repeated here.
 
 Every substituted map is verified true mip0 by the loader (DDS header vs object
 mip0 size — hard error otherwise), and every target hash already exists in the
+injector's `targets_generated.h` on the texture-upscale line. Substituted
+outputs use exactly the filename the injector looks up (`<target>_2x.dds`,
+e.g. `AR_E99Rifle_alt_d_2x.dds`); the name↔hash↔file mapping is committed as
+`asset-tools/textures/target_map.json` (extracted from the v2 injector table,
+80 entries) and the agreement is asserted by test, not by convention.
+
+Every substituted map is verified true mip0 by the loader (DDS header vs object
+mip0 size — hard error otherwise), and every target hash already exists in the
 injector's `targets_generated.h` on the texture-upscale line.
 
 Unlike batch 1, `door_rollingT_s` **is** true mip0 (256x256) — but it is still

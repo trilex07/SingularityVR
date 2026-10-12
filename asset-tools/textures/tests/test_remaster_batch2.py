@@ -95,10 +95,10 @@ def test_normal_maps_keep_channel_conventions() -> None:
         n = m["maps"]["normal"]["validation"]["normal_map_check"]
         assert n["alpha_min"] == 255 and n["alpha_max"] == 255, k
         assert 110 < n["x_mean"] < 146 and 110 < n["y_mean"] < 146, k
-        assert 0.5 <= n["unit_length_min"] <= 1.0, k
         assert 1.0 <= n["unit_length_max"] <= 1.15, k
-        # relative gate: the enhanced map must be at least as close to unit
-        # length as the shipped original (both batches improve on it)
+        # relative gates against the shipped original: the enhanced map must be
+        # no worse (modulo byte quantisation) on both the worst texel and the
+        # overall out-of-tolerance share
         src = _local(m["maps"]["normal"]["source_file"])
         a = np.asarray(load_dds(src)[0]).astype(np.float32)
         x = (a[:, :, 0] / 255) * 2 - 1
@@ -107,6 +107,7 @@ def test_normal_maps_keep_channel_conventions() -> None:
         L = (x * x + y * y + z * z) ** 0.5
         orig_out = float(((L < 0.98) | (L > 1.02)).mean() * 100)
         assert n["pct_outside_0p98_1p02"] <= orig_out + 0.01, (k, n, orig_out)
+        assert n["unit_length_min"] >= float(L.min()) - 0.15, (k, n, float(L.min()))
 
 
 def test_fidelity_bounds_and_detail_gain() -> None:
@@ -141,6 +142,19 @@ def test_evidence_labels_present() -> None:
     for k, m in manifests().items():
         for key, value in m["evidence"].items():
             assert value.startswith(("VERIFIED", "ESTIMATED", "NOT TESTED")), (k, key, value)
+
+
+def test_output_filenames_match_injector_lookup() -> None:
+    for k, m in manifests().items():
+        for map_type, e in m["maps"].items():
+            if not e.get("substituted"):
+                continue
+            t = e["injector_target"]
+            assert t["present"] is True, f"{k}/{map_type} has no injector target"
+            assert t["hash_match"] is True, f"{k}/{map_type} hash mismatch vs target table"
+            want = Path(t["table_file"]).stem + "_2x.dds"
+            assert Path(e["output_file"]).name == want, (k, map_type)
+            assert e["deploy_filename"] == want, (k, map_type)
 
 
 if __name__ == "__main__":

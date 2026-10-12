@@ -22,7 +22,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_diffuse_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 6063816156848365173,
+        "table_file": "phasetick_d.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "phasetick_d_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_d_2x.dds",
       "output_sha256": "59f448e07323f211aaa43689104e46d41d965f0bef6b2bc7a95adf0feac38d87",
       "validation": {
         "width": 512,
@@ -72,7 +79,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_normal_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 1975627357565138212,
+        "table_file": "phasetick_n.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "phasetick_n_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_n_2x.dds",
       "output_sha256": "be6fdb9f32cbcafc0b3941fd91d48c58d320051cbf25c769e067c4bea449f422",
       "validation": {
         "width": 512,

@@ -1,0 +1,36 @@
+{
+  "batch": 3,
+  "status": "OFFLINE ONLY - NOT VR TESTED",
+  "materials": [
+    {
+      "key": "weapon_sniper_normal",
+      "asset": "ar_sniper_rifle_n",
+      "manifest": "material-remaster-batch3/manifests/weapon_sniper_normal.json",
+      "substituted": {
+        "normal": "4733b4d27468edbb"
+      }
+    },
+    {
+      "key": "weapon_railgun_normal",
+      "asset": "elite_beam_n",
+      "manifest": "material-remaster-batch3/manifests/weapon_railgun_normal.json",
+      "substituted": {
+        "normal": "0a159266274c4fea"
+      }
+    },
+    {
+      "key": "device_tmd_normal",
+      "asset": "TMD_new_n",
+      "manifest": "material-remaster-batch3/manifests/device_tmd_normal.json",
+      "substituted": {
+        "normal": "ecb1bb6675bbeafd"
+      }
+    }
+  ],
+  "deferred": {
+    "ar_sniper_rifle_d / elite_beam_d / TMD diffuses": "covered in batch 3 as unprocessed lower mips; normals done procedurally",
+    "remaining inventory": "masks, emissives, FX sprites, unprovenanced captures - no further true-mip0 colour data in the local inventory"
+  },
+  "total_source_mip0_bytes": 4194304,
+  "total_replacement_bytes": 5592456
+}

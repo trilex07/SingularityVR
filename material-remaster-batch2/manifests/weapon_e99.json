@@ -22,7 +22,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/weapon_e99/AR_E99Rifle_alt_diffuse_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 16160022635740620080,
+        "table_file": "AR_E99Rifle_alt_d.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "AR_E99Rifle_alt_d_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/weapon_e99/AR_E99Rifle_alt_d_2x.dds",
       "output_sha256": "47dad11ee4c0b673048770bb654cbf19f28314964fb88515d2a3cb473ddff802",
       "validation": {
         "width": 2048,
@@ -72,7 +79,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/weapon_e99/AR_E99Rifle_alt_normal_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 185541836161454253,
+        "table_file": "AR_E99Rifle_n.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "AR_E99Rifle_n_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/weapon_e99/AR_E99Rifle_n_2x.dds",
       "output_sha256": "299787427defd8fdf0400332574993ab88af8c1910f5fce2aaebf3e3798309e4",
       "validation": {
         "width": 2048,

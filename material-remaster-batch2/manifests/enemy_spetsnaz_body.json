@@ -22,7 +22,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_body/Spetsnaz_MP_Body_diffuse_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 17230285951280772806,
+        "table_file": "Spetsnaz_MP_Body_d.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "Spetsnaz_MP_Body_d_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_body/Spetsnaz_MP_Body_d_2x.dds",
       "output_sha256": "13ed89aa9248b6ff06c02e38bf17f356499bb1958a389ccbe17bc53f35597c26",
       "validation": {
         "width": 1024,
@@ -72,7 +79,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_body/Spetsnaz_MP_Body_normal_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 10007535904788740833,
+        "table_file": "Spetsnaz_MP_Body_n.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "Spetsnaz_MP_Body_n_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_body/Spetsnaz_MP_Body_n_2x.dds",
       "output_sha256": "956b558d40cec9ac975bc3f61fbc95ea20ddca853e2798962a8b6609cf7364cf",
       "validation": {
         "width": 1024,

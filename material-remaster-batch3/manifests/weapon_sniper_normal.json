@@ -1,0 +1,152 @@
+{
+  "batch": 3,
+  "asset": "ar_sniper_rifle_n",
+  "material": "AR_SniperRifle",
+  "kind": "weapon",
+  "package": "RvGameMPLoader_SF",
+  "detail": "sniper rifle normal relief only (diffuse is a lower mip)",
+  "maps": {
+    "normal": {
+      "source_file": "<assets-local>/textures/original/RvGameMPLoader_SF/Texture2D/ar_sniper_rifle_n.dds",
+      "source_sha256": "1ea5f3484a3ed988015e12c69bdeb5a75687bd3e078044fe5b08b9894e744b2c",
+      "source_mip0_fnv1a64": 10616915492120553037,
+      "source_width": 2048,
+      "source_height": 1024,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 1048704,
+      "object_mip0_expected": [
+        2048,
+        1024
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "injector_target": {
+        "present": true,
+        "table_hash": 10616915492120553037,
+        "table_file": "ar_sniper_rifle_n.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "ar_sniper_rifle_n_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch3/weapon_sniper_normal/ar_sniper_rifle_n_2x.dds",
+      "output_sha256": "4733b4d27468edbbc150304014f3271d0dfb30c5dcecbd6df4b7476399d39ad7",
+      "validation": {
+        "width": 2048,
+        "height": 1024,
+        "fourcc": "DXT1",
+        "mip_count": 12,
+        "file_bytes": 1398248,
+        "pixel_data_bytes": 1398120,
+        "declared_mip_bytes": 1398120,
+        "video_memory_bytes": 1398120,
+        "decoded_size": [
+          2048,
+          1024
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 7.813,
+        "seam_col_mean_abs": 7.417,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 7.26,
+          "max_abs_diff": 199,
+          "pct_pixels_changed_over_4": 74.644,
+          "pct_pixels_changed_over_16": 4.138
+        },
+        "normal_map_check": {
+          "alpha_min": 255,
+          "alpha_max": 255,
+          "x_mean": 127.681,
+          "y_mean": 125.395,
+          "z_mean": 246.432,
+          "unit_length_min": 0.662954,
+          "unit_length_max": 1.0587,
+          "pct_outside_0p98_1p02": 16.0837,
+          "fourcc": "DXT1"
+        },
+        "status": "VERIFIED"
+      }
+    }
+  },
+  "newly_authored": [
+    "procedural-only micro relief (fbm, 4 octaves) - NOT coupled to diffuse",
+    "weaker provenance than diffuse-coupled relief; see manifest",
+    "original macro normals preserved and renormalised to unit length",
+    "alpha channel set to constant 255 (matches shipped DXT1 normal maps)"
+  ],
+  "recovered_from_source": [
+    "mip0 normal bytes, sha256 1ea5f3484a3ed988"
+  ],
+  "preserved_from_original": [
+    "original mip0 resolution for every substituted map (no upscaling)",
+    "original UV layout and texture orientation (pixels edited in place)",
+    "original DXT container format (DXT1 stays DXT1, DXT5 stays DXT5)",
+    "original mip0 alpha semantics",
+    "original colour palette: detail added as a fraction of local luminance"
+  ],
+  "notes": [],
+  "status": "OFFLINE ONLY - NOT VR TESTED",
+  "validation": {
+    "normal": {
+      "width": 2048,
+      "height": 1024,
+      "fourcc": "DXT1",
+      "mip_count": 12,
+      "file_bytes": 1398248,
+      "pixel_data_bytes": 1398120,
+      "declared_mip_bytes": 1398120,
+      "video_memory_bytes": 1398120,
+      "decoded_size": [
+        2048,
+        1024
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 7.813,
+      "seam_col_mean_abs": 7.417,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 7.26,
+        "max_abs_diff": 199,
+        "pct_pixels_changed_over_4": 74.644,
+        "pct_pixels_changed_over_16": 4.138
+      },
+      "normal_map_check": {
+        "alpha_min": 255,
+        "alpha_max": 255,
+        "x_mean": 127.681,
+        "y_mean": 125.395,
+        "z_mean": 246.432,
+        "unit_length_min": 0.662954,
+        "unit_length_max": 1.0587,
+        "pct_outside_0p98_1p02": 16.0837,
+        "fourcc": "DXT1"
+      },
+      "status": "VERIFIED"
+    }
+  },
+  "video_memory": {
+    "source_mip0_bytes_substituted": 1048576,
+    "replacement_total_bytes_substituted": 1398120,
+    "origin": "ESTIMATED (computed from measured DDS headers and file contents)"
+  },
+  "evidence": {
+    "true_mip0_per_substituted_map": "VERIFIED (DDS header vs object mip0 size)",
+    "dds_written_and_decoded_back": "VERIFIED (every file re-opened and decoded)",
+    "dds_dimensions_format_mips_channels": "VERIFIED (per file in validation)",
+    "normal_map_channel_conventions": "VERIFIED (alpha constant, X/Y centred, unit length ranged)",
+    "fidelity_vs_source": "VERIFIED (measured mean/max absolute difference)",
+    "checksums": "VERIFIED (sha256 of every source and produced file)",
+    "video_memory_figures": "ESTIMATED (block arithmetic over measured headers)",
+    "visual_result_in_game": "NOT TESTED (no Steam run, no deploy, no headset)",
+    "gpu_frame_cost": "NOT TESTED (needs a profiled run)"
+  },
+  "unprocessed": {
+    "ar_sniper_rifle_d": "diffuse exported at 1024x512 (object 2048x1024, mip1) - not processed, not substituted"
+  },
+  "comparisons_local_only": [
+    "<assets-local>/material-remaster-batch3/weapon_sniper_normal/comparison/ar_sniper_rifle_n_normal_compare.png"
+  ]
+}

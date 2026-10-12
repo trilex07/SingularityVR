@@ -22,7 +22,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_helmet/Spetsnaz_MP_helmet_diffuse_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 7773224157656991146,
+        "table_file": "Spetsnaz_MP_helmet_d.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "Spetsnaz_MP_helmet_d_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_helmet/Spetsnaz_MP_helmet_d_2x.dds",
       "output_sha256": "4d89b632fc19a5765bb8d425dc4e026276eccffaa5955cedd8e4914bbb3453b3",
       "validation": {
         "width": 1024,
@@ -72,7 +79,14 @@
       "is_true_mip0": true,
       "mip0_gate_enforced": true,
       "substituted": true,
-      "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_helmet/Spetsnaz_MP_helmet_normal_2x.dds",
+      "injector_target": {
+        "present": true,
+        "table_hash": 13284849330641921571,
+        "table_file": "Spetsnaz_MP_helmet_n.dds",
+        "hash_match": true
+      },
+      "deploy_filename": "Spetsnaz_MP_helmet_n_2x.dds",
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_helmet/Spetsnaz_MP_helmet_n_2x.dds",
       "output_sha256": "8d8d0ee4711ee97949c9bd1db0bd615f0472bd7e2382540c9bf9bc484f4d3b92",
       "validation": {
         "width": 1024,
