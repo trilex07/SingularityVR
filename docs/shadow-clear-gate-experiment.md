@@ -50,7 +50,7 @@ and some whole reporting windows read zero despite slow frames: no established
 press-duration correlation from this uncontrolled log alone.
 
 Next bounded instrument: owned hotpath-gameplay.request arms the existing sampled
-hook profiler only after focused tracked gameplay. One1200-frame window/process,
+hook profiler only after focused tracked gameplay. One3600-frame window/process,
 default OFF, no INI edits; rejected if INI profiling already enabled. Existing
 thread sampler additionally prints non-cumulative CPU deltas during this window
 (process user/kernel and Present-thread CPU), allowing burn-versus-wait comparison.

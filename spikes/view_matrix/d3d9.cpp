@@ -5698,7 +5698,7 @@ static void ReportHotPathSampler() {
     append("window=%u frames, timing sample=1/%u calls; frame-token=%llu predicted=%lldns "
            "poses[hmd/left/right]=%lld/%lld/%lld input=%lld recenter-gen=%lld palette=%lld; "
            "xr-calls[sync/actions/views/left-space/right-space]=%llu/%llu/%llu/%llu/%llu; ",
-           hotpath::default_window_frames, hotpath::sample_stride,
+           g_hotPathSampler.configured_frames(), hotpath::sample_stride,
            static_cast<unsigned long long>(g_hotPathSampler.frame_token()),
            static_cast<long long>(g_hotPredictedDisplayTime),
            static_cast<long long>(InterlockedCompareExchange64(&g_hotHmdPoseFrame,0,0)),
@@ -5718,15 +5718,15 @@ static void ReportHotPathSampler() {
         append("%s[calls=%llu samples=%llu avg_us=%.3f est_ms/frame=%.4f] ", hotpath::name(family),
                static_cast<unsigned long long>(r.calls), static_cast<unsigned long long>(r.samples),
                g_hotPathSampler.microseconds_per_call(family),
-               g_hotPathSampler.milliseconds_per_frame(family, hotpath::default_window_frames));
+               g_hotPathSampler.milliseconds_per_frame(family, g_hotPathSampler.configured_frames()));
     }
-    const double present = g_hotPathSampler.milliseconds_per_frame(hotpath::Family::frame_total, hotpath::default_window_frames);
+    const double present = g_hotPathSampler.milliseconds_per_frame(hotpath::Family::frame_total, g_hotPathSampler.configured_frames());
     const double known =
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_wait_frame, hotpath::default_window_frames) +
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::pose_input_update, hotpath::default_window_frames) +
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::d3d9_to_d3d11_copy, hotpath::default_window_frames) +
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_image_work, hotpath::default_window_frames) +
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_submit, hotpath::default_window_frames);
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_wait_frame, g_hotPathSampler.configured_frames()) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::pose_input_update, g_hotPathSampler.configured_frames()) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::d3d9_to_d3d11_copy, g_hotPathSampler.configured_frames()) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_image_work, g_hotPathSampler.configured_frames()) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_submit, g_hotPathSampler.configured_frames());
     append("present-hook residual estimate=%.4f ms/frame (inclusive stage estimates subtracted)", present-known);
     Log("hotpath sampler complete: %s", report);
 }
@@ -5750,8 +5750,8 @@ static void PollGameplayHotPath(bool ready) {
     if(!read || size!=sizeof(expected)-1 || memcmp(payload,expected,size)!=0)return;
     if(!DeleteFileA(path))return;
     armed=true;
-    g_hotPathSampler.configure(true);
-    Log("GAMEPLAY_HOTPATH armed: 1200 frames, sampled existing hooks; no rendering/input changes");
+    g_hotPathSampler.configure(true,3600);
+    Log("GAMEPLAY_HOTPATH armed: 3600 frames, sampled existing hooks; no rendering/input changes");
 }
 #include "pause_vr_settings.h"
 #include "native_ui_input.h"
