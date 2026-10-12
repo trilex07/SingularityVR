@@ -1,12 +1,8 @@
 #pragma once
 // One-variable experiment: defer the proven native device scan, never input reads.
 namespace inputenumthrottle {
-static constexpr DWORD ScanIntervalMs=2000u;
 static volatile LONG enabled=0;
 inline bool Enabled(){return InterlockedCompareExchange(&enabled,0,0)!=0;}
-inline bool Defer(bool on,bool eligible,bool haveSuccess,DWORD now,DWORD last) {
- return on && eligible && haveSuccess && DWORD(now-last)<ScanIntervalMs;
-}
 inline bool Poll(const char* logPath) {
  static DWORD lastPoll=0;const DWORD now=GetTickCount();
  if(lastPoll && DWORD(now-lastPoll)<1000u)return false;lastPoll=now;
@@ -20,7 +16,7 @@ inline bool Poll(const char* logPath) {
   if(n.QuadPart>=w.QuadPart && n.QuadPart-w.QuadPart<20ull*60*10000000) {
    HANDLE file=CreateFileA(path,GENERIC_READ,FILE_SHARE_READ,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,nullptr);
    if(file!=INVALID_HANDLE_VALUE) {
-    char payload[64]{};DWORD bytes=0;const char expected[]="SingularityVR input enum throttle v2 2000ms";
+    char payload[64]{};DWORD bytes=0;const char expected[]="SingularityVR input enum cache v3";
     on=ReadFile(file,payload,sizeof(payload)-1,&bytes,nullptr) && bytes==sizeof(expected)-1 && !memcmp(payload,expected,bytes);
     CloseHandle(file);
    }
@@ -28,7 +24,7 @@ inline bool Poll(const char* logPath) {
  }
  const bool changed=on!=Enabled();if(changed) {
   InterlockedExchange(&enabled,on?1:0);
-  Log("INPUT_ENUM_THROTTLE enabled=%d (%lums scan interval; gameplay/emulated-pad/owner-thread only)",on?1:0,(unsigned long)ScanIntervalMs);
+  Log("INPUT_ENUM_CACHE enabled=%d (topology snapshot; native callbacks replayed; gameplay/owner-thread only)",on?1:0);
  }
  return changed;
 }

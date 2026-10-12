@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+Event-invalidated input discovery cache: IMPLEMENTED_NOT_VERIFIED. Full native
+callback audit led to caching device INSTANCE records and replaying original
+callbacks, not suppressing all callbacks or moving DirectInput to a worker.
+DefaultOFF v3 flag; Windows topology epoch/interface/context/failure invalidation;
+bounded64-record snapshot, fail-open reentrancy and unavailable notifications.
+See docs/input-enumeration-cache.md. Requires runtime/callback-content and
+physical FPS/actions/pause/reconnect gates before production acceptance.
+
 Input 2000ms interval: DLL F1AB2981 / commit9f1e67e, real Steam PID38864,
 L3_PASS for limiter behavior and PHYSICALLY_VERIFIED for partial FPS benefit
 with tested actions/stereo/weapon tracking retained. User: "tak działa, spadek
