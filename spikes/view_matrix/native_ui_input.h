@@ -1,5 +1,6 @@
 #pragma once
 #include "pause_rtt_probe.h"
+#include "pause_rtt_start.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);

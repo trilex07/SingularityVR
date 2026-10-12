@@ -277,6 +277,11 @@ static void Snapshot(uintptr_t movie) {
     const int targetOffset = Property(cls, "RenderTexture", "ObjectProperty");
     const int modeOffset = Property(cls, "RenderTextureMode", "ByteProperty");
     Identity("focus-movie", movie);
+    const int nativeOffset = Property(cls, "pMovie", "StructProperty");
+    const uintptr_t nativeMovie = nativeOffset >= 0 ? Pointer(movie + nativeOffset) : 0;
+    Identity("native-record-target", nativeMovie ? Pointer(nativeMovie + 0x54) : 0);
+    Log("pause-rtt native-record=%p owner=%p pMovieOffset=%d", (void*)nativeMovie,
+        (void*)(nativeMovie ? Pointer(nativeMovie + 0x50) : 0), nativeOffset);
     Log("pause-rtt reflected MovieInfo=%d RenderTexture=%d RenderTextureMode=%d",
         infoOffset, targetOffset, modeOffset);
     if (infoOffset < 0 || targetOffset < 0 || modeOffset < 0 ||
