@@ -1,0 +1,17 @@
+# Boot/main menu placement candidate
+
+Base: main 8bd72ce (merged PR #13). Accepted pause DLL 1635A8F0...D625219
+and dedicated native RTT package remain the rollback baseline.
+
+User images: IIS title/start text sits near lower-left eye edge; main heading
+is clipped at the top. User asks boot text closer to centre, main slightly lower.
+Existing runtime evidence: class 1 native HUD scale 0.70 and boot provider=0;
+class 2 uses the captured GFx provider. Therefore boot changes its native safe
+area (0.45 cap), with the same inset for pointer geometry; main translates the
+provider/pointer plane 8% of eye height downward, and native backbuffer HUD
+fallback uses the identical -0.16 clip-Y offset. Native producer UVs unchanged.
+
+No pause/class-3, gameplay, eye projection, hands, weapons or texture changes.
+One boot/main actual XR-source capture per process (stable focus, 30 frames).
+Falsification: compare final eye images and physical text placement/click hit.
+State: IMPLEMENTED_NOT_VERIFIED until build/deployment and PSVR2 feedback.

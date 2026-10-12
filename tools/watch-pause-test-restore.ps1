@@ -2,6 +2,7 @@
 param(
     [Parameter(Mandatory)][string]$BackupPath,
     [Parameter(Mandatory)][string]$CandidateDllSha256,
+    [switch]$DllOnly,
     [ValidateRange(60,1800)][int]$LaunchWindowSeconds = 600
 )
 # MAIN-owned single test lease: no launch/input/kill, never replace a running
@@ -14,6 +15,26 @@ Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Utility') -ErrorA
 Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Management') -ErrorAction Stop
 $backup = (Resolve-Path -LiteralPath $BackupPath).Path
 $manifest = Get-Content -LiteralPath (Join-Path $backup 'manifest.json') -Raw | ConvertFrom-Json
+if ($DllOnly) {
+    # DLL-only placement tests retain the physically accepted native UI package.
+    # Use the existing deployment runner's exact backup format and rollback.
+    $savedDll=Join-Path $backup 'd3d9.dll'
+    if ((Get-FileHash -LiteralPath $savedDll).Hash -ne $manifest.Sha256) { throw 'Invalid DLL restore backup' }
+    $dllTarget='C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries\d3d9.dll'
+    $deadline=(Get-Date).AddSeconds($LaunchWindowSeconds); $seen=$false
+    Write-Output "READY: verified DLL-only restore backup; launch window $LaunchWindowSeconds seconds"
+    while ($true) {
+        $running=@(Get-Process -Name Singularity -ErrorAction SilentlyContinue)
+        if ($running.Count) { $seen=$true }
+        elseif ($seen -or (Get-Date) -ge $deadline) { break }
+        Start-Sleep -Seconds 2
+    }
+    if ((Get-FileHash -LiteralPath $dllTarget).Hash -ne $CandidateDllSha256) { throw 'Installation changed; refusing DLL restore' }
+    & (Join-Path $PSScriptRoot 'deploy-singularityvr.ps1') -Action Rollback -BackupPath $backup
+    if ((Get-FileHash -LiteralPath $dllTarget).Hash -ne $manifest.Sha256) { throw 'DLL rollback verification failed' }
+    Write-Output 'RESTORED: accepted DLL hash verified; native UI package untouched'
+    exit 0
+}
 $expected = @{}
 foreach ($entry in $manifest.files) {
     $saved = Join-Path $backup $entry.name

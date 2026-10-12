@@ -1,6 +1,10 @@
 # STATUS — session handoff
 
 Last updated **2026-10-12**. Left glove idle: **PHYSICALLY_VERIFIED** (`010eb45`).
+Boot/main placement follow-up on `fix/boot-main-menu-placement`:
+**IMPLEMENTED_NOT_VERIFIED**. Boot safe-area cap 0.70 -> 0.45; main plane
+8% eye-height down with matching laser/native HUD fallback. Accepted pause
+geometry and native RTT package unchanged. See `docs/boot-main-menu-placement.md`.
 Pause RTT layout on `fix/pause-native-rtt-integration`: **PHYSICALLY_VERIFIED**
 for appearance/placement only. User's first PSVR2 test on `eac307b` / DLL
 1635A8F0...D625219: "looks perfect". Complete native RGB/full UVs, compact 50%

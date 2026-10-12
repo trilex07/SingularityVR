@@ -215,6 +215,8 @@ static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& 
                 : Rd(g_menuInsetPct) / 100.0f,
             g_vrMenuPanel.plane);
         if (!g_vrMenuPanelValid) return;
+        g_vrMenuPanel.plane.centre = g_vrMenuPanel.plane.centre +
+            g_vrMenuPanel.plane.up * (MenuPlacementClipY((int)menuClass) * g_vrMenuPanel.plane.halfHeight);
         if (menuClass == 3) uipointer::CompactNativePause(g_vrMenuPanel.plane);
     }
     float rowV0 = 0.0f, rowV1 = 0.0f;
@@ -273,9 +275,13 @@ void UpdateVrUiPointer(float,bool available) {
     const auto& pos=g_handLastPos[1];
     float inset=Rd(g_menuInsetPct)/100.f;
     const LONG menuClass=Rd(g_vrMenuClass);
-    if ((menuClass==2 || menuClass==3) && inset>0.84f) inset=0.84f;
+    if (!panel && menuClass == 1) inset = ClassBackbufferScale(1, true, (int)Rd(g_menuInsetPct));
+    else if ((menuClass==2 || menuClass==3) && inset>0.84f) inset=0.84f;
     const float distance=Rd(g_vrMenuDistanceMm)/1000.0f;
     g_vrMenuPanelValid=uipointer::HeadPlane(head,VrUiRotate(q,{0,0,-1}),VrUiRotate(q,{1,0,0}),VrUiRotate(q,{0,1,0}),distance,g_targetTanX,g_targetTanY,inset,g_vrMenuPanel.plane);
+    if (!panel && g_vrMenuPanelValid)
+        g_vrMenuPanel.plane.centre = g_vrMenuPanel.plane.centre +
+            g_vrMenuPanel.plane.up * (MenuPlacementClipY((int)menuClass) * g_vrMenuPanel.plane.halfHeight);
     if (menuClass == 3 && !panel && g_vrMenuPanelValid) {
         uipointer::CompactNativePause(g_vrMenuPanel.plane);
         g_vrMenuPanel.canvas = uipointer::CanvasMap{};
@@ -367,6 +373,19 @@ void ReleaseVrMenuResources(){
 void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     ++g_vrMenuFrame;
     SyncVrMenuCaptureState();
+    // One stable boot and main proof image per process, actual XR source only.
+    static LONG placementClass = -1;
+    static unsigned placementFrames = 0, placementCaptured = 0;
+    const LONG placementNow = Rd(g_vrMenuClass);
+    if (placementClass != placementNow) { placementClass=placementNow; placementFrames=0; }
+    if ((placementNow == 1 || placementNow == 2) && ++placementFrames == 30 &&
+        !(placementCaptured & (1u << placementNow))) {
+        placementCaptured |= 1u << placementNow;
+        Log("menu-placement proof class=%ld inset=%.2f clipY=%.2f", placementNow,
+            ClassBackbufferScale((int)placementNow,true,(int)Rd(g_menuInsetPct)),
+            MenuPlacementClipY((int)placementNow));
+        InterlockedExchange(&g_pauseCaptureRequested,1);
+    }
     const bool dedicatedPause = PauseRttProbe::Ready();
     static bool sawPause = false, capturedReturn = false;
     if (dedicatedPause) sawPause = true;
