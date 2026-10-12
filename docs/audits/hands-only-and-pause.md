@@ -2,6 +2,23 @@
 
 Status: IMPLEMENTED_NOT_VERIFIED after PSVR2 re-test candidate. L1 covers rigid-glove policy, diegetic menu composition, and clip math. L2 build/tests pass on the branch. L3 smoke (Steam, no restore) and L4 headset are separate gates.
 
+## PSVR2 on `0eb22a6` / `2B896A7A…` (2026-10-12)
+
+- **Left glove (idle):** still PASS from `010eb45`.
+- **Support grip:** FAIL — left glove **disappears** on Left Grip latch.
+- **Pause:** FAIL — unchanged column split.
+
+**Root cause (support disappear, log-confirmed):** post-transform “wrist snap” added
+world-space `BuildGunC` translation into GPU bone palette rows (e.g.
+`support wrist snap: d=(49.8, 142.3, -86.3)`). That mixed spaces and moved the
+support mesh out of view. Fix: remove snap; drive support side with
+`LocalDeltaPair` left target = weapon transform, right = live aim controller,
+with controller fallback if weapon delta fails (avoids `nSeg=0` suppression).
+
+**Pause policy:** no further HUD viewport/c5 experiments until
+`PauseMenuDiag=1` evidence lines (`pause-evidence compose/submit/sbs-columns`)
+identify the failing stage.
+
 ## PSVR2 on `010eb45` / `076D70BB…` (2026-10-12)
 
 - **Left glove:** PASS (`l_arm_forearm` slot 26 fix).
