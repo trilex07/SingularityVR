@@ -5,10 +5,11 @@ Last updated **2026-10-12**. **Hands frozen** — PSVR2 accepted on DLL
 (`726e1a7`): gloves, two-hand pistol grip, no disappear/beside pistol.
 Branch `feature/regression-recovery` — regression pass only (no grip edits).
 
-**Regressions addressed (PSVR2 pending on pause):** Polish restored via `PolishLanguage=1`;
-black materials mitigated with texture injector disabled; pause menu fix on
-`fix/pause-menu-stereo` (`PauseHeadMenu=1`, pooled 1280×720 GFx → head provider — see
-`docs/audits/pause-menu-head-overlay.md`). Hands/grip code unchanged on that branch.
+**Pause compare build:** `fix/pause-menu-modes`. VR Settings DISPLAY row
+`PAUSE MENU` cycles LEGACY / HEAD / FULLGFX / FULLSRC live (saved as
+`PauseMenuMode`). HEAD is the failed 1280×720 redirect and stays available.
+FULLGFX stretches the scene colour target; FULLSRC copies the whole backbuffer
+into both SBS halves. Default is LEGACY. Not a visual PASS.
 
 **Steam install (MAIN):** see latest `deployment/install-reports/*.json` after
 `-EnsurePolishLanguage` + texture-injector A/B. Hands DLL SHA unchanged unless noted.

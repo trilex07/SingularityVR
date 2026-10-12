@@ -74,6 +74,7 @@
 #include "menu_submit_policy.h"
 #include "menu_hud_scale.h"
 #include "pause_menu_space.h"
+#include "pause_menu_mode.h"
 #include <shlobj.h>
 #include "async_thread_snapshot.h"
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
@@ -5531,7 +5532,33 @@ volatile LONG g_vrUiEnabled=1,g_vrUiMenu=0,g_vrUiValid=0,g_vrUiU=500000,g_vrUiV=
 // Hub round 4: provider-overlay kill switch for A/B (black-quad diagnosis). The in-scene
 // menu copy stays, so menus remain visible; only our head-locked overlay+laser go away.
 volatile LONG g_vrMenuOverlay=1;
-volatile LONG g_pauseHeadMenu=0; // ini [Render] PauseHeadMenu — class-3 GFx redirect (off until accepted)
+volatile LONG g_pauseHeadMenu=0; // derived: 1 only while PauseMenuMode==HeadGfx
+volatile LONG g_pauseMenuMode=0; // [Render] PauseMenuMode 0 legacy 1 head 2 full gfx 3 full source
+volatile LONG g_pauseCaptureOk=0;
+volatile LONG g_pauseModeRedirects=0;
+volatile LONG g_pauseModeStretches=0;
+volatile LONG g_pauseModeBakes=0;
+static void ApplyPauseMenuMode(int mode, const char* why) {
+    mode = pausemode::Clamp(mode);
+    const LONG prev = InterlockedExchange(&g_pauseMenuMode, mode);
+    InterlockedExchange(&g_pauseHeadMenu, pausemode::RedirectsOrtho(mode) ? 1 : 0);
+    if (prev == mode && why && why[0] == 'i') {
+        Log("pause-mode: selected=%d %s src=%s present=%s (%s)",
+            mode, pausemode::ShortName(mode), pausemode::SourceName(mode),
+            pausemode::PresentName(mode), why ? why : "set");
+        return;
+    }
+    InterlockedExchange(&g_pauseCaptureOk, 0);
+    InterlockedExchange(&g_pauseModeRedirects, 0);
+    InterlockedExchange(&g_pauseModeStretches, 0);
+    InterlockedExchange(&g_pauseModeBakes, 0);
+    Log("pause-mode: selected=%d %s src=%s present=%s capture=reset eyes=both (%s)",
+        mode, pausemode::ShortName(mode), pausemode::SourceName(mode),
+        pausemode::PresentName(mode), why ? why : "set");
+}
+void PauseMenuMode2NoteSource(IDirect3DDevice9* dev);
+void PauseMenuMode2Capture(IDirect3DDevice9* dev);
+void PauseMenuMode3Bake(IDirect3DDevice9* dev);
 volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=100;
 volatile LONG g_vrMenuDistanceMm=1200;
 volatile LONG g_vrUiEyeCentreU[2]={500000,500000};
@@ -6782,7 +6809,8 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_GOTO_TMD,
        // ⭐ run 249: the TMD page split into three. See kPageRows.
        PR_GOTO_TMDBONE, PR_GOTO_TMDMESH, PR_BACK_TMD,
-       PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_BACK };
+       PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON,
+       PR_PAUSEMODE, PR_BACK };
 
 // ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
@@ -6838,7 +6866,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
     { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE,
-      PR_POLISH, PR_GLOVEONLY, PR_VFXLOOK, PR_BACK },
+      PR_POLISH, PR_GLOVEONLY, PR_VFXLOOK, PR_PAUSEMODE, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
@@ -7112,6 +7140,10 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_vrMenuOverlay, 0, 0));
             WritePrivateProfileStringA("Render", "MenuOverlay", v, path); return;
+        case PR_PAUSEMODE:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
+                        InterlockedCompareExchange(&g_pauseMenuMode, 0, 0));
+            WritePrivateProfileStringA("Render", "PauseMenuMode", v, path); return;
         case PR_POLISH:
             WritePrivateProfileStringA("Localization", "PolishLanguage",
                 PolishLocalization::PL().IsPolishEnabled() ? "1" : "0", path); return;
@@ -7489,6 +7521,16 @@ void PanelRowText(int row, char* out, size_t cap) {
             _snprintf_s(out, cap, _TRUNCATE, "MENU OVERLAY   %s",
                         InterlockedCompareExchange(&g_vrMenuOverlay, 0, 0) ? "ON" : "OFF");
             break;
+        case PR_PAUSEMODE: {
+            const int mode = pausemode::Clamp((int)InterlockedCompareExchange(&g_pauseMenuMode, 0, 0));
+            const bool nosrc = mode != pausemode::Legacy &&
+                               InterlockedCompareExchange(&g_vrMenuClass, 0, 0) == 3 &&
+                               InterlockedCompareExchange(&g_gamePaused, 0, 0) &&
+                               !InterlockedCompareExchange(&g_pauseCaptureOk, 0, 0);
+            _snprintf_s(out, cap, _TRUNCATE, nosrc ? "PAUSE MENU     %s NO SRC" : "PAUSE MENU     %s",
+                        pausemode::ShortName(mode));
+            break;
+        }
         case PR_POLISH:
             _snprintf_s(out, cap, _TRUNCATE, "POLISH LANG    %s",
                         PolishLocalization::PL().IsPolishEnabled() ? "ON" : "OFF");
@@ -7984,6 +8026,14 @@ void PanelAdjust(int row, int dir) {
             InterlockedExchange(&g_vrMenuOverlay,
                                 InterlockedCompareExchange(&g_vrMenuOverlay, 0, 0) ? 0 : 1);
             break;
+        case PR_PAUSEMODE: {
+            int mode = pausemode::Clamp((int)InterlockedCompareExchange(&g_pauseMenuMode, 0, 0));
+            mode += dir >= 0 ? 1 : -1;
+            if (mode >= pausemode::Count) mode = pausemode::Legacy;
+            if (mode < pausemode::Legacy) mode = pausemode::FullSource;
+            ApplyPauseMenuMode(mode, "vr-settings");
+            break;
+        }
         case PR_POLISH: {
             const bool on = !PolishLocalization::PL().IsPolishEnabled();
             PolishLocalization::PL().SetPolishLanguage(on);
@@ -10944,6 +10994,9 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     const int64_t diagBridge = g_diagEnabled ? DiagQpc() : 0;
     const bool captureRequested = fs.shouldRender && g_haveEyes && gameDev;
     if (captureRequested) g_menuSubmitDiag.captureAttempts++;
+    if (captureRequested && gameDev &&
+        pausemode::BakesBackbuffer((int)InterlockedCompareExchange(&g_pauseMenuMode, 0, 0)))
+        PauseMenuMode3Bake(gameDev);
     const CopySlot* frame = captureRequested ? CopyBackbufferToD3D11(gameDev) : nullptr;
     if (captureRequested) {
         if (frame) g_menuSubmitDiag.validCaptures++;
@@ -17784,6 +17837,9 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
             hr = PauseHeadOverlayHudDraw(dev, draw, (unsigned)Rd(g_vfxFrame));
         } else {
             hr = draw();
+            if (menuClassNow == 3 &&
+                pausemode::StretchesScene((int)InterlockedCompareExchange(&g_pauseMenuMode, 0, 0)))
+                PauseMenuMode2NoteSource(dev);
         }
         dev->SetScissorRect(&oldRect);
         dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
@@ -27202,9 +27258,10 @@ void LoadIniSettings() {
     g_independentHands = GetPrivateProfileIntA("Render", "IndependentHandsPrototype", 0, path) ? 1 : 0;
     g_vrUiEnabled=GetPrivateProfileIntA("Input","VrMenuPointer",1,path)?1:0;
     g_vrMenuOverlay=GetPrivateProfileIntA("Render","MenuOverlay",1,path)?1:0;
-    g_pauseHeadMenu=GetPrivateProfileIntA("Render","PauseHeadMenu",1,path)?1:0;
-    Log("ini: PauseHeadMenu=%ld (class-3 GFx ortho -> pooled %ux%u for head overlay; 0=legacy diegetic monitor)",
-        Rd(g_pauseHeadMenu), pausehead::kPoolWidth, pausehead::kPoolHeight);
+    {
+        LONG mode = GetPrivateProfileIntA("Render", "PauseMenuMode", 0, path);
+        ApplyPauseMenuMode((int)mode, "ini");
+    }
     g_hideFpInMenu=GetPrivateProfileIntA("Render","HideFpInMenu",1,path)?1:0;
     Log("VR menu FP hide=%ld (HideFpInMenu; drops latched gun/arm draws while a GFx menu is focused)",Rd(g_hideFpInMenu));
     g_vfxHost=GetPrivateProfileIntA("Render","VfxHost",1,path)?1:0;
