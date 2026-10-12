@@ -5687,7 +5687,9 @@ static void ReportVrRuntimeCounters() {
     Log("Fix-M/menu-station: FP gun/arm draws hidden over menus=%ld (HideFpInMenu=%ld; station black-diamond gate)",
         Rd(g_vrMenuFpHidden),Rd(g_hideFpInMenu));
 }
-static void ReportHotPathSampler() {
+static void ReportHotPathSampler(bool complete=true) {
+    const unsigned measuredFrames=g_hotPathSampler.completed_frames();
+    if(!measuredFrames)return;
     char report[4096]{};
     size_t used = 0;
     auto append = [&](const char* format, auto... args) {
@@ -5698,7 +5700,7 @@ static void ReportHotPathSampler() {
     append("window=%u frames, timing sample=1/%u calls; frame-token=%llu predicted=%lldns "
            "poses[hmd/left/right]=%lld/%lld/%lld input=%lld recenter-gen=%lld palette=%lld; "
            "xr-calls[sync/actions/views/left-space/right-space]=%llu/%llu/%llu/%llu/%llu; ",
-           g_hotPathSampler.configured_frames(), hotpath::sample_stride,
+           measuredFrames, hotpath::sample_stride,
            static_cast<unsigned long long>(g_hotPathSampler.frame_token()),
            static_cast<long long>(g_hotPredictedDisplayTime),
            static_cast<long long>(InterlockedCompareExchange64(&g_hotHmdPoseFrame,0,0)),
@@ -5718,17 +5720,17 @@ static void ReportHotPathSampler() {
         append("%s[calls=%llu samples=%llu avg_us=%.3f est_ms/frame=%.4f] ", hotpath::name(family),
                static_cast<unsigned long long>(r.calls), static_cast<unsigned long long>(r.samples),
                g_hotPathSampler.microseconds_per_call(family),
-               g_hotPathSampler.milliseconds_per_frame(family, g_hotPathSampler.configured_frames()));
+               g_hotPathSampler.milliseconds_per_frame(family, measuredFrames));
     }
-    const double present = g_hotPathSampler.milliseconds_per_frame(hotpath::Family::frame_total, g_hotPathSampler.configured_frames());
+    const double present = g_hotPathSampler.milliseconds_per_frame(hotpath::Family::frame_total, measuredFrames);
     const double known =
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_wait_frame, g_hotPathSampler.configured_frames()) +
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::pose_input_update, g_hotPathSampler.configured_frames()) +
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::d3d9_to_d3d11_copy, g_hotPathSampler.configured_frames()) +
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_image_work, g_hotPathSampler.configured_frames()) +
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_submit, g_hotPathSampler.configured_frames());
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_wait_frame, measuredFrames) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::pose_input_update, measuredFrames) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::d3d9_to_d3d11_copy, measuredFrames) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_image_work, measuredFrames) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_submit, measuredFrames);
     append("present-hook residual estimate=%.4f ms/frame (inclusive stage estimates subtracted)", present-known);
-    Log("hotpath sampler complete: %s", report);
+    Log("hotpath sampler %s: %s", complete?"complete":"progress", report);
 }
 
 // One owned, gameplay-only request per process. Reuse the existing bounded
@@ -26550,6 +26552,8 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     }
     frameScope.finish();
     if (g_hotPathSampler.advance_frame()) ReportHotPathSampler();
+    else if(g_hotPathSampler.active() && g_hotPathSampler.completed_frames()>0 &&
+            g_hotPathSampler.completed_frames()%240==0) ReportHotPathSampler(false);
     return presentResult;
 }
 

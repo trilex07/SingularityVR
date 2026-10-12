@@ -58,6 +58,24 @@ Trigger endpoints are explicitly labeled endpoints, not entire-interval states;
 initial interval can straddle arming. Existing nested hook times are inclusive
 and must NOT be summed as independent costs. No shader/input/weapon changes.
 
+## Gameplay trigger test PID13296 / FD8C79A3, 23:00
+
+User confirms manual exit, not crash, and completed physical L2/R2 holds. The
+full runtime log does retain them BEFORE profiler arming: L2 sample17.8FPS,
+LT255/RT0 plus impulse held58/120 frames; sustained R2 samples34.6/34.7FPS,
+RT255 and physical min=max1.00. Both experiment flags OFF. Therefore this
+symptom also reproduces without ClearGate; its cause is not established.
+OpenXR calls/copy/submit remain small; unassigned residual must not be called
+mod CPU or total GPU time. Present/gpu-copy spans are not total frame GPU cost.
+
+MAIN armed the hook sampler too late (log line8988); all its retained120-frame
+CPU intervals end with LT0/RT0 and most show menus. Full3600-frame report did
+not finish before exit. This is INCOMPLETE_PROFILER_EVIDENCE, not absence of a
+trigger defect. All3 restoration hashes verified. Next candidate retains
+bounded cumulative partial hook reports every240 frames, with actual elapsed
+frame denominator and explicit progress label. Prearm request before launch to
+cover first gameplay instead of depending on a late log-poll/user notification.
+
 ## Evidence, real Steam PID5260 / DLL6D147048
 
 Focused capture 2: 1329 final calls, 322 state-qualified groups, zero overflow,

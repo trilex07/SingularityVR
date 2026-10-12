@@ -88,7 +88,7 @@ public:
 		QueryPerformanceFrequency(&frequency_);
 		window_frames_ = frames ? frames : 1;
 		delay_frames_ = delay_frames;
-		InterlockedExchange(&frames_left_, enabled && delay_frames == 0 ? static_cast<LONG>(window_frames_) : 0);
+		InterlockedExchange(&frames_left_, static_cast<LONG>(window_frames_));
 		InterlockedExchange(&delay_left_, enabled ? static_cast<LONG>(delay_frames) : 0);
 		InterlockedExchange(&active_, enabled && delay_frames == 0 ? 1 : 0);
 	}
@@ -167,6 +167,11 @@ public:
 		return (double(r.ticks) / double(r.samples)) * 1000000.0 / double(frequency_.QuadPart);
 	}
 	unsigned configured_frames() const noexcept { return window_frames_; }
+	unsigned completed_frames() const noexcept {
+		if(!frequency_.QuadPart)return 0;
+		const LONG left=InterlockedCompareExchange(const_cast<volatile LONG*>(&frames_left_),0,0);
+		return left>=0 && static_cast<unsigned>(left)<=window_frames_ ? window_frames_-static_cast<unsigned>(left) : 0;
+	}
 	unsigned configured_delay_frames() const noexcept { return delay_frames_; }
 };
 
