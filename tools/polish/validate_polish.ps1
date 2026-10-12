@@ -91,7 +91,7 @@ function Validate-TextFile {
         }
         $reader.Close()
     } catch {
-        Write-Log "FAIL: Invalid JSONL in $Name: $($_.Exception.Message)" -Level "ERROR"
+        Write-Log "FAIL: Invalid JSONL in ${Name}: $($_.Exception.Message)" -Level "ERROR"
         return $false
     }
     

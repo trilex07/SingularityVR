@@ -13,7 +13,10 @@ param(
     [switch]$KeepIni,
     [switch]$DllOnly,
     [switch]$SkipTextures,
-    [switch]$StopGame
+    [switch]$StopGame,
+    [switch]$EnsurePolishLanguage,
+    [ValidateSet('NoChange', 'Disable', 'Enable')]
+    [string]$TextureInjector = 'NoChange'
 )
 
 Set-StrictMode -Version Latest
@@ -72,6 +75,94 @@ function Stop-GameIfRequested {
             Stop-Process -Id $process.Id -Force
         }
     }
+}
+
+if (-not ('SingularityVrIniNative' -as [type])) {
+    Add-Type @"
+using System.Runtime.InteropServices;
+public static class SingularityVrIniNative {
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    public static extern bool WritePrivateProfileString(string section, string key, string value, string path);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    public static extern int GetPrivateProfileInt(string section, string key, int defaultValue, string path);
+}
+"@
+}
+
+function Set-IniPolishLanguage([string]$IniPath, [int]$Value) {
+    if (-not (Test-Path -LiteralPath $IniPath -PathType Leaf)) { throw "INI not found: $IniPath" }
+    $ok = [SingularityVrIniNative]::WritePrivateProfileString('Localization', 'PolishLanguage', $Value.ToString(), $IniPath)
+    if (-not $ok) { throw "WritePrivateProfileString failed for PolishLanguage on $IniPath" }
+    $readBack = [SingularityVrIniNative]::GetPrivateProfileInt('Localization', 'PolishLanguage', -1, $IniPath)
+    if ($readBack -ne $Value) { throw "PolishLanguage read-back mismatch (wanted $Value, got $readBack)" }
+}
+
+function Get-InstalledPolishAssetState([string]$GameBinaries) {
+    $plDir = Join-Path $GameBinaries 'vr-assets\localization\pl'
+    $audioDir = Join-Path $GameBinaries 'vr-assets\audio\polish'
+    $files = @(
+        'polish_text.jsonl',
+        'polish_voice.jsonl',
+        'polish_story_voice.jsonl'
+    )
+    $manifest = @{}
+    foreach ($name in $files) {
+        $path = Join-Path $plDir $name
+        $manifest[$name] = [pscustomobject]@{
+            Path = $path
+            Exists = (Test-Path -LiteralPath $path -PathType Leaf)
+            Sha256 = if (Test-Path -LiteralPath $path -PathType Leaf) { Get-Sha256 $path } else { $null }
+            Size = if (Test-Path -LiteralPath $path -PathType Leaf) { (Get-Item -LiteralPath $path).Length } else { $null }
+        }
+    }
+    $wavCount = 0
+    if (Test-Path -LiteralPath $audioDir -PathType Container) {
+        $wavCount = @(Get-ChildItem -LiteralPath $audioDir -Recurse -File -Filter '*.wav' -ErrorAction SilentlyContinue).Count
+    }
+    $iniPath = Join-Path $GameBinaries 'SingularityVR.ini'
+    $plLang = if (Test-Path -LiteralPath $iniPath -PathType Leaf) {
+        [SingularityVrIniNative]::GetPrivateProfileInt('Localization', 'PolishLanguage', -1, $iniPath)
+    } else { $null }
+    [pscustomobject]@{
+        PolishLanguage = $plLang
+        Manifests = $manifest
+        PolishWavCount = $wavCount
+        CoalescedInt = Get-FileState (Join-Path (Split-Path $GameBinaries -Parent) 'RvGame\CookedPC\Coalesced_INT.bin')
+    }
+}
+
+function Set-TextureInjectorState([string]$GameBinaries, [string]$Desired, [string]$BackupDir) {
+    if ($Desired -eq 'NoChange') { return $null }
+    $target = Join-Path $GameBinaries 'dinput8.dll'
+    $disabled = Join-Path $GameBinaries 'dinput8.dll.disabled-by-vr'
+    if ($Desired -eq 'Disable') {
+        if (-not (Test-Path -LiteralPath $target -PathType Leaf)) {
+            Write-Warning 'Texture injector already absent (dinput8.dll missing).'
+            return [pscustomobject]@{ Action = 'Disable'; Changed = $false; Path = $target }
+        }
+        if ($BackupDir -and $PSCmdlet.ShouldProcess($target, 'Back up dinput8.dll before disable')) {
+            Copy-Item -LiteralPath $target -Destination (Join-Path $BackupDir 'dinput8.dll') -Force
+        }
+        if ($PSCmdlet.ShouldProcess($disabled, 'Disable texture injector (rename dinput8.dll)')) {
+            if (Test-Path -LiteralPath $disabled -PathType Leaf) { Remove-Item -LiteralPath $disabled -Force }
+            Move-Item -LiteralPath $target -Destination $disabled -Force
+        }
+        return [pscustomobject]@{ Action = 'Disable'; Changed = $true; DisabledPath = $disabled }
+    }
+    if ($Desired -eq 'Enable') {
+        if (Test-Path -LiteralPath $target -PathType Leaf) {
+            Write-Warning 'Texture injector already enabled.'
+            return [pscustomobject]@{ Action = 'Enable'; Changed = $false; Path = $target }
+        }
+        if (-not (Test-Path -LiteralPath $disabled -PathType Leaf)) {
+            throw "Cannot enable texture injector: missing $disabled"
+        }
+        if ($PSCmdlet.ShouldProcess($target, 'Re-enable texture injector')) {
+            Move-Item -LiteralPath $disabled -Destination $target -Force
+        }
+        return [pscustomobject]@{ Action = 'Enable'; Changed = $true; Path = $target }
+    }
+    return $null
 }
 
 function Copy-Verified([string]$Source, [string]$Target) {
@@ -228,6 +319,20 @@ if ($Action -eq 'Status') {
         $textureCount = @(Get-ChildItem -LiteralPath $targetTextures -File -Filter '*.dds').Count
         Write-Host "Texture override DDS files: $textureCount"
     }
+    $polish = Get-InstalledPolishAssetState $gameBin
+    Write-Host ("PolishLanguage (INI): {0}" -f $polish.PolishLanguage)
+    foreach ($entry in $polish.Manifests.GetEnumerator()) {
+        Write-Host ("  {0}: exists={1} sha256={2}" -f $entry.Key, $entry.Value.Exists, $entry.Value.Sha256)
+    }
+    Write-Host ("Polish WAV files: {0}" -f $polish.PolishWavCount)
+    $disabledInjector = Join-Path $gameBin 'dinput8.dll.disabled-by-vr'
+    if (Test-Path -LiteralPath $disabledInjector -PathType Leaf) {
+        Write-Host 'Texture injector: DISABLED (dinput8.dll.disabled-by-vr present)'
+    } elseif (Test-Path -LiteralPath (Join-Path $gameBin 'dinput8.dll') -PathType Leaf) {
+        Write-Host 'Texture injector: ENABLED (dinput8.dll present)'
+    } else {
+        Write-Host 'Texture injector: absent'
+    }
     exit 0
 }
 
@@ -289,6 +394,9 @@ if (-not $DllOnly) {
     $targets += @($targetDinput, $targetDinputOrig, $targetTextureIni)
     if (-not $KeepIni) { $targets += $targetIni }
 }
+if (($EnsurePolishLanguage -or $TextureInjector -ne 'NoChange') -and ($KeepIni -or $DllOnly) -and ($targets -notcontains $targetIni)) {
+    $targets += $targetIni
+}
 $textureSources = @()
 if (-not $DllOnly -and -not $SkipTextures) { $textureSources = @(Get-TextureSources $assetsLocal) }
 $backupRoot = Join-Path $root 'deployment\install-backups'
@@ -316,6 +424,20 @@ if (-not $DllOnly -and -not $SkipTextures) {
 
 $reportDir = Join-Path $root 'deployment\install-reports'
 New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
+$postInstall = @{}
+if ($EnsurePolishLanguage) {
+    if ($PSCmdlet.ShouldProcess($targetIni, 'Set PolishLanguage=1 (mod runtime toggle, not Steam language)')) {
+        Set-IniPolishLanguage $targetIni 1
+        $postInstall['PolishLanguage'] = 1
+    }
+}
+$injectorState = Set-TextureInjectorState $gameBin $TextureInjector $backup
+if ($injectorState) { $postInstall['TextureInjector'] = $injectorState }
+$polishState = Get-InstalledPolishAssetState $gameBin
+if ($polishState.PolishLanguage -eq 0) {
+    Write-Warning 'PolishLanguage=0: Polish subtitle rewrite and voice redirect stay OFF until set to 1 and the game restarts.'
+}
+
 $report = [pscustomobject]@{
     Action = 'Install'
     Timestamp = (Get-Date).ToString('o')
@@ -327,6 +449,8 @@ $report = [pscustomobject]@{
     Installed = @($installed)
     TextureVariant = if ($DllOnly -or $SkipTextures) { 'skipped' } else { $TextureVariant }
     TextureCount = if ($DllOnly -or $SkipTextures) { 0 } else { $textureSources.Count }
+    PostInstall = $postInstall
+    PolishAssets = $polishState
     FinalState = @(
         Get-FileState $targetDll
         Get-FileState $targetIni

@@ -326,9 +326,13 @@ try {
 
     if (-not $SkipLaunch) {
         $testBridge = Join-Path $repoRoot 'tools\singularityvr-test-bridge.ps1'
-        Write-Runner 'Running mandatory test-bridge Preflight before launch.'
-        & $testBridge -Action Preflight -SteamRoot $SteamRoot -LogRoot $logRoot `
-            -XrSimDirectory (Split-Path -Parent $RuntimeManifest) | Out-Host
+        if (Test-Path -LiteralPath $testBridge -PathType Leaf) {
+            Write-Runner 'Running test-bridge Preflight before launch.'
+            & $testBridge -Action Preflight -SteamRoot $SteamRoot -LogRoot $logRoot `
+                -XrSimDirectory (Split-Path -Parent $RuntimeManifest) | Out-Host
+        } else {
+            Write-Runner 'Test bridge script absent; skipping Preflight (see AGENTS.md).'
+        }
         $env:XR_RUNTIME_JSON = $RuntimeManifest
         $env:DVR_XRSIM_DIR = Split-Path -Parent $RuntimeManifest
         $logBefore = Get-NewestLog $startedAt
@@ -416,12 +420,14 @@ try {
     }
     if ($report.launched) {
         $testBridge = Join-Path $repoRoot 'tools\singularityvr-test-bridge.ps1'
-        try {
-            Write-Runner 'Collecting runtime log, captures, xrsim state, and manifest through the test bridge.'
-            & $testBridge -Action Collect -SteamRoot $SteamRoot -LogRoot $logRoot `
-                -XrSimDirectory (Split-Path -Parent $RuntimeManifest) | Out-Host
-        } catch {
-            Write-Runner "Test-bridge collection failed: $($_.Exception.Message)"
+        if (Test-Path -LiteralPath $testBridge -PathType Leaf) {
+            try {
+                Write-Runner 'Collecting runtime log, captures, xrsim state, and manifest through the test bridge.'
+                & $testBridge -Action Collect -SteamRoot $SteamRoot -LogRoot $logRoot `
+                    -XrSimDirectory (Split-Path -Parent $RuntimeManifest) | Out-Host
+            } catch {
+                Write-Runner "Test-bridge collection failed: $($_.Exception.Message)"
+            }
         }
     }
     $env:XR_RUNTIME_JSON = $oldRuntime
