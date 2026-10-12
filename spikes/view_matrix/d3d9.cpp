@@ -11739,6 +11739,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     HRESULT hr = g_origSetRenderTarget(dev, idx, surf);
     if (FAILED(hr)) return hr; // Failed binds leave the actual device target unchanged.
+    if (idx == 0) PauseRttProbe::Bind(surf);
     // Run 116: which target the first-person pass draws into. If it switches at the foreground
     // boundary the pass is composited from its own surface, and skipping its draws leaves that
     // surface at its cleared value - which would explain "black but still occluding" without any

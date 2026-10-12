@@ -21,3 +21,19 @@ three snapshots per movie transition, 1.5 seconds apart, maximum 24 per process.
 Property type and validated UE3 property-layout prerequisites must hold. Native
 calls, target binding, texture suppression and renderer presentation are unchanged.
 No resource association or completed RGB/alpha content is claimed by this probe.
+
+Live probe PASS (2026-10-12 17:27): SPPause references RTT_VRPause,
+TextureRenderTarget2D, SizeX=1280, SizeY=720, modeRaw=2. Reflected movie
+offsets are 60/64/137 and dimensions 172/176. Reopening retains the target.
+SPMain control references RTT_UI1. Options/Video focus transitions also appear.
+Evidence is local deployment/pause-rtt-probe/evidence/probe-physical.log.
+Tested DLL 70228BA9DBAEDA64FC4022CF1911B4DE1F19F6F80C705E398403D33314045DED.
+Accepted baseline package/DLL/INI restored and hashes verified after collection.
+
+Next probe: inspect bounded UObject pointer fields up to the last proven
+dimension property. Find native nodes with an image-owned vtable and backlink
+to that exact target. Only a unique node is considered an owner candidate.
+At successful native RT0 binds compare its direct/nested pointers against the
+actual bound surface and GetContainer texture. All matches remain UNVERIFIED
+until native field semantics are corroborated. No speculative virtual calls.
+Maximum 24 distinct surfaces per owner and 96 per process; no draw-hook work.

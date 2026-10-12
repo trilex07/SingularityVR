@@ -6,6 +6,87 @@ namespace PauseRttProbe {
 static uintptr_t observedMovie = 0;
 static unsigned snapshots = 0, totalSnapshots = 0;
 static ULONGLONG nextSnapshot = 0;
+static volatile LONG resourceCandidate = 0;
+static volatile LONG targetIdentity = 0;
+static IDirect3DSurface9* seenBindings[24] = {};
+static unsigned bindingCount = 0;
+static unsigned totalBindings = 0;
+static uintptr_t bindingResource = 0;
+
+// Observed pointer provenance only. A backlink identifies an owner candidate;
+// an exact COM match narrows its fields. Neither permits presentation yet.
+static void FindOwnerResource(uintptr_t target, unsigned objectBytes) {
+    InterlockedExchange(&resourceCandidate, 0);
+    InterlockedExchange(&targetIdentity, (LONG)target);
+    unsigned matches = 0;
+    uintptr_t selected = 0;
+    const uintptr_t image = (uintptr_t)GetModuleHandleA(nullptr);
+    const IMAGE_DOS_HEADER* dos = (const IMAGE_DOS_HEADER*)image;
+    const IMAGE_NT_HEADERS* nt = (const IMAGE_NT_HEADERS*)(image + dos->e_lfanew);
+    const uintptr_t imageEnd = image + nt->OptionalHeader.SizeOfImage;
+    for (unsigned offset = 0x3C; offset + 4 <= objectBytes; offset += 4) {
+        const uintptr_t node = Pointer(target + offset);
+        if (!node || node == target || !Readable((void*)node, 0x100)) continue;
+        const uintptr_t vtable = Pointer(node);
+        if (vtable < image || vtable >= imageEnd) continue;
+        for (unsigned ownerOffset = 4; ownerOffset < 0x100; ownerOffset += 4) {
+            if (Pointer(node + ownerOffset) != target) continue;
+            Log("pause-rtt owner-candidate target=%p targetOffset=0x%X node=%p vtable=%p backlinkOffset=0x%X association=UNVERIFIED",
+                (void*)target, offset, (void*)node, (void*)vtable, ownerOffset);
+            selected = node;
+            ++matches;
+            break;
+        }
+    }
+    if (matches == 1) InterlockedExchange(&resourceCandidate, (LONG)selected);
+    Log("pause-rtt owner-candidate count=%u resource=%p", matches, matches == 1 ? (void*)selected : nullptr);
+}
+
+static void MatchBinding(uintptr_t resource, uintptr_t target, IDirect3DSurface9* surface,
+                         IDirect3DTexture9* texture) {
+    unsigned matches = 0;
+    for (unsigned first = 4; first < 0x100; first += 4) {
+        const uintptr_t value = Pointer(resource + first);
+        if (value == (uintptr_t)surface || (texture && value == (uintptr_t)texture)) {
+            Log("pause-rtt COM-match target=%p resource=%p path=0x%X value=%p surface=%p texture=%p association=UNVERIFIED",
+                (void*)target, (void*)resource, first, (void*)value, (void*)surface, (void*)texture);
+            ++matches;
+        }
+        if (!value || value == target || value == resource ||
+            value == (uintptr_t)surface || value == (uintptr_t)texture || !Readable((void*)value, 0x80)) continue;
+        for (unsigned second = 0; second < 0x80; second += 4) {
+            const uintptr_t nested = Pointer(value + second);
+            if (nested != (uintptr_t)surface && (!texture || nested != (uintptr_t)texture)) continue;
+            Log("pause-rtt COM-match target=%p resource=%p path=0x%X/0x%X node=%p value=%p surface=%p texture=%p association=UNVERIFIED",
+                (void*)target, (void*)resource, first, second, (void*)value, (void*)nested, (void*)surface, (void*)texture);
+            ++matches;
+        }
+    }
+    Log("pause-rtt bind-check target=%p resource=%p surface=%p texture=%p matches=%u",
+        (void*)target, (void*)resource, (void*)surface, (void*)texture, matches);
+}
+
+static void Bind(IDirect3DSurface9* surface) {
+    if (!surface || totalBindings >= 96) return;
+    const uintptr_t resource = (uintptr_t)InterlockedCompareExchange(&resourceCandidate, 0, 0);
+    const uintptr_t target = (uintptr_t)InterlockedCompareExchange(&targetIdentity, 0, 0);
+    if (!resource || !target) return;
+    // Only the D3D thread owns the binding ledger. Input thread publishes pointers
+    // atomically and never resets this array while a bind is being observed.
+    if (bindingResource != resource) { bindingResource = resource; bindingCount = 0; }
+    if (bindingCount >= 24) return;
+    for (unsigned i = 0; i < bindingCount; ++i) if (seenBindings[i] == surface) return;
+    seenBindings[bindingCount++] = surface;
+    ++totalBindings;
+    IDirect3DTexture9* texture = nullptr;
+    surface->GetContainer(__uuidof(IDirect3DTexture9), (void**)&texture);
+    __try { MatchBinding(resource, target, surface, texture); }
+    __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION
+                  ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) {
+        Log("pause-rtt UNKNOWN: resource association observation fault");
+    }
+    if (texture) texture->Release();
+}
 
 static uintptr_t Pointer(uintptr_t address) {
     return address && Readable((void*)address, sizeof(uintptr_t))
@@ -79,12 +160,15 @@ static void Snapshot(uintptr_t movie) {
         Log("pause-rtt target SizeX=%d SizeY=%d offsets=%d/%d content=UNKNOWN",
             *reinterpret_cast<const int*>(target + widthOffset),
             *reinterpret_cast<const int*>(target + heightOffset), widthOffset, heightOffset);
+        FindOwnerResource(target, (unsigned)heightOffset + 4);
     } else Log("pause-rtt UNKNOWN: target dimensions not reflected as IntProperty");
 }
 
 static void Observe(uintptr_t movie, bool relevant) {
     if (movie != observedMovie) {
         observedMovie = movie;
+        InterlockedExchange(&resourceCandidate, 0);
+        InterlockedExchange(&targetIdentity, 0);
         snapshots = 0;
         nextSnapshot = 0;
     }
