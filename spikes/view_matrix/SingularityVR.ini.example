@@ -234,7 +234,9 @@ ZeroCopy=1
 ;   1 = split only the two scene colour targets
 ; ---------------------------------------------------------------------------
 SplitColourTargetsOnly=0
-; StereoDecalPassFix=0  HQ deferred decal G16R16 pass: per-eye ScreenPositionScaleBias (experimental; default off)
+; StereoDecalPassFix=0  0=off 1=legacy G16 shape gate 2=scene-colour TRILIST/2 + DecalTargetPsHash
+; DecalTargetPsHash=0   FNV-1a PS bytecode hash from decal-diag log (required for mode 2)
+; DecalPassDiag=0       Log draw signatures (psHash, prim count) without GetPixelShader in draw path
 ; DecalScenePsReg=1     PS register for that constant (same role as ScopeScenePsReg)
 
 ; ---------------------------------------------------------------------------

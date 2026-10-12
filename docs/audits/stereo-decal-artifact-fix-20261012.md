@@ -19,11 +19,23 @@
 
 `ShadowMode=3` census `mask=0x0` remains a **separate** shadow-receiver issue; it does not explain HQ-decals OFF.
 
-## Fix (opt-in, default OFF)
+## Fix (opt-in, default OFF) — v2 @ `5a799ef`
 
-`[Render] StereoDecalPassFix=1` — for draws bound to a **scene-sized `G16R16` / `G16R16F`** RT, route through **per-eye viewport + PS ScreenPositionScaleBias remap** (`DecalScenePsReg`, default **1**), mirroring `ScopeScenePsReg` / run 213j.
+`[Render] StereoDecalPassFix=1` enables a **narrow** path only when **all** match:
 
-Implementation: `decal_stereo_pass.h`, `DecalProjectionStereoPair()` in `d3d9.cpp`.
+- Bound RT is scene-sized **`G16R16` / `G16R16F`**
+- Draw shape: configured `DecalPassPrimType` + `DecalPassPrimCount` (default **TRIANGLESTRIP / 2**), or **TRIANGLELIST / 2**, or small draw with **NDC-spanning** vertex bounds
+- **Not** a shadow-layout shader
+
+Then (if `DecalPassViewportSplit` / `DecalPassPsRemap` = 1): per-eye viewport + optional **ScreenPositionScaleBias** remap on `DecalScenePsReg` (default **c1**).
+
+With fix on, **`DecalPassAutoSplitColour=1`** (default) forces **`SplitColourTargetsOnly=1`** so G16R16 is not treated as scene-colour stereo split.
+
+**Counters** (1 Hz in `view_matrix.log`): `hookG16`, `stereoG16`, `classified`, `fixed`, `unchanged`.
+
+**v1 failure:** remapping **every** G16R16 draw (~240/s) removed shadows. **v2** only touches **classified** draws.
+
+Candidate DLL: `F8D585CD9FB2C72BA6837F4327C173D850679824F531306FFF46EA77A3AF0817` in `deployment/candidate-stereo-decal-narrow-20261012/`.
 
 ## Validation status
 

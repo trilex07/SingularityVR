@@ -78,7 +78,7 @@ dropped beside the game exe. No game files modified.
 | **VR settings panel** | ✅ run 142 — hold Y **1 s** anywhere (1.3 s until run 219); live changes, saved to the ini on close. ⚠️ **No page may exceed `kPanelRowsMax` (10) rows** — run 249 |
 | **The game's HUD and menus in both eyes** | ✅ run 151 — health, ammo, crosshair, prompts, pause menu. `HudStereo=1` |
 | **The sniper scope in both eyes** | ✅ run 213 — whole scope per eye, world once, circle round. `ScopeQuadPerEye=1` |
-| **HQ decal per-eye squares** | ⬜ **not shadows** — HQ decals OFF removes them (run 44). Opt-in `StereoDecalPassFix` on branch `fix/stereo-decal-artifacts`; production DLL **`2FE5011C…`** unchanged until PSVR2 pass. See `docs/audits/stereo-decal-artifact-fix-20261012.md` |
+| **HQ decal per-eye squares** | ⬜ **v2 did not execute.** PSVR2 on `F8D585CD…` (`view_matrix_2026-10-12_16-14-52.log`): `StereoDecalPassFix=1`, OpenXR `session=5`, gameplay `hookG16=240 classified=0 fixed=0`. Squares remained. G16R16 draws are indexed `TRIANGLELIST` prim 535 and 22816, not a 2-prim quad; run 45 already showed dropping that target does not remove the squares. Same squares on gloves/weapons match run 44 (projection onto depth, including the gun and arm). |
 | **Shipping defaults = the tested configuration** | ✅ 2026-08-08 — a fresh install with no ini now behaves like the tuned dev machine. See below |
 
 ### ⭐ The code defaults ARE the tested configuration (2026-08-08)
