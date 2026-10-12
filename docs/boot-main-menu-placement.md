@@ -25,3 +25,8 @@ boot placement/main plane offset and gameplay are unchanged.
 Test: raised .68 is selectable, old lower .79 is not, both band edges pass;
 PSVR2 follow-up determines final acceptance. Prior lease restored accepted
 DLL and verified hash before this next candidate.
+
+User accepted final row placement on 5f05687 ("jest dobrze"). Exact physical
+test DLL SHA: 9FBA308C91A2F246B336A54E35089A23CF676542CC0AFFB62B64E1B0599C4500.
+Appearance/placement accepted, not blanket gameplay/lifecycle verification.
+Test lease restored accepted pause baseline after session; no unattended candidate.
