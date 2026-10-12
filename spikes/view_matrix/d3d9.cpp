@@ -9450,8 +9450,14 @@ void SyncXRInput(XrTime displayTime) {
                 // The latched weapon is logged with every window on purpose. The impulse weapon shares
                 // this button, and when it finally exists this line is what says whether the two cases
                 // can be told apart at all - without it, that question needs its own run.
-                Log("melee window: arms shown from +%ld ms to +%ld ms after the press (gun=%ld)",
-                    dly, end, InterlockedCompareExchange(&g_gunVerts, 0, 0));
+                // Rate-limited to once per second so rapid melee presses in combat do not spam the log.
+                static ULONGLONG s_lastMeleeLogMs = 0;
+                const ULONGLONG nowMs = GetTickCount64();
+                if (nowMs - s_lastMeleeLogMs >= 1000) {
+                    s_lastMeleeLogMs = nowMs;
+                    Log("melee window: arms shown from +%ld ms to +%ld ms after the press (gun=%ld)",
+                        dly, end, InterlockedCompareExchange(&g_gunVerts, 0, 0));
+                }
             }
             wasDown = down;
         }
@@ -9937,7 +9943,9 @@ void SyncXRInput(XrTime displayTime) {
             // correct on its own terms regardless: buzzing a controller on a desk helps nobody.
             const float amp = (hapticsAllowed && g_handHeld[hand]) ? (float)raw[hand] / 65535.0f : 0.0f;
             const bool changed = fabsf(amp - lastAmp[hand]) > 0.02f;
-            const bool expiring = amp > 0.0f && (refresh % 15) == 0;
+            // Run/input-jump-stalls: 200 ms haptic duration means a 60-frame (~500 ms) refresh still
+            // overlaps the active pulse.  This cuts constant-amplitude rumble API calls by ~75%.
+            const bool expiring = amp > 0.0f && (refresh % 60) == 0;
             if (!changed && !expiring) continue;
             if (g_diagEnabled) { ++g_diagCurrent.hapticCalls; g_diagCurrent.hapticAmplitudeMilli = uint32_t(amp * 1000.0f); }
             lastAmp[hand] = amp;
