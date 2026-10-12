@@ -5031,6 +5031,8 @@ void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, cal
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
+static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer = false);
+static volatile LONG g_pauseCaptureRequested = 0;
 const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::d3d9_to_d3d11_copy);
     // ⭐ run 217: defined further down, next to the transforms it reuses - see DrawLaserSight.
@@ -5044,6 +5046,9 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawVfxOverlay(dev);
     DrawVrContextPrompt(dev);
     if (ownOverlayScene) dev->EndScene();
+    // Bounded pause diagnostics must read the actual source passed to XR, after
+    // every overlay. RT0 restored by overlays can instead be the scene texture.
+    if (InterlockedExchange(&g_pauseCaptureRequested, 0)) SaveBackbufferCapture(dev, true);
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return nullptr;
     D3DSURFACE_DESC sd{};
@@ -22734,13 +22739,16 @@ bool VrPanelHitNormalized(LONG uInt, LONG vInt, int* rowIndex) {
 // briefly (expect a visible hitch on the capture frame) - that is the price of
 // GetRenderTargetData, not a bug. Multisampled or exotic formats are skipped, never
 // forced. Render thread only; touches no device state, only reads target 0.
-static void SaveBackbufferCapture(IDirect3DDevice9* dev) {
+static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer) {
     static ULONGLONG lastMs = 0;
     const ULONGLONG now = GetTickCount64();
     if (now - lastMs < 3000) return;
     lastMs = now;
     IDirect3DSurface9* rt = nullptr;
-    if (FAILED(dev->GetRenderTarget(0, &rt)) || !rt) { Log("capture: no render target"); return; }
+    const HRESULT sourceResult = submittedBackbuffer
+        ? dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &rt)
+        : dev->GetRenderTarget(0, &rt);
+    if (FAILED(sourceResult) || !rt) { Log("capture: no render target"); return; }
     D3DSURFACE_DESC d{};
     if (FAILED(rt->GetDesc(&d))) { rt->Release(); Log("capture: no desc"); return; }
     if (d.MultiSampleType != D3DMULTISAMPLE_NONE) {
@@ -22792,7 +22800,8 @@ static void SaveBackbufferCapture(IDirect3DDevice9* dev) {
     }
     sys->UnlockRect();
     sys->Release(); rt->Release();
-    Log("capture: %s %s (%ux%u)", ok ? "saved" : "FAILED", path, d.Width, d.Height);
+    Log("capture: %s %s (%ux%u) source=%s", ok ? "saved" : "FAILED", path, d.Width, d.Height,
+        submittedBackbuffer ? "XR-backbuffer" : "RT0");
 }
 
 static void DrawStateReadout(IDirect3DDevice9* dev) {

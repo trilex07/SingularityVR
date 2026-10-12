@@ -72,3 +72,27 @@ original pointer association argument is superseded by this contract.
 Native start remains read-only: pause receives RTT_VRPause (repair=0), and
 the RTT list contains its active record. The corrected native pause surface
 has thousands of draws. Missing capture was a probe bug, not producer failure.
+
+## Physical provider failure, 2026-10-12 18:15
+
+On DLL 9CF168A4...6EDA6CAF the user reports Pause still clipped/outside the
+visible region, more visible when physical IPD increases. Laser highlights;
+resume/reopen works. VR Settings/footer appears higher. Returning to main
+has differing per-eye backgrounds; IPD causality is not established.
+Status remains BROKEN, not physically verified.
+
+Producer RGB is complete (1280x720); Objectives body has nonzero RGB with
+zero alpha. ONE/INVSRCALPHA preserves it. Both provider draws succeeded,
+but that is not pixel or headset proof. Auto captures used GetRenderTarget(0)
+after provider restoration and show only the scene, not the submitted menu.
+
+Next bounded candidate establishes a complete fixed-function sampling contract
+for pause only (UV index 0, texture transform disabled, stage 1 disabled,
+clamp sampler, fog/stencil off, ADD blend), inside the existing state block.
+Hypothesis: inherited GFx state defeats the full-UV quad despite draw success.
+Falsification: capture actual GetBackBuffer after the final overlays immediately
+before the XR bridge copy; inspect text and panel bounds in each submitted half.
+At most three pause captures and one return-to-main capture, with bounded
+inherited state/quad logs. No gameplay stereo/projection or main policy changes.
+Original package C8CDB2E1...6984F, accepted DLL 2FE5011C...B39A47 and INI
+61AEC56C...FE378B restored and verified before preparing this candidate.

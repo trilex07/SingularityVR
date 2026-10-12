@@ -10,3 +10,9 @@ if ($overlay -notmatch 'VrUiProjectEye\(eye,\s*g_vrUiHit\.world') { throw 'hit m
 $ini = Get-Content -Raw -LiteralPath (Join-Path $root 'SingularityVR.ini')
 if ($ini -match '(?m)^RenderEvidence=1$' -or $ini -match '(?m)^CameraTranslationEvidence=1$') { throw 'expensive evidence mode is enabled in shipping ini' }
 Write-Host 'PASS: no frame-rate disk log; one menu projector; sampled-shadow suppression; evidence modes off'
+if ($overlay -notmatch 'D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE' -or
+    $overlay -notmatch 'D3DTSS_TEXCOORDINDEX, 0' -or
+    $overlay -notmatch 'D3DTSS_COLOROP, D3DTOP_DISABLE') { throw 'pause fixed-function UV contract incomplete' }
+if ($source -notmatch 'SaveBackbufferCapture\(dev, true\)' -or
+    $overlay -match 'captures\+\+ < 3\) InterlockedExchange\(&g_captureRequested') { throw 'pause diagnostic still captures restored RT0' }
+Write-Host 'PASS: pause UV contract explicit; bounded capture reads actual XR backbuffer'

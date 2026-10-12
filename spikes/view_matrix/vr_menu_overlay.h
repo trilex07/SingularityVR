@@ -367,6 +367,12 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     ++g_vrMenuFrame;
     SyncVrMenuCaptureState();
     const bool dedicatedPause = PauseRttProbe::Ready();
+    static bool sawPause = false, capturedReturn = false;
+    if (dedicatedPause) sawPause = true;
+    if (sawPause && !capturedReturn && Rd(g_vrMenuClass) == 2) {
+        capturedReturn = true;
+        InterlockedExchange(&g_pauseCaptureRequested, 1);
+    }
     if (dedicatedPause) {
         if (g_vrMenuTexture != PauseRttProbe::contentTexture) {
             if (g_vrMenuTexture) g_vrMenuTexture->Release();
@@ -422,6 +428,32 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
         // Preserve the native AlphaComposite RGB term instead of multiplying it
         // by alpha a second time and erasing Objectives.
         if (dedicatedPause) {
+            if (PauseRttProbe::presentedToken != VrMenuStateToken()) {
+                static unsigned stateLogs = 0;
+                if (stateLogs++ < 6) {
+                    DWORD index=0, transform=0, stage1=0, fog=0, stencil=0, blend=0;
+                    dev->GetTextureStageState(0, D3DTSS_TEXCOORDINDEX, &index);
+                    dev->GetTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, &transform);
+                    dev->GetTextureStageState(1, D3DTSS_COLOROP, &stage1);
+                    dev->GetRenderState(D3DRS_FOGENABLE, &fog);
+                    dev->GetRenderState(D3DRS_STENCILENABLE, &stencil);
+                    dev->GetRenderState(D3DRS_BLENDOP, &blend);
+                    Log("pause-rtt inherited uvIndex=%lu uvTransform=%lu stage1=%lu fog=%lu stencil=%lu blendOp=%lu",
+                        index, transform, stage1, fog, stencil, blend);
+                }
+            }
+            // GFx's last pass is not a fixed-function UI contract. In particular,
+            // inherited TEXCOORDINDEX/transform or stage 1 can sample a different
+            // region despite a successful DrawPrimitiveUP. StateBlock restores all.
+            dev->SetTextureStageState(0, D3DTSS_TEXCOORDINDEX, 0);
+            dev->SetTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
+            dev->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+            dev->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+            dev->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+            dev->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+            dev->SetRenderState(D3DRS_FOGENABLE, FALSE);
+            dev->SetRenderState(D3DRS_STENCILENABLE, FALSE);
+            dev->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
             dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
             dev->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
             dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
@@ -442,6 +474,13 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
             else dev->SetTexture(0,g_vrMenuTexture);
             dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1);
             const HRESULT menuDraw = g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(VrMenuVtx));
+            if (dedicatedPause && PauseRttProbe::presentedToken != VrMenuStateToken()) {
+                static unsigned geometryLogs = 0;
+                if (geometryLogs++ < 12)
+                    Log("pause-rtt quad eye=%d back=%ux%u xy=(%.1f,%.1f)-(%.1f,%.1f) tan=(%.4f,%.4f) hr=%08lX",
+                        eye, d.Width, d.Height, v[0].x, v[0].y, v[3].x, v[3].y,
+                        g_targetTanX, g_targetTanY, menuDraw);
+            }
             if (dedicatedPause && SUCCEEDED(menuDraw)) ++pauseEyesDrawn;
             if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuProvided);
             if(Rd(g_vrMenuClass)==2)InterlockedIncrement(&g_vrCounters.mainMenuProvided);
@@ -481,7 +520,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
         {
             Log("pause-rtt provider token=%llu bothEyes=1 fullUV=1 alphaCompositeRGB=1", VrMenuStateToken());
             static unsigned captures = 0;
-            if (captures++ < 3) InterlockedExchange(&g_captureRequested, 1);
+            if (captures++ < 3) InterlockedExchange(&g_pauseCaptureRequested, 1);
         }
         PauseRttProbe::presentedToken = VrMenuStateToken();
     } else if (Rd(g_vrMenuClass) == 3) PauseRttProbe::presentedToken = 0;
