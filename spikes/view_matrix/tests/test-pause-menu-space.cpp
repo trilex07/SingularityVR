@@ -69,5 +69,12 @@ int main() {
     pausemenuspace::HudEyeClip(right[12], right[13], inset, 1, rx2, y2);
     Expect(lx2 > -1.0f && lx2 < 0.0f && rx2 > 0.0f && rx2 < 1.0f,
            "right-of-seam pause text also lands inside both eyes");
+
+    float canvas[16];
+    MeasuredFont(canvas);
+    Expect(pausemenuspace::DiegeticMenuCanvas(canvas, 5264, 5264),
+           "scene-sized GFx target uses per-eye canvas composition");
+    Expect(!pausemenuspace::DiegeticMenuCanvas(canvas, 1280, 5264),
+           "small monitor RT keeps single draw");
     return g_fails == 0 ? 0 : 1;
 }

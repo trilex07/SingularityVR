@@ -11553,6 +11553,7 @@ PFN_DrawIndexedPrimUP  g_origDrawIndexedPrimUP = nullptr;
 // frames 20-27; outside them each call is a flag read plus a counter. Identifies which
 // path draws the black-quad / second menu copy (RT size, texture, verts, projection).
 #include "menu_draw_trace.h"
+#include "menu_mono_trace.h"
 int g_drawsUP = 0;           // how many draws came through the user-pointer forms
 bool g_hookUserPtrDraws = false;  // ini-switchable; see LoadIniSettings for why it must be
 int  g_userPtrHookLevel = 0;      // 0 off, 1 patch only, 2 +counter, 3 full - a bisection ladder
@@ -17578,12 +17579,63 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // Apply to the complete GFx layout before eye remapping, never to world geometry.
     const bool menuLayout=InterlockedCompareExchange(&g_vrUiMenu,0,0)!=0;
     const LONG menuClassNow = InterlockedCompareExchange(&g_vrMenuClass, 0, 0);
+    if (InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0) &&
+        (menuClassNow == 2 || menuClassNow == 3) &&
+        pausemenuspace::IsPauseCanvasOrtho(c)) {
+        menumono::NoteDraw((int)menuClassNow, true, (unsigned)vp.Width, (unsigned)vp.Height,
+                           (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0), c, true);
+    }
     // Main/pause GFx is drawn into a scene-sized texture the cockpit monitor
     // shows whole. Remapping both eyes into that texture is the doubled menu.
     // The backbuffer path (title / IIS) stays split, then the XR crop shows one
     // half in each eye. Bink never reaches this function.
     if ((menuClassNow == 2 || menuClassNow == 3) &&
         !InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
+        D3DVIEWPORT9 vpMenu{};
+        dev->GetViewport(&vpMenu);
+        const unsigned sceneW = (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0);
+        const bool perEyeDiegetic =
+            pausemenuspace::DiegeticMenuCanvas(c, vpMenu.Width, sceneW);
+        menumono::NoteDraw((int)menuClassNow, false, vpMenu.Width, vpMenu.Height, sceneW, c,
+                           perEyeDiegetic);
+        if (perEyeDiegetic) {
+            static LONG saidPerEye = 0;
+            if (InterlockedCompareExchange(&saidPerEye, 1, 0) == 0)
+                Log("menu mono: class=%ld per-eye canvas into scene-sized GFx target (%ux%u)",
+                    menuClassNow, vpMenu.Width, vpMenu.Height);
+            const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
+            const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3;
+            const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
+            const LONG halfW = (LONG)vpMenu.Width / 2;
+            HRESULT hrMono = S_OK;
+            D3DVIEWPORT9 savedVp = vpMenu;
+            for (int eye = 0; eye < 2; ++eye) {
+                float m[16];
+                memcpy(m, c, sizeof(m));
+                Reg4* q = reinterpret_cast<Reg4*>(m);
+                for (int i = 0; i < 4; ++i) {
+                    q[i].x *= k;
+                    q[i].y *= k;
+                }
+                ApplyEyeRemap(reinterpret_cast<Reg4*>(m), CONV_ROW, eye ? +0.5f : -0.5f);
+                D3DVIEWPORT9 half = vpMenu;
+                half.X = vpMenu.X + (DWORD)(eye ? halfW : 0);
+                half.Width = (DWORD)halfW;
+                RECT sc = { (LONG)half.X, (LONG)half.Y,
+                            (LONG)(half.X + half.Width), (LONG)(half.Y + half.Height) };
+                dev->SetViewport(&half);
+                dev->SetScissorRect(&sc);
+                dev->SetVertexShaderConstantF(5, m, 4);
+                const HRESULT r = draw();
+                if (FAILED(r)) hrMono = r;
+            }
+            dev->SetViewport(&savedVp);
+            dev->SetVertexShaderConstantF(5, c, 4);
+            dev->SetScissorRect(&oldRect);
+            dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
+            g_inHudRemap = false;
+            return hrMono;
+        }
         static LONG saidMono = 0;
         if (InterlockedCompareExchange(&saidMono, 1, 0) == 0)
             Log("menu mono: class=%ld one draw into the diegetic target", menuClassNow);
@@ -17943,10 +17995,13 @@ volatile LONG g_scopeMatchAim = 0, g_scopeMatchIdle = 0;   // ⭐ run 231
 // seam cuts it. The HUD path already insets class 3 and copies it into each
 // eye. VR Settings is drawn later as its own overlay and does not use c5.
 static bool PauseCanvasNeedsEyeCopy(IDirect3DDevice9* dev) {
-    if (!g_hudRemap || Rd(g_vrMenuClass) != 3) return false;
+    const LONG menuClass = Rd(g_vrMenuClass);
+    if (menuClass != 2 && menuClass != 3) return false;
+    if (!g_hudRemap && menuClass != 3) return false;
     float m[16];
     if (FAILED(dev->GetVertexShaderConstantF(5, m, 4))) return false;
-    return pausemenuspace::IsPauseCanvasOrtho(m);
+    if (!pausemenuspace::IsPauseCanvasOrtho(m)) return false;
+    return InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0) != 0;
 }
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,

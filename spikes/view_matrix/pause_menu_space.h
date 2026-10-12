@@ -36,4 +36,12 @@ inline void HudEyeClip(float clipX, float clipY, float inset, int eye, float& ou
     outY = inset * clipY;
 }
 
+// GFx pause/main movies render a side-by-side canvas into a scene-sized RT.
+// One full-width draw parks text on the left half of the texture; the in-world
+// monitor then shows that clipped strip in both eyes.
+inline bool DiegeticMenuCanvas(const float m[16], unsigned rtWidth, unsigned sceneWidth) {
+    if (!IsPauseCanvasOrtho(m) || sceneWidth < 640) return false;
+    return rtWidth >= sceneWidth;
+}
+
 }  // namespace pausemenuspace
