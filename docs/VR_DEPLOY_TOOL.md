@@ -20,3 +20,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\deploy-singularityvr.ps1 -Actio
 ```
 
 Use `-KeepIni` only when deliberately preserving the INI that is already installed. The default installs the repository's current INI, including `ForceDesktopVr=0`, `DesktopCapture=0`, and `DesktopAutomation=0`.
+
+Polish dubbing/subtitles use the mod toggle `[Localization] PolishLanguage=1` (not Steam language). After `-KeepIni` or `-DllOnly` deploys, use `-EnsurePolishLanguage` to set `PolishLanguage=1` without replacing the whole INI; the tool backs up `SingularityVR.ini` and records manifest hashes in the install report. `-Action Status` prints `PolishLanguage`, jsonl SHA-256 values, and WAV count.
+
+For black-material A/B against the texture injector on the **same** `d3d9.dll`, use `-TextureInjector Disable` (renames `dinput8.dll` to `dinput8.dll.disabled-by-vr`, with backup) or `-TextureInjector Enable` to restore. Combine with `-DllOnly -KeepIni -StopGame` when only configuration changes are needed.

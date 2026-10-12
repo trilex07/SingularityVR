@@ -1,20 +1,19 @@
 # STATUS — session handoff
 
-Last updated **2026-10-12**. Left glove idle: **PHYSICALLY_VERIFIED** (`010eb45`).
-PSVR2 on `318b1fd`: support grip no longer hides the left glove, but it sat
-**beside** the pistol because the left target was `BuildGunC` while the right
-target stayed the aim controller. Pistol latch now uses `AuthoredPair`: both
-regions take the aim-hand rigid delta, and `GloveLeftShift` is not applied
-while that latch is held. `l_hand_IK` is the rest pose, not a grip point.
-Pause: offscreen class 3 is still `compose=0` (one full-width scene RT draw);
-no new HUD remap. See `docs/audits/hands-only-and-pause.md`.
+Last updated **2026-10-12**. **Hands frozen** — PSVR2 accepted on DLL
+`2FE5011C20DFEAAEDFFFFE58CD39E92A9570867F344649B00C0038AD97B39A47`
+(`726e1a7`): gloves, two-hand pistol grip, no disappear/beside pistol.
+Branch `feature/regression-recovery` — regression pass only (no grip edits).
 
-**Steam install (MAIN):** `2FE5011C20DFEAAEDFFFFE58CD39E92A9570867F344649B00C0038AD97B39A47`
-at `726e1a7`, backup `20261012-114944`, INI preserved, `PauseMenuDiag=1` set on
-the installed ini for the next class-3 capture. Support grip:
-**READY_FOR_PHYSICAL_ACCEPTANCE** (not a visual PASS). Prior candidate
-`318b1fd` / `4F85BEAA…`, backup `20261012-113123`. Workflow:
-`docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
+**Regressions on that candidate (PSVR2):** English VA/subtitles (`PolishLanguage=0` on
+installed INI — manifests present, runtime rewrite off); black materials (suspect texture
+injector — A/B via `-TextureInjector Disable`); pause menu still split/clipped (evidence in
+`docs/regression-recovery-20261012.md`, **no new HUD fix**).
+
+**Steam install (MAIN):** see latest `deployment/install-reports/*.json` after
+`-EnsurePolishLanguage` + texture-injector A/B. Hands DLL SHA unchanged unless noted.
+Workflow: `docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`, deploy polish checks in
+`tools/deploy-singularityvr.ps1 -Action Status`.
 
 Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
 Read this first, then `ENGINE_NOTES.md`.
