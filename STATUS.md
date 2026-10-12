@@ -1,9 +1,17 @@
 # STATUS — session handoff
 
-Last updated **2026-10-12**. Hands-only gloves and the pause-menu eye copy are
-`IMPLEMENTED_NOT_VERIFIED` on `feature/hands-only-gloves`. See
+Last updated **2026-10-12**. Rigid hands-only gloves and diegetic pause-menu
+composition are `IMPLEMENTED_NOT_VERIFIED` on `feature/hands-only-gloves`
+(commits `7c48cef`, `d7e9f58`). PSVR2 visual PASS is **not** claimed. See
 `docs/audits/hands-only-and-pause.md`. Full arms and elbow IK are not the
 rendering mode. The pause VR Settings row is unchanged.
+
+**Steam install (MAIN, leave until headset sign-off or explicit rollback):**
+branch `feature/hands-only-gloves`, commit `d7e9f58`, DLL SHA-256
+`9407D6075EDFB5A51E5C60E4F0CDB51145607823816FA8E8374B68DC04D20FFE`, INI
+preserved (`AA89218B…`). Deploy workflow:
+`docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`. Backup path recorded in the latest
+`deployment/install-reports/*.json` after deploy.
 
 Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
 Read this first, then `ENGINE_NOTES.md`.
