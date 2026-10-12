@@ -78,6 +78,7 @@ dropped beside the game exe. No game files modified.
 | **VR settings panel** | ✅ run 142 — hold Y **1 s** anywhere (1.3 s until run 219); live changes, saved to the ini on close. ⚠️ **No page may exceed `kPanelRowsMax` (10) rows** — run 249 |
 | **The game's HUD and menus in both eyes** | ✅ run 151 — health, ammo, crosshair, prompts, pause menu. `HudStereo=1` |
 | **The sniper scope in both eyes** | ✅ run 213 — whole scope per eye, world once, circle round. `ScopeQuadPerEye=1` |
+| **HQ decal per-eye squares** | ⬜ **not shadows** — HQ decals OFF removes them (run 44). Opt-in `StereoDecalPassFix` on branch `fix/stereo-decal-artifacts`; production DLL **`2FE5011C…`** unchanged until PSVR2 pass. See `docs/audits/stereo-decal-artifact-fix-20261012.md` |
 | **Shipping defaults = the tested configuration** | ✅ 2026-08-08 — a fresh install with no ini now behaves like the tuned dev machine. See below |
 
 ### ⭐ The code defaults ARE the tested configuration (2026-08-08)

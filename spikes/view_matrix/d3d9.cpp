@@ -14,6 +14,7 @@
 #include "camera_stabilization.h"
 #include "shadow_policy.h"
 #include "shadow_mode3.h"
+#include "decal_stereo_pass.h"
 #include "ui_pointer.h"
 #include "menu_capture_owner.h"
 #include "recenter_chord.h"
@@ -11664,6 +11665,10 @@ volatile LONG g_dumpShadowConsts = 0;
 // NUMPAD0 - drop draws to the scene-sized non-colour target, to prove whether it is the decal pass.
 volatile LONG g_skipExtraTarget = 0;
 int g_drawsSkipped = 0;
+// HQ deferred decal projection pass (scene-sized G16R16, ~2 draws/frame). Default off.
+int g_stereoDecalPassFix = 0;
+int g_decalScenePsReg = 1;   // ScreenPositionScaleBias register (scope precedent: ps c1)
+volatile LONG g_decalPassDraws = 0;
 
 // ---- render-target census (run 11) ----
 //
@@ -11906,6 +11911,52 @@ static void VfxCaptureBaseCam(const float* mat, int conv) {
     g_vfxBaseCamValid = true;
 }
 
+inline bool IsCurrentDecalProjectionRt() {
+    if (!g_stereoDecalPassFix || !g_srcW || !g_srcH) return false;
+    if (g_rtCurrent < 0 || g_rtCurrent >= 16) return false;
+    const RtInfo& rt = g_rtSeen[g_rtCurrent];
+    if (!singularity::decal::IsSceneSizedTarget(rt.w, rt.h, g_srcW, g_srcH)) return false;
+    return singularity::decal::IsProjectionTargetFormat(static_cast<std::uint32_t>(rt.fmt));
+}
+
+template <typename DrawFn>
+HRESULT DecalProjectionStereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
+    D3DVIEWPORT9 full{};
+    if (FAILED(dev->GetViewport(&full)) || full.Width < 4) return draw();
+    DWORD oldScissor = FALSE;
+    dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &oldScissor);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    float oldScene[4]{};
+    const bool haveScene = g_decalScenePsReg >= 0 &&
+        SUCCEEDED(dev->GetPixelShaderConstantF(g_decalScenePsReg, oldScene, 1));
+    const DWORD halfWidth = full.Width / 2;
+    HRESULT shr = S_OK;
+    static bool said = false;
+    if (!said) {
+        said = true;
+        Log("decal-pass: stereo fix on G16R16 projection (ScreenPositionScaleBias ps c%d)", g_decalScenePsReg);
+    }
+    for (int eye = 0; eye < 2; ++eye) {
+        D3DVIEWPORT9 vp = full;
+        vp.X = full.X + (eye ? halfWidth : 0);
+        vp.Width = halfWidth;
+        dev->SetViewport(&vp);
+        if (haveScene) {
+            float c[4];
+            memcpy(c, oldScene, sizeof(c));
+            singularity::decal::RemapScreenPositionScaleBiasForEye(c, eye);
+            dev->SetPixelShaderConstantF(g_decalScenePsReg, c, 1);
+        }
+        const HRESULT r = draw();
+        if (FAILED(r)) shr = r;
+    }
+    if (haveScene) dev->SetPixelShaderConstantF(g_decalScenePsReg, oldScene, 1);
+    dev->SetViewport(&full);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldScissor);
+    InterlockedIncrement(&g_decalPassDraws);
+    return shr;
+}
+
 template <typename DrawFn>
 HRESULT StereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
     if (!g_timeOurWork) return StereoPairBody(dev, draw);
@@ -11929,6 +11980,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
     // Shadow-map generation stays intact. VrShadows=0 neutralises only the measured sampled
     // projection texture in Hook_SetTexture, after the light-space pass has completed.
     if (!InterlockedCompareExchange(&g_dupDraws, 0, 0)) return draw();
+    if (IsCurrentDecalProjectionRt()) return DecalProjectionStereoPair(dev, draw);
     // Never split a draw aimed at a shadow map or other offscreen target - see the note on
     // Hook_SetRenderTarget for what that corrupts.
     // ---- run 41: dump the constants of the shadow pass, now that it is down to ~2 draws ----
@@ -27118,6 +27170,11 @@ void LoadIniSettings() {
     g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",1,path)?1:0;
     g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",1,path)?1:0;
     g_skipExtraTarget=GetPrivateProfileIntA("Render","DropExtraTarget",0,path)?1:0;
+    g_stereoDecalPassFix = GetPrivateProfileIntA("Render", "StereoDecalPassFix", 0, path) ? 1 : 0;
+    g_decalScenePsReg = GetPrivateProfileIntA("Render", "DecalScenePsReg", 1, path);
+    if (g_decalScenePsReg < -1 || g_decalScenePsReg > 63) g_decalScenePsReg = 1;
+    Log("ini: StereoDecalPassFix=%d DecalScenePsReg=%d (HQ decal G16R16 pass; 0=off)",
+        g_stereoDecalPassFix, g_decalScenePsReg);
     // Fix-E/shadows round 4: 0 = full split (measure only), 1 = mono sample, 2 = drop.
     // ShadowMode=3: protect light-space (generation native-once, light slots out
     // of the per-eye remap - see shadow_mode3.h). Supplants ShadowSampleMono

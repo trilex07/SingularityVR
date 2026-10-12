@@ -234,6 +234,8 @@ ZeroCopy=1
 ;   1 = split only the two scene colour targets
 ; ---------------------------------------------------------------------------
 SplitColourTargetsOnly=0
+; StereoDecalPassFix=0  HQ deferred decal G16R16 pass: per-eye ScreenPositionScaleBias (experimental; default off)
+; DecalScenePsReg=1     PS register for that constant (same role as ScopeScenePsReg)
 
 ; ---------------------------------------------------------------------------
 ; ExtraCamReg   -- TRIED AND FAILED (run 43). Kept so the result is reproducible.
