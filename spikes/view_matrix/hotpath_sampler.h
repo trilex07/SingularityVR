@@ -142,7 +142,9 @@ public:
 	}
 	bool should_time(Family f) noexcept {
 		const LONG sequence = InterlockedIncrement(&records_[static_cast<unsigned>(f)].sequence);
-		return active() && sequence % static_cast<LONG>(sample_stride) == 0;
+		// Enumeration was measured at ~75ms: time every bounded-window scan,
+		// rather than estimating its whole cost from nine samples.
+		return active() && (f==Family::native_gamepad_enumeration || sequence % static_cast<LONG>(sample_stride) == 0);
 	}
 	void record_sample(Family f, LONGLONG elapsed) noexcept {
 		auto& r = records_[static_cast<unsigned>(f)];

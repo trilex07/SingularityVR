@@ -157,6 +157,8 @@ static void Drain(float dt) {
 static void __fastcall Poll(void* self,void*,float dt) {
  ReadableForget();
  UpdateMenu(); // update mode before the game tick/XInput routes the trigger
+ NativeGamepadEnumProbe::SetContext(VrModeOn() && InterlockedCompareExchange(&g_padEmu,0,0)!=0 &&
+     InterlockedCompareExchange(&g_vrMenuClass,0,0)==0);
  BindViewport();
  {
   hotpath::scope inputScope(g_hotPathSampler,hotpath::Family::native_input_poll);

@@ -6,6 +6,7 @@ param(
     [switch]$ShadowReceiverExperiment,
     [switch]$ShadowClearGateExperiment,
     [switch]$GameplayHotPathRequest,
+    [switch]$InputEnumerationExperiment,
     [ValidateRange(60,1800)][int]$LaunchWindowSeconds = 600
 )
 # MAIN-owned single test lease: no launch/input/kill, never replace a running
@@ -34,6 +35,7 @@ if ($DllOnly) {
     }
     if ($ShadowReceiverExperiment) { & (Join-Path $PSScriptRoot 'set-shadow-receiver-experiment.ps1') -State OFF }
     if ($ShadowClearGateExperiment) { & (Join-Path $PSScriptRoot 'set-shadow-receiver-experiment.ps1') -State OFF -Experiment ClearGate }
+    if ($InputEnumerationExperiment) { & (Join-Path $PSScriptRoot 'set-input-enum-experiment.ps1') -State OFF }
     if ($GameplayHotPathRequest) {
         $ownedRequest='C:\Users\Trilex\AppData\Local\SingularityVR\hotpath-gameplay.request'
         if (Test-Path -LiteralPath $ownedRequest) {

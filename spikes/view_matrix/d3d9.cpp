@@ -23717,6 +23717,7 @@ static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
     shadowfix::Poll(g_logPath);
     shadowcleargate::Poll(g_logPath);
+    NativeGamepadEnumProbe::Poll(g_logPath);
     const bool shadowTraceReady=g_playerPawn && VrModeOn() && Rd(g_vrMenuClass)==0 &&
         g_xrSessionState==XR_SESSION_STATE_FOCUSED && g_handPoseValid[0] && g_handPoseValid[1] &&
         g_handPositionValid[0] && g_handPositionValid[1];

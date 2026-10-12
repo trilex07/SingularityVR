@@ -174,6 +174,41 @@ Falsifier: enum time/call counts remain small while originalPoll grows. This
 extra native hook is justified by the existing-hook timing and actual stack path;
 fails closed on unsupported loaded code. No guessed UE3 structure offset edit.
 
+## Enumeration timing PID31948 / A0068C7A
+
+Exact hook create/enable0/0 at Steam runtime. Completed3600 frames: helper309
+calls,9 timed samples, sampled mean75266.567us/scan, estimated6.4604ms/frame;
+parent polling3599 calls/112 samples, estimated4.8177ms/frame. Different sampled
+populations explain why the child estimate can exceed parent: do not sum them
+or claim an exact percent. Released intervals~90FPS. Native expensive scan path
+is measured, not merely a pointer/counter finding. Guard restored accepted DLL;
+final3 hashes still require MAIN verification after this session.
+
+## Default-OFF 500ms scan-throttle experiment
+
+Owned input-enum-throttle.flag payload/20-minute lease. Eligible only for VR,
+emulated pad ON, menu class0, and the exact thread latched by native input polling.
+First scan runs natively; successful EAX result may be reused for500ms after its
+completion. Failures never cached; other threads/contexts pass through. Native
+helper/callbacks are NOT invoked on deferred calls. This changes device-scan
+timing and may defer hotplug detection or callback side effects; neither is
+claimed safe in production yet. No button filtering, pose/shader/weapon/UI edit.
+Disabled state preserves native calls. Disable flag resets cache validity.
+
+Existing hook is reused. Full-rate bounded-window enum timing replaces1/32 for
+this rare75ms family; all other timers stay sampled. Native/deferred counts
+reported once/second from Present, never disk logging in the input hook. Guard
+removes owned experiment flag after exit/no-launch before restoring DLL.
+
+Offline x86 tests PASS: native failure bits preserved, failure not cached, first
+success native then defer, ineligible/other-thread pass through,499/500ms and
+DWORD wrap boundaries, unsupported signature untouched. Real runtime/physical
+test pending. Falsifier: scan count falls but input-poll/FPS do not improve, or
+buttons/menu behavior regress. Use same-session OFF/ON while HQ Decals ON; keep
+both shadow experiments OFF, restore accepted DLL after test. Do not mark fixed
+from offline tests. If FPS improves but periodic scan hitches remain,500ms gate
+is diagnostic progress, not final performance solution.
+
 ## Evidence, real Steam PID5260 / DLL6D147048
 
 Focused capture 2: 1329 final calls, 322 state-qualified groups, zero overflow,
