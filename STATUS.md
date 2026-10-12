@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+Input cache130dfdb / DLLF294D272: real Steam PID19520, PHYSICALLY_VERIFIED
+for held-button FPS/actions/stereo/tracking and pause/options/resume. User says
+everything retained and no FPS drops. Topology reconnect not tested. Profiler
+ended before3600 completion; final retained partial3360 has2 timed full scans
+mean75.942ms, not a complete-window claim. Zero-scan gameplay intervals replay
+native callbacks with~90FPS. Game exited; guard000916 restored DLL9FBA308C;
+MAIN verified actualDLL/UI5B2EA469/currentINI61AEC56C (user's change preserved).
+Return to square shadows; rejected receiver correction staysOFF.
+
 Event-invalidated input discovery cache: IMPLEMENTED_NOT_VERIFIED. Full native
 callback audit led to caching device INSTANCE records and replaying original
 callbacks, not suppressing all callbacks or moving DirectInput to a worker.

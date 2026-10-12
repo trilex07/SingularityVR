@@ -56,3 +56,19 @@ signature and unavailable notification passthrough. Runtime/PSVR2 pending.
 Test same save/HQDecalsON: L2/R2/other buttons, pause/options/resume, controller
 off/on if user permits. Compare exact scans/callbacks with FPS; guard restores
 accepted DLL after exit and preserves user INI/UI.
+
+## Steam/PSVR2 result PID19520, 2026-10-13
+
+ExactDLLF294D272 source130dfdb, hookcreate/enable0/0 and OpenXRready. Actual
+snapshot content:2 captured callbacks; subsequent requests replay2 callbacks
+each, zero rejected snapshots in shown gameplay intervals. Both-trigger endpoint
+LT255/RT255 interval11.131ms/frame, then90FPS gameplay with zero full scans.
+Context transition executes another real scan, as designed.
+User confirms all tested controls, stereo, tracking and pause/options/resume
+remain intact and FPS no longer drop. This is physical acceptance for the tested
+symptom/lifecycle, NOT controller reconnect or arbitrary device-error acceptance.
+Bounded profiler stopped before final3600 report; last3360 partial:2 scans,
+all timed, mean75942.450us. Do not report the profile as complete.
+Private final log runtime-19520-input-cache-final.log. After exit guard restored
+DLL9FBA308C; actual UI5B2EA469 and currentINI61AEC56C verified. User changed
+LaserSight back1 during session; retained rather than restoring pre-testINI568E.
