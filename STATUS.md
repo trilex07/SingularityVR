@@ -6,9 +6,12 @@ on `010eb45` stays **PHYSICALLY_VERIFIED**. Next candidate snaps the support
 wrist onto `BuildGunC` and squeezes class-3 canvas into the center of the
 scene RT (`compose=4`). Pause and two-hand remain `IMPLEMENTED_NOT_VERIFIED`.
 
-**Steam install:** redeploy after this build. Previous: `ed0b032` /
-`38C17399…`, backup `deployment/install-backups/20261012-111032`. Workflow:
-`docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
+**Steam install (leave until headset sign-off):** branch
+`feature/hands-only-gloves`, commit `0eb22a6`, DLL SHA-256
+`2B896A7A9A6B4F4B87CAD38098148FD471AEBA5EA5B78789479B717E0CAA66E9`, INI
+preserved. Backup: `deployment/install-backups/20261012-111934`. Retest
+**pause** (both columns in both eyes) and **pistol two-hand** (left glove on
+the gun). Workflow: `docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
 
 Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
 Read this first, then `ENGINE_NOTES.md`.
