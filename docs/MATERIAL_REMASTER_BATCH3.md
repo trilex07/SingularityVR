@@ -40,19 +40,24 @@ is present. Diffuse maps are not processed and not substituted; each manifest's
 Fidelity (centre-crop mean absolute difference) and normal-map unit length
 (enhanced vs shipped original, % outside 0.98–1.02 — lower is better):
 
-| normal map | size | mips | bytes | mean abs | px>4% | orig out-tol | enh out-tol |
-|------------|------|------|-------|----------|-------|--------------|-------------|
-| ar_sniper_rifle_n | 2048x1024 DXT1 | 12 | 1,398,248 | 7.26 | 74.6% | 24.1% | 16.1% |
-| elite_beam_n | 2048x2048 DXT1 | 12 | 2,796,344 | 8.32 | 78.5% | 35.3% | 19.3% |
-| TMD_new_n | 2048x1024 DXT1 | 12 | 1,398,248 | 8.77 | 81.4% | 47.3% | 23.7% |
+| normal map | substitute size | mips | bytes | mean abs vs clean 2x | max | orig out-tol | enh out-tol |
+|------------|-----------------|------|-------|----------|-----|--------------|-------------|
+| ar_sniper_rifle_n | 4096x2048 DXT1 | 13 | 5,592,424 | 6.85 | 188 | 24.1% | 14.0% |
+| elite_beam_n | 4096x4096 DXT1 | 13 | 11,184,824 | 7.49 | 165 | 35.3% | 17.2% |
+| TMD_new_n | 4096x2048 DXT1 | 13 | 5,592,424 | 8.13 | 239 | 47.3% | 20.8% |
 
-Mean abs sits higher than batch-2 normals (2.8–7.2) because procedural relief
+Revision 2 presents batch-3 normals at 2x like the rest (signed-space Lanczos
++ renorm of the procedural-relief native). Fidelity is measured against the
+clean 2x resample, so the numbers are relief delta + DXT loss.
+
+Mean abs sits higher than batch-2 normals because procedural relief
 is not anchored to diffuse detail and touches more texels; it stays inside the
 < 16 fidelity bound, and every map beats its shipped original on unit-length
 tolerance.
 
 Video memory, substituted maps only: source mip0 **4,194,304 B (4.00 MB)** →
-replacement **5,592,456 B (5.33 MB)**. No saving claimed.
+replacement 2x **22,369,672 B (21.33 MB)** (5,592,424 + 11,184,824 + 5,592,424).
+No saving claimed - this is the price of the 2x tier, stated up front.
 
 Normal-map unit length is gated relatively (enhanced out-of-tolerance % must
 not exceed the shipped original's), exactly as in batch 2.

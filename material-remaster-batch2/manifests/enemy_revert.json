@@ -30,35 +30,42 @@
       },
       "deploy_filename": "revert_d2_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_revert/revert_d2_2x.dds",
-      "output_sha256": "c0e3af2713b07a525df0116bb880ff65980dbd415a234563c28be144c3c82620",
+      "output_sha256": "c85a8bdcb59e62aadf973c6ed26dec50ace99173db32890e809812991586fea2",
       "validation": {
-        "width": 2048,
-        "height": 2048,
+        "width": 4096,
+        "height": 4096,
         "fourcc": "DXT1",
-        "mip_count": 12,
-        "file_bytes": 2796344,
-        "pixel_data_bytes": 2796216,
-        "declared_mip_bytes": 2796216,
-        "video_memory_bytes": 2796216,
+        "mip_count": 13,
+        "file_bytes": 11184952,
+        "pixel_data_bytes": 11184824,
+        "declared_mip_bytes": 11184824,
+        "video_memory_bytes": 11184824,
         "decoded_size": [
-          2048,
-          2048
+          4096,
+          4096
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 9.09,
-        "seam_col_mean_abs": 7.677,
+        "seam_row_mean_abs": 6.929,
+        "seam_col_mean_abs": 5.479,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 4.458,
-          "max_abs_diff": 44,
-          "pct_pixels_changed_over_4": 48.756,
-          "pct_pixels_changed_over_16": 0.269
+          "mean_abs_diff": 1.803,
+          "max_abs_diff": 29,
+          "pct_pixels_changed_over_4": 3.024,
+          "pct_pixels_changed_over_16": 0.002
         },
+        "fidelity_reference": "lanczos-2x of source (same resolution)",
         "detail_high_frequency_energy": {
           "source": 49.069,
-          "enhanced": 51.414,
-          "ratio": 1.0478
+          "enhanced": 22.353,
+          "ratio": 0.4555,
+          "note": "revision 2: cross-resolution magnitudes; preservation is asserted on detail_vs_clean_reference instead"
+        },
+        "detail_vs_clean_reference": {
+          "reference": 19.541,
+          "output": 22.353,
+          "ratio": 1.1439
         },
         "status": "VERIFIED"
       }
@@ -87,40 +94,41 @@
       },
       "deploy_filename": "revert_n2_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_revert/revert_n2_2x.dds",
-      "output_sha256": "311f72f0582509d500dbbdd3974dbaf5a4cfb257a2836a08929ee84262fe3a8e",
+      "output_sha256": "b3f2e193c5f8b89ab9e15a41f3901c09132d572aa282c4f620a5b852db43f8cd",
       "validation": {
-        "width": 2048,
-        "height": 2048,
+        "width": 4096,
+        "height": 4096,
         "fourcc": "DXT1",
-        "mip_count": 12,
-        "file_bytes": 2796344,
-        "pixel_data_bytes": 2796216,
-        "declared_mip_bytes": 2796216,
-        "video_memory_bytes": 2796216,
+        "mip_count": 13,
+        "file_bytes": 11184952,
+        "pixel_data_bytes": 11184824,
+        "declared_mip_bytes": 11184824,
+        "video_memory_bytes": 11184824,
         "decoded_size": [
-          2048,
-          2048
+          4096,
+          4096
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 0.81,
-        "seam_col_mean_abs": 1.298,
+        "seam_row_mean_abs": 0.817,
+        "seam_col_mean_abs": 1.3,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 2.91,
-          "max_abs_diff": 163,
-          "pct_pixels_changed_over_4": 22.794,
-          "pct_pixels_changed_over_16": 0.303
+          "mean_abs_diff": 2.83,
+          "max_abs_diff": 112,
+          "pct_pixels_changed_over_4": 20.98,
+          "pct_pixels_changed_over_16": 0.021
         },
+        "fidelity_reference": "lanczos-2x of source (same resolution)",
         "normal_map_check": {
           "alpha_min": 255,
           "alpha_max": 255,
-          "x_mean": 125.972,
-          "y_mean": 125.788,
-          "z_mean": 246.826,
-          "unit_length_min": 0.624146,
-          "unit_length_max": 1.060144,
-          "pct_outside_0p98_1p02": 15.3391,
+          "x_mean": 125.765,
+          "y_mean": 125.829,
+          "z_mean": 247.012,
+          "unit_length_min": 0.515175,
+          "unit_length_max": 1.059912,
+          "pct_outside_0p98_1p02": 16.0628,
           "fourcc": "DXT1"
         },
         "status": "VERIFIED"
@@ -128,13 +136,11 @@
     }
   },
   "newly_authored": [
-    "chitin mottling, 3 octaves, 10% of local luminance",
-    "hide pores, up to 28% local darkening (466 seed scale)",
-    "155 crack strokes, 8% of local luminance (darkening)",
-    "lesion tint patches, 2 octaves",
+    "no invented albedo detail: Lanczos 2x presentation of the true mip0 (revision 2; procedural micro-detail removed after visual review)",
     "micro relief from enhanced diffuse high-pass, slope amplitude 0.85",
     "original macro normals preserved and renormalised to unit length",
-    "alpha channel set to constant 255 (matches shipped DXT1 normal maps)"
+    "alpha channel set to constant 255 (matches shipped DXT1 normal maps)",
+    "normal presented at 2x via signed-space Lanczos + renormalisation (matches the diffuse tier)"
   ],
   "recovered_from_source": [
     "mip0 diffuse bytes, sha256 ef5b55d25d294c7f",
@@ -151,69 +157,77 @@
   "status": "OFFLINE ONLY - NOT VR TESTED",
   "validation": {
     "diffuse": {
-      "width": 2048,
-      "height": 2048,
+      "width": 4096,
+      "height": 4096,
       "fourcc": "DXT1",
-      "mip_count": 12,
-      "file_bytes": 2796344,
-      "pixel_data_bytes": 2796216,
-      "declared_mip_bytes": 2796216,
-      "video_memory_bytes": 2796216,
+      "mip_count": 13,
+      "file_bytes": 11184952,
+      "pixel_data_bytes": 11184824,
+      "declared_mip_bytes": 11184824,
+      "video_memory_bytes": 11184824,
       "decoded_size": [
-        2048,
-        2048
+        4096,
+        4096
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 9.09,
-      "seam_col_mean_abs": 7.677,
+      "seam_row_mean_abs": 6.929,
+      "seam_col_mean_abs": 5.479,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 4.458,
-        "max_abs_diff": 44,
-        "pct_pixels_changed_over_4": 48.756,
-        "pct_pixels_changed_over_16": 0.269
+        "mean_abs_diff": 1.803,
+        "max_abs_diff": 29,
+        "pct_pixels_changed_over_4": 3.024,
+        "pct_pixels_changed_over_16": 0.002
       },
+      "fidelity_reference": "lanczos-2x of source (same resolution)",
       "detail_high_frequency_energy": {
         "source": 49.069,
-        "enhanced": 51.414,
-        "ratio": 1.0478
+        "enhanced": 22.353,
+        "ratio": 0.4555,
+        "note": "revision 2: cross-resolution magnitudes; preservation is asserted on detail_vs_clean_reference instead"
+      },
+      "detail_vs_clean_reference": {
+        "reference": 19.541,
+        "output": 22.353,
+        "ratio": 1.1439
       },
       "status": "VERIFIED"
     },
     "normal": {
-      "width": 2048,
-      "height": 2048,
+      "width": 4096,
+      "height": 4096,
       "fourcc": "DXT1",
-      "mip_count": 12,
-      "file_bytes": 2796344,
-      "pixel_data_bytes": 2796216,
-      "declared_mip_bytes": 2796216,
-      "video_memory_bytes": 2796216,
+      "mip_count": 13,
+      "file_bytes": 11184952,
+      "pixel_data_bytes": 11184824,
+      "declared_mip_bytes": 11184824,
+      "video_memory_bytes": 11184824,
       "decoded_size": [
-        2048,
-        2048
+        4096,
+        4096
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 0.81,
-      "seam_col_mean_abs": 1.298,
+      "seam_row_mean_abs": 0.817,
+      "seam_col_mean_abs": 1.3,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 2.91,
-        "max_abs_diff": 163,
-        "pct_pixels_changed_over_4": 22.794,
-        "pct_pixels_changed_over_16": 0.303
+        "mean_abs_diff": 2.83,
+        "max_abs_diff": 112,
+        "pct_pixels_changed_over_4": 20.98,
+        "pct_pixels_changed_over_16": 0.021
       },
+      "fidelity_reference": "lanczos-2x of source (same resolution)",
       "normal_map_check": {
         "alpha_min": 255,
         "alpha_max": 255,
-        "x_mean": 125.972,
-        "y_mean": 125.788,
-        "z_mean": 246.826,
-        "unit_length_min": 0.624146,
-        "unit_length_max": 1.060144,
-        "pct_outside_0p98_1p02": 15.3391,
+        "x_mean": 125.765,
+        "y_mean": 125.829,
+        "z_mean": 247.012,
+        "unit_length_min": 0.515175,
+        "unit_length_max": 1.059912,
+        "pct_outside_0p98_1p02": 16.0628,
         "fourcc": "DXT1"
       },
       "status": "VERIFIED"
@@ -221,7 +235,7 @@
   },
   "video_memory": {
     "source_mip0_bytes_substituted": 4194304,
-    "replacement_total_bytes_substituted": 5592432,
+    "replacement_total_bytes_substituted": 22369648,
     "origin": "ESTIMATED (computed from measured DDS headers and file contents)"
   },
   "evidence": {

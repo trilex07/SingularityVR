@@ -7,7 +7,7 @@
       "asset": "ar_sniper_rifle_n",
       "manifest": "material-remaster-batch3/manifests/weapon_sniper_normal.json",
       "substituted": {
-        "normal": "4733b4d27468edbb"
+        "normal": "37ea2c1a3c368e1a"
       }
     },
     {
@@ -15,7 +15,7 @@
       "asset": "elite_beam_n",
       "manifest": "material-remaster-batch3/manifests/weapon_railgun_normal.json",
       "substituted": {
-        "normal": "0a159266274c4fea"
+        "normal": "a00fc23f679be3ee"
       }
     },
     {
@@ -23,7 +23,7 @@
       "asset": "TMD_new_n",
       "manifest": "material-remaster-batch3/manifests/device_tmd_normal.json",
       "substituted": {
-        "normal": "ecb1bb6675bbeafd"
+        "normal": "92f4592d7500d603"
       }
     }
   ],
@@ -32,5 +32,5 @@
     "remaining inventory": "masks, emissives, FX sprites, unprovenanced captures - no further true-mip0 colour data in the local inventory"
   },
   "total_source_mip0_bytes": 4194304,
-  "total_replacement_bytes": 5592456
+  "total_replacement_bytes": 22369672
 }

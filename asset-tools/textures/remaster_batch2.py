@@ -74,7 +74,6 @@ BATCH = {
         },
         "expected": {"diffuse": (2048, 1024), "normal": (2048, 1024)},
         "substitute": ["diffuse", "normal"],
-        "showcase_2x": True,   # one genuine 2x Lanczos variant, labelled upscaled
     },
     "weapon_gatling": {
         "asset": "ar_gatling_gun", "material": "AR_gatling_gun",
@@ -178,98 +177,6 @@ DEFERRED = {
 
 
 # --------------------------------------------------------------------------- #
-# enhancement (batch-2 kinds; weapon/environment reuse batch-1 via M dispatcher)
-# --------------------------------------------------------------------------- #
-def enhance_diffuse_organic(img: Image.Image) -> tuple[Image.Image, list[str]]:
-    """Mutant chitin/hide: plate mottling, pores, cracks, lesions."""
-    arr = np.asarray(img.convert("RGBA"))
-    h, w = arr.shape[:2]
-    notes = []
-    n_pore = max(30, (w * h) // 9000)
-
-    # large mottling (plate colour variation)
-    mot = M.fbm((h, w), 3, 5001, 0.008)
-    mot = (mot - 0.5) * 2.0
-    arr2 = M.blend_detail(arr, mot, 0.10)
-    notes.append("chitin mottling, 3 octaves, 10% of local luminance")
-
-    # pores: small dark pits
-    pit = M.fbm((h, w), 4, 5002, 0.22)
-    pit = np.where(pit > 0.78, (pit - 0.78) / 0.22, 0).astype(np.float32)
-    arr3 = arr2.astype(np.float32).copy()
-    for c in range(3):
-        arr3[:, :, c] = np.clip(arr3[:, :, c] * (1 - 0.28 * pit), 0, 255)
-    notes.append(f"hide pores, up to 28% local darkening ({n_pore} seed scale)")
-
-    # cracks: thin dark branching lines - sparse and shallow; dense dark
-    # strokes read as black bars rather than wear (review feedback)
-    scr = M.directional_scratches((h, w), count=max(12, n_pore // 3), seed=5003,
-                                  angle=1.1, spread=0.9, length=(15, 120))
-    arr4 = M.blend_detail(arr3.astype(np.uint8), -np.maximum(scr, 0.0), 0.08)
-    notes.append(f"{max(12, n_pore // 3)} crack strokes, 8% of local luminance (darkening)")
-
-    # lesion sheen variation (subtle warm shift in patches)
-    les = M.fbm((h, w), 2, 5004, 0.01)
-    les = np.where(les > 0.60, (les - 0.60) / 0.40, 0).astype(np.float32)
-    tint = np.array([0.10, -0.02, -0.05], np.float32)
-    arr5 = arr4.astype(np.float32).copy()
-    for c in range(3):
-        arr5[:, :, c] = np.clip(arr5[:, :, c] + tint[c] * 255.0 * les, 0, 255)
-    notes.append("lesion tint patches, 2 octaves")
-    return Image.fromarray(arr5.astype(np.uint8), "RGBA"), notes
-
-
-def enhance_diffuse_soldier(img: Image.Image) -> tuple[Image.Image, list[str]]:
-    """Uniform cloth + hard armor: weave, plate wear, webbing grime."""
-    arr = np.asarray(img.convert("RGBA"))
-    h, w = arr.shape[:2]
-    notes = []
-
-    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
-    pitch = max(5, w / 64)
-    weave = np.sin(xx * 2 * np.pi / pitch) * np.sin(yy * 2 * np.pi / pitch)
-    weave = weave - weave.mean()
-    weave = weave / max(np.abs(weave).max(), 1e-6)
-    arr2 = M.blend_detail(arr, weave, 0.09)
-    notes.append(f"uniform weave, pitch {pitch:.0f}px, 9% of local luminance, zero-mean")
-
-    # armor plate edge wear (bright scuffs on raised areas via luminance mask)
-    lum = arr2[:, :, :3].mean(axis=2)
-    hi = np.clip((lum - 110) / 90.0, 0, 1).astype(np.float32)
-    scuff = M.fbm((h, w), 3, 6002, 0.05) * hi
-    arr3 = arr2.astype(np.float32).copy()
-    for c in range(3):
-        arr3[:, :, c] = np.clip(arr3[:, :, c] + 22.0 * scuff, 0, 255)
-    notes.append("armor scuff highlights on bright regions, up to +22 levels")
-
-    # webbing / recess grime
-    lo = np.clip((70 - lum) / 70.0, 0, 1).astype(np.float32) ** 1.5
-    arr4 = arr3
-    for c in range(3):
-        arr4[:, :, c] = np.clip(arr4[:, :, c] * (1 - 0.16 * lo), 0, 255)
-    notes.append("recess grime, up to 16% local darkening")
-    return Image.fromarray(arr4.astype(np.uint8), "RGBA"), notes
-
-
-def enhance_diffuse_optic(img: Image.Image) -> tuple[Image.Image, list[str]]:
-    """Laser-sight housing: optically smooth, minimal grain only."""
-    arr = np.asarray(img.convert("RGBA"))
-    h, w = arr.shape[:2]
-    grain = (M.fbm((h, w), 2, 7001, 0.30) - 0.5) * 2.0
-    out = M.blend_detail(arr, grain, 0.04)
-    return Image.fromarray(out, "RGBA"), ["fine grain only, 4% of local luminance (housing must stay smooth)"]
-
-
-def enhance_diffuse(kind: str, img: Image.Image):
-    if kind == "organic":
-        return enhance_diffuse_organic(img)
-    if kind == "soldier":
-        return enhance_diffuse_soldier(img)
-    if kind == "optic":
-        return enhance_diffuse_optic(img)
-    return M.enhance_diffuse(img, kind)  # weapon / environment reuse batch 1
-
-
 def enhance_normal_procedural(img: Image.Image, kind: str) -> tuple[Image.Image, list[str]]:
     """Micro relief without diffuse coupling (for normal-only assets).
 
@@ -399,26 +306,43 @@ def process_asset(key: str, spec: dict) -> dict:
             entry["deploy_filename"] = deploy_name
 
         if map_type in spec["substitute"]:
+            # REVISION 2 (visual review verdict: invented albedo detail reads as
+            # dirt on dark textures): the substituted diffuse is a faithful
+            # Lanczos 2x of the true mip0 with a full mip chain. Zero invented
+            # pixels; channels filtered independently so packed alpha survives.
             if map_type == "diffuse":
-                enhanced, notes = enhance_diffuse(spec["kind"], img)
-                enhanced_diffuse = enhanced
-                result["newly_authored"].extend(notes)
+                clean2x = resize_rgba_independent(
+                    img, (img.width * 2, img.height * 2), Image.LANCZOS)
+                # normal-map relief anchors on the NATIVE source diffuse: the
+                # only genuine detail available (no enhanced diffuse exists)
+                enhanced_diffuse = img
+                result["newly_authored"].append(
+                    "no invented albedo detail: Lanczos 2x presentation of the "
+                    "true mip0 (revision 2; procedural micro-detail removed "
+                    "after visual review)")
                 fourcc = hdr["fourcc"]
-                a = np.asarray(enhanced)
-                payload = enhanced if a[:, :, 3].min() < 255 else enhanced.convert("RGB")
+                a = np.asarray(clean2x)
+                payload = clean2x if a[:, :, 3].min() < 255 else clean2x.convert("RGB")
                 out_dds = out_dir / entry["deploy_filename"]
                 written = save_dds(out_dds, payload, fourcc)
             elif map_type == "normal":
+                # micro relief is derived from the NATIVE source diffuse (the
+                # only genuine detail available), then presented at 2x through
+                # signed-space upsampling + renormalisation
                 if enhanced_diffuse is None:
                     if spec.get("relief") == "procedural":
-                        enhanced, notes = enhance_normal_procedural(img, spec["kind"])
+                        enhanced_native, notes = enhance_normal_procedural(img, spec["kind"])
                         result["newly_authored"].extend(notes)
                     else:
                         raise RuntimeError("normal processed before diffuse")
                 else:
-                    enhanced, notes = M.enhance_normal(img, enhanced_diffuse,
-                                                       spec["kind"])
+                    enhanced_native, notes = M.enhance_normal(img, enhanced_diffuse,
+                                                             spec["kind"])
                     result["newly_authored"].extend(notes)
+                enhanced = signed_upsample_2x(enhanced_native)
+                result["newly_authored"].append(
+                    "normal presented at 2x via signed-space Lanczos + "
+                    "renormalisation (matches the diffuse tier)")
                 out_dds = out_dir / entry["deploy_filename"]
                 written = save_normal_dds(out_dds, enhanced)
             elif map_type == "specular":
@@ -463,47 +387,44 @@ def process_asset(key: str, spec: dict) -> dict:
         result["recovered_from_source"].append(
             f"mip0 {map_type} bytes, sha256 {entry['source_sha256'][:16]}")
 
-    # genuine 2x showcase variant (ONE asset): Lanczos from true mip0, labelled
-    if spec.get("showcase_2x"):
-        d_entry = result["maps"]["diffuse"]
-        n_entry = result["maps"]["normal"]
-        d_img, _ = load_dds(Path(d_entry["output_file"]))
-        n_img, _ = load_dds(Path(n_entry["output_file"]))
-        d2 = resize_rgba_independent(d_img, (d_img.width * 2, d_img.height * 2),
-                                       Image.LANCZOS)
-        n2 = signed_upsample_2x(n_img)
-        d2_path = out_dir / f"{spec['asset']}_diffuse_2X_LANCZOS.dds"
-        n2_path = out_dir / f"{spec['asset']}_normal_2X_LANCZOS.dds"
-        wd = save_dds(d2_path, d2.convert("RGB") if d_entry["output_header"]["fourcc"] == "DXT1"
-                      else d2, d_entry["output_header"]["fourcc"])
-        wn = save_normal_dds(n2_path, n2)
-        result["upscaled_variants"] = {
-            "method": "LANCZOS from the enhanced native replacement (which itself "
-                      "derives from true mip0). Interpolation only: no detail above "
-                      "the original Nyquist frequency is genuine.",
-            "files": [
-                {"file": str(d2_path), "sha256": sha256_file(d2_path), "header": wd},
-                {"file": str(n2_path), "sha256": sha256_file(n2_path), "header": wn},
-            ],
-            "substituted": False,
-            "note": "NOT wired into the injector; showcase of genuine higher-resolution "
-                    "output vs invented detail. Compare against the native replacement.",
-        }
-        for f in result["upscaled_variants"]["files"]:
-            f["validation"] = validate_dds(Path(f["file"]))
-        print(f"    showcase 2x: {d2_path.name}, {n2_path.name}", flush=True)
+    # (revision 2: the old E99 2x showcase is superseded - every substitute IS a
+    # clean 2x presentation now, so a separate showcase would duplicate it)
 
     val = {}
     for map_type, entry in result["maps"].items():
         rep = validate_dds(Path(entry["output_file"]))
         rep["video_memory_bytes"] = video_memory_bytes(Path(entry["output_file"]))
-        rep["fidelity_vs_source"] = M.fidelity_report(entry["source_file"], entry["output_file"])
+        # fidelity is measured against the same-resolution clean reference, so
+        # the number captures DXT + packaging loss only - never resampling:
+        # for a 2x substitute the reference is Lanczos-2x of the source.
+        ref_img, _ = load_dds(Path(entry["source_file"]))
+        if (rep["width"], rep["height"]) != (ref_img.width, ref_img.height):
+            ref_img = resize_rgba_independent(ref_img, (rep["width"], rep["height"]),
+                                              Image.LANCZOS)
+        ref_path = None
+        try:
+            rep["fidelity_vs_source"] = fidelity_images(
+                ref_img, load_dds(Path(entry["output_file"]))[0])
+            rep["fidelity_reference"] = ("lanczos-2x of source (same resolution)"
+                                         if (rep["width"], rep["height"]) !=
+                                         (entry["source_width"], entry["source_height"])
+                                         else "source mip0 (same resolution)")
+        finally:
+            if ref_path is not None:
+                ref_path.unlink(missing_ok=True)
         if map_type == "diffuse":
             e_src = M.detail_energy(load_dds(Path(entry["source_file"]))[0])
             e_out = M.detail_energy(load_dds(Path(entry["output_file"]))[0])
             rep["detail_high_frequency_energy"] = {
                 "source": round(e_src, 3), "enhanced": round(e_out, 3),
-                "ratio": round(e_out / max(e_src, 1e-9), 4)}
+                "ratio": round(e_out / max(e_src, 1e-9), 4),
+                "note": "revision 2: cross-resolution magnitudes; preservation "
+                        "is asserted on detail_vs_clean_reference instead"}
+            e_ref = M.detail_energy(ref_img)
+            e_out2 = M.detail_energy(load_dds(Path(entry["output_file"]))[0])
+            rep["detail_vs_clean_reference"] = {
+                "reference": round(e_ref, 3), "output": round(e_out2, 3),
+                "ratio": round(e_out2 / max(e_ref, 1e-9), 4)}
         if map_type == "normal":
             rep["normal_map_check"] = M.check_normal_map(entry["output_file"])
         rep["status"] = "VERIFIED" if rep["fidelity_vs_source"]["compared_pixels"] > 0 else "NOT TESTED"
@@ -547,19 +468,23 @@ def make_comparisons(key: str, spec: dict, result: dict) -> list[str]:
         if "output_file" not in entry:
             continue
         orig, _ = load_dds(Path(spec["maps"][map_type]))
-        enh, _ = load_dds(Path(entry["output_file"]))
+        sub, _ = load_dds(Path(entry["output_file"]))
         w, h = orig.size
         crop = min(w, h, 256)
         x0, y0 = (w - crop) // 2, (h - crop) // 2
         box = (x0, y0, x0 + crop, y0 + crop)
+        # the substitute is 2x: take the same texture region at doubled
+        # coordinates so both panels show identical content
+        sx, sy = sub.width // w, sub.height // h
+        sbox = (x0 * sx, y0 * sy, (x0 + crop) * sx, (y0 + crop) * sy)
         tiles = [
-            (orig.crop(box).resize((crop * 2, crop * 2), Image.NEAREST), "ORIGINAL 1x (2x nearest)"),
-            (resize_rgba_independent(orig.crop(box), (crop * 2, crop * 2),
-                                     Image.LANCZOS), "LANCZOS upscale"),
-            (resize_rgba_independent(enh.crop(box), (crop * 2, crop * 2),
-                                     Image.LANCZOS), "REMASTERED (native)"),
+            (orig.crop(box).resize((crop * 2, crop * 2), Image.NEAREST),
+             "ORIGINAL 1x (2x nearest)"),
+            (resize_rgba_independent(sub.crop(sbox), (crop * 2, crop * 2),
+                                     Image.LANCZOS),
+             f"SUBSTITUTE 2x ({sub.width}x{sub.height})"),
         ]
-        sheet = Image.new("RGB", (crop * 2, crop * 2 * 3 + 40), (18, 18, 22))
+        sheet = Image.new("RGB", (crop * 2, crop * 2 * 2 + 40), (18, 18, 22))
         from PIL import ImageDraw
         d = ImageDraw.Draw(sheet)
         y = 0
@@ -572,6 +497,26 @@ def make_comparisons(key: str, spec: dict, result: dict) -> list[str]:
         produced.append(str(path))
         print(f"    comparison sheet: {path.name}", flush=True)
     return produced
+
+
+def fidelity_images(a_img: Image.Image, b_img: Image.Image, crop_max: int = 512) -> dict:
+    """Same measurement as material_remaster.fidelity_report, but from two
+    already-decoded images (the reference may be a lossless in-memory upscale,
+    not a DDS file on disk)."""
+    a = np.asarray(a_img.convert("RGB")).astype(np.int16)
+    b = np.asarray(b_img.convert("RGB")).astype(np.int16)
+    h = min(a.shape[0], b.shape[0], crop_max)
+    w = min(a.shape[1], b.shape[1], crop_max)
+    y0, x0 = (a.shape[0] - h) // 2, (a.shape[1] - w) // 2
+    y1, x1 = (b.shape[0] - h) // 2, (b.shape[1] - w) // 2
+    d = np.abs(a[y0:y0 + h, x0:x0 + w] - b[y1:y1 + h, x1:x1 + w])
+    return {
+        "compared_pixels": int(h * w),
+        "mean_abs_diff": round(float(d.mean()), 3),
+        "max_abs_diff": int(d.max()),
+        "pct_pixels_changed_over_4": round(float((d.mean(axis=2) > 4).mean() * 100.0), 3),
+        "pct_pixels_changed_over_16": round(float((d.mean(axis=2) > 16).mean() * 100.0), 3),
+    }
 
 
 def safe_manifest(result: dict) -> dict:

@@ -42,19 +42,24 @@ risks exactly the black-material class of surprise, so even true-mip0 specular
 maps are produced for inspection, never deployed. Each exclusion carries a
 recorded `exclusion_reason` in its manifest entry.
 
-## What is new vs batch 1
+## Method (revision 2 - visual review verdict applied)
 
-- Three new diffuse enhancers in `asset-tools/textures/remaster_batch2.py`:
-  **organic** (chitin mottling, pores, cracks, lesion tint),
-  **soldier** (zero-mean uniform weave, armor scuff highlights, recess grime),
-  **optic** (fine grain only — housings must stay smooth).
-- `enhance_normal` slope amplitudes extended in `material_remaster.py`:
-  organic 0.85, soldier 0.60, optic 0.35 (weapon 0.65, environment 0.75 unchanged).
-- One genuine 2x showcase variant (`weapon_e99` only): Lanczos from the
-  enhanced native replacement (signed-space 2x for the normal + renorm),
-  files named `*_2X_LANCZOS.dds`, manifest-flagged `substituted: False` with an
-  explicit honesty note that content above the original Nyquist frequency is
-  interpolation. NOT wired into the injector.
+The revision-1 approach (procedural micro-detail painted onto diffuse maps)
+failed visual review: on dark textures it reads as dirt and random black
+stripes, and the "remastered" textures look worse than a clean upscale. The
+procedural diffuse enhancers were deleted from `remaster_batch2.py`. Current
+rule:
+
+- **Substituted diffuse = faithful Lanczos 2x of the true mip0**, full mip
+  chain, channels filtered independently so packed alpha survives. Zero
+  invented pixels. Fidelity is measured against the clean resample, so the
+  reported numbers are DXT + packaging loss only.
+- **Substituted normal = micro relief derived from the NATIVE source diffuse**
+  (the only genuine detail available), presented at 2x through signed-space
+  Lanczos + renormalisation. `enhance_normal` slope amplitudes:
+  organic 0.85, soldier 0.60, optic 0.35 (weapon 0.65, environment 0.75).
+  Batch-3 procedural-only relief is unchanged.
+- Specular/emissive stay review-only by uniform policy.
 
 ## Deferred with reasons (not silently dropped)
 
@@ -70,27 +75,29 @@ recorded `exclusion_reason` in its manifest entry.
 
 ## Metrics (measured from decoded files; see manifests)
 
-Fidelity (centre-crop mean absolute difference, 0–255 levels), micro-detail
-gain (high-pass energy ratio, must exceed 1.02), and palette shift:
+Fidelity is measured against the same-resolution clean reference
+(Lanczos-2x of the source), so the numbers below are DXT + packaging loss
+only. Detail ratio for diffuse is informational (output vs clean resample;
+~1.1x is DXT block noise, asserted within 0.8\u20131.3 as a smoke check).
 
-| asset | map | mean abs | px>4% | detail ratio | luminance shift |
-|-------|-----|----------|-------|--------------|-----------|
-| AR_E99Rifle_alt | diffuse | 2.95 | 28.3% | 1.14x | −6.1% |
-| AR_E99Rifle_alt | normal | 4.00 | 29.9% | — | — |
-| ar_gatling_gun | diffuse | 4.48 | 44.5% | 1.30x | −9.0% |
-| ar_gatling_gun | normal | 2.75 | 18.9% | — | — |
-| laser | diffuse | 2.06 | 13.7% | 1.10x | −5.8% |
-| laser | normal | 3.26 | 24.6% | — | — |
-| revert_d2 | diffuse | 4.46 | 48.8% | 1.05x | −2.2% |
-| revert_d2 | normal | 2.91 | 22.8% | — | — |
-| phasetick | diffuse | 7.07 | 63.7% | 1.40x | −0.7% |
-| phasetick | normal | 7.16 | 59.1% | — | — |
-| Spetsnaz_MP_helmet | diffuse | 4.62 | 46.3% | 1.23x | −5.2% |
-| Spetsnaz_MP_helmet | normal | 3.14 | 24.3% | — | — |
-| Spetsnaz_MP_Body | diffuse | 4.37 | 43.9% | 1.21x | −5.1% |
-| Spetsnaz_MP_Body | normal | 4.00 | 32.5% | — | — |
-| door_rollingT | diffuse | 4.85 | 50.2% | 1.10x | +4.7% |
-| door_rollingT | normal | 4.10 | 27.4% | — | — |
+| asset | map | res | mean abs | max | detail ratio | luminance shift |
+|-------|-----|-----|----------|-----|--------------|-----------|
+| AR_E99Rifle_alt | diffuse | 4096x2048 | 1.51 | 41 | 1.11x | −1.6% |
+| AR_E99Rifle_alt | normal | 4096x2048 | 4.12 | 164 | — | — |
+| ar_gatling_gun | diffuse | 4096x2048 | 1.26 | 30 | 1.11x | −2.8% |
+| ar_gatling_gun | normal | 4096x2048 | 2.49 | 136 | — | — |
+| laser | diffuse | 512x512 | 1.79 | 24 | 1.10x | −5.1% |
+| laser | normal | 512x512 | 4.03 | 189 | — | — |
+| revert_d2 | diffuse | 4096x4096 | 1.80 | 29 | 1.14x | −0.5% |
+| revert_d2 | normal | 4096x4096 | 2.83 | 112 | — | — |
+| phasetick | diffuse | 1024x1024 | 3.62 | 53 | 1.15x | −0.3% |
+| phasetick | normal | 1024x1024 | 6.85 | 200 | — | — |
+| Spetsnaz_MP_helmet | diffuse | 2048x2048 | 1.81 | 35 | 1.12x | −0.9% |
+| Spetsnaz_MP_helmet | normal | 2048x2048 | 2.40 | 154 | — | — |
+| Spetsnaz_MP_Body | diffuse | 2048x2048 | 2.03 | 39 | 1.12x | −0.7% |
+| Spetsnaz_MP_Body | normal | 2048x2048 | 4.86 | 215 | — | — |
+| door_rollingT | diffuse | 1024x1024 | 2.54 | 54 | 1.09x | −0.5% |
+| door_rollingT | normal | 1024x1024 | 3.85 | 158 | — | — |
 
 All maps satisfy mean abs < 16 and luminance shift < 15% (asserted by
 `test_remaster_batch2.py`).
@@ -111,17 +118,17 @@ Normal-map unit length, enhanced vs shipped original (% of texels outside the
 
 Video memory, substituted maps only (block arithmetic over measured headers):
 
-| asset | source mip0 | replacement (all mips) |
+| asset | source mip0 | replacement 2x (all mips) |
 |-------|-------------|------------------------|
-| weapon_e99 | 3,145,728 B | 4,194,360 B |
-| weapon_gatling | 3,145,728 B | 4,194,360 B |
-| weapon_laser | 65,536 B | 87,408 B |
-| enemy_revert | 4,194,304 B | 5,592,432 B |
-| enemy_phasetick | 262,144 B | 349,552 B |
-| enemy_spetsnaz_helmet | 1,048,576 B | 1,398,128 B |
-| enemy_spetsnaz_body | 1,048,576 B | 1,398,128 B |
-| env_rollingdoor | 262,144 B | 349,552 B |
-| **batch-2 total** | **13,172,736 B (12.56 MB)** | **17,563,920 B (16.75 MB)** |
+| weapon_e99 | 3,145,728 B | 16,777,272 B |
+| weapon_gatling | 3,145,728 B | 16,777,272 B |
+| weapon_laser | 65,536 B | 349,552 B |
+| enemy_revert | 4,194,304 B | 22,369,648 B |
+| enemy_phasetick | 262,144 B | 1,398,128 B |
+| enemy_spetsnaz_helmet | 1,048,576 B | 5,592,536 B |
+| enemy_spetsnaz_body | 1,048,576 B | 5,592,536 B |
+| env_rollingdoor | 262,144 B | 1,398,128 B |
+| **batch-2 total** | **13,172,736 B (12.56 MB)** | **70,254,864 B (67.00 MB)** |
 
 The replacement sets are larger because they ship complete mip chains while the
 UModel exports are mip0-only. No saving is claimed.
