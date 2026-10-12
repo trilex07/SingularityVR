@@ -17,6 +17,18 @@ BuildGunC/BuildTmdC when g_thisDrawMoved is nonzero, while those matrices need
 not describe the scene alpha-depth producer. This is a hypothesis, not yet proof
 that that branch ran for the offending receiver.
 
+After disabling the correction the user additionally reports two screens rather
+than stereo, weapon not following hand, and no observed shadows; game closed.
+Final log contains c0(stale), zero split draws in some windows, and xrSyncActions
+failures with hand position invalid. It also contains pause/menu transitions.
+These establish a broader failed runtime state, not its cause: loss of XR focus
+or scene mode/lifecycle must not be silently blamed on the user or assumed to
+explain the entire regression. Controlled cold start on exact accepted DLL is
+the next safety gate before deploying the expanded read-only diagnostic.
+After exit all three accepted hashes verified, experimental flag absent.
+The CONTROL request did not produce a second trace before shutdown; no OFF
+capture comparison is claimed.
+
 Next controlled candidate is read-only: correction flag remains OFF, trace key
 includes moved context, repeated 8/12 volume draws retain last VS c0..3 and PS
 c0..14 (<=128 extra reads/frame). Compare first/last matrices and native world
