@@ -15,6 +15,7 @@ if($LASTEXITCODE -ne 0 -or $status -notmatch 'WPR is not recording') {
 $instance='SingularityVRTrigger-'+[guid]::NewGuid().ToString('N')
 $run=Join-Path (Split-Path $PSScriptRoot -Parent) ('deployment\shadow-probe\cpu-'+(Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
 New-Item -ItemType Directory -Path $run -ErrorAction Stop | Out-Null
+Start-Transcript -LiteralPath (Join-Path $run 'recorder.log') | Out-Null
 $trace=Join-Path $run 'trigger-cpu.etl'
 $started=$false
 try {
@@ -43,4 +44,5 @@ try {
     }
     $log='C:\Users\Trilex\AppData\Local\SingularityVR\view_matrix.log'
     if(Test-Path -LiteralPath $log){Copy-Item -LiteralPath $log -Destination (Join-Path $run 'view_matrix.log')}
+    Stop-Transcript | Out-Null
 }
