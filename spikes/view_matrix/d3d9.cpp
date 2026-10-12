@@ -14786,23 +14786,30 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
        FAILED(dev->GetVertexShaderConstantF(5,&saved[0][0],regs))) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
     BuildLiveControllerC(primary, true);
     BuildLiveControllerC(off, false);
-    // During support grip, wrist orientation follows the weapon; position still follows the
-    // left controller. Releasing immediately restores its independent tracked orientation.
-    // Exact asset sections can also arrive after the broad attachment path's 64-draw
-    // sanity limit. Move their bones directly; keep that safety limit for all other geometry.
+    float weaponC[4][4]{};
+    const bool supportGrip = Rd(g_twoHandActive) != 0;
+    const long supportGunVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+    if (supportGrip) BuildGunC(weaponC);
     float base[4][4]{};
     if(g_thisDrawMoved)memcpy(base,g_thisDrawMoved==2?off:primary,sizeof(base));
     else for(int i=0;i<4;++i)base[i][i]=1.0f;
-    if(Rd(g_twoHandActive)) {
-        // The old path copied the weapon rotation but kept the controller's world position and
-        // then added a TMD anchor delta. That made the left hand appear beside the pistol: the
-        // orientation was weapon-relative while the translation was still controller-relative.
-        // Use the weapon-specific support point in the same row-vector frame as BuildGunC.
-        if(!ApplySupportGripTarget(off,primary,InterlockedCompareExchange(&g_gunVerts,0,0))) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
+    const float (*rightTarget)[4] = primary;
+    if (supportGrip) {
+        // Support grip must follow the same weapon transform as the gun mesh (BuildGunC), not the
+        // raw aim-controller matrix. Authored pistol pairs preserve skinning when both hands share
+        // that transform; using the controller pivot left the support glove beside the pistol.
+        rightTarget = weaponC;
+        if(!ApplySupportGripTarget(off, weaponC, supportGunVerts)) {
+            IndependentAuditCount(IHA_PALETTE,audit);
+            return 0;
+        }
     }
     memcpy(changed,saved,regs*4*sizeof(float));
     float rightDelta[4][4];
-    if(!skeletal::LocalDeltaPair(delta,rightDelta,local,base,off,primary)) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
+    if(!skeletal::LocalDeltaPair(delta,rightDelta,local,base,off,rightTarget)) {
+        IndependentAuditCount(IHA_PALETTE,audit);
+        return 0;
+    }
     const GloveRefBone* refs = GloveRefs();
     const int wristSlot[2] = {
         GloveFindSlot(sectionMap, slots, refs, 89, "l_arm_wrist"),
@@ -17606,14 +17613,13 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
                     " (%ux%u sceneW=%u)",
                     menuClassNow, vpMenu.Width, vpMenu.Height, sceneW);
             HRESULT hrMono = S_OK;
-            D3DVIEWPORT9 savedVp = vpMenu;
             for (int eye = 0; eye < 2; ++eye) {
-                D3DVIEWPORT9 half = vpMenu;
-                half.X = vpMenu.X + (DWORD)(eye ? halfW : 0);
-                half.Width = (DWORD)halfW;
-                RECT sc = { (LONG)half.X, (LONG)half.Y,
-                            (LONG)(half.X + half.Width), (LONG)(half.Y + half.Height) };
-                dev->SetViewport(&half);
+                // Full scene-sized viewport; split with scissor only. Halving the viewport blanked
+                // GFx on the offscreen pause target; backbuffer pause already uses this pattern.
+                RECT sc = { (LONG)vpMenu.X + (eye ? halfW : 0), (LONG)vpMenu.Y,
+                            (LONG)vpMenu.X + (eye ? (LONG)vpMenu.Width : halfW),
+                            (LONG)(vpMenu.Y + vpMenu.Height) };
+                dev->SetViewport(&vpMenu);
                 dev->SetScissorRect(&sc);
                 const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
                 const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3;
@@ -17630,7 +17636,6 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
                 const HRESULT r = draw();
                 if (FAILED(r)) hrMono = r;
             }
-            dev->SetViewport(&savedVp);
             dev->SetVertexShaderConstantF(5, c, 4);
             dev->SetScissorRect(&oldRect);
             dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);

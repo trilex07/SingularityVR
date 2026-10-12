@@ -2,6 +2,13 @@
 
 Status: IMPLEMENTED_NOT_VERIFIED after PSVR2 re-test candidate. L1 covers rigid-glove policy, diegetic menu composition, and clip math. L2 build/tests pass on the branch. L3 smoke (Steam, no restore) and L4 headset are separate gates.
 
+## PSVR2 on `010eb45` / `076D70BB…` (2026-10-12)
+
+- **Left glove:** PASS (`l_arm_forearm` slot 26 fix).
+- **Pause:** FAIL — no visible change vs prior (SBS column split on diegetic monitor).
+- **VR Settings:** PASS.
+- **Pistol two-hand:** FAIL — support hand beside pistol; palette used aim-controller matrix instead of `BuildGunC`.
+
 ## PSVR2 visual fail on `05a5f55` / `8D2CF0AB…` (2026-10-12)
 
 - **Right glove / VR Settings:** unchanged PASS.
