@@ -96,3 +96,22 @@ At most three pause captures and one return-to-main capture, with bounded
 inherited state/quad logs. No gameplay stereo/projection or main policy changes.
 Original package C8CDB2E1...6984F, accepted DLL 2FE5011C...B39A47 and INI
 61AEC56C...FE378B restored and verified before preparing this candidate.
+
+## Compact panel request, 2026-10-12 18:31
+
+Physical feedback on 508DC0FF...87E1B8: better, upper text lower; user requests
+both side columns about halfway toward centre. Return-to-main was not tested.
+Actual XR backbuffer capture 18:28:46 shows complete native menu and Objectives
+in both halves. Next candidate halves pause plane width and height around its
+unchanged centre, preserving 16:9/full UVs and using the same plane for laser
+intersection. Text becomes smaller; headset readability still needs acceptance.
+Main/options/mod-owned settings panel and gameplay stereo are unchanged.
+L1 checks centre-relative corners move by exactly 0.5 and 75 compact-panel ray
+samples map back to original UVs. Physical check: columns comfortably visible,
+Objectives readable, Options click aligned.
+
+Restore watchdog initially failed to load Get-FileHash under Windows PowerShell.
+MAIN explicitly restored originals and verified hashes at 18:31:33. Next lease
+uses the bundled pwsh host, explicit host module imports, and requires a READY
+log before handing over the candidate. No claim of successful automatic restore
+is made until its restored hashes are recorded.

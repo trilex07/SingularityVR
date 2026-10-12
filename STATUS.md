@@ -3,8 +3,9 @@
 Last updated **2026-10-12**. Left glove idle: **PHYSICALLY_VERIFIED** (`010eb45`).
 Pause RTT integration on `fix/pause-native-rtt-integration`: **BROKEN** at
 physical presentation gate. Native 1280x720 RGB contains complete Pause and
-Objectives; headset still clipped, IPD-sensitive. Next candidate isolates pause
-fixed-function state and captures the actual XR source backbuffer (bounded).
+Objectives; fixed-function isolation improved physical visibility, corroborated
+by actual XR-backbuffer capture. User requests 50% centre-relative pause panel
+size next; input/render share the compact plane. Readability still unverified.
 Return-to-main per-eye background difference remains UNKNOWN; no stereo changes.
 See `docs/pause-rtt-integration.md`. This branch's verified safe restore is
 original UI C8CDB2E1..., accepted DLL 2FE5011C..., preserved INI 61AEC56C...

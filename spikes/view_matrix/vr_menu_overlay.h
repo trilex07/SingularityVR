@@ -215,6 +215,7 @@ static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& 
                 : Rd(g_menuInsetPct) / 100.0f,
             g_vrMenuPanel.plane);
         if (!g_vrMenuPanelValid) return;
+        if (menuClass == 3) uipointer::CompactNativePause(g_vrMenuPanel.plane);
     }
     float rowV0 = 0.0f, rowV1 = 0.0f;
     if (!pausevrsettings::Row((int)menuClass, rowV0, rowV1)) return;
@@ -276,7 +277,7 @@ void UpdateVrUiPointer(float,bool available) {
     const float distance=Rd(g_vrMenuDistanceMm)/1000.0f;
     g_vrMenuPanelValid=uipointer::HeadPlane(head,VrUiRotate(q,{0,0,-1}),VrUiRotate(q,{1,0,0}),VrUiRotate(q,{0,1,0}),distance,g_targetTanX,g_targetTanY,inset,g_vrMenuPanel.plane);
     if (menuClass == 3 && !panel && g_vrMenuPanelValid) {
-        g_vrMenuPanel.plane.halfHeight = g_vrMenuPanel.plane.halfWidth * (720.f / 1280.f);
+        uipointer::CompactNativePause(g_vrMenuPanel.plane);
         g_vrMenuPanel.canvas = uipointer::CanvasMap{};
     }
     bool valid=g_vrMenuPanelValid && g_vrMenuPanel.Ray({pos.x,pos.y,pos.z},VrUiRotate(g_handAimOrientation[1],{0,0,-1}),hit);

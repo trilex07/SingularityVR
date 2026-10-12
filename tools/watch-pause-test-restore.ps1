@@ -8,6 +8,10 @@ param(
 # game, and never overwrite files changed by another deployment. Run hidden.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+# Use the selected host's modules, not inherited PSModulePath from another
+# PowerShell edition. The first Windows PowerShell launch lacked Get-FileHash.
+Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Utility') -ErrorAction Stop
+Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Management') -ErrorAction Stop
 $backup = (Resolve-Path -LiteralPath $BackupPath).Path
 $manifest = Get-Content -LiteralPath (Join-Path $backup 'manifest.json') -Raw | ConvertFrom-Json
 $expected = @{}
@@ -23,6 +27,7 @@ foreach ($entry in $manifest.files) {
     }
 }
 $deadline = (Get-Date).AddSeconds($LaunchWindowSeconds)
+Write-Output "READY: verified restore backup; launch window $LaunchWindowSeconds seconds"
 $seen = $false
 while ($true) {
     $running = @(Get-Process -Name Singularity -ErrorAction SilentlyContinue)
