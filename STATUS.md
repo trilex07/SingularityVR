@@ -1,18 +1,14 @@
 # STATUS — session handoff
 
-Last updated **2026-10-12**. PSVR2 on `010eb45`: **(1) left glove PASS**, **(2)
-pause FAIL** (unchanged column split), **(3) VR Settings PASS**, **(2.5) pistol
-two-hand FAIL** (left glove beside weapon). Next candidate: support grip uses
-`BuildGunC`; offscreen canvas ortho uses full-viewport per-eye scissor. Left
-glove on `010eb45` is **PHYSICALLY_VERIFIED**; pause/two-hand still
-`IMPLEMENTED_NOT_VERIFIED`. See `docs/audits/hands-only-and-pause.md`.
+Last updated **2026-10-12**. PSVR2 on `ed0b032`: pause FAIL, pistol two-hand
+FAIL (grip latched in the log; left glove still beside the gun). Left glove
+on `010eb45` stays **PHYSICALLY_VERIFIED**. Next candidate snaps the support
+wrist onto `BuildGunC` and squeezes class-3 canvas into the center of the
+scene RT (`compose=4`). Pause and two-hand remain `IMPLEMENTED_NOT_VERIFIED`.
 
-**Steam install (leave until headset sign-off):** branch
-`feature/hands-only-gloves`, commit `ed0b032`, DLL SHA-256
-`38C17399FBC7F69E1C2D200BE36F6D5C9E6CAA372DA30F37383FAF988F7EC6F9`, INI
-preserved. Backup: `deployment/install-backups/20261012-111032`. Left glove
-verified on `010eb45`; retest **pause** and **pistol two-hand** on this build.
-Workflow: `docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
+**Steam install:** redeploy after this build. Previous: `ed0b032` /
+`38C17399…`, backup `deployment/install-backups/20261012-111032`. Workflow:
+`docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
 
 Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
 Read this first, then `ENGINE_NOTES.md`.

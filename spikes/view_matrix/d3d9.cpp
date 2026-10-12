@@ -14795,10 +14795,9 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     else for(int i=0;i<4;++i)base[i][i]=1.0f;
     const float (*rightTarget)[4] = primary;
     if (supportGrip) {
-        // Support grip must follow the same weapon transform as the gun mesh (BuildGunC), not the
-        // raw aim-controller matrix. Authored pistol pairs preserve skinning when both hands share
-        // that transform; using the controller pivot left the support glove beside the pistol.
-        rightTarget = weaponC;
+        // Aim glove stays on the live controller (the verified one-hand pose). The support
+        // wrist is snapped onto the gun mesh below; a shared root delta keeps the animated
+        // offset and leaves that glove beside the pistol.
         if(!ApplySupportGripTarget(off, weaponC, supportGunVerts)) {
             IndependentAuditCount(IHA_PALETTE,audit);
             return 0;
@@ -14896,6 +14895,59 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             const bool arm = gloveisolate::Classify(boneName) == gloveisolate::BoneRole::Collapse;
             if (!finger && !arm) continue;
             NudgeComponentX(reinterpret_cast<float(*)[4]>(&changed[b * 3]), leftShift);
+        }
+    }
+    // Shared bone deltas preserve the animated gap between the wrists. After that
+    // motion, slide every support-side bone so the wrist translation matches the
+    // gun (BuildGunC) plus a short fore-grip offset.
+    if (supportGrip) {
+        const int supportSide = OffHand();
+        if (supportSide >= 0 && supportSide <= 1 && wristSlot[supportSide] >= 0) {
+            float (*wristGpu)[4] =
+                reinterpret_cast<float(*)[4]>(&changed[wristSlot[supportSide] * 3]);
+            armbind::Mat wrist;
+            if (PaletteMat(wristGpu, wrist)) {
+                const SupportGripSpec spec = SupportGripFor(supportGunVerts);
+                float fwd = (float)spec.fwd, side = (float)spec.right, up = (float)spec.up;
+                if (spec.mode == SupportGripMode::AuthoredPair) {
+                    fwd = 12.0f;
+                    side = supportSide == 0 ? -6.0f : 6.0f;
+                    up = 0.0f;
+                }
+                float desired[3];
+                for (int j = 0; j < 3; ++j) {
+                    desired[j] = weaponC[3][j] + fwd * weaponC[0][j] +
+                                 side * weaponC[1][j] + up * weaponC[2][j];
+                }
+                const float dlt[3] = {
+                    desired[0] - wrist.m[3][0],
+                    desired[1] - wrist.m[3][1],
+                    desired[2] - wrist.m[3][2],
+                };
+                for (int b = 0; b < slots; ++b) {
+                    const unsigned bone = sectionMap[b];
+                    const char* boneName = bone < 89 ? refs[bone].name : nullptr;
+                    if (gloveisolate::HandSide(boneName) != supportSide ||
+                        gloveisolate::IsTmdDevice(boneName))
+                        continue;
+                    const bool finger = GloveIsDescendantOrSelf(
+                        bone, wristBone[supportSide], refs, 89);
+                    const bool arm =
+                        gloveisolate::Classify(boneName) == gloveisolate::BoneRole::Collapse;
+                    if (!finger && !arm && bone != wristBone[supportSide]) continue;
+                    float (*slot)[4] = reinterpret_cast<float(*)[4]>(&changed[b * 3]);
+                    armbind::Mat m;
+                    if (!PaletteMat(slot, m)) continue;
+                    m.m[3][0] += dlt[0];
+                    m.m[3][1] += dlt[1];
+                    m.m[3][2] += dlt[2];
+                    armbind::ToGpu(m, slot);
+                }
+                static LONG saidSnap = 0;
+                if (InterlockedCompareExchange(&saidSnap, 1, 0) == 0)
+                    Log("support wrist snap: gun=%ld side=%d d=(%.1f %.1f %.1f)",
+                        supportGunVerts, supportSide, dlt[0], dlt[1], dlt[2]);
+            }
         }
     }
     float posed[135][4];
@@ -17602,10 +17654,31 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         const unsigned sceneW = (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0);
         const bool perEyeCanvas =
             pausemenuspace::DiegeticMenuCanvas(c, vpMenu.Width, sceneW);
-        const int compose = perEyeCanvas ? 1 : 0;
+        const int compose = (perEyeCanvas && menuClassNow == 3) ? 4 : (perEyeCanvas ? 1 : 0);
         menumono::NoteDraw((int)menuClassNow, false, vpMenu.Width, vpMenu.Height, sceneW, c,
                            compose);
         const LONG halfW = (LONG)vpMenu.Width / 2;
+        // Class 3 pause text is authored across the full SBS frame (menu | objectives).
+        // Per-eye halves of this scene RT still read as one column per eye on the
+        // diegetic monitor. One draw, x scaled about the origin, packs both columns
+        // into the center of the texture both eyes already share.
+        if (perEyeCanvas && menuClassNow == 3) {
+            static LONG saidSqueeze = 0;
+            if (InterlockedCompareExchange(&saidSqueeze, 1, 0) == 0)
+                Log("menu pause: class=3 offscreen canvas squeezed to center (%ux%u)",
+                    vpMenu.Width, vpMenu.Height);
+            float m[16];
+            memcpy(m, c, sizeof(m));
+            Reg4* q = reinterpret_cast<Reg4*>(m);
+            for (int i = 0; i < 4; ++i) q[i].x *= 0.5f;
+            dev->SetVertexShaderConstantF(5, m, 4);
+            const HRESULT hrSqueeze = draw();
+            dev->SetVertexShaderConstantF(5, c, 4);
+            dev->SetScissorRect(&oldRect);
+            dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
+            g_inHudRemap = false;
+            return hrSqueeze;
+        }
         if (perEyeCanvas) {
             static LONG saidCompose = 0;
             if (InterlockedCompareExchange(&saidCompose, 1, 0) == 0)
