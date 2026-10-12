@@ -4358,6 +4358,7 @@ inline void InvalidateCamMats() {
 }
 
 struct ShaderLayoutEntry { IDirect3DVertexShader9* shader; skeletal::Layout layout; };
+#include "shadow_pass_trace.h"
 ShaderLayoutEntry g_shaderLayouts[1024]{};
 unsigned g_shaderLayoutNext=0;
 skeletal::Layout g_boundShaderLayout;
@@ -4402,6 +4403,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVS(IDirect3DDevice9* dev,IDirect3DVertexShader
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     const HRESULT hr=g_origSetVS(dev,shader);
     if(FAILED(hr))return hr;
+    shadowtrace::bound.vs=shader;
     g_boundShaderLayout={};
     if(shader)for(unsigned i=0;i<1024;++i) {
         const unsigned s=(ShaderLayoutHash(shader)+i)&1023;
@@ -11633,6 +11635,32 @@ PFN_DrawPrim           g_origDrawPrim = nullptr;
 PFN_DrawIndexedPrim    g_origDrawIndexedPrim = nullptr;
 PFN_DrawPrimUP         g_origDrawPrimUP = nullptr;
 PFN_DrawIndexedPrimUP  g_origDrawIndexedPrimUP = nullptr;
+static PFN_DrawPrim shadowNativePrim=nullptr;
+static PFN_DrawIndexedPrim shadowNativeIndexed=nullptr;
+static PFN_DrawPrimUP shadowNativeUP=nullptr;
+static PFN_DrawIndexedPrimUP shadowNativeIndexedUP=nullptr;
+extern volatile LONG g_inForeground;
+static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT first,UINT prims) {
+    const int id=shadowtrace::Before(dev,(unsigned)t,0,prims,(unsigned)Rd(g_inForeground));
+    const HRESULT hr=shadowNativePrim(dev,t,first,prims);shadowtrace::After(id,hr);return hr;
+}
+static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,INT base,UINT min,UINT verts,UINT start,UINT prims) {
+    const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground));
+    const HRESULT hr=shadowNativeIndexed(dev,t,base,min,verts,start,prims);shadowtrace::After(id,hr);return hr;
+}
+static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT prims,const void* data,UINT stride) {
+    const int id=shadowtrace::Before(dev,(unsigned)t,0,prims,(unsigned)Rd(g_inForeground));
+    const HRESULT hr=shadowNativeUP(dev,t,prims,data,stride);shadowtrace::After(id,hr);return hr;
+}
+static HRESULT STDMETHODCALLTYPE ShadowTraceIndexedUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT min,UINT verts,UINT prims,const void* indices,D3DFORMAT format,const void* data,UINT stride) {
+    const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground));
+    const HRESULT hr=shadowNativeIndexedUP(dev,t,min,verts,prims,indices,format,data,stride);shadowtrace::After(id,hr);return hr;
+}
+typedef HRESULT (STDMETHODCALLTYPE *ShadowSetPS)(IDirect3DDevice9*,IDirect3DPixelShader9*);
+static ShadowSetPS shadowOriginalPS=nullptr;
+static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
+    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr))shadowtrace::bound.ps=ps;return hr;
+}
 // Fix-I/menu census: wire the dormant MenuDrawTrace recorder into the four draw hooks
 // (calls below) with path masks in StereoPairBody (1) and HudStereoPair (2); provider
 // draws already carry bit 4 via g_vrMenuProviderDrawing. Records only menu-generation
@@ -11744,6 +11772,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     HRESULT hr = g_origSetRenderTarget(dev, idx, surf);
     if (FAILED(hr)) return hr; // Failed binds leave the actual device target unchanged.
+    if (idx == 0) shadowtrace::bound.rt=surf;
     if (idx == 0) { PauseRttProbe::Bind(surf); PauseRttProbe::ContentBind(surf); }
     // Run 116: which target the first-person pass draws into. If it switches at the foreground
     // boundary the pass is composited from its own surface, and skipping its draws leaves that
@@ -19400,7 +19429,9 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
         if (ProjectedShadowTexture(texture)) InterlockedOr(&g_shadowStageMask, 1L << stage);
         else InterlockedAnd(&g_shadowStageMask, ~(1L << stage));
     }
-    return g_origSetTexture(dev,stage,texture);
+    const HRESULT bindResult=g_origSetTexture(dev,stage,texture);
+    if(SUCCEEDED(bindResult) && stage<8)shadowtrace::bound.tex[stage]=texture;
+    return bindResult;
 }
 
 inline bool SuppressCapturedVrMenuDraw() {
@@ -23411,6 +23442,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    shadowtrace::Release();shadowtrace::pending=false;
     PauseRttProbe::ReleaseContent();
     ReleaseVrMenuResources();
     ReleaseVrShadowResources();
@@ -23622,6 +23654,8 @@ static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
 }
 
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
+    if(shadowtrace::Boundary(s,g_playerPawn && VrModeOn() && Rd(g_vrMenuClass)==0,g_logPath))
+        InterlockedExchange(&g_pauseCaptureRequested,1); // Actual XR source pixels for this trace.
     PauseRttStart::Install();
     PauseRttProbe::PresentContent(s);
     hotpath::scope frameScope(g_hotPathSampler, hotpath::Family::frame_total);
@@ -26411,6 +26445,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         g_haveLastWrittenYaw = false;   // stale reference once we stop steering
     }
     const LARGE_INTEGER realPresentBegin = Now();
+    if(shadowtrace::pending){shadowtrace::pending=false;shadowtrace::Arm(s);}
     const HRESULT presentResult = g_origPresent(s, a, b, c, d);
     static double realPresentSum=0, realPresentMax=0;
     static unsigned realPresentSamples=0;
@@ -27696,6 +27731,13 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
                 " and the panel's OCCLUSION row cannot do anything this run) ***");
             g_occlusionMode = 2;
         }
+        // Leaf wrappers observe the actual per-eye driver calls after existing
+        // stereo transforms; they never alter arguments/state or suppress draws.
+        shadowNativePrim=g_origDrawPrim; if(shadowNativePrim)g_origDrawPrim=&ShadowTracePrim;
+        shadowNativeIndexed=g_origDrawIndexedPrim; if(shadowNativeIndexed)g_origDrawIndexedPrim=&ShadowTraceIndexed;
+        shadowNativeUP=g_origDrawPrimUP; if(shadowNativeUP)g_origDrawPrimUP=&ShadowTraceUP;
+        shadowNativeIndexedUP=g_origDrawIndexedPrimUP; if(shadowNativeIndexedUP)g_origDrawIndexedPrimUP=&ShadowTraceIndexedUP;
+        shadowOriginalPS=(ShadowSetPS)PatchVTable(*out,107,(void*)&ShadowTraceSetPS);
         Log("Present + SetVertexShaderConstantF + Draw + SetRenderTarget + SetTexture hooks installed.");
         Log("F7 find the matrix | F1 TRUE stereo | F12 alternate-eye | F10 6-DOF | F9 head tracking");
         if (out && *out) VfxHostInitDevice(*out); // plugin Load + drawer + atlas (absent DLL = no-op)
