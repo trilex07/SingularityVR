@@ -4,6 +4,8 @@
 #include "arm_ik.h"
 #include "arm_bind.h"
 #include "arm_natural.h"
+#include "arm_ik_session.h"
+static armiksession::Session g_armIkSession;
 #include "support_grip.h"
 #include "weapon_holster.h"
 #include "weapon_wheel.h"
@@ -2271,6 +2273,7 @@ static uintptr_t FindPlayerPawn(bool force) {
     // advancing it. The splash case is unaffected: there was never a pawn there to lose.
     const bool hadPawn = g_playerPawn != 0;
     g_playerPawn = 0;
+    if (hadPawn) armiksession::Reset(g_armIkSession);
     // ---- 💥 run 256: the miss throttle counted FRAMES, which is backwards when the walk is the
     // thing making frames slow ----
     //
@@ -10079,6 +10082,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             // and its world transform are untouched.
             g_haveCentre = false;
             g_haveCentrePos = false;
+            armiksession::Reset(g_armIkSession);
             Log("recenter chord: L3+R3 accepted; rebuilding common HMD/controller stage");
         }
         // Anchor to the GAME's current yaw, not our own previous output. Seeding from
@@ -10567,6 +10571,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 const float kJump = 20000.0f;          // UU; gameplay never steps this far
                 if (havePrev && d2 > kJump * kJump) {
                     g_haveCentre = false;
+                    armiksession::Reset(g_armIkSession);
                     // Fix-D/height: yaw/base will be re-seeded, but the standing height
                     // stays whatever the last deliberate recentre captured (see flag).
                     InterlockedExchange(&g_keepCentrePos, 1);
@@ -14679,7 +14684,14 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         g_handPoseValid[0] && g_handPositionValid[0],
         g_handPoseValid[1] && g_handPositionValid[1]
     };
-    if(!handValid[0] && !handValid[1]) { IndependentAuditCount(IHA_POSITION,audit); return 0; }
+    if(!handValid[0] && !handValid[1]) {
+        armiksession::InvalidateHand(g_armIkSession, 0);
+        armiksession::InvalidateHand(g_armIkSession, 1);
+        IndependentAuditCount(IHA_POSITION,audit);
+        return 0;
+    }
+    if (!handValid[0]) armiksession::InvalidateHand(g_armIkSession, 0);
+    if (!handValid[1]) armiksession::InvalidateHand(g_armIkSession, 1);
     if(ArmsAnimActive()) { IndependentAuditCount(IHA_ANIMATION,audit); return 0; }
     // A stored weapon still owns the same first-person hand mesh.  Keep
     // driving the tracked hands while the gun is at the hip; the weapon-only
@@ -14836,16 +14848,26 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     }
     // Native arms are kept as the default. When explicitly enabled, only the
     // audited TMD arm sections receive constrained two-bone deltas.
-    if (g_armIkMode == 1 && (tmdBase || tmdGloves)) {
-        armbind::Deltas leftIk{}, rightIk{};
-        const bool haveLeft = armnatural::Build(false, delta, leftIk);
-        const bool haveRight = armnatural::Build(true, rightDelta, rightIk);
-        if (tmdBase) {
-            if (haveLeft)  armnatural::Apply(reinterpret_cast<float (*)[3][4]>(changed), reinterpret_cast<const float (*)[3][4]>(saved), slots, false, leftIk);
-            if (haveRight) armnatural::Apply(reinterpret_cast<float (*)[3][4]>(changed), reinterpret_cast<const float (*)[3][4]>(saved), slots, true, rightIk);
-        } else if (tmdGloves) {
-            if (haveLeft)  armnatural::ApplySection0(reinterpret_cast<float (*)[3][4]>(changed), reinterpret_cast<const float (*)[3][4]>(saved), slots, false, leftIk);
-            if (haveRight) armnatural::ApplySection0(reinterpret_cast<float (*)[3][4]>(changed), reinterpret_cast<const float (*)[3][4]>(saved), slots, true, rightIk);
+    if ((tmdBase || tmdGloves)) {
+        const unsigned ikFrame = (unsigned)Rd(g_armPaletteFrameToken);
+        const bool ikValid[2] = { handValid[0], handValid[1] };
+        for (int side = 0; side < 2; ++side) {
+            armbind::Deltas ik{};
+            const armiksession::Step step = armiksession::Consider(
+                g_armIkSession, side, ikValid[side], ikFrame, g_armIkMode,
+                side == 0 ? delta : rightDelta, ik);
+            if (step == armiksession::Step::Incompatible) {
+                static LONG saidIkDelta = 0;
+                if (InterlockedCompareExchange(&saidIkDelta, 1, 0) == 0)
+                    Log("arm IK: section meshDelta mismatch on side %d; first solve this frame kept", side);
+            }
+            if (step != armiksession::Step::Solved && step != armiksession::Step::Reuse) continue;
+            if (tmdBase)
+                armnatural::Apply(reinterpret_cast<float (*)[3][4]>(changed),
+                                  reinterpret_cast<const float (*)[3][4]>(saved), slots, side == 1, ik);
+            else
+                armnatural::ApplySection0(reinterpret_cast<float (*)[3][4]>(changed),
+                                          reinterpret_cast<const float (*)[3][4]>(saved), slots, side == 1, ik);
         }
     }
     // Bind-pose left is mesh +X (left wrist +49, right wrist -49). Shift the left
@@ -19336,6 +19358,7 @@ static void ResetVrAfterCameraLoss(const char* reason) {
     InterlockedExchange(&g_weaponWheelPulseGap, 0);
     g_weaponWheelState = {};
     g_supportLatch.Reset();
+    armiksession::Reset(g_armIkSession);
     InterlockedExchange(&g_vrUiValid, 0);
     InterlockedExchange(&g_vrUiDown, 0);
     InterlockedExchange(&g_vrUiBack, 0);
@@ -21930,6 +21953,7 @@ void SetVrMode(bool on) {
     // recentre stops the 6-DOF offset resuming from wherever the head was when it was switched off.
     InvalidateCamMats();
     g_haveCentre = false;
+    armiksession::Reset(g_armIkSession);
     // AFTER g_dupDraws is written, because ApplyAimMethod reads it through VrModeOn to decide
     // whether the chosen method applies at all. Off, this restores aim mode 0 and the normal arms
     // and gun; on, it puts the chosen method back. The setting itself is untouched either way, so
@@ -23473,6 +23497,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                      // ago.
                      InvalidateCamMats();
                      g_haveCentre = false;
+                     armiksession::Reset(g_armIkSession);
                      Log("F1: draw-call duplication (TRUE stereo) %s", was?"OFF":"ON"); }
     p1 = k1;
 
@@ -24338,6 +24363,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     if (k10 && !p10) { LONG was = InterlockedCompareExchange(&g_sixDof,0,0);
                        InterlockedExchange(&g_sixDof, was?0:1);
                        g_haveCentre = false;      // recentre so the offset starts from zero
+                       armiksession::Reset(g_armIkSession);
                        Log("F10: 6-DOF head position %s", was?"OFF":"ON"); }
     p10 = k10;
     static bool p11 = false;
@@ -26898,6 +26924,7 @@ void LoadIniSettings() {
         g_showControllerArms ? "animated mesh" : "gloves only");
     g_armIkMode = GetPrivateProfileIntA("Render", "ArmIKMode", 0, path);
     if (g_armIkMode < 0 || g_armIkMode > 2) g_armIkMode = 0;
+    armiksession::NoteMode(g_armIkSession, g_armIkMode);
     LONG gloveMode = GetPrivateProfileIntA("Render", "GloveIsolate", 2, path);
     if (gloveMode < 0 || gloveMode > 2) gloveMode = 2;
     InterlockedExchange(&g_gloveIsolate, gloveMode);

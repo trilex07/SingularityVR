@@ -359,8 +359,9 @@ void arm_palette_decoding_invariants() {
 void natural_arm_adapter_invariants() {
     float identity[4][4]={{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
     armbind::Deltas left{}, right{};
-    assert(armnatural::Build(false, identity, left));
-    assert(armnatural::Build(true, identity, right));
+    armik::State leftState{}, rightState{};
+    assert(armnatural::Build(false, identity, leftState, left));
+    assert(armnatural::Build(true, identity, rightState, right));
     assert(left.solution.targetError < .01f && right.solution.targetError < .01f);
     float original[15][3][4]{};
     float changed[15][3][4]{};

@@ -31,10 +31,21 @@ inline V TransformPoint(const V p, const float m[4][4]) {
     };
 }
 
+// Seed a new two-bone solve from the authored bend plane.  The reach axis is
+// shoulder->wrist; using shoulder->elbow here would project the vector against
+// itself and always select a world-space fallback.
+inline bool PreferredBend(const V shoulder, const V elbow, const V wrist, V& out) {
+    V reach;
+    if (!armik::Unit(wrist - shoulder, reach)) return false;
+    return armik::Unit((elbow - shoulder) - reach * armik::Dot(elbow - shoulder, reach), out);
+}
+
 // Build deltas against the exported reference pose.  meshDelta is the already
 // established local->controller transform used by the existing hand path, so
 // this keeps the coordinate convention identical to the weapon and fingers.
-inline bool Build(bool right, const float meshDelta[4][4], armbind::Deltas& out) {
+// `state` is the caller's persistent chain.  It is replaced only after the
+// solve and every bone delta succeed.
+inline bool Build(bool right, const float meshDelta[4][4], armik::State& state, armbind::Deltas& out) {
     const Cache& c = TmdBind();
     if (!c.ready || !meshDelta) return false;
     const unsigned shoulder = right ? 49u : 7u;
@@ -45,20 +56,22 @@ inline bool Build(bool right, const float meshDelta[4][4], armbind::Deltas& out)
     const float upper = armik::Length(ep - sp), fore = armik::Length(wp - ep);
     if (!(upper > 1e-3f && fore > 1e-3f)) return false;
 
-    V line; if (!armik::Unit(ep-sp, line)) return false;
-    V bend; if (!armik::Unit((ep-sp) - line*armik::Dot(ep-sp,line), bend)) bend = {0,0,1};
-    armik::State state{};
+    // A degenerate bind chain may still use the stable solver fallback, but
+    // ordinary TMD arms retain their own authored elbow side.
+    V bend;
+    if (!PreferredBend(sp, ep, wp, bend)) bend = {0,0,1};
+    armik::State next = state;
     armik::Solution solved;
     const V target = TransformPoint(wp, meshDelta);
-    if (!armik::Solve(sp, target, upper, fore, bend, state, solved)) return false;
+    if (!armik::Solve(sp, target, upper, fore, bend, next, solved)) return false;
 
     float oldUpper[4][4], oldFore[4][4], newUpper[4][4], newFore[4][4], targetWrist[4][4];
     // Keep the reference joint orientation as the baseline.  The target wrist
     // retains the controller's established orientation, including support grip.
     std::memcpy(oldUpper, s.m, sizeof(oldUpper));
     std::memcpy(oldFore, e.m, sizeof(oldFore));
-    if (!armik::Frame(solved.shoulder, solved.elbow-solved.shoulder, state.bend, newUpper)) return false;
-    if (!armik::Frame(solved.elbow, solved.wrist-solved.elbow, state.bend, newFore)) return false;
+    if (!armik::Frame(solved.shoulder, solved.elbow-solved.shoulder, next.bend, newUpper)) return false;
+    if (!armik::Frame(solved.elbow, solved.wrist-solved.elbow, next.bend, newFore)) return false;
     skeletal::Multiply(targetWrist, w.m, meshDelta);
     Mat oldUpperMat, oldForeMat, newUpperMat, newForeMat, targetWristMat;
     std::memcpy(oldUpperMat.m, oldUpper, sizeof(oldUpper));
@@ -66,10 +79,13 @@ inline bool Build(bool right, const float meshDelta[4][4], armbind::Deltas& out)
     std::memcpy(newUpperMat.m, newUpper, sizeof(newUpper));
     std::memcpy(newForeMat.m, newFore, sizeof(newFore));
     std::memcpy(targetWristMat.m, targetWrist, sizeof(targetWrist));
-    if (!armbind::Delta(oldUpperMat, newUpperMat, out.upper) ||
-        !armbind::Delta(oldForeMat, newForeMat, out.fore) ||
-        !armbind::Delta(w, targetWristMat, out.wrist)) return false;
-    out.solution = solved;
+    armbind::Deltas built{};
+    if (!armbind::Delta(oldUpperMat, newUpperMat, built.upper) ||
+        !armbind::Delta(oldForeMat, newForeMat, built.fore) ||
+        !armbind::Delta(w, targetWristMat, built.wrist)) return false;
+    built.solution = solved;
+    out = built;
+    state = next;
     return true;
 }
 
