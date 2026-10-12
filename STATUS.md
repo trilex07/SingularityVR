@@ -7,8 +7,11 @@ world into palette — removed); pause still **FAIL**. Support grip uses weapon
 `PauseMenuDiag=1` evidence (`pause-evidence *` log lines). See
 `docs/audits/hands-only-and-pause.md`.
 
-**Steam install:** pending deploy of fix branch head. Prior:
-`0eb22a6` / `2B896A7A…`, backup `20261012-111934`. Workflow:
+**Steam install (MAIN):** `4F85BEAAFC7033287B900A1750203375FDEE64E9FA817EDA2E9CB6F8EA2BECBE`
+(build after `94b47e8` + compile fix), backup `20261012-113123`, INI preserved.
+L3 smoke: `OpenXR ready` in `view_matrix.log` (2026-10-12 11:32:54 attach); no
+`support wrist snap` in this build. Support grip on headset: **READY_FOR_PHYSICAL_ACCEPTANCE**
+(not re-tested on PSVR2 yet). Prior: `0eb22a6` / `2B896A7A…`, backup `20261012-111934`. Workflow:
 `docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
 
 Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
