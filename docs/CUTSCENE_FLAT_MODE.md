@@ -64,12 +64,21 @@ sample, the stereo-pair gate, and the existing video-quad classifier.
 
 ## Validation
 
-`tests/test-vr-scene-mode.cpp` covers initial gameplay, two-frame cinematic
-entry, four-frame exit, one-frame noise rejection, immediate video entry, and
-menu classification.  It passes with:
+`spikes/view_matrix/tests/test-vr-scene-mode.cpp` (present on the MAIN
+integration line; absent from bare `origin/main`) covers initial gameplay,
+two-frame cinematic entry, four-frame exit, one-frame noise rejection,
+immediate video entry, and menu classification.  It passes with:
 
 ```text
 PASS: cinematic hysteresis, video mono, noisy signal, menu classification
+```
+
+Signal-qualification coverage (menu-context demotion, latch clear paths,
+director-cut hold, recorded-sequence replays) lives in
+`tools/reference-tests/cutscene/cutscene_detect_test.cpp`:
+
+```text
+PASS: cutscene detect (qualify + latch + recorded replays)
 ```
 
 The separate options DLL is built for x86 with `/O2` and the PE header is

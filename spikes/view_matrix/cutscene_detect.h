@@ -12,7 +12,8 @@
 //     native menu has focus is demoted, never presented flat on its own.
 //   - g_inCinematic latched ON permanently (run 211): a latch without a clear
 //     path is a bug, so every latched state has three explicit clear sources
-//     (exit edge, camera-instance change, N consecutive clear frames).
+//     (exit edge, dead-camera instance change, N consecutive clear frames).
+//     A live old camera means a Matinee director cut, never a transition.
 //   - Hysteresis is counted in frames, never seconds or per-level timings.
 
 #include <cstdint>
@@ -28,7 +29,14 @@ struct RawSignals {
     bool videoQuad = false;      // confirmed Bink/full-frame draw this frame
     bool menuFocus = false;      // native GFx menu focus (g_vrUiMenu)
     bool paused = false;         // SetPause state (diagnostic only)
-    bool cameraChanged = false;  // camera instance changed (level transition)
+    // Camera-instance tracking (run-211 backstop, refined — see Latch):
+    // cameraChanged reports that the tracked instance differs from last
+    // frame; oldCameraLive reports whether the PREVIOUS instance still
+    // passes the production liveness check (IsLive). A dead old camera is
+    // a level transition; a live old camera is a Matinee director cut
+    // between camera actors and must NOT clear an engaged cinematic.
+    bool cameraChanged = false;
+    bool oldCameraLive = false;
 };
 
 // Why a vote came out the way it did. Bitmask so the Present-time trace can
@@ -69,9 +77,11 @@ inline Vote Qualify(const RawSignals& s) {
 }
 
 // Edge-aware latch with a mandatory clear path. Entry needs kEnterFrames
-// consecutive qualified-ON frames; exit happens immediately on an explicit
-// exit edge or a camera-instance change, otherwise after kClearFrames
-// consecutive qualified-OFF frames. O(1) integer counters: no frame-time cost.
+// consecutive qualified-ON frames. Exit is immediate on an explicit exit
+// edge, or on a camera-instance change ONLY when the old instance is dead
+// (level transition — a live old camera is a Matinee director cut and the
+// latch holds through it). Otherwise exit takes kClearFrames consecutive
+// qualified-OFF frames. O(1) integer counters: no frame-time cost.
 class Latch {
 public:
     static constexpr std::uint32_t kEnterFrames = 2;
@@ -81,18 +91,47 @@ public:
 
     // Returns true when engagement changed this frame.
     bool Advance(const Vote& vote, const RawSignals& raw) {
-        if (raw.cinematicExit || raw.cameraChanged) {
+        if (raw.cinematicExit) {
             onFrames_ = 0;
             offFrames_ = 0;
             if (engaged_) {
                 engaged_ = false;
-                lastClear_ = raw.cinematicExit ? kExitEdge : kCameraClear;
+                lastClear_ = kExitEdge;
                 return true;
             }
-            lastClear_ = raw.cinematicExit ? kExitEdge : kCameraClear;
+            lastClear_ = kExitEdge;
             return false;
         }
+        if (raw.cameraChanged) {
+            if (!raw.oldCameraLive) {
+                onFrames_ = 0;
+                offFrames_ = 0;
+                if (engaged_) {
+                    engaged_ = false;
+                    lastClear_ = kCameraClear;
+                    return true;
+                }
+                lastClear_ = kCameraClear;
+                return false;
+            }
+            // Director cut: hold engagement, restart the clear count so a
+            // cut cannot shorten the hysteresis window.
+            offFrames_ = 0;
+        }
         if (vote.cinematic) {
+            // Confirmed video is a direct draw observation, not a sampled
+            // flag: it engages on the first frame (matches the existing
+            // VideoFlat immediate-entry rule). Hook-driven entry keeps the
+            // 2-frame hysteresis against single-sample noise.
+            if ((vote.reasons & kVideo) != 0) {
+                offFrames_ = 0;
+                onFrames_ = kEnterFrames;
+                if (!engaged_) {
+                    engaged_ = true;
+                    return true;
+                }
+                return false;
+            }
             ++onFrames_;
             offFrames_ = 0;
             if (!engaged_ && onFrames_ >= kEnterFrames) {
