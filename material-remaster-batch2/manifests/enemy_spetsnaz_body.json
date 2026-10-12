@@ -30,7 +30,7 @@
       },
       "deploy_filename": "Spetsnaz_MP_Body_d_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_body/Spetsnaz_MP_Body_d_2x.dds",
-      "output_sha256": "f6234e475060faead568a8e2432a14bbf98b27d9774dd04ee1702001cde093f1",
+      "output_sha256": "b83e6c279da12eb292f55502999c2e0e57d96794074c4b59db39aca5bcd0b6ea",
       "validation": {
         "width": 2048,
         "height": 2048,
@@ -46,26 +46,26 @@
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 0.043,
-        "seam_col_mean_abs": 1.749,
+        "seam_row_mean_abs": 0.022,
+        "seam_col_mean_abs": 1.759,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 2.033,
-          "max_abs_diff": 39,
-          "pct_pixels_changed_over_4": 7.66,
-          "pct_pixels_changed_over_16": 0.032
+          "mean_abs_diff": 2.429,
+          "max_abs_diff": 57,
+          "pct_pixels_changed_over_4": 13.752,
+          "pct_pixels_changed_over_16": 0.175
         },
         "fidelity_reference": "lanczos-2x of source (same resolution)",
         "detail_high_frequency_energy": {
           "source": 141.578,
-          "enhanced": 70.211,
-          "ratio": 0.4959,
+          "enhanced": 93.005,
+          "ratio": 0.6569,
           "note": "revision 2: cross-resolution magnitudes; preservation is asserted on detail_vs_clean_reference instead"
         },
         "detail_vs_clean_reference": {
           "reference": 62.45,
-          "output": 70.211,
-          "ratio": 1.1243
+          "output": 93.005,
+          "ratio": 1.4893
         },
         "status": "VERIFIED"
       }
@@ -94,7 +94,7 @@
       },
       "deploy_filename": "Spetsnaz_MP_Body_n_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_body/Spetsnaz_MP_Body_n_2x.dds",
-      "output_sha256": "803864b1c696e560b556d1ef20d8cd4e64a1995eaabde6e3633bcc059b62ab4d",
+      "output_sha256": "74812b145529fa1296da4456b5e97ad0aff21dc8391b946806a2ad6be4fa9323",
       "validation": {
         "width": 2048,
         "height": 2048,
@@ -110,25 +110,25 @@
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 1.203,
-        "seam_col_mean_abs": 1.155,
+        "seam_row_mean_abs": 1.204,
+        "seam_col_mean_abs": 1.192,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 4.858,
+          "mean_abs_diff": 4.932,
           "max_abs_diff": 215,
-          "pct_pixels_changed_over_4": 39.837,
-          "pct_pixels_changed_over_16": 3.762
+          "pct_pixels_changed_over_4": 40.714,
+          "pct_pixels_changed_over_16": 3.847
         },
         "fidelity_reference": "lanczos-2x of source (same resolution)",
         "normal_map_check": {
           "alpha_min": 255,
           "alpha_max": 255,
-          "x_mean": 128.857,
-          "y_mean": 126.382,
-          "z_mean": 242.826,
+          "x_mean": 128.901,
+          "y_mean": 126.388,
+          "z_mean": 242.761,
           "unit_length_min": 0.520536,
-          "unit_length_max": 1.059978,
-          "pct_outside_0p98_1p02": 16.7186,
+          "unit_length_max": 1.059912,
+          "pct_outside_0p98_1p02": 16.7765,
           "fourcc": "DXT1"
         },
         "status": "VERIFIED"
@@ -136,7 +136,7 @@
     }
   },
   "newly_authored": [
-    "no invented albedo detail: Lanczos 2x presentation of the true mip0 (revision 2; procedural micro-detail removed after visual review)",
+    "unsharp mask (radius 2, 20%, threshold 5) on RGB, alpha byte-exact, then Lanczos 2x presentation of the true mip0; zero invented pixels",
     "micro relief from enhanced diffuse high-pass, slope amplitude 0.6",
     "original macro normals preserved and renormalised to unit length",
     "alpha channel set to constant 255 (matches shipped DXT1 normal maps)",
@@ -171,26 +171,26 @@
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 0.043,
-      "seam_col_mean_abs": 1.749,
+      "seam_row_mean_abs": 0.022,
+      "seam_col_mean_abs": 1.759,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 2.033,
-        "max_abs_diff": 39,
-        "pct_pixels_changed_over_4": 7.66,
-        "pct_pixels_changed_over_16": 0.032
+        "mean_abs_diff": 2.429,
+        "max_abs_diff": 57,
+        "pct_pixels_changed_over_4": 13.752,
+        "pct_pixels_changed_over_16": 0.175
       },
       "fidelity_reference": "lanczos-2x of source (same resolution)",
       "detail_high_frequency_energy": {
         "source": 141.578,
-        "enhanced": 70.211,
-        "ratio": 0.4959,
+        "enhanced": 93.005,
+        "ratio": 0.6569,
         "note": "revision 2: cross-resolution magnitudes; preservation is asserted on detail_vs_clean_reference instead"
       },
       "detail_vs_clean_reference": {
         "reference": 62.45,
-        "output": 70.211,
-        "ratio": 1.1243
+        "output": 93.005,
+        "ratio": 1.4893
       },
       "status": "VERIFIED"
     },
@@ -209,25 +209,25 @@
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 1.203,
-      "seam_col_mean_abs": 1.155,
+      "seam_row_mean_abs": 1.204,
+      "seam_col_mean_abs": 1.192,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 4.858,
+        "mean_abs_diff": 4.932,
         "max_abs_diff": 215,
-        "pct_pixels_changed_over_4": 39.837,
-        "pct_pixels_changed_over_16": 3.762
+        "pct_pixels_changed_over_4": 40.714,
+        "pct_pixels_changed_over_16": 3.847
       },
       "fidelity_reference": "lanczos-2x of source (same resolution)",
       "normal_map_check": {
         "alpha_min": 255,
         "alpha_max": 255,
-        "x_mean": 128.857,
-        "y_mean": 126.382,
-        "z_mean": 242.826,
+        "x_mean": 128.901,
+        "y_mean": 126.388,
+        "z_mean": 242.761,
         "unit_length_min": 0.520536,
-        "unit_length_max": 1.059978,
-        "pct_outside_0p98_1p02": 16.7186,
+        "unit_length_max": 1.059912,
+        "pct_outside_0p98_1p02": 16.7765,
         "fourcc": "DXT1"
       },
       "status": "VERIFIED"

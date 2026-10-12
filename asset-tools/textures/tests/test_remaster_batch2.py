@@ -134,7 +134,39 @@ def test_fidelity_bounds_and_detail_preserved() -> None:
         # "nothing invented" gate; the energy ratio below is informational.
         assert f["mean_abs_diff"] < 5.0, f"{k}/diffuse: resampling loss too big: {f}"
         d = v["detail_vs_clean_reference"]
-        assert 0.80 < d["ratio"] < 1.30, f"{k}: detail smoke check failed: {d}"
+        # sharpening legitimately raises HF energy; the anti-invention proof
+        # is the fidelity bound above plus the flat-area test below
+        assert 0.80 < d["ratio"] < 2.00, f"{k}: detail smoke check failed: {d}"
+
+
+def test_flat_areas_untouched_by_sharpening() -> None:
+    """Unsharp mask carries a threshold precisely so flat areas (and the DXT
+    noise floor living in them) are not amplified. Where the source is flat,
+    the substitute must equal the clean resample within DXT noise."""
+    import numpy as np
+    from PIL import ImageFilter
+    from dds_io import resize_rgba_independent
+    from PIL import Image
+    for k, m in manifests().items():
+        e = m["maps"]["diffuse"]
+        src_img, _ = load_dds(_local(e["source_file"]))
+        out_img, _ = load_dds(_local(e["output_file"]))
+        ref = resize_rgba_independent(src_img, out_img.size, Image.LANCZOS)
+        grey = np.asarray(src_img.convert("L"), np.float32)
+        blur = np.asarray(src_img.convert("L").filter(ImageFilter.GaussianBlur(4.0)),
+                           np.float32)
+        hp = np.abs(grey - blur)
+        flat = hp < 2.0
+        # upscale the flat mask to output resolution (nearest: no blending)
+        fm = Image.fromarray((flat * 255).astype(np.uint8)).resize(
+            out_img.size, Image.NEAREST)
+        fmask = np.asarray(fm) > 0
+        if fmask.sum() < 1000:
+            continue
+        a = np.asarray(ref.convert("RGB")).astype(np.int16)[fmask]
+        b = np.asarray(out_img.convert("RGB")).astype(np.int16)[fmask]
+        diff = float(np.abs(a - b).mean())
+        assert diff < 3.0, f"{k}: flat areas changed by {diff:.2f} (sharpening leaked)"
 
 
 def test_luminance_shift_is_small() -> None:

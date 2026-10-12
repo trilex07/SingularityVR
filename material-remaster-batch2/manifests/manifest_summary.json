@@ -7,8 +7,8 @@
       "asset": "AR_E99Rifle_alt",
       "manifest": "material-remaster-batch2/manifests/weapon_e99.json",
       "substituted": {
-        "diffuse": "ef82f7485df9de66",
-        "normal": "a2e66518f6e68043"
+        "diffuse": "a0cdc3dd8528f6b2",
+        "normal": "54d47f3b7f15ee63"
       }
     },
     {
@@ -16,8 +16,8 @@
       "asset": "ar_gatling_gun",
       "manifest": "material-remaster-batch2/manifests/weapon_gatling.json",
       "substituted": {
-        "diffuse": "61e1205ca6866628",
-        "normal": "590c5b9e74249eab"
+        "diffuse": "6cc98f65b188ad65",
+        "normal": "c85bd288320e7e24"
       }
     },
     {
@@ -25,8 +25,8 @@
       "asset": "laser",
       "manifest": "material-remaster-batch2/manifests/weapon_laser.json",
       "substituted": {
-        "diffuse": "3e8622b5ac158352",
-        "normal": "96d4eb747a7fa6cc"
+        "diffuse": "3157f9bcca1f34ff",
+        "normal": "9f006af382433c0b"
       }
     },
     {
@@ -34,8 +34,8 @@
       "asset": "revert_d2",
       "manifest": "material-remaster-batch2/manifests/enemy_revert.json",
       "substituted": {
-        "diffuse": "c85a8bdcb59e62aa",
-        "normal": "b3f2e193c5f8b89a"
+        "diffuse": "f0f2a12427a660d9",
+        "normal": "505e0040ce7b02e3"
       }
     },
     {
@@ -43,8 +43,8 @@
       "asset": "phasetick",
       "manifest": "material-remaster-batch2/manifests/enemy_phasetick.json",
       "substituted": {
-        "diffuse": "922fae506d750f19",
-        "normal": "3eb34805165aa45f"
+        "diffuse": "705843a836fdff6b",
+        "normal": "29f4d27b9caac8c5"
       }
     },
     {
@@ -52,8 +52,8 @@
       "asset": "Spetsnaz_MP_helmet",
       "manifest": "material-remaster-batch2/manifests/enemy_spetsnaz_helmet.json",
       "substituted": {
-        "diffuse": "e63a4eab0edb8906",
-        "normal": "26a2943b6ad25e32"
+        "diffuse": "1967f1328209d93f",
+        "normal": "b8694c82cc7f3645"
       }
     },
     {
@@ -61,8 +61,8 @@
       "asset": "Spetsnaz_MP_Body",
       "manifest": "material-remaster-batch2/manifests/enemy_spetsnaz_body.json",
       "substituted": {
-        "diffuse": "f6234e475060faea",
-        "normal": "803864b1c696e560"
+        "diffuse": "b83e6c279da12eb2",
+        "normal": "74812b145529fa12"
       }
     },
     {
@@ -70,8 +70,8 @@
       "asset": "door_rollingT",
       "manifest": "material-remaster-batch2/manifests/env_rollingdoor.json",
       "substituted": {
-        "diffuse": "ba2ad383dbddc6d4",
-        "normal": "b1bfd7010ac51f90"
+        "diffuse": "7260e2b00e09ecf6",
+        "normal": "554c50c7b15e3b53"
       }
     }
   ],

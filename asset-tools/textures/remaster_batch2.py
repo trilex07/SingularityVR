@@ -311,15 +311,20 @@ def process_asset(key: str, spec: dict) -> dict:
             # Lanczos 2x of the true mip0 with a full mip chain. Zero invented
             # pixels; channels filtered independently so packed alpha survives.
             if map_type == "diffuse":
+                # REVISION 2b: gentle edge-contrast restoration (unsharp mask on
+                # RGB only, flat areas excluded by threshold) BEFORE the Lanczos
+                # 2x presentation. Sharpens genuine edges softened by DXT; adds
+                # no content. Alpha passes through byte-exact.
+                sharp = unsharp_luminance(img, radius=2.0, percent=20, threshold=5)
                 clean2x = resize_rgba_independent(
-                    img, (img.width * 2, img.height * 2), Image.LANCZOS)
-                # normal-map relief anchors on the NATIVE source diffuse: the
-                # only genuine detail available (no enhanced diffuse exists)
-                enhanced_diffuse = img
+                    sharp, (sharp.width * 2, sharp.height * 2), Image.LANCZOS)
+                # normal-map relief anchors on the sharpened master: same
+                # genuine detail the substitute presents, no extra invention
+                enhanced_diffuse = sharp
                 result["newly_authored"].append(
-                    "no invented albedo detail: Lanczos 2x presentation of the "
-                    "true mip0 (revision 2; procedural micro-detail removed "
-                    "after visual review)")
+                    "unsharp mask (radius 2, 20%, threshold 5) on RGB, alpha "
+                    "byte-exact, then Lanczos 2x presentation of the true "
+                    "mip0; zero invented pixels")
                 fourcc = hdr["fourcc"]
                 a = np.asarray(clean2x)
                 payload = clean2x if a[:, :, 3].min() < 255 else clean2x.convert("RGB")
@@ -497,6 +502,25 @@ def make_comparisons(key: str, spec: dict, result: dict) -> list[str]:
         produced.append(str(path))
         print(f"    comparison sheet: {path.name}", flush=True)
     return produced
+
+
+def unsharp_luminance(img: Image.Image, radius: float = 2.0,
+                      percent: int = 30, threshold: int = 5) -> Image.Image:
+    """Gentle edge-contrast restoration on RGB only; alpha byte-exact.
+
+    This sharpens genuine edges softened by DXT compression. It invents no
+    content: unsharp masking only re-weights existing local contrast, and the
+    threshold leaves flat areas (and DXT noise floors) untouched. Applied to
+    the source BEFORE the Lanczos 2x presentation upscale.
+    """
+    from PIL import ImageFilter
+    rgb = img.convert("RGB")
+    sharp = rgb.filter(ImageFilter.UnsharpMask(radius=radius, percent=percent,
+                                               threshold=threshold))
+    alpha = img.convert("RGBA").getchannel("A")
+    out = sharp.convert("RGBA")
+    out.putalpha(alpha)
+    return out
 
 
 def fidelity_images(a_img: Image.Image, b_img: Image.Image, crop_max: int = 512) -> dict:

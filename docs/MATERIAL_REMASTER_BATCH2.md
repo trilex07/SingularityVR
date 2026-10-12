@@ -50,10 +50,14 @@ stripes, and the "remastered" textures look worse than a clean upscale. The
 procedural diffuse enhancers were deleted from `remaster_batch2.py`. Current
 rule:
 
-- **Substituted diffuse = faithful Lanczos 2x of the true mip0**, full mip
-  chain, channels filtered independently so packed alpha survives. Zero
-  invented pixels. Fidelity is measured against the clean resample, so the
-  reported numbers are DXT + packaging loss only.
+- **Substituted diffuse = gently sharpened Lanczos 2x of the true mip0**
+  (unsharp mask radius 2, 20%, threshold 5 on RGB only, alpha byte-exact),
+  full mip chain, channels filtered independently so packed alpha survives.
+  Sharpening restores edge contrast softened by DXT; it re-weights existing
+  local contrast and invents no content, and the threshold leaves flat areas
+  (and the DXT noise floor) untouched — asserted by
+  `test_flat_areas_untouched_by_sharpening`. Fidelity is measured against the
+  clean resample, so the reported numbers are sharpening delta + DXT loss.
 - **Substituted normal = micro relief derived from the NATIVE source diffuse**
   (the only genuine detail available), presented at 2x through signed-space
   Lanczos + renormalisation. `enhance_normal` slope amplitudes:
@@ -76,28 +80,30 @@ rule:
 ## Metrics (measured from decoded files; see manifests)
 
 Fidelity is measured against the same-resolution clean reference
-(Lanczos-2x of the source), so the numbers below are DXT + packaging loss
-only. Detail ratio for diffuse is informational (output vs clean resample;
-~1.1x is DXT block noise, asserted within 0.8\u20131.3 as a smoke check).
+(Lanczos-2x of the source), so the numbers below are sharpening delta + DXT +
+packaging loss. Detail ratio for diffuse is informational (output vs clean
+resample; ~1.1-1.5x combines sharpening gain with DXT block noise, asserted
+within 0.8–2.0 as a smoke check; flat areas are separately asserted
+untouched).
 
 | asset | map | res | mean abs | max | detail ratio | luminance shift |
 |-------|-----|-----|----------|-----|--------------|-----------|
-| AR_E99Rifle_alt | diffuse | 4096x2048 | 1.51 | 41 | 1.11x | −1.6% |
-| AR_E99Rifle_alt | normal | 4096x2048 | 4.12 | 164 | — | — |
-| ar_gatling_gun | diffuse | 4096x2048 | 1.26 | 30 | 1.11x | −2.8% |
-| ar_gatling_gun | normal | 4096x2048 | 2.49 | 136 | — | — |
-| laser | diffuse | 512x512 | 1.79 | 24 | 1.10x | −5.1% |
-| laser | normal | 512x512 | 4.03 | 189 | — | — |
-| revert_d2 | diffuse | 4096x4096 | 1.80 | 29 | 1.14x | −0.5% |
-| revert_d2 | normal | 4096x4096 | 2.83 | 112 | — | — |
-| phasetick | diffuse | 1024x1024 | 3.62 | 53 | 1.15x | −0.3% |
-| phasetick | normal | 1024x1024 | 6.85 | 200 | — | — |
-| Spetsnaz_MP_helmet | diffuse | 2048x2048 | 1.81 | 35 | 1.12x | −0.9% |
-| Spetsnaz_MP_helmet | normal | 2048x2048 | 2.40 | 154 | — | — |
-| Spetsnaz_MP_Body | diffuse | 2048x2048 | 2.03 | 39 | 1.12x | −0.7% |
-| Spetsnaz_MP_Body | normal | 2048x2048 | 4.86 | 215 | — | — |
-| door_rollingT | diffuse | 1024x1024 | 2.54 | 54 | 1.09x | −0.5% |
-| door_rollingT | normal | 1024x1024 | 3.85 | 158 | — | — |
+| phasetick | diffuse | 1024x1024 | 4.874 | 69 | 1.58x | −0.3% |
+| phasetick | normal | 1024x1024 | 7.133 | 222 | — | — |
+| revert_d2 | diffuse | 4096x4096 | 2.064 | 33 | 1.48x | −0.4% |
+| revert_d2 | normal | 4096x4096 | 2.915 | 112 | — | — |
+| Spetsnaz_MP_Body | diffuse | 2048x2048 | 2.429 | 57 | 1.49x | −0.1% |
+| Spetsnaz_MP_Body | normal | 2048x2048 | 4.932 | 215 | — | — |
+| Spetsnaz_MP_helmet | diffuse | 2048x2048 | 2.066 | 49 | 1.48x | −0.5% |
+| Spetsnaz_MP_helmet | normal | 2048x2048 | 2.474 | 154 | — | — |
+| door_rollingT | diffuse | 1024x1024 | 4.024 | 61 | 1.51x | −0.5% |
+| door_rollingT | normal | 1024x1024 | 4.107 | 158 | — | — |
+| AR_E99Rifle_alt | diffuse | 4096x2048 | 1.779 | 56 | 1.46x | −0.4% |
+| AR_E99Rifle_alt | normal | 4096x2048 | 4.189 | 164 | — | — |
+| ar_gatling_gun | diffuse | 4096x2048 | 1.387 | 42 | 1.47x | −2.6% |
+| ar_gatling_gun | normal | 4096x2048 | 2.511 | 136 | — | — |
+| laser | diffuse | 512x512 | 1.895 | 35 | 1.47x | −4.9% |
+| laser | normal | 512x512 | 4.034 | 197 | — | — |
 
 All maps satisfy mean abs < 16 and luminance shift < 15% (asserted by
 `test_remaster_batch2.py`).

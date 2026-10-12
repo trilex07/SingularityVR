@@ -30,7 +30,7 @@
       },
       "deploy_filename": "phasetick_d_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_d_2x.dds",
-      "output_sha256": "922fae506d750f19b684a1ee2fd4eb46f83811e149b503a3ae6c955fbda2ec81",
+      "output_sha256": "705843a836fdff6bbe8f60e04e620f8c440beeb11f5699bb7d81d343e7953872",
       "validation": {
         "width": 1024,
         "height": 1024,
@@ -46,26 +46,26 @@
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 38.166,
-        "seam_col_mean_abs": 30.123,
+        "seam_row_mean_abs": 38.406,
+        "seam_col_mean_abs": 31.027,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 3.62,
-          "max_abs_diff": 53,
-          "pct_pixels_changed_over_4": 27.333,
-          "pct_pixels_changed_over_16": 1.067
+          "mean_abs_diff": 4.874,
+          "max_abs_diff": 69,
+          "pct_pixels_changed_over_4": 39.476,
+          "pct_pixels_changed_over_16": 3.537
         },
         "fidelity_reference": "lanczos-2x of source (same resolution)",
         "detail_high_frequency_energy": {
           "source": 374.015,
-          "enhanced": 229.369,
-          "ratio": 0.6133,
+          "enhanced": 316.749,
+          "ratio": 0.8469,
           "note": "revision 2: cross-resolution magnitudes; preservation is asserted on detail_vs_clean_reference instead"
         },
         "detail_vs_clean_reference": {
           "reference": 200.063,
-          "output": 229.369,
-          "ratio": 1.1465
+          "output": 316.749,
+          "ratio": 1.5832
         },
         "status": "VERIFIED"
       }
@@ -94,7 +94,7 @@
       },
       "deploy_filename": "phasetick_n_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_n_2x.dds",
-      "output_sha256": "3eb34805165aa45f505867bb6f9e51a354b189c8b221bfbd087a32d22041093f",
+      "output_sha256": "29f4d27b9caac8c590e40b3d250a06740b0b713e26c7a52d51a9fa18e5abf7ce",
       "validation": {
         "width": 1024,
         "height": 1024,
@@ -110,25 +110,25 @@
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 5.871,
-        "seam_col_mean_abs": 5.313,
+        "seam_row_mean_abs": 6.144,
+        "seam_col_mean_abs": 5.531,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 6.848,
-          "max_abs_diff": 200,
-          "pct_pixels_changed_over_4": 57.656,
-          "pct_pixels_changed_over_16": 6.994
+          "mean_abs_diff": 7.133,
+          "max_abs_diff": 222,
+          "pct_pixels_changed_over_4": 59.485,
+          "pct_pixels_changed_over_16": 7.711
         },
         "fidelity_reference": "lanczos-2x of source (same resolution)",
         "normal_map_check": {
           "alpha_min": 255,
           "alpha_max": 255,
-          "x_mean": 130.132,
-          "y_mean": 125.714,
-          "z_mean": 235.005,
-          "unit_length_min": 0.526061,
+          "x_mean": 130.287,
+          "y_mean": 125.731,
+          "z_mean": 234.743,
+          "unit_length_min": 0.512782,
           "unit_length_max": 1.0587,
-          "pct_outside_0p98_1p02": 23.1082,
+          "pct_outside_0p98_1p02": 23.5559,
           "fourcc": "DXT1"
         },
         "status": "VERIFIED"
@@ -230,7 +230,7 @@
     }
   },
   "newly_authored": [
-    "no invented albedo detail: Lanczos 2x presentation of the true mip0 (revision 2; procedural micro-detail removed after visual review)",
+    "unsharp mask (radius 2, 20%, threshold 5) on RGB, alpha byte-exact, then Lanczos 2x presentation of the true mip0; zero invented pixels",
     "micro relief from enhanced diffuse high-pass, slope amplitude 0.6",
     "original macro normals preserved and renormalised to unit length",
     "alpha channel set to constant 255 (matches shipped DXT1 normal maps)",
@@ -274,26 +274,26 @@
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 38.166,
-      "seam_col_mean_abs": 30.123,
+      "seam_row_mean_abs": 38.406,
+      "seam_col_mean_abs": 31.027,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 3.62,
-        "max_abs_diff": 53,
-        "pct_pixels_changed_over_4": 27.333,
-        "pct_pixels_changed_over_16": 1.067
+        "mean_abs_diff": 4.874,
+        "max_abs_diff": 69,
+        "pct_pixels_changed_over_4": 39.476,
+        "pct_pixels_changed_over_16": 3.537
       },
       "fidelity_reference": "lanczos-2x of source (same resolution)",
       "detail_high_frequency_energy": {
         "source": 374.015,
-        "enhanced": 229.369,
-        "ratio": 0.6133,
+        "enhanced": 316.749,
+        "ratio": 0.8469,
         "note": "revision 2: cross-resolution magnitudes; preservation is asserted on detail_vs_clean_reference instead"
       },
       "detail_vs_clean_reference": {
         "reference": 200.063,
-        "output": 229.369,
-        "ratio": 1.1465
+        "output": 316.749,
+        "ratio": 1.5832
       },
       "status": "VERIFIED"
     },
@@ -312,25 +312,25 @@
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 5.871,
-      "seam_col_mean_abs": 5.313,
+      "seam_row_mean_abs": 6.144,
+      "seam_col_mean_abs": 5.531,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 6.848,
-        "max_abs_diff": 200,
-        "pct_pixels_changed_over_4": 57.656,
-        "pct_pixels_changed_over_16": 6.994
+        "mean_abs_diff": 7.133,
+        "max_abs_diff": 222,
+        "pct_pixels_changed_over_4": 59.485,
+        "pct_pixels_changed_over_16": 7.711
       },
       "fidelity_reference": "lanczos-2x of source (same resolution)",
       "normal_map_check": {
         "alpha_min": 255,
         "alpha_max": 255,
-        "x_mean": 130.132,
-        "y_mean": 125.714,
-        "z_mean": 235.005,
-        "unit_length_min": 0.526061,
+        "x_mean": 130.287,
+        "y_mean": 125.731,
+        "z_mean": 234.743,
+        "unit_length_min": 0.512782,
         "unit_length_max": 1.0587,
-        "pct_outside_0p98_1p02": 23.1082,
+        "pct_outside_0p98_1p02": 23.5559,
         "fourcc": "DXT1"
       },
       "status": "VERIFIED"
