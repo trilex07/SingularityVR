@@ -1,10 +1,12 @@
 # STATUS — session handoff
 
-Shadow receiver experiment on `fix/stereo-shadow-rootcause`: **L1_PASS**.
+Shadow receiver experiment on `fix/stereo-shadow-rootcause`: **BROKEN**.
 ON/OFF/ON final-driver traces complete; user confirms OFF removes ordinary
 shadows as well. Exact receiver inverse/forward mismatch identified; bounded
 default-OFF c3..10 correction implemented. Synthetic math and state restoration
-tests pass; physical outcome UNKNOWN. See `docs/shadow-receiver-correction.md`.
+tests pass, but user physically rejects ED15225F: distorted rendering and shadows
+apparently following right controller. Experiment disabled live; read-only
+first/last/context diagnostic being prepared. See `docs/shadow-receiver-correction.md`.
 Accepted Steam restore remains DLL 9FBA308C..., INI 61AEC56C..., UI 5B2EA469...;
 all hashes reverified after diagnostic PID9576 exit.
 

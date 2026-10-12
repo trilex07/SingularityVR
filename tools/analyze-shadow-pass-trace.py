@@ -28,10 +28,11 @@ def read_trace(path, shader_out=None):
         elif line.startswith("geometry group="):
             data = dict(re.findall(r"(\w+)=([^ ]+)", line))
             groups[int(data["group"])]["geometry"] = data
-        elif line.startswith("constant group="):
-            match=re.match(r"constant group=(\d+) reg=(\d+) VS=([^ ]+) PS=([^ ]+)",line)
+        elif line.startswith(("constant group=", "tailconstant group=")):
+            match=re.match(r"(?:tail)?constant group=(\d+) reg=(\d+) VS=([^ ]+) PS=([^ ]+)",line)
             if match:
-                groups[int(match[1])].setdefault("constants",{})[int(match[2])] = {
+                target="tail_constants" if line.startswith("tailconstant") else "constants"
+                groups[int(match[1])].setdefault(target,{})[int(match[2])] = {
                     "VS": [float(v) for v in match[3].split(",")],
                     "PS": [float(v) for v in match[4].split(",")],
                 }

@@ -1,6 +1,27 @@
 # Shadow receiver experiment, 2026-10-12
 
-Status: IMPLEMENTED_NOT_VERIFIED. No physical fix claim.
+Status: BROKEN experiment, physically rejected. No fix claim.
+
+## Physical falsification of 88411b4 / ED15225F...
+
+PID24340 executed ~180 corrections and ~180 safe rejections/second, zero
+restore failures. Complete trace: 1235 calls / 276 groups / zero overflow.
+Both eyes' first receiver draws contain new inverse matrices. User reports
+strange rendering and shadows apparently moving with the right VR controller.
+Correction was immediately disabled by removing the owned flag, leaving HQ
+Decals ON; log confirms enabled=0. This rejects using every receiver volume's
+current VS transform as the scene-depth camera. Captured first/last draw numbers
+982/1206 and 983/1207 show two same-state draws per eye; first-only groups hide
+their different constant semantics. Existing StereoPairBody can compose
+BuildGunC/BuildTmdC when g_thisDrawMoved is nonzero, while those matrices need
+not describe the scene alpha-depth producer. This is a hypothesis, not yet proof
+that that branch ran for the offending receiver.
+
+Next controlled candidate is read-only: correction flag remains OFF, trace key
+includes moved context, repeated 8/12 volume draws retain last VS c0..3 and PS
+c0..14 (<=128 extra reads/frame). Compare first/last matrices and native world
+coordinate conventions before constructing another correction. No hand or
+weapon transform changes and no general stereo changes.
 
 Base: main 9e92a4f, accepted menu DLL 9FBA308C...99C4500. Frozen
 UI/weapon/hand/texture/stereo paths are not changed.

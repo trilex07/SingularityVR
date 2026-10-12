@@ -10,19 +10,22 @@ struct Key {
     IDirect3DSurface9* rt=nullptr;
     IDirect3DBaseTexture9* tex[8]{};
     RECT sc{};
-    unsigned phase=0;
+    unsigned phase=0,moved=0;
 };
 struct Group {
     Key key; D3DVIEWPORT9 vp{}; IDirect3DSurface9* depth=nullptr;
     unsigned first=0,last=0,count=0,failed=0,type=0,verts=0,minPrims=~0u,maxPrims=0;
     float vsConstants[32][4]{},psConstants[32][4]{};
     HRESULT vsRead=E_FAIL,psRead=E_FAIL;
+    float tailVS[4][4]{},tailPS[15][4]{};
+    HRESULT tailVSRead=E_FAIL,tailPSRead=E_FAIL;
+    bool tail=false;
     IDirect3DVertexBuffer9* vb=nullptr;IDirect3DIndexBuffer9* ib=nullptr;
     UINT offset=0,stride=0;
 };
 static Key bound;
 static Group groups[kGroups];
-static unsigned count=0,draws=0,overflow=0,sequence=0;
+static unsigned count=0,draws=0,overflow=0,sequence=0,tailReads=0;
 static bool active=false;
 static bool pending=false;
 inline void Release() {
@@ -33,13 +36,14 @@ inline void Release() {
         if(g.vb)g.vb->Release();if(g.ib)g.ib->Release();
         for(auto t:g.key.tex)if(t)t->Release();
     }
-    count=draws=overflow=0;active=false;
+    count=draws=overflow=tailReads=0;active=false;
 }
-inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned prims,unsigned phase) {
+inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned prims,unsigned phase,unsigned moved=0) {
     if(!active || draws>=kDraws) { if(active)++overflow; return -1; }
     ++draws;
     Key key=bound; // Shader/resource identities tracked at successful setters.
     key.phase=phase;
+    key.moved=moved;
     if(FAILED(dev->GetScissorRect(&key.sc))) { ++overflow;return -1; }
     unsigned i=0;
     for(;i<count;++i)if(memcmp(&groups[i].key,&key,sizeof(Key))==0)break;
@@ -54,6 +58,13 @@ inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned pr
         g.psRead=dev->GetPixelShaderConstantF(0,&g.psConstants[0][0],32);
     }
     auto& g=groups[i];++g.count;g.last=draws;
+    // First and last volume draws can have different matrix semantics despite
+    // identical COM state. Read only these small repeated volumes, <=128/frame.
+    if(g.count>1 && verts==8 && prims==12 && tailReads<128) {
+        ++tailReads;g.tail=true;
+        g.tailVSRead=dev->GetVertexShaderConstantF(0,&g.tailVS[0][0],4);
+        g.tailPSRead=dev->GetPixelShaderConstantF(0,&g.tailPS[0][0],15);
+    }
     g.minPrims=std::min(g.minPrims,prims);g.maxPrims=std::max(g.maxPrims,prims);
     return (int)i;
 }
@@ -86,7 +97,13 @@ inline void Dump(const char* path) {
             g.type,g.verts,g.minPrims,g.maxPrims,g.vp.X,g.vp.Y,g.vp.Width,g.vp.Height,
             g.key.sc.left,g.key.sc.top,g.key.sc.right,g.key.sc.bottom,g.vsRead,g.psRead);
         if(owner)owner->Release();
-        fprintf(f,"geometry group=%u phase=%u VB=%p offset=%u stride=%u IB=%p\n",i,g.key.phase,g.vb,g.offset,g.stride,g.ib);
+        fprintf(f,"geometry group=%u phase=%u moved=%u VB=%p offset=%u stride=%u IB=%p\n",i,g.key.phase,g.key.moved,g.vb,g.offset,g.stride,g.ib);
+        if(g.tail) {
+            fprintf(f,"tail group=%u draw=%u vsRead=%08lX psRead=%08lX\n",i,g.last,g.tailVSRead,g.tailPSRead);
+            for(unsigned r=0;r<15;++r)fprintf(f,"tailconstant group=%u reg=%u VS=%.9g,%.9g,%.9g,%.9g PS=%.9g,%.9g,%.9g,%.9g\n",
+                i,r,r<4?g.tailVS[r][0]:0,r<4?g.tailVS[r][1]:0,r<4?g.tailVS[r][2]:0,r<4?g.tailVS[r][3]:0,
+                g.tailPS[r][0],g.tailPS[r][1],g.tailPS[r][2],g.tailPS[r][3]);
+        }
         for(unsigned t=0;t<8;++t) {
             auto texture=g.key.tex[t];D3DSURFACE_DESC desc{};
             if(texture && texture->GetType()==D3DRTYPE_TEXTURE)
