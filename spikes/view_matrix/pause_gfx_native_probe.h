@@ -4,7 +4,6 @@
 #include <cstdint>
 
 extern void Log(const char* fmt, ...);
-extern bool Readable(void* p, size_t n);
 extern bool IniPath(char* out);
 extern UINT g_srcW;
 extern UINT g_srcH;
@@ -25,7 +24,7 @@ inline void LogPauseFocus(std::uintptr_t movie, void* viewport) {
     lastMovie = movie;
 
     int vpW = 0, vpH = 0;
-    if (viewport && Readable(viewport, 0x54)) {
+    if (viewport) {
         vpW = *reinterpret_cast<int*>(reinterpret_cast<std::uintptr_t>(viewport) + 0x4Cu);
         vpH = *reinterpret_cast<int*>(reinterpret_cast<std::uintptr_t>(viewport) + 0x50u);
     }

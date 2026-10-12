@@ -4,6 +4,8 @@
 
 **Scope:** Where `RvUIGFxMovie_Pause` gets its layout before D3D9 `HudStereoPair` remaps it. No draw-level capture, no Gate B redeploy.
 
+**Pass 2 (2026-10-12, static):** Steam `CookedPC` package catalog + `tools/uedecompress` on shipped `.xxx` files. No `Singularity.exe` ASCII class-name scans; no rendering or deploy changes.
+
 External references (architecture only — no offsets copied):
 
 | Project | Relevant idea |
@@ -27,7 +29,18 @@ Supplied report `singularity_vr_ue3_gfx_stereo_menu_research_2026-10-12.md` was 
 | Input thread | `NativeVrUi::Poll` @ `0x011D31C0` (MinHook); viewport cursor vtable `0x011CFC10/40/70` |
 | Pause detection | **`SetPause` is not used for menu class**; GFx focus is authoritative (`HISTORY.md`, `native_ui_input.h`) |
 
-**Not verified:** native C++ **render** entry (`Display` / `Advance` / `RenderUI`) for `RvUIGFxMovie_Pause` — no `Singularity.exe` hook or signature scan completed in this pass.
+### Origin, ownership, lifetime (evidence chain)
+
+| Layer | What we know | Gap |
+|-------|----------------|-----|
+| **Pointer source** | Each input tick, `UpdateMenu()` reads the same three-hop chain as native **GetFocusMovie** (no call into game code). Movie address is **not** cached inside the engine call — it is re-read from `*(record+0x50)` whenever focus is evaluated. | **`record` UObject type** not logged yet (`NameOf(record)` missing). |
+| **Engine anchor** | `*(0x01CF8778)` treated as live engine singleton (same global the native stub uses). | Not cross-checked with `GEngine` name index in this pass. |
+| **`record @ engine+0x148`** | Holds the pointer to the current focus movie at `+0x50`. | Native field owner class unconfirmed; script export table lists **`Default__RvUIMenuSystem`**, **`Default__RvUIInteraction`**, **`Default__RvUIScene`** adjacent to **`RvUIGFxMovie_Pause`** in decompressed **`RvGame.u`** (see §9). |
+| **Movie object** | Standard UE3 `UObject`: class at `movie+0x34`, name via `NameOf(movie)`. Instance lifetime tied to menu focus; mod sees pointer change only on focus transitions (`cachedMovie` gate). | Render-thread alias vs input-thread pointer not correlated. |
+| **Viewport coupling** | `BindViewport()` selects platform `FViewport` from `0x01D1FCC4` and patches cursor vtable; **`SizeX/SizeY @ +0x4C/+0x50`** feed GFx hit-testing. | Whether GFx **stage** size equals `FViewport` size is unproven (likely yes in VR). |
+| **Steam vs GOG code** | Shipped Steam `.text` is **encrypted on disk** (`FEASIBILITY.md`); bytes at file offset for `0x97C2C0` / `0xDD31C0` do **not** match x86 prologues offline. **`NativeVrUi::Install`** validates **`Poll` prologue at runtime** on the live process — accepted hands DLL on Steam implies parity with GOG-decrypted code at those VAs. | Static Ghidra on **GOG** still required to xref native **GetFocusMovie** / render; not run in this pass (GOG path absent on this machine). |
+
+**Not verified:** native C++ **render** entry (`Display` / `Advance` / `RenderUI`) for `RvUIGFxMovie_Pause` — no `Singularity.exe` hook or signature landed in this pass.
 
 ---
 
@@ -101,6 +114,15 @@ On first focus of `RvUIGFxMovie_Pause`, logs movie pointer, FViewport SizeX/Y, a
 
 **No Steam deploy required** for the investigation commit; MAIN runs probe on a candidate build when pursuing RE.
 
+### If runtime is needed next (single justified extension)
+
+| Unknown | Instrument | Why static is insufficient |
+|---------|------------|----------------------------|
+| Type of `record = *(engine+0x148)` | Log `NameOf(record)` once per focus change | Package names **`RvUIMenuSystem`** / **`RvUIScene`** are export-table neighbours only; they do not prove which native subobject owns `+0x50`. |
+| GFx stage vs `FViewport` | Log a **bounded** qword window at `movie+0x…` (fixed offsets from GOG RE) + `FViewport` sizes on pause open / Objectives tab | Decompressed packages expose **`GetFocusMovie` / `SetFocusMovie` / `GetGameViewportClient`** in **`GFxUI.u`** but not field offsets on `RvUIGFxMovie_Pause`. |
+
+Do **not** add writes or hooks until a GOG-derived native target is signature-validated at runtime on Steam.
+
 ---
 
 ## 7. Decision gate
@@ -119,15 +141,34 @@ On first focus of `RvUIGFxMovie_Pause`, logs movie pointer, FViewport SizeX/Y, a
 
 ### Smallest **technically justified** next step (still investigation, not shipping)
 
-1. **RE pass (Ghidra, GOG `Singularity.exe` + `GFxUI.u`):**  
-   - Xref `RvUIGFxMovie_Pause`, `UGFxMoviePlayer`, `SetViewport`, `GetViewportSize`.  
-   - Build **signature candidates** (no hardcoded addresses in committed code).
+1. **RE pass (Ghidra, GOG `Singularity.exe` — structural reference only):**  
+   - Xref **`GetFocusMovie`** / **`SetFocusMovie`** strings from **`GFxUI.u`** (plaintext `.rdata` on Steam is readable; **`.text` xrefs require GOG**).  
+   - Follow to **`UGFxMoviePlayer::Advance` / `Display` / viewport setters**; emit **signature candidates** validated in a **live Steam** process (prologue check like `NativeVrUi::Install`).
 
-2. **One Steam log session** with `PauseGfxProbe=1` + existing `menu-mono trace` on **in-game pause** (not main menu only): confirm `target=backbuffer 5264x2684 compose=1` on accepted DLL.
+2. **Optional one Steam log session** (research DLL, not accepted SHA): `PauseGfxProbe=1` + `NameOf(record)` extension + `menu-mono trace` on **in-game pause** and **Objectives tab** — confirm single movie pointer, `target=backbuffer 5264×2684 compose=1`.
 
-3. **If (1) finds a viewport setter tied to movie player:** minimal **read-only** hook that logs `(oldW, oldH, newW, newH)` on pause open/close only — still **no writes** until dimensions decouple from SBS in logs.
+3. **If (1) finds a viewport setter tied to movie player:** minimal **read-only** hook logging `(oldW, oldH, newW, newH)` on pause open/close only — still **no writes** until logs show decoupling from SBS.
 
-4. **Only after (3) shows decoupling:** isolated PoC branch — set pause movie logical viewport to **`height × 16/9`** at open, restore on close, **LEGACY fallback** unchanged, **no** `HudStereoPair` / Gate B changes.
+4. **Only after (3):** isolated PoC branch — set pause movie logical viewport to **`height × 16/9`** at open, restore on close; **no** `HudStereoPair` / Gate B / hands changes.
+
+---
+
+## 9. Steam cooked packages (Pass 2 catalog)
+
+**Install root (this machine):** `%ProgramFiles(x86)%\Steam\steamapps\common\Singularity\`
+
+| Location | Finding |
+|----------|---------|
+| `RvGame\CookedPC\` | **2006** cooked files; primary extension **`.xxx`** (LZO whole-file packages per `tools/uedecompress`). **Not** limited to a `CookedPC`-only layout — also `RvGame\Movies\`, `Splash\`. |
+| `RvGame\CookedPC\RvGame.xxx` | Decompresses to **28,025,244** B UE3 package; **19** `RvUIGFxMovie_*` classes including **`RvUIGFxMovie_Pause`**, **`RvUIGFxMovie_Notepad`**, options variants. Cleartext **`Objectives`** strings appear in **kismet** (`RvSeqAct_Objectives`) — not a second focus movie class. |
+| `RvGame\CookedPC\GFxUI.xxx` | Decompresses to **199,868** B; exports **`GetFocusMovie`**, **`SetFocusMovie`**, **`GetGameViewportClient`**, **`SetViewport`**, **`Publish`** (engine GFx bridge API names). **No** `RvUIGFxMovie_*` here — game movies live in **`RvGame.u`**. |
+| `RvGame\CookedPC\Engine.xxx` | Decompresses to **16,130,572** B; **`GetViewportSize`** present (generic viewport helper). |
+| `RvGame\CookedPC\UI_SinglePlayer_SF.xxx` | **Chunk-compressed** SWF package — **`uedecompress` fails** (non-contiguous chunk table; same blocker as `HISTORY.md` Scaleform spike). Pause SWF content requires a chunk-aware tool, not exe string scan. |
+| Other UI assets | `UI_SinglePlayer_SF.xxx`, `ui_GFx_fonts.xxx`, `UI_*_SF.xxx` under the same `CookedPC` directory. |
+
+**Verified native GFx viewport/render functions (committed code):** **none** — only **package-level** names above. Render interception before **`HudStereoPair`** remains **unmapped** on `Singularity.exe`.
+
+**Movie-level hook feasibility:** **NO-GO** until (1) yields a Steam-validated native boundary that runs **before** GFx tessellation and is **not** shared with unrelated HUD draws.
 
 ---
 
