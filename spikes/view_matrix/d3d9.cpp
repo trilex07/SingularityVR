@@ -11667,8 +11667,18 @@ volatile LONG g_skipExtraTarget = 0;
 int g_drawsSkipped = 0;
 // HQ deferred decal projection pass (scene-sized G16R16, ~2 draws/frame). Default off.
 int g_stereoDecalPassFix = 0;
-int g_decalScenePsReg = 1;   // ScreenPositionScaleBias register (scope precedent: ps c1)
-volatile LONG g_decalPassDraws = 0;
+int g_decalScenePsReg = 1;
+int g_decalPassPrimType = 5;   // D3DPT_TRIANGLESTRIP
+int g_decalPassPrimCount = 2;
+int g_decalPassPsRemap = 1;
+int g_decalPassViewportSplit = 1;
+volatile LONG g_decalStereoMark = 0;
+volatile LONG g_decalG16DrawsSec = 0;
+volatile LONG g_decalClassifiedSec = 0;
+volatile LONG g_decalFixedSec = 0;
+volatile LONG g_decalG16UnchangedSec = 0;
+volatile LONG g_decalG16HookSec = 0;
+int g_decalPassAutoSplitColour = 1;
 
 // ---- render-target census (run 11) ----
 //
@@ -11911,13 +11921,59 @@ static void VfxCaptureBaseCam(const float* mat, int conv) {
     g_vfxBaseCamValid = true;
 }
 
-inline bool IsCurrentDecalProjectionRt() {
-    if (!g_stereoDecalPassFix || !g_srcW || !g_srcH) return false;
-    if (g_rtCurrent < 0 || g_rtCurrent >= 16) return false;
+inline bool RtIsG16SceneSized() {
+    if (!g_srcW || !g_srcH || g_rtCurrent < 0 || g_rtCurrent >= 16) return false;
     const RtInfo& rt = g_rtSeen[g_rtCurrent];
     if (!singularity::decal::IsSceneSizedTarget(rt.w, rt.h, g_srcW, g_srcH)) return false;
     return singularity::decal::IsProjectionTargetFormat(static_cast<std::uint32_t>(rt.fmt));
 }
+
+inline bool DecalPassShapeMatch(D3DPRIMITIVETYPE t, UINT primCount, const void* vtx, UINT stride) {
+    if (primCount > 4) return false;
+    if (singularity::decal::MatchConfiguredPassShape((UINT)t, primCount, (UINT)g_decalPassPrimType,
+                                                   (UINT)g_decalPassPrimCount))
+        return true;
+    if (t == D3DPT_TRIANGLELIST && primCount == 2) return true;
+    if (!vtx || stride < 8) return false;
+    float minX = 0, maxX = 0, minY = 0, maxY = 0;
+    UINT verts = 0;
+    const UINT want = (t == D3DPT_TRIANGLESTRIP || t == D3DPT_TRIANGLEFAN) ? primCount + 2
+                                                                            : primCount * 3;
+    const UINT n = want > 6 ? 6 : want;
+    for (UINT i = 0; i < n; ++i) {
+        const uint8_t* p = static_cast<const uint8_t*>(vtx) + (size_t)i * stride;
+        if (!Readable(p, 8)) break;
+        const float* v = reinterpret_cast<const float*>(p);
+        if (verts == 0) {
+            minX = maxX = v[0];
+            minY = maxY = v[1];
+        } else {
+            if (v[0] < minX) minX = v[0];
+            if (v[0] > maxX) maxX = v[0];
+            if (v[1] < minY) minY = v[1];
+            if (v[1] > maxY) maxY = v[1];
+        }
+        ++verts;
+    }
+    return singularity::decal::VertexBoundsSpanNdc(minX, maxX, minY, maxY, verts);
+}
+
+inline void NoteDecalG16HookSeen() {
+    if (g_stereoDecalPassFix && RtIsG16SceneSized()) InterlockedIncrement(&g_decalG16HookSec);
+}
+
+inline bool TryMarkDecalProjectionDraw(D3DPRIMITIVETYPE t, UINT primCount, const void* vtx,
+                                       UINT stride) {
+    if (!g_stereoDecalPassFix || g_boundShaderLayout.shadow) return false;
+    if (!RtIsG16SceneSized()) return false;
+    NoteDecalG16HookSeen();
+    if (!DecalPassShapeMatch(t, primCount, vtx, stride)) return false;
+    InterlockedIncrement(&g_decalClassifiedSec);
+    InterlockedExchange(&g_decalStereoMark, 1);
+    return true;
+}
+
+inline void ClearDecalProjectionMark() { InterlockedExchange(&g_decalStereoMark, 0); }
 
 template <typename DrawFn>
 HRESULT DecalProjectionStereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
@@ -11934,14 +11990,17 @@ HRESULT DecalProjectionStereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
     static bool said = false;
     if (!said) {
         said = true;
-        Log("decal-pass: stereo fix on G16R16 projection (ScreenPositionScaleBias ps c%d)", g_decalScenePsReg);
+        Log("decal-pass: applying narrow G16R16 fix (ps c%d remap=%d viewport=%d)",
+            g_decalScenePsReg, g_decalPassPsRemap, g_decalPassViewportSplit);
     }
     for (int eye = 0; eye < 2; ++eye) {
-        D3DVIEWPORT9 vp = full;
-        vp.X = full.X + (eye ? halfWidth : 0);
-        vp.Width = halfWidth;
-        dev->SetViewport(&vp);
-        if (haveScene) {
+        if (g_decalPassViewportSplit) {
+            D3DVIEWPORT9 vp = full;
+            vp.X = full.X + (eye ? halfWidth : 0);
+            vp.Width = halfWidth;
+            dev->SetViewport(&vp);
+        }
+        if (haveScene && g_decalPassPsRemap) {
             float c[4];
             memcpy(c, oldScene, sizeof(c));
             singularity::decal::RemapScreenPositionScaleBiasForEye(c, eye);
@@ -11953,7 +12012,6 @@ HRESULT DecalProjectionStereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
     if (haveScene) dev->SetPixelShaderConstantF(g_decalScenePsReg, oldScene, 1);
     dev->SetViewport(&full);
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldScissor);
-    InterlockedIncrement(&g_decalPassDraws);
     return shr;
 }
 
@@ -11980,7 +12038,15 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
     // Shadow-map generation stays intact. VrShadows=0 neutralises only the measured sampled
     // projection texture in Hook_SetTexture, after the light-space pass has completed.
     if (!InterlockedCompareExchange(&g_dupDraws, 0, 0)) return draw();
-    if (IsCurrentDecalProjectionRt()) return DecalProjectionStereoPair(dev, draw);
+    if (g_stereoDecalPassFix && RtIsG16SceneSized()) {
+        InterlockedIncrement(&g_decalG16DrawsSec);
+        if (InterlockedCompareExchange(&g_decalStereoMark, 0, 0)) {
+            InterlockedIncrement(&g_decalFixedSec);
+            InterlockedExchange(&g_decalStereoMark, 0);
+            return DecalProjectionStereoPair(dev, draw);
+        }
+        InterlockedIncrement(&g_decalG16UnchangedSec);
+    }
     // Never split a draw aimed at a shadow map or other offscreen target - see the note on
     // Hook_SetRenderTarget for what that corrupts.
     // ---- run 41: dump the constants of the shadow pass, now that it is down to ~2 draws ----
@@ -13449,7 +13515,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     // in the indexed hook. Zero for the vertex count because a non-indexed draw does not report one;
     // see FgRidesGun for why that is the right thing to pass rather than a gap.
     g_thisDrawMoved = RideTargetFor(0);   // ⭐ run 237
+    const bool decalMark = TryMarkDecalProjectionDraw(t, count, nullptr, 0);
     const HRESULT phr = StereoPair(dev, [&] { return g_origDrawPrim(dev, t, start, count); });
+    if (decalMark) ClearDecalProjectionMark();
     g_thisDrawMoved = 0;
     return phr;
 }
@@ -16976,6 +17044,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         if (InterlockedCompareExchange(&reportedFaces, 1, 0) == 0)
             Log("GloveIsolation: drawing 2,922 glove-only faces from audited noTMD section");
     }
+    const bool decalMark = TryMarkDecalProjectionDraw(t, primCount, nullptr, 0);
     const HRESULT dhr = StereoPair(dev, [&] {
         HRESULT hr = D3D_OK;
         if (isolateNoTmdFaces) {
@@ -16993,6 +17062,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         }
         return hr;
     });
+    if (decalMark) ClearDecalProjectionMark();
     if(independentRegs)g_origSetVSConstF(dev,5,&independentSaved[0][0],independentRegs);
     if (boneRegN) g_origSetVSConstF(dev,boneRegLo, &savedBones[0][0], boneRegN);
 
@@ -18362,7 +18432,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
         return g_origDrawPrimUP(dev, t, primCount, vtxData, vtxStride);
     }
     NoteFirstUserPtrDraw("DrawPrimitiveUP");
-    return StereoPair(dev, [&] { return g_origDrawPrimUP(dev, t, primCount, vtxData, vtxStride); });
+    const bool decalMark = TryMarkDecalProjectionDraw(t, primCount, vtxData, vtxStride);
+    const HRESULT uphr = StereoPair(dev, [&] { return g_origDrawPrimUP(dev, t, primCount, vtxData, vtxStride); });
+    if (decalMark) ClearDecalProjectionMark();
+    return uphr;
 }
 
 HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
@@ -25627,6 +25700,16 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 Log("    NUMPAD0 ACTIVE: %d draws to the scene-sized non-colour target dropped"
                     " this window", g_drawsSkipped);
             g_drawsSkipped = 0;
+            if (g_stereoDecalPassFix) {
+                const LONG g16 = InterlockedExchange(&g_decalG16DrawsSec, 0);
+                const LONG cls = InterlockedExchange(&g_decalClassifiedSec, 0);
+                const LONG fix = InterlockedExchange(&g_decalFixedSec, 0);
+                const LONG pass = InterlockedExchange(&g_decalG16UnchangedSec, 0);
+                const LONG hook = InterlockedExchange(&g_decalG16HookSec, 0);
+                Log("    decal-pass: hookG16=%ld stereoG16=%ld classified=%ld fixed=%ld unchanged=%ld"
+                    " (shape type=%d count=%d or TRILIST/2)",
+                    hook, g16, cls, fix, pass, g_decalPassPrimType, g_decalPassPrimCount);
+            }
             // Fix-3/shadows: draws issued while the projected map was bound. A nonzero
             // count with eye-differing square shadows confirms the sampling pass runs
             // inside the split path; ShadowMode=1 then tests the mono fallback.
@@ -27173,8 +27256,22 @@ void LoadIniSettings() {
     g_stereoDecalPassFix = GetPrivateProfileIntA("Render", "StereoDecalPassFix", 0, path) ? 1 : 0;
     g_decalScenePsReg = GetPrivateProfileIntA("Render", "DecalScenePsReg", 1, path);
     if (g_decalScenePsReg < -1 || g_decalScenePsReg > 63) g_decalScenePsReg = 1;
-    Log("ini: StereoDecalPassFix=%d DecalScenePsReg=%d (HQ decal G16R16 pass; 0=off)",
-        g_stereoDecalPassFix, g_decalScenePsReg);
+    g_decalPassPrimType = GetPrivateProfileIntA("Render", "DecalPassPrimType", 5, path);
+    g_decalPassPrimCount = GetPrivateProfileIntA("Render", "DecalPassPrimCount", 2, path);
+    if (g_decalPassPrimType < 1 || g_decalPassPrimType > 6) g_decalPassPrimType = 5;
+    if (g_decalPassPrimCount < 1 || g_decalPassPrimCount > 16) g_decalPassPrimCount = 2;
+    g_decalPassPsRemap = GetPrivateProfileIntA("Render", "DecalPassPsRemap", 1, path) ? 1 : 0;
+    g_decalPassViewportSplit =
+        GetPrivateProfileIntA("Render", "DecalPassViewportSplit", 1, path) ? 1 : 0;
+    g_decalPassAutoSplitColour =
+        GetPrivateProfileIntA("Render", "DecalPassAutoSplitColour", 1, path) ? 1 : 0;
+    if (g_stereoDecalPassFix && g_decalPassAutoSplitColour && !g_splitColourOnly) {
+        g_splitColourOnly = 1;
+        Log("ini: StereoDecalPassFix=1 -> SplitColourTargetsOnly=1 (G16R16 excluded from scene split)");
+    }
+    Log("ini: StereoDecalPassFix=%d DecalScenePsReg=%d DecalPass type=%d count=%d psRemap=%d vpSplit=%d autoSplitColour=%d",
+        g_stereoDecalPassFix, g_decalScenePsReg, g_decalPassPrimType, g_decalPassPrimCount,
+        g_decalPassPsRemap, g_decalPassViewportSplit, g_decalPassAutoSplitColour);
     // Fix-E/shadows round 4: 0 = full split (measure only), 1 = mono sample, 2 = drop.
     // ShadowMode=3: protect light-space (generation native-once, light slots out
     // of the per-eye remap - see shadow_mode3.h). Supplants ShadowSampleMono
