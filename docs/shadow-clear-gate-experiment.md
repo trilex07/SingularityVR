@@ -146,6 +146,34 @@ cost grows on held controls. Falsifier: native_input_poll remains small while FP
 drops, moving investigation to other game/update or waiting paths. Keep ClearGate
 and Receiver OFF to isolate; inspect existing per240-frame partial profiles.
 
+## Native input polling measurement PID36472 / 4DBF5C9B
+
+Completed3600-frame window, originalPoll3727 calls/116 timed samples; estimated
+native_input_poll11.5214ms/frame, sampled mean11128.809us/call. Partial720/960/
+1200-frame estimates10.3271/13.0245/18.4084ms/frame, versus initial/loading
+480-frame0.0905ms/frame (not a stable gameplay baseline). Native cost localized
+inside originalPoll, not automatically DirectInput exclusively. User confirms
+all test buttons still drop FPS. Released final intervals~90FPS. Game closed;
+accepted DLL9FBA308C, INI61AEC56C, UI5B2EA469 restored/verified.
+
+Further retained ETW stack at58311362us/TID10764 enters cfgmgr32 through DirectInput
+and Steam Overlay under native input dispatch. Actual dinput8_orig matches the
+installed Windows SysWOW64 dinput8 SHA2A746CCF...; not a modified renderer asset.
+Loaded native helper011D2FC0 reads interface pointer01D1FC7C, calls vtable+10h
+with type4, callback011D2180, usernullptr and flags1, then returns. This is the
+DirectInput8 EnumDevices path for attached game controllers. Two static callers
+invoke it conditionally while processing input; neither consumes its return.
+The condition's UE3 field identity/runtime value is NOT established.
+
+Next bounded timing probe exact-fingerprints all29 helper bytes, hooks the proven
+no-argument entry, retains EAX return and original call/callback. Optional sampler
+family native_gamepad_enum quantifies frequency and inclusive cost. No enumeration
+suppression, caching, device disconnect or input filtering implemented yet.
+Hypothesis: enumeration amplification dominates originalPoll under held input.
+Falsifier: enum time/call counts remain small while originalPoll grows. This
+extra native hook is justified by the existing-hook timing and actual stack path;
+fails closed on unsupported loaded code. No guessed UE3 structure offset edit.
+
 ## Evidence, real Steam PID5260 / DLL6D147048
 
 Focused capture 2: 1329 final calls, 322 state-qualified groups, zero overflow,
