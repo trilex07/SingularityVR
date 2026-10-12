@@ -13,6 +13,7 @@ extern volatile LONG g_pauseModeBakes;
 extern volatile LONG g_gamePaused;
 extern volatile LONG g_vfxFrame;
 #include "pause_menu_mode.h"
+#include "pause_canvas_capture.h"
 static uintptr_t g_vrMenuSurface=0;
 static unsigned g_vrMenuFrame=0,g_vrMenuTextureFrame=0;
 static IDirect3DTexture9* g_pauseHeadPoolTex=nullptr;
@@ -135,51 +136,34 @@ void PauseMenuMode2Capture(IDirect3DDevice9* dev) {
             desc.Width, desc.Height, pausehead::kPoolWidth, pausehead::kPoolHeight);
 }
 
-void PauseMenuMode3Bake(IDirect3DDevice9* dev) {
-    if (!dev || !pausemode::BakesBackbuffer((int)Rd(g_pauseMenuMode))) return;
-    if (Rd(g_vrMenuClass) != 3) return;
-    static unsigned bakedFrame = ~0u;
-    const unsigned frame = (unsigned)Rd(g_vfxFrame);
-    if (bakedFrame == frame) return;
-    IDirect3DSurface9* back = nullptr;
-    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) {
+void PauseCanvasRegisterCapture(std::uint64_t token, unsigned bandA, unsigned bandB, unsigned rtW,
+                                unsigned rtH) {
+    (void)bandA;
+    (void)bandB;
+    IDirect3DTexture9* pool = pausecanvas::capture::PoolTexture();
+    if (!pool || !rtW || !rtH) {
         InterlockedExchange(&g_pauseCaptureOk, 0);
         return;
     }
-    D3DSURFACE_DESC desc{};
-    back->GetDesc(&desc);
-    if (desc.Width < 8 || desc.Height < 8 || !EnsurePauseHeadPool(dev)) {
-        back->Release();
+    if (VrMenuStateToken() != token) {
         InterlockedExchange(&g_pauseCaptureOk, 0);
         return;
     }
-    if (FAILED(dev->StretchRect(back, nullptr, g_pauseHeadPoolSurf, nullptr, D3DTEXF_LINEAR))) {
-        back->Release();
-        InterlockedExchange(&g_pauseCaptureOk, 0);
-        static LONG said = 0;
-        if (InterlockedCompareExchange(&said, 1, 0) == 0)
-            Log("pause-mode: mode=3 backbuffer stretch failed %ux%u", desc.Width, desc.Height);
-        return;
+    if (g_vrMenuTexture != pool) {
+        if (g_vrMenuTexture) g_vrMenuTexture->Release();
+        pool->AddRef();
+        g_vrMenuTexture = pool;
     }
-    RECT left{0, 0, (LONG)desc.Width / 2, (LONG)desc.Height};
-    RECT right{(LONG)desc.Width / 2, 0, (LONG)desc.Width, (LONG)desc.Height};
-    const HRESULT l = dev->StretchRect(g_pauseHeadPoolSurf, nullptr, back, &left, D3DTEXF_LINEAR);
-    const HRESULT r = dev->StretchRect(g_pauseHeadPoolSurf, nullptr, back, &right, D3DTEXF_LINEAR);
-    back->Release();
-    if (FAILED(l) || FAILED(r)) {
-        InterlockedExchange(&g_pauseCaptureOk, 0);
-        static LONG saidHalf = 0;
-        if (InterlockedCompareExchange(&saidHalf, 1, 0) == 0)
-            Log("pause-mode: mode=3 half blit failed l=0x%08lX r=0x%08lX", l, r);
-        return;
-    }
-    bakedFrame = frame;
+    g_vrMenuSurface = reinterpret_cast<uintptr_t>(pool);
+    g_vrMenuTextureScore = 0.f;
+    g_vrMenuPanel.canvas.cropU0 = 0.f;
+    g_vrMenuPanel.canvas.cropU1 = 1.f;
+    g_vrMenuPanel.canvas.cropV0 = 0.f;
+    g_vrMenuPanel.canvas.cropV1 = 1.f;
+    g_vrCaptureOwner.Capture(token, g_vrMenuSurface);
+    g_vrMenuTextureFrame = g_vrMenuFrame + 1;
     InterlockedExchange(&g_pauseCaptureOk, 1);
-    InterlockedIncrement(&g_pauseModeBakes);
-    static LONG saidOk = 0;
-    if (InterlockedCompareExchange(&saidOk, 1, 0) == 0)
-        Log("pause-mode: mode=3 src=backbuffer %ux%u present=identical halves (experimental scale)",
-            desc.Width, desc.Height);
+    InterlockedIncrement(&g_vrCounters.pauseMenuCaptured);
 }
 
 static void ReleasePauseHeadPool() {
@@ -187,6 +171,7 @@ static void ReleasePauseHeadPool() {
     if (g_pauseHeadPoolSurf) { g_pauseHeadPoolSurf->Release(); g_pauseHeadPoolSurf=nullptr; }
     if (g_pauseHeadPoolTex) { g_pauseHeadPoolTex->Release(); g_pauseHeadPoolTex=nullptr; }
     g_pauseHeadPoolClearFrame=~0u;
+    pausecanvas::capture::ReleasePool();
 }
 static uipointer::Hit g_vrUiHit;
 static bool g_vrMenuPanelValid=false;
@@ -589,9 +574,12 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     // Mode 0/3 must not keep showing a stale pool from a previous selection.
     const int pauseMode = pausemode::Clamp((int)Rd(g_pauseMenuMode));
     const bool class3 = Rd(g_vrMenuClass) == 3;
-    const bool pauseHead = class3 && pausemode::ShowsHeadCapture(pauseMode) &&
-                           g_pauseHeadPoolTex && g_vrMenuTexture == g_pauseHeadPoolTex &&
-                           Rd(g_pauseCaptureOk);
+    IDirect3DTexture9* const canvasPool = pausecanvas::capture::PoolTexture();
+    const bool pauseHead = class3 && pausemode::ShowsHeadCapture(pauseMode) && Rd(g_pauseCaptureOk) &&
+                           g_vrMenuTexture &&
+                           (pauseMode == pausemode::CanvasCapture
+                                ? (canvasPool && g_vrMenuTexture == canvasPool)
+                                : (g_pauseHeadPoolTex && g_vrMenuTexture == g_pauseHeadPoolTex));
     const bool showCaptured = nativeMenu && g_vrMenuTexture && g_vrMenuPanelValid &&
                               g_vrCaptureOwner.CanProvide(VrMenuStateToken()) &&
                               (!class3 || pauseHead);

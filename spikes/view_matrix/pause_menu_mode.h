@@ -7,7 +7,7 @@ enum : int {
     Legacy = 0,       // one draw into the diegetic scene target
     HeadGfx = 1,      // redirect class-3 ortho batches into the 1280x720 pool
     FullGfxMono = 2,  // stretch the full scene colour target into that pool
-    FullSource = 3,   // scale the whole backbuffer into both SBS halves
+    CanvasCapture = 3, // mirror PauseBackbufferCanvasRoute into full-size pool
     Count = 4
 };
 
@@ -21,7 +21,7 @@ inline const char* ShortName(int mode) {
     switch (Clamp(mode)) {
         case HeadGfx: return "HEAD";
         case FullGfxMono: return "FULLGFX";
-        case FullSource: return "FULLSRC";
+        case CanvasCapture: return "CANVAS";
         default: return "LEGACY";
     }
 }
@@ -30,7 +30,7 @@ inline const char* SourceName(int mode) {
     switch (Clamp(mode)) {
         case HeadGfx: return "class3-ortho-pool-1280x720";
         case FullGfxMono: return "scene-colour-stretch";
-        case FullSource: return "backbuffer-both-halves";
+        case CanvasCapture: return "backbuffer-canvas-pool";
         default: return "diegetic-scene";
     }
 }
@@ -39,16 +39,17 @@ inline const char* PresentName(int mode) {
     switch (Clamp(mode)) {
         case HeadGfx: return "head-plane-if-captured";
         case FullGfxMono: return "head-plane-full-scene";
-        case FullSource: return "identical-sbs-halves";
+        case CanvasCapture: return "head-plane-full-canvas";
         default: return "native-stereo-halves";
     }
 }
 
 inline bool RedirectsOrtho(int mode) { return Clamp(mode) == HeadGfx; }
 inline bool StretchesScene(int mode) { return Clamp(mode) == FullGfxMono; }
-inline bool BakesBackbuffer(int mode) { return Clamp(mode) == FullSource; }
+inline bool BakesBackbuffer(int mode) { (void)mode; return false; }
+inline bool CapturesCanvasBackbuffer(int mode) { return Clamp(mode) == CanvasCapture; }
 inline bool ShowsHeadCapture(int mode) {
     const int m = Clamp(mode);
-    return m == HeadGfx || m == FullGfxMono;
+    return m == HeadGfx || m == FullGfxMono || m == CanvasCapture;
 }
 }  // namespace pausemode

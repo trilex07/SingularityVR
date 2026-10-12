@@ -5533,7 +5533,7 @@ volatile LONG g_vrUiEnabled=1,g_vrUiMenu=0,g_vrUiValid=0,g_vrUiU=500000,g_vrUiV=
 // menu copy stays, so menus remain visible; only our head-locked overlay+laser go away.
 volatile LONG g_vrMenuOverlay=1;
 volatile LONG g_pauseHeadMenu=0; // derived: 1 only while PauseMenuMode==HeadGfx
-volatile LONG g_pauseMenuMode=0; // [Render] PauseMenuMode 0 legacy 1 head 2 full gfx 3 full source
+volatile LONG g_pauseMenuMode=0; // [Render] PauseMenuMode 0 legacy 1 head 2 full gfx 3 canvas capture
 volatile LONG g_pauseCaptureOk=0;
 volatile LONG g_pauseModeRedirects=0;
 volatile LONG g_pauseModeStretches=0;
@@ -5558,7 +5558,6 @@ static void ApplyPauseMenuMode(int mode, const char* why) {
 }
 void PauseMenuMode2NoteSource(IDirect3DDevice9* dev);
 void PauseMenuMode2Capture(IDirect3DDevice9* dev);
-void PauseMenuMode3Bake(IDirect3DDevice9* dev);
 volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=100;
 volatile LONG g_vrMenuDistanceMm=1200;
 volatile LONG g_vrUiEyeCentreU[2]={500000,500000};
@@ -5748,7 +5747,7 @@ static void ReportHotPathSampler() {
     append("present-hook residual estimate=%.4f ms/frame (inclusive stage estimates subtracted)", present-known);
     Log("hotpath sampler complete: %s", report);
 }
-#include "pause_canvas_backbuffer_trace.h"
+#include "pause_canvas_capture.h"
 #include "pause_vr_settings.h"
 #include "pause_menu_head_overlay.h"
 #include "native_ui_input.h"
@@ -8031,7 +8030,7 @@ void PanelAdjust(int row, int dir) {
             int mode = pausemode::Clamp((int)InterlockedCompareExchange(&g_pauseMenuMode, 0, 0));
             mode += dir >= 0 ? 1 : -1;
             if (mode >= pausemode::Count) mode = pausemode::Legacy;
-            if (mode < pausemode::Legacy) mode = pausemode::FullSource;
+            if (mode < pausemode::Legacy) mode = pausemode::CanvasCapture;
             ApplyPauseMenuMode(mode, "vr-settings");
             break;
         }
@@ -10995,9 +10994,6 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     const int64_t diagBridge = g_diagEnabled ? DiagQpc() : 0;
     const bool captureRequested = fs.shouldRender && g_haveEyes && gameDev;
     if (captureRequested) g_menuSubmitDiag.captureAttempts++;
-    if (captureRequested && gameDev &&
-        pausemode::BakesBackbuffer((int)InterlockedCompareExchange(&g_pauseMenuMode, 0, 0)))
-        PauseMenuMode3Bake(gameDev);
     const CopySlot* frame = captureRequested ? CopyBackbufferToD3D11(gameDev) : nullptr;
     if (captureRequested) {
         if (frame) g_menuSubmitDiag.validCaptures++;
@@ -17864,11 +17860,29 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
         const LONG halfW = (LONG)vp.Width / 2;
         HRESULT hrPause = S_OK;
+        const std::uint64_t pauseMenuToken = VrMenuStateToken();
+        const unsigned pauseFrameKey = (unsigned)InterlockedCompareExchange(&g_vfxFrame, 0, 0);
+        const bool pausePanelOpen = InterlockedCompareExchange(&g_panelOpen, 0, 0) != 0;
         if (menuClassNow == 3 && Rd(g_pauseComposeTrace)) {
-            pausecanvas::Record(dev, c, (unsigned)InterlockedCompareExchange(&g_vfxFrame, 0, 0),
-                                VrMenuStateToken(),
-                                InterlockedCompareExchange(&g_panelOpen, 0, 0) != 0,
+            pausecanvas::Record(dev, c, pauseFrameKey, pauseMenuToken, pausePanelOpen,
                                 _ReturnAddress(), stride, primCount, g_textLo, g_textHi);
+        }
+        const bool canvasCaptureActive =
+            menuClassNow == 3 && pausecanvas::capture::ActiveMode() && !pausePanelOpen;
+        const bool suppressNative =
+            canvasCaptureActive && pausecanvas::capture::SuppressNativeDraws(pauseMenuToken);
+        if (canvasCaptureActive) {
+            pausecanvas::capture::MirrorBatch(
+                dev, c,
+                [&] { return draw(); },
+                pauseMenuToken, pauseFrameKey, (unsigned)vp.Width, (unsigned)vp.Height);
+        }
+        if (suppressNative) {
+            dev->SetVertexShaderConstantF(5, c, 4);
+            dev->SetScissorRect(&oldRect);
+            dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
+            g_inHudRemap = false;
+            return hrPause;
         }
         for (int eye = 0; eye < 2; ++eye) {
             float m[16];
@@ -23684,8 +23698,9 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     UpdateSceneModeFrame();
     // VFX host: frame serial for once-per-eye draws + effect aging. Render
     // thread owns all plugin calls (game thread only fills the fire mailbox).
-    pausecanvas::EndFrame((unsigned)InterlockedCompareExchange(&g_vfxFrame, 0, 0),
-                          InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
+    const unsigned vfxFrameKey = (unsigned)InterlockedCompareExchange(&g_vfxFrame, 0, 0);
+    pausecanvas::capture::FinishPresentFrame(vfxFrameKey);
+    pausecanvas::EndFrame(vfxFrameKey, InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
                           (int)InterlockedCompareExchange(&g_vrMenuClass, 0, 0));
     InterlockedIncrement(&g_vfxFrame);
     if (Rd(g_vfxHost)) {
