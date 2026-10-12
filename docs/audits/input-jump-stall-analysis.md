@@ -5,6 +5,9 @@
 **Date:** 2026-10-12  
 **Mandate:** Identify root causes of intermittent controller-input and Jump-related stalls; propose minimal, measurable optimizations with low regression risk. No Steam, no broad rendering changes, no hands/grip system changes.
 
+> **Subsequent revision:** the haptic refresh-interval recommendation in section 7.1 was found to risk breaking 200 ms pulse continuity and has been reassessed in `docs/audits/jump-stall-root-cause.md`. The melee-window log throttle remains valid.
+
+
 ---
 
 ## 1. Executive summary
