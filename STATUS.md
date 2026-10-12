@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+Resumed shadow task: real Steam/OpenXR capture PID5260 on 6D147048... completed
+(1329 calls / 322 groups / 11 clears / overflow0). Accepted3 hashes restored
+and verified after exit. Pixel/shadow fix remains BROKEN, not visually accepted.
+Next default-OFF experiment excludes only offscreen R32F depth clears from
+foreground classification; see `docs/shadow-clear-gate-experiment.md`.
+No new shader constant edits; native Clear and hand/weapon transform code intact.
+
 2026-10-12 shadow session **paused at user's request**. Game closed; guard
 restored accepted DLL 9FBA308C...99C4500 from backup 20261012-204256.
 INI 61AEC56C...FE378B and UI 5B2EA469...673CDE verified unchanged;

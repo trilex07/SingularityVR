@@ -7,7 +7,8 @@ constexpr unsigned kGroups=1024, kDraws=24000, kShaders=192;
 constexpr D3DRENDERSTATETYPE kPipelineStates[]={D3DRS_COLORWRITEENABLE,D3DRS_ZENABLE,
     D3DRS_ZWRITEENABLE,D3DRS_ZFUNC,D3DRS_STENCILENABLE,D3DRS_STENCILFUNC,D3DRS_STENCILREF,
     D3DRS_ALPHABLENDENABLE,D3DRS_SRCBLEND,D3DRS_DESTBLEND,D3DRS_SEPARATEALPHABLENDENABLE,
-    D3DRS_SRCBLENDALPHA,D3DRS_DESTBLENDALPHA};
+    D3DRS_SRCBLENDALPHA,D3DRS_DESTBLENDALPHA,D3DRS_BLENDOP,D3DRS_BLENDOPALPHA};
+constexpr unsigned kPipelineCount=sizeof(kPipelineStates)/sizeof(kPipelineStates[0]);
 struct Key {
     IDirect3DVertexShader9* vs=nullptr;
     IDirect3DPixelShader9* ps=nullptr;
@@ -15,7 +16,7 @@ struct Key {
     IDirect3DBaseTexture9* tex[8]{};
     RECT sc{};
     unsigned phase=0,moved=0;
-    DWORD pipeline[13]{};
+    DWORD pipeline[kPipelineCount]{};
     bool pipelineValid=false;
 };
 struct Group {
@@ -34,20 +35,22 @@ static Group groups[kGroups];
 static unsigned count=0,draws=0,overflow=0,sequence=0,tailReads=0;
 static bool active=false;
 static bool pending=false;
-struct Copy { IDirect3DSurface9* src=nullptr;IDirect3DSurface9* dst=nullptr;unsigned draw=0;
+struct DrawEvent {unsigned op=0,group=~0u,fgCount=0;};
+static DrawEvent events[kDraws];static unsigned operations=0;
+struct Copy { IDirect3DSurface9* src=nullptr;IDirect3DSurface9* dst=nullptr;unsigned draw=0,op=0;
     RECT from{},to{};bool fromRect=false,toRect=false;D3DTEXTUREFILTERTYPE filter{};HRESULT hr=E_FAIL; };
-struct Clear { IDirect3DSurface9* rt=nullptr;IDirect3DSurface9* depth=nullptr;unsigned draw=0;
+struct Clear { IDirect3DSurface9* rt=nullptr;IDirect3DSurface9* depth=nullptr;unsigned draw=0,op=0;
     DWORD rects=0,flags=0,colour=0,stencil=0;float z=0;HRESULT hr=E_FAIL; };
 static Copy copies[128];static Clear clears[32];static unsigned copyCount=0,clearCount=0;
 inline void NoteCopy(IDirect3DSurface9* src,const RECT* from,IDirect3DSurface9* dst,const RECT* to,D3DTEXTUREFILTERTYPE filter,HRESULT hr) {
     if(!active)return;if(copyCount==128){++overflow;return;}
-    auto& c=copies[copyCount++];c={};c.src=src;c.dst=dst;c.draw=draws;c.hr=hr;c.filter=filter;
+    auto& c=copies[copyCount++];c={};c.op=++operations;c.src=src;c.dst=dst;c.draw=draws;c.hr=hr;c.filter=filter;
     if(src)src->AddRef();if(dst)dst->AddRef();
     if(from){c.from=*from;c.fromRect=true;}if(to){c.to=*to;c.toRect=true;}
 }
 inline void NoteClear(IDirect3DDevice9* dev,DWORD rects,DWORD flags,DWORD colour,float z,DWORD stencil,HRESULT hr) {
     if(!active)return;if(clearCount==32){++overflow;return;}
-    auto& c=clears[clearCount++];c={};c.rt=bound.rt;if(c.rt)c.rt->AddRef();
+    auto& c=clears[clearCount++];c={};c.op=++operations;c.rt=bound.rt;if(c.rt)c.rt->AddRef();
     dev->GetDepthStencilSurface(&c.depth);c.draw=draws;c.rects=rects;c.flags=flags;c.colour=colour;c.z=z;c.stencil=stencil;c.hr=hr;
 }
 inline void Release() {
@@ -61,16 +64,17 @@ inline void Release() {
         if(g.vb)g.vb->Release();if(g.ib)g.ib->Release();
         for(auto t:g.key.tex)if(t)t->Release();
     }
-    count=draws=overflow=tailReads=0;active=false;
+    count=draws=overflow=tailReads=operations=0;active=false;
 }
-inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned prims,unsigned phase,unsigned moved=0) {
+inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned prims,unsigned phase,unsigned moved=0,unsigned fgCount=0) {
     if(!active || draws>=kDraws) { if(active)++overflow; return -1; }
     ++draws;
+    events[draws-1]={++operations,~0u,fgCount};
     Key key=bound; // Shader/resource identities tracked at successful setters.
     key.phase=phase;
     key.moved=moved;
     key.pipelineValid=true;
-    for(unsigned r=0;r<13;++r)if(FAILED(dev->GetRenderState(kPipelineStates[r],&key.pipeline[r]))) {
+    for(unsigned r=0;r<kPipelineCount;++r)if(FAILED(dev->GetRenderState(kPipelineStates[r],&key.pipeline[r]))) {
         key.pipeline[r]=~0u;key.pipelineValid=false;
     }
     if(FAILED(dev->GetScissorRect(&key.sc))) { ++overflow;return -1; }
@@ -87,6 +91,7 @@ inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned pr
         g.psRead=dev->GetPixelShaderConstantF(0,&g.psConstants[0][0],32);
     }
     auto& g=groups[i];++g.count;g.last=draws;
+    events[draws-1].group=i;
     // First and last volume draws can have different matrix semantics despite
     // identical COM state. Read only these small repeated volumes, <=128/frame.
     if(g.count>1 && verts==8 && prims==12 && tailReads<128) {
@@ -116,16 +121,17 @@ inline void WriteShader(FILE* f,IUnknown* shader,bool pixel) {
 inline void Dump(const char* path) {
     FILE* f=nullptr;if(fopen_s(&f,path,"wb")||!f)return;
     fprintf(f,"shadow-pass-trace-v1 draws=%u groups=%u overflow=%u\n",draws,count,overflow);
+    for(unsigned i=0;i<draws;++i)fprintf(f,"event op=%u draw=%u group=%u fgCount=%u\n",events[i].op,i+1,events[i].group,events[i].fgCount);
     for(unsigned i=0;i<copyCount;++i){const auto& c=copies[i];IDirect3DTexture9* src=nullptr;IDirect3DTexture9* dst=nullptr;
         if(c.src)c.src->GetContainer(__uuidof(IDirect3DTexture9),(void**)&src);
         if(c.dst)c.dst->GetContainer(__uuidof(IDirect3DTexture9),(void**)&dst);
-        fprintf(f,"copy index=%u afterDraw=%u src=%p srcOwner=%p dst=%p dstOwner=%p filter=%u hr=%08lX fromRect=%u from=%ld,%ld,%ld,%ld toRect=%u to=%ld,%ld,%ld,%ld\n",
-            i,c.draw,c.src,src,c.dst,dst,(unsigned)c.filter,c.hr,c.fromRect?1:0,c.from.left,c.from.top,c.from.right,c.from.bottom,
+        fprintf(f,"copy index=%u op=%u afterDraw=%u src=%p srcOwner=%p dst=%p dstOwner=%p filter=%u hr=%08lX fromRect=%u from=%ld,%ld,%ld,%ld toRect=%u to=%ld,%ld,%ld,%ld\n",
+            i,c.op,c.draw,c.src,src,c.dst,dst,(unsigned)c.filter,c.hr,c.fromRect?1:0,c.from.left,c.from.top,c.from.right,c.from.bottom,
             c.toRect?1:0,c.to.left,c.to.top,c.to.right,c.to.bottom);
         if(src)src->Release();if(dst)dst->Release();
     }
-    for(unsigned i=0;i<clearCount;++i){const auto& c=clears[i];fprintf(f,"clear index=%u afterDraw=%u RT=%p depth=%p rects=%lu flags=%lu colour=%08lX z=%.9g stencil=%lu hr=%08lX\n",
-        i,c.draw,c.rt,c.depth,c.rects,c.flags,c.colour,c.z,c.stencil,c.hr);}
+    for(unsigned i=0;i<clearCount;++i){const auto& c=clears[i];fprintf(f,"clear index=%u op=%u afterDraw=%u RT=%p depth=%p rects=%lu flags=%lu colour=%08lX z=%.9g stencil=%lu hr=%08lX\n",
+        i,c.op,c.draw,c.rt,c.depth,c.rects,c.flags,c.colour,c.z,c.stencil,c.hr);}
     IUnknown* shaders[kShaders]{};unsigned sn=0;
     for(unsigned i=0;i<count;++i) {
         const auto& g=groups[i]; D3DSURFACE_DESC d{};if(g.key.rt)g.key.rt->GetDesc(&d);
@@ -137,10 +143,10 @@ inline void Dump(const char* path) {
             g.key.sc.left,g.key.sc.top,g.key.sc.right,g.key.sc.bottom,g.vsRead,g.psRead);
         if(owner)owner->Release();
         fprintf(f,"geometry group=%u phase=%u moved=%u VB=%p offset=%u stride=%u IB=%p\n",i,g.key.phase,g.key.moved,g.vb,g.offset,g.stride,g.ib);
-        fprintf(f,"pipeline group=%u valid=%u colorWrite=%lu zEnable=%lu zWrite=%lu zFunc=%lu stencil=%lu stencilFunc=%lu stencilRef=%lu blend=%lu srcBlend=%lu dstBlend=%lu separateAlpha=%lu srcAlpha=%lu dstAlpha=%lu\n",
+        fprintf(f,"pipeline group=%u valid=%u colorWrite=%lu zEnable=%lu zWrite=%lu zFunc=%lu stencil=%lu stencilFunc=%lu stencilRef=%lu blend=%lu srcBlend=%lu dstBlend=%lu separateAlpha=%lu srcAlpha=%lu dstAlpha=%lu rgbOp=%lu alphaOp=%lu\n",
             i,g.key.pipelineValid?1:0,g.key.pipeline[0],g.key.pipeline[1],g.key.pipeline[2],g.key.pipeline[3],
             g.key.pipeline[4],g.key.pipeline[5],g.key.pipeline[6],g.key.pipeline[7],g.key.pipeline[8],
-            g.key.pipeline[9],g.key.pipeline[10],g.key.pipeline[11],g.key.pipeline[12]);
+            g.key.pipeline[9],g.key.pipeline[10],g.key.pipeline[11],g.key.pipeline[12],g.key.pipeline[13],g.key.pipeline[14]);
         if(g.tail) {
             fprintf(f,"tail group=%u draw=%u vsRead=%08lX psRead=%08lX\n",i,g.last,g.tailVSRead,g.tailPSRead);
             for(unsigned r=0;r<15;++r)fprintf(f,"tailconstant group=%u reg=%u VS=%.9g,%.9g,%.9g,%.9g PS=%.9g,%.9g,%.9g,%.9g\n",

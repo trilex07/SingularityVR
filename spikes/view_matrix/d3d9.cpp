@@ -4360,6 +4360,7 @@ inline void InvalidateCamMats() {
 struct ShaderLayoutEntry { IDirect3DVertexShader9* shader; skeletal::Layout layout; };
 #include "shadow_pass_trace.h"
 #include "shadow_receiver_fix.h"
+#include "shadow_clear_gate.h"
 ShaderLayoutEntry g_shaderLayouts[1024]{};
 unsigned g_shaderLayoutNext=0;
 skeletal::Layout g_boundShaderLayout;
@@ -11643,24 +11644,25 @@ static PFN_DrawPrimUP shadowNativeUP=nullptr;
 static PFN_DrawIndexedPrimUP shadowNativeIndexedUP=nullptr;
 extern volatile LONG g_inForeground;
 extern int g_thisDrawMoved;
+extern volatile LONG g_fgDrawCount;
 static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT first,UINT prims) {
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,0,prims);
-    const int id=shadowtrace::Before(dev,(unsigned)t,0,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved);
+    const int id=shadowtrace::Before(dev,(unsigned)t,0,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
     const HRESULT hr=shadowNativePrim(dev,t,first,prims);shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,INT base,UINT min,UINT verts,UINT start,UINT prims) {
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
-    const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved);
+    const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
     const HRESULT hr=shadowNativeIndexed(dev,t,base,min,verts,start,prims);shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT prims,const void* data,UINT stride) {
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,0,prims);
-    const int id=shadowtrace::Before(dev,(unsigned)t,0,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved);
+    const int id=shadowtrace::Before(dev,(unsigned)t,0,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
     const HRESULT hr=shadowNativeUP(dev,t,prims,data,stride);shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexedUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT min,UINT verts,UINT prims,const void* indices,D3DFORMAT format,const void* data,UINT stride) {
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
-    const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved);
+    const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
     const HRESULT hr=shadowNativeIndexedUP(dev,t,min,verts,prims,indices,format,data,stride);shadowtrace::After(id,hr);return hr;
 }
 typedef HRESULT (STDMETHODCALLTYPE *ShadowSetPS)(IDirect3DDevice9*,IDirect3DPixelShader9*);
@@ -16458,7 +16460,9 @@ HRESULT STDMETHODCALLTYPE Hook_Clear(IDirect3DDevice9* dev, DWORD count, const D
     // The late depth clear opens the first-person pass. Draw 50 is well past the scene setup
     // clear at draw 0 and far short of the ~1088 where the real boundary sits, so it separates
     // them without assuming this frame's draw total.
-    if ((flags & D3DCLEAR_ZBUFFER) && InterlockedCompareExchange(&g_frameDrawIdx, 0, 0) > 50)
+    const bool measuredShadowTarget=shadowcleargate::Enabled() && !Rd(g_rtIsScene) &&
+        g_rtCurrent>=0 && g_rtCurrent<16 && g_rtSeen[g_rtCurrent].fmt==D3DFMT_R32F;
+    if (shadowcleargate::OpenForeground(flags,Rd(g_frameDrawIdx),measuredShadowTarget))
         InterlockedExchange(&g_inForeground, 1);
     return g_origClear(dev, count, rects, flags, colour, z, stencil);
 }
@@ -23674,6 +23678,7 @@ static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
 
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
     shadowfix::Poll(g_logPath);
+    shadowcleargate::Poll(g_logPath);
     const bool shadowTraceReady=g_playerPawn && VrModeOn() && Rd(g_vrMenuClass)==0 &&
         g_xrSessionState==XR_SESSION_STATE_FOCUSED && g_handPoseValid[0] && g_handPoseValid[1] &&
         g_handPositionValid[0] && g_handPositionValid[1];
