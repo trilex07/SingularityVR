@@ -49,7 +49,7 @@ From in-game pause (`PauseMenuDiag=1`, class 3):
 
 **Blocker for fix:** Confirm whether Objectives column is already SBS-encoded in the offscreen RT before stereo scene submit, vs lost at XR half-rect submit. No viewport/c5/scissor experiments until that stage is proven.
 
-**Candidate direction (not implemented):** Present full pause UI as one mono surface on both eyes via existing head-plane HUD path — requires evidence + input dependency review.
+**Fix (implemented on `fix/pause-menu-stereo`):** `[Render] PauseHeadMenu=1` (default on) redirects class-3 orthographic GFx batches from the scene-sized diegetic target into a pooled **1280×720** RT, then reuses the existing captured-menu provider (`CaptureVrMenuTarget` + `DrawVrMenuPointer` head-plane quad + suppression). See `docs/audits/pause-menu-head-overlay.md`. L3 log markers: `PauseHeadMenu: pooled GFx target`, `VR menu sink: private GFx candidate 1280x720`, `pauseMenuProvided` counter — **PSVR2 confirms full pause UI in both eyes**.
 
 ## P4 — Hands
 

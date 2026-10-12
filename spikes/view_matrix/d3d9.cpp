@@ -27202,7 +27202,7 @@ void LoadIniSettings() {
     g_independentHands = GetPrivateProfileIntA("Render", "IndependentHandsPrototype", 0, path) ? 1 : 0;
     g_vrUiEnabled=GetPrivateProfileIntA("Input","VrMenuPointer",1,path)?1:0;
     g_vrMenuOverlay=GetPrivateProfileIntA("Render","MenuOverlay",1,path)?1:0;
-    g_pauseHeadMenu=GetPrivateProfileIntA("Render","PauseHeadMenu",0,path)?1:0;
+    g_pauseHeadMenu=GetPrivateProfileIntA("Render","PauseHeadMenu",1,path)?1:0;
     Log("ini: PauseHeadMenu=%ld (class-3 GFx ortho -> pooled %ux%u for head overlay; 0=legacy diegetic monitor)",
         Rd(g_pauseHeadMenu), pausehead::kPoolWidth, pausehead::kPoolHeight);
     g_hideFpInMenu=GetPrivateProfileIntA("Render","HideFpInMenu",1,path)?1:0;
