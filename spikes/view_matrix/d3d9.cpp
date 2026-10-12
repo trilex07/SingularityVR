@@ -14885,15 +14885,29 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     const long supportGunVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
     bool weaponDeltaUsed = false;
     bool paletteFallback = false;
+    bool authoredPair = false;
     float base[4][4]{};
     if(g_thisDrawMoved)memcpy(base,g_thisDrawMoved==2?off:primary,sizeof(base));
     else for(int i=0;i<4;++i)base[i][i]=1.0f;
     const float (*leftTarget)[4] = off;
     if (supportGrip) {
-        BuildGunC(weaponC);
-        if (ApplySupportGripTarget(offWeapon, weaponC, supportGunVerts)) {
-            leftTarget = offWeapon;
-            weaponDeltaUsed = true;
+        const SupportGripSpec spec = SupportGripFor(supportGunVerts);
+        if (spec.mode == SupportGripMode::AuthoredPair) {
+            // Same rigid delta as the aim hand. The live palette already contains the
+            // pistol's two-hand relationship; retargeting only the left wrist to BuildGunC
+            // (or to l_hand_IK, which matches the rest pose) parks the glove beside the gun.
+            leftTarget = primary;
+            authoredPair = true;
+            static LONG saidAuthored = 0;
+            if (InterlockedCompareExchange(&saidAuthored, 1, 0) == 0)
+                Log("support grip pose: authored-pair gun=%ld leftDelta=primary"
+                    " (bind l_hand_IK is rest, not a grip point)", supportGunVerts);
+        } else {
+            BuildGunC(weaponC);
+            if (ApplySupportGripTarget(offWeapon, weaponC, supportGunVerts)) {
+                leftTarget = offWeapon;
+                weaponDeltaUsed = true;
+            }
         }
     }
     memcpy(changed,saved,regs*4*sizeof(float));
@@ -14991,7 +15005,9 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // wrist subtree and the left shoulder/elbow/forearm so the arm sits further
     // left than the native gun-hold, while the right hand stays on its controller.
     const float leftShift = (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
-    if (leftShift != 0.0f) {
+    // Idle shift parks the free left glove off the native gun-hold. During an authored
+    // pistol grip that same nudge is what puts the support hand beside the weapon.
+    if (leftShift != 0.0f && !authoredPair) {
         for (int b = 0; b < slots; ++b) {
             const unsigned bone = sectionMap[b];
             const char* boneName = bone < 89 ? refs[bone].name : nullptr;

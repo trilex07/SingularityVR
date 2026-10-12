@@ -8,9 +8,10 @@
 enum class SupportGripMode { AuthoredPair, ForeEnd };
 struct SupportGripSpec { long verts, fwd, right, up; SupportGripMode mode; };
 static const SupportGripSpec kSupportGripSpecs[] = {
-    // The shipped pistol pose already contains an authored two-hand relationship. Applying the
-    // primary rigid delta to both weighted regions preserves that relationship exactly; an added
-    // universal offset was what put the support hand below the pistol in the headset.
+    // Pistol: the shipped pose already holds the two-hand relationship in the GPU palette.
+    // Callers must feed this spec the SAME rigid transform as the aim hand. A separate
+    // gun-origin target (or l_hand_IK, which is the rest pose, not a grip point) slides the
+    // left glove off that pose. Offsets below are only for ForeEnd weapons.
     { 5799,  0,  0,  0, SupportGripMode::AuthoredPair },
     { 8297, 24, -5, -2, SupportGripMode::ForeEnd }, // shotgun fore-end
     {11387, 32, -5, -2, SupportGripMode::ForeEnd }, // assault-rifle fore-end

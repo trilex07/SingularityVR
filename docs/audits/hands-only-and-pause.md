@@ -1,6 +1,19 @@
 # Hands-only gloves and pause-menu text
 
-Status: IMPLEMENTED_NOT_VERIFIED after PSVR2 re-test candidate. L1 covers rigid-glove policy, diegetic menu composition, and clip math. L2 build/tests pass on the branch. L3 smoke (Steam, no restore) and L4 headset are separate gates.
+Status: pistol support grip uses the authored palette pair (same aim-hand rigid delta). Pause composition stage is identified from the `318b1fd` log; no new HUD remap in this change. L4 is the user's PSVR2 check.
+
+## PSVR2 on `318b1fd` (2026-10-12)
+
+- **Left grip:** glove stays visible, but sits **beside** the pistol.
+- **Pause:** still split across eyes. No visual change.
+
+**Support-grip cause:** `PrepareIndependentLeft` set the left target to `BuildGunC` while the right target stayed the live aim controller. That is not `AuthoredPair`. `AuthoredPair` (pistol 5799) means both weighted regions take the **same** aim-hand rigid delta, so the GPU palette keeps the shipped two-hand relationship. `l_hand_IK` in `singularity_bind_reference.h` reconstructs to the **rest** left wrist (component position matches `l_arm_wrist`, ~98 UU from `r_arm_wrist`). It is not a weapon grip point and is not applied. `GloveLeftShift` is also skipped while the authored latch is held; that shift exists to park the free left glove off the native gun-hold.
+
+**Pause stage (log `view_matrix.log`, attach 2026-10-12 11:32:54, class 3):**
+
+- Offscreen diegetic target: `compose=0`, `canvasOrtho=0`, `5264x2684`, `c5 sx=1 ty=0` — **one full-width GFx draw** into the scene-sized RT (771 lines). This is the stage that leaves left and right menu columns in one texture for stereo eyes to sample differently.
+- Backbuffer canvas: `compose=1`, `canvasOrtho=1`, same `5264x2684` (per-eye scissor + `c5` remap). This path already tries to duplicate; it is not the offscreen failure.
+- `PauseMenuDiag` was 0, so `pause-evidence *` lines were not emitted. Next launch sets `PauseMenuDiag=1`. No viewport/scissor/c5 change until that column sample is in.
 
 ## PSVR2 on `0eb22a6` / `2B896A7A…` (2026-10-12)
 

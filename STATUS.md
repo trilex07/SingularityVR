@@ -1,11 +1,13 @@
 # STATUS — session handoff
 
 Last updated **2026-10-12**. Left glove idle: **PHYSICALLY_VERIFIED** (`010eb45`).
-PSVR2 on `0eb22a6`: support grip made left glove **vanish** (wrist snap mixed
-world into palette — removed); pause still **FAIL**. Support grip uses weapon
-`LocalDeltaPair` + controller fallback; **no new pause HUD fix** until
-`PauseMenuDiag=1` evidence (`pause-evidence *` log lines). See
-`docs/audits/hands-only-and-pause.md`.
+PSVR2 on `318b1fd`: support grip no longer hides the left glove, but it sat
+**beside** the pistol because the left target was `BuildGunC` while the right
+target stayed the aim controller. Pistol latch now uses `AuthoredPair`: both
+regions take the aim-hand rigid delta, and `GloveLeftShift` is not applied
+while that latch is held. `l_hand_IK` is the rest pose, not a grip point.
+Pause: offscreen class 3 is still `compose=0` (one full-width scene RT draw);
+no new HUD remap. See `docs/audits/hands-only-and-pause.md`.
 
 **Steam install (MAIN):** `4F85BEAAFC7033287B900A1750203375FDEE64E9FA817EDA2E9CB6F8EA2BECBE`
 (build after `94b47e8` + compile fix), backup `20261012-113123`, INI preserved.
