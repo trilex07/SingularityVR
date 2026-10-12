@@ -77,11 +77,18 @@ int main() {
     Expect(!pausemenuspace::DiegeticMenuCanvas(canvas, 1280, 5264),
            "small monitor RT keeps single draw");
 
-    Expect(pausemenuspace::PauseMenuOffscreenSbs(3, 5264, 5264),
-           "in-game pause on scene-sized RT uses half-viewport compose");
-    Expect(!pausemenuspace::PauseMenuOffscreenSbs(2, 5264, 5264),
-           "main menu keeps the canvas path only when ortho matches");
-    Expect(!pausemenuspace::PauseMenuOffscreenSbs(3, 512, 5264),
-           "sub-rect monitor RT is not full SBS pause compose");
+    float bbCanvas[16];
+    MeasuredFont(bbCanvas);
+    Expect(pausemenuspace::PauseBackbufferCanvasRoute(3, true, bbCanvas),
+           "in-game pause canvas ortho on backbuffer uses per-eye copy");
+    Expect(!pausemenuspace::PauseBackbufferCanvasRoute(3, false, bbCanvas),
+           "offscreen pause canvas is not the backbuffer route");
+
+    Expect(pausemenuspace::PauseOffscreenMonoStage(3, 5264, 5264),
+           "in-game pause on scene-sized RT uses mono stage viewport");
+    Expect(!pausemenuspace::PauseOffscreenMonoStage(2, 5264, 5264),
+           "main menu does not take pause mono stage");
+    Expect(!pausemenuspace::PauseOffscreenMonoStage(3, 512, 5264),
+           "sub-rect monitor RT is not pause mono stage");
     return g_fails == 0 ? 0 : 1;
 }
