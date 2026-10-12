@@ -235,6 +235,29 @@ suppression or action/menu regression. Hotplug/callback latency may increase to
 2s; this is diagnostic only, not a production fix. No background DirectInput
 thread, guessed UE3 field edit, button filtering or shader/pose changes.
 
+## Input 2000ms runtime PID38864 / F1AB2981
+
+Commit9f1e67e x86PE32 /O2, both shadow flagsOFF, exact installedSHA and backup
+verified before Steam. INPUT_ENUM_THROTTLE enabled1/2000ms; native helper
+hookcreate/enable0/0; OpenXR ready. Held-input counters alternate0/1 native
+scan per one-second report with deferred calls. 3600-frame window completes:
+17 actual scans/all17 timed, mean76119.412us, amortized0.3595ms/frame in THIS
+window. Not a matched ratio to earlier loading/menu/mixed-condition windows.
+Sampled parentpoll estimate0.0806ms/frame misses rare expensive child calls:
+do not claim parent cost is lower than actual included scan cost.
+
+R2 held endpoints show11.127–11.764ms/frame; L2 endpoint11.585ms. User reports
+"tak działa, spadek jest do85fps", confirming physical partial benefit and
+tested actions/stereo/tracking remain working. No full90FPS fix, no hotplug or
+pause/resume lifecycle acceptance. Actual scanning remains~76ms and blocking.
+Next investigate callback/device-list side effects and cache invalidation;
+increasing interval indefinitely or moving callback threading is not a proven
+production solution. Private log runtime-38864-input-throttle-2s-final.log.
+
+After game exit guard235632 removed owned flag and restored acceptedDLL9FBA308C.
+MAIN separately verified DLL9FBA308C / UI5B2EA469 / preservedINI568E2BB5.
+CurrentINI backup input-2s-ini-20261012-235632-173.ini is hash-verified.
+
 ## Evidence, real Steam PID5260 / DLL6D147048
 
 Focused capture 2: 1329 final calls, 322 state-qualified groups, zero overflow,
