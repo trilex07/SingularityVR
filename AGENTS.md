@@ -39,3 +39,144 @@ These rules apply to all work in this repository and override generic skill defa
 - Repo-local Codex/OpenCode skills live under `.agents/skills/<name>/SKILL.md`; keep their required `name` and `description` front matter and preserve source licenses. See `docs/AGENT_SKILLS_MANIFEST.md` for the workflow index. (`docs/AGENT_SKILLS.md` does not exist; the manifest is the index.)
 - Prefer fixes for P0 lifecycle/performance, P1 stereo/render correctness, P2 hands/weapons, and P3 contextual interaction before optional polish.
 - Protect the user's existing working tree. Make focused changes and report exact evidence and remaining limits.
+
+
+# Singularity VR — Evidence-Driven Debugging & Reverse Engineering Policy
+
+This policy applies to ALL MAIN and SIDE agents working on difficult, repeatedly unresolved technical problems.
+
+## Escalation Rule
+
+After two unsuccessful implementations, or when previous research repeatedly fails to explain the observed behavior, STOP speculative patching.
+
+Switch to evidence-driven reverse engineering.
+
+Do not keep changing shader constants, offsets, rendering routes or engine behavior without identifying the actual producer and mechanism.
+
+## Required Workflow
+
+### 1. Observe the actual game behavior
+
+Identify what the game really does, not what you expect it to do.
+
+Use appropriate techniques:
+- Targeted D3D9/OpenXR instrumentation.
+- UE3 UObject/class/property reflection.
+- Shader, texture and render-target tracking.
+- Input and frame-timing traces.
+- Native assembly/disassembly and Ghidra.
+- Scaleform/GFx asset extraction and ActionScript analysis.
+- Controlled binary and memory inspection.
+- Comparisons against real working VR mods.
+
+Prefer observation through existing hooks over installing new invasive hooks.
+
+### 2. Prove the relevant execution path
+
+Identify the responsible function, shader, render target, resource, matrix, input handler or engine object.
+
+Record actual runtime evidence:
+- Object and resource identity.
+- Relevant state changes.
+- Call timing and ordering.
+- Data written and consumed.
+- Reproducible behavior.
+- Evidence that distinguishes the candidate cause from unrelated operations.
+
+A counter increment, object name, successful compilation or valid pointer is not automatically proof of correct behavior.
+
+### 3. Form a falsifiable hypothesis
+
+Before modifying code, state:
+
+- What exact mechanism is believed to be broken?
+- What evidence supports it?
+- What observation would disprove it?
+- What is the smallest test capable of distinguishing the possibilities?
+
+Do not guess shader registers, UE3 offsets or GFx variable paths.
+
+### 4. Implement the smallest controlled experiment
+
+Prefer:
+- Read-only probes.
+- Bounded diagnostic logs.
+- Captured resource identities.
+- Pixel/alpha readback where relevant.
+- Small offline reproductions.
+- Isolated default-OFF experimental features.
+
+Preserve D3D9 state, COM lifetime and threading semantics. Never allow diagnostic code itself to corrupt the rendering pipeline.
+
+### 5. Test, analyze and iterate
+
+Use:
+
+OBSERVE → HYPOTHESIZE → INSTRUMENT → MEASURE → IMPLEMENT → TEST → REFINE.
+
+Do not stop after rollback or after producing another report.
+
+If an experiment fails, use its actual evidence to determine the next justified experiment.
+
+Do not repeat disproven approaches without new supporting evidence.
+
+### 6. Distinguish evidence levels
+
+Always distinguish:
+
+- Offline structural PASS.
+- Compile/test PASS.
+- Real Steam runtime PASS.
+- OpenXR session confirmed.
+- Pixel/content validation PASS.
+- Physical PSVR2 visual PASS.
+
+Never claim higher-level validation from lower-level evidence.
+
+### 7. Preserve the accepted build
+
+Accepted systems are frozen unless explicitly included in the active task.
+
+Only MAIN may:
+- Deploy into Steam.
+- Modify installed DLL/config/assets.
+- Run controlled Steam integration tests.
+
+SIDE agents use isolated branches/worktrees and perform offline research and tests.
+
+MAIN must back up original files, verify exact hashes and restore the accepted installation after unsuccessful experiments.
+
+Never claim rollback succeeded without verifying the actual restored files.
+
+### 8. Ask for physical VR verification when necessary
+
+If automation cannot verify the required visual behavior, MAIN must prepare a safe candidate and ask the user for a short PSVR2 test.
+
+Do not silently abandon the experiment just because the game window cannot be observed automatically.
+
+Do not repeatedly ask the user to verify unchanged baseline behavior.
+
+### 9. Continue toward a working solution
+
+A failed experiment is a diagnostic result, not task completion.
+
+Continue autonomously while safe, productive experiments remain.
+
+Stop and report a blocker only when further work requires unavailable evidence, a risky or irreversible action, or explicit user authorization.
+
+## Git Rules
+
+Each agent must:
+- Work on a dedicated branch/worktree.
+- Commit meaningful changes.
+- Push completed work.
+- Document key findings without excessive reporting.
+- Never merge into main without authorization.
+
+## Primary Principle
+
+**Understand the system before changing it.**
+
+For difficult bugs, concrete reverse-engineering evidence is more valuable than another speculative patch.
+
+The objective is a working, verified solution — not merely a successfully built candidate or a restored baseline.

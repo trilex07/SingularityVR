@@ -2,14 +2,23 @@
 
 // Game-title text replacement ("Singularity" -> "Singularity VR").
 //
-// The main-menu title is Scaleform/GFx vector text, not a texture: no
-// load/logo/title texture exists in the extracted-texture inventory, and the
-// string "SINGULARITY" lives as a standalone entry in Coalesced_INT.bin next
-// to the RUIDataStore string aliases that feed the GFx movies (SPMain et al
-// in UI_SinglePlayer_SF.xxx). Like the prompt-label rewrite, this header is
-// the pure mapping half: exact-match title strings in, replacement out.
-// MAIN wires the GFx text-set seam and provides runtime evidence of which
-// movie/field renders the title before enabling anything.
+// Provenance (offline forensics, see docs/TITLE_MECHANISM.md):
+// - The menu title is Scaleform/GFx vector text, not a texture: no
+//   load/logo/title texture exists in the extracted-texture inventory.
+// - SPMenus (movie-0000af67.swf, export 2 of UI_SinglePlayer_SF.xxx) holds the
+//   header in DefineEditText char 166 (WFontHeader 60pt, centered), instanced
+//   as "MajorTitle"; AVM1 code formats it via getTextFormat/setTextFormat.
+// - The logo movie (movie-00003634.swf) holds it in DefineEditText char 10
+//   (WFontLogo 80pt, right-aligned) with NO instance name: static only.
+// - A deterministic offline SWF patcher (asset-tools/text-tools/
+//   swf_title_patch.py, tested) rewrites the initial-text bytes of exactly
+//   that tag, repairing tag + file lengths. Proven on copies of both movies.
+//
+// Like the prompt-label rewrite, this header is the pure mapping half:
+// exact-match title strings in, replacement out. The runtime half MUST also
+// scope by movie + field (TitleFieldLookup below): the same text must never
+// be rewritten in an arbitrary UI field. MAIN wires the seam and provides
+// runtime evidence of which movie/field renders before enabling anything.
 //
 // Safety design (deliberate, do not "simplify"):
 // - EXACT whole-field match only. There is deliberately NO substring mode:
@@ -52,6 +61,42 @@ inline const wchar_t* TitleForText(const wchar_t* text) {
     const TitleRule* table = TitleTable(count);
     for (int i = 0; i < count; ++i) {
         if (std::wcscmp(text, table[i].match) == 0)
+            return table[i].replacement;
+    }
+    return nullptr;
+}
+
+struct TitleFieldRule {
+    const wchar_t* movie;        // GFx movie, e.g. L"SPMenus"
+    const wchar_t* field;        // instance name, e.g. L"MajorTitle"
+    const wchar_t* match;        // whole field text must equal this
+    const wchar_t* replacement;
+};
+
+// Proven placements (see docs/TITLE_MECHANISM.md). The logo movie entry is
+// static-only (no instance name exists), so it is NOT here: there is nothing
+// for a runtime hook to address, and listing it would imply otherwise.
+// Only SPMenus/MajorTitle is wired for the runtime route.
+inline const TitleFieldRule* TitleFieldTable(int& count) {
+    static const TitleFieldRule kTable[] = {
+        { L"SPMenus", L"MajorTitle", L"SINGULARITY", L"SINGULARITY VR" },
+    };
+    count = (int)(sizeof(kTable) / sizeof(kTable[0]));
+    return kTable;
+}
+
+// Scoped lookup: same text in any other movie or field is left untouched,
+// even if it exactly equals a title string. This is what stops the rewrite
+// from ever touching an arbitrary UI field that happens to say "Singularity".
+inline const wchar_t* TitleFieldLookup(const wchar_t* movie, const wchar_t* field,
+                                       const wchar_t* text) {
+    if (!movie || !field || !text || !text[0]) return nullptr;
+    int count = 0;
+    const TitleFieldRule* table = TitleFieldTable(count);
+    for (int i = 0; i < count; ++i) {
+        if (std::wcscmp(movie, table[i].movie) == 0 &&
+            std::wcscmp(field, table[i].field) == 0 &&
+            std::wcscmp(text, table[i].match) == 0)
             return table[i].replacement;
     }
     return nullptr;
