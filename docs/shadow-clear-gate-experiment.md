@@ -76,6 +76,38 @@ bounded cumulative partial hook reports every240 frames, with actual elapsed
 frame denominator and explicit progress label. Prearm request before launch to
 cover first gameplay instead of depending on a late log-poll/user notification.
 
+## Full profile PID36504 / 76844456
+
+Prearmed profile completed3600 frames with partial240-frame snapshots retained.
+Physical user confirms L2 worse than R2 and release recovery; additionally Jump,
+Circle, R1 and Square also produce FPS drops. Input-only cause is a hypothesis,
+not a finding. L2 reporting sample17.1FPS; sustained R2 intervals20.304,
+21.909,24.440ms, with RT255 endpoint and latter windows physical min=max1.00.
+Released intervals return~11.12ms. Runtime CPU deltas in those R2 intervals:
+process user+kernel15.494,17.057,14.193ms; Present-thread4.688,4.688,3.906ms.
+These are sums across threads, not a serial frame budget. Mixed first interval
+is not evidence of sustained L2 CPU cost.
+
+Partial sampled inclusive draw-hook estimates~0.83-0.89ms/frame; pose/input~0.19ms,
+submit~0.25ms, no multi-ms classification or palette spike in these aggregates.
+Some stages are nested; don't add their times. Driver/native drawing outside the
+measured scope and unsampled spikes remain possible. Per-thread deltas derived
+from rounded cumulative logs for the two sustained R2 windows put the largest
+reported CPU on TID9610, start Singularity.exe+0x01B542ED (~7.28/6.64ms).
+Thread start address is NOT the hot instruction or function identity.
+
+Game exited normally; DLL9FBA308C and UI5B2EA469 verified. INI changed only
+LaserSight1->0 via in-game persistence; preserve it (new SHA256
+568E2BB5674E88F9C0F24B28A33710866282CE44E5C0C18848B33F6F81FB75B8),
+do not silently overwrite user state. No full3 rollback claim for this session.
+
+Next instrument tools/record-trigger-cpu.ps1 uses available Windows WPR CPU.Verbose
+with a unique named instance, refuses any existing recording, bounded launch
+wait and90-second/process-exit capture. No game hooks, settings, input injection,
+or DLL replacement. ETL is private and system-wide; analysis must filter game PID.
+Needs explicit administrator/UAC authorization: current shell is not elevated.
+Not yet run; no stack-level attribution until samples are captured.
+
 ## Evidence, real Steam PID5260 / DLL6D147048
 
 Focused capture 2: 1329 final calls, 322 state-qualified groups, zero overflow,
