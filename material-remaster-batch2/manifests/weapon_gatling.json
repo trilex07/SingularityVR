@@ -30,7 +30,7 @@
       },
       "deploy_filename": "ar_gatling_gun_d_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/weapon_gatling/ar_gatling_gun_d_2x.dds",
-      "output_sha256": "623aaf13872db36ffa6d05c291c6bbad28c44ba5abb6404510625ac3bdc794cf",
+      "output_sha256": "47d9c076cc2b812d8b4f74327557873be3fcfc49f5454e6d1b45163101930f21",
       "validation": {
         "width": 2048,
         "height": 1024,
@@ -46,19 +46,19 @@
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 6.489,
-        "seam_col_mean_abs": 6.571,
+        "seam_row_mean_abs": 6.116,
+        "seam_col_mean_abs": 6.373,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 4.966,
-          "max_abs_diff": 69,
-          "pct_pixels_changed_over_4": 46.83,
-          "pct_pixels_changed_over_16": 2.119
+          "mean_abs_diff": 4.484,
+          "max_abs_diff": 50,
+          "pct_pixels_changed_over_4": 44.49,
+          "pct_pixels_changed_over_16": 0.574
         },
         "detail_high_frequency_energy": {
           "source": 58.643,
-          "enhanced": 84.111,
-          "ratio": 1.4343
+          "enhanced": 76.449,
+          "ratio": 1.3036
         },
         "status": "VERIFIED"
       }
@@ -87,7 +87,7 @@
       },
       "deploy_filename": "ar_gatling_gun_n_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/weapon_gatling/ar_gatling_gun_n_2x.dds",
-      "output_sha256": "6b1f7d8a8471edf73e62f718cc8fd0c9aada027a98b0d4efdd1a3aa2ebd401d5",
+      "output_sha256": "213055519e5758949b4743ceaa312dbae83f190c5bca571a719b7913219d364a",
       "validation": {
         "width": 2048,
         "height": 1024,
@@ -103,24 +103,24 @@
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 0.693,
-        "seam_col_mean_abs": 0.905,
+        "seam_row_mean_abs": 0.66,
+        "seam_col_mean_abs": 0.802,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 2.8,
+          "mean_abs_diff": 2.752,
           "max_abs_diff": 174,
-          "pct_pixels_changed_over_4": 19.135,
-          "pct_pixels_changed_over_16": 1.781
+          "pct_pixels_changed_over_4": 18.902,
+          "pct_pixels_changed_over_16": 1.752
         },
         "normal_map_check": {
           "alpha_min": 255,
           "alpha_max": 255,
-          "x_mean": 124.742,
-          "y_mean": 127.236,
-          "z_mean": 248.81,
+          "x_mean": 124.666,
+          "y_mean": 127.267,
+          "z_mean": 248.807,
           "unit_length_min": 0.674635,
           "unit_length_max": 1.0587,
-          "pct_outside_0p98_1p02": 11.9506,
+          "pct_outside_0p98_1p02": 11.9009,
           "fourcc": "DXT1"
         },
         "status": "VERIFIED"
@@ -129,8 +129,8 @@
   },
   "newly_authored": [
     "isotropic machining grain, 4 octaves, 10% of local luminance",
-    "174 cross-grain scuffs, 12% of local luminance",
-    "349 procedural scratch strokes, 30% of local luminance (darkening: worn grooves)",
+    "43 cross-grain scuffs, 5% of local luminance",
+    "87 procedural scratch strokes, 10% of local luminance (darkening: worn grooves)",
     "low-frequency grime patches with cool tint, 3 octaves",
     "micro relief from enhanced diffuse high-pass, slope amplitude 0.65",
     "original macro normals preserved and renormalised to unit length",
@@ -165,19 +165,19 @@
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 6.489,
-      "seam_col_mean_abs": 6.571,
+      "seam_row_mean_abs": 6.116,
+      "seam_col_mean_abs": 6.373,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 4.966,
-        "max_abs_diff": 69,
-        "pct_pixels_changed_over_4": 46.83,
-        "pct_pixels_changed_over_16": 2.119
+        "mean_abs_diff": 4.484,
+        "max_abs_diff": 50,
+        "pct_pixels_changed_over_4": 44.49,
+        "pct_pixels_changed_over_16": 0.574
       },
       "detail_high_frequency_energy": {
         "source": 58.643,
-        "enhanced": 84.111,
-        "ratio": 1.4343
+        "enhanced": 76.449,
+        "ratio": 1.3036
       },
       "status": "VERIFIED"
     },
@@ -196,24 +196,24 @@
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 0.693,
-      "seam_col_mean_abs": 0.905,
+      "seam_row_mean_abs": 0.66,
+      "seam_col_mean_abs": 0.802,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 2.8,
+        "mean_abs_diff": 2.752,
         "max_abs_diff": 174,
-        "pct_pixels_changed_over_4": 19.135,
-        "pct_pixels_changed_over_16": 1.781
+        "pct_pixels_changed_over_4": 18.902,
+        "pct_pixels_changed_over_16": 1.752
       },
       "normal_map_check": {
         "alpha_min": 255,
         "alpha_max": 255,
-        "x_mean": 124.742,
-        "y_mean": 127.236,
-        "z_mean": 248.81,
+        "x_mean": 124.666,
+        "y_mean": 127.267,
+        "z_mean": 248.807,
         "unit_length_min": 0.674635,
         "unit_length_max": 1.0587,
-        "pct_outside_0p98_1p02": 11.9506,
+        "pct_outside_0p98_1p02": 11.9009,
         "fourcc": "DXT1"
       },
       "status": "VERIFIED"

@@ -30,7 +30,7 @@
       },
       "deploy_filename": "phasetick_d_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_d_2x.dds",
-      "output_sha256": "59f448e07323f211aaa43689104e46d41d965f0bef6b2bc7a95adf0feac38d87",
+      "output_sha256": "86bb5c12bbb56494767a2839045067b8f14a57a6df7cf48bc82f4f5001c82c7e",
       "validation": {
         "width": 512,
         "height": 512,
@@ -144,7 +144,7 @@
       "substituted": false,
       "exclusion_reason": "specular source is true mip0 but substitution stays diffuse+normal only by uniform policy (changing specular/emissive response without runtime validation risks black-material-class surprises); produced for review only",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_specular_review.dds",
-      "output_sha256": "4ef99eabf21eac29a972d88769e556282f8eb025624b467dded02645d77cd892",
+      "output_sha256": "ec373267b05b85a77bb493557be18403c4cbb86feba3dcd335b1e84997bc7e0d",
       "validation": {
         "width": 512,
         "height": 512,
@@ -190,7 +190,7 @@
       "substituted": false,
       "exclusion_reason": "emissive source is true mip0 but substitution stays diffuse+normal only by uniform policy (changing specular/emissive response without runtime validation risks black-material-class surprises); produced for review only",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_emissive_review.dds",
-      "output_sha256": "b5a583b44cdf04a71937e2367deb81d7e2e3bc9e183fe21120653214e31c9474",
+      "output_sha256": "8da92d436ccb801751307b9677e35dc56b261ca9c43e99513f72351e98903ec8",
       "validation": {
         "width": 512,
         "height": 512,

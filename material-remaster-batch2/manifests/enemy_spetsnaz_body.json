@@ -30,7 +30,7 @@
       },
       "deploy_filename": "Spetsnaz_MP_Body_d_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_body/Spetsnaz_MP_Body_d_2x.dds",
-      "output_sha256": "13ed89aa9248b6ff06c02e38bf17f356499bb1958a389ccbe17bc53f35597c26",
+      "output_sha256": "d43643552791b6e44d979b48bb18de046ed2a99bab18aca6ad3f9ff13e838251",
       "validation": {
         "width": 1024,
         "height": 1024,

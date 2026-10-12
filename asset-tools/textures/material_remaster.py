@@ -262,22 +262,23 @@ def enhance_diffuse_weapon(img: Image.Image) -> tuple[Image.Image, list[str]]:
     notes = []
 
     # fine machining grain (isotropic)
-    n_scratch = max(24, (w * h) // 6000)
+    n_scratch = max(12, (w * h) // 24000)
     grain = (fbm((h, w), 4, 1001, 0.35) - 0.5) * 2.0
     arr2 = blend_detail(arr, grain, 0.14)
     notes.append("isotropic machining grain, 4 octaves, 10% of local luminance")
 
-    # directional scratches
+    # directional scratches - kept sparse and shallow: dense dark strokes read
+    # as black bars rather than wear (review feedback)
     scr = directional_scratches((h, w), count=n_scratch, seed=1002,
                                 angle=0.25, spread=0.3, length=(30, 240))
     # scratches read as worn grooves: darkening only, so the worn look does not
     # lift the mean of the material
-    scr2 = directional_scratches((h, w), count=max(16, n_scratch // 2), seed=1005,
+    scr2 = directional_scratches((h, w), count=max(8, n_scratch // 2), seed=1005,
                                  angle=-0.9, spread=0.5, length=(20, 90))
-    arr2b = blend_detail(arr2, -np.maximum(scr2, 0.0), 0.12)
-    notes.append(f"{max(16, n_scratch // 2)} cross-grain scuffs, 12% of local luminance")
-    arr3 = blend_detail(arr2b, -np.maximum(scr, 0.0), 0.30)
-    notes.append(f"{n_scratch} procedural scratch strokes, 30% of local luminance (darkening: worn grooves)")
+    arr2b = blend_detail(arr2, -np.maximum(scr2, 0.0), 0.05)
+    notes.append(f"{max(8, n_scratch // 2)} cross-grain scuffs, 5% of local luminance")
+    arr3 = blend_detail(arr2b, -np.maximum(scr, 0.0), 0.10)
+    notes.append(f"{n_scratch} procedural scratch strokes, 10% of local luminance (darkening: worn grooves)")
 
     # large-scale dirt/grime patches
     muck = fbm((h, w), 3, 1003, 0.012)
@@ -344,16 +345,17 @@ def enhance_diffuse_env(img: Image.Image) -> tuple[Image.Image, list[str]]:
     notes = []
 
     # rolled-steel streaks along the panel length
-    n_scratch = max(12, (w * h) // 8000)
+    n_scratch = max(8, (w * h) // 16000)
     streak = fbm((h, w), 4, 3001, 0.004)
     arr2 = blend_detail(arr, streak - 0.5, 0.18)
     notes.append("rolled-steel streaks along panel axis, 5% of local luminance")
 
-    # horizontal score lines from handling
+    # horizontal score lines from handling - sparse and shallow; dense dark
+    # strokes read as black bars rather than wear (review feedback)
     scr = directional_scratches((h, w), count=n_scratch, seed=3002,
                                 angle=0.05, spread=0.15, length=(60, 300))
-    arr3 = blend_detail(arr2, -np.maximum(scr, 0.0), 0.28)
-    notes.append(f"{n_scratch} handling score lines, 28% of local luminance (darkening)")
+    arr3 = blend_detail(arr2, -np.maximum(scr, 0.0), 0.12)
+    notes.append(f"{n_scratch} handling score lines, 12% of local luminance (darkening)")
 
     # rust bloom near panel edges
     rust = fbm((h, w), 3, 3003, 0.01)

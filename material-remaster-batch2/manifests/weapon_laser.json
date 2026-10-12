@@ -30,7 +30,7 @@
       },
       "deploy_filename": "laser_d_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/weapon_laser/laser_d_2x.dds",
-      "output_sha256": "454c695f5ae3ba04ee6e51f8d52934b5a632cadea2fce672e7e38622a83ce47b",
+      "output_sha256": "9c259a204c0eea3dd69d1fea5d2b0a0376136fa12fb66a4c13a3edc7e73fa4b7",
       "validation": {
         "width": 256,
         "height": 256,

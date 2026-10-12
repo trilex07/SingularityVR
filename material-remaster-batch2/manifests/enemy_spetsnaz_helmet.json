@@ -30,7 +30,7 @@
       },
       "deploy_filename": "Spetsnaz_MP_helmet_d_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_helmet/Spetsnaz_MP_helmet_d_2x.dds",
-      "output_sha256": "4d89b632fc19a5765bb8d425dc4e026276eccffaa5955cedd8e4914bbb3453b3",
+      "output_sha256": "cef9509ba8c991b473c4d1b462b3a46ded1f7aeccf9467212f1c1e0f6dc8cef4",
       "validation": {
         "width": 1024,
         "height": 1024,

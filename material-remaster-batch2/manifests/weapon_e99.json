@@ -30,7 +30,7 @@
       },
       "deploy_filename": "AR_E99Rifle_alt_d_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/weapon_e99/AR_E99Rifle_alt_d_2x.dds",
-      "output_sha256": "47dad11ee4c0b673048770bb654cbf19f28314964fb88515d2a3cb473ddff802",
+      "output_sha256": "1f07d4d07f61562e2568868a938b0cb57e952d38744009bbcb4975d89408c4b3",
       "validation": {
         "width": 2048,
         "height": 1024,
@@ -46,19 +46,19 @@
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 23.87,
-        "seam_col_mean_abs": 18.63,
+        "seam_row_mean_abs": 23.879,
+        "seam_col_mean_abs": 18.815,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 3.348,
-          "max_abs_diff": 87,
-          "pct_pixels_changed_over_4": 29.483,
-          "pct_pixels_changed_over_16": 2.013
+          "mean_abs_diff": 2.953,
+          "max_abs_diff": 58,
+          "pct_pixels_changed_over_4": 28.348,
+          "pct_pixels_changed_over_16": 0.685
         },
         "detail_high_frequency_energy": {
           "source": 125.909,
-          "enhanced": 147.96,
-          "ratio": 1.1751
+          "enhanced": 143.578,
+          "ratio": 1.1403
         },
         "status": "VERIFIED"
       }
@@ -87,7 +87,7 @@
       },
       "deploy_filename": "AR_E99Rifle_n_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/weapon_e99/AR_E99Rifle_n_2x.dds",
-      "output_sha256": "299787427defd8fdf0400332574993ab88af8c1910f5fce2aaebf3e3798309e4",
+      "output_sha256": "576bbcacc017a92dfc34323e96989c1da19d8e29bc608a2c15cd1d3cecb663c1",
       "validation": {
         "width": 2048,
         "height": 1024,
@@ -103,24 +103,24 @@
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 9.544,
-        "seam_col_mean_abs": 13.112,
+        "seam_row_mean_abs": 9.555,
+        "seam_col_mean_abs": 13.11,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 4.0,
+          "mean_abs_diff": 3.987,
           "max_abs_diff": 191,
-          "pct_pixels_changed_over_4": 29.867,
-          "pct_pixels_changed_over_16": 3.576
+          "pct_pixels_changed_over_4": 29.676,
+          "pct_pixels_changed_over_16": 3.63
         },
         "normal_map_check": {
           "alpha_min": 255,
           "alpha_max": 255,
-          "x_mean": 127.881,
-          "y_mean": 127.244,
-          "z_mean": 240.532,
+          "x_mean": 127.855,
+          "y_mean": 127.242,
+          "z_mean": 240.525,
           "unit_length_min": 0.589163,
           "unit_length_max": 1.060144,
-          "pct_outside_0p98_1p02": 17.5148,
+          "pct_outside_0p98_1p02": 17.495,
           "fourcc": "DXT1"
         },
         "status": "VERIFIED"
@@ -129,8 +129,8 @@
   },
   "newly_authored": [
     "isotropic machining grain, 4 octaves, 10% of local luminance",
-    "174 cross-grain scuffs, 12% of local luminance",
-    "349 procedural scratch strokes, 30% of local luminance (darkening: worn grooves)",
+    "43 cross-grain scuffs, 5% of local luminance",
+    "87 procedural scratch strokes, 10% of local luminance (darkening: worn grooves)",
     "low-frequency grime patches with cool tint, 3 octaves",
     "micro relief from enhanced diffuse high-pass, slope amplitude 0.65",
     "original macro normals preserved and renormalised to unit length",
@@ -154,7 +154,7 @@
     "files": [
       {
         "file": "<assets-local>/material-remaster-batch2/weapon_e99/AR_E99Rifle_alt_diffuse_2X_LANCZOS.dds",
-        "sha256": "5883060b54a1e28acbf8c748cfa1652be7a6c0ec43d069f38cbc5947c83d639b",
+        "sha256": "62b5b91139c579eb8c52e54bf4e5a83930a0c4a53967bc284d463003318a7160",
         "validation": {
           "width": 4096,
           "height": 2048,
@@ -170,13 +170,13 @@
           ],
           "decoded_mode": "RGBA",
           "decoded_channels": 4,
-          "seam_row_mean_abs": 21.109,
-          "seam_col_mean_abs": 18.427
+          "seam_row_mean_abs": 23.592,
+          "seam_col_mean_abs": 18.723
         }
       },
       {
         "file": "<assets-local>/material-remaster-batch2/weapon_e99/AR_E99Rifle_alt_normal_2X_LANCZOS.dds",
-        "sha256": "c37fd19685eed5ea906072128e8beb156bab6cd69af86dd52cd8c81efc81f3fd",
+        "sha256": "ad38f0795fdf93066d5807cc8cc26b7d34d45b1d305e8d30a022c861bab82201",
         "validation": {
           "width": 4096,
           "height": 2048,
@@ -192,8 +192,8 @@
           ],
           "decoded_mode": "RGBA",
           "decoded_channels": 4,
-          "seam_row_mean_abs": 9.876,
-          "seam_col_mean_abs": 13.31
+          "seam_row_mean_abs": 9.874,
+          "seam_col_mean_abs": 13.294
         }
       }
     ],
@@ -216,19 +216,19 @@
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 23.87,
-      "seam_col_mean_abs": 18.63,
+      "seam_row_mean_abs": 23.879,
+      "seam_col_mean_abs": 18.815,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 3.348,
-        "max_abs_diff": 87,
-        "pct_pixels_changed_over_4": 29.483,
-        "pct_pixels_changed_over_16": 2.013
+        "mean_abs_diff": 2.953,
+        "max_abs_diff": 58,
+        "pct_pixels_changed_over_4": 28.348,
+        "pct_pixels_changed_over_16": 0.685
       },
       "detail_high_frequency_energy": {
         "source": 125.909,
-        "enhanced": 147.96,
-        "ratio": 1.1751
+        "enhanced": 143.578,
+        "ratio": 1.1403
       },
       "status": "VERIFIED"
     },
@@ -247,24 +247,24 @@
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 9.544,
-      "seam_col_mean_abs": 13.112,
+      "seam_row_mean_abs": 9.555,
+      "seam_col_mean_abs": 13.11,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 4.0,
+        "mean_abs_diff": 3.987,
         "max_abs_diff": 191,
-        "pct_pixels_changed_over_4": 29.867,
-        "pct_pixels_changed_over_16": 3.576
+        "pct_pixels_changed_over_4": 29.676,
+        "pct_pixels_changed_over_16": 3.63
       },
       "normal_map_check": {
         "alpha_min": 255,
         "alpha_max": 255,
-        "x_mean": 127.881,
-        "y_mean": 127.244,
-        "z_mean": 240.532,
+        "x_mean": 127.855,
+        "y_mean": 127.242,
+        "z_mean": 240.525,
         "unit_length_min": 0.589163,
         "unit_length_max": 1.060144,
-        "pct_outside_0p98_1p02": 17.5148,
+        "pct_outside_0p98_1p02": 17.495,
         "fourcc": "DXT1"
       },
       "status": "VERIFIED"

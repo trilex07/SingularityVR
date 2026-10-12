@@ -38,6 +38,7 @@ from dds_io import (  # noqa: E402
     fnv1a64_mip0,
     load_dds,
     read_dds_header,
+    resize_rgba_independent,
     save_dds,
     save_normal_dds,
     validate_dds,
@@ -200,11 +201,12 @@ def enhance_diffuse_organic(img: Image.Image) -> tuple[Image.Image, list[str]]:
         arr3[:, :, c] = np.clip(arr3[:, :, c] * (1 - 0.28 * pit), 0, 255)
     notes.append(f"hide pores, up to 28% local darkening ({n_pore} seed scale)")
 
-    # cracks: thin dark branching lines
-    scr = M.directional_scratches((h, w), count=n_pore, seed=5003,
+    # cracks: thin dark branching lines - sparse and shallow; dense dark
+    # strokes read as black bars rather than wear (review feedback)
+    scr = M.directional_scratches((h, w), count=max(12, n_pore // 3), seed=5003,
                                   angle=1.1, spread=0.9, length=(15, 120))
-    arr4 = M.blend_detail(arr3.astype(np.uint8), -np.maximum(scr, 0.0), 0.16)
-    notes.append(f"{n_pore} crack strokes, 16% of local luminance (darkening)")
+    arr4 = M.blend_detail(arr3.astype(np.uint8), -np.maximum(scr, 0.0), 0.08)
+    notes.append(f"{max(12, n_pore // 3)} crack strokes, 8% of local luminance (darkening)")
 
     # lesion sheen variation (subtle warm shift in patches)
     les = M.fbm((h, w), 2, 5004, 0.01)
@@ -467,7 +469,8 @@ def process_asset(key: str, spec: dict) -> dict:
         n_entry = result["maps"]["normal"]
         d_img, _ = load_dds(Path(d_entry["output_file"]))
         n_img, _ = load_dds(Path(n_entry["output_file"]))
-        d2 = d_img.resize((d_img.width * 2, d_img.height * 2), Image.LANCZOS)
+        d2 = resize_rgba_independent(d_img, (d_img.width * 2, d_img.height * 2),
+                                       Image.LANCZOS)
         n2 = signed_upsample_2x(n_img)
         d2_path = out_dir / f"{spec['asset']}_diffuse_2X_LANCZOS.dds"
         n2_path = out_dir / f"{spec['asset']}_normal_2X_LANCZOS.dds"
@@ -551,8 +554,10 @@ def make_comparisons(key: str, spec: dict, result: dict) -> list[str]:
         box = (x0, y0, x0 + crop, y0 + crop)
         tiles = [
             (orig.crop(box).resize((crop * 2, crop * 2), Image.NEAREST), "ORIGINAL 1x (2x nearest)"),
-            (orig.crop(box).resize((crop * 2, crop * 2), Image.LANCZOS), "LANCZOS upscale"),
-            (enh.crop(box).resize((crop * 2, crop * 2), Image.LANCZOS), "REMASTERED (native)"),
+            (resize_rgba_independent(orig.crop(box), (crop * 2, crop * 2),
+                                     Image.LANCZOS), "LANCZOS upscale"),
+            (resize_rgba_independent(enh.crop(box), (crop * 2, crop * 2),
+                                     Image.LANCZOS), "REMASTERED (native)"),
         ]
         sheet = Image.new("RGB", (crop * 2, crop * 2 * 3 + 40), (18, 18, 22))
         from PIL import ImageDraw

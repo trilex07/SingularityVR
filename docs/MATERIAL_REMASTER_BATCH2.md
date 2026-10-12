@@ -75,22 +75,22 @@ gain (high-pass energy ratio, must exceed 1.02), and palette shift:
 
 | asset | map | mean abs | px>4% | detail ratio | luminance shift |
 |-------|-----|----------|-------|--------------|-----------|
-| AR_E99Rifle_alt | diffuse | 3.35 | 29.5% | 1.18x | −8.6% |
+| AR_E99Rifle_alt | diffuse | 2.95 | 28.3% | 1.14x | −6.1% |
 | AR_E99Rifle_alt | normal | 4.00 | 29.9% | — | — |
-| ar_gatling_gun | diffuse | 4.97 | 46.8% | 1.43x | −11.7% |
-| ar_gatling_gun | normal | 2.80 | 19.1% | — | — |
+| ar_gatling_gun | diffuse | 4.48 | 44.5% | 1.30x | −9.0% |
+| ar_gatling_gun | normal | 2.75 | 18.9% | — | — |
 | laser | diffuse | 2.06 | 13.7% | 1.10x | −5.8% |
 | laser | normal | 3.26 | 24.6% | — | — |
-| revert_d2 | diffuse | 4.66 | 49.4% | 1.10x | −2.5% |
-| revert_d2 | normal | 2.94 | 23.1% | — | — |
+| revert_d2 | diffuse | 4.46 | 48.8% | 1.05x | −2.2% |
+| revert_d2 | normal | 2.91 | 22.8% | — | — |
 | phasetick | diffuse | 7.07 | 63.7% | 1.40x | −0.7% |
 | phasetick | normal | 7.16 | 59.1% | — | — |
 | Spetsnaz_MP_helmet | diffuse | 4.62 | 46.3% | 1.23x | −5.2% |
 | Spetsnaz_MP_helmet | normal | 3.14 | 24.3% | — | — |
 | Spetsnaz_MP_Body | diffuse | 4.37 | 43.9% | 1.21x | −5.1% |
 | Spetsnaz_MP_Body | normal | 4.00 | 32.5% | — | — |
-| door_rollingT | diffuse | 5.58 | 51.8% | 1.15x | +3.7% |
-| door_rollingT | normal | 4.13 | 27.7% | — | — |
+| door_rollingT | diffuse | 4.85 | 50.2% | 1.10x | +4.7% |
+| door_rollingT | normal | 4.10 | 27.4% | — | — |
 
 All maps satisfy mean abs < 16 and luminance shift < 15% (asserted by
 `test_remaster_batch2.py`).
@@ -101,9 +101,9 @@ Normal-map unit length, enhanced vs shipped original (% of texels outside the
 | normal map | original outside-tol | enhanced outside-tol |
 |------------|---------------------|---------------------|
 | AR_E99Rifle_n | 32.3% | 17.5% |
-| ar_gatling_gun_n | 20.0% | 12.0% |
+| ar_gatling_gun_n | 20.0% | 11.9% |
 | laser_n | 29.7% | 17.0% |
-| revert_n2 | 31.8% | 15.4% |
+| revert_n2 | 31.8% | 15.3% |
 | phasetick_n | 48.7% | 30.8% |
 | Spetsnaz_MP_helmet_n | 29.1% | 14.4% |
 | Spetsnaz_MP_Body_n | 34.4% | 19.7% |
@@ -125,6 +125,25 @@ Video memory, substituted maps only (block arithmetic over measured headers):
 
 The replacement sets are larger because they ship complete mip chains while the
 UModel exports are mip0-only. No saving is claimed.
+
+## Review-driven fixes (batch 2 revision)
+
+Two defects found by visual review after the first batch-2 run, both fixed and
+regenerated, all tests re-passing:
+
+1. **Alpha-coupled resampling destroyed bright transparent RGB.** PIL resize
+   filters (all except NEAREST) zero RGB where alpha is ~0. UE3 packs additive
+   glow as bright RGB with near-zero alpha (the E99 bullet), so every mip level
+   ≥ 1 and every Lanczos comparison tile erased it. Verified by pixel forensics
+   (native mip0 intact: 377 gold pixels; mip1+ black). Fix: new
+   `dds_io.resize_rgba_independent` (colour and alpha filtered separately),
+   now used by every mip-chain, upscale and comparison-sheet path. Bullet
+   survival re-verified per mip level (mip0 397/748 bright px → mip4 2/3,
+   graceful decay).
+2. **Directional scratches read as black bars.** Scratch strokes cut to ~1/4
+   count and ~1/3 strength on weapons (349→87 strokes, 30%→10%), env score
+   lines halved (28%→12%), organic cracks halved (16%→8%). Detail-energy ratios
+   stay above the 1.02 gate (1.05–1.40x).
 
 ## Reproduce (offline)
 

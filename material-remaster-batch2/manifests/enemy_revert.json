@@ -30,7 +30,7 @@
       },
       "deploy_filename": "revert_d2_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_revert/revert_d2_2x.dds",
-      "output_sha256": "11d0f80da648bc33ba3dd0ab51bf5e8353903cde75737e9de2c2cd53e5456fe9",
+      "output_sha256": "c0e3af2713b07a525df0116bb880ff65980dbd415a234563c28be144c3c82620",
       "validation": {
         "width": 2048,
         "height": 2048,
@@ -46,19 +46,19 @@
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 9.077,
-        "seam_col_mean_abs": 7.679,
+        "seam_row_mean_abs": 9.09,
+        "seam_col_mean_abs": 7.677,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 4.661,
-          "max_abs_diff": 57,
-          "pct_pixels_changed_over_4": 49.429,
-          "pct_pixels_changed_over_16": 1.112
+          "mean_abs_diff": 4.458,
+          "max_abs_diff": 44,
+          "pct_pixels_changed_over_4": 48.756,
+          "pct_pixels_changed_over_16": 0.269
         },
         "detail_high_frequency_energy": {
           "source": 49.069,
-          "enhanced": 53.836,
-          "ratio": 1.0971
+          "enhanced": 51.414,
+          "ratio": 1.0478
         },
         "status": "VERIFIED"
       }
@@ -87,7 +87,7 @@
       },
       "deploy_filename": "revert_n2_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/enemy_revert/revert_n2_2x.dds",
-      "output_sha256": "7b152cc4230c0df85f8896f6dee1266c90992e99ddfe27010a9de5e16cbe943e",
+      "output_sha256": "311f72f0582509d500dbbdd3974dbaf5a4cfb257a2836a08929ee84262fe3a8e",
       "validation": {
         "width": 2048,
         "height": 2048,
@@ -103,24 +103,24 @@
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 0.823,
-        "seam_col_mean_abs": 1.312,
+        "seam_row_mean_abs": 0.81,
+        "seam_col_mean_abs": 1.298,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 2.935,
+          "mean_abs_diff": 2.91,
           "max_abs_diff": 163,
-          "pct_pixels_changed_over_4": 23.087,
-          "pct_pixels_changed_over_16": 0.307
+          "pct_pixels_changed_over_4": 22.794,
+          "pct_pixels_changed_over_16": 0.303
         },
         "normal_map_check": {
           "alpha_min": 255,
           "alpha_max": 255,
-          "x_mean": 125.987,
-          "y_mean": 125.79,
-          "z_mean": 246.823,
+          "x_mean": 125.972,
+          "y_mean": 125.788,
+          "z_mean": 246.826,
           "unit_length_min": 0.624146,
           "unit_length_max": 1.060144,
-          "pct_outside_0p98_1p02": 15.3528,
+          "pct_outside_0p98_1p02": 15.3391,
           "fourcc": "DXT1"
         },
         "status": "VERIFIED"
@@ -130,7 +130,7 @@
   "newly_authored": [
     "chitin mottling, 3 octaves, 10% of local luminance",
     "hide pores, up to 28% local darkening (466 seed scale)",
-    "466 crack strokes, 16% of local luminance (darkening)",
+    "155 crack strokes, 8% of local luminance (darkening)",
     "lesion tint patches, 2 octaves",
     "micro relief from enhanced diffuse high-pass, slope amplitude 0.85",
     "original macro normals preserved and renormalised to unit length",
@@ -165,19 +165,19 @@
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 9.077,
-      "seam_col_mean_abs": 7.679,
+      "seam_row_mean_abs": 9.09,
+      "seam_col_mean_abs": 7.677,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 4.661,
-        "max_abs_diff": 57,
-        "pct_pixels_changed_over_4": 49.429,
-        "pct_pixels_changed_over_16": 1.112
+        "mean_abs_diff": 4.458,
+        "max_abs_diff": 44,
+        "pct_pixels_changed_over_4": 48.756,
+        "pct_pixels_changed_over_16": 0.269
       },
       "detail_high_frequency_energy": {
         "source": 49.069,
-        "enhanced": 53.836,
-        "ratio": 1.0971
+        "enhanced": 51.414,
+        "ratio": 1.0478
       },
       "status": "VERIFIED"
     },
@@ -196,24 +196,24 @@
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 0.823,
-      "seam_col_mean_abs": 1.312,
+      "seam_row_mean_abs": 0.81,
+      "seam_col_mean_abs": 1.298,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 2.935,
+        "mean_abs_diff": 2.91,
         "max_abs_diff": 163,
-        "pct_pixels_changed_over_4": 23.087,
-        "pct_pixels_changed_over_16": 0.307
+        "pct_pixels_changed_over_4": 22.794,
+        "pct_pixels_changed_over_16": 0.303
       },
       "normal_map_check": {
         "alpha_min": 255,
         "alpha_max": 255,
-        "x_mean": 125.987,
-        "y_mean": 125.79,
-        "z_mean": 246.823,
+        "x_mean": 125.972,
+        "y_mean": 125.788,
+        "z_mean": 246.826,
         "unit_length_min": 0.624146,
         "unit_length_max": 1.060144,
-        "pct_outside_0p98_1p02": 15.3528,
+        "pct_outside_0p98_1p02": 15.3391,
         "fourcc": "DXT1"
       },
       "status": "VERIFIED"

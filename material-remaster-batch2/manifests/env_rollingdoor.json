@@ -30,7 +30,7 @@
       },
       "deploy_filename": "door_rollingT_d_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/env_rollingdoor/door_rollingT_d_2x.dds",
-      "output_sha256": "60a54ca6816170fdd22e8f4af445ba30fd34620093b7116c14ebfcdd0c9bb831",
+      "output_sha256": "0b3ccd4c52bf93429bd8800869a2815aa4890680a0e785f4a89c276d095c2d7e",
       "validation": {
         "width": 512,
         "height": 512,
@@ -46,19 +46,19 @@
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 28.569,
-        "seam_col_mean_abs": 16.481,
+        "seam_row_mean_abs": 28.963,
+        "seam_col_mean_abs": 16.225,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 5.577,
-          "max_abs_diff": 80,
-          "pct_pixels_changed_over_4": 51.777,
-          "pct_pixels_changed_over_16": 3.702
+          "mean_abs_diff": 4.852,
+          "max_abs_diff": 66,
+          "pct_pixels_changed_over_4": 50.158,
+          "pct_pixels_changed_over_16": 1.321
         },
         "detail_high_frequency_energy": {
           "source": 349.427,
-          "enhanced": 401.821,
-          "ratio": 1.1499
+          "enhanced": 385.451,
+          "ratio": 1.1031
         },
         "status": "VERIFIED"
       }
@@ -87,7 +87,7 @@
       },
       "deploy_filename": "door_rollingT_n_2x.dds",
       "output_file": "<assets-local>/material-remaster-batch2/env_rollingdoor/door_rollingT_n_2x.dds",
-      "output_sha256": "b584cf4d216556bc15bda4fe7285cc7508ebf38a1c7f5b4f38f32666dd485cfc",
+      "output_sha256": "f28f5aac836a37b46a8eea906138d5db1b7825ca1f3eb39d2000f0645cb5c509",
       "validation": {
         "width": 512,
         "height": 512,
@@ -103,24 +103,24 @@
         ],
         "decoded_mode": "RGBA",
         "decoded_channels": 4,
-        "seam_row_mean_abs": 2.928,
-        "seam_col_mean_abs": 6.005,
+        "seam_row_mean_abs": 3.022,
+        "seam_col_mean_abs": 5.999,
         "fidelity_vs_source": {
           "compared_pixels": 262144,
-          "mean_abs_diff": 4.134,
+          "mean_abs_diff": 4.097,
           "max_abs_diff": 211,
-          "pct_pixels_changed_over_4": 27.7,
-          "pct_pixels_changed_over_16": 4.588
+          "pct_pixels_changed_over_4": 27.408,
+          "pct_pixels_changed_over_16": 4.561
         },
         "normal_map_check": {
           "alpha_min": 255,
           "alpha_max": 255,
-          "x_mean": 127.443,
-          "y_mean": 119.681,
-          "z_mean": 250.22,
+          "x_mean": 127.426,
+          "y_mean": 119.659,
+          "z_mean": 250.191,
           "unit_length_min": 0.719466,
           "unit_length_max": 1.040791,
-          "pct_outside_0p98_1p02": 9.6165,
+          "pct_outside_0p98_1p02": 9.5562,
           "fourcc": "DXT1"
         },
         "status": "VERIFIED"
@@ -144,7 +144,7 @@
       "substituted": false,
       "exclusion_reason": "specular source is true mip0 but substitution stays diffuse+normal only by uniform policy (changing specular/emissive response without runtime validation risks black-material-class surprises); produced for review only",
       "output_file": "<assets-local>/material-remaster-batch2/env_rollingdoor/door_rollingT_specular_review.dds",
-      "output_sha256": "3bc850793eb6a27abf06ab4ce57c11bc017d92632edd472b040447b6ba976695",
+      "output_sha256": "94a18afa1dce6c566e4ce77dab054c5f40717243dd3c5a8c95892c48277a49bd",
       "validation": {
         "width": 256,
         "height": 256,
@@ -175,7 +175,7 @@
   },
   "newly_authored": [
     "rolled-steel streaks along panel axis, 5% of local luminance",
-    "32 handling score lines, 28% of local luminance (darkening)",
+    "16 handling score lines, 12% of local luminance (darkening)",
     "rust bloom with warm tint, 3 octaves",
     "corrosion pits, up to 30% local darkening",
     "micro relief from enhanced diffuse high-pass, slope amplitude 0.75",
@@ -216,19 +216,19 @@
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 28.569,
-      "seam_col_mean_abs": 16.481,
+      "seam_row_mean_abs": 28.963,
+      "seam_col_mean_abs": 16.225,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 5.577,
-        "max_abs_diff": 80,
-        "pct_pixels_changed_over_4": 51.777,
-        "pct_pixels_changed_over_16": 3.702
+        "mean_abs_diff": 4.852,
+        "max_abs_diff": 66,
+        "pct_pixels_changed_over_4": 50.158,
+        "pct_pixels_changed_over_16": 1.321
       },
       "detail_high_frequency_energy": {
         "source": 349.427,
-        "enhanced": 401.821,
-        "ratio": 1.1499
+        "enhanced": 385.451,
+        "ratio": 1.1031
       },
       "status": "VERIFIED"
     },
@@ -247,24 +247,24 @@
       ],
       "decoded_mode": "RGBA",
       "decoded_channels": 4,
-      "seam_row_mean_abs": 2.928,
-      "seam_col_mean_abs": 6.005,
+      "seam_row_mean_abs": 3.022,
+      "seam_col_mean_abs": 5.999,
       "fidelity_vs_source": {
         "compared_pixels": 262144,
-        "mean_abs_diff": 4.134,
+        "mean_abs_diff": 4.097,
         "max_abs_diff": 211,
-        "pct_pixels_changed_over_4": 27.7,
-        "pct_pixels_changed_over_16": 4.588
+        "pct_pixels_changed_over_4": 27.408,
+        "pct_pixels_changed_over_16": 4.561
       },
       "normal_map_check": {
         "alpha_min": 255,
         "alpha_max": 255,
-        "x_mean": 127.443,
-        "y_mean": 119.681,
-        "z_mean": 250.22,
+        "x_mean": 127.426,
+        "y_mean": 119.659,
+        "z_mean": 250.191,
         "unit_length_min": 0.719466,
         "unit_length_max": 1.040791,
-        "pct_outside_0p98_1p02": 9.6165,
+        "pct_outside_0p98_1p02": 9.5562,
         "fourcc": "DXT1"
       },
       "status": "VERIFIED"
