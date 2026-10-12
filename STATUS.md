@@ -9,9 +9,9 @@ rendering mode. The pause VR Settings row is unchanged.
 **Steam install (MAIN, leave until headset sign-off or explicit rollback):**
 branch `feature/hands-only-gloves`, commit `d7e9f58`, DLL SHA-256
 `9407D6075EDFB5A51E5C60E4F0CDB51145607823816FA8E8374B68DC04D20FFE`, INI
-preserved (`AA89218B…`). Deploy workflow:
-`docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`. Backup path recorded in the latest
-`deployment/install-reports/*.json` after deploy.
+preserved (`AA89218B…`). Pre-deploy backup:
+`deployment/install-backups/20261012-103735` (DLL). Deploy workflow:
+`docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
 
 Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
 Read this first, then `ENGINE_NOTES.md`.
