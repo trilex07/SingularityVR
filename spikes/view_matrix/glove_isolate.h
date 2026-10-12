@@ -40,10 +40,15 @@ inline bool IsArmFleshSection(unsigned verts, unsigned first, unsigned triangles
 }
 
 // Hands-only rendering: gloves stay on the controllers, the long forearm section
-// is not drawn, and elbow IK must not rewrite the palette. The short cuff is the
-// existing wrist stump on the glove section, not a reach solve.
+// is not drawn, and elbow IK must not rewrite the palette. Vertices must move
+// rigidly with the controller delta, not with a wrist-centered stump scale.
 inline bool HandsOnly(int showControllerArms, int isolateMode) {
     return showControllerArms == 0 && isolateMode >= 2;
+}
+
+// Mode 2 hides arm draws only. Mode 3 is the legacy palette stump (stretchy).
+inline bool UsesPaletteStump(int showControllerArms, int isolateMode) {
+    return showControllerArms == 0 && isolateMode >= 3;
 }
 
 inline bool NameContains(const char* name, const char* part) {

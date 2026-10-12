@@ -14617,9 +14617,11 @@ static void ApplyGloveIsolation(float changed[108][4], const unsigned* map, int 
             }
         }
         ++wouldCollapse[side];
-        // Mode >= 2: stump collapse (keepScale) so the cuff sits behind the wrist
-        // instead of a point-collapse or a face clip flush with the glove.
-        if (mode < 2 || !g_gloveWristValid[side]) continue;
+        // Mode 3 only: stump collapse stretches blended cuff vertices toward the
+        // wrist. Hands-only (mode 2) hides the arm draw and drives bones rigidly.
+        if (!gloveisolate::UsesPaletteStump(g_showControllerArms, mode) ||
+            !g_gloveWristValid[side])
+            continue;
         armbind::Mat s;
         if (!PaletteMat(reinterpret_cast<const float (*)[4]>(&changed[slot * 3]), s)) continue;
         gloveisolate::Mat4 d;
@@ -14810,10 +14812,32 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         wristSlot[0] >= 0 ? sectionMap[wristSlot[0]] : 89u,
         wristSlot[1] >= 0 ? sectionMap[wristSlot[1]] : 89u,
     };
+    const bool rigidGloves =
+        gloveisolate::HandsOnly(g_showControllerArms, (int)InterlockedCompareExchange(&g_gloveIsolate, 0, 0));
     for(int b=0;b<slots;++b) {
         const unsigned bone = sectionMap[b];
         const char* boneName = bone < 89 ? refs[bone].name : nullptr;
         if (gloveisolate::IsTmdDevice(boneName)) continue;
+        if (rigidGloves &&
+            gloveisolate::Classify(boneName) == gloveisolate::BoneRole::Collapse) {
+            const int physicalSide = gloveisolate::HandSide(boneName);
+            if (physicalSide >= 0 && physicalSide <= 1 && wristSlot[physicalSide] >= 0 &&
+                handValid[physicalSide]) {
+                const int deltaSide = gloveisolate::ControllerDeltaForBone(boneName, OffHand());
+                if (deltaSide >= 0) {
+                    if (!independentBothHands && g_thisDrawMoved == 1 &&
+                        physicalSide != AimHand()) {
+                    } else if (!independentBothHands && g_thisDrawMoved == 2 &&
+                               !Rd(g_twoHandActive) && physicalSide != OffHand()) {
+                    } else {
+                        skeletal::TransformBone(
+                            &changed[b * 3], &saved[b * 3],
+                            deltaSide == 0 ? delta : rightDelta);
+                    }
+                }
+            }
+            continue;
+        }
         {
             const int namedSide = gloveisolate::HandSide(boneName);
             const bool finger = namedSide >= 0 && namedSide <= 1 && wristSlot[namedSide] >= 0 &&
