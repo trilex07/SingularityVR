@@ -11739,7 +11739,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     HRESULT hr = g_origSetRenderTarget(dev, idx, surf);
     if (FAILED(hr)) return hr; // Failed binds leave the actual device target unchanged.
-    if (idx == 0) PauseRttProbe::Bind(surf);
+    if (idx == 0) { PauseRttProbe::Bind(surf); PauseRttProbe::ContentBind(surf); }
     // Run 116: which target the first-person pass draws into. If it switches at the foreground
     // boundary the pass is composited from its own surface, and skipping its draws leaves that
     // surface at its cleared value - which would explain "black but still occluding" without any
@@ -13186,6 +13186,7 @@ void VidProbeFrameEnd() {
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                         UINT start, UINT count) {
+    PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0)) return g_origDrawPrim(dev,t,start,count);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
@@ -16619,6 +16620,7 @@ static bool TrackFpCaster(IDirect3DDevice9* dev,INT baseVertex,UINT minIndex,
 HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                                INT baseVertex, UINT minIndex, UINT numVertices,
                                                UINT startIndex, UINT primCount) {
+    PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0)) return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
@@ -18181,6 +18183,7 @@ static bool PauseCanvasNeedsEyeCopy(IDirect3DDevice9* dev) {
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                           UINT primCount, const void* vtxData, UINT vtxStride) {
+    PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawPrimUP) return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
@@ -18318,6 +18321,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
                                                 UINT minVtxIndex, UINT numVertices, UINT primCount,
                                                 const void* idxData, D3DFORMAT idxFormat,
                                                 const void* vtxData, UINT vtxStride) {
+    PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawIndexedPrimUP) return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
@@ -19354,6 +19358,7 @@ static void ReleaseVrShadowResources() {
 // ShadowMode now selects the sampling-pass treatment instead (0/1/2); see the stage mask below.
 // Proper fix: disable first-person arm/weapon shadow casting at engine level (bCastDynamicShadow=false).
 HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDirect3DBaseTexture9* texture) {
+    PauseRttProbe::Sample(texture);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::set_texture);
     // Fix-C/menu round 3: match the captured menu texture(s) on stages 0-3, not
     // only stage 0. g_vrMenuSourceBound keeps its stage-0-only meaning for existing
@@ -23387,6 +23392,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    PauseRttProbe::ReleaseContent();
     ReleaseVrMenuResources();
     ReleaseVrShadowResources();
     if (g_wristState) { g_wristState->Release(); g_wristState = nullptr; }
@@ -23597,6 +23603,7 @@ static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
 }
 
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
+    PauseRttProbe::PresentContent(s);
     hotpath::scope frameScope(g_hotPathSampler, hotpath::Family::frame_total);
     DiagStart();
     RefreshArmsAnimActive();

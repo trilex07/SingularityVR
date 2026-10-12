@@ -13,6 +13,21 @@ static unsigned bindingCount = 0;
 static unsigned totalBindings = 0;
 static uintptr_t bindingResource = 0;
 static uintptr_t Pointer(uintptr_t address);
+static IDirect3DSurface9* contentSurface = nullptr;
+static IDirect3DTexture9* contentTexture = nullptr;
+static unsigned long long contentToken = 0;
+static unsigned drawAttempts = 0, completedEpoch = 0, sampledEpoch = 0;
+static bool contentBound = false, mainDumped = false;
+static unsigned dumpCount = 0;
+static ULONGLONG lastDumpTime = 0;
+
+static void ReleaseContent() {
+    if (contentTexture) contentTexture->Release();
+    if (contentSurface) contentSurface->Release();
+    contentTexture = nullptr; contentSurface = nullptr;
+    contentBound = false; contentToken = 0;
+    drawAttempts = completedEpoch = sampledEpoch = 0;
+}
 static bool SafeRange(uintptr_t address, size_t bytes) {
     if (address < 0x10000 || bytes > UINTPTR_MAX - address) return false;
     MEMORY_BASIC_INFORMATION info = {};
@@ -24,6 +39,119 @@ static bool SafeRange(uintptr_t address, size_t bytes) {
         protection != PAGE_EXECUTE_READWRITE && protection != PAGE_EXECUTE_WRITECOPY) return false;
     return address - (uintptr_t)info.BaseAddress <= info.RegionSize &&
         bytes <= info.RegionSize - (address - (uintptr_t)info.BaseAddress);
+}
+
+static bool NativeResourceContract(uintptr_t target, uintptr_t resource) {
+    if (Pointer(target + 0xA4) != resource || Pointer(resource + 0x60) != target) return false;
+    const uintptr_t method = Pointer(Pointer(resource) + 4);
+    // InitDynamicRHI source: owner+0x60, SizeX+0xAC, SizeY+0xB0;
+    // creates TextureRHI+0x64 and surface RHI+0x48 (offline text snapshot).
+    static const unsigned char signature[] = {0x8B,0xF1,0x8B,0x46,0x60,0x33,0xDB,0x39,0x98,0xAC,0,0,0};
+    return SafeRange(method + 0x28, sizeof(signature)) &&
+        memcmp((void*)(method + 0x28), signature, sizeof(signature)) == 0;
+}
+
+static bool ExactTexture(uintptr_t target, uintptr_t resource, IDirect3DTexture9* texture) {
+    if (!texture || !NativeResourceContract(target, resource)) return false;
+    const uintptr_t rhi = Pointer(resource + 0x48);
+    return rhi && Pointer(rhi + 0x1C) == (uintptr_t)texture;
+}
+
+static void ContentBind(IDirect3DSurface9* surface) {
+    const unsigned long long token = VrMenuStateToken();
+    if (contentSurface && contentToken != token) ReleaseContent();
+    if (contentBound && surface != contentSurface) {
+        contentBound = false;
+        if (drawAttempts) ++completedEpoch;
+    }
+    if (!surface || dumpCount >= 4) return;
+    const uintptr_t resource = (uintptr_t)InterlockedCompareExchange(&resourceCandidate, 0, 0);
+    const uintptr_t target = (uintptr_t)InterlockedCompareExchange(&targetIdentity, 0, 0);
+    if (!target || !resource) return;
+    IDirect3DTexture9* texture = nullptr;
+    if (FAILED(surface->GetContainer(__uuidof(IDirect3DTexture9), (void**)&texture)) || !texture) return;
+    bool exact = false;
+    __try { exact = ExactTexture(target, resource, texture); }
+    __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION
+                  ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) { }
+    if (exact && !contentSurface) {
+        contentSurface = surface; surface->AddRef();
+        contentTexture = texture; texture->AddRef(); contentToken = token;
+        Log("pause-rtt exact-source token=%llu UObject=%p resource=%p RHI=%p texture=%p surface=%p contract=validated",
+            token, (void*)target, (void*)resource, (void*)Pointer(resource + 0x48), (void*)texture, (void*)surface);
+    }
+    if (exact && surface == contentSurface) contentBound = true;
+    texture->Release();
+}
+
+static void DrawAttempt() { if (contentBound && dumpCount < 4) ++drawAttempts; }
+static void Sample(IDirect3DBaseTexture9* texture) {
+    if (texture && texture == contentTexture && !contentBound && completedEpoch)
+        sampledEpoch = completedEpoch;
+}
+
+static bool Bitmap(const char* path, const D3DLOCKED_RECT& locked, unsigned w, unsigned h, bool alpha) {
+    const size_t bytes = (size_t)w * h * 4;
+    unsigned char* pixels = (unsigned char*)malloc(bytes);
+    if (!pixels) return false;
+    for (unsigned y = 0; y < h; ++y) {
+        const unsigned char* row = (const unsigned char*)locked.pBits + (size_t)y * locked.Pitch;
+        unsigned char* out = pixels + (size_t)y * w * 4;
+        for (unsigned x = 0; x < w; ++x) {
+            out[x*4+0] = alpha ? row[x*4+3] : row[x*4+0];
+            out[x*4+1] = alpha ? row[x*4+3] : row[x*4+1];
+            out[x*4+2] = alpha ? row[x*4+3] : row[x*4+2];
+            out[x*4+3] = 255;
+        }
+    }
+    BITMAPFILEHEADER file = {}; BITMAPINFOHEADER info = {};
+    file.bfType = 0x4D42; file.bfOffBits = sizeof(file) + sizeof(info); file.bfSize = file.bfOffBits + (DWORD)bytes;
+    info.biSize = sizeof(info); info.biWidth = (LONG)w; info.biHeight = -(LONG)h;
+    info.biPlanes = 1; info.biBitCount = 32; info.biCompression = BI_RGB; info.biSizeImage = (DWORD)bytes;
+    FILE* stream = nullptr; bool ok = false;
+    if (fopen_s(&stream, path, "wb") == 0 && stream) {
+        ok = fwrite(&file, sizeof(file), 1, stream) == 1 && fwrite(&info, sizeof(info), 1, stream) == 1 &&
+             fwrite(pixels, bytes, 1, stream) == 1;
+        if (fclose(stream) != 0) ok = false;
+    }
+    free(pixels); return ok;
+}
+
+static void PresentContent(IDirect3DDevice9* device) {
+    if (contentSurface && contentToken != VrMenuStateToken()) ReleaseContent();
+    const unsigned kind = (unsigned)contentToken;
+    if (!contentSurface || contentBound || !completedEpoch || dumpCount >= 4 ||
+        (kind != 2 && kind != 3) || (kind == 2 && mainDumped)) return;
+    const ULONGLONG now = GetTickCount64();
+    if (lastDumpTime && now - lastDumpTime < 2000) return;
+    IDirect3DSurface9* current = nullptr;
+    if (FAILED(device->GetRenderTarget(0, &current))) return;
+    const bool unbound = current != contentSurface; if (current) current->Release();
+    if (!unbound) return;
+    D3DSURFACE_DESC desc = {};
+    if (FAILED(contentSurface->GetDesc(&desc)) || desc.Format != D3DFMT_A8R8G8B8 ||
+        desc.MultiSampleType != D3DMULTISAMPLE_NONE || !desc.Width || !desc.Height ||
+        desc.Width > 2048 || desc.Height > 1536) return;
+    ++dumpCount; lastDumpTime = now; if (kind == 2) mainDumped = true;
+    IDirect3DSurface9* staging = nullptr;
+    HRESULT hr = device->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3DPOOL_SYSTEMMEM, &staging, nullptr);
+    if (SUCCEEDED(hr)) hr = device->GetRenderTargetData(contentSurface, staging);
+    D3DLOCKED_RECT locked = {};
+    if (SUCCEEDED(hr)) hr = staging->LockRect(&locked, nullptr, D3DLOCK_READONLY);
+    bool rgb = false, alpha = false;
+    char rgbPath[MAX_PATH] = {}, alphaPath[MAX_PATH] = {};
+    if (SUCCEEDED(hr)) {
+        char directory[MAX_PATH] = {}; strcpy_s(directory, g_logPath);
+        char* slash = strrchr(directory, '\\'); if (slash) *slash = 0;
+        sprintf_s(rgbPath, "%s\\pause-rtt-%lu-%u-c%u-rgb.bmp", directory, GetCurrentProcessId(), dumpCount, kind);
+        sprintf_s(alphaPath, "%s\\pause-rtt-%lu-%u-c%u-alpha.bmp", directory, GetCurrentProcessId(), dumpCount, kind);
+        rgb = Bitmap(rgbPath, locked, desc.Width, desc.Height, false);
+        alpha = Bitmap(alphaPath, locked, desc.Width, desc.Height, true);
+        staging->UnlockRect();
+    }
+    if (staging) staging->Release();
+    Log("pause-rtt content token=%llu epoch=%u sampleBindAttemptEpoch=%u drawAttempts=%u readbackHr=0x%08lX rgb=%d alpha=%d RGB=%s ALPHA=%s",
+        contentToken, completedEpoch, sampledEpoch, drawAttempts, (unsigned long)hr, rgb?1:0, alpha?1:0, rgbPath, alphaPath);
 }
 
 // Observed pointer provenance only. A backlink identifies an owner candidate;

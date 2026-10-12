@@ -37,3 +37,25 @@ At successful native RT0 binds compare its direct/nested pointers against the
 actual bound surface and GetContainer texture. All matches remain UNVERIFIED
 until native field semantics are corroborated. No speculative virtual calls.
 Maximum 24 distinct surfaces per owner and 96 per process; no draw-hook work.
+
+The resource scan initially faulted inside guarded diagnostics. Corrected local
+range checks reject overflow and use fresh VirtualQuery; image ownership uses
+AllocationBase rather than reading live PE headers. Autonomous Steam startup
+on AD2AC766...06B9E6 found a unique RTT_UI1 owner at UObject+0xA4,
+resource backlink+0x60, vtable 0x0182B7C8. An actual bound texture matched
+resource+0x48 -> RHI+0x1C. Other pointer paths also matched a non-texture
+surface: those incidental matches are not accepted as the UI texture.
+
+Offline inspection of the existing owned text snapshot corroborates resource
+InitDynamicRHI (vtable slot 1, observed 0x00895AB0): it reads owner+0x60,
+dimensions at owner+0xAC/+0xB0, creates the texture and surface via RHI, and
+assigns surface RHI at resource+0x48. Diagnostic runtime checks validate this
+method's owner/dimension instruction signature as well as target+0xA4 and the
+owner backlink. No virtual method is called on a scanned pointer.
+
+Content probe retains only an actual successfully bound surface whose container
+texture equals the verified RHI field. Readback occurs at Present after native
+unbind and draw attempts, under the same movie token, into SYSTEMMEM. Up to
+four RGB/alpha BMP pairs are written (one main control, three pause); no target
+or render state is changed. Draw and sample counters describe attempts, not
+successful semantic content. Pixels and callback freshness still need inspection.
