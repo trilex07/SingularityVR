@@ -23662,7 +23662,12 @@ static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
 
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
     shadowfix::Poll(g_logPath);
-    if(shadowtrace::Boundary(s,g_playerPawn && VrModeOn() && Rd(g_vrMenuClass)==0,g_logPath))
+    const bool shadowTraceReady=g_playerPawn && VrModeOn() && Rd(g_vrMenuClass)==0 &&
+        g_xrSessionState==XR_SESSION_STATE_FOCUSED && g_handPoseValid[0] && g_handPoseValid[1] &&
+        g_handPositionValid[0] && g_handPositionValid[1];
+    static unsigned shadowTraceStable=0;
+    shadowTraceStable=shadowTraceReady?std::min(shadowTraceStable+1,30u):0;
+    if(shadowtrace::Boundary(s,shadowTraceStable>=15,g_logPath))
         SaveBackbufferCapture(s,true); // Completed SBS scene, before menu/diagnostic overlays.
     PauseRttStart::Install();
     PauseRttProbe::PresentContent(s);
@@ -26453,7 +26458,13 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         g_haveLastWrittenYaw = false;   // stale reference once we stop steering
     }
     const LARGE_INTEGER realPresentBegin = Now();
-    if(shadowtrace::pending){shadowtrace::pending=false;shadowtrace::Arm(s);}
+    if(shadowtrace::pending && shadowTraceStable>=15 && g_xrSessionState==XR_SESSION_STATE_FOCUSED &&
+       g_handPositionValid[0] && g_handPositionValid[1]) {
+        shadowtrace::pending=false;
+        Log("shadow-pass focus context session=%d handPosition=%d,%d",(int)g_xrSessionState,
+            g_handPositionValid[0]?1:0,g_handPositionValid[1]?1:0);
+        shadowtrace::Arm(s);
+    }
     const HRESULT presentResult = g_origPresent(s, a, b, c, d);
     static double realPresentSum=0, realPresentMax=0;
     static unsigned realPresentSamples=0;

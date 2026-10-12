@@ -43,6 +43,9 @@ Game has exited. Next candidate cb9902e / EA298F2F... is read-only context
 diagnostics with the correction flag absent. Two same-head-view captures with
 different right-controller poses test whether the receiver's first/last VS/PS
 matrices or moved context follow the controller. Maintain HQ Decals ON throughout.
+Trace request now waits for 15 consecutive focused gameplay frames with both
+hand orientations/positions valid, and rechecks focus/positions before arming.
+This scopes diagnostics only; it does not change game input or rendering policy.
 
 Next controlled candidate is read-only: correction flag remains OFF, trace key
 includes moved context, repeated 8/12 volume draws retain last VS c0..3 and PS
