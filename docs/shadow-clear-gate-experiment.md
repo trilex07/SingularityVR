@@ -182,7 +182,7 @@ parent polling3599 calls/112 samples, estimated4.8177ms/frame. Different sampled
 populations explain why the child estimate can exceed parent: do not sum them
 or claim an exact percent. Released intervals~90FPS. Native expensive scan path
 is measured, not merely a pointer/counter finding. Guard restored accepted DLL;
-final3 hashes still require MAIN verification after this session.
+MAIN verified actual final3 hashes9FBA308C/61AEC56C/5B2EA469 after this session.
 
 ## Default-OFF 500ms scan-throttle experiment
 

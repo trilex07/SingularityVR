@@ -5697,7 +5697,7 @@ static void ReportHotPathSampler(bool complete=true) {
         const int n = _snprintf_s(report + used, sizeof(report) - used, _TRUNCATE, format, args...);
         if (n > 0) used += static_cast<size_t>(n);
     };
-    append("window=%u frames, timing sample=1/%u calls; frame-token=%llu predicted=%lldns "
+    append("window=%u frames, timing sample=1/%u calls (native_gamepad_enum=all); frame-token=%llu predicted=%lldns "
            "poses[hmd/left/right]=%lld/%lld/%lld input=%lld recenter-gen=%lld palette=%lld; "
            "xr-calls[sync/actions/views/left-space/right-space]=%llu/%llu/%llu/%llu/%llu; ",
            measuredFrames, hotpath::sample_stride,
