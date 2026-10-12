@@ -94,6 +94,7 @@
 #include "vfx/vfx_atlas_io.h"
 #include "hotpath_sampler.h"
 static hotpath::sampler g_hotPathSampler;
+static bool g_gameplayHotPathAllowed=false;
 alignas(8) static volatile LONG64 g_hotLeftPoseFrame = 0, g_hotRightPoseFrame = 0;
 alignas(8) static volatile LONG64 g_hotHmdPoseFrame = 0, g_hotInputFrame = 0;
 alignas(8) static volatile LONG64 g_hotRecenterGeneration = 0, g_hotPaletteFrame = 0;
@@ -5729,6 +5730,29 @@ static void ReportHotPathSampler() {
     append("present-hook residual estimate=%.4f ms/frame (inclusive stage estimates subtracted)", present-known);
     Log("hotpath sampler complete: %s", report);
 }
+
+// One owned, gameplay-only request per process. Reuse the existing bounded
+// sampler; never reset an active/completed sampler with scopes in flight.
+static void PollGameplayHotPath(bool ready) {
+    static bool armed=false;
+    static DWORD last=0;
+    if(armed || !g_gameplayHotPathAllowed || !ready || g_hotPathSampler.active() || g_hotPathSampler.frame_token()!=0)return;
+    const DWORD now=GetTickCount();if(last && now-last<1000)return;last=now;
+    char path[MAX_PATH]{};strcpy_s(path,g_logPath);
+    char* end=strrchr(path,'\\');if(!end)return;
+    strcpy_s(end+1,sizeof(path)-(end+1-path),"hotpath-gameplay.request");
+    HANDLE file=CreateFileA(path,GENERIC_READ,FILE_SHARE_READ,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,nullptr);
+    if(file==INVALID_HANDLE_VALUE)return;
+    char payload[64]{};DWORD size=0;
+    const bool read=ReadFile(file,payload,sizeof(payload)-1,&size,nullptr)!=0;
+    CloseHandle(file);
+    static const char expected[]="SingularityVR gameplay hotpath v1";
+    if(!read || size!=sizeof(expected)-1 || memcmp(payload,expected,size)!=0)return;
+    if(!DeleteFileA(path))return;
+    armed=true;
+    g_hotPathSampler.configure(true);
+    Log("GAMEPLAY_HOTPATH armed: 1200 frames, sampled existing hooks; no rendering/input changes");
+}
 #include "pause_vr_settings.h"
 #include "native_ui_input.h"
 uipointer::TriggerGate g_vrUiTrigger[2];
@@ -6312,6 +6336,8 @@ void SampleThreadCpu() {
                         && wallMs > 0.0 && wallMs < 5000.0;
     if (haveLast && idx < 0) ++g_cpuDroppedIntervals;
 
+    double intervalUser=0,intervalKernel=0,presentCpu=0;
+
     for (int i = 0; i < g_cpuThreadN; ++i) {
         CpuThread& t = g_cpuThreads[i];
         if (!t.alive || !t.h) continue;
@@ -6319,6 +6345,12 @@ void SampleThreadCpu() {
         if (!GetThreadTimes(t.h, &ct, &et, &kt, &ut)) { t.alive = false; continue; }
         const ULONGLONG kk = ((ULONGLONG)kt.dwHighDateTime << 32) | kt.dwLowDateTime;
         const ULONGLONG uu = ((ULONGLONG)ut.dwHighDateTime << 32) | ut.dwLowDateTime;
+        if(t.haveLast && framesNow>0 && wallMs>0 && wallMs<5000) {
+            const double user=double(uu-t.lastU)/10000.0;
+            const double kernel=double(kk-t.lastK)/10000.0;
+            intervalUser+=user;intervalKernel+=kernel;
+            if(t.tid==GetCurrentThreadId())presentCpu+=user+kernel;
+        }
         if (t.haveLast && attribute) {
             t.k[idx] += double(kk - t.lastK) / 10000.0;   // 100 ns units -> ms
             t.u[idx] += double(uu - t.lastU) / 10000.0;
@@ -6332,6 +6364,10 @@ void SampleThreadCpu() {
         g_cpuWallMs[idx]       += wallMs;
         g_cpuBucketFrames[idx] += framesNow;
     }
+    if(g_hotPathSampler.active() && haveLast && framesNow>0 && wallMs>0 && wallMs<5000)
+        Log("GAMEPLAY_HOTPATH interval frames=%ld wall_ms=%.3f process_user_ms=%.3f process_kernel_ms=%.3f present_cpu_ms=%.3f LT=%ld RT=%ld (CPU deltas, trigger endpoint only)",
+            framesNow,wallMs/framesNow,intervalUser/framesNow,intervalKernel/framesNow,presentCpu/framesNow,
+            Rd(g_rawAltTrigger),Rd(g_rawTrigger));
     lastT = now;
     haveLast = true;
 }
@@ -23684,6 +23720,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         g_handPositionValid[0] && g_handPositionValid[1];
     static unsigned shadowTraceStable=0;
     shadowTraceStable=shadowTraceReady?std::min(shadowTraceStable+1,30u):0;
+    PollGameplayHotPath(shadowTraceStable>=15);
     if(shadowtrace::Boundary(s,shadowTraceStable>=15,g_logPath))
         SaveBackbufferCapture(s,true); // Completed SBS scene, before menu/diagnostic overlays.
     PauseRttStart::Install();
@@ -26611,6 +26648,7 @@ void LoadIniSettings() {
     if (!IniPath(path)) return;
 
     const bool hotPathEnabled = GetPrivateProfileIntA("Render", "HotPathSampler", 0, path) != 0;
+    g_gameplayHotPathAllowed=!hotPathEnabled;
     g_hotPathSampler.configure(hotPathEnabled);
     if (hotPathEnabled)
         Log("ini: HotPathSampler=1; collecting 1200 Present frames, 1/%u timing samples, then stopping",

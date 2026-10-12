@@ -1,6 +1,7 @@
 # Native shadow-depth clear classification experiment
 
-Status: IMPLEMENTED_NOT_VERIFIED, default OFF. No shader correction.
+Status: RUNTIME_CLASSIFICATION_PASS / PARTIAL_PHYSICAL_RESULT, default OFF.
+No shader correction; square-shadow defect remains unresolved.
 
 ## Same-session runtime measurement, 2026-10-12 PID23132
 
@@ -31,6 +32,31 @@ visual PASS. No claim yet that square shadows, controller-following distant
 shadows, or black/frozen gun materials are fixed. Physical feedback and verified
 post-session restoration remain required. Bone palette contents are not proved
 by moved flags. No matching world-decal comparison was established in this pair.
+
+User feedback after this same-session test: stereo apparently OK, weapon tracking
+OK, no remaining/trailing weapon shadow; shadows still square. This is a partial
+visual result, not proof that every black/frozen material or distant shadow is
+fixed. User additionally reports progressively falling FPS while holding L2 or
+R2, recovering to90 when released. Ordinary-shadow preservation was not answered
+separately. Game exited; guard removed ClearGate flag and restored accepted DLL.
+MAIN verified all3 actual hashes: DLL9FBA308C..., INI61AEC56C..., UI5B2EA469....
+
+Retained runtime log contains39.7FPS/25.21ms and later89.9FPS/11.12ms. Measured
+OpenXR sync/actions/poses sum about0.18ms in that slow interval; haptics0ms,
+copy0.01ms, submit0.27ms. "Our work"24.90ms is an unassigned residual, not proof
+of mod CPU cost. Existing CPU buckets label all90Hz frames SLOW (FAST>=105),
+so their cumulative table cannot isolate this regression. Trigger endpoints
+and some whole reporting windows read zero despite slow frames: no established
+press-duration correlation from this uncontrolled log alone.
+
+Next bounded instrument: owned hotpath-gameplay.request arms the existing sampled
+hook profiler only after focused tracked gameplay. One1200-frame window/process,
+default OFF, no INI edits; rejected if INI profiling already enabled. Existing
+thread sampler additionally prints non-cumulative CPU deltas during this window
+(process user/kernel and Present-thread CPU), allowing burn-versus-wait comparison.
+Trigger endpoints are explicitly labeled endpoints, not entire-interval states;
+initial interval can straddle arming. Existing nested hook times are inclusive
+and must NOT be summed as independent costs. No shader/input/weapon changes.
 
 ## Evidence, real Steam PID5260 / DLL6D147048
 
