@@ -7,7 +7,7 @@ struct DiagFrame {
     uint32_t id, thread, mode, eye, eyeAge[2], buttons, previous, rising, falling, publishedButtons;
     uint32_t triggerL, triggerR, rumbleL, rumbleR, hapticCalls, hapticApplyCalls, hapticStopCalls, hapticCallUs, hapticAmplitudeMilli;
     uint32_t xiGetCalls, xiSetCalls, xiGetTotalUs, xiSetTotalUs, xiGetMaxUs, xiSetMaxUs;
-    uint32_t phaseUs[DP_COUNT], presentUs, frameUs, resetCount, swapchainCount;
+    uint32_t phaseUs[DP_COUNT], presentUs, frameUs, threadCpuUs, resetCount, swapchainCount;
     uint8_t phaseCalls[DP_COUNT];
     uint32_t recEyeW, recEyeH, autoW, autoH, backW, backH, sceneW, sceneH;
     uint32_t sharedW, sharedH, bridgeW, bridgeH, swapW, swapH, rectW, rectH, clientW, clientH;
@@ -27,8 +27,20 @@ static volatile LONG g_diagResetCount = 0, g_diagSwapchainCount = 0;
 static volatile LONG g_diagResetRequestW = 0, g_diagResetRequestH = 0;
 static volatile LONG g_diagSceneW = 0, g_diagSceneH = 0;
 static uint32_t g_diagNextId = 0, g_diagPublishedId = 0, g_diagLastEyeFrame[2] = {};
-static int64_t g_diagPriorStart = 0;
+static int64_t g_diagPriorStart = 0, g_diagPrevThreadCpu100ns = 0;
 static LARGE_INTEGER g_diagFrequency{};
+static uint32_t DiagSampleThreadCpuUs() {
+    FILETIME create{}, exit{}, kernel{}, user{};
+    if (!GetThreadTimes(GetCurrentThread(), &create, &exit, &kernel, &user)) return 0;
+    ULARGE_INTEGER k{}, u{};
+    k.LowPart = kernel.dwLowDateTime; k.HighPart = kernel.dwHighDateTime;
+    u.LowPart = user.dwLowDateTime; u.HighPart = user.dwHighDateTime;
+    const int64_t now = int64_t(k.QuadPart + u.QuadPart);
+    const int64_t delta = g_diagPrevThreadCpu100ns ? (now - g_diagPrevThreadCpu100ns) : 0;
+    g_diagPrevThreadCpu100ns = now;
+    if (delta < 0) return 0;
+    return uint32_t(delta / 10); // 100 ns units -> microseconds
+}
 
 // Log is defined by the host source before this header is included.
 static uint32_t DiagUs(int64_t start) {
@@ -56,6 +68,7 @@ static void DiagStart() {
     g_diagCurrent.mode = LONG(InterlockedCompareExchange(&g_diagMode, 0, 0));
     g_diagCurrent.qpcStart = DiagQpc();
     g_diagCurrent.frameUs = g_diagPriorStart ? uint32_t((g_diagCurrent.qpcStart - g_diagPriorStart) * 1000000LL / g_diagFrequency.QuadPart) : 0;
+    g_diagCurrent.threadCpuUs = DiagSampleThreadCpuUs();
     g_diagPriorStart = g_diagCurrent.qpcStart;
     g_diagCurrent.xiGetCalls = InterlockedExchange(&g_diagXiGetCalls, 0);
     g_diagCurrent.xiSetCalls = InterlockedExchange(&g_diagXiSetCalls, 0);
@@ -148,6 +161,32 @@ static DWORD WINAPI DiagWorker(LPVOID) {
             lastSettingsCheck=newest;
         }
         static uint32_t priorBackW=0,priorBackH=0,priorSwapW=0,priorSwapH=0,priorSceneW=0,priorSceneH=0,priorClientW=0,priorClientH=0,priorReset=0,priorRecreate=0;
+        static uint32_t lastStallId=0, stallReports=0;
+        if (newest && stallReports < 48) {
+            const DiagFrame& stall=local[newest%kDiagRing];
+            const int residual=int(stall.frameUs)-int(stall.presentUs);
+            if (stall.id==newest && stall.id!=lastStallId && residual>250000) {
+                char hist[384]{};
+                size_t used=0;
+                uint32_t listed=0;
+                const uint32_t begin=newest>90?newest-90:1;
+                for (uint32_t id=begin; id<=newest && listed<8; ++id) {
+                    const DiagFrame& e=local[id%kDiagRing];
+                    if (e.id!=id || !(e.rising|e.falling)) continue;
+                    const int n=sprintf_s(hist+used, sizeof(hist)-used, "%s%u:%s:0x%04X:pub%04X",
+                        used?" ":"", id, (e.rising?"R":"F"), e.rising?e.rising:e.falling, e.publishedButtons);
+                    if (n<=0) break;
+                    used+=size_t(n);
+                    ++listed;
+                }
+                DiagLog("LONGSTALL frame=%u mode=%s thread=%u frame_us=%u present_us=%u residual_us=%d thread_cpu_us=%u wait=%u end=%u swapwait=%u haptic=%u xiGet=%u/%u trig=%u/%u edges90=%s",
+                    stall.id, DiagModeName(stall.mode), stall.thread, stall.frameUs, stall.presentUs, residual, stall.threadCpuUs,
+                    stall.phaseUs[DP_WAIT], stall.phaseUs[DP_END], stall.phaseUs[DP_SWAPWAIT], stall.phaseUs[DP_HAPTIC],
+                    stall.xiGetCalls, stall.xiGetTotalUs, stall.triggerL, stall.triggerR, hist[0]?hist:"none");
+                lastStallId=stall.id;
+                ++stallReports;
+            }
+        }
         if(newest) {const DiagFrame& f=local[newest%kDiagRing];
             if(f.id==newest && (f.backW!=priorBackW||f.backH!=priorBackH||f.swapW!=priorSwapW||f.swapH!=priorSwapH||f.sceneW!=priorSceneW||f.sceneH!=priorSceneH||f.clientW!=priorClientW||f.clientH!=priorClientH||f.resetCount!=priorReset||f.swapchainCount!=priorRecreate)) {
                 DiagLog("RESOLUTION frame=%u recommendedEye=%ux%u auto=%ux%u client=%ux%u requestedReset=%ldx%ld backbuffer=%ux%u sceneCandidate=%ux%u shared=%ux%u bridge=%ux%u swapchain=%ux%u imageRect=%ux%u resets=%u recreates=%u",f.id,f.recEyeW,f.recEyeH,f.autoW,f.autoH,f.clientW,f.clientH,InterlockedCompareExchange(&g_diagResetRequestW,0,0),InterlockedCompareExchange(&g_diagResetRequestH,0,0),f.backW,f.backH,f.sceneW,f.sceneH,f.sharedW,f.sharedH,f.bridgeW,f.bridgeH,f.swapW,f.swapH,f.rectW,f.rectH,f.resetCount,f.swapchainCount);
