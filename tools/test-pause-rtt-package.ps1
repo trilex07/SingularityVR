@@ -84,7 +84,13 @@ if ($Action -eq 'Install') {
     $backup = Join-Path $backupRoot (Get-Date -Format 'yyyyMMdd-HHmmss')
     if ($PSCmdlet.ShouldProcess($backup, 'create pause RTT package backup')) {
         New-Item -ItemType Directory -Path $backup -Force | Out-Null
-        foreach ($source in @($package, $dll, $ini)) { Copy-Item -LiteralPath $source -Destination (Join-Path $backup ([IO.Path]::GetFileName($source))) -Force }
+        foreach ($source in @($package, $dll, $ini)) {
+            $destination = Join-Path $backup ([IO.Path]::GetFileName($source))
+            Copy-Item -LiteralPath $source -Destination $destination -Force
+            if ((Get-Sha256 $destination) -ne (Get-Sha256 $source)) {
+                throw "Backup verification failed: $source; package was not deployed."
+            }
+        }
         $manifest = [ordered]@{
             createdAt = (Get-Date).ToString('o'); candidate = $CandidatePath; candidateSha256 = $state.candidate.sha256
             files = @($package, $dll, $ini | ForEach-Object { [ordered]@{ name = [IO.Path]::GetFileName($_); sourcePath = $_; sha256 = Get-Sha256 $_ } })
