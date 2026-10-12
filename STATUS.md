@@ -6,9 +6,11 @@ Last updated **2026-10-12**.
 
 **Pause menu:** GFx ownership, native overlay, and GFx readback are **closed NO-GO** (`research/pause-vr-overlay-feasibility` @ `8b5643a`). **Do not** resume Gate B, cinema, or overlay work without new evidence. In-game pause visuals remain **broken** — not fixed.
 
-**Next priority — Performance:** `residual` = Present-to-Present gap minus current `Hook_Present` (`docs/audits/input-stall-hypothesis-20261012.md`). Across 46 logs the ~450–500 ms class is **not unique to Jump**; the 90-frame edge window over-attributes. `0x2001` on 2026-10-12 is **Health (`0x0001`) + Crouch (`0x2000`)**, triggers 0 — not a verified gunshot. **No fix.** New opt-in `LONGSTALL` + Present-thread `GetThreadTimes` in `diagnostic_trace.h`. Candidate DLL **`5CC5EA3D…`** (`deployment/candidate-longstall-20261012/`). Steam remains **`2FE5011C…`**. **Next PSVR2:** one stall with `[Diagnostic] Enabled=1` and read `thread_cpu_us` vs `residual_us`.
+**Performance (~495 ms stall):** Investigation branch **`perf/input-jump-stall-diagnostics` @ `4e58bdb`** (frozen; not merged). **Conclusion:** stall is **`residual`-dominated** (outside phased `Hook_Present`); haptics/swapwait ruled out on captured frames; **no mod fix** (`docs/audits/performance-stall-conclusion-20261012.md`). **`LONGSTALL` + `thread_cpu_us`** on `4e58bdb` is the **only** added discriminator for wait vs Present-thread CPU — requires one diagnostic deploy + log (candidate `5CC5EA3D…` in `deployment/candidate-longstall-20261012/`). **Do not** deploy without rollback plan. **Do not** re-open hands/grip/IK (`feature/hands-support-grip` @ `a18ba1e` is **inactive**).
 
-**Hands/gloves (accepted build):** Left glove idle **PHYSICALLY_VERIFIED** (`010eb45`); authored pistol grip @ `726e1a7`. Pause HUD: see `docs/audits/hands-only-and-pause.md` (unchanged on accepted DLL).
+**Hands/gloves (accepted — do not redesign):** User **PHYSICALLY_VERIFIED** idle left glove and **accepted** two-hand grip on production **`2FE5011C…` @ `726e1a7`**. No further hand PSVR2 tasks unless explicitly requested.
+
+**Pause menu:** GFx/overlay research **closed NO-GO** (`8b5643a`). In-game pause visuals **broken** (clipped upper-left; VR Settings OK). SIDE owns pause; MAIN does not experiment here.
 
 Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
 Read this first, then `ENGINE_NOTES.md`.

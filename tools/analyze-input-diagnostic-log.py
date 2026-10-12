@@ -90,6 +90,39 @@ class ButtonEdge:
 
 
 @dataclass
+class LongStall:
+    frame: int = 0
+    mode: str = ""
+    thread: int = 0
+    frame_us: int = 0
+    present_us: int = 0
+    residual_us: int = 0
+    thread_cpu_us: int = 0
+    wait_us: int = 0
+    end_us: int = 0
+    swapwait_us: int = 0
+    haptic_us: int = 0
+    xi_get_calls: int = 0
+    xi_get_total_us: int = 0
+    trigger_l: int = 0
+    trigger_r: int = 0
+    edges90: str = ""
+
+    def cpu_vs_wait_hint(self) -> str:
+        """Interpret Present-thread CPU vs residual (4e58bdb+ logs only)."""
+        if self.thread_cpu_us <= 0 and self.residual_us > 250000:
+            return "no thread_cpu_us (pre-4e58bdb log or field missing)"
+        if self.residual_us <= 0:
+            return "n/a"
+        ratio = self.thread_cpu_us / float(self.residual_us)
+        if ratio < 0.25:
+            return "Present thread mostly idle/waiting during residual (CPU ≪ residual)"
+        if ratio > 0.75:
+            return "Present thread CPU ≈ residual (busy on Present thread; use ETW for call stacks)"
+        return "mixed (partial Present-thread CPU during residual)"
+
+
+@dataclass
 class InputTiming:
     mode: str = ""
     frames: int = 0
@@ -171,6 +204,34 @@ def parse_button_edge(line: str) -> Optional[ButtonEdge]:
     )
 
 
+def parse_longstall(line: str) -> Optional[LongStall]:
+    m = re.search(
+        r"LONGSTALL\s+frame=(\d+)\s+mode=(\S+)\s+thread=(\d+)\s+frame_us=(\d+)\s+present_us=(\d+)\s+residual_us=(-?\d+)\s+thread_cpu_us=(\d+)\s+wait=(\d+)\s+end=(\d+)\s+swapwait=(\d+)\s+haptic=(\d+)\s+xiGet=(\d+)/(\d+)\s+trig=(\d+)/(\d+)\s+edges90=(.*)",
+        line,
+    )
+    if not m:
+        return None
+    g = m.groups()
+    return LongStall(
+        frame=int(g[0]),
+        mode=g[1],
+        thread=int(g[2]),
+        frame_us=int(g[3]),
+        present_us=int(g[4]),
+        residual_us=int(g[5]),
+        thread_cpu_us=int(g[6]),
+        wait_us=int(g[7]),
+        end_us=int(g[8]),
+        swapwait_us=int(g[9]),
+        haptic_us=int(g[10]),
+        xi_get_calls=int(g[11]),
+        xi_get_total_us=int(g[12]),
+        trigger_l=int(g[13]),
+        trigger_r=int(g[14]),
+        edges90=g[15].strip(),
+    )
+
+
 def parse_input_timing(line: str) -> Optional[InputTiming]:
     m = re.search(
         r"InputTiming\s+mode=(\S+)\s+frames=(\d+)\s+avg_us=(\d+)\s+p95_us=(\d+)\s+max_us=(\d+)\s+present_avg_us=(\d+)\s+xr_avg_us=(\d+)\s+bridge_avg_us=(\d+)\s+xinput_avg_us=(\d+)\s+lifecycleViolations=(\d+)",
@@ -219,6 +280,7 @@ class DiagnosticLog:
     timings: List[InputTiming] = field(default_factory=list)
     edges: List[ButtonEdge] = field(default_factory=list)
     phases: Dict[int, PhaseBreakdown] = field(default_factory=dict)
+    long_stalls: List[LongStall] = field(default_factory=list)
 
 
 def parse_log(text: str) -> DiagnosticLog:
@@ -240,6 +302,10 @@ def parse_log(text: str) -> DiagnosticLog:
         p = parse_phase(line)
         if p:
             log.phases[p.frame] = p
+            continue
+        ls = parse_longstall(line)
+        if ls:
+            log.long_stalls.append(ls)
             continue
     return log
 
@@ -267,6 +333,20 @@ def render(log: DiagnosticLog, path: str) -> str:
         lines.append("|---:|---|---|")
         for line_no, mode, poll in log.mode_changes:
             lines.append(f"| {line_no} | {mode} | {poll} |")
+        lines.append("")
+
+    if log.long_stalls:
+        lines.append("## LONGSTALL events (residual > 250 ms, 4e58bdb+ diagnostic builds)")
+        lines.append("")
+        lines.append("| frame | mode | frame ms | present ms | residual ms | thread CPU ms | hint | edges90 |")
+        lines.append("|---:|---|---:|---:|---:|---:|---|---|")
+        for ls in sorted(log.long_stalls, key=lambda x: x.residual_us, reverse=True):
+            lines.append(
+                f"| {ls.frame} | {ls.mode} | {ls.frame_us / 1000.0:.2f} | {ls.present_us / 1000.0:.2f} | "
+                f"{ls.residual_us / 1000.0:.2f} | {ls.thread_cpu_us / 1000.0:.2f} | {ls.cpu_vs_wait_hint()} | {ls.edges90} |"
+            )
+        lines.append("")
+        lines.append("- Compare **thread CPU ms** to **residual ms**: low ratio → wait/scheduling; high ratio → Present thread was executing (ETW still needed for UE3 attribution).")
         lines.append("")
 
     if log.timings:
