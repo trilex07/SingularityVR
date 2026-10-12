@@ -38,11 +38,15 @@ int main() {
     Expect(stump.m[0][0] > 0.0f && stump.m[0][0] < 1.0f,
            "legacy mode 3 stump remains a scale toward the wrist");
 
+    Expect(gloveisolate::NoTmdGlovePaletteCovers(6), "left clavicle is in the glove palette");
+    Expect(gloveisolate::NoTmdGlovePaletteCovers(7), "left shoulder is in the glove palette");
+    Expect(gloveisolate::NoTmdGlovePaletteCovers(8), "left elbow is in the glove palette");
     Expect(gloveisolate::NoTmdGlovePaletteCovers(9), "left wrist is in the glove palette");
     Expect(gloveisolate::NoTmdGlovePaletteCovers(27), "left forearm is in the glove palette");
+    Expect(gloveisolate::NoTmdGlovePaletteCovers(41), "left sleeve_fix is in the glove palette");
     Expect(gloveisolate::NoTmdGlovePaletteCovers(46), "left forearm2 is in the glove palette");
     Expect(gloveisolate::NoTmdGlovePaletteCovers(47), "left bicep is in the glove palette");
-    Expect(gloveisolate::kNoTmdGlovePaletteBoneCount == 37u,
+    Expect(gloveisolate::kNoTmdGlovePaletteBoneCount == 45u,
            "pistol glove palette slot count");
     return g_fails == 0 ? 0 : 1;
 }

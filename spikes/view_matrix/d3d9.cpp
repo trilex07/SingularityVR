@@ -14548,7 +14548,7 @@ static bool PaletteMat(const float gpu[3][4], armbind::Mat& out) {
     return armbind::FromGpu(gpu, out);
 }
 
-static void UpdateGloveWristCenters(float changed[114][4], const unsigned* map, int slots) {
+static void UpdateGloveWristCenters(float changed[135][4], const unsigned* map, int slots) {
     const GloveRefBone* refs = GloveRefs();
     for (int hand = 0; hand < 2; ++hand) {
         const char* name = hand == 0 ? "l_arm_wrist" : "r_arm_wrist";
@@ -14589,7 +14589,7 @@ static bool SlotScaleStable(const float before[3][4], const float after[3][4]) {
     return true;
 }
 
-static void ApplyGloveIsolation(float changed[114][4], const unsigned* map, int slots,
+static void ApplyGloveIsolation(float changed[135][4], const unsigned* map, int slots,
                                 int mode) {
     if (mode <= 0 || !map || slots <= 0) return;
     const GloveRefBone* refs = GloveRefs();
@@ -14645,7 +14645,7 @@ static void ApplyGloveIsolation(float changed[114][4], const unsigned* map, int 
 }
 
 static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first, UINT triangles,
-                                  float saved[114][4]) {
+                                  float saved[135][4]) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::bone_palette);
     if (g_hotPathSampler.active())
         InterlockedExchange64(&g_hotPaletteFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
@@ -14779,9 +14779,9 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     }
     int slots = 0;
     const unsigned* sectionMap = GloveMap(gloves, sleeve, tmdGloves, tmdBase, tmdExtra, slots);
-    if (!sectionMap || slots <= 0 || slots > 38) { IndependentAuditCount(IHA_MAP,audit); return 0; }
+    if (!sectionMap || slots <= 0 || slots > 45) { IndependentAuditCount(IHA_MAP,audit); return 0; }
     const int regs=slots*3;
-    float local[4][4],primary[4][4],off[4][4],delta[4][4],changed[114][4];
+    float local[4][4],primary[4][4],off[4][4],delta[4][4],changed[135][4];
     if(FAILED(dev->GetVertexShaderConstantF(230,&local[0][0],4)) ||
        FAILED(dev->GetVertexShaderConstantF(5,&saved[0][0],regs))) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
     BuildLiveControllerC(primary, true);
@@ -14891,7 +14891,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             NudgeComponentX(reinterpret_cast<float(*)[4]>(&changed[b * 3]), leftShift);
         }
     }
-    float posed[114][4];
+    float posed[135][4];
     memcpy(posed, changed, (size_t)regs * 4 * sizeof(float));
     // The wrist centers are taken from the live, post-IK palette.  Section 0
     // contains both wrists and seeds the cache used by the arm-only section;
@@ -16761,7 +16761,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // ⭐ run 251: one call per surviving segment, INSIDE the StereoPair lambda so each eye draws the
     // whole set. Putting the loop outside would run the per-eye setup once and the geometry twice.
     // The ordinary path is nSeg == 1 and emits exactly the call it always did.
-    float independentSaved[114][4];
+    float independentSaved[135][4];
     const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(dev,numVertices,startIndex,primCount,independentSaved) : 0;
     if(FgIndependentHandsCandidate(numVertices, startIndex, primCount) && !independentRegs) {
         nSeg=0;
@@ -17593,23 +17593,41 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         D3DVIEWPORT9 vpMenu{};
         dev->GetViewport(&vpMenu);
         const unsigned sceneW = (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0);
-        const bool pauseSbsCompose =
-            pausemenuspace::PauseMenuOffscreenSbs((unsigned)menuClassNow, vpMenu.Width, sceneW);
+        const bool monoStage =
+            pausemenuspace::PauseOffscreenMonoStage((unsigned)menuClassNow, vpMenu.Width, sceneW);
         const bool perEyeCanvas =
-            !pauseSbsCompose &&
-            pausemenuspace::DiegeticMenuCanvas(c, vpMenu.Width, sceneW);
-        const int compose = pauseSbsCompose ? 2 : (perEyeCanvas ? 1 : 0);
+            !monoStage && pausemenuspace::DiegeticMenuCanvas(c, vpMenu.Width, sceneW);
+        const int compose = monoStage ? 3 : (perEyeCanvas ? 1 : 0);
         menumono::NoteDraw((int)menuClassNow, false, vpMenu.Width, vpMenu.Height, sceneW, c,
                            compose);
+        if (monoStage) {
+            static LONG saidMonoStage = 0;
+            if (InterlockedCompareExchange(&saidMonoStage, 1, 0) == 0)
+                Log("menu mono: class=3 centered mono viewport into scene-sized GFx target"
+                    " (%ux%u sceneW=%u)",
+                    vpMenu.Width, vpMenu.Height, sceneW);
+            D3DVIEWPORT9 stage = vpMenu;
+            stage.X = vpMenu.X + sceneW / 4;
+            stage.Width = sceneW / 2;
+            RECT sc = { (LONG)stage.X, (LONG)stage.Y,
+                        (LONG)(stage.X + stage.Width), (LONG)(stage.Y + stage.Height) };
+            dev->SetViewport(&stage);
+            dev->SetScissorRect(&sc);
+            dev->SetVertexShaderConstantF(5, c, 4);
+            const HRESULT hrMono = draw();
+            dev->SetViewport(&vpMenu);
+            dev->SetScissorRect(&oldRect);
+            dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
+            g_inHudRemap = false;
+            return hrMono;
+        }
         const LONG halfW = (LONG)vpMenu.Width / 2;
-        if (pauseSbsCompose || perEyeCanvas) {
+        if (perEyeCanvas) {
             static LONG saidCompose = 0;
             if (InterlockedCompareExchange(&saidCompose, 1, 0) == 0)
-                Log("menu mono: class=%ld %s into scene-sized GFx target (%ux%u sceneW=%u)",
-                    menuClassNow,
-                    pauseSbsCompose ? "half-viewport SBS compose (c5 unchanged)"
-                                    : "per-eye canvas remap",
-                    vpMenu.Width, vpMenu.Height, sceneW);
+                Log("menu mono: class=%ld per-eye canvas remap into scene-sized GFx target"
+                    " (%ux%u sceneW=%u)",
+                    menuClassNow, vpMenu.Width, vpMenu.Height, sceneW);
             HRESULT hrMono = S_OK;
             D3DVIEWPORT9 savedVp = vpMenu;
             for (int eye = 0; eye < 2; ++eye) {
@@ -17620,20 +17638,18 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
                             (LONG)(half.X + half.Width), (LONG)(half.Y + half.Height) };
                 dev->SetViewport(&half);
                 dev->SetScissorRect(&sc);
-                if (perEyeCanvas) {
-                    const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
-                    const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3;
-                    const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
-                    float m[16];
-                    memcpy(m, c, sizeof(m));
-                    Reg4* q = reinterpret_cast<Reg4*>(m);
-                    for (int i = 0; i < 4; ++i) {
-                        q[i].x *= k;
-                        q[i].y *= k;
-                    }
-                    ApplyEyeRemap(reinterpret_cast<Reg4*>(m), CONV_ROW, eye ? +0.5f : -0.5f);
-                    dev->SetVertexShaderConstantF(5, m, 4);
+                const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
+                const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3;
+                const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
+                float m[16];
+                memcpy(m, c, sizeof(m));
+                Reg4* q = reinterpret_cast<Reg4*>(m);
+                for (int i = 0; i < 4; ++i) {
+                    q[i].x *= k;
+                    q[i].y *= k;
                 }
+                ApplyEyeRemap(reinterpret_cast<Reg4*>(m), CONV_ROW, eye ? +0.5f : -0.5f);
+                dev->SetVertexShaderConstantF(5, m, 4);
                 const HRESULT r = draw();
                 if (FAILED(r)) hrMono = r;
             }
@@ -17652,6 +17668,40 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
         g_inHudRemap = false;
         return draw();
+    }
+    if (pausemenuspace::PauseBackbufferCanvasRoute((unsigned)menuClassNow,
+            InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0) != 0, c)) {
+        menumono::NoteDraw((int)menuClassNow, true, (unsigned)vp.Width, (unsigned)vp.Height,
+                           (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0), c, 1);
+        static LONG saidPauseBb = 0;
+        if (InterlockedCompareExchange(&saidPauseBb, 1, 0) == 0)
+            Log("menu pause: class=3 backbuffer canvas ortho per-eye copy (c5 inset/remap)");
+        const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
+        const bool menuSafe = menuLayout || menuClassNow == 3;
+        const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
+        const LONG halfW = (LONG)vp.Width / 2;
+        HRESULT hrPause = S_OK;
+        for (int eye = 0; eye < 2; ++eye) {
+            float m[16];
+            memcpy(m, c, sizeof(m));
+            Reg4* q = reinterpret_cast<Reg4*>(m);
+            for (int i = 0; i < 4; ++i) {
+                q[i].x *= k;
+                q[i].y *= k;
+            }
+            ApplyEyeRemap(reinterpret_cast<Reg4*>(m), CONV_ROW, eye ? +0.5f : -0.5f);
+            RECT r = { (LONG)vp.X + (eye ? halfW : 0), (LONG)vp.Y,
+                       (LONG)vp.X + (eye ? (LONG)vp.Width : halfW), (LONG)(vp.Y + vp.Height) };
+            dev->SetScissorRect(&r);
+            dev->SetVertexShaderConstantF(5, m, 4);
+            const HRESULT rDraw = draw();
+            if (FAILED(rDraw)) hrPause = rDraw;
+        }
+        dev->SetVertexShaderConstantF(5, c, 4);
+        dev->SetScissorRect(&oldRect);
+        dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
+        g_inHudRemap = false;
+        return hrPause;
     }
     // Title corner labels only. Boot/Bink stay on their own path (class 1 scale
     // is the IIS title, which is not the video quad).
