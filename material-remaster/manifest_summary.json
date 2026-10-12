@@ -1,0 +1,33 @@
+{
+  "materials": [
+    {
+      "key": "weapon_shotgun",
+      "asset": "AR_shotgun",
+      "manifest": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\weapon_shotgun\\manifest.json",
+      "substituted": {
+        "diffuse": "6340e3245854c8cf",
+        "normal": "76a7d6ee4f446828"
+      }
+    },
+    {
+      "key": "glove",
+      "asset": "inview_glove",
+      "manifest": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\glove\\manifest.json",
+      "substituted": {
+        "diffuse": "e702e96cbae6ae73",
+        "normal": "754c1b0617db8384"
+      }
+    },
+    {
+      "key": "env_door",
+      "asset": "door_blastdoorN",
+      "manifest": "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\material-remaster\\env_door\\manifest.json",
+      "substituted": {
+        "diffuse": "6950d6da5947d3e0",
+        "normal": "e667e9a1d651026d"
+      }
+    }
+  ],
+  "total_source_mip0_bytes": 3325952,
+  "total_replacement_bytes": 4434752
+}
