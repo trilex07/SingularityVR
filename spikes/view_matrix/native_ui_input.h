@@ -157,7 +157,10 @@ static void __fastcall Poll(void* self,void*,float dt) {
  ReadableForget();
  UpdateMenu(); // update mode before the game tick/XInput routes the trigger
  BindViewport();
- originalPoll(self,dt); // original guarded missing-mouse path preserves keyboard/XInput/OpenXR
+ {
+  hotpath::scope inputScope(g_hotPathSampler,hotpath::Family::native_input_poll);
+  originalPoll(self,dt); // original guarded missing-mouse path preserves keyboard/XInput/OpenXR
+ }
  Drain(dt); // engine UI calls stay on the game's original input thread
 }
 static void Install() {

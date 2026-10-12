@@ -108,6 +108,44 @@ or DLL replacement. ETL is private and system-wide; analysis must filter game PI
 Needs explicit administrator/UAC authorization: current shell is not elevated.
 Not yet run; no stack-level attribution until samples are captured.
 
+## Bounded Windows CPU trace PID33004, 23:12
+
+User authorized UAC and physical test on accepted DLL9FBA308C. Named WPR instance
+started, independently confirmed through logman session inventory; stopped and
+saved privately after90 seconds from game launch. Default non-elevated WPR status
+did not expose the elevated named instance: it is not evidence that capture failed.
+ETL2,969,567,232 bytes; Perfinfo422,680 system samples. Game-only filtered CSV
+contains78,190 IP samples. Own stream analyzer handles actual I-Start/EndAddr
+and PrgrmCtr schemas, verifies PID33004, and can retain unique frame-hit counts
+for one sampled thread; these are inclusive counts, not additive CPU times.
+
+Physical user: drops on L2/R2, Jump, Circle, R1, Square; normal game exit. Files
+remain accepted DLL9FBA308C, UI5B2EA469; current INI returned to61AEC56C via
+game persistence (no MAIN overwrite). Private read-only .text snapshot PID33004,
+base00400000/RVA2000/size0138011A, zero failed pages, taken AFTER recording.
+Raw code/disassembly and ETL never committed. Full stack totals include context
+switches; CPU-only export must filter event "Sampled Profile" (with space).
+
+TID10764 corresponds to the previously observed non-Present game thread,
+start+01B542ED. Its hot004886BC IP belongs to a bytewise left-shift/table checksum
+loop at00488690, but573/1022 hits are in trace second16 (startup), so NOT a
+button root-cause finding. Avoid misleading global hot-address patching.
+
+In later seconds59/60, sampled stacks include original platform input polling,
+DirectInput forwarder and Steam Overlay. Accepted-map provenance and DLL SHA
+confirmed against pause-native worktree: own DLL RVA3F916 maps to NativeVrUi::Poll
++0x26. Source forwards originalPoll before Drain; its presence in a stack does NOT
+prove our UI bridge owns the sampled cost. Original native input virtual return
+011D3903 confirmed by private assembly. Temporal button-edge matching and native
+subpath identity are not complete; no input fix claim.
+
+Next minimal experiment adds one existing-sampler family around originalPoll
+inside the existing hook (no new native hook, no argument/result/behavior change).
+Default OFF unless bounded gameplay sampler requested. Hypothesis: native polling
+cost grows on held controls. Falsifier: native_input_poll remains small while FPS
+drops, moving investigation to other game/update or waiting paths. Keep ClearGate
+and Receiver OFF to isolate; inspect existing per240-frame partial profiles.
+
 ## Evidence, real Steam PID5260 / DLL6D147048
 
 Focused capture 2: 1329 final calls, 322 state-qualified groups, zero overflow,

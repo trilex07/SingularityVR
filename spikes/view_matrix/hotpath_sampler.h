@@ -10,6 +10,7 @@
 namespace hotpath {
 
 enum class Family : unsigned {
+	native_input_poll,
 	draw_hook,
 	menu_classification,
 	foreground_classification,
@@ -210,6 +211,7 @@ public:
 
 inline const char* name(Family f) noexcept {
 	switch (f) {
+	case Family::native_input_poll: return "native_input_poll";
 	case Family::draw_hook: return "draw";
 	case Family::menu_classification: return "menu";
 	case Family::foreground_classification: return "foreground";
