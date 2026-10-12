@@ -1,6 +1,11 @@
 # STATUS — session handoff
 
-Last updated **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
+Last updated **2026-10-12**. Hands-only gloves and the pause-menu eye copy are
+`IMPLEMENTED_NOT_VERIFIED` on `feature/hands-only-gloves`. See
+`docs/audits/hands-only-and-pause.md`. Full arms and elbow IK are not the
+rendering mode. The pause VR Settings row is unchanged.
+
+Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
 Read this first, then `ENGINE_NOTES.md`.
 
 **This file is current state only.** The run-by-run log moved to `HISTORY.md` on 2026-08-04 — you

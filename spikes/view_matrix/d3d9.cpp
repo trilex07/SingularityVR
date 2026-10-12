@@ -72,6 +72,7 @@
 #include "script_node_candidate.h"
 #include "menu_submit_policy.h"
 #include "menu_hud_scale.h"
+#include "pause_menu_space.h"
 #include <shlobj.h>
 #include "async_thread_snapshot.h"
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
@@ -14834,9 +14835,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         if(!independentBothHands && g_thisDrawMoved==2 && !Rd(g_twoHandActive) && physicalSide != OffHand()) continue;
         skeletal::TransformBone(&changed[b*3],&saved[b*3],deltaSide == 0 ? delta : rightDelta);
     }
-    // Native arms are kept as the default. When explicitly enabled, only the
-    // audited TMD arm sections receive constrained two-bone deltas.
-    if (g_armIkMode == 1 && (tmdBase || tmdGloves)) {
+    // Hands-only mode keeps the glove section on the controller deltas above
+    // and hides the long forearm draw. Elbow IK would rewrite those bones, so
+    // it does not run in this mode even if ArmIKMode is left on.
+    if (!gloveisolate::HandsOnly(g_showControllerArms, (int)Rd(g_gloveIsolate)) &&
+        g_armIkMode == 1 && (tmdBase || tmdGloves)) {
         armbind::Deltas leftIk{}, rightIk{};
         const bool haveLeft = armnatural::Build(false, delta, leftIk);
         const bool haveRight = armnatural::Build(true, rightDelta, rightIk);
@@ -17911,6 +17914,17 @@ int g_scopeAspectPsReg = 0;      // ini [Render] ScopeAspectPsReg  - ScreenAspec
 volatile LONG g_scopeQuadDraws = 0;
 volatile LONG g_scopeMatchAim = 0, g_scopeMatchIdle = 0;   // ⭐ run 231
 
+// Class 3 pause text is a canvas ortho in c5. StereoPair scissors the frame
+// and remaps the camera, so that ortho stays in full-frame clip space and the
+// seam cuts it. The HUD path already insets class 3 and copies it into each
+// eye. VR Settings is drawn later as its own overlay and does not use c5.
+static bool PauseCanvasNeedsEyeCopy(IDirect3DDevice9* dev) {
+    if (!g_hudRemap || Rd(g_vrMenuClass) != 3) return false;
+    float m[16];
+    if (FAILED(dev->GetVertexShaderConstantF(5, m, 4))) return false;
+    return pausemenuspace::IsPauseCanvasOrtho(m);
+}
+
 HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                           UINT primCount, const void* vtxData, UINT vtxStride) {
     // VFX reentrancy: our own per-eye quads draw through the vtable.
@@ -18005,7 +18019,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
         if (vtxStride == kFlashStride) FlashRegDump(dev, lo, hi, primCount, vtxStride);
     }
     if (g_dropStride && vtxStride == (UINT)g_dropStride) return D3D_OK;
-    if (hudArmed && g_hudRemap && !quad)
+    if (!quad && ((hudArmed && g_hudRemap) || PauseCanvasNeedsEyeCopy(dev)))
         return HudStereoPair(dev, primCount, vtxStride, [&] { return g_origDrawPrimUP(dev, t, primCount, vtxData, vtxStride); });
     if (quad) {
         // The one fullscreen quad that must NOT simply pass through. Gated on VR mode: flat, the
@@ -18139,7 +18153,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // The identification test - see g_dropStride. Returning S_OK without drawing is how the mod drops
     // draws everywhere else: device state untouched, so the next draw behaves normally.
     if (g_dropStride && vtxStride == (UINT)g_dropStride) return D3D_OK;
-    if (hudArmed && g_hudRemap && !quad)
+    if (!quad && ((hudArmed && g_hudRemap) || PauseCanvasNeedsEyeCopy(dev)))
         return HudStereoPair(dev, primCount, vtxStride, [&] {
             return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                            idxData, idxFormat, vtxData, vtxStride); });

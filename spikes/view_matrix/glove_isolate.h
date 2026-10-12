@@ -39,6 +39,13 @@ inline bool IsArmFleshSection(unsigned verts, unsigned first, unsigned triangles
            triangles == 7704u;
 }
 
+// Hands-only rendering: gloves stay on the controllers, the long forearm section
+// is not drawn, and elbow IK must not rewrite the palette. The short cuff is the
+// existing wrist stump on the glove section, not a reach solve.
+inline bool HandsOnly(int showControllerArms, int isolateMode) {
+    return showControllerArms == 0 && isolateMode >= 2;
+}
+
 inline bool NameContains(const char* name, const char* part) {
     if (!name || !part) return false;
     for (const char* h = name; *h; ++h) {
