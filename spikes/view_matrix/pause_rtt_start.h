@@ -21,7 +21,8 @@ static uintptr_t ResolvePauseTarget(uintptr_t record, uintptr_t incoming) {
     const bool valid = movieOffset >= 0 && PauseRttProbe::Pointer(movie + movieOffset) == record &&
         configured && !strcmp(targetName, "RTT_VRPause") && resource &&
         PauseRttProbe::NativeResourceContract(configured, resource);
-    const uintptr_t selected = !incoming && valid ? configured : incoming;
+    // Live pause already receives the dedicated target: keep this read-only.
+    const uintptr_t selected = incoming;
     if (reports++ < 12)
         Log("pause-rtt native-start movie=%p record=%p incoming=%p configured=%p selected=%p repair=%d prerequisites=%d",
             (void*)movie, (void*)record, (void*)incoming, (void*)configured, (void*)selected,

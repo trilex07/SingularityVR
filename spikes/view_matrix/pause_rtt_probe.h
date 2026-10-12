@@ -1,7 +1,7 @@
 #pragma once
 
-// Read-only, input-thread probe. Offsets come from validated UE3 reflection.
-// No engine calls, RHI guesses, COM calls, target changes, or draw-hook work.
+// Reflected input-thread identity and bounded D3D-thread content diagnostics.
+// Native RHI layout is source-derived and checked against actual COM bindings.
 namespace PauseRttProbe {
 static uintptr_t observedMovie = 0;
 static unsigned snapshots = 0, totalSnapshots = 0;
@@ -51,10 +51,19 @@ static bool NativeResourceContract(uintptr_t target, uintptr_t resource) {
         memcmp((void*)(method + 0x28), signature, sizeof(signature)) == 0;
 }
 
-static bool ExactTexture(uintptr_t target, uintptr_t resource, IDirect3DTexture9* texture) {
+static bool ExactTexture(uintptr_t target, uintptr_t resource, IDirect3DTexture9* texture,
+                         IDirect3DSurface9* surface) {
     if (!texture || !NativeResourceContract(target, resource)) return false;
-    const uintptr_t rhi = Pointer(resource + 0x48);
-    return rhi && Pointer(rhi + 0x1C) == (uintptr_t)texture;
+    const uintptr_t surfaceRhi = Pointer(resource + 0x48);
+    const uintptr_t textureRhi = Pointer(resource + 0x64);
+    const uintptr_t image = (uintptr_t)GetModuleHandleA(nullptr);
+    // Native creation returns wrapper base+0xC; COM is base+8 (RHI-4).
+    // Both constructors and live class identities corroborate this layout.
+    if (surfaceRhi < 12 || textureRhi < 12 ||
+        Pointer(surfaceRhi - 12) != image + 0x013B4474 ||
+        Pointer(textureRhi - 12) != image + 0x013B441C) return false;
+    return Pointer(surfaceRhi - 4) == (uintptr_t)surface &&
+        Pointer(textureRhi - 4) == (uintptr_t)texture;
 }
 
 static void ContentBind(IDirect3DSurface9* surface) {
@@ -71,7 +80,7 @@ static void ContentBind(IDirect3DSurface9* surface) {
     IDirect3DTexture9* texture = nullptr;
     if (FAILED(surface->GetContainer(__uuidof(IDirect3DTexture9), (void**)&texture)) || !texture) return;
     bool exact = false;
-    __try { exact = ExactTexture(target, resource, texture); }
+    __try { exact = ExactTexture(target, resource, texture, surface); }
     __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION
                   ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) { }
     if (exact && !contentSurface) {

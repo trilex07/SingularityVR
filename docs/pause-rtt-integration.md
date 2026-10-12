@@ -59,3 +59,16 @@ unbind and draw attempts, under the same movie token, into SYSTEMMEM. Up to
 four RGB/alpha BMP pairs are written (one main control, three pause); no target
 or render state is changed. Draw and sample counters describe attempts, not
 successful semantic content. Pixels and callback freshness still need inspection.
+
+Correction (2026-10-12 17:55): +0x1C was adjacent heap, not an RHI member.
+Read-only inspection of live PID 18936 and offline constructors/creation
+methods establishes opaque RHI handles are native wrapper base+0xC;
+the owned COM pointer is base+8, i.e. RHI-4. FD3D9Surface vtable is
+image+0x013B4474; FD3D9Texture2D is image+0x013B441C. Correct matching
+requires both classes, target/resource/backlink, and exact bound surface
+plus container texture equality. The old main RGB image is real, but its
+original pointer association argument is superseded by this contract.
+
+Native start remains read-only: pause receives RTT_VRPause (repair=0), and
+the RTT list contains its active record. The corrected native pause surface
+has thousands of draws. Missing capture was a probe bug, not producer failure.
