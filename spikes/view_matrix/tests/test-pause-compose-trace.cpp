@@ -37,8 +37,12 @@ static std::vector<std::string> ReadLog(const char* path) {
     std::ifstream in(path);
     std::string line;
     while (std::getline(in, line)) {
-        const auto at = line.find("pause-compose ");
-        if (at != std::string::npos) lines.push_back(line.substr(at));
+        const auto at = line.find("pause-compose txn=");
+        if (at != std::string::npos) {
+            lines.push_back(line.substr(at));
+            continue;
+        }
+        if (line.find("pause-compose arm:") != std::string::npos) continue;
     }
     return lines;
 }
