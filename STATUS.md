@@ -9,11 +9,11 @@ while that latch is held. `l_hand_IK` is the rest pose, not a grip point.
 Pause: offscreen class 3 is still `compose=0` (one full-width scene RT draw);
 no new HUD remap. See `docs/audits/hands-only-and-pause.md`.
 
-**Steam install (MAIN):** `4F85BEAAFC7033287B900A1750203375FDEE64E9FA817EDA2E9CB6F8EA2BECBE`
-(build after `94b47e8` + compile fix), backup `20261012-113123`, INI preserved.
-L3 smoke: `OpenXR ready` in `view_matrix.log` (2026-10-12 11:32:54 attach); no
-`support wrist snap` in this build. Support grip on headset: **READY_FOR_PHYSICAL_ACCEPTANCE**
-(not re-tested on PSVR2 yet). Prior: `0eb22a6` / `2B896A7A…`, backup `20261012-111934`. Workflow:
+**Steam install (MAIN):** `2FE5011C20DFEAAEDFFFFE58CD39E92A9570867F344649B00C0038AD97B39A47`
+at `726e1a7`, backup `20261012-114944`, INI preserved, `PauseMenuDiag=1` set on
+the installed ini for the next class-3 capture. Support grip:
+**READY_FOR_PHYSICAL_ACCEPTANCE** (not a visual PASS). Prior candidate
+`318b1fd` / `4F85BEAA…`, backup `20261012-113123`. Workflow:
 `docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
 
 Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
