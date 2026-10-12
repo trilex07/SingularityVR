@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+2026-10-12 shadow session **paused at user's request**. Game closed; guard
+restored accepted DLL 9FBA308C...99C4500 from backup 20261012-204256.
+INI 61AEC56C...FE378B and UI 5B2EA469...673CDE verified unchanged;
+experimental flag and pending trace request absent. A/B evidence retained privately.
+Next candidate ba628ae / DLL 6D147048...93996A is x86 /O2, tests passed,
+but NOT runtime-tested: resume with one focused HQ Decals ON capture of
+depth/alpha write masks, stencil coverage, native GPU copies and depth clears.
+Do not enable the rejected receiver correction. See `docs/shadow-receiver-correction.md`.
+
 Shadow receiver experiment on `fix/stereo-shadow-rootcause`: **BROKEN**.
 ON/OFF/ON final-driver traces complete; user confirms OFF removes ordinary
 shadows as well. Exact receiver inverse/forward mismatch identified; bounded
