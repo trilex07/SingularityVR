@@ -20,10 +20,12 @@ int main() {
     using namespace pausevrsettings;
     ExpectBand(2, kMainV0, kMainV1);
     ExpectBand(3, kPauseV0, kPauseV1);
-    assert(kMainV0 == 0.70f && kMainV1 == 0.80f);
+    assert(kMainV0 == 0.66f && kMainV1 == 0.76f);
     assert(kPauseV0 == 0.60f && kPauseV1 == 0.70f);
     assert(Hit(2, .50f, .75f));
     assert(!Hit(2, .50f, .65f));
+    assert(Hit(2, .50f, .68f)); // Raised portion is selectable.
+    assert(!Hit(2, .50f, .79f)); // Old lower edge no longer selects it.
     assert(Hit(3, .50f, .65f));
     assert(!Hit(3, .50f, .75f));
     assert(!Hit(1, .50f, .65f));
@@ -31,6 +33,6 @@ int main() {
     float unused0 = 1.0f, unused1 = 1.0f;
     assert(!Row(1, unused0, unused1));
     assert(unused0 == 1.0f && unused1 == 1.0f);
-    std::puts("pause VR settings row: class 2 stays at V 0.70-0.80, class 3 uses V 0.60-0.70");
+    std::puts("PASS: main VR settings V 0.66-0.76 render/hit band; pause unchanged V 0.60-0.70");
     return 0;
 }
