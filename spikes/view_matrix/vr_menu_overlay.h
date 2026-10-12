@@ -421,7 +421,11 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
         // RGB capture proves Objectives has nonzero RGB with zero stored alpha.
         // Preserve the native AlphaComposite RGB term instead of multiplying it
         // by alpha a second time and erasing Objectives.
-        if (dedicatedPause) dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+        if (dedicatedPause) {
+            dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+            dev->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
+            dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
+        }
         for(int eye=0;eye<2;++eye) {
             VrMenuVtx v[4]; bool visible=true;
             for(unsigned k=0;k<4;++k) {

@@ -19401,6 +19401,7 @@ inline bool SuppressCapturedVrMenuDraw() {
     // so the fail mask below only ever describes menu-source draws. Any-of-stages-0-3
     // since round 3 (the captured menu is sampled off stage 0).
     if (!Rd(g_vrUiMenu) || !MenuSourceBoundAny()) return false;
+    if (Rd(g_vrMenuClass) == 3 && !PauseRttProbe::Presented()) return false;
     // Fix-4/menus round 2: suppressed=0 while the provider serves frames means the scene
     // keeps its own copy (nested views). Record WHY as a sticky per-window bitmask:
     // 1=noprovide 2=flat 4=shadow 8=providing-now 16=offscreen. Same allow/deny outcome
