@@ -4,6 +4,11 @@
 are in `pause-menu-deep-re.md`. It is a property-driven native producer route,
 not a D3D capture patch. No new native function address is assumed.
 
+Update: a dedicated, recompressed asset and repack-only control now exist outside
+Git. See [prototype handoff](pause-native-rtt-prototype.md) for current tests,
+verified default/class/enum findings, integration gaps and the bounded runtime gate.
+The earlier paragraph below describing only a property-stream experiment is historical.
+
 ## Mechanism
 
 The authored `SPPause` instance lacks a serialized RenderTexture override.

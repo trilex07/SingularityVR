@@ -6,7 +6,7 @@ import json
 import struct
 from pathlib import Path
 
-def inspect(path, data=None):
+def inspect(path, data=None, include_all=False):
     b=Path(path).read_bytes() if data is None else data
     assert struct.unpack_from('<I',b)[0]==0x9E2A83C1
     folder=struct.unpack_from('<i',b,12)[0]
@@ -32,12 +32,12 @@ def inspect(path, data=None):
         assert 0<=e[10]<=32, 'net-count unsupported'
         p+=68+e[10]*4
         assert e[7]>=0 and 0<=e[8]<=len(b) and e[8]+e[7]<=len(b)
-        exports.append(dict(index=j+1,name=name(e[3]),cls=e[0],outer=e[2],size=e[7],offset=e[8],record_offset=record_offset))
+        exports.append(dict(index=j+1,name=name(e[3]),cls=e[0],super_index=e[1],outer=e[2],archetype=e[5],size=e[7],offset=e[8],record_offset=record_offset,record_bytes=68+e[10]*4))
     def ref(i):
         return name(imports[-i-1][5]) if i<0 else exports[i-1]['name'] if i else 'None'
     result=[]
     for e in exports:
-        if not (ref(e['cls']).startswith('RvUIGFxMovie') or ref(e['cls']) in ('GFxMovieInfo','TextureRenderTarget2D')): continue
+        if not include_all and not (ref(e['cls']).startswith('RvUIGFxMovie') or ref(e['cls']) in ('GFxMovieInfo','TextureRenderTarget2D')): continue
         p=e['offset']+4; end=e['offset']+e['size']; props=[]
         try:
             for _ in range(128):
@@ -59,10 +59,10 @@ def inspect(path, data=None):
                 elif typ=='ByteProperty' and size==1:val=val[0]
                 else:val={'bytes':size}
                 props.append(dict(name=nm,type=typ,value=val,tag_offset=tag_start,tag_bytes=p-tag_start))
-            result.append(dict(**e,class_name=ref(e['cls']),properties=props))
+            result.append(dict(**e,class_name=ref(e['cls']),properties=props,property_end=p))
         except (AssertionError,IndexError,struct.error) as ex:
             result.append(dict(**e,class_name=ref(e['cls']),parse_error=str(ex),properties=props))
-    return dict(counts=dict(names=nc,exports=ec,imports=ic),exports=result,records=exports)
+    return dict(counts=dict(names=nc,exports=ec,imports=ic),exports=result,records=exports,names=names,imports=imports,table_offsets=dict(names=no,exports=eo,imports=io))
 
 if __name__=='__main__':
     ap=argparse.ArgumentParser();ap.add_argument('package');args=ap.parse_args()
