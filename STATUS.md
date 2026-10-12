@@ -1,11 +1,13 @@
 # STATUS — session handoff
 
 Last updated **2026-10-12**. Left glove idle: **PHYSICALLY_VERIFIED** (`010eb45`).
-Pause RTT integration on `fix/pause-native-rtt-integration`: **BROKEN** at
-physical presentation gate. Native 1280x720 RGB contains complete Pause and
-Objectives; fixed-function isolation improved physical visibility, corroborated
-by actual XR-backbuffer capture. User requests 50% centre-relative pause panel
-size next; input/render share the compact plane. Readability still unverified.
+Pause RTT layout on `fix/pause-native-rtt-integration`: **PHYSICALLY_VERIFIED**
+for appearance/placement only. User's first PSVR2 test on `eac307b` / DLL
+1635A8F0...D625219: "looks perfect". Complete native RGB/full UVs, compact 50%
+plane and matching pointer geometry. Navigation/Options acceptance for this
+exact version remains unconfirmed. User authorizes persistent installation of
+this exact tested DLL plus dedicated UI package (no restore watchdog) and PR
+to main, including inherited baseline changes absent from main.
 Return-to-main per-eye background difference remains UNKNOWN; no stereo changes.
 See `docs/pause-rtt-integration.md`. This branch's verified safe restore is
 original UI C8CDB2E1..., accepted DLL 2FE5011C..., preserved INI 61AEC56C...
@@ -15,8 +17,8 @@ PSVR2 on `318b1fd`: support grip no longer hides the left glove, but it sat
 target stayed the aim controller. Pistol latch now uses `AuthoredPair`: both
 regions take the aim-hand rigid delta, and `GloveLeftShift` is not applied
 while that latch is held. `l_hand_IK` is the rest pose, not a grip point.
-Pause: offscreen class 3 is still `compose=0` (one full-width scene RT draw);
-no new HUD remap. See `docs/audits/hands-only-and-pause.md`.
+Historical pre-RTT pause evidence: see `docs/audits/hands-only-and-pause.md`;
+it does not describe the physically accepted native RTT provider above.
 
 **Steam install (MAIN):** `4F85BEAAFC7033287B900A1750203375FDEE64E9FA817EDA2E9CB6F8EA2BECBE`
 (build after `94b47e8` + compile fix), backup `20261012-113123`, INI preserved.

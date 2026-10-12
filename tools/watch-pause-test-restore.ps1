@@ -42,4 +42,9 @@ foreach ($target in $expected.Keys) {
 }
 # Runner rechecks processes, file locks, staged copies and restored hashes.
 & (Join-Path $PSScriptRoot 'test-pause-rtt-package.ps1') -Action Restore -BackupPath $backup
-if ($LASTEXITCODE -ne 0) { throw 'Verified restore runner failed' }
+foreach ($entry in $manifest.files) {
+    if ((Get-FileHash -LiteralPath $entry.sourcePath -Algorithm SHA256).Hash -ne $entry.sha256) {
+        throw "Post-restore verification failed: $($entry.sourcePath)"
+    }
+}
+Write-Output 'RESTORED: all original file hashes verified'

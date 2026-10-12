@@ -115,3 +115,20 @@ MAIN explicitly restored originals and verified hashes at 18:31:33. Next lease
 uses the bundled pwsh host, explicit host module imports, and requires a READY
 log before handing over the candidate. No claim of successful automatic restore
 is made until its restored hashes are recorded.
+
+## Physical acceptance and persistent install authorization
+
+User on PSVR2 reports first compact-panel test "looks perfect". Accepted
+appearance/placement: eac307bd444770123c5182e02fce5f73affac478, x86 PE32 /O2,
+DLL 1635A8F0D11313CFAFD2878E01E7A9012F401AC8B6D5986BDD3000C86D625219.
+Options/navigation and return-to-main for this exact version remain unconfirmed.
+Second launch showed old layout because the test lease restored originals at
+18:35:49; all three restored hashes were verified, not a rendering regression.
+The watchdog's final LASTEXITCODE check produced a spurious error after the
+successful restore; replaced with explicit post-restore manifest hash checks.
+
+User authorizes this exact accepted DLL and dedicated UI package to remain
+installed without a watchdog, and a PR to main including prior baseline changes
+absent from main. Subsequent commits update evidence/tooling only; do not replace
+the physically tested DLL with a newly compiled artifact just for documentation.
+No proprietary UI package, binary snapshots or runtime captures are committed.
