@@ -76,5 +76,12 @@ int main() {
            "scene-sized GFx target uses per-eye canvas composition");
     Expect(!pausemenuspace::DiegeticMenuCanvas(canvas, 1280, 5264),
            "small monitor RT keeps single draw");
+
+    Expect(pausemenuspace::PauseMenuOffscreenSbs(3, 5264, 5264),
+           "in-game pause on scene-sized RT uses half-viewport compose");
+    Expect(!pausemenuspace::PauseMenuOffscreenSbs(2, 5264, 5264),
+           "main menu keeps the canvas path only when ortho matches");
+    Expect(!pausemenuspace::PauseMenuOffscreenSbs(3, 512, 5264),
+           "sub-rect monitor RT is not full SBS pause compose");
     return g_fails == 0 ? 0 : 1;
 }

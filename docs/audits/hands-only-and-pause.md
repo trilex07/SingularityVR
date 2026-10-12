@@ -2,7 +2,13 @@
 
 Status: IMPLEMENTED_NOT_VERIFIED after PSVR2 re-test candidate. L1 covers rigid-glove policy, diegetic menu composition, and clip math. L2 build/tests pass on the branch. L3 smoke (Steam, no restore) and L4 headset are separate gates.
 
-## PSVR2 visual fail on `27ffc32` / `F769CD7E...`
+## PSVR2 visual fail on `1e2e72b` (2026-10-12)
+
+- **Right glove:** PASS (preserve).
+- **Left glove:** FAIL — stretch from anchor; right-side palette path OK.
+- **In-game pause:** FAIL — menu columns clipped left eye only; objectives (`Cele`) right eye only. Matches SBS content parked in left/right halves of the scene-sized GFx RT, then viewed through stereo diegetic monitor.
+
+## PSVR2 visual fail on `27ffc32` / `F769CD7E...` (superseded attempt)
 
 1. **Gloves** still stretched from an anchored point (not rigid 6DoF).
 2. **Pause menu** still clipped upper-left; backbuffer `c5` eye-copy in `27ffc32` did not affect the path that actually drew pause GFx.
@@ -17,11 +23,15 @@ Two coupled bugs in production `GloveIsolate=2` / `ShowControllerArms=0`:
 
 **Fix:** `UsesPaletteStump()` limits stump collapse to mode 3+. In hands-only mode, collapse-role bones get the same controller `TransformBone` as the wrist chain, then are skipped for the descendant loop (no IK, no extra offsets).
 
+**Left-only follow-up (1e2e72b FAIL):** Pistol glove section palette (`kNoTmdGlovePalette`, 37 slots) omitted **`l_arm_forearm2` and `l_arm_bicep` (bones 46/47)**. Left cuff vertices weighted to those bones stayed on native pose while the wrist moved with the controller → stretch. Right side already PASS without those bones in the exported map. Added 46/47 only; right pipeline unchanged.
+
 ## Root cause — pause menu (priority 2)
 
 Pause GFx for class 2/3 on the **scene-sized offscreen target** (`menu mono`, `g_rtIsBackbuffer=0`) took a **single full-width draw** in `HudStereoPair`. The cockpit monitor and SBS path show one combined texture; canvas ortho coordinates meant for a flat monitor were not remapped per eye. The `27ffc32` **`PauseCanvasNeedsEyeCopy`** path only ran on the **backbuffer** HUD route, which logged runs showed pause text rarely used for the failing visual.
 
-**Fix:** Detect **diegetic menu canvas** (canvas ortho + viewport width ≥ scene width). For that path, draw twice with half viewports, class inset scale, and `ApplyEyeRemap` on `c5` — same composition idea as backbuffer HUD, without moving `DrawPauseVrSettingsRow`. Bounded `menu-mono trace:` logging records backbuffer vs offscreen and per-eye vs single draw.
+**Fix (canvas ortho, class 2 / font draws):** `DiegeticMenuCanvas` keeps per-eye `c5` inset + `ApplyEyeRemap` on the backbuffer or tiny-scale ortho paths.
+
+**Fix (in-game pause class 3, identity-scale ortho on scene RT):** `PauseMenuOffscreenSbs` — two draws into left/right **half viewports** with **unchanged `c5`**, so GFx lays out a full panel per half instead of one full-width SBS column split. Trace logs `compose=2` vs `compose=1` (canvas) vs `compose=0` (single draw).
 
 ## Weapon / holster (unchanged)
 

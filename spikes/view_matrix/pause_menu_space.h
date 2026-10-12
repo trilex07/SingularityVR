@@ -44,4 +44,13 @@ inline bool DiegeticMenuCanvas(const float m[16], unsigned rtWidth, unsigned sce
     return rtWidth >= sceneWidth;
 }
 
+// In-game pause (class 3) renders GFx into the scene-sized offscreen target at
+// the full SBS width. One full-width draw leaves menu columns in the left RT
+// half and objectives (e.g. Cele) in the right half, which stereo then shows
+// one eye each. Compose with half-width viewports; do not remap c5.
+inline bool PauseMenuOffscreenSbs(unsigned menuClass, unsigned rtWidth, unsigned sceneWidth) {
+    if (menuClass != 3 || sceneWidth < 640) return false;
+    return rtWidth >= sceneWidth;
+}
+
 }  // namespace pausemenuspace
