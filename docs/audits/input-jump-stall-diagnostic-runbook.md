@@ -16,11 +16,22 @@ Enabled=1
 
 `Debug=1` is required so **F11** / **Shift+F11** reach the diagnostic mode cycler (`DebugKey` gate).
 
+## Mode equivalence (mandatory)
+
+| Mode | Jump in game? |
+|---|---|
+| NORMAL / HAPTICS_OFF | Yes — valid stall comparison |
+| XINPUT_OFF / XINPUT_OFF+HAPTICS_OFF | **No** (`feedGame=false`) — **non-equivalent** |
+| BUTTONS_OFF | **No** face buttons to game — **non-equivalent** for Jump |
+
+Check `published=1` on Jump lines in the log before comparing modes. See `docs/audits/input-jump-stall-psvr2-validation-20261012.md`.
+
 ## In-headset procedure (MAIN)
 
-1. Deploy diagnostic DLL with `tools/deploy-singularityvr.ps1` (timestamped backup, verify SHA).
-2. Load gameplay, reproduce the **Jump** stall (same scene/load as prior reports).
-3. Cycle modes with **F11**: `NORMAL` → `HAPTICS_OFF` → `XINPUT_OFF` → `XINPUT_OFF+HAPTICS_OFF` → `BUTTONS_OFF`. Spend **≥30 s per mode** with several Jump presses.
+1. Deploy diagnostic DLL with `tools/deploy-singularityvr.ps1` (timestamped backup, verify SHA). Candidate: `deployment/candidate-input-jump-baseline-20261012`.
+2. Launch **real Steam + SteamVR** (not xrsim).
+3. Load gameplay, reproduce the **Jump** stall (same scene/load as prior reports).
+4. Cycle modes with **F11**: `NORMAL` → `HAPTICS_OFF` → `XINPUT_OFF` → `XINPUT_OFF+HAPTICS_OFF` → `BUTTONS_OFF`. Spend **≥30 s per mode** with several Jump presses.
 4. Optional: **Shift+F11** toggles action polling off (poses stay on) for one isolation pass.
 5. Quit cleanly (hold PAUSE / WM_CLOSE path).
 6. Collect `%LOCALAPPDATA%\SingularityVR\input_diagnostic_YYYYMMDD_HHMMSS.log` (created at first attach when `Enabled=1`).
