@@ -9,6 +9,11 @@ native callbacks with~90FPS. Game exited; guard000916 restored DLL9FBA308C;
 MAIN verified actualDLL/UI5B2EA469/currentINI61AEC56C (user's change preserved).
 Return to square shadows; rejected receiver correction staysOFF.
 
+Next shadow candidate adds default-OFF one-frame R32F512 content readback at
+actual volume consumption (max4 maps,1MiB staging, no render-state changes).
+See docs/shadow-map-content-probe.md. Input cache retained in source; runtime
+content confirmation needed before any further shader/matrix modification.
+
 Event-invalidated input discovery cache: IMPLEMENTED_NOT_VERIFIED. Full native
 callback audit led to caching device INSTANCE records and replaying original
 callbacks, not suppressing all callbacks or moving DirectInput to a worker.

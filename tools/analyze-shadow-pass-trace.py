@@ -61,10 +61,18 @@ def read_trace(path, shader_out=None):
         raise ValueError("Not a shadow-pass-trace-v1 file")
     groups, shaders = {}, {}
     copies, clears = [], []
+    map_pixels=[]
     events=[]
     lines = text.splitlines()
     for i, line in enumerate(lines):
-        if line.startswith("event "):
+        if line.startswith("map-pixels "):
+            map_pixels.append(dict(re.findall(r"(\w+)=([^ ]+)",line)))
+        elif line.startswith("map-grid "):
+            match=re.match(r"map-grid index=(\d+) row=(\d+) (.+)",line)
+            if match:
+                for m in map_pixels:
+                    if m["index"]==match[1]:m.setdefault("grid",{})[int(match[2])]=[float(v) for v in match[3].split()]
+        elif line.startswith("event "):
             events.append(dict(re.findall(r"(\w+)=([^ ]+)",line)))
         elif line.startswith("copy "):
             copies.append(dict(re.findall(r"(\w+)=([^ ]+)",line)))
@@ -140,7 +148,7 @@ def read_trace(path, shader_out=None):
         "path": str(Path(path).resolve()), "draws": int(header[1]),
         "group_count": int(header[2]), "overflow": int(header[3]),
         "complete_budget": int(header[3]) == 0, "shaders": shaders,
-        "groups": groups, "candidate_edges": edges, "copies": copies, "clears": clears,"events":events,
+        "groups": groups, "candidate_edges": edges, "copies": copies, "clears": clears,"events":events,"map_pixels":map_pixels,
     }
 
 

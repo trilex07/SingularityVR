@@ -1,4 +1,5 @@
 #pragma once
+#include "shadow_depth_stats.h"
 // Default-OFF, read-only FINAL driver-call census. One requested gameplay frame.
 // No bytecode query, allocation or disk logging in the draw path. COM references
 // retained only for bounded unique groups and released by Present/reset.
@@ -35,6 +36,29 @@ static Group groups[kGroups];
 static unsigned count=0,draws=0,overflow=0,sequence=0,tailReads=0;
 static bool active=false;
 static bool pending=false;
+// Staging allocated once at Arm (outside draws), bounded 1MiB, never bound.
+struct MapPixels {IDirect3DBaseTexture9* texture=nullptr;unsigned draw=0,group=0;HRESULT hr=E_FAIL;shadowdepth::Stats stats;};
+static MapPixels mapPixels[4];static unsigned mapPixelCount=0;
+static IDirect3DSurface9* mapStaging=nullptr;
+static HRESULT mapStagingHr=E_FAIL;
+inline void ReadMap(IDirect3DDevice9* dev,unsigned group){
+ if(mapPixelCount==4)return;
+ auto texture=bound.tex[1];if(!texture||texture->GetType()!=D3DRTYPE_TEXTURE)return;
+ for(unsigned i=0;i<mapPixelCount;++i)if(mapPixels[i].texture==texture)return;
+ D3DSURFACE_DESC desc{};auto t=static_cast<IDirect3DTexture9*>(texture);
+ if(FAILED(t->GetLevelDesc(0,&desc))||desc.Format!=D3DFMT_R32F||desc.Width!=512||desc.Height!=512||
+    desc.Pool!=D3DPOOL_DEFAULT||!(desc.Usage&D3DUSAGE_RENDERTARGET)||desc.MultiSampleType!=D3DMULTISAMPLE_NONE)return;
+ auto& result=mapPixels[mapPixelCount++];result={};result.texture=texture;texture->AddRef();
+ result.draw=draws;result.group=group;result.hr=mapStagingHr;if(!mapStaging)return;
+ IDirect3DSurface9* source=nullptr;result.hr=t->GetSurfaceLevel(0,&source);
+ if(FAILED(result.hr)||!source){if(source)source->Release();return;}
+ result.hr=dev->GetRenderTargetData(source,mapStaging);source->Release();
+ if(FAILED(result.hr))return;
+ D3DLOCKED_RECT locked{};result.hr=mapStaging->LockRect(&locked,nullptr,D3DLOCK_READONLY);
+ if(FAILED(result.hr))return;
+ const bool parsed=shadowdepth::Read(locked.pBits,locked.Pitch,512,512,result.stats);
+ result.hr=mapStaging->UnlockRect();if(!parsed)result.hr=E_FAIL;
+}
 struct DrawEvent {unsigned op=0,group=~0u,fgCount=0;};
 static DrawEvent events[kDraws];static unsigned operations=0;
 struct Copy { IDirect3DSurface9* src=nullptr;IDirect3DSurface9* dst=nullptr;unsigned draw=0,op=0;
@@ -54,6 +78,8 @@ inline void NoteClear(IDirect3DDevice9* dev,DWORD rects,DWORD flags,DWORD colour
     dev->GetDepthStencilSurface(&c.depth);c.draw=draws;c.rects=rects;c.flags=flags;c.colour=colour;c.z=z;c.stencil=stencil;c.hr=hr;
 }
 inline void Release() {
+ for(unsigned i=0;i<mapPixelCount;++i)if(mapPixels[i].texture)mapPixels[i].texture->Release();
+ mapPixelCount=0;if(mapStaging){mapStaging->Release();mapStaging=nullptr;}
     for(unsigned i=0;i<copyCount;++i){if(copies[i].src)copies[i].src->Release();if(copies[i].dst)copies[i].dst->Release();}
     for(unsigned i=0;i<clearCount;++i){if(clears[i].rt)clears[i].rt->Release();if(clears[i].depth)clears[i].depth->Release();}
     copyCount=clearCount=0;
@@ -100,6 +126,7 @@ inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned pr
         g.tailPSRead=dev->GetPixelShaderConstantF(0,&g.tailPS[0][0],15);
     }
     g.minPrims=std::min(g.minPrims,prims);g.maxPrims=std::max(g.maxPrims,prims);
+    if(verts==8 && prims==12)ReadMap(dev,i);
     return (int)i;
 }
 inline void After(int i,HRESULT hr){if(i>=0 && FAILED(hr))++groups[i].failed;}
@@ -121,6 +148,10 @@ inline void WriteShader(FILE* f,IUnknown* shader,bool pixel) {
 inline void Dump(const char* path) {
     FILE* f=nullptr;if(fopen_s(&f,path,"wb")||!f)return;
     fprintf(f,"shadow-pass-trace-v1 draws=%u groups=%u overflow=%u\n",draws,count,overflow);
+    for(unsigned i=0;i<mapPixelCount;++i){const auto& m=mapPixels[i];const auto& v=m.stats;
+        fprintf(f,"map-pixels index=%u group=%u beforeDraw=%u texture=%p hr=%08lX finite=%u nonfinite=%u zero=%u one=%u min=%.9g max=%.9g\n",i,m.group,m.draw,m.texture,m.hr,v.finite,v.nonfinite,v.zero,v.one,v.minimum,v.maximum);
+        if(SUCCEEDED(m.hr))for(unsigned y=0;y<16;++y){fprintf(f,"map-grid index=%u row=%u",i,y);for(unsigned x=0;x<16;++x)fprintf(f," %.9g",v.grid[y*16+x]);fputc('\n',f);}
+    }
     for(unsigned i=0;i<draws;++i)fprintf(f,"event op=%u draw=%u group=%u fgCount=%u\n",events[i].op,i+1,events[i].group,events[i].fgCount);
     for(unsigned i=0;i<copyCount;++i){const auto& c=copies[i];IDirect3DTexture9* src=nullptr;IDirect3DTexture9* dst=nullptr;
         if(c.src)c.src->GetContainer(__uuidof(IDirect3DTexture9),(void**)&src);
@@ -174,6 +205,7 @@ inline void Dump(const char* path) {
 }
 inline void Arm(IDirect3DDevice9* dev) {
     Release();bound={};
+    mapStagingHr=dev->CreateOffscreenPlainSurface(512,512,D3DFMT_R32F,D3DPOOL_SYSTEMMEM,&mapStaging,nullptr);
     dev->GetVertexShader(&bound.vs);if(bound.vs)bound.vs->Release();
     dev->GetPixelShader(&bound.ps);if(bound.ps)bound.ps->Release();
     dev->GetRenderTarget(0,&bound.rt);if(bound.rt)bound.rt->Release();
