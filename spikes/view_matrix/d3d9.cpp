@@ -14460,10 +14460,6 @@ static bool IndependentAuditCandidate(UINT verts) {
 // meshes.  They are deliberately explicit: a 3x4 GPU palette slot is not an
 // identity-indexed copy of the PSK skeleton.  Keeping the maps here makes the
 // collapse/finger path fail closed if a new section signature is introduced.
-static const unsigned kNoTmdGloveMap[35] = {
-    85,51,70,71,72,79,80,76,73,74,82,83,77,84,81,78,75,50,
-    9,10,11,12,16,27,23,24,20,17,18,14,15,21,25,22,19
-};
 static const unsigned kNoTmdSleeveMap[6] = { 50,85,49,27,8,7 };
 static const unsigned kTmdGloveMap[36] = {
     85,9,10,11,12,23,24,20,17,18,14,13,15,21,16,25,22,19,
@@ -14533,7 +14529,10 @@ static bool GloveIsDescendantOrSelf(unsigned bone, unsigned ancestor,
 
 static const unsigned* GloveMap(bool gloves, bool sleeve, bool tmdGloves,
                                 bool tmdBase, bool tmdExtra, int& slots) {
-    if (gloves)      { slots = (int)_countof(kNoTmdGloveMap); return kNoTmdGloveMap; }
+    if (gloves) {
+        slots = (int)gloveisolate::kNoTmdGlovePaletteBoneCount;
+        return gloveisolate::kNoTmdGlovePalette;
+    }
     if (sleeve)      { slots = (int)_countof(kNoTmdSleeveMap); return kNoTmdSleeveMap; }
     if (tmdGloves)   { slots = (int)_countof(kTmdGloveMap); return kTmdGloveMap; }
     if (tmdBase)     { slots = (int)_countof(kTmdBaseMap); return kTmdBaseMap; }
@@ -14549,7 +14548,7 @@ static bool PaletteMat(const float gpu[3][4], armbind::Mat& out) {
     return armbind::FromGpu(gpu, out);
 }
 
-static void UpdateGloveWristCenters(float changed[108][4], const unsigned* map, int slots) {
+static void UpdateGloveWristCenters(float changed[114][4], const unsigned* map, int slots) {
     const GloveRefBone* refs = GloveRefs();
     for (int hand = 0; hand < 2; ++hand) {
         const char* name = hand == 0 ? "l_arm_wrist" : "r_arm_wrist";
@@ -14590,7 +14589,7 @@ static bool SlotScaleStable(const float before[3][4], const float after[3][4]) {
     return true;
 }
 
-static void ApplyGloveIsolation(float changed[108][4], const unsigned* map, int slots,
+static void ApplyGloveIsolation(float changed[114][4], const unsigned* map, int slots,
                                 int mode) {
     if (mode <= 0 || !map || slots <= 0) return;
     const GloveRefBone* refs = GloveRefs();
@@ -14646,7 +14645,7 @@ static void ApplyGloveIsolation(float changed[108][4], const unsigned* map, int 
 }
 
 static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first, UINT triangles,
-                                  float saved[108][4]) {
+                                  float saved[114][4]) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::bone_palette);
     if (g_hotPathSampler.active())
         InterlockedExchange64(&g_hotPaletteFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
@@ -14780,9 +14779,9 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     }
     int slots = 0;
     const unsigned* sectionMap = GloveMap(gloves, sleeve, tmdGloves, tmdBase, tmdExtra, slots);
-    if (!sectionMap || slots <= 0 || slots > 36) { IndependentAuditCount(IHA_MAP,audit); return 0; }
+    if (!sectionMap || slots <= 0 || slots > 38) { IndependentAuditCount(IHA_MAP,audit); return 0; }
     const int regs=slots*3;
-    float local[4][4],primary[4][4],off[4][4],delta[4][4],changed[108][4];
+    float local[4][4],primary[4][4],off[4][4],delta[4][4],changed[114][4];
     if(FAILED(dev->GetVertexShaderConstantF(230,&local[0][0],4)) ||
        FAILED(dev->GetVertexShaderConstantF(5,&saved[0][0],regs))) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
     BuildLiveControllerC(primary, true);
@@ -14892,7 +14891,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             NudgeComponentX(reinterpret_cast<float(*)[4]>(&changed[b * 3]), leftShift);
         }
     }
-    float posed[108][4];
+    float posed[114][4];
     memcpy(posed, changed, (size_t)regs * 4 * sizeof(float));
     // The wrist centers are taken from the live, post-IK palette.  Section 0
     // contains both wrists and seeds the cache used by the arm-only section;
@@ -16762,7 +16761,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // ⭐ run 251: one call per surviving segment, INSIDE the StereoPair lambda so each eye draws the
     // whole set. Putting the loop outside would run the per-eye setup once and the geometry twice.
     // The ordinary path is nSeg == 1 and emits exactly the call it always did.
-    float independentSaved[108][4];
+    float independentSaved[114][4];
     const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(dev,numVertices,startIndex,primCount,independentSaved) : 0;
     if(FgIndependentHandsCandidate(numVertices, startIndex, primCount) && !independentRegs) {
         nSeg=0;
@@ -17583,7 +17582,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         (menuClassNow == 2 || menuClassNow == 3) &&
         pausemenuspace::IsPauseCanvasOrtho(c)) {
         menumono::NoteDraw((int)menuClassNow, true, (unsigned)vp.Width, (unsigned)vp.Height,
-                           (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0), c, true);
+                           (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0), c, 1);
     }
     // Main/pause GFx is drawn into a scene-sized texture the cockpit monitor
     // shows whole. Remapping both eyes into that texture is the doubled menu.
@@ -17594,30 +17593,26 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         D3DVIEWPORT9 vpMenu{};
         dev->GetViewport(&vpMenu);
         const unsigned sceneW = (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0);
-        const bool perEyeDiegetic =
+        const bool pauseSbsCompose =
+            pausemenuspace::PauseMenuOffscreenSbs((unsigned)menuClassNow, vpMenu.Width, sceneW);
+        const bool perEyeCanvas =
+            !pauseSbsCompose &&
             pausemenuspace::DiegeticMenuCanvas(c, vpMenu.Width, sceneW);
+        const int compose = pauseSbsCompose ? 2 : (perEyeCanvas ? 1 : 0);
         menumono::NoteDraw((int)menuClassNow, false, vpMenu.Width, vpMenu.Height, sceneW, c,
-                           perEyeDiegetic);
-        if (perEyeDiegetic) {
-            static LONG saidPerEye = 0;
-            if (InterlockedCompareExchange(&saidPerEye, 1, 0) == 0)
-                Log("menu mono: class=%ld per-eye canvas into scene-sized GFx target (%ux%u)",
-                    menuClassNow, vpMenu.Width, vpMenu.Height);
-            const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
-            const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3;
-            const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
-            const LONG halfW = (LONG)vpMenu.Width / 2;
+                           compose);
+        const LONG halfW = (LONG)vpMenu.Width / 2;
+        if (pauseSbsCompose || perEyeCanvas) {
+            static LONG saidCompose = 0;
+            if (InterlockedCompareExchange(&saidCompose, 1, 0) == 0)
+                Log("menu mono: class=%ld %s into scene-sized GFx target (%ux%u sceneW=%u)",
+                    menuClassNow,
+                    pauseSbsCompose ? "half-viewport SBS compose (c5 unchanged)"
+                                    : "per-eye canvas remap",
+                    vpMenu.Width, vpMenu.Height, sceneW);
             HRESULT hrMono = S_OK;
             D3DVIEWPORT9 savedVp = vpMenu;
             for (int eye = 0; eye < 2; ++eye) {
-                float m[16];
-                memcpy(m, c, sizeof(m));
-                Reg4* q = reinterpret_cast<Reg4*>(m);
-                for (int i = 0; i < 4; ++i) {
-                    q[i].x *= k;
-                    q[i].y *= k;
-                }
-                ApplyEyeRemap(reinterpret_cast<Reg4*>(m), CONV_ROW, eye ? +0.5f : -0.5f);
                 D3DVIEWPORT9 half = vpMenu;
                 half.X = vpMenu.X + (DWORD)(eye ? halfW : 0);
                 half.Width = (DWORD)halfW;
@@ -17625,7 +17620,20 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
                             (LONG)(half.X + half.Width), (LONG)(half.Y + half.Height) };
                 dev->SetViewport(&half);
                 dev->SetScissorRect(&sc);
-                dev->SetVertexShaderConstantF(5, m, 4);
+                if (perEyeCanvas) {
+                    const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
+                    const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3;
+                    const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
+                    float m[16];
+                    memcpy(m, c, sizeof(m));
+                    Reg4* q = reinterpret_cast<Reg4*>(m);
+                    for (int i = 0; i < 4; ++i) {
+                        q[i].x *= k;
+                        q[i].y *= k;
+                    }
+                    ApplyEyeRemap(reinterpret_cast<Reg4*>(m), CONV_ROW, eye ? +0.5f : -0.5f);
+                    dev->SetVertexShaderConstantF(5, m, 4);
+                }
                 const HRESULT r = draw();
                 if (FAILED(r)) hrMono = r;
             }

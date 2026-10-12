@@ -37,5 +37,12 @@ int main() {
     gloveisolate::CollapseDelta(wrist, stump, 0.12f);
     Expect(stump.m[0][0] > 0.0f && stump.m[0][0] < 1.0f,
            "legacy mode 3 stump remains a scale toward the wrist");
+
+    Expect(gloveisolate::NoTmdGlovePaletteCovers(9), "left wrist is in the glove palette");
+    Expect(gloveisolate::NoTmdGlovePaletteCovers(27), "left forearm is in the glove palette");
+    Expect(gloveisolate::NoTmdGlovePaletteCovers(46), "left forearm2 is in the glove palette");
+    Expect(gloveisolate::NoTmdGlovePaletteCovers(47), "left bicep is in the glove palette");
+    Expect(gloveisolate::kNoTmdGlovePaletteBoneCount == 37u,
+           "pistol glove palette slot count");
     return g_fails == 0 ? 0 : 1;
 }
