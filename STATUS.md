@@ -1,13 +1,11 @@
 # STATUS — session handoff
 
-Last updated **2026-10-12**. Left glove idle: **PHYSICALLY_VERIFIED** (`010eb45`).
-PSVR2 on `318b1fd`: support grip no longer hides the left glove, but it sat
-**beside** the pistol because the left target was `BuildGunC` while the right
-target stayed the aim controller. Pistol latch now uses `AuthoredPair`: both
-regions take the aim-hand rigid delta, and `GloveLeftShift` is not applied
-while that latch is held. `l_hand_IK` is the rest pose, not a grip point.
-Pause: offscreen class 3 is still `compose=0` (one full-width scene RT draw);
-no new HUD remap. See `docs/audits/hands-only-and-pause.md`.
+Last updated **2026-10-12**. Hands-only branch `feature/hands-support-grip` from `726e1a7`.
+Perf diagnostics stay frozen at `4e58bdb`. Do not deploy that candidate. Do not integrate `feature/left-hand-ik-continuity`.
+
+**Hands target:** gloves and short cuffs only (`ArmIKMode=0`, `ShowControllerArms=0`, `GloveIsolate=2`). Idle left glove remains **PHYSICALLY_VERIFIED**. Pistol support grip on the accepted build used the aim-hand delta (`AuthoredPair`), so the left glove sat **beside** the pistol. This branch attaches the latched left glove to `BuildGunC` plus a pistol fore-end offset and skips `GloveLeftShift` while the latch is held. Release clears `g_twoHandActive` on the same Grip-up sample. Visual result is **not** a headset PASS until PSVR2 checks holstered, one-hand, two-hand, and release. Candidate DLL `B3F0AB69…` was smoke-launched (process attached 15:17:02, OpenXR session not running) and **removed**. Steam DLL is again `2FE5011C…`. Backup `20261012-151647`.
+
+**Pause (recorded, not in this task):** native pause text is still clipped in the upper-left corner. VR Settings placement is correct. Do not start another pause experiment here.
 
 **Steam install (MAIN):** `4F85BEAAFC7033287B900A1750203375FDEE64E9FA817EDA2E9CB6F8EA2BECBE`
 (build after `94b47e8` + compile fix), backup `20261012-113123`, INI preserved.

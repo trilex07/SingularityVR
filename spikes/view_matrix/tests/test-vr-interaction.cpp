@@ -57,20 +57,19 @@ static void menu_projection_tests(){
 }
 
 static void support_tests(){
-    const long pi=5799;assert(SupportGripFor(pi).mode==SupportGripMode::AuthoredPair);
+    const long pi=5799;assert(SupportGripFor(pi).mode==SupportGripMode::ForeEnd);
+    assert(SupportGripFor(pi).fwd==12 && SupportGripFor(pi).right==-4 && SupportGripFor(pi).up==2);
     const float angles[]={0.f,.78539816f,-.78539816f,1.5707963f,-1.5707963f,3.1415926f};
     int samples=0;
     for(float a:angles){
         float p[4][4]={{std::cos(a),std::sin(a),0,0},{-std::sin(a),std::cos(a),0,0},{0,0,1,0},{13,-7,4,1}},o[4][4]{};
-        assert(ApplySupportGripTarget(o,p,pi));
-        for(int i=0;i<4;++i)for(int j=0;j<4;++j)assert(close(o[i][j],p[i][j]));
-        for(long weapon: {8297L,11387L,11389L}){
+        for(long weapon: {5799L,8297L,11387L,11389L}){
             assert(ApplySupportGripTarget(o,p,weapon));const auto s=SupportGripFor(weapon);
             for(int j=0;j<3;++j){const float expected=s.fwd*p[0][j]+s.right*p[1][j]+s.up*p[2][j];assert(close(o[3][j]-p[3][j],expected));}
             ++samples;
         }
     }
-    std::printf("support: authored pistol delta identity; %d invariant long-gun rotation samples\n",samples);
+    std::printf("support: pistol and long guns stay on the weapon transform; %d rotation samples\n",samples);
 }
 
 static void shadow_tests(){
