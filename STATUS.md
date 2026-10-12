@@ -5,10 +5,10 @@ Last updated **2026-10-12**. **Hands frozen** — PSVR2 accepted on DLL
 (`726e1a7`): gloves, two-hand pistol grip, no disappear/beside pistol.
 Branch `feature/regression-recovery` — regression pass only (no grip edits).
 
-**Regressions on that candidate (PSVR2):** English VA/subtitles (`PolishLanguage=0` on
-installed INI — manifests present, runtime rewrite off); black materials (suspect texture
-injector — A/B via `-TextureInjector Disable`); pause menu still split/clipped (evidence in
-`docs/regression-recovery-20261012.md`, **no new HUD fix**).
+**Regressions addressed (PSVR2 pending on pause):** Polish restored via `PolishLanguage=1`;
+black materials mitigated with texture injector disabled; pause menu fix on
+`fix/pause-menu-stereo` (`PauseHeadMenu=1`, pooled 1280×720 GFx → head provider — see
+`docs/audits/pause-menu-head-overlay.md`). Hands/grip code unchanged on that branch.
 
 **Steam install (MAIN):** see latest `deployment/install-reports/*.json` after
 `-EnsurePolishLanguage` + texture-injector A/B. Hands DLL SHA unchanged unless noted.
