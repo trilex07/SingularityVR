@@ -1,6 +1,7 @@
 #pragma once
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
+#include "pause_gfx_native_probe.h"
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
 void OpenVrSettingsFromPause();
 extern volatile LONG g_panelOpen;
@@ -49,6 +50,7 @@ static bool UpdateMenu() {
   static unsigned generation=0;
   InterlockedExchange64(&g_vrMenuStateToken,((LONG64)++generation<<32)|(unsigned)kind);
   InterlockedExchange(&g_vrMenuClass,kind);
+  if (kind == 3) pausegfxprobe::LogPauseFocus(movie, viewport);
   Log("VR UI focus: movie=%p object=%s class=%s menu=%d",(void*)movie,objectName,className,cachedMenu?1:0);
   // Fix-4/menus: a movie outside the table is the prime suspect for the nested-views
   // second menu - its draws miss the menu path and fall through to StereoPair. Name it
@@ -100,6 +102,8 @@ static bool BindViewport() {
   }
  }
  viewport=selected;lastX=lastY=-1;
+ if (InterlockedCompareExchange(&g_vrMenuClass, 0, 0) == 3)
+     pausegfxprobe::LogPauseFocus(cachedMovie, viewport);
  Log("VR UI native viewport bound: %p cursor getters patched; desktop cursor untouched",viewport);
  InterlockedExchange(&g_vrUiNativeReady,1);
  return true;

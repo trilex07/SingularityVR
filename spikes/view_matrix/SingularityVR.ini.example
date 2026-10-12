@@ -1107,6 +1107,8 @@ DesktopCapture=0
 DesktopAutomation=0
 ; One-shot screenshot on the first native context-prompt geometry match; diagnostic only.
 CaptureFirstContextPrompt=0
+; Logs FViewport SizeX/Y and backbuffer size on RvUIGFxMovie_Pause focus (read-only).
+PauseGfxProbe=0
 
 ; ---------------------------------------------------------------------------
 ; [Render] WeaponFxRideGun -- the muzzle flash and barrel smoke (run 181)
