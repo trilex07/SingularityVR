@@ -16,7 +16,7 @@ inline void NoteDraw(int menuClass, bool backbuffer, unsigned rtW, unsigned rtH,
     static int seenCompose = -1;
     const bool canvas = pausemenuspace::IsPauseCanvasOrtho(c5);
     if (seenClass == menuClass && seenBack == (backbuffer ? 1 : 0) &&
-        seenW == rtW && seenH == rtH && seenCompose == compose && !canvas)
+        seenW == rtW && seenH == rtH && seenCompose == compose)
         return;
     seenClass = menuClass;
     seenBack = backbuffer ? 1 : 0;
