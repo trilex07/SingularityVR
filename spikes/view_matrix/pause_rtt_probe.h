@@ -12,6 +12,7 @@ static IDirect3DSurface9* seenBindings[24] = {};
 static unsigned bindingCount = 0;
 static unsigned totalBindings = 0;
 static uintptr_t bindingResource = 0;
+static uintptr_t Pointer(uintptr_t address);
 
 // Observed pointer provenance only. A backlink identifies an owner candidate;
 // an exact COM match narrows its fields. Neither permits presentation yet.
