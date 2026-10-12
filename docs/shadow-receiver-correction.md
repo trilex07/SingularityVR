@@ -29,6 +29,21 @@ After exit all three accepted hashes verified, experimental flag absent.
 The CONTROL request did not produce a second trace before shutdown; no OFF
 capture comparison is claimed.
 
+## Accepted baseline control, PID31176
+
+User physically confirms accepted 9FBA308C cold start restores stereo and weapon
+controller tracking. With HQ Decals ON, square shadows remain, distant shadows
+move with the gun, and the tracked gun sometimes turns black while its texture
+appears frozen elsewhere. User explicitly says the latter also happened before
+and had not been reported. Therefore these gun/light artifacts are baseline bugs,
+not evidence unique to the rejected receiver correction. No causal conclusion
+about the temporary stereo loss follows from this control alone.
+
+Game has exited. Next candidate cb9902e / EA298F2F... is read-only context
+diagnostics with the correction flag absent. Two same-head-view captures with
+different right-controller poses test whether the receiver's first/last VS/PS
+matrices or moved context follow the controller. Maintain HQ Decals ON throughout.
+
 Next controlled candidate is read-only: correction flag remains OFF, trace key
 includes moved context, repeated 8/12 volume draws retain last VS c0..3 and PS
 c0..14 (<=128 extra reads/frame). Compare first/last matrices and native world
