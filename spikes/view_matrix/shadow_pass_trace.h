@@ -4,6 +4,10 @@
 // retained only for bounded unique groups and released by Present/reset.
 namespace shadowtrace {
 constexpr unsigned kGroups=1024, kDraws=24000, kShaders=192;
+constexpr D3DRENDERSTATETYPE kPipelineStates[]={D3DRS_COLORWRITEENABLE,D3DRS_ZENABLE,
+    D3DRS_ZWRITEENABLE,D3DRS_ZFUNC,D3DRS_STENCILENABLE,D3DRS_STENCILFUNC,D3DRS_STENCILREF,
+    D3DRS_ALPHABLENDENABLE,D3DRS_SRCBLEND,D3DRS_DESTBLEND,D3DRS_SEPARATEALPHABLENDENABLE,
+    D3DRS_SRCBLENDALPHA,D3DRS_DESTBLENDALPHA};
 struct Key {
     IDirect3DVertexShader9* vs=nullptr;
     IDirect3DPixelShader9* ps=nullptr;
@@ -11,6 +15,8 @@ struct Key {
     IDirect3DBaseTexture9* tex[8]{};
     RECT sc{};
     unsigned phase=0,moved=0;
+    DWORD pipeline[13]{};
+    bool pipelineValid=false;
 };
 struct Group {
     Key key; D3DVIEWPORT9 vp{}; IDirect3DSurface9* depth=nullptr;
@@ -44,6 +50,10 @@ inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned pr
     Key key=bound; // Shader/resource identities tracked at successful setters.
     key.phase=phase;
     key.moved=moved;
+    key.pipelineValid=true;
+    for(unsigned r=0;r<13;++r)if(FAILED(dev->GetRenderState(kPipelineStates[r],&key.pipeline[r]))) {
+        key.pipeline[r]=~0u;key.pipelineValid=false;
+    }
     if(FAILED(dev->GetScissorRect(&key.sc))) { ++overflow;return -1; }
     unsigned i=0;
     for(;i<count;++i)if(memcmp(&groups[i].key,&key,sizeof(Key))==0)break;
@@ -98,6 +108,10 @@ inline void Dump(const char* path) {
             g.key.sc.left,g.key.sc.top,g.key.sc.right,g.key.sc.bottom,g.vsRead,g.psRead);
         if(owner)owner->Release();
         fprintf(f,"geometry group=%u phase=%u moved=%u VB=%p offset=%u stride=%u IB=%p\n",i,g.key.phase,g.key.moved,g.vb,g.offset,g.stride,g.ib);
+        fprintf(f,"pipeline group=%u valid=%u colorWrite=%lu zEnable=%lu zWrite=%lu zFunc=%lu stencil=%lu stencilFunc=%lu stencilRef=%lu blend=%lu srcBlend=%lu dstBlend=%lu separateAlpha=%lu srcAlpha=%lu dstAlpha=%lu\n",
+            i,g.key.pipelineValid?1:0,g.key.pipeline[0],g.key.pipeline[1],g.key.pipeline[2],g.key.pipeline[3],
+            g.key.pipeline[4],g.key.pipeline[5],g.key.pipeline[6],g.key.pipeline[7],g.key.pipeline[8],
+            g.key.pipeline[9],g.key.pipeline[10],g.key.pipeline[11],g.key.pipeline[12]);
         if(g.tail) {
             fprintf(f,"tail group=%u draw=%u vsRead=%08lX psRead=%08lX\n",i,g.last,g.tailVSRead,g.tailPSRead);
             for(unsigned r=0;r<15;++r)fprintf(f,"tailconstant group=%u reg=%u VS=%.9g,%.9g,%.9g,%.9g PS=%.9g,%.9g,%.9g,%.9g\n",

@@ -47,6 +47,37 @@ Trace request now waits for 15 consecutive focused gameplay frames with both
 hand orientations/positions valid, and rechecks focus/positions before arming.
 This scopes diagnostics only; it does not change game input or rendering policy.
 
+## Context A/B, PID43920
+
+User confirms the distant shadow or black/frozen gun changes with right-hand
+movement. A/B complete: 1073/1049 calls, 288/252 groups, zero overflow; focused
+session=5 and both positions valid. Receiver moved=0 in both eyes and both
+captures, so BuildGunC inside this receiver's StereoPair call is NOT established
+as the direct cause. Camera orientation changed substantially between captures;
+do not attribute all matrix differences solely to hand movement.
+
+First/last receiver constants differ despite the same shader/resource identity:
+MinZ_MaxZRatio c2 near coefficients ~9.99/~0.999; ScreenToWorld's unused W
+component ~1/~10. This explains the earlier strict affine guard rejecting half
+the calls, not the full artifact. PS never consumes that W component.
+
+Actual source path found: receiver scene sampler is HDR113 texture, copied from
+another HDR113 texture by PS 0df8d996... (TheTexture), whose producers include
+PS c965e1e958d3de23daa235d80271d96cb693201e07d4a705986c5c2de8e4876b.
+Private disassembly shows producer VS passes clip W to texcoord5.w and producer
+PS writes alpha = MinZ_MaxZRatio.x / clipW + MinZ_MaxZRatio.y. Thus native alpha
+really encodes depth, and consumer inverse coefficients can be checked against
+the producing pass, rather than guessed from hardware Z.
+
+Remaining hole: bound RT alone does not prove alpha writes. Some intervening
+box-volume draws use a constant-output PS, potentially stencil-only. Expanded
+read-only candidate records color-write, depth, stencil, RGB/alpha blend states
+in the grouping key (13 state reads/final call, only one requested bounded frame).
+This distinguishes actual depth-alpha producers from non-writing volumes and
+captures different receiver coverage/state instead of silently grouping them.
+No new matrix correction until producer/depth/coverage semantics are verified.
+After A/B exit accepted DLL/INI/UI hashes were all restored and verified.
+
 Next controlled candidate is read-only: correction flag remains OFF, trace key
 includes moved context, repeated 8/12 volume draws retain last VS c0..3 and PS
 c0..14 (<=128 extra reads/frame). Compare first/last matrices and native world

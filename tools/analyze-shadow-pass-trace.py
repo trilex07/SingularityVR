@@ -28,6 +28,11 @@ def read_trace(path, shader_out=None):
         elif line.startswith("geometry group="):
             data = dict(re.findall(r"(\w+)=([^ ]+)", line))
             groups[int(data["group"])]["geometry"] = data
+        elif line.startswith("pipeline group="):
+            data=dict(re.findall(r"(\w+)=([^ ]+)",line))
+            if data.get("valid")=="1":
+                data["writes_alpha"]=bool(int(data["colorWrite"]) & 8)
+            groups[int(data["group"])]["pipeline"]=data
         elif line.startswith(("constant group=", "tailconstant group=")):
             match=re.match(r"(?:tail)?constant group=(\d+) reg=(\d+) VS=([^ ]+) PS=([^ ]+)",line)
             if match:
