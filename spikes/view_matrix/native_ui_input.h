@@ -1,4 +1,6 @@
 #pragma once
+#include "pause_rtt_probe.h"
+#include "pause_rtt_start.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
@@ -57,6 +59,9 @@ static bool UpdateMenu() {
       Log("VR UI focus UNCLASSIFIED: object=%s class=%s - not in the menu table; open this"
           " menu in the test run, then check which render path its draws take",objectName,className);
  }
+ PauseRttProbe::Observe(movie,cachedMenu &&
+     (InterlockedCompareExchange(&g_vrMenuClass,0,0)==2 ||
+      InterlockedCompareExchange(&g_vrMenuClass,0,0)==3));
  const bool menu=cachedMenu && InterlockedCompareExchange(&g_vrUiEnabled,0,0)!=0;
  InterlockedExchange(&g_vrUiMenu,menu?1:0);
  if(menu)InterlockedAnd(&g_padBtns,0x0000FCFF); // Immediate select/fire separation before this input tick.

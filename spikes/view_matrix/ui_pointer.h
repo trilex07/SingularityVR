@@ -11,6 +11,12 @@ inline float Dot(V a,V b){return a.x*b.x+a.y*b.y+a.z*b.z;}
 inline bool Finite(V a){return std::isfinite(a.x)&&std::isfinite(a.y)&&std::isfinite(a.z);}
 inline bool Unit(V a,V& b){float n=std::sqrt(Dot(a,a));if(!std::isfinite(n)||n<1e-6f)return false;b=a*(1/n);return true;}
 struct Plane { V centre,right,up,normal; float halfWidth=0,halfHeight=0,inset=.70f; };
+// Native pause RTT is 16:9. Half the previous centre-to-edge distance moves
+// both text columns inward without cropping their UVs or changing eye poses.
+inline void CompactNativePause(Plane& p) {
+    p.halfWidth *= .5f;
+    p.halfHeight = p.halfWidth * (720.f / 1280.f);
+}
 // Basis is the SAME rendered view basis used to place the menu. All inputs share
 // one coordinate space/units. Symmetric projection half-FOV tangents set extent.
 inline bool HeadPlane(V head,V forward,V right,V up,float distance,float tanHalfX,float tanHalfY,float inset,Plane& out){

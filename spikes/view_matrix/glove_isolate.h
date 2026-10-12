@@ -39,6 +39,18 @@ inline bool IsArmFleshSection(unsigned verts, unsigned first, unsigned triangles
            triangles == 7704u;
 }
 
+// Hands-only rendering: gloves stay on the controllers, the long forearm section
+// is not drawn, and elbow IK must not rewrite the palette. Vertices must move
+// rigidly with the controller delta, not with a wrist-centered stump scale.
+inline bool HandsOnly(int showControllerArms, int isolateMode) {
+    return showControllerArms == 0 && isolateMode >= 2;
+}
+
+// Mode 2 hides arm draws only. Mode 3 is the legacy palette stump (stretchy).
+inline bool UsesPaletteStump(int showControllerArms, int isolateMode) {
+    return showControllerArms == 0 && isolateMode >= 3;
+}
+
 inline bool NameContains(const char* name, const char* part) {
     if (!name || !part) return false;
     for (const char* h = name; *h; ++h) {
@@ -149,6 +161,21 @@ inline void TransformPoint(const float m[4][4], const float p[3], float out[3]) 
     out[0] = m[0][0] * p[0] + m[1][0] * p[1] + m[2][0] * p[2] + m[3][0];
     out[1] = m[0][1] * p[0] + m[1][1] * p[1] + m[2][1] * p[2] + m[3][1];
     out[2] = m[0][2] * p[0] + m[1][2] * p[1] + m[2][2] * p[2] + m[3][2];
+}
+
+// Exported pistol-glove section palette (3314 verts @ first 0). Must include
+// every bone that skinning weights reference; missing entries stay on native pose.
+inline constexpr unsigned kNoTmdGlovePaletteBoneCount = 45;
+inline constexpr unsigned kNoTmdGlovePalette[kNoTmdGlovePaletteBoneCount] = {
+    85, 51, 70, 71, 72, 79, 80, 76, 73, 74, 82, 83, 77, 84, 81, 78, 75, 50,
+    6, 7, 8, 9, 10, 11, 12, 16, 26, 23, 24, 20, 17, 18, 14, 15, 21, 25, 22, 19,
+    41, 42, 43, 44, 45, 46, 47,
+};
+
+inline bool NoTmdGlovePaletteCovers(unsigned boneIndex) {
+    for (unsigned b : kNoTmdGlovePalette)
+        if (b == boneIndex) return true;
+    return false;
 }
 
 }  // namespace gloveisolate

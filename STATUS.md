@@ -1,6 +1,33 @@
 # STATUS — session handoff
 
-Last updated **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
+Last updated **2026-10-12**. Left glove idle: **PHYSICALLY_VERIFIED** (`010eb45`).
+Pause RTT layout on `fix/pause-native-rtt-integration`: **PHYSICALLY_VERIFIED**
+for appearance/placement only. User's first PSVR2 test on `eac307b` / DLL
+1635A8F0...D625219: "looks perfect". Complete native RGB/full UVs, compact 50%
+plane and matching pointer geometry. Navigation/Options acceptance for this
+exact version remains unconfirmed. User authorizes persistent installation of
+this exact tested DLL plus dedicated UI package (no restore watchdog) and PR
+to main, including inherited baseline changes absent from main.
+Return-to-main per-eye background difference remains UNKNOWN; no stereo changes.
+See `docs/pause-rtt-integration.md`. This branch's verified safe restore is
+original UI C8CDB2E1..., accepted DLL 2FE5011C..., preserved INI 61AEC56C...
+Older Steam installation statements below are not this task's current state.
+PSVR2 on `318b1fd`: support grip no longer hides the left glove, but it sat
+**beside** the pistol because the left target was `BuildGunC` while the right
+target stayed the aim controller. Pistol latch now uses `AuthoredPair`: both
+regions take the aim-hand rigid delta, and `GloveLeftShift` is not applied
+while that latch is held. `l_hand_IK` is the rest pose, not a grip point.
+Historical pre-RTT pause evidence: see `docs/audits/hands-only-and-pause.md`;
+it does not describe the physically accepted native RTT provider above.
+
+**Steam install (MAIN):** `4F85BEAAFC7033287B900A1750203375FDEE64E9FA817EDA2E9CB6F8EA2BECBE`
+(build after `94b47e8` + compile fix), backup `20261012-113123`, INI preserved.
+L3 smoke: `OpenXR ready` in `view_matrix.log` (2026-10-12 11:32:54 attach); no
+`support wrist snap` in this build. Support grip on headset: **READY_FOR_PHYSICAL_ACCEPTANCE**
+(not re-tested on PSVR2 yet). Prior: `0eb22a6` / `2B896A7A…`, backup `20261012-111934`. Workflow:
+`docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
+
+Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
 Read this first, then `ENGINE_NOTES.md`.
 
 **This file is current state only.** The run-by-run log moved to `HISTORY.md` on 2026-08-04 — you

@@ -32,6 +32,27 @@ int main() {
         }
     }
     griplatch::GripLatch latch;
+    for(float yaw:{-.9f,0.f,1.2f}) {
+        const V f{std::sin(yaw),0,-std::cos(yaw)},r{std::cos(yaw),0,std::sin(yaw)},up{0,1,0};
+        const V head{2,1.6f,-3};
+        VrMenuPanel pause;
+        assert(HeadPlane(head,f,r,up,.95f,1.04f,1.06f,.84f,pause.plane));
+        pause.plane.halfHeight=pause.plane.halfWidth*(720.f/1280.f);
+        V before[4]; for(unsigned k=0;k<4;++k) before[k]=pause.Corner(k);
+        CompactNativePause(pause.plane);
+        for(unsigned k=0;k<4;++k) {
+            const V delta=pause.Corner(k)-pause.plane.centre;
+            const V expected=(before[k]-pause.plane.centre)*.5f;
+            assert(Dot(delta-expected,delta-expected)<1e-10f);
+        }
+        for(float v:{0.f,.25f,.5f,.75f,1.f})
+        for(float u:{0.f,.25f,.5f,.75f,1.f}) {
+            const V world=pause.Corner(0)*((1-u)*(1-v))+pause.Corner(1)*(u*(1-v))
+                         +pause.Corner(2)*((1-u)*v)+pause.Corner(3)*(u*v);
+            Hit hit; assert(pause.Ray(head,world-head,hit));
+            assert(std::fabs(hit.u-u)<1e-5f && std::fabs(hit.v-v)<1e-5f);
+        }
+    }
     for(unsigned t=0;t<100;++t){latch.Update(false,0,true,1,t);assert(!latch.Latched());}
     latch.Update(true,0,true,1,101);assert(latch.Latched());
     latch.Update(true,100,true,1,102);assert(latch.Latched());

@@ -9,6 +9,7 @@
 #include "weapon_wheel.h"
 #include "grip_latch.h"
 #include "glove_isolate.h"
+#include "support_grip_palette.h"
 #include "fp_shadow.h"
 #include "camera_stabilization.h"
 #include "shadow_policy.h"
@@ -72,6 +73,7 @@
 #include "script_node_candidate.h"
 #include "menu_submit_policy.h"
 #include "menu_hud_scale.h"
+#include "pause_menu_space.h"
 #include <shlobj.h>
 #include "async_thread_snapshot.h"
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
@@ -115,6 +117,22 @@ static XrTime g_hotPredictedDisplayTime = 0;
 #pragma comment(lib, "d3d11.lib")
 
 namespace {
+
+extern volatile LONG g_vrMenuClass;
+extern volatile LONG g_independentRejectCode;
+extern volatile LONG g_pauseMenuDiag;
+extern volatile LONG g_pauseMenuDiagSubmitLogged;
+extern volatile LONG g_pauseMenuDiagSampleLogged;
+
+void LogSupportGripTransition(bool acquired, long gunVerts, IndependentReject reject,
+                                bool weaponDeltaUsed, bool fallbackUsed);
+void PauseMenuDiagNoteCompose(int menuClass, bool offscreen, int compose, unsigned rtW,
+                              unsigned rtH, unsigned sceneW, int canvasOrtho, float c5sx,
+                              float c5ty);
+void PauseMenuDiagNoteSubmit(bool dup, bool stereo, bool menuFlat, bool cropEyes, unsigned srcW,
+                             unsigned srcH, int menuClass);
+void PauseMenuDiagSampleSbsColumns(const uint8_t* bgra, unsigned width, unsigned height,
+                                   unsigned pitchBytes);
 
 // Scene-mode state is defined with the other runtime state below.  Keep the
 // declarations here so the Present/video probe code can sample it without
@@ -260,6 +278,60 @@ void Log(_Printf_format_string_ const char* fmt, ...) {
         fputc('\n', f); fclose(f);
     }
     LeaveCriticalSection(&g_lock);
+}
+
+#include "pause_menu_diagnostic.h"
+
+void LogSupportGripTransition(bool acquired, long gunVerts, IndependentReject reject,
+                                bool weaponDeltaUsed, bool fallbackUsed) {
+    Log("support-grip transition: %s gunVerts=%ld reject=%d weaponDelta=%d fallback=%d",
+        acquired ? "ACQUIRED" : "RELEASED", gunVerts, static_cast<int>(reject),
+        weaponDeltaUsed ? 1 : 0, fallbackUsed ? 1 : 0);
+}
+
+void PauseMenuDiagNoteCompose(int menuClass, bool offscreen, int compose, unsigned rtW,
+                              unsigned rtH, unsigned sceneW, int canvasOrtho, float c5sx,
+                              float c5ty) {
+    if (!InterlockedCompareExchange(&g_pauseMenuDiag, 0, 0) || menuClass != 3) return;
+    static int seenOff = -1;
+    static int seenCompose = -1;
+    if (seenOff == (offscreen ? 1 : 0) && seenCompose == compose) return;
+    seenOff = offscreen ? 1 : 0;
+    seenCompose = compose;
+    Log("pause-evidence compose: class=3 target=%s %ux%u sceneW=%u canvasOrtho=%d compose=%d"
+        " c5 sx=%.4g ty=%.4g",
+        offscreen ? "offscreen" : "backbuffer", rtW, rtH, sceneW, canvasOrtho, compose, c5sx,
+        c5ty);
+}
+
+void PauseMenuDiagNoteSubmit(bool dup, bool stereo, bool menuFlat, bool cropEyes, unsigned srcW,
+                             unsigned srcH, int menuClass) {
+    if (!InterlockedCompareExchange(&g_pauseMenuDiag, 0, 0) || menuClass != 3) return;
+    if (InterlockedCompareExchange(&g_pauseMenuDiagSubmitLogged, 1, 0) != 0) return;
+    Log("pause-evidence submit: class=3 dup=%d stereo=%d menuFlat=%d cropEyes=%d backbuffer=%ux%u"
+        " (menuFlat=0 for class 3: each eye keeps its half of the SBS backbuffer)",
+        dup ? 1 : 0, stereo ? 1 : 0, menuFlat ? 1 : 0, cropEyes ? 1 : 0, srcW, srcH);
+}
+
+void PauseMenuDiagSampleSbsColumns(const uint8_t* bgra, unsigned width, unsigned height,
+                                   unsigned pitchBytes) {
+    if (!InterlockedCompareExchange(&g_pauseMenuDiag, 0, 0) || !bgra || width < 8 || height < 8)
+        return;
+    if (InterlockedCompareExchange(&g_pauseMenuDiagSampleLogged, 1, 0) != 0) return;
+    unsigned long colSum[4] = { 0, 0, 0, 0 };
+    const unsigned colW = width / 4;
+    const unsigned stepY = height / 64;
+    if (stepY == 0) return;
+    for (unsigned y = 0; y < height; y += stepY) {
+        const uint8_t* row = bgra + y * pitchBytes;
+        for (unsigned q = 0; q < 4; ++q) {
+            const unsigned x0 = q * colW + colW / 4;
+            const uint8_t* px = row + x0 * 4;
+            colSum[q] += px[0] + px[1] + px[2];
+        }
+    }
+    Log("pause-evidence sbs-columns: w=%u h=%u sampleLuma Q0=%lu Q1=%lu Q2=%lu Q3=%lu", width,
+        height, colSum[0], colSum[1], colSum[2], colSum[3]);
 }
 
 #include "input_wmi_cache.h"
@@ -4959,6 +5031,8 @@ void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, cal
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
+static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer = false);
+static volatile LONG g_pauseCaptureRequested = 0;
 const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::d3d9_to_d3d11_copy);
     // ⭐ run 217: defined further down, next to the transforms it reuses - see DrawLaserSight.
@@ -4972,6 +5046,9 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawVfxOverlay(dev);
     DrawVrContextPrompt(dev);
     if (ownOverlayScene) dev->EndScene();
+    // Bounded pause diagnostics must read the actual source passed to XR, after
+    // every overlay. RT0 restored by overlays can instead be the scene texture.
+    if (InterlockedExchange(&g_pauseCaptureRequested, 0)) SaveBackbufferCapture(dev, true);
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return nullptr;
     D3DSURFACE_DESC sd{};
@@ -5108,6 +5185,8 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
             memcpy(d + (size_t)y * ms.RowPitch, s + (size_t)y * lr.Pitch, rowBytes);
     }
     MeasureCullBand(s, lr.Pitch, g_srcW, g_srcH);
+    if (Rd(g_gamePaused) && Rd(g_vrMenuClass) == 3)
+        PauseMenuDiagSampleSbsColumns(s, g_srcW, g_srcH, (unsigned)lr.Pitch);
     g_ctx11->Unmap(g_uploadTex, 0);
     use.surf->UnlockRect();
     g_msLockCopy += MsSince(t0);
@@ -9313,6 +9392,10 @@ void SyncXRInput(XrTime displayTime) {
     if(previousSupport!=(supportActive?1:0)) {
         InterlockedIncrement(supportActive?&g_vrCounters.gripLatchCount:&g_vrCounters.gripDetachCount);
         Log("two-hand grip: %s",supportActive?"ACQUIRED":"RELEASED");
+        LogSupportGripTransition(
+            supportActive != 0, InterlockedCompareExchange(&g_gunVerts, 0, 0),
+            static_cast<IndependentReject>(InterlockedCompareExchange(&g_independentRejectCode, 0, 0)),
+            false, false);
     }
 
     // ---- motion-controller weapon holster ---------------------------------
@@ -10872,6 +10955,10 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
 
     const bool cropEyes = frame && frame->dup && !frame->stereo && frame->menuFlat && g_srcW >= 2;
     g_scCropped = cropEyes;
+    if (frame) {
+        PauseMenuDiagNoteSubmit(frame->dup, frame->stereo, frame->menuFlat, cropEyes, g_srcW,
+                                g_srcH, (int)Rd(g_vrMenuClass));
+    }
     // research/nvidia-vr-upscaling: NIS engages only on the SBS true-stereo
     // path (two independent eye viewports, seam never in the kernel). Mono and
     // alternate-eye stereo keep the native path. Output is sized from the
@@ -11552,6 +11639,7 @@ PFN_DrawIndexedPrimUP  g_origDrawIndexedPrimUP = nullptr;
 // frames 20-27; outside them each call is a flag read plus a counter. Identifies which
 // path draws the black-quad / second menu copy (RT size, texture, verts, projection).
 #include "menu_draw_trace.h"
+#include "menu_mono_trace.h"
 int g_drawsUP = 0;           // how many draws came through the user-pointer forms
 bool g_hookUserPtrDraws = false;  // ini-switchable; see LoadIniSettings for why it must be
 int  g_userPtrHookLevel = 0;      // 0 off, 1 patch only, 2 +counter, 3 full - a bisection ladder
@@ -11656,6 +11744,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     HRESULT hr = g_origSetRenderTarget(dev, idx, surf);
     if (FAILED(hr)) return hr; // Failed binds leave the actual device target unchanged.
+    if (idx == 0) { PauseRttProbe::Bind(surf); PauseRttProbe::ContentBind(surf); }
     // Run 116: which target the first-person pass draws into. If it switches at the foreground
     // boundary the pass is composited from its own surface, and skipping its draws leaves that
     // surface at its cleared value - which would explain "black but still occluding" without any
@@ -13102,6 +13191,7 @@ void VidProbeFrameEnd() {
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                         UINT start, UINT count) {
+    PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0)) return g_origDrawPrim(dev,t,start,count);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
@@ -14434,6 +14524,10 @@ static void BuildLiveControllerC(float C[4][4], bool aimHand) {
 }
 
 int g_independentHands=0; // Evidence-backed prototype, enabled explicitly in the test INI.
+volatile LONG g_independentRejectCode = 0;
+volatile LONG g_pauseMenuDiag = 0;
+volatile LONG g_pauseMenuDiagSubmitLogged = 0;
+volatile LONG g_pauseMenuDiagSampleLogged = 0;
 inline bool FgMatchWindow();
 static bool IsIndependentHandSection(UINT verts, UINT first, UINT triangles);
 volatile LONG g_independentLeftDraws=0;
@@ -14458,10 +14552,6 @@ static bool IndependentAuditCandidate(UINT verts) {
 // meshes.  They are deliberately explicit: a 3x4 GPU palette slot is not an
 // identity-indexed copy of the PSK skeleton.  Keeping the maps here makes the
 // collapse/finger path fail closed if a new section signature is introduced.
-static const unsigned kNoTmdGloveMap[35] = {
-    85,51,70,71,72,79,80,76,73,74,82,83,77,84,81,78,75,50,
-    9,10,11,12,16,27,23,24,20,17,18,14,15,21,25,22,19
-};
 static const unsigned kNoTmdSleeveMap[6] = { 50,85,49,27,8,7 };
 static const unsigned kTmdGloveMap[36] = {
     85,9,10,11,12,23,24,20,17,18,14,13,15,21,16,25,22,19,
@@ -14531,7 +14621,10 @@ static bool GloveIsDescendantOrSelf(unsigned bone, unsigned ancestor,
 
 static const unsigned* GloveMap(bool gloves, bool sleeve, bool tmdGloves,
                                 bool tmdBase, bool tmdExtra, int& slots) {
-    if (gloves)      { slots = (int)_countof(kNoTmdGloveMap); return kNoTmdGloveMap; }
+    if (gloves) {
+        slots = (int)gloveisolate::kNoTmdGlovePaletteBoneCount;
+        return gloveisolate::kNoTmdGlovePalette;
+    }
     if (sleeve)      { slots = (int)_countof(kNoTmdSleeveMap); return kNoTmdSleeveMap; }
     if (tmdGloves)   { slots = (int)_countof(kTmdGloveMap); return kTmdGloveMap; }
     if (tmdBase)     { slots = (int)_countof(kTmdBaseMap); return kTmdBaseMap; }
@@ -14547,7 +14640,7 @@ static bool PaletteMat(const float gpu[3][4], armbind::Mat& out) {
     return armbind::FromGpu(gpu, out);
 }
 
-static void UpdateGloveWristCenters(float changed[108][4], const unsigned* map, int slots) {
+static void UpdateGloveWristCenters(float changed[135][4], const unsigned* map, int slots) {
     const GloveRefBone* refs = GloveRefs();
     for (int hand = 0; hand < 2; ++hand) {
         const char* name = hand == 0 ? "l_arm_wrist" : "r_arm_wrist";
@@ -14588,7 +14681,7 @@ static bool SlotScaleStable(const float before[3][4], const float after[3][4]) {
     return true;
 }
 
-static void ApplyGloveIsolation(float changed[108][4], const unsigned* map, int slots,
+static void ApplyGloveIsolation(float changed[135][4], const unsigned* map, int slots,
                                 int mode) {
     if (mode <= 0 || !map || slots <= 0) return;
     const GloveRefBone* refs = GloveRefs();
@@ -14616,9 +14709,11 @@ static void ApplyGloveIsolation(float changed[108][4], const unsigned* map, int 
             }
         }
         ++wouldCollapse[side];
-        // Mode >= 2: stump collapse (keepScale) so the cuff sits behind the wrist
-        // instead of a point-collapse or a face clip flush with the glove.
-        if (mode < 2 || !g_gloveWristValid[side]) continue;
+        // Mode 3 only: stump collapse stretches blended cuff vertices toward the
+        // wrist. Hands-only (mode 2) hides the arm draw and drives bones rigidly.
+        if (!gloveisolate::UsesPaletteStump(g_showControllerArms, mode) ||
+            !g_gloveWristValid[side])
+            continue;
         armbind::Mat s;
         if (!PaletteMat(reinterpret_cast<const float (*)[4]>(&changed[slot * 3]), s)) continue;
         gloveisolate::Mat4 d;
@@ -14642,7 +14737,7 @@ static void ApplyGloveIsolation(float changed[108][4], const unsigned* map, int 
 }
 
 static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first, UINT triangles,
-                                  float saved[108][4]) {
+                                  float saved[135][4]) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::bone_palette);
     if (g_hotPathSampler.active())
         InterlockedExchange64(&g_hotPaletteFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
@@ -14776,30 +14871,71 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     }
     int slots = 0;
     const unsigned* sectionMap = GloveMap(gloves, sleeve, tmdGloves, tmdBase, tmdExtra, slots);
-    if (!sectionMap || slots <= 0 || slots > 36) { IndependentAuditCount(IHA_MAP,audit); return 0; }
+    if (!sectionMap || slots <= 0 || slots > 45) {
+        IndependentAuditCount(IHA_MAP,audit);
+        InterlockedExchange(&g_independentRejectCode, (LONG)IndependentReject::Map);
+        return 0;
+    }
     const int regs=slots*3;
-    float local[4][4],primary[4][4],off[4][4],delta[4][4],changed[108][4];
+    float local[4][4],primary[4][4],off[4][4],delta[4][4],changed[135][4];
     if(FAILED(dev->GetVertexShaderConstantF(230,&local[0][0],4)) ||
-       FAILED(dev->GetVertexShaderConstantF(5,&saved[0][0],regs))) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
+       FAILED(dev->GetVertexShaderConstantF(5,&saved[0][0],regs))) {
+        IndependentAuditCount(IHA_PALETTE,audit);
+        InterlockedExchange(&g_independentRejectCode, (LONG)IndependentReject::PaletteRead);
+        return 0;
+    }
     BuildLiveControllerC(primary, true);
     BuildLiveControllerC(off, false);
-    // During support grip, wrist orientation follows the weapon; position still follows the
-    // left controller. Releasing immediately restores its independent tracked orientation.
-    // Exact asset sections can also arrive after the broad attachment path's 64-draw
-    // sanity limit. Move their bones directly; keep that safety limit for all other geometry.
+    float weaponC[4][4]{};
+    float offWeapon[4][4]{};
+    const bool supportGrip = Rd(g_twoHandActive) != 0;
+    const long supportGunVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+    bool weaponDeltaUsed = false;
+    bool paletteFallback = false;
+    bool authoredPair = false;
     float base[4][4]{};
     if(g_thisDrawMoved)memcpy(base,g_thisDrawMoved==2?off:primary,sizeof(base));
     else for(int i=0;i<4;++i)base[i][i]=1.0f;
-    if(Rd(g_twoHandActive)) {
-        // The old path copied the weapon rotation but kept the controller's world position and
-        // then added a TMD anchor delta. That made the left hand appear beside the pistol: the
-        // orientation was weapon-relative while the translation was still controller-relative.
-        // Use the weapon-specific support point in the same row-vector frame as BuildGunC.
-        if(!ApplySupportGripTarget(off,primary,InterlockedCompareExchange(&g_gunVerts,0,0))) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
+    const float (*leftTarget)[4] = off;
+    if (supportGrip) {
+        const SupportGripSpec spec = SupportGripFor(supportGunVerts);
+        if (spec.mode == SupportGripMode::AuthoredPair) {
+            // Same rigid delta as the aim hand. The live palette already contains the
+            // pistol's two-hand relationship; retargeting only the left wrist to BuildGunC
+            // (or to l_hand_IK, which matches the rest pose) parks the glove beside the gun.
+            leftTarget = primary;
+            authoredPair = true;
+            static LONG saidAuthored = 0;
+            if (InterlockedCompareExchange(&saidAuthored, 1, 0) == 0)
+                Log("support grip pose: authored-pair gun=%ld leftDelta=primary"
+                    " (bind l_hand_IK is rest, not a grip point)", supportGunVerts);
+        } else {
+            BuildGunC(weaponC);
+            if (ApplySupportGripTarget(offWeapon, weaponC, supportGunVerts)) {
+                leftTarget = offWeapon;
+                weaponDeltaUsed = true;
+            }
+        }
     }
     memcpy(changed,saved,regs*4*sizeof(float));
     float rightDelta[4][4];
-    if(!skeletal::LocalDeltaPair(delta,rightDelta,local,base,off,primary)) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
+    bool paired = skeletal::LocalDeltaPair(delta, rightDelta, local, base, leftTarget, primary);
+    if (!paired && supportGrip && weaponDeltaUsed) {
+        paired = skeletal::LocalDeltaPair(delta, rightDelta, local, base, off, primary);
+        paletteFallback = paired;
+        weaponDeltaUsed = false;
+    }
+    if (!paired) {
+        IndependentAuditCount(IHA_PALETTE,audit);
+        InterlockedExchange(&g_independentRejectCode, (LONG)IndependentReject::DeltaPair);
+        return 0;
+    }
+    if (paletteFallback) {
+        static LONG saidPaletteFallback = 0;
+        if (InterlockedCompareExchange(&saidPaletteFallback, 1, 0) == 0)
+            Log("support grip palette: weapon delta failed, using controller off-hand delta");
+    }
+    InterlockedExchange(&g_independentRejectCode, (LONG)IndependentReject::None);
     const GloveRefBone* refs = GloveRefs();
     const int wristSlot[2] = {
         GloveFindSlot(sectionMap, slots, refs, 89, "l_arm_wrist"),
@@ -14809,10 +14945,32 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         wristSlot[0] >= 0 ? sectionMap[wristSlot[0]] : 89u,
         wristSlot[1] >= 0 ? sectionMap[wristSlot[1]] : 89u,
     };
+    const bool rigidGloves =
+        gloveisolate::HandsOnly(g_showControllerArms, (int)InterlockedCompareExchange(&g_gloveIsolate, 0, 0));
     for(int b=0;b<slots;++b) {
         const unsigned bone = sectionMap[b];
         const char* boneName = bone < 89 ? refs[bone].name : nullptr;
         if (gloveisolate::IsTmdDevice(boneName)) continue;
+        if (rigidGloves &&
+            gloveisolate::Classify(boneName) == gloveisolate::BoneRole::Collapse) {
+            const int physicalSide = gloveisolate::HandSide(boneName);
+            if (physicalSide >= 0 && physicalSide <= 1 && wristSlot[physicalSide] >= 0 &&
+                handValid[physicalSide]) {
+                const int deltaSide = gloveisolate::ControllerDeltaForBone(boneName, OffHand());
+                if (deltaSide >= 0) {
+                    if (!independentBothHands && g_thisDrawMoved == 1 &&
+                        physicalSide != AimHand()) {
+                    } else if (!independentBothHands && g_thisDrawMoved == 2 &&
+                               !Rd(g_twoHandActive) && physicalSide != OffHand()) {
+                    } else {
+                        skeletal::TransformBone(
+                            &changed[b * 3], &saved[b * 3],
+                            deltaSide == 0 ? delta : rightDelta);
+                    }
+                }
+            }
+            continue;
+        }
         {
             const int namedSide = gloveisolate::HandSide(boneName);
             const bool finger = namedSide >= 0 && namedSide <= 1 && wristSlot[namedSide] >= 0 &&
@@ -14834,9 +14992,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         if(!independentBothHands && g_thisDrawMoved==2 && !Rd(g_twoHandActive) && physicalSide != OffHand()) continue;
         skeletal::TransformBone(&changed[b*3],&saved[b*3],deltaSide == 0 ? delta : rightDelta);
     }
-    // Native arms are kept as the default. When explicitly enabled, only the
-    // audited TMD arm sections receive constrained two-bone deltas.
-    if (g_armIkMode == 1 && (tmdBase || tmdGloves)) {
+    // Hands-only mode keeps the glove section on the controller deltas above
+    // and hides the long forearm draw. Elbow IK would rewrite those bones, so
+    // it does not run in this mode even if ArmIKMode is left on.
+    if (!gloveisolate::HandsOnly(g_showControllerArms, (int)Rd(g_gloveIsolate)) &&
+        g_armIkMode == 1 && (tmdBase || tmdGloves)) {
         armbind::Deltas leftIk{}, rightIk{};
         const bool haveLeft = armnatural::Build(false, delta, leftIk);
         const bool haveRight = armnatural::Build(true, rightDelta, rightIk);
@@ -14852,7 +15012,9 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // wrist subtree and the left shoulder/elbow/forearm so the arm sits further
     // left than the native gun-hold, while the right hand stays on its controller.
     const float leftShift = (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
-    if (leftShift != 0.0f) {
+    // Idle shift parks the free left glove off the native gun-hold. During an authored
+    // pistol grip that same nudge is what puts the support hand beside the weapon.
+    if (leftShift != 0.0f && !authoredPair) {
         for (int b = 0; b < slots; ++b) {
             const unsigned bone = sectionMap[b];
             const char* boneName = bone < 89 ? refs[bone].name : nullptr;
@@ -14864,7 +15026,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             NudgeComponentX(reinterpret_cast<float(*)[4]>(&changed[b * 3]), leftShift);
         }
     }
-    float posed[108][4];
+    float posed[135][4];
     memcpy(posed, changed, (size_t)regs * 4 * sizeof(float));
     // The wrist centers are taken from the live, post-IK palette.  Section 0
     // contains both wrists and seeds the cache used by the arm-only section;
@@ -14899,7 +15061,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         }
     }
     // Internal palette writes must bypass camera/HUD upload classification.
-    if(!g_origSetVSConstF || FAILED(g_origSetVSConstF(dev,5,&changed[0][0],regs))) { IndependentAuditCount(IHA_PALETTE,audit); return 0; }
+    if(!g_origSetVSConstF || FAILED(g_origSetVSConstF(dev,5,&changed[0][0],regs))) {
+        IndependentAuditCount(IHA_PALETTE,audit);
+        InterlockedExchange(&g_independentRejectCode, (LONG)IndependentReject::Upload);
+        return 0;
+    }
     InterlockedIncrement(&g_independentLeftDraws);
     IndependentAuditCount(IHA_SUCCESS,audit);
     return regs;
@@ -16459,6 +16625,7 @@ static bool TrackFpCaster(IDirect3DDevice9* dev,INT baseVertex,UINT minIndex,
 HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                                INT baseVertex, UINT minIndex, UINT numVertices,
                                                UINT startIndex, UINT primCount) {
+    PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0)) return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
@@ -16734,7 +16901,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // ⭐ run 251: one call per surviving segment, INSIDE the StereoPair lambda so each eye draws the
     // whole set. Putting the loop outside would run the per-eye setup once and the geometry twice.
     // The ordinary path is nSeg == 1 and emits exactly the call it always did.
-    float independentSaved[108][4];
+    float independentSaved[135][4];
     const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(dev,numVertices,startIndex,primCount,independentSaved) : 0;
     if(FgIndependentHandsCandidate(numVertices, startIndex, primCount) && !independentRegs) {
         nSeg=0;
@@ -17376,6 +17543,11 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // back to, and StereoPair would just return draw() anyway.
     if (!InterlockedCompareExchange(&g_dupDraws, 0, 0)) return draw();
     if(g_boundShaderLayout.shadow)return draw();
+    // This canonical path already identifies GFx canvas batches. Once the
+    // complete native pause RTT has successfully reached both eyes, remove
+    // only its old scene/backbuffer canvas copy. Never suppress the RTT producer.
+    if (Rd(g_vrMenuClass) == 3 && Rd(g_rtIsScene) && !Rd(g_vrMenuProviderDrawing) &&
+        PauseRttProbe::Presented()) return D3D_OK;
     if (!g_hudRemap) return StereoPair(dev, draw);
     InterlockedIncrement(&g_uiSeen);          // ⭐ run 230
 
@@ -17551,12 +17723,68 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // Apply to the complete GFx layout before eye remapping, never to world geometry.
     const bool menuLayout=InterlockedCompareExchange(&g_vrUiMenu,0,0)!=0;
     const LONG menuClassNow = InterlockedCompareExchange(&g_vrMenuClass, 0, 0);
+    if (InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0) &&
+        (menuClassNow == 2 || menuClassNow == 3) &&
+        pausemenuspace::IsPauseCanvasOrtho(c)) {
+        menumono::NoteDraw((int)menuClassNow, true, (unsigned)vp.Width, (unsigned)vp.Height,
+                           (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0), c, 1);
+    }
     // Main/pause GFx is drawn into a scene-sized texture the cockpit monitor
     // shows whole. Remapping both eyes into that texture is the doubled menu.
     // The backbuffer path (title / IIS) stays split, then the XR crop shows one
     // half in each eye. Bink never reaches this function.
     if ((menuClassNow == 2 || menuClassNow == 3) &&
         !InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
+        D3DVIEWPORT9 vpMenu{};
+        dev->GetViewport(&vpMenu);
+        const unsigned sceneW = (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0);
+        // Class 3 pause: evidence-only single draw until composition stage is proven.
+        // Class 2 may still use per-eye canvas remap on the scene-sized RT.
+        const bool perEyeCanvas = menuClassNow != 3 &&
+            pausemenuspace::DiegeticMenuCanvas(c, vpMenu.Width, sceneW);
+        const int compose = perEyeCanvas ? 1 : 0;
+        menumono::NoteDraw((int)menuClassNow, false, vpMenu.Width, vpMenu.Height, sceneW, c,
+                           compose);
+        PauseMenuDiagNoteCompose((int)menuClassNow, true, compose, vpMenu.Width, vpMenu.Height,
+                                 sceneW,
+                                 pausemenuspace::IsPauseCanvasOrtho(c) ? 1 : 0, c[0], c[13]);
+        const LONG halfW = (LONG)vpMenu.Width / 2;
+        if (perEyeCanvas) {
+            static LONG saidCompose = 0;
+            if (InterlockedCompareExchange(&saidCompose, 1, 0) == 0)
+                Log("menu mono: class=%ld per-eye canvas remap into scene-sized GFx target"
+                    " (%ux%u sceneW=%u)",
+                    menuClassNow, vpMenu.Width, vpMenu.Height, sceneW);
+            HRESULT hrMono = S_OK;
+            for (int eye = 0; eye < 2; ++eye) {
+                // Full scene-sized viewport; split with scissor only. Halving the viewport blanked
+                // GFx on the offscreen pause target; backbuffer pause already uses this pattern.
+                RECT sc = { (LONG)vpMenu.X + (eye ? halfW : 0), (LONG)vpMenu.Y,
+                            (LONG)vpMenu.X + (eye ? (LONG)vpMenu.Width : halfW),
+                            (LONG)(vpMenu.Y + vpMenu.Height) };
+                dev->SetViewport(&vpMenu);
+                dev->SetScissorRect(&sc);
+                const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
+                const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3;
+                const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
+                float m[16];
+                memcpy(m, c, sizeof(m));
+                Reg4* q = reinterpret_cast<Reg4*>(m);
+                for (int i = 0; i < 4; ++i) {
+                    q[i].x *= k;
+                    q[i].y *= k;
+                }
+                ApplyEyeRemap(reinterpret_cast<Reg4*>(m), CONV_ROW, eye ? +0.5f : -0.5f);
+                dev->SetVertexShaderConstantF(5, m, 4);
+                const HRESULT r = draw();
+                if (FAILED(r)) hrMono = r;
+            }
+            dev->SetVertexShaderConstantF(5, c, 4);
+            dev->SetScissorRect(&oldRect);
+            dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
+            g_inHudRemap = false;
+            return hrMono;
+        }
         static LONG saidMono = 0;
         if (InterlockedCompareExchange(&saidMono, 1, 0) == 0)
             Log("menu mono: class=%ld one draw into the diegetic target", menuClassNow);
@@ -17565,6 +17793,44 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
         g_inHudRemap = false;
         return draw();
+    }
+    if (pausemenuspace::PauseBackbufferCanvasRoute((unsigned)menuClassNow,
+            InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0) != 0, c)) {
+        menumono::NoteDraw((int)menuClassNow, true, (unsigned)vp.Width, (unsigned)vp.Height,
+                           (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0), c, 1);
+        PauseMenuDiagNoteCompose((int)menuClassNow, false, 1, (unsigned)vp.Width,
+                                 (unsigned)vp.Height,
+                                 (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0), 1, c[0],
+                                 c[13]);
+        static LONG saidPauseBb = 0;
+        if (InterlockedCompareExchange(&saidPauseBb, 1, 0) == 0)
+            Log("menu pause: class=3 backbuffer canvas ortho per-eye copy (c5 inset/remap)");
+        const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
+        const bool menuSafe = menuLayout || menuClassNow == 3;
+        const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
+        const LONG halfW = (LONG)vp.Width / 2;
+        HRESULT hrPause = S_OK;
+        for (int eye = 0; eye < 2; ++eye) {
+            float m[16];
+            memcpy(m, c, sizeof(m));
+            Reg4* q = reinterpret_cast<Reg4*>(m);
+            for (int i = 0; i < 4; ++i) {
+                q[i].x *= k;
+                q[i].y *= k;
+            }
+            ApplyEyeRemap(reinterpret_cast<Reg4*>(m), CONV_ROW, eye ? +0.5f : -0.5f);
+            RECT r = { (LONG)vp.X + (eye ? halfW : 0), (LONG)vp.Y,
+                       (LONG)vp.X + (eye ? (LONG)vp.Width : halfW), (LONG)(vp.Y + vp.Height) };
+            dev->SetScissorRect(&r);
+            dev->SetVertexShaderConstantF(5, m, 4);
+            const HRESULT rDraw = draw();
+            if (FAILED(rDraw)) hrPause = rDraw;
+        }
+        dev->SetVertexShaderConstantF(5, c, 4);
+        dev->SetScissorRect(&oldRect);
+        dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldOn);
+        g_inHudRemap = false;
+        return hrPause;
     }
     // Title corner labels only. Boot/Bink stay on their own path (class 1 scale
     // is the IIS title, which is not the video quad).
@@ -17911,8 +18177,23 @@ int g_scopeAspectPsReg = 0;      // ini [Render] ScopeAspectPsReg  - ScreenAspec
 volatile LONG g_scopeQuadDraws = 0;
 volatile LONG g_scopeMatchAim = 0, g_scopeMatchIdle = 0;   // ⭐ run 231
 
+// Class 3 pause text is a canvas ortho in c5. StereoPair scissors the frame
+// and remaps the camera, so that ortho stays in full-frame clip space and the
+// seam cuts it. The HUD path already insets class 3 and copies it into each
+// eye. VR Settings is drawn later as its own overlay and does not use c5.
+static bool PauseCanvasNeedsEyeCopy(IDirect3DDevice9* dev) {
+    const LONG menuClass = Rd(g_vrMenuClass);
+    if (menuClass != 2 && menuClass != 3) return false;
+    if (!g_hudRemap && menuClass != 3) return false;
+    float m[16];
+    if (FAILED(dev->GetVertexShaderConstantF(5, m, 4))) return false;
+    if (!pausemenuspace::IsPauseCanvasOrtho(m)) return false;
+    return InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0) != 0;
+}
+
 HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                           UINT primCount, const void* vtxData, UINT vtxStride) {
+    PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawPrimUP) return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
@@ -18005,7 +18286,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
         if (vtxStride == kFlashStride) FlashRegDump(dev, lo, hi, primCount, vtxStride);
     }
     if (g_dropStride && vtxStride == (UINT)g_dropStride) return D3D_OK;
-    if (hudArmed && g_hudRemap && !quad)
+    if (!quad && ((hudArmed && g_hudRemap) || PauseCanvasNeedsEyeCopy(dev)))
         return HudStereoPair(dev, primCount, vtxStride, [&] { return g_origDrawPrimUP(dev, t, primCount, vtxData, vtxStride); });
     if (quad) {
         // The one fullscreen quad that must NOT simply pass through. Gated on VR mode: flat, the
@@ -18050,6 +18331,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
                                                 UINT minVtxIndex, UINT numVertices, UINT primCount,
                                                 const void* idxData, D3DFORMAT idxFormat,
                                                 const void* vtxData, UINT vtxStride) {
+    PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawIndexedPrimUP) return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
@@ -18139,7 +18421,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // The identification test - see g_dropStride. Returning S_OK without drawing is how the mod drops
     // draws everywhere else: device state untouched, so the next draw behaves normally.
     if (g_dropStride && vtxStride == (UINT)g_dropStride) return D3D_OK;
-    if (hudArmed && g_hudRemap && !quad)
+    if (!quad && ((hudArmed && g_hudRemap) || PauseCanvasNeedsEyeCopy(dev)))
         return HudStereoPair(dev, primCount, vtxStride, [&] {
             return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                            idxData, idxFormat, vtxData, vtxStride); });
@@ -19086,6 +19368,7 @@ static void ReleaseVrShadowResources() {
 // ShadowMode now selects the sampling-pass treatment instead (0/1/2); see the stage mask below.
 // Proper fix: disable first-person arm/weapon shadow casting at engine level (bCastDynamicShadow=false).
 HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDirect3DBaseTexture9* texture) {
+    PauseRttProbe::Sample(texture);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::set_texture);
     // Fix-C/menu round 3: match the captured menu texture(s) on stages 0-3, not
     // only stage 0. g_vrMenuSourceBound keeps its stage-0-only meaning for existing
@@ -19123,6 +19406,7 @@ inline bool SuppressCapturedVrMenuDraw() {
     // so the fail mask below only ever describes menu-source draws. Any-of-stages-0-3
     // since round 3 (the captured menu is sampled off stage 0).
     if (!Rd(g_vrUiMenu) || !MenuSourceBoundAny()) return false;
+    if (Rd(g_vrMenuClass) == 3 && !PauseRttProbe::Presented()) return false;
     // Fix-4/menus round 2: suppressed=0 while the provider serves frames means the scene
     // keeps its own copy (nested views). Record WHY as a sticky per-window bitmask:
     // 1=noprovide 2=flat 4=shadow 8=providing-now 16=offscreen. Same allow/deny outcome
@@ -22455,13 +22739,16 @@ bool VrPanelHitNormalized(LONG uInt, LONG vInt, int* rowIndex) {
 // briefly (expect a visible hitch on the capture frame) - that is the price of
 // GetRenderTargetData, not a bug. Multisampled or exotic formats are skipped, never
 // forced. Render thread only; touches no device state, only reads target 0.
-static void SaveBackbufferCapture(IDirect3DDevice9* dev) {
+static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer) {
     static ULONGLONG lastMs = 0;
     const ULONGLONG now = GetTickCount64();
     if (now - lastMs < 3000) return;
     lastMs = now;
     IDirect3DSurface9* rt = nullptr;
-    if (FAILED(dev->GetRenderTarget(0, &rt)) || !rt) { Log("capture: no render target"); return; }
+    const HRESULT sourceResult = submittedBackbuffer
+        ? dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &rt)
+        : dev->GetRenderTarget(0, &rt);
+    if (FAILED(sourceResult) || !rt) { Log("capture: no render target"); return; }
     D3DSURFACE_DESC d{};
     if (FAILED(rt->GetDesc(&d))) { rt->Release(); Log("capture: no desc"); return; }
     if (d.MultiSampleType != D3DMULTISAMPLE_NONE) {
@@ -22513,7 +22800,8 @@ static void SaveBackbufferCapture(IDirect3DDevice9* dev) {
     }
     sys->UnlockRect();
     sys->Release(); rt->Release();
-    Log("capture: %s %s (%ux%u)", ok ? "saved" : "FAILED", path, d.Width, d.Height);
+    Log("capture: %s %s (%ux%u) source=%s", ok ? "saved" : "FAILED", path, d.Width, d.Height,
+        submittedBackbuffer ? "XR-backbuffer" : "RT0");
 }
 
 static void DrawStateReadout(IDirect3DDevice9* dev) {
@@ -23119,6 +23407,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    PauseRttProbe::ReleaseContent();
     ReleaseVrMenuResources();
     ReleaseVrShadowResources();
     if (g_wristState) { g_wristState->Release(); g_wristState = nullptr; }
@@ -23329,6 +23618,8 @@ static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
 }
 
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
+    PauseRttStart::Install();
+    PauseRttProbe::PresentContent(s);
     hotpath::scope frameScope(g_hotPathSampler, hotpath::Family::frame_total);
     DiagStart();
     RefreshArmsAnimActive();
@@ -26651,6 +26942,10 @@ void LoadIniSettings() {
     // than leaving two settings that have to be right together.
     LONG hudIni = GetPrivateProfileIntA("Render", "HudStereo", 1, path);
     if (hudIni < 0 || hudIni > 1) hudIni = 1;
+    InterlockedExchange(&g_pauseMenuDiag,
+                        GetPrivateProfileIntA("Render", "PauseMenuDiag", 0, path) ? 1 : 0);
+    if (Rd(g_pauseMenuDiag))
+        Log("ini: PauseMenuDiag=1 - one-shot pause class-3 compose/submit/SBS column evidence");
     g_hudRemap = (int)hudIni;
     if (g_hudRemap && g_userPtrHookLevel < 3) {
         Log("ini: HudStereo=1 needs HookUserPointerDraws=3 (was %d) - raising it, because the UI"
