@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+Shadow receiver experiment on `fix/stereo-shadow-rootcause`: **L1_PASS**.
+ON/OFF/ON final-driver traces complete; user confirms OFF removes ordinary
+shadows as well. Exact receiver inverse/forward mismatch identified; bounded
+default-OFF c3..10 correction implemented. Synthetic math and state restoration
+tests pass; physical outcome UNKNOWN. See `docs/shadow-receiver-correction.md`.
+Accepted Steam restore remains DLL 9FBA308C..., INI 61AEC56C..., UI 5B2EA469...;
+all hashes reverified after diagnostic PID9576 exit.
+
 Last updated **2026-10-12**. Left glove idle: **PHYSICALLY_VERIFIED** (`010eb45`).
 Boot/main placement follow-up on `fix/boot-main-menu-placement`:
 **PHYSICALLY_VERIFIED** for placement: user accepted 5f05687 / DLL

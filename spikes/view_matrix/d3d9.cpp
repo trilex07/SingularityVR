@@ -4359,6 +4359,7 @@ inline void InvalidateCamMats() {
 
 struct ShaderLayoutEntry { IDirect3DVertexShader9* shader; skeletal::Layout layout; };
 #include "shadow_pass_trace.h"
+#include "shadow_receiver_fix.h"
 ShaderLayoutEntry g_shaderLayouts[1024]{};
 unsigned g_shaderLayoutNext=0;
 skeletal::Layout g_boundShaderLayout;
@@ -4404,6 +4405,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVS(IDirect3DDevice9* dev,IDirect3DVertexShader
     const HRESULT hr=g_origSetVS(dev,shader);
     if(FAILED(hr))return hr;
     shadowtrace::bound.vs=shader;
+    shadowfix::BindVS(shader);
     g_boundShaderLayout={};
     if(shader)for(unsigned i=0;i<1024;++i) {
         const unsigned s=(ShaderLayoutHash(shader)+i)&1023;
@@ -11641,25 +11643,29 @@ static PFN_DrawPrimUP shadowNativeUP=nullptr;
 static PFN_DrawIndexedPrimUP shadowNativeIndexedUP=nullptr;
 extern volatile LONG g_inForeground;
 static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT first,UINT prims) {
+    shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,0,prims);
     const int id=shadowtrace::Before(dev,(unsigned)t,0,prims,(unsigned)Rd(g_inForeground));
     const HRESULT hr=shadowNativePrim(dev,t,first,prims);shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,INT base,UINT min,UINT verts,UINT start,UINT prims) {
+    shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
     const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground));
     const HRESULT hr=shadowNativeIndexed(dev,t,base,min,verts,start,prims);shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT prims,const void* data,UINT stride) {
+    shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,0,prims);
     const int id=shadowtrace::Before(dev,(unsigned)t,0,prims,(unsigned)Rd(g_inForeground));
     const HRESULT hr=shadowNativeUP(dev,t,prims,data,stride);shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexedUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT min,UINT verts,UINT prims,const void* indices,D3DFORMAT format,const void* data,UINT stride) {
+    shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
     const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground));
     const HRESULT hr=shadowNativeIndexedUP(dev,t,min,verts,prims,indices,format,data,stride);shadowtrace::After(id,hr);return hr;
 }
 typedef HRESULT (STDMETHODCALLTYPE *ShadowSetPS)(IDirect3DDevice9*,IDirect3DPixelShader9*);
 static ShadowSetPS shadowOriginalPS=nullptr;
 static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
-    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr))shadowtrace::bound.ps=ps;return hr;
+    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);}return hr;
 }
 // Fix-I/menu census: wire the dormant MenuDrawTrace recorder into the four draw hooks
 // (calls below) with path masks in StereoPairBody (1) and HudStereoPair (2); provider
@@ -23442,7 +23448,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
-    shadowtrace::Release();shadowtrace::pending=false;
+    shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();
     PauseRttProbe::ReleaseContent();
     ReleaseVrMenuResources();
     ReleaseVrShadowResources();
@@ -23654,8 +23660,9 @@ static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
 }
 
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
+    shadowfix::Poll(g_logPath);
     if(shadowtrace::Boundary(s,g_playerPawn && VrModeOn() && Rd(g_vrMenuClass)==0,g_logPath))
-        InterlockedExchange(&g_pauseCaptureRequested,1); // Actual XR source pixels for this trace.
+        SaveBackbufferCapture(s,true); // Completed SBS scene, before menu/diagnostic overlays.
     PauseRttStart::Install();
     PauseRttProbe::PresentContent(s);
     hotpath::scope frameScope(g_hotPathSampler, hotpath::Family::frame_total);

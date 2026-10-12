@@ -3,6 +3,7 @@ param(
     [Parameter(Mandatory)][string]$BackupPath,
     [Parameter(Mandatory)][string]$CandidateDllSha256,
     [switch]$DllOnly,
+    [switch]$ShadowReceiverExperiment,
     [ValidateRange(60,1800)][int]$LaunchWindowSeconds = 600
 )
 # MAIN-owned single test lease: no launch/input/kill, never replace a running
@@ -29,6 +30,7 @@ if ($DllOnly) {
         elseif ($seen -or (Get-Date) -ge $deadline) { break }
         Start-Sleep -Seconds 2
     }
+    if ($ShadowReceiverExperiment) { & (Join-Path $PSScriptRoot 'set-shadow-receiver-experiment.ps1') -State OFF }
     if ((Get-FileHash -LiteralPath $dllTarget).Hash -ne $CandidateDllSha256) { throw 'Installation changed; refusing DLL restore' }
     & (Join-Path $PSScriptRoot 'deploy-singularityvr.ps1') -Action Rollback -BackupPath $backup
     if ((Get-FileHash -LiteralPath $dllTarget).Hash -ne $manifest.Sha256) { throw 'DLL rollback verification failed' }

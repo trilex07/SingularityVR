@@ -10,7 +10,7 @@ import struct
 from pathlib import Path
 
 
-def read_trace(path):
+def read_trace(path, shader_out=None):
     text = Path(path).read_text(encoding="utf-8", errors="replace")
     header = re.search(r"draws=(\d+) groups=(\d+) overflow=(\d+)", text)
     if not header:
@@ -28,6 +28,13 @@ def read_trace(path):
         elif line.startswith("geometry group="):
             data = dict(re.findall(r"(\w+)=([^ ]+)", line))
             groups[int(data["group"])]["geometry"] = data
+        elif line.startswith("constant group="):
+            match=re.match(r"constant group=(\d+) reg=(\d+) VS=([^ ]+) PS=([^ ]+)",line)
+            if match:
+                groups[int(match[1])].setdefault("constants",{})[int(match[2])] = {
+                    "VS": [float(v) for v in match[3].split(",")],
+                    "PS": [float(v) for v in match[4].split(",")],
+                }
         elif line.startswith("shader "):
             match = re.match(r"shader (\S+) stage=(\w+) words=(\d+)", line)
             if not match:
@@ -40,9 +47,14 @@ def read_trace(path):
             if len(words) != int(match[3]):
                 raise ValueError(f"Incomplete shader {match[1]}")
             raw = struct.pack("<" + "I" * len(words), *words)
+            digest=hashlib.sha256(raw).hexdigest()
+            if shader_out:
+                output=Path(shader_out)
+                output.mkdir(parents=True,exist_ok=True)
+                (output / (match[2]+"-"+digest+".bin")).write_bytes(raw)
             names = re.findall(rb"[A-Za-z_][A-Za-z0-9_]{4,80}\x00", raw)
             shaders[match[1]] = {
-                "stage": match[2], "sha256": hashlib.sha256(raw).hexdigest(),
+                "stage": match[2], "sha256": digest,
                 "words": len(words), "strings": sorted({s[:-1].decode() for s in names}),
             }
     edges = []
@@ -79,8 +91,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("trace")
     parser.add_argument("--compare", help="HQ decals control trace; option state confirmed separately")
+    parser.add_argument("--shader-out",help="Private output directory for bytecode disassembly, never commit")
     args = parser.parse_args()
-    result = read_trace(args.trace)
+    result = read_trace(args.trace,args.shader_out)
     if args.compare:
         control = read_trace(args.compare)
         first, second = signatures(result), signatures(control)
