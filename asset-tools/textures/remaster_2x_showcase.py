@@ -24,7 +24,12 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from dds_io import load_dds, read_dds_header, save_dds  # noqa: E402
+from dds_io import (  # noqa: E402
+    load_dds,
+    read_dds_header,
+    resize_rgba_independent,
+    save_dds,
+)
 
 from PIL import Image, ImageDraw
 
@@ -71,8 +76,12 @@ def main() -> None:
         enh, _ = load_dds(enh_path)
         orig, _ = load_dds(src_path)
 
-        up_enh = enh.resize((enh.width * 2, enh.height * 2), Image.LANCZOS)
-        up_orig = orig.resize((orig.width * 2, orig.height * 2), Image.LANCZOS)
+        # independent channels: game alpha packing (bright RGB with ~zero
+        # alpha, e.g. additive glow) must survive upsampling intact
+        up_enh = resize_rgba_independent(enh, (enh.width * 2, enh.height * 2),
+                                          Image.LANCZOS)
+        up_orig = resize_rgba_independent(orig, (orig.width * 2, orig.height * 2),
+                                            Image.LANCZOS)
 
         out_dir = OUT / key
         out_dir.mkdir(parents=True, exist_ok=True)

@@ -102,7 +102,9 @@ def save_dds(path: Path, img: Image.Image, fourcc: str, full_chain: bool = True)
         while max(w, h) > 1:
             w = max(1, w // 2)
             h = max(1, h // 2)
-            levels.append(img.resize((w, h), Image.BOX))
+            # independent channels: game alpha packing (e.g. additive glow as
+            # bright RGB with ~zero alpha) must survive downsampling intact
+            levels.append(resize_rgba_independent(levels[-1], (w, h), Image.BOX))
     else:
         levels = [img]
 
@@ -178,6 +180,26 @@ def downsample_normal(img: Image.Image, size: tuple[int, int]) -> Image.Image:
         channels.append(np.asarray(small, dtype=np.float32)[:, :, None])
     blended = np.concatenate(channels, axis=2)
     return Image.fromarray(signed_to_normal(blended), "RGBA")
+
+
+def resize_rgba_independent(img: Image.Image, size: tuple[int, int],
+                            filt=Image.BOX) -> Image.Image:
+    """Resize RGBA treating colour and alpha as independent channels.
+
+    PIL's resampling filters (everything except NEAREST) combine the channels:
+    pixels with low alpha drag their RGB toward the transparent-black
+    background, permanently darkening bright-but-transparent texels (UE3 packs
+    additive glow as bright RGB with ~zero alpha, e.g. the E99 bullet). Game
+    materials sample RGB and alpha through separate expressions, so filtering
+    them independently is the faithful operation. Required for every mip-chain
+    and upscale step on colour textures with meaningful alpha.
+    """
+    img = img.convert("RGBA")
+    rgb = img.convert("RGB").resize(size, filt)
+    alpha = img.getchannel("A").resize(size, filt)
+    out = rgb.convert("RGBA")
+    out.putalpha(alpha)
+    return out
 
 
 def make_mip_chain(img: Image.Image, fourcc: str) -> list[Image.Image]:
