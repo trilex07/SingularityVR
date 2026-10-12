@@ -12,6 +12,10 @@ $status=(& $wpr -status | Out-String)
 if($LASTEXITCODE -ne 0 -or $status -notmatch 'WPR is not recording') {
     throw 'Existing or unclear WPR session; refusing to interfere.'
 }
+$sessions=(& logman.exe query -ets | Out-String)
+if($LASTEXITCODE -ne 0 -or $sessions -match 'WPR_initiated_') {
+    throw 'Existing named WPR session or unclear ETW inventory; refusing to interfere.'
+}
 $instance='SingularityVRTrigger-'+[guid]::NewGuid().ToString('N')
 $run=Join-Path (Split-Path $PSScriptRoot -Parent) ('deployment\shadow-probe\cpu-'+(Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
 New-Item -ItemType Directory -Path $run -ErrorAction Stop | Out-Null
