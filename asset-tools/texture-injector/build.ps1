@@ -6,6 +6,8 @@ param(
     [switch]$Install,
     [ValidateSet("A", "B")]
     [string]$Variant = "A",
+    [ValidateSet("2x", "4K", "8K")]
+    [string]$Quality = "2x",
     [string]$GameBin = "C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries",
     [string]$LocalRoot = "C:\Users\Trilex\vr-mods\SingularityVR-assets-local"
 )
@@ -42,6 +44,11 @@ try {
     if ($Install) {
         if (-not (Test-Path $GameBin)) { throw "game Binaries not found: $GameBin" }
 
+        # Quality tier determines the source directory: 2x -> textures\upscaled, 4K/8K -> textures\upscaled-4K / textures\upscaled-8K
+        $upDir = if ($Quality -eq "2x") { "textures\upscaled" } else { "textures\upscaled-$Quality" }
+        $up = Join-Path $LocalRoot $upDir
+        if (-not (Test-Path $up)) { throw "upscaled dir missing: $up (run the pipeline 'upscale_tier' step first)" }
+
         $texDst = Join-Path $GameBin "texture-override"
         New-Item -ItemType Directory -Force -Path $texDst | Out-Null
         # clear old variant files so only the chosen one is present
@@ -52,8 +59,8 @@ try {
         # a file without a target either matches nothing or, worse, matches a
         # texture whose source was only a lower mip.
         $suffix = if ($Variant -eq "B") { "__B_ibp" } else { "__A_lanczos" }
-        $up = Join-Path $LocalRoot "textures\upscaled"
-        if (-not (Test-Path $up)) { throw "upscaled dir missing: $up (run the pipeline 'upscale' step first)" }
+        $up = Join-Path $LocalRoot $upDir
+        if (-not (Test-Path $up)) { throw "upscaled dir missing: $up (run the pipeline 'upscale_tier' step first)" }
         $gen = Join-Path $here "targets_generated.h"
         if (-not (Test-Path $gen)) { throw "targets_generated.h missing (run the pipeline 'targets' step first)" }
         $wanted = Select-String -Path $gen -Pattern '"([^"]+)\.dds"' -AllMatches |
@@ -72,7 +79,7 @@ try {
         }
         if ($count -eq 0) { throw "no '$suffix' candidates found in $up" }
         if ($missing.Count -gt 0) { Write-Warning ("missing candidates: " + ($missing -join ", ")) }
-        Write-Host "Variant: $Variant ($suffix), $count of $($wanted.Count) target(s) deployed"
+        Write-Host "Variant: $Variant ($suffix) Quality: $Quality, $count of $($wanted.Count) target(s) deployed"
 
         # forward to a local copy of the real dinput8 under a distinct name
         $sysDi8 = Join-Path ${env:windir} "SysWOW64\dinput8.dll"

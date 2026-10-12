@@ -38,6 +38,7 @@ struct Target {
 // original mip-0 DXT bytes). Replacement filenames are variant-agnostic:
 // build.ps1 -Variant A|B copies the chosen candidate into <name>.dds.
 #include "targets_generated.h"
+#include "texture_groups.h"
 
 // ---------------------------------------------------------------------------
 // state
@@ -50,6 +51,8 @@ static bool      g_capture = false;           // dump locked mip0 of larger DXT 
 static char      g_capturesDir[MAX_PATH] = "capture";
 static UINT      g_captureMin = 512;
 static uint64_t  g_markerHash = 0;            // if set, only dump around this texture
+static char      g_qualityTier[16] = "2x";    // "2x", "4K", "8K"
+static bool      g_groupOn[texgroups::GCount] = { true, true, true, true, true, true };
 static CRITICAL_SECTION g_logLock;
 static FILE*     g_log = nullptr;
 
@@ -120,9 +123,16 @@ static void LoadConfig() {
     char mh[64] = "0";
     iniStr("general", "marker_hash", "0", mh, sizeof(mh), ini);
     g_markerHash = _strtoui64(mh, nullptr, 0);
+    // Quality tier: 2x, 4K, 8K
+    iniStr("TextureQuality", "tier", "2x", g_qualityTier, sizeof(g_qualityTier), ini);
+    // Texture groups
+    for (int g = 0; g < texgroups::GCount; ++g)
+        g_groupOn[g] = iniInt("TextureGroups", texgroups::GroupName(g), 1, ini) != 0;
     Log("config: enabled=%d apply=%d texturesDir=%s capture=%d min=%u marker=%016llX",
         g_enabled ? 1 : 0, g_apply ? 1 : 0, g_texturesDir, g_capture ? 1 : 0,
         g_captureMin, (unsigned long long)g_markerHash);
+    Log("config: quality=%s groups=%d%d%d%d%d%d", g_qualityTier,
+        g_groupOn[0], g_groupOn[1], g_groupOn[2], g_groupOn[3], g_groupOn[4], g_groupOn[5]);
 }
 
 // ---------------------------------------------------------------------------
@@ -457,6 +467,19 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
     uint64_t hash = 0; bool have = HashLevel0(t, desc, hash);
     const Target* hit = MatchTarget(desc, hash, have);
 
+    // Filter by texture group
+    if (hit) {
+        int gidx = texgroups::GroupIndex(hit->dds);
+        if (!texgroups::GroupAllows(g_groupOn, gidx)) {
+            AcquireSRWLockExclusive(&g_cacheLock);
+            e = CacheFind(t);
+            if (!e) e = CacheAdd(t);
+            if (e) { e->w = desc.Width; e->h = desc.Height; e->resolved = true; e->target = hit; }
+            ReleaseSRWLockExclusive(&g_cacheLock);
+            return RealSetTexture(dev, stage, tex);
+        }
+    }
+
     AcquireSRWLockExclusive(&g_cacheLock);
     e = CacheFind(t);
     if (!e) e = CacheAdd(t);
@@ -466,7 +489,14 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
         if (hit && g_apply) {
             DDSImage img;
             char ddsPath[MAX_PATH];
-            _snprintf_s(ddsPath, _TRUNCATE, "%s\\%s", g_texturesDir, hit->dds);
+            // Use quality tier suffix for replacement lookup
+            const char* qsuffix = texgroups::QualitySuffix(g_qualityTier);
+            char baseName[MAX_PATH];
+            // Strip .dds extension from hit->dds to get base name
+            _snprintf_s(baseName, _TRUNCATE, "%s", hit->dds);
+            char* dot = strrchr(baseName, '.');
+            if (dot) *dot = 0;
+            _snprintf_s(ddsPath, _TRUNCATE, "%s\\%s%s.dds", g_texturesDir, baseName, qsuffix);
             char full[MAX_PATH];
             if (ddsPath[0] == '\\' || (ddsPath[0] && ddsPath[1] == ':')) strcpy_s(full, ddsPath);
             else BuildPath(ddsPath, full, sizeof(full));
@@ -474,8 +504,8 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
                 IDirect3DTexture9* repl = nullptr;
                 if (CreateReplacement(dev, img, &repl)) {
                     e->replacement = repl;   // kept for process lifetime
-                    Log("SUBSTITUTE %s (%ux%u -> %ux%u) stage=%u", hit->name,
-                        desc.Width, desc.Height, img.w, img.h, stage);
+                    Log("SUBSTITUTE %s (%ux%u -> %ux%u) stage=%u tier=%s", hit->name,
+                        desc.Width, desc.Height, img.w, img.h, stage, g_qualityTier);
                 }
             }
         }
