@@ -138,14 +138,20 @@ Validation checks performed per file (`dds_io.validate_dds`):
 ## Video memory
 
 Computed from the measured DDS headers (block arithmetic, DXT1 = 8 bytes per 4x4
-block, DXT5 = 16 bytes) and summed over every mip level of the produced files:
+block, DXT5 = 16 bytes) and summed over every mip level of the produced files.
+The table separates the **six injectable maps** (what the injector can load)
+from the **three review-only specular maps** (produced for inspection,
+never deployed — see §Source selection):
 
-| asset | source mip0 sum | replacement sum (all mips) |
-|-------|-----------------|----------------------------|
-| AR_shotgun (3 maps) | 1,703,936 B | 2,271,968 B |
-| inview_glove (3 maps) | 1,081,344 B | 1,441,832 B |
-| door_blastdoorN (3 maps) | 540,672 B | 720,952 B |
-| **total** | **3,325,952 B (3.17 MB)** | **4,434,752 B (4.23 MB)** |
+| asset | source mip0 sum | injectable replacement (2 maps, all mips) | review-only specular |
+|-------|-----------------|-------------------------------------------|----------------------|
+| AR_shotgun | 1,703,936 B | 2,097,448 B | 174,904 B |
+| inview_glove | 1,081,344 B | 1,398,384 B | 43,832 B |
+| door_blastdoorN | 540,672 B | 699,344 B | 21,992 B |
+| **total** | **3,325,952 B (3.17 MB)** | **4,195,176 B (4.00 MB)** | **240,728 B** |
+
+Nine-file review-set total (injectable + review-only, on-disk including
+128-byte DDS headers): **4,435,904 B (4.23 MB)**.
 
 The replacement set is larger because it ships a complete mip chain for the
 texture while the UModel export is mip0 only. Because the injector replaces the

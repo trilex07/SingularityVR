@@ -82,7 +82,8 @@ menu/shadow-class textures.
 
 ## 5. Redistribution risk review (game-derived assets in Git)
 
-- `material-remaster/` commits 18 derived files, ~10.06 MiB (9 DDS ~4.23 MB +
+- `material-remaster/` commits 18 derived files, ~10.06 MiB (9 DDS ~4.23 MB on
+  disk, of which 6 injectable maps ~4.00 MB + 3 review-only specular maps, plus
   9 comparison PNG ~5.83 MB), plus 4 manifests and READMEs (23 files total).
 - No original game bytes are committed: `git ls-files "*.dds"` returns only the
   9 derived files; no `.tfc`/`.upk`/`.xxx`; manifest `source_file` paths point
@@ -115,8 +116,14 @@ Preconditions (all MAIN-owned):
 2. Re-run the black-materials A/B first: `-TextureInjector Disable` vs Enable
    on the frozen hands DLL, so the open hypothesis is closed before new
    textures are introduced.
-3. Deploy with `mode_apply=0` (log-only) first; inspect `texture_override.log`
-   for `SUBSTITUTE` lines on the six targets and zero unexpected matches.
+3. Deploy with `mode_apply=0` (log-only) first. Code behaviour
+   (`texture_injector.cpp:469,488,497-499`): the `LoadDDS`/`CreateReplacement`
+   block — and with it the `SUBSTITUTE` log line — runs only when
+   `hit && g_apply`. In log-only mode a hash match is therefore visible as a
+   **named candidate line** (`candidate WxH fmt=… hash=… <target name>`), and
+   **no `SUBSTITUTE` line may appear** (its presence with `mode_apply=0`
+   would indicate a code defect). Expect six named matches, zero `SUBSTITUTE`,
+   zero unexpected matches.
 
 Test steps:
 
@@ -141,8 +148,11 @@ CPU/GPU overhead (MAIN measures; SIDE proposes thresholds):
   Budget: p95 frame-time delta vs renamed-off baseline ≤ **0.5 ms** at
   PSVR2-equivalent resolution; zero `LockRect` failures on the six targets in
   log-only mode (any "not lockable" on a target = stop).
-- VRAM: replacement set measured at 4.23 MB total (headers + all mips);
-  confirm via log `SUBSTITUTE` lines that only the six targets load.
+- VRAM: injectable set measured at 4,195,176 B (4.00 MB, headers + all mips);
+  review-only specular maps add 240,728 B and are never deployed. In log-only
+  mode confirm via **named candidate lines** that only the six targets match
+  (no `SUBSTITUTE` lines expected); after flipping to `mode_apply=1`, six
+  `SUBSTITUTE` lines and no others.
 - No new `D3DERR_INVALIDCALL` in logs; no leaked-replacement growth across a
   device reset (log `CreateTexture` vs `Release` counts if instrumented).
 
