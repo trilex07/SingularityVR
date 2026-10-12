@@ -1,16 +1,16 @@
 # STATUS — session handoff
 
-Last updated **2026-10-12**. Rigid hands-only gloves and diegetic pause-menu
-composition are `IMPLEMENTED_NOT_VERIFIED` on `feature/hands-only-gloves`
-(commits `7c48cef`, `d7e9f58`). PSVR2 visual PASS is **not** claimed. See
-`docs/audits/hands-only-and-pause.md`. Full arms and elbow IK are not the
-rendering mode. The pause VR Settings row is unchanged.
+Last updated **2026-10-12**. Left-cuff palette fix and in-game pause
+half-viewport compose are `IMPLEMENTED_NOT_VERIFIED` on
+`feature/hands-only-gloves` (`6b45724`, `8ee3ff0`). PSVR2 re-test after
+`1e2e72b` FAIL: right glove PASS preserved; left glove and in-game pause
+were still failing until this candidate. See `docs/audits/hands-only-and-pause.md`.
 
 **Steam install (MAIN, leave until headset sign-off or explicit rollback):**
-branch `feature/hands-only-gloves`, commit `d7e9f58`, DLL SHA-256
-`9407D6075EDFB5A51E5C60E4F0CDB51145607823816FA8E8374B68DC04D20FFE`, INI
+branch `feature/hands-only-gloves`, commit `8ee3ff0`, DLL SHA-256
+`7CEABDA8CCCDF10BDF6E6A5264AF56BBD6BEC64021E047E80038FAAD47E2A46B`, INI
 preserved (`AA89218B…`). Pre-deploy backup:
-`deployment/install-backups/20261012-103735` (DLL). Deploy workflow:
+`deployment/install-backups/20261012-105110` (DLL). Deploy workflow:
 `docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
 
 Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
