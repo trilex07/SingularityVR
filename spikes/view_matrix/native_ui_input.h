@@ -4,11 +4,9 @@
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
 void OpenVrSettingsFromPause();
 extern volatile LONG g_panelOpen;
-namespace pausecompose {
-namespace runtime {
+namespace pausecanvas {
 void Arm(unsigned long long token);
 }
-}  // namespace pausecompose
 void* PatchVTable(void* obj,int index,void* repl);
 namespace NativeVrUi {
 struct Name { unsigned index, number; };
@@ -54,7 +52,7 @@ static bool UpdateMenu() {
   static unsigned generation=0;
   InterlockedExchange64(&g_vrMenuStateToken,((LONG64)++generation<<32)|(unsigned)kind);
   InterlockedExchange(&g_vrMenuClass,kind);
-  if(kind==3) pausecompose::runtime::Arm((unsigned long long)InterlockedCompareExchange64(&g_vrMenuStateToken,0,0));
+  if(kind==3) pausecanvas::Arm((unsigned long long)InterlockedCompareExchange64(&g_vrMenuStateToken,0,0));
   Log("VR UI focus: movie=%p object=%s class=%s menu=%d",(void*)movie,objectName,className,cachedMenu?1:0);
   // Fix-4/menus: a movie outside the table is the prime suspect for the nested-views
   // second menu - its draws miss the menu path and fall through to StereoPair. Name it

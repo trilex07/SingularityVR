@@ -5748,7 +5748,7 @@ static void ReportHotPathSampler() {
     append("present-hook residual estimate=%.4f ms/frame (inclusive stage estimates subtracted)", present-known);
     Log("hotpath sampler complete: %s", report);
 }
-#include "pause_compose_trace_runtime.h"
+#include "pause_canvas_backbuffer_trace.h"
 #include "pause_vr_settings.h"
 #include "pause_menu_head_overlay.h"
 #include "native_ui_input.h"
@@ -17835,13 +17835,6 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
             Log("menu mono: class=%ld one draw into the diegetic target", menuClassNow);
         dev->SetVertexShaderConstantF(5, c, 4);
         HRESULT hr = S_OK;
-        if (menuClassNow == 3) {
-            pausecompose::runtime::RecordBatch(
-                dev, c, (int)menuClassNow, InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
-                false, compose, (unsigned)InterlockedCompareExchange(&g_vfxFrame, 0, 0),
-                VrMenuStateToken(), InterlockedCompareExchange(&g_panelOpen, 0, 0) != 0,
-                _ReturnAddress());
-        }
         if (menuClassNow == 3 && PauseHeadGfxBatchEligible(menuLayout)) {
             hr = PauseHeadOverlayHudDraw(dev, draw, (unsigned)Rd(g_vfxFrame));
         } else {
@@ -17871,12 +17864,11 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
         const LONG halfW = (LONG)vp.Width / 2;
         HRESULT hrPause = S_OK;
-        if (menuClassNow == 3) {
-            pausecompose::runtime::RecordBatch(
-                dev, c, (int)menuClassNow, InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
-                true, 1, (unsigned)InterlockedCompareExchange(&g_vfxFrame, 0, 0),
-                VrMenuStateToken(), InterlockedCompareExchange(&g_panelOpen, 0, 0) != 0,
-                _ReturnAddress());
+        if (menuClassNow == 3 && Rd(g_pauseComposeTrace)) {
+            pausecanvas::Record(dev, c, (unsigned)InterlockedCompareExchange(&g_vfxFrame, 0, 0),
+                                VrMenuStateToken(),
+                                InterlockedCompareExchange(&g_panelOpen, 0, 0) != 0,
+                                _ReturnAddress(), stride, primCount, g_textLo, g_textHi);
         }
         for (int eye = 0; eye < 2; ++eye) {
             float m[16];
@@ -21640,7 +21632,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
                     InterlockedExchange(&g_pauseArgRaw, raw);
                     InterlockedExchange(&g_gamePaused, raw ? 1 : 0);
                     if (raw && InterlockedCompareExchange(&g_vrMenuClass, 0, 0) == 3)
-                        pausecompose::runtime::Arm(VrMenuStateToken());
+                        pausecanvas::Arm(VrMenuStateToken());
                     // Same check the cutscene latch got, for the same reason: if this is ever
                     // something other than 0 or 1 the frame layout assumption is wrong and the
                     // state is meaningless even when it happens to look right.
@@ -23692,10 +23684,9 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     UpdateSceneModeFrame();
     // VFX host: frame serial for once-per-eye draws + effect aging. Render
     // thread owns all plugin calls (game thread only fills the fire mailbox).
-    pausecompose::runtime::EndPresentFrame(
-        (unsigned)InterlockedCompareExchange(&g_vfxFrame, 0, 0),
-        InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
-        (int)InterlockedCompareExchange(&g_vrMenuClass, 0, 0));
+    pausecanvas::EndFrame((unsigned)InterlockedCompareExchange(&g_vfxFrame, 0, 0),
+                          InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
+                          (int)InterlockedCompareExchange(&g_vrMenuClass, 0, 0));
     InterlockedIncrement(&g_vfxFrame);
     if (Rd(g_vfxHost)) {
         const DWORD nowMs = GetTickCount();
@@ -27010,12 +27001,11 @@ void LoadIniSettings() {
                         GetPrivateProfileIntA("Render", "PauseMenuDiag", 0, path) ? 1 : 0);
     if (Rd(g_pauseMenuDiag))
         Log("ini: PauseMenuDiag=1 - one-shot pause class-3 compose/submit/SBS column evidence");
-    pausecompose::runtime::SetEnabled(
-        GetPrivateProfileIntA("Render", "PauseComposeTrace", 0, path) != 0);
+    pausecanvas::SetEnabled(GetPrivateProfileIntA("Render", "PauseComposeTrace", 0, path) != 0);
     InterlockedExchange(&g_pauseComposeTrace,
                         GetPrivateProfileIntA("Render", "PauseComposeTrace", 0, path) ? 1 : 0);
     if (Rd(g_pauseComposeTrace))
-        Log("ini: PauseComposeTrace=1 - bounded pause-compose transaction log (Gate A)");
+        Log("ini: PauseComposeTrace=1 - narrow Gate A (PauseBackbufferCanvasRoute only)");
     g_hudRemap = (int)hudIni;
     if (g_hudRemap && g_userPtrHookLevel < 3) {
         Log("ini: HudStereo=1 needs HookUserPointerDraws=3 (was %d) - raising it, because the UI"
