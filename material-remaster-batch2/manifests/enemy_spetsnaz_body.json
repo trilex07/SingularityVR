@@ -1,0 +1,227 @@
+{
+  "batch": 2,
+  "asset": "Spetsnaz_MP_Body",
+  "material": "MP_Spetsnaz_Grunt",
+  "kind": "soldier",
+  "package": "RvGameMPLoader_SF",
+  "detail": "Spetsnaz uniform: fatigues, webbing, armor inserts",
+  "maps": {
+    "diffuse": {
+      "source_file": "<assets-local>/textures/original/RvGameMPLoader_SF/Texture2D/Spetsnaz_MP_Body_d.dds",
+      "source_sha256": "722037ae72ee541d6e22c89d134b835825c5ed18b3b5fcdbabb3099fef8d98f6",
+      "source_mip0_fnv1a64": 17230285951280772806,
+      "source_width": 1024,
+      "source_height": 1024,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 524416,
+      "object_mip0_expected": [
+        1024,
+        1024
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_body/Spetsnaz_MP_Body_diffuse_2x.dds",
+      "output_sha256": "13ed89aa9248b6ff06c02e38bf17f356499bb1958a389ccbe17bc53f35597c26",
+      "validation": {
+        "width": 1024,
+        "height": 1024,
+        "fourcc": "DXT1",
+        "mip_count": 11,
+        "file_bytes": 699192,
+        "pixel_data_bytes": 699064,
+        "declared_mip_bytes": 699064,
+        "video_memory_bytes": 699064,
+        "decoded_size": [
+          1024,
+          1024
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 0.089,
+        "seam_col_mean_abs": 1.589,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 4.368,
+          "max_abs_diff": 112,
+          "pct_pixels_changed_over_4": 43.879,
+          "pct_pixels_changed_over_16": 1.075
+        },
+        "detail_high_frequency_energy": {
+          "source": 141.578,
+          "enhanced": 171.6,
+          "ratio": 1.2121
+        },
+        "status": "VERIFIED"
+      }
+    },
+    "normal": {
+      "source_file": "<assets-local>/textures/original/RvGameMPLoader_SF/Texture2D/Spetsnaz_MP_Body_n.dds",
+      "source_sha256": "ed45e2d6a079f40efbdfbd2de875060f3e585c1d54fd1c10a0cfe1b10391a326",
+      "source_mip0_fnv1a64": 10007535904788740833,
+      "source_width": 1024,
+      "source_height": 1024,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 524416,
+      "object_mip0_expected": [
+        1024,
+        1024
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_spetsnaz_body/Spetsnaz_MP_Body_normal_2x.dds",
+      "output_sha256": "956b558d40cec9ac975bc3f61fbc95ea20ddca853e2798962a8b6609cf7364cf",
+      "validation": {
+        "width": 1024,
+        "height": 1024,
+        "fourcc": "DXT1",
+        "mip_count": 11,
+        "file_bytes": 699192,
+        "pixel_data_bytes": 699064,
+        "declared_mip_bytes": 699064,
+        "video_memory_bytes": 699064,
+        "decoded_size": [
+          1024,
+          1024
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 0.954,
+        "seam_col_mean_abs": 1.084,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 3.996,
+          "max_abs_diff": 183,
+          "pct_pixels_changed_over_4": 32.485,
+          "pct_pixels_changed_over_16": 3.457
+        },
+        "normal_map_check": {
+          "alpha_min": 255,
+          "alpha_max": 255,
+          "x_mean": 129.045,
+          "y_mean": 126.324,
+          "z_mean": 242.033,
+          "unit_length_min": 0.656989,
+          "unit_length_max": 1.0587,
+          "pct_outside_0p98_1p02": 19.6715,
+          "fourcc": "DXT1"
+        },
+        "status": "VERIFIED"
+      }
+    }
+  },
+  "newly_authored": [
+    "uniform weave, pitch 16px, 9% of local luminance, zero-mean",
+    "armor scuff highlights on bright regions, up to +22 levels",
+    "recess grime, up to 16% local darkening",
+    "micro relief from enhanced diffuse high-pass, slope amplitude 0.6",
+    "original macro normals preserved and renormalised to unit length",
+    "alpha channel set to constant 255 (matches shipped DXT1 normal maps)"
+  ],
+  "recovered_from_source": [
+    "mip0 diffuse bytes, sha256 722037ae72ee541d",
+    "mip0 normal bytes, sha256 ed45e2d6a079f40e"
+  ],
+  "preserved_from_original": [
+    "original mip0 resolution for every substituted map (no upscaling)",
+    "original UV layout and texture orientation (pixels edited in place)",
+    "original DXT container format (DXT1 stays DXT1, DXT5 stays DXT5)",
+    "original mip0 alpha semantics",
+    "original colour palette: detail added as a fraction of local luminance"
+  ],
+  "notes": [],
+  "status": "OFFLINE ONLY - NOT VR TESTED",
+  "validation": {
+    "diffuse": {
+      "width": 1024,
+      "height": 1024,
+      "fourcc": "DXT1",
+      "mip_count": 11,
+      "file_bytes": 699192,
+      "pixel_data_bytes": 699064,
+      "declared_mip_bytes": 699064,
+      "video_memory_bytes": 699064,
+      "decoded_size": [
+        1024,
+        1024
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 0.089,
+      "seam_col_mean_abs": 1.589,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 4.368,
+        "max_abs_diff": 112,
+        "pct_pixels_changed_over_4": 43.879,
+        "pct_pixels_changed_over_16": 1.075
+      },
+      "detail_high_frequency_energy": {
+        "source": 141.578,
+        "enhanced": 171.6,
+        "ratio": 1.2121
+      },
+      "status": "VERIFIED"
+    },
+    "normal": {
+      "width": 1024,
+      "height": 1024,
+      "fourcc": "DXT1",
+      "mip_count": 11,
+      "file_bytes": 699192,
+      "pixel_data_bytes": 699064,
+      "declared_mip_bytes": 699064,
+      "video_memory_bytes": 699064,
+      "decoded_size": [
+        1024,
+        1024
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 0.954,
+      "seam_col_mean_abs": 1.084,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 3.996,
+        "max_abs_diff": 183,
+        "pct_pixels_changed_over_4": 32.485,
+        "pct_pixels_changed_over_16": 3.457
+      },
+      "normal_map_check": {
+        "alpha_min": 255,
+        "alpha_max": 255,
+        "x_mean": 129.045,
+        "y_mean": 126.324,
+        "z_mean": 242.033,
+        "unit_length_min": 0.656989,
+        "unit_length_max": 1.0587,
+        "pct_outside_0p98_1p02": 19.6715,
+        "fourcc": "DXT1"
+      },
+      "status": "VERIFIED"
+    }
+  },
+  "video_memory": {
+    "source_mip0_bytes_substituted": 1048576,
+    "replacement_total_bytes_substituted": 1398128,
+    "origin": "ESTIMATED (computed from measured DDS headers and file contents)"
+  },
+  "evidence": {
+    "true_mip0_per_substituted_map": "VERIFIED (DDS header vs object mip0 size)",
+    "dds_written_and_decoded_back": "VERIFIED (every file re-opened and decoded)",
+    "dds_dimensions_format_mips_channels": "VERIFIED (per file in validation)",
+    "normal_map_channel_conventions": "VERIFIED (alpha constant, X/Y centred, unit length ranged)",
+    "fidelity_vs_source": "VERIFIED (measured mean/max absolute difference)",
+    "checksums": "VERIFIED (sha256 of every source and produced file)",
+    "video_memory_figures": "ESTIMATED (block arithmetic over measured headers)",
+    "visual_result_in_game": "NOT TESTED (no Steam run, no deploy, no headset)",
+    "gpu_frame_cost": "NOT TESTED (needs a profiled run)"
+  },
+  "comparisons_local_only": [
+    "<assets-local>/material-remaster-batch2/enemy_spetsnaz_body/comparison/Spetsnaz_MP_Body_diffuse_compare.png",
+    "<assets-local>/material-remaster-batch2/enemy_spetsnaz_body/comparison/Spetsnaz_MP_Body_normal_compare.png"
+  ]
+}

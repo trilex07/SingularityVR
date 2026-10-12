@@ -1,0 +1,90 @@
+{
+  "batch": 2,
+  "status": "OFFLINE ONLY - NOT VR TESTED",
+  "materials": [
+    {
+      "key": "weapon_e99",
+      "asset": "AR_E99Rifle_alt",
+      "manifest": "material-remaster-batch2/manifests/weapon_e99.json",
+      "substituted": {
+        "diffuse": "47dad11ee4c0b673",
+        "normal": "299787427defd8fd"
+      }
+    },
+    {
+      "key": "weapon_gatling",
+      "asset": "ar_gatling_gun",
+      "manifest": "material-remaster-batch2/manifests/weapon_gatling.json",
+      "substituted": {
+        "diffuse": "623aaf13872db36f",
+        "normal": "6b1f7d8a8471edf7"
+      }
+    },
+    {
+      "key": "weapon_laser",
+      "asset": "laser",
+      "manifest": "material-remaster-batch2/manifests/weapon_laser.json",
+      "substituted": {
+        "diffuse": "454c695f5ae3ba04",
+        "normal": "c1639177958d8960"
+      }
+    },
+    {
+      "key": "enemy_revert",
+      "asset": "revert_d2",
+      "manifest": "material-remaster-batch2/manifests/enemy_revert.json",
+      "substituted": {
+        "diffuse": "11d0f80da648bc33",
+        "normal": "7b152cc4230c0df8"
+      }
+    },
+    {
+      "key": "enemy_phasetick",
+      "asset": "phasetick",
+      "manifest": "material-remaster-batch2/manifests/enemy_phasetick.json",
+      "substituted": {
+        "diffuse": "59f448e07323f211",
+        "normal": "be6fdb9f32cbcafc"
+      }
+    },
+    {
+      "key": "enemy_spetsnaz_helmet",
+      "asset": "Spetsnaz_MP_helmet",
+      "manifest": "material-remaster-batch2/manifests/enemy_spetsnaz_helmet.json",
+      "substituted": {
+        "diffuse": "4d89b632fc19a576",
+        "normal": "8d8d0ee4711ee979"
+      }
+    },
+    {
+      "key": "enemy_spetsnaz_body",
+      "asset": "Spetsnaz_MP_Body",
+      "manifest": "material-remaster-batch2/manifests/enemy_spetsnaz_body.json",
+      "substituted": {
+        "diffuse": "13ed89aa9248b6ff",
+        "normal": "956b558d40cec9ac"
+      }
+    },
+    {
+      "key": "env_rollingdoor",
+      "asset": "door_rollingT",
+      "manifest": "material-remaster-batch2/manifests/env_rollingdoor.json",
+      "substituted": {
+        "diffuse": "60a54ca6816170fd",
+        "normal": "b584cf4d216556bc"
+      }
+    }
+  ],
+  "deferred": {
+    "handgun_d/handgun_n": "pistol diffuse+normal are runtime captures at 1024px (object 2048px) - lower mips; needs MAIN-owned runtime capture at true mip0",
+    "ar_sniper_rifle_d": "diffuse exported at 1024x512 (object 2048x1024, mip1); normal alone deferred to a normal-only batch",
+    "elite_beam_d": "diffuse exported at 1024x1024 (object 2048x2048, mip1); normal alone deferred",
+    "TMD_new_n": "normal is true mip0 2048x1024 but no diffuse exists at mip0; normal-only batch material",
+    "scope_glass_d/o": "no normal map; _o is an opacity mask for the red-dot sight - too risky without runtime validation",
+    "muzzleFlashDir_01/brightFlash_01/muzzleflashCenter": "additive glow sprites; micro-detail risks altering light energy; deferred pending MAIN guidance",
+    "env_door_a/b, env_* captures": "no object-size provenance in metadata; mip0 cannot be proven - skipped, not upscaled",
+    "door_industrial/prison/locked": "no local exports (NOLOCAL); extraction deferred"
+  },
+  "total_source_mip0_bytes": 13172736,
+  "total_replacement_bytes": 17563920
+}

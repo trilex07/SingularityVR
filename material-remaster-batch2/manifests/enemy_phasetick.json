@@ -1,0 +1,382 @@
+{
+  "batch": 2,
+  "asset": "phasetick",
+  "material": "phase_tick",
+  "kind": "soldier",
+  "package": "RvGameMPLoader_SF",
+  "detail": "PhaseTick soldier: uniform cloth + hard armor + glow seams",
+  "maps": {
+    "diffuse": {
+      "source_file": "<assets-local>/textures/original/RvGameMPLoader_SF/Texture2D/phasetick_d.dds",
+      "source_sha256": "03c6f7342fc0b243437dc0f4fb083eefc3f2b11ae36727237cca2391043adaf2",
+      "source_mip0_fnv1a64": 6063816156848365173,
+      "source_width": 512,
+      "source_height": 512,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 131200,
+      "object_mip0_expected": [
+        512,
+        512
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_diffuse_2x.dds",
+      "output_sha256": "59f448e07323f211aaa43689104e46d41d965f0bef6b2bc7a95adf0feac38d87",
+      "validation": {
+        "width": 512,
+        "height": 512,
+        "fourcc": "DXT1",
+        "mip_count": 10,
+        "file_bytes": 174904,
+        "pixel_data_bytes": 174776,
+        "declared_mip_bytes": 174776,
+        "video_memory_bytes": 174776,
+        "decoded_size": [
+          512,
+          512
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 39.748,
+        "seam_col_mean_abs": 31.968,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 7.065,
+          "max_abs_diff": 91,
+          "pct_pixels_changed_over_4": 63.734,
+          "pct_pixels_changed_over_16": 7.278
+        },
+        "detail_high_frequency_energy": {
+          "source": 374.015,
+          "enhanced": 524.969,
+          "ratio": 1.4036
+        },
+        "status": "VERIFIED"
+      }
+    },
+    "normal": {
+      "source_file": "<assets-local>/textures/original/RvGameMPLoader_SF/Texture2D/phasetick_n.dds",
+      "source_sha256": "f159aefd245b4afeb0ab9c0de8e33d2becc831be7ea012294007f66f152a0028",
+      "source_mip0_fnv1a64": 1975627357565138212,
+      "source_width": 512,
+      "source_height": 512,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 131200,
+      "object_mip0_expected": [
+        512,
+        512
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_normal_2x.dds",
+      "output_sha256": "be6fdb9f32cbcafc0b3941fd91d48c58d320051cbf25c769e067c4bea449f422",
+      "validation": {
+        "width": 512,
+        "height": 512,
+        "fourcc": "DXT1",
+        "mip_count": 10,
+        "file_bytes": 174904,
+        "pixel_data_bytes": 174776,
+        "declared_mip_bytes": 174776,
+        "video_memory_bytes": 174776,
+        "decoded_size": [
+          512,
+          512
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 6.736,
+        "seam_col_mean_abs": 5.896,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 7.164,
+          "max_abs_diff": 215,
+          "pct_pixels_changed_over_4": 59.091,
+          "pct_pixels_changed_over_16": 7.856
+        },
+        "normal_map_check": {
+          "alpha_min": 255,
+          "alpha_max": 255,
+          "x_mean": 130.807,
+          "y_mean": 125.744,
+          "z_mean": 233.327,
+          "unit_length_min": 0.617108,
+          "unit_length_max": 1.060144,
+          "pct_outside_0p98_1p02": 30.7774,
+          "fourcc": "DXT1"
+        },
+        "status": "VERIFIED"
+      }
+    },
+    "specular": {
+      "source_file": "<assets-local>/textures/original/RvGameMPLoader_SF/Texture2D/phasetick_s.dds",
+      "source_sha256": "f423355e50ff0e115e1c3bc8edd43edc2f4cb89d8a2117b4a56db3a41d0309fb",
+      "source_mip0_fnv1a64": 2267087083260563590,
+      "source_width": 512,
+      "source_height": 512,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 131200,
+      "object_mip0_expected": [
+        512,
+        512
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": false,
+      "substituted": false,
+      "exclusion_reason": "specular source is true mip0 but substitution stays diffuse+normal only by uniform policy (changing specular/emissive response without runtime validation risks black-material-class surprises); produced for review only",
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_specular_review.dds",
+      "output_sha256": "4ef99eabf21eac29a972d88769e556282f8eb025624b467dded02645d77cd892",
+      "validation": {
+        "width": 512,
+        "height": 512,
+        "fourcc": "DXT1",
+        "mip_count": 10,
+        "file_bytes": 174904,
+        "pixel_data_bytes": 174776,
+        "declared_mip_bytes": 174776,
+        "video_memory_bytes": 174776,
+        "decoded_size": [
+          512,
+          512
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 63.168,
+        "seam_col_mean_abs": 46.236,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 6.535,
+          "max_abs_diff": 239,
+          "pct_pixels_changed_over_4": 51.687,
+          "pct_pixels_changed_over_16": 8.462
+        },
+        "status": "VERIFIED"
+      }
+    },
+    "emissive": {
+      "source_file": "<assets-local>/textures/original/RvGameMPLoader_SF/Texture2D/phasetick_e.dds",
+      "source_sha256": "dd9fbf2ddd2be8d947a3076c8742e0583c4cebb3558517c39146513778541a60",
+      "source_mip0_fnv1a64": 10446275587636028862,
+      "source_width": 512,
+      "source_height": 512,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 131200,
+      "object_mip0_expected": [
+        512,
+        512
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": false,
+      "substituted": false,
+      "exclusion_reason": "emissive source is true mip0 but substitution stays diffuse+normal only by uniform policy (changing specular/emissive response without runtime validation risks black-material-class surprises); produced for review only",
+      "output_file": "<assets-local>/material-remaster-batch2/enemy_phasetick/phasetick_emissive_review.dds",
+      "output_sha256": "b5a583b44cdf04a71937e2367deb81d7e2e3bc9e183fe21120653214e31c9474",
+      "validation": {
+        "width": 512,
+        "height": 512,
+        "fourcc": "DXT1",
+        "mip_count": 10,
+        "file_bytes": 174904,
+        "pixel_data_bytes": 174776,
+        "declared_mip_bytes": 174776,
+        "video_memory_bytes": 174776,
+        "decoded_size": [
+          512,
+          512
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 5.01,
+        "seam_col_mean_abs": 0.098,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 0.424,
+          "max_abs_diff": 39,
+          "pct_pixels_changed_over_4": 3.168,
+          "pct_pixels_changed_over_16": 0.0
+        },
+        "status": "VERIFIED"
+      }
+    }
+  },
+  "newly_authored": [
+    "uniform weave, pitch 8px, 9% of local luminance, zero-mean",
+    "armor scuff highlights on bright regions, up to +22 levels",
+    "recess grime, up to 16% local darkening",
+    "micro relief from enhanced diffuse high-pass, slope amplitude 0.6",
+    "original macro normals preserved and renormalised to unit length",
+    "alpha channel set to constant 255 (matches shipped DXT1 normal maps)",
+    "original mean preserved (126.8) before variation",
+    "specular variation 0.85-1.15x, 3 octaves (fabric sheen)",
+    "original mean preserved (31.8) before variation",
+    "specular variation 0.85-1.15x, 3 octaves (fabric sheen)"
+  ],
+  "recovered_from_source": [
+    "mip0 diffuse bytes, sha256 03c6f7342fc0b243",
+    "mip0 normal bytes, sha256 f159aefd245b4afe",
+    "mip0 specular bytes, sha256 f423355e50ff0e11",
+    "mip0 emissive bytes, sha256 dd9fbf2ddd2be8d9"
+  ],
+  "preserved_from_original": [
+    "original mip0 resolution for every substituted map (no upscaling)",
+    "original UV layout and texture orientation (pixels edited in place)",
+    "original DXT container format (DXT1 stays DXT1, DXT5 stays DXT5)",
+    "original mip0 alpha semantics",
+    "original colour palette: detail added as a fraction of local luminance"
+  ],
+  "notes": [
+    "specular source is true mip0 but substitution stays diffuse+normal only by uniform policy (changing specular/emissive response without runtime validation risks black-material-class surprises); produced for review only",
+    "emissive source is true mip0 but substitution stays diffuse+normal only by uniform policy (changing specular/emissive response without runtime validation risks black-material-class surprises); produced for review only"
+  ],
+  "status": "OFFLINE ONLY - NOT VR TESTED",
+  "validation": {
+    "diffuse": {
+      "width": 512,
+      "height": 512,
+      "fourcc": "DXT1",
+      "mip_count": 10,
+      "file_bytes": 174904,
+      "pixel_data_bytes": 174776,
+      "declared_mip_bytes": 174776,
+      "video_memory_bytes": 174776,
+      "decoded_size": [
+        512,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 39.748,
+      "seam_col_mean_abs": 31.968,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 7.065,
+        "max_abs_diff": 91,
+        "pct_pixels_changed_over_4": 63.734,
+        "pct_pixels_changed_over_16": 7.278
+      },
+      "detail_high_frequency_energy": {
+        "source": 374.015,
+        "enhanced": 524.969,
+        "ratio": 1.4036
+      },
+      "status": "VERIFIED"
+    },
+    "normal": {
+      "width": 512,
+      "height": 512,
+      "fourcc": "DXT1",
+      "mip_count": 10,
+      "file_bytes": 174904,
+      "pixel_data_bytes": 174776,
+      "declared_mip_bytes": 174776,
+      "video_memory_bytes": 174776,
+      "decoded_size": [
+        512,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 6.736,
+      "seam_col_mean_abs": 5.896,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 7.164,
+        "max_abs_diff": 215,
+        "pct_pixels_changed_over_4": 59.091,
+        "pct_pixels_changed_over_16": 7.856
+      },
+      "normal_map_check": {
+        "alpha_min": 255,
+        "alpha_max": 255,
+        "x_mean": 130.807,
+        "y_mean": 125.744,
+        "z_mean": 233.327,
+        "unit_length_min": 0.617108,
+        "unit_length_max": 1.060144,
+        "pct_outside_0p98_1p02": 30.7774,
+        "fourcc": "DXT1"
+      },
+      "status": "VERIFIED"
+    },
+    "specular": {
+      "width": 512,
+      "height": 512,
+      "fourcc": "DXT1",
+      "mip_count": 10,
+      "file_bytes": 174904,
+      "pixel_data_bytes": 174776,
+      "declared_mip_bytes": 174776,
+      "video_memory_bytes": 174776,
+      "decoded_size": [
+        512,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 63.168,
+      "seam_col_mean_abs": 46.236,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 6.535,
+        "max_abs_diff": 239,
+        "pct_pixels_changed_over_4": 51.687,
+        "pct_pixels_changed_over_16": 8.462
+      },
+      "status": "VERIFIED"
+    },
+    "emissive": {
+      "width": 512,
+      "height": 512,
+      "fourcc": "DXT1",
+      "mip_count": 10,
+      "file_bytes": 174904,
+      "pixel_data_bytes": 174776,
+      "declared_mip_bytes": 174776,
+      "video_memory_bytes": 174776,
+      "decoded_size": [
+        512,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 5.01,
+      "seam_col_mean_abs": 0.098,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 0.424,
+        "max_abs_diff": 39,
+        "pct_pixels_changed_over_4": 3.168,
+        "pct_pixels_changed_over_16": 0.0
+      },
+      "status": "VERIFIED"
+    }
+  },
+  "video_memory": {
+    "source_mip0_bytes_substituted": 262144,
+    "replacement_total_bytes_substituted": 349552,
+    "origin": "ESTIMATED (computed from measured DDS headers and file contents)"
+  },
+  "evidence": {
+    "true_mip0_per_substituted_map": "VERIFIED (DDS header vs object mip0 size)",
+    "dds_written_and_decoded_back": "VERIFIED (every file re-opened and decoded)",
+    "dds_dimensions_format_mips_channels": "VERIFIED (per file in validation)",
+    "normal_map_channel_conventions": "VERIFIED (alpha constant, X/Y centred, unit length ranged)",
+    "fidelity_vs_source": "VERIFIED (measured mean/max absolute difference)",
+    "checksums": "VERIFIED (sha256 of every source and produced file)",
+    "video_memory_figures": "ESTIMATED (block arithmetic over measured headers)",
+    "visual_result_in_game": "NOT TESTED (no Steam run, no deploy, no headset)",
+    "gpu_frame_cost": "NOT TESTED (needs a profiled run)"
+  },
+  "comparisons_local_only": [
+    "<assets-local>/material-remaster-batch2/enemy_phasetick/comparison/phasetick_diffuse_compare.png",
+    "<assets-local>/material-remaster-batch2/enemy_phasetick/comparison/phasetick_normal_compare.png",
+    "<assets-local>/material-remaster-batch2/enemy_phasetick/comparison/phasetick_specular_compare.png",
+    "<assets-local>/material-remaster-batch2/enemy_phasetick/comparison/phasetick_emissive_compare.png"
+  ]
+}

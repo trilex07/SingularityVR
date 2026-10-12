@@ -1,0 +1,225 @@
+{
+  "batch": 2,
+  "asset": "laser",
+  "material": "Laser",
+  "kind": "optic",
+  "package": "RvGameMPLoader_SF",
+  "detail": "pistol laser-sight housing (256px, optically smooth)",
+  "maps": {
+    "diffuse": {
+      "source_file": "<assets-local>/textures/original/RvGameMPLoader_SF/Texture2D/laser_d.dds",
+      "source_sha256": "67cf75b823f5ba30d56d0c2bf8437e00db6e2464a63b41384590f6ccc05ab85f",
+      "source_mip0_fnv1a64": 9480852095134046573,
+      "source_width": 256,
+      "source_height": 256,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 32896,
+      "object_mip0_expected": [
+        256,
+        256
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "output_file": "<assets-local>/material-remaster-batch2/weapon_laser/laser_diffuse_2x.dds",
+      "output_sha256": "454c695f5ae3ba04ee6e51f8d52934b5a632cadea2fce672e7e38622a83ce47b",
+      "validation": {
+        "width": 256,
+        "height": 256,
+        "fourcc": "DXT1",
+        "mip_count": 9,
+        "file_bytes": 43832,
+        "pixel_data_bytes": 43704,
+        "declared_mip_bytes": 43704,
+        "video_memory_bytes": 43704,
+        "decoded_size": [
+          256,
+          256
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 6.884,
+        "seam_col_mean_abs": 3.988,
+        "fidelity_vs_source": {
+          "compared_pixels": 65536,
+          "mean_abs_diff": 2.063,
+          "max_abs_diff": 58,
+          "pct_pixels_changed_over_4": 13.651,
+          "pct_pixels_changed_over_16": 0.008
+        },
+        "detail_high_frequency_energy": {
+          "source": 27.938,
+          "enhanced": 30.827,
+          "ratio": 1.1034
+        },
+        "status": "VERIFIED"
+      }
+    },
+    "normal": {
+      "source_file": "<assets-local>/textures/original/RvGameMPLoader_SF/Texture2D/laser_n.dds",
+      "source_sha256": "b085d3fa22da81c159ced8b06fc0d2647faf3821b5afe6bef6609b42c9efb31b",
+      "source_mip0_fnv1a64": 6733662572201863386,
+      "source_width": 256,
+      "source_height": 256,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 32896,
+      "object_mip0_expected": [
+        256,
+        256
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "output_file": "<assets-local>/material-remaster-batch2/weapon_laser/laser_normal_2x.dds",
+      "output_sha256": "c1639177958d89601634c3b3bb7d58594d497bbc813278feb0a4fe3ab1dbc55a",
+      "validation": {
+        "width": 256,
+        "height": 256,
+        "fourcc": "DXT1",
+        "mip_count": 9,
+        "file_bytes": 43832,
+        "pixel_data_bytes": 43704,
+        "declared_mip_bytes": 43704,
+        "video_memory_bytes": 43704,
+        "decoded_size": [
+          256,
+          256
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 8.83,
+        "seam_col_mean_abs": 10.284,
+        "fidelity_vs_source": {
+          "compared_pixels": 65536,
+          "mean_abs_diff": 3.26,
+          "max_abs_diff": 118,
+          "pct_pixels_changed_over_4": 24.634,
+          "pct_pixels_changed_over_16": 2.509
+        },
+        "normal_map_check": {
+          "alpha_min": 255,
+          "alpha_max": 255,
+          "x_mean": 127.525,
+          "y_mean": 128.124,
+          "z_mean": 239.227,
+          "unit_length_min": 0.75671,
+          "unit_length_max": 1.058119,
+          "pct_outside_0p98_1p02": 17.0059,
+          "fourcc": "DXT1"
+        },
+        "status": "VERIFIED"
+      }
+    }
+  },
+  "newly_authored": [
+    "fine grain only, 4% of local luminance (housing must stay smooth)",
+    "micro relief from enhanced diffuse high-pass, slope amplitude 0.35",
+    "original macro normals preserved and renormalised to unit length",
+    "alpha channel set to constant 255 (matches shipped DXT1 normal maps)"
+  ],
+  "recovered_from_source": [
+    "mip0 diffuse bytes, sha256 67cf75b823f5ba30",
+    "mip0 normal bytes, sha256 b085d3fa22da81c1"
+  ],
+  "preserved_from_original": [
+    "original mip0 resolution for every substituted map (no upscaling)",
+    "original UV layout and texture orientation (pixels edited in place)",
+    "original DXT container format (DXT1 stays DXT1, DXT5 stays DXT5)",
+    "original mip0 alpha semantics",
+    "original colour palette: detail added as a fraction of local luminance"
+  ],
+  "notes": [],
+  "status": "OFFLINE ONLY - NOT VR TESTED",
+  "validation": {
+    "diffuse": {
+      "width": 256,
+      "height": 256,
+      "fourcc": "DXT1",
+      "mip_count": 9,
+      "file_bytes": 43832,
+      "pixel_data_bytes": 43704,
+      "declared_mip_bytes": 43704,
+      "video_memory_bytes": 43704,
+      "decoded_size": [
+        256,
+        256
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 6.884,
+      "seam_col_mean_abs": 3.988,
+      "fidelity_vs_source": {
+        "compared_pixels": 65536,
+        "mean_abs_diff": 2.063,
+        "max_abs_diff": 58,
+        "pct_pixels_changed_over_4": 13.651,
+        "pct_pixels_changed_over_16": 0.008
+      },
+      "detail_high_frequency_energy": {
+        "source": 27.938,
+        "enhanced": 30.827,
+        "ratio": 1.1034
+      },
+      "status": "VERIFIED"
+    },
+    "normal": {
+      "width": 256,
+      "height": 256,
+      "fourcc": "DXT1",
+      "mip_count": 9,
+      "file_bytes": 43832,
+      "pixel_data_bytes": 43704,
+      "declared_mip_bytes": 43704,
+      "video_memory_bytes": 43704,
+      "decoded_size": [
+        256,
+        256
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 8.83,
+      "seam_col_mean_abs": 10.284,
+      "fidelity_vs_source": {
+        "compared_pixels": 65536,
+        "mean_abs_diff": 3.26,
+        "max_abs_diff": 118,
+        "pct_pixels_changed_over_4": 24.634,
+        "pct_pixels_changed_over_16": 2.509
+      },
+      "normal_map_check": {
+        "alpha_min": 255,
+        "alpha_max": 255,
+        "x_mean": 127.525,
+        "y_mean": 128.124,
+        "z_mean": 239.227,
+        "unit_length_min": 0.75671,
+        "unit_length_max": 1.058119,
+        "pct_outside_0p98_1p02": 17.0059,
+        "fourcc": "DXT1"
+      },
+      "status": "VERIFIED"
+    }
+  },
+  "video_memory": {
+    "source_mip0_bytes_substituted": 65536,
+    "replacement_total_bytes_substituted": 87408,
+    "origin": "ESTIMATED (computed from measured DDS headers and file contents)"
+  },
+  "evidence": {
+    "true_mip0_per_substituted_map": "VERIFIED (DDS header vs object mip0 size)",
+    "dds_written_and_decoded_back": "VERIFIED (every file re-opened and decoded)",
+    "dds_dimensions_format_mips_channels": "VERIFIED (per file in validation)",
+    "normal_map_channel_conventions": "VERIFIED (alpha constant, X/Y centred, unit length ranged)",
+    "fidelity_vs_source": "VERIFIED (measured mean/max absolute difference)",
+    "checksums": "VERIFIED (sha256 of every source and produced file)",
+    "video_memory_figures": "ESTIMATED (block arithmetic over measured headers)",
+    "visual_result_in_game": "NOT TESTED (no Steam run, no deploy, no headset)",
+    "gpu_frame_cost": "NOT TESTED (needs a profiled run)"
+  },
+  "comparisons_local_only": [
+    "<assets-local>/material-remaster-batch2/weapon_laser/comparison/laser_diffuse_compare.png",
+    "<assets-local>/material-remaster-batch2/weapon_laser/comparison/laser_normal_compare.png"
+  ]
+}

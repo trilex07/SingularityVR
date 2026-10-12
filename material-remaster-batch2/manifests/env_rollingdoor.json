@@ -1,0 +1,306 @@
+{
+  "batch": 2,
+  "asset": "door_rollingT",
+  "material": "door_rolling_A_t_ageable",
+  "kind": "environment",
+  "package": "SP_WL1_zone01_XSA",
+  "detail": "rolling shutter door: corrugated slats, rails, grime",
+  "maps": {
+    "diffuse": {
+      "source_file": "<assets-local>/textures/original/SP_WL1_zone01_XSA/Texture2D/door_rollingT_d.dds",
+      "source_sha256": "da7198c21e678ef988e03a53c2361602abd98a29dcbbddc17b10727ed31321df",
+      "source_mip0_fnv1a64": 6492888565812934941,
+      "source_width": 512,
+      "source_height": 512,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 131200,
+      "object_mip0_expected": [
+        512,
+        512
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "output_file": "<assets-local>/material-remaster-batch2/env_rollingdoor/door_rollingT_diffuse_2x.dds",
+      "output_sha256": "60a54ca6816170fdd22e8f4af445ba30fd34620093b7116c14ebfcdd0c9bb831",
+      "validation": {
+        "width": 512,
+        "height": 512,
+        "fourcc": "DXT1",
+        "mip_count": 10,
+        "file_bytes": 174904,
+        "pixel_data_bytes": 174776,
+        "declared_mip_bytes": 174776,
+        "video_memory_bytes": 174776,
+        "decoded_size": [
+          512,
+          512
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 28.569,
+        "seam_col_mean_abs": 16.481,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 5.577,
+          "max_abs_diff": 80,
+          "pct_pixels_changed_over_4": 51.777,
+          "pct_pixels_changed_over_16": 3.702
+        },
+        "detail_high_frequency_energy": {
+          "source": 349.427,
+          "enhanced": 401.821,
+          "ratio": 1.1499
+        },
+        "status": "VERIFIED"
+      }
+    },
+    "normal": {
+      "source_file": "<assets-local>/textures/original/SP_WL1_zone01_XSA/Texture2D/door_rollingT_n.dds",
+      "source_sha256": "14c5a81ebf3ebbd87bf10769941a1ed974ec1d1a68b6ce5dd3ff34f7cdbcf662",
+      "source_mip0_fnv1a64": 13090093012117832429,
+      "source_width": 512,
+      "source_height": 512,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 131200,
+      "object_mip0_expected": [
+        512,
+        512
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": true,
+      "substituted": true,
+      "output_file": "<assets-local>/material-remaster-batch2/env_rollingdoor/door_rollingT_normal_2x.dds",
+      "output_sha256": "b584cf4d216556bc15bda4fe7285cc7508ebf38a1c7f5b4f38f32666dd485cfc",
+      "validation": {
+        "width": 512,
+        "height": 512,
+        "fourcc": "DXT1",
+        "mip_count": 10,
+        "file_bytes": 174904,
+        "pixel_data_bytes": 174776,
+        "declared_mip_bytes": 174776,
+        "video_memory_bytes": 174776,
+        "decoded_size": [
+          512,
+          512
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 2.928,
+        "seam_col_mean_abs": 6.005,
+        "fidelity_vs_source": {
+          "compared_pixels": 262144,
+          "mean_abs_diff": 4.134,
+          "max_abs_diff": 211,
+          "pct_pixels_changed_over_4": 27.7,
+          "pct_pixels_changed_over_16": 4.588
+        },
+        "normal_map_check": {
+          "alpha_min": 255,
+          "alpha_max": 255,
+          "x_mean": 127.443,
+          "y_mean": 119.681,
+          "z_mean": 250.22,
+          "unit_length_min": 0.719466,
+          "unit_length_max": 1.040791,
+          "pct_outside_0p98_1p02": 9.6165,
+          "fourcc": "DXT1"
+        },
+        "status": "VERIFIED"
+      }
+    },
+    "specular": {
+      "source_file": "<assets-local>/textures/original/SP_WL1_zone01_XSA/Texture2D/door_rollingT_s.dds",
+      "source_sha256": "d210d68fdf22b928d938e2b94163dcbaeceb902a959308c430d050b77fd2d220",
+      "source_mip0_fnv1a64": 1897785315766383748,
+      "source_width": 256,
+      "source_height": 256,
+      "source_fourcc": "DXT1",
+      "source_mip_count": 1,
+      "source_file_bytes": 32896,
+      "object_mip0_expected": [
+        256,
+        256
+      ],
+      "is_true_mip0": true,
+      "mip0_gate_enforced": false,
+      "substituted": false,
+      "exclusion_reason": "specular source is true mip0 but substitution stays diffuse+normal only by uniform policy (changing specular/emissive response without runtime validation risks black-material-class surprises); produced for review only",
+      "output_file": "<assets-local>/material-remaster-batch2/env_rollingdoor/door_rollingT_specular_review.dds",
+      "output_sha256": "3bc850793eb6a27abf06ab4ce57c11bc017d92632edd472b040447b6ba976695",
+      "validation": {
+        "width": 256,
+        "height": 256,
+        "fourcc": "DXT1",
+        "mip_count": 9,
+        "file_bytes": 43832,
+        "pixel_data_bytes": 43704,
+        "declared_mip_bytes": 43704,
+        "video_memory_bytes": 43704,
+        "decoded_size": [
+          256,
+          256
+        ],
+        "decoded_mode": "RGBA",
+        "decoded_channels": 4,
+        "seam_row_mean_abs": 6.639,
+        "seam_col_mean_abs": 15.073,
+        "fidelity_vs_source": {
+          "compared_pixels": 65536,
+          "mean_abs_diff": 2.42,
+          "max_abs_diff": 27,
+          "pct_pixels_changed_over_4": 27.687,
+          "pct_pixels_changed_over_16": 0.342
+        },
+        "status": "VERIFIED"
+      }
+    }
+  },
+  "newly_authored": [
+    "rolled-steel streaks along panel axis, 5% of local luminance",
+    "32 handling score lines, 28% of local luminance (darkening)",
+    "rust bloom with warm tint, 3 octaves",
+    "corrosion pits, up to 30% local darkening",
+    "micro relief from enhanced diffuse high-pass, slope amplitude 0.75",
+    "original macro normals preserved and renormalised to unit length",
+    "alpha channel set to constant 255 (matches shipped DXT1 normal maps)",
+    "original mean preserved (70.9) before variation",
+    "specular variation 0.92-1.08x, 4 octaves (rolled steel)"
+  ],
+  "recovered_from_source": [
+    "mip0 diffuse bytes, sha256 da7198c21e678ef9",
+    "mip0 normal bytes, sha256 14c5a81ebf3ebbd8",
+    "mip0 specular bytes, sha256 d210d68fdf22b928"
+  ],
+  "preserved_from_original": [
+    "original mip0 resolution for every substituted map (no upscaling)",
+    "original UV layout and texture orientation (pixels edited in place)",
+    "original DXT container format (DXT1 stays DXT1, DXT5 stays DXT5)",
+    "original mip0 alpha semantics",
+    "original colour palette: detail added as a fraction of local luminance"
+  ],
+  "notes": [
+    "specular source is true mip0 but substitution stays diffuse+normal only by uniform policy (changing specular/emissive response without runtime validation risks black-material-class surprises); produced for review only"
+  ],
+  "status": "OFFLINE ONLY - NOT VR TESTED",
+  "validation": {
+    "diffuse": {
+      "width": 512,
+      "height": 512,
+      "fourcc": "DXT1",
+      "mip_count": 10,
+      "file_bytes": 174904,
+      "pixel_data_bytes": 174776,
+      "declared_mip_bytes": 174776,
+      "video_memory_bytes": 174776,
+      "decoded_size": [
+        512,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 28.569,
+      "seam_col_mean_abs": 16.481,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 5.577,
+        "max_abs_diff": 80,
+        "pct_pixels_changed_over_4": 51.777,
+        "pct_pixels_changed_over_16": 3.702
+      },
+      "detail_high_frequency_energy": {
+        "source": 349.427,
+        "enhanced": 401.821,
+        "ratio": 1.1499
+      },
+      "status": "VERIFIED"
+    },
+    "normal": {
+      "width": 512,
+      "height": 512,
+      "fourcc": "DXT1",
+      "mip_count": 10,
+      "file_bytes": 174904,
+      "pixel_data_bytes": 174776,
+      "declared_mip_bytes": 174776,
+      "video_memory_bytes": 174776,
+      "decoded_size": [
+        512,
+        512
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 2.928,
+      "seam_col_mean_abs": 6.005,
+      "fidelity_vs_source": {
+        "compared_pixels": 262144,
+        "mean_abs_diff": 4.134,
+        "max_abs_diff": 211,
+        "pct_pixels_changed_over_4": 27.7,
+        "pct_pixels_changed_over_16": 4.588
+      },
+      "normal_map_check": {
+        "alpha_min": 255,
+        "alpha_max": 255,
+        "x_mean": 127.443,
+        "y_mean": 119.681,
+        "z_mean": 250.22,
+        "unit_length_min": 0.719466,
+        "unit_length_max": 1.040791,
+        "pct_outside_0p98_1p02": 9.6165,
+        "fourcc": "DXT1"
+      },
+      "status": "VERIFIED"
+    },
+    "specular": {
+      "width": 256,
+      "height": 256,
+      "fourcc": "DXT1",
+      "mip_count": 9,
+      "file_bytes": 43832,
+      "pixel_data_bytes": 43704,
+      "declared_mip_bytes": 43704,
+      "video_memory_bytes": 43704,
+      "decoded_size": [
+        256,
+        256
+      ],
+      "decoded_mode": "RGBA",
+      "decoded_channels": 4,
+      "seam_row_mean_abs": 6.639,
+      "seam_col_mean_abs": 15.073,
+      "fidelity_vs_source": {
+        "compared_pixels": 65536,
+        "mean_abs_diff": 2.42,
+        "max_abs_diff": 27,
+        "pct_pixels_changed_over_4": 27.687,
+        "pct_pixels_changed_over_16": 0.342
+      },
+      "status": "VERIFIED"
+    }
+  },
+  "video_memory": {
+    "source_mip0_bytes_substituted": 262144,
+    "replacement_total_bytes_substituted": 349552,
+    "origin": "ESTIMATED (computed from measured DDS headers and file contents)"
+  },
+  "evidence": {
+    "true_mip0_per_substituted_map": "VERIFIED (DDS header vs object mip0 size)",
+    "dds_written_and_decoded_back": "VERIFIED (every file re-opened and decoded)",
+    "dds_dimensions_format_mips_channels": "VERIFIED (per file in validation)",
+    "normal_map_channel_conventions": "VERIFIED (alpha constant, X/Y centred, unit length ranged)",
+    "fidelity_vs_source": "VERIFIED (measured mean/max absolute difference)",
+    "checksums": "VERIFIED (sha256 of every source and produced file)",
+    "video_memory_figures": "ESTIMATED (block arithmetic over measured headers)",
+    "visual_result_in_game": "NOT TESTED (no Steam run, no deploy, no headset)",
+    "gpu_frame_cost": "NOT TESTED (needs a profiled run)"
+  },
+  "comparisons_local_only": [
+    "<assets-local>/material-remaster-batch2/env_rollingdoor/comparison/door_rollingT_diffuse_compare.png",
+    "<assets-local>/material-remaster-batch2/env_rollingdoor/comparison/door_rollingT_normal_compare.png",
+    "<assets-local>/material-remaster-batch2/env_rollingdoor/comparison/door_rollingT_specular_compare.png"
+  ]
+}
