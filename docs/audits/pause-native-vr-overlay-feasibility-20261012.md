@@ -140,6 +140,8 @@ PauseNativeOverlay=0   ; default OFF
 
 ---
 
-## Next step (if product direction changes)
+## Final readback gate (2026-10-12)
 
-The only path that avoids shadow UI **and** supports Objectives is **bounded runtime readback** on the live pause movie (`GFxMovie` **`GetVariable` / `Invoke`** — names exist in decompressed `GFxUI.u`, no caller in mod). That is a **small, explicit** engineering spike (read-only logs first), not open-ended exe/Ghidra work. Until that exists, remain on **visual fix attempts within native rendering** or accept **flatscreen-style pause outside VR** — both outside this overlay NO-GO.
+**NO-GO** — static gate complete. See **`pause-gfx-state-readback-gate-20261012.md`**. Pause-menu implementation research **stopped**; preserve accepted Steam DLL.
+
+~~The only path that avoids shadow UI **and** supports Objectives is **bounded runtime readback**…~~ **Superseded:** readback gate failed; do not spawn further GFx/overlay implementation work from this branch line.
