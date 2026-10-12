@@ -17846,6 +17846,10 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
         Reg4* q = reinterpret_cast<Reg4*>(cIn);
         for (int i=0;i<4;++i) { q[i].x*=k; q[i].y*=k; }
+        if (InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
+            const float clipY = MenuPlacementClipY((int)menuClassNow);
+            for (int i=0;i<4;++i) q[i].y += clipY*q[i].w;
+        }
         if (menuSafe) {
             static LONG saidSafe = 0;
             if (InterlockedCompareExchange(&saidSafe, 1, 0) == 0)
