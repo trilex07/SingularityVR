@@ -1,20 +1,14 @@
 # STATUS — session handoff
 
-Last updated **2026-10-12**. Left glove idle: **PHYSICALLY_VERIFIED** (`010eb45`).
-PSVR2 on `318b1fd`: support grip no longer hides the left glove, but it sat
-**beside** the pistol because the left target was `BuildGunC` while the right
-target stayed the aim controller. Pistol latch now uses `AuthoredPair`: both
-regions take the aim-hand rigid delta, and `GloveLeftShift` is not applied
-while that latch is held. `l_hand_IK` is the rest pose, not a grip point.
-Pause: offscreen class 3 is still `compose=0` (one full-width scene RT draw);
-no new HUD remap. See `docs/audits/hands-only-and-pause.md`.
+Last updated **2026-10-12**.
 
-**Steam install (MAIN):** `4F85BEAAFC7033287B900A1750203375FDEE64E9FA817EDA2E9CB6F8EA2BECBE`
-(build after `94b47e8` + compile fix), backup `20261012-113123`, INI preserved.
-L3 smoke: `OpenXR ready` in `view_matrix.log` (2026-10-12 11:32:54 attach); no
-`support wrist snap` in this build. Support grip on headset: **READY_FOR_PHYSICAL_ACCEPTANCE**
-(not re-tested on PSVR2 yet). Prior: `0eb22a6` / `2B896A7A…`, backup `20261012-111934`. Workflow:
-`docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
+**Steam install (MAIN — accepted):** DLL SHA-256 **`2FE5011C20DFEAAEDFFFFE58CD39E92A9570867F344649B00C0038AD97B39A47`** @ commit **`726e1a7`**. Rollback backup **`20261012-133123`** (DLL-only restore from **`20261012-121230`**). Workflow: `docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
+
+**Pause menu:** GFx ownership, native overlay, and GFx readback are **closed NO-GO** (`research/pause-vr-overlay-feasibility` @ `8b5643a`). **Do not** resume Gate B, cinema, or overlay work without new evidence. In-game pause visuals remain **broken** — not fixed.
+
+**Next priority — Performance (Jump ~475 ms delayed stall):** Branch **`perf/input-jump-stall-diagnostics`** (baseline `726e1a7` + analyzer + melee log throttle only; **haptic 15→60 stays rejected**). **Evidence (2026-10-06 log, revalidate on accepted DLL):** Jump edge → **475 ms** lands **2 frames** later; **`residual≈471 ms`** vs `presentUs≈5 ms`; unchanged in **`HAPTICS_OFF`** → not haptics; **`XINPUT_OFF`** cuts worst Jump stalls to **~27–98 ms** but large **`BUTTONS_OFF`** residual stalls remain → primary bucket is **engine/game thread outside Present**, with XInput path as secondary amplifier. Report: `docs/audits/input-jump-stall-diagnostic-report-20261006-175604.md`. **Next:** one fresh Steam capture on **`726e1a7`** diagnostic DLL (`runbook`) then **engine-side** investigation (no haptic/input perf hacks). Steam install should stay **`2FE5011C…`** unless MAIN deploys diag for capture.
+
+**Hands/gloves (accepted build):** Left glove idle **PHYSICALLY_VERIFIED** (`010eb45`); authored pistol grip @ `726e1a7`. Pause HUD: see `docs/audits/hands-only-and-pause.md` (unchanged on accepted DLL).
 
 Previous handoff **2026-08-16** (runs 249–271: panel, splash regression, weapon swap, popup text, scope).
 Read this first, then `ENGINE_NOTES.md`.

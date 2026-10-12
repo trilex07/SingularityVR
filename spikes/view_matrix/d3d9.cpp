@@ -9528,8 +9528,14 @@ void SyncXRInput(XrTime displayTime) {
                 // The latched weapon is logged with every window on purpose. The impulse weapon shares
                 // this button, and when it finally exists this line is what says whether the two cases
                 // can be told apart at all - without it, that question needs its own run.
-                Log("melee window: arms shown from +%ld ms to +%ld ms after the press (gun=%ld)",
-                    dly, end, InterlockedCompareExchange(&g_gunVerts, 0, 0));
+                // Rate-limited to once per second so rapid melee presses in combat do not spam the log.
+                static ULONGLONG s_lastMeleeLogMs = 0;
+                const ULONGLONG nowMs = GetTickCount64();
+                if (nowMs - s_lastMeleeLogMs >= 1000) {
+                    s_lastMeleeLogMs = nowMs;
+                    Log("melee window: arms shown from +%ld ms to +%ld ms after the press (gun=%ld)",
+                        dly, end, InterlockedCompareExchange(&g_gunVerts, 0, 0));
+                }
             }
             wasDown = down;
         }
