@@ -155,3 +155,22 @@ draw pairs. Existing unrelated timing families keep their previous policies.
 Guard31268 restored originals from20261013-203555; MAIN independently rehashed
 D892/AAA,INI B3FE/UI5B/107DDS/forwarder unchanged,request consumed. Game closed.
 Prepare next candidate offline; no further Steam run before fresh user start.
+
+## Next candidate ready offline
+
+VR sourcebdcd330e4a680f02f6969e15d9c1f5718d765589,regular x86 PE32/O2,
+SHA99D3F8008F3BF0BD894E2AA28BF062F1A32BE354F3DB055DBD5429BB7C51660E.
+InjectorD6EFDDAE unchanged from PID33140. Stage deployment/native-draw-cpu/artifact,
+prepared-test.json records both hashes/provenance/frozen files and startRequired.
+L1 eight x86/O2 executables PASS, including revised sampling/parity/RAII tests.
+L2 compile/format gate PASS (existing unrelated analyzer warnings remain).
+No native draw runtime or FPS/visual fix claim. Installation still accepted.
+
+After fresh start follow same two-DLL backup/guard/observer/request sequence
+above, but use this NEW explicit artifact directory and its new VR hash.
+Physical script: Continue from catastrophe, then50s of normal walking/looking
+around after stereo returns; no menus,chat switching or second New Game during
+measurement. No compulsory trigger holds this round. Close normally afterward.
+Existing after-cinema sampler stops at45s/3600frames; original arguments and
+presentation remain unchanged. Compare slow-window native-draw contribution
+with inclusive draw timing without summing overlapping families.

@@ -8,7 +8,10 @@ native scans tied to cinema/menu boundaries. Routine injector classification
 diagnostic separates original Draw* CPU submission from inclusive draw hooks;
 no image/quality/hand/shadow/input-policy changes. L1_PASS: sparse forwarding,
 thread domain,stop/exception/HRESULT and existing input/camera/audio tests.
-Regular x86/O2 L2 build in progress, then fresh start.
+L2_PASS regular x86 PE32/O2 sourcebdcd330,VR99D3F8008F3BF0BD894E2AA28BF062F1A32BE354F3DB055DBD5429BB7C51660E.
+Offline staged deployment/native-draw-cpu/artifact; same injectorD6EFDDAE.
+READY_FOR_PHYSICAL_ACCEPTANCE for diagnostic execution only, not FPS fix.
+No next candidate installed/request armed; await fresh start.
 Both originalsD892/AAA restored/hash verified;INI B3FE/UI5B/107DDS unchanged.
 See docs/post-cache-performance.md. Prior headers below are historical.
 
