@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+LATEST Steam PID8804 / camera-guard DLL64353686: OpenXR+cinema/native exit
+confirmed; physical hands/performance still BROKEN. User reports stretched
+hands, slowdown already at catastrophe, trigger influence unknown. Native
+cinema90->4.2->2.2FPS; actualOFF->GameplayStereo, then~6FPS. After-exit
+sampler45,015ms/265frames, idle227/LT26/RT12; no menu/cine contamination.
+No claim that a normal second New Game or the guarded fault was exercised.
+UAC explicitly authorized: WPR native CPU trace saved privately (2.5GB),
+after actual cinema exit, PID/start-time qualified. Two failed recorder
+attempts: sharing violation in ReadAllText; fixed live shared reader and
+preserved error output, tested in Windows PowerShell5.1, source8bc527f.
+ETL->private CSV export/target-PID analysis in progress; no FPS patch yet.
+Game closed; guard3472 restored D892 and MAIN rehashed DLL/INI B3FE/UI5B.
+No unattended candidate, no install/config/asset mutation beyond DLL lease.
+The earlier CURRENT block below is historical, superseded by this paragraph.
+
 CURRENT: CPU-profile candidate D430CE9F / source3bccd67 / Steam PID14600
 failed second entry: Continue(catastrophe)->stereo gameplay with stretched
 hands and worsening FPS->doubled flat menu->New Game access violation.

@@ -65,3 +65,35 @@ instance only, never mix a restarted PID. No guessed movie-duration trigger.
 This requires a fresh explicit user UAC authorization; syntax is checked
 offline but recorder execution/ETL evidence are pending. Raw system-wide ETL
 remains private; analysis filters Singularity only.
+
+## Follow-up session PID8804 — physical performance remains broken
+
+Steam launch19:18:09, regular guard DLL64353686 exact installed hash verified,
+original UI/DLL/INI backups verified, current user INI preserved. Guard3472
+used DLL-only backup20261013-191743 (one file, zero directories). Read-only
+observer12956 captured existing log transitions and full session after exit.
+Physical feedback: hands still stretched; FPS drop at catastrophe; influence
+of buttons unknown. Do not mark the second-entry crash repaired from this
+session: no explicit normal second New Game acceptance or contained-fault
+execution has been established.
+
+Native cinema initially~90FPS, then4.2 and2.2FPS, actualOFF and stereo return,
+then~6FPS. After-exit hook profile45,015ms/265frames, idle227/LT26/RT12,
+menu0/cine0. Sampled Present-hook2.818ms/frame versus~167ms native frame;
+enumeration0, cached callback replay0.846ms/frame. This is a large unexplained
+outside-hook/inclusive timing gap, not evidence for another enumeration patch.
+Pose updates can be~0.4-0.5s stale; cannot infer mesh-stretch cause from that.
+
+User explicitly approved UAC. Recorder attempts4548/26980 terminated before
+tracing: live ReadAllText sharing conflict independently reproduced in Windows
+PowerShell5.1 while native log writer was active. Corrected Get-Content shared
+reader tested live; ordinary transient I/O becomes a missed poll, fatal errors
+are transcribed before cleanup. Pure fresh/appended-cue tests PASS.
+Recorder22032 then confirmed actual cinema-exit gate, uniquely named own WPR
+instance; ETL saved successfully, stop/merge completed19:24:10. Capture up to
+90s or process exit; don't claim full90s before reading trace timestamps.
+ETL2,501,902,336bytes stays private; CSV export and Singularity-only stack/IP
+analysis in progress. No unrelated process data or raw trace in commits.
+
+After normal game exit, independent hashes verify safe installed DLL D892,
+user INI B3FEED43...2A079F and UI5B2EA469...673CDE. No game remains running.
