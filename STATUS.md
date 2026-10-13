@@ -6,7 +6,9 @@ has no new discovery/replay; input-cache changes NOT justified. Three43.712ms
 native scans tied to cinema/menu boundaries. Routine injector classification
 ~0.104us native/~0.238us noncandidate,no hash churn. Next offline bounded
 diagnostic separates original Draw* CPU submission from inclusive draw hooks;
-no image/quality/hand/shadow/input-policy changes. Need L1/L2 then fresh start.
+no image/quality/hand/shadow/input-policy changes. L1_PASS: sparse forwarding,
+thread domain,stop/exception/HRESULT and existing input/camera/audio tests.
+Regular x86/O2 L2 build in progress, then fresh start.
 Both originalsD892/AAA restored/hash verified;INI B3FE/UI5B/107DDS unchanged.
 See docs/post-cache-performance.md. Prior headers below are historical.
 

@@ -5917,7 +5917,7 @@ static void ReportHotPathSampler(bool complete=true) {
            static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::xr_locate_views)),
            static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::xr_locate_left)),
            static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::xr_locate_right)));
-    append("native_draw_forward timing=1/%u, within profiled draw hooks only (CPU wall, not GPU); ",hotpath::native_draw_stride);
+    append("native_draw_forward timing~1/%u randomized, within profiled draw hooks only (CPU wall, not GPU); ",hotpath::native_draw_stride);
     for (unsigned i = 0; i < static_cast<unsigned>(hotpath::Family::count); ++i) {
         const auto family = static_cast<hotpath::Family>(i);
         const auto r = g_hotPathSampler.read(family);

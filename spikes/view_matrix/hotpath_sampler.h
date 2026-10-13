@@ -152,11 +152,18 @@ public:
 		InterlockedIncrement64(&records_[static_cast<unsigned>(f)].calls);
 	}
 	bool should_time(Family f) noexcept {
+		if(f==Family::native_draw_forward) {
+			// Fixed512 cadence would systematically time just one eye because
+			// StereoPair emits adjacent left/right native calls. Randomize only
+			// this new family; retain existing sampler policies unchanged.
+			thread_local std::uint32_t sequence=0x7a238ed1u;
+			sequence^=sequence<<13;sequence^=sequence>>17;sequence^=sequence<<5;
+			return active() && (sequence&(native_draw_stride-1))==0;
+		}
 		const LONG sequence = InterlockedIncrement(&records_[static_cast<unsigned>(f)].sequence);
 		// Enumeration was measured at ~75ms: time every bounded-window scan,
 		// rather than estimating its whole cost from nine samples.
-		const unsigned stride=f==Family::native_draw_forward?native_draw_stride:sample_stride;
-		return active() && (f==Family::native_gamepad_enumeration || f==Family::native_gamepad_callback_replay || sequence % static_cast<LONG>(stride) == 0);
+		return active() && (f==Family::native_gamepad_enumeration || f==Family::native_gamepad_callback_replay || sequence % static_cast<LONG>(sample_stride) == 0);
 	}
 	void record_sample(Family f, LONGLONG elapsed) noexcept {
 		auto& r = records_[static_cast<unsigned>(f)];

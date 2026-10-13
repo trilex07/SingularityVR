@@ -143,12 +143,14 @@ cost dominates, investigate engine/driver workload; if small, investigate
 mod wrapper's actual hot scopes. Independent estimates are not exact additive
 CPU/GPU accounting. No performance/rendering fix claimed from this evidence.
 
-Native forwarding family uses1/512timing samples during the existing bounded
+Native forwarding family uses~1/512randomized timing samples during the bounded
 sampler only. Preserve parameters,exactly one original call,HRESULT,shadow
 trace and state; no allocations,per-draw logs or COM-state queries. Thread-
 local RAII nesting excludes standalone overlay/VFX calls outside profiled draw
 hooks and calls from other threads. Stop never resets scopes in flight.
 Default OFF unless owned gameplay request runs; no image/hand/input changes.
+Randomized selection avoids always sampling the same eye of adjacent stereo
+draw pairs. Existing unrelated timing families keep their previous policies.
 
 Guard31268 restored originals from20261013-203555; MAIN independently rehashed
 D892/AAA,INI B3FE/UI5B/107DDS/forwarder unchanged,request consumed. Game closed.
