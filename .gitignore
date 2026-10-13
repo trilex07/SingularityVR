@@ -56,3 +56,7 @@ packaging/dist/
 assets/reference/**
 assets/ui/kenney-input-prompts/kenney_input-prompts_*.zip
 assets/ui/kenney-input-prompts/source/**
+
+# ---- local Polish dubbing candidates ----
+# Generated/proprietary audio, transcripts, manifests and correction data stay local.
+audio/polish/repair_candidate_20261013/
