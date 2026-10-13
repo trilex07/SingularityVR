@@ -58,6 +58,7 @@ void PolishLocalizationManager::Shutdown() {
     m_text_entries.clear();
     m_audio_entries.clear();
     m_audio_by_package_asset.clear();
+    m_en_to_pl.clear();m_en_to_wav.clear();m_native_voice_en.clear();m_native_speech=false;
     m_initialized = false;
     m_enabled = false;
 }
@@ -324,6 +325,7 @@ bool PolishLocalizationManager::LoadStoryManifest(const std::string& path) {
             std::string file = extract("file");
             if (pl.empty()) pl = textPl;
             if (textEn.empty()) textEn = extract("en");
+            if(!textEn.empty() && extract("native_replaced")=="1")m_native_voice_en.insert(textEn);
 
             if (!textEn.empty() && !pl.empty() && pl != textEn && !m_en_to_pl.count(textEn))
                 m_en_to_pl.emplace(textEn, pl);
@@ -383,6 +385,7 @@ bool PolishLocalizationManager::WavForEnglish(const char* english_utf8, char* ou
     out[0] = 0;
     if (!m_enabled || !m_polish_language || !english_utf8 || !english_utf8[0]) return false;
     std::shared_lock<std::shared_mutex> lock(m_mutex);
+    if(m_native_speech&&m_native_voice_en.count(english_utf8))return false; // native UE3 owns this line; no PlaySound overlay
     auto it = m_en_to_wav.find(english_utf8);
     if (it == m_en_to_wav.end() || it->second.empty()) return false;
     strncpy_s(out, cap, it->second.c_str(), _TRUNCATE);

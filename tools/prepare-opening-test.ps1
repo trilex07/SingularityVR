@@ -7,6 +7,8 @@ param([Parameter(Mandatory)][string]$OutputDirectory,
       [switch]$CinemaMenuPair,
       [switch]$HandAnchorProbe,
       [switch]$WristAnchor,
+      [switch]$TextureBridge,
+      [switch]$NativeSpeech,
       [string]$SteamRoot='C:\Program Files (x86)\Steam')
 # Offline staging only. Does not install, arm diagnostics or launch Steam.
 Set-StrictMode -Version Latest
@@ -52,8 +54,21 @@ if($WristAnchor){
     if($text -cmatch 'NoTmdWristAnchorFix'){throw 'Existing wrist-anchor key'}
     $insert+=$ending+'NoTmdWristAnchorFix=1'
 }
+if($TextureBridge){
+    if($text -cmatch 'TextureBridgeOwned'){throw 'Existing bridge key'}
+    $insert+=$ending+'TextureBridgeOwned=1'
+}
 $candidateIni=$text.Insert($position,$insert)
 if($candidateIni.Remove($position,$insert.Length) -cne $text){throw 'INI changed outside owned experiment keys'}
+if($NativeSpeech){
+    if($candidateIni -cmatch 'NativePolishSpeech'){throw 'Existing native speech key'}
+    $loc=[regex]::Matches($candidateIni,'(?m)^\[Localization\](?=\r?$)')
+    if($loc.Count -ne 1){throw 'Exactly one Localization section required'}
+    $locPosition=$loc[0].Index+$loc[0].Length;$locInsert=$ending+'NativePolishSpeech=1'
+    $withNative=$candidateIni.Insert($locPosition,$locInsert)
+    if($withNative.Remove($locPosition,$locInsert.Length) -cne $candidateIni){throw 'Unowned locale INI change'}
+    $candidateIni=$withNative
+}
 New-Item -ItemType Directory -Path $out | Out-Null
 Copy-Item -LiteralPath $VrDll -Destination (Join-Path $out 'd3d9.dll')
 Copy-Item -LiteralPath $InjectorDll -Destination (Join-Path $out 'dinput8.dll')
@@ -67,7 +82,8 @@ foreach($i in 0..3) {
 }
 @{Kind='SingularityVR opening cutscene lease v1';StartRequired=$true;
   FrozenUiSha256=$uiHash;Files=$files;IniChangeOnly=($insert.Trim() -replace '\r?\n',';');
-  PhysicalAcceptance='PENDING';Notes='Native audio and hand candidate; FPS attribution, not proven residual-FPS fix'} |
+  PhysicalAcceptance='PENDING';NativeSpeechEnabled=[bool]$NativeSpeech;TextureBridgeEnabled=[bool]$TextureBridge;
+  Notes='Exact four-file core lease; independent asset delta and WAV leases are separate'} |
     ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $out 'test-manifest.json') -Encoding UTF8
 Write-Output "OFFLINE READY: $out"
 Write-Output 'No installed file changed; no game launched; fresh user start required'

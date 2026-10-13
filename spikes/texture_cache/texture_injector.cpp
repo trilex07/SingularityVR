@@ -25,6 +25,8 @@
 #include "MinHook.h"
 #include "resource_native_cache.h"
 #include "texture_hook_timing.h"
+#include "resource_positive_cache.h"
+#include "remaster_scope.h"
 
 // ---------------------------------------------------------------------------
 // targets: FNV-1a 64 over the compact mip-0 DXT bytes of the original texture
@@ -50,6 +52,9 @@ static HMODULE   g_self = nullptr;
 static bool      g_enabled = true;
 static bool      g_apply = true;              // false = log only
 static bool      g_resourceNativeCache = true;
+static bool      g_bridgeOwned = false; // new route default OFF; never arms MinHook
+static bool      g_remasterApply=false;
+static char      g_remasterDir[MAX_PATH]="texture-override-remaster";
 struct alignas(8) CacheCounters {
     volatile LONG64 binds=0, nativeHits=0, legacyHits=0, hashes=0;
     volatile LONG64 stored=0, storeFailed=0, evictions=0, candidateNotes=0;
@@ -130,6 +135,9 @@ static void LoadConfig() {
     g_enabled = iniInt("general", "enabled", 1, ini) != 0;
     g_apply   = iniInt("general", "mode_apply", 1, ini) != 0;
     g_resourceNativeCache=iniInt("general","resource_native_cache",1,ini)!=0;
+    g_bridgeOwned=iniInt("general","bridge_owned",0,ini)!=0;
+    g_remasterApply=iniInt("general","remaster_apply",0,ini)!=0;
+    iniStr("general","remasterdir","texture-override-remaster",g_remasterDir,MAX_PATH,ini);
     iniStr("general", "texturesdir", "texture-override", g_texturesDir, MAX_PATH, ini);
     g_capture = iniInt("general", "capture", 0, ini) != 0;
     iniStr("general", "capturesdir", "capture", g_capturesDir, MAX_PATH, ini);
@@ -192,6 +200,7 @@ static bool LoadDDS(const char* path, DDSImage& img) {
     else if (fourcc == MAKEFOURCC('D', 'X', 'T', '5')) { img.fmt = D3DFMT_DXT5; blk = 16; }
     else { Log("LoadDDS: unsupported fourcc for %s", path); return false; }
     if (mip == 0) mip = 1;
+    if(g_bridgeOwned&&(img.w==0||img.h==0||img.w>8192||img.h>8192||mip>14))return false;
     img.levels = (int)mip;
     size_t off = 128;
     for (UINT i = 0; i < mip; ++i) {
@@ -202,6 +211,7 @@ static bool LoadDDS(const char* path, DDSImage& img) {
         img.mip.emplace_back(buf.begin() + off, buf.begin() + off + sz);
         off += sz;
     }
+    if(g_bridgeOwned&&off!=(size_t)n)return false;
     return true;
 }
 
@@ -299,15 +309,24 @@ static bool HashLevel0(IDirect3DTexture9* t, D3DSURFACE_DESC& desc, uint64_t& ou
 static bool CreateReplacement(IDirect3DDevice9* dev, const DDSImage& img,
                               IDirect3DTexture9** out) {
     *out = nullptr;
+    IDirect3DDevice9Ex* ex=nullptr;
+    const bool isEx=g_bridgeOwned&&SUCCEEDED(dev->QueryInterface(__uuidof(IDirect3DDevice9Ex),reinterpret_cast<void**>(&ex)));
+    if(ex)ex->Release();
+    IDirect3DTexture9* upload=nullptr;
     HRESULT hr = dev->CreateTexture(img.w, img.h, (UINT)img.levels, 0, img.fmt,
-                                    D3DPOOL_MANAGED, out, nullptr);
+                                    isEx?D3DPOOL_DEFAULT:D3DPOOL_MANAGED, out, nullptr);
     if (FAILED(hr) || !*out) { Log("CreateTexture(%ux%u) failed 0x%08X", img.w, img.h, hr); return false; }
+    if(isEx){
+        hr=dev->CreateTexture(img.w,img.h,(UINT)img.levels,0,img.fmt,D3DPOOL_SYSTEMMEM,&upload,nullptr);
+        if(FAILED(hr)||!upload){(*out)->Release();*out=nullptr;return false;}
+    }
+    IDirect3DTexture9* writer=upload?upload:*out;
     const int blk = (img.fmt == D3DFMT_DXT1) ? 8 : 16;
     for (int i = 0; i < img.levels; ++i) {
         D3DLOCKED_RECT lr;
-        if (FAILED((*out)->LockRect((UINT)i, &lr, nullptr, 0))) {
+        if (FAILED(writer->LockRect((UINT)i, &lr, nullptr, 0))) {
             Log("replacement LockRect level %d failed", i);
-            (*out)->Release(); *out = nullptr; return false;
+            if(upload)upload->Release();(*out)->Release(); *out = nullptr; return false;
         }
         UINT mw = (img.w >> i) ? (img.w >> i) : 1;
         UINT mh = (img.h >> i) ? (img.h >> i) : 1;
@@ -316,8 +335,10 @@ static bool CreateReplacement(IDirect3DDevice9* dev, const DDSImage& img,
         const uint8_t* src = img.mip[i].data();
         for (UINT y = 0; y < rows; ++y)
             memcpy((uint8_t*)lr.pBits + (size_t)y * lr.Pitch, src + (size_t)y * rowbytes, rowbytes);
-        (*out)->UnlockRect((UINT)i);
+        hr=writer->UnlockRect((UINT)i);
+        if(FAILED(hr)){if(upload)upload->Release();(*out)->Release();*out=nullptr;return false;}
     }
+    if(upload){hr=dev->UpdateTexture(upload,*out);upload->Release();if(FAILED(hr)){(*out)->Release();*out=nullptr;return false;}}
     return true;
 }
 
@@ -600,7 +621,53 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
 }
 
 // ---------------------------------------------------------------------------
-// DirectInput8Create forwarder (our only required export)
+// Opt-in callback: production owns slot65. No MinHook/vtable patch here.
+extern "C" HRESULT WINAPI SingularityTextureBridgeV1(IDirect3DDevice9* dev,DWORD stage,
+    IDirect3DBaseTexture9* texture,texbridge::Forward forward,unsigned abi,unsigned flags) {
+    if(!forward)return E_POINTER;
+    if(!g_bridgeOwned||abi!=texbridge::version||(flags&texbridge::protectedSource)||
+       !g_enabled||!texture||texture->GetType()!=D3DRTYPE_TEXTURE)return forward(dev,stage,texture);
+    auto* original=static_cast<IDirect3DTexture9*>(texture);
+    InterlockedIncrement64(&g_cacheCounters.binds);
+    if(g_resourceNativeCache&&texnative::KnownNative(original)){
+        InterlockedIncrement64(&g_cacheCounters.nativeHits);return forward(dev,stage,texture);
+    }
+    if(auto* cached=texpositive::Acquire(original)){
+        HRESULT hr=forward(dev,stage,cached);cached->Release();return hr;
+    }
+    D3DSURFACE_DESC desc{};
+    if(FAILED(original->GetLevelDesc(0,&desc))||(desc.Usage&(D3DUSAGE_RENDERTARGET|D3DUSAGE_DEPTHSTENCIL|D3DUSAGE_DYNAMIC))||
+       !IsCandidate(desc))return forward(dev,stage,texture);
+    uint64_t hash=0;InterlockedIncrement64(&g_cacheCounters.hashes);
+    bool have=HashLevel0(original,desc,hash);
+    const Target* target=MatchTarget(desc,hash,have);
+    if(target&&!texgroups::GroupAllows(g_groupOn,texgroups::GroupIndex(target->group)))target=nullptr;
+    const bool remaster=target&&remasterscope::Contains(target->name);
+    if(target){
+        static volatile LONG seen[kTargetCount]{};
+        const unsigned slot=unsigned(target-kTargets);
+        if(!InterlockedCompareExchange(&seen[slot],1,0))Log("BRIDGE MATCH %s exact original hash=%016llX remaster=%d remaster_apply=%d; named proof before substitution",
+            target->name,(unsigned long long)hash,remaster?1:0,g_remasterApply?1:0);
+    }
+    IDirect3DTexture9* replacement=nullptr;
+    if(target&&g_apply){
+        char relative[MAX_PATH],path[MAX_PATH];
+        _snprintf_s(relative,_TRUNCATE,"%s\\%s",(remaster&&g_remasterApply)?g_remasterDir:g_texturesDir,target->dds);
+        if(relative[0]=='\\'||relative[1]==':')strcpy_s(path,relative);else BuildPath(relative,path,sizeof(path));
+        DDSImage image;
+        if(LoadDDS(path,image)&&image.fmt==desc.Format&&CreateReplacement(dev,image,&replacement)){
+            if(!texpositive::Store(original,replacement)){replacement->Release();replacement=nullptr;}
+            else Log("BRIDGE SUBSTITUTE %s (%ux%u -> %ux%u) stage=%u remaster=%d; resource-owned",target->name,desc.Width,desc.Height,image.w,image.h,stage,(remaster&&g_remasterApply)?1:0);
+        }
+    }
+    if(!replacement&&g_resourceNativeCache)texnative::RememberNative(original);
+    if(CandidateNote())Log("BRIDGE candidate %ux%u fmt=%d hash=%016llX name=%s lockable=%d apply=%d",
+        desc.Width,desc.Height,desc.Format,(unsigned long long)hash,target?target->name:"native",have?1:0,g_apply?1:0);
+    HRESULT hr=forward(dev,stage,replacement?replacement:texture);
+    if(replacement)replacement->Release();return hr;
+}
+
+// DirectInput8Create forwarder
 // ---------------------------------------------------------------------------
 typedef HRESULT (WINAPI* PFN_DI8CREATE)(HINSTANCE, DWORD, REFIID, LPVOID*, LPUNKNOWN);
 static PFN_DI8CREATE RealDI8Create = nullptr;
@@ -637,6 +704,16 @@ static DWORD WINAPI InitThread(LPVOID) {
     Log("init: real dinput8 export=%p", RealDI8Create);
 
     if (!g_enabled) { Log("disabled by ini - injector idle"); return 0; }
+
+    char renderIni[MAX_PATH];BuildPath("SingularityVR.ini",renderIni,sizeof(renderIni));
+    const bool renderBridge=GetPrivateProfileIntA("Render","TextureBridgeOwned",0,renderIni)!=0;
+    if(renderBridge!=g_bridgeOwned){Log("BRIDGE config mismatch; fail closed, no D3D hooks/substitution");return 0;}
+
+    if(g_bridgeOwned){
+        Log("BRIDGE READY ABI=1; production slot65 owner; no D3D9/CreateDevice/MinHook hooks armed");
+        for(unsigned note=0;note<60;++note){Sleep(5000);ReportCache();}
+        g_textureTiming.Stop();return 0;
+    }
 
     if (MH_Initialize() != MH_OK) { Log("MH_Initialize failed"); return 0; }
 

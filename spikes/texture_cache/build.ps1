@@ -26,11 +26,13 @@ try {
     if($LASTEXITCODE -ne 0){throw 'Static analysis compile failed'}
     if($analysis | Select-String 'warning C6067|warning C6063|warning C6064|warning C6066|warning C6270|warning C6271|warning C6272|warning C6273|warning C6328'){throw 'Format-string analysis failed'}
     $mhSources=@('buffer.c','hook.c','trampoline.c','hde\hde32.c') | ForEach-Object {'"'+(Join-Path $mh ('src\'+$_))+'"'}
-    $forwardTest=Join-Path $here 'tests\test-texture-hook-forwarding.cpp'
-    & cmd /c ("`"$vcvars`" x86 >nul && cl /nologo /O2 /EHsc /W3 /MD /std:c++17 /I`"$mh\include`" /Fe:test-texture-hook-forwarding.exe `"$forwardTest`" " + ($mhSources -join ' ') + ' /link user32.lib')
-    if($LASTEXITCODE -ne 0){throw 'Actual hook test compile failed'}
-    & (Join-Path $out 'test-texture-hook-forwarding.exe')
-    if($LASTEXITCODE -ne 0){throw 'Actual hook forwarding test failed'}
+    foreach($taskTest in @('texture-hook-forwarding','texture-bridge-gpu')){
+        $forwardTest=Join-Path $here "tests\test-$taskTest.cpp"
+        & cmd /c ("`"$vcvars`" x86 >nul && cl /nologo /O2 /EHsc /W3 /MD /std:c++17 /I`"$mh\include`" /Fe:test-$taskTest.exe `"$forwardTest`" " + ($mhSources -join ' ') + ' /link user32.lib')
+        if($LASTEXITCODE -ne 0){throw "Actual hook test compile failed: $taskTest"}
+        & (Join-Path $out "test-$taskTest.exe")
+        if($LASTEXITCODE -ne 0){throw "Actual hook test failed: $taskTest"}
+    }
     $definition=Join-Path $here 'dinput8.def'
     $compile="`"$vcvars`" x86 >nul && cl /nologo /LD /O2 /EHsc /W3 /MD /std:c++17$timingFlag /I`"$mh\include`" /Fe:dinput8.dll `"$source`" " + ($mhSources -join ' ') + " /link /DEBUG:NONE /MAP:dinput8.map /DEF:`"$definition`" user32.lib"
     & cmd /c $compile
@@ -41,7 +43,7 @@ try {
     if([BitConverter]::ToUInt32($bytes,$pe) -ne 0x4550 -or
        [BitConverter]::ToUInt16($bytes,$pe+4) -ne 0x14c -or
        [BitConverter]::ToUInt16($bytes,$pe+24) -ne 0x10b){throw 'Not x86 PE32'}
-    $inputs=@('texture_injector.cpp','resource_native_cache.h','texture_hook_timing.h','texture_groups.h','targets_generated.h','dinput8.def') | ForEach-Object {
+    $inputs=@('texture_injector.cpp','resource_native_cache.h','resource_positive_cache.h','remaster_scope.h','texture_hook_timing.h','texture_groups.h','targets_generated.h','dinput8.def','../view_matrix/texture_bridge_contract.h') | ForEach-Object {
         [ordered]@{name=$_;sha256=(Get-FileHash -LiteralPath (Join-Path $here $_)).Hash}
     }
     [ordered]@{builtAt=(Get-Date).ToString('o');branch=(& git -C $root branch --show-current).Trim();

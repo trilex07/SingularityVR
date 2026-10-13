@@ -1,5 +1,27 @@
 # STATUS — session handoff
 
+User physical feedback for E213B216 PID23584/36340: all requested hands/menu/
+cinema pause/eyes/controls checks OK except gameplay English radio. Own-wrist
+and cinema/menu presentation accepted for tested scope, not all future weapons.
+Next requested work: native Polish +SINGULARITY VR branding +existing material
+remaster, OFFLINE prepare only; no new Steam launch/install until fresh start.
+Current installed originals/frozen files remain restored; guards completed.
+
+Three-item prep: native48new waves +10preserved helicopter waves in4banks;
+6short replacements refused/retained EN, not all-game Polish completion.
+SIDE old29 +improved8 @9a5ae536; new1886-WAV lookup/format plan PASS,146QA pending.
+Exact native ownership gate keeps UI/uncovered PlaySound path. New title package
+UIE0F5A661 exact iis/char10 +3bytes; accepted RTT and other movies retained;
+independent LZO roundtrip PASS, typography/layout physical acceptance pending.
+24existing materials/91,229,592B staged privately from0dcdcd5/188c10a; no new
+texture generation or game assets in Git. Separate remaster folder; base107DDS,
+glyphs/FX/config groups stay frozen. DefaultOFF single-owner bridge+COM lifetime
+and pool-aware Ex upload implemented. Hidden plain/Ex DXT1/DXT5 RGB/alpha/Reset/
+exact-forward/refcount and actual MAIN translated-Lock/hash/forward chain tests
+PASS. L3/visual remaster/overhead remain OPEN. Exact32 delta lease fake tests
+PASS incl corruption/path/WhatIf/conflict. Final source commit/build/stage pending
+at this header. See docs/prepared-audio-title-remaster.md. Below historical.
+
 LATEST 2026-10-14 E213B216 test completed, physical feedback PENDING. PID23584:
 OpenXR/loaded paths/exact four hashes PASS; cinema pause reason32 and resume,
 then stereo recorded, hands blocked by existing position gate (no sample).

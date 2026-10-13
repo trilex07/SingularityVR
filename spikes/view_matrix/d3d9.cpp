@@ -2,6 +2,9 @@
 #include "skeletal_palette.h"
 #include "hand_anchor_probe.h"
 #include "hand_anchor_math.h"
+#include "texture_bridge_contract.h"
+static LONG g_textureBridgeOwned=0;
+static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "camera_translation_evidence.h"
 #include "arm_ik.h"
 #include "arm_bind.h"
@@ -19334,6 +19337,7 @@ inline void FlushShadow(StageEntry* e) {
 
 HRESULT STDMETHODCALLTYPE Hook_TexLockRect(IDirect3DTexture9* self, UINT level, D3DLOCKED_RECT* out,
                                            const RECT* rect, DWORD flags) {
+    if(Rd(g_textureBridgeOwned)&&!(flags&D3DLOCK_READONLY))texbridge::Invalidate(self);
     EnterCriticalSection(&g_stageLock);
     StageEntry* e = StageFind(self);
     IDirect3DTexture9* shadow = (e && e->shadow) ? (IDirect3DTexture9*)e->shadow : nullptr;
@@ -19898,7 +19902,13 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
         if (ProjectedShadowTexture(texture)) InterlockedOr(&g_shadowStageMask, 1L << stage);
         else InterlockedAnd(&g_shadowStageMask, ~(1L << stage));
     }
-    const HRESULT bindResult=g_origSetTexture(dev,stage,texture);
+    // VR classification sees ORIGINAL identity; callback forwards to driver once.
+    unsigned protectedFlags=0;
+    if(Rd(g_textureBridgeOwned)&&g_textureBridgeBind)
+        protectedFlags=(ProjectedShadowTexture(texture)||texture==g_vrMenuTexture||
+            (stage<4&&Rd(g_vrMenuStageBound[stage])))?texbridge::protectedSource:0;
+    const HRESULT bindResult=(Rd(g_textureBridgeOwned)&&g_textureBridgeBind)?
+        g_textureBridgeBind(dev,stage,texture,g_origSetTexture,texbridge::version,protectedFlags):g_origSetTexture(dev,stage,texture);
     if(SUCCEEDED(bindResult) && stage<8)shadowtrace::bound.tex[stage]=texture;
     return bindResult;
 }
@@ -19941,8 +19951,11 @@ void PatchVolVTableOnce(IDirect3DVolumeTexture9* t);
 HRESULT STDMETHODCALLTYPE Hook_CreateTexture(IDirect3DDevice9* dev, UINT w, UINT h, UINT levels,
                                              DWORD usage, D3DFORMAT fmt, D3DPOOL pool,
                                              IDirect3DTexture9** out, HANDLE* share) {
-    if (!g_deviceIsEx || pool != D3DPOOL_MANAGED)
-        return g_origCreateTexture(dev, w, h, levels, usage, fmt, pool, out, share);
+    if (!g_deviceIsEx || pool != D3DPOOL_MANAGED) {
+        HRESULT native=g_origCreateTexture(dev,w,h,levels,usage,fmt,pool,out,share);
+        if(Rd(g_textureBridgeOwned)&&SUCCEEDED(native)&&out&&*out)PatchTextureVTableOnce(*out);
+        return native;
+    }
 
     HRESULT hr = g_origCreateTexture(dev, w, h, levels, usage, fmt, D3DPOOL_DEFAULT, out, share);
     if (FAILED(hr) || !out || !*out) {
@@ -27278,6 +27291,9 @@ void LoadIniSettings() {
         if (polishInit) {
             LONG plLang = GetPrivateProfileIntA("Localization", "PolishLanguage", 0, path);
             if (plLang != 0) PolishLocalization::PL().SetPolishLanguage(true);
+            LONG nativeSpeech=GetPrivateProfileIntA("Localization","NativePolishSpeech",0,path);
+            PolishLocalization::PL().SetNativeSpeech(nativeSpeech!=0);
+            Log("ini: NativePolishSpeech=%ld (exact native_replaced story fields only; no global audio mute)",nativeSpeech);
             LONG plFallback = GetPrivateProfileIntA("Localization", "PolishFallbackToEnglish", 1, path);
             PolishLocalization::PL().SetFallbackToEnglish(plFallback != 0);
             Log("ini: Polish localization %s (PolishLanguage=%ld, Fallback=%ld)", polishInit ? "initialized" : "FAILED", plLang, plFallback);
@@ -27857,6 +27873,8 @@ void LoadIniSettings() {
     g_cutsceneMenuPairFix=GetPrivateProfileIntA("Render","CutsceneMenuPairFix",0,path)?1:0;
     g_handAnchorProbe=GetPrivateProfileIntA("Render","HandAnchorProbe",0,path)?1:0;
     g_noTmdWristAnchorFix=GetPrivateProfileIntA("Render","NoTmdWristAnchorFix",0,path)?1:0;
+    g_textureBridgeOwned=GetPrivateProfileIntA("Render","TextureBridgeOwned",0,path)?1:0;
+    Log("ini: TextureBridgeOwned=%ld (single slot65 owner; default OFF)",Rd(g_textureBridgeOwned));
     Log("ini: NoTmdWristAnchorFix=%ld (exact free noTMD wrists, gameplay only; default OFF)",Rd(g_noTmdWristAnchorFix));
     Log("ini: HandAnchorProbe=%ld (eight same-thread read-only samples; default OFF)",Rd(g_handAnchorProbe));
     Log("ini: CutsceneMenuPairFix=%ld (focused frontend/cinema pause only; default OFF)",Rd(g_cutsceneMenuPairFix));
@@ -28416,6 +28434,11 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
         // 65 = SetTexture. This catches the sampled projection map rather than deleting its
         // light-space render pass, which was why the former VrShadows=0 still left a rectangle.
         g_origSetTexture = (PFN_SetTexture)PatchVTable(*out,65,(void*)&Hook_SetTexture);
+        if(Rd(g_textureBridgeOwned)) {
+            HMODULE injector=GetModuleHandleW(L"dinput8.dll");
+            g_textureBridgeBind=injector?reinterpret_cast<texbridge::Bind>(GetProcAddress(injector,"SingularityTextureBridgeV1")):nullptr;
+            Log("texture bridge: slot65 MAIN owner; callback=%p originalForward=%p",(void*)g_textureBridgeBind,(void*)g_origSetTexture);
+        }
         // 118 = CreateQuery, the last method on IDirect3DDevice9. Counted forward from
         // SetVertexShaderConstantF at 94, which is independently confirmed working.
         g_origCreateQuery = (PFN_CreateQuery)PatchVTable(*out, 118, (void*)&Hook_CreateQuery);
