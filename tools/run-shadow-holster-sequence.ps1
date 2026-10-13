@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][ValidateRange(1,2147483647)][int]$GamePid,
+    [ValidateSet('Holster','PauseReturn')][string]$Mode = 'Holster',
     [ValidateRange(30,600)][int]$SyncTimeoutSeconds = 300,
     [ValidateRange(5,180)][int]$StageTimeoutSeconds = 120
 )
@@ -82,7 +83,7 @@ function Request-Capture([int]$sequence,[string]$stage) {
     while ((Get-Date) -lt $deadline) {
         Confirm-Game
         foreach ($line in @(Read-NewLogLines)) {
-            if ($sequence -le 2 -and $line -match 'weapon holster: STORED') {
+            if ($Mode -eq 'Holster' -and $sequence -le 2 -and $line -match 'weapon holster: STORED') {
                 throw "Weapon was holstered before capture $stage completed"
             }
             if ($line -match 'shadow-pass trace finished' -and
@@ -108,6 +109,31 @@ try {
     }
     if (Test-Path -LiteralPath $logPath) {
         $script:logOffset = (Get-Item -LiteralPath $logPath).Length
+    }
+    if ($Mode -eq 'PauseReturn') {
+        # Runtime log confirms class3 is SPPause and class0 is gameplay.
+        # This mode captures a chosen live-enemy scene without a holster gate.
+        Write-Output "WAITING_FOR_PAUSE_RETURN pid=$GamePid"
+        $deadline = (Get-Date).AddSeconds($SyncTimeoutSeconds)
+        $sawPause = $false
+        $resumedAt = $null
+        while ((Get-Date) -lt $deadline -and -not $resumedAt) {
+            Confirm-Game
+            foreach ($line in @(Read-NewLogLines)) {
+                if ($line -match '^menu-submit-edge: class=3\s') { $sawPause = $true }
+                elseif ($sawPause -and $line -match '^menu-submit-edge: class=0\s') {
+                    $resumedAt = Get-Date
+                    break
+                }
+            }
+            if (-not $resumedAt) { Start-Sleep -Milliseconds 250 }
+        }
+        if (-not $resumedAt) { throw 'Timed out waiting for pause to gameplay transition' }
+        Write-Output "SYNC_PAUSE_RETURN $($resumedAt.ToString('o'))"
+        Wait-Until $resumedAt.AddSeconds(1) $false
+        Request-Capture 1 'EnemyScene'
+        Write-Output 'COMPLETE: one focused scene frame captured; user may close game'
+        return
     }
     Write-Output "WAITING_FOR_DRAWN pid=$GamePid"
     $deadline = (Get-Date).AddSeconds($SyncTimeoutSeconds)

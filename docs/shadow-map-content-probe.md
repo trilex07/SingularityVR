@@ -79,14 +79,16 @@ accepted DLL, and MAIN rechecked the DLL/INI/UI hashes before removing the one
 owned pending trace request. Do not ask for replies between captures again.
 
 Offline comparison of two real Steam traces gives a firmer caster identity.
-PID35192 group2/3 draws the 3314-vertex foreground weapon with VB29A71EE0 /
+PID35192 group2/3 draws a 3314-vertex foreground mesh with VB29A71EE0 /
 IB0CA98E20 into the scene target. The same VB/IB is drawn by group257 (3314
 vertices) and group258 (390 vertices) into a native 512x512 R32F shadow target
 with viewport6,6,500,259. Both report phase1/moved0; this field alone does not
 prove their vertex constants are identical or that the mesh is untransformed.
 PID18352 independently repeats the exact same within-session VB/IB linkage:
-scene group2/3 and 512x512 shadow-target groups345/346. Thus weapon geometry
-participates in a dynamic shadow producer path. Whether it causes the frozen
+scene group2/3 and 512x512 shadow-target groups345/346. Thus first-person geometry
+participates in a dynamic shadow producer path. Later runtime logs identify
+3314 as the arm-role mesh and5799 as the gun; the earlier gun label is corrected.
+Whether this arm caster causes the frozen
 shadow or squares near enemy casters remains unresolved; compare actual matrix
 registers and content across controlled hand/holster frames.
 
@@ -107,11 +109,11 @@ producer and receiver data across A/B/C before inferring any causal fix.
 The DRAWN sync worked. A was captured at931 draws/274 groups and B at919
 draws/256 groups, both with overflow0 and successful finite R32F readbacks.
 The identical within-session VB29904FE0/IB0CA5A540 was present in each
-foreground weapon draw and native512x512 shadow target. Gun producer group249
+foreground first-person draw and native512x512 shadow target. Producer group249
 in A and231 in B uses the same vertex shader SHA c69b26e9..., whose CTAB
 names BoneMatrices at VS c5..229, LocalToWorld c230..233 and ProjectionMatrix
-c234..237. The captured c5..31 rows vary between A and B, directly showing
-that the native shadow caster's bone inputs respond to hand movement. The
+c234..237. The captured c5..31 rows vary between A and B; this is a measured
+input difference, not proof that controller motion is its only cause. The
 producer viewport changed from6,6,500,235 to6,6,500,280; this is not by itself
 evidence of the square's cause.
 
@@ -120,7 +122,7 @@ groups178/179 and164/165 draw 6481/4307 vertices into the same native R32F
 target, then copy/filter before receiver groups184 and170. Within each trace,
 their VB/IB also matches HDR scene groups150..153 (A) and corresponding B
 groups. This distinguishes that world/dynamic-mesh route from the later
-3314/390-vertex weapon shadow route. The source viewport is almost unchanged
+3314/390-vertex first-person shadow route. The source viewport is almost unchanged
 between A/B (394x224 versus395x225); sampled maps both have 262144 finite
 values but different zero counts (15413 versus8805). That difference alone
 cannot locate square pixels because the light/subject may move during the
@@ -141,9 +143,69 @@ shader CTAB, not guessed UE3 offsets. The prior trace stored c0..31 only, so
 it cannot distinguish the gun's local-to-world/phantom position from shadow
 projection changes. One extra read per qualifying group preserves the original
 render state and records HRESULT. Compare c5..31 and c230..240 for the exact
-gun VB/IB at armed and holstered poses; analyze enemy producer separately.
+first-person VB/IB at armed and holstered poses; analyze enemy producer separately.
 Source dbce0ed built x86 PE32 /O2 with performance diagnostics, DLL SHA-256
 54CC148FB994E2906634AD522A45597F71F4E22702B91993C97A73EEDE91B787.
 Python parser synthetic check, C++ trace OFF/COM check, shadow-depth stats and
 runtime policy checks pass. This establishes L2 only; new c230..240 records
-have not been validated in real Steam gameplay.
+were subsequently validated in PID12648 below.
+
+## Producer transforms in real Steam PID12648
+
+DLL54CC148F/source dbce0ed, one focused trace2304 calls/351 groups/overflow0.
+The holster scheduler never synchronized initially. MAIN stopped only that
+waiting helper and requested a single frame; after returning to gameplay the
+request completed and produced an XR-backbuffer capture at09:51:18. The player
+later succeeded in using the holster, but those events occurred after the sole
+trace. They report disappearance of controller-following shadows, persistent
+enemy squares, a black gun and darker textures. This is not visual acceptance.
+
+Runtime latch logs in PID12648 and PID18352 explicitly name gun5799/arms3314.
+This corrects the prior label of3314 as gun. In PID12648 the actual5799 gun
+VB69937F40/IB526B3100 is moved1 in scene groups0/1,327/328,331/332 and is not
+observed in a512R32F producer draw. The3314 arm-role VB29A9B960/IB0C4426A0
+links scene groups2/3,
+329/330,333/334 to shadow producer336, with390-vertex companion337. All these
+arm-role draws report moved0. Resource linkage alone cannot establish the mesh
+role; use the runtime role evidence when interpreting old traces.
+
+Groups336/337 successfully captured c230..240 and share LocalToWorld and
+ProjectionMatrix. The map viewport is6,6,500,245. Receiver342 is the audited
+VSd09ad82c/PS28e01133 and consumes the filtered512R32F map after copy/filter.
+Readback before draw2291:262144 finite values,0 nonfinite,19894 zeros,range0..e.
+Private disassembly proves the caster uses skinned position -> LocalToWorld ->
+ProjectionMatrix and stores exp(saturate(clipZ*InvMaxSubjectDepth+DepthBias)).
+The receiver decodes linear viewW from scene alpha, transforms that screen/W
+vector with ScreenToShadowMatrix, and compares against this exponential map.
+
+`tools/check-shadow-matrix-chain.py` checks an explicit caster/receiver pair
+using audited shader hashes, CTAB ownership and row-vector instructions.
+For336->342 the inferred texture scales are X~0.488281956,Y~-0.239257858,
+depth~0.001024079, consistent with500/1024,-245/1024 and captured inverse depth
+0.001024072. The proposed viewport plus half-texel chain has max coefficient
+residual~0.195865, concentrated in translation; inferred Y bias differs by
+~0.0002365 (about0.12 shadow texel). Do not treat that residual as a proven bug
+or patch it by fitting constants. This does not validate actual per-eye depth
+reconstruction. This frame has no confirmed active-enemy shadow producer.
+
+User changed ShowControllerArms0->1 and RecenterChord0->1 after the black gun
+appeared; a VR Settings save also wrote existing defaults. MAIN preserved that
+INI (B3FEED43E7651E86C57B3767359F13C363B2F3BBFE067429E29F81F4CB2A079F).
+Guard restored DLL9FBA308C and UI5B2EA469, both independently hashed; no owned
+flags or pending requests remained. Next live-enemy measurement can use the
+external scheduler's `-Mode PauseReturn`: actual submitted class3(SPPause) ->
+class0(gameplay) schedules one request at+1second. Runtime log contains three
+such transitions; parser checks pass. This avoids both the holster dependency
+and chat switching. Keep the existing read-only DLL candidate; gather the
+active-enemy caster matrices before further rendering modifications.
+
+Player clarification: the enemy in PID12648 was already dead. They also see
+square shadows under living/moving enemies, sometimes intersecting the body.
+Thus caching dead-body maps is only a possible contributor, not a sufficient
+explanation. The sole trace has exactly two audited ShadowDepthTexture receiver
+groups342/343, both reading the arm map512R32F; it contains no other R32F sampler
+and no confirmed enemy-caster map. Do not attribute enemy-square pixels to the
+captured arm map. Next measure a live enemy before firing, using pause/resume
+as synchronization. The snapshot runner accepts an explicitly selected current
+INI SHA via -ExpectedIniSha256 so user changes can be backed up and retained
+without weakening the DLL/UI hash checks.

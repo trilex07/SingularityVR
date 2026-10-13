@@ -3,6 +3,7 @@ param(
     [ValidateSet('Snapshot','Restore')][string]$Action='Snapshot',
     [string]$BackupPath='',
     [string]$ExpectedDllSha256='9FBA308C91A2F246B336A54E35089A23CF676542CC0AFFB62B64E1B0599C4500',
+    [ValidatePattern('^[A-Fa-f0-9]{64}$')][string]$ExpectedIniSha256='61AEC56CF0F961C3D771DE186ADF469E39A978900DE8F8609086A965B4FE378B',
     [string]$Provenance='5f05687f7823c9d0814edfe2ab320e7daef93802'
 )
 Set-StrictMode -Version Latest
@@ -12,7 +13,7 @@ $files=@((Join-Path $gameRoot 'Binaries\d3d9.dll'),(Join-Path $gameRoot 'Binarie
 if (@(Get-Process -Name Singularity -ErrorAction SilentlyContinue).Count) { throw 'Never snapshot/deploy/restore a running game' }
 if ($Action -eq 'Snapshot') {
     if ((Get-FileHash -LiteralPath $files[0]).Hash -ne $ExpectedDllSha256) { throw 'DLL differs from specified provenance' }
-    if ((Get-FileHash -LiteralPath $files[1]).Hash -ne '61AEC56CF0F961C3D771DE186ADF469E39A978900DE8F8609086A965B4FE378B') { throw 'INI changed' }
+    if ((Get-FileHash -LiteralPath $files[1]).Hash -ne $ExpectedIniSha256) { throw 'INI differs from explicitly selected snapshot hash' }
     if ((Get-FileHash -LiteralPath $files[2]).Hash -ne '5B2EA469A3EE06FF154AC78BD58604E8034970D4837F289E5C22503C6A673CDE') { throw 'Accepted RTT package changed' }
     $root=Join-Path (Split-Path $PSScriptRoot -Parent) 'deployment\shadow-backups'
     $backup=Join-Path $root (Get-Date -Format 'yyyyMMdd-HHmmss-fff')

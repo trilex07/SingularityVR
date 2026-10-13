@@ -1,5 +1,28 @@
 # STATUS — session handoff
 
+Producer-matrix probe L3_PASS in real Steam PID12648, DLL54CC148F/source
+dbce0ed: single focused frame2304 calls/351 groups/overflow0. R32F map readback
+and VS c230..240 reads succeeded. IMPORTANT ROLE CORRECTION: runtime mesh latch
+identifies gun5799/arms3314 in PID12648 and18352. Previous notes calling the
+3314 shadow caster "gun" were too strong. Exact first-person VB/IB linkage is
+valid, but the shadow-producing3314 mesh has the arm role;5799 gun scene draws
+are moved1 while3314 scene/caster draws are moved0 in this frame.
+Physical user: initially holster would not toggle; later it did, controller-
+following shadows disappeared, enemy squares persisted, gun was black and
+scene appeared darker. User changed ShowControllerArms/RecenterChord only
+AFTER black gun appeared. Captured map is the first-person arm map, not a
+confirmed active-enemy map. No three-pose capture and no visual fix PASS.
+Guard restored verified DLL9FBA308C and UI5B2EA469. User-modified INI preserved
+and hashed B3FEED43 (ShowControllerArms1/RecenterChord1 plus saved defaults).
+No experiment flags/request remain. New external PauseReturn mode schedules
+one frame after actual SPPause->gameplay log transition, avoiding the holster
+dependency and tab switching for next live-enemy measurement.
+User clarification: captured enemy was dead; squares also appear under live
+moving enemies and sometimes intersect them. Current trace's two audited
+shadow receivers both sample the arm map; no other R32F sample is present.
+Actual producer for enemy-square pixels remains unproven. Next capture live
+enemy before firing, PauseReturn+1second, same validated read-only DLL54CC148F.
+
 Shadow-map content probe L3_PASS for captured resource consumption: SteamPID18352,
 4EADB827,1769calls/370groups/overflow0,receiver exactVS/PS match,512R32F readback
 HRESULT0 with262144finite pixels,range0..~e. Encoded/filter shadow data, not raw
@@ -9,12 +32,12 @@ viewpoint around that shadow, not its position. Square shadows are seen around
 enemies (dynamic casters). Next armed-hand-A/B/VR-holstered controlled traces;
 do not re-enable rejected matrix correction. Accepted3 hashes
 restored/verified DLL9FBA308C/INI61AEC56C/UI5B2EA469 after exit. The later
-PID35192 A frame reidentified the exact foreground weapon VB/IB in native
-512x512 R32F shadow-target draws (3314-vertex gun, 390-vertex companion), also
+PID35192 A frame reidentified an exact foreground first-person VB/IB in native
+512x512 R32F shadow-target draws (3314-vertex mesh, 390-vertex companion), also
 present in PID18352. This is direct caster-path evidence, not artifact causality.
 The no-tab-switch PID27084 sequence captured A/B at 931/919 draws, 0 overflow;
-same gun VB/IB occurs in both native R32F shadow targets. CTAB identifies
-BoneMatrices starting at VS c5; its first rows change with hand pose A/B.
+same first-person VB/IB occurs in both native R32F shadow targets. CTAB identifies
+BoneMatrices starting at VS c5; its first rows differ between hand poses A/B.
 Physical user: enemy squares did not change with hand motion; the gun-associated
 shadow froze after VR holstering. C was not captured because the scheduler's
 40-second STORED timeout elapsed just before the event and the game closed.
@@ -22,7 +45,7 @@ Accepted DLL/INI/UI hashes were separately reverified after guard rollback.
 Next read-only candidate captures CTAB-backed VS c230..240 on native R32F
 producer groups to separate object and projection transforms. L2_PASS:
 dbce0ed x86 PE32 /O2 build SHA54CC148F, parser/trace unit checks and runtime
-policy pass. Real Steam execution of this additional probe is pending; no
+policy pass. Real Steam execution is now recorded above; no
 shadow fix claimed. See map-probe note.
 The first sampled A/B map comes from a separate 6481/4307-vertex dynamic-mesh
 producer also seen in HDR scene draws; its 394x224/395x225 native viewports
