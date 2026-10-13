@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+LATEST PID21056 physical: single frontend menu, matching eyes; background not
+fully rendered. Cinema pause NOT tested. Small FPS dips remain; L2/R2 unrelated
+in this trial. Native gameplay English persists. Four originals D892/AAA/B3FE/
+890C + UI5B/frozen files and all1886 WAV originals restored/independently hashed.
+Next Steam install/launch requires fresh start. Own-wrist defaultOFF experiment
+L1_PASS only: reconstructed no-ride residual49.997/40.844UU; no guessed50cm offset.
+Probe corrected to gameplay-only and actual ride capture. L2/physical pending.
+See docs/no-tmd-wrist-anchor.md. Native audio offline three-bank vertical slice
+42replacements/4too-long retainedEN; not full Polish/runtime/audio acceptance.
+User delegates missing sound generation to SIDE; MAIN retains all Steam writes.
+Older NEXT/LATEST headers below are historical.
+
 LATEST physical PID34980: no FPS dips noticed in this trial. Frontend menu
 duplication after gameplay resolved, but background still differs between eyes;
 cinema pause remains small/doubled. Hands too far from face/controllers (~50cm

@@ -6,7 +6,7 @@ namespace handanchor {
 struct Record {
     std::uint32_t tick=0, frame=0;
     int moved=0;
-    float local[16]{}, controller[2][16]{}, before[2][12]{}, after[2][12]{};
+    float local[16]{}, controller[2][16]{}, ride[16]{}, before[2][12]{}, after[2][12]{};
     float target[2][3]{}, headOffset[3]{}, anchor[3]{};
 };
 class Probe {
@@ -16,7 +16,7 @@ public:
     bool Capture(const Record& r) {
         if(!Due(r.tick))return false;
         const auto finite=[](const float* f,unsigned n){for(unsigned i=0;i<n;++i)if(!std::isfinite(f[i]))return false;return true;};
-        if(!finite(r.local,16)||!finite(r.controller[0],16)||!finite(r.controller[1],16)||
+        if(!finite(r.local,16)||!finite(r.controller[0],16)||!finite(r.controller[1],16)||!finite(r.ride,16)||
            !finite(r.before[0],12)||!finite(r.before[1],12)||!finite(r.after[0],12)||!finite(r.after[1],12)||
            !finite(r.target[0],3)||!finite(r.target[1],3)||!finite(r.headOffset,3)||!finite(r.anchor,3))return false;
         record_=r;last_=r.tick;++count_;pending_=true;return true;

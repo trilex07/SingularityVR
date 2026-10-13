@@ -6,6 +6,7 @@ param([Parameter(Mandatory)][string]$OutputDirectory,
       [switch]$FrontendHandoff,
       [switch]$CinemaMenuPair,
       [switch]$HandAnchorProbe,
+      [switch]$WristAnchor,
       [string]$SteamRoot='C:\Program Files (x86)\Steam')
 # Offline staging only. Does not install, arm diagnostics or launch Steam.
 Set-StrictMode -Version Latest
@@ -46,6 +47,10 @@ if($CinemaMenuPair) {
 if($HandAnchorProbe){
     if($text -cmatch 'HandAnchorProbe'){throw 'Existing hand-anchor key'}
     $insert+=$ending+'HandAnchorProbe=1'
+}
+if($WristAnchor){
+    if($text -cmatch 'NoTmdWristAnchorFix'){throw 'Existing wrist-anchor key'}
+    $insert+=$ending+'NoTmdWristAnchorFix=1'
 }
 $candidateIni=$text.Insert($position,$insert)
 if($candidateIni.Remove($position,$insert.Length) -cne $text){throw 'INI changed outside owned experiment keys'}

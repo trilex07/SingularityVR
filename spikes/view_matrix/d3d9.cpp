@@ -1,6 +1,7 @@
 #include "two_hand_grip.h"
 #include "skeletal_palette.h"
 #include "hand_anchor_probe.h"
+#include "hand_anchor_math.h"
 #include "camera_translation_evidence.h"
 #include "arm_ik.h"
 #include "arm_bind.h"
@@ -5070,6 +5071,7 @@ static LONG g_cutsceneNativeCameraFix = 1; // controlled native-camera experimen
 extern volatile LONG g_vrUiMenu;
 static LONG g_cutsceneMenuPairFix = 0; // exact focused menus; same-source XR crop experiment
 static LONG g_handAnchorProbe = 0;
+static LONG g_noTmdWristAnchorFix = 0;
 static void FlushHandAnchorProbe();
 static bool CutsceneNativeCameraArmed() {
     const bool cinemaPause = CinemaMenuPauseOwnsPresentation(Rd(g_cutsceneMenuPairFix)!=0,
@@ -14099,7 +14101,7 @@ static void FlushHandAnchorProbe() {
     if(!Rd(g_handAnchorProbe)||g_handAnchorThread!=GetCurrentThreadId())return;
     handanchor::Record r;
     if(!g_handAnchorRecords.Take(r))return;
-    Log("hand-anchor sample=%u frame=%u moved=%d targetL=(%.4f,%.4f,%.4f) targetR=(%.4f,%.4f,%.4f) head=(%.4f,%.4f,%.4f) gunAnchor=(%.4f,%.4f,%.4f); raw noTMD constants, not inferred world-joint position",
+    Log("hand-anchor sample=%u frame=%u moved=%d targetL=(%.4f,%.4f,%.4f) targetR=(%.4f,%.4f,%.4f) head=(%.4f,%.4f,%.4f) gunAnchor=(%.4f,%.4f,%.4f); stage=GameplayStereo; raw noTMD constants, not inferred world-joint position",
         g_handAnchorRecords.Count(),r.frame,r.moved,r.target[0][0],r.target[0][1],r.target[0][2],r.target[1][0],r.target[1][1],r.target[1][2],r.headOffset[0],r.headOffset[1],r.headOffset[2],r.anchor[0],r.anchor[1],r.anchor[2]);
     auto matrix=[](const char* name,const float* f,unsigned n){
         char line[512]{};size_t used=0;
@@ -14108,6 +14110,7 @@ static void FlushHandAnchorProbe() {
     };
     matrix("local230",r.local,16);
     matrix("controllerAim",r.controller[0],16);matrix("controllerOff",r.controller[1],16);
+    matrix("cameraRide",r.ride,16);
     matrix("nativeLeft9",r.before[0],12);matrix("nativeRight51",r.before[1],12);
     matrix("posedLeft9",r.after[0],12);matrix("posedRight51",r.after[1],12);
 }
@@ -15295,6 +15298,33 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     float base[4][4]{};
     if(g_thisDrawMoved)memcpy(base,g_thisDrawMoved==2?off:primary,sizeof(base));
     else for(int i=0;i<4;++i)base[i][i]=1.0f;
+    const bool wristAnchor = gloves && Rd(g_noTmdPaletteFix) && Rd(g_gloveIsolate)==2 && !supportGrip && handValid[0] && handValid[1] &&
+        handanchor::GameplaySource(Rd(g_noTmdWristAnchorFix)!=0,Rd(g_inCinematic)!=0,
+            Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo);
+    if(wristAnchor) {
+        // Undo the camera transform actually used by StereoPairBody, not the live controller
+        // surrogate: BuildGunC can differ at a holster/ADS; BuildTmdC has its own anchor/trim.
+        if(g_thisDrawMoved==1)BuildGunC(base);
+        else if(g_thisDrawMoved==2)BuildTmdC(base);
+        static armbind::Mat noTmdBind[90];static bool bindReady=false;
+        if(!bindReady)bindReady=armbind::BuildReference(bindassets::noTmd,90,noTmdBind);
+        const GloveRefBone* r=GloveRefs();
+        const int ws[2]={GloveFindSlot(sectionMap,slots,r,89,"l_arm_wrist"),GloveFindSlot(sectionMap,slots,r,89,"r_arm_wrist")};
+        float targetC[2][4][4];
+        if(!bindReady||ws[0]<0||ws[1]<0)return 0;
+        for(int side=0;side<2;++side) {
+            const bool aim=side==AimHand();
+            armik::V h{(float)Rd(aim?g_handOffX:g_offHandOffX)/kHandFixed,
+                (float)Rd(aim?g_handOffY:g_offHandOffY)/kHandFixed,
+                (float)(g_gunSignPosZ*Rd(aim?g_handOffZ:g_offHandOffZ))/kHandFixed};
+            if(g_gunHeadOffset){h.x+=g_hmdOffset[0];h.y+=g_hmdOffset[1];h.z+=g_hmdOffset[2];}
+            if(!handanchor::TargetWrist(targetC[side],noTmdBind[side?51:9],
+                reinterpret_cast<const float (*)[4]>(&saved[ws[side]*3]),local,aim?primary:off,h))return 0;
+        }
+        memcpy(primary,targetC[AimHand()],sizeof(primary));memcpy(off,targetC[OffHand()],sizeof(off));
+        static LONG saidAnchor=0;
+        if(!InterlockedExchange(&saidAnchor,1))Log("NoTmdWristAnchorFix: reconstructed native wrists -> own tracked targets; actual ride inverse; idle left shift bypassed only here");
+    }
     const float (*leftTarget)[4] = off;
     if (supportGrip) {
         const SupportGripSpec spec = SupportGripFor(supportGunVerts);
@@ -15424,7 +15454,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // Bind-pose left is mesh +X (left wrist +49, right wrist -49). Shift the left
     // wrist subtree and the left shoulder/elbow/forearm so the arm sits further
     // left than the native gun-hold, while the right hand stays on its controller.
-    const float leftShift = (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
+    const float leftShift = wristAnchor ? 0.f : (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
     // Idle shift parks the free left glove off the native gun-hold. During an authored
     // pistol grip that same nudge is what puts the support hand beside the weapon.
     if (leftShift != 0.0f && !authoredPair) {
@@ -15489,7 +15519,8 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     InterlockedIncrement(&g_independentLeftDraws);
     // Fixed-size read-only snapshot, flushed outside native draws in Present.
     // Same-thread only. No new hook/asset read, allocation or diagnostic palette write.
-    if(Rd(g_handAnchorProbe) && correctedNoTmd && !Rd(g_vrUiMenu) &&
+    if(handanchor::GameplaySource(Rd(g_handAnchorProbe)!=0,Rd(g_inCinematic)!=0,
+       Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo) && correctedNoTmd &&
        wristSlot[0]>=0 && wristSlot[1]>=0 && handValid[0] && handValid[1]) {
         const DWORD thread=GetCurrentThreadId();
         if(!g_handAnchorThread)g_handAnchorThread=thread;
@@ -15497,6 +15528,9 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         if(thread==g_handAnchorThread && g_handAnchorRecords.Due(tick)) {
             handanchor::Record r;r.tick=tick;r.frame=(unsigned)Rd(g_sceneModeFrame);r.moved=g_thisDrawMoved;
             memcpy(r.local,local,sizeof(local));memcpy(r.controller[0],primary,sizeof(primary));memcpy(r.controller[1],off,sizeof(off));
+            if(g_thisDrawMoved==1)BuildGunC(reinterpret_cast<float (*)[4]>(r.ride));
+            else if(g_thisDrawMoved==2)BuildTmdC(reinterpret_cast<float (*)[4]>(r.ride));
+            else for(int n=0;n<4;++n)r.ride[n*4+n]=1.f;
             for(int side=0;side<2;++side){memcpy(r.before[side],&saved[wristSlot[side]*3],sizeof(r.before[side]));memcpy(r.after[side],&changed[wristSlot[side]*3],sizeof(r.after[side]));}
             const float offsets[2][3]={{(float)Rd(g_offHandOffX)/kHandFixed,(float)Rd(g_offHandOffY)/kHandFixed,(float)(g_gunSignPosZ*Rd(g_offHandOffZ))/kHandFixed},
                 {(float)Rd(g_handOffX)/kHandFixed,(float)Rd(g_handOffY)/kHandFixed,(float)(g_gunSignPosZ*Rd(g_handOffZ))/kHandFixed}};
@@ -27822,6 +27856,8 @@ void LoadIniSettings() {
     g_cutsceneMenuHandoffFix=GetPrivateProfileIntA("Render","CutsceneMenuHandoffFix",0,path)?1:0;
     g_cutsceneMenuPairFix=GetPrivateProfileIntA("Render","CutsceneMenuPairFix",0,path)?1:0;
     g_handAnchorProbe=GetPrivateProfileIntA("Render","HandAnchorProbe",0,path)?1:0;
+    g_noTmdWristAnchorFix=GetPrivateProfileIntA("Render","NoTmdWristAnchorFix",0,path)?1:0;
+    Log("ini: NoTmdWristAnchorFix=%ld (exact free noTMD wrists, gameplay only; default OFF)",Rd(g_noTmdWristAnchorFix));
     Log("ini: HandAnchorProbe=%ld (eight same-thread read-only samples; default OFF)",Rd(g_handAnchorProbe));
     Log("ini: CutsceneMenuPairFix=%ld (focused frontend/cinema pause only; default OFF)",Rd(g_cutsceneMenuPairFix));
     Log("ini: CutsceneMenuHandoffFix=%ld (focused native frontend only; default OFF)",Rd(g_cutsceneMenuHandoffFix));
