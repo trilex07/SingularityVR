@@ -108,3 +108,12 @@ manifest plus992 WAVs exist. Existing PolishMaybeSpeak is driven by Localize
 text callbacks and PlaySoundW; it does not replace a Bink movie audio track.
 This is a movie-audio integration gap, not evidence the translation pack was
 forgotten. No voice assets changed; old deployment-status prose is historical.
+
+Candidate prepared: source4ba217495cee6d82e9a7ae574050786597836866, normal x86
+PE32/O2 SHA3242DB3167CF0A33476CD565EA5D6A6D70303DD60E532B1D76900C14D98CED4D.
+Placement/mono/scene/pawn regression and runtime-policy tests PASS. DLL-only
+deploy backup20261013-152140, verified restore guard READY, 600s launch window;
+INI C59B1CF6 and UI5B2EA469 unchanged. No helium/Matinee fix claimed from this
+build. Next route: New Game, assess smaller movie, remain in helicopter ~20s
+for new gate/stage logs, close normally. No mid-session chat or unchanged
+baseline visual question; full session evidence collected on exit.

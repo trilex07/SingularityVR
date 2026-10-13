@@ -5,6 +5,10 @@ stale-pawn read rejection logged. Helicopter still BROKEN: CINE ON but no mono
 composition success. Safe D892 baseline restored, INI/UI unchanged.
 Next candidate: requested Bink50% width/height + max20 mono gate/stage HRESULT
 notes only. GPU reproduction falsified surface-type-alone hypothesis.
+L1_PASS placement/mono/scene/pawn tests and runtime policy. L2_PASS source4ba2174,
+x86 PE32 /O2 DLL3242DB3167CF0A33476CD565EA5D6A6D70303DD60E532B1D76900C14D98CED4D.
+Installed DLL-only; verified guard/backup20261013-152140, 600s launch window.
+Helicopter fix NOT claimed; runtime stage diagnosis and video size L4 pending.
 Dubbing audit: installed PL manifests/WAVs and Localize hooks present; movie
 Bink audio redirection absent. Details: docs/CUTSCENE_RESUME_PHYSICAL.md.
 
@@ -15,7 +19,7 @@ baseline DLL D8928180 restored and rehashed; INI C59B1CF6 and UI5B2EA469 unchang
 Small guarded pawn-sample fix L1_PASS; no camera-math/render/input changes.
 L2_PASS: normal x86 PE32 /O2 source f69caf3, DLL4483CF02D86D6EB466CB9A2A924B4401329BD0345544BD5BA2254814E305A921.
 Candidate installed DLL-only, INI/UI retained; verified baseline restore guard,
-600s launch window. L3/L4 crash regression and helicopter test pending.
+600s launch window. Crash regression subsequently passed in PID4672; helicopter remains broken.
 See docs/CUTSCENE_RESUME_PHYSICAL.md. Prior active observer expired before the
 late crash; authoritative native log/dump recovered, no live-coverage claim.
 
