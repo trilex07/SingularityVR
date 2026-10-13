@@ -114,6 +114,9 @@ def main() -> None:
         '- Candidate files are 24 kHz mono PCM16; the QA screen found no technical flags.',
         '- Piper Polish medium was the available local replacement voice; it does not preserve '
         'the original Pocket-TTS/user-reference identities. Acting and voice identity remain pending.',
+        '- Piper exposes no random-seed control in the available API; a fresh generation may differ. '
+        'Keep the exact staged WAVs as the reviewed candidate.',
+        '- The correction map is local-only at `corrections.local.json` and is excluded from Git.',
         '- No source emotion metadata was available for story lines; no performance intent was guessed.', '',
         '## Local files', '',
         '- Replacements: `full_audit/` (`manifest.jsonl`, `qa.json`, WAVs).',

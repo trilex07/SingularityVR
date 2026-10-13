@@ -16,7 +16,9 @@ OUT=ROOT/'audio/polish/repair_candidate_20261013/full_audit'
 VOICE_ROOT=ROOT/'audio/models/piper'
 VOICES={'mc_speech':PiperVoice.load(str(VOICE_ROOT/'pl_PL-mc_speech-medium/pl_PL-mc_speech-medium.onnx')),'darkman':PiperVoice.load(str(VOICE_ROOT/'pl_PL-darkman-medium/pl_PL-darkman-medium.onnx'))}
 CORRECTION_FILE=ROOT/'audio/polish/repair_candidate_20261013/corrections.local.json'
-_corrections=json.loads(CORRECTION_FILE.read_text(encoding='utf-8')) if CORRECTION_FILE.exists() else {}
+if not CORRECTION_FILE.exists():
+ raise SystemExit(f'Missing local correction data: {CORRECTION_FILE}')
+_corrections=json.loads(CORRECTION_FILE.read_text(encoding='utf-8'))
 STORY_CORRECTIONS=_corrections.get('STORY_CORRECTIONS',{})
 UI_CORRECTIONS=_corrections.get('UI_CORRECTIONS',{})
 TOKEN_MAP=_corrections.get('TOKEN_MAP',{})
