@@ -22,6 +22,7 @@
 #include "cutscene_mono.h" // CutsceneFlat mono-to-both-eyes fit math (no D3D)
 #include "cinematic_state_observation.h"
 #include "cinema_exit_profile.h"
+#include "camera_lookup_guard.h"
 #include "video_cinema_placement.h"
 #include "input_remap.h"
 #include "polish_localization.h"
@@ -1677,15 +1678,17 @@ static bool IsLive(uintptr_t obj);
 // less than it did before - a false negative from IsLive costs a periodic re-walk, not the camera.
 // The liveness recheck is throttled: the condition only arises at a transition, so 15 frames is
 // 0.125 s of detection latency against a bounded handful of VirtualQuery calls.
-uintptr_t FindCamera() {
+static uintptr_t FindCameraUnchecked(void*) {
     uintptr_t fallback = 0;
-    if (g_camera && g_camClass && Readable((void*)g_camera, 0x700) &&
-        *reinterpret_cast<uintptr_t*>(g_camera + OBJ_CLASS) == g_camClass) {
+    const uintptr_t cached = g_camera;
+    const uintptr_t cameraClass = g_camClass;
+    if (cached && cameraClass && Readable((void*)cached, 0x700) &&
+        *reinterpret_cast<uintptr_t*>(cached + OBJ_CLASS) == cameraClass) {
         static int liveTick = 0;
-        if ((++liveTick % 15) != 0 || IsLive(g_camera)) return g_camera;
+        if ((++liveTick % 15) != 0 || IsLive(cached)) return cached;
         // Readable and the right class, just not provably live. Re-walk to look for a better
         // instance, but hold this one as the fallback so a false negative cannot blind us.
-        fallback = g_camera;
+        fallback = cached;
     }
     g_camera = 0;
     static ULONGLONG s_gate = 0;
@@ -1726,6 +1729,19 @@ uintptr_t FindCamera() {
     // No live one. Previous behaviour was the first match, so keep that rather than going blind.
     g_camera = first ? first : fallback;
     return g_camera;
+}
+
+uintptr_t FindCamera() {
+    uintptr_t found = 0;
+    if (TryCameraLookup(FindCameraUnchecked, nullptr, &found)) return found;
+    // Retain the established miss/backoff policy. Do not render with the
+    // failed candidate or keep this thread's positive mapping cache alive.
+    g_camera = 0;
+    ReadableForget();
+    static volatile LONG faultNotes = 0;
+    if (InterlockedIncrement(&faultNotes) <= 8)
+        Log("camera lookup: memory fault contained; discarded camera/cache, returning unavailable");
+    return 0;
 }
 
 // ============ ⭐ run 182 stage 1: what OWNS the first-person weapon's transform? ==============
