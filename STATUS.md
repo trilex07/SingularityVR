@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+Main PR preparation: persistent-default release build L2_PASS, regular x86 PE32
+/O2 source1b4e0b6 SHA E9DC831B599734CD3EC6CB8A16C907DE26F7D9EB8CEC29E95A5DD2C104D8116E.
+9 C++ unit executables, Python trace/CPU regressions and default-policy checks
+pass. Same physically accepted algorithms; INI default glue is not a separate
+Steam/PSVR2 runtime claim. No CI workflow configured. User approves/merges PR;
+MAIN does not merge. No installed files changed during PR preparation.
+
 SHADOW FIXES PHYSICALLY_VERIFIED / USER_ACCEPTED: PID39308, DLL5D49C7A5/source
 3488084. User says everything good, shadows finished, requests main PR for
 their approval/merge. World+ClearGate+near1 receiver+input cache ON. Trace1196
