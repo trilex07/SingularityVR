@@ -19,6 +19,7 @@
 #include "recenter_chord.h"
 #include "pose_conversion.h"
 #include "vr_scene_mode.h"
+#include "cutscene_mono.h" // CutsceneFlat mono-to-both-eyes fit math (no D3D)
 #include "input_remap.h"
 #include "polish_localization.h"
 
@@ -4639,6 +4640,8 @@ struct CopySlot {
     bool    stereo = false;              // alternate-eye active for this frame
     bool    dup = false;                 // draw duplication active for this frame
     bool    menuFlat = false;            // native GFx menu: XR bridge crops one half to both eyes
+    bool    cineFlat = false;            // CutsceneFlat mono: composed fit lives in the left half,
+                                         // XR bridge submits that same half crop to both eyes
     int     menuClass = 0;               // 0-4, snapshotted with these pixels
     bool    uiFocus = false;             // g_vrUiMenu at capture, not at a later submit
     XrPosef pose[2]{};                   // where the head was when these pixels were drawn
@@ -4996,6 +4999,116 @@ void MeasureCullBand(const uint8_t* bits, int pitch, UINT w, UINT h) {
 static bool VrXrSubmitMenuFlat(); // defined after g_vrUiMenu / g_vrMenuClass
 static void SnapshotMenuOnSlot(CopySlot& cap);
 
+// CutsceneFlat mono-to-both-eyes composition (fix/cutscene-mono-presentation).
+//
+// The engine draws the cinematic ONCE across the whole SBS backbuffer, but the
+// XR bridge would still submit one half per eye. ComposeCutsceneMonoPair moves
+// the full source image aspect-fit into the LEFT half (pillarboxed, the Bink
+// video proportions) so the bridge can submit that same half crop to both
+// eyes using the validated menu crop coordinates. VideoFlat (Bink) already
+// draws itself per eye and menu frames own their flat path, so neither takes
+// this path. Gated on the existing CutsceneFlatMode switch (ALWAYS VR off).
+extern volatile LONG g_sceneFlatEnabled;
+// Original SetRenderTarget, defined with the render-target hook far below.
+// Declared here so the mono composer can bypass hook bookkeeping exactly
+// like the cinema matte does.
+typedef HRESULT (STDMETHODCALLTYPE *PFN_CutsceneSetRenderTarget)(IDirect3DDevice9*, DWORD, IDirect3DSurface9*);
+extern PFN_CutsceneSetRenderTarget g_origSetRenderTarget;
+
+static CutsceneMonoMode CutsceneMonoCurrentMode() {
+    switch (g_sceneMode.Current()) {
+    case vrscene::Mode::CutsceneFlat: return CutsceneMonoMode::CutsceneFlat;
+    case vrscene::Mode::VideoFlat:    return CutsceneMonoMode::VideoFlat;
+    default:                          return CutsceneMonoMode::Other;
+    }
+}
+
+// Single predicate shared by the composer, the capture stamp and the cinema
+// matte skip, so the three can never disagree about a frame.
+static bool CutsceneMonoComposeArmed() {
+    if (!VrModeOn()) return false;
+    if (!InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0)) return false;
+    const bool menuFlat = MenuSubmitForcesFlat((int)Rd(g_vrMenuClass));
+    return CutsceneMonoShouldCompose(CutsceneMonoCurrentMode(), true, menuFlat, true);
+}
+
+static IDirect3DSurface9* g_cineMonoTemp = nullptr;
+static UINT g_cineMonoTempW = 0, g_cineMonoTempH = 0;
+static bool g_cineMonoReady = false; // set when this Present composed the frame
+static void ReleaseCutsceneMonoResources() {
+    if (g_cineMonoTemp) { g_cineMonoTemp->Release(); g_cineMonoTemp = nullptr; }
+    g_cineMonoTempW = g_cineMonoTempH = 0;
+}
+static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR colour);
+
+// Returns true when the backbuffer now holds the aspect-fit mono image in its
+// left half. Fail-closed: any failure leaves the backbuffer untouched and the
+// frame keeps the previous stereo-submission behaviour.
+static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
+    g_cineMonoReady = false;
+    if (!dev || !CutsceneMonoComposeArmed()) return false;
+    IDirect3DSurface9* back = nullptr;
+    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back)
+        return false;
+    D3DSURFACE_DESC d{};
+    bool ok = SUCCEEDED(back->GetDesc(&d)) && d.Width >= 8 && d.Height >= 8;
+    // The bridge crop uses the capture dimensions; composing against anything
+    // else would misalign the submitted half.
+    if (ok && (d.Width != g_srcW || d.Height != g_srcH)) {
+        static LONG saidDim = 0;
+        if (!InterlockedExchange(&saidDim, 1))
+            Log("cutscene-mono: backbuffer %ux%u != capture %ux%u - mono pair OFF this frame",
+                d.Width, d.Height, g_srcW, g_srcH);
+        ok = false;
+    }
+    const int bw = (int)d.Width, bh = (int)d.Height;
+    const CutsceneMonoFit fit = ok ? CutsceneMonoComputeFit(bw, bh, 0, bw / 2, bh)
+                                   : CutsceneMonoFit{};
+    if (!fit.valid) { back->Release(); return false; }
+    if (!g_cineMonoTemp || g_cineMonoTempW != (UINT)bw || g_cineMonoTempH != (UINT)bh) {
+        ReleaseCutsceneMonoResources();
+        if (FAILED(dev->CreateOffscreenPlainSurface(bw, bh, d.Format, D3DPOOL_DEFAULT,
+                                                    &g_cineMonoTemp, nullptr)) ||
+            !g_cineMonoTemp) {
+            back->Release();
+            return false;
+        }
+        g_cineMonoTempW = (UINT)bw;
+        g_cineMonoTempH = (UINT)bh;
+    }
+    const RECT full{ 0, 0, bw, bh };
+    HRESULT hr = dev->StretchRect(back, &full, g_cineMonoTemp, &full, D3DTEXF_NONE);
+    IDirect3DSurface9* old = nullptr;
+    IDirect3DSurface9* depth = nullptr;
+    if (SUCCEEDED(hr)) {
+        dev->GetRenderTarget(0, &old);
+        dev->GetDepthStencilSurface(&depth);
+        dev->SetDepthStencilSurface(nullptr);
+        if (g_origSetRenderTarget) g_origSetRenderTarget(dev, 0, back);
+        if (fit.barCount) {
+            D3DRECT bars[4];
+            for (int i = 0; i < fit.barCount; ++i)
+                bars[i] = { fit.bars[i].left, fit.bars[i].top,
+                            fit.bars[i].right, fit.bars[i].bottom };
+            ClearRects(dev, bars, fit.barCount, D3DCOLOR_XRGB(0, 0, 0));
+        }
+        const RECT dst{ fit.image.left, fit.image.top, fit.image.right, fit.image.bottom };
+        hr = dev->StretchRect(g_cineMonoTemp, &full, back, &dst, D3DTEXF_LINEAR);
+        if (g_origSetRenderTarget && old) g_origSetRenderTarget(dev, 0, old);
+        dev->SetDepthStencilSurface(depth);
+    }
+    if (old) old->Release();
+    if (depth) depth->Release();
+    back->Release();
+    if (FAILED(hr)) return false;
+    g_cineMonoReady = true;
+    static LONG saidMono = 0;
+    if (!InterlockedExchange(&saidMono, 1))
+        Log("cutscene-mono: composed %dx%d -> left-half fit (%d,%d)-(%d,%d), both eyes share it",
+            bw, bh, fit.image.left, fit.image.top, fit.image.right, fit.image.bottom);
+    return true;
+}
+
 // Stamp the slot with the state its pixels were drawn under. Everything the submission needs is
 // captured at the moment of capture, so a frame consumed later cannot be submitted with a pose or
 // a projection it was never rendered from. Shared by both the CPU and zero-copy paths - the two
@@ -5005,6 +5118,14 @@ void StampCaptureState(CopySlot& cap) {
     cap.dup    = InterlockedCompareExchange(&g_dupDraws, 0, 0) != 0;
     SnapshotMenuOnSlot(cap);
     if (cap.menuFlat) {
+        cap.stereo = false;
+        cap.dup = true;
+    }
+    // Mono submission only for a frame this Present actually composed. A failed
+    // composition keeps stereo stamping, so the bridge cannot submit an
+    // uncomposed half crop to both eyes.
+    cap.cineFlat = g_cineMonoReady && CutsceneMonoComposeArmed() && !cap.menuFlat;
+    if (cap.cineFlat) {
         cap.stereo = false;
         cap.dup = true;
     }
@@ -5044,6 +5165,10 @@ static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffe
 static volatile LONG g_pauseCaptureRequested = 0;
 const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::d3d9_to_d3d11_copy);
+    // CutsceneFlat mono composition runs before every overlay and before either
+    // capture path, so the composed half is what both paths submit. Fail-closed:
+    // on failure the frame keeps the previous behaviour and stamps stereo.
+    ComposeCutsceneMonoPair(dev);
     // ⭐ run 217: defined further down, next to the transforms it reuses - see DrawLaserSight.
     // The last thing added to the frame before it is handed to XR. Here rather than at a draw
     // hook because this is the one point that is provably AFTER the scene and BEFORE the copy, on both
@@ -11000,7 +11125,13 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     DiagPhaseAdd(DP_BRIDGE, diagBridge);
 
     const bool cropEyes = frame && frame->dup && !frame->stereo && frame->menuFlat && g_srcW >= 2;
-    g_scCropped = cropEyes;
+    // CutsceneFlat mono pair: the composed aspect-fit image lives in the left
+    // half (validated composition coordinates, not a blind half reuse). Both
+    // eyes share that same half crop; never one half per eye.
+    const bool cineCrop = frame && frame->cineFlat && frame->dup && !frame->stereo &&
+                          !frame->menuFlat && g_srcW >= 2;
+    const bool monoCrop = cropEyes || cineCrop;
+    g_scCropped = monoCrop;
     if (frame) {
         PauseMenuDiagNoteSubmit(frame->dup, frame->stereo, frame->menuFlat, cropEyes, g_srcW,
                                 g_srcH, (int)Rd(g_vrMenuClass));
@@ -11035,7 +11166,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             g_nis.rt.failedOnce = true; nisFrame = false;
         }
     }
-    const UINT wantW = nisFrame ? nisOutW : (cropEyes ? g_srcW / 2 : g_srcW);
+    const UINT wantW = nisFrame ? nisOutW : (monoCrop ? g_srcW / 2 : g_srcW);
     const UINT wantH = nisFrame ? nisOutH : g_srcH;
     if (frame && EnsureSwapchain(wantW, wantH)) {
         hotpath::scope xrImageScope(g_hotPathSampler, hotpath::Family::xr_image_work);
@@ -11082,10 +11213,18 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                     }
                 }
                 if (!nisDone && g_frameSrc11) {
-                    if (cropEyes) {
+                    if (monoCrop) {
                         const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
-                        const UINT left = swap ? g_srcW / 2 : 0;
+                        // Menus follow the eye-swap half; the composed cutscene
+                        // image always lives in the left half by construction.
+                        const UINT left = cineCrop ? 0 : (swap ? g_srcW / 2 : 0);
                         const D3D11_BOX box{ left, 0, 0, left + g_scWidth, g_scHeight, 1 };
+                        if (cineCrop) {
+                            static LONG saidCineBridge = 0;
+                            if (!InterlockedExchange(&saidCineBridge, 1))
+                                Log("cutscene-mono: XR bridge submits one identical full-image crop"
+                                    " to both eyes (%ux%u at x=%u)", g_scWidth, g_scHeight, left);
+                        }
                         g_ctx11->CopySubresourceRegion(g_scImages[0][idx], 0, 0, 0, 0, g_frameSrc11, 0, &box);
                     } else g_ctx11->CopyResource(g_scImages[filled][idx], g_frameSrc11);
                 }
@@ -11098,7 +11237,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 if (!stereo) { g_renderPose[0] = frame->pose[0]; g_renderPose[1] = frame->pose[1]; }
 
                 bool rightReady = true;
-                if (cropEyes) {
+                if (monoCrop) {
                     uint32_t rightIndex = 0;
                     const int64_t ta = g_diagEnabled ? DiagQpc() : 0;
                     const XrResult ar = xrAcquireSwapchainImage(g_swapchain[1], &ai, &rightIndex);
@@ -11115,9 +11254,10 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                                 g_ctx11->CopyResource(g_scImages[1][rightIndex],
                                     g_nis.rt.outTex[swap ? 0 : 1]);
                             } else if (g_frameSrc11) {
-                                const UINT left = frame->menuFlat
-                                    ? (swap ? g_srcW / 2 : 0)
-                                    : (swap ? 0 : g_srcW / 2);
+                                const UINT left = frame->cineFlat
+                                    ? 0
+                                    : (frame->menuFlat ? (swap ? g_srcW / 2 : 0)
+                                                       : (swap ? 0 : g_srcW / 2));
                                 if (frame->menuFlat) {
                                     static LONG reportedMenuBridge = 0;
                                     if (InterlockedCompareExchange(&reportedMenuBridge, 1, 0) == 0)
@@ -11155,12 +11295,12 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 // came from lets it reproject correctly instead of mismatching the two eyes.
                 const bool dupNow = frame->dup;
                 for (int i = 0; i < 2; ++i) {
-                    const int src = (stereo || cropEyes) ? i : 0;
+                    const int src = (stereo || monoCrop) ? i : 0;
                     projViews[i] = { XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW };
                     projViews[i].pose = frame->pose[i];
                     projViews[i].fov  = frame->useDerived ? frame->derived : frame->fov[i];
                     projViews[i].subImage.swapchain = g_swapchain[src];
-                    if (dupNow && !cropEyes) {
+                    if (dupNow && !monoCrop) {
                         // Both eyes live in one image, side by side. Hand each eye its half by
                         // rect - no extra copy, and both were drawn in the same instant.
                         const int32_t halfW = (int32_t)g_scWidth / 2;
@@ -11184,7 +11324,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                     layer.views = projViews;
                     layers[0] = reinterpret_cast<const XrCompositionLayerBaseHeader*>(&layer);
                     layerCount = 1;
-                    NoteMenuLayerSubmitted(frame, cropEyes);
+                    NoteMenuLayerSubmitted(frame, monoCrop);
                     if (++g_framesSubmitted == 1) Log("*** FIRST FRAME SUBMITTED TO THE HEADSET ***");
                 }
             } else {
@@ -23682,6 +23822,10 @@ static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
     if (!dev || !VrModeOn() || !InterlockedCompareExchange(&g_dupDraws, 0, 0) ||
         !InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) ||
         !InterlockedCompareExchange(&g_sceneCinemaMask, 0, 0) || !g_sceneMode.Flat()) return;
+    // A composed mono frame already carries its own letterbox bars; the matte
+    // would clear over the composed image. It still applies to uncomposed flat
+    // frames (composition failed or VideoFlat self-handled path).
+    if (CutsceneMonoComposeArmed()) return;
 
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
@@ -26590,6 +26734,7 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDevice(IDirect3DDevice9* dev, D3DPRESENT_PAR
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     ReleaseWristResources();
+    ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
     ReleaseVfxHost(); // drawer VB + atlas are device-bound; rebuilt lazily
     return g_origResetDevice(dev,pp);
 }
@@ -26597,6 +26742,7 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDeviceEx(IDirect3DDevice9Ex* dev, D3DPRESENT
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     ReleaseWristResources();
+    ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
     ReleaseVfxHost(); // drawer VB + atlas are device-bound; rebuilt lazily
     return g_origResetDeviceEx(dev,pp,dm);
 }
