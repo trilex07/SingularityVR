@@ -59,3 +59,51 @@ integration, and must not automatically deploy the old 42 entries as faithful.
 Repeated `_a`/`_b` entries require their own property/budget verification even
 when they share a selected waveform. The candidate does not fix mixer balance,
 Bink streams, or native cues outside this bounded inventory.
+
+## October 14 — review-only follow-up
+
+User reports English radio just after the crash. Read-only native inventory finds
+17 `VI1_*` dialogue/radio identities in `SP_VI2_kismet01_LOC_INT`; all17 have
+existing local pack entries/audio. Fourteen are represented by the original
+SIDE29 candidate, while three are in the earlier text-reviewed vertical slice.
+No genuinely absent native radio text was identified in that decoded bank.
+This is coverage evidence, not proof which event/package played in the session;
+MAIN still needs runtime identity evidence and integration.
+
+The original SIDE29 remains immutable. A separate follow-up has eight distinct
+selected takes from the nine review targets, with mono PCM16/24k/hash/timing
+PASS; four pass the conservative final-fit ASR screen and four remain REVIEW.
+Nimitz/name and callsign pronunciation still require listening. The ninth,
+reload, is excluded: guarded full-word and shorter takes require tempo above
+2.13, violating the1.85 limit. No gate is relaxed to include it.
+
+The existing intro-reference generator's explicit100-token/four-EOS-frame
+settings were reused, rather than installing a new model or changing profiles.
+Source and final-fit ASR differ for the right-direction bark: the source is
+recognized correctly, the old silence filter fit is not, and a contiguous PCM
+trim with40ms boundaries is again recognized correctly. That establishes
+boundary/ASR sensitivity, not that every previous line lost words. New selected
+takes use the conservative guard; tests prove interior PCM and faint edge
+samples remain a single contiguous source slice. Excessive durations reject.
+
+`export_native_voice_handoff.py` independently verifies each selected WAV and
+exports `sha256` and `selected_wav_sha256` as its current identity. Historical
+`candidate_wav_sha256`/input hashes remain only in a nested provenance object;
+they must never substitute for the generated/selected file hash. Every native
+binding is checked against original text, property bytes/hash, rate and frame
+budget. Seven synthetic tests and syntax/diff checks pass; all evidence remains
+offline, with no Steam writes/launches or auditory approval.
+
+Private handoff: `deployment/hands-dubbing/native-review-handoff-v2-20261014/`,
+with `selected.json`, `native-bindings.json`, `coverage.json` and explicit
+`native-encoding-gates.json`. Eight selected
+WAVs and raw/fitted ASR are separately retained under
+`deployment/hands-dubbing/native-review-improved-20261014/`. No whole1886-pack
+regeneration, mixer/texture/renderer modification or native playback claim.
+
+Native encoding remains MAIN-owned and unverified by SIDE. MAIN reports an
+old-take Vorbis experiment for `VI1_0107_CP2` with nominal38556frames but
+independent decode38428frames. That does not establish the result for this
+distinct new take, but is an explicit integration gate: decoded rate/channels
+and count must exactly equal the unchanged native property budget. Do not infer
+codec-delay compensation, crop speech or modify original properties to pass.

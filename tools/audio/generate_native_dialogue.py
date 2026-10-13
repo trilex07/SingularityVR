@@ -32,6 +32,8 @@ def main():
     ap.add_argument('--reference-map', type=Path)
     ap.add_argument('--seed', type=int, default=12013)
     ap.add_argument('--temperature', type=float, default=0.45)
+    ap.add_argument('--max-tokens', type=int, default=50)
+    ap.add_argument('--frames-after-eos', type=int)
     args = ap.parse_args()
     os.environ['HF_HUB_OFFLINE'] = '1'
     os.environ['TRANSFORMERS_OFFLINE'] = '1'
@@ -42,6 +44,8 @@ def main():
     from pocket_tts import TTSModel
     torch.set_num_threads(4)
     assert 0 < args.temperature <= 1.0
+    assert 10 <= args.max_tokens <= 200
+    assert args.frames_after_eos is None or 0 <= args.frames_after_eos <= 12
     torch.manual_seed(args.seed)
     rows = json.loads(args.manifest.read_text(encoding='utf-8'))
     reference_map = json.loads(args.reference_map.read_text(encoding='utf-8')) if args.reference_map else {}
@@ -64,7 +68,8 @@ def main():
             raise ValueError('refuse overwrite: ' + str(target))
         spoken = row.get('tts_text', row['text_pl'])
         segments = checked_segments(spoken, row.get('tts_segments'))
-        parts = [model.generate_audio(voices[str(reference)], segment).numpy().reshape(-1)
+        parts = [model.generate_audio(voices[str(reference)], segment,
+                    max_tokens=args.max_tokens, frames_after_eos=args.frames_after_eos).numpy().reshape(-1)
                  for segment in segments]
         audio = np.concatenate([item for index, part in enumerate(parts)
             for item in ([part] if index == len(parts)-1 else
@@ -79,6 +84,7 @@ def main():
         result = dict(row, reference=str(reference), source_reference=row['reference'],
                       generation_seed=args.seed, generation_temperature=args.temperature,
                       generation_segments=len(segments),
+                      generation_max_tokens=args.max_tokens, generation_frames_after_eos=args.frames_after_eos,
                       file=str(target), duration=len(audio)/model.sample_rate,
                       sha256=hashlib.sha256(target.read_bytes()).hexdigest(),
                       reference_sha256=hashlib.sha256(reference.read_bytes()).hexdigest(),
