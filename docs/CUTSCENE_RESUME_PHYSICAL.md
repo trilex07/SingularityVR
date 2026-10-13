@@ -151,3 +151,48 @@ Installed DLL-only with backup20261013-160811; guard45624 READY with600s launch
 window, original INI/UI hashes unchanged. Next physical check: whole matching
 eye image/proportions, NPC face, head direction, hands/FPS and clean return.
 Do not switch to chat during the headset run. Dubbing unchanged in this build.
+
+## PID44632: successful full image, next framing/foreground gate
+
+983BED0A session: composition S_OK and bridge confirms identical full source
+for both eyes. User says image is good overall; still too wide/stretched and
+edges outside comfortable view; tracked glove seen moving at edge. Native
+log verifies no copy errors and ~89-90 FPS late in this cutscene. Guard restored
+D892 and MAIN rehashed DLL/INI/UI. This is acceptance of full-image mono copy,
+not final aspect/framing/foreground acceptance.
+
+Source mechanism: ApplyVrFov still derives HALF-width tanX when g_dupDraws ON;
+SetVSConst forces it even though StereoPairBody's CutsceneFlat gate executes
+one original draw over FULL width. Pure projection test proves same geometry
+has 2x horizontal pixel scale. Controlled correction uses full-width tanX only
+for confirmed CutsceneFlat; XR submission keeps eye tanX, all other modes
+unchanged. Falsifier: runtime full-viewport diagnostic executes but the face
+still stretches -> inspect measured incoming/outgoing projection and source
+pixels, not arbitrary width squashing. Fit85% reduces both dimensions equally,
+center and complete source preserved, Bink50% untouched.
+
+Hide only already classified tracked foreground in CutsceneFlat, after mesh
+learning, with scene-target/non-shadow/FgMatchWindow + exact hand section or
+existing gun/ride identity. No world/NPC/shadow/animation/input state changes.
+One success log verifies whether the gate actually suppressed the reported
+glove; no log means next test must not claim that fix executed.
+
+Audio audit: Steam appmanifest language is english (two entries), independent
+of mod PolishLanguage1. Intro file already has Polish narration audio ordinal
+10 / actual track ID0xa, matching SIDE's offline inventory. Native import and
+installed binkw32 exports confirm _BinkSetSoundTrack@8 and _BinkOpen@8; actual
+track selection still unobserved. Do NOT infer it from the language flag, or
+force track10 for all movies (others have9/10/11 tracks and content unclassified).
+Reference for track-ID array semantics: https://www.radgametools.com/bnkhist.htm.
+
+Helicopter dialogue: runtime code only calls WavForEnglish from rewritten
+Localize FString; 40-character gate and exact text lookup. The package/asset
+audio lookup exists but has zero runtime caller outside its definitions; no
+SoundNodeWave playback redirect. Prior session logs4 Polish voice calls before
+CutsceneFlat entry, zero during it (old budget8 not exhausted). These facts
+explain why installing992 WAVs doesn't establish cutscene dubbing. Next build
+observes Bink exports max12 calls each, forwarding original arguments/results
+unchanged, plus max16 cinematic Localize strings/mapping and16 PlaySound
+acceptance notes. SEH-guarded argument snapshots; no BINK struct offsets,
+audio mixing/track override/asset/config mutation. Native audio entry missing
+mapping versus unplayed mapped voice remains to be separated by runtime data.

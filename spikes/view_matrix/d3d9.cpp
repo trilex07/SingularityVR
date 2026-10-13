@@ -82,6 +82,7 @@
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
 #include <d3d9.h>
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
+#include "bink_audio_observation.h"
 #include <d3d11.h>
 #include <dinput.h>
 
@@ -5042,6 +5043,7 @@ static IDirect3DSurface9* g_cineMonoTemp = nullptr;
 static UINT g_cineMonoTempW = 0, g_cineMonoTempH = 0;
 static D3DFORMAT g_cineMonoTempFmt = D3DFMT_UNKNOWN;
 static bool g_cineMonoFault = false;
+static LONG g_cutsceneCinemaScalePct = 85; // smaller complete image; Bink stays at accepted 50%
 static bool g_cineMonoReady = false; // set when this Present composed the frame
 // Bounded transition/error evidence. No per-draw work, new hooks, queries,
 // allocations or pixel readbacks. The existing silent returns hid the reason
@@ -5104,7 +5106,7 @@ static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
         ok = false;
     }
     const int bw = (int)d.Width, bh = (int)d.Height;
-    const CutsceneMonoFit fit = ok ? CutsceneMonoComputeFit(bw, bh, 0, bw / 2, bh)
+    const CutsceneMonoFit fit = ok ? CutsceneMonoComputeFit(bw, bh, 0, bw / 2, bh, (int)Rd(g_cutsceneCinemaScalePct))
                                    : CutsceneMonoFit{};
     if (!fit.valid) { CutsceneMonoNote("desc-or-fit", FAILED(descHr)?descHr:E_INVALIDARG); back->Release(); return false; }
     if (!g_cineMonoTemp || g_cineMonoTempW != (UINT)bw || g_cineMonoTempH != (UINT)bh || g_cineMonoTempFmt != d.Format) {
@@ -11769,7 +11771,17 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
         if (forceProj) {
             // lockTanX/Y were measured from the arriving matrix by the verify block above, so the
             // two paths cannot disagree about what the engine sent.
-            ApplyProjection(m, c, lockTanX, lockTanY, g_targetTanX, g_targetTanY);
+            const float renderTanX = CutsceneMonoRenderTanX(CutsceneMonoCurrentMode(),
+                Rd(g_sceneFlatEnabled) != 0, dup, g_targetTanX);
+            ApplyProjection(m, c, lockTanX, lockTanY, renderTanX, g_targetTanY);
+            if (renderTanX != g_targetTanX) {
+                static bool saidFullProjection = false;
+                if (!saidFullProjection) {
+                    saidFullProjection = true;
+                    Log("cutscene-mono: full-viewport projection tanX=%g eyeTanX=%g tanY=%g; fit=%ld%%",
+                        renderTanX, g_targetTanX, g_targetTanY, Rd(g_cutsceneCinemaScalePct));
+                }
+            }
             // Measure the RESULT, not just the input. The observed-FOV capture at the top of
             // this function reads the engine's matrix before we touch it, so it reports the
             // engine's drift and says nothing about whether our forcing arithmetic is right.
@@ -16969,6 +16981,21 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                                                      // rewrites the camera slots, so the bones persist
                                                      // across both eye draws
     const int rideTo = isGun ? 1 : RideTargetFor(numVertices);   // ⭐ run 237
+    // The same exact foreground identities already used for controller palettes
+    // and menu hiding. Never suppress world/NPC geometry or shadow generation.
+    const bool trackedCineMesh = isGun || rideTo != 0 ||
+        (IsIndependentHandSection(numVertices, startIndex, primCount) && g_independentHands);
+    if (CutsceneHideTrackedForeground(CutsceneMonoCurrentMode(), Rd(g_sceneFlatEnabled) != 0,
+        VrModeOn(), MenuSubmitForcesFlat((int)Rd(g_vrMenuClass)), Rd(g_rtIsScene) != 0,
+        g_boundShaderLayout.shadow, FgMatchWindow(), trackedCineMesh)) {
+        static bool saidHidden = false;
+        if (!saidHidden) {
+            saidHidden = true;
+            Log("cutscene-mono: suppressed tracked foreground verts=%u first=%u tris=%u; gameplay policy unchanged",
+                numVertices, startIndex, primCount);
+        }
+        return D3D_OK;
+    }
     // Fix-M/menu-station: UseStation/WeaponLocker GFx menus (class 4) keep the world
     // visible behind a window while g_vrUiMenu=1. The latched FP gun/arms have no
     // business rendering over that menu: at the engine camera they read as a
@@ -20886,6 +20913,56 @@ static ExecLocalizeFn g_origLocalize = nullptr;
 static char g_polishAudioDir[MAX_PATH]{};
 static char g_polishStoryAudioDir[MAX_PATH]{};
 
+// Actual Steam imports/installed exports are _BinkSetSoundTrack@8/_BinkOpen@8.
+// Observe only: preserve arguments, return value, thread and native playback.
+// The @8 ABI and two-argument entry points are verified, no BINK struct offsets.
+using BinkSetSoundTrackFn = void (WINAPI*)(DWORD, const DWORD*);
+using BinkOpenFn = void* (WINAPI*)(const char*, DWORD);
+static BinkSetSoundTrackFn g_binkSoundNative = nullptr;
+static BinkOpenFn g_binkOpenNative = nullptr;
+static LONG g_binkTrackNotes = 0, g_binkOpenNotes = 0;
+static void WINAPI ObserveBinkSoundTrack(DWORD count, const DWORD* tracks) {
+    const DWORD incomingError=GetLastError();
+    if (InterlockedIncrement(&g_binkTrackNotes)<=12) {
+        DWORD ids[8]{};
+        const bool read = BinkObserveTracks(count, tracks, ids);
+        Log("bink-audio: native track selection count=%lu readable=%d ids=%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu (unchanged)",
+            (unsigned long)count, read?1:0, (unsigned long)ids[0], (unsigned long)ids[1],
+            (unsigned long)ids[2], (unsigned long)ids[3], (unsigned long)ids[4],
+            (unsigned long)ids[5], (unsigned long)ids[6], (unsigned long)ids[7]);
+    }
+    SetLastError(incomingError);
+    g_binkSoundNative(count, tracks);
+}
+static void* WINAPI ObserveBinkOpen(const char* filename, DWORD flags) {
+    const DWORD incomingError=GetLastError();
+    // Read before the call; source may be a file handle with BINKFILEHANDLE.
+    const bool note=InterlockedIncrement(&g_binkOpenNotes)<=12;
+    char name[256]{};
+    const bool readable=note && BinkObserveName(filename, name);
+    SetLastError(incomingError);
+    void* result=g_binkOpenNative(filename, flags);
+    const DWORD nativeError=GetLastError();
+    if(note) Log("bink-audio: opened name=%s flags=0x%08lX handle=%p (unchanged)",
+        readable?name:"<not a readable filename>", (unsigned long)flags, result);
+    SetLastError(nativeError);
+    return result;
+}
+static void InstallBinkAudioObservation() {
+    static bool attempted=false;
+    if(attempted || !PolishLocalization::PL().IsPolishEnabled())return;
+    HMODULE module=GetModuleHandleA("binkw32.dll");
+    if(!module)return;
+    attempted=true;
+    void* sound=reinterpret_cast<void*>(GetProcAddress(module,"_BinkSetSoundTrack@8"));
+    void* open=reinterpret_cast<void*>(GetProcAddress(module,"_BinkOpen@8"));
+    const MH_STATUS a=sound?MH_CreateHook(sound,(void*)ObserveBinkSoundTrack,(void**)&g_binkSoundNative):MH_ERROR_NOT_EXECUTABLE;
+    const MH_STATUS b=open?MH_CreateHook(open,(void*)ObserveBinkOpen,(void**)&g_binkOpenNative):MH_ERROR_NOT_EXECUTABLE;
+    const MH_STATUS ea=a==MH_OK?MH_EnableHook(sound):a;
+    const MH_STATUS eb=b==MH_OK?MH_EnableHook(open):b;
+    Log("bink-audio: read-only exports observation sound=%d open=%d max12 each; no track override", (int)ea,(int)eb);
+}
+
 static void PolishMaybeSpeak(const char* english, const wchar_t* shown, int chars) {
     if (chars < 40 || !g_polishAudioDir[0] || !english || !shown) return;
     char file[160]{};
@@ -20911,9 +20988,9 @@ static void PolishMaybeSpeak(const char* english, const wchar_t* shown, int char
             GetProcAddress(winmm, "PlaySoundW"));
     }
     if (!play) return;
-    play(path, nullptr, 0x00020001); // SND_FILENAME | SND_ASYNC
+    const BOOL accepted=play(path, nullptr, 0x00020001); // SND_FILENAME | SND_ASYNC
     static int said = 0;
-    if (said < 8) { ++said; Log("polish voice: %s", file); }
+    if (said < 16) { ++said; Log("polish voice: %s accepted=%d chars=%d cine=%ld", file, (int)accepted, chars, Rd(g_inCinematic)); }
 }
 
 static uintptr_t g_fstringAssign = 0;
@@ -20942,7 +21019,11 @@ static void PolishRewriteFString(void* result) {
         ++seen;
         Log("polish localize saw: \"%s\"", en);
     }
-    if (!PolishLocalization::PL().PolishForEnglish(en, pl, sizeof(pl))) return;
+    const bool mapped=PolishLocalization::PL().PolishForEnglish(en, pl, sizeof(pl));
+    static LONG cineTextNotes=0;
+    if (Rd(g_inCinematic) && InterlockedIncrement(&cineTextNotes)<=16)
+        Log("polish cine text: mapped=%d chars=%d english=\"%s\"", mapped?1:0,num-1,en);
+    if (!mapped) return;
     wchar_t wide[480]{};
     const int wn = MultiByteToWideChar(CP_UTF8, 0, pl, -1, wide, 480);
     if (wn <= 1) return;
@@ -23948,6 +24029,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // any matte/overlay is emitted, so presentation policy and diagnostics use
     // the same frame boundary.
     UpdateSceneModeFrame();
+    InstallBinkAudioObservation(); // bounded exported-API observation, no audio mutation
     // VFX host: frame serial for once-per-eye draws + effect aging. Render
     // thread owns all plugin calls (game thread only fills the fire mailbox).
     InterlockedIncrement(&g_vfxFrame);
@@ -27026,6 +27108,8 @@ void LoadIniSettings() {
                         GetPrivateProfileIntA("Render", "VideoStereo", 1, path) ? 1 : 0);
     InterlockedExchange(&g_videoCinemaScalePct,
         ClampVideoCinemaScale(GetPrivateProfileIntA("Render", "VideoCinemaScalePct", 50, path)));
+    g_cutsceneCinemaScalePct = ClampVideoCinemaScale(
+        GetPrivateProfileIntA("Render", "CutsceneCinemaScalePct", 85, path));
     Log("ini: VideoStereo=%ld (%s)", InterlockedCompareExchange(&g_videoStereo, 0, 0),
         InterlockedCompareExchange(&g_videoStereo, 0, 0)
             ? "Bink video drawn once per eye"

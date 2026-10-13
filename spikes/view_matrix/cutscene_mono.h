@@ -20,7 +20,8 @@ struct CutsceneMonoFit {
 };
 
 inline CutsceneMonoFit CutsceneMonoComputeFit(int srcW, int srcH,
-                                              int halfX, int halfW, int dstH) {
+                                              int halfX, int halfW, int dstH,
+                                              int scalePct = 100) {
     CutsceneMonoFit out;
     if (srcW <= 0 || srcH <= 0 || halfW <= 0 || dstH <= 0 || halfX < 0)
         return out;
@@ -29,6 +30,9 @@ inline CutsceneMonoFit CutsceneMonoComputeFit(int srcW, int srcH,
     const double scaleH = (double)dstH / (double)srcH;
     if (scaleH < scale) scale = scaleH;
     if (scale > 1.0) scale = 1.0;
+    if (scalePct < 10) scalePct = 10;
+    if (scalePct > 100) scalePct = 100;
+    scale *= scalePct * 0.01;
     if (scale <= 0.0) return out;
     const int dw = (int)(srcW * scale);
     const int dh = (int)(srcH * scale);
@@ -75,4 +79,21 @@ inline bool CutsceneMonoShouldCompose(CutsceneMonoMode mode, bool flatEnabled,
     // VideoFlat (Bink) already draws itself per eye via DrawVideoQuadPerEye;
     // composing it again would stack the two paths and double/crop the video.
     return mode == CutsceneMonoMode::CutsceneFlat;
+}
+
+// ApplyVrFov computes a HALF-width eye projection while duplication is ON.
+// CutsceneFlat executes one draw over the FULL-width source. Match that actual
+// viewport or a square projects twice as wide. Submission retains eye tangents:
+// the full mono source is subsequently fitted into one half for both eyes.
+inline float CutsceneMonoRenderTanX(CutsceneMonoMode mode, bool flatEnabled,
+                                    bool duplicated, float eyeTanX) {
+    return mode == CutsceneMonoMode::CutsceneFlat && flatEnabled && duplicated
+        ? eyeTanX * 2.f : eyeTanX;
+}
+
+inline bool CutsceneHideTrackedForeground(CutsceneMonoMode mode, bool flatEnabled,
+    bool vrOn, bool menuFlat, bool sceneTarget, bool shadow, bool foreground,
+    bool trackedMesh) {
+    return CutsceneMonoShouldCompose(mode, flatEnabled, menuFlat, vrOn) &&
+        sceneTarget && !shadow && foreground && trackedMesh;
 }

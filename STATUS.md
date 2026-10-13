@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+PID44632/DLL983BED0A: full-image mono copy L3_PASS and user reports good image
+overall. Remaining cutscene framing/aspect/foreground polish: too wide,
+edges outside view and tracked glove moves at periphery. Guard restored D892;
+MAIN verified DLL/INI/UI unchanged. New candidate L1_PASS:85% centered fit,
+full-viewport render tangent (actual one-draw viewport versus global half-width
+dup setting), scoped tracked foreground hiding. Bink50%, menus, gameplay,
+shadows/input unchanged. Synthetic GPU pixel/state/MRT rollback and narrow
+regressions PASS. Runtime execution/physical framing and glove result pending.
+Audio diagnosis: English Steam language versus independent PL mod flag; no
+runtime package/asset voice redirect, only Localize exact text/40-char route.
+Polish intro embedded track10 exists. New bounded read-only Bink exports and
+voice-call observations separate selection from missing dialogue entry.
+No audio track/file/config changes. See docs/CUTSCENE_RESUME_PHYSICAL.md.
+
 PID40412/DLL3242DB31: New Game no-crash PASS again; Bink50% size now
 PHYSICALLY_VERIFIED / USER_ACCEPTED. Preserve size and pawn guard. Helicopter
 BROKEN: different stretched eye halves and semi-transparent NPC face. Native

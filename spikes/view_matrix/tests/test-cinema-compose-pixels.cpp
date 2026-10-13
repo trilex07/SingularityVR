@@ -57,7 +57,7 @@ static void Run(UINT w,UINT h){
         D3DSURFACE_DESC targetDesc{};saved->GetDesc(&targetDesc);
         Check(targetDesc.Pool==D3DPOOL_DEFAULT&&(targetDesc.Usage&D3DUSAGE_RENDERTARGET)&&targetDesc.Format==desc.Format,"target type/pool/format contract");
         D3DVIEWPORT9 before{7,13,w/3,h/3,.2f,.9f};dev->SetViewport(&before);dev->SetRenderState(D3DRS_SCISSORTESTENABLE,TRUE);
-        const auto fit=CutsceneMonoComputeFit(w,h,0,w/2,h);
+        const auto fit=CutsceneMonoComputeFit(w,h,0,w/2,h,85);
         D3DCAPS9 caps{};dev->GetDeviceCaps(&caps);
         if(caps.NumSimultaneousRTs>1) {
             Check(SUCCEEDED(dev->CreateRenderTarget(w,h,desc.Format,D3DMULTISAMPLE_NONE,0,FALSE,&aux,nullptr)),"auxiliary MRT created");

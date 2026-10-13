@@ -46,6 +46,39 @@ static void test_degenerate() {
     CHECK(!CutsceneMonoComputeFit(4096, 2160, -1, 2048, 2160).valid);
 }
 
+static void test_smaller_cinema_and_projection() {
+    const auto legacy=CutsceneMonoComputeFit(5264,2684,0,2632,2684);
+    const auto small=CutsceneMonoComputeFit(5264,2684,0,2632,2684,85);
+    CHECK(small.valid && small.barCount==4);
+    const int w=small.image.right-small.image.left, h=small.image.bottom-small.image.top;
+    CHECK(w==2237 && h==1140);
+    CHECK(small.image.left>0 && small.image.right<2632);
+    CHECK(w*2684LL-h*5264LL<2LL*(5264+2684));
+    CHECK(w<legacy.image.right-legacy.image.left);
+    CHECK(CutsceneMonoComputeFit(5264,2684,0,2632,2684,200).image.right==legacy.image.right);
+    using M=CutsceneMonoMode;
+    const float eyeX=1.3f, y=1.32f;
+    const float fullX=CutsceneMonoRenderTanX(M::CutsceneFlat,true,true,eyeX);
+    CHECK(fullX==2.f*eyeX);
+    // Same unit geometry, full viewport twice as wide: corrected tangent cancels
+    // the old 2x horizontal stretch, without changing the submitted eye frustum.
+    CHECK(5264.f/fullX == 2632.f/eyeX);
+    CHECK((5264.f/fullX)/(2684.f/y) < (5264.f/eyeX)/(2684.f/y));
+    CHECK(CutsceneMonoRenderTanX(M::VideoFlat,true,true,eyeX)==eyeX);
+    CHECK(CutsceneMonoRenderTanX(M::Other,true,true,eyeX)==eyeX);
+    CHECK(CutsceneMonoRenderTanX(M::CutsceneFlat,false,true,eyeX)==eyeX);
+    CHECK(CutsceneMonoRenderTanX(M::CutsceneFlat,true,false,eyeX)==eyeX);
+    CHECK(CutsceneHideTrackedForeground(M::CutsceneFlat,true,true,false,true,false,true,true));
+    CHECK(!CutsceneHideTrackedForeground(M::Other,true,true,false,true,false,true,true));
+    CHECK(!CutsceneHideTrackedForeground(M::VideoFlat,true,true,false,true,false,true,true));
+    CHECK(!CutsceneHideTrackedForeground(M::CutsceneFlat,true,true,true,true,false,true,true));
+    CHECK(!CutsceneHideTrackedForeground(M::CutsceneFlat,true,true,false,true,true,true,true));
+    CHECK(!CutsceneHideTrackedForeground(M::CutsceneFlat,true,true,false,false,false,true,true));
+    CHECK(!CutsceneHideTrackedForeground(M::CutsceneFlat,true,true,false,true,false,false,true));
+    CHECK(!CutsceneHideTrackedForeground(M::CutsceneFlat,true,true,false,true,false,true,false));
+    CHECK(!CutsceneHideTrackedForeground(M::CutsceneFlat,false,true,false,true,false,true,true));
+}
+
 static void test_predicate() {
     using M = CutsceneMonoMode;
     CHECK(CutsceneMonoShouldCompose(M::CutsceneFlat, true, false, true));
@@ -76,6 +109,7 @@ int main() {
     test_sbs_fit();
     test_odd_dims();
     test_degenerate();
+    test_smaller_cinema_and_projection();
     test_predicate();
     test_camera_change_gate();
     if (g_failures == 0) { std::printf("PASS: cutscene mono fit + predicate\n"); return 0; }
