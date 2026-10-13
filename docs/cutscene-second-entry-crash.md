@@ -97,3 +97,44 @@ analysis in progress. No unrelated process data or raw trace in commits.
 
 After normal game exit, independent hashes verify safe installed DLL D892,
 user INI B3FEED43...2A079F and UI5B2EA469...673CDE. No game remains running.
+
+## Native trace identifies texture hashing, not the cinema composer
+
+Complete export24,659,702,027bytes, private. Target-only sample/image/Present
+stack selection501,046,124bytes; corrected analyzer understands actual xperf
+one-frame-per-row Stack schema (No., Address, Image!Function), retaining full
+caller frames, excluding ordinals/duplicate frames. Legacy/current synthetic
+schemas and PID filtering PASS. Final target-PID analysis111319samples;
+Present thread30652 has78175samples. Module detail target-weight total111329078,
+texture injector72119764 ->64.78% of target weighted CPU samples, NOT4.39%
+(the latter denominator is all system CPU). CPU sampling is not GPU/off-CPU
+measurement and stack-frame hits must never be summed as inclusive times.
+
+Installed texture injector and SIDE source-built artifact both hash
+AAA07005F4FF658C4A71CC30EA258E469DAF250C77BFE447011FFD650379E4F7,38400bytes.
+Exact installed DLL disassembly locates top sampled RVA0x24E5 in mip0 hash
+byte XOR/multiply loop, seed0xCBF29CE484222325 and prime0x100000001B3;
+RVA0x5670..0x56A0 is the called64-bit multiply. Top IP0x24E5 has25174samples,
+0x5698 has8090; these are actual executed producer instructions, not an
+inference from the module name DirectInput. Our bounded enumeration counter0
+does not measure this separate SetTexture interceptor.
+
+Read-only source audit: texture_injector.cpp HookSetTexture hashes candidate
+mip0 only on cache miss; classification cache512entries, on saturation CacheAdd
+always replaces the FIRST entry without a replacement, not a rotating oldest
+entry. Thus two uncached textures can evict the same slot forever while old
+negative entries occupy the rest. Current installed config enabled1/apply1/
+capture0/2x, all groupsON. Injector log35,231,921bytes contains533291 candidate
+hash lines,655 distinct hashes; top repeated content appears75841times.
+This supports saturated negative-cache churn and excessive hash/log work.
+Resource identity/occupancy are not logged, so don't claim every repeated hash
+is the same COM object or that no other cost exists. Falsifier: bounded cache
+occupancy/miss/eviction/resource probe shows hashing while cache never fills,
+or a preserving cache repair executes but the slow phase remains.
+
+No modifications to installed injector/config/DDSs, SIDE worktree, accepted
+hand/shadow/input systems. Next repair belongs to the separate frozen texture
+injector, not another cinematic matrix/exit guess. Obtain explicit user scope
+for a cache-only repair preserving target hashes, texture quality and asset
+files before editing/deploying it. Mesh stretching remains open; current
+ShowControllerArms1 preserved. User's button-duration effect is unknown.

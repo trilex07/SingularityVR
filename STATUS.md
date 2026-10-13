@@ -1,5 +1,21 @@
 # STATUS — session handoff
 
+CPU ROOT-CAUSE PATH IDENTIFIED (not fixed): PID8804 native trace111319samples.
+~64.78% of target-process weighted CPU samples are texture injector dinput8,
+SHA AAA07005F4FF658C4A71CC30EA258E469DAF250C77BFE447011FFD650379E4F7,
+not our d3d9 cinema compositor/old DirectInput enumeration. Exact top RVA24E5
+is mip0 FNV hashing; RVA5670.. is its 64-bit multiply. Source/live DLL hashes
+match. Injector log35.2MB:533291 candidate-hash lines,655 distinct hashes,
+one texture repeated75841times. Fixed512 cache evicts first nonreplacement
+slot repeatedly -> negative-cache churn is supported mechanism; runtime
+occupancy/resource identities still need a bounded falsifier. No textures,
+injector DLL or its INI changed. This is outside frozen cinema component;
+request explicit scope to repair cache while retaining same DDS assets/lookup.
+Hands stretch remains independent/open; current user INI ShowControllerArms1
+was preserved, not silently changed. Full physical second-New-Game gate pending.
+Game closed; accepted DLL D892/INI B3FE/UI5B exact restore PASS. No new test
+launched. See docs/cutscene-second-entry-crash.md for measured path/limitations.
+
 LATEST Steam PID8804 / camera-guard DLL64353686: OpenXR+cinema/native exit
 confirmed; physical hands/performance still BROKEN. User reports stretched
 hands, slowdown already at catastrophe, trigger influence unknown. Native
