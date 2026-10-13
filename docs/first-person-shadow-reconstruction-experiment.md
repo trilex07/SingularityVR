@@ -43,3 +43,10 @@ zero queries, prerequisite/depth/moved gates, captured near1 eye round trips,
 balanced refs, scoped restoration and failed upload/restore fault latch. Existing
 world scope regression, runtime policy and PowerShell parsers pass. No runtime
 or visual pass for this new scope yet.
+
+L2_PASS: source3488084d46d7a8ad5d8a2a7310a577e92630c461, x86 PE32 /O2
+Performance SHA5D49C7A51EAAD4BC1F22F489D958DFE669A4AEE7B7C28936E053D34ED13F1A2F.
+Manifest matches actual artifact, no tracked edits during build. Added tests
+also cover nested world/near1 scopes and agreement of both-eye rebased light
+coordinates on captured eye matrices. Ready for controlled MAIN runtime gate,
+not physically accepted yet.

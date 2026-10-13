@@ -1,5 +1,11 @@
 # STATUS — session handoff
 
+Near1-only receiver L1/L2_PASS: source3488084/DLL5D49C7A5, x86 PE32 /O2,
+captured-matrix/nested-world-scope/restoration tests and parsers passed. Separate
+default-OFF FirstPerson flag requires existing WorldReceiver+ClearGate ON;
+world kernel and hand/gun transform code untouched. User authorized next
+physical no-tab test; runtime/eye-shadow visual result not yet established.
+
 Combination PHYSICALLY_VERIFIED for gun material/tracking, background-negative
 removal and retained enemy shadows: user's PID17212 result. Remaining BROKEN:
 shadow on gun/glove differs between eyes. Preserve world inverse + ClearGate +
