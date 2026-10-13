@@ -52,3 +52,38 @@ Performance build SHA7A7787EBB2B41CE0B54F94223FFC48A390A6A650FB2CC6E506036D9E3DD
 Build manifest matches the actual DLL; no tracked source edits during build.
 Trace parser regression, runtime-policy checks and flag/restore-guard parsers
 pass. Not deployed or visually verified at this gate.
+
+## Steam and physical result PID37880
+
+MAIN deployed the verified DLL7A7787EB via the runner, input cacheON,
+WorldReceiverON, rejected ReceiverOFF, ClearGateOFF. INI C59B1CF6/UI5B2EA469
+unchanged. Real Steam/OpenXR initialized. One pause-return frame contains1342
+draws/314groups/overflow0. Dynamic6481/4307 producer228/229, viewport6,6,472,342,
+feeds audited world receivers234/235. Final GPU constants reconstruct the caster
+origin with3.05e-5/6.60e-6UU error; both shadowUV~(.399054,.246867). Light-map
+chain still agrees (residual0.000465/0.000446). Later near1 inverse is identical
+in both eyes/native and skipped by the experiment. No restore fault reported.
+This proves scoped constant execution, not per-pixel depth correctness.
+
+Physical user explicitly confirms enemy shadows work and are dynamic. This
+tested-scene result is PHYSICALLY_VERIFIED; general lifecycle/other scenes and
+normal-shadow/stereo acceptance were not separately reported. Black/frozen gun
+and controller-following scene-negative artifacts remain BROKEN (also previously
+seen in accepted build). Do not call the entire shadow/weapon system fixed.
+
+Actual gun5799 VB69D3E700/IB2F58BD20 early depth groups0/1 are moved1. Same exact
+resource late depth297/298 has fgCount101/moved0 and late color301/302 has
+fgCount104/moved0, beyond64 rejection limit. Scene depth clear after1309 does
+not reset the already-open window; earlier shadow-map depth clear opened it.
+This matches the separately measured PID23132 ClearGate mechanism/result.
+
+Next one-variable experiment: retain WorldReceiverON and input cacheON, enable
+only existing ClearGate. Prediction: late gun depth/color movement aligns with
+early depth, scene effects stop being misclassified as foreground, enemy
+reconstruction remains active. Disproof: counts/movement remain inconsistent,
+gun/background remain broken despite aligned movement, or enemy shadows regress.
+Do not expand shader constants into near1/first-person or alter hand transforms.
+
+After PID37880 exit, guard removed both owned flags and restored DLL; MAIN
+independently verified DLL9FBA308C/INI C59B1CF6/UI5B2EA469. Snapshot111315-949,
+runner backup111316. Current installation safe, gloves-only setting retained.

@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+World-only receiver PHYSICALLY_VERIFIED for dynamic enemy shadows in tested
+scene: user reports enemy shadows now work and are dynamic. Steam PID37880,
+DLL7A7787EB/source532cf44, WorldReceiver/input cacheON; ClearGate/rejected
+ReceiverOFF. Final trace1342draws/314groups/overflow0 confirms corrected world
+inverse for both eyes, preserved light chain and untouched near1 tail. Full
+shadow/weapon feature remains BROKEN: black/frozen gun and controller-following
+background-negative remain. Exact gun5799 early moved1, late depth fgCount101
+and color104 moved0; premature foreground window persists. Next controlled
+combination retains working world inverse and enables only existing ClearGate,
+whose mechanism was separately demonstrated. No near1 shader/hand edits.
+Game exited; MAIN verified restored DLL9FBA308C/currentINI C59B1CF6/UI5B2EA469.
+
 Live-enemy probe L3_PASS, physical square observed: Steam PID35208/DLL54CC148F,
 1000 calls/266 groups/overflow0. Dynamic6481/4307 mesh produces the map consumed
 by world receivers186/187. Native light-map chain agrees within0.000114, but
