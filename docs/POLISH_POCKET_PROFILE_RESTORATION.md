@@ -51,9 +51,12 @@ python tools/audio/build_pocket_ab_review.py
 The automated QA covers sample rate, channels, PCM16 format, silence, clipping,
 approximate transcript and duration. ASR flags remain review prompts; they do
 not prove a recording is wrong, nor certify acting or speaker identity. The
-A/B reel pairs each affected profile's prompt reference with every flagged
-candidate and one unflagged example per profile/pack, with previous and new
-recordings adjacent. Perceptual approval still requires actual listening.
+A/B reel pairs each affected profile's **Polish character sample** with every
+flagged candidate and one unflagged example per profile/pack, with previous
+and new recordings adjacent. Russian/Ukrainian WAVs are Pocket-TTS conditioning
+anchors only; they are not Polish listening examples and must never be placed
+at the start of the Polish review reel. Perceptual approval still requires
+actual listening.
 
 ## Current local candidate
 
@@ -66,9 +69,11 @@ passed 171/205 and marked 34 for review; the independent `small` screen passed
 167/205 and marked 38. These are review flags, not a subjective quality grade.
 
 The A/B reel is
-`audio/polish/repair_candidate_20261013/pocket_voice_ab_review_20261013.wav`
-(about 6m22s); its `.md` timeline and `.json` index identify profile references,
-all rows flagged by either ASR model, and one clean example per profile/pack.
+`audio/polish/repair_candidate_20261013/pocket_voice_ab_review_20261013.wav`;
+its opening clips use the already-rendered Polish samples in
+`audio/polish/character_samples_12/`. Its `.md` timeline and `.json` index
+identify these Polish voice samples, all rows flagged by either ASR model, and
+one clean example per profile/pack.
 Per-file profile references and generation settings are recorded in the local
 `full_audit_pocket_selected/manifest.jsonl`.
 

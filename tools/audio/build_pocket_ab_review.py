@@ -1,4 +1,4 @@
-"""Make a local A/B reel: authorized reference, previous repair, Pocket-TTS repair."""
+"""Make a Polish-only A/B reel: Polish voice sample, previous, Pocket-TTS repair."""
 from __future__ import annotations
 
 import argparse
@@ -15,12 +15,15 @@ from scipy.signal import resample_poly
 ROOT = Path(__file__).resolve().parents[2]
 REPAIR = ROOT / "audio/polish/repair_candidate_20261013"
 REFERENCES = {
-    "narrator_user": ROOT / "audio/polish/user_reference/spokoj_reference.wav",
-    "renko_user": ROOT / "audio/polish/user_reference/spokoj_reference.wav",
-    "barisov_dmitri": ROOT / "audio/polish/accent_reference/ru_dmitri_reference.wav",
-    "demichev_ruslan": ROOT / "audio/polish/accent_reference/ru_ruslan_reference.wav",
-    "kathryn_tetiana": ROOT / "audio/polish/accent_reference/uk_tetiana_reference.wav",
-    "devlin_mykyta": ROOT / "audio/polish/accent_reference/uk_mykyta_reference.wav",
+    # These are finished Polish character-sample renders. The Russian and
+    # Ukrainian WAVs used to condition Pocket-TTS are intentionally excluded
+    # from a Polish listening reel: they are not Polish dialogue examples.
+    "narrator_user": ROOT / "audio/polish/character_samples_12/01_renko_neutral.wav",
+    "renko_user": ROOT / "audio/polish/character_samples_12/01_renko_neutral.wav",
+    "barisov_dmitri": ROOT / "audio/polish/character_samples_12/03_barisov_command.wav",
+    "demichev_ruslan": ROOT / "audio/polish/character_samples_12/06_demichev_cold.wav",
+    "kathryn_tetiana": ROOT / "audio/polish/character_samples_12/09_kathryn_scientific.wav",
+    "devlin_mykyta": ROOT / "audio/polish/character_samples_12/11_devlin_restrained.wav",
 }
 FFMPEG = Path(r"C:\Users\Trilex\vr-mods\SingularityVR-polish-integration\tools\ffmpeg\ffmpeg-9.0.2-essentials_build\bin\ffmpeg.exe")
 
@@ -99,7 +102,8 @@ def main() -> None:
         chunks.append(audio)
         cursor += len(audio)
         marks.append({"label": label, "start_s": round(start, 3),
-                      "end_s": round(cursor / 24000, 3), **metadata})
+                      "end_s": round(cursor / 24000, 3),
+                      "source_file": str(path.resolve()), **metadata})
         chunks.append(gap)
         cursor += len(gap)
 
@@ -126,7 +130,7 @@ def main() -> None:
                                    "segments": marks}, ensure_ascii=False, indent=2), encoding="utf-8")
     guide = args.output.with_suffix(".md")
     guide.write_text("# Pocket-TTS dubbing A/B review\n\n"
-                     "Listen to each `PREVIOUS` / `POCKET` pair; profile reference clips are at the start.\n\n"
+                     "All voice samples and dialogue in this reel are Polish. The first clips are existing Polish character samples (not the Russian/Ukrainian conditioning WAVs); listen to each `PREVIOUS` / `POCKET` pair.\n\n"
                      + "\n".join(f"- {m['start_s']:.2f}–{m['end_s']:.2f}s — {m['label']}"
                                   for m in marks) + "\n", encoding="utf-8")
     print(json.dumps({"segments": len(marks), "duration_s": round(cursor / 24000, 2),
