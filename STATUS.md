@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+LATEST PID43712: texture native-cache runtime execution PASS; physical L2/R2
+FPS drop no longer present. Remaining smaller dips + stretched hands OPEN.
+14,145,976 binds,9,909,759 native hits,668,586 legacy hits,950 hashes (late
+plateau),914 stamps,zero failures/evictions. No identical-scene speed ratio
+claim and no explicit physical texture-appearance acceptance. Both original
+DLLs D8928180/AAA07005 restored/hash verified; current INI B3FE/UI5B +107DDS
+unchanged. Game closed. User requires prepare offline then ask `start`; NEVER
+launch/install the next candidate before that reply. Current next work is
+bounded post-cache CPU attribution, not a speculative hand/shadow/quality fix.
+Synthetic native shape scan ~0.055us/call does not explain ms-scale dips;
+no shape-cache intervention. Diagnostic-only injector timing + existing VR
+cinema-exit sampler L1/L2_PASS (x86/O2); candidate remains OFFLINE pending
+explicit start. No post-cache runtime attribution yet. See docs/post-cache-performance.md.
+The pre-test cache status below is historical.
+
 NOW cache-only repair authorized and L1/L2_PASS. Injector sourcef6aeb6b,
 x86 PE32/O2 SHA1BC0F7DD59A46BD7E29DDEC0B17053A3CEA6726C0476A5C0782DC672F6CC3059.
 655resource negative results retain native classification; no pixel/asset,

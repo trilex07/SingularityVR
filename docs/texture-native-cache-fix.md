@@ -72,3 +72,21 @@ hash-verifies both restored DLLs; no DDS/config writes. Previous cinematic
 candidate64353686 is reused unchanged, so the sole runtime intervention versus
 PID8804 is injector cache. Physical availability confirmed by user; main Steam
 deployment/execution is next. No further WPR/UAC requested for this round.
+
+## Actual Steam + physical result
+
+PID43712,2026-10-13: installed hashes matched injector1BC0F7DD and unchanged
+VR64353686. OpenXR/native cinema exit/stereo confirmed. Resource counters end
+at14,145,976 binds,9,909,759 native hits,668,586 legacy hits,950 hashes,
+914 stamps,zero failures/evictions,table36/512. Warm hashes remain950 while
+bind counts grow. Classification cache mechanism L3_PASS. User confirms
+L2/R2 no longer reduce FPS; smaller unrelated/unattributed dips and stretched
+hands remain. This is NOT full performance/cinema/hands acceptance. User has
+not explicitly accepted texture appearance in this reply. Injector log is
+12,276bytes versus prior35.2MB, but sessions differ, not a matched benchmark.
+
+Game exited normally; guardian23272 restored both DLLs; MAIN independently
+verified D8928180/AAA07005 and unchanged INI B3FE/UI5B/107DDS/textureINI/original
+forwarder. Backup20261013-200809 exactly2DLLs/zero directories. PS5 guardian
+array-wrapping bug corrected before successful guard/start, documented in
+commit537def3. Next test must remain offline until user says `start`.

@@ -24,6 +24,7 @@
 #include <string>
 #include "MinHook.h"
 #include "resource_native_cache.h"
+#include "texture_hook_timing.h"
 
 // ---------------------------------------------------------------------------
 // targets: FNV-1a 64 over the compact mip-0 DXT bytes of the original texture
@@ -54,6 +55,8 @@ struct alignas(8) CacheCounters {
     volatile LONG64 stored=0, storeFailed=0, evictions=0, candidateNotes=0;
 };
 static CacheCounters g_cacheCounters;
+static textiming::Profiler g_textureTiming;
+static ULONGLONG g_textureTimingStart=0;
 static bool CandidateNote() {
     return InterlockedIncrement64(&g_cacheCounters.candidateNotes)<=64;
 }
@@ -254,6 +257,16 @@ static void ReportCache() {
         InterlockedCompareExchange64(&g_cacheCounters.stored,0,0),
         InterlockedCompareExchange64(&g_cacheCounters.storeFailed,0,0),occupied,
         InterlockedCompareExchange64(&g_cacheCounters.evictions,0,0));
+    if constexpr(textiming::enabled) {
+        for(unsigned n=0;n<static_cast<unsigned>(textiming::Route::count);++n) {
+            const auto route=static_cast<textiming::Route>(n);
+            const auto sample=g_textureTiming.Read(route);
+            Log("TEXTURE_HOOK_CPU elapsed_ms=%llu route=%s samples=%lld classify_total_us=%.3f forward_total_us=%.3f classify_max_us=%.3f forward_max_us=%.3f; sparse CPU wall times NOT GPU time",
+                (unsigned long long)(GetTickCount64()-g_textureTimingStart),textiming::Name(route),sample.samples,
+                g_textureTiming.Us(sample.classifyTicks),g_textureTiming.Us(sample.forwardTicks),
+                g_textureTiming.Us(sample.maxClassifyTicks),g_textureTiming.Us(sample.maxForwardTicks));
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -497,11 +510,12 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
         return RealSetTexture(dev, stage, tex);
 
     IDirect3DTexture9* t = static_cast<IDirect3DTexture9*>(tex);
+    textiming::Scope timing(g_textureTiming);
     MaybeCapture(t);
     InterlockedIncrement64(&g_cacheCounters.binds);
     if(g_resourceNativeCache && texnative::KnownNative(t)) {
         InterlockedIncrement64(&g_cacheCounters.nativeHits);
-        return RealSetTexture(dev,stage,tex);
+        return timing.Finish(textiming::Route::native_hit,[&]{return RealSetTexture(dev,stage,tex);});
     }
     AcquireSRWLockShared(&g_cacheLock);
     Entry* e = CacheFind(t);
@@ -509,17 +523,20 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
         InterlockedIncrement64(&g_cacheCounters.legacyHits);
         IDirect3DTexture9* repl = e->replacement;
         ReleaseSRWLockShared(&g_cacheLock);
-        return RealSetTexture(dev, stage, repl);
+        return timing.Finish(textiming::Route::positive_hit,[&]{return RealSetTexture(dev,stage,repl);});
     }
     if (e && e->resolved) {
         InterlockedIncrement64(&g_cacheCounters.legacyHits);
-        ReleaseSRWLockShared(&g_cacheLock); return RealSetTexture(dev, stage, tex);
+        ReleaseSRWLockShared(&g_cacheLock);
+        return timing.Finish(textiming::Route::legacy_native,[&]{return RealSetTexture(dev,stage,tex);});
     }
     ReleaseSRWLockShared(&g_cacheLock);
 
     D3DSURFACE_DESC desc;
-    if (FAILED(t->GetLevelDesc(0, &desc)) || !IsCandidate(desc))
-        return RealSetTexture(dev, stage, tex);
+    if (FAILED(t->GetLevelDesc(0, &desc)))
+        return timing.Finish(textiming::Route::descriptor_error,[&]{return RealSetTexture(dev,stage,tex);});
+    if (!IsCandidate(desc))
+        return timing.Finish(textiming::Route::noncandidate,[&]{return RealSetTexture(dev,stage,tex);});
 
     InterlockedIncrement64(&g_cacheCounters.hashes);
     uint64_t hash = 0; bool have = HashLevel0(t, desc, hash);
@@ -539,7 +556,7 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
             InterlockedIncrement64(&g_cacheCounters.stored);
             if(CandidateNote())Log("candidate %ux%u fmt=%d hash=%016llX native resource-cached haveHash=%d",
                 desc.Width,desc.Height,desc.Format,(unsigned long long)hash,have?1:0);
-            return RealSetTexture(dev,stage,tex);
+            return timing.Finish(textiming::Route::hashed_native,[&]{return RealSetTexture(dev,stage,tex);});
         }
         InterlockedIncrement64(&g_cacheCounters.storeFailed);
         // Unsupported/OOM metadata: fall through to the original native
@@ -578,7 +595,8 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
                  (unsigned long long)hash, hit ? hit->name : "(no match)");
     }
 
-    return RealSetTexture(dev, stage, repl ? repl : tex);
+    return timing.Finish(repl?textiming::Route::hashed_positive:textiming::Route::hashed_native,
+        [&]{return RealSetTexture(dev,stage,repl?repl:tex);});
 }
 
 // ---------------------------------------------------------------------------
@@ -611,6 +629,9 @@ extern "C" HRESULT WINAPI DirectInput8Create(HINSTANCE hinst, DWORD version, REF
 // init
 // ---------------------------------------------------------------------------
 static DWORD WINAPI InitThread(LPVOID) {
+    g_textureTimingStart=GetTickCount64();
+    g_textureTiming.Start();
+    Log("TEXTURE_HOOK_CPU diagnostic=%d sparse=1/1024 cap=20000 deadline=300s; rendering/texture policy unchanged",textiming::enabled?1:0);
     // load the real (renamed) dinput8 so DirectInput8Create has somewhere to go
     LoadRealDinput8();
     Log("init: real dinput8 export=%p", RealDI8Create);
@@ -633,6 +654,7 @@ static DWORD WINAPI InitThread(LPVOID) {
     // Existing initialization worker, no extra render/Present hooks. At most
     // 60 aggregate reports over five minutes; no per-bind filesystem work.
     for(unsigned note=0;note<60;++note){Sleep(5000);ReportCache();}
+    g_textureTiming.Stop();
     return 0;
 }
 

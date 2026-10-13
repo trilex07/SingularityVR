@@ -2,7 +2,8 @@
 param([Parameter(Mandatory)][string]$BackupPath,
       [Parameter(Mandatory)][string]$CandidateD3dSha256,
       [Parameter(Mandatory)][string]$CandidateInjectorSha256,
-      [ValidateRange(60,1800)][int]$LaunchWindowSeconds=600)
+      [ValidateRange(60,1800)][int]$LaunchWindowSeconds=600,
+      [switch]$CleanupCinemaExitRequest)
 # MAIN-only two-file lease. No Steam launch/input/kill, INI or DDS mutation.
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
@@ -37,5 +38,17 @@ if(-not $?){throw 'Restore runner failed'}
 foreach($entry in $manifest) {
     $name=[IO.Path]::GetFileName($entry.Path)
     if((Get-FileHash -LiteralPath (Join-Path $gameBin $name)).Hash -ne $entry.Sha256){throw "Restore hash failed: $name"}
+}
+if($CleanupCinemaExitRequest) {
+    # Explicitly owned optional diagnostic lease only, never arbitrary paths.
+    # The game normally consumes this exact payload. Clean a no-launch or
+    # early-exit request only after the installation has safely been restored.
+    $request=Join-Path $env:LOCALAPPDATA 'SingularityVR\hotpath-gameplay.request'
+    if(Test-Path -LiteralPath $request) {
+        if((Get-Content -LiteralPath $request -Raw) -ceq 'SingularityVR cinema exit hotpath v1') {
+            Remove-Item -LiteralPath $request
+            Write-Output 'Owned unconsumed cinema-exit profile request removed'
+        } else {Write-Output 'Different diagnostic request retained; no cleanup authority'}
+    }
 }
 Write-Output 'RESTORED: original d3d9.dll and dinput8.dll hashes verified'
