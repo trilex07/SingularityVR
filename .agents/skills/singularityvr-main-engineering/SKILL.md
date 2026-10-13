@@ -13,10 +13,10 @@ Use this skill when you are **MAIN** on difficult rendering, shadow, pause-menu,
 
 | Skill | When |
 |---|---|
-| [`vr-mod-workflow`](../../vr-mod-workflow/SKILL.md) | Feature gates, regression coverage, smallest reversible change |
-| [`singularityvr-agent-test-bridge`](../../singularityvr-agent-test-bridge/SKILL.md) | L1–L4 evidence labels and deploy boundaries |
-| [`mod-reverse-engineering`](../../mod-reverse-engineering/SKILL.md) | Ghidra/IDA/static RE outside the hot path |
-| [`xr-performance`](../../xr-performance/SKILL.md) | Generic frame-budget thinking after you know *where* time goes |
+| [`vr-mod-workflow`](../vr-mod-workflow/SKILL.md) | Feature gates, regression coverage, smallest reversible change |
+| [`singularityvr-agent-test-bridge`](../singularityvr-agent-test-bridge/SKILL.md) | L1–L4 evidence labels and deploy boundaries |
+| [`mod-reverse-engineering`](../mod-reverse-engineering/SKILL.md) | Ghidra/IDA/static RE outside the hot path |
+| [`xr-performance`](../xr-performance/SKILL.md) | Generic frame-budget thinking after you know *where* time goes |
 
 **Deep dives:** [`references/sol-debugging-case-studies.md`](references/sol-debugging-case-studies.md), [`references/test-and-handoff-playbook.md`](references/test-and-handoff-playbook.md).
 
@@ -96,11 +96,11 @@ Side agents: **never** deploy or launch Steam — [`AGENTS.md`](../../../AGENTS.
 
 MAIN checklist (detail in [`references/test-and-handoff-playbook.md`](references/test-and-handoff-playbook.md) and [`docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`](../../../docs/STEAM_MAIN_DEPLOY_WORKFLOW.md)):
 
-1. Stop `Singularity.exe`; build x86 PE32 `/O2`; record commit + SHA-256 in build manifest.
+1. Confirm `Singularity.exe` has exited; ask the user to close it normally if needed. Do not force-close it merely to deploy. Build x86 PE32 `/O2`; record commit + SHA-256 in build manifest.
 2. Backup via `tools/deploy-singularityvr.ps1`; verify installed DLL hash matches candidate before testing.
 3. Real Steam + OpenXR runtime; bounded logs/captures; preserve user INI/UI when possible.
 4. On critical failure, rollback from timestamped backup and **re-hash installed files**.
-5. Leave working candidates installed until L4 completes unless user requests rollback.
+5. Keep the candidate only within the agreed, bounded test window; do not silently restore while the user is preparing that test. When the window ends, the test finishes, or the user is unavailable/unresponsive, restore the verified safe installation after the game exits. If it is still running, request normal closure and report cleanup pending; never overwrite running files or force-close without explicit authorization. See the playbook's test lease and cleanup rules.
 
 **Headset / desktop lesson:** switching to desktop chat during a multi-step capture can drop focus, freeze the game, or invalidate gates — [`docs/shadow-map-content-probe.md`](../../../docs/shadow-map-content-probe.md). Prepare a full A/B/C script; user stays in PSVR2; collect feedback once afterward (`tools/run-shadow-holster-sequence.ps1` pattern).
 

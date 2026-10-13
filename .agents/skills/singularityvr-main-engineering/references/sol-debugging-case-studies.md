@@ -66,7 +66,7 @@ Evidence levels: **L1** synthetic/unit, **L2** x86 build+SHA, **L3** real Steam/
 **Evidence**
 - Same-session logs: OpenXR sync/actions ~0.18 ms in slow interval; large “our work” residual unassigned — [`docs/shadow-clear-gate-experiment.md`](../../../../docs/shadow-clear-gate-experiment.md).
 - Native callback audit: ~76 ms full DirectInput device discovery; throttling 500 ms / 2000 ms improved FPS partially but is incomplete — [`docs/input-enumeration-cache.md`](../../../../docs/input-enumeration-cache.md).
-- Callback `011D2180` (image-relative; use `.text` + base) compares GUIDs and may create/configure devices — not a poll loop.
+- Callback VA `0x011D2180` compares GUIDs and may create/configure devices — not a poll loop. In the audited image with base `0x00400000`, its RVA is `0x00DD2180`: `VA = image base + RVA`. Do not add the base to the VA again. COFF `.text` offsets are a different coordinate system; resolve them using the section RVA. Historical addresses are evidence, not portable hook targets: re-establish identity and validate the supported bytes before use.
 
 **Successful approach**
 - Event-invalidated cache of up to 64 `DIDEVICEINSTANCEW` records; on hit **replay original callback** on game thread with stored instance — `input_enum_cache.h`.

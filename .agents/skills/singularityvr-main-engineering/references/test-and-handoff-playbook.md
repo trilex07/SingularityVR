@@ -7,12 +7,12 @@ Authoritative policy remains [`AGENTS.md`](../../../../AGENTS.md). This file is 
 ## MAIN pre-deploy
 
 1. **Worktree sanity:** `git worktree list`, correct branch, clean scope (no edits in other agents’ paths).
-2. **Stop game:** `Singularity.exe` not running (`tools/deploy-singularityvr.ps1 -StopGame` when supported).
+2. **Confirm game exited:** if `Singularity.exe` is running, ask the user to close it normally and recheck. Do not automatically use `-StopGame` or terminate a process just to enable deployment; forced termination requires explicit user authorization for that action and an exact verified PID.
 3. **Build:** x86 PE32, `/O2`, OpenXR via `OPENXR_SDK` + `tools/Resolve-OpenXrSdk.ps1`.
 4. **Provenance:** branch, full commit SHA, SHA-256 of `d3d9.dll` in manifest (`d3d9.build.json` or project equivalent).
 5. **Backup:** timestamped DLL + INI (+ UI package if replaced) — [`docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`](../../../../docs/STEAM_MAIN_DEPLOY_WORKFLOW.md).
 6. **Install candidate;** verify **installed** hash equals manifest (not “built elsewhere”).
-7. **Experimental flags:** use checked-in `tools/set-*-experiment.ps1` / INI leases; remove before control tests.
+7. **Experimental flags:** use checked-in `tools/set-*-experiment.ps1` with their bounded leases; remove owned flags before control tests. Persistent accepted INI switches are not leases: removing a flag does not disable a fix whose INI/default remains ON. Declare the actual INI/flag state and follow the accepted-fixes doc for an OFF control.
 
 ---
 
@@ -22,8 +22,32 @@ Authoritative policy remains [`AGENTS.md`](../../../../AGENTS.md). This file is 
 - **One variable** per session when possible (e.g. ClearGate ON vs OFF without also changing receiver scope).
 - **Bounded evidence:** targeted log excerpts, trace files, capture counts — no whole-log exfil, no per-draw spam.
 - **Windowed desktop inspection** does not prove stereo or hand rendering — [`AGENTS.md`](../../../../AGENTS.md).
-- On success: leave candidate installed until L4 or user rollback request.
+- Keep the candidate through the agreed active L4 window; do not silently roll back while the user is preparing it. End-of-test and unattended cleanup follow the rules below, not an indefinite wait for L4.
 - On crash / no session / broken input: rollback, re-hash restored files, document failure.
+
+---
+
+## Test lease and cleanup
+
+Before launch, agree the test window and arm the reviewed restore guard with a
+verified backup, the exact candidate SHA and cleanup switches for this test's
+owned flags/requests. `tools/watch-pause-test-restore.ps1` reports READY; its
+default `LaunchWindowSeconds=600` bounds waiting for a game launch, not the
+duration of a running game. It restores after observed game exit, or after a
+no-launch timeout when the game is not running. It does not force-close a game.
+
+- If the user is unavailable or does not reply before the agreed window ends,
+  remove only this test's owned diagnostic requests/flags and restore the safe
+  installation as soon as the game is confirmed closed. Do not leave an
+  unattended candidate waiting indefinitely for another test window.
+- If the game is still running, do not replace installed files or silently kill
+  it. Request normal closure and report cleanup pending; retain the safe
+  post-exit guard. A timeout or lack of reply does not authorize termination.
+- After the test finishes, restore the declared safe installation and verify
+  actual file hashes. Keeping/promoting a candidate beyond that test requires
+  explicit user direction; L2 counters or a prior L4 build are not acceptance of
+  an untested rebuild. Preserve intentional user INI changes and report which
+  files were restored versus retained.
 
 ---
 
@@ -34,6 +58,7 @@ Give the user **one block**; they stay in headset until finished.
 ```text
 Setup: [branch @ commit], DLL SHA-256 [hash], INI/UI unchanged except [list].
 Baseline: accepted features ON/OFF as listed in docs/accepted-shadow-input-fixes.md (or state deltas).
+Test window: [agreed deadline/duration]; verified restore guard [backup/READY].
 
 A — [action / scene / duration]
 B — [action / scene / duration]
