@@ -36,3 +36,34 @@ No discovery scan in this window, callback replay28/~3.41ms per replay. Residual
 FPS cause still open; sampler intentionally supports one capture per process,
 so no second capture was armed/reset in this session. Later gameplay near90FPS
 and a ~4FPS VideoFlat interval are not an isolated gameplay A/B.
+
+## Controlled Steam trial PID34980 (2026-10-13)
+
+User explicitly authorized start. Four-file candidate installed after closed-game
+preflight and verified backup: VR85CCCB60, injectorD6EFDDAE, INIFB9779DA,
+native audio84B9A419. Loaded DLL paths and OpenXR ready confirmed. Independent
+read-only observer and hidden restore guardian ran; no game-window automation
+or mid-headset chat instruction. Evidence directory (private, not committed):
+deployment/hands-dubbing/frontend-loud-live-20261013-223929.
+
+L3 execution evidence: focused class2 with raw cine=1 is now MenuFlat; cinematic
+composer reports gate-blocked. On final frontend return, class2 submit counters
+are crop=0/half=90 (last89), versus the previous failing crop89/half0. Confirmed
+video still takes VideoFlat priority, and CutsceneFlat returns to GameplayStereo
+at frame12874. Exact noTMD35-slot palette gate executes. These are route/state
+observations, not pixel or physical acceptance; duplicated-menu falsifier still
+requires the user's result.
+
+One bounded profile completed:3600frames/40313ms, cine0, menu165, input
+idle/LT/RT/both=3600/0/0/0. It is predominantly gameplay, NOT a trigger A/B or
+strictly menu-free profile. Sparse native draw forwarding16865samples/~0.238us;
+estimate0.5737ms/frame, inclusive draw1.3266ms/frame. Two native discovery calls
+~21.37ms each and16callback replays~2.55ms each. Do not sum inclusive families or
+infer GPU time. Sampled gameplay perf lines near90FPS do not rule out short dips.
+No second profile armed. Residual performance and hand alignment remain open.
+
+Game exit observed; guardian restored all four originals. MAIN independently
+verified VRD8928180/injectorAAA07005/INIB3FEED43/audio890C6172, frozenUI5B2EA469,
+107DDS, texture config and original forwarder. No pending profile request.
+Full session and post-exit injector logs retained. Physical feedback PENDING;
+no acceptance or automatic next Steam launch inferred.

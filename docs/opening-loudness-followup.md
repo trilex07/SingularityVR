@@ -40,3 +40,10 @@ sampler's one-capture safety guard or reset active scope accounting. Next pure
 gameplay capture needs fresh process and arm after current gameplay qualified;
 no new test until fresh user start. Full native gameplay Polish voice delivery
 is OPEN, not solved by WAV presence or the helicopter package.
+
+2026-10-13 PID34980 follow-up ran the louder package84B9A419 with frontend
+candidate85CCCB60. Steam/OpenXR and exact installed four-file hashes confirmed;
+session completed and all originals independently hash-verified after guarded
+restore. Physical speech balance/quality feedback is still PENDING. No claim
+that all-game Polish dubbing is delivered. See cutscene-frontend-handoff.md for
+runtime presentation and limited profile observations from this session.
