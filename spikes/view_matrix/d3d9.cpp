@@ -20982,8 +20982,12 @@ static void* WINAPI ObserveBinkOpen(const char* filename, DWORD flags) {
         });
     if(result) {g_binkNativeTrackCount=1;g_binkNativeTracks[0]=0;g_binkNativeTracksValid=true;}
     else g_binkNativeTracksValid=false; // require a fresh native selection before another override
-    if(plan.enabled) Log("bink-audio: Polish INTRO track1->10; retained0/2/3; handle=%p post=%s",
-        result,result?"native-default0":"native-selection-rollback");
+    static unsigned introNotes=0;
+    if(plan.enabled && introNotes<8) {
+        ++introNotes;
+        Log("bink-audio: Polish INTRO track1->10; retained0/2/3; handle=%p post=%s",
+            result,result?"native-default0":"native-selection-rollback");
+    }
     if(note) Log("bink-audio: opened name=%s flags=0x%08lX handle=%p (unchanged)",
         readable?name:"<not a readable filename>", (unsigned long)flags, result);
     LeaveCriticalSection(&g_binkAudioLock);
