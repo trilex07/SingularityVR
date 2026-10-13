@@ -6,6 +6,11 @@ param([Parameter(Mandatory)][string]$ManifestPath,
 # MAIN-only four-file lease watcher. No launch, game input or process kill.
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+# A fresh hidden Windows PowerShell process can inherit a restricted module
+# search path from the host. Resolve built-in modules from its own PSHOME;
+# never depend on an interactive shell having imported Get-FileHash first.
+Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Utility') -ErrorAction Stop
+Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Management') -ErrorAction Stop
 $deadline=(Get-Date).AddSeconds($LaunchWindowSeconds)
 $seen=$false;$idleSince=$null
 if(-not (Get-CimInstance Win32_Process -Filter "ProcessId=$PID" -ErrorAction Stop)){throw 'Full process view required'}

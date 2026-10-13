@@ -8,6 +8,8 @@ param(
 # MAIN-only exact four-file test lease. Never launches or stops a game.
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Utility') -ErrorAction Stop
+Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Management') -ErrorAction Stop
 $allowed=@('Binaries\d3d9.dll','Binaries\dinput8.dll','Binaries\SingularityVR.ini',
            'RvGame\CookedPC\SP_VI_intro_Kismet_LOC_INT.xxx')
 $gameRoot=[IO.Path]::GetFullPath((Join-Path $SteamRoot 'steamapps\common\Singularity'))
