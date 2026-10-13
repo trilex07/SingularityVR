@@ -80,6 +80,13 @@ int main(){
  unsigned replaysBefore=(unsigned)NativeGamepadEnumProbe::replayedCallbacks;
  assert(NativeGamepadEnumProbe::Observe()==0 && nativeCalls==9);
  assert((unsigned)NativeGamepadEnumProbe::replayedCallbacks==replaysBefore+2);
+ g_hotPathSampler.configure(true,2);
+ assert(NativeGamepadEnumProbe::Observe()==0 && nativeCalls==9);
+ assert(g_hotPathSampler.read(hotpath::Family::native_gamepad_callback_replay).calls==1);
+ assert(g_hotPathSampler.read(hotpath::Family::native_gamepad_callback_replay).samples==1);
+ assert(g_hotPathSampler.read(hotpath::Family::native_gamepad_enumeration).calls==0);
+ assert((unsigned)NativeGamepadEnumProbe::replayedCallbacks==replaysBefore+4);
+ g_hotPathSampler.stop();
  NativeGamepadEnumProbe::TopologyChanged(nullptr,nullptr,CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL,nullptr,0);
  assert(NativeGamepadEnumProbe::Observe()==0 && nativeCalls==10);
  NativeGamepadEnumProbe::cache.Invalidate();changeDuringScan=true;

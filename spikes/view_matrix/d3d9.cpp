@@ -21,6 +21,7 @@
 #include "vr_scene_mode.h"
 #include "cutscene_mono.h" // CutsceneFlat mono-to-both-eyes fit math (no D3D)
 #include "cinematic_state_observation.h"
+#include "cinema_exit_profile.h"
 #include "video_cinema_placement.h"
 #include "input_remap.h"
 #include "polish_localization.h"
@@ -5883,7 +5884,7 @@ static void ReportHotPathSampler(bool complete=true) {
         const int n = _snprintf_s(report + used, sizeof(report) - used, _TRUNCATE, format, args...);
         if (n > 0) used += static_cast<size_t>(n);
     };
-    append("window=%u frames, timing sample=1/%u calls (native_gamepad_enum=all); frame-token=%llu predicted=%lldns "
+    append("window=%u frames, timing sample=1/%u calls (native_gamepad_enum/replay=all); frame-token=%llu predicted=%lldns "
            "poses[hmd/left/right]=%lld/%lld/%lld input=%lld recenter-gen=%lld palette=%lld; "
            "xr-calls[sync/actions/views/left-space/right-space]=%llu/%llu/%llu/%llu/%llu; ",
            measuredFrames, hotpath::sample_stride,
@@ -5921,9 +5922,13 @@ static void ReportHotPathSampler(bool complete=true) {
 
 // One owned, gameplay-only request per process. Reuse the existing bounded
 // sampler; never reset an active/completed sampler with scopes in flight.
+static cinemaexitprofile::Gate g_cinemaExitProfileGate;
+static ULONGLONG g_cinemaExitProfileStart=0;
+static unsigned g_cinemaExitInputBins[4]{},g_cinemaExitMenuFrames=0,g_cinemaExitCineFrames=0;
 static void PollGameplayHotPath(bool ready) {
     static bool armed=false;
     static DWORD last=0;
+    g_cinemaExitProfileGate.Observe(Rd(g_inCinematic)!=0,g_sceneMode.Current()==vrscene::Mode::CutsceneFlat);
     if(armed || !g_gameplayHotPathAllowed || !ready || g_hotPathSampler.active() || g_hotPathSampler.frame_token()!=0)return;
     const DWORD now=GetTickCount();if(last && now-last<1000)return;last=now;
     char path[MAX_PATH]{};strcpy_s(path,g_logPath);
@@ -5935,11 +5940,45 @@ static void PollGameplayHotPath(bool ready) {
     const bool read=ReadFile(file,payload,sizeof(payload)-1,&size,nullptr)!=0;
     CloseHandle(file);
     static const char expected[]="SingularityVR gameplay hotpath v1";
-    if(!read || size!=sizeof(expected)-1 || memcmp(payload,expected,size)!=0)return;
+    const bool cinemaRequest=read && cinemaexitprofile::IsRequest(payload,size);
+    const bool genericRequest=read && size==sizeof(expected)-1 && memcmp(payload,expected,size)==0;
+    if(!cinemaRequest && !genericRequest)return;
+    if(cinemaRequest && !g_cinemaExitProfileGate.Ready(ready,
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo,Rd(g_inCinematic)!=0,
+        Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0))return;
     if(!DeleteFileA(path))return;
     armed=true;
     g_hotPathSampler.configure(true,3600);
+    if(cinemaRequest) {
+        g_cinemaExitProfileStart=GetTickCount64();
+        Log("CINEMA_EXIT_HOTPATH armed: up to45s/3600 frames after native OFF + GameplayStereo; callbacks and render scopes observed only");
+    }
     Log("GAMEPLAY_HOTPATH armed: 3600 frames, sampled existing hooks; no rendering/input changes");
+}
+
+static void RecordCinemaExitHotPathInputs() {
+    if(g_cinemaExitProfileStart && g_hotPathSampler.active()) {
+        const unsigned pad=(unsigned)Rd(g_padBtns);
+        const unsigned bin=(((pad>>16)&255)>40?1u:0u)|(((pad>>24)&255)>40?2u:0u);
+        ++g_cinemaExitInputBins[bin];
+        if(Rd(g_vrUiMenu))++g_cinemaExitMenuFrames;
+        if(Rd(g_inCinematic))++g_cinemaExitCineFrames;
+    }
+}
+static void FinishCinemaExitHotPath() {
+    if(!g_cinemaExitProfileStart)return;
+    const ULONGLONG now=GetTickCount64();
+    const bool timeout=cinemaexitprofile::Expired(g_cinemaExitProfileStart,now);
+    if(!timeout && g_hotPathSampler.active())return;
+    if(timeout && g_hotPathSampler.active()) {
+        g_hotPathSampler.stop();
+        ReportHotPathSampler(false); // actual completed frames, never a fabricated full-window count
+    }
+    Log("CINEMA_EXIT_HOTPATH finished: elapsed=%llums frames=%u inputFrames[idle/LT/RT/both]=%u/%u/%u/%u menu=%u cine=%u cutoff=%s; inclusive CPU estimates, not GPU time",
+        (unsigned long long)(now-g_cinemaExitProfileStart),g_hotPathSampler.completed_frames(),
+        g_cinemaExitInputBins[0],g_cinemaExitInputBins[1],g_cinemaExitInputBins[2],g_cinemaExitInputBins[3],
+        g_cinemaExitMenuFrames,g_cinemaExitCineFrames,timeout?"time":"frames");
+    g_cinemaExitProfileStart=0;
 }
 #include "pause_vr_settings.h"
 #include "native_ui_input.h"
@@ -26967,9 +27006,11 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         priorPacked = raw;
     }
     frameScope.finish();
+    RecordCinemaExitHotPathInputs();
     if (g_hotPathSampler.advance_frame()) ReportHotPathSampler();
     else if(g_hotPathSampler.active() && g_hotPathSampler.completed_frames()>0 &&
             g_hotPathSampler.completed_frames()%240==0) ReportHotPathSampler(false);
+    FinishCinemaExitHotPath();
     return presentResult;
 }
 

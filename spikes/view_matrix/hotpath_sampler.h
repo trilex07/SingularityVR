@@ -12,6 +12,7 @@ namespace hotpath {
 enum class Family : unsigned {
 	native_input_poll,
 	native_gamepad_enumeration,
+	native_gamepad_callback_replay,
 	draw_hook,
 	menu_classification,
 	foreground_classification,
@@ -96,6 +97,12 @@ public:
 	}
 
 	bool active() const noexcept { return InterlockedCompareExchange(const_cast<volatile LONG*>(&active_), 0, 0) != 0; }
+	// Stop a bounded diagnostic at a frame boundary without resetting records or
+	// invalidating scopes already in flight. Such scopes may finish normally.
+	void stop() noexcept {
+		InterlockedExchange(&active_,0);
+		InterlockedExchange(&armed_,0);
+	}
 	std::uint64_t frame_token() const noexcept {
 		return static_cast<std::uint64_t>(InterlockedCompareExchange64(
 			const_cast<volatile LONG64*>(&frame_token_), 0, 0));
@@ -144,7 +151,7 @@ public:
 		const LONG sequence = InterlockedIncrement(&records_[static_cast<unsigned>(f)].sequence);
 		// Enumeration was measured at ~75ms: time every bounded-window scan,
 		// rather than estimating its whole cost from nine samples.
-		return active() && (f==Family::native_gamepad_enumeration || sequence % static_cast<LONG>(sample_stride) == 0);
+		return active() && (f==Family::native_gamepad_enumeration || f==Family::native_gamepad_callback_replay || sequence % static_cast<LONG>(sample_stride) == 0);
 	}
 	void record_sample(Family f, LONGLONG elapsed) noexcept {
 		auto& r = records_[static_cast<unsigned>(f)];
@@ -216,6 +223,7 @@ inline const char* name(Family f) noexcept {
 	switch (f) {
 	case Family::native_input_poll: return "native_input_poll";
 	case Family::native_gamepad_enumeration: return "native_gamepad_enum";
+	case Family::native_gamepad_callback_replay: return "native_gamepad_replay";
 	case Family::draw_hook: return "draw";
 	case Family::menu_classification: return "menu";
 	case Family::foreground_classification: return "foreground";

@@ -1,5 +1,43 @@
 # MAIN resume: round 3, no mid-session chat
 
+## PID45372 / 7A0EC94D: camera and cinema exit physically passed; CPU/hand gate open
+
+User confirms image OK, head no longer rotates content, actual stereo returns
+after crash/get-up. Reports crash~20FPS, gameplay~40FPS, hands do not track pads
+properly, heldL2 drops~10FPS. Helicopter PL dialogue remains unimplemented.
+Full private evidence `deployment/cinema-native-camera/test-live/session.log`:
+native-camera60% executed; helicopter~90FPS; second cinematic OFF pair at
+15573-15575, GameplayStereo at15587; later pause/resume transitions recorded.
+Controller state stays PlayerWalking while both cinematic ON and OFF: do NOT
+promote that state-name observation into an exit override. Native OFF works.
+
+Some measured native windows6.7FPS/148.98ms; cinema-copy CPU~0.02ms (enqueue
+scope, NOT GPU completion). One-second thread delta during slow phase: Present
+TID30652/77BC about1046.875ms CPU/1005.956ms wall; driver TID38480~140.625ms.
+This gives a render-thread CPU lead, not an exact function/stack diagnosis.
+INPUT_ENUM_SCAN later has native0 with replay4..24: accepted topology cache
+executes. Do not assume discovery again causes L2 stalls. Possible callback
+replay versus draw/state/palette CPU costs require direct measurement.
+
+Guard restored D892 and UI5B rehashed. INI changed only ShowControllerArms0->1
+via VR panel persistence at20544; SHA B3FEED43E7651E86C57B3767359F13C363B2F3BBFE067429E29F81F4CB2A079F.
+Preserve this user change. No claim that INI reverted toC59. No hands/control
+algorithms changed by MAIN. Camera/framing and intro accepted; do not perturb.
+
+Next read-only experiment (user authorizes one more physical test): original
+existing-hook sampler, explicit owned cinema-exit request, requires observed
+CutsceneFlat followed by nativeOFF + GameplayStereo + focused tracked gameplay,
+not initial menu or movie. Bound45s or3600frames; default OFF without request.
+Measure cached callback replay as a SEPARATE family (all calls timed), preserve
+callbacks/results/native-call behavior. Existing draw/state/palette scopes are
+sampled1/32. Report actual measured frames even on timeout; no summing inclusive
+families into a fictitious CPU total. Input LT/RT bins distinguish captured
+presses from assumed choreography; pause/cine contamination counted. No new
+input/render route, shader, game setting, asset or Polish audio change.
+Hypothesis: a measured existing CPU scope accounts for the saturated render
+thread. Falsifier: scopes collectively do not account for it -> actual Windows
+CPU stack capture is next, requiring fresh explicit UAC authority. Do not guess.
+
 ## PID45080 / 8B34C584: intro accepted, cinema gate REOPENED
 
 User confirms Polish intro. Cinema still too large/wide; turning the headset

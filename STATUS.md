@@ -1,5 +1,21 @@
 # STATUS — session handoff
 
+PID45372/7A0EC94D: cinema60% / native-camera head isolation and eventual
+stereo return PHYSICALLY_VERIFIED. Start-of-game perf/hand tracking BROKEN:
+user~20FPS crash/~40gameplay, L2~10, hands not matching pads. Native windows
+6.7FPS; Present CPU saturated in read-only1s sample. Cinema composition CPU
+~0.02ms, not GPU proof. INPUT_ENUM_SCAN native0/replayactive: old discovery
+mechanism not established. Controller PlayerWalking occurs while CINE ON/OFF:
+do not use that name alone for cinema detection. Actual second nativeOFF works.
+Safe D892 and UI5B restored/rehashed. User panel saved ShowControllerArms0->1;
+INI B3FEED43...2A079F preserved, NOT C59. Helicopter PL speech still unimplemented.
+
+Next user-authorized read-only CPU profile: existing sampler + separate cached
+callback replay timing, explicit owned after-cinema request, max45s/3600frames.
+No request ->OFF. No image/control/hand/shader/INI/asset change. L1 in progress.
+Camera/framing and Polish intro preserved. Need measured hot scope before fix;
+Windows stack profiler is available but needs fresh explicit UAC authority.
+
 READY_FOR_PHYSICAL_ACCEPTANCE (not L3/L4): native-camera candidate source
 f83fd71513a7792f639acfbcf7c861dacdabc6d7, regular x86 PE32 /O2 DLL SHA
 7A0EC94D22FDB1E27EFA5CA2469F28D1598126BFC5CF97004084B88AA02C1E65.
