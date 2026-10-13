@@ -68,3 +68,24 @@ shader identity; COM addresses are session-local. Keep both shadow correctionsOF
 
 After exit guard084305 removed input flag/restored DLL9FBA308C. Actual DLL,
 INI61AEC56C and UI5B2EA469 separately verified. No fix claimed.
+
+## No-tab-switch holster protocol
+
+The later PID35192 attempt recorded A (1137 draws/282 groups/overflow0,
+R32F readback HRESULT0) but B stayed pending when switching to the chat caused
+the headset/game to lose the focused, tracked gameplay gate. The player reported
+the game freezing on tab switches. It closed, the automatic guard restored the
+accepted DLL, and MAIN rechecked the DLL/INI/UI hashes before removing the one
+owned pending trace request. Do not ask for replies between captures again.
+
+`tools/run-shadow-holster-sequence.ps1` schedules three one-frame requests
+externally; it sends no game input. At the enemy scene the player uses the mod's
+VR holster once and draws the gun again. The `DRAWN` log event synchronizes A
+at +4 seconds and B at +16 seconds. The player holds pose A for about 10 seconds,
+moves the right hand and holds pose B for at least 12 seconds, then stows via the
+same VR holster and moves the right controller. The `STORED` event synchronizes
+C at +4 seconds. The player remains in PSVR2 throughout and closes the game
+after another 15 seconds. Each request still requires 15 focused/tracked frames;
+the runner rejects early stowing, timeouts and any pre-existing request. The
+restore guard retains ownership of DLL rollback after exit. Compare enemy-map
+producer and receiver data across A/B/C before inferring any causal fix.
