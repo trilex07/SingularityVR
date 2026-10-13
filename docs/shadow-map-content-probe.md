@@ -49,13 +49,22 @@ them with normalized hardware-Z assumptions. Retained shader metadata/instructio
 and map statistics distinguish actual data from a successful bound pointer.
 First snapshot does not cover later reuse of same map for another light.
 
-Physical user says diagnostic leaves image/controls unchanged. New observation:
-with weapon put away, shadows no longer follow right controller, only head.
-This separates armed-state/controller coupling from head-coupled error; it does
-not yet identify which matrices or producers change. Next controlled capture:
-same save/head direction, armed at two right-hand poses, then weapon stowed.
-Compare source map samples/producer matrices/receiver constants by actual shader
-identity, not cross-session COM addresses. Keep both shadow correctionsOFF.
+Physical user says diagnostic leaves image/controls unchanged. Clarification:
+"put away" means the mod's VR holster action. The observed shadow stays at the
+position it occupied when holstered; head movement changes only the observer's
+viewpoint around it. Square shadows are visible around enemies, implicating
+dynamic casters as a separate or shared source. This is visual evidence, not
+proof of the responsible map, caster draw or matrix. The holster code latches
+weapon orientation and moves the weapon mesh to a body-relative hip transform;
+it does not intentionally latch any shadow map. Falsifiable hypothesis: the
+weapon/controller transform reaches a dynamic shadow caster or receiver, and
+the apparent frozen shadow is its last map content or a cached transform. A
+trace in which that caster/map follows the live controller after holstering
+would disprove the proposed latch. Next controlled capture: same enemy scene,
+HQDecalsON, stable player/head position, weapon armed at two right-hand poses,
+then mod-holstered while the right controller moves. Compare source map
+content, producer transforms, receiver constants and event order by actual
+shader identity; COM addresses are session-local. Keep both shadow correctionsOFF.
 
 After exit guard084305 removed input flag/restored DLL9FBA308C. Actual DLL,
 INI61AEC56C and UI5B2EA469 separately verified. No fix claimed.
