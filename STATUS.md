@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+READY_FOR_PHYSICAL_ACCEPTANCE (not L3/L4): native-camera candidate source
+f83fd71513a7792f639acfbcf7c861dacdabc6d7, regular x86 PE32 /O2 DLL SHA
+7A0EC94D22FDB1E27EFA5CA2469F28D1598126BFC5CF97004084B88AA02C1E65.
+DLL-only installed/rehashed18:19:34, backup20261013-181931 contains exactly
+one accepted DLL/zero directories; original DLL/INI/UI backups verified.
+INI C59/UI5B unchanged. Guard29140/observer43780 READY; launch lease600s,
+then post-exit restore. No game running at handoff. Await next user start.
+Eight x86/O2 executables + policy/syntax PASS. Native exit/FPS are still an
+OPEN physical gate: this candidate observes rather than invents exit criteria.
+
 PID45080 / 8B34C584: Polish intro PHYSICALLY_VERIFIED. Cutscene camera/size,
 exit to gameplay and late performance BROKEN (user confirms too wide,
 head-dependent content, cinema/no hands after crash, several FPS). Native log

@@ -41,6 +41,20 @@ controller-state transitions. Physical exit/performance gate remains open.
 Priority from user: scene and start of gameplay first; full Polish dialogue/movie
 coverage next. Helicopter speech remains unimplemented and must not be called PL.
 
+L2_READY candidate: sourcef83fd71513a7792f639acfbcf7c861dacdabc6d7 (pushed),
+regular x86 PE32/O2 SHA7A0EC94D22FDB1E27EFA5CA2469F28D1598126BFC5CF97004084B88AA02C1E65.
+Eight narrow C++ unit executables PASS, native-state NOACCESS fault gates PASS,
+runtime policy/PS syntax/diff check PASS. Shared pixel/MRT rollback GPU test
+covers640x360/5264x2684 at85%;60% geometry separately covered by exact-fit unit
+test. No physical performance/native exit PASS inferred.
+DLL-only deployed18:19:34, accepted restore backup20261013-181931 (one file,
+no directories). Guard29140/observer43780 READY,600s launch lease; original
+DLL/INI/UI backup hashes verified, installedINI/UI unchanged. Game not running.
+Next route without tab switching: New Game (intro may skip) -> whole helicopter
+and getting-up sequence -> return to stereo/hands/pause if possible -> close.
+If low-FPS discomfort recurs, stop promptly; no repeated long low-FPS trial.
+Observer keeps full session log, explicit state names and bounded compose timing.
+
 Inherited candidate, no renderer changes in this resume:
 `fix/cutscene-mono-presentation` @ `3df65c843cf3b4aa1b6f223d5527cf68c809ee2a`,
 x86 PE32 /O2, DLL SHA256
