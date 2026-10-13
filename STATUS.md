@@ -5,7 +5,9 @@ exact candidate MAP/disassembly prove pawn Location.Z read in camera
 stabilization (RVA0x2898C, stale pawn0x0DA0A000), not mono composition. Safe
 baseline DLL D8928180 restored and rehashed; INI C59B1CF6 and UI5B2EA469 unchanged.
 Small guarded pawn-sample fix L1_PASS; no camera-math/render/input changes.
-L2 build pending; L3/L4 crash regression and helicopter test pending.
+L2_PASS: normal x86 PE32 /O2 source f69caf3, DLL4483CF02D86D6EB466CB9A2A924B4401329BD0345544BD5BA2254814E305A921.
+Candidate installed DLL-only, INI/UI retained; verified baseline restore guard,
+600s launch window. L3/L4 crash regression and helicopter test pending.
 See docs/CUTSCENE_RESUME_PHYSICAL.md. Prior active observer expired before the
 late crash; authoritative native log/dump recovered, no live-coverage claim.
 

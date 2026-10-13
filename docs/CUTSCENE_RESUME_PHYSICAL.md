@@ -71,3 +71,10 @@ observer stopped at 14:14 with zero selected events; crash occurred at 14:36.
 We recovered the authoritative native crash log/dump, but do not claim live
 observation covered that late crash. Next test starts only in a current test
 window; user stays in headset, normal closure and verified DLL guard remain.
+
+Next candidate L2_PASS: source `f69caf3e8160f836ed0f2fc3282f88fad74edad1`,
+normal x86 PE32 /O2 build `4483CF02D86D6EB466CB9A2A924B4401329BD0345544BD5BA2254814E305A921`.
+Installed DLL-only; deploy backup `deployment/install-backups/20261013-145004`
+contains verified D8928180 baseline. INI/UI unchanged. Restore guard armed
+with 600-second launch window; wait for user readiness rather than consuming
+the physical test window before they put on PSVR2. L3/L4 still pending.
