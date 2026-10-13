@@ -13,6 +13,11 @@ INI C59B1CF6 and accepted UI5B2EA469 unchanged. Helicopter Polish voice is a
 separate UE3 dialogue gap, not the SIDE Bink audio task.
 See docs/CUTSCENE_RESUME_PHYSICAL.md.
 
+RT candidate L2_PASS source468c74f / x86 PE32 /O2 DLL983BED0ADDFBEF64927800F0F25481D7DF35BF2E7E37E1A8BD7E1CC8E5B9F7F1.
+DLL-only installed/verified; backup20261013-160811 and guard READY (600s launch
+window), INI/UI unchanged. Await physical start; no game-runtime copy success
+or helicopter visual acceptance claimed. All narrow regressions PASS.
+
 PID4672/4483CF02: New Game crash reproduction PASS in Steam/PSVR2; guarded
 stale-pawn read rejection logged. Helicopter still BROKEN: CINE ON but no mono
 composition success. Safe D892 baseline restored, INI/UI unchanged.

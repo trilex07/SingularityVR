@@ -139,3 +139,15 @@ bars, state restoration, injected failure without damaged source. No game
 assets in test. Keep accepted video size, pawn guard, shaders/input/menu intact.
 Native log and observation saved; baseline D892, INI C59B1CF6, UI5B2EA469
 restored/rehashed. Helicopter dialogue is a separate UE3 audio gap, not Bink.
+
+RT candidate L1/L2_PASS: source468c74f328fcc4e85794c035097b74d613fe0d63,
+normal x86 PE32 /O2 DLL983BED0ADDFBEF64927800F0F25481D7DF35BF2E7E37E1A8BD7E1CC8E5B9F7F1.
+Native synthetic shared-helper test PASS at both sizes: complete source
+quadrants/opaque alpha, bars, pixel rollback after an injected post-clear
+failure, exact viewport/scissor/target restoration, auxiliary MRT identity
+and untouched MRT sentinel pixels. Placement/mono/scene/pawn and accepted
+runtime-policy regressions PASS. No game pixel or physical PASS inferred.
+Installed DLL-only with backup20261013-160811; guard45624 READY with600s launch
+window, original INI/UI hashes unchanged. Next physical check: whole matching
+eye image/proportions, NPC face, head direction, hands/FPS and clean return.
+Do not switch to chat during the headset run. Dubbing unchanged in this build.
