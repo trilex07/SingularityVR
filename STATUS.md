@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+Shadow-map content probe L3_PASS for captured resource consumption: SteamPID18352,
+4EADB827,1769calls/370groups/overflow0,receiver exactVS/PS match,512R32F readback
+HRESULT0 with262144finite pixels,range0..~e. Encoded/filter shadow data, not raw
+normalizedZ. Shadows remain BROKEN. User new observation: stowing weapon removes
+right-controller coupling, head coupling remains. Next armed-hand-A/B/stowed
+controlled traces; do not re-enable rejected matrix correction. Accepted3 hashes
+restored/verified DLL9FBA308C/INI61AEC56C/UI5B2EA469 after exit. See map-probe note.
+
 Input cache130dfdb / DLLF294D272: real Steam PID19520, PHYSICALLY_VERIFIED
 for held-button FPS/actions/stereo/tracking and pause/options/resume. User says
 everything retained and no FPS drops. Topology reconnect not tested. Profiler

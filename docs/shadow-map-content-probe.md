@@ -31,3 +31,31 @@ ReceiverOFF/ClearGateOFF first. One focused captured frame. Match readback group
 to audited receiver shader; if pixels valid inspect map content and actual
 producer/consumer transforms, not guessed camera constants. If readback fails,
 preserve its HRESULT and choose a supported read-only resource capture route.
+
+## Real Steam readback PID18352, 2026-10-13
+
+DLL4EADB827/source3b262e8. Trace1769 calls/370 groups/overflow0. Before draw1470
+group254, sampler1 texture2CA6BC20: HRESULT0,262144 finite values,0 nonfinite,
+22405 zeros,0 exactones,range0..2.71828198. Group matches exact audited receiver
+VSd09ad82c/PS28e01133. Content-at-consumption PASS for that resource; not proof
+of physically correct depth/shadow coverage or all lights. One unique map read.
+
+Raw source2CA6B520 producers248/249 have native512 target,viewport6,6,272,178,
+full512 scissor. Copy250 PS0df8d996 and filter251 PS3b93fac6 alternate before
+receiver. Private disassembly confirms filter has internal constant~e and
+clamped arithmetic, receiver performs exponential/log shadow comparison.
+Therefore values>1 up to~e are NOT by themselves corruption; do not replace
+them with normalized hardware-Z assumptions. Retained shader metadata/instructions
+and map statistics distinguish actual data from a successful bound pointer.
+First snapshot does not cover later reuse of same map for another light.
+
+Physical user says diagnostic leaves image/controls unchanged. New observation:
+with weapon put away, shadows no longer follow right controller, only head.
+This separates armed-state/controller coupling from head-coupled error; it does
+not yet identify which matrices or producers change. Next controlled capture:
+same save/head direction, armed at two right-hand poses, then weapon stowed.
+Compare source map samples/producer matrices/receiver constants by actual shader
+identity, not cross-session COM addresses. Keep both shadow correctionsOFF.
+
+After exit guard084305 removed input flag/restored DLL9FBA308C. Actual DLL,
+INI61AEC56C and UI5B2EA469 separately verified. No fix claimed.
