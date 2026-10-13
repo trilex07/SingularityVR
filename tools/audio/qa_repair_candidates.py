@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+import argparse
 from collections import Counter
 from pathlib import Path
 
@@ -20,7 +21,6 @@ from scipy.io import wavfile
 from scipy.signal import resample_poly
 
 ROOT = Path(__file__).resolve().parents[2]
-CANDIDATE_DIR = ROOT / 'audio/polish/repair_candidate_20261013/full_audit'
 
 
 def tokens(value: str) -> list[str]:
@@ -42,10 +42,25 @@ def similarity(expected: str, heard: str) -> float:
 
 
 def main() -> None:
-    manifest = CANDIDATE_DIR / 'manifest.jsonl'
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--candidate-dir', type=Path,
+                    default=ROOT / 'audio/polish/repair_candidate_20261013/full_audit')
+    ap.add_argument('--asr-model', default='base', help='cached faster-whisper model name (default: base)')
+    ap.add_argument('--line-id', action='append', default=[], help='screen only this line ID (repeatable)')
+    ap.add_argument('--output-file', type=Path, help='QA JSON output path (default: candidate-dir/qa.json)')
+    ap.add_argument('--merge', action='store_true', help='merge screened rows into existing output by line ID')
+    args = ap.parse_args()
+    candidate_dir = args.candidate_dir.resolve()
+    manifest = candidate_dir / 'manifest.jsonl'
     rows = [json.loads(line) for line in manifest.read_text(encoding='utf-8').splitlines()
             if line.strip()]
-    model = WhisperModel('base', device='cpu', compute_type='int8')
+    if args.line_id:
+        wanted = set(args.line_id)
+        unknown = wanted - {row['line_id'] for row in rows}
+        if unknown:
+            raise SystemExit(f'Unknown line IDs: {sorted(unknown)}')
+        rows = [row for row in rows if row['line_id'] in wanted]
+    model = WhisperModel(args.asr_model, device='cpu', compute_type='int8')
     screened = []
     for index, row in enumerate(rows, 1):
         rate, audio = wavfile.read(row['file'])
@@ -96,7 +111,13 @@ def main() -> None:
         if index == 1 or index % 50 == 0:
             print(f'ASR QA {index}/{len(rows)}', flush=True)
 
-    output = CANDIDATE_DIR / 'qa.json'
+    output = (args.output_file or (candidate_dir / 'qa.json')).resolve()
+    if args.merge and output.is_file():
+        existing = {row['line_id']: row for row in json.loads(output.read_text(encoding='utf-8'))}
+        existing.update({row['line_id']: row for row in screened})
+        manifest_order = [json.loads(line)['line_id'] for line in manifest.read_text(encoding='utf-8').splitlines()
+                          if line.strip()]
+        screened = [existing[line_id] for line_id in manifest_order if line_id in existing]
     output.write_text(json.dumps(screened, ensure_ascii=False, indent=2), encoding='utf-8')
     counts = Counter(row['qa_status'] for row in screened)
     flag_counts = Counter(flag for row in screened for flag in row['qa_flags'])
