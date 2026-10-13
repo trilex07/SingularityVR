@@ -46,3 +46,9 @@ the deployment guard's `-ShadowWorldReceiverExperiment` removes it on exit.
 No proprietary captures/assets are shipped. Only user-requested saved setting
 ShowControllerArms1->0 changed after PID35208, restoring gloves-only behavior;
 the experiment does not alter hands or weapon placement.
+
+L2_PASS: source532cf448aff4cf72398177eb0ea45acc21e54915, x86 PE32 /O2
+Performance build SHA7A7787EBB2B41CE0B54F94223FFC48A390A6A650FB2CC6E506036D9E3DDB6FAE.
+Build manifest matches the actual DLL; no tracked source edits during build.
+Trace parser regression, runtime-policy checks and flag/restore-guard parsers
+pass. Not deployed or visually verified at this gate.

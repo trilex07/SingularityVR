@@ -7,7 +7,8 @@ actual per-eye VS camera and identical native PS inverse disagree: mathematical
 caster-origin reconstruction error523/555UU; assumed-depth sample leaves map.
 Pixel-depth assumption remains unvalidated. See world-shadow experiment note.
 Separate default-OFF world-only inverse experiment L1_PASS (synthetic roundtrip,
-depth/resource gates, COM/constant restoration/failure latch); runtime and
+depth/resource gates, COM/constant restoration/failure latch), L2_PASS x86 PE32
+/O2 source532cf44/DLL7A7787EB (manifest/hash match); runtime and
 physical acceptance NOT verified. First-person near1 route excluded; rejected
 mixed receiver and ClearGate remainOFF. No hands/weapon transform changes.
 After exit MAIN verified accepted DLL9FBA308C/UI5B2EA469. User asked about visible
