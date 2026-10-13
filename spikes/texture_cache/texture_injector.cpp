@@ -23,6 +23,7 @@
 #include <vector>
 #include <string>
 #include "MinHook.h"
+#include "resource_native_cache.h"
 
 // ---------------------------------------------------------------------------
 // targets: FNV-1a 64 over the compact mip-0 DXT bytes of the original texture
@@ -47,6 +48,15 @@ struct Target {
 static HMODULE   g_self = nullptr;
 static bool      g_enabled = true;
 static bool      g_apply = true;              // false = log only
+static bool      g_resourceNativeCache = true;
+struct alignas(8) CacheCounters {
+    volatile LONG64 binds=0, nativeHits=0, legacyHits=0, hashes=0;
+    volatile LONG64 stored=0, storeFailed=0, evictions=0, candidateNotes=0;
+};
+static CacheCounters g_cacheCounters;
+static bool CandidateNote() {
+    return InterlockedIncrement64(&g_cacheCounters.candidateNotes)<=64;
+}
 static char      g_texturesDir[MAX_PATH] = "texture-override";
 static bool      g_groupOn[texgroups::GCount] = {true, true, true, true, true, true};
 static bool      g_capture = false;           // dump locked mip0 of larger DXT textures
@@ -80,7 +90,7 @@ static int  g_ringPos = 0;
 static bool g_markerSeen = false;
 static int  g_armed = 0;
 
-static void Log(const char* fmt, ...) {
+static void Log(_Printf_format_string_ const char* fmt, ...) {
     if (!g_log) return;
     EnterCriticalSection(&g_logLock);
     va_list a; va_start(a, fmt);
@@ -116,6 +126,7 @@ static void LoadConfig() {
     char ini[MAX_PATH]; BuildPath("texture_override.ini", ini, sizeof(ini));
     g_enabled = iniInt("general", "enabled", 1, ini) != 0;
     g_apply   = iniInt("general", "mode_apply", 1, ini) != 0;
+    g_resourceNativeCache=iniInt("general","resource_native_cache",1,ini)!=0;
     iniStr("general", "texturesdir", "texture-override", g_texturesDir, MAX_PATH, ini);
     g_capture = iniInt("general", "capture", 0, ini) != 0;
     iniStr("general", "capturesdir", "capture", g_capturesDir, MAX_PATH, ini);
@@ -146,6 +157,8 @@ static void LoadConfig() {
         g_groupOn[0] ? 1 : 0, g_groupOn[1] ? 1 : 0, g_groupOn[2] ? 1 : 0,
         g_groupOn[3] ? 1 : 0, g_groupOn[4] ? 1 : 0, g_groupOn[5] ? 1 : 0);
     Log("quality: %s (dir %s)", quality, g_texturesDir);
+    Log("TEXTURE_NATIVE_CACHE enabled=%d version=1; target lookup/DDS pixels unchanged",
+        g_resourceNativeCache?1:0);
 }
 
 // ---------------------------------------------------------------------------
@@ -202,6 +215,7 @@ struct Entry {
 static const int kCacheMax = 512;
 static Entry g_cache[kCacheMax];
 static int   g_cacheCount = 0;
+static std::size_t g_negativeCursor=0;
 static SRWLOCK g_cacheLock = SRWLOCK_INIT;
 
 static Entry* CacheFind(IDirect3DTexture9* t) {
@@ -210,6 +224,13 @@ static Entry* CacheFind(IDirect3DTexture9* t) {
 }
 static Entry* CacheAdd(IDirect3DTexture9* t) {
     if (g_cacheCount >= kCacheMax) {
+        if(g_resourceNativeCache) {
+            const std::size_t slot=texnative::NegativeVictim(g_cache,kCacheMax,g_negativeCursor);
+            if(slot==SIZE_MAX)return nullptr;
+            g_cache[slot]=Entry();g_cache[slot].tex=t;
+            InterlockedIncrement64(&g_cacheCounters.evictions);
+            return &g_cache[slot];
+        }
         // simple: drop the oldest non-replacement entry
         for (int i = 0; i < g_cacheCount; ++i) {
             if (!g_cache[i].replacement) { g_cache[i] = Entry(); g_cache[i].tex = t; return &g_cache[i]; }
@@ -219,6 +240,20 @@ static Entry* CacheAdd(IDirect3DTexture9* t) {
     Entry* e = &g_cache[g_cacheCount++];
     e->tex = t;
     return e;
+}
+
+static void ReportCache() {
+    AcquireSRWLockShared(&g_cacheLock);
+    const int occupied=g_cacheCount;
+    ReleaseSRWLockShared(&g_cacheLock);
+    Log("TEXTURE_NATIVE_CACHE binds=%lld nativeHits=%lld legacyHits=%lld hashes=%lld stored=%lld storeFailed=%lld table=%d/512 evictions=%lld",
+        InterlockedCompareExchange64(&g_cacheCounters.binds,0,0),
+        InterlockedCompareExchange64(&g_cacheCounters.nativeHits,0,0),
+        InterlockedCompareExchange64(&g_cacheCounters.legacyHits,0,0),
+        InterlockedCompareExchange64(&g_cacheCounters.hashes,0,0),
+        InterlockedCompareExchange64(&g_cacheCounters.stored,0,0),
+        InterlockedCompareExchange64(&g_cacheCounters.storeFailed,0,0),occupied,
+        InterlockedCompareExchange64(&g_cacheCounters.evictions,0,0));
 }
 
 // ---------------------------------------------------------------------------
@@ -463,26 +498,52 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
 
     IDirect3DTexture9* t = static_cast<IDirect3DTexture9*>(tex);
     MaybeCapture(t);
+    InterlockedIncrement64(&g_cacheCounters.binds);
+    if(g_resourceNativeCache && texnative::KnownNative(t)) {
+        InterlockedIncrement64(&g_cacheCounters.nativeHits);
+        return RealSetTexture(dev,stage,tex);
+    }
     AcquireSRWLockShared(&g_cacheLock);
     Entry* e = CacheFind(t);
     if (e && e->replacement) {
+        InterlockedIncrement64(&g_cacheCounters.legacyHits);
         IDirect3DTexture9* repl = e->replacement;
         ReleaseSRWLockShared(&g_cacheLock);
         return RealSetTexture(dev, stage, repl);
     }
-    if (e && e->resolved) { ReleaseSRWLockShared(&g_cacheLock); return RealSetTexture(dev, stage, tex); }
+    if (e && e->resolved) {
+        InterlockedIncrement64(&g_cacheCounters.legacyHits);
+        ReleaseSRWLockShared(&g_cacheLock); return RealSetTexture(dev, stage, tex);
+    }
     ReleaseSRWLockShared(&g_cacheLock);
 
     D3DSURFACE_DESC desc;
     if (FAILED(t->GetLevelDesc(0, &desc)) || !IsCandidate(desc))
         return RealSetTexture(dev, stage, tex);
 
+    InterlockedIncrement64(&g_cacheCounters.hashes);
     uint64_t hash = 0; bool have = HashLevel0(t, desc, hash);
     const Target* hit = MatchTarget(desc, hash, have);
     if (hit && !texgroups::GroupAllows(g_groupOn,
             texgroups::GroupIndex(hit->group))) {
         Log("group off: %s (%s)", hit->name, hit->group);
         hit = nullptr;
+    }
+
+    // Existing resolved native decision, now owned by this resource rather
+    // than competing with thousands of other negative pointer entries. A
+    // destroyed texture automatically loses the stamp. Positive loading and
+    // replacement bookkeeping below are deliberately unchanged.
+    if(g_resourceNativeCache && !hit) {
+        if(texnative::RememberNative(t)) {
+            InterlockedIncrement64(&g_cacheCounters.stored);
+            if(CandidateNote())Log("candidate %ux%u fmt=%d hash=%016llX native resource-cached haveHash=%d",
+                desc.Width,desc.Height,desc.Format,(unsigned long long)hash,have?1:0);
+            return RealSetTexture(dev,stage,tex);
+        }
+        InterlockedIncrement64(&g_cacheCounters.storeFailed);
+        // Unsupported/OOM metadata: fall through to the original native
+        // decision cache, with the bounded nonreplacement fallback above.
     }
 
     AcquireSRWLockExclusive(&g_cacheLock);
@@ -511,9 +572,11 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
     IDirect3DTexture9* repl = e ? e->replacement : nullptr;
     ReleaseSRWLockExclusive(&g_cacheLock);
 
-    if (!have) Log("candidate %ux%u fmt=%d: level0 not lockable (no hash)", desc.Width, desc.Height, desc.Format);
-    else Log("candidate %ux%u fmt=%d hash=%016llX %s", desc.Width, desc.Height, desc.Format,
-             (unsigned long long)hash, hit ? hit->name : "(no match)");
+    if(CandidateNote()) {
+        if (!have) Log("candidate %ux%u fmt=%d: level0 not lockable (no hash)", desc.Width, desc.Height, desc.Format);
+        else Log("candidate %ux%u fmt=%d hash=%016llX %s", desc.Width, desc.Height, desc.Format,
+                 (unsigned long long)hash, hit ? hit->name : "(no match)");
+    }
 
     return RealSetTexture(dev, stage, repl ? repl : tex);
 }
@@ -567,6 +630,9 @@ static DWORD WINAPI InitThread(LPVOID) {
     else Log("failed to hook Direct3DCreate9 (%p)", p9);
     if (p9e && MH_CreateHook(p9e, &HookCreate9Ex, (void**)&RealCreate9Ex) == MH_OK) MH_EnableHook(p9e);
     Log("hooks armed");
+    // Existing initialization worker, no extra render/Present hooks. At most
+    // 60 aggregate reports over five minutes; no per-bind filesystem work.
+    for(unsigned note=0;note<60;++note){Sleep(5000);ReportCache();}
     return 0;
 }
 
