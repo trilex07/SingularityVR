@@ -34,3 +34,12 @@ becomes detached, or gun/world/stereo regress. Disable only the new flag; keep
 the working combination. Next then inspect depth alpha/receiver ownership rather
 than guessing constants or suppressing normal shadows. Synthetic tests and x86
 PE32 /O2 provenance required before MAIN Steam/physical test.
+
+Implemented separate fpshadowfix scope and owned FirstPerson flag; existing
+world shader cache/resources/math reused without changing world correction.
+Requires WorldReceiver and ClearGate ON; fails closed without either. MAIN
+rollback guard now removes this separate flag. x86 /O2 unit checks cover OFF
+zero queries, prerequisite/depth/moved gates, captured near1 eye round trips,
+balanced refs, scoped restoration and failed upload/restore fault latch. Existing
+world scope regression, runtime policy and PowerShell parsers pass. No runtime
+or visual pass for this new scope yet.
