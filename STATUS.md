@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 E213B216 test completed, physical feedback PENDING. PID23584:
+OpenXR/loaded paths/exact four hashes PASS; cinema pause reason32 and resume,
+then stereo recorded, hands blocked by existing position gate (no sample).
+User restarted PID36340 on same leased candidate; second log separately saved.
+Wrist execution confirmed, eight GameplayStereo records actualRide/moved0;
+captured posed-constant reconstruction residual <=~0.001UU at log precision.
+Not pixel/controller-origin/physical acceptance; moved1/2 still L1 only.
+Both sessions closed; exact four originals and backups independently verified,
+UI5B/107DDS/frozen config+forwarder PASS. No new audio/WAV deployment in this
+trial. SIDE b13b8dda provides29private WAVs/34bindings,20ASRpass/9review; audit
+of previous42 finds20faithful/22needs correction. Native integration remains
+OFFLINE/OPEN; never deploy the old42 blindly. Next test requires fresh start.
+See docs/no-tmd-wrist-anchor.md. Below headers historical.
+
 LATEST PID21056 physical: single frontend menu, matching eyes; background not
 fully rendered. Cinema pause NOT tested. Small FPS dips remain; L2/R2 unrelated
 in this trial. Native gameplay English persists. Four originals D892/AAA/B3FE/
