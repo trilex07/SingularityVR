@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+Combination L3_PASS for execution/classification, PHYSICAL_FEEDBACK_PENDING:
+SteamPID17212/DLL7A7787EB, only ClearGateOFF->ON relative to successful enemy
+test; WorldReceiver/input cacheON and rejectedReceiverOFF. One pause-return
+frame1283draws/320groups/overflow0: same gun5799 early/late depth/color moved1,
+late fgCount1/4 versus previous101/104. World receivers210/211 still corrected,
+near1 receivers291/292 excluded; light chain retained, no restore faults.
+Need user perceptual result for black/frozen gun, background-negative and enemy
+shadow preservation. Game exited, accepted DLL9FBA308C/currentINI C59B1CF6/
+UI5B2EA469 independently verified; owned flags gone, gloves-only state retained.
+
 World-only receiver PHYSICALLY_VERIFIED for dynamic enemy shadows in tested
 scene: user reports enemy shadows now work and are dynamic. Steam PID37880,
 DLL7A7787EB/source532cf44, WorldReceiver/input cacheON; ClearGate/rejected

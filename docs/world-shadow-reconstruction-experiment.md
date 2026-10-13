@@ -87,3 +87,24 @@ Do not expand shader constants into near1/first-person or alter hand transforms.
 After PID37880 exit, guard removed both owned flags and restored DLL; MAIN
 independently verified DLL9FBA308C/INI C59B1CF6/UI5B2EA469. Snapshot111315-949,
 runner backup111316. Current installation safe, gloves-only setting retained.
+
+## Controlled combination PID17212 (physical feedback pending)
+
+User authorized the next test. Same source532cf44/DLL7A7787EB, identical
+INI C59B1CF6/UI5B2EA469: only ClearGate changed OFF->ON, WorldReceiver/input
+cache remainON, rejected ReceiverOFF. MAIN runner backup112917 and three-file
+snapshot112917-807 verified; guard and pause-return scheduler started hidden.
+Real Steam/OpenXR session running and first submitted headset frame confirmed.
+Pause-return capture1283draws/320groups/overflow0. Exact gun5799 resource
+VB6CAB5680/IB4E423060 early depth0/1 moved1; late depth276/277 fgCount1/moved1
+and late color280/281 fgCount4/moved1. This confirms the predicted classification
+alignment, not shader-palette or physical material correctness by itself.
+World receivers210/211 remain active near10, fgCount0, moved0; final corrected
+world reconstruction error1.50e-5/1.82e-5UU, both UV~(.225569,.102106). Native
+light chain agrees to0.000288/0.000248. Separate near1 receivers291/292 remain
+outside the world correction. Runtime logs show ignoredOffscreenR32 and zero
+world restore failures. Combination L3_PASS for scoped execution/classification;
+physical black-gun/background/stereo/enemy-shadow acceptance PENDING.
+Game exited; guard removed all three owned flags and restored accepted DLL.
+MAIN independently verified DLL9FBA308C/INI C59B1CF6/UI5B2EA469. No hand/weapon
+code, installed INI, textures or UI changed during this test.
