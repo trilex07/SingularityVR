@@ -251,3 +251,15 @@ actual native flags/layout, Polish OFF, binary buffers, invalid memory, forwardi
 successful default reset and failure rollback tests PASS. Movie->world/native
 OFF->gameplay->pause policy, original camera clears and GPU85% pixel/state/MRT
 rollback regressions PASS; actual scene exit and audio listening still pending.
+
+Candidate ready: sourceed9b1bfacd58e520e8ad34d97b1c20f14ac68db5, regular x86
+PE32/O2 SHA8B34C584B4FD9AF1774A8B2FDEDC4646746D33E1F055B68CA54E62C7E3070384.
+Intro AF53C8F8...CA9A3686 independently rehashed; installed DLL exact match.
+DLL-only backup20261013-173236 verified; guard7664/observer42544 READY (600s
+launch window). INI C59B1CF6/UI5B2EA469 unchanged. Bink/movie/WAV files untouched.
+Pending physical script without chat switching: New Game, listen intro10-15s
+(may then skip), let whole helicopter scene finish, verify restored gameplay
+stereo/tracked hands plus pause/Options/resume, close normally. Observe aspect,
+edges/foreground and audio; logs must separately prove handoff, composition,
+foreground suppression, intro track selection and exit. Helicopter Polish
+dialogue remains unimplemented, not included in the intro voice acceptance.

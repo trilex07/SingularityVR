@@ -14,6 +14,14 @@ Polish intro listening PENDING. Helicopter dialogue still not redirected from
 native SoundNodeWave; next existing Localize diagnostics will cover CINE ON.
 No movie/WAV/UI/INI file or gameplay shadow/input changes.
 
+Handoff/intro candidate L2_PASS sourceed9b1bfacd58e520e8ad34d97b1c20f14ac68db5,
+x86 PE32 /O2 SHA8B34C584B4FD9AF1774A8B2FDEDC4646746D33E1F055B68CA54E62C7E3070384.
+DLL-only installed/rehashed; verified backup20261013-173236, guard7664 and
+observer42544 READY with600s launch window. Intro content SHA AF53C8F8...CA9A3686
+verified before applying the known-track policy; no movie rewritten. UI/INI
+unchanged. Next gate: listen intro, full helicopter-end/gameplay/pause return;
+no mid-headset chat. Scene handoff execution and Polish intro L3/L4 pending.
+
 PID44632/DLL983BED0A: full-image mono copy L3_PASS and user reports good image
 overall. Remaining cutscene framing/aspect/foreground polish: too wide,
 edges outside view and tracked glove moves at periphery. Guard restored D892;
