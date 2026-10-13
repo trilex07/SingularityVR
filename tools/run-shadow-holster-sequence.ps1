@@ -72,8 +72,11 @@ function Request-Capture([int]$sequence,[string]$stage) {
     $tracePath = Join-Path $runtime "shadow-pass-$GamePid-$sequence.txt"
     if (Test-Path -LiteralPath $tracePath) { throw "Trace sequence already exists: $tracePath" }
     & (Join-Path $PSScriptRoot 'request-shadow-pass-trace.ps1') -Label CONTROL | Out-Null
-    if (-not (Test-Path -LiteralPath $requestPath)) { throw 'Trace request was not created' }
-    $script:ownedRequest = [IO.File]::ReadAllText($requestPath)
+    # Present can consume the request immediately. A missing file is not a
+    # scheduling failure; the completion log below is the actual success gate.
+    $script:ownedRequest = $null
+    try { $script:ownedRequest = [IO.File]::ReadAllText($requestPath) }
+    catch [IO.FileNotFoundException] { }
     Write-Output "REQUESTED $stage sequence=$sequence"
     $deadline = (Get-Date).AddSeconds($StageTimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
