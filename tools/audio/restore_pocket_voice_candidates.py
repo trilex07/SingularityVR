@@ -17,23 +17,41 @@ sys.path.insert(0, r"C:\Users\Trilex\vr-mods\.pocket_tools")
 import numpy as np
 from pocket_tts import TTSModel
 from scipy.io import wavfile
+from tts_pronunciation import to_spoken_polish
 
 ROOT = Path(__file__).resolve().parents[2]
 REPAIR = ROOT / "audio/polish/repair_candidate_20261013"
 INPUT = REPAIR / "full_audit/manifest.jsonl"
 OUT = REPAIR / "full_audit_pocket"
+INTRO_REFERENCE = ROOT / "audio/polish/repair_candidate_20261013/intro_reference_experiment/intro_narrator_reference.wav"
+NARRATOR_REFERENCE = INTRO_REFERENCE if INTRO_REFERENCE.is_file() else ROOT / "audio/polish/user_reference/spokoj_reference.wav"
 PROFILE_REFERENCES = {
-    "narrator_user": ROOT / "audio/polish/user_reference/spokoj_reference.wav",
-    "renko_user": ROOT / "audio/polish/user_reference/spokoj_reference.wav",
+    "narrator_user": NARRATOR_REFERENCE,
+    "renko_user": NARRATOR_REFERENCE,
     "barisov_dmitri": ROOT / "audio/polish/accent_reference/ru_dmitri_reference.wav",
     "demichev_ruslan": ROOT / "audio/polish/accent_reference/ru_ruslan_reference.wav",
     "kathryn_tetiana": ROOT / "audio/polish/accent_reference/uk_tetiana_reference.wav",
     "devlin_mykyta": ROOT / "audio/polish/accent_reference/uk_mykyta_reference.wav",
 }
+TEXT_OVERRIDES = {
+    "SP_VI2_kismet03_LOC_INT/SoundNodeWave/VI2_4009_SPT1.ogg":
+        "Tylko ty. Dalej! Chodź! Chodź! Chodź! Chodź!",
+    r"..\Engine\Localization\INT\Engine.int|GameMessage|OvertimeMessage":
+        "Remis po regulaminowym czasie. Rozstrzygnie dogrywka do pierwszego punktu!",
+    r"..\RvGame\Localization\INT\MP.int|General|InviteParty":
+        "Zaproś znajomych do grupy Xbox LIVE.",
+    r"..\RvGame\Localization\INT\RvGame.int|RvUI|FullAmmoRocketLauncher":
+        "Pełna amunicja do wyrzutni rakiet.",
+}
 
 
 def pieces(text: str) -> list[str]:
     text = re.sub(r"\s+", " ", text).strip()
+    # Keep sentence-level boundaries even for short cues. Pocket-TTS can omit
+    # repeated words or the last sentence when they are generated together.
+    sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", text) if part.strip()]
+    if len(sentences) > 1:
+        return sentences
     word_count = len(re.findall(r"\w+", text, flags=re.UNICODE))
     if word_count <= 14:
         return [text]
@@ -162,8 +180,8 @@ def main() -> None:
     completed = [existing[row["line_id"]] for row in rows
                  if row["line_id"] in existing and row["line_id"] not in retry_ids]
 
-    # Match the source pipeline's settings by pack: NLLB story was generated at
-    # temp=.55; localization/UI was generated at temp=.45; both used quantization.
+    # The measured .55/.45 pack settings produced fewer base-ASR flags than a
+    # .35 alternative (196/205 vs. 192/205), so keep the tested settings.
     models = {
         "story_nllb": TTSModel.load_model(
             config="hf://shefowl/pocket-tts-polish-6l/config.yaml", temp=0.55, quantize=True),
@@ -180,6 +198,10 @@ def main() -> None:
                 states[pack][profile] = model.get_state_for_audio_prompt(str(ref))
 
     for index, row in enumerate(selected_rows, 1):
+        row = dict(row)
+        if row["line_id"] in TEXT_OVERRIDES:
+            row["corrected_polish"] = TEXT_OVERRIDES[row["line_id"]]
+            row["tts_text"] = TEXT_OVERRIDES[row["line_id"]]
         old = existing.get(row["line_id"])
         outname = hashlib.sha1((row["pack"] + row["line_id"]).encode()).hexdigest()[:16] + ".wav"
         outpath = output_dir / outname
@@ -188,8 +210,10 @@ def main() -> None:
             continue
         profile = row["profile_before"]
         model = models["story_nllb" if row["pack"] == "story_nllb" else "full_localization"]
-        audio_pieces = [normalize(model.generate_audio(copy.deepcopy(states[row["pack"]][profile]), part).numpy())
-                        for part in pieces(row["tts_text"])]
+        spoken_text = to_spoken_polish(row["tts_text"])
+        audio_pieces = [normalize(model.generate_audio(
+            copy.deepcopy(states[row["pack"]][profile]), part, max_tokens=100,
+            frames_after_eos=4).numpy()) for part in pieces(spoken_text)]
         pause = np.zeros(int(model.sample_rate * 0.08), dtype=np.float32)
         audio = (audio_pieces[0] if len(audio_pieces) == 1 else
                  np.concatenate([part for piece in audio_pieces for part in (piece, pause)])[:-len(pause)])
@@ -199,6 +223,7 @@ def main() -> None:
         wavfile.write(str(outpath), model.sample_rate, pcm16)
         item = {
             **row,
+            "spoken_tts_text": spoken_text,
             "file": str(outpath.resolve()),
             "voice_engine": "Pocket-TTS Polish 6L",
             "reference_profile": profile,

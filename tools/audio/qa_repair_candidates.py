@@ -47,6 +47,7 @@ def main() -> None:
                     default=ROOT / 'audio/polish/repair_candidate_20261013/full_audit')
     ap.add_argument('--asr-model', default='base', help='cached faster-whisper model name (default: base)')
     ap.add_argument('--line-id', action='append', default=[], help='screen only this line ID (repeatable)')
+    ap.add_argument('--ids-file', type=Path, help='JSON array of line IDs to screen')
     ap.add_argument('--output-file', type=Path, help='QA JSON output path (default: candidate-dir/qa.json)')
     ap.add_argument('--merge', action='store_true', help='merge screened rows into existing output by line ID')
     args = ap.parse_args()
@@ -59,6 +60,12 @@ def main() -> None:
         unknown = wanted - {row['line_id'] for row in rows}
         if unknown:
             raise SystemExit(f'Unknown line IDs: {sorted(unknown)}')
+        rows = [row for row in rows if row['line_id'] in wanted]
+    if args.ids_file:
+        wanted = set(json.loads(args.ids_file.read_text(encoding='utf-8')))
+        unknown = wanted - {row['line_id'] for row in rows}
+        if unknown:
+            raise SystemExit(f'Unknown line IDs in ids-file: {len(unknown)}')
         rows = [row for row in rows if row['line_id'] in wanted]
     model = WhisperModel(args.asr_model, device='cpu', compute_type='int8')
     screened = []

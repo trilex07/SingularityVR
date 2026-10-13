@@ -68,14 +68,79 @@ No technical WAV flags remain. On the selected set, faster-whisper `base`
 passed 171/205 and marked 34 for review; the independent `small` screen passed
 167/205 and marked 38. These are review flags, not a subjective quality grade.
 
-The A/B reel is
-`audio/polish/repair_candidate_20261013/pocket_voice_ab_review_20261013.wav`;
-its opening clips use the already-rendered Polish samples in
-`audio/polish/character_samples_12/`. Its `.md` timeline and `.json` index
-identify these Polish voice samples, all rows flagged by either ASR model, and
-one clean example per profile/pack.
+The current A/B reel is
+`audio/polish/repair_candidate_20261013/pocket_voice_ab_review_intro_20261013.wav`
+(2m29s). It opens with the approved intro narrator excerpt and two newly
+generated Polish tests, then pairs flagged candidates with their previous
+recordings. The `.md` timeline and `.json` index preserve segment labels and
+source paths. It excludes the broken 1.28-second narrator demos and raw
+Russian/Ukrainian conditioning audio.
 Per-file profile references and generation settings are recorded in the local
 `full_audit_pocket_selected/manifest.jsonl`.
+
+## Approved intro voice reference
+
+The user's `SNG_intro_polish_voice.wav` is 123.04 seconds, mono, 48 kHz PCM16.
+A 10-second clean narration excerpt (8–18 s) is staged locally at
+`audio/polish/repair_candidate_20261013/intro_reference_experiment/intro_narrator_reference.wav`.
+Pocket-TTS generated the complete 5.68-second line “Musimy działać szybko.
+Sprawdźmy, co dzieje się w laboratorium.” from this reference; local Polish
+Whisper recovered the full sentence. A second 3.60-second test exercises
+speech-only spellings for `Rocket Launcher` and `online`. These tests are local
+staging only; no original or installed voicepack is changed.
+
+The earlier two user-reference demo renders were each only 1.28 seconds and
+Whisper failed to recognize them as Polish. The source user recordings are
+about 25 seconds each, so duration alone is not the problem. A retry from
+those references still yielded only 1.60 and 2.72 seconds with incomplete ASR.
+The intro reference works substantially better and is sufficient for the
+narrator profile; no longer recording is needed for that voice. The intro is a
+narration voice, not a set of separate character voices.
+
+When the intro reference exists, the Pocket repair generator uses it for
+narrator/Renko lines; existing generated packs remain untouched until an
+explicit candidate regeneration. Repair synthesis keeps its tested .55/.45
+per-pack temperatures, raises text chunks to 100 tokens, and keeps four
+post-EOS frames. The .55/.45 run scored 196/205 on base Whisper versus 192/205
+for a .35 comparison. Speech-only phonetic rules live in
+`tools/audio/tts_pronunciation.py` (`Rocket Launcher` → `roket lanczer`,
+`online` → `onlajn`); subtitle/localization display text remains unchanged.
+The 205-file repair candidate was generated from this reference for
+narrator/Renko lines. Base Whisper passes 196/205; small Whisper passes 200/205;
+the union flags 10 lines for listening/review and reports no technical WAV
+defects. This is an automated screen, not a perceptual approval.
+Reproduce the staged samples with:
+
+```powershell
+python tools/audio/generate_intro_reference_candidate.py
+```
+
+## Full revoice candidate
+
+The user approved the intro recording as the narrator quality reference. A
+separate, non-installed candidate now contains all 1,886 available rows: 894
+localization/UI and 992 story lines. It is at
+`audio/polish/repair_candidate_20261013/full_revoice_intro/`; the root
+`manifest.jsonl` keeps every source key, Polish text, character profile, prior
+WAV path, and candidate WAV path. Narrator/Renko use the intro reference;
+Barisov, Demichev, Kathryn, and Devlin retain their distinct Polish character
+references. The generator reads the Polish draft field, not the old partially
+English `tts_text` field, and applies explicit corrections to the lines found
+truncated in the first full screen.
+
+After regeneration, trimming the measured low-level pre-roll, and retrying 32
+flagged lines in smaller sentence chunks, the full base-Whisper screen reports
+1,740/1,886 `PASS_AUTOMATED_SCREEN`; 146 remain for review. There are no format,
+clipping, long-silence, or possible-truncation flags after the targeted repair.
+The remaining review flags are 142 content/pronunciation and 33 language /
+pronunciation findings (categories overlap). They include machine-draft text,
+foreign names/callsigns and voice pronunciation. ASR does not establish good
+acting, translation accuracy, or pleasant sound; the full candidate still
+needs focused listening and language corrections before integration.
+
+The local generation engine is Pocket-TTS Polish 6L, not Piper. This work
+creates a candidate voicepack only; it does not switch a runtime engine or
+touch the game installation. Generated WAVs and QA reports remain local-only.
 
 Generated WAVs, manifests, references, transcripts and correction data are
 local-only and ignored by Git. Only this safe workflow documentation and the

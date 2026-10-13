@@ -15,11 +15,9 @@ from scipy.signal import resample_poly
 ROOT = Path(__file__).resolve().parents[2]
 REPAIR = ROOT / "audio/polish/repair_candidate_20261013"
 REFERENCES = {
-    # These are finished Polish character-sample renders. The Russian and
-    # Ukrainian WAVs used to condition Pocket-TTS are intentionally excluded
-    # from a Polish listening reel: they are not Polish dialogue examples.
-    "narrator_user": ROOT / "audio/polish/character_samples_12/01_renko_neutral.wav",
-    "renko_user": ROOT / "audio/polish/character_samples_12/01_renko_neutral.wav",
+    # The old narrator demo renders were 1.28 seconds and failed QA. The new
+    # intro-derived narrator samples are delivered separately, because the
+    # already-generated candidates in this older reel used a different voice.
     "barisov_dmitri": ROOT / "audio/polish/character_samples_12/03_barisov_command.wav",
     "demichev_ruslan": ROOT / "audio/polish/character_samples_12/06_demichev_cold.wav",
     "kathryn_tetiana": ROOT / "audio/polish/character_samples_12/09_kathryn_scientific.wav",
@@ -107,6 +105,24 @@ def main() -> None:
         chunks.append(gap)
         cursor += len(gap)
 
+    # Lead with the approved intro-based Polish narrator test. The previously
+    # broken 01/02 user-reference renders are deliberately not included.
+    intro_dir = REPAIR / "intro_reference_experiment"
+    intro_manifest = intro_dir / "manifest.json"
+    if intro_manifest.is_file():
+        intro = json.loads(intro_manifest.read_text(encoding="utf-8"))
+        reference = Path(intro["reference_file"])
+        if reference.is_file():
+            append("INTRO POLISH VOICE REFERENCE", reference,
+                   profile="narrator_intro", kind="intro_reference")
+        intro_samples = [Path(row["file"]) for row in intro.get("samples", [])]
+        for index, sample in enumerate(intro_samples, 1):
+            if sample.is_file():
+                meta = intro["samples"][index - 1]
+                append(f"INTRO POCKET SAMPLE {index}: {meta['display_text']}", sample,
+                       profile="narrator_intro", kind="intro_voice_candidate",
+                       spoken_tts_text=meta.get("spoken_tts_text"))
+
     profiles = sorted({row.get("profile_before", "unknown") for row in selected.values()})
     for profile in profiles:
         ref = REFERENCES.get(profile)
@@ -130,7 +146,7 @@ def main() -> None:
                                    "segments": marks}, ensure_ascii=False, indent=2), encoding="utf-8")
     guide = args.output.with_suffix(".md")
     guide.write_text("# Pocket-TTS dubbing A/B review\n\n"
-                     "All voice samples and dialogue in this reel are Polish. The first clips are existing Polish character samples (not the Russian/Ukrainian conditioning WAVs); listen to each `PREVIOUS` / `POCKET` pair.\n\n"
+                     "All voice samples and dialogue in this reel are Polish. The opening segments are the approved intro narrator reference and two new test lines; raw Russian/Ukrainian conditioning WAVs and failed old narrator samples are excluded. Listen to each `PREVIOUS` / `POCKET` pair after the intro tests.\n\n"
                      + "\n".join(f"- {m['start_s']:.2f}–{m['end_s']:.2f}s — {m['label']}"
                                   for m in marks) + "\n", encoding="utf-8")
     print(json.dumps({"segments": len(marks), "duration_s": round(cursor / 24000, 2),

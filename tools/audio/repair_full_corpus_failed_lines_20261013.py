@@ -10,6 +10,7 @@ import numpy as np
 from scipy.io import wavfile
 from scipy.signal import resample_poly
 from piper import PiperVoice
+from tts_pronunciation import to_spoken_polish
 ROOT=Path(__file__).resolve().parents[2]
 QA=ROOT/'research/localization/polish_dubbing_qa_final.json'
 OUT=ROOT/'audio/polish/repair_candidate_20261013/full_audit'
@@ -31,12 +32,12 @@ def clean(text:str)->str:
  text=re.sub(r'\bE99\b','E dziewięćdziesiąt dziewięć',text,flags=re.I)
  text=re.sub(r'\bTMD\b','te em de',text,flags=re.I)
  text=re.sub(r'Katorga[- ]12','Katorga dwanaście',text,flags=re.I)
- text=re.sub(r'\bOnline\b','sieci',text,flags=re.I)
+ text=re.sub(r'\bOnline\b','onlajn',text,flags=re.I)
  text=re.sub(r'\bVolk S4\b','Wołk es cztery',text,flags=re.I)
  text=re.sub(r'\bKasimov\b','Kasimow',text,flags=re.I)
  text=re.sub(r'\bSNV[- ]E dziewięćdziesiąt dziewięć\b','es en we, E dziewięćdziesiąt dziewięć',text,flags=re.I)
  text=re.sub(r'\s+',' ',text).strip()
- return text
+ return to_spoken_polish(text)
 
 def trim_edges(a,rate):
  active=np.flatnonzero(np.abs(a)>=.002)
