@@ -196,3 +196,12 @@ unchanged, plus max16 cinematic Localize strings/mapping and16 PlaySound
 acceptance notes. SEH-guarded argument snapshots; no BINK struct offsets,
 audio mixing/track override/asset/config mutation. Native audio entry missing
 mapping versus unplayed mapped voice remains to be separated by runtime data.
+
+Framing/audio observation candidate L2_PASS: source22a68c74e47e9832997467a0b1589a359ddbf6af,
+x86 PE32 /O2 SHA820E82639FA89FD13B6DFF7B0E6F15B15DF06FD0D66362123AFCE3A88A5F98FC.
+Six narrow executables and runtime-policy PASS. All25 installed movies match
+SIDE's known source inventory hashes; no file copied or replaced. DLL-only
+deploy backup20261013-164928; guard41384 and read-only observer42416 READY,
+600s launch window. Installed INI C59B1CF6/UI5B2EA469 unchanged. Test pending:
+New Game -> movie -> helicopter20s, no chat switching, normal close; report
+framing/proportions/foreground and heard languages. No audio fix claimed.

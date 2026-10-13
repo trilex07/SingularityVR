@@ -14,6 +14,12 @@ Polish intro embedded track10 exists. New bounded read-only Bink exports and
 voice-call observations separate selection from missing dialogue entry.
 No audio track/file/config changes. See docs/CUTSCENE_RESUME_PHYSICAL.md.
 
+Current candidate L2_PASS source22a68c7 / x86 PE32 /O2 SHA820E82639FA89FD13B6DFF7B0E6F15B15DF06FD0D66362123AFCE3A88A5F98FC.
+Installed DLL-only, baseline backup20261013-164928 verified; restore guard and
+read-only observer READY (600s launch window). UI/INI unchanged, all25 movie
+hashes match known source inventory. Await user start; aspect/foreground and
+native audio selection still require runtime evidence and PSVR2 feedback.
+
 PID40412/DLL3242DB31: New Game no-crash PASS again; Bink50% size now
 PHYSICALLY_VERIFIED / USER_ACCEPTED. Preserve size and pawn guard. Helicopter
 BROKEN: different stretched eye halves and semi-transparent NPC face. Native
