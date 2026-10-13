@@ -19911,19 +19911,37 @@ void RefreshCameraPosition() {
     // cine ON` on every frame - the engine refusing the yaw we write, which is the reported broken
     // controls.
     //
-    // A change of camera INSTANCE is an unambiguous level transition, and unlike the exit event it
+    // A change of camera INSTANCE is usually a level transition, and unlike the exit event it
     // is something we can actually see. Logged once per transition, so it costs nothing per frame.
+    // Exception proven by PID 20128: a Matinee camera CUT inside a cinematic
+    // switches the camera actor with the same pawn and no menu. Clearing CINE
+    // there kept the whole helicopter scene stereo, so the cutscene gate below
+    // keeps the latch when the world demonstrably survived.
     static uintptr_t s_lastCam = 0;
+    static uintptr_t s_lastPawn = 0;
     if (cam != s_lastCam) {
         if (s_lastCam) {
-            Log("level transition: camera %p -> %p, CINE was %s%s", (void*)s_lastCam, (void*)cam,
-                InterlockedCompareExchange(&g_inCinematic, 0, 0) ? "ON" : "OFF",
-                InterlockedCompareExchange(&g_inCinematic, 0, 0) ? " - clearing it" : "");
-            InterlockedExchange(&g_inCinematic, 0);
+            const CameraChangeCtx cc{
+                InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0,
+                g_playerPawn != 0 && g_playerPawn == s_lastPawn,
+                g_playerPawn != 0,
+                Rd(g_vrMenuClass) != 0,
+            };
+            if (CameraChangeClearsCine(cc)) {
+                Log("level transition: camera %p -> %p, CINE was %s - clearing it",
+                    (void*)s_lastCam, (void*)cam, cc.cineOn ? "ON" : "OFF");
+                InterlockedExchange(&g_inCinematic, 0);
+            } else if (cc.cineOn) {
+                Log("camera cut: camera %p -> %p, same pawn, CINE stays ON",
+                    (void*)s_lastCam, (void*)cam);
+            } else {
+                Log("level transition: camera %p -> %p, CINE was OFF", (void*)s_lastCam, (void*)cam);
+            }
             ResetVrAfterCameraLoss("camera instance changed");
         }
         s_lastCam = cam;
     }
+    s_lastPawn = g_playerPawn;
     bool ok = false;
     if (Readable((void*)(cam + ACTOR_LOCATION), 12)) {
         memcpy(g_camPos, (void*)(cam + ACTOR_LOCATION), 12);

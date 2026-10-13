@@ -46,6 +46,25 @@ inline CutsceneMonoFit CutsceneMonoComputeFit(int srcW, int srcH,
     return out;
 }
 
+// A camera-instance change is ambiguous: a Matinee camera CUT (same level,
+// same pawn, engine still cinematic) must keep g_inCinematic, while a true
+// level transition (pawn destroyed/recreated, or quit to a menu) must clear
+// the stale latch. Proven by PID 20128: a helicopter-cut cleared CINE and the
+// whole scene stayed stereo.
+struct CameraChangeCtx {
+    bool cineOn = false;
+    bool pawnSame = false;   // g_playerPawn unchanged across the switch
+    bool pawnValid = false;  // g_playerPawn != 0 now
+    bool menuFocused = false;
+};
+
+inline bool CameraChangeClearsCine(CameraChangeCtx c) {
+    if (!c.cineOn) return false;                    // nothing latched
+    if (!c.pawnValid || !c.pawnSame) return true;   // world went away
+    if (c.menuFocused) return true;                 // quit to menu
+    return false;                                   // Matinee cut: keep CINE
+}
+
 // Presentation predicate shared by the composer, the capture stamp and the
 // cinema-matte skip so the three can never disagree about a frame.
 enum class CutsceneMonoMode : std::uint8_t { Other, CutsceneFlat, VideoFlat };

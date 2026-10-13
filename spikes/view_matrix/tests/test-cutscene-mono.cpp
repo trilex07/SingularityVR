@@ -56,11 +56,28 @@ static void test_predicate() {
     CHECK(!CutsceneMonoShouldCompose(M::CutsceneFlat, true, false, false)); // flat desktop
 }
 
+static void test_camera_change_gate() {
+    using C = CameraChangeCtx;
+    // Matinee camera cut: same pawn, no menu -> keep CINE.
+    CHECK((!CameraChangeClearsCine(C{ true, true, true, false })));
+    // True level transition: pawn recreated -> clear.
+    CHECK((CameraChangeClearsCine(C{ true, false, true, false })));
+    // World gone (menu load, pawn null) -> clear.
+    CHECK((CameraChangeClearsCine(C{ true, false, false, false })));
+    CHECK((CameraChangeClearsCine(C{ true, true, false, false })));
+    // Quit to menu with surviving pawn value -> clear.
+    CHECK((CameraChangeClearsCine(C{ true, true, true, true })));
+    // Nothing latched -> no-op regardless.
+    CHECK((!CameraChangeClearsCine(C{ false, false, false, false })));
+    CHECK((!CameraChangeClearsCine(C{ false, true, true, false })));
+}
+
 int main() {
     test_sbs_fit();
     test_odd_dims();
     test_degenerate();
     test_predicate();
+    test_camera_change_gate();
     if (g_failures == 0) { std::printf("PASS: cutscene mono fit + predicate\n"); return 0; }
     std::printf("FAILED: %d checks\n", g_failures);
     return 1;
