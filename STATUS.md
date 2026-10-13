@@ -6,10 +6,16 @@ in this trial. Native gameplay English persists. Four originals D892/AAA/B3FE/
 890C + UI5B/frozen files and all1886 WAV originals restored/independently hashed.
 Next Steam install/launch requires fresh start. Own-wrist defaultOFF experiment
 L1_PASS only: reconstructed no-ride residual49.997/40.844UU; no guessed50cm offset.
-Probe corrected to gameplay-only and actual ride capture. L2/physical pending.
+Probe corrected to gameplay-only and actual ride capture. L2_PASS sourcea23d7e9,
+x86 PE32/O2 SHA E213B216F90CF5545862D8850574D5CD7F82A480983847D4F989507E3E3E58A5.
+Offline wrist-anchor artifact prepared; fake four-file lease/restore gates PASS.
+Physical pending; no real install changed/Steam launched.
 See docs/no-tmd-wrist-anchor.md. Native audio offline three-bank vertical slice
 42replacements/4too-long retainedEN; not full Polish/runtime/audio acceptance.
 User delegates missing sound generation to SIDE; MAIN retains all Steam writes.
+SIDE found incorrect earlier transcriptions in four oversized lines. Native42
+candidate text fidelity is now being checked against SpokenText, not inferred
+from ASR screen PASS. Do not deploy those native banks before this audit.
 Older NEXT/LATEST headers below are historical.
 
 LATEST physical PID34980: no FPS dips noticed in this trial. Frontend menu

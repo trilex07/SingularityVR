@@ -43,4 +43,10 @@ not changed by this flag. Existing palette restoration remains authoritative.
 L1: synthetic reconstruction/rotation/scale/ride cancellation/fail-closed/gating
 tests and the three-record private replay pass. Corrected replay residual is
 below0.00002UU. This is algebraic validation, NOT GPU pixel or PSVR2 acceptance.
-L2 build and physical own-wrist acceptance remain pending at this note.
+L2 PASS: sourcea23d7e9, x86 PE32 `/O2`, DLL SHA-256
+E213B216F90CF5545862D8850574D5CD7F82A480983847D4F989507E3E3E58A5.
+Offline four-file artifact `deployment/hands-dubbing/wrist-anchor-test-artifact`
+adds NoTmdWristAnchorFix1 alongside the previous trial's four experiment flags.
+Existing fake-install tests pass: WhatIf, path refusal, corrupt backup rejection,
+user-INI conflict preservation, exact restore and frozen UI. No real installation
+changed and no Steam game launched. Physical own-wrist acceptance remains pending.
