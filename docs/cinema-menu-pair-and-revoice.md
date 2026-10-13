@@ -61,3 +61,10 @@ adds only NoTmdPaletteFix/CutsceneMenuHandoffFix/CutsceneMenuPairFix/HandAnchorP
 fake Steam lease/WhatIf/path/corrupt backup/conflict/restore tests PASS.
 Full1886WAV fake install/restore and fresh WindowsPS hidden60s timeout/restore
 PASS (no Steam launches). No L3 or physical acceptance for these new policies.
+
+MAIN WAV-only deployment at23:08:45 local: private evidence
+deployment/hands-dubbing/revoice-live-20261013-230604, guard45532 READY with600s
+no-launch lease. All1886candidate and1886backup hashes independently verified,
+pendingQA146. Actual accepted DLLs/INI/UI/native package/107DDS/frozen config
+unchanged; Steam NOT launched. This temporary voice install must restore after
+game exit or expire if no test starts; do not assume it remains installed later.
