@@ -111,22 +111,46 @@ TEXT_OVERRIDES = {
 
 def clean_localization_text(text: str) -> str:
     text = re.sub(r"<[^>]+>", " ", text or "")
+    # Turn UI action aliases into natural Polish instructions before the
+    # generic token-name fallback below ("Naciśnij kucania" is ungrammatical).
+    action_phrases = {
+        "fire": "przycisk strzału", "use": "przycisk użycia",
+        "grab": "przycisk chwytu", "age": "TMD", "impulse": "Impulsu",
+        "flashlight": "przycisk latarki", "aim": "przycisk celowania",
+        "jump": "przycisk skoku", "crouch": "przycisk kucania",
+        "dash": "przycisk sprintu", "reload": "przycisk przeładowania",
+        "switchwpn": "przycisk zmiany broni",
+    }
+    for token, spoken in action_phrases.items():
+        token_re = re.escape(f"[{token}]")
+        text = re.sub(rf"\b(naciśnij|nacisnij|press)\s+{token_re}",
+                      lambda m: ("Naciśnij przycisk Impulsu" if token == "impulse" else
+                                 "Naciśnij " + spoken), text, flags=re.IGNORECASE)
+        text = re.sub(rf"\b(przytrzymaj|press and hold)\s+{token_re}",
+                      ("Przytrzymaj przycisk Impulsu" if token == "impulse" else
+                       "Przytrzymaj " + spoken), text, flags=re.IGNORECASE)
     text = re.sub(r"\[([^\]]+)\]", lambda m: TOKEN_WORDS.get(m.group(1).lower(), m.group(1)), text)
     text = text.replace("`~", " ").replace("\\n", " ")
     return to_spoken_polish(re.sub(r"\s+", " ", text).strip())
 
 
 def spoken_pieces(text: str) -> list[str]:
-    text = re.sub(r"\s+", " ", text).strip()
-    if not text:
+    text = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+    # Multi-line tutorials and control lists must be synthesized as distinct
+    # utterances; otherwise Pocket-TTS may stop partway through the list.
+    lines = [re.sub(r"\s+", " ", part).strip() for part in text.split("\n")]
+    lines = [part for part in lines if part]
+    if not lines:
         return []
-    sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", text) if part.strip()]
-    if len(sentences) > 1:
-        return sentences
-    if len(re.findall(r"\w+", text, flags=re.UNICODE)) <= 14:
-        return [text]
-    clauses = [part.strip() for part in re.split(r"(?<=[,;:])\s+", text) if part.strip()]
-    return clauses or [text]
+    pieces: list[str] = []
+    for line in lines:
+        sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", line) if part.strip()]
+        if len(sentences) > 1 or len(re.findall(r"\w+", line, flags=re.UNICODE)) <= 14:
+            pieces.extend(sentences or [line])
+            continue
+        clauses = [part.strip() for part in re.split(r"(?<=[,;:])\s+", line) if part.strip()]
+        pieces.extend(clauses or [line])
+    return pieces
 
 
 def trim_model_padding(audio: np.ndarray, rate: int) -> np.ndarray:
@@ -177,12 +201,20 @@ def main() -> None:
     parser.add_argument("--pack", choices=("all", "full_localization", "story_nllb"), default="all")
     parser.add_argument("--force", action="store_true", help="regenerate selected rows even when a candidate WAV already exists")
     parser.add_argument("--ids-file", type=Path, help="JSON array of line IDs to generate")
+    parser.add_argument("--text-overrides-json", type=Path,
+                        help="optional local JSON object mapping exact manifest line_id to corrected Polish text")
+    parser.add_argument("--profile-overrides-json", type=Path,
+                        help="optional local JSON object mapping exact manifest line_id to a verified voice profile")
     args = parser.parse_args()
     if not INTRO.is_file():
         raise SystemExit(f"Prepare the approved intro reference first: {INTRO}")
     if not CORRECTIONS.is_file():
         raise SystemExit(f"Missing preserved local correction map: {CORRECTIONS}")
     corrections = json.loads(CORRECTIONS.read_text(encoding="utf-8"))
+    exact_overrides = (json.loads(args.text_overrides_json.read_text(encoding="utf-8"))
+                       if args.text_overrides_json else {})
+    profile_overrides = (json.loads(args.profile_overrides_json.read_text(encoding="utf-8"))
+                         if args.profile_overrides_json else {})
     ui_corrections = corrections.get("UI_CORRECTIONS", {})
     story_corrections = corrections.get("STORY_CORRECTIONS", {})
 
@@ -199,8 +231,9 @@ def main() -> None:
         for row in rows:
             if pack == "full_localization":
                 line_id = row.get("id", "")
-                profile = row.get("profile", "narrator_user")
-                polish = TEXT_OVERRIDES.get(line_id, ui_corrections.get(line_id, row.get("pl", "")))
+                profile = profile_overrides.get(line_id, row.get("profile", "narrator_user"))
+                polish = exact_overrides.get(line_id, TEXT_OVERRIDES.get(
+                    line_id, ui_corrections.get(line_id, row.get("pl", ""))))
                 # `tts_text` in this manifest is an older, partly-English
                 # synthesis string. Prefer the actual Polish draft unless a
                 # targeted correction overrides it.
@@ -209,8 +242,9 @@ def main() -> None:
                 english = row.get("en", "")
             else:
                 line_id = row.get("source", "")
-                profile = row.get("profile", "narrator_user")
-                polish = TEXT_OVERRIDES.get(line_id, story_corrections.get(row.get("asset", ""), row.get("text_pl_machine", "")))
+                profile = profile_overrides.get(line_id, row.get("profile", "narrator_user"))
+                polish = exact_overrides.get(line_id, TEXT_OVERRIDES.get(
+                    line_id, story_corrections.get(row.get("asset", ""), row.get("text_pl_machine", ""))))
                 text = to_spoken_polish(polish)
                 original = AUDIO / "story_voicepack_nllb" / row.get("file", "")
                 english = row.get("text_en", "")
