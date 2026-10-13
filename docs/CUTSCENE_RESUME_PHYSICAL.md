@@ -78,3 +78,33 @@ Installed DLL-only; deploy backup `deployment/install-backups/20261013-145004`
 contains verified D8928180 baseline. INI/UI unchanged. Restore guard armed
 with 600-second launch window; wait for user readiness rather than consuming
 the physical test window before they put on PSVR2. L3/L4 still pending.
+
+## PID4672 result and next controlled candidate
+
+4483CF02 session: user confirms New Game -> intro without crash; native log
+explicitly records the guarded read rejecting old pawn0x0DAAA000, then a new
+pawn is acquired. This is L3/L4 acceptance of this crash reproduction only,
+not every UObject transition. Helicopter still shows different stretched eye
+halves. CINE turns ON and stays ON; no successful composition log. Several
+later native Present windows ~87-90 FPS, not a complete user FPS measurement.
+User confirms closure; guard restored D8928180 with INI/UI hashes unchanged.
+
+Initial lead was the RT->offscreen plain StretchRect restriction documented at
+https://learn.microsoft.com/en-us/windows/win32/api/d3d9/nf-d3d9-idirect3ddevice9-stretchrect.
+Native x86 D3D9Ex GPU test FALSIFIED surface type alone: this driver accepts
+both original copies (all HRESULT S_OK). Do not replace that path on this
+hypothesis. Next candidate retains composition behavior and adds max20
+gate/stage/HRESULT log records from existing calls, no new draw queries or
+readback. Falsifier: armed+copy stages succeed and image still wrong -> inspect
+capture stamp/bridge pixels, not further surface guesses.
+
+User-requested intro change: halve both width and height relative to accepted
+per-eye Bink placement, retain centre/UV/aspect. `Render.VideoCinemaScalePct`
+defaults50; 100 is exact legacy control. Installed INI stays untouched; no
+world/menu/glove/weapon/shadow/input transform changes.
+
+Dubbing audit: PolishLanguage=1, localization hooks initialize, installed story
+manifest plus992 WAVs exist. Existing PolishMaybeSpeak is driven by Localize
+text callbacks and PlaySoundW; it does not replace a Bink movie audio track.
+This is a movie-audio integration gap, not evidence the translation pack was
+forgotten. No voice assets changed; old deployment-status prose is historical.

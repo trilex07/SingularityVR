@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+PID4672/4483CF02: New Game crash reproduction PASS in Steam/PSVR2; guarded
+stale-pawn read rejection logged. Helicopter still BROKEN: CINE ON but no mono
+composition success. Safe D892 baseline restored, INI/UI unchanged.
+Next candidate: requested Bink50% width/height + max20 mono gate/stage HRESULT
+notes only. GPU reproduction falsified surface-type-alone hypothesis.
+Dubbing audit: installed PL manifests/WAVs and Localize hooks present; movie
+Bink audio redirection absent. Details: docs/CUTSCENE_RESUME_PHYSICAL.md.
+
 MAIN cutscene resume, PID41200: New Game crashed before intro; WER/dump and
 exact candidate MAP/disassembly prove pawn Location.Z read in camera
 stabilization (RVA0x2898C, stale pawn0x0DA0A000), not mono composition. Safe

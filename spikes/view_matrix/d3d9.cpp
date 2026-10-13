@@ -20,6 +20,7 @@
 #include "pose_conversion.h"
 #include "vr_scene_mode.h"
 #include "cutscene_mono.h" // CutsceneFlat mono-to-both-eyes fit math (no D3D)
+#include "video_cinema_placement.h"
 #include "input_remap.h"
 #include "polish_localization.h"
 
@@ -5010,6 +5011,7 @@ static void SnapshotMenuOnSlot(CopySlot& cap);
 // draws itself per eye and menu frames own their flat path, so neither takes
 // this path. Gated on the existing CutsceneFlatMode switch (ALWAYS VR off).
 extern volatile LONG g_sceneFlatEnabled;
+extern volatile LONG g_inCinematic;
 // Original SetRenderTarget, defined with the render-target hook far below.
 // Declared here so the mono composer can bypass hook bookkeeping exactly
 // like the cinema matte does.
@@ -5036,6 +5038,26 @@ static bool CutsceneMonoComposeArmed() {
 static IDirect3DSurface9* g_cineMonoTemp = nullptr;
 static UINT g_cineMonoTempW = 0, g_cineMonoTempH = 0;
 static bool g_cineMonoReady = false; // set when this Present composed the frame
+// Bounded transition/error evidence. No per-draw work, new hooks, queries,
+// allocations or pixel readbacks. The existing silent returns hid the reason
+// PID4672 never composed despite CINE ON. At most 20 lines in one session.
+static unsigned g_cineMonoNotes = 0;
+static void CutsceneMonoNote(const char* stage, HRESULT hr) {
+    static const char* lastStage = nullptr;
+    static HRESULT lastHr = S_OK;
+    static vrscene::Mode lastMode = vrscene::Mode::Unknown;
+    static LONG lastMenu = -1;
+    const vrscene::Mode mode = g_sceneMode.Current();
+    const LONG menu = Rd(g_vrMenuClass);
+    // Consecutive repeats need not exhaust the budget before the next stage.
+    if (stage == lastStage && hr == lastHr && mode == lastMode && menu == lastMenu) return;
+    if (g_cineMonoNotes >= 20) return;
+    lastStage = stage; lastHr = hr; lastMode = mode; lastMenu = menu;
+    ++g_cineMonoNotes;
+    Log("cutscene-mono: stage=%s hr=0x%08lX mode=%s cine=%ld flat=%ld menuClass=%ld vr=%d src=%ux%u",
+        stage, (unsigned long)hr, vrscene::Name(g_sceneMode.Current()), Rd(g_inCinematic),
+        Rd(g_sceneFlatEnabled), Rd(g_vrMenuClass), VrModeOn()?1:0, g_srcW, g_srcH);
+}
 static void ReleaseCutsceneMonoResources() {
     if (g_cineMonoTemp) { g_cineMonoTemp->Release(); g_cineMonoTemp = nullptr; }
     g_cineMonoTempW = g_cineMonoTempH = 0;
@@ -5047,12 +5069,22 @@ static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR 
 // frame keeps the previous stereo-submission behaviour.
 static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
     g_cineMonoReady = false;
-    if (!dev || !CutsceneMonoComposeArmed()) return false;
-    IDirect3DSurface9* back = nullptr;
-    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back)
+    if (!dev) return false;
+    if (!CutsceneMonoComposeArmed()) {
+        if (Rd(g_inCinematic) && VrModeOn()) CutsceneMonoNote("gate-blocked", S_FALSE);
         return false;
+    }
+    static bool saidArmed = false;
+    if (!saidArmed) { saidArmed = true; CutsceneMonoNote("armed", S_OK); }
+    IDirect3DSurface9* back = nullptr;
+    const HRESULT getBack = dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back);
+    if (FAILED(getBack) || !back) {
+        CutsceneMonoNote("get-backbuffer", FAILED(getBack)?getBack:E_POINTER);
+        return false;
+    }
     D3DSURFACE_DESC d{};
-    bool ok = SUCCEEDED(back->GetDesc(&d)) && d.Width >= 8 && d.Height >= 8;
+    const HRESULT descHr = back->GetDesc(&d);
+    bool ok = SUCCEEDED(descHr) && d.Width >= 8 && d.Height >= 8;
     // The bridge crop uses the capture dimensions; composing against anything
     // else would misalign the submitted half.
     if (ok && (d.Width != g_srcW || d.Height != g_srcH)) {
@@ -5065,12 +5097,13 @@ static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
     const int bw = (int)d.Width, bh = (int)d.Height;
     const CutsceneMonoFit fit = ok ? CutsceneMonoComputeFit(bw, bh, 0, bw / 2, bh)
                                    : CutsceneMonoFit{};
-    if (!fit.valid) { back->Release(); return false; }
+    if (!fit.valid) { CutsceneMonoNote("desc-or-fit", FAILED(descHr)?descHr:E_INVALIDARG); back->Release(); return false; }
     if (!g_cineMonoTemp || g_cineMonoTempW != (UINT)bw || g_cineMonoTempH != (UINT)bh) {
         ReleaseCutsceneMonoResources();
-        if (FAILED(dev->CreateOffscreenPlainSurface(bw, bh, d.Format, D3DPOOL_DEFAULT,
-                                                    &g_cineMonoTemp, nullptr)) ||
-            !g_cineMonoTemp) {
+        const HRESULT createHr = dev->CreateOffscreenPlainSurface(bw, bh, d.Format, D3DPOOL_DEFAULT,
+                                                    &g_cineMonoTemp, nullptr);
+        if (FAILED(createHr) || !g_cineMonoTemp) {
+            CutsceneMonoNote("create-temp", FAILED(createHr)?createHr:E_POINTER);
             back->Release();
             return false;
         }
@@ -5079,6 +5112,7 @@ static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
     }
     const RECT full{ 0, 0, bw, bh };
     HRESULT hr = dev->StretchRect(back, &full, g_cineMonoTemp, &full, D3DTEXF_NONE);
+    if (FAILED(hr)) CutsceneMonoNote("copy-source-to-temp", hr);
     IDirect3DSurface9* old = nullptr;
     IDirect3DSurface9* depth = nullptr;
     if (SUCCEEDED(hr)) {
@@ -5095,6 +5129,7 @@ static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
         }
         const RECT dst{ fit.image.left, fit.image.top, fit.image.right, fit.image.bottom };
         hr = dev->StretchRect(g_cineMonoTemp, &full, back, &dst, D3DTEXF_LINEAR);
+        if (FAILED(hr)) CutsceneMonoNote("fit-temp-to-back", hr);
         if (g_origSetRenderTarget && old) g_origSetRenderTarget(dev, 0, old);
         dev->SetDepthStencilSurface(depth);
     }
@@ -18169,6 +18204,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
 // eye with black above and below. A flat screen in front of you, which is how 2D video should read
 // in a headset.
 volatile LONG g_videoStereo = 1;      // ini [Render] VideoStereo
+volatile LONG g_videoCinemaScalePct = 50; // relative size; user-requested half width and height
 
 // Counted per second and printed only when nonzero. The detection log says it once, which proves it
 // fired at all and nothing about WHERE - and the failure mode that matters is it firing during
@@ -18348,17 +18384,20 @@ bool DrawVideoQuadPerEye(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t, UINT primCou
     HRESULT hr = D3D_OK;
     for (int eye = 0; eye < 2; ++eye) {
         memcpy(scratch, vtxData, (size_t)nv * vtxStride);
-        const float xOff = (eye == 0) ? -0.5f : +0.5f;
         for (UINT i = 0; i < nv; ++i) {
             float* p = reinterpret_cast<float*>(scratch + (size_t)i * vtxStride);
-            p[0] = p[0] * 0.5f + xOff;
-            p[1] = p[1] * 0.5f;
+            PlaceVideoInEye(p[0], p[1], eye, (int)Rd(g_videoCinemaScalePct));
         }
         const HRESULT r = g_origDrawPrimUP(dev, t, primCount, scratch, vtxStride);
         if (FAILED(r)) hr = r;
     }
 
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldScissor);
+    static bool saidSize = false;
+    if (SUCCEEDED(hr) && !saidSize) {
+        saidSize = true;
+        Log("video cinema: per-eye width/height %ld%% of previous placement, UV/aspect unchanged", Rd(g_videoCinemaScalePct));
+    }
     return SUCCEEDED(hr);
 }
 
@@ -26990,6 +27029,8 @@ void LoadIniSettings() {
 
     InterlockedExchange(&g_videoStereo,
                         GetPrivateProfileIntA("Render", "VideoStereo", 1, path) ? 1 : 0);
+    InterlockedExchange(&g_videoCinemaScalePct,
+        ClampVideoCinemaScale(GetPrivateProfileIntA("Render", "VideoCinemaScalePct", 50, path)));
     Log("ini: VideoStereo=%ld (%s)", InterlockedCompareExchange(&g_videoStereo, 0, 0),
         InterlockedCompareExchange(&g_videoStereo, 0, 0)
             ? "Bink video drawn once per eye"
