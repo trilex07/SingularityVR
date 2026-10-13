@@ -6,6 +6,8 @@ param([Parameter(Mandatory)][string]$BackupPath,
 # MAIN-only two-file lease. No Steam launch/input/kill, INI or DDS mutation.
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Utility') -ErrorAction Stop
+Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Management') -ErrorAction Stop
 $backup=(Resolve-Path -LiteralPath $BackupPath).Path
 $metadata=Get-Content -LiteralPath (Join-Path $backup 'backup_metadata.json') -Raw | ConvertFrom-Json
 $manifest=@(Get-Content -LiteralPath (Join-Path $backup 'manifest.json') -Raw | ConvertFrom-Json)

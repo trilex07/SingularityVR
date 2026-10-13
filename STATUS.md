@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+NOW cache-only repair authorized and L1/L2_PASS. Injector sourcef6aeb6b,
+x86 PE32/O2 SHA1BC0F7DD59A46BD7E29DDEC0B17053A3CEA6726C0476A5C0782DC672F6CC3059.
+655resource negative results retain native classification; no pixel/asset,
+quality/group/hash-table change. Old saturation reproduced; native D3D9
+pixel/reset/lifetime test PASS. Pair-only synthetic install+rollback PASS,
+INI/DDS/original-forwarder untouched. Actual game perf/visual gate pending;
+user authorized short Continue(catastrophe)->stereo+L2/R2 test. Reuse previous
+VR64353686 unchanged; no new UAC/WPR. Steam not yet deployed at this header.
+Accepted original injectorAAA07005 and VRD892 must both be restored after test.
+Hands stretching still open. See docs/texture-native-cache-fix.md.
+
 CPU ROOT-CAUSE PATH IDENTIFIED (not fixed): PID8804 native trace111319samples.
 ~64.78% of target-process weighted CPU samples are texture injector dinput8,
 SHA AAA07005F4FF658C4A71CC30EA258E469DAF250C77BFE447011FFD650379E4F7,

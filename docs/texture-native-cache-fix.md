@@ -51,3 +51,24 @@ Official API semantics: resource-private byte records are copied with flags0,
 and GetPrivateData writes only the supplied caller buffer:
 [SetPrivateData](https://learn.microsoft.com/en-us/windows/win32/api/d3d9/nf-d3d9-idirect3dresource9-setprivatedata),
 [GetPrivateData](https://learn.microsoft.com/en-us/windows/win32/api/d3d9/nf-d3d9-idirect3dresource9-getprivatedata).
+
+## Offline gates completed
+
+Sourcef6aeb6bafff1b65716bc197a1ff8ee4c1d987807; regular x86 PE32/O2 injector
+1BC0F7DD59A46BD7E29DDEC0B17053A3CEA6726C0476A5C0782DC672F6CC3059.
+No tracked diff in build manifest. L1 old-policy reproducer20512hashes versus
+655hashes/65500binds with the new resource decisions. Failure/wrong record/
+new lifetime and pinned/rotating fallback checks PASS. Native synthetic HAL
+D3D9 test PASS:655 managed resources, identical mip0 pixels, bound texture
+unchanged, reset preserves decisions/pixels, fresh texture has no old stamp.
+These are not Steam/physical acceptance or measured game FPS gains.
+
+Synthetic two-DLL installer/rollback test PASS inside own workspace only:
+INI, original-forwarder and DDS fixture hashes unchanged; backup exactly
+two files/zero directories. New RuntimeDllPairOnly mode requires explicit
+artifact directory; all actual install/rollback paths reject a running game.
+Post-exit guardian includes10s idle grace for Steam's transient bootstrap,
+hash-verifies both restored DLLs; no DDS/config writes. Previous cinematic
+candidate64353686 is reused unchanged, so the sole runtime intervention versus
+PID8804 is injector cache. Physical availability confirmed by user; main Steam
+deployment/execution is next. No further WPR/UAC requested for this round.
