@@ -58,7 +58,13 @@ try {
             if(Test-Path -LiteralPath $nativeLog) {
                 $state=Get-Item -LiteralPath $nativeLog
                 if($state.LastWriteTime -ge $gameStart -and $state.Length -le 33554432) {
-                    $cueSeen=Test-CinemaExitTraceCue -Text ([IO.File]::ReadAllText($nativeLog)) -GameStart $gameStart
+                    # ReadAllText uses FileShare.Read: this fails while the
+                    # native logger is writing. Get-Content shares read/write.
+                    # A transient rotation/deletion is only a missed poll.
+                    try {
+                        $text=Get-Content -LiteralPath $nativeLog -Raw -ErrorAction Stop
+                        if($text){$cueSeen=Test-CinemaExitTraceCue -Text $text -GameStart $gameStart}
+                    } catch [IO.IOException] { $cueSeen=$false }
                 }
             }
             if(-not $cueSeen){Start-Sleep -Seconds 2}
@@ -82,6 +88,11 @@ try {
         if(-not $sameGame -or $sameGame.StartTime -ne $gameStart){break}
         Start-Sleep -Seconds 1
     }
+} catch {
+    # Hidden RunAs shells otherwise lose the terminating exception after the
+    # transcript closes. Preserve the diagnostic before cleanup/rethrow.
+    Write-Output ("CPU RECORDER ERROR: " + $_.Exception.Message)
+    throw
 } finally {
     if($started) {
         & $wpr -stop $trace -skipPdbGen -instancename $instance
