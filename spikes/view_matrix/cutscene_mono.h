@@ -83,6 +83,11 @@ inline bool CutsceneMonoShouldCompose(CutsceneMonoMode mode, bool flatEnabled,
     return mode == CutsceneMonoMode::CutsceneFlat;
 }
 
+inline bool CutsceneUseNativeCamera(CutsceneMonoMode mode, bool flatEnabled,
+                                    bool menuFlat, bool vrOn, bool enabled) {
+    return enabled && CutsceneMonoShouldCompose(mode,flatEnabled,menuFlat,vrOn);
+}
+
 // ApplyVrFov computes a HALF-width eye projection while duplication is ON.
 // CutsceneFlat executes one draw over the FULL-width source. Match that actual
 // viewport or a square projects twice as wide. Submission retains eye tangents:

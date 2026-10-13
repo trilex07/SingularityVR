@@ -21,7 +21,7 @@ $seen = [Collections.Generic.HashSet[string]]::new()
 $events = [Collections.Generic.List[string]]::new()
 $gameId = 0
 $heartbeat = $started
-$pattern = 'OpenXR ready|xr-heartbeat:|perf:|session state|SceneMode:|camera cut|level transition:|cutscene-camera:|cutscene-mono:|cutscene STARTED|cutscene ENDED|bCinematicMode|yaw asserted by the ENGINE|camera pawn sample:|FRAME SPIKE|bink-audio:|polish cine text:|polish voice:'
+$pattern = 'OpenXR ready|xr-heartbeat:|perf:|session state|SceneMode:|camera cut|level transition:|cutscene-camera:|cutscene-state:|cutscene-time:|cutscene-mono:|cutscene STARTED|cutscene ENDED|bCinematicMode|yaw asserted by the ENGINE|camera pawn sample:|FRAME SPIKE|bink-audio:|polish cine text:|polish voice:'
 Write-Output ('OBSERVER READY: read-only; deadline ' + $deadline.ToString('o'))
 while ((Get-Date) -lt $deadline) {
     $running = @(Get-Process -Name Singularity -ErrorAction SilentlyContinue)

@@ -1,5 +1,46 @@
 # MAIN resume: round 3, no mid-session chat
 
+## PID45080 / 8B34C584: intro accepted, cinema gate REOPENED
+
+User confirms Polish intro. Cinema still too large/wide; turning the headset
+rotates the content/shadows. After crash sequence, cinema/hiding remain active,
+several FPS and no tracked hands. Full private native log:
+`deployment/cinema-handoff/test-live/session.log`. Guard restored D8928180;
+MAIN independently verified DLL, INI C59B1CF6 and UI5B2EA469. No assets changed.
+
+Actual log contradicts a simple never-received-OFF diagnosis: SetCinematicMode
+OFF twice at lines10222-10225, then ON twice at10229-10232. Helicopter windows
+~90FPS precede the later16.3 then2.3FPS window (439.29ms). Existing `our work`
+438.67ms is a residual INCLUDING rendering, not a measured mod function. XR
+wait/submit, copy and object walking do not explain that interval. Do not label
+the second ON stale, invent an exit timer, or claim stereo return fixed.
+
+Source proves flat draw duplication stops, but SetVSConst still applies HMD
+rotation/position/roll and VR projection, CalcViewRotation still overwrites
+pitch, and ApplyVrFov still forces the cinematic camera's FOV. Hypothesis:
+preserve native camera/projection in *only* CutsceneFlat so all native depth,
+shadow and geometry consumers agree; continue to place the whole completed
+image in a smaller60% identical-eye fit. Falsifier: native-camera gate executes
+but content still follows head -> identify remaining writer, do not invert signs.
+Gameplay, menus, Bink50%, accepted shadows/input and Polish intro are unchanged.
+
+MAIN read-only Steam metadata boot PID36660 on D892: UProperty controls reproduce
+Actor.Location54/Rotation60; RvPlayerController.mCinematicData is StructProperty
+778,size24. Its mState IntProperty0 is a weapon-raise/lower state, not a universal
+cinematic flag (enum PCS_STATE_INACTIVE/INIT/LOWER_WAIT/RAISE/RAISE_WAIT/RAISE_DONE).
+No bCinematicMode property found: do not import an offset from another UE build.
+Live UObject.GetStateName UFunction::Func+AC ->004B7B60 native instructions prove
+self+18 ->FStateFrame, frame+28 ->StateNode, StateNode+2C ->FName. Read-only chain
+returns PlayerWalking at boot. Native entry offsets are evidence, NOT hooks.
+Next bounded probe validates StateNode's class `State` before naming it and only
+OBSERVES current-controller identity/state; it must not drive an unproven exit.
+Metadata boot closed normally via exact PID WM_CLOSE; no install writes.
+
+Next candidate adds bounded per-second composition CPU timing and actual
+controller-state transitions. Physical exit/performance gate remains open.
+Priority from user: scene and start of gameplay first; full Polish dialogue/movie
+coverage next. Helicopter speech remains unimplemented and must not be called PL.
+
 Inherited candidate, no renderer changes in this resume:
 `fix/cutscene-mono-presentation` @ `3df65c843cf3b4aa1b6f223d5527cf68c809ee2a`,
 x86 PE32 /O2, DLL SHA256

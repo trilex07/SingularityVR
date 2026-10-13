@@ -87,6 +87,17 @@ static void test_predicate() {
     CHECK(!CutsceneMonoShouldCompose(M::CutsceneFlat, false, false, true)); // ALWAYS VR
     CHECK(!CutsceneMonoShouldCompose(M::CutsceneFlat, true, true, true));   // menu owns it
     CHECK(!CutsceneMonoShouldCompose(M::CutsceneFlat, true, false, false)); // flat desktop
+    CHECK(CutsceneUseNativeCamera(M::CutsceneFlat,true,false,true,true));
+    CHECK(!CutsceneUseNativeCamera(M::Other,true,false,true,true));
+    CHECK(!CutsceneUseNativeCamera(M::VideoFlat,true,false,true,true));
+    CHECK(!CutsceneUseNativeCamera(M::CutsceneFlat,false,false,true,true));
+    CHECK(!CutsceneUseNativeCamera(M::CutsceneFlat,true,true,true,true));
+    CHECK(!CutsceneUseNativeCamera(M::CutsceneFlat,true,false,false,true));
+    CHECK(!CutsceneUseNativeCamera(M::CutsceneFlat,true,false,true,false));
+    const auto smaller=CutsceneMonoComputeFit(5264,2684,0,2632,2684,60);
+    CHECK(smaller.valid && smaller.barCount==4);
+    CHECK(smaller.image.right-smaller.image.left==1579);
+    CHECK(smaller.image.bottom-smaller.image.top==805);
 }
 
 static void test_camera_change_gate() {

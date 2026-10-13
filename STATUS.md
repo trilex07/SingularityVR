@@ -1,5 +1,24 @@
 # STATUS — session handoff
 
+PID45080 / 8B34C584: Polish intro PHYSICALLY_VERIFIED. Cutscene camera/size,
+exit to gameplay and late performance BROKEN (user confirms too wide,
+head-dependent content, cinema/no hands after crash, several FPS). Native log
+has OFF/OFF then ON/ON, NOT a never-received-OFF; ~90FPS helicopter followed by
+16.3 then2.3FPS. `our work` residual includes game rendering; cause not isolated.
+Guard restored D892, independent DLL/INI C59/UI5B hash verification PASS.
+
+Next controlled experiment L1_PASS: native-camera CutsceneFlat (no HMD source
+rotation/translation/roll, native projection/FOV retained), centered60% fit.
+Gameplay/menu/accepted Bink50%, shadows/input and Polish intro unchanged.
+Bounded composition timing and read-only actual controller state observation
+are added, NOT a guessed exit override. MAIN metadata Steam boot on D892 proves
+native GetStateName frame chain; menu state PlayerWalking. mCinematicData.mState
+is weapon raise/lower, not generic cinema detection. Normal exit/no install
+writes. Eight x86/O2 unit executables PASS; build/policy gate in progress.
+Priority: cinema + start of gameplay; whole-game Polish audio next. Helicopter
+speech still UNIMPLEMENTED, no global movie-track10 assumption.
+See docs/CUTSCENE_RESUME_PHYSICAL.md.
+
 PID5052/820E8263 correctly loaded new candidate (native Bink probes prove it),
 but movie/loading camera/pawn transition wrongly cleared CINE: no cinematic
 composition/framing/foreground execution. Intro selected IDs0/1/2/3, excluding

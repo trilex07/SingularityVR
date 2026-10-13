@@ -20,6 +20,7 @@
 #include "pose_conversion.h"
 #include "vr_scene_mode.h"
 #include "cutscene_mono.h" // CutsceneFlat mono-to-both-eyes fit math (no D3D)
+#include "cinematic_state_observation.h"
 #include "video_cinema_placement.h"
 #include "input_remap.h"
 #include "polish_localization.h"
@@ -149,6 +150,7 @@ extern volatile LONG g_sceneModeTrace;
 extern volatile LONG g_sceneVideoSeen;
 extern volatile LONG g_sceneModeFrame;
 static void UpdateSceneModeFrame();
+static bool CutsceneNativeCameraArmed();
 
 // ---------------------------------------------------------------- logging
 CRITICAL_SECTION g_lock;
@@ -1267,7 +1269,7 @@ FRotator* __fastcall Hook_CalcViewRotation(void* self, void* edx,
 
     if (InterlockedCompareExchange(&g_constTest, 0, 0)) {
         r->pitch = kConstPitch;
-    } else if (InterlockedCompareExchange(&g_enabled, 0, 0) && g_haveWant) {
+    } else if (InterlockedCompareExchange(&g_enabled, 0, 0) && g_haveWant && !CutsceneNativeCameraArmed()) {
         r->pitch = g_wantPitch;
         r->yaw   = g_wantYaw;
     }
@@ -5045,7 +5047,12 @@ static IDirect3DSurface9* g_cineMonoTemp = nullptr;
 static UINT g_cineMonoTempW = 0, g_cineMonoTempH = 0;
 static D3DFORMAT g_cineMonoTempFmt = D3DFMT_UNKNOWN;
 static bool g_cineMonoFault = false;
-static LONG g_cutsceneCinemaScalePct = 85; // smaller complete image; Bink stays at accepted 50%
+static LONG g_cutsceneCinemaScalePct = 60; // complete image; user found 85% too wide
+static LONG g_cutsceneNativeCameraFix = 1; // controlled native-camera experiment, cinema only
+static bool CutsceneNativeCameraArmed() {
+    return CutsceneUseNativeCamera(CutsceneMonoCurrentMode(),Rd(g_sceneFlatEnabled)!=0,
+        MenuSubmitForcesFlat((int)Rd(g_vrMenuClass)),VrModeOn(),Rd(g_cutsceneNativeCameraFix)!=0);
+}
 static LONG g_cutsceneVideoHandoffFix = 1;
 static bool g_cineMonoReady = false; // set when this Present composed the frame
 // Bounded transition/error evidence. No per-draw work, new hooks, queries,
@@ -5204,7 +5211,22 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     // CutsceneFlat mono composition runs before every overlay and before either
     // capture path, so the composed half is what both paths submit. Fail-closed:
     // on failure the frame keeps the previous behaviour and stamps stereo.
+    const bool cinemaTiming = CutsceneMonoComposeArmed();
+    const LARGE_INTEGER cinemaStarted = cinemaTiming ? Now() : LARGE_INTEGER{};
     ComposeCutsceneMonoPair(dev);
+    if (cinemaTiming) {
+        static unsigned frames=0,notes=0;
+        static double sum=0,peak=0;
+        static ULONGLONG last=0;
+        const double elapsed=MsSince(cinemaStarted);
+        sum+=elapsed; peak=std::max(peak,elapsed); ++frames;
+        const ULONGLONG now=GetTickCount64();
+        if(notes<128 && (!last || now-last>=1000)) {
+            Log("cutscene-time: compose CPU mean=%.3f peak=%.3f ms samples=%u ready=%d nativeCamera=%d",
+                sum/frames,peak,frames,g_cineMonoReady?1:0,CutsceneNativeCameraArmed()?1:0);
+            ++notes;last=now;frames=0;sum=peak=0;
+        }
+    }
     // ⭐ run 217: defined further down, next to the transforms it reuses - see DrawLaserSight.
     // The last thing added to the frame before it is handed to XR. Here rather than at a draw
     // hook because this is the one point that is provably AFTER the scene and BEFORE the copy, on both
@@ -11442,6 +11464,13 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
         InvalidateCamMats();
         g_camMatrixBound = false;
         return g_origSetVSConstF(dev, startReg, data, vec4Count);
+    }
+    // A cinema source is one native-camera image, not a VR world view. Leaving
+    // depth/shadow production native while rotating just its colour matrix with
+    // the HMD creates the observed head-dependent shadow/content mismatch.
+    if (CutsceneNativeCameraArmed()) {
+        InvalidateCamMats(); g_camMatrixBound=false;
+        return g_origSetVSConstF(dev,startReg,data,vec4Count);
     }
     // The TMD shader declares BoneMatrices at c5. This is metadata only and is
     // inactive unless the bounded arm trace is explicitly enabled in the INI.
@@ -20082,6 +20111,13 @@ void ApplyVrFov() {
     // changed the target, so a total failure to force anything looked like a partial success.
     if (fabsf(g_targetTanX - prevTanX) > 1e-4f) g_forcedTanX = g_forcedTanY = 0.0f;
 
+    // Keep computing the submitted eye frustum, but do not replace the native
+    // cinematic source's FOV. Both rendering and culling must share its camera.
+    if (CutsceneNativeCameraArmed()) {
+        static bool saidNative=false;
+        if(!saidNative) { saidNative=true; Log("cutscene-camera: native source camera/projection; HMD affects presentation only; fit=%ld%%",Rd(g_cutsceneCinemaScalePct)); }
+        return;
+    }
     // The request to the engine is deliberately wider: it now governs only culling.
     float askDeg = 2.0f * atanf(tanf(vHalf) * aspect * kFovHeadroom) * 57.2957795f;
     if (askDeg > 170.0f) askDeg = 170.0f;
@@ -20606,8 +20642,34 @@ volatile LONG g_cineCalls[3] = { 0, 0, 0 };
 // the state backwards.
 volatile LONG g_cineArgRaw = 0;
 volatile LONG g_inCinematic = 0;
+static volatile LONG g_cineControllerObserved = 0;
+
+static void ObserveCinematicControllerState() {
+    if(!Rd(g_cutsceneNativeCameraFix))return;
+    static ULONGLONG last=0;
+    const ULONGLONG now=GetTickCount64();
+    if(last && now-last<1000)return;
+    last=now;
+    const uintptr_t controller=(uintptr_t)(uint32_t)Rd(g_cineControllerObserved);
+    if(!controller)return;
+    const auto s=ReadCinematicStateObservation(controller);
+    char cn[80]{},sc[80]{},sn[80]{};
+    const bool valid=s.valid && GuardedNameOf(s.controllerClass,cn,sizeof(cn)) &&
+        !_stricmp(cn,"RvPlayerController") && GuardedNameOf(s.stateClass,sc,sizeof(sc)) &&
+        !_stricmp(sc,"State") && GuardedNameOf(s.stateNode,sn,sizeof(sn));
+    static LONG prevCine=-1;
+    static uintptr_t prevController=0,prevNode=0;
+    static unsigned notes=0;
+    const LONG cine=Rd(g_inCinematic);
+    if(notes<64 && (prevCine!=cine || prevController!=controller || prevNode!=s.stateNode)) {
+        Log("cutscene-state: controller=%p class=%s state=%s node=%p valid=%d cine=%ld native=%ld; observation only",
+            (void*)controller,cn,valid?sn:"<unvalidated>",(void*)s.stateNode,valid?1:0,cine,Rd(g_cineArgRaw));
+        ++notes;prevCine=cine;prevController=controller;prevNode=s.stateNode;
+    }
+}
 
 static void UpdateSceneModeFrame() {
+    ObserveCinematicControllerState();
     const bool video = InterlockedExchange(&g_sceneVideoSeen, 0) != 0;
     // REVERTED hub round 4b (melee->flat looked bad + different images per eye):
     // the flat gate lives only in StereoPairBody, so HUD/user-pointer draws kept
@@ -21964,6 +22026,9 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         if (FnIdx(ci) < 0 || fnIdx != FnIdx(ci)) continue;
         const LONG n = InterlockedIncrement(&g_cineCalls[ci - kFnCineFirst]);
         if (ci == kFnSetCinematic) {
+            // Keep the actual script recipient for the bounded native-state
+            // observation, rather than reusing a cached controller across a load.
+            InterlockedExchange(&g_cineControllerObserved,(LONG)(uintptr_t)self);
             // The bool argument, read the same way mode 7 reads SetAim's floats - through the
             // frame's locals pointer. Logged raw as well as interpreted, because "the first dword
             // is the bool" is an assumption about UE3's frame layout and not something this run
@@ -27158,7 +27223,8 @@ void LoadIniSettings() {
     InterlockedExchange(&g_videoCinemaScalePct,
         ClampVideoCinemaScale(GetPrivateProfileIntA("Render", "VideoCinemaScalePct", 50, path)));
     g_cutsceneCinemaScalePct = ClampVideoCinemaScale(
-        GetPrivateProfileIntA("Render", "CutsceneCinemaScalePct", 85, path));
+        GetPrivateProfileIntA("Render", "CutsceneCinemaScalePct", 60, path));
+    g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
     Log("ini: VideoStereo=%ld (%s)", InterlockedCompareExchange(&g_videoStereo, 0, 0),
         InterlockedCompareExchange(&g_videoStereo, 0, 0)
             ? "Bink video drawn once per eye"
