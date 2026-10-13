@@ -10,10 +10,10 @@ Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Utility') -ErrorA
 Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Management') -ErrorAction Stop
 $backup=(Resolve-Path -LiteralPath $BackupPath).Path
 $metadata=Get-Content -LiteralPath (Join-Path $backup 'backup_metadata.json') -Raw | ConvertFrom-Json
-$manifest=@(Get-Content -LiteralPath (Join-Path $backup 'manifest.json') -Raw | ConvertFrom-Json)
+$manifest=Get-Content -LiteralPath (Join-Path $backup 'manifest.json') -Raw | ConvertFrom-Json
 $names=@($metadata.Files | ForEach-Object Name | Sort-Object)
 if($names.Count -ne 2 -or ($names -join ',') -ne 'd3d9.dll,dinput8.dll' -or @($metadata.Directories).Count){throw 'Restore scope must be exactly two DLLs and zero directories'}
-if($manifest.Count -ne 2){throw 'Unexpected restore manifest'}
+if(@($manifest).Count -ne 2){throw 'Unexpected restore manifest'}
 foreach($entry in $manifest) {
     if((Get-FileHash -LiteralPath (Join-Path $backup ([IO.Path]::GetFileName($entry.Path)))).Hash -ne $entry.Sha256){throw 'Bad DLL backup'}
 }
