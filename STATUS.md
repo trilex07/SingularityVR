@@ -20,8 +20,10 @@ shadow froze after VR holstering. C was not captured because the scheduler's
 40-second STORED timeout elapsed just before the event and the game closed.
 Accepted DLL/INI/UI hashes were separately reverified after guard rollback.
 Next read-only candidate captures CTAB-backed VS c230..240 on native R32F
-producer groups to separate object and projection transforms. No shadow fix
-claimed. See map-probe note.
+producer groups to separate object and projection transforms. L2_PASS:
+dbce0ed x86 PE32 /O2 build SHA54CC148F, parser/trace unit checks and runtime
+policy pass. Real Steam execution of this additional probe is pending; no
+shadow fix claimed. See map-probe note.
 
 Input cache130dfdb / DLLF294D272: real Steam PID19520, PHYSICALLY_VERIFIED
 for held-button FPS/actions/stereo/tracking and pause/options/resume. User says

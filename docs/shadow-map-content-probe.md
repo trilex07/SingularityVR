@@ -131,3 +131,8 @@ it cannot distinguish the gun's local-to-world/phantom position from shadow
 projection changes. One extra read per qualifying group preserves the original
 render state and records HRESULT. Compare c5..31 and c230..240 for the exact
 gun VB/IB at armed and holstered poses; analyze enemy producer separately.
+Source dbce0ed built x86 PE32 /O2 with performance diagnostics, DLL SHA-256
+54CC148FB994E2906634AD522A45597F71F4E22702B91993C97A73EEDE91B787.
+Python parser synthetic check, C++ trace OFF/COM check, shadow-depth stats and
+runtime policy checks pass. This establishes L2 only; new c230..240 records
+have not been validated in real Steam gameplay.
