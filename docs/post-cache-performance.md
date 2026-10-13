@@ -113,3 +113,43 @@ default-OFF compiled test preserves10000 forwards withzero samples. Guard
 syntax checked in PowerShell7 and native Windows PowerShell5.1. Latest fresh
 read-only installed/backup/DDS/config/UI verification PASS. No next candidate
 is installed, no profile request written, no game launched in this turn.
+
+## Post-cache Steam result PID33140 (2026-10-13)
+
+VR64353686 / injectorD6EFDDAE, source8438447. Steam/OpenXR/timing execution
+confirmed. Profile completes3600frames/40,625ms; bins3408/126/66/0,229menu
+frames and0cinema frames. NOT a pure-gameplay aggregate. User confirms dips
+are during gameplay; no further texture/hand/second-entry result supplied.
+Subsequent video/cinema entry is recorded, not full second-entry acceptance.
+
+Texture counters100s:8,017,646binds/5,739,983native hits/366,240legacy hits/
+850hashes/803stamps,0failures/evictions,table47/512. Routine classification
+sampled mean~0.104us native/~0.238us noncandidate; no recurring old hash churn.
+Only3sampled hashed-native calls: insufficient to bound cold asset-loading
+cost. Do not implement the rejected shape-cache micro-optimization.
+
+Three native scans average43.712ms: one after cinema exit, another in menu,
+third after resuming. Cache intentionally invalidates at these boundaries.
+Slow77FPS/12.99ms gameplay window(line5927) has LT/RT0/0 and peak3330split
+draws. Discovery AND callback replay totals are unchanged between480/720frame
+reports: cannot explain this window. WMI misses remain2 throughout(hits134).
+Leave accepted input cache/recovery policy intact.
+
+Existing draw scope is INCLUSIVE,~1.78ms/frame by720frames. GPU-fence wait
+1.76ms in slow window is not full GPU frame time. Falsifiable next probe:
+separate native Draw* CPU submission from inclusive draw wrapper time, using
+existing ShadowTrace forwarding boundaries (no new hook). If native forward
+cost dominates, investigate engine/driver workload; if small, investigate
+mod wrapper's actual hot scopes. Independent estimates are not exact additive
+CPU/GPU accounting. No performance/rendering fix claimed from this evidence.
+
+Native forwarding family uses1/512timing samples during the existing bounded
+sampler only. Preserve parameters,exactly one original call,HRESULT,shadow
+trace and state; no allocations,per-draw logs or COM-state queries. Thread-
+local RAII nesting excludes standalone overlay/VFX calls outside profiled draw
+hooks and calls from other threads. Stop never resets scopes in flight.
+Default OFF unless owned gameplay request runs; no image/hand/input changes.
+
+Guard31268 restored originals from20261013-203555; MAIN independently rehashed
+D892/AAA,INI B3FE/UI5B/107DDS/forwarder unchanged,request consumed. Game closed.
+Prepare next candidate offline; no further Steam run before fresh user start.

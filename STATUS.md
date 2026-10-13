@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+CURRENT PID33140 post-cache attribution completed3600frames/40.625s with
+229menu frames (NOT pure gameplay). User: dips in gameplay. Slow77FPS window
+has no new discovery/replay; input-cache changes NOT justified. Three43.712ms
+native scans tied to cinema/menu boundaries. Routine injector classification
+~0.104us native/~0.238us noncandidate,no hash churn. Next offline bounded
+diagnostic separates original Draw* CPU submission from inclusive draw hooks;
+no image/quality/hand/shadow/input-policy changes. Need L1/L2 then fresh start.
+Both originalsD892/AAA restored/hash verified;INI B3FE/UI5B/107DDS unchanged.
+See docs/post-cache-performance.md. Prior headers below are historical.
+
 LATEST PID43712: texture native-cache runtime execution PASS; physical L2/R2
 FPS drop no longer present. Remaining smaller dips + stretched hands OPEN.
 14,145,976 binds,9,909,759 native hits,668,586 legacy hits,950 hashes (late

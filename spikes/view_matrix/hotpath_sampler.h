@@ -28,6 +28,7 @@ enum class Family : unsigned {
 	xr_image_work,
 	xr_submit,
 	frame_total,
+	native_draw_forward,
 	count
 };
 
@@ -49,7 +50,10 @@ enum class Counter : unsigned {
 };
 
 inline constexpr unsigned sample_stride = 32;
+inline constexpr unsigned native_draw_stride = 512;
 inline constexpr unsigned default_window_frames = 1200;
+// Standalone overlay calls must not be charged against profiled draw hooks.
+inline thread_local unsigned draw_scope_depth = 0;
 
 struct record {
 	volatile LONG64 calls{};
@@ -151,7 +155,8 @@ public:
 		const LONG sequence = InterlockedIncrement(&records_[static_cast<unsigned>(f)].sequence);
 		// Enumeration was measured at ~75ms: time every bounded-window scan,
 		// rather than estimating its whole cost from nine samples.
-		return active() && (f==Family::native_gamepad_enumeration || f==Family::native_gamepad_callback_replay || sequence % static_cast<LONG>(sample_stride) == 0);
+		const unsigned stride=f==Family::native_draw_forward?native_draw_stride:sample_stride;
+		return active() && (f==Family::native_gamepad_enumeration || f==Family::native_gamepad_callback_replay || sequence % static_cast<LONG>(stride) == 0);
 	}
 	void record_sample(Family f, LONGLONG elapsed) noexcept {
 		auto& r = records_[static_cast<unsigned>(f)];
@@ -192,11 +197,13 @@ class scope {
 	LARGE_INTEGER started_{};
 	bool timed_{};
 	bool finished_{};
+	bool draw_entered_{};
 
 public:
 	scope(sampler& owner, Family family) noexcept : family_(family) {
 		if (!owner.active()) return;
 		owner_ = &owner;
+		if(family_==Family::draw_hook){++draw_scope_depth;draw_entered_=true;}
 		owner_->record_call(family_);
 		if (owner_->should_time(family_)) {
 			QueryPerformanceCounter(&started_);
@@ -209,6 +216,7 @@ public:
 	void finish() noexcept {
 		if (finished_) return;
 		finished_ = true;
+		if(draw_entered_){--draw_scope_depth;draw_entered_=false;}
 		if (!timed_ || !owner_) return;
 		LARGE_INTEGER ended{};
 		QueryPerformanceCounter(&ended);
@@ -218,6 +226,14 @@ public:
 	scope(const scope&) = delete;
 	scope& operator=(const scope&) = delete;
 };
+
+// Observe only an existing native-call boundary. No new hook/state query,
+// changed arguments, replay or allocations. Forward directly when disabled.
+template<class Forward> auto forward_draw(sampler& owner,Forward&& forward) -> decltype(forward()) {
+	if(!draw_scope_depth)return forward();
+	scope native(owner,Family::native_draw_forward);
+	return forward();
+}
 
 inline const char* name(Family f) noexcept {
 	switch (f) {
@@ -239,6 +255,7 @@ inline const char* name(Family f) noexcept {
 	case Family::xr_image_work: return "xr_images";
 	case Family::xr_submit: return "xr_submit";
 	case Family::frame_total: return "present_frame";
+	case Family::native_draw_forward: return "native_draw_forward";
 	default: return "unknown";
 	}
 }
