@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+CUTSCENE MONO (branch fix/cutscene-mono-presentation, 08d7ed2):
+IMPLEMENTED_NOT_VERIFIED. CutsceneFlat composes the full SBS cinematic
+aspect-fit into the left half and submits that same crop to both eyes;
+VideoFlat/menu paths untouched, CutsceneFlatMode switch preserved.
+Offline: test-cutscene-mono PASS, test-vr-scene-mode PASS, runtime-policy
+PASS, x86 PE32 /O2. L3/L4 pending one coordinated PSVR2 window against the
+separately hashed merged baseline D8928180. See docs/CUTSCENE_MONO_PAIR.md.
+
 Main PR preparation: persistent-default release build L2_PASS, regular x86 PE32
 /O2 source1b4e0b6 SHA E9DC831B599734CD3EC6CB8A16C907DE26F7D9EB8CEC29E95A5DD2C104D8116E.
 9 C++ unit executables, Python trace/CPU regressions and default-policy checks
