@@ -81,7 +81,7 @@ foreach($i in 0..3) {
               CandidateSha256=(Get-FileHash -LiteralPath (Join-Path $out $name)).Hash}
 }
 @{Kind='SingularityVR opening cutscene lease v1';StartRequired=$true;
-  FrozenUiSha256=$uiHash;Files=$files;IniChangeOnly=($insert.Trim() -replace '\r?\n',';');
+  FrozenUiSha256=$uiHash;Files=$files;IniChangeOnly=(($insert.Trim() -replace '\r?\n',';')+$(if($NativeSpeech){';Localization.NativePolishSpeech=1'}else{''}));
   PhysicalAcceptance='PENDING';NativeSpeechEnabled=[bool]$NativeSpeech;TextureBridgeEnabled=[bool]$TextureBridge;
   Notes='Exact four-file core lease; independent asset delta and WAV leases are separate'} |
     ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $out 'test-manifest.json') -Encoding UTF8

@@ -104,3 +104,62 @@ Next test order: remaster log-only first (title/audio/menu/hands +candidate iden
 zero remaster=1 substitutions), then a separate cold-start apply round after that gate.
 Never change DLL/INI/assets while game runs. Existing accepted shadows/input/hand
 mesh logic, saves, registry, Bink movies and gameplay stereo remain outside scope.
+
+## Prepared handoff, 2026-10-14
+
+Runtime source commit: `9989baef05858f4cd1f16499272a38a4ab840c67` on
+`fix/cutscene-physical-observation`. Both final builds are x86 PE32 `/O2`,
+without performance instrumentation. Build provenance travels with core-ready.
+
+- d3d9: `C1D904D0D05B1ADDC48A7ED52A8BD1E06EC65FA874E7C2B1D4A5FC5F0666FE20`.
+- dinput8: `F5137234C9BACCCF636A6A387B63CCD9865C726C9E662AD56B6E30C74770F07A`.
+- INI: `A40C449ECEBA682002BA4DCC5AECD8B9C736AADE4BC5B0F037118ACBDFD71040`.
+- Native intro: `4904F2818B9CA9505AE636CB33ADE88C2B2E173AD1D2DB2A85BC43EDD49E1290`.
+- Title UI: `E0F5A661AD6E6EE7E56C7D6E9B914AFA61D83B38D118D2E8136D8CA086A3CC64`.
+
+Private artifact paths below are relative to this checkout's
+`deployment/hands-dubbing/three-items-prep/`. Do not add them to Git.
+
+- Core lease: `core-ready/test-manifest.json` (all six owned flags listed;
+  HandAnchorProbe OFF). `core-final` has identical bytes but older descriptive
+  IniChangeOnly metadata; prefer core-ready.
+- Audio source: `native-voices-v3/native-story.json`; fitted bank/control and
+  independent LZO roundtrip outputs are alongside it. Its historical legacy_wav
+  report labels must NOT drive deployment: `_a`/`_b` source names were shared
+  in SIDE data. Correct original entry identity is verified by voice-delivery-v3.
+- WAV candidate/QA: `voice-delivery-v3/revoice/`; PLAN evidence:
+  `revoice-plan/revoice-lease.json`. 1886 entries pass identity/format/hash gates;
+  146 retain explicit QA review status. Three lookup files in voice-delivery-v3
+  mark 45 fitted story IDs (48 native waves include three intro barks).
+- First-round asset lease: `delta-log-final/asset-manifest.json`.
+- Second-round asset lease: `delta-apply-final/asset-manifest.json`.
+  These are the ONLY final delta artifacts. Earlier delta directories are
+  superseded and must not be installed.
+- Material provenance: `materials-final/material-files.json` and excluded.json.
+- Final build logs: vr-final-build.log, bridge-final-build.log.
+- Actual MAIN wrapper fixture: main-bridge-fixture-v2.log.
+- Guard evidence: delta-guard-fixture/guard.out.txt (READY then RESTORED32,
+  stderr empty), independently checked against all32 original fake hashes.
+
+Preparation did not change any Steam file. Independent installation report
+`installation-unchanged.json` at 01:50+02:00 verifies original4 core, all32 asset
+targets (including absent remaster files),1886 original WAVs, accepted UI5B,
+107 DDS and frozen texture config/forwarder. This proves restoration/unchanged
+installation, not acceptance of candidate rendering or speech.
+
+Next fresh `start`: first verify no Singularity process and all originals again.
+Install core4 first (its UI preflight expects5B), then the separate1886 WAV lease
+using fresh install evidence, then exact32 log-only delta. Verify candidates and
+all three guardian READY messages before launching Steam app42670. Never reuse
+fake-test backup paths as real rollback evidence. Guardians own disjoint targets;
+after normal exit independently verify restoration of all files, not just DLLs.
+
+Headset script, with no chat switching: new game/intro/helicopter; pause/options
+and resume during helicopter; continue through standing up into stereo gameplay,
+listen to radio, move both hands near face/outward, use L2/R2, return to main menu,
+then close normally. MAIN records session/bridge/native bank evidence. User checks
+branding typography/clipping, Polish audio and timing, accepted hands/menu/shadows
+and FPS. Only after log-only passes, prepare a separate cold apply round for the
+24 remasters, checking black materials, appearance, matching eyes and frame cost.
+Retained English lines and unreviewed acting quality are explicit open limits;
+this is NOT a claim of complete Polish dubbing or accepted remaster.

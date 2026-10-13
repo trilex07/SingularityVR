@@ -15,7 +15,7 @@ foreach($f in $manifest.Files){
  if((Get-FileHash (Join-Path $GameRoot $f.RelativePath)).Hash -cne $f.CandidateSha256){throw 'Candidate not installed'}
  if($f.BaselineSha256 -cne 'ABSENT' -and (Get-FileHash (Join-Path $BackupPath $f.RelativePath)).Hash -cne $f.BaselineSha256){throw 'Bad guard backup'}
 }
-Write-Output 'READY: independent32-file asset guard, bounded600s no-launch/10s after exit'
+Write-Output ("READY: independent32-file asset guard, bounded${LaunchWindowSeconds}s no-launch/10s after exit")
 $deadline=(Get-Date).AddSeconds($LaunchWindowSeconds);$seen=$false;$idle=$null
 while($true){
  if(@(Get-Process -Name Singularity -ErrorAction SilentlyContinue).Count){$seen=$true;$idle=$null}

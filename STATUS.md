@@ -19,8 +19,14 @@ glyphs/FX/config groups stay frozen. DefaultOFF single-owner bridge+COM lifetime
 and pool-aware Ex upload implemented. Hidden plain/Ex DXT1/DXT5 RGB/alpha/Reset/
 exact-forward/refcount and actual MAIN translated-Lock/hash/forward chain tests
 PASS. L3/visual remaster/overhead remain OPEN. Exact32 delta lease fake tests
-PASS incl corruption/path/WhatIf/conflict. Final source commit/build/stage pending
-at this header. See docs/prepared-audio-title-remaster.md. Below historical.
+PASS incl corruption/path/WhatIf/conflict. Hidden cold-process timeout guardian
+restored all32 fake baselines; independent hash verification PASS. Runtime source
+9989baef built x86/O2: d3d9 C1D904D0, injector F5137234. Private core-ready,
+delta-log-final/delta-apply-final and voice-delivery-v3 artifacts prepared.
+Installation verification 2026-10-14T01:50+02:00: original4/asset32/WAV1886,
+UI5B/accepted107DDS/frozen config+forwarder unchanged. No Steam writes/launch
+during prep. READY for bounded physical test after fresh start, NOT L3/L4 accepted.
+See docs/prepared-audio-title-remaster.md. Below historical.
 
 LATEST 2026-10-14 E213B216 test completed, physical feedback PENDING. PID23584:
 OpenXR/loaded paths/exact four hashes PASS; cinema pause reason32 and resume,
