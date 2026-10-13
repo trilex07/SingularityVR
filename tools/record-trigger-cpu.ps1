@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param([ValidateRange(30,120)][int]$CaptureSeconds=90,
-      [ValidateRange(30,180)][int]$LaunchWindowSeconds=120)
+      [ValidateRange(30,180)][int]$LaunchWindowSeconds=120,
+      [switch]$AfterCinemaExit,
+      [ValidateRange(30,300)][int]$CinemaExitWindowSeconds=180)
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
@@ -23,21 +25,60 @@ Start-Transcript -LiteralPath (Join-Path $run 'recorder.log') | Out-Null
 $trace=Join-Path $run 'trigger-cpu.etl'
 $started=$false
 try {
-    & $wpr -start CPU.Verbose -filemode -instancename $instance
-    if($LASTEXITCODE -ne 0) {throw 'WPR start failed; inspect the named instance before retrying.'}
-    $started=$true
-    Write-Output "READY CPU STACK TRACE: $run instance=$instance; no game/input/file changes"
+    if(-not $AfterCinemaExit) {
+        & $wpr -start CPU.Verbose -filemode -instancename $instance
+        if($LASTEXITCODE -ne 0) {throw 'WPR start failed; inspect the named instance before retrying.'}
+        $started=$true
+        Write-Output "READY CPU STACK TRACE: $run instance=$instance; no game/input/file changes"
+    } else {
+        Write-Output "READY CINEMA-EXIT CPU RECORDER: $run; waiting for actual owned profile marker, not recording yet"
+    }
     $launchDeadline=(Get-Date).AddSeconds($LaunchWindowSeconds)
     $gameProcess=$null
     do {
-        $gameProcess=Get-Process Singularity -ErrorAction SilentlyContinue | Select-Object -First 1
+        $running=@(Get-Process Singularity -ErrorAction SilentlyContinue)
+        # Startup can briefly expose two entries. Never choose an arbitrary
+        # first PID or combine two sessions; wait for an unambiguous process.
+        if($running.Count -eq 1){$gameProcess=$running[0]}
         if(-not $gameProcess){Start-Sleep -Seconds 1}
     } until($gameProcess -or (Get-Date) -ge $launchDeadline)
     if(-not $gameProcess){throw 'No game launch within bounded window.'}
     $gameId=$gameProcess.Id
+    $gameStart=$gameProcess.StartTime
+    if($AfterCinemaExit) {
+        $cueDeadline=(Get-Date).AddSeconds($CinemaExitWindowSeconds)
+        $nativeLog=Join-Path $env:LOCALAPPDATA 'SingularityVR\view_matrix.log'
+        $cueSeen=$false
+        do {
+            $sameGame=Get-Process -Id $gameId -ErrorAction SilentlyContinue
+            if(-not $sameGame -or $sameGame.StartTime -ne $gameStart) {
+                throw 'Observed game exited/restarted before cinema exit; no trace started.'
+            }
+            if(Test-Path -LiteralPath $nativeLog) {
+                $state=Get-Item -LiteralPath $nativeLog
+                if($state.LastWriteTime -ge $gameStart -and $state.Length -le 33554432) {
+                    $cueSeen=[bool](Select-String -LiteralPath $nativeLog -Quiet -SimpleMatch 'CINEMA_EXIT_HOTPATH armed:')
+                }
+            }
+            if(-not $cueSeen){Start-Sleep -Seconds 2}
+        } until($cueSeen -or (Get-Date) -ge $cueDeadline)
+        if(-not $cueSeen){throw 'No fresh cinema-exit profile marker within bounded window; no trace started.'}
+        # Another profiler may have started while we waited. Check again;
+        # never interfere with somebody else's recording.
+        $status=(& $wpr -status | Out-String)
+        if($LASTEXITCODE -ne 0 -or $status -notmatch 'WPR is not recording') {throw 'WPR session appeared while waiting.'}
+        $sessions=(& logman.exe query -ets | Out-String)
+        if($LASTEXITCODE -ne 0 -or $sessions -match 'WPR_initiated_') {throw 'Named WPR session appeared while waiting.'}
+        & $wpr -start CPU.Verbose -filemode -instancename $instance
+        if($LASTEXITCODE -ne 0){throw 'WPR start failed; inspect the named instance before retrying.'}
+        $started=$true
+        Write-Output "CPU TRACE STARTED AFTER CINEMA EXIT: PID $gameId instance=$instance"
+    }
     Write-Output "GAME PID $gameId; capture bounded to $CaptureSeconds seconds or process exit"
     $deadline=(Get-Date).AddSeconds($CaptureSeconds)
-    while((Get-Date) -lt $deadline -and (Get-Process -Id $gameId -ErrorAction SilentlyContinue)) {
+    while((Get-Date) -lt $deadline) {
+        $sameGame=Get-Process -Id $gameId -ErrorAction SilentlyContinue
+        if(-not $sameGame -or $sameGame.StartTime -ne $gameStart){break}
         Start-Sleep -Seconds 1
     }
 } finally {

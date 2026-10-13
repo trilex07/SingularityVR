@@ -49,3 +49,19 @@ Guard restoration independently verified: DLL D8928180262706A95972D13B728A1867F1
 user INI B3FEED43E7651E86C57B3767359F13C363B2F3BBFE067429E29F81F4CB2A079F,
 UI5B2EA469A3EE06FF154AC78BD58604E8034970D4837F289E5C22503C6A673CDE.
 Raw log/dumps/game assets stay private, outside commits.
+
+## Verification and next measurement
+
+Guard source f57c3d5: six x86/O2 test executables and runtime policy PASS;
+regular x86 PE32/O2 DLL64353686EDD457EDE84B0D8892B32B6EC9D108C78912AEF9A7F753CFA163DC15.
+No Steam/physical validation yet. Immutable candidate remains offline while
+the accepted installed DLL stays D892.
+
+The optional record-trigger-cpu.ps1 -AfterCinemaExit path waits for the fresh
+owned CINEMA_EXIT_HOTPATH armed marker from this exact PID/start time (max180s),
+then starts its uniquely named Windows CPU stack recorder. Existing WPR/ETW
+sessions are checked again after waiting. Max90s trace planned, stop own
+instance only, never mix a restarted PID. No guessed movie-duration trigger.
+This requires a fresh explicit user UAC authorization; syntax is checked
+offline but recorder execution/ETL evidence are pending. Raw system-wide ETL
+remains private; analysis filters Singularity only.

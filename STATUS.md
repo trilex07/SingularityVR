@@ -7,13 +7,18 @@ Exact dump+MAP+DLL prove FindCamera cached Class+0x34 read, RVA0x1F6B8,
 not the earlier guarded pawn sample. Safe D892 independently restored;
 user INI B3FEED43/UI5B retained/rehashed. Camera lookup guard L1_PASS:
 valid/miss/nested lookup, NOACCESS/released object, unpublished fault result,
-non-memory exception propagation. L2 build pending; no new runtime pass.
+non-memory exception propagation. L2_PASS: sourcef57c3d5, x86 PE32/O2,
+DLL64353686EDD457EDE84B0D8892B32B6EC9D108C78912AEF9A7F753CFA163DC15.
+Six narrow test executables + runtime policy PASS; no new runtime pass.
 Full existing read-only profile captured45s/3474frames, LT917/RT101; slow
 CPU phase did occur90->49FPS and continued~40. Hook averages do not attribute
 the native frame cost. Need native slow-window stack trace; Windows WPR
 requires fresh UAC authorization. No speculative performance/hand patch.
 Cinema60% native-camera head isolation and Polish intro preserved; helicopter
 Polish speech still UNIMPLEMENTED. See docs/cutscene-second-entry-crash.md.
+Recorder supports an opt-in actual cinema-exit marker gate, max180s wait then
+90s native CPU trace, no recording during long intro/helicopter. Pending UAC
+authorization/runtime execution. Candidate remains OFFLINE, safe install live.
 Historical entries below are superseded by this header.
 
 PID45372/7A0EC94D: cinema60% / native-camera head isolation and eventual
