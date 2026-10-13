@@ -1,13 +1,21 @@
 # STATUS — session handoff
 
-Combination L3_PASS for execution/classification, PHYSICAL_FEEDBACK_PENDING:
+Combination PHYSICALLY_VERIFIED for gun material/tracking, background-negative
+removal and retained enemy shadows: user's PID17212 result. Remaining BROKEN:
+shadow on gun/glove differs between eyes. Preserve world inverse + ClearGate +
+input cache; near1 receiver291/292 still uses identical native inverse with
+different actual eye VP. Caster-origin mathematical errors61/97UU, corrected
+oracle maps both eyes to same UV; depth-pixel assumption still unvalidated.
+Next separate default-OFF near1-only receiver experiment; no hand transform
+or material edits. See first-person receiver note for falsification/gates.
+
+Combination L3_PASS for execution/classification (physical result above):
 SteamPID17212/DLL7A7787EB, only ClearGateOFF->ON relative to successful enemy
 test; WorldReceiver/input cacheON and rejectedReceiverOFF. One pause-return
 frame1283draws/320groups/overflow0: same gun5799 early/late depth/color moved1,
 late fgCount1/4 versus previous101/104. World receivers210/211 still corrected,
 near1 receivers291/292 excluded; light chain retained, no restore faults.
-Need user perceptual result for black/frozen gun, background-negative and enemy
-shadow preservation. Game exited, accepted DLL9FBA308C/currentINI C59B1CF6/
+Game exited, accepted DLL9FBA308C/currentINI C59B1CF6/
 UI5B2EA469 independently verified; owned flags gone, gloves-only state retained.
 
 World-only receiver PHYSICALLY_VERIFIED for dynamic enemy shadows in tested

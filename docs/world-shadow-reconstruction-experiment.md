@@ -88,7 +88,7 @@ After PID37880 exit, guard removed both owned flags and restored DLL; MAIN
 independently verified DLL9FBA308C/INI C59B1CF6/UI5B2EA469. Snapshot111315-949,
 runner backup111316. Current installation safe, gloves-only setting retained.
 
-## Controlled combination PID17212 (physical feedback pending)
+## Controlled combination PID17212
 
 User authorized the next test. Same source532cf44/DLL7A7787EB, identical
 INI C59B1CF6/UI5B2EA469: only ClearGate changed OFF->ON, WorldReceiver/input
@@ -108,3 +108,8 @@ physical black-gun/background/stereo/enemy-shadow acceptance PENDING.
 Game exited; guard removed all three owned flags and restored accepted DLL.
 MAIN independently verified DLL9FBA308C/INI C59B1CF6/UI5B2EA469. No hand/weapon
 code, installed INI, textures or UI changed during this test.
+
+Physical feedback confirms gun texture and controller following correct,
+background-negative gone, enemy shadows retained. Remaining issue: shadow on
+gun/glove differs between eyes. This scoped combination is visually accepted
+for the three reported improvements, not complete first-person shading.
