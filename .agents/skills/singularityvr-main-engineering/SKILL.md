@@ -1,0 +1,152 @@
+---
+name: singularityvr-main-engineering
+description: Evidence-driven UE3/D3D9/OpenXR reverse engineering, performance investigation, safe Steam/PSVR2 testing, and handoffs for SingularityVR MAIN agents.
+metadata:
+  source: project-specific
+---
+
+# SingularityVR MAIN engineering
+
+Use this skill when you are **MAIN** on difficult rendering, shadow, pause-menu, input, or performance problems in this repo. It preserves a proven investigation process (pause RTT, stereo shadows, DirectInput enumeration stalls) without duplicating policy already in [`AGENTS.md`](../../../AGENTS.md).
+
+**Companion skills (do not replace):**
+
+| Skill | When |
+|---|---|
+| [`vr-mod-workflow`](../../vr-mod-workflow/SKILL.md) | Feature gates, regression coverage, smallest reversible change |
+| [`singularityvr-agent-test-bridge`](../../singularityvr-agent-test-bridge/SKILL.md) | L1–L4 evidence labels and deploy boundaries |
+| [`mod-reverse-engineering`](../../mod-reverse-engineering/SKILL.md) | Ghidra/IDA/static RE outside the hot path |
+| [`xr-performance`](../../xr-performance/SKILL.md) | Generic frame-budget thinking after you know *where* time goes |
+
+**Deep dives:** [`references/sol-debugging-case-studies.md`](references/sol-debugging-case-studies.md), [`references/test-and-handoff-playbook.md`](references/test-and-handoff-playbook.md).
+
+---
+
+## Core loop
+
+Follow this order every time. Do not skip stages to patch faster.
+
+```text
+OBSERVE → REVERSE ENGINEER → MEASURE → HYPOTHESIS → IMPLEMENT → TEST → ANALYZE → ITERATE
+```
+
+| Stage | In this project |
+|---|---|
+| **Observe** | Read `STATUS.md`, targeted docs under `docs/`, and the code path in `spikes/view_matrix/d3d9.cpp`. Record what the game *does*, not what UE3 textbooks say. |
+| **Reverse engineer** | Use `ENGINE_NOTES.md`, CTAB/disassembly, UObject property walks, bounded D3D9 probes. Resolve by signature scan; never commit hardcoded VAs. |
+| **Measure** | Bounded counters, one-frame traces, hot-path sampler, ETW only when justified. Separate CPU exec, wait, GPU submit, and unassigned residual. |
+| **Hypothesis** | One mechanism, supporting evidence, explicit **falsifier** before code changes. |
+| **Implement** | Smallest default-OFF experiment; preserve COM/state restoration; one runtime variable. |
+| **Test** | L1 synthetic → L2 x86 PE32 `/O2` + SHA → L3 real Steam (MAIN only) → L4 PSVR2 when perception matters. |
+| **Analyze** | Classify: correlation vs causality vs untested guess. Abandon disproven paths. |
+| **Iterate** | After **two** failed speculative fixes on the same symptom, escalate RE depth (see [`AGENTS.md`](../../../AGENTS.md) evidence policy). |
+
+---
+
+## A. Evidence-driven reverse engineering
+
+1. **Prove identity, not dimensions.** Matching RT size or shader length does not prove the same resource. Log COM pointer, container texture, RHI wrapper layout (`ENGINE_NOTES.md`, pause RTT probe), and producer→consumer draw groups (`shadow_pass_trace.h`).
+2. **Shader constants from CTAB/disassembly**, not register folklore. Example: arm shadow producer uses `BoneMatrices` at VS c5; receiver depth encoding uses audited `MinZ_MaxZRatio` and producer PS alpha math — see [`docs/shadow-receiver-correction.md`](../../../docs/shadow-receiver-correction.md).
+3. **Separate mesh roles.** Runtime evidence corrected “gun” vs arm mesh (3314 vs 5799). Do not fix “the gun shadow” until caster VB/IB and phase/moved flags identify the pass owner — [`docs/shadow-map-content-probe.md`](../../../docs/shadow-map-content-probe.md).
+4. **World vs first-person shadow passes** are different scopes (`ShadowWorldReceiverFix`, `ShadowForegroundClearFix`, `ShadowFirstPersonReceiverFix`). Enabling one must not silently edit another — [`docs/accepted-shadow-input-fixes.md`](../../../docs/accepted-shadow-input-fixes.md).
+5. **Falsifier before fix.** Write what observation would disprove the hypothesis (e.g. “corrected constants present but per-eye UV still diverges” — [`docs/first-person-shadow-reconstruction-experiment.md`](../../../docs/first-person-shadow-reconstruction-experiment.md)).
+6. **Draw success ≠ visual proof.** Provider draws succeeding while backbuffer capture shows scene-only means the experiment failed classification, not that pixels are correct — [`docs/pause-rtt-integration.md`](../../../docs/pause-rtt-integration.md).
+
+Case studies: [`references/sol-debugging-case-studies.md`](references/sol-debugging-case-studies.md).
+
+---
+
+## B. Performance investigation
+
+1. **Locate the stall.** Use `HotPathSampler`, `FRAME SPIKE`, and `tools/analyze-vr-perf-log.py`. Present-time GObjects walks and menu trace D3D queries are structurally different from gameplay hitches — [`docs/audits/vr-frame-hitch-analysis.md`](../../../docs/audits/vr-frame-hitch-analysis.md).
+2. **Do not sum inclusive nested hook timings** as independent costs; read the sampler’s own labels — [`docs/shadow-clear-gate-experiment.md`](../../../docs/shadow-clear-gate-experiment.md).
+3. **Split residual time.** OpenXR sync may be ~0.2 ms while “our work” shows 25 ms unassigned; that is a measurement gap, not automatic proof of mod CPU guilt.
+4. **Input stalls:** correlate trigger hold with ~76 ms full DirectInput discovery scans, not generic OpenXR blame — [`docs/input-enumeration-cache.md`](../../../docs/input-enumeration-cache.md), `native_gamepad_enum_probe.h`, `tools/analyze-trigger-cpu.py`.
+5. **Prefer event-invalidated cache + callback replay** over blind throttling that skips native device setup forever. Falsifier: replay hits but FPS still collapses or menus break.
+6. **Verify actions after optimization:** held buttons, pause/options/resume, stereo, weapon tracking — physical acceptance is scoped, not “all hotplug forever.”
+
+---
+
+## C. D3D9 / OpenXR rendering safety
+
+- **Stereo:** per-eye view/projection from OpenXR; HUD and menu paths may differ from world passes — test both eyes and capture submitted half buffers when menus fail.
+- **State blocks:** experiments that set fixed-function stages must restore inside the same scoped block; failed restore latches are tested in shadow receiver unit tests.
+- **COM lifetime:** hold refs only for bounded trace groups; release at Present/Reset; no per-draw allocations or filesystem writes in draw hooks — [`AGENTS.md`](../../../AGENTS.md).
+- **Classification gates:** foreground vs background (`shadow_clear_gate.h`), moved vs unmoved draws, phase/group keys in pass trace — fix classification before matrix edits.
+- **Guard accepted behavior:** do not mix unrelated renderer experiments in one PSVR2 session; do not treat a rebuilt DLL as physically accepted because an older source revision passed L4.
+
+Key headers (read before editing): `shadow_pass_trace.h`, `shadow_world_receiver_fix.h`, `shadow_first_person_receiver_fix.h`, `shadow_clear_gate.h`, `pause_rtt_probe.h`, `pause_rtt_start.h`, `vr_menu_overlay.h`, `input_enum_cache.h`.
+
+---
+
+## D. Autonomous problem-solving
+
+- Continue through investigation, L1/L2, and doc updates without asking permission for routine repo work.
+- **Do not stop at a report** when the next safe experiment is obvious (read-only probe, parser test, single-flag candidate).
+- **Do not make the user attach a debugger** for problems you can bound with hooks, logs, or offline disassembly.
+- **Do not declare success** on compile, deploy, counter increment, or xrsim alone — see evidence gates in [`AGENTS.md`](../../../AGENTS.md).
+- After failure, record the result in `STATUS.md` or the feature doc and narrow the search; **do not repeat** disproven receiver remaps or register guesses — [`docs/shadow-receiver-correction.md`](../../../docs/shadow-receiver-correction.md).
+- **Protect accepted baselines** (menu RTT, shadow fixes, input cache). Roll back failed candidates; verify restored SHA-256 on disk, not log text alone.
+
+---
+
+## E. Steam and PSVR2 (MAIN only)
+
+Side agents: **never** deploy or launch Steam — [`AGENTS.md`](../../../AGENTS.md).
+
+MAIN checklist (detail in [`references/test-and-handoff-playbook.md`](references/test-and-handoff-playbook.md) and [`docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`](../../../docs/STEAM_MAIN_DEPLOY_WORKFLOW.md)):
+
+1. Stop `Singularity.exe`; build x86 PE32 `/O2`; record commit + SHA-256 in build manifest.
+2. Backup via `tools/deploy-singularityvr.ps1`; verify installed DLL hash matches candidate before testing.
+3. Real Steam + OpenXR runtime; bounded logs/captures; preserve user INI/UI when possible.
+4. On critical failure, rollback from timestamped backup and **re-hash installed files**.
+5. Leave working candidates installed until L4 completes unless user requests rollback.
+
+**Headset / desktop lesson:** switching to desktop chat during a multi-step capture can drop focus, freeze the game, or invalidate gates — [`docs/shadow-map-content-probe.md`](../../../docs/shadow-map-content-probe.md). Prepare a full A/B/C script; user stays in PSVR2; collect feedback once afterward (`tools/run-shadow-holster-sequence.ps1` pattern).
+
+Evidence levels: L1 math/tests → L2 build SHA → L3 installed Steam execution → L4 physical user acceptance. Never upgrade levels without the corresponding proof.
+
+---
+
+## F. Git collaboration
+
+| Role | May do |
+|---|---|
+| **MAIN** | Steam deploy, L3/L4, integration diagnostics on installed game |
+| **SIDE** | Isolated worktree, L1/L2, docs/research, PRs — no Steam |
+
+One branch per worktree; never edit another agent’s tree; push your branch and open a PR; do not merge your own PR.
+
+Handoff block (copy into `STATUS.md` or PR body): see checklist in [`references/test-and-handoff-playbook.md`](references/test-and-handoff-playbook.md).
+
+Merged integration references: PR **#13** pause native RTT, **#14** boot/menu placement, **#15** shadow root-cause + input cache (commits on `main` via merges `8bd72ce`, `9e92a4f`, `3c5ab21`).
+
+---
+
+## G. Regression prevention (quick list)
+
+- Blind VS/PS constant or matrix patches without producer/consumer proof.
+- Assuming shadow casters from mesh names or moved flags alone.
+- Treating StretchRect or HDR copy as shadow-map content without R32F readback.
+- Re-enabling physically rejected mixed receiver correction.
+- Hooking D3D9 vtable slots already owned by another injector.
+- Rolling back to pre-RTT DLLs or stale UI packages as “accepted.”
+- One PSVR2 session testing unrelated INI flags together.
+- Claiming PR-preparation L2 build equals prior L4 acceptance without a new headset test — [`docs/accepted-shadow-input-fixes.md`](../../../docs/accepted-shadow-input-fixes.md).
+
+---
+
+## Applying this skill (sanity scenarios)
+
+**New stereoscopic shader artifact:** start pass trace (default OFF), HQ decals A/B, prove which final draw contributes bad pixels; capture per-eye constants from CTAB-named registers; only then a scoped matrix or state fix with falsifier “artifact persists with identical constants.”
+
+**~500 ms frame stall:** arm hot-path gameplay window; check for 76 ms enum scans vs Present GObjects vs menu trace; ETW only if sampler residual remains; one change (cache vs opt-in trace OFF); verify triggers and menus on real Steam before PSVR2.
+
+---
+
+## When stuck
+
+1. Re-read the symptom line in `STATUS.md` and the linked doc’s **falsification** section.
+2. Confirm installed artifact SHA matches the build you think you tested.
+3. If two speculative fixes failed, stop patching and add read-only instrumentation or offline RE.
+4. Ask the user for a **single** L4 script only when autonomous levels cannot answer a perceptual question.
