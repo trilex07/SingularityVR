@@ -13,7 +13,12 @@ ap.add_argument('--logical', type=Path, required=True)
 ap.add_argument('--input', type=Path, required=True)
 ap.add_argument('--ffmpeg', type=Path, required=True)
 ap.add_argument('--out', type=Path, required=True)
+ap.add_argument('--boost-db', type=float, default=0.0,
+                help='Explicit speech-only loudness target above native; 0 preserves original policy')
+ap.add_argument('--max-corrections', type=int, default=5)
 args = ap.parse_args()
+require(math.isfinite(args.boost_db) and 0.0 <= args.boost_db <= 6.0, 'boost outside safe experiment range')
+require(1 <= args.max_corrections <= 8, 'unbounded corrections refused')
 require(not args.out.exists(), 'refuse overwrite')
 data = args.logical.read_bytes()
 exports = inspect(data)['exports']
@@ -49,7 +54,8 @@ for e in exports:
     props = {p['name']:p['value'] for p in e['properties']}
     frames = props['RawPCMDataSize']//2
     target = args.out/(e['name']+'.ogg')
-    target_i = float(native['input_i'])
+    original_i = float(native['input_i'])
+    target_i = original_i + args.boost_db
     # Short spoken lines can defeat loudnorm's long-window adaptive gain.
     # Derive gain from measured gated loudness, constrain peaks with a
     # look-ahead limiter, then verify the ENCODED result. Never hard-clip or
@@ -60,7 +66,7 @@ for e in exports:
     # to 1.5 LU below it rather than forcing stronger limiting; other dialogue
     # stays within 1 LU. This exception is explicit in the output manifest.
     tolerance = 1.5 if e['name'] == 'INTRO_1016_CP' else 1.0
-    for attempt in range(5):
+    for attempt in range(args.max_corrections):
         temp = args.out/'passes'/(e['name']+f'.pass{attempt+1}.ogg')
         filters = (f'volume={gain_db:.6f}dB,alimiter=limit=0.8:level=disabled:latency=1,'
                    f'aresample=48000,apad=whole_len={frames},atrim=end_sample={frames}')
@@ -80,7 +86,8 @@ for e in exports:
     with wave.open(str(decoded)) as wav:
         require(wav.getnframes()==frames and wav.getframerate()==48000 and
                 wav.getnchannels()==1, 'native PCM budget changed')
-    results.append(dict(asset=e['name'], original_lufs=target_i,
+    results.append(dict(asset=e['name'], original_lufs=original_i,
+                        target_lufs=target_i, speech_target_boost_db=args.boost_db,
                         before_lufs=float(before['input_i']), after_lufs=float(after['input_i']),
                         true_peak_dbtp=float(after['input_tp']), frames=frames,
                         applied_gain_db=gain_db,

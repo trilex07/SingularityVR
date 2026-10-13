@@ -1,5 +1,6 @@
 #include "../vr_scene_mode.h"
 #include "../cutscene_mono.h"
+#include "../menu_submit_policy.h"
 #include <cassert>
 #include <cstdio>
 
@@ -76,5 +77,25 @@ int main() {
     assert(frontend.Current()==Mode::CutsceneFlat);
     for(unsigned i=0;i<Controller::kExitFrames;++i)frontend.Advance(gameplay);
     assert(frontend.Current()==Mode::GameplayStereo);
+    for(int cls=0;cls<=4;++cls)for(int focus=0;focus<=1;++focus)
+    for(int cine=0;cine<=1;++cine)for(int paused=0;paused<=1;++paused) {
+        assert(!CinemaMenuIdenticalCrop(false,cls,focus,cine,paused));
+        assert(CinemaMenuIdenticalCrop(true,cls,focus,cine,paused)==
+            (focus && (cls==2 || (cls==3 && cine && paused))));
+        assert(CinemaMenuPauseOwnsPresentation(true,cls,focus,cine,paused)==
+            (cls==3 && focus && cine && paused));
+    }
+    Controller cinemaPause;
+    cinemaPause.Advance({true,false,false,false});
+    cinemaPause.Advance({true,false,false,false});
+    assert(cinemaPause.Current()==Mode::CutsceneFlat);
+    auto p=cinemaPause.Advance({true,true,true,true,false,true});
+    assert(p.to==Mode::MenuFlat && p.reason==32 && !cinemaPause.Flat());
+    assert(cinemaPause.NeedsMonoPair());
+    cinemaPause.Advance({true,false,false,false});
+    cinemaPause.Advance({true,false,false,false});
+    assert(cinemaPause.Current()==Mode::CutsceneFlat);
+    for(unsigned i=0;i<Controller::kExitFrames;++i)cinemaPause.Advance(gameplay);
+    assert(cinemaPause.Current()==Mode::GameplayStereo);
     std::puts("PASS: cinematic hysteresis, video mono, noisy signal, menu classification");
 }

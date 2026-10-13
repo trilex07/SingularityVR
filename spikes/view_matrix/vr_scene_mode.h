@@ -17,6 +17,7 @@ struct Signals {
     bool menu = false;        // native GFx menu focus; classification only
     bool paused = false;
     bool frontendMenu = false; // opt-in identified native main menu; not dialogue/pause
+    bool cinemaPauseMenu = false; // explicit focused pause owns presentation, not raw cinema
 };
 
 inline bool FrontendMenuPresentation(bool enabled, int menuClass, bool focus) {
@@ -53,6 +54,10 @@ public:
 
     Transition Advance(const Signals& s) {
         Transition out{mode_, mode_, false, 0};
+        if (s.cinemaPauseMenu) {
+            cinematicFrames_ = 0; clearFrames_ = 0;
+            return Change(Mode::MenuFlat, 32u, out);
+        }
         if (s.video) {
             cinematicFrames_ = 0; clearFrames_ = 0;
             return Change(Mode::VideoFlat, 2u, out);

@@ -1,5 +1,6 @@
 #include "two_hand_grip.h"
 #include "skeletal_palette.h"
+#include "hand_anchor_probe.h"
 #include "camera_translation_evidence.h"
 #include "arm_ik.h"
 #include "arm_bind.h"
@@ -5066,8 +5067,14 @@ static D3DFORMAT g_cineMonoTempFmt = D3DFMT_UNKNOWN;
 static bool g_cineMonoFault = false;
 static LONG g_cutsceneCinemaScalePct = 60; // complete image; user found 85% too wide
 static LONG g_cutsceneNativeCameraFix = 1; // controlled native-camera experiment, cinema only
+extern volatile LONG g_vrUiMenu;
+static LONG g_cutsceneMenuPairFix = 0; // exact focused menus; same-source XR crop experiment
+static LONG g_handAnchorProbe = 0;
+static void FlushHandAnchorProbe();
 static bool CutsceneNativeCameraArmed() {
-    return CutsceneUseNativeCamera(CutsceneMonoCurrentMode(),Rd(g_sceneFlatEnabled)!=0,
+    const bool cinemaPause = CinemaMenuPauseOwnsPresentation(Rd(g_cutsceneMenuPairFix)!=0,
+        (int)Rd(g_vrMenuClass),Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0);
+    return CutsceneUseNativeCamera(cinemaPause ? CutsceneMonoMode::CutsceneFlat : CutsceneMonoCurrentMode(),Rd(g_sceneFlatEnabled)!=0,
         MenuSubmitForcesFlat((int)Rd(g_vrMenuClass)),VrModeOn(),Rd(g_cutsceneNativeCameraFix)!=0);
 }
 static LONG g_cutsceneVideoHandoffFix = 1;
@@ -5232,6 +5239,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     const bool cinemaTiming = CutsceneMonoComposeArmed();
     const LARGE_INTEGER cinemaStarted = cinemaTiming ? Now() : LARGE_INTEGER{};
     ComposeCutsceneMonoPair(dev);
+    FlushHandAnchorProbe();
     if (cinemaTiming) {
         static unsigned frames=0,notes=0;
         static double sum=0,peak=0;
@@ -5794,7 +5802,9 @@ static void SnapshotMenuOnSlot(CopySlot& cap) {
     if (cls < 0 || cls > 4) cls = 0;
     cap.menuClass = cls;
     cap.uiFocus = Rd(g_vrUiMenu) != 0;
-    cap.menuFlat = MenuSubmitForcesFlat(cap.menuClass);
+    cap.menuFlat = MenuSubmitForcesFlat(cap.menuClass) ||
+        CinemaMenuIdenticalCrop(Rd(g_cutsceneMenuPairFix)!=0,cap.menuClass,
+            cap.uiFocus,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0);
 }
 
 struct MenuSubmitDiag {
@@ -14083,6 +14093,24 @@ int g_armIkMode = 0;                  // ini [Render] ArmIKMode
 volatile LONG g_gloveIsolate = 2;     // ini [Render] GloveIsolate
 volatile LONG g_gloveFaceFilter = 0;  // ini [Render] GloveFaceFilter
 volatile LONG g_noTmdPaletteFix = 0;  // controlled experiment; [Render] NoTmdPaletteFix
+static handanchor::Probe g_handAnchorRecords;
+static DWORD g_handAnchorThread=0;
+static void FlushHandAnchorProbe() {
+    if(!Rd(g_handAnchorProbe)||g_handAnchorThread!=GetCurrentThreadId())return;
+    handanchor::Record r;
+    if(!g_handAnchorRecords.Take(r))return;
+    Log("hand-anchor sample=%u frame=%u moved=%d targetL=(%.4f,%.4f,%.4f) targetR=(%.4f,%.4f,%.4f) head=(%.4f,%.4f,%.4f) gunAnchor=(%.4f,%.4f,%.4f); raw noTMD constants, not inferred world-joint position",
+        g_handAnchorRecords.Count(),r.frame,r.moved,r.target[0][0],r.target[0][1],r.target[0][2],r.target[1][0],r.target[1][1],r.target[1][2],r.headOffset[0],r.headOffset[1],r.headOffset[2],r.anchor[0],r.anchor[1],r.anchor[2]);
+    auto matrix=[](const char* name,const float* f,unsigned n){
+        char line[512]{};size_t used=0;
+        for(unsigned i=0;i<n && used<sizeof(line);++i){const int k=_snprintf_s(line+used,sizeof(line)-used,_TRUNCATE," %.6g",f[i]);if(k>0)used+=(size_t)k;}
+        Log("hand-anchor %s:%s",name,line);
+    };
+    matrix("local230",r.local,16);
+    matrix("controllerAim",r.controller[0],16);matrix("controllerOff",r.controller[1],16);
+    matrix("nativeLeft9",r.before[0],12);matrix("nativeRight51",r.before[1],12);
+    matrix("posedLeft9",r.after[0],12);matrix("posedRight51",r.after[1],12);
+}
 volatile LONG g_gloveStumpScalePct = 20; // ini [Render] GloveStumpScale
 // Mesh-space +X is the bind-pose left axis (left wrist +49, right wrist -49).
 // Positive pushes the left arm further left of the tracked wrist. Live from the pause hub.
@@ -15459,6 +15487,24 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         return 0;
     }
     InterlockedIncrement(&g_independentLeftDraws);
+    // Fixed-size read-only snapshot, flushed outside native draws in Present.
+    // Same-thread only. No new hook/asset read, allocation or diagnostic palette write.
+    if(Rd(g_handAnchorProbe) && correctedNoTmd && !Rd(g_vrUiMenu) &&
+       wristSlot[0]>=0 && wristSlot[1]>=0 && handValid[0] && handValid[1]) {
+        const DWORD thread=GetCurrentThreadId();
+        if(!g_handAnchorThread)g_handAnchorThread=thread;
+        const DWORD tick=GetTickCount();
+        if(thread==g_handAnchorThread && g_handAnchorRecords.Due(tick)) {
+            handanchor::Record r;r.tick=tick;r.frame=(unsigned)Rd(g_sceneModeFrame);r.moved=g_thisDrawMoved;
+            memcpy(r.local,local,sizeof(local));memcpy(r.controller[0],primary,sizeof(primary));memcpy(r.controller[1],off,sizeof(off));
+            for(int side=0;side<2;++side){memcpy(r.before[side],&saved[wristSlot[side]*3],sizeof(r.before[side]));memcpy(r.after[side],&changed[wristSlot[side]*3],sizeof(r.after[side]));}
+            const float offsets[2][3]={{(float)Rd(g_offHandOffX)/kHandFixed,(float)Rd(g_offHandOffY)/kHandFixed,(float)(g_gunSignPosZ*Rd(g_offHandOffZ))/kHandFixed},
+                {(float)Rd(g_handOffX)/kHandFixed,(float)Rd(g_handOffY)/kHandFixed,(float)(g_gunSignPosZ*Rd(g_handOffZ))/kHandFixed}};
+            for(int side=0;side<2;++side)for(int axis=0;axis<3;++axis)r.target[side][axis]=offsets[side==OffHand()?0:1][axis]+(g_gunHeadOffset?g_hmdOffset[axis]:0);
+            memcpy(r.headOffset,g_hmdOffset,sizeof(r.headOffset));GunAnchorWorld(r.anchor);
+            g_handAnchorRecords.Capture(r);
+        }
+    }
     IndependentAuditCount(IHA_SUCCESS,audit);
     return regs;
 }
@@ -20765,15 +20811,18 @@ static void UpdateSceneModeFrame() {
         InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
         vrscene::FrontendMenuPresentation(Rd(g_cutsceneMenuHandoffFix)!=0,
             (int)Rd(g_vrMenuClass), Rd(g_vrUiMenu)!=0),
+        CinemaMenuPauseOwnsPresentation(Rd(g_cutsceneMenuPairFix)!=0,
+            (int)Rd(g_vrMenuClass),Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0),
     };
     const vrscene::Transition t = g_sceneMode.Advance(signals);
     static unsigned sceneTransitionNotes=0;
     if (t.changed && (Rd(g_sceneModeTrace) || (Rd(g_cutsceneVideoHandoffFix) && sceneTransitionNotes++<16))) {
-        Log("SceneMode: %s -> %s reason=%lu cinematic=%d video=%d menu=%d paused=%d frontend=%d frame=%ld",
+        Log("SceneMode: %s -> %s reason=%lu cinematic=%d video=%d menu=%d paused=%d frontend=%d cinemaPause=%d frame=%ld",
             vrscene::Name(t.from), vrscene::Name(t.to), (unsigned long)t.reason,
             signals.cinematic ? 1 : 0, signals.video ? 1 : 0,
             signals.menu ? 1 : 0, signals.paused ? 1 : 0,
             signals.frontendMenu ? 1 : 0,
+            signals.cinemaPauseMenu ? 1 : 0,
             InterlockedCompareExchange(&g_sceneModeFrame, 0, 0));
     }
     InterlockedIncrement(&g_sceneModeFrame);
@@ -27771,6 +27820,10 @@ void LoadIniSettings() {
                         GetPrivateProfileIntA("Render", "CutsceneFlatMode", 1, path) ? 1 : 0);
     g_cutsceneVideoHandoffFix=GetPrivateProfileIntA("Render","CutsceneVideoHandoffFix",1,path)?1:0;
     g_cutsceneMenuHandoffFix=GetPrivateProfileIntA("Render","CutsceneMenuHandoffFix",0,path)?1:0;
+    g_cutsceneMenuPairFix=GetPrivateProfileIntA("Render","CutsceneMenuPairFix",0,path)?1:0;
+    g_handAnchorProbe=GetPrivateProfileIntA("Render","HandAnchorProbe",0,path)?1:0;
+    Log("ini: HandAnchorProbe=%ld (eight same-thread read-only samples; default OFF)",Rd(g_handAnchorProbe));
+    Log("ini: CutsceneMenuPairFix=%ld (focused frontend/cinema pause only; default OFF)",Rd(g_cutsceneMenuPairFix));
     Log("ini: CutsceneMenuHandoffFix=%ld (focused native frontend only; default OFF)",Rd(g_cutsceneMenuHandoffFix));
     g_polishIntroAudioFix=GetPrivateProfileIntA("Localization","PolishIntroAudioFix",1,path)?1:0;
     InterlockedExchange(&g_sceneCinemaMask,

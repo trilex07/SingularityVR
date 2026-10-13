@@ -4,6 +4,8 @@ param([Parameter(Mandatory)][string]$OutputDirectory,
       [Parameter(Mandatory)][string]$InjectorDll,
       [Parameter(Mandatory)][string]$AudioPackage,
       [switch]$FrontendHandoff,
+      [switch]$CinemaMenuPair,
+      [switch]$HandAnchorProbe,
       [string]$SteamRoot='C:\Program Files (x86)\Steam')
 # Offline staging only. Does not install, arm diagnostics or launch Steam.
 Set-StrictMode -Version Latest
@@ -36,6 +38,14 @@ $insert=$ending+'NoTmdPaletteFix=1'
 if($FrontendHandoff) {
     if($text -cmatch 'CutsceneMenuHandoffFix'){throw 'Existing frontend experiment key'}
     $insert+=$ending+'CutsceneMenuHandoffFix=1'
+}
+if($CinemaMenuPair) {
+    if(-not $FrontendHandoff -or $text -cmatch 'CutsceneMenuPairFix'){throw 'Menu-pair requires frontend handoff and absent experiment key'}
+    $insert+=$ending+'CutsceneMenuPairFix=1'
+}
+if($HandAnchorProbe){
+    if($text -cmatch 'HandAnchorProbe'){throw 'Existing hand-anchor key'}
+    $insert+=$ending+'HandAnchorProbe=1'
 }
 $candidateIni=$text.Insert($position,$insert)
 if($candidateIni.Remove($position,$insert.Length) -cne $text){throw 'INI changed outside owned experiment keys'}
