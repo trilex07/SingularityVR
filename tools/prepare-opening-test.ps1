@@ -3,6 +3,7 @@ param([Parameter(Mandatory)][string]$OutputDirectory,
       [Parameter(Mandatory)][string]$VrDll,
       [Parameter(Mandatory)][string]$InjectorDll,
       [Parameter(Mandatory)][string]$AudioPackage,
+      [switch]$FrontendHandoff,
       [string]$SteamRoot='C:\Program Files (x86)\Steam')
 # Offline staging only. Does not install, arm diagnostics or launch Steam.
 Set-StrictMode -Version Latest
@@ -27,12 +28,17 @@ $iniBytes=[IO.File]::ReadAllBytes((Join-Path $gameRoot $targets[2]))
 $encoding=[Text.Encoding]::GetEncoding(28591) # byte-preserving; insert ASCII only
 $text=$encoding.GetString($iniBytes)
 if($text.Contains([char]0) -or $text -cmatch 'NoTmdPaletteFix'){throw 'Unexpected INI encoding/key'}
-$render=[regex]::Matches($text,'(?m)^\[Render\]\r?$')
+$render=[regex]::Matches($text,'(?m)^\[Render\](?=\r?$)')
 if($render.Count -ne 1){throw 'Exactly one Render section required'}
 $ending=if($text.Contains("`r`n")){"`r`n"}else{"`n"}
 $position=$render[0].Index+$render[0].Length
-$candidateIni=$text.Insert($position,$ending+'NoTmdPaletteFix=1')
-if($candidateIni.Remove($position,($ending+'NoTmdPaletteFix=1').Length) -cne $text){throw 'INI changed outside one key'}
+$insert=$ending+'NoTmdPaletteFix=1'
+if($FrontendHandoff) {
+    if($text -cmatch 'CutsceneMenuHandoffFix'){throw 'Existing frontend experiment key'}
+    $insert+=$ending+'CutsceneMenuHandoffFix=1'
+}
+$candidateIni=$text.Insert($position,$insert)
+if($candidateIni.Remove($position,$insert.Length) -cne $text){throw 'INI changed outside owned experiment keys'}
 New-Item -ItemType Directory -Path $out | Out-Null
 Copy-Item -LiteralPath $VrDll -Destination (Join-Path $out 'd3d9.dll')
 Copy-Item -LiteralPath $InjectorDll -Destination (Join-Path $out 'dinput8.dll')
@@ -45,7 +51,7 @@ foreach($i in 0..3) {
               CandidateSha256=(Get-FileHash -LiteralPath (Join-Path $out $name)).Hash}
 }
 @{Kind='SingularityVR opening cutscene lease v1';StartRequired=$true;
-  FrozenUiSha256=$uiHash;Files=$files;IniChangeOnly='Render.NoTmdPaletteFix=1';
+  FrozenUiSha256=$uiHash;Files=$files;IniChangeOnly=($insert.Trim() -replace '\r?\n',';');
   PhysicalAcceptance='PENDING';Notes='Native audio and hand candidate; FPS attribution, not proven residual-FPS fix'} |
     ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $out 'test-manifest.json') -Encoding UTF8
 Write-Output "OFFLINE READY: $out"

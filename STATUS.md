@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+LATEST physical PID16456: Polish helicopter voices PRESENT but too quiet;
+noTMD hands almost corrected, controller alignment unaccepted (user seated on
+floor/cannot stand). Buttons show no FPS difference; residual dips remain.
+Return-menu double-flat regression OPEN. All four originalsD892/AAA/B3FE/890C
+restored/hash independently verified; UI5B/107DDS/frozen files unchanged.
+Guard cold-process Get-FileHash failure fixed before Steam launch (9dc167a).
+Native palette35 execution/OpenXR confirmed; no broad hands acceptance inferred.
+Profile3600frames/43.687s includes menu1080/cine309, not pure gameplay; no second
+profile armed (one-capture/process invariant). Next OFFLINE candidates: native
+voice loudness within1LU (crash radio1.5LU exception), package84B9A419; frontend
+presentation ownership defaultOFF/L1+L2_PASS source6628fa6 DLL85CCCB60.
+No hand offset/config rewrite based on seated report. Gameplay English/native
+full-voice integration and residual FPS still OPEN. See docs/opening-loudness-followup.md
+and docs/cutscene-frontend-handoff.md. No next install/launch until fresh start.
+
 NEXT COMBINED trial now prepared OFFLINE: user requested hands+dubbing before
 the next FPS test. No new Steam launch/install until fresh explicit `start`.
 NoTmdPaletteFix defaultOFF experiment L1/L2_PASS: actual cooked chunk0 has35
