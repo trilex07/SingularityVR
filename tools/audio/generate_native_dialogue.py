@@ -56,7 +56,8 @@ def main():
         audio *= (10**(-3/20))/peak
         wavfile.write(target, model.sample_rate,
                       (np.clip(audio, -1, 1)*32767).astype(np.int16))
-        result = dict(row, file=str(target), duration=len(audio)/model.sample_rate,
+        result = dict(row, reference=str(reference), source_reference=row['reference'],
+                      file=str(target), duration=len(audio)/model.sample_rate,
                       sha256=hashlib.sha256(target.read_bytes()).hexdigest(),
                       reference_sha256=hashlib.sha256(reference.read_bytes()).hexdigest(),
                       status='generated_candidate_not_auditioned')

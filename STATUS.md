@@ -20,6 +20,7 @@ UI5B and original audio890C independently verified, game CLOSED.
 Exact four-file lease adds only Render.NoTmdPaletteFix=1 (INI383D5E36); retains
 ShowControllerArms1/ArmIK0/GloveIsolate2/FaceFilter0. Fake installation+restore,
 WhatIf/path rejection/corrupt backup/user-INI preservation PASS incl WindowsPS5.1.
+No-launch guardian timeout60s PASS in fake install; all four original hashes restored.
 Artifact deployment/hands-dubbing/test-artifact/test-manifest.json. No request
 armed. READY_FOR_PHYSICAL_ACCEPTANCE for hand/audio candidate and diagnostics,
 NOT a residual-FPS fix or L3/L4 acceptance. Older headers below historical.

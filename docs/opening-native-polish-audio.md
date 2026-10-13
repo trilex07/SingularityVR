@@ -75,6 +75,8 @@ instead of falsely claiming exact restoration.
 Offline fake-Steam tests PASS in PowerShell7 and Windows PowerShell5.1: WhatIf,
 exact install/restore, path escape refusal, corrupted backup refusal before any
 write, unexpected INI preservation and remaining owned rollback, frozen UI.
+No-launch watcher also tested through a real 60-second fake-install lease:
+all four baseline hashes restored automatically, without starting any game.
 No real candidate installed/Steam launched during preparation. Fresh user
 `start` required. Requested combined trial is intentionally hands+audio+bounded
 FPS attribution, not a one-variable FPS performance A/B; speedup attribution
