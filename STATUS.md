@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+MAIN cutscene resume, PID41200: New Game crashed before intro; WER/dump and
+exact candidate MAP/disassembly prove pawn Location.Z read in camera
+stabilization (RVA0x2898C, stale pawn0x0DA0A000), not mono composition. Safe
+baseline DLL D8928180 restored and rehashed; INI C59B1CF6 and UI5B2EA469 unchanged.
+Small guarded pawn-sample fix L1_PASS; no camera-math/render/input changes.
+L2 build pending; L3/L4 crash regression and helicopter test pending.
+See docs/CUTSCENE_RESUME_PHYSICAL.md. Prior active observer expired before the
+late crash; authoritative native log/dump recovered, no live-coverage claim.
+
 CUTSCENE MONO (branch fix/cutscene-mono-presentation, 08d7ed2):
 IMPLEMENTED_NOT_VERIFIED. CutsceneFlat composes the full SBS cinematic
 aspect-fit into the left half and submits that same crop to both eyes;

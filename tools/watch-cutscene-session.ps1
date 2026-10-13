@@ -8,6 +8,10 @@ param(
 # The independently armed post-exit restore guard owns DLL cleanup.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+# The sandbox's process view can hide Steam while its log keeps advancing.
+# Fail closed rather than claim no launch from that incomplete view.
+$hostProcess = Get-CimInstance Win32_Process -Filter "ProcessId=$PID" -ErrorAction Stop
+if (-not $hostProcess) { throw 'Host process visibility unavailable; run in MAIN full-process context' }
 $output = (Resolve-Path -LiteralPath $EvidenceDirectory).Path
 $log = Join-Path $env:LOCALAPPDATA 'SingularityVR\view_matrix.log'
 $started = Get-Date
@@ -17,7 +21,7 @@ $seen = [Collections.Generic.HashSet[string]]::new()
 $events = [Collections.Generic.List[string]]::new()
 $gameId = 0
 $heartbeat = $started
-$pattern = 'OpenXR ready|session state|SceneMode:|camera cut|level transition:|cutscene-mono:|cutscene STARTED|cutscene ENDED|bCinematicMode|yaw asserted by the ENGINE|FRAME SPIKE|VR frame:|fps='
+$pattern = 'OpenXR ready|xr-heartbeat:|perf:|session state|SceneMode:|camera cut|level transition:|cutscene-mono:|cutscene STARTED|cutscene ENDED|bCinematicMode|yaw asserted by the ENGINE|camera pawn sample:|FRAME SPIKE'
 Write-Output ('OBSERVER READY: read-only; deadline ' + $deadline.ToString('o'))
 while ((Get-Date) -lt $deadline) {
     $running = @(Get-Process -Name Singularity -ErrorAction SilentlyContinue)
@@ -54,6 +58,14 @@ while ((Get-Date) -lt $deadline) {
         $heartbeat = (Get-Date).AddSeconds(30)
     }
     Start-Sleep -Seconds 5
+}
+if ($gameId -and @(Get-Process -Name Singularity -ErrorAction SilentlyContinue).Count) {
+    # Stop active observation at the bound, but retain a passive exit collector.
+    # A late crash must not replace the native log before we preserve it. No input,
+    # termination, install writes, or continued instrumentation after the bound.
+    Write-Output 'OBSERVATION DEADLINE: active tail stopped; passive collector waits for this PID to exit'
+    while (Get-Process -Id $gameId -ErrorAction SilentlyContinue) { Start-Sleep -Seconds 5 }
+    Write-Output "GAME EXITED after observation deadline: PID $gameId"
 }
 if (Test-Path -LiteralPath $log) {
     $final = Get-Item -LiteralPath $log

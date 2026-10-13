@@ -72,6 +72,7 @@
 #define NOMINMAX
 #include <windows.h>
 #include "script_node_candidate.h"
+#include "pawn_camera_sample.h"
 #include "menu_submit_policy.h"
 #include "menu_hud_scale.h"
 #include "pause_menu_space.h"
@@ -24940,9 +24941,18 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             Rd(g_camPosValid) && g_offEyeHeight >= 0 &&
             Readable((void*)(g_playerPawn + ACTOR_LOCATION), 12) &&
             Readable((void*)(g_playerPawn + g_offEyeHeight), 4)) {
-            float pawn[3]; memcpy(pawn, (void*)(g_playerPawn + ACTOR_LOCATION), 12);
-            const float eye = *reinterpret_cast<const float*>(g_playerPawn + g_offEyeHeight);
-            if (ComputeVrCameraStabilization(g_povPos, pawn, eye, g_vrCameraStabOffset))
+            const uintptr_t pawnAddress = g_playerPawn;
+            PawnCameraSample pawn{};
+            if (!TryReadPawnCameraSample(pawnAddress, ACTOR_LOCATION, g_offEyeHeight, &pawn)) {
+                // Only the stale pawn cache is invalidated; next bounded scan
+                // reacquires it. Never publish residual translation from a failed read.
+                if (g_playerPawn == pawnAddress) { g_playerPawn = 0; g_playerPawnClass = 0; }
+                ReadableForget();
+                static unsigned rejected = 0;
+                if (++rejected <= 8)
+                    Log("camera pawn sample: inaccessible pawn=%p, skipped stabilization and invalidated pawn cache (#%u)",
+                        (void*)pawnAddress, rejected);
+            } else if (ComputeVrCameraStabilization(g_povPos, pawn.location, pawn.eyeHeight, g_vrCameraStabOffset))
                 InterlockedExchange(&g_vrCameraStabValid, 1);
         }
         if(g_cameraTranslationEvidence) {

@@ -32,3 +32,42 @@ after transition. Abort if uncomfortable. One feedback report after exit.
 window; tail timestamps are observation times and can miss bursts. Final
 session log (max 32 MiB) supplies complete transition evidence. It cannot
 measure GPU time or establish physical acceptance. No new diagnostics flags.
+
+## Crash gate: 2026-10-13, PID 41200
+
+User: crash immediately after New Game, before the introductory video.
+WER: access violation in candidate d3d9.dll at RVA `0x2898C`, PE timestamp
+`0x6ACE167F`; exception record reads `0x0DA0A05C`. Candidate MAP locates this
+inside Hook_Present; exact binary instruction is `mov eax,[ecx+0x5C]`, following
+loads of `g_playerPawn`. Log acquired pawn `0x0DA0A000`. This is the Z component
+of Actor.Location (+0x54), in camera translation stabilization. No CutsceneFlat
+entry or compose log occurred. The dump's saved CONTEXT is in the exception
+handler (ntdll), not the fault instruction; do not label those registers as
+original fault registers or stack words as an unwound call stack.
+
+Hypothesis: cached Readable predicates do not protect the subsequent pawn
+sample when a level transition releases/reprotects the old pawn. The fault
+site and object address are proven; exact unmap timing is not. Small experiment:
+copy the already-audited location/eye-height sample under a memory-fault-only
+SEH boundary, leave output unpublished on failure, clear only the invalid pawn
+cache and skip stabilization for that frame. Keep camera math and all accepted
+render/input/menu fixes unchanged. Falsifier: another crash at this protected
+sample, or New Game remains broken elsewhere. L1 must exercise invalidated
+and partial samples, valid math, unchanged outputs and unrelated exceptions.
+
+Restore verified on disk: DLL D8928180..., INI C59B1CF6..., UI 5B2EA469...673CDE.
+Full crashed session and dump preserved privately under deployment; neither
+dump nor game assets are committed or transmitted.
+
+L1 guarded-reader test PASS: valid location/height and stabilization math;
+NOACCESS location Z, NOACCESS height after partial location read, stale and
+released pages; unchanged unpublished outputs; null/alignment/overflow gates;
+non-memory exception filter unchanged. Runtime outcome remains pending.
+
+Observer correction: require full-process visibility (sandbox hid the live
+Steam game), include actual `perf:`/`xr-heartbeat:` log names, retain a passive
+post-exit collector after the active 15-minute observation bound. Earlier
+observer stopped at 14:14 with zero selected events; crash occurred at 14:36.
+We recovered the authoritative native crash log/dump, but do not claim live
+observation covered that late crash. Next test starts only in a current test
+window; user stays in headset, normal closure and verified DLL guard remain.
