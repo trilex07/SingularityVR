@@ -24,6 +24,9 @@ producer groups to separate object and projection transforms. L2_PASS:
 dbce0ed x86 PE32 /O2 build SHA54CC148F, parser/trace unit checks and runtime
 policy pass. Real Steam execution of this additional probe is pending; no
 shadow fix claimed. See map-probe note.
+The first sampled A/B map comes from a separate 6481/4307-vertex dynamic-mesh
+producer also seen in HDR scene draws; its 394x224/395x225 native viewports
+and finite content are distinct from the later gun shadow route.
 
 Input cache130dfdb / DLLF294D272: real Steam PID19520, PHYSICALLY_VERIFIED
 for held-button FPS/actions/stereo/tracking and pause/options/resume. User says

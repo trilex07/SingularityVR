@@ -115,6 +115,17 @@ that the native shadow caster's bone inputs respond to hand movement. The
 producer viewport changed from6,6,500,235 to6,6,500,280; this is not by itself
 evidence of the square's cause.
 
+The first sampled map in A/B instead follows a different producer: source
+groups178/179 and164/165 draw 6481/4307 vertices into the same native R32F
+target, then copy/filter before receiver groups184 and170. Within each trace,
+their VB/IB also matches HDR scene groups150..153 (A) and corresponding B
+groups. This distinguishes that world/dynamic-mesh route from the later
+3314/390-vertex weapon shadow route. The source viewport is almost unchanged
+between A/B (394x224 versus395x225); sampled maps both have 262144 finite
+values but different zero counts (15413 versus8805). That difference alone
+cannot locate square pixels because the light/subject may move during the
+physical sequence.
+
 The player reports that enemy-adjacent squares did not change with right-hand
 motion, while the gun-associated shadow stopped at its previous location after
 VR holstering. These are distinct observed behaviors. C has no trace: the
