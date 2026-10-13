@@ -21,7 +21,6 @@
 #include "vr_scene_mode.h"
 #include "cutscene_mono.h" // CutsceneFlat mono-to-both-eyes fit math (no D3D)
 #include "video_cinema_placement.h"
-#include "cinema_surface_copy.h"
 #include "input_remap.h"
 #include "polish_localization.h"
 
@@ -82,6 +81,7 @@
 #include "async_thread_snapshot.h"
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
 #include <d3d9.h>
+#include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include <d3d11.h>
 #include <dinput.h>
 
