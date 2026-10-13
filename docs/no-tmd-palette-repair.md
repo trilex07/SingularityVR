@@ -42,6 +42,9 @@ settings are not globally redefined. No new hooks or runtime asset reads.
 
 L1_PASS: fresh cooked-map/PSK verification; weighted split reproducer;
 affine rigid-blend regression; exact slots and both handedness modes.
-Build/Steam/physical gates remain separate. Test candidate is offline until
+L2_PASS: normal x86 PE32/O2 build source316f33c, DLL
+`D10A6EE56F76D1F02CC00E3A55B50664D704CF2866FEF3A95724FFE816BD8EDF`.
+Existing glove isolation and eight camera/cinema/input/hotpath regressions PASS.
+Steam/physical gates remain separate. Test candidate is offline until
 the user writes a fresh `start`; test must restore both DLLs and any owned
 INI/audio-package changes after exit.

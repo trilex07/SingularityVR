@@ -1,5 +1,29 @@
 # STATUS — session handoff
 
+NEXT COMBINED trial now prepared OFFLINE: user requested hands+dubbing before
+the next FPS test. No new Steam launch/install until fresh explicit `start`.
+NoTmdPaletteFix defaultOFF experiment L1/L2_PASS: actual cooked chunk0 has35
+ordered slots, legacy code45 disagrees fromslot18; PSK weights independently
+agree and281points mix wrist/native forearm. Candidate exact noTMD map+rigid
+same-side contributors, NOT TMD/gun/world/shadow changes. Source316f33c,
+VR D10A6EE56F76D1F02CC00E3A55B50664D704CF2866FEF3A95724FFE816BD8EDF.
+Polish helicopter native SoundNodeWave candidate10voices L1_PASS; original
+scream+128other waves/property/event metadata preserved. Candidate package
+C8B30A1B639FBA1A6A5CE58542A81C8687DA4DF5C5BB515EAFC685114B40974C;
+original890C6172. Speech mono48k/exact native PCM sample budgets, LZO roundtrip
+and uepkg layout PASS. Synthetic voices/ASR reviewed, auditory/native load NOT
+verified. Not a claim of all-game Polish completion. See docs/opening-native-polish-audio.md
+and docs/no-tmd-palette-repair.md. FPS residual cause still OPEN, bounded sparse
+native Draw CPU probe included; accepted cache repair injectorD6EFDDAE retained
+in offline artifact. Current installed accepted originals D892/AAA, INI B3FE,
+UI5B and original audio890C independently verified, game CLOSED.
+Exact four-file lease adds only Render.NoTmdPaletteFix=1 (INI383D5E36); retains
+ShowControllerArms1/ArmIK0/GloveIsolate2/FaceFilter0. Fake installation+restore,
+WhatIf/path rejection/corrupt backup/user-INI preservation PASS incl WindowsPS5.1.
+Artifact deployment/hands-dubbing/test-artifact/test-manifest.json. No request
+armed. READY_FOR_PHYSICAL_ACCEPTANCE for hand/audio candidate and diagnostics,
+NOT a residual-FPS fix or L3/L4 acceptance. Older headers below historical.
+
 CURRENT PID33140 post-cache attribution completed3600frames/40.625s with
 229menu frames (NOT pure gameplay). User: dips in gameplay. Slow77FPS window
 has no new discovery/replay; input-cache changes NOT justified. Three43.712ms

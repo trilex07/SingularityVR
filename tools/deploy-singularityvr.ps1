@@ -13,12 +13,22 @@ param(
     [switch]$KeepIni,
     [switch]$DllOnly,
     [switch]$RuntimeDllPairOnly,
+    [string]$OpeningCutsceneManifestPath = '',
     [switch]$SkipTextures,
     [switch]$StopGame
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if($OpeningCutsceneManifestPath) {
+    if($DllOnly -or $RuntimeDllPairOnly -or $StopGame -or $KeepIni -or $SkipTextures){
+        throw 'Opening cutscene lease is an exclusive exact four-file deployment mode'
+    }
+    $openingAction=if($Action -eq 'Rollback'){'Restore'}elseif($Action -eq 'Status'){'Preflight'}else{'Install'}
+    & (Join-Path $PSScriptRoot 'test-opening-cutscene-package.ps1') -Action $openingAction `
+        -ManifestPath $OpeningCutsceneManifestPath -SteamRoot $SteamRoot -BackupPath $BackupPath -WhatIf:$WhatIfPreference
+    return
+}
 if($DllOnly -and $RuntimeDllPairOnly){throw 'Select one narrow deployment mode only'}
 $narrowRuntime=$DllOnly -or $RuntimeDllPairOnly
 
