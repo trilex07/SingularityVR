@@ -5,6 +5,7 @@ param([ValidateRange(30,120)][int]$CaptureSeconds=90,
       [ValidateRange(30,300)][int]$CinemaExitWindowSeconds=180)
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'cinema-exit-trace-cue.ps1')
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 if(-not ([Security.Principal.WindowsPrincipal]::new($identity)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     throw 'Windows CPU stack tracing requires an administrator token (UAC).'
@@ -57,7 +58,7 @@ try {
             if(Test-Path -LiteralPath $nativeLog) {
                 $state=Get-Item -LiteralPath $nativeLog
                 if($state.LastWriteTime -ge $gameStart -and $state.Length -le 33554432) {
-                    $cueSeen=[bool](Select-String -LiteralPath $nativeLog -Quiet -SimpleMatch 'CINEMA_EXIT_HOTPATH armed:')
+                    $cueSeen=Test-CinemaExitTraceCue -Text ([IO.File]::ReadAllText($nativeLog)) -GameStart $gameStart
                 }
             }
             if(-not $cueSeen){Start-Sleep -Seconds 2}
