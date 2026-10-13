@@ -8,7 +8,12 @@ leaves the observed shadow at its prior position; moving the head changes the
 viewpoint around that shadow, not its position. Square shadows are seen around
 enemies (dynamic casters). Next armed-hand-A/B/VR-holstered controlled traces;
 do not re-enable rejected matrix correction. Accepted3 hashes
-restored/verified DLL9FBA308C/INI61AEC56C/UI5B2EA469 after exit. See map-probe note.
+restored/verified DLL9FBA308C/INI61AEC56C/UI5B2EA469 after exit. The later
+PID35192 A frame reidentified the exact foreground weapon VB/IB in native
+512x512 R32F shadow-target draws (3314-vertex gun, 390-vertex companion), also
+present in PID18352. This is direct caster-path evidence, not artifact causality.
+Tab-switching blocked B; a DRAWN/STORED-synchronized three-frame scheduler is
+ready for a no-chat-switch physical sequence. See map-probe note.
 
 Input cache130dfdb / DLLF294D272: real Steam PID19520, PHYSICALLY_VERIFIED
 for held-button FPS/actions/stereo/tracking and pause/options/resume. User says

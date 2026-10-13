@@ -78,6 +78,18 @@ the game freezing on tab switches. It closed, the automatic guard restored the
 accepted DLL, and MAIN rechecked the DLL/INI/UI hashes before removing the one
 owned pending trace request. Do not ask for replies between captures again.
 
+Offline comparison of two real Steam traces gives a firmer caster identity.
+PID35192 group2/3 draws the 3314-vertex foreground weapon with VB29A71EE0 /
+IB0CA98E20 into the scene target. The same VB/IB is drawn by group257 (3314
+vertices) and group258 (390 vertices) into a native 512x512 R32F shadow target
+with viewport6,6,500,259. Both report phase1/moved0; this field alone does not
+prove their vertex constants are identical or that the mesh is untransformed.
+PID18352 independently repeats the exact same within-session VB/IB linkage:
+scene group2/3 and 512x512 shadow-target groups345/346. Thus weapon geometry
+participates in a dynamic shadow producer path. Whether it causes the frozen
+shadow or squares near enemy casters remains unresolved; compare actual matrix
+registers and content across controlled hand/holster frames.
+
 `tools/run-shadow-holster-sequence.ps1` schedules three one-frame requests
 externally; it sends no game input. At the enemy scene the player uses the mod's
 VR holster once and draws the gun again. The `DRAWN` log event synchronizes A
