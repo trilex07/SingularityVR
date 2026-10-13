@@ -26666,6 +26666,16 @@ void LoadIniSettings() {
     if (!IniPath(path)) return;
 
     const bool hotPathEnabled = GetPrivateProfileIntA("Render", "HotPathSampler", 0, path) != 0;
+    // The physically accepted shadow/input combination is persistent: missing
+    // keys use ON, so existing INIs need no overwrite or temporary flag files.
+    const bool worldShadow=GetPrivateProfileIntA("Render","ShadowWorldReceiverFix",1,path)!=0;
+    const bool foregroundShadow=GetPrivateProfileIntA("Render","ShadowForegroundClearFix",1,path)!=0;
+    const bool firstShadow=GetPrivateProfileIntA("Render","ShadowFirstPersonReceiverFix",1,path)!=0;
+    const bool inputCache=GetPrivateProfileIntA("Input","InputEnumerationCache",1,path)!=0;
+    worldshadowfix::Configure(worldShadow);shadowcleargate::Configure(foregroundShadow);
+    fpshadowfix::Configure(firstShadow);inputenumthrottle::Configure(inputCache);
+    Log("ini: accepted fixes worldShadow=%d foregroundClear=%d firstPersonShadow=%d inputCache=%d",
+        worldShadow?1:0,foregroundShadow?1:0,firstShadow?1:0,inputCache?1:0);
     g_gameplayHotPathAllowed=!hotPathEnabled;
     g_hotPathSampler.configure(hotPathEnabled);
     if (hotPathEnabled)

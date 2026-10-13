@@ -1,5 +1,6 @@
 #include "shadow_receiver_test_device.h"
 #include "../shadow_first_person_receiver_fix.h"
+#include "../input_enum_throttle.h"
 static void Point(const float* p,const float* m,float* out){for(int c=0;c<4;++c){out[c]=0;for(int r=0;r<4;++r)out[c]+=p[r]*m[r*4+c];}}
 int main(){
     using namespace fpshadowfix;IDirect3DDevice9 d;float original[32];memcpy(original,d.ps,128);
@@ -40,5 +41,9 @@ int main(){
     d.writes=0;d.failFirst=true;{Scope s(&d,true,8,12,0);assert(!s.changed);}assert(d.writes==2&&memcmp(d.ps,original,128)==0);
     d.writes=0;d.failFirst=false;d.failRestore=true;{Scope s(&d,true,8,12,0);}assert(fault&&restoreFailures==1);
     unsigned writes=d.writes;{Scope s(&d,true,8,12,0);}assert(writes==d.writes);
+    worldshadowfix::Configure(true);assert(worldshadowfix::Requested(false));worldshadowfix::Configure(false);assert(!worldshadowfix::Requested(false)&&worldshadowfix::Requested(true));
+    Configure(true);assert(Requested(false));Configure(false);assert(!Requested(false)&&Requested(true));
+    shadowcleargate::Configure(true);assert(shadowcleargate::Requested(false));shadowcleargate::Configure(false);assert(!shadowcleargate::Requested(false)&&shadowcleargate::Requested(true));
+    inputenumthrottle::Configure(true);assert(inputenumthrottle::Requested(false));inputenumthrottle::Configure(false);assert(!inputenumthrottle::Requested(false)&&inputenumthrottle::Requested(true));
     puts("PASS: near1 only; required world/ClearGate; captured eye round trips; no mesh/world edits; balanced refs and restored constants/fault latch");
 }

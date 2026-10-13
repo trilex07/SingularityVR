@@ -7,6 +7,9 @@ namespace worldshadowfix {
 struct Entry {IUnknown* shader=nullptr;bool match=false;};
 static Entry cache[128];static unsigned used=0;
 static bool enabled=false,vsMatch=false,psMatch=false,fault=false;
+static volatile LONG configured=0;
+inline void Configure(bool on){InterlockedExchange(&configured,on?1:0);}
+inline bool Requested(bool lease){return lease||InterlockedCompareExchange(&configured,0,0)!=0;}
 static unsigned appliedLeft=0,appliedRight=0,nearSkipped=0,rejected=0,restoreFailures=0;
 inline void Release(){for(unsigned i=0;i<used;++i)cache[i].shader->Release();used=0;vsMatch=psMatch=false;}
 template<class T> bool Classify(T* shader,UINT bytes,unsigned long long fingerprint){
@@ -43,6 +46,7 @@ inline void Poll(const char* logPath){
             }
         }
     }
+    on=Requested(on);
     if(on!=enabled){enabled=on;vsMatch=psMatch=false;Log("WORLD_SHADOW_RECONSTRUCTION enabled=%d",enabled?1:0);}
     if(appliedLeft||appliedRight||nearSkipped||rejected||restoreFailures){
         Log("WORLD_SHADOW_RECONSTRUCTION left=%u right=%u nearSkipped=%u rejected=%u restoreFailures=%u fault=%d",

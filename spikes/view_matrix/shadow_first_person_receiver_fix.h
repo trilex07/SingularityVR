@@ -5,6 +5,9 @@
 // world/ClearGate combination; never edits a mesh palette or gun transform.
 namespace fpshadowfix {
 static bool enabled=false,fault=false;
+static volatile LONG configured=0;
+inline void Configure(bool on){InterlockedExchange(&configured,on?1:0);}
+inline bool Requested(bool lease){return lease||InterlockedCompareExchange(&configured,0,0)!=0;}
 static unsigned appliedLeft=0,appliedRight=0,depthSkipped=0,rejected=0,restoreFailures=0;
 inline bool FirstDepth(const float* depth){
     for(unsigned i=0;i<4;++i)if(!std::isfinite(depth[i]))return false;
@@ -30,6 +33,7 @@ inline void Poll(const char* logPath){
             }
         }
     }
+    on=Requested(on);
     if(on!=enabled){enabled=on;Log("FP_SHADOW_RECONSTRUCTION enabled=%d",enabled?1:0);}
     if(appliedLeft||appliedRight||depthSkipped||rejected||restoreFailures){
         Log("FP_SHADOW_RECONSTRUCTION left=%u right=%u depthSkipped=%u rejected=%u restoreFailures=%u fault=%d",

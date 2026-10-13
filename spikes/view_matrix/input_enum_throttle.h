@@ -2,6 +2,9 @@
 // One-variable experiment: defer the proven native device scan, never input reads.
 namespace inputenumthrottle {
 static volatile LONG enabled=0;
+static volatile LONG configured=0;
+inline void Configure(bool on){InterlockedExchange(&configured,on?1:0);}
+inline bool Requested(bool lease){return lease||InterlockedCompareExchange(&configured,0,0)!=0;}
 inline bool Enabled(){return InterlockedCompareExchange(&enabled,0,0)!=0;}
 inline bool Poll(const char* logPath) {
  static DWORD lastPoll=0;const DWORD now=GetTickCount();
@@ -22,6 +25,7 @@ inline bool Poll(const char* logPath) {
    }
   }
  }
+ on=Requested(on);
  const bool changed=on!=Enabled();if(changed) {
   InterlockedExchange(&enabled,on?1:0);
   Log("INPUT_ENUM_CACHE enabled=%d (topology snapshot; native callbacks replayed; gameplay/owner-thread only)",on?1:0);

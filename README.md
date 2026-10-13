@@ -26,8 +26,11 @@ SingularityVR.ini
 `SingularityVR.ini` ships pre-configured. The in-headset settings menu changes it live and saves
 automatically, so you rarely need to touch it by hand.
 
-**In the game's Video Settings, uncheck every option.** High Quality Decals in particular enables
-dynamic shadows, which are currently broken.
+Keep **High Quality Decals = ON** to retain dynamic shadows. Stereo shadow
+reconstruction for the world and first-person weapon/glove, plus the foreground
+pass-boundary fix, were physically verified on PSVR2 through Steam/OpenXR.
+The accepted fixes are enabled by default, including for existing INIs. See
+[shadow/input settings](docs/accepted-shadow-input-fixes.md) for rollback switches.
 
 Then connect Virtual Desktop and launch `Singularity.exe` **with no arguments**. It starts in VR.
 

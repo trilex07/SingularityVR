@@ -50,3 +50,20 @@ Manifest matches actual artifact, no tracked edits during build. Added tests
 also cover nested world/near1 scopes and agreement of both-eye rebased light
 coordinates on captured eye matrices. Ready for controlled MAIN runtime gate,
 not physically accepted yet.
+
+## Physical acceptance PID39308
+
+MAIN Steam/OpenXR on verified DLL5D49C7A5/source3488084, previous world/ClearGate/
+input cache plus new near1 scope ON. Pause-return1196draws/304groups/overflow0;
+arm caster289 followed by near1 receivers295/296. Final GPU constants reconstruct
+caster origin with5.45e-6/3.94e-6UU error and both UV~(.827322,.463601). Runtime
+reports first-person application in both eyes and no restore failures.
+User explicitly reports everything good, considers shadows finished, requests
+main PR for approval/merge. PHYSICALLY_VERIFIED in this tested PSVR2 scene, not
+every weapon/level/headset. After exit, guard removed all four owned flags;
+MAIN verified actual DLL9FBA308C/INI C59B1CF6/UI5B2EA469 restored/retained.
+Verified snapshot115652-403/runner backup115652. Raw assets/captures stay private.
+
+Production promotion keeps the same math/scopes/cache and adds persistent INI
+defaults; its independent L2 build is recorded in accepted-fixes note. No claim
+that the new default-configuration artifact itself ran in Steam before PR.

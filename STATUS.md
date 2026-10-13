@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+SHADOW FIXES PHYSICALLY_VERIFIED / USER_ACCEPTED: PID39308, DLL5D49C7A5/source
+3488084. User says everything good, shadows finished, requests main PR for
+their approval/merge. World+ClearGate+near1 receiver+input cache ON. Trace1196
+draws/304groups/overflow0, near1 final constants correct in both eyes, no restore
+faults. Earlier black gun/background-negative and enemy-shadow passes retained.
+Accepted scene only; not every weapon/level/headset/hotplug. MAIN verified safe
+rollback DLL9FBA308C/currentINI C59B1CF6/UI5B2EA469; all test flags gone.
+Preparing persistent INI defaults (same accepted logical feature state, missing
+keys ON) and main-target PR; no main merge or new Steam deployment authorized
+as part of this PR preparation. See docs/accepted-shadow-input-fixes.md.
+
 Near1-only receiver L1/L2_PASS: source3488084/DLL5D49C7A5, x86 PE32 /O2,
 captured-matrix/nested-world-scope/restoration tests and parsers passed. Separate
 default-OFF FirstPerson flag requires existing WorldReceiver+ClearGate ON;
