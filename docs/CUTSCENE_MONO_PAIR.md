@@ -53,6 +53,22 @@ so no premature return is expected.
 2. CUTSCENE CANDIDATE: baseline + this change, SHA recorded in
    `spikes/view_matrix/d3d9.build.json` of this branch at test time.
 
+## Round-2 physical findings (candidate 1D6FD331, PID 20128, new game)
+
+- Single APPCRASH at first video start; clean retry played through. No dump;
+  candidate is behavior-identical to baseline at video time, so no mechanism
+  attributed. Treat as flake pending recurrence.
+- Helicopter Matinee: FPS no longer dropped (uncontrolled observation, cause
+  undetermined), but still no cinema view. Root cause in the log:
+  `level transition: camera 1A4B9300 -> 2D606900, CINE was ON - clearing it`.
+  The run-211 level-transition clear fires on a Matinee camera CUT, so
+  `CutsceneFlat` never engages and the mono composition never runs.
+- Fix (this branch): gate the clear on pawn continuity + menu focus
+  (`CameraChangeClearsCine`, unit-tested). `ResetVrAfterCameraLoss` untouched.
+- Still open, separate work: inverted head response during cinematics (log:
+  `yaw asserted by the ENGINE ... cine ON`), visible gloves/weapon, movement
+  allowed, Bink size request, round-1 FPS drop cause.
+
 ## Physical test script (one coordinated window, no mid-game chat)
 
 1. Deploy BASELINE, play to a Matinee cutscene: record stereo-split symptom.
