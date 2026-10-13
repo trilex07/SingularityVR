@@ -14081,6 +14081,7 @@ int g_hideExtraArms = 1;              // ini [Render] HideExtraArms
 int g_armIkMode = 0;                  // ini [Render] ArmIKMode
 volatile LONG g_gloveIsolate = 2;     // ini [Render] GloveIsolate
 volatile LONG g_gloveFaceFilter = 0;  // ini [Render] GloveFaceFilter
+volatile LONG g_noTmdPaletteFix = 0;  // controlled experiment; [Render] NoTmdPaletteFix
 volatile LONG g_gloveStumpScalePct = 20; // ini [Render] GloveStumpScale
 // Mesh-space +X is the bind-pose left axis (left wrist +49, right wrist -49).
 // Positive pushes the left arm further left of the tracked wrist. Live from the pause hub.
@@ -14987,6 +14988,10 @@ static bool GloveIsDescendantOrSelf(unsigned bone, unsigned ancestor,
 static const unsigned* GloveMap(bool gloves, bool sleeve, bool tmdGloves,
                                 bool tmdBase, bool tmdExtra, int& slots) {
     if (gloves) {
+        if (Rd(g_noTmdPaletteFix)) {
+            slots = (int)gloveisolate::kNoTmdCookedPaletteCount;
+            return gloveisolate::kNoTmdCookedPalette;
+        }
         slots = (int)gloveisolate::kNoTmdGlovePaletteBoneCount;
         return gloveisolate::kNoTmdGlovePalette;
     }
@@ -15312,9 +15317,23 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     };
     const bool rigidGloves =
         gloveisolate::HandsOnly(g_showControllerArms, (int)InterlockedCompareExchange(&g_gloveIsolate, 0, 0));
+    const bool correctedNoTmd = gloves && Rd(g_noTmdPaletteFix);
+    if (correctedNoTmd) {
+        static LONG saidCookedPalette = 0;
+        if (InterlockedCompareExchange(&saidCookedPalette, 1, 0) == 0)
+            Log("NoTmdPaletteFix: exact chunk0 slots=%d regs=%d isolate=%ld; TMD/gun/world untouched",
+                slots, regs, Rd(g_gloveIsolate));
+    }
     for(int b=0;b<slots;++b) {
         const unsigned bone = sectionMap[b];
         const char* boneName = bone < 89 ? refs[bone].name : nullptr;
+        if (correctedNoTmd && Rd(g_gloveIsolate) == 2) {
+            const int side = gloveisolate::NoTmdCookedHandSide(bone);
+            if (side >= 0 && side <= 1 && wristSlot[side] >= 0 && handValid[side])
+                skeletal::TransformBone(&changed[b*3], &saved[b*3],
+                    side == OffHand() ? delta : rightDelta);
+            continue;
+        }
         if (gloveisolate::IsTmdDevice(boneName)) continue;
         if (rigidGloves &&
             gloveisolate::Classify(boneName) == gloveisolate::BoneRole::Collapse) {
@@ -15383,6 +15402,13 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         for (int b = 0; b < slots; ++b) {
             const unsigned bone = sectionMap[b];
             const char* boneName = bone < 89 ? refs[bone].name : nullptr;
+            if (correctedNoTmd && Rd(g_gloveIsolate) == 2) {
+                // The cuff placeholder must consume the same optional shift
+                // as its wrist; do not reintroduce a mixed-weight seam here.
+                if (gloveisolate::NoTmdCookedHandSide(bone) == 0)
+                    NudgeComponentX(reinterpret_cast<float(*)[4]>(&changed[b * 3]), leftShift);
+                continue;
+            }
             if (gloveisolate::HandSide(boneName) != 0 || gloveisolate::IsTmdDevice(boneName)) continue;
             const bool finger = wristSlot[0] >= 0 &&
                 GloveIsDescendantOrSelf(bone, wristBone[0], refs, 89);
@@ -27808,6 +27834,9 @@ void LoadIniSettings() {
     InterlockedExchange(&g_gloveIsolate, gloveMode);
     InterlockedExchange(&g_gloveFaceFilter,
         GetPrivateProfileIntA("Render", "GloveFaceFilter", 0, path) ? 1 : 0);
+    InterlockedExchange(&g_noTmdPaletteFix,
+        GetPrivateProfileIntA("Render", "NoTmdPaletteFix", 0, path) ? 1 : 0);
+    Log("ini: NoTmdPaletteFix=%ld (exact noTMD chunk0; experimental, default OFF)", Rd(g_noTmdPaletteFix));
     {
         LONG stump = GetPrivateProfileIntA("Render", "GloveStumpScale", 20, path);
         if (stump < 0) stump = 0;

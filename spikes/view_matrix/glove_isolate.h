@@ -178,4 +178,27 @@ inline bool NoTmdGlovePaletteCovers(unsigned boneIndex) {
     return false;
 }
 
+// Actual noTMD LOD0 chunk 0, first=0 / 4830 triangles / 2924 vertices
+// (3314 including the separate sleeve chunk). Order is GPU palette slot order,
+// NOT a set of all skeleton bones. Adding "missing" bones shifts shader slots.
+// Independently checked against cooked RvGame and ActorX skin weights.
+inline constexpr unsigned kNoTmdCookedPalette[] = {
+    85, 51, 70, 71, 72, 79, 80, 76, 73, 74, 82, 83, 77, 84, 81, 78, 75, 50,
+    9, 10, 11, 12, 16, 27, 23, 24, 20, 17, 18, 14, 15, 21, 25, 22, 19,
+};
+inline constexpr unsigned kNoTmdCookedPaletteCount =
+    sizeof(kNoTmdCookedPalette) / sizeof(kNoTmdCookedPalette[0]);
+
+// On this noTMD section the tmd_base placeholder weights the left cuff; it is
+// not the separately drawn TMD hardware. Move all same-side skin contributors
+// together, including forearm/elbow weights, to avoid a native/tracked seam.
+// No other section consumes this policy; utility/unknown bones fail closed.
+inline int NoTmdCookedHandSide(unsigned bone) {
+    for (unsigned known : kNoTmdCookedPalette) {
+        if (bone == known)
+            return bone == 50 || bone == 51 || (bone >= 70 && bone <= 85) ? 1 : 0;
+    }
+    return -1;
+}
+
 }  // namespace gloveisolate
