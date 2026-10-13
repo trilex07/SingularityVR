@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+PID40412/DLL3242DB31: New Game no-crash PASS again; Bink50% size now
+PHYSICALLY_VERIFIED / USER_ACCEPTED. Preserve size and pawn guard. Helicopter
+BROKEN: different stretched eye halves and semi-transparent NPC face. Native
+stage evidence proves first source->plain-scratch StretchRect fails with
+D3DERR_INVALIDCALL, while zero-copy source->RT-texture succeeds. New controlled
+candidate mirrors the working RT destination/null-rectangle copy primitive;
+shared helper synthetic RGB/alpha + pixel rollback + viewport/scissor/RT
+restoration PASS at 640x360 and actual5264x2684. L3/L4 still pending; no NPC
+shader/camera/input/shadow/menu changes. Safe baseline D892 restored/rehashed,
+INI C59B1CF6 and accepted UI5B2EA469 unchanged. Helicopter Polish voice is a
+separate UE3 dialogue gap, not the SIDE Bink audio task.
+See docs/CUTSCENE_RESUME_PHYSICAL.md.
+
 PID4672/4483CF02: New Game crash reproduction PASS in Steam/PSVR2; guarded
 stale-pawn read rejection logged. Helicopter still BROKEN: CINE ON but no mono
 composition success. Safe D892 baseline restored, INI/UI unchanged.

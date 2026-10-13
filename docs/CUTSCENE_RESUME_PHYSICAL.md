@@ -117,3 +117,25 @@ INI C59B1CF6 and UI5B2EA469 unchanged. No helicopter/Matinee fix claimed from th
 build. Next route: New Game, assess smaller movie, remain in helicopter ~20s
 for new gate/stage logs, close normally. No mid-session chat or unchanged
 baseline visual question; full session evidence collected on exit.
+
+## PID40412: accepted Bink size, proven first copy failure
+
+User: no crash; films now excellent. Helicopter: different stretched eye
+images and apparently semi-transparent NPC face; no Polish helicopter voice.
+Native log confirms video50% placement. CINE enters CutsceneFlat; composer
+armed, then `copy-source-to-temp hr=0x8876086C` (D3DERR_INVALIDCALL), no success.
+Earlier small GPU test did not predict this runtime failure: keep both facts.
+The current zero-copy capture successfully copies the same backbuffer into a
+DEFAULT-pool render-target texture. Hypothesis: use that demonstrated target
+kind for the cinematic scratch instead of offscreen plain. Do not modify NPC
+shaders from this image symptom. Falsifier: copy still fails, or both copies
+succeed but submitted eyes/content remain wrong -> inspect the actual next stage.
+
+Small controlled change: one scratch RT texture/surface pair at source size
+and format, cached and released on Reset; scoped viewport/RT/depth/scissor
+restore and pixel rollback on failure. Share helper with offline GPU test:
+full5264x2684 synthetic quadrant RGB/alpha, whole-source fit into left half,
+bars, state restoration, injected failure without damaged source. No game
+assets in test. Keep accepted video size, pawn guard, shaders/input/menu intact.
+Native log and observation saved; baseline D892, INI C59B1CF6, UI5B2EA469
+restored/rehashed. Helicopter dialogue is a separate UE3 audio gap, not Bink.

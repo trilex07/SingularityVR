@@ -21,6 +21,7 @@
 #include "vr_scene_mode.h"
 #include "cutscene_mono.h" // CutsceneFlat mono-to-both-eyes fit math (no D3D)
 #include "video_cinema_placement.h"
+#include "cinema_surface_copy.h"
 #include "input_remap.h"
 #include "polish_localization.h"
 
@@ -5017,6 +5018,7 @@ extern volatile LONG g_inCinematic;
 // like the cinema matte does.
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CutsceneSetRenderTarget)(IDirect3DDevice9*, DWORD, IDirect3DSurface9*);
 extern PFN_CutsceneSetRenderTarget g_origSetRenderTarget;
+extern CinemaClear g_origClear;
 
 static CutsceneMonoMode CutsceneMonoCurrentMode() {
     switch (g_sceneMode.Current()) {
@@ -5035,8 +5037,11 @@ static bool CutsceneMonoComposeArmed() {
     return CutsceneMonoShouldCompose(CutsceneMonoCurrentMode(), true, menuFlat, true);
 }
 
+static IDirect3DTexture9* g_cineMonoTexture = nullptr;
 static IDirect3DSurface9* g_cineMonoTemp = nullptr;
 static UINT g_cineMonoTempW = 0, g_cineMonoTempH = 0;
+static D3DFORMAT g_cineMonoTempFmt = D3DFMT_UNKNOWN;
+static bool g_cineMonoFault = false;
 static bool g_cineMonoReady = false; // set when this Present composed the frame
 // Bounded transition/error evidence. No per-draw work, new hooks, queries,
 // allocations or pixel readbacks. The existing silent returns hid the reason
@@ -5060,16 +5065,20 @@ static void CutsceneMonoNote(const char* stage, HRESULT hr) {
 }
 static void ReleaseCutsceneMonoResources() {
     if (g_cineMonoTemp) { g_cineMonoTemp->Release(); g_cineMonoTemp = nullptr; }
+    if (g_cineMonoTexture) { g_cineMonoTexture->Release(); g_cineMonoTexture = nullptr; }
     g_cineMonoTempW = g_cineMonoTempH = 0;
+    g_cineMonoTempFmt = D3DFMT_UNKNOWN;
+    g_cineMonoFault = false;
 }
 static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR colour);
 
 // Returns true when the backbuffer now holds the aspect-fit mono image in its
-// left half. Fail-closed: any failure leaves the backbuffer untouched and the
-// frame keeps the previous stereo-submission behaviour.
+// left half. Failed composition restores pixels/state where possible and keeps
+// the previous submission behaviour. A restore fault disables retries until Reset.
 static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
     g_cineMonoReady = false;
     if (!dev) return false;
+    if (g_cineMonoFault) { CutsceneMonoNote("restore-fault-latched", E_FAIL); return false; }
     if (!CutsceneMonoComposeArmed()) {
         if (Rd(g_inCinematic) && VrModeOn()) CutsceneMonoNote("gate-blocked", S_FALSE);
         return false;
@@ -5098,10 +5107,9 @@ static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
     const CutsceneMonoFit fit = ok ? CutsceneMonoComputeFit(bw, bh, 0, bw / 2, bh)
                                    : CutsceneMonoFit{};
     if (!fit.valid) { CutsceneMonoNote("desc-or-fit", FAILED(descHr)?descHr:E_INVALIDARG); back->Release(); return false; }
-    if (!g_cineMonoTemp || g_cineMonoTempW != (UINT)bw || g_cineMonoTempH != (UINT)bh) {
+    if (!g_cineMonoTemp || g_cineMonoTempW != (UINT)bw || g_cineMonoTempH != (UINT)bh || g_cineMonoTempFmt != d.Format) {
         ReleaseCutsceneMonoResources();
-        const HRESULT createHr = dev->CreateOffscreenPlainSurface(bw, bh, d.Format, D3DPOOL_DEFAULT,
-                                                    &g_cineMonoTemp, nullptr);
+        const HRESULT createHr = CreateCinemaCopyTarget(dev, d, &g_cineMonoTexture, &g_cineMonoTemp);
         if (FAILED(createHr) || !g_cineMonoTemp) {
             CutsceneMonoNote("create-temp", FAILED(createHr)?createHr:E_POINTER);
             back->Release();
@@ -5109,34 +5117,21 @@ static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
         }
         g_cineMonoTempW = (UINT)bw;
         g_cineMonoTempH = (UINT)bh;
+        g_cineMonoTempFmt = d.Format;
     }
-    const RECT full{ 0, 0, bw, bh };
-    HRESULT hr = dev->StretchRect(back, &full, g_cineMonoTemp, &full, D3DTEXF_NONE);
-    if (FAILED(hr)) CutsceneMonoNote("copy-source-to-temp", hr);
-    IDirect3DSurface9* old = nullptr;
-    IDirect3DSurface9* depth = nullptr;
-    if (SUCCEEDED(hr)) {
-        dev->GetRenderTarget(0, &old);
-        dev->GetDepthStencilSurface(&depth);
-        dev->SetDepthStencilSurface(nullptr);
-        if (g_origSetRenderTarget) g_origSetRenderTarget(dev, 0, back);
-        if (fit.barCount) {
-            D3DRECT bars[4];
-            for (int i = 0; i < fit.barCount; ++i)
-                bars[i] = { fit.bars[i].left, fit.bars[i].top,
-                            fit.bars[i].right, fit.bars[i].bottom };
-            ClearRects(dev, bars, fit.barCount, D3DCOLOR_XRGB(0, 0, 0));
-        }
-        const RECT dst{ fit.image.left, fit.image.top, fit.image.right, fit.image.bottom };
-        hr = dev->StretchRect(g_cineMonoTemp, &full, back, &dst, D3DTEXF_LINEAR);
-        if (FAILED(hr)) CutsceneMonoNote("fit-temp-to-back", hr);
-        if (g_origSetRenderTarget && old) g_origSetRenderTarget(dev, 0, old);
-        dev->SetDepthStencilSurface(depth);
+    static bool saidTarget = false;
+    if (!saidTarget) {
+        saidTarget = true;
+        Log("cutscene-mono: source=%p fmt=%u pool=%u usage=0x%08lX msaa=%u quality=%lu scratch=RT-texture surface=%p",
+            (void*)back, (unsigned)d.Format, (unsigned)d.Pool, (unsigned long)d.Usage,
+            (unsigned)d.MultiSampleType, (unsigned long)d.MultiSampleQuality, (void*)g_cineMonoTemp);
     }
-    if (old) old->Release();
-    if (depth) depth->Release();
+    const CinemaCopyResult result = ComposeCinemaSurface(dev, back, g_cineMonoTemp, d, fit,
+        g_origSetRenderTarget, g_origClear);
+    CutsceneMonoNote(result.stage, result.hr);
+    if (!result.stateRestored || !result.pixelsRestored) g_cineMonoFault = true;
     back->Release();
-    if (FAILED(hr)) return false;
+    if (FAILED(result.hr)) return false;
     g_cineMonoReady = true;
     static LONG saidMono = 0;
     if (!InterlockedExchange(&saidMono, 1))
