@@ -92,6 +92,17 @@ def read_trace(path, shader_out=None):
             data=dict(re.findall(r"(\w+)=([^ ]+)",line))
             data.update(alpha_policy(data))
             groups[int(data["group"])]["pipeline"]=data
+        elif line.startswith("shadow-producer-high "):
+            data=dict(re.findall(r"(\w+)=([^ ]+)",line))
+            groups[int(data["group"])]["shadow_producer_high"]={
+                "first":int(data["first"]),"start":int(data["start"]),
+                "count":int(data["count"]),"hr":data["hr"],"constants":{},
+            }
+        elif line.startswith("shadow-producer-constant "):
+            match=re.match(r"shadow-producer-constant group=(\d+) reg=(\d+) VS=([^ ]+)",line)
+            if match:
+                high=groups[int(match[1])]["shadow_producer_high"]
+                high["constants"][int(match[2])]=[float(v) for v in match[3].split(",")]
         elif line.startswith(("constant group=", "tailconstant group=")):
             match=re.match(r"(?:tail)?constant group=(\d+) reg=(\d+) VS=([^ ]+) PS=([^ ]+)",line)
             if match:

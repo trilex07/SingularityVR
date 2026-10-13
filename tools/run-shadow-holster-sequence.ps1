@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory)][ValidateRange(1,2147483647)][int]$GamePid,
     [ValidateRange(30,600)][int]$SyncTimeoutSeconds = 300,
-    [ValidateRange(5,120)][int]$StageTimeoutSeconds = 40
+    [ValidateRange(5,180)][int]$StageTimeoutSeconds = 120
 )
 
 # MAIN-owned external trace scheduler. The player stays in PSVR2 throughout.

@@ -12,8 +12,16 @@ restored/verified DLL9FBA308C/INI61AEC56C/UI5B2EA469 after exit. The later
 PID35192 A frame reidentified the exact foreground weapon VB/IB in native
 512x512 R32F shadow-target draws (3314-vertex gun, 390-vertex companion), also
 present in PID18352. This is direct caster-path evidence, not artifact causality.
-Tab-switching blocked B; a DRAWN/STORED-synchronized three-frame scheduler is
-ready for a no-chat-switch physical sequence. See map-probe note.
+The no-tab-switch PID27084 sequence captured A/B at 931/919 draws, 0 overflow;
+same gun VB/IB occurs in both native R32F shadow targets. CTAB identifies
+BoneMatrices starting at VS c5; its first rows change with hand pose A/B.
+Physical user: enemy squares did not change with hand motion; the gun-associated
+shadow froze after VR holstering. C was not captured because the scheduler's
+40-second STORED timeout elapsed just before the event and the game closed.
+Accepted DLL/INI/UI hashes were separately reverified after guard rollback.
+Next read-only candidate captures CTAB-backed VS c230..240 on native R32F
+producer groups to separate object and projection transforms. No shadow fix
+claimed. See map-probe note.
 
 Input cache130dfdb / DLLF294D272: real Steam PID19520, PHYSICALLY_VERIFIED
 for held-button FPS/actions/stereo/tracking and pause/options/resume. User says

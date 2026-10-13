@@ -101,3 +101,33 @@ after another 15 seconds. Each request still requires 15 focused/tracked frames;
 the runner rejects early stowing, timeouts and any pre-existing request. The
 restore guard retains ownership of DLL rollback after exit. Compare enemy-map
 producer and receiver data across A/B/C before inferring any causal fix.
+
+## No-tab-switch Steam PID27084
+
+The DRAWN sync worked. A was captured at931 draws/274 groups and B at919
+draws/256 groups, both with overflow0 and successful finite R32F readbacks.
+The identical within-session VB29904FE0/IB0CA5A540 was present in each
+foreground weapon draw and native512x512 shadow target. Gun producer group249
+in A and231 in B uses the same vertex shader SHA c69b26e9..., whose CTAB
+names BoneMatrices at VS c5..229, LocalToWorld c230..233 and ProjectionMatrix
+c234..237. The captured c5..31 rows vary between A and B, directly showing
+that the native shadow caster's bone inputs respond to hand movement. The
+producer viewport changed from6,6,500,235 to6,6,500,280; this is not by itself
+evidence of the square's cause.
+
+The player reports that enemy-adjacent squares did not change with right-hand
+motion, while the gun-associated shadow stopped at its previous location after
+VR holstering. These are distinct observed behaviors. C has no trace: the
+40-second STORED wait expired immediately before the user's holster event; a
+manual request was issued afterward, but the game closed before consuming it.
+The request was removed after exit and the accepted DLL/INI/UI hashes verified.
+The scheduler now permits a120-second per-stage wait. No need to repeat A/B
+merely because C was missed.
+
+Next bounded producer probe reads VS c230..240 only when a new native512x512
+R32F non-quad draw group appears. These register names come from the captured
+shader CTAB, not guessed UE3 offsets. The prior trace stored c0..31 only, so
+it cannot distinguish the gun's local-to-world/phantom position from shadow
+projection changes. One extra read per qualifying group preserves the original
+render state and records HRESULT. Compare c5..31 and c230..240 for the exact
+gun VB/IB at armed and holstered poses; analyze enemy producer separately.

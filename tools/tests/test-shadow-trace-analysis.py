@@ -1,6 +1,7 @@
 """Synthetic metadata only: no proprietary shader bytecode."""
 import importlib.util
 import struct
+import tempfile
 from pathlib import Path
 
 spec=importlib.util.spec_from_file_location("trace",Path(__file__).parents[1]/"analyze-shadow-pass-trace.py")
@@ -32,6 +33,26 @@ def test_alpha():
     assert trace.alpha_policy({**state,"blend":"0"})["alpha_state_preserves_dst"] is False
     assert trace.alpha_policy({"valid":"0"})["alpha_write_enabled"] is None
 
+def test_shadow_producer_high():
+    synthetic=(
+        "shadow-pass-trace-v1 draws=1 groups=1 overflow=0\n"
+        "group=0 first=1 last=1 VS=00000001 PS=00000002 owner=00000000 fmt=114 type=4\n"
+        "shadow-producer-high group=0 first=1 start=230 count=11 hr=00000000\n"
+        "shadow-producer-constant group=0 reg=234 VS=1,2,3,4\n"
+    )
+    with tempfile.NamedTemporaryFile(mode="w",encoding="utf-8",suffix=".txt",
+                                     prefix="shadow-synthetic-",dir=Path(__file__).parents[2],
+                                     delete=False) as fixture:
+        fixture.write(synthetic)
+        path=Path(fixture.name)
+    try:
+        high=trace.read_trace(path)["groups"][0]["shadow_producer_high"]
+        assert high["start"]==230 and high["count"]==11 and high["hr"]=="00000000"
+        assert high["constants"][234]==[1.0,2.0,3.0,4.0]
+    finally:
+        path.unlink()
+
 test_ctab()
 test_alpha()
-print("PASS: bounded CTAB register metadata; mask/blend alpha policy; missing-state uncertainty")
+test_shadow_producer_high()
+print("PASS: bounded CTAB metadata; alpha policy; native shadow producer register parsing")

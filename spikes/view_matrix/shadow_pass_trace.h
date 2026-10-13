@@ -25,6 +25,12 @@ struct Group {
     unsigned first=0,last=0,count=0,failed=0,type=0,verts=0,minPrims=~0u,maxPrims=0;
     float vsConstants[32][4]{},psConstants[32][4]{};
     HRESULT vsRead=E_FAIL,psRead=E_FAIL;
+    // Native dynamic-shadow VS CTAB identifies c230..233 LocalToWorld,
+    // c234..237 ProjectionMatrix and c238..240 depth controls. Capture only
+    // on a new 512x512 R32F producer group, outside the default-OFF path.
+    float shadowProducerVS[11][4]{};
+    HRESULT shadowProducerRead=E_FAIL;
+    bool shadowProducer=false;
     float tailVS[4][4]{},tailPS[15][4]{};
     HRESULT tailVSRead=E_FAIL,tailPSRead=E_FAIL;
     bool tail=false;
@@ -115,6 +121,13 @@ inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned pr
         dev->GetStreamSource(0,&g.vb,&g.offset,&g.stride);dev->GetIndices(&g.ib);
         g.vsRead=dev->GetVertexShaderConstantF(0,&g.vsConstants[0][0],32);
         g.psRead=dev->GetPixelShaderConstantF(0,&g.psConstants[0][0],32);
+        D3DSURFACE_DESC producerTarget{};
+        if(verts>4 && key.rt && SUCCEEDED(key.rt->GetDesc(&producerTarget)) &&
+           producerTarget.Width==512 && producerTarget.Height==512 &&
+           producerTarget.Format==D3DFMT_R32F) {
+            g.shadowProducer=true;
+            g.shadowProducerRead=dev->GetVertexShaderConstantF(230,&g.shadowProducerVS[0][0],11);
+        }
     }
     auto& g=groups[i];++g.count;g.last=draws;
     events[draws-1].group=i;
@@ -178,6 +191,14 @@ inline void Dump(const char* path) {
             i,g.key.pipelineValid?1:0,g.key.pipeline[0],g.key.pipeline[1],g.key.pipeline[2],g.key.pipeline[3],
             g.key.pipeline[4],g.key.pipeline[5],g.key.pipeline[6],g.key.pipeline[7],g.key.pipeline[8],
             g.key.pipeline[9],g.key.pipeline[10],g.key.pipeline[11],g.key.pipeline[12],g.key.pipeline[13],g.key.pipeline[14]);
+        if(g.shadowProducer) {
+            fprintf(f,"shadow-producer-high group=%u first=%u start=230 count=11 hr=%08lX\n",
+                i,g.first,g.shadowProducerRead);
+            if(SUCCEEDED(g.shadowProducerRead))for(unsigned r=0;r<11;++r)
+                fprintf(f,"shadow-producer-constant group=%u reg=%u VS=%.9g,%.9g,%.9g,%.9g\n",
+                    i,230+r,g.shadowProducerVS[r][0],g.shadowProducerVS[r][1],
+                    g.shadowProducerVS[r][2],g.shadowProducerVS[r][3]);
+        }
         if(g.tail) {
             fprintf(f,"tail group=%u draw=%u vsRead=%08lX psRead=%08lX\n",i,g.last,g.tailVSRead,g.tailPSRead);
             for(unsigned r=0;r<15;++r)fprintf(f,"tailconstant group=%u reg=%u VS=%.9g,%.9g,%.9g,%.9g PS=%.9g,%.9g,%.9g,%.9g\n",
