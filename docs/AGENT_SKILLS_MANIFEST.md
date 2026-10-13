@@ -4,6 +4,7 @@ Project-local skills are discovered from `.agents/skills/<name>/SKILL.md` by Cod
 
 | Project skill | Origin | Source revision / note |
 |---|---|---|
+| `singularityvr-main-engineering` | SingularityVR project | Project-authored; MAIN evidence-driven UE3/D3D9/OpenXR debugging, Steam/PSVR2 testing, and handoffs. |
 | `singularityvr-agent-test-bridge` | SingularityVR project | Project-authored; mandatory runtime evidence gate. |
 | `vr-mod-workflow` | Adapted from `VR-Mod-Vibecoding-Wizard` | `bigbossafman/VR-Mod-Vibecoding-Wizard`, `40382b390e239f354ea3cecd1f9151c455883d7c`; local workflow is project-specific. |
 | `native-game-modding` | `universal-modder/skills/mod-any-game` | `rehan-remade/universal-modder`, `8370faa8e114baf33acdb23079aff552a7728c4b`. |
@@ -16,4 +17,6 @@ Project-local skills are discovered from `.agents/skills/<name>/SKILL.md` by Cod
 
 The upstream source checkouts and detailed revision record are maintained outside this production worktree under `agent-skills-sources/`; they are not runtime dependencies. The source safety review is copied into [`AGENT_SKILLS_SECURITY_REVIEW.md`](AGENT_SKILLS_SECURITY_REVIEW.md) so future agents can review the installed set without that staging directory.
 
-Validation on 2026-10-09: all nine project skill directories have a `SKILL.md`; every frontmatter `name` matches its directory name and every skill has a non-empty `description`. OpenCode CLI is not installed here, so CLI-level discovery has not been exercised; restart/reload a Codex/OpenCode session after changing skill metadata.
+Validation on 2026-10-13: all ten project skill directories have a `SKILL.md`; every frontmatter `name` matches its directory name and every skill has a non-empty `description`. OpenCode CLI is not installed here, so CLI-level discovery has not been exercised; restart/reload a Codex/OpenCode session after changing skill metadata.
+
+**MAIN difficult bugs:** read `singularityvr-main-engineering` after `AGENTS.md` and `singularityvr-agent-test-bridge`; use `vr-mod-workflow` for feature gates. Case studies live under `.agents/skills/singularityvr-main-engineering/references/`.
