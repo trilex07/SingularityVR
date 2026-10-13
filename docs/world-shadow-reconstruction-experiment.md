@@ -1,0 +1,48 @@
+# World-depth receiver reconstruction experiment
+
+Observed in physical PSVR2 PID35208: live enemy and square shadow visible.
+One pause-return capture:1000 calls/266 groups/overflow0. Enemy6481/4307 mesh
+VB2F99DDA0/IB2EF663C0 produces512R32F at viewport6,6,418,368; producer181
+successfully records LocalToWorld and ProjectionMatrix. Receiver186/187 uses
+the audited VSd09ad82c/PS28e01133. First scene-depth parameters are near10
+(MinZ_MaxZRatio9.98999977,.000999987125,.1001001,.000100098812).
+Later arm map reuses the same textures; do not confuse first and tail constants.
+
+Actual shader instructions prove VS c0 ViewProjectionMatrix writes identical
+clip position and PS varying. PS reconstructs [clipX,clipY,linearW,1], then
+uses ScreenToWorld c3..6 and ScreenToShadowMatrix c7..10. The VS matrices differ
+per eye/SBS; both native PS inverse matrices are identical. Native light-map
+chain is coherent: canonical ScreenToWorld * actual producer ProjectionMatrix
+* viewport/half-texel/depth scale agrees with ScreenToShadow to max~0.000114.
+
+Falsifiable mechanism: SBS/per-eye clip XY are consumed using the native mono
+inverse, so world/light coordinates sample outside the correct shadow map.
+Offline arithmetic at the caster LocalToWorld origin reconstructs world with
+523.156/554.729UU error and shadow UV(.2498,3.3943)/(.7020,-2.3103). Inverting
+the actual [VP.colX,VP.colY,VP.colW,affine1] maps that sample back with~1e-13
+error and both eyes sample UV(.482658,.403195). This is a mathematical sample,
+not pixel validation. It assumes scene alpha decodes actual cameraW.
+
+Smallest experiment: separate default-OFF flag, exact audited shader hashes,
+scene HDR/R32F resource shapes, half-eye scissors, non-controller-transformed
+volume draw and captured world near10 depth family only. Canonicalize the
+unused W column (PS reads XYZ only); derive actual per-eye inverse; preserve
+native world-to-shadow by rebasing c3..10. Upload only for that final native
+draw and restore all original eight constants afterward, including failed
+partial uploads. Fault-latch if restore fails. No first-person near1 receiver
+correction; old rejected experiment remains off. Counters alone are not a fix.
+
+Disproof: confirmed application to the world receiver without improvement of
+enemy squares, loss of normal shadows, or any stereo/geometry regression.
+Then disable the new flag, preserve OFF/ON traces and inspect scene alpha at
+consumption. Do not repeat the prior unbounded world/first-person receiver fix.
+
+Implementation L1: synthetic x86 /O2 test passes default-OFF/no-query behavior,
+world/first-person and moved-draw exclusion, both-eye camera round trips,
+unused-W canonicalization, balanced COM refs, scoped eight-register restoration
+and partial-upload/restore failure handling. No runtime or visual pass yet.
+`set-shadow-world-experiment.ps1` controls the separate 20-minute owned flag;
+the deployment guard's `-ShadowWorldReceiverExperiment` removes it on exit.
+No proprietary captures/assets are shipped. Only user-requested saved setting
+ShowControllerArms1->0 changed after PID35208, restoring gloves-only behavior;
+the experiment does not alter hands or weapon placement.

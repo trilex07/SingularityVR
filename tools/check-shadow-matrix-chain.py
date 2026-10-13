@@ -25,6 +25,10 @@ def multiply(a, b):
     return [[sum(a[r][k] * b[k][c] for k in range(4)) for c in range(4)] for r in range(4)]
 
 
+def apply(v, matrix):
+    return [sum(v[k] * matrix[k][c] for k in range(4)) for c in range(4)]
+
+
 def inverse(a):
     augmented = [row[:] + [float(r == c) for c in range(4)] for r, row in enumerate(a)]
     for c in range(4):
@@ -83,6 +87,32 @@ def check(trace, producer_id, receiver_id):
         raise ValueError("Nonfinite matrix values")
     agrees = all(abs(differences[r][c]) <= 0.002 + 2e-5 * max(abs(observed[r][c]), abs(expected[r][c]))
                  for r in range(4) for c in range(4))
+    reconstruction = None
+    if receiver["VS_hash"] == "d09ad82cc046f97724dcffcbb7976c271df034414c08742fab66810e94038f19":
+        reg = parameter(trace["shaders"][receiver["VS"]], "ViewProjectionMatrix", 4)
+        vp = [receiver["constants"][reg + r]["VS"] for r in range(4)]
+        # Audited VS copies clip XYW to the PS. Its input is [clipX,clipY,W,1].
+        screen = [[row[0], row[1], row[3], float(r == 3)] for r, row in enumerate(vp)]
+        actual_inverse = inverse(screen)
+        local_reg = parameter(vs, "LocalToWorld", 4)
+        point = high["constants"][local_reg + 3][:3] + [1.0]
+        screen_point = apply(point, screen)
+        native_point = apply(screen_point, world)
+        rebased_point = apply(screen_point, actual_inverse)
+        native_light = apply(screen_point, observed)
+        rebased_shadow = multiply(actual_inverse, multiply(inverse(world), observed))
+        rebased_light = apply(screen_point, rebased_shadow)
+        reconstruction = {
+            "sample": "Caster LocalToWorld origin; mathematical sample, not a captured raster pixel",
+            "world_point": point,
+            "clip_xy_linear_w": screen_point,
+            "native_reconstructed_world": native_point,
+            "native_world_error_units": math.sqrt(sum((native_point[c] - point[c]) ** 2 for c in range(3))),
+            "actual_camera_inverse_world_error_units": math.sqrt(sum((rebased_point[c] - point[c]) ** 2 for c in range(3))),
+            "native_shadow_uv": [native_light[c] / native_light[3] for c in range(2)],
+            "rebased_shadow_uv": [rebased_light[c] / rebased_light[3] for c in range(2)],
+            "assumption": "Scene alpha decodes W for this actual camera; pixel-depth validation still required",
+        }
     return {
         "producer_group": producer_id, "producer_first_draw": int(producer["first"]),
         "receiver_group": receiver_id, "receiver_first_draw": int(receiver["first"]),
@@ -93,6 +123,7 @@ def check(trace, producer_id, receiver_id):
         "expected": expected, "observed": observed,
         "inferred_texture_transform": multiply(inverse(multiply(world, projection)), observed),
         "candidate_viewport_texture_transform": texture,
+        "actual_camera_reconstruction": reconstruction,
         "limitations": "First group constants; proposed viewport relation includes a half texel and excludes caster depth bias. Residuals alone do not prove broken rendering. Does not prove eye reconstruction, scene depth, caster identity or artifact causality.",
     }
 

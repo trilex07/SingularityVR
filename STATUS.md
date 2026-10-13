@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+Live-enemy probe L3_PASS, physical square observed: Steam PID35208/DLL54CC148F,
+1000 calls/266 groups/overflow0. Dynamic6481/4307 mesh produces the map consumed
+by world receivers186/187. Native light-map chain agrees within0.000114, but
+actual per-eye VS camera and identical native PS inverse disagree: mathematical
+caster-origin reconstruction error523/555UU; assumed-depth sample leaves map.
+Pixel-depth assumption remains unvalidated. See world-shadow experiment note.
+Separate default-OFF world-only inverse experiment L1_PASS (synthetic roundtrip,
+depth/resource gates, COM/constant restoration/failure latch); runtime and
+physical acceptance NOT verified. First-person near1 route excluded; rejected
+mixed receiver and ClearGate remainOFF. No hands/weapon transform changes.
+After exit MAIN verified accepted DLL9FBA308C/UI5B2EA469. User asked about visible
+arms: saved ShowControllerArms was1 from prior VR Settings. MAIN restored only
+that line to0 while game closed; currentINI C59B1CF6, other settings preserved.
+
 Producer-matrix probe L3_PASS in real Steam PID12648, DLL54CC148F/source
 dbce0ed: single focused frame2304 calls/351 groups/overflow0. R32F map readback
 and VS c230..240 reads succeeded. IMPORTANT ROLE CORRECTION: runtime mesh latch
