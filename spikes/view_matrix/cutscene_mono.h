@@ -60,10 +60,12 @@ struct CameraChangeCtx {
     bool pawnSame = false;   // g_playerPawn unchanged across the switch
     bool pawnValid = false;  // g_playerPawn != 0 now
     bool menuFocused = false;
+    bool videoHandoff = false; // confirmed VideoFlat -> initial world load, native ON still present
 };
 
 inline bool CameraChangeClearsCine(CameraChangeCtx c) {
     if (!c.cineOn) return false;                    // nothing latched
+    if (c.videoHandoff) return false;              // new pawn/loading menu is expected here
     if (!c.pawnValid || !c.pawnSame) return true;   // world went away
     if (c.menuFocused) return true;                 // quit to menu
     return false;                                   // Matinee cut: keep CINE

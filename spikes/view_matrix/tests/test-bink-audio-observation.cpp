@@ -13,6 +13,8 @@ int main() {
     check(!BinkObserveTracks(9,original,copy) && !BinkObserveTracks(1,nullptr,copy),"count/null gates");
     char name[256]{};
     check(BinkObserveName("SNG_intro_12-14-09.bik",name) && !std::strcmp(name,"SNG_intro_12-14-09.bik"),"filename observed exactly");
+    const char binary[]{'B','I','K','i',char(0xFF),0};
+    check(!BinkObserveName(binary,name) && !name[0],"memory-backed BIK bytes never treated as a pathname");
     auto* inaccessible=VirtualAlloc(nullptr,4096,MEM_RESERVE|MEM_COMMIT,PAGE_NOACCESS);
     check(inaccessible!=nullptr,"private noaccess test page");
     if(inaccessible) {

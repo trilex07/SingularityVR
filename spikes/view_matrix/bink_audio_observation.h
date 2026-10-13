@@ -19,6 +19,9 @@ inline bool BinkObserveName(const char* source, char out[256]) {
         for (unsigned i=0;i<255;++i) {
             out[i]=source[i];
             if (!out[i]) return true;
+            if(static_cast<unsigned char>(out[i])<32 || static_cast<unsigned char>(out[i])>126) {
+                out[0]=0;return false; // memory-backed BIK header is not a pathname
+            }
         }
         out[255]=0;
         return false; // truncated/not a filename; don't interpret it

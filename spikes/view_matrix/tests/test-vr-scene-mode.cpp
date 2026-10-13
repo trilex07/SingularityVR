@@ -1,4 +1,5 @@
 #include "../vr_scene_mode.h"
+#include "../cutscene_mono.h"
 #include <cassert>
 #include <cstdio>
 
@@ -32,6 +33,20 @@ int main() {
     for (unsigned i=0; i<Controller::kExitFrames-1; ++i)
         assert(!video.Advance(gameplay).changed);
     assert(video.Advance(gameplay).to == Mode::GameplayStereo);
+
+    Controller handoff;
+    handoff.Advance({true,true,false,false});
+    assert(handoff.Current()==Mode::VideoFlat);
+    const CameraChangeCtx loading{true,false,false,true,true};
+    const bool retained=loading.cineOn && !CameraChangeClearsCine(loading);
+    handoff.Advance({retained,false,true,true});
+    handoff.Advance({retained,false,false,false});
+    assert(handoff.Current()==Mode::CutsceneFlat);
+    // Native OFF is not overridden; full scene -> gameplay restores stereo.
+    for(unsigned i=0;i<Controller::kExitFrames;++i)handoff.Advance(gameplay);
+    assert(handoff.Current()==Mode::GameplayStereo && !handoff.Flat());
+    handoff.Advance({false,false,true,true});
+    assert(handoff.Current()==Mode::MenuFlat);
 
     Controller menu;
     auto m = menu.Advance({false,false,true,true});

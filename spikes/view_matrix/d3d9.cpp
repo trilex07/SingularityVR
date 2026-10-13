@@ -83,6 +83,7 @@
 #include <d3d9.h>
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include "bink_audio_observation.h"
+#include "bink_intro_audio.h"
 #include <d3d11.h>
 #include <dinput.h>
 
@@ -5014,6 +5015,7 @@ static void SnapshotMenuOnSlot(CopySlot& cap);
 // this path. Gated on the existing CutsceneFlatMode switch (ALWAYS VR off).
 extern volatile LONG g_sceneFlatEnabled;
 extern volatile LONG g_inCinematic;
+extern volatile LONG g_cineArgRaw;
 // Original SetRenderTarget, defined with the render-target hook far below.
 // Declared here so the mono composer can bypass hook bookkeeping exactly
 // like the cinema matte does.
@@ -5044,6 +5046,7 @@ static UINT g_cineMonoTempW = 0, g_cineMonoTempH = 0;
 static D3DFORMAT g_cineMonoTempFmt = D3DFMT_UNKNOWN;
 static bool g_cineMonoFault = false;
 static LONG g_cutsceneCinemaScalePct = 85; // smaller complete image; Bink stays at accepted 50%
+static LONG g_cutsceneVideoHandoffFix = 1;
 static bool g_cineMonoReady = false; // set when this Present composed the frame
 // Bounded transition/error evidence. No per-draw work, new hooks, queries,
 // allocations or pixel readbacks. The existing silent returns hid the reason
@@ -19988,14 +19991,22 @@ void RefreshCameraPosition() {
                 g_playerPawn != 0 && g_playerPawn == s_lastPawn,
                 g_playerPawn != 0,
                 Rd(g_vrMenuClass) != 0,
+                VrModeOn() && Rd(g_sceneFlatEnabled) && Rd(g_cutsceneVideoHandoffFix) &&
+                    g_sceneMode.Current()==vrscene::Mode::VideoFlat && Rd(g_cineArgRaw)==1,
             };
+            static unsigned cameraPolicyNotes=0;
+            if(cameraPolicyNotes++<16)
+                Log("cutscene-camera: cine=%d native=%ld mode=%s videoHandoff=%d pawnSame=%d pawnValid=%d menuClass=%ld",
+                    cc.cineOn?1:0,Rd(g_cineArgRaw),vrscene::Name(g_sceneMode.Current()),cc.videoHandoff?1:0,
+                    cc.pawnSame?1:0,cc.pawnValid?1:0,Rd(g_vrMenuClass));
             if (CameraChangeClearsCine(cc)) {
                 Log("level transition: camera %p -> %p, CINE was %s - clearing it",
                     (void*)s_lastCam, (void*)cam, cc.cineOn ? "ON" : "OFF");
                 InterlockedExchange(&g_inCinematic, 0);
             } else if (cc.cineOn) {
-                Log("camera cut: camera %p -> %p, same pawn, CINE stays ON",
-                    (void*)s_lastCam, (void*)cam);
+                Log("camera cut: camera %p -> %p, CINE stays ON reason=%s pawn=%p oldPawn=%p menuClass=%ld mode=%s",
+                    (void*)s_lastCam, (void*)cam, cc.videoHandoff?"video-world-handoff":"same-pawn",
+                    (void*)g_playerPawn,(void*)s_lastPawn,Rd(g_vrMenuClass),vrscene::Name(g_sceneMode.Current()));
             } else {
                 Log("level transition: camera %p -> %p, CINE was OFF", (void*)s_lastCam, (void*)cam);
             }
@@ -20609,7 +20620,8 @@ static void UpdateSceneModeFrame() {
         InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
     };
     const vrscene::Transition t = g_sceneMode.Advance(signals);
-    if (t.changed && InterlockedCompareExchange(&g_sceneModeTrace, 0, 0)) {
+    static unsigned sceneTransitionNotes=0;
+    if (t.changed && (Rd(g_sceneModeTrace) || (Rd(g_cutsceneVideoHandoffFix) && sceneTransitionNotes++<16))) {
         Log("SceneMode: %s -> %s reason=%lu cinematic=%d video=%d menu=%d paused=%d frame=%ld",
             vrscene::Name(t.from), vrscene::Name(t.to), (unsigned long)t.reason,
             signals.cinematic ? 1 : 0, signals.video ? 1 : 0,
@@ -20921,11 +20933,21 @@ using BinkOpenFn = void* (WINAPI*)(const char*, DWORD);
 static BinkSetSoundTrackFn g_binkSoundNative = nullptr;
 static BinkOpenFn g_binkOpenNative = nullptr;
 static LONG g_binkTrackNotes = 0, g_binkOpenNotes = 0;
+static CRITICAL_SECTION g_binkAudioLock;
+static volatile LONG g_binkIntroReady = 0;
+static LONG g_polishIntroAudioFix = 1;
+static std::uint32_t g_binkNativeTracks[8]{};
+static DWORD g_binkNativeTrackCount = 0;
+static bool g_binkNativeTracksValid = false;
 static void WINAPI ObserveBinkSoundTrack(DWORD count, const DWORD* tracks) {
     const DWORD incomingError=GetLastError();
+    EnterCriticalSection(&g_binkAudioLock);
+    DWORD ids[8]{};
+    g_binkNativeTracksValid=BinkObserveTracks(count,tracks,ids);
+    g_binkNativeTrackCount=count;
+    if(g_binkNativeTracksValid)for(DWORD i=0;i<count;++i)g_binkNativeTracks[i]=ids[i];
     if (InterlockedIncrement(&g_binkTrackNotes)<=12) {
-        DWORD ids[8]{};
-        const bool read = BinkObserveTracks(count, tracks, ids);
+        const bool read = g_binkNativeTracksValid;
         Log("bink-audio: native track selection count=%lu readable=%d ids=%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu (unchanged)",
             (unsigned long)count, read?1:0, (unsigned long)ids[0], (unsigned long)ids[1],
             (unsigned long)ids[2], (unsigned long)ids[3], (unsigned long)ids[4],
@@ -20933,18 +20955,38 @@ static void WINAPI ObserveBinkSoundTrack(DWORD count, const DWORD* tracks) {
     }
     SetLastError(incomingError);
     g_binkSoundNative(count, tracks);
+    const DWORD nativeError=GetLastError();
+    LeaveCriticalSection(&g_binkAudioLock);
+    SetLastError(nativeError);
 }
 static void* WINAPI ObserveBinkOpen(const char* filename, DWORD flags) {
     const DWORD incomingError=GetLastError();
+    EnterCriticalSection(&g_binkAudioLock); // recursive native callbacks remain safe; global selection serialized
     // Read before the call; source may be a file handle with BINKFILEHANDLE.
     const bool note=InterlockedIncrement(&g_binkOpenNotes)<=12;
     char name[256]{};
-    const bool readable=note && BinkObserveName(filename, name);
-    SetLastError(incomingError);
-    void* result=g_binkOpenNative(filename, flags);
-    const DWORD nativeError=GetLastError();
+    const bool readable=(note || (Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix))) && BinkObserveName(filename, name);
+    const BinkIntroAudioPlan plan=BinkPlanIntroAudio(readable?name:nullptr,
+        Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix) && PolishLocalization::PL().IsPolishEnabled(),
+        g_binkNativeTracksValid?g_binkNativeTracks:nullptr,g_binkNativeTrackCount,flags);
+    DWORD nativeError=incomingError;
+    void* result=BinkOpenWithIntroPlan(plan,
+        [](std::uint32_t count,const std::uint32_t* tracks) {
+            DWORD native[8]{};
+            for(std::uint32_t i=0;i<count;++i)native[i]=tracks[i];
+            g_binkSoundNative(count,native);
+        }, [&]() {
+            SetLastError(incomingError);
+            void* handle=g_binkOpenNative(filename,flags);
+            nativeError=GetLastError();return handle;
+        });
+    if(result) {g_binkNativeTrackCount=1;g_binkNativeTracks[0]=0;g_binkNativeTracksValid=true;}
+    else g_binkNativeTracksValid=false; // require a fresh native selection before another override
+    if(plan.enabled) Log("bink-audio: Polish INTRO track1->10; retained0/2/3; handle=%p post=%s",
+        result,result?"native-default0":"native-selection-rollback");
     if(note) Log("bink-audio: opened name=%s flags=0x%08lX handle=%p (unchanged)",
         readable?name:"<not a readable filename>", (unsigned long)flags, result);
+    LeaveCriticalSection(&g_binkAudioLock);
     SetLastError(nativeError);
     return result;
 }
@@ -20954,13 +20996,16 @@ static void InstallBinkAudioObservation() {
     HMODULE module=GetModuleHandleA("binkw32.dll");
     if(!module)return;
     attempted=true;
+    InitializeCriticalSection(&g_binkAudioLock);
     void* sound=reinterpret_cast<void*>(GetProcAddress(module,"_BinkSetSoundTrack@8"));
     void* open=reinterpret_cast<void*>(GetProcAddress(module,"_BinkOpen@8"));
     const MH_STATUS a=sound?MH_CreateHook(sound,(void*)ObserveBinkSoundTrack,(void**)&g_binkSoundNative):MH_ERROR_NOT_EXECUTABLE;
     const MH_STATUS b=open?MH_CreateHook(open,(void*)ObserveBinkOpen,(void**)&g_binkOpenNative):MH_ERROR_NOT_EXECUTABLE;
     const MH_STATUS ea=a==MH_OK?MH_EnableHook(sound):a;
     const MH_STATUS eb=b==MH_OK?MH_EnableHook(open):b;
-    Log("bink-audio: read-only exports observation sound=%d open=%d max12 each; no track override", (int)ea,(int)eb);
+    InterlockedExchange(&g_binkIntroReady,ea==MH_OK && eb==MH_OK?1:0);
+    Log("bink-audio: exports sound=%d open=%d max12 notes; known-intro Polish fix=%ld ready=%d; other movies native",
+        (int)ea,(int)eb,Rd(g_polishIntroAudioFix),Rd(g_binkIntroReady)?1:0);
 }
 
 static void PolishMaybeSpeak(const char* english, const wchar_t* shown, int chars) {
@@ -27566,6 +27611,8 @@ void LoadIniSettings() {
     g_sceneModeTrace = GetPrivateProfileIntA("Diagnostic", "SceneModeTrace", 0, path) ? 1 : 0;
     InterlockedExchange(&g_sceneFlatEnabled,
                         GetPrivateProfileIntA("Render", "CutsceneFlatMode", 1, path) ? 1 : 0);
+    g_cutsceneVideoHandoffFix=GetPrivateProfileIntA("Render","CutsceneVideoHandoffFix",1,path)?1:0;
+    g_polishIntroAudioFix=GetPrivateProfileIntA("Localization","PolishIntroAudioFix",1,path)?1:0;
     InterlockedExchange(&g_sceneCinemaMask,
                         GetPrivateProfileIntA("Render", "CutsceneCinemaMask", 1, path) ? 1 : 0);
     g_armPaletteTraceFrames=GetPrivateProfileIntA("Diagnostic","ArmPaletteTraceFrames",0,path);    if(g_armPaletteTraceFrames<0)g_armPaletteTraceFrames=0;

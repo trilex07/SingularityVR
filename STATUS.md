@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+PID5052/820E8263 correctly loaded new candidate (native Bink probes prove it),
+but movie/loading camera/pawn transition wrongly cleared CINE: no cinematic
+composition/framing/foreground execution. Intro selected IDs0/1/2/3, excluding
+known Polish10. Safe D892 restored after normal exit; INI C59B1CF6/UI5B2EA469
+verified unchanged. New controlled fix L1_PASS: preserve native cinematic ON
+only across observed VideoFlat->world handoff, retain other level/menu clears;
+select intro0/10/2/3 only for exact known basename/flags/layout, preserving
+native default post-Open and failure rollback. Existing exports/camera hooks
+only; bounded argument/state logs. Seven narrow executables and runtime policy
+PASS, x86 /O2 build next. Actual whole-helicopter exit, frame/glove result and
+Polish intro listening PENDING. Helicopter dialogue still not redirected from
+native SoundNodeWave; next existing Localize diagnostics will cover CINE ON.
+No movie/WAV/UI/INI file or gameplay shadow/input changes.
+
 PID44632/DLL983BED0A: full-image mono copy L3_PASS and user reports good image
 overall. Remaining cutscene framing/aspect/foreground polish: too wide,
 edges outside view and tracked glove moves at periphery. Guard restored D892;

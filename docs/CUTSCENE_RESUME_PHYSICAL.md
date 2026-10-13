@@ -205,3 +205,49 @@ deploy backup20261013-164928; guard41384 and read-only observer42416 READY,
 600s launch window. Installed INI C59B1CF6/UI5B2EA469 unchanged. Test pending:
 New Game -> movie -> helicopter20s, no chat switching, normal close; report
 framing/proportions/foreground and heard languages. No audio fix claimed.
+
+## PID5052: new DLL confirmed; actual handoff and audio failures
+
+Session16:58:05 includes the new Bink observation hooks, so it ran820E8263,
+not an earlier DLL. On normal exit the guard restored D892 (independently
+rehashed); INI C59B1CF6/UI5B2EA469 unchanged. Native SetCinematicMode ON arrives
+during intro, but camera1A3B9300->2D426900 during VideoFlat/loading clears CINE
+because the old pawn/menu identity has not survived. Consequently there is no
+composer/projection/foreground success; rendering stays stereo. Do not treat
+this run as an executed test of the85% fit or foreground hiding.
+
+Controlled hypothesis: an observed video-to-world handoff while the native
+cinematic ON signal is still present must not be treated as a cutscene EXIT.
+Add only this narrow exception to the existing camera predicate (VR + flat
+policy, VideoFlat, raw cinematic1), keep cache/pose reset and other camera/menu
+clears. Explicit native OFF and subsequent non-video level/menu transitions
+remain authoritative. Falsifier: exception logs but no composition, or cutscene
+does not end at gameplay -> inspect that next signal rather than holding CINE
+globally. Full helicopter-end/gameplay/pause return is part of the next gate.
+
+Bink native selection: count4 IDs0,1,2,3 before opening the named intro, so
+known Polish track10 is not loaded. Only for that exact intro basename and
+known0..3 selection, replace English narration1 with10, preserving0/2/3.
+Configure immediately before native Open, preserve its default0 reset on
+success and restore prior selection on failure; serialize this global setting
+among the existing exported API hooks. No other movie override/voice-file changes.
+Pure shared policy/forwarding tests must establish exact call order and fallback.
+Helicopter dialogue remains separate: native SoundNodeWave audio is not wired
+to the installed package/asset WAV lookup. No dubbing claim for that path yet.
+
+Installed binkw32 disassembly proves the global config mechanism: exported
+SetSoundTrack RVA0xD320 copies count/IDs into globals; Open RVA0xD690 reads that
+selection into the opened handle (RVA0xE0D7..0xE106), then resets active global
+selection to count1/ID0 (RVA0xE116..0xE123). Addresses are offline evidence only,
+NOT runtime offsets. Production resolves exports and uses API calls, no BINK
+struct writes/global memory patches. Preserve native default post-Open rather
+than restoring count4 on success, which would change native lifecycle.
+
+Controls: Render.CutsceneVideoHandoffFix and Localization.PolishIntroAudioFix
+default1 in this controlled branch; existing flat-mode/Polish-language switches
+still gate behavior. Installed INI untouched. No fixed-track rule for
+unclassified films, no subtitle-driven claim for all992 voices. Bink basename,
+actual native flags/layout, Polish OFF, binary buffers, invalid memory, forwarding,
+successful default reset and failure rollback tests PASS. Movie->world/native
+OFF->gameplay->pause policy, original camera clears and GPU85% pixel/state/MRT
+rollback regressions PASS; actual scene exit and audio listening still pending.

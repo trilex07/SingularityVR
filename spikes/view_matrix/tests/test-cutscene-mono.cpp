@@ -103,6 +103,12 @@ static void test_camera_change_gate() {
     // Nothing latched -> no-op regardless.
     CHECK((!CameraChangeClearsCine(C{ false, false, false, false })));
     CHECK((!CameraChangeClearsCine(C{ false, true, true, false })));
+    // PID5052's confirmed movie/loading -> first-world camera changes pawn/menu
+    // identities. They are expected while native cinematic ON remains present.
+    CHECK((!CameraChangeClearsCine(C{ true, false, false, true, true })));
+    CHECK((!CameraChangeClearsCine(C{ true, false, true, false, true })));
+    CHECK((CameraChangeClearsCine(C{ true, false, false, true, false })));
+    CHECK((CameraChangeClearsCine(C{ true, true, true, true, false })));
 }
 
 int main() {
