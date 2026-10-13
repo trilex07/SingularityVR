@@ -10,6 +10,8 @@
 namespace hotpath {
 
 enum class Family : unsigned {
+	native_input_poll,
+	native_gamepad_enumeration,
 	draw_hook,
 	menu_classification,
 	foreground_classification,
@@ -88,7 +90,7 @@ public:
 		QueryPerformanceFrequency(&frequency_);
 		window_frames_ = frames ? frames : 1;
 		delay_frames_ = delay_frames;
-		InterlockedExchange(&frames_left_, enabled && delay_frames == 0 ? static_cast<LONG>(window_frames_) : 0);
+		InterlockedExchange(&frames_left_, static_cast<LONG>(window_frames_));
 		InterlockedExchange(&delay_left_, enabled ? static_cast<LONG>(delay_frames) : 0);
 		InterlockedExchange(&active_, enabled && delay_frames == 0 ? 1 : 0);
 	}
@@ -140,7 +142,9 @@ public:
 	}
 	bool should_time(Family f) noexcept {
 		const LONG sequence = InterlockedIncrement(&records_[static_cast<unsigned>(f)].sequence);
-		return active() && sequence % static_cast<LONG>(sample_stride) == 0;
+		// Enumeration was measured at ~75ms: time every bounded-window scan,
+		// rather than estimating its whole cost from nine samples.
+		return active() && (f==Family::native_gamepad_enumeration || sequence % static_cast<LONG>(sample_stride) == 0);
 	}
 	void record_sample(Family f, LONGLONG elapsed) noexcept {
 		auto& r = records_[static_cast<unsigned>(f)];
@@ -167,6 +171,11 @@ public:
 		return (double(r.ticks) / double(r.samples)) * 1000000.0 / double(frequency_.QuadPart);
 	}
 	unsigned configured_frames() const noexcept { return window_frames_; }
+	unsigned completed_frames() const noexcept {
+		if(!frequency_.QuadPart)return 0;
+		const LONG left=InterlockedCompareExchange(const_cast<volatile LONG*>(&frames_left_),0,0);
+		return left>=0 && static_cast<unsigned>(left)<=window_frames_ ? window_frames_-static_cast<unsigned>(left) : 0;
+	}
 	unsigned configured_delay_frames() const noexcept { return delay_frames_; }
 };
 
@@ -205,6 +214,8 @@ public:
 
 inline const char* name(Family f) noexcept {
 	switch (f) {
+	case Family::native_input_poll: return "native_input_poll";
+	case Family::native_gamepad_enumeration: return "native_gamepad_enum";
 	case Family::draw_hook: return "draw";
 	case Family::menu_classification: return "menu";
 	case Family::foreground_classification: return "foreground";

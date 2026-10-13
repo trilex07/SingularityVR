@@ -3,6 +3,12 @@ param(
     [Parameter(Mandatory)][string]$BackupPath,
     [Parameter(Mandatory)][string]$CandidateDllSha256,
     [switch]$DllOnly,
+    [switch]$ShadowReceiverExperiment,
+    [switch]$ShadowClearGateExperiment,
+    [switch]$ShadowWorldReceiverExperiment,
+    [switch]$ShadowFirstPersonReceiverExperiment,
+    [switch]$GameplayHotPathRequest,
+    [switch]$InputEnumerationExperiment,
     [ValidateRange(60,1800)][int]$LaunchWindowSeconds = 600
 )
 # MAIN-owned single test lease: no launch/input/kill, never replace a running
@@ -28,6 +34,20 @@ if ($DllOnly) {
         if ($running.Count) { $seen=$true }
         elseif ($seen -or (Get-Date) -ge $deadline) { break }
         Start-Sleep -Seconds 2
+    }
+    if ($ShadowReceiverExperiment) { & (Join-Path $PSScriptRoot 'set-shadow-receiver-experiment.ps1') -State OFF }
+    if ($ShadowClearGateExperiment) { & (Join-Path $PSScriptRoot 'set-shadow-receiver-experiment.ps1') -State OFF -Experiment ClearGate }
+    if ($ShadowWorldReceiverExperiment) { & (Join-Path $PSScriptRoot 'set-shadow-world-experiment.ps1') -State OFF }
+    if ($ShadowFirstPersonReceiverExperiment) { & (Join-Path $PSScriptRoot 'set-shadow-world-experiment.ps1') -State OFF -Experiment FirstPerson }
+    if ($InputEnumerationExperiment) { & (Join-Path $PSScriptRoot 'set-input-enum-experiment.ps1') -State OFF }
+    if ($GameplayHotPathRequest) {
+        $ownedRequest='C:\Users\Trilex\AppData\Local\SingularityVR\hotpath-gameplay.request'
+        if (Test-Path -LiteralPath $ownedRequest) {
+            if ([IO.File]::ReadAllText($ownedRequest) -eq 'SingularityVR gameplay hotpath v1') {
+                Remove-Item -LiteralPath $ownedRequest
+                Write-Output 'Removed unconsumed owned gameplay hotpath request'
+            } else { Write-Warning 'Unknown gameplay hotpath request preserved' }
+        }
     }
     if ((Get-FileHash -LiteralPath $dllTarget).Hash -ne $CandidateDllSha256) { throw 'Installation changed; refusing DLL restore' }
     & (Join-Path $PSScriptRoot 'deploy-singularityvr.ps1') -Action Rollback -BackupPath $backup

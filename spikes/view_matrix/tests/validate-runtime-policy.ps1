@@ -16,3 +16,8 @@ if ($overlay -notmatch 'D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE' -or
 if ($source -notmatch 'SaveBackbufferCapture\(dev, true\)' -or
     $overlay -match 'captures\+\+ < 3\) InterlockedExchange\(&g_captureRequested') { throw 'pause diagnostic still captures restored RT0' }
 Write-Host 'PASS: pause UV contract explicit; bounded capture reads actual XR backbuffer'
+foreach ($key in @('ShadowWorldReceiverFix','ShadowForegroundClearFix','ShadowFirstPersonReceiverFix','InputEnumerationCache')) {
+    if ($source -notmatch ('GetPrivateProfileIntA\("(?:Render|Input)","'+$key+'",1,path\)') -or
+        $ini -notmatch ('(?m)^'+$key+'=1\r?$')) { throw "Accepted fix lost persistent ON default: $key" }
+}
+Write-Host 'PASS: accepted shadow/input defaults enabled without temporary flags or old-INI replacement'

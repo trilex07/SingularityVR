@@ -1,5 +1,192 @@
 # STATUS — session handoff
 
+Main PR preparation: persistent-default release build L2_PASS, regular x86 PE32
+/O2 source1b4e0b6 SHA E9DC831B599734CD3EC6CB8A16C907DE26F7D9EB8CEC29E95A5DD2C104D8116E.
+9 C++ unit executables, Python trace/CPU regressions and default-policy checks
+pass. Same physically accepted algorithms; INI default glue is not a separate
+Steam/PSVR2 runtime claim. No CI workflow configured. User approves/merges PR;
+MAIN does not merge. No installed files changed during PR preparation.
+
+SHADOW FIXES PHYSICALLY_VERIFIED / USER_ACCEPTED: PID39308, DLL5D49C7A5/source
+3488084. User says everything good, shadows finished, requests main PR for
+their approval/merge. World+ClearGate+near1 receiver+input cache ON. Trace1196
+draws/304groups/overflow0, near1 final constants correct in both eyes, no restore
+faults. Earlier black gun/background-negative and enemy-shadow passes retained.
+Accepted scene only; not every weapon/level/headset/hotplug. MAIN verified safe
+rollback DLL9FBA308C/currentINI C59B1CF6/UI5B2EA469; all test flags gone.
+Preparing persistent INI defaults (same accepted logical feature state, missing
+keys ON) and main-target PR; no main merge or new Steam deployment authorized
+as part of this PR preparation. See docs/accepted-shadow-input-fixes.md.
+
+Near1-only receiver L1/L2_PASS: source3488084/DLL5D49C7A5, x86 PE32 /O2,
+captured-matrix/nested-world-scope/restoration tests and parsers passed. Separate
+default-OFF FirstPerson flag requires existing WorldReceiver+ClearGate ON;
+world kernel and hand/gun transform code untouched. User authorized next
+physical no-tab test; runtime/eye-shadow visual result not yet established.
+
+Combination PHYSICALLY_VERIFIED for gun material/tracking, background-negative
+removal and retained enemy shadows: user's PID17212 result. Remaining BROKEN:
+shadow on gun/glove differs between eyes. Preserve world inverse + ClearGate +
+input cache; near1 receiver291/292 still uses identical native inverse with
+different actual eye VP. Caster-origin mathematical errors61/97UU, corrected
+oracle maps both eyes to same UV; depth-pixel assumption still unvalidated.
+Next separate default-OFF near1-only receiver experiment; no hand transform
+or material edits. See first-person receiver note for falsification/gates.
+
+Combination L3_PASS for execution/classification (physical result above):
+SteamPID17212/DLL7A7787EB, only ClearGateOFF->ON relative to successful enemy
+test; WorldReceiver/input cacheON and rejectedReceiverOFF. One pause-return
+frame1283draws/320groups/overflow0: same gun5799 early/late depth/color moved1,
+late fgCount1/4 versus previous101/104. World receivers210/211 still corrected,
+near1 receivers291/292 excluded; light chain retained, no restore faults.
+Game exited, accepted DLL9FBA308C/currentINI C59B1CF6/
+UI5B2EA469 independently verified; owned flags gone, gloves-only state retained.
+
+World-only receiver PHYSICALLY_VERIFIED for dynamic enemy shadows in tested
+scene: user reports enemy shadows now work and are dynamic. Steam PID37880,
+DLL7A7787EB/source532cf44, WorldReceiver/input cacheON; ClearGate/rejected
+ReceiverOFF. Final trace1342draws/314groups/overflow0 confirms corrected world
+inverse for both eyes, preserved light chain and untouched near1 tail. Full
+shadow/weapon feature remains BROKEN: black/frozen gun and controller-following
+background-negative remain. Exact gun5799 early moved1, late depth fgCount101
+and color104 moved0; premature foreground window persists. Next controlled
+combination retains working world inverse and enables only existing ClearGate,
+whose mechanism was separately demonstrated. No near1 shader/hand edits.
+Game exited; MAIN verified restored DLL9FBA308C/currentINI C59B1CF6/UI5B2EA469.
+
+Live-enemy probe L3_PASS, physical square observed: Steam PID35208/DLL54CC148F,
+1000 calls/266 groups/overflow0. Dynamic6481/4307 mesh produces the map consumed
+by world receivers186/187. Native light-map chain agrees within0.000114, but
+actual per-eye VS camera and identical native PS inverse disagree: mathematical
+caster-origin reconstruction error523/555UU; assumed-depth sample leaves map.
+Pixel-depth assumption remains unvalidated. See world-shadow experiment note.
+Separate default-OFF world-only inverse experiment L1_PASS (synthetic roundtrip,
+depth/resource gates, COM/constant restoration/failure latch), L2_PASS x86 PE32
+/O2 source532cf44/DLL7A7787EB (manifest/hash match); runtime and
+physical acceptance NOT verified. First-person near1 route excluded; rejected
+mixed receiver and ClearGate remainOFF. No hands/weapon transform changes.
+After exit MAIN verified accepted DLL9FBA308C/UI5B2EA469. User asked about visible
+arms: saved ShowControllerArms was1 from prior VR Settings. MAIN restored only
+that line to0 while game closed; currentINI C59B1CF6, other settings preserved.
+
+Producer-matrix probe L3_PASS in real Steam PID12648, DLL54CC148F/source
+dbce0ed: single focused frame2304 calls/351 groups/overflow0. R32F map readback
+and VS c230..240 reads succeeded. IMPORTANT ROLE CORRECTION: runtime mesh latch
+identifies gun5799/arms3314 in PID12648 and18352. Previous notes calling the
+3314 shadow caster "gun" were too strong. Exact first-person VB/IB linkage is
+valid, but the shadow-producing3314 mesh has the arm role;5799 gun scene draws
+are moved1 while3314 scene/caster draws are moved0 in this frame.
+Physical user: initially holster would not toggle; later it did, controller-
+following shadows disappeared, enemy squares persisted, gun was black and
+scene appeared darker. User changed ShowControllerArms/RecenterChord only
+AFTER black gun appeared. Captured map is the first-person arm map, not a
+confirmed active-enemy map. No three-pose capture and no visual fix PASS.
+Guard restored verified DLL9FBA308C and UI5B2EA469. User-modified INI preserved
+and hashed B3FEED43 (ShowControllerArms1/RecenterChord1 plus saved defaults).
+No experiment flags/request remain. New external PauseReturn mode schedules
+one frame after actual SPPause->gameplay log transition, avoiding the holster
+dependency and tab switching for next live-enemy measurement.
+User clarification: captured enemy was dead; squares also appear under live
+moving enemies and sometimes intersect them. Current trace's two audited
+shadow receivers both sample the arm map; no other R32F sample is present.
+Actual producer for enemy-square pixels remains unproven. Next capture live
+enemy before firing, PauseReturn+1second, same validated read-only DLL54CC148F.
+
+Shadow-map content probe L3_PASS for captured resource consumption: SteamPID18352,
+4EADB827,1769calls/370groups/overflow0,receiver exactVS/PS match,512R32F readback
+HRESULT0 with262144finite pixels,range0..~e. Encoded/filter shadow data, not raw
+normalizedZ. Shadows remain BROKEN. User clarification: the VR holster action
+leaves the observed shadow at its prior position; moving the head changes the
+viewpoint around that shadow, not its position. Square shadows are seen around
+enemies (dynamic casters). Next armed-hand-A/B/VR-holstered controlled traces;
+do not re-enable rejected matrix correction. Accepted3 hashes
+restored/verified DLL9FBA308C/INI61AEC56C/UI5B2EA469 after exit. The later
+PID35192 A frame reidentified an exact foreground first-person VB/IB in native
+512x512 R32F shadow-target draws (3314-vertex mesh, 390-vertex companion), also
+present in PID18352. This is direct caster-path evidence, not artifact causality.
+The no-tab-switch PID27084 sequence captured A/B at 931/919 draws, 0 overflow;
+same first-person VB/IB occurs in both native R32F shadow targets. CTAB identifies
+BoneMatrices starting at VS c5; its first rows differ between hand poses A/B.
+Physical user: enemy squares did not change with hand motion; the gun-associated
+shadow froze after VR holstering. C was not captured because the scheduler's
+40-second STORED timeout elapsed just before the event and the game closed.
+Accepted DLL/INI/UI hashes were separately reverified after guard rollback.
+Next read-only candidate captures CTAB-backed VS c230..240 on native R32F
+producer groups to separate object and projection transforms. L2_PASS:
+dbce0ed x86 PE32 /O2 build SHA54CC148F, parser/trace unit checks and runtime
+policy pass. Real Steam execution is now recorded above; no
+shadow fix claimed. See map-probe note.
+The first sampled A/B map comes from a separate 6481/4307-vertex dynamic-mesh
+producer also seen in HDR scene draws; its 394x224/395x225 native viewports
+and finite content are distinct from the later gun shadow route.
+
+Input cache130dfdb / DLLF294D272: real Steam PID19520, PHYSICALLY_VERIFIED
+for held-button FPS/actions/stereo/tracking and pause/options/resume. User says
+everything retained and no FPS drops. Topology reconnect not tested. Profiler
+ended before3600 completion; final retained partial3360 has2 timed full scans
+mean75.942ms, not a complete-window claim. Zero-scan gameplay intervals replay
+native callbacks with~90FPS. Game exited; guard000916 restored DLL9FBA308C;
+MAIN verified actualDLL/UI5B2EA469/currentINI61AEC56C (user's change preserved).
+Return to square shadows; rejected receiver correction staysOFF.
+
+Next shadow candidate adds default-OFF one-frame R32F512 content readback at
+actual volume consumption (max4 maps,1MiB staging, no render-state changes).
+See docs/shadow-map-content-probe.md. Input cache retained in source; runtime
+content confirmation needed before any further shader/matrix modification.
+
+Event-invalidated input discovery cache: IMPLEMENTED_NOT_VERIFIED. Full native
+callback audit led to caching device INSTANCE records and replaying original
+callbacks, not suppressing all callbacks or moving DirectInput to a worker.
+DefaultOFF v3 flag; Windows topology epoch/interface/context/failure invalidation;
+bounded64-record snapshot, fail-open reentrancy and unavailable notifications.
+See docs/input-enumeration-cache.md. Requires runtime/callback-content and
+physical FPS/actions/pause/reconnect gates before production acceptance.
+
+Input 2000ms interval: DLL F1AB2981 / commit9f1e67e, real Steam PID38864,
+L3_PASS for limiter behavior and PHYSICALLY_VERIFIED for partial FPS benefit
+with tested actions/stereo/weapon tracking retained. User: "tak działa, spadek
+jest do85fps". Not a complete performance fix or hotplug/lifecycle acceptance.
+3600-frame profile:17 full-rate timed scans, mean76.119ms. Game exited; guard
+removed flag and restored DLL9FBA308C. MAIN verified DLL/UI5B2EA469/INI568E2BB5.
+Next: understand native scan/callback side effects and safe invalidation before
+replacing periodic scan with a production cache; never move DirectInput callbacks
+to a worker speculatively. Shadow squares remain BROKEN.
+
+Input enumeration: Steam PID38556 / DLL C24B3BB7 same-session OFF/500ms ON
+is L3_PASS for scan suppression and PHYSICALLY_VERIFIED for partial FPS benefit
+and retained tested actions/stereo/weapon tracking. User reports ~75–80FPS,
+not a complete fix. Scans fell from13–15/s to1–2/s. Next default-OFF 2000ms
+candidate is IMPLEMENTED_NOT_VERIFIED. Shadow squares remain BROKEN.
+After game exit accepted DLL9FBA308C and UI5B2EA469 verified restored/retained;
+user INI568E2BB5 retained (LaserSight changed), not overwritten with backup.
+See docs/shadow-clear-gate-experiment.md for timing limitations and next gate.
+
+Resumed shadow task: real Steam/OpenXR capture PID5260 on 6D147048... completed
+(1329 calls / 322 groups / 11 clears / overflow0). Accepted3 hashes restored
+and verified after exit. Pixel/shadow fix remains BROKEN, not visually accepted.
+Next default-OFF experiment excludes only offscreen R32F depth clears from
+foreground classification; see `docs/shadow-clear-gate-experiment.md`.
+No new shader constant edits; native Clear and hand/weapon transform code intact.
+
+2026-10-12 shadow session **paused at user's request**. Game closed; guard
+restored accepted DLL 9FBA308C...99C4500 from backup 20261012-204256.
+INI 61AEC56C...FE378B and UI 5B2EA469...673CDE verified unchanged;
+experimental flag and pending trace request absent. A/B evidence retained privately.
+Next candidate ba628ae / DLL 6D147048...93996A is x86 /O2, tests passed,
+but NOT runtime-tested: resume with one focused HQ Decals ON capture of
+depth/alpha write masks, stencil coverage, native GPU copies and depth clears.
+Do not enable the rejected receiver correction. See `docs/shadow-receiver-correction.md`.
+
+Shadow receiver experiment on `fix/stereo-shadow-rootcause`: **BROKEN**.
+ON/OFF/ON final-driver traces complete; user confirms OFF removes ordinary
+shadows as well. Exact receiver inverse/forward mismatch identified; bounded
+default-OFF c3..10 correction implemented. Synthetic math and state restoration
+tests pass, but user physically rejects ED15225F: distorted rendering and shadows
+apparently following right controller. Experiment disabled live; read-only
+first/last/context diagnostic being prepared. See `docs/shadow-receiver-correction.md`.
+Accepted Steam restore remains DLL 9FBA308C..., INI 61AEC56C..., UI 5B2EA469...;
+all hashes reverified after diagnostic PID9576 exit.
+
 Last updated **2026-10-12**. Left glove idle: **PHYSICALLY_VERIFIED** (`010eb45`).
 Boot/main placement follow-up on `fix/boot-main-menu-placement`:
 **PHYSICALLY_VERIFIED** for placement: user accepted 5f05687 / DLL

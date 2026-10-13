@@ -6,6 +6,7 @@
 int main() {
     hotpath::sampler s;
     s.configure(false);
+    assert(s.completed_frames()==0);
     {
         hotpath::scope disabled(s, hotpath::Family::draw_hook);
     }
@@ -22,6 +23,7 @@ int main() {
             }
         }
         const bool ended = s.advance_frame();
+        assert(s.completed_frames()==static_cast<unsigned>(frame+1));
         assert(ended == (frame == 4));
     }
     assert(!s.active());
@@ -43,6 +45,7 @@ int main() {
     assert(s.next_xr_frame() == 2);
 
     s.configure(true, 2, 3);
+    assert(s.completed_frames()==0);
     assert(!s.active());
     for (int frame = 0; frame < 2; ++frame) {
         { hotpath::scope ignored(s, hotpath::Family::draw_hook); }
@@ -52,6 +55,7 @@ int main() {
     { hotpath::scope ignored(s, hotpath::Family::draw_hook); }
     assert(!s.advance_frame()); // third delay frame arms the measurement window
     assert(s.active());
+    assert(s.completed_frames()==0);
     assert(s.read(hotpath::Family::draw_hook).calls == 0);
     for (int frame = 0; frame < 2; ++frame) {
         { hotpath::scope measured(s, hotpath::Family::draw_hook); }

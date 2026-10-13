@@ -94,6 +94,7 @@
 #include "vfx/vfx_atlas_io.h"
 #include "hotpath_sampler.h"
 static hotpath::sampler g_hotPathSampler;
+static bool g_gameplayHotPathAllowed=false;
 alignas(8) static volatile LONG64 g_hotLeftPoseFrame = 0, g_hotRightPoseFrame = 0;
 alignas(8) static volatile LONG64 g_hotHmdPoseFrame = 0, g_hotInputFrame = 0;
 alignas(8) static volatile LONG64 g_hotRecenterGeneration = 0, g_hotPaletteFrame = 0;
@@ -4358,6 +4359,11 @@ inline void InvalidateCamMats() {
 }
 
 struct ShaderLayoutEntry { IDirect3DVertexShader9* shader; skeletal::Layout layout; };
+#include "shadow_pass_trace.h"
+#include "shadow_receiver_fix.h"
+#include "shadow_world_receiver_fix.h"
+#include "shadow_clear_gate.h"
+#include "shadow_first_person_receiver_fix.h"
 ShaderLayoutEntry g_shaderLayouts[1024]{};
 unsigned g_shaderLayoutNext=0;
 skeletal::Layout g_boundShaderLayout;
@@ -4402,6 +4408,9 @@ HRESULT STDMETHODCALLTYPE Hook_SetVS(IDirect3DDevice9* dev,IDirect3DVertexShader
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     const HRESULT hr=g_origSetVS(dev,shader);
     if(FAILED(hr))return hr;
+    shadowtrace::bound.vs=shader;
+    shadowfix::BindVS(shader);
+    worldshadowfix::BindVS(shader);
     g_boundShaderLayout={};
     if(shader)for(unsigned i=0;i<1024;++i) {
         const unsigned s=(ShaderLayoutHash(shader)+i)&1023;
@@ -5681,7 +5690,9 @@ static void ReportVrRuntimeCounters() {
     Log("Fix-M/menu-station: FP gun/arm draws hidden over menus=%ld (HideFpInMenu=%ld; station black-diamond gate)",
         Rd(g_vrMenuFpHidden),Rd(g_hideFpInMenu));
 }
-static void ReportHotPathSampler() {
+static void ReportHotPathSampler(bool complete=true) {
+    const unsigned measuredFrames=g_hotPathSampler.completed_frames();
+    if(!measuredFrames)return;
     char report[4096]{};
     size_t used = 0;
     auto append = [&](const char* format, auto... args) {
@@ -5689,10 +5700,10 @@ static void ReportHotPathSampler() {
         const int n = _snprintf_s(report + used, sizeof(report) - used, _TRUNCATE, format, args...);
         if (n > 0) used += static_cast<size_t>(n);
     };
-    append("window=%u frames, timing sample=1/%u calls; frame-token=%llu predicted=%lldns "
+    append("window=%u frames, timing sample=1/%u calls (native_gamepad_enum=all); frame-token=%llu predicted=%lldns "
            "poses[hmd/left/right]=%lld/%lld/%lld input=%lld recenter-gen=%lld palette=%lld; "
            "xr-calls[sync/actions/views/left-space/right-space]=%llu/%llu/%llu/%llu/%llu; ",
-           hotpath::default_window_frames, hotpath::sample_stride,
+           measuredFrames, hotpath::sample_stride,
            static_cast<unsigned long long>(g_hotPathSampler.frame_token()),
            static_cast<long long>(g_hotPredictedDisplayTime),
            static_cast<long long>(InterlockedCompareExchange64(&g_hotHmdPoseFrame,0,0)),
@@ -5712,17 +5723,40 @@ static void ReportHotPathSampler() {
         append("%s[calls=%llu samples=%llu avg_us=%.3f est_ms/frame=%.4f] ", hotpath::name(family),
                static_cast<unsigned long long>(r.calls), static_cast<unsigned long long>(r.samples),
                g_hotPathSampler.microseconds_per_call(family),
-               g_hotPathSampler.milliseconds_per_frame(family, hotpath::default_window_frames));
+               g_hotPathSampler.milliseconds_per_frame(family, measuredFrames));
     }
-    const double present = g_hotPathSampler.milliseconds_per_frame(hotpath::Family::frame_total, hotpath::default_window_frames);
+    const double present = g_hotPathSampler.milliseconds_per_frame(hotpath::Family::frame_total, measuredFrames);
     const double known =
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_wait_frame, hotpath::default_window_frames) +
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::pose_input_update, hotpath::default_window_frames) +
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::d3d9_to_d3d11_copy, hotpath::default_window_frames) +
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_image_work, hotpath::default_window_frames) +
-        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_submit, hotpath::default_window_frames);
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_wait_frame, measuredFrames) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::pose_input_update, measuredFrames) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::d3d9_to_d3d11_copy, measuredFrames) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_image_work, measuredFrames) +
+        g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_submit, measuredFrames);
     append("present-hook residual estimate=%.4f ms/frame (inclusive stage estimates subtracted)", present-known);
-    Log("hotpath sampler complete: %s", report);
+    Log("hotpath sampler %s: %s", complete?"complete":"progress", report);
+}
+
+// One owned, gameplay-only request per process. Reuse the existing bounded
+// sampler; never reset an active/completed sampler with scopes in flight.
+static void PollGameplayHotPath(bool ready) {
+    static bool armed=false;
+    static DWORD last=0;
+    if(armed || !g_gameplayHotPathAllowed || !ready || g_hotPathSampler.active() || g_hotPathSampler.frame_token()!=0)return;
+    const DWORD now=GetTickCount();if(last && now-last<1000)return;last=now;
+    char path[MAX_PATH]{};strcpy_s(path,g_logPath);
+    char* end=strrchr(path,'\\');if(!end)return;
+    strcpy_s(end+1,sizeof(path)-(end+1-path),"hotpath-gameplay.request");
+    HANDLE file=CreateFileA(path,GENERIC_READ,FILE_SHARE_READ,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,nullptr);
+    if(file==INVALID_HANDLE_VALUE)return;
+    char payload[64]{};DWORD size=0;
+    const bool read=ReadFile(file,payload,sizeof(payload)-1,&size,nullptr)!=0;
+    CloseHandle(file);
+    static const char expected[]="SingularityVR gameplay hotpath v1";
+    if(!read || size!=sizeof(expected)-1 || memcmp(payload,expected,size)!=0)return;
+    if(!DeleteFileA(path))return;
+    armed=true;
+    g_hotPathSampler.configure(true,3600);
+    Log("GAMEPLAY_HOTPATH armed: 3600 frames, sampled existing hooks; no rendering/input changes");
 }
 #include "pause_vr_settings.h"
 #include "native_ui_input.h"
@@ -6307,6 +6341,8 @@ void SampleThreadCpu() {
                         && wallMs > 0.0 && wallMs < 5000.0;
     if (haveLast && idx < 0) ++g_cpuDroppedIntervals;
 
+    double intervalUser=0,intervalKernel=0,presentCpu=0;
+
     for (int i = 0; i < g_cpuThreadN; ++i) {
         CpuThread& t = g_cpuThreads[i];
         if (!t.alive || !t.h) continue;
@@ -6314,6 +6350,12 @@ void SampleThreadCpu() {
         if (!GetThreadTimes(t.h, &ct, &et, &kt, &ut)) { t.alive = false; continue; }
         const ULONGLONG kk = ((ULONGLONG)kt.dwHighDateTime << 32) | kt.dwLowDateTime;
         const ULONGLONG uu = ((ULONGLONG)ut.dwHighDateTime << 32) | ut.dwLowDateTime;
+        if(t.haveLast && framesNow>0 && wallMs>0 && wallMs<5000) {
+            const double user=double(uu-t.lastU)/10000.0;
+            const double kernel=double(kk-t.lastK)/10000.0;
+            intervalUser+=user;intervalKernel+=kernel;
+            if(t.tid==GetCurrentThreadId())presentCpu+=user+kernel;
+        }
         if (t.haveLast && attribute) {
             t.k[idx] += double(kk - t.lastK) / 10000.0;   // 100 ns units -> ms
             t.u[idx] += double(uu - t.lastU) / 10000.0;
@@ -6327,6 +6369,10 @@ void SampleThreadCpu() {
         g_cpuWallMs[idx]       += wallMs;
         g_cpuBucketFrames[idx] += framesNow;
     }
+    if(g_hotPathSampler.active() && haveLast && framesNow>0 && wallMs>0 && wallMs<5000)
+        Log("GAMEPLAY_HOTPATH interval frames=%ld wall_ms=%.3f process_user_ms=%.3f process_kernel_ms=%.3f present_cpu_ms=%.3f LT=%ld RT=%ld (CPU deltas, trigger endpoint only)",
+            framesNow,wallMs/framesNow,intervalUser/framesNow,intervalKernel/framesNow,presentCpu/framesNow,
+            Rd(g_rawAltTrigger),Rd(g_rawTrigger));
     lastT = now;
     haveLast = true;
 }
@@ -11633,6 +11679,53 @@ PFN_DrawPrim           g_origDrawPrim = nullptr;
 PFN_DrawIndexedPrim    g_origDrawIndexedPrim = nullptr;
 PFN_DrawPrimUP         g_origDrawPrimUP = nullptr;
 PFN_DrawIndexedPrimUP  g_origDrawIndexedPrimUP = nullptr;
+static PFN_DrawPrim shadowNativePrim=nullptr;
+static PFN_DrawIndexedPrim shadowNativeIndexed=nullptr;
+static PFN_DrawPrimUP shadowNativeUP=nullptr;
+static PFN_DrawIndexedPrimUP shadowNativeIndexedUP=nullptr;
+extern volatile LONG g_inForeground;
+extern int g_thisDrawMoved;
+extern volatile LONG g_fgDrawCount;
+static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT first,UINT prims) {
+    shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,0,prims);
+    worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
+    fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
+    const int id=shadowtrace::Before(dev,(unsigned)t,0,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
+    const HRESULT hr=shadowNativePrim(dev,t,first,prims);shadowtrace::After(id,hr);return hr;
+}
+static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,INT base,UINT min,UINT verts,UINT start,UINT prims) {
+    shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
+    worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
+    fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
+    const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
+    const HRESULT hr=shadowNativeIndexed(dev,t,base,min,verts,start,prims);shadowtrace::After(id,hr);return hr;
+}
+static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT prims,const void* data,UINT stride) {
+    shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,0,prims);
+    worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
+    fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
+    const int id=shadowtrace::Before(dev,(unsigned)t,0,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
+    const HRESULT hr=shadowNativeUP(dev,t,prims,data,stride);shadowtrace::After(id,hr);return hr;
+}
+static HRESULT STDMETHODCALLTYPE ShadowTraceIndexedUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT min,UINT verts,UINT prims,const void* indices,D3DFORMAT format,const void* data,UINT stride) {
+    shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
+    worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
+    fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
+    const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
+    const HRESULT hr=shadowNativeIndexedUP(dev,t,min,verts,prims,indices,format,data,stride);shadowtrace::After(id,hr);return hr;
+}
+typedef HRESULT (STDMETHODCALLTYPE *ShadowSetPS)(IDirect3DDevice9*,IDirect3DPixelShader9*);
+typedef HRESULT (STDMETHODCALLTYPE *ShadowStretch)(IDirect3DDevice9*,IDirect3DSurface9*,const RECT*,IDirect3DSurface9*,const RECT*,D3DTEXTUREFILTERTYPE);
+static ShadowStretch shadowOriginalStretch=nullptr;
+static HRESULT STDMETHODCALLTYPE ShadowTraceStretch(IDirect3DDevice9* dev,IDirect3DSurface9* src,const RECT* from,IDirect3DSurface9* dst,const RECT* to,D3DTEXTUREFILTERTYPE filter) {
+    if(!shadowOriginalStretch)return D3DERR_INVALIDCALL;
+    const HRESULT hr=shadowOriginalStretch(dev,src,from,dst,to,filter);
+    shadowtrace::NoteCopy(src,from,dst,to,filter,hr);return hr;
+}
+static ShadowSetPS shadowOriginalPS=nullptr;
+static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
+    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);}return hr;
+}
 // Fix-I/menu census: wire the dormant MenuDrawTrace recorder into the four draw hooks
 // (calls below) with path masks in StereoPairBody (1) and HudStereoPair (2); provider
 // draws already carry bit 4 via g_vrMenuProviderDrawing. Records only menu-generation
@@ -11744,6 +11837,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     HRESULT hr = g_origSetRenderTarget(dev, idx, surf);
     if (FAILED(hr)) return hr; // Failed binds leave the actual device target unchanged.
+    if (idx == 0) shadowtrace::bound.rt=surf;
     if (idx == 0) { PauseRttProbe::Bind(surf); PauseRttProbe::ContentBind(surf); }
     // Run 116: which target the first-person pass draws into. If it switches at the foreground
     // boundary the pass is composited from its own surface, and skipping its draws leaves that
@@ -16397,6 +16491,11 @@ typedef HRESULT (STDMETHODCALLTYPE *PFN_Clear)(IDirect3DDevice9*, DWORD, const D
                                                D3DCOLOR, float, DWORD);
 PFN_SetViewport g_origSetViewport = nullptr;
 PFN_Clear       g_origClear = nullptr;
+static PFN_Clear shadowNativeClear=nullptr;
+static HRESULT STDMETHODCALLTYPE ShadowTraceClear(IDirect3DDevice9* dev,DWORD count,const D3DRECT* rects,DWORD flags,D3DCOLOR colour,float z,DWORD stencil) {
+    const HRESULT hr=shadowNativeClear(dev,count,rects,flags,colour,z,stencil);
+    shadowtrace::NoteClear(dev,count,flags,colour,z,stencil,hr);return hr;
+}
 
 HRESULT STDMETHODCALLTYPE Hook_SetViewport(IDirect3DDevice9* dev, const D3DVIEWPORT9* vp) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
@@ -16410,7 +16509,9 @@ HRESULT STDMETHODCALLTYPE Hook_Clear(IDirect3DDevice9* dev, DWORD count, const D
     // The late depth clear opens the first-person pass. Draw 50 is well past the scene setup
     // clear at draw 0 and far short of the ~1088 where the real boundary sits, so it separates
     // them without assuming this frame's draw total.
-    if ((flags & D3DCLEAR_ZBUFFER) && InterlockedCompareExchange(&g_frameDrawIdx, 0, 0) > 50)
+    const bool measuredShadowTarget=shadowcleargate::Enabled() && !Rd(g_rtIsScene) &&
+        g_rtCurrent>=0 && g_rtCurrent<16 && g_rtSeen[g_rtCurrent].fmt==D3DFMT_R32F;
+    if (shadowcleargate::OpenForeground(flags,Rd(g_frameDrawIdx),measuredShadowTarget))
         InterlockedExchange(&g_inForeground, 1);
     return g_origClear(dev, count, rects, flags, colour, z, stencil);
 }
@@ -19400,7 +19501,9 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
         if (ProjectedShadowTexture(texture)) InterlockedOr(&g_shadowStageMask, 1L << stage);
         else InterlockedAnd(&g_shadowStageMask, ~(1L << stage));
     }
-    return g_origSetTexture(dev,stage,texture);
+    const HRESULT bindResult=g_origSetTexture(dev,stage,texture);
+    if(SUCCEEDED(bindResult) && stage<8)shadowtrace::bound.tex[stage]=texture;
+    return bindResult;
 }
 
 inline bool SuppressCapturedVrMenuDraw() {
@@ -23411,6 +23514,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();worldshadowfix::Release();
     PauseRttProbe::ReleaseContent();
     ReleaseVrMenuResources();
     ReleaseVrShadowResources();
@@ -23622,6 +23726,19 @@ static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
 }
 
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
+    shadowfix::Poll(g_logPath);
+    worldshadowfix::Poll(g_logPath);
+    shadowcleargate::Poll(g_logPath);
+    fpshadowfix::Poll(g_logPath);
+    NativeGamepadEnumProbe::Poll(g_logPath);
+    const bool shadowTraceReady=g_playerPawn && VrModeOn() && Rd(g_vrMenuClass)==0 &&
+        g_xrSessionState==XR_SESSION_STATE_FOCUSED && g_handPoseValid[0] && g_handPoseValid[1] &&
+        g_handPositionValid[0] && g_handPositionValid[1];
+    static unsigned shadowTraceStable=0;
+    shadowTraceStable=shadowTraceReady?std::min(shadowTraceStable+1,30u):0;
+    PollGameplayHotPath(shadowTraceStable>=15);
+    if(shadowtrace::Boundary(s,shadowTraceStable>=15,g_logPath))
+        SaveBackbufferCapture(s,true); // Completed SBS scene, before menu/diagnostic overlays.
     PauseRttStart::Install();
     PauseRttProbe::PresentContent(s);
     hotpath::scope frameScope(g_hotPathSampler, hotpath::Family::frame_total);
@@ -26411,6 +26528,13 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         g_haveLastWrittenYaw = false;   // stale reference once we stop steering
     }
     const LARGE_INTEGER realPresentBegin = Now();
+    if(shadowtrace::pending && shadowTraceStable>=15 && g_xrSessionState==XR_SESSION_STATE_FOCUSED &&
+       g_handPositionValid[0] && g_handPositionValid[1]) {
+        shadowtrace::pending=false;
+        Log("shadow-pass focus context session=%d handPosition=%d,%d",(int)g_xrSessionState,
+            g_handPositionValid[0]?1:0,g_handPositionValid[1]?1:0);
+        shadowtrace::Arm(s);
+    }
     const HRESULT presentResult = g_origPresent(s, a, b, c, d);
     static double realPresentSum=0, realPresentMax=0;
     static unsigned realPresentSamples=0;
@@ -26442,6 +26566,8 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     }
     frameScope.finish();
     if (g_hotPathSampler.advance_frame()) ReportHotPathSampler();
+    else if(g_hotPathSampler.active() && g_hotPathSampler.completed_frames()>0 &&
+            g_hotPathSampler.completed_frames()%240==0) ReportHotPathSampler(false);
     return presentResult;
 }
 
@@ -26540,6 +26666,17 @@ void LoadIniSettings() {
     if (!IniPath(path)) return;
 
     const bool hotPathEnabled = GetPrivateProfileIntA("Render", "HotPathSampler", 0, path) != 0;
+    // The physically accepted shadow/input combination is persistent: missing
+    // keys use ON, so existing INIs need no overwrite or temporary flag files.
+    const bool worldShadow=GetPrivateProfileIntA("Render","ShadowWorldReceiverFix",1,path)!=0;
+    const bool foregroundShadow=GetPrivateProfileIntA("Render","ShadowForegroundClearFix",1,path)!=0;
+    const bool firstShadow=GetPrivateProfileIntA("Render","ShadowFirstPersonReceiverFix",1,path)!=0;
+    const bool inputCache=GetPrivateProfileIntA("Input","InputEnumerationCache",1,path)!=0;
+    worldshadowfix::Configure(worldShadow);shadowcleargate::Configure(foregroundShadow);
+    fpshadowfix::Configure(firstShadow);inputenumthrottle::Configure(inputCache);
+    Log("ini: accepted fixes worldShadow=%d foregroundClear=%d firstPersonShadow=%d inputCache=%d",
+        worldShadow?1:0,foregroundShadow?1:0,firstShadow?1:0,inputCache?1:0);
+    g_gameplayHotPathAllowed=!hotPathEnabled;
     g_hotPathSampler.configure(hotPathEnabled);
     if (hotPathEnabled)
         Log("ini: HotPathSampler=1; collecting 1200 Present frames, 1/%u timing samples, then stopping",
@@ -27696,6 +27833,15 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
                 " and the panel's OCCLUSION row cannot do anything this run) ***");
             g_occlusionMode = 2;
         }
+        // Leaf wrappers observe final per-eye driver calls. Validated receivers
+        // scope/restore shader constants; native draw arguments are unchanged.
+        shadowNativePrim=g_origDrawPrim; if(shadowNativePrim)g_origDrawPrim=&ShadowTracePrim;
+        shadowNativeIndexed=g_origDrawIndexedPrim; if(shadowNativeIndexed)g_origDrawIndexedPrim=&ShadowTraceIndexed;
+        shadowNativeUP=g_origDrawPrimUP; if(shadowNativeUP)g_origDrawPrimUP=&ShadowTraceUP;
+        shadowNativeIndexedUP=g_origDrawIndexedPrimUP; if(shadowNativeIndexedUP)g_origDrawIndexedPrimUP=&ShadowTraceIndexedUP;
+        shadowOriginalPS=(ShadowSetPS)PatchVTable(*out,107,(void*)&ShadowTraceSetPS);
+        shadowOriginalStretch=(ShadowStretch)PatchVTable(*out,34,(void*)&ShadowTraceStretch); // SDK-confirmed device slot.
+        shadowNativeClear=g_origClear;if(shadowNativeClear)g_origClear=&ShadowTraceClear;
         Log("Present + SetVertexShaderConstantF + Draw + SetRenderTarget + SetTexture hooks installed.");
         Log("F7 find the matrix | F1 TRUE stereo | F12 alternate-eye | F10 6-DOF | F9 head tracking");
         if (out && *out) VfxHostInitDevice(*out); // plugin Load + drawer + atlas (absent DLL = no-op)

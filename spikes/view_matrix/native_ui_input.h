@@ -1,6 +1,7 @@
 #pragma once
 #include "pause_rtt_probe.h"
 #include "pause_rtt_start.h"
+#include "native_gamepad_enum_probe.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
@@ -156,8 +157,13 @@ static void Drain(float dt) {
 static void __fastcall Poll(void* self,void*,float dt) {
  ReadableForget();
  UpdateMenu(); // update mode before the game tick/XInput routes the trigger
+ NativeGamepadEnumProbe::SetContext(VrModeOn() && InterlockedCompareExchange(&g_padEmu,0,0)!=0 &&
+     InterlockedCompareExchange(&g_vrMenuClass,0,0)==0);
  BindViewport();
- originalPoll(self,dt); // original guarded missing-mouse path preserves keyboard/XInput/OpenXR
+ {
+  hotpath::scope inputScope(g_hotPathSampler,hotpath::Family::native_input_poll);
+  originalPoll(self,dt); // original guarded missing-mouse path preserves keyboard/XInput/OpenXR
+ }
  Drain(dt); // engine UI calls stay on the game's original input thread
 }
 static void Install() {
@@ -169,6 +175,7 @@ static void Install() {
  const MH_STATUS a=MH_CreateHook((void*)p,(void*)&Poll,(void**)&originalPoll);
  const MH_STATUS b=a==MH_OK?MH_EnableHook((void*)p):a;
  Log("VR UI native input hook: create=%d enable=%d",(int)a,(int)b);
+ if(a==MH_OK && b==MH_OK)NativeGamepadEnumProbe::Install();
 }
 } // namespace NativeVrUi
 

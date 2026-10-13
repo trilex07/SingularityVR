@@ -9,7 +9,7 @@ weapon that follows your hand.
 
 > **This is an alpha.** It has run on very few machines so far.
 
-**[Download the latest release →](https://github.com/letsgosportsteam/singularity-vr-mod/releases)**
+**[Download the latest release →](https://github.com/trilex07/SingularityVR/releases)**
 
 ---
 
@@ -26,10 +26,15 @@ SingularityVR.ini
 `SingularityVR.ini` ships pre-configured. The in-headset settings menu changes it live and saves
 automatically, so you rarely need to touch it by hand.
 
-**In the game's Video Settings, uncheck every option.** High Quality Decals in particular enables
-dynamic shadows, which are currently broken.
+Keep **High Quality Decals = ON** to retain dynamic shadows. Stereo shadow
+reconstruction for the world and first-person weapon/glove, plus the foreground
+pass-boundary fix, were physically verified on PSVR2 through Steam/OpenXR.
+The accepted fixes are enabled by default, including for existing INIs. See
+[shadow/input settings](docs/accepted-shadow-input-fixes.md) for rollback switches.
 
-Then connect Virtual Desktop and launch `Singularity.exe` **with no arguments**. It starts in VR.
+Connect your headset and select its active OpenXR runtime. For the tested PSVR2
+PC-adapter setup, start SteamVR and launch Singularity through Steam. Virtual
+Desktop/VDXR is the earlier Quest setup. No extra launch arguments are needed.
 
 **The first run will be at the wrong resolution.** That is expected. The mod must inject
 `-ResX`/`-ResY` before the engine reads the command line — which is before it can ask the headset
@@ -41,7 +46,7 @@ Launch once, quit, launch again.
 | | |
 |---|---|
 | Game | _Singularity_ (2010) for PC — Steam or GOG |
-| Headset | **Virtual Desktop** with **VDXR** as the OpenXR runtime — all testing has been on a **Quest 3S** |
+| Headset | Latest physical acceptance: **PSVR2** with PC adapter via Steam/OpenXR. Earlier testing: **Quest 3S** with Virtual Desktop/VDXR; other setups are not verified here. |
 | Runtime | **Visual C++ 2015–2022 Redistributable (x86)** — [installer](https://aka.ms/vs/17/release/vc_redist.x86.exe), needed to run the game with the mod installed, not just to build it |
 | OS | Windows 10 or 11 |
 | Network | Highly recommended: a dedicated router (PC on ethernet), **or** Virtual Desktop's wired USB connection (currently in beta) |
