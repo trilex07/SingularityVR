@@ -1,5 +1,35 @@
 # STATUS — session handoff
 
+LATEST physical PID34980: no FPS dips noticed in this trial. Frontend menu
+duplication after gameplay resolved, but background still differs between eyes;
+cinema pause remains small/doubled. Hands too far from face/controllers (~50cm
+apparent near-face discrepancy), NOT accepted. Helicopter PL speech louder but
+still much too quiet; gameplay native English remains. D892/AAA/B3FE/890C and
+UI5B/107DDS/frozen files restored/hash verified after exit. Profile3600frames/
+40313ms: cine0/menu165, idle3600/LT0/RT0 (not trigger A/B). Prior headers historical.
+
+NEXT presentation candidate L1/L2_PASS: source7cee8ba, x86 PE32/O2 SHA
+21515F87423774ED3B9896C138F0D9EDF70690AA1B9334C4EDD5F9DC64A5FDD4.
+CutsceneMenuPairFix defaultOFF: focused cinema pause owns MenuFlat instead of
+full-SBS cinematic shrink; frontend/cinema pause use established identical crop
+for both eyes. Gameplay/native cinema flag/other UI/accepted controls unchanged.
+HandAnchorProbe defaultOFF: eight same-thread copied raw constants, >=2s cadence,
+Present flush, no hand correction or guessed50cm offset. Actual seated play used.
+Artifact deployment/hands-dubbing/menu-pair-test-artifact, INI89E170DC (four
+explicit experiment flags only). L1 scene/probe/math/camera/Bink/hotpath gates,
+runtime policy and fake four-file lease/restore PASS; physical gate PENDING.
+
+User requests new1886-WAV candidate (sourcea390ede):894UI/992story, QA1740screen
+PASS/146review, all formats and installed identity mappings verified. New WAV-only
+installer uses exact hashes/all backups, conflict preservation and optional
+no-launch/post-exit guardian. Synthetic1886install/restore/WhatIf/corrupt backup/
+user-conflict tests PASS; WindowsPS hidden timeout/restore PASS. User-authorized
+temporary WAV deployment separately recorded in private revoice-live evidence;
+confirm guard/hashes before testing. Native UE3 gameplay voices are NOT redirected
+by installing these WAV files. Pack contains no native helicopter INTRO identities.
+Helicopter +6LU/+3LU attempts failed encoded gates and were NOT staged/deployed.
+Next Steam DLL install/launch requires fresh start. See docs/cinema-menu-pair-and-revoice.md.
+
 LATEST physical PID16456: Polish helicopter voices PRESENT but too quiet;
 noTMD hands almost corrected, controller alignment unaccepted (user seated on
 floor/cannot stand). Buttons show no FPS difference; residual dips remain.

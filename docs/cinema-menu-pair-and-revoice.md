@@ -52,3 +52,12 @@ Helicopter gain follow-up: explicit +6LU target fails bounded convergence, +3LU
 fails encoded true-peak headroom. Both private attempts retained and rejected;
 do not relax quality gates or quietly ship clipping. Native mixer/speech balance
 remains open. Original loudness-matched package retained in the menu experiment.
+
+L1_PASS: scene ownership/resume/video sequences; fixed record budget, finite
+inputs, tick-wrap/cadence and pending isolation; existing glove/palette tests;
+camera lookup/pawn stale-page safety, Bink selection, hotpath and runtime policy.
+L2_PASS: regular x86PE32/O2 source7cee8ba, VR21515F87. Offline four-file staging
+adds only NoTmdPaletteFix/CutsceneMenuHandoffFix/CutsceneMenuPairFix/HandAnchorProbe;
+fake Steam lease/WhatIf/path/corrupt backup/conflict/restore tests PASS.
+Full1886WAV fake install/restore and fresh WindowsPS hidden60s timeout/restore
+PASS (no Steam launches). No L3 or physical acceptance for these new policies.
