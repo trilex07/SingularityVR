@@ -5071,6 +5071,7 @@ static bool CutsceneNativeCameraArmed() {
         MenuSubmitForcesFlat((int)Rd(g_vrMenuClass)),VrModeOn(),Rd(g_cutsceneNativeCameraFix)!=0);
 }
 static LONG g_cutsceneVideoHandoffFix = 1;
+static LONG g_cutsceneMenuHandoffFix = 0; // opt-in frontend presentation ownership
 static bool g_cineMonoReady = false; // set when this Present composed the frame
 // Bounded transition/error evidence. No per-draw work, new hooks, queries,
 // allocations or pixel readbacks. The existing silent returns hid the reason
@@ -20762,14 +20763,17 @@ static void UpdateSceneModeFrame() {
         video,
         InterlockedCompareExchange(&g_vrUiMenu, 0, 0) != 0,
         InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
+        vrscene::FrontendMenuPresentation(Rd(g_cutsceneMenuHandoffFix)!=0,
+            (int)Rd(g_vrMenuClass), Rd(g_vrUiMenu)!=0),
     };
     const vrscene::Transition t = g_sceneMode.Advance(signals);
     static unsigned sceneTransitionNotes=0;
     if (t.changed && (Rd(g_sceneModeTrace) || (Rd(g_cutsceneVideoHandoffFix) && sceneTransitionNotes++<16))) {
-        Log("SceneMode: %s -> %s reason=%lu cinematic=%d video=%d menu=%d paused=%d frame=%ld",
+        Log("SceneMode: %s -> %s reason=%lu cinematic=%d video=%d menu=%d paused=%d frontend=%d frame=%ld",
             vrscene::Name(t.from), vrscene::Name(t.to), (unsigned long)t.reason,
             signals.cinematic ? 1 : 0, signals.video ? 1 : 0,
             signals.menu ? 1 : 0, signals.paused ? 1 : 0,
+            signals.frontendMenu ? 1 : 0,
             InterlockedCompareExchange(&g_sceneModeFrame, 0, 0));
     }
     InterlockedIncrement(&g_sceneModeFrame);
@@ -27766,6 +27770,8 @@ void LoadIniSettings() {
     InterlockedExchange(&g_sceneFlatEnabled,
                         GetPrivateProfileIntA("Render", "CutsceneFlatMode", 1, path) ? 1 : 0);
     g_cutsceneVideoHandoffFix=GetPrivateProfileIntA("Render","CutsceneVideoHandoffFix",1,path)?1:0;
+    g_cutsceneMenuHandoffFix=GetPrivateProfileIntA("Render","CutsceneMenuHandoffFix",0,path)?1:0;
+    Log("ini: CutsceneMenuHandoffFix=%ld (focused native frontend only; default OFF)",Rd(g_cutsceneMenuHandoffFix));
     g_polishIntroAudioFix=GetPrivateProfileIntA("Localization","PolishIntroAudioFix",1,path)?1:0;
     InterlockedExchange(&g_sceneCinemaMask,
                         GetPrivateProfileIntA("Render", "CutsceneCinemaMask", 1, path) ? 1 : 0);

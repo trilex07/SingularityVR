@@ -55,5 +55,26 @@ int main() {
     auto g = menu.Advance(gameplay);
     assert(g.changed && g.to == Mode::GameplayStereo);
     assert(!menu.NeedsMonoPair());
+    for(int cls=0;cls<=4;++cls) {
+        assert(!vrscene::FrontendMenuPresentation(false,cls,true));
+        assert(!vrscene::FrontendMenuPresentation(true,cls,false));
+        assert(vrscene::FrontendMenuPresentation(true,cls,true)==(cls==2));
+    }
+    Controller frontend;
+    frontend.Advance({true,false,false,false});
+    frontend.Advance({true,false,false,false});
+    assert(frontend.Current()==Mode::CutsceneFlat);
+    const auto takeover=frontend.Advance({true,false,true,false,true});
+    assert(takeover.to==Mode::MenuFlat && takeover.reason==16 && !frontend.Flat());
+    // Confirmed Bink wins over stale frontend focus on a new-game handoff.
+    frontend.Advance({true,true,true,false,true});
+    assert(frontend.Current()==Mode::VideoFlat);
+    frontend.Advance({true,false,true,false,true});
+    assert(frontend.Current()==Mode::MenuFlat);
+    frontend.Advance({true,false,false,false,false});
+    frontend.Advance({true,false,false,false,false});
+    assert(frontend.Current()==Mode::CutsceneFlat);
+    for(unsigned i=0;i<Controller::kExitFrames;++i)frontend.Advance(gameplay);
+    assert(frontend.Current()==Mode::GameplayStereo);
     std::puts("PASS: cinematic hysteresis, video mono, noisy signal, menu classification");
 }
