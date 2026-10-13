@@ -27833,8 +27833,8 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
                 " and the panel's OCCLUSION row cannot do anything this run) ***");
             g_occlusionMode = 2;
         }
-        // Leaf wrappers observe the actual per-eye driver calls after existing
-        // stereo transforms; they never alter arguments/state or suppress draws.
+        // Leaf wrappers observe final per-eye driver calls. Validated receivers
+        // scope/restore shader constants; native draw arguments are unchanged.
         shadowNativePrim=g_origDrawPrim; if(shadowNativePrim)g_origDrawPrim=&ShadowTracePrim;
         shadowNativeIndexed=g_origDrawIndexedPrim; if(shadowNativeIndexed)g_origDrawIndexedPrim=&ShadowTraceIndexed;
         shadowNativeUP=g_origDrawPrimUP; if(shadowNativeUP)g_origDrawPrimUP=&ShadowTraceUP;

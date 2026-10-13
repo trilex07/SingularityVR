@@ -1,5 +1,5 @@
 #pragma once
-// Default-OFF classification experiment. Native Clear arguments/state untouched.
+// Validated foreground boundary fix. Native Clear arguments/state untouched.
 namespace shadowcleargate {
 static volatile LONG enabled=0,ignored=0,allowed=0;
 static volatile LONG configured=0;

@@ -1,5 +1,5 @@
 #pragma once
-// One-variable experiment: defer the proven native device scan, never input reads.
+// Configured device discovery cache: defer native scans, never input reads.
 namespace inputenumthrottle {
 static volatile LONG enabled=0;
 static volatile LONG configured=0;

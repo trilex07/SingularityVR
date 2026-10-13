@@ -1,8 +1,8 @@
 #pragma once
 #include "shadow_world_receiver_fix.h"
 #include "shadow_clear_gate.h"
-// Default-OFF near1 receiver experiment. Requires the physically tested
-// world/ClearGate combination; never edits a mesh palette or gun transform.
+// Validated near1 correction, configured by INI (ON by default in loader).
+// Requires world/ClearGate; never edits a mesh palette or gun transform.
 namespace fpshadowfix {
 static bool enabled=false,fault=false;
 static volatile LONG configured=0;

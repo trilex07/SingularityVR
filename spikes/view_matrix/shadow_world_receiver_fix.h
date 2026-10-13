@@ -1,8 +1,8 @@
 #pragma once
 #include "shadow_receiver_fix.h"
 #include "shadow_world_receiver_math.h"
-// Distinct default-OFF experiment. World-depth receiver only, not the rejected
-// mixed first-person/world correction. Observe final constants with shadowtrace.
+// Validated world-depth correction, configured by INI (ON by default in loader).
+// Separate from the rejected mixed receiver; bounded diagnostic lease optional.
 namespace worldshadowfix {
 struct Entry {IUnknown* shader=nullptr;bool match=false;};
 static Entry cache[128];static unsigned used=0;
