@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 rect-probe DEPLOYED (b17715e / 24B9ECC4, fixture
+PASS, clean provenance), backup 20261014-224124 holds EA9EFFB1. One-shot
+mirror-rect logger (max 4 distinct src/dst shapes + bb/win, read-only).
+Observer armed (rect-probe-20261014-2241), game NOT launched — awaiting user
+start. Need: building save ~30 s gameplay + menu, normal exit, then rollback
++ contract design. Prior history.
+
 LATEST 2026-10-14 FULL DUBBING ON STEAM (no launch): v7 installed 102/102
 (101 banks + story flags), independently re-hashed. Live Polish banked lines:
 78 VI2 + 721 new = ~799 + old intro helicopter. Retained EN: 5 VI2 + ~184
