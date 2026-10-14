@@ -2,9 +2,9 @@
   "asset": "SNG_logo_vr.bik",
   "install_as": "RvGame/Movies/SNG_logo.bik",
   "stock_sha256": "FE40BA3B4521C4D0BFAC9EFD65B7BAF2C9F0F07F2E637A703DB1E7B29EA2B03C",
-  "candidate_bik_sha256": "989CAD6B711E9B40B3C67DA2AC20C9D9B4E3A5D1639FD5F835B37E6CC8F2D267",
+  "candidate_bik_sha256": "B9B04585E362707FF62ED2396C797DCA5EA6CD81F5CAE01CE613AE9BF0F606F6",
   "video": { "width": 1280, "height": 720, "duration_s": 11.0, "fps": "30/1", "frames": 330 },
-  "suffix": "V + Ya (two glyphs; Ya cloned from in-word R glyph index 7)",
+  "suffix": "cyan Latin VR on the chrome wordmark; same look as the pre-launch card (this bik)",
   "validate_video": "PASS",
   "proof_png_from_bik_only": "proof-from-bik/proof-manifest.json"
 }

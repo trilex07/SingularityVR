@@ -97,9 +97,55 @@ def erase_crossbar(glyph: Image.Image) -> Image.Image:
 
 
 def build_v_from_a(a_glyph: Image.Image) -> Image.Image:
-    """Stencil V: flip the A, then delete its crossbar so the top stays open."""
-    flipped = a_glyph.convert("RGBA").transpose(Image.Transpose.FLIP_TOP_BOTTOM)
-    return erase_crossbar(flipped)
+    """Symmetric stencil V: mirror the A's left leg, then point it downward."""
+    im = a_glyph.convert("RGBA")
+    w, h = im.size
+    px = im.load()
+    left = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    out = left.load()
+    for y in range(h):
+        cols = [x for x in range(w) if px[x, y][3] > 20 and min(px[x, y][:3]) > 150]
+        clusters = _clusters(cols)
+        if len(clusters) == 2:
+            edge_l, edge_r = clusters[0]
+        elif len(clusters) == 1 and y < int(h * 0.28):
+            edge_l, edge_r = clusters[0][0], (clusters[0][0] + clusters[0][1]) // 2
+        else:
+            continue
+        x0 = max(0, edge_l - 5)
+        x1 = min(w - 1, edge_r + 3)
+        for x in range(x0, x1 + 1):
+            out[x, y] = px[x, y]
+    mirrored = left.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+    joined = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    joined.paste(left, (0, 0), left)
+    joined.paste(mirrored, (0, 0), mirrored)
+    return joined.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+
+
+def build_latin_r(ya_glyph: Image.Image) -> Image.Image:
+    """Game R is the mirrored Ya. Flip it so the suffix reads as a Latin R."""
+    return ya_glyph.convert("RGBA").transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+
+
+def tint_cyan(glyph: Image.Image) -> Image.Image:
+    """Recolor a cloned glyph to the ice-blue VR in the reference stills."""
+    im = glyph.convert("RGBA")
+    px = im.load()
+    w, h = im.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a < 8:
+                px[x, y] = (0, 0, 0, 0)
+                continue
+            level = lum((r, g, b, a)) / 255.0
+            # White core, cyan shoulder, blue bloom.
+            nr = int(30 + level * 210)
+            ng = int(110 + level * 140)
+            nb = int(190 + level * 65)
+            px[x, y] = (min(255, nr), min(255, ng), min(255, nb), a)
+    return im
 
 
 def letter_gap(strip: Image.Image) -> int:
@@ -161,8 +207,8 @@ def stamp_v_ya(frame: Image.Image, y0: int, y1: int, pad: int = 6) -> Image.Imag
     if len(letters) < 11:
         raise ValueError(f"expected 11 letters, saw {len(letters)}")
     glyphs = [soft_glyph(band, a, b, pad) for a, b in letters]
-    v_glyph = build_v_from_a(glyphs[6])
-    ya_glyph = glyphs[7]
+    v_glyph = tint_cyan(build_v_from_a(glyphs[6]))
+    ya_glyph = tint_cyan(build_latin_r(glyphs[7]))
     gaps = [letters[i + 1][0] - letters[i][1] - 1 for i in range(10)]
     gap = max(4, sorted(gaps)[len(gaps) // 2])
     out = base.copy()
