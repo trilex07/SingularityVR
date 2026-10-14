@@ -43,4 +43,4 @@ Copy-Item -LiteralPath (Join-Path $RealGameRoot 'Binaries/texture_override.ini')
 $badManifest=Join-Path $out 'bad.json';$manifest.Files[0].RelativePath='..\escape.xxx';$manifest|ConvertTo-Json -Depth 6|Set-Content $badManifest -Encoding UTF8
 $refused=$false;try{& $tool -Action Install -ManifestPath $badManifest -GameRoot $fake}catch{$refused=$true}
 if(-not $refused){throw 'Path escape accepted'}
-Write-Output 'PASS: fake32 install/WhatIf/exact restore, full backup corruption refusal, conflict preservation, absent cleanup, path refusal'
+Write-Output "PASS: fake$(@($manifest.Files).Count) install/WhatIf/exact restore, full backup corruption refusal, conflict preservation, absent cleanup, path refusal"

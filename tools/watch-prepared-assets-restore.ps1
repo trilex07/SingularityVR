@@ -9,13 +9,15 @@ Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Management')
 if(-not(Get-CimInstance Win32_Process -Filter "ProcessId=$PID")){throw 'Full process view required'}
 $manifest=Get-Content $ManifestPath -Raw | ConvertFrom-Json
 $record=Get-Content (Join-Path $BackupPath 'lease.json') -Raw | ConvertFrom-Json
-if($manifest.Kind -cne 'SingularityVR prepared asset delta v1' -or @($manifest.Files).Count -ne 32 -or
+$profileOk=($manifest.Kind -ceq 'SingularityVR prepared asset delta v1' -and @($manifest.Files).Count -eq 32) -or
+ ($manifest.Kind -ceq 'SingularityVR post-opening asset delta v2' -and @($manifest.Files).Count -eq 34)
+if(-not $profileOk -or
  $record.GameRoot -cne [IO.Path]::GetFullPath($GameRoot) -or $record.ManifestSha256 -cne (Get-FileHash $ManifestPath).Hash){throw 'Wrong delta guard lease'}
 foreach($f in $manifest.Files){
  if((Get-FileHash (Join-Path $GameRoot $f.RelativePath)).Hash -cne $f.CandidateSha256){throw 'Candidate not installed'}
  if($f.BaselineSha256 -cne 'ABSENT' -and (Get-FileHash (Join-Path $BackupPath $f.RelativePath)).Hash -cne $f.BaselineSha256){throw 'Bad guard backup'}
 }
-Write-Output ("READY: independent32-file asset guard, bounded${LaunchWindowSeconds}s no-launch/10s after exit")
+Write-Output ("READY: independent$(@($manifest.Files).Count)-file asset guard, bounded${LaunchWindowSeconds}s no-launch/10s after exit")
 $deadline=(Get-Date).AddSeconds($LaunchWindowSeconds);$seen=$false;$idle=$null
 while($true){
  if(@(Get-Process -Name Singularity -ErrorAction SilentlyContinue).Count){$seen=$true;$idle=$null}

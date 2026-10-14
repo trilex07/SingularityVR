@@ -58,7 +58,7 @@ void PolishLocalizationManager::Shutdown() {
     m_text_entries.clear();
     m_audio_entries.clear();
     m_audio_by_package_asset.clear();
-    m_en_to_pl.clear();m_en_to_wav.clear();m_native_voice_en.clear();m_native_speech=false;
+    m_en_to_pl.clear();m_en_to_wav.clear();m_ui_voice_en.clear();m_native_voice_en.clear();m_native_speech=false;
     m_initialized = false;
     m_enabled = false;
 }
@@ -266,6 +266,7 @@ bool PolishLocalizationManager::LoadVoiceManifest(const std::string& path) {
             if (!pkgAssetKey.empty() && pkgAssetKey != "|") {
                 m_audio_by_package_asset[pkgAssetKey] = entry;
             }
+            if (!en.empty() && !file.empty()) m_ui_voice_en.insert(en);
             if (!en.empty() && !file.empty() && !m_en_to_wav.count(en))
                 m_en_to_wav.emplace(en, file);
             m_audio_entries[id] = std::move(entry);
@@ -376,6 +377,7 @@ bool PolishLocalizationManager::PolishForEnglish(const char* english_utf8, char*
     std::shared_lock<std::shared_mutex> lock(m_mutex);
     auto it = m_en_to_pl.find(english_utf8);
     if (it == m_en_to_pl.end() || it->second.empty()) return false;
+    if (it->second.size() >= cap) return false; // never install a truncated note/paragraph
     strncpy_s(out, cap, it->second.c_str(), _TRUNCATE);
     return out[0] != 0;
 }
@@ -388,8 +390,15 @@ bool PolishLocalizationManager::WavForEnglish(const char* english_utf8, char* ou
     if(m_native_speech&&m_native_voice_en.count(english_utf8))return false; // native UE3 owns this line; no PlaySound overlay
     auto it = m_en_to_wav.find(english_utf8);
     if (it == m_en_to_wav.end() || it->second.empty()) return false;
+    if (it->second.size() >= cap) return false;
     strncpy_s(out, cap, it->second.c_str(), _TRUNCATE);
     return out[0] != 0;
+}
+
+bool PolishLocalizationManager::IsUiVoiceEnglish(const char* english_utf8) const {
+    if (!english_utf8 || !*english_utf8) return false;
+    std::shared_lock<std::shared_mutex> lock(m_mutex);
+    return m_ui_voice_en.count(english_utf8) != 0;
 }
 
 const char* PolishLocalizationManager::GetLocalizedString(const char* record, const char* section, const char* key) {

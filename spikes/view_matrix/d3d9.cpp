@@ -5075,6 +5075,9 @@ extern volatile LONG g_vrUiMenu;
 static LONG g_cutsceneMenuPairFix = 0; // exact focused menus; same-source XR crop experiment
 static LONG g_handAnchorProbe = 0;
 static LONG g_noTmdWristAnchorFix = 0;
+static volatile LONG g_uiNarratorEnabled = 0; // UI/tutorial overlay only; native dialogue untouched.
+static volatile LONG g_modalUiProbe = 0; // cold reflected identity; no presentation changes.
+static void StopPolishUiNarrator();
 static void FlushHandAnchorProbe();
 static bool CutsceneNativeCameraArmed() {
     const bool cinemaPause = CinemaMenuPauseOwnsPresentation(Rd(g_cutsceneMenuPairFix)!=0,
@@ -7070,7 +7073,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        // ⭐ run 217: the laser and the per-weapon alignment rows.
        PR_LASER, PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH,
        PR_NOTESIZE,          // ⭐ run 230
-       PR_POLISH,            // Polish localization toggle
+       PR_POLISH, PR_UINARRATOR, // Independent text language / optional UI voice.
        PR_GUNSCALE,          // hub round A: first-person gun+hands size, live-tuned like world scale
        PR_MENUOVERLAY,       // hub round 4: overlay kill switch (black-quad diagnosis)
        PR_TMDON, PR_TMDFWD, PR_TMDRIGHT, PR_TMDUP, PR_TMDYAW, PR_TMDPITCH,   // ⭐ run 237
@@ -7141,7 +7144,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
     { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE,
-      PR_POLISH, PR_GLOVEONLY, PR_VFXLOOK, PR_BACK },
+      PR_POLISH, PR_UINARRATOR, PR_GLOVEONLY, PR_VFXLOOK, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
@@ -7182,7 +7185,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_GLOVEISOLATE, PR_GLOVEFACE, PR_GLOVESTUMP, PR_GLOVELEFT, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 11, 10, 3, 11, 10, 7, 10, 6, 8, 5 };
+const int kPageCount[kPanelPages] = { 11, 10, 3, 12, 10, 7, 10, 6, 8, 5 };
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -7418,6 +7421,9 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_POLISH:
             WritePrivateProfileStringA("Localization", "PolishLanguage",
                 PolishLocalization::PL().IsPolishEnabled() ? "1" : "0", path); return;
+        case PR_UINARRATOR:
+            WritePrivateProfileStringA("Localization", "UiNarratorEnabled",
+                Rd(g_uiNarratorEnabled) ? "1" : "0", path); return;
         case PR_GLOVEONLY:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", g_showControllerArms ? 0L : 1L);
             WritePrivateProfileStringA("Render", "ShowControllerArms", v, path); return;
@@ -7795,6 +7801,9 @@ void PanelRowText(int row, char* out, size_t cap) {
         case PR_POLISH:
             _snprintf_s(out, cap, _TRUNCATE, "POLISH LANG    %s",
                         PolishLocalization::PL().IsPolishEnabled() ? "ON" : "OFF");
+            break;
+        case PR_UINARRATOR:
+            _snprintf_s(out, cap, _TRUNCATE, "UI NARRATOR    %s", Rd(g_uiNarratorEnabled) ? "ON" : "OFF");
             break;
         case PR_GLOVEONLY:
             _snprintf_s(out, cap, _TRUNCATE, "GLOVE ONLY     %s",
@@ -8293,6 +8302,11 @@ void PanelAdjust(int row, int dir) {
             Log("VR panel: Polish language %s", on ? "ON" : "OFF");
             break;
         }
+        case PR_UINARRATOR:
+            InterlockedExchange(&g_uiNarratorEnabled, Rd(g_uiNarratorEnabled) ? 0 : 1);
+            if (!Rd(g_uiNarratorEnabled)) StopPolishUiNarrator();
+            Log("VR panel: UI narrator %s (native story dialogue unchanged)", Rd(g_uiNarratorEnabled) ? "ON" : "OFF");
+            break;
         case PR_GLOVEONLY:
             g_showControllerArms = g_showControllerArms ? 0 : 1;
             Log("VR panel: glove-only visual %s", g_showControllerArms ? "OFF" : "ON");
@@ -14098,14 +14112,14 @@ int g_armIkMode = 0;                  // ini [Render] ArmIKMode
 volatile LONG g_gloveIsolate = 2;     // ini [Render] GloveIsolate
 volatile LONG g_gloveFaceFilter = 0;  // ini [Render] GloveFaceFilter
 volatile LONG g_noTmdPaletteFix = 0;  // controlled experiment; [Render] NoTmdPaletteFix
-static handanchor::Probe g_handAnchorRecords;
+static handanchor::WeaponProbe g_handAnchorRecords;
 static DWORD g_handAnchorThread=0;
 static void FlushHandAnchorProbe() {
     if(!Rd(g_handAnchorProbe)||g_handAnchorThread!=GetCurrentThreadId())return;
     handanchor::Record r;
     if(!g_handAnchorRecords.Take(r))return;
-    Log("hand-anchor sample=%u frame=%u moved=%d targetL=(%.4f,%.4f,%.4f) targetR=(%.4f,%.4f,%.4f) head=(%.4f,%.4f,%.4f) gunAnchor=(%.4f,%.4f,%.4f); stage=GameplayStereo; raw noTMD constants, not inferred world-joint position",
-        g_handAnchorRecords.Count(),r.frame,r.moved,r.target[0][0],r.target[0][1],r.target[0][2],r.target[1][0],r.target[1][1],r.target[1][2],r.headOffset[0],r.headOffset[1],r.headOffset[2],r.anchor[0],r.anchor[1],r.anchor[2]);
+    Log("hand-anchor sample=%u frame=%u moved=%d weapon=%p epoch=%u targetL=(%.4f,%.4f,%.4f) targetR=(%.4f,%.4f,%.4f) head=(%.4f,%.4f,%.4f) gunAnchor=(%.4f,%.4f,%.4f); stage=GameplayStereo; raw noTMD constants, not inferred world-joint position",
+        g_handAnchorRecords.Count(),r.frame,r.moved,(void*)r.weapon,r.epoch,r.target[0][0],r.target[0][1],r.target[0][2],r.target[1][0],r.target[1][1],r.target[1][2],r.headOffset[0],r.headOffset[1],r.headOffset[2],r.anchor[0],r.anchor[1],r.anchor[2]);
     auto matrix=[](const char* name,const float* f,unsigned n){
         char line[512]{};size_t used=0;
         for(unsigned i=0;i<n && used<sizeof(line);++i){const int k=_snprintf_s(line+used,sizeof(line)-used,_TRUNCATE," %.6g",f[i]);if(k>0)used+=(size_t)k;}
@@ -15528,7 +15542,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         const DWORD thread=GetCurrentThreadId();
         if(!g_handAnchorThread)g_handAnchorThread=thread;
         const DWORD tick=GetTickCount();
-        if(thread==g_handAnchorThread && g_handAnchorRecords.Due(tick)) {
+        if(thread==g_handAnchorThread && g_handAnchorRecords.Due(tick,(std::uintptr_t)(unsigned)Rd(g_weaponObj))) {
             handanchor::Record r;r.tick=tick;r.frame=(unsigned)Rd(g_sceneModeFrame);r.moved=g_thisDrawMoved;
             memcpy(r.local,local,sizeof(local));memcpy(r.controller[0],primary,sizeof(primary));memcpy(r.controller[1],off,sizeof(off));
             if(g_thisDrawMoved==1)BuildGunC(reinterpret_cast<float (*)[4]>(r.ride));
@@ -21256,14 +21270,26 @@ static void InstallBinkAudioObservation() {
         (int)ea,(int)eb,Rd(g_polishIntroAudioFix),Rd(g_binkIntroReady)?1:0);
 }
 
+static SRWLOCK g_polishSpeakLock = SRWLOCK_INIT;
+static BOOL (WINAPI *g_polishPlaySound)(LPCWSTR, HMODULE, DWORD) = nullptr;
+static bool g_polishPlayingUi = false; // protected by speak lock; never a native UE3 sound.
+static void StopPolishUiNarrator() {
+    AcquireSRWLockExclusive(&g_polishSpeakLock);
+    if (g_polishPlayingUi && g_polishPlaySound) g_polishPlaySound(nullptr, nullptr, 0);
+    g_polishPlayingUi = false;
+    ReleaseSRWLockExclusive(&g_polishSpeakLock);
+}
 static void PolishMaybeSpeak(const char* english, const wchar_t* shown, int chars) {
     if (chars < 40 || !g_polishAudioDir[0] || !english || !shown) return;
+    const bool ui = PolishLocalization::PL().IsUiVoiceEnglish(english);
+    if (ui && !Rd(g_uiNarratorEnabled)) return;
     char file[160]{};
     if (!PolishLocalization::PL().WavForEnglish(english, file, sizeof(file))) return;
     wchar_t wfile[160]{}, path[MAX_PATH]{};
     if (MultiByteToWideChar(CP_UTF8, 0, file, -1, wfile, 160) <= 0) return;
     _snwprintf_s(path, _TRUNCATE, L"%hs\\%s", g_polishAudioDir, wfile);
     if (GetFileAttributesW(path) == INVALID_FILE_ATTRIBUTES) {
+        if (ui) return; // UI may not fall through into native/story ownership.
         if (!g_polishStoryAudioDir[0]) return;
         _snwprintf_s(path, _TRUNCATE, L"%hs\\%s", g_polishStoryAudioDir, wfile);
         if (GetFileAttributesW(path) == INVALID_FILE_ATTRIBUTES) return;
@@ -21271,19 +21297,24 @@ static void PolishMaybeSpeak(const char* english, const wchar_t* shown, int char
     static DWORD lastTick = 0;
     static wchar_t lastText[48]{};
     const DWORD now = GetTickCount();
-    if (lastText[0] && now - lastTick < 4000 && wcsncmp(lastText, shown, 40) == 0) return;
+    AcquireSRWLockExclusive(&g_polishSpeakLock);
+    if ((ui && !Rd(g_uiNarratorEnabled)) ||
+        (lastText[0] && now - lastTick < 4000 && wcsncmp(lastText, shown, 40) == 0)) {
+        ReleaseSRWLockExclusive(&g_polishSpeakLock); return;
+    }
     lastTick = now;
     wcsncpy_s(lastText, shown, _TRUNCATE);
-    static BOOL (WINAPI *play)(LPCWSTR, HMODULE, DWORD) = nullptr;
-    if (!play) {
+    if (!g_polishPlaySound) {
         HMODULE winmm = LoadLibraryA("winmm.dll");
-        if (winmm) play = reinterpret_cast<BOOL (WINAPI*)(LPCWSTR, HMODULE, DWORD)>(
+        if (winmm) g_polishPlaySound = reinterpret_cast<BOOL (WINAPI*)(LPCWSTR, HMODULE, DWORD)>(
             GetProcAddress(winmm, "PlaySoundW"));
     }
-    if (!play) return;
-    const BOOL accepted=play(path, nullptr, 0x00020001); // SND_FILENAME | SND_ASYNC
+    if (!g_polishPlaySound) { ReleaseSRWLockExclusive(&g_polishSpeakLock); return; }
+    const BOOL accepted=g_polishPlaySound(path, nullptr, 0x00020001); // SND_FILENAME | SND_ASYNC
+    g_polishPlayingUi = ui && accepted;
     static int said = 0;
-    if (said < 16) { ++said; Log("polish voice: %s accepted=%d chars=%d cine=%ld", file, (int)accepted, chars, Rd(g_inCinematic)); }
+    if (said < 16) { ++said; Log("polish voice: %s accepted=%d chars=%d cine=%ld ui=%d", file, (int)accepted, chars, Rd(g_inCinematic), ui?1:0); }
+    ReleaseSRWLockExclusive(&g_polishSpeakLock);
 }
 
 static uintptr_t g_fstringAssign = 0;
@@ -21294,7 +21325,10 @@ static void PolishRewriteFString(void* result) {
     wchar_t* data = *reinterpret_cast<wchar_t**>(result);
     const int num = *reinterpret_cast<int*>(reinterpret_cast<char*>(result) + 4);
     const int mx = *reinterpret_cast<int*>(reinterpret_cast<char*>(result) + 8);
-    if (!data || num < 2 || num > 480 || mx < num || mx > 2048) {
+    // Actual Notes manifest has paragraphs up to880 characters. The old480
+    // guard and480-wchar output silently excluded them even with translated text.
+    // Keep bounded stack buffers and the existing engine allocator; no guessed offsets.
+    if (!data || num < 2 || num > 4096 || mx < num || mx > 16384) {
         static int shape = 0;
         if (shape < 6) {
             ++shape;
@@ -21303,10 +21337,10 @@ static void PolishRewriteFString(void* result) {
         return;
     }
     if (!Readable(data, (size_t)num * sizeof(wchar_t)) || data[num - 1] != 0) return;
-    char en[1024]{};
+    char en[16384]{};
     if (WideCharToMultiByte(CP_UTF8, 0, data, num - 1, en, (int)sizeof(en) - 1, nullptr, nullptr) <= 0)
         return;
-    char pl[1024]{};
+    char pl[16384]{};
     static int seen = 0;
     if (seen < 12) {
         ++seen;
@@ -21317,8 +21351,8 @@ static void PolishRewriteFString(void* result) {
     if (Rd(g_inCinematic) && InterlockedIncrement(&cineTextNotes)<=16)
         Log("polish cine text: mapped=%d chars=%d english=\"%s\"", mapped?1:0,num-1,en);
     if (!mapped) return;
-    wchar_t wide[480]{};
-    const int wn = MultiByteToWideChar(CP_UTF8, 0, pl, -1, wide, 480);
+    wchar_t wide[4096]{};
+    const int wn = MultiByteToWideChar(CP_UTF8, 0, pl, -1, wide, 4096);
     if (wn <= 1) return;
     if (wn > mx) {
         if (!g_fstringAssign) {
@@ -27271,6 +27305,7 @@ void LoadIniSettings() {
             hotpath::sample_stride);
 
     // ---- Polish Localization initialization ----
+    InterlockedExchange(&g_modalUiProbe, GetPrivateProfileIntA("Render","ModalUiProbe",0,path)?1:0);
     // Initialize Polish localization manager and read PolishLanguage from INI
     // Paths are relative to the game Binaries directory where the DLL lives
     {
@@ -27293,6 +27328,8 @@ void LoadIniSettings() {
             if (plLang != 0) PolishLocalization::PL().SetPolishLanguage(true);
             LONG nativeSpeech=GetPrivateProfileIntA("Localization","NativePolishSpeech",0,path);
             PolishLocalization::PL().SetNativeSpeech(nativeSpeech!=0);
+            InterlockedExchange(&g_uiNarratorEnabled, GetPrivateProfileIntA("Localization","UiNarratorEnabled",0,path)?1:0);
+            Log("ini: UiNarratorEnabled=%ld (optional UI/tutorial only, native dialogue independent)", Rd(g_uiNarratorEnabled));
             Log("ini: NativePolishSpeech=%ld (exact native_replaced story fields only; no global audio mute)",nativeSpeech);
             LONG plFallback = GetPrivateProfileIntA("Localization", "PolishFallbackToEnglish", 1, path);
             PolishLocalization::PL().SetFallbackToEnglish(plFallback != 0);

@@ -53,6 +53,30 @@ static bool UpdateMenu() {
   InterlockedExchange64(&g_vrMenuStateToken,((LONG64)++generation<<32)|(unsigned)kind);
   InterlockedExchange(&g_vrMenuClass,kind);
   Log("VR UI focus: movie=%p object=%s class=%s menu=%d",(void*)movie,objectName,className,cachedMenu?1:0);
+  // NewGame: actual focus log proves SPSlots -> dialog. This probe establishes
+  // whether each has its own RTT, shares a parent's RTT, or draws directly.
+  // Four cold snapshots/session; no new hook, matrix write or resource ref.
+  static unsigned modalNotes=0;
+  if (Rd(g_modalUiProbe) && modalNotes<4 && movie &&
+      (!strcmp(className,"RvUIGFxMovie_Dialog") || !strcmp(className,"RvUIGFxMovie_Slots"))) {
+   ++modalNotes;
+   __try {
+    const int targetOff=PauseRttProbe::Property(cls,"RenderTexture","ObjectProperty");
+    const int infoOff=PauseRttProbe::Property(cls,"MovieInfo","ObjectProperty");
+    const int modeOff=PauseRttProbe::Property(cls,"RenderTextureMode","ByteProperty");
+    const uintptr_t target=targetOff>=0?ReadPointer(movie+targetOff):0;
+    const uintptr_t resource=target?ReadPointer(target+0xA4):0;
+    const bool contract=resource && PauseRttProbe::NativeResourceContract(target,resource);
+    const uintptr_t rhi=contract?ReadPointer(resource+0x48):0;
+    const uintptr_t surface=rhi>=12?ReadPointer(rhi-4):0;
+    Log("modal-ui identity n=%u token=%llu focus=%p class=%s MovieInfo=%p RenderTexture=%p resource=%p contract=%d surface=%p modeOffset=%d mode=%d; no render changes",
+        modalNotes,VrMenuStateToken(),(void*)movie,className,(void*)(infoOff>=0?ReadPointer(movie+infoOff):0),
+        (void*)target,(void*)resource,contract?1:0,(void*)surface,modeOff,
+        modeOff>=0 && Readable((void*)(movie+modeOff),1)?(int)*reinterpret_cast<const unsigned char*>(movie+modeOff):-1);
+   } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
+    Log("modal-ui UNKNOWN: guarded snapshot failed; no render changes");
+   }
+  }
   // Fix-4/menus: a movie outside the table is the prime suspect for the nested-views
   // second menu - its draws miss the menu path and fall through to StereoPair. Name it
   // loudly, once per focus change (never per frame/draw), so a test run identifies it.

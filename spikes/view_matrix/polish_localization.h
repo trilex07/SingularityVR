@@ -60,6 +60,7 @@ public:
     // Copies into the caller buffer. Empty result means no replacement.
     bool PolishForEnglish(const char* english_utf8, char* out, size_t cap) const;
     bool WavForEnglish(const char* english_utf8, char* out, size_t cap) const;
+    bool IsUiVoiceEnglish(const char* english_utf8) const;
     void SetNativeSpeech(bool enabled){m_native_speech=enabled;}
     
     // Configuration
@@ -90,6 +91,7 @@ private:
     std::unordered_map<std::string, LocalizedString> m_text_entries;
     std::unordered_map<std::string, std::string> m_en_to_pl;
     std::unordered_map<std::string, std::string> m_en_to_wav;
+    std::unordered_set<std::string> m_ui_voice_en;
     std::unordered_set<std::string> m_native_voice_en;
     bool m_native_speech=false; // default OFF, exact manifested lines only
     

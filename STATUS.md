@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+LATEST PR17 merged on GitHub into main8751a27 (not merged by this MAIN turn).
+Dedicated fix/post-opening-followups worktree. OFFLINE preparation, no Steam
+write/launch. New rooms2banks/19waves/13SIDEWAV, properties/cues/timing preserved,
+exact PCM/loudness/peak/independent LZO PASS; SIDE17e2f6b reviewed full native text,
+NOT_AUDITIONED.15 first-area Notes translations prepared, other57/open keys remain.
+UI NARRATOR defaultOFF live DISPLAY toggle; quiet894UI candidate35% amplitude,
+992story unchanged, inherited146QA review not upgraded. Source long-note bounded
+capacity/nontruncation, diagnostic sparse-flush fix and two-epoch wrist probe L1
+PASS. ShowControllerArms1 observed in actual INI/log; stage0 for glove-only test,
+no guessed pistol grip offset. NewGame SPSlots/dialog producer/capture identity
+probe only; layering fix and pistol grip remain OPEN. Exact34 v2 asset lease fake
+install/restore/corruption/conflict/WhatIf PASS; source build/staging finalization
+below feature note. Fresh start required; never deploy over running game.
+See docs/post-opening-followups.md. Previous entries below are historical.
+
 LATEST PID17436 closed; all3 guards restored, independent4+32+1886 hashes and
 107DDS PASS (live restore-verification.json). User physically heard Polish radio,
 generally accepts this version and requests PR targeting main (NO merge).

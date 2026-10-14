@@ -6,6 +6,7 @@ namespace handanchor {
 struct Record {
     std::uint32_t tick=0, frame=0;
     int moved=0;
+    std::uintptr_t weapon=0; unsigned epoch=0;
     float local[16]{}, controller[2][16]{}, ride[16]{}, before[2][12]{}, after[2][12]{};
     float target[2][3]{}, headOffset[3]{}, anchor[3]{};
 };
@@ -25,5 +26,32 @@ public:
     unsigned Count()const{return count_;}
 private:
     Record record_{};unsigned count_=0;std::uint32_t last_=0;bool pending_=false;
+};
+
+// Eight free-hand records alone expire before the first pistol pickup. A second
+// epoch reuses the already reflected Pawn.Weapon signal; max16 records/session,
+// no object/name walk or reset loop per swap. Retain an unflushed record first.
+class WeaponProbe {
+public:
+    bool Due(std::uint32_t tick, std::uintptr_t weapon) {
+        if (!epochs_) { key_=weapon; epochs_=1; }
+        if (key_ != weapon) {
+            if (epochs_ >= 2 || pending_) return false;
+            key_=weapon; ++epochs_; probe_=Probe{};
+        }
+        return probe_.Due(tick);
+    }
+    bool Capture(Record r) {
+        r.weapon=key_; r.epoch=epochs_;
+        if (!epochs_ || !probe_.Capture(r)) return false;
+        pending_=true; ++total_; return true;
+    }
+    bool Take(Record& out) {
+        if (!probe_.Take(out)) return false;
+        pending_=false; return true;
+    }
+    unsigned Count() const { return total_; }
+private:
+    Probe probe_{}; std::uintptr_t key_=0; unsigned epochs_=0, total_=0; bool pending_=false;
 };
 }

@@ -30,7 +30,9 @@ static void MenuDrawTraceFlush() {
     if(!g_menuGroupCount)return;
     Log("MenuDrawTrace state=%llu class=%u groups=%u dropped=%u sample=frames20..27 path=1:stereo,2:hud,4:provider",
         g_menuTraceState,(unsigned)g_menuTraceState,g_menuGroupCount,g_menuTraceDropped);
-    for(unsigned i=0;i<g_menuGroupCount;++i){const auto& a=g_menuGroups[i];const auto& k=a.key;
+    // Groups live in a hashed sparse table, not at [0, groupCount). Iterating
+    // only the count emitted empty slots and lost real high-index UI groups.
+    for(unsigned i=0;i<2048;++i){const auto& a=g_menuGroups[i];if(!a.count)continue;const auto& k=a.key;
         Log("MDG %u n=%u frames=%u first=%u:%u last=%u:%u rt=%p %ux%u ds=%p tex=%p surface=%p %ux%u fmt=%u vs=%p ps=%p decl=%p",
             i,a.count,a.frames,a.firstFrame,a.firstOrdinal,a.lastFrame,a.lastOrdinal,(void*)k.rt,k.rtW,k.rtH,(void*)k.depth,(void*)k.texture,(void*)k.textureSurface,k.texW,k.texH,k.texFmt,(void*)k.vs,(void*)k.ps,(void*)k.decl);
         Log("MDG %u kind=%u type=%u prim=%u verts=%u start=%u min=%u base=%d vb=%p ib=%p stride=%u offset=%u path=%u proj=%u flags=%u vp=%u,%u,%u,%u scissor=%ld,%ld,%ld,%ld/%lu blend=%lu,%lu,%lu depth=%lu,%lu,%lu",

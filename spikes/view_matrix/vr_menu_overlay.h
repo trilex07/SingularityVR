@@ -341,7 +341,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
             InterlockedIncrement(&g_vrMenuCaptured);
             if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuCaptured);
             if(Rd(g_vrMenuClass)==2)InterlockedIncrement(&g_vrCounters.mainMenuCaptured);
-            Log("VR menu sink: private GFx candidate %ux%u registered; all matching scene draws will be suppressed",desc.Width,desc.Height);
+            Log("VR menu sink: private GFx candidate %ux%u registered rt=%p texture=%p class=%ld token=%llu; all matching scene draws will be suppressed",desc.Width,desc.Height,(void*)surface,(void*)texture,Rd(g_vrMenuClass),captureState);
         }
         // Prefer the candidate whose aspect is closest to the native GFx canvas.  The source list
         // is retained as well because the physical menu can be submitted through more than one
