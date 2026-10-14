@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 user anchor CONFIRMED: working Polish dialogues = PID37660
+live test 16:27 (DLL 2763A984, first-area L4: NPC/recordings + note glyphs).
+Reinstalled v4 bank/font/manifest set is that era's accepted payload scope
+(8 VI2 banks + 60E72871 + 3 manifests); notes re-confirmed PL in PID46016.
+Open: menu double-flat (overlay falsifier hit), TV subrectangle mapping,
+xlingual-to-bank integration, PR via user browser. No test requested.
+
 LATEST 2026-10-14 SIDE-dubbing claims verified offline (no Steam writes):
 R6 files 6ba2/825b byte-identical in C:\PL-dubbing, xlingual source AND Steam
 (476c5c72/a8ae6d25, mono16/24k) — already deployed, nothing to install; 825b
