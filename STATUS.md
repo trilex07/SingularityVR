@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 TEXTURES row VERIFIED: user cycled 2x→4K→8K in headset
+("jest git"), installed texture_override.ini reads Quality=8K — save path
+PASS on disk. L3 display/cycle PASS per user; injector-log proof (quality: 8K
+after restart) pending next launch. Row authorized for PR (no merge by MAIN).
+HUD assets stand installed (81 files, inert until code integration — user
+asked why invisible: catalog/wheel/draw code not yet written). Prior history.
+
 LATEST 2026-10-15 TEXTURES row TEST (PID37152, 9C37BD1B): panel DISPLAY →
 TEXTURES cycle + save, normal exit; then INI check. Backup 20261015-000526
 (TV-accepted 6F4BBEF2). Observer textures-row-20261015-0005. L3/L4 pending. Prior history.
