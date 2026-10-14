@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST: menu title package 256BF823 stays installed. It is the LZO rebuild, not
+the uncompressed package that crashed. DLL E3E7C902 from 318fb9a hides the
+native arm mesh until a weapon is in hand, because the 19:02 log on 2763A984
+showed ShowControllerArms=1 and a weaponless 3314/390 pass that correctly did
+not latch. Backup of the previous hand DLL is 20261014-191533. No restore guard.
+Boot wordmark remains the separate SIDE task.
+
 LATEST: user still sees the boot wordmark SINGULARITY without VR, and hands
 remain stretched on D8928180. Installed the previously accepted hand DLL
 2763A984F01384C6FC0B289333E0283A9273665FD02B13A978DE95611F48C0B7. Backup
