@@ -12,6 +12,8 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "support_grip.h"
 #include "weapon_holster.h"
 #include "weapon_wheel.h"
+#include "weapon_wheel_direct_select.h"
+#include "weapon_wheel_catalog_load.h"
 #include "grip_latch.h"
 #include "glove_isolate.h"
 #include "support_grip_palette.h"
@@ -2191,6 +2193,60 @@ volatile LONG g_weaponWheelCommit = 0;
 volatile LONG g_weaponWheelPulseGap = 0;
 weaponwheel::State g_weaponWheelState{};
 LONG g_weaponWheelSlots = 4;
+// Direct-select wheel (Katorga HUD pack): sector->gun_verts catalog loaded
+// lazily at first R3 open when [Input] WeaponWheelDirectSelect=1 (default 0:
+// the offset-pulse path below is untouched). KatorgaHudEnabled gates visuals
+// only and is consumed by a later step; the asset root is shared.
+volatile LONG g_wwDirectSelect = 0;
+volatile LONG g_wwPickSource = 1;
+volatile LONG g_wwCatalogState = 0;   // 0 unloaded, 1 ready, -1 failed (logged once)
+volatile LONG g_wwTargetVerts = 0;
+volatile LONG g_wwExpecting = 0;
+volatile LONG g_katorgaHud = 0;
+static wheel_catalog::Catalog g_wwCatalog;
+static char g_katorgaAssetRoot[MAX_PATH] = "vr-assets/hud/katorga/3d";
+
+// Runs on the input thread only (first R3 open); readers below are the same
+// thread, so no torn-vector concerns across threads.
+static void MaybeLoadWheelCatalog() {
+    if (InterlockedCompareExchange(&g_wwCatalogState, 0, 0) != 0) return;
+    if (!Rd(g_wwDirectSelect)) return;
+    static char buf[65536];
+    size_t got = 0;
+    char dll[MAX_PATH]{};
+    HMODULE self = nullptr;
+    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                           GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           (LPCSTR)&MaybeLoadWheelCatalog, &self) &&
+        GetModuleFileNameA(self, dll, MAX_PATH)) {
+        char* slash = strrchr(dll, '\\');
+        if (slash) {
+            *slash = 0;
+            std::string root = g_katorgaAssetRoot;
+            for (char& c : root) if (c == '/') c = '\\';
+            char path[MAX_PATH]{};
+            _snprintf_s(path, sizeof(path), _TRUNCATE, "%s\\%s\\weapon_wheel_catalog.json",
+                        dll, root.c_str());
+            FILE* f = nullptr;
+            if (fopen_s(&f, path, "rb") == 0 && f) {
+                got = fread(buf, 1, sizeof(buf) - 1, f);
+                fclose(f);
+                buf[got] = 0;
+            }
+        }
+    }
+    wheel_catalog::Catalog cat;
+    if (got > 0 && wheel_catalog::Parse(buf, cat) &&
+        !cat.sectors.empty() && !cat.cycle.empty()) {
+        g_wwCatalog = cat;
+        InterlockedExchange(&g_wwCatalogState, 1);
+        Log("weapon wheel: direct-select catalog ready (%u sectors, %u cycle entries)",
+            (unsigned)cat.sectors.size(), (unsigned)cat.cycle.size());
+    } else {
+        InterlockedExchange(&g_wwCatalogState, -1);
+        Log("weapon wheel: catalog missing/unparsable - offset pulses for this session");
+    }
+}
 
 inline ArmedState PlayerArmed() { return (ArmedState)Rd(g_armedState); }
 
@@ -8907,6 +8963,24 @@ bool InitXRInput() {
                 GetPrivateProfileIntA("Input", "AutoPadStillFrames", 600, path);
             InterlockedExchange(&g_recenterChordEnabled,
                 GetPrivateProfileIntA("Input", "RecenterChord", 0, path) ? 1 : 0);
+            // Direct-select wheel + Katorga HUD pack: all default OFF/paths.
+            InterlockedExchange(&g_wwDirectSelect,
+                GetPrivateProfileIntA("Input", "WeaponWheelDirectSelect", 0, path) ? 1 : 0);
+            InterlockedExchange(&g_wwPickSource,
+                GetPrivateProfileIntA("Input", "WeaponWheelPickSource", 1, path));
+            InterlockedExchange(&g_katorgaHud,
+                GetPrivateProfileIntA("Render", "KatorgaHudEnabled", 0, path) ? 1 : 0);
+            {
+                char root[MAX_PATH]{};
+                GetPrivateProfileStringA("Render", "KatorgaHudAssetRoot",
+                                         "vr-assets/hud/katorga/3d", root, sizeof(root), path);
+                size_t rl = strlen(root);
+                if (rl > 0 && rl < sizeof(g_katorgaAssetRoot)) {
+                    memcpy(g_katorgaAssetRoot, root, rl + 1);
+                    for (size_t i = 0; i < rl; ++i)
+                        if (g_katorgaAssetRoot[i] == '/') g_katorgaAssetRoot[i] = '\\';
+                }
+            }
             Log("ini: RecenterChord=%ld (L3+R3 %s; recording is controlled separately in VR Settings)",
                 Rd(g_recenterChordEnabled), Rd(g_recenterChordEnabled) ? "recenters" : "does not recenter");
             InterlockedExchange(&g_cineStickTurn,
@@ -9867,14 +9941,49 @@ void SyncXRInput(XrTime displayTime) {
         InterlockedExchange(&g_weaponWheelSelection, 0);
         InterlockedExchange(&g_weaponWheelCommit, 0);
         InterlockedExchange(&g_weaponWheelPulseGap, 0);
+        MaybeLoadWheelCatalog();
         Log("weapon wheel: OPEN slots=%ld (R3 held; right stick selects, release commits)",
             g_weaponWheelSlots);
     } else if (wheelEvent == weaponwheel::Event::SelectionChanged) {
         InterlockedExchange(&g_weaponWheelSelection, g_weaponWheelState.selection);
     } else if (wheelEvent == weaponwheel::Event::Commit) {
         InterlockedExchange(&g_weaponWheelOpen, 0);
-        InterlockedExchange(&g_weaponWheelCommit, g_weaponWheelState.selection);
         InterlockedExchange(&g_weaponWheelPulseGap, 0);
+        const LONG sel = g_weaponWheelState.selection;
+        LONG pulses = sel;
+        // Direct-select: sector -> gun_verts -> forward cycle steps. Unknown
+        // verts (or catalog off) keep the historical offset-pulse behavior.
+        if (Rd(g_wwDirectSelect) && InterlockedCompareExchange(&g_wwCatalogState, 0, 0) == 1) {
+            weaponwheel_direct::CatalogSector secs[8]{};
+            long cyc[16]{};
+            size_t n = g_wwCatalog.sectors.size() < 8 ? g_wwCatalog.sectors.size() : 8;
+            for (size_t i = 0; i < n; ++i) {
+                secs[i].sector = g_wwCatalog.sectors[i].index;
+                secs[i].gunVerts = g_wwCatalog.sectors[i].verts;
+            }
+            size_t m = g_wwCatalog.cycle.size() < 16 ? g_wwCatalog.cycle.size() : 16;
+            for (size_t i = 0; i < m; ++i) cyc[i] = g_wwCatalog.cycle[i];
+            const weaponwheel_direct::Catalog view{ secs, (int)n, cyc, (int)m };
+            const LONG curV = Rd(g_gunVerts);
+            const LONG tgtV = weaponwheel_direct::TargetVertsForSector(view, (int)sel);
+            if (tgtV > 0 && tgtV != curV) {
+                const int steps = weaponwheel_direct::ShortestCycleSteps(curV, tgtV, cyc, (int)m);
+                if (steps > 0) {
+                    pulses = steps;
+                    InterlockedExchange(&g_wwTargetVerts, tgtV);
+                    InterlockedExchange(&g_wwExpecting, 300);
+                    Log("weapon wheel: DIRECT sector=%ld verts %ld->%ld steps=%d",
+                        sel, curV, tgtV, steps);
+                } else {
+                    Log("weapon wheel: direct fallback (verts outside catalog cur=%ld tgt=%ld)",
+                        curV, tgtV);
+                }
+            } else if (tgtV > 0) {
+                pulses = 0;
+                Log("weapon wheel: DIRECT already equipped (verts=%ld)", curV);
+            }
+        }
+        InterlockedExchange(&g_weaponWheelCommit, pulses);
         Log("weapon wheel: COMMIT offset=%ld (native cycle pulses)",
             g_weaponWheelState.selection);
     } else if (wheelEvent == weaponwheel::Event::Cancel) {
@@ -10062,6 +10171,18 @@ void SyncXRInput(XrTime displayTime) {
         stickHold = 8;
         InterlockedDecrement(&g_weaponWheelCommit);
         if (Rd(g_weaponWheelCommit) > 0) InterlockedExchange(&g_weaponWheelPulseGap, 3);
+    }
+    // Direct-select landing watch: bounded (~5 s), diagnostics only.
+    if (Rd(g_wwDirectSelect) && InterlockedCompareExchange(&g_wwExpecting, 0, 0) > 0) {
+        const LONG tv = InterlockedCompareExchange(&g_wwTargetVerts, 0, 0);
+        if (tv > 0 && Rd(g_gunVerts) == tv) {
+            InterlockedExchange(&g_wwExpecting, 0);
+            Log("weapon wheel: direct-select LANDED on gunVerts=%ld", tv);
+        } else if (InterlockedDecrement(&g_wwExpecting) <= 0) {
+            InterlockedExchange(&g_wwExpecting, 0);
+            Log("weapon wheel: direct-select watch EXPIRED at gunVerts=%ld (target was %ld)",
+                Rd(g_gunVerts), tv);
+        }
     }
 
     // ---- turn ----
