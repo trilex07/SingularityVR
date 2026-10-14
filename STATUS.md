@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 CORRECTION (my bad search): tier textures EXIST at
+C:\Users\Trilex\vr-mods\tex_tiers\ (58 PNG sets: dropin_native + tier_8K,
+TASK.json). Measured VRAM with full mips: drop-in 113 MB, 8K 1805 MB
+(7×DXT5, rest DXT1). Retracting "no tiers" claim — negative search lied.
+BLOCKERS: 4K tier missing entirely (4K select falls back to originals);
+NO DDS encoder on machine (texconv/NVTT absent) — DXT+mips encode blocked
+until texconv obtained. TEXTURES row still needs new globals. TV first. Prior history.
+
 LATEST 2026-10-14 TEXTURES-spec AUDIT verdict: mechanism TRUE (injector reads
 Quality once, hub-writes-key comments, installed Quality=2x, LEFTHAND
 precedent verbatim, DISPLAY 12/12, px math). FALSE: tier textures DO NOT
