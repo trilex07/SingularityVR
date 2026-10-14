@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 MAIN turn: NPC/radio root cause PROVEN (not fixed), freeze
+ready, no launch. PID35568 log shows zero `polish voice:` lines and Localize
+saw only menu strings — NPC/radio text never reaches PolishMaybeSpeak
+(chars>=40 gate + text-hook-only path); native SoundNodeWave banks are the
+sole producer. 40 first-building xlingual WAVs mapped to SP_VI2_kismet01-04
+assets, all present mono16. Native originals untouched, pins match.
+New offline freeze deployment/hands-dubbing/current-install-freeze-20261014/
+holds3 runtime +992 story +8 VI2 bank hashes; old run-recovery-trial.ps1
+refused (stale A8F38EF6/quiet-voice baselines). gh CLI not authed: PR must be
+opened via the logged-in compare page. Game closed, tree clean, HEAD 6bba929
+in sync with origin. See docs/native-npc-radio-producer.md. Prior headers history.
+
 LATEST 2026-10-14 PID35568 / EA9EFFB1: user reports everything OK except Polish
 story speech; note NOT inspected. Clarification: loaded save at first building,
 NPC and radio remained English. Scope is not opening/new-game audio acceptance.
