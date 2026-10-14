@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 mirror CONTRACT DEPLOYED (9b96c17/E612C2D5, 18/18 fixture,
+clean provenance): full-bb Present src + NULL dst now proceeds to mirror;
+true subrects stay native + probe. Backup 20261014-232154; accepted EA9EFFB1
+in 20261014-224124. Observer armed (note typo'd dir mirror-fix-20261014-2322,
+evidence lands there regardless), game NOT launched — awaiting user start.
+Need: ok>0 in log + single TV image + HMD no-regression, then rollback.
+Prior history.
+
 LATEST 2026-10-14 boot logo: stock-vs-candidate frames compared (90/180/300).
 Stock ends "...SINGULAЯITY" (mirrored R = signature style); candidate appends
 3 marks ("ЧПЧ"-like) meant as VR suffix. User says mirrored style is intended
