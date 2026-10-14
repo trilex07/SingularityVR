@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 mirror-diag RESULT: root cause PROVEN. All ~26k Presents
+(44×600 windows) hit skipRect — engine Presents with explicit src/dst rects
+every frame, mirror `ok=0` for the whole session. The subrectangle contract
+was never implemented, so the TV fix could never engage in-game; prior
+"wszystko okej" likely never included a real TV check (HMD on). Accepted
+EA9EFFB1 restored + verified, INI/injector/992 WAVs intact. Next probe:
+bounded one-shot capture of actual presentSrc/presentDst rect values, then
+subrectangle mapping. See docs/native-npc-radio-producer.md (TV section).
+
 LATEST 2026-10-14 mirror-diag probe DEPLOYED, awaiting headset: DLL
 CF96A841 (source 5dfaada, x86 PE32 /O2, fixture 12/12 PASS, analysis gate
 clean for desktop_mirror.h). Bounded outcome counters + last geometry, one

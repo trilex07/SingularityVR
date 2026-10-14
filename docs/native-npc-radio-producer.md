@@ -59,6 +59,19 @@ for that line. Absence confirms the native-bank route.
 
 ## Freeze for the next test (done, offline)
 
+## TV two-image root cause (proven 2026-10-14, probe CF96A841)
+
+`mirror-diag:` windows from PID43880: every window `n=600 skipRect=600`,
+`ok=0`, `bb=0x0`. `skipRect` = `!dev || presentSrc || presentDst`; dev is
+non-null (game runs), so the engine passes explicit Present rects on every
+frame and `desktop_mirror::Apply` returns before touching the backbuffer.
+The code comment already named the gap ("Subrectangle Present needs a
+separate mapping contract") — the contract was never implemented, in the
+accepted build either. Falsifier: any future window with `ok>0` proves rects
+are sometimes null. Next justified probe: bounded one-shot log of the actual
+`presentSrc`/`presentDst` values (coords + which of src/dst is set), then a
+subrectangle-aware mapping. No pixel-path change until rects are known.
+
 `deployment/hands-dubbing/current-install-freeze-20261014/freeze.json`:
 3 runtime hashes (EA9EFFB1/F5137234/757F414B), 992 installed story WAV
 hashes (all match the install receipt candidates), 8 VI2 native-bank
