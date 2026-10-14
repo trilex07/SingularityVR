@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST: title UI E852A20D2CB613602BA3361550F44551BD7A72484CB0D834468813190E86A7CD
+installed. DLL stays D8928180, INI202AA13A, font3F7BF0BE. Package only widens
+iis character 10 (right edge fixed) and SPMenus character 166 (centred) and
+writes SINGULARITY VR. No cursor change and no 4233E4A2 DLL. Chunk roundtrip
+and fake install/restore PASS. Backup title-ui-20261014-184342. Physical read
+of the boot title is the next check. L4 not claimed.
+
 LATEST: PID33552 witness ran and was restored. Live RawData is the original movies,
 not the private candidate: iis 30959 FNV669B2A3F185327C8, SPMenus 231953
 FNV51B6A92D4DED91D0 on main, options and pause. The old +3 byte title edit clipped:

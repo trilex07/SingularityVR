@@ -11,13 +11,38 @@ import subprocess
 import sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).parents[1]/'audio'))
-from native_story_package import pack
 from patch_opening_dialogue import require
 from ue3_layout import inspect
 from swf_title_patch import fit_title_field,split_tags
 from swf_ui_polish import polish_movie
 
 UI_SHA='5b2ea469a3ee06ff154ac78bd58604e8034970d4837f289e5c22503c6a673cde'
+TAG=0x9E2A83C1
+
+def pack_summary(logical):
+    """Write the pinned UI summary container with uncompressed blocks.
+
+    unpack_chunks.exe proved this layout on the accepted package: one chunk,
+    logical offset 0x71, physical offset 0x81. Equal compressed and
+    uncompressed sizes are the loader's copy path, so no LZO encoder is used.
+    """
+    require(len(logical)>0x71 and struct.unpack_from('<I',logical)[0]==TAG,'logical package')
+    require(logical[0x61:0x69]==b'\x00'*8,'decoded summary slot is not empty')
+    body=logical[0x71:]
+    block=0x20000
+    parts=[body[i:i+block] for i in range(0,len(body),block)] or [b'']
+    container=struct.pack('<4I',TAG,block,len(body),len(body))
+    container+=b''.join(struct.pack('<2I',len(part),len(part)) for part in parts)
+    container+=b''.join(parts)
+    physical=bytearray(logical[:0x61])
+    physical+=struct.pack('<2I',2,1)
+    physical+=struct.pack('<4I',0x71,len(body),0x81,len(container))
+    physical+=logical[0x69:0x71]
+    require(len(physical)==0x81,'summary header drifted')
+    physical+=container
+    physical+=b'\x00'*((-len(physical))%65536)
+    return bytes(physical)
+
 def sha(b):return hashlib.sha256(b).hexdigest()
 
 def offsets(b,e):
@@ -43,39 +68,37 @@ def build(original,logical,polish_ui=False):
     require(all('parse_error' not in e for e in data['exports']),'property parse')
     exports=data['exports'];by={e['name']:e for e in exports}
     require('RTT_VRPause' in by and len(exports)==45,'accepted RTT layout changed')
+    def splice(export,movie_bytes):
+        raw=next(p for p in export['properties'] if p['name']=='RawData')
+        require(raw['type']=='ArrayProperty','RawData type')
+        value=raw['tag_offset']+24;size=raw['value']['bytes']
+        require(struct.unpack_from('<I',logical,value)[0]==size-4,'RawData count')
+        delta=len(movie_bytes)-(size-4)
+        blob=bytearray(logical[export['offset']:value+4]+movie_bytes+logical[value+size:export['offset']+export['size']])
+        struct.pack_into('<I',blob,raw['tag_offset']-export['offset']+16,size+delta)
+        struct.pack_into('<I',blob,value-export['offset'],size-4+delta)
+        return blob
     logo=by['iis'];require(logo['class_name']=='GFxMovieInfo','logo class')
-    raw=next(p for p in logo['properties'] if p['name']=='RawData')
-    require(raw['type']=='ArrayProperty','RawData type')
-    value=raw['tag_offset']+24;size=raw['value']['bytes']
-    require(struct.unpack_from('<I',logical,value)[0]==size-4,'RawData count')
-    movie=logical[value+4:value+size]
+    logo_raw=next(p for p in logo['properties'] if p['name']=='RawData')
+    logo_at=logo_raw['tag_offset']+24;logo_n=logo_raw['value']['bytes']-4
+    movie=logical[logo_at+4:logo_at+4+logo_n]
     _,tags=split_tags(movie)
     hits=[t for t in tags if t['code']==37 and b'SINGULARITY' in movie[t['pay_off']:t['pay_off']+t['pay_len']]]
     require(len(hits)==1 and struct.unpack_from('<H',movie,hits[0]['pay_off'])[0]==10,'exact logo text character not proved')
+    menus=by['SPMenus'];require(menus['class_name']=='GFxMovieInfo','menus class')
+    menu_raw=next(p for p in menus['properties'] if p['name']=='RawData')
+    menu_at=menu_raw['tag_offset']+24;menu_n=menu_raw['value']['bytes']-4
+    menu_movie=logical[menu_at+4:menu_at+4+menu_n]
     if polish_ui:
         patched,report=polish_movie(movie,True)
+        changed,main_report=polish_movie(menu_movie,False)
     else:
         patched,report=fit_title_field(movie,b'SINGULARITY',b'SINGULARITY VR')
-        require(report['align']==1 and report['new_bounds'][1]==report['old_bounds'][1],'boot title must stay right-anchored')
-    delta=len(patched)-len(movie)
-    blob=bytearray(logical[logo['offset']:value+4]+patched+logical[value+size:logo['offset']+logo['size']])
-    struct.pack_into('<I',blob,raw['tag_offset']-logo['offset']+16,size+delta)
-    struct.pack_into('<I',blob,value-logo['offset'],size-4+delta)
-    blobs={logo['index']:blob}
-    if polish_ui:
-        menus=by['SPMenus'];require(menus['class_name']=='GFxMovieInfo','menus class')
-        menu_raw=next(p for p in menus['properties'] if p['name']=='RawData')
-        require(menu_raw['type']=='ArrayProperty','menus RawData type')
-        mv=menu_raw['tag_offset']+24;ms=menu_raw['value']['bytes']
-        require(struct.unpack_from('<I',logical,mv)[0]==ms-4,'menus RawData count')
-        changed,main_report=polish_movie(logical[mv+4:mv+ms],False)
-        md=len(changed)-(ms-4)
-        menu_blob=bytearray(logical[menus['offset']:mv+4]+changed+
-            logical[mv+ms:menus['offset']+menus['size']])
-        struct.pack_into('<I',menu_blob,menu_raw['tag_offset']-menus['offset']+16,ms+md)
-        struct.pack_into('<I',menu_blob,mv-menus['offset'],ms-4+md)
-        blobs[menus['index']]=menu_blob
-        report={'logo':report,'menus':main_report}
+        require(report['character']==10 and report['align']==1 and report['new_bounds'][1]==report['old_bounds'][1],'boot title must stay right-anchored')
+        changed,main_report=fit_title_field(menu_movie,b'SINGULARITY',b'SINGULARITY VR')
+        require(main_report['character']==166 and main_report['align']==2,'menu title must stay centred')
+    blobs={logo['index']:splice(logo,patched),menus['index']:splice(menus,changed)}
+    report={'logo':report,'menus':main_report,'cursor':'unchanged' if not polish_ui else 'native Mouse leaf','dll':'not part of this package'}
     ordered=sorted(exports,key=lambda e:e['offset']);cursor=ordered[0]['offset']
     out=bytearray(logical[:cursor]);relocations=[]
     for e in ordered:
@@ -109,8 +132,8 @@ def build(original,logical,polish_ui=False):
                 old=struct.unpack_from('<I',expected,rel['local'])[0];struct.pack_into('<I',expected,rel['local'],old+rel['delta'])
         require(out[b['offset']:b['offset']+b['size']]==expected,'unrelated export change')
         if a['class_name'] in ('Texture2D','TextureRenderTarget2D'):offsets(out,b)
-    return bytes(out),dict(movie='iis+SPMenus' if polish_ui else 'iis',character=10,title='SINGULARITY VR',
-        font_bounds='byte-exact',actions='scoped Initialize title conditional' if polish_ui else 'byte-exact',
+    return bytes(out),dict(movie='iis+SPMenus',title='SINGULARITY VR',
+        actions='byte-exact' if not polish_ui else 'scoped Initialize title conditional',
         patch=report,relocations=relocations)
 
 def main():
@@ -121,7 +144,7 @@ def main():
     original=a.original.read_bytes();logical=a.logical.read_bytes();changed,report=build(original,logical,a.polish_ui)
     a.out.mkdir(parents=True)
     for name,expected in [('control',logical),('candidate',changed)]:
-        physical=pack(expected,original);dest=a.out/(name+'.xxx');dest.write_bytes(physical)
+        physical=pack_summary(expected);dest=a.out/(name+'.xxx');dest.write_bytes(physical)
         decoded=a.out/(name+'.u');subprocess.run([str(a.decoder),str(dest),str(decoded)],capture_output=True,check=True)
         require(decoded.read_bytes()==expected,'independent decoder roundtrip')
     report.update(source_sha=sha(original),logical_sha=sha(logical),candidate_sha=sha((a.out/'candidate.xxx').read_bytes()),status='OFFLINE_PASS_PHYSICAL_PENDING')
