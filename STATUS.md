@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 boot logo ROLLED BACK to stock (my install, my rollback):
+candidate SNG_logo_vr renders garbage glyphs ("SINGULAЯITYЧПЧ" instead of
+"SINGULARITY VR", confirmed by decoding frame 180 of the installed .bik —
+matches their reference preview, so the defect is in the candidate, not the
+install). Stock FE40BA3B restored + verified. SIDE must fix the VR-suffix
+glyph cloning before any reinstall. Also: user's "no VR" check looked at the
+FIRST screens (ATVI/raven/UE3 logos play before SNG_logo) — branding was only
+ever targeted at the 4th card. Prior history.
+
 LATEST 2026-10-14 rect-probe DEPLOYED (b17715e / 24B9ECC4, fixture
 PASS, clean provenance), backup 20261014-224124 holds EA9EFFB1. One-shot
 mirror-rect logger (max 4 distinct src/dst shapes + bb/win, read-only).
