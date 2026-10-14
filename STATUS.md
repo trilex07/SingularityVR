@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 decoder UNLOCKED + candidates independently verified:
+tools/uedecompress/unpack_chunks.cpp (in-tree since 18f64f4) decodes stock
+sound banks BYTE-EQUAL to reference logicals (kismet02 → f6a24416…); same
+binary decoded all 8 xlingual candidates → sane packages, all 78 replaced
+Vorbis payloads byte-equal to fitted OGGs. Old-flow verification depth
+reached offline. Remaining banks (VI3-6/RL/RT/SL/WL) now unblocked: stocks on
+Steam, mapping in xlingual manifest, same pipeline. User headset test on
+PID18444 doubles as first game-load of the new container format. Prior history.
+
 LATEST 2026-10-14 xlingual banks INSTALLED on Steam (no launch): 8/8 VI2
 banks built offline (78 PL lines, 5 retained EN, peaks/tempos gated,
 container unpack + structural verification PASS) and deployed via new v5
