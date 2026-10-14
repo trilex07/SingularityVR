@@ -19,6 +19,8 @@ Samples under `offline-deliverables/loading-vya-v1/analysis/` (identification pa
 
 ## VR branding approach (candidate)
 
-Patch **only the top wordmark strip** with the same **V + Ya** suffix rules as boot (`vr_suffix_glyphs.py`): eleven-glyph split on the flat logo, **V** from glyph A, **Ya** cloned from in-word R (index 7). Hand, TMD, smoke, timing, and resolution unchanged.
+Rejected composite (v1): a bright-pixel bbox included the hand, then an opaque black rectangle was pasted back. That cut the fingers and clipped the suffix into side boxes. Not a VЯ read.
+
+Replacement: stamp two glyphs on the letter row only (y≈85–165), to the right of Y. Finger region vs stock before encode: mean channel delta 0. Bink still recompresses the whole frame.
 
 Deliverable: `offline-deliverables/loading-vya-v1/candidate/loading_screen_vr.bik` + proof PNGs decoded from that `.bik`.

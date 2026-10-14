@@ -2,7 +2,7 @@
   "asset": "loading_screen_vr.bik",
   "install_as": "RvGame/Movies/loading_screen.bik",
   "stock_sha256": "764E701B5049F182968D2DFFF4EE9ACCD13443B0D68B66B3FD1C0FB2F059E27D",
-  "candidate_bik_sha256": "A9BEC872FAA79D0685BB40CD1A28E842E7777AA3627DF6D08E9173183D8C2B8B",
+  "candidate_bik_sha256": "5C6BB9C8917EBDD98948D149C309B7075E9A35F43E6E70ACC23CA3B8352BE740",
   "video": { "width": 1280, "height": 720, "duration_s": 2.0, "fps": "24/1", "frames": 48, "audio": false },
   "content_summary": "docs/loading-screen-evidence.md",
   "validate_video": "PASS",

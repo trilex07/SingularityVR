@@ -8,12 +8,12 @@
     "frames": 48
   },
   "candidate": {
-    "bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v1\\candidate\\loading_screen_vr.bik",
-    "bik_sha256": "A9BEC872FAA79D0685BB40CD1A28E842E7777AA3627DF6D08E9173183D8C2B8B",
+    "bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v2\\candidate\\loading_screen_vr.bik",
+    "bik_sha256": "5C6BB9C8917EBDD98948D149C309B7075E9A35F43E6E70ACC23CA3B8352BE740",
     "encode": {
       "status": "BIK_CANDIDATE_WRITTEN",
-      "sha256": "A9BEC872FAA79D0685BB40CD1A28E842E7777AA3627DF6D08E9173183D8C2B8B"
+      "sha256": "5C6BB9C8917EBDD98948D149C309B7075E9A35F43E6E70ACC23CA3B8352BE740"
     }
   },
-  "patch": "top_wordmark V+Ya suffix; hand/TMD/smoke untouched"
+  "patch": "stamp V+Ya on the letter row only; hand/TMD not repainted"
 }
