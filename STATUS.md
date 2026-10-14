@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 wheel direct-select TEST (PID7112, 1ADD5608): R3 open
+(catalog load), select another sector if 2+ weapons owned, release, normal
+exit. INI leased (DirectSelect=1, backup ww-direct-test/ini-backup). DLL
+backup 20261015-001750 (TV-accepted 6F4BBEF2). Observer ww-direct-20261015-0017.
+After exit: LANDED/EXPIRED analysis + cycle_order verdict + INI restore
+(757F414B) + DLL rollback (6F4BBEF2), all hash-verified. Prior history.
+
 LATEST 2026-10-15 TEXTURES row VERIFIED: user cycled 2x→4K→8K in headset
 ("jest git"), installed texture_override.ini reads Quality=8K — save path
 PASS on disk. L3 display/cycle PASS per user; injector-log proof (quality: 8K
