@@ -1,5 +1,11 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 TV PHYSICALLY_VERIFIED (user: single image OK) + PR #25
+merged. PROMOTED accepted DLL 6F4BBEF2 (source cbb4509, already installed +
+verified). EA9EFFB1 retained as fallback. New branch fix/hud-3d-textures from
+origin/main for HUD assets + TEXTURES row. TV round closed; no rollback. Prior
+history below (merged).
+
 LATEST 2026-10-14 visible-region mirror DEPLOYED (cbb4509/6F4BBEF2, 21/21
 fixture, clean): eye aspect-fit into the on-monitor part of the window
 (expected dst 430,0,1489,1080 for the observed placement). Backup

@@ -369,6 +369,22 @@ bool IniPath(char* out /*MAX_PATH*/) {
     return true;
 }
 
+// Same directory as our DLL, different file name (e.g. the texture
+// injector's texture_override.ini). Shared by the TEXTURES row and the
+// startup read so both sides address the identical file.
+bool SiblingIniPath(const char* name, char* out /*MAX_PATH*/) {
+    if (!name || !name[0] || !out) return false;
+    HMODULE self = nullptr;
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCSTR)&SiblingIniPath, &self)) return false;
+    if (!GetModuleFileNameA(self, out, MAX_PATH)) return false;
+    char* slash = strrchr(out, '\\');
+    if (!slash) return false;
+    strcpy_s(slash + 1, MAX_PATH - (slash + 1 - out), name);
+    return true;
+}
+
 // GetPrivateProfileIntA returns an unsigned UINT.  Passing a negative default
 // (or reading a negative value and then assigning through the UINT return type)
 // therefore turns a signed body-relative offset into a huge positive number.
@@ -7110,7 +7126,8 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_GOTO_TMD,
        // ⭐ run 249: the TMD page split into three. See kPageRows.
        PR_GOTO_TMDBONE, PR_GOTO_TMDMESH, PR_BACK_TMD,
-       PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_BACK };
+       PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_BACK,
+       PR_TEXTURES };   // appended last: existing IDs never renumber
 
 // ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
@@ -7146,7 +7163,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
 //     before any of this. It also nearly DOUBLES the glyph - px is derived from this number, and at
 //     17 it had hit the floor of 3 that the comment below calls unreadable through a lens.
 const int kPanelPages    = 10;     // + HANDS (glove knobs that used to be ini-only)
-const int kPanelRowsMax  = 12;     // ⚠ a page longer than this cannot be declared - see kPageRows
+const int kPanelRowsMax  = 13;     // DISPLAY needs 13 for TEXTURES (was 12); effective px stays 3 via floor-raiser
 const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_ENABLEVR, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_GOTO_CTRL, PR_GOTO_COMFORT,
       PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_GOTO_TMD, PR_GOTO_HANDS },
@@ -7166,7 +7183,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
     { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE,
-      PR_POLISH, PR_UINARRATOR, PR_GLOVEONLY, PR_VFXLOOK, PR_BACK },
+      PR_POLISH, PR_UINARRATOR, PR_GLOVEONLY, PR_VFXLOOK, PR_TEXTURES, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
@@ -7207,7 +7224,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_GLOVEISOLATE, PR_GLOVEFACE, PR_GLOVESTUMP, PR_GLOVELEFT, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 11, 10, 3, 12, 10, 7, 10, 6, 8, 5 };
+const int kPageCount[kPanelPages] = { 11, 10, 3, 13, 10, 7, 10, 6, 8, 5 };   // [3] DISPLAY 12->13 for TEXTURES (px floor 3 unchanged)
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -7287,6 +7304,8 @@ extern volatile LONG g_cineStickTurn;
 extern volatile LONG g_cutsceneLockCamera;
 extern volatile LONG g_swapSticks;
 extern int g_leftHanded, g_leftHandedPending;
+// Defined beside g_leftHandedPending; declared here so the panel rows above can read it.
+extern int g_texQuality, g_texQualityApplied;
 // Defined with the handedness globals; the panel's MOVE DIRECTION row is the first thing to read it.
 inline int OffHand() { return g_leftHanded ? 1 : 0; }
 
@@ -7552,6 +7571,19 @@ void PanelSaveRow(int rowId, const char* path) {
             // The PENDING value, not the live one - see the LEFT HANDED row.
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%d", g_leftHandedPending);
             WritePrivateProfileStringA("Input", "LeftHanded", v, path); return;
+        case PR_TEXTURES: {
+            // Sibling ini owned by the texture injector - never SingularityVR.ini,
+            // which the injector does not read. Refuse to create it blindly.
+            static const char* kQ[3] = { "2x", "4K", "8K" };
+            long q = g_texQuality; if (q < 0 || q > 2) q = 0;
+            char tini[MAX_PATH]{};
+            if (!SiblingIniPath("texture_override.ini", tini)) return;
+            if (GetFileAttributesA(tini) == INVALID_FILE_ATTRIBUTES) {
+                Log("VR panel: texture_override.ini absent (injector not installed) - TEXTURES not saved");
+                return;
+            }
+            WritePrivateProfileStringA("TextureQuality", "Quality", kQ[q], tini); return;
+        }
         case PR_RECENTERCHORD:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_recenterChordEnabled));
             WritePrivateProfileStringA("Input", "RecenterChord", v, path); return;
@@ -7951,6 +7983,15 @@ void PanelRowText(int row, char* out, size_t cap) {
                         g_leftHandedPending ? "ON" : "OFF",
                         (g_leftHandedPending != g_leftHanded) ? "  *RESTART*" : "");
             break;
+        case PR_TEXTURES: {
+            // Same restart-marker precedent as LEFT HANDED: the tier is read once at
+            // injector startup, so the row must say the value moved AND pending.
+            static const char* kQn[3] = { "2x NATIVE", "4K", "8K" };
+            long q = g_texQuality; if (q < 0 || q > 2) q = 0;
+            _snprintf_s(out, cap, _TRUNCATE, "TEXTURES     %s%s", kQn[q],
+                        (g_texQuality != g_texQualityApplied) ? "  *RESTART*" : "");
+            break;
+        }
         case PR_RECENTERCHORD:
             _snprintf_s(out, cap, _TRUNCATE, "RECENTER L3+R3 %s",
                         Rd(g_recenterChordEnabled) ? "ON" : "OFF");
@@ -8395,6 +8436,15 @@ void PanelAdjust(int row, int dir) {
             // it back, because the button bindings it controls are frozen at attach.
             g_leftHandedPending = g_leftHandedPending ? 0 : 1;
             break;
+        case PR_TEXTURES: {
+            // Cycle list, not a range: three named tiers, wrap around.
+            long q = g_texQuality; if (q < 0 || q > 2) q = 0;
+            g_texQuality = (int)((q + (dir >= 0 ? 1 : 2)) % 3);
+            static const char* kQn[3] = { "2x NATIVE", "4K", "8K" };
+            Log("VR panel: TEXTURES %s%s", kQn[g_texQuality],
+                (g_texQuality != g_texQualityApplied) ? " (restart to apply)" : "");
+            break;
+        }
         case PR_RECENTERCHORD:
             InterlockedExchange(&g_recenterChordEnabled,
                                 Rd(g_recenterChordEnabled) ? 0 : 1);
@@ -8570,6 +8620,10 @@ int g_leftHanded = 0;                    // ini [Input] LeftHanded - read before
 // those are frozen at attach. A half-applied handedness is worse than one that waits - so the panel
 // moves this, PanelSave writes it, and the next launch reads it into both.
 int g_leftHandedPending = 0;
+// TEXTURES row: tier index into {"2x","4K","8K"} for Binaries\texture_override.ini
+// [TextureQuality] Quality. Read once at startup by the texture injector;
+// the PENDING/APPLIED pair follows the LEFT HANDED precedent (restart marker).
+int g_texQuality = 0, g_texQualityApplied = 0;
 volatile LONG g_swapSticks = 0;          // ini [Input] SwapSticks - live, on the CONTROLLER page
 
 // Which hand the gun and aim follow. The only thing the four aim sites need to know.
@@ -8924,6 +8978,17 @@ bool InitXRInput() {
                 Log("input: LEFT-HANDED - gun and buttons mirrored. Sticks are NOT swapped (that is"
                     " SwapSticks). MENU stays on the LEFT controller: the Touch profile has no"
                     " right-hand menu/click and system/click is reserved by the runtime.");
+            {
+                // TEXTURES row startup state (sibling ini owned by the texture
+                // injector). Both start equal so no false *RESTART* shows.
+                char tini[MAX_PATH]{};
+                char q[16] = "2x";
+                if (SiblingIniPath("texture_override.ini", tini))
+                    GetPrivateProfileStringA("TextureQuality", "Quality", "2x", q, sizeof(q), tini);
+                long tq = 0;
+                if (!_stricmp(q, "4K")) tq = 1; else if (!_stricmp(q, "8K")) tq = 2;
+                g_texQuality = g_texQualityApplied = (int)tq;
+            }
             for (int i = 0; i < kPadButtonCount; ++i) {
                 g_padButtons[i].mask = (WORD)GetPrivateProfileIntA(
                     "Input", g_padButtons[i].iniKey, g_padButtons[i].mask, path);
