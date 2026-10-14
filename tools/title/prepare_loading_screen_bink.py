@@ -13,7 +13,7 @@ from pathlib import Path
 from PIL import Image
 
 from prepare_boot_logo_bink import encode_mkv, sha256, sha256_bytes_image, try_binkenc
-from vr_suffix_glyphs import build_v_from_a
+from vr_suffix_glyphs import stamp_v_ya
 
 
 def lum(px: tuple[int, int, int, int]) -> float:
@@ -65,41 +65,29 @@ def letter_band(frame: Image.Image) -> tuple[int, int]:
     return y0, y1
 
 
-def _masked_glyph(band: Image.Image, x0: int, x1: int) -> Image.Image:
-    crop = band.crop((x0, 0, x1 + 1, band.size[1])).convert("RGBA")
+def _masked_glyph(band: Image.Image, x0: int, x1: int, pad: int = 7) -> Image.Image:
+    """Keep the orange bloom. A hard luminance cut was the rectangular edge."""
+    left = max(0, x0 - pad)
+    right = min(band.size[0] - 1, x1 + pad)
+    crop = band.crop((left, 0, right + 1, band.size[1])).convert("RGBA")
     px = crop.load()
     w, h = crop.size
     for y in range(h):
         for x in range(w):
             r, g, b, a = px[x, y]
-            if lum((r, g, b, a)) < 48:
+            level = lum((r, g, b, a))
+            if level < 34:
                 px[x, y] = (0, 0, 0, 0)
+            else:
+                px[x, y] = (r, g, b, min(255, int((level - 34) * 5)))
     return crop
 
 
 def patch_loading_frame(frame: Image.Image) -> Image.Image:
-    """Stamp V+Ya to the right of the existing letters. Do not repaint the hand."""
+    """Stamp V+Ya on the letter row. The hand stays on the original pixels."""
     base = frame.convert("RGBA")
     y0, y1 = letter_band(base)
-    band = base.crop((0, y0, base.size[0], y1 + 1))
-    spans = _ink_spans(band)
-    letters = [s for s in spans if (s[1] - s[0]) >= 12]
-    if len(letters) < 11:
-        raise ValueError(f"expected 11 letters, saw {len(letters)}")
-    letters = letters[:11]
-    glyphs = [_masked_glyph(band, a, b) for a, b in letters]
-    v_glyph = build_v_from_a(glyphs[6])
-    ya_glyph = glyphs[7]
-    gaps = [letters[i + 1][0] - letters[i][1] - 1 for i in range(10)]
-    gap = max(4, sorted(gaps)[len(gaps) // 2])
-    x = letters[-1][1] + 1 + gap
-    out = base.copy()
-    for glyph in (v_glyph, ya_glyph):
-        if x + glyph.size[0] >= out.size[0] - 4:
-            break
-        out.paste(glyph, (x, y0), glyph)
-        x += glyph.size[0] + gap
-    return out.convert("RGB")
+    return stamp_v_ya(base, y0, y1).convert("RGB")
 
 
 def main() -> int:

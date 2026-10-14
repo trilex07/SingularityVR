@@ -19,7 +19,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from vr_suffix_glyphs import append_v_ya_to_strip
+from vr_suffix_glyphs import stamp_v_ya
 
 
 def sha256(path: Path) -> str:
@@ -50,24 +50,10 @@ def bright_bbox(im: Image.Image, threshold: float = 42.0) -> tuple[int, int, int
 
 
 def patch_wordmark_frame(frame: Image.Image) -> Image.Image:
-    """Append exactly V + Ya (two glyphs) after SINGULARITY; word geometry unchanged."""
+    """Stamp V + Ya to the right of the chrome wordmark. SINGULARITY pixels stay."""
     base = frame.convert("RGBA")
-    x0, y0, x1, y1 = bright_bbox(base)
-    strip = base.crop((x0, y0, x1 + 1, y1 + 1))
-    extended = append_v_ya_to_strip(strip)
-
-    max_w = int(base.size[0] * 0.9)
-    if extended.size[0] > max_w:
-        scale = max_w / extended.size[0]
-        nh = max(1, int(extended.size[1] * scale))
-        extended = extended.resize((max_w, nh), Image.Resampling.LANCZOS)
-
-    out = base.copy()
-    out.paste(Image.new("RGBA", (x1 - x0 + 1, y1 - y0 + 1), (0, 0, 0, 255)), (x0, y0))
-    paste_x = x0 + ((x1 - x0 + 1) - extended.size[0]) // 2
-    paste_y = y0 + ((y1 - y0 + 1) - extended.size[1]) // 2
-    out.paste(extended, (paste_x, paste_y), extended)
-    return out.convert("RGB")
+    _x0, y0, _x1, y1 = bright_bbox(base)
+    return stamp_v_ya(base, y0, y1).convert("RGB")
 
 
 def decode_frames(ffmpeg: Path, source: Path, out_dir: Path) -> int:
@@ -218,7 +204,11 @@ def main() -> int:
         if (bx1 - bx0) < ref_span * 0.55:
             shutil.copy2(path, patched / path.name)
             continue
-        out = patch_wordmark_frame(im)
+        try:
+            out = patch_wordmark_frame(im)
+        except ValueError:
+            shutil.copy2(path, patched / path.name)
+            continue
         out.save(patched / path.name)
 
     mkv = args.out / "SNG_logo_vr.intermediate.mkv"

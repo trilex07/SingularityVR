@@ -1,6 +1,6 @@
 {
-  "source_bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v2\\candidate\\loading_screen_vr.bik",
-  "source_bik_sha256": "5C6BB9C8917EBDD98948D149C309B7075E9A35F43E6E70ACC23CA3B8352BE740",
+  "source_bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v3\\candidate\\loading_screen_vr.bik",
+  "source_bik_sha256": "2C9E197E3383844E64EE4D68915232B6A6BBFC2A7BCF34A05A54836E00B4904E",
   "video": {
     "width": 1280,
     "height": 720,
@@ -10,18 +10,18 @@
   "proof_frames": [
     {
       "frame_index": 0,
-      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v2\\proof-from-bik\\frame_n0000.png",
-      "sha256": "F15A702B050CB86D1B2ABA8E402E151E12AAC1B7BBB940193F6AE67805EF5575"
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v3\\proof-from-bik\\frame_n0000.png",
+      "sha256": "669464D255B07DBABDFE141D326D3CA209AD2942930026319149F01A87BAEA44"
     },
     {
       "frame_index": 24,
-      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v2\\proof-from-bik\\frame_n0024.png",
-      "sha256": "FFD68E993CC03F63811DC3D406EB4847FE463FE461C1638C12DCC1AC078C6FD0"
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v3\\proof-from-bik\\frame_n0024.png",
+      "sha256": "10439D2C8E9302B430C6D74E5D50477BBCC4D4F92E8FBFD267486A114C2DAB80"
     },
     {
       "frame_index": 47,
-      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v2\\proof-from-bik\\frame_n0047.png",
-      "sha256": "A43B57222610CE47CE813E62A7398039E572625F20BA764045FC1F36517C8F43"
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v3\\proof-from-bik\\frame_n0047.png",
+      "sha256": "8AAB5C38D8CDAE92FF9D9660A342A1FE6996F970A1C6BEE3125D4FDD46EBD265"
     }
   ]
 }

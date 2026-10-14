@@ -8,11 +8,11 @@
     "frames": 48
   },
   "candidate": {
-    "bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v2\\candidate\\loading_screen_vr.bik",
-    "bik_sha256": "5C6BB9C8917EBDD98948D149C309B7075E9A35F43E6E70ACC23CA3B8352BE740",
+    "bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v3\\candidate\\loading_screen_vr.bik",
+    "bik_sha256": "2C9E197E3383844E64EE4D68915232B6A6BBFC2A7BCF34A05A54836E00B4904E",
     "encode": {
       "status": "BIK_CANDIDATE_WRITTEN",
-      "sha256": "5C6BB9C8917EBDD98948D149C309B7075E9A35F43E6E70ACC23CA3B8352BE740"
+      "sha256": "2C9E197E3383844E64EE4D68915232B6A6BBFC2A7BCF34A05A54836E00B4904E"
     }
   },
   "patch": "stamp V+Ya on the letter row only; hand/TMD not repainted"

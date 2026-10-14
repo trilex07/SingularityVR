@@ -1,6 +1,6 @@
 {
-  "source_bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v1\\candidate\\SNG_logo_vr.bik",
-  "source_bik_sha256": "2105149E675CB12E27060322F16C9B206BC16CD3722879F404EC20C033A69A80",
+  "source_bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v3\\candidate\\SNG_logo_vr.bik",
+  "source_bik_sha256": "989CAD6B711E9B40B3C67DA2AC20C9D9B4E3A5D1639FD5F835B37E6CC8F2D267",
   "video": {
     "width": 1280,
     "height": 720,
@@ -10,18 +10,18 @@
   "proof_frames": [
     {
       "frame_index": 45,
-      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v1\\proof-from-bik\\frame_n0045.png",
-      "sha256": "D60DEDF6E204AD632D8F5086DAE8CFE4DC0749EA632FA98ABF15E372B8D98AB2"
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v3\\proof-from-bik\\frame_n0045.png",
+      "sha256": "CF5EF28F523F421986532B8BD78DE62018FACB8946BB04FAEC149CC8352FC0CC"
     },
     {
       "frame_index": 180,
-      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v1\\proof-from-bik\\frame_n0180.png",
-      "sha256": "869DF73B10509B215991B7E32AAB5EFA74DDD0CDA91EEDE1B4A59F4B73A0A4E0"
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v3\\proof-from-bik\\frame_n0180.png",
+      "sha256": "000E7822A217EB95A9D3C53B2EFE5E7594E8FE8C0CF735839A424DA806FD7374"
     },
     {
       "frame_index": 300,
-      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v1\\proof-from-bik\\frame_n0300.png",
-      "sha256": "1B22596CBF51798047E7AE8AFD2B989FB814FB69460CF4F263A977616A3974A8"
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v3\\proof-from-bik\\frame_n0300.png",
+      "sha256": "874ADEBF07626CF2F91A345D3A06097D1B600E396D7B04699CC223BB3CFC6A91"
     }
   ]
 }
