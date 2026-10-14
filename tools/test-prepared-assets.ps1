@@ -58,6 +58,9 @@ if($manifest.Kind -cin @('SingularityVR post-opening asset delta v2',
    'RvGame\CookedPC\SP_VI2_kismet04_LOC_INT.xxx','RvGame\CookedPC\SP_VI2_zone02a_LOC_INT.xxx',
    'RvGame\CookedPC\SP_VI2_zone02a_2010_LOC_INT.xxx')
   $expectedCount=8
+ }elseif($manifest.Kind -ceq 'SingularityVR intro bank delta v6'){
+  $allowed=@('RvGame\CookedPC\SP_VI_intro_Kismet_LOC_INT.xxx')
+  $expectedCount=1
  }else{throw 'Unknown exact delta profile'}
 }
 if(@($manifest.Files).Count -ne $expectedCount -or

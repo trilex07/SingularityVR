@@ -1,5 +1,10 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 previous intro bank INSTALLED (user-ordered interim):
+4904F281 via new v6 profile (Preflight PASS, stock backup
+asset-backups/20261014-221929-43400), hash verified on disk. Known quiet;
+no xlingual source for intro exists. No launch. Prior history.
+
 LATEST 2026-10-14 xlingual test PID18444 (short: menu→gameplay→cutscene→exit):
 helicopter still EN — structural, not a regression: SP_VI_intro_Kismet bank
 is stock BY DESIGN and xlingual has ZERO rows for it (11 xlingual 'intro'
