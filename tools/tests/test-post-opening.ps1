@@ -7,7 +7,7 @@ $vsPath=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Componen
 $vcvars=Join-Path $vsPath 'VC/Auxiliary/Build/vcvarsall.bat'
 Push-Location $evidence
 try {
- foreach($name in @('native-voice-ownership','hand-anchor-probe','hands-only','hand-anchor-math','menu-submit-policy','cutscene-mono','foreground-boundary','bink-intro-audio')) {
+ foreach($name in @('native-voice-ownership','hand-anchor-probe','hands-only','hand-anchor-math','menu-submit-policy','cutscene-mono','cinema-world-screen','foreground-boundary','bink-intro-audio')) {
   $source=Join-Path $repo "spikes/view_matrix/tests/test-$name.cpp"
   $extra=if($name -eq 'native-voice-ownership'){ '"'+(Join-Path $repo 'spikes/view_matrix/polish_localization.cpp')+'"' }else{''}
   $cmd='"'+$vcvars+'" x86 >nul && cl /nologo /O2 /EHsc /W3 /MD /std:c++17 /Fe:test-'+$name+'.exe "'+$source+'" '+$extra
@@ -18,4 +18,4 @@ try {
  }
 } finally {Pop-Location}
 & (Join-Path $repo 'spikes/view_matrix/tests/validate-runtime-policy.ps1')
-Write-Output 'PASS: eight optimized x86 regression fixtures; no Steam launch/install'
+Write-Output 'PASS: nine optimized x86 regression fixtures; no Steam launch/install'

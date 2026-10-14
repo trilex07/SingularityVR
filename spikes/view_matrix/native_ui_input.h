@@ -8,6 +8,9 @@ bool PauseVrSettingsHitNormalized(LONG u, LONG v);
 void OpenVrSettingsFromPause();
 extern volatile LONG g_panelOpen;
 void* PatchVTable(void* obj,int index,void* repl);
+extern volatile LONG g_vrMenuReleaseRequested; // render thread consumes COM invalidation
+extern volatile LONG g_modalSaveDialog; // 1 while RvUIGFxMovie_Dialog owns focus
+
 namespace NativeVrUi {
 struct Name { unsigned index, number; };
 typedef void (__thiscall *PollFn)(void*,float);
@@ -51,6 +54,15 @@ static bool UpdateMenu() {
   const LONG kind=!cachedMenu?0:!strcmp(className,"RvUIGFxMovie_IIS")?1:!strcmp(className,"RvUIGFxMovie_Main")?2:!strcmp(className,"RvUIGFxMovie_Pause")?3:4;
   static unsigned generation=0;
   InterlockedExchange64(&g_vrMenuStateToken,((LONG64)++generation<<32)|(unsigned)kind);
+  static char prevClass[96]{};
+  if (className[0] && !strcmp(className, "RvUIGFxMovie_Dialog") && prevClass[0] &&
+      (!strcmp(prevClass, "RvUIGFxMovie_Slots") || !strcmp(prevClass, "RvUIGFxMovie_SlotsBase"))) {
+   InterlockedExchange(&g_vrMenuReleaseRequested, 1);
+   Log("menu modal: save-slot -> dialog focus; render-thread slots RTT invalidation requested");
+  }
+  InterlockedExchange(&g_modalSaveDialog,
+      (className[0] && !strcmp(className, "RvUIGFxMovie_Dialog")) ? 1 : 0);
+  if (className[0]) strcpy_s(prevClass, className);
   InterlockedExchange(&g_vrMenuClass,kind);
   Log("VR UI focus: movie=%p object=%s class=%s menu=%d",(void*)movie,objectName,className,cachedMenu?1:0);
   // NewGame: actual focus log proves SPSlots -> dialog. This probe establishes

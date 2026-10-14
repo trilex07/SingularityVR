@@ -12,6 +12,7 @@ param([Parameter(Mandatory)][string]$OutputDirectory,
       [switch]$GlovesOnly,
       [switch]$ModalUiProbe,
       [switch]$UiNarrator,
+      [switch]$WorldCinema,
       [string]$SteamRoot='C:\Program Files (x86)\Steam')
 # Offline staging only. Does not install, arm diagnostics or launch Steam.
 Set-StrictMode -Version Latest
@@ -65,6 +66,10 @@ if($ModalUiProbe){
     if($text -cmatch 'ModalUiProbe'){throw 'Existing modal probe key'}
     $insert+=$ending+'ModalUiProbe=1'
 }
+if($WorldCinema){
+    if($text -cmatch 'CutsceneWorldScreen|CutsceneScreenDistanceMm'){throw 'Existing cinema anchor experiment key'}
+    $insert+=$ending+'CutsceneWorldScreen=1'+$ending+'CutsceneScreenDistanceMm=2000'
+}
 $candidateIni=$text.Insert($position,$insert)
 if($candidateIni.Remove($position,$insert.Length) -cne $text){throw 'INI changed outside owned experiment keys'}
 if($NativeSpeech -or $UiNarrator){
@@ -101,6 +106,7 @@ foreach($i in 0..3) {
   FrozenUiSha256=$uiHash;Files=$files;IniChangeOnly=(($insert.Trim() -replace '\r?\n',';')+$(if($NativeSpeech){';Localization.NativePolishSpeech=1'}else{''})+$(if($UiNarrator){';Localization.UiNarratorEnabled=1'}else{''})+$(if($GlovesOnly){';Render.ShowControllerArms=0 (was1)'}else{''}));
   PhysicalAcceptance='PENDING';NativeSpeechEnabled=[bool]$NativeSpeech;TextureBridgeEnabled=[bool]$TextureBridge;
   GlovesOnlyEnabled=[bool]$GlovesOnly;UiNarratorEnabled=[bool]$UiNarrator;ModalUiProbeEnabled=[bool]$ModalUiProbe;
+  WorldCinemaEnabled=[bool]$WorldCinema;
   Notes='Exact four-file core lease; optional owned ShowControllerArms1->0 and UI narrator; independent asset/WAV leases separate'} |
     ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $out 'test-manifest.json') -Encoding UTF8
 Write-Output "OFFLINE READY: $out"

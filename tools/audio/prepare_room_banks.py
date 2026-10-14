@@ -1,6 +1,7 @@
 """MAIN offline native delivery of SIDE-reviewed first-area room speech.
 
-Only2 exact zone02a banks; no accepted radio/intro/mixer/cue/metadata changes.
+Two exact zone02a banks or the explicit three-bank NPC profile;
+no accepted radio/intro/mixer/cue/metadata changes.
 SIDE generates speech; this tool encodes and independently validates delivery.
 """
 import argparse
@@ -19,27 +20,48 @@ BANKS = {
     'SP_VI2_zone02a_2010_LOC_INT': ('d79485c60a05ba05fbdd64c61fd367bc5c8390f6226f31ebd5625d69fe712070',
                                   'f8d541723290d55c85ecfea7bb86198d66eb541bd505e77f282167cdd9728cc1')
 }
+NPC_BANKS = {
+    'SP_VI2_kismet02_LOC_INT': ('44c42e06f8c5830f1ff7deb01231b6262374957ef76aad31e8c3d814f334da56',
+                              'f6a2441645034a84010f0f4eaedf60c78017021d1c4157155f21ba64b8af08c6'),
+    'SP_VI2_kismet03_LOC_INT': ('cd1d4a0565e803366d9bba59f4ad01fbd97519741b71158f1c8e5e53fc40ca17',
+                              '696d64d860114d2cd1ee6ce9982d061651e3fa5c37850e79144c7ac71b87d990'),
+    'SP_VI2_kismet04_LOC_INT': ('84773631379d0af88d61db8371e8d3eb17cbffdaa279410b849e3b8ca67db80b',
+                              '164720d7d90cd2ce32f56a03865d596f11e7d0c48190018c391f055348ddc7f5')
+}
+NPC_UNCHANGED = {
+    'SP_VI2_kismet02_LOC_INT': {'SD_GRD1_DEATH_LG1':'Arrrrgggh!', 'FR8_4410_WRK1':'Aaaaaah!',
+        'VI2_4505_DEMY':'Ahhhh!', 'VI2_5006_DEMY':'Cough, cough, cough', 'VI2_5007_DEMY':'Cough, cough, cough'},
+    'SP_VI2_kismet03_LOC_INT': {'SD_GRD1_DEATH_LG3':'Arrrrgggh!'},
+    'SP_VI2_kismet04_LOC_INT': {'VI2_4505_DEMY':'Ahhhh!', 'VI2_5006_DEMY':'Cough, cough, cough',
+                              'VI2_5007_DEMY':'Cough, cough, cough'}
+}
 
 
 def main():
     ap = argparse.ArgumentParser()
     for arg in ('bindings','cooked','ffmpeg','decoder','out'): ap.add_argument('--'+arg, type=Path, required=True)
     ap.add_argument('--bindings-sha256', required=True)
+    ap.add_argument('--npc-dialogue',action='store_true',help='exact three first-area dialogue banks/23 spoken waves')
+    ap.add_argument('--allow-pending-qa',action='store_true',help='explicitly retain reported ASR REVIEW, not auditory approval')
     a = ap.parse_args()
     require(not a.out.exists(), 'refuse existing output')
     binding_bytes = a.bindings.read_bytes()
     require(sha(binding_bytes) == a.bindings_sha256.lower(), 'SIDE binding changed')
     rows = json.loads(binding_bytes)
-    require(len(rows)==19 and len({(r['package'],r['asset']) for r in rows})==19, 'exact19 identities required')
-    require({r['package'] for r in rows}==set(BANKS), 'exact2 first-area banks required')
+    banks=NPC_BANKS if a.npc_dialogue else BANKS
+    expected_count=23 if a.npc_dialogue else 19
+    require(len(rows)==expected_count and len({(r['package'],r['asset']) for r in rows})==expected_count, 'exact identity count required')
+    require({r['package'] for r in rows}==set(banks), 'exact native bank profile required')
     for r in rows:
-        require(r['semantic_status']=='SIDE_FULL_NATIVE_TEXT_REVIEW' and r['qa_status']=='PASS_AUTOMATED_SCREEN', 'unreviewed speech')
+        require(r['semantic_status']=='SIDE_FULL_NATIVE_TEXT_REVIEW', 'unreviewed native text')
+        require(r['qa_status']=='PASS_AUTOMATED_SCREEN' or
+            (a.npc_dialogue and a.allow_pending_qa and r['qa_status']=='REVIEW_OR_REPAIR'), 'unreviewed speech')
         require(sha(Path(r['file']).read_bytes()) == r['selected_wav_sha256'], 'SIDE WAV changed')
     a.out.mkdir(parents=True)
     def run(argv):
         return subprocess.run([str(a.ffmpeg), '-hide_banner', '-nostats', *argv], capture_output=True, text=True, check=True).stderr
     report = []
-    for package, (bank_sha, logical_sha) in BANKS.items():
+    for package, (bank_sha, logical_sha) in banks.items():
         original_path = a.cooked/(package+'.xxx')
         original = original_path.read_bytes()
         require(sha(original)==bank_sha, 'original native bank changed')
@@ -49,7 +71,12 @@ def main():
         logical = logical_path.read_bytes(); require(sha(logical)==logical_sha, 'logical bank mismatch')
         native = {e['name']:e for e in inspect(logical)['exports'] if e['class_name']=='SoundNodeWave'}
         selected = [r for r in rows if r['package']==package]
-        require({r['asset'] for r in selected}==set(native), 'incomplete/unknown native target set')
+        preserved=NPC_UNCHANGED[package] if a.npc_dialogue else {}
+        require({r['asset'] for r in selected}|set(preserved)==set(native) and
+                not({r['asset'] for r in selected}&set(preserved)), 'incomplete/unknown native target set')
+        for asset,text in preserved.items():
+            require(next(p['value'] for p in native[asset]['properties'] if p['name']=='SpokenText')==text,
+                    'unobserved nonverbal export; refuse omission')
         replacements = {}; proof = []
         for r in selected:
             asset=r['asset']; e=native[asset]; props={p['name']:p['value'] for p in e['properties']}
@@ -74,7 +101,8 @@ def main():
                     require(w.getnframes()==frames if exact else 0<w.getnframes()<=frames, 'refuse speech crop / native duration mismatch')
             target, loudness = match(run,fitted_pcm,reference,folder,asset,rate,frames)
             replacements[asset]=target.read_bytes()
-            proof.append(dict(asset=asset,source_wav_sha256=r['selected_wav_sha256'],text_pl=r['text_pl'],**loudness))
+            proof.append(dict(asset=asset,source_wav_sha256=r['selected_wav_sha256'],text_pl=r['text_pl'],
+                              qa_status=r['qa_status'],**loudness))
             print(package,asset,'exact frames / loudness / peak PASS',flush=True)
         for kind, clips in (('control',{}),('candidate',replacements)):
             expected, packed=build(original,logical,clips,bank_sha,logical_sha)
@@ -83,9 +111,10 @@ def main():
             subprocess.run([str(a.decoder),str(dest),str(decoded)],capture_output=True,check=True)
             require(decoded.read_bytes()==expected,'independent LZO/absolute offset roundtrip failed')
         report.append(dict(package=package,source_sha256=bank_sha,candidate_sha256=sha((folder/'candidate.xxx').read_bytes()),
+                           unchanged_nonverbal=sorted(preserved),
                            lines=proof,status='OFFLINE_PASS_NOT_NATIVE_LOAD_OR_AUDITORY_ACCEPTANCE'))
         (a.out/'room-banks.json').write_text(json.dumps(report,indent=2,ensure_ascii=False),encoding='utf-8')
-    print('PASS:2 banks/19 native waves; exact metadata/cues/platforms; no Steam writes',flush=True)
+    print(f'PASS:{len(banks)} banks/{expected_count} native waves; exact metadata/cues/platforms; no Steam writes',flush=True)
 
 
 if __name__=='__main__': main()

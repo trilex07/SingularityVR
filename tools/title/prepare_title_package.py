@@ -15,6 +15,7 @@ from native_story_package import pack
 from patch_opening_dialogue import require
 from ue3_layout import inspect
 from swf_title_patch import patch_first,split_tags
+from swf_ui_polish import polish_movie
 
 UI_SHA='5b2ea469a3ee06ff154ac78bd58604e8034970d4837f289e5c22503c6a673cde'
 def sha(b):return hashlib.sha256(b).hexdigest()
@@ -35,7 +36,7 @@ def offsets(b,e):
     else:require(p==end,'unknown RTT tail')
     return fields
 
-def build(original,logical):
+def build(original,logical,polish_ui=False):
     require(sha(original)==UI_SHA,'accepted UI hash mismatch')
     require(sha(logical)=='c5e7db296339ec0e5daa962e3683f01c854cb7fa09afc7c257d020ce34007bed','accepted logical UI hash mismatch')
     data=inspect('memory',logical,include_all=True)
@@ -51,16 +52,35 @@ def build(original,logical):
     _,tags=split_tags(movie)
     hits=[t for t in tags if t['code']==37 and b'SINGULARITY' in movie[t['pay_off']:t['pay_off']+t['pay_len']]]
     require(len(hits)==1 and struct.unpack_from('<H',movie,hits[0]['pay_off'])[0]==10,'exact logo text character not proved')
-    patched,report=patch_first(movie,b'SINGULARITY',b'SINGULARITY VR')
-    require(report['delta']==3,'unexpected title delta')
+    if polish_ui:
+        patched,report=polish_movie(movie,True)
+    else:
+        patched,report=patch_first(movie,b'SINGULARITY',b'SINGULARITY VR')
+        require(report['delta']==3,'unexpected title delta')
+    delta=len(patched)-len(movie)
     blob=bytearray(logical[logo['offset']:value+4]+patched+logical[value+size:logo['offset']+logo['size']])
-    struct.pack_into('<I',blob,raw['tag_offset']-logo['offset']+16,size+3)
-    struct.pack_into('<I',blob,value-logo['offset'],size-4+3)
+    struct.pack_into('<I',blob,raw['tag_offset']-logo['offset']+16,size+delta)
+    struct.pack_into('<I',blob,value-logo['offset'],size-4+delta)
+    blobs={logo['index']:blob}
+    if polish_ui:
+        menus=by['SPMenus'];require(menus['class_name']=='GFxMovieInfo','menus class')
+        menu_raw=next(p for p in menus['properties'] if p['name']=='RawData')
+        require(menu_raw['type']=='ArrayProperty','menus RawData type')
+        mv=menu_raw['tag_offset']+24;ms=menu_raw['value']['bytes']
+        require(struct.unpack_from('<I',logical,mv)[0]==ms-4,'menus RawData count')
+        changed,main_report=polish_movie(logical[mv+4:mv+ms],False)
+        md=len(changed)-(ms-4)
+        menu_blob=bytearray(logical[menus['offset']:mv+4]+changed+
+            logical[mv+ms:menus['offset']+menus['size']])
+        struct.pack_into('<I',menu_blob,menu_raw['tag_offset']-menus['offset']+16,ms+md)
+        struct.pack_into('<I',menu_blob,mv-menus['offset'],ms-4+md)
+        blobs[menus['index']]=menu_blob
+        report={'logo':report,'menus':main_report}
     ordered=sorted(exports,key=lambda e:e['offset']);cursor=ordered[0]['offset']
     out=bytearray(logical[:cursor]);relocations=[]
     for e in ordered:
         require(e['offset']==cursor,'unknown native gap');cursor+=e['size']
-        new=len(out);part=bytearray(blob if e['index']==logo['index'] else logical[e['offset']:cursor])
+        new=len(out);part=bytearray(blobs.get(e['index'],logical[e['offset']:cursor]))
         cls=e['class_name']
         if cls in ('Texture2D','TextureRenderTarget2D'):
             for field in offsets(logical,e):
@@ -83,19 +103,22 @@ def build(original,logical):
     verify=inspect('result',out,include_all=True)
     for a,b in zip(exports,verify['exports']):
         require((a['name'],a['cls'],a['outer'])==(b['name'],b['cls'],b['outer']),'export identity')
-        expected=bytearray(blob if a['index']==logo['index'] else logical[a['offset']:a['offset']+a['size']])
+        expected=bytearray(blobs.get(a['index'],logical[a['offset']:a['offset']+a['size']]))
         for rel in relocations:
             if rel['export']==a['name']:
                 old=struct.unpack_from('<I',expected,rel['local'])[0];struct.pack_into('<I',expected,rel['local'],old+rel['delta'])
         require(out[b['offset']:b['offset']+b['size']]==expected,'unrelated export change')
         if a['class_name'] in ('Texture2D','TextureRenderTarget2D'):offsets(out,b)
-    return bytes(out),dict(movie='iis',character=10,title='SINGULARITY VR',font_bounds_and_actions='byte-exact',patch=report,relocations=relocations)
+    return bytes(out),dict(movie='iis+SPMenus' if polish_ui else 'iis',character=10,title='SINGULARITY VR',
+        font_bounds='byte-exact',actions='scoped Initialize title conditional' if polish_ui else 'byte-exact',
+        patch=report,relocations=relocations)
 
 def main():
     ap=argparse.ArgumentParser()
     for x in ('original','logical','decoder','out'):ap.add_argument('--'+x,type=Path,required=True)
+    ap.add_argument('--polish-ui',action='store_true',help='native Mouse concentric dot + runtime main-title assignment')
     a=ap.parse_args();require(not a.out.exists(),'refuse existing output')
-    original=a.original.read_bytes();logical=a.logical.read_bytes();changed,report=build(original,logical)
+    original=a.original.read_bytes();logical=a.logical.read_bytes();changed,report=build(original,logical,a.polish_ui)
     a.out.mkdir(parents=True)
     for name,expected in [('control',logical),('candidate',changed)]:
         physical=pack(expected,original);dest=a.out/(name+'.xxx');dest.write_bytes(physical)

@@ -10,11 +10,14 @@ int main(){
         <<"{\"id\":\"long-note\",\"en\":\""<<longEn<<"\",\"pl\":\""<<longPl<<"\",\"status\":\"translated\"}\n";
     std::ofstream("voice.jsonl")<<"{\"id\":\"ui\",\"en\":\"UI fixture\",\"file\":\"ui.wav\"}\n";
     std::ofstream("story.jsonl")<<"{\"id\":\"native\",\"text_en\":\"Radio fixture\",\"text_pl\":\"Radio PL\",\"file\":\"native.wav\",\"native_replaced\":\"1\"}\n"
+        <<"{\"id\":\"native-no-legacy-wav\",\"text_en\":\"Short NPC fixture\",\"text_pl\":\"NPC PL\",\"file\":\"\",\"native_replaced\":\"1\"}\n"
         <<"{\"id\":\"legacy\",\"text_en\":\"Uncovered fixture\",\"text_pl\":\"Uncovered PL\",\"file\":\"legacy.wav\"}\n";
     auto& pl=PolishLocalization::PL();assert(pl.Initialize("text.jsonl","voice.jsonl","story.jsonl"));pl.SetPolishLanguage(true);
     char out[128];assert(pl.WavForEnglish("Radio fixture",out,sizeof(out))); // flag OFF leaves old route
     pl.SetNativeSpeech(true);assert(!pl.WavForEnglish("Radio fixture",out,sizeof(out))&&out[0]==0);
     assert(pl.PolishForEnglish("Radio fixture",out,sizeof(out))&&!strcmp(out,"Radio PL"));
+    assert(pl.PolishForEnglish("Short NPC fixture",out,sizeof(out))&&!strcmp(out,"NPC PL"));
+    assert(!pl.WavForEnglish("Short NPC fixture",out,sizeof(out)) && out[0]==0);
     assert(pl.WavForEnglish("Uncovered fixture",out,sizeof(out))&&!strcmp(out,"legacy.wav"));
     assert(pl.WavForEnglish("UI fixture",out,sizeof(out))&&!strcmp(out,"ui.wav"));
     assert(pl.IsUiVoiceEnglish("UI fixture"));

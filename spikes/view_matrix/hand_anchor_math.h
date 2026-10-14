@@ -1,6 +1,17 @@
 #pragma once
 #include "arm_bind.h"
 namespace handanchor {
+using MatrixRows = const float (*)[4];
+inline bool PistolGrip(bool gloves,bool liveWeapon,bool holstered,long gunVertices,bool supportGrip) {
+    return gloves && liveWeapon && !holstered && gunVertices==5799 && !supportGrip;
+}
+// Select at consumption time: a snapshot made before TargetWrist silently
+// bypasses its correction. The proven pistol grip deliberately keeps its
+// weapon target; free hands use the final corrected controller target.
+inline MatrixRows AimTarget(bool pistolGrip, const float weapon[4][4],
+                            const float corrected[4][4]) {
+    return pistolGrip ? weapon : corrected;
+}
 inline armik::V Point(armik::V p,const float m[4][4]) {
     return {p.x*m[0][0]+p.y*m[1][0]+p.z*m[2][0]+m[3][0],
             p.x*m[0][1]+p.y*m[1][1]+p.z*m[2][1]+m[3][1],

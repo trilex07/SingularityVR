@@ -2,6 +2,7 @@
 import argparse
 import json
 import re
+import math
 from pathlib import Path
 
 def extract(text):
@@ -13,11 +14,15 @@ def extract(text):
     for i,line in enumerate(lines):
         transition=re.search(r'SceneMode: \w+ -> (\w+)',line)
         if transition:mode=transition.group(1)
-        match=re.search(r'hand-anchor sample=(\d+) frame=(\d+) moved=(\d+) targetL=\(([^)]+)\) targetR=\(([^)]+)\)',line)
+        match=re.search(r'hand-anchor sample=(?P<sample>\d+) frame=(?P<frame>\d+) moved=(?P<moved>\d+)'
+            r'(?: weapon=(?P<weapon>[0-9a-fA-F]{8}) epoch=(?P<epoch>\d+))?'
+            r' targetL=\((?P<left>[^)]+)\) targetR=\((?P<right>[^)]+)\)',line)
         if not match:continue
         stage=re.search(r'stage=(\w+)',line)
-        record=dict(sample=int(match[1]),frame=int(match[2]),moved=int(match[3]),mode=stage[1] if stage else mode,
-                    target=[list(map(float,match[4].split(','))),list(map(float,match[5].split(',')))])
+        record=dict(sample=int(match['sample']),frame=int(match['frame']),moved=int(match['moved']),
+                    epoch=int(match['epoch'] or 0),weapon=int(match['weapon'] or '0',16),
+                    mode=stage[1] if stage else mode,
+                    target=[list(map(float,match['left'].split(','))),list(map(float,match['right'].split(',')))])
         fields=list(zip(names,widths))
         if i+4<len(lines) and lines[i+4].startswith('hand-anchor cameraRide:'):
             fields.insert(3,('cameraRide',16))
@@ -25,10 +30,12 @@ def extract(text):
             prefix='hand-anchor '+name+':'
             if i+n>=len(lines) or not lines[i+n].startswith(prefix):raise ValueError('incomplete record')
             values=list(map(float,lines[i+n][len(prefix):].split()))
-            if len(values)!=width:raise ValueError('wrong matrix length')
+            if len(values)!=width or not all(map(math.isfinite,values)):raise ValueError('invalid matrix values')
             record[name]=values
         records.append(record)
-    if len(records)>8:raise ValueError('bounded probe exceeded')
+    epochs={r['epoch'] for r in records}
+    if len(records)>16 or len(epochs)>2 or any(sum(r['epoch']==e for r in records)>8 for e in epochs):
+        raise ValueError('bounded two-epoch probe exceeded')
     return records
 
 if __name__=='__main__':

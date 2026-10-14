@@ -10,10 +10,10 @@ from patch_opening_dialogue import require
 def sha(data): return hashlib.sha256(data).hexdigest().upper()
 
 
-def story_manifest(data, bindings):
+def story_manifest(data, bindings, expected_count=19):
     rows=[json.loads(l) for l in data.decode('utf-8-sig').splitlines() if l]
     by={(r['package'],r['asset']):r for r in bindings}
-    require(len(by)==19 and len(bindings)==19,'exact19 bindings')
+    require(expected_count in (19,23) and len(by)==expected_count and len(bindings)==expected_count,'exact reviewed binding count')
     seen=set()
     for row in rows:
         key=(row.get('package'),row.get('asset'))
@@ -25,7 +25,13 @@ def story_manifest(data, bindings):
         b=by[key]
         # The two short native1505 lines had no legacy WAV. Native ownership and
         # text mapping still load before the manager's empty-audio-entry gate.
-        require(b['asset']=='VI1_1505_ANN','unexpected absent story entry')
+        allowed_missing=({('SP_VI2_kismet02_LOC_INT','VI2_5012_DEMY'),
+                          ('SP_VI2_kismet03_LOC_INT','FR8_4406_GRD2'),
+                          ('SP_VI2_kismet04_LOC_INT','VI2_5012_DEMY')}
+                         if expected_count==23 else
+                         {('SP_VI2_zone02a_LOC_INT','VI1_1505_ANN'),
+                          ('SP_VI2_zone02a_2010_LOC_INT','VI1_1505_ANN')})
+        require(key in allowed_missing,'unexpected absent story entry')
         rows.append(dict(package=b['package'],asset=b['asset'],source=b['line_id'],file='',
             text_en=b['source_english'],text_pl=b['text_pl'],tts_text=b['text_pl'],native_replaced='1',translation_status='full_native_text_review'))
     return ('\n'.join(json.dumps(r,ensure_ascii=False) for r in rows)+'\n').encode('utf-8')

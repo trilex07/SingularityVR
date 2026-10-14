@@ -1,5 +1,21 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14: preparing first-area/font polish on fix/post-opening-followups,
+Draft PR19, NOT merged. Font SIDE219c6fa cherry-picked59da9f9; private output60E72871
+matches pinned original3F7BF0BE. UI5E46B619 replaces exclusive Mouse geometry and
+scoped Initialize title; three NPC banks/23 utterances retain9 nonverbal exports.
+SIDE audio e285652f reviewed;3 ASR REVIEW lines, not full-game/auditory acceptance.
+Free-hand target selected after wrist reconstruction; accepted pistol/modal policy
+retained, COM invalidation moved to render thread. Cinema LOCAL quad defaultOFF,
+same composed pixels/one scene anchor; enabled only in staged next test INI.
+26 Python tests +9 optimized x86 fixtures/policy PASS. Exact38 fake installation
+WhatIf/backup/corruption/conflict/restore PASS. Fresh build/guard/staging gate follows.
+Actual Steam remains original, no real lease/game launched this preparation turn;
+fresh user start required. Previous live restore independent1924 originals PASS.
+Font preview is an approximate raster, not proof of native GFx fill/wrap.
+See docs/post-opening-next-candidate.md. Entries below are historical snapshots.
+
+HISTORICAL:
 PREP READY after c029abe: x86PE32/O2 DLL1454A62B0AC28EC9A9C8D3A83E16DD9CF142E6CAEE3220FC591079F015192751.
 Private post-opening/core-ready +assets-ready exact34 +quiet-revoice-v2. Core4
 and asset34 fake/preflight gates PASS; fresh hidden WindowsPS34 timeout guard
