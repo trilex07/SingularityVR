@@ -1,6 +1,24 @@
 # STATUS — session handoff
 
-CURRENT 2026-10-14 startup-only PID23792 (09:53), fresh user start authorized.
+CURRENT LIVE PID17436 after user gotowe VR. Previous no-HMD session23792 closed;
+all3 guards completed and4+32+1886 originals independently verified in its
+restore-verification.json. SteamVR had quit-all from vrmonitor; MAIN relaunched
+app250820, actual playstation_vr2 HMD and vrcompositor confirmed BEFORE game launch.
+Fresh same candidate lease deployment/hands-dubbing/three-items-live-20261014-102151:
+core C1D904D0/F5137234, bankFB03741D, all candidate hashes and backups verified;
+all3 guardians READY. Steam game launched, actual loaded module paths confirmed,
+CURRENT OpenXR ready/session3/running1/haveEyes1. Observer26396 collects logs;
+physical radio/language/loudness result and exit/restoration pending. Core backup
+deployment/hands-dubbing/backups/20261014-102152-17684; asset backup
+deployment/hands-dubbing/asset-backups/20261014-102406-17684; WAV revoice/backup
+inside new live evidence. Only one radio waveform gain differs from earlier trial;
+no hands/input/shadow/stereo/INI/render changes, remaster_apply0. User headset
+script continues1-2min into first gameplay after standing up, closes without chat
+switch/restart, reports radio instruction near tower. DO NOT replace running files.
+Do not claim current restore until all3 guardians finish and independently checked.
+Below prior startup/completed trial/preparation history.
+
+HISTORICAL 2026-10-14 startup-only PID23792 (09:53), fresh user start authorized.
 Core C1D904D0/F5137234 and native radio bankFB03741D installed; all4+32+1886
 candidate hashes/backups verified, all3 guardians READY. Evidence private
 deployment/hands-dubbing/three-items-live-20261014-094554; observer33028.
