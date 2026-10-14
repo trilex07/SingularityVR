@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 dubbing+notatki FIXED offline (no launch, no test asked):
+root cause = restore guards had wiped the full accepted 38-asset payload to
+stock; re-persist saved only DLL/INI/injector + vr-assets WAVs. vr-assets
+WAVs alone never drove NPC/radio (native banks are the sole producer —
+proven). Reinstalled exact38 v4 payload via test-prepared-assets (Preflight
+PASS, backup asset-backups/20261014-212951-40600): 8 Polish VI2 banks
+(FB03741D/D6EA4374/A1A83F2/1CAF1E3F/A2E6B73/56CDDB02/7D50BD2B/1B2522CC),
+Polish font 60E72871, 3 PL manifests (6518581E/0D632BF4/22B755EB, 87
+native_replaced), UI 69CABCCF unchanged, 24 DDS + override INI. Independently
+re-hashed: all match; DLL EA9EFFB1/INI/injector frozen; 992 new xlingual WAVs
+byte-identical to freeze (names resolve from new manifest). See
+docs/native-npc-radio-producer.md. Prior headers history.
+
 LATEST 2026-10-14 mirror-diag RESULT: root cause PROVEN. All ~26k Presents
 (44×600 windows) hit skipRect — engine Presents with explicit src/dst rects
 every frame, mirror `ok=0` for the whole session. The subrectangle contract

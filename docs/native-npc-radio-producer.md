@@ -57,6 +57,27 @@ for that line. Absence confirms the native-bank route.
    preserving cues/metadata/duration. Never generate dubbing from scratch,
    never globally mute English, never blind-PlaySound.
 
+## Why the dubbing and notes disappeared (explained 2026-10-14)
+
+Working state (PID37660 era): exact4+38+1886 — the 38-asset v4 payload held
+8 Polish VI2 native banks, the Polish font, and 3 Polish manifests alongside
+the accepted renderer. That is what the user heard/saw.
+
+What broke it: after that session all three restore guards completed and
+returned 1927 files to stock originals. The later re-persist step saved back
+only 3 files (DLL EA9EFFB1 + injector F5137234 + INI 757F414B) plus the 992
+NEW xlingual WAVs into vr-assets. The 8 banks, font, and manifests stayed
+stock — and vr-assets WAVs alone cannot drive NPC/radio (proven above:
+Localize never sees the lines, `polish voice:` count zero).
+
+Fix applied offline 2026-10-14 ~21:29 (no launch): reinstalled the exact38
+v4 payload with `tools/test-prepared-assets.ps1` (Preflight PASS; backup
+`asset-backups/20261014-212951-40600`). The 992 new xlingual WAVs were NOT
+touched (992/992 match the freeze; the accepted story manifest resolves all
+their names, 87 bank-owned lines flagged native_replaced so nothing
+double-plays). DLL/INI/injector frozen. All verified by independent
+re-hash, not tool output alone.
+
 ## Freeze for the next test (done, offline)
 
 ## TV two-image root cause (proven 2026-10-14, probe CF96A841)
