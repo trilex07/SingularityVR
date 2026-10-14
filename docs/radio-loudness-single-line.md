@@ -74,3 +74,20 @@ stereo transition; finish the short route and close normally. MAIN preserves
 session and restored hashes; user reports radio language/audibility. If absent
 again, next step is a native action/load/playback observation and exact one-wave
 original-audio control, not another speculative global gain or PlaySound hook.
+
+## Physical result PID17436
+
+User heard Polish radio and generally accepted the current version. Exact native
+callback/decoded resource execution was not instrumented; do not invent that
+evidence from audio feedback. Session started with verified installed C1D904D0/
+F5137234 DLLs and bankFB03741D, OpenXR ready and actual loaded module paths.
+Session ended normally; three independent guardians and subsequent MAIN hashing
+confirm restoration of4+32+1886 originals plus107 frozen DDS. Private evidence:
+three-items-live-20261014-102151/session.log and restore-verification.json.
+
+Accepted scope: Polish radio audible in the tested opening route. User reports
+indoor recordings/people still English, notes untranslated, first pistol leaves
+forearms and bad right grip after pickup, UI narrator loud/no toggle, and stacked
+New Game save-slot/confirmation menus. These remain separate open follow-ups;
+no full-game Polish, complete hands, branding typography or applied remaster
+acceptance inferred. User requests a review PR to main, not automatic merge.

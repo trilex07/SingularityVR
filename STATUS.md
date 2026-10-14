@@ -1,6 +1,19 @@
 # STATUS — session handoff
 
-CURRENT LIVE PID17436 after user gotowe VR. Previous no-HMD session23792 closed;
+LATEST PID17436 closed; all3 guards restored, independent4+32+1886 hashes and
+107DDS PASS (live restore-verification.json). User physically heard Polish radio,
+generally accepts this version and requests PR targeting main (NO merge).
+PHYSICALLY_VERIFIED scoped opening radio presence after one-wave loudness change;
+not full-game dubbing or all materials/hands acceptance. New requested follow-ups:
+English indoor recordings/dialogue; untranslated notes; FIRST pistol pickup leaves
+visible forearms and poor right grip AFTER animation; UI/tutorial narrator too loud
+and needs VR Settings ON/OFF; New Game save selection/confirmation overlap.
+Prepare follow-ups separately from accepted PR snapshot. No new Steam test until
+fresh user start. Audio generation remains SIDE-only when needed; MAIN installs.
+Room/notepad identities being narrowed; no guessed pose offset or shader register.
+Below previous live/preparation history.
+
+HISTORICAL LIVE PID17436 after user gotowe VR. Previous no-HMD session23792 closed;
 all3 guards completed and4+32+1886 originals independently verified in its
 restore-verification.json. SteamVR had quit-all from vrmonitor; MAIN relaunched
 app250820, actual playstation_vr2 HMD and vrcompositor confirmed BEFORE game launch.
