@@ -1,5 +1,9 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 TEXTURES row TEST (PID37152, 9C37BD1B): panel DISPLAY →
+TEXTURES cycle + save, normal exit; then INI check. Backup 20261015-000526
+(TV-accepted 6F4BBEF2). Observer textures-row-20261015-0005. L3/L4 pending. Prior history.
+
 LATEST 2026-10-14 TV PHYSICALLY_VERIFIED (user: single image OK) + PR #25
 merged. PROMOTED accepted DLL 6F4BBEF2 (source cbb4509, already installed +
 verified). EA9EFFB1 retained as fallback. New branch fix/hud-3d-textures from
