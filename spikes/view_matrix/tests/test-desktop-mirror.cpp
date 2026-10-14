@@ -49,5 +49,17 @@ int main() {
     Expect(!desktop_mirror::IsFullBackbufferSrc(&part, nullptr, 5264, 2684), "half-bb src rect stays native");
     Expect(!desktop_mirror::IsFullBackbufferSrc(nullptr, &win, 5264, 2684), "any dst rect stays native");
     Expect(!desktop_mirror::IsFullBackbufferSrc(&full, &win, 5264, 2684), "full src with dst stays native");
+    RECT vdst{};
+    Expect(desktop_mirror::VisibleEyeDst(0, 0, 1920, 1080, 5264, 2684, 5264, 2684, 2632, 2684, vdst) &&
+           vdst.left == 430 && vdst.top == 0 && vdst.right == 1489 && vdst.bottom == 1080,
+           "1080p window corner shows aspect-fit eye");
+    RECT fdst{}, vfull{};
+    Expect(desktop_mirror::FitDestination(5264, 2684, 2632, 2684, 5264, 2684, fdst) &&
+           desktop_mirror::VisibleEyeDst(0, 0, 5264, 2684, 5264, 2684, 5264, 2684, 2632, 2684, vfull) &&
+           vfull.left == fdst.left && vfull.top == fdst.top &&
+           vfull.right == fdst.right && vfull.bottom == fdst.bottom,
+           "fully visible window matches legacy centering");
+    Expect(desktop_mirror::VisibleEyeDst(0, 0, 0, 0, 5264, 2684, 5264, 2684, 2632, 2684, vdst),
+           "empty visible box falls back without failing");
     return g_fails == 0 ? 0 : 1;
 }

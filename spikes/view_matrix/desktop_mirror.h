@@ -188,6 +188,51 @@ inline bool IsFullBackbufferSrc(const RECT* presentSrc, const RECT* presentDst,
            presentSrc->right >= (LONG)bw && presentSrc->bottom >= (LONG)bh;
 }
 
+// Fit one eye into a visible client sub-box (all in screen pixels except the
+// backbuffer scale), returning a backbuffer-pixel dst for StretchRect.
+// Falls back to full-backbuffer centering when nothing is visible.
+inline bool VisibleEyeDst(LONG visX, LONG visY, LONG visW, LONG visH,
+                          UINT bw, UINT bh, UINT ww, UINT wh,
+                          UINT sw, UINT sh, RECT& out) {
+    if (visW <= 0 || visH <= 0 || !bw || !bh || !sw || !sh || !ww || !wh)
+        return FitDestination(bw, bh, sw, sh, ww, wh, out);
+    const double sx = double(bw) / ww, sy = double(bh) / wh;
+    // Eye aspect as displayed on screen (backbuffer-to-window scale applied).
+    const double aspect = (double(sw) * ww / bw) / (double(sh) * wh / bh);
+    double w = double(visW), h = w / aspect;
+    if (h > double(visH)) { h = double(visH); w = h * aspect; }
+    if (w < 1 || h < 1) return false;
+    const double ox = double(visX) + (double(visW) - w) / 2;
+    const double oy = double(visY) + (double(visH) - h) / 2;
+    const LONG l = LONG(ox * sx + .5), t = LONG(oy * sy + .5);
+    out = { l, t, l + LONG(w * sx + .5), t + LONG(h * sy + .5) };
+    return out.right <= (LONG)bw && out.bottom <= (LONG)bh && out.left >= 0 && out.top >= 0;
+}
+
+// Visible client sub-box in client pixels (intersection of the window client
+// area with the nearest monitor). False when nothing is visible.
+inline bool VisibleClientBox(HWND window, UINT ww, UINT wh,
+                             LONG& vx, LONG& vy, LONG& vw, LONG& vh) {
+    vx = 0; vy = 0; vw = (LONG)ww; vh = (LONG)wh;
+    if (!window || !ww || !wh) return false;
+    POINT org{ 0, 0 };
+    if (!ClientToScreen(window, &org)) return false;
+    HMONITOR mon = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
+    RECT mr{ org.x, org.y, org.x + (LONG)ww, org.y + (LONG)wh };
+    if (mon) {
+        MONITORINFO mi{};
+        mi.cbSize = sizeof(mi);
+        if (GetMonitorInfoA(mon, &mi)) mr = mi.rcMonitor;
+    }
+    const LONG l = org.x > mr.left ? org.x : mr.left;
+    const LONG t = org.y > mr.top ? org.y : mr.top;
+    const LONG r = (org.x + (LONG)ww) < mr.right ? (org.x + (LONG)ww) : mr.right;
+    const LONG b = (org.y + (LONG)wh) < mr.bottom ? (org.y + (LONG)wh) : mr.bottom;
+    if (r <= l || b <= t) return false;
+    vx = l - org.x; vy = t - org.y; vw = r - l; vh = b - t;
+    return true;
+}
+
 inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
                   const RECT* presentDst, HWND overrideWindow) {
     const LONG mode = InterlockedCompareExchange(&g_desktopMirrorEye, 0, 0);
@@ -243,7 +288,13 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
     Diag::lastWw = ww; Diag::lastWh = wh;
     CapturePlacement(window);
     RECT dst{};
-    if (!FitDestination(desc.Width, desc.Height, desc.Width / 2, desc.Height, ww, wh, dst)) {
+    LONG vx = 0, vy = 0, vw = (LONG)ww, vh = (LONG)wh;
+    const bool haveVis = VisibleClientBox(window, ww, wh, vx, vy, vw, vh);
+    const bool fitOk = haveVis
+        ? VisibleEyeDst(vx, vy, vw, vh, desc.Width, desc.Height, ww, wh,
+                        desc.Width / 2, desc.Height, dst)
+        : FitDestination(desc.Width, desc.Height, desc.Width / 2, desc.Height, ww, wh, dst);
+    if (!fitOk) {
         back->Release();
         InterlockedIncrement(&Diag::failFit); EmitMaybe(); return;
     }
