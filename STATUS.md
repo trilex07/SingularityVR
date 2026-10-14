@@ -1,5 +1,11 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 placement probe DEPLOYED (8dd550d/68644067, clean): logs
+window screen rect + monitor rect (max 2/session) to place the mirrored eye
+into the visible 1080p. Contract ok=600 proven in PID39420. Backup
+20261014-232827; accepted EA9EFFB1 in 20261014-224124. Observer armed
+(mirror-place-20261014-2328), game NOT launched — awaiting user start. Prior history.
+
 LATEST 2026-10-14 mirror CONTRACT DEPLOYED (9b96c17/E612C2D5, 18/18 fixture,
 clean provenance): full-bb Present src + NULL dst now proceeds to mirror;
 true subrects stay native + probe. Backup 20261014-232154; accepted EA9EFFB1
