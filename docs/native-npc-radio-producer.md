@@ -57,6 +57,27 @@ for that line. Absence confirms the native-bank route.
    preserving cues/metadata/duration. Never generate dubbing from scratch,
    never globally mute English, never blind-PlaySound.
 
+## Dubbing-check 2026-10-14 PID46016 (38-pack on disk)
+
+User result: notes Polish ✓; start-game/radio English; New-Game menu double-flat.
+
+- Start speech: intro movie Polish (Bink track10, separate path ✓). Post-intro
+  crash Kismet = SP_VI_intro_Kismet bank = STOCK by design (candidate
+  4904F281/84B9A419 exists, never installed; intro protected). Per-line map
+  from old prep reports (`native-story.json`, `room-banks.json` in sibling
+  trees, read-only): kismet01 replaced 16/20 (incl. VI1_0105_CP2, VI1_0113_CP2,
+  VI1_1005_GST tower rally), retained EN 4 shorts (VI1_0107_CP2 "Shoppers
+  down!", VI1_0507_NIM, VI1_0114_CP, VI1_0110_CP2); NPC banks replaced 23
+  spoken, kept only screams/coughs/deaths. All non-VI2 banks (RL/RT/SL/VI3-6/
+  WL) never translated — full-game dubbing was never claimed.
+- This run used the New-Game path, which never reaches VI2 building content;
+  the building save WITH banks installed is unverified. No test requested.
+- Menu double-flat: MenuOverlay=1 experiment reached its documented falsifier
+  (recovery-after-tv-test.md: "correctly submitted RTT still malformed").
+  Accepted INI used MenuOverlay=0 with different menu code — flag flip alone
+  is not justified; needs producer analysis first. TV subrectangle mapping
+  still pending (mirror ok=0 proven).
+
 ## Why the dubbing and notes disappeared (explained 2026-10-14)
 
 Working state (PID37660 era): exact4+38+1886 — the 38-asset v4 payload held
@@ -77,6 +98,17 @@ touched (992/992 match the freeze; the accepted story manifest resolves all
 their names, 87 bank-owned lines flagged native_replaced so nothing
 double-plays). DLL/INI/injector frozen. All verified by independent
 re-hash, not tool output alone.
+
+## Steam identity verified SIDE 2026-10-14 ~21:36 (read-only)
+
+`tools/audio/verify-polish-install-state.ps1` wrote
+`deployment/hands-dubbing/current-install-freeze-20261014/steam-verify-latest.json`:
+
+- **38/38** asset **candidates** on disk (Polish font, PL manifests, VI2 banks FB03741D…).
+- **3/3** accepted runtime (EA9EFFB1 / F5137234 / INI 757F414B); **992/992** story WAVs.
+- Intro bank remains **stock** 890C6172… (`recovery-ready` core manifest intro candidate 4904F281… is **not** installed — intentional).
+
+Full report: `docs/SIDE-AUDIO-INVESTIGATION-20261014.md`. Physical L4 after 212951 reinstall is still **pending**; matching hashes ≠ proof of Polish audio in headset.
 
 ## Freeze for the next test (done, offline)
 

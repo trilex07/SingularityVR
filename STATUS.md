@@ -1,5 +1,24 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 dubbing-check PID46016 (38-pack installed): notes POLISH
+CONFIRMED by user. Start-game/radio speech still ENGLISH — consistent with
+scope, not a contradiction: intro bank stock BY DESIGN (candidate never
+installed), 4 short kismet01 radio lines retained EN by design (VI1_0107_CP2,
+VI1_0507_NIM, VI1_0114_CP, VI1_0110_CP2), nonverbals kept; 16/20 kismet01 +
+23 NPC + PA/ANN lines are Polish in installed banks but the New-Game path
+never reaches VI2 building content — building save with banks UNTESTED, no
+test requested. Menu double-flat on New Game CONFIRMED still BROKEN:
+MenuOverlay=1 experiment hit its falsifier. SIDE edited MAIN checkout
+(reviewed: kept run-trial hard-disable + verify notes, removed __pycache__);
+SIDE must not edit MAIN tree again. Prior headers history.
+
+LATEST 2026-10-14 SIDE offline verify (no launch): Steam read-only
+38/38 asset v4 +992 story WAVs +3 runtime match; intro stock (protected).
+Root-cause write-up docs/SIDE-AUDIO-INVESTIGATION-20261014.md;
+tools/audio/verify-polish-install-state.ps1 → steam-verify-latest.json.
+New xlingual still needs native bank integration (87 native_replaced).
+run-recovery-trial.ps1 hard-disabled (stale quiet-revoice). L4 pending.
+
 LATEST 2026-10-14 dubbing+notatki FIXED offline (no launch, no test asked):
 root cause = restore guards had wiped the full accepted 38-asset payload to
 stock; re-persist saved only DLL/INI/injector + vr-assets WAVs. vr-assets

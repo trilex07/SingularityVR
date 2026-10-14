@@ -19,4 +19,4 @@ The upstream source checkouts and detailed revision record are maintained outsid
 
 Validation on 2026-10-13: all ten project skill directories have a `SKILL.md`; every frontmatter `name` matches its directory name and every skill has a non-empty `description`. OpenCode CLI is not installed here, so CLI-level discovery has not been exercised; restart/reload a Codex/OpenCode session after changing skill metadata.
 
-**MAIN difficult bugs:** read `singularityvr-main-engineering` after `AGENTS.md` and `singularityvr-agent-test-bridge`; use `vr-mod-workflow` for feature gates. Case studies live under `.agents/skills/singularityvr-main-engineering/references/`.
+**MAIN difficult bugs:** read `singularityvr-main-engineering` after `AGENTS.md` and `singularityvr-agent-test-bridge`; use `vr-mod-workflow` for feature gates. Case studies and **continuity/asset integration** live under `.agents/skills/singularityvr-main-engineering/references/` (see `continuity-and-asset-integration.md` for guard vs promotion and native vs WAV dubbing).

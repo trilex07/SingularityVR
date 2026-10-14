@@ -18,7 +18,7 @@ Use this skill when you are **MAIN** on difficult rendering, shadow, pause-menu,
 | [`mod-reverse-engineering`](../mod-reverse-engineering/SKILL.md) | Ghidra/IDA/static RE outside the hot path |
 | [`xr-performance`](../xr-performance/SKILL.md) | Generic frame-budget thinking after you know *where* time goes |
 
-**Deep dives:** [`references/sol-debugging-case-studies.md`](references/sol-debugging-case-studies.md), [`references/test-and-handoff-playbook.md`](references/test-and-handoff-playbook.md).
+**Deep dives:** [`references/sol-debugging-case-studies.md`](references/sol-debugging-case-studies.md), [`references/test-and-handoff-playbook.md`](references/test-and-handoff-playbook.md), [`references/continuity-and-asset-integration.md`](references/continuity-and-asset-integration.md) (multi-file installs, guards, native audio/font).
 
 ---
 
