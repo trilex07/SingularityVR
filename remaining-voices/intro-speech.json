@@ -1,0 +1,968 @@
+[
+ {
+  "asset": "SD_GRD1_FIRE1",
+  "spoken": "Shoot him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.07
+ },
+ {
+  "asset": "SD_GRD1_FIRE2",
+  "spoken": "Kill him, kill him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.34
+ },
+ {
+  "asset": "SD_GRD1_FIRE3",
+  "spoken": "Keep me covered!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.97
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN1",
+  "spoken": "Let's go!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN2",
+  "spoken": "Go get him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.04
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN3",
+  "spoken": "Push forward!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.98
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN4",
+  "spoken": "Go, go, go!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.03
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN5",
+  "spoken": "You go, I'll cover!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.11
+ },
+ {
+  "asset": "SD_GRD1_RPT_PINNED1",
+  "spoken": "Help! I'm pinned down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.07
+ },
+ {
+  "asset": "SD_GRD1_SRCH_FIND1",
+  "spoken": "Where'd he go?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.73
+ },
+ {
+  "asset": "SD_GRD1_SRCH_KILL1",
+  "spoken": "Anybody see him?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.96
+ },
+ {
+  "asset": "SD_GRD1_SRCH_KILL2",
+  "spoken": "Let's just get outta here!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.12
+ },
+ {
+  "asset": "SD_GST_ADVANCING1",
+  "spoken": "Their making a push!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.89
+ },
+ {
+  "asset": "SD_GST_ADVANCING2",
+  "spoken": "Enemy advancing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "asset": "SD_GST_BREATHE_IN1",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.44
+ },
+ {
+  "asset": "SD_GST_BREATHE_IN2",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.38
+ },
+ {
+  "asset": "SD_GST_BREATHE_IN3",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "asset": "SD_GST_BREATHE_OUT1",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "asset": "SD_GST_BREATHE_OUT2",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "asset": "SD_GST_BREATHE_OUT3",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.41
+ },
+ {
+  "asset": "SD_GST_CHK_LFT1",
+  "spoken": "Checking left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "asset": "SD_GST_CHK_RT1",
+  "spoken": "Checking right.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "asset": "SD_GST_FALL_LARGE1",
+  "spoken": "Aaaaaaahhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.11
+ },
+ {
+  "asset": "SD_GST_FALL_LARGE2",
+  "spoken": "Aaaaaaahhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.63
+ },
+ {
+  "asset": "SD_GST_FALL_LARGE3",
+  "spoken": "Aaaaaaahhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.23
+ },
+ {
+  "asset": "SD_GST_FIRE1",
+  "spoken": "Open fire!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92
+ },
+ {
+  "asset": "SD_GST_FIRE2",
+  "spoken": "Engage! Engage!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.17
+ },
+ {
+  "asset": "SD_GST_FIRE3",
+  "spoken": "Light 'em up!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.67
+ },
+ {
+  "asset": "SD_GST_FIRE_SUPPRESS1",
+  "spoken": "Give me suppressing fire.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.3
+ },
+ {
+  "asset": "SD_GST_FIRE_SUPPRESS2",
+  "spoken": "Cover me.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.62
+ },
+ {
+  "asset": "SD_GST_FIRE_SUPPRESS3",
+  "spoken": "I need suppressing fire.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.43
+ },
+ {
+  "asset": "SD_GST_GEN1",
+  "spoken": "Stay frosty.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.87
+ },
+ {
+  "asset": "SD_GST_GEN2",
+  "spoken": "Watch the doorways.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.9
+ },
+ {
+  "asset": "SD_GST_GEN3",
+  "spoken": "Take it slow.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.88
+ },
+ {
+  "asset": "SD_GST_GEN4",
+  "spoken": "Keep scanning for hostiles.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.36
+ },
+ {
+  "asset": "SD_GST_GEN5",
+  "spoken": "Watch the corners.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92
+ },
+ {
+  "asset": "SD_GST_GRUNT1",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.28
+ },
+ {
+  "asset": "SD_GST_GRUNT2",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "asset": "SD_GST_GRUNT3",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "asset": "SD_GST_GRUNT_MELEE1",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "asset": "SD_GST_GRUNT_MELEE2",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "asset": "SD_GST_GRUNT_MELEE3",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "asset": "SD_GST_HELP1",
+  "spoken": "Renko, help me out here!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.69
+ },
+ {
+  "asset": "SD_GST_HELP2",
+  "spoken": "Gimme a hand!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.69
+ },
+ {
+  "asset": "SD_GST_JUMP1",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.23
+ },
+ {
+  "asset": "SD_GST_JUMP2",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "asset": "SD_GST_JUMP3",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "asset": "SD_GST_LAND1",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "asset": "SD_GST_LAND2",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "asset": "SD_GST_LAND3",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "asset": "SD_GST_LOC_ABV1",
+  "spoken": "Contact above us.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.99
+ },
+ {
+  "asset": "SD_GST_LOC_ABV2",
+  "spoken": "Enemy up top.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79
+ },
+ {
+  "asset": "SD_GST_LOC_AHD1",
+  "spoken": "Target 12 o'clock.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.98
+ },
+ {
+  "asset": "SD_GST_LOC_AHD2",
+  "spoken": "Contact dead ahead.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.95
+ },
+ {
+  "asset": "SD_GST_LOC_LFT1",
+  "spoken": "Enemy to the left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.89
+ },
+ {
+  "asset": "SD_GST_LOC_LFT2",
+  "spoken": "Contact to the left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.03
+ },
+ {
+  "asset": "SD_GST_LOC_LFT3",
+  "spoken": "Look left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.57
+ },
+ {
+  "asset": "SD_GST_LOC_RT1",
+  "spoken": "Contact to the right.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.83
+ },
+ {
+  "asset": "SD_GST_LOC_RT2",
+  "spoken": "Enemy to the right.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.93
+ },
+ {
+  "asset": "SD_GST_LOC_RT3",
+  "spoken": "To the right.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.51
+ },
+ {
+  "asset": "SD_GST_LOCS1",
+  "spoken": "Contact on the bridge!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.28
+ },
+ {
+  "asset": "SD_GST_LOCS2",
+  "spoken": "Enemy in the window!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.87
+ },
+ {
+  "asset": "SD_GST_LOCS3",
+  "spoken": "Hostile on the stairs!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.32
+ },
+ {
+  "asset": "SD_GST_LOCS4",
+  "spoken": "Contact on the roof!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.03
+ },
+ {
+  "asset": "SD_GST_MOVE_COVER1",
+  "spoken": "Take cover!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.84
+ },
+ {
+  "asset": "SD_GST_MOVE_COVER2",
+  "spoken": "Find cover!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.01
+ },
+ {
+  "asset": "SD_GST_MOVE_COVER3",
+  "spoken": "Get to cover!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.73
+ },
+ {
+  "asset": "SD_GST_MOVE_HOLD1",
+  "spoken": "Hold.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.42
+ },
+ {
+  "asset": "SD_GST_MOVE_HOLD2",
+  "spoken": "Hold up.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.45
+ },
+ {
+  "asset": "SD_GST_MOVE_HOLD3",
+  "spoken": "Hold position!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.91
+ },
+ {
+  "asset": "SD_GST_MOVE_IN1",
+  "spoken": "Move up.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.48
+ },
+ {
+  "asset": "SD_GST_MOVE_IN2",
+  "spoken": "Advance!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.62
+ },
+ {
+  "asset": "SD_GST_MOVE_IN3",
+  "spoken": "Let's go.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.49
+ },
+ {
+  "asset": "SD_GST_MOVE_IT1",
+  "spoken": "You mind moving this?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.81
+ },
+ {
+  "asset": "SD_GST_MOVE_IT2",
+  "spoken": "Could you get this out of my way?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.23
+ },
+ {
+  "asset": "SD_GST_MOVE_LEFT1",
+  "spoken": "Flank left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.7
+ },
+ {
+  "asset": "SD_GST_MOVE_LEFT2",
+  "spoken": "Left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.44
+ },
+ {
+  "asset": "SD_GST_MOVE_LEFT3",
+  "spoken": "Go left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "asset": "SD_GST_MOVE_OUT1",
+  "spoken": "Let's go.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.5
+ },
+ {
+  "asset": "SD_GST_MOVE_OUT2",
+  "spoken": "This way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.44
+ },
+ {
+  "asset": "SD_GST_MOVE_OUT3",
+  "spoken": "Follow me.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.5
+ },
+ {
+  "asset": "SD_GST_MOVE_RETREAT1",
+  "spoken": "Retreat.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.49
+ },
+ {
+  "asset": "SD_GST_MOVE_RETREAT2",
+  "spoken": "Fallback.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.56
+ },
+ {
+  "asset": "SD_GST_MOVE_RETREAT3",
+  "spoken": "Let's pull back.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74
+ },
+ {
+  "asset": "SD_GST_MOVE_RIGHT1",
+  "spoken": "Flank right!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.72
+ },
+ {
+  "asset": "SD_GST_MOVE_RIGHT2",
+  "spoken": "Right!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.49
+ },
+ {
+  "asset": "SD_GST_MOVE_RIGHT3",
+  "spoken": "Go right!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.57
+ },
+ {
+  "asset": "SD_GST_MOVE_YOU1",
+  "spoken": "You mind moving?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.7
+ },
+ {
+  "asset": "SD_GST_MOVE_YOU2",
+  "spoken": "You're in my way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.98
+ },
+ {
+  "asset": "SD_GST_PAIN_LARGE1",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.64
+ },
+ {
+  "asset": "SD_GST_PAIN_LARGE2",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.9
+ },
+ {
+  "asset": "SD_GST_PAIN_LARGE3",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "asset": "SD_GST_PAIN_SMALL1",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "asset": "SD_GST_PAIN_SMALL2",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "asset": "SD_GST_PAIN_SMALL3",
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.33
+ },
+ {
+  "asset": "SD_GST_REPORT_BEHIND1",
+  "spoken": "Circle around behind them.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "asset": "SD_GST_REPORT_CLEAR1",
+  "spoken": "This area is clear.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.9
+ },
+ {
+  "asset": "SD_GST_REPORT_CLEAR2",
+  "spoken": "All clear.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.58
+ },
+ {
+  "asset": "SD_GST_REPORT_DESTROY1",
+  "spoken": "Target down.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76
+ },
+ {
+  "asset": "SD_GST_REPORT_DESTROY2",
+  "spoken": "Got 'em.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.41
+ },
+ {
+  "asset": "SD_GST_REPORT_DESTROY3",
+  "spoken": "He's down.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.6
+ },
+ {
+  "asset": "SD_GST_REPORT_FIRE1",
+  "spoken": "I just heard shots.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.95
+ },
+ {
+  "asset": "SD_GST_REPORT_FIRE2",
+  "spoken": "Taking fire!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.96
+ },
+ {
+  "asset": "SD_GST_REPORT_HIT1",
+  "spoken": "I'm hit!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.52
+ },
+ {
+  "asset": "SD_GST_REPORT_NEGATIVE1",
+  "spoken": "Negative.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.52
+ },
+ {
+  "asset": "SD_GST_REPORT_PINNED1",
+  "spoken": "I'm pinned down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.97
+ },
+ {
+  "asset": "SD_GST_REPORT_PINNED2",
+  "spoken": "I'm taking heavy fire!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.3
+ },
+ {
+  "asset": "SD_GST_REPORT_RELOAD1",
+  "spoken": "Reloading.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.61
+ },
+ {
+  "asset": "SD_GST_REPORT_RELOAD2",
+  "spoken": "I have to reload.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.95
+ },
+ {
+  "asset": "SD_GST_REPORT_RELOAD3",
+  "spoken": "Need to reload.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.8
+ },
+ {
+  "asset": "SD_GST_REPORT_SNIPER1",
+  "spoken": "Sniper!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.53
+ },
+ {
+  "asset": "SD_GST_REPORT_SNIPER2",
+  "spoken": "We've got a sniper!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92
+ },
+ {
+  "asset": "SD_GST_SEE_COVER1",
+  "spoken": "Target in cover.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.91
+ },
+ {
+  "asset": "SD_GST_SEE_COVER2",
+  "spoken": "Enemy is behind cover.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.24
+ },
+ {
+  "asset": "SD_GST_SEE_GRENADE1",
+  "spoken": "Incoming!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.78
+ },
+ {
+  "asset": "SD_GST_SEE_GRENADE2",
+  "spoken": "Grenade!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.69
+ },
+ {
+  "asset": "SD_GST_SEE_GRENADE3",
+  "spoken": "Grenade incoming!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.13
+ },
+ {
+  "asset": "SD_GST_SEE_TARGET1",
+  "spoken": "Contact!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.56
+ },
+ {
+  "asset": "SD_GST_SEE_TARGET2",
+  "spoken": "Target! Dead ahead!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.93
+ },
+ {
+  "asset": "SD_GST_SEE_TARGET3",
+  "spoken": "Enemy spotted.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79
+ },
+ {
+  "asset": "SD_GST_SMOKE1",
+  "spoken": "They popped smoke!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.81
+ },
+ {
+  "asset": "SD_SPT1_ELEC_PAIN1",
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "asset": "SD_SPT1_ELEC_PAIN2",
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.73
+ },
+ {
+  "asset": "SD_SPT1_ELEC_PAIN3",
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.9
+ },
+ {
+  "asset": "SD_SPT1_FIRE_PAIN1",
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.57
+ },
+ {
+  "asset": "SD_SPT1_FIRE_PAIN2",
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 3.44
+ },
+ {
+  "asset": "SD_SPT1_FIRE_PAIN3",
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.92
+ },
+ {
+  "asset": "INTRO_1005_NIM",
+  "spoken": "Spartan team, Nimitz Actual.  You are now entering Russian airspace.  Proceed with caution.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 5.47
+ },
+ {
+  "asset": "INTRO_1006_CP",
+  "spoken": "Roger that, Nimitz.  Continuing on this vector.  ETA to target three minutes.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 4.66
+ },
+ {
+  "asset": "INTRO_1007_GST",
+  "spoken": "The brass must be scared shitless if they're willing to risk an international incident sending us in like this.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 5.41
+ },
+ {
+  "asset": "INTRO_1008_GST",
+  "spoken": "Intel says this berg's been abandoned for fifty years, but you know what they say about 'military intelligence.'  So keep your head on a swivel.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 8.2
+ },
+ {
+  "asset": "INTRO_1009_NIM",
+  "spoken": "Spartan team maintain present speed and heading.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.36
+ },
+ {
+  "asset": "INTRO_1010_CP",
+  "spoken": "Copy that, Nimitz.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16
+ },
+ {
+  "asset": "INTRO_1011_GST",
+  "spoken": "Damn ... you see that?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.96
+ },
+ {
+  "asset": "INTRO_1012_NIM",
+  "spoken": "Spartan two-one, Spartan two-one -- we're reading a radiation spike on your vector.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 4.02
+ },
+ {
+  "asset": "INTRO_1014_GST",
+  "spoken": "Looks like a goddamn EMP.  Buckle up, Renko!  We're going for a ride!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.69
+ },
+ {
+  "asset": "INTRO_1015_GST",
+  "spoken": "Aaaaaaagh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.09
+ },
+ {
+  "asset": "INTRO_1016_CP",
+  "spoken": "We're hit!  We're hit!  Mayday mayday mayday!  We're going down.  We're--  Oh my G--",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 5.39
+ }
+]

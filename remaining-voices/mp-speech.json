@@ -1,0 +1,7178 @@
+[
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.27
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.13
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.11
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.09
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.48
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_FAIL1_MTR1",
+  "spoken": "Defeat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.44
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_FAIL1_SPT1",
+  "spoken": "The battle is lost, but the war continues.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_FAIL2_MTR1",
+  "spoken": "No! Nooo!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_FAIL2_SPT1",
+  "spoken": "You have failed the Motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_FAIL3_SPT1",
+  "spoken": "You disappoint the motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "spoken": "They are near the beacon. Kill them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "spoken": "We have visual contact with the Beacon.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN1_CMP",
+  "spoken": "Beacon online.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.45
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN1_MTR1",
+  "spoken": "They are regenerating the beacon. Stop them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN1_SPT1",
+  "spoken": "Beacon regeneration in progress.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN2_CMP",
+  "spoken": "Eradication starts now.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN2_SPT1",
+  "spoken": "Defend it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN3_SPT1",
+  "spoken": "Now hold it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT01_CMP",
+  "spoken": "1",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.55
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT02_CMP",
+  "spoken": "2",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.35
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT03_CMP",
+  "spoken": "3",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.44
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT04_CMP",
+  "spoken": "4",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.5
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT05_CMP",
+  "spoken": "5",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.56
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT10_CMP",
+  "spoken": "10 seconds",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.39
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT15_CMP",
+  "spoken": "15 seconds",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.54
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN_START1_CMP",
+  "spoken": "Beacon functional.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN_START2_CMP",
+  "spoken": "Uplink initiated.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN_STOP1_CMP",
+  "spoken": "System failure. Uplink aborted.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.99
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_REGEN_STOP2_CMP",
+  "spoken": "Beacon down.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.27
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_START1_MTR1",
+  "spoken": "Stop the humans.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_START1_SPT1",
+  "spoken": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_START2_MTR1",
+  "spoken": "Die for the hive.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_START2_SPT1",
+  "spoken": "Get those beacons restored. The Hive must be exterminated!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_START3_SPT1",
+  "spoken": "Find and regenerate old troop spawners along the way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TICKEND1_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TICKEND2_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TICKEND3_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TICKEND4_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "spoken": "Hunh ... It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "spoken": "Unf ... Help! A tick's on me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "spoken": "Huh ... A tick! A tick!!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "spoken": "Unf ... Help! It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "spoken": "Aaah! Shoot it! Kill the tick!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "spoken": "Shoot the tick! Kill it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "spoken": "Kill it! Get it off me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "spoken": "Aaaaah! Shoot the damn thing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_TIME3_SPT1",
+  "spoken": "Time is running out!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_WIN1_MTR1",
+  "spoken": "The Hive lives on to fight another day.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_WIN1_SPT1",
+  "spoken": "That's how it's done. Outstanding job soldiers.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_WIN2_MTR1",
+  "spoken": "Long live the Hive!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_WIN2_SPT1",
+  "spoken": "Great job, soldiers! Exterminating hive now!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_WIN3_MTR1",
+  "spoken": "The Hive is victorious!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_WIN3_SPT1",
+  "spoken": "You make the motherland proud!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_WIN4_MTR1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.43
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_WIN4_SPT1",
+  "spoken": "For the motherland!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_CvS_Manufacturing_p_LOC_INT",
+  "asset": "MP_WIN5_SPT1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.27
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.13
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.11
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.09
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.48
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_FAIL1_MTR1",
+  "spoken": "Defeat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.44
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_FAIL1_SPT1",
+  "spoken": "The battle is lost, but the war continues.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_FAIL2_MTR1",
+  "spoken": "No! Nooo!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_FAIL2_SPT1",
+  "spoken": "You have failed the Motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_FAIL3_SPT1",
+  "spoken": "You disappoint the motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "spoken": "They are near the beacon. Kill them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "spoken": "We have visual contact with the Beacon.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN1_CMP",
+  "spoken": "Beacon online.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.45
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN1_MTR1",
+  "spoken": "They are regenerating the beacon. Stop them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN1_SPT1",
+  "spoken": "Beacon regeneration in progress.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN2_CMP",
+  "spoken": "Eradication starts now.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN2_SPT1",
+  "spoken": "Defend it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN3_SPT1",
+  "spoken": "Now hold it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT01_CMP",
+  "spoken": "1",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.55
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT02_CMP",
+  "spoken": "2",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.35
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT03_CMP",
+  "spoken": "3",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.44
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT04_CMP",
+  "spoken": "4",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.5
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT05_CMP",
+  "spoken": "5",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.56
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT10_CMP",
+  "spoken": "10 seconds",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.39
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT15_CMP",
+  "spoken": "15 seconds",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.54
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN_START1_CMP",
+  "spoken": "Beacon functional.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN_START2_CMP",
+  "spoken": "Uplink initiated.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN_STOP1_CMP",
+  "spoken": "System failure. Uplink aborted.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.99
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_REGEN_STOP2_CMP",
+  "spoken": "Beacon down.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.27
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_START1_MTR1",
+  "spoken": "Stop the humans.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_START1_SPT1",
+  "spoken": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_START2_MTR1",
+  "spoken": "Die for the hive.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_START2_SPT1",
+  "spoken": "Get those beacons restored. The Hive must be exterminated!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_START3_SPT1",
+  "spoken": "Find and regenerate old troop spawners along the way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TICKEND1_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TICKEND2_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TICKEND3_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TICKEND4_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "spoken": "Hunh ... It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "spoken": "Unf ... Help! A tick's on me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "spoken": "Huh ... A tick! A tick!!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "spoken": "Unf ... Help! It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "spoken": "Aaah! Shoot it! Kill the tick!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "spoken": "Shoot the tick! Kill it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "spoken": "Kill it! Get it off me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "spoken": "Aaaaah! Shoot the damn thing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_TIME3_SPT1",
+  "spoken": "Time is running out!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_WIN1_MTR1",
+  "spoken": "The Hive lives on to fight another day.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_WIN1_SPT1",
+  "spoken": "That's how it's done. Outstanding job soldiers.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_WIN2_MTR1",
+  "spoken": "Long live the Hive!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_WIN2_SPT1",
+  "spoken": "Great job, soldiers! Exterminating hive now!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_WIN3_MTR1",
+  "spoken": "The Hive is victorious!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_WIN3_SPT1",
+  "spoken": "You make the motherland proud!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_WIN4_MTR1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.43
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_WIN4_SPT1",
+  "spoken": "For the motherland!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_CvS_Village_p_LOC_INT",
+  "asset": "MP_WIN5_SPT1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.27
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.13
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.11
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.09
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.48
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_FAIL1_MTR1",
+  "spoken": "Defeat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.44
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_FAIL1_SPT1",
+  "spoken": "The battle is lost, but the war continues.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_FAIL2_MTR1",
+  "spoken": "No! Nooo!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_FAIL2_SPT1",
+  "spoken": "You have failed the Motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_FAIL3_SPT1",
+  "spoken": "You disappoint the motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "spoken": "They are near the beacon. Kill them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "spoken": "We have visual contact with the Beacon.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN1_CMP",
+  "spoken": "Beacon online.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.45
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN1_MTR1",
+  "spoken": "They are regenerating the beacon. Stop them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN1_SPT1",
+  "spoken": "Beacon regeneration in progress.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN2_CMP",
+  "spoken": "Eradication starts now.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN2_SPT1",
+  "spoken": "Defend it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN3_SPT1",
+  "spoken": "Now hold it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT01_CMP",
+  "spoken": "1",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.55
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT02_CMP",
+  "spoken": "2",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.35
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT03_CMP",
+  "spoken": "3",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.44
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT04_CMP",
+  "spoken": "4",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.5
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT05_CMP",
+  "spoken": "5",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.56
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT10_CMP",
+  "spoken": "10 seconds",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.39
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN_COUNT15_CMP",
+  "spoken": "15 seconds",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.54
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN_START1_CMP",
+  "spoken": "Beacon functional.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN_START2_CMP",
+  "spoken": "Uplink initiated.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN_STOP1_CMP",
+  "spoken": "System failure. Uplink aborted.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.99
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_REGEN_STOP2_CMP",
+  "spoken": "Beacon down.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.27
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_START1_MTR1",
+  "spoken": "Stop the humans.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_START1_SPT1",
+  "spoken": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_START2_MTR1",
+  "spoken": "Die for the hive.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_START2_SPT1",
+  "spoken": "Get those beacons restored. The Hive must be exterminated!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_START3_SPT1",
+  "spoken": "Find and regenerate old troop spawners along the way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TICKEND1_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TICKEND2_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TICKEND3_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TICKEND4_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "spoken": "Hunh ... It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "spoken": "Unf ... Help! A tick's on me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "spoken": "Huh ... A tick! A tick!!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "spoken": "Unf ... Help! It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "spoken": "Aaah! Shoot it! Kill the tick!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "spoken": "Shoot the tick! Kill it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "spoken": "Kill it! Get it off me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "spoken": "Aaaaah! Shoot the damn thing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_TIME3_SPT1",
+  "spoken": "Time is running out!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_WIN1_MTR1",
+  "spoken": "The Hive lives on to fight another day.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_WIN1_SPT1",
+  "spoken": "That's how it's done. Outstanding job soldiers.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_WIN2_MTR1",
+  "spoken": "Long live the Hive!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_WIN2_SPT1",
+  "spoken": "Great job, soldiers! Exterminating hive now!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_WIN3_MTR1",
+  "spoken": "The Hive is victorious!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_WIN3_SPT1",
+  "spoken": "You make the motherland proud!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_WIN4_MTR1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.43
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_WIN4_SPT1",
+  "spoken": "For the motherland!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_CvS_Wasteland_p_LOC_INT",
+  "asset": "MP_WIN5_SPT1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.27
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.13
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.11
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.09
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.48
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_FAIL1_MTR1",
+  "spoken": "Defeat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.44
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_FAIL1_SPT1",
+  "spoken": "The battle is lost, but the war continues.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_FAIL2_MTR1",
+  "spoken": "No! Nooo!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_FAIL2_SPT1",
+  "spoken": "You have failed the Motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_FAIL3_SPT1",
+  "spoken": "You disappoint the motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "spoken": "They are near the beacon. Kill them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "spoken": "We have visual contact with the Beacon.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_REGEN1_MTR1",
+  "spoken": "They are regenerating the beacon. Stop them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_REGEN1_SPT1",
+  "spoken": "Beacon regeneration in progress.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_REGEN2_SPT1",
+  "spoken": "Defend it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_REGEN3_SPT1",
+  "spoken": "Now hold it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_START1_MTR1",
+  "spoken": "Stop the humans.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_START1_SPT1",
+  "spoken": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_START2_MTR1",
+  "spoken": "Die for the hive.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_START2_SPT1",
+  "spoken": "Get those beacons restored. The Hive must be exterminated!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_START3_SPT1",
+  "spoken": "Find and regenerate old troop spawners along the way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TICKEND1_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TICKEND2_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TICKEND3_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TICKEND4_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "spoken": "Hunh ... It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "spoken": "Unf ... Help! A tick's on me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "spoken": "Huh ... A tick! A tick!!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "spoken": "Unf ... Help! It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "spoken": "Aaah! Shoot it! Kill the tick!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "spoken": "Shoot the tick! Kill it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "spoken": "Kill it! Get it off me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "spoken": "Aaaaah! Shoot the damn thing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_TIME3_SPT1",
+  "spoken": "Time is running out!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_WIN1_MTR1",
+  "spoken": "The Hive lives on to fight another day.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_WIN1_SPT1",
+  "spoken": "That's how it's done. Outstanding job soldiers.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_WIN2_MTR1",
+  "spoken": "Long live the Hive!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_WIN2_SPT1",
+  "spoken": "Great job, soldiers! Exterminating hive now!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_WIN3_MTR1",
+  "spoken": "The Hive is victorious!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_WIN3_SPT1",
+  "spoken": "You make the motherland proud!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_WIN4_MTR1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.43
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_WIN4_SPT1",
+  "spoken": "For the motherland!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "asset": "MP_WIN5_SPT1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.27
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.13
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.11
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.09
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.48
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_FAIL1_MTR1",
+  "spoken": "Defeat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.44
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_FAIL1_SPT1",
+  "spoken": "The battle is lost, but the war continues.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_FAIL2_MTR1",
+  "spoken": "No! Nooo!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_FAIL2_SPT1",
+  "spoken": "You have failed the Motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_FAIL3_SPT1",
+  "spoken": "You disappoint the motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "spoken": "They are near the beacon. Kill them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "spoken": "We have visual contact with the Beacon.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_REGEN1_MTR1",
+  "spoken": "They are regenerating the beacon. Stop them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_REGEN1_SPT1",
+  "spoken": "Beacon regeneration in progress.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_REGEN2_SPT1",
+  "spoken": "Defend it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_REGEN3_SPT1",
+  "spoken": "Now hold it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_START1_MTR1",
+  "spoken": "Stop the humans.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_START1_SPT1",
+  "spoken": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_START2_MTR1",
+  "spoken": "Die for the hive.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_START2_SPT1",
+  "spoken": "Get those beacons restored. The Hive must be exterminated!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_START3_SPT1",
+  "spoken": "Find and regenerate old troop spawners along the way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TICKEND1_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TICKEND2_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TICKEND3_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TICKEND4_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "spoken": "Hunh ... It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "spoken": "Unf ... Help! A tick's on me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "spoken": "Huh ... A tick! A tick!!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "spoken": "Unf ... Help! It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "spoken": "Aaah! Shoot it! Kill the tick!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "spoken": "Shoot the tick! Kill it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "spoken": "Kill it! Get it off me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "spoken": "Aaaaah! Shoot the damn thing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_TIME3_SPT1",
+  "spoken": "Time is running out!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_WIN1_MTR1",
+  "spoken": "The Hive lives on to fight another day.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_WIN1_SPT1",
+  "spoken": "That's how it's done. Outstanding job soldiers.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_WIN2_MTR1",
+  "spoken": "Long live the Hive!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_WIN2_SPT1",
+  "spoken": "Great job, soldiers! Exterminating hive now!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_WIN3_MTR1",
+  "spoken": "The Hive is victorious!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_WIN3_SPT1",
+  "spoken": "You make the motherland proud!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_WIN4_MTR1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.43
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_WIN4_SPT1",
+  "spoken": "For the motherland!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "asset": "MP_WIN5_SPT1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.27
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.13
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.11
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.09
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.48
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_FAIL1_MTR1",
+  "spoken": "Defeat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.44
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_FAIL1_SPT1",
+  "spoken": "The battle is lost, but the war continues.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_FAIL2_MTR1",
+  "spoken": "No! Nooo!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_FAIL2_SPT1",
+  "spoken": "You have failed the Motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_FAIL3_SPT1",
+  "spoken": "You disappoint the motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "spoken": "They are near the beacon. Kill them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "spoken": "We have visual contact with the Beacon.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_REGEN1_MTR1",
+  "spoken": "They are regenerating the beacon. Stop them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_REGEN1_SPT1",
+  "spoken": "Beacon regeneration in progress.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_REGEN2_SPT1",
+  "spoken": "Defend it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_REGEN3_SPT1",
+  "spoken": "Now hold it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_START1_MTR1",
+  "spoken": "Stop the humans.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_START1_SPT1",
+  "spoken": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_START2_MTR1",
+  "spoken": "Die for the hive.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_START2_SPT1",
+  "spoken": "Get those beacons restored. The Hive must be exterminated!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_START3_SPT1",
+  "spoken": "Find and regenerate old troop spawners along the way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TICKEND1_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TICKEND2_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TICKEND3_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TICKEND4_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "spoken": "Hunh ... It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "spoken": "Unf ... Help! A tick's on me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "spoken": "Huh ... A tick! A tick!!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "spoken": "Unf ... Help! It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "spoken": "Aaah! Shoot it! Kill the tick!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "spoken": "Shoot the tick! Kill it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "spoken": "Kill it! Get it off me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "spoken": "Aaaaah! Shoot the damn thing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_TIME3_SPT1",
+  "spoken": "Time is running out!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_WIN1_MTR1",
+  "spoken": "The Hive lives on to fight another day.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_WIN1_SPT1",
+  "spoken": "That's how it's done. Outstanding job soldiers.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_WIN2_MTR1",
+  "spoken": "Long live the Hive!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_WIN2_SPT1",
+  "spoken": "Great job, soldiers! Exterminating hive now!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_WIN3_MTR1",
+  "spoken": "The Hive is victorious!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_WIN3_SPT1",
+  "spoken": "You make the motherland proud!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_WIN4_MTR1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.43
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_WIN4_SPT1",
+  "spoken": "For the motherland!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "asset": "MP_WIN5_SPT1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.27
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.13
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.11
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.09
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.48
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_FAIL1_MTR1",
+  "spoken": "Defeat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.44
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_FAIL1_SPT1",
+  "spoken": "The battle is lost, but the war continues.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_FAIL2_MTR1",
+  "spoken": "No! Nooo!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_FAIL2_SPT1",
+  "spoken": "You have failed the Motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_FAIL3_SPT1",
+  "spoken": "You disappoint the motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "spoken": "They are near the beacon. Kill them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "spoken": "We have visual contact with the Beacon.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_REGEN1_MTR1",
+  "spoken": "They are regenerating the beacon. Stop them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_REGEN1_SPT1",
+  "spoken": "Beacon regeneration in progress.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_REGEN2_SPT1",
+  "spoken": "Defend it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_REGEN3_SPT1",
+  "spoken": "Now hold it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_START1_MTR1",
+  "spoken": "Stop the humans.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_START1_SPT1",
+  "spoken": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_START2_MTR1",
+  "spoken": "Die for the hive.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_START2_SPT1",
+  "spoken": "Get those beacons restored. The Hive must be exterminated!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_START3_SPT1",
+  "spoken": "Find and regenerate old troop spawners along the way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TICKEND1_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TICKEND2_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TICKEND3_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TICKEND4_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "spoken": "Hunh ... It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "spoken": "Unf ... Help! A tick's on me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "spoken": "Huh ... A tick! A tick!!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "spoken": "Unf ... Help! It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "spoken": "Aaah! Shoot it! Kill the tick!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "spoken": "Shoot the tick! Kill it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "spoken": "Kill it! Get it off me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "spoken": "Aaaaah! Shoot the damn thing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_TIME3_SPT1",
+  "spoken": "Time is running out!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_WIN1_MTR1",
+  "spoken": "The Hive lives on to fight another day.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_WIN1_SPT1",
+  "spoken": "That's how it's done. Outstanding job soldiers.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_WIN2_MTR1",
+  "spoken": "Long live the Hive!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_WIN2_SPT1",
+  "spoken": "Great job, soldiers! Exterminating hive now!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_WIN3_MTR1",
+  "spoken": "The Hive is victorious!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_WIN3_SPT1",
+  "spoken": "You make the motherland proud!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_WIN4_MTR1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.43
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_WIN4_SPT1",
+  "spoken": "For the motherland!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_TDM_VillageA_p_LOC_INT",
+  "asset": "MP_WIN5_SPT1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.27
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.13
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.11
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.09
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.48
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_FAIL1_MTR1",
+  "spoken": "Defeat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.44
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_FAIL1_SPT1",
+  "spoken": "The battle is lost, but the war continues.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_FAIL2_MTR1",
+  "spoken": "No! Nooo!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_FAIL2_SPT1",
+  "spoken": "You have failed the Motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_FAIL3_SPT1",
+  "spoken": "You disappoint the motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "spoken": "They are near the beacon. Kill them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "spoken": "We have visual contact with the Beacon.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_REGEN1_MTR1",
+  "spoken": "They are regenerating the beacon. Stop them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_REGEN1_SPT1",
+  "spoken": "Beacon regeneration in progress.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_REGEN2_SPT1",
+  "spoken": "Defend it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_REGEN3_SPT1",
+  "spoken": "Now hold it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_START1_MTR1",
+  "spoken": "Stop the humans.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_START1_SPT1",
+  "spoken": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_START2_MTR1",
+  "spoken": "Die for the hive.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_START2_SPT1",
+  "spoken": "Get those beacons restored. The Hive must be exterminated!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_START3_SPT1",
+  "spoken": "Find and regenerate old troop spawners along the way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TICKEND1_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TICKEND2_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TICKEND3_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TICKEND4_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "spoken": "Hunh ... It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "spoken": "Unf ... Help! A tick's on me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "spoken": "Huh ... A tick! A tick!!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "spoken": "Unf ... Help! It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "spoken": "Aaah! Shoot it! Kill the tick!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "spoken": "Shoot the tick! Kill it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "spoken": "Kill it! Get it off me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "spoken": "Aaaaah! Shoot the damn thing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_TIME3_SPT1",
+  "spoken": "Time is running out!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_WIN1_MTR1",
+  "spoken": "The Hive lives on to fight another day.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_WIN1_SPT1",
+  "spoken": "That's how it's done. Outstanding job soldiers.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_WIN2_MTR1",
+  "spoken": "Long live the Hive!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_WIN2_SPT1",
+  "spoken": "Great job, soldiers! Exterminating hive now!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_WIN3_MTR1",
+  "spoken": "The Hive is victorious!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_WIN3_SPT1",
+  "spoken": "You make the motherland proud!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_WIN4_MTR1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.43
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_WIN4_SPT1",
+  "spoken": "For the motherland!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_TDM_VillageB_p_LOC_INT",
+  "asset": "MP_WIN5_SPT1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.27
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.13
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.11
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.09
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.48
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_FAIL1_MTR1",
+  "spoken": "Defeat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.44
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_FAIL1_SPT1",
+  "spoken": "The battle is lost, but the war continues.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_FAIL2_MTR1",
+  "spoken": "No! Nooo!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_FAIL2_SPT1",
+  "spoken": "You have failed the Motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_FAIL3_SPT1",
+  "spoken": "You disappoint the motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "spoken": "They are near the beacon. Kill them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "spoken": "We have visual contact with the Beacon.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_REGEN1_MTR1",
+  "spoken": "They are regenerating the beacon. Stop them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_REGEN1_SPT1",
+  "spoken": "Beacon regeneration in progress.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_REGEN2_SPT1",
+  "spoken": "Defend it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_REGEN3_SPT1",
+  "spoken": "Now hold it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_START1_MTR1",
+  "spoken": "Stop the humans.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_START1_SPT1",
+  "spoken": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_START2_MTR1",
+  "spoken": "Die for the hive.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_START2_SPT1",
+  "spoken": "Get those beacons restored. The Hive must be exterminated!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_START3_SPT1",
+  "spoken": "Find and regenerate old troop spawners along the way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TICKEND1_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TICKEND2_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TICKEND3_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TICKEND4_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "spoken": "Hunh ... It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "spoken": "Unf ... Help! A tick's on me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "spoken": "Huh ... A tick! A tick!!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "spoken": "Unf ... Help! It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "spoken": "Aaah! Shoot it! Kill the tick!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "spoken": "Shoot the tick! Kill it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "spoken": "Kill it! Get it off me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "spoken": "Aaaaah! Shoot the damn thing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_TIME3_SPT1",
+  "spoken": "Time is running out!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_WIN1_MTR1",
+  "spoken": "The Hive lives on to fight another day.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_WIN1_SPT1",
+  "spoken": "That's how it's done. Outstanding job soldiers.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_WIN2_MTR1",
+  "spoken": "Long live the Hive!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_WIN2_SPT1",
+  "spoken": "Great job, soldiers! Exterminating hive now!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_WIN3_MTR1",
+  "spoken": "The Hive is victorious!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_WIN3_SPT1",
+  "spoken": "You make the motherland proud!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_WIN4_MTR1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.43
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_WIN4_SPT1",
+  "spoken": "For the motherland!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_TDM_WastelandA_p_LOC_INT",
+  "asset": "MP_WIN5_SPT1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.27
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.13
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.11
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.09
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.48
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_FAIL1_MTR1",
+  "spoken": "Defeat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.44
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_FAIL1_SPT1",
+  "spoken": "The battle is lost, but the war continues.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_FAIL2_MTR1",
+  "spoken": "No! Nooo!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_FAIL2_SPT1",
+  "spoken": "You have failed the Motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_FAIL3_SPT1",
+  "spoken": "You disappoint the motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "spoken": "They are near the beacon. Kill them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "spoken": "We have visual contact with the Beacon.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_REGEN1_MTR1",
+  "spoken": "They are regenerating the beacon. Stop them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_REGEN1_SPT1",
+  "spoken": "Beacon regeneration in progress.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_REGEN2_SPT1",
+  "spoken": "Defend it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_REGEN3_SPT1",
+  "spoken": "Now hold it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_START1_MTR1",
+  "spoken": "Stop the humans.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_START1_SPT1",
+  "spoken": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_START2_MTR1",
+  "spoken": "Die for the hive.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_START2_SPT1",
+  "spoken": "Get those beacons restored. The Hive must be exterminated!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_START3_SPT1",
+  "spoken": "Find and regenerate old troop spawners along the way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TICKEND1_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TICKEND2_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TICKEND3_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TICKEND4_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "spoken": "Hunh ... It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "spoken": "Unf ... Help! A tick's on me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "spoken": "Huh ... A tick! A tick!!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "spoken": "Unf ... Help! It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "spoken": "Aaah! Shoot it! Kill the tick!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "spoken": "Shoot the tick! Kill it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "spoken": "Kill it! Get it off me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "spoken": "Aaaaah! Shoot the damn thing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_TIME3_SPT1",
+  "spoken": "Time is running out!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_WIN1_MTR1",
+  "spoken": "The Hive lives on to fight another day.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_WIN1_SPT1",
+  "spoken": "That's how it's done. Outstanding job soldiers.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_WIN2_MTR1",
+  "spoken": "Long live the Hive!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_WIN2_SPT1",
+  "spoken": "Great job, soldiers! Exterminating hive now!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_WIN3_MTR1",
+  "spoken": "The Hive is victorious!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_WIN3_SPT1",
+  "spoken": "You make the motherland proud!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_WIN4_MTR1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.43
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_WIN4_SPT1",
+  "spoken": "For the motherland!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_TDM_WastelandB_p_LOC_INT",
+  "asset": "MP_WIN5_SPT1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_ESP1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.21
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_GRD1_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.27
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.13
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.11
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.09
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.48
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.24
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT2_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_JUMP5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.18
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND1",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND2",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.3
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND3",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND4",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.32
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "SD_SPT3_GRUNT_LAND5",
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_FAIL1_MTR1",
+  "spoken": "Defeat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.44
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_FAIL1_SPT1",
+  "spoken": "The battle is lost, but the war continues.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_FAIL2_MTR1",
+  "spoken": "No! Nooo!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_FAIL2_SPT1",
+  "spoken": "You have failed the Motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_FAIL3_SPT1",
+  "spoken": "You disappoint the motherland.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "spoken": "They are near the beacon. Kill them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "spoken": "We have visual contact with the Beacon.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_REGEN1_MTR1",
+  "spoken": "They are regenerating the beacon. Stop them!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_REGEN1_SPT1",
+  "spoken": "Beacon regeneration in progress.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_REGEN2_SPT1",
+  "spoken": "Defend it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_REGEN3_SPT1",
+  "spoken": "Now hold it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_START1_MTR1",
+  "spoken": "Stop the humans.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_START1_SPT1",
+  "spoken": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_START2_MTR1",
+  "spoken": "Die for the hive.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_START2_SPT1",
+  "spoken": "Get those beacons restored. The Hive must be exterminated!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_START3_SPT1",
+  "spoken": "Find and regenerate old troop spawners along the way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TICKEND1_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TICKEND2_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TICKEND3_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TICKEND4_SPT1",
+  "spoken": "Ack! Ack! Ack!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "spoken": "Hunh ... It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "spoken": "Unf ... Help! A tick's on me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "spoken": "Huh ... A tick! A tick!!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "spoken": "Unf ... Help! It's got me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "spoken": "Aaah! Shoot it! Kill the tick!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "spoken": "Shoot the tick! Kill it!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "spoken": "Kill it! Get it off me!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "spoken": "Aaaaah! Shoot the damn thing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_TIME3_SPT1",
+  "spoken": "Time is running out!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_WIN1_MTR1",
+  "spoken": "The Hive lives on to fight another day.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_WIN1_SPT1",
+  "spoken": "That's how it's done. Outstanding job soldiers.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_WIN2_MTR1",
+  "spoken": "Long live the Hive!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_WIN2_SPT1",
+  "spoken": "Great job, soldiers! Exterminating hive now!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_WIN3_MTR1",
+  "spoken": "The Hive is victorious!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_WIN3_SPT1",
+  "spoken": "You make the motherland proud!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_WIN4_MTR1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.43
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_WIN4_SPT1",
+  "spoken": "For the motherland!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46
+ },
+ {
+  "package": "MP_TDM_WastelandC_p_LOC_INT",
+  "asset": "MP_WIN5_SPT1",
+  "spoken": "Victory!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16
+ }
+]

@@ -79,3 +79,9 @@ audio/polish/cast_legal_20261014/**/*.ogg
 audio/polish/cast_legal_20261014/**/*.exe
 audio/polish/cast_legal_20261014/**/*.onnx
 audio/polish/cast_legal_20261014/**/*.onnx.json
+
+# ---- remaining-voices SIDE audio (252 MB): WAVy lokalnie, manifesty tak ----
+remaining-voices/out/**/*.wav
+remaining-voices/_refs/
+_work_u/
+

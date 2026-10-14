@@ -1,0 +1,4092 @@
+[
+ {
+  "asset": "MP_FAIL1_SPT1",
+  "en": "The battle is lost, but the war continues.",
+  "pl": "Bitwa jest przegrana, ale wojna trwa.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_MTR1",
+  "en": "No! Nooo!",
+  "pl": "Nie, nie, nie!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_SPT1",
+  "en": "You have failed the Motherland.",
+  "pl": "Zawiedłeś ojczyznę.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL3_SPT1",
+  "en": "You disappoint the motherland.",
+  "pl": "Rozczarowujesz ojczyznę.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "en": "They are near the beacon. Kill them!",
+  "pl": "Są w pobliżu latarni.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "en": "We have visual contact with the Beacon.",
+  "pl": "Mamy kontakt wizualny z Beaconem.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_CMP",
+  "en": "Beacon online.",
+  "pl": "nadajnik w sieci.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.45,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_MTR1",
+  "en": "They are regenerating the beacon. Stop them!",
+  "pl": "Regenerują latarnię.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_SPT1",
+  "en": "Beacon regeneration in progress.",
+  "pl": "Regeneracja nadajnik w toku.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_CMP",
+  "en": "Eradication starts now.",
+  "pl": "Wyeliminowanie zaczyna się teraz.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_SPT1",
+  "en": "Defend it!",
+  "pl": "Obronicie go!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN3_SPT1",
+  "en": "Now hold it!",
+  "pl": "Trzymaj się!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_COUNT10_CMP",
+  "en": "10 seconds",
+  "pl": "10 sekund",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.39,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_COUNT15_CMP",
+  "en": "15 seconds",
+  "pl": "15 sekund",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.54,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_START1_CMP",
+  "en": "Beacon functional.",
+  "pl": "Światło funkcjonalne.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_START2_CMP",
+  "en": "Uplink initiated.",
+  "pl": "Połączenie zainicjowane.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_STOP1_CMP",
+  "en": "System failure. Uplink aborted.",
+  "pl": "Wypadek systemu, połączenie przerwane.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.99,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_STOP2_CMP",
+  "en": "Beacon down.",
+  "pl": "Światło w dół.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.27,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_MTR1",
+  "en": "Stop the humans.",
+  "pl": "Zatrzymaj ludzi.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_SPT1",
+  "en": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "pl": "Żołnierze, waszym zadaniem jest infiltracja na terytorium istoty i przywrócenie wszystkich latarek w drodze.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_MTR1",
+  "en": "Die for the hive.",
+  "pl": "Umrzesz za koło.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_SPT1",
+  "en": "Get those beacons restored. The Hive must be exterminated!",
+  "pl": "Niech te latarki zostaną przywrócone.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START3_SPT1",
+  "en": "Find and regenerate old troop spawners along the way.",
+  "pl": "Znajdź i regeneruj starych żołnierzy.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND1_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND2_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND3_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND4_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "en": "Hunh ... It's got me!",
+  "pl": "Złapał mnie!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "en": "Unf ... Help! A tick's on me!",
+  "pl": "Pomóżcie mi!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "en": "Huh ... A tick! A tick!!",
+  "pl": "Żarówka, żarówka!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "en": "Unf ... Help! It's got me!",
+  "pl": "Pomóżcie, złapał mnie!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "en": "Aaah! Shoot it! Kill the tick!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "en": "Shoot the tick! Kill it!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "en": "Kill it! Get it off me!",
+  "pl": "Zabij go!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "en": "Aaaaah! Shoot the damn thing!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TIME3_SPT1",
+  "en": "Time is running out!",
+  "pl": "Czas się kończy!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_MTR1",
+  "en": "The Hive lives on to fight another day.",
+  "pl": "Węża przetrwa, by walczyć jeszcze jeden dzień.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_SPT1",
+  "en": "That's how it's done. Outstanding job soldiers.",
+  "pl": "Tak to się robi, wybitni żołnierze pracy.",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_MTR1",
+  "en": "Long live the Hive!",
+  "pl": "Niech żyje Ucza!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_SPT1",
+  "en": "Great job, soldiers! Exterminating hive now!",
+  "pl": "Świetna robota, żołnierze!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_MTR1",
+  "en": "The Hive is victorious!",
+  "pl": "Węża zwyciężyła!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_SPT1",
+  "en": "You make the motherland proud!",
+  "pl": "Robicie ojczyznę dumną!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN4_SPT1",
+  "en": "For the motherland!",
+  "pl": "Za ojczyznę!",
+  "pkg": "MP_CvS_Manufacturing_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL1_SPT1",
+  "en": "The battle is lost, but the war continues.",
+  "pl": "Bitwa jest przegrana, ale wojna trwa.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_MTR1",
+  "en": "No! Nooo!",
+  "pl": "Nie, nie, nie!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_SPT1",
+  "en": "You have failed the Motherland.",
+  "pl": "Zawiedłeś ojczyznę.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL3_SPT1",
+  "en": "You disappoint the motherland.",
+  "pl": "Rozczarowujesz ojczyznę.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "en": "They are near the beacon. Kill them!",
+  "pl": "Są w pobliżu latarni.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "en": "We have visual contact with the Beacon.",
+  "pl": "Mamy kontakt wizualny z Beaconem.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_CMP",
+  "en": "Beacon online.",
+  "pl": "nadajnik w sieci.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.45,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_MTR1",
+  "en": "They are regenerating the beacon. Stop them!",
+  "pl": "Regenerują latarnię.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_SPT1",
+  "en": "Beacon regeneration in progress.",
+  "pl": "Regeneracja nadajnik w toku.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_CMP",
+  "en": "Eradication starts now.",
+  "pl": "Wyeliminowanie zaczyna się teraz.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_SPT1",
+  "en": "Defend it!",
+  "pl": "Obronicie go!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN3_SPT1",
+  "en": "Now hold it!",
+  "pl": "Trzymaj się!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_COUNT10_CMP",
+  "en": "10 seconds",
+  "pl": "10 sekund",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.39,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_COUNT15_CMP",
+  "en": "15 seconds",
+  "pl": "15 sekund",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.54,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_START1_CMP",
+  "en": "Beacon functional.",
+  "pl": "Światło funkcjonalne.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_START2_CMP",
+  "en": "Uplink initiated.",
+  "pl": "Połączenie zainicjowane.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_STOP1_CMP",
+  "en": "System failure. Uplink aborted.",
+  "pl": "Wypadek systemu, połączenie przerwane.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.99,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_STOP2_CMP",
+  "en": "Beacon down.",
+  "pl": "Światło w dół.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.27,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_MTR1",
+  "en": "Stop the humans.",
+  "pl": "Zatrzymaj ludzi.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_SPT1",
+  "en": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "pl": "Żołnierze, waszym zadaniem jest infiltracja na terytorium istoty i przywrócenie wszystkich latarek w drodze.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_MTR1",
+  "en": "Die for the hive.",
+  "pl": "Umrzesz za koło.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_SPT1",
+  "en": "Get those beacons restored. The Hive must be exterminated!",
+  "pl": "Niech te latarki zostaną przywrócone.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START3_SPT1",
+  "en": "Find and regenerate old troop spawners along the way.",
+  "pl": "Znajdź i regeneruj starych żołnierzy.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND1_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND2_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND3_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND4_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "en": "Hunh ... It's got me!",
+  "pl": "Złapał mnie!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "en": "Unf ... Help! A tick's on me!",
+  "pl": "Pomóżcie mi!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "en": "Huh ... A tick! A tick!!",
+  "pl": "Żarówka, żarówka!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "en": "Unf ... Help! It's got me!",
+  "pl": "Pomóżcie, złapał mnie!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "en": "Aaah! Shoot it! Kill the tick!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "en": "Shoot the tick! Kill it!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "en": "Kill it! Get it off me!",
+  "pl": "Zabij go!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "en": "Aaaaah! Shoot the damn thing!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TIME3_SPT1",
+  "en": "Time is running out!",
+  "pl": "Czas się kończy!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_MTR1",
+  "en": "The Hive lives on to fight another day.",
+  "pl": "Węża przetrwa, by walczyć jeszcze jeden dzień.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_SPT1",
+  "en": "That's how it's done. Outstanding job soldiers.",
+  "pl": "Tak to się robi, wybitni żołnierze pracy.",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_MTR1",
+  "en": "Long live the Hive!",
+  "pl": "Niech żyje Ucza!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_SPT1",
+  "en": "Great job, soldiers! Exterminating hive now!",
+  "pl": "Świetna robota, żołnierze!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_MTR1",
+  "en": "The Hive is victorious!",
+  "pl": "Węża zwyciężyła!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_SPT1",
+  "en": "You make the motherland proud!",
+  "pl": "Robicie ojczyznę dumną!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN4_SPT1",
+  "en": "For the motherland!",
+  "pl": "Za ojczyznę!",
+  "pkg": "MP_CvS_Village_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL1_SPT1",
+  "en": "The battle is lost, but the war continues.",
+  "pl": "Bitwa jest przegrana, ale wojna trwa.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_MTR1",
+  "en": "No! Nooo!",
+  "pl": "Nie, nie, nie!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_SPT1",
+  "en": "You have failed the Motherland.",
+  "pl": "Zawiedłeś ojczyznę.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL3_SPT1",
+  "en": "You disappoint the motherland.",
+  "pl": "Rozczarowujesz ojczyznę.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "en": "They are near the beacon. Kill them!",
+  "pl": "Są w pobliżu latarni.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "en": "We have visual contact with the Beacon.",
+  "pl": "Mamy kontakt wizualny z Beaconem.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_CMP",
+  "en": "Beacon online.",
+  "pl": "nadajnik w sieci.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.45,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_MTR1",
+  "en": "They are regenerating the beacon. Stop them!",
+  "pl": "Regenerują latarnię.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_SPT1",
+  "en": "Beacon regeneration in progress.",
+  "pl": "Regeneracja nadajnik w toku.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_CMP",
+  "en": "Eradication starts now.",
+  "pl": "Wyeliminowanie zaczyna się teraz.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_SPT1",
+  "en": "Defend it!",
+  "pl": "Obronicie go!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN3_SPT1",
+  "en": "Now hold it!",
+  "pl": "Trzymaj się!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_COUNT10_CMP",
+  "en": "10 seconds",
+  "pl": "10 sekund",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.39,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_COUNT15_CMP",
+  "en": "15 seconds",
+  "pl": "15 sekund",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.54,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_START1_CMP",
+  "en": "Beacon functional.",
+  "pl": "Światło funkcjonalne.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_START2_CMP",
+  "en": "Uplink initiated.",
+  "pl": "Połączenie zainicjowane.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_STOP1_CMP",
+  "en": "System failure. Uplink aborted.",
+  "pl": "Wypadek systemu, połączenie przerwane.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.99,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN_STOP2_CMP",
+  "en": "Beacon down.",
+  "pl": "Światło w dół.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.27,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_MTR1",
+  "en": "Stop the humans.",
+  "pl": "Zatrzymaj ludzi.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_SPT1",
+  "en": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "pl": "Żołnierze, waszym zadaniem jest infiltracja na terytorium istoty i przywrócenie wszystkich latarek w drodze.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_MTR1",
+  "en": "Die for the hive.",
+  "pl": "Umrzesz za koło.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_SPT1",
+  "en": "Get those beacons restored. The Hive must be exterminated!",
+  "pl": "Niech te latarki zostaną przywrócone.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START3_SPT1",
+  "en": "Find and regenerate old troop spawners along the way.",
+  "pl": "Znajdź i regeneruj starych żołnierzy.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND1_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND2_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND3_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND4_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "en": "Hunh ... It's got me!",
+  "pl": "Złapał mnie!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "en": "Unf ... Help! A tick's on me!",
+  "pl": "Pomóżcie mi!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "en": "Huh ... A tick! A tick!!",
+  "pl": "Żarówka, żarówka!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "en": "Unf ... Help! It's got me!",
+  "pl": "Pomóżcie, złapał mnie!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "en": "Aaah! Shoot it! Kill the tick!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "en": "Shoot the tick! Kill it!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "en": "Kill it! Get it off me!",
+  "pl": "Zabij go!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "en": "Aaaaah! Shoot the damn thing!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TIME3_SPT1",
+  "en": "Time is running out!",
+  "pl": "Czas się kończy!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_MTR1",
+  "en": "The Hive lives on to fight another day.",
+  "pl": "Węża przetrwa, by walczyć jeszcze jeden dzień.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_SPT1",
+  "en": "That's how it's done. Outstanding job soldiers.",
+  "pl": "Tak to się robi, wybitni żołnierze pracy.",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_MTR1",
+  "en": "Long live the Hive!",
+  "pl": "Niech żyje Ucza!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_SPT1",
+  "en": "Great job, soldiers! Exterminating hive now!",
+  "pl": "Świetna robota, żołnierze!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_MTR1",
+  "en": "The Hive is victorious!",
+  "pl": "Węża zwyciężyła!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_SPT1",
+  "en": "You make the motherland proud!",
+  "pl": "Robicie ojczyznę dumną!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN4_SPT1",
+  "en": "For the motherland!",
+  "pl": "Za ojczyznę!",
+  "pkg": "MP_CvS_Wasteland_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL1_SPT1",
+  "en": "The battle is lost, but the war continues.",
+  "pl": "Bitwa jest przegrana, ale wojna trwa.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_MTR1",
+  "en": "No! Nooo!",
+  "pl": "Nie, nie, nie!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_SPT1",
+  "en": "You have failed the Motherland.",
+  "pl": "Zawiedłeś ojczyznę.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL3_SPT1",
+  "en": "You disappoint the motherland.",
+  "pl": "Rozczarowujesz ojczyznę.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "en": "They are near the beacon. Kill them!",
+  "pl": "Są w pobliżu latarni.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "en": "We have visual contact with the Beacon.",
+  "pl": "Mamy kontakt wizualny z Beaconem.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_MTR1",
+  "en": "They are regenerating the beacon. Stop them!",
+  "pl": "Regenerują latarnię.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_SPT1",
+  "en": "Beacon regeneration in progress.",
+  "pl": "Regeneracja nadajnik w toku.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_SPT1",
+  "en": "Defend it!",
+  "pl": "Obronicie go!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN3_SPT1",
+  "en": "Now hold it!",
+  "pl": "Trzymaj się!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_MTR1",
+  "en": "Stop the humans.",
+  "pl": "Zatrzymaj ludzi.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_SPT1",
+  "en": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "pl": "Żołnierze, waszym zadaniem jest infiltracja na terytorium istoty i przywrócenie wszystkich latarek w drodze.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_MTR1",
+  "en": "Die for the hive.",
+  "pl": "Umrzesz za koło.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_SPT1",
+  "en": "Get those beacons restored. The Hive must be exterminated!",
+  "pl": "Niech te latarki zostaną przywrócone.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START3_SPT1",
+  "en": "Find and regenerate old troop spawners along the way.",
+  "pl": "Znajdź i regeneruj starych żołnierzy.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND1_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND2_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND3_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND4_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "en": "Hunh ... It's got me!",
+  "pl": "Złapał mnie!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "en": "Unf ... Help! A tick's on me!",
+  "pl": "Pomóżcie mi!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "en": "Huh ... A tick! A tick!!",
+  "pl": "Żarówka, żarówka!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "en": "Unf ... Help! It's got me!",
+  "pl": "Pomóżcie, złapał mnie!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "en": "Aaah! Shoot it! Kill the tick!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "en": "Shoot the tick! Kill it!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "en": "Kill it! Get it off me!",
+  "pl": "Zabij go!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "en": "Aaaaah! Shoot the damn thing!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TIME3_SPT1",
+  "en": "Time is running out!",
+  "pl": "Czas się kończy!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_MTR1",
+  "en": "The Hive lives on to fight another day.",
+  "pl": "Węża przetrwa, by walczyć jeszcze jeden dzień.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_SPT1",
+  "en": "That's how it's done. Outstanding job soldiers.",
+  "pl": "Tak to się robi, wybitni żołnierze pracy.",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_MTR1",
+  "en": "Long live the Hive!",
+  "pl": "Niech żyje Ucza!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_SPT1",
+  "en": "Great job, soldiers! Exterminating hive now!",
+  "pl": "Świetna robota, żołnierze!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_MTR1",
+  "en": "The Hive is victorious!",
+  "pl": "Węża zwyciężyła!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_SPT1",
+  "en": "You make the motherland proud!",
+  "pl": "Robicie ojczyznę dumną!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN4_SPT1",
+  "en": "For the motherland!",
+  "pl": "Za ojczyznę!",
+  "pkg": "MP_TDM_ManufacturingA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL1_SPT1",
+  "en": "The battle is lost, but the war continues.",
+  "pl": "Bitwa jest przegrana, ale wojna trwa.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_MTR1",
+  "en": "No! Nooo!",
+  "pl": "Nie, nie, nie!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_SPT1",
+  "en": "You have failed the Motherland.",
+  "pl": "Zawiedłeś ojczyznę.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL3_SPT1",
+  "en": "You disappoint the motherland.",
+  "pl": "Rozczarowujesz ojczyznę.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "en": "They are near the beacon. Kill them!",
+  "pl": "Są w pobliżu latarni.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "en": "We have visual contact with the Beacon.",
+  "pl": "Mamy kontakt wizualny z Beaconem.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_MTR1",
+  "en": "They are regenerating the beacon. Stop them!",
+  "pl": "Regenerują latarnię.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_SPT1",
+  "en": "Beacon regeneration in progress.",
+  "pl": "Regeneracja nadajnik w toku.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_SPT1",
+  "en": "Defend it!",
+  "pl": "Obronicie go!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN3_SPT1",
+  "en": "Now hold it!",
+  "pl": "Trzymaj się!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_MTR1",
+  "en": "Stop the humans.",
+  "pl": "Zatrzymaj ludzi.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_SPT1",
+  "en": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "pl": "Żołnierze, waszym zadaniem jest infiltracja na terytorium istoty i przywrócenie wszystkich latarek w drodze.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_MTR1",
+  "en": "Die for the hive.",
+  "pl": "Umrzesz za koło.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_SPT1",
+  "en": "Get those beacons restored. The Hive must be exterminated!",
+  "pl": "Niech te latarki zostaną przywrócone.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START3_SPT1",
+  "en": "Find and regenerate old troop spawners along the way.",
+  "pl": "Znajdź i regeneruj starych żołnierzy.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND1_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND2_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND3_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND4_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "en": "Hunh ... It's got me!",
+  "pl": "Złapał mnie!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "en": "Unf ... Help! A tick's on me!",
+  "pl": "Pomóżcie mi!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "en": "Huh ... A tick! A tick!!",
+  "pl": "Żarówka, żarówka!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "en": "Unf ... Help! It's got me!",
+  "pl": "Pomóżcie, złapał mnie!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "en": "Aaah! Shoot it! Kill the tick!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "en": "Shoot the tick! Kill it!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "en": "Kill it! Get it off me!",
+  "pl": "Zabij go!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "en": "Aaaaah! Shoot the damn thing!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TIME3_SPT1",
+  "en": "Time is running out!",
+  "pl": "Czas się kończy!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_MTR1",
+  "en": "The Hive lives on to fight another day.",
+  "pl": "Węża przetrwa, by walczyć jeszcze jeden dzień.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_SPT1",
+  "en": "That's how it's done. Outstanding job soldiers.",
+  "pl": "Tak to się robi, wybitni żołnierze pracy.",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_MTR1",
+  "en": "Long live the Hive!",
+  "pl": "Niech żyje Ucza!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_SPT1",
+  "en": "Great job, soldiers! Exterminating hive now!",
+  "pl": "Świetna robota, żołnierze!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_MTR1",
+  "en": "The Hive is victorious!",
+  "pl": "Węża zwyciężyła!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_SPT1",
+  "en": "You make the motherland proud!",
+  "pl": "Robicie ojczyznę dumną!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN4_SPT1",
+  "en": "For the motherland!",
+  "pl": "Za ojczyznę!",
+  "pkg": "MP_TDM_ManufacturingB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL1_SPT1",
+  "en": "The battle is lost, but the war continues.",
+  "pl": "Bitwa jest przegrana, ale wojna trwa.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_MTR1",
+  "en": "No! Nooo!",
+  "pl": "Nie, nie, nie!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_SPT1",
+  "en": "You have failed the Motherland.",
+  "pl": "Zawiedłeś ojczyznę.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL3_SPT1",
+  "en": "You disappoint the motherland.",
+  "pl": "Rozczarowujesz ojczyznę.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "en": "They are near the beacon. Kill them!",
+  "pl": "Są w pobliżu latarni.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "en": "We have visual contact with the Beacon.",
+  "pl": "Mamy kontakt wizualny z Beaconem.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_MTR1",
+  "en": "They are regenerating the beacon. Stop them!",
+  "pl": "Regenerują latarnię.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_SPT1",
+  "en": "Beacon regeneration in progress.",
+  "pl": "Regeneracja nadajnik w toku.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_SPT1",
+  "en": "Defend it!",
+  "pl": "Obronicie go!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN3_SPT1",
+  "en": "Now hold it!",
+  "pl": "Trzymaj się!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_MTR1",
+  "en": "Stop the humans.",
+  "pl": "Zatrzymaj ludzi.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_SPT1",
+  "en": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "pl": "Żołnierze, waszym zadaniem jest infiltracja na terytorium istoty i przywrócenie wszystkich latarek w drodze.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_MTR1",
+  "en": "Die for the hive.",
+  "pl": "Umrzesz za koło.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_SPT1",
+  "en": "Get those beacons restored. The Hive must be exterminated!",
+  "pl": "Niech te latarki zostaną przywrócone.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START3_SPT1",
+  "en": "Find and regenerate old troop spawners along the way.",
+  "pl": "Znajdź i regeneruj starych żołnierzy.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND1_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND2_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND3_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND4_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "en": "Hunh ... It's got me!",
+  "pl": "Złapał mnie!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "en": "Unf ... Help! A tick's on me!",
+  "pl": "Pomóżcie mi!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "en": "Huh ... A tick! A tick!!",
+  "pl": "Żarówka, żarówka!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "en": "Unf ... Help! It's got me!",
+  "pl": "Pomóżcie, złapał mnie!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "en": "Aaah! Shoot it! Kill the tick!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "en": "Shoot the tick! Kill it!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "en": "Kill it! Get it off me!",
+  "pl": "Zabij go!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "en": "Aaaaah! Shoot the damn thing!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TIME3_SPT1",
+  "en": "Time is running out!",
+  "pl": "Czas się kończy!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_MTR1",
+  "en": "The Hive lives on to fight another day.",
+  "pl": "Węża przetrwa, by walczyć jeszcze jeden dzień.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_SPT1",
+  "en": "That's how it's done. Outstanding job soldiers.",
+  "pl": "Tak to się robi, wybitni żołnierze pracy.",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_MTR1",
+  "en": "Long live the Hive!",
+  "pl": "Niech żyje Ucza!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_SPT1",
+  "en": "Great job, soldiers! Exterminating hive now!",
+  "pl": "Świetna robota, żołnierze!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_MTR1",
+  "en": "The Hive is victorious!",
+  "pl": "Węża zwyciężyła!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_SPT1",
+  "en": "You make the motherland proud!",
+  "pl": "Robicie ojczyznę dumną!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN4_SPT1",
+  "en": "For the motherland!",
+  "pl": "Za ojczyznę!",
+  "pkg": "MP_TDM_ManufacturingC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL1_SPT1",
+  "en": "The battle is lost, but the war continues.",
+  "pl": "Bitwa jest przegrana, ale wojna trwa.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_MTR1",
+  "en": "No! Nooo!",
+  "pl": "Nie, nie, nie!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_SPT1",
+  "en": "You have failed the Motherland.",
+  "pl": "Zawiedłeś ojczyznę.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL3_SPT1",
+  "en": "You disappoint the motherland.",
+  "pl": "Rozczarowujesz ojczyznę.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "en": "They are near the beacon. Kill them!",
+  "pl": "Są w pobliżu latarni.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "en": "We have visual contact with the Beacon.",
+  "pl": "Mamy kontakt wizualny z Beaconem.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_MTR1",
+  "en": "They are regenerating the beacon. Stop them!",
+  "pl": "Regenerują latarnię.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_SPT1",
+  "en": "Beacon regeneration in progress.",
+  "pl": "Regeneracja nadajnik w toku.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_SPT1",
+  "en": "Defend it!",
+  "pl": "Obronicie go!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN3_SPT1",
+  "en": "Now hold it!",
+  "pl": "Trzymaj się!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_MTR1",
+  "en": "Stop the humans.",
+  "pl": "Zatrzymaj ludzi.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_SPT1",
+  "en": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "pl": "Żołnierze, waszym zadaniem jest infiltracja na terytorium istoty i przywrócenie wszystkich latarek w drodze.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_MTR1",
+  "en": "Die for the hive.",
+  "pl": "Umrzesz za koło.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_SPT1",
+  "en": "Get those beacons restored. The Hive must be exterminated!",
+  "pl": "Niech te latarki zostaną przywrócone.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START3_SPT1",
+  "en": "Find and regenerate old troop spawners along the way.",
+  "pl": "Znajdź i regeneruj starych żołnierzy.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND1_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND2_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND3_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND4_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "en": "Hunh ... It's got me!",
+  "pl": "Złapał mnie!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "en": "Unf ... Help! A tick's on me!",
+  "pl": "Pomóżcie mi!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "en": "Huh ... A tick! A tick!!",
+  "pl": "Żarówka, żarówka!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "en": "Unf ... Help! It's got me!",
+  "pl": "Pomóżcie, złapał mnie!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "en": "Aaah! Shoot it! Kill the tick!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "en": "Shoot the tick! Kill it!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "en": "Kill it! Get it off me!",
+  "pl": "Zabij go!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "en": "Aaaaah! Shoot the damn thing!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TIME3_SPT1",
+  "en": "Time is running out!",
+  "pl": "Czas się kończy!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_MTR1",
+  "en": "The Hive lives on to fight another day.",
+  "pl": "Węża przetrwa, by walczyć jeszcze jeden dzień.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_SPT1",
+  "en": "That's how it's done. Outstanding job soldiers.",
+  "pl": "Tak to się robi, wybitni żołnierze pracy.",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_MTR1",
+  "en": "Long live the Hive!",
+  "pl": "Niech żyje Ucza!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_SPT1",
+  "en": "Great job, soldiers! Exterminating hive now!",
+  "pl": "Świetna robota, żołnierze!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_MTR1",
+  "en": "The Hive is victorious!",
+  "pl": "Węża zwyciężyła!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_SPT1",
+  "en": "You make the motherland proud!",
+  "pl": "Robicie ojczyznę dumną!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN4_SPT1",
+  "en": "For the motherland!",
+  "pl": "Za ojczyznę!",
+  "pkg": "MP_TDM_VillageA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL1_SPT1",
+  "en": "The battle is lost, but the war continues.",
+  "pl": "Bitwa jest przegrana, ale wojna trwa.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_MTR1",
+  "en": "No! Nooo!",
+  "pl": "Nie, nie, nie!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_SPT1",
+  "en": "You have failed the Motherland.",
+  "pl": "Zawiedłeś ojczyznę.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL3_SPT1",
+  "en": "You disappoint the motherland.",
+  "pl": "Rozczarowujesz ojczyznę.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "en": "They are near the beacon. Kill them!",
+  "pl": "Są w pobliżu latarni.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "en": "We have visual contact with the Beacon.",
+  "pl": "Mamy kontakt wizualny z Beaconem.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_MTR1",
+  "en": "They are regenerating the beacon. Stop them!",
+  "pl": "Regenerują latarnię.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_SPT1",
+  "en": "Beacon regeneration in progress.",
+  "pl": "Regeneracja nadajnik w toku.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_SPT1",
+  "en": "Defend it!",
+  "pl": "Obronicie go!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN3_SPT1",
+  "en": "Now hold it!",
+  "pl": "Trzymaj się!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_MTR1",
+  "en": "Stop the humans.",
+  "pl": "Zatrzymaj ludzi.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_SPT1",
+  "en": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "pl": "Żołnierze, waszym zadaniem jest infiltracja na terytorium istoty i przywrócenie wszystkich latarek w drodze.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_MTR1",
+  "en": "Die for the hive.",
+  "pl": "Umrzesz za koło.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_SPT1",
+  "en": "Get those beacons restored. The Hive must be exterminated!",
+  "pl": "Niech te latarki zostaną przywrócone.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START3_SPT1",
+  "en": "Find and regenerate old troop spawners along the way.",
+  "pl": "Znajdź i regeneruj starych żołnierzy.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND1_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND2_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND3_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND4_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "en": "Hunh ... It's got me!",
+  "pl": "Złapał mnie!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "en": "Unf ... Help! A tick's on me!",
+  "pl": "Pomóżcie mi!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "en": "Huh ... A tick! A tick!!",
+  "pl": "Żarówka, żarówka!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "en": "Unf ... Help! It's got me!",
+  "pl": "Pomóżcie, złapał mnie!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "en": "Aaah! Shoot it! Kill the tick!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "en": "Shoot the tick! Kill it!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "en": "Kill it! Get it off me!",
+  "pl": "Zabij go!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "en": "Aaaaah! Shoot the damn thing!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TIME3_SPT1",
+  "en": "Time is running out!",
+  "pl": "Czas się kończy!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_MTR1",
+  "en": "The Hive lives on to fight another day.",
+  "pl": "Węża przetrwa, by walczyć jeszcze jeden dzień.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_SPT1",
+  "en": "That's how it's done. Outstanding job soldiers.",
+  "pl": "Tak to się robi, wybitni żołnierze pracy.",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_MTR1",
+  "en": "Long live the Hive!",
+  "pl": "Niech żyje Ucza!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_SPT1",
+  "en": "Great job, soldiers! Exterminating hive now!",
+  "pl": "Świetna robota, żołnierze!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_MTR1",
+  "en": "The Hive is victorious!",
+  "pl": "Węża zwyciężyła!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_SPT1",
+  "en": "You make the motherland proud!",
+  "pl": "Robicie ojczyznę dumną!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN4_SPT1",
+  "en": "For the motherland!",
+  "pl": "Za ojczyznę!",
+  "pkg": "MP_TDM_VillageB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL1_SPT1",
+  "en": "The battle is lost, but the war continues.",
+  "pl": "Bitwa jest przegrana, ale wojna trwa.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_MTR1",
+  "en": "No! Nooo!",
+  "pl": "Nie, nie, nie!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_SPT1",
+  "en": "You have failed the Motherland.",
+  "pl": "Zawiedłeś ojczyznę.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL3_SPT1",
+  "en": "You disappoint the motherland.",
+  "pl": "Rozczarowujesz ojczyznę.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "en": "They are near the beacon. Kill them!",
+  "pl": "Są w pobliżu latarni.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "en": "We have visual contact with the Beacon.",
+  "pl": "Mamy kontakt wizualny z Beaconem.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_MTR1",
+  "en": "They are regenerating the beacon. Stop them!",
+  "pl": "Regenerują latarnię.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_SPT1",
+  "en": "Beacon regeneration in progress.",
+  "pl": "Regeneracja nadajnik w toku.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_SPT1",
+  "en": "Defend it!",
+  "pl": "Obronicie go!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN3_SPT1",
+  "en": "Now hold it!",
+  "pl": "Trzymaj się!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_MTR1",
+  "en": "Stop the humans.",
+  "pl": "Zatrzymaj ludzi.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_SPT1",
+  "en": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "pl": "Żołnierze, waszym zadaniem jest infiltracja na terytorium istoty i przywrócenie wszystkich latarek w drodze.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_MTR1",
+  "en": "Die for the hive.",
+  "pl": "Umrzesz za koło.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_SPT1",
+  "en": "Get those beacons restored. The Hive must be exterminated!",
+  "pl": "Niech te latarki zostaną przywrócone.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START3_SPT1",
+  "en": "Find and regenerate old troop spawners along the way.",
+  "pl": "Znajdź i regeneruj starych żołnierzy.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND1_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND2_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND3_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND4_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "en": "Hunh ... It's got me!",
+  "pl": "Złapał mnie!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "en": "Unf ... Help! A tick's on me!",
+  "pl": "Pomóżcie mi!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "en": "Huh ... A tick! A tick!!",
+  "pl": "Żarówka, żarówka!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "en": "Unf ... Help! It's got me!",
+  "pl": "Pomóżcie, złapał mnie!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "en": "Aaah! Shoot it! Kill the tick!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "en": "Shoot the tick! Kill it!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "en": "Kill it! Get it off me!",
+  "pl": "Zabij go!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "en": "Aaaaah! Shoot the damn thing!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TIME3_SPT1",
+  "en": "Time is running out!",
+  "pl": "Czas się kończy!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_MTR1",
+  "en": "The Hive lives on to fight another day.",
+  "pl": "Węża przetrwa, by walczyć jeszcze jeden dzień.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_SPT1",
+  "en": "That's how it's done. Outstanding job soldiers.",
+  "pl": "Tak to się robi, wybitni żołnierze pracy.",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_MTR1",
+  "en": "Long live the Hive!",
+  "pl": "Niech żyje Ucza!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_SPT1",
+  "en": "Great job, soldiers! Exterminating hive now!",
+  "pl": "Świetna robota, żołnierze!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_MTR1",
+  "en": "The Hive is victorious!",
+  "pl": "Węża zwyciężyła!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_SPT1",
+  "en": "You make the motherland proud!",
+  "pl": "Robicie ojczyznę dumną!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN4_SPT1",
+  "en": "For the motherland!",
+  "pl": "Za ojczyznę!",
+  "pkg": "MP_TDM_WastelandA_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL1_SPT1",
+  "en": "The battle is lost, but the war continues.",
+  "pl": "Bitwa jest przegrana, ale wojna trwa.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_MTR1",
+  "en": "No! Nooo!",
+  "pl": "Nie, nie, nie!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_SPT1",
+  "en": "You have failed the Motherland.",
+  "pl": "Zawiedłeś ojczyznę.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL3_SPT1",
+  "en": "You disappoint the motherland.",
+  "pl": "Rozczarowujesz ojczyznę.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "en": "They are near the beacon. Kill them!",
+  "pl": "Są w pobliżu latarni.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "en": "We have visual contact with the Beacon.",
+  "pl": "Mamy kontakt wizualny z Beaconem.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_MTR1",
+  "en": "They are regenerating the beacon. Stop them!",
+  "pl": "Regenerują latarnię.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_SPT1",
+  "en": "Beacon regeneration in progress.",
+  "pl": "Regeneracja nadajnik w toku.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_SPT1",
+  "en": "Defend it!",
+  "pl": "Obronicie go!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN3_SPT1",
+  "en": "Now hold it!",
+  "pl": "Trzymaj się!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_MTR1",
+  "en": "Stop the humans.",
+  "pl": "Zatrzymaj ludzi.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_SPT1",
+  "en": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "pl": "Żołnierze, waszym zadaniem jest infiltracja na terytorium istoty i przywrócenie wszystkich latarek w drodze.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_MTR1",
+  "en": "Die for the hive.",
+  "pl": "Umrzesz za koło.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_SPT1",
+  "en": "Get those beacons restored. The Hive must be exterminated!",
+  "pl": "Niech te latarki zostaną przywrócone.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START3_SPT1",
+  "en": "Find and regenerate old troop spawners along the way.",
+  "pl": "Znajdź i regeneruj starych żołnierzy.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND1_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND2_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND3_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND4_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "en": "Hunh ... It's got me!",
+  "pl": "Złapał mnie!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "en": "Unf ... Help! A tick's on me!",
+  "pl": "Pomóżcie mi!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "en": "Huh ... A tick! A tick!!",
+  "pl": "Żarówka, żarówka!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "en": "Unf ... Help! It's got me!",
+  "pl": "Pomóżcie, złapał mnie!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "en": "Aaah! Shoot it! Kill the tick!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "en": "Shoot the tick! Kill it!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "en": "Kill it! Get it off me!",
+  "pl": "Zabij go!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "en": "Aaaaah! Shoot the damn thing!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TIME3_SPT1",
+  "en": "Time is running out!",
+  "pl": "Czas się kończy!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_MTR1",
+  "en": "The Hive lives on to fight another day.",
+  "pl": "Węża przetrwa, by walczyć jeszcze jeden dzień.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_SPT1",
+  "en": "That's how it's done. Outstanding job soldiers.",
+  "pl": "Tak to się robi, wybitni żołnierze pracy.",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_MTR1",
+  "en": "Long live the Hive!",
+  "pl": "Niech żyje Ucza!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_SPT1",
+  "en": "Great job, soldiers! Exterminating hive now!",
+  "pl": "Świetna robota, żołnierze!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_MTR1",
+  "en": "The Hive is victorious!",
+  "pl": "Węża zwyciężyła!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_SPT1",
+  "en": "You make the motherland proud!",
+  "pl": "Robicie ojczyznę dumną!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN4_SPT1",
+  "en": "For the motherland!",
+  "pl": "Za ojczyznę!",
+  "pkg": "MP_TDM_WastelandB_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL1_SPT1",
+  "en": "The battle is lost, but the war continues.",
+  "pl": "Bitwa jest przegrana, ale wojna trwa.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_MTR1",
+  "en": "No! Nooo!",
+  "pl": "Nie, nie, nie!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.68,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL2_SPT1",
+  "en": "You have failed the Motherland.",
+  "pl": "Zawiedłeś ojczyznę.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FAIL3_SPT1",
+  "en": "You disappoint the motherland.",
+  "pl": "Rozczarowujesz ojczyznę.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_MTR1",
+  "en": "They are near the beacon. Kill them!",
+  "pl": "Są w pobliżu latarni.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_FIRSTAREA1_SPT1",
+  "en": "We have visual contact with the Beacon.",
+  "pl": "Mamy kontakt wizualny z Beaconem.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_MTR1",
+  "en": "They are regenerating the beacon. Stop them!",
+  "pl": "Regenerują latarnię.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN1_SPT1",
+  "en": "Beacon regeneration in progress.",
+  "pl": "Regeneracja nadajnik w toku.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN2_SPT1",
+  "en": "Defend it!",
+  "pl": "Obronicie go!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_REGEN3_SPT1",
+  "en": "Now hold it!",
+  "pl": "Trzymaj się!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_MTR1",
+  "en": "Stop the humans.",
+  "pl": "Zatrzymaj ludzi.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START1_SPT1",
+  "en": "Soldiers, your mission is to infiltrate the creature's territory and restore all beacons along the way. The 3rd and final beacon is located in the heart of the ",
+  "pl": "Żołnierze, waszym zadaniem jest infiltracja na terytorium istoty i przywrócenie wszystkich latarek w drodze.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 15.42,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_MTR1",
+  "en": "Die for the hive.",
+  "pl": "Umrzesz za koło.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.14,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START2_SPT1",
+  "en": "Get those beacons restored. The Hive must be exterminated!",
+  "pl": "Niech te latarki zostaną przywrócone.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_START3_SPT1",
+  "en": "Find and regenerate old troop spawners along the way.",
+  "pl": "Znajdź i regeneruj starych żołnierzy.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND1_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND2_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND3_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKEND4_SPT1",
+  "en": "Ack! Ack! Ack!",
+  "pl": "Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, Ack, A",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT1_SPT1",
+  "en": "Hunh ... It's got me!",
+  "pl": "Złapał mnie!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT2_SPT1",
+  "en": "Unf ... Help! A tick's on me!",
+  "pl": "Pomóżcie mi!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.65,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT3_SPT1",
+  "en": "Huh ... A tick! A tick!!",
+  "pl": "Żarówka, żarówka!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.35,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKIMPACT4_SPT1",
+  "en": "Unf ... Help! It's got me!",
+  "pl": "Pomóżcie, złapał mnie!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT1_SPT1",
+  "en": "Aaah! Shoot it! Kill the tick!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.37,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT2_SPT1",
+  "en": "Shoot the tick! Kill it!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT3_SPT1",
+  "en": "Kill it! Get it off me!",
+  "pl": "Zabij go!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.86,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TICKSHOOT4_SPT1",
+  "en": "Aaaaah! Shoot the damn thing!",
+  "pl": "Strzelaj!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_TIME3_SPT1",
+  "en": "Time is running out!",
+  "pl": "Czas się kończy!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_MTR1",
+  "en": "The Hive lives on to fight another day.",
+  "pl": "Węża przetrwa, by walczyć jeszcze jeden dzień.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN1_SPT1",
+  "en": "That's how it's done. Outstanding job soldiers.",
+  "pl": "Tak to się robi, wybitni żołnierze pracy.",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.04,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_MTR1",
+  "en": "Long live the Hive!",
+  "pl": "Niech żyje Ucza!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN2_SPT1",
+  "en": "Great job, soldiers! Exterminating hive now!",
+  "pl": "Świetna robota, żołnierze!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_MTR1",
+  "en": "The Hive is victorious!",
+  "pl": "Węża zwyciężyła!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN3_SPT1",
+  "en": "You make the motherland proud!",
+  "pl": "Robicie ojczyznę dumną!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "MP_WIN4_SPT1",
+  "en": "For the motherland!",
+  "pl": "Za ojczyznę!",
+  "pkg": "MP_TDM_WastelandC_p_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ }
+]

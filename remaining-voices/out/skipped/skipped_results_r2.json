@@ -1,0 +1,1173 @@
+[
+ {
+  "package": "SP_Freight_Script_1950Dock_LOC_INT",
+  "asset": "FR3_2805_SPT4",
+  "budget": 0.51,
+  "dur": 2.64,
+  "tempo": 5.2,
+  "profile": "narrator_user",
+  "text": "- Chodümy.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_Freight_Script_1950Dock_LOC_INT",
+  "asset": "FR3_2807_SPT4",
+  "budget": 0.68,
+  "dur": 2.64,
+  "tempo": 3.89,
+  "profile": "narrator_user",
+  "text": "Tak, Lee.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RL1_kismet01_LOC_INT",
+  "asset": "RL1_0407_KAT",
+  "budget": 0.93,
+  "dur": 2.0,
+  "tempo": 2.14,
+  "profile": "kathryn_tetiana",
+  "text": "Teraz idü.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RL2_kismet02_LOC_INT",
+  "asset": "RL99_0105_SPT1",
+  "budget": 1.54,
+  "dur": 4.64,
+  "tempo": 3.023,
+  "profile": "narrator_user",
+  "text": "Wiesz, gdzie to jest, powiedz mi!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RL2_kismet05_1950_LOC_INT",
+  "asset": "RL3_3706_BARY",
+  "budget": 1.2,
+  "dur": 2.08,
+  "tempo": 1.739,
+  "profile": "barisov_dmitri",
+  "text": "Powinniúmy juø iúÊ.",
+  "verdict": "CANDIDATE",
+  "qa_note": "REVIEW: fitting bez ciecia, tempo<=1.85; ASR do potwierdzenia"
+ },
+ {
+  "package": "SP_RL2_kismet05_1950_LOC_INT",
+  "asset": "RL3_3717_BARY",
+  "budget": 0.64,
+  "dur": 2.08,
+  "tempo": 3.234,
+  "profile": "barisov_dmitri",
+  "text": "Uwaøaj na siebie.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RL2_kismet05_1950_LOC_INT",
+  "asset": "RL3_3725_BARY",
+  "budget": 0.58,
+  "dur": 2.56,
+  "tempo": 4.444,
+  "profile": "barisov_dmitri",
+  "text": "Tutaj!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RL2_kismet05_1950_LOC_INT",
+  "asset": "RL3_3726_BARY",
+  "budget": 0.58,
+  "dur": 1.28,
+  "tempo": 2.218,
+  "profile": "barisov_dmitri",
+  "text": "- Szybko.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RL2_kismet05_1950_LOC_INT",
+  "asset": "RL3_3727_BARY",
+  "budget": 0.82,
+  "dur": 2.16,
+  "tempo": 2.637,
+  "profile": "barisov_dmitri",
+  "text": "Chodü za mnπ.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "RL3_3705_BARY",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL3_3706_BARY",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL3_3717_BARY",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL3_3725_BARY",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL3_3726_BARY",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL3_3727_BARY",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_RL6_katya_LOC_INT",
+  "asset": "RL6_2210_KAT",
+  "budget": 0.59,
+  "dur": 3.2,
+  "tempo": 5.404,
+  "profile": "kathryn_tetiana",
+  "text": "- Cholera. - Co to jest?",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "RL6_2211_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL6_2230_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_RL6_katya_LOC_INT",
+  "asset": "RL6_2231_KAT",
+  "budget": 0.61,
+  "dur": 1.36,
+  "tempo": 2.247,
+  "profile": "kathryn_tetiana",
+  "text": "Idziemy! Idziemy!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RL6_katya_LOC_INT",
+  "asset": "RL6_2232_KAT",
+  "budget": 0.64,
+  "dur": 1.92,
+  "tempo": 2.98,
+  "profile": "kathryn_tetiana",
+  "text": "Chodü za mnπ.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RL6_katya_LOC_INT",
+  "asset": "RL6_2233_KAT",
+  "budget": 0.9,
+  "dur": 3.12,
+  "tempo": 3.463,
+  "profile": "kathryn_tetiana",
+  "text": "TÍdy, Renko!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RL6_katya_LOC_INT",
+  "asset": "RL6_2405_KAT",
+  "budget": 0.71,
+  "dur": 2.32,
+  "tempo": 3.247,
+  "profile": "kathryn_tetiana",
+  "text": "- W porzπdku.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RL6_katya_LOC_INT",
+  "asset": "RL6_2605_KAT",
+  "budget": 0.63,
+  "dur": 1.36,
+  "tempo": 2.142,
+  "profile": "kathryn_tetiana",
+  "text": "Kurwa!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RL6_katya_LOC_INT",
+  "asset": "RL6_5008_BAR",
+  "budget": 0.84,
+  "dur": 1.92,
+  "tempo": 2.292,
+  "profile": "barisov_dmitri",
+  "text": "Juø w drodze.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RL6_katya_LOC_INT",
+  "asset": "RL6_7011_KAT",
+  "budget": 0.65,
+  "dur": 1.76,
+  "tempo": 2.719,
+  "profile": "kathryn_tetiana",
+  "text": "Chodü za mnπ!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "RL6_2210_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL6_2211_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL6_2231_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL6_2232_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL6_2233_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL6_2405_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL6_2605_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RL6_7011_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_RT1_kismet0_LOC_INT",
+  "asset": "RT1_2008_KAT",
+  "budget": 1.91,
+  "dur": 4.8,
+  "tempo": 2.508,
+  "profile": "kathryn_tetiana",
+  "text": "Mam nadziejÍ, øe Barisov ma racjÍ.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "RT2_9005_BAR",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_RT4_kismet01_LOC_INT",
+  "asset": "RT4_1011_KAT",
+  "budget": 0.64,
+  "dur": 1.92,
+  "tempo": 2.994,
+  "profile": "kathryn_tetiana",
+  "text": "Kochaj mnie!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RT4_kismet01_LOC_INT",
+  "asset": "RT4_1012_KAT",
+  "budget": 0.98,
+  "dur": 2.16,
+  "tempo": 2.208,
+  "profile": "kathryn_tetiana",
+  "text": "Uwaøaj, Renko.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RT4_kismet01_LOC_INT",
+  "asset": "RT4_1014_KAT",
+  "budget": 0.69,
+  "dur": 1.84,
+  "tempo": 2.661,
+  "profile": "kathryn_tetiana",
+  "text": "Strzelaj do nich!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RT4_kismet01_LOC_INT",
+  "asset": "RT4_1020_KAT",
+  "budget": 1.19,
+  "dur": 3.76,
+  "tempo": 3.167,
+  "profile": "kathryn_tetiana",
+  "text": "Dobry strza≥, Renko!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RT4_kismet01_LOC_INT",
+  "asset": "RT4_1021_KAT",
+  "budget": 0.81,
+  "dur": 2.0,
+  "tempo": 2.465,
+  "profile": "kathryn_tetiana",
+  "text": "åwietny strza≥!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RT4_kismet01_LOC_INT",
+  "asset": "RT4_1022_KAT",
+  "budget": 0.64,
+  "dur": 1.84,
+  "tempo": 2.863,
+  "profile": "kathryn_tetiana",
+  "text": "Dobrze zrobi≥eú.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RT4_kismet01_LOC_INT",
+  "asset": "RT4_1023_KAT",
+  "budget": 0.62,
+  "dur": 1.44,
+  "tempo": 2.314,
+  "profile": "kathryn_tetiana",
+  "text": "åwietnie!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RT4_kismet01_LOC_INT",
+  "asset": "RT4_1024_KAT",
+  "budget": 0.96,
+  "dur": 2.72,
+  "tempo": 2.838,
+  "profile": "kathryn_tetiana",
+  "text": "Trzymaj siÍ, Renko.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "RT4_1002_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_RT4_kismet02_LOC_INT",
+  "asset": "RT4_1010_KAT",
+  "budget": 1.27,
+  "dur": 3.04,
+  "tempo": 2.394,
+  "profile": "kathryn_tetiana",
+  "text": "Cholera, Spetsnolds!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "RT4_1011_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1012_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1014_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1020_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1021_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1022_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1023_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1024_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_5010_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_5011_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_RT4_kismet03_LOC_INT",
+  "asset": "RT4B_1512_5_KAT",
+  "budget": 0.75,
+  "dur": 2.08,
+  "tempo": 2.782,
+  "profile": "kathryn_tetiana",
+  "text": "Znaleüli nas!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_RT4_kismet03_LOC_INT",
+  "asset": "RT4B_1512_6_KAT",
+  "budget": 1.29,
+  "dur": 4.24,
+  "tempo": 3.285,
+  "profile": "kathryn_tetiana",
+  "text": "ChcÍ, øeby by≥y wy≥πczone, gdy pracujÍ.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "RT4B_3005_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4B_3007_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_RT4_kismet03_LOC_INT",
+  "asset": "RT4B_3009_KAT",
+  "budget": 0.84,
+  "dur": 3.04,
+  "tempo": 3.619,
+  "profile": "kathryn_tetiana",
+  "text": "- DziÍkujÍ. - DziÍkujÍ.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "RT4B_5008_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_RT4_kismet03_LOC_INT",
+  "asset": "RT4B_5013_KAT",
+  "budget": 1.76,
+  "dur": 4.0,
+  "tempo": 2.274,
+  "profile": "kathryn_tetiana",
+  "text": "Daj spokÛj, Renko, weü mi rÍkÍ.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "RT4_1010_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1011_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1012_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1014_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1020_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1021_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1022_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1023_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_1024_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4_5010_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_RT5_kismet01_LOC_INT",
+  "asset": "RT5_1507_DEM",
+  "budget": 0.75,
+  "dur": 1.84,
+  "tempo": 2.448,
+  "profile": "demichev_ruslan",
+  "text": "Zabijcie ich.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_VI2_kismet01_LOC_INT",
+  "asset": "VI1_0107_CP2",
+  "budget": 0.8,
+  "dur": 2.08,
+  "tempo": 2.589,
+  "profile": "narrator_user",
+  "text": "Kupujπcy w dÛ≥!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_VI2_kismet01_LOC_INT",
+  "asset": "VI1_0110_CP2",
+  "budget": 1.84,
+  "dur": 3.84,
+  "tempo": 2.083,
+  "profile": "narrator_user",
+  "text": "Ostrzeøenie, Wrachy na dokach Po≥udniowo-Wschodnich.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI1_0113_CP2",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI2_kismet01_LOC_INT",
+  "asset": "VI1_0115_NIM",
+  "budget": 2.58,
+  "dur": 6.16,
+  "tempo": 2.388,
+  "profile": "narrator_user",
+  "text": "Wszystkie samoloty LERC 5 zosta≥y wystrzelone i sπ w powietrzu.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_VI2_kismet03_LOC_INT",
+  "asset": "VI2_4009_SPT1",
+  "budget": 1.7,
+  "dur": 4.32,
+  "tempo": 2.548,
+  "profile": "narrator_user",
+  "text": "Tylko ty chodü, chodü, chodü, chodü!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI2_7508_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI3_6806_GST",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI3_kismet03_LOC_INT",
+  "asset": "VI3_6910_GST",
+  "budget": 2.68,
+  "dur": 3.36,
+  "tempo": 1.255,
+  "profile": "narrator_user",
+  "text": "Tu Devlin 4-1.",
+  "verdict": "CANDIDATE",
+  "qa_note": "REVIEW: fitting bez ciecia, tempo<=1.85; ASR do potwierdzenia"
+ },
+ {
+  "package": "SP_VI3_kismet03_LOC_INT",
+  "asset": "VI3_7005_GST",
+  "budget": 4.07,
+  "dur": 8.24,
+  "tempo": 2.025,
+  "profile": "narrator_user",
+  "text": "Zatrzymajmy siÍ planu, pÛjdümy do wieøy radiowej, moøe uda nam siÍ tam uratowaÊ sprzÍt, jeúli go potrzebujemy.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI3_6806_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI3_7005_GST",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI4_kismet01_LOC_INT",
+  "asset": "VI4_3005_GST",
+  "budget": 0.61,
+  "dur": 1.36,
+  "tempo": 2.242,
+  "profile": "narrator_user",
+  "text": "- Chodümy.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_VI4_kismet01_LOC_INT",
+  "asset": "VI4_3006_GST",
+  "budget": 0.61,
+  "dur": 3.28,
+  "tempo": 5.383,
+  "profile": "narrator_user",
+  "text": "- W porzπdku.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_VI4_kismet01_LOC_INT",
+  "asset": "VI4_3012_GST",
+  "budget": 0.47,
+  "dur": 1.6,
+  "tempo": 3.373,
+  "profile": "narrator_user",
+  "text": "- W porzπdku.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_VI4_kismet01_LOC_INT",
+  "asset": "VI4_3505_GST",
+  "budget": 1.31,
+  "dur": 3.44,
+  "tempo": 2.631,
+  "profile": "narrator_user",
+  "text": "OtwÛrz drzwi, a potem mnie zakryj.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_VI4_kismet01_LOC_INT",
+  "asset": "VI4_3510_GST",
+  "budget": 0.7,
+  "dur": 1.44,
+  "tempo": 2.063,
+  "profile": "narrator_user",
+  "text": "Na mnie!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI4_3705_GST",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI4_kismet01_LOC_INT",
+  "asset": "VI4_4105_GST",
+  "budget": 0.71,
+  "dur": 2.0,
+  "tempo": 2.834,
+  "profile": "narrator_user",
+  "text": "Wszystko w porzπdku!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI4_4205_GST",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI4_kismet01_LOC_INT",
+  "asset": "VI4_4206_GST",
+  "budget": 0.85,
+  "dur": 2.0,
+  "tempo": 2.359,
+  "profile": "narrator_user",
+  "text": "Zabierz mnie za rÍkÍ!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI4_4210_GST",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI4_kismet01_LOC_INT",
+  "asset": "VI4_4220_GST",
+  "budget": 0.52,
+  "dur": 1.68,
+  "tempo": 3.247,
+  "profile": "narrator_user",
+  "text": "W maju.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI4_3005_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3006_GST",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI4_kismet01_a_LOC_INT",
+  "asset": "VI4_3010_GST",
+  "budget": 0.73,
+  "dur": 3.12,
+  "tempo": 4.245,
+  "profile": "narrator_user",
+  "text": "- W porzπdku.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI4_3012_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3505_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3510_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4005_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4105_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4205_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4206_GST",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI4_kismet01_a_LOC_INT",
+  "asset": "VI4_4208_GST",
+  "budget": 1.41,
+  "dur": 2.72,
+  "tempo": 1.929,
+  "profile": "narrator_user",
+  "text": "Chodü, z≥ap mnie za rÍkÍ!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI4_4210_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4220_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3005_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3012_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3505_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3510_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4005_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4105_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4205_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4206_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4210_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4220_GST",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI5_kismet01_LOC_INT",
+  "asset": "VI4_2005_GST",
+  "budget": 1.57,
+  "dur": 3.44,
+  "tempo": 2.186,
+  "profile": "narrator_user",
+  "text": "Z≥ap tÍ strzelbÍ, chodümy.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI4_3005_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3010_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3012_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3505_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3510_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4105_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4205_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4206_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4210_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4220_GST",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI5_kismet01_LOC_INT",
+  "asset": "VI5_1208_GST",
+  "budget": 1.15,
+  "dur": 2.88,
+  "tempo": 2.498,
+  "profile": "narrator_user",
+  "text": "- Nie, nie.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_VI5_kismet01_LOC_INT",
+  "asset": "VI5_1905_GST",
+  "budget": 0.47,
+  "dur": 1.6,
+  "tempo": 3.411,
+  "profile": "narrator_user",
+  "text": "Na mnie.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_VI5_kismet01_LOC_INT",
+  "asset": "VI5_5006_GST",
+  "budget": 0.72,
+  "dur": 2.0,
+  "tempo": 2.794,
+  "profile": "narrator_user",
+  "text": "W ten sposÛb!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_VI5_kismet01_LOC_INT",
+  "asset": "VI5_5007_GST",
+  "budget": 1.0,
+  "dur": 2.08,
+  "tempo": 2.077,
+  "profile": "narrator_user",
+  "text": "Ruszaj, øo≥nierzu!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI5_1208_GST",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI5_kismet02_LOC_INT",
+  "asset": "VI5_1805_GST",
+  "budget": 2.43,
+  "dur": 4.64,
+  "tempo": 1.912,
+  "profile": "narrator_user",
+  "text": "W porzπdku, prosimy Mike'a o powrÛt do mojej pozycji.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI5_1905_GST",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI5_kismet02_LOC_INT",
+  "asset": "VI5_4009_GST",
+  "budget": 2.92,
+  "dur": 6.72,
+  "tempo": 2.301,
+  "profile": "narrator_user",
+  "text": "Titan 1, to Devlin 4.1, aktualny.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_VI5_kismet02_LOC_INT",
+  "asset": "VI5_4013_GST",
+  "budget": 2.15,
+  "dur": 3.76,
+  "tempo": 1.748,
+  "profile": "narrator_user",
+  "text": "PowtÛrz, tu Devlin 4-1.",
+  "verdict": "CANDIDATE",
+  "qa_note": "REVIEW: fitting bez ciecia, tempo<=1.85; ASR do potwierdzenia"
+ },
+ {
+  "asset": "VI5_5006_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3005_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3012_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3505_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_3510_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4105_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4205_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4206_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4210_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI4_4220_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI5_1208_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI5_1905_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI5_2012_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI5_4011_SPT1",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI5_4013_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI5_5006_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI5_5007_GST",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI6_1005_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "VI6_1010_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI6_kismet02_LOC_INT",
+  "asset": "VI6_1021_KAT",
+  "budget": 0.73,
+  "dur": 2.0,
+  "tempo": 2.752,
+  "profile": "kathryn_tetiana",
+  "text": "ZwrÛÊ siÍ w prawo!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "VI6_1062_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_VI6_kismet04_LOC_INT",
+  "asset": "VI6_1020_KAT",
+  "budget": 0.69,
+  "dur": 1.92,
+  "tempo": 2.785,
+  "profile": "kathryn_tetiana",
+  "text": "ZwrÛÊ siÍ w lewo.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_WL1_kismet01_LOC_INT",
+  "asset": "WL1_0510_BAR",
+  "budget": 0.82,
+  "dur": 2.0,
+  "tempo": 2.43,
+  "profile": "barisov_dmitri",
+  "text": "Dalej, kapitanie!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_WL1_kismet01_LOC_INT",
+  "asset": "WL1_0511_BAR",
+  "budget": 1.17,
+  "dur": 2.8,
+  "tempo": 2.383,
+  "profile": "barisov_dmitri",
+  "text": "ProszÍ, powinieneú iúÊ!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "WL1_0510_BAR",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "WL1_0511_BAR",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_WL4_kismet08_LOC_INT",
+  "asset": "WL4_4405_SPT2",
+  "budget": 2.03,
+  "dur": 5.6,
+  "tempo": 2.763,
+  "profile": "narrator_user",
+  "text": "Jestem w≥aúcicielem StanÛw Zjednoczonych i jestem w≥aúcicielem StanÛw Zjednoczonych.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "SP_WL6_kismet_1950_LOC_INT",
+  "asset": "WL6_5207_SPT1",
+  "budget": 1.9,
+  "dur": 3.52,
+  "tempo": 1.854,
+  "profile": "narrator_user",
+  "text": "Jesteúmy startem bezpieczeÒstwa, sir Ed.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "WL6_9309_PA",
+  "note": "exists-skip"
+ },
+ {
+  "package": "SP_WL6_zone1_2010_d1_LOC_INT",
+  "asset": "WL6_9516_BAR",
+  "budget": 1.12,
+  "dur": 2.32,
+  "tempo": 2.069,
+  "profile": "barisov_dmitri",
+  "text": "Chodümy, kapitanie!",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "sp_freight_script_end_LOC_INT",
+  "asset": "FR3_9503_BAR",
+  "budget": 0.61,
+  "dur": 1.36,
+  "tempo": 2.237,
+  "profile": "barisov_dmitri",
+  "text": "- W porzπdku.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "sp_rt3_cistern_LOC_INT",
+  "asset": "RT1_1509_KAT",
+  "budget": 2.69,
+  "dur": 5.44,
+  "tempo": 2.021,
+  "profile": "kathryn_tetiana",
+  "text": "Uwaøaj, Renko, nadchodzπ do ciebie kolejne patrole.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "sp_rt3_katya_LOC_INT",
+  "asset": "RT3_5007_ESP2",
+  "budget": 1.3,
+  "dur": 3.6,
+  "tempo": 2.762,
+  "profile": "narrator_user",
+  "text": "Kathryn, pos≥uchaj go.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "RT3_5010_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "package": "sp_rt3_katya_LOC_INT",
+  "asset": "RT3_7007_KAT",
+  "budget": 1.08,
+  "dur": 2.96,
+  "tempo": 2.752,
+  "profile": "kathryn_tetiana",
+  "text": "Moøesz sprÛbowaÊ jπ otworzyÊ?",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "sp_rt3_katya_LOC_INT",
+  "asset": "RT3_7012_KAT",
+  "budget": 1.21,
+  "dur": 2.32,
+  "tempo": 1.913,
+  "profile": "kathryn_tetiana",
+  "text": "Masz szczÍúcie z drzwiami?",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "RT3_7021_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "package": "sp_rt3_katya_LOC_INT",
+  "asset": "RT3_7806_1_KAT",
+  "budget": 1.3,
+  "dur": 3.12,
+  "tempo": 2.405,
+  "profile": "kathryn_tetiana",
+  "text": "Pomoøesz mi wstaÊ, Renko?",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "sp_rt3_katya_LOC_INT",
+  "asset": "RT3_7806_2_KAT",
+  "budget": 1.73,
+  "dur": 4.48,
+  "tempo": 2.594,
+  "profile": "kathryn_tetiana",
+  "text": "PotrzebujÍ twojej pomocy, øeby dostaÊ siÍ do wentylacji.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "sp_rt3_katya_LOC_INT",
+  "asset": "RT3_7807_KAT",
+  "budget": 0.58,
+  "dur": 3.12,
+  "tempo": 5.414,
+  "profile": "kathryn_tetiana",
+  "text": "- DziÍkujÍ. - DziÍkujÍ.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "package": "sp_rt3_katya_LOC_INT",
+  "asset": "RT3_8005_2_KAT",
+  "budget": 0.92,
+  "dur": 3.44,
+  "tempo": 3.734,
+  "profile": "kathryn_tetiana",
+  "text": "TÍdy, Renko.",
+  "verdict": "NEEDS_TRIM_OR_TEXTFIX"
+ },
+ {
+  "asset": "RT4B_1512_5_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4B_1512_6_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4B_3009_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4B_5008_KAT",
+  "note": "exists-skip"
+ },
+ {
+  "asset": "RT4B_5013_KAT",
+  "note": "exists-skip"
+ }
+]
