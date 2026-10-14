@@ -42,7 +42,62 @@ struct Diag {
     static inline UINT lastBw = 0, lastBh = 0, lastWw = 0, lastWh = 0;
     static inline UINT lastSrcLeft = 0;
     static inline RECT lastDst{ 0, 0, 0, 0 };
+    // One-shot subrectangle probe: first 4 distinct (src,dst) Present rect
+    // shapes per session. Read-only; never touches pixels.
+    struct RectSample { RECT src{}; RECT dst{}; bool hasSrc = false; bool hasDst = false;
+                        UINT bw = 0, bh = 0, ww = 0, wh = 0; };
+    static inline RectSample rectSamples[4]{};
+    static inline LONG rectCount = 0;
 };
+
+inline void CaptureRects(IDirect3DDevice9* dev, const RECT* presentSrc,
+                         const RECT* presentDst, HWND overrideWindow) {
+    Diag::RectSample cur{};
+    cur.hasSrc = presentSrc != nullptr;
+    cur.hasDst = presentDst != nullptr;
+    if (presentSrc) cur.src = *presentSrc;
+    if (presentDst) cur.dst = *presentDst;
+    if (dev) {
+        IDirect3DSurface9* back = nullptr;
+        if (SUCCEEDED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) && back) {
+            D3DSURFACE_DESC desc{};
+            if (SUCCEEDED(back->GetDesc(&desc))) { cur.bw = desc.Width; cur.bh = desc.Height; }
+            back->Release();
+        }
+    }
+    D3DPRESENT_PARAMETERS params{};
+    IDirect3DSwapChain9* chain = nullptr;
+    HWND window = overrideWindow;
+    if (!window && dev && SUCCEEDED(dev->GetSwapChain(0, &chain)) && chain) {
+        if (SUCCEEDED(chain->GetPresentParameters(&params))) window = params.hDeviceWindow;
+    }
+    if (chain) chain->Release();
+    if (!window && dev) {
+        D3DDEVICE_CREATION_PARAMETERS creation{};
+        if (SUCCEEDED(dev->GetCreationParameters(&creation))) window = creation.hFocusWindow;
+    }
+    RECT client{};
+    if (window && GetClientRect(window, &client) && client.right > 0 && client.bottom > 0) {
+        cur.ww = UINT(client.right); cur.wh = UINT(client.bottom);
+    }
+    for (LONG i = 0; i < Diag::rectCount && i < 4; ++i) {
+        const Diag::RectSample& s = Diag::rectSamples[i];
+        if (s.hasSrc == cur.hasSrc && s.hasDst == cur.hasDst &&
+            (!cur.hasSrc || (s.src.left == cur.src.left && s.src.top == cur.src.top &&
+                             s.src.right == cur.src.right && s.src.bottom == cur.src.bottom)) &&
+            (!cur.hasDst || (s.dst.left == cur.dst.left && s.dst.top == cur.dst.top &&
+                             s.dst.right == cur.dst.right && s.dst.bottom == cur.dst.bottom)) &&
+            s.bw == cur.bw && s.bh == cur.bh && s.ww == cur.ww && s.wh == cur.wh)
+            return;
+    }
+    const LONG slot = InterlockedIncrement(&Diag::rectCount) - 1;
+    if (slot < 0 || slot >= 4) return;
+    Diag::rectSamples[slot] = cur;
+    Log("mirror-rect: src=%s(%ld,%ld,%ld,%ld) dst=%s(%ld,%ld,%ld,%ld) bb=%ux%u win=%ux%u",
+        cur.hasSrc ? "" : "none", cur.src.left, cur.src.top, cur.src.right, cur.src.bottom,
+        cur.hasDst ? "" : "none", cur.dst.left, cur.dst.top, cur.dst.right, cur.dst.bottom,
+        cur.bw, cur.bh, cur.ww, cur.wh);
+}
 
 inline void EmitMaybe() {
     const LONG n = InterlockedIncrement(&Diag::calls);
@@ -107,7 +162,9 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
     if (mode <= 0) { InterlockedIncrement(&Diag::skipMode); EmitMaybe(); return; }
     if (!dup) { InterlockedIncrement(&Diag::skipDup); EmitMaybe(); return; }
     // Subrectangle Present needs a separate mapping contract: leave it native.
+    // Probe records the actual rect values (bounded, read-only) for that contract.
     if (!dev || presentSrc || presentDst) {
+        if (dev) CaptureRects(dev, presentSrc, presentDst, overrideWindow);
         InterlockedIncrement(&Diag::skipRect); EmitMaybe(); return;
     }
     if (!g_xrRunning || !g_srcW || !g_srcH) {
