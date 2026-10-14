@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+PREP READY after c029abe: x86PE32/O2 DLL1454A62B0AC28EC9A9C8D3A83E16DD9CF142E6CAEE3220FC591079F015192751.
+Private post-opening/core-ready +assets-ready exact34 +quiet-revoice-v2. Core4
+and asset34 fake/preflight gates PASS; fresh hidden WindowsPS34 timeout guard
+restored/independent hashes PASS. WAV plan894UI/992story all identities/formats,
+pending146QA, no install. Actual4+34+1886 originals/107DDS verified unchanged.
+Draft PR19 created/attached, not merged. New physical/runtime feedback PENDING;
+fresh start only. Original Steam untouched; no active real-install guardian/test.
+
 LATEST PR17 merged on GitHub into main8751a27 (not merged by this MAIN turn).
 Dedicated fix/post-opening-followups worktree. OFFLINE preparation, no Steam
 write/launch. New rooms2banks/19waves/13SIDEWAV, properties/cues/timing preserved,

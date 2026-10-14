@@ -81,6 +81,17 @@ their quality classifications. Existing remasters remain log-only/apply0.
 
 ## Physical script, only after MAIN confirms installed hashes/guards
 
+Preparation completed: L2_PASS source c029abe84615123dfb704be7dee2da93515c36cd,
+x86PE32 `/O2`, DLL1454A62B0AC28EC9A9C8D3A83E16DD9CF142E6CAEE3220FC591079F015192751.
+Core staging `core-ready/test-manifest.json`, exact34 `assets-ready/asset-manifest.json`,
+1886 WAV `quiet-revoice-v2` (Plan verified,146 inherited pending reviews). Core4
+preflight/fake lease PASS. Fresh hidden Windows PowerShell v2 guard timeout60s
+on FAKE installation restored all34, independently rehashed; stderr empty.
+Real installed core4+assets34+WAV1886 originals and107 frozen DDS independently
+verified unchanged in `installed-baseline-verification.json`. No Steam writes.
+Draft PR19 targets main; NOT merged/not L3/L4. Runtime/presentation algorithms
+still from the source commit above; this addendum is evidence-only.
+
 User stays in headset throughout, no chat switches/restarts:
 New Game -> pause on save-slot/confirmation each~2seconds -> opening -> first room
 recordings/notes -> first pistol pickup, hold/move both controllers~15seconds ->
