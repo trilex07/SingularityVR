@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 SIDE-dubbing claims verified offline (no Steam writes):
+R6 files 6ba2/825b byte-identical in C:\PL-dubbing, xlingual source AND Steam
+(476c5c72/a8ae6d25, mono16/24k) — already deployed, nothing to install; 825b
+middle still ear-QA pending. sol_dobry.txt searched: NO dubbing build in it
+(Oct-12 pause/Bink era); the working build was Oct-14 VI2 banks (restored).
+install_polish.ps1:39 already xlingual BUT script is broad (VFX+INI+admin) —
+will not run; story files already on Steam. Branch
+agent/polish-xlingual-dubbing-20261014 = PR20 head 1532907: 62 files
++15064/-8 incl. renderer (vr_scene_mode.h) — NOT audio-only, do not merge.
+gh unauthed here; PR creation needs user browser. Prior headers history.
+
 LATEST 2026-10-14 dubbing-check PID46016 (38-pack installed): notes POLISH
 CONFIRMED by user. Start-game/radio speech still ENGLISH — consistent with
 scope, not a contradiction: intro bank stock BY DESIGN (candidate never
