@@ -47,10 +47,9 @@ Latest offline prep (append-only VR suffix cloned from frame A/R glyphs):
 | `SNG_logo_vr.intermediate.mkv` | `96984BA727A6DC2A392A5C0214A20C4E9E0915B152AFFA44620D883B4A257C2C` |
 | Reference patch preview PNG | `0DC5A249382A5AE849001EF8E923EA9E1852A6124F883EAB5AA28937E6B81224` |
 
-`.bik` (BIKi) not emitted: no `binkenc` on SIDE host. Re-run
-`prepare_boot_logo_bink.py` with `--binkenc <path-to-binkenc.dll>` after MAIN
-obtains a Bink 1 encoder; then validate with
-`SingularityVR-bink-dubbing/tools/bink_media.py validate-video`.
+**BIKi candidate:** see [`side-boot-logo-bik-handoff.md`](side-boot-logo-bik-handoff.md)
+(`SNG_logo_vr.bik`, `validate-video` PASS, offline under `deployment/hands-dubbing/boot-logo-v2/`).
+Build path: `tools/build-binkenc.ps1` + `tools/prepare-boot-logo-full.ps1`.
 
 `texconv.exe` was not found on the SIDE host: not on `PATH`, and no
 `texconv.exe` under the searched `Program Files` directories (about 47 s,
