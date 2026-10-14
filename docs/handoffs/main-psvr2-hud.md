@@ -20,3 +20,5 @@ Nie implementować energii TMD, celów, napisów ani kierunku obrażeń, dopóki
 Nie ruszać kina, chwytu, cieni, dubbingu, glifów notatek, logo, lasera menu, SFX broni, projektora ani stereo rozgrywki. Offsety z `ENGINE_NOTES.md` są pomiarem jednej budowy. W kodzie zostaje rozwiązywanie po nazwie.
 
 Test gogli z `HUD_STAGE1.md` jest krótki i należy do MAIN. Wynik tego brancha jest projektem offline, nie przejściem fizycznym.
+
+Płyty, atlas i ikony promptów są w `docs/hud/KATORGA_ASSETS.md` oraz `docs/handoffs/main-katorga-hud-assets.md`. To grafika. Nie są jeszcze podpięte.

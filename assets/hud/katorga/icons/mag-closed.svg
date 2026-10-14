@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" id="mag-closed">
+<!-- Original Katorga HUD art. MIT, same terms as the repository. Not taken from the game, from Kenney, or from a console mark sheet. No font is embedded. -->
+<title>mag-closed</title>
+<rect x="16" y="12" width="32" height="40" fill="none" stroke="#e6e1d6" stroke-width="2"/><path d="M24 12 V52 M16 26 H48 M16 38 H48" fill="none" stroke="#5a6f8d" stroke-width="2"/>
+</svg>

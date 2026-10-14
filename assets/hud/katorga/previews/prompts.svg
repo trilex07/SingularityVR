@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="420" viewBox="0 0 880 420" id="prompt-replace">
+<!-- Original Katorga HUD art. MIT, same terms as the repository. Not taken from the game, from Kenney, or from a console mark sheet. No font is embedded. -->
+<title>Podmiana tokenu</title>
+<rect width="880" height="420" fill="#121416"/>
+<text x="24" y="32" fill="#8d97a1" font-family="Segoe UI, Arial, sans-serif" font-size="16">Ikona wchodzi w miejsce tokenu. Druga legenda obok zdania nie powstaje.</text>
+<g transform="translate(24 64)">
+<text x="0" y="28" fill="#5a6f8d" font-family="Segoe UI, Arial, sans-serif" font-size="14">[health]</text>
+<text x="120" y="36" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="22">Naciśnij</text>
+<g transform="translate(250 0)"><circle cx="32" cy="32" r="16" fill="none" stroke="#e6e1d6" stroke-width="4"/></g>
+<text x="330" y="36" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="22">aby użyć apteczki.</text>
+</g>
+<g transform="translate(24 132)">
+<text x="0" y="28" fill="#5a6f8d" font-family="Segoe UI, Arial, sans-serif" font-size="14">[use]</text>
+<text x="120" y="36" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="22"></text>
+<g transform="translate(250 0)"><rect x="12" y="8" width="14" height="48" fill="#5a6f8d"/><path d="M32 14 C54 14 54 50 32 50" fill="none" stroke="#e6e1d6" stroke-width="5" stroke-linecap="round"/></g>
+<text x="330" y="36" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="22">Apteczka</text>
+</g>
+<g transform="translate(24 200)">
+<text x="0" y="28" fill="#5a6f8d" font-family="Segoe UI, Arial, sans-serif" font-size="14">[age]</text>
+<text x="120" y="36" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="22">Naciśnij</text>
+<g transform="translate(250 0)"><rect x="16" y="16" width="32" height="32" fill="none" stroke="#e6e1d6" stroke-width="4"/></g>
+<text x="330" y="36" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="22">aby odnowić apteczki.</text>
+</g>
+<g transform="translate(24 268)">
+<text x="0" y="28" fill="#5a6f8d" font-family="Segoe UI, Arial, sans-serif" font-size="14">[reload]</text>
+<text x="120" y="36" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="22">Naciśnij</text>
+<g transform="translate(250 0)"><rect x="12" y="8" width="14" height="48" fill="#5a6f8d"/><path d="M32 14 C54 14 54 50 32 50" fill="none" stroke="#e6e1d6" stroke-width="5" stroke-linecap="round"/></g>
+<text x="330" y="36" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="22">aby przeładować.</text>
+</g>
+<g transform="translate(24 336)">
+<text x="0" y="28" fill="#5a6f8d" font-family="Segoe UI, Arial, sans-serif" font-size="14">[cancel]</text>
+<text x="120" y="36" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="22">Naciśnij</text>
+<g transform="translate(250 0)"><circle cx="32" cy="32" r="16" fill="none" stroke="#e6e1d6" stroke-width="4"/></g>
+<text x="330" y="36" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="22">aby wrócić. Tylko menu.</text>
+</g>
+</svg>

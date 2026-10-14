@@ -1,0 +1,241 @@
+{
+  "name": "katorga-hud",
+  "width": 512,
+  "height": 256,
+  "cell": 64,
+  "origin": "top-left",
+  "format": "RGBA8",
+  "bytes_rgba": 524288,
+  "png_sha256": "5ff19fc5c18d49b799684ab26945aee81bcd5f07b66729654e0a5c0bb16126b6",
+  "license": "MIT",
+  "origin_note": "Original drawings for this mod. Not extracted from Singularity, Kenney, or a platform button sheet.",
+  "rects": [
+    {
+      "id": "tick-full",
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "tick-empty",
+      "x": 64,
+      "y": 0,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "tick-worn",
+      "x": 128,
+      "y": 0,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "mag-closed",
+      "x": 192,
+      "y": 0,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "mag-open",
+      "x": 256,
+      "y": 0,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "reload-mark",
+      "x": 320,
+      "y": 0,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "warning-notch",
+      "x": 384,
+      "y": 0,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "rivet",
+      "x": 448,
+      "y": 0,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "sense-circle",
+      "x": 0,
+      "y": 64,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "sense-square",
+      "x": 64,
+      "y": 64,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "sense-cross",
+      "x": 128,
+      "y": 64,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "sense-triangle",
+      "x": 192,
+      "y": 64,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "sense-grip",
+      "x": 256,
+      "y": 64,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "sense-stick-down",
+      "x": 320,
+      "y": 64,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "digit-slot",
+      "x": 384,
+      "y": 64,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "id": "name-rule",
+      "x": 448,
+      "y": 64,
+      "w": 64,
+      "h": 64
+    }
+  ],
+  "reserved": [
+    {
+      "x": 0,
+      "y": 128,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "x": 64,
+      "y": 128,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "x": 128,
+      "y": 128,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "x": 192,
+      "y": 128,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "x": 256,
+      "y": 128,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "x": 320,
+      "y": 128,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "x": 384,
+      "y": 128,
+      "w": 64,
+      "h": 64
+    },
+    {
+      "x": 448,
+      "y": 128,
+      "w": 64,
+      "h": 64
+    }
+  ],
+  "tokens": [
+    {
+      "token": "health",
+      "icon": "sense-circle",
+      "sentence_key": "GameDialogs.HealthPackDesc",
+      "sentence_pl": "Naciśnij [health], aby użyć znalezionych w świecie apteczek.",
+      "replace": "icon only, Polish sentence stays",
+      "openxr": "/user/hand/right/input/b/click",
+      "emits": "DPAD_UP 0x0001 (kCircleHealthMask)",
+      "sense_right_handed": "Circle on the right Sense controller",
+      "sense_left_handed": "mirrorHand moves right/b to left/y. That path is also the Triangle menu button, which is not mirrored. Do not ship the left-handed health icon until that collision is tested.",
+      "not": "D-pad, Pad 11, R1"
+    },
+    {
+      "token": "use",
+      "icon": "sense-grip",
+      "sentence_key": "Pickup.TakeHealthPack",
+      "sentence_pl": "[use] Apteczka",
+      "replace": "icon only, Polish sentence stays",
+      "openxr": "/user/hand/right/input/squeeze/value",
+      "emits": "XI_X 0x4000",
+      "sense_right_handed": "Right grip",
+      "sense_left_handed": "Left grip",
+      "not": "R1, face button X"
+    },
+    {
+      "token": "reload",
+      "icon": "sense-grip",
+      "same_rect_as": "use",
+      "sentence_key": "Tutorial.Reload",
+      "sentence_pl": "Naciśnij [reload], aby przeładować",
+      "replace": "icon only, Polish sentence stays",
+      "openxr": "/user/hand/right/input/squeeze/value",
+      "emits": "XI_X 0x4000",
+      "sense_right_handed": "Right grip. Same g_padButtons row as use: \"Use / reload\". There is no second reload binding.",
+      "sense_left_handed": "Left grip",
+      "not": "a different button from use, R1"
+    },
+    {
+      "token": "age",
+      "icon": "sense-square",
+      "sentence_key": "Tutorial.Medkit",
+      "sentence_pl": "Naciśnij [age], aby odnowić apteczki i odzyskać znajdujące się w nich pakiety zdrowia.",
+      "replace": "icon only, Polish sentence stays",
+      "openxr": "/user/hand/left/input/x/click",
+      "emits": "XI_LSHOULDER 0x0100",
+      "sense_right_handed": "Square on the left Sense controller",
+      "sense_left_handed": "mirrorHand moves left/x to right/a, the Cross position. Jump moves the other way.",
+      "not": "LB bumper, Pad N"
+    },
+    {
+      "token": "cancel",
+      "icon": "sense-circle",
+      "same_physical_button_as": "health",
+      "context": "menu",
+      "sentence_key": "",
+      "sentence_pl": "",
+      "replace": "icon only, and only after a screenshot shows the sentence",
+      "openxr": "/user/hand/right/input/b/click",
+      "emits": "XI_B 0x2000 while the menu gate is on (g_actUiBack)",
+      "sense_right_handed": "Circle. Menu back is bound with handed=false, so it stays on the right controller.",
+      "sense_left_handed": "Stays on right Circle. It does not follow the health mirror.",
+      "not": "Pad N. Not the weapon-wheel cancel, which is L3 in weapon_wheel.h. In gameplay, Circle emits health (DPAD_UP), and native B is right-stick down (crouch)."
+    }
+  ]
+}

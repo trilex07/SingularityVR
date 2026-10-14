@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" id="sense-stick-down">
+<!-- Original Katorga HUD art. MIT, same terms as the repository. Not taken from the game, from Kenney, or from a console mark sheet. No font is embedded. -->
+<title>sense-stick-down</title>
+<circle cx="32" cy="18" r="8" fill="none" stroke="#e6e1d6" stroke-width="3"/><path d="M32 26 V40 M22 36 L32 50 L42 36" fill="none" stroke="#e6e1d6" stroke-width="3"/>
+</svg>

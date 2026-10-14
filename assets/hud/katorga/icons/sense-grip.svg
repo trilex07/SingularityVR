@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" id="sense-grip">
+<!-- Original Katorga HUD art. MIT, same terms as the repository. Not taken from the game, from Kenney, or from a console mark sheet. No font is embedded. -->
+<title>sense-grip</title>
+<rect x="12" y="8" width="14" height="48" fill="#5a6f8d"/><path d="M32 14 C54 14 54 50 32 50" fill="none" stroke="#e6e1d6" stroke-width="5" stroke-linecap="round"/>
+</svg>

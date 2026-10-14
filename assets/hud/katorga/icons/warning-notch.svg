@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" id="warning-notch">
+<!-- Original Katorga HUD art. MIT, same terms as the repository. Not taken from the game, from Kenney, or from a console mark sheet. No font is embedded. -->
+<title>warning-notch</title>
+<rect x="14" y="14" width="36" height="36" fill="none" stroke="#e6e1d6" stroke-width="2"/><path d="M20 42 L30 22 M28 44 L40 22 M36 46 L48 24" fill="none" stroke="#e6e1d6" stroke-width="2"/>
+</svg>

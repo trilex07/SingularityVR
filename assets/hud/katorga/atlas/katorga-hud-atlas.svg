@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="256" viewBox="0 0 512 256" id="katorga-hud-atlas">
+<!-- Original Katorga HUD art. MIT, same terms as the repository. Not taken from the game, from Kenney, or from a console mark sheet. No font is embedded. -->
+<title>Atlas HUD Katorga</title>
+<rect width="512" height="256" fill="none"/>
+<g id="tick-full" transform="translate(0 0)">
+<path d="M22 12 H40 L44 18 V54 H18 V18 Z" fill="#e6e1d6" stroke="#5a6f8d" stroke-width="2"/>
+</g>
+<g id="tick-empty" transform="translate(64 0)">
+<path d="M22 12 H40 L44 18 V54 H18 V18 Z" fill="none" stroke="#5a6f8d" stroke-width="2"/>
+</g>
+<g id="tick-worn" transform="translate(128 0)">
+<path d="M22 30 H40 L44 36 V54 H18 V36 Z" fill="#e6e1d6" stroke="#5a6f8d" stroke-width="2"/>
+</g>
+<g id="mag-closed" transform="translate(192 0)">
+<rect x="16" y="12" width="32" height="40" fill="none" stroke="#e6e1d6" stroke-width="2"/><path d="M24 12 V52 M16 26 H48 M16 38 H48" fill="none" stroke="#5a6f8d" stroke-width="2"/>
+</g>
+<g id="mag-open" transform="translate(256 0)">
+<path d="M18 26 V50 H46 V26" fill="none" stroke="#e6e1d6" stroke-width="3"/><path d="M20 14 H44" fill="none" stroke="#e6e1d6" stroke-width="3"/>
+</g>
+<g id="reload-mark" transform="translate(320 0)">
+<rect x="8" y="24" width="16" height="16" fill="#e6e1d6"/><rect x="40" y="24" width="16" height="16" fill="#e6e1d6"/><path d="M26 32 H38" fill="none" stroke="#5a6f8d" stroke-width="2"/>
+</g>
+<g id="warning-notch" transform="translate(384 0)">
+<rect x="14" y="14" width="36" height="36" fill="none" stroke="#e6e1d6" stroke-width="2"/><path d="M20 42 L30 22 M28 44 L40 22 M36 46 L48 24" fill="none" stroke="#e6e1d6" stroke-width="2"/>
+</g>
+<g id="rivet" transform="translate(448 0)">
+<circle cx="32" cy="32" r="6" fill="none" stroke="#5a6f8d" stroke-width="2"/><circle cx="32" cy="32" r="2" fill="#e6e1d6"/>
+</g>
+<g id="sense-circle" transform="translate(0 64)">
+<circle cx="32" cy="32" r="16" fill="none" stroke="#e6e1d6" stroke-width="4"/>
+</g>
+<g id="sense-square" transform="translate(64 64)">
+<rect x="16" y="16" width="32" height="32" fill="none" stroke="#e6e1d6" stroke-width="4"/>
+</g>
+<g id="sense-cross" transform="translate(128 64)">
+<path d="M20 20 L44 44 M44 20 L20 44" fill="none" stroke="#e6e1d6" stroke-width="4"/>
+</g>
+<g id="sense-triangle" transform="translate(192 64)">
+<path d="M32 14 L50 48 H14 Z" fill="none" stroke="#e6e1d6" stroke-width="4"/>
+</g>
+<g id="sense-grip" transform="translate(256 64)">
+<rect x="12" y="8" width="14" height="48" fill="#5a6f8d"/><path d="M32 14 C54 14 54 50 32 50" fill="none" stroke="#e6e1d6" stroke-width="5" stroke-linecap="round"/>
+</g>
+<g id="sense-stick-down" transform="translate(320 64)">
+<circle cx="32" cy="18" r="8" fill="none" stroke="#e6e1d6" stroke-width="3"/><path d="M32 26 V40 M22 36 L32 50 L42 36" fill="none" stroke="#e6e1d6" stroke-width="3"/>
+</g>
+<g id="digit-slot" transform="translate(384 64)">
+<rect x="12" y="16" width="40" height="32" fill="none" stroke="#5a6f8d" stroke-width="2" stroke-dasharray="3 3"/>
+</g>
+<g id="name-rule" transform="translate(448 64)">
+<path d="M10 40 H54" fill="none" stroke="#5a6f8d" stroke-width="2"/><path d="M10 40 H18 M46 40 H54" fill="none" stroke="#e6e1d6" stroke-width="2"/>
+</g>
+</svg>
