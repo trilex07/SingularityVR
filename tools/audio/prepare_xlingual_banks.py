@@ -121,6 +121,12 @@ def main():
         ap.add_argument('--' + arg, type=Path, required=True)
     ap.add_argument('--allow-partial', action='store_true')
     ap.add_argument('--allow-pending-qa', action='store_true')
+    ap.add_argument('--only', default='',
+                    help='only packages containing this substring (targeted rerun)')
+    ap.add_argument('--exclude', default='',
+                    help='skip packages containing this substring (e.g. built VI2)')
+    ap.add_argument('--pins', type=Path, default=None,
+                    help='pins JSON (package -> stock/logical hashes); defaults to embedded VI2 set')
     a = ap.parse_args()
     require(not a.out.exists(), 'refuse existing output')
     xl = {}
@@ -147,80 +153,96 @@ def main():
                               capture_output=True, text=True, check=True).stderr
 
     a.out.mkdir(parents=True)
+    if a.pins is not None:
+        pins = json.loads(a.pins.read_text(encoding='utf-8-sig'))
+        stock_map = {pkg: v['stock'] for pkg, v in pins.items()}
+        logical_map = {pkg: v['logical'] for pkg, v in pins.items()}
+    else:
+        stock_map, logical_map = STOCK, LOGICAL
     report = []
-    for package, source_sha in STOCK.items():
-        folder = a.out / package
-        folder.mkdir()
-        original = (a.cooked / (package + '.xxx')).read_bytes()
-        require(sha(original) == source_sha.lower(), 'stock bank changed: ' + package)
-        logical = (a.logical / (package + '.u')).read_bytes()
-        logical_sha = sha(logical)
-        require(logical_sha == LOGICAL[package].lower(), 'logical bank mismatch: ' + package)
-        exports = inspect(logical)['exports']
-        by = {e['name']: e for e in exports}
-        selected = [(e, xl[(package, e['name'])]) for e in exports
-                    if e['class_name'] == 'SoundNodeWave' and (package, e['name']) in xl]
-        require(bool(selected), 'empty xlingual target group: ' + package)
-        replacements = {}
-        lines = []
-        skipped = []
-        for e, r in selected:
-            asset = e['name']
-            require(e['class_name'] == 'SoundNodeWave', 'wrong export class')
-            source = a.xlingual / r['file']
-            props = {x['name']: x['value'] for x in e['properties']}
-            rate = props['SampleRate']
-            require(props['NumChannels'] == 1 and rate in (44100, 48000)
-                    and props['RawPCMDataSize'] % 2 == 0, 'unsupported PCM metadata')
-            frames = props['RawPCMDataSize'] // 2
-            spoken = next(x for x in e['properties'] if x['name'] == 'SpokenText')
-            text_match = (r.get('text_en') == props['SpokenText'])
-            qa_recall = recall.get(r['file'])
-            qa_flag = r['file'] in flagged_files
-            if qa_flag and not a.allow_pending_qa:
-                skipped.append(dict(asset=asset, reason='QA-flagged file needs explicit flag'))
-                continue
-            reference = folder / (asset + '.native.ogg')
-            reference.write_bytes(bulks(logical, e)[1][1])
-            decoded = folder / (asset + '.native.wav')
-            run(['-v', 'error', '-n', '-i', str(reference), '-c:a', 'pcm_s16le', str(decoded)])
-            with wave.open(str(decoded)) as w:
-                require(w.getnframes() == frames and w.getframerate() == rate
-                        and w.getnchannels() == 1, 'native PCM mismatch')
-            target, fitting = fit(run, source, folder, asset, rate, frames)
-            if target is None:
-                require(a.allow_partial, 'utterance too long: ' + asset)
-                skipped.append(dict(asset=asset, **fitting))
-                print(package, asset, 'RETAIN ENGLISH: unfit at safe tempo', flush=True)
-                continue
-            loud = run(['-i', str(target), '-af', 'loudnorm=I=-24:TP=-1:LRA=11:print_format=json',
-                        '-f', 'null', '-'])
-            measurement = json.loads(loud[loud.rfind('{'):loud.rfind('}') + 1])
-            require(float(measurement['input_tp']) < -.2, 'encoded peak gate')
-            replacements[asset] = target.read_bytes()
-            lines.append(dict(asset=asset, source_wav=r['file'],
-                              source_sha256=sha(source.read_bytes()),
-                              english=props['SpokenText'], polish=r.get('text_pl_machine', ''),
-                              text_exact_match=text_match,
-                              qa_recall=qa_recall, qa_flagged=qa_flag,
-                              true_peak_dbtp=float(measurement['input_tp']), **fitting))
-            print(package, asset, 'fit tempo=%.2f peak=%s' % (fitting['tempo'], measurement['input_tp']), flush=True)
-        require(bool(replacements), 'no eligible voices: ' + package)
-        expected, physical = build(original, logical, replacements, source_sha, logical_sha)
-        packed = folder / 'candidate.xxx'
-        packed.write_bytes(physical)
-        # Fresh container-integrity check (not a game-load proof).
-        body = unpack_physical(physical)
-        header = bytearray(logical[:0x71])
-        # logical body starts at 0x71 per pack()
-        require(body == expected[0x71:], 'container roundtrip mismatch: ' + package)
-        report.append(dict(package=package, source_sha256=source_sha,
-                           candidate_sha256=sha(physical), lines=lines, skipped=skipped,
-                           status='OFFLINE_PASS_NOT_NATIVE_LOAD_OR_AUDITORY_ACCEPTANCE'))
-        print(package, 'candidate', sha(physical)[:16], 'lines', len(lines),
-              'retained', len(skipped), flush=True)
+    for package, source_sha in stock_map.items():
+        if a.only and a.only not in package:
+            continue
+        if a.exclude and a.exclude in package:
+            continue
+        try:
+            report.append(build_one(a, xl, recall, flagged_files, run,
+                                    package, source_sha, logical_map[package]))
+        except Exception as ex:
+            print(package, 'FAILED:', str(ex)[:200], flush=True)
+            report.append(dict(package=package, status='FAILED: ' + str(ex)[:200],
+                               lines=[], skipped=[]))
     (a.out / 'xlingual-banks.json').write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding='utf-8')
     print('OFFLINE ONLY: no Steam file changed; game-load and headset gates pending', flush=True)
+
+
+def build_one(a, xl, recall, flagged_files, run, package, source_sha, logical_sha):
+    folder = a.out / package
+    folder.mkdir(exist_ok=True)
+    original = (a.cooked / (package + '.xxx')).read_bytes()
+    require(sha(original) == source_sha.lower(), 'stock bank changed: ' + package)
+    logical = (a.logical / (package + '.u')).read_bytes()
+    require(sha(logical) == logical_sha.lower(), 'logical bank mismatch: ' + package)
+    exports = inspect(logical)['exports']
+    selected = [(e, xl[(package, e['name'])]) for e in exports
+                if e['class_name'] == 'SoundNodeWave' and (package, e['name']) in xl]
+    require(bool(selected), 'empty xlingual target group: ' + package)
+    replacements = {}
+    lines = []
+    skipped = []
+    for e, r in selected:
+        asset = e['name']
+        require(e['class_name'] == 'SoundNodeWave', 'wrong export class')
+        source = a.xlingual / r['file']
+        props = {x['name']: x['value'] for x in e['properties']}
+        rate = props['SampleRate']
+        require(props['NumChannels'] == 1 and rate in (44100, 48000)
+                and props['RawPCMDataSize'] % 2 == 0, 'unsupported PCM metadata')
+        frames = props['RawPCMDataSize'] // 2
+        text_match = (r.get('text_en') == props['SpokenText'])
+        qa_recall = recall.get(r['file'])
+        qa_flag = r['file'] in flagged_files
+        if qa_flag and not a.allow_pending_qa:
+            skipped.append(dict(asset=asset, reason='QA-flagged file needs explicit flag'))
+            continue
+        reference = folder / (asset + '.native.ogg')
+        reference.write_bytes(bulks(logical, e)[1][1])
+        decoded = folder / (asset + '.native.wav')
+        run(['-v', 'error', '-n', '-i', str(reference), '-c:a', 'pcm_s16le', str(decoded)])
+        with wave.open(str(decoded)) as w:
+            require(w.getnframes() == frames and w.getframerate() == rate
+                    and w.getnchannels() == 1, 'native PCM mismatch')
+        target, fitting = fit(run, source, folder, asset, rate, frames)
+        if target is None:
+            require(a.allow_partial, 'utterance too long: ' + asset)
+            skipped.append(dict(asset=asset, **fitting))
+            print(package, asset, 'RETAIN ENGLISH: unfit at safe tempo', flush=True)
+            continue
+        loud = run(['-i', str(target), '-af', 'loudnorm=I=-24:TP=-1:LRA=11:print_format=json',
+                    '-f', 'null', '-'])
+        measurement = json.loads(loud[loud.rfind('{'):loud.rfind('}') + 1])
+        require(float(measurement['input_tp']) < -.2, 'encoded peak gate')
+        replacements[asset] = target.read_bytes()
+        lines.append(dict(asset=asset, source_wav=r['file'],
+                          source_sha256=sha(source.read_bytes()),
+                          english=props['SpokenText'], polish=r.get('text_pl_machine', ''),
+                          text_exact_match=text_match,
+                          qa_recall=qa_recall, qa_flagged=qa_flag,
+                          true_peak_dbtp=float(measurement['input_tp']), **fitting))
+        print(package, asset, 'fit tempo=%.2f peak=%s' % (fitting['tempo'], measurement['input_tp']), flush=True)
+    require(bool(replacements), 'no eligible voices: ' + package)
+    expected, physical = build(original, logical, replacements, source_sha, logical_sha)
+    packed = folder / 'candidate.xxx'
+    packed.write_bytes(physical)
+    # Fresh container-integrity check (not a game-load proof).
+    body = unpack_physical(physical)
+    # logical body starts at 0x71 per pack()
+    require(body == expected[0x71:], 'container roundtrip mismatch: ' + package)
+    print(package, 'candidate', sha(physical)[:16], 'lines', len(lines),
+          'retained', len(skipped), flush=True)
+    return dict(package=package, source_sha256=source_sha,
+                candidate_sha256=sha(physical), lines=lines, skipped=skipped,
+                status='OFFLINE_PASS_NOT_NATIVE_LOAD_OR_AUDITORY_ACCEPTANCE')
 
 
 if __name__ == '__main__':
