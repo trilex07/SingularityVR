@@ -18,6 +18,10 @@ int main() {
     Expect(!gloveisolate::UsesPaletteStump(0, 2), "mode 2 does not palette-stump");
     Expect(gloveisolate::UsesPaletteStump(0, 3), "mode 3 keeps legacy stump");
     Expect(!gloveisolate::HandsOnly(1, 2), "showing controller arms is not hands-only");
+    Expect(gloveisolate::GlovesUntilWeapon(1, 2, false), "arms setting still uses gloves before a weapon");
+    Expect(!gloveisolate::GlovesUntilWeapon(1, 2, true), "a held weapon keeps the controller-arm path");
+    Expect(gloveisolate::GlovesUntilWeapon(0, 2, false), "gloves-only stays gloves without a weapon");
+    Expect(!gloveisolate::GlovesUntilWeapon(1, 0, false), "isolation off does not switch paths");
     Expect(!gloveisolate::HandsOnly(0, 0), "isolation off is not hands-only");
     Expect(!gloveisolate::HandsOnly(0, 1), "census mode does not hide the arm");
 

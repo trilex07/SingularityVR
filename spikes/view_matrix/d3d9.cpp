@@ -15878,16 +15878,22 @@ static bool IsIndependentHandSection(UINT verts, UINT first, UINT triangles) {
            ((verts==7444 || verts==37) && first==36318 && triangles==17);
 }
 
+static bool GlovesUntilWeaponNow() {
+    return g_independentHands && gloveisolate::GlovesUntilWeapon(
+        g_showControllerArms, (int)Rd(g_gloveIsolate),
+        Rd(g_weaponObj) != 0 && Rd(g_weaponHolstered) == 0);
+}
+
 static bool FgIndependentHandsCandidate(UINT verts, UINT first, UINT triangles) {
     const bool exactSection=IsIndependentHandSection(verts, first, triangles);
     const bool exactSectionWindow=exactSection && Rd(g_inForeground) &&
         Rd(g_fgDrawCount) <= kFgSanePass && Rd(g_rtIsScene) && !g_boundShaderLayout.shadow;
-    return !g_showControllerArms && g_independentHands && Rd(g_gloveIsolate)>=2 &&
+    return GlovesUntilWeaponNow() &&
            exactSection && (FgMatchWindow() || exactSectionWindow);
 }
 
 static bool FgHidden(UINT verts, UINT first, UINT triangles) {                    // arms, in modes 2 and 3
-    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2 &&
+    if (GlovesUntilWeaponNow() &&
         gloveisolate::IsStrayFingerSection(verts, first, triangles)) {
         static LONG saidStray = 0;
         if (InterlockedCompareExchange(&saidStray, 1, 0) == 0)
@@ -15895,7 +15901,7 @@ static bool FgHidden(UINT verts, UINT first, UINT triangles) {                  
                 verts, first, triangles);
         return true;
     }
-    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2 &&
+    if (GlovesUntilWeaponNow() &&
         gloveisolate::IsArmFleshSection(verts, first, triangles)) {
         static LONG saidArmFlesh = 0;
         if (InterlockedCompareExchange(&saidArmFlesh, 1, 0) == 0)
@@ -15903,7 +15909,7 @@ static bool FgHidden(UINT verts, UINT first, UINT triangles) {                  
                 verts, first, triangles);
         return FgMatchWindow();
     }
-    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2 && FgMatchWindow() &&
+    if (GlovesUntilWeaponNow() && FgMatchWindow() &&
         (verts == 4818 || verts == 4781 || verts == 1368)) {
         static LONG saidGauntlet = 0;
         if (InterlockedCompareExchange(&saidGauntlet, 1, 0) == 0)
@@ -15911,7 +15917,7 @@ static bool FgHidden(UINT verts, UINT first, UINT triangles) {                  
                 verts, first, triangles);
         return true;
     }
-    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2 &&
+    if (GlovesUntilWeaponNow() &&
         ((verts == 7444 || verts == 37) && first == 36318 && triangles == 17)) {
         return FgMatchWindow();
     }
@@ -15933,7 +15939,7 @@ static bool FgHidden(UINT verts, UINT first, UINT triangles) {                  
 
     if (FgIndependentHandsCandidate(verts, first, triangles)) return false;
 
-    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2) {
+    if (GlovesUntilWeaponNow()) {
         const LONG arms = Rd(g_armsVerts);
         if (arms && (UINT)arms == verts && !IsIndependentHandSection(verts, first, triangles)) {
             static LONG saidGlovesOnlyArm = 0;
@@ -15944,7 +15950,8 @@ static bool FgHidden(UINT verts, UINT first, UINT triangles) {                  
         }
     }
 
-    if (g_showControllerArms && (Rd(g_hideMeshIdx) == 2 || Rd(g_hideMeshIdx) == 3) &&
+    if (g_showControllerArms && Rd(g_weaponObj) != 0 && Rd(g_weaponHolstered) == 0 &&
+        (Rd(g_hideMeshIdx) == 2 || Rd(g_hideMeshIdx) == 3) &&
         FgMatchWindow()) {
         static LONG said = 0;
         if (InterlockedCompareExchange(&said, 1, 0) == 0)
@@ -16278,9 +16285,11 @@ static bool FgRidesGun(UINT verts) {
         // already in the first-person signature list is not world geometry.
         const bool tmdPrime = Rd(g_tmdOnOffHand) && TmdRaised() &&
                               FgMatchesSignature(verts) && FgMatchWindow();
+        const bool weaponInHand = Rd(g_weaponObj) != 0 && Rd(g_weaponHolstered) == 0;
+        const bool armsOnWeapon = g_showControllerArms && weaponInHand;
         if (!tmdPrime &&
-            !(((PlayerArmed() == ARMED_NO || g_showControllerArms) && ap && (UINT)ap == verts
-               || (g_showControllerArms && FgIsExtraArm(verts))) && FgMatchWindow())) return false;
+            !(((PlayerArmed() == ARMED_NO || armsOnWeapon) && ap && (UINT)ap == verts
+               || (armsOnWeapon && FgIsExtraArm(verts))) && FgMatchWindow())) return false;
     }
     // Nothing rides during an animation window - the gun itself is not being moved, so an attachment
     // that followed the controller would be the only thing off the animation. Moved BELOW the cheap
@@ -16299,7 +16308,8 @@ static bool FgRidesGun(UINT verts) {
     // 64 is far above anything real and far below "the rest of the level". Past it we are not in
     // the first-person pass at all, whatever the flag says, and riding stops for the frame.
     // g_fgDrawCount is already incremented before either hook reaches this.
-    const bool identifiedArm = g_showControllerArms && FgMatchWindow() &&
+    const bool identifiedArm = g_showControllerArms && Rd(g_weaponObj) != 0 &&
+        Rd(g_weaponHolstered) == 0 && FgMatchWindow() &&
         (((UINT)Rd(g_armsVerts) == verts) || FgIsExtraArm(verts));
     if (!identifiedArm && Rd(g_fgDrawCount) > kFgRideMax) {
         InterlockedExchange(&g_fgRideBailed, 1);
