@@ -1,0 +1,30 @@
+#pragma once
+#include "arm_bind.h"
+namespace handanchor {
+inline armik::V Point(armik::V p,const float m[4][4]) {
+    return {p.x*m[0][0]+p.y*m[1][0]+p.z*m[2][0]+m[3][0],
+            p.x*m[0][1]+p.y*m[1][1]+p.z*m[2][1]+m[3][1],
+            p.x*m[0][2]+p.y*m[1][2]+p.z*m[2][2]+m[3][2]};
+}
+inline bool Affine(const float m[4][4]) {
+    for(unsigned r=0;r<4;++r)for(unsigned c=0;c<4;++c)if(!std::isfinite(m[r][c]))return false;
+    return std::fabs(m[0][3])+std::fabs(m[1][3])+std::fabs(m[2][3])+std::fabs(m[3][3]-1.f)<1e-5f;
+}
+// Skin constants are inverse-bind * current-joint, NOT the joint position itself.
+// Preserve controller rotation/scale; only remove the measured wrong pivot offset.
+inline bool TargetWrist(float out[4][4],const armbind::Mat& bind,const float skin[3][4],
+                        const float local[4][4],const float controller[4][4],armik::V desired) {
+    if(!Affine(local)||!Affine(controller)||!armik::Finite(desired))return false;
+    armbind::Mat joint;if(!armbind::CurrentJoint(bind,skin,joint))return false;
+    const auto nativeWorld=Point(armbind::Position(joint),local);
+    const auto oldTarget=Point(nativeWorld,controller);
+    if(!armik::Finite(nativeWorld)||!armik::Finite(oldTarget))return false;
+    float staged[4][4];std::memcpy(staged,controller,sizeof(staged));
+    staged[3][0]+=desired.x-oldTarget.x;staged[3][1]+=desired.y-oldTarget.y;staged[3][2]+=desired.z-oldTarget.z;
+    if(!Affine(staged))return false;
+    std::memcpy(out,staged,sizeof(staged));return true;
+}
+inline bool GameplaySource(bool enabled,bool cinematic,bool menu,bool paused,bool gameplay) {
+    return enabled && !cinematic && !menu && !paused && gameplay;
+}
+}

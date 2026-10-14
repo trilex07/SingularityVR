@@ -1,5 +1,447 @@
 # STATUS — session handoff
 
+LATEST PID17436 closed; all3 guards restored, independent4+32+1886 hashes and
+107DDS PASS (live restore-verification.json). User physically heard Polish radio,
+generally accepts this version and requests PR targeting main (NO merge).
+PHYSICALLY_VERIFIED scoped opening radio presence after one-wave loudness change;
+not full-game dubbing or all materials/hands acceptance. New requested follow-ups:
+English indoor recordings/dialogue; untranslated notes; FIRST pistol pickup leaves
+visible forearms and poor right grip AFTER animation; UI/tutorial narrator too loud
+and needs VR Settings ON/OFF; New Game save selection/confirmation overlap.
+Prepare follow-ups separately from accepted PR snapshot. No new Steam test until
+fresh user start. Audio generation remains SIDE-only when needed; MAIN installs.
+Room/notepad identities being narrowed; no guessed pose offset or shader register.
+Below previous live/preparation history.
+
+HISTORICAL LIVE PID17436 after user gotowe VR. Previous no-HMD session23792 closed;
+all3 guards completed and4+32+1886 originals independently verified in its
+restore-verification.json. SteamVR had quit-all from vrmonitor; MAIN relaunched
+app250820, actual playstation_vr2 HMD and vrcompositor confirmed BEFORE game launch.
+Fresh same candidate lease deployment/hands-dubbing/three-items-live-20261014-102151:
+core C1D904D0/F5137234, bankFB03741D, all candidate hashes and backups verified;
+all3 guardians READY. Steam game launched, actual loaded module paths confirmed,
+CURRENT OpenXR ready/session3/running1/haveEyes1. Observer26396 collects logs;
+physical radio/language/loudness result and exit/restoration pending. Core backup
+deployment/hands-dubbing/backups/20261014-102152-17684; asset backup
+deployment/hands-dubbing/asset-backups/20261014-102406-17684; WAV revoice/backup
+inside new live evidence. Only one radio waveform gain differs from earlier trial;
+no hands/input/shadow/stereo/INI/render changes, remaster_apply0. User headset
+script continues1-2min into first gameplay after standing up, closes without chat
+switch/restart, reports radio instruction near tower. DO NOT replace running files.
+Do not claim current restore until all3 guardians finish and independently checked.
+Below prior startup/completed trial/preparation history.
+
+HISTORICAL 2026-10-14 startup-only PID23792 (09:53), fresh user start authorized.
+Core C1D904D0/F5137234 and native radio bankFB03741D installed; all4+32+1886
+candidate hashes/backups verified, all3 guardians READY. Evidence private
+deployment/hands-dubbing/three-items-live-20261014-094554; observer33028.
+NO RADIO/PSVR2 TEST YET: actual log says no HMD, session0/haveEyes0. SteamVR
+was absent at launch; MAIN requested app250820, vrserver23780/vrmonitor31384 now
+observed. Source InitXR called once behind g_initTried; BACKSPACE changes VR flags
+but cannot create a missing session. User asked to enable HMD/SteamVR, close game
+normally and reply gotowe VR. No forced termination or writes while game runs.
+Candidate remains leased until exit; DO NOT claim restored until all3 guardians
+finish and MAIN independently hashes originals. Then authorized startup retry
+must redeploy and start only after headset/runtime readiness. Core backup
+deployment/hands-dubbing/backups/20261014-094555-28084; asset backup
+deployment/hands-dubbing/asset-backups/20261014-094755-28084; WAV revoice/backup
+inside live evidence. startup-boundary.json records exact startup failure.
+Below completed prior trial/preparation history.
+
+LATEST PID24468 completed/closed. User: menu OK; radio did not speak. This is
+NOT confirmation that all voices were silent or that the radio trigger fired.
+All3 guardians completed; independent4+32+1886 original hashes,107DDS and frozen
+forwarder PASS (live restore-verification.json). No candidate remains installed.
+Runtime single-owner bridge/accepted base substitutions and two exact glove
+remaster matches confirmed, remaster_apply0 and no remaster=1 substitutions.
+Native radio playback/branding typography/all24 remaster visuals remain OPEN.
+Offline RE: typed Kismet RadioConversation -> SoundCue ->17 imported waves;
+single-line main action points to VI1_1005_GST. Tested PL radio clips7-13.49LU
+below stock; quiet audio is a hypothesis, not proof of event execution.
+Next isolated candidate changes ONLY VI1_1005_GST volume (-23.16 -> -13.64LUFS,
+stock-12.83, encoded peak-1.37, exact442418 mono48k frames). All other prior
+voices/properties/cues/DLLs/INI/title/material settings unchanged. Prepared
+deployment/hands-dubbing/radio-event-investigation-20261014/delta-single-radio-ready/
+asset-manifest.json; bank SHA FB03741D672537CFC8117C8448361CFEABF819562B3955DADD7BBAD0945AECF8.
+L1 synthetic guards/typed graph, FFmpeg PCM+peak, independent source/candidate
+LZO and fake32 lease PASS; new runtime/audition pending. Two broad louder batches
+failed guards and are NOT deployable. Fresh user start before any new launch.
+See docs/radio-loudness-single-line.md. Below earlier live/preparation history.
+
+HISTORICAL LIVE 2026-10-14 08:56+02:00, user authorized fresh start. Steam PID24468,
+candidate d3d9 C1D904D0/injector F5137234; actual application module paths and
+all4+32+1886 candidate hashes verified. OpenXR ready and actual MAIN slot65
+callback forwarding logged, NativePolishSpeech1. All three separate guardians
+READY; original core/asset/WAV backups verified. Remaster_apply0 (accepted base
+textures kept), title/native radio candidates installed. Independent read-only
+observer PID25180 collects session in private
+deployment/hands-dubbing/three-items-live-20261014-085320. Core backup
+deployment/hands-dubbing/backups/20261014-085321-22672; asset backup
+deployment/hands-dubbing/asset-backups/20261014-085516-22672; WAV originals in
+live folder revoice/backup. Physical trial/exit/restore verification PENDING.
+DO NOT deploy or swap while PID24468/any Singularity runs. No repeat launch
+after exit until all3 guards finish and MAIN independently hashes originals.
+Below preparation/historical headers describe earlier state.
+
+User physical feedback for E213B216 PID23584/36340: all requested hands/menu/
+cinema pause/eyes/controls checks OK except gameplay English radio. Own-wrist
+and cinema/menu presentation accepted for tested scope, not all future weapons.
+Next requested work: native Polish +SINGULARITY VR branding +existing material
+remaster, OFFLINE prepare only; no new Steam launch/install until fresh start.
+Current installed originals/frozen files remain restored; guards completed.
+
+Three-item prep: native48new waves +10preserved helicopter waves in4banks;
+6short replacements refused/retained EN, not all-game Polish completion.
+SIDE old29 +improved8 @9a5ae536; new1886-WAV lookup/format plan PASS,146QA pending.
+Exact native ownership gate keeps UI/uncovered PlaySound path. New title package
+UIE0F5A661 exact iis/char10 +3bytes; accepted RTT and other movies retained;
+independent LZO roundtrip PASS, typography/layout physical acceptance pending.
+24existing materials/91,229,592B staged privately from0dcdcd5/188c10a; no new
+texture generation or game assets in Git. Separate remaster folder; base107DDS,
+glyphs/FX/config groups stay frozen. DefaultOFF single-owner bridge+COM lifetime
+and pool-aware Ex upload implemented. Hidden plain/Ex DXT1/DXT5 RGB/alpha/Reset/
+exact-forward/refcount and actual MAIN translated-Lock/hash/forward chain tests
+PASS. L3/visual remaster/overhead remain OPEN. Exact32 delta lease fake tests
+PASS incl corruption/path/WhatIf/conflict. Hidden cold-process timeout guardian
+restored all32 fake baselines; independent hash verification PASS. Runtime source
+9989baef built x86/O2: d3d9 C1D904D0, injector F5137234. Private core-ready,
+delta-log-final/delta-apply-final and voice-delivery-v3 artifacts prepared.
+Installation verification 2026-10-14T01:50+02:00: original4/asset32/WAV1886,
+UI5B/accepted107DDS/frozen config+forwarder unchanged. No Steam writes/launch
+during prep. READY for bounded physical test after fresh start, NOT L3/L4 accepted.
+See docs/prepared-audio-title-remaster.md. Below historical.
+
+LATEST 2026-10-14 E213B216 test completed, physical feedback PENDING. PID23584:
+OpenXR/loaded paths/exact four hashes PASS; cinema pause reason32 and resume,
+then stereo recorded, hands blocked by existing position gate (no sample).
+User restarted PID36340 on same leased candidate; second log separately saved.
+Wrist execution confirmed, eight GameplayStereo records actualRide/moved0;
+captured posed-constant reconstruction residual <=~0.001UU at log precision.
+Not pixel/controller-origin/physical acceptance; moved1/2 still L1 only.
+Both sessions closed; exact four originals and backups independently verified,
+UI5B/107DDS/frozen config+forwarder PASS. No new audio/WAV deployment in this
+trial. SIDE b13b8dda provides29private WAVs/34bindings,20ASRpass/9review; audit
+of previous42 finds20faithful/22needs correction. Native integration remains
+OFFLINE/OPEN; never deploy the old42 blindly. Next test requires fresh start.
+See docs/no-tmd-wrist-anchor.md. Below headers historical.
+
+LATEST PID21056 physical: single frontend menu, matching eyes; background not
+fully rendered. Cinema pause NOT tested. Small FPS dips remain; L2/R2 unrelated
+in this trial. Native gameplay English persists. Four originals D892/AAA/B3FE/
+890C + UI5B/frozen files and all1886 WAV originals restored/independently hashed.
+Next Steam install/launch requires fresh start. Own-wrist defaultOFF experiment
+L1_PASS only: reconstructed no-ride residual49.997/40.844UU; no guessed50cm offset.
+Probe corrected to gameplay-only and actual ride capture. L2_PASS sourcea23d7e9,
+x86 PE32/O2 SHA E213B216F90CF5545862D8850574D5CD7F82A480983847D4F989507E3E3E58A5.
+Offline wrist-anchor artifact prepared; fake four-file lease/restore gates PASS.
+Physical pending; no real install changed/Steam launched.
+See docs/no-tmd-wrist-anchor.md. Native audio offline three-bank vertical slice
+42replacements/4too-long retainedEN; not full Polish/runtime/audio acceptance.
+User delegates missing sound generation to SIDE; MAIN retains all Steam writes.
+SIDE found incorrect earlier transcriptions in four oversized lines. Native42
+candidate text fidelity is now being checked against SpokenText, not inferred
+from ASR screen PASS. Do not deploy those native banks before this audit.
+Older NEXT/LATEST headers below are historical.
+
+LATEST physical PID34980: no FPS dips noticed in this trial. Frontend menu
+duplication after gameplay resolved, but background still differs between eyes;
+cinema pause remains small/doubled. Hands too far from face/controllers (~50cm
+apparent near-face discrepancy), NOT accepted. Helicopter PL speech louder but
+still much too quiet; gameplay native English remains. D892/AAA/B3FE/890C and
+UI5B/107DDS/frozen files restored/hash verified after exit. Profile3600frames/
+40313ms: cine0/menu165, idle3600/LT0/RT0 (not trigger A/B). Prior headers historical.
+
+NEXT presentation candidate L1/L2_PASS: source7cee8ba, x86 PE32/O2 SHA
+21515F87423774ED3B9896C138F0D9EDF70690AA1B9334C4EDD5F9DC64A5FDD4.
+CutsceneMenuPairFix defaultOFF: focused cinema pause owns MenuFlat instead of
+full-SBS cinematic shrink; frontend/cinema pause use established identical crop
+for both eyes. Gameplay/native cinema flag/other UI/accepted controls unchanged.
+HandAnchorProbe defaultOFF: eight same-thread copied raw constants, >=2s cadence,
+Present flush, no hand correction or guessed50cm offset. Actual seated play used.
+Artifact deployment/hands-dubbing/menu-pair-test-artifact, INI89E170DC (four
+explicit experiment flags only). L1 scene/probe/math/camera/Bink/hotpath gates,
+runtime policy and fake four-file lease/restore PASS; physical gate PENDING.
+
+User requests new1886-WAV candidate (sourcea390ede):894UI/992story, QA1740screen
+PASS/146review, all formats and installed identity mappings verified. New WAV-only
+installer uses exact hashes/all backups, conflict preservation and optional
+no-launch/post-exit guardian. Synthetic1886install/restore/WhatIf/corrupt backup/
+user-conflict tests PASS; WindowsPS hidden timeout/restore PASS. User-authorized
+temporary WAV deployment separately recorded in private revoice-live evidence;
+confirm guard/hashes before testing. Native UE3 gameplay voices are NOT redirected
+by installing these WAV files. Pack contains no native helicopter INTRO identities.
+Helicopter +6LU/+3LU attempts failed encoded gates and were NOT staged/deployed.
+Next Steam DLL install/launch requires fresh start. See docs/cinema-menu-pair-and-revoice.md.
+
+LATEST physical PID16456: Polish helicopter voices PRESENT but too quiet;
+noTMD hands almost corrected, controller alignment unaccepted (user seated on
+floor/cannot stand). Buttons show no FPS difference; residual dips remain.
+Return-menu double-flat regression OPEN. All four originalsD892/AAA/B3FE/890C
+restored/hash independently verified; UI5B/107DDS/frozen files unchanged.
+Guard cold-process Get-FileHash failure fixed before Steam launch (9dc167a).
+Native palette35 execution/OpenXR confirmed; no broad hands acceptance inferred.
+Profile3600frames/43.687s includes menu1080/cine309, not pure gameplay; no second
+profile armed (one-capture/process invariant). Next OFFLINE candidates: native
+voice loudness within1LU (crash radio1.5LU exception), package84B9A419; frontend
+presentation ownership defaultOFF/L1+L2_PASS source6628fa6 DLL85CCCB60.
+No hand offset/config rewrite based on seated report. Gameplay English/native
+full-voice integration and residual FPS still OPEN. See docs/opening-loudness-followup.md
+and docs/cutscene-frontend-handoff.md. No next install/launch until fresh start.
+
+NEXT COMBINED trial now prepared OFFLINE: user requested hands+dubbing before
+the next FPS test. No new Steam launch/install until fresh explicit `start`.
+NoTmdPaletteFix defaultOFF experiment L1/L2_PASS: actual cooked chunk0 has35
+ordered slots, legacy code45 disagrees fromslot18; PSK weights independently
+agree and281points mix wrist/native forearm. Candidate exact noTMD map+rigid
+same-side contributors, NOT TMD/gun/world/shadow changes. Source316f33c,
+VR D10A6EE56F76D1F02CC00E3A55B50664D704CF2866FEF3A95724FFE816BD8EDF.
+Polish helicopter native SoundNodeWave candidate10voices L1_PASS; original
+scream+128other waves/property/event metadata preserved. Candidate package
+C8B30A1B639FBA1A6A5CE58542A81C8687DA4DF5C5BB515EAFC685114B40974C;
+original890C6172. Speech mono48k/exact native PCM sample budgets, LZO roundtrip
+and uepkg layout PASS. Synthetic voices/ASR reviewed, auditory/native load NOT
+verified. Not a claim of all-game Polish completion. See docs/opening-native-polish-audio.md
+and docs/no-tmd-palette-repair.md. FPS residual cause still OPEN, bounded sparse
+native Draw CPU probe included; accepted cache repair injectorD6EFDDAE retained
+in offline artifact. Current installed accepted originals D892/AAA, INI B3FE,
+UI5B and original audio890C independently verified, game CLOSED.
+Exact four-file lease adds only Render.NoTmdPaletteFix=1 (INI383D5E36); retains
+ShowControllerArms1/ArmIK0/GloveIsolate2/FaceFilter0. Fake installation+restore,
+WhatIf/path rejection/corrupt backup/user-INI preservation PASS incl WindowsPS5.1.
+No-launch guardian timeout60s PASS in fake install; all four original hashes restored.
+Artifact deployment/hands-dubbing/test-artifact/test-manifest.json. No request
+armed. READY_FOR_PHYSICAL_ACCEPTANCE for hand/audio candidate and diagnostics,
+NOT a residual-FPS fix or L3/L4 acceptance. Older headers below historical.
+
+CURRENT PID33140 post-cache attribution completed3600frames/40.625s with
+229menu frames (NOT pure gameplay). User: dips in gameplay. Slow77FPS window
+has no new discovery/replay; input-cache changes NOT justified. Three43.712ms
+native scans tied to cinema/menu boundaries. Routine injector classification
+~0.104us native/~0.238us noncandidate,no hash churn. Next offline bounded
+diagnostic separates original Draw* CPU submission from inclusive draw hooks;
+no image/quality/hand/shadow/input-policy changes. L1_PASS: sparse forwarding,
+thread domain,stop/exception/HRESULT and existing input/camera/audio tests.
+L2_PASS regular x86 PE32/O2 sourcebdcd330,VR99D3F8008F3BF0BD894E2AA28BF062F1A32BE354F3DB055DBD5429BB7C51660E.
+Offline staged deployment/native-draw-cpu/artifact; same injectorD6EFDDAE.
+READY_FOR_PHYSICAL_ACCEPTANCE for diagnostic execution only, not FPS fix.
+No next candidate installed/request armed; await fresh start.
+Both originalsD892/AAA restored/hash verified;INI B3FE/UI5B/107DDS unchanged.
+See docs/post-cache-performance.md. Prior headers below are historical.
+
+LATEST PID43712: texture native-cache runtime execution PASS; physical L2/R2
+FPS drop no longer present. Remaining smaller dips + stretched hands OPEN.
+14,145,976 binds,9,909,759 native hits,668,586 legacy hits,950 hashes (late
+plateau),914 stamps,zero failures/evictions. No identical-scene speed ratio
+claim and no explicit physical texture-appearance acceptance. Both original
+DLLs D8928180/AAA07005 restored/hash verified; current INI B3FE/UI5B +107DDS
+unchanged. Game closed. User requires prepare offline then ask `start`; NEVER
+launch/install the next candidate before that reply. Current next work is
+bounded post-cache CPU attribution, not a speculative hand/shadow/quality fix.
+Synthetic native shape scan ~0.055us/call does not explain ms-scale dips;
+no shape-cache intervention. Diagnostic-only injector timing + existing VR
+cinema-exit sampler L1/L2_PASS (x86/O2); candidate remains OFFLINE pending
+explicit start. No post-cache runtime attribution yet. See docs/post-cache-performance.md.
+The pre-test cache status below is historical.
+
+NOW cache-only repair authorized and L1/L2_PASS. Injector sourcef6aeb6b,
+x86 PE32/O2 SHA1BC0F7DD59A46BD7E29DDEC0B17053A3CEA6726C0476A5C0782DC672F6CC3059.
+655resource negative results retain native classification; no pixel/asset,
+quality/group/hash-table change. Old saturation reproduced; native D3D9
+pixel/reset/lifetime test PASS. Pair-only synthetic install+rollback PASS,
+INI/DDS/original-forwarder untouched. Actual game perf/visual gate pending;
+user authorized short Continue(catastrophe)->stereo+L2/R2 test. Reuse previous
+VR64353686 unchanged; no new UAC/WPR. Steam not yet deployed at this header.
+Accepted original injectorAAA07005 and VRD892 must both be restored after test.
+Hands stretching still open. See docs/texture-native-cache-fix.md.
+
+CPU ROOT-CAUSE PATH IDENTIFIED (not fixed): PID8804 native trace111319samples.
+~64.78% of target-process weighted CPU samples are texture injector dinput8,
+SHA AAA07005F4FF658C4A71CC30EA258E469DAF250C77BFE447011FFD650379E4F7,
+not our d3d9 cinema compositor/old DirectInput enumeration. Exact top RVA24E5
+is mip0 FNV hashing; RVA5670.. is its 64-bit multiply. Source/live DLL hashes
+match. Injector log35.2MB:533291 candidate-hash lines,655 distinct hashes,
+one texture repeated75841times. Fixed512 cache evicts first nonreplacement
+slot repeatedly -> negative-cache churn is supported mechanism; runtime
+occupancy/resource identities still need a bounded falsifier. No textures,
+injector DLL or its INI changed. This is outside frozen cinema component;
+request explicit scope to repair cache while retaining same DDS assets/lookup.
+Hands stretch remains independent/open; current user INI ShowControllerArms1
+was preserved, not silently changed. Full physical second-New-Game gate pending.
+Game closed; accepted DLL D892/INI B3FE/UI5B exact restore PASS. No new test
+launched. See docs/cutscene-second-entry-crash.md for measured path/limitations.
+
+LATEST Steam PID8804 / camera-guard DLL64353686: OpenXR+cinema/native exit
+confirmed; physical hands/performance still BROKEN. User reports stretched
+hands, slowdown already at catastrophe, trigger influence unknown. Native
+cinema90->4.2->2.2FPS; actualOFF->GameplayStereo, then~6FPS. After-exit
+sampler45,015ms/265frames, idle227/LT26/RT12; no menu/cine contamination.
+No claim that a normal second New Game or the guarded fault was exercised.
+UAC explicitly authorized: WPR native CPU trace saved privately (2.5GB),
+after actual cinema exit, PID/start-time qualified. Two failed recorder
+attempts: sharing violation in ReadAllText; fixed live shared reader and
+preserved error output, tested in Windows PowerShell5.1, source8bc527f.
+ETL->private CSV export/target-PID analysis in progress; no FPS patch yet.
+Game closed; guard3472 restored D892 and MAIN rehashed DLL/INI B3FE/UI5B.
+No unattended candidate, no install/config/asset mutation beyond DLL lease.
+The earlier CURRENT block below is historical, superseded by this paragraph.
+
+CURRENT: CPU-profile candidate D430CE9F / source3bccd67 / Steam PID14600
+failed second entry: Continue(catastrophe)->stereo gameplay with stretched
+hands and worsening FPS->doubled flat menu->New Game access violation.
+Exact dump+MAP+DLL prove FindCamera cached Class+0x34 read, RVA0x1F6B8,
+not the earlier guarded pawn sample. Safe D892 independently restored;
+user INI B3FEED43/UI5B retained/rehashed. Camera lookup guard L1_PASS:
+valid/miss/nested lookup, NOACCESS/released object, unpublished fault result,
+non-memory exception propagation. L2_PASS: sourcef57c3d5, x86 PE32/O2,
+DLL64353686EDD457EDE84B0D8892B32B6EC9D108C78912AEF9A7F753CFA163DC15.
+Six narrow test executables + runtime policy PASS; no new runtime pass.
+Full existing read-only profile captured45s/3474frames, LT917/RT101; slow
+CPU phase did occur90->49FPS and continued~40. Hook averages do not attribute
+the native frame cost. Need native slow-window stack trace; Windows WPR
+requires fresh UAC authorization. No speculative performance/hand patch.
+Cinema60% native-camera head isolation and Polish intro preserved; helicopter
+Polish speech still UNIMPLEMENTED. See docs/cutscene-second-entry-crash.md.
+Recorder supports an opt-in actual cinema-exit marker gate, max180s wait then
+90s native CPU trace, no recording during long intro/helicopter. Pending UAC
+authorization/runtime execution. Candidate remains OFFLINE, safe install live.
+Historical entries below are superseded by this header.
+
+PID45372/7A0EC94D: cinema60% / native-camera head isolation and eventual
+stereo return PHYSICALLY_VERIFIED. Start-of-game perf/hand tracking BROKEN:
+user~20FPS crash/~40gameplay, L2~10, hands not matching pads. Native windows
+6.7FPS; Present CPU saturated in read-only1s sample. Cinema composition CPU
+~0.02ms, not GPU proof. INPUT_ENUM_SCAN native0/replayactive: old discovery
+mechanism not established. Controller PlayerWalking occurs while CINE ON/OFF:
+do not use that name alone for cinema detection. Actual second nativeOFF works.
+Safe D892 and UI5B restored/rehashed. User panel saved ShowControllerArms0->1;
+INI B3FEED43...2A079F preserved, NOT C59. Helicopter PL speech still unimplemented.
+
+Next user-authorized read-only CPU profile: existing sampler + separate cached
+callback replay timing, explicit owned after-cinema request, max45s/3600frames.
+No request ->OFF. No image/control/hand/shader/INI/asset change. L1 in progress.
+Camera/framing and Polish intro preserved. Need measured hot scope before fix;
+Windows stack profiler is available but needs fresh explicit UAC authority.
+
+READY_FOR_PHYSICAL_ACCEPTANCE (not L3/L4): native-camera candidate source
+f83fd71513a7792f639acfbcf7c861dacdabc6d7, regular x86 PE32 /O2 DLL SHA
+7A0EC94D22FDB1E27EFA5CA2469F28D1598126BFC5CF97004084B88AA02C1E65.
+DLL-only installed/rehashed18:19:34, backup20261013-181931 contains exactly
+one accepted DLL/zero directories; original DLL/INI/UI backups verified.
+INI C59/UI5B unchanged. Guard29140/observer43780 READY; launch lease600s,
+then post-exit restore. No game running at handoff. Await next user start.
+Eight x86/O2 executables + policy/syntax PASS. Native exit/FPS are still an
+OPEN physical gate: this candidate observes rather than invents exit criteria.
+
+PID45080 / 8B34C584: Polish intro PHYSICALLY_VERIFIED. Cutscene camera/size,
+exit to gameplay and late performance BROKEN (user confirms too wide,
+head-dependent content, cinema/no hands after crash, several FPS). Native log
+has OFF/OFF then ON/ON, NOT a never-received-OFF; ~90FPS helicopter followed by
+16.3 then2.3FPS. `our work` residual includes game rendering; cause not isolated.
+Guard restored D892, independent DLL/INI C59/UI5B hash verification PASS.
+
+Next controlled experiment L1_PASS: native-camera CutsceneFlat (no HMD source
+rotation/translation/roll, native projection/FOV retained), centered60% fit.
+Gameplay/menu/accepted Bink50%, shadows/input and Polish intro unchanged.
+Bounded composition timing and read-only actual controller state observation
+are added, NOT a guessed exit override. MAIN metadata Steam boot on D892 proves
+native GetStateName frame chain; menu state PlayerWalking. mCinematicData.mState
+is weapon raise/lower, not generic cinema detection. Normal exit/no install
+writes. Eight x86/O2 unit executables PASS; build/policy gate in progress.
+Priority: cinema + start of gameplay; whole-game Polish audio next. Helicopter
+speech still UNIMPLEMENTED, no global movie-track10 assumption.
+See docs/CUTSCENE_RESUME_PHYSICAL.md.
+
+PID5052/820E8263 correctly loaded new candidate (native Bink probes prove it),
+but movie/loading camera/pawn transition wrongly cleared CINE: no cinematic
+composition/framing/foreground execution. Intro selected IDs0/1/2/3, excluding
+known Polish10. Safe D892 restored after normal exit; INI C59B1CF6/UI5B2EA469
+verified unchanged. New controlled fix L1_PASS: preserve native cinematic ON
+only across observed VideoFlat->world handoff, retain other level/menu clears;
+select intro0/10/2/3 only for exact known basename/flags/layout, preserving
+native default post-Open and failure rollback. Existing exports/camera hooks
+only; bounded argument/state logs. Seven narrow executables and runtime policy
+PASS, x86 /O2 build next. Actual whole-helicopter exit, frame/glove result and
+Polish intro listening PENDING. Helicopter dialogue still not redirected from
+native SoundNodeWave; next existing Localize diagnostics will cover CINE ON.
+No movie/WAV/UI/INI file or gameplay shadow/input changes.
+
+Handoff/intro candidate L2_PASS sourceed9b1bfacd58e520e8ad34d97b1c20f14ac68db5,
+x86 PE32 /O2 SHA8B34C584B4FD9AF1774A8B2FDEDC4646746D33E1F055B68CA54E62C7E3070384.
+DLL-only installed/rehashed; verified backup20261013-173236, guard7664 and
+observer42544 READY with600s launch window. Intro content SHA AF53C8F8...CA9A3686
+verified before applying the known-track policy; no movie rewritten. UI/INI
+unchanged. Next gate: listen intro, full helicopter-end/gameplay/pause return;
+no mid-headset chat. Scene handoff execution and Polish intro L3/L4 pending.
+
+PID44632/DLL983BED0A: full-image mono copy L3_PASS and user reports good image
+overall. Remaining cutscene framing/aspect/foreground polish: too wide,
+edges outside view and tracked glove moves at periphery. Guard restored D892;
+MAIN verified DLL/INI/UI unchanged. New candidate L1_PASS:85% centered fit,
+full-viewport render tangent (actual one-draw viewport versus global half-width
+dup setting), scoped tracked foreground hiding. Bink50%, menus, gameplay,
+shadows/input unchanged. Synthetic GPU pixel/state/MRT rollback and narrow
+regressions PASS. Runtime execution/physical framing and glove result pending.
+Audio diagnosis: English Steam language versus independent PL mod flag; no
+runtime package/asset voice redirect, only Localize exact text/40-char route.
+Polish intro embedded track10 exists. New bounded read-only Bink exports and
+voice-call observations separate selection from missing dialogue entry.
+No audio track/file/config changes. See docs/CUTSCENE_RESUME_PHYSICAL.md.
+
+Current candidate L2_PASS source22a68c7 / x86 PE32 /O2 SHA820E82639FA89FD13B6DFF7B0E6F15B15DF06FD0D66362123AFCE3A88A5F98FC.
+Installed DLL-only, baseline backup20261013-164928 verified; restore guard and
+read-only observer READY (600s launch window). UI/INI unchanged, all25 movie
+hashes match known source inventory. Await user start; aspect/foreground and
+native audio selection still require runtime evidence and PSVR2 feedback.
+
+PID40412/DLL3242DB31: New Game no-crash PASS again; Bink50% size now
+PHYSICALLY_VERIFIED / USER_ACCEPTED. Preserve size and pawn guard. Helicopter
+BROKEN: different stretched eye halves and semi-transparent NPC face. Native
+stage evidence proves first source->plain-scratch StretchRect fails with
+D3DERR_INVALIDCALL, while zero-copy source->RT-texture succeeds. New controlled
+candidate mirrors the working RT destination/null-rectangle copy primitive;
+shared helper synthetic RGB/alpha + pixel rollback + viewport/scissor/RT
+restoration PASS at 640x360 and actual5264x2684. L3/L4 still pending; no NPC
+shader/camera/input/shadow/menu changes. Safe baseline D892 restored/rehashed,
+INI C59B1CF6 and accepted UI5B2EA469 unchanged. Helicopter Polish voice is a
+separate UE3 dialogue gap, not the SIDE Bink audio task.
+See docs/CUTSCENE_RESUME_PHYSICAL.md.
+
+RT candidate L2_PASS source468c74f / x86 PE32 /O2 DLL983BED0ADDFBEF64927800F0F25481D7DF35BF2E7E37E1A8BD7E1CC8E5B9F7F1.
+DLL-only installed/verified; backup20261013-160811 and guard READY (600s launch
+window), INI/UI unchanged. Await physical start; no game-runtime copy success
+or helicopter visual acceptance claimed. All narrow regressions PASS.
+
+PID4672/4483CF02: New Game crash reproduction PASS in Steam/PSVR2; guarded
+stale-pawn read rejection logged. Helicopter still BROKEN: CINE ON but no mono
+composition success. Safe D892 baseline restored, INI/UI unchanged.
+Next candidate: requested Bink50% width/height + max20 mono gate/stage HRESULT
+notes only. GPU reproduction falsified surface-type-alone hypothesis.
+L1_PASS placement/mono/scene/pawn tests and runtime policy. L2_PASS source4ba2174,
+x86 PE32 /O2 DLL3242DB3167CF0A33476CD565EA5D6A6D70303DD60E532B1D76900C14D98CED4D.
+Installed DLL-only; verified guard/backup20261013-152140, 600s launch window.
+Helicopter fix NOT claimed; runtime stage diagnosis and video size L4 pending.
+Dubbing audit: installed PL manifests/WAVs and Localize hooks present; movie
+Bink audio redirection absent. Details: docs/CUTSCENE_RESUME_PHYSICAL.md.
+
+MAIN cutscene resume, PID41200: New Game crashed before intro; WER/dump and
+exact candidate MAP/disassembly prove pawn Location.Z read in camera
+stabilization (RVA0x2898C, stale pawn0x0DA0A000), not mono composition. Safe
+baseline DLL D8928180 restored and rehashed; INI C59B1CF6 and UI5B2EA469 unchanged.
+Small guarded pawn-sample fix L1_PASS; no camera-math/render/input changes.
+L2_PASS: normal x86 PE32 /O2 source f69caf3, DLL4483CF02D86D6EB466CB9A2A924B4401329BD0345544BD5BA2254814E305A921.
+Candidate installed DLL-only, INI/UI retained; verified baseline restore guard,
+600s launch window. Crash regression subsequently passed in PID4672; helicopter remains broken.
+See docs/CUTSCENE_RESUME_PHYSICAL.md. Prior active observer expired before the
+late crash; authoritative native log/dump recovered, no live-coverage claim.
+
+CUTSCENE MONO (branch fix/cutscene-mono-presentation, 08d7ed2):
+IMPLEMENTED_NOT_VERIFIED. CutsceneFlat composes the full SBS cinematic
+aspect-fit into the left half and submits that same crop to both eyes;
+VideoFlat/menu paths untouched, CutsceneFlatMode switch preserved.
+Offline: test-cutscene-mono PASS, test-vr-scene-mode PASS, runtime-policy
+PASS, x86 PE32 /O2. L3/L4 pending one coordinated PSVR2 window against the
+separately hashed merged baseline D8928180. See docs/CUTSCENE_MONO_PAIR.md.
+
 Main PR preparation: persistent-default release build L2_PASS, regular x86 PE32
 /O2 source1b4e0b6 SHA E9DC831B599734CD3EC6CB8A16C907DE26F7D9EB8CEC29E95A5DD2C104D8116E.
 9 C++ unit executables, Python trace/CPU regressions and default-policy checks

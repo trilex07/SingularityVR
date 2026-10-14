@@ -43,7 +43,7 @@ if ($DllOnly) {
     if ($GameplayHotPathRequest) {
         $ownedRequest='C:\Users\Trilex\AppData\Local\SingularityVR\hotpath-gameplay.request'
         if (Test-Path -LiteralPath $ownedRequest) {
-            if ([IO.File]::ReadAllText($ownedRequest) -eq 'SingularityVR gameplay hotpath v1') {
+            if ([IO.File]::ReadAllText($ownedRequest) -in @('SingularityVR gameplay hotpath v1','SingularityVR cinema exit hotpath v1')) {
                 Remove-Item -LiteralPath $ownedRequest
                 Write-Output 'Removed unconsumed owned gameplay hotpath request'
             } else { Write-Warning 'Unknown gameplay hotpath request preserved' }

@@ -16,7 +16,13 @@ struct Signals {
     bool video = false;       // confirmed Bink/full-frame draw in this frame
     bool menu = false;        // native GFx menu focus; classification only
     bool paused = false;
+    bool frontendMenu = false; // opt-in identified native main menu; not dialogue/pause
+    bool cinemaPauseMenu = false; // explicit focused pause owns presentation, not raw cinema
 };
+
+inline bool FrontendMenuPresentation(bool enabled, int menuClass, bool focus) {
+    return enabled && focus && menuClass == 2;
+}
 
 struct Transition {
     Mode from = Mode::Unknown;
@@ -48,9 +54,20 @@ public:
 
     Transition Advance(const Signals& s) {
         Transition out{mode_, mode_, false, 0};
+        if (s.cinemaPauseMenu) {
+            cinematicFrames_ = 0; clearFrames_ = 0;
+            return Change(Mode::MenuFlat, 32u, out);
+        }
         if (s.video) {
             cinematicFrames_ = 0; clearFrames_ = 0;
             return Change(Mode::VideoFlat, 2u, out);
+        }
+        if (s.frontendMenu) {
+            // Native frontend backdrops may keep the cinematic bit ON.
+            // The frontend owns its accepted per-eye UI route, not full-SBS
+            // cinema fitting. Do not rewrite the native cinematic flag.
+            cinematicFrames_ = 0; clearFrames_ = 0;
+            return Change(Mode::MenuFlat, 16u, out);
         }
         if (s.cinematic) {
             ++cinematicFrames_; clearFrames_ = 0;

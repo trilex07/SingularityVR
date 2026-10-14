@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <shared_mutex>
 #include <cstdint>
@@ -59,6 +60,7 @@ public:
     // Copies into the caller buffer. Empty result means no replacement.
     bool PolishForEnglish(const char* english_utf8, char* out, size_t cap) const;
     bool WavForEnglish(const char* english_utf8, char* out, size_t cap) const;
+    void SetNativeSpeech(bool enabled){m_native_speech=enabled;}
     
     // Configuration
     bool IsPolishEnabled() const { return m_enabled && m_polish_language; }
@@ -88,6 +90,8 @@ private:
     std::unordered_map<std::string, LocalizedString> m_text_entries;
     std::unordered_map<std::string, std::string> m_en_to_pl;
     std::unordered_map<std::string, std::string> m_en_to_wav;
+    std::unordered_set<std::string> m_native_voice_en;
+    bool m_native_speech=false; // default OFF, exact manifested lines only
     
     // Audio entries: package+asset -> AudioEntry
     std::unordered_map<std::string, AudioEntry> m_audio_entries;

@@ -52,6 +52,7 @@ static DWORD __cdecl Observe() {
  const bool experiment=inputenumthrottle::Enabled() && allowed && originalCallback && notification;
  const DWORD identity=experiment?interfaceIdentity():0;
  if(experiment && !busy && cache.Ready(identity)) {
+  hotpath::scope replayMeasured(g_hotPathSampler,hotpath::Family::native_gamepad_callback_replay);
   InterlockedIncrement(&deferredCalls);
   busy=true;
   const DWORD result=cache.Replay([](const DIDEVICEINSTANCEW* instance,void* user){

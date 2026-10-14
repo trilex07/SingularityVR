@@ -22,6 +22,7 @@ def analyze(path, pid, stack_thread=None):
     bins = collections.defaultdict(collections.Counter)
     stack_bins = collections.defaultdict(collections.Counter)
     pending_stack = None
+    pending_frames = set()
     in_header = False
     with path.open(encoding='utf-8-sig', errors='replace', newline='') as stream:
         for row in csv.reader(stream, skipinitialspace=True):
@@ -41,8 +42,20 @@ def analyze(path, pid, stack_thread=None):
                 timestamp, tid = number(row[1]), number(row[2])
                 if (timestamp, tid)==pending_stack:
                     # Unique frame hits per sampled stack, not additive CPU times.
-                    stack_bins[timestamp//1000000].update(set(item.strip() for item in row[3:]))
-                    pending_stack=None
+                    stack_fields = dict(zip(headers.get(event, []), [item.strip() for item in row[1:]]))
+                    # Current xperf dumper: one frame per row (No., Address,
+                    # Image!Function). Do not count frame ordinals as functions,
+                    # or discard all callers after the first row.
+                    if 'no' in stack_fields and 'imagefunction' in stack_fields:
+                        frames = {stack_fields['imagefunction']}
+                    else:  # Older inline-stack export / synthetic legacy oracle.
+                        frames = set(item.strip() for item in row[3:])
+                    frames.discard('')
+                    fresh = frames - pending_frames
+                    stack_bins[timestamp//1000000].update(fresh)
+                    pending_frames.update(frames)
+                continue
+            if event not in ('I-Start', 'I-DCStart', 'I-DCEnd', 'SampledProfile'):
                 continue
             fields = dict(zip(headers.get(event, []), [item.strip() for item in row[1:]]))
             target = re.fullmatch(r'Singularity\.exe\s*\(\s*' + str(pid) + r'\s*\)', fields.get('processnamepid', ''), re.I)
@@ -61,6 +74,7 @@ def analyze(path, pid, stack_thread=None):
                 by_thread[tid][ip] += 1
                 bins[(timestamp // 1000000, tid)][ip] += 1
                 pending_stack=(timestamp, tid) if tid==stack_thread else None
+                pending_frames=set()
     def resolve(ip, count):
         for module in modules.values():
             if module['base'] <= ip < module['end']:

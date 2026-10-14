@@ -63,4 +63,16 @@ int main() {
     }
     assert(!s.active());
     assert(s.read(hotpath::Family::draw_hook).calls == 2);
+    s.configure(true,100);
+    {
+        hotpath::scope inFlight(s,hotpath::Family::native_gamepad_callback_replay);
+        assert(!s.advance_frame());
+        s.stop();
+        assert(!s.active() && s.completed_frames()==1);
+        assert(!s.advance_frame()); // stopping does not fabricate the other99 frames
+    }
+    const auto kept=s.read(hotpath::Family::native_gamepad_callback_replay);
+    assert(kept.calls==1 && kept.samples==1); // in-flight scope may finish safely
+    {hotpath::scope after(s,hotpath::Family::native_gamepad_callback_replay);}
+    assert(s.read(hotpath::Family::native_gamepad_callback_replay).calls==1);
 }

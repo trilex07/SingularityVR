@@ -12,6 +12,7 @@ namespace hotpath {
 enum class Family : unsigned {
 	native_input_poll,
 	native_gamepad_enumeration,
+	native_gamepad_callback_replay,
 	draw_hook,
 	menu_classification,
 	foreground_classification,
@@ -27,6 +28,7 @@ enum class Family : unsigned {
 	xr_image_work,
 	xr_submit,
 	frame_total,
+	native_draw_forward,
 	count
 };
 
@@ -48,7 +50,10 @@ enum class Counter : unsigned {
 };
 
 inline constexpr unsigned sample_stride = 32;
+inline constexpr unsigned native_draw_stride = 512;
 inline constexpr unsigned default_window_frames = 1200;
+// Standalone overlay calls must not be charged against profiled draw hooks.
+inline thread_local unsigned draw_scope_depth = 0;
 
 struct record {
 	volatile LONG64 calls{};
@@ -96,6 +101,12 @@ public:
 	}
 
 	bool active() const noexcept { return InterlockedCompareExchange(const_cast<volatile LONG*>(&active_), 0, 0) != 0; }
+	// Stop a bounded diagnostic at a frame boundary without resetting records or
+	// invalidating scopes already in flight. Such scopes may finish normally.
+	void stop() noexcept {
+		InterlockedExchange(&active_,0);
+		InterlockedExchange(&armed_,0);
+	}
 	std::uint64_t frame_token() const noexcept {
 		return static_cast<std::uint64_t>(InterlockedCompareExchange64(
 			const_cast<volatile LONG64*>(&frame_token_), 0, 0));
@@ -141,10 +152,18 @@ public:
 		InterlockedIncrement64(&records_[static_cast<unsigned>(f)].calls);
 	}
 	bool should_time(Family f) noexcept {
+		if(f==Family::native_draw_forward) {
+			// Fixed512 cadence would systematically time just one eye because
+			// StereoPair emits adjacent left/right native calls. Randomize only
+			// this new family; retain existing sampler policies unchanged.
+			thread_local std::uint32_t sequence=0x7a238ed1u;
+			sequence^=sequence<<13;sequence^=sequence>>17;sequence^=sequence<<5;
+			return active() && (sequence&(native_draw_stride-1))==0;
+		}
 		const LONG sequence = InterlockedIncrement(&records_[static_cast<unsigned>(f)].sequence);
 		// Enumeration was measured at ~75ms: time every bounded-window scan,
 		// rather than estimating its whole cost from nine samples.
-		return active() && (f==Family::native_gamepad_enumeration || sequence % static_cast<LONG>(sample_stride) == 0);
+		return active() && (f==Family::native_gamepad_enumeration || f==Family::native_gamepad_callback_replay || sequence % static_cast<LONG>(sample_stride) == 0);
 	}
 	void record_sample(Family f, LONGLONG elapsed) noexcept {
 		auto& r = records_[static_cast<unsigned>(f)];
@@ -185,11 +204,13 @@ class scope {
 	LARGE_INTEGER started_{};
 	bool timed_{};
 	bool finished_{};
+	bool draw_entered_{};
 
 public:
 	scope(sampler& owner, Family family) noexcept : family_(family) {
 		if (!owner.active()) return;
 		owner_ = &owner;
+		if(family_==Family::draw_hook){++draw_scope_depth;draw_entered_=true;}
 		owner_->record_call(family_);
 		if (owner_->should_time(family_)) {
 			QueryPerformanceCounter(&started_);
@@ -202,6 +223,7 @@ public:
 	void finish() noexcept {
 		if (finished_) return;
 		finished_ = true;
+		if(draw_entered_){--draw_scope_depth;draw_entered_=false;}
 		if (!timed_ || !owner_) return;
 		LARGE_INTEGER ended{};
 		QueryPerformanceCounter(&ended);
@@ -212,10 +234,19 @@ public:
 	scope& operator=(const scope&) = delete;
 };
 
+// Observe only an existing native-call boundary. No new hook/state query,
+// changed arguments, replay or allocations. Forward directly when disabled.
+template<class Forward> auto forward_draw(sampler& owner,Forward&& forward) -> decltype(forward()) {
+	if(!draw_scope_depth)return forward();
+	scope native(owner,Family::native_draw_forward);
+	return forward();
+}
+
 inline const char* name(Family f) noexcept {
 	switch (f) {
 	case Family::native_input_poll: return "native_input_poll";
 	case Family::native_gamepad_enumeration: return "native_gamepad_enum";
+	case Family::native_gamepad_callback_replay: return "native_gamepad_replay";
 	case Family::draw_hook: return "draw";
 	case Family::menu_classification: return "menu";
 	case Family::foreground_classification: return "foreground";
@@ -231,6 +262,7 @@ inline const char* name(Family f) noexcept {
 	case Family::xr_image_work: return "xr_images";
 	case Family::xr_submit: return "xr_submit";
 	case Family::frame_total: return "present_frame";
+	case Family::native_draw_forward: return "native_draw_forward";
 	default: return "unknown";
 	}
 }

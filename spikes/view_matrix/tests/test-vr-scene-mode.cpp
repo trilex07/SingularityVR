@@ -1,4 +1,6 @@
 #include "../vr_scene_mode.h"
+#include "../cutscene_mono.h"
+#include "../menu_submit_policy.h"
 #include <cassert>
 #include <cstdio>
 
@@ -33,6 +35,20 @@ int main() {
         assert(!video.Advance(gameplay).changed);
     assert(video.Advance(gameplay).to == Mode::GameplayStereo);
 
+    Controller handoff;
+    handoff.Advance({true,true,false,false});
+    assert(handoff.Current()==Mode::VideoFlat);
+    const CameraChangeCtx loading{true,false,false,true,true};
+    const bool retained=loading.cineOn && !CameraChangeClearsCine(loading);
+    handoff.Advance({retained,false,true,true});
+    handoff.Advance({retained,false,false,false});
+    assert(handoff.Current()==Mode::CutsceneFlat);
+    // Native OFF is not overridden; full scene -> gameplay restores stereo.
+    for(unsigned i=0;i<Controller::kExitFrames;++i)handoff.Advance(gameplay);
+    assert(handoff.Current()==Mode::GameplayStereo && !handoff.Flat());
+    handoff.Advance({false,false,true,true});
+    assert(handoff.Current()==Mode::MenuFlat);
+
     Controller menu;
     auto m = menu.Advance({false,false,true,true});
     assert(m.changed && m.to == Mode::MenuFlat && !menu.Flat());
@@ -40,5 +56,46 @@ int main() {
     auto g = menu.Advance(gameplay);
     assert(g.changed && g.to == Mode::GameplayStereo);
     assert(!menu.NeedsMonoPair());
+    for(int cls=0;cls<=4;++cls) {
+        assert(!vrscene::FrontendMenuPresentation(false,cls,true));
+        assert(!vrscene::FrontendMenuPresentation(true,cls,false));
+        assert(vrscene::FrontendMenuPresentation(true,cls,true)==(cls==2));
+    }
+    Controller frontend;
+    frontend.Advance({true,false,false,false});
+    frontend.Advance({true,false,false,false});
+    assert(frontend.Current()==Mode::CutsceneFlat);
+    const auto takeover=frontend.Advance({true,false,true,false,true});
+    assert(takeover.to==Mode::MenuFlat && takeover.reason==16 && !frontend.Flat());
+    // Confirmed Bink wins over stale frontend focus on a new-game handoff.
+    frontend.Advance({true,true,true,false,true});
+    assert(frontend.Current()==Mode::VideoFlat);
+    frontend.Advance({true,false,true,false,true});
+    assert(frontend.Current()==Mode::MenuFlat);
+    frontend.Advance({true,false,false,false,false});
+    frontend.Advance({true,false,false,false,false});
+    assert(frontend.Current()==Mode::CutsceneFlat);
+    for(unsigned i=0;i<Controller::kExitFrames;++i)frontend.Advance(gameplay);
+    assert(frontend.Current()==Mode::GameplayStereo);
+    for(int cls=0;cls<=4;++cls)for(int focus=0;focus<=1;++focus)
+    for(int cine=0;cine<=1;++cine)for(int paused=0;paused<=1;++paused) {
+        assert(!CinemaMenuIdenticalCrop(false,cls,focus,cine,paused));
+        assert(CinemaMenuIdenticalCrop(true,cls,focus,cine,paused)==
+            (focus && (cls==2 || (cls==3 && cine && paused))));
+        assert(CinemaMenuPauseOwnsPresentation(true,cls,focus,cine,paused)==
+            (cls==3 && focus && cine && paused));
+    }
+    Controller cinemaPause;
+    cinemaPause.Advance({true,false,false,false});
+    cinemaPause.Advance({true,false,false,false});
+    assert(cinemaPause.Current()==Mode::CutsceneFlat);
+    auto p=cinemaPause.Advance({true,true,true,true,false,true});
+    assert(p.to==Mode::MenuFlat && p.reason==32 && !cinemaPause.Flat());
+    assert(cinemaPause.NeedsMonoPair());
+    cinemaPause.Advance({true,false,false,false});
+    cinemaPause.Advance({true,false,false,false});
+    assert(cinemaPause.Current()==Mode::CutsceneFlat);
+    for(unsigned i=0;i<Controller::kExitFrames;++i)cinemaPause.Advance(gameplay);
+    assert(cinemaPause.Current()==Mode::GameplayStereo);
     std::puts("PASS: cinematic hysteresis, video mono, noisy signal, menu classification");
 }
