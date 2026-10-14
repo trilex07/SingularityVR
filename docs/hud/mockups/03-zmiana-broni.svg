@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#121416"/>
+  <rect x="64" y="36" width="1152" height="648" fill="#181b1e" stroke="#2c3136"/>
+  <circle cx="640" cy="360" r="300" fill="none" stroke="#5a6f8d" stroke-dasharray="5 7"/>
+  <text x="80" y="28" fill="#8d97a1" font-family="Segoe UI, Arial, sans-serif" font-size="16">Zmiana broni. Nazwa gaśnie po około 1,2 s. CommonText.ARPistol.</text>
+  <rect x="500" y="250" width="280" height="140" fill="none" stroke="#2c3136" stroke-dasharray="3 6"/>
+  <text x="640" y="326" text-anchor="middle" fill="#5c656d" font-family="Segoe UI, Arial, sans-serif" font-size="14">środek wolny</text>
+  <g>
+    <rect x="230" y="490" width="230" height="64" fill="#101214" stroke="#5a6f8d"/>
+    <text x="246" y="514" fill="#5a6f8d" font-family="Segoe UI, Arial, sans-serif" font-size="13">ZDROWIE</text>
+    <text x="246" y="538" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="18">10/10</text>
+  </g>
+  <g>
+    <rect x="760" y="430" width="300" height="130" fill="#101214" stroke="#e6e1d6"/>
+    <text x="776" y="456" fill="#5a6f8d" font-family="Segoe UI, Arial, sans-serif" font-size="13">TERAZ</text>
+    <text x="776" y="496" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="28">Centurion</text>
+    <text x="776" y="534" fill="#e6e1d6" font-family="Segoe UI, Arial, sans-serif" font-size="22">12</text>
+    <text x="820" y="534" fill="#8d97a1" font-family="Segoe UI, Arial, sans-serif" font-size="16">/ 48</text>
+  </g>
+</svg>
