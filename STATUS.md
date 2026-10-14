@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST: hands accepted on 627F1111. That same session captured the main menu
+and pause into the RTT (pixels are there) while MenuOverlay=0, and the scene
+copy of the main menu was suppressed, so the headset had nothing to show.
+DLL A8F38EF6007BCED8F3CB247E5A4A65942958CD4A1ED43F1B6601F81E342D001C keeps the
+in-scene menu and notes when the overlay is off, and stretches the right SBS
+half across the game window after XR submit (DesktopMirrorEye=2). Glove-only
+stays forced. Backup 20261014-200828. Boot card is still stock SINGULARITY:
+no binkenc. L4 is the TV picture plus the main menu, pause, and a Polish note.
+
 LATEST: cursor ring accepted. Glove-only is now forced on: ini ShowControllerArms
 is 0 (was 1, one byte) and the panel cannot turn the arm mesh back on. DLL
 627F11118E72A41A5305ABD9A80975AAC587D22C5B0788305AF298678F1BCC7B. Free hands use

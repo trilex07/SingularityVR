@@ -7244,6 +7244,7 @@ inline int PanelRowId(int i) {
 // is not "was tested now", and one launch settles it. `StartInVr=0` restores run 37's cold start
 // exactly, with no rebuild.
 volatile LONG g_startInVr = 1;      // ini [Render] StartInVr
+volatile LONG g_desktopMirrorEye = 0; // ini [Render] DesktopMirrorEye: 0 off, 1 left, 2 right
 // Diagnostic-only desktop HMD: exercise stereo/backbuffer hooks without an XR system.
 // This never changes normal PSVR2 startup behavior unless explicitly enabled in [Diagnostic].
 volatile LONG g_forceDesktopVr = 0; // ini [Diagnostic] ForceDesktopVr
@@ -20046,6 +20047,14 @@ inline bool SuppressCapturedVrMenuDraw() {
     // so the fail mask below only ever describes menu-source draws. Any-of-stages-0-3
     // since round 3 (the captured menu is sampled off stage 0).
     if (!Rd(g_vrUiMenu) || !MenuSourceBoundAny()) return false;
+    // MenuOverlay=0 is the in-scene menu. Suppressing that copy while the head
+    // overlay is off removes the main menu, pause, and the notepad.
+    if (!Rd(g_vrMenuOverlay)) {
+        static LONG saidKeepSceneMenu = 0;
+        if (InterlockedCompareExchange(&saidKeepSceneMenu, 1, 0) == 0)
+            Log("menu suppress: overlay off, keeping the in-scene menu and notes");
+        return false;
+    }
     if (Rd(g_vrMenuClass) == 3 && !PauseRttProbe::Presented()) return false;
     // Fix-4/menus round 2: suppressed=0 while the provider serves frames means the scene
     // keeps its own copy (nested views). Record WHY as a sticky per-window bitmask:
@@ -24273,12 +24282,14 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
     g_wristState->Apply();
 }
 
+#include "desktop_mirror.h"
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
     shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();worldshadowfix::Release();
     PauseRttProbe::ReleaseContent();
     ReleaseVrMenuResources();
     ReleaseVrShadowResources();
+    desktop_mirror::ReleaseScratch();
     if (g_wristState) { g_wristState->Release(); g_wristState = nullptr; }
 }
 void DrawWristHealth(IDirect3DDevice9* dev) {
@@ -27310,6 +27321,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             g_handPositionValid[0]?1:0,g_handPositionValid[1]?1:0);
         shadowtrace::Arm(s);
     }
+    desktop_mirror::Apply(s);
     const HRESULT presentResult = g_origPresent(s, a, b, c, d);
     static double realPresentSum=0, realPresentMax=0;
     static unsigned realPresentSamples=0;
@@ -27621,6 +27633,12 @@ void LoadIniSettings() {
     // would split the frame before OpenXR has been initialised, so a launch with no headset would
     // show a side-by-side desktop image for no reason.
     InterlockedExchange(&g_startInVr, GetPrivateProfileIntA("Render", "StartInVr", 1, path) ? 1 : 0);
+    {
+        LONG mirror = GetPrivateProfileIntA("Render", "DesktopMirrorEye", 0, path);
+        if (mirror < 0 || mirror > 2) mirror = 0;
+        InterlockedExchange(&g_desktopMirrorEye, mirror);
+        Log("ini: DesktopMirrorEye=%ld (0=SBS window, 1=left eye, 2=right eye; after XR submit)", mirror);
+    }
     Log("ini: StartInVr=%ld (%s)", InterlockedCompareExchange(&g_startInVr, 0, 0),
         InterlockedCompareExchange(&g_startInVr, 0, 0)
             ? "VR mode on as soon as the headset is up - BACKSPACE still toggles it"

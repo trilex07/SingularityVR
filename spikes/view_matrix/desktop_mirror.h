@@ -9,8 +9,8 @@ extern volatile LONG g_swapEyes;
 extern volatile LONG g_desktopMirrorEye;
 extern bool g_scCropped;
 extern bool g_xrRunning;
-extern uint32_t g_srcW;
-extern uint32_t g_srcH;
+extern unsigned g_srcW;
+extern unsigned g_srcH;
 
 namespace desktop_mirror {
 
@@ -24,6 +24,17 @@ inline void ReleaseScratch() {
         g_scratch = nullptr;
     }
     g_scratchW = g_scratchH = 0;
+}
+
+// mode 1 = left eye, mode 2 = right eye. Swap follows the same half the XR
+// bridge uses. A cropped menu/cutscene frame already repeated one half, so
+// the mirror takes that half instead of the empty one.
+inline UINT SourceLeft(UINT width, LONG mode, bool swap, bool cropped) {
+    const UINT half = width / 2;
+    if (cropped) return swap ? half : 0;
+    const bool right = mode == 2;
+    const UINT halfIndex = right ? (swap ? 0u : 1u) : (swap ? 1u : 0u);
+    return halfIndex * half;
 }
 
 inline void Apply(IDirect3DDevice9* dev) {
@@ -42,7 +53,7 @@ inline void Apply(IDirect3DDevice9* dev) {
     if (!g_scratch || g_scratchW != desc.Width || g_scratchH != desc.Height) {
         ReleaseScratch();
         if (FAILED(dev->CreateRenderTarget(desc.Width, desc.Height, desc.Format, D3DMULTISAMPLE_NONE,
-                                           0, TRUE, &g_scratch, nullptr))) {
+                                           0, FALSE, &g_scratch, nullptr))) {
             back->Release();
             return;
         }
@@ -50,17 +61,9 @@ inline void Apply(IDirect3DDevice9* dev) {
         g_scratchH = desc.Height;
     }
 
-    const UINT halfW = desc.Width / 2;
     const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
-    UINT srcLeft = 0;
-    if (g_scCropped) {
-        srcLeft = swap ? halfW : 0;
-    } else {
-        const bool right = (mode == 2);
-        const UINT halfIndex = right ? (swap ? 0u : 1u) : (swap ? 1u : 0u);
-        srcLeft = halfIndex * halfW;
-    }
-    const RECT src{ (LONG)srcLeft, 0, (LONG)(srcLeft + halfW), (LONG)desc.Height };
+    const UINT srcLeft = SourceLeft(desc.Width, mode, swap, g_scCropped);
+    const RECT src{ (LONG)srcLeft, 0, (LONG)(srcLeft + desc.Width / 2), (LONG)desc.Height };
     if (SUCCEEDED(dev->StretchRect(back, &src, g_scratch, nullptr, D3DTEXF_LINEAR))) {
         dev->StretchRect(g_scratch, nullptr, back, nullptr, D3DTEXF_LINEAR);
     }
