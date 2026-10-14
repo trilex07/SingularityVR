@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 boot logo: stock-vs-candidate frames compared (90/180/300).
+Stock ends "...SINGULAЯITY" (mirrored R = signature style); candidate appends
+3 marks ("ЧПЧ"-like) meant as VR suffix. User says mirrored style is intended
+("tak ma być"). Readability of the suffix as "VR" unverified by MAIN — user
+is arbiter. Stock currently installed (FE40BA3B verified); reinstall of
+D85FC268 on user order only. Prior history.
+
 LATEST 2026-10-14 boot logo ROLLED BACK to stock (my install, my rollback):
 candidate SNG_logo_vr renders garbage glyphs ("SINGULAЯITYЧПЧ" instead of
 "SINGULARITY VR", confirmed by decoding frame 180 of the installed .bik —
