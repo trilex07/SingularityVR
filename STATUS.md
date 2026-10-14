@@ -1,5 +1,11 @@
 # STATUS — session handoff
 
+LATEST: menu-witness lease ARMED, game not launched. Installed DLL4233E4A23BE50D47A017369A4F231D2DAE2A10DA068BA08D57E0EAC7EC540BAC
+from build c5d3924, x86 PE32 /O2. INI8A8F52F3ADFFC9AE63ADCF8364B97F59C8651D680FEBC5D4001C9AB95D767026
+adds only Diagnostic.MenuAssetWitness=1 over preserved202AA13A. UI5B2EA469 and font3F7BF0BE
+untouched. Backup deployment/install-backups/20261014-180712. Restore guard READY,
+1800s to launch, then restores after a normal exit. No L3 until a process runs. No L4.
+
 LATEST: witness candidate c5d3924, DLL4233E4A23BE50D47A017369A4F231D2DAE2A10DA068BA08D57E0EAC7EC540BAC,
 x86 PE32 /O2. Offline fake lease PASS: WhatIf, path refusal, corrupt-backup refusal,
 user-INI preservation, owned rollback, frozen UI. Not installed, not launched, not L3/L4.
