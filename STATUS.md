@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 mirror-diag probe DEPLOYED, awaiting headset: DLL
+CF96A841 (source 5dfaada, x86 PE32 /O2, fixture 12/12 PASS, analysis gate
+clean for desktop_mirror.h). Bounded outcome counters + last geometry, one
+`mirror-diag:` line per 600 Presents; copy logic byte-identical. Installed
+via deploy-singularityvr -DllOnly -KeepIni -SkipTextures, backup
+20261014-211920 holds accepted EA9EFFB1 for post-test rollback. INI/injector/
+992 WAVs untouched. Steam PID43880 launched, observer-only
+(mirror-diag-20261014-2119), no restore guards. Need: 1-2 min load-save at
+building + radio, normal exit, then rollback + analysis.
+
 LATEST 2026-10-14 manual headset retest PID12424 (~2 min, observer-only, no
 deploy): audio hypothesis CONFIRMED — zero `polish voice:` lines, only menu
 strings through Localize; NPC/radio/long dialogue all English, note English.
