@@ -1,5 +1,11 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 wheel VISUAL test (PID428, 3149A872): R3 open (atlas load +
+icons?), select sector, release, normal exit. Flags leased (DirectSelect=1,
+KatorgaHud=1; backup ww-visual-test/ini-backup). DLL backup 20261015-003155
+(TV-accepted 6F4BBEF2). Observer ww-visual-20261015-0032. After exit: atlas
+evidence + equip logs + INI restore + DLL rollback, all verified. Prior history.
+
 LATEST 2026-10-15 wheel direct-select TEST (PID7112, 1ADD5608): R3 open
 (catalog load), select another sector if 2+ weapons owned, release, normal
 exit. INI leased (DirectSelect=1, backup ww-direct-test/ini-backup). DLL
