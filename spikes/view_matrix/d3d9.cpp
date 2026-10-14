@@ -14,6 +14,8 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "weapon_wheel.h"
 #include "weapon_wheel_direct_select.h"
 #include "weapon_wheel_catalog_load.h"
+#include "weapon_wheel_atlas.h"
+#include <wincodec.h>
 #include "grip_latch.h"
 #include "glove_isolate.h"
 #include "support_grip_palette.h"
@@ -2205,12 +2207,17 @@ volatile LONG g_wwExpecting = 0;
 volatile LONG g_katorgaHud = 0;
 static wheel_catalog::Catalog g_wwCatalog;
 static char g_katorgaAssetRoot[MAX_PATH] = "vr-assets/hud/katorga/3d";
+// Katorga icon atlas (render thread only: created lazily at first wheel draw,
+// consumed only in DrawWeaponWheel; MANAGED pool survives device resets).
+static IDirect3DTexture9* g_hudAtlasTex = nullptr;
+static hud_atlas::Sheet g_hudAtlas;
+static volatile LONG g_hudAtlasState = 0;   // 0 unloaded, 1 ready, -1 failed (logged once)
 
 // Runs on the input thread only (first R3 open); readers below are the same
 // thread, so no torn-vector concerns across threads.
 static void MaybeLoadWheelCatalog() {
     if (InterlockedCompareExchange(&g_wwCatalogState, 0, 0) != 0) return;
-    if (!Rd(g_wwDirectSelect)) return;
+    if (!Rd(g_wwDirectSelect) && !Rd(g_katorgaHud)) return;
     static char buf[65536];
     size_t got = 0;
     char dll[MAX_PATH]{};
@@ -24554,9 +24561,96 @@ void DrawWristHealth(IDirect3DDevice9* dev) {
 // anchor is projected from the tracked right-controller pose, while the sector
 // cards are cheap Clear() rectangles and numeric glyphs. The actual selection
 // still commits through the game's native cycle-weapon input above.
+// Katorga icon atlas: lazy WIC load on the render thread, verified against
+// the installed atlas.json (dims + byte size). Any failure keeps state -1
+// and the wheel falls back to squares for the session. MANAGED pool: no
+// Reset handling needed; released with the other D3D resources.
+static void MaybeLoadHudAtlas(IDirect3DDevice9* dev) {
+    if (InterlockedCompareExchange(&g_hudAtlasState, 0, 0) != 0) return;
+    if (!dev || !Rd(g_katorgaHud)) return;
+    auto fail = [](const char* why) {
+        InterlockedExchange(&g_hudAtlasState, -1);
+        Log("weapon wheel: HUD atlas unavailable (%s) - squares for this session", why);
+    };
+    char dll[MAX_PATH]{};
+    HMODULE self = nullptr;
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCSTR)&MaybeLoadHudAtlas, &self) ||
+        !GetModuleFileNameA(self, dll, MAX_PATH)) { fail("module path"); return; }
+    char* slash = strrchr(dll, '\\');
+    if (!slash) { fail("module path"); return; }
+    *slash = 0;
+    std::string root = g_katorgaAssetRoot;
+    for (char& c : root) if (c == '/') c = '\\';
+    const size_t cut = root.find_last_of('\\');
+    std::string atlasDir = (cut == std::string::npos) ? "vr-assets\\hud\\katorga\\atlas"
+                                                      : root.substr(0, cut) + "\\atlas";
+    char jsonPath[MAX_PATH]{}, pngPath[MAX_PATH]{};
+    _snprintf_s(jsonPath, sizeof(jsonPath), _TRUNCATE, "%s\\%s\\atlas.json", dll, atlasDir.c_str());
+    _snprintf_s(pngPath, sizeof(pngPath), _TRUNCATE, "%s\\%s\\katorga-hud-atlas.png", dll, atlasDir.c_str());
+    FILE* fj = nullptr;
+    std::string jstext;
+    if (fopen_s(&fj, jsonPath, "rb") == 0 && fj) {
+        char chunk[4096];
+        size_t n = 0;
+        while ((n = fread(chunk, 1, sizeof(chunk), fj)) > 0) jstext.append(chunk, n);
+        fclose(fj);
+    }
+    hud_atlas::Sheet sheet;
+    if (jstext.empty() || !hud_atlas::Parse(jstext.c_str(), sheet) ||
+        sheet.width <= 0 || sheet.width > 2048 || sheet.height <= 0 || sheet.height > 2048 ||
+        sheet.rects.empty()) { fail("atlas.json"); return; }
+    CoInitializeEx(nullptr, COINIT_MULTITHREADED); // no-op if the game COM is already up
+    wchar_t wpng[MAX_PATH]{};
+    if (!MultiByteToWideChar(CP_ACP, 0, pngPath, -1, wpng, MAX_PATH)) { fail("wide path"); return; }
+    IWICImagingFactory* fac = nullptr;
+    IWICBitmapDecoder* dec = nullptr;
+    IWICBitmapFrameDecode* frame = nullptr;
+    IWICFormatConverter* conv = nullptr;
+    UINT pw = 0, ph = 0;
+    std::vector<BYTE> px;
+    bool ok = SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                                         IID_PPV_ARGS(&fac))) && fac &&
+              SUCCEEDED(fac->CreateDecoderFromFilename(wpng, nullptr, GENERIC_READ,
+                                                       WICDecodeMetadataCacheOnDemand, &dec)) && dec &&
+              SUCCEEDED(dec->GetFrame(0, &frame)) && frame &&
+              SUCCEEDED(fac->CreateFormatConverter(&conv)) && conv &&
+              SUCCEEDED(conv->Initialize(frame, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone,
+                                         nullptr, 0.0, WICBitmapPaletteTypeCustom)) &&
+              SUCCEEDED(conv->GetSize(&pw, &ph)) &&
+              pw == (UINT)sheet.width && ph == (UINT)sheet.height;
+    if (ok) {
+        px.resize((size_t)pw * ph * 4);
+        ok = SUCCEEDED(conv->CopyPixels(nullptr, pw * 4, (UINT)px.size(), px.data()));
+    }
+    if (conv) conv->Release();
+    if (frame) frame->Release();
+    if (dec) dec->Release();
+    if (fac) fac->Release();
+    if (!ok) { fail("png decode"); return; }
+    IDirect3DTexture9* tex = nullptr;
+    if (FAILED(dev->CreateTexture(pw, ph, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, nullptr)) || !tex) {
+        fail("texture create");
+        return;
+    }
+    D3DLOCKED_RECT lr{};
+    if (FAILED(tex->LockRect(0, &lr, nullptr, 0))) { tex->Release(); fail("texture lock"); return; }
+    const BYTE* src = px.data();
+    for (UINT y = 0; y < ph; ++y)
+        memcpy((BYTE*)lr.pBits + (size_t)y * lr.Pitch, src + (size_t)y * pw * 4, (size_t)pw * 4);
+    tex->UnlockRect(0);
+    g_hudAtlasTex = tex;
+    g_hudAtlas = sheet;
+    InterlockedExchange(&g_hudAtlasState, 1);
+    Log("weapon wheel: HUD atlas ready (%dx%d, %u icons)", pw, ph, (unsigned)sheet.rects.size());
+}
+
 void DrawWeaponWheel(IDirect3DDevice9* dev) {
     if (!dev || !VrModeOn() || !Rd(g_dupDraws) || !Rd(g_weaponWheelOpen) ||
         !g_handPositionValid[1] || !g_haveEyes || !g_origSetRenderTarget) return;
+    if (Rd(g_katorgaHud) && InterlockedCompareExchange(&g_hudAtlasState, 0, 0) == 0)
+        MaybeLoadHudAtlas(dev);
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
     D3DSURFACE_DESC d{};
@@ -24594,6 +24688,35 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     const int slots = weaponwheel::ClampSlots((int)g_weaponWheelSlots);
     const int selected = std::max(0, std::min(slots - 1,
         (int)InterlockedCompareExchange(&g_weaponWheelSelection, 0, 0)));
+    // Katorga icon path: every drawn slot resolves an atlas icon, else the
+    // whole frame falls back to squares (never a mix, never a hole).
+    const hud_atlas::Rect* slotIcons[8]{};
+    bool katorgaIcons = Rd(g_katorgaHud) &&
+        InterlockedCompareExchange(&g_hudAtlasState, 0, 0) == 1 &&
+        InterlockedCompareExchange(&g_wwCatalogState, 0, 0) == 1 &&
+        g_hudAtlasTex != nullptr && g_hudAtlas.width > 0;
+    if (katorgaIcons) {
+        for (int i = 0; i < slots && i < 8; ++i) {
+            const char* iconId = (i < (int)g_wwCatalog.sectors.size())
+                ? g_wwCatalog.sectors[i].atlas.c_str() : nullptr;
+            slotIcons[i] = hud_atlas::Find(g_hudAtlas, iconId);
+            if (!slotIcons[i]) { katorgaIcons = false; break; }
+        }
+    }
+    struct HudIconVtx { float x, y, z, rhw; DWORD c; float u, v; };
+    if (katorgaIcons) {
+        dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+        dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+        dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+        dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+        dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+        dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+        dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+        dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+        dev->SetTexture(0, g_hudAtlasTex);
+        dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    }
     const uipointer::V hand{g_handLastPos[1].x, g_handLastPos[1].y + 0.12f,
                             g_handLastPos[1].z};
     const float pi = 3.14159265358979323846f;
@@ -24610,6 +24733,25 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
             const float a = -pi * 0.5f + 2.0f * pi * (float)i / (float)slots;
             const int x = (int)lroundf(cx + cosf(a) * radius);
             const int y = (int)lroundf(cy + sinf(a) * radius);
+            if (katorgaIcons && i < 8 && slotIcons[i]) {
+                // Same footprint as the square below; icon tint marks selection.
+                const hud_atlas::Rect* ir = slotIcons[i];
+                const float u0 = (float)ir->x / (float)g_hudAtlas.width;
+                const float v0 = (float)ir->y / (float)g_hudAtlas.height;
+                const float du = (float)ir->w / (float)g_hudAtlas.width;
+                const float dv = (float)ir->h / (float)g_hudAtlas.height;
+                const DWORD tint = (i == selected) ? 0xFFFFD080 : 0xFFFFFFFF;
+                const float x0 = (float)(x - card), y0 = (float)(y - card);
+                const float x1 = (float)(x + card), y1 = (float)(y + card);
+                HudIconVtx v[4] = {
+                    { x0, y0, 0, 1, tint, u0, v0 },
+                    { x1, y0, 0, 1, tint, u0 + du, v0 },
+                    { x0, y1, 0, 1, tint, u0, v0 + dv },
+                    { x1, y1, 0, 1, tint, u0 + du, v0 + dv },
+                };
+                g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(HudIconVtx));
+                continue;
+            }
             D3DRECT r = {x - card, y - card, x + card, y + card};
             ClearRects(dev, &r, 1, i == selected ? 0xE0FFD040 : 0xB0304050);
             char label[8]; _snprintf_s(label, sizeof(label), _TRUNCATE, "W%d", i + 1);
@@ -24623,7 +24765,11 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
         }
     }
     static bool said = false;
-    if (!said) { said = true; Log("weapon wheel: overlay active (right-hand anchor, %d sectors)", slots); }
+    if (!said) {
+        said = true;
+        Log(katorgaIcons ? "weapon wheel: overlay active (Katorga icons, right-hand anchor, %d sectors)"
+                         : "weapon wheel: overlay active (right-hand anchor, %d sectors)", slots);
+    }
     g_wristState->Apply();
     if (old) g_origSetRenderTarget(dev, 0, old);
     dev->SetDepthStencilSurface(depth);

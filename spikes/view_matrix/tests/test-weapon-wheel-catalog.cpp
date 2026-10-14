@@ -12,8 +12,7 @@ static void Expect(bool cond, const char* name) {
 static const char kSample[] =
     "{\"sectors\":["
     "{\"index\":0,\"label_pl\":\"Brak\",\"gun_verts\":0},"
-    "{\"index\":1,\"label_pl\":\"Centurion\",\"gun_verts\":5799},"
-    "{\"index\":2,\"label_pl\":\"AR\",\"gun_verts\":11387},"
+    "{\"index\":1,\"label_pl\":\"Centurion\",\"gun_verts\":5799,\"atlas_icon\":\"mag-closed\"},"    "{\"index\":2,\"label_pl\":\"AR\",\"gun_verts\":11387},"
     "{\"index\":3,\"label_pl\":\"Shotgun\",\"gun_verts\":8297},"
     "{\"index\":4,\"label_pl\":\"Snajper\",\"gun_verts\":11389},"
     "{\"index\":5,\"label_pl\":\"-\",\"gun_verts\":0},"
@@ -27,6 +26,7 @@ int main() {
     Expect(wheel_catalog::Parse(kSample, cat), "catalog parses");
     Expect(cat.sectors.size() == 8, "eight sectors");
     Expect(cat.sectors[1].verts == 5799, "sector1 verts");
+    Expect(cat.sectors[1].atlas == "mag-closed", "sector1 icon");
     Expect(cat.cycle.size() == 4, "four cycle entries");
 
     wheel_catalog::Catalog bad;

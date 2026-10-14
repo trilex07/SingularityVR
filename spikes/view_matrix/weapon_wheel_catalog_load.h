@@ -9,7 +9,7 @@
 
 namespace wheel_catalog {
 
-struct Sector { int index = -1; long verts = 0; };
+struct Sector { int index = -1; long verts = 0; std::string atlas; };
 struct Catalog { std::vector<Sector> sectors; std::vector<long> cycle; };
 
 inline const char* SkipWs(const char* p) {
@@ -35,6 +35,23 @@ inline bool ObjInt(const char* obj, const char* objEnd, const char* key, long& v
     return false;
 }
 
+inline bool ObjStr(const char* obj, const char* objEnd, const char* key, std::string& v) {
+    const size_t kl = std::strlen(key);
+    for (const char* p = obj; p + kl + 1 < objEnd; ++p) {
+        if (*p != '"') continue;
+        if (std::strncmp(p + 1, key, kl) != 0 || p[1 + kl] != '"') continue;
+        const char* c = SkipWs(p + 1 + kl + 1);
+        if (*c != ':') continue;
+        c = SkipWs(c + 1);
+        if (*c != '"') continue;
+        const char* e = std::strchr(c + 1, '"');
+        if (!e || e >= objEnd) continue;
+        v.assign(c + 1, e);
+        return true;
+    }
+    return false;
+}
+
 inline bool Parse(const char* text, Catalog& out) {
     out.sectors.clear();
     out.cycle.clear();
@@ -51,7 +68,9 @@ inline bool Parse(const char* text, Catalog& out) {
         long index = -1, verts = 0;
         if (!ObjInt(p, end, "index", index)) return false;
         ObjInt(p, end, "gun_verts", verts); // absent means unused sector
-        out.sectors.push_back(Sector{ (int)index, verts });
+        std::string atlas;
+        ObjStr(p, end, "atlas_icon", atlas); // absent means no icon
+        out.sectors.push_back(Sector{ (int)index, verts, atlas });
         p = end;
     }
     if (out.sectors.empty()) return false;
