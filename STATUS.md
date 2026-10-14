@@ -1,5 +1,22 @@
 # STATUS — session handoff
 
+CURRENT 2026-10-14 startup-only PID23792 (09:53), fresh user start authorized.
+Core C1D904D0/F5137234 and native radio bankFB03741D installed; all4+32+1886
+candidate hashes/backups verified, all3 guardians READY. Evidence private
+deployment/hands-dubbing/three-items-live-20261014-094554; observer33028.
+NO RADIO/PSVR2 TEST YET: actual log says no HMD, session0/haveEyes0. SteamVR
+was absent at launch; MAIN requested app250820, vrserver23780/vrmonitor31384 now
+observed. Source InitXR called once behind g_initTried; BACKSPACE changes VR flags
+but cannot create a missing session. User asked to enable HMD/SteamVR, close game
+normally and reply gotowe VR. No forced termination or writes while game runs.
+Candidate remains leased until exit; DO NOT claim restored until all3 guardians
+finish and MAIN independently hashes originals. Then authorized startup retry
+must redeploy and start only after headset/runtime readiness. Core backup
+deployment/hands-dubbing/backups/20261014-094555-28084; asset backup
+deployment/hands-dubbing/asset-backups/20261014-094755-28084; WAV revoice/backup
+inside live evidence. startup-boundary.json records exact startup failure.
+Below completed prior trial/preparation history.
+
 LATEST PID24468 completed/closed. User: menu OK; radio did not speak. This is
 NOT confirmation that all voices were silent or that the radio trigger fired.
 All3 guardians completed; independent4+32+1886 original hashes,107DDS and frozen
