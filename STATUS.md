@@ -1,5 +1,22 @@
 # STATUS — session handoff
 
+LATEST after PID37660: scoped L4 PASS cinema stability, right hand/pistol grip,
+Polish first-area NPC/recordings and note glyphs. Logo and native arrow STILL
+BROKEN; slight laser/cursor deviation. User defers small acceptable FPS dips.
+1927 original files restored independently; INI user armsON/narratorOFF preserved
+and owned flags removed via exact cleanup. Actual INI202AA13A74BF1FF49104C8C507A1B9A6A6069D22DC43A529FCF6BFFC07430DBF;
+safe baseline DLLD8928180/UI5B2EA469/font3F7BF0BE. No game/test left active.
+Next producer witnesses defaultOFF: live GFx RawData identity/coordinate dispatch
+and native pistol template identity. No speculative cursor/logo offset fix.
+Offline original logo texture decoded ui_logos.logo512x128 DXT5, earlier inventory
+incorrect; contributing draw still UNKNOWN. Native weapon cue/particle assets
+found; user requests BOTH sounds and VFX, no generated replacements.
+HUD SIDEcd76bac reviewed, source-art prompt delivered; no HUD renderer integrated.
+First-building projector mismatch recorded UNKNOWN producer. MAIN active scope:
+logo/ring/laser correspondence and original gun FX/audio, preserving L4 systems.
+See docs/first-area-accepted-and-ui-witness.md. Previous entries historical.
+
+HISTORICAL LIVE:
 LIVE 2026-10-14: fresh user start, Steam PID37660 launched16:32:55+02:00.
 DLL2763A984F01384C6FC0B289333E0283A9273665FD02B13A978DE95611F48C0B7
 loaded from Steam Binaries; injectorF5137234 loaded. Exact4+38+1886 installed

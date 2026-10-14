@@ -13,6 +13,9 @@ param([Parameter(Mandatory)][string]$OutputDirectory,
       [switch]$ModalUiProbe,
       [switch]$UiNarrator,
       [switch]$WorldCinema,
+      [switch]$MenuAssetWitness,
+      [ValidateSet('B3FEED43E7651E86C57B3767359F13C363B2F3BBFE067429E29F81F4CB2A079F','202AA13A74BF1FF49104C8C507A1B9A6A6069D22DC43A529FCF6BFFC07430DBF')]
+      [string]$BaselineIniSha256='B3FEED43E7651E86C57B3767359F13C363B2F3BBFE067429E29F81F4CB2A079F',
       [string]$SteamRoot='C:\Program Files (x86)\Steam')
 # Offline staging only. Does not install, arm diagnostics or launch Steam.
 Set-StrictMode -Version Latest
@@ -26,6 +29,7 @@ $expected=@('D8928180262706A95972D13B728A1867F1EAB1757DCFD6C4A32D99EFBFBEC1BE',
             'AAA07005F4FF658C4A71CC30EA258E469DAF250C77BFE447011FFD650379E4F7',
             'B3FEED43E7651E86C57B3767359F13C363B2F3BBFE067429E29F81F4CB2A079F',
             '890C61720ABC0BB5AFAD86F16433A811A6F21BA6FC6284563BC5875E52642E85')
+$expected[2]=$BaselineIniSha256 # exact recorded user-preserving post-test INI, never an arbitrary baseline
 foreach($i in 0..3) {
     if((Get-FileHash -LiteralPath (Join-Path $gameRoot $targets[$i])).Hash -cne $expected[$i]){
         throw "Baseline changed: $($targets[$i])"
@@ -72,6 +76,16 @@ if($WorldCinema){
 }
 $candidateIni=$text.Insert($position,$insert)
 if($candidateIni.Remove($position,$insert.Length) -cne $text){throw 'INI changed outside owned experiment keys'}
+if($MenuAssetWitness){
+    if($candidateIni -cmatch 'MenuAssetWitness'){throw 'Existing witness key'}
+    $diag=[regex]::Matches($candidateIni,'(?m)^\[Diagnostic\](?=\r?$)')
+    if($diag.Count -ne 1){throw 'Exactly one Diagnostic section required'}
+    $at=$diag[0].Index+$diag[0].Length
+    $added=$ending+'MenuAssetWitness=1'
+    $next=$candidateIni.Insert($at,$added)
+    if($next.Remove($at,$added.Length) -cne $candidateIni){throw 'Unowned diagnostic edit'}
+    $candidateIni=$next
+}
 if($NativeSpeech -or $UiNarrator){
     if($candidateIni -cmatch 'NativePolishSpeech'){throw 'Existing native speech key'}
     $loc=[regex]::Matches($candidateIni,'(?m)^\[Localization\](?=\r?$)')
@@ -107,6 +121,7 @@ foreach($i in 0..3) {
   PhysicalAcceptance='PENDING';NativeSpeechEnabled=[bool]$NativeSpeech;TextureBridgeEnabled=[bool]$TextureBridge;
   GlovesOnlyEnabled=[bool]$GlovesOnly;UiNarratorEnabled=[bool]$UiNarrator;ModalUiProbeEnabled=[bool]$ModalUiProbe;
   WorldCinemaEnabled=[bool]$WorldCinema;
+  MenuAssetWitnessEnabled=[bool]$MenuAssetWitness;
   Notes='Exact four-file core lease; optional owned ShowControllerArms1->0 and UI narrator; independent asset/WAV leases separate'} |
     ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $out 'test-manifest.json') -Encoding UTF8
 Write-Output "OFFLINE READY: $out"

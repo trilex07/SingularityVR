@@ -5819,6 +5819,7 @@ volatile LONG g_vrStaleRejected=0;
 void SyncVrMenuCaptureState();
 volatile LONG g_vrMenuClass=0; // 0 none, 1 IIS boot, 2 Main, 3 Pause, 4 other native UI.
 volatile LONG g_modalSaveDialog = 0; // save-slot confirmation dialog; suppress stale slots RTT overlay
+volatile LONG g_menuAssetWitness = 0; // default-OFF, cold identity/coordinate evidence, no render mutation
 volatile LONG g_vrMenuReleaseRequested = 0; // input publishes; render thread owns COM release
 // XR bridge: crop one SBS half to both eyes only for the IIS boot/title menu.
 // Classes 2-4 keep whatever stereo/dup the scene already captured.
@@ -27586,6 +27587,7 @@ void LoadIniSettings() {
         GetPrivateProfileIntA("Render", "CutsceneCinemaScalePct", 60, path));
     g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
     g_cutsceneWorldScreen=GetPrivateProfileIntA("Render","CutsceneWorldScreen",0,path)?1:0;
+    g_menuAssetWitness=GetPrivateProfileIntA("Diagnostic","MenuAssetWitness",0,path)?1:0;
     g_cutsceneScreenDistanceMm=cinemascreen::ClampDistanceMm(
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));
     Log("ini: CutsceneWorldScreen=%ld distance=%ldmm (LOCAL anchored quad, default OFF)",
