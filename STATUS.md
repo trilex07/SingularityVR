@@ -1,5 +1,23 @@
 # STATUS — session handoff
 
+LIVE 2026-10-14: fresh user start, Steam PID37660 launched16:32:55+02:00.
+DLL2763A984F01384C6FC0B289333E0283A9273665FD02B13A978DE95611F48C0B7
+loaded from Steam Binaries; injectorF5137234 loaded. Exact4+38+1886 installed
+hashes and original backups PASS; actual OpenXR session3/running1/haveEyes1.
+PSVR2 native SteamVR HMD evidence before launch; no xrsim/registry/UI automation.
+Private deployment/hands-dubbing/first-area-font-live-20261014-1627/live.json.
+Core backup20261014-162546-8912, assets20261014-162549-8912; WAV originals in
+live/revoice. Guards10836/36428/39912 READY600s no-launch/post-exit; observer38296
+READY1800s active/passive exit collector. No restoration claim while game runs.
+Cinema world quad ON2000mm, gloves-only, accepted shadows/input unchanged.
+User stays headset: NewGame/save confirmation, helipad pause/options, free glove,
+pistol, first-area speech/note, title/pointer/menu, normal exit. L4 feedback PENDING.
+Two pre-launch orchestration failures restored exact baseline before retry; no
+game launched in them. Failed guard parameters/empty-log READY detection corrected
+in private runner; candidate DLL/assets unchanged. Restore all3 leases after exit
+and independently verify1928 originals/frozen107DDS. Never overwrite running files.
+
+HISTORICAL PREPARATION:
 LATEST 2026-10-14: OFFLINE PREP READY first-area/font polish on fix/post-opening-followups,
 Draft PR19, NOT merged. Font SIDE219c6fa cherry-picked59da9f9; private output60E72871
 matches pinned original3F7BF0BE. UI5E46B619 replaces exclusive Mouse geometry and
