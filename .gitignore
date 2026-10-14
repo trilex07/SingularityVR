@@ -34,6 +34,9 @@ uscript/
 *.xxx
 .local-notes/
 /deployment/hands-dubbing/
+/deployment/install-backups/
+/deployment/install-reports/
+/deployment/story-format-test-*/
 
 # Claude Code local settings. Records absolute paths from this machine, including the
 # home directory, so it must never reach the remote. A global ignore covered this before

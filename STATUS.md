@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 PID35568 / EA9EFFB1: user reports everything OK except Polish
+story speech; note NOT inspected. Clarification: loaded save at first building,
+NPC and radio remained English. Scope is not opening/new-game audio acceptance.
+Guard restored all4 core+38 assets+1886 WAV originals; TV subsequently reverted
+with the previous renderer/config. User now requested new992 xlingual WAVs and
+persistent TV correction. Exact3 runtime/INI promotion completed (EA9EFFB1 /
+F5137234 / INI757F414B), backup20261014-205618; no guard or new launch.
+992 source WAVs installed with verified backups;894 UI voices unchanged.
+Intro, multiplayer, native banks and font untouched in this story-only action.
+PR21 already merged the43 SIDE text/tool files; do not merge conflicting PR20.
+Native NPC/radio playback remains BROKEN/producer investigation, not fixed by
+the WAV copy. 825b middle phrase still requires listening. See the new handoff.
+
 LATEST 2026-10-14 recovery: user rejected A8F38EF6 combined installation
 (TV stretched, menus/free hands/FPS regressed, Polish text/voices/notes lost).
 Audit proves original injector/font/eight native bank deltas/three manifests,

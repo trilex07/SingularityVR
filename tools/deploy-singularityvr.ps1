@@ -13,6 +13,7 @@ param(
     [switch]$KeepIni,
     [switch]$DllOnly,
     [switch]$RuntimeDllPairOnly,
+    [switch]$IncludeIni,
     [string]$OpeningCutsceneManifestPath = '',
     [switch]$SkipTextures,
     [switch]$StopGame
@@ -21,7 +22,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if($OpeningCutsceneManifestPath) {
-    if($DllOnly -or $RuntimeDllPairOnly -or $StopGame -or $KeepIni -or $SkipTextures){
+    if($DllOnly -or $RuntimeDllPairOnly -or $IncludeIni -or $StopGame -or $KeepIni -or $SkipTextures){
         throw 'Opening cutscene lease is an exclusive exact four-file deployment mode'
     }
     $openingAction=if($Action -eq 'Rollback'){'Restore'}elseif($Action -eq 'Status'){'Preflight'}else{'Install'}
@@ -30,6 +31,7 @@ if($OpeningCutsceneManifestPath) {
     return
 }
 if($DllOnly -and $RuntimeDllPairOnly){throw 'Select one narrow deployment mode only'}
+if($IncludeIni -and (-not $RuntimeDllPairOnly -or $KeepIni)){throw 'IncludeIni requires the explicit runtime pair mode without KeepIni'}
 $narrowRuntime=$DllOnly -or $RuntimeDllPairOnly
 
 function Assert-GameClosed {
@@ -302,6 +304,7 @@ if ($Action -eq 'Rollback') {
 }
 
 if (-not $stageDll) { throw 'No d3d9.dll source found in the selected artifact directory or source tree.' }
+if($IncludeIni -and -not $stageIni){throw 'IncludeIni requires a verified staged INI'}
 if (-not $narrowRuntime -and -not $stageIni -and -not $KeepIni) { throw 'No SingularityVR.ini source found; use -KeepIni only if preserving the installed INI is intentional.' }
 if (-not $DllOnly -and -not (Test-Path -LiteralPath $dinputSource -PathType Leaf)) { throw "Texture injector dinput8.dll not found: $dinputSource" }
 if (-not $narrowRuntime -and -not (Test-Path -LiteralPath $textureIniSource -PathType Leaf)) { throw "Texture injector config not found: $textureIniSource" }
@@ -313,6 +316,7 @@ if (-not $DllOnly -and -not $dinputPe.IsPe32) { throw "The texture injector dinp
 
 $targets = @($targetDll)
 if($RuntimeDllPairOnly){$targets+=@($targetDinput)}
+if($IncludeIni){$targets+=@($targetIni)}
 if (-not $narrowRuntime) {
     $targets += @($targetDinput, $targetDinputOrig, $targetTextureIni)
     if (-not $KeepIni) { $targets += $targetIni }
@@ -330,6 +334,7 @@ Set-DirectoryMetadata $backup $directoryBackups
 $installed = @()
 $installed += Copy-Verified $stageDll $targetDll
 if($RuntimeDllPairOnly){$installed+=Copy-Verified $dinputSource $targetDinput}
+if($IncludeIni){$installed+=Copy-Verified $stageIni $targetIni}
 if (-not $narrowRuntime) {
     if (-not $KeepIni) { $installed += Copy-Verified $stageIni $targetIni }
     $installed += Copy-Verified $dinputSource $targetDinput
@@ -354,6 +359,7 @@ $report = [pscustomobject]@{
     Pe32 = $pe.IsPe32
     DllOnly = [bool]$DllOnly
     RuntimeDllPairOnly = [bool]$RuntimeDllPairOnly
+    IncludeIni = [bool]$IncludeIni
     DInput8Pe32 = if ($dinputPe) { $dinputPe.IsPe32 } else { $null }
     Installed = @($installed)
     TextureVariant = if ($narrowRuntime -or $SkipTextures) { 'skipped' } else { $TextureVariant }
