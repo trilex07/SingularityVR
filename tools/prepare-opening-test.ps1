@@ -9,6 +9,13 @@ param([Parameter(Mandatory)][string]$OutputDirectory,
       [switch]$WristAnchor,
       [switch]$TextureBridge,
       [switch]$NativeSpeech,
+      [switch]$GlovesOnly,
+      [switch]$ModalUiProbe,
+      [switch]$UiNarrator,
+      [switch]$WorldCinema,
+      [switch]$MenuAssetWitness,
+      [ValidateSet('B3FEED43E7651E86C57B3767359F13C363B2F3BBFE067429E29F81F4CB2A079F','202AA13A74BF1FF49104C8C507A1B9A6A6069D22DC43A529FCF6BFFC07430DBF')]
+      [string]$BaselineIniSha256='B3FEED43E7651E86C57B3767359F13C363B2F3BBFE067429E29F81F4CB2A079F',
       [string]$SteamRoot='C:\Program Files (x86)\Steam')
 # Offline staging only. Does not install, arm diagnostics or launch Steam.
 Set-StrictMode -Version Latest
@@ -22,6 +29,7 @@ $expected=@('D8928180262706A95972D13B728A1867F1EAB1757DCFD6C4A32D99EFBFBEC1BE',
             'AAA07005F4FF658C4A71CC30EA258E469DAF250C77BFE447011FFD650379E4F7',
             'B3FEED43E7651E86C57B3767359F13C363B2F3BBFE067429E29F81F4CB2A079F',
             '890C61720ABC0BB5AFAD86F16433A811A6F21BA6FC6284563BC5875E52642E85')
+$expected[2]=$BaselineIniSha256 # exact recorded user-preserving post-test INI, never an arbitrary baseline
 foreach($i in 0..3) {
     if((Get-FileHash -LiteralPath (Join-Path $gameRoot $targets[$i])).Hash -cne $expected[$i]){
         throw "Baseline changed: $($targets[$i])"
@@ -58,16 +66,44 @@ if($TextureBridge){
     if($text -cmatch 'TextureBridgeOwned'){throw 'Existing bridge key'}
     $insert+=$ending+'TextureBridgeOwned=1'
 }
+if($ModalUiProbe){
+    if($text -cmatch 'ModalUiProbe'){throw 'Existing modal probe key'}
+    $insert+=$ending+'ModalUiProbe=1'
+}
+if($WorldCinema){
+    if($text -cmatch 'CutsceneWorldScreen|CutsceneScreenDistanceMm'){throw 'Existing cinema anchor experiment key'}
+    $insert+=$ending+'CutsceneWorldScreen=1'+$ending+'CutsceneScreenDistanceMm=2000'
+}
 $candidateIni=$text.Insert($position,$insert)
 if($candidateIni.Remove($position,$insert.Length) -cne $text){throw 'INI changed outside owned experiment keys'}
-if($NativeSpeech){
+if($MenuAssetWitness){
+    if($candidateIni -cmatch 'MenuAssetWitness'){throw 'Existing witness key'}
+    $diag=[regex]::Matches($candidateIni,'(?m)^\[Diagnostic\](?=\r?$)')
+    if($diag.Count -ne 1){throw 'Exactly one Diagnostic section required'}
+    $at=$diag[0].Index+$diag[0].Length
+    $added=$ending+'MenuAssetWitness=1'
+    $next=$candidateIni.Insert($at,$added)
+    if($next.Remove($at,$added.Length) -cne $candidateIni){throw 'Unowned diagnostic edit'}
+    $candidateIni=$next
+}
+if($NativeSpeech -or $UiNarrator){
     if($candidateIni -cmatch 'NativePolishSpeech'){throw 'Existing native speech key'}
     $loc=[regex]::Matches($candidateIni,'(?m)^\[Localization\](?=\r?$)')
     if($loc.Count -ne 1){throw 'Exactly one Localization section required'}
-    $locPosition=$loc[0].Index+$loc[0].Length;$locInsert=$ending+'NativePolishSpeech=1'
+    $locPosition=$loc[0].Index+$loc[0].Length;$locInsert=''
+    if($NativeSpeech){$locInsert+=$ending+'NativePolishSpeech=1'}
+    if($UiNarrator){
+        if($candidateIni -cmatch 'UiNarratorEnabled'){throw 'Existing UI narration key'}
+        $locInsert+=$ending+'UiNarratorEnabled=1'
+    }
     $withNative=$candidateIni.Insert($locPosition,$locInsert)
     if($withNative.Remove($locPosition,$locInsert.Length) -cne $candidateIni){throw 'Unowned locale INI change'}
     $candidateIni=$withNative
+}
+if($GlovesOnly){
+    $arms=[regex]::Matches($candidateIni,'(?m)^ShowControllerArms=1(?=\r?$)')
+    if($arms.Count -ne 1){throw 'Exactly one observed ShowControllerArms=1 required'}
+    $candidateIni=$candidateIni.Remove($arms[0].Index,$arms[0].Length).Insert($arms[0].Index,'ShowControllerArms=0')
 }
 New-Item -ItemType Directory -Path $out | Out-Null
 Copy-Item -LiteralPath $VrDll -Destination (Join-Path $out 'd3d9.dll')
@@ -81,9 +117,12 @@ foreach($i in 0..3) {
               CandidateSha256=(Get-FileHash -LiteralPath (Join-Path $out $name)).Hash}
 }
 @{Kind='SingularityVR opening cutscene lease v1';StartRequired=$true;
-  FrozenUiSha256=$uiHash;Files=$files;IniChangeOnly=(($insert.Trim() -replace '\r?\n',';')+$(if($NativeSpeech){';Localization.NativePolishSpeech=1'}else{''}));
+  FrozenUiSha256=$uiHash;Files=$files;IniChangeOnly=(($insert.Trim() -replace '\r?\n',';')+$(if($NativeSpeech){';Localization.NativePolishSpeech=1'}else{''})+$(if($UiNarrator){';Localization.UiNarratorEnabled=1'}else{''})+$(if($GlovesOnly){';Render.ShowControllerArms=0 (was1)'}else{''}));
   PhysicalAcceptance='PENDING';NativeSpeechEnabled=[bool]$NativeSpeech;TextureBridgeEnabled=[bool]$TextureBridge;
-  Notes='Exact four-file core lease; independent asset delta and WAV leases are separate'} |
+  GlovesOnlyEnabled=[bool]$GlovesOnly;UiNarratorEnabled=[bool]$UiNarrator;ModalUiProbeEnabled=[bool]$ModalUiProbe;
+  WorldCinemaEnabled=[bool]$WorldCinema;
+  MenuAssetWitnessEnabled=[bool]$MenuAssetWitness;
+  Notes='Exact four-file core lease; optional owned ShowControllerArms1->0 and UI narrator; independent asset/WAV leases separate'} |
     ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $out 'test-manifest.json') -Encoding UTF8
 Write-Output "OFFLINE READY: $out"
 Write-Output 'No installed file changed; no game launched; fresh user start required'

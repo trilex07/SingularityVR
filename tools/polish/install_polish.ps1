@@ -36,7 +36,7 @@ $SourceText = Join-Path $SourcePath "localization\pl\polish_text.jsonl"
 $SourceVoice = Join-Path $SourcePath "localization\pl\polish_voice.jsonl"
 $SourceStory = Join-Path $SourcePath "localization\pl\polish_story_voice.jsonl"
 $SourceAudioUI = Join-Path $SourcePath "..\SingularityVR-cutscene\audio\polish\full_voicepack"
-$SourceAudioStory = Join-Path $SourcePath "..\SingularityVR-cutscene\audio\polish\story_voicepack_nllb"
+$SourceAudioStory = Join-Path $SourcePath "..\SingularityVR-cutscene\audio\polish\story_voicepack_xlingual"
 $SourceVfxDll = Join-Path $SourcePath "..\SingularityVR-production\deployment\desktop-hmd-current-20261009\SingularityVfx.dll"
 $ManifestFile = Join-Path $SourcePath "localization\pl\polish_manifest.json"
 

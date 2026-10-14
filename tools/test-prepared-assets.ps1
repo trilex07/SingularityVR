@@ -37,8 +37,22 @@ $allowed=@('RvGame\CookedPC\UI_SinglePlayer_SF.xxx','RvGame\CookedPC\SP_VI2_kism
  'Binaries\texture_override.ini','Binaries\vr-assets\localization\pl\polish_text.jsonl',
  'Binaries\vr-assets\localization\pl\polish_voice.jsonl','Binaries\vr-assets\localization\pl\polish_story_voice.jsonl')+
  @($dds|ForEach-Object {'Binaries\texture-override-remaster\'+$_+'.dds'})
-if($manifest.Kind -cne 'SingularityVR prepared asset delta v1' -or @($manifest.Files).Count -ne 32 -or
- (($manifest.Files|ForEach-Object {$_.RelativePath}|Sort-Object) -join '|') -cne (($allowed|Sort-Object) -join '|')){throw 'Exact32 delta targets required'}
+$expectedCount=32
+if($manifest.Kind -cin @('SingularityVR post-opening asset delta v2',
+ 'SingularityVR first-area polish delta v3','SingularityVR first-area font polish delta v4')){
+ $allowed+=@('RvGame\CookedPC\SP_VI2_zone02a_LOC_INT.xxx','RvGame\CookedPC\SP_VI2_zone02a_2010_LOC_INT.xxx')
+ $expectedCount=34
+ if($manifest.Kind -cne 'SingularityVR post-opening asset delta v2'){
+  $allowed+=@('RvGame\CookedPC\SP_VI2_kismet02_LOC_INT.xxx','RvGame\CookedPC\SP_VI2_kismet03_LOC_INT.xxx',
+              'RvGame\CookedPC\SP_VI2_kismet04_LOC_INT.xxx')
+  $expectedCount=37
+  if($manifest.Kind -ceq 'SingularityVR first-area font polish delta v4'){
+   $allowed+=@('RvGame\CookedPC\ui_GFx_fonts.xxx');$expectedCount=38
+  }
+ }
+}elseif($manifest.Kind -cne 'SingularityVR prepared asset delta v1'){throw 'Unknown exact delta profile'}
+if(@($manifest.Files).Count -ne $expectedCount -or
+ (($manifest.Files|ForEach-Object {$_.RelativePath}|Sort-Object) -join '|') -cne (($allowed|Sort-Object) -join '|')){throw 'Exact32/34/37/38 delta targets required'}
 Closed
 foreach($f in $manifest.Files){
  if($f.BaselineSha256 -cnotmatch '^([A-F0-9]{64}|ABSENT)$' -or $f.CandidateSha256 -cnotmatch '^[A-F0-9]{64}$'){throw 'Invalid hash'}
@@ -62,7 +76,7 @@ if($Action -eq 'Restore'){
  $record=Get-Content (Join-Path $backup 'lease.json') -Raw | ConvertFrom-Json
  if($record.GameRoot -cne $game -or $record.ManifestSha256 -cne (Hash $manifestFull)){throw 'Wrong backup/manifest'}
  foreach($f in $manifest.Files){if($f.BaselineSha256 -cne 'ABSENT' -and (Hash (Child $backup $f.RelativePath)) -cne $f.BaselineSha256){throw 'Bad backup; zero restore writes'}}
- if(-not $PSCmdlet.ShouldProcess($game,'Restore exact32 owned asset files')){return}
+ if(-not $PSCmdlet.ShouldProcess($game,"Restore exact$expectedCount owned asset files")){return}
  $conflicts=@()
  foreach($f in $manifest.Files){
   $target=Child $game $f.RelativePath;$current=Hash $target
@@ -73,15 +87,15 @@ if($Action -eq 'Restore'){
  }
  if($conflicts.Count){throw ('Unexpected user changes preserved: '+($conflicts -join ', '))}
  foreach($f in $manifest.Files){if((Hash (Child $game $f.RelativePath)) -cne $f.BaselineSha256){throw 'Final restore mismatch'}}
- Write-Output 'RESTORED:32 exact asset baselines; newly created owned files removed';return
+ Write-Output "RESTORED:$expectedCount exact asset baselines; newly created owned files removed";return
 }
 foreach($f in $manifest.Files){
  if((Hash (Child $sourceRoot $f.Source)) -cne $f.CandidateSha256){throw 'Candidate changed'}
  if((Hash (Child $game $f.RelativePath)) -cne $f.BaselineSha256){throw ('Baseline changed: '+$f.RelativePath)}
 }
-Write-Output 'PREFLIGHT PASS: exact32 independent delta files, no core-DLL/INI/native-intro/WAV overlap'
+Write-Output "PREFLIGHT PASS: exact$expectedCount independent delta files, no core-DLL/INI/native-intro/WAV overlap"
 if($Action -eq 'Preflight' -or $WhatIfPreference){return}
-if(-not $PSCmdlet.ShouldProcess($game,'Install exact32 prepared asset test files')){return}
+if(-not $PSCmdlet.ShouldProcess($game,"Install exact$expectedCount prepared asset test files")){return}
 $repo=(Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $backup=Join-Path $repo ('deployment\hands-dubbing\asset-backups\'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'-'+$PID)
 New-Item -ItemType Directory -Path $backup | Out-Null
@@ -104,4 +118,4 @@ try{
  throw 'Delta installation failed; owned rollback attempted'
 }
 Write-Output ('ASSET BACKUP: '+$backup)
-Write-Output 'INSTALLED:32 candidate hashes verified; Steam launch is separate and MAIN-only'
+Write-Output "INSTALLED:$expectedCount candidate hashes verified; Steam launch is separate and MAIN-only"

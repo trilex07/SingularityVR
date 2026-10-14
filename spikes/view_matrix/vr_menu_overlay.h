@@ -317,6 +317,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
     // Pause now has an identity-proven native RTT; generic size candidates
     // are never allowed to select or suppress its source.
     if (Rd(g_vrMenuClass) == 3) return;
+    if (Rd(g_modalSaveDialog)) return;
     const auto captureState=VrMenuStateToken();
     if(!Rd(g_vrUiEnabled)||!Rd(g_vrUiMenu)||!Rd(g_vrUiNativeReady)||g_boundShaderLayout.shadow)return;
     // GFx menu surfaces are not guaranteed to carry the identity c5 orthographic constants.
@@ -341,7 +342,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
             InterlockedIncrement(&g_vrMenuCaptured);
             if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuCaptured);
             if(Rd(g_vrMenuClass)==2)InterlockedIncrement(&g_vrCounters.mainMenuCaptured);
-            Log("VR menu sink: private GFx candidate %ux%u registered; all matching scene draws will be suppressed",desc.Width,desc.Height);
+            Log("VR menu sink: private GFx candidate %ux%u registered rt=%p texture=%p class=%ld token=%llu; all matching scene draws will be suppressed",desc.Width,desc.Height,(void*)surface,(void*)texture,Rd(g_vrMenuClass),captureState);
         }
         // Prefer the candidate whose aspect is closest to the native GFx canvas.  The source list
         // is retained as well because the physical menu can be submitted through more than one
@@ -371,6 +372,7 @@ void ReleaseVrMenuResources(){
 // Render the captured GFx menu texture as a single head-relative quad at VrMenuDistanceMm.
 // Also draws the laser pointer and prompt legend.
 void DrawVrMenuPointer(IDirect3DDevice9* dev) {
+    if (InterlockedExchange(&g_vrMenuReleaseRequested, 0)) ReleaseVrMenuResources();
     ++g_vrMenuFrame;
     SyncVrMenuCaptureState();
     // One stable boot and main proof image per process, actual XR source only.
@@ -442,7 +444,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
 
     // ---- RENDER MENU QUAD ----
     unsigned pauseEyesDrawn = 0;
-    if (nativeMenu && g_vrMenuTexture && g_vrMenuPanelValid &&
+    if (nativeMenu && !Rd(g_modalSaveDialog) && g_vrMenuTexture && g_vrMenuPanelValid &&
         (Rd(g_vrMenuClass) != 3 || dedicatedPause) && g_vrCaptureOwner.CanProvide(VrMenuStateToken())) {
         // RGB capture proves Objectives has nonzero RGB with zero stored alpha.
         // Preserve the native AlphaComposite RGB term instead of multiplying it

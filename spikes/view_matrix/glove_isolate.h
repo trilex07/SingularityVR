@@ -46,6 +46,13 @@ inline bool HandsOnly(int showControllerArms, int isolateMode) {
     return showControllerArms == 0 && isolateMode >= 2;
 }
 
+// A pre-weapon save still has ShowControllerArms on. That draws the native arm
+// mesh with no gun pose, which is the stretch. Gloves stay until a weapon is
+// actually in hand; the accepted pistol grip is unchanged once it is.
+inline bool GlovesUntilWeapon(int showControllerArms, int isolateMode, bool weaponInHand) {
+    return isolateMode >= 2 && (showControllerArms == 0 || !weaponInHand);
+}
+
 // Mode 2 hides arm draws only. Mode 3 is the legacy palette stump (stretchy).
 inline bool UsesPaletteStump(int showControllerArms, int isolateMode) {
     return showControllerArms == 0 && isolateMode >= 3;

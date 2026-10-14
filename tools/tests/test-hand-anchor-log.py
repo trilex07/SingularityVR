@@ -30,5 +30,14 @@ class Tests(unittest.TestCase):
         with self.assertRaises(ValueError):anchor.extract(record()[:-2])
     def test_bound_refuses(self):
         with self.assertRaises(ValueError):anchor.extract('\n'.join([record()]*9))
+    def test_current_two_epochs(self):
+        first=record(True,True).replace('moved=0 targetL','moved=0 weapon=00000000 epoch=1 targetL')
+        second=record(True,True).replace('moved=0 targetL','moved=0 weapon=01234567 epoch=2 targetL')
+        rows=anchor.extract('\n'.join([first]*8+[second]*8))
+        self.assertEqual(len(rows),16)
+        self.assertEqual(rows[0]['weapon'],0)
+        self.assertEqual(rows[-1]['weapon'],0x01234567)
+    def test_nonfinite_refuses(self):
+        with self.assertRaises(ValueError):anchor.extract(record().replace('local230: 0','local230: nan'))
 
 if __name__=='__main__':unittest.main()

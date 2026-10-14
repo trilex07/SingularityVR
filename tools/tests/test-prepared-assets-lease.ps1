@@ -1,5 +1,6 @@
 [CmdletBinding()]
 param([Parameter(Mandatory)][string]$ManifestPath,[Parameter(Mandatory)][string]$OutputRoot,
+ [switch]$WatchTimeout,
  [string]$RealGameRoot='C:\Program Files (x86)\Steam\steamapps\common\Singularity')
 # Private fake installation only. No real Steam writes, game launch or input.
 Set-StrictMode -Version Latest;$ErrorActionPreference='Stop'
@@ -43,4 +44,28 @@ Copy-Item -LiteralPath (Join-Path $RealGameRoot 'Binaries/texture_override.ini')
 $badManifest=Join-Path $out 'bad.json';$manifest.Files[0].RelativePath='..\escape.xxx';$manifest|ConvertTo-Json -Depth 6|Set-Content $badManifest -Encoding UTF8
 $refused=$false;try{& $tool -Action Install -ManifestPath $badManifest -GameRoot $fake}catch{$refused=$true}
 if(-not $refused){throw 'Path escape accepted'}
-Write-Output 'PASS: fake32 install/WhatIf/exact restore, full backup corruption refusal, conflict preservation, absent cleanup, path refusal'
+Write-Output "PASS: fake$(@($manifest.Files).Count) install/WhatIf/exact restore, full backup corruption refusal, conflict preservation, absent cleanup, path refusal"
+if($WatchTimeout){
+ # Use the original manifest, never our intentionally corrupted in-memory copy.
+ $manifest=Get-Content $ManifestPath -Raw | ConvertFrom-Json
+ $installed=@(& $tool -Action Install -ManifestPath $ManifestPath -GameRoot $fake)
+ $backup=(@($installed|Where-Object {$_ -is [string] -and $_.StartsWith('ASSET BACKUP: ')})[0]).Substring(14)
+ $guard=Join-Path $repo 'tools/watch-prepared-assets-restore.ps1'
+ $stdout=Join-Path $out 'guard.stdout.log';$stderr=Join-Path $out 'guard.stderr.log'
+ $argv=@('-NoProfile','-ExecutionPolicy','Bypass','-File',('"'+$guard+'"'),
+  '-ManifestPath',('"'+[IO.Path]::GetFullPath($ManifestPath)+'"'),
+  '-BackupPath',('"'+$backup+'"'),'-GameRoot',('"'+$fake+'"'),'-LaunchWindowSeconds','60')
+ $proc=Start-Process -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList $argv `
+  -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+ $null=$proc.Handle # keep the handle so exit-code retrieval survives child termination
+ $deadline=(Get-Date).AddSeconds(90)
+ while(-not $proc.HasExited){
+  if((Get-Date) -ge $deadline){throw 'Fake guard timed out; preserve evidence, do not kill'}
+  Start-Sleep -Seconds 1;$proc.Refresh()
+ }
+ $proc.WaitForExit()
+ if($proc.ExitCode -ne 0){throw "Fresh guard failed; see $stderr"}
+ if(-not (Get-Content $stdout -Raw).Contains('READY: independent')){throw 'Guard never armed'}
+ foreach($f in $manifest.Files){if((Hash (Join-Path $fake $f.RelativePath)) -cne $f.BaselineSha256){throw 'Guard restore mismatch'}}
+ Write-Output "PASS: fresh hidden WindowsPS timeout guard independently restored$(@($manifest.Files).Count) exact baselines"
+}

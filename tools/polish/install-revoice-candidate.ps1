@@ -89,8 +89,8 @@ $src=(Resolve-Path -LiteralPath $CandidateDirectory).Path
 $manifest=Resolve-Child $src 'manifest.jsonl';$qaPath=Resolve-Child $src 'qa.json'
 $manifestHash=Hash $manifest;$qaHash=Hash $qaPath
 $rows=@(Get-Content -LiteralPath $manifest | Where-Object {$_} | ForEach-Object {$_|ConvertFrom-Json})
-$qa=@(Get-Content -LiteralPath $qaPath -Raw | ConvertFrom-Json)
-if($rows.Count -ne 1886 -or $qa.Count -ne 1886){throw 'Expected exactly 1886 entries'}
+$qa=Get-Content -LiteralPath $qaPath -Raw | ConvertFrom-Json
+if($rows.Count -ne 1886 -or @($qa).Count -ne 1886){throw 'Expected exactly 1886 entries'}
 $pending=@($qa | Where-Object {$_.qa_status -cne 'PASS_AUTOMATED_SCREEN'}).Count
 if($pending -and -not $AllowPendingQa){throw 'Pending QA requires explicit AllowPendingQa'}
 $ids=@{};$qaIds=@{};$targets=@{};$counts=@{full_localization=0;story_nllb=0};$files=@()

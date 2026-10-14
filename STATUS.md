@@ -1,5 +1,209 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 PID35568 / EA9EFFB1: user reports everything OK except Polish
+story speech; note NOT inspected. Clarification: loaded save at first building,
+NPC and radio remained English. Scope is not opening/new-game audio acceptance.
+Guard restored all4 core+38 assets+1886 WAV originals; TV subsequently reverted
+with the previous renderer/config. User now requested new992 xlingual WAVs and
+persistent TV correction. Exact3 runtime/INI promotion completed (EA9EFFB1 /
+F5137234 / INI757F414B), backup20261014-205618; no guard or new launch.
+992 source WAVs installed with verified backups;894 UI voices unchanged.
+Intro, multiplayer, native banks and font untouched in this story-only action.
+PR21 already merged the43 SIDE text/tool files; do not merge conflicting PR20.
+Native NPC/radio playback remains BROKEN/producer investigation, not fixed by
+the WAV copy. 825b middle phrase still requires listening. See the new handoff.
+
+LATEST 2026-10-14 recovery: user rejected A8F38EF6 combined installation
+(TV stretched, menus/free hands/FPS regressed, Polish text/voices/notes lost).
+Audit proves original injector/font/eight native bank deltas/three manifests,
+and absent accepted wrist/cinema/menu/texture-bridge/native-speech flags.
+Recovery preserves UI69CABCCF ring/title, stages the accepted first-area payload,
+and fixes TV aspect mapping including Present window scaling. No Steam writes
+or launch. Eleven optimized x86 fixtures + scoped INI tests PASS; combined L3/L4
+PENDING. See docs/recovery-after-tv-test.md. Earlier latest blocks are history,
+not acceptance of this rejected configuration.
+
+LATEST: hands accepted on 627F1111. That same session captured the main menu
+and pause into the RTT (pixels are there) while MenuOverlay=0, and the scene
+copy of the main menu was suppressed, so the headset had nothing to show.
+DLL A8F38EF6007BCED8F3CB247E5A4A65942958CD4A1ED43F1B6601F81E342D001C keeps the
+in-scene menu and notes when the overlay is off, and stretches the right SBS
+half across the game window after XR submit (DesktopMirrorEye=2). Glove-only
+stays forced. Backup 20261014-200828. Boot card is still stock SINGULARITY:
+no binkenc. L4 is the TV picture plus the main menu, pause, and a Polish note.
+
+LATEST: cursor ring accepted. Glove-only is now forced on: ini ShowControllerArms
+is 0 (was 1, one byte) and the panel cannot turn the arm mesh back on. DLL
+627F11118E72A41A5305ABD9A80975AAC587D22C5B0788305AF298678F1BCC7B. Free hands use
+the measured wrist-anchor correction; a live 5799 pistol still aims through
+BuildGunC. Backup 20261014-195152. UI 69CABCCF and font unchanged. No restore
+guard. L4 is the next unarmed-glove look, then the pistol in the same session.
+Boot card is not installed: no binkenc.dll on this machine, only the SIDE MKV.
+Hand plates are not in this DLL.
+
+LATEST: headset check of 256BF823 + E3E7C902: menu text SINGULARITY VR is good,
+arms no longer stretch, free gloves still sit too far from the pads until the
+pistol is picked up, then tracking and grip are good. Exit was not checked.
+Glove distance is unchanged this turn. The native Mouse shape is a 27×29 px
+arrow whose bounds start at the hotspot and extend down-right, so the visible
+cursor sat off the laser. UI 69CABCCF13C0F13B120163331ADDCFDDE3764CE8E32FE60A15F800FDF8C87D66
+keeps the same title fit and replaces that leaf with a ring centred on the
+hotspot. DLL stays E3E7C902, INI 202AA13A, font 3F7BF0BE. Backup of the stock
+UI is title-ui-20261014-193045. No restore guard is armed. L4 for the dot is
+the next menu look. SIDE also reported texconv is absent; the boot card stays
+on SNG_logo.bik, not a DXT5 swap of ui_logos.logo.
+
+LATEST: menu title package 256BF823 stays installed. It is the LZO rebuild, not
+the uncompressed package that crashed. DLL E3E7C902 from 318fb9a hides the
+native arm mesh until a weapon is in hand, because the 19:02 log on 2763A984
+showed ShowControllerArms=1 and a weaponless 3314/390 pass that correctly did
+not latch. Backup of the previous hand DLL is 20261014-191533. No restore guard.
+Boot wordmark remains the separate SIDE task.
+
+LATEST: user still sees the boot wordmark SINGULARITY without VR, and hands
+remain stretched on D8928180. Installed the previously accepted hand DLL
+2763A984F01384C6FC0B289333E0283A9273665FD02B13A978DE95611F48C0B7. Backup
+deployment/install-backups/20261014-185905. UI is the original 5B2EA469.
+Boot card is a separate producer from the GFx title fields. SIDE handoff:
+docs/handoffs/side-boot-logo.md. L4 for this reinstall is the next launch.
+
+LATEST: title package E852A20D crashed before the menu. Log ended on the engine
+string "Ran out of virtual memory" and Windows recorded 0xe06d7363. That package
+stored the UI chunk uncompressed; the game decompressed those bytes and aborted.
+Replacement 256BF8234CBCD959C8E7FB62D27EBC4A2D186810746326EE65C3C9DA24FE3F14 uses
+LZO literal blocks, round-trips through unpack_chunks, and is installed. DLL
+remains D8928180. Backup title-ui-20261014-185316. L4 still open.
+
+LATEST: title UI E852A20D2CB613602BA3361550F44551BD7A72484CB0D834468813190E86A7CD
+installed. DLL stays D8928180, INI202AA13A, font3F7BF0BE. Package only widens
+iis character 10 (right edge fixed) and SPMenus character 166 (centred) and
+writes SINGULARITY VR. No cursor change and no 4233E4A2 DLL. Chunk roundtrip
+and fake install/restore PASS. Backup title-ui-20261014-184342. Physical read
+of the boot title is the next check. L4 not claimed.
+
+LATEST: PID33552 witness ran and was restored. Live RawData is the original movies,
+not the private candidate: iis 30959 FNV669B2A3F185327C8, SPMenus 231953
+FNV51B6A92D4DED91D0 on main, options and pause. The old +3 byte title edit clipped:
+iis character 10 is right-aligned in a 500px box that the word already fills, and
+SPMenus character 166 is centred in a 900px box. fit_title_field now grows the free
+side (iis xmin -40 to -2767, right edge fixed; SPMenus both sides by 4909 twips)
+and keeps the replacement exclusive. DLL4233E4A2 stays rejected. Steam remains
+DLLD8928180, INI202AA13A, UI5B2EA469, font3F7BF0BE. No new Steam install.
+
+LATEST: user rejected witness DLL4233E4A2 during PID33552. Hands stretched again
+and the menu was doubled flat on exit to the menu. That DLL is not installed.
+Independent restore remains DLLD8928180, INI202AA13A, UI5B2EA469, font3F7BF0BE.
+Do not redeploy 4233E4A2. The physically accepted first-area DLL was 2763A984
+from 34b180e, saved at deployment/hands-dubbing/post-opening/next-core-v1/d3d9.dll.
+HUD corner reach was not changed by this lease.
+
+LATEST: menu-witness session PID33552 L3, then restored. Independent hashes: DLLD8928180,
+INI202AA13A, UI5B2EA469, font3F7BF0BE. Live MovieInfo.RawData matched the original
+packages, not the private candidate: iis 30959 bytes FNV669B2A3F185327C8 on
+RvUIGFxMovie_IIS; SPMenus 231953 bytes FNV51B6A92D4DED91D0 on SPMain, SPOptions
+and SPPause. GFX magic 47465809. Saved frames show MENU GŁÓWNE and PAUZA, not a
+separate title texture. No title edit. No L4 for this DLL.
+
+LATEST: menu-witness lease ARMED, game not launched. Installed DLL4233E4A23BE50D47A017369A4F231D2DAE2A10DA068BA08D57E0EAC7EC540BAC
+from build c5d3924, x86 PE32 /O2. INI8A8F52F3ADFFC9AE63ADCF8364B97F59C8651D680FEBC5D4001C9AB95D767026
+adds only Diagnostic.MenuAssetWitness=1 over preserved202AA13A. UI5B2EA469 and font3F7BF0BE
+untouched. Backup deployment/install-backups/20261014-180712. Restore guard READY,
+1800s to launch, then restores after a normal exit. No L3 until a process runs. No L4.
+
+LATEST: witness candidate c5d3924, DLL4233E4A23BE50D47A017369A4F231D2DAE2A10DA068BA08D57E0EAC7EC540BAC,
+x86 PE32 /O2. Offline fake lease PASS: WhatIf, path refusal, corrupt-backup refusal,
+user-INI preservation, owned rollback, frozen UI. Not installed, not launched, not L3/L4.
+Installed Steam unchanged: DLLD8928180, INI202AA13A74BF1FF49104C8C507A1B9A6A6069D22DC43A529FCF6BFFC07430DBF,
+UI5B2EA469, font3F7BF0BE. Source-only title strings: iis WFontLogo HTML is the run the
+private candidate changed to SINGULARITY VR; SPMenus keeps a styled SINGULARITY run in
+both packages and the candidate also writes MajorTitle text SINGULARITY VR. ui_logos.logo
+is one 512x128 DXT5 beside weapon HUD textures. SPMenus token UI_Logos. sits by
+getSubstitutions/SCOPE_MP_PLAYER_MSG, so it is not the proven title. Live RawData FNV
+still required before another edit. Source FNV, not pixels: control iis 669B2A3F185327C8
+30959 bytes, control SPMenus 51B6A92D4DED91D0 231953, candidate iis 2470EB3DBD9A78BB
+31178, candidate SPMenus 56AFE359868D7429 232282. HUD SIDE assets are 5f4364c on
+fix/psvr2-hud-design and stay unintegrated.
+
+LATEST after PID37660: scoped L4 PASS cinema stability, right hand/pistol grip,
+Polish first-area NPC/recordings and note glyphs. Logo and native arrow STILL
+BROKEN; slight laser/cursor deviation. User defers small acceptable FPS dips.
+1927 original files restored independently; INI user armsON/narratorOFF preserved
+and owned flags removed via exact cleanup. Actual INI202AA13A74BF1FF49104C8C507A1B9A6A6069D22DC43A529FCF6BFFC07430DBF;
+safe baseline DLLD8928180/UI5B2EA469/font3F7BF0BE. No game/test left active.
+Next producer witnesses defaultOFF: live GFx RawData identity/coordinate dispatch
+and native pistol template identity. No speculative cursor/logo offset fix.
+Offline original logo texture decoded ui_logos.logo512x128 DXT5, earlier inventory
+incorrect; contributing draw still UNKNOWN. Native weapon cue/particle assets
+found; user requests BOTH sounds and VFX, no generated replacements.
+HUD SIDEcd76bac reviewed, source-art prompt delivered; no HUD renderer integrated.
+First-building projector mismatch recorded UNKNOWN producer. MAIN active scope:
+logo/ring/laser correspondence and original gun FX/audio, preserving L4 systems.
+See docs/first-area-accepted-and-ui-witness.md. Previous entries historical.
+
+HISTORICAL LIVE:
+LIVE 2026-10-14: fresh user start, Steam PID37660 launched16:32:55+02:00.
+DLL2763A984F01384C6FC0B289333E0283A9273665FD02B13A978DE95611F48C0B7
+loaded from Steam Binaries; injectorF5137234 loaded. Exact4+38+1886 installed
+hashes and original backups PASS; actual OpenXR session3/running1/haveEyes1.
+PSVR2 native SteamVR HMD evidence before launch; no xrsim/registry/UI automation.
+Private deployment/hands-dubbing/first-area-font-live-20261014-1627/live.json.
+Core backup20261014-162546-8912, assets20261014-162549-8912; WAV originals in
+live/revoice. Guards10836/36428/39912 READY600s no-launch/post-exit; observer38296
+READY1800s active/passive exit collector. No restoration claim while game runs.
+Cinema world quad ON2000mm, gloves-only, accepted shadows/input unchanged.
+User stays headset: NewGame/save confirmation, helipad pause/options, free glove,
+pistol, first-area speech/note, title/pointer/menu, normal exit. L4 feedback PENDING.
+Two pre-launch orchestration failures restored exact baseline before retry; no
+game launched in them. Failed guard parameters/empty-log READY detection corrected
+in private runner; candidate DLL/assets unchanged. Restore all3 leases after exit
+and independently verify1928 originals/frozen107DDS. Never overwrite running files.
+
+HISTORICAL PREPARATION:
+LATEST 2026-10-14: OFFLINE PREP READY first-area/font polish on fix/post-opening-followups,
+Draft PR19, NOT merged. Font SIDE219c6fa cherry-picked59da9f9; private output60E72871
+matches pinned original3F7BF0BE. UI5E46B619 replaces exclusive Mouse geometry and
+scoped Initialize title; three NPC banks/23 utterances retain9 nonverbal exports.
+SIDE audio e285652f reviewed;3 ASR REVIEW lines, not full-game/auditory acceptance.
+Free-hand target selected after wrist reconstruction; accepted pistol/modal policy
+retained, COM invalidation moved to render thread. Cinema LOCAL quad defaultOFF,
+same composed pixels/one scene anchor; enabled only in staged next test INI.
+26 Python tests +9 optimized x86 fixtures/policy PASS. Exact38 fake installation
+WhatIf/backup/corruption/conflict/restore PASS. Fresh hidden WindowsPS38 guard and
+core4 no-launch timeout independently restored exact baselines PASS. x86/O2 DLL
+2763A984F01384C6FC0B289333E0283A9273665FD02B13A978DE95611F48C0B7
+from tracked-clean source34b180e; next-core-v1/next-assets-v4/quiet-revoice-v2 ready.
+Actual1928 original identities and staged1928 candidate hashes PASS;992 legacy
+WAV filenames preserved by new lookup. Original font independently backed up.
+Actual Steam remains original, no real lease/game launched this preparation turn;
+fresh user start required. Previous live restore independent1924 originals PASS.
+Font preview is an approximate raster, not proof of native GFx fill/wrap.
+Private bundle deployment/hands-dubbing/post-opening/next-candidate-index.json.
+See docs/post-opening-next-candidate.md. Entries below are historical snapshots.
+
+HISTORICAL:
+PREP READY after c029abe: x86PE32/O2 DLL1454A62B0AC28EC9A9C8D3A83E16DD9CF142E6CAEE3220FC591079F015192751.
+Private post-opening/core-ready +assets-ready exact34 +quiet-revoice-v2. Core4
+and asset34 fake/preflight gates PASS; fresh hidden WindowsPS34 timeout guard
+restored/independent hashes PASS. WAV plan894UI/992story all identities/formats,
+pending146QA, no install. Actual4+34+1886 originals/107DDS verified unchanged.
+Draft PR19 created/attached, not merged. New physical/runtime feedback PENDING;
+fresh start only. Original Steam untouched; no active real-install guardian/test.
+
+LATEST PR17 merged on GitHub into main8751a27 (not merged by this MAIN turn).
+Dedicated fix/post-opening-followups worktree. OFFLINE preparation, no Steam
+write/launch. New rooms2banks/19waves/13SIDEWAV, properties/cues/timing preserved,
+exact PCM/loudness/peak/independent LZO PASS; SIDE17e2f6b reviewed full native text,
+NOT_AUDITIONED.15 first-area Notes translations prepared, other57/open keys remain.
+UI NARRATOR defaultOFF live DISPLAY toggle; quiet894UI candidate35% amplitude,
+992story unchanged, inherited146QA review not upgraded. Source long-note bounded
+capacity/nontruncation, diagnostic sparse-flush fix and two-epoch wrist probe L1
+PASS. ShowControllerArms1 observed in actual INI/log; stage0 for glove-only test,
+no guessed pistol grip offset. NewGame SPSlots/dialog producer/capture identity
+probe only; layering fix and pistol grip remain OPEN. Exact34 v2 asset lease fake
+install/restore/corruption/conflict/WhatIf PASS; source build/staging finalization
+below feature note. Fresh start required; never deploy over running game.
+See docs/post-opening-followups.md. Previous entries below are historical.
+
 LATEST PID17436 closed; all3 guards restored, independent4+32+1886 hashes and
 107DDS PASS (live restore-verification.json). User physically heard Polish radio,
 generally accepts this version and requests PR targeting main (NO merge).

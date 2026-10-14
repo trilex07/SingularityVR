@@ -71,6 +71,132 @@ def encode_tag_header(code: int, ln: int) -> bytes:
     return struct.pack("<H", (code << 6) | 63) + struct.pack("<I", ln)
 
 
+def _take_bits(data: bytes, bitpos: int, width: int, signed: bool = False) -> tuple[int, int]:
+    value = 0
+    for _ in range(width):
+        value = (value << 1) | ((data[bitpos // 8] >> (7 - (bitpos % 8))) & 1)
+        bitpos += 1
+    if signed and width and value & (1 << (width - 1)):
+        value -= 1 << width
+    return value, bitpos
+
+
+def read_rect(data: bytes, offset: int) -> tuple[int, list[int], int]:
+    """SWF RECT. Returns nbits, [xmin, xmax, ymin, ymax], and the next byte offset."""
+    nbits = data[offset] >> 3
+    if not 1 <= nbits <= 31:
+        raise ValueError("RECT bit width implausible")
+    bitpos = offset * 8 + 5
+    vals = []
+    for _ in range(4):
+        value, bitpos = _take_bits(data, bitpos, nbits, signed=True)
+        vals.append(value)
+    return nbits, vals, (bitpos + 7) // 8
+
+
+def write_rect(vals: list[int], nbits: int | None = None) -> bytes:
+    """Encode a RECT. Passing the original nbits keeps a round trip byte-identical."""
+    need = max(2, max(abs(int(v)).bit_length() + 1 for v in vals))
+    if nbits is None:
+        nbits = need
+    if nbits < need or not 1 <= nbits <= 31:
+        raise ValueError("RECT values do not fit the requested width")
+    bits = [(nbits >> shift) & 1 for shift in range(4, -1, -1)]
+    for value in vals:
+        raw = value if value >= 0 else (1 << nbits) + value
+        bits.extend((raw >> shift) & 1 for shift in range(nbits - 1, -1, -1))
+    bits.extend([0] * ((-len(bits)) % 8))
+    return bytes(sum(bits[i + j] << (7 - j) for j in range(8)) for i in range(0, len(bits), 8))
+
+
+def _edit_align(payload: bytes) -> tuple[list[int], int, int]:
+    """Return bounds, rect-end, and align (0 left, 1 right, 2 centre). Refuse an unknown field."""
+    _nbits, vals, end = read_rect(payload, 2)
+    bitpos = end * 8
+    flags = []
+    for _ in range(16):
+        flag, bitpos = _take_bits(payload, bitpos, 1)
+        flags.append(flag)
+    if bitpos % 8:
+        raise ValueError("DefineEditText flags are not byte aligned")
+    names = (
+        "HasText", "WordWrap", "Multiline", "Password", "ReadOnly", "HasTextColor",
+        "HasMaxLength", "HasFont", "HasFontClass", "AutoSize", "HasLayout", "NoSelect",
+        "Border", "WasStatic", "HTML", "UseOutlines",
+    )
+    flag = dict(zip(names, flags))
+    if flag["AutoSize"]:
+        raise ValueError("auto-sized title field does not clip; refusing a bounds edit")
+    offset = bitpos // 8
+    if flag["HasFont"]:
+        offset += 4
+    if flag["HasFontClass"]:
+        offset = payload.index(0, offset) + 1
+    if flag["HasTextColor"]:
+        offset += 4
+    if flag["HasMaxLength"]:
+        offset += 2
+    if not flag["HasLayout"]:
+        raise ValueError("title field has no layout align")
+    align = payload[offset]
+    if align not in (0, 1, 2, 3):
+        raise ValueError("unknown title align")
+    return vals, end, align
+
+
+def fit_title_field(data: bytes, old: bytes, new: bytes, tag_code: int = TAG_DEFINE_EDIT_TEXT) -> tuple[bytes, dict]:
+    """Replace one DefineEditText string and grow its box toward the free side.
+
+    A right-aligned field keeps its right edge, because that is the anchor the
+    original layout uses. Growing only the text and not the box clips the added
+    glyphs, which is what a +3 byte replacement did to the 500px boot title.
+    """
+    if old not in new or len(new) <= len(old):
+        raise ValueError("replacement must extend the original title")
+    _, tags = split_tags(data)
+    cands = [t for t in tags if t["code"] == tag_code
+             and data[t["pay_off"]:t["pay_off"] + t["pay_len"]].count(old) == 1]
+    if len(cands) != 1:
+        raise ValueError("title field is not one exclusive DefineEditText")
+    tag = cands[0]
+    payload = data[tag["pay_off"]:tag["pay_off"] + tag["pay_len"]]
+    vals, rect_end, align = _edit_align(payload)
+    xmin, xmax, ymin, ymax = vals
+    width = xmax - xmin
+    if width <= 0:
+        raise ValueError("empty title box")
+    grow = width * (len(new) - len(old)) // len(old)
+    if grow <= 0:
+        raise ValueError("title growth rounded away")
+    if align == 1:
+        vals = [xmin - grow, xmax, ymin, ymax]
+    elif align == 2:
+        vals = [xmin - grow // 2, xmax + (grow - grow // 2), ymin, ymax]
+    else:
+        vals = [xmin, xmax + grow, ymin, ymax]
+    rect = write_rect(vals)
+    fitted = payload[:2] + rect + payload[rect_end:]
+    if fitted.count(old) != 1:
+        raise ValueError("title bytes moved outside the edited field")
+    fitted = fitted.replace(old, new, 1)
+    out = (data[:tag["tag_off"]] + encode_tag_header(tag["code"], len(fitted)) + fitted
+           + data[tag["pay_off"] + tag["pay_len"]:])
+    out = out[:4] + struct.pack("<I", len(out)) + out[8:]
+    split_tags(out)
+    if out.count(new) != 1:
+        raise ValueError("fitted title is not exclusive")
+    report = {
+        "tag_code": tag["code"],
+        "character": struct.unpack_from("<H", payload)[0],
+        "align": align,
+        "old_bounds": [xmin, xmax, ymin, ymax],
+        "new_bounds": vals,
+        "grow_twips": grow,
+        "delta": len(out) - len(data),
+    }
+    return out, report
+
+
 def patch_first(data: bytes, old: bytes, new: bytes, tag_code: int = TAG_DEFINE_EDIT_TEXT) -> tuple[bytes, dict]:
     """Replace the first occurrence of old inside a tag_code payload.
 

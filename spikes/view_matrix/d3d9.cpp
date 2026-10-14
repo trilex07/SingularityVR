@@ -25,6 +25,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "pose_conversion.h"
 #include "vr_scene_mode.h"
 #include "cutscene_mono.h" // CutsceneFlat mono-to-both-eyes fit math (no D3D)
+#include "cinema_world_screen.h"
 #include "cinematic_state_observation.h"
 #include "cinema_exit_profile.h"
 #include "camera_lookup_guard.h"
@@ -4095,6 +4096,11 @@ void ApplyOffset(Reg4* r, int conv, const float* o) {
 XrInstance g_xrInstance = XR_NULL_HANDLE;
 XrSession  g_xrSession  = XR_NULL_HANDLE;
 XrSpace    g_xrSpace    = XR_NULL_HANDLE;
+static cinemascreen::Anchor g_cinemaWorldAnchor;
+static LONG g_cutsceneWorldScreen=0; // default-OFF world-space presentation experiment
+static LONG g_cutsceneScreenDistanceMm=2000;
+static XrTime g_cinemaReferenceChangeTime=0;
+static bool g_eyePositionsValid=false;
 XrSystemId g_xrSystem   = XR_NULL_SYSTEM_ID;
 ID3D11Device* g_dev11 = nullptr;
 ID3D11DeviceContext* g_ctx11 = nullptr;
@@ -4220,8 +4226,15 @@ void PumpXR() {
                 bi.primaryViewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
                 if (XR_SUCCEEDED(xrBeginSession(g_xrSession, &bi))) { g_xrRunning = true; Log("session running"); }
             } else if (s->state == XR_SESSION_STATE_STOPPING) {
+                g_cinemaWorldAnchor.Reset();
+                g_cinemaReferenceChangeTime=0;
+                g_eyePositionsValid=false;
                 xrEndSession(g_xrSession); g_xrRunning = false;
             }
+        } else if(ev.type == XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING) {
+            const auto* change=reinterpret_cast<const XrEventDataReferenceSpaceChangePending*>(&ev);
+            if(change->referenceSpaceType==XR_REFERENCE_SPACE_TYPE_LOCAL)
+                g_cinemaReferenceChangeTime=change->changeTime;
         }
         ev = { XR_TYPE_EVENT_DATA_BUFFER };
     }
@@ -4671,6 +4684,8 @@ struct CopySlot {
     bool    menuFlat = false;            // native GFx menu: XR bridge crops one half to both eyes
     bool    cineFlat = false;            // CutsceneFlat mono: composed fit lives in the left half,
                                          // XR bridge submits that same half crop to both eyes
+    CutsceneMonoRect cineImage{};         // exact fitted image rect stamped with its pixels
+    bool eyePositionsValid=false;       // tracking contract stamped with the same frame
     int     menuClass = 0;               // 0-4, snapshotted with these pixels
     bool    uiFocus = false;             // g_vrUiMenu at capture, not at a later submit
     XrPosef pose[2]{};                   // where the head was when these pixels were drawn
@@ -5075,6 +5090,9 @@ extern volatile LONG g_vrUiMenu;
 static LONG g_cutsceneMenuPairFix = 0; // exact focused menus; same-source XR crop experiment
 static LONG g_handAnchorProbe = 0;
 static LONG g_noTmdWristAnchorFix = 0;
+static volatile LONG g_uiNarratorEnabled = 0; // UI/tutorial overlay only; native dialogue untouched.
+static volatile LONG g_modalUiProbe = 0; // cold reflected identity; no presentation changes.
+static void StopPolishUiNarrator();
 static void FlushHandAnchorProbe();
 static bool CutsceneNativeCameraArmed() {
     const bool cinemaPause = CinemaMenuPauseOwnsPresentation(Rd(g_cutsceneMenuPairFix)!=0,
@@ -5085,6 +5103,7 @@ static bool CutsceneNativeCameraArmed() {
 static LONG g_cutsceneVideoHandoffFix = 1;
 static LONG g_cutsceneMenuHandoffFix = 0; // opt-in frontend presentation ownership
 static bool g_cineMonoReady = false; // set when this Present composed the frame
+static CutsceneMonoRect g_cineMonoImage{};
 // Bounded transition/error evidence. No per-draw work, new hooks, queries,
 // allocations or pixel readbacks. The existing silent returns hid the reason
 // PID4672 never composed despite CINE ON. At most 20 lines in one session.
@@ -5175,6 +5194,7 @@ static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
     back->Release();
     if (FAILED(result.hr)) return false;
     g_cineMonoReady = true;
+    g_cineMonoImage = fit.image;
     static LONG saidMono = 0;
     if (!InterlockedExchange(&saidMono, 1))
         Log("cutscene-mono: composed %dx%d -> left-half fit (%d,%d)-(%d,%d), both eyes share it",
@@ -5198,6 +5218,8 @@ void StampCaptureState(CopySlot& cap) {
     // composition keeps stereo stamping, so the bridge cannot submit an
     // uncomposed half crop to both eyes.
     cap.cineFlat = g_cineMonoReady && CutsceneMonoComposeArmed() && !cap.menuFlat;
+    cap.cineImage = cap.cineFlat ? g_cineMonoImage : CutsceneMonoRect{};
+    cap.eyePositionsValid=g_eyePositionsValid;
     if (cap.cineFlat) {
         cap.stereo = false;
         cap.dup = true;
@@ -5796,6 +5818,9 @@ static menucapture::Owner g_vrCaptureOwner;
 volatile LONG g_vrStaleRejected=0;
 void SyncVrMenuCaptureState();
 volatile LONG g_vrMenuClass=0; // 0 none, 1 IIS boot, 2 Main, 3 Pause, 4 other native UI.
+volatile LONG g_modalSaveDialog = 0; // save-slot confirmation dialog; suppress stale slots RTT overlay
+volatile LONG g_menuAssetWitness = 0; // default-OFF, cold identity/coordinate evidence, no render mutation
+volatile LONG g_vrMenuReleaseRequested = 0; // input publishes; render thread owns COM release
 // XR bridge: crop one SBS half to both eyes only for the IIS boot/title menu.
 // Classes 2-4 keep whatever stereo/dup the scene already captured.
 static bool VrXrSubmitMenuFlat() {
@@ -7070,7 +7095,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        // ⭐ run 217: the laser and the per-weapon alignment rows.
        PR_LASER, PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH,
        PR_NOTESIZE,          // ⭐ run 230
-       PR_POLISH,            // Polish localization toggle
+       PR_POLISH, PR_UINARRATOR, // Independent text language / optional UI voice.
        PR_GUNSCALE,          // hub round A: first-person gun+hands size, live-tuned like world scale
        PR_MENUOVERLAY,       // hub round 4: overlay kill switch (black-quad diagnosis)
        PR_TMDON, PR_TMDFWD, PR_TMDRIGHT, PR_TMDUP, PR_TMDYAW, PR_TMDPITCH,   // ⭐ run 237
@@ -7141,7 +7166,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
     { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE,
-      PR_POLISH, PR_GLOVEONLY, PR_VFXLOOK, PR_BACK },
+      PR_POLISH, PR_UINARRATOR, PR_GLOVEONLY, PR_VFXLOOK, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
@@ -7182,7 +7207,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_GLOVEISOLATE, PR_GLOVEFACE, PR_GLOVESTUMP, PR_GLOVELEFT, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 11, 10, 3, 11, 10, 7, 10, 6, 8, 5 };
+const int kPageCount[kPanelPages] = { 11, 10, 3, 12, 10, 7, 10, 6, 8, 5 };
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -7219,6 +7244,7 @@ inline int PanelRowId(int i) {
 // is not "was tested now", and one launch settles it. `StartInVr=0` restores run 37's cold start
 // exactly, with no rebuild.
 volatile LONG g_startInVr = 1;      // ini [Render] StartInVr
+volatile LONG g_desktopMirrorEye = 0; // ini [Render] DesktopMirrorEye: 0 off, 1 left, 2 right
 // Diagnostic-only desktop HMD: exercise stereo/backbuffer hooks without an XR system.
 // This never changes normal PSVR2 startup behavior unless explicitly enabled in [Diagnostic].
 volatile LONG g_forceDesktopVr = 0; // ini [Diagnostic] ForceDesktopVr
@@ -7418,9 +7444,11 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_POLISH:
             WritePrivateProfileStringA("Localization", "PolishLanguage",
                 PolishLocalization::PL().IsPolishEnabled() ? "1" : "0", path); return;
+        case PR_UINARRATOR:
+            WritePrivateProfileStringA("Localization", "UiNarratorEnabled",
+                Rd(g_uiNarratorEnabled) ? "1" : "0", path); return;
         case PR_GLOVEONLY:
-            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", g_showControllerArms ? 0L : 1L);
-            WritePrivateProfileStringA("Render", "ShowControllerArms", v, path); return;
+            WritePrivateProfileStringA("Render", "ShowControllerArms", "0", path); return;
         case PR_GLOVEISOLATE:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_gloveIsolate));
             WritePrivateProfileStringA("Render", "GloveIsolate", v, path); return;
@@ -7795,6 +7823,9 @@ void PanelRowText(int row, char* out, size_t cap) {
         case PR_POLISH:
             _snprintf_s(out, cap, _TRUNCATE, "POLISH LANG    %s",
                         PolishLocalization::PL().IsPolishEnabled() ? "ON" : "OFF");
+            break;
+        case PR_UINARRATOR:
+            _snprintf_s(out, cap, _TRUNCATE, "UI NARRATOR    %s", Rd(g_uiNarratorEnabled) ? "ON" : "OFF");
             break;
         case PR_GLOVEONLY:
             _snprintf_s(out, cap, _TRUNCATE, "GLOVE ONLY     %s",
@@ -8293,9 +8324,14 @@ void PanelAdjust(int row, int dir) {
             Log("VR panel: Polish language %s", on ? "ON" : "OFF");
             break;
         }
+        case PR_UINARRATOR:
+            InterlockedExchange(&g_uiNarratorEnabled, Rd(g_uiNarratorEnabled) ? 0 : 1);
+            if (!Rd(g_uiNarratorEnabled)) StopPolishUiNarrator();
+            Log("VR panel: UI narrator %s (native story dialogue unchanged)", Rd(g_uiNarratorEnabled) ? "ON" : "OFF");
+            break;
         case PR_GLOVEONLY:
-            g_showControllerArms = g_showControllerArms ? 0 : 1;
-            Log("VR panel: glove-only visual %s", g_showControllerArms ? "OFF" : "ON");
+            g_showControllerArms = 0;
+            Log("VR panel: glove-only visual ON (kept)");
             break;
         case PR_GLOVEISOLATE: {
             LONG m = Rd(g_gloveIsolate) + dir;
@@ -10439,6 +10475,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     vli.space = g_xrSpace;
     XrViewState vs{ XR_TYPE_VIEW_STATE };
     g_hotPathSampler.count(hotpath::Counter::xr_locate_views);
+    g_eyePositionsValid=false;
     if (XR_SUCCEEDED(xrLocateViews(g_xrSession, &vli, &vs, 2, &n, views)) && n >= 1 &&
         (vs.viewStateFlags & XR_VIEW_STATE_ORIENTATION_VALID_BIT)) {
         // keep the per-eye poses/FOVs for the projection layer submitted below
@@ -10446,6 +10483,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             InterlockedExchange64(&g_hotHmdPoseFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
         for (uint32_t i = 0; i < n && i < 2; ++i) { g_eyePose[i] = views[i].pose; g_eyeFov[i] = views[i].fov; }
         g_haveEyes = (n >= 2);
+        g_eyePositionsValid=g_haveEyes && (vs.viewStateFlags & XR_VIEW_STATE_POSITION_VALID_BIT)!=0;
         g_headFovDeg = (fabsf(views[0].fov.angleLeft) + fabsf(views[0].fov.angleRight)) * 57.2957795f;
 
         const XrQuaternionf& q = views[0].pose.orientation;
@@ -11240,11 +11278,17 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
 
     // ---- copy the game's frame into the swapchain and submit it ----
     XrCompositionLayerProjection layer{ XR_TYPE_COMPOSITION_LAYER_PROJECTION };
+    XrCompositionLayerQuad cinemaQuad{ XR_TYPE_COMPOSITION_LAYER_QUAD };
+    bool cinemaQuadSubmitted=false;
     XrCompositionLayerProjectionView projViews[2]{};
     const XrCompositionLayerBaseHeader* layers[1] = { nullptr };
     uint32_t layerCount = 0;
 
     const int64_t diagBridge = g_diagEnabled ? DiagQpc() : 0;
+    g_cinemaWorldAnchor.Observe(Rd(g_inCinematic)!=0,Rd(g_cutsceneWorldScreen)!=0);
+    if(g_cinemaReferenceChangeTime && fs.predictedDisplayTime>=g_cinemaReferenceChangeTime) {
+        g_cinemaWorldAnchor.Reset();g_cinemaReferenceChangeTime=0;
+    }
     const bool captureRequested = fs.shouldRender && g_haveEyes && gameDev;
     if (captureRequested) g_menuSubmitDiag.captureAttempts++;
     const CopySlot* frame = captureRequested ? CopyBackbufferToD3D11(gameDev) : nullptr;
@@ -11453,6 +11497,42 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                     layer.viewCount = 2;
                     layer.views = projViews;
                     layers[0] = reinterpret_cast<const XrCompositionLayerBaseHeader*>(&layer);
+                    // Same proved composed pixels; the compositor places the screen in LOCAL
+                    // space instead of interpreting it as a head-following projection image.
+                    // A pause/menu keeps its established presentation and retains this anchor.
+                    if(cineCrop && Rd(g_cutsceneWorldScreen) && Rd(g_inCinematic) &&
+                       cinemascreen::TrackingAllowsAnchor(g_cinemaWorldAnchor.valid,frame->eyePositionsValid)) {
+                        const auto& r=frame->cineImage;
+                        const int imageW=r.right-r.left,imageH=r.bottom-r.top;
+                        const XrFovf& f=frame->useDerived?frame->derived:frame->fov[0];
+                        const float halfTan=(tanf(f.angleRight)-tanf(f.angleLeft))*.5f;
+                        const auto& q=frame->pose[0].orientation;const auto& rq=frame->pose[1].orientation;
+                        const auto& l=frame->pose[0].position;const auto& right=frame->pose[1].position;
+                        const auto head=cinemascreen::Centre(
+                            {l.x,l.y,l.z,q.x,q.y,q.z,q.w},
+                            {right.x,right.y,right.z,rq.x,rq.y,rq.z,rq.w});
+                        const bool wasAnchored=g_cinemaWorldAnchor.valid;
+                        if(r.left>=0 && r.top>=0 && r.right<=(int)g_scWidth && r.bottom<=(int)g_scHeight &&
+                           imageW>0 && imageH>0 && g_cinemaWorldAnchor.Latch(head,
+                            Rd(g_cutsceneScreenDistanceMm)/1000.f,halfTan,
+                            (float)imageW/g_scWidth,(float)imageW/imageH)) {
+                            const auto& a=g_cinemaWorldAnchor;
+                            cinemaQuad.space=g_xrSpace;
+                            cinemaQuad.eyeVisibility=XR_EYE_VISIBILITY_BOTH;
+                            cinemaQuad.pose={{a.pose.qx,a.pose.qy,a.pose.qz,a.pose.qw},
+                                             {a.pose.x,a.pose.y,a.pose.z}};
+                            cinemaQuad.size={a.width,a.height};
+                            cinemaQuad.subImage.swapchain=g_swapchain[0];
+                            cinemaQuad.subImage.imageRect.offset={r.left,r.top};
+                            cinemaQuad.subImage.imageRect.extent={imageW,imageH};
+                            layers[0]=reinterpret_cast<const XrCompositionLayerBaseHeader*>(&cinemaQuad);
+                            cinemaQuadSubmitted=true;
+                            static unsigned anchorNotes=0;
+                            if(!wasAnchored && anchorNotes++<16)
+                                Log("cinema-world: LOCAL quad anchored=(%.3f,%.3f,%.3f) size=(%.3f,%.3f) image=%dx%d; pose stays fixed",
+                                    a.pose.x,a.pose.y,a.pose.z,a.width,a.height,imageW,imageH);
+                        }
+                    }
                     layerCount = 1;
                     NoteMenuLayerSubmitted(frame, monoCrop);
                     if (++g_framesSubmitted == 1) Log("*** FIRST FRAME SUBMITTED TO THE HEADSET ***");
@@ -11480,7 +11560,20 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // now it was pooled into "our work" alongside the game's own rendering.
     LARGE_INTEGER tXrEnd = Now();
     hotpath::scope xrSubmitScope(g_hotPathSampler, hotpath::Family::xr_submit);
-    xrEndFrame(g_xrSession, &fei);
+    const XrResult frameEndResult=xrEndFrame(g_xrSession, &fei);
+    if(cinemaQuadSubmitted) {
+        if(XR_FAILED(frameEndResult)) {
+            InterlockedExchange(&g_cutsceneWorldScreen,0);
+            g_cinemaWorldAnchor.Reset();
+            Log("cinema-world: xrEndFrame rejected quad result=%d; experiment disabled, legacy projection fallback",(int)frameEndResult);
+        } else {
+            static bool saidWorldSubmit=false;
+            if(!saidWorldSubmit) {
+                saidWorldSubmit=true;
+                Log("cinema-world: quad xrEndFrame accepted; LOCAL/BOTH, physical stability still unverified");
+            }
+        }
+    }
     xrSubmitScope.finish();
     // Existing timing above covers the blocking call; this sampler records the aggregate API scope.
     DiagPhaseAdd(DP_END, tXrEnd.QuadPart);
@@ -14098,14 +14191,14 @@ int g_armIkMode = 0;                  // ini [Render] ArmIKMode
 volatile LONG g_gloveIsolate = 2;     // ini [Render] GloveIsolate
 volatile LONG g_gloveFaceFilter = 0;  // ini [Render] GloveFaceFilter
 volatile LONG g_noTmdPaletteFix = 0;  // controlled experiment; [Render] NoTmdPaletteFix
-static handanchor::Probe g_handAnchorRecords;
+static handanchor::WeaponProbe g_handAnchorRecords;
 static DWORD g_handAnchorThread=0;
 static void FlushHandAnchorProbe() {
     if(!Rd(g_handAnchorProbe)||g_handAnchorThread!=GetCurrentThreadId())return;
     handanchor::Record r;
     if(!g_handAnchorRecords.Take(r))return;
-    Log("hand-anchor sample=%u frame=%u moved=%d targetL=(%.4f,%.4f,%.4f) targetR=(%.4f,%.4f,%.4f) head=(%.4f,%.4f,%.4f) gunAnchor=(%.4f,%.4f,%.4f); stage=GameplayStereo; raw noTMD constants, not inferred world-joint position",
-        g_handAnchorRecords.Count(),r.frame,r.moved,r.target[0][0],r.target[0][1],r.target[0][2],r.target[1][0],r.target[1][1],r.target[1][2],r.headOffset[0],r.headOffset[1],r.headOffset[2],r.anchor[0],r.anchor[1],r.anchor[2]);
+    Log("hand-anchor sample=%u frame=%u moved=%d weapon=%p epoch=%u targetL=(%.4f,%.4f,%.4f) targetR=(%.4f,%.4f,%.4f) head=(%.4f,%.4f,%.4f) gunAnchor=(%.4f,%.4f,%.4f); stage=GameplayStereo; raw noTMD constants, not inferred world-joint position",
+        g_handAnchorRecords.Count(),r.frame,r.moved,(void*)r.weapon,r.epoch,r.target[0][0],r.target[0][1],r.target[0][2],r.target[1][0],r.target[1][1],r.target[1][2],r.headOffset[0],r.headOffset[1],r.headOffset[2],r.anchor[0],r.anchor[1],r.anchor[2]);
     auto matrix=[](const char* name,const float* f,unsigned n){
         char line[512]{};size_t used=0;
         for(unsigned i=0;i<n && used<sizeof(line);++i){const int k=_snprintf_s(line+used,sizeof(line)-used,_TRUNCATE," %.6g",f[i]);if(k>0)used+=(size_t)k;}
@@ -15274,8 +15367,19 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
                 verts, first, triangles, Rd(g_rtIsScene));
         }
     }
+    const bool weaponLive = Rd(g_weaponObj)!=0 && Rd(g_weaponHolstered)==0;
+    const bool freeWrist = handValid[0] && handValid[1] &&
+        handanchor::FreeWristAnchor(gloves, weaponLive, (int)Rd(g_gloveIsolate), Rd(g_twoHandActive)!=0) &&
+        handanchor::GameplaySource(true, Rd(g_inCinematic)!=0, Rd(g_vrUiMenu)!=0,
+            Rd(g_gamePaused)!=0, g_sceneMode.Current()==vrscene::Mode::GameplayStereo);
     int slots = 0;
-    const unsigned* sectionMap = GloveMap(gloves, sleeve, tmdGloves, tmdBase, tmdExtra, slots);
+    const unsigned* sectionMap = nullptr;
+    if (gloves && (freeWrist || Rd(g_noTmdPaletteFix))) {
+        slots = (int)gloveisolate::kNoTmdCookedPaletteCount;
+        sectionMap = gloveisolate::kNoTmdCookedPalette;
+    } else {
+        sectionMap = GloveMap(gloves, sleeve, tmdGloves, tmdBase, tmdExtra, slots);
+    }
     if (!sectionMap || slots <= 0 || slots > 45) {
         IndependentAuditCount(IHA_MAP,audit);
         InterlockedExchange(&g_independentRejectCode, (LONG)IndependentReject::Map);
@@ -15293,17 +15397,26 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     BuildLiveControllerC(off, false);
     float weaponC[4][4]{};
     float offWeapon[4][4]{};
+    float aimTarget[4][4]{};
     const bool supportGrip = Rd(g_twoHandActive) != 0;
     const long supportGunVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+    const bool pistolSingleHand = handanchor::PistolGrip(gloves,Rd(g_weaponObj)!=0,
+        Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip);
+    if (pistolSingleHand) {
+        BuildGunC(aimTarget);
+        static LONG saidPistolAimGrip = 0;
+        if (InterlockedCompareExchange(&saidPistolAimGrip, 1, 0) == 0)
+            Log("pistol aim grip: right glove delta follows BuildGunC (weapon pose), not open controller");
+    }
     bool weaponDeltaUsed = false;
     bool paletteFallback = false;
     bool authoredPair = false;
     float base[4][4]{};
     if(g_thisDrawMoved)memcpy(base,g_thisDrawMoved==2?off:primary,sizeof(base));
     else for(int i=0;i<4;++i)base[i][i]=1.0f;
-    const bool wristAnchor = gloves && Rd(g_noTmdPaletteFix) && Rd(g_gloveIsolate)==2 && !supportGrip && handValid[0] && handValid[1] &&
+    const bool wristAnchor = freeWrist || (gloves && Rd(g_noTmdPaletteFix) && Rd(g_gloveIsolate)==2 && !supportGrip && handValid[0] && handValid[1] &&
         handanchor::GameplaySource(Rd(g_noTmdWristAnchorFix)!=0,Rd(g_inCinematic)!=0,
-            Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo);
+            Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo));
     if(wristAnchor) {
         // Undo the camera transform actually used by StereoPairBody, not the live controller
         // surrogate: BuildGunC can differ at a holster/ADS; BuildTmdC has its own anchor/trim.
@@ -15351,7 +15464,8 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     }
     memcpy(changed,saved,regs*4*sizeof(float));
     float rightDelta[4][4];
-    bool paired = skeletal::LocalDeltaPair(delta, rightDelta, local, base, leftTarget, primary);
+    bool paired = skeletal::LocalDeltaPair(delta, rightDelta, local, base, leftTarget,
+        handanchor::AimTarget(pistolSingleHand, aimTarget, primary));
     if (!paired && supportGrip && weaponDeltaUsed) {
         paired = skeletal::LocalDeltaPair(delta, rightDelta, local, base, off, primary);
         paletteFallback = paired;
@@ -15379,7 +15493,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     };
     const bool rigidGloves =
         gloveisolate::HandsOnly(g_showControllerArms, (int)InterlockedCompareExchange(&g_gloveIsolate, 0, 0));
-    const bool correctedNoTmd = gloves && Rd(g_noTmdPaletteFix);
+    const bool correctedNoTmd = gloves && (freeWrist || Rd(g_noTmdPaletteFix));
     if (correctedNoTmd) {
         static LONG saidCookedPalette = 0;
         if (InterlockedCompareExchange(&saidCookedPalette, 1, 0) == 0)
@@ -15457,7 +15571,10 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // Bind-pose left is mesh +X (left wrist +49, right wrist -49). Shift the left
     // wrist subtree and the left shoulder/elbow/forearm so the arm sits further
     // left than the native gun-hold, while the right hand stays on its controller.
-    const float leftShift = wristAnchor ? 0.f : (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
+    const bool weaponInHand = Rd(g_weaponObj)!=0 &&
+        InterlockedCompareExchange(&g_gunVerts, 0, 0) != 0 && !Rd(g_weaponHolstered);
+    const float leftShift = (wristAnchor || !weaponInHand) ? 0.f
+        : (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
     // Idle shift parks the free left glove off the native gun-hold. During an authored
     // pistol grip that same nudge is what puts the support hand beside the weapon.
     if (leftShift != 0.0f && !authoredPair) {
@@ -15528,7 +15645,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         const DWORD thread=GetCurrentThreadId();
         if(!g_handAnchorThread)g_handAnchorThread=thread;
         const DWORD tick=GetTickCount();
-        if(thread==g_handAnchorThread && g_handAnchorRecords.Due(tick)) {
+        if(thread==g_handAnchorThread && g_handAnchorRecords.Due(tick,(std::uintptr_t)(unsigned)Rd(g_weaponObj))) {
             handanchor::Record r;r.tick=tick;r.frame=(unsigned)Rd(g_sceneModeFrame);r.moved=g_thisDrawMoved;
             memcpy(r.local,local,sizeof(local));memcpy(r.controller[0],primary,sizeof(primary));memcpy(r.controller[1],off,sizeof(off));
             if(g_thisDrawMoved==1)BuildGunC(reinterpret_cast<float (*)[4]>(r.ride));
@@ -15772,16 +15889,22 @@ static bool IsIndependentHandSection(UINT verts, UINT first, UINT triangles) {
            ((verts==7444 || verts==37) && first==36318 && triangles==17);
 }
 
+static bool GlovesUntilWeaponNow() {
+    return g_independentHands && gloveisolate::GlovesUntilWeapon(
+        g_showControllerArms, (int)Rd(g_gloveIsolate),
+        Rd(g_weaponObj) != 0 && Rd(g_weaponHolstered) == 0);
+}
+
 static bool FgIndependentHandsCandidate(UINT verts, UINT first, UINT triangles) {
     const bool exactSection=IsIndependentHandSection(verts, first, triangles);
     const bool exactSectionWindow=exactSection && Rd(g_inForeground) &&
         Rd(g_fgDrawCount) <= kFgSanePass && Rd(g_rtIsScene) && !g_boundShaderLayout.shadow;
-    return !g_showControllerArms && g_independentHands && Rd(g_gloveIsolate)>=2 &&
+    return GlovesUntilWeaponNow() &&
            exactSection && (FgMatchWindow() || exactSectionWindow);
 }
 
 static bool FgHidden(UINT verts, UINT first, UINT triangles) {                    // arms, in modes 2 and 3
-    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2 &&
+    if (GlovesUntilWeaponNow() &&
         gloveisolate::IsStrayFingerSection(verts, first, triangles)) {
         static LONG saidStray = 0;
         if (InterlockedCompareExchange(&saidStray, 1, 0) == 0)
@@ -15789,7 +15912,7 @@ static bool FgHidden(UINT verts, UINT first, UINT triangles) {                  
                 verts, first, triangles);
         return true;
     }
-    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2 &&
+    if (GlovesUntilWeaponNow() &&
         gloveisolate::IsArmFleshSection(verts, first, triangles)) {
         static LONG saidArmFlesh = 0;
         if (InterlockedCompareExchange(&saidArmFlesh, 1, 0) == 0)
@@ -15797,7 +15920,7 @@ static bool FgHidden(UINT verts, UINT first, UINT triangles) {                  
                 verts, first, triangles);
         return FgMatchWindow();
     }
-    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2 && FgMatchWindow() &&
+    if (GlovesUntilWeaponNow() && FgMatchWindow() &&
         (verts == 4818 || verts == 4781 || verts == 1368)) {
         static LONG saidGauntlet = 0;
         if (InterlockedCompareExchange(&saidGauntlet, 1, 0) == 0)
@@ -15805,7 +15928,7 @@ static bool FgHidden(UINT verts, UINT first, UINT triangles) {                  
                 verts, first, triangles);
         return true;
     }
-    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2 &&
+    if (GlovesUntilWeaponNow() &&
         ((verts == 7444 || verts == 37) && first == 36318 && triangles == 17)) {
         return FgMatchWindow();
     }
@@ -15827,7 +15950,7 @@ static bool FgHidden(UINT verts, UINT first, UINT triangles) {                  
 
     if (FgIndependentHandsCandidate(verts, first, triangles)) return false;
 
-    if (!g_showControllerArms && g_independentHands && Rd(g_gloveIsolate) >= 2) {
+    if (GlovesUntilWeaponNow()) {
         const LONG arms = Rd(g_armsVerts);
         if (arms && (UINT)arms == verts && !IsIndependentHandSection(verts, first, triangles)) {
             static LONG saidGlovesOnlyArm = 0;
@@ -15838,7 +15961,8 @@ static bool FgHidden(UINT verts, UINT first, UINT triangles) {                  
         }
     }
 
-    if (g_showControllerArms && (Rd(g_hideMeshIdx) == 2 || Rd(g_hideMeshIdx) == 3) &&
+    if (g_showControllerArms && Rd(g_weaponObj) != 0 && Rd(g_weaponHolstered) == 0 &&
+        (Rd(g_hideMeshIdx) == 2 || Rd(g_hideMeshIdx) == 3) &&
         FgMatchWindow()) {
         static LONG said = 0;
         if (InterlockedCompareExchange(&said, 1, 0) == 0)
@@ -16172,9 +16296,11 @@ static bool FgRidesGun(UINT verts) {
         // already in the first-person signature list is not world geometry.
         const bool tmdPrime = Rd(g_tmdOnOffHand) && TmdRaised() &&
                               FgMatchesSignature(verts) && FgMatchWindow();
+        const bool weaponInHand = Rd(g_weaponObj) != 0 && Rd(g_weaponHolstered) == 0;
+        const bool armsOnWeapon = g_showControllerArms && weaponInHand;
         if (!tmdPrime &&
-            !(((PlayerArmed() == ARMED_NO || g_showControllerArms) && ap && (UINT)ap == verts
-               || (g_showControllerArms && FgIsExtraArm(verts))) && FgMatchWindow())) return false;
+            !(((PlayerArmed() == ARMED_NO || armsOnWeapon) && ap && (UINT)ap == verts
+               || (armsOnWeapon && FgIsExtraArm(verts))) && FgMatchWindow())) return false;
     }
     // Nothing rides during an animation window - the gun itself is not being moved, so an attachment
     // that followed the controller would be the only thing off the animation. Moved BELOW the cheap
@@ -16193,7 +16319,8 @@ static bool FgRidesGun(UINT verts) {
     // 64 is far above anything real and far below "the rest of the level". Past it we are not in
     // the first-person pass at all, whatever the flag says, and riding stops for the frame.
     // g_fgDrawCount is already incremented before either hook reaches this.
-    const bool identifiedArm = g_showControllerArms && FgMatchWindow() &&
+    const bool identifiedArm = g_showControllerArms && Rd(g_weaponObj) != 0 &&
+        Rd(g_weaponHolstered) == 0 && FgMatchWindow() &&
         (((UINT)Rd(g_armsVerts) == verts) || FgIsExtraArm(verts));
     if (!identifiedArm && Rd(g_fgDrawCount) > kFgRideMax) {
         InterlockedExchange(&g_fgRideBailed, 1);
@@ -19920,6 +20047,14 @@ inline bool SuppressCapturedVrMenuDraw() {
     // so the fail mask below only ever describes menu-source draws. Any-of-stages-0-3
     // since round 3 (the captured menu is sampled off stage 0).
     if (!Rd(g_vrUiMenu) || !MenuSourceBoundAny()) return false;
+    // MenuOverlay=0 is the in-scene menu. Suppressing that copy while the head
+    // overlay is off removes the main menu, pause, and the notepad.
+    if (!Rd(g_vrMenuOverlay)) {
+        static LONG saidKeepSceneMenu = 0;
+        if (InterlockedCompareExchange(&saidKeepSceneMenu, 1, 0) == 0)
+            Log("menu suppress: overlay off, keeping the in-scene menu and notes");
+        return false;
+    }
     if (Rd(g_vrMenuClass) == 3 && !PauseRttProbe::Presented()) return false;
     // Fix-4/menus round 2: suppressed=0 while the provider serves frames means the scene
     // keeps its own copy (nested views). Record WHY as a sticky per-window bitmask:
@@ -21256,14 +21391,26 @@ static void InstallBinkAudioObservation() {
         (int)ea,(int)eb,Rd(g_polishIntroAudioFix),Rd(g_binkIntroReady)?1:0);
 }
 
+static SRWLOCK g_polishSpeakLock = SRWLOCK_INIT;
+static BOOL (WINAPI *g_polishPlaySound)(LPCWSTR, HMODULE, DWORD) = nullptr;
+static bool g_polishPlayingUi = false; // protected by speak lock; never a native UE3 sound.
+static void StopPolishUiNarrator() {
+    AcquireSRWLockExclusive(&g_polishSpeakLock);
+    if (g_polishPlayingUi && g_polishPlaySound) g_polishPlaySound(nullptr, nullptr, 0);
+    g_polishPlayingUi = false;
+    ReleaseSRWLockExclusive(&g_polishSpeakLock);
+}
 static void PolishMaybeSpeak(const char* english, const wchar_t* shown, int chars) {
     if (chars < 40 || !g_polishAudioDir[0] || !english || !shown) return;
+    const bool ui = PolishLocalization::PL().IsUiVoiceEnglish(english);
+    if (ui && !Rd(g_uiNarratorEnabled)) return;
     char file[160]{};
     if (!PolishLocalization::PL().WavForEnglish(english, file, sizeof(file))) return;
     wchar_t wfile[160]{}, path[MAX_PATH]{};
     if (MultiByteToWideChar(CP_UTF8, 0, file, -1, wfile, 160) <= 0) return;
     _snwprintf_s(path, _TRUNCATE, L"%hs\\%s", g_polishAudioDir, wfile);
     if (GetFileAttributesW(path) == INVALID_FILE_ATTRIBUTES) {
+        if (ui) return; // UI may not fall through into native/story ownership.
         if (!g_polishStoryAudioDir[0]) return;
         _snwprintf_s(path, _TRUNCATE, L"%hs\\%s", g_polishStoryAudioDir, wfile);
         if (GetFileAttributesW(path) == INVALID_FILE_ATTRIBUTES) return;
@@ -21271,30 +21418,75 @@ static void PolishMaybeSpeak(const char* english, const wchar_t* shown, int char
     static DWORD lastTick = 0;
     static wchar_t lastText[48]{};
     const DWORD now = GetTickCount();
-    if (lastText[0] && now - lastTick < 4000 && wcsncmp(lastText, shown, 40) == 0) return;
+    AcquireSRWLockExclusive(&g_polishSpeakLock);
+    if ((ui && !Rd(g_uiNarratorEnabled)) ||
+        (lastText[0] && now - lastTick < 4000 && wcsncmp(lastText, shown, 40) == 0)) {
+        ReleaseSRWLockExclusive(&g_polishSpeakLock); return;
+    }
     lastTick = now;
     wcsncpy_s(lastText, shown, _TRUNCATE);
-    static BOOL (WINAPI *play)(LPCWSTR, HMODULE, DWORD) = nullptr;
-    if (!play) {
+    if (!g_polishPlaySound) {
         HMODULE winmm = LoadLibraryA("winmm.dll");
-        if (winmm) play = reinterpret_cast<BOOL (WINAPI*)(LPCWSTR, HMODULE, DWORD)>(
+        if (winmm) g_polishPlaySound = reinterpret_cast<BOOL (WINAPI*)(LPCWSTR, HMODULE, DWORD)>(
             GetProcAddress(winmm, "PlaySoundW"));
     }
-    if (!play) return;
-    const BOOL accepted=play(path, nullptr, 0x00020001); // SND_FILENAME | SND_ASYNC
+    if (!g_polishPlaySound) { ReleaseSRWLockExclusive(&g_polishSpeakLock); return; }
+    const BOOL accepted=g_polishPlaySound(path, nullptr, 0x00020001); // SND_FILENAME | SND_ASYNC
+    g_polishPlayingUi = ui && accepted;
     static int said = 0;
-    if (said < 16) { ++said; Log("polish voice: %s accepted=%d chars=%d cine=%ld", file, (int)accepted, chars, Rd(g_inCinematic)); }
+    if (said < 16) { ++said; Log("polish voice: %s accepted=%d chars=%d cine=%ld ui=%d", file, (int)accepted, chars, Rd(g_inCinematic), ui?1:0); }
+    ReleaseSRWLockExclusive(&g_polishSpeakLock);
 }
 
 static uintptr_t g_fstringAssign = 0;
 
-static void PolishRewriteFString(void* result) {
+static bool WideFieldToUtf8(const wchar_t* wide, char* out, size_t cap) {
+    if (!wide || !out || cap < 2) return false;
+    out[0] = 0;
+    if (!wide[0]) return false;
+    return WideCharToMultiByte(CP_UTF8, 0, wide, -1, out, (int)cap, nullptr, nullptr) > 0;
+}
+
+static bool PolishNotesSection(const wchar_t* section) {
+    if (!section || !section[0]) return false;
+    char sec[96]{};
+    return WideFieldToUtf8(section, sec, sizeof(sec)) && _stricmp(sec, "Notes") == 0;
+}
+
+static bool PolishLookupByKey(const wchar_t* section, const wchar_t* key,
+                              const wchar_t* package, char* pl, size_t cap) {
+    if (!section || !key || !pl || cap < 2) return false;
+    char sec[96]{}, ky[96]{}, pkg[160]{}, record[320]{};
+    if (!WideFieldToUtf8(section, sec, sizeof(sec)) || !WideFieldToUtf8(key, ky, sizeof(ky)))
+        return false;
+    if (_stricmp(sec, "Notes") != 0) return false;
+    if (package && package[0]) {
+        if (!WideFieldToUtf8(package, pkg, sizeof(pkg))) return false;
+        _snprintf_s(record, _TRUNCATE, "..\\RvGame\\Localization\\INT\\%s|Notes|%s", pkg, ky);
+        const char* byId = PolishLocalization::PL().GetLocalizedStringById(record);
+        if (byId && byId[0] && strlen(byId) < cap) {
+            strcpy_s(pl, cap, byId);
+            return true;
+        }
+    }
+    const char* byKey = PolishLocalization::PL().GetLocalizedString(
+        "..\\RvGame\\Localization\\INT\\RvGame.int", sec, ky);
+    if (!byKey || !byKey[0] || strlen(byKey) >= cap) return false;
+    strcpy_s(pl, cap, byKey);
+    return true;
+}
+
+static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
+                                 const wchar_t* key = nullptr, const wchar_t* package = nullptr) {
     if (!result || !PolishLocalization::PL().IsPolishEnabled()) return;
     if (!Readable(result, 12)) return;
     wchar_t* data = *reinterpret_cast<wchar_t**>(result);
     const int num = *reinterpret_cast<int*>(reinterpret_cast<char*>(result) + 4);
     const int mx = *reinterpret_cast<int*>(reinterpret_cast<char*>(result) + 8);
-    if (!data || num < 2 || num > 480 || mx < num || mx > 2048) {
+    // Actual Notes manifest has paragraphs up to880 characters. The old480
+    // guard and480-wchar output silently excluded them even with translated text.
+    // Keep bounded stack buffers and the existing engine allocator; no guessed offsets.
+    if (!data || num < 2 || num > 4096 || mx < num || mx > 16384) {
         static int shape = 0;
         if (shape < 6) {
             ++shape;
@@ -21303,23 +21495,31 @@ static void PolishRewriteFString(void* result) {
         return;
     }
     if (!Readable(data, (size_t)num * sizeof(wchar_t)) || data[num - 1] != 0) return;
-    char en[1024]{};
+    char en[16384]{};
     if (WideCharToMultiByte(CP_UTF8, 0, data, num - 1, en, (int)sizeof(en) - 1, nullptr, nullptr) <= 0)
         return;
-    char pl[1024]{};
+    char pl[16384]{};
     static int seen = 0;
     if (seen < 12) {
         ++seen;
         Log("polish localize saw: \"%s\"", en);
     }
-    const bool mapped=PolishLocalization::PL().PolishForEnglish(en, pl, sizeof(pl));
+    const bool mappedByKey = PolishLookupByKey(section, key, package, pl, sizeof(pl));
+    bool mapped = mappedByKey;
+    if (!mapped) mapped = PolishLocalization::PL().PolishForEnglish(en, pl, sizeof(pl));
     static LONG cineTextNotes=0;
     if (Rd(g_inCinematic) && InterlockedIncrement(&cineTextNotes)<=16)
         Log("polish cine text: mapped=%d chars=%d english=\"%s\"", mapped?1:0,num-1,en);
     if (!mapped) return;
-    wchar_t wide[480]{};
-    const int wn = MultiByteToWideChar(CP_UTF8, 0, pl, -1, wide, 480);
+    wchar_t wide[4096]{};
+    const bool notes = mappedByKey || PolishNotesSection(section);
+    // FString/GFx receives Unicode; a code-page round trip neither creates
+    // glyphs nor proves their coverage and can replace unsupported text by '?'.
+    const int wn = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, pl, -1, wide, 4096);
     if (wn <= 1) return;
+    static LONG saidNoteUnicode = 0;
+    if (notes && InterlockedCompareExchange(&saidNoteUnicode, 1, 0) == 0)
+        Log("polish notes: Unicode preserved; font glyph coverage requires separate validation");
     if (wn > mx) {
         if (!g_fstringAssign) {
             static int tight = 0;
@@ -21345,7 +21545,7 @@ static void PolishRewriteFString(void* result) {
 
 static void __fastcall Hook_ExecLocalize(void* self, void* edx, void* stack, void* result) {
     if (g_origLocalize) g_origLocalize(self, edx, stack, result);
-    PolishRewriteFString(result);
+    PolishRewriteFString(result, nullptr, nullptr, nullptr);
 }
 
 typedef void* (__cdecl *CppLocalizeFn)(void* out, const wchar_t* section, const wchar_t* key,
@@ -21357,7 +21557,7 @@ static void* __cdecl Hook_CppLocalize(void* out, const wchar_t* section, const w
     void* ret = g_origCppLocalize
         ? g_origCppLocalize(out, section, key, package, lang, optional)
         : out;
-    PolishRewriteFString(out);
+    PolishRewriteFString(out, section, key, package);
     return ret;
 }
 
@@ -24082,12 +24282,14 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
     g_wristState->Apply();
 }
 
+#include "desktop_mirror.h"
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
     shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();worldshadowfix::Release();
     PauseRttProbe::ReleaseContent();
     ReleaseVrMenuResources();
     ReleaseVrShadowResources();
+    desktop_mirror::ReleaseScratch();
     if (g_wristState) { g_wristState->Release(); g_wristState = nullptr; }
 }
 void DrawWristHealth(IDirect3DDevice9* dev) {
@@ -27119,6 +27321,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             g_handPositionValid[0]?1:0,g_handPositionValid[1]?1:0);
         shadowtrace::Arm(s);
     }
+    desktop_mirror::Apply(s, a, b, c);
     const HRESULT presentResult = g_origPresent(s, a, b, c, d);
     static double realPresentSum=0, realPresentMax=0;
     static unsigned realPresentSamples=0;
@@ -27271,6 +27474,7 @@ void LoadIniSettings() {
             hotpath::sample_stride);
 
     // ---- Polish Localization initialization ----
+    InterlockedExchange(&g_modalUiProbe, GetPrivateProfileIntA("Render","ModalUiProbe",0,path)?1:0);
     // Initialize Polish localization manager and read PolishLanguage from INI
     // Paths are relative to the game Binaries directory where the DLL lives
     {
@@ -27293,6 +27497,8 @@ void LoadIniSettings() {
             if (plLang != 0) PolishLocalization::PL().SetPolishLanguage(true);
             LONG nativeSpeech=GetPrivateProfileIntA("Localization","NativePolishSpeech",0,path);
             PolishLocalization::PL().SetNativeSpeech(nativeSpeech!=0);
+            InterlockedExchange(&g_uiNarratorEnabled, GetPrivateProfileIntA("Localization","UiNarratorEnabled",0,path)?1:0);
+            Log("ini: UiNarratorEnabled=%ld (optional UI/tutorial only, native dialogue independent)", Rd(g_uiNarratorEnabled));
             Log("ini: NativePolishSpeech=%ld (exact native_replaced story fields only; no global audio mute)",nativeSpeech);
             LONG plFallback = GetPrivateProfileIntA("Localization", "PolishFallbackToEnglish", 1, path);
             PolishLocalization::PL().SetFallbackToEnglish(plFallback != 0);
@@ -27412,6 +27618,12 @@ void LoadIniSettings() {
     g_cutsceneCinemaScalePct = ClampVideoCinemaScale(
         GetPrivateProfileIntA("Render", "CutsceneCinemaScalePct", 60, path));
     g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
+    g_cutsceneWorldScreen=GetPrivateProfileIntA("Render","CutsceneWorldScreen",0,path)?1:0;
+    g_menuAssetWitness=GetPrivateProfileIntA("Diagnostic","MenuAssetWitness",0,path)?1:0;
+    g_cutsceneScreenDistanceMm=cinemascreen::ClampDistanceMm(
+        GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));
+    Log("ini: CutsceneWorldScreen=%ld distance=%ldmm (LOCAL anchored quad, default OFF)",
+        Rd(g_cutsceneWorldScreen),Rd(g_cutsceneScreenDistanceMm));
     Log("ini: VideoStereo=%ld (%s)", InterlockedCompareExchange(&g_videoStereo, 0, 0),
         InterlockedCompareExchange(&g_videoStereo, 0, 0)
             ? "Bink video drawn once per eye"
@@ -27421,6 +27633,12 @@ void LoadIniSettings() {
     // would split the frame before OpenXR has been initialised, so a launch with no headset would
     // show a side-by-side desktop image for no reason.
     InterlockedExchange(&g_startInVr, GetPrivateProfileIntA("Render", "StartInVr", 1, path) ? 1 : 0);
+    {
+        LONG mirror = GetPrivateProfileIntA("Render", "DesktopMirrorEye", 0, path);
+        if (mirror < 0 || mirror > 2) mirror = 0;
+        InterlockedExchange(&g_desktopMirrorEye, mirror);
+        Log("ini: DesktopMirrorEye=%ld (0=SBS window, 1=left eye, 2=right eye; after XR submit)", mirror);
+    }
     Log("ini: StartInVr=%ld (%s)", InterlockedCompareExchange(&g_startInVr, 0, 0),
         InterlockedCompareExchange(&g_startInVr, 0, 0)
             ? "VR mode on as soon as the headset is up - BACKSPACE still toggles it"
@@ -27937,9 +28155,10 @@ void LoadIniSettings() {
     if (g_weaponWheelSlots > 8) g_weaponWheelSlots = 8;
     Log("weapon wheel: R3 hold, right stick sectors=%ld, release commits native cycle-weapon pulses",
         g_weaponWheelSlots);
-    g_showControllerArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 0, path) ? 1 : 0;
-    Log("controller arms: %s (ShowControllerArms; glove-only is the stable default)",
-        g_showControllerArms ? "animated mesh" : "gloves only");
+    const int iniShowArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 0, path);
+    g_showControllerArms = 0;
+    Log("controller arms: gloves only (forced; ini ShowControllerArms=%d does not turn the arm mesh on)",
+        iniShowArms);
     g_armIkMode = GetPrivateProfileIntA("Render", "ArmIKMode", 0, path);
     if (g_armIkMode < 0 || g_armIkMode > 2) g_armIkMode = 0;
     LONG gloveMode = GetPrivateProfileIntA("Render", "GloveIsolate", 2, path);

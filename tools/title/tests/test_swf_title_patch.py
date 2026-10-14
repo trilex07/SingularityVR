@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from swf_title_patch import encode_tag_header, patch_first, split_tags  # noqa: E402
+from swf_title_patch import encode_tag_header, fit_title_field, patch_first, read_rect, split_tags, write_rect  # noqa: E402
 
 
 def make_movie(tags: list[tuple[int, bytes]]) -> bytes:
@@ -108,6 +108,41 @@ def test_wrong_tag_code_ignored() -> None:
     except ValueError:
         return
     raise SystemExit("should have raised")
+
+
+def test_rect_round_trip() -> None:
+    vals = [-40, 9959, -40, 1270]
+    encoded = write_rect(vals)
+    nbits, got, end = read_rect(encoded, 0)
+    assert end == len(encoded)
+    assert got == vals
+    assert write_rect(got, nbits) == encoded
+
+
+def test_live_title_grows_on_the_free_side() -> None:
+    root = Path(__file__).resolve().parents[3]
+    package = root / "deployment" / "hands-dubbing" / "post-opening" / "ui-polish-v1" / "control.u"
+    if not package.is_file():
+        return
+    sys.path.insert(0, str(root / "tools" / "title"))
+    from ue3_layout import inspect
+
+    data = package.read_bytes()
+    doc = inspect("memory", data, True)
+    for movie_name, align in (("iis", 1), ("SPMenus", None)):
+        export = next(item for item in doc["exports"] if item["name"] == movie_name)
+        raw = next(prop for prop in export["properties"] if prop["name"] == "RawData")
+        at = raw["tag_offset"] + 24
+        count = struct.unpack_from("<I", data, at)[0]
+        movie = data[at + 4:at + 4 + count]
+        fitted, report = fit_title_field(movie, b"SINGULARITY", b"SINGULARITY VR")
+        assert report["align"] in (0, 1, 2, 3)
+        if align is not None:
+            assert report["align"] == align
+            assert report["new_bounds"][1] == report["old_bounds"][1]
+            assert report["new_bounds"][0] < report["old_bounds"][0]
+        assert b"SINGULARITY VR" in fitted
+        split_tags(fitted)
 
 
 if __name__ == "__main__":

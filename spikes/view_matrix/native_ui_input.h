@@ -2,12 +2,17 @@
 #include "pause_rtt_probe.h"
 #include "pause_rtt_start.h"
 #include "native_gamepad_enum_probe.h"
+#include "ui_asset_witness.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
 void OpenVrSettingsFromPause();
 extern volatile LONG g_panelOpen;
 void* PatchVTable(void* obj,int index,void* repl);
+extern volatile LONG g_vrMenuReleaseRequested; // render thread consumes COM invalidation
+extern volatile LONG g_modalSaveDialog; // 1 while RvUIGFxMovie_Dialog owns focus
+extern volatile LONG g_menuAssetWitness;
+
 namespace NativeVrUi {
 struct Name { unsigned index, number; };
 typedef void (__thiscall *PollFn)(void*,float);
@@ -26,6 +31,61 @@ static int lastX=-1,lastY=-1;
 static LONG installs=0, ticks=0;
 static uintptr_t ReadPointer(uintptr_t p) {
  return p && Readable((void*)p,4) ? *reinterpret_cast<uintptr_t*>(p) : 0;
+}
+static void ObserveMovieAsset(uintptr_t movie,uintptr_t cls,const char* focusClass) {
+ if(!Rd(g_menuAssetWitness))return;
+ static unsigned remaining=8;
+ if(!remaining)return;--remaining;
+ __try {
+  const int infoOff=PauseRttProbe::Property(cls,"MovieInfo","ObjectProperty");
+  const uintptr_t info=infoOff>=0?ReadPointer(movie+infoOff):0;
+  const uintptr_t infoClass=ReadPointer(info?info+0x34u:0);
+  char infoName[96]{};
+  const int rawOff=infoClass?PauseRttProbe::Property(infoClass,"RawData","ArrayProperty"):-1;
+  if(!info || !NameOf(info,infoName,sizeof(infoName)) || rawOff<0 ||
+     !Readable((void*)(info+rawOff),12)) {
+   Log("ui-asset witness: focus=%s MovieInfo=%p RawData UNKNOWN (no writes)",focusClass,(void*)info);return;
+  }
+  const uintptr_t array=info+rawOff;
+  const uintptr_t bytes=ReadPointer(array);
+  const int count=*reinterpret_cast<const int*>(array+4);
+  const int capacity=*reinterpret_cast<const int*>(array+8);
+  if(!bytes || !uiwitness::ArrayBounds(count,capacity) || !Readable((void*)bytes,count)) {
+   Log("ui-asset witness: focus=%s info=%s rawOff=%d count=%d capacity=%d UNKNOWN (no writes)",focusClass,infoName,rawOff,count,capacity);return;
+  }
+  const auto* data=reinterpret_cast<const unsigned char*>(bytes);
+  Log("ui-asset witness: focus=%s info=%s rawOff=%d bytes=%d fnv64=%016llX magic=%02X%02X%02X%02X (source identity, not pixel proof; no writes)",
+      focusClass,infoName,rawOff,count,uiwitness::Fingerprint(data,count),data[0],data[1],data[2],data[3]);
+ } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
+  Log("ui-asset witness: guarded read failed UNKNOWN; no writes");
+ }
+}
+static void ObserveWeaponAssets() {
+ if(!Rd(g_menuAssetWitness))return;
+ static uintptr_t last=0;static unsigned remaining=6;
+ const uintptr_t weapon=(uintptr_t)Rd(g_weaponObj);
+ if(!remaining || !weapon || weapon==last)return;
+ last=weapon;--remaining;
+ __try {
+  const uintptr_t cls=ReadPointer(weapon+0x34u);char name[96]{};
+  if(!cls || !NameOf(weapon,name,sizeof(name)))return;
+  const int fxOff=PauseRttProbe::Property(cls,"mWeaponFX","ObjectProperty");
+  const uintptr_t fx=fxOff>=0?ReadPointer(weapon+fxOff):0;
+  const uintptr_t fxClass=ReadPointer(fx?fx+0x34u:0);
+  Log("native-fx witness: weapon=%s object=%p mWeaponFX=%p off=%d (read-only, no playback/render proof)",name,(void*)weapon,(void*)fx,fxOff);
+  if(!fxClass)return;
+  const char* fields[]={"mMuzzleFlash1stPerson","mMuzzleFlash3rdPerson","mMuzzleFlashIronsights","mLoopingMuzzleFXEmitter"};
+  for(const char* field:fields){
+   const int off=PauseRttProbe::Property(fxClass,field,"ObjectProperty");
+   const uintptr_t asset=off>=0?ReadPointer(fx+off):0;
+   char assetName[96]{},assetClass[96]{};
+   const uintptr_t type=ReadPointer(asset?asset+0x34u:0);
+   if(asset)NameOf(asset,assetName,sizeof(assetName));if(type)NameOf(type,assetClass,sizeof(assetClass));
+   Log("native-fx witness: field=%s off=%d value=%p name=%s class=%s (no mutations)",field,off,(void*)asset,assetName,assetClass);
+  }
+ } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
+  Log("native-fx witness: guarded read failed UNKNOWN; no writes");
+ }
 }
 static bool MenuClass(const char* n) {
  static const char* names[]={"RvUIGFxMovie_Main","RvUIGFxMovie_IIS","RvUIGFxMovie_Pause",
@@ -51,8 +111,42 @@ static bool UpdateMenu() {
   const LONG kind=!cachedMenu?0:!strcmp(className,"RvUIGFxMovie_IIS")?1:!strcmp(className,"RvUIGFxMovie_Main")?2:!strcmp(className,"RvUIGFxMovie_Pause")?3:4;
   static unsigned generation=0;
   InterlockedExchange64(&g_vrMenuStateToken,((LONG64)++generation<<32)|(unsigned)kind);
+  static char prevClass[96]{};
+  if (className[0] && !strcmp(className, "RvUIGFxMovie_Dialog") && prevClass[0] &&
+      (!strcmp(prevClass, "RvUIGFxMovie_Slots") || !strcmp(prevClass, "RvUIGFxMovie_SlotsBase"))) {
+   InterlockedExchange(&g_vrMenuReleaseRequested, 1);
+   Log("menu modal: save-slot -> dialog focus; render-thread slots RTT invalidation requested");
+  }
+  InterlockedExchange(&g_modalSaveDialog,
+      (className[0] && !strcmp(className, "RvUIGFxMovie_Dialog")) ? 1 : 0);
+  if (className[0]) strcpy_s(prevClass, className);
   InterlockedExchange(&g_vrMenuClass,kind);
   Log("VR UI focus: movie=%p object=%s class=%s menu=%d",(void*)movie,objectName,className,cachedMenu?1:0);
+  if(cachedMenu)ObserveMovieAsset(movie,cls,className);
+  // NewGame: actual focus log proves SPSlots -> dialog. This probe establishes
+  // whether each has its own RTT, shares a parent's RTT, or draws directly.
+  // Four cold snapshots/session; no new hook, matrix write or resource ref.
+  static unsigned modalNotes=0;
+  if (Rd(g_modalUiProbe) && modalNotes<4 && movie &&
+      (!strcmp(className,"RvUIGFxMovie_Dialog") || !strcmp(className,"RvUIGFxMovie_Slots"))) {
+   ++modalNotes;
+   __try {
+    const int targetOff=PauseRttProbe::Property(cls,"RenderTexture","ObjectProperty");
+    const int infoOff=PauseRttProbe::Property(cls,"MovieInfo","ObjectProperty");
+    const int modeOff=PauseRttProbe::Property(cls,"RenderTextureMode","ByteProperty");
+    const uintptr_t target=targetOff>=0?ReadPointer(movie+targetOff):0;
+    const uintptr_t resource=target?ReadPointer(target+0xA4):0;
+    const bool contract=resource && PauseRttProbe::NativeResourceContract(target,resource);
+    const uintptr_t rhi=contract?ReadPointer(resource+0x48):0;
+    const uintptr_t surface=rhi>=12?ReadPointer(rhi-4):0;
+    Log("modal-ui identity n=%u token=%llu focus=%p class=%s MovieInfo=%p RenderTexture=%p resource=%p contract=%d surface=%p modeOffset=%d mode=%d; no render changes",
+        modalNotes,VrMenuStateToken(),(void*)movie,className,(void*)(infoOff>=0?ReadPointer(movie+infoOff):0),
+        (void*)target,(void*)resource,contract?1:0,(void*)surface,modeOff,
+        modeOff>=0 && Readable((void*)(movie+modeOff),1)?(int)*reinterpret_cast<const unsigned char*>(movie+modeOff):-1);
+   } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
+    Log("modal-ui UNKNOWN: guarded snapshot failed; no render changes");
+   }
+  }
   // Fix-4/menus: a movie outside the table is the prime suspect for the nested-views
   // second menu - its draws miss the menu path and fall through to StereoPair. Name it
   // loudly, once per focus change (never per frame/draw), so a test run identifies it.
@@ -129,6 +223,16 @@ static void Drain(float dt) {
  // Original platform code uses these same InputAxis/InputKey interfaces, controller0/gamepad0.
  if(valid) {
   ((MoveFn)vt[14])((void*)client,viewport,x,y); // verified WM_MOUSEMOVE dispatch vtable+0x38
+  if(Rd(g_menuAssetWitness)) {
+   static unsigned sampleCount=0;static DWORD sampleTime=0;
+   const DWORD now=GetTickCount();
+   if(sampleCount<24 && (sampleCount==0 || (DWORD)(now-sampleTime)>=500)) {
+    ++sampleCount;sampleTime=now;
+    Log("ui-coordinate witness: sample=%u token=%llu nativeXY=%d,%d viewport=%d,%d rayUV=%ld,%ld updates=%ld (dispatch timing; no cursor mutation)",
+        sampleCount,VrMenuStateToken(),x,y,*reinterpret_cast<const int*>((uintptr_t)viewport+0x4Cu),
+        *reinterpret_cast<const int*>((uintptr_t)viewport+0x50u),Rd(g_vrUiU),Rd(g_vrUiV),Rd(g_vrCounters.vrPointerUpdates));
+   }
+  }
   const float dx=lastX<0?0.f:(float)(x-lastX),dy=lastY<0?0.f:(float)(lastY-y);
   ((AxisFn)vt[6])((void*)client,viewport,0,mouseX,dx,dt,0);
   ((AxisFn)vt[6])((void*)client,viewport,0,mouseY,dy,dt,0);
@@ -157,6 +261,7 @@ static void Drain(float dt) {
 static void __fastcall Poll(void* self,void*,float dt) {
  ReadableForget();
  UpdateMenu(); // update mode before the game tick/XInput routes the trigger
+ ObserveWeaponAssets(); // at most six weapon identities, only the explicit read-only witness
  NativeGamepadEnumProbe::SetContext(VrModeOn() && InterlockedCompareExchange(&g_padEmu,0,0)!=0 &&
      InterlockedCompareExchange(&g_vrMenuClass,0,0)==0);
  BindViewport();
