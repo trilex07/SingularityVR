@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 xlingual test PID18444 (short: menu→gameplay→cutscene→exit):
+helicopter still EN — structural, not a regression: SP_VI_intro_Kismet bank
+is stock BY DESIGN and xlingual has ZERO rows for it (11 xlingual 'intro'
+rows are freight-train/RT1 scenes). Nothing to integrate for it from the new
+set; old intro candidate (old voices) exists but intro stays protected unless
+user orders otherwise. VI2 building content still unreached this run (user
+tested game start). Xlingual banks intact on Steam (8FCAE808…), overlay still
+menu-only. Prior history.
+
 LATEST 2026-10-14 decoder UNLOCKED + candidates independently verified:
 tools/uedecompress/unpack_chunks.cpp (in-tree since 18f64f4) decodes stock
 sound banks BYTE-EQUAL to reference logicals (kismet02 → f6a24416…); same
