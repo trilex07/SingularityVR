@@ -154,6 +154,19 @@ inline UINT SourceLeft(UINT width, LONG mode, bool swap, bool cropped) {
     return halfIndex * half;
 }
 
+// Subrectangle contract (runtime-proven 2026-10-14: engine passes a full-
+// backbuffer pSourceRect with NULL pDestRect on every VR Present).
+// A source rect covering the whole backbuffer with no dest rect is
+// equivalent to NULL: Apply() below only uses backbuffer dimensions.
+// Any true subrectangle stays native and is sampled by the probe.
+inline bool IsFullBackbufferSrc(const RECT* presentSrc, const RECT* presentDst,
+                                UINT bw, UINT bh) {
+    if (presentDst) return false;
+    if (!presentSrc) return true;
+    return presentSrc->left <= 0 && presentSrc->top <= 0 &&
+           presentSrc->right >= (LONG)bw && presentSrc->bottom >= (LONG)bh;
+}
+
 inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
                   const RECT* presentDst, HWND overrideWindow) {
     const LONG mode = InterlockedCompareExchange(&g_desktopMirrorEye, 0, 0);
@@ -161,15 +174,7 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
     const LONG dup = InterlockedCompareExchange(&g_dupDraws, 0, 0);
     if (mode <= 0) { InterlockedIncrement(&Diag::skipMode); EmitMaybe(); return; }
     if (!dup) { InterlockedIncrement(&Diag::skipDup); EmitMaybe(); return; }
-    // Subrectangle Present needs a separate mapping contract: leave it native.
-    // Probe records the actual rect values (bounded, read-only) for that contract.
-    if (!dev || presentSrc || presentDst) {
-        if (dev) CaptureRects(dev, presentSrc, presentDst, overrideWindow);
-        InterlockedIncrement(&Diag::skipRect); EmitMaybe(); return;
-    }
-    if (!g_xrRunning || !g_srcW || !g_srcH) {
-        InterlockedIncrement(&Diag::skipXr); EmitMaybe(); return;
-    }
+    if (!dev) { InterlockedIncrement(&Diag::skipRect); EmitMaybe(); return; }
 
     IDirect3DSurface9* back = nullptr;
     HRESULT hr = dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back);
@@ -185,6 +190,20 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
         InterlockedIncrement(&Diag::failDesc); EmitMaybe(); return;
     }
     Diag::lastBw = desc.Width; Diag::lastBh = desc.Height;
+    // Subrectangle contract (runtime-proven 2026-10-14: engine passes a full-
+    // backbuffer pSourceRect with NULL pDestRect on every VR Present).
+    // A source rect covering the whole backbuffer with no dest rect is
+    // equivalent to NULL: the mirror below only uses backbuffer dimensions.
+    // Any true subrectangle stays native and is sampled by the probe.
+    if (!IsFullBackbufferSrc(presentSrc, presentDst, desc.Width, desc.Height)) {
+        if (dev) CaptureRects(dev, presentSrc, presentDst, overrideWindow);
+        back->Release();
+        InterlockedIncrement(&Diag::skipRect); EmitMaybe(); return;
+    }
+    if (!g_xrRunning || !g_srcW || !g_srcH) {
+        back->Release();
+        InterlockedIncrement(&Diag::skipXr); EmitMaybe(); return;
+    }
 
     D3DDEVICE_CREATION_PARAMETERS creation{};
     D3DPRESENT_PARAMETERS params{};

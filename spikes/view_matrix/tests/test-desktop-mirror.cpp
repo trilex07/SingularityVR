@@ -39,5 +39,15 @@ int main() {
     Expect(std::fabs(shownAspect - 2632.0/2684) < .001,
            "nonmatching backbuffer and TV aspects compensated");
     Expect(!desktop_mirror::FitDestination(0,1080,1920,1080,1920,1080,dst), "zero dimensions rejected");
+    const RECT full{ 0, 0, 5264, 2684 };
+    const RECT part{ 0, 0, 2632, 2684 };
+    const RECT over{ -8, -8, 5272, 2692 };
+    const RECT win{ 0, 0, 1920, 1080 };
+    Expect(desktop_mirror::IsFullBackbufferSrc(nullptr, nullptr, 5264, 2684), "null rects proceed to mirror");
+    Expect(desktop_mirror::IsFullBackbufferSrc(&full, nullptr, 5264, 2684), "full-bb src rect proceeds to mirror");
+    Expect(desktop_mirror::IsFullBackbufferSrc(&over, nullptr, 5264, 2684), "oversized src rect proceeds to mirror");
+    Expect(!desktop_mirror::IsFullBackbufferSrc(&part, nullptr, 5264, 2684), "half-bb src rect stays native");
+    Expect(!desktop_mirror::IsFullBackbufferSrc(nullptr, &win, 5264, 2684), "any dst rect stays native");
+    Expect(!desktop_mirror::IsFullBackbufferSrc(&full, &win, 5264, 2684), "full src with dst stays native");
     return g_fails == 0 ? 0 : 1;
 }
