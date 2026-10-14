@@ -32,6 +32,7 @@ save_backups/
 uscript/
 *.upk
 *.xxx
+.local-notes/
 /deployment/hands-dubbing/
 
 # Claude Code local settings. Records absolute paths from this machine, including the
