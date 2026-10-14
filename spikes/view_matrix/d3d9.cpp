@@ -27321,7 +27321,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             g_handPositionValid[0]?1:0,g_handPositionValid[1]?1:0);
         shadowtrace::Arm(s);
     }
-    desktop_mirror::Apply(s);
+    desktop_mirror::Apply(s, a, b, c);
     const HRESULT presentResult = g_origPresent(s, a, b, c, d);
     static double realPresentSum=0, realPresentMax=0;
     static unsigned realPresentSamples=0;

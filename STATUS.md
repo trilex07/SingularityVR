@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 recovery: user rejected A8F38EF6 combined installation
+(TV stretched, menus/free hands/FPS regressed, Polish text/voices/notes lost).
+Audit proves original injector/font/eight native bank deltas/three manifests,
+and absent accepted wrist/cinema/menu/texture-bridge/native-speech flags.
+Recovery preserves UI69CABCCF ring/title, stages the accepted first-area payload,
+and fixes TV aspect mapping including Present window scaling. No Steam writes
+or launch. Eleven optimized x86 fixtures + scoped INI tests PASS; combined L3/L4
+PENDING. See docs/recovery-after-tv-test.md. Earlier latest blocks are history,
+not acceptance of this rejected configuration.
+
 LATEST: hands accepted on 627F1111. That same session captured the main menu
 and pause into the RTT (pixels are there) while MenuOverlay=0, and the scene
 copy of the main menu was suppressed, so the headset had nothing to show.
