@@ -41,6 +41,22 @@ All other core/assets/WAV originals restored; no test left installed.
   particles, while custom screen flash is ON. Do not mute/replay native sounds
   via WinMM or globally suppress particles to make the evidence look cleaner.
 
+Offline fake lease of the witness candidate passed on 2026-10-14. The candidate
+DLL was not copied into Steam. Installed hashes stayed at the accepted baseline
+above. The witness remains default-OFF until a later leased session.
+
+Source-only string locations, not a consumer proof: the private candidate changes
+the iis HTML run that uses WFontLogo from SINGULARITY to SINGULARITY VR. SPMenus
+still contains a styled SINGULARITY run in both the original and the candidate.
+The candidate also sets a SPMenus MajorTitle text to SINGULARITY VR. The separate
+texture ui_logos.logo is one DXT5 in a package of weapon HUD images. The SPMenus
+token UI_Logos. occurs beside getSubstitutions and SCOPE_MP_PLAYER_MSG, so that
+token is not evidence that the texture is the title the user sees. Compare a live
+ui-asset witness FNV with these source fingerprints before editing either movie
+or that texture: control iis 669B2A3F185327C8 (30959), control SPMenus
+51B6A92D4DED91D0 (231953), candidate iis 2470EB3DBD9A78BB (31178), candidate
+SPMenus 56AFE359868D7429 (232282).
+
 Default-OFF Diagnostic.MenuAssetWitness uses existing input hooks, no new detour.
 Eight cold focus asset fingerprints(max2MiB/array),24 coordinate samples at500ms,
 six weapon identities. No renderer/audio/COM/state mutation. Compare native

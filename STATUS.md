@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+LATEST: witness candidate c5d3924, DLL4233E4A23BE50D47A017369A4F231D2DAE2A10DA068BA08D57E0EAC7EC540BAC,
+x86 PE32 /O2. Offline fake lease PASS: WhatIf, path refusal, corrupt-backup refusal,
+user-INI preservation, owned rollback, frozen UI. Not installed, not launched, not L3/L4.
+Installed Steam unchanged: DLLD8928180, INI202AA13A74BF1FF49104C8C507A1B9A6A6069D22DC43A529FCF6BFFC07430DBF,
+UI5B2EA469, font3F7BF0BE. Source-only title strings: iis WFontLogo HTML is the run the
+private candidate changed to SINGULARITY VR; SPMenus keeps a styled SINGULARITY run in
+both packages and the candidate also writes MajorTitle text SINGULARITY VR. ui_logos.logo
+is one 512x128 DXT5 beside weapon HUD textures. SPMenus token UI_Logos. sits by
+getSubstitutions/SCOPE_MP_PLAYER_MSG, so it is not the proven title. Live RawData FNV
+still required before another edit. Source FNV, not pixels: control iis 669B2A3F185327C8
+30959 bytes, control SPMenus 51B6A92D4DED91D0 231953, candidate iis 2470EB3DBD9A78BB
+31178, candidate SPMenus 56AFE359868D7429 232282. HUD SIDE assets are 5f4364c on
+fix/psvr2-hud-design and stay unintegrated.
+
 LATEST after PID37660: scoped L4 PASS cinema stability, right hand/pistol grip,
 Polish first-area NPC/recordings and note glyphs. Logo and native arrow STILL
 BROKEN; slight laser/cursor deviation. User defers small acceptable FPS dips.
