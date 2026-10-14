@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 boot logo INSTALLED (user-ordered): candidate SNG_logo_vr
+independently validated (1280x720/30fps/11s, BIKi, audio, D85FC268…),
+stock FE40BA3B backed up to boot-logo-backup-20261014, hash verified on disk.
+Full xlingual build done: 109/112 banks OK (800 PL lines, 184 retained);
+FAILED stay stock: RT1_fx01, RT3_Vignette (PCM meta), VI6_kismet03. "Pauza"
+clipped to "AZA" noted (title field widths, pre-existing likely). Next: v7
+story flags + single install of remaining banks (VI2-done excluded). Prior history.
+
 LATEST 2026-10-14 previous intro bank INSTALLED (user-ordered interim):
 4904F281 via new v6 profile (Preflight PASS, stock backup
 asset-backups/20261014-221929-43400), hash verified on disk. Known quiet;
