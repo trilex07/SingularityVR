@@ -1,6 +1,12 @@
 #include "../desktop_mirror.h"
 #include <cstdio>
 #include <cmath>
+#include <cstdarg>
+
+static void Log(const char* fmt, ...) {
+    (void)fmt;
+    va_list ap; va_start(ap, fmt); va_end(ap);
+}
 
 static int g_fails = 0;
 static void Expect(bool cond, const char* name) {
