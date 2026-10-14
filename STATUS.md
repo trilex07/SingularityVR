@@ -1,6 +1,26 @@
 # STATUS — session handoff
 
-LIVE 2026-10-14 08:56+02:00, user authorized fresh start. Steam PID24468,
+LATEST PID24468 completed/closed. User: menu OK; radio did not speak. This is
+NOT confirmation that all voices were silent or that the radio trigger fired.
+All3 guardians completed; independent4+32+1886 original hashes,107DDS and frozen
+forwarder PASS (live restore-verification.json). No candidate remains installed.
+Runtime single-owner bridge/accepted base substitutions and two exact glove
+remaster matches confirmed, remaster_apply0 and no remaster=1 substitutions.
+Native radio playback/branding typography/all24 remaster visuals remain OPEN.
+Offline RE: typed Kismet RadioConversation -> SoundCue ->17 imported waves;
+single-line main action points to VI1_1005_GST. Tested PL radio clips7-13.49LU
+below stock; quiet audio is a hypothesis, not proof of event execution.
+Next isolated candidate changes ONLY VI1_1005_GST volume (-23.16 -> -13.64LUFS,
+stock-12.83, encoded peak-1.37, exact442418 mono48k frames). All other prior
+voices/properties/cues/DLLs/INI/title/material settings unchanged. Prepared
+deployment/hands-dubbing/radio-event-investigation-20261014/delta-single-radio-ready/
+asset-manifest.json; bank SHA FB03741D672537CFC8117C8448361CFEABF819562B3955DADD7BBAD0945AECF8.
+L1 synthetic guards/typed graph, FFmpeg PCM+peak, independent source/candidate
+LZO and fake32 lease PASS; new runtime/audition pending. Two broad louder batches
+failed guards and are NOT deployable. Fresh user start before any new launch.
+See docs/radio-loudness-single-line.md. Below earlier live/preparation history.
+
+HISTORICAL LIVE 2026-10-14 08:56+02:00, user authorized fresh start. Steam PID24468,
 candidate d3d9 C1D904D0/injector F5137234; actual application module paths and
 all4+32+1886 candidate hashes verified. OpenXR ready and actual MAIN slot65
 callback forwarding logged, NativePolishSpeech1. All three separate guardians

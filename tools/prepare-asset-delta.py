@@ -8,6 +8,7 @@ def load(p):return json.loads(p.read_text(encoding='utf-8-sig'))
 def main():
     ap=argparse.ArgumentParser()
     for name in ('native','title','materials','locale','game','out'):ap.add_argument('--'+name,type=Path,required=True)
+    ap.add_argument('--native-manifest',choices=['native-story.json','radio-loudness.json'],default='native-story.json')
     ap.add_argument('--mode',choices=['log-only','apply'],required=True);a=ap.parse_args()
     require(not a.out.exists(),'refuse existing artifact');a.out.mkdir(parents=True);files=[]
     def add(rel,source,expected,baseline=None):
@@ -16,7 +17,7 @@ def main():
         installed=a.game/Path(rel);actual=sha(installed.read_bytes()) if installed.exists() else 'ABSENT'
         if baseline is not None:require(actual==baseline.upper(),'original delta baseline changed')
         files.append(dict(RelativePath=relative,Source='payload\\'+relative,BaselineSha256=actual,CandidateSha256=sha(data)))
-    for bank in load(a.native/'native-story.json'):
+    for bank in load(a.native/a.native_manifest):
         if bank['package']=='SP_VI_intro_Kismet_LOC_INT':continue # belongs ONLY to four-file lease
         add('RvGame/CookedPC/'+bank['package']+'.xxx',a.native/bank['package']/'candidate.xxx',bank['candidate_sha'],bank['source_sha'])
     title=load(a.title/'title.json')
