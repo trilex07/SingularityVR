@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 FULL DUBBING ON STEAM (no launch): v7 installed 102/102
+(101 banks + story flags), independently re-hashed. Live Polish banked lines:
+78 VI2 + 721 new = ~799 + old intro helicopter. Retained EN: 5 VI2 + ~184
+new (tempo) + 3 failed banks stock (RT1_fx01, RT3_Vignette, VI6_kismet03) +
+combat barks/deaths + MP + VI_intro-new (no source). DLL/INI/injector/font/
+WAVs frozen. Backup asset-backups/20261014-222826-40844. Game-load/headset
+gates PENDING (no test requested). v7 tooling committed (profiles, pins,
+generators). Prior history.
+
 LATEST 2026-10-14 boot logo INSTALLED (user-ordered): candidate SNG_logo_vr
 independently validated (1280x720/30fps/11s, BIKi, audio, D85FC268…),
 stock FE40BA3B backed up to boot-logo-backup-20261014, hash verified on disk.

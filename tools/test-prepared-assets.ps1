@@ -61,6 +61,16 @@ if($manifest.Kind -cin @('SingularityVR post-opening asset delta v2',
  }elseif($manifest.Kind -ceq 'SingularityVR intro bank delta v6'){
   $allowed=@('RvGame\CookedPC\SP_VI_intro_Kismet_LOC_INT.xxx')
   $expectedCount=1
+ }elseif($manifest.Kind -ceq 'SingularityVR xlingual full-game bank delta v7'){
+  $paths=@($manifest.Files|ForEach-Object {$_.RelativePath})
+  if($paths.Count -ne 102 -or @($paths|Sort-Object -Unique).Count -ne 102){throw 'v7 requires exactly 102 unique files'}
+  $story='Binaries\vr-assets\localization\pl\polish_story_voice.jsonl'
+  if(@($paths|Where-Object {$_ -ceq $story}).Count -ne 1){throw 'v7 requires the story manifest'}
+  foreach($p in $paths){
+   if($p -ceq $story){continue}
+   if($p -notlike 'RvGame\CookedPC\*.xxx' -or $p -notlike '*_LOC_INT.xxx'){throw ('v7 rejects: '+$p)}
+  }
+  $allowed=$paths;$expectedCount=102
  }else{throw 'Unknown exact delta profile'}
 }
 if(@($manifest.Files).Count -ne $expectedCount -or
