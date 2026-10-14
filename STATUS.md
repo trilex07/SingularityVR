@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 TEXTURES-spec AUDIT verdict: mechanism TRUE (injector reads
+Quality once, hub-writes-key comments, installed Quality=2x, LEFTHAND
+precedent verbatim, DISPLAY 12/12, px math). FALSE: tier textures DO NOT
+EXIST anywhere (no tex_tiers/, no env_*.dds; only 24 v4 DDS on Steam) — row
+without tiers switches nothing; VRAM numbers ungrounded; line numbers stale;
+g_texQuality must be created. Texture PRODUCTION is the missing work. Prior history.
+
 LATEST 2026-10-14 panel spec VERIFIED read-only (no edits, Steam untouched):
 d3d9.cpp identical to origin/main (blob 7b802383, SHA 5E2E80632CD6 ✓);
 holster facts hold (28144-28149, writes only at startup, live HipPoint use);
