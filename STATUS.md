@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+LATEST: user rejected witness DLL4233E4A2 during PID33552. Hands stretched again
+and the menu was doubled flat on exit to the menu. That DLL is not installed.
+Independent restore remains DLLD8928180, INI202AA13A, UI5B2EA469, font3F7BF0BE.
+Do not redeploy 4233E4A2. The physically accepted first-area DLL was 2763A984
+from 34b180e, saved at deployment/hands-dubbing/post-opening/next-core-v1/d3d9.dll.
+HUD corner reach was not changed by this lease.
+
+LATEST: menu-witness session PID33552 L3, then restored. Independent hashes: DLLD8928180,
+INI202AA13A, UI5B2EA469, font3F7BF0BE. Live MovieInfo.RawData matched the original
+packages, not the private candidate: iis 30959 bytes FNV669B2A3F185327C8 on
+RvUIGFxMovie_IIS; SPMenus 231953 bytes FNV51B6A92D4DED91D0 on SPMain, SPOptions
+and SPPause. GFX magic 47465809. Saved frames show MENU GŁÓWNE and PAUZA, not a
+separate title texture. No title edit. No L4 for this DLL.
+
 LATEST: menu-witness lease ARMED, game not launched. Installed DLL4233E4A23BE50D47A017369A4F231D2DAE2A10DA068BA08D57E0EAC7EC540BAC
 from build c5d3924, x86 PE32 /O2. INI8A8F52F3ADFFC9AE63ADCF8364B97F59C8651D680FEBC5D4001C9AB95D767026
 adds only Diagnostic.MenuAssetWitness=1 over preserved202AA13A. UI5B2EA469 and font3F7BF0BE
