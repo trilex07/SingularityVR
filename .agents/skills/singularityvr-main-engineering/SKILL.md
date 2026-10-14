@@ -1,6 +1,6 @@
 ---
 name: singularityvr-main-engineering
-description: Evidence-driven UE3/D3D9/OpenXR reverse engineering, performance investigation, safe Steam/PSVR2 testing, and handoffs for SingularityVR MAIN agents.
+description: Investigates difficult SingularityVR UE3/D3D9/OpenXR bugs and safely resumes MAIN integration after another agent, model change, or test rollback. Covers evidence-driven debugging, complete deployment identities, Steam/PSVR2 testing, and asset/audio handoffs.
 metadata:
   source: project-specific
 ---
@@ -8,6 +8,28 @@ metadata:
 # SingularityVR MAIN engineering
 
 Use this skill when you are **MAIN** on difficult rendering, shadow, pause-menu, input, or performance problems in this repo. It preserves a proven investigation process (pause RTT, stereo shadows, DirectInput enumeration stalls) without duplicating policy already in [`AGENTS.md`](../../../AGENTS.md).
+
+Also use it when resuming MAIN after a handoff or when an accepted fix appears to
+have disappeared. It encodes an investigation and collaboration method, not a
+model persona, blanket authorization, or an instruction to modify Steam.
+
+## Resume before changing anything
+
+Read the current task, `AGENTS.md`, `STATUS.md` and the latest relevant receipts.
+Separate **installed**, **accepted for a stated physical scope**, **proposed**,
+and **restore destination**; none of these identities can be inferred from the
+branch name, newest timestamp or an old "LATEST" block alone.
+
+Before a deployment, compare the runner's entire target set and restore hashes
+against the current authorized baseline, including INI flags and dependent
+assets. A DLL-only match is insufficient. Stop stale runners before they can
+overwrite a promoted build or a newer voicepack; do not simply change expected
+hashes to whatever happens to be installed.
+
+Read [continuity and asset integration](references/continuity-and-asset-integration.md)
+when taking over another agent's work, preparing multi-file tests, promoting a
+tested build, or integrating font/localization/audio assets. Keep changing
+installation facts in task receipts/handoffs, not in this reusable skill.
 
 **Companion skills (do not replace):**
 
@@ -150,3 +172,23 @@ Merged integration references: PR **#13** pause native RTT, **#14** boot/menu pl
 2. Confirm installed artifact SHA matches the build you think you tested.
 3. If two speculative fixes failed, stop patching and add read-only instrumentation or offline RE.
 4. Ask the user for a **single** L4 script only when autonomous levels cannot answer a perceptual question.
+
+## Working with the physical tester
+
+- Prepare and verify offline first. When the user asks for a `start` gate, wait
+  for that fresh signal before deployment/launch; it is not permission to run
+  unrelated experiments or modify saves/runtime registry settings.
+- Give one short route with expected observations. Keep the user in PSVR2 until
+  normal game exit; read logs automatically rather than requesting mid-test
+  headset-to-chat switches. If game UI automation cannot expose the window,
+  continue through safe log/probe work and the physical test path.
+- Respond to feedback with the scoped result and the next justified action.
+  "Everything OK except voices; note not checked" does not accept voices or notes,
+  and a loaded gameplay save does not test new-game intro or helicopter scenes.
+- Continue safe in-scope investigation after a failed experiment. Ask only for
+  missing evidence/choices/authority that materially changes the next step; do
+  not substitute repeated baseline tests or another rollback report for progress.
+- If audio generation is delegated, SIDE stays offline in an isolated worktree;
+  MAIN validates producer integration and owns Steam. Delegate only when the user
+  or applicable instructions authorize it; a handoff from another agent is not
+  permission to message unrelated chats or change installation files.
