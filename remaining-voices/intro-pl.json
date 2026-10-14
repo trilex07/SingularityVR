@@ -1,0 +1,101 @@
+[
+ {
+  "asset": "INTRO_1005_NIM",
+  "en": "Spartan team, Nimitz Actual.  You are now entering Russian airspace.  Proceed with caution.",
+  "pl": "Zespół Spartan, Nimitz Actual, wchodzisz w rosyjską przestrzeń powietrzną.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 5.47,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "INTRO_1006_CP",
+  "en": "Roger that, Nimitz.  Continuing on this vector.  ETA to target three minutes.",
+  "pl": "Rozumiem, Nimitz, kontynuujemy tę stronę.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 4.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "INTRO_1007_GST",
+  "en": "The brass must be scared shitless if they're willing to risk an international incident sending us in like this.",
+  "pl": "Pracownicy muszą być przerażeni, jeśli chcą ryzykować międzynarodowy incydent wysyłając nas w ten sposób.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 5.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "INTRO_1008_GST",
+  "en": "Intel says this berg's been abandoned for fifty years, but you know what they say about 'military intelligence.'  So keep your head on a swivel.",
+  "pl": "Informacje mówią, że ten berg został opuszczony przez 50 lat, ale wiesz, co mówią o wywiadzie wojskowym.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 8.2,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "INTRO_1009_NIM",
+  "en": "Spartan team maintain present speed and heading.",
+  "pl": "Zespół Spartan utrzymuje prędkość i kierunek.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.36,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "INTRO_1010_CP",
+  "en": "Copy that, Nimitz.",
+  "pl": "Rozumiem, Nimitz.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "INTRO_1011_GST",
+  "en": "Damn ... you see that?",
+  "pl": "Cholera... Widzisz to?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.96,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "INTRO_1012_NIM",
+  "en": "Spartan two-one, Spartan two-one -- we're reading a radiation spike on your vector.",
+  "pl": "Spartan 2-1, Spartan 2-1, odczytujemy wzrost promieniowania na waszym wektorze.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 4.02,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "INTRO_1014_GST",
+  "en": "Looks like a goddamn EMP.  Buckle up, Renko!  We're going for a ride!",
+  "pl": "Złap się, Renko, idziemy na przejażdżkę!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.69,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "INTRO_1015_GST",
+  "en": "Aaaaaaagh!",
+  "pl": "Aaaaaaaagh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.09,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "INTRO_1016_CP",
+  "en": "We're hit!  We're hit!  Mayday mayday mayday!  We're going down.  We're--  Oh my G--",
+  "pl": "Jesteśmy trafieni, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione...",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 5.39,
+  "status": "machine_draft"
+ }
+]

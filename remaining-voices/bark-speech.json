@@ -1,0 +1,3824 @@
+{
+ "SD_ESP1_DEATH_LG1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.27,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_DEATH_LG2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.09,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_DEATH_LG3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.22,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_DEATH_LG4": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.04,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_DEATH_LG5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.15,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_DEATH_SM1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.44,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_DEATH_SM2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_DEATH_SM3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.56,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_DEATH_SM4": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.5,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_DEATH_SM5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_ELEC_PAIN1": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_ELEC_PAIN2": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.12,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_ELEC_PAIN3": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.86,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_FALL_LNG1": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.7,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_FALL_LNG2": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.34,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_FALL_LNG3": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.46,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_FIRE1": {
+  "spoken": "Shoot him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.87,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_FIRE2": {
+  "spoken": "Kill him, kill him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.82,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_FIRE3": {
+  "spoken": "Keep me covered!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.83,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_FIRE_GRENADE1": {
+  "spoken": "Grenade!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.9,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_FIRE_GRENADE2": {
+  "spoken": "Throwing grenade!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.85,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_FIRE_GRENADE3": {
+  "spoken": "Get down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.1,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_FIRE_PAIN1": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.59,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_FIRE_PAIN2": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.71,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_FIRE_PAIN3": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.12,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_MOVE_COVER1": {
+  "spoken": "Duck!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.88,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_MOVE_COVER2": {
+  "spoken": "Keep your head down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.9,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_MOVE_IN1": {
+  "spoken": "Let's go!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_MOVE_IN2": {
+  "spoken": "Go get him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.58,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_MOVE_IN3": {
+  "spoken": "Push forward!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.25,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_MOVE_IN4": {
+  "spoken": "Go, go, go!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.58,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_MOVE_IN5": {
+  "spoken": "You go, I'll cover!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.63,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_MOVE_RETREAT1": {
+  "spoken": "Run!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.72,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_MOVE_RETREAT2": {
+  "spoken": "Let's get out of here!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.26,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_MOVE_RETREAT3": {
+  "spoken": "Retreat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.37,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_PAIN_AGE1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.12,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_PAIN_AGE2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.22,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_PAIN_AGE3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.59,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_PAIN_REVERT1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.79,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_PAIN_REVERT2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 4.04,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_PAIN_REVERT3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.47,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_RPT_PINNED1": {
+  "spoken": "Help! I'm pinned down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.49,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_SEE_GRENADE2": {
+  "spoken": "Grenade!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.93,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_SEE_TARGET1": {
+  "spoken": "I see him! I see him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.23,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_SEE_TARGET2": {
+  "spoken": "There he is!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_SEE_TARGET3": {
+  "spoken": "Over there!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.18,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_SEE_TARGET4": {
+  "spoken": "I have him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.54,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_SEE_TARGET5": {
+  "spoken": "Help, over here!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_SRCH_FIND1": {
+  "spoken": "Where'd he go?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.43,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_SRCH_KILL1": {
+  "spoken": "Anybody see him?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.23,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP1_SRCH_KILL2": {
+  "spoken": "Let's just get outta here!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.91,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_DEATH_LG1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.27,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_DEATH_LG2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.09,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_DEATH_LG3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.22,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_DEATH_LG4": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.64,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_DEATH_LG5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.16,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_DEATH_SM1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.45,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_DEATH_SM2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_DEATH_SM3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.55,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_DEATH_SM4": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.5,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_DEATH_SM5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_FALL_LNG1": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 6.65,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_FALL_LNG2": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 4.02,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_FALL_LNG3": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.57,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_FIRE1": {
+  "spoken": "Shoot him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.12,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_FIRE2": {
+  "spoken": "Kill him, kill him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.71,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_FIRE3": {
+  "spoken": "Keep me covered!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.22,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_FIRE_GRENADE1": {
+  "spoken": "Grenade!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.5,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_FIRE_GRENADE2": {
+  "spoken": "Throwing grenade!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.08,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_FIRE_GRENADE3": {
+  "spoken": "Get down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.8,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_MOVE_COVER1": {
+  "spoken": "Duck!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.28,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_MOVE_COVER2": {
+  "spoken": "Keep your head down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.27,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_MOVE_IN1": {
+  "spoken": "Let's go!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.07,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_MOVE_IN2": {
+  "spoken": "Go get him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.27,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_MOVE_IN3": {
+  "spoken": "Push forward!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.01,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_MOVE_IN4": {
+  "spoken": "Go, go, go!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.58,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_MOVE_IN5": {
+  "spoken": "You go, I'll cover!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.63,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_MOVE_RETREAT1": {
+  "spoken": "Run!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.87,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_MOVE_RETREAT2": {
+  "spoken": "Let's get out of here!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_MOVE_RETREAT3": {
+  "spoken": "Retreat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.69,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_PAIN_AGE1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.12,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_PAIN_AGE2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.65,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_PAIN_AGE3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.59,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_PAIN_REVERT1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.79,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_PAIN_REVERT2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 4.04,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_PAIN_REVERT3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.47,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_RPT_PINNED1": {
+  "spoken": "Help! I'm pinned down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_SEE_GRENADE1": {
+  "spoken": "Run!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.83,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_SEE_TARGET1": {
+  "spoken": "I see him! I see him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.64,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_SEE_TARGET2": {
+  "spoken": "There he is!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.68,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_SEE_TARGET3": {
+  "spoken": "Over there!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_SEE_TARGET4": {
+  "spoken": "I have him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.65,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_SEE_TARGET5": {
+  "spoken": "Help, over here!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_SRCH_FIND1": {
+  "spoken": "Where'd he go?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.52,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_SRCH_KILL1": {
+  "spoken": "Anybody see him?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.3,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_ESP2_SRCH_KILL2": {
+  "spoken": "Let's just get outta here!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.91,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GRD1_FIRE1": {
+  "spoken": "Shoot him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.07,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GRD1_FIRE2": {
+  "spoken": "Kill him, kill him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.34,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GRD1_FIRE3": {
+  "spoken": "Keep me covered!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.97,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GRD1_MOVE_IN1": {
+  "spoken": "Let's go!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GRD1_MOVE_IN2": {
+  "spoken": "Go get him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.04,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GRD1_MOVE_IN3": {
+  "spoken": "Push forward!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.98,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GRD1_MOVE_IN4": {
+  "spoken": "Go, go, go!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.03,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GRD1_MOVE_IN5": {
+  "spoken": "You go, I'll cover!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.11,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GRD1_RPT_PINNED1": {
+  "spoken": "Help! I'm pinned down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.07,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GRD1_SRCH_FIND1": {
+  "spoken": "Where'd he go?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.73,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GRD1_SRCH_KILL1": {
+  "spoken": "Anybody see him?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.96,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GRD1_SRCH_KILL2": {
+  "spoken": "Let's just get outta here!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.12,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_ADVANCING1": {
+  "spoken": "Their making a push!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.89,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_ADVANCING2": {
+  "spoken": "Enemy advancing!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_BREATHE_IN1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.44,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_BREATHE_IN2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.38,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_BREATHE_IN3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_BREATHE_OUT1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_BREATHE_OUT2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_BREATHE_OUT3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.41,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_CHK_LFT1": {
+  "spoken": "Checking left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_CHK_RT1": {
+  "spoken": "Checking right.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_FALL_LARGE1": {
+  "spoken": "Aaaaaaahhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.11,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_FALL_LARGE2": {
+  "spoken": "Aaaaaaahhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.63,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_FALL_LARGE3": {
+  "spoken": "Aaaaaaahhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.23,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_FIRE1": {
+  "spoken": "Open fire!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_FIRE2": {
+  "spoken": "Engage! Engage!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.17,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_FIRE3": {
+  "spoken": "Light 'em up!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.67,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_FIRE_SUPPRESS1": {
+  "spoken": "Give me suppressing fire.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.3,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_FIRE_SUPPRESS2": {
+  "spoken": "Cover me.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.62,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_FIRE_SUPPRESS3": {
+  "spoken": "I need suppressing fire.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.43,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_GEN1": {
+  "spoken": "Stay frosty.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.87,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_GEN2": {
+  "spoken": "Watch the doorways.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.9,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_GEN3": {
+  "spoken": "Take it slow.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.88,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_GEN4": {
+  "spoken": "Keep scanning for hostiles.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.36,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_GEN5": {
+  "spoken": "Watch the corners.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_GRUNT1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.28,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_GRUNT2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.25,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_GRUNT3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_GRUNT_MELEE1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_GRUNT_MELEE2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_GRUNT_MELEE3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_HELP1": {
+  "spoken": "Renko, help me out here!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.69,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_HELP2": {
+  "spoken": "Gimme a hand!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.69,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_JUMP1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.23,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_JUMP2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_JUMP3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.17,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LAND1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LAND2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.3,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LAND3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.22,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOC_ABV1": {
+  "spoken": "Contact above us.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.99,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOC_ABV2": {
+  "spoken": "Enemy up top.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOC_AHD1": {
+  "spoken": "Target 12 o'clock.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.98,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOC_AHD2": {
+  "spoken": "Contact dead ahead.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.95,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOC_LFT1": {
+  "spoken": "Enemy to the left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.89,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOC_LFT2": {
+  "spoken": "Contact to the left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.03,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOC_LFT3": {
+  "spoken": "Look left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.57,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOC_RT1": {
+  "spoken": "Contact to the right.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.83,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOC_RT2": {
+  "spoken": "Enemy to the right.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.93,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOC_RT3": {
+  "spoken": "To the right.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.51,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOCS1": {
+  "spoken": "Contact on the bridge!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.28,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOCS2": {
+  "spoken": "Enemy in the window!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.87,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOCS3": {
+  "spoken": "Hostile on the stairs!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.32,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_LOCS4": {
+  "spoken": "Contact on the roof!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.03,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_COVER1": {
+  "spoken": "Take cover!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.84,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_COVER2": {
+  "spoken": "Find cover!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.01,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_COVER3": {
+  "spoken": "Get to cover!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.73,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_HOLD1": {
+  "spoken": "Hold.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.42,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_HOLD2": {
+  "spoken": "Hold up.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.45,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_HOLD3": {
+  "spoken": "Hold position!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.91,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_IN1": {
+  "spoken": "Move up.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.48,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_IN2": {
+  "spoken": "Advance!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.62,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_IN3": {
+  "spoken": "Let's go.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.49,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_IT1": {
+  "spoken": "You mind moving this?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.81,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_IT2": {
+  "spoken": "Could you get this out of my way?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.23,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_LEFT1": {
+  "spoken": "Flank left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.7,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_LEFT2": {
+  "spoken": "Left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.44,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_LEFT3": {
+  "spoken": "Go left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_OUT1": {
+  "spoken": "Let's go.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.5,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_OUT2": {
+  "spoken": "This way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.44,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_OUT3": {
+  "spoken": "Follow me.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.5,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_RETREAT1": {
+  "spoken": "Retreat.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.49,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_RETREAT2": {
+  "spoken": "Fallback.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.56,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_RETREAT3": {
+  "spoken": "Let's pull back.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_RIGHT1": {
+  "spoken": "Flank right!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.72,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_RIGHT2": {
+  "spoken": "Right!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.49,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_RIGHT3": {
+  "spoken": "Go right!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.57,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_YOU1": {
+  "spoken": "You mind moving?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.7,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_MOVE_YOU2": {
+  "spoken": "You're in my way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.98,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_PAIN_LARGE1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.64,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_PAIN_LARGE2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.9,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_PAIN_LARGE3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_PAIN_SMALL1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_PAIN_SMALL2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_PAIN_SMALL3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.33,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_BEHIND1": {
+  "spoken": "Circle around behind them.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_CLEAR1": {
+  "spoken": "This area is clear.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.9,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_CLEAR2": {
+  "spoken": "All clear.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.58,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_DESTROY1": {
+  "spoken": "Target down.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_DESTROY2": {
+  "spoken": "Got 'em.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.41,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_DESTROY3": {
+  "spoken": "He's down.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.6,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_FIRE1": {
+  "spoken": "I just heard shots.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.95,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_FIRE2": {
+  "spoken": "Taking fire!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.96,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_HIT1": {
+  "spoken": "I'm hit!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.52,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_NEGATIVE1": {
+  "spoken": "Negative.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.52,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_PINNED1": {
+  "spoken": "I'm pinned down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.97,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_PINNED2": {
+  "spoken": "I'm taking heavy fire!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.3,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_RELOAD1": {
+  "spoken": "Reloading.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.61,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_RELOAD2": {
+  "spoken": "I have to reload.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.95,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_RELOAD3": {
+  "spoken": "Need to reload.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.8,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_SNIPER1": {
+  "spoken": "Sniper!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.53,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_REPORT_SNIPER2": {
+  "spoken": "We've got a sniper!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_SEE_COVER1": {
+  "spoken": "Target in cover.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.91,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_SEE_COVER2": {
+  "spoken": "Enemy is behind cover.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.24,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_SEE_GRENADE1": {
+  "spoken": "Incoming!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.78,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_SEE_GRENADE2": {
+  "spoken": "Grenade!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.69,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_SEE_GRENADE3": {
+  "spoken": "Grenade incoming!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.13,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_SEE_TARGET1": {
+  "spoken": "Contact!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.56,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_SEE_TARGET2": {
+  "spoken": "Target! Dead ahead!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.93,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_SEE_TARGET3": {
+  "spoken": "Enemy spotted.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_GST_SMOKE1": {
+  "spoken": "They popped smoke!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.81,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_DEATH_LG1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.39,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_DEATH_LG2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.64,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_DEATH_LG3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.52,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_DEATH_LG4": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.43,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_DEATH_LG5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.39,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_DEATH_SM1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.83,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_DEATH_SM2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.63,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_DEATH_SM3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.07,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_DEATH_SM4": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.83,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_DEATH_SM5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.63,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_ELEC_PAIN1": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.97,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_ELEC_PAIN2": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.73,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_ELEC_PAIN3": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.9,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FALL_LNG1": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.06,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FALL_LNG2": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.68,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FALL_LNG3": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.02,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FIRE1": {
+  "spoken": "Engaging target!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.43,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FIRE2": {
+  "spoken": "Firing!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.79,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FIRE3": {
+  "spoken": "I got him!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.43,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FIRE_GRENADE1": {
+  "spoken": "Frag out!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.64,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FIRE_GRENADE2": {
+  "spoken": "Tossing frag!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.17,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FIRE_GRENADE3": {
+  "spoken": "Grenade out!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.17,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FIRE_PAIN1": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.57,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FIRE_PAIN2": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 3.44,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FIRE_PAIN3": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.92,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_MOVE_COVER1": {
+  "spoken": "Cover!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.8,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_MOVE_COVER2": {
+  "spoken": "Down!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.52,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_MOVE_IN1": {
+  "spoken": "Move!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.46,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_MOVE_IN2": {
+  "spoken": "We're moving up!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.15,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_MOVE_IN3": {
+  "spoken": "Take forward positions!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.76,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_MOVE_IN4": {
+  "spoken": "Advance!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.76,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_MOVE_IN5": {
+  "spoken": "Spread out!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.15,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_MOVE_RETREAT1": {
+  "spoken": "Retreat to cover!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.26,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_MOVE_RETREAT2": {
+  "spoken": "We can't hold here.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.29,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_MOVE_RETREAT3": {
+  "spoken": "We need to fall back.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.96,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_PAIN_AGE1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 4.09,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_PAIN_AGE2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.0,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_PAIN_AGE3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.95,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_PAIN_REVERT1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.84,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_PAIN_REVERT2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.02,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_PAIN_REVERT3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.94,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_PAIN_SM1": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.43,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_PAIN_SM2": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.44,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_PAIN_SM3": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.24,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_PAIN_SM4": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.28,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_PAIN_SM5": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.4,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_RPT_PINNED1": {
+  "spoken": "We are pinned down.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.03,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_SEE_GRENADE2": {
+  "spoken": "Grenade incoming!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.77,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_SEE_TARGET1": {
+  "spoken": "Enemy sighted!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.99,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_SEE_TARGET2": {
+  "spoken": "Tango in range!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.4,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_SEE_TARGET3": {
+  "spoken": "Let's get him.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.07,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_SEE_TARGET4": {
+  "spoken": "I see him.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.55,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_SEE_TARGET5": {
+  "spoken": "Got him.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.82,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_SRCH_FIND1": {
+  "spoken": "I'll find him.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.05,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_SRCH_KILL1": {
+  "spoken": "He's here somewhere.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.21,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_SRCH_KILL2": {
+  "spoken": "He's dead when I find him.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.21,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_DEATH_LG1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.95,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_DEATH_LG2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.29,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_DEATH_LG3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.75,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_DEATH_LG4": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.22,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_DEATH_LG5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.87,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_DEATH_SM1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.52,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_DEATH_SM2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.41,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_DEATH_SM3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.61,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_DEATH_SM4": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.6,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_DEATH_SM5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.03,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_FALL_LNG1": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.38,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_FALL_LNG2": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.99,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_FALL_LNG3": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 3.43,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_FIRE1": {
+  "spoken": "Take him out.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.85,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_FIRE2": {
+  "spoken": "Attack!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.7,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_FIRE3": {
+  "spoken": "Target sighted, firing now!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.55,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_FIRE_GRENADE1": {
+  "spoken": "Using grenade!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.96,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_FIRE_GRENADE2": {
+  "spoken": "Grenade in air!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.03,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_MOVE_COVER1": {
+  "spoken": "Spread out and take cover!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.5,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_MOVE_COVER2": {
+  "spoken": "Don't give him a target!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.6,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_MOVE_IN1": {
+  "spoken": "Push forward!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.84,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_MOVE_IN2": {
+  "spoken": "Everybody -- move!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.16,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_MOVE_IN3": {
+  "spoken": "Take those positions!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.39,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_MOVE_IN4": {
+  "spoken": "Up and out, let's go!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.47,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_MOVE_IN5": {
+  "spoken": "Move it!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.47,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_MOVE_RETREAT1": {
+  "spoken": "We're leaving!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.69,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_MOVE_RETREAT2": {
+  "spoken": "Fall back!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.87,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_MOVE_RETREAT3": {
+  "spoken": "Retreat!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.16,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_PAIN_AGE1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.9,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_PAIN_AGE2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.51,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_PAIN_AGE3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.12,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_PAIN_REVERT1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.11,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_PAIN_REVERT2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 3.56,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_PAIN_REVERT3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.89,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_PAIN_SM1": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.38,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_PAIN_SM2": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.26,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_PAIN_SM3": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.35,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_PAIN_SM4": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.25,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_PAIN_SM5": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.42,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_RPT_PINNED1": {
+  "spoken": "Can't move!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.05,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_SEE_GRENADE1": {
+  "spoken": "Grenade!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.05,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_SEE_TARGET1": {
+  "spoken": "I have a target!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.72,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_SEE_TARGET2": {
+  "spoken": "We have contact!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.05,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_SEE_TARGET3": {
+  "spoken": "Contact.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.92,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_SEE_TARGET4": {
+  "spoken": "Eyes front -- intruder!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.08,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_SEE_TARGET5": {
+  "spoken": "Tracking intruder.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.12,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_SRCH_FIND1": {
+  "spoken": "Check the corners!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.11,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_SRCH_KILL1": {
+  "spoken": "Don't let him out of here alive!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.43,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT2_SRCH_KILL2": {
+  "spoken": "Everybody search!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.94,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_DEATH_LG1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.95,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_DEATH_LG2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.29,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_DEATH_LG3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.75,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_DEATH_LG4": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.22,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_DEATH_LG5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.87,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_DEATH_SM1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.12,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_DEATH_SM2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.02,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_DEATH_SM3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.19,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_DEATH_SM4": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.86,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_DEATH_SM5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.12,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_FALL_LNG1": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 3.21,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_FALL_LNG2": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.97,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_FALL_LNG3": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 3.21,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_FIRE1": {
+  "spoken": "Shoot him!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.85,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_FIRE2": {
+  "spoken": "Kill him, kill him!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.93,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_FIRE3": {
+  "spoken": "Keep me covered!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.01,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_FIRE_GRENADE1": {
+  "spoken": "Grenade!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.88,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_FIRE_GRENADE2": {
+  "spoken": "Throwing grenade!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.46,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_FIRE_GRENADE3": {
+  "spoken": "Get down!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.88,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_MOVE_COVER1": {
+  "spoken": "Duck!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.6,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_MOVE_COVER2": {
+  "spoken": "Keep your head down!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.05,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_MOVE_IN1": {
+  "spoken": "Let's go!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.3,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_MOVE_IN2": {
+  "spoken": "Go get him!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.02,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_MOVE_IN3": {
+  "spoken": "Push forward!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.35,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_MOVE_IN4": {
+  "spoken": "Go, go, go!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.54,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_MOVE_IN5": {
+  "spoken": "You go, I'll cover!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.99,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_MOVE_RETREAT1": {
+  "spoken": "Run!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.4,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_MOVE_RETREAT2": {
+  "spoken": "Let's get out of here!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.91,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_MOVE_RETREAT3": {
+  "spoken": "Retreat!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.5,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_PAIN_AGE1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.9,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_PAIN_AGE2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.51,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_PAIN_AGE3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.12,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_PAIN_REVERT1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.11,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_PAIN_REVERT2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 3.56,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_PAIN_REVERT3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.89,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_PAIN_SM1": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.34,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_PAIN_SM2": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.37,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_PAIN_SM3": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.34,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_PAIN_SM4": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.4,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_PAIN_SM5": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.55,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_RPT_PINNED1": {
+  "spoken": "Help! I'm pinned down!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.89,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_SEE_GRENADE2": {
+  "spoken": "Grenade!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.87,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_SEE_TARGET1": {
+  "spoken": "I see him! I see him!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.85,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_SEE_TARGET2": {
+  "spoken": "There he is!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.69,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_SEE_TARGET3": {
+  "spoken": "Over there!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.28,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_SEE_TARGET4": {
+  "spoken": "I have him!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.96,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_SEE_TARGET5": {
+  "spoken": "Help, over here!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.54,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_SRCH_FIND1": {
+  "spoken": "Where'd he go?",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.1,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_SRCH_KILL1": {
+  "spoken": "Anybody see him?",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.24,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_SRCH_KILL2": {
+  "spoken": "Let's just get outta here!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.91,
+  "package": "SP_VI5_kismet03_LOC_INT"
+ },
+ "SD_KAT_BREATHE_IN1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.7,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_BREATHE_IN2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.48,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_BREATHE_IN3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.6,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_BREATHE_OUT1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.3,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_BREATHE_OUT2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.58,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_BREATHE_OUT3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.78,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_FALL_LARGE1": {
+  "spoken": "Aaaaaaahhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.55,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_FALL_LARGE2": {
+  "spoken": "Aaaaaaahhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.36,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_FALL_LARGE3": {
+  "spoken": "Aaaaaaahhh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 3.18,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_FIRE1": {
+  "spoken": "Open fire!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.83,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_FIRE2": {
+  "spoken": "Shoot!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.55,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_FIRE_SUPPRESS1": {
+  "spoken": "Give me suppressing fire.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_FIRE_SUPPRESS3": {
+  "spoken": "I need suppressing fire.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 4.0,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_GEN1": {
+  "spoken": "Watch the doorways.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.05,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_GEN2": {
+  "spoken": "Watch the corners.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_GEN3": {
+  "spoken": "Check the rooms.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_GEN4": {
+  "spoken": "Keep it quiet.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.8,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_GEN5": {
+  "spoken": "Let's take it slow.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.02,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_GRUNT1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.32,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_GRUNT2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.55,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_GRUNT3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.3,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_GRUNT_MELEE1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.35,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_GRUNT_MELEE2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.4,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_GRUNT_MELEE3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.34,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_JUMP1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_JUMP2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.47,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_JUMP3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.15,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LAND1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.38,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LAND2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.52,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LAND3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.28,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LOC_ABV1": {
+  "spoken": "Look above us.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.98,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LOC_ABV2": {
+  "spoken": "Look up there!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LOC_AHD1": {
+  "spoken": "Right ahead of us!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.93,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LOC_AHD2": {
+  "spoken": "Dead ahead.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.71,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LOC_LFT1": {
+  "spoken": "Enemy to the left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.96,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LOC_LFT2": {
+  "spoken": "There's an enemy to the left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LOC_LFT3": {
+  "spoken": "There's one to the left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.07,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LOC_RT1": {
+  "spoken": "There's one to the right.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.25,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LOC_RT2": {
+  "spoken": "To the right.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.72,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_LOC_RT3": {
+  "spoken": "Look right!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_COVER1": {
+  "spoken": "Take cover!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_COVER2": {
+  "spoken": "Get to cover!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.91,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_COVER3": {
+  "spoken": "Get behind something!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.22,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_HOLD1": {
+  "spoken": "Hold up.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.57,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_IN1": {
+  "spoken": "Move forward.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.7,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_IN2": {
+  "spoken": "Let's move up!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_IN3": {
+  "spoken": "Let's go.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.55,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_IT1": {
+  "spoken": "Could you get this out of my way?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.37,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_IT2": {
+  "spoken": "Could you move this?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.97,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_LEFT1": {
+  "spoken": "Flank left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.73,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_LEFT2": {
+  "spoken": "Left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.46,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_LEFT3": {
+  "spoken": "Move left.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.82,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_OUT1": {
+  "spoken": "Let's go.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.55,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_OUT2": {
+  "spoken": "This way.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.51,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_OUT3": {
+  "spoken": "Follow me.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.58,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_RETREAT1": {
+  "spoken": "Retreat.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.69,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_RETREAT2": {
+  "spoken": "Let's fallback.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.09,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_RETREAT3": {
+  "spoken": "We need to fall back.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.23,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_RIGHT1": {
+  "spoken": "Flank right!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_RIGHT2": {
+  "spoken": "Right!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.43,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_RIGHT3": {
+  "spoken": "Move right!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.83,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_YOU1": {
+  "spoken": "Would you move please?",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_MOVE_YOU2": {
+  "spoken": "If you don't mind.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.99,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_PAIN_LARGE1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_PAIN_LARGE2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.47,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_PAIN_LARGE3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.65,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_PAIN_SMALL1": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.31,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_PAIN_SMALL2": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.24,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_PAIN_SMALL3": {
+  "spoken": "Hunh.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.6,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_REPORT_BEHIND1": {
+  "spoken": "Go behind them.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_REPORT_CLEAR1": {
+  "spoken": "All's clear.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.77,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_REPORT_CLEAR2": {
+  "spoken": "It's safe.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.67,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_REPORT_DESTROY1": {
+  "spoken": "He's down.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.75,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_REPORT_DESTROY2": {
+  "spoken": "Got one!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.62,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_REPORT_FIRE1": {
+  "spoken": "We're taking fire!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.11,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_REPORT_HIT1": {
+  "spoken": "I've been hit!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.47,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_REPORT_PINNED1": {
+  "spoken": "I'm pinned down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_REPORT_PINNED2": {
+  "spoken": "I'm taking fire!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.43,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_REPORT_SNIPER1": {
+  "spoken": "There's a sniper!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.01,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_REPORT_SNIPER2": {
+  "spoken": "Sniper!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.62,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_SEE_COVER1": {
+  "spoken": "They're behind cover.",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.01,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_SEE_GRENADE1": {
+  "spoken": "There's a grenade!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.96,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_SEE_GRENADE2": {
+  "spoken": "Grenade!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.68,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_SEE_TARGET1": {
+  "spoken": "There's one!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.69,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_SEE_TARGET2": {
+  "spoken": "Look over there!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.95,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_KAT_SEE_TARGET3": {
+  "spoken": "Over there!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT1_GRUNT1": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.2,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT1_GRUNT2": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.42,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT1_GRUNT3": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.32,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT1_GRUNT4": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.64,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT1_GRUNT5": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.58,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT1_PAIN_MD1": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.52,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT1_PAIN_MD2": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.6,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT1_PAIN_MD3": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.47,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT1_PAIN_MD4": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.51,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT1_PAIN_MD5": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.55,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT2_ELEC_PAIN1": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.26,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT2_ELEC_PAIN2": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.03,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT2_ELEC_PAIN3": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.21,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT2_FIRE_PAIN1": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.56,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT2_FIRE_PAIN2": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.91,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_SPT2_FIRE_PAIN3": {
+  "spoken": "Aaaaaaaaaaaaaaaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.8,
+  "package": "SP_VI6_kismet05_LOC_INT"
+ },
+ "SD_GRD1_DEATH_LG1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.35,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_DEATH_LG2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.48,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_DEATH_LG3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.69,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_DEATH_LG4": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.36,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_DEATH_LG5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.17,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_DEATH_MD5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.25,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_DEATH_SM1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.73,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_DEATH_SM2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.39,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_DEATH_SM3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_DEATH_SM4": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.4,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_DEATH_SM5": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.54,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_FALL_LNG1": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.95,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_FALL_LNG2": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.36,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_FALL_LNG3": {
+  "spoken": "Aaaaaaaahhhh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 3.71,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_FIRE_GRENADE1": {
+  "spoken": "Grenade!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.84,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_FIRE_GRENADE2": {
+  "spoken": "Throwing grenade!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.23,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_FIRE_GRENADE3": {
+  "spoken": "Get down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.56,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_MOVE_COVER1": {
+  "spoken": "Duck!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_MOVE_COVER2": {
+  "spoken": "Keep your head down!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.2,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_MOVE_RETREAT1": {
+  "spoken": "Run!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.46,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_MOVE_RETREAT2": {
+  "spoken": "Let's get out of here!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.05,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_MOVE_RETREAT3": {
+  "spoken": "Retreat!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.82,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_PAIN_AGE1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.62,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_PAIN_AGE2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.48,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_PAIN_AGE3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.92,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_PAIN_REVERT1": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.23,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_PAIN_REVERT2": {
+  "spoken": "Arrrrgggh!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.85,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_PAIN_REVERT3": {
+  "spoken": "Arrrrgggh!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.82,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_SEE_GRENADE2": {
+  "spoken": "Grenade!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.93,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_SEE_TARGET1": {
+  "spoken": "I see him! I see him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_SEE_TARGET2": {
+  "spoken": "There he is!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.64,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_SEE_TARGET3": {
+  "spoken": "Over there!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_SEE_TARGET4": {
+  "spoken": "I have him!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.8,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_GRD1_SEE_TARGET5": {
+  "spoken": "Help, over here!",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.15,
+  "package": "SP_RL2_kismet02_1950_LOC_INT"
+ },
+ "SD_SPT1_GRUNT_MELEE1": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.67,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT1_GRUNT_MELEE2": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.81,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT1_GRUNT_MELEE3": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.43,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT1_GRUNT_MELEE4": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.56,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT1_GRUNT_MELEE5": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.45,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT1_PANIC1": {
+  "spoken": "Aaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.31,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT1_PANIC2": {
+  "spoken": "Aaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.84,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT1_PANIC3": {
+  "spoken": "Aaah!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.9,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT2_FIRE_SUPPRESS1": {
+  "spoken": "Cover fire!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.16,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT2_FIRE_SUPPRESS2": {
+  "spoken": "Suppressing fire!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.24,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT2_FIRE_SUPPRESS3": {
+  "spoken": "Someone cover me!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.48,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT2_GRUNT_MELEE1": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.29,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT2_GRUNT_MELEE2": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.35,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT2_GRUNT_MELEE3": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.6,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT2_GRUNT_MELEE4": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.7,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT2_GRUNT_MELEE5": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.51,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT2_MOVE_HOLD1": {
+  "spoken": "Hunker down!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.75,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT2_MOVE_HOLD2": {
+  "spoken": "Hold this position.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.58,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT3_GRUNT_MELEE1": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.55,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT3_GRUNT_MELEE2": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.58,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT3_GRUNT_MELEE3": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.35,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT3_GRUNT_MELEE4": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.2,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT3_GRUNT_MELEE5": {
+  "spoken": "Unhf.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.44,
+  "package": "SP_WL4_kismet10_LOC_INT"
+ },
+ "SD_SPT3_FIRE_SUPPRESS1": {
+  "spoken": "Gimme cover!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.96,
+  "package": "SP_RL5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_FIRE_SUPPRESS2": {
+  "spoken": "I need cover fire!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.17,
+  "package": "SP_RL5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_FIRE_SUPPRESS3": {
+  "spoken": "Shoot him, shoot him!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.47,
+  "package": "SP_RL5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_RPT_CLEAR1": {
+  "spoken": "Sector's clear, I think.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.29,
+  "package": "SP_RL5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_RPT_IN_A1": {
+  "spoken": "Alpha team checking in.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.45,
+  "package": "SP_RL5_kismet03_LOC_INT"
+ },
+ "SD_SPT3_SEE_ZEK1": {
+  "spoken": "Help! Monsters!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.44,
+  "package": "SP_RL5_kismet03_LOC_INT"
+ },
+ "SD_SPT1_FIRE_SUPPRESS1": {
+  "spoken": "Cover fire!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.1,
+  "package": "SP_Freight_Script_Cargo1B_LOC_INT"
+ },
+ "SD_SPT1_FIRE_SUPPRESS2": {
+  "spoken": "Pin him down!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.46,
+  "package": "SP_Freight_Script_Cargo1B_LOC_INT"
+ },
+ "SD_SPT1_FIRE_SUPPRESS3": {
+  "spoken": "Give me cover fire!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.02,
+  "package": "SP_Freight_Script_Cargo1B_LOC_INT"
+ },
+ "SD_SPT1_RPT_BACKUP1": {
+  "spoken": "??? ????? ?????????!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.18,
+  "package": "SP_Freight_Script_Cargo1B_LOC_INT"
+ },
+ "SD_SPT1_SEE_ZEK1": {
+  "spoken": "Get those things!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.22,
+  "package": "SP_Freight_Script_Cargo1B_LOC_INT"
+ },
+ "SD_SPT3_RPT_AFFIRM1": {
+  "spoken": "You got it!",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.56,
+  "package": "SP_RL5_audio01_LOC_INT"
+ },
+ "SD_SPT3_RPT_IN_B1": {
+  "spoken": "Bravo team here.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.49,
+  "package": "SP_RL5_audio01_LOC_INT"
+ },
+ "SD_SPT3_RPT_IN_D1": {
+  "spoken": "Delta squad reporting in.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.52,
+  "package": "SP_RL5_audio01_LOC_INT"
+ },
+ "SD_SPT2_PAIN_LG5": {
+  "spoken": "Unfh.",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.62,
+  "package": "SP_SL3_kismet_Fire_LOC_INT"
+ }
+}

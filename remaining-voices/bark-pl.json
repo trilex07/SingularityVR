@@ -1,0 +1,2682 @@
+[
+ {
+  "asset": "SD_ESP1_FIRE1",
+  "en": "Shoot him!",
+  "pl": "Strzelaj do niego!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_FIRE2",
+  "en": "Kill him, kill him!",
+  "pl": "Zabijcie go! Zabijcie go!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.82,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_FIRE3",
+  "en": "Keep me covered!",
+  "pl": "Trzymaj mnie przykrytym!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_FIRE_GRENADE2",
+  "en": "Throwing grenade!",
+  "pl": "Rzucają granat!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.85,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_FIRE_GRENADE3",
+  "en": "Get down!",
+  "pl": "Złaź!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_MOVE_COVER2",
+  "en": "Keep your head down!",
+  "pl": "Trzymaj głowę w dół!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.9,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_MOVE_IN1",
+  "en": "Let's go!",
+  "pl": "Chodźmy! Chodźmy!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_MOVE_IN2",
+  "en": "Go get him!",
+  "pl": "Idź go złapać!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.58,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_MOVE_IN3",
+  "en": "Push forward!",
+  "pl": "Wciśnijcie do przodu!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.25,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_MOVE_IN4",
+  "en": "Go, go, go!",
+  "pl": "Idź, idź, idź!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.58,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_MOVE_IN5",
+  "en": "You go, I'll cover!",
+  "pl": "Ty idź, ja się zajmę!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_MOVE_RETREAT2",
+  "en": "Let's get out of here!",
+  "pl": "Wynośmy się stąd!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.26,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_RPT_PINNED1",
+  "en": "Help! I'm pinned down!",
+  "pl": "Pomocy, zamknęłam się!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_SEE_TARGET1",
+  "en": "I see him! I see him!",
+  "pl": "Widzę go!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.23,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_SEE_TARGET2",
+  "en": "There he is!",
+  "pl": "Tu jest!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_SEE_TARGET3",
+  "en": "Over there!",
+  "pl": "Tam jest!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_SEE_TARGET4",
+  "en": "I have him!",
+  "pl": "Mam go!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.54,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_SEE_TARGET5",
+  "en": "Help, over here!",
+  "pl": "Pomoc, tutaj!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_SRCH_FIND1",
+  "en": "Where'd he go?",
+  "pl": "- Gdzie on jest?",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.43,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_SRCH_KILL1",
+  "en": "Anybody see him?",
+  "pl": "Ktoś go widział?",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.23,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP1_SRCH_KILL2",
+  "en": "Let's just get outta here!",
+  "pl": "Wynośmy się stąd!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.91,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_FIRE1",
+  "en": "Shoot him!",
+  "pl": "Strzelaj do niego!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.12,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_FIRE2",
+  "en": "Kill him, kill him!",
+  "pl": "Zabijcie go! Zabijcie go!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.71,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_FIRE3",
+  "en": "Keep me covered!",
+  "pl": "Trzymaj mnie przykrytym!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.22,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_FIRE_GRENADE2",
+  "en": "Throwing grenade!",
+  "pl": "Rzucają granat!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.08,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_FIRE_GRENADE3",
+  "en": "Get down!",
+  "pl": "Złaź!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.8,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_COVER2",
+  "en": "Keep your head down!",
+  "pl": "Trzymaj głowę w dół!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.27,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_IN1",
+  "en": "Let's go!",
+  "pl": "Chodźmy! Chodźmy!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.07,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_IN2",
+  "en": "Go get him!",
+  "pl": "Idź go złapać!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.27,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_IN3",
+  "en": "Push forward!",
+  "pl": "Wciśnijcie do przodu!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_IN4",
+  "en": "Go, go, go!",
+  "pl": "Idź, idź, idź!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.58,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_IN5",
+  "en": "You go, I'll cover!",
+  "pl": "Ty idź, ja się zajmę!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.63,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_RETREAT2",
+  "en": "Let's get out of here!",
+  "pl": "Wynośmy się stąd!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_RPT_PINNED1",
+  "en": "Help! I'm pinned down!",
+  "pl": "Pomocy, zamknęłam się!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_SEE_TARGET1",
+  "en": "I see him! I see him!",
+  "pl": "Widzę go!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.64,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_SEE_TARGET2",
+  "en": "There he is!",
+  "pl": "Tu jest!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.68,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_SEE_TARGET3",
+  "en": "Over there!",
+  "pl": "Tam jest!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_SEE_TARGET4",
+  "en": "I have him!",
+  "pl": "Mam go!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.65,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_SEE_TARGET5",
+  "en": "Help, over here!",
+  "pl": "Pomoc, tutaj!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_SRCH_FIND1",
+  "en": "Where'd he go?",
+  "pl": "- Gdzie on jest?",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.52,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_SRCH_KILL1",
+  "en": "Anybody see him?",
+  "pl": "Ktoś go widział?",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.3,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_ESP2_SRCH_KILL2",
+  "en": "Let's just get outta here!",
+  "pl": "Wynośmy się stąd!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.91,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_FIRE1",
+  "en": "Shoot him!",
+  "pl": "Strzelaj do niego!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.07,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_FIRE2",
+  "en": "Kill him, kill him!",
+  "pl": "Zabijcie go! Zabijcie go!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.34,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_FIRE3",
+  "en": "Keep me covered!",
+  "pl": "Trzymaj mnie przykrytym!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_FIRE_GRENADE2",
+  "en": "Throwing grenade!",
+  "pl": "Rzucają granat!",
+  "pkg": "SP_RL2_kismet02_1950_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.23,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_FIRE_GRENADE3",
+  "en": "Get down!",
+  "pl": "Złaź!",
+  "pkg": "SP_RL2_kismet02_1950_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_COVER2",
+  "en": "Keep your head down!",
+  "pl": "Trzymaj głowę w dół!",
+  "pkg": "SP_RL2_kismet02_1950_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.2,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN1",
+  "en": "Let's go!",
+  "pl": "Chodźmy! Chodźmy!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN2",
+  "en": "Go get him!",
+  "pl": "Idź go złapać!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.04,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN3",
+  "en": "Push forward!",
+  "pl": "Wciśnijcie do przodu!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.98,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN4",
+  "en": "Go, go, go!",
+  "pl": "Idź, idź, idź!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.03,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN5",
+  "en": "You go, I'll cover!",
+  "pl": "Ty idź, ja się zajmę!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.11,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_RETREAT2",
+  "en": "Let's get out of here!",
+  "pl": "Wynośmy się stąd!",
+  "pkg": "SP_RL2_kismet02_1950_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.05,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_RPT_PINNED1",
+  "en": "Help! I'm pinned down!",
+  "pl": "Pomocy, zamknęłam się!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 2.07,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_SEE_TARGET1",
+  "en": "I see him! I see him!",
+  "pl": "Widzę go!",
+  "pkg": "SP_RL2_kismet02_1950_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_SEE_TARGET2",
+  "en": "There he is!",
+  "pl": "Tu jest!",
+  "pkg": "SP_RL2_kismet02_1950_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.64,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_SEE_TARGET3",
+  "en": "Over there!",
+  "pl": "Tam jest!",
+  "pkg": "SP_RL2_kismet02_1950_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_SEE_TARGET4",
+  "en": "I have him!",
+  "pl": "Mam go!",
+  "pkg": "SP_RL2_kismet02_1950_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.8,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_SEE_TARGET5",
+  "en": "Help, over here!",
+  "pl": "Pomoc, tutaj!",
+  "pkg": "SP_RL2_kismet02_1950_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.15,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_SRCH_FIND1",
+  "en": "Where'd he go?",
+  "pl": "- Gdzie on jest?",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.73,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_SRCH_KILL1",
+  "en": "Anybody see him?",
+  "pl": "Ktoś go widział?",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.96,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GRD1_SRCH_KILL2",
+  "en": "Let's just get outta here!",
+  "pl": "Wynośmy się stąd!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.12,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_ADVANCING1",
+  "en": "Their making a push!",
+  "pl": "Wciśnięcie!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.89,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_ADVANCING2",
+  "en": "Enemy advancing!",
+  "pl": "Wróg zbliża się!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_CHK_LFT1",
+  "en": "Checking left.",
+  "pl": "Sprawdzam w lewo.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_CHK_RT1",
+  "en": "Checking right.",
+  "pl": "Sprawdzam w prawo.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_FIRE1",
+  "en": "Open fire!",
+  "pl": "Otwórz ogień!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_FIRE2",
+  "en": "Engage! Engage!",
+  "pl": "Zaangażuj się!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.17,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_FIRE3",
+  "en": "Light 'em up!",
+  "pl": "Zapalcie je!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.67,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_FIRE_SUPPRESS1",
+  "en": "Give me suppressing fire.",
+  "pl": "Daj mi tłumienie ognia.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.3,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_FIRE_SUPPRESS2",
+  "en": "Cover me.",
+  "pl": "Zaopiekuj mnie.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.62,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_FIRE_SUPPRESS3",
+  "en": "I need suppressing fire.",
+  "pl": "Potrzebuję tłumienia ognia.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.43,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_GEN1",
+  "en": "Stay frosty.",
+  "pl": "Zostań mroźny.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_GEN2",
+  "en": "Watch the doorways.",
+  "pl": "Uważaj na drzwi.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.9,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_GEN3",
+  "en": "Take it slow.",
+  "pl": "Powoli.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.88,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_GEN4",
+  "en": "Keep scanning for hostiles.",
+  "pl": "Kontynuuj skanowanie na wrogów.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.36,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_GEN5",
+  "en": "Watch the corners.",
+  "pl": "Uważaj na kąty.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_HELP1",
+  "en": "Renko, help me out here!",
+  "pl": "Renko, pomóż mi!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.69,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_HELP2",
+  "en": "Gimme a hand!",
+  "pl": "Pomóż mi!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.69,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOCS1",
+  "en": "Contact on the bridge!",
+  "pl": "Kontakt na moscie!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.28,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOCS2",
+  "en": "Enemy in the window!",
+  "pl": "Wróg w oknie!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOCS3",
+  "en": "Hostile on the stairs!",
+  "pl": "Nieprzyjaciół na schodach!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.32,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOCS4",
+  "en": "Contact on the roof!",
+  "pl": "Kontakt na dachu!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.03,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOC_ABV1",
+  "en": "Contact above us.",
+  "pl": "Kontakt nad nami.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.99,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOC_ABV2",
+  "en": "Enemy up top.",
+  "pl": "Wróg na górze.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOC_AHD1",
+  "en": "Target 12 o'clock.",
+  "pl": "Cel o 12.00.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.98,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOC_AHD2",
+  "en": "Contact dead ahead.",
+  "pl": "Kontakt martwy z przodu.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOC_LFT1",
+  "en": "Enemy to the left.",
+  "pl": "Wróg po lewej stronie.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.89,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOC_LFT2",
+  "en": "Contact to the left.",
+  "pl": "Kontakt z lewej strony.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.03,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOC_LFT3",
+  "en": "Look left.",
+  "pl": "Spójrz w lewo.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.57,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOC_RT1",
+  "en": "Contact to the right.",
+  "pl": "Kontakt po prawej stronie.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOC_RT2",
+  "en": "Enemy to the right.",
+  "pl": "Wróg po prawej stronie.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.93,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_LOC_RT3",
+  "en": "To the right.",
+  "pl": "Po prawej.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.51,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_COVER1",
+  "en": "Take cover!",
+  "pl": "Ukryj się!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_COVER2",
+  "en": "Find cover!",
+  "pl": "Znajdź kryjówkę!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_COVER3",
+  "en": "Get to cover!",
+  "pl": "Zabezpieczcie się!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.73,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_HOLD2",
+  "en": "Hold up.",
+  "pl": "Poczekajcie.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.45,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_HOLD3",
+  "en": "Hold position!",
+  "pl": "Trzymaj pozycję!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.91,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_IN1",
+  "en": "Move up.",
+  "pl": "Ruszaj się.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.48,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_IN3",
+  "en": "Let's go.",
+  "pl": "- Chodźmy.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_IT1",
+  "en": "You mind moving this?",
+  "pl": "Możesz to przesunąć?",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.81,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_IT2",
+  "en": "Could you get this out of my way?",
+  "pl": "Możesz mi to zabrać?",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.23,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_LEFT1",
+  "en": "Flank left.",
+  "pl": "Z lewej skrzydła.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_LEFT3",
+  "en": "Go left.",
+  "pl": "Idź w lewo.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_OUT1",
+  "en": "Let's go.",
+  "pl": "- Chodźmy.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.5,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_OUT2",
+  "en": "This way.",
+  "pl": "- W tę stronę.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.44,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_OUT3",
+  "en": "Follow me.",
+  "pl": "Chodź za mną.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.5,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_RETREAT3",
+  "en": "Let's pull back.",
+  "pl": "Wracajmy wstecz.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_RIGHT1",
+  "en": "Flank right!",
+  "pl": "Po prawej stronie!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.72,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_RIGHT3",
+  "en": "Go right!",
+  "pl": "Idź w prawo!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.57,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_YOU1",
+  "en": "You mind moving?",
+  "pl": "Możesz się ruszyć?",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_MOVE_YOU2",
+  "en": "You're in my way.",
+  "pl": "Jesteś mi w drodze.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.98,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_BEHIND1",
+  "en": "Circle around behind them.",
+  "pl": "Za nimi krąg.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.06,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_CLEAR1",
+  "en": "This area is clear.",
+  "pl": "To miejsce jest czyste.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.9,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_CLEAR2",
+  "en": "All clear.",
+  "pl": "Wszystko w porządku.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.58,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_DESTROY1",
+  "en": "Target down.",
+  "pl": "Cel w dół.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_DESTROY2",
+  "en": "Got 'em.",
+  "pl": "Mam je.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.41,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_DESTROY3",
+  "en": "He's down.",
+  "pl": "Jest na dole.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_FIRE1",
+  "en": "I just heard shots.",
+  "pl": "Słyszałem strzały.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_FIRE2",
+  "en": "Taking fire!",
+  "pl": "Strzelają!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.96,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_HIT1",
+  "en": "I'm hit!",
+  "pl": "Zostałem trafiony!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.52,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_PINNED1",
+  "en": "I'm pinned down!",
+  "pl": "Jestem uwięziony!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_PINNED2",
+  "en": "I'm taking heavy fire!",
+  "pl": "Wzię ciężki ogień!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.3,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_RELOAD2",
+  "en": "I have to reload.",
+  "pl": "Muszę się przeładować.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_RELOAD3",
+  "en": "Need to reload.",
+  "pl": "Muszę się przeładować.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.8,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_REPORT_SNIPER2",
+  "en": "We've got a sniper!",
+  "pl": "Mamy snajpera!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_SEE_COVER1",
+  "en": "Target in cover.",
+  "pl": "Cel w ukryciu.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.91,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_SEE_COVER2",
+  "en": "Enemy is behind cover.",
+  "pl": "Wróg jest za kryjówką.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_SEE_GRENADE3",
+  "en": "Grenade incoming!",
+  "pl": "Granata wchodząca!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.13,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_SEE_TARGET2",
+  "en": "Target! Dead ahead!",
+  "pl": "Celem!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.93,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_SEE_TARGET3",
+  "en": "Enemy spotted.",
+  "pl": "Wróg zauważył.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.79,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_GST_SMOKE1",
+  "en": "They popped smoke!",
+  "pl": "Wybuchł dym!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.81,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_FIRE1",
+  "en": "Open fire!",
+  "pl": "Otwórz ogień!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_FIRE_SUPPRESS1",
+  "en": "Give me suppressing fire.",
+  "pl": "Daj mi tłumienie ognia.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_FIRE_SUPPRESS3",
+  "en": "I need suppressing fire.",
+  "pl": "Potrzebuję tłumienia ognia.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 4.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_GEN1",
+  "en": "Watch the doorways.",
+  "pl": "Uważaj na drzwi.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.05,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_GEN2",
+  "en": "Watch the corners.",
+  "pl": "Uważaj na kąty.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.0,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_GEN3",
+  "en": "Check the rooms.",
+  "pl": "Sprawdź pokoje.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_GEN4",
+  "en": "Keep it quiet.",
+  "pl": "Trzymaj się cicho.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.8,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_GEN5",
+  "en": "Let's take it slow.",
+  "pl": "Zróbmy to powoli.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.02,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_LOC_ABV1",
+  "en": "Look above us.",
+  "pl": "Spójrz nad nami.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.98,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_LOC_ABV2",
+  "en": "Look up there!",
+  "pl": "Spójrz tam!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_LOC_AHD1",
+  "en": "Right ahead of us!",
+  "pl": "Tuż przed nami!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.93,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_LOC_AHD2",
+  "en": "Dead ahead.",
+  "pl": "Zatrzymaj się.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.71,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_LOC_LFT1",
+  "en": "Enemy to the left.",
+  "pl": "Wróg po lewej stronie.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.96,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_LOC_LFT2",
+  "en": "There's an enemy to the left.",
+  "pl": "Jest wróg po lewej stronie.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.38,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_LOC_LFT3",
+  "en": "There's one to the left.",
+  "pl": "Jest jeden po lewej.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.07,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_LOC_RT1",
+  "en": "There's one to the right.",
+  "pl": "Jeden po prawej.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.25,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_LOC_RT2",
+  "en": "To the right.",
+  "pl": "Po prawej.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.72,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_LOC_RT3",
+  "en": "Look right!",
+  "pl": "Spójrz w prawo!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_COVER1",
+  "en": "Take cover!",
+  "pl": "Ukryj się!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_COVER2",
+  "en": "Get to cover!",
+  "pl": "Zabezpieczcie się!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.91,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_COVER3",
+  "en": "Get behind something!",
+  "pl": "Zatrzymaj się za czymś!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.22,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_HOLD1",
+  "en": "Hold up.",
+  "pl": "Poczekajcie.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.57,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_IN1",
+  "en": "Move forward.",
+  "pl": "Ruszajcie naprzód.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.7,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_IN2",
+  "en": "Let's move up!",
+  "pl": "Ruszamy w górę!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_IN3",
+  "en": "Let's go.",
+  "pl": "- Chodźmy.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.55,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_IT1",
+  "en": "Could you get this out of my way?",
+  "pl": "Możesz mi to zabrać?",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.37,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_IT2",
+  "en": "Could you move this?",
+  "pl": "Możesz to przesunąć?",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.97,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_LEFT1",
+  "en": "Flank left.",
+  "pl": "Z lewej skrzydła.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.73,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_LEFT3",
+  "en": "Move left.",
+  "pl": "Idź w lewo.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.82,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_OUT1",
+  "en": "Let's go.",
+  "pl": "- Chodźmy.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.55,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_OUT2",
+  "en": "This way.",
+  "pl": "- W tę stronę.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.51,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_OUT3",
+  "en": "Follow me.",
+  "pl": "Chodź za mną.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.58,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_RETREAT2",
+  "en": "Let's fallback.",
+  "pl": "Zwróćmy się.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.09,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_RETREAT3",
+  "en": "We need to fall back.",
+  "pl": "Musimy się odwrócić.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.23,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_RIGHT1",
+  "en": "Flank right!",
+  "pl": "Po prawej stronie!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.76,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_RIGHT3",
+  "en": "Move right!",
+  "pl": "Ruszajcie w prawo!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.83,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_YOU1",
+  "en": "Would you move please?",
+  "pl": "Możesz się ruszyć?",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.92,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_MOVE_YOU2",
+  "en": "If you don't mind.",
+  "pl": "Jeśli nie masz nic przeciwko.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.99,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_REPORT_BEHIND1",
+  "en": "Go behind them.",
+  "pl": "Idź za nimi.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.74,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_REPORT_CLEAR1",
+  "en": "All's clear.",
+  "pl": "Wszystko jest w porządku.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.77,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_REPORT_CLEAR2",
+  "en": "It's safe.",
+  "pl": "To bezpieczne.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.67,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_REPORT_DESTROY1",
+  "en": "He's down.",
+  "pl": "Jest na dole.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.75,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_REPORT_DESTROY2",
+  "en": "Got one!",
+  "pl": "Mam jedną!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.62,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_REPORT_FIRE1",
+  "en": "We're taking fire!",
+  "pl": "Strzelają!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.11,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_REPORT_HIT1",
+  "en": "I've been hit!",
+  "pl": "Zostałem uderzony!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.47,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_REPORT_PINNED1",
+  "en": "I'm pinned down!",
+  "pl": "Jestem uwięziony!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_REPORT_PINNED2",
+  "en": "I'm taking fire!",
+  "pl": "Zabieram ogień!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.43,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_REPORT_SNIPER1",
+  "en": "There's a sniper!",
+  "pl": "Jest snajper!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_SEE_COVER1",
+  "en": "They're behind cover.",
+  "pl": "Są za kryjówką.",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 1.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_SEE_GRENADE1",
+  "en": "There's a grenade!",
+  "pl": "Jest granata!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.96,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_SEE_TARGET1",
+  "en": "There's one!",
+  "pl": "Jest jeden!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.69,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_SEE_TARGET2",
+  "en": "Look over there!",
+  "pl": "Spójrz tam!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.95,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_KAT_SEE_TARGET3",
+  "en": "Over there!",
+  "pl": "Tam jest!",
+  "pkg": "SP_VI6_kismet05_LOC_INT",
+  "rate": 48000,
+  "ch": 1,
+  "dur": 0.66,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_FIRE1",
+  "en": "Engaging target!",
+  "pl": "Włączamy cel!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.43,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_FIRE3",
+  "en": "I got him!",
+  "pl": "Mam go!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.43,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_FIRE_GRENADE1",
+  "en": "Frag out!",
+  "pl": "Zjeżdżaj!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.64,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_FIRE_GRENADE2",
+  "en": "Tossing frag!",
+  "pl": "Rzucałam frag!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.17,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_FIRE_GRENADE3",
+  "en": "Grenade out!",
+  "pl": "Granata!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.17,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_FIRE_SUPPRESS1",
+  "en": "Cover fire!",
+  "pl": "Strzelaj!",
+  "pkg": "SP_Freight_Script_Cargo1B_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_FIRE_SUPPRESS2",
+  "en": "Pin him down!",
+  "pl": "Zatrzymaj go!",
+  "pkg": "SP_Freight_Script_Cargo1B_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_FIRE_SUPPRESS3",
+  "en": "Give me cover fire!",
+  "pl": "Daj mi ogień kryjówki!",
+  "pkg": "SP_Freight_Script_Cargo1B_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.02,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_MOVE_IN2",
+  "en": "We're moving up!",
+  "pl": "Idziemy w górę!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.15,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_MOVE_IN3",
+  "en": "Take forward positions!",
+  "pl": "Weźcie pozycje naprzód!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.76,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_MOVE_IN5",
+  "en": "Spread out!",
+  "pl": "Rozprosz się!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.15,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_MOVE_RETREAT1",
+  "en": "Retreat to cover!",
+  "pl": "Wycofać się do kryjówki!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.26,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_MOVE_RETREAT2",
+  "en": "We can't hold here.",
+  "pl": "Nie możemy tu trzymać.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.29,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_MOVE_RETREAT3",
+  "en": "We need to fall back.",
+  "pl": "Musimy się odwrócić.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.96,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_RPT_BACKUP1",
+  "en": "??? ????? ?????????!",
+  "pl": "Czy to nie ma znaczenia?",
+  "pkg": "SP_Freight_Script_Cargo1B_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.18,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_RPT_PINNED1",
+  "en": "We are pinned down.",
+  "pl": "Jesteśmy zamknięci.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.03,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_SEE_GRENADE2",
+  "en": "Grenade incoming!",
+  "pl": "Granata wchodząca!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.77,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_SEE_TARGET1",
+  "en": "Enemy sighted!",
+  "pl": "Wroga widziany!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.99,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_SEE_TARGET2",
+  "en": "Tango in range!",
+  "pl": "Tango w zasięgu!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.4,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_SEE_TARGET3",
+  "en": "Let's get him.",
+  "pl": "Złapmy go.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.07,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_SEE_TARGET4",
+  "en": "I see him.",
+  "pl": "Widzę go.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.55,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_SEE_TARGET5",
+  "en": "Got him.",
+  "pl": "Mam go.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.82,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_SEE_ZEK1",
+  "en": "Get those things!",
+  "pl": "Zabierzcie te rzeczy!",
+  "pkg": "SP_Freight_Script_Cargo1B_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.22,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_SRCH_FIND1",
+  "en": "I'll find him.",
+  "pl": "Znajdę go.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.05,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_SRCH_KILL1",
+  "en": "He's here somewhere.",
+  "pl": "Jest gdzieś tutaj.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT1_SRCH_KILL2",
+  "en": "He's dead when I find him.",
+  "pl": "Kiedy go znajdę, będzie martwy.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.21,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_FIRE1",
+  "en": "Take him out.",
+  "pl": "Zabierzcie go.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.85,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_FIRE3",
+  "en": "Target sighted, firing now!",
+  "pl": "Cel widoczny, strzelaj natychmiast!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.55,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_FIRE_GRENADE1",
+  "en": "Using grenade!",
+  "pl": "Korzystając z granaty!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.96,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_FIRE_GRENADE2",
+  "en": "Grenade in air!",
+  "pl": "Granata w powietrzu!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.03,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_FIRE_SUPPRESS1",
+  "en": "Cover fire!",
+  "pl": "Strzelaj!",
+  "pkg": "SP_WL4_kismet10_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.16,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_FIRE_SUPPRESS2",
+  "en": "Suppressing fire!",
+  "pl": "Stłumienie ognia!",
+  "pkg": "SP_WL4_kismet10_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_FIRE_SUPPRESS3",
+  "en": "Someone cover me!",
+  "pl": "Niech ktoś mnie kryje!",
+  "pkg": "SP_WL4_kismet10_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.48,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_COVER1",
+  "en": "Spread out and take cover!",
+  "pl": "Rozprosz się i ukryj się!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.5,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_COVER2",
+  "en": "Don't give him a target!",
+  "pl": "Nie daj mu celu!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.6,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_HOLD1",
+  "en": "Hunker down!",
+  "pl": "W dół!",
+  "pkg": "SP_WL4_kismet10_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.75,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_HOLD2",
+  "en": "Hold this position.",
+  "pl": "Trzymaj tę pozycję.",
+  "pkg": "SP_WL4_kismet10_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.58,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_IN1",
+  "en": "Push forward!",
+  "pl": "Wciśnijcie do przodu!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.84,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_IN2",
+  "en": "Everybody -- move!",
+  "pl": "Wszyscy... ruszajcie się!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.16,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_IN3",
+  "en": "Take those positions!",
+  "pl": "Weźcie pozycje!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.39,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_IN4",
+  "en": "Up and out, let's go!",
+  "pl": "W górę i na zewnątrz, chodźmy!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.47,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_IN5",
+  "en": "Move it!",
+  "pl": "Ruszajcie!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.47,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_RETREAT1",
+  "en": "We're leaving!",
+  "pl": "Wyjeżdżamy!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.69,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_RETREAT2",
+  "en": "Fall back!",
+  "pl": "Odwróć się!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.87,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_RPT_PINNED1",
+  "en": "Can't move!",
+  "pl": "Nie mogę się ruszyć!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.05,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_SEE_TARGET1",
+  "en": "I have a target!",
+  "pl": "Mam cel!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.72,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_SEE_TARGET2",
+  "en": "We have contact!",
+  "pl": "Mamy kontakt!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.05,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_SEE_TARGET4",
+  "en": "Eyes front -- intruder!",
+  "pl": "Oczami naprzód - włamywacz!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 2.08,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_SEE_TARGET5",
+  "en": "Tracking intruder.",
+  "pl": "Śledzenie włamywacza.",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.12,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_SRCH_FIND1",
+  "en": "Check the corners!",
+  "pl": "Sprawdź kąty!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.11,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_SRCH_KILL1",
+  "en": "Don't let him out of here alive!",
+  "pl": "Nie wypuszczaj go stąd żywego!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.43,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT2_SRCH_KILL2",
+  "en": "Everybody search!",
+  "pl": "Wszyscy szukajcie!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.94,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_FIRE1",
+  "en": "Shoot him!",
+  "pl": "Strzelaj do niego!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.85,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_FIRE2",
+  "en": "Kill him, kill him!",
+  "pl": "Zabijcie go! Zabijcie go!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.93,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_FIRE3",
+  "en": "Keep me covered!",
+  "pl": "Trzymaj mnie przykrytym!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.01,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_FIRE_GRENADE2",
+  "en": "Throwing grenade!",
+  "pl": "Rzucają granat!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.46,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_FIRE_GRENADE3",
+  "en": "Get down!",
+  "pl": "Złaź!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.88,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_FIRE_SUPPRESS1",
+  "en": "Gimme cover!",
+  "pl": "Daj mi kryj!",
+  "pkg": "SP_RL5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.96,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_FIRE_SUPPRESS2",
+  "en": "I need cover fire!",
+  "pl": "Potrzebuję ognia kryjówki!",
+  "pkg": "SP_RL5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.17,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_FIRE_SUPPRESS3",
+  "en": "Shoot him, shoot him!",
+  "pl": "Strzelaj! Strzelaj!",
+  "pkg": "SP_RL5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.47,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_COVER2",
+  "en": "Keep your head down!",
+  "pl": "Trzymaj głowę w dół!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.05,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_IN1",
+  "en": "Let's go!",
+  "pl": "Chodźmy! Chodźmy!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.3,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_IN2",
+  "en": "Go get him!",
+  "pl": "Idź go złapać!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.02,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_IN3",
+  "en": "Push forward!",
+  "pl": "Wciśnijcie do przodu!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.35,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_IN4",
+  "en": "Go, go, go!",
+  "pl": "Idź, idź, idź!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.54,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_IN5",
+  "en": "You go, I'll cover!",
+  "pl": "Ty idź, ja się zajmę!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.99,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_RETREAT2",
+  "en": "Let's get out of here!",
+  "pl": "Wynośmy się stąd!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.91,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_RPT_AFFIRM1",
+  "en": "You got it!",
+  "pl": "Masz to!",
+  "pkg": "SP_RL5_audio01_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.56,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_RPT_CLEAR1",
+  "en": "Sector's clear, I think.",
+  "pl": "Sektor jest czysty, myślę.",
+  "pkg": "SP_RL5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.29,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_RPT_IN_A1",
+  "en": "Alpha team checking in.",
+  "pl": "Zespół Alpha przyjeżdża.",
+  "pkg": "SP_RL5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.45,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_RPT_IN_B1",
+  "en": "Bravo team here.",
+  "pl": "Zespół Bravo.",
+  "pkg": "SP_RL5_audio01_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.49,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_RPT_IN_D1",
+  "en": "Delta squad reporting in.",
+  "pl": "Oddział Delta zgłasza się.",
+  "pkg": "SP_RL5_audio01_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.52,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_RPT_PINNED1",
+  "en": "Help! I'm pinned down!",
+  "pl": "Pomocy, zamknęłam się!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.89,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_SEE_TARGET1",
+  "en": "I see him! I see him!",
+  "pl": "Widzę go!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.85,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_SEE_TARGET2",
+  "en": "There he is!",
+  "pl": "Tu jest!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.69,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_SEE_TARGET3",
+  "en": "Over there!",
+  "pl": "Tam jest!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.28,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_SEE_TARGET4",
+  "en": "I have him!",
+  "pl": "Mam go!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 0.96,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_SEE_TARGET5",
+  "en": "Help, over here!",
+  "pl": "Pomoc, tutaj!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.54,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_SEE_ZEK1",
+  "en": "Help! Monsters!",
+  "pl": "Pomocy, potwory!",
+  "pkg": "SP_RL5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.44,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_SRCH_FIND1",
+  "en": "Where'd he go?",
+  "pl": "- Gdzie on jest?",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.1,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_SRCH_KILL1",
+  "en": "Anybody see him?",
+  "pl": "Ktoś go widział?",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.24,
+  "status": "machine_draft"
+ },
+ {
+  "asset": "SD_SPT3_SRCH_KILL2",
+  "en": "Let's just get outta here!",
+  "pl": "Wynośmy się stąd!",
+  "pkg": "SP_VI5_kismet03_LOC_INT",
+  "rate": 44100,
+  "ch": 1,
+  "dur": 1.91,
+  "status": "machine_draft"
+ }
+]

@@ -1,0 +1,2950 @@
+[
+ {
+  "asset": "SD_GST_ADVANCING1",
+  "en": "Their making a push!",
+  "pl": "Wciœniêcie!",
+  "donor_fac": "ADVANCING",
+  "dur": 1.6,
+  "budget": 0.89,
+  "tempo": 1.798,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_ADVANCING2",
+  "en": "Enemy advancing!",
+  "pl": "Wróg zbli¿a siê!",
+  "donor_fac": "ADVANCING",
+  "dur": 2.0,
+  "budget": 1.0,
+  "tempo": 2.0,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_CHK_LFT1",
+  "en": "Checking left.",
+  "pl": "Sprawdzam w lewo.",
+  "donor_fac": "CHK",
+  "dur": 2.96,
+  "budget": 0.66,
+  "tempo": 4.485,
+  "verdict": "REVIEW_TEMPO",
+  "retry_t02": {
+   "dur": 2.0,
+   "tempo": 3.03
+  }
+ },
+ {
+  "asset": "SD_GST_CHK_RT1",
+  "en": "Checking right.",
+  "pl": "Sprawdzam w prawo.",
+  "donor_fac": "CHK",
+  "dur": 2.16,
+  "budget": 0.66,
+  "tempo": 3.273,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP1_FIRE1",
+  "en": "Shoot him!",
+  "pl": "Strzelaj do niego!",
+  "donor_fac": "FIRE",
+  "dur": 4.4,
+  "budget": 0.87,
+  "tempo": 5.057,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 4.16,
+   "tempo": 4.782
+  },
+  "retry_645b": {
+   "dur": 2.64,
+   "tempo": 3.034
+  }
+ },
+ {
+  "asset": "SD_ESP1_FIRE2",
+  "en": "Kill him, kill him!",
+  "pl": "Zabijcie go! Zabijcie go!",
+  "donor_fac": "FIRE",
+  "dur": 5.36,
+  "budget": 0.82,
+  "tempo": 6.537,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 5.36,
+   "tempo": 6.537
+  },
+  "retry_645b": {
+   "dur": 1.68,
+   "tempo": 2.049
+  }
+ },
+ {
+  "asset": "SD_ESP1_FIRE3",
+  "en": "Keep me covered!",
+  "pl": "Trzymaj mnie przykrytym!",
+  "donor_fac": "FIRE",
+  "dur": 2.64,
+  "budget": 0.83,
+  "tempo": 3.181,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP1_FIRE_GRENADE2",
+  "en": "Throwing grenade!",
+  "pl": "Rzucaj¹ granat!",
+  "donor_fac": "FIRE",
+  "dur": 4.64,
+  "budget": 0.85,
+  "tempo": 5.459,
+  "verdict": "STAYS_EN",
+  "retry_t02": {
+   "dur": 4.72,
+   "tempo": 5.553
+  },
+  "retry_645b": {
+   "dur": 3.28,
+   "tempo": 3.859
+  }
+ },
+ {
+  "asset": "SD_ESP1_FIRE_GRENADE3",
+  "en": "Get down!",
+  "pl": "Z³aŸ!",
+  "donor_fac": "FIRE",
+  "dur": 2.56,
+  "budget": 1.1,
+  "tempo": 2.327,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP2_FIRE1",
+  "en": "Shoot him!",
+  "pl": "Strzelaj do niego!",
+  "donor_fac": "FIRE",
+  "dur": 4.4,
+  "budget": 1.12,
+  "tempo": 3.929,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_645b": {
+   "dur": 2.96,
+   "tempo": 2.643
+  }
+ },
+ {
+  "asset": "SD_ESP2_FIRE2",
+  "en": "Kill him, kill him!",
+  "pl": "Zabijcie go! Zabijcie go!",
+  "donor_fac": "FIRE",
+  "dur": 5.36,
+  "budget": 0.71,
+  "tempo": 7.549,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 5.36,
+   "tempo": 7.549
+  },
+  "retry_645b": {
+   "dur": 2.08,
+   "tempo": 2.93
+  }
+ },
+ {
+  "asset": "SD_ESP2_FIRE3",
+  "en": "Keep me covered!",
+  "pl": "Trzymaj mnie przykrytym!",
+  "donor_fac": "FIRE",
+  "dur": 1.76,
+  "budget": 1.22,
+  "tempo": 1.443,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_ESP2_FIRE_GRENADE2",
+  "en": "Throwing grenade!",
+  "pl": "Rzucaj¹ granat!",
+  "donor_fac": "FIRE",
+  "dur": 4.72,
+  "budget": 1.08,
+  "tempo": 4.37,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 4.72,
+   "tempo": 4.37
+  },
+  "retry_645b": {
+   "dur": 1.68,
+   "tempo": 1.556
+  }
+ },
+ {
+  "asset": "SD_ESP2_FIRE_GRENADE3",
+  "en": "Get down!",
+  "pl": "Z³aŸ!",
+  "donor_fac": "FIRE",
+  "dur": 2.88,
+  "budget": 0.8,
+  "tempo": 3.6,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_645b": {
+   "dur": 2.4,
+   "tempo": 3.0
+  }
+ },
+ {
+  "asset": "SD_GRD1_FIRE1",
+  "en": "Shoot him!",
+  "pl": "Strzelaj do niego!",
+  "donor_fac": "FIRE",
+  "dur": 3.12,
+  "budget": 1.07,
+  "tempo": 2.916,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GRD1_FIRE2",
+  "en": "Kill him, kill him!",
+  "pl": "Zabijcie go! Zabijcie go!",
+  "donor_fac": "FIRE",
+  "dur": 2.24,
+  "budget": 1.34,
+  "tempo": 1.672,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GRD1_FIRE3",
+  "en": "Keep me covered!",
+  "pl": "Trzymaj mnie przykrytym!",
+  "donor_fac": "FIRE",
+  "dur": 3.2,
+  "budget": 0.97,
+  "tempo": 3.299,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GRD1_FIRE_GRENADE2",
+  "en": "Throwing grenade!",
+  "pl": "Rzucaj¹ granat!",
+  "donor_fac": "FIRE",
+  "dur": 4.72,
+  "budget": 1.23,
+  "tempo": 3.837,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_645b": {
+   "dur": 0.96,
+   "tempo": 0.78
+  }
+ },
+ {
+  "asset": "SD_GRD1_FIRE_GRENADE3",
+  "en": "Get down!",
+  "pl": "Z³aŸ!",
+  "donor_fac": "FIRE",
+  "dur": 2.72,
+  "budget": 0.56,
+  "tempo": 4.857,
+  "verdict": "STAYS_EN",
+  "retry_t02": {
+   "dur": 2.56,
+   "tempo": 4.571
+  },
+  "retry_645b": {
+   "dur": 3.12,
+   "tempo": 5.571
+  }
+ },
+ {
+  "asset": "SD_GST_FIRE1",
+  "en": "Open fire!",
+  "pl": "Otwórz ogieñ!",
+  "donor_fac": "FIRE",
+  "dur": 4.0,
+  "budget": 0.92,
+  "tempo": 4.348,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 4.0,
+   "tempo": 4.348
+  },
+  "retry_645b": {
+   "dur": 1.6,
+   "tempo": 1.739
+  }
+ },
+ {
+  "asset": "SD_GST_FIRE2",
+  "en": "Engage! Engage!",
+  "pl": "Zaanga¿uj siê!",
+  "donor_fac": "FIRE",
+  "dur": 4.4,
+  "budget": 1.17,
+  "tempo": 3.761,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_645b": {
+   "dur": 1.84,
+   "tempo": 1.573
+  }
+ },
+ {
+  "asset": "SD_GST_FIRE3",
+  "en": "Light 'em up!",
+  "pl": "Zapalcie je!",
+  "donor_fac": "FIRE",
+  "dur": 2.88,
+  "budget": 0.67,
+  "tempo": 4.299,
+  "verdict": "STAYS_EN",
+  "retry_t02": {
+   "dur": 2.56,
+   "tempo": 3.821
+  },
+  "retry_645b": {
+   "dur": 3.44,
+   "tempo": 5.134
+  }
+ },
+ {
+  "asset": "SD_GST_FIRE_SUPPRESS1",
+  "en": "Give me suppressing fire.",
+  "pl": "Daj mi t³umienie ognia.",
+  "donor_fac": "FIRE",
+  "dur": 4.4,
+  "budget": 1.3,
+  "tempo": 3.385,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_FIRE_SUPPRESS2",
+  "en": "Cover me.",
+  "pl": "Zaopiekuj mnie.",
+  "donor_fac": "FIRE",
+  "dur": 2.56,
+  "budget": 0.62,
+  "tempo": 4.129,
+  "verdict": "STAYS_EN",
+  "retry_t02": {
+   "dur": 2.56,
+   "tempo": 4.129
+  },
+  "retry_645b": {
+   "dur": 2.56,
+   "tempo": 4.129
+  }
+ },
+ {
+  "asset": "SD_GST_FIRE_SUPPRESS3",
+  "en": "I need suppressing fire.",
+  "pl": "Potrzebujê t³umienia ognia.",
+  "donor_fac": "FIRE",
+  "dur": 4.16,
+  "budget": 1.43,
+  "tempo": 2.909,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_FIRE1",
+  "en": "Open fire!",
+  "pl": "Otwórz ogieñ!",
+  "donor_fac": "FIRE",
+  "dur": 4.0,
+  "budget": 0.83,
+  "tempo": 4.819,
+  "verdict": "REVIEW_TEMPO",
+  "retry_t02": {
+   "dur": 2.56,
+   "tempo": 3.084
+  }
+ },
+ {
+  "asset": "SD_KAT_FIRE_SUPPRESS1",
+  "en": "Give me suppressing fire.",
+  "pl": "Daj mi t³umienie ognia.",
+  "donor_fac": "FIRE",
+  "dur": 2.48,
+  "budget": 1.46,
+  "tempo": 1.699,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_FIRE_SUPPRESS3",
+  "en": "I need suppressing fire.",
+  "pl": "Potrzebujê t³umienia ognia.",
+  "donor_fac": "FIRE",
+  "dur": 4.72,
+  "budget": 4.0,
+  "tempo": 1.18,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_FIRE1",
+  "en": "Engaging target!",
+  "pl": "W³¹czamy cel!",
+  "donor_fac": "FIRE",
+  "dur": 4.0,
+  "budget": 0.43,
+  "tempo": 9.302,
+  "verdict": "STAYS_EN",
+  "retry_t02": {
+   "dur": 3.52,
+   "tempo": 8.186
+  },
+  "retry_645b": {
+   "dur": 3.12,
+   "tempo": 7.256
+  }
+ },
+ {
+  "asset": "SD_SPT1_FIRE3",
+  "en": "I got him!",
+  "pl": "Mam go!",
+  "donor_fac": "FIRE",
+  "dur": 2.56,
+  "budget": 0.43,
+  "tempo": 5.953,
+  "verdict": "STAYS_EN",
+  "retry_t02": {
+   "dur": 2.8,
+   "tempo": 6.512
+  },
+  "retry_645b": {
+   "dur": 2.08,
+   "tempo": 4.837
+  }
+ },
+ {
+  "asset": "SD_SPT1_FIRE_GRENADE1",
+  "en": "Frag out!",
+  "pl": "Zje¿d¿aj!",
+  "donor_fac": "FIRE",
+  "dur": 2.0,
+  "budget": 0.64,
+  "tempo": 3.125,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT1_FIRE_GRENADE2",
+  "en": "Tossing frag!",
+  "pl": "Rzuca³am frag!",
+  "donor_fac": "FIRE",
+  "dur": 4.4,
+  "budget": 1.17,
+  "tempo": 3.761,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_645b": {
+   "dur": 4.0,
+   "tempo": 3.419
+  }
+ },
+ {
+  "asset": "SD_SPT1_FIRE_GRENADE3",
+  "en": "Grenade out!",
+  "pl": "Granata!",
+  "donor_fac": "FIRE",
+  "dur": 3.68,
+  "budget": 1.17,
+  "tempo": 3.145,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT1_FIRE_SUPPRESS1",
+  "en": "Cover fire!",
+  "pl": "Strzelaj!",
+  "donor_fac": "FIRE",
+  "dur": 2.56,
+  "budget": 1.1,
+  "tempo": 2.327,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT1_FIRE_SUPPRESS2",
+  "en": "Pin him down!",
+  "pl": "Zatrzymaj go!",
+  "donor_fac": "FIRE",
+  "dur": 3.28,
+  "budget": 1.46,
+  "tempo": 2.247,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT1_FIRE_SUPPRESS3",
+  "en": "Give me cover fire!",
+  "pl": "Daj mi ogieñ kryjówki!",
+  "donor_fac": "FIRE",
+  "dur": 2.0,
+  "budget": 1.02,
+  "tempo": 1.961,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT2_FIRE1",
+  "en": "Take him out.",
+  "pl": "Zabierzcie go.",
+  "donor_fac": "FIRE",
+  "dur": 2.32,
+  "budget": 0.85,
+  "tempo": 2.729,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT2_FIRE3",
+  "en": "Target sighted, firing now!",
+  "pl": "Cel widoczny, strzelaj natychmiast!",
+  "donor_fac": "FIRE",
+  "dur": 5.12,
+  "budget": 1.55,
+  "tempo": 3.303,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT2_FIRE_GRENADE1",
+  "en": "Using grenade!",
+  "pl": "Korzystaj¹c z granaty!",
+  "donor_fac": "FIRE",
+  "dur": 5.04,
+  "budget": 0.96,
+  "tempo": 5.25,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 5.04,
+   "tempo": 5.25
+  },
+  "retry_645b": {
+   "dur": 2.16,
+   "tempo": 2.25
+  }
+ },
+ {
+  "asset": "SD_SPT2_FIRE_GRENADE2",
+  "en": "Grenade in air!",
+  "pl": "Granata w powietrzu!",
+  "donor_fac": "FIRE",
+  "dur": 4.4,
+  "budget": 1.03,
+  "tempo": 4.272,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 4.0,
+   "tempo": 3.883
+  },
+  "retry_645b": {
+   "dur": 1.76,
+   "tempo": 1.709
+  }
+ },
+ {
+  "asset": "SD_SPT2_FIRE_SUPPRESS1",
+  "en": "Cover fire!",
+  "pl": "Strzelaj!",
+  "donor_fac": "FIRE",
+  "dur": 2.24,
+  "budget": 1.16,
+  "tempo": 1.931,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT2_FIRE_SUPPRESS2",
+  "en": "Suppressing fire!",
+  "pl": "St³umienie ognia!",
+  "donor_fac": "FIRE",
+  "dur": 3.36,
+  "budget": 1.24,
+  "tempo": 2.71,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT2_FIRE_SUPPRESS3",
+  "en": "Someone cover me!",
+  "pl": "Niech ktoœ mnie kryje!",
+  "donor_fac": "FIRE",
+  "dur": 3.28,
+  "budget": 1.48,
+  "tempo": 2.216,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT3_FIRE1",
+  "en": "Shoot him!",
+  "pl": "Strzelaj do niego!",
+  "donor_fac": "FIRE",
+  "dur": 2.88,
+  "budget": 1.85,
+  "tempo": 1.557,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_FIRE2",
+  "en": "Kill him, kill him!",
+  "pl": "Zabijcie go! Zabijcie go!",
+  "donor_fac": "FIRE",
+  "dur": 5.36,
+  "budget": 0.93,
+  "tempo": 5.763,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 5.36,
+   "tempo": 5.763
+  },
+  "retry_645b": {
+   "dur": 2.16,
+   "tempo": 2.323
+  }
+ },
+ {
+  "asset": "SD_SPT3_FIRE3",
+  "en": "Keep me covered!",
+  "pl": "Trzymaj mnie przykrytym!",
+  "donor_fac": "FIRE",
+  "dur": 4.72,
+  "budget": 1.01,
+  "tempo": 4.673,
+  "verdict": "REVIEW_TEMPO",
+  "retry_t02": {
+   "dur": 3.36,
+   "tempo": 3.327
+  }
+ },
+ {
+  "asset": "SD_SPT3_FIRE_GRENADE2",
+  "en": "Throwing grenade!",
+  "pl": "Rzucaj¹ granat!",
+  "donor_fac": "FIRE",
+  "dur": 4.72,
+  "budget": 1.46,
+  "tempo": 3.233,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT3_FIRE_GRENADE3",
+  "en": "Get down!",
+  "pl": "Z³aŸ!",
+  "donor_fac": "FIRE",
+  "dur": 3.36,
+  "budget": 0.88,
+  "tempo": 3.818,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_645b": {
+   "dur": 2.48,
+   "tempo": 2.818
+  }
+ },
+ {
+  "asset": "SD_SPT3_FIRE_SUPPRESS1",
+  "en": "Gimme cover!",
+  "pl": "Daj mi kryj!",
+  "donor_fac": "FIRE",
+  "dur": 4.0,
+  "budget": 1.96,
+  "tempo": 2.041,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT3_FIRE_SUPPRESS2",
+  "en": "I need cover fire!",
+  "pl": "Potrzebujê ognia kryjówki!",
+  "donor_fac": "FIRE",
+  "dur": 5.04,
+  "budget": 1.17,
+  "tempo": 4.308,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 5.04,
+   "tempo": 4.308
+  },
+  "retry_645b": {
+   "dur": 2.64,
+   "tempo": 2.256
+  }
+ },
+ {
+  "asset": "SD_SPT3_FIRE_SUPPRESS3",
+  "en": "Shoot him, shoot him!",
+  "pl": "Strzelaj! Strzelaj!",
+  "donor_fac": "FIRE",
+  "dur": 2.56,
+  "budget": 1.47,
+  "tempo": 1.741,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_GEN1",
+  "en": "Stay frosty.",
+  "pl": "Zostañ mroŸny.",
+  "donor_fac": "GEN",
+  "dur": 2.0,
+  "budget": 0.87,
+  "tempo": 2.299,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_GEN2",
+  "en": "Watch the doorways.",
+  "pl": "Uwa¿aj na drzwi.",
+  "donor_fac": "GEN",
+  "dur": 2.08,
+  "budget": 0.9,
+  "tempo": 2.311,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_GEN3",
+  "en": "Take it slow.",
+  "pl": "Powoli.",
+  "donor_fac": "GEN",
+  "dur": 1.36,
+  "budget": 0.88,
+  "tempo": 1.545,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_GEN4",
+  "en": "Keep scanning for hostiles.",
+  "pl": "Kontynuuj skanowanie na wrogów.",
+  "donor_fac": "GEN",
+  "dur": 2.96,
+  "budget": 1.36,
+  "tempo": 2.176,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_GEN5",
+  "en": "Watch the corners.",
+  "pl": "Uwa¿aj na k¹ty.",
+  "donor_fac": "GEN",
+  "dur": 1.92,
+  "budget": 0.92,
+  "tempo": 2.087,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_GEN1",
+  "en": "Watch the doorways.",
+  "pl": "Uwa¿aj na drzwi.",
+  "donor_fac": "GEN",
+  "dur": 2.0,
+  "budget": 1.05,
+  "tempo": 1.905,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_GEN2",
+  "en": "Watch the corners.",
+  "pl": "Uwa¿aj na k¹ty.",
+  "donor_fac": "GEN",
+  "dur": 2.08,
+  "budget": 1.0,
+  "tempo": 2.08,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_GEN3",
+  "en": "Check the rooms.",
+  "pl": "SprawdŸ pokoje.",
+  "donor_fac": "GEN",
+  "dur": 2.0,
+  "budget": 0.76,
+  "tempo": 2.632,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_GEN4",
+  "en": "Keep it quiet.",
+  "pl": "Trzymaj siê cicho.",
+  "donor_fac": "GEN",
+  "dur": 2.16,
+  "budget": 0.8,
+  "tempo": 2.7,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_GEN5",
+  "en": "Let's take it slow.",
+  "pl": "Zróbmy to powoli.",
+  "donor_fac": "GEN",
+  "dur": 2.0,
+  "budget": 1.02,
+  "tempo": 1.961,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_HELP1",
+  "en": "Renko, help me out here!",
+  "pl": "Renko, pomó¿ mi!",
+  "donor_fac": "HELP",
+  "dur": 2.64,
+  "budget": 1.69,
+  "tempo": 1.562,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_HELP2",
+  "en": "Gimme a hand!",
+  "pl": "Pomó¿ mi!",
+  "donor_fac": "HELP",
+  "dur": 1.6,
+  "budget": 0.69,
+  "tempo": 2.319,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_LOC_ABV1",
+  "en": "Contact above us.",
+  "pl": "Kontakt nad nami.",
+  "donor_fac": "LOC",
+  "dur": 1.84,
+  "budget": 0.99,
+  "tempo": 1.859,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_LOC_ABV2",
+  "en": "Enemy up top.",
+  "pl": "Wróg na górze.",
+  "donor_fac": "LOC",
+  "dur": 1.6,
+  "budget": 0.79,
+  "tempo": 2.025,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_LOC_AHD1",
+  "en": "Target 12 o'clock.",
+  "pl": "Cel o 12.00.",
+  "donor_fac": "LOC",
+  "dur": 2.88,
+  "budget": 0.98,
+  "tempo": 2.939,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_LOC_AHD2",
+  "en": "Contact dead ahead.",
+  "pl": "Kontakt martwy z przodu.",
+  "donor_fac": "LOC",
+  "dur": 2.56,
+  "budget": 0.95,
+  "tempo": 2.695,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_LOC_LFT1",
+  "en": "Enemy to the left.",
+  "pl": "Wróg po lewej stronie.",
+  "donor_fac": "LOC",
+  "dur": 2.0,
+  "budget": 0.89,
+  "tempo": 2.247,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_LOC_LFT2",
+  "en": "Contact to the left.",
+  "pl": "Kontakt z lewej strony.",
+  "donor_fac": "LOC",
+  "dur": 2.24,
+  "budget": 1.03,
+  "tempo": 2.175,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_LOC_LFT3",
+  "en": "Look left.",
+  "pl": "Spójrz w lewo.",
+  "donor_fac": "LOC",
+  "dur": 1.68,
+  "budget": 0.57,
+  "tempo": 2.947,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_LOC_RT1",
+  "en": "Contact to the right.",
+  "pl": "Kontakt po prawej stronie.",
+  "donor_fac": "LOC",
+  "dur": 2.48,
+  "budget": 0.83,
+  "tempo": 2.988,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_LOC_RT2",
+  "en": "Enemy to the right.",
+  "pl": "Wróg po prawej stronie.",
+  "donor_fac": "LOC",
+  "dur": 2.32,
+  "budget": 0.93,
+  "tempo": 2.495,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_LOC_RT3",
+  "en": "To the right.",
+  "pl": "Po prawej.",
+  "donor_fac": "LOC",
+  "dur": 1.36,
+  "budget": 0.51,
+  "tempo": 2.667,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_LOC_ABV1",
+  "en": "Look above us.",
+  "pl": "Spójrz nad nami.",
+  "donor_fac": "LOC",
+  "dur": 1.84,
+  "budget": 0.98,
+  "tempo": 1.878,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_LOC_ABV2",
+  "en": "Look up there!",
+  "pl": "Spójrz tam!",
+  "donor_fac": "LOC",
+  "dur": 1.6,
+  "budget": 0.92,
+  "tempo": 1.739,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_LOC_AHD1",
+  "en": "Right ahead of us!",
+  "pl": "Tu¿ przed nami!",
+  "donor_fac": "LOC",
+  "dur": 2.08,
+  "budget": 0.93,
+  "tempo": 2.237,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_LOC_AHD2",
+  "en": "Dead ahead.",
+  "pl": "Zatrzymaj siê.",
+  "donor_fac": "LOC",
+  "dur": 1.6,
+  "budget": 0.71,
+  "tempo": 2.254,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_LOC_LFT1",
+  "en": "Enemy to the left.",
+  "pl": "Wróg po lewej stronie.",
+  "donor_fac": "LOC",
+  "dur": 3.04,
+  "budget": 0.96,
+  "tempo": 3.167,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_LOC_LFT2",
+  "en": "There's an enemy to the left.",
+  "pl": "Jest wróg po lewej stronie.",
+  "donor_fac": "LOC",
+  "dur": 2.16,
+  "budget": 1.38,
+  "tempo": 1.565,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_LOC_LFT3",
+  "en": "There's one to the left.",
+  "pl": "Jest jeden po lewej.",
+  "donor_fac": "LOC",
+  "dur": 2.08,
+  "budget": 1.07,
+  "tempo": 1.944,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_LOC_RT1",
+  "en": "There's one to the right.",
+  "pl": "Jeden po prawej.",
+  "donor_fac": "LOC",
+  "dur": 1.76,
+  "budget": 1.25,
+  "tempo": 1.408,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_LOC_RT2",
+  "en": "To the right.",
+  "pl": "Po prawej.",
+  "donor_fac": "LOC",
+  "dur": 1.6,
+  "budget": 0.72,
+  "tempo": 2.222,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_LOC_RT3",
+  "en": "Look right!",
+  "pl": "Spójrz w prawo!",
+  "donor_fac": "LOC",
+  "dur": 1.76,
+  "budget": 0.92,
+  "tempo": 1.913,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_LOCS1",
+  "en": "Contact on the bridge!",
+  "pl": "Kontakt na moscie!",
+  "donor_fac": "LOCS",
+  "dur": 2.16,
+  "budget": 1.28,
+  "tempo": 1.688,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_LOCS2",
+  "en": "Enemy in the window!",
+  "pl": "Wróg w oknie!",
+  "donor_fac": "LOCS",
+  "dur": 2.24,
+  "budget": 0.87,
+  "tempo": 2.575,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_LOCS3",
+  "en": "Hostile on the stairs!",
+  "pl": "Nieprzyjació³ na schodach!",
+  "donor_fac": "LOCS",
+  "dur": 2.24,
+  "budget": 1.32,
+  "tempo": 1.697,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_LOCS4",
+  "en": "Contact on the roof!",
+  "pl": "Kontakt na dachu!",
+  "donor_fac": "LOCS",
+  "dur": 2.16,
+  "budget": 1.03,
+  "tempo": 2.097,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP1_MOVE_COVER2",
+  "en": "Keep your head down!",
+  "pl": "Trzymaj g³owê w dó³!",
+  "donor_fac": "MOVE",
+  "dur": 2.16,
+  "budget": 0.9,
+  "tempo": 2.4,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP1_MOVE_IN1",
+  "en": "Let's go!",
+  "pl": "ChodŸmy! ChodŸmy!",
+  "donor_fac": "MOVE",
+  "dur": 3.6,
+  "budget": 0.74,
+  "tempo": 4.865,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 2.72,
+   "tempo": 3.676
+  },
+  "retry_645b": {
+   "dur": 1.76,
+   "tempo": 2.378
+  }
+ },
+ {
+  "asset": "SD_ESP1_MOVE_IN2",
+  "en": "Go get him!",
+  "pl": "IdŸ go z³apaæ!",
+  "donor_fac": "MOVE",
+  "dur": 2.0,
+  "budget": 0.58,
+  "tempo": 3.448,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP1_MOVE_IN3",
+  "en": "Push forward!",
+  "pl": "Wciœnijcie do przodu!",
+  "donor_fac": "MOVE",
+  "dur": 2.08,
+  "budget": 1.25,
+  "tempo": 1.664,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_ESP1_MOVE_IN4",
+  "en": "Go, go, go!",
+  "pl": "IdŸ, idŸ, idŸ!",
+  "donor_fac": "MOVE",
+  "dur": 3.28,
+  "budget": 1.58,
+  "tempo": 2.076,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP1_MOVE_IN5",
+  "en": "You go, I'll cover!",
+  "pl": "Ty idŸ, ja siê zajmê!",
+  "donor_fac": "MOVE",
+  "dur": 3.76,
+  "budget": 0.63,
+  "tempo": 5.968,
+  "verdict": "STAYS_EN",
+  "retry_t02": {
+   "dur": 2.72,
+   "tempo": 4.317
+  },
+  "retry_645b": {
+   "dur": 3.12,
+   "tempo": 4.952
+  }
+ },
+ {
+  "asset": "SD_ESP1_MOVE_RETREAT2",
+  "en": "Let's get out of here!",
+  "pl": "Wynoœmy siê st¹d!",
+  "donor_fac": "MOVE",
+  "dur": 2.16,
+  "budget": 1.26,
+  "tempo": 1.714,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_COVER2",
+  "en": "Keep your head down!",
+  "pl": "Trzymaj g³owê w dó³!",
+  "donor_fac": "MOVE",
+  "dur": 2.16,
+  "budget": 1.27,
+  "tempo": 1.701,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_IN1",
+  "en": "Let's go!",
+  "pl": "ChodŸmy! ChodŸmy!",
+  "donor_fac": "MOVE",
+  "dur": 2.88,
+  "budget": 1.07,
+  "tempo": 2.692,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_IN2",
+  "en": "Go get him!",
+  "pl": "IdŸ go z³apaæ!",
+  "donor_fac": "MOVE",
+  "dur": 1.68,
+  "budget": 1.27,
+  "tempo": 1.323,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_IN3",
+  "en": "Push forward!",
+  "pl": "Wciœnijcie do przodu!",
+  "donor_fac": "MOVE",
+  "dur": 2.64,
+  "budget": 1.01,
+  "tempo": 2.614,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_IN4",
+  "en": "Go, go, go!",
+  "pl": "IdŸ, idŸ, idŸ!",
+  "donor_fac": "MOVE",
+  "dur": 2.88,
+  "budget": 1.58,
+  "tempo": 1.823,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_ESP2_MOVE_IN5",
+  "en": "You go, I'll cover!",
+  "pl": "Ty idŸ, ja siê zajmê!",
+  "donor_fac": "MOVE",
+  "dur": 2.96,
+  "budget": 0.63,
+  "tempo": 4.698,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 2.96,
+   "tempo": 4.698
+  },
+  "retry_645b": {
+   "dur": 1.2,
+   "tempo": 1.905
+  }
+ },
+ {
+  "asset": "SD_ESP2_MOVE_RETREAT2",
+  "en": "Let's get out of here!",
+  "pl": "Wynoœmy siê st¹d!",
+  "donor_fac": "MOVE",
+  "dur": 1.76,
+  "budget": 1.38,
+  "tempo": 1.275,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_COVER2",
+  "en": "Keep your head down!",
+  "pl": "Trzymaj g³owê w dó³!",
+  "donor_fac": "MOVE",
+  "dur": 2.8,
+  "budget": 1.2,
+  "tempo": 2.333,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN1",
+  "en": "Let's go!",
+  "pl": "ChodŸmy! ChodŸmy!",
+  "donor_fac": "MOVE",
+  "dur": 3.04,
+  "budget": 0.79,
+  "tempo": 3.848,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_645b": {
+   "dur": 1.52,
+   "tempo": 1.924
+  }
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN2",
+  "en": "Go get him!",
+  "pl": "IdŸ go z³apaæ!",
+  "donor_fac": "MOVE",
+  "dur": 1.76,
+  "budget": 1.04,
+  "tempo": 1.692,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN3",
+  "en": "Push forward!",
+  "pl": "Wciœnijcie do przodu!",
+  "donor_fac": "MOVE",
+  "dur": 2.16,
+  "budget": 0.98,
+  "tempo": 2.204,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN4",
+  "en": "Go, go, go!",
+  "pl": "IdŸ, idŸ, idŸ!",
+  "donor_fac": "MOVE",
+  "dur": 1.84,
+  "budget": 1.03,
+  "tempo": 1.786,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_IN5",
+  "en": "You go, I'll cover!",
+  "pl": "Ty idŸ, ja siê zajmê!",
+  "donor_fac": "MOVE",
+  "dur": 2.48,
+  "budget": 1.11,
+  "tempo": 2.234,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GRD1_MOVE_RETREAT2",
+  "en": "Let's get out of here!",
+  "pl": "Wynoœmy siê st¹d!",
+  "donor_fac": "MOVE",
+  "dur": 1.84,
+  "budget": 1.05,
+  "tempo": 1.752,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_MOVE_COVER1",
+  "en": "Take cover!",
+  "pl": "Ukryj siê!",
+  "donor_fac": "MOVE",
+  "dur": 1.36,
+  "budget": 0.84,
+  "tempo": 1.619,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_MOVE_COVER2",
+  "en": "Find cover!",
+  "pl": "ZnajdŸ kryjówkê!",
+  "donor_fac": "MOVE",
+  "dur": 2.56,
+  "budget": 1.01,
+  "tempo": 2.535,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_COVER3",
+  "en": "Get to cover!",
+  "pl": "Zabezpieczcie siê!",
+  "donor_fac": "MOVE",
+  "dur": 1.76,
+  "budget": 0.73,
+  "tempo": 2.411,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_HOLD2",
+  "en": "Hold up.",
+  "pl": "Poczekajcie.",
+  "donor_fac": "MOVE",
+  "dur": 1.44,
+  "budget": 0.45,
+  "tempo": 3.2,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_HOLD3",
+  "en": "Hold position!",
+  "pl": "Trzymaj pozycjê!",
+  "donor_fac": "MOVE",
+  "dur": 2.8,
+  "budget": 0.91,
+  "tempo": 3.077,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_IN1",
+  "en": "Move up.",
+  "pl": "Ruszaj siê.",
+  "donor_fac": "MOVE",
+  "dur": 1.68,
+  "budget": 0.48,
+  "tempo": 3.5,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_IN3",
+  "en": "Let's go.",
+  "pl": "- ChodŸmy.",
+  "donor_fac": "MOVE",
+  "dur": 1.44,
+  "budget": 0.49,
+  "tempo": 2.939,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_IT1",
+  "en": "You mind moving this?",
+  "pl": "Mo¿esz to przesun¹æ?",
+  "donor_fac": "MOVE",
+  "dur": 2.0,
+  "budget": 0.81,
+  "tempo": 2.469,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_IT2",
+  "en": "Could you get this out of my way?",
+  "pl": "Mo¿esz mi to zabraæ?",
+  "donor_fac": "MOVE",
+  "dur": 2.48,
+  "budget": 1.23,
+  "tempo": 2.016,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_LEFT1",
+  "en": "Flank left.",
+  "pl": "Z lewej skrzyd³a.",
+  "donor_fac": "MOVE",
+  "dur": 1.76,
+  "budget": 0.7,
+  "tempo": 2.514,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_LEFT3",
+  "en": "Go left.",
+  "pl": "IdŸ w lewo.",
+  "donor_fac": "MOVE",
+  "dur": 2.24,
+  "budget": 0.66,
+  "tempo": 3.394,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_OUT1",
+  "en": "Let's go.",
+  "pl": "- ChodŸmy.",
+  "donor_fac": "MOVE",
+  "dur": 1.36,
+  "budget": 0.5,
+  "tempo": 2.72,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_OUT2",
+  "en": "This way.",
+  "pl": "- W tê stronê.",
+  "donor_fac": "MOVE",
+  "dur": 1.92,
+  "budget": 0.44,
+  "tempo": 4.364,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 1.92,
+   "tempo": 4.364
+  },
+  "retry_645b": {
+   "dur": 1.36,
+   "tempo": 3.091
+  }
+ },
+ {
+  "asset": "SD_GST_MOVE_OUT3",
+  "en": "Follow me.",
+  "pl": "ChodŸ za mn¹.",
+  "donor_fac": "MOVE",
+  "dur": 1.6,
+  "budget": 0.5,
+  "tempo": 3.2,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_RETREAT3",
+  "en": "Let's pull back.",
+  "pl": "Wracajmy wstecz.",
+  "donor_fac": "MOVE",
+  "dur": 1.76,
+  "budget": 0.74,
+  "tempo": 2.378,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_RIGHT1",
+  "en": "Flank right!",
+  "pl": "Po prawej stronie!",
+  "donor_fac": "MOVE",
+  "dur": 2.0,
+  "budget": 0.72,
+  "tempo": 2.778,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_RIGHT3",
+  "en": "Go right!",
+  "pl": "IdŸ w prawo!",
+  "donor_fac": "MOVE",
+  "dur": 1.6,
+  "budget": 0.57,
+  "tempo": 2.807,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_YOU1",
+  "en": "You mind moving?",
+  "pl": "Mo¿esz siê ruszyæ?",
+  "donor_fac": "MOVE",
+  "dur": 2.24,
+  "budget": 0.7,
+  "tempo": 3.2,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_MOVE_YOU2",
+  "en": "You're in my way.",
+  "pl": "Jesteœ mi w drodze.",
+  "donor_fac": "MOVE",
+  "dur": 1.92,
+  "budget": 0.98,
+  "tempo": 1.959,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_MOVE_COVER1",
+  "en": "Take cover!",
+  "pl": "Ukryj siê!",
+  "donor_fac": "MOVE",
+  "dur": 1.52,
+  "budget": 0.74,
+  "tempo": 2.054,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_COVER2",
+  "en": "Get to cover!",
+  "pl": "Zabezpieczcie siê!",
+  "donor_fac": "MOVE",
+  "dur": 2.16,
+  "budget": 0.91,
+  "tempo": 2.374,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_COVER3",
+  "en": "Get behind something!",
+  "pl": "Zatrzymaj siê za czymœ!",
+  "donor_fac": "MOVE",
+  "dur": 2.48,
+  "budget": 1.22,
+  "tempo": 2.033,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_HOLD1",
+  "en": "Hold up.",
+  "pl": "Poczekajcie.",
+  "donor_fac": "MOVE",
+  "dur": 1.68,
+  "budget": 0.57,
+  "tempo": 2.947,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_IN1",
+  "en": "Move forward.",
+  "pl": "Ruszajcie naprzód.",
+  "donor_fac": "MOVE",
+  "dur": 2.16,
+  "budget": 0.7,
+  "tempo": 3.086,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_IN2",
+  "en": "Let's move up!",
+  "pl": "Ruszamy w górê!",
+  "donor_fac": "MOVE",
+  "dur": 1.84,
+  "budget": 0.76,
+  "tempo": 2.421,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_IN3",
+  "en": "Let's go.",
+  "pl": "- ChodŸmy.",
+  "donor_fac": "MOVE",
+  "dur": 2.8,
+  "budget": 0.55,
+  "tempo": 5.091,
+  "verdict": "REVIEW_TEMPO",
+  "retry_t02": {
+   "dur": 1.76,
+   "tempo": 3.2
+  }
+ },
+ {
+  "asset": "SD_KAT_MOVE_IT1",
+  "en": "Could you get this out of my way?",
+  "pl": "Mo¿esz mi to zabraæ?",
+  "donor_fac": "MOVE",
+  "dur": 3.04,
+  "budget": 1.37,
+  "tempo": 2.219,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_IT2",
+  "en": "Could you move this?",
+  "pl": "Mo¿esz to przesun¹æ?",
+  "donor_fac": "MOVE",
+  "dur": 2.64,
+  "budget": 0.97,
+  "tempo": 2.722,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_LEFT1",
+  "en": "Flank left.",
+  "pl": "Z lewej skrzyd³a.",
+  "donor_fac": "MOVE",
+  "dur": 1.92,
+  "budget": 0.73,
+  "tempo": 2.63,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_LEFT3",
+  "en": "Move left.",
+  "pl": "IdŸ w lewo.",
+  "donor_fac": "MOVE",
+  "dur": 1.68,
+  "budget": 0.82,
+  "tempo": 2.049,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_OUT1",
+  "en": "Let's go.",
+  "pl": "- ChodŸmy.",
+  "donor_fac": "MOVE",
+  "dur": 1.12,
+  "budget": 0.55,
+  "tempo": 2.036,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_OUT2",
+  "en": "This way.",
+  "pl": "- W tê stronê.",
+  "donor_fac": "MOVE",
+  "dur": 1.6,
+  "budget": 0.51,
+  "tempo": 3.137,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_OUT3",
+  "en": "Follow me.",
+  "pl": "ChodŸ za mn¹.",
+  "donor_fac": "MOVE",
+  "dur": 3.2,
+  "budget": 0.58,
+  "tempo": 5.517,
+  "verdict": "REVIEW_TEMPO",
+  "retry_t02": {
+   "dur": 1.52,
+   "tempo": 2.621
+  }
+ },
+ {
+  "asset": "SD_KAT_MOVE_RETREAT2",
+  "en": "Let's fallback.",
+  "pl": "Zwróæmy siê.",
+  "donor_fac": "MOVE",
+  "dur": 1.84,
+  "budget": 1.09,
+  "tempo": 1.688,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_MOVE_RETREAT3",
+  "en": "We need to fall back.",
+  "pl": "Musimy siê odwróciæ.",
+  "donor_fac": "MOVE",
+  "dur": 2.0,
+  "budget": 1.23,
+  "tempo": 1.626,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_MOVE_RIGHT1",
+  "en": "Flank right!",
+  "pl": "Po prawej stronie!",
+  "donor_fac": "MOVE",
+  "dur": 2.08,
+  "budget": 0.76,
+  "tempo": 2.737,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_RIGHT3",
+  "en": "Move right!",
+  "pl": "Ruszajcie w prawo!",
+  "donor_fac": "MOVE",
+  "dur": 2.08,
+  "budget": 0.83,
+  "tempo": 2.506,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_YOU1",
+  "en": "Would you move please?",
+  "pl": "Mo¿esz siê ruszyæ?",
+  "donor_fac": "MOVE",
+  "dur": 2.08,
+  "budget": 0.92,
+  "tempo": 2.261,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_MOVE_YOU2",
+  "en": "If you don't mind.",
+  "pl": "Jeœli nie masz nic przeciwko.",
+  "donor_fac": "MOVE",
+  "dur": 3.28,
+  "budget": 0.99,
+  "tempo": 3.313,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT1_MOVE_IN2",
+  "en": "We're moving up!",
+  "pl": "Idziemy w górê!",
+  "donor_fac": "MOVE",
+  "dur": 1.84,
+  "budget": 1.15,
+  "tempo": 1.6,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_MOVE_IN3",
+  "en": "Take forward positions!",
+  "pl": "WeŸcie pozycje naprzód!",
+  "donor_fac": "MOVE",
+  "dur": 2.24,
+  "budget": 1.76,
+  "tempo": 1.273,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_MOVE_IN5",
+  "en": "Spread out!",
+  "pl": "Rozprosz siê!",
+  "donor_fac": "MOVE",
+  "dur": 2.24,
+  "budget": 1.15,
+  "tempo": 1.948,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_MOVE_RETREAT1",
+  "en": "Retreat to cover!",
+  "pl": "Wycofaæ siê do kryjówki!",
+  "donor_fac": "MOVE",
+  "dur": 2.24,
+  "budget": 1.26,
+  "tempo": 1.778,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_MOVE_RETREAT2",
+  "en": "We can't hold here.",
+  "pl": "Nie mo¿emy tu trzymaæ.",
+  "donor_fac": "MOVE",
+  "dur": 2.16,
+  "budget": 1.29,
+  "tempo": 1.674,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_MOVE_RETREAT3",
+  "en": "We need to fall back.",
+  "pl": "Musimy siê odwróciæ.",
+  "donor_fac": "MOVE",
+  "dur": 2.0,
+  "budget": 0.96,
+  "tempo": 2.083,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_COVER1",
+  "en": "Spread out and take cover!",
+  "pl": "Rozprosz siê i ukryj siê!",
+  "donor_fac": "MOVE",
+  "dur": 2.88,
+  "budget": 1.5,
+  "tempo": 1.92,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_COVER2",
+  "en": "Don't give him a target!",
+  "pl": "Nie daj mu celu!",
+  "donor_fac": "MOVE",
+  "dur": 2.4,
+  "budget": 1.6,
+  "tempo": 1.5,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_HOLD1",
+  "en": "Hunker down!",
+  "pl": "W dó³!",
+  "donor_fac": "MOVE",
+  "dur": 1.44,
+  "budget": 0.75,
+  "tempo": 1.92,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_HOLD2",
+  "en": "Hold this position.",
+  "pl": "Trzymaj tê pozycjê.",
+  "donor_fac": "MOVE",
+  "dur": 2.24,
+  "budget": 1.58,
+  "tempo": 1.418,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_IN1",
+  "en": "Push forward!",
+  "pl": "Wciœnijcie do przodu!",
+  "donor_fac": "MOVE",
+  "dur": 2.0,
+  "budget": 0.84,
+  "tempo": 2.381,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_IN2",
+  "en": "Everybody -- move!",
+  "pl": "Wszyscy... ruszajcie siê!",
+  "donor_fac": "MOVE",
+  "dur": 3.68,
+  "budget": 1.16,
+  "tempo": 3.172,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_IN3",
+  "en": "Take those positions!",
+  "pl": "WeŸcie pozycje!",
+  "donor_fac": "MOVE",
+  "dur": 2.0,
+  "budget": 1.39,
+  "tempo": 1.439,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_IN4",
+  "en": "Up and out, let's go!",
+  "pl": "W górê i na zewn¹trz, chodŸmy!",
+  "donor_fac": "MOVE",
+  "dur": 2.96,
+  "budget": 1.47,
+  "tempo": 2.014,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_IN5",
+  "en": "Move it!",
+  "pl": "Ruszajcie!",
+  "donor_fac": "MOVE",
+  "dur": 1.6,
+  "budget": 0.47,
+  "tempo": 3.404,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_RETREAT1",
+  "en": "We're leaving!",
+  "pl": "Wyje¿d¿amy!",
+  "donor_fac": "MOVE",
+  "dur": 1.44,
+  "budget": 0.69,
+  "tempo": 2.087,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT2_MOVE_RETREAT2",
+  "en": "Fall back!",
+  "pl": "Odwróæ siê!",
+  "donor_fac": "MOVE",
+  "dur": 2.24,
+  "budget": 0.87,
+  "tempo": 2.575,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_COVER2",
+  "en": "Keep your head down!",
+  "pl": "Trzymaj g³owê w dó³!",
+  "donor_fac": "MOVE",
+  "dur": 3.12,
+  "budget": 1.05,
+  "tempo": 2.971,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_IN1",
+  "en": "Let's go!",
+  "pl": "ChodŸmy! ChodŸmy!",
+  "donor_fac": "MOVE",
+  "dur": 2.56,
+  "budget": 1.3,
+  "tempo": 1.969,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_IN2",
+  "en": "Go get him!",
+  "pl": "IdŸ go z³apaæ!",
+  "donor_fac": "MOVE",
+  "dur": 1.76,
+  "budget": 1.02,
+  "tempo": 1.725,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_IN3",
+  "en": "Push forward!",
+  "pl": "Wciœnijcie do przodu!",
+  "donor_fac": "MOVE",
+  "dur": 2.24,
+  "budget": 1.35,
+  "tempo": 1.659,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_IN4",
+  "en": "Go, go, go!",
+  "pl": "IdŸ, idŸ, idŸ!",
+  "donor_fac": "MOVE",
+  "dur": 2.4,
+  "budget": 1.54,
+  "tempo": 1.558,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_IN5",
+  "en": "You go, I'll cover!",
+  "pl": "Ty idŸ, ja siê zajmê!",
+  "donor_fac": "MOVE",
+  "dur": 1.92,
+  "budget": 0.99,
+  "tempo": 1.939,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_MOVE_RETREAT2",
+  "en": "Let's get out of here!",
+  "pl": "Wynoœmy siê st¹d!",
+  "donor_fac": "MOVE",
+  "dur": 2.08,
+  "budget": 0.91,
+  "tempo": 2.286,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_REPORT_BEHIND1",
+  "en": "Circle around behind them.",
+  "pl": "Za nimi kr¹g.",
+  "donor_fac": "REPORT",
+  "dur": 2.0,
+  "budget": 1.06,
+  "tempo": 1.887,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_REPORT_CLEAR1",
+  "en": "This area is clear.",
+  "pl": "To miejsce jest czyste.",
+  "donor_fac": "REPORT",
+  "dur": 2.24,
+  "budget": 0.9,
+  "tempo": 2.489,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_REPORT_CLEAR2",
+  "en": "All clear.",
+  "pl": "Wszystko w porz¹dku.",
+  "donor_fac": "REPORT",
+  "dur": 2.08,
+  "budget": 0.58,
+  "tempo": 3.586,
+  "verdict": "STAYS_EN",
+  "retry_645b": {
+   "dur": 2.64,
+   "tempo": 4.552
+  }
+ },
+ {
+  "asset": "SD_GST_REPORT_DESTROY1",
+  "en": "Target down.",
+  "pl": "Cel w dó³.",
+  "donor_fac": "REPORT",
+  "dur": 1.68,
+  "budget": 0.76,
+  "tempo": 2.211,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_REPORT_DESTROY2",
+  "en": "Got 'em.",
+  "pl": "Mam je.",
+  "donor_fac": "REPORT",
+  "dur": 1.28,
+  "budget": 0.41,
+  "tempo": 3.122,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_REPORT_DESTROY3",
+  "en": "He's down.",
+  "pl": "Jest na dole.",
+  "donor_fac": "REPORT",
+  "dur": 2.08,
+  "budget": 0.6,
+  "tempo": 3.467,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_REPORT_FIRE1",
+  "en": "I just heard shots.",
+  "pl": "S³ysza³em strza³y.",
+  "donor_fac": "REPORT",
+  "dur": 2.08,
+  "budget": 0.95,
+  "tempo": 2.189,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_REPORT_FIRE2",
+  "en": "Taking fire!",
+  "pl": "Strzelaj¹!",
+  "donor_fac": "REPORT",
+  "dur": 1.52,
+  "budget": 0.96,
+  "tempo": 1.583,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_REPORT_HIT1",
+  "en": "I'm hit!",
+  "pl": "Zosta³em trafiony!",
+  "donor_fac": "REPORT",
+  "dur": 1.84,
+  "budget": 0.52,
+  "tempo": 3.538,
+  "verdict": "STAYS_EN",
+  "retry_645b": {
+   "dur": 2.24,
+   "tempo": 4.308
+  }
+ },
+ {
+  "asset": "SD_GST_REPORT_PINNED1",
+  "en": "I'm pinned down!",
+  "pl": "Jestem uwiêziony!",
+  "donor_fac": "REPORT",
+  "dur": 2.24,
+  "budget": 0.97,
+  "tempo": 2.309,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_REPORT_PINNED2",
+  "en": "I'm taking heavy fire!",
+  "pl": "Wziê ciê¿ki ogieñ!",
+  "donor_fac": "REPORT",
+  "dur": 2.64,
+  "budget": 1.3,
+  "tempo": 2.031,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_REPORT_RELOAD2",
+  "en": "I have to reload.",
+  "pl": "Muszê siê prze³adowaæ.",
+  "donor_fac": "REPORT",
+  "dur": 2.4,
+  "budget": 0.95,
+  "tempo": 2.526,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_REPORT_RELOAD3",
+  "en": "Need to reload.",
+  "pl": "Muszê siê prze³adowaæ.",
+  "donor_fac": "REPORT",
+  "dur": 2.16,
+  "budget": 0.8,
+  "tempo": 2.7,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_REPORT_SNIPER2",
+  "en": "We've got a sniper!",
+  "pl": "Mamy snajpera!",
+  "donor_fac": "REPORT",
+  "dur": 2.16,
+  "budget": 0.92,
+  "tempo": 2.348,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_REPORT_BEHIND1",
+  "en": "Go behind them.",
+  "pl": "IdŸ za nimi.",
+  "donor_fac": "REPORT",
+  "dur": 2.0,
+  "budget": 0.74,
+  "tempo": 2.703,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_REPORT_CLEAR1",
+  "en": "All's clear.",
+  "pl": "Wszystko jest w porz¹dku.",
+  "donor_fac": "REPORT",
+  "dur": 2.32,
+  "budget": 0.77,
+  "tempo": 3.013,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_REPORT_CLEAR2",
+  "en": "It's safe.",
+  "pl": "To bezpieczne.",
+  "donor_fac": "REPORT",
+  "dur": 1.76,
+  "budget": 0.67,
+  "tempo": 2.627,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_REPORT_DESTROY1",
+  "en": "He's down.",
+  "pl": "Jest na dole.",
+  "donor_fac": "REPORT",
+  "dur": 1.84,
+  "budget": 0.75,
+  "tempo": 2.453,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_REPORT_DESTROY2",
+  "en": "Got one!",
+  "pl": "Mam jedn¹!",
+  "donor_fac": "REPORT",
+  "dur": 1.6,
+  "budget": 0.62,
+  "tempo": 2.581,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_REPORT_FIRE1",
+  "en": "We're taking fire!",
+  "pl": "Strzelaj¹!",
+  "donor_fac": "REPORT",
+  "dur": 1.68,
+  "budget": 1.11,
+  "tempo": 1.514,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_REPORT_HIT1",
+  "en": "I've been hit!",
+  "pl": "Zosta³em uderzony!",
+  "donor_fac": "REPORT",
+  "dur": 1.92,
+  "budget": 1.47,
+  "tempo": 1.306,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_REPORT_PINNED1",
+  "en": "I'm pinned down!",
+  "pl": "Jestem uwiêziony!",
+  "donor_fac": "REPORT",
+  "dur": 2.0,
+  "budget": 1.46,
+  "tempo": 1.37,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_REPORT_PINNED2",
+  "en": "I'm taking fire!",
+  "pl": "Zabieram ogieñ!",
+  "donor_fac": "REPORT",
+  "dur": 1.84,
+  "budget": 1.43,
+  "tempo": 1.287,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_KAT_REPORT_SNIPER1",
+  "en": "There's a sniper!",
+  "pl": "Jest snajper!",
+  "donor_fac": "REPORT",
+  "dur": 2.24,
+  "budget": 1.01,
+  "tempo": 2.218,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP1_RPT_PINNED1",
+  "en": "Help! I'm pinned down!",
+  "pl": "Pomocy, zamknê³am siê!",
+  "donor_fac": "RPT",
+  "dur": 3.2,
+  "budget": 0.49,
+  "tempo": 6.531,
+  "verdict": "STAYS_EN",
+  "retry_t02": {
+   "dur": 3.04,
+   "tempo": 6.204
+  },
+  "retry_645b": {
+   "dur": 4.0,
+   "tempo": 8.163
+  }
+ },
+ {
+  "asset": "SD_ESP2_RPT_PINNED1",
+  "en": "Help! I'm pinned down!",
+  "pl": "Pomocy, zamknê³am siê!",
+  "donor_fac": "RPT",
+  "dur": 3.2,
+  "budget": 0.76,
+  "tempo": 4.211,
+  "verdict": "REVIEW_TEMPO",
+  "retry_t02": {
+   "dur": 2.56,
+   "tempo": 3.368
+  }
+ },
+ {
+  "asset": "SD_GRD1_RPT_PINNED1",
+  "en": "Help! I'm pinned down!",
+  "pl": "Pomocy, zamknê³am siê!",
+  "donor_fac": "RPT",
+  "dur": 2.48,
+  "budget": 2.07,
+  "tempo": 1.198,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_RPT_BACKUP1",
+  "en": "??? ????? ?????????!",
+  "pl": "Czy to nie ma znaczenia?",
+  "donor_fac": "RPT",
+  "dur": 2.0,
+  "budget": 1.18,
+  "tempo": 1.695,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_RPT_PINNED1",
+  "en": "We are pinned down.",
+  "pl": "Jesteœmy zamkniêci.",
+  "donor_fac": "RPT",
+  "dur": 2.08,
+  "budget": 1.03,
+  "tempo": 2.019,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT2_RPT_PINNED1",
+  "en": "Can't move!",
+  "pl": "Nie mogê siê ruszyæ!",
+  "donor_fac": "RPT",
+  "dur": 2.08,
+  "budget": 1.05,
+  "tempo": 1.981,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_RPT_AFFIRM1",
+  "en": "You got it!",
+  "pl": "Masz to!",
+  "donor_fac": "RPT",
+  "dur": 1.44,
+  "budget": 0.56,
+  "tempo": 2.571,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT3_RPT_CLEAR1",
+  "en": "Sector's clear, I think.",
+  "pl": "Sektor jest czysty, myœlê.",
+  "donor_fac": "RPT",
+  "dur": 2.64,
+  "budget": 1.29,
+  "tempo": 2.047,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT3_RPT_IN_A1",
+  "en": "Alpha team checking in.",
+  "pl": "Zespó³ Alpha przyje¿d¿a.",
+  "donor_fac": "RPT",
+  "dur": 2.48,
+  "budget": 1.45,
+  "tempo": 1.71,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_RPT_IN_B1",
+  "en": "Bravo team here.",
+  "pl": "Zespó³ Bravo.",
+  "donor_fac": "RPT",
+  "dur": 1.84,
+  "budget": 1.49,
+  "tempo": 1.235,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_RPT_IN_D1",
+  "en": "Delta squad reporting in.",
+  "pl": "Oddzia³ Delta zg³asza siê.",
+  "donor_fac": "RPT",
+  "dur": 2.4,
+  "budget": 1.52,
+  "tempo": 1.579,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_RPT_PINNED1",
+  "en": "Help! I'm pinned down!",
+  "pl": "Pomocy, zamknê³am siê!",
+  "donor_fac": "RPT",
+  "dur": 3.12,
+  "budget": 0.89,
+  "tempo": 3.506,
+  "verdict": "STAYS_EN",
+  "retry_645b": {
+   "dur": 3.44,
+   "tempo": 3.865
+  }
+ },
+ {
+  "asset": "SD_ESP1_SEE_TARGET1",
+  "en": "I see him! I see him!",
+  "pl": "Widzê go!",
+  "donor_fac": "SEE",
+  "dur": 2.32,
+  "budget": 1.23,
+  "tempo": 1.886,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_ESP1_SEE_TARGET2",
+  "en": "There he is!",
+  "pl": "Tu jest!",
+  "donor_fac": "SEE",
+  "dur": 2.16,
+  "budget": 0.76,
+  "tempo": 2.842,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP1_SEE_TARGET3",
+  "en": "Over there!",
+  "pl": "Tam jest!",
+  "donor_fac": "SEE",
+  "dur": 2.0,
+  "budget": 1.18,
+  "tempo": 1.695,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_ESP1_SEE_TARGET4",
+  "en": "I have him!",
+  "pl": "Mam go!",
+  "donor_fac": "SEE",
+  "dur": 1.28,
+  "budget": 0.54,
+  "tempo": 2.37,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP1_SEE_TARGET5",
+  "en": "Help, over here!",
+  "pl": "Pomoc, tutaj!",
+  "donor_fac": "SEE",
+  "dur": 3.12,
+  "budget": 0.66,
+  "tempo": 4.727,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 3.6,
+   "tempo": 5.455
+  },
+  "retry_645b": {
+   "dur": 2.16,
+   "tempo": 3.273
+  }
+ },
+ {
+  "asset": "SD_ESP2_SEE_TARGET1",
+  "en": "I see him! I see him!",
+  "pl": "Widzê go!",
+  "donor_fac": "SEE",
+  "dur": 1.52,
+  "budget": 0.64,
+  "tempo": 2.375,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP2_SEE_TARGET2",
+  "en": "There he is!",
+  "pl": "Tu jest!",
+  "donor_fac": "SEE",
+  "dur": 1.84,
+  "budget": 0.68,
+  "tempo": 2.706,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP2_SEE_TARGET3",
+  "en": "Over there!",
+  "pl": "Tam jest!",
+  "donor_fac": "SEE",
+  "dur": 1.44,
+  "budget": 1.0,
+  "tempo": 1.44,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_ESP2_SEE_TARGET4",
+  "en": "I have him!",
+  "pl": "Mam go!",
+  "donor_fac": "SEE",
+  "dur": 3.04,
+  "budget": 0.65,
+  "tempo": 4.677,
+  "verdict": "REVIEW_TEMPO",
+  "retry_t02": {
+   "dur": 1.84,
+   "tempo": 2.831
+  }
+ },
+ {
+  "asset": "SD_ESP2_SEE_TARGET5",
+  "en": "Help, over here!",
+  "pl": "Pomoc, tutaj!",
+  "donor_fac": "SEE",
+  "dur": 3.68,
+  "budget": 0.79,
+  "tempo": 4.658,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 3.36,
+   "tempo": 4.253
+  },
+  "retry_645b": {
+   "dur": 1.84,
+   "tempo": 2.329
+  }
+ },
+ {
+  "asset": "SD_GRD1_SEE_TARGET1",
+  "en": "I see him! I see him!",
+  "pl": "Widzê go!",
+  "donor_fac": "SEE",
+  "dur": 1.68,
+  "budget": 1.46,
+  "tempo": 1.151,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GRD1_SEE_TARGET2",
+  "en": "There he is!",
+  "pl": "Tu jest!",
+  "donor_fac": "SEE",
+  "dur": 1.52,
+  "budget": 0.64,
+  "tempo": 2.375,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GRD1_SEE_TARGET3",
+  "en": "Over there!",
+  "pl": "Tam jest!",
+  "donor_fac": "SEE",
+  "dur": 2.16,
+  "budget": 0.66,
+  "tempo": 3.273,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GRD1_SEE_TARGET4",
+  "en": "I have him!",
+  "pl": "Mam go!",
+  "donor_fac": "SEE",
+  "dur": 1.44,
+  "budget": 0.8,
+  "tempo": 1.8,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GRD1_SEE_TARGET5",
+  "en": "Help, over here!",
+  "pl": "Pomoc, tutaj!",
+  "donor_fac": "SEE",
+  "dur": 3.68,
+  "budget": 1.15,
+  "tempo": 3.2,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_SEE_COVER1",
+  "en": "Target in cover.",
+  "pl": "Cel w ukryciu.",
+  "donor_fac": "SEE",
+  "dur": 2.4,
+  "budget": 0.91,
+  "tempo": 2.637,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_SEE_COVER2",
+  "en": "Enemy is behind cover.",
+  "pl": "Wróg jest za kryjówk¹.",
+  "donor_fac": "SEE",
+  "dur": 2.96,
+  "budget": 1.24,
+  "tempo": 2.387,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_SEE_GRENADE3",
+  "en": "Grenade incoming!",
+  "pl": "Granata wchodz¹ca!",
+  "donor_fac": "SEE",
+  "dur": 2.0,
+  "budget": 1.13,
+  "tempo": 1.77,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_SEE_TARGET2",
+  "en": "Target! Dead ahead!",
+  "pl": "Celem!",
+  "donor_fac": "SEE",
+  "dur": 1.28,
+  "budget": 0.93,
+  "tempo": 1.376,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GST_SEE_TARGET3",
+  "en": "Enemy spotted.",
+  "pl": "Wróg zauwa¿y³.",
+  "donor_fac": "SEE",
+  "dur": 1.76,
+  "budget": 0.79,
+  "tempo": 2.228,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_SEE_COVER1",
+  "en": "They're behind cover.",
+  "pl": "S¹ za kryjówk¹.",
+  "donor_fac": "SEE",
+  "dur": 2.08,
+  "budget": 1.01,
+  "tempo": 2.059,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_SEE_GRENADE1",
+  "en": "There's a grenade!",
+  "pl": "Jest granata!",
+  "donor_fac": "SEE",
+  "dur": 2.0,
+  "budget": 0.96,
+  "tempo": 2.083,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_SEE_TARGET1",
+  "en": "There's one!",
+  "pl": "Jest jeden!",
+  "donor_fac": "SEE",
+  "dur": 1.84,
+  "budget": 0.69,
+  "tempo": 2.667,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_SEE_TARGET2",
+  "en": "Look over there!",
+  "pl": "Spójrz tam!",
+  "donor_fac": "SEE",
+  "dur": 2.24,
+  "budget": 0.95,
+  "tempo": 2.358,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_KAT_SEE_TARGET3",
+  "en": "Over there!",
+  "pl": "Tam jest!",
+  "donor_fac": "SEE",
+  "dur": 1.6,
+  "budget": 0.66,
+  "tempo": 2.424,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT1_SEE_GRENADE2",
+  "en": "Grenade incoming!",
+  "pl": "Granata wchodz¹ca!",
+  "donor_fac": "SEE",
+  "dur": 3.04,
+  "budget": 0.77,
+  "tempo": 3.948,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_645b": {
+   "dur": 2.32,
+   "tempo": 3.013
+  }
+ },
+ {
+  "asset": "SD_SPT1_SEE_TARGET1",
+  "en": "Enemy sighted!",
+  "pl": "Wroga widziany!",
+  "donor_fac": "SEE",
+  "dur": 2.64,
+  "budget": 0.99,
+  "tempo": 2.667,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT1_SEE_TARGET2",
+  "en": "Tango in range!",
+  "pl": "Tango w zasiêgu!",
+  "donor_fac": "SEE",
+  "dur": 3.28,
+  "budget": 1.4,
+  "tempo": 2.343,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT1_SEE_TARGET3",
+  "en": "Let's get him.",
+  "pl": "Z³apmy go.",
+  "donor_fac": "SEE",
+  "dur": 2.0,
+  "budget": 1.07,
+  "tempo": 1.869,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_SEE_TARGET4",
+  "en": "I see him.",
+  "pl": "Widzê go.",
+  "donor_fac": "SEE",
+  "dur": 1.68,
+  "budget": 0.55,
+  "tempo": 3.055,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT1_SEE_TARGET5",
+  "en": "Got him.",
+  "pl": "Mam go.",
+  "donor_fac": "SEE",
+  "dur": 1.28,
+  "budget": 0.82,
+  "tempo": 1.561,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_SEE_ZEK1",
+  "en": "Get those things!",
+  "pl": "Zabierzcie te rzeczy!",
+  "donor_fac": "SEE",
+  "dur": 2.24,
+  "budget": 1.22,
+  "tempo": 1.836,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT2_SEE_TARGET1",
+  "en": "I have a target!",
+  "pl": "Mam cel!",
+  "donor_fac": "SEE",
+  "dur": 1.44,
+  "budget": 0.72,
+  "tempo": 2.0,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT2_SEE_TARGET2",
+  "en": "We have contact!",
+  "pl": "Mamy kontakt!",
+  "donor_fac": "SEE",
+  "dur": 4.4,
+  "budget": 1.05,
+  "tempo": 4.19,
+  "verdict": "REVIEW_TEMPO",
+  "retry_t02": {
+   "dur": 2.08,
+   "tempo": 1.981
+  }
+ },
+ {
+  "asset": "SD_SPT2_SEE_TARGET4",
+  "en": "Eyes front -- intruder!",
+  "pl": "Oczami naprzód - w³amywacz!",
+  "donor_fac": "SEE",
+  "dur": 3.04,
+  "budget": 2.08,
+  "tempo": 1.462,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT2_SEE_TARGET5",
+  "en": "Tracking intruder.",
+  "pl": "Œledzenie w³amywacza.",
+  "donor_fac": "SEE",
+  "dur": 2.24,
+  "budget": 1.12,
+  "tempo": 2.0,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_SEE_TARGET1",
+  "en": "I see him! I see him!",
+  "pl": "Widzê go!",
+  "donor_fac": "SEE",
+  "dur": 1.44,
+  "budget": 0.85,
+  "tempo": 1.694,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_SEE_TARGET2",
+  "en": "There he is!",
+  "pl": "Tu jest!",
+  "donor_fac": "SEE",
+  "dur": 2.16,
+  "budget": 1.69,
+  "tempo": 1.278,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_SEE_TARGET3",
+  "en": "Over there!",
+  "pl": "Tam jest!",
+  "donor_fac": "SEE",
+  "dur": 1.76,
+  "budget": 1.28,
+  "tempo": 1.375,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_SEE_TARGET4",
+  "en": "I have him!",
+  "pl": "Mam go!",
+  "donor_fac": "SEE",
+  "dur": 1.36,
+  "budget": 0.96,
+  "tempo": 1.417,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_SEE_TARGET5",
+  "en": "Help, over here!",
+  "pl": "Pomoc, tutaj!",
+  "donor_fac": "SEE",
+  "dur": 2.64,
+  "budget": 1.54,
+  "tempo": 1.714,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_SEE_ZEK1",
+  "en": "Help! Monsters!",
+  "pl": "Pomocy, potwory!",
+  "donor_fac": "SEE",
+  "dur": 2.96,
+  "budget": 1.44,
+  "tempo": 2.056,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GST_SMOKE1",
+  "en": "They popped smoke!",
+  "pl": "Wybuch³ dym!",
+  "donor_fac": "SMOKE",
+  "dur": 1.52,
+  "budget": 0.81,
+  "tempo": 1.877,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_ESP1_SRCH_FIND1",
+  "en": "Where'd he go?",
+  "pl": "- Gdzie on jest?",
+  "donor_fac": "SRCH",
+  "dur": 1.92,
+  "budget": 0.43,
+  "tempo": 4.465,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_t02": {
+   "dur": 2.0,
+   "tempo": 4.651
+  },
+  "retry_645b": {
+   "dur": 1.12,
+   "tempo": 2.605
+  }
+ },
+ {
+  "asset": "SD_ESP1_SRCH_KILL1",
+  "en": "Anybody see him?",
+  "pl": "Ktoœ go widzia³?",
+  "donor_fac": "SRCH",
+  "dur": 1.84,
+  "budget": 1.23,
+  "tempo": 1.496,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_ESP1_SRCH_KILL2",
+  "en": "Let's just get outta here!",
+  "pl": "Wynoœmy siê st¹d!",
+  "donor_fac": "SRCH",
+  "dur": 2.0,
+  "budget": 0.91,
+  "tempo": 2.198,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_ESP2_SRCH_FIND1",
+  "en": "Where'd he go?",
+  "pl": "- Gdzie on jest?",
+  "donor_fac": "SRCH",
+  "dur": 2.08,
+  "budget": 0.52,
+  "tempo": 4.0,
+  "verdict": "STAYS_EN",
+  "retry_645b": {
+   "dur": 2.32,
+   "tempo": 4.462
+  }
+ },
+ {
+  "asset": "SD_ESP2_SRCH_KILL1",
+  "en": "Anybody see him?",
+  "pl": "Ktoœ go widzia³?",
+  "donor_fac": "SRCH",
+  "dur": 2.0,
+  "budget": 1.3,
+  "tempo": 1.538,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_ESP2_SRCH_KILL2",
+  "en": "Let's just get outta here!",
+  "pl": "Wynoœmy siê st¹d!",
+  "donor_fac": "SRCH",
+  "dur": 2.16,
+  "budget": 0.91,
+  "tempo": 2.374,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_GRD1_SRCH_FIND1",
+  "en": "Where'd he go?",
+  "pl": "- Gdzie on jest?",
+  "donor_fac": "SRCH",
+  "dur": 2.56,
+  "budget": 0.73,
+  "tempo": 3.507,
+  "verdict": "CANDIDATE_645B_DONOR",
+  "retry_645b": {
+   "dur": 2.4,
+   "tempo": 3.288
+  }
+ },
+ {
+  "asset": "SD_GRD1_SRCH_KILL1",
+  "en": "Anybody see him?",
+  "pl": "Ktoœ go widzia³?",
+  "donor_fac": "SRCH",
+  "dur": 1.76,
+  "budget": 0.96,
+  "tempo": 1.833,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_GRD1_SRCH_KILL2",
+  "en": "Let's just get outta here!",
+  "pl": "Wynoœmy siê st¹d!",
+  "donor_fac": "SRCH",
+  "dur": 1.84,
+  "budget": 1.12,
+  "tempo": 1.643,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_SRCH_FIND1",
+  "en": "I'll find him.",
+  "pl": "Znajdê go.",
+  "donor_fac": "SRCH",
+  "dur": 1.68,
+  "budget": 1.05,
+  "tempo": 1.6,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_SRCH_KILL1",
+  "en": "He's here somewhere.",
+  "pl": "Jest gdzieœ tutaj.",
+  "donor_fac": "SRCH",
+  "dur": 1.92,
+  "budget": 1.21,
+  "tempo": 1.587,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT1_SRCH_KILL2",
+  "en": "He's dead when I find him.",
+  "pl": "Kiedy go znajdê, bêdzie martwy.",
+  "donor_fac": "SRCH",
+  "dur": 2.64,
+  "budget": 1.21,
+  "tempo": 2.182,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT2_SRCH_FIND1",
+  "en": "Check the corners!",
+  "pl": "SprawdŸ k¹ty!",
+  "donor_fac": "SRCH",
+  "dur": 1.76,
+  "budget": 1.11,
+  "tempo": 1.586,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT2_SRCH_KILL1",
+  "en": "Don't let him out of here alive!",
+  "pl": "Nie wypuszczaj go st¹d ¿ywego!",
+  "donor_fac": "SRCH",
+  "dur": 2.88,
+  "budget": 1.43,
+  "tempo": 2.014,
+  "verdict": "REVIEW_TEMPO"
+ },
+ {
+  "asset": "SD_SPT2_SRCH_KILL2",
+  "en": "Everybody search!",
+  "pl": "Wszyscy szukajcie!",
+  "donor_fac": "SRCH",
+  "dur": 1.76,
+  "budget": 0.94,
+  "tempo": 1.872,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_SRCH_FIND1",
+  "en": "Where'd he go?",
+  "pl": "- Gdzie on jest?",
+  "donor_fac": "SRCH",
+  "dur": 2.08,
+  "budget": 1.1,
+  "tempo": 1.891,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_SRCH_KILL1",
+  "en": "Anybody see him?",
+  "pl": "Ktoœ go widzia³?",
+  "donor_fac": "SRCH",
+  "dur": 2.0,
+  "budget": 1.24,
+  "tempo": 1.613,
+  "verdict": "CANDIDATE"
+ },
+ {
+  "asset": "SD_SPT3_SRCH_KILL2",
+  "en": "Let's just get outta here!",
+  "pl": "Wynoœmy siê st¹d!",
+  "donor_fac": "SRCH",
+  "dur": 1.68,
+  "budget": 1.91,
+  "tempo": 0.88,
+  "verdict": "CANDIDATE"
+ }
+]

@@ -1,0 +1,15 @@
+{
+ "FIRE": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI6_kismet05_LOC_INT\\SoundNodeWave\\SD_KAT_FIRE_SUPPRESS3.ogg",
+ "MOVE": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI5_kismet03_LOC_INT\\SoundNodeWave\\SD_SPT1_MOVE_IN3.ogg",
+ "RPT": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI5_kismet03_LOC_INT\\SoundNodeWave\\SD_GRD1_RPT_PINNED1.ogg",
+ "SEE": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI5_kismet03_LOC_INT\\SoundNodeWave\\SD_SPT2_SEE_TARGET4.ogg",
+ "SRCH": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI5_kismet03_LOC_INT\\SoundNodeWave\\SD_SPT3_SRCH_KILL2.ogg",
+ "ADVANCING": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI5_kismet03_LOC_INT\\SoundNodeWave\\SD_GST_ADVANCING2.ogg",
+ "CHK": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI5_kismet03_LOC_INT\\SoundNodeWave\\SD_GST_CHK_LFT1.ogg",
+ "GEN": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI5_kismet03_LOC_INT\\SoundNodeWave\\SD_GST_GEN4.ogg",
+ "HELP": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI5_kismet03_LOC_INT\\SoundNodeWave\\SD_GST_HELP1.ogg",
+ "LOCS": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI5_kismet03_LOC_INT\\SoundNodeWave\\SD_GST_LOCS3.ogg",
+ "LOC": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI6_kismet05_LOC_INT\\SoundNodeWave\\SD_KAT_LOC_LFT2.ogg",
+ "REPORT": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI6_kismet05_LOC_INT\\SoundNodeWave\\SD_KAT_REPORT_HIT1.ogg",
+ "SMOKE": "C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/story_en_reference\\SP_VI5_kismet03_LOC_INT\\SoundNodeWave\\SD_GST_SMOKE1.ogg"
+}
