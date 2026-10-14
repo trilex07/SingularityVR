@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 manual headset retest PID12424 (~2 min, observer-only, no
+deploy): audio hypothesis CONFIRMED — zero `polish voice:` lines, only menu
+strings through Localize; NPC/radio/long dialogue all English, note English.
+Gameplay window only ~25 s (MenuFlat→GameplayStereo 21:12:33→MenuFlat 21:12:58).
+TV reported TWO images on the identical accepted build+INI (EA9EFFB1/757F414B)
+— cause UNKNOWN: desktop_mirror.h has zero runtime logging, so logs cannot
+distinguish mirror-inactive (menu/raw SBS) from mirror-failed (gameplay).
+Install intact after exit (3 hashes + 992 WAVs). Next: bounded mirror
+diagnostics candidate (counters only), then bank integration. See
+docs/native-npc-radio-producer.md. Prior headers history.
+
 LATEST 2026-10-14 MAIN turn: NPC/radio root cause PROVEN (not fixed), freeze
 ready, no launch. PID35568 log shows zero `polish voice:` lines and Localize
 saw only menu strings — NPC/radio text never reaches PolishMaybeSpeak
