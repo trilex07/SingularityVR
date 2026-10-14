@@ -48,7 +48,28 @@ struct Diag {
                         UINT bw = 0, bh = 0, ww = 0, wh = 0; };
     static inline RectSample rectSamples[4]{};
     static inline LONG rectCount = 0;
+    // One-shot window/monitor placement probe (max 2 logs/session, read-only).
+    static inline volatile LONG placeCount = 0;
 };
+
+inline void CapturePlacement(HWND window) {
+    const LONG slot = InterlockedIncrement(&Diag::placeCount);
+    if (slot != 1 && slot != 2) return;
+    RECT wr{ 0, 0, 0, 0 };
+    if (window) GetWindowRect(window, &wr);
+    RECT mr{ 0, 0, 0, 0 };
+    if (window) {
+        HMONITOR mon = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
+        if (mon) {
+            MONITORINFO mi{};
+            mi.cbSize = sizeof(mi);
+            if (GetMonitorInfoA(mon, &mi)) mr = mi.rcMonitor;
+        }
+    }
+    Log("mirror-place: win=(%ld,%ld,%ld,%ld) mon=(%ld,%ld,%ld,%ld)",
+        wr.left, wr.top, wr.right, wr.bottom,
+        mr.left, mr.top, mr.right, mr.bottom);
+}
 
 inline void CaptureRects(IDirect3DDevice9* dev, const RECT* presentSrc,
                          const RECT* presentDst, HWND overrideWindow) {
@@ -220,6 +241,7 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
         ww = UINT(client.right); wh = UINT(client.bottom);
     }
     Diag::lastWw = ww; Diag::lastWh = wh;
+    CapturePlacement(window);
     RECT dst{};
     if (!FitDestination(desc.Width, desc.Height, desc.Width / 2, desc.Height, ww, wh, dst)) {
         back->Release();
