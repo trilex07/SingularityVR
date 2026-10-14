@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+LATEST: headset check of 256BF823 + E3E7C902: menu text SINGULARITY VR is good,
+arms no longer stretch, free gloves still sit too far from the pads until the
+pistol is picked up, then tracking and grip are good. Exit was not checked.
+Glove distance is unchanged this turn. The native Mouse shape is a 27×29 px
+arrow whose bounds start at the hotspot and extend down-right, so the visible
+cursor sat off the laser. UI 69CABCCF13C0F13B120163331ADDCFDDE3764CE8E32FE60A15F800FDF8C87D66
+keeps the same title fit and replaces that leaf with a ring centred on the
+hotspot. DLL stays E3E7C902, INI 202AA13A, font 3F7BF0BE. Backup of the stock
+UI is title-ui-20261014-193045. No restore guard is armed. L4 for the dot is
+the next menu look. SIDE also reported texconv is absent; the boot card stays
+on SNG_logo.bik, not a DXT5 swap of ui_logos.logo.
+
 LATEST: menu title package 256BF823 stays installed. It is the LZO rebuild, not
 the uncompressed package that crashed. DLL E3E7C902 from 318fb9a hides the
 native arm mesh until a weapon is in hand, because the 19:02 log on 2763A984

@@ -6,8 +6,8 @@ $ErrorActionPreference='Stop'
 $repo=(Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $ui='C:\Program Files (x86)\Steam\steamapps\common\Singularity\RvGame\CookedPC\UI_SinglePlayer_SF.xxx'
 $dll='C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries\d3d9.dll'
-$candidate='256BF8234CBCD959C8E7FB62D27EBC4A2D186810746326EE65C3C9DA24FE3F14'
-$acceptedDll='D8928180262706A95972D13B728A1867F1EAB1757DCFD6C4A32D99EFBFBEC1BE'
+$candidate='69CABCCF13C0F13B120163331ADDCFDDE3764CE8E32FE60A15F800FDF8C87D66'
+$acceptedDll='E3E7C90293C9BB22DFDEDE97310E86342711BDC3CBC915AF8FDCAF7BDD95D73B'
 if((Get-FileHash -LiteralPath $ui).Hash -cne $candidate){throw 'Title package is not installed'}
 if((Get-FileHash -LiteralPath $dll).Hash -cne $acceptedDll){throw 'DLL changed before the title window'}
 Write-Output "READY: title UI restore armed; launch window $LaunchWindowSeconds seconds; DLL stays $acceptedDll"

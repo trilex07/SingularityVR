@@ -52,6 +52,13 @@ Latest offline prep (append-only VR suffix cloned from frame A/R glyphs):
 obtains a Bink 1 encoder; then validate with
 `SingularityVR-bink-dubbing/tools/bink_media.py validate-video`.
 
+`texconv.exe` was not found on the SIDE host: not on `PATH`, and no
+`texconv.exe` under the searched `Program Files` directories (about 47 s,
+exit 0, empty result). That does not block this candidate. The boot card is
+`SNG_logo.bik` via the MKV plus a later `binkenc` step, not a DXT5 replacement
+of `ui_logos.logo`. If a 512×128 texture is required later, MAIN can add
+DirectXTex `texconv` or another BC3/DXT5 encoder.
+
 ## MAIN install gate (physical L4)
 
 1. Backup stock `SNG_logo.bik`; verify SHA-256 above.

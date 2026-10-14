@@ -14,7 +14,7 @@ sys.path.insert(0,str(Path(__file__).parents[1]/'audio'))
 from patch_opening_dialogue import literals, require
 from ue3_layout import inspect
 from swf_title_patch import fit_title_field,split_tags
-from swf_ui_polish import polish_movie
+from swf_ui_polish import patch_cursor, polish_movie
 
 UI_SHA='5b2ea469a3ee06ff154ac78bd58604e8034970d4837f289e5c22503c6a673cde'
 TAG=0x9E2A83C1
@@ -94,12 +94,15 @@ def build(original,logical,polish_ui=False):
         patched,report=polish_movie(movie,True)
         changed,main_report=polish_movie(menu_movie,False)
     else:
-        patched,report=fit_title_field(movie,b'SINGULARITY',b'SINGULARITY VR')
+        patched, cursor_logo = patch_cursor(movie)
+        patched, report = fit_title_field(patched, b'SINGULARITY', b'SINGULARITY VR')
         require(report['character']==10 and report['align']==1 and report['new_bounds'][1]==report['old_bounds'][1],'boot title must stay right-anchored')
-        changed,main_report=fit_title_field(menu_movie,b'SINGULARITY',b'SINGULARITY VR')
+        changed, cursor_menu = patch_cursor(menu_movie)
+        changed, main_report = fit_title_field(changed, b'SINGULARITY', b'SINGULARITY VR')
         require(main_report['character']==166 and main_report['align']==2,'menu title must stay centred')
+        require(cursor_logo['placement_actions_unchanged'] and cursor_menu['placement_actions_unchanged'], 'cursor placement changed')
     blobs={logo['index']:splice(logo,patched),menus['index']:splice(menus,changed)}
-    report={'logo':report,'menus':main_report,'cursor':'unchanged' if not polish_ui else 'native Mouse leaf','dll':'not part of this package'}
+    report={'logo':report,'menus':main_report,'cursor':'native Mouse leaf replaced with a centred dot','dll':'not part of this package'}
     ordered=sorted(exports,key=lambda e:e['offset']);cursor=ordered[0]['offset']
     out=bytearray(logical[:cursor]);relocations=[]
     for e in ordered:
