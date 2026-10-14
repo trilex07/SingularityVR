@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 HUD pack REVIEWED read-only (no install): 95 files,
+catalog v1 (sectors index/label_pl/gun_verts [5799/11387/8297/11389],
+cycle_order UNVERIFIED as stated), attach schema + runtime paths coherent,
+both SIDE tests PASS. Installer is backup-less robocopy — MAIN will guard on
+install. Anti-goals hold (no code/dubbing/shadow touched). READY, awaiting go;
+TV round first (6F4BBEF2 + observer armed). Prior history.
+
 LATEST 2026-10-14 CORRECTION (my bad search): tier textures EXIST at
 C:\Users\Trilex\vr-mods\tex_tiers\ (58 PNG sets: dropin_native + tier_8K,
 TASK.json). Measured VRAM with full mips: drop-in 113 MB, 8K 1805 MB
