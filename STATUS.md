@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 xlingual bank build (offline): old recipe reconstructed,
+tools located; uedecompress sound-incompatible so logicals verified by pins
+instead (5 room + 3 audit MATCH). Pipeline tools/audio/prepare_xlingual_banks.py
+(8 stocks+logicals pinned, 83 mapped lines, QA recorded; 6ba2 in scope, 825b
+out). Two unpack-check self-bugs fixed (tuple compare, record offset).
+Checkout was found switched to foreign side/polish-deploy-profile (their
+pushed 9cf84b9 + my one accidental local-only commit 8b6f6f4) — restored to
+fix/recover-accepted-opening, foreign ref left untouched for SIDE to repair.
+Build running in background; Steam untouched. Prior headers history.
+
 LATEST 2026-10-14 user anchor CONFIRMED: working Polish dialogues = PID37660
 live test 16:27 (DLL 2763A984, first-area L4: NPC/recordings + note glyphs).
 Reinstalled v4 bank/font/manifest set is that era's accepted payload scope
