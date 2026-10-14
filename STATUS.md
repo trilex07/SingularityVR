@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST: PID33552 witness ran and was restored. Live RawData is the original movies,
+not the private candidate: iis 30959 FNV669B2A3F185327C8, SPMenus 231953
+FNV51B6A92D4DED91D0 on main, options and pause. The old +3 byte title edit clipped:
+iis character 10 is right-aligned in a 500px box that the word already fills, and
+SPMenus character 166 is centred in a 900px box. fit_title_field now grows the free
+side (iis xmin -40 to -2767, right edge fixed; SPMenus both sides by 4909 twips)
+and keeps the replacement exclusive. DLL4233E4A2 stays rejected. Steam remains
+DLLD8928180, INI202AA13A, UI5B2EA469, font3F7BF0BE. No new Steam install.
+
 LATEST: user rejected witness DLL4233E4A2 during PID33552. Hands stretched again
 and the menu was doubled flat on exit to the menu. That DLL is not installed.
 Independent restore remains DLLD8928180, INI202AA13A, UI5B2EA469, font3F7BF0BE.

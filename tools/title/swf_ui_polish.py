@@ -5,7 +5,7 @@ sprite placement/actions survive; only its exclusive leaf geometry changes.
 """
 import math
 import struct
-from swf_title_patch import split_tags, encode_tag_header, patch_first
+from swf_title_patch import split_tags, encode_tag_header, fit_title_field
 
 
 def require(ok, message):
@@ -222,8 +222,10 @@ def patch_main_brand(movie):
 
 def polish_movie(movie, logo):
     changed, cursor = patch_cursor(movie)
+    changed, fitted = fit_title_field(changed, b'SINGULARITY', b'SINGULARITY VR')
     if logo:
-        changed, title = patch_first(changed, b'SINGULARITY', b'SINGULARITY VR')
+        title = fitted
     else:
-        changed, title = patch_main_brand(changed)
+        changed, runtime = patch_main_brand(changed)
+        title = {'fitted': fitted, 'runtime': runtime}
     return changed, dict(cursor=cursor, title=title)

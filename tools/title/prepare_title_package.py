@@ -14,7 +14,7 @@ sys.path.insert(0,str(Path(__file__).parents[1]/'audio'))
 from native_story_package import pack
 from patch_opening_dialogue import require
 from ue3_layout import inspect
-from swf_title_patch import patch_first,split_tags
+from swf_title_patch import fit_title_field,split_tags
 from swf_ui_polish import polish_movie
 
 UI_SHA='5b2ea469a3ee06ff154ac78bd58604e8034970d4837f289e5c22503c6a673cde'
@@ -55,8 +55,8 @@ def build(original,logical,polish_ui=False):
     if polish_ui:
         patched,report=polish_movie(movie,True)
     else:
-        patched,report=patch_first(movie,b'SINGULARITY',b'SINGULARITY VR')
-        require(report['delta']==3,'unexpected title delta')
+        patched,report=fit_title_field(movie,b'SINGULARITY',b'SINGULARITY VR')
+        require(report['align']==1 and report['new_bounds'][1]==report['old_bounds'][1],'boot title must stay right-anchored')
     delta=len(patched)-len(movie)
     blob=bytearray(logical[logo['offset']:value+4]+patched+logical[value+size:logo['offset']+logo['size']])
     struct.pack_into('<I',blob,raw['tag_offset']-logo['offset']+16,size+delta)
