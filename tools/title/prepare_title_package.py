@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).parents[1]/'audio'))
-from patch_opening_dialogue import require
+from patch_opening_dialogue import literals, require
 from ue3_layout import inspect
 from swf_title_patch import fit_title_field,split_tags
 from swf_ui_polish import polish_movie
@@ -20,20 +20,21 @@ UI_SHA='5b2ea469a3ee06ff154ac78bd58604e8034970d4837f289e5c22503c6a673cde'
 TAG=0x9E2A83C1
 
 def pack_summary(logical):
-    """Write the pinned UI summary container with uncompressed blocks.
+    """Write the pinned UI summary container as LZO literal blocks.
 
-    unpack_chunks.exe proved this layout on the accepted package: one chunk,
-    logical offset 0x71, physical offset 0x81. Equal compressed and
-    uncompressed sizes are the loader's copy path, so no LZO encoder is used.
+    The accepted package is one chunk at logical 0x71 and physical 0x81.
+    Raw uncompressed blocks made the game run its decompressor on plain
+    bytes and abort with the virtual-memory error before the main menu.
     """
     require(len(logical)>0x71 and struct.unpack_from('<I',logical)[0]==TAG,'logical package')
     require(logical[0x61:0x69]==b'\x00'*8,'decoded summary slot is not empty')
     body=logical[0x71:]
     block=0x20000
-    parts=[body[i:i+block] for i in range(0,len(body),block)] or [b'']
-    container=struct.pack('<4I',TAG,block,len(body),len(body))
-    container+=b''.join(struct.pack('<2I',len(part),len(part)) for part in parts)
-    container+=b''.join(parts)
+    parts=[body[i:i+block] for i in range(0,len(body),block)]
+    encoded=[literals(part) for part in parts]
+    container=struct.pack('<4I',TAG,block,sum(map(len,encoded)),len(body))
+    container+=b''.join(struct.pack('<2I',len(comp),len(raw)) for comp,raw in zip(encoded,parts))
+    container+=b''.join(encoded)
     physical=bytearray(logical[:0x61])
     physical+=struct.pack('<2I',2,1)
     physical+=struct.pack('<4I',0x71,len(body),0x81,len(container))

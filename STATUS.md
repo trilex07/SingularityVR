@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST: title package E852A20D crashed before the menu. Log ended on the engine
+string "Ran out of virtual memory" and Windows recorded 0xe06d7363. That package
+stored the UI chunk uncompressed; the game decompressed those bytes and aborted.
+Replacement 256BF8234CBCD959C8E7FB62D27EBC4A2D186810746326EE65C3C9DA24FE3F14 uses
+LZO literal blocks, round-trips through unpack_chunks, and is installed. DLL
+remains D8928180. Backup title-ui-20261014-185316. L4 still open.
+
 LATEST: title UI E852A20D2CB613602BA3361550F44551BD7A72484CB0D834468813190E86A7CD
 installed. DLL stays D8928180, INI202AA13A, font3F7BF0BE. Package only widens
 iis character 10 (right edge fixed) and SPMenus character 166 (centred) and
