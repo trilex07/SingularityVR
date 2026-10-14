@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 panel spec VERIFIED read-only (no edits, Steam untouched):
+d3d9.cpp identical to origin/main (blob 7b802383, SHA 5E2E80632CD6 ✓);
+holster facts hold (28144-28149, writes only at startup, live HipPoint use);
+PR_GOTO_DISPLAY exists. BLOCKERS: spec line numbers stale (enum 7086 not
+7113 etc. — navigate by symbol); g_texQuality vars exist NOWHERE and d3d9.cpp
+does not include texture_groups.h (lives in spikes/texture_cache/) — TEXTURES
+row needs new globals/read/save, not a copy-paste; injector 2x-fallback
+unverifiable here. Panel = dedicated branch AFTER TV round closes (6F4BBEF2
+installed + observer armed). Prior history.
+
 LATEST 2026-10-14 visible-region mirror DEPLOYED (cbb4509/6F4BBEF2, 21/21
 fixture, clean): eye aspect-fit into the on-monitor part of the window
 (expected dst 430,0,1489,1080 for the observed placement). Backup
