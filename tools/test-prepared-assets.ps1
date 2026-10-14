@@ -50,7 +50,16 @@ if($manifest.Kind -cin @('SingularityVR post-opening asset delta v2',
    $allowed+=@('RvGame\CookedPC\ui_GFx_fonts.xxx');$expectedCount=38
   }
  }
-}elseif($manifest.Kind -cne 'SingularityVR prepared asset delta v1'){throw 'Unknown exact delta profile'}
+}elseif($manifest.Kind -cne 'SingularityVR prepared asset delta v1'){
+ if($manifest.Kind -ceq 'SingularityVR xlingual bank delta v5'){
+  $allowed=@('RvGame\CookedPC\SP_VI2_kismet01_LOC_INT.xxx',
+   'RvGame\CookedPC\SP_VI2_kismet01_a_LOC_INT.xxx','RvGame\CookedPC\SP_VI2_kismet01_b_LOC_INT.xxx',
+   'RvGame\CookedPC\SP_VI2_kismet02_LOC_INT.xxx','RvGame\CookedPC\SP_VI2_kismet03_LOC_INT.xxx',
+   'RvGame\CookedPC\SP_VI2_kismet04_LOC_INT.xxx','RvGame\CookedPC\SP_VI2_zone02a_LOC_INT.xxx',
+   'RvGame\CookedPC\SP_VI2_zone02a_2010_LOC_INT.xxx')
+  $expectedCount=8
+ }else{throw 'Unknown exact delta profile'}
+}
 if(@($manifest.Files).Count -ne $expectedCount -or
  (($manifest.Files|ForEach-Object {$_.RelativePath}|Sort-Object) -join '|') -cne (($allowed|Sort-Object) -join '|')){throw 'Exact32/34/37/38 delta targets required'}
 Closed

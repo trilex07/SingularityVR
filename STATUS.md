@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 xlingual banks INSTALLED on Steam (no launch): 8/8 VI2
+banks built offline (78 PL lines, 5 retained EN, peaks/tempos gated,
+container unpack + structural verification PASS) and deployed via new v5
+profile in test-prepared-assets (Preflight PASS, backup
+asset-backups/20261014-220913-43700 with v4 banks). Independently re-hashed
+on disk. Story manifest v4 flags already cover all 78 banked lines — no
+double-play, no manifest change. DLL/INI/injector frozen, 992 WAVs intact.
+Game-load/headset gates PENDING (no test requested). PR #22 merged prior
+branch state to main without MAIN authorization — noted. Prior history.
+
 LATEST 2026-10-14 xlingual bank build (offline): old recipe reconstructed,
 tools located; uedecompress sound-incompatible so logicals verified by pins
 instead (5 room + 3 audit MATCH). Pipeline tools/audio/prepare_xlingual_banks.py
