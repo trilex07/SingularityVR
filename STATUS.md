@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 visible-region mirror DEPLOYED (cbb4509/6F4BBEF2, 21/21
+fixture, clean): eye aspect-fit into the on-monitor part of the window
+(expected dst 430,0,1489,1080 for the observed placement). Backup
+20261014-233228; accepted EA9EFFB1 in 20261014-224124. Observer armed
+(mirror-vis-20261014-2332), game NOT launched — awaiting user start. Need:
+full 1080p single-eye TV image, then rollback. Prior history.
+
 LATEST 2026-10-14 placement probe DEPLOYED (8dd550d/68644067, clean): logs
 window screen rect + monitor rect (max 2/session) to place the mirrored eye
 into the visible 1080p. Contract ok=600 proven in PID39420. Backup
