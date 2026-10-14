@@ -1,0 +1,224 @@
+{
+ "long_token": [
+  [
+   "8863317732273346.wav",
+   "W dniu 22 listopada 1955 roku Roman przyszedł do mnie wieczorem w pani",
+   53,
+   4.1
+  ],
+  [
+   "6cff99694a523753.wav",
+   "/Pobieg osobisty, 22 listopada 1955 r., /zajęliśmy coś, co dr Demichev",
+   44,
+   6.6
+  ],
+  [
+   "db5a9bb47d436a5a.wav",
+   "Jak wiele jeszcze mogę znieść? Singularność wybuchła dwa dni temu, a o",
+   42,
+   5.3
+  ]
+ ],
+ "abrupt_tail": [
+  [
+   "8863317732273346.wav",
+   "W dniu 22 listopada 1955 roku Roman przyszedł do mnie wieczorem w pani",
+   4.1,
+   0.114
+  ],
+  [
+   "cb7c2e225e18f45e.wav",
+   "Życzę ci wszystkiego najlepszego, przyjacielu.",
+   4.6,
+   0.084
+  ],
+  [
+   "3221532a45bdbd2a.wav",
+   "Ostrzegam cię, puść mnie!",
+   2.1,
+   0.177
+  ],
+  [
+   "6064fd461d16dd5c.wav",
+   "Po zebraniu E99 jest wysyłany do kilku maszyn czyszczących, które usuw",
+   10.8,
+   0.103
+  ],
+  [
+   "5339b0068ab0840e.wav",
+   "Laboratoria badawcze są miejscem, w którym prowadzone są badania nauko",
+   4.8,
+   0.108
+  ],
+  [
+   "7bc07a5eedf72165.wav",
+   "Jeśli ktoś znajdzie ten nagranie, proszę, nasze dzieci ukrywają się w ",
+   6.7,
+   0.083
+  ],
+  [
+   "14b741662999699a.wav",
+   "Od momentu, w którym wynalazłem TMD, Demichev chciał go, żądał, żebym ",
+   7.3,
+   0.115
+  ],
+  [
+   "64f99c874ecc2128.wav",
+   "Powinniśmy iść, kończy nam się czas!",
+   2.0,
+   0.091
+  ]
+ ],
+ "too_short": [
+  [
+   "3f5b1ae6838679f3.wav",
+   "Demichew był opętany siłą i możliwościami Singularity, ale kilka miesi",
+   4.5,
+   25
+  ],
+  [
+   "8863317732273346.wav",
+   "W dniu 22 listopada 1955 roku Roman przyszedł do mnie wieczorem w pani",
+   4.1,
+   53
+  ],
+  [
+   "691d44b2b46e8adc.wav",
+   "Jest to prototyp broni E99, może być niestabilny, ale powinien pomóc n",
+   2.9,
+   14
+  ],
+  [
+   "645b6de719763bc4.wav",
+   "Jestem uwięziony tutaj od ponad dwóch dni, za każdym razem, gdy próbuj",
+   3.1,
+   18
+  ],
+  [
+   "d51c5eb73b496acd.wav",
+   "Wreszcie E99 zostaje wysłany do kalutronu lub pieczywni, gdzie jest oc",
+   2.4,
+   13
+  ],
+  [
+   "5f28785c2235a178.wav",
+   "Jeszcze raz, doktor E99 pomoże nam dzisiaj, gdy będziemy mówić o bezpi",
+   2.6,
+   12
+  ],
+  [
+   "1f71c047ef2edb87.wav",
+   "I oczywiście, są ważne eksperymenty, które robimy z E99. Jest naszym p",
+   4.0,
+   19
+  ],
+  [
+   "38f168ed9f807bf5.wav",
+   "Według dziennika 12, w tym budynku jest ukryty wejście prowadzące do s",
+   1.6,
+   12
+  ],
+  [
+   "83e8a49cd92a4d9b.wav",
+   "Dr Barisov, udało nam się wejść do ogrodzenia.",
+   1.8,
+   8
+  ],
+  [
+   "7c2914f970a04038.wav",
+   "Ludzie chwalili jego rozbity los na Katorga-12, grupa z nas jest zjedn",
+   2.5,
+   16
+  ],
+  [
+   "f1e4518cef6740f1.wav",
+   "Nie jesteś pierwszym 12-tym agentem, którego przesłuchałem lub złamałe",
+   1.8,
+   9
+  ],
+  [
+   "6ba243d8f3f9a7f9.wav",
+   "Zgłoszyły się plotki, że dr Barisov może zostać nowym szefem Katorga-1",
+   3.7,
+   20
+  ],
+  [
+   "825b608f491f738b.wav",
+   "Pomóż mi z sireny, a potem eksplodowała, a pani Barisov krzyknęła i uc",
+   0.7,
+   15
+  ],
+  [
+   "351649e5ff2f58dc.wav",
+   "Skontaktujmy się z Titanem 1 i wyjdźmy z tego kręgu, dupku.",
+   2.3,
+   11
+  ],
+  [
+   "62b644f558505f1e.wav",
+   "Kiedy zaatakowano nas, prowadziłem grupę cywilów do bezpiecznego miejs",
+   1.4,
+   18
+  ],
+  [
+   "6cff99694a523753.wav",
+   "/Pobieg osobisty, 22 listopada 1955 r., /zajęliśmy coś, co dr Demichev",
+   6.6,
+   44
+  ],
+  [
+   "a6badd299a337015.wav",
+   "/Musimy znaleźć wyjście z tych cholernego kanalizacji /i dostać się do",
+   6.3,
+   37
+  ],
+  [
+   "8fb9966094b18a77.wav",
+   "Satelita ma cię około 30 km na południe od wieży radiowej.",
+   2.2,
+   11
+  ],
+  [
+   "abed1099af8c27cc.wav",
+   "Od czasu wizyty dr. Demiczewa w Moskwie, przypływ nowych naukowców i t",
+   3.4,
+   24
+  ],
+  [
+   "6d2d54ee3297204e.wav",
+   "Przykro mi poinformować, że próbowałem powstrzymać Kathryn w doku, ale",
+   5.0,
+   25
+  ],
+  [
+   "8af8ac6f4328569e.wav",
+   "Musisz go wykorzystać, aby odwrócić się do 1955 roku i powstrzymać Dem",
+   2.7,
+   15
+  ],
+  [
+   "1b52b3ab80034682.wav",
+   "Wczoraj ponownie mnie odwiedził, poddany Alpha z eksperymentu teleport",
+   3.1,
+   20
+  ],
+  [
+   "667dff226f5b38eb.wav",
+   "Skontaktujmy się z Titanem 1 i wyjdźmy z tego kręgu, dupku.",
+   2.1,
+   11
+  ],
+  [
+   "db5a9bb47d436a5a.wav",
+   "Jak wiele jeszcze mogę znieść? Singularność wybuchła dwa dni temu, a o",
+   5.3,
+   42
+  ],
+  [
+   "0a61180090e23d1a.wav",
+   "Kiedy nastąpiła katastrofa, wynajęliśmy z Eliną bezpieczeństwo tych tu",
+   5.8,
+   34
+  ]
+ ]
+}

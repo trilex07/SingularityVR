@@ -1,0 +1,46 @@
+import json
+# R3: recznie wyczyszczone teksty (poprawione bledy NLLB + uzupelnione uciete zdania z EN).
+# E99 rozpisane slownie (konwencja QA), TMD zostaje (model czyta poprawnie).
+CLEAN = {
+"8863317732273346.wav": [
+  "Dziennik osobisty, 22 listopada 1955 roku. Roman przyszedł do mnie wieczorem w panice. Twierdził, że pojemnik z bombą E dziewięćdziesiąt dziewięć świeci, więc musiałem zobaczyć to na własne oczy. Mówił prawdę.",
+  "Wokół całego pojemnika unosi się dziwna pomarańczowa poświata. Skontaktowali się z doktorem Demichevem i powiedział mi, żebym się nie martwił. To tylko E dziewięćdziesiąt dziewięć w środku.",
+  "Twierdzi, że transport jest w pełni bezpieczny. Wyruszamy rano i musimy trzymać się harmonogramu."],
+"d51c5eb73b496acd.wav": [
+  "Wreszcie E dziewięćdziesiąt dziewięć trafia do kalutronu, gdzie jest oczyszczane i wzbogacane. Gdy ten etap się zakończy, E dziewięćdziesiąt dziewięć jest gotowe do użycia."],
+"6ba243d8f3f9a7f9.wav": [
+  "Podobno doktor Barisov może zostać nowym szefem Katorgi-12, ale podobno Moskwa nie ma do niego wielkiego zaufania. Gdyby tylko doktor Demichev nie zginął w tym pożarze."],
+"825b608f491f738b.wav": [
+  "Pomocy! Syreny! A potem nastąpił wybuch, pani Barisov krzyknęła i wybiegła z klasy. Zostawiła nas tam."],
+"351649e5ff2f58dc.wav": [
+  "Tam jest wieża radiowa. Wezwijmy Tytana Jeden i spadajmy z tego kręgu."],
+"62b644f558505f1e.wav": [
+  "Prowadziłem grupę cywilów w bezpieczne miejsce, gdy nas zaatakowano. Odstraszyłem stworzenie, ale zdążyło mnie drasnąć. Ach, mocno krwawię."],
+"6cff99694a523753.wav": [
+  "Dziennik osobisty, 22 listopada 1955 roku. Przejęliśmy coś, co doktor Demichev nazywa bombą E dziewięćdziesiąt dziewięć. Nie podoba mi się, że wiozę to na statku. To nie jest sprawdzone.",
+  "Bomba jest niebezpieczna. Powiedziałem oficerom, żeby trzymali wszystkich z dala od tylnej ładowni."],
+"a6badd299a337015.wav": [
+  "Liczebność szybko topnieje. Musimy znaleźć wyjście z tych cholernych kanałów i dostać się do torów. Tam powinniśmy znaleźć silnik i dojechać nim do doków.",
+  "Niestety musimy iść powoli. Wielu z nas jest rannych. Stworzenia są bardzo silne i sprytne."],
+"abed1099af8c27cc.wav": [
+  "Odkąd doktor Demichev pojechał do Moskwy, napływ nowych naukowców i techników na Katorgę-12 wzrósł dziesięciokrotnie. Jego prezentacja naszej pracy musiała być bardzo udana.",
+  "Dobudowują nowe obiekty, a fundusze na badania rosną. A pomyśleć, że cztery tygodnie temu doktor Demichev чуть nie zginął w tym pożarze. Kto go wtedy uratował, wyświadczył nam wszystkim wielką przysługę."],
+"1b52b3ab80034682.wav": [
+  "Wczoraj późno w nocy znowu mnie odwiedził. Obiekt Alfa z eksperymentu teleportacji. To już czwarty raz w ciągu dwóch tygodni. Materializuje się znikąd. Zdaje się coraz bardziej cielesny z każdą wizytą."],
+"667dff226f5b38eb.wav": [
+  "Tam jest wieża radiowa. Wezwijmy Tytana Jeden i spadajmy z tego kręgu."],
+"db5a9bb47d436a5a.wav": [
+  "Ile jeszcze wytrzymam? Singularność wybuchła dwa dni temu i od tamtej pory nie odpoczywałam.",
+  "Kilku medyków zdołało otworzyć punkt triażu w tych tunelach, ale ilu byśmy nie opatrzyli, przybywa jeszcze więcej chorych i rannych. Ta wyspa mnie wykończy."],
+"0a61180090e23d1a.wav": [
+  "Kiedy nadeszła katastrofa, uciekłyśmy z Eliną do bezpieczeństwa tych tuneli. Zdążyłyśmy w ostatniej chwili, ale częściowe zawalenie zmiażdżyło mi nogę.",
+  "Czekałyśmy na ratunek, ale nikt nie przyszedł. Elina musiała pójść szukać dla mnie lekarstw. To było trzy dni temu. Ona nie wróci i wiem, że bez niej nie dam rady."],
+}
+# literowka cyrylicą do poprawy przed zapisem
+for k, v in CLEAN.items():
+    CLEAN[k] = [s.replace(' чуть ', ' cudem ') for s in v]
+with open('C:/Users/Trilex/vr-mods/SingularityVR-cutscene/audio/polish/CLEAN13.json', 'w', encoding='utf-8') as f:
+    json.dump(CLEAN, f, ensure_ascii=False, indent=1)
+print('zapisano', len(CLEAN), 'plikow')
+for k, v in CLEAN.items():
+    print(k, len(v), 'chunki')

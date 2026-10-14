@@ -1,0 +1,83 @@
+[
+  {
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\lektor_natan_ref.wav",
+    "role": "narrator_ui",
+    "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\rhvoice_natan_reference.wav",
+    "text": "Wczytywanie. Proszę czekać.",
+    "engine": "Pocket-TTS Polish 6L",
+    "start_s": 0.0,
+    "end_s": 1.36
+  },
+  {
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\lektor_magda_ref.wav",
+    "role": "narrator_ui",
+    "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\rhvoice_magda_reference.wav",
+    "text": "Zapisywanie postępu gry.",
+    "engine": "Pocket-TTS Polish 6L",
+    "start_s": 1.86,
+    "end_s": 4.02
+  },
+  {
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\lektor_cml_ref.wav",
+    "role": "narrator_ui",
+    "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\pocket_cml_reference.wav",
+    "text": "Opcje gry. Tryb wieloosobowy.",
+    "engine": "Pocket-TTS Polish 6L",
+    "start_s": 4.52,
+    "end_s": 7.64
+  },
+  {
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\lektor_mc_ref.wav",
+    "role": "narrator_ui",
+    "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\piper_mc_speech_reference.wav",
+    "text": "Wróć do gry. Zmień drużynę.",
+    "engine": "Pocket-TTS Polish 6L",
+    "start_s": 8.14,
+    "end_s": 10.46
+  },
+  {
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\kathryn_magda_ref.wav",
+    "role": "kathryn",
+    "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\rhvoice_magda_reference.wav",
+    "text": "Potrzebuję jeszcze chwili. Dane są prawie kompletne.",
+    "engine": "Pocket-TTS Polish 6L",
+    "start_s": 10.96,
+    "end_s": 12.96
+  },
+  {
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\soldier_natan_ref.wav",
+    "role": "soldier",
+    "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\rhvoice_natan_reference.wav",
+    "text": "Sektor jest zabezpieczony. Ruszamy dalej.",
+    "engine": "Pocket-TTS Polish 6L",
+    "start_s": 13.46,
+    "end_s": 16.5
+  },
+  {
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\scientist_gosia_ref.wav",
+    "role": "scientist",
+    "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\piper_gosia_reference.wav",
+    "text": "Metal E99 zawiera oczyszczony izotop.",
+    "engine": "Pocket-TTS Polish 6L",
+    "start_s": 17.0,
+    "end_s": 18.28
+  },
+  {
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\announcer_cml_ref.wav",
+    "role": "announcer",
+    "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\pocket_cml_reference.wav",
+    "text": "Wynik jest remisowy po regulaminowym czasie.",
+    "engine": "Pocket-TTS Polish 6L",
+    "start_s": 18.78,
+    "end_s": 22.38
+  },
+  {
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\demichev_darkman_ref.wav",
+    "role": "demichev",
+    "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\piper_darkman_reference.wav",
+    "text": "Nie ma już odwrotu. Procedura zostanie uruchomiona.",
+    "engine": "Pocket-TTS Polish 6L",
+    "start_s": 22.88,
+    "end_s": 27.12
+  }
+]

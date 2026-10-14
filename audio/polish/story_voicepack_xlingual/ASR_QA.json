@@ -1,0 +1,80 @@
+[
+ {
+  "file": "8863317732273346.wav",
+  "asr": " Jest to pada?  Kiedyś to wiedziałem się, więc wiedziałem, więc musiałem zobaczyć to na włatrze. Mówił prawdę.  Kawać się ziwna, pomarańczowali się z doktorem Demm.  To tylko dziennień, dziesiątku.  J",
+  "recall": 0.23,
+  "expected": "W dniu 22 listopada 1955 roku Roman przyszedł do mnie wieczorem w panice Nerf. twierdził, że kontener bomby E99 świeci, "
+ },
+ {
+  "file": "d51c5eb73b496acd.wav",
+  "asr": " To jest traw, jest oczyszczane i wzbogacane, gdy ten, gdy ten tacy...",
+  "recall": 0.15,
+  "expected": "Wreszcie E99 zostaje wysłany do kalutronu lub pieczywni, gdzie jest oczyszczany i wzbogacony."
+ },
+ {
+  "file": "6ba243d8f3f9a7f9.wav",
+  "asr": " Podobno może zostać nowym szefem Katolii, gdyby tylko doktor Michew nie zginął w tym pożarze.",
+  "recall": 0.26,
+  "expected": "Zgłoszyły się plotki, że dr Barisov może zostać nowym szefem Katorga-12, ale myślałem, że Moskwa ma w nim duże zaufanie."
+ },
+ {
+  "file": "825b608f491f738b.wav",
+  "asr": " Tobatem nastąpił wybuch, pani Barysow krzyknęła i wybiegła z klasy.",
+  "recall": 0.38,
+  "expected": "Pomóż mi z sireny, a potem eksplodowała, a pani Barisov krzyknęła i uciekła z klasy."
+ },
+ {
+  "file": "351649e5ff2f58dc.wav",
+  "asr": " Wezwijmy tytana jeden i spadajmy z tego kręgu.",
+  "recall": 0.44,
+  "expected": "Skontaktujmy się z Titanem 1 i wyjdźmy z tego kręgu, dupku."
+ },
+ {
+  "file": "62b644f558505f1e.wav",
+  "asr": " Bezpieczne miejsce, gdy nas zaatakowano.  Obstraszyłem stworzenie.",
+  "recall": 0.18,
+  "expected": "Kiedy zaatakowano nas, prowadziłem grupę cywilów do bezpiecznego miejsca, ale przeraziłem stworzenie, ale nie zanim dost"
+ },
+ {
+  "file": "6cff99694a523753.wav",
+  "asr": " Ręliśmy coś w środze, doktor Demichev, to myślę, że wiozem to na statku.  Powiedziałem oficerom. Powiedziałem oficerom. Trzymali.",
+  "recall": 0.24,
+  "expected": "/Pobieg osobisty, 22 listopada 1955 r., /zajęliśmy coś, co dr Demichev nazywa bombą E99. /Nie czuję się komfortowo, że m"
+ },
+ {
+  "file": "a6badd299a337015.wav",
+  "asr": " Musimy znaleźć wyjście z tych cholernych kanałów i dostać się do torów.  Mielu z nas jest rannych.",
+  "recall": 0.4,
+  "expected": "/Musimy znaleźć wyjście z tych cholernego kanalizacji /i dostać się do koleje /tam powinniśmy znaleźć silnik /i zabrać g"
+ },
+ {
+  "file": "abed1099af8c27cc.wav",
+  "asr": " od kordemy hefgnowych naukowców i techników na katorgę,  jego prezentacja musiała być bardzo udana.  A pomyśl na badania rosną.  A pomyśleć cztery tygodnie temu doktor Nifewtude mnie zginął w tym poż",
+  "recall": 0.42,
+  "expected": "Od czasu wizyty dr. Demiczewa w Moskwie, przypływ nowych naukowców i techników do Katorga-12 wzrósł dziesięciokrotnie. J"
+ },
+ {
+  "file": "1b52b3ab80034682.wav",
+  "asr": " Obiektat w atres eksperymentu teleportacji.  Zajeje się coraz bardziej celesny z każdą wizytą.",
+  "recall": 0.25,
+  "expected": "Wczoraj ponownie mnie odwiedził, poddany Alpha z eksperymentu teleportacji, po raz czwarty w ciągu ostatnich dwóch tygod"
+ },
+ {
+  "file": "667dff226f5b38eb.wav",
+  "asr": " Wezwijam Tytana 1 i spadajmy z tego kręgu.",
+  "recall": 0.44,
+  "expected": "Skontaktujmy się z Titanem 1 i wyjdźmy z tego kręgu, dupku."
+ },
+ {
+  "file": "db5a9bb47d436a5a.wav",
+  "asr": " I że wydaność wybyła dwa dni temu i od tamtej pory nie odpoczywałam.  Kilku metli, że oni w tych tunelach i lubiśmy nie opatrzyli.  Ta wyspanie wykończy.",
+  "recall": 0.28,
+  "expected": "Jak wiele jeszcze mogę znieść? Singularność wybuchła dwa dni temu, a od tego czasu nie odpoczywałam. Kilku pracowników m"
+ },
+ {
+  "file": "0a61180090e23d1a.wav",
+  "asr": " Kiedy nadeszła tych tunerinom do bezpieczeństwa tych tunerii,  Krakarnik nie przyszedł.  Elina musiała pójść szykać dla mnie lekarstw.",
+  "recall": 0.24,
+  "expected": "Kiedy nastąpiła katastrofa, wynajęliśmy z Eliną bezpieczeństwo tych tuneli, dotarliśmy w odpowiednim czasie, ale moja no"
+ }
+]
