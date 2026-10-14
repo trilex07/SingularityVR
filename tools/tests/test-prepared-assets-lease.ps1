@@ -57,11 +57,13 @@ if($WatchTimeout){
   '-BackupPath',('"'+$backup+'"'),'-GameRoot',('"'+$fake+'"'),'-LaunchWindowSeconds','60')
  $proc=Start-Process -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList $argv `
   -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+ $null=$proc.Handle # keep the handle so exit-code retrieval survives child termination
  $deadline=(Get-Date).AddSeconds(90)
  while(-not $proc.HasExited){
   if((Get-Date) -ge $deadline){throw 'Fake guard timed out; preserve evidence, do not kill'}
   Start-Sleep -Seconds 1;$proc.Refresh()
  }
+ $proc.WaitForExit()
  if($proc.ExitCode -ne 0){throw "Fresh guard failed; see $stderr"}
  if(-not (Get-Content $stdout -Raw).Contains('READY: independent')){throw 'Guard never armed'}
  foreach($f in $manifest.Files){if((Hash (Join-Path $fake $f.RelativePath)) -cne $f.BaselineSha256){throw 'Guard restore mismatch'}}

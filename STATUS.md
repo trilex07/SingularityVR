@@ -1,6 +1,6 @@
 # STATUS — session handoff
 
-LATEST 2026-10-14: preparing first-area/font polish on fix/post-opening-followups,
+LATEST 2026-10-14: OFFLINE PREP READY first-area/font polish on fix/post-opening-followups,
 Draft PR19, NOT merged. Font SIDE219c6fa cherry-picked59da9f9; private output60E72871
 matches pinned original3F7BF0BE. UI5E46B619 replaces exclusive Mouse geometry and
 scoped Initialize title; three NPC banks/23 utterances retain9 nonverbal exports.
@@ -9,10 +9,16 @@ Free-hand target selected after wrist reconstruction; accepted pistol/modal poli
 retained, COM invalidation moved to render thread. Cinema LOCAL quad defaultOFF,
 same composed pixels/one scene anchor; enabled only in staged next test INI.
 26 Python tests +9 optimized x86 fixtures/policy PASS. Exact38 fake installation
-WhatIf/backup/corruption/conflict/restore PASS. Fresh build/guard/staging gate follows.
+WhatIf/backup/corruption/conflict/restore PASS. Fresh hidden WindowsPS38 guard and
+core4 no-launch timeout independently restored exact baselines PASS. x86/O2 DLL
+2763A984F01384C6FC0B289333E0283A9273665FD02B13A978DE95611F48C0B7
+from tracked-clean source34b180e; next-core-v1/next-assets-v4/quiet-revoice-v2 ready.
+Actual1928 original identities and staged1928 candidate hashes PASS;992 legacy
+WAV filenames preserved by new lookup. Original font independently backed up.
 Actual Steam remains original, no real lease/game launched this preparation turn;
 fresh user start required. Previous live restore independent1924 originals PASS.
 Font preview is an approximate raster, not proof of native GFx fill/wrap.
+Private bundle deployment/hands-dubbing/post-opening/next-candidate-index.json.
 See docs/post-opening-next-candidate.md. Entries below are historical snapshots.
 
 HISTORICAL:

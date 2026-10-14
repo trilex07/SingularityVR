@@ -60,6 +60,15 @@ The pose is evaluated in its named space, size is metres, and front face is +Z.
   install/hash/backup corruption refusal/conflict preservation/restore PASS.
 - Current Steam files are not these candidates. No launch before fresh start.
 
+Final offline bundle: `next-candidate-index.json` in private post-opening
+deployment links core4, asset38 and the1886-WAV plan with exact manifest hashes.
+Optimized x86 DLL `2763A984…F48C0B7` is built from tracked-clean source34b180e.
+Both core4 and a fresh hidden WindowsPS38 guard pass no-launch timeout rollback
+with independent baseline checks. Staged1928 hashes and actual1928 original
+identities PASS. The new lookup preserves every existing992 story WAV filename.
+Font original3F7BF0BE is independently copied/verified outside Steam. Actual
+Steam DLL remains baselineD8928180; no real-install guardian or game was started.
+
 Headset script after MAIN verifies all leases: New Game/save confirmation →
 intro/helicopter (look away from screen then back; pause/Options/return) →
 free right glove near face before pickup → pistol grip → first-area dialogue,
