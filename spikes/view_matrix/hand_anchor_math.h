@@ -5,6 +5,12 @@ using MatrixRows = const float (*)[4];
 inline bool PistolGrip(bool gloves,bool liveWeapon,bool holstered,long gunVertices,bool supportGrip) {
     return gloves && liveWeapon && !holstered && gunVertices==5799 && !supportGrip;
 }
+// Free hands miss the pads by the measured gun-anchor residual (~50 UU left,
+// ~41 UU right). That correction runs only while no weapon is live. A held
+// pistol keeps BuildGunC through AimTarget.
+inline bool FreeWristAnchor(bool gloves, bool weaponLive, int isolateMode, bool supportGrip) {
+    return gloves && !weaponLive && isolateMode == 2 && !supportGrip;
+}
 // Select at consumption time: a snapshot made before TargetWrist silently
 // bypasses its correction. The proven pistol grip deliberately keeps its
 // weapon target; free hands use the final corrected controller target.

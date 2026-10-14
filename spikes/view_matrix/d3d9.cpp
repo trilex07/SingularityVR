@@ -7447,8 +7447,7 @@ void PanelSaveRow(int rowId, const char* path) {
             WritePrivateProfileStringA("Localization", "UiNarratorEnabled",
                 Rd(g_uiNarratorEnabled) ? "1" : "0", path); return;
         case PR_GLOVEONLY:
-            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", g_showControllerArms ? 0L : 1L);
-            WritePrivateProfileStringA("Render", "ShowControllerArms", v, path); return;
+            WritePrivateProfileStringA("Render", "ShowControllerArms", "0", path); return;
         case PR_GLOVEISOLATE:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_gloveIsolate));
             WritePrivateProfileStringA("Render", "GloveIsolate", v, path); return;
@@ -8330,8 +8329,8 @@ void PanelAdjust(int row, int dir) {
             Log("VR panel: UI narrator %s (native story dialogue unchanged)", Rd(g_uiNarratorEnabled) ? "ON" : "OFF");
             break;
         case PR_GLOVEONLY:
-            g_showControllerArms = g_showControllerArms ? 0 : 1;
-            Log("VR panel: glove-only visual %s", g_showControllerArms ? "OFF" : "ON");
+            g_showControllerArms = 0;
+            Log("VR panel: glove-only visual ON (kept)");
             break;
         case PR_GLOVEISOLATE: {
             LONG m = Rd(g_gloveIsolate) + dir;
@@ -15367,8 +15366,19 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
                 verts, first, triangles, Rd(g_rtIsScene));
         }
     }
+    const bool weaponLive = Rd(g_weaponObj)!=0 && Rd(g_weaponHolstered)==0;
+    const bool freeWrist = handValid[0] && handValid[1] &&
+        handanchor::FreeWristAnchor(gloves, weaponLive, (int)Rd(g_gloveIsolate), Rd(g_twoHandActive)!=0) &&
+        handanchor::GameplaySource(true, Rd(g_inCinematic)!=0, Rd(g_vrUiMenu)!=0,
+            Rd(g_gamePaused)!=0, g_sceneMode.Current()==vrscene::Mode::GameplayStereo);
     int slots = 0;
-    const unsigned* sectionMap = GloveMap(gloves, sleeve, tmdGloves, tmdBase, tmdExtra, slots);
+    const unsigned* sectionMap = nullptr;
+    if (gloves && (freeWrist || Rd(g_noTmdPaletteFix))) {
+        slots = (int)gloveisolate::kNoTmdCookedPaletteCount;
+        sectionMap = gloveisolate::kNoTmdCookedPalette;
+    } else {
+        sectionMap = GloveMap(gloves, sleeve, tmdGloves, tmdBase, tmdExtra, slots);
+    }
     if (!sectionMap || slots <= 0 || slots > 45) {
         IndependentAuditCount(IHA_MAP,audit);
         InterlockedExchange(&g_independentRejectCode, (LONG)IndependentReject::Map);
@@ -15403,9 +15413,9 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     float base[4][4]{};
     if(g_thisDrawMoved)memcpy(base,g_thisDrawMoved==2?off:primary,sizeof(base));
     else for(int i=0;i<4;++i)base[i][i]=1.0f;
-    const bool wristAnchor = gloves && Rd(g_noTmdPaletteFix) && Rd(g_gloveIsolate)==2 && !supportGrip && handValid[0] && handValid[1] &&
+    const bool wristAnchor = freeWrist || (gloves && Rd(g_noTmdPaletteFix) && Rd(g_gloveIsolate)==2 && !supportGrip && handValid[0] && handValid[1] &&
         handanchor::GameplaySource(Rd(g_noTmdWristAnchorFix)!=0,Rd(g_inCinematic)!=0,
-            Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo);
+            Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo));
     if(wristAnchor) {
         // Undo the camera transform actually used by StereoPairBody, not the live controller
         // surrogate: BuildGunC can differ at a holster/ADS; BuildTmdC has its own anchor/trim.
@@ -15482,7 +15492,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     };
     const bool rigidGloves =
         gloveisolate::HandsOnly(g_showControllerArms, (int)InterlockedCompareExchange(&g_gloveIsolate, 0, 0));
-    const bool correctedNoTmd = gloves && Rd(g_noTmdPaletteFix);
+    const bool correctedNoTmd = gloves && (freeWrist || Rd(g_noTmdPaletteFix));
     if (correctedNoTmd) {
         static LONG saidCookedPalette = 0;
         if (InterlockedCompareExchange(&saidCookedPalette, 1, 0) == 0)
@@ -28127,9 +28137,10 @@ void LoadIniSettings() {
     if (g_weaponWheelSlots > 8) g_weaponWheelSlots = 8;
     Log("weapon wheel: R3 hold, right stick sectors=%ld, release commits native cycle-weapon pulses",
         g_weaponWheelSlots);
-    g_showControllerArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 0, path) ? 1 : 0;
-    Log("controller arms: %s (ShowControllerArms; glove-only is the stable default)",
-        g_showControllerArms ? "animated mesh" : "gloves only");
+    const int iniShowArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 0, path);
+    g_showControllerArms = 0;
+    Log("controller arms: gloves only (forced; ini ShowControllerArms=%d does not turn the arm mesh on)",
+        iniShowArms);
     g_armIkMode = GetPrivateProfileIntA("Render", "ArmIKMode", 0, path);
     if (g_armIkMode < 0 || g_armIkMode > 2) g_armIkMode = 0;
     LONG gloveMode = GetPrivateProfileIntA("Render", "GloveIsolate", 2, path);

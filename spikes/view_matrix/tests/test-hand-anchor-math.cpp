@@ -11,6 +11,11 @@ int main(){
     assert(!handanchor::PistolGrip(true,true,false,5799,true));
     assert(!handanchor::PistolGrip(true,true,false,6100,false));
     assert(!handanchor::PistolGrip(false,true,false,5799,false));
+    assert(handanchor::FreeWristAnchor(true,false,2,false));
+    assert(!handanchor::FreeWristAnchor(true,true,2,false));
+    assert(!handanchor::FreeWristAnchor(true,false,0,false));
+    assert(!handanchor::FreeWristAnchor(true,false,2,true));
+    assert(!handanchor::FreeWristAnchor(false,false,2,false));
     armbind::Mat bind;identity(bind.m);bind.m[3][0]=12;bind.m[3][1]=-7;bind.m[3][2]=3;
     float skin[3][4]={{1,0,0,-12},{0,1,0,7},{0,0,1,0}}; // animated joint, not skin translation
     float local[4][4];identity(local);local[3][0]=20;local[3][2]=-40;

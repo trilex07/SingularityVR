@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST: cursor ring accepted. Glove-only is now forced on: ini ShowControllerArms
+is 0 (was 1, one byte) and the panel cannot turn the arm mesh back on. DLL
+627F11118E72A41A5305ABD9A80975AAC587D22C5B0788305AF298678F1BCC7B. Free hands use
+the measured wrist-anchor correction; a live 5799 pistol still aims through
+BuildGunC. Backup 20261014-195152. UI 69CABCCF and font unchanged. No restore
+guard. L4 is the next unarmed-glove look, then the pistol in the same session.
+Boot card is not installed: no binkenc.dll on this machine, only the SIDE MKV.
+Hand plates are not in this DLL.
+
 LATEST: headset check of 256BF823 + E3E7C902: menu text SINGULARITY VR is good,
 arms no longer stretch, free gloves still sit too far from the pads until the
 pistol is picked up, then tracking and grip are good. Exit was not checked.
