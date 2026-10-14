@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+LIVE 2026-10-14 08:56+02:00, user authorized fresh start. Steam PID24468,
+candidate d3d9 C1D904D0/injector F5137234; actual application module paths and
+all4+32+1886 candidate hashes verified. OpenXR ready and actual MAIN slot65
+callback forwarding logged, NativePolishSpeech1. All three separate guardians
+READY; original core/asset/WAV backups verified. Remaster_apply0 (accepted base
+textures kept), title/native radio candidates installed. Independent read-only
+observer PID25180 collects session in private
+deployment/hands-dubbing/three-items-live-20261014-085320. Core backup
+deployment/hands-dubbing/backups/20261014-085321-22672; asset backup
+deployment/hands-dubbing/asset-backups/20261014-085516-22672; WAV originals in
+live folder revoice/backup. Physical trial/exit/restore verification PENDING.
+DO NOT deploy or swap while PID24468/any Singularity runs. No repeat launch
+after exit until all3 guards finish and MAIN independently hashes originals.
+Below preparation/historical headers describe earlier state.
+
 User physical feedback for E213B216 PID23584/36340: all requested hands/menu/
 cinema pause/eyes/controls checks OK except gameplay English radio. Own-wrist
 and cinema/menu presentation accepted for tested scope, not all future weapons.
