@@ -15,6 +15,7 @@ function Hash([string]$p){if(Test-Path -LiteralPath $p -PathType Leaf){return (G
 if(-not(Get-CimInstance Win32_Process -Filter "ProcessId=$PID")){throw 'Full process visibility required'}
 if(@(Get-CimInstance Win32_Process -Filter "Name='Singularity.exe'").Count){throw 'Game running; no deployment'}
 if((Hash $voicePlanPath) -cne '68569A3139E9D5D8E53803A73ECBAC6650061BF066B220818D619B2C3873859F'){throw 'Accepted voice plan changed'}
+throw 'STALE RUNNER: pins quiet-revoice-v2 and recovery-ready baselines that undo story-xlingual v1 + 38-asset v4. Regenerate manifests from deployment/hands-dubbing/current-install-freeze-20261014 and docs/SIDE-AUDIO-INVESTIGATION-20261014.md before any live run.'
 $build=Get-Content (Join-Path $ready 'd3d9.build.json') -Raw | ConvertFrom-Json
 if($build.commit -cne 'c51f53a8e814af0f1741f5d89bd2279fad352393' -or
  $build.sha256 -cne 'EA9EFFB10C83815DAA36131F1F7785D2CC1B83C55866DF84AD0700CC335FD71C' -or

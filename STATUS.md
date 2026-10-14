@@ -1,5 +1,201 @@
 # STATUS — session handoff
 
+LATEST 2026-10-14 visible-region mirror DEPLOYED (cbb4509/6F4BBEF2, 21/21
+fixture, clean): eye aspect-fit into the on-monitor part of the window
+(expected dst 430,0,1489,1080 for the observed placement). Backup
+20261014-233228; accepted EA9EFFB1 in 20261014-224124. Observer armed
+(mirror-vis-20261014-2332), game NOT launched — awaiting user start. Need:
+full 1080p single-eye TV image, then rollback. Prior history.
+
+LATEST 2026-10-14 placement probe DEPLOYED (8dd550d/68644067, clean): logs
+window screen rect + monitor rect (max 2/session) to place the mirrored eye
+into the visible 1080p. Contract ok=600 proven in PID39420. Backup
+20261014-232827; accepted EA9EFFB1 in 20261014-224124. Observer armed
+(mirror-place-20261014-2328), game NOT launched — awaiting user start. Prior history.
+
+LATEST 2026-10-14 mirror CONTRACT DEPLOYED (9b96c17/E612C2D5, 18/18 fixture,
+clean provenance): full-bb Present src + NULL dst now proceeds to mirror;
+true subrects stay native + probe. Backup 20261014-232154; accepted EA9EFFB1
+in 20261014-224124. Observer armed (note typo'd dir mirror-fix-20261014-2322,
+evidence lands there regardless), game NOT launched — awaiting user start.
+Need: ok>0 in log + single TV image + HMD no-regression, then rollback.
+Prior history.
+
+LATEST 2026-10-14 boot logo: stock-vs-candidate frames compared (90/180/300).
+Stock ends "...SINGULAЯITY" (mirrored R = signature style); candidate appends
+3 marks ("ЧПЧ"-like) meant as VR suffix. User says mirrored style is intended
+("tak ma być"). Readability of the suffix as "VR" unverified by MAIN — user
+is arbiter. Stock currently installed (FE40BA3B verified); reinstall of
+D85FC268 on user order only. Prior history.
+
+LATEST 2026-10-14 boot logo ROLLED BACK to stock (my install, my rollback):
+candidate SNG_logo_vr renders garbage glyphs ("SINGULAЯITYЧПЧ" instead of
+"SINGULARITY VR", confirmed by decoding frame 180 of the installed .bik —
+matches their reference preview, so the defect is in the candidate, not the
+install). Stock FE40BA3B restored + verified. SIDE must fix the VR-suffix
+glyph cloning before any reinstall. Also: user's "no VR" check looked at the
+FIRST screens (ATVI/raven/UE3 logos play before SNG_logo) — branding was only
+ever targeted at the 4th card. Prior history.
+
+LATEST 2026-10-14 rect-probe DEPLOYED (b17715e / 24B9ECC4, fixture
+PASS, clean provenance), backup 20261014-224124 holds EA9EFFB1. One-shot
+mirror-rect logger (max 4 distinct src/dst shapes + bb/win, read-only).
+Observer armed (rect-probe-20261014-2241), game NOT launched — awaiting user
+start. Need: building save ~30 s gameplay + menu, normal exit, then rollback
++ contract design. Prior history.
+
+LATEST 2026-10-14 FULL DUBBING ON STEAM (no launch): v7 installed 102/102
+(101 banks + story flags), independently re-hashed. Live Polish banked lines:
+78 VI2 + 721 new = ~799 + old intro helicopter. Retained EN: 5 VI2 + ~184
+new (tempo) + 3 failed banks stock (RT1_fx01, RT3_Vignette, VI6_kismet03) +
+combat barks/deaths + MP + VI_intro-new (no source). DLL/INI/injector/font/
+WAVs frozen. Backup asset-backups/20261014-222826-40844. Game-load/headset
+gates PENDING (no test requested). v7 tooling committed (profiles, pins,
+generators). Prior history.
+
+LATEST 2026-10-14 boot logo INSTALLED (user-ordered): candidate SNG_logo_vr
+independently validated (1280x720/30fps/11s, BIKi, audio, D85FC268…),
+stock FE40BA3B backed up to boot-logo-backup-20261014, hash verified on disk.
+Full xlingual build done: 109/112 banks OK (800 PL lines, 184 retained);
+FAILED stay stock: RT1_fx01, RT3_Vignette (PCM meta), VI6_kismet03. "Pauza"
+clipped to "AZA" noted (title field widths, pre-existing likely). Next: v7
+story flags + single install of remaining banks (VI2-done excluded). Prior history.
+
+LATEST 2026-10-14 previous intro bank INSTALLED (user-ordered interim):
+4904F281 via new v6 profile (Preflight PASS, stock backup
+asset-backups/20261014-221929-43400), hash verified on disk. Known quiet;
+no xlingual source for intro exists. No launch. Prior history.
+
+LATEST 2026-10-14 xlingual test PID18444 (short: menu→gameplay→cutscene→exit):
+helicopter still EN — structural, not a regression: SP_VI_intro_Kismet bank
+is stock BY DESIGN and xlingual has ZERO rows for it (11 xlingual 'intro'
+rows are freight-train/RT1 scenes). Nothing to integrate for it from the new
+set; old intro candidate (old voices) exists but intro stays protected unless
+user orders otherwise. VI2 building content still unreached this run (user
+tested game start). Xlingual banks intact on Steam (8FCAE808…), overlay still
+menu-only. Prior history.
+
+LATEST 2026-10-14 decoder UNLOCKED + candidates independently verified:
+tools/uedecompress/unpack_chunks.cpp (in-tree since 18f64f4) decodes stock
+sound banks BYTE-EQUAL to reference logicals (kismet02 → f6a24416…); same
+binary decoded all 8 xlingual candidates → sane packages, all 78 replaced
+Vorbis payloads byte-equal to fitted OGGs. Old-flow verification depth
+reached offline. Remaining banks (VI3-6/RL/RT/SL/WL) now unblocked: stocks on
+Steam, mapping in xlingual manifest, same pipeline. User headset test on
+PID18444 doubles as first game-load of the new container format. Prior history.
+
+LATEST 2026-10-14 xlingual banks INSTALLED on Steam (no launch): 8/8 VI2
+banks built offline (78 PL lines, 5 retained EN, peaks/tempos gated,
+container unpack + structural verification PASS) and deployed via new v5
+profile in test-prepared-assets (Preflight PASS, backup
+asset-backups/20261014-220913-43700 with v4 banks). Independently re-hashed
+on disk. Story manifest v4 flags already cover all 78 banked lines — no
+double-play, no manifest change. DLL/INI/injector frozen, 992 WAVs intact.
+Game-load/headset gates PENDING (no test requested). PR #22 merged prior
+branch state to main without MAIN authorization — noted. Prior history.
+
+LATEST 2026-10-14 xlingual bank build (offline): old recipe reconstructed,
+tools located; uedecompress sound-incompatible so logicals verified by pins
+instead (5 room + 3 audit MATCH). Pipeline tools/audio/prepare_xlingual_banks.py
+(8 stocks+logicals pinned, 83 mapped lines, QA recorded; 6ba2 in scope, 825b
+out). Two unpack-check self-bugs fixed (tuple compare, record offset).
+Checkout was found switched to foreign side/polish-deploy-profile (their
+pushed 9cf84b9 + my one accidental local-only commit 8b6f6f4) — restored to
+fix/recover-accepted-opening, foreign ref left untouched for SIDE to repair.
+Build running in background; Steam untouched. Prior headers history.
+
+LATEST 2026-10-14 user anchor CONFIRMED: working Polish dialogues = PID37660
+live test 16:27 (DLL 2763A984, first-area L4: NPC/recordings + note glyphs).
+Reinstalled v4 bank/font/manifest set is that era's accepted payload scope
+(8 VI2 banks + 60E72871 + 3 manifests); notes re-confirmed PL in PID46016.
+Open: menu double-flat (overlay falsifier hit), TV subrectangle mapping,
+xlingual-to-bank integration, PR via user browser. No test requested.
+
+LATEST 2026-10-14 SIDE-dubbing claims verified offline (no Steam writes):
+R6 files 6ba2/825b byte-identical in C:\PL-dubbing, xlingual source AND Steam
+(476c5c72/a8ae6d25, mono16/24k) — already deployed, nothing to install; 825b
+middle still ear-QA pending. sol_dobry.txt searched: NO dubbing build in it
+(Oct-12 pause/Bink era); the working build was Oct-14 VI2 banks (restored).
+install_polish.ps1:39 already xlingual BUT script is broad (VFX+INI+admin) —
+will not run; story files already on Steam. Branch
+agent/polish-xlingual-dubbing-20261014 = PR20 head 1532907: 62 files
++15064/-8 incl. renderer (vr_scene_mode.h) — NOT audio-only, do not merge.
+gh unauthed here; PR creation needs user browser. Prior headers history.
+
+LATEST 2026-10-14 dubbing-check PID46016 (38-pack installed): notes POLISH
+CONFIRMED by user. Start-game/radio speech still ENGLISH — consistent with
+scope, not a contradiction: intro bank stock BY DESIGN (candidate never
+installed), 4 short kismet01 radio lines retained EN by design (VI1_0107_CP2,
+VI1_0507_NIM, VI1_0114_CP, VI1_0110_CP2), nonverbals kept; 16/20 kismet01 +
+23 NPC + PA/ANN lines are Polish in installed banks but the New-Game path
+never reaches VI2 building content — building save with banks UNTESTED, no
+test requested. Menu double-flat on New Game CONFIRMED still BROKEN:
+MenuOverlay=1 experiment hit its falsifier. SIDE edited MAIN checkout
+(reviewed: kept run-trial hard-disable + verify notes, removed __pycache__);
+SIDE must not edit MAIN tree again. Prior headers history.
+
+LATEST 2026-10-14 SIDE offline verify (no launch): Steam read-only
+38/38 asset v4 +992 story WAVs +3 runtime match; intro stock (protected).
+Root-cause write-up docs/SIDE-AUDIO-INVESTIGATION-20261014.md;
+tools/audio/verify-polish-install-state.ps1 → steam-verify-latest.json.
+New xlingual still needs native bank integration (87 native_replaced).
+run-recovery-trial.ps1 hard-disabled (stale quiet-revoice). L4 pending.
+
+LATEST 2026-10-14 dubbing+notatki FIXED offline (no launch, no test asked):
+root cause = restore guards had wiped the full accepted 38-asset payload to
+stock; re-persist saved only DLL/INI/injector + vr-assets WAVs. vr-assets
+WAVs alone never drove NPC/radio (native banks are the sole producer —
+proven). Reinstalled exact38 v4 payload via test-prepared-assets (Preflight
+PASS, backup asset-backups/20261014-212951-40600): 8 Polish VI2 banks
+(FB03741D/D6EA4374/A1A83F2/1CAF1E3F/A2E6B73/56CDDB02/7D50BD2B/1B2522CC),
+Polish font 60E72871, 3 PL manifests (6518581E/0D632BF4/22B755EB, 87
+native_replaced), UI 69CABCCF unchanged, 24 DDS + override INI. Independently
+re-hashed: all match; DLL EA9EFFB1/INI/injector frozen; 992 new xlingual WAVs
+byte-identical to freeze (names resolve from new manifest). See
+docs/native-npc-radio-producer.md. Prior headers history.
+
+LATEST 2026-10-14 mirror-diag RESULT: root cause PROVEN. All ~26k Presents
+(44×600 windows) hit skipRect — engine Presents with explicit src/dst rects
+every frame, mirror `ok=0` for the whole session. The subrectangle contract
+was never implemented, so the TV fix could never engage in-game; prior
+"wszystko okej" likely never included a real TV check (HMD on). Accepted
+EA9EFFB1 restored + verified, INI/injector/992 WAVs intact. Next probe:
+bounded one-shot capture of actual presentSrc/presentDst rect values, then
+subrectangle mapping. See docs/native-npc-radio-producer.md (TV section).
+
+LATEST 2026-10-14 mirror-diag probe DEPLOYED, awaiting headset: DLL
+CF96A841 (source 5dfaada, x86 PE32 /O2, fixture 12/12 PASS, analysis gate
+clean for desktop_mirror.h). Bounded outcome counters + last geometry, one
+`mirror-diag:` line per 600 Presents; copy logic byte-identical. Installed
+via deploy-singularityvr -DllOnly -KeepIni -SkipTextures, backup
+20261014-211920 holds accepted EA9EFFB1 for post-test rollback. INI/injector/
+992 WAVs untouched. Steam PID43880 launched, observer-only
+(mirror-diag-20261014-2119), no restore guards. Need: 1-2 min load-save at
+building + radio, normal exit, then rollback + analysis.
+
+LATEST 2026-10-14 manual headset retest PID12424 (~2 min, observer-only, no
+deploy): audio hypothesis CONFIRMED — zero `polish voice:` lines, only menu
+strings through Localize; NPC/radio/long dialogue all English, note English.
+Gameplay window only ~25 s (MenuFlat→GameplayStereo 21:12:33→MenuFlat 21:12:58).
+TV reported TWO images on the identical accepted build+INI (EA9EFFB1/757F414B)
+— cause UNKNOWN: desktop_mirror.h has zero runtime logging, so logs cannot
+distinguish mirror-inactive (menu/raw SBS) from mirror-failed (gameplay).
+Install intact after exit (3 hashes + 992 WAVs). Next: bounded mirror
+diagnostics candidate (counters only), then bank integration. See
+docs/native-npc-radio-producer.md. Prior headers history.
+
+LATEST 2026-10-14 MAIN turn: NPC/radio root cause PROVEN (not fixed), freeze
+ready, no launch. PID35568 log shows zero `polish voice:` lines and Localize
+saw only menu strings — NPC/radio text never reaches PolishMaybeSpeak
+(chars>=40 gate + text-hook-only path); native SoundNodeWave banks are the
+sole producer. 40 first-building xlingual WAVs mapped to SP_VI2_kismet01-04
+assets, all present mono16. Native originals untouched, pins match.
+New offline freeze deployment/hands-dubbing/current-install-freeze-20261014/
+holds3 runtime +992 story +8 VI2 bank hashes; old run-recovery-trial.ps1
+refused (stale A8F38EF6/quiet-voice baselines). gh CLI not authed: PR must be
+opened via the logged-in compare page. Game closed, tree clean, HEAD 6bba929
+in sync with origin. See docs/native-npc-radio-producer.md. Prior headers history.
+
 LATEST 2026-10-14 PID35568 / EA9EFFB1: user reports everything OK except Polish
 story speech; note NOT inspected. Clarification: loaded save at first building,
 NPC and radio remained English. Scope is not opening/new-game audio acceptance.
