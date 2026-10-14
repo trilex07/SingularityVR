@@ -1,0 +1,103 @@
+{
+  "generated_at": "20261014",
+  "distribution": "non-commercial free mod",
+  "rhvoice_sapi_install": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\tools\\rhvoice_sapi_local",
+  "rhvoice_sapi_install_attempted": false,
+  "rhvoice_sapi_ok": {
+    "natan": "fallback_demo_piper_hybrid",
+    "magda": "fallback_demo_piper_hybrid"
+  },
+  "references": {},
+  "reference_files": [
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\piper_darkman_reference.wav",
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\piper_gosia_reference.wav",
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\piper_mc_speech_reference.wav",
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\pocket_cml_reference.wav",
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\rhvoice_magda_demo_short.wav",
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\rhvoice_magda_reference.wav",
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\rhvoice_natan_demo_short.wav",
+    "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\rhvoice_natan_reference.wav"
+  ],
+  "recommended_cast": {
+    "narrator_ui_primary": "references/rhvoice_natan_reference.wav -> pocket lektor",
+    "narrator_ui_alt_female": "references/rhvoice_magda_reference.wav",
+    "kathryn_alt": "references/rhvoice_magda_reference.wav (zamiast uk accent gdy za ostry)",
+    "soldier_pool": "references/rhvoice_natan_reference.wav",
+    "scientist_civilian_female": "references/piper_gosia_reference.wav",
+    "demichev_alt_nc": "references/piper_darkman_reference.wav (Piper NC — tylko NC mod)",
+    "barisov_devlin_kathryn": "bez zmian — accent_reference + character_samples_12"
+  },
+  "legal_notes": {
+    "natan": "CC0 — RHVoice/natan-pol",
+    "magda": "CC BY 4.0 — RHVoice/magda-pol (atrybucja)",
+    "cml_pocket_ref": "CC BY 4.0 — CML-TTS via pocket-tts-polish-6l",
+    "piper_mc_gosia": "sprawdź MODEL_CARD rhasspy/piper-voices",
+    "piper_darkman": "często non-commercial — OK dla darmowego moda",
+    "no_celebrity_clones": "nie naśladujemy rozpoznawalnych zmarłych lektorów — tylko licencjonowane głosy TTS"
+  },
+  "pocket_demos": [
+    {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\lektor_natan_ref.wav",
+      "role": "narrator_ui",
+      "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\rhvoice_natan_reference.wav",
+      "text": "Wczytywanie. Proszę czekać.",
+      "engine": "Pocket-TTS Polish 6L"
+    },
+    {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\lektor_magda_ref.wav",
+      "role": "narrator_ui",
+      "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\rhvoice_magda_reference.wav",
+      "text": "Zapisywanie postępu gry.",
+      "engine": "Pocket-TTS Polish 6L"
+    },
+    {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\lektor_cml_ref.wav",
+      "role": "narrator_ui",
+      "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\pocket_cml_reference.wav",
+      "text": "Opcje gry. Tryb wieloosobowy.",
+      "engine": "Pocket-TTS Polish 6L"
+    },
+    {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\lektor_mc_ref.wav",
+      "role": "narrator_ui",
+      "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\piper_mc_speech_reference.wav",
+      "text": "Wróć do gry. Zmień drużynę.",
+      "engine": "Pocket-TTS Polish 6L"
+    },
+    {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\kathryn_magda_ref.wav",
+      "role": "kathryn",
+      "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\rhvoice_magda_reference.wav",
+      "text": "Potrzebuję jeszcze chwili. Dane są prawie kompletne.",
+      "engine": "Pocket-TTS Polish 6L"
+    },
+    {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\soldier_natan_ref.wav",
+      "role": "soldier",
+      "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\rhvoice_natan_reference.wav",
+      "text": "Sektor jest zabezpieczony. Ruszamy dalej.",
+      "engine": "Pocket-TTS Polish 6L"
+    },
+    {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\scientist_gosia_ref.wav",
+      "role": "scientist",
+      "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\piper_gosia_reference.wav",
+      "text": "Metal E99 zawiera oczyszczony izotop.",
+      "engine": "Pocket-TTS Polish 6L"
+    },
+    {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\announcer_cml_ref.wav",
+      "role": "announcer",
+      "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\pocket_cml_reference.wav",
+      "text": "Wynik jest remisowy po regulaminowym czasie.",
+      "engine": "Pocket-TTS Polish 6L"
+    },
+    {
+      "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\pocket_demos\\demichev_darkman_ref.wav",
+      "role": "demichev",
+      "reference": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\cast_legal_20261014\\references\\piper_darkman_reference.wav",
+      "text": "Nie ma już odwrotu. Procedura zostanie uruchomiona.",
+      "engine": "Pocket-TTS Polish 6L"
+    }
+  ]
+}

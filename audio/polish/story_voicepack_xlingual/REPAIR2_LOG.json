@@ -1,0 +1,104 @@
+[
+ {
+  "file": "0a61180090e23d1a.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 2,
+  "dur": 11.8
+ },
+ {
+  "file": "14b741662999699a.wav",
+  "donor": "691d44b2b46e8adc_en.wav",
+  "chunks": 2,
+  "dur": 14.3
+ },
+ {
+  "file": "1b52b3ab80034682.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 1,
+  "dur": 5.1
+ },
+ {
+  "file": "351649e5ff2f58dc.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 1,
+  "dur": 2.1
+ },
+ {
+  "file": "3f5b1ae6838679f3.wav",
+  "donor": "691d44b2b46e8adc_en.wav",
+  "chunks": 1,
+  "dur": 16.0
+ },
+ {
+  "file": "62b644f558505f1e.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 1,
+  "dur": 5.1
+ },
+ {
+  "file": "667dff226f5b38eb.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 1,
+  "dur": 4.2
+ },
+ {
+  "file": "6ba243d8f3f9a7f9.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 1,
+  "dur": 3.1
+ },
+ {
+  "file": "6cff99694a523753.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 2,
+  "dur": 12.8
+ },
+ {
+  "file": "6d2d54ee3297204e.wav",
+  "donor": "691d44b2b46e8adc_en.wav",
+  "chunks": 1,
+  "dur": 14.5
+ },
+ {
+  "file": "7bc07a5eedf72165.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 2,
+  "dur": 7.5
+ },
+ {
+  "file": "825b608f491f738b.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 1,
+  "dur": 4.3
+ },
+ {
+  "file": "8863317732273346.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 3,
+  "dur": 10.1
+ },
+ {
+  "file": "a6badd299a337015.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 2,
+  "dur": 8.6
+ },
+ {
+  "file": "abed1099af8c27cc.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 1,
+  "dur": 7.8
+ },
+ {
+  "file": "d51c5eb73b496acd.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 1,
+  "dur": 3.1
+ },
+ {
+  "file": "db5a9bb47d436a5a.wav",
+  "donor": "5339b0068ab0840e_en.wav",
+  "chunks": 2,
+  "dur": 12.2
+ }
+]

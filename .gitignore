@@ -8,6 +8,8 @@
 *.ilk
 *.log
 *.map
+__pycache__/
+*.pyc
 # /analyze output - build.ps1 runs a static-analysis pass, see the note in it
 *.nativecodeanalysis.xml
 
@@ -65,3 +67,15 @@ spikes/view_matrix/d3d9.build.json
 assets/reference/**
 assets/ui/kenney-input-prompts/kenney_input-prompts_*.zip
 assets/ui/kenney-input-prompts/source/**
+
+# ---- local Polish dubbing audio ----
+# Generated/proprietary audio stays local (174 MB xlingual pack etc.); manifests,
+# scripts, QA logs and casting docs ARE tracked.
+audio/polish/story_voicepack_xlingual/**/*.wav
+audio/polish/cast_legal_20261014/**/*.wav
+audio/polish/cast_legal_20261014/**/*.mp3
+audio/polish/cast_legal_20261014/**/*.m4a
+audio/polish/cast_legal_20261014/**/*.ogg
+audio/polish/cast_legal_20261014/**/*.exe
+audio/polish/cast_legal_20261014/**/*.onnx
+audio/polish/cast_legal_20261014/**/*.onnx.json
