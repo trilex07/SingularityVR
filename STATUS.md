@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST: user still sees the boot wordmark SINGULARITY without VR, and hands
+remain stretched on D8928180. Installed the previously accepted hand DLL
+2763A984F01384C6FC0B289333E0283A9273665FD02B13A978DE95611F48C0B7. Backup
+deployment/install-backups/20261014-185905. UI is the original 5B2EA469.
+Boot card is a separate producer from the GFx title fields. SIDE handoff:
+docs/handoffs/side-boot-logo.md. L4 for this reinstall is the next launch.
+
 LATEST: title package E852A20D crashed before the menu. Log ended on the engine
 string "Ran out of virtual memory" and Windows recorded 0xe06d7363. That package
 stored the UI chunk uncompressed; the game decompressed those bytes and aborted.
