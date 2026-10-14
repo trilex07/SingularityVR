@@ -26,7 +26,10 @@ not re-stage the complete accepted configuration and assets.
   render path, not yet a visual proof of every symptom. Restore these switches,
   preserve user calibration/recenter/narrator OFF and retest.
 - UI source pixels were captured by the other agent. Keeping an in-scene copy
-  with MenuOverlay OFF is not the accepted native RTT panel presentation.
+  with MenuOverlay OFF changes the native RTT panel presentation. The earlier
+  accepted INI also contained MenuOverlay=0, but used a different UI payload and
+  suppression code: ON below is an explicit new experiment, not an assertion
+  that the previously accepted INI used ON.
   Recovery selects MenuOverlay ON so the same capture is presented with its
   matching pointer plane. Falsifier: correctly submitted RTT still malformed.
 - TV code expands a half-width eye to the entire backbuffer. Aspect-fit must
@@ -47,6 +50,14 @@ current core/UI identities. Unknown changes abort before staging. It only writes
 inside the recovery checkout and generates exact core4/asset38 manifests for the
 existing backup/lease/restore tools. The title/ring UI is frozen unchanged.
 No stock game assets are committed or redistributed.
+
+Offline validation completed: eleven optimized x86 fixtures, LF/CRLF scoped INI
+tests and separate fake core4/asset38 install/restore checks. Negative fixtures
+refuse bad backups/path escapes and preserve unexpected user edits. Clean-source
+build c51f53a is x86 PE32 /O2, SHA-256
+EA9EFFB10C83815DAA36131F1F7785D2CC1B83C55866DF84AD0700CC335FD71C.
+Independent checks verify all42 real installed identities and1886 original WAVs
+remain unchanged. Combined recovery is staged only; L3/L4 remain pending.
 
 Install/launch only after a fresh user `start`, with full process visibility,
 backup hashes, core/asset restore guards and the accepted quiet-WAV lease.
