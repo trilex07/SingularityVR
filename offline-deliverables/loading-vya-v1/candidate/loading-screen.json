@@ -1,0 +1,19 @@
+{
+  "producer": "loading_screen.bik",
+  "source": {
+    "path": "C:\\Users\\Trilex\\vr-mods\\l3-sandbox-20261010\\RvGame\\Movies\\loading_screen.bik",
+    "sha256": "764E701B5049F182968D2DFFF4EE9ACCD13443B0D68B66B3FD1C0FB2F059E27D",
+    "duration_s": 2.0,
+    "fps": "24/1",
+    "frames": 48
+  },
+  "candidate": {
+    "bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v1\\candidate\\loading_screen_vr.bik",
+    "bik_sha256": "A9BEC872FAA79D0685BB40CD1A28E842E7777AA3627DF6D08E9173183D8C2B8B",
+    "encode": {
+      "status": "BIK_CANDIDATE_WRITTEN",
+      "sha256": "A9BEC872FAA79D0685BB40CD1A28E842E7777AA3627DF6D08E9173183D8C2B8B"
+    }
+  },
+  "patch": "top_wordmark V+Ya suffix; hand/TMD/smoke untouched"
+}

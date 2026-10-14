@@ -88,8 +88,8 @@ def compose(stock_png: Path) -> tuple[Image.Image, Image.Image, dict]:
         glyphs.append(g)
         masks.append(gm)
     # Letter templates from the stock strip.
-    r_img, r_mask = glyphs[8], masks[8]  # ...G-U-L-A-R-...
-    a_img, a_mask = glyphs[4], masks[4]
+    a_img, a_mask = glyphs[6], masks[6]  # S-I-N-G-U-L-A-…
+    r_img, r_mask = glyphs[7], masks[7]  # mirrored R / Ya template
     v_img = build_v_from_a(a_img, a_mask)
 
     target_w, target_h = 512, 128

@@ -1,0 +1,47 @@
+{
+  "file": "C:\\Users\\Trilex\\vr-mods\\l3-sandbox-20261010\\RvGame\\Movies\\loading_screen.bik",
+  "sha256": "764E701B5049F182968D2DFFF4EE9ACCD13443B0D68B66B3FD1C0FB2F059E27D",
+  "duration_s": 2.0,
+  "fps": "24/1",
+  "width": 1280,
+  "height": 720,
+  "estimated_frames": 48,
+  "samples": [
+    {
+      "frame": 0,
+      "png": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\deployment\\hands-dubbing\\loading-screen-v1\\analysis\\sample_n0000.png",
+      "sha256": "7AA2A3805FC5B58B6EAF45A1EE57F62DE37AA18ABEB310A6FFD7BC79234351E4"
+    },
+    {
+      "frame": 8,
+      "png": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\deployment\\hands-dubbing\\loading-screen-v1\\analysis\\sample_n0008.png",
+      "sha256": "D7D7B6D60A124228607CD1665003417B2BBEAD1AD88E0C9AA5AC92FF214C9B52"
+    },
+    {
+      "frame": 16,
+      "png": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\deployment\\hands-dubbing\\loading-screen-v1\\analysis\\sample_n0016.png",
+      "sha256": "084CE0A13DE350900B09C82349CDA1C60875745EDF5DE820BCF344EED7B5497E"
+    },
+    {
+      "frame": 24,
+      "png": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\deployment\\hands-dubbing\\loading-screen-v1\\analysis\\sample_n0024.png",
+      "sha256": "3139A0D6E621BA3A156E0D5F91AA2563047BA73384328AFC44B32239A52CD1F4"
+    },
+    {
+      "frame": 32,
+      "png": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\deployment\\hands-dubbing\\loading-screen-v1\\analysis\\sample_n0032.png",
+      "sha256": "1EDBFA1DD681E8FD077CD166C30EB3CDC756A0034F1FC6712B0815546220C2CE"
+    },
+    {
+      "frame": 40,
+      "png": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\deployment\\hands-dubbing\\loading-screen-v1\\analysis\\sample_n0040.png",
+      "sha256": "4FD91F36108FF191AD785341505F27F7B5F2D9699EC70B2A76BDECBC4E7E3938"
+    },
+    {
+      "frame": 47,
+      "png": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\deployment\\hands-dubbing\\loading-screen-v1\\analysis\\sample_n0047.png",
+      "sha256": "B8BF885EA0FE48B363D921F885C391C3D33C60C8FD7CB015C57BFD6131E933F8"
+    }
+  ],
+  "notes": "Human-readable description belongs in loading-screen-evidence.md after reviewing PNGs."
+}

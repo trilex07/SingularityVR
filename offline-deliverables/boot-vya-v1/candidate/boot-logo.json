@@ -1,0 +1,23 @@
+{
+  "status": "OFFLINE_PREP",
+  "producer": "SNG_logo.bik",
+  "source": {
+    "path": "C:\\Users\\Trilex\\vr-mods\\l3-sandbox-20261010\\RvGame\\Movies\\SNG_logo.bik",
+    "sha256": "FE40BA3B4521C4D0BFAC9EFD65B7BAF2C9F0F07F2E637A703DB1E7B29EA2B03C",
+    "duration_s": 11.0,
+    "fps": "30/1",
+    "frames": 330
+  },
+  "candidate": {
+    "intermediate_mkv": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v1\\candidate\\SNG_logo_vr.intermediate.mkv",
+    "intermediate_sha256": "F15F3D93089A587D091B41949B48F4AE0CBEFC8E0467303E1B8276C1797CBE03",
+    "bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v1\\candidate\\SNG_logo_vr.bik",
+    "encode": {
+      "status": "BIK_CANDIDATE_WRITTEN",
+      "sha256": "91A8F9816C964EC45A7F9B196DB2B556A7C45EA45CB4B29110BCC30FBDE4D131"
+    }
+  },
+  "reference_frame": "frame_00181.png",
+  "template_preview_sha256": "B101F197BF5780A165C408BA21C239321128F83FB50D19869C220F752224AD24",
+  "scope": "Boot card only; does not modify iis char 10 / SPMenus char 166 / DLL / INI"
+}

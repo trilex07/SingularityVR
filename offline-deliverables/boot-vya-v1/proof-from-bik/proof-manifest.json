@@ -1,0 +1,27 @@
+{
+  "source_bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v1\\candidate\\SNG_logo_vr.bik",
+  "source_bik_sha256": "2105149E675CB12E27060322F16C9B206BC16CD3722879F404EC20C033A69A80",
+  "video": {
+    "width": 1280,
+    "height": 720,
+    "r_frame_rate": "30/1",
+    "duration": 11.0
+  },
+  "proof_frames": [
+    {
+      "frame_index": 45,
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v1\\proof-from-bik\\frame_n0045.png",
+      "sha256": "D60DEDF6E204AD632D8F5086DAE8CFE4DC0749EA632FA98ABF15E372B8D98AB2"
+    },
+    {
+      "frame_index": 180,
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v1\\proof-from-bik\\frame_n0180.png",
+      "sha256": "869DF73B10509B215991B7E32AAB5EFA74DDD0CDA91EEDE1B4A59F4B73A0A4E0"
+    },
+    {
+      "frame_index": 300,
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v1\\proof-from-bik\\frame_n0300.png",
+      "sha256": "1B22596CBF51798047E7AE8AFD2B989FB814FB69460CF4F263A977616A3974A8"
+    }
+  ]
+}

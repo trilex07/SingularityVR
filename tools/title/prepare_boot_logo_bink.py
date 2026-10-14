@@ -17,7 +17,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageFilter
+from PIL import Image
+
+from vr_suffix_glyphs import append_v_ya_to_strip
 
 
 def sha256(path: Path) -> str:
@@ -47,52 +49,17 @@ def bright_bbox(im: Image.Image, threshold: float = 42.0) -> tuple[int, int, int
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def _content_span(strip: Image.Image) -> tuple[int, int]:
-    rgba = strip.convert("RGBA")
-    w, h = rgba.size
-    px = rgba.load()
-    cols = [x for x in range(w) if any(lum(px[x, y]) > 42 for y in range(h))]
-    if not cols:
-        raise ValueError("empty strip")
-    return cols[0], cols[-1]
-
-
-def _glyph_from_a(a_glyph: Image.Image) -> Image.Image:
-    aw, ah = a_glyph.size
-    left = a_glyph.crop((0, 0, aw // 2, ah)).transpose(Image.Transpose.FLIP_TOP_BOTTOM)
-    right = a_glyph.crop((aw // 2, 0, aw, ah)).transpose(Image.Transpose.FLIP_TOP_BOTTOM)
-    v_glyph = Image.new("RGBA", (aw, ah), (0, 0, 0, 0))
-    v_glyph.paste(left, (0, 0), left)
-    v_glyph.paste(right, (aw // 2, 0, aw, ah), right)
-    return v_glyph
-
-
 def patch_wordmark_frame(frame: Image.Image) -> Image.Image:
-    """Append VR cloned from this frame's A/R glyphs; SINGULARITY geometry unchanged."""
+    """Append exactly V + Ya (two glyphs) after SINGULARITY; word geometry unchanged."""
     base = frame.convert("RGBA")
     x0, y0, x1, y1 = bright_bbox(base)
     strip = base.crop((x0, y0, x1 + 1, y1 + 1))
-    w, h = strip.size
-    c0, c1 = _content_span(strip)
-    content_w = c1 - c0 + 1
-    glyph_w = max(8, content_w // 11)
-    r_glyph = strip.crop((c1 - glyph_w + 1, 0, c1 + 1, h))
-    a_x = c0 + int(content_w * 0.34)
-    a_glyph = strip.crop((a_x, 0, min(w, a_x + glyph_w), h))
-    v_glyph = _glyph_from_a(a_glyph)
-    gap = max(4, glyph_w // 5)
-    suffix = Image.new("RGBA", (v_glyph.size[0] + gap + r_glyph.size[0], h), (0, 0, 0, 0))
-    suffix.paste(v_glyph, (0, 0), v_glyph)
-    suffix.paste(r_glyph, (v_glyph.size[0] + gap, 0), r_glyph)
-
-    extended = Image.new("RGBA", (w + gap + suffix.size[0], h), (0, 0, 0, 255))
-    extended.paste(strip, (0, 0))
-    extended.paste(suffix, (w + gap, 0), suffix)
+    extended = append_v_ya_to_strip(strip)
 
     max_w = int(base.size[0] * 0.9)
     if extended.size[0] > max_w:
         scale = max_w / extended.size[0]
-        nh = max(1, int(h * scale))
+        nh = max(1, int(extended.size[1] * scale))
         extended = extended.resize((max_w, nh), Image.Resampling.LANCZOS)
 
     out = base.copy()
@@ -127,23 +94,30 @@ def decode_frames(ffmpeg: Path, source: Path, out_dir: Path) -> int:
 def encode_mkv(ffmpeg: Path, frames: Path, source: Path, dest: Path, fps: str, work: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     audio = work / "audio.wav"
-    subprocess.run(
-        [
-            str(ffmpeg),
-            "-y",
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-i",
-            str(source),
-            "-map",
-            "0:a:0?",
-            "-c:a",
-            "pcm_s16le",
-            str(audio),
-        ],
-        check=True,
+    probe = subprocess.run(
+        [str(ffmpeg), "-hide_banner", "-i", str(source)],
+        capture_output=True,
+        text=True,
     )
+    has_audio = "Audio:" in (probe.stderr or "")
+    if has_audio:
+        subprocess.run(
+            [
+                str(ffmpeg),
+                "-y",
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-i",
+                str(source),
+                "-map",
+                "0:a:0",
+                "-c:a",
+                "pcm_s16le",
+                str(audio),
+            ],
+            check=True,
+        )
     cmd = [
         str(ffmpeg),
         "-y",
