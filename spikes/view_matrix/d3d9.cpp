@@ -6276,6 +6276,7 @@ void ReleaseVrMenuResources();
 void ReleaseFpCasterCache();
 static void HolsterHipWorld(float H[3], bool includeHmdOffset = true);
 static void GunPivotWorld(float H[3]);
+static void GunAimDir(float d[3]);
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 bool     g_handPoseValid[2] = { false, false };
 bool g_handPositionValid[2] = { false, false };
@@ -8966,9 +8967,14 @@ bool InitXRInput() {
                 g_hipKnifeReady=g_hipKnifeRenderer.Load(directory+"\\vr-assets\\knife\\knife.svrk");
             }
         }
-        Log("hip knife: cache=%s verts=%u tris=%u; pre-TMD native camera-trace experiment only",
+        Log("hip knife: cache=%s verts=%u tris=%u; pre-TMD both hands, post-TMD right hand only, native camera trace",
             g_hipKnifeReady?"READY":"MISSING/INVALID (disabled)",
             g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles());
+        // MAIN round 15 build marker: proves which DLL produced this log.
+        // Update the tag every behavior round; parsers key on "knife build r".
+        Log("hip knife: build r15 postTMD-right-only + silent-refusal probe + trigger==ring (src bcf8ec1+); holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
+            g_holsterConfig.fwd,g_holsterConfig.right,g_holsterConfig.up,g_holsterConfig.radius,
+            g_hipKnifeConfig.left,g_hipKnifeConfig.down,g_hipKnifeConfig.radius);
     }
 
     {
@@ -10123,6 +10129,11 @@ void SyncXRInput(XrTime displayTime) {
             f.grip[h]=h==AimHand()?primaryGrip:rawSupportGrip;
             f.free[h]=h!=AimHand()||!WeaponInHands()||Rd(g_weaponHolstered);
         }
+        // MAIN round 15: capture the grip rising edge BEFORE Update consumes it
+        // (Update copies grip into priorGrip, so post-Update edge reads are
+        // always false). Needed by the silent-refusal probe below.
+        bool preEdge[2]{};
+        for(int h=0;h<2;++h)preEdge[h]=f.grip[h]&&!g_hipKnifeState.priorGrip[h];
         const auto event=hipknife::Update(g_hipKnifeState,f,g_hipKnifeConfig);
         g_hipKnifeBelt=f.hip.p;
         g_hipKnifeVisible=hipknife::Context(f)&&(g_hipKnifeState.held>=0?
@@ -10177,6 +10188,38 @@ void SyncXRInput(XrTime displayTime) {
                             f.gameplay?1:0,f.focused?1:0,f.alive?1:0,f.nativeKnife?1:0,
                             f.hasTMD?1:0,f.noWeapon?1:0,f.pawn,
                             offT,offH,(unsigned)tmdV,hpV,impIdx,impMask);
+                    }
+                }
+            }
+        }
+        // MAIN round 15 silent-refusal probe: Context TRUE, hand at belt, grip
+        // held, yet no PICKED. Covers the silent failures the Context probe
+        // cannot see: grip held BEFORE entering the radius (pickup needs a
+        // rising edge AT the belt), wrong hand in post-TMD mode, !free hand
+        // (weapon in hand), or untracked hand. Bounded: one line per DISTINCT
+        // mask. Falsifier: mask with edge=1 on the near hand and still no
+        // PICKED would disprove the edge-timing hypothesis.
+        {
+            static int saidSilent=-1;
+            if(g_hipKnifeState.held<0&&event==hipknife::Event::None&&hipknife::Context(f)){
+                int nearM=0,gripM=0,edgeM=0,freeM=0,trkM=0;
+                for(int h=0;h<2;++h){
+                    if(f.tracked[h]&&hipknife::Finite(f.hand[h].p)&&
+                       hipknife::Length(f.hand[h].p-f.hip.p)<=g_hipKnifeConfig.radius)
+                        nearM|=(1<<h);
+                    if(f.grip[h])gripM|=(1<<h);
+                    if(preEdge[h])edgeM|=(1<<h);
+                    if(f.free[h])freeM|=(1<<h);
+                    if(f.tracked[h])trkM|=(1<<h);
+                }
+                if(nearM&&gripM){
+                    const int mask=nearM|(gripM<<2)|(edgeM<<4)|(freeM<<6)|(trkM<<8)|
+                        (f.noWeapon?1024:0)|(f.hasTMD?2048:0)|(f.nativeKnife?4096:0);
+                    if(mask!=saidSilent){
+                        saidSilent=mask;
+                        Log("hip knife: armed grip at belt but no pickup (near=%d grip=%d edge=%d free=%d trk=%d noWpn=%d postTMD=%d preTMD=%d)",
+                            nearM,gripM,edgeM,freeM,trkM,
+                            f.noWeapon?1:0,(f.hasTMD&&!f.nativeKnife)?1:0,f.nativeKnife?1:0);
                     }
                 }
             }
@@ -10248,16 +10291,24 @@ void SyncXRInput(XrTime displayTime) {
         g_holsterState, primaryGripRising && !uiMenu && !Rd(g_gamePaused), holsterValid, feedGame,
         (uint32_t)holsterIdentity, {handX, handY, handZ},
         {holsterHip[0], holsterHip[1], holsterHip[2]}, g_holsterConfig);
+    // MAIN round 15: also log the aim dir at STORED/DRAWN. Hypothesis under
+    // test (user: store fires behind+above the drawn ring): the user aligns
+    // the VISIBLE gun to the ring while the trigger tests the CONTROLLER
+    // point, which trails the gun along -aim. If (hip-hand) aligns with +aim
+    // across samples, the fix is a gun-length offset along aim, not a hip
+    // constant. Falsifier: hip-hand scatter orthogonal to aim.
     if (holsterEvent == weaponholster::Event::Stored ||
         holsterEvent == weaponholster::Event::Drawn) {
         InterlockedExchange(&g_weaponHolstered, g_holsterState.active ? 1 : 0);
         InterlockedExchange(&g_holsterYawUU, Rd(g_handDevYawUU));
         InterlockedExchange(&g_holsterPitchUU, Rd(g_handDevPitchUU));
         InterlockedExchange(&g_holsterRollUU, Rd(g_handDevRollUU));
-        Log("weapon holster: %s weapon=%ld hand=(%.1f,%.1f,%.1f) hip=(%.1f,%.1f,%.1f) radius=%.1f",
+        float aimD[3]{1,0,0}; GunAimDir(aimD);
+        Log("weapon holster: %s weapon=%ld hand=(%.1f,%.1f,%.1f) hip=(%.1f,%.1f,%.1f) radius=%.1f aim=(%.2f,%.2f,%.2f)",
             holsterEvent == weaponholster::Event::Stored ? "STORED" : "DRAWN",
             holsterIdentity, handX, handY, handZ,
-            holsterHip[0], holsterHip[1], holsterHip[2], g_holsterConfig.radius);
+            holsterHip[0], holsterHip[1], holsterHip[2], g_holsterConfig.radius,
+            aimD[0], aimD[1], aimD[2]);
     } else if (holsterEvent == weaponholster::Event::Reset) {
         InterlockedExchange(&g_weaponHolstered, 0);
         InterlockedExchange(&g_holsterYawUU, 0);
@@ -30348,7 +30399,7 @@ void LoadIniSettings() {
     g_hipKnifeConfig.left=std::max(.10f,std::min(.50f,IniSignedInt("Input","HipKnifeLeftCm",25,path)*.01f));
     g_hipKnifeConfig.down=std::max(.20f,std::min(.90f,IniSignedInt("Input","HipKnifeDownCm",50,path)*.01f));
     g_hipKnifeConfig.forward=std::max(-.20f,std::min(.30f,IniSignedInt("Input","HipKnifeForwardCm",6,path)*.01f));
-    Log("ini: HipKnifeEnabled=%d (default OFF, restart required; pre-TMD only, native camera trace)",g_hipKnifeEnabled);
+    Log("ini: HipKnifeEnabled=%d (default OFF, restart required; pre-TMD both hands, post-TMD right hand only, native camera trace)",g_hipKnifeEnabled);
     g_holsterConfig.radius = (float)IniSignedInt("Input", "HolsterRadius", 12, path);
     if (g_holsterConfig.radius < 2.0f) g_holsterConfig.radius = 2.0f;
     if (g_holsterConfig.radius > 48.0f) g_holsterConfig.radius = 48.0f;
