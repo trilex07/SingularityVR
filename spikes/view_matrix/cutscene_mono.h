@@ -61,10 +61,17 @@ struct CameraChangeCtx {
     bool pawnValid = false;  // g_playerPawn != 0 now
     bool menuFocused = false;
     bool videoHandoff = false; // confirmed VideoFlat -> initial world load, native ON still present
+    // Menu-driven load experiment (default OFF): a camera cut with the menu
+    // focused and the same pawn is a save/menu load, not a Matinee cut, even
+    // when videoHandoff also holds (loading movie + stale SetCinematicMode
+    // arg). Proved by the 2026-10-15 menu->Load session: cut at menuClass=4,
+    // same pawn, VideoFlat, CINE kept -> CutsceneFlat stuck till exit.
+    bool menuLoadClear = false;
 };
 
 inline bool CameraChangeClearsCine(CameraChangeCtx c) {
     if (!c.cineOn) return false;                    // nothing latched
+    if (c.menuLoadClear && c.menuFocused && c.pawnSame) return true; // menu load, not a cut
     if (c.videoHandoff) return false;              // new pawn/loading menu is expected here
     if (!c.pawnValid || !c.pawnSame) return true;   // world went away
     if (c.menuFocused) return true;                 // quit to menu

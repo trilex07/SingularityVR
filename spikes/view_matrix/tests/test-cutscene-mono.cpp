@@ -120,6 +120,16 @@ static void test_camera_change_gate() {
     CHECK((!CameraChangeClearsCine(C{ true, false, true, false, true })));
     CHECK((CameraChangeClearsCine(C{ true, false, false, true, false })));
     CHECK((CameraChangeClearsCine(C{ true, true, true, true, false })));
+    // Menu-driven load inside VideoFlat (2026-10-15 session): menu focused +
+    // same pawn must clear even when the loading movie holds videoHandoff.
+    // The flag is default-OFF; without it the old verdict stands.
+    CHECK((CameraChangeClearsCine(C{ true, true, true, true, true, true })));
+    CHECK((!CameraChangeClearsCine(C{ true, true, true, true, true, false })));
+    // Matinee cuts (menuClass=0) are untouched by the experiment flag.
+    CHECK((!CameraChangeClearsCine(C{ true, true, true, false, true, true })));
+    CHECK((!CameraChangeClearsCine(C{ true, true, true, false, false, true })));
+    // Changed pawn with menu focused still follows the old order.
+    CHECK((!CameraChangeClearsCine(C{ true, false, true, true, true, true })));
 }
 
 int main() {

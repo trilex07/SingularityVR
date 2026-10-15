@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 CINE-stuck-after-Load EXPERIMENT, L1_PASS + L2 pending.
+Menu->Load latches CINE (videoHandoff short-circuits menuFocused on the
+loading-movie cut: same pawn, menuClass=4) -> CutsceneFlat stuck, mono,
+0-split. Discriminator `menuFocused && pawnSame` (all proven Matinee cuts
+are menuClass=0). New default-OFF `[Render] CineMenuLoadClear` + distinct
+menu-load log line. Wheel/plate exonerated (no activity in stuck tail, no
+shared state). See docs/cine-menu-load-clear.md. Prior history.
+
 LATEST 2026-10-15 health-plate ROUND-2 DEPLOYED (DLL 89CB0984/source b73e311,
 built==installed; backup 20261015-110532). Gesture earlier: show 60 cm /
 hide 80 cm. NOTE: Steam runs main+plate WITHOUT the wheel (wheel code lives
