@@ -89,6 +89,16 @@ is committed. Cache SHA256:
 `891D8243843A72FBD2F0180CB1703DB33ACF1995C820FE2B538070173C974E9C`.
 Input identities are retained in `grip-report.json`.
 
+L2_PASS: clean source `2db0702eb2d3018aa386b4583a5b4f36f60bc283`, `/O2`,
+x86 PE32 (014C/010B), instrumentation OFF. DLL SHA256:
+`4849DD0D18117353EBF6908EED6F68CFCC313D41576C2F1FF6685A41AB769807`.
+Provenance records an empty working-tree status. Later receipt-only changes
+do not alter the compiled source. Local combined handoff directory:
+`C:\Users\Trilex\vr-mods\SingularityVR-knife-hand-grip\build\knife-hand-grip\candidate`.
+It contains the DLL/provenance, four private caches, logs and CPU preview.
+Runtime depth/eye matching, swing tracking, Reset recovery and performance are
+UNVERIFIED until MAIN L3/L4. Existing unrelated compiler warnings remain.
+
 Reproduce using offline exports, never Steam paths:
 
 ```powershell

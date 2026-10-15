@@ -8,7 +8,9 @@ VB/UV/material/cuff/scale preserved; knife keeps original diffuse, not full UE3
 lighting. Controlled pre-TMD firearm-holstered scope, no simultaneous pistol.
 L1_PASS: zero fitted mesh crossings/buried knife vertices, 2218 hand +1324 knife
 golden replay, CTAB colour/shadow exclusion, release/opposite-hand/state/DS
-guards and existing regressions. L2 receipt follows in docs/knife-hand-grip.md.
+guards and existing regressions. L2_PASS clean 2db0702 /O2 x86 PE32; DLL SHA256
+4849DD0D18117353EBF6908EED6F68CFCC313D41576C2F1FF6685A41AB769807.
+Full receipt and MAIN three-sentence test: docs/knife-hand-grip.md.
 NO Steam/installed file access, NO runtime/GPU pixel/PSVR2 acceptance.
 
 LATEST 2026-10-15 SIDE PR #30: user ACCEPTS SIZE, rejects GLB material/cuff.
