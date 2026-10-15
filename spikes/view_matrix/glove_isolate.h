@@ -22,6 +22,27 @@
 
 namespace gloveisolate {
 
+// The accepted native noTMD cut, shared with the offline GLB baker. Inclusive
+// face ranges in the cooked section; ActorX order is independently round-tripped
+// against that cooked index buffer before reuse (winding swaps 0/1 only).
+struct FaceRun {unsigned first,last;};
+inline constexpr FaceRun kNoTmdHandFaces[] = {
+    {272,274},{278,291},{392,398},{400,405},{410,681},{783,843},
+    {1017,1433},{1439,1444},{1452,1454},{1460,1470},{1475,1480},
+    {1488,1495},{1501,1631},{1806,1976},{1986,1988},{1992,1996},
+    {1998,2012},{2024,2026},{2028,2029},{2038,2131},{2173,2173},
+    {2183,2183},{2194,2284},{2286,2298},{2314,2351},{2353,2681},
+    {2683,2717},{2720,2778},{2781,2947},{3410,3410},{3431,3431},
+    {3435,3436},{3443,3444},{3575,4055},{4057,4188},{4193,4197},
+    {4210,4252},{4256,4268},{4322,4425},{4428,4429},{4457,4507},
+    {4644,4663},{4674,4707},{4709,4718},
+    {4738,4741},{4744,4751},{4783,4805},{4818,4827}
+};
+inline constexpr unsigned NativeHandFaceCount(){
+    unsigned n=0;for(const auto& run:kNoTmdHandFaces)n+=run.last-run.first+1;return n;
+}
+static_assert(NativeHandFaceCount()==2918,"preserve accepted native cut");
+
 // The pistol foreground pass contains one separately submitted 390-vertex
 // sleeve/finger fragment (first index 14490, 674 triangles). In the
 // gloves-only path this is not part of the wrist subtree: collapsing its

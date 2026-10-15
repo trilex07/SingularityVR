@@ -10,6 +10,9 @@
 *.map
 __pycache__/
 *.pyc
+# Private game-derived glove experiments; tools and synthetic tests are tracked.
+/build/gloves/
+/vr-assets/hud/katorga/glove-animation/
 # /analyze output - build.ps1 runs a static-analysis pass, see the note in it
 *.nativecodeanalysis.xml
 
@@ -84,4 +87,9 @@ audio/polish/cast_legal_20261014/**/*.onnx.json
 remaining-voices/out/**/*.wav
 remaining-voices/_refs/
 _work_u/
+
+# Local game-derived knife exports/cache; never distribute game assets in Git.
+/build/knife/
+/vr-assets/knife/
+/build/knife-hand-grip/
 
