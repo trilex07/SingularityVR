@@ -1,5 +1,41 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 SIDE PR #30: user ACCEPTS SIZE, rejects GLB material/cuff.
+New default-OFF GloveNativeEnabled uses the original UE3 VB/UV/material/shaders
+and real rig, not a replacement diffuse renderer. Original short forearm cut
+plus closed cap: 3694 original +98 cap triangles, one native draw/eye; same
+native scale chain. Per-hand finger poses use real bind hierarchy. Held gun,
+TMD, world/shadow/menu/cine excluded. L1_PASS: native pose/IB guard/malformed
+data/101 analog levels, original hand regressions, source topology + axial rays.
+L2_PASS clean 6a7f46b /O2 x86 PE32; DLL SHA256
+0491CEB351998317E8D93D82D3C7439E254291A9996CF1510D28A9B42B45633C.
+Full runtime appearance remains UNVERIFIED. ZERO Steam. See
+docs/glove-native-draw.md; previous native-match GLB appearance is rejected.
+
+LATEST 2026-10-15 SIDE PR #30 REOPENED by physical feedback: functional
+gloves, but size/appearance rejected; user requires the SAME native hand cut,
+including wrist/cuff behind glove. New candidate uses shared accepted 48 face
+runs / 2918 faces, full cooked-to-ActorX index roundtrip; exact original UVs
+and diffuse bytes. Scale now inherits native LocalToWorld, GunScalePct and
+world UU/metre; wrist/IPD not scaled. SVRG v2 carries baked units: old caches
+are rejected (update DLL AND both meshes). Removed fabricated normal-Y tint.
+L1_PASS: 284 CPU checks, 9 Python tests incl exact albedo and native face IDs,
+guard/native-hand regressions. L2_PASS clean 3939add, x86 PE32 /O2, DLL SHA256
+2C813E40A67F85375F57639F988BBC71536BAB07F17FAEC79BFC8E2138C62F9C.
+Full UE3 normal/specular/scene lighting is NOT reproduced by the diffuse-only
+GLB renderer: full appearance acceptance remains OPEN. No Steam touched.
+See docs/glove-native-match.md for the new private candidate and test scope.
+
+LATEST 2026-10-15 SIDE feature/glove-animation: L1_PASS + L2_PASS, clean
+source 94aab901; x86 PE32 /O2 DLL SHA 27D5DA96...82568A4. Default OFF.
+User explicitly selected a new default-OFF baked-GLB renderer after source
+inspection proved main uses the native UE3 skin, not the rigid HUD GLBs.
+Closed-cuff + open/fist morph assets prepared locally; free noTMD hands only,
+held weapon/TMD/aiming unchanged. 261 CPU checks + fake render-state guard,
+native hand regressions and 7 geometry tests; zero Steam access/deployment.
+MAIN L3/L4 pending. See docs/glove-animation.md and
+docs/glove-animation-evidence.md (exact SHA, private candidate, 3-sentence test).
+
 LATEST 2026-10-15 CINE ROUND-2 L3_PASS (user: stereo back after Load).
 Log: `menu-load cut ... latch=1` -> `VideoFlat -> GameplayStereo`, drift back
 to `cine off`. PR to main pending (user creates, gh auth missing here).
