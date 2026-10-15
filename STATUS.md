@@ -1,5 +1,29 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN plates L3 candidate DEPLOYED (DLL
+9EC02D511C347C488A17C960B8C6420B53926413A3C245E43B60B43576227008/source
+e943f06 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-155047; INI
+DECEB3AD... preserved, AmmoPlateEnabled=1 HealthPlateEnabled=1). Merges
+origin/feature/ammo-plates (9bf0cab) + origin/fix/health-plate-size (a2e8a3a);
+side worktrees untouched (their unpushed 7dbbd5c diagnostics NOT taken).
+MAIN-authored changes only in d3d9.cpp: (1) ammo unknown log now carries
+clip/bin/hud/offC/offB values; (2) one-shot ammo drew (plate/clip/bin/rect)
+and proj-fail lines; (3) one-shot health drew (twoHand/rect) and proj-fail
+lines; (4) HP two-hand anchor +0.02f->+0.00f and left shift 0.35W->0.60W per
+user "jeszcze nizej i troche bardziej w lewo" (single-hand untouched).
+L1_PASS (ammo layout 20/20, probe 10/10) + static-analysis gate in build.
+L2_PASS (PE32 0x014C/0x010B, manifest commit matches, tree clean at build).
+L3 runtime evidence PENDING: 15:20 log proved ammo hidden at
+clip<0||bin<0 (offsets cached +1404/+1400 on RvHUD) and health "shown" logged
+but user reports both plates invisible — drew-vs-seen still undistinguished
+until this candidate runs in-headset. Next: one PSVR2 pass (hold gun, check
+ammo plate; empty mag to 0; grip two-hand, check HP low-left), then read
+view_matrix.log for ammo unknown(...)/drew and health drew lines.
+Falsifier: drew present + still invisible = placement/alpha, not sampling;
+unknown with clip/bin>=0 readable = offset/window wrong, not HUD-missing.
+No fix claimed; no rollback (candidate healthy, game closed at deploy).
+
 LATEST 2026-10-15 ammo PLATES FIX DEPLOYED (DLL 742645B8/source 43f1381,
 built==installed; backup 20261015-151309; INI carried over). Root cause of
 invisible plates: WIC size guard (<=2048) rejected the 2172px digits strip.
