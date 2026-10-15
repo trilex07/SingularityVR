@@ -1,10 +1,8 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 ammo PROBE ROUND-5 DEPLOYED (DLL 11A53540/source c9bd263,
-built==installed; backup 20261015-135353; INI AmmoProbe=8 carried over).
-Adds pawn diffs per pull + mShotCount fire proof (by name). Need: SINGLE
-taps ~2 s, 8 pulls, exit. Decisive: shots total climbs? pawn -1 steps?
-Live: deployment/hands-dubbing/ammo-probe5-20261015/live.json. Prior history.
+LATEST 2026-10-15 ammo PAWN VOCABULARY run (no build change): leased
+PropDumpPawn=1 (INI diff +1). Need: load, hold gun seconds, exit — no firing.
+Then offline: bin/inventory names -> targeted follow build. Prior history.
 
 LATEST 2026-10-15 ammo PROBE ROUND-2 DEPLOYED (DLL 05F960F0/source 2a22d62):
 class property dump on equip (RvWeaponShared vocabulary: no ammo data
