@@ -5,6 +5,7 @@
 #include "arm_bind.h"
 #include "glove_isolate.h"
 #include "singularity_bind_reference.h"
+#include "knife_hand_grip.h"
 
 namespace nativegloves {
 inline bool Finger(unsigned b){return (b>=10&&b<=25&&b!=13)||(b>=70&&b<=84);}
@@ -81,9 +82,10 @@ public:
     // Transactional, stack-only. Source is original bind rig, not guessed slots.
     // Wrist/controller scale and position are already in the existing palette.
     // The cuff uses the same wrist transform rather than an animated elbow.
-    bool Pose(float palette[135][4],const float grip[2])const{
+    bool Pose(float palette[135][4],const float grip[2],const float (*digits)[5]=nullptr)const{
         if(!Ready()||!palette||!grip)return false;
         for(unsigned side=0;side<2;++side)if(!std::isfinite(grip[side])||grip[side]<0||grip[side]>1)return false;
+        if(digits)for(unsigned side=0;side<2;++side)for(float f:digits[side])if(!std::isfinite(f)||f<0||f>1)return false;
         armbind::Mat posed[90],wristSkin[2];int wristSlot[2]={-1,-1};
         for(unsigned s=0;s<gloveisolate::kNoTmdCookedPaletteCount;++s){
             const auto b=gloveisolate::kNoTmdCookedPalette[s];
@@ -96,7 +98,8 @@ public:
             if(Finger(b)){
                 const int side=gloveisolate::NoTmdCookedHandSide(b);
                 if(side<0)return false;
-                const float t=grip[side];const auto q=data.curl[b];gloves::Q blend;
+                const int digit=knifehand::Digit(b);if(digit<0)return false;
+                const float t=digits?digits[side][digit]:grip[side];const auto q=data.curl[b];gloves::Q blend;
                 // Shortest-path normalized quaternion blend; rigid at all t.
                 if(!gloves::Normalize({q.x*t,q.y*t,q.z*t,1+(q.w-1)*t},blend))return false;
                 armbind::Mat rotation{};rotation.m[3][3]=1;
