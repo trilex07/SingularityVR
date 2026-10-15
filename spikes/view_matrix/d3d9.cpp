@@ -2213,6 +2213,9 @@ hipknife::State g_hipKnifeState{};
 hipknife::TriggerGate g_hipKnifeTrigger[2]{};
 hipknife::Pose g_hipKnifePose{};
 hipknife::Renderer g_hipKnifeRenderer;
+// MAIN: last belt anchor in absolute XR metres (mirrors f.hip.p from the XR
+// owner each update) so the belt marker can project it at Present time.
+hipknife::V g_hipKnifeBelt{0,0,0};
 
 // R3 weapon wheel. Selection is an offset from the currently equipped weapon;
 // commit pulses the game's existing cycle-weapon action, so no inventory scan
@@ -5437,6 +5440,7 @@ void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, 
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
 void DrawHolsterMarker(IDirect3DDevice9* dev); // MAIN: white ring at the hip while a gun is held
+void DrawKnifeBeltMarker(IDirect3DDevice9* dev); // MAIN: white ring at the left belt while the knife is held
 void DrawCustomGloves(IDirect3DDevice9* dev); // default-OFF, noTMD free hands only
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 void DrawHipKnife(IDirect3DDevice9* dev);
@@ -5478,6 +5482,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawAmmoPlate(dev);
     DrawAmmoPlate(dev);
     DrawHolsterMarker(dev);
+    DrawKnifeBeltMarker(dev);
     DrawWeaponWheel(dev);
     DrawHipKnife(dev);
     DrawVfxOverlay(dev);
@@ -10114,6 +10119,7 @@ void SyncXRInput(XrTime displayTime) {
             f.free[h]=h!=AimHand()||!WeaponInHands()||Rd(g_weaponHolstered);
         }
         const auto event=hipknife::Update(g_hipKnifeState,f,g_hipKnifeConfig);
+        g_hipKnifeBelt=f.hip.p;
         g_hipKnifeVisible=hipknife::Context(f)&&(g_hipKnifeState.held>=0?
             f.tracked[g_hipKnifeState.held]:(f.tracked[0]||f.tracked[1]));
         if(g_hipKnifeState.held>=0)g_hipKnifePose=f.hand[g_hipKnifeState.held];
@@ -25128,7 +25134,15 @@ static void MaybeLoadHudAtlas(IDirect3DDevice9* dev) {
 void DrawHipKnife(IDirect3DDevice9* dev){
     if(!g_hipKnifeEnabled||!g_hipKnifeReady||!g_hipKnifeVisible||!VrModeOn()||
        !InGameplay()||!g_stereo||!g_haveEyes||Rd(g_gamePaused)||Rd(g_vrUiMenu)||
-       Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||CutsceneNativeCameraArmed())return;
+       Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||CutsceneNativeCameraArmed()){
+        // MAIN falsifier probe: one line names the blocking gate.
+        static bool saidGate=false;
+        if(!saidGate){saidGate=true;
+            Log("hip knife: gate blocked (en=%d ready=%d vis=%d vr=%d play=%d stereo=%d eyes=%d paused=%d menu=%d panel=%d wheel=%d cine=%d)",
+                g_hipKnifeEnabled?1:0,g_hipKnifeReady?1:0,g_hipKnifeVisible?1:0,VrModeOn()?1:0,
+                InGameplay()?1:0,g_stereo?1:0,g_haveEyes?1:0,(int)Rd(g_gamePaused),(int)Rd(g_vrUiMenu),
+                (int)Rd(g_panelOpen),(int)Rd(g_weaponWheelOpen),CutsceneNativeCameraArmed()?1:0);}
+        return;}
     IDirect3DSurface9* back=nullptr;
     if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
     D3DSURFACE_DESC desc{};
@@ -26019,6 +26033,112 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
 // lands (GunPivotWorld holster path). Ring radius derives from the largest
 // screen extent of three axis-offset probes, so it cannot degenerate along
 // the view axis. Bounded: one small fan per eye, no allocations, one log line.
+struct RingVtx { float x, y, z, rhw; DWORD c; };
+static const DWORD kRingCol = 0x80FFFFFF; // white, half transparent
+static const float kRingRo = 0.1127f, kRingRi = 0.0877f; // +1 inch diameter, 2.5cm rim
+// Horizontal annulus at absolute XR centre (flat to floor/ceiling).
+// Shared by the gun-holster and knife-belt markers. Returns per-frame drew.
+static bool DrawFlatRingAt(IDirect3DDevice9* dev, uipointer::V c, const char* tag,
+                            bool& saidDrew, bool& saidProj) {
+    // Fixed-function state saved/restored in full: this runs at Present time
+    // after the scene, like DrawLaserSight.
+    IDirect3DVertexShader9* oldVS = nullptr; dev->GetVertexShader(&oldVS);
+    IDirect3DPixelShader9* oldPS = nullptr; dev->GetPixelShader(&oldPS);
+    DWORD oldFVF = 0, oldZ = 0, oldAB = 0, oldSrc = 0, oldDst = 0, oldCull = 0;
+    DWORD oldLit = 0, oldSc = 0, oldCop = 0, oldCa1 = 0, oldAop = 0, oldAa1 = 0;
+    dev->GetFVF(&oldFVF);
+    dev->GetRenderState(D3DRS_ZENABLE, &oldZ);
+    dev->GetRenderState(D3DRS_ALPHABLENDENABLE, &oldAB);
+    dev->GetRenderState(D3DRS_SRCBLEND, &oldSrc);
+    dev->GetRenderState(D3DRS_DESTBLEND, &oldDst);
+    dev->GetRenderState(D3DRS_CULLMODE, &oldCull);
+    dev->GetRenderState(D3DRS_LIGHTING, &oldLit);
+    dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &oldSc);
+    dev->GetTextureStageState(0, D3DTSS_COLOROP, &oldCop);
+    dev->GetTextureStageState(0, D3DTSS_COLORARG1, &oldCa1);
+    dev->GetTextureStageState(0, D3DTSS_ALPHAOP, &oldAop);
+    dev->GetTextureStageState(0, D3DTSS_ALPHAARG1, &oldAa1);
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetTexture(0, nullptr);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+    dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
+    bool drewFrame = false;
+    D3DSURFACE_DESC dd{};
+    {
+        // Backbuffer dims for the SBS mapping (same convention as the plates).
+        IDirect3DSurface9* bb = nullptr;
+        if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &bb)) || !bb) return false;
+        if (FAILED(bb->GetDesc(&dd))) { bb->Release(); return false; }
+        bb->Release();
+        if (dd.Width < 8 || dd.Height < 8) return false;
+    }
+    for (int eye = 0; eye < 2; ++eye) {
+        uipointer::ScreenPoint p;
+        if (!VrUiProjectEye(eye, c, p)) continue;
+        const float cx = (eye + p.u) * dd.Width * 0.5f;
+        const float cy = p.v * dd.Height;
+        drewFrame = true;
+        if (!saidDrew) {
+            saidDrew = true;
+            Log("%s: drew flat ring at %.0f,%.0f", tag, (double)cx, (double)cy);
+        }
+        // Horizontal ring verts (XR x/z plane at centre height).
+        const int SEG = 28;
+        RingVtx v[2 * (SEG + 1)];
+        for (int i = 0; i <= SEG; ++i) {
+            const float a = (float)i / (float)SEG * 6.2831853f;
+            const float co = cosf(a), si = sinf(a);
+            uipointer::V wo{ c.x + co * kRingRo, c.y, c.z + si * kRingRo };
+            uipointer::V wi{ c.x + co * kRingRi, c.y, c.z + si * kRingRi };
+            uipointer::ScreenPoint po, pi;
+            float ox = cx, oy = cy, ix = cx, iy = cy;
+            if (VrUiProjectEye(eye, wo, po)) {
+                ox = (eye + po.u) * dd.Width * 0.5f;
+                oy = po.v * dd.Height;
+            }
+            if (VrUiProjectEye(eye, wi, pi)) {
+                ix = (eye + pi.u) * dd.Width * 0.5f;
+                iy = pi.v * dd.Height;
+            }
+            v[2 * i] = { ox, oy, 0, 1, kRingCol };
+            v[2 * i + 1] = { ix, iy, 0, 1, kRingCol };
+        }
+        g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2 * SEG, v, sizeof(RingVtx));
+    }
+    if (!drewFrame && !saidProj) {
+        saidProj = true;
+        Log("%s: centre not projectable in either eye", tag);
+    }
+    dev->SetVertexShader(oldVS);
+    dev->SetPixelShader(oldPS);
+    if (oldVS) oldVS->Release();
+    if (oldPS) oldPS->Release();
+    dev->SetFVF(oldFVF);
+    dev->SetRenderState(D3DRS_ZENABLE, oldZ);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, oldAB);
+    dev->SetRenderState(D3DRS_SRCBLEND, oldSrc);
+    dev->SetRenderState(D3DRS_DESTBLEND, oldDst);
+    dev->SetRenderState(D3DRS_CULLMODE, oldCull);
+    dev->SetRenderState(D3DRS_LIGHTING, oldLit);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldSc);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, oldCop);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, oldCa1);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, oldAop);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, oldAa1);
+    return drewFrame;
+}
+
 void DrawHolsterMarker(IDirect3DDevice9* dev) {
     if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
         Rd(g_weaponWheelOpen) || !g_holsterEnabled || !WeaponInHands() ||
@@ -26058,107 +26178,30 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
     // outer 0.1127m / inner 0.0877m (2.5cm rim, empty middle), lying in the
     // XR horizontal plane at hip height. Yaw-invariant by construction.
     static bool saidDrew = false, saidProj = false;
-    const float kRo = 0.1127f, kRi = 0.0877f;
-    // Fixed-function state saved/restored in full: this runs at Present time
-    // after the scene, like DrawLaserSight.
-    IDirect3DVertexShader9* oldVS = nullptr; dev->GetVertexShader(&oldVS);
-    IDirect3DPixelShader9* oldPS = nullptr; dev->GetPixelShader(&oldPS);
-    DWORD oldFVF = 0, oldZ = 0, oldAB = 0, oldSrc = 0, oldDst = 0, oldCull = 0;
-    DWORD oldLit = 0, oldSc = 0, oldCop = 0, oldCa1 = 0, oldAop = 0, oldAa1 = 0;
-    dev->GetFVF(&oldFVF);
-    dev->GetRenderState(D3DRS_ZENABLE, &oldZ);
-    dev->GetRenderState(D3DRS_ALPHABLENDENABLE, &oldAB);
-    dev->GetRenderState(D3DRS_SRCBLEND, &oldSrc);
-    dev->GetRenderState(D3DRS_DESTBLEND, &oldDst);
-    dev->GetRenderState(D3DRS_CULLMODE, &oldCull);
-    dev->GetRenderState(D3DRS_LIGHTING, &oldLit);
-    dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &oldSc);
-    dev->GetTextureStageState(0, D3DTSS_COLOROP, &oldCop);
-    dev->GetTextureStageState(0, D3DTSS_COLORARG1, &oldCa1);
-    dev->GetTextureStageState(0, D3DTSS_ALPHAOP, &oldAop);
-    dev->GetTextureStageState(0, D3DTSS_ALPHAARG1, &oldAa1);
-    dev->SetVertexShader(nullptr);
-    dev->SetPixelShader(nullptr);
-    dev->SetTexture(0, nullptr);
-    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
-    dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
-    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
-    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
-    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
-    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
-    struct RingVtx { float x, y, z, rhw; DWORD c; };
-    const DWORD ringCol = 0x80FFFFFF; // white, half transparent
-    bool drewFrame = false;
-    D3DSURFACE_DESC dd{};
-    {
-        // Backbuffer dims for the SBS mapping (same convention as the plates).
-        IDirect3DSurface9* bb = nullptr;
-        if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &bb)) || !bb) return;
-        if (FAILED(bb->GetDesc(&dd))) { bb->Release(); return; }
-        bb->Release();
-        if (dd.Width < 8 || dd.Height < 8) return;
-    }
-    for (int eye = 0; eye < 2; ++eye) {
-        uipointer::ScreenPoint p;
-        if (!VrUiProjectEye(eye, hip, p)) continue;
-        const float cx = (eye + p.u) * dd.Width * 0.5f;
-        const float cy = p.v * dd.Height;
-        drewFrame = true;
-        if (!saidDrew) {
-            saidDrew = true;
-            Log("holster marker: drew flat ring at %.0f,%.0f (hip UU %.1f,%.1f,%.1f)",
-                (double)cx, (double)cy, (double)H[0], (double)H[1], (double)H[2]);
+    DrawFlatRingAt(dev, hip, "holster marker", saidDrew, saidProj);
+}
+
+// MAIN round 10: the same white ring at the LEFT belt while the knife is
+// held (user: same as the gun ring, obviously on the left). Belt anchor is
+// mirrored live from the XR owner; projection reuses the gun-ring helper.
+void DrawKnifeBeltMarker(IDirect3DDevice9* dev) {
+    const int held = g_hipKnifeState.held;
+    if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
+        Rd(g_weaponWheelOpen) || !g_hipKnifeEnabled || !g_hipKnifeReady ||
+        held < 0 || !g_origDrawPrimUP) {
+        static bool saidGate = false;
+        if (!saidGate) {
+            saidGate = true;
+            Log("knife belt marker: gate blocked (vr=%d dup=%d paused=%d wheel=%d en=%d ready=%d held=%d)",
+                VrModeOn() ? 1 : 0, (int)Rd(g_dupDraws), (int)Rd(g_gamePaused),
+                (int)Rd(g_weaponWheelOpen), g_hipKnifeEnabled ? 1 : 0,
+                g_hipKnifeReady ? 1 : 0, held);
         }
-        // Horizontal ring verts (XR x/z plane at hip height).
-        const int SEG = 28;
-        RingVtx v[2 * (SEG + 1)];
-        for (int i = 0; i <= SEG; ++i) {
-            const float a = (float)i / (float)SEG * 6.2831853f;
-            const float co = cosf(a), si = sinf(a);
-            uipointer::V wo{ hip.x + co * kRo, hip.y, hip.z + si * kRo };
-            uipointer::V wi{ hip.x + co * kRi, hip.y, hip.z + si * kRi };
-            uipointer::ScreenPoint po, pi;
-            float ox = cx, oy = cy, ix = cx, iy = cy;
-            if (VrUiProjectEye(eye, wo, po)) {
-                ox = (eye + po.u) * dd.Width * 0.5f;
-                oy = po.v * dd.Height;
-            }
-            if (VrUiProjectEye(eye, wi, pi)) {
-                ix = (eye + pi.u) * dd.Width * 0.5f;
-                iy = pi.v * dd.Height;
-            }
-            v[2 * i] = { ox, oy, 0, 1, ringCol };
-            v[2 * i + 1] = { ix, iy, 0, 1, ringCol };
-        }
-        g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2 * SEG, v, sizeof(RingVtx));
+        return;
     }
-    if (!drewFrame && !saidProj) {
-        saidProj = true;
-        Log("holster marker: hip not projectable in either eye (hip UU %.1f,%.1f,%.1f)",
-            (double)H[0], (double)H[1], (double)H[2]);
-    }
-    dev->SetVertexShader(oldVS);
-    dev->SetPixelShader(oldPS);
-    if (oldVS) oldVS->Release();
-    if (oldPS) oldPS->Release();
-    dev->SetFVF(oldFVF);
-    dev->SetRenderState(D3DRS_ZENABLE, oldZ);
-    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, oldAB);
-    dev->SetRenderState(D3DRS_SRCBLEND, oldSrc);
-    dev->SetRenderState(D3DRS_DESTBLEND, oldDst);
-    dev->SetRenderState(D3DRS_CULLMODE, oldCull);
-    dev->SetRenderState(D3DRS_LIGHTING, oldLit);
-    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldSc);
-    dev->SetTextureStageState(0, D3DTSS_COLOROP, oldCop);
-    dev->SetTextureStageState(0, D3DTSS_COLORARG1, oldCa1);
-    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, oldAop);
-    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, oldAa1);
+    const uipointer::V belt{ g_hipKnifeBelt.x, g_hipKnifeBelt.y, g_hipKnifeBelt.z };
+    static bool saidDrew = false, saidProj = false;
+    DrawFlatRingAt(dev, belt, "knife belt marker", saidDrew, saidProj);
 }
 
 // A flat cutscene should read as a cinema screen, not as a full-field texture
