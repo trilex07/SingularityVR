@@ -10137,11 +10137,13 @@ void SyncXRInput(XrTime displayTime) {
                 InterlockedExchange64(&g_lastMeleeEdgeMs,(LONG64)f.nowMs);
             }
         }
-        // MAIN round 11 pickup-refusal probe: grip held with a hand at the
-        // belt but no PICKED names the blocking Context term (one line).
+        // MAIN round 11/12 pickup-refusal probe: grip held with a hand at the
+        // belt but no PICKED logs the Context terms. One line per DISTINCT
+        // reason bitmask (not one-shot: an early offsets-unknown refusal must
+        // not swallow a later post-TMD one).
         {
-            static bool saidRefuse=false;
-            if(!saidRefuse&&g_hipKnifeState.held<0&&!hipknife::Context(f)){
+            static int saidMask=-1;
+            if(g_hipKnifeState.held<0&&!hipknife::Context(f)){
                 bool handNear=false,gripHeld=false;
                 for(int h=0;h<2;++h){
                     if(f.tracked[h]&&hipknife::Finite(f.hand[h].p)&&
@@ -10150,9 +10152,12 @@ void SyncXRInput(XrTime displayTime) {
                     if(f.grip[h])gripHeld=true;
                 }
                 if(handNear&&gripHeld){
-                    saidRefuse=true;
-                    Log("hip knife: grip held at belt but no pickup (gameplay=%d focused=%d alive=%d nativeKnife=%d pawn=%08X)",
-                        f.gameplay?1:0,f.focused?1:0,f.alive?1:0,f.nativeKnife?1:0,f.pawn);
+                    const int mask=(f.gameplay?1:0)|(f.focused?2:0)|(f.alive?4:0)|(f.nativeKnife?8:0);
+                    if(mask!=saidMask){
+                        saidMask=mask;
+                        Log("hip knife: grip held at belt but no pickup (gameplay=%d focused=%d alive=%d nativeKnife=%d pawn=%08X)",
+                            f.gameplay?1:0,f.focused?1:0,f.alive?1:0,f.nativeKnife?1:0,f.pawn);
+                    }
                 }
             }
         }
@@ -10207,12 +10212,12 @@ void SyncXRInput(XrTime displayTime) {
     const bool holsterValid = g_holsterEnabled && feedGame && WeaponInHands() &&
                               g_handPositionValid[AimHand()] && g_handPoseValid[AimHand()] &&
                               holsterWeapon != 0 && holsterIdentity != 0;
+    // MAIN round 12: drop the trigger zone onto the drawn ring (user feel +
+    // 8x STORED hand-hip deltas: systematic +4UU up bias, X/Y scatter).
+    // Falsifier: next STORED deltas centre on ~0 (hand vs hip are logged).
     float holsterHip[3]{};
-    // MAIN round 11: trigger uses the SAME world point the ring draws and the
-    // stored gun renders (HolsterHipWorld TRUE). The head-relative FALSE point
-    // sits hmdOffset above the ring, which is why storing needed aiming above
-    // it (user report + 17:19/19:30 store logs). Falsifier: store-at-ring fails.
-    HolsterHipWorld(holsterHip, true);
+    HolsterHipWorld(holsterHip, true); // same point the ring draws / gun renders
+    holsterHip[2] -= 4.0f;
     const float handX = (float)Rd(g_handOffX) / kHandFixed;
     const float handY = (float)Rd(g_handOffY) / kHandFixed;
     const float handZ = (float)(g_gunSignPosZ * Rd(g_handOffZ)) / kHandFixed;
