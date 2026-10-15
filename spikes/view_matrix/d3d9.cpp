@@ -2341,6 +2341,7 @@ static uintptr_t g_ammoProbeFmObj = 0;
 static int32_t g_ammoProbeFmPrev[128]{};
 static bool g_ammoProbeFmHave = false;
 
+static uintptr_t FindHudObject(); // defined near the HUD readers below
 static void LogEquippedClass(uintptr_t w) {
     static uintptr_t lastObj = (uintptr_t)-1;
     if (w == lastObj) return;
@@ -2377,6 +2378,30 @@ static void LogEquippedClass(uintptr_t w) {
                     char cc[80] = "(none)";
                     NameOf(cls, cc, sizeof(cc));
                     DumpClassProperties(cls, cc);
+                }
+            }
+        }
+    }
+    // ---- ammo probe round 6: HUD class dump (display-value cache?) ----
+    // The native HUD renders ammo ("21" on screen), so its object may cache
+    // the displayed mag/reserve in named fields. One-shot per HUD class, max
+    // two, gated by the same probe flag (plain read: input thread owns it).
+    // Offline: read the names, then sample the winners per pull like mShotCount.
+    if (g_ammoProbeLeft > 0) {
+        const uintptr_t hud = FindHudObject();
+        if (hud && Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t))) {
+            if (const uintptr_t hcls = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS)) {
+                static uintptr_t hdumped[2]{};
+                static int nHdumped = 0;
+                bool hknown = false;
+                for (int i = 0; i < nHdumped; ++i) {
+                    if (hdumped[i] == hcls) { hknown = true; break; }
+                }
+                if (!hknown) {
+                    if (nHdumped < 2) hdumped[nHdumped++] = hcls;
+                    char hc[80] = "(none)";
+                    NameOf(hcls, hc, sizeof(hc));
+                    DumpClassProperties(hcls, hc);
                 }
             }
         }

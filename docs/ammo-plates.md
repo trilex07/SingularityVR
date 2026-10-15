@@ -18,7 +18,14 @@ Reference art (`vr-mods/references/`):
 volatile words are flags/timers/coords/event latches. Static small ints
 (3/4/20/30/...) never move. Falsifier for round 2 stands: enumerate NAMES.
 
-## RE round 5: pawn diffs + shots-fired proof (this change)
+## RE round 6: HUD display cache (this change)
+
+Native HUD renders ammo, so its object may cache displayed mag/reserve in
+NAMED fields. Same one-shot pattern in LogEquippedClass (max 2 HUD classes,
+probe flag). Falsifier: named mag/reserve fields whose live values track
+firing/pickups. If absent, the value is computed on the fly (GFx push) and
+the trail goes native (Ghidra iNative table) — stated now so the escalation
+is pre-authorized by evidence, not decided mid-frustration.
 
 Three sessions prove no mag int on weapon/firemode actors. Remaining doubt:
 did the taps actually fire? `mShotCount` (dump-named, resolved BY NAME per
