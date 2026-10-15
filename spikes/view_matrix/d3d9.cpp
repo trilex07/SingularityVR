@@ -10038,7 +10038,11 @@ void SyncXRInput(XrTime displayTime) {
     } else if (wheelEvent == weaponwheel::Event::Commit) {
         InterlockedExchange(&g_weaponWheelOpen, 0);
         InterlockedExchange(&g_weaponWheelPulseGap, 0);
-        const LONG sel = g_weaponWheelState.selection;
+        // NB: Update() already reset g_weaponWheelState.selection to 0 on the
+        // close edge, so the committed sector must come from the live mirror
+        // (last SelectionChanged, never cleared on close). Reading the state
+        // here yields sel=0 for every commit: highlights without switching.
+        const LONG sel = InterlockedCompareExchange(&g_weaponWheelSelection, 0, 0);
         LONG pulses = sel;
         // Direct-select: sector -> gun_verts -> forward cycle steps. Unknown
         // verts (or catalog off) keep the historical offset-pulse behavior.
@@ -10082,8 +10086,8 @@ void SyncXRInput(XrTime displayTime) {
             }
         }
         InterlockedExchange(&g_weaponWheelCommit, pulses);
-        Log("weapon wheel: COMMIT offset=%ld (native cycle pulses)",
-            g_weaponWheelState.selection);
+        Log("weapon wheel: COMMIT sector=%ld offset=%ld (native cycle pulses)",
+            sel, pulses);
         InterlockedExchange(&g_wwHandAnchorOk, 0);
     } else if (wheelEvent == weaponwheel::Event::Cancel) {
         InterlockedExchange(&g_weaponWheelOpen, 0);
