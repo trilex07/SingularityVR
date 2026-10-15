@@ -1,15 +1,14 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 ammo PROBE ROUND-3 DEPLOYED (DLL B9D5354A/source 4670e4c,
-built==installed; backup 20261015-133312; INI AmmoProbe=8 carried over).
-Window [0,0x1000) + one-shot pawn baseline [0,0x800). Need: SINGLE taps
-spaced ~2 s (no spray — auto spray + reloads mask the sawtooth), 8 pulls,
-exit. Live: deployment/hands-dubbing/ammo-probe3-20261015/live.json. Prior history.
-built==installed; backup 20261015-131755; INI AmmoProbe=8 carried over).
-Adds weapon-class property dump on equip (1/class, max 4) + same trigger
-diffs. Need: hold/switch guns (dump names), ~8 spaced shots, exit. Then
-offline: name mag/reserve candidates for round-3 motion verification. Live:
-deployment/hands-dubbing/ammo-probe2-20261015/live.json. Prior history.
+LATEST 2026-10-15 ammo PROBE ROUND-4 DEPLOYED (DLL 20B1BCAD/source 66c5843,
+built==installed; backup 20261015-134351; INI AmmoProbe=8 carried over).
+Follows WeaponFireTypes[0] by name, dumps fm words baseline+diff. Need:
+SINGLE taps spaced ~2 s, 8 pulls, exit. Falsifier: fm int -1/tap IS mag.
+Live: deployment/hands-dubbing/ammo-probe4-20261015/live.json. Prior history.
+
+LATEST 2026-10-15 ammo PROBE ROUND-2 DEPLOYED (DLL 05F960F0/source 2a22d62):
+class property dump on equip (RvWeaponShared vocabulary: no ammo data
+fields, only GetAmmoInClip/Bin-style functions). Prior history.
 
 LATEST 2026-10-15 CINE ROUND-2 L3_PASS (user: stereo back after Load).
 Log: `menu-load cut ... latch=1` -> `VideoFlat -> GameplayStereo`, drift back
