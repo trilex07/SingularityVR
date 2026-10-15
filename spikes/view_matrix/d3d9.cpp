@@ -2347,7 +2347,6 @@ static uintptr_t g_ammoProbeInvObj = 0;
 static int32_t g_ammoProbeInvPrev[128]{};
 static bool g_ammoProbeInvHave = false;
 
-static uintptr_t FindHudObject(); // defined near the HUD readers below
 static void LogEquippedClass(uintptr_t w) {
     static uintptr_t lastObj = (uintptr_t)-1;
     if (w == lastObj) return;
@@ -2710,13 +2709,13 @@ static bool ClassDerivesFrom(uintptr_t cls, uintptr_t base) {
     return false;
 }
 
-static uintptr_t FindHudObject() {
+static uintptr_t FindHudObject(bool force = false) {
     if (g_hudObject && g_hudClass && Readable((void*)g_hudObject, 0x40) &&
         *reinterpret_cast<uintptr_t*>(g_hudObject + OBJ_CLASS) == g_hudClass)
         return g_hudObject;
     g_hudObject = 0;
     static int missTick = 0;
-    if ((++missTick % 30) != 1) return 0;
+    if (!force && (++missTick % 30) != 1) return 0;
     if (!g_upChildren) return 0;                     // the derives-from walk needs the layout
     if (!g_hudBaseClass) g_hudBaseClass = FindClassByName("RvGameSharedHUD");
     if (!g_hudBaseClass) return 0;
@@ -27960,11 +27959,57 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     else if (shown > 24) Log("ammo probe: inv diff obj=%p ... +%d more", (void*)mgr, shown - 24);
                 }
             }
+            // ---- round 8: inventory manager CLASS dump (link names) ----
+            // The manager words don't move with shots; its class vocabulary
+            // names the Inventory link and any ammo pools. One-shot per
+            // manager class, max two, same probe gate.
+            if (g_ammoProbeLeft > 0) {
+                const uintptr_t pawn = FindPlayerPawn();
+                uintptr_t pcls = 0;
+                if (pawn && Readable((const void*)(pawn + OBJ_CLASS), sizeof(uintptr_t)))
+                    pcls = *reinterpret_cast<const uintptr_t*>(pawn + OBJ_CLASS);
+                static uintptr_t invCls = 0;
+                static int invOff = -2;
+                if (pcls && pcls != invCls) {
+                    invCls = pcls;
+                    invOff = PropOffsetInChain(pcls, "InvManager");
+                    char cc[80] = "(none)";
+                    NameOf(pcls, cc, sizeof(cc));
+                    Log("ammo probe: InvManager %+d on %s", invOff, cc);
+                }
+                if (invOff >= 0 && pawn && Readable((const void*)(pawn + invOff), sizeof(uintptr_t))) {
+                    const uintptr_t mgr = *reinterpret_cast<const uintptr_t*>(pawn + invOff);
+                    if (mgr && Readable((const void*)(mgr + OBJ_CLASS), sizeof(uintptr_t))) {
+                        const uintptr_t mcls = *reinterpret_cast<const uintptr_t*>(mgr + OBJ_CLASS);
+                        if (mcls) {
+                            static uintptr_t mdumped[2]{};
+                            static int nMdumped = 0;
+                            bool mknown = false;
+                            for (int i = 0; i < nMdumped; ++i) {
+                                if (mdumped[i] == mcls) { mknown = true; break; }
+                            }
+                            if (!mknown) {
+                                if (nMdumped < 2) mdumped[nMdumped++] = mcls;
+                                char mc[80] = "(none)";
+                                NameOf(mcls, mc, sizeof(mc));
+                                DumpClassProperties(mcls, mc);
+                            }
+                        }
+                    }
+                }
+            }
             // ---- round 6 (relocated): HUD class dump, now on trigger pulls ----
             // LogEquippedClass fires only on weapon change (and the HUD may not
             // exist at the first equip), so the one-shot never ran. Trigger
             // pulls happen with the HUD alive; still one-shot per HUD class.
+            // Round 8: force the throttled find ONCE (missTick gate would eat
+            // all 8 pulls); the cache serves the rest of the session.
             if (g_ammoProbeLeft > 0) {
+                static bool hudForced = false;
+                if (!hudForced) {
+                    hudForced = true;
+                    FindHudObject(true);
+                }
                 const uintptr_t hud = FindHudObject();
                 if (hud && Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t))) {
                     if (const uintptr_t hcls = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS)) {

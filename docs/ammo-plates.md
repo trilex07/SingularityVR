@@ -18,7 +18,13 @@ Reference art (`vr-mods/references/`):
 volatile words are flags/timers/coords/event latches. Static small ints
 (3/4/20/30/...) never move. Falsifier for round 2 stands: enumerate NAMES.
 
-## RE round 7: InvManager trail + HUD relocation (this change)
+## RE round 8: manager vocabulary + forced HUD find (this change)
+
+InvManager words static across shots; HUD dump never fired (throttled find
++ equip-only placement). This round: `InvManager` offset resolved BY NAME
+per pawn class (cached, logged once), manager class dumped for link names;
+`FindHudObject(true)` forced once so the HUD dump actually runs. Falsifier:
+named Inventory/ammo-pool links on the manager; HUD display fields.
 
 Pawn +0x114 climbs with trigger pulls (+3,+3,+3,+5,+1,+1 ≈ burst lengths;
 total 3→22) — the shot clock; mShotCount=1 means first-shot-latch semantics,
