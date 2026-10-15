@@ -1,5 +1,28 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN adopted side native gloves (user auth: side agent at
+limit, WIP uncommitted in their tree — read-only takeover, their tree
+untouched). DEPLOYED DLL
+97244AE7525EA21792D9ED9AC3DFED917B8B3971BEE893462306959B87A33A8B/source
+be561e4 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-183351; game closed
+at deploy. Takeover method: exported side diff to patch file, applied all but
+one hunk cleanly, hand-applied the last (Hook_DrawIndexedPrim restore block);
+copied untracked glove_native.h + native test/tool/doc files; verified every
+hunk landed by grep. Native variant: original VB/material/shaders stay bound,
+scoped index-subset draw + finger palette on original bones, cuff with short
+forearm, same native size (no rescale), default OFF (GloveNativeEnabled, takes
+priority over the GLB renderer). Installed native_hands.svni (hash B4564A69 =
+side report cache_sha256, verified after copy) + GloveNativeEnabled=1 in
+installed INI (pre-edit backed to
+deployment/install-backups/20261015-182559/SingularityVR.ini.pre-native;
+GloveRendererEnabled=1 kept as fallback path). L1_PASS (native guard/decode/
+101-level pose test vs real asset: triangles=3792 cap=98, plus layout, probe,
+holster, vrpose, glove 276-check anim + state guard). L2_PASS (PE32, manifest
+commit be561e4 clean). L3/physical PENDING: native material/cuff/fist in
+headset (side's falsifiers: looks different from held glove in same light, no
+cuff behind wrist, size change, grip/aim change). No fix claimed.
+
 LATEST 2026-10-15 MAIN round 8 DEPLOYED (DLL
 59598E6D3E0BDCBAFCBF6351DE7F5515935BA2C7525A9D4CA0A505D91F3ACD1B/source
 97574db branch plates-l3-main, x86 PE32 /O2, built==installed via
