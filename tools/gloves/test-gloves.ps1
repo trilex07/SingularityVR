@@ -1,5 +1,5 @@
 # Offline SIDE L1: synthetic CPU + optional locally prepared game-derived data.
-param([string]$PreparedDirectory)
+param([string]$PreparedDirectory,[string]$SourceTexture)
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $out=Join-Path $repo 'build\gloves\tests'
@@ -24,5 +24,6 @@ foreach($test in $tests){
     if($LASTEXITCODE -ne 0){throw "test failed: $test"}
 }
 $py=Join-Path $PSScriptRoot 'test_gloves.py'
-if($PreparedDirectory){python $py --prepared $PreparedDirectory}else{python $py}
+if($PreparedDirectory -and $SourceTexture){python $py --prepared $PreparedDirectory --texture $SourceTexture}
+elseif($PreparedDirectory){python $py --prepared $PreparedDirectory}else{python $py}
 if($LASTEXITCODE -ne 0){throw 'Python geometry tests failed'}

@@ -20,7 +20,8 @@ static void Check(bool ok,const char* what){++checks;if(!ok){++failures;std::fpr
 static bool Near(float a,float b,float eps=1e-5f){return std::fabs(a-b)<eps;}
 static void Push32(std::vector<unsigned char>& b,std::uint32_t v){const auto* p=reinterpret_cast<const unsigned char*>(&v);b.insert(b.end(),p,p+4);}
 static std::vector<unsigned char> Fixture(){
-    std::vector<unsigned char> b={'S','V','R','G'};Push32(b,1);Push32(b,3);Push32(b,3);
+    std::vector<unsigned char> b={'S','V','R','G'};Push32(b,2);Push32(b,3);Push32(b,3);
+    float units=52.5f;std::uint32_t bits;std::memcpy(&bits,&units,4);Push32(b,bits);Push32(b,0);
     for(unsigned i=0;i<3;++i){
         gloves::SourceVertex v;v.open={float(i)*.01f,.01f,-.1f};v.delta={0,-.02f,.03f};v.normal={0,1,0};
         const auto* p=reinterpret_cast<const unsigned char*>(&v);b.insert(b.end(),p,p+sizeof(v));
@@ -58,14 +59,17 @@ int main(int argc,char** argv){
     Check(Decode(bytes.data(),bytes.size(),mesh),"valid cache");
     for(std::size_t n=0;n<bytes.size();++n)Check(!Decode(bytes.data(),n,mesh),"every truncation rejects");
     auto bad=bytes;bad.push_back(0);Check(!Decode(bad.data(),bad.size(),mesh),"trailing bytes reject");
-    bad=bytes;bad[4]=2;Check(!Decode(bad.data(),bad.size(),mesh),"version rejects");
+    bad=bytes;bad[4]=1;Check(!Decode(bad.data(),bad.size(),mesh),"stale v1 cache rejects");
     bad=bytes;bad[8]=0xff;bad[9]=0xff;Check(!Decode(bad.data(),bad.size(),mesh),"bounded vertex count");
     bad=bytes;bad[bad.size()-4]=3;Check(!Decode(bad.data(),bad.size(),mesh),"out of range index");
-    bad=bytes;std::memcpy(bad.data()+16,&nan,4);Check(!Decode(bad.data(),bad.size(),mesh),"NaN asset rejects");
+    bad=bytes;std::memcpy(bad.data()+24,&nan,4);Check(!Decode(bad.data(),bad.size(),mesh),"NaN asset rejects");
+    bad=bytes;std::memcpy(bad.data()+16,&nan,4);Check(!Decode(bad.data(),bad.size(),mesh),"NaN baked scale rejects");
+    bad=bytes;bad[20]=1;Check(!Decode(bad.data(),bad.size(),mesh),"unknown material flags reject");
     Check(mesh.source.size()==3,"failed decode preserves previous asset");
     Pose hand{},eye{};hand.position={.1f,.2f,-.5f};
     Check(Transform(mesh,0,hand,eye),"open transform");
     const Vertex open=mesh.scratch[0];
+    Check(open.color==0xffffffff,"albedo never receives fake normal-Y tint");
     Check(Near(open.p.x,.1f)&&Near(open.p.y,.21f)&&Near(open.p.z,.6f),"metres, XR to D3D depth");
     Check(Transform(mesh,1,hand,eye),"fist transform");
     Check(Near(mesh.scratch[0].p.y,.19f)&&Near(mesh.scratch[0].p.z,.57f),"fist delta actually consumed");
@@ -78,6 +82,21 @@ int main(int argc,char** argv){
     eye.position={.032f,0,0};Transform(mesh,0,hand,eye);
     Check(Near(lx-mesh.scratch[0].p.x,.064f),"per-eye separation once, no double IPD");
     Check(!Transform(mesh,nan,hand,eye),"bad blend rejects");
+    {float local[4][4]{};for(int i=0;i<4;++i)local[i][i]=1;
+     float ls=0,factor=0;Check(UniformScale(local,ls)&&Near(ls,1),"native local unit scale");
+     Check(NativeSizeFactor(52.5f,52.5f,75,ls,factor)&&Near(factor,.75f),"native shared 75 percent, not 100");
+     Check(Transform(mesh,0,hand,eye,factor),"scaled transform");
+     Check(Near(mesh.scratch[0].p.y,.0075f),"wrist-relative native hand size");
+     // The tracked wrist and eye separation are not part of mesh size.
+     Check(Near(mesh.scratch[0].p.x,-.032f),"tracked position/IPD not rescaled");
+     Check(NativeSizeFactor(105,52.5f,75,ls,factor)&&Near(factor,1.5f),"alternate baked units cancel");
+     Check(NativeSizeFactor(52.5f,105,75,ls,factor)&&Near(factor,.375f),"world scale matches native UU conversion");
+     for(int r=0;r<3;++r)for(int c=0;c<3;++c)local[r][c]*=2;
+     Check(UniformScale(local,ls)&&Near(ls,2),"measured native component scale");
+     local[0][1]=.2f;Check(!UniformScale(local,ls),"native shear rejects");
+     local[0][1]=0;local[0][0]=3;Check(!UniformScale(local,ls),"nonuniform native size rejects");
+     Check(!NativeSizeFactor(nan,52.5f,75,1,factor),"unknown source scale rejects");
+     Check(!Transform(mesh,0,hand,eye,nan),"unknown runtime size rejects");}
     const auto eligible=[](int off){bool v[13];for(auto& b:v)b=true;bool p=false,m=false,c=false,w=false,g=false;
         if(off==0)v[0]=false;if(off==1)v[1]=false;if(off==2)v[2]=false;if(off==3)p=true;if(off==4)m=true;
         if(off==5)c=true;if(off==6)v[6]=false;if(off==7)v[7]=false;if(off==8)v[8]=false;

@@ -2,6 +2,42 @@
 
 Base: `origin/main` at `72ad59d`. No Steam access; L1/L2 only.
 
+## Reopened: native appearance and size (2026-10-15)
+
+User reports the gloves work, but requires the **same model appearance and
+size as the native gloves holding a gun**. This accepts neither size nor art.
+Source evidence: `ApplyMeshScale` / `BuildLiveControllerC` / `BuildGunC`
+all use `GunScalePct`; the custom renderer used unscaled baked metres.
+`MetresToUU` additionally varies with `WorldScalePct`. The custom colour
+factor `.55 + .45*abs(normal.y)` is invented lighting, not UE3's material.
+
+Hypothesis: use the existing native hand's uniform LocalToWorld scale and
+the shared GunScalePct/MetresToUU conversion at consumption time, keeping
+both wrist positions/IPD untouched. Remove the invented normal-Y colour
+factor; pin source skin geometry/UV and original diffuse texels in offline
+tests. Version the cache with its actual baked units so custom pack scales
+cannot silently bypass the conversion. Falsifier: transformed wrist-relative
+native/custom landmark distances differ for a uniform native matrix or live
+scale changes; any albedo texel/channel differs from the source PNG.
+
+**Known rendering gap:** the current renderer is diffuse-only, not the native
+UE3 normal/specular/scene-light shader. Removing the fake tint is not proof
+of identical lighting. Do not call the full appearance requirement fixed
+without native material/pass identification and a real side-by-side result.
+This update must not silently replace the user's chosen GLB route with a
+different hand system or change accepted gun meshes to match a bad glove.
+
+The follow-up request includes the visible wrist/cuff portion after the glove.
+Its exact producer is `kNoTmdHandFaces`, now shared in `glove_isolate.h`:
+48 inclusive runs / **2918** faces (the old log saying 2922 was inaccurate).
+The table is unchanged; native clipping and held-weapon poses are not edited.
+The baker proves all **16512** cooked indices against ActorX, swapping corners
+0/1 for UEViewer's reflection, then uses exactly those native faces, not an
+invented centimetre cut. Original UVs, weights and skeleton are retained.
+Left: 1482 original faces +24 cap; right: 1436 original faces +28 cap.
+Caps follow the blended cuff rim through the morph, not a frozen disc that
+tears away from the native cut. Both endpoints have zero welded boundary edges.
+
 ## Producer and hypothesis (before implementation)
 
 `xrLocateSpace` in `PollActions` supplies orientation, decomposed into yaw,
@@ -53,7 +89,8 @@ The output GLB still has no skeleton: its morph is already baked from the
 90-bone source. No copyrighted mesh or texture is committed to Git.
 
 The D3D9 renderer consumes this narrow **offline-baked GLB cache**, not an
-arbitrary general-purpose GLB scene. SVRG v1 has a 16-byte header, then
+arbitrary general-purpose GLB scene. SVRG v2 has a 24-byte header including
+baked mesh-units/metre and reserved-zero flags, then
 14 float32 values per vertex (open/delta/normal/normalDelta/UV) and uint32
 triangle indices; SVRT v1 has dimensions and BGRA8 texels. Lengths, counts,
 indices and float ranges are checked before accepting the pair. Both morph
@@ -87,8 +124,11 @@ native hands resume next frame; a suppressed frame cannot retroactively be
 redrawn. Real driver failure/reset behavior remains MAIN test debt.
 
 Grip-local axes are +X right, +Y dorsal, -Z fingers, with the native wrist
-as origin. Scale is an explicit offline argument, default 52.5 mesh units/m;
-there is **no measured Sense grip-to-wrist mounting offset yet**. Position,
+as origin. Baked units default to 52.5, converted at runtime by
+`bakedUnits / MetresToUU() * GunScalePct/100 * nativeLocalScale`.
+LocalToWorld uniform scale is read from the exact known draw; unknown/sheared
+or nonuniform transforms preserve native hands. There is still
+**no measured Sense grip-to-wrist mounting offset yet**. Position,
 size, finger self-intersections during linear blending and comfort require
 physical validation, not a claim that an authored closed silhouette is final.
 

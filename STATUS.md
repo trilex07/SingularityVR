@@ -138,6 +138,20 @@ deployment/hands-dubbing/ammo-plates-fix-20261015/live.json. Prior history.
 LATEST 2026-10-15 ammo PROBE ROUND-2 DEPLOYED (DLL 05F960F0/source 2a22d62):
 class property dump on equip (RvWeaponShared vocabulary: no ammo data
 fields, only GetAmmoInClip/Bin-style functions). Prior history.
+LATEST 2026-10-15 SIDE PR #30 REOPENED by physical feedback: functional
+gloves, but size/appearance rejected; user requires the SAME native hand cut,
+including wrist/cuff behind glove. New candidate uses shared accepted 48 face
+runs / 2918 faces, full cooked-to-ActorX index roundtrip; exact original UVs
+and diffuse bytes. Scale now inherits native LocalToWorld, GunScalePct and
+world UU/metre; wrist/IPD not scaled. SVRG v2 carries baked units: old caches
+are rejected (update DLL AND both meshes). Removed fabricated normal-Y tint.
+L1_PASS: 284 CPU checks, 9 Python tests incl exact albedo and native face IDs,
+guard/native-hand regressions. L2_PASS clean 3939add, x86 PE32 /O2, DLL SHA256
+2C813E40A67F85375F57639F988BBC71536BAB07F17FAEC79BFC8E2138C62F9C.
+Full UE3 normal/specular/scene lighting is NOT reproduced by the diffuse-only
+GLB renderer: full appearance acceptance remains OPEN. No Steam touched.
+See docs/glove-native-match.md for the new private candidate and test scope.
+
 LATEST 2026-10-15 SIDE feature/glove-animation: L1_PASS + L2_PASS, clean
 source 94aab901; x86 PE32 /O2 DLL SHA 27D5DA96...82568A4. Default OFF.
 User explicitly selected a new default-OFF baked-GLB renderer after source

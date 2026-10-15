@@ -111,14 +111,18 @@ public:
         width=w;height=h;return true;
     }
     bool Draw(IDirect3DDevice9* dev,const Calls& calls,IDirect3DSurface9* back,
-              const Pose (&hand)[2],const Pose (&eye)[2],const float (&blend)[2],float tanX,float tanY){
+              const Pose (&hand)[2],const Pose (&eye)[2],const float (&blend)[2],float tanX,float tanY,
+              float unitsPerMetre,float gunScalePct,float localScale){
         if(!Ready()||!calls.Valid()||!back)return false;
         D3DMATRIX proj{},ident{};
         if(!Projection(tanX,tanY,.015f,20.f,proj.m))return false;
         for(unsigned i=0;i<4;++i)ident.m[i][i]=1;
         // Validate all poses before changing device state or writing any pixels.
-        for(unsigned h=0;h<2;++h)for(unsigned e=0;e<2;++e)
-            if(!Transform(mesh[h],blend[h],hand[h],eye[e]))return false;
+        float size[2];
+        for(unsigned h=0;h<2;++h){
+            if(!NativeSizeFactor(mesh[h].bakedUnitsPerMetre,unitsPerMetre,gunScalePct,localScale,size[h]))return false;
+            for(unsigned e=0;e<2;++e)if(!Transform(mesh[h],blend[h],hand[h],eye[e],size[h]))return false;
+        }
         StateGuard<> guard(dev,state,calls);if(!guard.valid)return false;
         if(FAILED(dev->SetDepthStencilSurface(nullptr)))return false;
         for(unsigned i=1;i<guard.count;++i)if(FAILED(calls.target(dev,i,nullptr)))return false;
@@ -160,7 +164,7 @@ public:
             D3DVIEWPORT9 vp{e*width/2,0,width/2,height,0,1};
             if(FAILED(calls.viewport(dev,&vp)))return false;
             for(unsigned h=0;h<2;++h){
-                if(!Transform(mesh[h],blend[h],hand[h],eye[e]))return false;
+                if(!Transform(mesh[h],blend[h],hand[h],eye[e],size[h]))return false;
                 if(FAILED(calls.draw(dev,D3DPT_TRIANGLELIST,0,UINT(mesh[h].source.size()),UINT(mesh[h].indices.size()/3),
                     mesh[h].indices.data(),D3DFMT_INDEX32,mesh[h].scratch.data(),sizeof(Vertex))))return false;
                 ++draws;

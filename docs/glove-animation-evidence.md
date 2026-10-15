@@ -1,5 +1,11 @@
 # Glove renderer — SIDE L1/L2 evidence (2026-10-15)
 
+**Superseded candidate:** the receipts below describe the first implementation.
+User later reported working gloves but rejected art/size. Current native-cut,
+original-albedo and shared-size candidate: [glove-native-match.md](glove-native-match.md).
+It needs SVRG v2 mesh caches; the v1 files below are not the new candidate.
+Full native UE3 material/lighting equality is still OPEN.
+
 Branch: `feature/glove-animation`, based on `origin/main` `72ad59d`.
 Runtime source commit: `94aab90112e392d4a47ab142ed3aa38506461c8c`.
 The evidence/status follow-up changes documentation only.

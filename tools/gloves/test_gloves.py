@@ -5,11 +5,13 @@ from pathlib import Path
 import struct
 import tempfile
 import unittest
+from PIL import Image
 import numpy as np
 from prepare_gloves import boundary_loops, read_glb, write_glb, write_cache, normals, rotation
 from preview_gloves import cache, ray_distance
 
 PREPARED=None
+TEXTURE=None
 TEMP_ROOT=Path(__file__).resolve().parents[2]/'build'/'gloves'/'tests'
 TEMP_ROOT.mkdir(parents=True,exist_ok=True)
 
@@ -68,9 +70,13 @@ class Geometry(unittest.TestCase):
             self.skipTest('private assets not supplied')
         report=json.loads((PREPARED/'report.json').read_text())
         rays=json.loads((PREPARED/'axial-rays.json').read_text())
+        self.assertEqual(report['native_cut']['native_faces'],2918)
+        all_faces=[]
         for side in ('left','right'):
             with self.subTest(side=side):
                 r=report['hands'][side]
+                all_faces+=r['source_face_ids']
+                self.assertEqual(r['cut_source'],'shared native face runs (glove plus wrist/cuff)')
                 self.assertEqual((r['source_nodes'],r['source_skins'],r['source_animations']),(1,0,0))
                 self.assertEqual(r['boundary_loops'],1)
                 self.assertTrue(rays[side]['cap_is_first'])
@@ -81,9 +87,9 @@ class Geometry(unittest.TestCase):
                 self.assertEqual(boundary_loops(t,f),[])
                 self.assertGreater(np.linalg.norm(t-p,axis=1).max(),.04)
                 self.assertLess(np.linalg.norm(t-p,axis=1).max(),.4)
-                # Cap is motionless and stays welded at BOTH endpoints.
+                # Cap follows its source rim and stays welded at BOTH endpoints.
                 cap=f[r['cap_start_triangle']:]
-                self.assertLess(np.abs(v[np.unique(cap),3:6]).max(),1e-6)
+                self.assertLess(np.abs(v[np.unique(cap),3:6]).max(),.02)
                 doc,gp,gf=read_glb(PREPARED/f'glove_{side}.glb')
                 self.assertEqual(len(doc['meshes'][0]['primitives']),1)
                 self.assertEqual(len(doc['meshes'][0]['primitives'][0]['targets']),1)
@@ -93,11 +99,35 @@ class Geometry(unittest.TestCase):
                 # Caps have no zero-area or reversed-winding assumption.
                 area=np.linalg.norm(np.cross(p[f[:,1]]-p[f[:,0]],p[f[:,2]]-p[f[:,0]]),axis=1)
                 self.assertGreater(float(area.min()),1e-12)
+                header=(PREPARED/f'glove_{side}.svrg').read_bytes()[:24]
+                self.assertEqual(struct.unpack_from('<4sI',header),(b'SVRG',2))
+                self.assertAlmostEqual(struct.unpack_from('<f',header,16)[0],r['units_per_metre'])
+        self.assertEqual(len(all_faces),2918)
+        self.assertEqual(len(set(all_faces)),2918)
+
+    def test_native_albedo_roundtrip(self):
+        if PREPARED is None:self.skipTest('private assets not supplied')
+        # Source path is an explicit opt-in test argument, never an install scan.
+        if TEXTURE is None:self.skipTest('source texture not supplied')
+        image=Image.open(TEXTURE).convert('RGBA')
+        raw=(PREPARED/'glove.svrt').read_bytes()
+        self.assertEqual(struct.unpack_from('<4sIII',raw),(b'SVRT',1,*image.size))
+        self.assertEqual(raw[16:],image.tobytes('raw','BGRA'))
+
+    def test_cache_baked_units(self):
+        p=np.array([[0.,0,0],[.1,0,0],[0,.1,0]]);f=np.array([[0,1,2]]);n=normals(p,f)
+        with tempfile.TemporaryDirectory(dir=TEMP_ROOT) as tmp:
+            path=Path(tmp)/'scale.svrg'
+            write_cache(path,p,p,n,n,np.zeros((3,2)),f,105)
+            self.assertEqual(struct.unpack_from('<f',path.read_bytes(),16)[0],105)
+            with self.assertRaises(ValueError):write_cache(path,p,p,n,n,np.zeros((3,2)),f,float('nan'))
 
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('--prepared',type=Path)
+    parser.add_argument('--texture',type=Path)
     args,remaining=parser.parse_known_args()
     PREPARED=args.prepared
+    TEXTURE=args.texture
     unittest.main(argv=[__file__]+remaining)

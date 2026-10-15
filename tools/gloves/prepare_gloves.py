@@ -9,6 +9,7 @@ from collections import Counter, defaultdict
 import hashlib
 import json
 import math
+import re
 from pathlib import Path
 import struct
 import time
@@ -175,7 +176,32 @@ def normals(points, faces):
     return n
 
 
-def author(source, psk, side, units_per_metre):
+def native_cut(header, cooked, psk_faces):
+    source=Path(header).read_text(encoding='utf-8')
+    text=source.split('kNoTmdHandFaces[] = {',1)[1].split('};',1)[0]
+    runs=[tuple(map(int,m)) for m in re.findall(r'\{(\d+),(\d+)\}',text)]
+    keep=[i for a,b in runs for i in range(a,b+1)]
+    if len(keep)!=2918 or len(set(keep))!=2918 or max(keep)>=4830:
+        raise ValueError('native cut changed; review before baking')
+    data=Path(cooked).read_bytes()
+    pattern=struct.pack('<ihhiHhhiH',2,0,0,0,4830,1,1,14490,674)
+    at=data.find(pattern)
+    if at<0 or data.find(pattern,at+1)>=0:
+        raise ValueError('ambiguous noTMD cooked section')
+    p=at+len(pattern)
+    if struct.unpack_from('<ii',data,p)!=(2,16512):
+        raise ValueError('unsupported native index layout')
+    indices=np.frombuffer(data,'<u2',16512,p+8).reshape(-1,3)
+    # UEViewer reflects Y and swaps the first two corners, but does not reorder
+    # faces. Prove the ENTIRE index stream, not a vertex count or sample.
+    if not np.array_equal(indices[:,[1,0,2]],np.array([f[:3] for f in psk_faces])):
+        raise ValueError('ActorX/cooked face order differs')
+    return set(keep),dict(header_sha256=sha(header),cooked_sha256=sha(cooked),
+                          face_runs=len(runs),native_faces=len(keep),
+                          index_roundtrip='all 16512 indices exact after winding reflection')
+
+
+def author(source, psk, side, units_per_metre, kept_faces=None):
     doc, source_p, source_f = read_glb(source)
     names, parents, local, bind, pnts, weights, wedges, pfaces = psk
     prefix = 'l_' if side == 'left' else 'r_'
@@ -241,8 +267,11 @@ def author(source, psk, side, units_per_metre):
     source_set = {tuple(np.round(p, 4)) for p in source_p}
     dom = {i:max(w)[1] for i,w in weights.items()}
     output, uv, closed, faces, mapped, removed = [], [], [], [], {}, 0
-    for a,b,c,mat,_,_ in pfaces:
+    source_face_ids=[]
+    for face_id,(a,b,c,mat,_,_) in enumerate(pfaces):
         if mat != 0:
+            continue
+        if kept_faces is not None and face_id not in kept_faces:
             continue
         ws = [wedges[x] for x in (a,b,c)]
         ids = [w[0] for w in ws]
@@ -271,7 +300,12 @@ def author(source, psk, side, units_per_metre):
                 closed.append(sum(w*(wp @ skin[b])[:3] for w,b in weights[point])/total)
             face.append(mapped[key])
         faces.append(face)
+        source_face_ids.append(face_id)
     points, target = np.array(output), np.array(closed)
+    # The native cut includes blended cuff vertices: some rim points follow
+    # finger skin weights slightly. A frozen cap would tear when closing the
+    # fist. Retain the exact matching endpoint for every rim vertex.
+    closed_by_point={tuple(np.round(p,5)):t.copy() for p,t in zip(points,target)}
     loops = boundary_loops(points, faces)
     cap_triangles = 0
     # Cap ONLY cuffs: all loop points must be close to the wrist and farther
@@ -281,16 +315,20 @@ def author(source, psk, side, units_per_metre):
         if np.dot(centre-wrist_pos, forward) > 3.5 or np.linalg.norm(centre-wrist_pos) > 10.:
             raise ValueError('unexpected non-cuff boundary')
         centre_id = len(output)
-        output.append(centre); closed.append(centre); uv.append([.5,.5])
+        cap_target=np.mean([closed_by_point[tuple(np.round(p,5))] for p in loop],axis=0)
+        output.append(centre); closed.append(cap_target); uv.append([.5,.5])
         ring_ids = []
         for p in loop:
-            ring_ids.append(len(output)); output.append(p); closed.append(p); uv.append([.5,.5])
+            ring_ids.append(len(output)); output.append(p)
+            closed.append(closed_by_point[tuple(np.round(p,5))]); uv.append([.5,.5])
         for k,a in enumerate(ring_ids):
             faces.append([centre_id, ring_ids[(k+1)%len(ring_ids)], a])
             cap_triangles += 1
     points, target, faces = np.array(output), np.array(closed), np.array(faces)
     if boundary_loops(points, faces):
         raise ValueError('cap did not close mesh')
+    if boundary_loops(target, faces):
+        raise ValueError('cap did not follow the morphed cuff')
     points = (points-wrist_pos) @ basis / units_per_metre
     target = (target-wrist_pos) @ basis / units_per_metre
     n, nt = normals(points, faces), normals(target, faces)
@@ -308,6 +346,8 @@ def author(source, psk, side, units_per_metre):
                   bounds_metres=[points.min(0).tolist(), points.max(0).tolist()],
                   maximum_morph_metres=float(np.linalg.norm(target-points, axis=1).max()),
                   runtime_draws_per_visible_hand_per_eye=1, runtime_mesh_swaps=0)
+    report['source_face_ids']=source_face_ids
+    report['cut_source']='shared native face runs (glove plus wrist/cuff)' if kept_faces is not None else 'legacy dominant wrist subtree'
     report['wrist_raw_uu'] = wrist_pos.tolist()
     report['raw_to_grip_basis'] = basis.tolist()
     report['cap_start_triangle'] = len(faces)-cap_triangles
@@ -356,10 +396,13 @@ def write_glb(path, p, target, n, nt, uv, f, texture=None):
                            struct.pack('<II',len(raw),0x004e4942)+raw)
 
 
-def write_cache(path, p, target, n, nt, uv, f):
-    # SVRG v1, 16-byte header, 14 little-endian floats/vertex, uint32 indices.
+def write_cache(path, p, target, n, nt, uv, f, units_per_metre=52.5):
+    # SVRG v2: carry the baked conversion, preventing a stale/custom-scale
+    # cache from silently disagreeing with the runtime native hand size.
+    if not math.isfinite(units_per_metre) or not 10<=units_per_metre<=1000:
+        raise ValueError('invalid baked mesh scale')
     rows = np.column_stack([p,target-p,n,nt-n,uv]).astype('<f4')
-    Path(path).write_bytes(struct.pack('<4sIII',b'SVRG',1,len(p),f.size)+
+    Path(path).write_bytes(struct.pack('<4sIIIfI',b'SVRG',2,len(p),f.size,units_per_metre,0)+
                            rows.tobytes()+f.astype('<u4').tobytes())
 
 
@@ -367,6 +410,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--gloves',type=Path,required=True)
     ap.add_argument('--psk',type=Path,required=True)
+    ap.add_argument('--cooked',type=Path,required=True,help='offline decompressed RvGame to prove native face order')
+    ap.add_argument('--native-cut',type=Path,default=Path(__file__).resolve().parents[2]/'spikes/view_matrix/glove_isolate.h')
     ap.add_argument('--output',type=Path,required=True)
     ap.add_argument('--texture',type=Path,required=True,help='private inview_glove_d PNG')
     ap.add_argument('--units-per-metre',type=float,default=52.5,
@@ -380,6 +425,7 @@ def main():
         ap.error('output must be outside source pack')
     out.mkdir(parents=True,exist_ok=True)
     psk = read_psk(args.psk)
+    kept_faces,cut_report=native_cut(args.native_cut,args.cooked,psk[-1])
     from PIL import Image
     import io
     image = Image.open(args.texture).convert('RGBA')
@@ -389,13 +435,13 @@ def main():
     image.save(png,format='PNG')
     (out/'glove.svrt').write_bytes(struct.pack('<4sIII',b'SVRT',1,*image.size)+image.tobytes('raw','BGRA'))
     report = dict(psk_sha256=sha(args.psk),texture_sha256=sha(args.texture),
-                  runtime_texture_sha256=sha(out/'glove.svrt'),hands={})
+                  runtime_texture_sha256=sha(out/'glove.svrt'),native_cut=cut_report,hands={})
     for side in ('left','right'):
         start = time.perf_counter()
-        result = author(args.gloves/f'glove_{side}.glb',psk,side,args.units_per_metre)
+        result = author(args.gloves/f'glove_{side}.glb',psk,side,args.units_per_metre,kept_faces)
         p,target,n,nt,uv,f,r = result
         write_glb(out/f'glove_{side}.glb',p,target,n,nt,uv,f,png.getvalue())
-        write_cache(out/f'glove_{side}.svrg',p,target,n,nt,uv,f)
+        write_cache(out/f'glove_{side}.svrg',p,target,n,nt,uv,f,args.units_per_metre)
         r['output_glb_sha256'] = sha(out/f'glove_{side}.glb')
         r['output_cache_sha256'] = sha(out/f'glove_{side}.svrg')
         r['offline_prepare_ms'] = (time.perf_counter()-start)*1000
