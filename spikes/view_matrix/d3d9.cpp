@@ -25188,14 +25188,18 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
         }
         return;
     }
-    const int hp = *reinterpret_cast<int*>(pawn + g_offHealth);
-    const int maxHp = *reinterpret_cast<int*>(pawn + g_offHealthMax);
-    const int filled = healthbar::FilledSegments((float)hp, (float)maxHp);
+    const std::int32_t hpBits = *reinterpret_cast<std::int32_t*>(pawn + g_offHealth);
+    const std::int32_t maxBits = *reinterpret_cast<std::int32_t*>(pawn + g_offHealthMax);
+    // Health fields are floats in memory: int reads keep ordering (enough for
+    // the heal window) but destroy ratios, pinning a segment bar near full.
+    const float hp = healthbar::HpFromBits(hpBits);
+    const float maxHp = healthbar::HpFromBits(maxBits);
+    const int filled = healthbar::FilledSegments(hp, maxHp);
     if (filled < 0) {
         g_hbShown = false;
         if (!InterlockedCompareExchange(&g_hbUnknownSaid, 0, 0)) {
             InterlockedExchange(&g_hbUnknownSaid, 1);
-            Log("health plate: HP unknown (%d/%d) - hidden until readable", hp, maxHp);
+            Log("health plate: HP unknown (%f/%f) - hidden until readable", (double)hp, (double)maxHp);
         }
         return;
     }
@@ -25205,13 +25209,13 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     if (!g_hbShown && healthbar::FaceRaiseShow(hand.x, hand.y, hand.z, head.x, head.y, head.z,
                                                fwd.x, fwd.y, fwd.z)) {
         g_hbShown = true;
-        Log("health plate: shown (face-raise) hp=%d/%d", hp, maxHp);
+        Log("health plate: shown (face-raise) hp=%f/%f", (double)hp, (double)maxHp);
     } else if (g_hbShown && healthbar::FaceRaiseHide(hand.x, hand.y, hand.z, head.x, head.y, head.z,
                                                      fwd.x, fwd.y, fwd.z)) {
         g_hbShown = false;
     }
     const bool twoHand = Rd(g_twoHandActive) && WeaponInHands();
-    if (twoHand && !g_hbTwoWas) Log("health plate: shown (two-hand) hp=%d/%d", hp, maxHp);
+    if (twoHand && !g_hbTwoWas) Log("health plate: shown (two-hand) hp=%f/%f", (double)hp, (double)maxHp);
     g_hbTwoWas = twoHand;
     if (!g_hbShown && !twoHand) return;
     const plates_atlas::Rect* bgR = plates_atlas::Find(g_platesSheet, "plate-health-bg");

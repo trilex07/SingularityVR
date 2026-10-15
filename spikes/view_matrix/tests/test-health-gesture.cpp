@@ -24,7 +24,13 @@ int main() {
     Expect(FaceRaiseHide(0.0f, -0.05f, -0.90f, 0, 0, 0, 0, 0, -1), "outer radius hides");
     Expect(FaceRaiseHide(0.0f, -0.05f, 0.30f, 0, 0, 0, 0, 0, -1), "behind face hides");
     // Segment mapping.
-    Expect(FilledSegments(100.0f, 100.0f) == 11, "full bar");
+    // Native floats travel as int32 reads: reinterpret before scaling.
+    Expect(HpFromBits((std::int32_t)0x43100000) == 144.0f, "hp bits to float");
+    Expect(FilledSegments(HpFromBits((std::int32_t)0x43100000),
+                          HpFromBits((std::int32_t)0x43100000)) == 11, "full hp bits full bar");
+    Expect(FilledSegments(HpFromBits((std::int32_t)0x42900000),
+                          HpFromBits((std::int32_t)0x43100000)) == 6, "half hp bits half bar");
+    Expect(HpFromBits(1125515264) > 0.0f, "session bits positive float");
     Expect(FilledSegments(0.0f, 100.0f) == 0, "empty bar");
     Expect(FilledSegments(50.0f, 100.0f) == 6, "half rounds to six");
     Expect(FilledSegments(150.0f, 100.0f) == 11, "overheal clamps full");
