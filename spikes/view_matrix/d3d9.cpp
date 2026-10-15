@@ -16,6 +16,8 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "weapon_wheel_catalog_load.h"
 #include "weapon_wheel_atlas.h"
 #include "weapon_wheel_layout.h"
+#include "health_gesture.h"
+#include "plates_atlas.h"
 #include <wincodec.h>
 #include "grip_latch.h"
 #include "glove_isolate.h"
@@ -112,6 +114,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "vfx/vfx_host.h"
 #include "vfx/vfx_draw.h"
 #include "vfx/vfx_atlas_io.h"
+#include <wincodec.h> // plates atlas PNG decode (linked windowscodecs/ole32)
 #include "hotpath_sampler.h"
 static hotpath::sampler g_hotPathSampler;
 static bool g_gameplayHotPathAllowed=false;
@@ -5358,6 +5361,7 @@ void StampCaptureState(CopySlot& cap) {
 // that is normal startup, not a failure.
 void DrawLaserSight(IDirect3DDevice9* dev);
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
+void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
@@ -5392,6 +5396,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     const bool ownOverlayScene = SUCCEEDED(dev->BeginScene());
     DrawLaserSight(dev);
     DrawWristHealth(dev);
+    DrawHealthPlate(dev);
     DrawWeaponWheel(dev);
     DrawVfxOverlay(dev);
     DrawVrContextPrompt(dev);
@@ -24247,6 +24252,17 @@ static void WorldToClip(const float* m, int conv, const float pt[3], float out[4
 struct LaserVtx { float x, y, z, rhw; DWORD c; };
 
 volatile LONG g_wristHealth=1;
+// Katorga health plate (left glove, gesture-gated). Default OFF: the accepted
+// run-217 wrist band above is untouched. Plates atlas lives in
+// vr-assets/hud/katorga/plates-atlas/ (installed data, Steam only).
+volatile LONG g_healthPlate = 0;
+static char g_platesAssetRoot[MAX_PATH] = "vr-assets/hud/katorga/plates-atlas";
+static IDirect3DTexture9* g_platesTex = nullptr;
+static plates_atlas::Sheet g_platesSheet;
+static volatile LONG g_platesState = 0;   // 0 unloaded, 1 ready, -1 failed (logged once)
+static volatile LONG g_hbUnknownSaid = 0; // one-shot unreadable-HP log latch
+static bool g_hbShown = false;            // face-raise hysteresis (render thread only)
+static bool g_hbTwoWas = false;           // two-hand rising edge (render thread only)
 IDirect3DStateBlock9* g_wristState = nullptr;
 void DrawLaserSight(IDirect3DDevice9* dev) {
     if (!InterlockedCompareExchange(&g_laserOn, 0, 0)) return;
@@ -25064,6 +25080,215 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
         Log(roundOn ? "weapon wheel: overlay active (round, right-hand anchor, %d sectors)"
             : katorgaIcons ? "weapon wheel: overlay active (Katorga icons, right-hand anchor, %d sectors)"
                            : "weapon wheel: overlay active (right-hand anchor, %d sectors)", slots);
+    }
+    g_wristState->Apply();
+    if (old) g_origSetRenderTarget(dev, 0, old);
+    dev->SetDepthStencilSurface(depth);
+    if (old) old->Release(); if (depth) depth->Release(); back->Release();
+}
+
+// Katorga plates atlas: lazy WIC load on the render thread, verified against
+// plates.json (dims + PNG sha). Any failure keeps state -1 and the plate
+// stays hidden (the accepted wrist band is unaffected). MANAGED pool: no
+// Reset handling needed.
+static void MaybeLoadPlatesAtlas(IDirect3DDevice9* dev) {
+    if (InterlockedCompareExchange(&g_platesState, 0, 0) != 0) return;
+    auto fail = [](const char* why) {
+        InterlockedExchange(&g_platesState, -1);
+        Log("health plate: atlas unavailable (%s) - plate hidden", why);
+    };
+    char dll[MAX_PATH]{};
+    HMODULE self = nullptr;
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCSTR)&MaybeLoadPlatesAtlas, &self) ||
+        !GetModuleFileNameA(self, dll, MAX_PATH)) { fail("module path"); return; }
+    char* slash = strrchr(dll, '\\');
+    if (!slash) { fail("module path"); return; }
+    *slash = 0;
+    std::string root = g_platesAssetRoot;
+    for (char& c : root) if (c == '/') c = '\\';
+    char jsonPath[MAX_PATH]{}, pngPath[MAX_PATH]{};
+    _snprintf_s(jsonPath, sizeof(jsonPath), _TRUNCATE, "%s\\%s\\plates.json", dll, root.c_str());
+    _snprintf_s(pngPath, sizeof(pngPath), _TRUNCATE, "%s\\%s\\katorga-plates-atlas.png", dll, root.c_str());
+    FILE* fj = nullptr;
+    std::string jstext;
+    if (fopen_s(&fj, jsonPath, "rb") == 0 && fj) {
+        char chunk[4096];
+        size_t n = 0;
+        while ((n = fread(chunk, 1, sizeof(chunk), fj)) > 0) jstext.append(chunk, n);
+        fclose(fj);
+    }
+    plates_atlas::Sheet sheet;
+    if (jstext.empty() || !plates_atlas::Parse(jstext.c_str(), sheet) ||
+        sheet.width <= 0 || sheet.width > 2048 || sheet.height <= 0 || sheet.height > 2048 ||
+        sheet.rects.empty()) { fail("plates.json"); return; }
+    CoInitializeEx(nullptr, COINIT_MULTITHREADED); // no-op if the game COM is already up
+    wchar_t wpng[MAX_PATH]{};
+    if (!MultiByteToWideChar(CP_ACP, 0, pngPath, -1, wpng, MAX_PATH)) { fail("wide path"); return; }
+    IWICImagingFactory* fac = nullptr;
+    IWICBitmapDecoder* dec = nullptr;
+    IWICBitmapFrameDecode* frame = nullptr;
+    IWICFormatConverter* conv = nullptr;
+    UINT pw = 0, ph = 0;
+    std::vector<BYTE> px;
+    bool ok = SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                                         IID_PPV_ARGS(&fac))) && fac &&
+              SUCCEEDED(fac->CreateDecoderFromFilename(wpng, nullptr, GENERIC_READ,
+                                                       WICDecodeMetadataCacheOnDemand, &dec)) && dec &&
+              SUCCEEDED(dec->GetFrame(0, &frame)) && frame &&
+              SUCCEEDED(fac->CreateFormatConverter(&conv)) && conv &&
+              SUCCEEDED(conv->Initialize(frame, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone,
+                                         nullptr, 0.0, WICBitmapPaletteTypeCustom)) &&
+              SUCCEEDED(conv->GetSize(&pw, &ph)) &&
+              pw == (UINT)sheet.width && ph == (UINT)sheet.height;
+    if (ok) {
+        px.resize((size_t)pw * ph * 4);
+        ok = SUCCEEDED(conv->CopyPixels(nullptr, pw * 4, (UINT)px.size(), px.data()));
+    }
+    if (conv) conv->Release();
+    if (frame) frame->Release();
+    if (dec) dec->Release();
+    if (fac) fac->Release();
+    if (!ok) { fail("png decode"); return; }
+    IDirect3DTexture9* tex = nullptr;
+    if (FAILED(dev->CreateTexture(pw, ph, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, nullptr)) || !tex) {
+        fail("texture create");
+        return;
+    }
+    D3DLOCKED_RECT lr{};
+    if (FAILED(tex->LockRect(0, &lr, nullptr, 0))) { tex->Release(); fail("texture lock"); return; }
+    const BYTE* src = px.data();
+    for (UINT y = 0; y < ph; ++y)
+        memcpy((BYTE*)lr.pBits + (size_t)y * lr.Pitch, src + (size_t)y * pw * 4, (size_t)pw * 4);
+    tex->UnlockRect(0);
+    g_platesTex = tex;
+    g_platesSheet = sheet;
+    InterlockedExchange(&g_platesState, 1);
+    Log("health plate: atlas ready (%dx%d, %u rects)", pw, ph, (unsigned)sheet.rects.size());
+}
+
+// Left-glove Katorga health plate: bg quad + 11 stamped segment cells over a
+// left-hand anchor. Appears on face-raise (hysteresis) or while two-handing
+// the pistol. HP comes from the cached pawn (never a scan from rendering);
+// unknown HP hides the bar, never a guessed full one.
+void DrawHealthPlate(IDirect3DDevice9* dev) {
+    if (!Rd(g_healthPlate) || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
+        !g_handPositionValid[0] || !g_haveEyes || !g_origSetRenderTarget || !g_origDrawPrimUP) return;
+    if (InterlockedCompareExchange(&g_platesState, 0, 0) == 0) MaybeLoadPlatesAtlas(dev);
+    if (InterlockedCompareExchange(&g_platesState, 0, 0) != 1 || !g_platesTex) return;
+    if (g_offHealth < 0 || g_offHealthMax < 0) return;
+    const uintptr_t pawn = g_playerPawn; // Never initiate an object scan from overlay rendering.
+    if (!pawn || !Readable((void*)(pawn + g_offHealth), 4) ||
+        !Readable((void*)(pawn + g_offHealthMax), 4)) {
+        g_hbShown = false;
+        if (!InterlockedCompareExchange(&g_hbUnknownSaid, 0, 0)) {
+            InterlockedExchange(&g_hbUnknownSaid, 1);
+            Log("health plate: HP unreadable - hidden until readable");
+        }
+        return;
+    }
+    const int hp = *reinterpret_cast<int*>(pawn + g_offHealth);
+    const int maxHp = *reinterpret_cast<int*>(pawn + g_offHealthMax);
+    const int filled = healthbar::FilledSegments((float)hp, (float)maxHp);
+    if (filled < 0) {
+        g_hbShown = false;
+        if (!InterlockedCompareExchange(&g_hbUnknownSaid, 0, 0)) {
+            InterlockedExchange(&g_hbUnknownSaid, 1);
+            Log("health plate: HP unknown (%d/%d) - hidden until readable", hp, maxHp);
+        }
+        return;
+    }
+    const uipointer::V hand{ g_handLastPos[0].x, g_handLastPos[0].y, g_handLastPos[0].z };
+    const uipointer::V head{ g_headPosXR[0], g_headPosXR[1], g_headPosXR[2] };
+    const uipointer::V fwd = VrUiRotate(g_eyePose[0].orientation, { 0, 0, -1 });
+    if (!g_hbShown && healthbar::FaceRaiseShow(hand.x, hand.y, hand.z, head.x, head.y, head.z,
+                                               fwd.x, fwd.y, fwd.z)) {
+        g_hbShown = true;
+        Log("health plate: shown (face-raise) hp=%d/%d", hp, maxHp);
+    } else if (g_hbShown && healthbar::FaceRaiseHide(hand.x, hand.y, hand.z, head.x, head.y, head.z,
+                                                     fwd.x, fwd.y, fwd.z)) {
+        g_hbShown = false;
+    }
+    const bool twoHand = Rd(g_twoHandActive) && WeaponInHands();
+    if (twoHand && !g_hbTwoWas) Log("health plate: shown (two-hand) hp=%d/%d", hp, maxHp);
+    g_hbTwoWas = twoHand;
+    if (!g_hbShown && !twoHand) return;
+    const plates_atlas::Rect* bgR = plates_atlas::Find(g_platesSheet, "plate-health-bg");
+    const plates_atlas::Rect* fullR = plates_atlas::Find(g_platesSheet, "seg-full");
+    const plates_atlas::Rect* emptyR = plates_atlas::Find(g_platesSheet, "seg-empty");
+    if (!bgR || !fullR || !emptyR) return; // atlas mismatch: hide (logged at load)
+    const uipointer::V anchor{ hand.x, hand.y + (twoHand ? 0.12f : 0.08f), hand.z };
+    IDirect3DSurface9* back = nullptr;
+    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
+    D3DSURFACE_DESC d{};
+    if (FAILED(back->GetDesc(&d)) || d.Width < 8 || d.Height < 8) {
+        back->Release();
+        return;
+    }
+    IDirect3DSurface9* old = nullptr;
+    IDirect3DSurface9* depth = nullptr;
+    dev->GetRenderTarget(0, &old);
+    dev->GetDepthStencilSurface(&depth);
+    if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) {
+        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    if (FAILED(g_wristState->Capture())) {
+        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    dev->SetDepthStencilSurface(nullptr);
+    g_origSetRenderTarget(dev, 0, back);
+    D3DVIEWPORT9 vp{0, 0, d.Width, d.Height, 0.0f, 1.0f};
+    dev->SetViewport(&vp);
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetRenderState(D3DRS_ZENABLE, FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+    dev->SetTexture(0, g_platesTex);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    struct PlateVtx { float x, y, z, rhw; DWORD c; float u, v; };
+    const float AW = (float)g_platesSheet.width, AH = (float)g_platesSheet.height;
+    const int plateW = std::max(64, (int)(d.Height * 0.18f));
+    const int plateH = std::max(10, plateW * 330 / 2001);
+    for (int eye = 0; eye < 2; ++eye) {
+        uipointer::ScreenPoint p;
+        if (!VrUiProjectEye(eye, anchor, p)) continue;
+        const float cx = (eye + p.u) * d.Width * 0.5f;
+        const float cy = p.v * d.Height;
+        const float x0 = cx - plateW * 0.5f, y0 = cy - plateH * 0.5f;
+        const float x1 = cx + plateW * 0.5f, y1 = cy + plateH * 0.5f;
+        PlateVtx v[4] = {
+            { x0, y0, 0, 1, 0xFFFFFFFF, bgR->x / AW, bgR->y / AH },
+            { x1, y0, 0, 1, 0xFFFFFFFF, (bgR->x + bgR->w) / AW, bgR->y / AH },
+            { x0, y1, 0, 1, 0xFFFFFFFF, bgR->x / AW, (bgR->y + bgR->h) / AH },
+            { x1, y1, 0, 1, 0xFFFFFFFF, (bgR->x + bgR->w) / AW, (bgR->y + bgR->h) / AH },
+        };
+        g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(PlateVtx));
+        for (int i = 0; i < healthbar::SegmentSlots(); ++i) {
+            float fx0 = 0, fy0 = 0, fx1 = 0, fy1 = 0;
+            healthbar::SlotFrac(i, fx0, fy0, fx1, fy1);
+            const plates_atlas::Rect* cell = (i < filled) ? fullR : emptyR;
+            const float sx0 = x0 + fx0 * plateW, sy0 = y0 + fy0 * plateH;
+            const float sx1 = x0 + fx1 * plateW, sy1 = y0 + fy1 * plateH;
+            PlateVtx s[4] = {
+                { sx0, sy0, 0, 1, 0xFFFFFFFF, cell->x / AW, cell->y / AH },
+                { sx1, sy0, 0, 1, 0xFFFFFFFF, (cell->x + cell->w) / AW, cell->y / AH },
+                { sx0, sy1, 0, 1, 0xFFFFFFFF, cell->x / AW, (cell->y + cell->h) / AH },
+                { sx1, sy1, 0, 1, 0xFFFFFFFF, (cell->x + cell->w) / AW, (cell->y + cell->h) / AH },
+            };
+            g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, s, sizeof(PlateVtx));
+        }
     }
     g_wristState->Apply();
     if (old) g_origSetRenderTarget(dev, 0, old);
@@ -28761,6 +28986,20 @@ void LoadIniSettings() {
         Rd(g_vrMenuLaser),laserOpacity,laserWidth,Rd(g_vrShadows),Rd(g_vrTranslationStabilization));
     Log("shadow sampling: ShadowMode=%ld (0=full split 1=mono sample 2=drop sample 3=protect light-space; hub ADVANCED page)",Rd(g_shadowMode));
     g_wristHealth = GetPrivateProfileIntA("Render", "WristHealth", 1, path) ? 1 : 0;
+    InterlockedExchange(&g_healthPlate,
+        GetPrivateProfileIntA("Render", "HealthPlateEnabled", 0, path) ? 1 : 0);
+    {
+        char platesRoot[MAX_PATH]{};
+        GetPrivateProfileStringA("Render", "KatorgaPlatesAssetRoot",
+                                 "vr-assets/hud/katorga/plates-atlas", platesRoot, sizeof(platesRoot), path);
+        size_t rl = strlen(platesRoot);
+        if (rl > 0 && rl < sizeof(g_platesAssetRoot)) {
+            memcpy(g_platesAssetRoot, platesRoot, rl + 1);
+            for (size_t i = 0; i < rl; ++i)
+                if (g_platesAssetRoot[i] == '/') g_platesAssetRoot[i] = '\\';
+        }
+    }
+    Log("health plate: %s (plates root %s)", Rd(g_healthPlate) ? "ENABLED" : "off", g_platesAssetRoot);
     Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld, scene trace=%ld",
         Rd(g_wristHealth),Rd(g_renderEvidence),Rd(g_sceneModeTrace));
     Log("cutscene presentation: %s, cinema matte=%s (VR panel rows)",

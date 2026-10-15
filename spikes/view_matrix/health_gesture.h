@@ -59,4 +59,16 @@ inline int FilledSegments(float hp, float maxHp) {
     return (int)std::lround(hp * (float)n / maxHp);
 }
 
+// Slot quad fractions of the plate, measured from the mockup PNG
+// (plate 2001x330 at (84,183); slot pitch 142.9 px; frames y 246..500).
+// Slot i spans [x0,x1]x[y0,y1] in plate UV space. Indices clamp.
+inline void SlotFrac(int i, float& x0, float& y0, float& x1, float& y1) {
+    if (i < 0) i = 0;
+    if (i >= SegmentSlots()) i = SegmentSlots() - 1;
+    x0 = 0.1589f + (float)i * 0.0714f;
+    x1 = x0 + 0.0715f;
+    y0 = 0.191f;
+    y1 = 0.961f;
+}
+
 } // namespace healthbar

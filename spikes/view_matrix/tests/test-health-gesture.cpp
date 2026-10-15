@@ -35,6 +35,23 @@ int main() {
         Expect(FilledSegments(nan, 100.0f) == -1, "NaN hp unknown");
         Expect(FilledSegments(50.0f, nan) == -1, "NaN max unknown");
     }
+    // Slot fractions stay inside the plate and tile left to right.
+    {
+        float x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+        SlotFrac(0, x0, y0, x1, y1);
+        Expect(x0 > 0.15f && x0 < 0.17f && x1 > x0, "slot 0 fractions");
+        float px1 = 0;
+        SlotFrac(10, x0, y0, x1, y1);
+        px1 = x1;
+        Expect(px1 < 1.0f && y0 > 0.18f && y1 < 0.97f, "slot 10 inside plate");
+        float ax0 = 0, ay0 = 0, ax1 = 0, ay1 = 0, bx0 = 0, by0 = 0, bx1 = 0, by1 = 0;
+        SlotFrac(3, ax0, ay0, ax1, ay1);
+        SlotFrac(4, bx0, by0, bx1, by1);
+        Expect(bx0 + 0.001f >= ax1 && ay0 == by0 && ay1 == by1, "slots tile in order");
+        SlotFrac(-5, ax0, ay0, ax1, ay1);
+        SlotFrac(99, bx0, by0, bx1, by1);
+        Expect(ax0 >= 0.0f && bx1 <= 1.0f, "slot indices clamp");
+    }
     if (g_fails == 0) std::puts("health bar: face-raise gesture + segments L1");
     return g_fails == 0 ? 0 : 1;
 }

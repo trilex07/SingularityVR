@@ -49,3 +49,10 @@ render (bg quad + 11 stamped seg cells), `[Render] HealthBarEnabled=0`
 default OFF with lease for L3, L2 build, deploy, headset placement tuning
 (face-raise vs two-hand offsets). AMMO-style fabrication ban applies to
 segments: unknown HP hides the bar, never a guessed full one.
+
+## RUNTIME (this change)
+
+- `DrawHealthPlate` after the squares wheel in the copy path (same BeginScene block, state block, per-eye projection); physical left hand anchor (+8 cm face mode, +12 cm two-hand), plate width 18% frame height, bg + 11 stamped seg cells, white tint, alpha blend. Accepted run-217 band untouched.
+- HP from the cached pawn on the render thread (no scans; Readable guards); unknown HP hides the bar with a one-shot log. Visibility: face-raise hysteresis (`g_hbShown`, render thread) OR two-hand + weapon in hands. Bounded logs: atlas ready, shown edges with hp/max.
+- `MaybeLoadPlatesAtlas`: lazy WIC BGRA decode, dims verified vs JSON, MANAGED texture; any failure hides the plate for the session. `[Render] HealthPlateEnabled=0` default OFF + `KatorgaPlatesAssetRoot` path key. build.ps1 links windowscodecs/ole32.
+- Left-handed mode caveat: physical left hand (index 0) is the anchor regardless of AimHand mirror.

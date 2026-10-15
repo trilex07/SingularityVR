@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 health-bar RUNTIME implemented, L1_PASS + L2_PASS.
+DrawHealthPlate (plates atlas bg + 11 seg cells, left-hand anchor, gesture
+hysteresis + two-hand, cached-pawn HP, unknown hides) behind
+[Render] HealthPlateEnabled=0; accepted wrist band untouched. L1: gesture 24
++ plates 10 checks PASS. L2: x86 PE32 /O2, static analysis clean (candidate
+SHA after clean-tree rebuild). L3 deploy pending (replaces wheel DLL in
+Steam until wheel PR merges — user warned). See docs/health-bar-glove.md.
+Plates atlas installed (Steam-only data): 512x256 PNG + plates.json (3 rects,
+sha verified), 11 segment slots per mockup measurement. Prior history.
+
 LATEST 2026-10-15 wheel PR PREPARED, not yet created: `gh` has no auth in
 this session (push works, PR creation needs user-side login). Branch
 fix/hud-3d-textures pushed (17 commits over origin/main). User creates via
