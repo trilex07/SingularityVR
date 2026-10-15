@@ -7,6 +7,8 @@ plus closed cap: 3694 original +98 cap triangles, one native draw/eye; same
 native scale chain. Per-hand finger poses use real bind hierarchy. Held gun,
 TMD, world/shadow/menu/cine excluded. L1_PASS: native pose/IB guard/malformed
 data/101 analog levels, original hand regressions, source topology + axial rays.
+L2_PASS clean 6a7f46b /O2 x86 PE32; DLL SHA256
+0491CEB351998317E8D93D82D3C7439E254291A9996CF1510D28A9B42B45633C.
 Full runtime appearance remains UNVERIFIED. ZERO Steam. See
 docs/glove-native-draw.md; previous native-match GLB appearance is rejected.
 

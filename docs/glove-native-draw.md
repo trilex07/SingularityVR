@@ -74,6 +74,13 @@ source/quaternion/topology tests. Both cuffs are welded closed at open/fist;
 axial CPU rays hit cap at 6.84/6.95 UU rather than the far hand at 19.38/19.16.
 Synthetic native pose CPU =0.0051 ms; not GPU timing or no-hitch proof.
 
+L2_PASS clean source `6a7f46b56d189be730edcc0e14041734cfa8f287`, x86 PE32
+014C/010B, `/O2`; DLL SHA256
+`0491CEB351998317E8D93D82D3C7439E254291A9996CF1510D28A9B42B45633C`.
+No new warnings identify `glove_native.h`; existing unrelated build/analyzer
+warnings remain. Local complete snapshot: `build/gloves/native-ue3-candidate/`.
+This docs receipt is a later commit, not a different compiled source.
+
 Private prepared data: `build/gloves/native-ue3/`, including topology-only PNG,
 source hashes, receipt and axial rays. Cache SHA256:
 `B4564A69AF904DDE7BE9077EBBC96677D93B42E104DEDD93F94B6BF8ACE46C04`.
