@@ -1,19 +1,12 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 wheel COMMIT FIX DEPLOYED (DLL E90B1E9C/source f8920bc,
-clean tree, built==installed; backup 20261015-102632). Log analysis before
-the PR proved every commit used sel=0 (Update zeroes selection on close):
-highlights without switching, since the FSM was written. Fix reads the live
-selection mirror; COMMIT log prints sector+pulses. PR ON HOLD for one short
-switching test: hold gun A, R3+hand to gun B, release, B in hands, exit. Log
-must show select-sector + DIRECT sector=N + LANDED + visible switch. Live:
-deployment/hands-dubbing/ww-commitfix-20261015/live.json. Prior history.
-x86 PE32 /O2, clean tree; built==installed hash-verified). Backup
-20261015-101700 (prior C1974AFF). INI lease carried over; atlas icons already
-installed. Live record: deployment/hands-dubbing/ww-round3-20261015/live.json.
-Need (both pads on): 4 gun wedges with held brighter, unowned wedges empty,
-hand move commits pointed gun, tap R3 = no switch, normal exit. Log must show
-select-sector source (hand/stick) + COMMIT. Prior history.
+LATEST 2026-10-15 wheel PR OPENED (user accepts visuals; switching test
+deferred — single-weapon save). denoted in docs/wheel-round-layout.md OPEN
+TEST DEBT: multi-weapon switch (select+DIRECT+LANDED+visible change),
+Seeker/TMD sectors, 6 slots, ammo. Wheel visuals (ring, 4 gun wedges, held
+brighter, unowned empty, labels, silhouette icons, hand highlight):
+PHYSICALLY_VERIFIED by user in headset. Switching logic: IMPLEMENTED +
+L1/L2 only (commit-mirror fix in, L3 evidence pending). Prior history.
 
 LATEST 2026-10-15 wheel ICONS installed (no DLL change): 6 weapon silhouettes
 cut from references/95f791be-....png into the Katorga atlas reserved row

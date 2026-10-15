@@ -92,3 +92,9 @@ User: hand tracking felt off (retest pending - left controller was off); wheel s
 ## COMMIT FIX (2026-10-15, found by log analysis before PR)
 
 The close edge in `weaponwheel::Update` resets `state.selection = 0` before returning `Commit`, so the runtime read `sel = 0` on every commit: the wheel highlighted but never switched (legacy pulses 0; direct-select always targeted position 0). Pre-existing since the FSM was written, not a round-layout regression. Fix: commit reads the live `g_weaponWheelSelection` mirror (last SelectionChanged, cleared only on Open); COMMIT log prints sector + pulses. Falsifier: L3 must show `COMMIT sector=N`, `DIRECT sector=N verts A->B steps=K`, `direct-select LANDED on gunVerts=B`, and the held gun visibly changes.
+
+## OPEN TEST DEBT (2026-10-15, required future tests)
+
+Verified by user in headset: round wheel renders (ring, 4 gun wedges, held brighter, unowned empty), catalog labels, silhouette icons, hand/stick highlight. NOT verified (user save holds a single weapon): an actual weapon SWITCH with 2+ owned guns.
+
+Required future test (multi-weapon save): hold gun A, R3 + hand/stick to gun B, release, B visibly in hands, normal exit. session.log must show `select sector=N`, `DIRECT sector=N verts A->B steps=K`, `direct-select LANDED on gunVerts=B`, and `COMMIT sector=N`. Also still open: Seeker/TMD sector switching (mechanism UNKNOWN, icons reserved), 6-slot default, ammo counts (AMMO_UNKNOWN).
