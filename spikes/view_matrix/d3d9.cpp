@@ -25412,7 +25412,20 @@ static void MaybeLoadPlatesAtlas(IDirect3DDevice9* dev) {
 // unknown HP hides the bar, never a guessed full one.
 void DrawHealthPlate(IDirect3DDevice9* dev) {
     if (!Rd(g_healthPlate) || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
-        !g_handPositionValid[0] || !g_haveEyes || !g_origSetRenderTarget || !g_origDrawPrimUP) return;
+        !g_handPositionValid[0] || !g_haveEyes || !g_origSetRenderTarget || !g_origDrawPrimUP) {
+        // MAIN falsifier probe: names the exact blocking gate (one line per
+        // session). A full gameplay session without any plate line means this
+        // fired every frame — read the flags, do not guess placement.
+        static bool saidGate = false;
+        if (!saidGate) {
+            saidGate = true;
+            Log("health plate: gate blocked (flag=%d vr=%d dup=%d paused=%d hand=%d eyes=%d)",
+                (int)Rd(g_healthPlate), VrModeOn() ? 1 : 0, (int)Rd(g_dupDraws),
+                (int)Rd(g_gamePaused), g_handPositionValid[0] ? 1 : 0,
+                g_haveEyes ? 1 : 0);
+        }
+        return;
+    }
     if (InterlockedCompareExchange(&g_platesState, 0, 0) == 0) MaybeLoadPlatesAtlas(dev);
     if (InterlockedCompareExchange(&g_platesState, 0, 0) != 1 || !g_platesTex) return;
     if (g_offHealth < 0 || g_offHealthMax < 0) return;
@@ -25651,7 +25664,18 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     if (!Rd(g_ammoPlate) || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
         Rd(g_weaponWheelOpen) || !WeaponInHands() ||
         !g_handPositionValid[AimHand()] || !g_haveEyes ||
-        !g_origSetRenderTarget || !g_origDrawPrimUP) return;
+        !g_origSetRenderTarget || !g_origDrawPrimUP) {
+        static bool saidGate = false;
+        if (!saidGate) {
+            saidGate = true;
+            Log("ammo plate: gate blocked (flag=%d vr=%d dup=%d paused=%d wheel=%d armed=%d hand=%d eyes=%d)",
+                (int)Rd(g_ammoPlate), VrModeOn() ? 1 : 0, (int)Rd(g_dupDraws),
+                (int)Rd(g_gamePaused), (int)Rd(g_weaponWheelOpen),
+                WeaponInHands() ? 1 : 0, g_handPositionValid[AimHand()] ? 1 : 0,
+                g_haveEyes ? 1 : 0);
+        }
+        return;
+    }
     if (InterlockedCompareExchange(&g_ammoArtState, 0, 0) == 0) MaybeLoadAmmoArt(dev);
     if (InterlockedCompareExchange(&g_ammoArtState, 0, 0) != 1) return;
     const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
@@ -25727,8 +25751,11 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
     dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
     struct AmmoVtx { float x, y, z, rhw; DWORD c; float u, v; };
-    const int plateW = std::max(64, (int)(d.Height * 0.17f));
-    const int plateH = std::max(21, plateW * 724 / 2172);
+    // Fallback size (~5% under the previous 0.17H). Per eye below, the plate
+    // is re-anchored to a constant 0.19m world width, so it shrinks with
+    // distance instead of looking bigger as the gun moves away (user 2026-10-15).
+    int plateW = std::max(64, (int)(d.Height * 0.16f));
+    int plateH = std::max(21, plateW * 724 / 2172);
     // Cover baked digit bands always; red warning box iff 2 or fewer rounds
     // remain. The white mag cell is never covered: the left mag icon stays
     // visible in both states (user 2026-10-15).
@@ -25752,6 +25779,28 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
         uipointer::ScreenPoint p;
         if (!VrUiProjectEye(eye, hand, p)) continue;
         ammoProjFail = false;
+        {
+            // World-anchored width: project a 0.5m probe along this eye's
+            // right axis; px-per-metre here scales the constant 0.19m plate.
+            // Probe failure keeps the fallback size above.
+            const uipointer::V rgt = VrUiRotate(g_eyePose[eye].orientation, { 1, 0, 0 });
+            const uipointer::V probe{ hand.x + rgt.x * 0.5f, hand.y + rgt.y * 0.5f,
+                                      hand.z + rgt.z * 0.5f };
+            uipointer::ScreenPoint p2;
+            if (VrUiProjectEye(eye, probe, p2)) {
+                const float du = (p2.u - p.u) * d.Width * 0.5f;
+                const float dv = (p2.v - p.v) * (float)d.Height;
+                const float pxM = 2.0f * sqrtf(du * du + dv * dv);
+                if (pxM > 1.0f) {
+                    int w = (int)(0.19f * pxM);
+                    if (w < 64) w = 64;
+                    const int maxW = (int)(d.Height * 0.30f);
+                    if (w > maxW) w = maxW;
+                    plateW = w;
+                    plateH = std::max(21, plateW * 724 / 2172);
+                }
+            }
+        }
         const float cx = (eye + p.u) * d.Width * 0.5f;
         const float cy = p.v * d.Height;
         if (!ammoDrewAny) { ammoDrewAny = true; ammoDrewCx = cx; ammoDrewCy = cy; }
@@ -25830,7 +25879,17 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
 void DrawHolsterMarker(IDirect3DDevice9* dev) {
     if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
         Rd(g_weaponWheelOpen) || !g_holsterEnabled || !WeaponInHands() ||
-        Rd(g_weaponHolstered) || !g_origDrawPrimUP) return;
+        Rd(g_weaponHolstered) || !g_origDrawPrimUP) {
+        static bool saidGate = false;
+        if (!saidGate) {
+            saidGate = true;
+            Log("holster marker: gate blocked (vr=%d dup=%d paused=%d wheel=%d holsterEn=%d armed=%d holstered=%d)",
+                VrModeOn() ? 1 : 0, (int)Rd(g_dupDraws), (int)Rd(g_gamePaused),
+                (int)Rd(g_weaponWheelOpen), g_holsterEnabled ? 1 : 0,
+                WeaponInHands() ? 1 : 0, (int)Rd(g_weaponHolstered));
+        }
+        return;
+    }
     int slot = -1;
     for (int i = 0; i < g_camMatUsed; ++i) if (g_camMats[i].valid) { slot = i; break; }
     if (slot < 0) return;

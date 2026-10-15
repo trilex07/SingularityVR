@@ -47,13 +47,19 @@ inline GlyphRect DigitGlyph(int d) {
 // Cover quads (plate fractions): baked digit bands. The mag cover extends to
 // y1=0.71 to also hide the baked cyan segment pips under the mag digits
 // (measured bright y210-236 on all four plates); the live digits sit above
-// them. The reserve bullets icon stays above its cover (icon bottom y178 vs
-// cover top y179) and is never hidden.
+// them. The reserve bullets icon bottoms (y178) dip ~3px into the widened
+// reserve cover top (y174.6); that fringe is dim icon glow, accepted to fully
+// enclose the digits halo.
 inline void MagCover(float& x0, float& y0, float& x1, float& y1) {
     x0 = 0.265f; y0 = 0.345f; x1 = 0.416f; y1 = 0.710f;
 }
+// Reserve digits ghost fix (user 2026-10-15: burnt "48" outline still
+// visible): the baked glyphs end 1px from the old cover (right x616 vs 617,
+// top y179 vs 179) so their glow halo bled past. Widened to enclose the
+// halo; bullets icon bottoms stay above y0 (gap rows y172-179 are the
+// dimmest on all four plates).
 inline void ReserveCover(float& x0, float& y0, float& x1, float& y1) {
-    x0 = 0.502f; y0 = 0.525f; x1 = 0.603f; y1 = 0.704f;
+    x0 = 0.494f; y0 = 0.512f; x1 = 0.606f; y1 = 0.720f;
 }
 inline void WhiteMagCover(float& x0, float& y0, float& x1, float& y1) {
     x0 = 0.095f; y0 = 0.330f; x1 = 0.210f; y1 = 0.620f;
