@@ -42,6 +42,19 @@ line, return to GameplayStereo with `cine off` drift lines and split draws;
 if still stuck (or any real cinematic loses cinema), the discriminator is
 wrong — report, do not expand the rule.
 
+## ROUND 2 (same session, second load): menu closes before the cut
+
+The leased flag did NOT fire: the failing cut read `menuClass=0` — the menu
+had already closed when the camera cut landed. Instantaneous menuClass
+cannot catch it. Added `MenuLoadLatch` (pure, L1-tested): frontend menu
+visited after gameplay arms it, GameplayStereo clears it, boot/pause menus
+never touch it. Policy now clears on `menuLoadClear &&
+((menuFocused && pawnSame) || menuSeenSinceGameplay)`, logged with
+`focused/latch/samePawn` evidence. Replayed the whole session trace: the
+latch is set exactly once (frontend quit-to-menu) and only the failing cut
+sees it set — zero false positives in-session. Pause-menu Load stays
+uncovered (no frontend phase); that is the next experiment if reported.
+
 ## GATES
 
 - L1: `test-cutscene-mono` gate cases (menu-load clears iff flag; Matinee
