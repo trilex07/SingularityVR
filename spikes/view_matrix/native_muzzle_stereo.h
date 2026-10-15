@@ -14,7 +14,7 @@ static unsigned dropped=0,aliases=0,refused=0,restoreFailed=0;
 static CapturePlan capture;
 static unsigned captureWeapon=0;
 static ULONGLONG probeStart=0;
-struct Witness {std::uint64_t vs=0,ps=0;unsigned vb=0,pb=0,slots=0;int camera=-1,alias=-1;
+struct Witness {std::uint64_t vs=0,ps=0;unsigned vb=0,pb=0,slots=0;int camera=-1,alias=-1,convention=-1;
     bool read=false,tracked=false;float gpu[16]{};};
 static Witness witness[128];static unsigned witnessCount=0,witnessOverflow=0;
 template<class Dev,class Slot> void Observe(Dev* dev,const Slot* slots,int n,bool allowed){
@@ -25,14 +25,15 @@ template<class Dev,class Slot> void Observe(Dev* dev,const Slot* slots,int n,boo
     for(int i=0;i<n&&i<32;++i)if(slots[i].valid){w.slots|=1u<<i;if((int)slots[i].reg==vs.camera)w.tracked=true;}
     if(vs.camera>=0&&SUCCEEDED(dev->GetVertexShaderConstantF((UINT)vs.camera,w.gpu,4))){
         w.read=true;w.alias=Alias(w.gpu,(unsigned)vs.camera,slots,n);
+        if(w.alias>=0)w.convention=slots[w.alias].conv;
     }
 }
 inline void DumpWitness(){
     if(!Probe())return;
     Log("native-fx: camera witness records=%u overflow=%u (StereoPair entry only; raw draws still in pass trace)",witnessCount,witnessOverflow);
     for(unsigned i=0;i<witnessCount;++i){const auto& w=witness[i];
-        Log("native-fx witness VS=%016llX VSBytes=%u PS=%016llX PSBytes=%u camera=%d tracked=%d validSlots=%08X read=%d alias=%d",
-            w.vs,w.vb,w.ps,w.pb,w.camera,w.tracked?1:0,w.slots,w.read?1:0,w.alias);
+        Log("native-fx witness VS=%016llX VSBytes=%u PS=%016llX PSBytes=%u camera=%d tracked=%d validSlots=%08X read=%d alias=%d sourceConv=%d",
+            w.vs,w.vb,w.ps,w.pb,w.camera,w.tracked?1:0,w.slots,w.read?1:0,w.alias,w.convention);
         if(w.read)for(unsigned r=0;r<4;++r)Log("native-fx matrix VS=%016llX PS=%016llX row=%u value=%.9g,%.9g,%.9g,%.9g",
             w.vs,w.ps,r,w.gpu[r*4],w.gpu[r*4+1],w.gpu[r*4+2],w.gpu[r*4+3]);
     }
@@ -63,9 +64,9 @@ inline void Release(){
     for(auto& shader:shaders){if(shader.object)shader.object->Release();shader={};}
     used=0;vs={};ps={};context=false;witnessCount=witnessOverflow=0;
 }
-inline void Configure(int mode,bool trace,const char* v,const char* p,unsigned vb,unsigned pb){
+inline void Configure(int mode,bool trace,const char* v,const char* p,unsigned vb,unsigned pb,int convention){
     Release();selected={};InterlockedExchange(&probe,trace?1:0);fault=false;capture={};captureWeapon=0;probeStart=0;InterlockedExchange(&shots,0);
-    if(mode==1||mode==2){Selection x;x.mode=mode;x.vsBytes=vb;x.psBytes=pb;
+    if(mode==1||mode==2){Selection x;x.mode=mode;x.vsBytes=vb;x.psBytes=pb;x.convention=convention;
         if(Hex(v,x.vs)&&Hex(p,x.ps)&&x.Valid())selected=x;}
     Log("native-fx: probe=%d mode=%d (0 unchanged,1 selected-pair drop,2 exact camera alias); no replacement FX",Probe()?1:0,selected.mode);
 }
@@ -79,7 +80,7 @@ template<class Dev,class Slot,class Upload> struct AliasScope {
         if(!allowed||selected.mode!=2||!Match()||vs.camera<0||!u)return;
         reg=(unsigned)vs.camera;
         if(reg>252||FAILED(d->GetVertexShaderConstantF(reg,gpu,4))){++refused;return;}
-        const int source=Alias(gpu,reg,s,n);if(source<0){++refused;return;}
+        const int source=Alias(gpu,reg,s,n);if(source<0||s[source].conv!=selected.convention){++refused;return;}
         for(int i=0;i<n;++i)if(!s[i].valid){index=i;break;}
         if(index<0&&n<cap)index=n++;
         if(index<0){++refused;return;}

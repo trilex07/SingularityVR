@@ -26,7 +26,7 @@ struct FakeShader: IUnknown {
     HRESULT GetFunction(void* p,UINT* n){++queries;if(fail||*n<sizeof(words))return E_FAIL;*n=sizeof(words);memcpy(p,words,sizeof(words));return S_OK;}
 };
 static void Init(Dev& d,Slot* slots,int& n){
-    using namespace nativefx;selected={11,22,128,256,2};fault=false;context=true;vs={};ps={};
+    using namespace nativefx;selected={11,22,128,256,2,1};fault=false;context=true;vs={};ps={};
     vs.hash=11;vs.bytes=128;vs.camera=12;ps.hash=22;ps.bytes=256;
     n=1;slots[0]={};slots[0].reg=0;slots[0].valid=true;slots[0].conv=1;
     for(unsigned i=0;i<4;++i)d.matrix[i*4+i]=slots[0].m[i*4+i]=1;
@@ -43,6 +43,7 @@ int main(){
     std::uint64_t h=7;assert(!Hex("0",h)&&h==7);assert(!Hex("0000000000000000",h));
     assert(!Hex("gggggggggggggggg",h));assert(Hex("CBF29CE484222325",h));assert(h==Hash("",0));
     assert(Hash("hello",5)==0xa430d84680aabd0bull);
+    {Selection unknown{11,22,128,256,2};assert(!unknown.Valid());unknown.convention=0;assert(unknown.Valid());}
     {FakeShader shader;selected={};probe=false;assert(!Describe(&shader,true).hash&&!shader.queries);
         probe=true;auto first=Describe(&shader,true);assert(first.camera==12&&first.bytes==88&&shader.refs==2);
         assert(Describe(&shader,true).hash==first.hash&&shader.queries==1&&used==1);
@@ -65,6 +66,8 @@ int main(){
     {Dev d;Slot s[3]{};int n;Init(d,s,n);s[1].reg=8;s[1].valid=false;n=2;Slot old=s[1];
         {Scope x(&d,s,n,3,&Upload,true);assert(x.changed&&n==2);}
         assert(n==2&&!memcmp(&s[1],&old,sizeof(old)));}
+    {Dev d;Slot s[3]{};int n;Init(d,s,n);selected.convention=0;
+        {Scope x(&d,s,n,3,&Upload,true);assert(!x.changed);}assert(!d.writes&&n==1);}
     {Dev d;Slot s[3]{};int n;Init(d,s,n);d.failWrite=true;{Scope x(&d,s,n,3,&Upload,true);assert(x.changed);}
         assert(fault&&n==1);const unsigned old=d.reads;{Scope x(&d,s,n,3,&Upload,true);assert(!x.changed);}assert(d.reads==old);}
     CapturePlan plan;for(unsigned i=0;i<89;++i)assert(!plan.Tick(true,0,false));assert(plan.Tick(true,0,false)==1);

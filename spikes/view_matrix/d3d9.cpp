@@ -30044,7 +30044,8 @@ void LoadIniSettings() {
         nativefx::Configure(GetPrivateProfileIntA("Diagnostic","NativeMuzzleStereoMode",0,path),
             GetPrivateProfileIntA("Diagnostic","NativeMuzzleProbe",0,path)!=0,vs,ps,
             GetPrivateProfileIntA("Diagnostic","NativeMuzzleVSBytes",0,path),
-            GetPrivateProfileIntA("Diagnostic","NativeMuzzlePSBytes",0,path));
+            GetPrivateProfileIntA("Diagnostic","NativeMuzzlePSBytes",0,path),
+            (int)GetPrivateProfileIntA("Diagnostic","NativeMuzzleMatrixConvention",-1,path));
     }
     g_cutsceneScreenDistanceMm=cinemascreen::ClampDistanceMm(
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));
