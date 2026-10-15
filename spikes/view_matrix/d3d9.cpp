@@ -100,6 +100,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
 #include <d3d9.h>
 #include "glove_renderer.h"
+#include "glove_native.h"
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include "bink_audio_observation.h"
 #include "bink_intro_audio.h"
@@ -5959,6 +5960,9 @@ XrQuaternionf g_handAimOrientation[2]={{0,0,0,1},{0,0,0,1}};
 // SIDE: separate grip-pose/analog consumer. Never writes the accepted gun/hand
 // pose, input buttons, holster state, or native skeletal palettes.
 static bool g_gloveExperiment=false,g_gloveCpuAttempted=false;
+static bool g_nativeGloveExperiment=false,g_nativeGlovePoseThisDraw=false;
+static nativegloves::Renderer g_nativeGloveRenderer;
+static bool NativeGlovesEligible();
 static bool g_glovePoseValid[2]{};
 static bool g_gloveReplacementSeen=false;
 static gloves::Renderer g_gloveRenderer;
@@ -9203,9 +9207,20 @@ bool InitXRInput() {
     if (!g_gloveCpuAttempted) {
         g_gloveCpuAttempted=true;
         char ini[MAX_PATH]{};
+        g_nativeGloveExperiment=IniPath(ini) &&
+            GetPrivateProfileIntA("Render","GloveNativeEnabled",0,ini)!=0;
         g_gloveExperiment=IniPath(ini) &&
             GetPrivateProfileIntA("Render","GloveRendererEnabled",0,ini)!=0;
-        if(g_gloveExperiment) {
+        if(g_nativeGloveExperiment) {
+            char path[MAX_PATH]{};
+            try {
+                g_gloveExperiment=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation\\native_hands.svni",path)&&
+                    g_nativeGloveRenderer.Load(path);
+            }catch(...){g_gloveExperiment=false;}
+            Log("native-gloves: startup %s triangles=%u cap=%u; original VB/material/shaders, no replacement texture; GLB suppressed",
+                g_gloveExperiment?"CPU ready":"FAILED, native baseline kept",
+                g_nativeGloveRenderer.Triangles(),g_nativeGloveRenderer.Caps());
+        }else if(g_gloveExperiment) {
             char root[MAX_PATH]{};
             const LARGE_INTEGER start=Now();
             try {
@@ -15697,6 +15712,7 @@ static void ApplyGloveIsolation(float changed[135][4], const unsigned* map, int 
 
 static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first, UINT triangles,
                                   float saved[135][4]) {
+    g_nativeGlovePoseThisDraw=false;
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::bone_palette);
     if (g_hotPathSampler.active())
         InterlockedExchange64(&g_hotPaletteFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
@@ -16091,6 +16107,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             Log("FingerScale fail-closed slots=%d (wrist descendants kept rigid)", fingerScaleRejected);
         }
     }
+    // Exact free noTMD draw only. Original GPU skin, UVs and material remain;
+    // finger rotations/cuff follow the same native wrist/scale as the gun rig.
+    if(gloves&&wristAnchor&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount&&
+       NativeGlovesEligible()&&g_nativeGloveRenderer.Ensure(dev))
+        g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,g_gloveBlend);
     // Internal palette writes must bypass camera/HUD upload classification.
     if(!g_origSetVSConstF || FAILED(g_origSetVSConstF(dev,5,&changed[0][0],regs))) {
         IndependentAuditCount(IHA_PALETTE,audit);
@@ -16365,7 +16386,15 @@ static bool FgIndependentHandsCandidate(UINT verts, UINT first, UINT triangles) 
 }
 
 static bool CustomGlovesEligible() {
-    return gloves::Eligible(g_gloveExperiment,g_gloveRenderer.Ready(),
+    return gloves::Eligible(g_gloveExperiment&&!g_nativeGloveExperiment,g_gloveRenderer.Ready(),
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo,Rd(g_gamePaused)!=0,
+        Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,g_xrSessionState==XR_SESSION_STATE_FOCUSED,
+        Rd(g_dupDraws)!=0,g_haveEyes&&g_eyePositionsValid,g_glovePoseValid[0],g_glovePoseValid[1],
+        Rd(g_weaponObj)!=0&&Rd(g_weaponHolstered)==0,Rd(g_twoHandActive)!=0);
+}
+static bool NativeGlovesEligible() {
+    return g_independentHands&&Rd(g_gloveIsolate)==2&&
+        gloves::Eligible(g_gloveExperiment&&g_nativeGloveExperiment,g_nativeGloveRenderer.Ready(),
         g_sceneMode.Current()==vrscene::Mode::GameplayStereo,Rd(g_gamePaused)!=0,
         Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,g_xrSessionState==XR_SESSION_STATE_FOCUSED,
         Rd(g_dupDraws)!=0,g_haveEyes&&g_eyePositionsValid,g_glovePoseValid[0],g_glovePoseValid[1],
@@ -18029,8 +18058,16 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         if (InterlockedCompareExchange(&reportedFaces, 1, 0) == 0)
             Log("GloveIsolation: drawing %u glove/cuff faces from audited noTMD section",gloveisolate::NativeHandFaceCount());
     }
+    const bool nativeCuff=independentRegs&&g_nativeGlovePoseThisDraw&&NativeGlovesEligible()&&
+        t==D3DPT_TRIANGLELIST&&(numVertices==3314||numVertices==2924)&&
+        startIndex==0&&primCount==4830&&nSeg==1&&segStart[0]==0&&segPrims[0]==4830;
+    nativegloves::IndexGuard<> nativeIndices(dev,nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr);
     const HRESULT dhr = StereoPair(dev, [&] {
         HRESULT hr = D3D_OK;
+        if(nativeIndices.valid){
+            ++g_nativeGloveRenderer.draws;
+            return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,0,g_nativeGloveRenderer.Triangles());
+        }
         if (isolateNoTmdFaces) {
             for (const auto& run : gloveisolate::kNoTmdHandFaces) {
                 const HRESULT h = g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
@@ -18046,8 +18083,16 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         }
         return hr;
     });
+    const HRESULT nativeRestore=nativeIndices.Restore();
     if(independentRegs)g_origSetVSConstF(dev,5,&independentSaved[0][0],independentRegs);
     if (boneRegN) g_origSetVSConstF(dev,boneRegLo, &savedBones[0][0], boneRegN);
+    if(nativeCuff){
+        static LONG saidNative=0;
+        if(!InterlockedExchange(&saidNative,1))
+            Log("native-gloves: scoped original-material draw=%d triangles=%u; same native size; wrist+short forearm; grip=%.3f/%.3f",
+                g_nativeGloveRenderer.draws!=0,g_nativeGloveRenderer.Triangles(),g_gloveBlend[0],g_gloveBlend[1]);
+    }
+    if(FAILED(nativeRestore)){g_gloveExperiment=false;return nativeRestore;}
 
     // ⭐ run 241: how many bones this mesh REALLY has, so the sweep range stops being a guess.
     // Reads the whole possible block once a second and reports the last register that is not all
@@ -24786,6 +24831,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 #include "desktop_mirror.h"
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    g_nativeGloveRenderer.ReleaseGPU();g_nativeGlovePoseThisDraw=false;
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();worldshadowfix::Release();
     PauseRttProbe::ReleaseContent();
@@ -24796,7 +24842,7 @@ void ReleaseWristResources() {
 }
 void DrawCustomGloves(IDirect3DDevice9* dev) {
     const bool replaced=g_gloveReplacementSeen;g_gloveReplacementSeen=false;
-    if(!g_gloveExperiment||!VrModeOn()||!g_origDrawIndexedPrimUP)return;
+    if(!g_gloveExperiment||g_nativeGloveExperiment||!VrModeOn()||!g_origDrawIndexedPrimUP)return;
     IDirect3DSurface9* back=nullptr;
     if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
     D3DSURFACE_DESC desc{};
