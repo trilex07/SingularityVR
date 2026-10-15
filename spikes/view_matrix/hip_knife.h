@@ -39,6 +39,10 @@ inline Pose Hip(V head,float bodyYaw,const Config& c={}){
 enum class Event {None,Picked,Sheathed,Reset,Swing};
 struct Frame {
     bool enabled=false,gameplay=false,focused=false,alive=false,nativeKnife=false;
+    // MAIN round 14: post-TMD mode. TMD!=0 with intact impulse mapping.
+    // Pickup then restricted to physical right hand (h==1) with no weapon
+    // in hand; pre-TMD path (nativeKnife) unchanged.
+    bool hasTMD=false,noWeapon=false;
     bool tracked[2]{},grip[2]{},free[2]{};
     Pose hand[2];V head;Pose hip;
     std::uint64_t nowMs=0;std::uint32_t pawn=0;
@@ -51,16 +55,20 @@ struct State {
     bool Pulse(std::uint64_t now)const{return held>=0&&now<pulseUntil;}
 };
 inline bool Context(const Frame& f){return f.enabled&&f.gameplay&&f.focused&&f.alive&&
-    f.nativeKnife&&f.pawn&&Finite(f.head)&&Finite(f.hip.p)&&Valid(f.hip.q);}
+    (f.nativeKnife||f.hasTMD)&&f.pawn&&Finite(f.head)&&Finite(f.hip.p)&&Valid(f.hip.q);}
 inline Event Update(State& s,const Frame& f,const Config& c={}){
     const bool valid=Context(f)&&(!s.pawn||s.pawn==f.pawn);
     if(!valid){const bool had=s.held>=0;s={};s.pawn=f.pawn;return had?Event::Reset:Event::None;}
+    // Post-TMD (hasTMD without nativeKnife): a left-held knife from before
+    // the TMD arrived must not survive; right-hand-only from here.
+    if(f.hasTMD&&!f.nativeKnife&&s.held>=0&&s.held!=1){s={};s.pawn=f.pawn;return Event::Reset;}
     s.pawn=f.pawn;
     bool edge[2]{};
     for(int h=0;h<2;++h){edge[h]=f.grip[h]&&!s.priorGrip[h];s.priorGrip[h]=f.grip[h];}
     if(s.held<0){
+        const bool postTMD=f.hasTMD&&!f.nativeKnife;
         for(int h=0;h<2;++h)if(edge[h]&&f.free[h]&&f.tracked[h]&&Finite(f.hand[h].p)&&Valid(f.hand[h].q)&&
-            Length(f.hand[h].p-f.hip.p)<=c.radius){
+            Length(f.hand[h].p-f.hip.p)<=c.radius&&(!postTMD||(h==1&&f.noWeapon))){
             s.held=h;s.pickedMs=f.nowMs;s.sampled=false;s.armed=false;s.pulseUntil=0;return Event::Picked;
         }
         return Event::None;

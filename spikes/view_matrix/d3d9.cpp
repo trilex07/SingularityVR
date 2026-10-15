@@ -10103,11 +10103,16 @@ void SyncXRInput(XrTime displayTime) {
         const uintptr_t pawn=g_playerPawn;f.pawn=(uint32_t)pawn;
         // These offsets already come from the UObject property resolver. Unknown
         // state is never treated as "no TMD" or "alive".
-        f.nativeKnife=pawn&&g_offTMD>=0&&Readable((void*)(pawn+g_offTMD),4)&&
-            *reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)==0&&
-            g_impulseBtnIdx>=0&&g_padButtons[g_impulseBtnIdx].mask==XI_RSHOULDER;
+        const bool impulseOk=g_impulseBtnIdx>=0&&g_impulseBtnIdx<kPadButtonCount&&
+            g_padButtons[g_impulseBtnIdx].mask==XI_RSHOULDER;
+        const bool tmdReadable=pawn&&g_offTMD>=0&&Readable((void*)(pawn+g_offTMD),4);
+        f.nativeKnife=tmdReadable&&*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)==0&&impulseOk;
+        // MAIN round 14: post-TMD mode (user request) — TMD present, knife still
+        // allowed but right hand (h==1) with no weapon in hand only.
+        f.hasTMD=tmdReadable&&*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)!=0&&impulseOk;
         f.alive=pawn&&g_offHealth>=0&&Readable((void*)(pawn+g_offHealth),4)&&
             *reinterpret_cast<const int*>(pawn+g_offHealth)>0;
+        f.noWeapon=!WeaponInHands()||Rd(g_weaponHolstered);
         f.head={g_headPosXR[0],g_headPosXR[1],g_headPosXR[2]};
         f.hip=hipknife::Hip(f.head,g_centreYaw,g_hipKnifeConfig);
         f.nowMs=GetTickCount64();
@@ -10137,12 +10142,13 @@ void SyncXRInput(XrTime displayTime) {
                 InterlockedExchange64(&g_lastMeleeEdgeMs,(LONG64)f.nowMs);
             }
         }
-        // MAIN round 11/12/13 pickup-refusal probe: grip held with a hand at the
-        // belt but no PICKED logs the Context terms. One line per DISTINCT
+        // MAIN round 11/12/13/14 pickup-refusal probe: grip held with a hand at
+        // the belt but no PICKED logs the Context terms. One line per DISTINCT
         // reason bitmask (not one-shot: an early offsets-unknown refusal must
         // not swallow a later post-TMD one). Raw TMD/health/offsets included
-        // so post-TMD (by design pre-TMD only) vs unknown-offsets vs dead
-        // can be told apart without a second build.
+        // so TMD-present vs unknown-offsets vs dead can be told apart without
+        // a second build. Round 14 adds hasTMD/noWeapon (post-TMD mode is
+        // right hand h==1 with no weapon; pre-TMD allows both hands).
         {
             static int saidMask=-1;
             if(g_hipKnifeState.held<0&&!hipknife::Context(f)){
@@ -10154,7 +10160,8 @@ void SyncXRInput(XrTime displayTime) {
                     if(f.grip[h])gripHeld=true;
                 }
                 if(handNear&&gripHeld){
-                    const int mask=(f.gameplay?1:0)|(f.focused?2:0)|(f.alive?4:0)|(f.nativeKnife?8:0);
+                    const int mask=(f.gameplay?1:0)|(f.focused?2:0)|(f.alive?4:0)|(f.nativeKnife?8:0)|
+                        (f.hasTMD?16:0)|(f.noWeapon?32:0);
                     if(mask!=saidMask){
                         saidMask=mask;
                         const int offT=g_offTMD, offH=g_offHealth;
@@ -10166,8 +10173,9 @@ void SyncXRInput(XrTime displayTime) {
                         const int impIdx=g_impulseBtnIdx;
                         const unsigned impMask=(impIdx>=0&&impIdx<kPadButtonCount)?
                             (unsigned)g_padButtons[impIdx].mask:0xFFFFFFFFu;
-                        Log("hip knife: grip held at belt but no pickup (gameplay=%d focused=%d alive=%d nativeKnife=%d pawn=%08X offTMD=%d offHP=%d tmd=%08X hp=%d impIdx=%d impMask=%08X)",
-                            f.gameplay?1:0,f.focused?1:0,f.alive?1:0,f.nativeKnife?1:0,f.pawn,
+                        Log("hip knife: grip held at belt but no pickup (gameplay=%d focused=%d alive=%d nativeKnife=%d hasTMD=%d noWeapon=%d pawn=%08X offTMD=%d offHP=%d tmd=%08X hp=%d impIdx=%d impMask=%08X)",
+                            f.gameplay?1:0,f.focused?1:0,f.alive?1:0,f.nativeKnife?1:0,
+                            f.hasTMD?1:0,f.noWeapon?1:0,f.pawn,
                             offT,offH,(unsigned)tmdV,hpV,impIdx,impMask);
                     }
                 }

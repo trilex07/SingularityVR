@@ -58,6 +58,21 @@ int main(){
         f=Base();f.grip[0]=true;Update(s,f);CHECK(s.held==-1);
     }
     {State s;Frame f=Base();Pick(s,f);Away(s,f);Move(s,f,{2,1,-.4f});CHECK(!s.armed&&!s.Pulse(f.nowMs));}
+    // MAIN round 14: post-TMD mode — Context holds with hasTMD, pickup is
+    // physical right hand (h==1) with no weapon only; pre-TMD both-hands path
+    // above is unchanged.
+    {State s;Frame f=Base();f.nativeKnife=false;f.hasTMD=true;f.noWeapon=true;
+     f.grip[0]=f.grip[1]=false;CHECK(Update(s,f)==Event::None);
+     f.nowMs+=11;f.grip[1]=true;CHECK(Update(s,f)==Event::Picked);CHECK(s.held==1);}
+    {State s;Frame f=Base();f.nativeKnife=false;f.hasTMD=true;f.noWeapon=true;
+     f.grip[0]=f.grip[1]=false;Update(s,f);
+     f.nowMs+=11;f.grip[0]=true;CHECK(Update(s,f)==Event::None);CHECK(s.held==-1);}
+    {State s;Frame f=Base();f.nativeKnife=false;f.hasTMD=true;f.noWeapon=false;
+     f.grip[0]=f.grip[1]=false;Update(s,f);
+     f.nowMs+=11;f.grip[1]=true;CHECK(Update(s,f)==Event::None);CHECK(s.held==-1);}
+    {State s;Frame f=Base();Pick(s,f,0); // left-held pre-TMD, then TMD arrives
+     f.nativeKnife=false;f.hasTMD=true;f.noWeapon=true;
+     CHECK(Update(s,f)==Event::Reset);CHECK(s.held==-1);}
     {State s;Frame f=Base();Pick(s,f);Away(s,f);
      unsigned swings=0;
      for(int i=1;i<=8;++i){const float a=float(i)*.13f;f.hand[0].q={0,std::sin(a*.5f),0,std::cos(a*.5f)};
