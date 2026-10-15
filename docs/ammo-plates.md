@@ -12,16 +12,18 @@ Reference art (`vr-mods/references/`):
 - Mag states: white mag = full/normal, red mag + `!` = empty (inside the red
   box). Runtime shows white normally, red zone on empty.
 
-## RE first: ammo offsets UNKNOWN
+## RE round 1 verdict (2026-10-15 session): NO plain int32 mag on the weapon
 
-No native mag/reserve hook is proven. Evidence-driven probe (this change):
-`ammo_probe.h` gate (L1) + bounded dumper in d3d9.cpp next to the fire
-census (input thread): `[Diagnostic] AmmoProbe=N` pulls, baseline snapshot
-per weapon object ([0,0x400), 256 guarded reads), changed-offsets-only after,
-then silent. Falsifier: an int decrementing once per spaced shot IS the mag
-counter (expect start at mag size 12/30/6/5); reserve moves on pickup, not
-fire — identified by value, verified later. If nothing moves on the weapon
-object, widen to pawn/inventory chain (next experiment, not this one).
+8 pulls, same object (ARMachineGun/RvWeaponShared): no word decrements by 1;
+volatile words are flags/timers/coords/event latches. Static small ints
+(3/4/20/30/...) never move. Falsifier for round 2 stands: enumerate NAMES.
+
+## RE round 2: class property dump on equip (this change)
+
+`LogEquippedClass` dumps the equipped weapon's class chain once per class
+(max 4) while the probe flag is armed — run-235 pattern, no guessing. Same
+session also re-collects trigger diffs. Offline analysis then names mag
+(+reserve) candidates that round 3 verifies by motion.
 
 ## Runtime plan (after offsets harden like Health run-199)
 

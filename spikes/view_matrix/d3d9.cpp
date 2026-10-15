@@ -2320,6 +2320,13 @@ inline ArmedState PlayerArmed() { return (ArmedState)Rd(g_armedState); }
 // switch would have fired it. The first version logged once because that run contained no weapon
 // switch at all, not because the key was dead. The object pointer is still the better key, since two
 // weapons CAN share a class; the reasoning that got here was not.
+// ---- ammo probe state (see trigger-edge dumper next to the fire census) ----
+static int g_ammoProbeLeft = 0;
+static uintptr_t g_ammoProbeObj = 0;
+static int32_t g_ammoProbePrev[256]{};
+static bool g_ammoProbeHave = false;
+static bool g_ammoProbeWasDown = false;
+
 static void LogEquippedClass(uintptr_t w) {
     static uintptr_t lastObj = (uintptr_t)-1;
     if (w == lastObj) return;
@@ -2338,6 +2345,28 @@ static void LogEquippedClass(uintptr_t w) {
     Log("equipped: Pawn.Weapon -> object '%s'  (class %s)   run 235b: the OBJECT is the identity -"
         " classes vary but can also be shared, so the pointer is the only key with neither failure"
         " mode. Run 235c: it never names the TMD, which is HIDDEN rather than swapped.", on, cn);
+    // ---- ammo probe: enumerate the equipped weapon's properties once per class ----
+    // Run-235 pattern: list names, don't guess them. Gated by the probe flag;
+    // one dump per distinct class, max four - the names name the mag/reserve
+    // candidates that the NEXT round verifies by motion against trigger diffs.
+    if (w && g_ammoProbeLeft > 0) {
+        if (Readable((void*)(w + OBJ_CLASS), sizeof(uintptr_t))) {
+            if (const uintptr_t cls = *reinterpret_cast<const uintptr_t*>(w + OBJ_CLASS)) {
+                static uintptr_t dumped[4]{};
+                static int nDumped = 0;
+                bool known = false;
+                for (int i = 0; i < nDumped; ++i) {
+                    if (dumped[i] == cls) { known = true; break; }
+                }
+                if (!known) {
+                    if (nDumped < 4) dumped[nDumped++] = cls;
+                    char cc[80] = "(none)";
+                    NameOf(cls, cc, sizeof(cc));
+                    DumpClassProperties(cls, cc);
+                }
+            }
+        }
+    }
 }
 
 static void RefreshArmedState() {
@@ -13130,16 +13159,7 @@ inline int32_t CensusSlot(uint32_t k, bool create, bool* fresh, int32_t nextIdx)
 FireSig g_fireSig[kFireSigMax]{};
 int  g_fireSigN = 0;
 int  g_fireCensusBudget = 0;         // ini [Render] FireDrawCensus: how many shots to record
-// ---- ammo probe: which ints on Pawn.Weapon move when a shot is fired ----
-// Default OFF ([Diagnostic] AmmoProbe=N pulls). Baseline snapshot per weapon
-// object, changed-offsets-only after. Bounded: N pulls, 256 guarded reads
-// per pull, then silent. Diffing the dumps across spaced shots names the mag
-// counter (decrements per shot); reserve moves on pickup, not here.
-static int g_ammoProbeLeft = 0;
-static uintptr_t g_ammoProbeObj = 0;
-static int32_t g_ammoProbePrev[256]{};
-static bool g_ammoProbeHave = false;
-static bool g_ammoProbeWasDown = false;
+// (ammo probe state lives just above LogEquippedClass: first use precedes this line)
 volatile LONG g_fireCensusFrames = 0;
 bool g_fireTrigWasDown = false;
 int  g_fireSplitSeen = 0, g_fireQuadSeen = 0;
