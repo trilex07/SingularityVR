@@ -1,11 +1,10 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 ammo PROBE ROUND-6 DEPLOYED (DLL 7BAE2421/source 9cf52e1,
-built==installed; backup 20261015-140857; INI carried over). Adds HUD class
-dump (display-cache hunt). Need: load, hold gun (dump fires), taps as
-before, exit. Then offline: HUD mag/reserve names -> sample. If absent:
-GFx-push/natives next. Live:
-deployment/hands-dubbing/ammo-probe6-20261015/live.json. Prior history.
+LATEST 2026-10-15 ammo PROBE ROUND-7 DEPLOYED (DLL D55C0189/source 3c2e6aa,
+built==installed; backup 20261015-142058; INI carried over). InvManager trail
+(by name) + HUD dump relocated to trigger block. Need: taps ~2 s, 8 pulls,
+exit. Falsifier: manager/bin ints vs +0x114 shot clock. Live:
+deployment/hands-dubbing/ammo-probe7-20261015/live.json. Prior history.
 
 LATEST 2026-10-15 ammo PROBE ROUND-2 DEPLOYED (DLL 05F960F0/source 2a22d62):
 class property dump on equip (RvWeaponShared vocabulary: no ammo data
