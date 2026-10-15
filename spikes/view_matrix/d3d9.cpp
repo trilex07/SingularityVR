@@ -1939,6 +1939,8 @@ WantedName g_wantNames[] = {
     // Ammo probe round 5: shots-fired counter (fire proof per pull) and the
     // pawn baseline below needs no new names.
     { "mShotCount", -1 },
+    // Ammo probe round 9: HUD display cache (mag/reserve as shown on screen).
+    { "mClipAmmo", -1 }, { "mBinAmmo", -1 }, { "mClipSize", -1 },
 };
 const int kWantNameCount = (int)(sizeof(g_wantNames) / sizeof(g_wantNames[0]));
 
@@ -28026,6 +28028,39 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                             DumpClassProperties(hcls, hc);
                         }
                     }
+                }
+            }
+            // ---- round 9: HUD display cache sample (mag/reserve as shown) ----
+            // mClipAmmo/mBinAmmo/mClipSize are dump-named ints on the HUD
+            // object: the exact numbers the native HUD renders. Resolved BY
+            // NAME per HUD class, cached; sampled per pull. Falsifier: clip
+            // -1 per spaced tap, bin static during fire (moves on pickup).
+            {
+                static uintptr_t hudSampCls = 0;
+                static int offClip = -2, offBin = -2, offSize = -2;
+                const uintptr_t hud = FindHudObject();
+                uintptr_t hc = 0;
+                if (hud && Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t)))
+                    hc = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS);
+                if (hc && hc != hudSampCls) {
+                    hudSampCls = hc;
+                    offClip = PropOffsetInChain(hc, "mClipAmmo");
+                    offBin = PropOffsetInChain(hc, "mBinAmmo");
+                    offSize = PropOffsetInChain(hc, "mClipSize");
+                    char cc[80] = "(none)";
+                    NameOf(hc, cc, sizeof(cc));
+                    Log("ammo probe: HUD cache clip%+d bin%+d size%+d on %s",
+                        offClip, offBin, offSize, cc);
+                }
+                if (offClip >= 0 && offBin >= 0 && hud &&
+                    Readable((const void*)(hud + offClip), 4) &&
+                    Readable((const void*)(hud + offBin), 4)) {
+                    const int32_t clip = *reinterpret_cast<const int32_t*>(hud + offClip);
+                    const int32_t bin = *reinterpret_cast<const int32_t*>(hud + offBin);
+                    int32_t size = -1;
+                    if (offSize >= 0 && Readable((const void*)(hud + offSize), 4))
+                        size = *reinterpret_cast<const int32_t*>(hud + offSize);
+                    Log("ammo probe: hud clip=%d/%d bin=%d", clip, size, bin);
                 }
             }
         }

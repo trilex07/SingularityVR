@@ -18,7 +18,13 @@ Reference art (`vr-mods/references/`):
 volatile words are flags/timers/coords/event latches. Static small ints
 (3/4/20/30/...) never move. Falsifier for round 2 stands: enumerate NAMES.
 
-## RE round 8: manager vocabulary + forced HUD find (this change)
+## RE round 9: HUD display cache sample (this change)
+
+HUD vocabulary: `mClipAmmo`/`mBinAmmo`/`mClipSize` (+0x578/57C/580) — the
+displayed numbers. Resolved BY NAME per HUD class, sampled per pull.
+Falsifier: clip -1 per spaced tap, bin static during fire. If live, round 10
+hardens them like Health (offsets + Readable + sampled LONGs) and builds the
+plates (live digits, white/red mag, R3 hide).
 
 InvManager words static across shots; HUD dump never fired (throttled find
 + equip-only placement). This round: `InvManager` offset resolved BY NAME
