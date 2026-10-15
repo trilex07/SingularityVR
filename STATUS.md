@@ -1,14 +1,12 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 health-plate ROUND-1 DEPLOYED for L3 (DLL 139E5D71/source
-104f8cd, clean tree, built==installed; backup 20261015-105738 holding wheel
-E90B1E9C). INI leased 2FE66550 (+HealthPlateEnabled=1 only). NOTE: Steam now
-runs main-baseline + plate (NO wheel features until wheel PR merges).
-Live: deployment/hands-dubbing/hb-round1-20261015/live.json. Need: raise
-left hand to face -> plate with N segments; two-hand pistol -> plate above
-left hand; lower hand -> hides; exit. Log: atlas ready + shown edges.
-Plates atlas installed (Steam-only data): 512x256 PNG + plates.json (3 rects,
-sha verified), 11 segment slots per mockup measurement. Prior history.
+LATEST 2026-10-15 health-plate ROUND-2 DEPLOYED (DLL 89CB0984/source b73e311,
+built==installed; backup 20261015-110532). Gesture earlier: show 60 cm /
+hide 80 cm. NOTE: Steam runs main+plate WITHOUT the wheel (wheel code lives
+only on unmerged fix/hud-3d-textures) — reunion = merge wheel PR, then
+rebase this branch. Need: face-raise shows plate sooner, two-hand + hide as
+before. Plates atlas installed (Steam-only data): 512x256 PNG + plates.json
+(3 rects, sha verified), 11 segment slots per mockup measurement. Prior history.
 
 LATEST 2026-10-15 wheel PR PREPARED, not yet created: `gh` has no auth in
 this session (push works, PR creation needs user-side login). Branch
