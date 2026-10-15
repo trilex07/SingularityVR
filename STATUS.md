@@ -1,5 +1,23 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 14 DEPLOYED (DLL
+D065446C99A909DBAEFDE2A4F3D5E714715259BD96EBE2E6AE42E604E785E034/source
+bcf8ec1 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-200339; game closed
+at deploy). Why (user request): with TMD present the knife stays usable but
+right hand (h==1) with no weapon in hand only; pre-TMD both-hands path
+unchanged. Frame gains hasTMD (TMD!=0 with intact impulse mapping) and
+noWeapon (!WeaponInHands||holstered); Context accepts nativeKnife||hasTMD;
+post-TMD pickup requires h==1&&noWeapon and a left-held knife resets when TMD
+arrives. Refusal probe mask/log extended with hasTMD/noWeapon. Correction to
+prior note: the old `mTMD NON-NULL` line came from another moment in the long
+log, NOT the user's current no-TMD save — current save has Centurion knife,
+no TMD, so hasTMD must read 0; the new raw tmd/hp/off/imp fields will prove
+the actual blocker (offsets vs hp vs mapping). L1_PASS (hip-knife 159 checks:
+147 retained + 12 post-TMD). L2_PASS (PE32 0x014C/0x010B, manifest commit
+bcf8ec1 clean). L3/physical PENDING: pre-TMD either hand picks up; post-TMD
+right hand empty-handed only; swing attacks. No fix claimed.
+
 LATEST 2026-10-15 MAIN round 13 DEPLOYED (DLL
 391B44BB4CF6B6CAAD922E166159CA13E3DD3B89766A8EE345E7476E0A366EEE/source
 e181aa1 branch plates-l3-main, x86 PE32 /O2, built==installed via
