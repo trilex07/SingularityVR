@@ -27,9 +27,13 @@ inline V EyeLocal(V world,const Pose& eye){return Rotate({-eye.q.x,-eye.q.y,-eye
 inline float Length(V v){return std::sqrt(Dot(v,v));}
 struct Config {
     // Tracking metres: left is literal physical left, never mirrored by AimHand.
-    float left=.25f,down=.50f,forward=.06f,radius=.15f;
+    float left=.25f,down=.50f,forward=.06f,radius=.22f;
     float minSpeed=1.2f,resetSpeed=.35f,minTravel=.10f;
     std::uint64_t pickupGraceMs=300,cooldownMs=750,pulseMs=90;
+    // MAIN round 20: grip pressed up to this long BEFORE entering the radius
+    // (still held) also picks up. r19 log: near=1 grip=1 edge=0 — users squeeze
+    // while reaching, so an edge-inside-radius-only rule never fired.
+    std::uint64_t grabWindowMs=600;
 };
 // Only yaw, not head pitch/roll; looking down must not throw the belt forward.
 inline Pose Hip(V head,float bodyYaw,const Config& c={}){
@@ -51,6 +55,7 @@ struct State {
     int held=-1;bool priorGrip[2]{true,true};bool armed=false,sampled=false;
     V previousTip{},strokeOrigin{};
     std::uint64_t sampleMs=0,pickedMs=0,lastSwingMs=0,pulseUntil=0;
+    std::uint64_t edgeMs[2]{}; // last grip rising edge per hand (0 = none pending)
     std::uint32_t pawn=0;
     bool Pulse(std::uint64_t now)const{return held>=0&&now<pulseUntil;}
 };
@@ -64,13 +69,19 @@ inline Event Update(State& s,const Frame& f,const Config& c={}){
     if(f.hasTMD&&!f.nativeKnife&&s.held>=0&&s.held!=1){s={};s.pawn=f.pawn;return Event::Reset;}
     s.pawn=f.pawn;
     bool edge[2]{};
-    for(int h=0;h<2;++h){edge[h]=f.grip[h]&&!s.priorGrip[h];s.priorGrip[h]=f.grip[h];}
+    for(int h=0;h<2;++h){edge[h]=f.grip[h]&&!s.priorGrip[h];s.priorGrip[h]=f.grip[h];
+        if(edge[h])s.edgeMs[h]=f.nowMs?f.nowMs:1;
+        if(!f.grip[h])s.edgeMs[h]=0;}
     if(s.held<0){
         const bool postTMD=f.hasTMD&&!f.nativeKnife;
-        for(int h=0;h<2;++h)if(edge[h]&&f.free[h]&&f.tracked[h]&&Finite(f.hand[h].p)&&Valid(f.hand[h].q)&&
+        for(int h=0;h<2;++h){
+            const bool grab=edge[h]||(f.grip[h]&&s.edgeMs[h]&&f.nowMs>=s.edgeMs[h]&&
+                f.nowMs-s.edgeMs[h]<=c.grabWindowMs);
+            if(grab&&f.free[h]&&f.tracked[h]&&Finite(f.hand[h].p)&&Valid(f.hand[h].q)&&
             Length(f.hand[h].p-f.hip.p)<=c.radius&&(!postTMD||(h==1&&f.noWeapon))){
-            s.held=h;s.pickedMs=f.nowMs;s.sampled=false;s.armed=false;s.pulseUntil=0;return Event::Picked;
-        }
+            s.held=h;s.edgeMs[0]=s.edgeMs[1]=0;
+            s.pickedMs=f.nowMs;s.sampled=false;s.armed=false;s.pulseUntil=0;return Event::Picked;
+        }}
         return Event::None;
     }
     const int h=s.held;

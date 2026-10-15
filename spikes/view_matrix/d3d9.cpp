@@ -8982,7 +8982,7 @@ bool InitXRInput() {
             g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles());
         // MAIN round 16/17/18/19 build marker: proves which DLL produced this log.
         // Update the tag every behavior round; parsers key on "knife build r".
-        Log("hip knife: build r19 IgnoreTMD-fixed (pre-TMD both-hands pickup) + holster trim down/left; holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
+        Log("hip knife: build r20 grab-window 600ms + radius 22cm + holster drawRadius + reach/miss probes; holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
             g_holsterConfig.fwd,g_holsterConfig.right,g_holsterConfig.up,g_holsterConfig.radius,
             g_hipKnifeConfig.left,g_hipKnifeConfig.down,g_hipKnifeConfig.radius);
     }
@@ -10146,6 +10146,18 @@ void SyncXRInput(XrTime displayTime) {
         for(int h=0;h<2;++h)preEdge[h]=f.grip[h]&&!g_hipKnifeState.priorGrip[h];
         const auto event=hipknife::Update(g_hipKnifeState,f,g_hipKnifeConfig);
         g_hipKnifeBelt=f.hip.p;
+        // MAIN round 20 reach probe: each grip edge within 50 cm of the belt
+        // point logs distance and whether it picked (bounded). Falsifier for
+        // the grab-window fix: edges logged at dist<radius with picked=0.
+        if(hipknife::Context(f)){
+            static unsigned reach=0;
+            for(int h=0;h<2;++h)if(preEdge[h]&&f.tracked[h]&&hipknife::Finite(f.hand[h].p)){
+                const float d=hipknife::Length(f.hand[h].p-f.hip.p);
+                if(d<=.5f&&reach++<64)
+                    Log("hip knife: grip edge hand=%d dist=%.2fm (radius=%.2f) free=%d picked=%d",
+                        h,d,g_hipKnifeConfig.radius,f.free[h]?1:0,event==hipknife::Event::Picked?1:0);
+            }
+        }
         g_hipKnifeVisible=hipknife::Context(f)&&(g_hipKnifeState.held>=0?
             f.tracked[g_hipKnifeState.held]:(f.tracked[0]||f.tracked[1]));
         if(g_hipKnifeState.held>=0)g_hipKnifePose=f.hand[g_hipKnifeState.held];
@@ -10314,6 +10326,17 @@ void SyncXRInput(XrTime displayTime) {
         g_holsterState, primaryGripRising && !uiMenu && !Rd(g_gamePaused), holsterValid, feedGame,
         (uint32_t)holsterIdentity, {handX, handY, handZ},
         {holsterHip[0], holsterHip[1], holsterHip[2]}, g_holsterConfig);
+    // MAIN round 20: bounded miss probe — right grip edge while holstered that
+    // did NOT draw. Distance tells whether drawRadius or the hip point is wrong.
+    if (holsterEvent == weaponholster::Event::None && g_holsterState.active &&
+        primaryGripRising && !uiMenu && !Rd(g_gamePaused)) {
+        static unsigned misses = 0;
+        if (misses++ < 64) {
+            const float dx = handX - holsterHip[0], dy = handY - holsterHip[1], dz = handZ - holsterHip[2];
+            Log("weapon holster: DRAW MISS dist=%.1f UU (drawRadius=%.0f) d=(%.1f,%.1f,%.1f)",
+                sqrtf(dx*dx + dy*dy + dz*dz), g_holsterConfig.drawRadius, dx, dy, dz);
+        }
+    }
     // MAIN round 15: also log the aim dir at STORED/DRAWN. Hypothesis under
     // test (user: store fires behind+above the drawn ring): the user aligns
     // the VISIBLE gun to the ring while the trigger tests the CONTROLLER
@@ -30441,13 +30464,21 @@ void LoadIniSettings() {
     g_hipKnifeConfig.left=std::max(.10f,std::min(.50f,IniSignedInt("Input","HipKnifeLeftCm",25,path)*.01f));
     g_hipKnifeConfig.down=std::max(.20f,std::min(.90f,IniSignedInt("Input","HipKnifeDownCm",50,path)*.01f));
     g_hipKnifeConfig.forward=std::max(-.20f,std::min(.30f,IniSignedInt("Input","HipKnifeForwardCm",6,path)*.01f));
+    g_hipKnifeConfig.radius=std::max(.08f,std::min(.40f,IniSignedInt("Input","HipKnifeRadiusCm",22,path)*.01f));
+    const int gw = (int)IniSignedInt("Input","HipKnifeGrabWindowMs",600,path);
+    g_hipKnifeConfig.grabWindowMs = (std::uint64_t)(gw < 0 ? 0 : (gw > 2000 ? 2000 : gw));
+    Log("ini: HipKnifeRadiusCm=%.0f HipKnifeGrabWindowMs=%u (r20: squeeze-while-reaching pickup)",
+        (double)(g_hipKnifeConfig.radius*100.f),(unsigned)g_hipKnifeConfig.grabWindowMs);
     Log("ini: HipKnifeEnabled=%d (default OFF, restart required; pre-TMD both hands, post-TMD right hand only, native camera trace)",g_hipKnifeEnabled);
     g_holsterConfig.radius = (float)IniSignedInt("Input", "HolsterRadius", 12, path);
     if (g_holsterConfig.radius < 2.0f) g_holsterConfig.radius = 2.0f;
     if (g_holsterConfig.radius > 48.0f) g_holsterConfig.radius = 48.0f;
-    Log("weapon holster=%d; hip fwd/right/up=(%.0f,%.0f,%.0f) UU radius=%.0f UU; right grip rising edge toggles",
+    g_holsterConfig.drawRadius = (float)IniSignedInt("Input", "HolsterDrawRadius", 20, path);
+    if (g_holsterConfig.drawRadius < g_holsterConfig.radius) g_holsterConfig.drawRadius = g_holsterConfig.radius;
+    if (g_holsterConfig.drawRadius > 48.0f) g_holsterConfig.drawRadius = 48.0f;
+    Log("weapon holster=%d; hip fwd/right/up=(%.0f,%.0f,%.0f) UU radius=%.0f UU drawRadius=%.0f UU; right grip rising edge toggles",
         g_holsterEnabled, g_holsterConfig.fwd, g_holsterConfig.right,
-        g_holsterConfig.up, g_holsterConfig.radius);
+        g_holsterConfig.up, g_holsterConfig.radius, g_holsterConfig.drawRadius);
     g_weaponWheelSlots = GetPrivateProfileIntA("Input", "WeaponWheelSlots", 4, path);
     if (g_weaponWheelSlots < 2) g_weaponWheelSlots = 2;
     if (g_weaponWheelSlots > 8) g_weaponWheelSlots = 8;

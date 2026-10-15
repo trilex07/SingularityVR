@@ -96,6 +96,18 @@ int main(){
      float m[4][4];CHECK(Projection(1,1,m));CHECK(m[2][3]==-1);CHECK(!Projection(0,1,m));}
     {TriggerGate g;CHECK(g.Update(false,.7f)==.7f);CHECK(g.Update(true,.7f)==0);
      CHECK(g.Update(false,.7f)==0);CHECK(g.Update(false,0)==0);CHECK(g.Update(false,.7f)==.7f);}
+    // MAIN round 20 grab window: squeeze outside the radius, then reach in.
+    {State s;Frame f=Base();f.hand[0].p=f.hip.p+V{.5f,0,0};f.grip[0]=f.grip[1]=false;Update(s,f);
+     f.nowMs+=11;f.grip[0]=true;CHECK(Update(s,f)==Event::None);   // edge far from belt
+     f.nowMs+=300;f.hand[0].p=f.hip.p;CHECK(Update(s,f)==Event::Picked);CHECK(s.held==0);}
+    {State s;Frame f=Base();f.hand[0].p=f.hip.p+V{.5f,0,0};f.grip[0]=f.grip[1]=false;Update(s,f);
+     f.nowMs+=11;f.grip[0]=true;Update(s,f);
+     f.nowMs+=900;f.hand[0].p=f.hip.p;CHECK(Update(s,f)==Event::None);CHECK(s.held==-1);} // stale
+    {State s;Frame f=Base();f.hand[0].p=f.hip.p+V{.5f,0,0};f.grip[0]=f.grip[1]=false;Update(s,f);
+     f.nowMs+=11;f.grip[0]=true;Update(s,f);f.nowMs+=11;f.grip[0]=false;Update(s,f);
+     f.nowMs+=11;f.hand[0].p=f.hip.p;CHECK(Update(s,f)==Event::None);} // released: no pickup
+    {State s;Frame f=Base();f.grip[0]=f.grip[1]=false;Update(s,f);  // 20 cm off: inside .22 radius
+     f.hand[0].p=f.hip.p+V{.20f,0,0};f.nowMs+=11;f.grip[0]=true;CHECK(Update(s,f)==Event::Picked);}
     const auto start=std::chrono::steady_clock::now();
     State s;Frame f=Base();Pick(s,f);Away(s,f);
     for(unsigned i=0;i<360000;++i){f.nowMs+=11;Update(s,f);}
