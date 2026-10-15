@@ -25428,7 +25428,7 @@ static bool LoadAmmoPng(IDirect3DDevice9* dev, const char* file, IDirect3DTextur
               SUCCEEDED(fac->CreateFormatConverter(&conv)) && conv &&
               SUCCEEDED(conv->Initialize(frame, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone,
                                          nullptr, 0.0, WICBitmapPaletteTypeCustom)) &&
-              SUCCEEDED(conv->GetSize(&pw, &ph)) && pw > 0 && pw <= 2048 && ph > 0 && ph <= 2048;
+              SUCCEEDED(conv->GetSize(&pw, &ph)) && pw > 0 && pw <= 4096 && ph > 0 && ph <= 4096;
     if (ok) {
         px.resize((size_t)pw * ph * 4);
         ok = SUCCEEDED(conv->CopyPixels(nullptr, pw * 4, (UINT)px.size(), px.data()));
