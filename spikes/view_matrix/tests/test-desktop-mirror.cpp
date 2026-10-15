@@ -22,6 +22,8 @@ int main() {
     Expect(desktop_mirror::SourceLeft(5264, 1, true, false) == 2632, "swapped left eye is the second half");
     Expect(desktop_mirror::SourceLeft(5264, 2, false, true) == 0, "cropped frame keeps the repeated half");
     Expect(desktop_mirror::SourceLeft(5264, 2, true, true) == 2632, "cropped swap keeps the other repeated half");
+    Expect(desktop_mirror::SourceLeft(5264, 2, false, false, true) == 0, "mono/cutscene frame forces left half even for mode 2");
+    Expect(desktop_mirror::SourceLeft(5264, 2, true, false, true) == 2632, "mono/cutscene swap frame forces swapped half even for mode 2");
     RECT dst{};
     Expect(desktop_mirror::FitDestination(3840,1080,1920,1080,1920,1080,dst) &&
            dst.left==0 && dst.right==3840 && dst.top==0 && dst.bottom==1080,

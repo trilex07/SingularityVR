@@ -19217,7 +19217,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     const bool menuLayout=InterlockedCompareExchange(&g_vrUiMenu,0,0)!=0;
     const LONG menuClassNow = InterlockedCompareExchange(&g_vrMenuClass, 0, 0);
     if (InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0) &&
-        (menuClassNow == 2 || menuClassNow == 3) &&
+        (menuClassNow == 2 || menuClassNow == 3 || menuClassNow == 4) &&
         pausemenuspace::IsPauseCanvasOrtho(c)) {
         menumono::NoteDraw((int)menuClassNow, true, (unsigned)vp.Width, (unsigned)vp.Height,
                            (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0), c, 1);
@@ -19226,14 +19226,13 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // shows whole. Remapping both eyes into that texture is the doubled menu.
     // The backbuffer path (title / IIS) stays split, then the XR crop shows one
     // half in each eye. Bink never reaches this function.
-    if ((menuClassNow == 2 || menuClassNow == 3) &&
+    if ((menuClassNow == 2 || menuClassNow == 3 || menuClassNow == 4) &&
         !InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
         D3DVIEWPORT9 vpMenu{};
         dev->GetViewport(&vpMenu);
         const unsigned sceneW = (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0);
-        // Class 3 pause: evidence-only single draw until composition stage is proven.
-        // Class 2 may still use per-eye canvas remap on the scene-sized RT.
-        const bool perEyeCanvas = menuClassNow != 3 &&
+        // Both Class 2, Class 3 and Class 4 use per-eye canvas remap on the scene-sized RT.
+        const bool perEyeCanvas =
             pausemenuspace::DiegeticMenuCanvas(c, vpMenu.Width, sceneW);
         const int compose = perEyeCanvas ? 1 : 0;
         menumono::NoteDraw((int)menuClassNow, false, vpMenu.Width, vpMenu.Height, sceneW, c,
@@ -19258,7 +19257,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
                 dev->SetViewport(&vpMenu);
                 dev->SetScissorRect(&sc);
                 const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
-                const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3;
+                const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3 || menuClassNow == 4;
                 const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
                 float m[16];
                 memcpy(m, c, sizeof(m));
@@ -19327,7 +19326,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     }
     // Title corner labels only. Boot/Bink stay on their own path (class 1 scale
     // is the IIS title, which is not the video quad).
-    const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3;
+    const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3 || menuClassNow == 4;
     if (!InterlockedCompareExchange(&g_noteOpen, 0, 0) &&
         (menuSafe ||
          InterlockedCompareExchange(&g_gamePaused, 0, 0) ||
@@ -22231,7 +22230,7 @@ static void* WINAPI ObserveBinkOpen(const char* filename, DWORD flags) {
     // Read before the call; source may be a file handle with BINKFILEHANDLE.
     const bool note=InterlockedIncrement(&g_binkOpenNotes)<=12;
     char name[256]{};
-    const bool readable=(note || (Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix))) && BinkObserveName(filename, name);
+    const bool readable=(note || (Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix))) && BinkObserveName(filename, name, flags);
     const BinkIntroAudioPlan plan=BinkPlanIntroAudio(readable?name:nullptr,
         Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix) && PolishLocalization::PL().IsPolishEnabled(),
         g_binkNativeTracksValid?g_binkNativeTracks:nullptr,g_binkNativeTrackCount,flags);

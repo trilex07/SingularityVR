@@ -95,4 +95,5 @@ _work_u/
 
 # ---- bink stills pipeline: intermediates local ----
 work/
+offline-deliverables/
 *.intermediate.mkv

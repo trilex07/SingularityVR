@@ -22,5 +22,11 @@ int main() {
         check(!BinkObserveName(static_cast<const char*>(inaccessible),name) && !name[0],"file-handle/not-name fault contained");
         VirtualFree(inaccessible,0,MEM_RELEASE);
     }
+    HANDLE hSelf = CreateFileA(__FILE__, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
+    if (hSelf != INVALID_HANDLE_VALUE) {
+        check(BinkObserveName(reinterpret_cast<const char*>(hSelf), name, 0x04000000) && std::strstr(name, "test-bink-audio-observation.cpp") != nullptr,
+              "file handle resolved to pathname via GetFinalPathNameByHandleA");
+        CloseHandle(hSelf);
+    }
     return failed?1:0;
 }

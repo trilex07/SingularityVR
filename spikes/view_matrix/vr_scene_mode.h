@@ -21,7 +21,7 @@ struct Signals {
 };
 
 inline bool FrontendMenuPresentation(bool enabled, int menuClass, bool focus) {
-    return enabled && focus && menuClass == 2;
+    return enabled && focus && (menuClass == 2 || menuClass == 4);
 }
 
 struct Transition {

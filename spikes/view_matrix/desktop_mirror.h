@@ -10,6 +10,7 @@ extern volatile LONG g_dupDraws;
 extern volatile LONG g_swapEyes;
 extern volatile LONG g_desktopMirrorEye;
 extern volatile LONG g_desktopMirrorFill;
+extern volatile LONG g_inCinematic;
 extern bool g_scCropped;
 extern bool g_xrRunning;
 extern unsigned g_srcW;
@@ -168,9 +169,9 @@ inline bool FitDestination(UINT bw, UINT bh, UINT sw, UINT sh,
 // mode 1 = left eye, mode 2 = right eye. Swap follows the same half the XR
 // bridge uses. A cropped menu/cutscene frame already repeated one half, so
 // the mirror takes that half instead of the empty one.
-inline UINT SourceLeft(UINT width, LONG mode, bool swap, bool cropped) {
+inline UINT SourceLeft(UINT width, LONG mode, bool swap, bool cropped, bool monoOrCutscene = false) {
     const UINT half = width / 2;
-    if (cropped) return swap ? half : 0;
+    if (cropped || monoOrCutscene) return swap ? half : 0;
     const bool right = mode == 2;
     const UINT halfIndex = right ? (swap ? 0u : 1u) : (swap ? 1u : 0u);
     return halfIndex * half;
@@ -279,7 +280,7 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
     Diag::lastMode = mode;
     const LONG dup = InterlockedCompareExchange(&g_dupDraws, 0, 0);
     if (mode <= 0) { InterlockedIncrement(&Diag::skipMode); EmitMaybe(); return; }
-    if (!dup) { InterlockedIncrement(&Diag::skipDup); EmitMaybe(); return; }
+    if (!dup && !g_xrRunning) { InterlockedIncrement(&Diag::skipDup); EmitMaybe(); return; }
     if (!dev) { InterlockedIncrement(&Diag::skipRect); EmitMaybe(); return; }
 
     IDirect3DSurface9* back = nullptr;
@@ -357,7 +358,8 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
     }
 
     const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
-    const UINT srcLeft = SourceLeft(desc.Width, mode, swap, g_scCropped);
+    const bool monoOrCutscene = !dup || g_scCropped || (InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0);
+    const UINT srcLeft = SourceLeft(desc.Width, mode, swap, g_scCropped, monoOrCutscene);
     Diag::lastSrcLeft = srcLeft;
     Diag::lastDst = dst;
     const RECT src{ (LONG)srcLeft, 0, (LONG)(srcLeft + desc.Width / 2), (LONG)desc.Height };

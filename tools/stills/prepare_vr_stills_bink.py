@@ -67,6 +67,14 @@ CANDIDATES = {
         "quality": 6, "audio": "none", "experimental": True,
         "note": "EXPERIMENTAL native-4K Bink 1; never slot-proven in UE3 2010 decoder",
     },
+    "Copyright_Sing_vr": {
+        "src_png": REFS / "Metaliczne logo SINGULARITY VR.png",
+        "stock_bik": SANDBOX_MOVIES / "Copyright_Sing.bik",
+        "install_as": "RvGame/Movies/Copyright_Sing.bik",
+        "width": 1280, "height": 720, "fps": "30", "seconds": 5,
+        "quality": 8, "audio": "stock-remux",
+        "note": "boot legal/copyright screen (5.00s, 30fps, 1280x720, stock 44.1kHz stereo audio remuxed)",
+    },
 }
 
 

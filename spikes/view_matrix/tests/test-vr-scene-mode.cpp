@@ -59,7 +59,7 @@ int main() {
     for(int cls=0;cls<=4;++cls) {
         assert(!vrscene::FrontendMenuPresentation(false,cls,true));
         assert(!vrscene::FrontendMenuPresentation(true,cls,false));
-        assert(vrscene::FrontendMenuPresentation(true,cls,true)==(cls==2));
+        assert(vrscene::FrontendMenuPresentation(true,cls,true)==(cls==2 || cls==4));
     }
     Controller frontend;
     frontend.Advance({true,false,false,false});
@@ -81,7 +81,7 @@ int main() {
     for(int cine=0;cine<=1;++cine)for(int paused=0;paused<=1;++paused) {
         assert(!CinemaMenuIdenticalCrop(false,cls,focus,cine,paused));
         assert(CinemaMenuIdenticalCrop(true,cls,focus,cine,paused)==
-            (focus && (cls==2 || (cls==3 && cine && paused))));
+            (focus && (cls==2 || cls==4 || (cls==3 && cine && paused))));
         assert(CinemaMenuPauseOwnsPresentation(true,cls,focus,cine,paused)==
             (cls==3 && focus && cine && paused));
     }

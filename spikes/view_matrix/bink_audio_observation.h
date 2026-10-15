@@ -12,9 +12,21 @@ inline bool BinkObserveTracks(DWORD count, const DWORD* tracks, DWORD out[8]) {
         return true;
     } __except (MemoryFaultFilter(GetExceptionCode())) { return false; }
 }
-inline bool BinkObserveName(const char* source, char out[256]) {
+inline bool BinkObserveName(const char* source, char out[256], DWORD flags = 0) {
     if (!source || !out) return false;
     out[0]=0;
+    if (flags & 0x04000000) {
+        HANDLE hFile = (HANDLE)(uintptr_t)source;
+        DWORD ret = GetFinalPathNameByHandleA(hFile, out, 256, FILE_NAME_NORMALIZED);
+        if (ret > 0 && ret < 256) {
+            if (strncmp(out, "\\\\?\\", 4) == 0) {
+                memmove(out, out + 4, strlen(out + 4) + 1);
+            }
+            return true;
+        }
+        out[0] = 0;
+        return false;
+    }
     __try {
         for (unsigned i=0;i<255;++i) {
             out[i]=source[i];

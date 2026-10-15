@@ -14,7 +14,7 @@ inline bool CinemaMenuPauseOwnsPresentation(bool enabled, int menuClass,
 }
 inline bool CinemaMenuIdenticalCrop(bool enabled, int menuClass,
                                    bool focus, bool cinematic, bool paused) {
-    return enabled && focus && (menuClass == 2 ||
+    return enabled && focus && (menuClass == 2 || menuClass == 4 ||
         CinemaMenuPauseOwnsPresentation(enabled, menuClass, focus, cinematic, paused));
 }
 
