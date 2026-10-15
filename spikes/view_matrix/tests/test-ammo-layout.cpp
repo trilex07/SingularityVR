@@ -32,7 +32,8 @@ int main() {
         }
         Expect(ok, "glyph rects sane");
     }
-    // Covers sit inside the plate with positive area.
+    // Covers sit inside the plate with positive area (red box measured
+    // identical on all four plates).
     {
         float x0, y0, x1, y1, ok = true;
         MagCover(x0, y0, x1, y1);
@@ -40,6 +41,8 @@ int main() {
         ReserveCover(x0, y0, x1, y1);
         if (!(x0 >= 0 && x1 <= 1 && y0 >= 0 && y1 <= 1 && x1 > x0 && y1 > y0)) ok = false;
         WhiteMagCover(x0, y0, x1, y1);
+        if (!(x0 >= 0 && x1 <= 1 && y0 >= 0 && y1 <= 1 && x1 > x0 && y1 > y0)) ok = false;
+        RedBoxCover(x0, y0, x1, y1);
         if (!(x0 >= 0 && x1 <= 1 && y0 >= 0 && y1 <= 1 && x1 > x0 && y1 > y0)) ok = false;
         Expect(ok != 0, "cover rects sane");
     }

@@ -25512,7 +25512,7 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
         }
         return;
     }
-    const uipointer::V hand{ g_handLastPos[AimHand()].x, g_handLastPos[AimHand()].y + 0.12f,
+    const uipointer::V hand{ g_handLastPos[AimHand()].x, g_handLastPos[AimHand()].y + 0.05f,
                              g_handLastPos[AimHand()].z };
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
@@ -25552,13 +25552,16 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
     dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
     struct AmmoVtx { float x, y, z, rhw; DWORD c; float u, v; };
-    const int plateW = std::max(64, (int)(d.Height * 0.24f));
+    const int plateW = std::max(64, (int)(d.Height * 0.19f));
     const int plateH = std::max(21, plateW * 724 / 2172);
-    // Cover baked digit bands + white mag cell when empty (plate fractions).
+    // Cover baked digit bands always; white mag cell iff empty, red warning
+    // box iff NOT empty (exactly one of the two states shows at a time).
     float mcx0, mcy0, mcx1, mcy1, rcx0, rcy0, rcx1, rcy1, wcx0, wcy0, wcx1, wcy1;
+    float rbx0, rby0, rbx1, rby1;
     ammoplates::MagCover(mcx0, mcy0, mcx1, mcy1);
     ammoplates::ReserveCover(rcx0, rcy0, rcx1, rcy1);
     ammoplates::WhiteMagCover(wcx0, wcy0, wcx1, wcy1);
+    ammoplates::RedBoxCover(rbx0, rby0, rbx1, rby1);
     const DWORD coverCol = ammoplates::CoverColor();
     const bool empty = ammoplates::MagEmpty(clip);
     float mrx, mtop, mhh, rrx, rtop, rhh;
@@ -25595,6 +25598,7 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
         cover(mcx0, mcy0, mcx1, mcy1);
         cover(rcx0, rcy0, rcx1, rcy1);
         if (empty) cover(wcx0, wcy0, wcx1, wcy1);
+        else cover(rbx0, rby0, rbx1, rby1);
         // Live digits from the strip texture.
         dev->SetTexture(0, g_ammoDigitsTex);
         dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);

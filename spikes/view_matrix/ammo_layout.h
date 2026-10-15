@@ -54,6 +54,11 @@ inline void ReserveCover(float& x0, float& y0, float& x1, float& y1) {
 inline void WhiteMagCover(float& x0, float& y0, float& x1, float& y1) {
     x0 = 0.095f; y0 = 0.330f; x1 = 0.210f; y1 = 0.620f;
 }
+// Red warning box (mag + `!`): shown ONLY when the mag is empty, covered
+// otherwise. Measured identical on all four plates.
+inline void RedBoxCover(float& x0, float& y0, float& x1, float& y1) {
+    x0 = 0.650f; y0 = 0.422f; x1 = 0.876f; y1 = 0.699f;
+}
 inline unsigned CoverColor() { return 0xFF041A2E; } // measured plate bg (4,26,46), opaque
 
 // Digit zones: right edge + top + digit height (plate fractions).
