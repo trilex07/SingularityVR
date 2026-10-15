@@ -42,12 +42,24 @@ int main(){
      for(int i=1;i<=5;++i){f.nowMs+=11;f.hand[0].p=p+V{.025f*float(i),0,0};
         const Event e=Update(s,f);if(e==Event::Swing)++swings;else CHECK(e==Event::None);}
      CHECK(swings==1);
-     CHECK(s.Pulse(f.nowMs));CHECK(!s.Pulse(f.nowMs+90));
+     CHECK(s.Pulse(f.nowMs));CHECK(!s.Pulse(f.nowMs+120));
      const auto first=s.lastSwingMs;
      for(int i=0;i<20;++i)Move(s,f,f.hand[0].p+V{.025f,0,0});
      CHECK(s.lastSwingMs==first); // sustained fast motion is one attack
      f.nowMs+=11;Update(s,f);CHECK(s.armed);
      f.nowMs+=750;Update(s,f);CHECK(!s.armed); // gap invalidates rearm and pulse
+    }
+    {State s;Frame f=Base();Pick(s,f);Away(s,f);
+     CHECK(!s.Pulse(f.nowMs));
+     f.trigger[0]=true;f.nowMs+=11;
+     CHECK(Update(s,f)==Event::Swing);
+     CHECK(s.Pulse(f.nowMs));
+     f.nowMs+=11;
+     CHECK(Update(s,f)==Event::None); // holding trigger does not retrigger
+     f.trigger[0]=false;f.nowMs+=350;
+     CHECK(Update(s,f)==Event::None);
+     f.trigger[0]=true;f.nowMs+=11;
+     CHECK(Update(s,f)==Event::Swing); // rising edge after cooldown triggers again
     }
     for(int gate=0;gate<9;++gate){State s;Frame f=Base();Pick(s,f);Away(s,f);
         switch(gate){case 0:f.enabled=false;break;case 1:f.gameplay=false;break;

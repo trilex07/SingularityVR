@@ -103,8 +103,8 @@ try {
         # Copy SingularityVfx.dll (VFX plugin) if it exists
         # Try multiple stable locations
         $vfxDllPaths = @(
-            Join-Path $root "deployment\runtime-test-current\SingularityVfx.dll",
-            Join-Path $root "deployment\desktop-hmd-current-20261009\SingularityVfx.dll"
+            (Join-Path $root "deployment\runtime-test-current\SingularityVfx.dll"),
+            (Join-Path $root "deployment\desktop-hmd-current-20261009\SingularityVfx.dll")
         )
         $vfxCopied = $false
         foreach ($vfxDll in $vfxDllPaths) {

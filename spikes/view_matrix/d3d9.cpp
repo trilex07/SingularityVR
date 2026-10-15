@@ -8977,12 +8977,13 @@ bool InitXRInput() {
                 g_hipKnifeReady=g_hipKnifeRenderer.Load(directory+"\\vr-assets\\knife\\knife.svrk");
             }
         }
-        Log("hip knife: cache=%s verts=%u tris=%u; pre-TMD both hands, post-TMD right hand only, native camera trace",
+        Log("hip knife: cache=%s verts=%u tris=%u original diffuse=%ux%u; pre-TMD both hands, post-TMD right hand only, native camera trace",
             g_hipKnifeReady?"READY":"MISSING/INVALID (disabled)",
-            g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles());
-        // MAIN round 16/17/18/19 build marker: proves which DLL produced this log.
+            g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles(),
+            g_hipKnifeRenderer.TextureWidth(),g_hipKnifeRenderer.TextureHeight());
+        // MAIN round 16/17/18/19/20/21 build marker: proves which DLL produced this log.
         // Update the tag every behavior round; parsers key on "knife build r".
-        Log("hip knife: build r20 grab-window 600ms + radius 22cm + holster drawRadius + reach/miss probes; holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
+        Log("hip knife: build r21 trigger-attack + swing thresholds + grab-window 800ms + radius 28cm + holster drawRadius 32; holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
             g_holsterConfig.fwd,g_holsterConfig.right,g_holsterConfig.up,g_holsterConfig.radius,
             g_hipKnifeConfig.left,g_hipKnifeConfig.down,g_hipKnifeConfig.radius);
     }
@@ -10138,6 +10139,7 @@ void SyncXRInput(XrTime displayTime) {
             f.tracked[h]=g_handPositionValid[h]&&g_handPoseValid[h]&&g_handTracked[h];
             f.grip[h]=h==AimHand()?primaryGrip:rawSupportGrip;
             f.free[h]=h!=AimHand()||!WeaponInHands()||Rd(g_weaponHolstered);
+            f.trigger[h]=h==AimHand()?Rd(g_rawTrigger)>128:Rd(g_rawAltTrigger)>128;
         }
         // MAIN round 15: capture the grip rising edge BEFORE Update consumes it
         // (Update copies grip into priorGrip, so post-Update edge reads are
@@ -10996,10 +10998,24 @@ void SyncXRInput(XrTime displayTime) {
     if (lt < 0.10f) lt = 0.0f;
     if (rt < 0.10f) rt = 0.0f;
     if(g_hipKnifeEnabled){
+        const float knifeTrig = g_hipKnifeState.held == fireHand ? rt : (g_hipKnifeState.held == altHand ? lt : 0.0f);
+        static bool knifeTrigWasDown = false;
+        const bool knifeTrigDown = knifeTrig > 0.5f;
+        if(g_hipKnifeState.held >= 0 && knifeTrigDown && !knifeTrigWasDown && !uiMenu && !Rd(g_gamePaused)){
+            g_hipKnifeState.TriggerAttack(GetTickCount64(), g_hipKnifeConfig.pulseMs);
+            Log("hip knife: TRIGGER ATTACK -> RB pulse held=%d pawn=%08X", g_hipKnifeState.held, (uint32_t)g_playerPawn);
+        }
+        knifeTrigWasDown = knifeTrigDown;
+
         rt=g_hipKnifeTrigger[fireHand].Update(hipknife::Reserves(g_hipKnifeState,fireHand),rt);
         lt=g_hipKnifeTrigger[altHand].Update(hipknife::Reserves(g_hipKnifeState,altHand),lt);
     }
-    if(g_hipKnifeState.held>=0&&g_hipKnifeState.Pulse(GetTickCount64())&&!uiMenu&&!Rd(g_gamePaused))btns|=XI_RSHOULDER;
+    if(g_hipKnifeState.held>=0&&g_hipKnifeState.Pulse(GetTickCount64())&&!uiMenu&&!Rd(g_gamePaused)){
+        btns|=XI_RSHOULDER;
+        static unsigned knifeRbPulses=0;
+        if(knifeRbPulses++<128)
+            Log("hip knife: injected XI_RSHOULDER (melee attack) into game btns, held=%d", g_hipKnifeState.held);
+    }
     if (Rd(g_weaponHolstered) && !uiMenu) rt = 0.0f;
     UpdateVrUiPointer(fireHand==1?rt:lt,true);
     const auto primaryGate=g_vrUiTrigger[fireHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,rt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
@@ -30464,18 +30480,18 @@ void LoadIniSettings() {
     g_hipKnifeConfig.left=std::max(.10f,std::min(.50f,IniSignedInt("Input","HipKnifeLeftCm",25,path)*.01f));
     g_hipKnifeConfig.down=std::max(.20f,std::min(.90f,IniSignedInt("Input","HipKnifeDownCm",50,path)*.01f));
     g_hipKnifeConfig.forward=std::max(-.20f,std::min(.30f,IniSignedInt("Input","HipKnifeForwardCm",6,path)*.01f));
-    g_hipKnifeConfig.radius=std::max(.08f,std::min(.40f,IniSignedInt("Input","HipKnifeRadiusCm",22,path)*.01f));
-    const int gw = (int)IniSignedInt("Input","HipKnifeGrabWindowMs",600,path);
+    g_hipKnifeConfig.radius=std::max(.08f,std::min(.50f,IniSignedInt("Input","HipKnifeRadiusCm",28,path)*.01f));
+    const int gw = (int)IniSignedInt("Input","HipKnifeGrabWindowMs",800,path);
     g_hipKnifeConfig.grabWindowMs = (std::uint64_t)(gw < 0 ? 0 : (gw > 2000 ? 2000 : gw));
-    Log("ini: HipKnifeRadiusCm=%.0f HipKnifeGrabWindowMs=%u (r20: squeeze-while-reaching pickup)",
+    Log("ini: HipKnifeRadiusCm=%.0f HipKnifeGrabWindowMs=%u (r21: wider squeeze-while-reaching pickup)",
         (double)(g_hipKnifeConfig.radius*100.f),(unsigned)g_hipKnifeConfig.grabWindowMs);
     Log("ini: HipKnifeEnabled=%d (default OFF, restart required; pre-TMD both hands, post-TMD right hand only, native camera trace)",g_hipKnifeEnabled);
     g_holsterConfig.radius = (float)IniSignedInt("Input", "HolsterRadius", 12, path);
     if (g_holsterConfig.radius < 2.0f) g_holsterConfig.radius = 2.0f;
     if (g_holsterConfig.radius > 48.0f) g_holsterConfig.radius = 48.0f;
-    g_holsterConfig.drawRadius = (float)IniSignedInt("Input", "HolsterDrawRadius", 20, path);
+    g_holsterConfig.drawRadius = (float)IniSignedInt("Input", "HolsterDrawRadius", 32, path);
     if (g_holsterConfig.drawRadius < g_holsterConfig.radius) g_holsterConfig.drawRadius = g_holsterConfig.radius;
-    if (g_holsterConfig.drawRadius > 48.0f) g_holsterConfig.drawRadius = 48.0f;
+    if (g_holsterConfig.drawRadius > 60.0f) g_holsterConfig.drawRadius = 60.0f;
     Log("weapon holster=%d; hip fwd/right/up=(%.0f,%.0f,%.0f) UU radius=%.0f UU drawRadius=%.0f UU; right grip rising edge toggles",
         g_holsterEnabled, g_holsterConfig.fwd, g_holsterConfig.right,
         g_holsterConfig.up, g_holsterConfig.radius, g_holsterConfig.drawRadius);

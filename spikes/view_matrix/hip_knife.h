@@ -27,13 +27,11 @@ inline V EyeLocal(V world,const Pose& eye){return Rotate({-eye.q.x,-eye.q.y,-eye
 inline float Length(V v){return std::sqrt(Dot(v,v));}
 struct Config {
     // Tracking metres: left is literal physical left, never mirrored by AimHand.
-    float left=.25f,down=.50f,forward=.06f,radius=.22f;
-    float minSpeed=1.2f,resetSpeed=.35f,minTravel=.10f;
-    std::uint64_t pickupGraceMs=300,cooldownMs=750,pulseMs=90;
-    // MAIN round 20: grip pressed up to this long BEFORE entering the radius
-    // (still held) also picks up. r19 log: near=1 grip=1 edge=0 — users squeeze
-    // while reaching, so an edge-inside-radius-only rule never fired.
-    std::uint64_t grabWindowMs=600;
+    float left=.25f,down=.50f,forward=.06f,radius=.28f;
+    float minSpeed=0.60f,resetSpeed=.30f,minTravel=.04f;
+    std::uint64_t pickupGraceMs=150,cooldownMs=350,pulseMs=120;
+    // MAIN round 20/21: wider grab window and radius for effortless pickup
+    std::uint64_t grabWindowMs=800;
 };
 // Only yaw, not head pitch/roll; looking down must not throw the belt forward.
 inline Pose Hip(V head,float bodyYaw,const Config& c={}){
@@ -47,17 +45,20 @@ struct Frame {
     // Pickup then restricted to physical right hand (h==1) with no weapon
     // in hand; pre-TMD path (nativeKnife) unchanged.
     bool hasTMD=false,noWeapon=false;
-    bool tracked[2]{},grip[2]{},free[2]{};
+    bool tracked[2]{},grip[2]{},free[2]{},trigger[2]{};
     Pose hand[2];V head;Pose hip;
     std::uint64_t nowMs=0;std::uint32_t pawn=0;
 };
 struct State {
-    int held=-1;bool priorGrip[2]{true,true};bool armed=false,sampled=false;
+    int held=-1;bool priorGrip[2]{true,true};bool priorTrigger[2]{false,false};bool armed=false,sampled=false;
     V previousTip{},strokeOrigin{};
     std::uint64_t sampleMs=0,pickedMs=0,lastSwingMs=0,pulseUntil=0;
     std::uint64_t edgeMs[2]{}; // last grip rising edge per hand (0 = none pending)
     std::uint32_t pawn=0;
     bool Pulse(std::uint64_t now)const{return held>=0&&now<pulseUntil;}
+    void TriggerAttack(std::uint64_t now,std::uint64_t pulseMs=120){
+        lastSwingMs=now;pulseUntil=now+pulseMs;armed=false;
+    }
 };
 inline bool Context(const Frame& f){return f.enabled&&f.gameplay&&f.focused&&f.alive&&
     (f.nativeKnife||f.hasTMD)&&f.pawn&&Finite(f.head)&&Finite(f.hip.p)&&Valid(f.hip.q);}
@@ -89,6 +90,15 @@ inline Event Update(State& s,const Frame& f,const Config& c={}){
         s.held=-1;s.sampled=false;s.armed=false;s.pulseUntil=0;return Event::Reset;
     }
     if(!f.grip[h]){s.held=-1;s.sampled=false;s.armed=false;s.pulseUntil=0;return Event::Sheathed;}
+
+    // Trigger attack on the knife hand (instant, reliable attack alternative to physical swing)
+    const bool trigEdge=f.trigger[h]&&!s.priorTrigger[h];
+    s.priorTrigger[h]=f.trigger[h];
+    if(trigEdge&&f.nowMs-s.pickedMs>=c.pickupGraceMs&&
+       (!s.lastSwingMs||f.nowMs-s.lastSwingMs>=c.cooldownMs)){
+        s.armed=false;s.lastSwingMs=f.nowMs;s.pulseUntil=f.nowMs+c.pulseMs;return Event::Swing;
+    }
+
     // Tip includes angular swings. No engine/view writes; tracking coordinates
     // do not change from stick locomotion or software snap-turns.
     const V tip=f.hand[h].p+Rotate(f.hand[h].q,{0,0,-.22f});
@@ -100,8 +110,8 @@ inline Event Update(State& s,const Frame& f,const Config& c={}){
     s.previousTip=tip;s.sampleMs=f.nowMs;
     if(delta>.25f){s.armed=false;s.strokeOrigin=tip;s.pulseUntil=0;return Event::None;} // tracking jump
     const float speed=delta/dt;
-    if(speed<c.resetSpeed){s.strokeOrigin=tip;s.armed=true;}
-    const bool away=Length(f.hand[h].p-f.hip.p)>c.radius+.06f;
+    if(speed<c.resetSpeed||(!s.armed&&f.nowMs-s.lastSwingMs>=c.cooldownMs)){s.strokeOrigin=tip;s.armed=true;}
+    const bool away=Length(f.hand[h].p-f.hip.p)>c.radius;
     if(s.armed&&away&&f.nowMs-s.pickedMs>=c.pickupGraceMs&&
        (!s.lastSwingMs||f.nowMs-s.lastSwingMs>=c.cooldownMs)&&
        speed>=c.minSpeed&&Length(tip-s.strokeOrigin)>=c.minTravel){

@@ -40,13 +40,13 @@ int main() {
     s.active = true;
     assert(Update(s, true, false, true, 57, hip, hip, c) == Event::Reset);
     assert(!s.active && s.weapon == 0);
-    // MAIN round 20: store needs radius (12), draw accepts drawRadius (20).
+    // MAIN round 20/21: store needs radius (12), draw accepts drawRadius (32).
     {
         State d; const V3 off{4.0f, 18.0f + 16.0f, -24.0f};  // 16 UU from hip
         assert(Update(d, true, true, true, 9, off, hip, c) == Event::None);   // too far to store
         assert(Update(d, true, true, true, 9, hip, hip, c) == Event::Stored);
-        assert(Update(d, true, true, true, 9, off, hip, c) == Event::Drawn);  // 16 < 20 draws
-        assert(Update(d, true, true, true, 9, {4.0f, 18.0f + 21.0f, -24.0f}, hip, c) == Event::None);
+        assert(Update(d, true, true, true, 9, off, hip, c) == Event::Drawn);  // 16 < 32 draws
+        assert(Update(d, true, true, true, 9, {4.0f, 18.0f + 35.0f, -24.0f}, hip, c) == Event::None);
     }
     std::puts("weapon holster: radius, rising-edge toggle, hold, re-entry, weapon/reset gates, drawRadius");
 }

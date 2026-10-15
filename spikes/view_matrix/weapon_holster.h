@@ -15,9 +15,9 @@ struct Config {
     float right = 18.0f;    // UU to the primary-hand side
     float up = -24.0f;      // UU below the view/body origin
     float radius = 12.0f;   // UU activation radius (store)
-    // MAIN round 20: draw uses a wider sphere. r19 user: storing fine, drawing
-    // needs "a very specific point" (holster point is invisible once stored).
-    float drawRadius = 20.0f;
+    // MAIN round 20/21: draw uses a wider sphere. r19/r20 user: storing fine, drawing
+    // needs a wider tolerance so player doesn't have to hit a tiny point.
+    float drawRadius = 32.0f;
 };
 
 enum class Event { None, Stored, Drawn, Reset };
