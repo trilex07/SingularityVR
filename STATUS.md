@@ -1,5 +1,26 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 10 DEPLOYED (DLL
+66E63F943642244E73878F07F6DF57C1090A19BF0E208ECD3371A5D3E4061E8B/source
+1ed9b12 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-192322; game closed
+at deploy). Knife level + ring: (1) installed HipKnifeDownCm=55 (holster
+-36UU at WorldScale 80 = 0.549m below head; pre-edit INI backed to
+deployment/install-backups/20261015-192322/SingularityVR.ini.pre-knifedepth;
+file verified all-CRLF after edit); (2) NEW white knife-belt ring at the
+LEFT belt while held (shared DrawFlatRingAt helper with the gun ring — one
+mechanism; own gate/drew/proj logs); (3) one-shot gate log added to side's
+DrawHipKnife (names the blocker if the knife stays invisible). L1_PASS
+(hip-knife 147). L2_PASS (PE32, manifest commit 1ed9b12 clean). NOTE: a
+botched PowerShell text rewrite of d3d9.cpp (UTF-8 BOM + double-encoded
+emoji, 879-line noise commit dc68e62) was caught by diff-size check and
+fully reverted — unpushed, abandoned via reset; round 10 was redone with
+byte-safe edits only (99+/56-, mojibake grep clean). Lesson: never route
+source files through PowerShell Get-Content/Set-Content; use the edit tool
+or git-native writes. L3/physical PENDING (pre-TMD save): knife visible at
+left hip at holster level, grip pickup, belt ring while held, release
+returns, swing attack. No fix claimed.
+
 LATEST 2026-10-15 MAIN knife live (DLL
 CF5D9143941209D012CC660EE32D6631C77F06E6591165CE04D2D1E11711DB6A/source
 cf99df9 = e89c41e code + STATUS record; x86 PE32 /O2, built==installed via
