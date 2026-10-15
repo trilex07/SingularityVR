@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+SIDE 2026-10-15 left-hip knife: IMPLEMENTED_NOT_VERIFIED, L1_PASS;
+isolated feature/left-hip-knife from origin/main 72ad59d, independent of glove
+PR #30. Default OFF HipKnifeEnabled: local native knife mesh on physical left
+hip, free-hand grip pickup/hold/release, bounded swing -> native RB pulse.
+Pre-TMD only, unknown/dead/unfocused/menu/cine/transition states fail closed.
+IMPORTANT: native trace is inview_camera (50 damage / 96 UU), not blade-tip
+collision; offline identity is not runtime input-to-damage proof. L1 147 checks,
+5 Python tests, fake-D3D guard/decoder + holster/hand regressions PASS. Optimized
+x86 build succeeded; final clean-source L2 receipt pending. ZERO Steam.
+See docs/left-hip-knife.md for exact limits, local assets and MAIN test script.
+
 LATEST 2026-10-15 CINE ROUND-2 L3_PASS (user: stereo back after Load).
 Log: `menu-load cut ... latch=1` -> `VideoFlat -> GameplayStereo`, drift back
 to `cine off`. PR to main pending (user creates, gh auth missing here).
