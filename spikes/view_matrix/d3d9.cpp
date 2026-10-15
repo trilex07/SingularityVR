@@ -12,6 +12,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "support_grip.h"
 #include "weapon_holster.h"
 #include "weapon_wheel.h"
+#include "ammo_probe.h"
 #include "weapon_wheel_direct_select.h"
 #include "weapon_wheel_catalog_load.h"
 #include "weapon_wheel_atlas.h"
@@ -13129,6 +13130,16 @@ inline int32_t CensusSlot(uint32_t k, bool create, bool* fresh, int32_t nextIdx)
 FireSig g_fireSig[kFireSigMax]{};
 int  g_fireSigN = 0;
 int  g_fireCensusBudget = 0;         // ini [Render] FireDrawCensus: how many shots to record
+// ---- ammo probe: which ints on Pawn.Weapon move when a shot is fired ----
+// Default OFF ([Diagnostic] AmmoProbe=N pulls). Baseline snapshot per weapon
+// object, changed-offsets-only after. Bounded: N pulls, 256 guarded reads
+// per pull, then silent. Diffing the dumps across spaced shots names the mag
+// counter (decrements per shot); reserve moves on pickup, not here.
+static int g_ammoProbeLeft = 0;
+static uintptr_t g_ammoProbeObj = 0;
+static int32_t g_ammoProbePrev[256]{};
+static bool g_ammoProbeHave = false;
+static bool g_ammoProbeWasDown = false;
 volatile LONG g_fireCensusFrames = 0;
 bool g_fireTrigWasDown = false;
 int  g_fireSplitSeen = 0, g_fireQuadSeen = 0;
@@ -27663,6 +27674,57 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         if (InterlockedCompareExchange(&g_rawTrigger, 0, 0) < 20) g_fireTrigWasDown = false;
     }
 
+    // ---- ammo probe dump: snapshot Pawn.Weapon ints on the trigger edge ----
+    {
+        const LONG trig = InterlockedCompareExchange(&g_rawTrigger, 0, 0);
+        const bool down = trig > 40;
+        const uintptr_t wobj = (uintptr_t)(uint32_t)InterlockedCompareExchange(&g_weaponObj, 0, 0);
+        const bool latched = InterlockedCompareExchange(&g_gunVerts, 0, 0) != 0;
+        if (ammoprobe::ShouldDump(down, g_ammoProbeWasDown, g_ammoProbeLeft, latched, wobj)) {
+            --g_ammoProbeLeft;
+            g_ammoProbeWasDown = true;
+            if (!g_ammoProbeHave || wobj != g_ammoProbeObj) {
+                g_ammoProbeObj = wobj;
+                g_ammoProbeHave = true;
+                for (int i = 0; i < ammoprobe::kSlots; ++i) {
+                    const void* p = (const void*)(wobj + (uintptr_t)(i * 4));
+                    g_ammoProbePrev[i] = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                        : ammoprobe::kUnreadable;
+                }
+                char line[32 * 12 + 64];
+                for (int c = 0; c < 8; ++c) {
+                    int n = _snprintf_s(line, sizeof(line), _TRUNCATE,
+                                        "ammo probe: base obj=%p [%03x..%03x]=",
+                                        (void*)wobj, c * 32 * 4, (c * 32 + 31) * 4 + 3);
+                    for (int k = 0; k < 32 && n > 0; ++k) {
+                        n += _snprintf_s(line + n, sizeof(line) - n, _TRUNCATE, "%d,",
+                                         g_ammoProbePrev[c * 32 + k]);
+                    }
+                    Log("%s", line);
+                }
+                Log("ammo probe: BASELINE dumped (%d pulls left)", g_ammoProbeLeft);
+            } else {
+                int shown = 0;
+                for (int i = 0; i < ammoprobe::kSlots; ++i) {
+                    const void* p = (const void*)(wobj + (uintptr_t)(i * 4));
+                    const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                     : ammoprobe::kUnreadable;
+                    if (v != g_ammoProbePrev[i]) {
+                        if (shown < 24)
+                            Log("ammo probe: diff obj=%p off=+0x%03x %d->%d", (void*)wobj,
+                                (unsigned)(i * 4), g_ammoProbePrev[i], v);
+                        ++shown;
+                        g_ammoProbePrev[i] = v;
+                    }
+                }
+                if (shown == 0) Log("ammo probe: diff obj=%p no changes", (void*)wobj);
+                else if (shown > 24) Log("ammo probe: diff obj=%p ... +%d more", (void*)wobj, shown - 24);
+            }
+            if (g_ammoProbeLeft == 0) Log("ammo probe: budget spent");
+        }
+        if (trig < 20) g_ammoProbeWasDown = false;
+    }
+
     // ---- ⭐ run 222: the ADS constant capture, on the same ALT trigger ----
     //
     // Armed from Present and captured at the draw, because Present is where the trigger state is known
@@ -28599,6 +28661,13 @@ void LoadIniSettings() {
         g_fireCensusBudget ? "record how each small draw during a shot is classified - looking for a"
                              " draw PASSED THROUGH as a fullscreen quad that does not span NDC"
                            : "off");
+    // Ammo probe: snapshot Pawn.Weapon ints on N trigger pulls to find the
+    // mag counter by motion (decrements per shot). Default OFF, auto-expires.
+    g_ammoProbeLeft = GetPrivateProfileIntA("Diagnostic", "AmmoProbe", 0, path);
+    if (g_ammoProbeLeft < 0) g_ammoProbeLeft = 0;
+    if (g_ammoProbeLeft > 12) g_ammoProbeLeft = 12;
+    if (g_ammoProbeLeft > 0)
+        Log("ini: AmmoProbe=%d (dump weapon ints on trigger pulls, then silent)", g_ammoProbeLeft);
 
     // Run 213d: the drop test for the DrawPrimitive path - the validation MuzzleFxDropStride cannot do,
     // because that path has no stride. Set DropPrimCount=2 DropPrimType=5 and scope: if the scope

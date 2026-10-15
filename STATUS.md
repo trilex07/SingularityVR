@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 ammo PROBE (this branch): bounded trigger-edge dumper for
+Pawn.Weapon ints ([Diagnostic] AmmoProbe=N, baseline + diffs, auto-expires).
+Goal: name the mag counter by motion across spaced shots. Falsifier: a
+per-shot decrementing int; reserve identified by value later. Art inventoried
+(4 plates + digit strip + 4 bullet renders + mag full/empty semantics). See
+docs/ammo-plates.md. Runtime plates after offsets harden. Prior history.
+
 LATEST 2026-10-15 CINE ROUND-2 L3_PASS (user: stereo back after Load).
 Log: `menu-load cut ... latch=1` -> `VideoFlat -> GameplayStereo`, drift back
 to `cine off`. PR to main pending (user creates, gh auth missing here).
