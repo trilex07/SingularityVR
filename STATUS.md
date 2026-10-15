@@ -1,5 +1,98 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 wheel PR PREPARED, not yet created: `gh` has no auth in
+this session (push works, PR creation needs user-side login). Branch
+fix/hud-3d-textures pushed (17 commits over origin/main). User creates via
+web compare link with the prepared title/body (see handoff message), then
+reviews/merges. Open test debt stands (multi-weapon switch).
+Wheel visuals (ring, 4 gun wedges, held brighter, unowned empty, labels,
+silhouette icons, hand highlight): PHYSICALLY_VERIFIED by user in headset.
+Switching logic: IMPLEMENTED + L1/L2 only (commit-mirror fix in, L3 evidence
+pending: select+DIRECT+LANDED+visible change on a 2+ gun save; Seeker/TMD
+sectors, 6 slots, ammo also open per docs/wheel-round-layout.md). Prior history.
+
+LATEST 2026-10-15 wheel ICONS installed (no DLL change): 6 weapon silhouettes
+cut from references/95f791be-....png into the Katorga atlas reserved row
+(gun-centurion/valkyrie/spikeshot/kasimov + dev-seeker/dev-tmd for later);
+atlas 512x256 PNG E77799B6 + atlas.json 22 rects (sha matches file) +
+catalog sectors 1-4 remapped; all 6 catalog ids resolve, bounds/unique PASS.
+Backup: ww-icons-20261015/atlas-backup. Installed DLL C1974AFF loads the
+atlas dynamically, so icons appear on next launch with the current lease.
+Upstream SIDE hud pack should absorb the deltas. Need: R3 open shows gun
+silhouettes instead of mag squares + `HUD atlas ready (512x256, 22 icons)`.
+
+LATEST 2026-10-15 wheel ROUND-2 IMPLEMENTED, L1_PASS + L2_PASS (user feedback
+on 2E2064FB: hand-select, smaller, ownership-gated labels, translucency).
+Head-relative hand travel (6 cm deadzone, eye-0 basis) drives selection via
+WeaponWheelPickSource=1 (default; 0 = legacy stick); FSM/commit untouched.
+Wheel 20%->16% frame height; labels only for held/seen weapons; fills
+translucent, text opaque. L1: 99-check layout suite (hand direction incl.
+behind-eye/deadzone/fallback, ownership gate, FSM hand edges) PASS. L2: x86
+PE32 /O2, static analysis clean (candidate SHA after clean-tree rebuild).
+Regression verdict from the 2E2064FB session log: doubled movies + 26-38 fps
+from boot predate first wheel OPEN — wheel code exonerated (early return
+while closed); fixed ~30 ms/frame stall, draw-count independent, needs
+separate A/B vs accepted 6F4BBEF2 on the same save. L3 redeploy pending.
+
+LATEST 2026-10-15 wheel ROUND-2 DEPLOYED for L3 (DLL C1974AFF/source 2ecd757,
+x86 PE32 /O2, clean tree; built==installed hash-verified). Backup
+20261015-094655 (prior 2E2064FB). INI lease carried over (02DCE23D, backup in
+ww-round2 dir): Round=1 + DirectSelect=1 + KatorgaHud=1, no PickSource key =
+hand mode. Live record: deployment/hands-dubbing/ww-round2-20261015/live.json.
+Need: 10 s no-R3 baseline, then R3 open (hand moves select, 6 cm deadzone),
+owned names only, translucent smaller ring, release commits, normal exit.
+
+LATEST 2026-10-15 wheel ROUND layout IMPLEMENTED, L1_PASS + L2_PASS (MAIN
+takeover: previous agent gone, user authorises MAIN continuation in this
+checkout). Ring + wedge sectors + catalog labels behind
+[Input] WeaponWheelRound=0 (default OFF; squares path byte-identical when
+OFF). Slot-0 icon/label show the held weapon; FSM/commit pulses untouched;
+ammo NOT drawn (AMMO_UNKNOWN, no native hook). L1: layout round-trip 2..8
+slots + sanitation + slot labels, catalog labels, atlas, wheel FSM — all
+PASS. L2: x86 PE32 /O2 DLL SHA
+2E2064FB1689E166162107D42CFD829E0BD9AC4A83AB08B3ECDD24E8F201DC3F
+(source 39d6b38 clean tree; static analysis clean; deployed, see below). LATEST 2026-10-15 wheel ROUND DEPLOYED for L3 (DLL 2E2064FB/source 39d6b38,
+x86 PE32 /O2, clean tree; built==installed hash-verified). Backup
+20261015-092336 (prior EA9EFFB1). INI leased 02DCE23D (backup 4924DF4D):
+WeaponWheelRound=1 + DirectSelect=1 + KatorgaHudEnabled=1; installed diff is
+exactly those two added lines. Game was closed at deploy; MAIN does not
+launch — user starts via Steam. Live record:
+deployment/hands-dubbing/ww-round-20261015/live.json. Need: R3 open shows
+ring + 4 labelled wedges (top = held weapon), stick tilt highlights orange,
+release on sector>0 commits as before, normal exit. After exit: log
+analysis (OPEN/COMMIT/DIRECT/LANDED + `overlay active (round`), INI restore
++ DLL rollback hash-verified. Prior history.
+
+LATEST 2026-10-15 wheel VISUAL test (PID428, 3149A872): R3 open (atlas load +
+icons?), select sector, release, normal exit. Flags leased (DirectSelect=1,
+KatorgaHud=1; backup ww-visual-test/ini-backup). DLL backup 20261015-003155
+(TV-accepted 6F4BBEF2). Observer ww-visual-20261015-0032. After exit: atlas
+evidence + equip logs + INI restore + DLL rollback, all verified. Prior history.
+
+LATEST 2026-10-15 wheel direct-select TEST (PID7112, 1ADD5608): R3 open
+(catalog load), select another sector if 2+ weapons owned, release, normal
+exit. INI leased (DirectSelect=1, backup ww-direct-test/ini-backup). DLL
+backup 20261015-001750 (TV-accepted 6F4BBEF2). Observer ww-direct-20261015-0017.
+After exit: LANDED/EXPIRED analysis + cycle_order verdict + INI restore
+(757F414B) + DLL rollback (6F4BBEF2), all hash-verified. Prior history.
+
+LATEST 2026-10-15 TEXTURES row VERIFIED: user cycled 2x→4K→8K in headset
+("jest git"), installed texture_override.ini reads Quality=8K — save path
+PASS on disk. L3 display/cycle PASS per user; injector-log proof (quality: 8K
+after restart) pending next launch. Row authorized for PR (no merge by MAIN).
+HUD assets stand installed (81 files, inert until code integration — user
+asked why invisible: catalog/wheel/draw code not yet written). Prior history.
+
+LATEST 2026-10-15 TEXTURES row TEST (PID37152, 9C37BD1B): panel DISPLAY →
+TEXTURES cycle + save, normal exit; then INI check. Backup 20261015-000526
+(TV-accepted 6F4BBEF2). Observer textures-row-20261015-0005. L3/L4 pending. Prior history.
+
+LATEST 2026-10-14 TV PHYSICALLY_VERIFIED (user: single image OK) + PR #25
+merged. PROMOTED accepted DLL 6F4BBEF2 (source cbb4509, already installed +
+verified). EA9EFFB1 retained as fallback. New branch fix/hud-3d-textures from
+origin/main for HUD assets + TEXTURES row. TV round closed; no rollback. Prior
+history below (merged).
+
 LATEST 2026-10-14 visible-region mirror DEPLOYED (cbb4509/6F4BBEF2, 21/21
 fixture, clean): eye aspect-fit into the on-monitor part of the window
 (expected dst 430,0,1489,1080 for the observed placement). Backup

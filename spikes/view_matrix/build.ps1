@@ -53,7 +53,7 @@ try {
     $cmd = "`"$vcvars`" x86 && cl /nologo /LD /EHsc /W3 /Z7 /MD /std:c++17 " + $optimization +
            "/I`"$inc`" /I`"$mh\include`" " +
            "/Fe:d3d9.dll d3d9.cpp polish_localization.cpp $mhSrc " +
-           "/link /DEBUG:NONE /MAP:d3d9.map /DEF:d3d9.def /LIBPATH:`"$libDir`" openxr_loader.lib dxgi.lib user32.lib shell32.lib"
+           "/link /DEBUG:NONE /MAP:d3d9.map /DEF:d3d9.def /LIBPATH:`"$libDir`" openxr_loader.lib dxgi.lib user32.lib shell32.lib windowscodecs.lib ole32.lib"
     cmd /c $cmd
     if ($LASTEXITCODE -ne 0) { throw "build failed (exit $LASTEXITCODE)" }
 

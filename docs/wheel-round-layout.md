@@ -1,0 +1,100 @@
+# Round weapon-wheel layout — ring + wedge sectors + catalog labels
+
+Reference mockup: `references/95f791be-39f6-461b-8470-8ff0664ee7e6.png`
+(6-wedge circular wheel, per-sector label/icon/ammo, orange selected wedge,
+centre SELECT WEAPON).
+## OBSERVE (2026-10-15, PID428 session `ww-visual-20261015-0032`)
+
+- Catalog ready (8 sectors, 4 cycle entries), atlas ready (512x256, 16 icons),
+  overlay active with Katorga icons, 4 sectors, anchored to the right hand.
+- The log contains repeated `OPEN slots=4` and **zero** `COMMIT` /
+  `SelectionChanged` / `LANDED` lines: the user opened the wheel but never
+  committed a selection (stick inside deadzone, release on sector 0, or wheel
+  opened without a weapon in hands — `Update()` requires
+  `gameplay && weaponInHands`).
+- User report: top shows a circle icon, left/right/down show squares; asks
+  whether selection is right-hand movement. Answer from
+  `spikes/view_matrix/weapon_wheel.h`: **selection is the RIGHT STICK
+  direction** (`SectorForStick`, deadzone 0.35, sector 0 = up, clockwise);
+  the wheel is only *anchored* to the right-hand pose. R3 hold opens,
+  stick tilt highlights, R3 release commits (`selection > 0`), L3 cancels,
+  release on sector 0 is Cancel by design (no-op "current" sector).
+- Current visuals are floating squares (`W1..W4` or 64px atlas quads showing
+  magazine/sense glyphs) — no ring, no wedge sectors, no weapon names. The
+  installed atlas has **no weapon silhouettes**, so reference-style gun
+  pictures are not renderable from it.
+
+## HYPOTHESIS
+
+Replacing square cards with wedge fills + outer ring + centre disc + catalog
+labels (same input FSM, same commit path) proves the circular layout without
+changing what the wheel *does*. Falsifier: L1 geometry round-trip failure,
+L2 build/test failure, or an L3 session where R3 no longer opens the wheel
+or COMMIT pulses change count vs the squares build.
+
+## SCOPE (this step)
+
+- `weapon_wheel_layout.h` (new, pure): sector angles, wedge bounds/points,
+  `RoundMetrics` (wheel diameter ~40% frame height), glyph-set label
+  sanitation, `LabelForSlot` with slot-0-shows-held-weapon.
+- `weapon_wheel_catalog_load.h`: parses `label_pl` (was discarded).
+- `d3d9.cpp` `DrawWeaponWheel`: round path behind `[Input] WeaponWheelRound=0`
+  (default OFF — squares path byte-identical when OFF). Slot-0 icon also
+  shows the held weapon when the catalog resolves it. FSM untouched.
+- Centre caption `SELECT` / `WEAPON`. Per-sector labels from the catalog,
+  `W#` fallback when the catalog is absent, icon-only when a label is empty.
+- OUT of scope: ammo counts (AMMO_UNKNOWN — no native ammo hook proven, never
+  fabricate), weapon silhouettes (not in the atlas), 3D ring/plates GLBs,
+  sector-0 commit semantics (still Cancel/no-op), 6-slot default (slots stay
+  `WeaponWheelSlots=4` until Seeker/TMD sectors get verified `gun_verts`).
+
+## EVIDENCE GATES
+
+- L1: `test-weapon-wheel-layout` (sector/stick round-trip 2..8 slots, wedge
+  bounds, metrics, sanitation incl. `/` mockup labels, slot labels incl.
+  held-weapon override/truncation) + existing wheel/catalog/atlas tests.
+- L2: x86 PE32 `/O2` DLL build, SHA recorded; tests above re-run.
+- L3 (MAIN only): leased INI `WeaponWheelRound=1` (+ existing
+  `WeaponWheelDirectSelect=1`, `KatorgaHudEnabled=1`), R3 open shows the ring
+  with 4 labelled wedges, tilt highlights orange, release commits exactly as
+  the squares build; then INI restore + DLL rollback, hash-verified.
+- L4: physical PSVR2 readability/placement acceptance (separate).
+
+## LIMITS
+
+- Labels use the 5x7 glyph set (A-Z 0-9 `+-()` space); `/` and `.` render as
+  space explicitly, Polish diacritics are not in the font. 16-glyph cap.
+- Long labels (e.g. `KASIMOV SNV-E99` = 15) fit 4-slot wedges at px=2; 6+ slot
+  wedges may see minor text overspill — noted, not blocked.
+- Catalog/atlas reads on the render thread follow the existing pattern
+  (written once at first R3 open); same accepted lifetime as the icon path.
+
+## ROUND 2 (2026-10-15, user feedback on 2E2064FB)
+
+User: wheel OK and stick tilt works, but selection must follow RIGHT-HAND movement; wheel slightly too big; never name unowned weapons; wheel should be translucent. Separately: doubled loading/movie background per eye + ~35 fps.
+
+- Hand selection: head-relative hand travel since R3 open (anchor latched on Open), 6 cm deadzone, read as a screen direction through the current eye-0 basis (turning the head with a still hand does not steer). `WeaponWheelPickSource=1` (default, pre-existing INI key, previously unread); 0 restores the legacy stick. `weaponwheel::Update` takes `handSector` (-2 = stick, -1 = hold, >= 0 = sector); open/commit/cancel edges and sector-0 Cancel unchanged.
+- Smaller: outer radius 20% -> 16% of frame height.
+- Ownership gate: `g_wwSeen[8]` gun_verts held this session (input thread appends, bounded log once per weapon); labels draw only for held/seen sectors, others stay icon-only; W# fallback only without a catalog.
+- Translucent fills/ring/disc (alpha blend, ~60-88%); sector + centre text stay opaque.
+- Regression verdict (log evidence, same session): VideoFlat movies (lines 237-754) and 26-38 fps from boot (134 draws -> 33 fps) both predate the first wheel OPEN (line 5262); the round code early-returns while closed, so it cannot cause either. Same headset/resolution as the 89 fps PID428 session; fps is draw-count independent -> fixed ~30 ms/frame stall outside itemized hooks (`our work` residual). Wheel exonerated; fps/movies need a separate A/B (same save, accepted 6F4BBEF2 vs candidate) and stay OPEN, not attributed to this change.
+
+## ROUND 3 (2026-10-15, user feedback on C1974AFF + icons)
+
+User: hand tracking felt off (retest pending - left controller was off); wheel shows 3 gun icons + circle-as-current, wants 4 gun icons with the held one visibly marked; unowned weapons must be fully empty slots (no icon, no name).
+
+- Gun-order mapping: wheel positions come from catalog sectors with gun_verts > 0 in catalog order (Centurion/Valkyrie/Spikeshot/Kasimov); the "Obecna" no-op sector is gone. Held wedge: brighter steel fill + tinted icon/label; selected wedge: orange (unchanged meaning: commits on release).
+- FSM touched rule: release commits only a touched wheel (highlight left the deadzone at least once); an untouched tap cancels. This keeps tap safety now that every sector is a real gun, and allows commit on sector 0. Legacy offset-pulse path unaffected (0 pulses = no-op).
+- Commit path builds its sector table in the same gun order, so drawn position == committed target. Unowned positions draw wedge only (icon + label skipped).
+- Retest diagnostics (bounded): OPEN logs anchor validity; first SelectionChanged per open logs sector + hand/stick source, so the hand-feel retest is attributable.
+- Falsifier: L1 gun-order/touched/ownership suites; L3 must show 4 gun wedges, held brighter, unowned empty, tap = no switch, R3-release after hand move commits the pointed gun.
+
+## COMMIT FIX (2026-10-15, found by log analysis before PR)
+
+The close edge in `weaponwheel::Update` resets `state.selection = 0` before returning `Commit`, so the runtime read `sel = 0` on every commit: the wheel highlighted but never switched (legacy pulses 0; direct-select always targeted position 0). Pre-existing since the FSM was written, not a round-layout regression. Fix: commit reads the live `g_weaponWheelSelection` mirror (last SelectionChanged, cleared only on Open); COMMIT log prints sector + pulses. Falsifier: L3 must show `COMMIT sector=N`, `DIRECT sector=N verts A->B steps=K`, `direct-select LANDED on gunVerts=B`, and the held gun visibly changes.
+
+## OPEN TEST DEBT (2026-10-15, required future tests)
+
+Verified by user in headset: round wheel renders (ring, 4 gun wedges, held brighter, unowned empty), catalog labels, silhouette icons, hand/stick highlight. NOT verified (user save holds a single weapon): an actual weapon SWITCH with 2+ owned guns.
+
+Required future test (multi-weapon save): hold gun A, R3 + hand/stick to gun B, release, B visibly in hands, normal exit. session.log must show `select sector=N`, `DIRECT sector=N verts A->B steps=K`, `direct-select LANDED on gunVerts=B`, and `COMMIT sector=N`. Also still open: Seeker/TMD sector switching (mechanism UNKNOWN, icons reserved), 6-slot default, ammo counts (AMMO_UNKNOWN).

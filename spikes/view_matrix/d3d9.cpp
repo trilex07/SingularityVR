@@ -12,6 +12,11 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "support_grip.h"
 #include "weapon_holster.h"
 #include "weapon_wheel.h"
+#include "weapon_wheel_direct_select.h"
+#include "weapon_wheel_catalog_load.h"
+#include "weapon_wheel_atlas.h"
+#include "weapon_wheel_layout.h"
+#include <wincodec.h>
 #include "grip_latch.h"
 #include "glove_isolate.h"
 #include "support_grip_palette.h"
@@ -366,6 +371,22 @@ bool IniPath(char* out /*MAX_PATH*/) {
     char* slash = strrchr(out, '\\');
     if (!slash) return false;
     strcpy_s(slash + 1, MAX_PATH - (slash + 1 - out), "SingularityVR.ini");
+    return true;
+}
+
+// Same directory as our DLL, different file name (e.g. the texture
+// injector's texture_override.ini). Shared by the TEXTURES row and the
+// startup read so both sides address the identical file.
+bool SiblingIniPath(const char* name, char* out /*MAX_PATH*/) {
+    if (!name || !name[0] || !out) return false;
+    HMODULE self = nullptr;
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCSTR)&SiblingIniPath, &self)) return false;
+    if (!GetModuleFileNameA(self, out, MAX_PATH)) return false;
+    char* slash = strrchr(out, '\\');
+    if (!slash) return false;
+    strcpy_s(slash + 1, MAX_PATH - (slash + 1 - out), name);
     return true;
 }
 
@@ -2175,6 +2196,90 @@ volatile LONG g_weaponWheelCommit = 0;
 volatile LONG g_weaponWheelPulseGap = 0;
 weaponwheel::State g_weaponWheelState{};
 LONG g_weaponWheelSlots = 4;
+// Direct-select wheel (Katorga HUD pack): sector->gun_verts catalog loaded
+// lazily at first R3 open when [Input] WeaponWheelDirectSelect=1 (default 0:
+// the offset-pulse path below is untouched). KatorgaHudEnabled gates visuals
+// only and is consumed by a later step; the asset root is shared.
+volatile LONG g_wwDirectSelect = 0;
+volatile LONG g_wwPickSource = 1;
+volatile LONG g_wwCatalogState = 0;   // 0 unloaded, 1 ready, -1 failed (logged once)
+volatile LONG g_wwTargetVerts = 0;
+volatile LONG g_wwExpecting = 0;
+volatile LONG g_katorgaHud = 0;
+// Round wheel layout (reference mockup: ring + wedge sectors + catalog labels).
+// Default OFF: the square-card path below is untouched. Gates visuals only;
+// input/commit FSM in SyncXRInput is identical in both modes.
+volatile LONG g_wwRound = 0;
+// Hand-driven selection (WeaponWheelPickSource=1, default): head-relative
+// right-hand offset latched at wheel open; 6 cm deadzone. Slot 0 release is
+// still Cancel. WeaponWheelPickSource=0 restores the legacy right stick.
+static XrVector3f g_wwHandAnchor{ 0, 0, 0 };
+static volatile LONG g_wwHandAnchorOk = 0;
+// Gun_verts the player has verifiably held (render + input threads read;
+// input thread appends). Labels are drawn only for these + the held weapon.
+static volatile LONG g_wwSeen[8]{};
+// Quaternion rotate for the hand-selection eye basis. Mirrors VrUiRotate
+// (vr_menu_overlay.h is included further down this TU, past SyncXRInput).
+static uipointer::V WwRotate(const XrQuaternionf& q, uipointer::V v) {
+    const uipointer::V axis{ q.x, q.y, q.z };
+    const auto cross = [](uipointer::V a, uipointer::V b) {
+        return uipointer::V{ a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z,
+                             a.x * b.y - a.y * b.x };
+    };
+    const uipointer::V t = cross(axis, v) * 2.0f;
+    const uipointer::V c = cross(axis, t);
+    return uipointer::V{ v.x + t.x * q.w + c.x, v.y + t.y * q.w + c.y,
+                         v.z + t.z * q.w + c.z };
+}
+static wheel_catalog::Catalog g_wwCatalog;
+static char g_katorgaAssetRoot[MAX_PATH] = "vr-assets/hud/katorga/3d";
+// Katorga icon atlas (render thread only: created lazily at first wheel draw,
+// consumed only in DrawWeaponWheel; MANAGED pool survives device resets).
+static IDirect3DTexture9* g_hudAtlasTex = nullptr;
+static hud_atlas::Sheet g_hudAtlas;
+static volatile LONG g_hudAtlasState = 0;   // 0 unloaded, 1 ready, -1 failed (logged once)
+
+// Runs on the input thread only (first R3 open); readers below are the same
+// thread, so no torn-vector concerns across threads.
+static void MaybeLoadWheelCatalog() {
+    if (InterlockedCompareExchange(&g_wwCatalogState, 0, 0) != 0) return;
+    if (!Rd(g_wwDirectSelect) && !Rd(g_katorgaHud) && !Rd(g_wwRound)) return;
+    static char buf[65536];
+    size_t got = 0;
+    char dll[MAX_PATH]{};
+    HMODULE self = nullptr;
+    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                           GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           (LPCSTR)&MaybeLoadWheelCatalog, &self) &&
+        GetModuleFileNameA(self, dll, MAX_PATH)) {
+        char* slash = strrchr(dll, '\\');
+        if (slash) {
+            *slash = 0;
+            std::string root = g_katorgaAssetRoot;
+            for (char& c : root) if (c == '/') c = '\\';
+            char path[MAX_PATH]{};
+            _snprintf_s(path, sizeof(path), _TRUNCATE, "%s\\%s\\weapon_wheel_catalog.json",
+                        dll, root.c_str());
+            FILE* f = nullptr;
+            if (fopen_s(&f, path, "rb") == 0 && f) {
+                got = fread(buf, 1, sizeof(buf) - 1, f);
+                fclose(f);
+                buf[got] = 0;
+            }
+        }
+    }
+    wheel_catalog::Catalog cat;
+    if (got > 0 && wheel_catalog::Parse(buf, cat) &&
+        !cat.sectors.empty() && !cat.cycle.empty()) {
+        g_wwCatalog = cat;
+        InterlockedExchange(&g_wwCatalogState, 1);
+        Log("weapon wheel: direct-select catalog ready (%u sectors, %u cycle entries)",
+            (unsigned)cat.sectors.size(), (unsigned)cat.cycle.size());
+    } else {
+        InterlockedExchange(&g_wwCatalogState, -1);
+        Log("weapon wheel: catalog missing/unparsable - offset pulses for this session");
+    }
+}
 
 inline ArmedState PlayerArmed() { return (ArmedState)Rd(g_armedState); }
 
@@ -7110,7 +7215,8 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_GOTO_TMD,
        // ⭐ run 249: the TMD page split into three. See kPageRows.
        PR_GOTO_TMDBONE, PR_GOTO_TMDMESH, PR_BACK_TMD,
-       PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_BACK };
+       PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_BACK,
+       PR_TEXTURES };   // appended last: existing IDs never renumber
 
 // ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
@@ -7146,7 +7252,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
 //     before any of this. It also nearly DOUBLES the glyph - px is derived from this number, and at
 //     17 it had hit the floor of 3 that the comment below calls unreadable through a lens.
 const int kPanelPages    = 10;     // + HANDS (glove knobs that used to be ini-only)
-const int kPanelRowsMax  = 12;     // ⚠ a page longer than this cannot be declared - see kPageRows
+const int kPanelRowsMax  = 13;     // DISPLAY needs 13 for TEXTURES (was 12); effective px stays 3 via floor-raiser
 const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_ENABLEVR, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_GOTO_CTRL, PR_GOTO_COMFORT,
       PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_GOTO_TMD, PR_GOTO_HANDS },
@@ -7166,7 +7272,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
     { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE,
-      PR_POLISH, PR_UINARRATOR, PR_GLOVEONLY, PR_VFXLOOK, PR_BACK },
+      PR_POLISH, PR_UINARRATOR, PR_GLOVEONLY, PR_VFXLOOK, PR_TEXTURES, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
@@ -7207,7 +7313,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_GLOVEISOLATE, PR_GLOVEFACE, PR_GLOVESTUMP, PR_GLOVELEFT, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 11, 10, 3, 12, 10, 7, 10, 6, 8, 5 };
+const int kPageCount[kPanelPages] = { 11, 10, 3, 13, 10, 7, 10, 6, 8, 5 };   // [3] DISPLAY 12->13 for TEXTURES (px floor 3 unchanged)
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -7287,6 +7393,8 @@ extern volatile LONG g_cineStickTurn;
 extern volatile LONG g_cutsceneLockCamera;
 extern volatile LONG g_swapSticks;
 extern int g_leftHanded, g_leftHandedPending;
+// Defined beside g_leftHandedPending; declared here so the panel rows above can read it.
+extern int g_texQuality, g_texQualityApplied;
 // Defined with the handedness globals; the panel's MOVE DIRECTION row is the first thing to read it.
 inline int OffHand() { return g_leftHanded ? 1 : 0; }
 
@@ -7552,6 +7660,19 @@ void PanelSaveRow(int rowId, const char* path) {
             // The PENDING value, not the live one - see the LEFT HANDED row.
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%d", g_leftHandedPending);
             WritePrivateProfileStringA("Input", "LeftHanded", v, path); return;
+        case PR_TEXTURES: {
+            // Sibling ini owned by the texture injector - never SingularityVR.ini,
+            // which the injector does not read. Refuse to create it blindly.
+            static const char* kQ[3] = { "2x", "4K", "8K" };
+            long q = g_texQuality; if (q < 0 || q > 2) q = 0;
+            char tini[MAX_PATH]{};
+            if (!SiblingIniPath("texture_override.ini", tini)) return;
+            if (GetFileAttributesA(tini) == INVALID_FILE_ATTRIBUTES) {
+                Log("VR panel: texture_override.ini absent (injector not installed) - TEXTURES not saved");
+                return;
+            }
+            WritePrivateProfileStringA("TextureQuality", "Quality", kQ[q], tini); return;
+        }
         case PR_RECENTERCHORD:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_recenterChordEnabled));
             WritePrivateProfileStringA("Input", "RecenterChord", v, path); return;
@@ -7951,6 +8072,15 @@ void PanelRowText(int row, char* out, size_t cap) {
                         g_leftHandedPending ? "ON" : "OFF",
                         (g_leftHandedPending != g_leftHanded) ? "  *RESTART*" : "");
             break;
+        case PR_TEXTURES: {
+            // Same restart-marker precedent as LEFT HANDED: the tier is read once at
+            // injector startup, so the row must say the value moved AND pending.
+            static const char* kQn[3] = { "2x NATIVE", "4K", "8K" };
+            long q = g_texQuality; if (q < 0 || q > 2) q = 0;
+            _snprintf_s(out, cap, _TRUNCATE, "TEXTURES     %s%s", kQn[q],
+                        (g_texQuality != g_texQualityApplied) ? "  *RESTART*" : "");
+            break;
+        }
         case PR_RECENTERCHORD:
             _snprintf_s(out, cap, _TRUNCATE, "RECENTER L3+R3 %s",
                         Rd(g_recenterChordEnabled) ? "ON" : "OFF");
@@ -8395,6 +8525,15 @@ void PanelAdjust(int row, int dir) {
             // it back, because the button bindings it controls are frozen at attach.
             g_leftHandedPending = g_leftHandedPending ? 0 : 1;
             break;
+        case PR_TEXTURES: {
+            // Cycle list, not a range: three named tiers, wrap around.
+            long q = g_texQuality; if (q < 0 || q > 2) q = 0;
+            g_texQuality = (int)((q + (dir >= 0 ? 1 : 2)) % 3);
+            static const char* kQn[3] = { "2x NATIVE", "4K", "8K" };
+            Log("VR panel: TEXTURES %s%s", kQn[g_texQuality],
+                (g_texQuality != g_texQualityApplied) ? " (restart to apply)" : "");
+            break;
+        }
         case PR_RECENTERCHORD:
             InterlockedExchange(&g_recenterChordEnabled,
                                 Rd(g_recenterChordEnabled) ? 0 : 1);
@@ -8570,6 +8709,10 @@ int g_leftHanded = 0;                    // ini [Input] LeftHanded - read before
 // those are frozen at attach. A half-applied handedness is worse than one that waits - so the panel
 // moves this, PanelSave writes it, and the next launch reads it into both.
 int g_leftHandedPending = 0;
+// TEXTURES row: tier index into {"2x","4K","8K"} for Binaries\texture_override.ini
+// [TextureQuality] Quality. Read once at startup by the texture injector;
+// the PENDING/APPLIED pair follows the LEFT HANDED precedent (restart marker).
+int g_texQuality = 0, g_texQualityApplied = 0;
 volatile LONG g_swapSticks = 0;          // ini [Input] SwapSticks - live, on the CONTROLLER page
 
 // Which hand the gun and aim follow. The only thing the four aim sites need to know.
@@ -8853,6 +8996,26 @@ bool InitXRInput() {
                 GetPrivateProfileIntA("Input", "AutoPadStillFrames", 600, path);
             InterlockedExchange(&g_recenterChordEnabled,
                 GetPrivateProfileIntA("Input", "RecenterChord", 0, path) ? 1 : 0);
+            // Direct-select wheel + Katorga HUD pack + round layout: all default OFF.
+            InterlockedExchange(&g_wwDirectSelect,
+                GetPrivateProfileIntA("Input", "WeaponWheelDirectSelect", 0, path) ? 1 : 0);
+            InterlockedExchange(&g_wwRound,
+                GetPrivateProfileIntA("Input", "WeaponWheelRound", 0, path) ? 1 : 0);
+            InterlockedExchange(&g_wwPickSource,
+                GetPrivateProfileIntA("Input", "WeaponWheelPickSource", 1, path));
+            InterlockedExchange(&g_katorgaHud,
+                GetPrivateProfileIntA("Render", "KatorgaHudEnabled", 0, path) ? 1 : 0);
+            {
+                char root[MAX_PATH]{};
+                GetPrivateProfileStringA("Render", "KatorgaHudAssetRoot",
+                                         "vr-assets/hud/katorga/3d", root, sizeof(root), path);
+                size_t rl = strlen(root);
+                if (rl > 0 && rl < sizeof(g_katorgaAssetRoot)) {
+                    memcpy(g_katorgaAssetRoot, root, rl + 1);
+                    for (size_t i = 0; i < rl; ++i)
+                        if (g_katorgaAssetRoot[i] == '/') g_katorgaAssetRoot[i] = '\\';
+                }
+            }
             Log("ini: RecenterChord=%ld (L3+R3 %s; recording is controlled separately in VR Settings)",
                 Rd(g_recenterChordEnabled), Rd(g_recenterChordEnabled) ? "recenters" : "does not recenter");
             InterlockedExchange(&g_cineStickTurn,
@@ -8924,6 +9087,17 @@ bool InitXRInput() {
                 Log("input: LEFT-HANDED - gun and buttons mirrored. Sticks are NOT swapped (that is"
                     " SwapSticks). MENU stays on the LEFT controller: the Touch profile has no"
                     " right-hand menu/click and system/click is reserved by the runtime.");
+            {
+                // TEXTURES row startup state (sibling ini owned by the texture
+                // injector). Both start equal so no false *RESTART* shows.
+                char tini[MAX_PATH]{};
+                char q[16] = "2x";
+                if (SiblingIniPath("texture_override.ini", tini))
+                    GetPrivateProfileStringA("TextureQuality", "Quality", "2x", q, sizeof(q), tini);
+                long tq = 0;
+                if (!_stricmp(q, "4K")) tq = 1; else if (!_stricmp(q, "8K")) tq = 2;
+                g_texQuality = g_texQualityApplied = (int)tq;
+            }
             for (int i = 0; i < kPadButtonCount; ++i) {
                 g_padButtons[i].mask = (WORD)GetPrivateProfileIntA(
                     "Input", g_padButtons[i].iniKey, g_padButtons[i].mask, path);
@@ -9794,27 +9968,131 @@ void SyncXRInput(XrTime displayTime) {
     // recenter/screenshot chord, so opening is vetoed while L3 is held.  The
     // same edge state is also used by the deterministic desktop simulator.
     const bool r3Released = !r3Held && g_weaponWheelState.priorR3;
+    // Seen-weapons set for label gating (bounded: 8 entries, input thread).
+    {
+        const LONG curV = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+        if (curV > 0) {
+            bool known = false;
+            for (int k = 0; k < 8; ++k) {
+                if (InterlockedCompareExchange(&g_wwSeen[k], 0, 0) == curV) { known = true; break; }
+            }
+            if (!known) {
+                for (int k = 0; k < 8; ++k) {
+                    if (InterlockedCompareExchange(&g_wwSeen[k], 0, curV) == 0) {
+                        Log("weapon wheel: new weapon seen verts=%ld", curV);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    // Hand-driven sector: head-relative right-hand travel since R3 open, read
+    // as a screen direction through the current eye-0 basis (turning the head
+    // with a still hand does not steer). -2 keeps the legacy stick: source
+    // switch, projection failure, or invalid anchor/hand. Eye-pose reads race
+    // the render thread by design; the value is recomputed every input tick.
+    int handSector = -2;
+    const bool handPick = Rd(g_wwPickSource) != 0;
+    if (handPick && g_weaponWheelState.open && Rd(g_wwHandAnchorOk) &&
+        g_handPositionValid[1] && g_haveEyes) {
+        wheel_layout::EyeBasis eye;
+        eye.pos = { g_eyePose[0].position.x, g_eyePose[0].position.y, g_eyePose[0].position.z };
+        eye.fwd = WwRotate(g_eyePose[0].orientation, { 0, 0, -1 });
+        eye.right = WwRotate(g_eyePose[0].orientation, { 1, 0, 0 });
+        eye.up = WwRotate(g_eyePose[0].orientation, { 0, 1, 0 });
+        eye.tanHalfX = g_targetTanX;
+        eye.tanHalfY = g_targetTanY;
+        const float dx = (g_handLastPos[1].x - g_headPosXR[0]) - g_wwHandAnchor.x;
+        const float dy = (g_handLastPos[1].y - g_headPosXR[1]) - g_wwHandAnchor.y;
+        const float dz = (g_handLastPos[1].z - g_headPosXR[2]) - g_wwHandAnchor.z;
+        handSector = wheel_layout::HandSector(dx, dy, dz, eye, (int)g_weaponWheelSlots);
+    }
     const weaponwheel::Event wheelEvent = weaponwheel::Update(
         g_weaponWheelState, r3Held, l3Held, !uiMenu && feedGame && !Rd(g_gamePaused),
-        WeaponInHands(), Rd(g_weaponHolstered), tx, ty, (int)g_weaponWheelSlots);
+        WeaponInHands(), Rd(g_weaponHolstered), tx, ty, (int)g_weaponWheelSlots, handSector);
     if (wheelEvent == weaponwheel::Event::Open) {
         InterlockedExchange(&g_weaponWheelOpen, 1);
         InterlockedExchange(&g_weaponWheelSelection, 0);
         InterlockedExchange(&g_weaponWheelCommit, 0);
         InterlockedExchange(&g_weaponWheelPulseGap, 0);
-        Log("weapon wheel: OPEN slots=%ld (R3 held; right stick selects, release commits)",
-            g_weaponWheelSlots);
+        if (handPick && g_handPositionValid[1]) {
+            g_wwHandAnchor.x = g_handLastPos[1].x - g_headPosXR[0];
+            g_wwHandAnchor.y = g_handLastPos[1].y - g_headPosXR[1];
+            g_wwHandAnchor.z = g_handLastPos[1].z - g_headPosXR[2];
+            InterlockedExchange(&g_wwHandAnchorOk, 1);
+        } else {
+            InterlockedExchange(&g_wwHandAnchorOk, 0);
+        }
+        MaybeLoadWheelCatalog();
+        Log("weapon wheel: OPEN slots=%ld (R3 held; %s selects, release commits)",
+            g_weaponWheelSlots, handPick ? "right hand moves" : "right stick");
+        if (handPick && !Rd(g_wwHandAnchorOk))
+            Log("weapon wheel: hand anchor invalid at open - stick fallback for this open");
     } else if (wheelEvent == weaponwheel::Event::SelectionChanged) {
         InterlockedExchange(&g_weaponWheelSelection, g_weaponWheelState.selection);
+        if (!g_weaponWheelState.loggedSel) {
+            g_weaponWheelState.loggedSel = true;
+            Log("weapon wheel: select sector=%d via %s", g_weaponWheelState.selection,
+                handSector != -2 ? "hand" : "stick");
+        }
     } else if (wheelEvent == weaponwheel::Event::Commit) {
         InterlockedExchange(&g_weaponWheelOpen, 0);
-        InterlockedExchange(&g_weaponWheelCommit, g_weaponWheelState.selection);
         InterlockedExchange(&g_weaponWheelPulseGap, 0);
-        Log("weapon wheel: COMMIT offset=%ld (native cycle pulses)",
-            g_weaponWheelState.selection);
+        // NB: Update() already reset g_weaponWheelState.selection to 0 on the
+        // close edge, so the committed sector must come from the live mirror
+        // (last SelectionChanged, never cleared on close). Reading the state
+        // here yields sel=0 for every commit: highlights without switching.
+        const LONG sel = InterlockedCompareExchange(&g_weaponWheelSelection, 0, 0);
+        LONG pulses = sel;
+        // Direct-select: sector -> gun_verts -> forward cycle steps. Unknown
+        // verts (or catalog off) keep the historical offset-pulse behavior.
+        if (Rd(g_wwDirectSelect) && InterlockedCompareExchange(&g_wwCatalogState, 0, 0) == 1) {
+            weaponwheel_direct::CatalogSector secs[8]{};
+            long cyc[16]{};
+            // Same position order as the drawn wheel: catalog gun sectors.
+            const int nSlots = weaponwheel::ClampSlots((int)g_weaponWheelSlots);
+            long catV[8]{};
+            int cn = (int)g_wwCatalog.sectors.size() < 8 ? (int)g_wwCatalog.sectors.size() : 8;
+            for (int i = 0; i < cn; ++i) catV[i] = g_wwCatalog.sectors[i].verts;
+            int order[8]{ 0, 1, 2, 3, 4, 5, 6, 7 };
+            const bool gunOrder = wheel_layout::GunOrder(catV, cn, order, 8) >= nSlots;
+            size_t n = gunOrder ? (size_t)nSlots
+                                : (g_wwCatalog.sectors.size() < 8 ? g_wwCatalog.sectors.size() : 8);
+            for (size_t i = 0; i < n; ++i) {
+                const size_t ci = gunOrder ? (size_t)order[i] : i;
+                secs[i].sector = g_wwCatalog.sectors[ci].index;
+                secs[i].gunVerts = g_wwCatalog.sectors[ci].verts;
+            }
+            size_t m = g_wwCatalog.cycle.size() < 16 ? g_wwCatalog.cycle.size() : 16;
+            for (size_t i = 0; i < m; ++i) cyc[i] = g_wwCatalog.cycle[i];
+            const weaponwheel_direct::Catalog view{ secs, (int)n, cyc, (int)m };
+            const LONG curV = Rd(g_gunVerts);
+            const LONG tgtV = weaponwheel_direct::TargetVertsForSector(view, (int)sel);
+            if (tgtV > 0 && tgtV != curV) {
+                const int steps = weaponwheel_direct::ShortestCycleSteps(curV, tgtV, cyc, (int)m);
+                if (steps > 0) {
+                    pulses = steps;
+                    InterlockedExchange(&g_wwTargetVerts, tgtV);
+                    InterlockedExchange(&g_wwExpecting, 300);
+                    Log("weapon wheel: DIRECT sector=%ld verts %ld->%ld steps=%d",
+                        sel, curV, tgtV, steps);
+                } else {
+                    Log("weapon wheel: direct fallback (verts outside catalog cur=%ld tgt=%ld)",
+                        curV, tgtV);
+                }
+            } else if (tgtV > 0) {
+                pulses = 0;
+                Log("weapon wheel: DIRECT already equipped (verts=%ld)", curV);
+            }
+        }
+        InterlockedExchange(&g_weaponWheelCommit, pulses);
+        Log("weapon wheel: COMMIT sector=%ld offset=%ld (native cycle pulses)",
+            sel, pulses);
+        InterlockedExchange(&g_wwHandAnchorOk, 0);
     } else if (wheelEvent == weaponwheel::Event::Cancel) {
         InterlockedExchange(&g_weaponWheelOpen, 0);
         InterlockedExchange(&g_weaponWheelCommit, 0);
+        InterlockedExchange(&g_wwHandAnchorOk, 0);
     }
     static bool triangleWasHeld = false;
     const bool trianglePressed = triangleHeld && !triangleWasHeld;
@@ -9997,6 +10275,18 @@ void SyncXRInput(XrTime displayTime) {
         stickHold = 8;
         InterlockedDecrement(&g_weaponWheelCommit);
         if (Rd(g_weaponWheelCommit) > 0) InterlockedExchange(&g_weaponWheelPulseGap, 3);
+    }
+    // Direct-select landing watch: bounded (~5 s), diagnostics only.
+    if (Rd(g_wwDirectSelect) && InterlockedCompareExchange(&g_wwExpecting, 0, 0) > 0) {
+        const LONG tv = InterlockedCompareExchange(&g_wwTargetVerts, 0, 0);
+        if (tv > 0 && Rd(g_gunVerts) == tv) {
+            InterlockedExchange(&g_wwExpecting, 0);
+            Log("weapon wheel: direct-select LANDED on gunVerts=%ld", tv);
+        } else if (InterlockedDecrement(&g_wwExpecting) <= 0) {
+            InterlockedExchange(&g_wwExpecting, 0);
+            Log("weapon wheel: direct-select watch EXPIRED at gunVerts=%ld (target was %ld)",
+                Rd(g_gunVerts), tv);
+        }
     }
 
     // ---- turn ----
@@ -24368,9 +24658,96 @@ void DrawWristHealth(IDirect3DDevice9* dev) {
 // anchor is projected from the tracked right-controller pose, while the sector
 // cards are cheap Clear() rectangles and numeric glyphs. The actual selection
 // still commits through the game's native cycle-weapon input above.
+// Katorga icon atlas: lazy WIC load on the render thread, verified against
+// the installed atlas.json (dims + byte size). Any failure keeps state -1
+// and the wheel falls back to squares for the session. MANAGED pool: no
+// Reset handling needed; released with the other D3D resources.
+static void MaybeLoadHudAtlas(IDirect3DDevice9* dev) {
+    if (InterlockedCompareExchange(&g_hudAtlasState, 0, 0) != 0) return;
+    if (!dev || !Rd(g_katorgaHud)) return;
+    auto fail = [](const char* why) {
+        InterlockedExchange(&g_hudAtlasState, -1);
+        Log("weapon wheel: HUD atlas unavailable (%s) - squares for this session", why);
+    };
+    char dll[MAX_PATH]{};
+    HMODULE self = nullptr;
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCSTR)&MaybeLoadHudAtlas, &self) ||
+        !GetModuleFileNameA(self, dll, MAX_PATH)) { fail("module path"); return; }
+    char* slash = strrchr(dll, '\\');
+    if (!slash) { fail("module path"); return; }
+    *slash = 0;
+    std::string root = g_katorgaAssetRoot;
+    for (char& c : root) if (c == '/') c = '\\';
+    const size_t cut = root.find_last_of('\\');
+    std::string atlasDir = (cut == std::string::npos) ? "vr-assets\\hud\\katorga\\atlas"
+                                                      : root.substr(0, cut) + "\\atlas";
+    char jsonPath[MAX_PATH]{}, pngPath[MAX_PATH]{};
+    _snprintf_s(jsonPath, sizeof(jsonPath), _TRUNCATE, "%s\\%s\\atlas.json", dll, atlasDir.c_str());
+    _snprintf_s(pngPath, sizeof(pngPath), _TRUNCATE, "%s\\%s\\katorga-hud-atlas.png", dll, atlasDir.c_str());
+    FILE* fj = nullptr;
+    std::string jstext;
+    if (fopen_s(&fj, jsonPath, "rb") == 0 && fj) {
+        char chunk[4096];
+        size_t n = 0;
+        while ((n = fread(chunk, 1, sizeof(chunk), fj)) > 0) jstext.append(chunk, n);
+        fclose(fj);
+    }
+    hud_atlas::Sheet sheet;
+    if (jstext.empty() || !hud_atlas::Parse(jstext.c_str(), sheet) ||
+        sheet.width <= 0 || sheet.width > 2048 || sheet.height <= 0 || sheet.height > 2048 ||
+        sheet.rects.empty()) { fail("atlas.json"); return; }
+    CoInitializeEx(nullptr, COINIT_MULTITHREADED); // no-op if the game COM is already up
+    wchar_t wpng[MAX_PATH]{};
+    if (!MultiByteToWideChar(CP_ACP, 0, pngPath, -1, wpng, MAX_PATH)) { fail("wide path"); return; }
+    IWICImagingFactory* fac = nullptr;
+    IWICBitmapDecoder* dec = nullptr;
+    IWICBitmapFrameDecode* frame = nullptr;
+    IWICFormatConverter* conv = nullptr;
+    UINT pw = 0, ph = 0;
+    std::vector<BYTE> px;
+    bool ok = SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                                         IID_PPV_ARGS(&fac))) && fac &&
+              SUCCEEDED(fac->CreateDecoderFromFilename(wpng, nullptr, GENERIC_READ,
+                                                       WICDecodeMetadataCacheOnDemand, &dec)) && dec &&
+              SUCCEEDED(dec->GetFrame(0, &frame)) && frame &&
+              SUCCEEDED(fac->CreateFormatConverter(&conv)) && conv &&
+              SUCCEEDED(conv->Initialize(frame, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone,
+                                         nullptr, 0.0, WICBitmapPaletteTypeCustom)) &&
+              SUCCEEDED(conv->GetSize(&pw, &ph)) &&
+              pw == (UINT)sheet.width && ph == (UINT)sheet.height;
+    if (ok) {
+        px.resize((size_t)pw * ph * 4);
+        ok = SUCCEEDED(conv->CopyPixels(nullptr, pw * 4, (UINT)px.size(), px.data()));
+    }
+    if (conv) conv->Release();
+    if (frame) frame->Release();
+    if (dec) dec->Release();
+    if (fac) fac->Release();
+    if (!ok) { fail("png decode"); return; }
+    IDirect3DTexture9* tex = nullptr;
+    if (FAILED(dev->CreateTexture(pw, ph, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, nullptr)) || !tex) {
+        fail("texture create");
+        return;
+    }
+    D3DLOCKED_RECT lr{};
+    if (FAILED(tex->LockRect(0, &lr, nullptr, 0))) { tex->Release(); fail("texture lock"); return; }
+    const BYTE* src = px.data();
+    for (UINT y = 0; y < ph; ++y)
+        memcpy((BYTE*)lr.pBits + (size_t)y * lr.Pitch, src + (size_t)y * pw * 4, (size_t)pw * 4);
+    tex->UnlockRect(0);
+    g_hudAtlasTex = tex;
+    g_hudAtlas = sheet;
+    InterlockedExchange(&g_hudAtlasState, 1);
+    Log("weapon wheel: HUD atlas ready (%dx%d, %u icons)", pw, ph, (unsigned)sheet.rects.size());
+}
+
 void DrawWeaponWheel(IDirect3DDevice9* dev) {
     if (!dev || !VrModeOn() || !Rd(g_dupDraws) || !Rd(g_weaponWheelOpen) ||
         !g_handPositionValid[1] || !g_haveEyes || !g_origSetRenderTarget) return;
+    if (Rd(g_katorgaHud) && InterlockedCompareExchange(&g_hudAtlasState, 0, 0) == 0)
+        MaybeLoadHudAtlas(dev);
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
     D3DSURFACE_DESC d{};
@@ -24408,6 +24785,79 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     const int slots = weaponwheel::ClampSlots((int)g_weaponWheelSlots);
     const int selected = std::max(0, std::min(slots - 1,
         (int)InterlockedCompareExchange(&g_weaponWheelSelection, 0, 0)));
+    const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+    const bool haveCatalog = InterlockedCompareExchange(&g_wwCatalogState, 0, 0) == 1 &&
+        !g_wwCatalog.sectors.empty();
+    // Round layout needs DrawPrimitiveUP; without it fall back to squares.
+    const bool roundOn = Rd(g_wwRound) && g_origDrawPrimUP != nullptr;
+    // Katorga icon path: every drawn slot resolves an atlas icon, else the
+    // whole frame falls back to squares (never a mix, never a hole).
+    const hud_atlas::Rect* slotIcons[8]{};
+    bool katorgaIcons = Rd(g_katorgaHud) &&
+        InterlockedCompareExchange(&g_hudAtlasState, 0, 0) == 1 &&
+        InterlockedCompareExchange(&g_wwCatalogState, 0, 0) == 1 &&
+        g_hudAtlasTex != nullptr && g_hudAtlas.width > 0;
+    // Wheel positions map to catalog gun sectors (Centurion/Valkyrie/
+    // Spikeshot/Kasimov with the shipped catalog); a short catalog falls
+    // back to identity order. Shared by icons, labels and the commit path.
+    int wheelOrder[8]{ 0, 1, 2, 3, 4, 5, 6, 7 };
+    bool gunOrder = false;
+    if (haveCatalog) {
+        long catV[8]{};
+        int cn = (int)g_wwCatalog.sectors.size() < 8 ? (int)g_wwCatalog.sectors.size() : 8;
+        for (int i = 0; i < cn; ++i) catV[i] = g_wwCatalog.sectors[i].verts;
+        gunOrder = wheel_layout::GunOrder(catV, cn, wheelOrder, 8) >= slots;
+    }
+    if (katorgaIcons) {
+        for (int i = 0; i < slots && i < 8; ++i) {
+            const int ci = (gunOrder && wheelOrder[i] < (int)g_wwCatalog.sectors.size())
+                ? wheelOrder[i] : i;
+            const char* iconId = (ci < (int)g_wwCatalog.sectors.size())
+                ? g_wwCatalog.sectors[ci].atlas.c_str() : nullptr;
+            slotIcons[i] = hud_atlas::Find(g_hudAtlas, iconId);
+            if (!slotIcons[i]) { katorgaIcons = false; break; }
+        }
+    }
+    // Display labels parallel to slotIcons (catalog label_pl, may be empty).
+    const char* slotLabels[8]{};
+    long slotVerts[8]{};
+    if (haveCatalog) {
+        for (int i = 0; i < slots && i < 8; ++i) {
+            const int ci = (gunOrder && wheelOrder[i] < (int)g_wwCatalog.sectors.size())
+                ? wheelOrder[i] : i;
+            if (ci >= (int)g_wwCatalog.sectors.size()) break;
+            slotLabels[i] = g_wwCatalog.sectors[ci].label.c_str();
+            slotVerts[i] = g_wwCatalog.sectors[ci].verts;
+        }
+    }
+    // Snapshot of the seen-weapons set for label gating (render thread read).
+    long seenCopy[8]{};
+    for (int k = 0; k < 8; ++k)
+        seenCopy[k] = InterlockedCompareExchange(&g_wwSeen[k], 0, 0);
+    // Named wedges get icon + label; unowned weapon wedges stay empty.
+    bool slotNamed[8]{};
+    for (int i = 0; i < slots && i < 8; ++i) {
+        const long pv = slotVerts[i];
+        if (pv <= 0 || pv == heldVerts) { slotNamed[i] = true; continue; }
+        for (int k = 0; k < 8; ++k) {
+            if (seenCopy[k] == pv) { slotNamed[i] = true; break; }
+        }
+    }
+    struct HudIconVtx { float x, y, z, rhw; DWORD c; float u, v; };
+    struct WwVtx { float x, y, z, rhw; DWORD c; };
+    if (katorgaIcons && !roundOn) {
+        dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+        dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+        dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+        dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+        dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+        dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+        dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+        dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+        dev->SetTexture(0, g_hudAtlasTex);
+        dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    }
     const uipointer::V hand{g_handLastPos[1].x, g_handLastPos[1].y + 0.12f,
                             g_handLastPos[1].z};
     const float pi = 3.14159265358979323846f;
@@ -24416,6 +24866,159 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
         if (!VrUiProjectEye(eye, hand, p)) continue;
         const int cx = (int)lroundf((eye + p.u) * d.Width * 0.5f);
         const int cy = (int)lroundf(p.v * d.Height);
+        if (roundOn) {
+            // Round layout (reference mockup): wedge sectors + outer ring +
+            // centre disc, icons at mid-radius, catalog labels near the rim.
+            // Input/commit FSM is untouched; ammo is not drawn (AMMO_UNKNOWN).
+            const wheel_layout::Metrics m = wheel_layout::RoundMetrics((int)d.Height);
+            const float fx = (float)cx, fy = (float)cy;
+            dev->SetTexture(0, nullptr);
+            dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+            // Translucent fills: the scene stays visible through the wheel.
+            // Text below stays opaque ClearRects for readability.
+            dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+            dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+            dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+            dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+            dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+            const DWORD wedgeIdle = 0x99142A40, wedgeSel = 0xE0FF8C1A;
+            const DWORD wedgeHeld = 0x992E6E9E; // held, not selected: brighter steel
+            const DWORD ringCol = 0xC02FB9D8, ringSel = 0xE0FFA726;
+            for (int i = 0; i < slots; ++i) {
+                float a0 = 0, a1 = 0;
+                wheel_layout::WedgeBounds(i, slots, 0.10f, a0, a1);
+                const long pv = (i < 8) ? slotVerts[i] : 0;
+                const bool held = (pv > 0 && pv == heldVerts);
+                const DWORD wc = (i == selected) ? wedgeSel : (held ? wedgeHeld : wedgeIdle);
+                WwVtx v[2 + 6 + 1];
+                v[0].x = fx; v[0].y = fy; v[0].z = 0; v[0].rhw = 1; v[0].c = wc;
+                for (int k = 0; k <= m.wedgeSteps; ++k) {
+                    const float c = a0 + (a1 - a0) * (float)k / (float)m.wedgeSteps;
+                    float x = 0, y = 0;
+                    wheel_layout::WedgePoint(fx, fy, (float)m.outerR, c, x, y);
+                    v[1 + k].x = x; v[1 + k].y = y;
+                    v[1 + k].z = 0; v[1 + k].rhw = 1; v[1 + k].c = wc;
+                }
+                g_origDrawPrimUP(dev, D3DPT_TRIANGLEFAN, (UINT)m.wedgeSteps,
+                                 v, sizeof(WwVtx));
+            }
+            // Outer ring + orange arc over the selected wedge.
+            WwVtx ring[65];
+            for (int k = 0; k <= m.ringSteps; ++k) {
+                const float c = 2.0f * pi * (float)k / (float)m.ringSteps;
+                float x = 0, y = 0;
+                wheel_layout::WedgePoint(fx, fy, (float)m.outerR + 3.0f, c, x, y);
+                ring[k].x = x; ring[k].y = y;
+                ring[k].z = 0; ring[k].rhw = 1; ring[k].c = ringCol;
+            }
+            g_origDrawPrimUP(dev, D3DPT_LINESTRIP, (UINT)m.ringSteps, ring, sizeof(WwVtx));
+            {
+                float a0 = 0, a1 = 0;
+                wheel_layout::WedgeBounds(selected, slots, 0.10f, a0, a1);
+                WwVtx arc[2 + 6 + 1];
+                for (int k = 0; k <= m.wedgeSteps; ++k) {
+                    const float c = a0 + (a1 - a0) * (float)k / (float)m.wedgeSteps;
+                    float x = 0, y = 0;
+                    wheel_layout::WedgePoint(fx, fy, (float)m.outerR + 3.0f, c, x, y);
+                    arc[k].x = x; arc[k].y = y;
+                    arc[k].z = 0; arc[k].rhw = 1; arc[k].c = ringSel;
+                }
+                g_origDrawPrimUP(dev, D3DPT_LINESTRIP, (UINT)m.wedgeSteps, arc, sizeof(WwVtx));
+            }
+            // Centre disc + SELECT / WEAPON caption.
+            {
+                const int segs = 24;
+                WwVtx disc[2 + 24 + 1];
+                disc[0].x = fx; disc[0].y = fy;
+                disc[0].z = 0; disc[0].rhw = 1; disc[0].c = 0xC8121A22;
+                for (int k = 0; k <= segs; ++k) {
+                    const float c = 2.0f * pi * (float)k / (float)segs;
+                    float x = 0, y = 0;
+                    wheel_layout::WedgePoint(fx, fy, (float)m.innerR, c, x, y);
+                    disc[1 + k].x = x; disc[1 + k].y = y;
+                    disc[1 + k].z = 0; disc[1 + k].rhw = 1; disc[1 + k].c = 0xC8121A22;
+                }
+                g_origDrawPrimUP(dev, D3DPT_TRIANGLEFAN, (UINT)segs, disc, sizeof(WwVtx));
+                D3DRECT text[256];
+                const int lh = (kGlyphH + 2) * m.textPx;
+                const char* lines[2] = { "SELECT", "WEAPON" };
+                for (int li = 0; li < 2; ++li) {
+                    const int tw = (int)strlen(lines[li]) * (kGlyphW + 1) * m.textPx;
+                    const int y0 = (li == 0) ? cy - lh - 1 : cy + 1;
+                    const int n = TextRects(text, 0, (int)(sizeof(text) / sizeof(text[0])),
+                                             cx - tw / 2, y0, m.textPx, lines[li]);
+                    ClearRects(dev, text, n, 0xFFE8F4FF);
+                }
+            }
+            // Icons at mid-radius (slot 0 already shows the held weapon).
+            if (katorgaIcons) {
+                dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+                dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+                dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+                dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+                dev->SetTexture(0, g_hudAtlasTex);
+                dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+                for (int i = 0; i < slots && i < 8 && slotIcons[i] && slotNamed[i]; ++i) {
+                    const float c = wheel_layout::SectorCenter(i, slots);
+                    float ix = 0, iy = 0;
+                    wheel_layout::WedgePoint(fx, fy, (float)m.iconR, c, ix, iy);
+                    const hud_atlas::Rect* ir = slotIcons[i];
+                    const float u0 = (float)ir->x / (float)g_hudAtlas.width;
+                    const float v0 = (float)ir->y / (float)g_hudAtlas.height;
+                    const float du = (float)ir->w / (float)g_hudAtlas.width;
+                    const float dv = (float)ir->h / (float)g_hudAtlas.height;
+                    const DWORD tint = (i == selected) ? 0xFFFFD080
+                        : ((slotVerts[i] > 0 && slotVerts[i] == heldVerts) ? 0xFFC0E8FF : 0xFFFFFFFF);
+                    const float x0 = ix - (float)m.iconHalf, y0 = iy - (float)m.iconHalf;
+                    const float x1 = ix + (float)m.iconHalf, y1 = iy + (float)m.iconHalf;
+                    HudIconVtx v[4] = {
+                        { x0, y0, 0, 1, tint, u0, v0 },
+                        { x1, y0, 0, 1, tint, u0 + du, v0 },
+                        { x0, y1, 0, 1, tint, u0, v0 + dv },
+                        { x1, y1, 0, 1, tint, u0 + du, v0 + dv },
+                    };
+                    g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(HudIconVtx));
+                }
+                dev->SetTexture(0, nullptr);
+                dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+                dev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+            }
+            // Sector labels near the rim: catalog names only for owned weapons
+            // (held or verifiably seen); unowned sectors stay icon-only, and
+            // the W# fallback applies only without a catalog (orientation aid).
+            for (int i = 0; i < slots; ++i) {
+                char label[wheel_layout::kMaxLabel + 1];
+                bool has = false;
+                if (haveCatalog)
+                    has = wheel_layout::LabelForSlot(slotLabels, slotVerts, slots, i,
+                                                     heldVerts, seenCopy, 8,
+                                                     label, sizeof(label));
+                if (!has && !haveCatalog) {
+                    _snprintf_s(label, sizeof(label), _TRUNCATE, "W%d", i + 1);
+                    wheel_layout::SanitizeLabel(label, label, sizeof(label));
+                    has = label[0] != 0;
+                }
+                if (!has) continue;
+                const float c = wheel_layout::SectorCenter(i, slots);
+                float lx = 0, ly = 0;
+                wheel_layout::WedgePoint(fx, fy, (float)m.labelR, c, lx, ly);
+                D3DRECT text[256];
+                const int tw = (int)strlen(label) * (kGlyphW + 1) * m.textPx;
+                const int th = kGlyphH * m.textPx;
+                const int n = TextRects(text, 0, (int)(sizeof(text) / sizeof(text[0])),
+                                         (int)lroundf(lx) - tw / 2, (int)lroundf(ly) - th / 2,
+                                         m.textPx, label);
+                const bool held = (slotVerts[i] > 0 && slotVerts[i] == heldVerts);
+                ClearRects(dev, text, n, (i == selected) ? 0xFFFFC060
+                    : (held ? 0xFFBFE9FF : 0xFFE8EEF8));
+            }
+            continue;
+        }
         const int radius = std::max(32, (int)(d.Height * 0.070f));
         const int card = std::max(18, (int)(d.Height * 0.026f));
         D3DRECT centre = {cx - card, cy - card, cx + card, cy + card};
@@ -24424,6 +25027,25 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
             const float a = -pi * 0.5f + 2.0f * pi * (float)i / (float)slots;
             const int x = (int)lroundf(cx + cosf(a) * radius);
             const int y = (int)lroundf(cy + sinf(a) * radius);
+            if (katorgaIcons && i < 8 && slotIcons[i]) {
+                // Same footprint as the square below; icon tint marks selection.
+                const hud_atlas::Rect* ir = slotIcons[i];
+                const float u0 = (float)ir->x / (float)g_hudAtlas.width;
+                const float v0 = (float)ir->y / (float)g_hudAtlas.height;
+                const float du = (float)ir->w / (float)g_hudAtlas.width;
+                const float dv = (float)ir->h / (float)g_hudAtlas.height;
+                const DWORD tint = (i == selected) ? 0xFFFFD080 : 0xFFFFFFFF;
+                const float x0 = (float)(x - card), y0 = (float)(y - card);
+                const float x1 = (float)(x + card), y1 = (float)(y + card);
+                HudIconVtx v[4] = {
+                    { x0, y0, 0, 1, tint, u0, v0 },
+                    { x1, y0, 0, 1, tint, u0 + du, v0 },
+                    { x0, y1, 0, 1, tint, u0, v0 + dv },
+                    { x1, y1, 0, 1, tint, u0 + du, v0 + dv },
+                };
+                g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(HudIconVtx));
+                continue;
+            }
             D3DRECT r = {x - card, y - card, x + card, y + card};
             ClearRects(dev, &r, 1, i == selected ? 0xE0FFD040 : 0xB0304050);
             char label[8]; _snprintf_s(label, sizeof(label), _TRUNCATE, "W%d", i + 1);
@@ -24437,7 +25059,12 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
         }
     }
     static bool said = false;
-    if (!said) { said = true; Log("weapon wheel: overlay active (right-hand anchor, %d sectors)", slots); }
+    if (!said) {
+        said = true;
+        Log(roundOn ? "weapon wheel: overlay active (round, right-hand anchor, %d sectors)"
+            : katorgaIcons ? "weapon wheel: overlay active (Katorga icons, right-hand anchor, %d sectors)"
+                           : "weapon wheel: overlay active (right-hand anchor, %d sectors)", slots);
+    }
     g_wristState->Apply();
     if (old) g_origSetRenderTarget(dev, 0, old);
     dev->SetDepthStencilSurface(depth);
