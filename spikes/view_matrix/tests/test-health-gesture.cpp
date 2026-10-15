@@ -14,13 +14,14 @@ int main() {
     Expect(SegmentSlots() == 11, "eleven slots per mockup");
     // Head at origin looking -Z. Hand 30 cm ahead, slightly below eyes.
     Expect(FaceRaiseShow(0.0f, -0.05f, -0.30f, 0, 0, 0, 0, 0, -1), "raised hand shows");
-    Expect(!FaceRaiseShow(0.0f, -0.05f, -0.60f, 0, 0, 0, 0, 0, -1), "far hand stays hidden");
+    Expect(FaceRaiseShow(0.0f, -0.05f, -0.55f, 0, 0, 0, 0, 0, -1), "mid-range hand shows");
+    Expect(!FaceRaiseShow(0.0f, -0.05f, -0.90f, 0, 0, 0, 0, 0, -1), "far hand stays hidden");
     Expect(!FaceRaiseShow(0.0f, -0.05f, 0.30f, 0, 0, 0, 0, 0, -1), "hand behind face stays hidden");
     Expect(!FaceRaiseShow(0.0f, -0.60f, -0.20f, 0, 0, 0, 0, 0, -1), "hand at waist stays hidden");
     Expect(!FaceRaiseShow(0.0f, -0.05f, -0.30f, 0, 0, 0, 0, 0, 1), "facing away stays hidden");
-    // Hysteresis: shown bar survives the 40-55 cm band, dies outside it.
-    Expect(!FaceRaiseHide(0.0f, -0.05f, -0.45f, 0, 0, 0, 0, 0, -1), "band keeps bar");
-    Expect(FaceRaiseHide(0.0f, -0.05f, -0.60f, 0, 0, 0, 0, 0, -1), "outer radius hides");
+    // Hysteresis: shown bar survives the 60-80 cm band, dies outside it.
+    Expect(!FaceRaiseHide(0.0f, -0.05f, -0.70f, 0, 0, 0, 0, 0, -1), "band keeps bar");
+    Expect(FaceRaiseHide(0.0f, -0.05f, -0.90f, 0, 0, 0, 0, 0, -1), "outer radius hides");
     Expect(FaceRaiseHide(0.0f, -0.05f, 0.30f, 0, 0, 0, 0, 0, -1), "behind face hides");
     // Segment mapping.
     Expect(FilledSegments(100.0f, 100.0f) == 11, "full bar");

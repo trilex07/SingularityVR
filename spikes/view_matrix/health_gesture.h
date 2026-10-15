@@ -17,8 +17,8 @@ namespace healthbar {
 inline int SegmentSlots() { return 11; }
 
 // Show/hide radii around the head for the face-raise gesture.
-inline float ShowRadiusM() { return 0.40f; }
-inline float HideRadiusM() { return 0.55f; }
+inline float ShowRadiusM() { return 0.60f; }
+inline float HideRadiusM() { return 0.80f; }
 
 inline float Dist2(float ax, float ay, float az, float bx, float by, float bz) {
     const float dx = ax - bx, dy = ay - by, dz = az - bz;
