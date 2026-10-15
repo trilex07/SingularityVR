@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 9 DEPLOYED (DLL
+D119F664A08A693E6BA07A4FB75C4B78AA225D8254C2D764F27B8479A94FC026/source
+e1353a9 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-184201; game closed
+at deploy; native gloves + GloveNativeEnabled=1 retained). Thumb fix: full
+authored opposition (62.8 deg on bones 10-12/70-72, verified against the
+private PSK bone list) drove the thumb through the fingers at full grip, so
+Pose() now blends thumb bones with gain 0.7 (Thumb()/ThumbGain() in
+glove_native.h, other fingers untouched, shape preserved). L1_PASS (native
+test incl. new Thumb membership asserts vs real asset; structural checks
+unchanged). L2_PASS (PE32, manifest commit e1353a9 clean). L3/physical
+PENDING: slow grip — thumb must stop short of the fingers without looking
+stiff (too far -> lower gain; stiff -> raise toward 1). No fix claimed.
+
 LATEST 2026-10-15 MAIN adopted side native gloves (user auth: side agent at
 limit, WIP uncommitted in their tree — read-only takeover, their tree
 untouched). DEPLOYED DLL
