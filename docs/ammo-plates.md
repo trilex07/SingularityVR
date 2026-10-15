@@ -18,7 +18,16 @@ Reference art (`vr-mods/references/`):
 volatile words are flags/timers/coords/event latches. Static small ints
 (3/4/20/30/...) never move. Falsifier for round 2 stands: enumerate NAMES.
 
-## RE round 3: wider window + pawn baseline (this change)
+## RE round 4: firemode object (this change)
+
+Dump vocabulary proves RvWeaponShared's own data holds no ammo counter, but
+`+0x023C WeaponFireTypes` exists (UT pattern: live counters on the firemode
+object). `WeaponFireTypes` registered in g_wantNames, resolved BY NAME per
+weapon class (never assumed); `WeaponFireTypes[0]` dumped [0,0x200)
+baseline+diff with `fm` tags. Falsifier: an int there decrementing once per
+spaced tap IS the mag. Reserve still open (bins hypothesis).
+
+## Runtime plan (after offsets harden like Health run-199)
 
 Round-1/2 verdict: no ±1 int in weapon [0,0x400); class vocabulary shows
 ammo lives behind GetAmmoInClip/GetAmmoInBin-style accessors with no plain

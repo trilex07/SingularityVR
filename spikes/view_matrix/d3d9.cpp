@@ -1931,6 +1931,9 @@ WantedName g_wantNames[] = {
     // property with `NameOf`, so it can see names the lookup is structurally blind to. That is why they
     // disagreed, and it is worth knowing before trusting a "not found" from this resolver again.
     { "mPlayerHandsStatus", -1 }, { "mTMD", -1 },
+    // Ammo probe round 4: UT-pattern firemode object (WeaponFireTypes[0])
+    // carries the live counters. Resolved per weapon class, never assumed.
+    { "WeaponFireTypes", -1 },
 };
 const int kWantNameCount = (int)(sizeof(g_wantNames) / sizeof(g_wantNames[0]));
 
@@ -2327,6 +2330,10 @@ static int32_t g_ammoProbePrev[1024]{};
 static bool g_ammoProbeHave = false;
 static bool g_ammoProbeWasDown = false;
 static bool g_ammoProbePawnDone = false;
+// Round 4: firemode object snapshot (WeaponFireTypes[0]), same bounded rules.
+static uintptr_t g_ammoProbeFmObj = 0;
+static int32_t g_ammoProbeFmPrev[128]{};
+static bool g_ammoProbeFmHave = false;
 
 static void LogEquippedClass(uintptr_t w) {
     static uintptr_t lastObj = (uintptr_t)-1;
@@ -27765,6 +27772,70 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 else if (shown > 24) Log("ammo probe: diff obj=%p ... +%d more", (void*)wobj, shown - 24);
             }
             if (g_ammoProbeLeft == 0) Log("ammo probe: budget spent");
+            // ---- round 4: UT-pattern firemode object (WeaponFireTypes[0]) ----
+            // Resolved BY NAME per weapon class (never assumed); the dump then
+            // diffs its words exactly like the weapon object. Falsifier: an int
+            // here decrementing once per spaced tap IS the mag counter.
+            {
+                uintptr_t wcls = 0;
+                if (Readable((const void*)(wobj + OBJ_CLASS), sizeof(uintptr_t)))
+                    wcls = *reinterpret_cast<const uintptr_t*>(wobj + OBJ_CLASS);
+                static uintptr_t fmCls = 0;
+                static int fmOff = -2;
+                if (wcls && wcls != fmCls) {
+                    fmCls = wcls;
+                    fmOff = PropOffsetInChain(wcls, "WeaponFireTypes");
+                    char cc[80] = "(none)";
+                    NameOf(wcls, cc, sizeof(cc));
+                    if (fmOff >= 0)
+                        Log("ammo probe: WeaponFireTypes +0x%03X on %s", fmOff, cc);
+                    else
+                        Log("ammo probe: WeaponFireTypes NOT FOUND on %s - fm dump skipped", cc);
+                }
+                uintptr_t fm0 = 0;
+                if (fmOff >= 0 && Readable((const void*)(wobj + fmOff), 12)) {
+                    const uintptr_t arr = *reinterpret_cast<const uintptr_t*>(wobj + fmOff);
+                    const int32_t cnt = *reinterpret_cast<const int32_t*>(wobj + fmOff + 4);
+                    if (arr && cnt > 0 && cnt < 8 && Readable((const void*)arr, sizeof(uintptr_t)))
+                        fm0 = *reinterpret_cast<const uintptr_t*>(arr);
+                }
+                if (!fm0) {
+                    Log("ammo probe: fm array empty/unreadable");
+                } else if (!g_ammoProbeFmHave || fm0 != g_ammoProbeFmObj) {
+                    g_ammoProbeFmObj = fm0;
+                    g_ammoProbeFmHave = true;
+                    char line[32 * 12 + 64];
+                    for (int c = 0; c < 4; ++c) {
+                        int n = _snprintf_s(line, sizeof(line), _TRUNCATE,
+                                            "ammo probe: fm base obj=%p [%03x..%03x]=",
+                                            (void*)fm0, c * 32 * 4, (c * 32 + 31) * 4 + 3);
+                        for (int k = 0; k < 32 && n > 0; ++k) {
+                            const void* p = (const void*)(fm0 + (uintptr_t)((c * 32 + k) * 4));
+                            const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                             : ammoprobe::kUnreadable;
+                            g_ammoProbeFmPrev[c * 32 + k] = v;
+                            n += _snprintf_s(line + n, sizeof(line) - n, _TRUNCATE, "%d,", v);
+                        }
+                        Log("%s", line);
+                    }
+                } else {
+                    int shown = 0;
+                    for (int i = 0; i < 128; ++i) {
+                        const void* p = (const void*)(fm0 + (uintptr_t)(i * 4));
+                        const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                         : ammoprobe::kUnreadable;
+                        if (v != g_ammoProbeFmPrev[i]) {
+                            if (shown < 24)
+                                Log("ammo probe: fm diff obj=%p off=+0x%03x %d->%d", (void*)fm0,
+                                    (unsigned)(i * 4), g_ammoProbeFmPrev[i], v);
+                            ++shown;
+                            g_ammoProbeFmPrev[i] = v;
+                        }
+                    }
+                    if (shown == 0) Log("ammo probe: fm diff obj=%p no changes", (void*)fm0);
+                    else if (shown > 24) Log("ammo probe: fm diff obj=%p ... +%d more", (void*)fm0, shown - 24);
+                }
+            }
         }
         if (trig < 20) g_ammoProbeWasDown = false;
     }
