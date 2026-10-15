@@ -1,5 +1,25 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN knife live (DLL
+CF5D9143941209D012CC660EE32D6631C77F06E6591165CE04D2D1E11711DB6A/source
+cf99df9 = e89c41e code + STATUS record; x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-190214; game closed
+at deploy). Verified on disk: installed DLL hash equals manifest; knife.svrk
+6BC784FB present; installed INI now carries GloveNativeEnabled=1 (Render) and
+HipKnifeEnabled=1 (Input) — both were absent despite the earlier handoff
+claiming them, set now with pre-edit backup
+deployment/install-backups/20261015-185357/SingularityVR.ini.pre-flags
+(plus deduped an accidental double-write). GloveRendererEnabled=1 and
+holster 6/18/-36 retained. Previous segment's L1 (147 knife checks) + L2
+re-verified against this tree before deploy (same code, fresh link only).
+L3/physical PENDING (pre-TMD save ONLY): knife at left hip, free-hand grip
+pickup, release returns to belt, decisive swing -> native attack; hit counts
+from camera (no 6DoF blade collision). TEXTURES NEXT (user scope set): upscale
+installed 4K remasters to 8K DDS+mips into texture-override-8K (Quality=8K +
+panel TEXTURES row already exist); loading screens need DDS encode + FNV
+targets + loading group + dinput8 rebuild + panel selection row. No fix
+claimed.
+
 LATEST 2026-10-15 MAIN merged + deployed left-hip knife (DLL
 886B6D31FF87791AFFCF5B94C568925912634CED3F2F9FCC4534A96750D6B272/source
 e89c41e merge of origin/feature/left-hip-knife 043cfc0 (draft PR #31);
