@@ -13,6 +13,14 @@ from boot predate first wheel OPEN — wheel code exonerated (early return
 while closed); fixed ~30 ms/frame stall, draw-count independent, needs
 separate A/B vs accepted 6F4BBEF2 on the same save. L3 redeploy pending.
 
+LATEST 2026-10-15 wheel ROUND-2 DEPLOYED for L3 (DLL C1974AFF/source 2ecd757,
+x86 PE32 /O2, clean tree; built==installed hash-verified). Backup
+20261015-094655 (prior 2E2064FB). INI lease carried over (02DCE23D, backup in
+ww-round2 dir): Round=1 + DirectSelect=1 + KatorgaHud=1, no PickSource key =
+hand mode. Live record: deployment/hands-dubbing/ww-round2-20261015/live.json.
+Need: 10 s no-R3 baseline, then R3 open (hand moves select, 6 cm deadzone),
+owned names only, translucent smaller ring, release commits, normal exit.
+
 LATEST 2026-10-15 wheel ROUND layout IMPLEMENTED, L1_PASS + L2_PASS (MAIN
 takeover: previous agent gone, user authorises MAIN continuation in this
 checkout). Ring + wedge sectors + catalog labels behind
