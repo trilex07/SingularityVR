@@ -1,5 +1,27 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN plates+gloves round 3 DEPLOYED (DLL
+B7369140B76AF4D7A715F0C16A2DCE73A98500272B946A0ABFAFC42088E710DB/source
+d060c33 branch plates-l3-main = merge origin/feature/glove-animation
+(8518e6f, PR #30 open) + MAIN round-3 fixes; x86 PE32 /O2, built==installed
+via tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-165234; game
+closed at deploy; installed INI holster lines already 6/18/-36). Round 3:
+(1) NEW MagPipsCover band x0.190-0.465/y0.600-0.765 (measured bright bbox
+x202-469/y200-259 all 4 plates: wider than MagCover and, on shotgun/sniper,
+below it — this is what stayed visible); top deco brackets untouched;
+(2) holster ring: radius clamp 400->1000px (a close hip legitimately
+projects ~300-500px; old cap could skip the draw) + one-shot
+"not projectable" log for falsifiability; NOTE 16:41 session ran previous
+DLL only to startup, so the ring NEVER drew in gameplay yet — "not visible"
+is untested, not disproven; (3) glove-animation merged (default OFF,
+GloveRendererEnabled=0, no asset install needed while OFF; native hands and
+weapon grip unchanged). L1_PASS (ammo layout+probe, holster machine, glove
+253-check anim + render-state guard re-run on merged headers). L2_PASS (PE32,
+manifest commit d060c33 clean tree). L3/physical PENDING: one PSVR2 pass —
+pips gone, <=2 red box, hip ring while holding gun + store/draw at new hip,
+then side's 3-sentence glove test (needs GloveRendererEnabled=1 + private
+assets? confirm with side docs before enabling). No fix claimed.
+
 LATEST 2026-10-15 MAIN plates round 2 DEPLOYED (DLL
 BBA4BF9590F9F7EDDA415EEB35E4A6A0EB03DBEDD02D691E9ACC1991B26EB57F/source
 22dc4aa branch plates-l3-main, x86 PE32 /O2, built==installed via
