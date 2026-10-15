@@ -5424,6 +5424,7 @@ void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, cal
 void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
+void DrawHolsterMarker(IDirect3DDevice9* dev); // MAIN: white ring at the hip while a gun is held
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
@@ -5461,6 +5462,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawHealthPlate(dev);
     DrawAmmoPlate(dev);
     DrawAmmoPlate(dev);
+    DrawHolsterMarker(dev);
     DrawWeaponWheel(dev);
     DrawVfxOverlay(dev);
     DrawVrContextPrompt(dev);
@@ -25302,7 +25304,7 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     const plates_atlas::Rect* fullR = plates_atlas::Find(g_platesSheet, "seg-full");
     const plates_atlas::Rect* emptyR = plates_atlas::Find(g_platesSheet, "seg-empty");
     if (!bgR || !fullR || !emptyR) return; // atlas mismatch: hide (logged at load)
-    const uipointer::V anchor{ hand.x, hand.y + (twoHand ? 0.00f : 0.08f), hand.z };
+    const uipointer::V anchor{ hand.x, hand.y + (twoHand ? -0.02f : 0.08f), hand.z };
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
     D3DSURFACE_DESC d{};
@@ -25348,7 +25350,7 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
                                : std::max(64, (int)(d.Height * 0.18f));
     const int plateH = std::max(10, plateW * 330 / 2001);
     // Two-hand plate sits left of the gun line so it never covers it.
-    // MAIN 2026-10-15: user "jeszcze nizej i troche bardziej w lewo".
+    // MAIN 2026-10-15: user "jeszcze bardziej w lewo i nizej".
     float hbDrewCx = 0, hbDrewCy = 0;
     bool hbDrewAny = false, hbProjFail = true;
     static bool hbSaidDrew = false, hbSaidProj = false;
@@ -25356,7 +25358,7 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
         uipointer::ScreenPoint p;
         if (!VrUiProjectEye(eye, anchor, p)) continue;
         hbProjFail = false;
-        const float cx = (eye + p.u) * d.Width * 0.5f - (twoHand ? plateW * 0.60f : 0.0f);
+        const float cx = (eye + p.u) * d.Width * 0.5f - (twoHand ? plateW * 0.85f : 0.0f);
         const float cy = p.v * d.Height;
         if (!hbDrewAny) { hbDrewAny = true; hbDrewCx = cx; hbDrewCy = cy; }
         const float x0 = cx - plateW * 0.5f, y0 = cy - plateH * 0.5f;
@@ -25402,9 +25404,9 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
 // Default OFF ([Render] AmmoPlateEnabled). Shown while a known gun is held;
 // hidden while the R3 wheel is open so the two never overlap. Mag/reserve
 // digits are live (HUD mClipAmmo/mBinAmmo, proven by the round-9 probe);
-// baked digits are covered. White mag cell is covered when the mag is empty
-// (red box + red mag stay as drawn). Unknown values hide the plate, never a
-// guessed one.
+// baked digits are covered (mag cover also hides the baked segment pips).
+// White mag icon is never covered; red box + red mag show iff 2 or fewer
+// rounds remain. Unknown values hide the plate, never a guessed one.
 volatile LONG g_ammoPlate = 0;
 static char g_ammoAssetRoot[MAX_PATH] = "vr-assets/hud/katorga/ammo";
 static IDirect3DTexture9* g_ammoPlateTex[4]{};
@@ -25529,7 +25531,7 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
         }
         return;
     }
-    const uipointer::V hand{ g_handLastPos[AimHand()].x, g_handLastPos[AimHand()].y + 0.05f,
+    const uipointer::V hand{ g_handLastPos[AimHand()].x, g_handLastPos[AimHand()].y + 0.03f,
                              g_handLastPos[AimHand()].z };
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
@@ -25569,15 +25571,15 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
     dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
     struct AmmoVtx { float x, y, z, rhw; DWORD c; float u, v; };
-    const int plateW = std::max(64, (int)(d.Height * 0.19f));
+    const int plateW = std::max(64, (int)(d.Height * 0.17f));
     const int plateH = std::max(21, plateW * 724 / 2172);
-    // Cover baked digit bands always; white mag cell iff empty, red warning
-    // box iff NOT empty (exactly one of the two states shows at a time).
-    float mcx0, mcy0, mcx1, mcy1, rcx0, rcy0, rcx1, rcy1, wcx0, wcy0, wcx1, wcy1;
+    // Cover baked digit bands always; red warning box iff 2 or fewer rounds
+    // remain. The white mag cell is never covered: the left mag icon stays
+    // visible in both states (user 2026-10-15).
+    float mcx0, mcy0, mcx1, mcy1, rcx0, rcy0, rcx1, rcy1;
     float rbx0, rby0, rbx1, rby1;
     ammoplates::MagCover(mcx0, mcy0, mcx1, mcy1);
     ammoplates::ReserveCover(rcx0, rcy0, rcx1, rcy1);
-    ammoplates::WhiteMagCover(wcx0, wcy0, wcx1, wcy1);
     ammoplates::RedBoxCover(rbx0, rby0, rbx1, rby1);
     const DWORD coverCol = ammoplates::CoverColor();
     const bool empty = ammoplates::MagEmpty(clip);
@@ -25621,8 +25623,7 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
         };
         cover(mcx0, mcy0, mcx1, mcy1);
         cover(rcx0, rcy0, rcx1, rcy1);
-        if (empty) cover(wcx0, wcy0, wcx1, wcy1);
-        else cover(rbx0, rby0, rbx1, rby1);
+        if (!empty) cover(rbx0, rby0, rbx1, rby1);
         // Live digits from the strip texture.
         dev->SetTexture(0, g_ammoDigitsTex);
         dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
@@ -25660,6 +25661,117 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     if (old) g_origSetRenderTarget(dev, 0, old);
     dev->SetDepthStencilSurface(depth);
     if (old) old->Release(); if (depth) depth->Release(); back->Release();
+}
+
+// MAIN 2026-10-15: white translucent ring marks the hip holster spot while a
+// weapon is held (user: "widac gdzie odkladac bron"). Same camera-matrix UU
+// projection as DrawLaserSight, so the ring sits exactly where a stored gun
+// lands (GunPivotWorld holster path). Ring radius derives from the largest
+// screen extent of three axis-offset probes, so it cannot degenerate along
+// the view axis. Bounded: one small fan per eye, no allocations, one log line.
+void DrawHolsterMarker(IDirect3DDevice9* dev) {
+    if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
+        Rd(g_weaponWheelOpen) || !g_holsterEnabled || !WeaponInHands() ||
+        Rd(g_weaponHolstered) || !g_origDrawPrimUP) return;
+    int slot = -1;
+    for (int i = 0; i < g_camMatUsed; ++i) if (g_camMats[i].valid) { slot = i; break; }
+    if (slot < 0) return;
+    D3DVIEWPORT9 vp{};
+    if (FAILED(dev->GetViewport(&vp)) || vp.Width < 4 || vp.Height < 4) return;
+    float H[3];
+    HolsterHipWorld(H, true); // full UU world, same input the stored gun uses
+    const float R = (g_holsterConfig.radius >= 2.0f) ? g_holsterConfig.radius * 0.75f : 9.0f;
+    static bool saidDrew = false;
+    // Fixed-function state saved/restored in full: this runs at Present time
+    // after the scene, like DrawLaserSight.
+    IDirect3DVertexShader9* oldVS = nullptr; dev->GetVertexShader(&oldVS);
+    IDirect3DPixelShader9* oldPS = nullptr; dev->GetPixelShader(&oldPS);
+    DWORD oldFVF = 0, oldZ = 0, oldAB = 0, oldSrc = 0, oldDst = 0, oldCull = 0;
+    DWORD oldLit = 0, oldSc = 0, oldCop = 0, oldCa1 = 0, oldAop = 0, oldAa1 = 0;
+    dev->GetFVF(&oldFVF);
+    dev->GetRenderState(D3DRS_ZENABLE, &oldZ);
+    dev->GetRenderState(D3DRS_ALPHABLENDENABLE, &oldAB);
+    dev->GetRenderState(D3DRS_SRCBLEND, &oldSrc);
+    dev->GetRenderState(D3DRS_DESTBLEND, &oldDst);
+    dev->GetRenderState(D3DRS_CULLMODE, &oldCull);
+    dev->GetRenderState(D3DRS_LIGHTING, &oldLit);
+    dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &oldSc);
+    dev->GetTextureStageState(0, D3DTSS_COLOROP, &oldCop);
+    dev->GetTextureStageState(0, D3DTSS_COLORARG1, &oldCa1);
+    dev->GetTextureStageState(0, D3DTSS_ALPHAOP, &oldAop);
+    dev->GetTextureStageState(0, D3DTSS_ALPHAARG1, &oldAa1);
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetTexture(0, nullptr);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+    dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
+    struct RingVtx { float x, y, z, rhw; DWORD c; };
+    const DWORD ringCol = 0x80FFFFFF; // white, half transparent
+    for (int eye = 0; eye < 2; ++eye) {
+        float m[16];
+        memcpy(m, g_camMats[slot].m, sizeof(m));
+        const int conv = g_camMats[slot].conv;
+        if (eye) ApplyOffset(reinterpret_cast<Reg4*>(m), conv, g_eyeDeltaUU);
+        ApplyEyeRemap(reinterpret_cast<Reg4*>(m), conv, eye ? +0.5f : -0.5f);
+        float cc[4];
+        WorldToClip(m, conv, H, cc);
+        if (cc[3] <= 0.001f) continue;
+        const float cx = (cc[0] / cc[3] * 0.5f + 0.5f) * (float)vp.Width + (float)vp.X;
+        const float cy = (0.5f - cc[1] / cc[3] * 0.5f) * (float)vp.Height + (float)vp.Y;
+        float best = 0.0f; // px radius from the widest axis probe
+        for (int a = 0; a < 3; ++a) {
+            float E[3] = { H[0], H[1], H[2] };
+            E[a] += R;
+            float ce[4];
+            WorldToClip(m, conv, E, ce);
+            if (ce[3] <= 0.001f) continue;
+            const float ex = (ce[0] / ce[3] * 0.5f + 0.5f) * (float)vp.Width + (float)vp.X;
+            const float ey = (0.5f - ce[1] / ce[3] * 0.5f) * (float)vp.Height + (float)vp.Y;
+            const float dx = ex - cx, dy = ey - cy;
+            const float rr = sqrtf(dx * dx + dy * dy);
+            if (rr > best) best = rr;
+        }
+        if (best < 2.0f || best > 400.0f) continue;
+        if (!saidDrew) {
+            saidDrew = true;
+            Log("holster marker: drew at %.0f,%.0f r%.0f (hip UU %.1f,%.1f,%.1f)",
+                (double)cx, (double)cy, (double)best, (double)H[0], (double)H[1], (double)H[2]);
+        }
+        const int SEG = 24;
+        RingVtx v[SEG + 2];
+        v[0] = { cx, cy, 0, 1, ringCol };
+        for (int i = 0; i <= SEG; ++i) {
+            const float a = (float)i / (float)SEG * 6.2831853f;
+            v[1 + i] = { cx + cosf(a) * best, cy + sinf(a) * best, 0, 1, ringCol };
+        }
+        g_origDrawPrimUP(dev, D3DPT_TRIANGLEFAN, SEG, v, sizeof(RingVtx));
+    }
+    dev->SetVertexShader(oldVS);
+    dev->SetPixelShader(oldPS);
+    if (oldVS) oldVS->Release();
+    if (oldPS) oldPS->Release();
+    dev->SetFVF(oldFVF);
+    dev->SetRenderState(D3DRS_ZENABLE, oldZ);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, oldAB);
+    dev->SetRenderState(D3DRS_SRCBLEND, oldSrc);
+    dev->SetRenderState(D3DRS_DESTBLEND, oldDst);
+    dev->SetRenderState(D3DRS_CULLMODE, oldCull);
+    dev->SetRenderState(D3DRS_LIGHTING, oldLit);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldSc);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, oldCop);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, oldCa1);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, oldAop);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, oldAa1);
 }
 
 // A flat cutscene should read as a cinema screen, not as a full-field texture
@@ -29744,9 +29856,12 @@ void LoadIniSettings() {
         Rd(g_sceneCinemaMask) ? "ON" : "OFF");
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
     g_holsterEnabled = GetPrivateProfileIntA("Input", "HolsterEnabled", 1, path) ? 1 : 0;
-    g_holsterConfig.fwd = (float)IniSignedInt("Input", "HolsterFwd", 8, path);
-    g_holsterConfig.right = (float)IniSignedInt("Input", "HolsterRight", 12, path);
-    g_holsterConfig.up = (float)IniSignedInt("Input", "HolsterUp", -30, path);
+    // MAIN 2026-10-15: hip lower and further out (pelvis level, clear of the
+    // torso) per user; installed INIs pinning older values need the same
+    // three lines updated (see STATUS handoff).
+    g_holsterConfig.fwd = (float)IniSignedInt("Input", "HolsterFwd", 6, path);
+    g_holsterConfig.right = (float)IniSignedInt("Input", "HolsterRight", 18, path);
+    g_holsterConfig.up = (float)IniSignedInt("Input", "HolsterUp", -36, path);
     g_holsterConfig.radius = (float)IniSignedInt("Input", "HolsterRadius", 12, path);
     if (g_holsterConfig.radius < 2.0f) g_holsterConfig.radius = 2.0f;
     if (g_holsterConfig.radius > 48.0f) g_holsterConfig.radius = 48.0f;

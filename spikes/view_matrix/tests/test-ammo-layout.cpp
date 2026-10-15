@@ -46,7 +46,7 @@ int main() {
         if (!(x0 >= 0 && x1 <= 1 && y0 >= 0 && y1 <= 1 && x1 > x0 && y1 > y0)) ok = false;
         Expect(ok != 0, "cover rects sane");
     }
-    Expect(MagEmpty(0) && !MagEmpty(1) && !MagEmpty(30), "empty rule");
+    Expect(MagEmpty(0) && MagEmpty(1) && MagEmpty(2) && !MagEmpty(3) && !MagEmpty(30), "empty rule");
     // Right-aligned layout ends exactly at rightX.
     {
         DigitQuad q[4];

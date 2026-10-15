@@ -44,9 +44,13 @@ inline GlyphRect DigitGlyph(int d) {
     return GlyphRect{ x0[d], 35, x1[d], 205 };
 }
 
-// Cover quads (plate fractions): baked digit bands + white-mag cell.
+// Cover quads (plate fractions): baked digit bands. The mag cover extends to
+// y1=0.71 to also hide the baked cyan segment pips under the mag digits
+// (measured bright y210-236 on all four plates); the live digits sit above
+// them. The reserve bullets icon stays above its cover (icon bottom y178 vs
+// cover top y179) and is never hidden.
 inline void MagCover(float& x0, float& y0, float& x1, float& y1) {
-    x0 = 0.265f; y0 = 0.345f; x1 = 0.416f; y1 = 0.615f;
+    x0 = 0.265f; y0 = 0.345f; x1 = 0.416f; y1 = 0.710f;
 }
 inline void ReserveCover(float& x0, float& y0, float& x1, float& y1) {
     x0 = 0.502f; y0 = 0.525f; x1 = 0.603f; y1 = 0.704f;
@@ -70,9 +74,10 @@ inline void ReserveDigits(float& rightEdge, float& top, float& height) {
 }
 inline float DigitGapFrac() { return 0.08f; } // × digit display height
 
-// Empty rule: white mag cell covered iff the mag is empty (red box + red
-// mag stay as the mockup draws them).
-inline bool MagEmpty(int clip) { return clip <= 0; }
+// Empty rule (user 2026-10-15): full white mag icon while clip > 2, red
+// warning box once 2 or fewer rounds remain. The white mag cell itself is
+// never covered: the left mag icon stays visible in both states.
+inline bool MagEmpty(int clip) { return clip <= 2; }
 
 // Right-aligned number layout in plate px. Returns digit quads (glyph ids +
 // rects); value clamps to [0, 9999]. Returns 0 and leaves output untouched
