@@ -10137,6 +10137,25 @@ void SyncXRInput(XrTime displayTime) {
                 InterlockedExchange64(&g_lastMeleeEdgeMs,(LONG64)f.nowMs);
             }
         }
+        // MAIN round 11 pickup-refusal probe: grip held with a hand at the
+        // belt but no PICKED names the blocking Context term (one line).
+        {
+            static bool saidRefuse=false;
+            if(!saidRefuse&&g_hipKnifeState.held<0&&!hipknife::Context(f)){
+                bool handNear=false,gripHeld=false;
+                for(int h=0;h<2;++h){
+                    if(f.tracked[h]&&hipknife::Finite(f.hand[h].p)&&
+                       hipknife::Length(f.hand[h].p-f.hip.p)<=g_hipKnifeConfig.radius)
+                        handNear=true;
+                    if(f.grip[h])gripHeld=true;
+                }
+                if(handNear&&gripHeld){
+                    saidRefuse=true;
+                    Log("hip knife: grip held at belt but no pickup (gameplay=%d focused=%d alive=%d nativeKnife=%d pawn=%08X)",
+                        f.gameplay?1:0,f.focused?1:0,f.alive?1:0,f.nativeKnife?1:0,f.pawn);
+                }
+            }
+        }
     }
     const bool supportGrip=rawSupportGrip&&!hipknife::Reserves(g_hipKnifeState,OffHand());
     static bool priorSupportGrip=false;
@@ -10189,7 +10208,11 @@ void SyncXRInput(XrTime displayTime) {
                               g_handPositionValid[AimHand()] && g_handPoseValid[AimHand()] &&
                               holsterWeapon != 0 && holsterIdentity != 0;
     float holsterHip[3]{};
-    HolsterHipWorld(holsterHip, false); // handOff is relative to the current head
+    // MAIN round 11: trigger uses the SAME world point the ring draws and the
+    // stored gun renders (HolsterHipWorld TRUE). The head-relative FALSE point
+    // sits hmdOffset above the ring, which is why storing needed aiming above
+    // it (user report + 17:19/19:30 store logs). Falsifier: store-at-ring fails.
+    HolsterHipWorld(holsterHip, true);
     const float handX = (float)Rd(g_handOffX) / kHandFixed;
     const float handY = (float)Rd(g_handOffY) / kHandFixed;
     const float handZ = (float)(g_gunSignPosZ * Rd(g_handOffZ)) / kHandFixed;
@@ -26184,18 +26207,19 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
 // MAIN round 10: the same white ring at the LEFT belt while the knife is
 // held (user: same as the gun ring, obviously on the left). Belt anchor is
 // mirrored live from the XR owner; projection reuses the gun-ring helper.
+// MAIN round 11: also shown while docked (held<0 no longer gates) so the
+// belt can be FOUND: the user reports never seeing the knife at all.
 void DrawKnifeBeltMarker(IDirect3DDevice9* dev) {
-    const int held = g_hipKnifeState.held;
     if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
         Rd(g_weaponWheelOpen) || !g_hipKnifeEnabled || !g_hipKnifeReady ||
-        held < 0 || !g_origDrawPrimUP) {
+        !g_origDrawPrimUP) {
         static bool saidGate = false;
         if (!saidGate) {
             saidGate = true;
-            Log("knife belt marker: gate blocked (vr=%d dup=%d paused=%d wheel=%d en=%d ready=%d held=%d)",
+            Log("knife belt marker: gate blocked (vr=%d dup=%d paused=%d wheel=%d en=%d ready=%d)",
                 VrModeOn() ? 1 : 0, (int)Rd(g_dupDraws), (int)Rd(g_gamePaused),
                 (int)Rd(g_weaponWheelOpen), g_hipKnifeEnabled ? 1 : 0,
-                g_hipKnifeReady ? 1 : 0, held);
+                g_hipKnifeReady ? 1 : 0);
         }
         return;
     }
