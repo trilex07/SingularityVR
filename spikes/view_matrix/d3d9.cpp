@@ -25572,7 +25572,7 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
 // Default OFF ([Render] AmmoPlateEnabled). Shown while a known gun is held;
 // hidden while the R3 wheel is open so the two never overlap. Mag/reserve
 // digits are live (HUD mClipAmmo/mBinAmmo, proven by the round-9 probe);
-// baked digits are covered (mag cover also hides the baked segment pips).
+// plate art is digit-free (user-supplied), so no baked covers are drawn.
 // White mag icon is never covered; red box + red mag show iff 2 or fewer
 // rounds remain. Unknown values hide the plate, never a guessed one.
 volatile LONG g_ammoPlate = 0;
@@ -25755,14 +25755,11 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     // distance instead of looking bigger as the gun moves away (user 2026-10-15).
     int plateW = std::max(64, (int)(d.Height * 0.16f));
     int plateH = std::max(21, plateW * 724 / 2172);
-    // Cover baked digit bands always; red warning box iff 2 or fewer rounds
-    // remain. The white mag cell is never covered: the left mag icon stays
-    // visible in both states (user 2026-10-15).
-    float mcx0, mcy0, mcx1, mcy1, rcx0, rcy0, rcx1, rcy1, pcx0, pcy0, pcx1, pcy1;
+    // MAIN round 8: digit-free art (user-supplied plates without baked digits
+    // or pips) needs NO baked-content covers — only the empty-mag info.
+    // The red warning box stays covered iff 3+ rounds remain; everything
+    // else (white mag, icons, frames, labels) is never touched.
     float rbx0, rby0, rbx1, rby1;
-    ammoplates::MagCover(mcx0, mcy0, mcx1, mcy1);
-    ammoplates::ReserveCover(rcx0, rcy0, rcx1, rcy1);
-    ammoplates::MagPipsCover(pcx0, pcy0, pcx1, pcy1);
     ammoplates::RedBoxCover(rbx0, rby0, rbx1, rby1);
     const DWORD coverCol = ammoplates::CoverColor();
     const bool empty = ammoplates::MagEmpty(clip);
@@ -25826,10 +25823,7 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
             };
             g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, r, sizeof(AmmoVtx));
         };
-        cover(mcx0, mcy0, mcx1, mcy1);
-        cover(rcx0, rcy0, rcx1, rcy1);
-        cover(pcx0, pcy0, pcx1, pcy1); // baked pips row (user: still visible)
-        if (!empty) cover(rbx0, rby0, rbx1, rby1);
+        if (!empty) cover(rbx0, rby0, rbx1, rby1); // red box hidden while 3+ rounds remain
         // Live digits from the strip texture.
         dev->SetTexture(0, g_ammoDigitsTex);
         dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
@@ -25909,12 +25903,12 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
     const uipointer::V hip{ g_headPosXR[0] + (-sc * hfwd + cc * hright),
                             g_headPosXR[1] + H[2] / units,
                             g_headPosXR[2] + (-cc * hfwd - sc * hright) };
-    // MAIN round 7: vertical annulus (user: empty inside, 5cm rim, plane
-    // perpendicular to the floor). Outer 0.10m / inner 0.05m in the plane
-    // spanned by XR-up and the horizontal eye-right (billboard around Y, so
-    // it reads as a standing wheel from any facing).
+    // MAIN round 8: horizontal annulus (user: flat to floor/ceiling, not
+    // facing the user). Outer diameter +1 inch vs round 7, rim halved:
+    // outer 0.1127m / inner 0.0877m (2.5cm rim, empty middle), lying in the
+    // XR horizontal plane at hip height. Yaw-invariant by construction.
     static bool saidDrew = false, saidProj = false;
-    const float kRo = 0.10f, kRi = 0.05f;
+    const float kRo = 0.1127f, kRi = 0.0877f;
     // Fixed-function state saved/restored in full: this runs at Present time
     // after the scene, like DrawLaserSight.
     IDirect3DVertexShader9* oldVS = nullptr; dev->GetVertexShader(&oldVS);
@@ -25965,26 +25959,20 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
         if (!VrUiProjectEye(eye, hip, p)) continue;
         const float cx = (eye + p.u) * dd.Width * 0.5f;
         const float cy = p.v * dd.Height;
-        // Vertical plane: XR-up x horizontal eye-right.
-        uipointer::V er = VrUiRotate(g_eyePose[eye].orientation, { 1, 0, 0 });
-        float rl = sqrtf(er.x * er.x + er.z * er.z);
-        if (rl < 1e-3f) continue;
-        er.x /= rl; er.z /= rl; er.y = 0.0f;
         drewFrame = true;
         if (!saidDrew) {
             saidDrew = true;
-            Log("holster marker: drew ring at %.0f,%.0f (hip UU %.1f,%.1f,%.1f)",
+            Log("holster marker: drew flat ring at %.0f,%.0f (hip UU %.1f,%.1f,%.1f)",
                 (double)cx, (double)cy, (double)H[0], (double)H[1], (double)H[2]);
         }
+        // Horizontal ring verts (XR x/z plane at hip height).
         const int SEG = 28;
         RingVtx v[2 * (SEG + 1)];
         for (int i = 0; i <= SEG; ++i) {
             const float a = (float)i / (float)SEG * 6.2831853f;
             const float co = cosf(a), si = sinf(a);
-            uipointer::V wo{ hip.x + er.x * si * kRo, hip.y + co * kRo,
-                             hip.z + er.z * si * kRo };
-            uipointer::V wi{ hip.x + er.x * si * kRi, hip.y + co * kRi,
-                             hip.z + er.z * si * kRi };
+            uipointer::V wo{ hip.x + co * kRo, hip.y, hip.z + si * kRo };
+            uipointer::V wi{ hip.x + co * kRi, hip.y, hip.z + si * kRi };
             uipointer::ScreenPoint po, pi;
             float ox = cx, oy = cy, ix = cx, iy = cy;
             if (VrUiProjectEye(eye, wo, po)) {
