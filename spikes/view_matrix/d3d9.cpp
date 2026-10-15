@@ -25892,7 +25892,14 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
     }
     int slot = -1;
     for (int i = 0; i < g_camMatUsed; ++i) if (g_camMats[i].valid) { slot = i; break; }
-    if (slot < 0) return;
+    if (slot < 0) {
+        static bool saidCam = false;
+        if (!saidCam) {
+            saidCam = true;
+            Log("holster marker: no valid camera matrix slot (used=%d)", g_camMatUsed);
+        }
+        return;
+    }
     D3DVIEWPORT9 vp{};
     if (FAILED(dev->GetViewport(&vp)) || vp.Width < 4 || vp.Height < 4) return;
     float H[3];
