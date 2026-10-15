@@ -2204,6 +2204,11 @@ volatile LONG g_holsterYawUU = 0, g_holsterPitchUU = 0, g_holsterRollUU = 0;
 int g_holsterEnabled = 1;
 weaponholster::Config g_holsterConfig{};
 weaponholster::State g_holsterState{};
+// MAIN round 16: user-tunable trigger trim (centimetres, body frame) applied
+// to the TRIGGER hip point only — the drawn ring and the stored-gun render
+// stay at HolsterHipWorld. Default 0 (trigger==ring). Same precedent as the
+// run-217 gun anchor tuning: the user measures in-headset, no guessed const.
+float g_holsterTrimFcm=0,g_holsterTrimRcm=0,g_holsterTrimUcm=0;
 // Independent, default-OFF pre-TMD knife candidate; render/input state is
 // updated by the existing XR frame owner, never a new hook or worker thread.
 int g_hipKnifeEnabled=0;
@@ -8970,9 +8975,9 @@ bool InitXRInput() {
         Log("hip knife: cache=%s verts=%u tris=%u; pre-TMD both hands, post-TMD right hand only, native camera trace",
             g_hipKnifeReady?"READY":"MISSING/INVALID (disabled)",
             g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles());
-        // MAIN round 15 build marker: proves which DLL produced this log.
+        // MAIN round 16 build marker: proves which DLL produced this log.
         // Update the tag every behavior round; parsers key on "knife build r".
-        Log("hip knife: build r15 postTMD-right-only + silent-refusal probe + trigger==ring (src bcf8ec1+); holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
+        Log("hip knife: build r16 trigger-trim-INI + silent-refusal probe + trigger==ring default (src d74a922+); holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
             g_holsterConfig.fwd,g_holsterConfig.right,g_holsterConfig.up,g_holsterConfig.radius,
             g_hipKnifeConfig.left,g_hipKnifeConfig.down,g_hipKnifeConfig.radius);
     }
@@ -10284,6 +10289,19 @@ void SyncXRInput(XrTime displayTime) {
     // contacts prove radius, not offset.
     float holsterHip[3]{};
     HolsterHipWorld(holsterHip, true); // same point the ring draws / gun renders
+    // MAIN round 16: user trim moves the TRIGGER onto the felt ring without
+    // touching the ring or the stored-gun render. Body frame like HipPoint;
+    // cm values apply only when the user sets non-zero INI values.
+    {
+        const float uuPerCm = MetresToUU() * 0.01f;
+        if(uuPerCm>0&&(g_holsterTrimFcm!=0||g_holsterTrimRcm!=0||g_holsterTrimUcm!=0)){
+            const float tyr = g_baseYaw * (6.2831853f / 65536.0f);
+            const float tcy = cosf(tyr), tsy = sinf(tyr);
+            holsterHip[0] += (g_holsterTrimFcm*tcy - g_holsterTrimRcm*tsy) * uuPerCm;
+            holsterHip[1] += (g_holsterTrimFcm*tsy + g_holsterTrimRcm*tcy) * uuPerCm;
+            holsterHip[2] += g_holsterTrimUcm * uuPerCm;
+        }
+    }
     const float handX = (float)Rd(g_handOffX) / kHandFixed;
     const float handY = (float)Rd(g_handOffY) / kHandFixed;
     const float handZ = (float)(g_gunSignPosZ * Rd(g_handOffZ)) / kHandFixed;
@@ -30395,6 +30413,13 @@ void LoadIniSettings() {
     g_holsterConfig.fwd = (float)IniSignedInt("Input", "HolsterFwd", 6, path);
     g_holsterConfig.right = (float)IniSignedInt("Input", "HolsterRight", 18, path);
     g_holsterConfig.up = (float)IniSignedInt("Input", "HolsterUp", -36, path);
+    // MAIN round 16: trigger-only trim, centimetres in body frame (fwd/right/up).
+    // Default 0 = trigger exactly at the drawn ring. Clamped to +/-30 cm.
+    g_holsterTrimFcm = std::max(-30.f,std::min(30.f,(float)IniSignedInt("Input","HolsterTrimFwdCm",0,path)));
+    g_holsterTrimRcm = std::max(-30.f,std::min(30.f,(float)IniSignedInt("Input","HolsterTrimRightCm",0,path)));
+    g_holsterTrimUcm = std::max(-30.f,std::min(30.f,(float)IniSignedInt("Input","HolsterTrimUpCm",0,path)));
+    Log("ini: HolsterTrimCm fwd=%.0f right=%.0f up=%.0f (trigger-only, 0=at ring)",
+        (double)g_holsterTrimFcm,(double)g_holsterTrimRcm,(double)g_holsterTrimUcm);
     g_hipKnifeEnabled=GetPrivateProfileIntA("Input","HipKnifeEnabled",0,path)?1:0;
     g_hipKnifeConfig.left=std::max(.10f,std::min(.50f,IniSignedInt("Input","HipKnifeLeftCm",25,path)*.01f));
     g_hipKnifeConfig.down=std::max(.20f,std::min(.90f,IniSignedInt("Input","HipKnifeDownCm",50,path)*.01f));
