@@ -1,10 +1,11 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 ammo PROBE ROUND-9 DEPLOYED (DLL 44CC3332/source 9ffc791,
-built==installed; backup 20261015-144029; INI carried over). Samples HUD
-mClipAmmo/mBinAmmo/mClipSize per pull (by name). Need: SINGLE taps ~2 s, 8
-pulls, exit. Falsifier: clip -1/tap. Live:
-deployment/hands-dubbing/ammo-probe9-20261015/live.json. Prior history.
+LATEST 2026-10-15 ammo PLATES RUNTIME DEPLOYED for L3 (DLL 7F7EF175/source
+8e9ef4a, built==installed; backup 20261015-150446). INI: +AmmoPlateEnabled=1,
+probe/dump diagnostics OFF for clean visual. Need: hold gun -> plate behind
+it with LIVE digits tracking fire/pickup; R3 opens -> plate hides; empty mag
+-> white mag covered. Log: art ready + HUD cache + no unknown-hide. Live:
+deployment/hands-dubbing/ammo-plates-20261015/live.json. Prior history.
 
 LATEST 2026-10-15 ammo PROBE ROUND-2 DEPLOYED (DLL 05F960F0/source 2a22d62):
 class property dump on equip (RvWeaponShared vocabulary: no ammo data
