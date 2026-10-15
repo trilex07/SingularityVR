@@ -56,6 +56,15 @@ deployment/hands-dubbing/ammo-plates-fix-20261015/live.json. Prior history.
 LATEST 2026-10-15 ammo PROBE ROUND-2 DEPLOYED (DLL 05F960F0/source 2a22d62):
 class property dump on equip (RvWeaponShared vocabulary: no ammo data
 fields, only GetAmmoInClip/Bin-style functions). Prior history.
+LATEST 2026-10-15 SIDE feature/glove-animation: L1_PASS + L2_PASS, clean
+source 94aab901; x86 PE32 /O2 DLL SHA 27D5DA96...82568A4. Default OFF.
+User explicitly selected a new default-OFF baked-GLB renderer after source
+inspection proved main uses the native UE3 skin, not the rigid HUD GLBs.
+Closed-cuff + open/fist morph assets prepared locally; free noTMD hands only,
+held weapon/TMD/aiming unchanged. 261 CPU checks + fake render-state guard,
+native hand regressions and 7 geometry tests; zero Steam access/deployment.
+MAIN L3/L4 pending. See docs/glove-animation.md and
+docs/glove-animation-evidence.md (exact SHA, private candidate, 3-sentence test).
 
 LATEST 2026-10-15 CINE ROUND-2 L3_PASS (user: stereo back after Load).
 Log: `menu-load cut ... latch=1` -> `VideoFlat -> GameplayStereo`, drift back

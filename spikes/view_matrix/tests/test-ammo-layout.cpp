@@ -46,6 +46,14 @@ int main() {
         if (!(x0 >= 0 && x1 <= 1 && y0 >= 0 && y1 <= 1 && x1 > x0 && y1 > y0)) ok = false;
         Expect(ok != 0, "cover rects sane");
     }
+    // Pips cover hides the baked row (measured y0.587-0.76) without touching
+    // the live mag digits (bottom 0.359+0.235=0.594).
+    {
+        float x0, y0, x1, y1;
+        MagPipsCover(x0, y0, x1, y1);
+        Expect(x0 >= 0.19f && x1 <= 0.47f && y0 >= 0.595f && y1 <= 0.77f && x1 > x0 && y1 > y0,
+               "pips cover band");
+    }
     Expect(MagEmpty(0) && MagEmpty(1) && MagEmpty(2) && !MagEmpty(3) && !MagEmpty(30), "empty rule");
     // Right-aligned layout ends exactly at rightX.
     {
