@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 19 DEPLOYED (DLL
+F303DA28CA6B387A5DEBBF31B72D9D1CE71F798B728EF315D10B9A3EB6A88C48/source
+branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; game closed at deploy).
+Why: User feedback:
+1) "jeszcze troche w dół i w lewo odkładanie borni": HolsterTrimRightCm=-7 (left), HolsterTrimUpCm=-6 (down) written to SingularityVR.ini.
+2) "nóż widzę ale nie mogę go podnieść": Log showed near=1 (left hand at belt) blocked because engine has mTMD non-null (+0x1058), which triggered postTMD=1 requiring right hand only (h==1) without weapon (noWpn=0). Fixed: g_hipKnifeIgnoreTMD defaults to 1 and explicitly sets f.nativeKnife=impulseOk, f.hasTMD=false. INI updated with HipKnifeIgnoreTMD=1. Now both hands can pick up the knife at the hip regardless of held weapon.
+3) "mesh jest noża jest customowy a powinien być wzięty z gry": Analysis shows 2010_knife in knife.svrk IS the game's native geometry from RvGame.xxx, but knife_renderer.h renders it with D3DFVF_XYZ|D3DFVF_DIFFUSE (flat 2-color unlit vertex colors without textures or lighting), making it look like an untextured custom model.
+L1_PASS (159 checks), L2_PASS (PE32 /O2). Pending physical PSVR2 verification.
+
 LATEST 2026-10-15 MAIN round 18 DEPLOYED (DLL
 D2E2ACD1E13298CEBB79F83BDB455A98BAD47874702B8924B6D2D706B67E04FD/source
 5baaf5a branch plates-l3-main, x86 PE32 /O2, built==installed via

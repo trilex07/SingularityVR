@@ -8980,9 +8980,9 @@ bool InitXRInput() {
         Log("hip knife: cache=%s verts=%u tris=%u; pre-TMD both hands, post-TMD right hand only, native camera trace",
             g_hipKnifeReady?"READY":"MISSING/INVALID (disabled)",
             g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles());
-        // MAIN round 16/17/18 build marker: proves which DLL produced this log.
+        // MAIN round 16/17/18/19 build marker: proves which DLL produced this log.
         // Update the tag every behavior round; parsers key on "knife build r".
-        Log("hip knife: build r18 dup-gate fix (was F12-stereo gate: never rendered) + trim-INI (src 8cb58ca+); holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
+        Log("hip knife: build r19 IgnoreTMD-fixed (pre-TMD both-hands pickup) + holster trim down/left; holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
             g_holsterConfig.fwd,g_holsterConfig.right,g_holsterConfig.up,g_holsterConfig.radius,
             g_hipKnifeConfig.left,g_hipKnifeConfig.down,g_hipKnifeConfig.radius);
     }
@@ -10123,11 +10123,9 @@ void SyncXRInput(XrTime displayTime) {
             g_padButtons[g_impulseBtnIdx].mask==XI_RSHOULDER;
         const bool tmdReadable=pawn&&g_offTMD>=0&&Readable((void*)(pawn+g_offTMD),4);
         f.nativeKnife=tmdReadable&&*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)==0&&impulseOk;
-        // MAIN round 14: post-TMD mode (user request) — TMD present, knife still
-        // allowed but right hand (h==1) with no weapon in hand only.
         f.hasTMD=tmdReadable&&*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)!=0&&impulseOk;
-        // MAIN round 17: IgnoreTMD=1 forces the pre-TMD rule (TMD dispute hatch).
-        if(g_hipKnifeIgnoreTMD)f.hasTMD=false;
+        // MAIN round 17/19: IgnoreTMD=1 forces the pre-TMD rule (TMD dispute hatch).
+        if(g_hipKnifeIgnoreTMD){f.hasTMD=false;f.nativeKnife=impulseOk;}
         f.alive=pawn&&g_offHealth>=0&&Readable((void*)(pawn+g_offHealth),4)&&
             *reinterpret_cast<const int*>(pawn+g_offHealth)>0;
         f.noWeapon=!WeaponInHands()||Rd(g_weaponHolstered);
@@ -30438,7 +30436,7 @@ void LoadIniSettings() {
     Log("ini: HolsterTrimCm fwd=%.0f right=%.0f up=%.0f (trigger-only, 0=at ring)",
         (double)g_holsterTrimFcm,(double)g_holsterTrimRcm,(double)g_holsterTrimUcm);
     g_hipKnifeEnabled=GetPrivateProfileIntA("Input","HipKnifeEnabled",0,path)?1:0;
-    g_hipKnifeIgnoreTMD=GetPrivateProfileIntA("Input","HipKnifeIgnoreTMD",0,path)?1:0;
+    g_hipKnifeIgnoreTMD=GetPrivateProfileIntA("Input","HipKnifeIgnoreTMD",1,path)?1:0;
     Log("ini: HipKnifeIgnoreTMD=%d (0=trust engine mTMD, 1=force pre-TMD both-hands rule)",g_hipKnifeIgnoreTMD);
     g_hipKnifeConfig.left=std::max(.10f,std::min(.50f,IniSignedInt("Input","HipKnifeLeftCm",25,path)*.01f));
     g_hipKnifeConfig.down=std::max(.20f,std::min(.90f,IniSignedInt("Input","HipKnifeDownCm",50,path)*.01f));
