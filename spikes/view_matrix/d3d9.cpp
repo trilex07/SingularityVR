@@ -25909,9 +25909,12 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
     const uipointer::V hip{ g_headPosXR[0] + (-sc * hfwd + cc * hright),
                             g_headPosXR[1] + H[2] / units,
                             g_headPosXR[2] + (-cc * hfwd - sc * hright) };
-    const float R = (g_holsterConfig.radius >= 2.0f) ? g_holsterConfig.radius * 0.75f : 9.0f;
-    const float Rm = R / units; // ring radius in metres
+    // MAIN round 7: vertical annulus (user: empty inside, 5cm rim, plane
+    // perpendicular to the floor). Outer 0.10m / inner 0.05m in the plane
+    // spanned by XR-up and the horizontal eye-right (billboard around Y, so
+    // it reads as a standing wheel from any facing).
     static bool saidDrew = false, saidProj = false;
+    const float kRo = 0.10f, kRi = 0.05f;
     // Fixed-function state saved/restored in full: this runs at Present time
     // after the scene, like DrawLaserSight.
     IDirect3DVertexShader9* oldVS = nullptr; dev->GetVertexShader(&oldVS);
@@ -25962,31 +25965,40 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
         if (!VrUiProjectEye(eye, hip, p)) continue;
         const float cx = (eye + p.u) * dd.Width * 0.5f;
         const float cy = p.v * dd.Height;
-        // Ring radius: a ring-radius probe along this eye's right axis.
-        const uipointer::V ergt = VrUiRotate(g_eyePose[eye].orientation, { 1, 0, 0 });
-        const uipointer::V probe{ hip.x + ergt.x * Rm, hip.y + ergt.y * Rm,
-                                  hip.z + ergt.z * Rm };
-        uipointer::ScreenPoint p2;
-        if (!VrUiProjectEye(eye, probe, p2)) continue;
-        const float dx = (p2.u - p.u) * dd.Width * 0.5f;
-        const float dy = (p2.v - p.v) * dd.Height;
-        float best = sqrtf(dx * dx + dy * dy);
-        if (best < 2.0f) continue; // degenerate: behind or on the eye
-        if (best > 1000.0f) best = 1000.0f; // clamp, never skip a valid spot
+        // Vertical plane: XR-up x horizontal eye-right.
+        uipointer::V er = VrUiRotate(g_eyePose[eye].orientation, { 1, 0, 0 });
+        float rl = sqrtf(er.x * er.x + er.z * er.z);
+        if (rl < 1e-3f) continue;
+        er.x /= rl; er.z /= rl; er.y = 0.0f;
         drewFrame = true;
         if (!saidDrew) {
             saidDrew = true;
-            Log("holster marker: drew at %.0f,%.0f r%.0f (hip UU %.1f,%.1f,%.1f)",
-                (double)cx, (double)cy, (double)best, (double)H[0], (double)H[1], (double)H[2]);
+            Log("holster marker: drew ring at %.0f,%.0f (hip UU %.1f,%.1f,%.1f)",
+                (double)cx, (double)cy, (double)H[0], (double)H[1], (double)H[2]);
         }
-        const int SEG = 24;
-        RingVtx v[SEG + 2];
-        v[0] = { cx, cy, 0, 1, ringCol };
+        const int SEG = 28;
+        RingVtx v[2 * (SEG + 1)];
         for (int i = 0; i <= SEG; ++i) {
             const float a = (float)i / (float)SEG * 6.2831853f;
-            v[1 + i] = { cx + cosf(a) * best, cy + sinf(a) * best, 0, 1, ringCol };
+            const float co = cosf(a), si = sinf(a);
+            uipointer::V wo{ hip.x + er.x * si * kRo, hip.y + co * kRo,
+                             hip.z + er.z * si * kRo };
+            uipointer::V wi{ hip.x + er.x * si * kRi, hip.y + co * kRi,
+                             hip.z + er.z * si * kRi };
+            uipointer::ScreenPoint po, pi;
+            float ox = cx, oy = cy, ix = cx, iy = cy;
+            if (VrUiProjectEye(eye, wo, po)) {
+                ox = (eye + po.u) * dd.Width * 0.5f;
+                oy = po.v * dd.Height;
+            }
+            if (VrUiProjectEye(eye, wi, pi)) {
+                ix = (eye + pi.u) * dd.Width * 0.5f;
+                iy = pi.v * dd.Height;
+            }
+            v[2 * i] = { ox, oy, 0, 1, ringCol };
+            v[2 * i + 1] = { ix, iy, 0, 1, ringCol };
         }
-        g_origDrawPrimUP(dev, D3DPT_TRIANGLEFAN, SEG, v, sizeof(RingVtx));
+        g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2 * SEG, v, sizeof(RingVtx));
     }
     if (!drewFrame && !saidProj) {
         saidProj = true;

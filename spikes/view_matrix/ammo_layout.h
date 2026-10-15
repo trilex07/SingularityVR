@@ -71,12 +71,12 @@ inline void RedBoxCover(float& x0, float& y0, float& x1, float& y1) {
 }
 inline unsigned CoverColor() { return 0xFF041A2E; } // measured plate bg (4,26,46), opaque
 
-// Baked segment-pip row under the mag digits (measured bright x202-469 /
-// y200-259 on all four plates, i.e. wider than MagCover and, on shotgun /
-// sniper art, below it). Separate rect so the top deco brackets stay intact.
-// y0=0.60 clears the live mag digits (bottom 0.359+0.235=0.594).
+// Baked segment-pip row under the mag digits: true pips live at x272-380 /
+// y210-236 on all four plates (column profile; the x202-224 content is the
+// mag icon bottom + corner tick, the y260 line is the cell frame — both
+// deco the user flagged red). Tight rect covers pips only.
 inline void MagPipsCover(float& x0, float& y0, float& x1, float& y1) {
-    x0 = 0.190f; y0 = 0.600f; x1 = 0.465f; y1 = 0.765f;
+    x0 = 0.260f; y0 = 0.600f; x1 = 0.380f; y1 = 0.698f;
 }
 
 // Digit zones: right edge + top + digit height (plate fractions).

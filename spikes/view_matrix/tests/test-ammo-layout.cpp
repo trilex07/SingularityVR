@@ -54,11 +54,14 @@ int main() {
         Expect(x0 <= 0.495f && y0 <= 0.513f && x1 >= 0.606f && y1 >= 0.719f,
                "reserve halo margins");
     }
-    // Pips band lock: baked row y0.587-0.76, clear of live digits (bottom 0.594).
+    // Pips band lock: true pips at x0.266-0.371/y0.616-0.692; rect must
+    // enclose them without touching mag-icon bottom, corner tick (x<0.26)
+    // or the y0.762 cell frame, and must clear live digits (bottom 0.594).
     {
         float x0, y0, x1, y1;
         MagPipsCover(x0, y0, x1, y1);
-        Expect(x0 >= 0.19f && x1 <= 0.47f && y0 >= 0.595f && y1 <= 0.77f && x1 > x0 && y1 > y0,
+        Expect(x0 >= 0.255f && x0 <= 0.265f && x1 >= 0.375f && x1 <= 0.385f &&
+               y0 >= 0.595f && y1 >= 0.695f && y1 <= 0.70f,
                "pips cover band");
     }
     Expect(MagEmpty(0) && MagEmpty(1) && MagEmpty(2) && !MagEmpty(3) && !MagEmpty(30), "empty rule");
