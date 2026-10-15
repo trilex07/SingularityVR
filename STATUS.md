@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 wheel ICONS installed (no DLL change): 6 weapon silhouettes
+cut from references/95f791be-....png into the Katorga atlas reserved row
+(gun-centurion/valkyrie/spikeshot/kasimov + dev-seeker/dev-tmd for later);
+atlas 512x256 PNG E77799B6 + atlas.json 22 rects (sha matches file) +
+catalog sectors 1-4 remapped; all 6 catalog ids resolve, bounds/unique PASS.
+Backup: ww-icons-20261015/atlas-backup. Installed DLL C1974AFF loads the
+atlas dynamically, so icons appear on next launch with the current lease.
+Upstream SIDE hud pack should absorb the deltas. Need: R3 open shows gun
+silhouettes instead of mag squares + `HUD atlas ready (512x256, 22 icons)`.
+
 LATEST 2026-10-15 wheel ROUND-2 IMPLEMENTED, L1_PASS + L2_PASS (user feedback
 on 2E2064FB: hand-select, smaller, ownership-gated labels, translucency).
 Head-relative hand travel (6 cm deadzone, eye-0 basis) drives selection via
