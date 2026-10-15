@@ -7477,6 +7477,7 @@ inline int PanelRowId(int i) {
 // exactly, with no rebuild.
 volatile LONG g_startInVr = 1;      // ini [Render] StartInVr
 volatile LONG g_desktopMirrorEye = 0; // ini [Render] DesktopMirrorEye: 0 off, 1 left, 2 right
+volatile LONG g_desktopMirrorFill = 0; // ini [Render] DesktopMirrorFill: 0=letterbox, 1=full stretch, 2=crop 16:9
 // Diagnostic-only desktop HMD: exercise stereo/backbuffer hooks without an XR system.
 // This never changes normal PSVR2 startup behavior unless explicitly enabled in [Diagnostic].
 volatile LONG g_forceDesktopVr = 0; // ini [Diagnostic] ForceDesktopVr
@@ -30025,6 +30026,10 @@ void LoadIniSettings() {
         if (mirror < 0 || mirror > 2) mirror = 0;
         InterlockedExchange(&g_desktopMirrorEye, mirror);
         Log("ini: DesktopMirrorEye=%ld (0=SBS window, 1=left eye, 2=right eye; after XR submit)", mirror);
+        LONG fill = GetPrivateProfileIntA("Render", "DesktopMirrorFill", 0, path);
+        if (fill < 0 || fill > 2) fill = 0;
+        InterlockedExchange(&g_desktopMirrorFill, fill);
+        Log("ini: DesktopMirrorFill=%ld (0=letterbox, 1=full stretch, 2=crop 16:9; fills backbuffer for F12/TV)", fill);
     }
     Log("ini: StartInVr=%ld (%s)", InterlockedCompareExchange(&g_startInVr, 0, 0),
         InterlockedCompareExchange(&g_startInVr, 0, 0)
