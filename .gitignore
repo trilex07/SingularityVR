@@ -10,6 +10,9 @@
 *.map
 __pycache__/
 *.pyc
+# Private game-derived glove experiments; tools and synthetic tests are tracked.
+/build/gloves/
+/vr-assets/hud/katorga/glove-animation/
 # /analyze output - build.ps1 runs a static-analysis pass, see the note in it
 *.nativecodeanalysis.xml
 

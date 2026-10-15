@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 SIDE feature/glove-animation: L1_PASS, L2 build PASS in
+development; clean-source candidate/provenance pending final rebuild.
+User explicitly selected a new default-OFF baked-GLB renderer after source
+inspection proved main uses the native UE3 skin, not the rigid HUD GLBs.
+Closed-cuff + open/fist morph assets prepared locally; free noTMD hands only,
+held weapon/TMD/aiming unchanged. 261 CPU checks + fake render-state guard,
+native hand regressions and 7 geometry tests; zero Steam access/deployment.
+MAIN L3/L4 pending. See docs/glove-animation.md and final artifact evidence.
+
 LATEST 2026-10-15 CINE ROUND-2 L3_PASS (user: stereo back after Load).
 Log: `menu-load cut ... latch=1` -> `VideoFlat -> GameplayStereo`, drift back
 to `cine off`. PR to main pending (user creates, gh auth missing here).
