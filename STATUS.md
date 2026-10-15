@@ -1,5 +1,25 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 5 DEPLOYED (DLL
+65A1539F4D0529E83E08BA7004CAFAB78C887619362E0B1184EAC5900EAC71D5/source
+6cd7ab2 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-172846; game closed
+at deploy; glove assets + GloveRendererEnabled=1 retained from round 4).
+Root-cause fix for "burnt digits": offline SBS render of the exact
+composition proved baked art is fully hidden — the burnt look is the LIVE
+digits' own dark minification fringe (strip transparent pixels were
+transparent BLACK; GPU linear downscale 184px->~80px bleeds black into the
+glow). Fixed by 16-pass alpha-bleed of installed ammo-digits.png
+(6BD0D4DA->D0872891; alpha untouched; pre-edit backed to
+deployment/install-backups/20261015-171643/ammo-digits.pre-bleed.png);
+offline re-render confirms the boxes are gone (residual edge in the sim is
+GDI+ bicubic overstatement vs in-game bilinear). Plus: holster marker camera
+slot one-shot log (gate/camMat/proj/drew chain now complete — 17:01 log
+proved ammo drew while the marker never attempted, so the break is gate or
+camMat, and the next session names it). L2_PASS (PE32, manifest commit
+6cd7ab2 clean). L3/physical PENDING: gameplay pass holding the gun
+UNholstered, eyes on the hip + digits check. No fix claimed.
+
 LATEST 2026-10-15 MAIN round 4 DEPLOYED (DLL
 C6D35DC695218CB08C3E10F05B35223DBCE6D9D73969573C7573460560A3FF75/source
 6961f5d branch plates-l3-main, x86 PE32 /O2, built==installed via
