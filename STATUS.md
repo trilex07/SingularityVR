@@ -1,5 +1,27 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 16 DEPLOYED (DLL
+AD1137A395587D79D1F9ABE063B6F98E6B1C4850FD6F67E7FE92ED8D44E7745A/source
+f58a09f branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-202051; game closed
+at deploy). Why: r15 log (session 20:15, `build r15` marker present) proves
+(1) user HAS TMD (`hands: mTMD is NON-NULL`, postTMD=1 on every silent line
+— Centurion is the weapon, TMD the wrist device, no contradiction); left-hand
+belt squeezes with fresh edge (near=1 grip=1 edge=1) are blocked post-TMD by
+the user's own right-only rule; one line shows right grip held while only the
+left hand is at the belt (near=1 grip=2 edge=0); right hand was never at the
+belt with a fresh edge, so no PICKED is correct behavior, not a bug;
+(2) 3x STORED hand-hip vs aim gives 47/88/29 deg — mixed with one orthogonal
+sample, so the gun-vs-controller axis hypothesis is NOT confirmed; all three
+are front-edge contacts at radius ~11-12 (approach direction, not bias).
+Change: user-tunable trigger-only trim INI (HolsterTrimFwdCm/RightCm/UpCm,
+default 0 = trigger at ring, body frame, +/-30 cm, logged at startup);
+ring and stored-gun render untouched. L1_PASS (159). L2_PASS (PE32, manifest
+f58a09f clean). L3/physical PENDING: restart game (new `build r16` marker),
+knife = empty RIGHT hand to belt + squeeze AT belt; holster = dial trim in
+3 cm steps (felt zone behind+above ring → TrimFwdCm plus, TrimUpCm minus).
+No fix claimed.
+
 LATEST 2026-10-15 MAIN round 15 DEPLOYED (DLL
 AB2F11F23D9E6A4D44636A5CD0BE846B3DDECF679F7EA0E39346F003F0B9F30A/source
 d74a922 branch plates-l3-main, x86 PE32 /O2, built==installed via
