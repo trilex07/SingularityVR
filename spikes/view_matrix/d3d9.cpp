@@ -8980,9 +8980,9 @@ bool InitXRInput() {
         Log("hip knife: cache=%s verts=%u tris=%u; pre-TMD both hands, post-TMD right hand only, native camera trace",
             g_hipKnifeReady?"READY":"MISSING/INVALID (disabled)",
             g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles());
-        // MAIN round 16/17 build marker: proves which DLL produced this log.
+        // MAIN round 16/17/18 build marker: proves which DLL produced this log.
         // Update the tag every behavior round; parsers key on "knife build r".
-        Log("hip knife: build r17 render-gate-mask + IgnoreTMD hatch (src f58a09f+); holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
+        Log("hip knife: build r18 dup-gate fix (was F12-stereo gate: never rendered) + trim-INI (src 8cb58ca+); holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
             g_holsterConfig.fwd,g_holsterConfig.right,g_holsterConfig.up,g_holsterConfig.radius,
             g_hipKnifeConfig.left,g_hipKnifeConfig.down,g_hipKnifeConfig.radius);
     }
@@ -25259,21 +25259,25 @@ static void MaybeLoadHudAtlas(IDirect3DDevice9* dev) {
 }
 
 void DrawHipKnife(IDirect3DDevice9* dev){
+    // MAIN round 18: gate on dupDraws (TRUE stereo, the normal VR path — same
+    // signal the belt ring uses), NOT g_stereo (the F12 alternate-eye debug
+    // method that SetVrMode/F1 deliberately clear, so the knife could NEVER
+    // render in normal play: zero `draw=` in the whole log history).
     if(!g_hipKnifeEnabled||!g_hipKnifeReady||!g_hipKnifeVisible||!VrModeOn()||
-       !InGameplay()||!g_stereo||!g_haveEyes||Rd(g_gamePaused)||Rd(g_vrUiMenu)||
+       !InGameplay()||!Rd(g_dupDraws)||!g_haveEyes||Rd(g_gamePaused)||Rd(g_vrUiMenu)||
        Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||CutsceneNativeCameraArmed()){
         // MAIN round 17: per-DISTINCT-mask gate log (the old one-shot spent
         // itself at the menu and said nothing about gameplay, where the user
         // reports the docked knife never renders despite input-side Context).
         static int saidGateMask=-1;
         const int mask=(g_hipKnifeEnabled?1:0)|(g_hipKnifeReady?2:0)|(g_hipKnifeVisible?4:0)|
-            (VrModeOn()?8:0)|(InGameplay()?16:0)|(g_stereo?32:0)|(g_haveEyes?64:0)|
+            (VrModeOn()?8:0)|(InGameplay()?16:0)|(Rd(g_dupDraws)?32:0)|(g_haveEyes?64:0)|
             (Rd(g_gamePaused)?128:0)|(Rd(g_vrUiMenu)?256:0)|
             (Rd(g_panelOpen)?512:0)|(Rd(g_weaponWheelOpen)?1024:0)|(CutsceneNativeCameraArmed()?2048:0);
         if(mask!=saidGateMask){saidGateMask=mask;
-            Log("hip knife: gate blocked (en=%d ready=%d vis=%d vr=%d play=%d stereo=%d eyes=%d paused=%d menu=%d panel=%d wheel=%d cine=%d)",
+            Log("hip knife: gate blocked (en=%d ready=%d vis=%d vr=%d play=%d dup=%d eyes=%d paused=%d menu=%d panel=%d wheel=%d cine=%d)",
                 g_hipKnifeEnabled?1:0,g_hipKnifeReady?1:0,g_hipKnifeVisible?1:0,VrModeOn()?1:0,
-                InGameplay()?1:0,g_stereo?1:0,g_haveEyes?1:0,(int)Rd(g_gamePaused),(int)Rd(g_vrUiMenu),
+                InGameplay()?1:0,(int)Rd(g_dupDraws),g_haveEyes?1:0,(int)Rd(g_gamePaused),(int)Rd(g_vrUiMenu),
                 (int)Rd(g_panelOpen),(int)Rd(g_weaponWheelOpen),CutsceneNativeCameraArmed()?1:0);}
         return;}
     IDirect3DSurface9* back=nullptr;
