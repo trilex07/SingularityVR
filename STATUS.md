@@ -1,5 +1,494 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 19 DEPLOYED (DLL
+F303DA28CA6B387A5DEBBF31B72D9D1CE71F798B728EF315D10B9A3EB6A88C48/source
+branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; game closed at deploy).
+Why: User feedback:
+1) "jeszcze troche w dół i w lewo odkładanie borni": HolsterTrimRightCm=-7 (left), HolsterTrimUpCm=-6 (down) written to SingularityVR.ini.
+2) "nóż widzę ale nie mogę go podnieść": Log showed near=1 (left hand at belt) blocked because engine has mTMD non-null (+0x1058), which triggered postTMD=1 requiring right hand only (h==1) without weapon (noWpn=0). Fixed: g_hipKnifeIgnoreTMD defaults to 1 and explicitly sets f.nativeKnife=impulseOk, f.hasTMD=false. INI updated with HipKnifeIgnoreTMD=1. Now both hands can pick up the knife at the hip regardless of held weapon.
+3) "mesh jest noża jest customowy a powinien być wzięty z gry": Analysis shows 2010_knife in knife.svrk IS the game's native geometry from RvGame.xxx, but knife_renderer.h renders it with D3DFVF_XYZ|D3DFVF_DIFFUSE (flat 2-color unlit vertex colors without textures or lighting), making it look like an untextured custom model.
+L1_PASS (159 checks), L2_PASS (PE32 /O2). Pending physical PSVR2 verification.
+
+LATEST 2026-10-15 MAIN round 18 DEPLOYED (DLL
+D2E2ACD1E13298CEBB79F83BDB455A98BAD47874702B8924B6D2D706B67E04FD/source
+5baaf5a branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-203638; game closed
+at deploy). Why: r17 log (session 20:30, `build r17` marker) names the knife
+render blocker: gameplay mask `vis=1 play=1 stereo=0` — input Context TRUE and
+visible, but render gated on g_stereo, the F12 alternate-eye DEBUG method that
+SetVrMode/F1 deliberately clear. Zero `draw=` in the whole log history proves
+the mesh NEVER rendered in normal play (side's L1/L2 never covered pixels).
+Fix: render gates on Rd(g_dupDraws) (TRUE stereo, same signal as the belt
+ring). Same session's silent lines (postTMD=1, near=LEFT+grip=RIGHT or fresh
+left squeezes) confirm pickup logic behaves per the requested right-only rule.
+Plus user trim applied to INSTALLED INI (pre-edit backup
+deployment/install-backups/20261015-203644/SingularityVR.ini.pre-trim):
+HolsterTrimFwdCm=-2 (toward camera = back), HolsterTrimRightCm=-3 (left),
+HolsterTrimUpCm=-2 (down); mapping stated so sign flips are one edit away.
+L1_PASS (159). L2_PASS (PE32, manifest 5baaf5a clean). L3/physical PENDING:
+restart game (new `build r18` marker), docked knife should render at left
+belt; store should fire at the ring; knife = empty right hand + squeeze AT
+belt. No fix claimed.
+
+LATEST 2026-10-15 MAIN round 17 DEPLOYED (DLL
+B94033554E1E8E6D77D2069AB7B2C6FD9BF0F40EE2CEA46F3667AA6B5A4B3C71/source
+8cb58ca branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-202938; game closed
+at deploy). Why: user disputes TMD (claims none) and reports the docked knife
+MODEL never renders. Evidence: (1) TMD read is exact-FName `mTMD` +0x1058
+depth 1, distinct from `mTMDArchetype` +0x1054 — archetype-confusion ruled
+out; `hands: mTMD is NON-NULL` + every silent line postTMD=1 agree; story-wise
+the device fuses to the wrist in the prologue while Centurion is a weapon, so
+no contradiction. Still, new INI hatch HipKnifeIgnoreTMD (default 0 = trust
+engine; =1 forces pre-TMD both-hands rule, restart required) unblocks the
+user either way. (2) Render side: DrawHipKnife is called every Present but
+this session never logs `draw=` nor GPU-failure — the gate blocks with only a
+spent menu-time one-shot to show for it. Gate log is now per-DISTINCT-mask
+(en/ready/vis/vr/play/stereo/eyes/paused/menu/panel/wheel/cine) and names the
+gameplay blocker in one run. L1_PASS (159). L2_PASS (PE32, manifest 8cb58ca
+clean). L3/physical PENDING: restart (new `build r17` marker), read the new
+`gate blocked` mask in gameplay; knife = empty right hand + squeeze AT belt;
+optional IgnoreTMD=1 test. No fix claimed.
+
+LATEST 2026-10-15 MAIN round 16 DEPLOYED (DLL
+AD1137A395587D79D1F9ABE063B6F98E6B1C4850FD6F67E7FE92ED8D44E7745A/source
+f58a09f branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-202051; game closed
+at deploy). Why: r15 log (session 20:15, `build r15` marker present) proves
+(1) user HAS TMD (`hands: mTMD is NON-NULL`, postTMD=1 on every silent line
+— Centurion is the weapon, TMD the wrist device, no contradiction); left-hand
+belt squeezes with fresh edge (near=1 grip=1 edge=1) are blocked post-TMD by
+the user's own right-only rule; one line shows right grip held while only the
+left hand is at the belt (near=1 grip=2 edge=0); right hand was never at the
+belt with a fresh edge, so no PICKED is correct behavior, not a bug;
+(2) 3x STORED hand-hip vs aim gives 47/88/29 deg — mixed with one orthogonal
+sample, so the gun-vs-controller axis hypothesis is NOT confirmed; all three
+are front-edge contacts at radius ~11-12 (approach direction, not bias).
+Change: user-tunable trigger-only trim INI (HolsterTrimFwdCm/RightCm/UpCm,
+default 0 = trigger at ring, body frame, +/-30 cm, logged at startup);
+ring and stored-gun render untouched. L1_PASS (159). L2_PASS (PE32, manifest
+f58a09f clean). L3/physical PENDING: restart game (new `build r16` marker),
+knife = empty RIGHT hand to belt + squeeze AT belt; holster = dial trim in
+3 cm steps (felt zone behind+above ring → TrimFwdCm plus, TrimUpCm minus).
+No fix claimed.
+
+LATEST 2026-10-15 MAIN round 15 DEPLOYED (DLL
+AB2F11F23D9E6A4D44636A5CD0BE846B3DDECF679F7EA0E39346F003F0B9F30A/source
+d74a922 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-201446; game closed
+at deploy). Why: user retest on r14 reports (1) pistol stores behind+above
+the drawn ring, (2) no docked knife at left belt despite no-weapon tries with
+both hands — while the 20:05 r14 log PROVES one right-hand PICKED held=1 +
+SHEATHED cycle and mTMD null (no TMD, pre-TMD both-hands path live). No
+behavior change this round, only falsifying instruments: (a) startup build
+marker `hip knife: build r15 ...` with holster/knife config (proves which DLL
+runs); (b) silent-refusal probe `armed grip at belt but no pickup
+(near/grip/edge/free/trk/noWpn/postTMD/preTMD)` — catches edge-missed grips
+(held BEFORE entering radius), !free (weapon in hand), untracked hand;
+falsifier: edge=1 on the near hand with no PICKED disproves edge-timing;
+(c) STORED/DRAWN now logs aim dir — if (hip-hand) aligns with +aim across
+samples the user aligns the VISIBLE gun while the trigger tests the
+CONTROLLER point, and the fix is a gun-length offset along aim, not a hip
+constant; orthogonal scatter disproves it. Ini strings updated (post-TMD
+right-hand-only). L1_PASS (159). L2_PASS (PE32, manifest d74a922 clean).
+L3/physical PENDING: controlled run — 3x store aligning CONTROLLER to ring,
+3x aligning GUN to ring; knife right-hand no-weapon pickup; MAIN takes the
+log. No fix claimed.
+
+LATEST 2026-10-15 MAIN round 14 DEPLOYED (DLL
+D065446C99A909DBAEFDE2A4F3D5E714715259BD96EBE2E6AE42E604E785E034/source
+bcf8ec1 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-200339; game closed
+at deploy). Why (user request): with TMD present the knife stays usable but
+right hand (h==1) with no weapon in hand only; pre-TMD both-hands path
+unchanged. Frame gains hasTMD (TMD!=0 with intact impulse mapping) and
+noWeapon (!WeaponInHands||holstered); Context accepts nativeKnife||hasTMD;
+post-TMD pickup requires h==1&&noWeapon and a left-held knife resets when TMD
+arrives. Refusal probe mask/log extended with hasTMD/noWeapon. Correction to
+prior note: the old `mTMD NON-NULL` line came from another moment in the long
+log, NOT the user's current no-TMD save — current save has Centurion knife,
+no TMD, so hasTMD must read 0; the new raw tmd/hp/off/imp fields will prove
+the actual blocker (offsets vs hp vs mapping). L1_PASS (hip-knife 159 checks:
+147 retained + 12 post-TMD). L2_PASS (PE32 0x014C/0x010B, manifest commit
+bcf8ec1 clean). L3/physical PENDING: pre-TMD either hand picks up; post-TMD
+right hand empty-handed only; swing attacks. No fix claimed.
+
+LATEST 2026-10-15 MAIN round 13 DEPLOYED (DLL
+391B44BB4CF6B6CAAD922E166159CA13E3DD3B89766A8EE345E7476E0A366EEE/source
+e181aa1 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-195400; game closed
+at deploy; knife.svrk + native gloves + INI flags retained). Why: round 12
+(d39bb27, built 546DDAA9 but NEVER deployed — agent stalled during build)
+subtracted 4 UU from the holster trigger Z based on 10x STORED edge contacts
+(mean hand ~5 UU above hip); those are approach-direction edge hits inside
+radius 12, not a calibration bias, and -4 moved the trigger AWAY from the
+approaching hand. Round 13 reverts to trigger==ring==stored-gun point
+(HolsterHipWorld TRUE) and enriches the refusal probe with offTMD/offHP/
+tmd/hp/impIdx/impMask so post-TMD (by design pre-TMD only) vs unknown offsets
+vs dead can be told apart in ONE log line. Log evidence: mTMD NON-NULL seen
+earlier plus last refusal alive=0 nativeKnife=0 strongly suggests the user is
+testing post-TMD, where the knife is correctly hidden. L1_PASS (hip-knife
+147). L2_PASS (PE32 0x014C/0x010B, manifest commit e181aa1 clean). L3/physical
+PENDING (pre-TMD save ONLY): belt ring at left hip, grip at ring picks up,
+new refusal line names the blocker with raw values; store gun AT the gun
+ring (no behind/above offset). No fix claimed.
+
+LATEST 2026-10-15 MAIN round 11 DEPLOYED (DLL
+00522E118FC59B5F0F6175D5934C2CD42583D3E3F6AA30AA069DE2282AFD835D/source
+05e0042 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-193527; game closed
+at deploy; knife.svrk + native gloves + INI flags retained). Why: live log
+19:28-19:30 (current DLL) proved gun ring DREW (flat ring at 1917,1985) while
+the knife was never picked (no PICKED, belt ring gate held=-1 at startup) —
+knife code simply never ran in gameplay yet. Changes: (1) holster trigger now
+uses HolsterHipWorld(H,TRUE), the same point the ring draws and the stored
+gun renders — the FALSE trigger sat hmdOffset above the ring, which is why
+storing needed aiming above it; (2) belt ring shows while DOCKED too (held
+gate removed) so the belt can be found — it marks where to grip; (3) one-shot
+pickup-refusal probe (grip held at belt but no PICKED logs gameplay/focused/
+alive/nativeKnife — nativeKnife=0 means post-TMD save, by design pre-TMD
+only). L1_PASS (hip-knife 147). L2_PASS (PE32, manifest commit 05e0042
+clean). L3/physical PENDING (pre-TMD save): belt ring visible at left hip,
+grip at ring picks up, ring while held, release sheathes, swing attacks;
+store gun AT the gun ring. No fix claimed.
+
+LATEST 2026-10-15 MAIN round 10 DEPLOYED (DLL
+66E63F943642244E73878F07F6DF57C1090A19BF0E208ECD3371A5D3E4061E8B/source
+1ed9b12 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-192322; game closed
+at deploy). Knife level + ring: (1) installed HipKnifeDownCm=55 (holster
+-36UU at WorldScale 80 = 0.549m below head; pre-edit INI backed to
+deployment/install-backups/20261015-192322/SingularityVR.ini.pre-knifedepth;
+file verified all-CRLF after edit); (2) NEW white knife-belt ring at the
+LEFT belt while held (shared DrawFlatRingAt helper with the gun ring — one
+mechanism; own gate/drew/proj logs); (3) one-shot gate log added to side's
+DrawHipKnife (names the blocker if the knife stays invisible). L1_PASS
+(hip-knife 147). L2_PASS (PE32, manifest commit 1ed9b12 clean). NOTE: a
+botched PowerShell text rewrite of d3d9.cpp (UTF-8 BOM + double-encoded
+emoji, 879-line noise commit dc68e62) was caught by diff-size check and
+fully reverted — unpushed, abandoned via reset; round 10 was redone with
+byte-safe edits only (99+/56-, mojibake grep clean). Lesson: never route
+source files through PowerShell Get-Content/Set-Content; use the edit tool
+or git-native writes. L3/physical PENDING (pre-TMD save): knife visible at
+left hip at holster level, grip pickup, belt ring while held, release
+returns, swing attack. No fix claimed.
+
+LATEST 2026-10-15 MAIN knife live (DLL
+CF5D9143941209D012CC660EE32D6631C77F06E6591165CE04D2D1E11711DB6A/source
+cf99df9 = e89c41e code + STATUS record; x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-190214; game closed
+at deploy). Verified on disk: installed DLL hash equals manifest; knife.svrk
+6BC784FB present; installed INI now carries GloveNativeEnabled=1 (Render) and
+HipKnifeEnabled=1 (Input) — both were absent despite the earlier handoff
+claiming them, set now with pre-edit backup
+deployment/install-backups/20261015-185357/SingularityVR.ini.pre-flags
+(plus deduped an accidental double-write). GloveRendererEnabled=1 and
+holster 6/18/-36 retained. Previous segment's L1 (147 knife checks) + L2
+re-verified against this tree before deploy (same code, fresh link only).
+L3/physical PENDING (pre-TMD save ONLY): knife at left hip, free-hand grip
+pickup, release returns to belt, decisive swing -> native attack; hit counts
+from camera (no 6DoF blade collision). TEXTURES NEXT (user scope set): upscale
+installed 4K remasters to 8K DDS+mips into texture-override-8K (Quality=8K +
+panel TEXTURES row already exist); loading screens need DDS encode + FNV
+targets + loading group + dinput8 rebuild + panel selection row. No fix
+claimed.
+
+LATEST 2026-10-15 MAIN merged + deployed left-hip knife (DLL
+886B6D31FF87791AFFCF5B94C568925912634CED3F2F9FCC4534A96750D6B272/source
+e89c41e merge of origin/feature/left-hip-knife 043cfc0 (draft PR #31);
+x86 PE32 /O2, built==installed via tools/deploy-singularityvr.ps1 -DllOnly;
+backup 20261015-185357; game closed at deploy). Merge conflicts resolved by
+keeping both sides (ReleaseWristResources releases all three renderers; MY
+holster 6/18/-36 defaults kept + knife INI block added; STATUS blocks kept).
+Installed knife.svrk to vr-assets/knife (hash 6BC784FB = side hashes.json,
+verified after copy) + HipKnifeEnabled=1 in installed INI (pre-edit backed
+to deployment/install-backups/20261015-182559/SingularityVR.ini.pre-knife).
+L1_PASS (hip-knife 147 checks + renderer fake-D3D guard re-run on merged
+tree). L2_PASS (PE32, manifest commit e89c41e clean). L3/physical PENDING
+(pre-TMD save ONLY): knife at left hip, free-hand grip pickup, release
+returns to belt, decisive swing -> native attack; hit still counts from
+camera (no 6DoF blade collision). TEXTURES OPEN: no 8K DDS exists anywhere
+(max installed is 4K 4096x2048; Quality=8K already selected in
+texture_override.ini but has no 8K content); VR panel TEXTURES row (2x/4K/8K)
+already exists; loading screens need the DDS encoder + dinput8 target rebuild
+(doc docs/loading-screens-4k.md pipeline steps 1-4) — awaiting user scope
+(upscale 4K->8K? user-supplied files? loading via injector vs splash-only?).
+No fix claimed.
+
+LATEST 2026-10-15 MAIN round 9 DEPLOYED (DLL
+D119F664A08A693E6BA07A4FB75C4B78AA225D8254C2D764F27B8479A94FC026/source
+e1353a9 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-184201; game closed
+at deploy; native gloves + GloveNativeEnabled=1 retained). Thumb fix: full
+authored opposition (62.8 deg on bones 10-12/70-72, verified against the
+private PSK bone list) drove the thumb through the fingers at full grip, so
+Pose() now blends thumb bones with gain 0.7 (Thumb()/ThumbGain() in
+glove_native.h, other fingers untouched, shape preserved). L1_PASS (native
+test incl. new Thumb membership asserts vs real asset; structural checks
+unchanged). L2_PASS (PE32, manifest commit e1353a9 clean). L3/physical
+PENDING: slow grip — thumb must stop short of the fingers without looking
+stiff (too far -> lower gain; stiff -> raise toward 1). No fix claimed.
+
+LATEST 2026-10-15 MAIN adopted side native gloves (user auth: side agent at
+limit, WIP uncommitted in their tree — read-only takeover, their tree
+untouched). DEPLOYED DLL
+97244AE7525EA21792D9ED9AC3DFED917B8B3971BEE893462306959B87A33A8B/source
+be561e4 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-183351; game closed
+at deploy. Takeover method: exported side diff to patch file, applied all but
+one hunk cleanly, hand-applied the last (Hook_DrawIndexedPrim restore block);
+copied untracked glove_native.h + native test/tool/doc files; verified every
+hunk landed by grep. Native variant: original VB/material/shaders stay bound,
+scoped index-subset draw + finger palette on original bones, cuff with short
+forearm, same native size (no rescale), default OFF (GloveNativeEnabled, takes
+priority over the GLB renderer). Installed native_hands.svni (hash B4564A69 =
+side report cache_sha256, verified after copy) + GloveNativeEnabled=1 in
+installed INI (pre-edit backed to
+deployment/install-backups/20261015-182559/SingularityVR.ini.pre-native;
+GloveRendererEnabled=1 kept as fallback path). L1_PASS (native guard/decode/
+101-level pose test vs real asset: triangles=3792 cap=98, plus layout, probe,
+holster, vrpose, glove 276-check anim + state guard). L2_PASS (PE32, manifest
+commit be561e4 clean). L3/physical PENDING: native material/cuff/fist in
+headset (side's falsifiers: looks different from held glove in same light, no
+cuff behind wrist, size change, grip/aim change). No fix claimed.
+
+LATEST 2026-10-15 MAIN round 8 DEPLOYED (DLL
+59598E6D3E0BDCBAFCBF6351DE7F5515935BA2C7525A9D4CA0A505D91F3ACD1B/source
+97574db branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-182559; game closed
+at deploy; user-supplied digit-free plates installed (old baked PNGs backed
+to deployment/install-backups/20261015-180725/plate-*.baked.png); glove v2
+pack + GloveRendererEnabled=1 retained). Changes per annotated screenshot:
+(1) baked-digit covers REMOVED from DrawAmmoPlate — clean art needs nothing
+covered except the empty-mag info (red box hidden iff clip>2; white mag,
+icons, frames, labels never touched); cover helpers stay for L1 only;
+(2) holster ring is now HORIZONTAL (flat to floor/ceiling): outer 0.1127m /
+inner 0.0877m (diameter +1 inch, rim 5cm->2.5cm), XR x/z plane at hip height,
+yaw-invariant; (3) side native-material glove variant NOT merged — side
+worktree still holds uncommitted WIP (glove_native.h, prepare_native_hands.py,
+native tests; origin still ea86587), per policy MAIN waits for their pushed
+green L1/L2. L1_PASS (layout). L2_PASS (PE32, manifest commit 97574db clean).
+L3/physical PENDING: clean plates (digits on empty cells, red iff <=2),
+flat ring at hip with gun held, gloves v2. No fix claimed.
+
+LATEST 2026-10-15 MAIN round 7 DEPLOYED (DLL
+96F5947BDE7299734FD719EA0A753B8C46B3D77FBAC3006E7655D224B5ACC50B/source
+99b2546 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-180725; game closed
+at deploy; glove v2 pack + GloveRendererEnabled=1 retained). From the user's
+annotated screenshot: (1) RED (wrongly covered): pips band x0.190 covered
+mag-icon bottom + corner tick + cell frame — column profile proves true pips
+are only x272-380/y210-236, so the band is now TIGHT x0.260-0.380/y0.600-0.698
+(y260 line is the cell frame, kept); (2) PINK (reserve ghost): widened cover
+stands + live digits already draw on top + strip alpha-bleed from round 5;
+(3) ring redesigned to a VERTICAL annulus: outer 0.10m / inner 0.05m (5cm rim,
+empty middle), plane spanned by XR-up and horizontal eye-right (billboard
+around Y, perpendicular to the floor), same XR projection as plates.
+L1_PASS (pips-band lock, halo lock, vrpose invert). L2_PASS (PE32, manifest
+commit 99b2546 clean). L3/physical PENDING: red deco restored, pink ghost
+gone, vertical ring at hip with gun held + side native-match gloves. No fix
+claimed.
+
+LATEST 2026-10-15 MAIN round 6 DEPLOYED (DLL
+AAABE9FE732BD4F2BE83F2212ACEF89CB260407EBF86599A5A792E2FE95D8387/source
+ffb5b83 branch plates-l3-main = merge origin/feature/glove-animation
+native-match (ea86587) + MAIN XR-space holster marker; x86 PE32 /O2,
+built==installed via tools/deploy-singularityvr.ps1 -DllOnly; backup
+20261015-174458; game closed at deploy; INI flags kept
+(GloveRendererEnabled=1, holster 6/18/-36)). Changes: (1) marker rewritten
+from camMat to XR projection — 17:19 log proved ammo drew while the marker
+never attempted, and camMat slots are invalidated by post-scene draws before
+Present, so no valid slot exists at overlay time; hip UU converts via the
+exact inverse of vrpose::TrackingDeltaToWorldUU (L1 roundtrip
+test-vrpose-invert.cpp) + head pos, radius via eye-right probe — only proven
+pieces (holster NearHip frame, plates' VrUiProjectEye); (2) side native-match
+merged (native cut/wrist, original UV/albedo, rig-tied scale, SVRG v2) and
+v2 pack installed with hash verification (AC199AF2/1942A834/0F6A90BB =
+side hashes.json; v1 backed to
+deployment/install-backups/20261015-171643/glove_*.svrg.v1); SVRT unchanged;
+(3) user screenshot analyzed: small plates beside ours have no mini-plate
+code path in the wheel (only DrawAmmoPlate draws plates+digits) — pending
+user identification if they persist. L1_PASS (vrpose invert, layout, probe,
+holster, glove 276-check anim + state guard on merged headers). L2_PASS
+(PE32, manifest commit ffb5b83 clean). L3/physical PENDING: ring at hip with
+gun held unholstered + native-match gloves (scale/cuff/fist) + digits fringe
+check after the bleed. No fix claimed.
+
+LATEST 2026-10-15 MAIN round 5 DEPLOYED (DLL
+65A1539F4D0529E83E08BA7004CAFAB78C887619362E0B1184EAC5900EAC71D5/source
+6cd7ab2 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-172846; game closed
+at deploy; glove assets + GloveRendererEnabled=1 retained from round 4).
+Root-cause fix for "burnt digits": offline SBS render of the exact
+composition proved baked art is fully hidden — the burnt look is the LIVE
+digits' own dark minification fringe (strip transparent pixels were
+transparent BLACK; GPU linear downscale 184px->~80px bleeds black into the
+glow). Fixed by 16-pass alpha-bleed of installed ammo-digits.png
+(6BD0D4DA->D0872891; alpha untouched; pre-edit backed to
+deployment/install-backups/20261015-171643/ammo-digits.pre-bleed.png);
+offline re-render confirms the boxes are gone (residual edge in the sim is
+GDI+ bicubic overstatement vs in-game bilinear). Plus: holster marker camera
+slot one-shot log (gate/camMat/proj/drew chain now complete — 17:01 log
+proved ammo drew while the marker never attempted, so the break is gate or
+camMat, and the next session names it). L2_PASS (PE32, manifest commit
+6cd7ab2 clean). L3/physical PENDING: gameplay pass holding the gun
+UNholstered, eyes on the hip + digits check. No fix claimed.
+
+LATEST 2026-10-15 MAIN round 4 DEPLOYED (DLL
+C6D35DC695218CB08C3E10F05B35223DBCE6D9D73969573C7573460560A3FF75/source
+6961f5d branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-171643; game closed
+at deploy). Why round 4: (a) 16:41 gameplay log (BBA4BF95) contains ZERO
+plate/marker lines despite STORED/DRAWN holster events — all three overlays
+sat in their top gates all session, but no gate log existed, so the blocker
+was unidentifiable; (b) user still sees burnt reserve digits. Changes:
+(1) ReserveCover widened to x0.494-0.606/y0.512-0.720 — baked "48" ends 1px
+from the old rect (right x616 vs 617, top y179 vs 179), glow bled past;
+bullets icon gap rows y172-179 verified dimmest, ~3px icon-glow overlap
+accepted; live reserve digits already draw on top inside the rect;
+(2) ammo plate is now world-anchored (constant 0.19m wide via per-eye
+0.5m-probe px-per-metre, clamped 64px-0.30H, 0.16H fallback) so it shrinks
+with distance instead of growing as the gun moves away; fallback also
+carries the asked ~5% reduction; health plate untouched;
+(3) one-shot "gate blocked (flag/vr/dup/paused/...)" falsifier logs on all
+three overlays — next session names the exact blocker if lines stay absent;
+(4) ring radius clamp 400->1000px + proj-fail log (a close hip legitimately
+projects ~300-500px);
+(5) docs/handoffs/side-glove-visual-parity-prompt.md prepared for SIDE
+(native weapon-hold look + size parity, L1/L2 only, own worktree).
+L1_PASS (layout incl. halo-margin lock, probe, holster, both glove suites
+re-run on merged headers). L2_PASS (PE32, manifest commit 6961f5d clean).
+L3/physical PENDING: one PSVR2 gameplay pass with gun held (plates, ring at
+hip, store/draw) + glove script. No fix claimed.
+
+LATEST 2026-10-15 MAIN enabled side glove renderer for L3 (DLL unchanged
+B7369140, source d060c33): installed private pack
+vr-assets/hud/katorga/glove-animation/{glove_left.svrg,glove_right.svrg,glove.svrt}
+from side candidate, all 3 SHA-256 verified equal to candidate hashes.json
+(58A267AD/5683181F/0F6A90BB) before AND after copy; installed INI
+GloveRendererEnabled 0->1 (pre-edit INI backed to
+deployment/install-backups/20261015-165234/SingularityVR.ini.pre-glove).
+Fail-safe: missing/bad pack logs FAILED and keeps native hands; flag reads
+at XR startup, game was closed. L3/physical PENDING — side's 3-sentence
+script: empty-hand pad rotation, cuff-to-eye hole check, slow grip open/fist
++ draw weapon (grip/aim unchanged) + quit. Revert = set flag 0 (assets can
+stay; OFF loads nothing).
+
+LATEST 2026-10-15 MAIN plates+gloves round 3 DEPLOYED (DLL
+B7369140B76AF4D7A715F0C16A2DCE73A98500272B946A0ABFAFC42088E710DB/source
+d060c33 branch plates-l3-main = merge origin/feature/glove-animation
+(8518e6f, PR #30 open) + MAIN round-3 fixes; x86 PE32 /O2, built==installed
+via tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-165234; game
+closed at deploy; installed INI holster lines already 6/18/-36). Round 3:
+(1) NEW MagPipsCover band x0.190-0.465/y0.600-0.765 (measured bright bbox
+x202-469/y200-259 all 4 plates: wider than MagCover and, on shotgun/sniper,
+below it — this is what stayed visible); top deco brackets untouched;
+(2) holster ring: radius clamp 400->1000px (a close hip legitimately
+projects ~300-500px; old cap could skip the draw) + one-shot
+"not projectable" log for falsifiability; NOTE 16:41 session ran previous
+DLL only to startup, so the ring NEVER drew in gameplay yet — "not visible"
+is untested, not disproven; (3) glove-animation merged (default OFF,
+GloveRendererEnabled=0, no asset install needed while OFF; native hands and
+weapon grip unchanged). L1_PASS (ammo layout+probe, holster machine, glove
+253-check anim + render-state guard re-run on merged headers). L2_PASS (PE32,
+manifest commit d060c33 clean tree). L3/physical PENDING: one PSVR2 pass —
+pips gone, <=2 red box, hip ring while holding gun + store/draw at new hip,
+then side's 3-sentence glove test (needs GloveRendererEnabled=1 + private
+assets? confirm with side docs before enabling). No fix claimed.
+
+LATEST 2026-10-15 MAIN plates round 2 DEPLOYED (DLL
+BBA4BF9590F9F7EDDA415EEB35E4A6A0EB03DBEDD02D691E9ACC1991B26EB57F/source
+22dc4aa branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-160921; game closed
+at deploy). Per-user package: (1) HP two-hand anchor +0.00->-0.02 and left
+shift 0.60W->0.85W; (2) ammo plate 0.19H->0.17H, anchor +0.05->+0.03;
+(3) MagEmpty clip<=0 -> clip<=2 (full white mag iff clip>2, red box iff <=2;
+white mag cell NEVER covered, left icon always visible); (4) MagCover y1
+0.615->0.710 hides baked cyan pips (measured bright y210-236 all 4 plates;
+reserve bullets icon verified above its cover, y178 vs cover y179);
+(5) holster moved Fwd8->6/Right12->18/Up-30->-36 (code defaults + source INI
++ installed INI lines 164-166; pre-edit INI backed to
+deployment/install-backups/20261015-160921/SingularityVR.ini.pre-holster,
+hash DECEB3AD); (6) NEW white 50%-alpha hip ring (DrawHolsterMarker, same
+cam-matrix UU projection as the laser, radius from widest axis probe,
+shown iff gun held && !holstered, full state save/restore, one-shot drew
+log). L1_PASS (layout incl. new <=2 rule, probe, holster state machine).
+L2_PASS (PE32, manifest commit 22dc4aa clean tree). L3/physical PENDING:
+15:53 session ran previous DLL only to startup; nobody has run BBA4BF95 in
+gameplay yet. Next: one PSVR2 pass (plates positions, <=2 red box, hip ring
+visible while holding gun, store/draw at new hip), then read drew/unknown
+lines. No fix claimed.
+
+LATEST 2026-10-15 MAIN plates L3 candidate DEPLOYED (DLL
+9EC02D511C347C488A17C960B8C6420B53926413A3C245E43B60B43576227008/source
+e943f06 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-155047; INI
+DECEB3AD... preserved, AmmoPlateEnabled=1 HealthPlateEnabled=1). Merges
+origin/feature/ammo-plates (9bf0cab) + origin/fix/health-plate-size (a2e8a3a);
+side worktrees untouched (their unpushed 7dbbd5c diagnostics NOT taken).
+MAIN-authored changes only in d3d9.cpp: (1) ammo unknown log now carries
+clip/bin/hud/offC/offB values; (2) one-shot ammo drew (plate/clip/bin/rect)
+and proj-fail lines; (3) one-shot health drew (twoHand/rect) and proj-fail
+lines; (4) HP two-hand anchor +0.02f->+0.00f and left shift 0.35W->0.60W per
+user "jeszcze nizej i troche bardziej w lewo" (single-hand untouched).
+L1_PASS (ammo layout 20/20, probe 10/10) + static-analysis gate in build.
+L2_PASS (PE32 0x014C/0x010B, manifest commit matches, tree clean at build).
+L3 runtime evidence PENDING: 15:20 log proved ammo hidden at
+clip<0||bin<0 (offsets cached +1404/+1400 on RvHUD) and health "shown" logged
+but user reports both plates invisible — drew-vs-seen still undistinguished
+until this candidate runs in-headset. Next: one PSVR2 pass (hold gun, check
+ammo plate; empty mag to 0; grip two-hand, check HP low-left), then read
+view_matrix.log for ammo unknown(...)/drew and health drew lines.
+Falsifier: drew present + still invisible = placement/alpha, not sampling;
+unknown with clip/bin>=0 readable = offset/window wrong, not HUD-missing.
+No fix claimed; no rollback (candidate healthy, game closed at deploy).
+
+LATEST 2026-10-15 ammo PLATES FIX DEPLOYED (DLL 742645B8/source 43f1381,
+built==installed; backup 20261015-151309; INI carried over). Root cause of
+invisible plates: WIC size guard (<=2048) rejected the 2172px digits strip.
+Need: plate behind gun with live digits. Live:
+deployment/hands-dubbing/ammo-plates-fix-20261015/live.json. Prior history.
+
+LATEST 2026-10-15 ammo PROBE ROUND-2 DEPLOYED (DLL 05F960F0/source 2a22d62):
+class property dump on equip (RvWeaponShared vocabulary: no ammo data
+fields, only GetAmmoInClip/Bin-style functions). Prior history.
+LATEST 2026-10-15 SIDE PR #30 REOPENED by physical feedback: functional
+gloves, but size/appearance rejected; user requires the SAME native hand cut,
+including wrist/cuff behind glove. New candidate uses shared accepted 48 face
+runs / 2918 faces, full cooked-to-ActorX index roundtrip; exact original UVs
+and diffuse bytes. Scale now inherits native LocalToWorld, GunScalePct and
+world UU/metre; wrist/IPD not scaled. SVRG v2 carries baked units: old caches
+are rejected (update DLL AND both meshes). Removed fabricated normal-Y tint.
+L1_PASS: 284 CPU checks, 9 Python tests incl exact albedo and native face IDs,
+guard/native-hand regressions. L2_PASS clean 3939add, x86 PE32 /O2, DLL SHA256
+2C813E40A67F85375F57639F988BBC71536BAB07F17FAEC79BFC8E2138C62F9C.
+Full UE3 normal/specular/scene lighting is NOT reproduced by the diffuse-only
+GLB renderer: full appearance acceptance remains OPEN. No Steam touched.
+See docs/glove-native-match.md for the new private candidate and test scope.
+
+LATEST 2026-10-15 SIDE feature/glove-animation: L1_PASS + L2_PASS, clean
+source 94aab901; x86 PE32 /O2 DLL SHA 27D5DA96...82568A4. Default OFF.
+User explicitly selected a new default-OFF baked-GLB renderer after source
+inspection proved main uses the native UE3 skin, not the rigid HUD GLBs.
+Closed-cuff + open/fist morph assets prepared locally; free noTMD hands only,
+held weapon/TMD/aiming unchanged. 261 CPU checks + fake render-state guard,
+native hand regressions and 7 geometry tests; zero Steam access/deployment.
+MAIN L3/L4 pending. See docs/glove-animation.md and
+docs/glove-animation-evidence.md (exact SHA, private candidate, 3-sentence test).
+SIDE 2026-10-15 left-hip knife: IMPLEMENTED_NOT_VERIFIED, L1_PASS, L2_PASS;
+isolated feature/left-hip-knife from origin/main 72ad59d, independent of glove
+PR #30. Default OFF HipKnifeEnabled: local native knife mesh on physical left
+hip, free-hand grip pickup/hold/release, bounded swing -> native RB pulse.
+Pre-TMD only, unknown/dead/unfocused/menu/cine/transition states fail closed.
+IMPORTANT: native trace is inview_camera (50 damage / 96 UU), not blade-tip
+collision; offline identity is not runtime input-to-damage proof. L1 147 checks,
+5 Python tests, fake-D3D guard/decoder + holster/hand regressions PASS. Clean
+ec124ec source built x86 PE32 /O2, DLL SHA256
+75F22354E2FF12A816BD986438518694FEBB37DD02BA8C75968066CA4D5A5BC1.
+ZERO Steam; L3 native damage and L4 geometry/grip still unverified.
+See docs/left-hip-knife.md for exact limits, local assets and MAIN test script.
+
 LATEST 2026-10-15 CINE ROUND-2 L3_PASS (user: stereo back after Load).
 Log: `menu-load cut ... latch=1` -> `VideoFlat -> GameplayStereo`, drift back
 to `cine off`. PR to main pending (user creates, gh auth missing here).

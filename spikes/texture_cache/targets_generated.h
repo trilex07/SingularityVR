@@ -15,6 +15,9 @@ static const Target kTargets[] = {
     { "ar_sniper_rifle_n", 2048u, 1024u, D3DFMT_DXT1, 10616915492120553037ULL, "ar_sniper_rifle_n.dds", "weapons" },
     { "brightFlash_01", 512u, 512u, D3DFMT_DXT1, 5369144333500254618ULL, "brightFlash_01.dds", "fx" },
     { "bsplat3_d", 256u, 256u, D3DFMT_DXT5, 5627902033149582049ULL, "bsplat3_d.dds", "fx" },
+    { "CVS_Manufacturing", 512u, 256u, D3DFMT_DXT1, 16473974989740112034ULL, "CVS_Manufacturing.dds", "ui" },
+    { "CVS_Village", 512u, 256u, D3DFMT_DXT1, 8608928728670849053ULL, "CVS_Village.dds", "ui" },
+    { "CVS_Wasteland", 512u, 256u, D3DFMT_DXT1, 10635061785614100046ULL, "CVS_Wasteland.dds", "ui" },
     { "door_blastdoorN_d", 1024u, 512u, D3DFMT_DXT1, 3085875096892879354ULL, "door_blastdoorN_d.dds", "env" },
     { "door_blastdoorN_n", 1024u, 512u, D3DFMT_DXT1, 12693714519537856089ULL, "door_blastdoorN_n.dds", "env" },
     { "door_rollingT_d", 512u, 512u, D3DFMT_DXT1, 6492888565812934941ULL, "door_rollingT_d.dds", "env" },
@@ -81,6 +84,14 @@ static const Target kTargets[] = {
     { "spark_hit01", 512u, 512u, D3DFMT_DXT1, 9295590768409729334ULL, "spark_hit01.dds", "fx" },
     { "sparks1_subuv", 32u, 64u, D3DFMT_DXT1, 4011618080145910416ULL, "sparks1_subuv.dds", "fx" },
     { "t_decal_metal_d_v4", 128u, 128u, D3DFMT_DXT5, 7064741585614937927ULL, "t_decal_metal_d_v4.dds", "fx" },
+    { "TDM_Manufacturing_A", 512u, 256u, D3DFMT_DXT1, 16730174538437890999ULL, "TDM_Manufacturing_A.dds", "ui" },
+    { "TDM_Manufacturing_B", 512u, 256u, D3DFMT_DXT1, 17971689313253452637ULL, "TDM_Manufacturing_B.dds", "ui" },
+    { "TDM_Manufacturing_C", 512u, 256u, D3DFMT_DXT1, 4041294266973581614ULL, "TDM_Manufacturing_C.dds", "ui" },
+    { "TDM_Village_A", 512u, 256u, D3DFMT_DXT1, 17521745489702997004ULL, "TDM_Village_A.dds", "ui" },
+    { "TDM_Village_B", 512u, 256u, D3DFMT_DXT1, 8036242095351216344ULL, "TDM_Village_B.dds", "ui" },
+    { "TDM_Wasteland_A", 512u, 256u, D3DFMT_DXT1, 3457990422506908266ULL, "TDM_Wasteland_A.dds", "ui" },
+    { "TDM_Wasteland_B", 512u, 256u, D3DFMT_DXT1, 3178419709280426792ULL, "TDM_Wasteland_B.dds", "ui" },
+    { "TDM_Wasteland_C", 512u, 256u, D3DFMT_DXT1, 8999781223865330057ULL, "TDM_Wasteland_C.dds", "ui" },
 };
 static const int kTargetCount = (int)(sizeof(kTargets) / sizeof(kTargets[0]));
 

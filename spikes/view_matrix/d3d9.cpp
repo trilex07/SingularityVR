@@ -11,7 +11,10 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "arm_natural.h"
 #include "support_grip.h"
 #include "weapon_holster.h"
+#include "knife_renderer.h"
 #include "weapon_wheel.h"
+#include "ammo_probe.h"
+#include "ammo_layout.h"
 #include "weapon_wheel_direct_select.h"
 #include "weapon_wheel_catalog_load.h"
 #include "weapon_wheel_atlas.h"
@@ -97,6 +100,8 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "async_thread_snapshot.h"
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
 #include <d3d9.h>
+#include "glove_renderer.h"
+#include "glove_native.h"
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include "bink_audio_observation.h"
 #include "bink_intro_audio.h"
@@ -1930,6 +1935,16 @@ WantedName g_wantNames[] = {
     // property with `NameOf`, so it can see names the lookup is structurally blind to. That is why they
     // disagreed, and it is worth knowing before trusting a "not found" from this resolver again.
     { "mPlayerHandsStatus", -1 }, { "mTMD", -1 },
+    // Ammo probe round 4: UT-pattern firemode object (WeaponFireTypes[0])
+    // carries the live counters. Resolved per weapon class, never assumed.
+    { "WeaponFireTypes", -1 },
+    // Ammo probe round 7: pawn InvManager (live manager object).
+    { "InvManager", -1 },
+    // Ammo probe round 5: shots-fired counter (fire proof per pull) and the
+    // pawn baseline below needs no new names.
+    { "mShotCount", -1 },
+    // Ammo probe round 9: HUD display cache (mag/reserve as shown on screen).
+    { "mClipAmmo", -1 }, { "mBinAmmo", -1 }, { "mClipSize", -1 },
 };
 const int kWantNameCount = (int)(sizeof(g_wantNames) / sizeof(g_wantNames[0]));
 
@@ -2189,6 +2204,28 @@ volatile LONG g_holsterYawUU = 0, g_holsterPitchUU = 0, g_holsterRollUU = 0;
 int g_holsterEnabled = 1;
 weaponholster::Config g_holsterConfig{};
 weaponholster::State g_holsterState{};
+// MAIN round 16: user-tunable trigger trim (centimetres, body frame) applied
+// to the TRIGGER hip point only — the drawn ring and the stored-gun render
+// stay at HolsterHipWorld. Default 0 (trigger==ring). Same precedent as the
+// run-217 gun anchor tuning: the user measures in-headset, no guessed const.
+float g_holsterTrimFcm=0,g_holsterTrimRcm=0,g_holsterTrimUcm=0;
+// Independent, default-OFF pre-TMD knife candidate; render/input state is
+// updated by the existing XR frame owner, never a new hook or worker thread.
+int g_hipKnifeEnabled=0;
+// MAIN round 17: escape hatch for the TMD dispute (user reports no TMD while
+// the exact-FName mTMD read says acquired). Default 0 = trust the engine
+// (pre-TMD both hands, post-TMD right hand only). =1 forces the pre-TMD
+// both-hands rule regardless of mTMD. Restart required.
+int g_hipKnifeIgnoreTMD=0;
+bool g_hipKnifeReady=false,g_hipKnifeVisible=false;
+hipknife::Config g_hipKnifeConfig{};
+hipknife::State g_hipKnifeState{};
+hipknife::TriggerGate g_hipKnifeTrigger[2]{};
+hipknife::Pose g_hipKnifePose{};
+hipknife::Renderer g_hipKnifeRenderer;
+// MAIN: last belt anchor in absolute XR metres (mirrors f.hip.p from the XR
+// owner each update) so the belt marker can project it at Present time.
+hipknife::V g_hipKnifeBelt{0,0,0};
 
 // R3 weapon wheel. Selection is an offset from the currently equipped weapon;
 // commit pulses the game's existing cycle-weapon action, so no inventory scan
@@ -2319,6 +2356,25 @@ inline ArmedState PlayerArmed() { return (ArmedState)Rd(g_armedState); }
 // switch would have fired it. The first version logged once because that run contained no weapon
 // switch at all, not because the key was dead. The object pointer is still the better key, since two
 // weapons CAN share a class; the reasoning that got here was not.
+// ---- ammo probe state (see trigger-edge dumper next to the fire census) ----
+static int g_ammoProbeLeft = 0;
+static uintptr_t g_ammoProbeObj = 0;
+static int32_t g_ammoProbePrev[1024]{};
+static bool g_ammoProbeHave = false;
+static bool g_ammoProbeWasDown = false;
+static bool g_ammoProbePawnDone = false;
+// Round 5: pawn snapshot for changed-only diffs + per-class shot counter.
+static uintptr_t g_ammoProbePawnObj = 0;
+static int32_t g_ammoProbePawnPrev[512]{};
+// Round 4: firemode object snapshot (WeaponFireTypes[0]), same bounded rules.
+static uintptr_t g_ammoProbeFmObj = 0;
+static int32_t g_ammoProbeFmPrev[128]{};
+static bool g_ammoProbeFmHave = false;
+// Round 7: inventory manager snapshot (ammo bins trail).
+static uintptr_t g_ammoProbeInvObj = 0;
+static int32_t g_ammoProbeInvPrev[128]{};
+static bool g_ammoProbeInvHave = false;
+
 static void LogEquippedClass(uintptr_t w) {
     static uintptr_t lastObj = (uintptr_t)-1;
     if (w == lastObj) return;
@@ -2337,6 +2393,30 @@ static void LogEquippedClass(uintptr_t w) {
     Log("equipped: Pawn.Weapon -> object '%s'  (class %s)   run 235b: the OBJECT is the identity -"
         " classes vary but can also be shared, so the pointer is the only key with neither failure"
         " mode. Run 235c: it never names the TMD, which is HIDDEN rather than swapped.", on, cn);
+    // ---- ammo probe: enumerate the equipped weapon's properties once per class ----
+    // Run-235 pattern: list names, don't guess them. Gated by the probe flag;
+    // one dump per distinct class, max four - the names name the mag/reserve
+    // candidates that the NEXT round verifies by motion against trigger diffs.
+    if (w && g_ammoProbeLeft > 0) {
+        if (Readable((void*)(w + OBJ_CLASS), sizeof(uintptr_t))) {
+            if (const uintptr_t cls = *reinterpret_cast<const uintptr_t*>(w + OBJ_CLASS)) {
+                static uintptr_t dumped[4]{};
+                static int nDumped = 0;
+                bool known = false;
+                for (int i = 0; i < nDumped; ++i) {
+                    if (dumped[i] == cls) { known = true; break; }
+                }
+                if (!known) {
+                    if (nDumped < 4) dumped[nDumped++] = cls;
+                    char cc[80] = "(none)";
+                    NameOf(cls, cc, sizeof(cc));
+                    DumpClassProperties(cls, cc);
+                }
+            }
+        }
+    }
+    // (Round-6 HUD dump moved to the trigger block below: this runs only on
+    // weapon change, and the HUD may not exist at the first equip.)
 }
 
 static void RefreshArmedState() {
@@ -2657,13 +2737,13 @@ static bool ClassDerivesFrom(uintptr_t cls, uintptr_t base) {
     return false;
 }
 
-static uintptr_t FindHudObject() {
+static uintptr_t FindHudObject(bool force = false) {
     if (g_hudObject && g_hudClass && Readable((void*)g_hudObject, 0x40) &&
         *reinterpret_cast<uintptr_t*>(g_hudObject + OBJ_CLASS) == g_hudClass)
         return g_hudObject;
     g_hudObject = 0;
     static int missTick = 0;
-    if ((++missTick % 30) != 1) return 0;
+    if (!force && (++missTick % 30) != 1) return 0;
     if (!g_upChildren) return 0;                     // the derives-from walk needs the layout
     if (!g_hudBaseClass) g_hudBaseClass = FindClassByName("RvGameSharedHUD");
     if (!g_hudBaseClass) return 0;
@@ -5367,7 +5447,13 @@ void StampCaptureState(CopySlot& cap) {
 void DrawLaserSight(IDirect3DDevice9* dev);
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
+void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
+void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
+void DrawHolsterMarker(IDirect3DDevice9* dev); // MAIN: white ring at the hip while a gun is held
+void DrawKnifeBeltMarker(IDirect3DDevice9* dev); // MAIN: white ring at the left belt while the knife is held
+void DrawCustomGloves(IDirect3DDevice9* dev); // default-OFF, noTMD free hands only
 void DrawWeaponWheel(IDirect3DDevice9* dev);
+void DrawHipKnife(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
 static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer = false);
@@ -5399,10 +5485,16 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     // hook because this is the one point that is provably AFTER the scene and BEFORE the copy, on both
     // the zero-copy and CPU paths - the laser cannot end up in one and not the other.
     const bool ownOverlayScene = SUCCEEDED(dev->BeginScene());
+    DrawCustomGloves(dev);
     DrawLaserSight(dev);
     DrawWristHealth(dev);
     DrawHealthPlate(dev);
+    DrawAmmoPlate(dev);
+    DrawAmmoPlate(dev);
+    DrawHolsterMarker(dev);
+    DrawKnifeBeltMarker(dev);
     DrawWeaponWheel(dev);
+    DrawHipKnife(dev);
     DrawVfxOverlay(dev);
     DrawVrContextPrompt(dev);
     if (ownOverlayScene) dev->EndScene();
@@ -5892,6 +5984,19 @@ int  g_triggerGate = -1;                      // ini [Input] TriggerTouchGate, r
 XrAction g_actHandPose = XR_NULL_HANDLE;
 XrSpace  g_handSpace[2] = { XR_NULL_HANDLE, XR_NULL_HANDLE };
 XrQuaternionf g_handAimOrientation[2]={{0,0,0,1},{0,0,0,1}};
+// SIDE: separate grip-pose/analog consumer. Never writes the accepted gun/hand
+// pose, input buttons, holster state, or native skeletal palettes.
+static bool g_gloveExperiment=false,g_gloveCpuAttempted=false;
+static bool g_nativeGloveExperiment=false,g_nativeGlovePoseThisDraw=false;
+static nativegloves::Renderer g_nativeGloveRenderer;
+static bool NativeGlovesEligible();
+static bool g_glovePoseValid[2]{};
+static bool g_gloveReplacementSeen=false;
+static gloves::Renderer g_gloveRenderer;
+static gloves::Pose g_glovePose[2]{};
+static float g_gloveBlend[2]{};
+static XrAction g_actGloveSqueeze=XR_NULL_HANDLE,g_actGlovePose=XR_NULL_HANDLE;
+static XrSpace g_gloveSpace[2]={XR_NULL_HANDLE,XR_NULL_HANDLE};
 volatile LONG g_vrUiEnabled=1,g_vrUiMenu=0,g_vrUiValid=0,g_vrUiU=500000,g_vrUiV=500000;
 // Hub round 4: provider-overlay kill switch for A/B (black-quad diagnosis). The in-scene
 // menu copy stays, so menus remain visible; only our head-locked overlay+laser go away.
@@ -6181,6 +6286,7 @@ void ReleaseVrMenuResources();
 void ReleaseFpCasterCache();
 static void HolsterHipWorld(float H[3], bool includeHmdOffset = true);
 static void GunPivotWorld(float H[3]);
+static void GunAimDir(float d[3]);
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 bool     g_handPoseValid[2] = { false, false };
 bool g_handPositionValid[2] = { false, false };
@@ -8859,6 +8965,29 @@ static const char* TouchBindingPath(const char* p, bool, char*, size_t) { return
 bool InitXRInput() {
     if (g_xrInstance == XR_NULL_HANDLE || g_xrSession == XR_NULL_HANDLE) return false;
 
+    // Eager CPU asset loading at XR input initialization, outside DllMain and
+    // draw hooks. Missing/bad cache fails closed without changing normal input.
+    g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};
+    if(g_hipKnifeEnabled){
+        char path[MAX_PATH]{};
+        if(IniPath(path)){
+            std::string directory(path);const auto slash=directory.find_last_of("\\/");
+            if(slash!=std::string::npos){
+                directory.resize(slash);
+                g_hipKnifeReady=g_hipKnifeRenderer.Load(directory+"\\vr-assets\\knife\\knife.svrk");
+            }
+        }
+        Log("hip knife: cache=%s verts=%u tris=%u original diffuse=%ux%u; pre-TMD both hands, post-TMD right hand only, native camera trace",
+            g_hipKnifeReady?"READY":"MISSING/INVALID (disabled)",
+            g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles(),
+            g_hipKnifeRenderer.TextureWidth(),g_hipKnifeRenderer.TextureHeight());
+        // MAIN round 16/17/18/19/20/21 build marker: proves which DLL produced this log.
+        // Update the tag every behavior round; parsers key on "knife build r".
+        Log("hip knife: build r21 trigger-attack + swing thresholds + grab-window 800ms + radius 28cm + holster drawRadius 32; holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
+            g_holsterConfig.fwd,g_holsterConfig.right,g_holsterConfig.up,g_holsterConfig.radius,
+            g_hipKnifeConfig.left,g_hipKnifeConfig.down,g_hipKnifeConfig.radius);
+    }
+
     {
         char path[MAX_PATH]{};
         if (IniPath(path)) {
@@ -9124,6 +9253,39 @@ bool InitXRInput() {
     // first would have the ini overwrite the preset, which is the wrong way round.
     ApplyAimMethod(false);
 
+    // Startup only, outside loader lock and before gameplay. OFF adds no new
+    // action bindings, file reads, allocations, draws or native suppression.
+    if (!g_gloveCpuAttempted) {
+        g_gloveCpuAttempted=true;
+        char ini[MAX_PATH]{};
+        g_nativeGloveExperiment=IniPath(ini) &&
+            GetPrivateProfileIntA("Render","GloveNativeEnabled",0,ini)!=0;
+        g_gloveExperiment=IniPath(ini) &&
+            GetPrivateProfileIntA("Render","GloveRendererEnabled",0,ini)!=0;
+        if(g_nativeGloveExperiment) {
+            char path[MAX_PATH]{};
+            try {
+                g_gloveExperiment=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation\\native_hands.svni",path)&&
+                    g_nativeGloveRenderer.Load(path);
+            }catch(...){g_gloveExperiment=false;}
+            Log("native-gloves: startup %s triangles=%u cap=%u; original VB/material/shaders, no replacement texture; GLB suppressed",
+                g_gloveExperiment?"CPU ready":"FAILED, native baseline kept",
+                g_nativeGloveRenderer.Triangles(),g_nativeGloveRenderer.Caps());
+        }else if(g_gloveExperiment) {
+            char root[MAX_PATH]{};
+            const LARGE_INTEGER start=Now();
+            try {
+                g_gloveExperiment=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation",root)&&
+                    g_gloveRenderer.Load(root);
+            } catch (...) { g_gloveExperiment=false; }
+            g_gloveRenderer.loadMs=MsSince(start);
+            Log("glove-renderer: startup %s loadCPU=%.3fms vertices=%u/%u triangles=%u/%u; free noTMD only",
+                g_gloveExperiment?"ready":"FAILED, native kept",g_gloveRenderer.loadMs,
+                g_gloveRenderer.Vertices(0),g_gloveRenderer.Vertices(1),
+                g_gloveRenderer.Triangles(0),g_gloveRenderer.Triangles(1));
+        }
+    }
+
     XrActionSetCreateInfo asci{ XR_TYPE_ACTION_SET_CREATE_INFO };
     strcpy_s(asci.actionSetName, "gameplay");
     strcpy_s(asci.localizedActionSetName, "Gameplay");
@@ -9217,6 +9379,19 @@ bool InitXRInput() {
             g_actHandPose = XR_NULL_HANDLE;   // poses only; the rest of input carries on
     }
 
+    if(g_gloveExperiment) {
+        XrActionCreateInfo aci{XR_TYPE_ACTION_CREATE_INFO};
+        aci.countSubactionPaths=2;aci.subactionPaths=g_handSubPath;
+        strcpy_s(aci.actionName,"glove_squeeze");
+        strcpy_s(aci.localizedActionName,"Experimental glove fist blend");
+        aci.actionType=XR_ACTION_TYPE_FLOAT_INPUT;
+        if(XR_FAILED(xrCreateAction(g_actionSet,&aci,&g_actGloveSqueeze)))g_actGloveSqueeze=XR_NULL_HANDLE;
+        strcpy_s(aci.actionName,"glove_grip_pose");
+        strcpy_s(aci.localizedActionName,"Experimental glove grip pose");
+        aci.actionType=XR_ACTION_TYPE_POSE_INPUT;
+        if(XR_FAILED(xrCreateAction(g_actionSet,&aci,&g_actGlovePose)))g_actGlovePose=XR_NULL_HANDLE;
+    }
+
     bool ok = true;
     ok &= mkAction("move",    "Move",     XR_ACTION_TYPE_VECTOR2F_INPUT, &g_actMove);
     ok &= mkAction("turn",    "Turn",     XR_ACTION_TYPE_VECTOR2F_INPUT, &g_actTurn);
@@ -9251,6 +9426,7 @@ bool InitXRInput() {
                                     + 2                  // trigtouch
                                     + 2                  // sticktouch
                                     + 4                  // hand poses: aim + grip for each hand
+                                    + 4                  // optional glove analog + grip pose (two hands)
                                     + 2;                 // per-profile extras (Index trackpad/touch)
     XrActionSuggestedBinding binds[kMaxBinds]{};
     uint32_t nb = 0;
@@ -9398,6 +9574,8 @@ bool InitXRInput() {
         const char* wp[2] = { "/user/hand/left/input/squeeze/value",
                               "/user/hand/right/input/squeeze/value" };
         if (!prof.poseOnly) for (int i = 0; i < 2; ++i) add(g_actGrip, wp[i], false, false);
+        if(g_gloveExperiment && !prof.poseOnly)
+            for(int i=0;i<2;++i)add(g_actGloveSqueeze,wp[i],false,false);
 
         // ⚠️ Run 82: thumbrest + trigger alone was TOO NARROW. The log caught it outright -
         // "right on desk (2346 um/frame)" is a controller being waved about while the sensors
@@ -9450,6 +9628,10 @@ bool InitXRInput() {
         const char* pp[4] = { "/user/hand/left/input/aim/pose", "/user/hand/right/input/aim/pose",
                               "/user/hand/left/input/grip/pose", "/user/hand/right/input/grip/pose" };
         for (int i = 0; i < 4; ++i) add(g_actHandPose, pp[i], false, false);
+        if(g_gloveExperiment) {
+            add(g_actGlovePose,"/user/hand/left/input/grip/pose",false,false);
+            add(g_actGlovePose,"/user/hand/right/input/grip/pose",false,false);
+        }
 
         if (overflow) {
             // Cannot happen with the table as it stands - kMaxBinds is spelled one term per site.
@@ -9468,6 +9650,18 @@ bool InitXRInput() {
         sb.suggestedBindings = binds;
         sb.countSuggestedBindings = nb;
         XrResult sr = xrSuggestInteractionProfileBindings(g_xrInstance, &sb);
+        if(XR_FAILED(sr)&&g_gloveExperiment) {
+            // Suggestions fail atomically. If a runtime refuses a new optional
+            // source, retry the EXACT original action list and abandon gloves,
+            // rather than losing the user's established controls with it.
+            const unsigned kept=gloves::WithoutOptional(binds,nb,g_actGlovePose,g_actGloveSqueeze);
+            sb.countSuggestedBindings=kept;
+            sr=xrSuggestInteractionProfileBindings(g_xrInstance,&sb);
+            if(XR_SUCCEEDED(sr)) {
+                nb=kept;g_gloveExperiment=false;
+                Log("glove-renderer: optional bindings rejected; native controls restored for %s",prof.path);
+            }
+        }
         if (XR_FAILED(sr)) {
             // ⚠️ This fails as a WHOLE if any single binding path is not valid for the profile - it
             // is not a per-binding filter. So a typo in one path silently costs every control for
@@ -9507,6 +9701,13 @@ bool InitXRInput() {
     }
 
     g_xrInputReady = true;
+    if(g_gloveExperiment && g_actGlovePose!=XR_NULL_HANDLE) {
+        for(int i=0;i<2;++i) {
+            XrActionSpaceCreateInfo sci{XR_TYPE_ACTION_SPACE_CREATE_INFO};
+            sci.action=g_actGlovePose;sci.subactionPath=g_handSubPath[i];sci.poseInActionSpace.orientation.w=1;
+            if(XR_FAILED(xrCreateActionSpace(g_xrSession,&sci,&g_gloveSpace[i])))g_gloveSpace[i]=XR_NULL_HANDLE;
+        }
+    }
     Log("xrinput: %u bindings attached. Turn mode %s (%s). Walk direction %s. Hand poses %s.", nb,
         g_turnMode == 1 ? "SNAP" : g_turnMode == 2 ? "SMOOTH" : "engine look-stick",
         g_turnMode == 1 ? "TurnAngle degrees per flick" :
@@ -9537,6 +9738,8 @@ void SyncXRInput(XrTime displayTime) {
     // the state labels valid on both sides of it.
     const LONG diagMode = InterlockedCompareExchange(&g_diagMode, 0, 0);
     const bool pollOff = InterlockedCompareExchange(&g_diagPollOff, 0, 0) != 0;
+    g_glovePoseValid[0]=g_glovePoseValid[1]=false;
+    g_gloveBlend[0]=g_gloveBlend[1]=0;
     const bool feedGame = !pollOff && InterlockedCompareExchange(&g_xrInputOff, 0, 0) == 0 && diagMode != 2 && diagMode != 3;
     const bool hapticsAllowed = feedGame && diagMode != 1;
 
@@ -9561,6 +9764,7 @@ void SyncXRInput(XrTime displayTime) {
     // are simply inactive. Zeroing here is what stops the player walking on for ever because the
     // stick was held when the headset was taken off or a system overlay took focus.
     if (sr != XR_SUCCESS) {
+        g_hipKnifeState={};g_hipKnifeVisible=false;
         UpdateVrUiPointer(0,false);
         ++g_syncFailFrames;
         InterlockedExchange(&g_twoHandActive, 0);
@@ -9830,6 +10034,29 @@ void SyncXRInput(XrTime displayTime) {
     // does not expose them. `isActive` is what says whether the binding resolved at all, so a
     // profile without thumbrest/trigger touch degrades to the old behaviour instead of reporting
     // every controller as permanently set down.
+    if(g_gloveExperiment && !pollOff)for(int i=0;i<2;++i) {
+        XrActionStateGetInfo gi{XR_TYPE_ACTION_STATE_GET_INFO};
+        gi.action=g_actGloveSqueeze;gi.subactionPath=g_handSubPath[i];
+        XrActionStateFloat st{XR_TYPE_ACTION_STATE_FLOAT};
+        if(g_actGloveSqueeze!=XR_NULL_HANDLE) {
+            g_hotPathSampler.count(hotpath::Counter::xr_action_state);
+            if(XR_SUCCEEDED(xrGetActionStateFloat(g_xrSession,&gi,&st)))
+                g_gloveBlend[i]=gloves::Blend(st.currentState,st.isActive!=XR_FALSE);
+        }
+        XrSpaceLocation loc{XR_TYPE_SPACE_LOCATION};
+        constexpr XrSpaceLocationFlags needed=XR_SPACE_LOCATION_POSITION_VALID_BIT|
+            XR_SPACE_LOCATION_POSITION_TRACKED_BIT|XR_SPACE_LOCATION_ORIENTATION_VALID_BIT|
+            XR_SPACE_LOCATION_ORIENTATION_TRACKED_BIT;
+        if(g_gloveSpace[i]!=XR_NULL_HANDLE && XR_SUCCEEDED(xrLocateSpace(g_gloveSpace[i],g_xrSpace,handTime,&loc))&&
+            (loc.locationFlags&needed)==needed) {
+            gloves::Q q;
+            const auto& p=loc.pose;
+            if(gloves::Normalize({p.orientation.x,p.orientation.y,p.orientation.z,p.orientation.w},q)&&
+                gloves::Finite({p.position.x,p.position.y,p.position.z})) {
+                g_glovePose[i]={{p.position.x,p.position.y,p.position.z},q};g_glovePoseValid[i]=true;
+            }
+        }
+    }
     for (int i = 0; i < 2; ++i) {
         bool touched = false, haveTouch = false;
         if (g_actGrasp != XR_NULL_HANDLE) {
@@ -9883,7 +10110,146 @@ void SyncXRInput(XrTime displayTime) {
     tSt = Now();
     bool panelHeld = false;
     WORD panelMask = 0;
-    const bool supportGrip = getGrip(OffHand());
+    const bool primaryGrip = getGrip(AimHand());
+    const bool rawSupportGrip = getGrip(OffHand());
+    if(g_hipKnifeEnabled&&g_hipKnifeReady){
+        hipknife::Frame f;
+        f.enabled=true;f.focused=g_xrSessionState==XR_SESSION_STATE_FOCUSED;
+        f.gameplay=feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
+            !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed();
+        const uintptr_t pawn=g_playerPawn;f.pawn=(uint32_t)pawn;
+        // These offsets already come from the UObject property resolver. Unknown
+        // state is never treated as "no TMD" or "alive".
+        const bool impulseOk=g_impulseBtnIdx>=0&&g_impulseBtnIdx<kPadButtonCount&&
+            g_padButtons[g_impulseBtnIdx].mask==XI_RSHOULDER;
+        const bool tmdReadable=pawn&&g_offTMD>=0&&Readable((void*)(pawn+g_offTMD),4);
+        f.nativeKnife=tmdReadable&&*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)==0&&impulseOk;
+        f.hasTMD=tmdReadable&&*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)!=0&&impulseOk;
+        // MAIN round 17/19: IgnoreTMD=1 forces the pre-TMD rule (TMD dispute hatch).
+        if(g_hipKnifeIgnoreTMD){f.hasTMD=false;f.nativeKnife=impulseOk;}
+        f.alive=pawn&&g_offHealth>=0&&Readable((void*)(pawn+g_offHealth),4)&&
+            *reinterpret_cast<const int*>(pawn+g_offHealth)>0;
+        f.noWeapon=!WeaponInHands()||Rd(g_weaponHolstered);
+        f.head={g_headPosXR[0],g_headPosXR[1],g_headPosXR[2]};
+        f.hip=hipknife::Hip(f.head,g_centreYaw,g_hipKnifeConfig);
+        f.nowMs=GetTickCount64();
+        for(int h=0;h<2;++h){
+            const auto& q=g_handAimOrientation[h];const auto& p=g_handLastPos[h];
+            f.hand[h]={{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}};
+            f.tracked[h]=g_handPositionValid[h]&&g_handPoseValid[h]&&g_handTracked[h];
+            f.grip[h]=h==AimHand()?primaryGrip:rawSupportGrip;
+            f.free[h]=h!=AimHand()||!WeaponInHands()||Rd(g_weaponHolstered);
+            f.trigger[h]=h==AimHand()?Rd(g_rawTrigger)>128:Rd(g_rawAltTrigger)>128;
+        }
+        // MAIN round 15: capture the grip rising edge BEFORE Update consumes it
+        // (Update copies grip into priorGrip, so post-Update edge reads are
+        // always false). Needed by the silent-refusal probe below.
+        bool preEdge[2]{};
+        for(int h=0;h<2;++h)preEdge[h]=f.grip[h]&&!g_hipKnifeState.priorGrip[h];
+        const auto event=hipknife::Update(g_hipKnifeState,f,g_hipKnifeConfig);
+        g_hipKnifeBelt=f.hip.p;
+        // MAIN round 20 reach probe: each grip edge within 50 cm of the belt
+        // point logs distance and whether it picked (bounded). Falsifier for
+        // the grab-window fix: edges logged at dist<radius with picked=0.
+        if(hipknife::Context(f)){
+            static unsigned reach=0;
+            for(int h=0;h<2;++h)if(preEdge[h]&&f.tracked[h]&&hipknife::Finite(f.hand[h].p)){
+                const float d=hipknife::Length(f.hand[h].p-f.hip.p);
+                if(d<=.5f&&reach++<64)
+                    Log("hip knife: grip edge hand=%d dist=%.2fm (radius=%.2f) free=%d picked=%d",
+                        h,d,g_hipKnifeConfig.radius,f.free[h]?1:0,event==hipknife::Event::Picked?1:0);
+            }
+        }
+        g_hipKnifeVisible=hipknife::Context(f)&&(g_hipKnifeState.held>=0?
+            f.tracked[g_hipKnifeState.held]:(f.tracked[0]||f.tracked[1]));
+        if(g_hipKnifeState.held>=0)g_hipKnifePose=f.hand[g_hipKnifeState.held];
+        else{
+            g_hipKnifePose=f.hip;
+            g_hipKnifePose.q=hipknife::Multiply(f.hip.q,{-.70710678f,0,0,.70710678f});
+        }
+        if(event!=hipknife::Event::None){
+            static unsigned notes=0;
+            if(notes++<128)Log("hip knife: %s held=%d pawn=%08X (native camera trace, not blade collision)",
+                event==hipknife::Event::Picked?"PICKED":event==hipknife::Event::Sheathed?"SHEATHED":
+                event==hipknife::Event::Swing?"SWING -> RB pulse":"RESET",g_hipKnifeState.held,f.pawn);
+            if(event==hipknife::Event::Swing){
+                InterlockedOr(&g_vrRecorderEventFlags,vrrec::Melee);
+                InterlockedExchange64(&g_lastMeleeEdgeMs,(LONG64)f.nowMs);
+            }
+        }
+        // MAIN round 11/12/13/14 pickup-refusal probe: grip held with a hand at
+        // the belt but no PICKED logs the Context terms. One line per DISTINCT
+        // reason bitmask (not one-shot: an early offsets-unknown refusal must
+        // not swallow a later post-TMD one). Raw TMD/health/offsets included
+        // so TMD-present vs unknown-offsets vs dead can be told apart without
+        // a second build. Round 14 adds hasTMD/noWeapon (post-TMD mode is
+        // right hand h==1 with no weapon; pre-TMD allows both hands).
+        {
+            static int saidMask=-1;
+            if(g_hipKnifeState.held<0&&!hipknife::Context(f)){
+                bool handNear=false,gripHeld=false;
+                for(int h=0;h<2;++h){
+                    if(f.tracked[h]&&hipknife::Finite(f.hand[h].p)&&
+                       hipknife::Length(f.hand[h].p-f.hip.p)<=g_hipKnifeConfig.radius)
+                        handNear=true;
+                    if(f.grip[h])gripHeld=true;
+                }
+                if(handNear&&gripHeld){
+                    const int mask=(f.gameplay?1:0)|(f.focused?2:0)|(f.alive?4:0)|(f.nativeKnife?8:0)|
+                        (f.hasTMD?16:0)|(f.noWeapon?32:0);
+                    if(mask!=saidMask){
+                        saidMask=mask;
+                        const int offT=g_offTMD, offH=g_offHealth;
+                        uintptr_t tmdV=0; int hpV=-999999;
+                        if(f.pawn&&offT>=0&&Readable((void*)(f.pawn+offT),4))
+                            tmdV=*reinterpret_cast<const uintptr_t*>(f.pawn+offT);
+                        if(f.pawn&&offH>=0&&Readable((void*)(f.pawn+offH),4))
+                            hpV=*reinterpret_cast<const int*>(f.pawn+offH);
+                        const int impIdx=g_impulseBtnIdx;
+                        const unsigned impMask=(impIdx>=0&&impIdx<kPadButtonCount)?
+                            (unsigned)g_padButtons[impIdx].mask:0xFFFFFFFFu;
+                        Log("hip knife: grip held at belt but no pickup (gameplay=%d focused=%d alive=%d nativeKnife=%d hasTMD=%d noWeapon=%d pawn=%08X offTMD=%d offHP=%d tmd=%08X hp=%d impIdx=%d impMask=%08X)",
+                            f.gameplay?1:0,f.focused?1:0,f.alive?1:0,f.nativeKnife?1:0,
+                            f.hasTMD?1:0,f.noWeapon?1:0,f.pawn,
+                            offT,offH,(unsigned)tmdV,hpV,impIdx,impMask);
+                    }
+                }
+            }
+        }
+        // MAIN round 15 silent-refusal probe: Context TRUE, hand at belt, grip
+        // held, yet no PICKED. Covers the silent failures the Context probe
+        // cannot see: grip held BEFORE entering the radius (pickup needs a
+        // rising edge AT the belt), wrong hand in post-TMD mode, !free hand
+        // (weapon in hand), or untracked hand. Bounded: one line per DISTINCT
+        // mask. Falsifier: mask with edge=1 on the near hand and still no
+        // PICKED would disprove the edge-timing hypothesis.
+        {
+            static int saidSilent=-1;
+            if(g_hipKnifeState.held<0&&event==hipknife::Event::None&&hipknife::Context(f)){
+                int nearM=0,gripM=0,edgeM=0,freeM=0,trkM=0;
+                for(int h=0;h<2;++h){
+                    if(f.tracked[h]&&hipknife::Finite(f.hand[h].p)&&
+                       hipknife::Length(f.hand[h].p-f.hip.p)<=g_hipKnifeConfig.radius)
+                        nearM|=(1<<h);
+                    if(f.grip[h])gripM|=(1<<h);
+                    if(preEdge[h])edgeM|=(1<<h);
+                    if(f.free[h])freeM|=(1<<h);
+                    if(f.tracked[h])trkM|=(1<<h);
+                }
+                if(nearM&&gripM){
+                    const int mask=nearM|(gripM<<2)|(edgeM<<4)|(freeM<<6)|(trkM<<8)|
+                        (f.noWeapon?1024:0)|(f.hasTMD?2048:0)|(f.nativeKnife?4096:0);
+                    if(mask!=saidSilent){
+                        saidSilent=mask;
+                        Log("hip knife: armed grip at belt but no pickup (near=%d grip=%d edge=%d free=%d trk=%d noWpn=%d postTMD=%d preTMD=%d)",
+                            nearM,gripM,edgeM,freeM,trkM,
+                            f.noWeapon?1:0,(f.hasTMD&&!f.nativeKnife)?1:0,f.nativeKnife?1:0);
+                    }
+                }
+            }
+        }
+    }
+    const bool supportGrip=rawSupportGrip&&!hipknife::Reserves(g_hipKnifeState,OffHand());
     static bool priorSupportGrip=false;
     if(supportGrip!=priorSupportGrip)InterlockedIncrement(supportGrip?&g_vrCounters.gripPressEdges:&g_vrCounters.gripReleaseEdges);
     priorSupportGrip=supportGrip;
@@ -9924,17 +10290,37 @@ void SyncXRInput(XrTime displayTime) {
     // rising edge at the body-relative hip toggles the equipped weapon; the
     // trigger is suppressed while stored, so a hand reaching for the holster
     // cannot fire through the menu/gameplay input path.
-    const bool primaryGrip = getGrip(AimHand());
     static bool priorPrimaryGrip = false;
-    const bool primaryGripRising = primaryGrip && !priorPrimaryGrip;
+    const bool primaryGripRising = primaryGrip && !priorPrimaryGrip&&
+        !hipknife::Reserves(g_hipKnifeState,AimHand());
     priorPrimaryGrip = primaryGrip;
     const LONG holsterWeapon = Rd(g_gunVerts);
     const LONG holsterIdentity = Rd(g_weaponObj);
     const bool holsterValid = g_holsterEnabled && feedGame && WeaponInHands() &&
                               g_handPositionValid[AimHand()] && g_handPoseValid[AimHand()] &&
                               holsterWeapon != 0 && holsterIdentity != 0;
+    // MAIN round 13: trigger uses EXACTLY the ring/stored-gun point
+    // (HolsterHipWorld TRUE). Round 12 subtracted 4 UU from Z based on 10x
+    // STORED edge contacts (mean hand 5 UU above hip); those are approach-
+    // direction edge hits inside radius 12, not a calibration bias, and -4
+    // moved the trigger AWAY from the approaching hand. Falsifier: next
+    // STORED hand==hip at centre would prove misalignment; edge ring
+    // contacts prove radius, not offset.
     float holsterHip[3]{};
-    HolsterHipWorld(holsterHip, false); // handOff is relative to the current head
+    HolsterHipWorld(holsterHip, true); // same point the ring draws / gun renders
+    // MAIN round 16: user trim moves the TRIGGER onto the felt ring without
+    // touching the ring or the stored-gun render. Body frame like HipPoint;
+    // cm values apply only when the user sets non-zero INI values.
+    {
+        const float uuPerCm = MetresToUU() * 0.01f;
+        if(uuPerCm>0&&(g_holsterTrimFcm!=0||g_holsterTrimRcm!=0||g_holsterTrimUcm!=0)){
+            const float tyr = g_baseYaw * (6.2831853f / 65536.0f);
+            const float tcy = cosf(tyr), tsy = sinf(tyr);
+            holsterHip[0] += (g_holsterTrimFcm*tcy - g_holsterTrimRcm*tsy) * uuPerCm;
+            holsterHip[1] += (g_holsterTrimFcm*tsy + g_holsterTrimRcm*tcy) * uuPerCm;
+            holsterHip[2] += g_holsterTrimUcm * uuPerCm;
+        }
+    }
     const float handX = (float)Rd(g_handOffX) / kHandFixed;
     const float handY = (float)Rd(g_handOffY) / kHandFixed;
     const float handZ = (float)(g_gunSignPosZ * Rd(g_handOffZ)) / kHandFixed;
@@ -9942,16 +10328,35 @@ void SyncXRInput(XrTime displayTime) {
         g_holsterState, primaryGripRising && !uiMenu && !Rd(g_gamePaused), holsterValid, feedGame,
         (uint32_t)holsterIdentity, {handX, handY, handZ},
         {holsterHip[0], holsterHip[1], holsterHip[2]}, g_holsterConfig);
+    // MAIN round 20: bounded miss probe — right grip edge while holstered that
+    // did NOT draw. Distance tells whether drawRadius or the hip point is wrong.
+    if (holsterEvent == weaponholster::Event::None && g_holsterState.active &&
+        primaryGripRising && !uiMenu && !Rd(g_gamePaused)) {
+        static unsigned misses = 0;
+        if (misses++ < 64) {
+            const float dx = handX - holsterHip[0], dy = handY - holsterHip[1], dz = handZ - holsterHip[2];
+            Log("weapon holster: DRAW MISS dist=%.1f UU (drawRadius=%.0f) d=(%.1f,%.1f,%.1f)",
+                sqrtf(dx*dx + dy*dy + dz*dz), g_holsterConfig.drawRadius, dx, dy, dz);
+        }
+    }
+    // MAIN round 15: also log the aim dir at STORED/DRAWN. Hypothesis under
+    // test (user: store fires behind+above the drawn ring): the user aligns
+    // the VISIBLE gun to the ring while the trigger tests the CONTROLLER
+    // point, which trails the gun along -aim. If (hip-hand) aligns with +aim
+    // across samples, the fix is a gun-length offset along aim, not a hip
+    // constant. Falsifier: hip-hand scatter orthogonal to aim.
     if (holsterEvent == weaponholster::Event::Stored ||
         holsterEvent == weaponholster::Event::Drawn) {
         InterlockedExchange(&g_weaponHolstered, g_holsterState.active ? 1 : 0);
         InterlockedExchange(&g_holsterYawUU, Rd(g_handDevYawUU));
         InterlockedExchange(&g_holsterPitchUU, Rd(g_handDevPitchUU));
         InterlockedExchange(&g_holsterRollUU, Rd(g_handDevRollUU));
-        Log("weapon holster: %s weapon=%ld hand=(%.1f,%.1f,%.1f) hip=(%.1f,%.1f,%.1f) radius=%.1f",
+        float aimD[3]{1,0,0}; GunAimDir(aimD);
+        Log("weapon holster: %s weapon=%ld hand=(%.1f,%.1f,%.1f) hip=(%.1f,%.1f,%.1f) radius=%.1f aim=(%.2f,%.2f,%.2f)",
             holsterEvent == weaponholster::Event::Stored ? "STORED" : "DRAWN",
             holsterIdentity, handX, handY, handZ,
-            holsterHip[0], holsterHip[1], holsterHip[2], g_holsterConfig.radius);
+            holsterHip[0], holsterHip[1], holsterHip[2], g_holsterConfig.radius,
+            aimD[0], aimD[1], aimD[2]);
     } else if (holsterEvent == weaponholster::Event::Reset) {
         InterlockedExchange(&g_weaponHolstered, 0);
         InterlockedExchange(&g_holsterYawUU, 0);
@@ -10113,7 +10518,9 @@ void SyncXRInput(XrTime displayTime) {
     static bool healthWasDown = false;
     bool healthDown = false;
     for (int i = 0; i < kPadButtonCount; ++i) {
-        const bool down = getBool(g_padButtons[i].action);
+        bool down = getBool(g_padButtons[i].action);
+        if((i==g_impulseBtnIdx&&(g_hipKnifeState.held>=0||g_hipKnifeTrigger[OffHand()].blocked))||
+           (!strcmp(g_padButtons[i].name,"use")&&hipknife::Reserves(g_hipKnifeState,AimHand())))down=false;
         if (i >= 0 && !strcmp(g_padButtons[i].name, "health")) {
             healthDown = down;
             // Circle owns the native health action.  Arm the first-person bandage animation on
@@ -10590,6 +10997,25 @@ void SyncXRInput(XrTime displayTime) {
     // into a byte that flickers between 0 and 1, and that is a state change every frame.
     if (lt < 0.10f) lt = 0.0f;
     if (rt < 0.10f) rt = 0.0f;
+    if(g_hipKnifeEnabled){
+        const float knifeTrig = g_hipKnifeState.held == fireHand ? rt : (g_hipKnifeState.held == altHand ? lt : 0.0f);
+        static bool knifeTrigWasDown = false;
+        const bool knifeTrigDown = knifeTrig > 0.5f;
+        if(g_hipKnifeState.held >= 0 && knifeTrigDown && !knifeTrigWasDown && !uiMenu && !Rd(g_gamePaused)){
+            g_hipKnifeState.TriggerAttack(GetTickCount64(), g_hipKnifeConfig.pulseMs);
+            Log("hip knife: TRIGGER ATTACK -> RB pulse held=%d pawn=%08X", g_hipKnifeState.held, (uint32_t)g_playerPawn);
+        }
+        knifeTrigWasDown = knifeTrigDown;
+
+        rt=g_hipKnifeTrigger[fireHand].Update(hipknife::Reserves(g_hipKnifeState,fireHand),rt);
+        lt=g_hipKnifeTrigger[altHand].Update(hipknife::Reserves(g_hipKnifeState,altHand),lt);
+    }
+    if(g_hipKnifeState.held>=0&&g_hipKnifeState.Pulse(GetTickCount64())&&!uiMenu&&!Rd(g_gamePaused)){
+        btns|=XI_RSHOULDER;
+        static unsigned knifeRbPulses=0;
+        if(knifeRbPulses++<128)
+            Log("hip knife: injected XI_RSHOULDER (melee attack) into game btns, held=%d", g_hipKnifeState.held);
+    }
     if (Rd(g_weaponHolstered) && !uiMenu) rt = 0.0f;
     UpdateVrUiPointer(fireHand==1?rt:lt,true);
     const auto primaryGate=g_vrUiTrigger[fireHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,rt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
@@ -12964,7 +13390,7 @@ extern volatile LONG g_inForeground, g_hideMeshIdx, g_fgDrawCount;
 // Defined with the foreground-mesh code. StereoPair reads it; the non-indexed draw hook above sets
 // it as of run 181, and that hook comes before the definition.
 extern int g_thisDrawMoved;   // ⭐ run 237: 0 none, 1 gun hand, 2 off hand
-static bool FgHidden(UINT verts, UINT first, UINT triangles);
+static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangles);
 static bool FgRidesGun(UINT verts);
 static bool FgMatchesSignature(UINT verts);   // ⭐ run 237c: used by the depth-prime exemption
 static int  RideTargetFor(UINT verts);   // ⭐ run 237: 0 none, 1 gun hand, 2 off hand
@@ -13129,6 +13555,7 @@ inline int32_t CensusSlot(uint32_t k, bool create, bool* fresh, int32_t nextIdx)
 FireSig g_fireSig[kFireSigMax]{};
 int  g_fireSigN = 0;
 int  g_fireCensusBudget = 0;         // ini [Render] FireDrawCensus: how many shots to record
+// (ammo probe state lives just above LogEquippedClass: first use precedes this line)
 volatile LONG g_fireCensusFrames = 0;
 bool g_fireTrigWasDown = false;
 int  g_fireSplitSeen = 0, g_fireQuadSeen = 0;
@@ -15536,6 +15963,7 @@ static void ApplyGloveIsolation(float changed[135][4], const unsigned* map, int 
 
 static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first, UINT triangles,
                                   float saved[135][4]) {
+    g_nativeGlovePoseThisDraw=false;
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::bone_palette);
     if (g_hotPathSampler.active())
         InterlockedExchange64(&g_hotPaletteFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
@@ -15930,6 +16358,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             Log("FingerScale fail-closed slots=%d (wrist descendants kept rigid)", fingerScaleRejected);
         }
     }
+    // Exact free noTMD draw only. Original GPU skin, UVs and material remain;
+    // finger rotations/cuff follow the same native wrist/scale as the gun rig.
+    if(gloves&&wristAnchor&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount&&
+       NativeGlovesEligible()&&g_nativeGloveRenderer.Ensure(dev))
+        g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,g_gloveBlend);
     // Internal palette writes must bypass camera/HUD upload classification.
     if(!g_origSetVSConstF || FAILED(g_origSetVSConstF(dev,5,&changed[0][0],regs))) {
         IndependentAuditCount(IHA_PALETTE,audit);
@@ -16203,7 +16636,40 @@ static bool FgIndependentHandsCandidate(UINT verts, UINT first, UINT triangles) 
            exactSection && (FgMatchWindow() || exactSectionWindow);
 }
 
-static bool FgHidden(UINT verts, UINT first, UINT triangles) {                    // arms, in modes 2 and 3
+static bool CustomGlovesEligible() {
+    return gloves::Eligible(g_gloveExperiment&&!g_nativeGloveExperiment,g_gloveRenderer.Ready(),
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo,Rd(g_gamePaused)!=0,
+        Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,g_xrSessionState==XR_SESSION_STATE_FOCUSED,
+        Rd(g_dupDraws)!=0,g_haveEyes&&g_eyePositionsValid,g_glovePoseValid[0],g_glovePoseValid[1],
+        Rd(g_weaponObj)!=0&&Rd(g_weaponHolstered)==0,Rd(g_twoHandActive)!=0);
+}
+static bool NativeGlovesEligible() {
+    return g_independentHands&&Rd(g_gloveIsolate)==2&&
+        gloves::Eligible(g_gloveExperiment&&g_nativeGloveExperiment,g_nativeGloveRenderer.Ready(),
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo,Rd(g_gamePaused)!=0,
+        Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,g_xrSessionState==XR_SESSION_STATE_FOCUSED,
+        Rd(g_dupDraws)!=0,g_haveEyes&&g_eyePositionsValid,g_glovePoseValid[0],g_glovePoseValid[1],
+        Rd(g_weaponObj)!=0&&Rd(g_weaponHolstered)==0,Rd(g_twoHandActive)!=0);
+}
+static float g_customGloveNativeScale=1.f;
+static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangles) { // arms, in modes 2 and 3
+    if(g_gloveExperiment && gloves::ReplaceSection(CustomGlovesEligible(),verts,first,triangles,
+        Rd(g_rtIsScene)!=0,g_boundShaderLayout.shadow,g_boundShaderLayout.bones,
+        g_boundShaderLayout.boneRegs,g_boundShaderLayout.local,
+        FgMatchWindow()||(Rd(g_inForeground)&&Rd(g_fgDrawCount)<=kFgSanePass))) {
+        float local[4][4],scale=0;
+        // Exact CTAB LocalToWorld register was established by ReplaceSection.
+        // This read is restricted to that opt-in section, not every game draw.
+        if(SUCCEEDED(dev->GetVertexShaderConstantF((UINT)g_boundShaderLayout.local,&local[0][0],4))&&
+           gloves::UniformScale(local,scale)){
+            g_customGloveNativeScale=scale;
+            g_gloveReplacementSeen=true;
+            return true;
+        }
+        // Unknown/sheared size must preserve the original native draw rather
+        // than substitute a guessed hand size.
+        return false;
+    }
     if (GlovesUntilWeaponNow() &&
         gloveisolate::IsStrayFingerSection(verts, first, triangles)) {
         static LONG saidStray = 0;
@@ -17582,12 +18048,12 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         DpgRecord(2, 0.0f, 0.0f, (uint32_t)k, numVertices, primCount, (uint32_t)t);
         // WEAPON FX = HIDE PASS. Deliberately after the learn, per the note above and FgHideWholePass.
         if (FgHideWholePass()) return D3D_OK;
-        if (FgHidden(numVertices, startIndex, primCount)) return D3D_OK;
+        if (FgHidden(dev,numVertices, startIndex, primCount)) return D3D_OK;
         // Returning S_OK without drawing is how the mod already drops draws elsewhere - the
         // device state is untouched, so the next draw behaves normally.
     } else if (FgMatchesSignature(numVertices)) {
         // Outside the pass, but the same mesh - the near-plane depth prime at draws 2-3.
-        if (FgHidden(numVertices, startIndex, primCount)) return D3D_OK;
+        if (FgHidden(dev,numVertices, startIndex, primCount)) return D3D_OK;
         // The same mesh, drawn OUTSIDE the foreground pass. This is the whole question.
         DpgRecord(4, 0.0f, 0.0f, (uint32_t)InterlockedCompareExchange(&g_frameDrawIdx, 0, 0),
                   numVertices, primCount, 0);
@@ -17834,19 +18300,6 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             Log("IndependentHandsSuppressed verts=%u first=%u prim=%u type=%u (palette section not transformed)",
                 numVertices,startIndex,primCount,(unsigned)t);
     }
-    struct FaceRun { UINT first, last; };
-    static constexpr FaceRun kNoTmdHandFaces[] = {
-        {272,274},{278,291},{392,398},{400,405},{410,681},{783,843},
-        {1017,1433},{1439,1444},{1452,1454},{1460,1470},{1475,1480},
-        {1488,1495},{1501,1631},{1806,1976},{1986,1988},{1992,1996},
-        {1998,2012},{2024,2026},{2028,2029},{2038,2131},{2173,2173},
-        {2183,2183},{2194,2284},{2286,2298},{2314,2351},{2353,2681},
-        {2683,2717},{2720,2778},{2781,2947},{3410,3410},{3431,3431},
-        {3435,3436},{3443,3444},{3575,4055},{4057,4188},{4193,4197},
-        {4210,4252},{4256,4268},{4322,4425},{4428,4429},{4457,4507},
-        {4644,4663},{4674,4707},{4709,4718},
-        {4738,4741},{4744,4751},{4783,4805},{4818,4827}
-    };
     const bool isolateNoTmdFaces = independentRegs && g_independentHands && Rd(g_gloveFaceFilter) &&
         t == D3DPT_TRIANGLELIST && (numVertices == 3314 || numVertices == 2924) &&
         startIndex == 0 && primCount == 4830 && nSeg == 1 &&
@@ -17854,12 +18307,20 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     if (isolateNoTmdFaces) {
         static LONG reportedFaces = 0;
         if (InterlockedCompareExchange(&reportedFaces, 1, 0) == 0)
-            Log("GloveIsolation: drawing 2,922 glove-only faces from audited noTMD section");
+            Log("GloveIsolation: drawing %u glove/cuff faces from audited noTMD section",gloveisolate::NativeHandFaceCount());
     }
+    const bool nativeCuff=independentRegs&&g_nativeGlovePoseThisDraw&&NativeGlovesEligible()&&
+        t==D3DPT_TRIANGLELIST&&(numVertices==3314||numVertices==2924)&&
+        startIndex==0&&primCount==4830&&nSeg==1&&segStart[0]==0&&segPrims[0]==4830;
+    nativegloves::IndexGuard<> nativeIndices(dev,nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr);
     const HRESULT dhr = StereoPair(dev, [&] {
         HRESULT hr = D3D_OK;
+        if(nativeIndices.valid){
+            ++g_nativeGloveRenderer.draws;
+            return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,0,g_nativeGloveRenderer.Triangles());
+        }
         if (isolateNoTmdFaces) {
-            for (const FaceRun& run : kNoTmdHandFaces) {
+            for (const auto& run : gloveisolate::kNoTmdHandFaces) {
                 const HRESULT h = g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
                     startIndex + run.first * 3, run.last - run.first + 1);
                 if (FAILED(h) && SUCCEEDED(hr)) hr = h;
@@ -17873,8 +18334,16 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         }
         return hr;
     });
+    const HRESULT nativeRestore=nativeIndices.Restore();
     if(independentRegs)g_origSetVSConstF(dev,5,&independentSaved[0][0],independentRegs);
     if (boneRegN) g_origSetVSConstF(dev,boneRegLo, &savedBones[0][0], boneRegN);
+    if(nativeCuff){
+        static LONG saidNative=0;
+        if(!InterlockedExchange(&saidNative,1))
+            Log("native-gloves: scoped original-material draw=%d triangles=%u; same native size; wrist+short forearm; grip=%.3f/%.3f",
+                g_nativeGloveRenderer.draws!=0,g_nativeGloveRenderer.Triangles(),g_gloveBlend[0],g_gloveBlend[1]);
+    }
+    if(FAILED(nativeRestore)){g_gloveExperiment=false;return nativeRestore;}
 
     // ⭐ run 241: how many bones this mesh REALLY has, so the sweep range stops being a guess.
     // Reads the whole possible block once a second and reports the last register that is not all
@@ -20546,12 +21015,15 @@ void ReportPoolTranslation() {
 // the support grip attached to a destroyed weapon. Reset only the VR-side caches here; the
 // game owns the camera and will repopulate them on the next valid frame.
 static void ResetVrAfterCameraLoss(const char* reason) {
+    g_hipKnifeState={};g_hipKnifeVisible=false;
     InvalidateCamMats();
     g_camMatrixBound = false;
     g_haveCentre = false;
     g_haveCentrePos = false;
     g_lastHandPoseTime = 0;
     g_poseStaleNs = 0.0;
+    g_glovePoseValid[0]=g_glovePoseValid[1]=false;
+    g_gloveBlend[0]=g_gloveBlend[1]=0;g_gloveReplacementSeen=false;
     for (int i = 0; i < 2; ++i) {
         g_handPoseValid[i] = false;
         g_handPositionValid[i] = false;
@@ -24611,12 +25083,56 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 #include "desktop_mirror.h"
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    g_nativeGloveRenderer.ReleaseGPU();g_nativeGlovePoseThisDraw=false;
+    g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
+    g_hipKnifeRenderer.ReleaseGPU();
     shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();worldshadowfix::Release();
     PauseRttProbe::ReleaseContent();
     ReleaseVrMenuResources();
     ReleaseVrShadowResources();
     desktop_mirror::ReleaseScratch();
     if (g_wristState) { g_wristState->Release(); g_wristState = nullptr; }
+}
+void DrawCustomGloves(IDirect3DDevice9* dev) {
+    const bool replaced=g_gloveReplacementSeen;g_gloveReplacementSeen=false;
+    if(!g_gloveExperiment||g_nativeGloveExperiment||!VrModeOn()||!g_origDrawIndexedPrimUP)return;
+    IDirect3DSurface9* back=nullptr;
+    if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
+    D3DSURFACE_DESC desc{};
+    bool gpu=SUCCEEDED(back->GetDesc(&desc))&&desc.MultiSampleType==D3DMULTISAMPLE_NONE&&
+        g_gloveRenderer.Ensure(dev,desc.Width,desc.Height);
+    if(!gpu) {
+        g_gloveExperiment=false;
+        Log("glove-renderer: GPU setup failed/unsupported MSAA; native kept");
+    }
+    // The first frame only prepares resources; render only after an exact
+    // native free-hand section was intentionally suppressed in THIS frame.
+    if(gpu&&replaced&&CustomGlovesEligible()) {
+        gloves::Pose eyes[2]{};
+        for(int i=0;i<2;++i){
+            const auto& p=g_eyePose[i];
+            eyes[i]={{p.position.x,p.position.y,p.position.z},
+                {p.orientation.x,p.orientation.y,p.orientation.z,p.orientation.w}};
+        }
+        const LARGE_INTEGER start=Now();
+        // Bypass the existing observation/classification hooks. A state block
+        // restores D3D state but cannot restore their CPU-side caches or undo
+        // a shadow-pass depth-clear classification triggered by our private DS.
+        const gloves::Calls calls{shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
+            shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport};
+        const bool drawn=g_gloveRenderer.Draw(dev,calls,back,g_glovePose,eyes,
+            g_gloveBlend,g_targetTanX,g_targetTanY,MetresToUU(),(float)Rd(g_gunScalePct),g_customGloveNativeScale);
+        static unsigned notes=0;static ULONGLONG last=0;
+        const ULONGLONG now=GetTickCount64();
+        if(notes<8&&(!last||now-last>=2000)) {
+            ++notes;last=now;
+            Log("glove-renderer: draw=%d calls=%u blend=%.3f/%.3f CPU=%.3fms native-size gun=%ld worldUUperM=%.3f local=%.4f albedo-only (NOT native UE3 shading)",
+                drawn?1:0,g_gloveRenderer.draws,g_gloveBlend[0],g_gloveBlend[1],MsSince(start),
+                Rd(g_gunScalePct),MetresToUU(),g_customGloveNativeScale);
+        }
+        if(!drawn){g_gloveExperiment=false;Log("glove-renderer: FAILED, native resumes next frame");}
+    }
+    back->Release();
 }
 void DrawWristHealth(IDirect3DDevice9* dev) {
     if (!Rd(g_wristHealth) || !VrModeOn() || !Rd(g_offHandValid) || !g_origDrawPrimUP ||
@@ -24779,6 +25295,45 @@ static void MaybeLoadHudAtlas(IDirect3DDevice9* dev) {
     Log("weapon wheel: HUD atlas ready (%dx%d, %u icons)", pw, ph, (unsigned)sheet.rects.size());
 }
 
+void DrawHipKnife(IDirect3DDevice9* dev){
+    // MAIN round 18: gate on dupDraws (TRUE stereo, the normal VR path — same
+    // signal the belt ring uses), NOT g_stereo (the F12 alternate-eye debug
+    // method that SetVrMode/F1 deliberately clear, so the knife could NEVER
+    // render in normal play: zero `draw=` in the whole log history).
+    if(!g_hipKnifeEnabled||!g_hipKnifeReady||!g_hipKnifeVisible||!VrModeOn()||
+       !InGameplay()||!Rd(g_dupDraws)||!g_haveEyes||Rd(g_gamePaused)||Rd(g_vrUiMenu)||
+       Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||CutsceneNativeCameraArmed()){
+        // MAIN round 17: per-DISTINCT-mask gate log (the old one-shot spent
+        // itself at the menu and said nothing about gameplay, where the user
+        // reports the docked knife never renders despite input-side Context).
+        static int saidGateMask=-1;
+        const int mask=(g_hipKnifeEnabled?1:0)|(g_hipKnifeReady?2:0)|(g_hipKnifeVisible?4:0)|
+            (VrModeOn()?8:0)|(InGameplay()?16:0)|(Rd(g_dupDraws)?32:0)|(g_haveEyes?64:0)|
+            (Rd(g_gamePaused)?128:0)|(Rd(g_vrUiMenu)?256:0)|
+            (Rd(g_panelOpen)?512:0)|(Rd(g_weaponWheelOpen)?1024:0)|(CutsceneNativeCameraArmed()?2048:0);
+        if(mask!=saidGateMask){saidGateMask=mask;
+            Log("hip knife: gate blocked (en=%d ready=%d vis=%d vr=%d play=%d dup=%d eyes=%d paused=%d menu=%d panel=%d wheel=%d cine=%d)",
+                g_hipKnifeEnabled?1:0,g_hipKnifeReady?1:0,g_hipKnifeVisible?1:0,VrModeOn()?1:0,
+                InGameplay()?1:0,(int)Rd(g_dupDraws),g_haveEyes?1:0,(int)Rd(g_gamePaused),(int)Rd(g_vrUiMenu),
+                (int)Rd(g_panelOpen),(int)Rd(g_weaponWheelOpen),CutsceneNativeCameraArmed()?1:0);}
+        return;}
+    IDirect3DSurface9* back=nullptr;
+    if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
+    D3DSURFACE_DESC desc{};
+    if(SUCCEEDED(back->GetDesc(&desc))&&g_hipKnifeRenderer.Ensure(dev,desc.Width,desc.Height)){
+        hipknife::Pose eyes[2];
+        for(int e=0;e<2;++e){const auto& p=g_eyePose[e];
+            eyes[e]={{p.position.x,p.position.y,p.position.z},
+                     {p.orientation.x,p.orientation.y,p.orientation.z,p.orientation.w}};}
+        const hipknife::Calls calls{shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
+            shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport};
+        const bool ok=g_hipKnifeRenderer.Draw(dev,calls,back,g_hipKnifePose,eyes,g_targetTanX,g_targetTanY);
+        if(!ok){g_hipKnifeReady=false;g_hipKnifeState={};g_hipKnifeVisible=false;}
+        static unsigned notes=0;if(notes++<2)Log("hip knife: draw=%s 2 indexed calls/frame (not pixel proof)",ok?"OK":"FAIL");
+    }else{g_hipKnifeReady=false;g_hipKnifeState={};g_hipKnifeVisible=false;
+        Log("hip knife: GPU allocation unavailable; disabled until next XR init (normal inputs retained)");}
+    back->Release();
+}
 void DrawWeaponWheel(IDirect3DDevice9* dev) {
     if (!dev || !VrModeOn() || !Rd(g_dupDraws) || !Rd(g_weaponWheelOpen) ||
         !g_handPositionValid[1] || !g_haveEyes || !g_origSetRenderTarget) return;
@@ -25194,7 +25749,20 @@ static void MaybeLoadPlatesAtlas(IDirect3DDevice9* dev) {
 // unknown HP hides the bar, never a guessed full one.
 void DrawHealthPlate(IDirect3DDevice9* dev) {
     if (!Rd(g_healthPlate) || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
-        !g_handPositionValid[0] || !g_haveEyes || !g_origSetRenderTarget || !g_origDrawPrimUP) return;
+        !g_handPositionValid[0] || !g_haveEyes || !g_origSetRenderTarget || !g_origDrawPrimUP) {
+        // MAIN falsifier probe: names the exact blocking gate (one line per
+        // session). A full gameplay session without any plate line means this
+        // fired every frame — read the flags, do not guess placement.
+        static bool saidGate = false;
+        if (!saidGate) {
+            saidGate = true;
+            Log("health plate: gate blocked (flag=%d vr=%d dup=%d paused=%d hand=%d eyes=%d)",
+                (int)Rd(g_healthPlate), VrModeOn() ? 1 : 0, (int)Rd(g_dupDraws),
+                (int)Rd(g_gamePaused), g_handPositionValid[0] ? 1 : 0,
+                g_haveEyes ? 1 : 0);
+        }
+        return;
+    }
     if (InterlockedCompareExchange(&g_platesState, 0, 0) == 0) MaybeLoadPlatesAtlas(dev);
     if (InterlockedCompareExchange(&g_platesState, 0, 0) != 1 || !g_platesTex) return;
     if (g_offHealth < 0 || g_offHealthMax < 0) return;
@@ -25242,7 +25810,7 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     const plates_atlas::Rect* fullR = plates_atlas::Find(g_platesSheet, "seg-full");
     const plates_atlas::Rect* emptyR = plates_atlas::Find(g_platesSheet, "seg-empty");
     if (!bgR || !fullR || !emptyR) return; // atlas mismatch: hide (logged at load)
-    const uipointer::V anchor{ hand.x, hand.y + (twoHand ? 0.12f : 0.08f), hand.z };
+    const uipointer::V anchor{ hand.x, hand.y + (twoHand ? -0.02f : 0.08f), hand.z };
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
     D3DSURFACE_DESC d{};
@@ -25283,13 +25851,22 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
     struct PlateVtx { float x, y, z, rhw; DWORD c; float u, v; };
     const float AW = (float)g_platesSheet.width, AH = (float)g_platesSheet.height;
-    const int plateW = std::max(64, (int)(d.Height * 0.18f));
+    // Two-hand plate rides smaller and lower so it never covers the gunfight.
+    const int plateW = twoHand ? std::max(48, (int)(d.Height * 0.10f))
+                               : std::max(64, (int)(d.Height * 0.18f));
     const int plateH = std::max(10, plateW * 330 / 2001);
+    // Two-hand plate sits left of the gun line so it never covers it.
+    // MAIN 2026-10-15: user "jeszcze bardziej w lewo i nizej".
+    float hbDrewCx = 0, hbDrewCy = 0;
+    bool hbDrewAny = false, hbProjFail = true;
+    static bool hbSaidDrew = false, hbSaidProj = false;
     for (int eye = 0; eye < 2; ++eye) {
         uipointer::ScreenPoint p;
         if (!VrUiProjectEye(eye, anchor, p)) continue;
-        const float cx = (eye + p.u) * d.Width * 0.5f;
+        hbProjFail = false;
+        const float cx = (eye + p.u) * d.Width * 0.5f - (twoHand ? plateW * 0.85f : 0.0f);
         const float cy = p.v * d.Height;
+        if (!hbDrewAny) { hbDrewAny = true; hbDrewCx = cx; hbDrewCy = cy; }
         const float x0 = cx - plateW * 0.5f, y0 = cy - plateH * 0.5f;
         const float x1 = cx + plateW * 0.5f, y1 = cy + plateH * 0.5f;
         PlateVtx v[4] = {
@@ -25314,10 +25891,492 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
             g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, s, sizeof(PlateVtx));
         }
     }
+    if (hbDrewAny && !hbSaidDrew) {
+        hbSaidDrew = true;
+        Log("health plate: drew twoHand=%d %dx%d at %.0f,%.0f (backbuffer %ux%u)",
+            twoHand ? 1 : 0, plateW, plateH, (double)hbDrewCx, (double)hbDrewCy, d.Width, d.Height);
+    }
+    if (!hbDrewAny && hbProjFail && !hbSaidProj) {
+        hbSaidProj = true;
+        Log("health plate: anchor not projectable in either eye (hand behind camera?)");
+    }
     g_wristState->Apply();
     if (old) g_origSetRenderTarget(dev, 0, old);
     dev->SetDepthStencilSurface(depth);
     if (old) old->Release(); if (depth) depth->Release(); back->Release();
+}
+
+// ---- Katorga ammo plates: one per held gun, semi-transparent behind it ----
+// Default OFF ([Render] AmmoPlateEnabled). Shown while a known gun is held;
+// hidden while the R3 wheel is open so the two never overlap. Mag/reserve
+// digits are live (HUD mClipAmmo/mBinAmmo, proven by the round-9 probe);
+// plate art is digit-free (user-supplied), so no baked covers are drawn.
+// White mag icon is never covered; red box + red mag show iff 2 or fewer
+// rounds remain. Unknown values hide the plate, never a guessed one.
+volatile LONG g_ammoPlate = 0;
+static char g_ammoAssetRoot[MAX_PATH] = "vr-assets/hud/katorga/ammo";
+static IDirect3DTexture9* g_ammoPlateTex[4]{};
+static IDirect3DTexture9* g_ammoDigitsTex = nullptr;
+static volatile LONG g_ammoArtState = 0;   // 0 unloaded, 1 ready, -1 failed (logged once)
+static volatile LONG g_ammoUnknownSaid = 0;
+// HUD sampler cache: offsets resolved BY NAME per HUD class (probe round 9).
+static uintptr_t g_ammoHudCls = 0;
+static int g_ammoOffClip = -2, g_ammoOffBin = -2, g_ammoOffSize = -2;
+
+static bool LoadAmmoPng(IDirect3DDevice9* dev, const char* file, IDirect3DTexture9** out) {
+    char dll[MAX_PATH]{};
+    HMODULE self = nullptr;
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCSTR)&LoadAmmoPng, &self) ||
+        !GetModuleFileNameA(self, dll, MAX_PATH)) return false;
+    char* slash = strrchr(dll, '\\');
+    if (!slash) return false;
+    *slash = 0;
+    std::string root = g_ammoAssetRoot;
+    for (char& c : root) if (c == '/') c = '\\';
+    char pngPath[MAX_PATH]{};
+    _snprintf_s(pngPath, sizeof(pngPath), _TRUNCATE, "%s\\%s\\%s", dll, root.c_str(), file);
+    CoInitializeEx(nullptr, COINIT_MULTITHREADED); // no-op if the game COM is already up
+    wchar_t wpng[MAX_PATH]{};
+    if (!MultiByteToWideChar(CP_ACP, 0, pngPath, -1, wpng, MAX_PATH)) return false;
+    IWICImagingFactory* fac = nullptr;
+    IWICBitmapDecoder* dec = nullptr;
+    IWICBitmapFrameDecode* frame = nullptr;
+    IWICFormatConverter* conv = nullptr;
+    UINT pw = 0, ph = 0;
+    std::vector<BYTE> px;
+    bool ok = SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                                         IID_PPV_ARGS(&fac))) && fac &&
+              SUCCEEDED(fac->CreateDecoderFromFilename(wpng, nullptr, GENERIC_READ,
+                                                       WICDecodeMetadataCacheOnDemand, &dec)) && dec &&
+              SUCCEEDED(dec->GetFrame(0, &frame)) && frame &&
+              SUCCEEDED(fac->CreateFormatConverter(&conv)) && conv &&
+              SUCCEEDED(conv->Initialize(frame, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone,
+                                         nullptr, 0.0, WICBitmapPaletteTypeCustom)) &&
+              SUCCEEDED(conv->GetSize(&pw, &ph)) && pw > 0 && pw <= 4096 && ph > 0 && ph <= 4096;
+    if (ok) {
+        px.resize((size_t)pw * ph * 4);
+        ok = SUCCEEDED(conv->CopyPixels(nullptr, pw * 4, (UINT)px.size(), px.data()));
+    }
+    if (conv) conv->Release();
+    if (frame) frame->Release();
+    if (dec) dec->Release();
+    if (fac) fac->Release();
+    if (!ok) return false;
+    IDirect3DTexture9* tex = nullptr;
+    if (FAILED(dev->CreateTexture(pw, ph, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, nullptr)) || !tex)
+        return false;
+    D3DLOCKED_RECT lr{};
+    if (FAILED(tex->LockRect(0, &lr, nullptr, 0))) { tex->Release(); return false; }
+    const BYTE* src = px.data();
+    for (UINT y = 0; y < ph; ++y)
+        memcpy((BYTE*)lr.pBits + (size_t)y * lr.Pitch, src + (size_t)y * pw * 4, (size_t)pw * 4);
+    tex->UnlockRect(0);
+    *out = tex;
+    return true;
+}
+
+static void MaybeLoadAmmoArt(IDirect3DDevice9* dev) {
+    if (InterlockedCompareExchange(&g_ammoArtState, 0, 0) != 0) return;
+    const char* files[4] = { "plate-centurion.png", "plate-rifle.png",
+                             "plate-shotgun.png", "plate-sniper.png" };
+    for (int i = 0; i < 4; ++i) {
+        if (!LoadAmmoPng(dev, files[i], &g_ammoPlateTex[i])) {
+            InterlockedExchange(&g_ammoArtState, -1);
+            Log("ammo plate: art unavailable (%s) - plates hidden", files[i]);
+            return;
+        }
+    }
+    if (!LoadAmmoPng(dev, "ammo-digits.png", &g_ammoDigitsTex)) {
+        InterlockedExchange(&g_ammoArtState, -1);
+        Log("ammo plate: art unavailable (ammo-digits.png) - plates hidden");
+        return;
+    }
+    InterlockedExchange(&g_ammoArtState, 1);
+    Log("ammo plate: art ready (4 plates + digits)");
+}
+
+void DrawAmmoPlate(IDirect3DDevice9* dev) {
+    if (!Rd(g_ammoPlate) || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
+        Rd(g_weaponWheelOpen) || !WeaponInHands() ||
+        !g_handPositionValid[AimHand()] || !g_haveEyes ||
+        !g_origSetRenderTarget || !g_origDrawPrimUP) {
+        static bool saidGate = false;
+        if (!saidGate) {
+            saidGate = true;
+            Log("ammo plate: gate blocked (flag=%d vr=%d dup=%d paused=%d wheel=%d armed=%d hand=%d eyes=%d)",
+                (int)Rd(g_ammoPlate), VrModeOn() ? 1 : 0, (int)Rd(g_dupDraws),
+                (int)Rd(g_gamePaused), (int)Rd(g_weaponWheelOpen),
+                WeaponInHands() ? 1 : 0, g_handPositionValid[AimHand()] ? 1 : 0,
+                g_haveEyes ? 1 : 0);
+        }
+        return;
+    }
+    if (InterlockedCompareExchange(&g_ammoArtState, 0, 0) == 0) MaybeLoadAmmoArt(dev);
+    if (InterlockedCompareExchange(&g_ammoArtState, 0, 0) != 1) return;
+    const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+    const int plate = ammoplates::PlateForGunVerts(heldVerts);
+    if (plate < 0 || plate > 3 || !g_ammoPlateTex[plate] || !g_ammoDigitsTex) return;
+    // HUD sampler: offsets BY NAME per HUD class (round-9 probe verdict).
+    const uintptr_t hud = FindHudObject();
+    uintptr_t hc = 0;
+    if (hud && Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t)))
+        hc = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS);
+    if (hc && hc != g_ammoHudCls) {
+        g_ammoHudCls = hc;
+        g_ammoOffClip = PropOffsetInChain(hc, "mClipAmmo");
+        g_ammoOffBin = PropOffsetInChain(hc, "mBinAmmo");
+        g_ammoOffSize = PropOffsetInChain(hc, "mClipSize");
+        char cc[80] = "(none)";
+        NameOf(hc, cc, sizeof(cc));
+        Log("ammo plate: HUD cache clip%+d bin%+d size%+d on %s",
+            g_ammoOffClip, g_ammoOffBin, g_ammoOffSize, cc);
+    }
+    int clip = -1, bin = -1;
+    if (g_ammoOffClip >= 0 && g_ammoOffBin >= 0 && hud &&
+        Readable((const void*)(hud + g_ammoOffClip), 4) &&
+        Readable((const void*)(hud + g_ammoOffBin), 4)) {
+        clip = *reinterpret_cast<const int32_t*>(hud + g_ammoOffClip);
+        bin = *reinterpret_cast<const int32_t*>(hud + g_ammoOffBin);
+    }
+    if (clip < 0 || bin < 0) {
+        if (!InterlockedCompareExchange(&g_ammoUnknownSaid, 0, 0)) {
+            InterlockedExchange(&g_ammoUnknownSaid, 1);
+            Log("ammo plate: ammo unknown (clip=%d bin=%d hud=%p offC=%d offB=%d) - hidden until readable",
+                clip, bin, (void*)hud, g_ammoOffClip, g_ammoOffBin);
+        }
+        return;
+    }
+    const uipointer::V hand{ g_handLastPos[AimHand()].x, g_handLastPos[AimHand()].y + 0.03f,
+                             g_handLastPos[AimHand()].z };
+    IDirect3DSurface9* back = nullptr;
+    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
+    D3DSURFACE_DESC d{};
+    if (FAILED(back->GetDesc(&d)) || d.Width < 8 || d.Height < 8) {
+        back->Release();
+        return;
+    }
+    IDirect3DSurface9* old = nullptr;
+    IDirect3DSurface9* depth = nullptr;
+    dev->GetRenderTarget(0, &old);
+    dev->GetDepthStencilSurface(&depth);
+    if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) {
+        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    if (FAILED(g_wristState->Capture())) {
+        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    dev->SetDepthStencilSurface(nullptr);
+    g_origSetRenderTarget(dev, 0, back);
+    D3DVIEWPORT9 vp{0, 0, d.Width, d.Height, 0.0f, 1.0f};
+    dev->SetViewport(&vp);
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetRenderState(D3DRS_ZENABLE, FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    struct AmmoVtx { float x, y, z, rhw; DWORD c; float u, v; };
+    // Fallback size (~5% under the previous 0.17H). Per eye below, the plate
+    // is re-anchored to a constant 0.19m world width, so it shrinks with
+    // distance instead of looking bigger as the gun moves away (user 2026-10-15).
+    int plateW = std::max(64, (int)(d.Height * 0.16f));
+    int plateH = std::max(21, plateW * 724 / 2172);
+    // MAIN round 8: digit-free art (user-supplied plates without baked digits
+    // or pips) needs NO baked-content covers — only the empty-mag info.
+    // The red warning box stays covered iff 3+ rounds remain; everything
+    // else (white mag, icons, frames, labels) is never touched.
+    float rbx0, rby0, rbx1, rby1;
+    ammoplates::RedBoxCover(rbx0, rby0, rbx1, rby1);
+    const DWORD coverCol = ammoplates::CoverColor();
+    const bool empty = ammoplates::MagEmpty(clip);
+    float mrx, mtop, mhh, rrx, rtop, rhh;
+    ammoplates::MagDigits(mrx, mtop, mhh);
+    ammoplates::ReserveDigits(rrx, rtop, rhh);
+    // MAIN L3 probe (bounded): one drew-confirmation with rect, one proj-fail
+    // line. Distinguishes "never drawn" from "drawn but not seen".
+    float ammoDrewCx = 0, ammoDrewCy = 0;
+    bool ammoDrewAny = false, ammoProjFail = true;
+    static bool ammoSaidDrew = false, ammoSaidProj = false;
+    for (int eye = 0; eye < 2; ++eye) {
+        uipointer::ScreenPoint p;
+        if (!VrUiProjectEye(eye, hand, p)) continue;
+        ammoProjFail = false;
+        {
+            // World-anchored width: project a 0.5m probe along this eye's
+            // right axis; px-per-metre here scales the constant 0.19m plate.
+            // Probe failure keeps the fallback size above.
+            const uipointer::V rgt = VrUiRotate(g_eyePose[eye].orientation, { 1, 0, 0 });
+            const uipointer::V probe{ hand.x + rgt.x * 0.5f, hand.y + rgt.y * 0.5f,
+                                      hand.z + rgt.z * 0.5f };
+            uipointer::ScreenPoint p2;
+            if (VrUiProjectEye(eye, probe, p2)) {
+                const float du = (p2.u - p.u) * d.Width * 0.5f;
+                const float dv = (p2.v - p.v) * (float)d.Height;
+                const float pxM = 2.0f * sqrtf(du * du + dv * dv);
+                if (pxM > 1.0f) {
+                    int w = (int)(0.19f * pxM);
+                    if (w < 64) w = 64;
+                    const int maxW = (int)(d.Height * 0.30f);
+                    if (w > maxW) w = maxW;
+                    plateW = w;
+                    plateH = std::max(21, plateW * 724 / 2172);
+                }
+            }
+        }
+        const float cx = (eye + p.u) * d.Width * 0.5f;
+        const float cy = p.v * d.Height;
+        if (!ammoDrewAny) { ammoDrewAny = true; ammoDrewCx = cx; ammoDrewCy = cy; }
+        const float x0 = cx - plateW * 0.5f, y0 = cy - plateH * 0.5f;
+        const float x1 = cx + plateW * 0.5f, y1 = cy + plateH * 0.5f;
+        dev->SetTexture(0, g_ammoPlateTex[plate]);
+        AmmoVtx v[4] = {
+            { x0, y0, 0, 1, 0xFFFFFFFF, 0, 0 },
+            { x1, y0, 0, 1, 0xFFFFFFFF, 1, 0 },
+            { x0, y1, 0, 1, 0xFFFFFFFF, 0, 1 },
+            { x1, y1, 0, 1, 0xFFFFFFFF, 1, 1 },
+        };
+        g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(AmmoVtx));
+        // Opaque covers use the diffuse channel (no texture).
+        dev->SetTexture(0, nullptr);
+        dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+        dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+        auto cover = [&](float fx0, float fy0, float fx1, float fy1) {
+            AmmoVtx r[4] = {
+                { x0 + fx0 * plateW, y0 + fy0 * plateH, 0, 1, coverCol, 0, 0 },
+                { x0 + fx1 * plateW, y0 + fy0 * plateH, 0, 1, coverCol, 0, 0 },
+                { x0 + fx0 * plateW, y0 + fy1 * plateH, 0, 1, coverCol, 0, 0 },
+                { x0 + fx1 * plateW, y0 + fy1 * plateH, 0, 1, coverCol, 0, 0 },
+            };
+            g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, r, sizeof(AmmoVtx));
+        };
+        if (!empty) cover(rbx0, rby0, rbx1, rby1); // red box hidden while 3+ rounds remain
+        // Live digits from the strip texture.
+        dev->SetTexture(0, g_ammoDigitsTex);
+        dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+        dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+        const float DW = 2172.0f, DH = 240.0f;
+        auto digits = [&](int value, int maxDigits, float rightEdge, float top, float height) {
+            ammoplates::DigitQuad q[4];
+            const int n = ammoplates::LayoutNumber(value, maxDigits,
+                x0 + rightEdge * plateW, y0 + top * plateH, height * plateH, q, 4);
+            for (int i = 0; i < n; ++i) {
+                const ammoplates::GlyphRect g = ammoplates::DigitGlyph(q[i].glyph);
+                AmmoVtx t[4] = {
+                    { q[i].x0, q[i].y0, 0, 1, 0xFFFFFFFF, g.x0 / DW, g.y0 / DH },
+                    { q[i].x1, q[i].y0, 0, 1, 0xFFFFFFFF, g.x1 / DW, g.y0 / DH },
+                    { q[i].x0, q[i].y1, 0, 1, 0xFFFFFFFF, g.x0 / DW, (g.y1) / DH },
+                    { q[i].x1, q[i].y1, 0, 1, 0xFFFFFFFF, g.x1 / DW, (g.y1) / DH },
+                };
+                g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, t, sizeof(AmmoVtx));
+            }
+        };
+        digits(clip, 3, mrx, mtop, mhh);
+        digits(bin, 4, rrx, rtop, rhh);
+    }
+    if (ammoDrewAny && !ammoSaidDrew) {
+        ammoSaidDrew = true;
+        Log("ammo plate: drew plate=%d clip=%d bin=%d %dx%d at %.0f,%.0f (backbuffer %ux%u)",
+            plate, clip, bin, plateW, plateH, (double)ammoDrewCx, (double)ammoDrewCy, d.Width, d.Height);
+    }
+    if (!ammoDrewAny && ammoProjFail && !ammoSaidProj) {
+        ammoSaidProj = true;
+        Log("ammo plate: anchor not projectable in either eye (hand behind camera?)");
+    }
+    g_wristState->Apply();
+    if (old) g_origSetRenderTarget(dev, 0, old);
+    dev->SetDepthStencilSurface(depth);
+    if (old) old->Release(); if (depth) depth->Release(); back->Release();
+}
+
+// MAIN 2026-10-15: white translucent ring marks the hip holster spot while a
+// weapon is held (user: "widac gdzie odkladac bron"). Same camera-matrix UU
+// projection as DrawLaserSight, so the ring sits exactly where a stored gun
+// lands (GunPivotWorld holster path). Ring radius derives from the largest
+// screen extent of three axis-offset probes, so it cannot degenerate along
+// the view axis. Bounded: one small fan per eye, no allocations, one log line.
+struct RingVtx { float x, y, z, rhw; DWORD c; };
+static const DWORD kRingCol = 0x80FFFFFF; // white, half transparent
+static const float kRingRo = 0.1127f, kRingRi = 0.0877f; // +1 inch diameter, 2.5cm rim
+// Horizontal annulus at absolute XR centre (flat to floor/ceiling).
+// Shared by the gun-holster and knife-belt markers. Returns per-frame drew.
+static bool DrawFlatRingAt(IDirect3DDevice9* dev, uipointer::V c, const char* tag,
+                            bool& saidDrew, bool& saidProj) {
+    // Fixed-function state saved/restored in full: this runs at Present time
+    // after the scene, like DrawLaserSight.
+    IDirect3DVertexShader9* oldVS = nullptr; dev->GetVertexShader(&oldVS);
+    IDirect3DPixelShader9* oldPS = nullptr; dev->GetPixelShader(&oldPS);
+    DWORD oldFVF = 0, oldZ = 0, oldAB = 0, oldSrc = 0, oldDst = 0, oldCull = 0;
+    DWORD oldLit = 0, oldSc = 0, oldCop = 0, oldCa1 = 0, oldAop = 0, oldAa1 = 0;
+    dev->GetFVF(&oldFVF);
+    dev->GetRenderState(D3DRS_ZENABLE, &oldZ);
+    dev->GetRenderState(D3DRS_ALPHABLENDENABLE, &oldAB);
+    dev->GetRenderState(D3DRS_SRCBLEND, &oldSrc);
+    dev->GetRenderState(D3DRS_DESTBLEND, &oldDst);
+    dev->GetRenderState(D3DRS_CULLMODE, &oldCull);
+    dev->GetRenderState(D3DRS_LIGHTING, &oldLit);
+    dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &oldSc);
+    dev->GetTextureStageState(0, D3DTSS_COLOROP, &oldCop);
+    dev->GetTextureStageState(0, D3DTSS_COLORARG1, &oldCa1);
+    dev->GetTextureStageState(0, D3DTSS_ALPHAOP, &oldAop);
+    dev->GetTextureStageState(0, D3DTSS_ALPHAARG1, &oldAa1);
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetTexture(0, nullptr);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+    dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
+    bool drewFrame = false;
+    D3DSURFACE_DESC dd{};
+    {
+        // Backbuffer dims for the SBS mapping (same convention as the plates).
+        IDirect3DSurface9* bb = nullptr;
+        if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &bb)) || !bb) return false;
+        if (FAILED(bb->GetDesc(&dd))) { bb->Release(); return false; }
+        bb->Release();
+        if (dd.Width < 8 || dd.Height < 8) return false;
+    }
+    for (int eye = 0; eye < 2; ++eye) {
+        uipointer::ScreenPoint p;
+        if (!VrUiProjectEye(eye, c, p)) continue;
+        const float cx = (eye + p.u) * dd.Width * 0.5f;
+        const float cy = p.v * dd.Height;
+        drewFrame = true;
+        if (!saidDrew) {
+            saidDrew = true;
+            Log("%s: drew flat ring at %.0f,%.0f", tag, (double)cx, (double)cy);
+        }
+        // Horizontal ring verts (XR x/z plane at centre height).
+        const int SEG = 28;
+        RingVtx v[2 * (SEG + 1)];
+        for (int i = 0; i <= SEG; ++i) {
+            const float a = (float)i / (float)SEG * 6.2831853f;
+            const float co = cosf(a), si = sinf(a);
+            uipointer::V wo{ c.x + co * kRingRo, c.y, c.z + si * kRingRo };
+            uipointer::V wi{ c.x + co * kRingRi, c.y, c.z + si * kRingRi };
+            uipointer::ScreenPoint po, pi;
+            float ox = cx, oy = cy, ix = cx, iy = cy;
+            if (VrUiProjectEye(eye, wo, po)) {
+                ox = (eye + po.u) * dd.Width * 0.5f;
+                oy = po.v * dd.Height;
+            }
+            if (VrUiProjectEye(eye, wi, pi)) {
+                ix = (eye + pi.u) * dd.Width * 0.5f;
+                iy = pi.v * dd.Height;
+            }
+            v[2 * i] = { ox, oy, 0, 1, kRingCol };
+            v[2 * i + 1] = { ix, iy, 0, 1, kRingCol };
+        }
+        g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2 * SEG, v, sizeof(RingVtx));
+    }
+    if (!drewFrame && !saidProj) {
+        saidProj = true;
+        Log("%s: centre not projectable in either eye", tag);
+    }
+    dev->SetVertexShader(oldVS);
+    dev->SetPixelShader(oldPS);
+    if (oldVS) oldVS->Release();
+    if (oldPS) oldPS->Release();
+    dev->SetFVF(oldFVF);
+    dev->SetRenderState(D3DRS_ZENABLE, oldZ);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, oldAB);
+    dev->SetRenderState(D3DRS_SRCBLEND, oldSrc);
+    dev->SetRenderState(D3DRS_DESTBLEND, oldDst);
+    dev->SetRenderState(D3DRS_CULLMODE, oldCull);
+    dev->SetRenderState(D3DRS_LIGHTING, oldLit);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldSc);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, oldCop);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, oldCa1);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, oldAop);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, oldAa1);
+    return drewFrame;
+}
+
+void DrawHolsterMarker(IDirect3DDevice9* dev) {
+    if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
+        Rd(g_weaponWheelOpen) || !g_holsterEnabled || !WeaponInHands() ||
+        Rd(g_weaponHolstered) || !g_origDrawPrimUP) {
+        static bool saidGate = false;
+        if (!saidGate) {
+            saidGate = true;
+            Log("holster marker: gate blocked (vr=%d dup=%d paused=%d wheel=%d holsterEn=%d armed=%d holstered=%d)",
+                VrModeOn() ? 1 : 0, (int)Rd(g_dupDraws), (int)Rd(g_gamePaused),
+                (int)Rd(g_weaponWheelOpen), g_holsterEnabled ? 1 : 0,
+                WeaponInHands() ? 1 : 0, (int)Rd(g_weaponHolstered));
+        }
+        return;
+    }
+    // MAIN round 6: XR-space projection (no camera matrices). The camMat path
+    // never drew: post-scene draws invalidate the slots before Present, so no
+    // valid slot exists at overlay time (17:19 log: ammo drew, marker never
+    // attempted). Hip UU is head-relative in the same frame the holster
+    // NearHip test uses; it converts to absolute XR metres by inverting
+    // vrpose::TrackingDeltaToWorldUU (L1 roundtrip in test-vrpose-invert.cpp)
+    // plus the head position — the same space plates project in.
+    float H[3];
+    HolsterHipWorld(H, true); // full UU world, same input the stored gun uses
+    const float units = MetresToUU();
+    if (units <= 0.0f) return;
+    const float byr = g_baseYaw * (6.2831853f / 65536.0f);
+    const float bc = cosf(byr), bs = sinf(byr);
+    const float cc = cosf(g_centreYaw), sc = sinf(g_centreYaw);
+    const float XN = H[0] / units, YN = H[1] / units;
+    const float hfwd = XN * bc + YN * bs;
+    const float hright = -XN * bs + YN * bc;
+    const uipointer::V hip{ g_headPosXR[0] + (-sc * hfwd + cc * hright),
+                            g_headPosXR[1] + H[2] / units,
+                            g_headPosXR[2] + (-cc * hfwd - sc * hright) };
+    // MAIN round 8: horizontal annulus (user: flat to floor/ceiling, not
+    // facing the user). Outer diameter +1 inch vs round 7, rim halved:
+    // outer 0.1127m / inner 0.0877m (2.5cm rim, empty middle), lying in the
+    // XR horizontal plane at hip height. Yaw-invariant by construction.
+    static bool saidDrew = false, saidProj = false;
+    DrawFlatRingAt(dev, hip, "holster marker", saidDrew, saidProj);
+}
+
+// MAIN round 10: the same white ring at the LEFT belt while the knife is
+// held (user: same as the gun ring, obviously on the left). Belt anchor is
+// mirrored live from the XR owner; projection reuses the gun-ring helper.
+// MAIN round 11: also shown while docked (held<0 no longer gates) so the
+// belt can be FOUND: the user reports never seeing the knife at all.
+void DrawKnifeBeltMarker(IDirect3DDevice9* dev) {
+    if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
+        Rd(g_weaponWheelOpen) || !g_hipKnifeEnabled || !g_hipKnifeReady ||
+        !g_origDrawPrimUP) {
+        static bool saidGate = false;
+        if (!saidGate) {
+            saidGate = true;
+            Log("knife belt marker: gate blocked (vr=%d dup=%d paused=%d wheel=%d en=%d ready=%d)",
+                VrModeOn() ? 1 : 0, (int)Rd(g_dupDraws), (int)Rd(g_gamePaused),
+                (int)Rd(g_weaponWheelOpen), g_hipKnifeEnabled ? 1 : 0,
+                g_hipKnifeReady ? 1 : 0);
+        }
+        return;
+    }
+    const uipointer::V belt{ g_hipKnifeBelt.x, g_hipKnifeBelt.y, g_hipKnifeBelt.z };
+    static bool saidDrew = false, saidProj = false;
+    DrawFlatRingAt(dev, belt, "knife belt marker", saidDrew, saidProj);
 }
 
 // A flat cutscene should read as a cinema screen, not as a full-field texture
@@ -27663,6 +28722,355 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         if (InterlockedCompareExchange(&g_rawTrigger, 0, 0) < 20) g_fireTrigWasDown = false;
     }
 
+    // ---- ammo probe dump: snapshot Pawn.Weapon ints on the trigger edge ----
+    {
+        const LONG trig = InterlockedCompareExchange(&g_rawTrigger, 0, 0);
+        const bool down = trig > 40;
+        const uintptr_t wobj = (uintptr_t)(uint32_t)InterlockedCompareExchange(&g_weaponObj, 0, 0);
+        const bool latched = InterlockedCompareExchange(&g_gunVerts, 0, 0) != 0;
+        if (ammoprobe::ShouldDump(down, g_ammoProbeWasDown, g_ammoProbeLeft, latched, wobj)) {
+            --g_ammoProbeLeft;
+            g_ammoProbeWasDown = true;
+            if (!g_ammoProbeHave || wobj != g_ammoProbeObj) {
+                g_ammoProbeObj = wobj;
+                g_ammoProbeHave = true;
+                for (int i = 0; i < ammoprobe::kSlots; ++i) {
+                    const void* p = (const void*)(wobj + (uintptr_t)(i * 4));
+                    g_ammoProbePrev[i] = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                        : ammoprobe::kUnreadable;
+                }
+                char line[32 * 12 + 64];
+                for (int c = 0; c < ammoprobe::kSlots / 32; ++c) {
+                    int n = _snprintf_s(line, sizeof(line), _TRUNCATE,
+                                        "ammo probe: base obj=%p [%03x..%03x]=",
+                                        (void*)wobj, c * 32 * 4, (c * 32 + 31) * 4 + 3);
+                    for (int k = 0; k < 32 && n > 0; ++k) {
+                        n += _snprintf_s(line + n, sizeof(line) - n, _TRUNCATE, "%d,",
+                                         g_ammoProbePrev[c * 32 + k]);
+                    }
+                    Log("%s", line);
+                }
+                // Pawn baseline once per session + changed-only diffs after:
+                // reserve candidates live here if not on the weapon. Location
+                // floats wobble every pull (user sway) - the mag shows as
+                // exact -1 steps on a small int, which sway never produces.
+                if (!g_ammoProbePawnDone) {
+                    g_ammoProbePawnDone = true;
+                    const uintptr_t pawn = FindPlayerPawn();
+                    if (pawn) {
+                        g_ammoProbePawnObj = pawn;
+                        for (int c = 0; c < ammoprobe::kPawnSlots / 32; ++c) {
+                            int n = _snprintf_s(line, sizeof(line), _TRUNCATE,
+                                                "ammo probe: pawn obj=%p [%03x..%03x]=",
+                                                (void*)pawn, c * 32 * 4, (c * 32 + 31) * 4 + 3);
+                            for (int k = 0; k < 32 && n > 0; ++k) {
+                                const void* p = (const void*)(pawn + (uintptr_t)((c * 32 + k) * 4));
+                                const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                                 : ammoprobe::kUnreadable;
+                                g_ammoProbePawnPrev[c * 32 + k] = v;
+                                n += _snprintf_s(line + n, sizeof(line) - n, _TRUNCATE, "%d,", v);
+                            }
+                            Log("%s", line);
+                        }
+                    } else {
+                        Log("ammo probe: pawn baseline skipped (no pawn)");
+                    }
+                }
+                Log("ammo probe: BASELINE dumped (%d pulls left)", g_ammoProbeLeft);
+            } else {
+                int shown = 0;
+                for (int i = 0; i < ammoprobe::kSlots; ++i) {
+                    const void* p = (const void*)(wobj + (uintptr_t)(i * 4));
+                    const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                     : ammoprobe::kUnreadable;
+                    if (v != g_ammoProbePrev[i]) {
+                        if (shown < 24)
+                            Log("ammo probe: diff obj=%p off=+0x%03x %d->%d", (void*)wobj,
+                                (unsigned)(i * 4), g_ammoProbePrev[i], v);
+                        ++shown;
+                        g_ammoProbePrev[i] = v;
+                    }
+                }
+                if (shown == 0) Log("ammo probe: diff obj=%p no changes", (void*)wobj);
+                else if (shown > 24) Log("ammo probe: diff obj=%p ... +%d more", (void*)wobj, shown - 24);
+            }
+            if (g_ammoProbeLeft == 0) Log("ammo probe: budget spent");
+            // ---- round 4: UT-pattern firemode object (WeaponFireTypes[0]) ----
+            // Resolved BY NAME per weapon class (never assumed); the dump then
+            // diffs its words exactly like the weapon object. Falsifier: an int
+            // here decrementing once per spaced tap IS the mag counter.
+            {
+                uintptr_t wcls = 0;
+                if (Readable((const void*)(wobj + OBJ_CLASS), sizeof(uintptr_t)))
+                    wcls = *reinterpret_cast<const uintptr_t*>(wobj + OBJ_CLASS);
+                static uintptr_t fmCls = 0;
+                static int fmOff = -2;
+                if (wcls && wcls != fmCls) {
+                    fmCls = wcls;
+                    fmOff = PropOffsetInChain(wcls, "WeaponFireTypes");
+                    char cc[80] = "(none)";
+                    NameOf(wcls, cc, sizeof(cc));
+                    if (fmOff >= 0)
+                        Log("ammo probe: WeaponFireTypes +0x%03X on %s", fmOff, cc);
+                    else
+                        Log("ammo probe: WeaponFireTypes NOT FOUND on %s - fm dump skipped", cc);
+                }
+                uintptr_t fm0 = 0;
+                if (fmOff >= 0 && Readable((const void*)(wobj + fmOff), 12)) {
+                    const uintptr_t arr = *reinterpret_cast<const uintptr_t*>(wobj + fmOff);
+                    const int32_t cnt = *reinterpret_cast<const int32_t*>(wobj + fmOff + 4);
+                    if (arr && cnt > 0 && cnt < 8 && Readable((const void*)arr, sizeof(uintptr_t)))
+                        fm0 = *reinterpret_cast<const uintptr_t*>(arr);
+                }
+                if (!fm0) {
+                    Log("ammo probe: fm array empty/unreadable");
+                } else if (!g_ammoProbeFmHave || fm0 != g_ammoProbeFmObj) {
+                    g_ammoProbeFmObj = fm0;
+                    g_ammoProbeFmHave = true;
+                    char line[32 * 12 + 64];
+                    for (int c = 0; c < 4; ++c) {
+                        int n = _snprintf_s(line, sizeof(line), _TRUNCATE,
+                                            "ammo probe: fm base obj=%p [%03x..%03x]=",
+                                            (void*)fm0, c * 32 * 4, (c * 32 + 31) * 4 + 3);
+                        for (int k = 0; k < 32 && n > 0; ++k) {
+                            const void* p = (const void*)(fm0 + (uintptr_t)((c * 32 + k) * 4));
+                            const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                             : ammoprobe::kUnreadable;
+                            g_ammoProbeFmPrev[c * 32 + k] = v;
+                            n += _snprintf_s(line + n, sizeof(line) - n, _TRUNCATE, "%d,", v);
+                        }
+                        Log("%s", line);
+                    }
+                } else {
+                    int shown = 0;
+                    for (int i = 0; i < 128; ++i) {
+                        const void* p = (const void*)(fm0 + (uintptr_t)(i * 4));
+                        const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                         : ammoprobe::kUnreadable;
+                        if (v != g_ammoProbeFmPrev[i]) {
+                            if (shown < 24)
+                                Log("ammo probe: fm diff obj=%p off=+0x%03x %d->%d", (void*)fm0,
+                                    (unsigned)(i * 4), g_ammoProbeFmPrev[i], v);
+                            ++shown;
+                            g_ammoProbeFmPrev[i] = v;
+                        }
+                    }
+                    if (shown == 0) Log("ammo probe: fm diff obj=%p no changes", (void*)fm0);
+                    else if (shown > 24) Log("ammo probe: fm diff obj=%p ... +%d more", (void*)fm0, shown - 24);
+                }
+            }
+            // ---- round 5: pawn diffs + shots-fired proof ----
+            // Pawn motion (sway) wobbles floats every pull; a mag/reserve int
+            // shows as exact small-int steps, which sway never produces.
+            // mShotCount (resolved BY NAME per weapon class) must climb with
+            // real shots - if it doesn't, the pulls aren't firing at all.
+            {
+                const uintptr_t pawn = FindPlayerPawn();
+                if (pawn && pawn == g_ammoProbePawnObj) {
+                    int shown = 0;
+                    for (int i = 0; i < ammoprobe::kPawnSlots; ++i) {
+                        const void* p = (const void*)(pawn + (uintptr_t)(i * 4));
+                        const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                         : ammoprobe::kUnreadable;
+                        if (v != g_ammoProbePawnPrev[i]) {
+                            if (shown < 24)
+                                Log("ammo probe: pawn diff obj=%p off=+0x%03x %d->%d", (void*)pawn,
+                                    (unsigned)(i * 4), g_ammoProbePawnPrev[i], v);
+                            ++shown;
+                            g_ammoProbePawnPrev[i] = v;
+                        }
+                    }
+                    if (shown == 0) Log("ammo probe: pawn diff obj=%p no changes", (void*)pawn);
+                    else if (shown > 24) Log("ammo probe: pawn diff obj=%p ... +%d more", (void*)pawn, shown - 24);
+                } else if (pawn) {
+                    g_ammoProbePawnObj = pawn;
+                    for (int i = 0; i < ammoprobe::kPawnSlots; ++i) {
+                        const void* p = (const void*)(pawn + (uintptr_t)(i * 4));
+                        g_ammoProbePawnPrev[i] = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                                : ammoprobe::kUnreadable;
+                    }
+                    Log("ammo probe: pawn obj changed, rebaselined (no diff this pull)");
+                }
+                uintptr_t wcls = 0;
+                if (Readable((const void*)(wobj + OBJ_CLASS), sizeof(uintptr_t)))
+                    wcls = *reinterpret_cast<const uintptr_t*>(wobj + OBJ_CLASS);
+                static uintptr_t shotCls = 0;
+                static int shotOff = -2;
+                if (wcls && wcls != shotCls) {
+                    shotCls = wcls;
+                    shotOff = PropOffsetInChain(wcls, "mShotCount");
+                    char cc[80] = "(none)";
+                    NameOf(wcls, cc, sizeof(cc));
+                    Log("ammo probe: mShotCount %+d on %s", shotOff, cc);
+                }
+                if (shotOff >= 0 && Readable((const void*)(wobj + shotOff), 4)) {
+                    Log("ammo probe: shots total=%d", *reinterpret_cast<const int32_t*>(wobj + shotOff));
+                }
+            }
+            // ---- round 7: inventory manager dump (ammo bins trail) ----
+            // Pawn InvManager (dump-named +0x03D0, resolved BY NAME per pawn
+            // class) holds the live manager; ammo pools (mUsesAmmoType bins)
+            // live here or one link down. [0,0x200) baseline+diff, same caps.
+            {
+                const uintptr_t pawn = FindPlayerPawn();
+                uintptr_t pcls = 0;
+                if (pawn && Readable((const void*)(pawn + OBJ_CLASS), sizeof(uintptr_t)))
+                    pcls = *reinterpret_cast<const uintptr_t*>(pawn + OBJ_CLASS);
+                static uintptr_t invCls = 0;
+                static int invOff = -2;
+                if (pcls && pcls != invCls) {
+                    invCls = pcls;
+                    invOff = PropOffsetInChain(pcls, "InvManager");
+                    char cc[80] = "(none)";
+                    NameOf(pcls, cc, sizeof(cc));
+                    Log("ammo probe: InvManager %+d on %s", invOff, cc);
+                }
+                uintptr_t mgr = 0;
+                if (invOff >= 0 && pawn && Readable((const void*)(pawn + invOff), sizeof(uintptr_t)))
+                    mgr = *reinterpret_cast<const uintptr_t*>(pawn + invOff);
+                if (!mgr) {
+                    Log("ammo probe: inv manager null/unreadable");
+                } else if (!g_ammoProbeInvHave || mgr != g_ammoProbeInvObj) {
+                    g_ammoProbeInvObj = mgr;
+                    g_ammoProbeInvHave = true;
+                    char line[32 * 12 + 64];
+                    for (int c = 0; c < 4; ++c) {
+                        int n = _snprintf_s(line, sizeof(line), _TRUNCATE,
+                                            "ammo probe: inv base obj=%p [%03x..%03x]=",
+                                            (void*)mgr, c * 32 * 4, (c * 32 + 31) * 4 + 3);
+                        for (int k = 0; k < 32 && n > 0; ++k) {
+                            const void* p = (const void*)(mgr + (uintptr_t)((c * 32 + k) * 4));
+                            const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                             : ammoprobe::kUnreadable;
+                            g_ammoProbeInvPrev[c * 32 + k] = v;
+                            n += _snprintf_s(line + n, sizeof(line) - n, _TRUNCATE, "%d,", v);
+                        }
+                        Log("%s", line);
+                    }
+                } else {
+                    int shown = 0;
+                    for (int i = 0; i < 128; ++i) {
+                        const void* p = (const void*)(mgr + (uintptr_t)(i * 4));
+                        const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                         : ammoprobe::kUnreadable;
+                        if (v != g_ammoProbeInvPrev[i]) {
+                            if (shown < 24)
+                                Log("ammo probe: inv diff obj=%p off=+0x%03x %d->%d", (void*)mgr,
+                                    (unsigned)(i * 4), g_ammoProbeInvPrev[i], v);
+                            ++shown;
+                            g_ammoProbeInvPrev[i] = v;
+                        }
+                    }
+                    if (shown == 0) Log("ammo probe: inv diff obj=%p no changes", (void*)mgr);
+                    else if (shown > 24) Log("ammo probe: inv diff obj=%p ... +%d more", (void*)mgr, shown - 24);
+                }
+            }
+            // ---- round 8: inventory manager CLASS dump (link names) ----
+            // The manager words don't move with shots; its class vocabulary
+            // names the Inventory link and any ammo pools. One-shot per
+            // manager class, max two, same probe gate.
+            if (g_ammoProbeLeft > 0) {
+                const uintptr_t pawn = FindPlayerPawn();
+                uintptr_t pcls = 0;
+                if (pawn && Readable((const void*)(pawn + OBJ_CLASS), sizeof(uintptr_t)))
+                    pcls = *reinterpret_cast<const uintptr_t*>(pawn + OBJ_CLASS);
+                static uintptr_t invCls = 0;
+                static int invOff = -2;
+                if (pcls && pcls != invCls) {
+                    invCls = pcls;
+                    invOff = PropOffsetInChain(pcls, "InvManager");
+                    char cc[80] = "(none)";
+                    NameOf(pcls, cc, sizeof(cc));
+                    Log("ammo probe: InvManager %+d on %s", invOff, cc);
+                }
+                if (invOff >= 0 && pawn && Readable((const void*)(pawn + invOff), sizeof(uintptr_t))) {
+                    const uintptr_t mgr = *reinterpret_cast<const uintptr_t*>(pawn + invOff);
+                    if (mgr && Readable((const void*)(mgr + OBJ_CLASS), sizeof(uintptr_t))) {
+                        const uintptr_t mcls = *reinterpret_cast<const uintptr_t*>(mgr + OBJ_CLASS);
+                        if (mcls) {
+                            static uintptr_t mdumped[2]{};
+                            static int nMdumped = 0;
+                            bool mknown = false;
+                            for (int i = 0; i < nMdumped; ++i) {
+                                if (mdumped[i] == mcls) { mknown = true; break; }
+                            }
+                            if (!mknown) {
+                                if (nMdumped < 2) mdumped[nMdumped++] = mcls;
+                                char mc[80] = "(none)";
+                                NameOf(mcls, mc, sizeof(mc));
+                                DumpClassProperties(mcls, mc);
+                            }
+                        }
+                    }
+                }
+            }
+            // ---- round 6 (relocated): HUD class dump, now on trigger pulls ----
+            // LogEquippedClass fires only on weapon change (and the HUD may not
+            // exist at the first equip), so the one-shot never ran. Trigger
+            // pulls happen with the HUD alive; still one-shot per HUD class.
+            // Round 8: force the throttled find ONCE (missTick gate would eat
+            // all 8 pulls); the cache serves the rest of the session.
+            if (g_ammoProbeLeft > 0) {
+                static bool hudForced = false;
+                if (!hudForced) {
+                    hudForced = true;
+                    FindHudObject(true);
+                }
+                const uintptr_t hud = FindHudObject();
+                if (hud && Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t))) {
+                    if (const uintptr_t hcls = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS)) {
+                        static uintptr_t hdumped[2]{};
+                        static int nHdumped = 0;
+                        bool hknown = false;
+                        for (int i = 0; i < nHdumped; ++i) {
+                            if (hdumped[i] == hcls) { hknown = true; break; }
+                        }
+                        if (!hknown) {
+                            if (nHdumped < 2) hdumped[nHdumped++] = hcls;
+                            char hc[80] = "(none)";
+                            NameOf(hcls, hc, sizeof(hc));
+                            DumpClassProperties(hcls, hc);
+                        }
+                    }
+                }
+            }
+            // ---- round 9: HUD display cache sample (mag/reserve as shown) ----
+            // mClipAmmo/mBinAmmo/mClipSize are dump-named ints on the HUD
+            // object: the exact numbers the native HUD renders. Resolved BY
+            // NAME per HUD class, cached; sampled per pull. Falsifier: clip
+            // -1 per spaced tap, bin static during fire (moves on pickup).
+            {
+                static uintptr_t hudSampCls = 0;
+                static int offClip = -2, offBin = -2, offSize = -2;
+                const uintptr_t hud = FindHudObject();
+                uintptr_t hc = 0;
+                if (hud && Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t)))
+                    hc = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS);
+                if (hc && hc != hudSampCls) {
+                    hudSampCls = hc;
+                    offClip = PropOffsetInChain(hc, "mClipAmmo");
+                    offBin = PropOffsetInChain(hc, "mBinAmmo");
+                    offSize = PropOffsetInChain(hc, "mClipSize");
+                    char cc[80] = "(none)";
+                    NameOf(hc, cc, sizeof(cc));
+                    Log("ammo probe: HUD cache clip%+d bin%+d size%+d on %s",
+                        offClip, offBin, offSize, cc);
+                }
+                if (offClip >= 0 && offBin >= 0 && hud &&
+                    Readable((const void*)(hud + offClip), 4) &&
+                    Readable((const void*)(hud + offBin), 4)) {
+                    const int32_t clip = *reinterpret_cast<const int32_t*>(hud + offClip);
+                    const int32_t bin = *reinterpret_cast<const int32_t*>(hud + offBin);
+                    int32_t size = -1;
+                    if (offSize >= 0 && Readable((const void*)(hud + offSize), 4))
+                        size = *reinterpret_cast<const int32_t*>(hud + offSize);
+                    Log("ammo probe: hud clip=%d/%d bin=%d", clip, size, bin);
+                }
+            }
+        }
+        if (trig < 20) g_ammoProbeWasDown = false;
+    }
+
     // ---- ⭐ run 222: the ADS constant capture, on the same ALT trigger ----
     //
     // Armed from Present and captured at the draw, because Present is where the trigger state is known
@@ -28599,6 +30007,13 @@ void LoadIniSettings() {
         g_fireCensusBudget ? "record how each small draw during a shot is classified - looking for a"
                              " draw PASSED THROUGH as a fullscreen quad that does not span NDC"
                            : "off");
+    // Ammo probe: snapshot Pawn.Weapon ints on N trigger pulls to find the
+    // mag counter by motion (decrements per shot). Default OFF, auto-expires.
+    g_ammoProbeLeft = GetPrivateProfileIntA("Diagnostic", "AmmoProbe", 0, path);
+    if (g_ammoProbeLeft < 0) g_ammoProbeLeft = 0;
+    if (g_ammoProbeLeft > 12) g_ammoProbeLeft = 12;
+    if (g_ammoProbeLeft > 0)
+        Log("ini: AmmoProbe=%d (dump weapon ints on trigger pulls, then silent)", g_ammoProbeLeft);
 
     // Run 213d: the drop test for the DrawPrimitive path - the validation MuzzleFxDropStride cannot do,
     // because that path has no stride. Set DropPrimCount=2 DropPrimType=5 and scope: if the scope
@@ -29025,6 +30440,20 @@ void LoadIniSettings() {
         }
     }
     Log("health plate: %s (plates root %s)", Rd(g_healthPlate) ? "ENABLED" : "off", g_platesAssetRoot);
+    InterlockedExchange(&g_ammoPlate,
+        GetPrivateProfileIntA("Render", "AmmoPlateEnabled", 0, path) ? 1 : 0);
+    {
+        char ammoRoot[MAX_PATH]{};
+        GetPrivateProfileStringA("Render", "KatorgaAmmoAssetRoot",
+                                 "vr-assets/hud/katorga/ammo", ammoRoot, sizeof(ammoRoot), path);
+        size_t al = strlen(ammoRoot);
+        if (al > 0 && al < sizeof(g_ammoAssetRoot)) {
+            memcpy(g_ammoAssetRoot, ammoRoot, al + 1);
+            for (size_t i = 0; i < al; ++i)
+                if (g_ammoAssetRoot[i] == '/') g_ammoAssetRoot[i] = '\\';
+        }
+    }
+    Log("ammo plate: %s (ammo root %s)", Rd(g_ammoPlate) ? "ENABLED" : "off", g_ammoAssetRoot);
     Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld, scene trace=%ld",
         Rd(g_wristHealth),Rd(g_renderEvidence),Rd(g_sceneModeTrace));
     Log("cutscene presentation: %s, cinema matte=%s (VR panel rows)",
@@ -29032,15 +30461,40 @@ void LoadIniSettings() {
         Rd(g_sceneCinemaMask) ? "ON" : "OFF");
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
     g_holsterEnabled = GetPrivateProfileIntA("Input", "HolsterEnabled", 1, path) ? 1 : 0;
-    g_holsterConfig.fwd = (float)IniSignedInt("Input", "HolsterFwd", 8, path);
-    g_holsterConfig.right = (float)IniSignedInt("Input", "HolsterRight", 12, path);
-    g_holsterConfig.up = (float)IniSignedInt("Input", "HolsterUp", -30, path);
+    // MAIN 2026-10-15: hip lower and further out (pelvis level, clear of the
+    // torso) per user; installed INIs pinning older values need the same
+    // three lines updated (see STATUS handoff).
+    g_holsterConfig.fwd = (float)IniSignedInt("Input", "HolsterFwd", 6, path);
+    g_holsterConfig.right = (float)IniSignedInt("Input", "HolsterRight", 18, path);
+    g_holsterConfig.up = (float)IniSignedInt("Input", "HolsterUp", -36, path);
+    // MAIN round 16: trigger-only trim, centimetres in body frame (fwd/right/up).
+    // Default 0 = trigger exactly at the drawn ring. Clamped to +/-30 cm.
+    g_holsterTrimFcm = std::max(-30.f,std::min(30.f,(float)IniSignedInt("Input","HolsterTrimFwdCm",0,path)));
+    g_holsterTrimRcm = std::max(-30.f,std::min(30.f,(float)IniSignedInt("Input","HolsterTrimRightCm",0,path)));
+    g_holsterTrimUcm = std::max(-30.f,std::min(30.f,(float)IniSignedInt("Input","HolsterTrimUpCm",0,path)));
+    Log("ini: HolsterTrimCm fwd=%.0f right=%.0f up=%.0f (trigger-only, 0=at ring)",
+        (double)g_holsterTrimFcm,(double)g_holsterTrimRcm,(double)g_holsterTrimUcm);
+    g_hipKnifeEnabled=GetPrivateProfileIntA("Input","HipKnifeEnabled",0,path)?1:0;
+    g_hipKnifeIgnoreTMD=GetPrivateProfileIntA("Input","HipKnifeIgnoreTMD",1,path)?1:0;
+    Log("ini: HipKnifeIgnoreTMD=%d (0=trust engine mTMD, 1=force pre-TMD both-hands rule)",g_hipKnifeIgnoreTMD);
+    g_hipKnifeConfig.left=std::max(.10f,std::min(.50f,IniSignedInt("Input","HipKnifeLeftCm",25,path)*.01f));
+    g_hipKnifeConfig.down=std::max(.20f,std::min(.90f,IniSignedInt("Input","HipKnifeDownCm",50,path)*.01f));
+    g_hipKnifeConfig.forward=std::max(-.20f,std::min(.30f,IniSignedInt("Input","HipKnifeForwardCm",6,path)*.01f));
+    g_hipKnifeConfig.radius=std::max(.08f,std::min(.50f,IniSignedInt("Input","HipKnifeRadiusCm",28,path)*.01f));
+    const int gw = (int)IniSignedInt("Input","HipKnifeGrabWindowMs",800,path);
+    g_hipKnifeConfig.grabWindowMs = (std::uint64_t)(gw < 0 ? 0 : (gw > 2000 ? 2000 : gw));
+    Log("ini: HipKnifeRadiusCm=%.0f HipKnifeGrabWindowMs=%u (r21: wider squeeze-while-reaching pickup)",
+        (double)(g_hipKnifeConfig.radius*100.f),(unsigned)g_hipKnifeConfig.grabWindowMs);
+    Log("ini: HipKnifeEnabled=%d (default OFF, restart required; pre-TMD both hands, post-TMD right hand only, native camera trace)",g_hipKnifeEnabled);
     g_holsterConfig.radius = (float)IniSignedInt("Input", "HolsterRadius", 12, path);
     if (g_holsterConfig.radius < 2.0f) g_holsterConfig.radius = 2.0f;
     if (g_holsterConfig.radius > 48.0f) g_holsterConfig.radius = 48.0f;
-    Log("weapon holster=%d; hip fwd/right/up=(%.0f,%.0f,%.0f) UU radius=%.0f UU; right grip rising edge toggles",
+    g_holsterConfig.drawRadius = (float)IniSignedInt("Input", "HolsterDrawRadius", 32, path);
+    if (g_holsterConfig.drawRadius < g_holsterConfig.radius) g_holsterConfig.drawRadius = g_holsterConfig.radius;
+    if (g_holsterConfig.drawRadius > 60.0f) g_holsterConfig.drawRadius = 60.0f;
+    Log("weapon holster=%d; hip fwd/right/up=(%.0f,%.0f,%.0f) UU radius=%.0f UU drawRadius=%.0f UU; right grip rising edge toggles",
         g_holsterEnabled, g_holsterConfig.fwd, g_holsterConfig.right,
-        g_holsterConfig.up, g_holsterConfig.radius);
+        g_holsterConfig.up, g_holsterConfig.radius, g_holsterConfig.drawRadius);
     g_weaponWheelSlots = GetPrivateProfileIntA("Input", "WeaponWheelSlots", 4, path);
     if (g_weaponWheelSlots < 2) g_weaponWheelSlots = 2;
     if (g_weaponWheelSlots > 8) g_weaponWheelSlots = 8;
