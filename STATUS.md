@@ -1,5 +1,24 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 8 DEPLOYED (DLL
+59598E6D3E0BDCBAFCBF6351DE7F5515935BA2C7525A9D4CA0A505D91F3ACD1B/source
+97574db branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-182559; game closed
+at deploy; user-supplied digit-free plates installed (old baked PNGs backed
+to deployment/install-backups/20261015-180725/plate-*.baked.png); glove v2
+pack + GloveRendererEnabled=1 retained). Changes per annotated screenshot:
+(1) baked-digit covers REMOVED from DrawAmmoPlate — clean art needs nothing
+covered except the empty-mag info (red box hidden iff clip>2; white mag,
+icons, frames, labels never touched); cover helpers stay for L1 only;
+(2) holster ring is now HORIZONTAL (flat to floor/ceiling): outer 0.1127m /
+inner 0.0877m (diameter +1 inch, rim 5cm->2.5cm), XR x/z plane at hip height,
+yaw-invariant; (3) side native-material glove variant NOT merged — side
+worktree still holds uncommitted WIP (glove_native.h, prepare_native_hands.py,
+native tests; origin still ea86587), per policy MAIN waits for their pushed
+green L1/L2. L1_PASS (layout). L2_PASS (PE32, manifest commit 97574db clean).
+L3/physical PENDING: clean plates (digits on empty cells, red iff <=2),
+flat ring at hip with gun held, gloves v2. No fix claimed.
+
 LATEST 2026-10-15 MAIN round 7 DEPLOYED (DLL
 96F5947BDE7299734FD719EA0A753B8C46B3D77FBAC3006E7655D224B5ACC50B/source
 99b2546 branch plates-l3-main, x86 PE32 /O2, built==installed via
