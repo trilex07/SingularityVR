@@ -88,6 +88,9 @@ remaining-voices/out/**/*.wav
 remaining-voices/_refs/
 _work_u/
 
+# ---- enemy upscale batch (side/enemy-upscale-batch): pipeline scratch ----
+work/
+
 # Local game-derived knife exports/cache; never distribute game assets in Git.
 /build/knife/
 /vr-assets/knife/
