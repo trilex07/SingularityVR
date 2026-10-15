@@ -18,7 +18,15 @@ Reference art (`vr-mods/references/`):
 volatile words are flags/timers/coords/event latches. Static small ints
 (3/4/20/30/...) never move. Falsifier for round 2 stands: enumerate NAMES.
 
-## RE round 6: HUD display cache (this change)
+## RE round 7: InvManager trail + HUD relocation (this change)
+
+Pawn +0x114 climbs with trigger pulls (+3,+3,+3,+5,+1,+1 ≈ burst lengths;
+total 3→22) — the shot clock; mShotCount=1 means first-shot-latch semantics,
+not totals. Mag still absent everywhere sampled. New: `InvManager` (+0x03D0,
+dump-named, resolved BY NAME per pawn class) dumped [0,0x200) baseline+diff;
+HUD class dump moved from equip (never fired: same gun + HUD-absent-at-load)
+into the trigger block. Falsifier: manager/bin ints stepping against the
++0x114 clock (mag down on fire, reserve on pickup).
 
 Native HUD renders ammo, so its object may cache displayed mag/reserve in
 NAMED fields. Same one-shot pattern in LogEquippedClass (max 2 HUD classes,

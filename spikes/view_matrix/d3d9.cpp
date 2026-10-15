@@ -1934,6 +1934,8 @@ WantedName g_wantNames[] = {
     // Ammo probe round 4: UT-pattern firemode object (WeaponFireTypes[0])
     // carries the live counters. Resolved per weapon class, never assumed.
     { "WeaponFireTypes", -1 },
+    // Ammo probe round 7: pawn InvManager (live manager object).
+    { "InvManager", -1 },
     // Ammo probe round 5: shots-fired counter (fire proof per pull) and the
     // pawn baseline below needs no new names.
     { "mShotCount", -1 },
@@ -2340,6 +2342,10 @@ static int32_t g_ammoProbePawnPrev[512]{};
 static uintptr_t g_ammoProbeFmObj = 0;
 static int32_t g_ammoProbeFmPrev[128]{};
 static bool g_ammoProbeFmHave = false;
+// Round 7: inventory manager snapshot (ammo bins trail).
+static uintptr_t g_ammoProbeInvObj = 0;
+static int32_t g_ammoProbeInvPrev[128]{};
+static bool g_ammoProbeInvHave = false;
 
 static uintptr_t FindHudObject(); // defined near the HUD readers below
 static void LogEquippedClass(uintptr_t w) {
@@ -2382,30 +2388,8 @@ static void LogEquippedClass(uintptr_t w) {
             }
         }
     }
-    // ---- ammo probe round 6: HUD class dump (display-value cache?) ----
-    // The native HUD renders ammo ("21" on screen), so its object may cache
-    // the displayed mag/reserve in named fields. One-shot per HUD class, max
-    // two, gated by the same probe flag (plain read: input thread owns it).
-    // Offline: read the names, then sample the winners per pull like mShotCount.
-    if (g_ammoProbeLeft > 0) {
-        const uintptr_t hud = FindHudObject();
-        if (hud && Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t))) {
-            if (const uintptr_t hcls = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS)) {
-                static uintptr_t hdumped[2]{};
-                static int nHdumped = 0;
-                bool hknown = false;
-                for (int i = 0; i < nHdumped; ++i) {
-                    if (hdumped[i] == hcls) { hknown = true; break; }
-                }
-                if (!hknown) {
-                    if (nHdumped < 2) hdumped[nHdumped++] = hcls;
-                    char hc[80] = "(none)";
-                    NameOf(hcls, hc, sizeof(hc));
-                    DumpClassProperties(hcls, hc);
-                }
-            }
-        }
-    }
+    // (Round-6 HUD dump moved to the trigger block below: this runs only on
+    // weapon change, and the HUD may not exist at the first equip.)
 }
 
 static void RefreshArmedState() {
@@ -27916,6 +27900,87 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 }
                 if (shotOff >= 0 && Readable((const void*)(wobj + shotOff), 4)) {
                     Log("ammo probe: shots total=%d", *reinterpret_cast<const int32_t*>(wobj + shotOff));
+                }
+            }
+            // ---- round 7: inventory manager dump (ammo bins trail) ----
+            // Pawn InvManager (dump-named +0x03D0, resolved BY NAME per pawn
+            // class) holds the live manager; ammo pools (mUsesAmmoType bins)
+            // live here or one link down. [0,0x200) baseline+diff, same caps.
+            {
+                const uintptr_t pawn = FindPlayerPawn();
+                uintptr_t pcls = 0;
+                if (pawn && Readable((const void*)(pawn + OBJ_CLASS), sizeof(uintptr_t)))
+                    pcls = *reinterpret_cast<const uintptr_t*>(pawn + OBJ_CLASS);
+                static uintptr_t invCls = 0;
+                static int invOff = -2;
+                if (pcls && pcls != invCls) {
+                    invCls = pcls;
+                    invOff = PropOffsetInChain(pcls, "InvManager");
+                    char cc[80] = "(none)";
+                    NameOf(pcls, cc, sizeof(cc));
+                    Log("ammo probe: InvManager %+d on %s", invOff, cc);
+                }
+                uintptr_t mgr = 0;
+                if (invOff >= 0 && pawn && Readable((const void*)(pawn + invOff), sizeof(uintptr_t)))
+                    mgr = *reinterpret_cast<const uintptr_t*>(pawn + invOff);
+                if (!mgr) {
+                    Log("ammo probe: inv manager null/unreadable");
+                } else if (!g_ammoProbeInvHave || mgr != g_ammoProbeInvObj) {
+                    g_ammoProbeInvObj = mgr;
+                    g_ammoProbeInvHave = true;
+                    char line[32 * 12 + 64];
+                    for (int c = 0; c < 4; ++c) {
+                        int n = _snprintf_s(line, sizeof(line), _TRUNCATE,
+                                            "ammo probe: inv base obj=%p [%03x..%03x]=",
+                                            (void*)mgr, c * 32 * 4, (c * 32 + 31) * 4 + 3);
+                        for (int k = 0; k < 32 && n > 0; ++k) {
+                            const void* p = (const void*)(mgr + (uintptr_t)((c * 32 + k) * 4));
+                            const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                             : ammoprobe::kUnreadable;
+                            g_ammoProbeInvPrev[c * 32 + k] = v;
+                            n += _snprintf_s(line + n, sizeof(line) - n, _TRUNCATE, "%d,", v);
+                        }
+                        Log("%s", line);
+                    }
+                } else {
+                    int shown = 0;
+                    for (int i = 0; i < 128; ++i) {
+                        const void* p = (const void*)(mgr + (uintptr_t)(i * 4));
+                        const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                         : ammoprobe::kUnreadable;
+                        if (v != g_ammoProbeInvPrev[i]) {
+                            if (shown < 24)
+                                Log("ammo probe: inv diff obj=%p off=+0x%03x %d->%d", (void*)mgr,
+                                    (unsigned)(i * 4), g_ammoProbeInvPrev[i], v);
+                            ++shown;
+                            g_ammoProbeInvPrev[i] = v;
+                        }
+                    }
+                    if (shown == 0) Log("ammo probe: inv diff obj=%p no changes", (void*)mgr);
+                    else if (shown > 24) Log("ammo probe: inv diff obj=%p ... +%d more", (void*)mgr, shown - 24);
+                }
+            }
+            // ---- round 6 (relocated): HUD class dump, now on trigger pulls ----
+            // LogEquippedClass fires only on weapon change (and the HUD may not
+            // exist at the first equip), so the one-shot never ran. Trigger
+            // pulls happen with the HUD alive; still one-shot per HUD class.
+            if (g_ammoProbeLeft > 0) {
+                const uintptr_t hud = FindHudObject();
+                if (hud && Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t))) {
+                    if (const uintptr_t hcls = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS)) {
+                        static uintptr_t hdumped[2]{};
+                        static int nHdumped = 0;
+                        bool hknown = false;
+                        for (int i = 0; i < nHdumped; ++i) {
+                            if (hdumped[i] == hcls) { hknown = true; break; }
+                        }
+                        if (!hknown) {
+                            if (nHdumped < 2) hdumped[nHdumped++] = hcls;
+                            char hc[80] = "(none)";
+                            NameOf(hcls, hc, sizeof(hc));
+                            DumpClassProperties(hcls, hc);
+                        }
+                    }
                 }
             }
         }
