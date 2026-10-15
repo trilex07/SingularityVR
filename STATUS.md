@@ -93,6 +93,14 @@ verified). EA9EFFB1 retained as fallback. New branch fix/hud-3d-textures from
 origin/main for HUD assets + TEXTURES row. TV round closed; no rollback. Prior
 history below (merged).
 
+LATEST 2026-10-15 health-bar ART + GESTURE on feature/health-bar-glove (new
+worktree from origin/main; PR branch fix/hud-3d-textures untouched). Plates
+atlas installed (Steam-only data): 512x256 PNG + plates.json (3 rects, sha
+verified), 11 segment slots per mockup measurement. L1: 18-check gesture
+suite PASS (face-raise 40/55 cm hysteresis, 11-seg mapping, unknown->-1).
+Runtime (sampling/visibility/draw + L2 + L3) is next, behind
+[Render] HealthBarEnabled=0. See docs/health-bar-glove.md. Prior history.
+
 LATEST 2026-10-14 visible-region mirror DEPLOYED (cbb4509/6F4BBEF2, 21/21
 fixture, clean): eye aspect-fit into the on-monitor part of the window
 (expected dst 430,0,1489,1080 for the observed placement). Backup
