@@ -1,5 +1,10 @@
 # PR #30 follow-up — native glove/wrist cut and scale
 
+**Superseded for appearance:** the next physical review accepted size but
+rejected material and cuff. See `glove-native-draw.md`: new opt-in original
+UE3 draw path, not another diffuse-only GLB approximation. Historical hashes
+below identify the rejected appearance candidate and are not the new pack.
+
 User feedback: new gloves function, but must look and be sized like native hands
 holding the gun, including the short visible wrist/cuff, not gloves cut off alone.
 This reopens appearance/size acceptance; it does not accept all of PR #30.

@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 SIDE PR #30: user ACCEPTS SIZE, rejects GLB material/cuff.
+New default-OFF GloveNativeEnabled uses the original UE3 VB/UV/material/shaders
+and real rig, not a replacement diffuse renderer. Original short forearm cut
+plus closed cap: 3694 original +98 cap triangles, one native draw/eye; same
+native scale chain. Per-hand finger poses use real bind hierarchy. Held gun,
+TMD, world/shadow/menu/cine excluded. L1_PASS: native pose/IB guard/malformed
+data/101 analog levels, original hand regressions, source topology + axial rays.
+Full runtime appearance remains UNVERIFIED. ZERO Steam. See
+docs/glove-native-draw.md; previous native-match GLB appearance is rejected.
+
 LATEST 2026-10-15 SIDE PR #30 REOPENED by physical feedback: functional
 gloves, but size/appearance rejected; user requires the SAME native hand cut,
 including wrist/cuff behind glove. New candidate uses shared accepted 48 face
