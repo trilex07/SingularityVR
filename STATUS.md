@@ -1,5 +1,25 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 13 DEPLOYED (DLL
+391B44BB4CF6B6CAAD922E166159CA13E3DD3B89766A8EE345E7476E0A366EEE/source
+e181aa1 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-195400; game closed
+at deploy; knife.svrk + native gloves + INI flags retained). Why: round 12
+(d39bb27, built 546DDAA9 but NEVER deployed — agent stalled during build)
+subtracted 4 UU from the holster trigger Z based on 10x STORED edge contacts
+(mean hand ~5 UU above hip); those are approach-direction edge hits inside
+radius 12, not a calibration bias, and -4 moved the trigger AWAY from the
+approaching hand. Round 13 reverts to trigger==ring==stored-gun point
+(HolsterHipWorld TRUE) and enriches the refusal probe with offTMD/offHP/
+tmd/hp/impIdx/impMask so post-TMD (by design pre-TMD only) vs unknown offsets
+vs dead can be told apart in ONE log line. Log evidence: mTMD NON-NULL seen
+earlier plus last refusal alive=0 nativeKnife=0 strongly suggests the user is
+testing post-TMD, where the knife is correctly hidden. L1_PASS (hip-knife
+147). L2_PASS (PE32 0x014C/0x010B, manifest commit e181aa1 clean). L3/physical
+PENDING (pre-TMD save ONLY): belt ring at left hip, grip at ring picks up,
+new refusal line names the blocker with raw values; store gun AT the gun
+ring (no behind/above offset). No fix claimed.
+
 LATEST 2026-10-15 MAIN round 11 DEPLOYED (DLL
 00522E118FC59B5F0F6175D5934C2CD42583D3E3F6AA30AA069DE2282AFD835D/source
 05e0042 branch plates-l3-main, x86 PE32 /O2, built==installed via
