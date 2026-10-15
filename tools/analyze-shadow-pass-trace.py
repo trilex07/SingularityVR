@@ -9,6 +9,11 @@ import re
 import struct
 from pathlib import Path
 
+def fnv1a(raw):
+    value=14695981039346656037
+    for byte in raw:value=((value^byte)*1099511628211)&0xffffffffffffffff
+    return f'{value:016X}'
+
 
 def ctab_registers(raw):
     """Read bounded SM3 CTAB comment metadata, never infer register ownership."""
@@ -132,6 +137,7 @@ def read_trace(path, shader_out=None):
             shaders[match[1]] = {
                 "stage": match[2], "sha256": digest,
                 "words": len(words), "strings": sorted({s[:-1].decode() for s in names}),
+                "fnv1a64": fnv1a(raw), "bytes": len(raw),
                 "parameter_registers": ctab_registers(raw),
             }
     edges = []
@@ -159,6 +165,8 @@ def read_trace(path, shader_out=None):
         "path": str(Path(path).resolve()), "draws": int(header[1]),
         "group_count": int(header[2]), "overflow": int(header[3]),
         "complete_budget": int(header[3]) == 0, "shaders": shaders,
+        "shader_budget_overflow": text.count('shader-budget-overflow '),
+        "shader_unavailable": text.count('shader-unavailable '),
         "groups": groups, "candidate_edges": edges, "copies": copies, "clears": clears,"events":events,"map_pixels":map_pixels,
     }
 
