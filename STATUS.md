@@ -1,5 +1,26 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 18 DEPLOYED (DLL
+D2E2ACD1E13298CEBB79F83BDB455A98BAD47874702B8924B6D2D706B67E04FD/source
+5baaf5a branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-203638; game closed
+at deploy). Why: r17 log (session 20:30, `build r17` marker) names the knife
+render blocker: gameplay mask `vis=1 play=1 stereo=0` — input Context TRUE and
+visible, but render gated on g_stereo, the F12 alternate-eye DEBUG method that
+SetVrMode/F1 deliberately clear. Zero `draw=` in the whole log history proves
+the mesh NEVER rendered in normal play (side's L1/L2 never covered pixels).
+Fix: render gates on Rd(g_dupDraws) (TRUE stereo, same signal as the belt
+ring). Same session's silent lines (postTMD=1, near=LEFT+grip=RIGHT or fresh
+left squeezes) confirm pickup logic behaves per the requested right-only rule.
+Plus user trim applied to INSTALLED INI (pre-edit backup
+deployment/install-backups/20261015-203644/SingularityVR.ini.pre-trim):
+HolsterTrimFwdCm=-2 (toward camera = back), HolsterTrimRightCm=-3 (left),
+HolsterTrimUpCm=-2 (down); mapping stated so sign flips are one edit away.
+L1_PASS (159). L2_PASS (PE32, manifest 5baaf5a clean). L3/physical PENDING:
+restart game (new `build r18` marker), docked knife should render at left
+belt; store should fire at the ring; knife = empty right hand + squeeze AT
+belt. No fix claimed.
+
 LATEST 2026-10-15 MAIN round 17 DEPLOYED (DLL
 B94033554E1E8E6D77D2069AB7B2C6FD9BF0F40EE2CEA46F3667AA6B5A4B3C71/source
 8cb58ca branch plates-l3-main, x86 PE32 /O2, built==installed via
