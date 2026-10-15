@@ -15,6 +15,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "weapon_wheel_direct_select.h"
 #include "weapon_wheel_catalog_load.h"
 #include "weapon_wheel_atlas.h"
+#include "weapon_wheel_layout.h"
 #include <wincodec.h>
 #include "grip_latch.h"
 #include "glove_isolate.h"
@@ -2205,6 +2206,10 @@ volatile LONG g_wwCatalogState = 0;   // 0 unloaded, 1 ready, -1 failed (logged 
 volatile LONG g_wwTargetVerts = 0;
 volatile LONG g_wwExpecting = 0;
 volatile LONG g_katorgaHud = 0;
+// Round wheel layout (reference mockup: ring + wedge sectors + catalog labels).
+// Default OFF: the square-card path below is untouched. Gates visuals only;
+// input/commit FSM in SyncXRInput is identical in both modes.
+volatile LONG g_wwRound = 0;
 static wheel_catalog::Catalog g_wwCatalog;
 static char g_katorgaAssetRoot[MAX_PATH] = "vr-assets/hud/katorga/3d";
 // Katorga icon atlas (render thread only: created lazily at first wheel draw,
@@ -2217,7 +2222,7 @@ static volatile LONG g_hudAtlasState = 0;   // 0 unloaded, 1 ready, -1 failed (l
 // thread, so no torn-vector concerns across threads.
 static void MaybeLoadWheelCatalog() {
     if (InterlockedCompareExchange(&g_wwCatalogState, 0, 0) != 0) return;
-    if (!Rd(g_wwDirectSelect) && !Rd(g_katorgaHud)) return;
+    if (!Rd(g_wwDirectSelect) && !Rd(g_katorgaHud) && !Rd(g_wwRound)) return;
     static char buf[65536];
     size_t got = 0;
     char dll[MAX_PATH]{};
@@ -8970,9 +8975,11 @@ bool InitXRInput() {
                 GetPrivateProfileIntA("Input", "AutoPadStillFrames", 600, path);
             InterlockedExchange(&g_recenterChordEnabled,
                 GetPrivateProfileIntA("Input", "RecenterChord", 0, path) ? 1 : 0);
-            // Direct-select wheel + Katorga HUD pack: all default OFF/paths.
+            // Direct-select wheel + Katorga HUD pack + round layout: all default OFF.
             InterlockedExchange(&g_wwDirectSelect,
                 GetPrivateProfileIntA("Input", "WeaponWheelDirectSelect", 0, path) ? 1 : 0);
+            InterlockedExchange(&g_wwRound,
+                GetPrivateProfileIntA("Input", "WeaponWheelRound", 0, path) ? 1 : 0);
             InterlockedExchange(&g_wwPickSource,
                 GetPrivateProfileIntA("Input", "WeaponWheelPickSource", 1, path));
             InterlockedExchange(&g_katorgaHud,
@@ -24688,6 +24695,11 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     const int slots = weaponwheel::ClampSlots((int)g_weaponWheelSlots);
     const int selected = std::max(0, std::min(slots - 1,
         (int)InterlockedCompareExchange(&g_weaponWheelSelection, 0, 0)));
+    const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+    const bool haveCatalog = InterlockedCompareExchange(&g_wwCatalogState, 0, 0) == 1 &&
+        !g_wwCatalog.sectors.empty();
+    // Round layout needs DrawPrimitiveUP; without it fall back to squares.
+    const bool roundOn = Rd(g_wwRound) && g_origDrawPrimUP != nullptr;
     // Katorga icon path: every drawn slot resolves an atlas icon, else the
     // whole frame falls back to squares (never a mix, never a hole).
     const hud_atlas::Rect* slotIcons[8]{};
@@ -24699,12 +24711,30 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
         for (int i = 0; i < slots && i < 8; ++i) {
             const char* iconId = (i < (int)g_wwCatalog.sectors.size())
                 ? g_wwCatalog.sectors[i].atlas.c_str() : nullptr;
+            if (i == 0 && heldVerts > 0) {
+                // Slot 0 is the no-op "current" sector: show the held weapon's
+                // icon so the top wedge reads as what is equipped. FSM untouched.
+                for (size_t j = 0; j < g_wwCatalog.sectors.size(); ++j) {
+                    const wheel_catalog::Sector& s = g_wwCatalog.sectors[j];
+                    if (s.verts == heldVerts && !s.atlas.empty()) { iconId = s.atlas.c_str(); break; }
+                }
+            }
             slotIcons[i] = hud_atlas::Find(g_hudAtlas, iconId);
             if (!slotIcons[i]) { katorgaIcons = false; break; }
         }
     }
+    // Display labels parallel to slotIcons (catalog label_pl, may be empty).
+    const char* slotLabels[8]{};
+    long slotVerts[8]{};
+    if (haveCatalog) {
+        for (int i = 0; i < slots && i < 8 && i < (int)g_wwCatalog.sectors.size(); ++i) {
+            slotLabels[i] = g_wwCatalog.sectors[i].label.c_str();
+            slotVerts[i] = g_wwCatalog.sectors[i].verts;
+        }
+    }
     struct HudIconVtx { float x, y, z, rhw; DWORD c; float u, v; };
-    if (katorgaIcons) {
+    struct WwVtx { float x, y, z, rhw; DWORD c; };
+    if (katorgaIcons && !roundOn) {
         dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
         dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
         dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
@@ -24725,6 +24755,144 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
         if (!VrUiProjectEye(eye, hand, p)) continue;
         const int cx = (int)lroundf((eye + p.u) * d.Width * 0.5f);
         const int cy = (int)lroundf(p.v * d.Height);
+        if (roundOn) {
+            // Round layout (reference mockup): wedge sectors + outer ring +
+            // centre disc, icons at mid-radius, catalog labels near the rim.
+            // Input/commit FSM is untouched; ammo is not drawn (AMMO_UNKNOWN).
+            const wheel_layout::Metrics m = wheel_layout::RoundMetrics((int)d.Height);
+            const float fx = (float)cx, fy = (float)cy;
+            dev->SetTexture(0, nullptr);
+            dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+            dev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+            dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+            dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+            const DWORD wedgeIdle = 0xB0142A40, wedgeSel = 0xF0FF8C1A;
+            const DWORD ringCol = 0xFF2FB9D8, ringSel = 0xFFFFA726;
+            for (int i = 0; i < slots; ++i) {
+                float a0 = 0, a1 = 0;
+                wheel_layout::WedgeBounds(i, slots, 0.10f, a0, a1);
+                const DWORD wc = (i == selected) ? wedgeSel : wedgeIdle;
+                WwVtx v[2 + 6 + 1];
+                v[0].x = fx; v[0].y = fy; v[0].z = 0; v[0].rhw = 1; v[0].c = wc;
+                for (int k = 0; k <= m.wedgeSteps; ++k) {
+                    const float c = a0 + (a1 - a0) * (float)k / (float)m.wedgeSteps;
+                    float x = 0, y = 0;
+                    wheel_layout::WedgePoint(fx, fy, (float)m.outerR, c, x, y);
+                    v[1 + k].x = x; v[1 + k].y = y;
+                    v[1 + k].z = 0; v[1 + k].rhw = 1; v[1 + k].c = wc;
+                }
+                g_origDrawPrimUP(dev, D3DPT_TRIANGLEFAN, (UINT)m.wedgeSteps,
+                                 v, sizeof(WwVtx));
+            }
+            // Outer ring + orange arc over the selected wedge.
+            WwVtx ring[65];
+            for (int k = 0; k <= m.ringSteps; ++k) {
+                const float c = 2.0f * pi * (float)k / (float)m.ringSteps;
+                float x = 0, y = 0;
+                wheel_layout::WedgePoint(fx, fy, (float)m.outerR + 3.0f, c, x, y);
+                ring[k].x = x; ring[k].y = y;
+                ring[k].z = 0; ring[k].rhw = 1; ring[k].c = ringCol;
+            }
+            g_origDrawPrimUP(dev, D3DPT_LINESTRIP, (UINT)m.ringSteps, ring, sizeof(WwVtx));
+            {
+                float a0 = 0, a1 = 0;
+                wheel_layout::WedgeBounds(selected, slots, 0.10f, a0, a1);
+                WwVtx arc[2 + 6 + 1];
+                for (int k = 0; k <= m.wedgeSteps; ++k) {
+                    const float c = a0 + (a1 - a0) * (float)k / (float)m.wedgeSteps;
+                    float x = 0, y = 0;
+                    wheel_layout::WedgePoint(fx, fy, (float)m.outerR + 3.0f, c, x, y);
+                    arc[k].x = x; arc[k].y = y;
+                    arc[k].z = 0; arc[k].rhw = 1; arc[k].c = ringSel;
+                }
+                g_origDrawPrimUP(dev, D3DPT_LINESTRIP, (UINT)m.wedgeSteps, arc, sizeof(WwVtx));
+            }
+            // Centre disc + SELECT / WEAPON caption.
+            {
+                const int segs = 24;
+                WwVtx disc[2 + 24 + 1];
+                disc[0].x = fx; disc[0].y = fy;
+                disc[0].z = 0; disc[0].rhw = 1; disc[0].c = 0xE0121A22;
+                for (int k = 0; k <= segs; ++k) {
+                    const float c = 2.0f * pi * (float)k / (float)segs;
+                    float x = 0, y = 0;
+                    wheel_layout::WedgePoint(fx, fy, (float)m.innerR, c, x, y);
+                    disc[1 + k].x = x; disc[1 + k].y = y;
+                    disc[1 + k].z = 0; disc[1 + k].rhw = 1; disc[1 + k].c = 0xE0121A22;
+                }
+                g_origDrawPrimUP(dev, D3DPT_TRIANGLEFAN, (UINT)segs, disc, sizeof(WwVtx));
+                D3DRECT text[256];
+                const int lh = (kGlyphH + 2) * m.textPx;
+                const char* lines[2] = { "SELECT", "WEAPON" };
+                for (int li = 0; li < 2; ++li) {
+                    const int tw = (int)strlen(lines[li]) * (kGlyphW + 1) * m.textPx;
+                    const int y0 = (li == 0) ? cy - lh - 1 : cy + 1;
+                    const int n = TextRects(text, 0, (int)(sizeof(text) / sizeof(text[0])),
+                                             cx - tw / 2, y0, m.textPx, lines[li]);
+                    ClearRects(dev, text, n, 0xFFE8F4FF);
+                }
+            }
+            // Icons at mid-radius (slot 0 already shows the held weapon).
+            if (katorgaIcons) {
+                dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+                dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+                dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+                dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+                dev->SetTexture(0, g_hudAtlasTex);
+                dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+                for (int i = 0; i < slots && i < 8 && slotIcons[i]; ++i) {
+                    const float c = wheel_layout::SectorCenter(i, slots);
+                    float ix = 0, iy = 0;
+                    wheel_layout::WedgePoint(fx, fy, (float)m.iconR, c, ix, iy);
+                    const hud_atlas::Rect* ir = slotIcons[i];
+                    const float u0 = (float)ir->x / (float)g_hudAtlas.width;
+                    const float v0 = (float)ir->y / (float)g_hudAtlas.height;
+                    const float du = (float)ir->w / (float)g_hudAtlas.width;
+                    const float dv = (float)ir->h / (float)g_hudAtlas.height;
+                    const DWORD tint = (i == selected) ? 0xFFFFD080 : 0xFFFFFFFF;
+                    const float x0 = ix - (float)m.iconHalf, y0 = iy - (float)m.iconHalf;
+                    const float x1 = ix + (float)m.iconHalf, y1 = iy + (float)m.iconHalf;
+                    HudIconVtx v[4] = {
+                        { x0, y0, 0, 1, tint, u0, v0 },
+                        { x1, y0, 0, 1, tint, u0 + du, v0 },
+                        { x0, y1, 0, 1, tint, u0, v0 + dv },
+                        { x1, y1, 0, 1, tint, u0 + du, v0 + dv },
+                    };
+                    g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(HudIconVtx));
+                }
+                dev->SetTexture(0, nullptr);
+                dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+                dev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+            }
+            // Sector labels near the rim (catalog, sanitised; W# fallback).
+            for (int i = 0; i < slots; ++i) {
+                char label[wheel_layout::kMaxLabel + 1];
+                bool has = false;
+                if (haveCatalog)
+                    has = wheel_layout::LabelForSlot(slotLabels, slotVerts, slots, i,
+                                                     heldVerts, label, sizeof(label));
+                if (!has) {
+                    _snprintf_s(label, sizeof(label), _TRUNCATE, "W%d", i + 1);
+                    wheel_layout::SanitizeLabel(label, label, sizeof(label));
+                }
+                const float c = wheel_layout::SectorCenter(i, slots);
+                float lx = 0, ly = 0;
+                wheel_layout::WedgePoint(fx, fy, (float)m.labelR, c, lx, ly);
+                D3DRECT text[256];
+                const int tw = (int)strlen(label) * (kGlyphW + 1) * m.textPx;
+                const int th = kGlyphH * m.textPx;
+                const int n = TextRects(text, 0, (int)(sizeof(text) / sizeof(text[0])),
+                                         (int)lroundf(lx) - tw / 2, (int)lroundf(ly) - th / 2,
+                                         m.textPx, label);
+                ClearRects(dev, text, n, (i == selected) ? 0xFFFFC060 : 0xFFE8EEF8);
+            }
+            continue;
+        }
         const int radius = std::max(32, (int)(d.Height * 0.070f));
         const int card = std::max(18, (int)(d.Height * 0.026f));
         D3DRECT centre = {cx - card, cy - card, cx + card, cy + card};
@@ -24767,8 +24935,9 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     static bool said = false;
     if (!said) {
         said = true;
-        Log(katorgaIcons ? "weapon wheel: overlay active (Katorga icons, right-hand anchor, %d sectors)"
-                         : "weapon wheel: overlay active (right-hand anchor, %d sectors)", slots);
+        Log(roundOn ? "weapon wheel: overlay active (round, right-hand anchor, %d sectors)"
+            : katorgaIcons ? "weapon wheel: overlay active (Katorga icons, right-hand anchor, %d sectors)"
+                           : "weapon wheel: overlay active (right-hand anchor, %d sectors)", slots);
     }
     g_wristState->Apply();
     if (old) g_origSetRenderTarget(dev, 0, old);

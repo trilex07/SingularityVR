@@ -9,7 +9,7 @@
 
 namespace wheel_catalog {
 
-struct Sector { int index = -1; long verts = 0; std::string atlas; };
+struct Sector { int index = -1; long verts = 0; std::string atlas; std::string label; };
 struct Catalog { std::vector<Sector> sectors; std::vector<long> cycle; };
 
 inline const char* SkipWs(const char* p) {
@@ -68,9 +68,10 @@ inline bool Parse(const char* text, Catalog& out) {
         long index = -1, verts = 0;
         if (!ObjInt(p, end, "index", index)) return false;
         ObjInt(p, end, "gun_verts", verts); // absent means unused sector
-        std::string atlas;
+        std::string atlas, label;
         ObjStr(p, end, "atlas_icon", atlas); // absent means no icon
-        out.sectors.push_back(Sector{ (int)index, verts, atlas });
+        ObjStr(p, end, "label_pl", label);   // absent means no label (icon only)
+        out.sectors.push_back(Sector{ (int)index, verts, atlas, label });
         p = end;
     }
     if (out.sectors.empty()) return false;

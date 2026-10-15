@@ -28,6 +28,9 @@ int main() {
     Expect(cat.sectors[1].verts == 5799, "sector1 verts");
     Expect(cat.sectors[1].atlas == "mag-closed", "sector1 icon");
     Expect(cat.cycle.size() == 4, "four cycle entries");
+    Expect(cat.sectors[1].label == "Centurion", "sector1 label");
+    Expect(cat.sectors[0].label == "Brak", "sector0 label");
+    Expect(cat.sectors[2].label == "AR", "sector2 label");
 
     wheel_catalog::Catalog bad;
     Expect(!wheel_catalog::Parse("{\"nope\":[]}", bad), "garbage refused");

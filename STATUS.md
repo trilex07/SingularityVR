@@ -1,5 +1,22 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 wheel ROUND layout IMPLEMENTED, L1_PASS + L2_PASS (MAIN
+takeover: previous agent gone, user authorises MAIN continuation in this
+checkout). Ring + wedge sectors + catalog labels behind
+[Input] WeaponWheelRound=0 (default OFF; squares path byte-identical when
+OFF). Slot-0 icon/label show the held weapon; FSM/commit pulses untouched;
+ammo NOT drawn (AMMO_UNKNOWN, no native hook). L1: layout round-trip 2..8
+slots + sanitation + slot labels, catalog labels, atlas, wheel FSM — all
+PASS. L2: x86 PE32 /O2 DLL SHA
+A1B26D09A6FA990C7C55C6902EC858C249ECBA04FB1001957FD225D9EDAC9D65
+(source d041fe4 + this change; static analysis clean). No Steam deploy yet:
+candidate NOT installed (Steam still holds EA9EFFB1/INI 4924DF4D; accepted
+TV DLL is 6F4BBEF2 — reconciling install state is a separate MAIN step
+before any L3 lease). L3 leased test pending: WeaponWheelRound=1 with
+DirectSelect=1 + KatorgaHud=1, R3 open shows ring + 4 labelled wedges, tilt
+highlights orange, release commits as before. See docs/wheel-round-layout.md.
+Prior history.
+
 LATEST 2026-10-15 wheel VISUAL test (PID428, 3149A872): R3 open (atlas load +
 icons?), select sector, release, normal exit. Flags leased (DirectSelect=1,
 KatorgaHud=1; backup ww-visual-test/ini-backup). DLL backup 20261015-003155
