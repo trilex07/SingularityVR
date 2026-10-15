@@ -100,8 +100,7 @@ static void test_predicate() {
     CHECK(smaller.image.bottom-smaller.image.top==805);
 }
 
-static void test_camera_change_gate() {
-    using C = CameraChangeCtx;
+static void test_camera_change_gate() {    using C = CameraChangeCtx;
     // Matinee camera cut: same pawn, no menu -> keep CINE.
     CHECK((!CameraChangeClearsCine(C{ true, true, true, false })));
     // True level transition: pawn recreated -> clear.
@@ -120,6 +119,44 @@ static void test_camera_change_gate() {
     CHECK((!CameraChangeClearsCine(C{ true, false, true, false, true })));
     CHECK((CameraChangeClearsCine(C{ true, false, false, true, false })));
     CHECK((CameraChangeClearsCine(C{ true, true, true, true, false })));
+    // Menu-driven load inside VideoFlat (2026-10-15 session): menu focused +
+    // same pawn must clear even when the loading movie holds videoHandoff.
+    // The flag is default-OFF; without it the old verdict stands.
+    CHECK((CameraChangeClearsCine(C{ true, true, true, true, true, true })));
+    CHECK((!CameraChangeClearsCine(C{ true, true, true, true, true, false })));
+    // Matinee cuts (menuClass=0) are untouched by the experiment flag.
+    CHECK((!CameraChangeClearsCine(C{ true, true, true, false, true, true })));
+    CHECK((!CameraChangeClearsCine(C{ true, true, true, false, false, true })));
+    // Changed pawn with menu focused still follows the old order.
+    CHECK((!CameraChangeClearsCine(C{ true, false, true, true, true, true })));
+    // Latch variant: menu closed before the cut (menuClass=0 at cut time)
+    // after a frontend menu visit still clears when the flag is on.
+    CHECK((CameraChangeClearsCine(C{ true, true, true, false, true, true, true })));
+    CHECK((CameraChangeClearsCine(C{ true, false, true, false, true, true, true })));
+    CHECK((!CameraChangeClearsCine(C{ true, true, true, false, true, false, true })));
+    CHECK((!CameraChangeClearsCine(C{ true, true, true, false, true, true, false })));
+}
+
+static void test_menu_load_latch() {
+    MenuLoadLatch l;
+    // Boot menu (no gameplay yet) never arms.
+    MenuLoadLatchObserve(l, false, true);
+    CHECK(!l.menuSeen && !l.gameplaySeen);
+    // Pause menu (not frontend) never arms.
+    MenuLoadLatchObserve(l, false, false);
+    CHECK(!l.menuSeen);
+    // Gameplay arms the session; frontend menu sets the latch.
+    MenuLoadLatchObserve(l, true, false);
+    CHECK(l.gameplaySeen && !l.menuSeen);
+    MenuLoadLatchObserve(l, false, true);
+    CHECK(l.menuSeen);
+    // Latch survives non-gameplay phases (loading movie closed the menu
+    // before the camera cut in the 2026-10-15 session).
+    MenuLoadLatchObserve(l, false, false);
+    CHECK(l.menuSeen);
+    // Gameplay clears.
+    MenuLoadLatchObserve(l, true, false);
+    CHECK(!l.menuSeen && l.gameplaySeen);
 }
 
 int main() {
@@ -129,6 +166,7 @@ int main() {
     test_smaller_cinema_and_projection();
     test_predicate();
     test_camera_change_gate();
+    test_menu_load_latch();
     if (g_failures == 0) { std::printf("PASS: cutscene mono fit + predicate\n"); return 0; }
     std::printf("FAILED: %d checks\n", g_failures);
     return 1;

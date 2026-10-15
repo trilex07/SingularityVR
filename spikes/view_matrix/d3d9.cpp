@@ -5210,6 +5210,11 @@ static bool CutsceneNativeCameraArmed() {
 }
 static LONG g_cutsceneVideoHandoffFix = 1;
 static LONG g_cutsceneMenuHandoffFix = 0; // opt-in frontend presentation ownership
+static LONG g_cineMenuLoadClear = 0; // experiment: menu-focused + same-pawn cut clears CINE despite video handoff
+// Frontend-menu latch for the experiment (pure state machine in
+// cutscene_mono.h): set in UpdateSceneModeFrame, read by the camera policy
+// in RefreshCameraPosition below.
+static MenuLoadLatch g_menuLatch;
 static bool g_cineMonoReady = false; // set when this Present composed the frame
 static CutsceneMonoRect g_cineMonoImage{};
 // Bounded transition/error evidence. No per-draw work, new hooks, queries,
@@ -20628,6 +20633,8 @@ void RefreshCameraPosition() {
                 Rd(g_vrMenuClass) != 0,
                 VrModeOn() && Rd(g_sceneFlatEnabled) && Rd(g_cutsceneVideoHandoffFix) &&
                     g_sceneMode.Current()==vrscene::Mode::VideoFlat && Rd(g_cineArgRaw)==1,
+                Rd(g_cineMenuLoadClear) != 0,
+                g_menuLatch.menuSeen,
             };
             static unsigned cameraPolicyNotes=0;
             if(cameraPolicyNotes++<16)
@@ -20635,8 +20642,14 @@ void RefreshCameraPosition() {
                     cc.cineOn?1:0,Rd(g_cineArgRaw),vrscene::Name(g_sceneMode.Current()),cc.videoHandoff?1:0,
                     cc.pawnSame?1:0,cc.pawnValid?1:0,Rd(g_vrMenuClass));
             if (CameraChangeClearsCine(cc)) {
-                Log("level transition: camera %p -> %p, CINE was %s - clearing it",
-                    (void*)s_lastCam, (void*)cam, cc.cineOn ? "ON" : "OFF");
+                if (Rd(g_cineMenuLoadClear) && cc.videoHandoff &&
+                    ((cc.menuFocused && cc.pawnSame) || cc.menuSeenSinceGameplay))
+                    Log("menu-load cut: camera %p -> %p, clearing CINE despite video handoff (menu evidence: focused=%d latch=%d samePawn=%d)",
+                        (void*)s_lastCam, (void*)cam, cc.menuFocused ? 1 : 0,
+                        cc.menuSeenSinceGameplay ? 1 : 0, cc.pawnSame ? 1 : 0);
+                else
+                    Log("level transition: camera %p -> %p, CINE was %s - clearing it",
+                        (void*)s_lastCam, (void*)cam, cc.cineOn ? "ON" : "OFF");
                 InterlockedExchange(&g_inCinematic, 0);
             } else if (cc.cineOn) {
                 Log("camera cut: camera %p -> %p, CINE stays ON reason=%s pawn=%p oldPawn=%p menuClass=%ld mode=%s",
@@ -21292,6 +21305,13 @@ static void UpdateSceneModeFrame() {
             (int)Rd(g_vrMenuClass),Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0),
     };
     const vrscene::Transition t = g_sceneMode.Advance(signals);
+    // Latch for the menu-load CINE experiment: a frontend menu visited after
+    // gameplay means the next same-session camera cut may be a save/menu load
+    // (menu closes before the cut, so instantaneous menuClass misses it).
+    // Cleared on GameplayStereo; boot menus (no gameplay yet) never arm it.
+    MenuLoadLatchObserve(g_menuLatch,
+        g_sceneMode.Current() == vrscene::Mode::GameplayStereo,
+        g_sceneMode.Current() == vrscene::Mode::MenuFlat && signals.frontendMenu);
     static unsigned sceneTransitionNotes=0;
     if (t.changed && (Rd(g_sceneModeTrace) || (Rd(g_cutsceneVideoHandoffFix) && sceneTransitionNotes++<16))) {
         Log("SceneMode: %s -> %s reason=%lu cinematic=%d video=%d menu=%d paused=%d frontend=%d cinemaPause=%d frame=%ld",
@@ -28944,6 +28964,7 @@ void LoadIniSettings() {
                         GetPrivateProfileIntA("Render", "CutsceneFlatMode", 1, path) ? 1 : 0);
     g_cutsceneVideoHandoffFix=GetPrivateProfileIntA("Render","CutsceneVideoHandoffFix",1,path)?1:0;
     g_cutsceneMenuHandoffFix=GetPrivateProfileIntA("Render","CutsceneMenuHandoffFix",0,path)?1:0;
+    g_cineMenuLoadClear=GetPrivateProfileIntA("Render","CineMenuLoadClear",0,path)?1:0;
     g_cutsceneMenuPairFix=GetPrivateProfileIntA("Render","CutsceneMenuPairFix",0,path)?1:0;
     g_handAnchorProbe=GetPrivateProfileIntA("Render","HandAnchorProbe",0,path)?1:0;
     g_noTmdWristAnchorFix=GetPrivateProfileIntA("Render","NoTmdWristAnchorFix",0,path)?1:0;

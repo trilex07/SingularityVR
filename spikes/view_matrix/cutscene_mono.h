@@ -61,10 +61,39 @@ struct CameraChangeCtx {
     bool pawnValid = false;  // g_playerPawn != 0 now
     bool menuFocused = false;
     bool videoHandoff = false; // confirmed VideoFlat -> initial world load, native ON still present
+    // Menu-driven load experiment (default OFF): a camera cut with the menu
+    // focused and the same pawn is a save/menu load, not a Matinee cut, even
+    // when videoHandoff also holds (loading movie + stale SetCinematicMode
+    // arg). Proved by the 2026-10-15 menu->Load session: cut at menuClass=4,
+    // same pawn, VideoFlat, CINE kept -> CutsceneFlat stuck till exit.
+    // menuSeenSinceGameplay covers the variant where the menu already closed
+    // before the cut (frontend menu visited after gameplay this session).
+    bool menuLoadClear = false;
+    bool menuSeenSinceGameplay = false;
 };
+
+// Frontend-menu latch for the menu-load experiment. Pure state machine over
+// per-frame scene signals (L1-tested below in spirit via test-cutscene-mono):
+// set when a frontend menu shows after gameplay this session; cleared on
+// GameplayStereo. Boot menus (no gameplay yet) never arm it, and pause menus
+// (not frontend) never touch it, so Matinee cuts keep the latch false.
+struct MenuLoadLatch {
+    bool gameplaySeen = false;
+    bool menuSeen = false;
+};
+
+inline void MenuLoadLatchObserve(MenuLoadLatch& l, bool gameplay, bool frontendMenu) {
+    if (gameplay) {
+        l.gameplaySeen = true;
+        l.menuSeen = false;
+    } else if (frontendMenu && l.gameplaySeen) {
+        l.menuSeen = true;
+    }
+}
 
 inline bool CameraChangeClearsCine(CameraChangeCtx c) {
     if (!c.cineOn) return false;                    // nothing latched
+    if (c.menuLoadClear && ((c.menuFocused && c.pawnSame) || c.menuSeenSinceGameplay)) return true;
     if (c.videoHandoff) return false;              // new pawn/loading menu is expected here
     if (!c.pawnValid || !c.pawnSame) return true;   // world went away
     if (c.menuFocused) return true;                 // quit to menu

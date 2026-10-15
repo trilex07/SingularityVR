@@ -1,5 +1,10 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 CINE ROUND-2 L3_PASS (user: stereo back after Load).
+Log: `menu-load cut ... latch=1` -> `VideoFlat -> GameplayStereo`, drift back
+to `cine off`. PR to main pending (user creates, gh auth missing here).
+Prior history.
+
 LATEST 2026-10-15 health-plate ROUND-2 DEPLOYED (DLL 89CB0984/source b73e311,
 built==installed; backup 20261015-110532). Gesture earlier: show 60 cm /
 hide 80 cm. NOTE: Steam runs main+plate WITHOUT the wheel (wheel code lives
