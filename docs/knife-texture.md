@@ -61,9 +61,16 @@ spikes/view_matrix/build.ps1 -GameBinaries <absolute>/build/never-deploy
 ```
 
 Source mesh SHA256 `DA9303A792361EB735124E620F147E490F26EF5A49D4E6C2E897F0B337F5FB5D`.
-Diffuse TGA SHA256 `8A7705671A84B7B39943836E3057A2BA78D5DDf7E385326A3AD8D7E556841C56`.
+Diffuse TGA SHA256 `8A7705671A84B7B39943836E3057A2BA78D5DDF7E385326A3AD8D7E556841C56`.
 New SVRK SHA256 `F7165692E4F74E69364A6BACD8944515F77837033044A771A048D82B666F1913`.
 New SVRT SHA256 `D4686DE723CD4550C6387D274A08A3C88AFFB8C6B3F039165F6E6BCAAA4494F2`.
+
+L2_PASS clean source `c5171eca04a45803386a71ae364c835929f0f095`, `/O2`,
+x86 PE32 (014C/010B), 2,886,656-byte DLL SHA256
+`FF59F353265DA05904A02FBD108A6BC51639A72FCDBD11703E30D0BD6496D4A8`.
+No new `knife_renderer.h` build/analyzer warnings; existing unrelated warnings
+remain. Local snapshot: `build/knife/textured-candidate/`. This later docs
+receipt does not change the compiled source. No Steam/GPU pixels/PSVR2 pass.
 
 MAIN must integrate this PR into current combined source and rebuild, not
 overwrite newer accepted code with this old-base standalone DLL. Stage **both**
@@ -75,3 +82,7 @@ Sheathe/reacquire, make a slow motion and one deliberate native melee swing;
 verify scale, grip and attack behavior are unchanged.
 Pause/resume, exit normally and report texture, stereo/FPS and Reset regressions
 separately; normal/specular/native-lighting equivalence is explicitly not claimed.
+
+When combining with PR #30's native-hand follow-up, retain BOTH independent
+startup asset initializers and BOTH GPU-release paths. This PR does not contain
+PR #30's hand changes and neither standalone old-base DLL is the combined build.

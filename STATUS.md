@@ -7,6 +7,8 @@ mesh size/mount and knife interaction/damage paths unchanged. SYSTEMMEM upload
 to DEFAULT, no MANAGED/default LockRect; Reset releases GPU texture. Seven
 Python tests + 147 interaction checks + fake upload failure/state/refcount and
 holster/hand regressions PASS. NOT full UE3 normal/specular/lighting, NOT L3/L4.
+L2_PASS clean c5171ec /O2 x86 PE32, DLL SHA256
+FF59F353265DA05904A02FBD108A6BC51639A72FCDBD11703E30D0BD6496D4A8.
 MAIN must update DLL + BOTH caches; no Steam touched. See docs/knife-texture.md.
 
 SIDE 2026-10-15 left-hip knife: IMPLEMENTED_NOT_VERIFIED, L1_PASS, L2_PASS;
