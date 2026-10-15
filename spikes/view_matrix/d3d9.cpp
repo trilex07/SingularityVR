@@ -25472,15 +25472,36 @@ static void MaybeLoadAmmoArt(IDirect3DDevice9* dev) {
 }
 
 void DrawAmmoPlate(IDirect3DDevice9* dev) {
+    // One-shot gate diagnostics: exactly one line per blocking reason per
+    // session, plus one confirmation with the drawn rect. Distinguishes
+    // "never drawn" from "drawn but not seen" (wrong place/size/alpha).
+    static bool saidGuards = false, saidGun = false;
+    static bool saidProj = false, saidDrew = false;
     if (!Rd(g_ammoPlate) || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
         Rd(g_weaponWheelOpen) || !WeaponInHands() ||
         !g_handPositionValid[AimHand()] || !g_haveEyes ||
-        !g_origSetRenderTarget || !g_origDrawPrimUP) return;
+        !g_origSetRenderTarget || !g_origDrawPrimUP) {
+        if (!saidGuards) {
+            saidGuards = true;
+            Log("ammo plate: gate blocked (flag=%d vr=%d dup=%d paused=%d wheel=%d armed=%d hand=%d eyes=%d)",
+                (int)Rd(g_ammoPlate), VrModeOn() ? 1 : 0, (int)Rd(g_dupDraws),
+                (int)Rd(g_gamePaused), (int)Rd(g_weaponWheelOpen),
+                WeaponInHands() ? 1 : 0, g_handPositionValid[AimHand()] ? 1 : 0,
+                g_haveEyes ? 1 : 0);
+        }
+        return;
+    }
     if (InterlockedCompareExchange(&g_ammoArtState, 0, 0) == 0) MaybeLoadAmmoArt(dev);
     if (InterlockedCompareExchange(&g_ammoArtState, 0, 0) != 1) return;
     const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
     const int plate = ammoplates::PlateForGunVerts(heldVerts);
-    if (plate < 0 || plate > 3 || !g_ammoPlateTex[plate] || !g_ammoDigitsTex) return;
+    if (plate < 0 || plate > 3 || !g_ammoPlateTex[plate] || !g_ammoDigitsTex) {
+        if (!saidGun) {
+            saidGun = true;
+            Log("ammo plate: no known gun (verts=%ld)", heldVerts);
+        }
+        return;
+    }
     // HUD sampler: offsets BY NAME per HUD class (round-9 probe verdict).
     const uintptr_t hud = FindHudObject();
     uintptr_t hc = 0;
@@ -25506,7 +25527,8 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     if (clip < 0 || bin < 0) {
         if (!InterlockedCompareExchange(&g_ammoUnknownSaid, 0, 0)) {
             InterlockedExchange(&g_ammoUnknownSaid, 1);
-            Log("ammo plate: ammo unknown - hidden until readable");
+            Log("ammo plate: ammo unknown (clip=%d bin=%d hud=%p) - hidden until readable",
+                clip, bin, (void*)hud);
         }
         return;
     }
@@ -25565,11 +25587,15 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     float mrx, mtop, mhh, rrx, rtop, rhh;
     ammoplates::MagDigits(mrx, mtop, mhh);
     ammoplates::ReserveDigits(rrx, rtop, rhh);
+    float drewCx = 0, drewCy = 0;
+    bool drewAny = false, drewProjFail = true;
     for (int eye = 0; eye < 2; ++eye) {
         uipointer::ScreenPoint p;
         if (!VrUiProjectEye(eye, hand, p)) continue;
+        drewProjFail = false;
         const float cx = (eye + p.u) * d.Width * 0.5f;
         const float cy = p.v * d.Height;
+        if (!drewAny) { drewAny = true; drewCx = cx; drewCy = cy; }
         const float x0 = cx - plateW * 0.5f, y0 = cy - plateH * 0.5f;
         const float x1 = cx + plateW * 0.5f, y1 = cy + plateH * 0.5f;
         dev->SetTexture(0, g_ammoPlateTex[plate]);
@@ -25620,6 +25646,15 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
         };
         digits(clip, 3, mrx, mtop, mhh);
         digits(bin, 4, rrx, rtop, rhh);
+    }
+    if (drewAny && !saidDrew) {
+        saidDrew = true;
+        Log("ammo plate: drew plate=%d clip=%d bin=%d %dx%d at %.0f,%.0f (backbuffer %ux%u)",
+            plate, clip, bin, plateW, plateH, (double)drewCx, (double)drewCy, d.Width, d.Height);
+    }
+    if (!drewAny && drewProjFail && !saidProj) {
+        saidProj = true;
+        Log("ammo plate: anchor not projectable in either eye (hand behind camera?)");
     }
     g_wristState->Apply();
     if (old) g_origSetRenderTarget(dev, 0, old);
