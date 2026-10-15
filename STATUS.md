@@ -8,14 +8,18 @@ OFF). Slot-0 icon/label show the held weapon; FSM/commit pulses untouched;
 ammo NOT drawn (AMMO_UNKNOWN, no native hook). L1: layout round-trip 2..8
 slots + sanitation + slot labels, catalog labels, atlas, wheel FSM — all
 PASS. L2: x86 PE32 /O2 DLL SHA
-A1B26D09A6FA990C7C55C6902EC858C249ECBA04FB1001957FD225D9EDAC9D65
-(source d041fe4 + this change; static analysis clean). No Steam deploy yet:
-candidate NOT installed (Steam still holds EA9EFFB1/INI 4924DF4D; accepted
-TV DLL is 6F4BBEF2 — reconciling install state is a separate MAIN step
-before any L3 lease). L3 leased test pending: WeaponWheelRound=1 with
-DirectSelect=1 + KatorgaHud=1, R3 open shows ring + 4 labelled wedges, tilt
-highlights orange, release commits as before. See docs/wheel-round-layout.md.
-Prior history.
+2E2064FB1689E166162107D42CFD829E0BD9AC4A83AB08B3ECDD24E8F201DC3F
+(source 39d6b38 clean tree; static analysis clean; deployed, see below). LATEST 2026-10-15 wheel ROUND DEPLOYED for L3 (DLL 2E2064FB/source 39d6b38,
+x86 PE32 /O2, clean tree; built==installed hash-verified). Backup
+20261015-092336 (prior EA9EFFB1). INI leased 02DCE23D (backup 4924DF4D):
+WeaponWheelRound=1 + DirectSelect=1 + KatorgaHudEnabled=1; installed diff is
+exactly those two added lines. Game was closed at deploy; MAIN does not
+launch — user starts via Steam. Live record:
+deployment/hands-dubbing/ww-round-20261015/live.json. Need: R3 open shows
+ring + 4 labelled wedges (top = held weapon), stick tilt highlights orange,
+release on sector>0 commits as before, normal exit. After exit: log
+analysis (OPEN/COMMIT/DIRECT/LANDED + `overlay active (round`), INI restore
++ DLL rollback hash-verified. Prior history.
 
 LATEST 2026-10-15 wheel VISUAL test (PID428, 3149A872): R3 open (atlas load +
 icons?), select sector, release, normal exit. Flags leased (DirectSelect=1,
