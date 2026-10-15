@@ -1,5 +1,9 @@
 # Left-hip knife: controlled pre-TMD gesture candidate
 
+**Texture follow-up:** see `knife-texture.md`. SVRK v2 + original diffuse
+`knife.svrt` replace the initial two-colour prototype below. Old v1 hashes
+and the old single-cache candidate are historical, not the textured candidate.
+
 SIDE only: no installed-game reads/writes, launches, deployment or L3/L4 claim.
 Independent of glove PR #30, based on origin/main 72ad59d.
 
@@ -68,9 +72,9 @@ Z [-2.48718,3.34248]; explicit visual length 0.30 m, not a measured physical mou
 Offline tools (run in this checkout, never with installed Steam paths):
 
 ```powershell
-python tools/knife/prepare_knife.py --mesh <offline-export>/2010_knife.pskx --output build/knife/prepared
+python tools/knife/prepare_knife.py --mesh <offline-export>/2010_knife.pskx --diffuse <offline-export>/knife_d.tga --output build/knife/textured
 python tools/knife/inspect_native_knife.py <offline>/RvGame.decompressed.xxx --output build/knife/native-evidence.json
-tools/knife/test-knife.ps1 -PreparedMesh <absolute>/build/knife/prepared/knife.svrk
+tools/knife/test-knife.ps1 -PreparedMesh <absolute>/build/knife/textured/knife.svrk
 spikes/view_matrix/build.ps1 -GameBinaries <absolute>/build/never-deploy
 ```
 

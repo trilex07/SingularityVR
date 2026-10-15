@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 SIDE knife-texture follow-up: L1_PASS, default-OFF experiment.
+SVRK v2 keeps original native wedge UVs, white vertices; original 256x256
+knife_d -> private knife.svrt replaces grey/black placeholder colours. Native
+mesh size/mount and knife interaction/damage paths unchanged. SYSTEMMEM upload
+to DEFAULT, no MANAGED/default LockRect; Reset releases GPU texture. Seven
+Python tests + 147 interaction checks + fake upload failure/state/refcount and
+holster/hand regressions PASS. NOT full UE3 normal/specular/lighting, NOT L3/L4.
+MAIN must update DLL + BOTH caches; no Steam touched. See docs/knife-texture.md.
+
 SIDE 2026-10-15 left-hip knife: IMPLEMENTED_NOT_VERIFIED, L1_PASS, L2_PASS;
 isolated feature/left-hip-knife from origin/main 72ad59d, independent of glove
 PR #30. Default OFF HipKnifeEnabled: local native knife mesh on physical left

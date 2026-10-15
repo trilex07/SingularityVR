@@ -1,9 +1,9 @@
 """Offline ActorX knife -> bounded, local-only SVRK mesh. Never reads Steam.
 
-Usage: prepare_knife.py --mesh <2010_knife.pskx> --output <outside-Steam dir>
+Usage: prepare_knife.py --mesh <2010_knife.pskx> --diffuse <knife_d.tga> --output <outside-Steam dir>
 No original assets are committed. Export with UEViewer from an offline copy.
-Neutral steel/handle vertex colours deliberately do not claim to be the native
-material: source texture TFC may be absent in an offline research copy.
+Original UVs + diffuse replace v1 placeholder colours. Native normal/specular
+and UE3 lighting are not claimed by this albedo-only cache.
 """
 import argparse
 import hashlib
@@ -11,6 +11,7 @@ import json
 import math
 import struct
 from pathlib import Path
+from PIL import Image
 
 
 def parse(data):
@@ -55,32 +56,44 @@ def bake(data, length=.30):
         # Measured source -Y = blade, X = thickness, Z = blade width.
         # Tracking local -Z = blade, +X = width, +Y = thickness; grip at
         # original mesh origin (authored hilt) with no invented UE3 bone offset.
-        verts.append((z*scale, x*scale, y*scale))
+        # Preserve original Direct3D wedge UV, not an OBJ-style V flip.
+        verts.append((z*scale, x*scale, y*scale, 0xffffffff, u, v))
     indices = []
-    colours = [0xff9ba6af if points[w[0]][1] < -7 else 0xff34383b for w in wedges]
     for a, b, d, material, _, _ in faces:
         if max(a,b,d) >= len(verts) or material != 0:
             raise ValueError('bad face/material')
         indices.extend((a,b,d))
-    output = struct.pack('<4sIII', b'SVRK', 1, len(verts), len(indices))
-    output += b''.join(struct.pack('<3fI', *v, col) for v,col in zip(verts,colours))
+    output = struct.pack('<4sIII', b'SVRK', 2, len(verts), len(indices))
+    output += b''.join(struct.pack('<3fI2f', *v) for v in verts)
     output += struct.pack('<'+'H'*len(indices), *indices)
     report = dict(source_sha256=hashlib.sha256(data).hexdigest(), source_points=len(points),
                   vertices=len(verts), triangles=len(indices)//3, bounds_source=bounds,
                   length_metres=length, metres_per_source_unit=scale,
-                  material='neutral vertex colours, not native texture',
+                  material='original wedge UV + diffuse, no placeholder colours; not full UE3 shading',
                   output_sha256=hashlib.sha256(output).hexdigest())
     return output, report
+
+
+def texture(path):
+    image=Image.open(path).convert('RGBA')
+    if not all(1<=n<=2048 for n in image.size):raise ValueError('texture bounds')
+    output=struct.pack('<4sIII',b'SVRT',1,*image.size)+image.tobytes('raw','BGRA')
+    return output,dict(source_sha256=hashlib.sha256(Path(path).read_bytes()).hexdigest(),
+                       width=image.width,height=image.height,bytes=len(output),
+                       output_sha256=hashlib.sha256(output).hexdigest())
 
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--mesh', type=Path, required=True)
     ap.add_argument('--output', type=Path, required=True)
+    ap.add_argument('--diffuse',type=Path,required=True)
     ap.add_argument('--length', type=float, default=.30)
     args = ap.parse_args()
     data, report = bake(args.mesh.read_bytes(), args.length)
+    texels,report['diffuse']=texture(args.diffuse)
     args.output.mkdir(parents=True, exist_ok=True)
     (args.output/'knife.svrk').write_bytes(data)
+    (args.output/'knife.svrt').write_bytes(texels)
     (args.output/'report.json').write_text(json.dumps(report, indent=2)+'\n', encoding='utf-8')
     print(json.dumps(report, indent=2))

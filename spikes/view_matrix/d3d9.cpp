@@ -8883,9 +8883,10 @@ bool InitXRInput() {
                 g_hipKnifeReady=g_hipKnifeRenderer.Load(directory+"\\vr-assets\\knife\\knife.svrk");
             }
         }
-        Log("hip knife: cache=%s verts=%u tris=%u; pre-TMD native camera-trace experiment only",
+        Log("hip knife: cache=%s verts=%u tris=%u original diffuse=%ux%u; pre-TMD native camera-trace experiment only",
             g_hipKnifeReady?"READY":"MISSING/INVALID (disabled)",
-            g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles());
+            g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles(),
+            g_hipKnifeRenderer.TextureWidth(),g_hipKnifeRenderer.TextureHeight());
     }
 
     {
