@@ -114,7 +114,15 @@ negative queries/refcounts, exact alias/no-double-remap/overlap/refusal, cache
 and GPU restoration/fault latch, idle/fire capture bounds; six Python analysis
 and original-light-array checks. Existing world + first-person shadow receiver,
 VFX eye conversion, native hand anchor, holster and trace analysis regressions PASS.
-L2 receipt follows after a clean committed build. L3/L4 NOT performed by SIDE.
+L2_PASS: clean source `469c99aed64244e95895b42ed7c14ca1ba6a6e23`, x86 PE32
+(014C/010B), `/O2`, performance instrumentation OFF; no new native_muzzle-header
+compiler/static-analysis warnings. DLL SHA256:
+`4A8DB99F20E354CFB6D274BA74F92E6DC84ACE85FE94DD749A6CDBF20314EA23`.
+Provenance records an empty working tree. Later receipt-only commit does not
+change compiled code. L3/L4 NOT performed by SIDE; contributing draw UNKNOWN.
+Local candidate: `C:\Users\Trilex\vr-mods\SingularityVR-native-muzzle-stereo\build\native-muzzle\candidate`.
+Contains DLL/provenance, scoped probe snippet, L1/build logs and offline ownership
+reports. No game-derived package/model/texture is committed or deployed.
 
 ## MAIN-only next gate: one session without chat switching
 

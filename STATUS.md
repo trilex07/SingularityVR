@@ -9,7 +9,9 @@ driver capture + exact shader-pair drop discriminator + guarded CTAB-camera
 alias repair. L1_PASS (cache/COM/restore/alias/sequence +6 Python + accepted
 shadow/hand/holster regressions). Contributing live draw still UNKNOWN; alias
 hypothesis NOT established. No generated replacement FX or native object edits.
-L2 receipt in docs/native-muzzle-stereo.md; L3/L4 requires MAIN. Do not enable
+L2_PASS clean469c99a /O2 x86 PE32; DLL SHA256
+4A8DB99F20E354CFB6D274BA74F92E6DC84ACE85FE94DD749A6CDBF20314EA23.
+Full receipt in docs/native-muzzle-stereo.md; L3/L4 requires MAIN. Do not enable
 mode2 without the selected-pair/content and exact-alias evidence.
 
 LATEST 2026-10-15 MAIN round 19 DEPLOYED (DLL
