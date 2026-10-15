@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 SIDE fix/native-muzzle-stereo, base fb73156: original FX
+continuation, no Steam. Original pistol light ownership now separately proven
+offline: mMuzzleFlashLights -> export918 RvGameShared_ExplosionLightComponent;
+flash/smoke template remains FX_MuzzleLockedFX_MuzzleLocked. Stride72 identity
+was DISPROVED historically, not reused. Implemented default-OFF idle/3-shot
+driver capture + exact shader-pair drop discriminator + guarded CTAB-camera
+alias repair. L1_PASS (cache/COM/restore/alias/sequence +6 Python + accepted
+shadow/hand/holster regressions). Contributing live draw still UNKNOWN; alias
+hypothesis NOT established. No generated replacement FX or native object edits.
+L2_PASS clean469c99a /O2 x86 PE32; DLL SHA256
+4A8DB99F20E354CFB6D274BA74F92E6DC84ACE85FE94DD749A6CDBF20314EA23.
+Full receipt in docs/native-muzzle-stereo.md; L3/L4 requires MAIN. Do not enable
+mode2 without the selected-pair/content and exact-alias evidence.
+
 LATEST 2026-10-15 MAIN round 19 DEPLOYED (DLL
 F303DA28CA6B387A5DEBBF31B72D9D1CE71F798B728EF315D10B9A3EB6A88C48/source
 branch plates-l3-main, x86 PE32 /O2, built==installed via
