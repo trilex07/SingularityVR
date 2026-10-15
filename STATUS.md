@@ -1,5 +1,25 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 17 DEPLOYED (DLL
+B94033554E1E8E6D77D2069AB7B2C6FD9BF0F40EE2CEA46F3667AA6B5A4B3C71/source
+8cb58ca branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-202938; game closed
+at deploy). Why: user disputes TMD (claims none) and reports the docked knife
+MODEL never renders. Evidence: (1) TMD read is exact-FName `mTMD` +0x1058
+depth 1, distinct from `mTMDArchetype` +0x1054 — archetype-confusion ruled
+out; `hands: mTMD is NON-NULL` + every silent line postTMD=1 agree; story-wise
+the device fuses to the wrist in the prologue while Centurion is a weapon, so
+no contradiction. Still, new INI hatch HipKnifeIgnoreTMD (default 0 = trust
+engine; =1 forces pre-TMD both-hands rule, restart required) unblocks the
+user either way. (2) Render side: DrawHipKnife is called every Present but
+this session never logs `draw=` nor GPU-failure — the gate blocks with only a
+spent menu-time one-shot to show for it. Gate log is now per-DISTINCT-mask
+(en/ready/vis/vr/play/stereo/eyes/paused/menu/panel/wheel/cine) and names the
+gameplay blocker in one run. L1_PASS (159). L2_PASS (PE32, manifest 8cb58ca
+clean). L3/physical PENDING: restart (new `build r17` marker), read the new
+`gate blocked` mask in gameplay; knife = empty right hand + squeeze AT belt;
+optional IgnoreTMD=1 test. No fix claimed.
+
 LATEST 2026-10-15 MAIN round 16 DEPLOYED (DLL
 AD1137A395587D79D1F9ABE063B6F98E6B1C4850FD6F67E7FE92ED8D44E7745A/source
 f58a09f branch plates-l3-main, x86 PE32 /O2, built==installed via
