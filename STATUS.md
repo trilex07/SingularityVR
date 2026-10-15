@@ -1,11 +1,11 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 CINE EXPERIMENT DEPLOYED for L3 (DLL 813A8DD8/source
-c5b7aa9, built==installed; backup 20261015-120924). INI leased BA7673B1
-(+CineMenuLoadClear=1 only; wheel+plate leases intact). Need: gameplay ->
-menu -> Load -> loaded game must return to stereo (GameplayStereo, splits,
-`cine off` drift). Falsifier in live.json. Live:
-deployment/hands-dubbing/cine-load-20261015/live.json. Prior history.
+LATEST 2026-10-15 CINE ROUND-2 DEPLOYED (DLL B71839DA/source eecf585,
+built==installed; backup 20261015-123334; INI unchanged). Round 1 failed as
+the new log predicted (cut at menuClass=0). Added frontend-menu latch
+(L1-tested, zero false positives on full session replay). Need: gameplay ->
+menu -> Load -> stereo back (log: menu-load cut latch=1, GameplayStereo).
+Live: deployment/hands-dubbing/cine-load2-20261015/live.json. Prior history.
 
 LATEST 2026-10-15 health-plate ROUND-2 DEPLOYED (DLL 89CB0984/source b73e311,
 built==installed; backup 20261015-110532). Gesture earlier: show 60 cm /
