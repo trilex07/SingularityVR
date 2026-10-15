@@ -49,3 +49,7 @@ Wszystkie WAV: mono PCM16/24 kHz, peak −1 dBFS. Integrację do banków robi MA
 - Dawca 5339b0068ab0840e jest toksyczny (halucynacje niezależnie od tempa) — blacklist.
 - Izolowane okrzyki („Pomocy!", „Syreny!") derailują model; doklejone do zdania działają.
 - `import gen_barks` wykonuje batch (side effect) — nie importować, kopiować funkcje.
+
+## Decyzja reżyserska 2026-10-15: MULTIPLAYER PO POLSKU
+Poprzednie ustalenie („multi zostaje jak jest") ZASTĄPIONE: skoro gotowy jest pełny
+dubbing MP (409 kwestii PL w tym PR), w grze zostaje NOWY. MAIN integruje paczki MP.
