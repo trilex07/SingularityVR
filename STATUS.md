@@ -1,11 +1,10 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 ammo PLATES RUNTIME DEPLOYED for L3 (DLL 7F7EF175/source
-8e9ef4a, built==installed; backup 20261015-150446). INI: +AmmoPlateEnabled=1,
-probe/dump diagnostics OFF for clean visual. Need: hold gun -> plate behind
-it with LIVE digits tracking fire/pickup; R3 opens -> plate hides; empty mag
--> white mag covered. Log: art ready + HUD cache + no unknown-hide. Live:
-deployment/hands-dubbing/ammo-plates-20261015/live.json. Prior history.
+LATEST 2026-10-15 ammo PLATES FIX DEPLOYED (DLL 742645B8/source 43f1381,
+built==installed; backup 20261015-151309; INI carried over). Root cause of
+invisible plates: WIC size guard (<=2048) rejected the 2172px digits strip.
+Need: plate behind gun with live digits. Live:
+deployment/hands-dubbing/ammo-plates-fix-20261015/live.json. Prior history.
 
 LATEST 2026-10-15 ammo PROBE ROUND-2 DEPLOYED (DLL 05F960F0/source 2a22d62):
 class property dump on equip (RvWeaponShared vocabulary: no ammo data
