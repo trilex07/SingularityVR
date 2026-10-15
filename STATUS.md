@@ -8,7 +8,8 @@ and diffuse bytes. Scale now inherits native LocalToWorld, GunScalePct and
 world UU/metre; wrist/IPD not scaled. SVRG v2 carries baked units: old caches
 are rejected (update DLL AND both meshes). Removed fabricated normal-Y tint.
 L1_PASS: 284 CPU checks, 9 Python tests incl exact albedo and native face IDs,
-guard/native-hand regressions; fresh clean-source L2 receipt pending.
+guard/native-hand regressions. L2_PASS clean 3939add, x86 PE32 /O2, DLL SHA256
+2C813E40A67F85375F57639F988BBC71536BAB07F17FAEC79BFC8E2138C62F9C.
 Full UE3 normal/specular/scene lighting is NOT reproduced by the diffuse-only
 GLB renderer: full appearance acceptance remains OPEN. No Steam touched.
 See docs/glove-native-match.md for the new private candidate and test scope.

@@ -49,11 +49,20 @@ L1_PASS: 284 CPU checks, 9 Python geometry/format/native-cut/albedo tests,
 fake-D3D guard/refcounts, native glove/cooked-palette/hand-anchor regressions.
 Synthetic CPU transforms: 0 allocations, 3600 frames x 2 eyes per hand,
 0.0128/0.0131 ms per pair; eager CPU loading 2.181 ms. Not GPU or runtime timings.
-Production build has succeeded x86 PE32 /O2; clean-source receipt follows.
+L2_PASS: clean `3939add1194845defd2b733061c42d7c0e8d9e55` source, x86 PE32
+(014C / 010B), /O2, DLL 2,887,680 bytes, SHA256
+`2C813E40A67F85375F57639F988BBC71536BAB07F17FAEC79BFC8E2138C62F9C`.
+The following receipt commit only changes docs/status, not runtime source.
 
-New private prepared pack: `build/gloves/native-match/`; candidate will be
+New private prepared pack: `build/gloves/native-match/`; candidate is
 `build/gloves/native-match-candidate/`. Old `build/gloves/candidate/` is the
 previous snapshot and is NOT the new pack. Never infer which one is installed.
+
+Current mesh cache hashes (v2, must accompany this DLL):
+
+- Left `AC199AF21ACB45A2D80E0EAB527934BE6E2DE77E01F747D21F869B38ED59E1B9`.
+- Right `1942A834D0C4188A3D9BCD2C5A282AA868AB6DE53C6609FCD7CA0400840CEF82`.
+- Diffuse `0F6A90BBEBEDE8CB80672F13F468DEFB0C3A1C5E758AA1459CCCBCD5A1DE442C`.
 
 ```powershell
 python tools/gloves/prepare_gloves.py --gloves <old-rigid-GLB-folder> --psk <offline>/ch_inview_noTMD.psk --cooked <offline>/RvGame.decompressed.xxx --texture <offline>/inview_glove_d.png --output build/gloves/native-match
