@@ -25302,7 +25302,7 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     const plates_atlas::Rect* fullR = plates_atlas::Find(g_platesSheet, "seg-full");
     const plates_atlas::Rect* emptyR = plates_atlas::Find(g_platesSheet, "seg-empty");
     if (!bgR || !fullR || !emptyR) return; // atlas mismatch: hide (logged at load)
-    const uipointer::V anchor{ hand.x, hand.y + (twoHand ? 0.02f : 0.08f), hand.z };
+    const uipointer::V anchor{ hand.x, hand.y + (twoHand ? 0.00f : 0.08f), hand.z };
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
     D3DSURFACE_DESC d{};
@@ -25347,12 +25347,18 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     const int plateW = twoHand ? std::max(48, (int)(d.Height * 0.10f))
                                : std::max(64, (int)(d.Height * 0.18f));
     const int plateH = std::max(10, plateW * 330 / 2001);
+    // Two-hand plate sits left of the gun line so it never covers it.
+    // MAIN 2026-10-15: user "jeszcze nizej i troche bardziej w lewo".
+    float hbDrewCx = 0, hbDrewCy = 0;
+    bool hbDrewAny = false, hbProjFail = true;
+    static bool hbSaidDrew = false, hbSaidProj = false;
     for (int eye = 0; eye < 2; ++eye) {
         uipointer::ScreenPoint p;
         if (!VrUiProjectEye(eye, anchor, p)) continue;
-        // Two-hand plate sits left of the gun line so it never covers it.
-        const float cx = (eye + p.u) * d.Width * 0.5f - (twoHand ? plateW * 0.35f : 0.0f);
+        hbProjFail = false;
+        const float cx = (eye + p.u) * d.Width * 0.5f - (twoHand ? plateW * 0.60f : 0.0f);
         const float cy = p.v * d.Height;
+        if (!hbDrewAny) { hbDrewAny = true; hbDrewCx = cx; hbDrewCy = cy; }
         const float x0 = cx - plateW * 0.5f, y0 = cy - plateH * 0.5f;
         const float x1 = cx + plateW * 0.5f, y1 = cy + plateH * 0.5f;
         PlateVtx v[4] = {
@@ -25376,6 +25382,15 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
             };
             g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, s, sizeof(PlateVtx));
         }
+    }
+    if (hbDrewAny && !hbSaidDrew) {
+        hbSaidDrew = true;
+        Log("health plate: drew twoHand=%d %dx%d at %.0f,%.0f (backbuffer %ux%u)",
+            twoHand ? 1 : 0, plateW, plateH, (double)hbDrewCx, (double)hbDrewCy, d.Width, d.Height);
+    }
+    if (!hbDrewAny && hbProjFail && !hbSaidProj) {
+        hbSaidProj = true;
+        Log("health plate: anchor not projectable in either eye (hand behind camera?)");
     }
     g_wristState->Apply();
     if (old) g_origSetRenderTarget(dev, 0, old);
@@ -25509,7 +25524,8 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     if (clip < 0 || bin < 0) {
         if (!InterlockedCompareExchange(&g_ammoUnknownSaid, 0, 0)) {
             InterlockedExchange(&g_ammoUnknownSaid, 1);
-            Log("ammo plate: ammo unknown - hidden until readable");
+            Log("ammo plate: ammo unknown (clip=%d bin=%d hud=%p offC=%d offB=%d) - hidden until readable",
+                clip, bin, (void*)hud, g_ammoOffClip, g_ammoOffBin);
         }
         return;
     }
@@ -25568,11 +25584,18 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     float mrx, mtop, mhh, rrx, rtop, rhh;
     ammoplates::MagDigits(mrx, mtop, mhh);
     ammoplates::ReserveDigits(rrx, rtop, rhh);
+    // MAIN L3 probe (bounded): one drew-confirmation with rect, one proj-fail
+    // line. Distinguishes "never drawn" from "drawn but not seen".
+    float ammoDrewCx = 0, ammoDrewCy = 0;
+    bool ammoDrewAny = false, ammoProjFail = true;
+    static bool ammoSaidDrew = false, ammoSaidProj = false;
     for (int eye = 0; eye < 2; ++eye) {
         uipointer::ScreenPoint p;
         if (!VrUiProjectEye(eye, hand, p)) continue;
+        ammoProjFail = false;
         const float cx = (eye + p.u) * d.Width * 0.5f;
         const float cy = p.v * d.Height;
+        if (!ammoDrewAny) { ammoDrewAny = true; ammoDrewCx = cx; ammoDrewCy = cy; }
         const float x0 = cx - plateW * 0.5f, y0 = cy - plateH * 0.5f;
         const float x1 = cx + plateW * 0.5f, y1 = cy + plateH * 0.5f;
         dev->SetTexture(0, g_ammoPlateTex[plate]);
@@ -25623,6 +25646,15 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
         };
         digits(clip, 3, mrx, mtop, mhh);
         digits(bin, 4, rrx, rtop, rhh);
+    }
+    if (ammoDrewAny && !ammoSaidDrew) {
+        ammoSaidDrew = true;
+        Log("ammo plate: drew plate=%d clip=%d bin=%d %dx%d at %.0f,%.0f (backbuffer %ux%u)",
+            plate, clip, bin, plateW, plateH, (double)ammoDrewCx, (double)ammoDrewCy, d.Width, d.Height);
+    }
+    if (!ammoDrewAny && ammoProjFail && !ammoSaidProj) {
+        ammoSaidProj = true;
+        Log("ammo plate: anchor not projectable in either eye (hand behind camera?)");
     }
     g_wristState->Apply();
     if (old) g_origSetRenderTarget(dev, 0, old);
