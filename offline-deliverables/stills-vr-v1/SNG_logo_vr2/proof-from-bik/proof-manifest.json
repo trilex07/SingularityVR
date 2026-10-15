@@ -1,0 +1,21 @@
+{
+  "source_bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\SNG_logo_vr2\\candidate\\SNG_logo_vr2.bik",
+  "source_bik_sha256": "B0D35C12229685142808C82252FDFEEAD9ACFE393B11389CD60B204F26C618EF",
+  "proof_frames": [
+    {
+      "frame_index": 0,
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\SNG_logo_vr2\\proof-from-bik\\frame_n0000.png",
+      "sha256": "CA9D85FD98F4267AE9146B98E852B3B44D039E080A393001A40586B049ACAA70"
+    },
+    {
+      "frame_index": 165,
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\SNG_logo_vr2\\proof-from-bik\\frame_n0165.png",
+      "sha256": "7CF5C6A92E6BCF23AA71788BA6F0C84EEE4ED49706A79C12CE7AC7ACC51D8218"
+    },
+    {
+      "frame_index": 329,
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\SNG_logo_vr2\\proof-from-bik\\frame_n0329.png",
+      "sha256": "36125BBFDA261A663F9BE02AC10BF0E287BDB92EE645EA0E21573FA99409D536"
+    }
+  ]
+}

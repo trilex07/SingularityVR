@@ -85,3 +85,7 @@ remaining-voices/out/**/*.wav
 remaining-voices/_refs/
 _work_u/
 
+# ---- bink stills pipeline (side/bink-stills-vr): intermediates local ----
+work/
+*.intermediate.mkv
+

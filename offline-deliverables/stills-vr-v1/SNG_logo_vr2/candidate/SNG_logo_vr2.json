@@ -1,0 +1,55 @@
+{
+  "asset": "SNG_logo_vr2",
+  "install_as": "RvGame/Movies/SNG_logo.bik",
+  "experimental": false,
+  "note": "pre-open card + first SINGULARITY film (one asset); metallic VR logo still",
+  "source_png": {
+    "path": "C:\\Users\\Trilex\\vr-mods\\references\\Metaliczne logo SINGULARITY VR.png",
+    "sha256": "769B9DDD4EBB25E09174CA3348717FE7FF1B930FE37EB5EBA7EC16629D67FB61"
+  },
+  "stock_bik": {
+    "path": "C:\\Users\\Trilex\\vr-mods\\l3-sandbox-20261010\\RvGame\\Movies\\SNG_logo.bik",
+    "sha256": "FE40BA3B4521C4D0BFAC9EFD65B7BAF2C9F0F07F2E637A703DB1E7B29EA2B03C"
+  },
+  "video": {
+    "width": 1280,
+    "height": 720,
+    "duration_s": 11.0,
+    "fps": "30/1",
+    "frames": 330,
+    "quality": 8,
+    "audio": "stock-remux",
+    "intermediate_mkv_NOT_SHIPPED": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\work\\stills-vr-v1\\SNG_logo_vr2\\SNG_logo_vr2.intermediate.mkv"
+  },
+  "candidate_bik": {
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\SNG_logo_vr2\\candidate\\SNG_logo_vr2.bik",
+    "sha256": "B0D35C12229685142808C82252FDFEEAD9ACFE393B11389CD60B204F26C618EF"
+  },
+  "validate": {
+    "verdict": "PASS",
+    "checks": {
+      "magic_biki": true,
+      "codec_binkvideo": true,
+      "geometry": true,
+      "fps": true,
+      "audio_layout": true
+    }
+  },
+  "proof_frames_from_final_bik": [
+    {
+      "frame_index": 0,
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\SNG_logo_vr2\\proof-from-bik\\frame_n0000.png",
+      "sha256": "CA9D85FD98F4267AE9146B98E852B3B44D039E080A393001A40586B049ACAA70"
+    },
+    {
+      "frame_index": 165,
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\SNG_logo_vr2\\proof-from-bik\\frame_n0165.png",
+      "sha256": "7CF5C6A92E6BCF23AA71788BA6F0C84EEE4ED49706A79C12CE7AC7ACC51D8218"
+    },
+    {
+      "frame_index": 329,
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\SNG_logo_vr2\\proof-from-bik\\frame_n0329.png",
+      "sha256": "36125BBFDA261A663F9BE02AC10BF0E287BDB92EE645EA0E21573FA99409D536"
+    }
+  ]
+}

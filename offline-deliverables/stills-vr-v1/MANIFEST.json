@@ -1,0 +1,172 @@
+{
+  "producer": "tools/stills/prepare_vr_stills_bink.py",
+  "encoder": "LibBink binkenc (open-source Bink 1), third_party/libbink-src",
+  "runtime_test": "NOT performed (SIDE); MAIN installs after backup + hash verify",
+  "assets": {
+    "SNG_logo_vr2": {
+      "asset": "SNG_logo_vr2",
+      "install_as": "RvGame/Movies/SNG_logo.bik",
+      "experimental": false,
+      "note": "pre-open card + first SINGULARITY film (one asset); metallic VR logo still",
+      "source_png": {
+        "path": "C:\\Users\\Trilex\\vr-mods\\references\\Metaliczne logo SINGULARITY VR.png",
+        "sha256": "769B9DDD4EBB25E09174CA3348717FE7FF1B930FE37EB5EBA7EC16629D67FB61"
+      },
+      "stock_bik": {
+        "path": "C:\\Users\\Trilex\\vr-mods\\l3-sandbox-20261010\\RvGame\\Movies\\SNG_logo.bik",
+        "sha256": "FE40BA3B4521C4D0BFAC9EFD65B7BAF2C9F0F07F2E637A703DB1E7B29EA2B03C"
+      },
+      "video": {
+        "width": 1280,
+        "height": 720,
+        "duration_s": 11.0,
+        "fps": "30/1",
+        "frames": 330,
+        "quality": 8,
+        "audio": "stock-remux",
+        "intermediate_mkv_NOT_SHIPPED": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\work\\stills-vr-v1\\SNG_logo_vr2\\SNG_logo_vr2.intermediate.mkv"
+      },
+      "candidate_bik": {
+        "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\SNG_logo_vr2\\candidate\\SNG_logo_vr2.bik",
+        "sha256": "B0D35C12229685142808C82252FDFEEAD9ACFE393B11389CD60B204F26C618EF"
+      },
+      "validate": {
+        "verdict": "PASS",
+        "checks": {
+          "magic_biki": true,
+          "codec_binkvideo": true,
+          "geometry": true,
+          "fps": true,
+          "audio_layout": true
+        }
+      },
+      "proof_frames_from_final_bik": [
+        {
+          "frame_index": 0,
+          "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\SNG_logo_vr2\\proof-from-bik\\frame_n0000.png",
+          "sha256": "CA9D85FD98F4267AE9146B98E852B3B44D039E080A393001A40586B049ACAA70"
+        },
+        {
+          "frame_index": 165,
+          "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\SNG_logo_vr2\\proof-from-bik\\frame_n0165.png",
+          "sha256": "7CF5C6A92E6BCF23AA71788BA6F0C84EEE4ED49706A79C12CE7AC7ACC51D8218"
+        },
+        {
+          "frame_index": 329,
+          "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\SNG_logo_vr2\\proof-from-bik\\frame_n0329.png",
+          "sha256": "36125BBFDA261A663F9BE02AC10BF0E287BDB92EE645EA0E21573FA99409D536"
+        }
+      ]
+    },
+    "loading_screen_vr2": {
+      "asset": "loading_screen_vr2",
+      "install_as": "RvGame/Movies/loading_screen.bik",
+      "experimental": false,
+      "note": "level-load card; 4K source downscaled 3x to slot-proven 720p",
+      "source_png": {
+        "path": "C:\\Users\\Trilex\\vr-mods\\references\\Singularity_VR_4K_3840x2160.png",
+        "sha256": "34490CB40F932C566DA898D66B78635F704C902645A4D48630B0C5145BFC3269"
+      },
+      "stock_bik": {
+        "path": "C:\\Users\\Trilex\\vr-mods\\l3-sandbox-20261010\\RvGame\\Movies\\loading_screen.bik",
+        "sha256": "764E701B5049F182968D2DFFF4EE9ACCD13443B0D68B66B3FD1C0FB2F059E27D"
+      },
+      "video": {
+        "width": 1280,
+        "height": 720,
+        "duration_s": 2.0,
+        "fps": "24/1",
+        "frames": 48,
+        "quality": 8,
+        "audio": "none",
+        "intermediate_mkv_NOT_SHIPPED": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\work\\stills-vr-v1\\loading_screen_vr2\\loading_screen_vr2.intermediate.mkv"
+      },
+      "candidate_bik": {
+        "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\loading_screen_vr2\\candidate\\loading_screen_vr2.bik",
+        "sha256": "4DBDFADA32C493D6D7F779F6B82A628987CBADE8732ACA3C60F4826F49D858EB"
+      },
+      "validate": {
+        "verdict": "PASS",
+        "checks": {
+          "magic_biki": true,
+          "codec_binkvideo": true,
+          "geometry": true,
+          "fps": true,
+          "audio_layout": true
+        }
+      },
+      "proof_frames_from_final_bik": [
+        {
+          "frame_index": 0,
+          "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\loading_screen_vr2\\proof-from-bik\\frame_n0000.png",
+          "sha256": "C71539C9639BBA45B2F30E5C42341307290BA6103FCD5605D0A5E36391AAB2D7"
+        },
+        {
+          "frame_index": 24,
+          "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\loading_screen_vr2\\proof-from-bik\\frame_n0024.png",
+          "sha256": "A3E569969368EF1D2DBB10A125A690B61BB6EE3A49ED1F66F7B084568D19AF5C"
+        },
+        {
+          "frame_index": 47,
+          "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\loading_screen_vr2\\proof-from-bik\\frame_n0047.png",
+          "sha256": "6534C2D5E38D0641A3E0AD2CF5B7851D63B9EA7245B7269A4D3D2078BEB78C37"
+        }
+      ]
+    },
+    "loading_screen_4k": {
+      "asset": "loading_screen_4k",
+      "install_as": "RvGame/Movies/loading_screen.bik",
+      "experimental": true,
+      "note": "EXPERIMENTAL native-4K Bink 1; never slot-proven in UE3 2010 decoder",
+      "source_png": {
+        "path": "C:\\Users\\Trilex\\vr-mods\\references\\Singularity_VR_4K_3840x2160.png",
+        "sha256": "34490CB40F932C566DA898D66B78635F704C902645A4D48630B0C5145BFC3269"
+      },
+      "stock_bik": {
+        "path": "C:\\Users\\Trilex\\vr-mods\\l3-sandbox-20261010\\RvGame\\Movies\\loading_screen.bik",
+        "sha256": "764E701B5049F182968D2DFFF4EE9ACCD13443B0D68B66B3FD1C0FB2F059E27D"
+      },
+      "video": {
+        "width": 3840,
+        "height": 2160,
+        "duration_s": 2.0,
+        "fps": "24/1",
+        "frames": 48,
+        "quality": 6,
+        "audio": "none",
+        "intermediate_mkv_NOT_SHIPPED": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\work\\stills-vr-v1\\loading_screen_4k\\loading_screen_4k.intermediate.mkv"
+      },
+      "candidate_bik": {
+        "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\loading_screen_4k\\candidate\\loading_screen_4k.bik",
+        "sha256": "069253195939380407826A9DDDAB207702A3FA02287DC1B109250D17427234D0"
+      },
+      "validate": {
+        "verdict": "PASS",
+        "checks": {
+          "magic_biki": true,
+          "codec_binkvideo": true,
+          "geometry": true,
+          "fps": true,
+          "audio_layout": true
+        }
+      },
+      "proof_frames_from_final_bik": [
+        {
+          "frame_index": 0,
+          "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\loading_screen_4k\\proof-from-bik\\frame_n0000.png",
+          "sha256": "6775C7F67BFE57638DB285849E2AD13B514E2868C8B15DD17AFD6FE64EB60089"
+        },
+        {
+          "frame_index": 24,
+          "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\loading_screen_4k\\proof-from-bik\\frame_n0024.png",
+          "sha256": "B9E48980025365848D4A9A3692FB21226FE1FE48E4FD1CEC9FB09BD276ADB732"
+        },
+        {
+          "frame_index": 47,
+          "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\loading_screen_4k\\proof-from-bik\\frame_n0047.png",
+          "sha256": "F0E598A78E022FDFE37CFD95C4D27172E204F774420B85F43C5E6E658F2E6AA9"
+        }
+      ]
+    }
+  }
+}

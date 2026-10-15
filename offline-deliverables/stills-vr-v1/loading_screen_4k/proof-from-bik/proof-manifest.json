@@ -1,0 +1,21 @@
+{
+  "source_bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\loading_screen_4k\\candidate\\loading_screen_4k.bik",
+  "source_bik_sha256": "069253195939380407826A9DDDAB207702A3FA02287DC1B109250D17427234D0",
+  "proof_frames": [
+    {
+      "frame_index": 0,
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\loading_screen_4k\\proof-from-bik\\frame_n0000.png",
+      "sha256": "6775C7F67BFE57638DB285849E2AD13B514E2868C8B15DD17AFD6FE64EB60089"
+    },
+    {
+      "frame_index": 24,
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\loading_screen_4k\\proof-from-bik\\frame_n0024.png",
+      "sha256": "B9E48980025365848D4A9A3692FB21226FE1FE48E4FD1CEC9FB09BD276ADB732"
+    },
+    {
+      "frame_index": 47,
+      "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-bink-stills\\offline-deliverables\\stills-vr-v1\\loading_screen_4k\\proof-from-bik\\frame_n0047.png",
+      "sha256": "F0E598A78E022FDFE37CFD95C4D27172E204F774420B85F43C5E6E658F2E6AA9"
+    }
+  ]
+}
