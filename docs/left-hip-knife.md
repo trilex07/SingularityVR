@@ -74,13 +74,16 @@ tools/knife/test-knife.ps1 -PreparedMesh <absolute>/build/knife/prepared/knife.s
 spikes/view_matrix/build.ps1 -GameBinaries <absolute>/build/never-deploy
 ```
 
-Build has succeeded x86 PE32 /O2; final clean-source L2 receipt follows separately.
+L2_PASS: clean source `ec124ec2a9916bc5c3567f893c4aeeace89405c4`,
+x86 PE32 (machine 014C, optional header 010B), /O2, 2,884,096-byte DLL.
+SHA256 `75F22354E2FF12A816BD986438518694FEBB37DD02BA8C75968066CA4D5A5BC1`.
+Later evidence/docs commit does not change compiled source.
 Existing unrelated compiler/static-analysis warnings remain; no new knife-header
 warnings in this build. No Steam, real GPU pixels or headset validation.
 
 ## MAIN integration boundary
 
-Local candidate will contain DLL, provenance, this cache under
+Local `build/knife/candidate` contains DLL, provenance, this cache under
 `vr-assets/knife/knife.svrk`, L1 log and offline identity report. It is not a
 deployment script and does not overwrite any accepted files. MAIN must use
 current installation backup/hash/lease tooling, enable **only**
