@@ -1,12 +1,12 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 health-bar RUNTIME implemented, L1_PASS + L2_PASS.
-DrawHealthPlate (plates atlas bg + 11 seg cells, left-hand anchor, gesture
-hysteresis + two-hand, cached-pawn HP, unknown hides) behind
-[Render] HealthPlateEnabled=0; accepted wrist band untouched. L1: gesture 24
-+ plates 10 checks PASS. L2: x86 PE32 /O2, static analysis clean (candidate
-SHA after clean-tree rebuild). L3 deploy pending (replaces wheel DLL in
-Steam until wheel PR merges — user warned). See docs/health-bar-glove.md.
+LATEST 2026-10-15 health-plate ROUND-1 DEPLOYED for L3 (DLL 139E5D71/source
+104f8cd, clean tree, built==installed; backup 20261015-105738 holding wheel
+E90B1E9C). INI leased 2FE66550 (+HealthPlateEnabled=1 only). NOTE: Steam now
+runs main-baseline + plate (NO wheel features until wheel PR merges).
+Live: deployment/hands-dubbing/hb-round1-20261015/live.json. Need: raise
+left hand to face -> plate with N segments; two-hand pistol -> plate above
+left hand; lower hand -> hides; exit. Log: atlas ready + shown edges.
 Plates atlas installed (Steam-only data): 512x256 PNG + plates.json (3 rects,
 sha verified), 11 segment slots per mockup measurement. Prior history.
 
