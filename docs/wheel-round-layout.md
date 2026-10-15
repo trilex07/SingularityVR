@@ -88,3 +88,7 @@ User: hand tracking felt off (retest pending - left controller was off); wheel s
 - Commit path builds its sector table in the same gun order, so drawn position == committed target. Unowned positions draw wedge only (icon + label skipped).
 - Retest diagnostics (bounded): OPEN logs anchor validity; first SelectionChanged per open logs sector + hand/stick source, so the hand-feel retest is attributable.
 - Falsifier: L1 gun-order/touched/ownership suites; L3 must show 4 gun wedges, held brighter, unowned empty, tap = no switch, R3-release after hand move commits the pointed gun.
+
+## COMMIT FIX (2026-10-15, found by log analysis before PR)
+
+The close edge in `weaponwheel::Update` resets `state.selection = 0` before returning `Commit`, so the runtime read `sel = 0` on every commit: the wheel highlighted but never switched (legacy pulses 0; direct-select always targeted position 0). Pre-existing since the FSM was written, not a round-layout regression. Fix: commit reads the live `g_weaponWheelSelection` mirror (last SelectionChanged, cleared only on Open); COMMIT log prints sector + pulses. Falsifier: L3 must show `COMMIT sector=N`, `DIRECT sector=N verts A->B steps=K`, `direct-select LANDED on gunVerts=B`, and the held gun visibly changes.

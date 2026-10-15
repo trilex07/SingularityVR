@@ -1,6 +1,13 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 wheel ROUND-3 DEPLOYED for L3 (DLL 6DD9CC71/source 589d386,
+LATEST 2026-10-15 wheel COMMIT FIX DEPLOYED (DLL E90B1E9C/source f8920bc,
+clean tree, built==installed; backup 20261015-102632). Log analysis before
+the PR proved every commit used sel=0 (Update zeroes selection on close):
+highlights without switching, since the FSM was written. Fix reads the live
+selection mirror; COMMIT log prints sector+pulses. PR ON HOLD for one short
+switching test: hold gun A, R3+hand to gun B, release, B in hands, exit. Log
+must show select-sector + DIRECT sector=N + LANDED + visible switch. Live:
+deployment/hands-dubbing/ww-commitfix-20261015/live.json. Prior history.
 x86 PE32 /O2, clean tree; built==installed hash-verified). Backup
 20261015-101700 (prior C1974AFF). INI lease carried over; atlas icons already
 installed. Live record: deployment/hands-dubbing/ww-round3-20261015/live.json.
