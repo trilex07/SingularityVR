@@ -1,12 +1,11 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 CINE-stuck-after-Load EXPERIMENT, L1_PASS + L2 pending.
-Menu->Load latches CINE (videoHandoff short-circuits menuFocused on the
-loading-movie cut: same pawn, menuClass=4) -> CutsceneFlat stuck, mono,
-0-split. Discriminator `menuFocused && pawnSame` (all proven Matinee cuts
-are menuClass=0). New default-OFF `[Render] CineMenuLoadClear` + distinct
-menu-load log line. Wheel/plate exonerated (no activity in stuck tail, no
-shared state). See docs/cine-menu-load-clear.md. Prior history.
+LATEST 2026-10-15 CINE EXPERIMENT DEPLOYED for L3 (DLL 813A8DD8/source
+c5b7aa9, built==installed; backup 20261015-120924). INI leased BA7673B1
+(+CineMenuLoadClear=1 only; wheel+plate leases intact). Need: gameplay ->
+menu -> Load -> loaded game must return to stereo (GameplayStereo, splits,
+`cine off` drift). Falsifier in live.json. Live:
+deployment/hands-dubbing/cine-load-20261015/live.json. Prior history.
 
 LATEST 2026-10-15 health-plate ROUND-2 DEPLOYED (DLL 89CB0984/source b73e311,
 built==installed; backup 20261015-110532). Gesture earlier: show 60 cm /
