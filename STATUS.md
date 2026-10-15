@@ -1,5 +1,28 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 15 DEPLOYED (DLL
+AB2F11F23D9E6A4D44636A5CD0BE846B3DDECF679F7EA0E39346F003F0B9F30A/source
+d74a922 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-201446; game closed
+at deploy). Why: user retest on r14 reports (1) pistol stores behind+above
+the drawn ring, (2) no docked knife at left belt despite no-weapon tries with
+both hands — while the 20:05 r14 log PROVES one right-hand PICKED held=1 +
+SHEATHED cycle and mTMD null (no TMD, pre-TMD both-hands path live). No
+behavior change this round, only falsifying instruments: (a) startup build
+marker `hip knife: build r15 ...` with holster/knife config (proves which DLL
+runs); (b) silent-refusal probe `armed grip at belt but no pickup
+(near/grip/edge/free/trk/noWpn/postTMD/preTMD)` — catches edge-missed grips
+(held BEFORE entering radius), !free (weapon in hand), untracked hand;
+falsifier: edge=1 on the near hand with no PICKED disproves edge-timing;
+(c) STORED/DRAWN now logs aim dir — if (hip-hand) aligns with +aim across
+samples the user aligns the VISIBLE gun while the trigger tests the
+CONTROLLER point, and the fix is a gun-length offset along aim, not a hip
+constant; orthogonal scatter disproves it. Ini strings updated (post-TMD
+right-hand-only). L1_PASS (159). L2_PASS (PE32, manifest d74a922 clean).
+L3/physical PENDING: controlled run — 3x store aligning CONTROLLER to ring,
+3x aligning GUN to ring; knife right-hand no-weapon pickup; MAIN takes the
+log. No fix claimed.
+
 LATEST 2026-10-15 MAIN round 14 DEPLOYED (DLL
 D065446C99A909DBAEFDE2A4F3D5E714715259BD96EBE2E6AE42E604E785E034/source
 bcf8ec1 branch plates-l3-main, x86 PE32 /O2, built==installed via
