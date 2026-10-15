@@ -1,10 +1,10 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 ammo PROBE ROUND-8 DEPLOYED (DLL 8AC8CE05/source 2e733bc,
-built==installed; backup 20261015-143144; INI carried over). Manager
-vocabulary + forced HUD find (fixed two no-fire causes). Need: taps ~2 s, 8
-pulls, exit. Falsifier: named Inventory/ammo links. Live:
-deployment/hands-dubbing/ammo-probe8-20261015/live.json. Prior history.
+LATEST 2026-10-15 ammo PROBE ROUND-9 DEPLOYED (DLL 44CC3332/source 9ffc791,
+built==installed; backup 20261015-144029; INI carried over). Samples HUD
+mClipAmmo/mBinAmmo/mClipSize per pull (by name). Need: SINGLE taps ~2 s, 8
+pulls, exit. Falsifier: clip -1/tap. Live:
+deployment/hands-dubbing/ammo-probe9-20261015/live.json. Prior history.
 
 LATEST 2026-10-15 ammo PROBE ROUND-2 DEPLOYED (DLL 05F960F0/source 2a22d62):
 class property dump on equip (RvWeaponShared vocabulary: no ammo data
