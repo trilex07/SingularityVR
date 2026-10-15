@@ -1934,6 +1934,9 @@ WantedName g_wantNames[] = {
     // Ammo probe round 4: UT-pattern firemode object (WeaponFireTypes[0])
     // carries the live counters. Resolved per weapon class, never assumed.
     { "WeaponFireTypes", -1 },
+    // Ammo probe round 5: shots-fired counter (fire proof per pull) and the
+    // pawn baseline below needs no new names.
+    { "mShotCount", -1 },
 };
 const int kWantNameCount = (int)(sizeof(g_wantNames) / sizeof(g_wantNames[0]));
 
@@ -2330,6 +2333,9 @@ static int32_t g_ammoProbePrev[1024]{};
 static bool g_ammoProbeHave = false;
 static bool g_ammoProbeWasDown = false;
 static bool g_ammoProbePawnDone = false;
+// Round 5: pawn snapshot for changed-only diffs + per-class shot counter.
+static uintptr_t g_ammoProbePawnObj = 0;
+static int32_t g_ammoProbePawnPrev[512]{};
 // Round 4: firemode object snapshot (WeaponFireTypes[0]), same bounded rules.
 static uintptr_t g_ammoProbeFmObj = 0;
 static int32_t g_ammoProbeFmPrev[128]{};
@@ -27730,13 +27736,15 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     }
                     Log("%s", line);
                 }
-                // Pawn baseline once per session: reserve candidates live here
-                // if not on the weapon. Static ints near plausible counts are
-                // eyeballed offline; motion decides in a follow-up if needed.
+                // Pawn baseline once per session + changed-only diffs after:
+                // reserve candidates live here if not on the weapon. Location
+                // floats wobble every pull (user sway) - the mag shows as
+                // exact -1 steps on a small int, which sway never produces.
                 if (!g_ammoProbePawnDone) {
                     g_ammoProbePawnDone = true;
                     const uintptr_t pawn = FindPlayerPawn();
                     if (pawn) {
+                        g_ammoProbePawnObj = pawn;
                         for (int c = 0; c < ammoprobe::kPawnSlots / 32; ++c) {
                             int n = _snprintf_s(line, sizeof(line), _TRUNCATE,
                                                 "ammo probe: pawn obj=%p [%03x..%03x]=",
@@ -27745,6 +27753,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                                 const void* p = (const void*)(pawn + (uintptr_t)((c * 32 + k) * 4));
                                 const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
                                                                  : ammoprobe::kUnreadable;
+                                g_ammoProbePawnPrev[c * 32 + k] = v;
                                 n += _snprintf_s(line + n, sizeof(line) - n, _TRUNCATE, "%d,", v);
                             }
                             Log("%s", line);
@@ -27834,6 +27843,54 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                     }
                     if (shown == 0) Log("ammo probe: fm diff obj=%p no changes", (void*)fm0);
                     else if (shown > 24) Log("ammo probe: fm diff obj=%p ... +%d more", (void*)fm0, shown - 24);
+                }
+            }
+            // ---- round 5: pawn diffs + shots-fired proof ----
+            // Pawn motion (sway) wobbles floats every pull; a mag/reserve int
+            // shows as exact small-int steps, which sway never produces.
+            // mShotCount (resolved BY NAME per weapon class) must climb with
+            // real shots - if it doesn't, the pulls aren't firing at all.
+            {
+                const uintptr_t pawn = FindPlayerPawn();
+                if (pawn && pawn == g_ammoProbePawnObj) {
+                    int shown = 0;
+                    for (int i = 0; i < ammoprobe::kPawnSlots; ++i) {
+                        const void* p = (const void*)(pawn + (uintptr_t)(i * 4));
+                        const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                         : ammoprobe::kUnreadable;
+                        if (v != g_ammoProbePawnPrev[i]) {
+                            if (shown < 24)
+                                Log("ammo probe: pawn diff obj=%p off=+0x%03x %d->%d", (void*)pawn,
+                                    (unsigned)(i * 4), g_ammoProbePawnPrev[i], v);
+                            ++shown;
+                            g_ammoProbePawnPrev[i] = v;
+                        }
+                    }
+                    if (shown == 0) Log("ammo probe: pawn diff obj=%p no changes", (void*)pawn);
+                    else if (shown > 24) Log("ammo probe: pawn diff obj=%p ... +%d more", (void*)pawn, shown - 24);
+                } else if (pawn) {
+                    g_ammoProbePawnObj = pawn;
+                    for (int i = 0; i < ammoprobe::kPawnSlots; ++i) {
+                        const void* p = (const void*)(pawn + (uintptr_t)(i * 4));
+                        g_ammoProbePawnPrev[i] = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                                : ammoprobe::kUnreadable;
+                    }
+                    Log("ammo probe: pawn obj changed, rebaselined (no diff this pull)");
+                }
+                uintptr_t wcls = 0;
+                if (Readable((const void*)(wobj + OBJ_CLASS), sizeof(uintptr_t)))
+                    wcls = *reinterpret_cast<const uintptr_t*>(wobj + OBJ_CLASS);
+                static uintptr_t shotCls = 0;
+                static int shotOff = -2;
+                if (wcls && wcls != shotCls) {
+                    shotCls = wcls;
+                    shotOff = PropOffsetInChain(wcls, "mShotCount");
+                    char cc[80] = "(none)";
+                    NameOf(wcls, cc, sizeof(cc));
+                    Log("ammo probe: mShotCount %+d on %s", shotOff, cc);
+                }
+                if (shotOff >= 0 && Readable((const void*)(wobj + shotOff), 4)) {
+                    Log("ammo probe: shots total=%d", *reinterpret_cast<const int32_t*>(wobj + shotOff));
                 }
             }
         }

@@ -18,7 +18,14 @@ Reference art (`vr-mods/references/`):
 volatile words are flags/timers/coords/event latches. Static small ints
 (3/4/20/30/...) never move. Falsifier for round 2 stands: enumerate NAMES.
 
-## RE round 4: firemode object (this change)
+## RE round 5: pawn diffs + shots-fired proof (this change)
+
+Three sessions prove no mag int on weapon/firemode actors. Remaining doubt:
+did the taps actually fire? `mShotCount` (dump-named, resolved BY NAME per
+class) is logged per pull — climbs iff shots fire. Pawn words diff per pull
+(location sway wobbles floats; mag/reserve would show exact small-int
+steps). If shots fire and nothing steps anywhere, ammo lives in bins/
+inventory (mUsesAmmoType trail) — next experiment.
 
 Dump vocabulary proves RvWeaponShared's own data holds no ammo counter, but
 `+0x023C WeaponFireTypes` exists (UT pattern: live counters on the firemode
