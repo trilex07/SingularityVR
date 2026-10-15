@@ -18,65 +18,22 @@ Reference art (`vr-mods/references/`):
 volatile words are flags/timers/coords/event latches. Static small ints
 (3/4/20/30/...) never move. Falsifier for round 2 stands: enumerate NAMES.
 
-## RE round 9: HUD display cache sample (this change)
+## RE round 9 verdict: HUD cache PROVEN live
 
-HUD vocabulary: `mClipAmmo`/`mBinAmmo`/`mClipSize` (+0x578/57C/580) — the
-displayed numbers. Resolved BY NAME per HUD class, sampled per pull.
-Falsifier: clip -1 per spaced tap, bin static during fire. If live, round 10
-hardens them like Health (offsets + Readable + sampled LONGs) and builds the
-plates (live digits, white/red mag, R3 hide).
+`mClipAmmo`/`mBinAmmo`/`mClipSize` (+0x578/57C/580 on RvHUD): clip
+4→3→2→1→[reload]→6→5→4 (-1/tap), bin 16→10 on the -6 reload. History:
+rounds 1-5 ruled out weapon [0,0x1000), firemode, pawn ints (+0x114 pawn
+clock counts shots); vocabularies hold no ammo data fields; InvManager
+words static; HUD dump needed forced find + relocation to fire at all.
 
-InvManager words static across shots; HUD dump never fired (throttled find
-+ equip-only placement). This round: `InvManager` offset resolved BY NAME
-per pawn class (cached, logged once), manager class dumped for link names;
-`FindHudObject(true)` forced once so the HUD dump actually runs. Falsifier:
-named Inventory/ammo-pool links on the manager; HUD display fields.
+## RE round 10: plates runtime (this change)
 
-Pawn +0x114 climbs with trigger pulls (+3,+3,+3,+5,+1,+1 ≈ burst lengths;
-total 3→22) — the shot clock; mShotCount=1 means first-shot-latch semantics,
-not totals. Mag still absent everywhere sampled. New: `InvManager` (+0x03D0,
-dump-named, resolved BY NAME per pawn class) dumped [0,0x200) baseline+diff;
-HUD class dump moved from equip (never fired: same gun + HUD-absent-at-load)
-into the trigger block. Falsifier: manager/bin ints stepping against the
-+0x114 clock (mag down on fire, reserve on pickup).
-
-Native HUD renders ammo, so its object may cache displayed mag/reserve in
-NAMED fields. Same one-shot pattern in LogEquippedClass (max 2 HUD classes,
-probe flag). Falsifier: named mag/reserve fields whose live values track
-firing/pickups. If absent, the value is computed on the fly (GFx push) and
-the trail goes native (Ghidra iNative table) — stated now so the escalation
-is pre-authorized by evidence, not decided mid-frustration.
-
-Three sessions prove no mag int on weapon/firemode actors. Remaining doubt:
-did the taps actually fire? `mShotCount` (dump-named, resolved BY NAME per
-class) is logged per pull — climbs iff shots fire. Pawn words diff per pull
-(location sway wobbles floats; mag/reserve would show exact small-int
-steps). If shots fire and nothing steps anywhere, ammo lives in bins/
-inventory (mUsesAmmoType trail) — next experiment.
-
-Dump vocabulary proves RvWeaponShared's own data holds no ammo counter, but
-`+0x023C WeaponFireTypes` exists (UT pattern: live counters on the firemode
-object). `WeaponFireTypes` registered in g_wantNames, resolved BY NAME per
-weapon class (never assumed); `WeaponFireTypes[0]` dumped [0,0x200)
-baseline+diff with `fm` tags. Falsifier: an int there decrementing once per
-spaced tap IS the mag. Reserve still open (bins hypothesis).
-
-## Runtime plan (after offsets harden like Health run-199)
-
-Round-1/2 verdict: no ±1 int in weapon [0,0x400); class vocabulary shows
-ammo lives behind GetAmmoInClip/GetAmmoInBin-style accessors with no plain
-data field in the dump. Round 3 widens the weapon window to [0,0x1000) and
-adds a one-shot pawn baseline [0,0x800) for reserve candidates by value.
-Script discipline matters: SINGLE taps spaced ~2 s (auto spray + reloads
-mask the sawtooth). Falsifier unchanged: a per-tap decrementing int IS the
-mag; reserve identified by value, verified by pickup later.
-
-`LogEquippedClass` dumps the equipped weapon's class chain once per class
-(max 4) while the probe flag is armed — run-235 pattern, no guessing. Same
-session also re-collects trigger diffs. Offline analysis then names mag
-(+reserve) candidates that round 3 verifies by motion.
-
-## Runtime plan (after offsets harden like Health run-199)
+Per-gun plate bg + cover quads over baked digits + right-aligned strip
+glyphs (mag 3, reserve 4 digits) + white-mag cover iff empty; hidden on R3,
+on unknown gun/ammo, without weapon. `[Render] AmmoPlateEnabled=0` default
+OFF. Anchor: aim hand +12 cm; width 24% frame height (placement tuning left
+for L3). Art: 4 plates (1024x341) + digits strip (2172x240) in
+vr-assets/hud/katorga/ammo/ (installed data).
 
 - Per held gun: plate quad semi-transparent behind the gun; hidden while R3
   wheel is open (no mutual overlap).

@@ -13,6 +13,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "weapon_holster.h"
 #include "weapon_wheel.h"
 #include "ammo_probe.h"
+#include "ammo_layout.h"
 #include "weapon_wheel_direct_select.h"
 #include "weapon_wheel_catalog_load.h"
 #include "weapon_wheel_atlas.h"
@@ -5421,6 +5422,8 @@ void StampCaptureState(CopySlot& cap) {
 void DrawLaserSight(IDirect3DDevice9* dev);
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
+void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
+void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
@@ -5456,6 +5459,8 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawLaserSight(dev);
     DrawWristHealth(dev);
     DrawHealthPlate(dev);
+    DrawAmmoPlate(dev);
+    DrawAmmoPlate(dev);
     DrawWeaponWheel(dev);
     DrawVfxOverlay(dev);
     DrawVrContextPrompt(dev);
@@ -25375,6 +25380,249 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     if (old) old->Release(); if (depth) depth->Release(); back->Release();
 }
 
+// ---- Katorga ammo plates: one per held gun, semi-transparent behind it ----
+// Default OFF ([Render] AmmoPlateEnabled). Shown while a known gun is held;
+// hidden while the R3 wheel is open so the two never overlap. Mag/reserve
+// digits are live (HUD mClipAmmo/mBinAmmo, proven by the round-9 probe);
+// baked digits are covered. White mag cell is covered when the mag is empty
+// (red box + red mag stay as drawn). Unknown values hide the plate, never a
+// guessed one.
+volatile LONG g_ammoPlate = 0;
+static char g_ammoAssetRoot[MAX_PATH] = "vr-assets/hud/katorga/ammo";
+static IDirect3DTexture9* g_ammoPlateTex[4]{};
+static IDirect3DTexture9* g_ammoDigitsTex = nullptr;
+static volatile LONG g_ammoArtState = 0;   // 0 unloaded, 1 ready, -1 failed (logged once)
+static volatile LONG g_ammoUnknownSaid = 0;
+// HUD sampler cache: offsets resolved BY NAME per HUD class (probe round 9).
+static uintptr_t g_ammoHudCls = 0;
+static int g_ammoOffClip = -2, g_ammoOffBin = -2, g_ammoOffSize = -2;
+
+static bool LoadAmmoPng(IDirect3DDevice9* dev, const char* file, IDirect3DTexture9** out) {
+    char dll[MAX_PATH]{};
+    HMODULE self = nullptr;
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCSTR)&LoadAmmoPng, &self) ||
+        !GetModuleFileNameA(self, dll, MAX_PATH)) return false;
+    char* slash = strrchr(dll, '\\');
+    if (!slash) return false;
+    *slash = 0;
+    std::string root = g_ammoAssetRoot;
+    for (char& c : root) if (c == '/') c = '\\';
+    char pngPath[MAX_PATH]{};
+    _snprintf_s(pngPath, sizeof(pngPath), _TRUNCATE, "%s\\%s\\%s", dll, root.c_str(), file);
+    CoInitializeEx(nullptr, COINIT_MULTITHREADED); // no-op if the game COM is already up
+    wchar_t wpng[MAX_PATH]{};
+    if (!MultiByteToWideChar(CP_ACP, 0, pngPath, -1, wpng, MAX_PATH)) return false;
+    IWICImagingFactory* fac = nullptr;
+    IWICBitmapDecoder* dec = nullptr;
+    IWICBitmapFrameDecode* frame = nullptr;
+    IWICFormatConverter* conv = nullptr;
+    UINT pw = 0, ph = 0;
+    std::vector<BYTE> px;
+    bool ok = SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                                         IID_PPV_ARGS(&fac))) && fac &&
+              SUCCEEDED(fac->CreateDecoderFromFilename(wpng, nullptr, GENERIC_READ,
+                                                       WICDecodeMetadataCacheOnDemand, &dec)) && dec &&
+              SUCCEEDED(dec->GetFrame(0, &frame)) && frame &&
+              SUCCEEDED(fac->CreateFormatConverter(&conv)) && conv &&
+              SUCCEEDED(conv->Initialize(frame, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone,
+                                         nullptr, 0.0, WICBitmapPaletteTypeCustom)) &&
+              SUCCEEDED(conv->GetSize(&pw, &ph)) && pw > 0 && pw <= 2048 && ph > 0 && ph <= 2048;
+    if (ok) {
+        px.resize((size_t)pw * ph * 4);
+        ok = SUCCEEDED(conv->CopyPixels(nullptr, pw * 4, (UINT)px.size(), px.data()));
+    }
+    if (conv) conv->Release();
+    if (frame) frame->Release();
+    if (dec) dec->Release();
+    if (fac) fac->Release();
+    if (!ok) return false;
+    IDirect3DTexture9* tex = nullptr;
+    if (FAILED(dev->CreateTexture(pw, ph, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, nullptr)) || !tex)
+        return false;
+    D3DLOCKED_RECT lr{};
+    if (FAILED(tex->LockRect(0, &lr, nullptr, 0))) { tex->Release(); return false; }
+    const BYTE* src = px.data();
+    for (UINT y = 0; y < ph; ++y)
+        memcpy((BYTE*)lr.pBits + (size_t)y * lr.Pitch, src + (size_t)y * pw * 4, (size_t)pw * 4);
+    tex->UnlockRect(0);
+    *out = tex;
+    return true;
+}
+
+static void MaybeLoadAmmoArt(IDirect3DDevice9* dev) {
+    if (InterlockedCompareExchange(&g_ammoArtState, 0, 0) != 0) return;
+    const char* files[4] = { "plate-centurion.png", "plate-rifle.png",
+                             "plate-shotgun.png", "plate-sniper.png" };
+    for (int i = 0; i < 4; ++i) {
+        if (!LoadAmmoPng(dev, files[i], &g_ammoPlateTex[i])) {
+            InterlockedExchange(&g_ammoArtState, -1);
+            Log("ammo plate: art unavailable (%s) - plates hidden", files[i]);
+            return;
+        }
+    }
+    if (!LoadAmmoPng(dev, "ammo-digits.png", &g_ammoDigitsTex)) {
+        InterlockedExchange(&g_ammoArtState, -1);
+        Log("ammo plate: art unavailable (ammo-digits.png) - plates hidden");
+        return;
+    }
+    InterlockedExchange(&g_ammoArtState, 1);
+    Log("ammo plate: art ready (4 plates + digits)");
+}
+
+void DrawAmmoPlate(IDirect3DDevice9* dev) {
+    if (!Rd(g_ammoPlate) || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
+        Rd(g_weaponWheelOpen) || !WeaponInHands() ||
+        !g_handPositionValid[AimHand()] || !g_haveEyes ||
+        !g_origSetRenderTarget || !g_origDrawPrimUP) return;
+    if (InterlockedCompareExchange(&g_ammoArtState, 0, 0) == 0) MaybeLoadAmmoArt(dev);
+    if (InterlockedCompareExchange(&g_ammoArtState, 0, 0) != 1) return;
+    const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+    const int plate = ammoplates::PlateForGunVerts(heldVerts);
+    if (plate < 0 || plate > 3 || !g_ammoPlateTex[plate] || !g_ammoDigitsTex) return;
+    // HUD sampler: offsets BY NAME per HUD class (round-9 probe verdict).
+    const uintptr_t hud = FindHudObject();
+    uintptr_t hc = 0;
+    if (hud && Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t)))
+        hc = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS);
+    if (hc && hc != g_ammoHudCls) {
+        g_ammoHudCls = hc;
+        g_ammoOffClip = PropOffsetInChain(hc, "mClipAmmo");
+        g_ammoOffBin = PropOffsetInChain(hc, "mBinAmmo");
+        g_ammoOffSize = PropOffsetInChain(hc, "mClipSize");
+        char cc[80] = "(none)";
+        NameOf(hc, cc, sizeof(cc));
+        Log("ammo plate: HUD cache clip%+d bin%+d size%+d on %s",
+            g_ammoOffClip, g_ammoOffBin, g_ammoOffSize, cc);
+    }
+    int clip = -1, bin = -1;
+    if (g_ammoOffClip >= 0 && g_ammoOffBin >= 0 && hud &&
+        Readable((const void*)(hud + g_ammoOffClip), 4) &&
+        Readable((const void*)(hud + g_ammoOffBin), 4)) {
+        clip = *reinterpret_cast<const int32_t*>(hud + g_ammoOffClip);
+        bin = *reinterpret_cast<const int32_t*>(hud + g_ammoOffBin);
+    }
+    if (clip < 0 || bin < 0) {
+        if (!InterlockedCompareExchange(&g_ammoUnknownSaid, 0, 0)) {
+            InterlockedExchange(&g_ammoUnknownSaid, 1);
+            Log("ammo plate: ammo unknown - hidden until readable");
+        }
+        return;
+    }
+    const uipointer::V hand{ g_handLastPos[AimHand()].x, g_handLastPos[AimHand()].y + 0.12f,
+                             g_handLastPos[AimHand()].z };
+    IDirect3DSurface9* back = nullptr;
+    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
+    D3DSURFACE_DESC d{};
+    if (FAILED(back->GetDesc(&d)) || d.Width < 8 || d.Height < 8) {
+        back->Release();
+        return;
+    }
+    IDirect3DSurface9* old = nullptr;
+    IDirect3DSurface9* depth = nullptr;
+    dev->GetRenderTarget(0, &old);
+    dev->GetDepthStencilSurface(&depth);
+    if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) {
+        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    if (FAILED(g_wristState->Capture())) {
+        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    dev->SetDepthStencilSurface(nullptr);
+    g_origSetRenderTarget(dev, 0, back);
+    D3DVIEWPORT9 vp{0, 0, d.Width, d.Height, 0.0f, 1.0f};
+    dev->SetViewport(&vp);
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetRenderState(D3DRS_ZENABLE, FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    struct AmmoVtx { float x, y, z, rhw; DWORD c; float u, v; };
+    const int plateW = std::max(64, (int)(d.Height * 0.24f));
+    const int plateH = std::max(21, plateW * 724 / 2172);
+    // Cover baked digit bands + white mag cell when empty (plate fractions).
+    float mcx0, mcy0, mcx1, mcy1, rcx0, rcy0, rcx1, rcy1, wcx0, wcy0, wcx1, wcy1;
+    ammoplates::MagCover(mcx0, mcy0, mcx1, mcy1);
+    ammoplates::ReserveCover(rcx0, rcy0, rcx1, rcy1);
+    ammoplates::WhiteMagCover(wcx0, wcy0, wcx1, wcy1);
+    const DWORD coverCol = ammoplates::CoverColor();
+    const bool empty = ammoplates::MagEmpty(clip);
+    float mrx, mtop, mhh, rrx, rtop, rhh;
+    ammoplates::MagDigits(mrx, mtop, mhh);
+    ammoplates::ReserveDigits(rrx, rtop, rhh);
+    for (int eye = 0; eye < 2; ++eye) {
+        uipointer::ScreenPoint p;
+        if (!VrUiProjectEye(eye, hand, p)) continue;
+        const float cx = (eye + p.u) * d.Width * 0.5f;
+        const float cy = p.v * d.Height;
+        const float x0 = cx - plateW * 0.5f, y0 = cy - plateH * 0.5f;
+        const float x1 = cx + plateW * 0.5f, y1 = cy + plateH * 0.5f;
+        dev->SetTexture(0, g_ammoPlateTex[plate]);
+        AmmoVtx v[4] = {
+            { x0, y0, 0, 1, 0xFFFFFFFF, 0, 0 },
+            { x1, y0, 0, 1, 0xFFFFFFFF, 1, 0 },
+            { x0, y1, 0, 1, 0xFFFFFFFF, 0, 1 },
+            { x1, y1, 0, 1, 0xFFFFFFFF, 1, 1 },
+        };
+        g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(AmmoVtx));
+        // Opaque covers use the diffuse channel (no texture).
+        dev->SetTexture(0, nullptr);
+        dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+        dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+        auto cover = [&](float fx0, float fy0, float fx1, float fy1) {
+            AmmoVtx r[4] = {
+                { x0 + fx0 * plateW, y0 + fy0 * plateH, 0, 1, coverCol, 0, 0 },
+                { x0 + fx1 * plateW, y0 + fy0 * plateH, 0, 1, coverCol, 0, 0 },
+                { x0 + fx0 * plateW, y0 + fy1 * plateH, 0, 1, coverCol, 0, 0 },
+                { x0 + fx1 * plateW, y0 + fy1 * plateH, 0, 1, coverCol, 0, 0 },
+            };
+            g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, r, sizeof(AmmoVtx));
+        };
+        cover(mcx0, mcy0, mcx1, mcy1);
+        cover(rcx0, rcy0, rcx1, rcy1);
+        if (empty) cover(wcx0, wcy0, wcx1, wcy1);
+        // Live digits from the strip texture.
+        dev->SetTexture(0, g_ammoDigitsTex);
+        dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+        dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+        const float DW = 2172.0f, DH = 240.0f;
+        auto digits = [&](int value, int maxDigits, float rightEdge, float top, float height) {
+            ammoplates::DigitQuad q[4];
+            const int n = ammoplates::LayoutNumber(value, maxDigits,
+                x0 + rightEdge * plateW, y0 + top * plateH, height * plateH, q, 4);
+            for (int i = 0; i < n; ++i) {
+                const ammoplates::GlyphRect g = ammoplates::DigitGlyph(q[i].glyph);
+                AmmoVtx t[4] = {
+                    { q[i].x0, q[i].y0, 0, 1, 0xFFFFFFFF, g.x0 / DW, g.y0 / DH },
+                    { q[i].x1, q[i].y0, 0, 1, 0xFFFFFFFF, g.x1 / DW, g.y0 / DH },
+                    { q[i].x0, q[i].y1, 0, 1, 0xFFFFFFFF, g.x0 / DW, (g.y1) / DH },
+                    { q[i].x1, q[i].y1, 0, 1, 0xFFFFFFFF, g.x1 / DW, (g.y1) / DH },
+                };
+                g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, t, sizeof(AmmoVtx));
+            }
+        };
+        digits(clip, 3, mrx, mtop, mhh);
+        digits(bin, 4, rrx, rtop, rhh);
+    }
+    g_wristState->Apply();
+    if (old) g_origSetRenderTarget(dev, 0, old);
+    dev->SetDepthStencilSurface(depth);
+    if (old) old->Release(); if (depth) depth->Release(); back->Release();
+}
+
 // A flat cutscene should read as a cinema screen, not as a full-field texture
 // glued to the user's face.  The game has already rendered the mono image once
 // into the SBS target; this inexpensive matte clears the area around a centered
@@ -29436,6 +29684,20 @@ void LoadIniSettings() {
         }
     }
     Log("health plate: %s (plates root %s)", Rd(g_healthPlate) ? "ENABLED" : "off", g_platesAssetRoot);
+    InterlockedExchange(&g_ammoPlate,
+        GetPrivateProfileIntA("Render", "AmmoPlateEnabled", 0, path) ? 1 : 0);
+    {
+        char ammoRoot[MAX_PATH]{};
+        GetPrivateProfileStringA("Render", "KatorgaAmmoAssetRoot",
+                                 "vr-assets/hud/katorga/ammo", ammoRoot, sizeof(ammoRoot), path);
+        size_t al = strlen(ammoRoot);
+        if (al > 0 && al < sizeof(g_ammoAssetRoot)) {
+            memcpy(g_ammoAssetRoot, ammoRoot, al + 1);
+            for (size_t i = 0; i < al; ++i)
+                if (g_ammoAssetRoot[i] == '/') g_ammoAssetRoot[i] = '\\';
+        }
+    }
+    Log("ammo plate: %s (ammo root %s)", Rd(g_ammoPlate) ? "ENABLED" : "off", g_ammoAssetRoot);
     Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld, scene trace=%ld",
         Rd(g_wristHealth),Rd(g_renderEvidence),Rd(g_sceneModeTrace));
     Log("cutscene presentation: %s, cinema matte=%s (VR panel rows)",
