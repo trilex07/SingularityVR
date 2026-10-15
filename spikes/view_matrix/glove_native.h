@@ -8,6 +8,12 @@
 
 namespace nativegloves {
 inline bool Finger(unsigned b){return (b>=10&&b<=25&&b!=13)||(b>=70&&b<=84);}
+inline bool Thumb(unsigned b){return (b>=10&&b<=12)||(b>=70&&b<=72);}
+// MAIN round 9: thumb curl gain. The full authored opposition (62.8 deg)
+// drives the thumb through the other fingers at full grip (physical PSVR2
+// report). 0.7 keeps the authored shape, stopping short of intersection.
+// Falsifier: still intersects -> lower; thumb looks stiff -> raise toward 1.
+inline float ThumbGain(){ return 0.7f; }
 struct Data {std::vector<std::uint16_t> indices;gloves::Q curl[90]{};unsigned capTriangles=0;};
 inline bool Decode(const unsigned char* p,std::size_t bytes,Data& out){
     if(!p||bytes<32||std::memcmp(p,"SVNI",4)||gloves::U32(p+4)!=1||
@@ -96,7 +102,7 @@ public:
             if(Finger(b)){
                 const int side=gloveisolate::NoTmdCookedHandSide(b);
                 if(side<0)return false;
-                const float t=grip[side];const auto q=data.curl[b];gloves::Q blend;
+                const float t=grip[side]*(Thumb(b)?ThumbGain():1.0f);const auto q=data.curl[b];gloves::Q blend;
                 // Shortest-path normalized quaternion blend; rigid at all t.
                 if(!gloves::Normalize({q.x*t,q.y*t,q.z*t,1+(q.w-1)*t},blend))return false;
                 armbind::Mat rotation{};rotation.m[3][3]=1;

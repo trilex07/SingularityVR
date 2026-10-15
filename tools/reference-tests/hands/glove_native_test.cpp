@@ -43,6 +43,10 @@ static void QuaternionTests(){
 }
 int main(int argc,char** argv){
     GuardTests();QuaternionTests();
+    for(unsigned b=0;b<90;++b){
+        const bool th=nativegloves::Thumb(b);
+        assert(th==((b>=10&&b<=12)||(b>=70&&b<=72)));
+    }
     if(argc!=2){std::puts("PASS native index guard CPU fake; native asset checks not requested");return 0;}
     nativegloves::Renderer renderer;assert(renderer.Load(argv[1])&&renderer.Ready());
     std::vector<unsigned char> bytes;assert(gloves::Read(argv[1],bytes,128*1024));
