@@ -1,10 +1,11 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 ammo PROBE DEPLOYED for L3 (DLL 832CDFB7/source b57be24,
-built==installed; backup 20261015-130435). INI leased AmmoProbe=8 (diff: +1
-line). Need: pistol, ~8 SPACED single shots (no switch/holster), exit. Log
-must show BASELINE + per-shot diffs. Live:
-deployment/hands-dubbing/ammo-probe-20261015/live.json. Prior history.
+LATEST 2026-10-15 ammo PROBE ROUND-2 DEPLOYED (DLL 05F960F0/source 2a22d62,
+built==installed; backup 20261015-131755; INI AmmoProbe=8 carried over).
+Adds weapon-class property dump on equip (1/class, max 4) + same trigger
+diffs. Need: hold/switch guns (dump names), ~8 spaced shots, exit. Then
+offline: name mag/reserve candidates for round-3 motion verification. Live:
+deployment/hands-dubbing/ammo-probe2-20261015/live.json. Prior history.
 
 LATEST 2026-10-15 CINE ROUND-2 L3_PASS (user: stereo back after Load).
 Log: `menu-load cut ... latch=1` -> `VideoFlat -> GameplayStereo`, drift back
