@@ -57,10 +57,10 @@ int main() {
     // Metrics scale with frame height and stay sane at degenerate input.
     {
         Metrics m = RoundMetrics(1080);
-        Expect(m.outerR == 216 && m.innerR > 0 && m.innerR < m.outerR, "1080p radii");
+        Expect(m.outerR == 172 && m.innerR > 0 && m.innerR < m.outerR, "1080p radii");
         Expect(m.iconR < m.labelR && m.labelR < m.outerR, "anchor ordering");
         Metrics tiny = RoundMetrics(0);
-        Expect(tiny.outerR == 96 && tiny.iconHalf >= 12, "degenerate height floors");
+        Expect(tiny.outerR == 80 && tiny.iconHalf >= 12, "degenerate height floors");
     }
 
     // Glyph sanitation is explicit: lowercase folds, supported symbols stay,
@@ -82,28 +82,85 @@ int main() {
     }
 
     // Slot labels come from the catalog; slot 0 shows the held weapon.
+    // Unowned labelled sectors (verts never held, not currently held) yield
+    // no label: the wheel never names a weapon the player does not own yet.
     {
         const char* labels[4] = { "Obecna", "Centurion", "AR9 Valkyrie", "Spikeshot" };
         const long verts[4] = { 0, 5799, 11387, 8297 };
+        const long seenNone[1] = { 0 };
+        const long seenAr[2] = { 5799, 11387 };
+        const long seenAll[4] = { 5799, 11387, 8297, 1 };
         char dst[32];
-        Expect(LabelForSlot(labels, verts, 4, 2, 5799, dst, sizeof(dst)) &&
+        Expect(LabelForSlot(labels, verts, 4, 2, 5799, seenAr, 2, dst, sizeof(dst)) &&
                std::strcmp(dst, "AR9 VALKYRIE") == 0, "plain slot label");
-        Expect(LabelForSlot(labels, verts, 4, 0, 11387, dst, sizeof(dst)) &&
+        Expect(LabelForSlot(labels, verts, 4, 0, 11387, seenAr, 2, dst, sizeof(dst)) &&
                std::strcmp(dst, "AR9 VALKYRIE") == 0, "slot0 shows held weapon");
-        Expect(LabelForSlot(labels, verts, 4, 0, 0, dst, sizeof(dst)) &&
+        Expect(LabelForSlot(labels, verts, 4, 0, 0, seenNone, 1, dst, sizeof(dst)) &&
                std::strcmp(dst, "OBECNA") == 0, "slot0 fallback without verts");
-        Expect(LabelForSlot(labels, verts, 4, 0, 12345, dst, sizeof(dst)) &&
+        Expect(LabelForSlot(labels, verts, 4, 0, 12345, seenNone, 1, dst, sizeof(dst)) &&
                std::strcmp(dst, "OBECNA") == 0, "slot0 fallback unknown verts");
+        Expect(!LabelForSlot(labels, verts, 4, 2, 5799, seenNone, 1, dst, sizeof(dst)),
+               "unowned sector unnamed");
+        Expect(LabelForSlot(labels, verts, 4, 2, 11387, seenNone, 1, dst, sizeof(dst)) &&
+               std::strcmp(dst, "AR9 VALKYRIE") == 0, "held weapon always named");
+        Expect(LabelForSlot(labels, verts, 4, 3, 5799, seenAll, 4, dst, sizeof(dst)) &&
+               std::strcmp(dst, "SPIKESHOT") == 0, "seen weapon named");
+        Expect(!LabelForSlot(labels, verts, 4, 3, 5799, nullptr, 0, dst, sizeof(dst)),
+               "null seen set gates label");
         const char* empty[2] = { "", "" };
         const long ev[2] = { 0, 0 };
-        Expect(!LabelForSlot(empty, ev, 2, 1, 0, dst, sizeof(dst)), "empty label refused");
-        Expect(!LabelForSlot(labels, verts, 4, 9, 0, dst, sizeof(dst)), "oob slot refused");
-        Expect(!LabelForSlot(nullptr, verts, 4, 1, 0, dst, sizeof(dst)), "null labels refused");
+        Expect(!LabelForSlot(empty, ev, 2, 1, 0, seenNone, 1, dst, sizeof(dst)), "empty label refused");
+        Expect(!LabelForSlot(labels, verts, 4, 9, 0, seenNone, 1, dst, sizeof(dst)), "oob slot refused");
+        Expect(!LabelForSlot(nullptr, verts, 4, 1, 0, seenNone, 1, dst, sizeof(dst)), "null labels refused");
         // Long names truncate at kMaxLabel display glyphs, never overflow.
         const char* longL[1] = { "Very Long Weapon Name X" };
-        const long lv[1] = { 5799 };
-        Expect(LabelForSlot(longL, lv, 1, 0, 0, dst, sizeof(dst)) &&
+        const long lv[1] = { 0 };
+        Expect(LabelForSlot(longL, lv, 1, 0, 0, seenNone, 1, dst, sizeof(dst)) &&
                std::strlen(dst) == (size_t)kMaxLabel, "long label truncates");
+    }
+
+    // Hand-driven sector: synthetic eye looking -Z, 90-degree half tangents.
+    {
+        EyeBasis eye;
+        eye.pos = { 0, 0, 0 };
+        eye.fwd = { 0, 0, -1 };
+        eye.right = { 1, 0, 0 };
+        eye.up = { 0, 1, 0 };
+        eye.tanHalfX = 1.0f;
+        eye.tanHalfY = 1.0f;
+        Expect(HandSector(0.0f, 0.0f, 0.0f, eye, 4) == -1, "hand still keeps highlight");
+        Expect(HandSector(0.03f, 0.0f, 0.0f, eye, 4) == -1, "hand inside 6cm deadzone");
+        Expect(HandSector(0.5f, 0.0f, 0.0f, eye, 4) == 1, "hand right selects right");
+        Expect(HandSector(-0.5f, 0.0f, 0.0f, eye, 4) == 3, "hand left selects left");
+        Expect(HandSector(0.0f, 0.5f, 0.0f, eye, 4) == 0, "hand up selects up");
+        Expect(HandSector(0.0f, -0.5f, 0.0f, eye, 4) == 2, "hand down selects down");
+        Expect(HandSector(0.0f, 0.0f, 0.5f, eye, 4) == -1, "hand pull-back has no direction");
+        Expect(HandSector(0.0f, 0.0f, 3.0f, eye, 4) == -2, "hand behind eye refused");
+        Expect(HandSector(0.0f, 0.0f, -0.5f, eye, 4) == -1, "hand forward push has no direction");
+        EyeBasis bad = eye;
+        bad.tanHalfX = 0.0f;
+        Expect(HandSector(0.5f, 0.0f, 0.0f, bad, 4) == -2, "bad basis falls back to stick");
+        Expect(HandSector(0.5f, 0.15f, 0.0f, eye, 6) == 1, "hand direction holds for 6 slots");
+    }
+
+    // FSM: handSector -2 keeps legacy stick; >= -1 drives the highlight.
+    {
+        using namespace weaponwheel;
+        State s{};
+        Expect(Update(s, true, false, true, true, false, 0, -1, 4, -2) == Event::Open, "hand-capable open");
+        Expect(Update(s, true, false, true, true, false, 0, -1, 4, 1) == Event::SelectionChanged,
+               "hand sector steers");
+        Expect(s.selection == 1, "hand selection mirrored");
+        Expect(Update(s, true, false, true, true, false, 0, -1, 4, -1) == Event::None,
+               "hand deadzone keeps highlight");
+        Expect(Update(s, true, false, true, true, false, 0, -1, 4, 1) == Event::None,
+               "same hand sector is silent");
+        Expect(Update(s, false, false, true, true, false, 0, 0, 4, 1) == Event::Commit,
+               "hand release commits");
+        State t{};
+        Expect(Update(t, true, false, true, true, false, 1, 0, 4, -2) == Event::Open, "stick open");
+        Expect(Update(t, true, false, true, true, false, 1, 0, 4, -2) == Event::SelectionChanged,
+               "stick still works with -2");
     }
 
     if (g_fails == 0) std::puts("weapon wheel: round layout geometry + labels L1");

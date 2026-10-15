@@ -34,9 +34,13 @@ inline int SectorForStick(float x, float y, int slots, float deadzone = 0.35f) {
 // It owns no engine state: the caller mirrors `open`, `selection`, and commit
 // pulses into its native input path.  This makes press/hold/release behaviour
 // deterministic and prevents a held R3 from generating repeated commits.
+//
+// handSector selects the input source: -2 (default) keeps the legacy right
+// stick; -1 means "hand inside deadzone / no reading" (highlight unchanged);
+// >= 0 is the hand-driven sector. The desktop simulator passes -2 (stick).
 inline Event Update(State& state, bool r3Held, bool l3Held, bool gameplay,
                     bool weaponInHands, bool holstered, float stickX, float stickY,
-                    int slots) {
+                    int slots, int handSector = -2) {
     const bool pressed = r3Held && !state.priorR3;
     const bool released = !r3Held && state.priorR3;
     state.priorR3 = r3Held;
@@ -67,7 +71,8 @@ inline Event Update(State& state, bool r3Held, bool l3Held, bool gameplay,
         return Event::Cancel;
     }
 
-    const int sector = SectorForStick(stickX, stickY, slots);
+    const int sector = (handSector != -2) ? handSector
+                                                : SectorForStick(stickX, stickY, slots);
     if (sector >= 0 && sector != state.selection) {
         state.selection = sector;
         return Event::SelectionChanged;

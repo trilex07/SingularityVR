@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 wheel ROUND-2 IMPLEMENTED, L1_PASS + L2_PASS (user feedback
+on 2E2064FB: hand-select, smaller, ownership-gated labels, translucency).
+Head-relative hand travel (6 cm deadzone, eye-0 basis) drives selection via
+WeaponWheelPickSource=1 (default; 0 = legacy stick); FSM/commit untouched.
+Wheel 20%->16% frame height; labels only for held/seen weapons; fills
+translucent, text opaque. L1: 99-check layout suite (hand direction incl.
+behind-eye/deadzone/fallback, ownership gate, FSM hand edges) PASS. L2: x86
+PE32 /O2, static analysis clean (candidate SHA after clean-tree rebuild).
+Regression verdict from the 2E2064FB session log: doubled movies + 26-38 fps
+from boot predate first wheel OPEN — wheel code exonerated (early return
+while closed); fixed ~30 ms/frame stall, draw-count independent, needs
+separate A/B vs accepted 6F4BBEF2 on the same save. L3 redeploy pending.
+
 LATEST 2026-10-15 wheel ROUND layout IMPLEMENTED, L1_PASS + L2_PASS (MAIN
 takeover: previous agent gone, user authorises MAIN continuation in this
 checkout). Ring + wedge sectors + catalog labels behind

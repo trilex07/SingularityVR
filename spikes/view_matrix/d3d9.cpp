@@ -2210,6 +2210,27 @@ volatile LONG g_katorgaHud = 0;
 // Default OFF: the square-card path below is untouched. Gates visuals only;
 // input/commit FSM in SyncXRInput is identical in both modes.
 volatile LONG g_wwRound = 0;
+// Hand-driven selection (WeaponWheelPickSource=1, default): head-relative
+// right-hand offset latched at wheel open; 6 cm deadzone. Slot 0 release is
+// still Cancel. WeaponWheelPickSource=0 restores the legacy right stick.
+static XrVector3f g_wwHandAnchor{ 0, 0, 0 };
+static volatile LONG g_wwHandAnchorOk = 0;
+// Gun_verts the player has verifiably held (render + input threads read;
+// input thread appends). Labels are drawn only for these + the held weapon.
+static volatile LONG g_wwSeen[8]{};
+// Quaternion rotate for the hand-selection eye basis. Mirrors VrUiRotate
+// (vr_menu_overlay.h is included further down this TU, past SyncXRInput).
+static uipointer::V WwRotate(const XrQuaternionf& q, uipointer::V v) {
+    const uipointer::V axis{ q.x, q.y, q.z };
+    const auto cross = [](uipointer::V a, uipointer::V b) {
+        return uipointer::V{ a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z,
+                             a.x * b.y - a.y * b.x };
+    };
+    const uipointer::V t = cross(axis, v) * 2.0f;
+    const uipointer::V c = cross(axis, t);
+    return uipointer::V{ v.x + t.x * q.w + c.x, v.y + t.y * q.w + c.y,
+                         v.z + t.z * q.w + c.z };
+}
 static wheel_catalog::Catalog g_wwCatalog;
 static char g_katorgaAssetRoot[MAX_PATH] = "vr-assets/hud/katorga/3d";
 // Katorga icon atlas (render thread only: created lazily at first wheel draw,
@@ -9947,17 +9968,64 @@ void SyncXRInput(XrTime displayTime) {
     // recenter/screenshot chord, so opening is vetoed while L3 is held.  The
     // same edge state is also used by the deterministic desktop simulator.
     const bool r3Released = !r3Held && g_weaponWheelState.priorR3;
+    // Seen-weapons set for label gating (bounded: 8 entries, input thread).
+    {
+        const LONG curV = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+        if (curV > 0) {
+            bool known = false;
+            for (int k = 0; k < 8; ++k) {
+                if (InterlockedCompareExchange(&g_wwSeen[k], 0, 0) == curV) { known = true; break; }
+            }
+            if (!known) {
+                for (int k = 0; k < 8; ++k) {
+                    if (InterlockedCompareExchange(&g_wwSeen[k], 0, curV) == 0) {
+                        Log("weapon wheel: new weapon seen verts=%ld", curV);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    // Hand-driven sector: head-relative right-hand travel since R3 open, read
+    // as a screen direction through the current eye-0 basis (turning the head
+    // with a still hand does not steer). -2 keeps the legacy stick: source
+    // switch, projection failure, or invalid anchor/hand. Eye-pose reads race
+    // the render thread by design; the value is recomputed every input tick.
+    int handSector = -2;
+    const bool handPick = Rd(g_wwPickSource) != 0;
+    if (handPick && g_weaponWheelState.open && Rd(g_wwHandAnchorOk) &&
+        g_handPositionValid[1] && g_haveEyes) {
+        wheel_layout::EyeBasis eye;
+        eye.pos = { g_eyePose[0].position.x, g_eyePose[0].position.y, g_eyePose[0].position.z };
+        eye.fwd = WwRotate(g_eyePose[0].orientation, { 0, 0, -1 });
+        eye.right = WwRotate(g_eyePose[0].orientation, { 1, 0, 0 });
+        eye.up = WwRotate(g_eyePose[0].orientation, { 0, 1, 0 });
+        eye.tanHalfX = g_targetTanX;
+        eye.tanHalfY = g_targetTanY;
+        const float dx = (g_handLastPos[1].x - g_headPosXR[0]) - g_wwHandAnchor.x;
+        const float dy = (g_handLastPos[1].y - g_headPosXR[1]) - g_wwHandAnchor.y;
+        const float dz = (g_handLastPos[1].z - g_headPosXR[2]) - g_wwHandAnchor.z;
+        handSector = wheel_layout::HandSector(dx, dy, dz, eye, (int)g_weaponWheelSlots);
+    }
     const weaponwheel::Event wheelEvent = weaponwheel::Update(
         g_weaponWheelState, r3Held, l3Held, !uiMenu && feedGame && !Rd(g_gamePaused),
-        WeaponInHands(), Rd(g_weaponHolstered), tx, ty, (int)g_weaponWheelSlots);
+        WeaponInHands(), Rd(g_weaponHolstered), tx, ty, (int)g_weaponWheelSlots, handSector);
     if (wheelEvent == weaponwheel::Event::Open) {
         InterlockedExchange(&g_weaponWheelOpen, 1);
         InterlockedExchange(&g_weaponWheelSelection, 0);
         InterlockedExchange(&g_weaponWheelCommit, 0);
         InterlockedExchange(&g_weaponWheelPulseGap, 0);
+        if (handPick && g_handPositionValid[1]) {
+            g_wwHandAnchor.x = g_handLastPos[1].x - g_headPosXR[0];
+            g_wwHandAnchor.y = g_handLastPos[1].y - g_headPosXR[1];
+            g_wwHandAnchor.z = g_handLastPos[1].z - g_headPosXR[2];
+            InterlockedExchange(&g_wwHandAnchorOk, 1);
+        } else {
+            InterlockedExchange(&g_wwHandAnchorOk, 0);
+        }
         MaybeLoadWheelCatalog();
-        Log("weapon wheel: OPEN slots=%ld (R3 held; right stick selects, release commits)",
-            g_weaponWheelSlots);
+        Log("weapon wheel: OPEN slots=%ld (R3 held; %s selects, release commits)",
+            g_weaponWheelSlots, handPick ? "right hand moves" : "right stick");
     } else if (wheelEvent == weaponwheel::Event::SelectionChanged) {
         InterlockedExchange(&g_weaponWheelSelection, g_weaponWheelState.selection);
     } else if (wheelEvent == weaponwheel::Event::Commit) {
@@ -10000,9 +10068,11 @@ void SyncXRInput(XrTime displayTime) {
         InterlockedExchange(&g_weaponWheelCommit, pulses);
         Log("weapon wheel: COMMIT offset=%ld (native cycle pulses)",
             g_weaponWheelState.selection);
+        InterlockedExchange(&g_wwHandAnchorOk, 0);
     } else if (wheelEvent == weaponwheel::Event::Cancel) {
         InterlockedExchange(&g_weaponWheelOpen, 0);
         InterlockedExchange(&g_weaponWheelCommit, 0);
+        InterlockedExchange(&g_wwHandAnchorOk, 0);
     }
     static bool triangleWasHeld = false;
     const bool trianglePressed = triangleHeld && !triangleWasHeld;
@@ -24732,6 +24802,10 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
             slotVerts[i] = g_wwCatalog.sectors[i].verts;
         }
     }
+    // Snapshot of the seen-weapons set for label gating (render thread read).
+    long seenCopy[8]{};
+    for (int k = 0; k < 8; ++k)
+        seenCopy[k] = InterlockedCompareExchange(&g_wwSeen[k], 0, 0);
     struct HudIconVtx { float x, y, z, rhw; DWORD c; float u, v; };
     struct WwVtx { float x, y, z, rhw; DWORD c; };
     if (katorgaIcons && !roundOn) {
@@ -24763,11 +24837,15 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
             const float fx = (float)cx, fy = (float)cy;
             dev->SetTexture(0, nullptr);
             dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
-            dev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+            // Translucent fills: the scene stays visible through the wheel.
+            // Text below stays opaque ClearRects for readability.
+            dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+            dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+            dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
             dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
             dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
-            const DWORD wedgeIdle = 0xB0142A40, wedgeSel = 0xF0FF8C1A;
-            const DWORD ringCol = 0xFF2FB9D8, ringSel = 0xFFFFA726;
+            const DWORD wedgeIdle = 0x99142A40, wedgeSel = 0xE0FF8C1A;
+            const DWORD ringCol = 0xC02FB9D8, ringSel = 0xE0FFA726;
             for (int i = 0; i < slots; ++i) {
                 float a0 = 0, a1 = 0;
                 wheel_layout::WedgeBounds(i, slots, 0.10f, a0, a1);
@@ -24812,13 +24890,13 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
                 const int segs = 24;
                 WwVtx disc[2 + 24 + 1];
                 disc[0].x = fx; disc[0].y = fy;
-                disc[0].z = 0; disc[0].rhw = 1; disc[0].c = 0xE0121A22;
+                disc[0].z = 0; disc[0].rhw = 1; disc[0].c = 0xC8121A22;
                 for (int k = 0; k <= segs; ++k) {
                     const float c = 2.0f * pi * (float)k / (float)segs;
                     float x = 0, y = 0;
                     wheel_layout::WedgePoint(fx, fy, (float)m.innerR, c, x, y);
                     disc[1 + k].x = x; disc[1 + k].y = y;
-                    disc[1 + k].z = 0; disc[1 + k].rhw = 1; disc[1 + k].c = 0xE0121A22;
+                    disc[1 + k].z = 0; disc[1 + k].rhw = 1; disc[1 + k].c = 0xC8121A22;
                 }
                 g_origDrawPrimUP(dev, D3DPT_TRIANGLEFAN, (UINT)segs, disc, sizeof(WwVtx));
                 D3DRECT text[256];
@@ -24869,17 +24947,22 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
                 dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
                 dev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
             }
-            // Sector labels near the rim (catalog, sanitised; W# fallback).
+            // Sector labels near the rim: catalog names only for owned weapons
+            // (held or verifiably seen); unowned sectors stay icon-only, and
+            // the W# fallback applies only without a catalog (orientation aid).
             for (int i = 0; i < slots; ++i) {
                 char label[wheel_layout::kMaxLabel + 1];
                 bool has = false;
                 if (haveCatalog)
                     has = wheel_layout::LabelForSlot(slotLabels, slotVerts, slots, i,
-                                                     heldVerts, label, sizeof(label));
-                if (!has) {
+                                                     heldVerts, seenCopy, 8,
+                                                     label, sizeof(label));
+                if (!has && !haveCatalog) {
                     _snprintf_s(label, sizeof(label), _TRUNCATE, "W%d", i + 1);
                     wheel_layout::SanitizeLabel(label, label, sizeof(label));
+                    has = label[0] != 0;
                 }
+                if (!has) continue;
                 const float c = wheel_layout::SectorCenter(i, slots);
                 float lx = 0, ly = 0;
                 wheel_layout::WedgePoint(fx, fy, (float)m.labelR, c, lx, ly);

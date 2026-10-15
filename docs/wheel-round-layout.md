@@ -3,7 +3,6 @@
 Reference mockup: `references/95f791be-39f6-461b-8470-8ff0664ee7e6.png`
 (6-wedge circular wheel, per-sector label/icon/ammo, orange selected wedge,
 centre SELECT WEAPON).
-
 ## OBSERVE (2026-10-15, PID428 session `ww-visual-20261015-0032`)
 
 - Catalog ready (8 sectors, 4 cycle entries), atlas ready (512x256, 16 icons),
@@ -69,3 +68,13 @@ or COMMIT pulses change count vs the squares build.
   wedges may see minor text overspill — noted, not blocked.
 - Catalog/atlas reads on the render thread follow the existing pattern
   (written once at first R3 open); same accepted lifetime as the icon path.
+
+## ROUND 2 (2026-10-15, user feedback on 2E2064FB)
+
+User: wheel OK and stick tilt works, but selection must follow RIGHT-HAND movement; wheel slightly too big; never name unowned weapons; wheel should be translucent. Separately: doubled loading/movie background per eye + ~35 fps.
+
+- Hand selection: head-relative hand travel since R3 open (anchor latched on Open), 6 cm deadzone, read as a screen direction through the current eye-0 basis (turning the head with a still hand does not steer). `WeaponWheelPickSource=1` (default, pre-existing INI key, previously unread); 0 restores the legacy stick. `weaponwheel::Update` takes `handSector` (-2 = stick, -1 = hold, >= 0 = sector); open/commit/cancel edges and sector-0 Cancel unchanged.
+- Smaller: outer radius 20% -> 16% of frame height.
+- Ownership gate: `g_wwSeen[8]` gun_verts held this session (input thread appends, bounded log once per weapon); labels draw only for held/seen sectors, others stay icon-only; W# fallback only without a catalog.
+- Translucent fills/ring/disc (alpha blend, ~60-88%); sector + centre text stay opaque.
+- Regression verdict (log evidence, same session): VideoFlat movies (lines 237-754) and 26-38 fps from boot (134 draws -> 33 fps) both predate the first wheel OPEN (line 5262); the round code early-returns while closed, so it cannot cause either. Same headset/resolution as the 89 fps PID428 session; fps is draw-count independent -> fixed ~30 ms/frame stall outside itemized hooks (`our work` residual). Wheel exonerated; fps/movies need a separate A/B (same save, accepted 6F4BBEF2 vs candidate) and stay OPEN, not attributed to this change.

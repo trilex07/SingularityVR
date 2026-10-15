@@ -14,6 +14,9 @@
 #include <cstddef>
 #include <cstring>
 
+#include "ui_pointer.h"
+#include "weapon_wheel.h"
+
 namespace wheel_layout {
 
 inline float Pi() { return 3.14159265358979323846f; }
@@ -70,8 +73,8 @@ struct Metrics {
 inline Metrics RoundMetrics(int backbufferH) {
     Metrics m;
     if (backbufferH < 8) backbufferH = 8;
-    m.outerR = backbufferH * 20 / 100;
-    if (m.outerR < 96) m.outerR = 96;
+    m.outerR = backbufferH * 16 / 100;
+    if (m.outerR < 80) m.outerR = 80;
     m.innerR = m.outerR * 36 / 100;
     m.iconHalf = m.outerR * 17 / 100;
     if (m.iconHalf < 12) m.iconHalf = 12;
@@ -116,19 +119,36 @@ enum { kMaxLabel = 16 };
 // slot0ShowsCurrent: when true and currentVerts matches a labelled catalog
 // entry, slot 0 (the no-op "current" sector) shows that weapon's label so the
 // top wedge reads as the held weapon instead of a cryptic placeholder.
+// Ownership gate: a labelled sector whose gun_verts is positive, is not the
+// currently held weapon, and is absent from the seen set (weapons the player
+// has verifiably held this session) yields NO label — the wheel never names
+// a weapon the player does not own yet. seen may be null (gate skipped).
 // Returns false when the slot has no usable label (caller draws icon only).
 // The FSM is untouched: slot 0 release is still Cancel (no commit pulses).
 inline bool LabelForSlot(const char* const* labels, const long* verts, int n,
-                         int slot, long currentVerts, char* dst, size_t cap) {
+                         int slot, long currentVerts, const long* seen, int nSeen,
+                         char* dst, size_t cap) {
     if (!labels || !verts || n <= 0 || !dst || cap == 0) return false;
     if (slot < 0 || slot >= n) return false;
     const char* pick = labels[slot];
+    long pickVerts = verts[slot];
     if (slot == 0 && currentVerts > 0) {
         for (int i = 0; i < n; ++i) {
-            if (verts[i] == currentVerts && labels[i] && labels[i][0]) { pick = labels[i]; break; }
+            if (verts[i] == currentVerts && labels[i] && labels[i][0]) {
+                pick = labels[i];
+                pickVerts = verts[i];
+                break;
+            }
         }
     }
     if (!pick || !pick[0]) return false;
+    if (pickVerts > 0 && pickVerts != currentVerts) {
+        bool owned = false;
+        for (int i = 0; seen && i < nSeen; ++i) {
+            if (seen[i] == pickVerts) { owned = true; break; }
+        }
+        if (!owned) return false;
+    }
     char clean[kMaxLabel + 1];
     SanitizeLabel(pick, clean, sizeof(clean));
     // Reject labels that sanitise to blank (e.g. "--" is fine, "   " is not).
@@ -142,6 +162,50 @@ inline bool LabelForSlot(const char* const* labels, const long* verts, int n,
     for (const char* p = clean; *p && ni + 1 < cap && ni < (size_t)kMaxLabel; ++p) dst[ni++] = *p;
     dst[ni] = 0;
     return ni > 0;
+}
+
+// Hand-driven selection: the hand offset D (meters, head-relative tracking
+// space: (hand - head) - anchor, where anchor was latched at wheel open).
+// The offset is read as a screen-space direction through the CURRENT eye
+// basis, so turning the head with a still hand does not steer the highlight.
+// Returns -2 when no reading is possible (caller falls back to the stick),
+// -1 inside the deadzone (keep current highlight), else 0..slots-1.
+enum { kHandSlotsMax = 8 };
+inline float HandDeadzoneM() { return 0.06f; }   // 6 cm of hand travel
+inline float HandNdcDeadzone() { return 0.02f; } // guards the forward push
+
+struct EyeBasis {
+    uipointer::V pos;   // eye position (tracking space)
+    uipointer::V fwd;   // view forward
+    uipointer::V right; // view right
+    uipointer::V up;    // view up
+    float tanHalfX = 0; // symmetric half-FOV tangents
+    float tanHalfY = 0;
+};
+
+inline int HandSector(float dx, float dy, float dz, const EyeBasis& eye, int slots) {
+    slots = weaponwheel::ClampSlots(slots);
+    const float m2 = dx * dx + dy * dy + dz * dz;
+    const float dead = HandDeadzoneM();
+    if (!(m2 >= dead * dead)) return -1; // zero/NaN/sub-deadzone travel
+    if (eye.tanHalfX <= 0 || eye.tanHalfY <= 0) return -2;
+    // Read D as a screen-space direction: project a reference point 2 m ahead
+    // of the eye and the same point shifted by D. A push straight along the
+    // view axis yields no direction (-1); a point behind the eye fails (-2).
+    const uipointer::V ref{ eye.pos.x + eye.fwd.x * 2.0f, eye.pos.y + eye.fwd.y * 2.0f,
+                            eye.pos.z + eye.fwd.z * 2.0f };
+    const uipointer::V tgt{ ref.x + dx, ref.y + dy, ref.z + dz };
+    uipointer::ScreenPoint a, b;
+    if (!uipointer::ProjectPoint(ref, eye.pos, eye.fwd, eye.right, eye.up,
+                                 eye.tanHalfX, eye.tanHalfY, a))
+        return -2;
+    if (!uipointer::ProjectPoint(tgt, eye.pos, eye.fwd, eye.right, eye.up,
+                                 eye.tanHalfX, eye.tanHalfY, b))
+        return -2; // target behind the eye: no meaningful direction
+    if (a.depth <= 0 || b.depth <= 0) return -2;
+    const float du = b.u - a.u, dv = b.v - a.v; // u right, v DOWN (screen-like)
+    if (!(du * du + dv * dv >= HandNdcDeadzone() * HandNdcDeadzone())) return -1;
+    return weaponwheel::SectorForStick(du, dv, slots, 0.0f);
 }
 
 } // namespace wheel_layout
