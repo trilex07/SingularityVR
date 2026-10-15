@@ -71,6 +71,10 @@ All keys are under `[Diagnostic]`, restart required:
 - Modes1/2 require `NativeMuzzleVSHash`, `NativeMuzzlePSHash` (16 hex FNV1a64)
   and `NativeMuzzleVSBytes`, `NativeMuzzlePSBytes`. Missing/invalid selection
   disables mutation. A failed GPU constant restore latches further repair OFF.
+  Mode2 ALSO requires `NativeMuzzleMatrixConvention=0` (ROW) or `1` (COL),
+  proven from that shader's actual position instructions, matching the source
+  camera's convention. Default-1 refuses repair: equal bytes and CTAB names alone
+  do not prove two shaders consume the same matrix orientation.
 
 Metadata is cached at existing shader setters (fixed1024 open-addressed slots,
 balanced bounded COM refs, release on Reset/shutdown), never queried per draw.
