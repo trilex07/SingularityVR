@@ -1,12 +1,15 @@
 # STATUS — session handoff
 
-LATEST 2026-10-15 wheel PR OPENED (user accepts visuals; switching test
-deferred — single-weapon save). denoted in docs/wheel-round-layout.md OPEN
-TEST DEBT: multi-weapon switch (select+DIRECT+LANDED+visible change),
-Seeker/TMD sectors, 6 slots, ammo. Wheel visuals (ring, 4 gun wedges, held
-brighter, unowned empty, labels, silhouette icons, hand highlight):
-PHYSICALLY_VERIFIED by user in headset. Switching logic: IMPLEMENTED +
-L1/L2 only (commit-mirror fix in, L3 evidence pending). Prior history.
+LATEST 2026-10-15 wheel PR PREPARED, not yet created: `gh` has no auth in
+this session (push works, PR creation needs user-side login). Branch
+fix/hud-3d-textures pushed (17 commits over origin/main). User creates via
+web compare link with the prepared title/body (see handoff message), then
+reviews/merges. Open test debt stands (multi-weapon switch).
+Wheel visuals (ring, 4 gun wedges, held brighter, unowned empty, labels,
+silhouette icons, hand highlight): PHYSICALLY_VERIFIED by user in headset.
+Switching logic: IMPLEMENTED + L1/L2 only (commit-mirror fix in, L3 evidence
+pending: select+DIRECT+LANDED+visible change on a 2+ gun save; Seeker/TMD
+sectors, 6 slots, ammo also open per docs/wheel-round-layout.md). Prior history.
 
 LATEST 2026-10-15 wheel ICONS installed (no DLL change): 6 weapon silhouettes
 cut from references/95f791be-....png into the Katorga atlas reserved row
