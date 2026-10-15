@@ -1,5 +1,28 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN plates round 2 DEPLOYED (DLL
+BBA4BF9590F9F7EDDA415EEB35E4A6A0EB03DBEDD02D691E9ACC1991B26EB57F/source
+22dc4aa branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-160921; game closed
+at deploy). Per-user package: (1) HP two-hand anchor +0.00->-0.02 and left
+shift 0.60W->0.85W; (2) ammo plate 0.19H->0.17H, anchor +0.05->+0.03;
+(3) MagEmpty clip<=0 -> clip<=2 (full white mag iff clip>2, red box iff <=2;
+white mag cell NEVER covered, left icon always visible); (4) MagCover y1
+0.615->0.710 hides baked cyan pips (measured bright y210-236 all 4 plates;
+reserve bullets icon verified above its cover, y178 vs cover y179);
+(5) holster moved Fwd8->6/Right12->18/Up-30->-36 (code defaults + source INI
++ installed INI lines 164-166; pre-edit INI backed to
+deployment/install-backups/20261015-160921/SingularityVR.ini.pre-holster,
+hash DECEB3AD); (6) NEW white 50%-alpha hip ring (DrawHolsterMarker, same
+cam-matrix UU projection as the laser, radius from widest axis probe,
+shown iff gun held && !holstered, full state save/restore, one-shot drew
+log). L1_PASS (layout incl. new <=2 rule, probe, holster state machine).
+L2_PASS (PE32, manifest commit 22dc4aa clean tree). L3/physical PENDING:
+15:53 session ran previous DLL only to startup; nobody has run BBA4BF95 in
+gameplay yet. Next: one PSVR2 pass (plates positions, <=2 red box, hip ring
+visible while holding gun, store/draw at new hip), then read drew/unknown
+lines. No fix claimed.
+
 LATEST 2026-10-15 MAIN plates L3 candidate DEPLOYED (DLL
 9EC02D511C347C488A17C960B8C6420B53926413A3C245E43B60B43576227008/source
 e943f06 branch plates-l3-main, x86 PE32 /O2, built==installed via
