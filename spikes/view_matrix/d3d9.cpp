@@ -25242,7 +25242,7 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     const plates_atlas::Rect* fullR = plates_atlas::Find(g_platesSheet, "seg-full");
     const plates_atlas::Rect* emptyR = plates_atlas::Find(g_platesSheet, "seg-empty");
     if (!bgR || !fullR || !emptyR) return; // atlas mismatch: hide (logged at load)
-    const uipointer::V anchor{ hand.x, hand.y + (twoHand ? 0.12f : 0.08f), hand.z };
+    const uipointer::V anchor{ hand.x, hand.y + (twoHand ? 0.05f : 0.08f), hand.z };
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
     D3DSURFACE_DESC d{};
@@ -25283,7 +25283,9 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
     struct PlateVtx { float x, y, z, rhw; DWORD c; float u, v; };
     const float AW = (float)g_platesSheet.width, AH = (float)g_platesSheet.height;
-    const int plateW = std::max(64, (int)(d.Height * 0.18f));
+    // Two-hand plate rides smaller and lower so it never covers the gunfight.
+    const int plateW = twoHand ? std::max(48, (int)(d.Height * 0.10f))
+                               : std::max(64, (int)(d.Height * 0.18f));
     const int plateH = std::max(10, plateW * 330 / 2001);
     for (int eye = 0; eye < 2; ++eye) {
         uipointer::ScreenPoint p;
