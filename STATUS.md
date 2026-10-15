@@ -1,5 +1,30 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 6 DEPLOYED (DLL
+AAABE9FE732BD4F2BE83F2212ACEF89CB260407EBF86599A5A792E2FE95D8387/source
+ffb5b83 branch plates-l3-main = merge origin/feature/glove-animation
+native-match (ea86587) + MAIN XR-space holster marker; x86 PE32 /O2,
+built==installed via tools/deploy-singularityvr.ps1 -DllOnly; backup
+20261015-174458; game closed at deploy; INI flags kept
+(GloveRendererEnabled=1, holster 6/18/-36)). Changes: (1) marker rewritten
+from camMat to XR projection — 17:19 log proved ammo drew while the marker
+never attempted, and camMat slots are invalidated by post-scene draws before
+Present, so no valid slot exists at overlay time; hip UU converts via the
+exact inverse of vrpose::TrackingDeltaToWorldUU (L1 roundtrip
+test-vrpose-invert.cpp) + head pos, radius via eye-right probe — only proven
+pieces (holster NearHip frame, plates' VrUiProjectEye); (2) side native-match
+merged (native cut/wrist, original UV/albedo, rig-tied scale, SVRG v2) and
+v2 pack installed with hash verification (AC199AF2/1942A834/0F6A90BB =
+side hashes.json; v1 backed to
+deployment/install-backups/20261015-171643/glove_*.svrg.v1); SVRT unchanged;
+(3) user screenshot analyzed: small plates beside ours have no mini-plate
+code path in the wheel (only DrawAmmoPlate draws plates+digits) — pending
+user identification if they persist. L1_PASS (vrpose invert, layout, probe,
+holster, glove 276-check anim + state guard on merged headers). L2_PASS
+(PE32, manifest commit ffb5b83 clean). L3/physical PENDING: ring at hip with
+gun held unholstered + native-match gloves (scale/cuff/fist) + digits fringe
+check after the bleed. No fix claimed.
+
 LATEST 2026-10-15 MAIN round 5 DEPLOYED (DLL
 65A1539F4D0529E83E08BA7004CAFAB78C887619362E0B1184EAC5900EAC71D5/source
 6cd7ab2 branch plates-l3-main, x86 PE32 /O2, built==installed via
