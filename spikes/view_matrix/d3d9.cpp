@@ -10137,10 +10137,12 @@ void SyncXRInput(XrTime displayTime) {
                 InterlockedExchange64(&g_lastMeleeEdgeMs,(LONG64)f.nowMs);
             }
         }
-        // MAIN round 11/12 pickup-refusal probe: grip held with a hand at the
+        // MAIN round 11/12/13 pickup-refusal probe: grip held with a hand at the
         // belt but no PICKED logs the Context terms. One line per DISTINCT
         // reason bitmask (not one-shot: an early offsets-unknown refusal must
-        // not swallow a later post-TMD one).
+        // not swallow a later post-TMD one). Raw TMD/health/offsets included
+        // so post-TMD (by design pre-TMD only) vs unknown-offsets vs dead
+        // can be told apart without a second build.
         {
             static int saidMask=-1;
             if(g_hipKnifeState.held<0&&!hipknife::Context(f)){
@@ -10155,8 +10157,18 @@ void SyncXRInput(XrTime displayTime) {
                     const int mask=(f.gameplay?1:0)|(f.focused?2:0)|(f.alive?4:0)|(f.nativeKnife?8:0);
                     if(mask!=saidMask){
                         saidMask=mask;
-                        Log("hip knife: grip held at belt but no pickup (gameplay=%d focused=%d alive=%d nativeKnife=%d pawn=%08X)",
-                            f.gameplay?1:0,f.focused?1:0,f.alive?1:0,f.nativeKnife?1:0,f.pawn);
+                        const int offT=g_offTMD, offH=g_offHealth;
+                        uintptr_t tmdV=0; int hpV=-999999;
+                        if(f.pawn&&offT>=0&&Readable((void*)(f.pawn+offT),4))
+                            tmdV=*reinterpret_cast<const uintptr_t*>(f.pawn+offT);
+                        if(f.pawn&&offH>=0&&Readable((void*)(f.pawn+offH),4))
+                            hpV=*reinterpret_cast<const int*>(f.pawn+offH);
+                        const int impIdx=g_impulseBtnIdx;
+                        const unsigned impMask=(impIdx>=0&&impIdx<kPadButtonCount)?
+                            (unsigned)g_padButtons[impIdx].mask:0xFFFFFFFFu;
+                        Log("hip knife: grip held at belt but no pickup (gameplay=%d focused=%d alive=%d nativeKnife=%d pawn=%08X offTMD=%d offHP=%d tmd=%08X hp=%d impIdx=%d impMask=%08X)",
+                            f.gameplay?1:0,f.focused?1:0,f.alive?1:0,f.nativeKnife?1:0,f.pawn,
+                            offT,offH,(unsigned)tmdV,hpV,impIdx,impMask);
                     }
                 }
             }
@@ -10212,12 +10224,15 @@ void SyncXRInput(XrTime displayTime) {
     const bool holsterValid = g_holsterEnabled && feedGame && WeaponInHands() &&
                               g_handPositionValid[AimHand()] && g_handPoseValid[AimHand()] &&
                               holsterWeapon != 0 && holsterIdentity != 0;
-    // MAIN round 12: drop the trigger zone onto the drawn ring (user feel +
-    // 8x STORED hand-hip deltas: systematic +4UU up bias, X/Y scatter).
-    // Falsifier: next STORED deltas centre on ~0 (hand vs hip are logged).
+    // MAIN round 13: trigger uses EXACTLY the ring/stored-gun point
+    // (HolsterHipWorld TRUE). Round 12 subtracted 4 UU from Z based on 10x
+    // STORED edge contacts (mean hand 5 UU above hip); those are approach-
+    // direction edge hits inside radius 12, not a calibration bias, and -4
+    // moved the trigger AWAY from the approaching hand. Falsifier: next
+    // STORED hand==hip at centre would prove misalignment; edge ring
+    // contacts prove radius, not offset.
     float holsterHip[3]{};
     HolsterHipWorld(holsterHip, true); // same point the ring draws / gun renders
-    holsterHip[2] -= 4.0f;
     const float handX = (float)Rd(g_handOffX) / kHandFixed;
     const float handY = (float)Rd(g_handOffY) / kHandFixed;
     const float handZ = (float)(g_gunSignPosZ * Rd(g_handOffZ)) / kHandFixed;
