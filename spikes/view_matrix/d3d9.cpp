@@ -11,6 +11,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "arm_natural.h"
 #include "support_grip.h"
 #include "weapon_holster.h"
+#include "knife_renderer.h"
 #include "weapon_wheel.h"
 #include "ammo_probe.h"
 #include "ammo_layout.h"
@@ -2203,6 +2204,15 @@ volatile LONG g_holsterYawUU = 0, g_holsterPitchUU = 0, g_holsterRollUU = 0;
 int g_holsterEnabled = 1;
 weaponholster::Config g_holsterConfig{};
 weaponholster::State g_holsterState{};
+// Independent, default-OFF pre-TMD knife candidate; render/input state is
+// updated by the existing XR frame owner, never a new hook or worker thread.
+int g_hipKnifeEnabled=0;
+bool g_hipKnifeReady=false,g_hipKnifeVisible=false;
+hipknife::Config g_hipKnifeConfig{};
+hipknife::State g_hipKnifeState{};
+hipknife::TriggerGate g_hipKnifeTrigger[2]{};
+hipknife::Pose g_hipKnifePose{};
+hipknife::Renderer g_hipKnifeRenderer;
 
 // R3 weapon wheel. Selection is an offset from the currently equipped weapon;
 // commit pulses the game's existing cycle-weapon action, so no inventory scan
@@ -5429,6 +5439,7 @@ void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, 
 void DrawHolsterMarker(IDirect3DDevice9* dev); // MAIN: white ring at the hip while a gun is held
 void DrawCustomGloves(IDirect3DDevice9* dev); // default-OFF, noTMD free hands only
 void DrawWeaponWheel(IDirect3DDevice9* dev);
+void DrawHipKnife(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
 static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer = false);
@@ -5468,6 +5479,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawAmmoPlate(dev);
     DrawHolsterMarker(dev);
     DrawWeaponWheel(dev);
+    DrawHipKnife(dev);
     DrawVfxOverlay(dev);
     DrawVrContextPrompt(dev);
     if (ownOverlayScene) dev->EndScene();
@@ -8937,6 +8949,23 @@ static const char* TouchBindingPath(const char* p, bool, char*, size_t) { return
 bool InitXRInput() {
     if (g_xrInstance == XR_NULL_HANDLE || g_xrSession == XR_NULL_HANDLE) return false;
 
+    // Eager CPU asset loading at XR input initialization, outside DllMain and
+    // draw hooks. Missing/bad cache fails closed without changing normal input.
+    g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};
+    if(g_hipKnifeEnabled){
+        char path[MAX_PATH]{};
+        if(IniPath(path)){
+            std::string directory(path);const auto slash=directory.find_last_of("\\/");
+            if(slash!=std::string::npos){
+                directory.resize(slash);
+                g_hipKnifeReady=g_hipKnifeRenderer.Load(directory+"\\vr-assets\\knife\\knife.svrk");
+            }
+        }
+        Log("hip knife: cache=%s verts=%u tris=%u; pre-TMD native camera-trace experiment only",
+            g_hipKnifeReady?"READY":"MISSING/INVALID (disabled)",
+            g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles());
+    }
+
     {
         char path[MAX_PATH]{};
         if (IniPath(path)) {
@@ -9713,6 +9742,7 @@ void SyncXRInput(XrTime displayTime) {
     // are simply inactive. Zeroing here is what stops the player walking on for ever because the
     // stick was held when the headset was taken off or a system overlay took focus.
     if (sr != XR_SUCCESS) {
+        g_hipKnifeState={};g_hipKnifeVisible=false;
         UpdateVrUiPointer(0,false);
         ++g_syncFailFrames;
         InterlockedExchange(&g_twoHandActive, 0);
@@ -10058,7 +10088,51 @@ void SyncXRInput(XrTime displayTime) {
     tSt = Now();
     bool panelHeld = false;
     WORD panelMask = 0;
-    const bool supportGrip = getGrip(OffHand());
+    const bool primaryGrip = getGrip(AimHand());
+    const bool rawSupportGrip = getGrip(OffHand());
+    if(g_hipKnifeEnabled&&g_hipKnifeReady){
+        hipknife::Frame f;
+        f.enabled=true;f.focused=g_xrSessionState==XR_SESSION_STATE_FOCUSED;
+        f.gameplay=feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
+            !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed();
+        const uintptr_t pawn=g_playerPawn;f.pawn=(uint32_t)pawn;
+        // These offsets already come from the UObject property resolver. Unknown
+        // state is never treated as "no TMD" or "alive".
+        f.nativeKnife=pawn&&g_offTMD>=0&&Readable((void*)(pawn+g_offTMD),4)&&
+            *reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)==0&&
+            g_impulseBtnIdx>=0&&g_padButtons[g_impulseBtnIdx].mask==XI_RSHOULDER;
+        f.alive=pawn&&g_offHealth>=0&&Readable((void*)(pawn+g_offHealth),4)&&
+            *reinterpret_cast<const int*>(pawn+g_offHealth)>0;
+        f.head={g_headPosXR[0],g_headPosXR[1],g_headPosXR[2]};
+        f.hip=hipknife::Hip(f.head,g_centreYaw,g_hipKnifeConfig);
+        f.nowMs=GetTickCount64();
+        for(int h=0;h<2;++h){
+            const auto& q=g_handAimOrientation[h];const auto& p=g_handLastPos[h];
+            f.hand[h]={{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}};
+            f.tracked[h]=g_handPositionValid[h]&&g_handPoseValid[h]&&g_handTracked[h];
+            f.grip[h]=h==AimHand()?primaryGrip:rawSupportGrip;
+            f.free[h]=h!=AimHand()||!WeaponInHands()||Rd(g_weaponHolstered);
+        }
+        const auto event=hipknife::Update(g_hipKnifeState,f,g_hipKnifeConfig);
+        g_hipKnifeVisible=hipknife::Context(f)&&(g_hipKnifeState.held>=0?
+            f.tracked[g_hipKnifeState.held]:(f.tracked[0]||f.tracked[1]));
+        if(g_hipKnifeState.held>=0)g_hipKnifePose=f.hand[g_hipKnifeState.held];
+        else{
+            g_hipKnifePose=f.hip;
+            g_hipKnifePose.q=hipknife::Multiply(f.hip.q,{-.70710678f,0,0,.70710678f});
+        }
+        if(event!=hipknife::Event::None){
+            static unsigned notes=0;
+            if(notes++<128)Log("hip knife: %s held=%d pawn=%08X (native camera trace, not blade collision)",
+                event==hipknife::Event::Picked?"PICKED":event==hipknife::Event::Sheathed?"SHEATHED":
+                event==hipknife::Event::Swing?"SWING -> RB pulse":"RESET",g_hipKnifeState.held,f.pawn);
+            if(event==hipknife::Event::Swing){
+                InterlockedOr(&g_vrRecorderEventFlags,vrrec::Melee);
+                InterlockedExchange64(&g_lastMeleeEdgeMs,(LONG64)f.nowMs);
+            }
+        }
+    }
+    const bool supportGrip=rawSupportGrip&&!hipknife::Reserves(g_hipKnifeState,OffHand());
     static bool priorSupportGrip=false;
     if(supportGrip!=priorSupportGrip)InterlockedIncrement(supportGrip?&g_vrCounters.gripPressEdges:&g_vrCounters.gripReleaseEdges);
     priorSupportGrip=supportGrip;
@@ -10099,9 +10173,9 @@ void SyncXRInput(XrTime displayTime) {
     // rising edge at the body-relative hip toggles the equipped weapon; the
     // trigger is suppressed while stored, so a hand reaching for the holster
     // cannot fire through the menu/gameplay input path.
-    const bool primaryGrip = getGrip(AimHand());
     static bool priorPrimaryGrip = false;
-    const bool primaryGripRising = primaryGrip && !priorPrimaryGrip;
+    const bool primaryGripRising = primaryGrip && !priorPrimaryGrip&&
+        !hipknife::Reserves(g_hipKnifeState,AimHand());
     priorPrimaryGrip = primaryGrip;
     const LONG holsterWeapon = Rd(g_gunVerts);
     const LONG holsterIdentity = Rd(g_weaponObj);
@@ -10288,7 +10362,9 @@ void SyncXRInput(XrTime displayTime) {
     static bool healthWasDown = false;
     bool healthDown = false;
     for (int i = 0; i < kPadButtonCount; ++i) {
-        const bool down = getBool(g_padButtons[i].action);
+        bool down = getBool(g_padButtons[i].action);
+        if((i==g_impulseBtnIdx&&(g_hipKnifeState.held>=0||g_hipKnifeTrigger[OffHand()].blocked))||
+           (!strcmp(g_padButtons[i].name,"use")&&hipknife::Reserves(g_hipKnifeState,AimHand())))down=false;
         if (i >= 0 && !strcmp(g_padButtons[i].name, "health")) {
             healthDown = down;
             // Circle owns the native health action.  Arm the first-person bandage animation on
@@ -10765,6 +10841,11 @@ void SyncXRInput(XrTime displayTime) {
     // into a byte that flickers between 0 and 1, and that is a state change every frame.
     if (lt < 0.10f) lt = 0.0f;
     if (rt < 0.10f) rt = 0.0f;
+    if(g_hipKnifeEnabled){
+        rt=g_hipKnifeTrigger[fireHand].Update(hipknife::Reserves(g_hipKnifeState,fireHand),rt);
+        lt=g_hipKnifeTrigger[altHand].Update(hipknife::Reserves(g_hipKnifeState,altHand),lt);
+    }
+    if(g_hipKnifeState.held>=0&&g_hipKnifeState.Pulse(GetTickCount64())&&!uiMenu&&!Rd(g_gamePaused))btns|=XI_RSHOULDER;
     if (Rd(g_weaponHolstered) && !uiMenu) rt = 0.0f;
     UpdateVrUiPointer(fireHand==1?rt:lt,true);
     const auto primaryGate=g_vrUiTrigger[fireHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,rt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
@@ -20764,6 +20845,7 @@ void ReportPoolTranslation() {
 // the support grip attached to a destroyed weapon. Reset only the VR-side caches here; the
 // game owns the camera and will repopulate them on the next valid frame.
 static void ResetVrAfterCameraLoss(const char* reason) {
+    g_hipKnifeState={};g_hipKnifeVisible=false;
     InvalidateCamMats();
     g_camMatrixBound = false;
     g_haveCentre = false;
@@ -24833,6 +24915,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 void ReleaseWristResources() {
     g_nativeGloveRenderer.ReleaseGPU();g_nativeGlovePoseThisDraw=false;
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
+    g_hipKnifeRenderer.ReleaseGPU();
     shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();worldshadowfix::Release();
     PauseRttProbe::ReleaseContent();
     ReleaseVrMenuResources();
@@ -25042,6 +25125,27 @@ static void MaybeLoadHudAtlas(IDirect3DDevice9* dev) {
     Log("weapon wheel: HUD atlas ready (%dx%d, %u icons)", pw, ph, (unsigned)sheet.rects.size());
 }
 
+void DrawHipKnife(IDirect3DDevice9* dev){
+    if(!g_hipKnifeEnabled||!g_hipKnifeReady||!g_hipKnifeVisible||!VrModeOn()||
+       !InGameplay()||!g_stereo||!g_haveEyes||Rd(g_gamePaused)||Rd(g_vrUiMenu)||
+       Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||CutsceneNativeCameraArmed())return;
+    IDirect3DSurface9* back=nullptr;
+    if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
+    D3DSURFACE_DESC desc{};
+    if(SUCCEEDED(back->GetDesc(&desc))&&g_hipKnifeRenderer.Ensure(dev,desc.Width,desc.Height)){
+        hipknife::Pose eyes[2];
+        for(int e=0;e<2;++e){const auto& p=g_eyePose[e];
+            eyes[e]={{p.position.x,p.position.y,p.position.z},
+                     {p.orientation.x,p.orientation.y,p.orientation.z,p.orientation.w}};}
+        const hipknife::Calls calls{shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
+            shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport};
+        const bool ok=g_hipKnifeRenderer.Draw(dev,calls,back,g_hipKnifePose,eyes,g_targetTanX,g_targetTanY);
+        if(!ok){g_hipKnifeReady=false;g_hipKnifeState={};g_hipKnifeVisible=false;}
+        static unsigned notes=0;if(notes++<2)Log("hip knife: draw=%s 2 indexed calls/frame (not pixel proof)",ok?"OK":"FAIL");
+    }else{g_hipKnifeReady=false;g_hipKnifeState={};g_hipKnifeVisible=false;
+        Log("hip knife: GPU allocation unavailable; disabled until next XR init (normal inputs retained)");}
+    back->Release();
+}
 void DrawWeaponWheel(IDirect3DDevice9* dev) {
     if (!dev || !VrModeOn() || !Rd(g_dupDraws) || !Rd(g_weaponWheelOpen) ||
         !g_handPositionValid[1] || !g_haveEyes || !g_origSetRenderTarget) return;
@@ -30145,6 +30249,11 @@ void LoadIniSettings() {
     g_holsterConfig.fwd = (float)IniSignedInt("Input", "HolsterFwd", 6, path);
     g_holsterConfig.right = (float)IniSignedInt("Input", "HolsterRight", 18, path);
     g_holsterConfig.up = (float)IniSignedInt("Input", "HolsterUp", -36, path);
+    g_hipKnifeEnabled=GetPrivateProfileIntA("Input","HipKnifeEnabled",0,path)?1:0;
+    g_hipKnifeConfig.left=std::max(.10f,std::min(.50f,IniSignedInt("Input","HipKnifeLeftCm",25,path)*.01f));
+    g_hipKnifeConfig.down=std::max(.20f,std::min(.90f,IniSignedInt("Input","HipKnifeDownCm",50,path)*.01f));
+    g_hipKnifeConfig.forward=std::max(-.20f,std::min(.30f,IniSignedInt("Input","HipKnifeForwardCm",6,path)*.01f));
+    Log("ini: HipKnifeEnabled=%d (default OFF, restart required; pre-TMD only, native camera trace)",g_hipKnifeEnabled);
     g_holsterConfig.radius = (float)IniSignedInt("Input", "HolsterRadius", 12, path);
     if (g_holsterConfig.radius < 2.0f) g_holsterConfig.radius = 2.0f;
     if (g_holsterConfig.radius > 48.0f) g_holsterConfig.radius = 48.0f;
