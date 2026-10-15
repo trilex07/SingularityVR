@@ -13063,7 +13063,7 @@ extern volatile LONG g_inForeground, g_hideMeshIdx, g_fgDrawCount;
 // Defined with the foreground-mesh code. StereoPair reads it; the non-indexed draw hook above sets
 // it as of run 181, and that hook comes before the definition.
 extern int g_thisDrawMoved;   // ⭐ run 237: 0 none, 1 gun hand, 2 off hand
-static bool FgHidden(UINT verts, UINT first, UINT triangles);
+static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangles);
 static bool FgRidesGun(UINT verts);
 static bool FgMatchesSignature(UINT verts);   // ⭐ run 237c: used by the depth-prime exemption
 static int  RideTargetFor(UINT verts);   // ⭐ run 237: 0 none, 1 gun hand, 2 off hand
@@ -16309,13 +16309,24 @@ static bool CustomGlovesEligible() {
         Rd(g_dupDraws)!=0,g_haveEyes&&g_eyePositionsValid,g_glovePoseValid[0],g_glovePoseValid[1],
         Rd(g_weaponObj)!=0&&Rd(g_weaponHolstered)==0,Rd(g_twoHandActive)!=0);
 }
-static bool FgHidden(UINT verts, UINT first, UINT triangles) {                    // arms, in modes 2 and 3
+static float g_customGloveNativeScale=1.f;
+static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangles) { // arms, in modes 2 and 3
     if(g_gloveExperiment && gloves::ReplaceSection(CustomGlovesEligible(),verts,first,triangles,
         Rd(g_rtIsScene)!=0,g_boundShaderLayout.shadow,g_boundShaderLayout.bones,
         g_boundShaderLayout.boneRegs,g_boundShaderLayout.local,
         FgMatchWindow()||(Rd(g_inForeground)&&Rd(g_fgDrawCount)<=kFgSanePass))) {
-        g_gloveReplacementSeen=true;
-        return true;
+        float local[4][4],scale=0;
+        // Exact CTAB LocalToWorld register was established by ReplaceSection.
+        // This read is restricted to that opt-in section, not every game draw.
+        if(SUCCEEDED(dev->GetVertexShaderConstantF((UINT)g_boundShaderLayout.local,&local[0][0],4))&&
+           gloves::UniformScale(local,scale)){
+            g_customGloveNativeScale=scale;
+            g_gloveReplacementSeen=true;
+            return true;
+        }
+        // Unknown/sheared size must preserve the original native draw rather
+        // than substitute a guessed hand size.
+        return false;
     }
     if (GlovesUntilWeaponNow() &&
         gloveisolate::IsStrayFingerSection(verts, first, triangles)) {
@@ -17695,12 +17706,12 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         DpgRecord(2, 0.0f, 0.0f, (uint32_t)k, numVertices, primCount, (uint32_t)t);
         // WEAPON FX = HIDE PASS. Deliberately after the learn, per the note above and FgHideWholePass.
         if (FgHideWholePass()) return D3D_OK;
-        if (FgHidden(numVertices, startIndex, primCount)) return D3D_OK;
+        if (FgHidden(dev,numVertices, startIndex, primCount)) return D3D_OK;
         // Returning S_OK without drawing is how the mod already drops draws elsewhere - the
         // device state is untouched, so the next draw behaves normally.
     } else if (FgMatchesSignature(numVertices)) {
         // Outside the pass, but the same mesh - the near-plane depth prime at draws 2-3.
-        if (FgHidden(numVertices, startIndex, primCount)) return D3D_OK;
+        if (FgHidden(dev,numVertices, startIndex, primCount)) return D3D_OK;
         // The same mesh, drawn OUTSIDE the foreground pass. This is the whole question.
         DpgRecord(4, 0.0f, 0.0f, (uint32_t)InterlockedCompareExchange(&g_frameDrawIdx, 0, 0),
                   numVertices, primCount, 0);
@@ -17947,19 +17958,6 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             Log("IndependentHandsSuppressed verts=%u first=%u prim=%u type=%u (palette section not transformed)",
                 numVertices,startIndex,primCount,(unsigned)t);
     }
-    struct FaceRun { UINT first, last; };
-    static constexpr FaceRun kNoTmdHandFaces[] = {
-        {272,274},{278,291},{392,398},{400,405},{410,681},{783,843},
-        {1017,1433},{1439,1444},{1452,1454},{1460,1470},{1475,1480},
-        {1488,1495},{1501,1631},{1806,1976},{1986,1988},{1992,1996},
-        {1998,2012},{2024,2026},{2028,2029},{2038,2131},{2173,2173},
-        {2183,2183},{2194,2284},{2286,2298},{2314,2351},{2353,2681},
-        {2683,2717},{2720,2778},{2781,2947},{3410,3410},{3431,3431},
-        {3435,3436},{3443,3444},{3575,4055},{4057,4188},{4193,4197},
-        {4210,4252},{4256,4268},{4322,4425},{4428,4429},{4457,4507},
-        {4644,4663},{4674,4707},{4709,4718},
-        {4738,4741},{4744,4751},{4783,4805},{4818,4827}
-    };
     const bool isolateNoTmdFaces = independentRegs && g_independentHands && Rd(g_gloveFaceFilter) &&
         t == D3DPT_TRIANGLELIST && (numVertices == 3314 || numVertices == 2924) &&
         startIndex == 0 && primCount == 4830 && nSeg == 1 &&
@@ -17967,12 +17965,12 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     if (isolateNoTmdFaces) {
         static LONG reportedFaces = 0;
         if (InterlockedCompareExchange(&reportedFaces, 1, 0) == 0)
-            Log("GloveIsolation: drawing 2,922 glove-only faces from audited noTMD section");
+            Log("GloveIsolation: drawing %u glove/cuff faces from audited noTMD section",gloveisolate::NativeHandFaceCount());
     }
     const HRESULT dhr = StereoPair(dev, [&] {
         HRESULT hr = D3D_OK;
         if (isolateNoTmdFaces) {
-            for (const FaceRun& run : kNoTmdHandFaces) {
+            for (const auto& run : gloveisolate::kNoTmdHandFaces) {
                 const HRESULT h = g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
                     startIndex + run.first * 3, run.last - run.first + 1);
                 if (FAILED(h) && SUCCEEDED(hr)) hr = h;
@@ -24762,13 +24760,14 @@ void DrawCustomGloves(IDirect3DDevice9* dev) {
         const gloves::Calls calls{shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
             shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport};
         const bool drawn=g_gloveRenderer.Draw(dev,calls,back,g_glovePose,eyes,
-            g_gloveBlend,g_targetTanX,g_targetTanY);
+            g_gloveBlend,g_targetTanX,g_targetTanY,MetresToUU(),(float)Rd(g_gunScalePct),g_customGloveNativeScale);
         static unsigned notes=0;static ULONGLONG last=0;
         const ULONGLONG now=GetTickCount64();
         if(notes<8&&(!last||now-last>=2000)) {
             ++notes;last=now;
-            Log("glove-renderer: draw=%d calls=%u blend=%.3f/%.3f CPU=%.3fms grip-quaternion noTMD free hands",
-                drawn?1:0,g_gloveRenderer.draws,g_gloveBlend[0],g_gloveBlend[1],MsSince(start));
+            Log("glove-renderer: draw=%d calls=%u blend=%.3f/%.3f CPU=%.3fms native-size gun=%ld worldUUperM=%.3f local=%.4f albedo-only (NOT native UE3 shading)",
+                drawn?1:0,g_gloveRenderer.draws,g_gloveBlend[0],g_gloveBlend[1],MsSince(start),
+                Rd(g_gunScalePct),MetresToUU(),g_customGloveNativeScale);
         }
         if(!drawn){g_gloveExperiment=false;Log("glove-renderer: FAILED, native resumes next frame");}
     }

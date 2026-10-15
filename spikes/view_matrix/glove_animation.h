@@ -36,19 +36,23 @@ inline unsigned WithoutOptional(Binding* bindings,unsigned count,Action pose,Act
     return kept;
 }
 struct SourceVertex { V open,delta,normal,normalDelta; float u=0,v=0; };
-static_assert(sizeof(SourceVertex)==56,"SVRG v1 layout");
+static_assert(sizeof(SourceVertex)==56,"SVRG vertex layout");
 struct Vertex { V p; std::uint32_t color=0xFFFFFFFF; float u=0,v=0; };
 static_assert(sizeof(Vertex)==24,"D3D XYZ/DIFFUSE/TEX1");
-struct Mesh { std::vector<SourceVertex> source; std::vector<std::uint32_t> indices; std::vector<Vertex> scratch; };
+struct Mesh { std::vector<SourceVertex> source; std::vector<std::uint32_t> indices; std::vector<Vertex> scratch;
+    float bakedUnitsPerMetre=52.5f; };
 inline std::uint32_t U32(const unsigned char* p){std::uint32_t n;std::memcpy(&n,p,4);return n;}
 inline bool Decode(const unsigned char* b,std::size_t n,Mesh& out){
-    if(!b||n<16||std::memcmp(b,"SVRG",4)||U32(b+4)!=1)return false;
+    if(!b||n<24||std::memcmp(b,"SVRG",4)||U32(b+4)!=2||U32(b+20)!=0)return false;
     const auto nv=U32(b+8),ni=U32(b+12);
+    float units;std::memcpy(&units,b+16,4);
+    if(!std::isfinite(units)||units<10.f||units>1000.f)return false;
     if(nv<3||nv>16384||ni<3||ni>98304||ni%3)return false;
-    if(n!=16+std::size_t(nv)*sizeof(SourceVertex)+std::size_t(ni)*4)return false;
+    if(n!=24+std::size_t(nv)*sizeof(SourceVertex)+std::size_t(ni)*4)return false;
     Mesh next;next.source.resize(nv);next.indices.resize(ni);next.scratch.resize(nv);
-    std::memcpy(next.source.data(),b+16,nv*sizeof(SourceVertex));
-    std::memcpy(next.indices.data(),b+16+nv*sizeof(SourceVertex),ni*4);
+    next.bakedUnitsPerMetre=units;
+    std::memcpy(next.source.data(),b+24,nv*sizeof(SourceVertex));
+    std::memcpy(next.indices.data(),b+24+nv*sizeof(SourceVertex),ni*4);
     for(const auto& v:next.source){
         if(!Finite(v.open)||!Finite(v.delta)||!Finite(v.normal)||!Finite(v.normalDelta)||
            !std::isfinite(v.u)||!std::isfinite(v.v)||Dot(v.open,v.open)>4.f||Dot(v.delta,v.delta)>4.f||
@@ -58,22 +62,42 @@ inline bool Decode(const unsigned char* b,std::size_t n,Mesh& out){
     for(auto i:next.indices)if(i>=nv)return false;
     out=std::move(next);return true;
 }
-// Exact quaternion route: grip-local metres -> XR tracking -> eye -> D3D LH.
-// No Euler decomposition, camera yaw subtraction, weapon scale or aiming writes.
-inline bool Transform(Mesh& mesh,float blend,const Pose& hand,const Pose& eye){
+// Measure, do not assume the component's scale. Uniform rotations/reflections
+// are accepted; shear/nonuniform/degenerate state must keep the native draw.
+inline bool UniformScale(const float m[4][4],float& out){
+    V row[3];float n[3];
+    for(unsigned r=0;r<3;++r){row[r]={m[r][0],m[r][1],m[r][2]};
+        n[r]=std::sqrt(Dot(row[r],row[r]));if(!std::isfinite(n[r])||n[r]<.001f||n[r]>1000.f)return false;}
+    const float mean=(n[0]+n[1]+n[2])/3;
+    for(unsigned r=0;r<3;++r)if(std::fabs(n[r]/mean-1.f)>.005f)return false;
+    for(unsigned r=0;r<3;++r)for(unsigned c=r+1;c<3;++c)
+        if(std::fabs(Dot(row[r],row[c])/(n[r]*n[c]))>.005f)return false;
+    out=mean;return true;
+}
+inline bool NativeSizeFactor(float bakedUnits,float worldUnitsPerMetre,float gunScalePct,
+                             float localScale,float& factor){
+    if(!std::isfinite(bakedUnits)||bakedUnits<10||bakedUnits>1000||
+       !std::isfinite(worldUnitsPerMetre)||worldUnitsPerMetre<=0||
+       !std::isfinite(gunScalePct)||gunScalePct<25||gunScalePct>400||
+       !std::isfinite(localScale)||localScale<.001f||localScale>1000)return false;
+    factor=bakedUnits/worldUnitsPerMetre*(gunScalePct*.01f)*localScale;
+    return std::isfinite(factor)&&factor>0&&factor<=100;
+}
+// Wrist-local geometry inherits the SAME size knobs as the native gun rig.
+// Position and IPD are not scaled: only mesh offsets from the tracked wrist.
+inline bool Transform(Mesh& mesh,float blend,const Pose& hand,const Pose& eye,float sizeFactor=1.f){
     Q h,e;
     if(!std::isfinite(blend)||blend<0||blend>1||!Finite(hand.position)||!Finite(eye.position)||
+       !std::isfinite(sizeFactor)||sizeFactor<=0||sizeFactor>100||
        !Normalize(hand.orientation,h)||!Normalize(eye.orientation,e)||mesh.scratch.size()!=mesh.source.size())return false;
     e={-e.x,-e.y,-e.z,e.w};
     for(std::size_t i=0;i<mesh.source.size();++i){
         const auto& s=mesh.source[i];auto& o=mesh.scratch[i];
-        const V world=hand.position+Rotate(h,s.open+s.delta*blend);
+        const V world=hand.position+Rotate(h,(s.open+s.delta*blend)*sizeFactor);
         const V p=Rotate(e,world-eye.position);
-        const V normal=Rotate(h,s.normal+s.normalDelta*blend);
-        const float len=std::sqrt(Dot(normal,normal));
-        const float lit=len>1e-6f?.55f+.45f*std::fabs(normal.y)/len:.55f;
-        const auto c=std::uint32_t(255.f*lit);
-        o.p={p.x,p.y,-p.z};o.u=s.u;o.v=s.v;o.color=0xFF000000u|(c<<16)|(c<<8)|c;
+        // Preserve source albedo. The old normal-Y multiplier recoloured the
+        // glove with a fake world-up light, unrelated to native UE3 lighting.
+        o.p={p.x,p.y,-p.z};o.u=s.u;o.v=s.v;o.color=0xFFFFFFFFu;
     }
     return true;
 }

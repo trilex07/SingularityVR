@@ -11,9 +11,10 @@ from prepare_gloves import read_glb
 def cache(path):
     raw=Path(path).read_bytes()
     magic,version,nv,ni=struct.unpack_from('<4sIII',raw)
-    assert magic==b'SVRG' and version==1
-    v=np.frombuffer(raw,'<f4',nv*14,16).reshape(nv,14)
-    f=np.frombuffer(raw,'<u4',ni,16+nv*56).reshape(-1,3)
+    assert magic==b'SVRG' and version in (1,2)
+    start=24 if version==2 else 16
+    v=np.frombuffer(raw,'<f4',nv*14,start).reshape(nv,14)
+    f=np.frombuffer(raw,'<u4',ni,start+nv*56).reshape(-1,3)
     return v,f
 
 
