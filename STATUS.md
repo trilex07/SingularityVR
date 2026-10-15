@@ -1,5 +1,24 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 11 DEPLOYED (DLL
+00522E118FC59B5F0F6175D5934C2CD42583D3E3F6AA30AA069DE2282AFD835D/source
+05e0042 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-193527; game closed
+at deploy; knife.svrk + native gloves + INI flags retained). Why: live log
+19:28-19:30 (current DLL) proved gun ring DREW (flat ring at 1917,1985) while
+the knife was never picked (no PICKED, belt ring gate held=-1 at startup) —
+knife code simply never ran in gameplay yet. Changes: (1) holster trigger now
+uses HolsterHipWorld(H,TRUE), the same point the ring draws and the stored
+gun renders — the FALSE trigger sat hmdOffset above the ring, which is why
+storing needed aiming above it; (2) belt ring shows while DOCKED too (held
+gate removed) so the belt can be found — it marks where to grip; (3) one-shot
+pickup-refusal probe (grip held at belt but no PICKED logs gameplay/focused/
+alive/nativeKnife — nativeKnife=0 means post-TMD save, by design pre-TMD
+only). L1_PASS (hip-knife 147). L2_PASS (PE32, manifest commit 05e0042
+clean). L3/physical PENDING (pre-TMD save): belt ring visible at left hip,
+grip at ring picks up, ring while held, release sheathes, swing attacks;
+store gun AT the gun ring. No fix claimed.
+
 LATEST 2026-10-15 MAIN round 10 DEPLOYED (DLL
 66E63F943642244E73878F07F6DF57C1090A19BF0E208ECD3371A5D3E4061E8B/source
 1ed9b12 branch plates-l3-main, x86 PE32 /O2, built==installed via
