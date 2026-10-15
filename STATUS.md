@@ -35,6 +35,29 @@ held weapon/TMD/aiming unchanged. 261 CPU checks + fake render-state guard,
 native hand regressions and 7 geometry tests; zero Steam access/deployment.
 MAIN L3/L4 pending. See docs/glove-animation.md and
 docs/glove-animation-evidence.md (exact SHA, private candidate, 3-sentence test).
+LATEST 2026-10-15 SIDE knife-texture follow-up: L1_PASS, default-OFF experiment.
+SVRK v2 keeps original native wedge UVs, white vertices; original 256x256
+knife_d -> private knife.svrt replaces grey/black placeholder colours. Native
+mesh size/mount and knife interaction/damage paths unchanged. SYSTEMMEM upload
+to DEFAULT, no MANAGED/default LockRect; Reset releases GPU texture. Seven
+Python tests + 147 interaction checks + fake upload failure/state/refcount and
+holster/hand regressions PASS. NOT full UE3 normal/specular/lighting, NOT L3/L4.
+L2_PASS clean c5171ec /O2 x86 PE32, DLL SHA256
+FF59F353265DA05904A02FBD108A6BC51639A72FCDBD11703E30D0BD6496D4A8.
+MAIN must update DLL + BOTH caches; no Steam touched. See docs/knife-texture.md.
+
+SIDE 2026-10-15 left-hip knife: IMPLEMENTED_NOT_VERIFIED, L1_PASS, L2_PASS;
+isolated feature/left-hip-knife from origin/main 72ad59d, independent of glove
+PR #30. Default OFF HipKnifeEnabled: local native knife mesh on physical left
+hip, free-hand grip pickup/hold/release, bounded swing -> native RB pulse.
+Pre-TMD only, unknown/dead/unfocused/menu/cine/transition states fail closed.
+IMPORTANT: native trace is inview_camera (50 damage / 96 UU), not blade-tip
+collision; offline identity is not runtime input-to-damage proof. L1 147 checks,
+5 Python tests, fake-D3D guard/decoder + holster/hand regressions PASS. Clean
+ec124ec source built x86 PE32 /O2, DLL SHA256
+75F22354E2FF12A816BD986438518694FEBB37DD02BA8C75968066CA4D5A5BC1.
+ZERO Steam; L3 native damage and L4 geometry/grip still unverified.
+See docs/left-hip-knife.md for exact limits, local assets and MAIN test script.
 
 LATEST 2026-10-15 CINE ROUND-2 L3_PASS (user: stereo back after Load).
 Log: `menu-load cut ... latch=1` -> `VideoFlat -> GameplayStereo`, drift back

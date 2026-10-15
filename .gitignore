@@ -88,3 +88,7 @@ remaining-voices/out/**/*.wav
 remaining-voices/_refs/
 _work_u/
 
+# Local game-derived knife exports/cache; never distribute game assets in Git.
+/build/knife/
+/vr-assets/knife/
+
