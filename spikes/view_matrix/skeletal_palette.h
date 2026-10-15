@@ -67,7 +67,7 @@ inline Layout ReadLayout(const uint32_t* words,unsigned count) {
                 if(u16(p+4)!=2)continue; // FLOAT4 register set
                 if(!strcmp(text,"BoneMatrices")){result.bones=u16(p+6);result.boneRegs=u16(p+8);}
                 if(!strcmp(text,"LocalToWorld"))result.local=u16(p+6);
-                if(!strcmp(text,"ViewProjectionMatrix")&&u16(p+8)==4)result.viewProjection=u16(p+6);
+                if(!strcmp(text,"ViewProjectionMatrix")&&u16(p+8)==4&&u16(p+6)<=252)result.viewProjection=u16(p+6);
                 if(!strcmp(text,"ProjectionMatrix"))projection=true;
                 if(!strcmp(text,"InvMaxSubjectDepth")||!strcmp(text,"DepthBias"))depth=true;
             }

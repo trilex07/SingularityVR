@@ -1,0 +1,20 @@
+$ErrorActionPreference='Stop'
+$repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$out=Join-Path $repo 'build\native-muzzle\tests'
+New-Item -ItemType Directory -Force -Path $out | Out-Null
+$vswhere="${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+$vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+$vcvars=Join-Path $vs 'VC\Auxiliary\Build\vcvarsall.bat'
+foreach($test in @('test-native-muzzle','test-shadow-world-receiver','test-shadow-first-person-receiver','test-vfx-eye-scale','test-hand-anchor-math','test-weapon-holster')){
+    $source=Join-Path $repo "spikes\view_matrix\tests\$test.cpp"
+    if(!(Test-Path -LiteralPath $source)){throw "Missing test $source"}
+    $exe=Join-Path $out "$test.exe"; $obj=Join-Path $out "$test.obj"
+    cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:`"$exe`" /Fo:`"$obj`" `"$source`""
+    if($LASTEXITCODE -ne 0){throw "compile failed $test"}
+    & $exe
+    if($LASTEXITCODE -ne 0){throw "test failed $test"}
+}
+python (Join-Path $repo 'tools\tests\test-shadow-trace-analysis.py')
+if($LASTEXITCODE -ne 0){throw 'trace analysis regression failed'}
+python (Join-Path $PSScriptRoot 'test_native_muzzle_analysis.py')
+if($LASTEXITCODE -ne 0){throw 'native muzzle analysis tests failed'}

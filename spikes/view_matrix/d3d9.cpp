@@ -4599,6 +4599,7 @@ struct ShaderLayoutEntry { IDirect3DVertexShader9* shader; skeletal::Layout layo
 ShaderLayoutEntry g_shaderLayouts[1024]{};
 unsigned g_shaderLayoutNext=0;
 skeletal::Layout g_boundShaderLayout;
+#include "native_muzzle_stereo.h"
 // Opt-in first-person TMD arm evidence. Only the last relevant palette upload
 // metadata is retained; matrix reads happen in the bounded draw capture below.
 volatile LONG g_armPaletteTraceFrames=0;
@@ -4641,6 +4642,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVS(IDirect3DDevice9* dev,IDirect3DVertexShader
     const HRESULT hr=g_origSetVS(dev,shader);
     if(FAILED(hr))return hr;
     shadowtrace::bound.vs=shader;
+    nativefx::BindVS(shader);
     shadowfix::BindVS(shader);
     worldshadowfix::BindVS(shader);
     g_boundShaderLayout={};
@@ -12815,6 +12817,7 @@ extern volatile LONG g_inForeground;
 extern int g_thisDrawMoved;
 extern volatile LONG g_fgDrawCount;
 static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT first,UINT prims) {
+    if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,0,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
@@ -12822,6 +12825,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMIT
     const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativePrim(dev,t,first,prims);});shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,INT base,UINT min,UINT verts,UINT start,UINT prims) {
+    if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
@@ -12829,6 +12833,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRI
     const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeIndexed(dev,t,base,min,verts,start,prims);});shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT prims,const void* data,UINT stride) {
+    if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,0,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
@@ -12836,6 +12841,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIV
     const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeUP(dev,t,prims,data,stride);});shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexedUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT min,UINT verts,UINT prims,const void* indices,D3DFORMAT format,const void* data,UINT stride) {
+    if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
@@ -12852,7 +12858,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceStretch(IDirect3DDevice9* dev,IDirec
 }
 static ShadowSetPS shadowOriginalPS=nullptr;
 static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
-    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);}return hr;
+    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);nativefx::BindPS(ps);}return hr;
 }
 // Fix-I/menu census: wire the dormant MenuDrawTrace recorder into the four draw hooks
 // (calls below) with path masks in StereoPairBody (1) and HudStereoPair (2); provider
@@ -13136,6 +13142,10 @@ static void VfxCaptureBaseCam(const float* mat, int conv) {
 
 template <typename DrawFn>
 HRESULT StereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
+    if(nativefx::Probe()&&shadowtrace::active)
+        nativefx::Observe(dev,g_camMats,g_camMatUsed,Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed());
+    nativefx::AliasScope<IDirect3DDevice9,CamMatSlot,PFN_SetVSConstF> alias(dev,g_camMats,g_camMatUsed,kMaxCamMats,g_origSetVSConstF,
+        nativefx::selected.mode==2&&Rd(g_dupDraws)&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed());
     if (!g_timeOurWork) return StereoPairBody(dev, draw);
     const LARGE_INTEGER t0 = Now();
     const HRESULT hr = StereoPairBody(dev, draw);
@@ -23225,11 +23235,14 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch) && Stack) {
+    if ((censusOn || routeTwo || cineWatch || nativefx::Probe()) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
         if (fnIdx < 0) InterlockedIncrement(&g_peUnnamed);
     }
+    if(nativefx::Probe()&&fnIdx>=0&&FnIdx(kFnFireFirst)>=0&&fnIdx==FnIdx(kFnFireFirst)&&
+       reinterpret_cast<uintptr_t>(self)==(uintptr_t)(uint32_t)Rd(g_weaponObj))
+        InterlockedIncrement(&nativefx::shots); // Native fire seam, independent of custom VFX host.
 
     if (censusOn && Stack) {
         InterlockedIncrement(&g_peCalls);
@@ -25194,6 +25207,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 #include "desktop_mirror.h"
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    nativefx::Release();
     g_knifeHandPoseThisDraw=false;g_knifeJointFrame=-1;g_knifeJointEyes=0;
     g_nativeGloveRenderer.ReleaseGPU();g_nativeGlovePoseThisDraw=false;
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
@@ -26563,8 +26577,12 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     static unsigned shadowTraceStable=0;
     shadowTraceStable=shadowTraceReady?std::min(shadowTraceStable+1,30u):0;
     PollGameplayHotPath(shadowTraceStable>=15);
-    if(shadowtrace::Boundary(s,shadowTraceStable>=15,g_logPath))
+    if(shadowtrace::Boundary(s,shadowTraceStable>=15,g_logPath)){
         SaveBackbufferCapture(s,true); // Completed SBS scene, before menu/diagnostic overlays.
+        nativefx::DumpWitness();
+    }
+    nativefx::Boundary(shadowTraceStable>=15&&!CutsceneNativeCameraArmed()&&!Rd(g_gamePaused)&&!Rd(g_panelOpen)&&!Rd(g_vrUiMenu)&&Rd(g_weaponObj)&&!Rd(g_weaponHolstered),shadowtrace::active||shadowtrace::pending,(unsigned)Rd(g_weaponObj));
+    nativefx::Summary();
     PauseRttStart::Install();
     PauseRttProbe::PresentContent(s);
     hotpath::scope frameScope(g_hotPathSampler, hotpath::Family::frame_total);
@@ -30019,6 +30037,15 @@ void LoadIniSettings() {
     g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
     g_cutsceneWorldScreen=GetPrivateProfileIntA("Render","CutsceneWorldScreen",0,path)?1:0;
     g_menuAssetWitness=GetPrivateProfileIntA("Diagnostic","MenuAssetWitness",0,path)?1:0;
+    {
+        char vs[32]{},ps[32]{};
+        GetPrivateProfileStringA("Diagnostic","NativeMuzzleVSHash","",vs,sizeof(vs),path);
+        GetPrivateProfileStringA("Diagnostic","NativeMuzzlePSHash","",ps,sizeof(ps),path);
+        nativefx::Configure(GetPrivateProfileIntA("Diagnostic","NativeMuzzleStereoMode",0,path),
+            GetPrivateProfileIntA("Diagnostic","NativeMuzzleProbe",0,path)!=0,vs,ps,
+            GetPrivateProfileIntA("Diagnostic","NativeMuzzleVSBytes",0,path),
+            GetPrivateProfileIntA("Diagnostic","NativeMuzzlePSBytes",0,path));
+    }
     g_cutsceneScreenDistanceMm=cinemascreen::ClampDistanceMm(
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));
     Log("ini: CutsceneWorldScreen=%ld distance=%ldmm (LOCAL anchored quad, default OFF)",
