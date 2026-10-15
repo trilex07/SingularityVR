@@ -1,5 +1,27 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN merged + deployed left-hip knife (DLL
+886B6D31FF87791AFFCF5B94C568925912634CED3F2F9FCC4534A96750D6B272/source
+e89c41e merge of origin/feature/left-hip-knife 043cfc0 (draft PR #31);
+x86 PE32 /O2, built==installed via tools/deploy-singularityvr.ps1 -DllOnly;
+backup 20261015-185357; game closed at deploy). Merge conflicts resolved by
+keeping both sides (ReleaseWristResources releases all three renderers; MY
+holster 6/18/-36 defaults kept + knife INI block added; STATUS blocks kept).
+Installed knife.svrk to vr-assets/knife (hash 6BC784FB = side hashes.json,
+verified after copy) + HipKnifeEnabled=1 in installed INI (pre-edit backed
+to deployment/install-backups/20261015-182559/SingularityVR.ini.pre-knife).
+L1_PASS (hip-knife 147 checks + renderer fake-D3D guard re-run on merged
+tree). L2_PASS (PE32, manifest commit e89c41e clean). L3/physical PENDING
+(pre-TMD save ONLY): knife at left hip, free-hand grip pickup, release
+returns to belt, decisive swing -> native attack; hit still counts from
+camera (no 6DoF blade collision). TEXTURES OPEN: no 8K DDS exists anywhere
+(max installed is 4K 4096x2048; Quality=8K already selected in
+texture_override.ini but has no 8K content); VR panel TEXTURES row (2x/4K/8K)
+already exists; loading screens need the DDS encoder + dinput8 target rebuild
+(doc docs/loading-screens-4k.md pipeline steps 1-4) — awaiting user scope
+(upscale 4K->8K? user-supplied files? loading via injector vs splash-only?).
+No fix claimed.
+
 LATEST 2026-10-15 MAIN round 9 DEPLOYED (DLL
 D119F664A08A693E6BA07A4FB75C4B78AA225D8254C2D764F27B8479A94FC026/source
 e1353a9 branch plates-l3-main, x86 PE32 /O2, built==installed via
