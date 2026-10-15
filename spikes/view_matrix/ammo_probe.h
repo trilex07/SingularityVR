@@ -8,7 +8,8 @@
 // identified by value (mag-size knowledge: 12/30/6/5), not by motion.
 namespace ammoprobe {
 
-enum { kSlots = 256 };  // int32 words covered: [0, 0x400) of the weapon object
+enum { kSlots = 1024 };  // int32 words covered: [0, 0x1000) of the weapon object
+enum { kPawnSlots = 512 }; // pawn baseline window: [0, 0x800), once per session
 enum { kUnreadable = 0x7fffffff }; // sentinel for a failed Readable guard
 
 inline bool ShouldDump(bool down, bool wasDown, int left, bool gunLatched,

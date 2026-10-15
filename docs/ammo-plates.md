@@ -18,7 +18,15 @@ Reference art (`vr-mods/references/`):
 volatile words are flags/timers/coords/event latches. Static small ints
 (3/4/20/30/...) never move. Falsifier for round 2 stands: enumerate NAMES.
 
-## RE round 2: class property dump on equip (this change)
+## RE round 3: wider window + pawn baseline (this change)
+
+Round-1/2 verdict: no ±1 int in weapon [0,0x400); class vocabulary shows
+ammo lives behind GetAmmoInClip/GetAmmoInBin-style accessors with no plain
+data field in the dump. Round 3 widens the weapon window to [0,0x1000) and
+adds a one-shot pawn baseline [0,0x800) for reserve candidates by value.
+Script discipline matters: SINGLE taps spaced ~2 s (auto spray + reloads
+mask the sawtooth). Falsifier unchanged: a per-tap decrementing int IS the
+mag; reserve identified by value, verified by pickup later.
 
 `LogEquippedClass` dumps the equipped weapon's class chain once per class
 (max 4) while the probe flag is armed — run-235 pattern, no guessing. Same

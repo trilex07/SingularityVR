@@ -2323,9 +2323,10 @@ inline ArmedState PlayerArmed() { return (ArmedState)Rd(g_armedState); }
 // ---- ammo probe state (see trigger-edge dumper next to the fire census) ----
 static int g_ammoProbeLeft = 0;
 static uintptr_t g_ammoProbeObj = 0;
-static int32_t g_ammoProbePrev[256]{};
+static int32_t g_ammoProbePrev[1024]{};
 static bool g_ammoProbeHave = false;
 static bool g_ammoProbeWasDown = false;
+static bool g_ammoProbePawnDone = false;
 
 static void LogEquippedClass(uintptr_t w) {
     static uintptr_t lastObj = (uintptr_t)-1;
@@ -27712,7 +27713,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                                                         : ammoprobe::kUnreadable;
                 }
                 char line[32 * 12 + 64];
-                for (int c = 0; c < 8; ++c) {
+                for (int c = 0; c < ammoprobe::kSlots / 32; ++c) {
                     int n = _snprintf_s(line, sizeof(line), _TRUNCATE,
                                         "ammo probe: base obj=%p [%03x..%03x]=",
                                         (void*)wobj, c * 32 * 4, (c * 32 + 31) * 4 + 3);
@@ -27721,6 +27722,29 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                                          g_ammoProbePrev[c * 32 + k]);
                     }
                     Log("%s", line);
+                }
+                // Pawn baseline once per session: reserve candidates live here
+                // if not on the weapon. Static ints near plausible counts are
+                // eyeballed offline; motion decides in a follow-up if needed.
+                if (!g_ammoProbePawnDone) {
+                    g_ammoProbePawnDone = true;
+                    const uintptr_t pawn = FindPlayerPawn();
+                    if (pawn) {
+                        for (int c = 0; c < ammoprobe::kPawnSlots / 32; ++c) {
+                            int n = _snprintf_s(line, sizeof(line), _TRUNCATE,
+                                                "ammo probe: pawn obj=%p [%03x..%03x]=",
+                                                (void*)pawn, c * 32 * 4, (c * 32 + 31) * 4 + 3);
+                            for (int k = 0; k < 32 && n > 0; ++k) {
+                                const void* p = (const void*)(pawn + (uintptr_t)((c * 32 + k) * 4));
+                                const int32_t v = Readable(p, 4) ? *reinterpret_cast<const int32_t*>(p)
+                                                                 : ammoprobe::kUnreadable;
+                                n += _snprintf_s(line + n, sizeof(line) - n, _TRUNCATE, "%d,", v);
+                            }
+                            Log("%s", line);
+                        }
+                    } else {
+                        Log("ammo probe: pawn baseline skipped (no pawn)");
+                    }
                 }
                 Log("ammo probe: BASELINE dumped (%d pulls left)", g_ammoProbeLeft);
             } else {

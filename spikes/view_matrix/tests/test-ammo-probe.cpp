@@ -10,7 +10,8 @@ static void Expect(bool cond, const char* name) {
 
 int main() {
     using namespace ammoprobe;
-    Expect(kSlots == 256, "coverage window");
+    Expect(kSlots == 1024, "coverage window [0,0x1000)");
+    Expect(kPawnSlots == 512, "pawn baseline window");
     // Rising edge with budget, latched gun and live object dumps.
     Expect(ShouldDump(true, false, 8, true, 0x12345678), "rising edge dumps");
     Expect(!ShouldDump(true, true, 8, true, 0x12345678), "held trigger silent");
