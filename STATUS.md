@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 wheel ROUND-3 IMPLEMENTED, L1_PASS (user: 4 gun icons not
+3+circle; unowned slots fully empty; hand-feel retest with left pad on).
+Gun-order mapping (catalog gun_verts>0 in order) replaces the Obecna sector;
+held wedge brighter, unowned wedges empty (no icon/label). FSM touched rule:
+untouched release cancels (tap safety), touched release commits incl.
+sector 0; commit table uses the same order. Diagnostics: anchor validity at
+OPEN + first-selection source per open. L1: 132 PASS / 0 FAIL (gun order,
+touched FSM, ownership, hand direction). L2 rebuild + L3 redeploy pending.
+
 LATEST 2026-10-15 wheel ICONS installed (no DLL change): 6 weapon silhouettes
 cut from references/95f791be-....png into the Katorga atlas reserved row
 (gun-centurion/valkyrie/spikeshot/kasimov + dev-seeker/dev-tmd for later);

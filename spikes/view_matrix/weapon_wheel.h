@@ -10,6 +10,12 @@ struct State {
     bool open = false;
     bool priorR3 = false;
     int selection = 0;
+    // Set on the first highlight change of one open. Release commits only a
+    // touched wheel: tapping R3 without ever leaving the deadzone cancels
+    // instead of committing the resting sector. Shared by stick and hand.
+    bool touched = false;
+    // Runtime logging latch (input thread): first SelectionChanged per open.
+    bool loggedSel = false;
 };
 
 inline int ClampSlots(int slots) {
@@ -58,16 +64,21 @@ inline Event Update(State& state, bool r3Held, bool l3Held, bool gameplay,
         if (valid && pressed) {
             state.open = true;
             state.selection = 0;
+            state.touched = false;
+            state.loggedSel = false;
             return Event::Open;
         }
         return Event::None;
     }
 
     if (!r3Held || !valid) {
-        const int selection = state.selection;
+        const bool touched = state.touched;
         state.open = false;
         state.selection = 0;
-        if (released && valid && selection > 0) return Event::Commit;
+        // Commit only a touched wheel: every sector holds a real weapon now,
+        // so an untouched release (tap, stick/hand never left the deadzone)
+        // must cancel rather than commit the resting sector.
+        if (released && valid && touched) return Event::Commit;
         return Event::Cancel;
     }
 
@@ -75,6 +86,7 @@ inline Event Update(State& state, bool r3Held, bool l3Held, bool gameplay,
                                                 : SectorForStick(stickX, stickY, slots);
     if (sector >= 0 && sector != state.selection) {
         state.selection = sector;
+        state.touched = true;
         return Event::SelectionChanged;
     }
     return Event::None;

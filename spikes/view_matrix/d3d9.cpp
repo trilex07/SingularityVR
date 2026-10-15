@@ -10026,8 +10026,15 @@ void SyncXRInput(XrTime displayTime) {
         MaybeLoadWheelCatalog();
         Log("weapon wheel: OPEN slots=%ld (R3 held; %s selects, release commits)",
             g_weaponWheelSlots, handPick ? "right hand moves" : "right stick");
+        if (handPick && !Rd(g_wwHandAnchorOk))
+            Log("weapon wheel: hand anchor invalid at open - stick fallback for this open");
     } else if (wheelEvent == weaponwheel::Event::SelectionChanged) {
         InterlockedExchange(&g_weaponWheelSelection, g_weaponWheelState.selection);
+        if (!g_weaponWheelState.loggedSel) {
+            g_weaponWheelState.loggedSel = true;
+            Log("weapon wheel: select sector=%d via %s", g_weaponWheelState.selection,
+                handSector != -2 ? "hand" : "stick");
+        }
     } else if (wheelEvent == weaponwheel::Event::Commit) {
         InterlockedExchange(&g_weaponWheelOpen, 0);
         InterlockedExchange(&g_weaponWheelPulseGap, 0);
@@ -10038,10 +10045,19 @@ void SyncXRInput(XrTime displayTime) {
         if (Rd(g_wwDirectSelect) && InterlockedCompareExchange(&g_wwCatalogState, 0, 0) == 1) {
             weaponwheel_direct::CatalogSector secs[8]{};
             long cyc[16]{};
-            size_t n = g_wwCatalog.sectors.size() < 8 ? g_wwCatalog.sectors.size() : 8;
+            // Same position order as the drawn wheel: catalog gun sectors.
+            const int nSlots = weaponwheel::ClampSlots((int)g_weaponWheelSlots);
+            long catV[8]{};
+            int cn = (int)g_wwCatalog.sectors.size() < 8 ? (int)g_wwCatalog.sectors.size() : 8;
+            for (int i = 0; i < cn; ++i) catV[i] = g_wwCatalog.sectors[i].verts;
+            int order[8]{ 0, 1, 2, 3, 4, 5, 6, 7 };
+            const bool gunOrder = wheel_layout::GunOrder(catV, cn, order, 8) >= nSlots;
+            size_t n = gunOrder ? (size_t)nSlots
+                                : (g_wwCatalog.sectors.size() < 8 ? g_wwCatalog.sectors.size() : 8);
             for (size_t i = 0; i < n; ++i) {
-                secs[i].sector = g_wwCatalog.sectors[i].index;
-                secs[i].gunVerts = g_wwCatalog.sectors[i].verts;
+                const size_t ci = gunOrder ? (size_t)order[i] : i;
+                secs[i].sector = g_wwCatalog.sectors[ci].index;
+                secs[i].gunVerts = g_wwCatalog.sectors[ci].verts;
             }
             size_t m = g_wwCatalog.cycle.size() < 16 ? g_wwCatalog.cycle.size() : 16;
             for (size_t i = 0; i < m; ++i) cyc[i] = g_wwCatalog.cycle[i];
@@ -24777,18 +24793,23 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
         InterlockedCompareExchange(&g_hudAtlasState, 0, 0) == 1 &&
         InterlockedCompareExchange(&g_wwCatalogState, 0, 0) == 1 &&
         g_hudAtlasTex != nullptr && g_hudAtlas.width > 0;
+    // Wheel positions map to catalog gun sectors (Centurion/Valkyrie/
+    // Spikeshot/Kasimov with the shipped catalog); a short catalog falls
+    // back to identity order. Shared by icons, labels and the commit path.
+    int wheelOrder[8]{ 0, 1, 2, 3, 4, 5, 6, 7 };
+    bool gunOrder = false;
+    if (haveCatalog) {
+        long catV[8]{};
+        int cn = (int)g_wwCatalog.sectors.size() < 8 ? (int)g_wwCatalog.sectors.size() : 8;
+        for (int i = 0; i < cn; ++i) catV[i] = g_wwCatalog.sectors[i].verts;
+        gunOrder = wheel_layout::GunOrder(catV, cn, wheelOrder, 8) >= slots;
+    }
     if (katorgaIcons) {
         for (int i = 0; i < slots && i < 8; ++i) {
-            const char* iconId = (i < (int)g_wwCatalog.sectors.size())
-                ? g_wwCatalog.sectors[i].atlas.c_str() : nullptr;
-            if (i == 0 && heldVerts > 0) {
-                // Slot 0 is the no-op "current" sector: show the held weapon's
-                // icon so the top wedge reads as what is equipped. FSM untouched.
-                for (size_t j = 0; j < g_wwCatalog.sectors.size(); ++j) {
-                    const wheel_catalog::Sector& s = g_wwCatalog.sectors[j];
-                    if (s.verts == heldVerts && !s.atlas.empty()) { iconId = s.atlas.c_str(); break; }
-                }
-            }
+            const int ci = (gunOrder && wheelOrder[i] < (int)g_wwCatalog.sectors.size())
+                ? wheelOrder[i] : i;
+            const char* iconId = (ci < (int)g_wwCatalog.sectors.size())
+                ? g_wwCatalog.sectors[ci].atlas.c_str() : nullptr;
             slotIcons[i] = hud_atlas::Find(g_hudAtlas, iconId);
             if (!slotIcons[i]) { katorgaIcons = false; break; }
         }
@@ -24797,15 +24818,27 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     const char* slotLabels[8]{};
     long slotVerts[8]{};
     if (haveCatalog) {
-        for (int i = 0; i < slots && i < 8 && i < (int)g_wwCatalog.sectors.size(); ++i) {
-            slotLabels[i] = g_wwCatalog.sectors[i].label.c_str();
-            slotVerts[i] = g_wwCatalog.sectors[i].verts;
+        for (int i = 0; i < slots && i < 8; ++i) {
+            const int ci = (gunOrder && wheelOrder[i] < (int)g_wwCatalog.sectors.size())
+                ? wheelOrder[i] : i;
+            if (ci >= (int)g_wwCatalog.sectors.size()) break;
+            slotLabels[i] = g_wwCatalog.sectors[ci].label.c_str();
+            slotVerts[i] = g_wwCatalog.sectors[ci].verts;
         }
     }
     // Snapshot of the seen-weapons set for label gating (render thread read).
     long seenCopy[8]{};
     for (int k = 0; k < 8; ++k)
         seenCopy[k] = InterlockedCompareExchange(&g_wwSeen[k], 0, 0);
+    // Named wedges get icon + label; unowned weapon wedges stay empty.
+    bool slotNamed[8]{};
+    for (int i = 0; i < slots && i < 8; ++i) {
+        const long pv = slotVerts[i];
+        if (pv <= 0 || pv == heldVerts) { slotNamed[i] = true; continue; }
+        for (int k = 0; k < 8; ++k) {
+            if (seenCopy[k] == pv) { slotNamed[i] = true; break; }
+        }
+    }
     struct HudIconVtx { float x, y, z, rhw; DWORD c; float u, v; };
     struct WwVtx { float x, y, z, rhw; DWORD c; };
     if (katorgaIcons && !roundOn) {
@@ -24845,11 +24878,14 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
             dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
             dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
             const DWORD wedgeIdle = 0x99142A40, wedgeSel = 0xE0FF8C1A;
+            const DWORD wedgeHeld = 0x992E6E9E; // held, not selected: brighter steel
             const DWORD ringCol = 0xC02FB9D8, ringSel = 0xE0FFA726;
             for (int i = 0; i < slots; ++i) {
                 float a0 = 0, a1 = 0;
                 wheel_layout::WedgeBounds(i, slots, 0.10f, a0, a1);
-                const DWORD wc = (i == selected) ? wedgeSel : wedgeIdle;
+                const long pv = (i < 8) ? slotVerts[i] : 0;
+                const bool held = (pv > 0 && pv == heldVerts);
+                const DWORD wc = (i == selected) ? wedgeSel : (held ? wedgeHeld : wedgeIdle);
                 WwVtx v[2 + 6 + 1];
                 v[0].x = fx; v[0].y = fy; v[0].z = 0; v[0].rhw = 1; v[0].c = wc;
                 for (int k = 0; k <= m.wedgeSteps; ++k) {
@@ -24923,7 +24959,7 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
                 dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
                 dev->SetTexture(0, g_hudAtlasTex);
                 dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
-                for (int i = 0; i < slots && i < 8 && slotIcons[i]; ++i) {
+                for (int i = 0; i < slots && i < 8 && slotIcons[i] && slotNamed[i]; ++i) {
                     const float c = wheel_layout::SectorCenter(i, slots);
                     float ix = 0, iy = 0;
                     wheel_layout::WedgePoint(fx, fy, (float)m.iconR, c, ix, iy);
@@ -24932,7 +24968,8 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
                     const float v0 = (float)ir->y / (float)g_hudAtlas.height;
                     const float du = (float)ir->w / (float)g_hudAtlas.width;
                     const float dv = (float)ir->h / (float)g_hudAtlas.height;
-                    const DWORD tint = (i == selected) ? 0xFFFFD080 : 0xFFFFFFFF;
+                    const DWORD tint = (i == selected) ? 0xFFFFD080
+                        : ((slotVerts[i] > 0 && slotVerts[i] == heldVerts) ? 0xFFC0E8FF : 0xFFFFFFFF);
                     const float x0 = ix - (float)m.iconHalf, y0 = iy - (float)m.iconHalf;
                     const float x1 = ix + (float)m.iconHalf, y1 = iy + (float)m.iconHalf;
                     HudIconVtx v[4] = {
@@ -24972,7 +25009,9 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
                 const int n = TextRects(text, 0, (int)(sizeof(text) / sizeof(text[0])),
                                          (int)lroundf(lx) - tw / 2, (int)lroundf(ly) - th / 2,
                                          m.textPx, label);
-                ClearRects(dev, text, n, (i == selected) ? 0xFFFFC060 : 0xFFE8EEF8);
+                const bool held = (slotVerts[i] > 0 && slotVerts[i] == heldVerts);
+                ClearRects(dev, text, n, (i == selected) ? 0xFFFFC060
+                    : (held ? 0xFFBFE9FF : 0xFFE8EEF8));
             }
             continue;
         }

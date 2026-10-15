@@ -81,30 +81,25 @@ int main() {
         Expect(dst[0] == 0, "null sanitises empty");
     }
 
-    // Slot labels come from the catalog; slot 0 shows the held weapon.
-    // Unowned labelled sectors (verts never held, not currently held) yield
-    // no label: the wheel never names a weapon the player does not own yet.
+    // Slot labels come from the catalog gun order; every position is a real
+    // weapon, so no slot needs a placeholder override. Unowned labelled
+    // sectors (verts never held, not currently held) yield no label at all:
+    // the wheel never names a weapon the player does not own yet.
     {
-        const char* labels[4] = { "Obecna", "Centurion", "AR9 Valkyrie", "Spikeshot" };
-        const long verts[4] = { 0, 5799, 11387, 8297 };
+        const char* labels[4] = { "Centurion", "AR9 Valkyrie", "Spikeshot", "Kasimov SNV-E99" };
+        const long verts[4] = { 5799, 11387, 8297, 11389 };
         const long seenNone[1] = { 0 };
         const long seenAr[2] = { 5799, 11387 };
-        const long seenAll[4] = { 5799, 11387, 8297, 1 };
+        const long seenAll[4] = { 5799, 11387, 8297, 11389 };
         char dst[32];
-        Expect(LabelForSlot(labels, verts, 4, 2, 5799, seenAr, 2, dst, sizeof(dst)) &&
-               std::strcmp(dst, "AR9 VALKYRIE") == 0, "plain slot label");
-        Expect(LabelForSlot(labels, verts, 4, 0, 11387, seenAr, 2, dst, sizeof(dst)) &&
-               std::strcmp(dst, "AR9 VALKYRIE") == 0, "slot0 shows held weapon");
-        Expect(LabelForSlot(labels, verts, 4, 0, 0, seenNone, 1, dst, sizeof(dst)) &&
-               std::strcmp(dst, "OBECNA") == 0, "slot0 fallback without verts");
-        Expect(LabelForSlot(labels, verts, 4, 0, 12345, seenNone, 1, dst, sizeof(dst)) &&
-               std::strcmp(dst, "OBECNA") == 0, "slot0 fallback unknown verts");
+        Expect(LabelForSlot(labels, verts, 4, 2, 5799, seenAll, 4, dst, sizeof(dst)) &&
+               std::strcmp(dst, "SPIKESHOT") == 0, "plain slot label");
+        Expect(LabelForSlot(labels, verts, 4, 0, 5799, seenNone, 1, dst, sizeof(dst)) &&
+               std::strcmp(dst, "CENTURION") == 0, "held weapon always named");
         Expect(!LabelForSlot(labels, verts, 4, 2, 5799, seenNone, 1, dst, sizeof(dst)),
                "unowned sector unnamed");
-        Expect(LabelForSlot(labels, verts, 4, 2, 11387, seenNone, 1, dst, sizeof(dst)) &&
-               std::strcmp(dst, "AR9 VALKYRIE") == 0, "held weapon always named");
         Expect(LabelForSlot(labels, verts, 4, 3, 5799, seenAll, 4, dst, sizeof(dst)) &&
-               std::strcmp(dst, "SPIKESHOT") == 0, "seen weapon named");
+               std::strcmp(dst, "KASIMOV SNV-E99") == 0, "seen weapon named");
         Expect(!LabelForSlot(labels, verts, 4, 3, 5799, nullptr, 0, dst, sizeof(dst)),
                "null seen set gates label");
         const char* empty[2] = { "", "" };
@@ -117,6 +112,20 @@ int main() {
         const long lv[1] = { 0 };
         Expect(LabelForSlot(longL, lv, 1, 0, 0, seenNone, 1, dst, sizeof(dst)) &&
                std::strlen(dst) == (size_t)kMaxLabel, "long label truncates");
+    }
+
+    // Wheel positions map to catalog gun sectors in catalog order.
+    {
+        const long verts[8] = { 0, 5799, 11387, 8297, 11389, 0, 0, 0 };
+        int order[8] = { -1, -1, -1, -1, -1, -1, -1, -1 };
+        Expect(GunOrder(verts, 8, order, 8) == 4, "four gun positions");
+        Expect(order[0] == 1 && order[1] == 2 && order[2] == 3 && order[3] == 4,
+               "gun order follows catalog");
+        Expect(GunOrder(verts, 8, order, 2) == 2, "order respects cap");
+        const long bare[2] = { 0, 0 };
+        Expect(GunOrder(bare, 2, order, 8) == 0, "no guns, no positions");
+        Expect(GunOrder(nullptr, 8, order, 8) == 0, "null catalog refused");
+        Expect(GunOrder(verts, 8, nullptr, 8) == 0, "null output refused");
     }
 
     // Hand-driven sector: synthetic eye looking -Z, 90-degree half tangents.
@@ -161,6 +170,26 @@ int main() {
         Expect(Update(t, true, false, true, true, false, 1, 0, 4, -2) == Event::Open, "stick open");
         Expect(Update(t, true, false, true, true, false, 1, 0, 4, -2) == Event::SelectionChanged,
                "stick still works with -2");
+    }
+
+    // Touched rule: an untouched release cancels (tap safety); any touched
+    // release commits, including back on sector 0 (every sector is a gun).
+    {
+        using namespace weaponwheel;
+        State u{};
+        Expect(Update(u, true, false, true, true, false, 0, -1, 4, -2) == Event::Open, "tap opens");
+        Expect(Update(u, false, false, true, true, false, 0, 0, 4, -2) == Event::Cancel,
+               "untouched release cancels");
+        Expect(!u.open, "cancelled wheel closed");
+        State v{};
+        Expect(Update(v, true, false, true, true, false, 0, -1, 4, -2) == Event::Open, "touch opens");
+        Expect(Update(v, true, false, true, true, false, 1, 0, 4, -2) == Event::SelectionChanged,
+               "touch steers to 1");
+        Expect(Update(v, true, false, true, true, false, 0, -1, 4, -2) == Event::SelectionChanged,
+               "touch steers back to 0");
+        Expect(v.selection == 0 && v.touched, "sector 0 touched");
+        Expect(Update(v, false, false, true, true, false, 0, 0, 4, -2) == Event::Commit,
+               "touched release on 0 commits");
     }
 
     if (g_fails == 0) std::puts("weapon wheel: round layout geometry + labels L1");

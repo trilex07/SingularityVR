@@ -78,3 +78,13 @@ User: wheel OK and stick tilt works, but selection must follow RIGHT-HAND moveme
 - Ownership gate: `g_wwSeen[8]` gun_verts held this session (input thread appends, bounded log once per weapon); labels draw only for held/seen sectors, others stay icon-only; W# fallback only without a catalog.
 - Translucent fills/ring/disc (alpha blend, ~60-88%); sector + centre text stay opaque.
 - Regression verdict (log evidence, same session): VideoFlat movies (lines 237-754) and 26-38 fps from boot (134 draws -> 33 fps) both predate the first wheel OPEN (line 5262); the round code early-returns while closed, so it cannot cause either. Same headset/resolution as the 89 fps PID428 session; fps is draw-count independent -> fixed ~30 ms/frame stall outside itemized hooks (`our work` residual). Wheel exonerated; fps/movies need a separate A/B (same save, accepted 6F4BBEF2 vs candidate) and stay OPEN, not attributed to this change.
+
+## ROUND 3 (2026-10-15, user feedback on C1974AFF + icons)
+
+User: hand tracking felt off (retest pending - left controller was off); wheel shows 3 gun icons + circle-as-current, wants 4 gun icons with the held one visibly marked; unowned weapons must be fully empty slots (no icon, no name).
+
+- Gun-order mapping: wheel positions come from catalog sectors with gun_verts > 0 in catalog order (Centurion/Valkyrie/Spikeshot/Kasimov); the "Obecna" no-op sector is gone. Held wedge: brighter steel fill + tinted icon/label; selected wedge: orange (unchanged meaning: commits on release).
+- FSM touched rule: release commits only a touched wheel (highlight left the deadzone at least once); an untouched tap cancels. This keeps tap safety now that every sector is a real gun, and allows commit on sector 0. Legacy offset-pulse path unaffected (0 pulses = no-op).
+- Commit path builds its sector table in the same gun order, so drawn position == committed target. Unowned positions draw wedge only (icon + label skipped).
+- Retest diagnostics (bounded): OPEN logs anchor validity; first SelectionChanged per open logs sector + hand/stick source, so the hand-feel retest is attributable.
+- Falsifier: L1 gun-order/touched/ownership suites; L3 must show 4 gun wedges, held brighter, unowned empty, tap = no switch, R3-release after hand move commits the pointed gun.

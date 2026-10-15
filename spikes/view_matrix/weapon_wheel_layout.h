@@ -115,32 +115,22 @@ inline int SanitizeLabel(const char* src, char* dst, size_t cap) {
 enum { kMaxLabel = 16 };
 
 // Pick the display label for a wheel slot.
-// sectors: parallel arrays of catalog labels (may be null/empty).
-// slot0ShowsCurrent: when true and currentVerts matches a labelled catalog
-// entry, slot 0 (the no-op "current" sector) shows that weapon's label so the
-// top wedge reads as the held weapon instead of a cryptic placeholder.
-// Ownership gate: a labelled sector whose gun_verts is positive, is not the
-// currently held weapon, and is absent from the seen set (weapons the player
-// has verifiably held this session) yields NO label — the wheel never names
-// a weapon the player does not own yet. seen may be null (gate skipped).
-// Returns false when the slot has no usable label (caller draws icon only).
-// The FSM is untouched: slot 0 release is still Cancel (no commit pulses).
+// Wheel positions map 1:1 to catalog gun sectors (see GunOrder), so every
+// position is a real weapon: no slot needs a "current" placeholder override.
+// Ownership gate: a sector whose gun_verts is positive, is not the currently
+// held weapon, and is absent from the seen set (weapons the player has
+// verifiably held this session) yields NO label — the wheel never names a
+// weapon the player does not own yet. seen may be null (gate skipped).
+// Returns false when the slot has no usable label (caller draws the wedge
+// empty: icon and label both skipped). The FSM is untouched: an untouched
+// release still cancels via the touched flag (no commit pulses).
 inline bool LabelForSlot(const char* const* labels, const long* verts, int n,
                          int slot, long currentVerts, const long* seen, int nSeen,
                          char* dst, size_t cap) {
     if (!labels || !verts || n <= 0 || !dst || cap == 0) return false;
     if (slot < 0 || slot >= n) return false;
     const char* pick = labels[slot];
-    long pickVerts = verts[slot];
-    if (slot == 0 && currentVerts > 0) {
-        for (int i = 0; i < n; ++i) {
-            if (verts[i] == currentVerts && labels[i] && labels[i][0]) {
-                pick = labels[i];
-                pickVerts = verts[i];
-                break;
-            }
-        }
-    }
+    const long pickVerts = verts[slot];
     if (!pick || !pick[0]) return false;
     if (pickVerts > 0 && pickVerts != currentVerts) {
         bool owned = false;
@@ -206,6 +196,21 @@ inline int HandSector(float dx, float dy, float dz, const EyeBasis& eye, int slo
     const float du = b.u - a.u, dv = b.v - a.v; // u right, v DOWN (screen-like)
     if (!(du * du + dv * dv >= HandNdcDeadzone() * HandNdcDeadzone())) return -1;
     return weaponwheel::SectorForStick(du, dv, slots, 0.0f);
+}
+
+// Wheel positions map to catalog sectors that name a real weapon
+// (gun_verts > 0), in catalog order: with the shipped catalog, positions
+// 0..3 are Centurion / Valkyrie / Spikeshot / Kasimov and every sector is
+// committable (an untouched release still cancels via the touched flag).
+// Returns positions filled. A short catalog yields fewer; the caller falls
+// back to identity order so the wheel never shows fewer sectors than slots.
+inline int GunOrder(const long* verts, int n, int* out, int cap) {
+    if (!verts || !out || cap <= 0) return 0;
+    int m = 0;
+    for (int i = 0; i < n && m < cap; ++i) {
+        if (verts[i] > 0) out[m++] = i;
+    }
+    return m;
 }
 
 } // namespace wheel_layout
