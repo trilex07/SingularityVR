@@ -1,5 +1,23 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 7 DEPLOYED (DLL
+96F5947BDE7299734FD719EA0A753B8C46B3D77FBAC3006E7655D224B5ACC50B/source
+99b2546 branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-180725; game closed
+at deploy; glove v2 pack + GloveRendererEnabled=1 retained). From the user's
+annotated screenshot: (1) RED (wrongly covered): pips band x0.190 covered
+mag-icon bottom + corner tick + cell frame — column profile proves true pips
+are only x272-380/y210-236, so the band is now TIGHT x0.260-0.380/y0.600-0.698
+(y260 line is the cell frame, kept); (2) PINK (reserve ghost): widened cover
+stands + live digits already draw on top + strip alpha-bleed from round 5;
+(3) ring redesigned to a VERTICAL annulus: outer 0.10m / inner 0.05m (5cm rim,
+empty middle), plane spanned by XR-up and horizontal eye-right (billboard
+around Y, perpendicular to the floor), same XR projection as plates.
+L1_PASS (pips-band lock, halo lock, vrpose invert). L2_PASS (PE32, manifest
+commit 99b2546 clean). L3/physical PENDING: red deco restored, pink ghost
+gone, vertical ring at hip with gun held + side native-match gloves. No fix
+claimed.
+
 LATEST 2026-10-15 MAIN round 6 DEPLOYED (DLL
 AAABE9FE732BD4F2BE83F2212ACEF89CB260407EBF86599A5A792E2FE95D8387/source
 ffb5b83 branch plates-l3-main = merge origin/feature/glove-animation
