@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN enabled side glove renderer for L3 (DLL unchanged
+B7369140, source d060c33): installed private pack
+vr-assets/hud/katorga/glove-animation/{glove_left.svrg,glove_right.svrg,glove.svrt}
+from side candidate, all 3 SHA-256 verified equal to candidate hashes.json
+(58A267AD/5683181F/0F6A90BB) before AND after copy; installed INI
+GloveRendererEnabled 0->1 (pre-edit INI backed to
+deployment/install-backups/20261015-165234/SingularityVR.ini.pre-glove).
+Fail-safe: missing/bad pack logs FAILED and keeps native hands; flag reads
+at XR startup, game was closed. L3/physical PENDING — side's 3-sentence
+script: empty-hand pad rotation, cuff-to-eye hole check, slow grip open/fist
++ draw weapon (grip/aim unchanged) + quit. Revert = set flag 0 (assets can
+stay; OFF loads nothing).
+
 LATEST 2026-10-15 MAIN plates+gloves round 3 DEPLOYED (DLL
 B7369140B76AF4D7A715F0C16A2DCE73A98500272B946A0ABFAFC42088E710DB/source
 d060c33 branch plates-l3-main = merge origin/feature/glove-animation
