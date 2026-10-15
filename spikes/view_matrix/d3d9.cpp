@@ -2212,6 +2212,11 @@ float g_holsterTrimFcm=0,g_holsterTrimRcm=0,g_holsterTrimUcm=0;
 // Independent, default-OFF pre-TMD knife candidate; render/input state is
 // updated by the existing XR frame owner, never a new hook or worker thread.
 int g_hipKnifeEnabled=0;
+// MAIN round 17: escape hatch for the TMD dispute (user reports no TMD while
+// the exact-FName mTMD read says acquired). Default 0 = trust the engine
+// (pre-TMD both hands, post-TMD right hand only). =1 forces the pre-TMD
+// both-hands rule regardless of mTMD. Restart required.
+int g_hipKnifeIgnoreTMD=0;
 bool g_hipKnifeReady=false,g_hipKnifeVisible=false;
 hipknife::Config g_hipKnifeConfig{};
 hipknife::State g_hipKnifeState{};
@@ -8975,9 +8980,9 @@ bool InitXRInput() {
         Log("hip knife: cache=%s verts=%u tris=%u; pre-TMD both hands, post-TMD right hand only, native camera trace",
             g_hipKnifeReady?"READY":"MISSING/INVALID (disabled)",
             g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles());
-        // MAIN round 16 build marker: proves which DLL produced this log.
+        // MAIN round 16/17 build marker: proves which DLL produced this log.
         // Update the tag every behavior round; parsers key on "knife build r".
-        Log("hip knife: build r16 trigger-trim-INI + silent-refusal probe + trigger==ring default (src d74a922+); holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
+        Log("hip knife: build r17 render-gate-mask + IgnoreTMD hatch (src f58a09f+); holster fwd=%.1f right=%.1f up=%.1f radius=%.1f knife left=%.2f down=%.2f radius=%.2f",
             g_holsterConfig.fwd,g_holsterConfig.right,g_holsterConfig.up,g_holsterConfig.radius,
             g_hipKnifeConfig.left,g_hipKnifeConfig.down,g_hipKnifeConfig.radius);
     }
@@ -10121,6 +10126,8 @@ void SyncXRInput(XrTime displayTime) {
         // MAIN round 14: post-TMD mode (user request) — TMD present, knife still
         // allowed but right hand (h==1) with no weapon in hand only.
         f.hasTMD=tmdReadable&&*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)!=0&&impulseOk;
+        // MAIN round 17: IgnoreTMD=1 forces the pre-TMD rule (TMD dispute hatch).
+        if(g_hipKnifeIgnoreTMD)f.hasTMD=false;
         f.alive=pawn&&g_offHealth>=0&&Readable((void*)(pawn+g_offHealth),4)&&
             *reinterpret_cast<const int*>(pawn+g_offHealth)>0;
         f.noWeapon=!WeaponInHands()||Rd(g_weaponHolstered);
@@ -25255,9 +25262,15 @@ void DrawHipKnife(IDirect3DDevice9* dev){
     if(!g_hipKnifeEnabled||!g_hipKnifeReady||!g_hipKnifeVisible||!VrModeOn()||
        !InGameplay()||!g_stereo||!g_haveEyes||Rd(g_gamePaused)||Rd(g_vrUiMenu)||
        Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||CutsceneNativeCameraArmed()){
-        // MAIN falsifier probe: one line names the blocking gate.
-        static bool saidGate=false;
-        if(!saidGate){saidGate=true;
+        // MAIN round 17: per-DISTINCT-mask gate log (the old one-shot spent
+        // itself at the menu and said nothing about gameplay, where the user
+        // reports the docked knife never renders despite input-side Context).
+        static int saidGateMask=-1;
+        const int mask=(g_hipKnifeEnabled?1:0)|(g_hipKnifeReady?2:0)|(g_hipKnifeVisible?4:0)|
+            (VrModeOn()?8:0)|(InGameplay()?16:0)|(g_stereo?32:0)|(g_haveEyes?64:0)|
+            (Rd(g_gamePaused)?128:0)|(Rd(g_vrUiMenu)?256:0)|
+            (Rd(g_panelOpen)?512:0)|(Rd(g_weaponWheelOpen)?1024:0)|(CutsceneNativeCameraArmed()?2048:0);
+        if(mask!=saidGateMask){saidGateMask=mask;
             Log("hip knife: gate blocked (en=%d ready=%d vis=%d vr=%d play=%d stereo=%d eyes=%d paused=%d menu=%d panel=%d wheel=%d cine=%d)",
                 g_hipKnifeEnabled?1:0,g_hipKnifeReady?1:0,g_hipKnifeVisible?1:0,VrModeOn()?1:0,
                 InGameplay()?1:0,g_stereo?1:0,g_haveEyes?1:0,(int)Rd(g_gamePaused),(int)Rd(g_vrUiMenu),
@@ -30421,6 +30434,8 @@ void LoadIniSettings() {
     Log("ini: HolsterTrimCm fwd=%.0f right=%.0f up=%.0f (trigger-only, 0=at ring)",
         (double)g_holsterTrimFcm,(double)g_holsterTrimRcm,(double)g_holsterTrimUcm);
     g_hipKnifeEnabled=GetPrivateProfileIntA("Input","HipKnifeEnabled",0,path)?1:0;
+    g_hipKnifeIgnoreTMD=GetPrivateProfileIntA("Input","HipKnifeIgnoreTMD",0,path)?1:0;
+    Log("ini: HipKnifeIgnoreTMD=%d (0=trust engine mTMD, 1=force pre-TMD both-hands rule)",g_hipKnifeIgnoreTMD);
     g_hipKnifeConfig.left=std::max(.10f,std::min(.50f,IniSignedInt("Input","HipKnifeLeftCm",25,path)*.01f));
     g_hipKnifeConfig.down=std::max(.20f,std::min(.90f,IniSignedInt("Input","HipKnifeDownCm",50,path)*.01f));
     g_hipKnifeConfig.forward=std::max(-.20f,std::min(.30f,IniSignedInt("Input","HipKnifeForwardCm",6,path)*.01f));
