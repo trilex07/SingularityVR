@@ -1,5 +1,32 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 MAIN round 4 DEPLOYED (DLL
+C6D35DC695218CB08C3E10F05B35223DBCE6D9D73969573C7573460560A3FF75/source
+6961f5d branch plates-l3-main, x86 PE32 /O2, built==installed via
+tools/deploy-singularityvr.ps1 -DllOnly; backup 20261015-171643; game closed
+at deploy). Why round 4: (a) 16:41 gameplay log (BBA4BF95) contains ZERO
+plate/marker lines despite STORED/DRAWN holster events — all three overlays
+sat in their top gates all session, but no gate log existed, so the blocker
+was unidentifiable; (b) user still sees burnt reserve digits. Changes:
+(1) ReserveCover widened to x0.494-0.606/y0.512-0.720 — baked "48" ends 1px
+from the old rect (right x616 vs 617, top y179 vs 179), glow bled past;
+bullets icon gap rows y172-179 verified dimmest, ~3px icon-glow overlap
+accepted; live reserve digits already draw on top inside the rect;
+(2) ammo plate is now world-anchored (constant 0.19m wide via per-eye
+0.5m-probe px-per-metre, clamped 64px-0.30H, 0.16H fallback) so it shrinks
+with distance instead of growing as the gun moves away; fallback also
+carries the asked ~5% reduction; health plate untouched;
+(3) one-shot "gate blocked (flag/vr/dup/paused/...)" falsifier logs on all
+three overlays — next session names the exact blocker if lines stay absent;
+(4) ring radius clamp 400->1000px + proj-fail log (a close hip legitimately
+projects ~300-500px);
+(5) docs/handoffs/side-glove-visual-parity-prompt.md prepared for SIDE
+(native weapon-hold look + size parity, L1/L2 only, own worktree).
+L1_PASS (layout incl. halo-margin lock, probe, holster, both glove suites
+re-run on merged headers). L2_PASS (PE32, manifest commit 6961f5d clean).
+L3/physical PENDING: one PSVR2 gameplay pass with gun held (plates, ring at
+hip, store/draw) + glove script. No fix claimed.
+
 LATEST 2026-10-15 MAIN enabled side glove renderer for L3 (DLL unchanged
 B7369140, source d060c33): installed private pack
 vr-assets/hud/katorga/glove-animation/{glove_left.svrg,glove_right.svrg,glove.svrt}
