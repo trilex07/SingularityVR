@@ -6,7 +6,7 @@
 #include <chrono>
 
 // CPU-only D3D surface/state fake: no real device, GPU, game, or Steam.
-struct Surface {unsigned refs=1;void AddRef(){++refs;}void Release(){assert(refs>1);--refs;}};
+struct Surface {unsigned refs=1,clears=0;void AddRef(){++refs;}void Release(){assert(refs>1);--refs;}};
 struct Device {
     Surface a,b,c,depth,replacement;
     Surface* rt[4]={&a,&b,&c,nullptr};Surface* ds=&depth;
@@ -25,6 +25,8 @@ struct Block {
 struct Calls {
     static HRESULT target(Device* d,DWORD i,Surface* p){d->rt[i]=p;++d->changes;return S_OK;}
     static HRESULT viewport(Device* d,const D3DVIEWPORT9* p){d->vp=*p;++d->changes;return S_OK;}
+    static HRESULT clear(Device* d,DWORD,const D3DRECT*,DWORD flags,D3DCOLOR,float depth,DWORD stencil){
+        assert(flags==D3DCLEAR_ZBUFFER&&depth==1&&!stencil&&d->ds);++d->ds->clears;return S_OK;}
 };
 using Guard=hipknife::StateGuard<Device,Block,Surface,Calls>;
 static void Mutate(Device& d){d.rt[0]=&d.replacement;d.rt[1]=d.rt[2]=nullptr;d.ds=nullptr;d.state=-99;d.vp={0,0,320,200,0,1};}
@@ -73,6 +75,10 @@ static void UploadTests(){
 int main(int argc,char** argv){
     UploadTests();
     const Calls calls;
+    {Device d;Block b{&d};{Guard guard(&d,&b,calls);assert(guard.valid);
+        assert(!hipknife::PrimePrivateDepth(&d,&d.depth,&d.depth,calls)&&!d.depth.clears);
+        assert(hipknife::PrimePrivateDepth(&d,&d.replacement,&d.depth,calls));}
+        Restored(d,b);assert(!d.depth.clears&&d.replacement.clears==1);}
     {Device d;Block b{&d};{Guard guard(&d,&b,calls);assert(guard.valid);Mutate(d);}Restored(d,b);}
     {Device d;Block b{&d};assert(!EarlyReturn(d,b,calls));Restored(d,b);}
     for(int fail=0;fail<4;++fail){Device d;d.failRT=fail;Block b{&d};

@@ -2201,6 +2201,12 @@ hipknife::State g_hipKnifeState{};
 hipknife::TriggerGate g_hipKnifeTrigger[2]{};
 hipknife::Pose g_hipKnifePose{};
 hipknife::Renderer g_hipKnifeRenderer;
+static bool g_knifeHandGrip=false,g_knifeHandAssetReady=false,g_knifeHandPoseThisDraw=false;
+static knifehand::Data g_knifeHandData;
+static armbind::Mat g_knifeHandWrist{},g_knifeHandLocal{};
+static int g_knifeStereoEye=-1;
+static LONG g_knifeJointFrame=-1;static unsigned g_knifeJointEyes=0,g_knifeJointDraws=0;
+static hipknife::Calls NativeKnifeDriverCalls();
 
 // R3 weapon wheel. Selection is an offset from the currently equipped weapon;
 // commit pulses the game's existing cycle-weapon action, so no inventory scan
@@ -8899,6 +8905,11 @@ bool InitXRInput() {
             if(slash!=std::string::npos){
                 directory.resize(slash);
                 g_hipKnifeReady=g_hipKnifeRenderer.Load(directory+"\\vr-assets\\knife\\knife.svrk");
+                if(g_knifeHandGrip){
+                    std::vector<unsigned char> bytes;
+                    g_knifeHandAssetReady=hipknife::Read(directory+"\\vr-assets\\knife\\knife_hand.svng",bytes,1024)&&
+                        knifehand::Decode(bytes.data(),bytes.size(),g_knifeHandData);
+                }
             }
         }
         Log("hip knife: cache=%s verts=%u tris=%u original diffuse=%ux%u; pre-TMD native camera-trace experiment only",
@@ -9205,6 +9216,10 @@ bool InitXRInput() {
         }
     }
 
+    if(g_knifeHandGrip&&(!g_knifeHandAssetReady||!g_nativeGloveExperiment||!g_nativeGloveRenderer.Ready())){
+        g_hipKnifeReady=false;
+        Log("knife-hand: dependencies unavailable; knife disabled, native gun/hands kept (requires native gloves + new grip cache)");
+    }
     XrActionSetCreateInfo asci{ XR_TYPE_ACTION_SET_CREATE_INFO };
     strcpy_s(asci.actionSetName, "gameplay");
     strcpy_s(asci.localizedActionSetName, "Gameplay");
@@ -10036,6 +10051,8 @@ void SyncXRInput(XrTime displayTime) {
         f.enabled=true;f.focused=g_xrSessionState==XR_SESSION_STATE_FOCUSED;
         f.gameplay=feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
             !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed();
+        if(g_knifeHandGrip)f.gameplay=f.gameplay&&g_gloveExperiment&&g_nativeGloveExperiment&&
+            g_knifeHandAssetReady&&(!WeaponInHands()||Rd(g_weaponHolstered));
         const uintptr_t pawn=g_playerPawn;f.pawn=(uint32_t)pawn;
         // These offsets already come from the UObject property resolver. Unknown
         // state is never treated as "no TMD" or "alive".
@@ -13111,7 +13128,9 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             }
             g_origSetVSConstF(dev, cs.reg, mat, 4);
         }
+        if(g_knifeHandGrip)g_knifeStereoEye=0;
         hr = draw();
+        if(g_knifeHandGrip)g_knifeStereoEye=-1;
         VfxEyeDraw(dev, 0); // host VFX, left eye: matrices for this eye still bound
     }
 
@@ -13137,7 +13156,9 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             }
             g_origSetVSConstF(dev, cs.reg, mat, 4);
         }
+        if(g_knifeHandGrip)g_knifeStereoEye=1;
         HRESULT hr2 = draw();
+        if(g_knifeHandGrip)g_knifeStereoEye=-1;
         if (dbg == 2) hr = hr2;
         VfxEyeDraw(dev, 1); // host VFX, right eye: matrices for this eye still bound
     }
@@ -15734,6 +15755,7 @@ static void ApplyGloveIsolation(float changed[135][4], const unsigned* map, int 
 static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first, UINT triangles,
                                   float saved[135][4]) {
     g_nativeGlovePoseThisDraw=false;
+    g_knifeHandPoseThisDraw=false;
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::bone_palette);
     if (g_hotPathSampler.active())
         InterlockedExchange64(&g_hotPaletteFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
@@ -16131,8 +16153,18 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // Exact free noTMD draw only. Original GPU skin, UVs and material remain;
     // finger rotations/cuff follow the same native wrist/scale as the gun rig.
     if(gloves&&wristAnchor&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount&&
-       NativeGlovesEligible()&&g_nativeGloveRenderer.Ensure(dev))
-        g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,g_gloveBlend);
+       NativeGlovesEligible()&&g_nativeGloveRenderer.Ensure(dev)){
+        const int held=g_hipKnifeState.held;
+        const bool joint=g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&g_hipKnifeVisible&&held>=0&&held<2;
+        float digits[2][5];for(unsigned side=0;side<2;++side)for(unsigned d=0;d<5;++d)
+            digits[side][d]=joint&&(int)side==held?g_knifeHandData.fingers[side][d]:g_gloveBlend[side];
+        g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,g_gloveBlend,joint?digits:nullptr);
+        if(joint&&g_nativeGlovePoseThisDraw){
+            const unsigned slot=held?1:18; // resolved exact cooked palette: right wrist51 / left9.
+            g_knifeHandPoseThisDraw=armbind::FromGpu(reinterpret_cast<const float(*)[4]>(&changed[slot*3]),g_knifeHandWrist);
+            std::memcpy(g_knifeHandLocal.m,local,sizeof(local));
+        }
+    }
     // Internal palette writes must bypass camera/HUD upload classification.
     if(!g_origSetVSConstF || FAILED(g_origSetVSConstF(dev,5,&changed[0][0],regs))) {
         IndependentAuditCount(IHA_PALETTE,audit);
@@ -16420,6 +16452,62 @@ static bool NativeGlovesEligible() {
         Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,g_xrSessionState==XR_SESSION_STATE_FOCUSED,
         Rd(g_dupDraws)!=0,g_haveEyes&&g_eyePositionsValid,g_glovePoseValid[0],g_glovePoseValid[1],
         Rd(g_weaponObj)!=0&&Rd(g_weaponHolstered)==0,Rd(g_twoHandActive)!=0);
+}
+static void KnifeHandDisable(const char* reason){
+    g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};g_knifeHandPoseThisDraw=false;
+    static unsigned notes=0;if(notes++<8)Log("knife-hand: disabled (%s); original gun/hands retained",reason);
+}
+static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT vertices){
+    if(!g_knifeHandGrip||!g_knifeHandPoseThisDraw||!g_hipKnifeReady||
+       !g_hipKnifeVisible||g_hipKnifeState.held<0||g_hipKnifeState.held>1||g_knifeStereoEye<0)return;
+    const LONG frame=Rd(g_sceneModeFrame);
+    if(g_knifeJointFrame!=frame){g_knifeJointFrame=frame;g_knifeJointEyes=0;}
+    const unsigned bit=1u<<g_knifeStereoEye;if(g_knifeJointEyes&bit)return;
+    DWORD mask=0,blend=0;
+    if(FAILED(dev->GetRenderState(D3DRS_COLORWRITEENABLE,&mask))||
+       FAILED(dev->GetRenderState(D3DRS_ALPHABLENDENABLE,&blend)))return;
+    // Depth-only and additive native light passes do not own final base colour.
+    if((mask&7)!=7||blend)return;
+    const auto layout=g_boundShaderLayout;
+    float eye[4][4];
+    if(layout.viewProjection<0||FAILED(dev->GetVertexShaderConstantF((UINT)layout.viewProjection,&eye[0][0],4))||
+       !knifehand::StandardDepth(eye)){KnifeHandDisable("unsupported native eye/depth projection");return;}
+    IDirect3DSurface9* target=nullptr;D3DSURFACE_DESC desc{};
+    if(FAILED(dev->GetRenderTarget(0,&target))||!target){KnifeHandDisable("missing native colour target");return;}
+    const bool targetOk=SUCCEEDED(target->GetDesc(&desc))&&desc.MultiSampleType==D3DMULTISAMPLE_NONE;
+    target->Release();
+    if(!targetOk||!g_hipKnifeRenderer.EnsureShared(dev,desc.Width,desc.Height)){
+        KnifeHandDisable("joint GPU resources unavailable");return;
+    }
+    const hipknife::Calls calls=NativeKnifeDriverCalls();
+    if(!calls.Valid()){KnifeHandDisable("raw driver callbacks unavailable");return;}
+    hipknife::StateGuard<> guard(dev,g_hipKnifeRenderer.SharedState(),calls);
+    if(!guard.valid){KnifeHandDisable("native state capture failed");return;}
+    // The original foreground/world depth is NEVER cleared or written by this
+    // experiment. The pair shares this private depth, at the original eye VP.
+    bool ok=hipknife::PrimePrivateDepth(dev,g_hipKnifeRenderer.SharedDepth(),guard.ds,calls)&&
+        SUCCEEDED(dev->SetRenderState(D3DRS_ZENABLE,D3DZB_TRUE))&&
+        SUCCEEDED(dev->SetRenderState(D3DRS_ZWRITEENABLE,TRUE))&&
+        SUCCEEDED(dev->SetRenderState(D3DRS_ZFUNC,D3DCMP_LESSEQUAL))&&
+        SUCCEEDED(dev->SetRenderState(D3DRS_STENCILENABLE,FALSE));
+    for(unsigned i=0;i<guard.count&&ok;++i)
+        ok=SUCCEEDED(dev->SetRenderState((D3DRENDERSTATETYPE)(i?D3DRS_COLORWRITEENABLE1+i-1:D3DRS_COLORWRITEENABLE),0));
+    // Same original VB/IB/declaration/skin/VS/PS as the preceding glove colour
+    // draw, colour masked. Its real fingers therefore occlude the real handle.
+    if(ok)ok=SUCCEEDED(g_origDrawIndexedPrim(dev,D3DPT_TRIANGLELIST,baseVertex,0,vertices,0,g_nativeGloveRenderer.Triangles()));
+    armbind::Mat a,b,clip;
+    if(ok){
+        skeletal::Multiply(a.m,g_knifeHandData.mount[g_hipKnifeState.held].m,g_knifeHandWrist.m);
+        skeletal::Multiply(b.m,a.m,g_knifeHandLocal.m);
+        skeletal::Multiply(clip.m,b.m,eye);
+        ok=g_hipKnifeRenderer.DrawShared(dev,calls,clip.m);
+    }
+    const bool restored=guard.Restore();
+    if(!ok||!restored){KnifeHandDisable(restored?"joint draw failed":"joint state restore failed");return;}
+    g_knifeJointEyes|=bit;++g_knifeJointDraws;
+    static unsigned notes=0;if(notes++<4)
+        Log("knife-hand: native joint eye=%d frame=%ld holder=%d camera=c%d sharedDepth=%ux%u; original glove material, original knife UV",
+            g_knifeStereoEye,frame,g_hipKnifeState.held,layout.viewProjection,desc.Width,desc.Height);
 }
 static float g_customGloveNativeScale=1.f;
 static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangles) { // arms, in modes 2 and 3
@@ -18087,7 +18175,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         HRESULT hr = D3D_OK;
         if(nativeIndices.valid){
             ++g_nativeGloveRenderer.draws;
-            return g_origDrawIndexedPrim(dev,t,baseVertex,0,numVertices,0,g_nativeGloveRenderer.Triangles());
+            const HRESULT h=g_origDrawIndexedPrim(dev,t,baseVertex,0,numVertices,0,g_nativeGloveRenderer.Triangles());
+            if(SUCCEEDED(h))DrawKnifeWithNativeGlove(dev,baseVertex,numVertices);
+            return h;
         }
         if (isolateNoTmdFaces) {
             for (const auto& run : gloveisolate::kNoTmdHandFaces) {
@@ -24853,6 +24943,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 #include "desktop_mirror.h"
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    g_knifeHandPoseThisDraw=false;g_knifeJointFrame=-1;g_knifeJointEyes=0;
     g_nativeGloveRenderer.ReleaseGPU();g_nativeGlovePoseThisDraw=false;
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     g_hipKnifeRenderer.ReleaseGPU();
@@ -25065,10 +25156,17 @@ static void MaybeLoadHudAtlas(IDirect3DDevice9* dev) {
     Log("weapon wheel: HUD atlas ready (%dx%d, %u icons)", pw, ph, (unsigned)sheet.rects.size());
 }
 
+static hipknife::Calls NativeKnifeDriverCalls(){
+    return {shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
+        shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport};
+}
 void DrawHipKnife(IDirect3DDevice9* dev){
     if(!g_hipKnifeEnabled||!g_hipKnifeReady||!g_hipKnifeVisible||!VrModeOn()||
        !InGameplay()||!g_stereo||!g_haveEyes||Rd(g_gamePaused)||Rd(g_vrUiMenu)||
        Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||CutsceneNativeCameraArmed())return;
+    // Held joint assembly was already drawn with the native hand's actual eye
+    // matrices/shared depth. Never redraw it on top as an independent overlay.
+    if(g_knifeHandGrip&&g_hipKnifeState.held>=0)return;
     IDirect3DSurface9* back=nullptr;
     if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
     D3DSURFACE_DESC desc{};
@@ -29340,6 +29438,7 @@ void LoadIniSettings() {
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
     g_holsterEnabled = GetPrivateProfileIntA("Input", "HolsterEnabled", 1, path) ? 1 : 0;
     g_hipKnifeEnabled=GetPrivateProfileIntA("Input","HipKnifeEnabled",0,path)?1:0;
+    g_knifeHandGrip=GetPrivateProfileIntA("Render","KnifeHandGripEnabled",0,path)!=0;
     g_hipKnifeConfig.left=std::max(.10f,std::min(.50f,IniSignedInt("Input","HipKnifeLeftCm",25,path)*.01f));
     g_hipKnifeConfig.down=std::max(.20f,std::min(.90f,IniSignedInt("Input","HipKnifeDownCm",50,path)*.01f));
     g_hipKnifeConfig.forward=std::max(-.20f,std::min(.30f,IniSignedInt("Input","HipKnifeForwardCm",6,path)*.01f));

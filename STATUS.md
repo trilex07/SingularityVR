@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+LATEST 2026-10-15 SIDE feature/knife-hand-grip: joint original-rig knife grip,
+default-OFF KnifeHandGripEnabled, integration includes #30 and #31 (no main
+merge). One shared actual native wrist/eye chain, per-digit fitted pose and
+private hand+knife depth; no held knife overlay through fingers. Original glove
+VB/UV/material/cuff/scale preserved; knife keeps original diffuse, not full UE3
+lighting. Controlled pre-TMD firearm-holstered scope, no simultaneous pistol.
+L1_PASS: zero fitted mesh crossings/buried knife vertices, 2218 hand +1324 knife
+golden replay, CTAB colour/shadow exclusion, release/opposite-hand/state/DS
+guards and existing regressions. L2 receipt follows in docs/knife-hand-grip.md.
+NO Steam/installed file access, NO runtime/GPU pixel/PSVR2 acceptance.
+
 LATEST 2026-10-15 SIDE PR #30: user ACCEPTS SIZE, rejects GLB material/cuff.
 New default-OFF GloveNativeEnabled uses the original UE3 VB/UV/material/shaders
 and real rig, not a replacement diffuse renderer. Original short forearm cut
