@@ -92,6 +92,7 @@ _work_u/
 /build/knife/
 /vr-assets/knife/
 /build/knife-hand-grip/
+/build/knife-shading-thumb/
 
 # ---- bink stills pipeline: intermediates local ----
 work/

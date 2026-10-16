@@ -8984,7 +8984,8 @@ bool InitXRInput() {
             std::string directory(path);const auto slash=directory.find_last_of("\\/");
             if(slash!=std::string::npos){
                 directory.resize(slash);
-                g_hipKnifeReady=g_hipKnifeRenderer.Load(directory+"\\vr-assets\\knife\\knife.svrk");
+                g_hipKnifeReady=g_hipKnifeRenderer.Load(directory+"\\vr-assets\\knife\\knife.svrk",
+                    GetPrivateProfileIntA("Render","KnifeSceneLighting",0,path)!=0);
                 if(g_knifeHandGrip){
                     std::vector<unsigned char> bytes;
                     g_knifeHandAssetReady=hipknife::Read(directory+"\\vr-assets\\knife\\knife_hand.svng",bytes,1024)&&
@@ -9282,6 +9283,11 @@ bool InitXRInput() {
             try {
                 g_gloveExperiment=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation\\native_hands.svni",path)&&
                     g_nativeGloveRenderer.Load(path);
+                if(g_gloveExperiment&&GetPrivateProfileIntA("Render","HandThumbPoseFix",0,ini)){
+                    const bool loaded=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation\\hand_thumb.svnt",path)&&
+                        g_nativeGloveRenderer.LoadThumbs(path);
+                    Log("native-gloves: separate fist/knife thumb poses %s",loaded?"ready":"FAILED; old pose retained");
+                }
             }catch(...){g_gloveExperiment=false;}
             Log("native-gloves: startup %s triangles=%u cap=%u; original VB/material/shaders, no replacement texture; GLB suppressed",
                 g_gloveExperiment?"CPU ready":"FAILED, native baseline kept",
@@ -16386,7 +16392,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         const int held=g_hipKnifeState.held;
         float digits[2][5];for(unsigned side=0;side<2;++side)for(unsigned d=0;d<5;++d)
             digits[side][d]=joint&&(int)side==held?g_knifeHandData.fingers[side][d]:g_gloveBlend[side];
-        g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,g_gloveBlend,joint?digits:nullptr);
+        g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,g_gloveBlend,joint?digits:nullptr,joint?held:-1);
         if(joint&&g_nativeGlovePoseThisDraw){
             const unsigned slot=held?1:18; // resolved exact cooked palette: right wrist51 / left9.
             g_knifeHandPoseThisDraw=armbind::FromGpu(reinterpret_cast<const float(*)[4]>(&changed[slot*3]),g_knifeHandWrist);
@@ -16690,7 +16696,7 @@ extern PFN_Clear shadowNativeClear;
 
 static hipknife::Calls NativeKnifeDriverCalls(){
     return {shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
-        shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport};
+        shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport,g_origSetVSConstF};
 }
 static void KnifeHandDisable(const char* reason){
     g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};g_knifeHandPoseThisDraw=false;
@@ -16718,6 +16724,7 @@ static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT v
     if(!targetOk||!g_hipKnifeRenderer.EnsureShared(dev,desc.Width,desc.Height)){
         KnifeHandDisable("joint GPU resources unavailable");return;
     }
+    const bool sceneLit=desc.Format==D3DFMT_A16B16G16R16F&&g_hipKnifeRenderer.LightingMatch(dev);
     const hipknife::Calls calls=NativeKnifeDriverCalls();
     if(!calls.Valid()){KnifeHandDisable("raw driver callbacks unavailable");return;}
     hipknife::StateGuard<> guard(dev,g_hipKnifeRenderer.SharedState(),calls);
@@ -16739,14 +16746,15 @@ static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT v
         skeletal::Multiply(a.m,g_knifeHandData.mount[g_hipKnifeState.held].m,g_knifeHandWrist.m);
         skeletal::Multiply(b.m,a.m,g_knifeHandLocal.m);
         skeletal::Multiply(clip.m,b.m,eye);
-        ok=g_hipKnifeRenderer.DrawShared(dev,calls,clip.m);
+        ok=sceneLit?g_hipKnifeRenderer.DrawLitShared(dev,calls,b.m,clip.m):
+            g_hipKnifeRenderer.DrawShared(dev,calls,clip.m);
     }
     const bool restored=guard.Restore();
     if(!ok||!restored){KnifeHandDisable(restored?"joint draw failed":"joint state restore failed");return;}
     g_knifeJointEyes|=bit;++g_knifeJointDraws;
     static unsigned notes=0;if(notes++<4)
-        Log("knife-hand: native joint eye=%d frame=%ld holder=%d camera=c%d sharedDepth=%ux%u; original glove material, original knife UV",
-            g_knifeStereoEye,frame,g_hipKnifeState.held,layout.viewProjection,desc.Width,desc.Height);
+        Log("knife-hand: native joint eye=%d frame=%ld holder=%d camera=c%d sharedDepth=%ux%u sceneLit=%d; original glove material, original knife UV",
+            g_knifeStereoEye,frame,g_hipKnifeState.held,layout.viewProjection,desc.Width,desc.Height,sceneLit);
 }
 static float g_customGloveNativeScale=1.f;
 static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangles) { // arms, in modes 2 and 3
