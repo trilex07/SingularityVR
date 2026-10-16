@@ -21,3 +21,5 @@ python (Join-Path $PSScriptRoot 'test_centurion_animation.py')
 if($LASTEXITCODE -ne 0){throw 'Centurion animation tests failed'}
 python (Join-Path $PSScriptRoot 'test_reload_notifies.py')
 if($LASTEXITCODE -ne 0){throw 'Centurion notification tests failed'}
+python (Join-Path $PSScriptRoot 'test_analyze_reload_log.py')
+if($LASTEXITCODE -ne 0){throw 'Centurion log analysis tests failed'}

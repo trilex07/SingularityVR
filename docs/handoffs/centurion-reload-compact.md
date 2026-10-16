@@ -9,7 +9,7 @@ You are SIDE unless the human explicitly assigns MAIN. ZERO Steam launches, depl
 ## Location / delivery
 
 - Repo: `C:\Users\Trilex\vr-mods\SingularityVR-centurion-reload`
-- Branch: `feature/centurion-manual-reload`; snapshot HEAD `59021c1` (docs).
+- Branch: `feature/centurion-manual-reload`; verify its current HEAD before editing.
 - Draft PR: https://github.com/trilex07/SingularityVR/pull/37
 - Stacked base: `feature/joint-knife-grip-and-stills`, merged through `f0b96ad`, NOT current main. MAIN has newer work elsewhere: integrate onto CURRENT accepted MAIN and rebuild; never deploy this standalone older base over it.
 - Start by reading `AGENTS.md`, latest block of `STATUS.md`, then `docs/centurion-manual-reload.md` as needed. Use local `vr-mod-workflow` and `singularityvr-agent-test-bridge`; hard RE also requires `singularityvr-main-engineering`.
@@ -36,7 +36,7 @@ Private candidate and exact asset hashes: `build/centurion-reload/candidate/cent
 
 ## Continue
 
-1. Safe offline work: validate probes/log analysis, cancellation/state restoration and regression tests. Prove producer/ABI before changing engine behavior; no guessed offsets, shader constants, ammo writes or native cylinder suppression.
+1. Safe offline work: validate probes/log analysis, cancellation/state restoration and regression tests. `tools/reload/analyze_reload_log.py --log <archived-log>` emits correlation-only JSON; 13 synthetic tests, no runtime/DLL changes. Prove producer/ABI before changing engine behavior; no guessed offsets, shader constants, ammo writes or native cylinder suppression.
 2. Tests: inspect then run `tools/reload/test-centurion.ps1`, `tools/knife/test-knife.ps1`. Build `spikes/view_matrix/build.ps1` WITHOUT `-Install`; commit source first for clean provenance. `tools/reload/stage-preview.ps1` stages ONLY private candidate, never Steam.
 3. MAIN's FIRST runtime variable: Probe=1, other three OFF; existing save, reserve ammo, fire twice, ordinary reload away from interactables. Correlate player identities/callback timing with conserved ammo change. Then separate manual dry-run (NativeTap OFF), then preview, finally optional shared-X backend only after evidence.
 4. User stays in PSVR2 for the full agreed sequence, no chat/alt-tab mid-test. MAIN verifies exit/backups/hashes and restores safe install after test/timeout. Do not request another unchanged baseline.

@@ -1,6 +1,11 @@
 # STATUS — session handoff
 
 LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN f0b96ad:
+Compact import: docs/handoffs/centurion-reload-compact.md. Offline correlation
+helper tools/reload/analyze_reload_log.py added: 13 synthetic tests PASS;
+reload suite now eight CPU executables +27 Python tests PASS. It never proves
+native reload/ABI, writes files or touches Steam. No runtime/DLL/assets changed;
+existing L2 receipt below remains the candidate identity, L3/L4 UNKNOWN.
 Continuation: CenturionClipPreview default OFF; original cylinder/albedo in
 left hand only during Carrying, 100 ms identity/focus/tracking snapshot guard.
 Shared knife loader keeps original defaults; no native cylinder suppression,

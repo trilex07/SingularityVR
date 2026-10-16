@@ -269,6 +269,33 @@ from inventory semantics, and never credit a draw log as physical acceptance.
 
 ## Evidence / next native work
 
+### Offline log correlation helper (no runtime changes)
+
+The ammo probe logs changed HUD samples only, without pawn ID; the interpreter
+probe logs entry, not completion. Hypothesis for the next MAIN measurement:
+a normal reload has a conserved positive clip/reserve transfer bracketed by
+the same player's reload callbacks. Unequal deltas, changed identities, absent
+callback coverage or a competing action falsify or leave that interpretation
+unknown. Even a matching bracket is correlation, not authoritative ammo/ABI proof.
+
+`python tools/reload/analyze_reload_log.py --log <archived-view_matrix.log>`
+reads an explicit log and emits JSON to stdout; it never launches/attaches to
+the game or writes output files. It separates attached-header sessions, checks
+identities/count bounds, uses producer ticks rather than async file ordering,
+and reports malformed rows, possible log caps and missing headers. Invalid
+samples and identity/capacity changes break comparison chains. Only adjacent
+changed samples at most 5000 ms apart are compared (configurable `--window-ms`,
+an analysis heuristic, NOT an engine constant). `IsReloading` polling alone
+does not count as a reload callback. Multiple callback pawn IDs cannot establish
+single-player correlation. Input/record limits bound parsing and report size.
+
+Output never marks native reload proven or upgrades L3/L4. The missing pawn
+and unchanged-sample history prevent freshness/ownership proof; even exact
+counts can conceal intervening actions. Thirteen synthetic regression tests
+cover conservation, identity/session changes, malformed/capped input, timing,
+and read-only input SHA/line preservation. The test runner includes them.
+No runtime source, DLL, INI or staged asset changed for this helper.
+
 Current preview L2_PASS: clean source
 `E0FB5E1E71434988ED20D24BA3AF1D97DACFB7CA`, `/O2`, x86 PE32 (`014C/010B`),
 empty build-manifest working-tree status. DLL SHA-256:
