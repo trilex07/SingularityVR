@@ -30551,6 +30551,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         shadowtrace::Arm(s);
     }
     const bool mirrored = desktop_mirror::Apply(s, a, b, c, g_mirrorCineCrop);
+    if (mirrored) desktop_mirror::StampCaptureRt(s);
     HRESULT presentResult;
     {
         desktop_mirror::PresentBackbufferScope captureScope(s,
@@ -30609,9 +30610,50 @@ typedef HRESULT (STDMETHODCALLTYPE *PFN_ResetDevice)(IDirect3DDevice9*, D3DPRESE
 typedef HRESULT (STDMETHODCALLTYPE *PFN_ResetDeviceEx)(IDirect3DDevice9Ex*, D3DPRESENT_PARAMETERS*, D3DDISPLAYMODEEX*);
 PFN_ResetDevice g_origResetDevice = nullptr;
 PFN_ResetDeviceEx g_origResetDeviceEx = nullptr;
+// Tripwire + safety net (fail-open, see desktop_mirror.h): redirect a Reset
+// that merely follows a shrunk window to the measured SteamVR SBS size.
+// The window is never resized by the mirror anymore, so any enforcement here
+// proves an external shrink; the fuse stands down on a Reset war.
+static void GuardResetSize(D3DPRESENT_PARAMETERS* pp) {
+    if (!pp) return;
+    UINT cw = 0, ch = 0;
+    {
+        desktop_mirror::PhysicalPixelScope pixels;
+        if (g_gameWindow) {
+            RECT cr{};
+            if (GetClientRect(g_gameWindow, &cr) && cr.right > 0 && cr.bottom > 0) {
+                cw = (UINT)cr.right;
+                ch = (UINT)cr.bottom;
+            }
+        }
+    }
+    const desktop_mirror::ResetDecision d = desktop_mirror::DecideResetSize(
+        pp->BackBufferWidth, pp->BackBufferHeight, g_srcW, g_srcH, cw, ch,
+        Rd(g_desktopMirrorWindow) != 0, VrModeOn());
+    if (!d.enforced) return;
+    // Fuse against a Reset war (black HMD + native monitor): a burst of
+    // enforcements in a short window means the engine Resets every frame, so
+    // stop enforcing for the session and pass everything through.
+    static desktop_mirror::ResetFuse fuse;
+    static volatile LONG fuseLog = 0;
+    if (!fuse.Observe(GetTickCount64())) {
+        if (InterlockedIncrement(&fuseLog) == 1)
+            Log("reset-guard: FUSE BLOWN - engine keeps Resetting away from SBS; passing through (window fit stays, VR res follows window)");
+        return;
+    }
+    pp->BackBufferWidth = d.w;
+    pp->BackBufferHeight = d.h;
+    static volatile LONG guardLogs = 0;
+    if (InterlockedIncrement(&guardLogs) <= 6)
+        Log("reset-guard: window-fit shrink %ux%u (client %ux%u) -> enforced SteamVR SBS %ux%u; render kept, window stays fitted",
+            (unsigned)InterlockedCompareExchange(&g_diagResetRequestW, 0, 0),
+            (unsigned)InterlockedCompareExchange(&g_diagResetRequestH, 0, 0),
+            cw, ch, d.w, d.h);
+}
 HRESULT STDMETHODCALLTYPE Hook_ResetDevice(IDirect3DDevice9* dev, D3DPRESENT_PARAMETERS* pp) {
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
+    if (pp && dev) GuardResetSize(pp);
     ReleaseWristResources();
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
     ReleaseVfxHost(); // drawer VB + atlas are device-bound; rebuilt lazily
@@ -30620,6 +30662,7 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDevice(IDirect3DDevice9* dev, D3DPRESENT_PAR
 HRESULT STDMETHODCALLTYPE Hook_ResetDeviceEx(IDirect3DDevice9Ex* dev, D3DPRESENT_PARAMETERS* pp, D3DDISPLAYMODEEX* dm) {
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
+    if (pp && dev) GuardResetSize(pp);
     ReleaseWristResources();
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
     ReleaseVfxHost(); // drawer VB + atlas are device-bound; rebuilt lazily
