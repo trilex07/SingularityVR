@@ -31637,9 +31637,10 @@ void LoadIniSettings() {
         (float)std::clamp(IniSignedInt("Input","ReloadClipYawDeg",0,path),-180L,180L),
         (float)std::clamp(IniSignedInt("Input","ReloadClipRollDeg",0,path),-180L,180L));
     Log("ini: CenturionClipPreview=%d (default OFF; unlit original cylinder calibration)",g_centurionClipPreview);
-    g_centurionConfig.shoulderLeft=std::clamp(IniSignedInt("Input","ReloadShoulderLeftCm",22,path)*.01f,.15f,.40f);
+    g_centurionConfig.shoulderLeft=std::clamp(IniSignedInt("Input","ReloadShoulderLeftCm",-22,path)*.01f,-.40f,.40f);
     g_centurionConfig.shoulderDown=std::clamp(IniSignedInt("Input","ReloadShoulderDownCm",12,path)*.01f,0.f,.25f);
     g_centurionConfig.shoulderBack=std::clamp(IniSignedInt("Input","ReloadShoulderBackCm",18,path)*.01f,.10f,.35f);
+    g_centurionConfig.insertRadius=std::clamp(IniSignedInt("Input","ReloadSocketRadiusCm",16,path)*.01f,.05f,.35f);
     g_centurionConfig.socketLocal.x=std::clamp(IniSignedInt("Input","ReloadSocketRightMm",-35,path)*.001f,-.25f,.25f);
     g_centurionConfig.socketLocal.y=std::clamp(IniSignedInt("Input","ReloadSocketUpMm",-35,path)*.001f,-.25f,.25f);
     g_centurionConfig.socketLocal.z=std::clamp(IniSignedInt("Input","ReloadSocketBackMm",-80,path)*.001f,-.30f,.30f);

@@ -12,7 +12,7 @@ struct Config {
     // keys intentionally do not move this anchor back into the knife zone.
     float shoulderLeft=.22f,shoulderDown=.12f,shoulderBack=.18f,pouchRadius=.13f;
     V socketLocal{-.035f,-.035f,-.08f}; // authored calibration, NOT a UE3 offset
-    float socketRadius=.075f,pullDistance=.15f;
+    float socketRadius=.075f,pullDistance=.15f,insertRadius=.16f;
     std::uint64_t timeoutMs=15000,ackMs=4000,cooldownMs=500,grabWindowMs=650;
 };
 inline Pose Pouch(V head,float yaw,const Config& c={}) {
@@ -161,7 +161,7 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
         }break;
     case Phase::Carrying:
         if(release){
-            if(Near(f.hand,f.socket,c.socketRadius)){
+            if(Near(f.hand,f.socket,c.insertRadius)){
                 if(c.cylinderGestures){s.stageGun=f.gun;return enter(Phase::Loaded,Event::Loaded);}
                 s.phase=Phase::WaitingNative;s.since=f.nowMs;
                 return out(Event::Inserted,true);
