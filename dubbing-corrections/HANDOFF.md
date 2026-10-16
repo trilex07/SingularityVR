@@ -108,6 +108,24 @@ Walidacja offline (`validate_gain.py`: ponowny volumedetect 114/114 + ebur128 11
 over_ceiling: 0; decode_failures: 0; format_violations: 0 (wszystkie PCM16 mono 24 kHz).
 Wyniki per plik: `gain_validation.jsonl`.
 
+## Zastosowanie korekt do plików (2026-10-16, za zgodą użytkownika)
+
+Skrypt: `dubbing-corrections/apply_corrections.py` (abort przy nieznanym/zdublowanym id
+albo statusie innym niż `machine_draft` — 42 wiersze `full_native_text_review` nietknięte).
+- `localization/pl/polish_story_voice.jsonl`: **130 wierszy** zmienionych, dokładnie pola
+  `text_pl` (=proposed_pl) + `translation_status` (`machine_draft` → `side_text_review_applied`);
+  reszta pól i wierszy byte-identical (zweryfikowano programowo per pole).
+- 1 no-op: VI4_4220 (`W maju.` = draft, needs_human; zostaje `machine_draft`).
+- `tts_text` celowo NIETKNIĘTE (proweniencja: istniejące WAV mówią stary tekst).
+- 8 wierszy needs_human zastosowanych na wyraźne polecenie użytkownika; flaga zostaje
+  w `corrections_sp_vi5_kismet03.jsonl` do review przy re-TTS.
+- Statusy po: machine_draft 1500 / side_text_review_applied 130 / full_native_text_review 42.
+- Analyzer (installer branch) mapuje nowy status nadal do TRANSLATION_NEEDS_CORRECTION
+  z evidence `translation_status=side_text_review_applied` — backlog/GAPS do regeneracji
+  przez MAIN na tamtym branchu; liczby TNC celowo bez zmian (audio nieaktualne).
+- Dla MAIN/re-TTS: syntetyzować `text_pl` tych 130 wierszy, po regeneracji wyrównać
+  `tts_text=text_pl`; `full_native_text_review` dopiero po uchu reżysera.
+
 ## Co NIE działa / następny krok
 
 - Korekty to propozycje tekstowe (L1): zero weryfikacji w grze (verified_in_game=false
