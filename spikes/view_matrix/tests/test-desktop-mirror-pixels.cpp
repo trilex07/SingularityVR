@@ -43,13 +43,20 @@ int main() {
     p.Windowed=TRUE;p.hDeviceWindow=win;p.PresentationInterval=D3DPRESENT_INTERVAL_IMMEDIATE;
     IDirect3DDevice9Ex* dev=nullptr;
     HR(api->CreateDeviceEx(0,D3DDEVTYPE_HAL,win,D3DCREATE_HARDWARE_VERTEXPROCESSING|D3DCREATE_FPU_PRESERVE,&p,nullptr,&dev),"create device");
-    IDirect3DSurface9 *back=nullptr,*scene=nullptr;
+    IDirect3DSurface9 *back=nullptr,*scene=nullptr,*depth=nullptr,*extra=nullptr;
     HR(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back),"backbuffer");
     HR(dev->CreateRenderTarget(640,360,p.BackBufferFormat,D3DMULTISAMPLE_NONE,0,FALSE,&scene,nullptr),"offscreen scene");
     HR(dev->ColorFill(back,nullptr,0xffff0000),"red left eye");
     const RECT right{320,0,640,360};HR(dev->ColorFill(back,&right,0xff00ff00),"green right eye");
     HR(dev->ColorFill(scene,nullptr,0xff000000),"black RT0 control");
     HR(dev->SetRenderTarget(0,scene),"restore UE3-like offscreen RT0");
+    HR(dev->CreateDepthStencilSurface(640,360,D3DFMT_D24S8,D3DMULTISAMPLE_NONE,0,TRUE,&depth,nullptr),"depth fixture");
+    HR(dev->SetDepthStencilSurface(depth),"original depth binding");
+    D3DCAPS9 caps{};HR(dev->GetDeviceCaps(&caps),"fixture caps");
+    if(caps.NumSimultaneousRTs>1) {
+        HR(dev->CreateRenderTarget(640,360,p.BackBufferFormat,D3DMULTISAMPLE_NONE,0,FALSE,&extra,nullptr),"MRT fixture");
+        HR(dev->SetRenderTarget(1,extra),"original MRT binding");
+    }
     const D3DVIEWPORT9 vp{7,9,600,320,.2f,.8f};HR(dev->SetViewport(&vp),"custom viewport");
     Check(desktop_mirror::Apply(dev,nullptr,nullptr,win),"compose right eye");
     Check(Pixel(dev,back,320,180)==0x00ff00,"mirror center is right eye, not black/left");
@@ -67,10 +74,15 @@ int main() {
         IDirect3DSurface9* observed=nullptr;HR(dev->GetRenderTarget(0,&observed),"synthetic overlay RT0");
         Check(observed==back && Pixel(dev,observed,320,180)==0x00ff00,"capture consumer sees completed mirror");
         observed->Release();
+        IDirect3DSurface9* detached=nullptr;
+        Check(dev->GetDepthStencilSurface(&detached)==D3DERR_NOTFOUND && !detached,"capture depth detached");
+        if(extra) Check(dev->GetRenderTarget(1,&detached)==D3DERR_NOTFOUND && !detached,"capture MRT detached");
         {desktop_mirror::PresentBackbufferScope nested(dev,true);Check(nested.Active(),"nested scope");}
     }
     IDirect3DSurface9* actual=nullptr;HR(dev->GetRenderTarget(0,&actual),"restored RT0");
     Check(actual==scene,"RT0 restored exactly");actual->Release();
+    HR(dev->GetDepthStencilSurface(&actual),"restored depth");Check(actual==depth,"depth identity restored");actual->Release();
+    if(extra) {HR(dev->GetRenderTarget(1,&actual),"restored MRT");Check(actual==extra,"MRT identity restored");actual->Release();}
     D3DVIEWPORT9 after{};HR(dev->GetViewport(&after),"restored viewport");
     Check(memcmp(&after,&vp,sizeof(vp))==0,"viewport restored exactly");
     // A true subrectangle must not mutate any pixels or claim mirror ownership.
@@ -110,6 +122,9 @@ int main() {
     // Window resizing alone is display-only in D3D. UE3's WM_SIZE reaction is
     // deliberately NOT claimed by this own-process fixture.
     HR(dev->SetRenderTarget(0,back),"bind before reset");
+    HR(dev->SetDepthStencilSurface(nullptr),"unbind depth before reset");
+    depth->Release();
+    if(extra) {HR(dev->SetRenderTarget(1,nullptr),"unbind MRT before reset");extra->Release();}
     scene->Release();back->Release();
     desktop_mirror::ReleaseScratch();
     HR(dev->ResetEx(&p,nullptr),"reset after releasing mirror resources");

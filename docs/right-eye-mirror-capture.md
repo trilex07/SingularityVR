@@ -61,3 +61,31 @@ This experiment does not replace/initialize Steam API, hook its callbacks, or
 write/import screenshots into Steam's library directly. If F12 is still black,
 the RT0 hypothesis is falsified; inspect the overlay's actual capture producer
 before adding another patch.
+
+## Offline receipt — 2026-10-16
+
+`tools/tests/test-right-eye-mirror.ps1`: optimized x86 `/W4 /WX` geometry,
+transaction fault injection and own-process D3D9Ex fixture PASS; six Python
+source/config contracts PASS. GPU fixture verifies actual right/left/cinema
+pixels, window-fit override, physical window cap, an intentionally black RT0
+control, nested capture scopes, RT0/MRT/depth/viewport identity restoration,
+subrect bypass and resource release/recreation across ResetEx. No visible
+window, game process, Steam session or XR runtime was launched. These pixels are
+synthetic and are NOT proof of Steam screenshot output or UE3 resize behavior.
+All six frontend/menu/cinema CPU regression executables also PASS.
+
+Clean production build source `4513db60d7ce59aaa4cd7c3d86a40088fbe0a385`, x86
+PE32 (`014C/010B`), `/O2`, performance instrumentation OFF, SHA-256:
+`B8E9AE47DB0C9780B0FB684A766DAA167F404D09CC52CAA0152EC582DCA9EF73`.
+Later handoff/test-only commit does not change production sources. Build warnings
+include the pre-existing interlocked diagnostic counter warning; no compile
+errors. Manifest: `spikes/view_matrix/d3d9.build.json` (local, not distributed).
+
+Candidate and exact manifest are kept under `build/right-eye-mirror/candidate/`,
+with NO full INI staged. MAIN should integrate the source into its CURRENT
+accepted branch and rebuild; do not replace a newer MAIN DLL with this standalone
+`origin/main` build and accidentally lose unmerged reload/localization changes.
+Cost: one additional full-backbuffer GPU commit plus one reusable DEFAULT-pool
+target versus the old mirror. No per-frame CPU readback; performance on the
+real game remains L3/L4 UNKNOWN. The original SBS XR copy precedes all mirror
+operations. Only MAIN may stage/deploy/launch and verify installed hashes.

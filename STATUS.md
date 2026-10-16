@@ -10,7 +10,9 @@ around original Present, bounded identity/failure logs, exact RT/DS/MRT/viewport
 restoration. Steam black screenshot hypothesis NOT runtime-proven.
 L1_PASS geometry/fault CPU checks, own-process D3D9Ex pixels/source/swap/cinema/
 RT0 scope/window cap/Reset and 6 Python contracts; six menu/cinema regressions.
-L2_PENDING, L3/L4 UNKNOWN. ZERO Steam or installed-file changes.
+L2_PASS clean source 4513db6, x86 PE32 /O2 DLL SHA-256
+B8E9AE47DB0C9780B0FB684A766DAA167F404D09CC52CAA0152EC582DCA9EF73.
+L3/L4 UNKNOWN. ZERO Steam or installed-file changes.
 See docs/right-eye-mirror-capture.md. MAIN must integrate on current source,
 preserve full accepted config/assets and validate actual saved Steam images and
 UE3 WM_SIZE behavior before accepting the window-fit flag.
