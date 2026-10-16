@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE feature/accepted-profile-guard: offline deployment
+regression guard, complete semantic INI + exact inventoried SHA-256 and
+reviewed per-candidate plan; denies silent Polish/hand/knife/calibration loss
+and stale rollback. Narrow deploy runner integrated, legacy build -Install
+blocked. No automatic acceptance/restore. Broad/cutscene writes fail closed;
+other standalone runners remain OUT OF SCOPE until MAIN adapts them.
+No live baseline created or promoted, ZERO Steam, no renderer/input changes.
+L1_PASS 37 rejection cases on Windows PowerShell 5.1 and PowerShell 7.
+L2_PASS clean4e7828e /O2 x86 PE32, DLL SHA-256
+3B83750AC8C5BCABFA4C1160791BB03055C8D6F84ACAF288B8715ABC2A67F1D1.
+Build only, not staged; L3/L4 UNKNOWN. Not active on user's installation.
+See docs/accepted-profile-guard.md for contract, coverage and migration limits.
+
 LATEST 2026-10-16 SIDE feature/menu-holster-polish: class-2 frontend-only
 scale/depth candidate 88% / 1400 mm, same provider/pointer/fallback geometry;
 native source RT/crop, pause/boot and mod panel unchanged. Original thin

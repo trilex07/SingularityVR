@@ -8,6 +8,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+if ($Install) {
+    throw 'Direct build -Install is disabled. Build without -Install, then use tools/deploy-singularityvr.ps1 with a reviewed accepted profile and exact change plan.'
+}
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Resolve-Path (Join-Path $here "..\..")
 . (Join-Path $root "tools\Resolve-OpenXrSdk.ps1")
@@ -90,39 +93,6 @@ try {
     Write-Host "Built: $builtDll"
     Write-Host ("Build provenance: {0} (SHA-256 {1})" -f $manifestPath, $buildManifest.sha256)
 
-    if ($Install) {
-        if (-not $devGameBin -or -not (Test-Path -LiteralPath $devGameBin)) {
-            throw "game Binaries folder not found. Pass -GameBinaries <path>, or set SINGULARITY_BINARIES / SINGULARITY_DEV_GAME."
-        }
-        Copy-Item $builtDll $devGameBin -Force
-        $deployedDll = Join-Path $devGameBin 'd3d9.dll'
-        $deployedHash = (Get-FileHash -LiteralPath $deployedDll -Algorithm SHA256).Hash.ToUpperInvariant()
-        if ($deployedHash -ne $buildManifest.sha256) { throw "built/deployed DLL SHA-256 mismatch: $($buildManifest.sha256) != $deployedHash" }
-        Copy-Item (Join-Path $binDir "openxr_loader.dll") $devGameBin -Force
-        
-        # Copy SingularityVfx.dll (VFX plugin) if it exists
-        # Try multiple stable locations
-        $vfxDllPaths = @(
-            (Join-Path $root "deployment\runtime-test-current\SingularityVfx.dll"),
-            (Join-Path $root "deployment\desktop-hmd-current-20261009\SingularityVfx.dll")
-        )
-        $vfxCopied = $false
-        foreach ($vfxDll in $vfxDllPaths) {
-            if (Test-Path $vfxDll) {
-                Copy-Item $vfxDll $devGameBin -Force
-                Write-Host "Installed SingularityVfx.dll (VFX plugin) to: $devGameBin"
-                $vfxCopied = $true
-                break
-            }
-        }
-        if (-not $vfxCopied) {
-            Write-Host "WARNING: SingularityVfx.dll not found in any known location - VFX plugin will not be available" -ForegroundColor Yellow
-        }
-        
-        Copy-Item (Join-Path $binDir "openxr_loader.dll") $devGameBin -Force
-        Write-Host "Installed d3d9.dll + openxr_loader.dll (+ SingularityVfx.dll if present) to: $devGameBin"
-        Write-Host ("BUILT SHA-256 == DEPLOYED SHA-256: {0}" -f $deployedHash)
-    }
 } finally {
     Pop-Location
 }

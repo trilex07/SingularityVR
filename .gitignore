@@ -1,4 +1,7 @@
 # ---- build output ----
+/build/accepted-profile-guard/
+/deployment/accepted-profile.json
+/deployment/change-plan*.json
 *.dll
 *.exe
 *.obj
