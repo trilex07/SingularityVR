@@ -6,8 +6,11 @@ length 30 -> 32.685 cm), hilt/mount/UV/material unchanged. Knife thumb only
 re-fitted against a 15-vertex pad patch; all free-fist bytes unchanged, zero
 measured hand/knife and thumb/finger crossings. Default-OFF KnifeTrackedMelee
 keeps eligible held-joint tracking and cancels native wrist attack rotation;
-native RB/damage/heal and non-knife display remain unchanged. L1 passed; clean
-L2 receipt follows. ZERO Steam. L3/L4 pending. See docs/knife-grip-retune.md.
+native RB/damage/heal and non-knife display remain unchanged. L1_PASS, L2_PASS:
+clean 6936fd5 /O2 x86 PE32, DLL SHA-256
+0D46D0BA9A13C0F51A7CEECFB836FE88E2BDC7047CB6E6B9522A3F24B44CB43A.
+Private retuned-candidate bundle hashes/provenance verified, no wholesale INI.
+ZERO Steam. L3/L4 pending. See docs/knife-grip-retune.md.
 
 LATEST 2026-10-16 SIDE fix/knife-shading-thumb: physical feedback accepts
 joint mount/size, rejects bright unlit knife and thumb interpenetration.

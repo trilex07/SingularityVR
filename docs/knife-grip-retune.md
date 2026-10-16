@@ -72,8 +72,19 @@ L1: blade-only byte invariants, malformed inputs, deterministic resizing;
 side, compound axes/nonidentity baseline, preserved controller scale/centre;
 reference lifecycle and fail-closed transaction. Existing native 13308-vertex
 thumb golden replay, 101 analog levels, shader identity/SM3 compile,
-upload/state/holster/anchor regressions remain mandatory. L2 provenance is
-recorded after a clean source commit/build. L3/GPU and L4 PSVR2 are UNKNOWN.
+upload/state/holster/anchor regressions pass. The original joint replay also
+passes (2218 hand + 1324 knife vertices), separate from the retuned hand golden.
+L2_PASS: clean source `6936fd55e55cffaa637847911d450d18b9359490`, `/O2`, x86
+PE32 (014C/010B), instrumentation OFF, manifest working-tree status empty.
+DLL SHA-256 `0D46D0BA9A13C0F51A7CEECFB836FE88E2BDC7047CB6E6B9522A3F24B44CB43A`.
+Existing unrelated compiler warnings remain. L3/GPU and L4 PSVR2 are UNKNOWN.
+
+Private payload and provenance: `build/knife-shading-thumb/retuned-candidate`.
+Canonical hand cache path: `vr-assets/hud/katorga/glove-animation/`; knife
+caches: `vr-assets/knife/`. New mesh/SVNL/thumb hashes are above. The five
+other staged caches match the prior accepted-input bundle byte-for-byte:
+original diffuse/normal/specular, original native SVNI and accepted mount SVNG.
+Receipt-only commits after this build do not change compiled source.
 
 MAIN must integrate ONLY this follow-up onto CURRENT accepted source and build
 there, not deploy this branch's older standalone source over newer menu/Bink
