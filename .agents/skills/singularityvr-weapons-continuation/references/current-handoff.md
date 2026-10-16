@@ -1,5 +1,17 @@
 # Current handoff — 2026-10-16, snapshot only
 
+NEWER continuation: user reports native auto-reload guard blocked3 calls and
+asks for original visual motion plus SIDE c70b36f review. Read
+`docs/centurion-cylinder-animation.md` and `docs/centurion-cylinder-size.md`.
+Default-OFF native clip/release palette animation is now implemented with a
+private original PSA cache, exact cooked IB-content witness and scoped restore;
+runtime/physical validation pending. Cooked clip slot0 is NOT PSK bone57.
+16cm insertion accepted; negative-left-sign rationale rejected in favor of
+current tracking yaw latched per transaction and magnitude22. Detached spare
+scale follows gun/world calibration; no full spare material or individual shell
+particles yet. These new receipts supersede older NOT DONE animation/size
+paragraphs below, not the Steam ownership boundary. Never infer deployment.
+
 Native continuation now supersedes the older "no ABI/guard implemented" scope:
 read `docs/centurion-native-reload.md` first. Offline registration->wrapper->class
 vtable->native method and empty BeginFire/fallback path identified. New

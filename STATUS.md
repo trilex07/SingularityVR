@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE Centurion native cylinder animation: default-OFF
+CenturionCylinderAnimation retimes original Reload clip/clip_release tracks on
+native gun palette, material/shader retained, exact cooked IB content witness,
+scoped two-eye palette restore/fault latch and Reset release. Original cooked
+palette [57,53,56,55,58] => clip0,parent1,release4; no guessed register base.
+Separate insertion16cm accepts reported9.3cm; old-grab7.5cm unchanged.
+Shoulder uses physical yaw at transaction start and latches it; negative legacy
+left offset migrated to magnitude22, NOT an inverted OpenXR quaternion patch.
+L1_PASS 14 CPU executables +34 Python checks, private1042 rigid original poses
+and idle bind identity, inspected native geometry; own-process D3D9Ex IB bytes
+upload/read checks PASS (NOT Steam/animation pixels). L2_PENDING; L3/L4 UNKNOWN.
+No individual ejected cartridge meshes/FX; native post-request animation not
+suppressed; detached spare remains albedo-only. User reports3 guard blocks,
+not universal reload acceptance. ZERO Steam. See docs/centurion-cylinder-animation.md.
+
 LATEST 2026-10-16 SIDE Centurion cylinder size: user reports oversized spare.
 Original clip model/UV/albedo identity confirmed by full offline re-extraction
 (identical SVRK SHA F2196114...). Preview lacked native gun/world size factors.
