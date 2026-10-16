@@ -12,7 +12,13 @@ prepared asset is not yet rendered. L1_PASS six CPU executables +four Python
 tests + actual FLOAT32 asset roundtrip, plus six menu/holster regression exes.
 Probe-only mode records named ammo changes and bounded per-weapon UFunction
 binding identities (never called); original six-chamber cylinder inspected.
-L2_PASS clean source db14959 /O2 x86 PE32,
+Continuation L1_PASS: fresh identity-bound HUD samples, missing-field retry,
+physical-left ownership and capacity guards; 360000 reload lifecycle frames;
+seven CPU executables +12 Python tests. Original Reload: 53 frames /24 Hz;
+14 notifies include AnimNotify_RefillClip at 1.47052908 s on RvSharedPawn.
+Fifth player-pawn-only probe event; no native calls. Material AR_Pistol resolved
+offline; live shader/socket and dedicated reload ABI remain unproven.
+Continuation L2 pending rebuild. Previous L2_PASS source db14959 /O2 x86 PE32,
 DLL SHA BACD5FDBBB4C23E55149F4CFF9ECBCD3D6E8DE67FACF99EE1A423B8212AD9343;
 receipt in docs/centurion-manual-reload.md.
 L3/L4 UNKNOWN. ZERO Steam. Integrate onto current accepted MAIN and rebuild,

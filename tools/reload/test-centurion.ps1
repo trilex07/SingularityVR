@@ -5,7 +5,7 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $vswhere="${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $vcvars=Join-Path $vs 'VC\Auxiliary\Build\vcvarsall.bat'
-foreach($test in @('test-centurion-reload','test-manual-reload','test-hip-knife','test-weapon-holster','test-hand-anchor-math','test-knife-renderer')){
+foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-manual-reload','test-hip-knife','test-weapon-holster','test-hand-anchor-math','test-knife-renderer')){
     $source=Join-Path $repo "spikes\view_matrix\tests\$test.cpp"
     $exe=Join-Path $out "$test.exe"
     $obj=Join-Path $out "$test.obj"
@@ -17,3 +17,7 @@ foreach($test in @('test-centurion-reload','test-manual-reload','test-hip-knife'
 }
 python (Join-Path $PSScriptRoot 'test_prepare_centurion.py')
 if($LASTEXITCODE -ne 0){throw 'Centurion extraction tests failed'}
+python (Join-Path $PSScriptRoot 'test_centurion_animation.py')
+if($LASTEXITCODE -ne 0){throw 'Centurion animation tests failed'}
+python (Join-Path $PSScriptRoot 'test_reload_notifies.py')
+if($LASTEXITCODE -ne 0){throw 'Centurion notification tests failed'}

@@ -51,17 +51,75 @@ or removed from the original gun. Do not promote this as completed manual reload
   Overlaid markers intentionally have no world occlusion or final material claim.
 - Independent default-OFF native reload observer, existing script hook only,
   at most 16 records per exported name: ServerStartReload, ReloadFinished,
-  AttemptReload, IsReloading. Absence may mean native/script coverage mismatch.
-  Events must target the current player weapon, so NPC reloads cannot exhaust
-  the budget before the player's measured attempt.
+  AttemptReload, IsReloading, AnimNotify_RefillClip. Absence may mean native/script
+  coverage mismatch. First four target the current player weapon, the refill
+  notify targets the current player pawn: NPCs cannot exhaust the budget.
 - Probe-only mode now independently logs ammo changes (maximum 128), plus the
   current weapon name/class and class-chain UFunction bindings. Uses only the
-  existing measured Children/Next/Super and voted Func offsets: maximum eight
-  weapon identities, 2048 field reads/identity and 16 binding records/identity.
+  existing measured Children/Next/Super and voted Func offsets: maximum sixteen
+  combined pawn/weapon identities, 2048 field reads/identity and 16 binding records/identity.
   Logs shared-interpreter versus game-text binding, never calls it. Function
   identity is not an ABI or execution proof. No new hook is installed.
 - Off-hand trigger latch requires a physical trigger release after handling
   ammo, so a held L2 cannot leak into a TMD/aim action on insertion/cancellation.
+- HUD observations expire after 250 ms and are bound to pawn/weapon/HUD
+  identity; context gaps clear them. Missing reflected fields retry at most
+  once/second instead of remaining permanently unresolved. A capacity change
+  cancels the transaction even if clip/reserve deltas happen to balance.
+  Grip ownership stays tied to physical LEFT hand across a handedness change,
+  not to whichever hand becomes the new support hand. No extra XR polls.
+
+## Native reload animation continuation (offline)
+
+UEViewer loaded the existing PRIVATE `wp_SP_ARPistol_SF.xxx` and resolved
+the measured first-person mesh material slot to
+`wp_alt_pistol.Materials.AR_Pistol`. That instance references original
+`AR_Pistol_d`, `AR_Pistol_n`, `AR_Pistol_s` and `AR_Pistol_rim`.
+The parent shader/reflection imports were missing in this offline package set;
+this is NOT proof of the complete live shader or a reason to substitute
+the unrelated `handgun_d` texture. Runtime cylinder rendering remains gated.
+
+Original `Alt_pistol` exports 10 sequences, 78 tracks / 228 frames / 17784
+keys. Private PSA SHA-256:
+`9A30ECE4C009BDBEA8672AEEA67B832F1AD840E946CB3887CEFBF584DAA412D3`.
+`Reload`: 53 frames at 24 Hz, 2.20833 s. Its `clip` track has maximum local
+translation 42.3398 UU (frame 18) and rotation 65.6277 degrees from the first
+sample; both return to the original pose at the end. Other nine sequences
+have no local clip motion in this export. These are parent-relative authoring
+coordinates, not a controller socket, palette index or physical scale proof.
+Crucially, PSA `clip` is track 54, PSK `clip` is bone 57, parent
+`cog_alt_pistol`: match by NAME, never assume indices coincide. UEViewer's
+PSA parent fields are placeholders; use the original PSK hierarchy instead.
+
+The narrow offline PSA reader validates bounded chunks, contiguous sequence
+windows, finite/unit rotations, exact key counts and a byte-exact re-encoding
+of all original records/FLOAT32 keys. Its four synthetic tests include a known
+translation/rotation, mismatched track indices and malformed input.
+
+Separately, decompression of the private package validated all three chunks;
+the existing package inspector accepted all 1105 exports with exact serial
+tiling. Reload export 77 (outer `Alt_pistol`) contains 14 animation notifies.
+Its script notify at **1.47052908 s** is **`AnimNotify_RefillClip`**. UEViewer's
+independent notify dump agrees. The validated RvGame package locates this
+function under **`RvSharedPawn`**, not `RvWeaponShared`. No function body,
+ABI or inventory semantics are inferred just from this name.
+
+`inspect_reload_notifies.py` fully consumes the tagged array, validates field
+bounds/reference targets and has four synthetic parser tests. Both readers
+produce ignored private reports, never redistribute animation keys/assets.
+The probe now watches this fifth event ONLY on the current PLAYER pawn;
+the other four remain restricted to its current weapon. Binding observations
+cover both objects with a combined maximum of 16 identities, and timestamps
+allow MAIN to compare callback entry and actual conserved ammo change.
+Absence of the callback remains inconclusive (native/interpreter coverage).
+Falsifier for the next mechanism: notify entry without the expected clip/
+reserve transfer is not a commit proof and must not trigger a direct call.
+
+L1 continuation: seven CPU executables, including deterministic 360000-frame
+reload lifecycle replay (7584 insert requests / 6753 conserved acknowledgements /
+5957 cancellations), plus 12 Python tests. Positive controls and interruptions
+include focus/tracking loss, stale HUD, weapon/pawn change, nonfinite positions,
+clock regression, capacity change and ammo pickup. This is CPU evidence only.
 
 ## Original asset measurement
 
@@ -144,7 +202,7 @@ extraction tests; actual original-asset extraction/UV/bind round trip.
 Continuation also passes the six-executable menu/holster regression suite from
 the synchronized MAIN base (including shared knife/holster tests).
 
-Latest L2_PASS: clean source `db1495986a9eef704b3aa6972277aa03ef3fca2c`,
+Previous L2_PASS (before this continuation): clean source `db1495986a9eef704b3aa6972277aa03ef3fca2c`,
 `/O2`, x86 PE32 (`014C/010B`), empty working-tree status in build manifest.
 Latest DLL SHA-256:
 `BACD5FDBBB4C23E55149F4CFF9ECBCD3D6E8DE67FACF99EE1A423B8212AD9343`.

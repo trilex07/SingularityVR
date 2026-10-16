@@ -12,3 +12,15 @@ and shared weapon Reload state/functions. Added read-only per-weapon UFunction
 binding identity, shared-interpreter discriminator and ammo-change records;
 no direct native ABI/call or inventory write inferred. Synchronized current
 MAIN db4a261 into this own branch, preserving both sides of documentation conflicts.
+
+Continuation: original Alt_pistol Reload PSA is 53 frames /24 Hz; clip local
+motion returns to bind-relative start. Track 54 differs from PSK bone 57;
+name-map through original parent cog_alt_pistol, never PSA placeholder parents.
+Original mesh resolves material AR_Pistol and d/n/s/rim textures; offline parent
+shader imports remain missing, so no claim of complete native material parity.
+Validated Reload notification array has AnimNotify_RefillClip at 1.47052908 s;
+RvGame names its owner RvSharedPawn. Added player-pawn-only read-only observation,
+not a direct call or inventory write. Bounded PSA/tag readers + synthetic tests
+and exact asset roundtrip; private original assets/reports remain ignored.
+HUD freshness/identity/capacity guards and physical-left ownership strengthened;
+360000 deterministic lifecycle frames pass, without Steam or headset claims.

@@ -27,7 +27,7 @@ inline const char* Name(Event e){switch(e){
     default:return "none";}}
 struct Frame {
     bool enabled=false,context=false,tracked=false,supported=false,grip=false,firing=false;
-    bool handBusy=false,supportLatched=false,knifeNear=false;
+    bool handBusy=false,supportLatched=false,knifeNear=false,ammoFresh=false;
     std::uint32_t pawn=0,weapon=0;
     int clip=-1,reserve=-1,capacity=-1;
     V hand{},socket{},pouch{};
@@ -37,10 +37,29 @@ struct State {
     Phase phase=Phase::Idle;
     bool priorGrip=true,ownsGrip=false;
     std::uint32_t pawn=0,weapon=0;
-    int startClip=-1,startReserve=-1;
+    int startClip=-1,startReserve=-1,startCapacity=-1;
     std::uint64_t since=0,lastMs=0;
 };
 struct Result {Event event=Event::None;bool reserveHand=false,requestNative=false;};
+// Read-only HUD observations are not authoritative inventory. Bind each sample
+// to its producers and invalidate it across context gaps; never use old counts
+// to start or acknowledge a transaction after a pause/swap/failed read.
+struct AmmoObservation {
+    std::uint32_t pawn=0,weapon=0,hud=0;
+    std::uint64_t sampledMs=0;
+    int counts[3]{-1,-1,-1};
+    bool present=false;
+    void Clear(){*this={};}
+    void Capture(std::uint32_t p,std::uint32_t w,std::uint32_t h,
+                 const int (&values)[3],std::uint64_t now){
+        pawn=p;weapon=w;hud=h;sampledMs=now;present=true;
+        for(int i=0;i<3;++i)counts[i]=values[i];
+    }
+    bool Fresh(std::uint32_t p,std::uint32_t w,std::uint32_t h,std::uint64_t now)const{
+        return present&&p&&w&&h&&p==pawn&&w==weapon&&h==hud&&
+            now>=sampledMs&&now-sampledMs<=250;
+    }
+};
 inline bool AmmoValid(const Frame& f){return f.clip>=0&&f.reserve>=0&&f.capacity>0&&
     f.clip<=f.capacity&&f.capacity<=1000&&f.reserve<=1000000;}
 inline Result Update(State& s,const Frame& f,const Config& c={}){
@@ -49,7 +68,7 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
     s.priorGrip=f.grip;
     const bool changed=(s.weapon&&s.weapon!=f.weapon)||(s.pawn&&s.pawn!=f.pawn);
     const bool valid=f.enabled&&f.context&&f.tracked&&f.supported&&f.pawn&&f.weapon&&
-        AmmoValid(f)&&hipknife::Finite(f.hand)&&hipknife::Finite(f.socket)&&hipknife::Finite(f.pouch)&&
+        f.ammoFresh&&AmmoValid(f)&&hipknife::Finite(f.hand)&&hipknife::Finite(f.socket)&&hipknife::Finite(f.pouch)&&
         !f.handBusy&&!f.supportLatched&&!f.firing&&!changed&&f.nowMs>=s.lastMs;
     s.lastMs=f.nowMs;
     if(!valid){
@@ -64,6 +83,8 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
     if(!f.grip)s.ownsGrip=false;
     auto out=[&](Event e=Event::None,bool request=false){return Result{e,s.ownsGrip,request};};
     auto enter=[&](Phase p,Event e){s.phase=p;s.since=f.nowMs;return out(e);};
+    if(s.phase!=Phase::Idle&&s.phase!=Phase::Cooldown&&f.capacity!=s.startCapacity)
+        return enter(Phase::Cooldown,Event::Cancelled);
     if(s.phase==Phase::WaitingNative){
         // Exact conservation for a native reload; do NOT credit a pickup or
         // merely a callback. A late HUD update that fails this remains unknown.
@@ -86,7 +107,7 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
     case Phase::Idle:
         if(!s.ownsGrip&&edge&&!f.knifeNear&&f.reserve>0&&f.clip<f.capacity&&
            Near(f.hand,f.socket,c.socketRadius)){
-            s.ownsGrip=true;s.startClip=f.clip;s.startReserve=f.reserve;
+            s.ownsGrip=true;s.startClip=f.clip;s.startReserve=f.reserve;s.startCapacity=f.capacity;
             return enter(Phase::Removing,Event::GrabOld);
         }break;
     case Phase::Removing:

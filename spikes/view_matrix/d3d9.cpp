@@ -10292,7 +10292,7 @@ void SyncXRInput(XrTime displayTime) {
     if(g_centurionReload||g_centurionReloadProbe)UpdateCenturionReload(
         feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
         !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed(),
-        rawSupportGrip,g_supportLatch.Latched());
+        OffHand()==0?rawSupportGrip:primaryGrip,g_supportLatch.Latched());
     if(g_hipKnifeEnabled&&g_hipKnifeReady){
         hipknife::Frame f;
         f.enabled=true;f.focused=g_xrSessionState==XR_SESSION_STATE_FOCUSED;
@@ -10319,7 +10319,7 @@ void SyncXRInput(XrTime displayTime) {
             f.hand[h]={{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}};
             f.tracked[h]=g_handPositionValid[h]&&g_handPoseValid[h]&&g_handTracked[h];
             f.grip[h]=h==AimHand()?primaryGrip:rawSupportGrip;
-            if(h==OffHand()&&g_centurionOwnsGrip){f.grip[h]=false;g_hipKnifeState.edgeMs[h]=0;}
+            if(h==0&&g_centurionOwnsGrip){f.grip[h]=false;g_hipKnifeState.edgeMs[h]=0;}
             f.free[h]=h!=AimHand()||!WeaponInHands()||Rd(g_weaponHolstered);
             f.trigger[h]=h==AimHand()?Rd(g_rawTrigger)>128:Rd(g_rawAltTrigger)>128;
         }
@@ -10431,7 +10431,8 @@ void SyncXRInput(XrTime displayTime) {
             }
         }
     }
-    const bool supportGrip=rawSupportGrip&&!hipknife::Reserves(g_hipKnifeState,OffHand())&&!g_centurionOwnsGrip;
+    const bool supportGrip=rawSupportGrip&&!hipknife::Reserves(g_hipKnifeState,OffHand())&&
+        !(OffHand()==0&&g_centurionOwnsGrip);
     static bool priorSupportGrip=false;
     if(supportGrip!=priorSupportGrip)InterlockedIncrement(supportGrip?&g_vrCounters.gripPressEdges:&g_vrCounters.gripReleaseEdges);
     priorSupportGrip=supportGrip;
@@ -10701,7 +10702,8 @@ void SyncXRInput(XrTime displayTime) {
     bool healthDown = false;
     for (int i = 0; i < kPadButtonCount; ++i) {
         bool down = getBool(g_padButtons[i].action);
-        if(g_centurionOwnsGrip&&i==g_impulseBtnIdx)down=false;
+        if(g_centurionOwnsGrip&&((OffHand()==0&&i==g_impulseBtnIdx)||
+           (AimHand()==0&&!strcmp(g_padButtons[i].name,"use"))))down=false;
         // During a transaction, reserve the shared Use/reload bit as well:
         // an accidental primary squeeze must not reload before insertion.
         if(g_centurionReload&&g_centurionState.phase!=centurionreload::Phase::Idle&&
@@ -22028,6 +22030,7 @@ ScriptFn g_scriptFns[] = {
     { "ReloadFinished",     -1 },
     { "AttemptReload",      -1 },
     { "IsReloading",        -1 },
+    { "AnimNotify_RefillClip",-1 }, // original Centurion Reload notify targets RvSharedPawn
 };
 const int kFnGetAdjustedAim = 0;
 const int kFnTick           = 5;
@@ -22044,6 +22047,9 @@ const int kFnCineLast       = 17;
 const int kFnMenuFirst      = 18;   // [18..23] the pause-menu candidates
 const int kFnMenuLast       = 23;
 const int kFnSetPause       = 23;   // the only one that fires - see the table
+const int kFnReloadFirst    = 24;
+const int kFnReloadLast     = 28;
+const int kFnRefillClip     = 28;
 const int kScriptFnCount    = (int)(sizeof(g_scriptFns) / sizeof(g_scriptFns[0]));
 
 // Which menu candidate fired last, and how many frames ago. The readout shows it by NAME so the
@@ -23467,18 +23473,20 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     if(nativefx::Probe()&&fnIdx>=0&&FnIdx(kFnFireFirst)>=0&&fnIdx==FnIdx(kFnFireFirst)&&
        reinterpret_cast<uintptr_t>(self)==(uintptr_t)(uint32_t)Rd(g_weaponObj))
         InterlockedIncrement(&nativefx::shots); // Native fire seam, independent of custom VFX host.
-    if(g_centurionReloadProbe&&fnIdx>=0&&
-       reinterpret_cast<uintptr_t>(self)==(uintptr_t)(uint32_t)Rd(g_weaponObj)){
-        static volatile LONG events[4]{};
-        for(int i=24;i<28;++i)if(FnIdx(i)>=0&&fnIdx==FnIdx(i)&&InterlockedIncrement(&events[i-24])<=16){
+    if(g_centurionReloadProbe&&fnIdx>=0){
+        static volatile LONG events[kFnReloadLast-kFnReloadFirst+1]{};
+        for(int i=kFnReloadFirst;i<=kFnReloadLast;++i)if(FnIdx(i)>=0&&fnIdx==FnIdx(i)&&
+            reinterpret_cast<uintptr_t>(self)==(i==kFnRefillClip?g_playerPawn:(uintptr_t)(uint32_t)Rd(g_weaponObj))&&
+            InterlockedIncrement(&events[i-kFnReloadFirst])<=16){
             char obj[80]{},cls[80]{};
             const uintptr_t object=reinterpret_cast<uintptr_t>(self);
             GuardedNameOf(object,obj,sizeof(obj));
             uintptr_t klass=0;
             if(TryLoadAlignedI32(object+OBJ_CLASS,reinterpret_cast<int32_t*>(&klass)))
                 GuardedNameOf(klass,cls,sizeof(cls));
-            Log("centurion reload probe: %s self=%08X %s/%s weapon=%08X pawn=%08X (entry only, no ABI call)",
-                g_scriptFns[i].name,(unsigned)object,obj,cls,(unsigned)Rd(g_weaponObj),(unsigned)g_playerPawn);
+            Log("centurion reload probe: %s self=%08X %s/%s weapon=%08X pawn=%08X t=%llu (entry only, no ABI call)",
+                g_scriptFns[i].name,(unsigned)object,obj,cls,(unsigned)Rd(g_weaponObj),(unsigned)g_playerPawn,
+                (unsigned long long)GetTickCount64());
         }
     }
 
@@ -25712,20 +25720,21 @@ void DrawHipKnife(IDirect3DDevice9* dev){
         Log("hip knife: GPU allocation unavailable; disabled until next XR init (normal inputs retained)");}
     back->Release();
 }
-static void ObserveCenturionReloadBindings(uintptr_t weapon){
+static void ObserveCenturionReloadBindings(uintptr_t object){
     // Use ONLY the existing measured reflection layout / UFunction::Func vote.
     // No assumed FunctionFlags/FFrame fields and no native invocation.
-    static uintptr_t observed[8]{};static unsigned count=0;
-    if(!weapon||g_funcOffset<0||g_upChildren<=0||g_upNext<=0||FnIdx(24)<0||count>=8)return;
-    for(unsigned i=0;i<count;++i)if(observed[i]==weapon)return;
+    static uintptr_t observed[16]{};static unsigned count=0;
+    if(!object||g_funcOffset<0||g_upChildren<=0||g_upNext<=0||count>=16)return;
+    for(int i=kFnReloadFirst;i<=kFnReloadLast;++i)if(FnIdx(i)<0)return;
+    for(unsigned i=0;i<count;++i)if(observed[i]==object)return;
     int32_t classBits=0;
-    if(!TryLoadAlignedI32(weapon+OBJ_CLASS,&classBits)||!classBits)return;
-    observed[count++]=weapon;
+    if(!TryLoadAlignedI32(object+OBJ_CLASS,&classBits)||!classBits)return;
+    observed[count++]=object;
     uintptr_t cls=(uintptr_t)(uint32_t)classBits;
     char weaponName[80]{},className[80]{};
-    GuardedNameOf(weapon,weaponName,sizeof(weaponName));GuardedNameOf(cls,className,sizeof(className));
-    Log("centurion reload binding: weapon=%08X %s class=%08X %s FuncVoteOffset=%d",
-        (unsigned)weapon,weaponName,(unsigned)cls,className,g_funcOffset);
+    GuardedNameOf(object,weaponName,sizeof(weaponName));GuardedNameOf(cls,className,sizeof(className));
+    Log("centurion reload binding: object=%08X %s class=%08X %s FuncVoteOffset=%d",
+        (unsigned)object,weaponName,(unsigned)cls,className,g_funcOffset);
     unsigned found=0,visited=0;
     for(unsigned depth=0;cls&&depth<32&&visited<2048&&found<16;++depth){
         int32_t childBits=0;if(!TryLoadAlignedI32(cls+g_upChildren,&childBits))break;
@@ -25733,7 +25742,7 @@ static void ObserveCenturionReloadBindings(uintptr_t weapon){
         for(unsigned n=0;field&&n<512&&visited<2048&&found<16;++n,++visited){
             int32_t name=-1;
             if(!TryLoadAlignedI32(field+OBJ_NAME,&name))break;
-            for(int fn=24;fn<28;++fn)if(FnIdx(fn)>=0&&name==FnIdx(fn)){
+            for(int fn=kFnReloadFirst;fn<=kFnReloadLast;++fn)if(FnIdx(fn)>=0&&name==FnIdx(fn)){
                 int32_t fieldClassBits=0,funcBits=0;char type[48]{},owner[80]{};
                 if(!TryLoadAlignedI32(field+OBJ_CLASS,&fieldClassBits)||
                    !GuardedNameOf((uintptr_t)(uint32_t)fieldClassBits,type,sizeof(type))||strcmp(type,"Function"))continue;
@@ -25758,41 +25767,53 @@ static void ObserveCenturionReloadBindings(uintptr_t weapon){
 static void UpdateCenturionReload(bool context,bool grip,bool supportLatched){
     // Input-thread sampler, 10 Hz maximum, only for this opt-in prototype.
     // HUD fields are observers, NEVER the authoritative write target.
-    static uintptr_t lastWeapon=0,lastPawn=0,hudClass=0;
-    static int offsets[3]{-1,-1,-1},ammo[3]{-1,-1,-1};
-    static ULONGLONG nextSample=0;
+    static uintptr_t hudClass=0;
+    static int offsets[3]{-1,-1,-1};
+    static centurionreload::AmmoObservation observation;
+    static ULONGLONG nextSample=0,nextResolve=0;
     const ULONGLONG now=GetTickCount64();
     const uintptr_t weapon=(uintptr_t)(uint32_t)Rd(g_weaponObj),pawn=g_playerPawn;
-    if(weapon!=lastWeapon||pawn!=lastPawn){
-        lastWeapon=weapon;lastPawn=pawn;nextSample=0;ammo[0]=ammo[1]=ammo[2]=-1;
-    }
+    const uintptr_t hud=g_hudObject;
     const bool supported=AimHand()==1&&OffHand()==0&&Rd(g_gunVerts)==5799;
     int32_t health=-1;
     const bool alive=pawn&&g_offHealth>=0&&TryLoadAlignedI32(pawn+g_offHealth,&health)&&health>0;
-    if(context&&supported&&now>=nextSample){
-        nextSample=now+100;ammo[0]=ammo[1]=ammo[2]=-1;
+    const bool eligible=context&&supported&&alive&&hud&&pawn&&weapon;
+    const bool sameSource=observation.pawn==(uint32_t)pawn&&observation.weapon==(uint32_t)weapon&&
+        observation.hud==(uint32_t)hud;
+    // Invalid counts must not reset the rate limiter on every input frame.
+    // Identity/context changes re-arm immediately; read failures remain 10 Hz.
+    if(!eligible||(observation.present&&(!sameSource||now<observation.sampledMs))){
+        observation.Clear();nextSample=0;
+    }
+    if(eligible&&now>=nextSample){
+        nextSample=now+100;int ammo[3]{-1,-1,-1};
         // Reuse the existing HUD census, never add a GObjects scan to input.
-        const uintptr_t hud=g_hudObject;
         int32_t classBits=0;
         if(hud)TryLoadAlignedI32(hud+OBJ_CLASS,&classBits);
         const uintptr_t klass=(uintptr_t)(uint32_t)classBits;
-        if(klass&&klass!=hudClass){
+        // Names/layout can resolve after the first HUD sample. A negative
+        // lookup is not permanent; retry at most once/second for this class.
+        if(klass&&(klass!=hudClass||((offsets[0]<0||offsets[1]<0||offsets[2]<0)&&now>=nextResolve))){
             hudClass=klass;
+            nextResolve=now+1000;
             offsets[0]=PropOffsetInChain(klass,"mClipAmmo");
             offsets[1]=PropOffsetInChain(klass,"mBinAmmo");
             offsets[2]=PropOffsetInChain(klass,"mClipSize");
-            Log("centurion reload: HUD observers offsets=%d/%d/%d (read-only)",offsets[0],offsets[1],offsets[2]);
+            static unsigned layouts=0;
+            if(layouts++<16)Log("centurion reload: HUD observers offsets=%d/%d/%d (read-only)",offsets[0],offsets[1],offsets[2]);
         }
         if(hud&&klass)for(int i=0;i<3;++i)if(offsets[i]>=0){
             int32_t value=-1;if(TryLoadAlignedI32(hud+offsets[i],&value))ammo[i]=value;
         }
+        observation.Capture((uint32_t)pawn,(uint32_t)weapon,(uint32_t)hud,ammo,now);
         if(g_centurionReloadProbe){
             ObserveCenturionReloadBindings(weapon);
+            ObserveCenturionReloadBindings(pawn);
             static int prior[3]{-2,-2,-2};static uintptr_t priorWeapon=0;static unsigned notes=0;
             if(notes<128&&(priorWeapon!=weapon||prior[0]!=ammo[0]||prior[1]!=ammo[1]||prior[2]!=ammo[2])){
                 ++notes;priorWeapon=weapon;for(int i=0;i<3;++i)prior[i]=ammo[i];
-                Log("centurion reload ammo: weapon=%08X hud=%08X class=%08X clip=%d reserve=%d size=%d (observer only)",
-                    (unsigned)weapon,(unsigned)hud,(unsigned)klass,ammo[0],ammo[1],ammo[2]);
+                Log("centurion reload ammo: weapon=%08X hud=%08X class=%08X clip=%d reserve=%d size=%d t=%llu (observer only)",
+                    (unsigned)weapon,(unsigned)hud,(unsigned)klass,ammo[0],ammo[1],ammo[2],(unsigned long long)now);
             }
         }
     }
@@ -25800,7 +25821,8 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched){
     f.enabled=g_centurionReload!=0;f.context=context&&alive&&WeaponInHands()&&!Rd(g_weaponHolstered)&&
         g_xrSessionState==XR_SESSION_STATE_FOCUSED;
     f.supported=supported;f.pawn=(uint32_t)pawn;f.weapon=(uint32_t)weapon;
-    f.clip=ammo[0];f.reserve=ammo[1];f.capacity=ammo[2];f.nowMs=now;f.grip=grip;
+    f.clip=observation.counts[0];f.reserve=observation.counts[1];f.capacity=observation.counts[2];f.nowMs=now;f.grip=grip;
+    f.ammoFresh=observation.Fresh((uint32_t)pawn,(uint32_t)weapon,(uint32_t)hud,now);
     f.firing=Rd(g_rawTrigger)>26;f.supportLatched=supportLatched;
     f.handBusy=hipknife::Reserves(g_hipKnifeState,0);
     f.tracked=g_handPositionValid[0]&&g_handPositionValid[1]&&
@@ -25815,16 +25837,17 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched){
     const auto result=centurionreload::Update(g_centurionState,f,g_centurionConfig);
     g_centurionOwnsGrip=result.reserveHand;
     if(TryAcquireSRWLockExclusive(&g_centurionVisualLock)){
-        g_centurionVisual={f.context&&f.supported&&f.tracked&&centurionreload::AmmoValid(f),
+        g_centurionVisual={f.context&&f.supported&&f.tracked&&f.ammoFresh&&centurionreload::AmmoValid(f),
             f.pouch,f.socket,f.hand,(int)g_centurionState.phase};
         ReleaseSRWLockExclusive(&g_centurionVisualLock);
     }
     if(result.requestNative&&g_centurionNativeTap)g_centurionTap.Update(true,true,now);
     if(result.event!=centurionreload::Event::None){
         static unsigned records=0;
-        if(records++<128)Log("centurion reload: %s pawn=%08X weapon=%08X verts=%ld clip=%d reserve=%d size=%d nativeTap=%d socketDist=%.3f pouchDist=%.3f",
+        if(records++<128)Log("centurion reload: %s pawn=%08X weapon=%08X verts=%ld clip=%d reserve=%d size=%d nativeTap=%d socketDist=%.3f pouchDist=%.3f t=%llu sample=%llu fresh=%d",
             centurionreload::Name(result.event),f.pawn,f.weapon,Rd(g_gunVerts),f.clip,f.reserve,f.capacity,g_centurionNativeTap,
-            hipknife::Length(f.hand-f.socket),hipknife::Length(f.hand-f.pouch));
+            hipknife::Length(f.hand-f.socket),hipknife::Length(f.hand-f.pouch),(unsigned long long)now,
+            (unsigned long long)observation.sampledMs,f.ammoFresh?1:0);
     }
 }
 
@@ -27856,7 +27879,9 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         // Resolve missing reload names even if the cinematic watch resolved its
         // own earlier. Observe the existing hook; install no extra detour.
         static unsigned tick=0,attempts=0;
-        if(FnIdx(24)<0&&attempts<12&&++tick%240==0&&g_camera){
+        bool missing=false;
+        for(int i=kFnReloadFirst;i<=kFnReloadLast;++i)if(FnIdx(i)<0)missing=true;
+        if(missing&&attempts<12&&++tick%240==0&&g_camera){
             ++attempts;ResolveScriptNames();
             Log("centurion reload probe: name attempt=%u existing script hook=%p (zero events is NOT proof of no reload)",
                 attempts,g_origProcessEvent);
