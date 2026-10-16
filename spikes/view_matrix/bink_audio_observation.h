@@ -15,7 +15,8 @@ inline bool BinkObserveTracks(DWORD count, const DWORD* tracks, DWORD out[8]) {
 inline bool BinkObserveName(const char* source, char out[256], DWORD flags = 0) {
     if (!source || !out) return false;
     out[0]=0;
-    if (flags & 0x04000000) {
+    if (flags & 0x04000000) return false; // BINKFROMMEMORY: source is an in-memory BIK buffer
+    if (flags & 0x00800000) {             // BINKFILEHANDLE: source is an OS file HANDLE
         HANDLE hFile = (HANDLE)(uintptr_t)source;
         DWORD ret = GetFinalPathNameByHandleA(hFile, out, 256, FILE_NAME_NORMALIZED);
         if (ret > 0 && ret < 256) {

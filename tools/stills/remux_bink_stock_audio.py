@@ -26,6 +26,10 @@ def parse_index(data: bytes) -> tuple[dict, list[tuple[int, int]]]:
     if has_audio:
         audio_meta = struct.unpack_from("<IHH I", data, off)
         off += 12
+    first_off = struct.unpack_from("<I", data, off)[0] & ~1
+    table_entries = (first_off - off) // 4
+    if table_entries not in (frame_count, frame_count + 1):
+        raise ValueError(f"unexpected offset table entries: {table_entries} for {frame_count} frames")
     index: list[tuple[int, int]] = []
     for i in range(frame_count):
         raw = struct.unpack_from("<I", data, off + i * 4)[0]
@@ -34,8 +38,8 @@ def parse_index(data: bytes) -> tuple[dict, list[tuple[int, int]]]:
         "frame_count": frame_count,
         "has_audio": has_audio,
         "audio_meta": audio_meta,
-        "index_offset": 44 + (12 if has_audio else 0),
-        "table_end": off + frame_count * 4,
+        "index_offset": off,
+        "table_end": first_off,
     }
     return header, index
 
@@ -74,20 +78,24 @@ def rebuild(stock: Path, candidate: Path, dest: Path) -> None:
             raise ValueError(f"frame {i} not 4-byte aligned")
         merged_payloads.append(merged)
 
-    header = bytearray(cand_data[: cand_h["table_end"]])
+    index_offset = cand_h["index_offset"]
+    frame_count = cand_h["frame_count"]
+    # RAD Bink 1 (BIKi) requires N+1 uint32 offsets in the frame table; entry N is EOF.
+    header = bytearray(cand_data[:index_offset] + b"\x00" * ((frame_count + 1) * 4))
     if stock_h["audio_meta"]:
         struct.pack_into("<IHH I", header, 44, *stock_h["audio_meta"])
 
     body = b"".join(merged_payloads)
-    index_offset = cand_h["index_offset"]
-    frame_count = cand_h["frame_count"]
     offset = len(header)
     for i in range(frame_count):
         struct.pack_into("<I", header, index_offset + i * 4, offset | stock_idx[i][1])
         offset += len(merged_payloads[i])
+    struct.pack_into("<I", header, index_offset + frame_count * 4, offset)
 
     total_size = len(header) + len(body)
+    max_frame_size = max((len(p) for p in merged_payloads), default=0)
     struct.pack_into("<I", header, 4, total_size - 8)
+    struct.pack_into("<I", header, 12, max_frame_size)
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(bytes(header) + body)

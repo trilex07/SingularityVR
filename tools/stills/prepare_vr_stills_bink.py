@@ -28,6 +28,7 @@ import argparse
 import hashlib
 import json
 import shutil
+import struct
 import subprocess
 import sys
 from pathlib import Path
@@ -84,6 +85,44 @@ def sha256(path: Path) -> str:
         for block in iter(lambda: f.read(1 << 20), b""):
             h.update(block)
     return h.hexdigest().upper()
+
+
+def has_biki_sentinel(data: bytes) -> bool:
+    if len(data) < 48 or data[:4] != b"BIKi":
+        return False
+    fc = struct.unpack_from("<I", data, 8)[0]
+    tracks = struct.unpack_from("<I", data, 40)[0]
+    off = 44 + 12 * tracks
+    if len(data) < off + (fc + 1) * 4:
+        return False
+    first_off = struct.unpack_from("<I", data, off)[0] & ~1
+    sentinel = struct.unpack_from("<I", data, off + fc * 4)[0] & ~1
+    return first_off == off + (fc + 1) * 4 and sentinel == len(data)
+
+
+def ensure_biki_sentinel(src: Path, dst: Path) -> None:
+    data = src.read_bytes()
+    if has_biki_sentinel(data):
+        dst.write_bytes(data)
+        return
+    if data[:4] != b"BIKi":
+        raise ValueError("not BIKi")
+    fc = struct.unpack_from("<I", data, 8)[0]
+    tracks = struct.unpack_from("<I", data, 40)[0]
+    off = 44 + 12 * tracks
+    raw_offs = [struct.unpack_from("<I", data, off + i * 4)[0] for i in range(fc)]
+    table_end = off + fc * 4
+    body = data[table_end:]
+    new_total = len(data) + 4
+    shifted = [((o & ~1) + 4) | (o & 1) for o in raw_offs] + [new_total]
+    max_frame = max(((shifted[i + 1] & ~1) - (shifted[i] & ~1) for i in range(fc)), default=0)
+    header = bytearray(data[:off] + b"\x00" * ((fc + 1) * 4))
+    struct.pack_into("<I", header, 4, new_total - 8)
+    struct.pack_into("<I", header, 12, max_frame)
+    for i, val in enumerate(shifted):
+        struct.pack_into("<I", header, off + i * 4, val)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_bytes(bytes(header) + body)
 
 
 def run(cmd: list[str]) -> str:
@@ -167,14 +206,16 @@ def build_candidate(name: str, spec: dict) -> dict:
              "--stock", str(spec["stock_bik"]), "--candidate-video", str(raw_bik),
              "--output", str(final_bik)])
     else:
-        shutil.copyfile(raw_bik, final_bik)
+        ensure_biki_sentinel(raw_bik, final_bik)
 
     # ---- validate vs stock slot ----
+    bik_bytes = final_bik.read_bytes()
     info = ffprobe_json(final_bik)
     v = stream_by_codec(info, "video") or {}
     a = stream_by_codec(info, "audio")
     checks = {
-        "magic_biki": final_bik.read_bytes()[:4] == b"BIKi",
+        "magic_biki": bik_bytes[:4] == b"BIKi",
+        "offset_table_sentinel": has_biki_sentinel(bik_bytes),
         "codec_binkvideo": (v.get("codec_name") or "") == "binkvideo",
         "geometry": (v.get("width"), v.get("height")) == (spec["width"], spec["height"]),
         "fps": (v.get("avg_frame_rate") or v.get("r_frame_rate")) in (f"{fps}/1", f"{fps}.0"),

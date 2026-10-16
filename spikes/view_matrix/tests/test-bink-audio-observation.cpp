@@ -24,8 +24,10 @@ int main() {
     }
     HANDLE hSelf = CreateFileA(__FILE__, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
     if (hSelf != INVALID_HANDLE_VALUE) {
-        check(BinkObserveName(reinterpret_cast<const char*>(hSelf), name, 0x04000000) && std::strstr(name, "test-bink-audio-observation.cpp") != nullptr,
+        check(BinkObserveName(reinterpret_cast<const char*>(hSelf), name, 0x00800000) && std::strstr(name, "test-bink-audio-observation.cpp") != nullptr,
               "file handle resolved to pathname via GetFinalPathNameByHandleA");
+        check(!BinkObserveName(reinterpret_cast<const char*>(hSelf), name, 0x04000000) && !name[0],
+              "BINKFROMMEMORY flag rejected without treating buffer as handle or path");
         CloseHandle(hSelf);
     }
     return failed?1:0;

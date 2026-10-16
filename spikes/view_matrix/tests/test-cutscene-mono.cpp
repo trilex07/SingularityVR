@@ -130,9 +130,10 @@ static void test_camera_change_gate() {    using C = CameraChangeCtx;
     // Changed pawn with menu focused still follows the old order.
     CHECK((!CameraChangeClearsCine(C{ true, false, true, true, true, true })));
     // Latch variant: menu closed before the cut (menuClass=0 at cut time)
-    // after a frontend menu visit still clears when the flag is on.
+    // after a frontend menu visit still clears when the flag is on and pawnSame holds,
+    // but a New Game intro handoff (pawnSame=false, videoHandoff=true) keeps CINE.
     CHECK((CameraChangeClearsCine(C{ true, true, true, false, true, true, true })));
-    CHECK((CameraChangeClearsCine(C{ true, false, true, false, true, true, true })));
+    CHECK((!CameraChangeClearsCine(C{ true, false, true, false, true, true, true })));
     CHECK((!CameraChangeClearsCine(C{ true, true, true, false, true, false, true })));
     CHECK((!CameraChangeClearsCine(C{ true, true, true, false, true, true, false })));
 }

@@ -93,7 +93,7 @@ inline void MenuLoadLatchObserve(MenuLoadLatch& l, bool gameplay, bool frontendM
 
 inline bool CameraChangeClearsCine(CameraChangeCtx c) {
     if (!c.cineOn) return false;                    // nothing latched
-    if (c.menuLoadClear && ((c.menuFocused && c.pawnSame) || c.menuSeenSinceGameplay)) return true;
+    if (c.menuLoadClear && c.pawnSame && (c.menuFocused || c.menuSeenSinceGameplay)) return true;
     if (c.videoHandoff) return false;              // new pawn/loading menu is expected here
     if (!c.pawnValid || !c.pawnSame) return true;   // world went away
     if (c.menuFocused) return true;                 // quit to menu

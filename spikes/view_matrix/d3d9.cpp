@@ -21881,7 +21881,7 @@ static void UpdateSceneModeFrame() {
     // (menu closes before the cut, so instantaneous menuClass misses it).
     // Cleared on GameplayStereo; boot menus (no gameplay yet) never arm it.
     MenuLoadLatchObserve(g_menuLatch,
-        g_sceneMode.Current() == vrscene::Mode::GameplayStereo,
+        g_sceneMode.Current() == vrscene::Mode::GameplayStereo && g_playerPawn != 0,
         g_sceneMode.Current() == vrscene::Mode::MenuFlat && signals.frontendMenu);
     static unsigned sceneTransitionNotes=0;
     if (t.changed && (Rd(g_sceneModeTrace) || (Rd(g_cutsceneVideoHandoffFix) && sceneTransitionNotes++<16))) {
@@ -23310,6 +23310,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
                     const LONG raw = (LONG)(*reinterpret_cast<uint32_t*>(p));
                     InterlockedExchange(&g_cineArgRaw, raw);
                     InterlockedExchange(&g_inCinematic, raw ? 1 : 0);
+                    if (raw && !Rd(g_vrUiMenu)) g_menuLatch.menuSeen = false;
                 }
             }
         }
