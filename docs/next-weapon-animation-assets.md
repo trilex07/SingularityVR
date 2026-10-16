@@ -1,5 +1,22 @@
 # Next weapons — original animation/model preparation, SIDE 2026-10-17
 
+## Current control decision — supersedes manual magazine extraction
+
+User requests Circle eject for Valkyrie/Volk/Kasimov, then physical-left grip
+behind LEFT shoulder, insert and release. No pull-old-magazine, tilt or closing
+flick is required for these three. Centurion keeps its separate cylinder path:
+Circle unlock -> sideways opening -> muzzle-down case dump -> fresh ammunition
+-> insert -> closing flick; the hinged cylinder is not a dropped box magazine.
+
+Hypothesis: replace the old shared pull/discard adapter with a small independent
+magazine policy while retaining strict identity/calibration/ammo observations.
+Falsifiers: grip alone ejects; held Circle repeats or survives menu/weapon change;
+ejection consumes left support/knife grip; insert needs a flick; a request is
+emitted twice or acknowledged without matching reserve loss. Implement/test CPU
+only, default OFF; do not change Centurion, native input, inventory or Steam.
+This first native-transfer prototype retains the existing partial/empty-clip
+and reserve>0 eligibility; full-mag/no-reserve tactical ejection is not enabled.
+
 Brief before implementation: extend the existing f519de6 offline prototypes,
 not Centurion runtime. Valkyrie, Volk S4 and Kasimov already have original rigid
 clip exports and validated PSA Reload tracks. Prepare original albedo and
@@ -86,9 +103,22 @@ The imported f519de6 gesture prototypes remain CPU-only/default-OFF. Their
 explicit shoulder API uses mid-eye head position + LATCHED physical yaw and
 local `(-0.22,-0.12,+0.18)m`: physical LEFT and BACK at every tested yaw,
 height-relative for seated play. Caller must use `Supply`, not old belt `Pouch`.
-This is math proof, not a physical reach calibration. Profile/calibration
-changes cancel, support hand stays reserved, and only shared magazine-gesture
-fields are copied to the Centurion recognizer (no cylinder-specific flags).
+This is math proof, not a physical reach calibration. Current independent
+magazine policy no longer calls the Centurion recognizer: Circle emits a
+single `ejectMagazine` intent and enters NeedAmmo; free left grip at the shoulder
+enters Carrying; release at the calibrated socket emits ONE reload intent.
+No pull-old-magazine, cylinder tilt, bolt gesture or closing flick is required.
+Centurion configuration flags and gun motion cannot change this sequence.
+
+`Frame.magazineReleaseDown` is the named-action LEVEL (PSVR2 default Circle),
+not a native button bit. The policy requires neutral in valid context before a
+new press; held startup/menu/tracking/weapon-change inputs cannot eject later.
+Repeats while empty/carrying/waiting/cooldown do not restart the transaction.
+Circle itself never claims the left hand: it can eject while left support is
+held, but fresh ammunition requires a NEW free squeeze, not a synthetic release
+or a stolen support/knife grip. Cancellation retains owned grip until release.
+Only real observed clip gain with equal reserve loss acknowledges insertion;
+fewer reserve rounds may give a partial refill. No fabricated ammo or native call.
 
 ## Verification
 
@@ -128,14 +158,14 @@ regression build, NOT a ready-to-deploy replacement for MAIN's newer integration
 Subsequent receipt-only commit changes no tested implementation. This is the
 PRE-sync regression receipt; latest clean build is recorded separately below.
 
-Current-main compatibility: integrated MAIN 513013a without editing its renderer,
+Previous-main compatibility receipt: integrated MAIN 513013a without editing its renderer,
 INI, Centurion recognizer, input, mirror or localization. Resolved only additive
 STATUS/test-runner conflicts, retaining all existing native tests and optional
-`-NativeEvidence`. Explicitly freeze the magazine adapter's acquisition window
-to a rising edge and insertion radius to its own calibrated socket: new
-Centurion cylinder/16cm/window settings cannot leak into these profiles.
+`-NativeEvidence`. Its pull/discard adapter was subsequently superseded by the
+independent Circle policy above; Centurion cylinder/16cm/window settings still
+cannot leak into these profiles.
 
-LATEST L2_PASS after sync: clean source
+Pre-Circle L2_PASS after sync: clean source
 `36681f4a8e8057ee3c3412856787693b4081239b`, empty manifest working-tree state,
 `/O2`, x86 PE32 `014C/010B`; DLL SHA-256
 `14DEECAEA1E63EF77A3936226121AEF6D6A89E99632BAFFD1792B43ABAC031F8`.
@@ -174,8 +204,14 @@ lighting are unverified: an albedo fixture must not replace the native material.
 L3/L4 UNKNOWN; NOT ready for physical acceptance. Future headset script AFTER
 runtime gates (one weapon per test, stay in headset): load a save with the
 selected weapon and check normal firing, left knife/right holster; perform one
-remove/drop/left-shoulder pickup/insert gesture and verify moving parts + actual
+Circle eject/left-shoulder pickup/insert/release and verify moving parts + actual
 clip/reserve conservation; pause/resume, switch weapon, return to menu and close.
+
+Future runtime glue must consume `ejectMagazine` only once, hide/drop the
+matching native part, gate firing while the magazine is absent, reconcile native
+ammo/partial magazine semantics and clear that visual state only after known
+native completion or deliberate abort. The CPU intent does NOT do these things.
+No runtime or INI was changed by the Circle-control follow-up.
 
 ## Delivery
 

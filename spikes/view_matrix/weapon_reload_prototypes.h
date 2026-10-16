@@ -4,7 +4,8 @@
 #include <cstring>
 
 // CPU-only next-weapon prototypes. NOT connected to OpenXR/XInput/UE3.
-// Reuse transaction safety, not the Centurion cylinder/socket or native tap.
+// Independent magazine policy: Circle eject -> shoulder grab -> insert/release.
+// Reuse observation types, NEVER the Centurion cylinder FSM or native tap.
 namespace weaponreloadproto {
 struct Shoulder {float left=.22f,down=.12f,back=.18f;};
 inline hipknife::Pose Supply(hipknife::V headCentre,float latchedPhysicalYaw,const Shoulder& c){
@@ -41,7 +42,23 @@ struct Frame {
     const char* objectName=nullptr; // resolved base FName, not a class substring
     long meshWedges=0;
     int aimHand=1; // first slice: right weapon, physical left interaction only
+    bool magazineReleaseDown=false; // named action LEVEL, PSVR2 binding: Circle
     centurionreload::Frame gesture{};
+};
+enum class Phase {Idle,NeedAmmo,Carrying,WaitingNative,Cooldown};
+enum class Event {None,Ejected,GrabFresh,Discarded,Inserted,Acknowledged,Rejected,Cancelled};
+inline const char* Name(Event e){switch(e){
+    case Event::Ejected:return "magazine-ejected";case Event::GrabFresh:return "grab-fresh";
+    case Event::Discarded:return "discarded";case Event::Inserted:return "inserted/request";
+    case Event::Acknowledged:return "native-ammo-ack";case Event::Rejected:return "native-timeout";
+    case Event::Cancelled:return "cancelled";default:return "none";
+}}
+struct Transaction {
+    Phase phase=Phase::Idle;
+    bool priorGrip=true,ownsGrip=false,releaseArmed=false;
+    std::uint32_t pawn=0,weapon=0;
+    int startClip=-1,startReserve=-1,startCapacity=-1;
+    std::uint64_t since=0,lastMs=0;
 };
 struct State {
     Kind profile=Kind::None;
@@ -49,12 +66,13 @@ struct State {
     bool haveCalibration=false;
     centurionreload::Config priorCalibration{};
     Shoulder priorShoulder{};
-    centurionreload::State transaction{};
+    Transaction transaction{};
 };
 struct Result {
-    centurionreload::Event event=centurionreload::Event::None;
+    Event event=Event::None;
     bool reservePhysicalLeft=false;
     bool reloadIntent=false; // abstract intent ONLY, never a native call
+    bool ejectMagazine=false; // one visual/backend intent, NOT an inventory write
 };
 inline Result Update(State& s,const Frame& f,const Calibration& c){
     const auto* profile=Find(f.kind);
@@ -64,19 +82,72 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
     const bool changed=(s.profile!=Kind::None&&s.profile!=f.kind)||
         (s.haveCalibration&&(s.calibrationRevision!=c.revision||!Same(s.priorCalibration,c.gesture)||
             s.priorShoulder.left!=c.shoulder.left||s.priorShoulder.down!=c.shoulder.down||s.priorShoulder.back!=c.shoulder.back));
-    auto input=f.gesture;
-    input.enabled=f.enabled&&identity&&f.aimHand==1&&calibrated&&!changed&&!input.supportLatched;
-    // Copy only reviewed shared fields. New Centurion cylinder/layout settings
-    // must not silently change these magazine-only prototypes when integrated.
-    centurionreload::Config gesture{};
-    gesture.socketLocal=c.gesture.socketLocal;gesture.socketRadius=c.gesture.socketRadius;
-    gesture.pullDistance=c.gesture.pullDistance;gesture.pouchRadius=c.gesture.pouchRadius;
-    gesture.timeoutMs=c.gesture.timeoutMs;gesture.ackMs=c.gesture.ackMs;gesture.cooldownMs=c.gesture.cooldownMs;
-    gesture.insertRadius=c.gesture.socketRadius;gesture.grabWindowMs=0;
-    const auto result=centurionreload::Update(s.transaction,input,gesture);
+    const auto& in=f.gesture;auto& t=s.transaction;
+    const bool gripEdge=in.grip&&!t.priorGrip,gripRelease=!in.grip&&t.priorGrip;
+    const bool core=f.enabled&&identity&&f.aimHand==1&&calibrated&&!changed&&
+        in.context&&in.tracked&&in.supported&&in.pawn&&in.weapon&&in.ammoFresh&&
+        centurionreload::AmmoValid(in)&&hipknife::Finite(in.hand)&&hipknife::Finite(in.socket)&&
+        hipknife::Finite(in.pouch)&&!in.firing&&in.nowMs>=t.lastMs&&
+        (!t.pawn||t.pawn==in.pawn)&&(!t.weapon||t.weapon==in.weapon);
     s.profile=identity?f.kind:Kind::None;
     s.calibrationRevision=calibrated?c.revision:0;s.haveCalibration=calibrated;
     if(calibrated){s.priorCalibration=c.gesture;s.priorShoulder=c.shoulder;}
-    return {result.event,result.reserveHand,result.requestNative};
+    if(!core){
+        const bool active=t.phase!=Phase::Idle&&t.phase!=Phase::Cooldown;
+        const bool owned=t.ownsGrip&&in.grip;
+        t={};t.priorGrip=in.grip;t.ownsGrip=owned;t.lastMs=in.nowMs;
+        return {active?Event::Cancelled:Event::None,owned,false,false};
+    }
+    t.pawn=in.pawn;t.weapon=in.weapon;t.lastMs=in.nowMs;t.priorGrip=in.grip;
+    if(!in.grip)t.ownsGrip=false;
+    // A discrete semantic action, requiring neutral in an ELIGIBLE context.
+    // Never fire from a held button inherited from a menu/identity/tracking gap.
+    const bool eject=f.magazineReleaseDown&&t.releaseArmed;
+    if(!f.magazineReleaseDown)t.releaseArmed=true;
+    if(eject)t.releaseArmed=false;
+    auto out=[&](Event e=Event::None,bool request=false){return Result{e,t.ownsGrip,request,e==Event::Ejected};};
+    auto enter=[&](Phase p,Event e){t.phase=p;t.since=in.nowMs;return out(e);};
+    const auto& g=c.gesture;
+    if(t.phase!=Phase::Idle&&t.phase!=Phase::Cooldown&&in.capacity!=t.startCapacity)
+        return enter(Phase::Cooldown,Event::Cancelled);
+    if(t.phase==Phase::WaitingNative){
+        const int gain=in.clip-t.startClip;
+        if(gain>0&&in.reserve==t.startReserve-gain)return enter(Phase::Cooldown,Event::Acknowledged);
+        if(in.nowMs-t.since>=g.ackMs)return enter(Phase::Cooldown,Event::Rejected);
+        return out();
+    }
+    if(t.phase==Phase::Cooldown){
+        if(!in.grip&&in.nowMs-t.since>=g.cooldownMs)t.phase=Phase::Idle;
+        return out();
+    }
+    if(t.phase!=Phase::Idle&&(in.nowMs-t.since>=g.timeoutMs||
+       in.clip!=t.startClip||in.reserve!=t.startReserve))return enter(Phase::Cooldown,Event::Cancelled);
+    if(t.phase==Phase::Carrying&&(in.handBusy||in.supportLatched))
+        return enter(Phase::Cooldown,Event::Cancelled);
+    switch(t.phase){
+    case Phase::Idle:
+        // Keep the prior native-transfer eligibility until per-weapon ammo
+        // semantics are proven. No fake native clip=0 or discarded-round writes.
+        if(eject&&in.reserve>0&&in.clip<in.capacity){
+            t.startClip=in.clip;t.startReserve=in.reserve;t.startCapacity=in.capacity;
+            return enter(Phase::NeedAmmo,Event::Ejected);
+        }break;
+    case Phase::NeedAmmo:
+        // Ejection doesn't steal support/knife grip. A NEW free-hand squeeze
+        // at the shoulder acquires the fresh magazine, never a held squeeze.
+        if(gripEdge&&!t.ownsGrip&&!in.handBusy&&!in.supportLatched&&!in.knifeNear&&
+           centurionreload::Near(in.hand,in.pouch,g.pouchRadius)){
+            t.ownsGrip=true;return enter(Phase::Carrying,Event::GrabFresh);
+        }break;
+    case Phase::Carrying:
+        if(gripRelease){
+            if(centurionreload::Near(in.hand,in.socket,g.socketRadius)){
+                t.phase=Phase::WaitingNative;t.since=in.nowMs;return out(Event::Inserted,true);
+            }
+            return enter(Phase::NeedAmmo,Event::Discarded);
+        }break;
+    default:break;
+    }
+    return out();
 }
 } // namespace weaponreloadproto

@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE next-weapon control decision: Valkyrie/Volk/Kasimov use
+Circle eject -> physical-left shoulder grip -> insert/release, no old-magazine
+pull or closing flick. Independent default-OFF CPU policy replaces the shared
+Centurion pull/discard adapter; no Centurion/input/renderer/INI/Steam edits.
+L1_PASS: 15 CPU executables +44 Python tests, 30000 Circle/shoulder/insert
+transactions, held/context rearm, free-left ownership and partial conserved
+refill checks; existing original-asset GPU/state/Reset regression PASS.
+Follow-up clean L2 receipt pending. No physical/runtime acceptance claimed.
+Centurion sequence unchanged: Circle unlock -> sideways open -> muzzle-down
+dump -> shoulder ammunition -> insert -> closing flick. NOT a dropped cylinder.
+These remain offline prototypes; no additional weapon backend/runtime install.
+
 LATEST 2026-10-17 SIDE feature/next-weapon-reload-assets: original Valkyrie,
 Volk S4 and Kasimov magazines/albedo/Reload caches plus bounded offline
 hierarchical animation consumer; gun root frozen, real cooked palettes and

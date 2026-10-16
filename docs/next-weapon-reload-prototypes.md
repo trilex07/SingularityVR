@@ -3,6 +3,9 @@
 Imported from f519de6; the receipt below is historical, NOT an installed or
 current candidate identity. Current original textures/animation evidence and
 left-shoulder contract: `docs/next-weapon-animation-assets.md`.
+The user's newer Circle-eject decision supersedes the old pull/discard flow
+below. Current code uses an independent magazine FSM, not Centurion's Update:
+Circle -> shoulder grab -> insert/release, with no tilt or closing flick.
 
 Scope: continue beyond Centurion without changing its runtime, left knife or
 right gun holster. ZERO Steam. These are CPU gesture/asset prototypes, NOT
@@ -58,14 +61,14 @@ Git; texture/material binding stays a separate measured step.
 
 ## Implementation and limits
 
-`spikes/view_matrix/weapon_reload_prototypes.h` contains three allocation-free
+The original f519de6 `spikes/view_matrix/weapon_reload_prototypes.h` contained three allocation-free
 CPU profiles. `Frame.enabled`, `liveIdentityVerified` and calibration readiness
 default false. These are API gates, NOT installed INI settings. No runtime hook
 or caller exists yet. Object names are expected base FNames for future MAIN
 verification; even matching names + wedge counts cannot set the verified bit.
 Only right-dominant/physical-left interaction is accepted in this first slice.
 
-The existing Centurion transaction is reused without editing it. A changed
+In that historical implementation, the Centurion transaction was reused without editing it. A changed
 profile, revision OR calibration values cancel even if an observer reports
 balanced ammo in that frame. Ownership persists until physical grip release.
 The result emits `reloadIntent`, not XInput nor a direct engine operation.
