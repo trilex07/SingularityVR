@@ -44,7 +44,7 @@ struct Profiles {
 inline bool ClampWeaponTriple(Triple& t) {
     if (t.a < 1 || t.a > 8) return false;
     if (t.b < t.a || t.b > 8) return false;
-    if (t.c < 1 || t.c > 8) return false;
+    if (t.c > 8) return false;
     return true;
 }
 inline bool ClampVibrationTriple(Triple& t) {

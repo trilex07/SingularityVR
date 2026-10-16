@@ -19465,9 +19465,8 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         D3DVIEWPORT9 vpMenu{};
         dev->GetViewport(&vpMenu);
         const unsigned sceneW = (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0);
-        // Class 3 pause uses single draw into the diegetic target;
-        // Class 2 and frontend Class 4 use per-eye canvas remap on the scene-sized RT.
-        const bool perEyeCanvas = menuClassNow != 3 &&
+        // Both Class 2, Class 3 and Class 4 use per-eye canvas remap on the scene-sized RT.
+        const bool perEyeCanvas =
             pausemenuspace::DiegeticMenuCanvas(c, vpMenu.Width, sceneW);
         const int compose = perEyeCanvas ? 1 : 0;
         menumono::NoteDraw((int)menuClassNow, false, vpMenu.Width, vpMenu.Height, sceneW, c,

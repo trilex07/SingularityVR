@@ -401,8 +401,8 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
             if (g_vrMenuTexture) g_vrMenuTexture->Release();
             g_vrMenuTexture = PauseRttProbe::contentTexture; g_vrMenuTexture->AddRef();
             g_vrMenuSurface = (uintptr_t)PauseRttProbe::contentSurface;
-            g_vrCaptureOwner.Capture(VrMenuStateToken(), g_vrMenuSurface);
         }
+        g_vrCaptureOwner.Capture(VrMenuStateToken(), g_vrMenuSurface);
     }
     MenuDrawTraceFrame();
     const bool nativeMenu = Rd(g_vrUiEnabled) && VrModeOn() && Rd(g_dupDraws) && Rd(g_vrUiNativeReady) &&
