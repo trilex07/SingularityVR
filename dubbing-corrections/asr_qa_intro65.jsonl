@@ -1,0 +1,6 @@
+{"file": "INTRO_1005_NIM.pl.wav", "asset": "INTRO_1005_NIM", "asr": "Ciężko.  Ciężko.  Ciężko.  Ciężko.", "recall": 0.0, "loop": false, "expected": "Zespół Spartan, mówi baza. Wkraczacie w rosyjską przestrzeń powietrzną. Zachować ostrożność.", "pass": false}
+{"file": "INTRO_1006_CP.pl.wav", "asset": "INTRO_1006_CP", "asr": "", "recall": 0.0, "loop": false, "expected": "Zrozumiałem. Trzymamy kurs. Do celu trzy minuty.", "pass": false}
+{"file": "INTRO_1011_GST.pl.wav", "asset": "INTRO_1011_GST", "asr": "Jak to?  Jak to?", "recall": 0.33, "loop": false, "expected": "Cholera... Widzicie to?", "pass": false}
+{"file": "INTRO_1012_NIM.pl.wav", "asset": "INTRO_1012_NIM", "asr": "Zbyt spory!  Zbyt spory!  Zbyt spory!", "recall": 0.0, "loop": false, "expected": "Spartan dwa-jeden, Spartan dwa-jeden. Odczytujemy skok promieniowania na waszym wektorze.", "pass": false}
+{"file": "INTRO_1014_GST.pl.wav", "asset": "INTRO_1014_GST", "asr": "Złupko, złupko, złupko, złupko, złupko.", "recall": 0.0, "loop": true, "expected": "Wygląda jak cholerny EMP. Zapnij pasy, Renko! Czeka nas jazda!", "pass": false}
+{"file": "INTRO_1016_CP.pl.wav", "asset": "INTRO_1016_CP", "asr": "Dzień dobry.  Dzień dobry.  Dzień dobry.  Dzień dobry.", "recall": 0.0, "loop": false, "expected": "Dostaliśmy! Dostaliśmy! Mejday, mejday, mejday! Spadamy!", "pass": false}

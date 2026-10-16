@@ -5,7 +5,10 @@
 2) Przerwa miedzy zdaniami 0.12 s -> 0.04 s (attempt2 + dotkniete pliki).
 3) temp 0.5 (stabilnosc z rund repair) dla dotknietych plikow.
 Backup v2 do _backup_v2/ (porownanie A/B). Manifest: attempt=3 + notka."""
-import json, os, re, sys, time, hashlib, shutil
+import argparse, json, os, re, sys, time, hashlib, shutil
+ap = argparse.ArgumentParser()
+ap.add_argument('--temp', type=float, default=0.65)
+a = ap.parse_args()
 sys.path.insert(0, r'C:\Users\Trilex\vr-mods\.pocket_tools')
 os.environ['HF_HUB_OFFLINE'] = '1'
 import numpy as np
@@ -65,14 +68,16 @@ for f in ['1fca8cc6e8f67644.wav', 'fc18985d1ee4277a.wav', '960111000a1afdbf.wav'
 bak = os.path.join(WAVDIR, '_backup_v2')
 os.makedirs(bak, exist_ok=True)
 for f, _, _, _ in JOBS:
-    shutil.copyfile(os.path.join(WAVDIR, f), os.path.join(bak, f))
+    dst = os.path.join(bak, f)
+    if not os.path.exists(dst):
+        shutil.copyfile(os.path.join(WAVDIR, f), dst)
 print('backup v2: %d' % len(JOBS), flush=True)
 
 from pocket_tts import TTSModel
 from scipy.io import wavfile
 print('loading model...', flush=True)
 model = TTSModel.load_model(config='hf://shefowl/pocket-tts-polish-6l/config.yaml',
-                            temp=0.5, quantize=True)
+                            temp=a.temp, quantize=True)
 SR = model.sample_rate
 assert SR == 24000
 
@@ -103,7 +108,7 @@ for f, parts, gap_s, temp in JOBS:
     wavfile.write(outp, SR, (np.clip(full * g, -1, 1) * 32767).astype(np.int16))
     h = hashlib.sha256(open(outp, 'rb').read()).hexdigest()[:16]
     log.append({'file': f, 'parts': [t for t, _ in parts], 'donors': donors_used,
-                'gap_s': gap_s, 'temp': temp, 'dur_s': round(len(full) / SR, 2),
+                'gap_s': gap_s, 'temp': a.temp, 'dur_s': round(len(full) / SR, 2),
                 'peak_gain_db': round(20 * np.log10(g), 2), 'sha16': h})
     print('FIX %s %dpart %.1fs donors=%s' % (f, len(parts), len(full) / SR,
                                             ','.join(x[:14] for x in donors_used)), flush=True)

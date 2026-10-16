@@ -18,6 +18,8 @@ def main():
     ap.add_argument('--out-dir', required=True)
     ap.add_argument('--manifest-out', required=True)
     ap.add_argument('--temp', type=float, default=0.5)
+    ap.add_argument('--donor', default=None,
+                    help='opcjonalny wspolny dawca (czysty glos) zamiast wlasnych ogg EN')
     a = ap.parse_args()
     os.makedirs(a.out_dir, exist_ok=True)
     donors = os.path.join(a.out_dir, '_donors_en')
@@ -32,11 +34,14 @@ def main():
     jobs = []
     for c in cor:
         asset = c['id'].split(':')[-1]
-        ogg = os.path.join(ENB, asset + '.ogg')
-        assert os.path.exists(ogg), ogg
-        dw = os.path.join(donors, asset + '_en.wav')
-        if not os.path.exists(dw):
-            ogg_to_wav_mono24(ogg, dw)
+        if a.donor:
+            dw = a.donor
+        else:
+            ogg = os.path.join(ENB, asset + '.ogg')
+            assert os.path.exists(ogg), ogg
+            dw = os.path.join(donors, asset + '_en.wav')
+            if not os.path.exists(dw):
+                ogg_to_wav_mono24(ogg, dw)
         jobs.append((asset, clean(c['proposed_pl']), dw))
     print('jobs: %d' % len(jobs), flush=True)
 
@@ -66,6 +71,7 @@ def main():
             wavfile.write(outp, SR, (np.clip(full * g, -1, 1) * 32767).astype(np.int16))
             h = hashlib.sha256(open(outp, 'rb').read()).hexdigest()[:16]
             man.append({'file': asset + '.pl.wav', 'asset': asset, 'donor': 'own-game-en-ogg',
+                        'donor_file': os.path.basename(dw),
                         'text_pl': text, 'chunks': len(sents), 'dur_s': round(len(full) / SR, 2),
                         'budget_s': idx[asset].get('dur'),
                         'peak_gain_db': round(20 * np.log10(g), 2),

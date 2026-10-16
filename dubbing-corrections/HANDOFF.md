@@ -158,7 +158,8 @@ Skrypt: `dubbing-corrections/fix_emotion_gap.py` (backup v2 w `_backup_v2/` w te
 - Przerwy między zdaniami 0,12 s → 0,04 s (5× attempt2 + 4fa0f0de); temp 0,5.
 - Peaki po fixie: −1,0 wszystkie (8/8); dekod pełny (konwersja odsłuchowa przeszła).
 - `bc0ee3caae5d223b.wav` (VI4_5005): regen temp 0,5 dał obcięte 2,1 s, retry 0,65 dał
-  5,2 s — ODRZUCONE progiem kompletności; wrócono do v2 (10,6 s, recall 0,78).
+  5,2 s - ODRZUCONE (krótsze od v2 5,8 s bez dowodu kompletności); wrócono do v2
+  (5,8 s, recall 0,78 z pełną treścią).
   Emocja tej kwestii nadal otwarta (duży rozrzut próbkowania TTS na tej linii).
 - Kopie odsłuchowe (44,1 kHz stereo) odświeżone dla 8 plików w
   `%TEMP%\opencode\dubbing-qa\odsluch\`; `bc0ee3caa` tam = v2 bez zmian.
@@ -180,19 +181,26 @@ RT1_1505 −16,5 RMS (norma packa −19,4) — pliki NIE są ciche; winne przyci
 - Odsłuch (44,1 kHz stereo): `%TEMP%\opencode\dubbing-qa\odsluch_firstscene\` (29 plików).
 - Dla MAIN: hashe drop-in do story packa; statusy TNC do regeneracji backlog na installerze.
 
-## Batch 3 audio — ZABLOKOWANE pomiarem (derailment modelu, 2026-10-16)
+## Batch 3 audio — ZABLOKOWANE (4 receptury padły, 2026-10-16)
 
-Teksty batch 3 w `intro-pl.json` ZASTOSOWANE (6/6). Audio: 2 receptury próbowano,
-obie odrzucone bramką ASR (pliki tylko w temp `resynth_intro_REJECTED`, nie do użycia):
-1. zdanie=chunk, temp 0,5: recall 0,00 wszystkie (loopy 'Wyspoczy', 'Jako', puste).
-2. single chunk, temp 0,5 (wierna receptura gen_intro): recall 0,00 wszystkie + 1 loop.
-Dowód: `asr_qa_intro.jsonl`, `resynth_intro_retry_log.jsonl`.
-Diagnoza: przywrócone pełne teksty + zaszumieni dawcy kokpitowi derailują Pocket-TTS;
-krótsze teksty produkcyjne na tych dawcach przechodziły. Istniejący pack intro NIETKNIĘTY.
-Opcje dla MAIN/człowieka: (a) skrócić teksty do długości produkcyjnych (nowa runda wordingu),
-(b) czyści dawcy (zmiana głosu vs pack), (c) inny model/temp, (d) zostawić obecne audio.
-Dodatkowo: wszystkie 6 przekracza sloty cinematic (tempo vs budżet EN 1,46–2,31) —
-nawet udana synteza wymaga decyzji o dopasowaniu czasu.
+Teksty w `intro-pl.json` ZASTOSOWANE (6/6). Audio odrzucone bramką multi-draw ASR
+(2–3 niezależne procesy na plik, wszystkie recall 0,00 przy różnym bełkocie —
+wyklucza to artefakt pojedynczego odczytu; istniejący pack introwy NIETKNIĘTY):
+1. zdanie=chunk, temp 0,5, dawcy kokpitowe — FAIL (loopy/pustki).
+2. single chunk, temp 0,5 (wierna receptura gen_intro) — FAIL.
+3. zdanie=chunk, temp 0,65 + dawca 645b — FAIL (`Dzień dobry`/`Kupi kupi`).
+4. zdanie=chunk, temp 0,65 + dawcy pod emocje (REF645 calm / bark SEE-ADVANCING-FIRE)
+   — FAIL (bełkot + pustki). Dowód: `multidraw_emo.jsonl` (16 wierszy).
+Wniosek: dłuższe teksty PL derailują Pocket-TTS niezależnie od tempa/dawcy/chunkingu;
+krótsze teksty produkcyjne na tych dawcach przechodziły. Opcje: (a) skrócić teksty
+do długości produkcyjnych, (b) inny silnik/TTS, (c) zostawić obecne audio packa.
+Dodatkowo sloty cinematic: tempa vs budżet EN 1,46–2,31 — udana synteza i tak wymaga
+decyzji o czasie. Pliki odrzucone tylko w temp (`resynth_intro*_REJECTED`).
+
+### Poboczne twarde ustalenie: ASR jest niestabilny między procesami
+Te same bajty raz dają treść, raz bełkot (zmierzone na plikach batcha 1). Dlatego
+wszystkie powyżej to średnie z 2–3 procesów; pojedynczy recall to wskazówka, nie dowód.
+Ucho użytkownika rozstrzyga.
 
 ## Co NIE działa / następny krok
 
