@@ -6,7 +6,10 @@ native source RT/crop, pause/boot and mod panel unchanged. Original thin
 segmented hip cues, gun/knife icons, valid-hand proximity highlight; SAME
 anchors and grab radii. Missing config keeps exact legacy layout/white ring.
 L1_PASS six CPU test executables, original procedural CPU preview inspected;
-L2 receipt pending. ZERO Steam, L3/L4 UNKNOWN. Isolated tree based on
+L2_PASS clean44b4bf7 /O2 x86 PE32, DLL SHA-256
+04C5B55AA6400F4F68FFABE246DF9120E967CF497D60B55A6A527F8E198BDDF8.
+Private candidate/provenance verified, no wholesale INI; ZERO Steam, L3/L4
+UNKNOWN. Isolated tree based on
 MAIN committed17bf1ed, no MAIN dirty edits copied; integrate follow-up onto
 current MAIN, never replace newer work. See docs/menu-holster-polish.md.
 

@@ -60,7 +60,14 @@ combinations and 202 cue geometry/proximity cases. Gun has 1122 vertices,
 knife 1116 (374/372 triangles), at most four batched UP draws total for both
 markers/both eyes. CPU preview rendered and inspected separately. This is
 not a measurement of native GPU draw calls or headset performance.
-Clean L2 receipt follows. L3/D3D and L4 PSVR2 UNKNOWN until MAIN test.
+L2_PASS: clean source `44b4bf7e03eaeab4260c898ad3fd91bcfde9d8cc`, /O2 x86
+PE32 (014C/010B), instrumentation OFF, manifest working-tree status empty.
+DLL SHA-256 `04C5B55AA6400F4F68FFABE246DF9120E967CF497D60B55A6A527F8E198BDDF8`.
+Existing unrelated compiler warnings remain. Initial build caught the Windows
+legacy `near` macro; fixed by descriptive variable names, with a macro-context
+regression check, then re-tested/rebuilt clean. L3/D3D and L4 PSVR2 UNKNOWN.
+Private compile artifact/provenance/logs/CPU preview:
+`build/menu-holster-polish/candidate`. It contains no wholesale user INI.
 
 MAIN applies only three [Render] keys (no wholesale calibration INI):
 FrontMenuScalePct=88, FrontMenuDistanceMm=1400, HolsterMarkerStyle=1.
