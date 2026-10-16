@@ -180,6 +180,20 @@ RT1_1505 −16,5 RMS (norma packa −19,4) — pliki NIE są ciche; winne przyci
 - Odsłuch (44,1 kHz stereo): `%TEMP%\opencode\dubbing-qa\odsluch_firstscene\` (29 plików).
 - Dla MAIN: hashe drop-in do story packa; statusy TNC do regeneracji backlog na installerze.
 
+## Batch 3 audio — ZABLOKOWANE pomiarem (derailment modelu, 2026-10-16)
+
+Teksty batch 3 w `intro-pl.json` ZASTOSOWANE (6/6). Audio: 2 receptury próbowano,
+obie odrzucone bramką ASR (pliki tylko w temp `resynth_intro_REJECTED`, nie do użycia):
+1. zdanie=chunk, temp 0,5: recall 0,00 wszystkie (loopy 'Wyspoczy', 'Jako', puste).
+2. single chunk, temp 0,5 (wierna receptura gen_intro): recall 0,00 wszystkie + 1 loop.
+Dowód: `asr_qa_intro.jsonl`, `resynth_intro_retry_log.jsonl`.
+Diagnoza: przywrócone pełne teksty + zaszumieni dawcy kokpitowi derailują Pocket-TTS;
+krótsze teksty produkcyjne na tych dawcach przechodziły. Istniejący pack intro NIETKNIĘTY.
+Opcje dla MAIN/człowieka: (a) skrócić teksty do długości produkcyjnych (nowa runda wordingu),
+(b) czyści dawcy (zmiana głosu vs pack), (c) inny model/temp, (d) zostawić obecne audio.
+Dodatkowo: wszystkie 6 przekracza sloty cinematic (tempo vs budżet EN 1,46–2,31) —
+nawet udana synteza wymaga decyzji o dopasowaniu czasu.
+
 ## Co NIE działa / następny krok
 
 - Korekty to propozycje tekstowe (L1): zero weryfikacji w grze (verified_in_game=false

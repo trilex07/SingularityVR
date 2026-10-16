@@ -23,7 +23,7 @@ def main():
     donors = os.path.join(a.out_dir, '_donors_en')
     os.makedirs(donors, exist_ok=True)
 
-    pl = json.loads(open(os.path.join(a.repo, 'remaining-voices', 'intro-pl.json'),
+    pl = json.load(open(os.path.join(a.repo, 'remaining-voices', 'intro-pl.json'),
                          encoding='utf-8'))
     idx = {r['asset']: r for r in pl}
     cor = [json.loads(l) for l in
