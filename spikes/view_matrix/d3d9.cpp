@@ -5380,6 +5380,7 @@ static void SnapshotMenuOnSlot(CopySlot& cap);
 extern volatile LONG g_sceneFlatEnabled;
 extern volatile LONG g_inCinematic;
 extern volatile LONG g_cineArgRaw;
+extern volatile LONG g_videoCinemaScalePct;
 // Original SetRenderTarget, defined with the render-target hook far below.
 // Declared here so the mono composer can bypass hook bookkeeping exactly
 // like the cinema matte does.
@@ -5547,9 +5548,20 @@ void StampCaptureState(CopySlot& cap) {
     // Mono submission only for a frame this Present actually composed. A failed
     // composition keeps stereo stamping, so the bridge cannot submit an
     // uncomposed half crop to both eyes.
-    cap.cineFlat = g_cineMonoReady && CutsceneMonoComposeArmed() && !cap.menuFlat;
-    cap.cineImage = cap.cineFlat ? g_cineMonoImage : CutsceneMonoRect{};
-    cap.eyePositionsValid=g_eyePositionsValid;
+    const bool isVideoFlat = (g_sceneMode.Current() == vrscene::Mode::VideoFlat);
+    if (isVideoFlat) {
+        const float scale = ClampVideoCinemaScale((int)Rd(g_videoCinemaScalePct)) * 0.005f;
+        const int left   = (int)((0.25f - 0.5f * scale) * (float)g_srcW);
+        const int right  = (int)((0.25f + 0.5f * scale) * (float)g_srcW);
+        const int top    = (int)((0.5f - 0.5f * scale) * (float)g_srcH);
+        const int bottom = (int)((0.5f + 0.5f * scale) * (float)g_srcH);
+        cap.cineFlat = (right > left && bottom > top);
+        cap.cineImage = CutsceneMonoRect{ left, top, right, bottom };
+    } else {
+        cap.cineFlat = g_cineMonoReady && CutsceneMonoComposeArmed() && !cap.menuFlat;
+        cap.cineImage = cap.cineFlat ? g_cineMonoImage : CutsceneMonoRect{};
+    }
+    cap.eyePositionsValid = g_eyePositionsValid;
     if (cap.cineFlat) {
         cap.stereo = false;
         cap.dup = true;
@@ -12173,7 +12185,9 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     uint32_t layerCount = 0;
 
     const int64_t diagBridge = g_diagEnabled ? DiagQpc() : 0;
-    g_cinemaWorldAnchor.Observe(Rd(g_inCinematic)!=0,Rd(g_cutsceneWorldScreen)!=0);
+    const bool isVideoFlat = (g_sceneMode.Current() == vrscene::Mode::VideoFlat);
+    const bool activeWorldAnchor = (Rd(g_inCinematic) != 0) || isVideoFlat;
+    g_cinemaWorldAnchor.Observe(activeWorldAnchor, Rd(g_cutsceneWorldScreen) != 0);
     if(g_cinemaReferenceChangeTime && fs.predictedDisplayTime>=g_cinemaReferenceChangeTime) {
         g_cinemaWorldAnchor.Reset();g_cinemaReferenceChangeTime=0;
     }
@@ -12191,7 +12205,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // half (validated composition coordinates, not a blind half reuse). Both
     // eyes share that same half crop; never one half per eye.
     const bool cineCrop = frame && frame->cineFlat && frame->dup && !frame->stereo &&
-                          !frame->menuFlat && g_srcW >= 2;
+                          (!frame->menuFlat || isVideoFlat) && g_srcW >= 2;
     const bool monoCrop = cropEyes || cineCrop;
     g_scCropped = monoCrop;
     if (frame) {
@@ -12388,8 +12402,9 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                     // Same proved composed pixels; the compositor places the screen in LOCAL
                     // space instead of interpreting it as a head-following projection image.
                     // A pause/menu keeps its established presentation and retains this anchor.
-                    if(cineCrop && Rd(g_cutsceneWorldScreen) && Rd(g_inCinematic) &&
-                       !Rd(g_vrMenuClass) && !Rd(g_panelOpen) &&
+                    const bool menuPermitted = (!Rd(g_vrMenuClass) || Rd(g_vrMenuClass) == 3 || (isVideoFlat && Rd(g_vrMenuClass) == 1));
+                    if(cineCrop && Rd(g_cutsceneWorldScreen) && activeWorldAnchor &&
+                       menuPermitted && !Rd(g_panelOpen) &&
                        cinemascreen::TrackingAllowsAnchor(g_cinemaWorldAnchor.valid,frame->eyePositionsValid)) {
                         const auto& r=frame->cineImage;
                         const int imageW=r.right-r.left,imageH=r.bottom-r.top;
