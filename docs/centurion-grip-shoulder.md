@@ -1,5 +1,9 @@
 # Centurion: test feedback, shoulder source and cylinder controls
 
+Native follow-up: [audited native reload seam](centurion-native-reload.md).
+Adds a separate OFF/observe/guard experiment; earlier statements below describe
+the gesture-only candidate, not physical acceptance of the new native guard.
+
 2026-10-16, SIDE `fix/centurion-grip-shoulder`. ZERO Steam operations.
 Based on `origin/main` 644be25, with existing Centurion source through e7a0c89
 merged into this OWN branch. MAIN's current integration checkout is separate;

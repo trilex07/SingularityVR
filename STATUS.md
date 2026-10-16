@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE native Centurion continuation: offline native registration,
+class-constructor/vtable and original BeginFire reload/fallback path identified.
+New default-OFF CenturionNativeReloadGuard 1=observe /2=conditional suppression
+experiment, derived ABI/slot + method-shape validation; one close-token, native
+inventory untouched. L1_PASS13 CPU executables +31 Python checks, original
+archived wrapper/body match and own-process x86 detour replay. L2 pending;
+L3/L4 UNKNOWN. Actual cylinder animation OPEN.
+See docs/centurion-native-reload.md. ZERO Steam, preserve current MAIN integration.
+
 LATEST 2026-10-16 SIDE fix/centurion-grip-shoulder: user tested original
 Centurion prototype and reported auto-reload, gun/knife grab conflicts, squares.
 Follow-up implements left-shoulder source, bounded grip priority/no fake release,

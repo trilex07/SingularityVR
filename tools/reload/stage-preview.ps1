@@ -54,8 +54,8 @@ $receipt=[ordered]@{
     architecture=$manifest.architecture
     optimization=$manifest.optimization
     files=$files
-    flagsDefaultOff=@('CenturionManualReload','CenturionNativeReloadTap','CenturionReloadProbe','CenturionClipPreview','CenturionReloadMarkers','ReloadControlLayout','CenturionCylinderGestures')
-    limitations='Albedo-only shoulder/carrying preview, cylinder gestures only; native auto-reload/cylinder/animation/ammo untouched; L3/L4 UNKNOWN'
+    flagsDefaultOff=@('CenturionManualReload','CenturionNativeReloadTap','CenturionReloadProbe','CenturionClipPreview','CenturionReloadMarkers','ReloadControlLayout','CenturionCylinderGestures','CenturionNativeReloadGuard')
+    limitations='Native guard OFF/observe/guard experiment requires MAIN runtime proof; original cylinder animation remains, ammo UE3-owned; albedo-only preview; L3/L4 UNKNOWN'
 }
 $receipt | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $output 'centurion-preview.manifest.json') -Encoding UTF8
 $receipt | ConvertTo-Json -Depth 6

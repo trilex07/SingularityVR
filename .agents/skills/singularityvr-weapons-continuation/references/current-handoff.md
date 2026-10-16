@@ -1,5 +1,13 @@
 # Current handoff — 2026-10-16, snapshot only
 
+Native continuation now supersedes the older "no ABI/guard implemented" scope:
+read `docs/centurion-native-reload.md` first. Offline registration->wrapper->class
+vtable->native method and empty BeginFire/fallback path identified. New
+`CenturionNativeReloadGuard=0/1/2` OFF/observe/guard experiment, not yet Steam
+verified; no actual cylinder opening/ejection animation added. Existing receipt
+below identifies the earlier gesture DLL only; read latest STATUS/build manifest
+for the new artifact, never assume it is installed.
+
 ## Location and delivery
 
 - Repository: https://github.com/trilex07/SingularityVR
