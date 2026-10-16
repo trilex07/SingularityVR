@@ -114,7 +114,17 @@ Valkyrie 302/302, Volk 307/307, Kasimov 210/210, with non-flat texture colours.
 This verifies detached asset consumption, NOT native animated gun GPU output,
 world occlusion, scene lighting, headset dimensions or runtime thread safety.
 The six CPU inspection views per weapon and all three albedo previews were
-visually inspected. L2 build receipt is recorded below after the clean build.
+visually inspected.
+
+L2_PASS: clean source `f5c2fb83f1e4416fdb6e73e61aefb2d17f7dab06`, x86
+PE32 (`014C/010B`), `/O2`, empty manifest working-tree status. Regression DLL
+SHA-256 `7F350D7347A76239BC1E1EDB49A25A32C5BC98720CF43BFC753F7664182353DF`;
+animation test executable SHA-256
+`5E9981FE60B64E99A3B9DE00DE5B210240B3CA8FB488EF1A4AD38F4D4471BDE6`.
+Build retains inherited warnings; no build errors/fatal format gate issue.
+The DLL does NOT include a runtime caller for these prototypes; it is solely a
+regression build, NOT a ready-to-deploy replacement for MAIN's newer integration.
+Subsequent receipt-only commit changes no tested implementation.
 
 SVWA SHA-256 (profile locked in decoder):
 

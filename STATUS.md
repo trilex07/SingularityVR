@@ -7,7 +7,9 @@ native diffuse references measured. Imported f519de6 CPU gesture prototypes,
 independent left/back shoulder math and cancellation across calibration changes.
 L1_PASS ten optimized CPU executables +40 Python tests; 30000 transactions,
 7506 original fractional track poses; own-process D3D9Ex actual textured pixels
-in BOTH eyes, state/failure/Reset checks PASS. L2 build pending clean receipt.
+in BOTH eyes, state/failure/Reset checks PASS. L2_PASS clean source f5c2fb8,
+x86 PE32 /O2 regression DLL SHA-256
+7F350D7347A76239BC1E1EDB49A25A32C5BC98720CF43BFC753F7664182353DF.
 No runtime dispatcher/INI/native ammo backend; L3/L4 UNKNOWN, NOT headset-ready.
 ZERO Steam, no Centurion/accepted config or installed asset changes.
 See docs/next-weapon-animation-assets.md. SIDE regression DLL MUST NOT replace
