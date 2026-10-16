@@ -149,4 +149,27 @@ invalid count and injected partial draw failure. This fixture loads the SYSTEM
 D3D9 only, never the game/proxy/Steam. It is not OpenXR or native game pixels.
 Separate earlier original IB upload/read fixture also passes.
 
-L2 clean receipt follows. L3 Steam / native scene alignment / L4 PSVR2 UNKNOWN.
+## Clean L2 receipt
+
+Source `14bb749d5aaca52d7942a8be52feb55d6cc408ac` (implementation9df0907 plus
+idle-pass follow-up14bb749), empty build-manifest workingTreeStatus, x86 PE32
+machine014C/optional010B, `/O2`, performance instrumentation OFF. DLL SHA256:
+`7597EA4DE4CD56BA13D9D2245E638AF6D45FDFC443E595D3BEDB303DCB5DA9BB`.
+Existing renderer compiler/analyzer warnings remain; no errors or new shell
+header build errors. All16 CPU executables/40 Python tests and BOTH own-process
+D3D9Ex fixtures PASS on this source. Six-case CPU Sample100,000-iteration mean
+about.85us in a separate synthetic run, NOT a real game frame-time measurement.
+Repeated original asset extraction produced identical mesh/texture hashes;
+corrected-label CPU preview inspected again, not native game pixels.
+
+Private staged payload in this checkout's ignored
+`build/centurion-reload/ejection-candidate/`: DLL/build provenance +5 verified
+original private assets (clip pair, animation, case pair). Exact manifest
+`centurion-preview.manifest.json`; staged DLL and all asset SHA256 verified.
+NO INI, Steam file, process or installation changed. This is a candidate identity,
+not an installed/accepted DLL identity. Receipt-only commit after this source
+does not change compiled code. MAIN must retain current integration features.
+PR creation is unavailable: gh is not authenticated; branch push is separate
+from creation of an actual PR. No merge is performed.
+
+L2_PASS. L3 Steam / native scene alignment / L4 PSVR2 UNKNOWN.

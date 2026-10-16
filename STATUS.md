@@ -10,7 +10,10 @@ L1_PASS16 CPU executables +40 Python tests,27,075 shoulder producer/basis checks
 own-process D3D9Ex original textured pixels in BOTH eyes +fault/state/Reset PASS.
 No native collision/impact audio/world or hand occlusion/full scene lighting.
 No independent torso tracker: start facing forward. L3/L4 UNKNOWN; ZERO Steam.
-Clean L2 receipt follows. See docs/centurion-shells-shoulder.md.
+L2_PASS clean14bb749 /O2 x86 PE32 DLL SHA256
+7597EA4DE4CD56BA13D9D2245E638AF6D45FDFC443E595D3BEDB303DCB5DA9BB.
+Private ejection-candidate DLL +5 assets hashes verified, NO INI/Steam writes.
+See docs/centurion-shells-shoulder.md; MAIN integrates/rebuilds CURRENT source.
 
 LATEST 2026-10-16 SIDE Centurion native cylinder animation: default-OFF
 CenturionCylinderAnimation retimes original Reload clip/clip_release tracks on
