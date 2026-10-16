@@ -129,3 +129,11 @@ the synthetic PE header cannot execute. Legacy build `-Install` must reject.
 
 No Steam/game launch, installed-file mutation, accepted baseline promotion or
 headset acceptance belongs to these tests. Runtime features are unchanged.
+
+Receipt 2026-10-16: L1_PASS, 37 rejection cases plus positive install/rollback
+and actual-runner WhatIf checks, independently on Windows PowerShell 5.1 and
+PowerShell 7. L2_PASS regression build at clean `4e7828e07f8d8f3ede68d5f9133c361effc068b0`,
+x86 PE32 `/O2`, DLL SHA-256
+`3B83750AC8C5BCABFA4C1160791BB03055C8D6F84ACAF288B8715ABC2A67F1D1`.
+Build only, not staged/deployed; L3/L4 UNKNOWN. No real accepted profile exists
+in this branch. MAIN's reviewed baseline/migration is required before activation.
