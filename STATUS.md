@@ -12,8 +12,8 @@ prepared asset is not yet rendered. L1_PASS six CPU executables +four Python
 tests + actual FLOAT32 asset roundtrip, plus six menu/holster regression exes.
 Probe-only mode records named ammo changes and bounded per-weapon UFunction
 binding identities (never called); original six-chamber cylinder inspected.
-L2_PASS clean source 45dd1fa /O2 x86 PE32,
-DLL SHA 5607AA19203539725559C15258D5B9950BF363308AE5C6E006333218B1AECA39;
+L2_PASS clean source db14959 /O2 x86 PE32,
+DLL SHA BACD5FDBBB4C23E55149F4CFF9ECBCD3D6E8DE67FACF99EE1A423B8212AD9343;
 receipt in docs/centurion-manual-reload.md.
 L3/L4 UNKNOWN. ZERO Steam. Integrate onto current accepted MAIN and rebuild,
 never replace newer knife/menu work with this older standalone base.

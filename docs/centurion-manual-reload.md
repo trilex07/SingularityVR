@@ -144,10 +144,10 @@ extraction tests; actual original-asset extraction/UV/bind round trip.
 Continuation also passes the six-executable menu/holster regression suite from
 the synchronized MAIN base (including shared knife/holster tests).
 
-Latest L2_PASS: clean source `45dd1faa5dcb9d75792a5eaaa4deeab2304f4c36`,
+Latest L2_PASS: clean source `db1495986a9eef704b3aa6972277aa03ef3fca2c`,
 `/O2`, x86 PE32 (`014C/010B`), empty working-tree status in build manifest.
 Latest DLL SHA-256:
-`5607AA19203539725559C15258D5B9950BF363308AE5C6E006333218B1AECA39`.
+`BACD5FDBBB4C23E55149F4CFF9ECBCD3D6E8DE67FACF99EE1A423B8212AD9343`.
 Local `build/centurion-reload/candidate` DLL/manifest match this exact build.
 Both the extraction cache hash and all original UVs remain unchanged after the
 stricter encoded-FLOAT32 round trip and optional wireframe inspection.
