@@ -10,6 +10,12 @@ and actual three-cache C++ decoding PASS. Centurion runtime/INI/holsters unchang
 Old catalog's 8297="Spikeshot" label contradicts shotgun mesh/CommonText.ARShotgun
 (Volk); no accepted wheel edits. Details: docs/next-weapon-reload-prototypes.md.
 L3/L4 UNKNOWN; ZERO Steam. Existing private Centurion candidate remains separate.
+L2_PASS offline scope: clean source f519de6a9e0d731137fcc2d646b6183cba0c39f9,
+full x86 PE32 /O2 build, unchanged runtime behavior; DLL SHA
+A61CEBF5D45F11C8291B32DEB41BCE5782BA333D31AE02AA7C753D1DF08FF84F.
+No staging/install; old Centurion candidate remains e7a0c89 /23AB074B...77A.
+Test executable x86 PE32 and three independent SP PSK hash matches verified;
+full receipts in docs/next-weapon-reload-prototypes.md. No native backend claim.
 
 LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN f0b96ad:
 Presentation safety continuation: capture/outer-restore failure now latches

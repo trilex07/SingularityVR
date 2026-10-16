@@ -114,3 +114,22 @@ inspected. Native UE3 calls, textures, GPU draw, Steam and PSVR2 remain UNKNOWN.
 No existing runtime source or INI was edited; the new header is compiled by the
 CPU test, not included by `d3d9.cpp`. Full DLL build is a separate regression
 gate and cannot establish that these prototypes are wired into the game.
+
+The independent single-player mesh exports match the research PSKs byte-for-byte:
+machinegun from RvGame, shotgun from wp_SP_ARShotgun_SF, sniper from
+wp_SP_ARSniperRifle_SF. Respective SHA-256:
+`B445A4A2C27E9EEDFC487A2CD5358B6DB1BD755B184CAFD663C4A2454991B442`,
+`941C871B695480E608AC8EB0CA25B99731344ECA57383C9C5927CF71E7BAF1AB`,
+`8FEAEFCE7B0B4880A084B2F31CAE10C2B0C3D98B57415EF040EA87AFADE033A7`.
+
+L2_PASS offline build scope: clean source
+`F519DE6A9E0D731137FCC2D646B6183CBA0C39F9`, `/O2`, x86 PE32 (`014C/010B`),
+empty manifest working-tree status. Regression DLL SHA-256:
+`A61CEBF5D45F11C8291B32DEB41BCE5782BA333D31AE02AA7C753D1DF08FF84F`.
+Prototype test executable also verifies PE32/x86; SHA-256:
+`B7DDAB7B1BFCB08BB435C6E05AE278FAACA3A02F6DE0440B08A7401CDE67658A`.
+The DLL has unchanged runtime behavior and was NOT copied to the private
+Centurion candidate or Steam. Existing candidate remains source e7a0c89 / SHA
+`23AB074B813499DE2338EAC625079C3F5B0A5A1AB97196F6299F0B95BDCAB77A`.
+The prototype header and prepared parts are not yet a runtime implementation.
+Compiler retains inherited warnings, with no build error/fatal format gate issue.

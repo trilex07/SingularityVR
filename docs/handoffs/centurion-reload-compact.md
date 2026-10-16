@@ -36,7 +36,7 @@ Private candidate and exact asset hashes: `build/centurion-reload/candidate/cent
 
 ## Continue
 
-Next weapons: `weapon_reload_prototypes.h` adds CPU-only Valkyrie/Volk/Kasimov profiles, default OFF, no runtime caller. Original clips/Reload tracks measured; suite now 9 CPU +33 Python PASS. Read `docs/next-weapon-reload-prototypes.md`. Mesh 8297 is Volk, not catalog's Spikeshot. Centurion runtime/candidate unchanged.
+Next weapons: `weapon_reload_prototypes.h` adds CPU-only Valkyrie/Volk/Kasimov profiles, default OFF, no runtime caller. Original clips/Reload tracks measured; 9 CPU +33 Python PASS. Offline L2 source f519de6 passed; DLL NOT staged, prototypes NOT wired. Full receipt: `docs/next-weapon-reload-prototypes.md`. Mesh 8297 is Volk, not catalog's Spikeshot. Centurion runtime/candidate unchanged.
 
 1. Safe offline work: validate probes/log analysis, cancellation/state restoration and regression tests. `tools/reload/analyze_reload_log.py --log <archived-log>` emits correlation-only JSON; 13 synthetic tests, no runtime/DLL changes. Prove producer/ABI before changing engine behavior; no guessed offsets, shader constants, ammo writes or native cylinder suppression.
 2. Tests: inspect then run `tools/reload/test-centurion.ps1`, `tools/knife/test-knife.ps1`. Build `spikes/view_matrix/build.ps1` WITHOUT `-Install`; commit source first for clean provenance. `tools/reload/stage-preview.ps1` stages ONLY private candidate, never Steam.
