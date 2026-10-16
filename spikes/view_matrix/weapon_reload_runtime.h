@@ -45,7 +45,7 @@ inline hipknife::V Transform(hipknife::V p,const armbind::Mat& m){return {
 inline bool PhysicalMatrix(const armbind::Mat& m){
     if(!armbind::Finite(m)||m.m[0][3]||m.m[1][3]||m.m[2][3]||m.m[3][3]!=1)return false;
     for(unsigned r=0;r<3;++r){const float n=hipknife::Length({m.m[r][0],m.m[r][1],m.m[r][2]});
-        if(n<.05f||n>4.f)return false;}
+        if(n<.05f||n>16.f)return false;} // includes existing WorldScale/GunScale tuning extremes
     const float determinant=m.m[0][0]*(m.m[1][1]*m.m[2][2]-m.m[1][2]*m.m[2][1])-
         m.m[0][1]*(m.m[1][0]*m.m[2][2]-m.m[1][2]*m.m[2][0])+
         m.m[0][2]*(m.m[1][0]*m.m[2][1]-m.m[1][1]*m.m[2][0]);

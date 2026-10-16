@@ -19055,7 +19055,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 g_nativeGloveRenderer.draws!=0,g_nativeGloveRenderer.Triangles(),g_gloveBlend[0],g_gloveBlend[1]);
     }
     if(FAILED(nativeRestore)){g_gloveExperiment=false;return nativeRestore;}
-    if(FAILED(nextRestore))return nextRestore;
+    if(FAILED(nextRestore)){g_thisDrawMoved=0;return nextRestore;}
 
     // ⭐ run 241: how many bones this mesh REALLY has, so the sweep range stops being a guess.
     // Reads the whole possible block once a second and reports the last register that is not all

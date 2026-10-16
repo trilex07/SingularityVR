@@ -81,6 +81,9 @@ static void TestOriginal(const weaponreloadanim::Spec& spec,const std::string& r
     std::printf("PASS original %s: palette collapse/root restore; measured animation %.0f -> %.0f; 1440 socket roundtrips\n",stem.c_str(),timing.outFrame,timing.inFrame);
 }
 static void TestBridge(){
+    auto scaled=Identity();scaled.m[0][0]=scaled.m[1][1]=scaled.m[2][2]=8.4f;
+    assert(PhysicalMatrix(scaled)); // existing WorldScale200% / GunScale400% combination
+    scaled.m[0][0]=32;assert(!PhysicalMatrix(scaled));
     for(const auto& profile:weaponreloadproto::profiles){
         weaponreloadproto::State state;weaponreloadproto::Frame f;weaponreloadproto::Calibration config;
         config.ready=true;config.revision=1;config.gesture.socketRadius=.16f;config.gesture.pullDistance=.30f;
