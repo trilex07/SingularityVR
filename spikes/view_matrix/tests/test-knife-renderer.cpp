@@ -114,5 +114,10 @@ int main(int argc,char** argv){
         std::printf("CPU eager knife + original diffuse load %.3f ms, %u verts / %u tris / %ux%u texture\n",
             std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count(),r.Vertices(),r.Triangles(),r.TextureWidth(),r.TextureHeight());
         assert(!r.Load("missing-private-knife.svrk")&&!r.Vertices()&&!r.TextureWidth());}
+    if(argc==3){hipknife::Renderer r;const auto start=std::chrono::steady_clock::now();
+        assert(r.LoadWithAlbedo(argv[1],argv[2]));
+        std::printf("CPU eager explicit asset pair %.3f ms, %u verts / %u tris / %ux%u texture\n",
+            std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count(),r.Vertices(),r.Triangles(),r.TextureWidth(),r.TextureHeight());
+        assert(!r.LoadWithAlbedo(argv[1],"missing-private-albedo.svrt")&&!r.Vertices()&&!r.TextureWidth());}
     std::puts("PASS knife CPU fake: decoder, RT/MRT/DS/viewport/state/refcounts + early return/capture failures");
 }

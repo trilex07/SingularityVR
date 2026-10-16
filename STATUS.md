@@ -1,5 +1,78 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE next-weapon CPU prototypes on feature/centurion-manual-reload:
+Valkyrie (11387), Volk S4 (8297), Kasimov (11389): original rigid clip meshes
+and Reload tracks inspected; private extraction/UV/FLOAT32/PSA roundtrips PASS.
+New pure profile wrapper defaults OFF and requires explicit identity/calibration;
+gesture intents only, NO runtime caller, XInput/native call, material or rendering.
+L1_PASS nine CPU executables +33 Python tests; 30000 complete synthetic transfers
+and actual three-cache C++ decoding PASS. Centurion runtime/INI/holsters unchanged.
+Old catalog's 8297="Spikeshot" label contradicts shotgun mesh/CommonText.ARShotgun
+(Volk); no accepted wheel edits. Details: docs/next-weapon-reload-prototypes.md.
+L3/L4 UNKNOWN; ZERO Steam. Existing private Centurion candidate remains separate.
+L2_PASS offline scope: clean source f519de6a9e0d731137fcc2d646b6183cba0c39f9,
+full x86 PE32 /O2 build, unchanged runtime behavior; DLL SHA
+A61CEBF5D45F11C8291B32DEB41BCE5782BA333D31AE02AA7C753D1DF08FF84F.
+No staging/install; old Centurion candidate remains e7a0c89 /23AB074B...77A.
+Test executable x86 PE32 and three independent SP PSK hash matches verified;
+full receipts in docs/next-weapon-reload-prototypes.md. No native backend claim.
+
+LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN f0b96ad:
+Presentation safety continuation: capture/outer-restore failure now latches
+ONLY Centurion markers/carried preview off until Reset/XR init. Draw failure
+still restores; successful outer restore permits cyan fallback. Lock-free CPU
+policy passes 100000 disabled frames; eight reload CPU executables +27 Python
+tests and six knife CPU executables +14 Python tests PASS (no private rig replay).
+L2_PASS clean source e7a0c8986b10859a6832847c0d0a77f74d76d7f3, /O2 x86 PE32.
+DLL SHA 23AB074B813499DE2338EAC625079C3F5B0A5A1AB97196F6299F0B95BDCAB77A.
+Private candidate DLL/manifest and both original assets staged/hash-verified;
+all four flags default OFF; no INI or Steam operation. No native ammo/animation
+or input change. User has NOT tested Centurion; L3/L4 UNKNOWN. Integrate onto
+CURRENT accepted MAIN and rebuild; older receipts below are superseded.
+
+Previous 2026-10-16 continuation:
+Compact import: docs/handoffs/centurion-reload-compact.md. Offline correlation
+helper tools/reload/analyze_reload_log.py added: 13 synthetic tests PASS;
+reload suite now eight CPU executables +27 Python tests PASS. It never proves
+native reload/ABI, writes files or touches Steam. No runtime/DLL/assets changed;
+existing L2 receipt below remains the candidate identity, L3/L4 UNKNOWN.
+Continuation: CenturionClipPreview default OFF; original cylinder/albedo in
+left hand only during Carrying, 100 ms identity/focus/tracking snapshot guard.
+Shared knife loader keeps original defaults; no native cylinder suppression,
+ammo/animation changes, fitted grip or native-lighting claim. Eight CPU
+executables +14 Python tests PASS; actual mesh/albedo load and textured CPU
+preview inspected. L2_PASS clean source e0fb5e1 /O2 x86 PE32; DLL SHA
+00C49400DC5FCF6A9F9DA2F67ED35E47F7239B86FB8B1F15915AC5D3B90E502B.
+Private candidate DLL/manifest +both assets verified; no INI staged/deployed.
+Prior receipts below are superseded; user has NOT tested Centurion yet.
+Centurion-only assisted gesture prototype, NOT completed physical reload.
+Front-centre pouch, unchanged left knife/right gun holsters; allocation-free
+remove/discard/pouch/insert/ack FSM, ownership/cancel guards, bounded calibration
+overlay, named read-only HUD observers and existing-hook native reload probe.
+All four flags OFF. Shared native Use/reload tap is independently opt-in;
+no engine ammo writes, cylinder animation control or auto-reload suppression.
+Original clip extracted offline: 1067 UV verts /1252 tris, no mixed boundary;
+optional unlit carried preview implemented, not GPU verified. Initial L1 six CPU executables +four Python
+tests + actual FLOAT32 asset roundtrip, plus six menu/holster regression exes.
+Probe-only mode records named ammo changes and bounded per-weapon UFunction
+binding identities (never called); original six-chamber cylinder inspected.
+Continuation L1_PASS: fresh identity-bound HUD samples, missing-field retry,
+physical-left ownership and capacity guards; 360000 reload lifecycle frames;
+seven CPU executables +12 Python tests. Original Reload: 53 frames /24 Hz;
+14 notifies include AnimNotify_RefillClip at 1.47052908 s on RvSharedPawn.
+Fifth player-pawn-only probe event; no native calls. Material AR_Pistol resolved
+offline; live shader/socket and dedicated reload ABI remain unproven.
+Previous continuation L2_PASS source 9c164eb /O2 x86 PE32,
+DLL SHA 99A00CB7C636856EAAA88A829ACD09E4548045D3B4A71FB30064812CFADDD051;
+private DLL/manifest hashes verified, original textures staged offline only;
+PR base advanced during work: merged its committed f0b96ad into this branch
+only, preserving MAIN's new knife impulse path after reload ownership gate.
+INI, native knife, cinema and muzzle policy files match that base exactly;
+seven reload CPU/12 Python tests and six knife CPU/14 Python tests pass.
+receipt in docs/centurion-manual-reload.md.
+L3/L4 UNKNOWN. ZERO Steam. Integrate onto current accepted MAIN and rebuild,
+never replace newer knife/menu work with this older standalone base.
+
 LATEST 2026-10-16 SIDE feature/menu-holster-polish: class-2 frontend-only
 scale/depth candidate 88% / 1400 mm, same provider/pointer/fallback geometry;
 native source RT/crop, pause/boot and mod panel unchanged. Original thin
