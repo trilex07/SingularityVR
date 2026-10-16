@@ -217,9 +217,11 @@ klonowanie tym samym łańcuchem (dawca zamiast own-EN), bramka multi-draw, ucho
 Manifest: `dubbing-corrections/deploy_manifest.jsonl` (166 wierszy: pack, target,
 src w temp, id/tekst, sha16). Wszystkie pliki zweryfikowane: PCM16 mono 24 kHz,
 peak ≤ −1,0 dBFS. WAV-y w temp (nie w gicie); MAIN kopiuje do banków.
-- **Story** (159 plików, drop-in 1:1 do `story_voicepack_xlingual`, te same nazwy):
-  130× batch1 (SP_VI5_KISMET03, `.../resynth130/`) + 29× batch2 (train_intro+RT1,
-  `.../resynth_firstscene/`). Źródła: kolumna `src` manifestu.
+- **Story**: pełny pack 992 + moje: 67 drop-in (te same hashe) + **92 gap-fill `SD_*.wav`**
+  (pack NIE zawierał tych plików, a jsonl mapuje na nie 92 assety — bank grałby ciszę).
+  Razem `C:\Dubbing-aktualny\story\` = 1084 pliki. Reszta packów bez zmian: mp 409,
+  barki 268, skipped 97 unikalnych, intro 12, vignette 6. Pełny zestaw: 1949 wierszy
+  (`deploy_full_manifest.jsonl`, kolumna origin: pack/side-resynth).
 - **Intro** (7 plików, drop-in do `out/intro` jako `INTRO_*.pl.wav`):
   NIM/GST (1005/1011/1012/1014) = piper darkman (spójny męski); pilot 1006/1010 =
   XTTS dawca-PL; 1016 = XTTS krzyk dawca-okrzyk (primary; spokojny wariant XTTS-PL
