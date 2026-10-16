@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE next-weapon CPU prototypes on feature/centurion-manual-reload:
+Valkyrie (11387), Volk S4 (8297), Kasimov (11389): original rigid clip meshes
+and Reload tracks inspected; private extraction/UV/FLOAT32/PSA roundtrips PASS.
+New pure profile wrapper defaults OFF and requires explicit identity/calibration;
+gesture intents only, NO runtime caller, XInput/native call, material or rendering.
+L1_PASS nine CPU executables +33 Python tests; 30000 complete synthetic transfers
+and actual three-cache C++ decoding PASS. Centurion runtime/INI/holsters unchanged.
+Old catalog's 8297="Spikeshot" label contradicts shotgun mesh/CommonText.ARShotgun
+(Volk); no accepted wheel edits. Details: docs/next-weapon-reload-prototypes.md.
+L3/L4 UNKNOWN; ZERO Steam. Existing private Centurion candidate remains separate.
+
 LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN f0b96ad:
 Presentation safety continuation: capture/outer-restore failure now latches
 ONLY Centurion markers/carried preview off until Reset/XR init. Draw failure
