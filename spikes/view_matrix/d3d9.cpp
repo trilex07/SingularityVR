@@ -9154,7 +9154,7 @@ bool InitXRInput() {
     // Eager CPU asset loading at XR input initialization, outside DllMain and
     // draw hooks. Missing/bad cache fails closed without changing normal input.
     g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};
-    g_centurionClipReady=false;g_centurionClipFault=false;
+    g_centurionClipRenderer.ReleaseGPU();g_centurionClipReady=false;g_centurionClipFault=false;
     if(g_centurionReload&&g_centurionClipPreview){
         char path[MAX_PATH]{};
         if(IniPath(path)){
@@ -31277,9 +31277,9 @@ void LoadIniSettings() {
         std::clamp(IniSignedInt("Input","ReloadClipUpMm",0,path)*.001f,-.15f,.15f),
         std::clamp(IniSignedInt("Input","ReloadClipBackMm",-80,path)*.001f,-.15f,.15f)};
     g_centurionClipConfig.rotation=centurionclip::Degrees(
-        (float)std::clamp(IniSignedInt("Input","ReloadClipPitchDeg",0,path),-180,180),
-        (float)std::clamp(IniSignedInt("Input","ReloadClipYawDeg",0,path),-180,180),
-        (float)std::clamp(IniSignedInt("Input","ReloadClipRollDeg",0,path),-180,180));
+        (float)std::clamp(IniSignedInt("Input","ReloadClipPitchDeg",0,path),-180L,180L),
+        (float)std::clamp(IniSignedInt("Input","ReloadClipYawDeg",0,path),-180L,180L),
+        (float)std::clamp(IniSignedInt("Input","ReloadClipRollDeg",0,path),-180L,180L));
     Log("ini: CenturionClipPreview=%d (default OFF; unlit original cylinder calibration)",g_centurionClipPreview);
     g_centurionConfig.pouchDown=std::clamp(IniSignedInt("Input","ReloadPouchDownCm",42,path)*.01f,.20f,.70f);
     g_centurionConfig.pouchForward=std::clamp(IniSignedInt("Input","ReloadPouchForwardCm",34,path)*.01f,.20f,.50f);
