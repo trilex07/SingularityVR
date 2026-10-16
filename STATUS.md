@@ -1,6 +1,21 @@
 # STATUS — session handoff
 
-LATEST 2026-10-16 SIDE fix/frontend-menu-comfort: default-OFF class2-only
+LATEST 2026-10-16: Prototypy przeładowania Valkyrie, Volk S4 i Kasimova (PR #37):
+Przygotowałem prototypy przeładowania Valkyrie, Volk S4 i Kasimova: gesty, zabezpieczenia oraz oryginalne modele magazynków.
+Przeszło 30 000 symulowanych przeładowań, 9 programów testowych C++, 33 testy Python i build x86 /O2. Zmiany są w [PR #37](https://github.com/trilex07/SingularityVR/pull/37).
+To jeszcze prototypy offline — następny etap to podłączenie renderowania i natywnej amunicji. Steam oraz działanie Centuriona pozostały nietknięte.
+
+LATEST 2026-10-16 SIDE fix/native-glove-cuffs (PR #41): original full native cuffs
+(noTMD 10.786UU behind wrist instead of old 3.5UU cut), closed cuff backs for
+free hands AND held-gun native noTMD/TMD sections. New default-OFF
+NativeGloveCuffClosure uses separate native_cuffs.svnc (two exact profiles),
+original VB/UV/skin/material/scale retained. No gun-finger/anchor changes;
+knife private depth uses the selected colour IB's triangle count.
+L1_PASS new topology/axial/skin-seam/source roundtrip +2048 runtime context
+combinations/decoder/IB guard tests and existing glove/knife regressions.
+L2_PASS clean b50e5c9 /O2 x86 PE32.
+
+LATEST 2026-10-16 SIDE fix/frontend-menu-comfort (PR #40): default-OFF class2-only
 FrontMenuCleanBackdrop replaces the glitch-prone UE3 backdrop with neutral dark
 colour and retains both eye projections of the existing current-token GFx panel.
 Scoped test values: FrontMenuScalePct=80 / FrontMenuDistanceMm=1800 (no INI
@@ -9,23 +24,56 @@ failure pixel restore, Reset-owned DEFAULT-pool resources; captured successful
 receipt disables legacy identical-left-crop for this frame only.
 L1_PASS six /O2 /W4 /WX CPU executables: policy/generation/transaction failures,
 panel/laser/parallax geometry, menu/pause/cutscene regressions.
-L2_PASS clean9b23e3f /O2 x86 PE32; DLL SHA-256
-681D3A790951E9D192377CDD4AC7433F8652A01F7FE2B7D9649315805E878C1E.
-ZERO Steam; L3/L4 UNKNOWN. No game assets/config/renders of hands/weapons changed.
-See docs/frontend-menu-comfort.md; MAIN owns L3 and physical acceptance.
+L2_PASS clean9b23e3f /O2 x86 PE32.
 
-LATEST 2026-10-16 SIDE feature/accepted-profile-guard: offline deployment
+LATEST 2026-10-16 SIDE feature/accepted-profile-guard (PR #39): offline deployment
 regression guard, complete semantic INI + exact inventoried SHA-256 and
 reviewed per-candidate plan; denies silent Polish/hand/knife/calibration loss
 and stale rollback. Narrow deploy runner integrated, legacy build -Install
-blocked. No automatic acceptance/restore. Broad/cutscene writes fail closed;
-other standalone runners remain OUT OF SCOPE until MAIN adapts them.
-No live baseline created or promoted, ZERO Steam, no renderer/input changes.
-L1_PASS 37 rejection cases on Windows PowerShell 5.1 and PowerShell 7.
-L2_PASS clean4e7828e /O2 x86 PE32, DLL SHA-256
-3B83750AC8C5BCABFA4C1160791BB03055C8D6F84ACAF288B8715ABC2A67F1D1.
-Build only, not staged; L3/L4 UNKNOWN. Not active on user's installation.
-See docs/accepted-profile-guard.md for contract, coverage and migration limits.
+blocked. No automatic acceptance/restore. Broad/cutscene writes fail closed.
+
+LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN f0b96ad:
+Compact import: docs/handoffs/centurion-reload-compact.md. Offline correlation
+helper tools/reload/analyze_reload_log.py added: 13 synthetic tests PASS;
+reload suite now eight CPU executables +27 Python tests PASS. It never proves
+native reload/ABI, writes files or touches Steam. No runtime/DLL/assets changed;
+existing L2 receipt below remains the candidate identity, L3/L4 UNKNOWN.
+Continuation: CenturionClipPreview default OFF; original cylinder/albedo in
+left hand only during Carrying, 100 ms identity/focus/tracking snapshot guard.
+Shared knife loader keeps original defaults; no native cylinder suppression,
+ammo/animation changes, fitted grip or native-lighting claim. Eight CPU
+executables +14 Python tests PASS; actual mesh/albedo load and textured CPU
+preview inspected. L2_PASS clean source e0fb5e1 /O2 x86 PE32; DLL SHA
+00C49400DC5FCF6A9F9DA2F67ED35E47F7239B86FB8B1F15915AC5D3B90E502B.
+Private candidate DLL/manifest +both assets verified; no INI staged/deployed.
+Prior receipts below are superseded; user has NOT tested Centurion yet.
+Centurion-only assisted gesture prototype, NOT completed physical reload.
+Front-centre pouch, unchanged left knife/right gun holsters; allocation-free
+remove/discard/pouch/insert/ack FSM, ownership/cancel guards, bounded calibration
+overlay, named read-only HUD observers and existing-hook native reload probe.
+All four flags OFF. Shared native Use/reload tap is independently opt-in;
+no engine ammo writes, cylinder animation control or auto-reload suppression.
+Original clip extracted offline: 1067 UV verts /1252 tris, no mixed boundary;
+optional unlit carried preview implemented, not GPU verified. Initial L1 six CPU executables +four Python
+tests + actual FLOAT32 asset roundtrip, plus six menu/holster regression exes.
+Probe-only mode records named ammo changes and bounded per-weapon UFunction
+binding identities (never called); original six-chamber cylinder inspected.
+Continuation L1_PASS: fresh identity-bound HUD samples, missing-field retry,
+physical-left ownership and capacity guards; 360000 reload lifecycle frames;
+seven CPU executables +12 Python tests. Original Reload: 53 frames /24 Hz;
+14 notifies include AnimNotify_RefillClip at 1.47052908 s on RvSharedPawn.
+Fifth player-pawn-only probe event; no native calls. Material AR_Pistol resolved
+offline; live shader/socket and dedicated reload ABI remain unproven.
+Previous continuation L2_PASS source 9c164eb /O2 x86 PE32,
+DLL SHA 99A00CB7C636856EAAA88A829ACD09E4548045D3B4A71FB30064812CFADDD051;
+private DLL/manifest hashes verified, original textures staged offline only;
+PR base advanced during work: merged its committed f0b96ad into this branch
+only, preserving MAIN's new knife impulse path after reload ownership gate.
+INI, native knife, cinema and muzzle policy files match that base exactly;
+seven reload CPU/12 Python tests and six knife CPU/14 Python tests pass.
+receipt in docs/centurion-manual-reload.md.
+L3/L4 UNKNOWN. ZERO Steam. Integrate onto current accepted MAIN and rebuild,
+never replace newer knife/menu work with this older standalone base.
 
 LATEST 2026-10-16 SIDE feature/menu-holster-polish: class-2 frontend-only
 scale/depth candidate 88% / 1400 mm, same provider/pointer/fallback geometry;

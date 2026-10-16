@@ -126,12 +126,17 @@ class Renderer {
     knifelight::Renderer lighting;bool sceneLighting=false;
 public:
     bool Load(const std::string& file,bool sceneLit=false){
+        const auto slash=file.find_last_of("\\/");
+        return LoadWithAlbedo(file,(slash==std::string::npos?std::string():file.substr(0,slash+1))+"knife.svrt",sceneLit);
+    }
+    // Explicit asset pair for other measured rigid meshes. The original knife
+    // entry point above retains its exact path and rendering/lighting behavior.
+    bool LoadWithAlbedo(const std::string& file,const std::string& albedo,bool sceneLit=false){
         ReleaseGPU();source.clear();scratch.clear();indices.clear();texels.clear();textureWidth=textureHeight=0;
         std::vector<unsigned char> data;std::vector<Vertex> vertices;std::vector<WORD> ix;
         if(!Read(file,data,2*1024*1024)||!Decode(data.data(),data.size(),vertices,ix))return false;
         const auto slash=file.find_last_of("\\/");
-        const auto path=(slash==std::string::npos?std::string():file.substr(0,slash+1))+"knife.svrt";
-        if(!Read(path,data,16+2048*2048*4)||!DecodeTexture(data.data(),data.size(),textureWidth,textureHeight,texels))return false;
+        if(!Read(albedo,data,16+2048*2048*4)||!DecodeTexture(data.data(),data.size(),textureWidth,textureHeight,texels))return false;
         source=std::move(vertices);indices=std::move(ix);scratch.resize(source.size());
         sceneLighting=sceneLit;
         if(sceneLighting&&!lighting.Load(slash==std::string::npos?std::string():file.substr(0,slash+1)))return false;

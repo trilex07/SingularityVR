@@ -36,6 +36,7 @@ int main(){
         a.Observe(false, true);
         assert(!a.valid); // resets cleanly when video ends
     }
+
     assert(a.Latch(head,2,1,.6f,16.f/9));
     assert(near(a.pose.x,98) && near(a.pose.z,2)); // new scene chooses new anchor
     assert(near(a.pose.qy,.70710678f));
