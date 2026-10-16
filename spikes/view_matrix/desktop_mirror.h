@@ -424,6 +424,113 @@ inline bool ComputeMirrorDestination(UINT bw, UINT bh, UINT sw, UINT sh,
         : FitDestination(bw, bh, sw, sh, ww, wh, outDst);
 }
 
+// ---- Reset guard: keep the window fit display-only ----
+//
+// MAIN observed on the centurion branch that fitting the game window shrinks
+// the UE3 backbuffer and drops VR resolution: the engine follows WM_SIZE with
+// a Reset sized to the window. The window fit must stay display-only while
+// the render stays at the SteamVR SBS size, so Reset requests that merely
+// follow the fitted window are redirected to the trusted SBS size.
+//
+// Pure decision function (L1-testable). The trusted size is the MEASURED copy
+// size (g_srcW/H), never the AutoRes cache: a refused -ResX must not be
+// enforced. req==0 means "use the window client area" in D3D9, so it is
+// resolved against the live client size before judging.
+struct ResetDecision { UINT w = 0, h = 0; bool enforced = false; };
+inline ResetDecision DecideResetSize(UINT reqW, UINT reqH,
+                                     UINT trustW, UINT trustH,
+                                     UINT clientW, UINT clientH,
+                                     bool fitActive, bool dupActive) {
+    const ResetDecision pass{ reqW, reqH, false };
+    if (!fitActive || !dupActive || !trustW || !trustH) return pass;
+    const UINT effW = reqW ? reqW : clientW;
+    const UINT effH = reqH ? reqH : clientH;
+    if (!effW || !effH) return pass;               // nothing to judge against
+    if (effW == trustW && effH == trustH) return pass;
+    if (effW >= trustW && effH >= trustH) return pass;  // explicit bigger size: user's own choice
+    const bool followsWindow =
+        (clientW && clientH && effW == clientW && effH == clientH);
+    if (!followsWindow) return pass;               // smaller but not window-sized: explicit choice, keep
+    const ResetDecision hold{ trustW, trustH, true };
+    return hold;
+}
+
+// ---- Screenshot stamp: mirror pixels into RT0, persistently ----
+//
+// The transient PresentBackbufferScope (binding RT0 to the backbuffer DURING
+// Present) was falsified on Steam: F12 stayed black with it active, so the
+// overlay does not sample the binding. What survives a pre-hook or
+// post-restore capture is PIXELS, so after a successful mirror composition the
+// finished backbuffer is also copied into the engine's current RT0 surface
+// when it is a same-size/format alias. No state is changed (StretchRect does
+// not rebind), nothing is read back to the CPU, and a failed stamp never
+// touches the already-committed mirror.
+struct StampDiag {
+    static inline volatile LONG same = 0;     // RT0 already the backbuffer
+    static inline volatile LONG stamped = 0;
+    static inline volatile LONG skipped = 0;  // capture off / size mismatch
+    static inline volatile LONG failed = 0;
+    static inline LONG lastHr = 0;
+};
+inline bool ShouldStampRt(const D3DSURFACE_DESC& back, const D3DSURFACE_DESC& rt) {
+    return back.Width == rt.Width && back.Height == rt.Height &&
+           back.Format == rt.Format &&
+           back.MultiSampleType == D3DMULTISAMPLE_NONE &&
+           rt.MultiSampleType == D3DMULTISAMPLE_NONE;
+}
+inline bool StampCaptureRt(IDirect3DDevice9* dev) {
+    if (!dev || InterlockedCompareExchange(&g_steamCaptureBackbuffer, 0, 0) == 0) {
+        InterlockedIncrement(&StampDiag::skipped);
+        return false;
+    }
+    IDirect3DSurface9* rt0 = nullptr;
+    if (FAILED(dev->GetRenderTarget(0, &rt0)) || !rt0) {
+        InterlockedIncrement(&StampDiag::failed);
+        return false;
+    }
+    IDirect3DSurface9* back = nullptr;
+    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) {
+        rt0->Release();
+        InterlockedIncrement(&StampDiag::failed);
+        return false;
+    }
+    bool done = false;
+    if (rt0 == back) {
+        InterlockedIncrement(&StampDiag::same);
+    } else {
+        D3DSURFACE_DESC db{}, dr{};
+        const HRESULT hb = back->GetDesc(&db), hr = rt0->GetDesc(&dr);
+        if (SUCCEEDED(hb) && SUCCEEDED(hr) && ShouldStampRt(db, dr)) {
+            const HRESULT hs = dev->StretchRect(back, nullptr, rt0, nullptr, D3DTEXF_NONE);
+            if (SUCCEEDED(hs)) {
+                InterlockedIncrement(&StampDiag::stamped);
+                done = true;
+                static LONG said = 0;
+                if (!InterlockedExchange(&said, 1))
+                    Log("steam-capture: stamped completed mirror %ux%u fmt=%d into RT0; Steam F12 pixels pending",
+                        (unsigned)db.Width, (unsigned)db.Height, (int)db.Format);
+            } else {
+                StampDiag::lastHr = (LONG)hs;
+                InterlockedIncrement(&StampDiag::failed);
+            }
+        } else {
+            if (FAILED(hb)) StampDiag::lastHr = (LONG)hb;
+            else if (FAILED(hr)) StampDiag::lastHr = (LONG)hr;
+            InterlockedIncrement(&StampDiag::skipped);
+            static LONG saidDim = 0;
+            if (!InterlockedExchange(&saidDim, 1))
+                Log("steam-capture: RT0 %ux%u fmt=%d vs backbuffer %ux%u fmt=%d - stamp skipped (binding scope still covers Present)",
+                    SUCCEEDED(hr) ? (unsigned)dr.Width : 0, SUCCEEDED(hr) ? (unsigned)dr.Height : 0,
+                    SUCCEEDED(hr) ? (int)dr.Format : 0,
+                    SUCCEEDED(hb) ? (unsigned)db.Width : 0, SUCCEEDED(hb) ? (unsigned)db.Height : 0,
+                    SUCCEEDED(hb) ? (int)db.Format : 0);
+        }
+    }
+    back->Release();
+    rt0->Release();
+    return done;
+}
+
 inline bool Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
                   const RECT* presentDst, HWND overrideWindow, bool cineCrop = false) {
     const bool fitWindow = InterlockedCompareExchange(&g_desktopMirrorWindow, 0, 0) != 0;

@@ -62,6 +62,30 @@ int main() {
     Check(Pixel(dev,back,320,180)==0x00ff00,"mirror center is right eye, not black/left");
     Check(Pixel(dev,back,0,180)==0,"full eye retained with pillarbox");
     Check(Pixel(dev,scene,320,180)==0,"unrelated RT0 pixels unchanged");
+    // Persistent stamp: same-size offscreen RT0 receives the completed mirror
+    // so pre-hook/post-restore samplers see scene, not stale black.
+    Check(desktop_mirror::StampCaptureRt(dev),"stamp mirror into offscreen RT0");
+    Check(Pixel(dev,scene,320,180)==0x00ff00,"RT0 pixels carry the completed mirror");
+    Check(Pixel(dev,back,320,180)==0x00ff00,"stamp never disturbs the committed mirror");
+    HR(dev->ColorFill(scene,nullptr,0xff000000),"restore black RT0 control");
+    // RT0 already the backbuffer: no-op without writes.
+    HR(dev->SetRenderTarget(0,back),"bind RT0 to backbuffer");
+    Check(!desktop_mirror::StampCaptureRt(dev),"identical RT0/backbuffer skips the copy");
+    HR(dev->SetRenderTarget(0,scene),"restore offscreen RT0 binding");
+    // Size mismatch: skipped, target untouched.
+    IDirect3DSurface9* tiny=nullptr;
+    HR(dev->CreateRenderTarget(320,180,p.BackBufferFormat,D3DMULTISAMPLE_NONE,0,FALSE,&tiny,nullptr),"small RT");
+    HR(dev->ColorFill(tiny,nullptr,0xff0000ff),"blue small control");
+    HR(dev->SetRenderTarget(0,tiny),"bind mismatched RT0");
+    Check(!desktop_mirror::StampCaptureRt(dev),"size mismatch skips stamp");
+    Check(Pixel(dev,tiny,160,90)==0x0000ff,"mismatched RT0 pixels untouched");
+    tiny->Release();
+    HR(dev->SetRenderTarget(0,scene),"restore offscreen RT0 binding");
+    // This stack resets the viewport on every SetRenderTarget (even an
+    // identical rebind - measured). Production overlays rebind at Present when
+    // the game viewport is already full-frame, and the capture scope saves and
+    // restores it explicitly; the fixture re-applies its custom viewport here.
+    HR(dev->SetViewport(&vp),"reapply custom viewport after rebinds");
     {
         desktop_mirror::PresentBackbufferScope disabled(dev,false);
         Check(!disabled.Active(),"OFF does not own RT0");

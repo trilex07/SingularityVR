@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE side/mirror-screenshot-fix (base 9576f5e): right-eye
+mirror fitted in monitor + VR keeps SteamVR resolution, and persistent RT0
+pixel stamp for black Steam screenshots (transient RT0 binding was falsified
+by MAIN). Reset guard redirects window-following Resets to the measured SBS
+size (fail-open; explicit user sizes pass); stamp copies the finished mirror
+into same-size RT0 without rebinding/viewport side effects, scope kept
+underneath, all under SteamCaptureBackbuffer=1 (shipped ON). Fixture proved
+this stack resets the viewport on every SetRenderTarget — stamp avoids it by
+construction. L1_PASS mirror/guard/stamp CPU + D3D9Ex pixels/scope/viewport/
+Reset + 7 Python contracts + six menu/cinema regressions. L2_PASS clean tree,
+x86 PE32 /O2 DLL SHA-256
+90BE2B3F5E1CFFF6EF87DD91310DEC776397F56D8E2A8879D5C2B947B8A196F9.
+L3/L4 UNKNOWN. ZERO Steam. See docs/right-eye-mirror-capture.md for the MAIN
+L3 script and both falsifiers.
+
 LATEST 2026-10-16 SIDE fix/right-eye-mirror-steam-capture (PR #43): complete right-eye
 aspect fit, opt-in monitor work-area window cap 1920x1080 (physical client px),
 no changing XR/scene resolution commands. Fixed double-applied aspect scaling;

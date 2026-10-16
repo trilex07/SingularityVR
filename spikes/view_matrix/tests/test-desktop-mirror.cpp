@@ -119,5 +119,52 @@ int main() {
     const double targetAspect = 5264.0 / 2684.0;
     Expect(std::fabs(cropAspect - targetAspect) < .002,
            "ComputeMirrorDestination mode 2 preserves target aspect ratio");
+    // Reset guard: the window fit stays display-only, VR keeps SteamVR SBS.
+    // Trusted 5544x2828 SBS, fitted client 1920x1080.
+    using desktop_mirror::DecideResetSize;
+    Expect(!DecideResetSize(5544, 2828, 5544, 2828, 1920, 1080, true, true).enforced,
+           "identical SBS passes untouched");
+    Expect(!DecideResetSize(0, 0, 0, 0, 1920, 1080, true, true).enforced,
+           "no trusted size passes through (fail-open)");
+    Expect(!DecideResetSize(1920, 1080, 5544, 2828, 1920, 1080, false, true).enforced,
+           "fit off passes the window size");
+    Expect(!DecideResetSize(1920, 1080, 5544, 2828, 1920, 1080, true, false).enforced,
+           "flat mode passes the window size");
+    {
+        const auto d = DecideResetSize(1920, 1080, 5544, 2828, 1920, 1080, true, true);
+        Expect(d.enforced && d.w == 5544 && d.h == 2828,
+               "window-following shrink redirected to SBS");
+    }
+    {
+        const auto d = DecideResetSize(0, 0, 5544, 2828, 1920, 1080, true, true);
+        Expect(d.enforced && d.w == 5544 && d.h == 2828,
+               "zero (client-sized) request redirected to SBS");
+    }
+    {
+        const auto d = DecideResetSize(1280, 720, 5544, 2828, 1920, 1080, true, true);
+        Expect(!d.enforced && d.w == 1280 && d.h == 720,
+               "explicit smaller choice kept, not fought");
+    }
+    {
+        const auto d = DecideResetSize(6000, 3000, 5544, 2828, 1920, 1080, true, true);
+        Expect(!d.enforced,
+               "explicit larger size passes for the copy path to follow");
+    }
+    {
+        const auto d = DecideResetSize(0, 0, 5544, 2828, 0, 0, true, true);
+        Expect(!d.enforced,
+               "unreadable client cannot judge a zero request");
+    }
+    // Stamp gate: same-size/format RT0 receives mirror pixels, else skipped.
+    {
+        D3DSURFACE_DESC a{}, b{};
+        a.Width = b.Width = 640; a.Height = b.Height = 360;
+        a.Format = b.Format = D3DFMT_A8R8G8B8;
+        Expect(desktop_mirror::ShouldStampRt(a, b), "same RT/backbuffer stamps");
+        b.Width = 320;
+        Expect(!desktop_mirror::ShouldStampRt(a, b), "size mismatch skips");
+        b.Width = 640; b.Format = D3DFMT_X8R8G8B8;
+        Expect(!desktop_mirror::ShouldStampRt(a, b), "format mismatch skips");
+    }
     return g_fails == 0 ? 0 : 1;
 }

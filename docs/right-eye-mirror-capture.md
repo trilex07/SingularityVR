@@ -1,5 +1,114 @@
 # Right-eye window and Steam screenshots
 
+## Continuation 2026-10-16 — SIDE side/mirror-screenshot-fix (base 9576f5e)
+
+Two user-reported failures, one branch:
+
+1. Monitor should show the right-eye mirror fitted inside the monitor while
+   VR keeps the SteamVR resolution.
+2. Screenshots (Share button on the left PSVR2 Sense) come out black with
+   only mod-rendered pixels (weapon HUD etc.) visible.
+
+### 1. Window fit vs SteamVR resolution — Root cause and fix
+
+MAIN's centurion-branch INI already records the mechanism:
+`DesktopMirrorWindow=0` with the comment "fit window (resizes UE3 backbuffer
+and drops VR resolution)". The engine follows the fitted window with a
+`WM_SIZE` Reset sized to the window, so fitting the window shrank the
+backbuffer and the whole XR chain (copy size, swapchains) followed it down.
+
+Fix: the fit stays, the shrink does not. Both `Hook_ResetDevice` and
+`Hook_ResetDeviceEx` now pass windowed Reset requests through
+`desktop_mirror::DecideResetSize` (pure, L1-tested in
+`test-desktop-mirror.cpp`): a request that merely follows the fitted client
+area (explicit size equal to the live client rect, or `0` = "use client
+area") is redirected to the measured SBS size `g_srcW/H` while VR
+duplication is active. Everything else passes through untouched — identical
+sizes, explicit larger sizes (user raised the resolution; the copy path
+follows), explicit smaller non-window sizes (user's own choice is kept, not
+fought), and fail-open whenever no trusted size or client rect is known.
+
+AutoResolution (cached recommended SBS injected as `-ResX/-ResY -windowed`)
+is unchanged and remains the resolution source; the guard keys off the
+MEASURED copy size, never the cache, so a refused `-ResX` can never be
+enforced. Falsifier for MAIN: `reset-guard:` log lines (max 6/session) show
+requested/client/enforced sizes. Zero lines + stable SBS = the engine did not
+Reset after the fit (guard a harmless no-op). Lines present + SBS stable =
+the fix held. Lines present + size still dropped = the engine resizes
+outside `Reset` (viewport/scissor path) — do not add another patch, inspect
+that producer instead.
+
+### 2. Black screenshots — RT0 binding falsified, pixels stamped instead
+
+Status inherited: the transient `PresentBackbufferScope` (bind the finished
+mirror backbuffer to RT0 DURING `Present`) was tested by MAIN and F12 stayed
+black — the overlay does not sample the binding. What survives a pre-hook or
+post-restore capture is PIXELS.
+
+Fix: after every successful mirror composition, `StampCaptureRt` also copies
+the finished backbuffer into the engine's current RT0 surface when it is a
+same-size/format alias (`ShouldStampRt`, L1-tested). No bindings change
+(`StretchRect` never rebinds), no CPU readback, and a failed stamp never
+touches the committed mirror. The transient scope is kept underneath for
+samplers that read the binding rather than pixels. Both are gated on the
+existing `SteamCaptureBackbuffer=1` INI flag (shipped ON); `OFF` restores the
+exact previous behavior.
+
+Bounded diagnostics (`steam-capture:` one-shot lines + counters) prove which
+case MAIN is in: `stamped ... into RT0` (pixels delivered), `RT0 ... vs
+backbuffer ... skipped` (size/format mismatch — binding scope still covers
+`Present`), or RT0 already the backbuffer (both paths no-ops). Falsifier for
+MAIN: with flags on, take F12 in menu and in gameplay and inspect the saved
+images plus these lines. If images are still black while `stamped` fired,
+the overlay reads neither RT0 pixels nor the RT0 binding (front
+buffer/DWM/window path — check window placement/occlusion next, and whether
+the window is minimized when Share is pressed). Do not stack another blind
+RT0 patch; inspect the overlay's actual capture producer.
+
+### Incidental finding (fixture-proven, production-safe by construction)
+
+This stack resets the viewport on EVERY `SetRenderTarget` — even an
+identical rebind (isolated in the own-process D3D9Ex fixture). The stamp was
+designed around it (no rebinding, so no viewport side effect); the capture
+scope already saves/restores the viewport explicitly. Present-time overlays
+rebind while the game viewport is already full-frame, so they are unaffected
+in practice. No overlay code was changed for this.
+
+### Evidence (SIDE, no Steam)
+
+- L1: `tools/tests/test-right-eye-mirror.ps1` — `test-desktop-mirror`
+  (incl. 9 ResetDecision + 3 ShouldStampRt cases), own-process D3D9Ex
+  `test-desktop-mirror-pixels` (right/left/cinema pixels, window-fit
+  override, intentional black-RT0 control, stamp/no-op/mismatch pixel
+  checks, nested-scope RT/MRT/depth/viewport restoration, subrect bypass,
+  Reset release/recreate), 7 Python source contracts (incl. new
+  stamp-before-scope order + Reset-guard presence). Six menu/cinema CPU
+  regression suites re-run green on this tree.
+- L2: clean `spikes/view_matrix` build, x86 PE32 (`014C`), `/O2`,
+  DLL SHA-256 `90BE2B3F5E1CFFF6EF87DD91310DEC776397F56D8E2A8879D5C2B947B8A196F9`
+  (manifest `spikes/view_matrix/d3d9.build.json`, local). Provenance:
+  branch `side/mirror-screenshot-fix`, base `9576f5e`.
+- L3/L4: UNKNOWN. No Steam launch, deploy, or installed-file change.
+  ZERO headset claims.
+
+### MAIN L3 script (short, one variable at a time)
+
+1. Deploy candidate via `tools/deploy-singularityvr.ps1` (verify installed
+   SHA), INI `DesktopMirrorEye=2 DesktopMirrorFill=0 DesktopMirrorWindow=1
+   SteamCaptureBackbuffer=1` (scoped edits only).
+2. Start via Steam, one gameplay scene: confirm one full right-eye mirror
+   fitted inside the monitor work area; read log for `mirror-window:`,
+   `reset-guard:` (if any), `command line:` + `per eye ... against the
+   headset's` (resolution verdict), and scene/backbuffer/XR sizes.
+3. F12 in gameplay and in pause menu: inspect the two saved Steam images.
+   Pass = scene visible in both. Read `steam-capture:` lines to name the
+   path taken.
+4. Resize/move the window, pause/resume, return to menu, normal exit.
+   Stay in headset until exit. Roll back per the deploy tooling on any
+   critical failure and re-verify installed hashes.
+
+---
+
 Scope: SIDE, no Steam launches/deployment or installed-file changes. Base
 `origin/main` 67b82c1. Preserve MAIN's newer integration when cherry-picking.
 
