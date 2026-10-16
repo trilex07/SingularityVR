@@ -2,20 +2,20 @@
  {
   "asset": "INTRO_1005_NIM",
   "en": "Spartan team, Nimitz Actual.  You are now entering Russian airspace.  Proceed with caution.",
-  "pl": "Zespół Spartan, Nimitz Actual, wchodzisz w rosyjską przestrzeń powietrzną.",
+  "pl": "Zespół Spartan, mówi baza. Wkraczacie w rosyjską przestrzeń powietrzną. Zachować ostrożność.",
   "rate": 48000,
   "ch": 1,
   "dur": 5.47,
-  "status": "machine_draft"
+  "status": "side_text_review_applied"
  },
  {
   "asset": "INTRO_1006_CP",
   "en": "Roger that, Nimitz.  Continuing on this vector.  ETA to target three minutes.",
-  "pl": "Rozumiem, Nimitz, kontynuujemy tę stronę.",
+  "pl": "Halo. Trzymamy kurs. Do celu trzy minuty.",
   "rate": 48000,
   "ch": 1,
   "dur": 4.66,
-  "status": "machine_draft"
+  "status": "side_text_review_applied"
  },
  {
   "asset": "INTRO_1007_GST",
@@ -56,29 +56,29 @@
  {
   "asset": "INTRO_1011_GST",
   "en": "Damn ... you see that?",
-  "pl": "Cholera... Widzisz to?",
+  "pl": "Cholera... Widzicie to?",
   "rate": 48000,
   "ch": 1,
   "dur": 1.96,
-  "status": "machine_draft"
+  "status": "side_text_review_applied"
  },
  {
   "asset": "INTRO_1012_NIM",
   "en": "Spartan two-one, Spartan two-one -- we're reading a radiation spike on your vector.",
-  "pl": "Spartan 2-1, Spartan 2-1, odczytujemy wzrost promieniowania na waszym wektorze.",
+  "pl": "Spartan dwa-jeden, Spartan dwa-jeden. Odczytujemy skok promieniowania na waszym wektorze.",
   "rate": 48000,
   "ch": 1,
   "dur": 4.02,
-  "status": "machine_draft"
+  "status": "side_text_review_applied"
  },
  {
   "asset": "INTRO_1014_GST",
   "en": "Looks like a goddamn EMP.  Buckle up, Renko!  We're going for a ride!",
-  "pl": "Złap się, Renko, idziemy na przejażdżkę!",
+  "pl": "Wygląda jak cholerny EMP. Zapnij pasy, Renko! Czeka nas jazda!",
   "rate": 48000,
   "ch": 1,
   "dur": 3.69,
-  "status": "machine_draft"
+  "status": "side_text_review_applied"
  },
  {
   "asset": "INTRO_1015_GST",
@@ -92,10 +92,10 @@
  {
   "asset": "INTRO_1016_CP",
   "en": "We're hit!  We're hit!  Mayday mayday mayday!  We're going down.  We're--  Oh my G--",
-  "pl": "Jesteśmy trafieni, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione, mamy trafione...",
+  "pl": "Dostaliśmy! Dostaliśmy! Mejday, mejday, mejday! Spadamy!",
   "rate": 48000,
   "ch": 1,
   "dur": 5.39,
-  "status": "machine_draft"
+  "status": "side_text_review_applied"
  }
 ]

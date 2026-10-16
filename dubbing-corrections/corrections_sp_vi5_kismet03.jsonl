@@ -1,0 +1,131 @@
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_4014_GST", "proposed_pl": "Muszą zagłuszać naszą łączność. W eterze słychać tylko rosyjski.", "note": "przywrócono pominięte 2. zdanie (It's all Russian all the time); łączność zamiast komunikacja (termin radiowy)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_2005_GST", "proposed_pl": "Cholera, znowu te stwory. Weź ten karabin, musimy oczyścić drogę.", "note": "przywrócono pominięte 2. zdanie (Grab that rifle...); things=stwory per kontekst mostu w tym chapterze (VI5_2010/VI5_2011: maggots/whatever they are na moście)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_2205_GST", "proposed_pl": "Świetnie strzelasz. Ruszamy.", "note": "przywrócono pominięte Let's move", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_2010_GST", "proposed_pl": "Na co czekasz? Zabierz tę strzelbę i ruszamy.", "note": "przywrócono pominięte 1. zdanie (What are you waiting for?); wyprowadzimy się (wyprowadzka!) -> ruszamy", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_3705_GST", "proposed_pl": "Renko! Obejdź ich z prawej! Ja pójdę z lewej!", "note": "przywrócono pominięte I'll go left!; flank=oskrzydlić (nie 'skrzydło po prawej stronie')", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_4410_GST", "proposed_pl": "Dalej, Renko. Znajdź sposób na otwarcie drzwi. Ja tu zostanę.", "note": "przywrócono pominięty wołacz (Go on, Renko.) i 2. zdanie (I'll hold up here)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_4412_GST", "proposed_pl": "Otwórz drzwi, Renko. Ja utrzymam tę pozycję.", "note": "przywrócono pominięte 2. zdanie (I'll hold this position)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_4019_GST", "proposed_pl": "Cholera, ci goście nie wyglądają przyjaźnie. Mam dziś naprawdę parszywy dzień.", "note": "przywrócono pominięte 2. zdanie (I am having a really bad day here)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_3005_GST", "proposed_pl": "Śmigłowiec! I to nie nasz! Padnij!", "note": "przywrócono pominięte Chopper! i Get down! (okrzyk bojowy, nie zdanie oznajmujące)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_4405_GST", "proposed_pl": "Cholera, zamknięte. Potrzymam ten obszar, a ty znajdź sposób na otwarcie drzwi.", "note": "przywrócono pominięte 1. zdanie (Shit, it's locked.); naprawiono inwersję logiki: póki nie znajdziesz (dopóki nie) vs while (podczas gdy)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_4018_GST", "proposed_pl": "Kto to jest, do cholery?", "note": "usunięto systematyczny artefakt wiodącego '- '; przywrócono the hell", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_SEE_TARGET2", "proposed_pl": "Cel! Prosto przed nami!", "note": "przywrócono pominięte Dead ahead!; okrzyk (nie 'celem' w narzędniku)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_FIRE_GRENADE3", "proposed_pl": "Granat!", "note": "Grenade out! to okrzyk w mianowniku; granata (dopełniacz) błędna", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI99_2205_SC1", "proposed_pl": "Ludzie zwrócili się przeciwko strażnikom. Wielu zginęło, a większość ocalałych uciekła w głąb wyspy. Muszę odnaleźć Nadię.", "note": "INWERSJA SENSU: to ludzie przeciw strażnikom (People have turned on the guards), nie strażnicy przeciw nam", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_4411_GST", "proposed_pl": "Będę trzymał pozycję, podczas gdy ty otworzysz drzwi.", "note": "while=jednoczesność (podczas gdy); samo 'gdy' czyta się jako następstwo (kiedy otworzysz)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_4013_GST", "proposed_pl": "Powtórz, tu Devlin cztery-jeden.", "note": "INWERSJA procedury radiowej: Say again to prośba o powtórzenie; 'powtórzę' znaczy odwrotnie (ja powtórzę)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_FIRE3", "proposed_pl": "Widzę cel, otwieram ogień!", "note": "INWERSJA OSOBY: to ja strzelam (firing now), nie rozkaz dla innych (strzelaj natychmiast)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_MOVE_RETREAT3", "proposed_pl": "Musimy się wycofać.", "note": "INWERSJA: fall back=wycofać się, nie odwrócić się", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_MOVE_RETREAT2", "proposed_pl": "Wycofać się!", "note": "INWERSJA: Fall back!=odwróć się (odwrócić to turn around)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_SEE_TARGET3", "proposed_pl": "Zauważono wroga!", "note": "INWERSJA STRONY: wróg został zauważony, nie 'wróg zauważył' (ktoś/coś)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_FIRE1", "proposed_pl": "Zdejmijcie go.", "note": "take out (osobę)=eliminować/zdejmować, nie zabierać (zabrać to take away)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_2011_GST", "proposed_pl": "Zgarnij ten karabin snajperski i zdejmij je, czymkolwiek są.", "note": "take out=eliminować (nie zabierać); rodzajnik: tej karabiny (błędny) -> ten karabin (karabin m.)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_1905_GST", "proposed_pl": "Do mnie!", "note": "KOLIZJA TERMINOLOGII: On me! to komenda zbiórki; VI4_3510 (ON ME!) ma poprawne 'Do mnie!', ujednolicono; 'na mnie' znaczy co innego", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_3505_GST", "proposed_pl": "Otwórz drzwi i mnie osłaniaj.", "note": "cover me=osłaniaj (termin bojowy), nie zakryj (fizyczne przykrycie)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_4105_GST", "proposed_pl": "Czysto!", "note": "All clear! to standardowy okrzyk (rejon czysty), nie zdanie 'wszystko w porządku'", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_FIRE1", "proposed_pl": "Ognia!", "note": "Open fire!=otwórz ogień (kalka słowo w słowo); standardowa komenda to Ognia!", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_FIRE2", "proposed_pl": "Ognia! Ognia!", "note": "Engage!=zaangażuj się (kalka); komenda otwarcia ognia + zachowane powtórzenie", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_FIRE_SUPPRESS1", "proposed_pl": "Daj ogień zaporowy.", "note": "suppressing fire=ogień zaporowy (termin), nie tłumienie ognia (kalka)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_FIRE_SUPPRESS3", "proposed_pl": "Potrzebuję ognia zaporowego.", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_GEN1", "proposed_pl": "Bądźcie czujni.", "note": "Stay frosty to idiom (bądźcie czujni), nie 'zostań mroźny' (kalka)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_LOC_AHD1", "proposed_pl": "Cel na dwunastej!", "note": "12 o'clock to pozycja na tarczy zegara, nie godzina 12:00", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_LOC_AHD2", "proposed_pl": "Kontakt dokładnie przed nami.", "note": "dead ahead=prosto przed nami; 'martwy' to kalka dead (nie żyje)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_COVER1", "proposed_pl": "Kryj się!", "note": "take cover=zajmować osłonę (kryć się), nie chować się (ukryj się)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_COVER2", "proposed_pl": "Znajdź osłonę!", "note": "cover=osłona (termin), nie kryjówka (melina)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_COVER3", "proposed_pl": "Do osłony!", "note": "jw.; zabezpieczcie się znaczy co innego (zabezpieczać=secure)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_LEFT1", "proposed_pl": "Obejdź z lewej!", "note": "flank=oskrzydlać/obejść; naprawiono rozsypkę 'z lewej skrzydła' (błędny przypadek)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_RIGHT1", "proposed_pl": "Obejdź z prawej!", "note": "jw.; ujednolicono z VI4_3705 (flank right)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_MOVE_IN5", "proposed_pl": "Rozproszyć się!", "note": "LICZBA: rozkaz do drużyny (bezokolicznik/mnogo), nie 2 os. lp ('rozprosz się' do jednej osoby)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_MOVE_RETREAT1", "proposed_pl": "Wycofać się za osłonę!", "note": "LICZBA (rozdaj do drużyny) + cover=osłona, nie kryjówka", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_MOVE_RETREAT2", "proposed_pl": "Nie utrzymamy się tutaj.", "note": "hold (pozycję)=utrzymać się; 'trzymać' wymaga dopełnienia i znaczy trzymać przedmiot", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_MOVE_COVER1", "proposed_pl": "Rozproszyć się i kryć!", "note": "LICZBA + kryć się (nie 'ukryj się' lp)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_MOVE_COVER2", "proposed_pl": "Nie wystawiajcie się!", "note": "don't give him a target=idiom niewystawiania się; 'nie daj mu celu' kalka + lp", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_BEHIND1", "proposed_pl": "Zachodzimy ich od tyłu!", "note": "circle around behind them=obejść od tyłu; 'za nimi krąg' bez sensu", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_CLEAR1", "proposed_pl": "Rejon czysty!", "note": "clear (rejon)=bezpieczny/sprawdzony; 'miejsce jest czyste' czyta się jak sprzątanie; standardowy meldunek", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_DESTROY1", "proposed_pl": "Cel zdjęty!", "note": "down (cel)=zdjęty/wyeliminowany; 'cel w dół' kalka", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_DESTROY2", "proposed_pl": "Mam ich!", "note": "Got 'em to ludzie (ich, osobowy), nie 'je' (niejadalne/nieosobowe)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_DESTROY3", "proposed_pl": "Zdjęty!", "note": "He's down!=jest na dole (na dole to downstairs); meldunek: zdjęty/leży", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_PINNED1", "proposed_pl": "Przygwoździli mnie!", "note": "KOLIZJA: pinned down=przygwożdżony ogniem, nie uwięziony (więzienie); ujednolicono ze SD_SPT1_RPT_PINNED1", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_RPT_PINNED1", "proposed_pl": "Przygwoździli nas!", "note": "jw., 1 os. lm; 'zamknięci' znaczy w zamknięciu", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_PINNED2", "proposed_pl": "Jestem pod silnym ogniem!", "note": "INWERSJA OSOBY I CZASU: to ja dostaję ogień, teraz; nie 'wziął' (on, przeszłość)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_RPT_PINNED1", "proposed_pl": "Pomocy! Przygwoździli mnie!", "note": "pinned down!=zamknęłam się (rodzaj + sens); okrzyk o pomoc", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GRD1_RPT_PINNED1", "proposed_pl": "Pomocy! Przygwoździli mnie!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_SEE_COVER1", "proposed_pl": "Cel za osłoną!", "note": "cover=osłona (termin), nie ukrycie (kryjówka)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_SEE_COVER2", "proposed_pl": "Wróg za osłoną!", "note": "jw., nie kryjówka", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_SEE_GRENADE3", "proposed_pl": "Uwaga, granat!", "note": "incoming=nadlatuje/leci; 'granata wchodząca' to rozsypka (rodzaj + wchodzić o granacie); standardowy okrzyk", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_SEE_GRENADE2", "proposed_pl": "Uwaga, granat!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_SEE_TARGET1", "proposed_pl": "Widzę wroga!", "note": "naprawiono rozsypkę przypadków ('wroga widziany': biernik + mianownik przymiotnika)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_MOVE_IN3", "proposed_pl": "Naprzód!", "note": "Push forward!=wciśnijcie do przodu (wciskać to press/click); ujednolicono 5 wystąpień (ESP1/ESP2/GRD1/SPT2/SPT3)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_MOVE_IN3", "proposed_pl": "Naprzód!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GRD1_MOVE_IN3", "proposed_pl": "Naprzód!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_MOVE_IN1", "proposed_pl": "Naprzód!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_MOVE_IN3", "proposed_pl": "Naprzód!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_MOVE_IN4", "proposed_pl": "Dalej! Dalej! Dalej!", "note": "LICZBA: okrzyk do drużyny; 'idź' to 2 os. lp do jednej osoby; zachowane potrójne powtórzenie", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_MOVE_IN4", "proposed_pl": "Dalej! Dalej! Dalej!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GRD1_MOVE_IN4", "proposed_pl": "Dalej! Dalej! Dalej!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_MOVE_IN4", "proposed_pl": "Dalej! Dalej! Dalej!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_MOVE_IN5", "proposed_pl": "Ty idź, ja osłaniam!", "note": "cover=osłaniać (nie 'zajmę się'); ujednolicono 3 wystąpienia (ESP2/GRD1/SPT3)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GRD1_MOVE_IN5", "proposed_pl": "Ty idź, ja osłaniam!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_MOVE_IN5", "proposed_pl": "Ty idź, ja osłaniam!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_MOVE_COVER2", "proposed_pl": "Głowy w dół!", "note": "idiom okrzyku (nie 'trzymaj głowę w dół'); ujednolicono 3 wystąpienia (ESP1/ESP2/SPT3)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_MOVE_COVER2", "proposed_pl": "Głowy w dół!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_MOVE_COVER2", "proposed_pl": "Głowy w dół!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_SEE_TARGET2", "proposed_pl": "Tam jest!", "note": "deixis: there=tam, nie tu; ujednolicono 3 wystąpienia (ESP1/ESP2/SPT3)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_SEE_TARGET2", "proposed_pl": "Tam jest!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_SEE_TARGET2", "proposed_pl": "Tam jest!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_SEE_TARGET5", "proposed_pl": "Pomocy! Tutaj!", "note": "Help!=pomoc (rzeczownik); wołacz pomocy + okrzyk miejsca; ujednolicono 3 wystąpienia (ESP1/ESP2/SPT3)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_SEE_TARGET5", "proposed_pl": "Pomocy! Tutaj!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_SEE_TARGET5", "proposed_pl": "Pomocy! Tutaj!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_SEE_TARGET1", "proposed_pl": "Widzę go! Widzę go!", "note": "przywrócono powtórzenie okrzyku (I see him x2); uwaga: dłuższy czas TTS vs budżet", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_SEE_TARGET1", "proposed_pl": "Widzę go! Widzę go!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_SEE_TARGET1", "proposed_pl": "Widzę go! Widzę go!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_FIRE_GRENADE2", "proposed_pl": "Rzucam granat!", "note": "OSOBA: to ja rzucam (rzucam), nie oni (rzucają); ujednolicono 2 wystąpienia (ESP2/SPT3)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_FIRE_GRENADE2", "proposed_pl": "Rzucam granat!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_SRCH_FIND1", "proposed_pl": "Gdzie się podział?", "note": "usunięto artefakt '- '; Where'd he go to zniknięcie, nie statyczne 'gdzie on jest'; ujednolicono 3 wystąpienia (ESP1/GRD1/SPT3)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GRD1_SRCH_FIND1", "proposed_pl": "Gdzie się podział?", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_SRCH_FIND1", "proposed_pl": "Gdzie się podział?", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_FIRE_GRENADE2", "proposed_pl": "Rzucam granat!", "note": "RODZAJ: mówca męski (SPT1), nie 'rzucałam'; frag=granat (nie zostawiać EN)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_FIRE_GRENADE1", "proposed_pl": "Używam granatu!", "note": "Using grenade: 1 os. + dopełniacz (granatu); 'korzystając z granaty' to imiesłów + błędny przypadek", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_FIRE_GRENADE2", "proposed_pl": "Granat w powietrzu!", "note": "mianownik (granat), nie 'granata' (dopełniacz)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_RELOAD2", "proposed_pl": "Muszę przeładować!", "note": "przeładować (niezwrotne); 'przeładować się' nie istnieje; meldunek bez 'się'", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_RELOAD3", "proposed_pl": "Muszę przeładować!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_ADVANCING1", "proposed_pl": "Nacierają!", "note": "Their(=They're) making a push=nieprzyjaciel naciera; 'wciśnijcie' bez sensu (wciskać=press); okrzyk bojowy", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_SEE_TARGET4", "proposed_pl": "Przed siebie! Intruz!", "note": "'oczami naprzód' kalka; rozkaz kierunku + meldunek (intruder=intruz, spójnie z SEE_TARGET5)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_SEE_TARGET5", "proposed_pl": "Śledzę intruza.", "note": "OSOBA: to ja śledzę (meldunek 1 os.), nie bezosobowe 'śledzenie'", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_SMOKE1", "proposed_pl": "Wystawili zasłonę dymną!", "note": "popped smoke=użyć granatu dymnego (oni); nie wybuch (eksplozja)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_SRCH_FIND1", "proposed_pl": "Sprawdźcie rogi!", "note": "LICZBA (drużyna) + rogi pomieszczeń (clearing), nie kąty geometryczne", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_SRCH_KILL1", "proposed_pl": "Nie wypuszczać go stąd żywego!", "note": "LICZBA: rozkaz do drużyny (bezokolicznik), nie 2 os. lp", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_OUT2", "proposed_pl": "Tędy.", "note": "This way=tędy (kierunek); usunięto artefakt '- '", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_3005_GST", "proposed_pl": "Chodźmy.", "note": "usunięto systematyczny artefakt wiodącego '- ' (myślnik nie jest częścią kwestii)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_IN3", "proposed_pl": "Chodźmy.", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_OUT1", "proposed_pl": "Chodźmy.", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_1505_GST", "proposed_pl": "Mundur jest nieco inny niż te, które widziałem, ale to zdecydowanie rosyjski żołnierz. Bez wątpienia.", "note": "uniforma->mundur (uniforma to archaizm/czechizm); No question=bez wątpienia (nie pominięte)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_2012_GST", "proposed_pl": "Dalej, weź strzelbę i ruszamy.", "note": "Go on=dalej (zachęta, nie pomijać); shotgun=strzelba (nie generyczna broń); wyprowadzimy się (wyprowadzka!) -> ruszamy", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_2011_GST", "proposed_pl": "Weź strzelbę i idziemy.", "note": "broń->strzelba (shotgun); pójdziemy->idziemy (natychmiastowość rozkazu)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_2012_GST", "proposed_pl": "Użyj tego karabinu snajperskiego i strzelaj do tych stworów na moście!", "note": "RODZAJ: tej karabiny (błąd) -> tego karabinu (karabin m.); things=stwory per kontekst mostu (VI5_2010: maggots na moście)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_2010_GST", "proposed_pl": "Weź ten karabin snajperski i zabij te robaki na moście.", "note": "RODZAJ: tę karabinę (błąd) -> ten karabin; maggots=robaki (celowa dehumanizacja wroga, zachowana)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_4015_GST", "proposed_pl": "Czy na tej cholernej wyspie cokolwiek działa?", "note": "forma: cholerniej (błąd) -> cholernej; naturalniejszy szyk", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_4016_DEM", "proposed_pl": "To miejsce opuszczono prawie 50 lat temu.", "note": "przyimek czasu: 'przez prawie 50 lat' sugeruje trwanie; temu=punkt w czasie (nearly 50 years ago)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_5006_GST", "proposed_pl": "Tędy!", "note": "THIS WAY! to okrzyk kierunku, nie 'w ten sposób' (sposób=method)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_4017_DEM", "proposed_pl": "Tak przynajmniej miało być.", "note": "naprawiono kalekę szykową 'miało być tak'", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_4005_GST", "proposed_pl": "Dalej, Hollis!", "note": "Come on!=chodź (ruch pieszy); zachęta=dalej", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_4206_GST", "proposed_pl": "Daj mi rękę!", "note": "naturalność wołania ratunkowego + spójność z VI4_4208 (złap mnie za rękę); 'podaj' sugeruje podawanie przedmiotu", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_3305_GST", "proposed_pl": "Szybko, pomóż mi przy tej szafie.", "note": "'pomóż mi z szafą' dwuznaczne (wsparcie emocjonalne?); przy+narzędnik = fizyczna pomoc przy meblu", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_GEN4", "proposed_pl": "Wypatrujcie wrogów.", "note": "'kontynuuj skanowanie' to kalka techniczna; wypatrywać (termin obserwacji)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_GEN2", "proposed_pl": "Pilnujcie drzwi.", "note": "LICZBA + pilnować (nie 'uważaj na': uważać to watch out, pilnować to guard)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_GEN5", "proposed_pl": "Pilnujcie rogów.", "note": "jw.; rogi pomieszczeń, nie kąty", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_LEFT3", "proposed_pl": "W lewo!", "note": "LICZBA: rozkaz kierunku do drużyny (nie 'idź' lp)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_RIGHT3", "proposed_pl": "W prawo!", "note": "jw.", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_MOVE_IN3", "proposed_pl": "Zajmijcie przednie stanowiska!", "note": "take positions=zajmować (nie brać); forward=przednie (kierunek natarcia)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_RETREAT3", "proposed_pl": "Wycofujemy się.", "note": "pleonazm 'wracajmy wstecz' (wracać już zawiera kierunek); wycofywać się (termin)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_YOU2", "proposed_pl": "Stoisz mi na drodze.", "note": "'być w drodze' znaczy być w podróży (kalka be in the way); sens: tarasujesz przejście", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_4012_GST", "proposed_pl": "Znowu ci Rosjanie.", "note": "naturalność: 'znowu z Rosjanami' kalka składniowa (again with the...)", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_FIRE2", "proposed_pl": "Jesteśmy pod ogniem!", "note": "Taking fire!=strzelają (kto? do kogo?); meldunek: ogień idzie w nas", "needs_human": false}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_4220_GST", "proposed_pl": "W maju.", "note": "FRAGMENT bez kontekstu (EN to też tylko 'On May.'): data jakiego zdarzenia? do weryfikacji z misją/nagraniem; nie rozwijać bez kontekstu", "needs_human": true}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_4207_GST", "proposed_pl": "Tu, do góry! Chwyć mnie za głowę!", "note": "sens wątpliwy: głowa vs ręka (por. VI4_4206/VI4_4208 o ręce); przywrócono pominięte Up here!; do weryfikacji z animacją sceny", "needs_human": true}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_5005_GST", "proposed_pl": "Skontaktujmy się z Titanem 1 i wynośmy się z tego kręgu, matołku.", "note": "REJESTR: jerk (łagodne 'głupku/matołku') vs 'dupku' (wulgarne, za mocne); circle=krąg? kocioł? (teren); do ucha reżysera", "needs_human": true}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_4009_GST", "proposed_pl": "Tajtan jeden, tu Devlin cztery-jeden, dowódca. Odbiór?", "note": "przywrócono pominięte 'actual'=dowódca (termin radiowy: dowódca pododdziału); 'Tajtan' to celowy respelling pod TTS — NIE cofać do Titan bez testu wymowy", "needs_human": true}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI5_1505_GST", "proposed_pl": "To już osiemdziesiąty szósty. Sprawdź tamten posterunek wartowniczy. Może jest tam kolejny przełącznik.", "note": "'86th' niejednoznaczne (86. przełącznik z rzędu? siatka? kryptonim?); przywrócono guard=wartowniczy; do weryfikacji z misją", "needs_human": true}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_3012_GST", "proposed_pl": "Ech!", "note": "grunt 'Ugh!' oddany jako 'W porządku' (inwersja sensu: Ugh to stęknięcie/wzdrygnięcie, nie OK); propozycja contributorska — do decyzji reżysera głosu", "needs_human": true}
+{"id": "story:SP_VI5_kismet03_LOC_INT:VI4_4210_GST", "proposed_pl": "Ach!", "note": "jw. dla 'Argh!' (okrzyk bólu/wysiłku, nie zgoda); do decyzji reżysera głosu", "needs_human": true}
+{"id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_SNIPER2", "proposed_pl": "Wrogi snajper!", "note": "niejednoznaczne: wrogi vs własny snajper; jeśli własny — zostawić 'Mamy snajpera'; do weryfikacji z misją", "needs_human": true}
