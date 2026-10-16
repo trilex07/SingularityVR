@@ -36,6 +36,20 @@ int main(){
         a.Observe(false, true);
         assert(!a.valid); // resets cleanly when video ends
     }
+    // MainMenu cinema world anchor lifecycle (MenuFlat + menuClass 1/2/4)
+    {
+        const bool isMainMenuFlat = true;
+        const bool menuWorldScreen = true;
+        const bool activeWorldAnchor = (menuWorldScreen && isMainMenuFlat);
+        cinemascreen::Pose mhead{0,1.4f,0,0,0,0,1};
+        assert(a.Latch(mhead,2,1,.6f,16.f/9));
+        assert(a.valid);
+        a.Observe(activeWorldAnchor, true);
+        assert(a.valid); // stays latched while in main menu
+        a.Observe(false, true); // transition to gameplay resets anchor
+        assert(!a.valid);
+    }
+
     assert(a.Latch(head,2,1,.6f,16.f/9));
     assert(near(a.pose.x,98) && near(a.pose.z,2)); // new scene chooses new anchor
     assert(near(a.pose.qy,.70710678f));

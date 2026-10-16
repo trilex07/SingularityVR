@@ -1236,10 +1236,13 @@ PFN_CalcViewRotation g_origCalcViewRotation = nullptr;
 
 struct FVec3 { float x, y, z; };
 
+inline LONG Rd(const volatile LONG& v) { return v; }
+
 volatile LONG g_enabled = 0;      // head tracking - cold start is flat; BACKSPACE = all three at once
 volatile LONG g_constTest = 0;    // constant-pitch proof
 const int32_t kConstPitch = 8000; // ~44 degrees up - unmissable
 
+volatile LONG g_vrCameraShakeSuppression = 1;
 int32_t g_wantPitch = 0, g_wantYaw = 0;
 // Our own last yaw write, so anything else that moved yaw since can be told apart from it and
 // folded in rather than overwritten. See the note at the write site.
@@ -1313,8 +1316,12 @@ FRotator* __fastcall Hook_CalcViewRotation(void* self, void* edx,
     if (InterlockedCompareExchange(&g_constTest, 0, 0)) {
         r->pitch = kConstPitch;
     } else if (InterlockedCompareExchange(&g_enabled, 0, 0) && g_haveWant && !CutsceneNativeCameraArmed()) {
-        r->pitch = g_wantPitch;
-        r->yaw   = g_wantYaw;
+        int32_t op = 0, oy = 0, oroll = 0;
+        const bool suppressShake = Rd(g_vrCameraShakeSuppression) != 0;
+        StabilizeVrCameraRotation(g_wantPitch, g_wantYaw, r->pitch, r->yaw, r->roll, op, oy, oroll, suppressShake);
+        r->pitch = op;
+        r->yaw   = oy;
+        r->roll  = oroll;
     }
 
     // NOT re-asserting the FOV here. Tried in run 20 on the theory that this seam - the camera
@@ -1346,7 +1353,7 @@ const int CTL_ROTATION_2 = 0x05D4;
 // line tens of thousands of times a frame - and it is what collapsed the dock from 120 fps to 11.
 //
 // ⚠️ Reads only. Anything that WRITES, or needs read-modify-write, must stay interlocked.
-inline LONG Rd(const volatile LONG& v) { return v; }
+// (Defined above before Hook_CalcViewRotation)
 
 // ---- 💥 run 256: this is a SYSCALL, and a GObjects walk makes hundreds of thousands of them ----
 //
@@ -4293,6 +4300,7 @@ XrSession  g_xrSession  = XR_NULL_HANDLE;
 XrSpace    g_xrSpace    = XR_NULL_HANDLE;
 static cinemascreen::Anchor g_cinemaWorldAnchor;
 static LONG g_cutsceneWorldScreen=0; // default-OFF world-space presentation experiment
+static LONG g_menuWorldScreen=1;     // default-ON anchored cinema screen for main menu
 static LONG g_cutsceneScreenDistanceMm=2000;
 static XrTime g_cinemaReferenceChangeTime=0;
 static bool g_eyePositionsValid=false;
@@ -5550,6 +5558,8 @@ void StampCaptureState(CopySlot& cap) {
     // composition keeps stereo stamping, so the bridge cannot submit an
     // uncomposed half crop to both eyes.
     const bool isVideoFlat = (g_sceneMode.Current() == vrscene::Mode::VideoFlat);
+    const bool isMainMenuFlat = (g_sceneMode.Current() == vrscene::Mode::MenuFlat) &&
+        (cap.menuClass == 1 || cap.menuClass == 2 || cap.menuClass == 4);
     if (isVideoFlat) {
         const float scale = ClampVideoCinemaScale((int)Rd(g_videoCinemaScalePct)) * 0.005f;
         const int left   = (int)((0.25f - 0.5f * scale) * (float)g_srcW);
@@ -5558,6 +5568,9 @@ void StampCaptureState(CopySlot& cap) {
         const int bottom = (int)((0.5f + 0.5f * scale) * (float)g_srcH);
         cap.cineFlat = (right > left && bottom > top);
         cap.cineImage = CutsceneMonoRect{ left, top, right, bottom };
+    } else if (isMainMenuFlat && Rd(g_menuWorldScreen)) {
+        cap.cineFlat = true;
+        cap.cineImage = CutsceneMonoRect{ 0, 0, (int)(g_srcW / 2), (int)g_srcH };
     } else {
         cap.cineFlat = g_cineMonoReady && CutsceneMonoComposeArmed() && !cap.menuFlat;
         cap.cineImage = cap.cineFlat ? g_cineMonoImage : CutsceneMonoRect{};
@@ -12198,8 +12211,12 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
 
     const int64_t diagBridge = g_diagEnabled ? DiagQpc() : 0;
     const bool isVideoFlat = (g_sceneMode.Current() == vrscene::Mode::VideoFlat);
-    const bool activeWorldAnchor = (Rd(g_inCinematic) != 0) || isVideoFlat;
-    g_cinemaWorldAnchor.Observe(activeWorldAnchor, Rd(g_cutsceneWorldScreen) != 0);
+    const bool isMainMenuFlat = (g_sceneMode.Current() == vrscene::Mode::MenuFlat) &&
+        (Rd(g_vrMenuClass) == 1 || Rd(g_vrMenuClass) == 2 || Rd(g_vrMenuClass) == 4);
+    const bool isMainMenuCinema = (Rd(g_menuWorldScreen) != 0) && isMainMenuFlat;
+    const bool activeWorldAnchor = (Rd(g_inCinematic) != 0) || isVideoFlat || isMainMenuCinema;
+    const bool cinemaWorldPermitted = (isMainMenuCinema && Rd(g_menuWorldScreen) != 0) || (Rd(g_cutsceneWorldScreen) != 0);
+    g_cinemaWorldAnchor.Observe(activeWorldAnchor, cinemaWorldPermitted);
     if(g_cinemaReferenceChangeTime && fs.predictedDisplayTime>=g_cinemaReferenceChangeTime) {
         g_cinemaWorldAnchor.Reset();g_cinemaReferenceChangeTime=0;
     }
@@ -12217,7 +12234,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // half (validated composition coordinates, not a blind half reuse). Both
     // eyes share that same half crop; never one half per eye.
     const bool cineCrop = frame && frame->cineFlat && frame->dup && !frame->stereo &&
-                          (!frame->menuFlat || isVideoFlat) && g_srcW >= 2;
+                          (!frame->menuFlat || isVideoFlat || isMainMenuCinema) && g_srcW >= 2;
     const bool monoCrop = cropEyes || cineCrop;
     g_scCropped = monoCrop;
     if (frame) {
@@ -12414,8 +12431,9 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                     // Same proved composed pixels; the compositor places the screen in LOCAL
                     // space instead of interpreting it as a head-following projection image.
                     // A pause/menu keeps its established presentation and retains this anchor.
-                    const bool menuPermitted = (!Rd(g_vrMenuClass) || Rd(g_vrMenuClass) == 3 || (isVideoFlat && Rd(g_vrMenuClass) == 1));
-                    if(cineCrop && Rd(g_cutsceneWorldScreen) && activeWorldAnchor &&
+                    const bool menuPermitted = (!Rd(g_vrMenuClass) || Rd(g_vrMenuClass) == 3 || (isVideoFlat && Rd(g_vrMenuClass) == 1) ||
+                                                (Rd(g_menuWorldScreen) && (Rd(g_vrMenuClass) == 1 || Rd(g_vrMenuClass) == 2 || Rd(g_vrMenuClass) == 4)));
+                    if(cineCrop && cinemaWorldPermitted && activeWorldAnchor &&
                        menuPermitted && !Rd(g_panelOpen) &&
                        cinemascreen::TrackingAllowsAnchor(g_cinemaWorldAnchor.valid,frame->eyePositionsValid)) {
                         const auto& r=frame->cineImage;
@@ -12428,10 +12446,13 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                             {l.x,l.y,l.z,q.x,q.y,q.z,q.w},
                             {right.x,right.y,right.z,rq.x,rq.y,rq.z,rq.w});
                         const bool wasAnchored=g_cinemaWorldAnchor.valid;
+                        const float aspect = (isMainMenuCinema && g_srcH > 0)
+                            ? ((float)g_srcW / (float)g_srcH)
+                            : (imageH > 0 ? (float)imageW / imageH : 16.f / 9.f);
                         if(r.left>=0 && r.top>=0 && r.right<=(int)g_scWidth && r.bottom<=(int)g_scHeight &&
                            imageW>0 && imageH>0 && g_cinemaWorldAnchor.Latch(head,
                             Rd(g_cutsceneScreenDistanceMm)/1000.f,halfTan,
-                            (float)imageW/g_scWidth,(float)imageW/imageH)) {
+                            (float)imageW/g_scWidth,aspect)) {
                             const auto& a=g_cinemaWorldAnchor;
                             cinemaQuad.space=g_xrSpace;
                             cinemaQuad.eyeVisibility=XR_EYE_VISIBILITY_BOTH;
@@ -21520,6 +21541,24 @@ void RefreshCameraPosition() {
         g_camFwd[0]   = cp * cy; g_camFwd[1]   = cp * sy; g_camFwd[2]   = sp;
         g_camRight[0] = -sy;     g_camRight[1] = cy;      g_camRight[2] = 0.0f;
     }
+    if (VrModeOn() && Rd(g_vrTranslationStabilization) && cam && !CutsceneNativeCameraArmed()) {
+        if (Readable((void*)(cam + CAM_POV_ROT), 12)) {
+            int32_t* povRot = reinterpret_cast<int32_t*>(cam + CAM_POV_ROT);
+            povRot[2] = 0;
+            if (Rd(g_vrCameraShakeSuppression)) {
+                povRot[0] = g_wantPitch;
+                povRot[1] = g_wantYaw;
+            }
+        }
+        if (Readable((void*)(cam + ACTOR_ROTATION), 12)) {
+            int32_t* actorRot = reinterpret_cast<int32_t*>(cam + ACTOR_ROTATION);
+            actorRot[2] = 0;
+            if (Rd(g_vrCameraShakeSuppression)) {
+                actorRot[0] = g_wantPitch;
+                actorRot[1] = g_wantYaw;
+            }
+        }
+    }
     // A camera sitting exactly at the origin would make the w test meaningless - every matrix
     // would pass on its constant term alone. Wait for a real position before scanning.
     float d2 = g_camPos[0]*g_camPos[0] + g_camPos[1]*g_camPos[1] + g_camPos[2]*g_camPos[2];
@@ -30370,6 +30409,8 @@ void LoadIniSettings() {
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));
     Log("ini: CutsceneWorldScreen=%ld distance=%ldmm (LOCAL anchored quad, default OFF)",
         Rd(g_cutsceneWorldScreen),Rd(g_cutsceneScreenDistanceMm));
+    g_menuWorldScreen=GetPrivateProfileIntA("Render","MenuWorldScreen",1,path)?1:0;
+    Log("ini: MenuWorldScreen=%ld (anchored cinema screen for main menu, default ON)", Rd(g_menuWorldScreen));
     Log("ini: VideoStereo=%ld (%s)", InterlockedCompareExchange(&g_videoStereo, 0, 0),
         InterlockedCompareExchange(&g_videoStereo, 0, 0)
             ? "Bink video drawn once per eye"
@@ -30871,6 +30912,7 @@ void LoadIniSettings() {
     g_cameraTranslationEvidence=GetPrivateProfileIntA("Diagnostic","CameraTranslationEvidence",0,path)?1:0;
     Log("camera translation evidence=%d; passive 10Hz, 240 samples maximum; no translation override",g_cameraTranslationEvidence);
     g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",1,path)?1:0;
+    g_vrCameraShakeSuppression=GetPrivateProfileIntA("Render","VrCameraShakeSuppression",1,path)?1:0;
     g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",1,path)?1:0;
     g_skipExtraTarget=GetPrivateProfileIntA("Render","DropExtraTarget",0,path)?1:0;
     // Fix-E/shadows round 4: 0 = full split (measure only), 1 = mono sample, 2 = drop.
@@ -30948,7 +30990,7 @@ void LoadIniSettings() {
         (double)g_holsterTrimFcm,(double)g_holsterTrimRcm,(double)g_holsterTrimUcm);
     g_hipKnifeEnabled=GetPrivateProfileIntA("Input","HipKnifeEnabled",0,path)?1:0;
     g_knifeHandGrip=GetPrivateProfileIntA("Render","KnifeHandGripEnabled",0,path)!=0;
-    g_knifeTrackedMelee=GetPrivateProfileIntA("Render","KnifeTrackedMelee",0,path)!=0;
+    g_knifeTrackedMelee=GetPrivateProfileIntA("Render","KnifeTrackedMelee",1,path)!=0;
     Log("ini: KnifeTrackedMelee=%d (keep joint knife/controller pose during native attack)",g_knifeTrackedMelee);
     Log("ini: KnifeHandGripEnabled=%d (joint original glove/knife assembly)",g_knifeHandGrip);
     g_hipKnifeIgnoreTMD=GetPrivateProfileIntA("Input","HipKnifeIgnoreTMD",1,path)?1:0;
