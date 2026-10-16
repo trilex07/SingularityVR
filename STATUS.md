@@ -7,7 +7,9 @@ Draw now uses (52.5/MetresToUU())*GunScalePct/100 for both shoulder and carried
 cylinder: .6 at default gun75/world80, no hand/socket/gesture/inventory change.
 Shared knife Draw optional scale defaults1; knife size/material unchanged.
 L1_PASS 2356 calibration combinations, full reload CPU/Python suites;
-L2_PENDING. L3/L4 UNKNOWN. Native normal/specular/shadow material still OPEN,
+L2_PASS clean source 4e0d810, x86 PE32 /O2 DLL SHA256
+AAC6F35DA9A9D272FA927223EC9A85EC10FA040C47DFFF76A07D5A9633640030.
+L3/L4 UNKNOWN. Native normal/specular/shadow material still OPEN,
 preview remains original albedo-only; no complete appearance acceptance claimed.
 See docs/centurion-cylinder-size.md. ZERO Steam; rebuild onto CURRENT MAIN.
 

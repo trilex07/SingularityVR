@@ -49,3 +49,20 @@ scale alongside current GunScalePct/MetresToUU. In PSVR2 compare the fresh spare
 beside the Centurion cylinder, rotate both hands, insert normally; verify knife
 size unchanged. One route, no mid-headset chat switch. If appearance still differs,
 identify actual material passes before another shader/material patch.
+
+## Verified receipt
+
+Full reload suite: 13 optimized CPU executables (including own-process detour)
+and 31 Python tests PASS. Knife regression: 6 CPU executables and 14 Python
+tests PASS. Original PSK was re-extracted offline; every output byte matches the
+old F2196114... cache. Original texture cache hash remains 17A3355A...; no asset
+rewriting, geometry simplification, UV change or generated replacement art.
+
+Clean source build `4e0d810594e26874a8cf7b3242fe24541f49425d`, x86 PE32
+(`014C/010B`), `/O2`, SHA256:
+`AAC6F35DA9A9D272FA927223EC9A85EC10FA040C47DFFF76A07D5A9633640030`.
+Local manifest `spikes/view_matrix/d3d9.build.json`; dedicated private output
+`build/centurion-reload/cylinder-size-candidate/` contains DLL + manifest only.
+NO INI staged, previous candidate/manifest remains intact. No installed or
+accepted Steam hash is implied. This follow-up's later receipt commit only
+updates docs, not compiled sources. L3/L4 and complete material match UNKNOWN.
