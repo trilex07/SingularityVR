@@ -26139,9 +26139,11 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
         Log("centurion clip preview: GPU preparation failed; no preview until Reset/XR init (markers require explicit opt-in)");
     }
     hipknife::Pose clipPose;
+    float clipScale=1.f;
     const bool drawClip=previewAvailable&&centurionclip::Eligible(visual.clip,true,
         (uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),now)&&
-        centurionclip::PreviewPose(visual.clip,visual.source,g_centurionClipConfig,clipPose);
+        centurionclip::PreviewPose(visual.clip,visual.source,g_centurionClipConfig,clipPose)&&
+        centurionclip::NativeSize(MetresToUU(),(float)Rd(g_gunScalePct),clipScale);
     bool ok=SUCCEEDED(dev->SetDepthStencilSurface(nullptr));
     for(unsigned i=1;i<guard.count;++i)ok=SUCCEEDED(calls.target(dev,i,nullptr))&&ok;
     ok=SUCCEEDED(calls.target(dev,0,back))&&ok;
@@ -26189,10 +26191,11 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
         for(int e=0;e<2;++e){const auto& p=g_eyePose[e];
             eyes[e]={{p.position.x,p.position.y,p.position.z},
                 {p.orientation.x,p.orientation.y,p.orientation.z,p.orientation.w}};}
-        const bool drawn=g_centurionClipRenderer.Draw(dev,calls,back,clipPose,eyes,g_targetTanX,g_targetTanY);
+        const bool drawn=g_centurionClipRenderer.Draw(dev,calls,back,clipPose,eyes,g_targetTanX,g_targetTanY,clipScale);
         static unsigned notes=0;
         if(!drawn){ok=false;g_centurionClipFault=true;Log("centurion clip preview: draw/restore failed; cyan marker fallback only if outer restore succeeds");}
-        else if(notes++<2)Log("centurion clip preview: two-eye draw submitted (not pixel/physical proof)");
+        else if(notes++<2)Log("centurion clip preview: original model/UV/albedo scale=%.4f gun=%ld%% worldUUperM=%.3f (two-eye submission, NOT native material/physical proof)",
+            clipScale,Rd(g_gunScalePct),MetresToUU());
     }
     return ok;
     });

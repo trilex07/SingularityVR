@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE Centurion cylinder size: user reports oversized spare.
+Original clip model/UV/albedo identity confirmed by full offline re-extraction
+(identical SVRK SHA F2196114...). Preview lacked native gun/world size factors.
+Draw now uses (52.5/MetresToUU())*GunScalePct/100 for both shoulder and carried
+cylinder: .6 at default gun75/world80, no hand/socket/gesture/inventory change.
+Shared knife Draw optional scale defaults1; knife size/material unchanged.
+L1_PASS 2356 calibration combinations, full reload CPU/Python suites;
+L2_PENDING. L3/L4 UNKNOWN. Native normal/specular/shadow material still OPEN,
+preview remains original albedo-only; no complete appearance acceptance claimed.
+See docs/centurion-cylinder-size.md. ZERO Steam; rebuild onto CURRENT MAIN.
+
 LATEST 2026-10-16 SIDE native Centurion continuation: offline native registration,
 class-constructor/vtable and original BeginFire reload/fallback path identified.
 New default-OFF CenturionNativeReloadGuard 1=observe /2=conditional suppression

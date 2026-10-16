@@ -212,10 +212,10 @@ public:
         return SUCCEEDED(c.draw(dev,D3DPT_TRIANGLELIST,0,count,count/3,jointIndices.data(),D3DFMT_INDEX16,jointScratch.data(),sizeof(jointScratch[0])));
     }
     bool Draw(IDirect3DDevice9* dev,const Calls& c,IDirect3DSurface9* back,
-              const Pose& knife,const Pose (&eyes)[2],float tx,float ty){
+              const Pose& knife,const Pose (&eyes)[2],float tx,float ty,float modelScale=1.f){
         D3DMATRIX proj{},ident{};
         if(!state||!texture||!c.Valid()||!back||!Valid(knife.q)||!Finite(knife.p)||
-           !Projection(tx,ty,proj.m))return false;
+           !Projection(tx,ty,proj.m)||!std::isfinite(modelScale)||modelScale<.01f||modelScale>16.f)return false;
         for(const auto& eye:eyes)if(!Valid(eye.q)||!Finite(eye.p))return false;
         for(int i=0;i<4;++i)ident.m[i][i]=1;
         StateGuard<> guard(dev,state,c);if(!guard.valid)return false;
@@ -254,7 +254,8 @@ public:
             const D3DVIEWPORT9 vp{e*width/2,0,width/2,height,0,1};
             if(FAILED(c.viewport(dev,&vp)))return false;
             for(size_t i=0;i<source.size();++i){
-                const auto& v=source[i];const V p=EyeLocal(knife.p+Rotate(knife.q,{v.x,v.y,v.z}),eyes[e]);
+                const auto& v=source[i];const V p=EyeLocal(knife.p+Rotate(knife.q,
+                    {v.x*modelScale,v.y*modelScale,v.z*modelScale}),eyes[e]);
                 scratch[i]={p.x,p.y,p.z,0xffffffff,v.u,v.v};
             }
             if(FAILED(c.draw(dev,D3DPT_TRIANGLELIST,0,UINT(scratch.size()),UINT(indices.size()/3),
