@@ -24,6 +24,18 @@ int main(){
     }
     a.Observe(true,true);assert(a.valid); // pause/menu while cinematic remains active
     a.Observe(false,true);assert(!a.valid); // no quad state leaks into gameplay
+    // VideoFlat world anchor lifecycle
+    {
+        const bool isVideoFlat = true;
+        const bool activeWorldAnchor = false || isVideoFlat;
+        cinemascreen::Pose vhead{0,1.2f,0,0,0,0,1};
+        assert(a.Latch(vhead,2,1,.6f,16.f/9));
+        assert(a.valid);
+        a.Observe(activeWorldAnchor, true);
+        assert(a.valid); // stays latched during video playback
+        a.Observe(false, true);
+        assert(!a.valid); // resets cleanly when video ends
+    }
     assert(a.Latch(head,2,1,.6f,16.f/9));
     assert(near(a.pose.x,98) && near(a.pose.z,2)); // new scene chooses new anchor
     assert(near(a.pose.qy,.70710678f));

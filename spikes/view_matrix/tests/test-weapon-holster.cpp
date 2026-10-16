@@ -48,5 +48,13 @@ int main() {
         assert(Update(d, true, true, true, 9, off, hip, c) == Event::Drawn);  // 16 < 32 draws
         assert(Update(d, true, true, true, 9, {4.0f, 18.0f + 35.0f, -24.0f}, hip, c) == Event::None);
     }
-    std::puts("weapon holster: radius, rising-edge toggle, hold, re-entry, weapon/reset gates, drawRadius");
+    {
+        Config c16{4.0f, 18.0f, -24.0f, 16.0f, 32.0f};
+        State st;
+        V3 atHip{4.0f, 18.0f, -24.0f};
+        assert(NearHip(atHip, atHip, c16));
+        assert(Update(st, true, true, true, 42, atHip, atHip, c16) == Event::Stored);
+        assert(st.active);
+    }
+    std::puts("weapon holster: radius, rising-edge toggle, hold, re-entry, weapon/reset gates, drawRadius, c16");
 }

@@ -6,6 +6,43 @@
 #include <cstdint>
 
 namespace knifehand {
+// Native damage still consumes RB. Only its legacy camera-space arm DISPLAY
+// window is bypassed while the existing tracked joint assembly owns the hand.
+inline bool KeepTrackedMelee(bool enabled,bool nativeEligible,bool ready,bool visible,
+                             int holder,bool tracked,bool melee,bool heal){
+    return enabled&&nativeEligible&&ready&&visible&&(holder==0||holder==1)&&tracked&&melee&&!heal;
+}
+// Cancel ONLY the native wrist animation basis, not the controller transform.
+// Row chain: rawSkin * trackingDelta. Preserve the already-correct wrist centre.
+inline bool StabilizeMeleeWrist(armbind::Mat& out,const armbind::Mat& reference,
+                              const armbind::Mat& raw,const armbind::Mat& tracked,
+                              const armbind::Mat& bind){
+    if(!armbind::Finite(reference)||!armbind::Finite(raw)||!armbind::Finite(tracked)||!armbind::Finite(bind))return false;
+    float a=0,b=0;if(!gloves::UniformScale(reference.m,a)||!gloves::UniformScale(raw.m,b)||std::fabs(a-b)>.005f)return false;
+    auto basisA=reference,basisB=raw;for(unsigned c=0;c<3;++c)basisA.m[3][c]=basisB.m[3][c]=0;
+    armbind::Mat inverse,correction,result;
+    if(!skeletal::Inverse(inverse.m,basisB.m))return false;
+    skeletal::Multiply(correction.m,basisA.m,inverse.m);skeletal::Multiply(result.m,correction.m,tracked.m);
+    for(unsigned c=0;c<3;++c){
+        float centre=tracked.m[3][c],rotated=0;
+        for(unsigned k=0;k<3;++k){centre+=bind.m[3][k]*tracked.m[k][c];rotated+=bind.m[3][k]*result.m[k][c];}
+        result.m[3][c]=centre-rotated;
+    }
+    if(!armbind::Finite(result))return false;out=result;return true;
+}
+struct MeleeReference {
+    armbind::Mat reference{};std::uint32_t pawn=0;std::uint64_t pickup=0;int holder=-1;bool valid=false;
+    void Reset(){valid=false;pawn=0;pickup=0;holder=-1;}
+    bool Update(std::uint32_t actor,std::uint64_t generation,int hand,bool melee,
+                const float rawGpu[3][4],float trackedGpu[3][4],const armbind::Mat& bind){
+        if(hand<0||hand>1||!actor){Reset();return false;}
+        if(pawn!=actor||pickup!=generation||holder!=hand){Reset();pawn=actor;pickup=generation;holder=hand;}
+        armbind::Mat raw,tracked,result;if(!armbind::FromGpu(rawGpu,raw)||!armbind::FromGpu(trackedGpu,tracked))return false;
+        if(!melee){reference=raw;valid=true;return true;}
+        if(!valid||!StabilizeMeleeWrist(result,reference,raw,tracked,bind))return false;
+        armbind::ToGpu(result,trackedGpu);return true;
+    }
+};
 struct Data {armbind::Mat mount[2];float fingers[2][5]{};};
 inline bool Decode(const unsigned char* p,std::size_t bytes,Data& output){
     if(!p||bytes!=200||std::memcmp(p,"SVNG",4)||gloves::U32(p+4)!=1||
