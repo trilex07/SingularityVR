@@ -38,6 +38,7 @@ class Contract(unittest.TestCase):
         self.assertIn("pp->BackBufferWidth = d.w", CPP)
         self.assertIn("pp->BackBufferHeight = d.h", CPP)
         self.assertIn("reset-guard:", CPP)
+        self.assertIn("FUSE BLOWN", CPP)
 
     def test_sample_config(self):
         ini = (ROOT / "spikes/view_matrix/SingularityVR.ini").read_text(encoding="utf-8-sig")
