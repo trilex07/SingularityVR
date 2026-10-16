@@ -5992,6 +5992,8 @@ static bool g_nativeGloveExperiment=false,g_nativeGlovePoseThisDraw=false;
 static nativegloves::Renderer g_nativeGloveRenderer;
 static bool NativeGlovesEligible();
 static bool g_knifeHandGrip = false;
+static bool g_knifeTrackedMelee = false;
+static knifehand::MeleeReference g_knifeMeleeReference;
 static bool g_knifeHandAssetReady = false;
 static knifehand::Data g_knifeHandData{};
 static bool g_knifeHandPoseThisDraw = false;
@@ -15057,7 +15059,15 @@ inline bool MeleeWindowActive() {
 // 32-bit word. The prior active-window path executed two locked cmpxchg8b operations plus
 // GetTickCount64 for every mesh draw, exactly during the knife animation where the headset regressed.
 inline void RefreshArmsAnimActive() {
-    InterlockedExchange(&g_armsAnimActiveCached,(HealWindowActive()||MeleeWindowActive())?1:0);
+    const bool heal=HealWindowActive(),melee=MeleeWindowActive();
+    const int holder=g_hipKnifeState.held;
+    const bool tracked=(holder==0||holder==1)&&g_handPositionValid[holder]&&g_handPoseValid[holder];
+    const bool keep=knifehand::KeepTrackedMelee(g_knifeTrackedMelee&&g_knifeHandGrip&&g_knifeHandAssetReady,
+        melee&&NativeGlovesEligible(),g_hipKnifeReady,g_hipKnifeVisible,holder,tracked,melee,heal);
+    InterlockedExchange(&g_armsAnimActiveCached,(heal||(melee&&!keep))?1:0);
+    static bool wasKept=false;static unsigned notes=0;
+    if(keep&&!wasKept&&notes++<8)Log("knife-hand: melee display stays controller-tracked holder=%d; native damage untouched",holder);
+    wasKept=keep;
 }
 inline bool ArmsAnimActive() { return Rd(g_armsAnimActiveCached)!=0; }
 
@@ -16390,6 +16400,15 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         const bool joint=g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&g_hipKnifeVisible&&
             (g_hipKnifeState.held==0||g_hipKnifeState.held==1);
         const int held=g_hipKnifeState.held;
+        if(joint&&g_knifeTrackedMelee){
+            const unsigned slot=held?1:18;
+            if(!g_knifeMeleeReference.Update((std::uint32_t)g_playerPawn,g_hipKnifeState.pickedMs,held,
+                MeleeWindowActive(),reinterpret_cast<const float(*)[4]>(&saved[slot*3]),
+                reinterpret_cast<float(*)[4]>(&changed[slot*3]),g_nativeGloveRenderer.WristReference((unsigned)held))){
+                static unsigned notes=0;if(notes++<4)Log("knife-hand: melee wrist correction unavailable holder=%d; joint draw skipped, no guessed orientation",held);
+                g_knifeHandPoseThisDraw=false;return 0;
+            }
+        }
         float digits[2][5];for(unsigned side=0;side<2;++side)for(unsigned d=0;d<5;++d)
             digits[side][d]=joint&&(int)side==held?g_knifeHandData.fingers[side][d]:g_gloveBlend[side];
         g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,g_gloveBlend,joint?digits:nullptr,joint?held:-1);
@@ -25190,6 +25209,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 #include "desktop_mirror.h"
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    g_knifeMeleeReference.Reset();
     g_knifeHandPoseThisDraw=false;g_knifeJointFrame=-1;g_knifeJointEyes=0;
     g_nativeGloveRenderer.ReleaseGPU();g_nativeGlovePoseThisDraw=false;
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
@@ -30587,6 +30607,8 @@ void LoadIniSettings() {
         (double)g_holsterTrimFcm,(double)g_holsterTrimRcm,(double)g_holsterTrimUcm);
     g_hipKnifeEnabled=GetPrivateProfileIntA("Input","HipKnifeEnabled",0,path)?1:0;
     g_knifeHandGrip=GetPrivateProfileIntA("Render","KnifeHandGripEnabled",0,path)!=0;
+    g_knifeTrackedMelee=GetPrivateProfileIntA("Render","KnifeTrackedMelee",0,path)!=0;
+    Log("ini: KnifeTrackedMelee=%d (keep joint knife/controller pose during native attack)",g_knifeTrackedMelee);
     Log("ini: KnifeHandGripEnabled=%d (joint original glove/knife assembly)",g_knifeHandGrip);
     g_hipKnifeIgnoreTMD=GetPrivateProfileIntA("Input","HipKnifeIgnoreTMD",1,path)?1:0;
     Log("ini: HipKnifeIgnoreTMD=%d (0=trust engine mTMD, 1=force pre-TMD both-hands rule)",g_hipKnifeIgnoreTMD);

@@ -25,6 +25,53 @@ static void ClipTests(){
     assert(StandardDepth(perspective));perspective[2][2]=-.01f;assert(!StandardDepth(perspective));
     perspective[2][2]=NAN;assert(!StandardDepth(perspective));
     for(unsigned b=0;b<90;++b)assert((Digit(b)>=0)==nativegloves::Finger(b));
+    for(unsigned bits=0;bits<128;++bits)for(int holder=-1;holder<=2;++holder){
+        const bool on=bits&1,eligible=bits&2,ready=bits&4,visible=bits&8,tracked=bits&16,melee=bits&32,heal=bits&64;
+        const bool keep=KeepTrackedMelee(on,eligible,ready,visible,holder,tracked,melee,heal);
+        assert(keep==(bits==63&&(holder==0||holder==1)));
+        if(!on||heal||holder<0||holder>1)assert(!keep);
+        // Heal and non-knife melee retain their original display policy.
+        if(heal)assert(heal||(melee&&!keep));
+    }
+}
+static void MeleeMath(){
+    using namespace knifehand;armbind::Mat ref{},bind{},delta{};
+    for(unsigned i=0;i<4;++i)ref.m[i][i]=bind.m[i][i]=delta.m[i][i]=1;
+    bind.m[3][0]=49;bind.m[3][1]=-4;bind.m[3][2]=12;
+    // Left/right: controller rotations and .75 scale stay, even while native
+    // attack spins the wrist through 180 degrees and changes its translation.
+    for(unsigned side=0;side<2;++side)for(unsigned degrees=0;degrees<=180;degrees+=15){
+        const float angle=(float)degrees*3.14159265f/180,sign=side?-1.f:1.f;
+        armbind::Mat raw=ref;raw.m[0][0]=raw.m[1][1]=std::cos(angle);raw.m[0][1]=sign*std::sin(angle);raw.m[1][0]=-sign*std::sin(angle);
+        raw.m[3][0]=7;raw.m[3][1]=14;raw.m[3][2]=3;
+        delta.m[0][0]=0;delta.m[0][1]=.75f;delta.m[1][0]=-.75f;delta.m[1][1]=0;delta.m[2][2]=.75f;
+        delta.m[3][0]=10;delta.m[3][1]=20;delta.m[3][2]=30;
+        armbind::Mat tracked,out;skeletal::Multiply(tracked.m,raw.m,delta.m);
+        assert(StabilizeMeleeWrist(out,ref,raw,tracked,bind));
+        for(unsigned r=0;r<3;++r)for(unsigned c=0;c<3;++c)assert(std::fabs(out.m[r][c]-delta.m[r][c])<1e-5f);
+        for(unsigned c=0;c<3;++c){float a=out.m[3][c],b=tracked.m[3][c];
+            for(unsigned k=0;k<3;++k){a+=bind.m[3][k]*out.m[k][c];b+=bind.m[3][k]*tracked.m[k][c];}
+            assert(std::fabs(a-b)<1e-4f);}
+    }
+    MeleeReference state;float raw[3][4],tracked[3][4];armbind::ToGpu(ref,raw);armbind::ToGpu(delta,tracked);
+    assert(!state.Update(123,1,0,true,raw,tracked,bind)); // no invented reference
+    assert(state.Update(123,1,0,false,raw,tracked,bind));assert(state.Update(123,1,0,true,raw,tracked,bind));
+    assert(!state.Update(123,2,0,true,raw,tracked,bind)); // release/regrab invalidates
+    assert(state.Update(123,2,0,false,raw,tracked,bind));assert(!state.Update(124,2,0,true,raw,tracked,bind));
+    assert(!state.Update(124,2,1,true,raw,tracked,bind));state.Reset();assert(!state.valid);
+    // Non-identity baseline, compound axes and fail-closed output transaction.
+    armbind::Mat baseline=ref,current=ref,want,actual,trackedMat;
+    baseline.m[0][0]=0;baseline.m[0][2]=1;baseline.m[2][0]=-1;baseline.m[2][2]=0;
+    current.m[1][1]=0;current.m[1][2]=1;current.m[2][1]=-1;current.m[2][2]=0;
+    skeletal::Multiply(trackedMat.m,current.m,delta.m);skeletal::Multiply(want.m,baseline.m,delta.m);
+    assert(StabilizeMeleeWrist(actual,baseline,current,trackedMat,bind));
+    for(unsigned r=0;r<3;++r)for(unsigned c=0;c<3;++c)assert(std::fabs(actual.m[r][c]-want.m[r][c])<1e-5f);
+    const auto sentinel=actual;current.m[1][0]=.5f;
+    assert(!StabilizeMeleeWrist(actual,baseline,current,trackedMat,bind));assert(!std::memcmp(&actual,&sentinel,sizeof(actual)));
+    current=ref;current.m[0][0]=NAN;
+    assert(!StabilizeMeleeWrist(actual,baseline,current,trackedMat,bind));assert(!std::memcmp(&actual,&sentinel,sizeof(actual)));
+    current=ref;for(unsigned r=0;r<3;++r)current.m[r][r]=2;
+    assert(!StabilizeMeleeWrist(actual,baseline,current,trackedMat,bind));assert(!std::memcmp(&actual,&sentinel,sizeof(actual)));
 }
 static void CapturedShader(const char* path,bool shadow){
     std::vector<unsigned char> bytes;assert(gloves::Read(path,bytes,65536)&&bytes.size()%4==0);
@@ -34,7 +81,7 @@ static void CapturedShader(const char* path,bool shadow){
     assert(layout.viewProjection==(shadow?-1:0));
 }
 int main(int argc,char** argv){
-    ClipTests();
+    ClipTests();MeleeMath();
     if(argc<3){std::puts("PASS joint homogeneous clipping/depth/digit math; private replay not requested");return 0;}
     std::vector<unsigned char> bytes;assert(gloves::Read(argv[1],bytes,1024));knifehand::Data data;
     assert(knifehand::Decode(bytes.data(),bytes.size(),data));

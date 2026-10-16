@@ -32,3 +32,5 @@ python (Join-Path $PSScriptRoot 'test_fit_hand_grip.py')
 if($LASTEXITCODE -ne 0){throw 'Python joint geometry tests failed'}
 python (Join-Path $PSScriptRoot 'test_knife_lighting.py')
 if($LASTEXITCODE -ne 0){throw 'Python tangent frame tests failed'}
+python (Join-Path $PSScriptRoot 'test_retune_knife.py')
+if($LASTEXITCODE -ne 0){throw 'Python blade-only sizing tests failed'}

@@ -74,6 +74,7 @@ public:
         data=std::move(next);cpu=true;return true;
     }
     bool Ready()const{return cpu&&!failed;}
+    const armbind::Mat& WristReference(unsigned side)const{return bind[side?51:9];}
     unsigned Triangles()const{return (unsigned)data.indices.size()/3;}
     unsigned Caps()const{return data.capTriangles;}
     void ReleaseGPU(){gloves::Release(ib);failed=false;}
