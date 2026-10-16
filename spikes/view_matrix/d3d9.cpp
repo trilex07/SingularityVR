@@ -15,6 +15,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "centurion_reload.h"
 #include "centurion_clip_preview.h"
 #include "centurion_native_reload.h"
+#include "weapon_reload_runtime.h"
 #include "weapon_wheel.h"
 #include "ammo_probe.h"
 #include "ammo_layout.h"
@@ -2249,7 +2250,53 @@ static CenturionVisual g_centurionVisual{};
 static IDirect3DStateBlock9* g_centurionMarkerState=nullptr;
 static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,bool releaseCylinder);
 static void DrawCenturionReload(IDirect3DDevice9* dev);
+// Independent, default-OFF three-weapon path; Centurion remains untouched.
+static int g_nextReload[3]{};
+static bool NextReloadEnabled(){return g_nextReload[0]||g_nextReload[1]||g_nextReload[2];}
+static centurionnative::Gate g_nextNativeGate; // protected by existing native lock
+static volatile LONG g_nextNativePermits=0,g_nextNativeBlocks=0;
+static ULONGLONG g_nextNativePermitMs=0; // same native SRW lock, no torn x86 read
+static LONG g_nextPermitStart=0; // input-thread transaction baseline
+static weaponreloadproto::State g_nextReloadState;
+static centurionreload::NativeTap g_nextReloadTap;
+static hipknife::TriggerGate g_nextReloadTrigger[2];
+static bool g_nextOwnsGrip=false,g_nextBlockFire=false;
+static weaponreloadanim::Data g_nextAnimation[3];
+static weaponreload::Animation g_nextTiming[3];
+static hipknife::Renderer g_nextClipRenderer[3];
+static bool g_nextReady[3]{};static volatile LONG g_nextFault[3]{};
+static IDirect3DIndexBuffer9* g_nextIB[3]{};
+static bool g_nextIBVerified[3]{};static unsigned g_nextIBAttempts[3]{};
+static SRWLOCK g_nextVisualLock=SRWLOCK_INIT;
+struct NextReloadVisual {
+    bool valid=false;weaponreload::Kind kind=weaponreload::Kind::None;
+    weaponreload::Phase phase=weaponreload::Phase::Idle;
+    uint32_t pawn=0,weapon=0;ULONGLONG sampledMs=0,since=0;
+    hipknife::Pose hand{},source{},aim{};
+    armbind::Mat drop{};ULONGLONG dropMs=0;
+    bool rootValid=false;armbind::Mat root{};ULONGLONG nativeEnd=0;
+};
+static NextReloadVisual g_nextVisual;
+static weaponreload::Witness g_nextWitness;
+static centurionclip::PresentationSafety g_nextPresentation;
+static void InitNextReload();
+static void ReleaseNextReloadGPU();
+static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool circleDown);
+static int PrepareNextReload(IDirect3DDevice9*,INT,UINT,UINT,UINT,UINT,float*,UINT&);
+static void DrawNextReload(IDirect3DDevice9*);
+static void CancelNextReload(){
+    const bool owned=g_nextOwnsGrip;
+    g_nextReloadState={};g_nextReloadState.transaction.ownsGrip=owned;
+    g_nextReloadTap.Cancel();g_nextBlockFire=false;
+    if(TryAcquireSRWLockExclusive(&g_centurionNativeLock)){
+        g_nextNativeGate.Clear();ReleaseSRWLockExclusive(&g_centurionNativeLock);
+    }
+    if(TryAcquireSRWLockExclusive(&g_nextVisualLock)){
+        g_nextVisual={};g_nextWitness={};ReleaseSRWLockExclusive(&g_nextVisualLock);
+    }
+}
 static void CancelCenturionInput(){
+    CancelNextReload();
     const bool owned=g_centurionOwnsGrip;
     g_centurionState={};g_centurionState.ownsGrip=owned;
     g_centurionTap.Cancel();g_reloadControls={};
@@ -5749,6 +5796,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawWeaponWheel(dev);
     DrawHipKnife(dev);
     DrawCenturionReload(dev);
+    DrawNextReload(dev);
     DrawVfxOverlay(dev);
     DrawVrContextPrompt(dev);
     if (ownOverlayScene) dev->EndScene();
@@ -9287,6 +9335,7 @@ bool InitXRInput() {
     // draw hooks. Missing/bad cache fails closed without changing normal input.
     g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};
     CancelCenturionInput();
+    InitNextReload();
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipReady=false;g_centurionClipFault=false;
     g_centurionPresentationSafety.Reset();
     if(g_centurionReload&&g_centurionClipPreview){
@@ -10482,6 +10531,8 @@ void SyncXRInput(XrTime displayTime) {
         feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
         !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed(),
         OffHand()==0?rawSupportGrip:primaryGrip,g_supportLatch.Latched(),reloadActions.releaseCylinder);
+    if(NextReloadEnabled()||g_nextOwnsGrip||g_nextBlockFire)UpdateNextReload(reloadLayout&&reloadInputContext,
+        OffHand()==0?rawSupportGrip:primaryGrip,g_supportLatch.Latched(),sampledButtons[1]);
     if(g_hipKnifeEnabled&&g_hipKnifeReady){
         hipknife::Frame f;
         f.enabled=true;f.focused=g_xrSessionState==XR_SESSION_STATE_FOCUSED;
@@ -10511,7 +10562,7 @@ void SyncXRInput(XrTime displayTime) {
             f.free[h]=h!=AimHand()||!WeaponInHands()||Rd(g_weaponHolstered);
             // Preserve the physical edge history; fabricating grip=false here
             // can produce a new knife pickup when reload ownership ends.
-            if(h==0&&g_centurionOwnsGrip){f.free[h]=false;g_hipKnifeState.edgeMs[h]=0;}
+            if(h==0&&(g_centurionOwnsGrip||g_nextOwnsGrip)){f.free[h]=false;g_hipKnifeState.edgeMs[h]=0;}
             f.trigger[h]=h==AimHand()?Rd(g_rawTrigger)>128:Rd(g_rawAltTrigger)>128;
         }
         // MAIN round 15: capture the grip rising edge BEFORE Update consumes it
@@ -10622,7 +10673,7 @@ void SyncXRInput(XrTime displayTime) {
         }
     }
     const bool supportGrip=rawSupportGrip&&!hipknife::Reserves(g_hipKnifeState,OffHand())&&
-        !(OffHand()==0&&(g_centurionOwnsGrip||(g_centurionReload&&g_centurionConfig.cylinderGestures&&
+        !(OffHand()==0&&(g_nextOwnsGrip||g_centurionOwnsGrip||(g_centurionReload&&g_centurionConfig.cylinderGestures&&
             centurionreload::Active(g_centurionState.phase))));
     static bool priorSupportGrip=false;
     if(supportGrip!=priorSupportGrip)InterlockedIncrement(supportGrip?&g_vrCounters.gripPressEdges:&g_vrCounters.gripReleaseEdges);
@@ -10896,13 +10947,14 @@ void SyncXRInput(XrTime displayTime) {
         const auto routed=reloadcontrols::RouteFace(reloadLayout,InGameplay()&&!uiMenu,
             face,sampledButtons[i],g_padButtons[i].mask,legacyHealth,reloadActions);
         bool down=routed.down;const WORD outputMask=routed.mask;const bool healthAction=routed.health;
-        if(g_centurionOwnsGrip&&((OffHand()==0&&i==g_impulseBtnIdx)||
+        if((g_centurionOwnsGrip||g_nextOwnsGrip)&&((OffHand()==0&&i==g_impulseBtnIdx)||
            (AimHand()==0&&!strcmp(g_padButtons[i].name,"use"))))down=false;
         // During a transaction, reserve the shared Use/reload bit as well:
         // an accidental primary squeeze must not reload before insertion.
         if(g_centurionReload&&g_centurionState.phase!=centurionreload::Phase::Idle&&
            g_centurionState.phase!=centurionreload::Phase::Cooldown&&
            !uiMenu&&g_padButtons[i].mask==XI_X)down=false;
+        if(g_nextBlockFire&&!uiMenu&&g_padButtons[i].mask==XI_X)down=false;
         if (i == g_impulseBtnIdx && g_hipKnifeState.held >= 0) {
             if (down && !knifeImpulseWasDown && !uiMenu && !Rd(g_gamePaused)) {
                 g_hipKnifeState.TriggerAttack(GetTickCount64(), g_hipKnifeConfig.pulseMs);
@@ -11427,6 +11479,14 @@ void SyncXRInput(XrTime displayTime) {
         rt=g_centurionTrigger[fireHand].Update((g_centurionOwnsGrip&&fireHand==0)||
             (g_centurionConfig.cylinderGestures&&centurionreload::Active(g_centurionState.phase)),rt);
         lt=g_centurionTrigger[altHand].Update(g_centurionOwnsGrip&&altHand==0,lt);
+    }
+    if(NextReloadEnabled()){
+        const bool valid=g_nextBlockFire&&feedGame&&!uiMenu&&!Rd(g_gamePaused)&&
+            g_nextReloadState.transaction.phase==weaponreload::Phase::WaitingNative&&
+            g_xrSessionState==XR_SESSION_STATE_FOCUSED;
+        if(g_nextReloadTap.Update(valid,false,GetTickCount64()))btns|=XI_X;
+        rt=g_nextReloadTrigger[fireHand].Update(g_nextBlockFire,rt);
+        lt=g_nextReloadTrigger[altHand].Update(g_nextOwnsGrip&&altHand==0,lt);
     }
     UpdateVrUiPointer(fireHand==1?rt:lt,true);
     const auto primaryGate=g_vrUiTrigger[fireHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,rt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
@@ -18951,6 +19011,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             Rd(g_rtIsScene)!=0,g_boundShaderLayout.shadow,Rd(g_gamePaused)!=0,Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0);
     IDirect3DIndexBuffer9* cuffBuffer=fullCuff?g_nativeCuffRenderer.Ensure(dev,cuffProfile):nullptr;
     const UINT gloveTriangles=cuffBuffer?g_nativeCuffRenderer.Triangles(cuffProfile):g_nativeGloveRenderer.Triangles();
+    float nextSaved[16*12];UINT nextReg=0;
+    const int nextRegs=t==D3DPT_TRIANGLELIST?
+        PrepareNextReload(dev,baseVertex,minIndex,numVertices,startIndex,primCount,nextSaved,nextReg):0;
     nativegloves::IndexGuard<> nativeIndices(dev,cuffBuffer?cuffBuffer:(nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr),
         cuffBuffer?g_nativeCuffRenderer.SourceBytes(cuffProfile):16512*2);
     const HRESULT dhr = StereoPair(dev, [&] {
@@ -18979,6 +19042,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         return hr;
     });
     const HRESULT nativeRestore=nativeIndices.Restore();
+    const HRESULT nextRestore=nextRegs?g_origSetVSConstF(dev,nextReg,nextSaved,(UINT)nextRegs):D3D_OK;
+    if(FAILED(nextRestore)){
+        for(unsigned i=0;i<3;++i)InterlockedExchange(&g_nextFault[i],1);
+    }
     if(independentRegs)g_origSetVSConstF(dev,5,&independentSaved[0][0],independentRegs);
     if (boneRegN) g_origSetVSConstF(dev,boneRegLo, &savedBones[0][0], boneRegN);
     if(nativeCuff){
@@ -18988,6 +19055,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 g_nativeGloveRenderer.draws!=0,g_nativeGloveRenderer.Triangles(),g_gloveBlend[0],g_gloveBlend[1]);
     }
     if(FAILED(nativeRestore)){g_gloveExperiment=false;return nativeRestore;}
+    if(FAILED(nextRestore))return nextRestore;
 
     // ⭐ run 241: how many bones this mesh REALLY has, so the sweep range stops being a guess.
     // Reads the whole possible block once a second and reports the last register that is not all
@@ -21598,6 +21666,7 @@ HRESULT STDMETHODCALLTYPE Hook_CreateVertexBuffer(IDirect3DDevice9* dev, UINT le
 HRESULT STDMETHODCALLTYPE Hook_CreateIndexBuffer(IDirect3DDevice9* dev, UINT len, DWORD usage,
                                                  D3DFORMAT fmt, D3DPOOL pool,
                                                  IDirect3DIndexBuffer9** out, HANDLE* share) {
+    usage=weaponreload::ReadableUsage(NextReloadEnabled(),len,fmt==D3DFMT_INDEX16,usage,D3DUSAGE_WRITEONLY);
     if (g_deviceIsEx && pool == D3DPOOL_MANAGED) { pool = D3DPOOL_DEFAULT; InterlockedIncrement(&g_xlatIB); }
     return g_origCreateIndexBuffer(dev, len, usage, fmt, pool, out, share);
 }
@@ -25780,6 +25849,7 @@ void ReleaseWristResources() {
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     g_hipKnifeRenderer.ReleaseGPU();
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipFault=false;
+    ReleaseNextReloadGPU();CancelNextReload();
     g_centurionPresentationSafety.Reset();
     hipknife::Release(g_centurionMarkerState);
     shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();worldshadowfix::Release();
@@ -26043,30 +26113,36 @@ static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
     const auto weapon=(uint32_t)Rd(g_weaponObj),pawn=(uint32_t)g_playerPawn;
     const auto now=GetTickCount64();
     auto decision=centurionnative::Decision::Forward;
+    const char* owner="centurion";
     bool lockMiss=false;
     if(TryAcquireSRWLockExclusive(&g_centurionNativeLock)){
         decision=g_centurionNativeGate.Evaluate(g_centurionNativeGuardMode,object,pawn,weapon,now);
+        if(decision==centurionnative::Decision::Forward&&NextReloadEnabled()){
+            decision=g_nextNativeGate.Evaluate(2,object,pawn,weapon,now);owner="next-weapon";
+            if(decision==centurionnative::Decision::Permit){InterlockedIncrement(&g_nextNativePermits);g_nextNativePermitMs=now;}
+            if(decision==centurionnative::Decision::Block)InterlockedIncrement(&g_nextNativeBlocks);
+        }
         ReleaseSRWLockExclusive(&g_centurionNativeLock);
     }else lockMiss=true; // never wait in an engine hook, leave native behavior unchanged
     static volatile LONG records=0;
     const bool note=(decision!=centurionnative::Decision::Forward||object==weapon)&&
         InterlockedIncrement(&records)<=48;
     if(decision==centurionnative::Decision::Block){
-        if(note)Log("centurion native guard: BLOCK self=%08X pawn=%08X return=%08X t=%llu (no token, no inventory write)",
-            object,pawn,(unsigned)reinterpret_cast<uintptr_t>(_ReturnAddress()),(unsigned long long)now);
+        if(note)Log("%s native guard: BLOCK self=%08X pawn=%08X return=%08X t=%llu (no token, no inventory write)",
+            owner,object,pawn,(unsigned)reinterpret_cast<uintptr_t>(_ReturnAddress()),(unsigned long long)now);
         return 0; // audited 32-bit native bool; original BeginFire handles refusal
     }
     // This is forwarding an existing native call, NOT calling ProcessInternal
     // with invented parameters. No exception masking or ammo modification.
     const int result=g_origCenturionAttemptReload(self);
-    if(note)Log("centurion native guard: %s self=%08X pawn=%08X return=%08X result=%d lockMiss=%d t=%llu (result is not ammo proof)",
+    if(note)Log("%s native guard: %s self=%08X pawn=%08X return=%08X result=%d lockMiss=%d t=%llu (result is not ammo proof)",owner,
         decision==centurionnative::Decision::Permit?"PERMIT":
         decision==centurionnative::Decision::Observe?"OBSERVE":"FORWARD",
         object,pawn,(unsigned)reinterpret_cast<uintptr_t>(_ReturnAddress()),result,lockMiss?1:0,(unsigned long long)now);
     return result;
 }
 static void TryInstallCenturionNativeGuard(uintptr_t object,uintptr_t wrapper,const char* owner){
-    if(!g_centurionNativeGuardMode||Rd(g_centurionNativeTarget)||strcmp(owner,"RvWeaponShared")||
+    if((!g_centurionNativeGuardMode&&!NextReloadEnabled())||Rd(g_centurionNativeTarget)||strcmp(owner,"RvWeaponShared")||
        object!=(uintptr_t)(uint32_t)Rd(g_weaponObj)||wrapper<g_textLo||wrapper>=g_textHi||
        g_textHi-wrapper<centurionnative::WrapperBytes||!Readable((void*)wrapper,centurionnative::WrapperBytes))return;
     uint32_t slot=0;
@@ -26273,6 +26349,8 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
             (unsigned long long)observation.sampledMs,f.ammoFresh?1:0);
     }
 }
+
+#include "weapon_reload_dispatch.inl"
 
 static void DrawCenturionReload(IDirect3DDevice9* dev){
     if(!g_centurionReloadMarkers&&(!g_centurionClipPreview||!g_centurionClipReady||g_centurionClipFault))return;
@@ -31665,6 +31743,13 @@ void LoadIniSettings() {
     g_centurionClipPreview=GetPrivateProfileIntA("Input","CenturionClipPreview",0,path)?1:0;
     g_centurionReloadMarkers=GetPrivateProfileIntA("Input","CenturionReloadMarkers",0,path)?1:0;
     g_reloadControlLayout=GetPrivateProfileIntA("Input","ReloadControlLayout",0,path)?1:0;
+    const int priorNextMask=g_nextReload[0]|(g_nextReload[1]<<1)|(g_nextReload[2]<<2);
+    const char* nextKeys[]{"ValkyrieManualReload","VolkManualReload","KasimovManualReload"};
+    for(unsigned i=0;i<3;++i){
+        g_nextReload[i]=g_reloadControlLayout&&GetPrivateProfileIntA("Input",nextKeys[i],0,path)!=0;
+        Log("ini: %s=%d (default OFF; audited native + original IB/palette/socket/asset witnesses required)",nextKeys[i],g_nextReload[i]);
+    }
+    if(priorNextMask!=(g_nextReload[0]|(g_nextReload[1]<<1)|(g_nextReload[2]<<2)))CancelNextReload();
     g_centurionConfig.cylinderGestures=g_reloadControlLayout&&
         GetPrivateProfileIntA("Input","CenturionCylinderGestures",0,path)!=0;
     g_centurionNativeGuardMode=(int)std::clamp(IniSignedInt("Input","CenturionNativeReloadGuard",0,path),0L,2L);
@@ -32202,7 +32287,9 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
             }
         }
         g_origPresent = (PFN_Present)PatchVTable(*out, 17, (void*)&Hook_Present);
-        if(g_diagEnabled || Rd(g_desktopMirrorWindow) || Rd(g_desktopMirrorEye)) {
+        if(NextReloadEnabled()&&!g_origCreateIndexBuffer)
+            g_origCreateIndexBuffer=(PFN_CreateIndexBuffer)PatchVTable(*out,27,(void*)&Hook_CreateIndexBuffer);
+        if(g_diagEnabled || Rd(g_desktopMirrorWindow) || Rd(g_desktopMirrorEye) || NextReloadEnabled()) {
             g_origResetDevice=(PFN_ResetDevice)PatchVTable(*out,16,(void*)&Hook_ResetDevice);
             if(g_deviceIsEx)g_origResetDeviceEx=(PFN_ResetDeviceEx)PatchVTable(*out,132,(void*)&Hook_ResetDeviceEx);
             Log("D3D9 resource Reset hooks: Reset=%p ResetEx=%p",g_origResetDevice,g_origResetDeviceEx);

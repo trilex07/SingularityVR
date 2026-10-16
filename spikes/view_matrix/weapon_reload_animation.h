@@ -5,8 +5,8 @@
 #include <memory>
 #include <new>
 
-// OFF-by-default offline consumer. No runtime hook/caller, UObject or inventory
-// operation. Cache is original private data, never shipped in the source repo.
+// Bounded original animation consumer used by the default-OFF runtime path.
+// No UObject/inventory operation here. Private original caches stay out of Git.
 namespace weaponreloadanim {
 using Kind=weaponreloadproto::Kind;
 struct Spec {
@@ -36,7 +36,8 @@ inline bool Decode(const unsigned char* p,std::size_t size,Kind requested,Data& 
        size!=112+std::size_t(s->tracks)*72+std::size_t(s->frames)*s->tracks*28)return false;
     // Decode is a LOAD-time operation, never a draw-time allocation. Keep large
     // fixed caches off the small x86 stack and leave output unchanged on failure.
-    std::unique_ptr<Data> staged(new(std::nothrow) Data{});if(!staged)return false;
+    std::unique_ptr<Data> staged;
+    try{staged=std::make_unique<Data>();}catch(const std::bad_alloc&){return false;}
     auto& d=*staged;d.kind=requested;d.slots=s->slots;d.root=s->root;
     d.tracks=s->tracks;d.frames=s->frames;d.fps=fps;
     std::memcpy(d.rootBind.m,p+48,64);

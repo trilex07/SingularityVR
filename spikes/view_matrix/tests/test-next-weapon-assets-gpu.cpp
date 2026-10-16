@@ -6,12 +6,16 @@
 #include <cstdio>
 #include <cstdlib>
 #include <set>
+#include <limits>
 #pragma comment(lib,"user32.lib")
 static void Check(bool yes,const char* why){if(!yes){puts(why);std::exit(1);}}
 static unsigned draws=0,failAt=0;
 static HRESULT STDMETHODCALLTYPE Draw(IDirect3DDevice9* d,D3DPRIMITIVETYPE t,UINT min,UINT n,UINT count,
     const void* ix,D3DFORMAT format,const void* vertices,UINT stride){
-    ++draws;if(failAt&&draws==failAt)return E_FAIL;
+    ++draws;if(failAt&&draws==failAt){
+        const float poison[4]{-123,-456,-789,-987};d->SetVertexShaderConstantF(5,poison,1);
+        return E_FAIL;
+    }
     return d->DrawIndexedPrimitiveUP(t,min,n,count,ix,format,vertices,stride);
 }
 static HRESULT STDMETHODCALLTYPE RT(IDirect3DDevice9* d,DWORD n,IDirect3DSurface9* s){return d->SetRenderTarget(n,s);}
@@ -58,6 +62,7 @@ int main(int argc,char** argv){
             const D3DVIEWPORT9 full{0,0,512,256,0,1},initial{7,9,400,200,0,1};
             Check(SUCCEEDED(dev->SetViewport(&full))&&SUCCEEDED(dev->Clear(0,nullptr,D3DCLEAR_TARGET,0xff102030,1,0)),"whole target background");
             Check(SUCCEEDED(dev->SetViewport(&initial))&&SUCCEEDED(dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE)),"sentinel state");
+            const float constants[4]{1,2,3,4};Check(SUCCEEDED(dev->SetVertexShaderConstantF(5,constants,1)),"constant sentinel");
             auto restored=[&](){
                 D3DVIEWPORT9 v{};DWORD blend=0;Check(SUCCEEDED(dev->GetViewport(&v))&&!std::memcmp(&v,&initial,sizeof(v)),"viewport restore");
                 Check(SUCCEEDED(dev->GetRenderState(D3DRS_ALPHABLENDENABLE,&blend))&&blend==TRUE,"blend restore");
@@ -66,9 +71,15 @@ int main(int argc,char** argv){
                 Check(SUCCEEDED(dev->GetIndices(&index))&&index==ib,"UP indices restore");hipknife::Release(stream);hipknife::Release(index);
                 IDirect3DSurface9* target=nullptr;Check(SUCCEEDED(dev->GetRenderTarget(0,&target))&&target==back,"RT restore");hipknife::Release(target);
                 IDirect3DSurface9* depth=nullptr;Check(dev->GetDepthStencilSurface(&depth)==D3DERR_NOTFOUND&&!depth,"DS restore");
+                float readConstants[4]{};Check(SUCCEEDED(dev->GetVertexShaderConstantF(5,readConstants,1))&&
+                    !std::memcmp(readConstants,constants,sizeof(constants)),"VS constants restore including failed eye");
             };
             draws=failAt=0;Check(SUCCEEDED(dev->BeginScene()),"begin");
-            Check(renderer.Draw(dev,calls,back,pose,eyes,1,1)&&draws==2,"one draw per eye");
+            float affine[4][4]{};for(unsigned axis=0;axis<4;++axis)affine[axis][axis]=1;
+            affine[3][0]=pose.p.x;affine[3][1]=pose.p.y;affine[3][2]=pose.p.z;
+            // Round0 legacy pose, round1 NEW affine path. Identical pixels prove
+            // the extension preserves accepted knife rendering at identity.
+            Check(renderer.Draw(dev,calls,back,pose,eyes,1,1,round?affine:nullptr)&&draws==2,"one draw per eye / affine equivalence");
             restored();Check(SUCCEEDED(dev->EndScene()),"end");
             IDirect3DSurface9* read=nullptr;Check(SUCCEEDED(dev->CreateOffscreenPlainSurface(512,256,D3DFMT_A8R8G8B8,D3DPOOL_SYSTEMMEM,&read,nullptr)),"readback");
             Check(SUCCEEDED(dev->GetRenderTargetData(back,read)),"pixel copy");D3DLOCKED_RECT r{};
@@ -84,8 +95,26 @@ int main(int argc,char** argv){
             if(round)Check(pixels[0]==previous[0]&&pixels[1]==previous[1],"identical Reset recreation pixels");
             previous[0]=pixels[0];previous[1]=pixels[1];
             std::printf("own GPU %s round%u L/R pixels=%u/%u colours=%zu/%zu\n",names[profile],round,pixels[0],pixels[1],colours[0].size(),colours[1].size());
+            // Actual content through a reflected/scaled native-style affine
+            // matrix, not just the old pose path. No assumed controller mount.
+            affine[0][0]=-.8f;affine[1][1]=affine[2][2]=.8f;
+            affine[3][0]=.8f*centre.x;affine[3][1]=-.8f*centre.y;affine[3][2]=-.8f-.8f*centre.z;
+            Check(SUCCEEDED(dev->SetViewport(&full))&&SUCCEEDED(dev->Clear(0,nullptr,D3DCLEAR_TARGET,0xff102030,1,0))&&
+                SUCCEEDED(dev->SetViewport(&initial)),"affine clear");
+            Check(SUCCEEDED(dev->BeginScene()),"affine begin");draws=failAt=0;
+            Check(renderer.Draw(dev,calls,back,pose,eyes,1,1,affine)&&draws==2,"reflected scaled original mesh both eyes");
+            restored();Check(SUCCEEDED(dev->EndScene()),"affine end");
+            Check(SUCCEEDED(dev->CreateOffscreenPlainSurface(512,256,D3DFMT_A8R8G8B8,D3DPOOL_SYSTEMMEM,&read,nullptr))&&
+                SUCCEEDED(dev->GetRenderTargetData(back,read))&&SUCCEEDED(read->LockRect(&r,nullptr,D3DLOCK_READONLY)),"affine pixels");
+            unsigned scaled[2]{};
+            for(unsigned y=0;y<256;++y)for(unsigned x=0;x<512;++x)
+                if((*reinterpret_cast<const DWORD*>(static_cast<const unsigned char*>(r.pBits)+y*r.Pitch+x*4)&0xffffff)!=0x102030)++scaled[x/256];
+            Check(SUCCEEDED(read->UnlockRect()),"affine unlock");hipknife::Release(read);
+            Check(scaled[0]>30&&scaled[1]>30&&scaled[0]<pixels[0]&&scaled[1]<pixels[1],"smaller reflected textured content BOTH eyes");
+            const float finite=affine[0][0];affine[0][0]=std::numeric_limits<float>::quiet_NaN();draws=0;
+            Check(!renderer.Draw(dev,calls,back,pose,eyes,1,1,affine)&&!draws,"reject invalid affine before drawing");restored();affine[0][0]=finite;
             Check(SUCCEEDED(dev->BeginScene()),"fault begin");draws=0;failAt=2;
-            Check(!renderer.Draw(dev,calls,back,pose,eyes,1,1),"injected second-eye failure");restored();
+            Check(!renderer.Draw(dev,calls,back,pose,eyes,1,1,affine),"injected second-eye failure / affine");restored();
             Check(SUCCEEDED(dev->EndScene()),"fault end");renderer.ReleaseGPU();
             Check(SUCCEEDED(dev->SetStreamSource(0,nullptr,0,0))&&SUCCEEDED(dev->SetIndices(nullptr)),"unbind");
             hipknife::Release(vb);hipknife::Release(ib);hipknife::Release(back);

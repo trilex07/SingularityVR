@@ -1,5 +1,9 @@
 # Next weapons — original animation/model preparation, SIDE 2026-10-17
 
+Runtime follow-up supersedes the "future caller/not wired" limitations below:
+see `docs/next-weapon-runtime-integration.md`. Those historical offline receipts
+do NOT identify the new candidate, an installed DLL, or L3/L4 acceptance.
+
 ## Current control decision — supersedes manual magazine extraction
 
 User requests Circle eject for Valkyrie/Volk/Kasimov, then physical-left grip

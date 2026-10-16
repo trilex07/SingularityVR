@@ -86,7 +86,7 @@ static void TestCancellation(const Profile& p){
         if(fault==8)x.f.gesture.weapon++;
         if(fault==9)x.f.gesture.pawn++;
         if(fault==10)x.c.shoulder.left+=.01f;
-        if(fault==11)x.f.gesture.firing=true;
+        if(fault==11)x.f.gesture.supported=false;
         if(fault==12)x.f.gesture.capacity++;
         if(fault==13)x.f.gesture.nowMs=0;
         if(fault==14)x.f.gesture.socket.z=std::numeric_limits<float>::quiet_NaN();
@@ -101,6 +101,16 @@ static void TestCancellation(const Profile& p){
     }
 }
 static void TestAmmoAndTimeout(const Profile& p){
+    Fixture noPermit(p);noPermit.f.nativePermitRequired=true;noPermit.Insert();
+    noPermit.f.gesture.clip=6;noPermit.f.gesture.reserve=21;
+    assert(noPermit.Tick(false,noPermit.f.gesture.socket).event==E::None); // conserved HUD alone is not OUR native completion
+    noPermit.f.nativePermitConsumed=true;
+    assert(noPermit.Tick(false,noPermit.f.gesture.socket).event==E::Acknowledged);
+    Fixture heldTrigger(p);heldTrigger.Start();heldTrigger.f.gesture.firing=true;
+    assert(heldTrigger.Tick(true,heldTrigger.f.gesture.pouch).event==E::GrabFresh);
+    assert(heldTrigger.Tick(false,heldTrigger.f.gesture.socket).reloadIntent);
+    // Runtime suppresses R2 while absent; raw held trigger must not silently
+    // cancel the physical procedure and make the attached magazine reappear.
     Fixture independent(p);independent.c.gesture.cylinderGestures=true;
     independent.c.gesture.insertRadius=9;independent.c.gesture.grabWindowMs=60000;
     independent.f.gesture.releaseCylinder=true;
@@ -253,6 +263,6 @@ int main(int argc,char** argv){
     }
     assert(transactions==30000);
     if(argc>1){assert(argc==4);ValidateAsset(argv[1],547,596);ValidateAsset(argv[2],242,198);ValidateAsset(argv[3],170,180);}
-    std::printf("next-weapon reload L1 PASS: 3 profiles, Circle eject/shoulder/insert with NO flick, %u conserved synthetic transactions, default OFF/identity/calibration/ownership/held-input gates; native backend NOT wired; private assets %s\n",
+    std::printf("next-weapon reload L1 PASS: 3 profiles, Circle eject/shoulder/insert with NO flick, %u conserved synthetic transactions, default OFF/identity/calibration/ownership/held-input gates; pure policy fixture, NOT native inventory proof; private assets %s\n",
         transactions,argc==4?"validated":"not requested");
 }

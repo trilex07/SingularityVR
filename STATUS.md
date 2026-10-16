@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE: THREE actual runtime connections implemented on
+feature/next-weapon-reload-assets (base main513013a), not just offline prototypes.
+Valkyrie/Volk/Kasimov: default-OFF dispatcher, shared audited AttemptReload hook,
+native one-shot permit + ordinary reload tap + consumed/conserved ammo ACK;
+Circle/left-shoulder/insert, native gun/attachment root hold + child animation,
+original attached clip hide/carried/drop, live IB/CTAB/socket identity, Reset.
+Centurion/accepted language/knife/hands/etc preserved; ZERO Steam or INI writes.
+See docs/next-weapon-runtime-integration.md for exact integration/test contract.
+Offline native mapper confirms all three classes share the same native method
+and Shotgun/Sniper inherit Shared script states. L1/L2 final receipt pending;
+L3/L4 UNKNOWN, not "100% physically verified". Carried albedo/private depth is
+not a full native-lighting/hand-occlusion claim. Do not deploy an old SIDE DLL
+over newer MAIN; integrate SOURCE and preserve its accepted dependency profile.
+
 LATEST 2026-10-17 SIDE next-weapon control decision: Valkyrie/Volk/Kasimov use
 Circle eject -> physical-left shoulder grip -> insert/release, no old-magazine
 pull or closing flick. Independent default-OFF CPU policy replaces the shared

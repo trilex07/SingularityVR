@@ -124,6 +124,7 @@ class Renderer {
     UINT textureWidth=0,textureHeight=0;
     UINT width=0,height=0;bool failed=false;
     knifelight::Renderer lighting;bool sceneLighting=false;
+    V sourceCentre{};
 public:
     bool Load(const std::string& file,bool sceneLit=false){
         const auto slash=file.find_last_of("\\/");
@@ -138,6 +139,10 @@ public:
         const auto slash=file.find_last_of("\\/");
         if(!Read(albedo,data,16+2048*2048*4)||!DecodeTexture(data.data(),data.size(),textureWidth,textureHeight,texels))return false;
         source=std::move(vertices);indices=std::move(ix);scratch.resize(source.size());
+        V lo{1,1,1},hi{-1,-1,-1};for(const auto& v:source){
+            lo.x=std::min(lo.x,v.x);lo.y=std::min(lo.y,v.y);lo.z=std::min(lo.z,v.z);
+            hi.x=std::max(hi.x,v.x);hi.y=std::max(hi.y,v.y);hi.z=std::max(hi.z,v.z);}
+        sourceCentre=(lo+hi)*.5f;
         sceneLighting=sceneLit;
         if(sceneLighting&&!lighting.Load(slash==std::string::npos?std::string():file.substr(0,slash+1)))return false;
         if(Triangles()<=5000){jointScratch.resize(Triangles()*12);jointIndices.resize(jointScratch.size());
@@ -148,6 +153,7 @@ public:
     unsigned Triangles()const{return unsigned(indices.size()/3);}
     unsigned TextureWidth()const{return textureWidth;}
     unsigned TextureHeight()const{return textureHeight;}
+    V SourceCentre()const{return sourceCentre;}
     void ReleaseGPU(){lighting.Release();Release(depth);Release(state);Release(texture);width=height=0;failed=false;}
     bool Ensure(IDirect3DDevice9* dev,UINT w,UINT h){
         if(source.empty()||texels.empty()||failed||w<2||w%2||h<2)return false;
@@ -212,11 +218,13 @@ public:
         return SUCCEEDED(c.draw(dev,D3DPT_TRIANGLELIST,0,count,count/3,jointIndices.data(),D3DFMT_INDEX16,jointScratch.data(),sizeof(jointScratch[0])));
     }
     bool Draw(IDirect3DDevice9* dev,const Calls& c,IDirect3DSurface9* back,
-              const Pose& knife,const Pose (&eyes)[2],float tx,float ty){
+              const Pose& knife,const Pose (&eyes)[2],float tx,float ty,const float (*affine)[4]=nullptr){
         D3DMATRIX proj{},ident{};
         if(!state||!texture||!c.Valid()||!back||!Valid(knife.q)||!Finite(knife.p)||
            !Projection(tx,ty,proj.m))return false;
         for(const auto& eye:eyes)if(!Valid(eye.q)||!Finite(eye.p))return false;
+        if(affine){for(unsigned r=0;r<4;++r)for(unsigned k=0;k<4;++k)if(!std::isfinite(affine[r][k]))return false;
+            if(affine[0][3]||affine[1][3]||affine[2][3]||affine[3][3]!=1)return false;}
         for(int i=0;i<4;++i)ident.m[i][i]=1;
         StateGuard<> guard(dev,state,c);if(!guard.valid)return false;
         if(FAILED(dev->SetDepthStencilSurface(nullptr)))return false;
@@ -254,7 +262,13 @@ public:
             const D3DVIEWPORT9 vp{e*width/2,0,width/2,height,0,1};
             if(FAILED(c.viewport(dev,&vp)))return false;
             for(size_t i=0;i<source.size();++i){
-                const auto& v=source[i];const V p=EyeLocal(knife.p+Rotate(knife.q,{v.x,v.y,v.z}),eyes[e]);
+                const auto& v=source[i];
+                const V world=affine?V{
+                    v.x*affine[0][0]+v.y*affine[1][0]+v.z*affine[2][0]+affine[3][0],
+                    v.x*affine[0][1]+v.y*affine[1][1]+v.z*affine[2][1]+affine[3][1],
+                    v.x*affine[0][2]+v.y*affine[1][2]+v.z*affine[2][2]+affine[3][2]}:
+                    knife.p+Rotate(knife.q,{v.x,v.y,v.z});
+                const V p=EyeLocal(world,eyes[e]);
                 scratch[i]={p.x,p.y,p.z,0xffffffff,v.u,v.v};
             }
             if(FAILED(c.draw(dev,D3DPT_TRIANGLELIST,0,UINT(scratch.size()),UINT(indices.size()/3),

@@ -3,7 +3,7 @@
 #include "weapon_reload_profiles.h"
 #include <cstring>
 
-// CPU-only next-weapon prototypes. NOT connected to OpenXR/XInput/UE3.
+// Pure CPU policy, called by the opt-in runtime dispatcher. No engine ABI here.
 // Independent magazine policy: Circle eject -> shoulder grab -> insert/release.
 // Reuse observation types, NEVER the Centurion cylinder FSM or native tap.
 namespace weaponreloadproto {
@@ -43,6 +43,7 @@ struct Frame {
     long meshWedges=0;
     int aimHand=1; // first slice: right weapon, physical left interaction only
     bool magazineReleaseDown=false; // named action LEVEL, PSVR2 binding: Circle
+    bool nativePermitRequired=false,nativePermitConsumed=false; // real dispatcher evidence, not just conserved HUD change
     centurionreload::Frame gesture{};
 };
 enum class Phase {Idle,NeedAmmo,Carrying,WaitingNative,Cooldown};
@@ -87,7 +88,7 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
     const bool core=f.enabled&&identity&&f.aimHand==1&&calibrated&&!changed&&
         in.context&&in.tracked&&in.supported&&in.pawn&&in.weapon&&in.ammoFresh&&
         centurionreload::AmmoValid(in)&&hipknife::Finite(in.hand)&&hipknife::Finite(in.socket)&&
-        hipknife::Finite(in.pouch)&&!in.firing&&in.nowMs>=t.lastMs&&
+        hipknife::Finite(in.pouch)&&(!in.firing||t.phase!=Phase::Idle)&&in.nowMs>=t.lastMs&&
         (!t.pawn||t.pawn==in.pawn)&&(!t.weapon||t.weapon==in.weapon);
     s.profile=identity?f.kind:Kind::None;
     s.calibrationRevision=calibrated?c.revision:0;s.haveCalibration=calibrated;
@@ -112,7 +113,8 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
         return enter(Phase::Cooldown,Event::Cancelled);
     if(t.phase==Phase::WaitingNative){
         const int gain=in.clip-t.startClip;
-        if(gain>0&&in.reserve==t.startReserve-gain)return enter(Phase::Cooldown,Event::Acknowledged);
+        if(gain>0&&in.reserve==t.startReserve-gain&&(!f.nativePermitRequired||f.nativePermitConsumed))
+            return enter(Phase::Cooldown,Event::Acknowledged);
         if(in.nowMs-t.since>=g.ackMs)return enter(Phase::Cooldown,Event::Rejected);
         return out();
     }

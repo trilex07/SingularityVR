@@ -6,14 +6,15 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $vswhere="${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $vcvars=Join-Path $vs 'VC\Auxiliary\Build\vcvarsall.bat'
-foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-clip','test-manual-reload','test-hip-knife','test-weapon-holster','test-hand-anchor-math','test-knife-renderer','test-next-weapon-reload','test-next-weapon-animation')){
+foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-clip','test-manual-reload','test-hip-knife','test-weapon-holster','test-hand-anchor-math','test-knife-renderer','test-next-weapon-reload','test-next-weapon-animation','test-next-weapon-runtime')){
     $source=Join-Path $repo "spikes\view_matrix\tests\$test.cpp"
     $exe=Join-Path $out "$test.exe"
     $obj=Join-Path $out "$test.obj"
     $command="`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:`"$exe`" /Fo:`"$obj`" `"$source`""
     cmd /c $command
     if($LASTEXITCODE -ne 0){throw "compile failed: $test"}
-    if($test -eq 'test-next-weapon-animation' -and $PreparedRoot){ & $exe $PreparedRoot }
+    if($test -in @('test-next-weapon-animation','test-next-weapon-runtime') -and $PreparedRoot){ & $exe $PreparedRoot }
+    elseif($test -eq 'test-next-weapon-runtime') { throw 'Runtime fixture requires explicit -PreparedRoot (private originals)' }
     elseif($test -eq 'test-next-weapon-reload' -and $PreparedRoot){
         & $exe (Join-Path $PreparedRoot 'valkyrie/valkyrie_clip.svrk') (Join-Path $PreparedRoot 'volk/volk_clip.svrk') (Join-Path $PreparedRoot 'kasimov/kasimov_clip.svrk')
     }
@@ -41,6 +42,13 @@ try{
     if($LASTEXITCODE -ne 0){throw 'native ABI harness compile failed'}
     & $abiExe
     if($LASTEXITCODE -ne 0){throw 'native ABI harness failed'}
+    $nextAbiSource=Join-Path $repo 'spikes/view_matrix/tests/test-next-weapon-native-abi.cpp'
+    $nextAbiExe=Join-Path $out 'test-next-weapon-native-abi.exe'
+    $command="`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /I`"$mh\include`" /Fe:`"$nextAbiExe`" `"$nextAbiSource`" buffer.obj hook.obj trampoline.obj hde32.obj"
+    cmd /c $command
+    if($LASTEXITCODE -ne 0){throw 'three-weapon native ABI harness compile failed'}
+    & $nextAbiExe
+    if($LASTEXITCODE -ne 0){throw 'three-weapon native ABI harness failed'}
 }finally{Pop-Location}
 python (Join-Path $PSScriptRoot 'test_prepare_centurion.py')
 if($LASTEXITCODE -ne 0){throw 'Centurion extraction tests failed'}
@@ -66,3 +74,7 @@ if($Gpu){
 }
 python (Join-Path $PSScriptRoot 'test_inspect_native_reload.py')
 if($LASTEXITCODE -ne 0){throw 'Native reload offline mapper tests failed'}
+python (Join-Path $PSScriptRoot 'test_next_weapon_native.py')
+if($LASTEXITCODE -ne 0){throw 'Three-weapon inherited method checks failed'}
+python (Join-Path $PSScriptRoot 'test_runtime_candidate.py')
+if($LASTEXITCODE -ne 0){throw 'Offline candidate safety/provenance checks failed'}

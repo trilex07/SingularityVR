@@ -1,5 +1,9 @@
 # Next weapon reload prototypes — SIDE / offline
 
+Latest runtime connection: `docs/next-weapon-runtime-integration.md`. The code is
+now wired behind independent default-OFF flags; the historical report below
+remains offline evidence, NOT a current installed identity or physical PASS.
+
 Imported from f519de6; the receipt below is historical, NOT an installed or
 current candidate identity. Current original textures/animation evidence and
 left-shoulder contract: `docs/next-weapon-animation-assets.md`.
