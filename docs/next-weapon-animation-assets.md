@@ -17,6 +17,21 @@ only, default OFF; do not change Centurion, native input, inventory or Steam.
 This first native-transfer prototype retains the existing partial/empty-clip
 and reserve>0 eligibility; full-mag/no-reserve tactical ejection is not enabled.
 
+Circle follow-up receipt: L1_PASS 15 optimized CPU executables +44 Python tests,
+30000 Circle/shoulder/insert conserved transactions; held-through-startup/menu/
+tracking/disabled/weapon/calibration inputs, busy left hand, no grip-only eject,
+drop/retry, partial refill, timeout and one-shot request checks PASS. All three
+original clip decoders, fractional animation oracle and own-process GPU/state/
+Reset regressions remain PASS. Final narrow rebuild also checks Centurion's
+`releaseCylinder` input cannot accidentally trigger magazine release.
+L2_PASS clean source `0d335685dece66eb36a9ae6a12c02dadc876d65f`, `/O2`, x86
+PE32 `014C/010B`, empty working-tree manifest; DLL SHA-256
+`EF0555EF941F4E50ACA5A1194FBF661867A03EB639722ED224F1D581C6D90F37`.
+Circle-policy executable SHA-256
+`0FD284309ADD921083ECE038C1D5DC3019E216B84EE0FB43A0E3595930A50813`.
+This is still an offline policy/build, NOT native ejection or installed input.
+Centurion, renderer, input bindings, INI, private assets and Steam unchanged.
+
 Brief before implementation: extend the existing f519de6 offline prototypes,
 not Centurion runtime. Valkyrie, Volk S4 and Kasimov already have original rigid
 clip exports and validated PSA Reload tracks. Prepare original albedo and

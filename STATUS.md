@@ -7,7 +7,9 @@ Centurion pull/discard adapter; no Centurion/input/renderer/INI/Steam edits.
 L1_PASS: 15 CPU executables +44 Python tests, 30000 Circle/shoulder/insert
 transactions, held/context rearm, free-left ownership and partial conserved
 refill checks; existing original-asset GPU/state/Reset regression PASS.
-Follow-up clean L2 receipt pending. No physical/runtime acceptance claimed.
+L2_PASS clean 0d33568, x86 PE32 /O2, DLL SHA-256
+EF0555EF941F4E50ACA5A1194FBF661867A03EB639722ED224F1D581C6D90F37.
+No physical/runtime acceptance claimed; DLL is a regression artifact only.
 Centurion sequence unchanged: Circle unlock -> sideways open -> muzzle-down
 dump -> shoulder ammunition -> insert -> closing flick. NOT a dropped cylinder.
 These remain offline prototypes; no additional weapon backend/runtime install.
