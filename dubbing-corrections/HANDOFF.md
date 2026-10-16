@@ -212,6 +212,28 @@ M-AILABS (LibriVox public domain — legalne jak reszta castingu):
 Oryginały 16 kHz w `%TEMP%\opencode\dubbing-qa\mailabs_{en_,}m.wav`. Po wyborze użytkownika:
 klonowanie tym samym łańcuchem (dawca zamiast own-EN), bramka multi-draw, ucho decyduje.
 
+## Do wgrania jako dubbing — instrukcja dla MAIN (2026-10-16, Side dostarcza, MAIN wdraża)
+
+Manifest: `dubbing-corrections/deploy_manifest.jsonl` (166 wierszy: pack, target,
+src w temp, id/tekst, sha16). Wszystkie pliki zweryfikowane: PCM16 mono 24 kHz,
+peak ≤ −1,0 dBFS. WAV-y w temp (nie w gicie); MAIN kopiuje do banków.
+- **Story** (159 plików, drop-in 1:1 do `story_voicepack_xlingual`, te same nazwy):
+  130× batch1 (SP_VI5_KISMET03, `.../resynth130/`) + 29× batch2 (train_intro+RT1,
+  `.../resynth_firstscene/`). Źródła: kolumna `src` manifestu.
+- **Intro** (7 plików, drop-in do `out/intro` jako `INTRO_*.pl.wav`):
+  NIM/GST (1005/1011/1012/1014) = piper darkman (spójny męski); pilot 1006/1010 =
+  XTTS dawca-PL; 1016 = XTTS krzyk dawca-okrzyk (primary; spokojny wariant XTTS-PL
+  w `resynth_intro_xtts/INTRO_1016_CP.xtts.wav` jako backup). Głos pilota celowo
+  inny niż reszta (decyzja: rozróżnialność). UWAGA: piper≠XTTS barwa — pilot brzmi
+  inaczej niż NIM/GST (zaakceptowane przez reżysera na odsłuchu).
+- **tts_text** w `polish_story_voice.jsonl` = teksty nowych nagrań (159 wierszy story);
+  intro nie ma pola tts_text (tekst = kolumna manifestu).
+- Po stronie MAIN: kopia plików wg manifestu, regeneracja backlog/GAPS na installerze
+  (statusy `side_text_review_applied` → TNC do weryfikacji w grze), bank cook,
+  runtime-check głośności radia/muzyki w Stearnie. Side NIE wdraża.
+- Poza zakresem tego pakietu: skipped/vignette (tabela gain do decyzji),
+  INTRO_1015 (zostaje EN), reszta chapterów (drafty bez korekt).
+
 ## Co NIE działa / następny krok
 
 - Korekty to propozycje tekstowe (L1): zero weryfikacji w grze (verified_in_game=false
