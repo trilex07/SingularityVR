@@ -126,3 +126,24 @@ on that leniency. [D3DUSAGE documentation](https://learn.microsoft.com/en-us/win
 also warns of performance cost for DEFAULT buffers without WRITEONLY; this is
 limited to cooked-size IBs under the OFF-by-default visual flag, and MAIN still
 must measure real gameplay frame times. No performance acceptance is claimed.
+
+## Build receipt
+
+Clean source `a373d1f4bc99af9d36ab2170a5384d31193403e5`, x86 PE32
+(`014C/010B`), `/O2`, performance instrumentation OFF. DLL SHA256:
+`307707C1365655C707474CB82AEFDC196459E159FBEB2143DE4D7D054739F03B`.
+14 CPU executables +34 Python checks PASS; own-process D3D9Ex index-buffer
+upload/read fixture PASS, no game or Steam loaded. Original cache/1042 fractional
+poses/idle identity and inspected geometry preview PASS, not native GPU animation
+pixels. Build has existing renderer warnings; no compilation errors.
+
+Private stage: `build/centurion-reload/animation-candidate/`, DLL +original clip
+mesh/albedo +SVCA; all three asset hashes and build identity verified by the
+staging helper. No INI or installed files copied. Exact receipt
+`centurion-preview.manifest.json` there. Previous scale/guard candidate folders
+remain separate. Subsequent receipt commit does not modify compiled sources.
+
+MAIN needs source integration, not deployment of this older standalone base:
+include scale fix4e0d810 plus a373d1f, retain current c70b36f settings only as
+reviewed above, and preserve latest mirror/gloves/Polish assets/config. L3/L4
+remain UNKNOWN. No PR creation success or Steam/PSVR2 acceptance is implied.

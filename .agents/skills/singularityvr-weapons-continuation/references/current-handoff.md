@@ -12,6 +12,13 @@ scale follows gun/world calibration; no full spare material or individual shell
 particles yet. These new receipts supersede older NOT DONE animation/size
 paragraphs below, not the Steam ownership boundary. Never infer deployment.
 
+Animation source a373d1f: 14 CPU/34 Python checks plus own-process IB upload/read
+PASS, clean x86 PE32 /O2 DLL307707C1365655C707474CB82AEFDC196459E159FBEB2143DE4D7D054739F03B.
+Private animation-candidate contains DLL+3 verified assets, NO INI/Steam writes;
+original SVCA SHA85ABCDDE7C9F1971C7B3BD5457672D69987FF332F8EC8C52953604505A945EA6.
+Current MAIN must integrate/rebuild source (including scale4e0d810), not deploy
+this older-base DLL over newer mirror/glove/localization work. L3/L4 UNKNOWN.
+
 Native continuation now supersedes the older "no ABI/guard implemented" scope:
 read `docs/centurion-native-reload.md` first. Offline registration->wrapper->class
 vtable->native method and empty BeginFire/fallback path identified. New

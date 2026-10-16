@@ -10,7 +10,11 @@ Shoulder uses physical yaw at transaction start and latches it; negative legacy
 left offset migrated to magnitude22, NOT an inverted OpenXR quaternion patch.
 L1_PASS 14 CPU executables +34 Python checks, private1042 rigid original poses
 and idle bind identity, inspected native geometry; own-process D3D9Ex IB bytes
-upload/read checks PASS (NOT Steam/animation pixels). L2_PENDING; L3/L4 UNKNOWN.
+upload/read checks PASS (NOT Steam/animation pixels). L2_PASS clean a373d1f,
+x86 PE32 /O2 DLL SHA256
+307707C1365655C707474CB82AEFDC196459E159FBEB2143DE4D7D054739F03B.
+Private animation-candidate DLL +3 assets/hash manifest verified, NO INI staged.
+L3/L4 UNKNOWN.
 No individual ejected cartridge meshes/FX; native post-request animation not
 suppressed; detached spare remains albedo-only. User reports3 guard blocks,
 not universal reload acceptance. ZERO Steam. See docs/centurion-cylinder-animation.md.
