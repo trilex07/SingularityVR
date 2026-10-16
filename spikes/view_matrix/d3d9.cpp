@@ -14,6 +14,8 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "knife_renderer.h"
 #include "centurion_reload.h"
 #include "centurion_clip_preview.h"
+#include "centurion_cylinder_animation.h"
+#include "centurion_shells.h"
 #include "centurion_native_reload.h"
 #include "weapon_wheel.h"
 #include "ammo_probe.h"
@@ -2234,17 +2236,30 @@ static centurionnative::Gate g_centurionNativeGate;
 static volatile LONG g_centurionNativeTarget=0,g_centurionNativeSlot=0;
 static reloadcontrols::State g_reloadControls;
 int g_centurionClipPreview=0,g_centurionReloadMarkers=0;
+static int g_centurionCylinderAnimation=0;
+static int g_centurionShellEjection=0;
 static hipknife::Renderer g_centurionClipRenderer;
 static bool g_centurionClipReady=false,g_centurionClipFault=false;
 static centurionclip::PresentationSafety g_centurionPresentationSafety;
 static centurionclip::Config g_centurionClipConfig;
+static centurionanim::Data g_centurionAnimation;
+static IDirect3DIndexBuffer9* g_centurionAnimationIB=nullptr;
+static bool g_centurionAnimationIBValid=false,g_centurionAnimationFault=false;
+static unsigned g_centurionAnimationIBAttempts=0;
+static volatile LONG g_centurionAnimationDraws=0,g_centurionAnimationWitness=0;
+static hipknife::Renderer g_centurionShellRenderer;
+static bool g_centurionShellReady=false,g_centurionShellFault=false,g_centurionShellWarmed=false;
+static centurionshells::Burst g_centurionShellBurst{}; // XR input owner only
+static volatile LONG g_centurionShellSeenGun=0,g_centurionShellGeneration=0;
+static LONG g_centurionShellInputGeneration=0;
 centurionreload::Config g_centurionConfig{};
 centurionreload::State g_centurionState{};
 centurionreload::NativeTap g_centurionTap{};
 hipknife::TriggerGate g_centurionTrigger[2]{};
 bool g_centurionOwnsGrip=false;
 static SRWLOCK g_centurionVisualLock=SRWLOCK_INIT;
-struct CenturionVisual {bool visible=false;hipknife::V pouch{},socket{},hand{};int phase=0;centurionclip::Snapshot clip{};hipknife::Pose source{};};
+struct CenturionVisual {bool visible=false;hipknife::V pouch{},socket{},hand{};int phase=0;centurionclip::Snapshot clip{};hipknife::Pose source{};std::uint64_t since=0;
+    centurionshells::Burst shells{};centurionshells::WorldFrame world{};LONG shellGeneration=0;};
 static CenturionVisual g_centurionVisual{};
 static IDirect3DStateBlock9* g_centurionMarkerState=nullptr;
 static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,bool releaseCylinder);
@@ -2252,6 +2267,7 @@ static void DrawCenturionReload(IDirect3DDevice9* dev);
 static void CancelCenturionInput(){
     const bool owned=g_centurionOwnsGrip;
     g_centurionState={};g_centurionState.ownsGrip=owned;
+    g_centurionShellBurst={};
     g_centurionTap.Cancel();g_reloadControls={};
     if(TryAcquireSRWLockExclusive(&g_centurionNativeLock)){
         g_centurionNativeGate.Clear();ReleaseSRWLockExclusive(&g_centurionNativeLock);
@@ -9288,7 +9304,38 @@ bool InitXRInput() {
     g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};
     CancelCenturionInput();
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipReady=false;g_centurionClipFault=false;
+    g_centurionShellRenderer.ReleaseGPU();g_centurionShellReady=false;g_centurionShellFault=false;g_centurionShellWarmed=false;
+    InterlockedExchange(&g_centurionShellSeenGun,0);InterlockedIncrement(&g_centurionShellGeneration);
     g_centurionPresentationSafety.Reset();
+    g_centurionAnimation={};g_centurionAnimationFault=false;
+    hipknife::Release(g_centurionAnimationIB);g_centurionAnimationIBValid=false;g_centurionAnimationIBAttempts=0;
+    if(g_centurionReload&&g_centurionCylinderAnimation){
+        char path[MAX_PATH]{};
+        if(IniPath(path)){
+            std::string directory(path);const auto slash=directory.find_last_of("\\/");
+            if(slash!=std::string::npos){
+                directory.resize(slash);directory+="\\vr-assets\\reload\\centurion\\centurion_reload.svca";
+                std::vector<unsigned char> data;
+                if(hipknife::Read(directory,data,16384))centurionanim::Decode(data.data(),data.size(),g_centurionAnimation);
+            }
+        }
+        Log("centurion animation: original two-track cache=%s; render-only; IB content witness and CTAB still required",
+            g_centurionAnimation.ready?"READY":"MISSING/INVALID (native unchanged)");
+    }
+    if(g_centurionReload&&g_centurionShellEjection){
+        char path[MAX_PATH]{};
+        if(IniPath(path)){
+            std::string directory(path);const auto slash=directory.find_last_of("\\/");
+            if(slash!=std::string::npos){
+                directory.resize(slash);directory+="\\vr-assets\\reload\\centurion\\";
+                g_centurionShellReady=g_centurionShellRenderer.LoadWithAlbedo(
+                    directory+"centurion_shell.svrk",directory+"centurion_shell.svrt")&&
+                    g_centurionShellRenderer.Vertices()==136&&g_centurionShellRenderer.Triangles()==100;
+            }
+        }
+        Log("centurion shells: original handgun particle mesh/albedo=%s; cosmetic only, no collision/audio; native gun witness required",
+            g_centurionShellReady?"READY":"MISSING/INVALID (disabled)");
+    }
     if(g_centurionReload&&g_centurionClipPreview){
         char path[MAX_PATH]{};
         if(IniPath(path)){
@@ -18628,6 +18675,58 @@ static bool TrackFpCaster(IDirect3DDevice9* dev,INT baseVertex,UINT minIndex,
     return skip;
 }
 
+// No file I/O, asset loading or allocations here. Verify the actual cooked IB
+// content once per resource (max four attempts/reset), never just mesh counts.
+static int PrepareCenturionCylinder(IDirect3DDevice9* dev,INT baseVertex,UINT vertices,
+    UINT first,UINT triangles,float (&saved)[15][4]){
+    if(!g_centurionCylinderAnimation||!g_centurionAnimation.ready||g_centurionAnimationFault||
+       !g_centurionReload||!g_centurionConfig.cylinderGestures||baseVertex!=0||vertices!=5799||
+       first!=0||triangles!=6767||GetCurrentThreadId()!=g_mainThreadId||!FgMatchWindow()||
+       !Rd(g_rtIsScene)||Rd(g_weaponHolstered))return -1;
+    const auto layout=g_boundShaderLayout;
+    if(layout.shadow||layout.bones<0||layout.boneRegs<15||layout.bones+15>256)return -1;
+    CenturionVisual visual;
+    if(!TryAcquireSRWLockShared(&g_centurionVisualLock))return -1;
+    visual=g_centurionVisual;ReleaseSRWLockShared(&g_centurionVisualLock);
+    const auto now=GetTickCount64();
+    if(!visual.visible||!centurionclip::Current(visual.clip,(uint32_t)g_playerPawn,
+        (uint32_t)Rd(g_weaponObj),now))return -1;
+    const auto time=centurionanim::Time((centurionreload::Phase)visual.phase,visual.since,now);
+    if(!time.active)return -1;
+    IDirect3DIndexBuffer9* ib=nullptr;
+    if(FAILED(dev->GetIndices(&ib))||!ib)return -1;
+    if(ib!=g_centurionAnimationIB){
+        InterlockedExchange(&g_centurionShellSeenGun,0);
+        hipknife::Release(g_centurionAnimationIB);g_centurionAnimationIB=ib;ib->AddRef();
+        g_centurionAnimationIBValid=false;
+        if(g_centurionAnimationIBAttempts<4){
+            ++g_centurionAnimationIBAttempts;
+            D3DINDEXBUFFER_DESC desc{};void* data=nullptr;
+            constexpr UINT bytes=6767*3*2;
+            if(SUCCEEDED(ib->GetDesc(&desc))&&desc.Format==D3DFMT_INDEX16&&desc.Size>=bytes&&
+               SUCCEEDED(ib->Lock(0,bytes,&data,D3DLOCK_READONLY))){
+                const bool matches=data&&centurionanim::Hash((const unsigned char*)data,bytes)==g_centurionAnimation.indexHash;
+                g_centurionAnimationIBValid=SUCCEEDED(ib->Unlock())&&matches;
+            }
+            InterlockedExchange(&g_centurionAnimationWitness,g_centurionAnimationIBValid?1:-1);
+        }
+    }
+    ib->Release();if(!g_centurionAnimationIBValid)return -1;
+    float changed[15][4];
+    if(FAILED(dev->GetVertexShaderConstantF(layout.bones,&saved[0][0],15))||
+       !centurionanim::Palette(g_centurionAnimation,time,saved,changed)){
+        InterlockedExchange(&g_centurionShellSeenGun,0);return -1;
+    }
+    if(FAILED(g_origSetVSConstF(dev,layout.bones,&changed[0][0],15))){
+        if(FAILED(g_origSetVSConstF(dev,layout.bones,&saved[0][0],15))){
+            g_centurionAnimationFault=true;InterlockedExchange(&g_centurionShellSeenGun,0);
+        }
+        return -1;
+    }
+    InterlockedExchange(&g_centurionShellSeenGun,1);
+    InterlockedIncrement(&g_centurionAnimationDraws);return layout.bones;
+}
+
 HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                                INT baseVertex, UINT minIndex, UINT numVertices,
                                                UINT startIndex, UINT primCount) {
@@ -18953,6 +19052,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     const UINT gloveTriangles=cuffBuffer?g_nativeCuffRenderer.Triangles(cuffProfile):g_nativeGloveRenderer.Triangles();
     nativegloves::IndexGuard<> nativeIndices(dev,cuffBuffer?cuffBuffer:(nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr),
         cuffBuffer?g_nativeCuffRenderer.SourceBytes(cuffProfile):16512*2);
+    float cylinderSaved[15][4];
+    const int cylinderBase=t==D3DPT_TRIANGLELIST&&nSeg==1&&!boneRegN&&!independentRegs
+        ?PrepareCenturionCylinder(dev,baseVertex,numVertices,startIndex,primCount,cylinderSaved):-1;
     const HRESULT dhr = StereoPair(dev, [&] {
         HRESULT hr = D3D_OK;
         if(nativeIndices.valid){
@@ -18979,6 +19081,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         return hr;
     });
     const HRESULT nativeRestore=nativeIndices.Restore();
+    if(cylinderBase>=0&&FAILED(g_origSetVSConstF(dev,cylinderBase,&cylinderSaved[0][0],15))){
+        g_centurionAnimationFault=true;InterlockedExchange(&g_centurionShellSeenGun,0);
+    }
     if(independentRegs)g_origSetVSConstF(dev,5,&independentSaved[0][0],independentRegs);
     if (boneRegN) g_origSetVSConstF(dev,boneRegLo, &savedBones[0][0], boneRegN);
     if(nativeCuff){
@@ -21598,6 +21703,7 @@ HRESULT STDMETHODCALLTYPE Hook_CreateVertexBuffer(IDirect3DDevice9* dev, UINT le
 HRESULT STDMETHODCALLTYPE Hook_CreateIndexBuffer(IDirect3DDevice9* dev, UINT len, DWORD usage,
                                                  D3DFORMAT fmt, D3DPOOL pool,
                                                  IDirect3DIndexBuffer9** out, HANDLE* share) {
+    usage=centurionanim::ReadableUsage(g_centurionCylinderAnimation!=0,len,fmt==D3DFMT_INDEX16,usage,D3DUSAGE_WRITEONLY);
     if (g_deviceIsEx && pool == D3DPOOL_MANAGED) { pool = D3DPOOL_DEFAULT; InterlockedIncrement(&g_xlatIB); }
     return g_origCreateIndexBuffer(dev, len, usage, fmt, pool, out, share);
 }
@@ -25780,6 +25886,10 @@ void ReleaseWristResources() {
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     g_hipKnifeRenderer.ReleaseGPU();
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipFault=false;
+    hipknife::Release(g_centurionAnimationIB);g_centurionAnimationIBValid=false;
+    g_centurionAnimationIBAttempts=0;g_centurionAnimationFault=false;
+    g_centurionShellRenderer.ReleaseGPU();g_centurionShellFault=false;g_centurionShellWarmed=false;
+    InterlockedExchange(&g_centurionShellSeenGun,0);InterlockedIncrement(&g_centurionShellGeneration);
     g_centurionPresentationSafety.Reset();
     hipknife::Release(g_centurionMarkerState);
     shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();worldshadowfix::Release();
@@ -26224,11 +26334,32 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
     f.gun={{gp.x,gp.y,gp.z},{q.x,q.y,q.z,q.w}};
     f.socket=hipknife::V{gp.x,gp.y,gp.z}+hipknife::Rotate({q.x,q.y,q.z,q.w},g_centurionConfig.socketLocal);
     const hipknife::V head{g_headPosXR[0],g_headPosXR[1],g_headPosXR[2]};
-    f.pouch=centurionreload::Pouch(head,g_centreYaw,g_centurionConfig).p;
+    hipknife::V shoulderHead{};
+    const auto& le=g_eyePose[0].position;const auto& re=g_eyePose[1].position;
+    const bool headCentreValid=g_haveEyes&&g_eyePositionsValid&&
+        centurionreload::HeadCentre({le.x,le.y,le.z},{re.x,re.y,re.z},shoulderHead);
+    f.tracked=f.tracked&&headCentreValid;
+    f.bodyYaw=g_headYawRad;
+    const float shoulderYaw=centurionreload::AnchorYaw(g_centurionState,f.bodyYaw);
+    f.pouch=centurionreload::Pouch(shoulderHead,shoulderYaw,g_centurionConfig).p;
     if(g_hipKnifeEnabled&&g_hipKnifeReady)
         f.knifeNear=centurionreload::Near(f.hand,hipknife::Hip(head,g_centreYaw,g_hipKnifeConfig).p,g_hipKnifeConfig.radius);
     const bool gripEdge=f.grip&&!g_centurionState.priorGrip;
     const auto result=centurionreload::Update(g_centurionState,f,g_centurionConfig);
+    const centurionshells::WorldFrame shellWorld{{g_camPos[0],g_camPos[1],g_camPos[2]},
+        {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
+        g_baseYaw*(6.2831853f/65536.f),MetresToUU()};
+    const LONG shellGeneration=Rd(g_centurionShellGeneration);
+    if(g_centurionShellInputGeneration!=shellGeneration){
+        g_centurionShellBurst={};g_centurionShellInputGeneration=shellGeneration;
+    }
+    centurionshells::Maintain(g_centurionShellBurst,f,result.event);
+    const bool shellLaunch=centurionshells::Launch(g_centurionShellBurst,f,result.event,
+        g_centurionShellEjection&&g_centurionShellReady&&g_centurionCylinderAnimation&&
+        Rd(g_camPosValid)&&Rd(g_centurionShellSeenGun),shellWorld);
+    if(shellLaunch){static unsigned bursts=0;if(bursts++<12)
+        Log("centurion shells: cosmetic dump count=%u native-gun-witness=1 socket=(%.3f %.3f %.3f) (NOT native particle/collision/audio)",
+            g_centurionShellBurst.count,f.socket.x,f.socket.y,f.socket.z);}
     if(g_centurionNativeGuardMode&&TryAcquireSRWLockExclusive(&g_centurionNativeLock)){
         // Gate only an identity-bound, currently held Centurion with fresh HUD
         // observations, the audited native method and an active input context.
@@ -26254,7 +26385,10 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
         const auto& leftQ=g_handAimOrientation[0];
         g_centurionVisual={visible,f.pouch,f.socket,f.hand,(int)g_centurionState.phase,
             {visible,g_centurionState.phase,{f.hand,{leftQ.x,leftQ.y,leftQ.z,leftQ.w}},f.pawn,f.weapon,now}};
-        g_centurionVisual.source=centurionreload::Pouch(head,g_centreYaw,g_centurionConfig);
+        g_centurionVisual.source=centurionreload::Pouch(shoulderHead,shoulderYaw,g_centurionConfig);
+        g_centurionVisual.since=g_centurionState.since;
+        g_centurionVisual.shells=g_centurionShellBurst;g_centurionVisual.world=shellWorld;
+        g_centurionVisual.shellGeneration=shellGeneration;
         ReleaseSRWLockExclusive(&g_centurionVisualLock);
     }
     if(result.requestNative&&g_centurionNativeTap)g_centurionTap.Update(true,true,now);
@@ -26266,6 +26400,14 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
             hipknife::Length(f.hand-f.socket),hipknife::Length(f.hand-f.pouch));
     }
     if(result.event!=centurionreload::Event::None){
+        if(result.event==centurionreload::Event::Unlocked||result.event==centurionreload::Event::GrabFresh){
+            static unsigned anchors=0;if(anchors++<16){
+                const hipknife::Q inv{0,-std::sin(shoulderYaw*.5f),0,std::cos(shoulderYaw*.5f)};
+                const auto local=hipknife::Rotate(inv,f.pouch-shoulderHead);
+                Log("centurion shoulder: mid-eye=(%.3f %.3f %.3f) latchedYaw=%.3f local=(%.3f %.3f %.3f) target=(%.3f %.3f %.3f) (X<0 left,Z>0 behind; head-at-start estimate)",
+                    shoulderHead.x,shoulderHead.y,shoulderHead.z,shoulderYaw,local.x,local.y,local.z,f.pouch.x,f.pouch.y,f.pouch.z);
+            }
+        }
         static unsigned records=0;
         if(records++<128)Log("centurion reload: %s pawn=%08X weapon=%08X verts=%ld clip=%d reserve=%d size=%d nativeTap=%d socketDist=%.3f pouchDist=%.3f t=%llu sample=%llu fresh=%d",
             centurionreload::Name(result.event),f.pawn,f.weapon,Rd(g_gunVerts),f.clip,f.reserve,f.capacity,g_centurionNativeTap,
@@ -26275,7 +26417,8 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
 }
 
 static void DrawCenturionReload(IDirect3DDevice9* dev){
-    if(!g_centurionReloadMarkers&&(!g_centurionClipPreview||!g_centurionClipReady||g_centurionClipFault))return;
+    if(!g_centurionReloadMarkers&&(!g_centurionClipPreview||!g_centurionClipReady||g_centurionClipFault)&&
+       (!g_centurionShellEjection||!g_centurionShellReady||g_centurionShellFault))return;
     if(!g_centurionReload||!g_centurionPresentationSafety.Allowed()||!dev||!VrModeOn()||!InGameplay()||!Rd(g_dupDraws)||
        !g_haveEyes||Rd(g_gamePaused)||Rd(g_vrUiMenu)||Rd(g_panelOpen)||
        Rd(g_weaponWheelOpen)||CutsceneNativeCameraArmed()||!g_origDrawPrimUP||
@@ -26286,6 +26429,16 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
     visual=g_centurionVisual;ReleaseSRWLockShared(&g_centurionVisualLock);
     const ULONGLONG now=GetTickCount64();
     if(!visual.visible||!centurionclip::Current(visual.clip,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),now))return;
+    hipknife::Pose shellPoses[6];
+    const unsigned wantedShellCount=g_centurionShellEjection&&g_centurionShellReady&&!g_centurionShellFault&&
+        Rd(g_centurionShellSeenGun)&&visual.shellGeneration==Rd(g_centurionShellGeneration)?
+        centurionshells::Sample(visual.shells,visual.world,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),now,shellPoses):0;
+    // The new feature must not create an idle overlay/state-setup cost. Warm
+    // once outside the gesture, then use the existing pass only for real work.
+    // OFF retains the pre-existing preview/marker scheduling unchanged.
+    if(g_centurionShellEjection&&!centurionshells::NeedsPass(g_centurionShellWarmed,g_centurionReloadMarkers!=0,
+       g_centurionClipPreview&&g_centurionClipReady&&!g_centurionClipFault&&
+       centurionclip::Eligible(visual.clip,true,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),now),wantedShellCount))return;
     IDirect3DSurface9* back=nullptr;
     if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
     D3DSURFACE_DESC desc{};
@@ -26305,10 +26458,18 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
         g_centurionClipFault=true;previewAvailable=false;
         Log("centurion clip preview: GPU preparation failed; no preview until Reset/XR init (markers require explicit opt-in)");
     }
+    bool shellsAvailable=g_centurionShellEjection&&g_centurionShellReady&&!g_centurionShellFault;
+    if(shellsAvailable){
+        if(!g_centurionShellRenderer.Ensure(dev,desc.Width,desc.Height)){
+            g_centurionShellFault=true;shellsAvailable=false;
+        }else g_centurionShellWarmed=true;
+    }
     hipknife::Pose clipPose;
+    float clipScale=1.f;
     const bool drawClip=previewAvailable&&centurionclip::Eligible(visual.clip,true,
         (uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),now)&&
-        centurionclip::PreviewPose(visual.clip,visual.source,g_centurionClipConfig,clipPose);
+        centurionclip::PreviewPose(visual.clip,visual.source,g_centurionClipConfig,clipPose)&&
+        centurionclip::NativeSize(MetresToUU(),(float)Rd(g_gunScalePct),clipScale);
     bool ok=SUCCEEDED(dev->SetDepthStencilSurface(nullptr));
     for(unsigned i=1;i<guard.count;++i)ok=SUCCEEDED(calls.target(dev,i,nullptr))&&ok;
     ok=SUCCEEDED(calls.target(dev,0,back))&&ok;
@@ -26356,10 +26517,20 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
         for(int e=0;e<2;++e){const auto& p=g_eyePose[e];
             eyes[e]={{p.position.x,p.position.y,p.position.z},
                 {p.orientation.x,p.orientation.y,p.orientation.z,p.orientation.w}};}
-        const bool drawn=g_centurionClipRenderer.Draw(dev,calls,back,clipPose,eyes,g_targetTanX,g_targetTanY);
+        const bool drawn=g_centurionClipRenderer.Draw(dev,calls,back,clipPose,eyes,g_targetTanX,g_targetTanY,clipScale);
         static unsigned notes=0;
         if(!drawn){ok=false;g_centurionClipFault=true;Log("centurion clip preview: draw/restore failed; cyan marker fallback only if outer restore succeeds");}
-        else if(notes++<2)Log("centurion clip preview: two-eye draw submitted (not pixel/physical proof)");
+        else if(notes++<2)Log("centurion clip preview: original model/UV/albedo scale=%.4f gun=%ld%% worldUUperM=%.3f (two-eye submission, NOT native material/physical proof)",
+            clipScale,Rd(g_gunScalePct),MetresToUU());
+    }
+    const unsigned shellCount=shellsAvailable?wantedShellCount:0;
+    if(ok&&shellCount&&centurionclip::NativeSize(MetresToUU(),(float)Rd(g_gunScalePct),clipScale)){
+        hipknife::Pose eyes[2];
+        for(int e=0;e<2;++e){const auto& p=g_eyePose[e];
+            eyes[e]={{p.position.x,p.position.y,p.position.z},{p.orientation.x,p.orientation.y,p.orientation.z,p.orientation.w}};}
+        const bool drawn=g_centurionShellRenderer.DrawInstances(dev,calls,back,shellPoses,shellCount,eyes,g_targetTanX,g_targetTanY,clipScale);
+        if(!drawn){ok=false;g_centurionShellFault=true;}
+        else {static unsigned draws=0;if(draws++<4)Log("centurion shells: two-eye cosmetic submission count=%u (NOT PSVR2 acceptance)",shellCount);}
     }
     return ok;
     });
@@ -30285,6 +30456,12 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     }
 
     UpdateFromHeadset(s);
+    {
+        const LONG witness=InterlockedExchange(&g_centurionAnimationWitness,0);
+        static unsigned notes=0;
+        if(witness&&notes++<8)Log("centurion animation: cooked index-content witness=%s palette=clip0,parent1,release4; scoped draws=%ld restoreFault=%d (visual acceptance pending)",
+            witness>0?"MATCH":"REJECT/UNREADABLE",Rd(g_centurionAnimationDraws),g_centurionAnimationFault?1:0);
+    }
     ApplyPadTestOverrides();   // must follow SyncXRInput - see the note on the function
     UpdateAutoPad();           // and after that, so a test override is never what keeps it awake
     InterlockedExchange(&g_camRotDirty, 1);   // re-read the camera's real rotation next frame
@@ -31663,6 +31840,12 @@ void LoadIniSettings() {
     g_centurionNativeTap=GetPrivateProfileIntA("Input","CenturionNativeReloadTap",0,path)?1:0;
     g_centurionReloadProbe=GetPrivateProfileIntA("Input","CenturionReloadProbe",0,path)?1:0;
     g_centurionClipPreview=GetPrivateProfileIntA("Input","CenturionClipPreview",0,path)?1:0;
+    g_centurionCylinderAnimation=GetPrivateProfileIntA("Input","CenturionCylinderAnimation",0,path)?1:0;
+    g_centurionShellEjection=GetPrivateProfileIntA("Input","CenturionShellEjection",0,path)?1:0;
+    Log("ini: CenturionShellEjection=%d (default OFF, needs native cylinder witness and private original shell assets)",
+        g_centurionShellEjection);
+    Log("ini: CenturionCylinderAnimation=%d (default OFF; private original Reload tracks, exact cooked IB witness; no ammo writes)",
+        g_centurionCylinderAnimation);
     g_centurionReloadMarkers=GetPrivateProfileIntA("Input","CenturionReloadMarkers",0,path)?1:0;
     g_reloadControlLayout=GetPrivateProfileIntA("Input","ReloadControlLayout",0,path)?1:0;
     g_centurionConfig.cylinderGestures=g_reloadControlLayout&&
@@ -31682,10 +31865,13 @@ void LoadIniSettings() {
         (float)std::clamp(IniSignedInt("Input","ReloadClipYawDeg",0,path),-180L,180L),
         (float)std::clamp(IniSignedInt("Input","ReloadClipRollDeg",0,path),-180L,180L));
     Log("ini: CenturionClipPreview=%d (default OFF; unlit original cylinder calibration)",g_centurionClipPreview);
-    g_centurionConfig.shoulderLeft=std::clamp(IniSignedInt("Input","ReloadShoulderLeftCm",-22,path)*.01f,-.40f,.40f);
+    // Legacy SIDE -22 is migrated as a left-distance magnitude. Pouch already
+    // negates local X; retaining a negative value would literally select right.
+    g_centurionConfig.shoulderLeft=centurionreload::ShoulderLeftMetres(IniSignedInt("Input","ReloadShoulderLeftCm",22,path));
     g_centurionConfig.shoulderDown=std::clamp(IniSignedInt("Input","ReloadShoulderDownCm",12,path)*.01f,0.f,.25f);
     g_centurionConfig.shoulderBack=std::clamp(IniSignedInt("Input","ReloadShoulderBackCm",18,path)*.01f,.10f,.35f);
-    g_centurionConfig.insertRadius=std::clamp(IniSignedInt("Input","ReloadSocketRadiusCm",16,path)*.01f,.05f,.35f);
+    g_centurionConfig.insertRadius=std::clamp(IniSignedInt("Input","ReloadInsertRadiusCm",
+        IniSignedInt("Input","ReloadSocketRadiusCm",16,path),path)*.01f,.05f,.20f);
     g_centurionConfig.socketLocal.x=std::clamp(IniSignedInt("Input","ReloadSocketRightMm",-35,path)*.001f,-.25f,.25f);
     g_centurionConfig.socketLocal.y=std::clamp(IniSignedInt("Input","ReloadSocketUpMm",-35,path)*.001f,-.25f,.25f);
     g_centurionConfig.socketLocal.z=std::clamp(IniSignedInt("Input","ReloadSocketBackMm",-80,path)*.001f,-.30f,.30f);

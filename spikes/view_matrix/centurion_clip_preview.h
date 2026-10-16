@@ -6,6 +6,17 @@
 // gun. No animation palette, engine socket or inventory operation is inferred.
 namespace centurionclip {
 using hipknife::Pose;using hipknife::V;using hipknife::Q;
+
+// SVRK is original PSK clip-bone geometry baked at 52.5 UU/metre.
+// The held native gun uses ApplyMeshScale and MetresToUU(), not that fixed
+// export scale. Match both at draw time without rewriting vertices/UV/assets.
+inline bool NativeSize(float worldUnitsPerMetre,float gunScalePct,float& out){
+    if(!std::isfinite(worldUnitsPerMetre)||worldUnitsPerMetre<10.f||worldUnitsPerMetre>1000.f||
+       !std::isfinite(gunScalePct)||gunScalePct<25.f||gunScalePct>400.f)return false;
+    const float size=(52.5f/worldUnitsPerMetre)*(gunScalePct/100.f);
+    if(!std::isfinite(size)||size<.01f||size>16.f)return false;
+    out=size;return true;
+}
 enum class DrawResult {Success,Disabled,CaptureFailed,DrawFailed,RestoreFailed};
 // Render-only fault policy. This never reserves a hand or changes reload state.
 // Lifecycle code may reset it; normal frames cannot clear a failed restore.

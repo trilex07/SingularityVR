@@ -126,7 +126,7 @@ def preview(cache, destination):
     image.save(destination)
 
 
-def textured_preview(cache, texture, destination):
+def textured_preview(cache, texture, destination, label='Original Centurion cylinder'):
     """CPU orthographic z-buffer: original UV/albedo only, not UE3 lighting."""
     from PIL import Image, ImageDraw
     magic,version,n,count=struct.unpack_from('<4sIII',cache)
@@ -165,7 +165,7 @@ def textured_preview(cache, texture, destination):
             dest=rgb[lo[1]:hi[1]+1,lo[0]:hi[0]+1]
             dest[mask]=pixels[texel[:,:,1],texel[:,:,0]][mask];region[mask]=z[mask]
         image.paste(Image.fromarray(rgb),(view*480,25))
-        draw.text((view*480+20,12),f'Original Centurion cylinder | axes {axes[:2]}',fill='white')
+        draw.text((view*480+20,12),f'{label} | axes {axes[:2]}',fill='white')
     draw.text((20,515),'CPU original UV/albedo only / no normal, specular, scene lighting or runtime-pose claim',fill='white')
     image.save(destination)
 
