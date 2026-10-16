@@ -3359,7 +3359,7 @@ volatile LONG g_camPosValid = 0;
 int g_cameraTranslationEvidence = 0; // bounded passive decomposition, default off
 float g_vrCameraStabOffset[3] = {0,0,0};
 volatile LONG g_vrCameraStabValid = 0;
-volatile LONG g_vrTranslationStabilization = 1;
+volatile LONG g_vrTranslationStabilization = 0;
 
 // The camera's own axes, from its FRotator. These are what make the origin case decidable -
 // see the direction test below.
@@ -12646,21 +12646,6 @@ void UpdateCameraStabilizationThisFrame() {
         memcpy(g_camPos, (void*)(cam + ACTOR_LOCATION), 12);
     }
 
-    if (Rd(g_vrCameraShakeSuppression) && !CutsceneNativeCameraArmed()) {
-        if (Readable((void*)(cam + CAM_POV_ROT), 12)) {
-            int32_t* povRot = reinterpret_cast<int32_t*>(cam + CAM_POV_ROT);
-            povRot[2] = 0;
-            povRot[0] = g_wantPitch;
-            povRot[1] = g_wantYaw;
-        }
-        if (Readable((void*)(cam + ACTOR_ROTATION), 12)) {
-            int32_t* actRot = reinterpret_cast<int32_t*>(cam + ACTOR_ROTATION);
-            actRot[2] = 0;
-            actRot[0] = g_wantPitch;
-            actRot[1] = g_wantYaw;
-        }
-    }
-
     const uintptr_t pawn = g_playerPawn;
     const int eyeOffset = (g_offBaseEyeHeight >= 0) ? g_offBaseEyeHeight : g_offEyeHeight;
     if (pawn && eyeOffset >= 0 &&
@@ -13024,8 +13009,6 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
             const float curYaw   = (g_camRotKnown ? g_camYawUU   : g_matCurYawUU)   * kUUToRad;
             ApplyHeadRotation(m, c, curPitch, curYaw,
                               g_matDesPitchUU * kUUToRad, g_matDesYawUU * kUUToRad);
-        } else if (VrModeOn() && Rd(g_vrCameraShakeSuppression) && !CutsceneNativeCameraArmed()) {
-            CancelMatrixRoll(m, c);
         }
         if (inject) ApplyOffset(m, c, o);
         if (forceProj) {
@@ -21667,24 +21650,7 @@ void RefreshCameraPosition() {
         g_camFwd[0]   = cp * cy; g_camFwd[1]   = cp * sy; g_camFwd[2]   = sp;
         g_camRight[0] = -sy;     g_camRight[1] = cy;      g_camRight[2] = 0.0f;
     }
-    if (VrModeOn() && Rd(g_vrTranslationStabilization) && cam && !CutsceneNativeCameraArmed()) {
-        if (Readable((void*)(cam + CAM_POV_ROT), 12)) {
-            int32_t* povRot = reinterpret_cast<int32_t*>(cam + CAM_POV_ROT);
-            povRot[2] = 0;
-            if (Rd(g_vrCameraShakeSuppression)) {
-                povRot[0] = g_wantPitch;
-                povRot[1] = g_wantYaw;
-            }
-        }
-        if (Readable((void*)(cam + ACTOR_ROTATION), 12)) {
-            int32_t* actorRot = reinterpret_cast<int32_t*>(cam + ACTOR_ROTATION);
-            actorRot[2] = 0;
-            if (Rd(g_vrCameraShakeSuppression)) {
-                actorRot[0] = g_wantPitch;
-                actorRot[1] = g_wantYaw;
-            }
-        }
-    }
+
     // A camera sitting exactly at the origin would make the w test meaningless - every matrix
     // would pass on its constant term alone. Wait for a real position before scanning.
     float d2 = g_camPos[0]*g_camPos[0] + g_camPos[1]*g_camPos[1] + g_camPos[2]*g_camPos[2];
@@ -31301,7 +31267,7 @@ void LoadIniSettings() {
     Log("arm palette trace=%ld frame(s), exact TMD sections only; 0=off (default)",Rd(g_armPaletteTraceFrames));
     g_cameraTranslationEvidence=GetPrivateProfileIntA("Diagnostic","CameraTranslationEvidence",0,path)?1:0;
     Log("camera translation evidence=%d; passive 10Hz, 240 samples maximum; no translation override",g_cameraTranslationEvidence);
-    g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",1,path)?1:0;
+    g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",0,path)?1:0;
     g_vrCameraShakeSuppression=GetPrivateProfileIntA("Render","VrCameraShakeSuppression",1,path)?1:0;
     g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",1,path)?1:0;
     g_skipExtraTarget=GetPrivateProfileIntA("Render","DropExtraTarget",0,path)?1:0;

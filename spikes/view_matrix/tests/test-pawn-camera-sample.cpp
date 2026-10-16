@@ -25,6 +25,9 @@ int main() {
     float pov[3] = {11,22,103}, residual[3]{};
     Check(ComputeVrCameraStabilization(pov, out.location, out.eyeHeight, residual) &&
         residual[0] == -1 && residual[1] == -2 && residual[2] == -3, "valid camera math unchanged");
+    float distantPov[3] = {1000, 2000, 3000};
+    Check(!ComputeVrCameraStabilization(distantPov, out.location, out.eyeHeight, residual) &&
+        residual[0] == 0 && residual[1] == 0 && residual[2] == 0, "distant pawn offset safely rejected");
     int32_t op = 0, oy = 0, oroll = 0;
     Check(StabilizeVrCameraRotation(100, 200, 115, 205, 50, op, oy, oroll, true) &&
         op == 100 && oy == 200 && oroll == 0, "rotation stabilization locks pitch/yaw and zeros roll");
