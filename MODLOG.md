@@ -24,3 +24,9 @@ not a direct call or inventory write. Bounded PSA/tag readers + synthetic tests
 and exact asset roundtrip; private original assets/reports remain ignored.
 HUD freshness/identity/capacity guards and physical-left ownership strengthened;
 360000 deterministic lifecycle frames pass, without Steam or headset claims.
+
+PR37 base advanced during continuation. Merged its committed f0b96ad only into
+own branch; resolved one input conflict preserving both left-grip arbitration
+and MAIN's new knife impulse attack window. No accepted-source rollback:
+canonical INI, knife, cinema and muzzle policy files match new base exactly.
+Clean 9c164eb /O2 x86 PE32 rebuilt and candidate hash verified; receipt in doc.

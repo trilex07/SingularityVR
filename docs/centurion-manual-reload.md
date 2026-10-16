@@ -1,8 +1,8 @@
 # Centurion reload — first controlled prototype
 
 SIDE, 2026-10-16. Initial base: MAIN `5763e6c`; synchronized into this own
-branch with current committed MAIN `db4a261`, preserving its menu/holster,
-knife-joint and PSVR2 bridge changes. No Steam operations.
+branch first with committed MAIN `db4a261`, then `f0b96ad`, preserving its
+menu/holster, knife-joint, cinematic transition and PSVR2 changes. No Steam operations.
 Scope: Centurion only, right-hand weapon, left-hand interaction; existing left
 knife and right gun holsters retain their positions, radii and mechanics.
 The new ammo zone is front-centre, yaw-relative and head-height-relative, so
@@ -207,7 +207,20 @@ failed backend, not success. The 120 ms X tap is not a dedicated Reload call.
 
 ## Evidence / next native work
 
-Current continuation L2_PASS: clean source
+Current synchronized L2_PASS: clean merge source
+`9C164EBA647C48998612C283EB4331FAC913A09F`, `/O2`, x86 PE32 (`014C/010B`),
+empty build-manifest working-tree status. DLL SHA-256:
+`99A00CB7C636856EAAA88A829ACD09E4548045D3B4A71FB30064812CFADDD051`.
+Private candidate DLL/manifest match this build. Seven reload CPU executables /
+12 Python tests pass again; the synchronized six-executable knife suite /14
+Python tests also pass. Its private original-rig replay was NOT requested and
+is not claimed. MAIN base advanced by seven commits while this continuation
+was running: its f0b96ad was merged ONLY INTO THIS SIDE branch. One d3d9 input
+conflict was resolved by preserving MAIN's knife-impulse attack path AFTER the
+reload ownership gate. No MAIN edits/reverts. Canonical INI, knife headers,
+cinematic headers and muzzle policies remain byte-identical to that new base.
+
+Previous continuation L2_PASS before latest MAIN synchronization: clean source
 `861FC12C5C73AEAEA1D641CEBCABA902F93C4CD8`, `/O2`, x86 PE32 (`014C/010B`),
 empty build-manifest working-tree status. DLL SHA-256:
 `8DBB1B4FFCCDFDFE22B2E45039DC8C37DAC93F68421D99C05E51DDFB2F0B2AEA`.

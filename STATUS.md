@@ -1,6 +1,6 @@
 # STATUS — session handoff
 
-LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN db4a261:
+LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN f0b96ad:
 Centurion-only assisted gesture prototype, NOT completed physical reload.
 Front-centre pouch, unchanged left knife/right gun holsters; allocation-free
 remove/discard/pouch/insert/ack FSM, ownership/cancel guards, bounded calibration
@@ -18,9 +18,13 @@ seven CPU executables +12 Python tests. Original Reload: 53 frames /24 Hz;
 14 notifies include AnimNotify_RefillClip at 1.47052908 s on RvSharedPawn.
 Fifth player-pawn-only probe event; no native calls. Material AR_Pistol resolved
 offline; live shader/socket and dedicated reload ABI remain unproven.
-Continuation L2_PASS clean source 861fc12 /O2 x86 PE32,
-DLL SHA 8DBB1B4FFCCDFDFE22B2E45039DC8C37DAC93F68421D99C05E51DDFB2F0B2AEA;
+Continuation L2_PASS clean source 9c164eb /O2 x86 PE32,
+DLL SHA 99A00CB7C636856EAAA88A829ACD09E4548045D3B4A71FB30064812CFADDD051;
 private DLL/manifest hashes verified, original textures staged offline only;
+PR base advanced during work: merged its committed f0b96ad into this branch
+only, preserving MAIN's new knife impulse path after reload ownership gate.
+INI, native knife, cinema and muzzle policy files match that base exactly;
+seven reload CPU/12 Python tests and six knife CPU/14 Python tests pass.
 receipt in docs/centurion-manual-reload.md.
 L3/L4 UNKNOWN. ZERO Steam. Integrate onto current accepted MAIN and rebuild,
 never replace newer knife/menu work with this older standalone base.
