@@ -1144,6 +1144,7 @@ extern volatile LONG   g_meleeArmsMs, g_meleeDelayMs, g_meleePending;
 extern volatile LONG64 g_meleeUntilMs, g_meleeFromMs;
 extern volatile LONG   g_armsAnimActiveCached;
 extern volatile LONG64 g_lastMeleeEdgeMs, g_lastJumpEdgeMs;   // fix-G/perf (defined with melee state)
+void ArmMeleeWindowFromKnife();
 extern volatile LONG g_forceDesktopAutomation;                // defined with desktop-HMD diagnostics
 volatile LONG g_desktopAutomationFrame = 0;                   // shared deterministic input-script clock
 
@@ -10348,8 +10349,7 @@ void SyncXRInput(XrTime displayTime) {
                 event==hipknife::Event::Picked?"PICKED":event==hipknife::Event::Sheathed?"SHEATHED":
                 event==hipknife::Event::Swing?"SWING -> RB pulse":"RESET",g_hipKnifeState.held,f.pawn);
             if(event==hipknife::Event::Swing){
-                InterlockedOr(&g_vrRecorderEventFlags,vrrec::Melee);
-                InterlockedExchange64(&g_lastMeleeEdgeMs,(LONG64)f.nowMs);
+                ArmMeleeWindowFromKnife();
             }
         }
         // MAIN round 11/12/13/14 pickup-refusal probe: grip held with a hand at
@@ -10692,8 +10692,17 @@ void SyncXRInput(XrTime displayTime) {
     if (trianglePressed) btns |= XI_START;
     static bool healthWasDown = false;
     bool healthDown = false;
+    static bool knifeImpulseWasDown = false;
     for (int i = 0; i < kPadButtonCount; ++i) {
         bool down = getBool(g_padButtons[i].action);
+        if (i == g_impulseBtnIdx && g_hipKnifeState.held >= 0) {
+            if (down && !knifeImpulseWasDown && !uiMenu && !Rd(g_gamePaused)) {
+                g_hipKnifeState.TriggerAttack(GetTickCount64(), g_hipKnifeConfig.pulseMs);
+                ArmMeleeWindowFromKnife();
+                Log("hip knife: IMPULSE BTN ATTACK -> RB pulse held=%d", g_hipKnifeState.held);
+            }
+            knifeImpulseWasDown = down;
+        }
         if((i==g_impulseBtnIdx&&(g_hipKnifeState.held>=0||g_hipKnifeTrigger[OffHand()].blocked))||
            (!strcmp(g_padButtons[i].name,"use")&&hipknife::Reserves(g_hipKnifeState,AimHand())))down=false;
         if (i >= 0 && !strcmp(g_padButtons[i].name, "health")) {
@@ -11178,6 +11187,7 @@ void SyncXRInput(XrTime displayTime) {
         const bool knifeTrigDown = knifeTrig > 0.5f;
         if(g_hipKnifeState.held >= 0 && knifeTrigDown && !knifeTrigWasDown && !uiMenu && !Rd(g_gamePaused)){
             g_hipKnifeState.TriggerAttack(GetTickCount64(), g_hipKnifeConfig.pulseMs);
+            ArmMeleeWindowFromKnife();
             Log("hip knife: TRIGGER ATTACK -> RB pulse held=%d pawn=%08X", g_hipKnifeState.held, (uint32_t)g_playerPawn);
         }
         knifeTrigWasDown = knifeTrigDown;
@@ -15235,6 +15245,19 @@ inline void RefreshArmsAnimActive() {
     wasKept=keep;
 }
 inline bool ArmsAnimActive() { return Rd(g_armsAnimActiveCached)!=0; }
+
+inline void ArmMeleeWindowFromKnife() {
+    if (InterlockedCompareExchange(&g_meleeArmsMs, 0, 0) <= 0) return;
+    InterlockedOr(&g_vrRecorderEventFlags, vrrec::Melee);
+    const LONG64 now = (LONG64)GetTickCount64();
+    InterlockedExchange64(&g_lastMeleeEdgeMs, now);
+    const LONG dly = InterlockedCompareExchange(&g_meleeDelayMs, 0, 0);
+    const LONG end = InterlockedCompareExchange(&g_meleeArmsMs, 0, 0);
+    InterlockedExchange64(&g_meleeFromMs, now + dly);
+    InterlockedExchange64(&g_meleeUntilMs, now + (end > dly ? end : dly + 1));
+    InterlockedExchange(&g_meleePending, 1);
+    RefreshArmsAnimActive();
+}
 
 // Was this mesh on screen when the latch was taken?
 static bool FgIsBaseline(UINT verts) {

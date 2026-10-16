@@ -104,6 +104,8 @@ void config_tests() {
     assert(q.pistol.a == 2 && q.pistol.b == 8 && q.pistol.c == 0);
     assert(ParseIni("[PSVR2]\nTriggerPistol=1,2,8\n", q) == 1);
     assert(q.pistol.a == 1 && q.pistol.b == 2 && q.pistol.c == 8);
+    assert(ParseIni("[PSVR2]\nTriggerPistol=1,5,8\n", q) == 1);
+    assert(q.pistol.a == 1 && q.pistol.b == 5 && q.pistol.c == 8);
     assert(ParseIni("[PSVR2]\nAdaptiveTriggers=0\n", q) == 1 && !q.enabled);
     PolicyInput in = LiveGame(Weapon::Pistol);
     assert(SelectWithProfiles(in, q).effect == Effect::Off);
