@@ -1,5 +1,6 @@
 # ---- build output ----
 /build/accepted-profile-guard/
+/build/frontend-menu-comfort/
 /deployment/accepted-profile.json
 /deployment/change-plan*.json
 *.dll

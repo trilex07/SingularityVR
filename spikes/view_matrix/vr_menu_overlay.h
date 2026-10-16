@@ -13,6 +13,42 @@ static IDirect3DTexture9* g_vrPromptAtlas=nullptr;
 static bool g_vrPromptAtlasAttempted=false;
 struct VrPromptVtx { float x,y,z,rhw; DWORD colour; float u,v; };
 struct VrMenuVtx { float x,y,z,rhw; DWORD colour; float u,v; };
+static bool VrUiProjectEye(int eye,uipointer::V point,uipointer::ScreenPoint& out);
+static frontmenu::Resources g_frontMenuResources;
+static bool ComposeCleanFrontend(IDirect3DDevice9* dev,IDirect3DSurface9* back,
+                                const D3DSURFACE_DESC& desc,bool nativeMenu) {
+    const frontmenu::Signals signals{Rd(g_frontMenuCleanBackdrop)!=0,VrModeOn(),Rd(g_dupDraws)!=0,
+        Rd(g_vrUiMenu)!=0,nativeMenu,Rd(g_panelOpen)!=0,Rd(g_modalSaveDialog)!=0,
+        g_vrCaptureOwner.CanProvide(VrMenuStateToken()),g_vrMenuPanelValid,
+        g_sceneMode.Current()==vrscene::Mode::MenuFlat,
+        g_sceneMode.Current()==vrscene::Mode::VideoFlat,(int)Rd(g_vrMenuClass)};
+    if(!frontmenu::Eligible(signals)||!g_vrMenuTexture||!g_origSetRenderTarget||!g_origSetVS||!g_origDrawPrimUP)return false;
+    if(desc.Width<8||desc.Height<8||(desc.Width&1))return false;
+    const auto drawnToken=VrMenuStateToken();
+    frontmenu::Vertex vertices[2][4];
+    for(int eye=0;eye<2;++eye)for(unsigned k=0;k<4;++k){
+        uipointer::ScreenPoint p;
+        if(!VrUiProjectEye(eye,g_vrMenuPanel.Corner(k),p)||!std::isfinite(p.u)||!std::isfinite(p.v))return false;
+        const auto& crop=g_vrMenuPanel.canvas;
+        vertices[eye][k]={(eye+p.u)*desc.Width*.5f,p.v*desc.Height,0,1,0xFFFFFFFF,
+            (k&1)?crop.cropU1:crop.cropU0,(k&2)?crop.cropV1:crop.cropV0};
+    }
+    frontmenu::SurfacePass pass(dev,back,g_vrMenuTexture,g_frontMenuResources,desc,vertices,
+        g_origSetRenderTarget,g_origSetVS,g_origSetTexture,g_origDrawPrimUP);
+    InterlockedExchange(&g_vrMenuProviderDrawing,1);
+    const auto result=frontmenu::Render(pass);
+    InterlockedExchange(&g_vrMenuProviderDrawing,0);
+    if(!result.stateRestored||!result.pixelsRestored)g_frontMenuResources.fault=true;
+    if(result.composed)g_frontMenuCleanToken=drawnToken;
+    static unsigned notes=0;static unsigned long long notedToken=0;
+    if(notes<16 && (notedToken!=VrMenuStateToken()||!result.composed)){
+        notedToken=VrMenuStateToken();++notes;
+        Log("frontend-clean: token=%llu composed=%d stateRestore=%d pixelRestore=%d source=%p back=%ux%u perEye=1",
+            notedToken,result.composed?1:0,result.stateRestored?1:0,result.pixelsRestored?1:0,
+            (void*)g_vrMenuTexture,desc.Width,desc.Height);
+    }
+    return result.composed;
+}
 static bool LoadVrPromptAtlas(IDirect3DDevice9* dev) {
     if(g_vrPromptAtlasAttempted) return g_vrPromptAtlas!=nullptr;
     g_vrPromptAtlasAttempted=true;
@@ -362,6 +398,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
     surface->Release();
 }
 void ReleaseVrMenuResources(){
+    g_frontMenuResources.Release();g_frontMenuCleanFrame=false;
     g_vrCaptureOwner.Invalidate(VrMenuStateToken());
     ReleaseFpCasterCache();
     if(g_vrMenuTexture){g_vrMenuTexture->Release();g_vrMenuTexture=nullptr;}
@@ -418,6 +455,11 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     D3DSURFACE_DESC d{}; back->GetDesc(&d);
     if (d.Width < 4 || d.Height < 4) { back->Release(); return; }
 
+    // Present is outside BeginScene. Commit only if both eye draws and full
+    // restoration succeed; otherwise the transaction puts back original pixels.
+    const bool cleanFrontend=ComposeCleanFrontend(dev,back,d,nativeMenu);
+    g_frontMenuCleanFrame=cleanFrontend;
+
     dev->GetRenderTarget(0, &old); dev->GetDepthStencilSurface(&depth);
     if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) { if (old) old->Release(); if (depth) depth->Release(); back->Release(); return; }
     if (FAILED(g_wristState->Capture())) { if (old) old->Release(); if (depth) depth->Release(); back->Release(); return; }
@@ -445,7 +487,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
 
     // ---- RENDER MENU QUAD ----
     unsigned pauseEyesDrawn = 0;
-    if (nativeMenu && !Rd(g_modalSaveDialog) && g_vrMenuTexture && g_vrMenuPanelValid &&
+    if (!cleanFrontend && nativeMenu && !Rd(g_modalSaveDialog) && g_vrMenuTexture && g_vrMenuPanelValid &&
         (Rd(g_vrMenuClass) != 3 || dedicatedPause) && g_vrCaptureOwner.CanProvide(VrMenuStateToken())) {
         // RGB capture proves Objectives has nonzero RGB with zero stored alpha.
         // Preserve the native AlphaComposite RGB term instead of multiplying it
