@@ -1,4 +1,8 @@
+// windows.h defines this legacy keyword even in the x86 production DLL.
+// Keep the pure header usable in that exact macro environment too.
+#define near
 #include "../holster_marker.h"
+#undef near
 #include <cassert>
 #include <cstdio>
 #include <cstring>

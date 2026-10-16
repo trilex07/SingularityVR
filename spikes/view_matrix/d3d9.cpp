@@ -26461,12 +26461,12 @@ static bool DrawHolsterCueAt(IDirect3DDevice9* dev,uipointer::V centre,
         SUCCEEDED(dev->GetRenderTarget(0,&target))&&target==back;
     if(target)target->Release();back->Release();if(!valid)return false;
     if(!g_wristState&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&g_wristState)))return false;
-    float near=0;
+    float proximityWeight=0;
     for(int side=0;side<2;++side)if(hand<0||hand==side){
         const auto& h=g_handLastPos[side];
-        near=std::max(near,holstermarker::Proximity(centre,{h.x,h.y,h.z},g_handPositionValid[side]&&g_handPoseValid[side]));
+        proximityWeight=std::max(proximityWeight,holstermarker::Proximity(centre,{h.x,h.y,h.z},g_handPositionValid[side]&&g_handPoseValid[side]));
     }
-    holstermarker::Mesh mesh;holstermarker::Build(item,near,mesh);
+    holstermarker::Mesh mesh;holstermarker::Build(item,proximityWeight,mesh);
     struct Pass {
         IDirect3DDevice9* dev;bool active=false;
         bool Begin(unsigned width,unsigned height){

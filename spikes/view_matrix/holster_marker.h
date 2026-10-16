@@ -43,18 +43,18 @@ inline void Stroke(Mesh& m,float x,float z,float xx,float zz,float width,std::ui
     Quad(m,{x+nx,z+nz,colour},{x-nx,z-nz,colour},{xx+nx,zz+nz,colour},{xx-nx,zz-nz,colour});
 }
 inline void Build(Item item,float proximity,Mesh& mesh){
-    mesh.count=0;const float near=Clamp(proximity),pi=3.14159265358979323846f;
-    const auto edge=Colour(0xe8ded0u,.32f+.48f*near);
-    const auto accent=Colour(near>.5f?0xf0c982u:0x9baeb6u,.30f+.50f*near);
+    mesh.count=0;const float proximityWeight=Clamp(proximity),pi=3.14159265358979323846f;
+    const auto edge=Colour(0xe8ded0u,.32f+.48f*proximityWeight);
+    const auto accent=Colour(proximityWeight>.5f?0xf0c982u:0x9baeb6u,.30f+.50f*proximityWeight);
     // Same 22.54 cm outer footprint as the accepted ring. Thin dark keyline,
     // four broken arcs, inner guide and orientation ticks. Empty centre stays.
-    Arc(mesh,.1035f,.1127f,0,2*pi,48,Colour(0x121b20u,.24f+.12f*near));
+    Arc(mesh,.1035f,.1127f,0,2*pi,48,Colour(0x121b20u,.24f+.12f*proximityWeight));
     for(unsigned arc=0;arc<4;++arc){
         const float a=arc*pi*.5f+pi/18,b=(arc+1)*pi*.5f-pi/18;
         Arc(mesh,.1075f,.1115f,a,b,10,edge);
-        Arc(mesh,.1015f,.104f,a,b,10,Colour(0xc6b080u,.12f+.22f*near));
+        Arc(mesh,.1015f,.104f,a,b,10,Colour(0xc6b080u,.12f+.22f*proximityWeight));
     }
-    Arc(mesh,.0877f,.0892f,0,2*pi,48,Colour(0x8ea1a9u,.12f+.20f*near));
+    Arc(mesh,.0877f,.0892f,0,2*pi,48,Colour(0x8ea1a9u,.12f+.20f*proximityWeight));
     for(unsigned tick=0;tick<4;++tick){
         const float a=tick*pi*.5f;
         Stroke(mesh,std::cos(a)*.095f,std::sin(a)*.095f,std::cos(a)*.1115f,std::sin(a)*.1115f,.003f,accent);
