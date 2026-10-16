@@ -30551,6 +30551,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         shadowtrace::Arm(s);
     }
     const bool mirrored = desktop_mirror::Apply(s, a, b, c, g_mirrorCineCrop);
+    if (mirrored) desktop_mirror::StampCaptureRt(s);
     HRESULT presentResult;
     {
         desktop_mirror::PresentBackbufferScope captureScope(s,
@@ -30609,9 +30610,40 @@ typedef HRESULT (STDMETHODCALLTYPE *PFN_ResetDevice)(IDirect3DDevice9*, D3DPRESE
 typedef HRESULT (STDMETHODCALLTYPE *PFN_ResetDeviceEx)(IDirect3DDevice9Ex*, D3DPRESENT_PARAMETERS*, D3DDISPLAYMODEEX*);
 PFN_ResetDevice g_origResetDevice = nullptr;
 PFN_ResetDeviceEx g_origResetDeviceEx = nullptr;
+// Keep the window fit display-only: a Reset that merely follows the fitted
+// window is redirected to the measured SteamVR SBS size, so the monitor
+// window fits while VR keeps its resolution. Fail-open: without a trusted
+// size, or for an explicit non-window size, pass through.
+static void GuardResetSize(D3DPRESENT_PARAMETERS* pp) {
+    if (!pp) return;
+    UINT cw = 0, ch = 0;
+    {
+        desktop_mirror::PhysicalPixelScope pixels;
+        if (g_gameWindow) {
+            RECT cr{};
+            if (GetClientRect(g_gameWindow, &cr) && cr.right > 0 && cr.bottom > 0) {
+                cw = (UINT)cr.right;
+                ch = (UINT)cr.bottom;
+            }
+        }
+    }
+    const desktop_mirror::ResetDecision d = desktop_mirror::DecideResetSize(
+        pp->BackBufferWidth, pp->BackBufferHeight, g_srcW, g_srcH, cw, ch,
+        Rd(g_desktopMirrorWindow) != 0, VrModeOn());
+    if (!d.enforced) return;
+    pp->BackBufferWidth = d.w;
+    pp->BackBufferHeight = d.h;
+    static volatile LONG guardLogs = 0;
+    if (InterlockedIncrement(&guardLogs) <= 6)
+        Log("reset-guard: window-fit shrink %ux%u (client %ux%u) -> enforced SteamVR SBS %ux%u; render kept, window stays fitted",
+            (unsigned)InterlockedCompareExchange(&g_diagResetRequestW, 0, 0),
+            (unsigned)InterlockedCompareExchange(&g_diagResetRequestH, 0, 0),
+            cw, ch, d.w, d.h);
+}
 HRESULT STDMETHODCALLTYPE Hook_ResetDevice(IDirect3DDevice9* dev, D3DPRESENT_PARAMETERS* pp) {
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
+    if (pp && dev) GuardResetSize(pp);
     ReleaseWristResources();
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
     ReleaseVfxHost(); // drawer VB + atlas are device-bound; rebuilt lazily
@@ -30620,6 +30652,7 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDevice(IDirect3DDevice9* dev, D3DPRESENT_PAR
 HRESULT STDMETHODCALLTYPE Hook_ResetDeviceEx(IDirect3DDevice9Ex* dev, D3DPRESENT_PARAMETERS* pp, D3DDISPLAYMODEEX* dm) {
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
+    if (pp && dev) GuardResetSize(pp);
     ReleaseWristResources();
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
     ReleaseVfxHost(); // drawer VB + atlas are device-bound; rebuilt lazily
