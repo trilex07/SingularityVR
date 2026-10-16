@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE fix/right-eye-mirror-steam-capture: complete right-eye
+aspect fit, opt-in monitor work-area window cap 1920x1080 (physical client px),
+no changing XR/scene resolution commands. Fixed double-applied aspect scaling;
+offscreen composition then commit avoids clear-before-failed-copy black frame.
+L3+R3 no longer saves BMP; optional recenter/recorder/wheel remain. F12 no longer
+switches debug stereo. Opt-in SteamCaptureBackbuffer scopes completed mirror RT0
+around original Present, bounded identity/failure logs, exact RT/DS/MRT/viewport
+restoration. Steam black screenshot hypothesis NOT runtime-proven.
+L1_PASS geometry/fault CPU checks, own-process D3D9Ex pixels/source/swap/cinema/
+RT0 scope/window cap/Reset and 6 Python contracts; six menu/cinema regressions.
+L2_PENDING, L3/L4 UNKNOWN. ZERO Steam or installed-file changes.
+See docs/right-eye-mirror-capture.md. MAIN must integrate on current source,
+preserve full accepted config/assets and validate actual saved Steam images and
+UE3 WM_SIZE behavior before accepting the window-fit flag.
+
 LATEST 2026-10-16: Prototypy przeładowania Valkyrie, Volk S4 i Kasimova (PR #37):
 Przygotowałem prototypy przeładowania Valkyrie, Volk S4 i Kasimova: gesty, zabezpieczenia oraz oryginalne modele magazynków.
 Przeszło 30 000 symulowanych przeładowań, 9 programów testowych C++, 33 testy Python i build x86 /O2. Zmiany są w [PR #37](https://github.com/trilex07/SingularityVR/pull/37).

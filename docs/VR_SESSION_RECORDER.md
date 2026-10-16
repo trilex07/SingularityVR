@@ -2,7 +2,7 @@
 
 The production DLL now exposes `VR Settings -> CONTROLLER -> RECORD SESSION`.
 R2 over the row starts or stops a session; the L3+R3 chord never changes this
-state. The chord remains a screenshot request and optionally recentres according
+state. The chord no longer takes screenshots and optionally recentres according
 to `[Input] RecenterChord=1`.
 
 Recordings are written to:
