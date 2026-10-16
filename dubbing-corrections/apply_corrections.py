@@ -12,12 +12,16 @@ Zasady (zatwierdzone przez uzytkownika 2026-10-16; zdejmuje zakaz edycji generow
     (nie nadpisujemy zweryfikowanych 42), text_pl juz rowny proposed.
 Bezposredni zapis JSONL z zachowaniem kolejnosci kluczy i koncowek CRLF.
 """
-import json, sys
+import argparse, json
+ap = argparse.ArgumentParser()
+ap.add_argument('--corrections', required=True)
+ap.add_argument('--status', default='side_text_review_applied')
+a = ap.parse_args()
 
 REPO = r'C:\Users\Trilex\vr-mods\SingularityVR-dubbing-corrections'
 SRC = REPO + r'\localization\pl\polish_story_voice.jsonl'
-COR = REPO + r'\dubbing-corrections\corrections_sp_vi5_kismet03.jsonl'
-NEW_STATUS = 'side_text_review_applied'
+COR = REPO + '\\' + a.corrections.replace('/', '\\')
+NEW_STATUS = a.status
 
 cor = {}
 for line in open(COR, encoding='utf-8'):
@@ -38,11 +42,14 @@ for i, r in enumerate(rows):
     idx.setdefault(key, []).append(i)
 
 assert len(rows) == 1672, len(rows)
-changed, skipped_same = 0, []
+changed, skipped_same, already = 0, [], 0
 for cid, c in cor.items():
     hits = idx.get(cid, [])
     assert len(hits) == 1, (cid, len(hits))
     r = rows[hits[0]]
+    if r.get('text_pl') == c['proposed_pl'] and r.get('translation_status') == NEW_STATUS:
+        already += 1
+        continue
     assert r.get('translation_status') == 'machine_draft', (cid, r.get('translation_status'))
     if r.get('text_pl') == c['proposed_pl']:
         skipped_same.append(cid)
@@ -52,7 +59,8 @@ for cid, c in cor.items():
     changed += 1
 
 assert len(skipped_same) <= 5, skipped_same
-print('matched: %d changed: %d no-op (proposed==draft): %s' % (len(cor), changed, skipped_same), flush=True)
+print('matched: %d changed: %d already-applied: %d no-op (proposed==draft): %s' % (
+    len(cor), changed, already, skipped_same), flush=True)
 
 with open(SRC, 'wb') as fh:
     for r in rows:
@@ -64,10 +72,11 @@ rows2 = [json.loads(l) for l in open(SRC, encoding='utf-8')]
 print('total:', len(rows2), 'statuses:', Counter(r.get('translation_status') for r in rows2), flush=True)
 assert len(rows2) == 1672
 cmap = {c: cor[c]['proposed_pl'] for c in cor}
-n_new = sum(1 for r in rows2 if r.get('translation_status') == NEW_STATUS)
-assert n_new == changed, (n_new, changed)
+by_id = {}
 for r in rows2:
-    key = 'story:%s:%s' % (r['package'], r['asset'])
-    if key in cmap:
-        assert r['text_pl'] == cmap[key], key
-print('OK: 131 text_pl=proposed, tts_text untouched, reszta byte-identical (sprawdz diff)', flush=True)
+    by_id['story:%s:%s' % (r['package'], r['asset'])] = r
+assert len(rows2) == 1672
+for cid, prop in cmap.items():
+    assert by_id[cid]['text_pl'] == prop, cid
+    assert by_id[cid]['translation_status'] == NEW_STATUS, cid
+print('OK: %d text_pl=proposed+%s, tts_text untouched' % (len(cmap), NEW_STATUS), flush=True)

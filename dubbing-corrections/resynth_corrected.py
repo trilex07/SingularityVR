@@ -67,6 +67,7 @@ def main():
     ap.add_argument('--refdir', required=True, help='katalog _refs_en (tylko odczyt)')
     ap.add_argument('--out-dir', required=True, help='katalog wynikowy w temp')
     ap.add_argument('--manifest-out', required=True)
+    ap.add_argument('--corrections', default='dubbing-corrections/corrections_sp_vi5_kismet03.jsonl')
     ap.add_argument('--temp', type=float, default=0.65)
     ap.add_argument('--limit', type=int, default=0, help='0 = wszystkie')
     a = ap.parse_args()
@@ -77,7 +78,7 @@ def main():
                  encoding='utf-8') if l.strip()]
     idx = {('story:%s:%s' % (r['package'], r['asset'])): r for r in rows}
     cor = [json.loads(l) for l in
-           open(os.path.join(a.repo, 'dubbing-corrections', 'corrections_sp_vi5_kismet03.jsonl'),
+           open(os.path.join(a.repo, a.corrections.replace('/', os.sep)),
                 encoding='utf-8') if l.strip()]
     jobs = []
     donor_tmp = os.path.join(a.out_dir, '_donors_en')
