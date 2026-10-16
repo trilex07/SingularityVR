@@ -16317,7 +16317,8 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     const bool wristAnchor = freeWrist || (gloves && Rd(g_noTmdPaletteFix) && Rd(g_gloveIsolate)==2 && !supportGrip && handValid[0] && handValid[1] &&
         handanchor::GameplaySource(Rd(g_noTmdWristAnchorFix)!=0,Rd(g_inCinematic)!=0,
             Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo));
-    const bool offWristAnchor = !wristAnchor && gloves && NativeKnifeOffHandEligible() &&
+    const bool nativeOffKnife = NativeKnifeOffHandEligible();
+    const bool offWristAnchor = !wristAnchor && gloves && nativeOffKnife &&
         handValid[0] && handValid[1];
     if(wristAnchor) {
         // Undo the camera transform actually used by StereoPairBody, not the live controller
@@ -16493,7 +16494,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // left than the native gun-hold, while the right hand stays on its controller.
     const bool weaponInHand = Rd(g_weaponObj)!=0 &&
         InterlockedCompareExchange(&g_gunVerts, 0, 0) != 0 && !Rd(g_weaponHolstered);
-    const float leftShift = (wristAnchor || offWristAnchor || !weaponInHand) ? 0.f
+    const float leftShift = (wristAnchor || offWristAnchor || nativeOffKnife || !weaponInHand) ? 0.f
         : (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
     // Idle shift parks the free left glove off the native gun-hold. During an authored
     // pistol grip that same nudge is what puts the support hand beside the weapon.
@@ -16554,7 +16555,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // Original GPU skin, UVs and material remain; when aiming a weapon, only the off-hand
     // fingers/thumb are posed while the weapon hand keeps its native grip fingers.
     const bool nativeBoth = wristAnchor && NativeGlovesEligible();
-    const bool nativeOffKnife = offWristAnchor && NativeKnifeOffHandEligible();
+    if (nativeOffKnife) {
+        static LONG saidOffKnife = 0;
+        if (InterlockedCompareExchange(&saidOffKnife, 1, 0) == 0)
+            Log("PrepareIndependentLeft: nativeOffKnife active (joint glove+knife pose while weapon held)");
+    }
     if(gloves&&(nativeBoth||nativeOffKnife)&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount&&
        g_nativeGloveRenderer.Ensure(dev)){
         const bool joint=g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&g_hipKnifeVisible&&

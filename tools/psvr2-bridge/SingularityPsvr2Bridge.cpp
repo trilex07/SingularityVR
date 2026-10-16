@@ -228,20 +228,23 @@ struct Backend {
         return init && deinit && active && set;
     }
     bool Initialize() {
-        if (!active || !init) return false;
-        const bool driverActive = SafeActive(active);
-        const int result = driverActive ? SafeInit(init) : -4;
-        initialized = driverActive && result == 0;
+        if (!init) return false;
+        if (initialized) return true;
+        const int result = SafeInit(init);
+        initialized = (result == 0);
         return initialized;
     }
     void Off(Controller hand) {
+        if (!initialized) Initialize();
         if (!initialized || !set) return;
         TriggerCommand c{};
         c.mode = 0;
         SafeSet(set, hand, c);
     }
     bool Apply(const psvr2ipc::EffectDesc& e) {
+        if (!initialized) Initialize();
         if (!initialized || !set || e.effect > 4) return false;
+        if (active && !SafeActive(active)) return false;
         TriggerCommand c{};
         // EffectDesc: 0=Off, 1=Weapon, 2=Vibration, 3=Feedback, 4=SlopeFeedback
         // Toolkit CAPI: 0=OFF, 1=FEEDBACK, 2=WEAPON, 3=VIBRATION, 5=SLOPE_FEEDBACK
@@ -324,7 +327,10 @@ int wmain(int argc, wchar_t** argv) {
             Log().Write("bridge", "FAIL: loader or required CAPI export unavailable");
             return 4;
         }
-        Log().Write("bridge", "PASS: x64 loader loaded; init/deinit/driver-active/set-trigger-effect exports resolved (not initialized)");
+        const int initRes = Backend::SafeInit(probe.init);
+        const bool activeRes = Backend::SafeActive(probe.active);
+        Log().Write("bridge", "PASS: x64 loader loaded; SafeInit()=%d SafeActive()=%d", initRes, activeRes ? 1 : 0);
+        if (initRes == 0 && probe.deinit) Backend::SafeDeinit(probe.deinit);
         return 0;
     }
     std::uint8_t token[psvr2ipc::kMaxTokenBytes]{};
@@ -369,13 +375,12 @@ int wmain(int argc, wchar_t** argv) {
             if (g_shutdownEvent) CloseHandle(g_shutdownEvent);
             return 4;
         }
-        if (!backend.Initialize()) {
-            Log().Write("bridge", "PSVR2 driver inactive or CAPI init failed");
-            if (parentWatch) CloseHandle(parentWatch);
-            if (g_shutdownEvent) CloseHandle(g_shutdownEvent);
-            return 5;
+        if (backend.Initialize()) {
+            const bool driverActive = backend.active ? Backend::SafeActive(backend.active) : false;
+            Log().Write("bridge", "PSVR2 CAPI ready (init=0 driverActive=%d); authenticated pipe active", driverActive ? 1 : 0);
+        } else {
+            Log().Write("bridge", "PSVR2 CAPI init deferred; authenticated pipe active (will retry on demand)");
         }
-        Log().Write("bridge", "PSVR2 CAPI ready; authenticated pipe active");
     } else {
         Log().Write("bridge", "dry bridge active; hardware calls disabled");
     }

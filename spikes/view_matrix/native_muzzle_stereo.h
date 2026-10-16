@@ -101,7 +101,12 @@ inline void Boundary(bool ready,bool busy,unsigned weapon){
     if(!busy&&shadowtrace::sequence>=4){InterlockedExchange(&probe,0);Log("native-fx: shared trace budget unavailable; no further captures");return;}
     if(!capture.stage)captureWeapon=weapon;
     if(ready&&capture.stage&&capture.stage<4&&weapon!=captureWeapon){
-        capture.stage=4;InterlockedExchange(&probe,0);Log("native-fx: capture ABORTED weapon changed; do not compare different weapons");return;
+        if(capture.stage==1){
+            captureWeapon=weapon;capture.stage=0;capture.idle=0;
+            Log("native-fx: weapon changed before shot; restarting idle baseline for weapon 0x%X",weapon);
+        } else {
+            capture.stage=4;InterlockedExchange(&probe,0);Log("native-fx: capture ABORTED weapon changed; do not compare different weapons");return;
+        }
     }
     const int next=capture.Tick(ready,InterlockedCompareExchange(&shots,0,0),busy);
     if(next&&!shadowtrace::pending&&!shadowtrace::active&&shadowtrace::sequence<4){
