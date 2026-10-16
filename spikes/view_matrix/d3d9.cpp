@@ -11482,6 +11482,8 @@ void SyncXRInput(XrTime displayTime) {
     }
     if(NextReloadEnabled()){
         const bool valid=g_nextBlockFire&&feedGame&&!uiMenu&&!Rd(g_gamePaused)&&
+            !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed()&&!Rd(g_weaponHolstered)&&
+            g_nextReloadState.transaction.weapon==(uint32_t)Rd(g_weaponObj)&&
             g_nextReloadState.transaction.phase==weaponreload::Phase::WaitingNative&&
             g_xrSessionState==XR_SESSION_STATE_FOCUSED;
         if(g_nextReloadTap.Update(valid,false,GetTickCount64()))btns|=XI_X;
