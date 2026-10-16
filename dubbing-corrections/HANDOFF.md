@@ -163,6 +163,23 @@ Skrypt: `dubbing-corrections/fix_emotion_gap.py` (backup v2 w `_backup_v2/` w te
 - Kopie odsłuchowe (44,1 kHz stereo) odświeżone dla 8 plików w
   `%TEMP%\opencode\dubbing-qa\odsluch\`; `bc0ee3caa` tam = v2 bez zmian.
 
+## Batch 2 — pierwsza scena po intro (train_intro + RT1, 2026-10-16)
+
+Na polecenie użytkownika (kwestie radiowe za cicho + nieadekwatne).
+Pomiar na kopiach (32 pliki): peak −1,0 wszystkie; radio FR1_1005 −19,5 / FR1_1006 −14,5 /
+RT1_1505 −16,5 RMS (norma packa −19,4) — pliki NIE są ciche; winne przycięte teksty
+(FR1_1005 mówi 1 zdanie z 2) + filtrowanie radia/muzyka w grze (do runtime MAIN).
+- `corrections_train_intro_rt1.jsonl`: 29 wierszy (22 pewne / 7 needs_human), zastosowane
+  do jsonl (text_pl+status; tts_text sync po resyntezie, 29/29).
+- Resynteza 29/29 własnymi dawcami EN (temp `resynth_firstscene`); walidacja: peak −1,0,
+  0 decode/format fails (`resynth_validation_firstscene.jsonl`).
+- ASR-QA final: mean 0,79; <0,5: RT2_1004 (grunt Mhm — do ucha), 645b6de7 (treść pełna,
+  ortografia ASR). Naprawione pomiarem: e102465ca (early-stop→recall 1,00),
+  f340d133e2 (early-stop→1,00), 72cf0068 (loop No-no→donor-swap na SPT2-0305→0,90).
+  Skrypty: `regen_fs_fix.py`, `resynth_fs_fix_log.jsonl`, `asr_qa_firstscene.jsonl`.
+- Odsłuch (44,1 kHz stereo): `%TEMP%\opencode\dubbing-qa\odsluch_firstscene\` (29 plików).
+- Dla MAIN: hashe drop-in do story packa; statusy TNC do regeneracji backlog na installerze.
+
 ## Co NIE działa / następny krok
 
 - Korekty to propozycje tekstowe (L1): zero weryfikacji w grze (verified_in_game=false

@@ -1,12 +1,17 @@
 """ASR-QA resyntezy: faster-whisper-small (cache), jezyk pl, recall tokenowy
 (application jak produkcyjne ASR_QA.json; prog watch <0.5 jak rundy repair)."""
-import json, os, re
+import argparse, json, os, re
+ap = argparse.ArgumentParser()
+ap.add_argument('--manifest', default=None)
+ap.add_argument('--wavdir', default=None)
+ap.add_argument('--out', default=None)
+a = ap.parse_args()
 
 REPO = r'C:\Users\Trilex\vr-mods\SingularityVR-dubbing-corrections'
 os.environ['HF_HUB_OFFLINE'] = '1'
-WAVDIR = r'C:\Users\Trilex\AppData\Local\Temp\opencode\dubbing-qa\resynth130'
-MAN = REPO + r'\dubbing-corrections\resynth_manifest.jsonl'
-OUT = REPO + r'\dubbing-corrections\asr_qa_resynth.jsonl'
+WAVDIR = a.wavdir or r'C:\Users\Trilex\AppData\Local\Temp\opencode\dubbing-qa\resynth130'
+MAN = a.manifest or REPO + r'\dubbing-corrections\resynth_manifest.jsonl'
+OUT = a.out or REPO + r'\dubbing-corrections\asr_qa_resynth.jsonl'
 
 def toks(s):
     return re.findall(r'[a-ząćęłńóśźż]+', s.lower())
