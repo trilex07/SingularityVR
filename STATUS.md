@@ -1,6 +1,19 @@
 # STATUS — session handoff
 
 LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN f0b96ad:
+Presentation safety continuation: capture/outer-restore failure now latches
+ONLY Centurion markers/carried preview off until Reset/XR init. Draw failure
+still restores; successful outer restore permits cyan fallback. Lock-free CPU
+policy passes 100000 disabled frames; eight reload CPU executables +27 Python
+tests and six knife CPU executables +14 Python tests PASS (no private rig replay).
+L2_PASS clean source e7a0c8986b10859a6832847c0d0a77f74d76d7f3, /O2 x86 PE32.
+DLL SHA 23AB074B813499DE2338EAC625079C3F5B0A5A1AB97196F6299F0B95BDCAB77A.
+Private candidate DLL/manifest and both original assets staged/hash-verified;
+all four flags default OFF; no INI or Steam operation. No native ammo/animation
+or input change. User has NOT tested Centurion; L3/L4 UNKNOWN. Integrate onto
+CURRENT accepted MAIN and rebuild; older receipts below are superseded.
+
+Previous 2026-10-16 continuation:
 Compact import: docs/handoffs/centurion-reload-compact.md. Offline correlation
 helper tools/reload/analyze_reload_log.py added: 13 synthetic tests PASS;
 reload suite now eight CPU executables +27 Python tests PASS. It never proves

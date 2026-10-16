@@ -317,7 +317,19 @@ cover conservation, identity/session changes, malformed/capped input, timing,
 and read-only input SHA/line preservation. The test runner includes them.
 No runtime source, DLL, INI or staged asset changed for this helper.
 
-Current preview L2_PASS: clean source
+Current presentation-safety L2_PASS: clean source
+`E7A0C8986B10859A6832847C0D0A77F74D76D7F3`, `/O2`, x86 PE32 (`014C/010B`),
+empty build-manifest working-tree status. DLL SHA-256:
+`23AB074B813499DE2338EAC625079C3F5B0A5A1AB97196F6299F0B95BDCAB77A`.
+Eight reload CPU executables /27 Python tests PASS, including the 100000-frame
+presentation fault policy; six knife CPU executables /14 Python tests PASS.
+Private original-rig replay/GPU execution are NOT claimed. Private staging
+verifies DLL/source provenance and both unchanged original cylinder caches.
+All four flags remain default OFF, no INI staging or Steam operations. L3/L4
+UNKNOWN; no Centurion physical feedback yet. Native begin/commit/end remains
+unproven, not implemented by this safety change.
+
+Previous preview L2_PASS before presentation latch: clean source
 `E0FB5E1E71434988ED20D24BA3AF1D97DACFB7CA`, `/O2`, x86 PE32 (`014C/010B`),
 empty build-manifest working-tree status. DLL SHA-256:
 `00C49400DC5FCF6A9F9DA2F67ED35E47F7239B86FB8B1F15915AC5D3B90E502B`.

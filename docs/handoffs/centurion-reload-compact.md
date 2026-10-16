@@ -20,7 +20,7 @@ User has a Centurion save only and has NOT tested this reload. Preserve left-hip
 
 Centurion has an original SIX-CHAMBER CYLINDER, not a box magazine. Allocation-free FSM: remove with left grip, pull 15 cm, release; take fresh cylinder at belt; carry to socket, release; wait for native ammo acknowledgement. Left-hand ownership/cancellation protects knife/TMD/support actions. HUD observations are identity-bound, fresh and read-only; no inventory writes. Ack requires clip gain == reserve loss.
 
-Optional carried preview uses original extracted cylinder + original albedo, only while Carrying; native cylinder stays on gun. Unlit, no glove occlusion/fitted grip/native material parity. Authored mount/scale still needs headset calibration.
+Optional carried preview uses original cylinder + original albedo, only while Carrying; native cylinder stays on gun. Unlit, no glove occlusion/fitted grip/native material parity. Mount/scale needs headset calibration. Capture/outer-state-restore failure latches presentation OFF until Reset/XR init; input/FSM unchanged.
 
 Native probe is bounded/read-only in EXISTING interpreter hook. IMPORTANT: `Hook_ProcessEvent` actually hooks ProcessInternal(FFrame&,Result), NOT ProcessEvent(UFunction*,Parms). NEVER call its trampoline as Reload. Probe player-weapon ServerStartReload/ReloadFinished/AttemptReload/IsReloading and player-pawn AnimNotify_RefillClip. Offline Reload notify at 1.47052908 s does NOT prove live ammo commit or ABI. Dedicated begin/commit/end reload remains UNKNOWN; auto-reload/native animation untouched.
 
@@ -30,8 +30,8 @@ ALL default OFF under `[Input]`, restart required:
 `CenturionManualReload`, `CenturionNativeReloadTap`, `CenturionReloadProbe`, `CenturionClipPreview`.
 NativeTap is only an opt-in 120 ms shared XInput Use/reload X tap, NOT dedicated Reload; avoid interactables.
 
-L1: 8 CPU executables +14 Python tests; knife regressions 6 CPU +14 Python PASS. L2: clean source `e0fb5e1e71434988ed20d24ba3af1d97dacfb7ca`, x86 PE32 `/O2`.
-DLL SHA256: `00C49400DC5FCF6A9F9DA2F67ED35E47F7239B86FB8B1F15915AC5D3B90E502B`.
+L1: 8 CPU executables +27 Python tests; 100000-frame presentation-fault test; knife regressions 6 CPU +14 Python PASS. L2: clean source `e7a0c8986b10859a6832847c0d0a77f74d76d7f3`, x86 PE32 `/O2`.
+DLL SHA256: `23AB074B813499DE2338EAC625079C3F5B0A5A1AB97196F6299F0B95BDCAB77A`.
 Private candidate and exact asset hashes: `build/centurion-reload/candidate/centurion-preview.manifest.json`. DLL/manifest +two original assets verified; NO INI staged. Private game assets are ignored, NOT in Git. L3/L4 UNKNOWN. PR body may lag; manifests/source receipts win.
 
 ## Continue
