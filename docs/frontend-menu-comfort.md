@@ -71,3 +71,11 @@ content/FPS. No mid-test chat. MAIN checks `frontend-clean: composed=1` and
 `menu-submit-edge: class=2 ... crop=0` plus existing placement evidence. A
 successful draw is only route evidence; a wrong/incomplete captured UI source
 must reject this candidate. Do not call the native animated backdrop repaired.
+
+L2 receipt 2026-10-16: clean source
+`9b23e3ff7de9519216a09859211d836db03d9776`, production x86 PE32 `/O2`,
+instrumentation OFF, manifest workingTreeStatus empty. DLL SHA-256
+`681D3A790951E9D192377CDD4AC7433F8652A01F7FE2B7D9649315805E878C1E`.
+No new frontend-header analyzer warning in the full build; existing unrelated
+warnings remain. No Steam deployment/launch, no package/INI/audio asset edits,
+no approved-profile promotion. L3 and physical PSVR2 acceptance UNKNOWN.

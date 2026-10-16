@@ -8,8 +8,10 @@ replacement). Backup-before-clear, full D3D state + RT/DS/MRT restoration,
 failure pixel restore, Reset-owned DEFAULT-pool resources; captured successful
 receipt disables legacy identical-left-crop for this frame only.
 L1_PASS six /O2 /W4 /WX CPU executables: policy/generation/transaction failures,
-panel/laser/parallax geometry, menu/pause/cutscene regressions. L2 pending final
-clean build; ZERO Steam. No game assets/config/renders of hands/weapons changed.
+panel/laser/parallax geometry, menu/pause/cutscene regressions.
+L2_PASS clean9b23e3f /O2 x86 PE32; DLL SHA-256
+681D3A790951E9D192377CDD4AC7433F8652A01F7FE2B7D9649315805E878C1E.
+ZERO Steam; L3/L4 UNKNOWN. No game assets/config/renders of hands/weapons changed.
 See docs/frontend-menu-comfort.md; MAIN owns L3 and physical acceptance.
 
 LATEST 2026-10-16 SIDE feature/accepted-profile-guard: offline deployment
