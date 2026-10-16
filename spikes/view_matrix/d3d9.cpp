@@ -3362,7 +3362,7 @@ volatile LONG g_camPosValid = 0;
 int g_cameraTranslationEvidence = 0; // bounded passive decomposition, default off
 float g_vrCameraStabOffset[3] = {0,0,0};
 volatile LONG g_vrCameraStabValid = 0;
-volatile LONG g_vrTranslationStabilization = 1;
+volatile LONG g_vrTranslationStabilization = 0;
 
 // The camera's own axes, from its FRotator. These are what make the origin case decidable -
 // see the direction test below.
@@ -7589,8 +7589,9 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_GOTO_TMD,
        // ⭐ run 249: the TMD page split into three. See kPageRows.
        PR_GOTO_TMDBONE, PR_GOTO_TMDMESH, PR_BACK_TMD,
-       PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_BACK,
-       PR_TEXTURES };   // appended last: existing IDs never renumber
+        PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_BACK,
+        PR_TEXTURES,
+        PR_SHAKESCREEN, PR_BOBSTABILIZE };   // appended last: existing IDs never renumber
 
 // ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
@@ -7632,7 +7633,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
       PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_GOTO_TMD, PR_GOTO_HANDS },
     { PR_TURNMODE, PR_TURNSPEED, PR_SNAPANGLE, PR_TURNDIR, PR_MOVEDIR, PR_SWAPSTICKS,
       PR_LEFTHAND, PR_RECENTERCHORD, PR_RECORDING, PR_BACK },
-    { PR_CINESTICK, PR_CINECAM, PR_BACK },
+    { PR_CINESTICK, PR_CINECAM, PR_SHAKESCREEN, PR_BOBSTABILIZE, PR_BACK },
     // MUZZLE FX joins CROSSHAIR here rather than going on ADVANCED: both are "the game draws something
     // at the centre of your view that VR makes wrong", both are things a player judges by looking, and
     // the DISPLAY page was created in run 165 expecting exactly this company.
@@ -7687,7 +7688,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_GLOVEISOLATE, PR_GLOVEFACE, PR_GLOVESTUMP, PR_GLOVELEFT, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 11, 10, 3, 13, 10, 7, 10, 6, 8, 5 };   // [3] DISPLAY 12->13 for TEXTURES (px floor 3 unchanged)
+const int kPageCount[kPanelPages] = { 11, 10, 5, 13, 10, 7, 10, 6, 8, 5 };   // [2] COMFORT 3->5 (shake screen + head bob)
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -8027,6 +8028,12 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_cutsceneLockCamera, 0, 0));
             WritePrivateProfileStringA("Input", "CutsceneLockCamera", v, path); return;
+        case PR_SHAKESCREEN:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_vrCameraShakeSuppression));
+            WritePrivateProfileStringA("Render", "VrCameraShakeSuppression", v, path); return;
+        case PR_BOBSTABILIZE:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_vrTranslationStabilization));
+            WritePrivateProfileStringA("Render", "VrTranslationStabilization", v, path); return;
         case PR_SWAPSTICKS:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_swapSticks, 0, 0));
@@ -8433,6 +8440,14 @@ void PanelRowText(int row, char* out, size_t cap) {
             _snprintf_s(out, cap, _TRUNCATE, "CUTSCENE CAM   %s",
                         InterlockedCompareExchange(&g_cutsceneLockCamera, 0, 0) ? "LOCKED"
                                                                                 : "FOLLOWS SCENE");
+            break;
+        case PR_SHAKESCREEN:
+            _snprintf_s(out, cap, _TRUNCATE, "SHAKE SCREEN    %s",
+                        Rd(g_vrCameraShakeSuppression) ? "OFF" : "ON");
+            break;
+        case PR_BOBSTABILIZE:
+            _snprintf_s(out, cap, _TRUNCATE, "HEAD BOB STAB   %s",
+                        Rd(g_vrTranslationStabilization) ? "ON" : "OFF");
             break;
         case PR_GOTO_CTRL:    _snprintf_s(out, cap, _TRUNCATE, "CONTROLLER / RECENTER >"); break;
         case PR_GOTO_COMFORT: _snprintf_s(out, cap, _TRUNCATE, "COMFORT            >"); break;
@@ -8886,6 +8901,18 @@ void PanelAdjust(int row, int dir) {
         case PR_CINECAM:
             InterlockedExchange(&g_cutsceneLockCamera,
                                 InterlockedCompareExchange(&g_cutsceneLockCamera, 0, 0) ? 0 : 1);
+            break;
+        case PR_SHAKESCREEN:
+            InterlockedExchange(&g_vrCameraShakeSuppression,
+                                Rd(g_vrCameraShakeSuppression) ? 0 : 1);
+            Log("VR panel: SHAKE SCREEN %s",
+                Rd(g_vrCameraShakeSuppression) ? "OFF" : "ON");
+            break;
+        case PR_BOBSTABILIZE:
+            InterlockedExchange(&g_vrTranslationStabilization,
+                                Rd(g_vrTranslationStabilization) ? 0 : 1);
+            Log("VR panel: HEAD BOB STAB %s",
+                Rd(g_vrTranslationStabilization) ? "ON" : "OFF");
             break;
         // Navigation. Page changes reset the cursor, and `return` skips the dirty flag - moving
         // between pages is not a settings change and must not make PanelSave write on close.
@@ -31341,7 +31368,7 @@ void LoadIniSettings() {
     Log("arm palette trace=%ld frame(s), exact TMD sections only; 0=off (default)",Rd(g_armPaletteTraceFrames));
     g_cameraTranslationEvidence=GetPrivateProfileIntA("Diagnostic","CameraTranslationEvidence",0,path)?1:0;
     Log("camera translation evidence=%d; passive 10Hz, 240 samples maximum; no translation override",g_cameraTranslationEvidence);
-    g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",1,path)?1:0;
+    g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",0,path)?1:0;
     g_vrCameraShakeSuppression=GetPrivateProfileIntA("Render","VrCameraShakeSuppression",1,path)?1:0;
     g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",1,path)?1:0;
     g_skipExtraTarget=GetPrivateProfileIntA("Render","DropExtraTarget",0,path)?1:0;
