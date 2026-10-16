@@ -29,6 +29,15 @@ static DWORD Pixel(IDirect3DDevice9* dev,IDirect3DSurface9* surface,UINT x,UINT 
     const DWORD value=*(const DWORD*)((const char*)lock.pBits+y*lock.Pitch+x*4);
     HR(sys->UnlockRect(),"unlock");sys->Release();return value&0x00ffffffu;
 }
+static DWORD PixelRaw(IDirect3DDevice9* dev,IDirect3DSurface9* surface,UINT x,UINT y) {
+    D3DSURFACE_DESC d{};HR(surface->GetDesc(&d),"read description");
+    IDirect3DSurface9* sys=nullptr;
+    HR(dev->CreateOffscreenPlainSurface(d.Width,d.Height,d.Format,D3DPOOL_SYSTEMMEM,&sys,nullptr),"read allocation");
+    HR(dev->GetRenderTargetData(surface,sys),"pixel readback");
+    D3DLOCKED_RECT lock{};HR(sys->LockRect(&lock,nullptr,D3DLOCK_READONLY),"read lock");
+    const DWORD value=*(const DWORD*)((const char*)lock.pBits+y*lock.Pitch+x*4);
+    HR(sys->UnlockRect(),"unlock");sys->Release();return value;
+}
 int main() {
     HWND win=CreateWindowExW(0,L"STATIC",L"offline mirror fixture",WS_OVERLAPPED,
         0,0,320,180,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
@@ -161,6 +170,13 @@ int main() {
     HR(dev->ColorFill(back,nullptr,0xff0000ff),"new generation");
     Check(desktop_mirror::Apply(dev,nullptr,nullptr,win),"recreate after Reset");
     Check(Pixel(dev,back,320,180)==0x0000ff,"no stale previous frame");
+    Check((PixelRaw(dev,back,320,180)>>24)==0xff,"alpha is opaque 0xFF after mirror Apply");
+    HR(dev->ColorFill(back,nullptr,0x00112233),"zero alpha control");
+    Check((PixelRaw(dev,back,10,10)>>24)==0,"initial alpha is 0");
+    Check((PixelRaw(dev,back,10,10)&0x00ffffff)==0x00112233,"initial RGB matches");
+    Check(desktop_mirror::EnsureOpaqueAlpha(dev,back),"EnsureOpaqueAlpha succeeds");
+    Check((PixelRaw(dev,back,10,10)>>24)==0xff,"alpha became opaque 0xFF");
+    Check((PixelRaw(dev,back,10,10)&0x00ffffff)==0x00112233,"RGB untouched after alpha stamp");
     desktop_mirror::ReleaseScratch();back->Release();dev->Release();api->Release();
     FreeLibrary(dll);DestroyWindow(win);
     std::puts("PASS own-process D3D9Ex pixel/RT0/viewport/reset; Steam and headset UNKNOWN");return 0;
