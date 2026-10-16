@@ -6447,7 +6447,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev);
 void DrawVrMenuPointer(IDirect3DDevice9* dev);
 void ReleaseVrMenuResources();
 void ReleaseFpCasterCache();
-static void HolsterHipWorld(float H[3], bool includeHmdOffset = true);
+static void HolsterHipWorld(float H[3], bool includeHmdOffset = false);
 static void GunPivotWorld(float H[3]);
 static void GunAimDir(float d[3]);
 void DrawWeaponWheel(IDirect3DDevice9* dev);
@@ -10482,7 +10482,7 @@ void SyncXRInput(XrTime displayTime) {
     // STORED hand==hip at centre would prove misalignment; edge ring
     // contacts prove radius, not offset.
     float holsterHip[3]{};
-    HolsterHipWorld(holsterHip, true); // same point the ring draws / gun renders
+    HolsterHipWorld(holsterHip, false); // head-relative UU, matching handX/Y/Z (which is hand-head)
     // MAIN round 16: user trim moves the TRIGGER onto the felt ring without
     // touching the ring or the stored-gun render. Body frame like HipPoint;
     // cm values apply only when the user sets non-zero INI values.
@@ -15735,7 +15735,12 @@ static void GunPivotWorld(float H[3]) {
     if (Rd(g_weaponHolstered)) {
         // A stored weapon is body-locked at the hip. Do not run controller
         // follow, ADS pullback or HMD-relative hand translation on this path.
-        HolsterHipWorld(H);
+        HolsterHipWorld(H, false);
+        if (g_gunHeadOffset) {
+            H[0] += g_hmdOffset[0];
+            H[1] += g_hmdOffset[1];
+            H[2] += g_hmdOffset[2];
+        }
         return;
     }
     H[0] = G[0]; H[1] = G[1]; H[2] = G[2];      // no position following -> translation cancels
@@ -26748,7 +26753,7 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
     // vrpose::TrackingDeltaToWorldUU (L1 roundtrip in test-vrpose-invert.cpp)
     // plus the head position — the same space plates project in.
     float H[3];
-    HolsterHipWorld(H, true); // full UU world, same input the stored gun uses
+    HolsterHipWorld(H, false); // head-relative UU, inverted to OpenXR metres to add to g_headPosXR
     const float units = MetresToUU();
     if (units <= 0.0f) return;
     const float byr = g_baseYaw * (6.2831853f / 65536.0f);
