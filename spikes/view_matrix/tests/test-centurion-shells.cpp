@@ -6,6 +6,9 @@
 using namespace centurionshells;
 static bool close(V a,V b,float tolerance=.0001f){return hipknife::Length(a-b)<tolerance;}
 int main(){
+    for(unsigned i=0;i<100000;++i)assert(!NeedsPass(true,false,false,0));
+    assert(NeedsPass(false,false,false,0)&&NeedsPass(true,true,false,0)&&
+           NeedsPass(true,false,true,0)&&NeedsPass(true,false,false,6));
     centurionreload::Frame f;f.enabled=f.context=f.tracked=f.supported=f.ammoFresh=true;
     f.pawn=7;f.weapon=13;f.clip=0;f.reserve=20;f.capacity=6;f.nowMs=1000;
     f.socket={.25f,1.f,-.45f};f.gun={f.socket,centurionclip::Degrees(-45,0,0)};

@@ -2239,7 +2239,7 @@ static unsigned g_centurionAnimationIBAttempts=0;
 static volatile LONG g_centurionAnimationDraws=0,g_centurionAnimationWitness=0;
 static int g_centurionShellEjection=0;
 static hipknife::Renderer g_centurionShellRenderer;
-static bool g_centurionShellReady=false,g_centurionShellFault=false;
+static bool g_centurionShellReady=false,g_centurionShellFault=false,g_centurionShellWarmed=false;
 static centurionshells::Burst g_centurionShellBurst{}; // XR input owner only
 static volatile LONG g_centurionShellSeenGun=0,g_centurionShellGeneration=0;
 static LONG g_centurionShellInputGeneration=0;
@@ -9201,7 +9201,7 @@ bool InitXRInput() {
     g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};
     CancelCenturionInput();
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipReady=false;g_centurionClipFault=false;
-    g_centurionShellRenderer.ReleaseGPU();g_centurionShellReady=false;g_centurionShellFault=false;
+    g_centurionShellRenderer.ReleaseGPU();g_centurionShellReady=false;g_centurionShellFault=false;g_centurionShellWarmed=false;
     InterlockedExchange(&g_centurionShellSeenGun,0);InterlockedIncrement(&g_centurionShellGeneration);
     g_centurionPresentationSafety.Reset();
     g_centurionAnimation={};g_centurionAnimationFault=false;
@@ -25721,7 +25721,7 @@ void ReleaseWristResources() {
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     g_hipKnifeRenderer.ReleaseGPU();
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipFault=false;
-    g_centurionShellRenderer.ReleaseGPU();g_centurionShellFault=false;
+    g_centurionShellRenderer.ReleaseGPU();g_centurionShellFault=false;g_centurionShellWarmed=false;
     InterlockedExchange(&g_centurionShellSeenGun,0);InterlockedIncrement(&g_centurionShellGeneration);
     g_centurionPresentationSafety.Reset();
     hipknife::Release(g_centurionMarkerState);
@@ -26262,6 +26262,16 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
     visual=g_centurionVisual;ReleaseSRWLockShared(&g_centurionVisualLock);
     const ULONGLONG now=GetTickCount64();
     if(!visual.visible||!centurionclip::Current(visual.clip,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),now))return;
+    hipknife::Pose shellPoses[6];
+    const unsigned wantedShellCount=g_centurionShellEjection&&g_centurionShellReady&&!g_centurionShellFault&&
+        Rd(g_centurionShellSeenGun)&&visual.shellGeneration==Rd(g_centurionShellGeneration)?
+        centurionshells::Sample(visual.shells,visual.world,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),now,shellPoses):0;
+    // The new feature must not create an idle overlay/state-setup cost. Warm
+    // once outside the gesture, then use the existing pass only for real work.
+    // OFF retains the pre-existing preview/marker scheduling unchanged.
+    if(g_centurionShellEjection&&!centurionshells::NeedsPass(g_centurionShellWarmed,g_centurionReloadMarkers!=0,
+       g_centurionClipPreview&&g_centurionClipReady&&!g_centurionClipFault&&
+       centurionclip::Eligible(visual.clip,true,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),now),wantedShellCount))return;
     IDirect3DSurface9* back=nullptr;
     if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
     D3DSURFACE_DESC desc{};
@@ -26282,8 +26292,10 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
         Log("centurion clip preview: GPU preparation failed; no preview until Reset/XR init (markers require explicit opt-in)");
     }
     bool shellsAvailable=g_centurionShellEjection&&g_centurionShellReady&&!g_centurionShellFault;
-    if(shellsAvailable&&!g_centurionShellRenderer.Ensure(dev,desc.Width,desc.Height)){
-        g_centurionShellFault=true;shellsAvailable=false;
+    if(shellsAvailable){
+        if(!g_centurionShellRenderer.Ensure(dev,desc.Width,desc.Height)){
+            g_centurionShellFault=true;shellsAvailable=false;
+        }else g_centurionShellWarmed=true;
     }
     hipknife::Pose clipPose;
     float clipScale=1.f;
@@ -26344,9 +26356,7 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
         else if(notes++<2)Log("centurion clip preview: original model/UV/albedo scale=%.4f gun=%ld%% worldUUperM=%.3f (two-eye submission, NOT native material/physical proof)",
             clipScale,Rd(g_gunScalePct),MetresToUU());
     }
-    hipknife::Pose shellPoses[6];
-    const unsigned shellCount=shellsAvailable&&Rd(g_centurionShellSeenGun)&&visual.shellGeneration==Rd(g_centurionShellGeneration)?
-        centurionshells::Sample(visual.shells,visual.world,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),now,shellPoses):0;
+    const unsigned shellCount=shellsAvailable?wantedShellCount:0;
     if(ok&&shellCount&&centurionclip::NativeSize(MetresToUU(),(float)Rd(g_gunScalePct),clipScale)){
         hipknife::Pose eyes[2];
         for(int e=0;e<2;++e){const auto& p=g_eyePose[e];

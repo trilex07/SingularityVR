@@ -68,7 +68,9 @@ albedo-only, NOT complete UE3 material/shadows or the actual particle simulation
 Default-OFF `[Input] CenturionShellEjection=1`, alongside
 `CenturionCylinderAnimation=1` and current manual cylinder gesture flags.
 CPU assets load at existing XR initialization, GPU resources warm before a
-gesture. Missing/invalid assets fail closed. Ejection additionally requires the
+gesture. Once warm, the new feature skips idle state capture/setup entirely
+when no clip/markers/cases need drawing;100,000 idle-policy checks cover this.
+OFF retains prior preview scheduling. Missing/invalid assets fail closed. Ejection additionally requires the
 actual native cylinder palette/IB-content path to have passed its witness.
 That witness is cleared on XR initialization, Reset and palette restore faults.
 

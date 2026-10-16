@@ -6,6 +6,7 @@
 // Fixed six-item storage, analytical world-space flight, no collision/sound.
 namespace centurionshells {
 using hipknife::V;using hipknife::Q;using hipknife::Pose;
+inline bool NeedsPass(bool warmed,bool markers,bool clip,unsigned cases){return !warmed||markers||clip||cases!=0;}
 struct WorldFrame {
     V origin{},centre{}; // existing camera world UU / tracking recenter metres
     float centreYaw=0,baseYaw=0,units=0;
