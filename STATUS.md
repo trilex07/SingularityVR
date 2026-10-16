@@ -18,8 +18,9 @@ seven CPU executables +12 Python tests. Original Reload: 53 frames /24 Hz;
 14 notifies include AnimNotify_RefillClip at 1.47052908 s on RvSharedPawn.
 Fifth player-pawn-only probe event; no native calls. Material AR_Pistol resolved
 offline; live shader/socket and dedicated reload ABI remain unproven.
-Continuation L2 pending rebuild. Previous L2_PASS source db14959 /O2 x86 PE32,
-DLL SHA BACD5FDBBB4C23E55149F4CFF9ECBCD3D6E8DE67FACF99EE1A423B8212AD9343;
+Continuation L2_PASS clean source 861fc12 /O2 x86 PE32,
+DLL SHA 8DBB1B4FFCCDFDFE22B2E45039DC8C37DAC93F68421D99C05E51DDFB2F0B2AEA;
+private DLL/manifest hashes verified, original textures staged offline only;
 receipt in docs/centurion-manual-reload.md.
 L3/L4 UNKNOWN. ZERO Steam. Integrate onto current accepted MAIN and rebuild,
 never replace newer knife/menu work with this older standalone base.

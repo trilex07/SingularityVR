@@ -78,6 +78,17 @@ the measured first-person mesh material slot to
 The parent shader/reflection imports were missing in this offline package set;
 this is NOT proof of the complete live shader or a reason to substitute
 the unrelated `handgun_d` texture. Runtime cylinder rendering remains gated.
+The original texture cache also exported successfully to the ignored private
+`build/centurion-reload/native-material` directory: diffuse 1024x1024 DXT5,
+normal 1024x1024 DXT1, specular 256x256 DXT1 and rim 128x128 DXT1.
+Specular/rim are the exporter's available mip level 2, not claimed full-res.
+Diffuse SHA-256:
+`0C958ED11C3311DDBB517A8893EC7E372D0811A58582220F04A6EFD30A0D9A39`;
+normal `AE206388BB839175C3D3D0DB453A7B7A0F0505B6DB76FC3DC46D950EC23AE2D8`;
+specular `9189EEC3AC33B84A32FA4EEB4FA1C251B984FA2C9C1AD41DC5A3120D5ADCDF4E`;
+rim `FFD873DD23120D67AA36EAFBB7ADB65A5283C428A5E1032A948B44374F73DA70`.
+These assets are staged only for later integration; current DLL still renders
+the calibration boxes, not a falsely labelled complete material implementation.
 
 Original `Alt_pistol` exports 10 sequences, 78 tracks / 228 frames / 17784
 keys. Private PSA SHA-256:
@@ -196,6 +207,14 @@ failed backend, not success. The 120 ms X tap is not a dedicated Reload call.
 
 ## Evidence / next native work
 
+Current continuation L2_PASS: clean source
+`861FC12C5C73AEAEA1D641CEBCABA902F93C4CD8`, `/O2`, x86 PE32 (`014C/010B`),
+empty build-manifest working-tree status. DLL SHA-256:
+`8DBB1B4FFCCDFDFE22B2E45039DC8C37DAC93F68421D99C05E51DDFB2F0B2AEA`.
+Private candidate DLL and manifest hashes match. All seven CPU executables,
+12 Python tests and the six-executable menu/holster regression suite pass.
+L3/L4 remain UNKNOWN; SIDE did not launch, deploy or restore Steam.
+
 L1_PASS: six optimized CPU executables (transaction + old gesture + existing
 knife, holster, hand anchor, D3D fake-state regressions) and four Python
 extraction tests; actual original-asset extraction/UV/bind round trip.
@@ -204,9 +223,9 @@ the synchronized MAIN base (including shared knife/holster tests).
 
 Previous L2_PASS (before this continuation): clean source `db1495986a9eef704b3aa6972277aa03ef3fca2c`,
 `/O2`, x86 PE32 (`014C/010B`), empty working-tree status in build manifest.
-Latest DLL SHA-256:
+Previous DLL SHA-256:
 `BACD5FDBBB4C23E55149F4CFF9ECBCD3D6E8DE67FACF99EE1A423B8212AD9343`.
-Local `build/centurion-reload/candidate` DLL/manifest match this exact build.
+This older DLL is superseded by the continuation receipt above.
 Both the extraction cache hash and all original UVs remain unchanged after the
 stricter encoded-FLOAT32 round trip and optional wireframe inspection.
 
