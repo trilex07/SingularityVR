@@ -44,7 +44,7 @@ inline void TransformBone(float out[3][4],const float bone[3][4],const float del
     }
     memcpy(out,result,sizeof(result));
 }
-struct Layout { int bones=-1, boneRegs=0, local=-1; bool shadow=false; };
+struct Layout { int bones=-1, boneRegs=0, local=-1; bool shadow=false; int viewProjection=-1; };
 // D3D9 CTAB offsets are relative to the header immediately after the FOURCC.
 inline Layout ReadLayout(const uint32_t* words,unsigned count) {
     Layout result;
@@ -67,6 +67,7 @@ inline Layout ReadLayout(const uint32_t* words,unsigned count) {
                 if(u16(p+4)!=2)continue; // FLOAT4 register set
                 if(!strcmp(text,"BoneMatrices")){result.bones=u16(p+6);result.boneRegs=u16(p+8);}
                 if(!strcmp(text,"LocalToWorld"))result.local=u16(p+6);
+                if(!strcmp(text,"ViewProjectionMatrix")&&u16(p+8)==4)result.viewProjection=u16(p+6);
                 if(!strcmp(text,"ProjectionMatrix"))projection=true;
                 if(!strcmp(text,"InvMaxSubjectDepth")||!strcmp(text,"DepthBias"))depth=true;
             }

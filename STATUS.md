@@ -1,5 +1,32 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE knife feedback follow-up: empty fist and knife colour/
+shadows accepted by user; frozen. Blade only +15% length/+8% width (whole
+length 30 -> 32.685 cm), hilt/mount/UV/material unchanged. Knife thumb only
+re-fitted against a 15-vertex pad patch; all free-fist bytes unchanged, zero
+measured hand/knife and thumb/finger crossings. Default-OFF KnifeTrackedMelee
+keeps eligible held-joint tracking and cancels native wrist attack rotation;
+native RB/damage/heal and non-knife display remain unchanged. L1_PASS, L2_PASS:
+clean 6936fd5 /O2 x86 PE32, DLL SHA-256
+0D46D0BA9A13C0F51A7CEECFB836FE88E2BDC7047CB6E6B9522A3F24B44CB43A.
+Private retuned-candidate bundle hashes/provenance verified, no wholesale INI.
+ZERO Steam. L3/L4 pending. See docs/knife-grip-retune.md.
+
+LATEST 2026-10-16 SIDE fix/knife-shading-thumb: physical feedback accepts
+joint mount/size, rejects bright unlit knife and thumb interpenetration.
+Default-OFF HandThumbPoseFix: original thumb rig only, separate knife pose and
+11-key empty-fist path; zero measured crossings at 201 FLOAT32 samples/hand.
+Default-OFF KnifeSceneLighting: original normal/specular, audited native scene
+SH/direct/ambient light and depth-alpha encoding; exact captured shader gate.
+This is a scene-lit approximation, NOT full Mat_Knife or a new shadow caster.
+L1_PASS: 13308 original-rig golden vertices, 101 palette levels, unchanged
+non-thumb/opposite-hand/rig/cuff/mount, SM3 compile + tangent/cache tests and
+existing upload/state/holster/hand regressions. L2_PASS clean 230c62e /O2 x86
+PE32, DLL SHA E71EF4E18ACF99418AC50F6A2E9BB0C294C2886559582ABB2F6EAD8DE8F086A2.
+Base includes MAIN aef042f (joint PR32 + Bink stills); integrate follow-up onto
+current MAIN, don't deploy stale standalone source. ZERO Steam, L3/L4 UNKNOWN.
+See docs/knife-shading-thumb.md for flags, limits and two independent tests.
+
 LATEST 2026-10-15 MAIN round 19 DEPLOYED (DLL
 F303DA28CA6B387A5DEBBF31B72D9D1CE71F798B728EF315D10B9A3EB6A88C48/source
 branch plates-l3-main, x86 PE32 /O2, built==installed via

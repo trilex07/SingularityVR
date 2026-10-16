@@ -5,8 +5,11 @@
 #include "arm_bind.h"
 #include "glove_isolate.h"
 #include "singularity_bind_reference.h"
+#include "knife_hand_grip.h"
+#include "hand_thumb_pose.h"
 
 namespace nativegloves {
+inline bool Thumb(unsigned b){return thumbpose::Thumb(b);}
 inline bool Finger(unsigned b){return (b>=10&&b<=25&&b!=13)||(b>=70&&b<=84);}
 struct Data {std::vector<std::uint16_t> indices;gloves::Q curl[90]{};unsigned capTriangles=0;};
 inline bool Decode(const unsigned char* p,std::size_t bytes,Data& out){
@@ -53,10 +56,16 @@ class Renderer {
     Data data;bool cpu=false,failed=false;
     armbind::Mat bind[90]{},inverse[90]{},local[90]{};
     IDirect3DIndexBuffer9* ib=nullptr;
+    thumbpose::Data thumbs{};bool thumbReady=false;
 public:
+    bool LoadThumbs(const char* path){
+        thumbReady=false;std::vector<unsigned char> bytes;thumbpose::Data next;
+        if(!gloves::Read(path,bytes,8192)||!thumbpose::Decode(bytes.data(),bytes.size(),next))return false;
+        thumbs=next;thumbReady=true;return true;
+    }
     unsigned draws=0;
     bool Load(const char* path){
-        ReleaseGPU();cpu=false;Data next;std::vector<unsigned char> bytes;
+        ReleaseGPU();cpu=false;thumbReady=false;Data next;std::vector<unsigned char> bytes;
         if(!gloves::Read(path,bytes,128*1024)||!Decode(bytes.data(),bytes.size(),next)||
            !armbind::BuildReference(bindassets::noTmd,90,bind))return false;
         for(unsigned b=0;b<90;++b)
@@ -65,6 +74,7 @@ public:
         data=std::move(next);cpu=true;return true;
     }
     bool Ready()const{return cpu&&!failed;}
+    const armbind::Mat& WristReference(unsigned side)const{return bind[side?51:9];}
     unsigned Triangles()const{return (unsigned)data.indices.size()/3;}
     unsigned Caps()const{return data.capTriangles;}
     void ReleaseGPU(){gloves::Release(ib);failed=false;}
@@ -81,9 +91,11 @@ public:
     // Transactional, stack-only. Source is original bind rig, not guessed slots.
     // Wrist/controller scale and position are already in the existing palette.
     // The cuff uses the same wrist transform rather than an animated elbow.
-    bool Pose(float palette[135][4],const float grip[2])const{
+    bool Pose(float palette[135][4],const float grip[2],const float (*digits)[5]=nullptr,int knifeSide=-1)const{
         if(!Ready()||!palette||!grip)return false;
+        if(knifeSide < -1||knifeSide>1)return false;
         for(unsigned side=0;side<2;++side)if(!std::isfinite(grip[side])||grip[side]<0||grip[side]>1)return false;
+        if(digits)for(unsigned side=0;side<2;++side)for(float f:digits[side])if(!std::isfinite(f)||f<0||f>1)return false;
         armbind::Mat posed[90],wristSkin[2];int wristSlot[2]={-1,-1};
         for(unsigned s=0;s<gloveisolate::kNoTmdCookedPaletteCount;++s){
             const auto b=gloveisolate::kNoTmdCookedPalette[s];
@@ -96,7 +108,13 @@ public:
             if(Finger(b)){
                 const int side=gloveisolate::NoTmdCookedHandSide(b);
                 if(side<0)return false;
-                const float t=grip[side];const auto q=data.curl[b];gloves::Q blend;
+                const int digit=knifehand::Digit(b);if(digit<0)return false;
+                float t=digits?digits[side][digit]:grip[side];auto q=data.curl[b];gloves::Q blend;
+                if(thumbReady&&Thumb(b)){
+                    const bool knife=side==knifeSide;
+                    if(!thumbpose::Sample(thumbs,(unsigned)side,thumbpose::Segment(b),grip[side],knife,q))return false;
+                    t=1.f;
+                }
                 // Shortest-path normalized quaternion blend; rigid at all t.
                 if(!gloves::Normalize({q.x*t,q.y*t,q.z*t,1+(q.w-1)*t},blend))return false;
                 armbind::Mat rotation{};rotation.m[3][3]=1;
