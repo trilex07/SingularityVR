@@ -7,7 +7,10 @@ default-OFF Cross health/right-stick-up jump/Circle cylinder gesture layout,
 Circle/open/dump/shoulder/insert/close FSM and opt-in original stock/carried mesh.
 Markers now independently OFF. Native auto-reload/cylinder animation NOT fixed;
 native declaration/ABI/runtime producer still requires evidence, not guessed calls.
-L1_PASS eleven /O2 /W4 /WX CPU executables +27 Python tests; L2 pending.
+L1_PASS eleven /O2 /W4 /WX CPU executables +27 Python tests; knife 6 CPU/14 Python.
+L2_PASS clean80a5e34 /O2 x86 PE32 DLL SHA256
+B5352D3C9DF60F705904A0AE992EDF478E96650A1E7B6888F4B51F3985384CAA.
+Private candidate/asset hashes verified, NO INI staged. Full manual reload not ready.
 ZERO Steam, no installed-file writes; L3/L4 UNKNOWN.
 See docs/centurion-grip-shoulder.md; rebuild onto CURRENT MAIN before any test.
 

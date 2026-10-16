@@ -118,3 +118,16 @@ L1: `tools/reload/test-centurion.ps1`: eleven /O2 /W4 /WX CPU executables
 360000 lifecycle frames, presentation restore faults) +27 Python tests.
 L2 receipt is appended after clean-source x86 PE32 /O2 build.
 L3 Steam / pixel content / L4 PSVR2 for this follow-up: UNKNOWN.
+
+L1_PASS: all eleven CPU executables +27 Python tests; additional knife suite
+six CPU executables +14 Python tests PASS (synthetic only, private rig/shader
+replay not requested). SM3 vertex/pixel shader compilation PASS, not GPU proof.
+L2_PASS: clean source `80a5e340b79da773912d3ec55d64dbe27e3cf590`, x86 PE32,
+`/O2`, empty `workingTreeStatus` in build manifest. DLL SHA256:
+`B5352D3C9DF60F705904A0AE992EDF478E96650A1E7B6888F4B51F3985384CAA`.
+Existing static-analysis/compiler warnings remain; not claimed warning-free.
+Private candidate in this checkout's ignored `build/centurion-reload/candidate`,
+including verified original cylinder/albedo; NO INI and NO Steam deployment.
+Not READY_FOR_PHYSICAL_ACCEPTANCE as a full manual reload: native authority
+gate above remains open. Control/gesture-only integration can be evaluated
+separately by MAIN with its current accepted build and exact scoped INI plan.
