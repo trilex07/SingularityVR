@@ -437,6 +437,28 @@ inline bool ComputeMirrorDestination(UINT bw, UINT bh, UINT sw, UINT sh,
 // enforced. req==0 means "use the window client area" in D3D9, so it is
 // resolved against the live client size before judging.
 struct ResetDecision { UINT w = 0, h = 0; bool enforced = false; };
+// Fuse against a Reset war: enforcing the SBS size forever while the engine
+// Resets every frame (backbuffer never what it wants) means nothing ever
+// renders (black HMD + native monitor). After a burst of enforcements in a
+// short window, give up for the session (pass everything through) instead of
+// blacking out the headset. Time is an argument so L1 can drive bursts and
+// gaps deterministically.
+struct ResetFuse {
+    static const int kBurst = 4;               // enforcements...
+    static const ULONGLONG kWindowMs = 10000;  // ...inside 10 s blows the fuse
+    int count = 0;
+    ULONGLONG startMs = 0;
+    bool blown = false;
+    // Returns true while THIS enforcement is allowed.
+    inline bool Observe(ULONGLONG nowMs) {
+        if (blown) return false;
+        if (count == 0 || nowMs - startMs > kWindowMs) { count = 1; startMs = nowMs; return true; }
+        ++count;
+        if (count >= kBurst) { blown = true; return false; }
+        return true;
+    }
+};
+
 inline ResetDecision DecideResetSize(UINT reqW, UINT reqH,
                                      UINT trustW, UINT trustH,
                                      UINT clientW, UINT clientH,

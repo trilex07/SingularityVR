@@ -11,7 +11,7 @@ this stack resets the viewport on every SetRenderTarget — stamp avoids it by
 construction. L1_PASS mirror/guard/stamp CPU + D3D9Ex pixels/scope/viewport/
 Reset + 7 Python contracts + six menu/cinema regressions. L2_PASS clean tree,
 x86 PE32 /O2 DLL SHA-256
-90BE2B3F5E1CFFF6EF87DD91310DEC776397F56D8E2A8879D5C2B947B8A196F9.
+573A038B120AD7FA99F4F2922CAEFB7386FC2FE4DBC3D387A51F175264D8FA3F.
 L3/L4 UNKNOWN. ZERO Steam. See docs/right-eye-mirror-capture.md for the MAIN
 L3 script and both falsifiers.
 

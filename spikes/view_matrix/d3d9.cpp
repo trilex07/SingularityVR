@@ -30792,6 +30792,16 @@ static void GuardResetSize(D3DPRESENT_PARAMETERS* pp) {
         pp->BackBufferWidth, pp->BackBufferHeight, g_srcW, g_srcH, cw, ch,
         Rd(g_desktopMirrorWindow) != 0, VrModeOn());
     if (!d.enforced) return;
+    // Fuse against a Reset war (black HMD + native monitor): a burst of
+    // enforcements in a short window means the engine Resets every frame, so
+    // stop enforcing for the session and pass everything through.
+    static desktop_mirror::ResetFuse fuse;
+    static volatile LONG fuseLog = 0;
+    if (!fuse.Observe(GetTickCount64())) {
+        if (InterlockedIncrement(&fuseLog) == 1)
+            Log("reset-guard: FUSE BLOWN - engine keeps Resetting away from SBS; passing through (window fit stays, VR res follows window)");
+        return;
+    }
     pp->BackBufferWidth = d.w;
     pp->BackBufferHeight = d.h;
     static volatile LONG guardLogs = 0;

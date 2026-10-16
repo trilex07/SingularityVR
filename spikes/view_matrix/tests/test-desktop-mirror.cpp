@@ -166,5 +166,21 @@ int main() {
         b.Width = 640; b.Format = D3DFMT_X8R8G8B8;
         Expect(!desktop_mirror::ShouldStampRt(a, b), "format mismatch skips");
     }
+    // Reset fuse: a burst of enforcements in a short window blows the fuse
+    // (pass-through for the session) instead of Reset-warring into a blackout.
+    {
+        desktop_mirror::ResetFuse f;
+        Expect(f.Observe(0) && f.Observe(1000) && f.Observe(2000),
+               "spaced enforcements allowed");
+        Expect(!f.Observe(3000) && f.blown,
+               "fourth enforcement inside 10 s blows the fuse");
+        Expect(!f.Observe(4000) && !f.Observe(100000),
+               "blown fuse stays pass-through for the session");
+    }
+    {
+        desktop_mirror::ResetFuse f;
+        Expect(f.Observe(0) && f.Observe(11000) && f.Observe(22000) && f.Observe(33000) && !f.blown,
+               "enforcements spaced beyond the window never blow the fuse");
+    }
     return g_fails == 0 ? 0 : 1;
 }

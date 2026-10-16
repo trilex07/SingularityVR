@@ -31,7 +31,12 @@ fought), and fail-open whenever no trusted size or client rect is known.
 AutoResolution (cached recommended SBS injected as `-ResX/-ResY -windowed`)
 is unchanged and remains the resolution source; the guard keys off the
 MEASURED copy size, never the cache, so a refused `-ResX` can never be
-enforced. Falsifier for MAIN: `reset-guard:` log lines (max 6/session) show
+enforced. A burst fuse (`ResetFuse`, L1-tested: 4 enforcements inside
+10 s) stops enforcing for the session and passes everything through, so a
+Reset-warring engine degrades to the old window-sized render instead of a
+black HMD + native monitor. Falsifier for MAIN: `reset-guard:` log lines
+(max 6/session) show requested/client/enforced SBS sizes; `FUSE BLOWN`
+means the engine Resets in a loop and the guard stood down.
 requested/client/enforced sizes. Zero lines + stable SBS = the engine did not
 Reset after the fit (guard a harmless no-op). Lines present + SBS stable =
 the fix held. Lines present + size still dropped = the engine resizes
@@ -85,7 +90,7 @@ in practice. No overlay code was changed for this.
   stamp-before-scope order + Reset-guard presence). Six menu/cinema CPU
   regression suites re-run green on this tree.
 - L2: clean `spikes/view_matrix` build, x86 PE32 (`014C`), `/O2`,
-  DLL SHA-256 `90BE2B3F5E1CFFF6EF87DD91310DEC776397F56D8E2A8879D5C2B947B8A196F9`
+  DLL SHA-256 `573A038B120AD7FA99F4F2922CAEFB7386FC2FE4DBC3D387A51F175264D8FA3F`
   (manifest `spikes/view_matrix/d3d9.build.json`, local). Provenance:
   branch `side/mirror-screenshot-fix`, base `9576f5e`.
 - L3/L4: UNKNOWN. No Steam launch, deploy, or installed-file change.
