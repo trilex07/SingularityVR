@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE fix/native-glove-cuffs: original full native cuffs
+(noTMD10.786UU behind wrist instead of old3.5UU cut), closed cuff backs for
+free hands AND held-gun native noTMD/TMD sections. New default-OFF
+NativeGloveCuffClosure uses separate native_cuffs.svnc (two exact profiles),
+original VB/UV/skin/material/scale retained. No gun-finger/anchor changes;
+knife private depth uses the selected colour IB's triangle count.
+L1_PASS new topology/axial/skin-seam/source roundtrip +2048 runtime context
+combinations/decoder/IB guard tests and existing glove/knife regressions.
+L2 pending clean build; ZERO Steam, L3/L4 UNKNOWN. Private assets are not in
+Git; MAIN must integrate/rebuild on current source and guard exact cache+flag.
+See docs/native-glove-cuffs.md.
+
 LATEST 2026-10-16 SIDE fix/frontend-menu-comfort: default-OFF class2-only
 FrontMenuCleanBackdrop replaces the glitch-prone UE3 backdrop with neutral dark
 colour and retains both eye projections of the existing current-token GFx panel.

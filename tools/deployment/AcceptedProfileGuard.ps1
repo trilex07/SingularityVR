@@ -121,6 +121,7 @@ function Assert-AcceptedDeployment {
         throw 'Profile must pin its accepted renderer DLL'
     }
     $dependencies=@{
+        'Render/NativeGloveCuffClosure'=@('Binaries/vr-assets/hud/katorga/glove-animation/native_cuffs.svnc')
         'Render/GloveNativeEnabled'=@('Binaries/vr-assets/hud/katorga/glove-animation/native_hands.svni')
         'Render/HandThumbPoseFix'=@('Binaries/vr-assets/hud/katorga/glove-animation/hand_thumb.svnt')
         'Input/HipKnifeEnabled'=@('Binaries/vr-assets/knife/knife.svrk','Binaries/vr-assets/knife/knife.svrt')
