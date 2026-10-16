@@ -4672,6 +4672,7 @@ void PumpXR() {
 XrSwapchain g_swapchain[2] = { XR_NULL_HANDLE, XR_NULL_HANDLE };
 uint32_t g_scWidth = 0, g_scHeight = 0;
 bool g_scCropped = false; // simultaneous SBS: each XR texture holds one eye
+bool g_mirrorCineCrop = false; // stamped from the actual XR crop decision, not scene-name inference
 ID3D11Texture2D** g_scImages[2] = { nullptr, nullptr };
 uint32_t g_scImageCount[2] = { 0, 0 };
 
@@ -6544,13 +6545,13 @@ RecenterChord g_recenterChord;
 volatile LONG g_recenterRequested=0;
 // The chord is deliberately independent from recording.  A capture shortcut
 // must never stop or restart a session that is collecting physical movements.
-volatile LONG g_recenterChordEnabled=0; // ini [Input] RecenterChord; L3+R3 remains capture-only by default
+volatile LONG g_recenterChordEnabled=0; // ini [Input] RecenterChord; no screenshot binding
 vrrec::Recorder g_vrRecorder;
 volatile LONG g_vrRecording=0;
 std::uint64_t g_vrRecordFrame=0;
 volatile LONG g_vrRecorderEventFlags=0;
 float g_vrRecorderMuzzle[3]={0,0,0};
-// Fix-H/capture: L3+R3 also requests a backbuffer BMP next to the log (debounced in
+// Explicit engineering probes can request a backbuffer BMP (debounced in
 // Present). Set on the input thread, consumed once on the render thread.
 volatile LONG g_captureRequested=0;
 // Fix-G/perf off-switch: the spike reporter below costs nothing when idle, but the user
@@ -7747,6 +7748,8 @@ inline int PanelRowId(int i) {
 volatile LONG g_startInVr = 1;      // ini [Render] StartInVr
 volatile LONG g_desktopMirrorEye = 0; // ini [Render] DesktopMirrorEye: 0 off, 1 left, 2 right
 volatile LONG g_desktopMirrorFill = 0; // ini [Render] DesktopMirrorFill: 0=letterbox, 1=full stretch, 2=crop 16:9
+volatile LONG g_desktopMirrorWindow = 0; // opt-in right eye + fit window, cap client at 1920x1080
+volatile LONG g_steamCaptureBackbuffer = 0; // opt-in RT0 scope around the original Present
 // Diagnostic-only desktop HMD: exercise stereo/backbuffer hooks without an XR system.
 // This never changes normal PSVR2 startup behavior unless explicitly enabled in [Diagnostic].
 volatile LONG g_forceDesktopVr = 0; // ini [Diagnostic] ForceDesktopVr
@@ -8979,7 +8982,7 @@ void PanelAdjust(int row, int dir) {
             } else if (g_vrRecorder.StartDefault()) {
                 g_vrRecordFrame = 0;
                 InterlockedExchange(&g_vrRecording, 1);
-                Log("VR session recorder: STARTED (L3+R3 remains screenshot/recenter only)");
+                Log("VR session recorder: STARTED (L3+R3 remains recenter only)");
             } else {
                 Log("VR session recorder: START FAILED");
             }
@@ -10742,16 +10745,13 @@ void SyncXRInput(XrTime displayTime) {
         r3Held = desktopAutomationR3;
     if (g_recenterChord.Update(l3Held, r3Held)) {
         if (Rd(g_recenterChordEnabled)) InterlockedExchange(&g_recenterRequested, 1);
-        // Fix-H/capture: same chord doubles as the screenshot trigger (user asked).
-        // It never toggles recording.  The screenshot remains an explicit visual diagnostic.
-        InterlockedExchange(&g_captureRequested, 1);
         InterlockedOr(&g_vrRecorderEventFlags, vrrec::Recenter);
-        Log("L3+R3 chord: recenter=%s capture=requested recording=%s",
+        Log("L3+R3 chord: recenter=%s capture=disabled recording=%s",
             Rd(g_recenterChordEnabled) ? "requested" : "disabled",
             g_vrRecorder.Active() ? "continues" : "off");
     }
     // R3 owns the weapon wheel in gameplay. L3+R3 remains the explicit
-    // recenter/screenshot chord, so opening is vetoed while L3 is held.  The
+    // recenter chord, so opening is vetoed while L3 is held.  The
     // same edge state is also used by the deterministic desktop simulator.
     const bool r3Released = !r3Held && g_weaponWheelState.priorR3;
     // Seen-weapons set for label gating (bounded: 8 entries, input thread).
@@ -12449,6 +12449,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                           (!frame->menuFlat || isVideoFlat) && g_srcW >= 2;
     const bool monoCrop = cropEyes || cineCrop;
     g_scCropped = monoCrop;
+    g_mirrorCineCrop = cineCrop;
     if (frame) {
         PauseMenuDiagNoteSubmit(frame->dup, frame->stereo, frame->menuFlat, cropEyes, g_srcW,
                                 g_srcH, (int)Rd(g_vrMenuClass));
@@ -25086,7 +25087,7 @@ bool VrPanelHitNormalized(LONG uInt, LONG vInt, int* rowIndex) {
     return false;
 }
 
-// Fix-H/capture: L3+R3 backbuffer screenshot next to the log, for remote diagnosis.
+// Explicit probe backbuffer screenshot next to the log, for remote diagnosis.
 // Explicit user trigger only; debounced 3 s. One fullscreen readback stalls the GPU
 // briefly (expect a visible hitch on the capture frame) - that is the price of
 // GetRenderTargetData, not a bug. Multisampled or exotic formats are skipped, never
@@ -27591,8 +27592,8 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // headset screenshots unusable in the production DLL. This isolated options DLL exposes it
     // again because the cutscene presentation choice must be reachable without editing the INI.
     DrawVrMenuPointer(s);
-    // Fix-H/capture: consume a pending L3+R3 screenshot request (set on the input
-    // thread) after the menu/prompt overlays have been drawn. This makes diagnostic
+    // Consume an explicit engineering probe request (not a controller chord)
+    // after menu/prompt overlays have been drawn. This makes diagnostic
     // captures represent the actual submitted eye image, including PS prompt icons.
     if (InterlockedExchange(&g_captureRequested, 0)) SaveBackbufferCapture(s);
     if (InterlockedExchange(&g_initTried, 1) == 0) {
@@ -28558,18 +28559,8 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                          InterlockedExchange(&g_swapEyes, was?0:1);
                          Log("DELETE: eye/half assignment %s", was?"NORMAL":"SWAPPED"); }
     pDel = kDel;
-    static bool p12 = false;
-    bool k12 = (DebugKey(VK_F12) & 0x8000) != 0;
-    if (k12 && !p12) { LONG was = InterlockedCompareExchange(&g_stereo,0,0);
-                       InterlockedExchange(&g_stereo, was?0:1);
-                       g_eyeFilled[0] = g_eyeFilled[1] = false;
-                       g_renderEye = 0;
-                       Log("F12: alternate-eye STEREO %s%s", was?"OFF":"ON",
-                           was?"":" - each eye now updates at half the frame rate");
-                       if (!was) Log("    stereo shares the position path, so it brings"
-                                     " positional head tracking with it whether F10 is on or not");
-                     }
-    p12 = k12;
+    // F12 belongs exclusively to Steam screenshots, including with Debug=1.
+    // Never toggle alternate-eye stereo or clear the filled eyes on that key.
     static bool p10 = false;
     bool k10 = (DebugKey(VK_F10) & 0x8000) != 0;
     if (k10 && !p10) { LONG was = InterlockedCompareExchange(&g_sixDof,0,0);
@@ -30720,8 +30711,13 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             g_handPositionValid[0]?1:0,g_handPositionValid[1]?1:0);
         shadowtrace::Arm(s);
     }
-    desktop_mirror::Apply(s, a, b, c);
-    const HRESULT presentResult = g_origPresent(s, a, b, c, d);
+    const bool mirrored = desktop_mirror::Apply(s, a, b, c, g_mirrorCineCrop);
+    HRESULT presentResult;
+    {
+        desktop_mirror::PresentBackbufferScope captureScope(s,
+            mirrored && Rd(g_steamCaptureBackbuffer) != 0);
+        presentResult = g_origPresent(s, a, b, c, d);
+    }
     static double realPresentSum=0, realPresentMax=0;
     static unsigned realPresentSamples=0;
     const double realPresentMs = MsSince(realPresentBegin);
@@ -31053,6 +31049,12 @@ void LoadIniSettings() {
         if (fill < 0 || fill > 2) fill = 0;
         InterlockedExchange(&g_desktopMirrorFill, fill);
         Log("ini: DesktopMirrorFill=%ld (0=letterbox, 1=full stretch, 2=crop 16:9; fills backbuffer for F12/TV)", fill);
+        const LONG fitWindow = GetPrivateProfileIntA("Render", "DesktopMirrorWindow", 0, path) ? 1 : 0;
+        InterlockedExchange(&g_desktopMirrorWindow, fitWindow);
+        const LONG steamCapture = GetPrivateProfileIntA("Render", "SteamCaptureBackbuffer", 0, path) ? 1 : 0;
+        InterlockedExchange(&g_steamCaptureBackbuffer, steamCapture);
+        Log("ini: DesktopMirrorWindow=%ld (right eye, aspect-fit, windowed client <=1920x1080) SteamCaptureBackbuffer=%ld (Present RT0 scope, Steam acceptance pending)",
+            fitWindow, steamCapture);
     }
     Log("ini: StartInVr=%ld (%s)", InterlockedCompareExchange(&g_startInVr, 0, 0),
         InterlockedCompareExchange(&g_startInVr, 0, 0)
@@ -32157,10 +32159,10 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
             }
         }
         g_origPresent = (PFN_Present)PatchVTable(*out, 17, (void*)&Hook_Present);
-        if(g_diagEnabled) {
+        if(g_diagEnabled || Rd(g_desktopMirrorWindow) || Rd(g_desktopMirrorEye)) {
             g_origResetDevice=(PFN_ResetDevice)PatchVTable(*out,16,(void*)&Hook_ResetDevice);
             if(g_deviceIsEx)g_origResetDeviceEx=(PFN_ResetDeviceEx)PatchVTable(*out,132,(void*)&Hook_ResetDeviceEx);
-            Log("DIAG D3D9 Reset hooks: Reset=%p ResetEx=%p",g_origResetDevice,g_origResetDeviceEx);
+            Log("D3D9 resource Reset hooks: Reset=%p ResetEx=%p",g_origResetDevice,g_origResetDeviceEx);
         }
         // Slot 94 = SetVertexShaderConstantF. Present at 17 already proved this vtable
         // indexing against the real interface, so 94 needs no separate verification.

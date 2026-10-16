@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cmath>
 #include <cstdarg>
+#include <initializer_list>
 
 void Log(const char* fmt, ...) {
     (void)fmt;
@@ -15,7 +16,25 @@ static void Expect(bool cond, const char* name) {
     ++g_fails;
 }
 
+struct FaultOps {
+    int fail=0, step=0, back=17, candidate=0, commits=0;
+    bool Pass() { return ++step!=fail; }
+    bool CopyEye() { return Pass(); }
+    bool ClearCandidate() { candidate=0; return Pass(); }
+    bool FitCandidate() { candidate=23; return Pass(); }
+    bool Commit() { ++commits; if (!Pass()) return false; back=candidate; return true; }
+};
+
 int main() {
+    for(int fail=1;fail<=4;++fail) {
+        FaultOps ops;ops.fail=fail;
+        const auto stage=desktop_mirror::ComposeTransactional(ops,true);
+        Expect(stage!=desktop_mirror::ComposeStage::Done && ops.back==17 && ops.commits==(fail==4?1:0),
+               "failed composition never clears submitted image and short-circuits");
+    }
+    FaultOps ops;
+    Expect(desktop_mirror::ComposeTransactional(ops,true)==desktop_mirror::ComposeStage::Done &&
+           ops.back==23 && ops.commits==1,"one completed transaction commits exactly once");
     Expect(desktop_mirror::SourceLeft(5264, 2, false, false) == 2632, "right eye is the second half");
     Expect(desktop_mirror::SourceLeft(5264, 2, true, false) == 0, "swapped right eye is the first half");
     Expect(desktop_mirror::SourceLeft(5264, 1, false, false) == 0, "left eye is the first half");
@@ -63,6 +82,29 @@ int main() {
            "fully visible window matches legacy centering");
     Expect(desktop_mirror::VisibleEyeDst(0, 0, 0, 0, 5264, 2684, 5264, 2684, 2632, 2684, vdst),
            "empty visible box falls back without failing");
+    RECT windowFit{};
+    Expect(desktop_mirror::FitDestination(5264,2684,2632,2684,1920,1080,windowFit) &&
+           desktop_mirror::VisibleEyeDst(0, 0, 1920, 1080, 5264, 2684, 1920, 1080, 2632, 2684, vdst) &&
+           EqualRect(&windowFit,&vdst),
+           "differently sized window retains full-window aspect fit (old implementation fails)");
+    for (UINT ww : {800u, 1280u, 1920u, 2560u}) for (UINT wh : {600u, 720u, 1080u, 1440u}) {
+        RECT a{}, b{};
+        Expect(desktop_mirror::FitDestination(5264,2684,2632,2684,ww,wh,a) &&
+               desktop_mirror::VisibleEyeDst(0,0,(LONG)ww,(LONG)wh,5264,2684,ww,wh,2632,2684,b) &&
+               EqualRect(&a,&b), "visible full client equals direct fit for arbitrary monitor shape");
+    }
+    RECT work{0,0,1920,1040}, outer{};
+    Expect(desktop_mirror::WindowBox(work,16,39,outer) && EqualRect(&work,&outer),
+           "1080p work area includes title/borders/taskbar, not oversized SBS");
+    work={-3840,100,0,2220};
+    Expect(desktop_mirror::WindowBox(work,16,39,outer) && outer.right-outer.left==1936 &&
+           outer.bottom-outer.top==1119 && outer.left>=work.left && outer.right<=work.right,
+           "4K second monitor negative origin caps physical client at 1920x1080");
+    work={1920,-600,3200,120};
+    Expect(desktop_mirror::WindowBox(work,16,39,outer) && EqualRect(&work,&outer),
+           "small monitor is fully contained including negative Y");
+    work={0,0,10,10};
+    Expect(!desktop_mirror::WindowBox(work,16,39,outer), "invalid work area rejected");
     RECT mdst{}, msrc{}; bool useSrc = false, needClr = true;
     Expect(desktop_mirror::ComputeMirrorDestination(5264, 2684, 2632, 2684, 5264, 2684, 0, false, 0, 0, 0, 0, mdst, msrc, useSrc, needClr) &&
            needClr && !useSrc && mdst.left == fdst.left && mdst.right == fdst.right,

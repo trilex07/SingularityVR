@@ -10,6 +10,8 @@ extern volatile LONG g_dupDraws;
 extern volatile LONG g_swapEyes;
 extern volatile LONG g_desktopMirrorEye;
 extern volatile LONG g_desktopMirrorFill;
+extern volatile LONG g_desktopMirrorWindow;
+extern volatile LONG g_steamCaptureBackbuffer;
 extern volatile LONG g_inCinematic;
 extern bool g_scCropped;
 extern bool g_xrRunning;
@@ -18,10 +20,40 @@ extern unsigned g_srcH;
 
 namespace desktop_mirror {
 
+// Stops before any mutation of the submitted backbuffer unless every
+// preparatory operation succeeded. Also used by fault-injection CPU tests.
+enum class ComposeStage { CopyEye, ClearCandidate, FitCandidate, Commit, Done };
+template<class Ops> inline ComposeStage ComposeTransactional(Ops& ops, bool clear) {
+    if (!ops.CopyEye()) return ComposeStage::CopyEye;
+    if (clear && !ops.ClearCandidate()) return ComposeStage::ClearCandidate;
+    if (!ops.FitCandidate()) return ComposeStage::FitCandidate;
+    if (!ops.Commit()) return ComposeStage::Commit;
+    return ComposeStage::Done;
+}
+
 inline IDirect3DSurface9* g_scratch = nullptr;
+inline IDirect3DSurface9* g_composed = nullptr;
 inline UINT g_scratchW = 0;
 inline UINT g_scratchH = 0;
 inline D3DFORMAT g_scratchFormat = D3DFMT_UNKNOWN;
+
+// Geometry must be in physical monitor pixels, even when the game's process
+// is DPI-unaware. Never change process/window DPI awareness for UE3 or Steam.
+class PhysicalPixelScope {
+    using SetContext = HANDLE (WINAPI*)(HANDLE);
+    SetContext set_ = nullptr;
+    HANDLE prior_ = nullptr;
+public:
+    PhysicalPixelScope() {
+        static const auto set = reinterpret_cast<SetContext>(GetProcAddress(
+            GetModuleHandleW(L"user32.dll"), "SetThreadDpiAwarenessContext"));
+        set_ = set;
+        if (set_) prior_ = set_(reinterpret_cast<HANDLE>(static_cast<INT_PTR>(-4)));
+    }
+    ~PhysicalPixelScope() { if (set_ && prior_) set_(prior_); }
+    PhysicalPixelScope(const PhysicalPixelScope&) = delete;
+    PhysicalPixelScope& operator=(const PhysicalPixelScope&) = delete;
+};
 
 // Bounded outcome diagnostics: counters + last geometry only, one Log line
 // per 600 Apply calls. Mirror copy logic below is unchanged by this probe.
@@ -141,6 +173,7 @@ inline void EmitMaybe() {
 }
 
 inline void ReleaseScratch() {
+    if (g_composed) { g_composed->Release(); g_composed = nullptr; }
     if (g_scratch) {
         g_scratch->Release();
         g_scratch = nullptr;
@@ -198,9 +231,12 @@ inline bool VisibleEyeDst(LONG visX, LONG visY, LONG visW, LONG visH,
                           UINT sw, UINT sh, RECT& out) {
     if (visW <= 0 || visH <= 0 || !bw || !bh || !sw || !sh || !ww || !wh)
         return FitDestination(bw, bh, sw, sh, ww, wh, out);
+    if (visX == 0 && visY == 0 && UINT(visW) == ww && UINT(visH) == wh)
+        return FitDestination(bw, bh, sw, sh, ww, wh, out);
     const double sx = double(bw) / ww, sy = double(bh) / wh;
-    // Eye aspect as displayed on screen (backbuffer-to-window scale applied).
-    const double aspect = (double(sw) * ww / bw) / (double(sh) * wh / bh);
+    // Fit in CLIENT pixels first. Applying the Present scale here and again
+    // below distorted the eye whenever window and SBS backbuffer differed.
+    const double aspect = double(sw) / sh;
     double w = double(visW), h = w / aspect;
     if (h > double(visH)) { h = double(visH); w = h * aspect; }
     if (w < 1 || h < 1) return false;
@@ -210,6 +246,120 @@ inline bool VisibleEyeDst(LONG visX, LONG visY, LONG visW, LONG visH,
     out = { l, t, l + LONG(w * sx + .5), t + LONG(h * sy + .5) };
     return out.right <= (LONG)bw && out.bottom <= (LONG)bh && out.left >= 0 && out.top >= 0;
 }
+
+// Work-area geometry, including frame/title bar. Pure CPU; monitor origins may
+// be negative. The cap is CLIENT pixels, never a stereo render-target size.
+inline bool WindowBox(const RECT& work, LONG frameW, LONG frameH, RECT& out) {
+    const LONG aw = work.right - work.left, ah = work.bottom - work.top;
+    if (frameW < 0 || frameH < 0 || aw <= frameW || ah <= frameH) return false;
+    const LONG cw = (aw - frameW < 1920) ? aw - frameW : 1920;
+    const LONG ch = (ah - frameH < 1080) ? ah - frameH : 1080;
+    if (cw < 64 || ch < 64) return false;
+    const LONG w = cw + frameW, h = ch + frameH;
+    const LONG l = work.left + (aw - w) / 2, t = work.top + (ah - h) / 2;
+    out = {l, t, l + w, t + h};
+    return true;
+}
+
+inline void FitWindow(HWND window, bool windowed) {
+    if (!window || !windowed || IsIconic(window)) return;
+    // Window messages can be owned by a different thread. Never synchronously
+    // wait for it from the render thread, activate it, or change fullscreen.
+    static HWND lastWindow = nullptr;
+    static HMONITOR lastMonitor = nullptr;
+    static RECT lastWork{};
+    static ULONGLONG retryAt = 0;
+    const ULONGLONG now = GetTickCount64();
+    if (now < retryAt) return;
+    retryAt = now + 1000;
+    HMONITOR mon = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO mi{}; mi.cbSize = sizeof(mi);
+    if (!mon || !GetMonitorInfoW(mon, &mi)) return;
+    // Fit once per window/monitor/work-area change, not every frame: users can
+    // subsequently resize or move the window without fighting an auto-maximizer.
+    if (lastWindow == window && lastMonitor == mon && EqualRect(&mi.rcWork, &lastWork)) return;
+    RECT wr{}, cr{}, target{};
+    if (!GetWindowRect(window, &wr) || !GetClientRect(window, &cr)) return;
+    const LONG fw = (wr.right - wr.left) - (cr.right - cr.left);
+    const LONG fh = (wr.bottom - wr.top) - (cr.bottom - cr.top);
+    if (!WindowBox(mi.rcWork, fw, fh, target)) return;
+    if (!SetWindowPos(window, nullptr, target.left, target.top,
+                      target.right-target.left, target.bottom-target.top,
+                      SWP_NOZORDER | SWP_NOACTIVATE | SWP_ASYNCWINDOWPOS)) return;
+    lastWindow = window; lastMonitor = mon; lastWork = mi.rcWork;
+    Log("mirror-window: requested outer=(%ld,%ld,%ld,%ld) frame=%ldx%ld client-cap=1920x1080; render targets unchanged by mirror",
+        target.left,target.top,target.right,target.bottom,fw,fh);
+}
+
+// The Steam overlay may sample RT0 at Present. It must see the *completed*
+// backbuffer rather than a restored UE3 offscreen target. No shader/constants
+// are edited. Restore exact COM bindings and viewport after the original Present.
+// Failure to acquire/prepare the scope leaves the original Present path intact.
+class PresentBackbufferScope {
+    IDirect3DDevice9* dev_ = nullptr;
+    IDirect3DSurface9* rt_[4]{};
+    IDirect3DSurface9* ds_ = nullptr;
+    D3DVIEWPORT9 vp_{};
+    UINT count_ = 0;
+    bool saved_ = false;
+    static inline volatile LONG boundLogs_ = 0, failureLogs_ = 0;
+    static void Failure(const char* phase, HRESULT hr) {
+        if (InterlockedIncrement(&failureLogs_) <= 4)
+            Log("steam-capture: %s failed hr=0x%08lX (bounded; Steam pixels NOT validated)", phase,(unsigned long)hr);
+    }
+public:
+    PresentBackbufferScope(IDirect3DDevice9* dev, bool enable) {
+        if (!dev || !enable) return;
+        D3DCAPS9 caps{};
+        HRESULT hr = dev->GetDeviceCaps(&caps);
+        if (FAILED(hr) || !caps.NumSimultaneousRTs) { Failure("caps",hr); return; }
+        count_ = caps.NumSimultaneousRTs < 4 ? caps.NumSimultaneousRTs : 4;
+        hr=dev->GetViewport(&vp_);
+        if (FAILED(hr)) { Failure("save viewport",hr); return; }
+        for (UINT i=0; i<count_; ++i) {
+            hr = dev->GetRenderTarget(i, &rt_[i]);
+            if ((i == 0 && (FAILED(hr) || !rt_[0])) ||
+                (FAILED(hr) && hr != D3DERR_NOTFOUND)) { Failure("save RT",hr); Release(); return; }
+        }
+        const HRESULT dhr = dev->GetDepthStencilSurface(&ds_);
+        if (FAILED(dhr) && dhr != D3DERR_NOTFOUND) { Failure("save depth",dhr); Release(); return; }
+        IDirect3DSurface9* back = nullptr;
+        hr=dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back);
+        if (FAILED(hr) || !back) { Failure("backbuffer",hr); Release(); return; }
+        dev_ = dev; saved_ = true;
+        bool ok = SUCCEEDED(hr=dev->SetDepthStencilSurface(nullptr));
+        for (UINT i=1; i<count_ && ok; ++i) ok = SUCCEEDED(hr=dev->SetRenderTarget(i,nullptr));
+        if (ok) ok = SUCCEEDED(hr=dev->SetRenderTarget(0,back));
+        if (ok && InterlockedIncrement(&boundLogs_) <= 4)
+            Log("steam-capture: Present RT0=%p -> completed mirror backbuffer=%p; Steam F12 pixels pending",rt_[0],back);
+        back->Release();
+        if (!ok) { Failure("bind",hr); Restore(); }
+    }
+    PresentBackbufferScope(const PresentBackbufferScope&) = delete;
+    PresentBackbufferScope& operator=(const PresentBackbufferScope&) = delete;
+    ~PresentBackbufferScope() { Restore(); Release(); }
+    bool Active() const { return saved_; }
+private:
+    void Restore() {
+        if (!saved_) return;
+        HRESULT hr=dev_->SetDepthStencilSurface(nullptr);
+        if (FAILED(hr)) Failure("restore detach depth",hr);
+        for (UINT i=1; i<count_; ++i) {
+            hr=dev_->SetRenderTarget(i,nullptr);if(FAILED(hr))Failure("restore detach MRT",hr);
+        }
+        hr=dev_->SetRenderTarget(0,rt_[0]);if(FAILED(hr))Failure("restore RT0",hr);
+        for (UINT i=1; i<count_; ++i) {
+            hr=dev_->SetRenderTarget(i,rt_[i]);if(FAILED(hr))Failure("restore MRT",hr);
+        }
+        hr=dev_->SetDepthStencilSurface(ds_);if(FAILED(hr))Failure("restore depth",hr);
+        hr=dev_->SetViewport(&vp_);if(FAILED(hr))Failure("restore viewport",hr);
+        saved_ = false;
+    }
+    void Release() {
+        for (auto& r : rt_) if (r) { r->Release(); r=nullptr; }
+        if (ds_) { ds_->Release(); ds_=nullptr; }
+    }
+};
 
 // Visible client sub-box in client pixels (intersection of the window client
 // area with the nearest monitor). False when nothing is visible.
@@ -274,27 +424,28 @@ inline bool ComputeMirrorDestination(UINT bw, UINT bh, UINT sw, UINT sh,
         : FitDestination(bw, bh, sw, sh, ww, wh, outDst);
 }
 
-inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
-                  const RECT* presentDst, HWND overrideWindow) {
-    const LONG mode = InterlockedCompareExchange(&g_desktopMirrorEye, 0, 0);
+inline bool Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
+                  const RECT* presentDst, HWND overrideWindow, bool cineCrop = false) {
+    const bool fitWindow = InterlockedCompareExchange(&g_desktopMirrorWindow, 0, 0) != 0;
+    const LONG mode = fitWindow ? 2 : InterlockedCompareExchange(&g_desktopMirrorEye, 0, 0);
     Diag::lastMode = mode;
     const LONG dup = InterlockedCompareExchange(&g_dupDraws, 0, 0);
-    if (mode <= 0) { InterlockedIncrement(&Diag::skipMode); EmitMaybe(); return; }
-    if (!dup && !g_xrRunning) { InterlockedIncrement(&Diag::skipDup); EmitMaybe(); return; }
-    if (!dev) { InterlockedIncrement(&Diag::skipRect); EmitMaybe(); return; }
+    if (mode <= 0) { InterlockedIncrement(&Diag::skipMode); EmitMaybe(); return false; }
+    if (!dup && !g_xrRunning) { InterlockedIncrement(&Diag::skipDup); EmitMaybe(); return false; }
+    if (!dev) { InterlockedIncrement(&Diag::skipRect); EmitMaybe(); return false; }
 
     IDirect3DSurface9* back = nullptr;
     HRESULT hr = dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back);
     if (FAILED(hr) || !back) {
         Diag::lastHr = (LONG)hr;
-        InterlockedIncrement(&Diag::failBack); EmitMaybe(); return;
+        InterlockedIncrement(&Diag::failBack); EmitMaybe(); return false;
     }
     D3DSURFACE_DESC desc{};
     hr = back->GetDesc(&desc);
-    if (FAILED(hr) || desc.Width < 2 || !desc.Height) {
+    if (FAILED(hr) || desc.Width < 2 || (desc.Width & 1) || !desc.Height) {
         Diag::lastHr = (LONG)hr;
         back->Release();
-        InterlockedIncrement(&Diag::failDesc); EmitMaybe(); return;
+        InterlockedIncrement(&Diag::failDesc); EmitMaybe(); return false;
     }
     Diag::lastBw = desc.Width; Diag::lastBh = desc.Height;
     // Subrectangle contract (runtime-proven 2026-10-14: engine passes a full-
@@ -305,52 +456,60 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
     if (!IsFullBackbufferSrc(presentSrc, presentDst, desc.Width, desc.Height)) {
         if (dev) CaptureRects(dev, presentSrc, presentDst, overrideWindow);
         back->Release();
-        InterlockedIncrement(&Diag::skipRect); EmitMaybe(); return;
+        InterlockedIncrement(&Diag::skipRect); EmitMaybe(); return false;
     }
     if (!g_xrRunning || !g_srcW || !g_srcH) {
         back->Release();
-        InterlockedIncrement(&Diag::skipXr); EmitMaybe(); return;
+        InterlockedIncrement(&Diag::skipXr); EmitMaybe(); return false;
     }
 
     D3DDEVICE_CREATION_PARAMETERS creation{};
     D3DPRESENT_PARAMETERS params{};
     IDirect3DSwapChain9* chain = nullptr;
     HWND window = overrideWindow;
-    if (!window && SUCCEEDED(dev->GetSwapChain(0, &chain)) && chain) {
-        if (SUCCEEDED(chain->GetPresentParameters(&params))) window = params.hDeviceWindow;
+    if (SUCCEEDED(dev->GetSwapChain(0, &chain)) && chain) {
+        if (SUCCEEDED(chain->GetPresentParameters(&params)) && !window) window = params.hDeviceWindow;
     }
     if (chain) chain->Release();
     if (!window && SUCCEEDED(dev->GetCreationParameters(&creation))) window = creation.hFocusWindow;
     RECT client{};
     UINT ww = desc.Width, wh = desc.Height;
-    if (window && GetClientRect(window, &client) && client.right > 0 && client.bottom > 0) {
-        ww = UINT(client.right); wh = UINT(client.bottom);
+    LONG vx = 0, vy = 0, vw = (LONG)ww, vh = (LONG)wh;
+    bool haveVis;
+    {
+        PhysicalPixelScope pixels;
+        if (fitWindow) FitWindow(window, params.Windowed != FALSE);
+        if (window && GetClientRect(window, &client) && client.right > 0 && client.bottom > 0) {
+            ww = UINT(client.right); wh = UINT(client.bottom);
+        }
+        haveVis = VisibleClientBox(window, ww, wh, vx, vy, vw, vh);
     }
     Diag::lastWw = ww; Diag::lastWh = wh;
     CapturePlacement(window);
-    const LONG fillMode = InterlockedCompareExchange(&g_desktopMirrorFill, 0, 0);
+    const LONG fillMode = fitWindow ? 0 : InterlockedCompareExchange(&g_desktopMirrorFill, 0, 0);
     RECT dst{};
     RECT scratchSrc{};
     bool useScratchSrc = false;
     bool needClear = true;
-    LONG vx = 0, vy = 0, vw = (LONG)ww, vh = (LONG)wh;
-    const bool haveVis = VisibleClientBox(window, ww, wh, vx, vy, vw, vh);
     const bool fitOk = ComputeMirrorDestination(desc.Width, desc.Height, desc.Width / 2, desc.Height,
                                                 ww, wh, fillMode, haveVis, vx, vy, vw, vh,
                                                 dst, scratchSrc, useScratchSrc, needClear);
     if (!fitOk) {
         back->Release();
-        InterlockedIncrement(&Diag::failFit); EmitMaybe(); return;
+        InterlockedIncrement(&Diag::failFit); EmitMaybe(); return false;
     }
-    if (!g_scratch || g_scratchW != desc.Width / 2 || g_scratchH != desc.Height ||
+    if (!g_scratch || !g_composed || g_scratchW != desc.Width / 2 || g_scratchH != desc.Height ||
         g_scratchFormat != desc.Format) {
         ReleaseScratch();
         hr = dev->CreateRenderTarget(desc.Width / 2, desc.Height, desc.Format, D3DMULTISAMPLE_NONE,
                                      0, FALSE, &g_scratch, nullptr);
+        if (SUCCEEDED(hr)) hr = dev->CreateRenderTarget(desc.Width, desc.Height, desc.Format,
+            D3DMULTISAMPLE_NONE, 0, FALSE, &g_composed, nullptr);
         if (FAILED(hr)) {
+            ReleaseScratch();
             Diag::lastHr = (LONG)hr;
             back->Release();
-            InterlockedIncrement(&Diag::failScratch); EmitMaybe(); return;
+            InterlockedIncrement(&Diag::failScratch); EmitMaybe(); return false;
         }
         g_scratchW = desc.Width / 2;
         g_scratchH = desc.Height;
@@ -358,34 +517,36 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
     }
 
     const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
-    const bool monoOrCutscene = !dup || g_scCropped || (InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0);
-    const UINT srcLeft = SourceLeft(desc.Width, mode, swap, g_scCropped, monoOrCutscene);
+    // Match the actual XR crop, not merely the cinematic flag. A stereo
+    // cinematic still has independent halves; composed cinema always uses 0.
+    const UINT srcLeft = cineCrop ? 0 : SourceLeft(desc.Width, mode, swap, g_scCropped, !dup);
     Diag::lastSrcLeft = srcLeft;
     Diag::lastDst = dst;
     const RECT src{ (LONG)srcLeft, 0, (LONG)(srcLeft + desc.Width / 2), (LONG)desc.Height };
-    hr = dev->StretchRect(back, &src, g_scratch, nullptr, D3DTEXF_LINEAR);
-    if (FAILED(hr)) {
-        Diag::lastHr = (LONG)hr;
+    struct Ops {
+        IDirect3DDevice9* dev;
+        IDirect3DSurface9* back;
+        const RECT *src, *scratchSrc, *dst;
+        HRESULT hr = S_OK;
+        bool CopyEye() { return SUCCEEDED(hr=dev->StretchRect(back,src,g_scratch,nullptr,D3DTEXF_LINEAR)); }
+        bool ClearCandidate() { return SUCCEEDED(hr=dev->ColorFill(g_composed,nullptr,D3DCOLOR_XRGB(0,0,0))); }
+        bool FitCandidate() { return SUCCEEDED(hr=dev->StretchRect(g_scratch,scratchSrc,g_composed,dst,D3DTEXF_LINEAR)); }
+        bool Commit() { return SUCCEEDED(hr=dev->StretchRect(g_composed,nullptr,back,nullptr,D3DTEXF_NONE)); }
+    } ops{dev,back,&src,useScratchSrc ? &scratchSrc : nullptr,&dst};
+    const ComposeStage stage = ComposeTransactional(ops,needClear);
+    if (stage != ComposeStage::Done) {
+        Diag::lastHr = (LONG)ops.hr;
         back->Release();
-        InterlockedIncrement(&Diag::failStretch1); EmitMaybe(); return;
-    }
-    if (needClear) {
-        hr = dev->ColorFill(back, nullptr, D3DCOLOR_XRGB(0, 0, 0));
-        if (FAILED(hr)) {
-            Diag::lastHr = (LONG)hr;
-            back->Release();
-            InterlockedIncrement(&Diag::failFill); EmitMaybe(); return;
-        }
-    }
-    hr = dev->StretchRect(g_scratch, useScratchSrc ? &scratchSrc : nullptr, back, &dst, D3DTEXF_LINEAR);
-    if (FAILED(hr)) {
-        Diag::lastHr = (LONG)hr;
-        back->Release();
-        InterlockedIncrement(&Diag::failStretch2); EmitMaybe(); return;
+        if (stage == ComposeStage::CopyEye) InterlockedIncrement(&Diag::failStretch1);
+        else if (stage == ComposeStage::ClearCandidate) InterlockedIncrement(&Diag::failFill);
+        else InterlockedIncrement(&Diag::failStretch2);
+        EmitMaybe(); return false;
     }
     InterlockedIncrement(&Diag::ok);
+    Diag::lastHr = S_OK;
     back->Release();
     EmitMaybe();
+    return true;
 }
 
 } // namespace desktop_mirror

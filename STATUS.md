@@ -1,5 +1,22 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE fix/right-eye-mirror-steam-capture (PR #43): complete right-eye
+aspect fit, opt-in monitor work-area window cap 1920x1080 (physical client px),
+no changing XR/scene resolution commands. Fixed double-applied aspect scaling;
+offscreen composition then commit avoids clear-before-failed-copy black frame.
+L3+R3 no longer saves BMP; optional recenter/recorder/wheel remain. F12 no longer
+switches debug stereo. Opt-in SteamCaptureBackbuffer scopes completed mirror RT0
+around original Present, bounded identity/failure logs, exact RT/DS/MRT/viewport
+restoration. Steam black screenshot hypothesis NOT runtime-proven.
+L1_PASS geometry/fault CPU checks, own-process D3D9Ex pixels/source/swap/cinema/
+RT0 scope/window cap/Reset and 6 Python contracts; six menu/cinema regressions.
+L2_PASS clean source 4513db6, x86 PE32 /O2 DLL SHA-256
+B8E9AE47DB0C9780B0FB684A766DAA167F404D09CC52CAA0152EC582DCA9EF73.
+L3/L4 UNKNOWN. ZERO Steam or installed-file changes.
+See docs/right-eye-mirror-capture.md. MAIN must integrate on current source,
+preserve full accepted config/assets and validate actual saved Steam images and
+UE3 WM_SIZE behavior before accepting the window-fit flag.
+
 LATEST 2026-10-16 SIDE native Centurion continuation: offline native registration,
 class-constructor/vtable and original BeginFire reload/fallback path identified.
 New default-OFF CenturionNativeReloadGuard 1=observe /2=conditional suppression
