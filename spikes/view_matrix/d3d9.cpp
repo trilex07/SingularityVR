@@ -19044,6 +19044,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // back to, and StereoPair would just return draw() anyway.
     if (!InterlockedCompareExchange(&g_dupDraws, 0, 0)) return draw();
     if(g_boundShaderLayout.shadow)return draw();
+    if (InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) && g_sceneMode.Flat()) return draw();
     // This canonical path already identifies GFx canvas batches. Once the
     // complete native pause RTT has successfully reached both eyes, remove
     // only its old scene/backbuffer canvas copy. Never suppress the RTT producer.
@@ -19239,8 +19240,9 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         D3DVIEWPORT9 vpMenu{};
         dev->GetViewport(&vpMenu);
         const unsigned sceneW = (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0);
-        // Both Class 2, Class 3 and Class 4 use per-eye canvas remap on the scene-sized RT.
-        const bool perEyeCanvas =
+        // Class 3 pause uses single draw into the diegetic target;
+        // Class 2 and frontend Class 4 use per-eye canvas remap on the scene-sized RT.
+        const bool perEyeCanvas = menuClassNow != 3 &&
             pausemenuspace::DiegeticMenuCanvas(c, vpMenu.Width, sceneW);
         const int compose = perEyeCanvas ? 1 : 0;
         menumono::NoteDraw((int)menuClassNow, false, vpMenu.Width, vpMenu.Height, sceneW, c,
@@ -21879,7 +21881,8 @@ static void UpdateSceneModeFrame() {
         InterlockedCompareExchange(&g_vrUiMenu, 0, 0) != 0,
         InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
         vrscene::FrontendMenuPresentation(Rd(g_cutsceneMenuHandoffFix)!=0,
-            (int)Rd(g_vrMenuClass), Rd(g_vrUiMenu)!=0),
+            (int)Rd(g_vrMenuClass), Rd(g_vrUiMenu)!=0,
+            Rd(g_inCinematic)!=0, Rd(g_gamePaused)!=0),
         CinemaMenuPauseOwnsPresentation(Rd(g_cutsceneMenuPairFix)!=0,
             (int)Rd(g_vrMenuClass),Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0),
     };

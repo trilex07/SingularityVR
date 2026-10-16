@@ -6,16 +6,18 @@ inline bool MenuSubmitForcesFlat(int menuClass) {
     return menuClass == 1;
 }
 
-// Opt-in: reuse the established identical-crop bridge for focused frontend,
-// and for a real pause over native cinema. Not dialogue, HUD or gameplay pause.
+// Opt-in: reuse the established identical-crop bridge for focused frontend.
+// Pause over native cinema stays in CutsceneFlat so the pause menu remains flat
+// inside the Cinema Mode screen without jumping to a 2x half-crop zoom.
 inline bool CinemaMenuPauseOwnsPresentation(bool enabled, int menuClass,
                                            bool focus, bool cinematic, bool paused) {
-    return enabled && menuClass == 3 && focus && cinematic && paused;
+    (void)enabled; (void)menuClass; (void)focus; (void)cinematic; (void)paused;
+    return false;
 }
 inline bool CinemaMenuIdenticalCrop(bool enabled, int menuClass,
                                    bool focus, bool cinematic, bool paused) {
-    return enabled && focus && (menuClass == 2 || menuClass == 4 ||
-        CinemaMenuPauseOwnsPresentation(enabled, menuClass, focus, cinematic, paused));
+    return enabled && focus && !(cinematic && paused) &&
+           (menuClass == 2 || menuClass == 4);
 }
 
 // 1 crop, 2 half-rect, 3 stereo full-rect, 4 mono.

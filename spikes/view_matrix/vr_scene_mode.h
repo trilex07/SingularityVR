@@ -20,8 +20,10 @@ struct Signals {
     bool cinemaPauseMenu = false; // explicit focused pause owns presentation, not raw cinema
 };
 
-inline bool FrontendMenuPresentation(bool enabled, int menuClass, bool focus) {
-    return enabled && focus && (menuClass == 2 || menuClass == 4);
+inline bool FrontendMenuPresentation(bool enabled, int menuClass, bool focus,
+                                     bool cinematic = false, bool paused = false) {
+    return enabled && focus && !(cinematic && paused) &&
+           (menuClass == 2 || menuClass == 4);
 }
 
 struct Transition {
