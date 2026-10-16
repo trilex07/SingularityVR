@@ -9,7 +9,8 @@ SH/direct/ambient light and depth-alpha encoding; exact captured shader gate.
 This is a scene-lit approximation, NOT full Mat_Knife or a new shadow caster.
 L1_PASS: 13308 original-rig golden vertices, 101 palette levels, unchanged
 non-thumb/opposite-hand/rig/cuff/mount, SM3 compile + tangent/cache tests and
-existing upload/state/holster/hand regressions. L2 clean build pending.
+existing upload/state/holster/hand regressions. L2_PASS clean 230c62e /O2 x86
+PE32, DLL SHA E71EF4E18ACF99418AC50F6A2E9BB0C294C2886559582ABB2F6EAD8DE8F086A2.
 Base includes MAIN aef042f (joint PR32 + Bink stills); integrate follow-up onto
 current MAIN, don't deploy stale standalone source. ZERO Steam, L3/L4 UNKNOWN.
 See docs/knife-shading-thumb.md for flags, limits and two independent tests.
