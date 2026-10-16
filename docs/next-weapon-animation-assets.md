@@ -176,3 +176,14 @@ runtime gates (one weapon per test, stay in headset): load a save with the
 selected weapon and check normal firing, left knife/right holster; perform one
 remove/drop/left-shoulder pickup/insert gesture and verify moving parts + actual
 clip/reserve conservation; pause/resume, switch weapon, return to menu and close.
+
+## Delivery
+
+Pushed branch: `feature/next-weapon-reload-assets`; no merge. GitHub integration
+refused PR creation with403 `Resource not accessible by integration`; `gh auth
+status` confirms no signed-in CLI host. No PR was created by this attempt.
+Open the review form (NOT an existing PR):
+https://github.com/trilex07/SingularityVR/compare/main...feature/next-weapon-reload-assets?expand=1
+Keep the title scoped to original next-weapon assets/animations (offline), and
+the unknown native/runtime gates above explicit. No need to redeploy or revert
+anything: SIDE did not inspect or modify the installed game.
