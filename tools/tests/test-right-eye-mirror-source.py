@@ -33,7 +33,7 @@ class Contract(unittest.TestCase):
 
     def test_sample_config(self):
         ini = (ROOT / "spikes/view_matrix/SingularityVR.ini").read_text(encoding="utf-8-sig")
-        for key in ("DesktopMirrorEye=2", "DesktopMirrorFill=0", "DesktopMirrorWindow=1", "SteamCaptureBackbuffer=1"):
+        for key in ("DesktopMirrorEye=2", "DesktopMirrorFill=1", "DesktopMirrorWindow=0", "SteamCaptureBackbuffer=0"):
             self.assertIn(key, ini)
 
 
