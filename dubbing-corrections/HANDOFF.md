@@ -234,6 +234,14 @@ peak ≤ −1,0 dBFS. WAV-y w temp (nie w gicie); MAIN kopiuje do banków.
 - Poza zakresem tego pakietu: skipped/vignette (tabela gain do decyzji),
   INTRO_1015 (zostaje EN), reszta chapterów (drafty bez korekt).
 
+## Parowanie A/B krzyk/przerwy (2026-10-16, werdykt uchem użytkownika)
+- `odsluch\` = v2 (temp 0,65, przerwy 0,12 s, zdania łączone; ASR-zweryfikowane w batchu).
+- `odsluch_fix65b\` = fix (temp 0,65, przerwy 0,04–0,05 s, krzyk GRD1/ESP2 dawcą-okrzykiem).
+- ASR nie rozstrzyga (niestabilność między procesami) — pary do odsłuchu, zwycięzca
+  per plik decyzją użytkownika. UWAGA: C:\PL-dubbing to junction do cutscene-packa,
+  NIE katalog stagingowy — finał trafi do osobnego folderu po werdykcie.
+- bc0ee3caa zostaje v2 (fix 2,5 s nieprawdopodobne dla 13 słów).
+
 ## Co NIE działa / następny krok
 
 - Korekty to propozycje tekstowe (L1): zero weryfikacji w grze (verified_in_game=false
