@@ -15228,7 +15228,7 @@ inline void RefreshArmsAnimActive() {
     const int holder=g_hipKnifeState.held;
     const bool tracked=(holder==0||holder==1)&&g_handPositionValid[holder]&&g_handPoseValid[holder];
     const bool keep=knifehand::KeepTrackedMelee(g_knifeTrackedMelee&&g_knifeHandGrip&&g_knifeHandAssetReady,
-        melee&&NativeGlovesEligible(),g_hipKnifeReady,g_hipKnifeVisible,holder,tracked,melee,heal);
+        melee&&(NativeGlovesEligible()||NativeKnifeOffHandEligible()),g_hipKnifeReady,g_hipKnifeVisible,holder,tracked,melee,heal);
     InterlockedExchange(&g_armsAnimActiveCached,(heal||(melee&&!keep))?1:0);
     static bool wasKept=false;static unsigned notes=0;
     if(keep&&!wasKept&&notes++<8)Log("knife-hand: melee display stays controller-tracked holder=%d; native damage untouched",holder);
