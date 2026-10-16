@@ -17,12 +17,13 @@ int main(){
     assert(tick(false,f.socket).requestNative);
     for(int i=0;i<10;++i)assert(!tick(false,f.socket).requestNative);
     f.clip=6;f.reserve=21;assert(tick(false,f.socket).event==Event::Acknowledged);
-    // Full gun, no reserve, tracking, knife and support ownership refuse entry.
+    // Full gun, no reserve, tracking, knife and long-held support refuse entry.
     for(int gate=0;gate<10;++gate){
         s={};f.clip=2;f.reserve=25;f.capacity=6;f.grip=false;f.hand=f.socket;Update(s,f);
         f.grip=true;f.nowMs+=20;
         if(gate==0)f.clip=6;if(gate==1)f.reserve=0;if(gate==2)f.tracked=false;
-        if(gate==3)f.knifeNear=true;if(gate==4)f.supportLatched=true;
+        if(gate==3)f.knifeNear=true;
+        if(gate==4){f.supportLatched=true;s.priorGrip=true;}
         if(gate==5)f.supported=false;if(gate==6)f.firing=true;
         if(gate==7)f.handBusy=true;
         if(gate==8)f.ammoFresh=false;if(gate==9)f.context=false;
@@ -82,8 +83,9 @@ int main(){
     assert(trigger.Update(false,.8f)==0);
     assert(trigger.Update(false,0)==0);
     assert(trigger.Update(false,.8f)==.8f);
-    const auto p=Pouch({0,1.1f,0},0);assert(p.p.x==0&&p.p.y<1.1f&&p.p.z<0);
+    const auto p=Pouch({0,1.1f,0},0);assert(p.p.x<0&&p.p.y<1.1f&&p.p.z>0);
     const auto turned=Pouch({0,1.1f,0},3.14159265f/2);
-    assert(std::fabs(turned.p.x+.34f)<1e-5f);
-    std::puts("centurion reload L1 PASS: sequence/ownership/cancel/ammo/tap/pouch");
+    assert(std::fabs(turned.p.x-.18f)<1e-5f);
+    assert(std::fabs(turned.p.z-.22f)<1e-5f);
+    std::puts("centurion reload L1 PASS: sequence/ownership/cancel/ammo/tap/shoulder");
 }

@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE fix/centurion-grip-shoulder: user tested original
+Centurion prototype and reported auto-reload, gun/knife grab conflicts, squares.
+Follow-up implements left-shoulder source, bounded grip priority/no fake release,
+default-OFF Cross health/right-stick-up jump/Circle cylinder gesture layout,
+Circle/open/dump/shoulder/insert/close FSM and opt-in original stock/carried mesh.
+Markers now independently OFF. Native auto-reload/cylinder animation NOT fixed;
+native declaration/ABI/runtime producer still requires evidence, not guessed calls.
+L1_PASS eleven /O2 /W4 /WX CPU executables +27 Python tests; L2 pending.
+ZERO Steam, no installed-file writes; L3/L4 UNKNOWN.
+See docs/centurion-grip-shoulder.md; rebuild onto CURRENT MAIN before any test.
+
 LATEST 2026-10-16 SIDE fix/frontend-menu-comfort: default-OFF class2-only
 FrontMenuCleanBackdrop replaces the glitch-prone UE3 backdrop with neutral dark
 colour and retains both eye projections of the existing current-token GFx panel.

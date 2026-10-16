@@ -2,6 +2,15 @@
 
 Snapshot: 2026-10-16. Continue implementation, not just a report. This file replaces the long chat; inspect current Git/source before trusting snapshot values.
 
+**Superseding follow-up:** `fix/centurion-grip-shoulder`, own checkout
+`C:\Users\Trilex\vr-mods\SingularityVR-centurion-grip-shoulder`.
+Read `docs/centurion-grip-shoulder.md` first. User HAS tested and rejected
+auto-reload/gun+knife grabs/calibration squares. New opt-in controls: Cross
+health, right-stick-up jump, Circle cylinder release. Ammo is behind physical
+LEFT shoulder, NOT at belt. Gesture-only open/dump/insert/close recognizer;
+native auto-reload suppression and actual cylinder animation remain UNKNOWN.
+Below is historical context, not a deployment manifest.
+
 ## Role and safety
 
 You are SIDE unless the human explicitly assigns MAIN. ZERO Steam launches, deploys, restores, installed-file writes or live probes. MAIN alone owns Steam/PSVR2. Never merge, reset, force-push or edit another agent's checkout. Concurrent chat: create your OWN worktree/branch from this feature tip; reuse this checkout only after its previous writer stops. Commit/push your own work. No headset acceptance inferred from tests.

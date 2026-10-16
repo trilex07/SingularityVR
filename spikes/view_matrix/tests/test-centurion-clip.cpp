@@ -52,13 +52,23 @@ int main(){
     assert(!Eligible(s,true,21,10,1000)&&!Eligible(s,true,20,11,1000));
     assert(!Eligible(s,true,20,10,1101)&&!Eligible(s,true,20,10,999));
     for(auto phase:{centurionreload::Phase::Idle,centurionreload::Phase::Removing,
-        centurionreload::Phase::Discard,centurionreload::Phase::NeedAmmo,
+        centurionreload::Phase::Discard,centurionreload::Phase::Unlocked,
+        centurionreload::Phase::Open,centurionreload::Phase::Loaded,
         centurionreload::Phase::WaitingNative,centurionreload::Phase::Cooldown}){
         s.phase=phase;assert(!Eligible(s,true,20,10,1000));
     }
     s.phase=centurionreload::Phase::Carrying;s.visible=false;assert(!Eligible(s,true,20,10,1000));
     s.visible=true;Pose pose;Config cfg;assert(Mount(s.hand,cfg,pose));
     assert(std::fabs(pose.p.x-.2f)<1e-6f&&std::fabs(pose.p.z+.58f)<1e-6f);
+    s.phase=centurionreload::Phase::NeedAmmo;
+    assert(Eligible(s,true,20,10,1000));
+    const Pose stock{{-.22f,1.48f,.18f},Degrees(0,30,0)};
+    assert(PreviewPose(s,stock,cfg,pose));
+    assert(hipknife::Length(pose.p-stock.p)==0); // not displaced by hand offset
+    s.phase=centurionreload::Phase::Carrying;
+    assert(PreviewPose(s,stock,cfg,pose)&&std::fabs(pose.p.z+.58f)<1e-6f);
+    s.phase=centurionreload::Phase::Loaded;assert(!PreviewPose(s,stock,cfg,pose));
+    s.phase=centurionreload::Phase::Carrying;
     // Authored offset rotates with the controller, never the head/camera.
     s.hand.q=Degrees(0,90,0);assert(Mount(s.hand,cfg,pose));
     assert(std::fabs(pose.p.x-.12f)<1e-6f&&std::fabs(pose.p.z+.5f)<1e-6f);

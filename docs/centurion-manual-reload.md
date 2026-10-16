@@ -1,5 +1,11 @@
 # Centurion reload — first controlled prototype
 
+Current follow-up: [shoulder, grip arbitration and requested controls](centurion-grip-shoulder.md).
+The user HAS now tested the original prototype: auto-reload remains, grip
+selected gun/knife and calibration squares dominated. Historical front-belt
+placement and "not tested" statements below describe the earlier candidate,
+not the current implementation. This is still NOT complete physical reload.
+
 SIDE, 2026-10-16. Initial base: MAIN `5763e6c`; synchronized into this own
 branch first with committed MAIN `db4a261`, then `f0b96ad`, preserving its
 menu/holster, knife-joint, cinematic transition and PSVR2 changes. No Steam operations.

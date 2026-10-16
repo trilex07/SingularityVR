@@ -47,7 +47,8 @@ inline bool Current(const Snapshot& s,std::uint32_t pawn,std::uint32_t weapon,st
 }
 inline bool Eligible(const Snapshot& s,bool enabled,std::uint32_t pawn,
                      std::uint32_t weapon,std::uint64_t now){
-    return enabled&&s.phase==centurionreload::Phase::Carrying&&Current(s,pawn,weapon,now);
+    return enabled&&(s.phase==centurionreload::Phase::Carrying||s.phase==centurionreload::Phase::NeedAmmo)&&
+        Current(s,pawn,weapon,now);
 }
 inline bool Mount(const Pose& hand,const Config& c,Pose& out){
     if(!hipknife::Finite(hand.p)||!hipknife::Valid(hand.q)||
@@ -55,5 +56,12 @@ inline bool Mount(const Pose& hand,const Config& c,Pose& out){
     Pose staged{hand.p+hipknife::Rotate(hand.q,c.offset),hipknife::Multiply(hand.q,c.rotation)};
     if(!hipknife::Finite(staged.p)||!hipknife::Valid(staged.q))return false;
     out=staged;return true;
+}
+inline bool PreviewPose(const Snapshot& s,const Pose& source,const Config& c,Pose& out){
+    if(s.phase==centurionreload::Phase::Carrying)return Mount(s.hand,c,out);
+    if(s.phase!=centurionreload::Phase::NeedAmmo)return false;
+    // Stock geometry at the same shoulder centre as the actual grab target;
+    // the hand mount offset must NOT displace it from the acquisition sphere.
+    Config stock=c;stock.offset={};return Mount(source,stock,out);
 }
 } // namespace centurionclip
