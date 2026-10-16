@@ -8,10 +8,10 @@ independent left/back shoulder math and cancellation across calibration changes.
 L1_PASS fifteen optimized CPU executables +44 Python tests after sync with
 MAIN 513013a (including own-process native ABI regression); 30000 transactions,
 7506 original fractional track poses; own-process D3D9Ex actual textured pixels
-in BOTH eyes, state/failure/Reset checks PASS. Earlier L2_PASS source f5c2fb8,
+in BOTH eyes, state/failure/Reset checks PASS. L2_PASS clean source 36681f4,
 x86 PE32 /O2 regression DLL SHA-256
-7F350D7347A76239BC1E1EDB49A25A32C5BC98720CF43BFC753F7664182353DF.
-Post-sync clean L2 build pending receipt. MAIN runtime/INI match 513013a exactly.
+14DEECAEA1E63EF77A3936226121AEF6D6A89E99632BAFFD1792B43ABAC031F8.
+MAIN runtime/INI match 513013a exactly; 16 fixture binaries verified x86 PE32.
 No runtime dispatcher/INI/native ammo backend; L3/L4 UNKNOWN, NOT headset-ready.
 ZERO Steam, no Centurion/accepted config or installed asset changes.
 See docs/next-weapon-animation-assets.md. SIDE regression DLL MUST NOT replace

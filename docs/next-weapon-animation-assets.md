@@ -135,6 +135,15 @@ STATUS/test-runner conflicts, retaining all existing native tests and optional
 to a rising edge and insertion radius to its own calibrated socket: new
 Centurion cylinder/16cm/window settings cannot leak into these profiles.
 
+LATEST L2_PASS after sync: clean source
+`36681f4a8e8057ee3c3412856787693b4081239b`, empty manifest working-tree state,
+`/O2`, x86 PE32 `014C/010B`; DLL SHA-256
+`14DEECAEA1E63EF77A3936226121AEF6D6A89E99632BAFFD1792B43ABAC031F8`.
+All 16 CPU/GPU fixture executables independently verified PE32/x86. Full
+post-sync suite PASS, including private assets, original quarter-frame oracle,
+native ABI fake-method detour, texture pixels and Reset. No runtime/INI diff
+against MAIN 513013a. This remains a regression DLL, NOT a deployment payload.
+
 SVWA SHA-256 (profile locked in decoder):
 
 - Valkyrie `97DE1B7B37C733DCB35A8B15EA5AE6FF778A1FB1917305ACF70322C32C30E9DD`
