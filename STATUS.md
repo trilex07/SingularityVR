@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE feature/centurion-manual-reload, base MAIN 5763e6c:
+Centurion-only assisted gesture prototype, NOT completed physical reload.
+Front-centre pouch, unchanged left knife/right gun holsters; allocation-free
+remove/discard/pouch/insert/ack FSM, ownership/cancel guards, bounded calibration
+overlay, named read-only HUD observers and existing-hook native reload probe.
+All three flags OFF. Shared native Use/reload tap is independently opt-in;
+no engine ammo writes, cylinder animation control or auto-reload suppression.
+Original clip extracted offline: 1067 UV verts /1252 tris, no mixed boundary;
+prepared asset is not yet rendered. L1_PASS six CPU executables +four Python
+tests + actual asset roundtrip. L2 receipt in docs/centurion-manual-reload.md;
+L3/L4 UNKNOWN. ZERO Steam. Integrate onto current accepted MAIN and rebuild,
+never replace newer knife/menu work with this older standalone base.
+
 LATEST 2026-10-16 SIDE fix/knife-shading-thumb: physical feedback accepts
 joint mount/size, rejects bright unlit knife and thumb interpenetration.
 Default-OFF HandThumbPoseFix: original thumb rig only, separate knife pose and
