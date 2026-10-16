@@ -3,10 +3,10 @@
 
 // Replace only residual engine POV translation. Pawn movement and eye height
 // remain, while physical HMD motion is applied separately.
-// Strictly bounded to realistic head-bob bounds (maxBobUu ~ 15 UU) to prevent
+// Strictly bounded to realistic head-bob bounds (maxBobUu ~ 35 UU) to prevent
 // runaway offsets if pawn location and POV diverge.
 inline bool ComputeVrCameraStabilization(const float pov[3], const float pawn[3],
-                                         float eyeHeight, float out[3], float maxBobUu = 15.0f) {
+                                         float eyeHeight, float out[3], float maxBobUu = 35.0f) {
     if (!pov || !pawn || !out || !std::isfinite(eyeHeight)) return false;
     for (int i=0;i<3;++i) if (!std::isfinite(pov[i]) || !std::isfinite(pawn[i])) return false;
     out[0] = pawn[0] - pov[0];
@@ -71,6 +71,36 @@ inline bool CancelBasisRoll(const float rightIn[3], const float upIn[3], const f
     for (int i = 0; i < 3; ++i) {
         for (int k = 0; k < 3; ++k) {
             R_out[i][k] = rd[i] * rightIn[k] + ud[i] * upIn[k] + forwardIn[i] * forwardIn[k];
+        }
+    }
+    return true;
+}
+
+// Clears residual camera pitch, yaw, and roll shake from an orthonormal camera basis
+// by aligning it to the target look orientation (desPitchRad, desYawRad, zero roll).
+inline bool StabilizeBasisToLook(const float rightIn[3], const float upIn[3], const float forwardIn[3],
+                                float desPitchRad, float desYawRad,
+                                float rightOut[3], float upOut[3], float forwardOut[3],
+                                float R_out[3][3]) {
+    if (!rightIn || !upIn || !forwardIn || !rightOut || !upOut || !forwardOut || !R_out) return false;
+
+    const float cp = std::cos(desPitchRad), sp = std::sin(desPitchRad);
+    const float cy = std::cos(desYawRad),   sy = std::sin(desYawRad);
+    const float fwd[3]   = { cp * cy, cp * sy, sp };
+    const float right[3] = { -sy,     cy,      0.0f };
+    const float up[3]    = { fwd[1]*right[2] - fwd[2]*right[1],
+                             fwd[2]*right[0] - fwd[0]*right[2],
+                             fwd[0]*right[1] - fwd[1]*right[0] };
+
+    for (int i = 0; i < 3; ++i) {
+        rightOut[i]   = right[i];
+        upOut[i]      = up[i];
+        forwardOut[i] = fwd[i];
+    }
+
+    for (int i = 0; i < 3; ++i) {
+        for (int k = 0; k < 3; ++k) {
+            R_out[i][k] = right[i] * rightIn[k] + up[i] * upIn[k] + fwd[i] * forwardIn[k];
         }
     }
     return true;

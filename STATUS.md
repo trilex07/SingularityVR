@@ -1,5 +1,10 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16: Prototypy przeładowania Valkyrie, Volk S4 i Kasimova (PR #37):
+Przygotowałem prototypy przeładowania Valkyrie, Volk S4 i Kasimova: gesty, zabezpieczenia oraz oryginalne modele magazynków.
+Przeszło 30 000 symulowanych przeładowań, 9 programów testowych C++, 33 testy Python i build x86 /O2. Zmiany są w [PR #37](https://github.com/trilex07/SingularityVR/pull/37).
+To jeszcze prototypy offline — następny etap to podłączenie renderowania i natywnej amunicji. Steam oraz działanie Centuriona pozostały nietknięte.
+
 LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN f0b96ad:
 Compact import: docs/handoffs/centurion-reload-compact.md. Offline correlation
 helper tools/reload/analyze_reload_log.py added: 13 synthetic tests PASS;

@@ -1147,6 +1147,7 @@ extern volatile LONG64 g_meleeUntilMs, g_meleeFromMs;
 extern volatile LONG   g_armsAnimActiveCached;
 extern volatile LONG64 g_lastMeleeEdgeMs, g_lastJumpEdgeMs;   // fix-G/perf (defined with melee state)
 void ArmMeleeWindowFromKnife();
+bool MeleeWindowActive();
 extern volatile LONG g_forceDesktopAutomation;                // defined with desktop-HMD diagnostics
 volatile LONG g_desktopAutomationFrame = 0;                   // shared deterministic input-script clock
 
@@ -3359,7 +3360,7 @@ volatile LONG g_camPosValid = 0;
 int g_cameraTranslationEvidence = 0; // bounded passive decomposition, default off
 float g_vrCameraStabOffset[3] = {0,0,0};
 volatile LONG g_vrCameraStabValid = 0;
-volatile LONG g_vrTranslationStabilization = 0;
+volatile LONG g_vrTranslationStabilization = 1;
 
 // The camera's own axes, from its FRotator. These are what make the origin case decidable -
 // see the direction test below.
@@ -4311,6 +4312,31 @@ void CancelMatrixRoll(Reg4* r, int conv) {
 
     float ro[3], uo[3], fo[3], R[3][3];
     if (!CancelBasisRoll(right, up, forward, ro, uo, fo, R)) return;
+
+    if (conv == CONV_ROW) {
+        Reg4 out[3];
+        for (int i = 0; i < 3; ++i)
+            for (int k = 0; k < 4; ++k)
+                (&out[i].x)[k] = R[i][0]*(&r[0].x)[k]
+                               + R[i][1]*(&r[1].x)[k]
+                               + R[i][2]*(&r[2].x)[k];
+        for (int i = 0; i < 3; ++i) r[i] = out[i];
+    } else {
+        for (int i = 0; i < 4; ++i) {
+            const float x = r[i].x, y = r[i].y, z = r[i].z;
+            for (int k = 0; k < 3; ++k)
+                (&r[i].x)[k] = x*R[k][0] + y*R[k][1] + z*R[k][2];
+        }
+    }
+}
+
+void StabilizeMatrixBasis(Reg4* r, int conv, float desPitchRad, float desYawRad) {
+    float right[3], up[3], forward[3];
+    AxisCols(r, conv, right, up, forward);
+    if (!NormaliseVec3(right) || !NormaliseVec3(up) || !NormaliseVec3(forward)) return;
+
+    float ro[3], uo[3], fo[3], R[3][3];
+    if (!StabilizeBasisToLook(right, up, forward, desPitchRad, desYawRad, ro, uo, fo, R)) return;
 
     if (conv == CONV_ROW) {
         Reg4 out[3];
@@ -11282,6 +11308,7 @@ void SyncXRInput(XrTime displayTime) {
     }
     if(g_hipKnifeState.held>=0&&g_hipKnifeState.Pulse(GetTickCount64())&&!uiMenu&&!Rd(g_gamePaused)){
         btns|=XI_RSHOULDER;
+        ArmMeleeWindowFromKnife();
         static unsigned knifeRbPulses=0;
         if(knifeRbPulses++<128)
             Log("hip knife: injected XI_RSHOULDER (melee attack) into game btns, held=%d", g_hipKnifeState.held);
@@ -11325,6 +11352,9 @@ void SyncXRInput(XrTime displayTime) {
                           | ((LONG)(BYTE)(lt * 255.0f) << 16)
                           | ((LONG)(BYTE)(rt * 255.0f) << 24);
     if (g_diagEnabled) InterlockedExchange(&g_diagRawBtns, packedBtns);
+    if ((btns & XI_RSHOULDER) && !uiMenu && !Rd(g_gamePaused)) {
+        ArmMeleeWindowFromKnife();
+    }
 
     auto toAxis = [](float v) -> int16_t {
         if (v >  1.0f) v =  1.0f;
@@ -13009,6 +13039,13 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
             const float curYaw   = (g_camRotKnown ? g_camYawUU   : g_matCurYawUU)   * kUUToRad;
             ApplyHeadRotation(m, c, curPitch, curYaw,
                               g_matDesPitchUU * kUUToRad, g_matDesYawUU * kUUToRad);
+        } else if (VrModeOn() && Rd(g_vrCameraShakeSuppression) && !CutsceneNativeCameraArmed()) {
+            if (MeleeWindowActive()) {
+                const float kUUToRad = 6.2831853f / 65536.0f;
+                StabilizeMatrixBasis(m, c, g_wantPitch * kUUToRad, g_wantYaw * kUUToRad);
+            } else {
+                CancelMatrixRoll(m, c);
+            }
         }
         if (inject) ApplyOffset(m, c, o);
         if (forceProj) {
@@ -31267,7 +31304,7 @@ void LoadIniSettings() {
     Log("arm palette trace=%ld frame(s), exact TMD sections only; 0=off (default)",Rd(g_armPaletteTraceFrames));
     g_cameraTranslationEvidence=GetPrivateProfileIntA("Diagnostic","CameraTranslationEvidence",0,path)?1:0;
     Log("camera translation evidence=%d; passive 10Hz, 240 samples maximum; no translation override",g_cameraTranslationEvidence);
-    g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",0,path)?1:0;
+    g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",1,path)?1:0;
     g_vrCameraShakeSuppression=GetPrivateProfileIntA("Render","VrCameraShakeSuppression",1,path)?1:0;
     g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",1,path)?1:0;
     g_skipExtraTarget=GetPrivateProfileIntA("Render","DropExtraTarget",0,path)?1:0;

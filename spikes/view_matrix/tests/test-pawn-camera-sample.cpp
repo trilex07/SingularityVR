@@ -69,6 +69,50 @@ int main() {
         Check(std::fabs(rotatedF[0] - 1.0f) < 1e-5f && std::fabs(rotatedF[1]) < 1e-5f && std::fabs(rotatedF[2]) < 1e-5f, "R matrix preserves forward look vector");
     }
 
+    // 3. Test StabilizeBasisToLook: shake injected in pitch, yaw, and roll
+    {
+        const float pitchShake = -0.15f; // ~ -8.6 deg melee dip
+        const float yawShake   =  0.08f; // ~ +4.6 deg yaw twitch
+        const float rollShake  =  0.25f; // ~ +14.3 deg roll
+        // Construct shaken basis
+        const float cp = std::cos(pitchShake), sp = std::sin(pitchShake);
+        const float cy = std::cos(yawShake),   sy = std::sin(yawShake);
+        const float fIn[3] = { cp * cy, cp * sy, sp };
+        const float r0[3]  = { -sy, cy, 0.0f };
+        const float u0[3]  = { fIn[1]*r0[2] - fIn[2]*r0[1], fIn[2]*r0[0] - fIn[0]*r0[2], fIn[0]*r0[1] - fIn[1]*r0[0] };
+        // Apply roll shake
+        const float cr = std::cos(rollShake), sr = std::sin(rollShake);
+        const float rIn[3] = { cr*r0[0] + sr*u0[0], cr*r0[1] + sr*u0[1], cr*r0[2] + sr*u0[2] };
+        const float uIn[3] = { -sr*r0[0] + cr*u0[0], -sr*r0[1] + cr*u0[1], -sr*r0[2] + cr*u0[2] };
+
+        // Target look angles: level forward look (pitch=0, yaw=0)
+        float rOut[3]{}, uOut[3]{}, fOut[3]{}, R[3][3]{};
+        Check(StabilizeBasisToLook(rIn, uIn, fIn, 0.0f, 0.0f, rOut, uOut, fOut, R), "StabilizeBasisToLook processed");
+        // Desired forward is +X (1, 0, 0), right is +Y (0, 1, 0), up is +Z (0, 0, 1)
+        Check(std::fabs(fOut[0] - 1.0f) < 1e-5f && std::fabs(fOut[1]) < 1e-5f && std::fabs(fOut[2]) < 1e-5f,
+              "StabilizeBasisToLook forward look locked to target");
+        Check(std::fabs(rOut[0]) < 1e-5f && std::fabs(rOut[1] - 1.0f) < 1e-5f && std::fabs(rOut[2]) < 1e-5f,
+              "StabilizeBasisToLook right vector locked (zero roll)");
+        Check(std::fabs(uOut[0]) < 1e-5f && std::fabs(uOut[1]) < 1e-5f && std::fabs(uOut[2] - 1.0f) < 1e-5f,
+              "StabilizeBasisToLook up vector locked to +Z");
+
+        // Verify R transforms the shaken basis into the target basis
+        float rotatedF[3] = {
+            R[0][0]*fIn[0] + R[0][1]*fIn[1] + R[0][2]*fIn[2],
+            R[1][0]*fIn[0] + R[1][1]*fIn[1] + R[1][2]*fIn[2],
+            R[2][0]*fIn[0] + R[2][1]*fIn[1] + R[2][2]*fIn[2]
+        };
+        float rotatedR[3] = {
+            R[0][0]*rIn[0] + R[0][1]*rIn[1] + R[0][2]*rIn[2],
+            R[1][0]*rIn[0] + R[1][1]*rIn[1] + R[1][2]*rIn[2],
+            R[2][0]*rIn[0] + R[2][1]*rIn[1] + R[2][2]*rIn[2]
+        };
+        Check(std::fabs(rotatedF[0] - 1.0f) < 1e-5f && std::fabs(rotatedF[1]) < 1e-5f && std::fabs(rotatedF[2]) < 1e-5f,
+              "R matrix restores shaken forward to clean look");
+        Check(std::fabs(rotatedR[1] - 1.0f) < 1e-5f && std::fabs(rotatedR[2]) < 1e-5f,
+              "R matrix restores shaken right to zero-roll");
+    }
+
     const PawnCameraSample before = out;
 
     DWORD previous = 0;
