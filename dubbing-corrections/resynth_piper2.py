@@ -11,11 +11,11 @@ VOICES = {
 # asset: (glos, tempo<mowa szybsza, ekspresja>wyzej). NIM=dowodca, CP=pilot, GST=zolnierze.
 CAST = {
     'INTRO_1005_NIM': ('darkman', 1.00, 0.667),
-    'INTRO_1006_CP': ('mc', 1.00, 0.667),
+    'INTRO_1006_CP': ('mc', 0.95, 0.900),
     'INTRO_1011_GST': ('darkman', 0.92, 1.000),
     'INTRO_1012_NIM': ('darkman', 0.90, 0.900),
     'INTRO_1014_GST': ('darkman', 0.88, 1.000),
-    'INTRO_1016_CP': ('mc', 0.88, 1.000),
+    'INTRO_1016_CP': ('mc', 0.85, 1.200),
 }
 OUT = r'C:\Users\Trilex\AppData\Local\Temp\opencode\dubbing-qa\resynth_intro_piper'
 os.makedirs(OUT, exist_ok=True)
