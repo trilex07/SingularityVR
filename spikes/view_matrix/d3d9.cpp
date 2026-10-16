@@ -30771,10 +30771,10 @@ typedef HRESULT (STDMETHODCALLTYPE *PFN_ResetDevice)(IDirect3DDevice9*, D3DPRESE
 typedef HRESULT (STDMETHODCALLTYPE *PFN_ResetDeviceEx)(IDirect3DDevice9Ex*, D3DPRESENT_PARAMETERS*, D3DDISPLAYMODEEX*);
 PFN_ResetDevice g_origResetDevice = nullptr;
 PFN_ResetDeviceEx g_origResetDeviceEx = nullptr;
-// Keep the window fit display-only: a Reset that merely follows the fitted
-// window is redirected to the measured SteamVR SBS size, so the monitor
-// window fits while VR keeps its resolution. Fail-open: without a trusted
-// size, or for an explicit non-window size, pass through.
+// Tripwire + safety net (fail-open, see desktop_mirror.h): redirect a Reset
+// that merely follows a shrunk window to the measured SteamVR SBS size.
+// The window is never resized by the mirror anymore, so any enforcement here
+// proves an external shrink; the fuse stands down on a Reset war.
 static void GuardResetSize(D3DPRESENT_PARAMETERS* pp) {
     if (!pp) return;
     UINT cw = 0, ch = 0;

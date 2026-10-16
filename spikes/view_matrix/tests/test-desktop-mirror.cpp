@@ -93,18 +93,6 @@ int main() {
                desktop_mirror::VisibleEyeDst(0,0,(LONG)ww,(LONG)wh,5264,2684,ww,wh,2632,2684,b) &&
                EqualRect(&a,&b), "visible full client equals direct fit for arbitrary monitor shape");
     }
-    RECT work{0,0,1920,1040}, outer{};
-    Expect(desktop_mirror::WindowBox(work,16,39,outer) && EqualRect(&work,&outer),
-           "1080p work area includes title/borders/taskbar, not oversized SBS");
-    work={-3840,100,0,2220};
-    Expect(desktop_mirror::WindowBox(work,16,39,outer) && outer.right-outer.left==1936 &&
-           outer.bottom-outer.top==1119 && outer.left>=work.left && outer.right<=work.right,
-           "4K second monitor negative origin caps physical client at 1920x1080");
-    work={1920,-600,3200,120};
-    Expect(desktop_mirror::WindowBox(work,16,39,outer) && EqualRect(&work,&outer),
-           "small monitor is fully contained including negative Y");
-    work={0,0,10,10};
-    Expect(!desktop_mirror::WindowBox(work,16,39,outer), "invalid work area rejected");
     RECT mdst{}, msrc{}; bool useSrc = false, needClr = true;
     Expect(desktop_mirror::ComputeMirrorDestination(5264, 2684, 2632, 2684, 5264, 2684, 0, false, 0, 0, 0, 0, mdst, msrc, useSrc, needClr) &&
            needClr && !useSrc && mdst.left == fdst.left && mdst.right == fdst.right,
@@ -119,8 +107,8 @@ int main() {
     const double targetAspect = 5264.0 / 2684.0;
     Expect(std::fabs(cropAspect - targetAspect) < .002,
            "ComputeMirrorDestination mode 2 preserves target aspect ratio");
-    // Reset guard: the window fit stays display-only, VR keeps SteamVR SBS.
-    // Trusted 5544x2828 SBS, fitted client 1920x1080.
+    // Reset guard (tripwire + safety net): redirect window-following shrinks
+    // to the measured SBS size; fail-open otherwise. Trusted 5544x2828 SBS.
     using desktop_mirror::DecideResetSize;
     Expect(!DecideResetSize(5544, 2828, 5544, 2828, 1920, 1080, true, true).enforced,
            "identical SBS passes untouched");

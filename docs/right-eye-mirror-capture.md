@@ -1,5 +1,46 @@
 # Right-eye window and Steam screenshots
 
+## Continuation 2026-10-17 — SIDE side/mirror-screenshot-fix: MAIN root-cause in, window resize OUT
+
+MAIN's evidence (rolled back to accepted `F5E925…`, test build `620FE76D…`
+= pre-fuse `3ad9975`, INI Eye=2/Fill=0/Window=1/Capture=1):
+
+- `reset-guard:` fired exactly ONCE
+  (`1914x1003 client → enforced SBS 5904x3012`). No Reset war: S1 (no XR)
+  and S2 (Reset loop) are both falsified — `xr-heartbeat` shows
+  `submit=1005, validCapture=90, missingLayer=0`.
+- `mirror-rect: src=(0,0,1914,1003) dst=none bb=5904x3012` → the engine
+  Presented a window-sized subrect, so the mirror correctly bypassed
+  (`skipRect=600, ok=0`); monitor showed native content.
+- Dumped-frame analysis: non-zero bbox `(0,0,3640,1883)` on a `5904x3012`
+  backbuffer; everything at `x>=2952` pure black. UE3 binds its render
+  viewport AND its Present region to the window size: shrinking the window
+  leaves the right-eye half black in both the backbuffer and the XR copy.
+  Forcing the backbuffer to stay big cannot fix that — the engine only
+  rasterizes a window-sized corner.
+
+Architectural correction: the `SetWindowPos` window-fit path is REMOVED
+(`FitWindow`/`WindowBox` deleted, contract `test_window_never_resized`).
+`DesktopMirrorWindow=1` now means: right eye, aspect-fit, into the VISIBLE
+client region of the untouched SBS-sized window (`VisibleEyeDst` +
+`VisibleClientBox`, L1-verified for arbitrary monitor shapes) — zero engine
+interaction, zero Resets, VR keeps the SteamVR SBS size by construction.
+The Reset guard stays as a fail-open tripwire (any future `reset-guard:`
+line proves an external shrink) plus the anti-war fuse.
+
+Falsifier for MAIN (updated): with flags
+`Eye=2 Fill=0 Window=1 Capture=1`, the log must show `ok>0` rising,
+`skipRect` quiet, `bb=<SBS>` stable, NO `reset-guard:` lines, and
+`mirror-place:` with client == SBS size. F12/Share then re-tests the stamp
+on a render with two live halves (the earlier F12-black falsification of
+the RT0 binding predates this fix and may have been a black-right-half
+render, not the overlay path).
+
+Remaining risk (stated, not solved): if the game window is minimized or
+fully covered when Share is pressed, any window/DWM-sampling overlay path
+yields black regardless of RT0 pixels — that would be T3, inspect the
+overlay producer next. The stamp is harmless in all cases.
+
 ## Continuation 2026-10-16 — SIDE side/mirror-screenshot-fix (base 9576f5e)
 
 Two user-reported failures, one branch:
@@ -90,7 +131,7 @@ in practice. No overlay code was changed for this.
   stamp-before-scope order + Reset-guard presence). Six menu/cinema CPU
   regression suites re-run green on this tree.
 - L2: clean `spikes/view_matrix` build, x86 PE32 (`014C`), `/O2`,
-  DLL SHA-256 `573A038B120AD7FA99F4F2922CAEFB7386FC2FE4DBC3D387A51F175264D8FA3F`
+  DLL SHA-256 `594D11ABFCA21985FC6159A2A0E2B66628FC892B12F56F3619D751E7A47BCB49`
   (manifest `spikes/view_matrix/d3d9.build.json`, local). Provenance:
   branch `side/mirror-screenshot-fix`, base `9576f5e`.
 - L3/L4: UNKNOWN. No Steam launch, deploy, or installed-file change.
