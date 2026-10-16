@@ -122,7 +122,13 @@ failed backend, not success. The 120 ms X tap is not a dedicated Reload call.
 L1_PASS: six optimized CPU executables (transaction + old gesture + existing
 knife, holster, hand anchor, D3D fake-state regressions) and four Python
 extraction tests; actual original-asset extraction/UV/bind round trip.
-L2 build receipt follows below after clean source commit. L3/L4 UNKNOWN.
+L2_PASS: clean source `01d7e2817580b610a983361ff0eab82dc3fbdde8`,
+`/O2`, x86 PE32 (`014C/010B`), empty working-tree status in build manifest.
+DLL SHA-256:
+`71C733C6DA7DC1BA4648BC13C3DBB50DDCE19E4DA058D883DECF96D322CA03BA`.
+Private local DLL/manifest are in `build/centurion-reload/candidate`.
+Compiler analysis retains inherited warnings; no fatal format-string gate
+violations or compile errors. L3/L4 UNKNOWN; not physical acceptance of reload.
 
 Next: use native observation to identify the authoritative weapon/ammo owner,
 dedicated begin/commit/end reload path and animation notify boundaries. Prove

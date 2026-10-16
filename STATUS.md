@@ -9,7 +9,9 @@ All three flags OFF. Shared native Use/reload tap is independently opt-in;
 no engine ammo writes, cylinder animation control or auto-reload suppression.
 Original clip extracted offline: 1067 UV verts /1252 tris, no mixed boundary;
 prepared asset is not yet rendered. L1_PASS six CPU executables +four Python
-tests + actual asset roundtrip. L2 receipt in docs/centurion-manual-reload.md;
+tests + actual asset roundtrip. L2_PASS clean source 01d7e28 /O2 x86 PE32,
+DLL SHA 71C733C6DA7DC1BA4648BC13C3DBB50DDCE19E4DA058D883DECF96D322CA03BA;
+receipt in docs/centurion-manual-reload.md.
 L3/L4 UNKNOWN. ZERO Steam. Integrate onto current accepted MAIN and rebuild,
 never replace newer knife/menu work with this older standalone base.
 
