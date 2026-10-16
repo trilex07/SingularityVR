@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE fix/frontend-menu-comfort: default-OFF class2-only
+FrontMenuCleanBackdrop replaces the glitch-prone UE3 backdrop with neutral dark
+colour and retains both eye projections of the existing current-token GFx panel.
+Scoped test values: FrontMenuScalePct=80 / FrontMenuDistanceMm=1800 (no INI
+replacement). Backup-before-clear, full D3D state + RT/DS/MRT restoration,
+failure pixel restore, Reset-owned DEFAULT-pool resources; captured successful
+receipt disables legacy identical-left-crop for this frame only.
+L1_PASS six /O2 /W4 /WX CPU executables: policy/generation/transaction failures,
+panel/laser/parallax geometry, menu/pause/cutscene regressions. L2 pending final
+clean build; ZERO Steam. No game assets/config/renders of hands/weapons changed.
+See docs/frontend-menu-comfort.md; MAIN owns L3 and physical acceptance.
+
 LATEST 2026-10-16 SIDE feature/accepted-profile-guard: offline deployment
 regression guard, complete semantic INI + exact inventoried SHA-256 and
 reviewed per-candidate plan; denies silent Polish/hand/knife/calibration loss
