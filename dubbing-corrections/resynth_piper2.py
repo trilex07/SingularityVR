@@ -4,7 +4,19 @@ import os
 import subprocess
 
 REPO = r'C:\Users\Trilex\vr-mods\SingularityVR-dubbing-corrections'
-VOICE = r'C:\Users\Trilex\vr-mods\SingularityVR-cutscene\audio\models\piper\pl_PL-darkman-medium\pl_PL-darkman-medium.onnx'
+VOICES = {
+    'darkman': r'C:\Users\Trilex\vr-mods\SingularityVR-cutscene\audio\models\piper\pl_PL-darkman-medium\pl_PL-darkman-medium.onnx',
+    'mc': r'C:\Users\Trilex\vr-mods\SingularityVR-cutscene\audio\models\piper\pl_PL-mc_speech-medium\pl_PL-mc_speech-medium.onnx',
+}
+# asset: (glos, tempo<mowa szybsza, ekspresja>wyzej). NIM=dowodca, CP=pilot, GST=zolnierze.
+CAST = {
+    'INTRO_1005_NIM': ('darkman', 1.00, 0.667),
+    'INTRO_1006_CP': ('mc', 1.00, 0.667),
+    'INTRO_1011_GST': ('darkman', 0.92, 1.000),
+    'INTRO_1012_NIM': ('darkman', 0.90, 0.900),
+    'INTRO_1014_GST': ('darkman', 0.88, 1.000),
+    'INTRO_1016_CP': ('mc', 0.88, 1.000),
+}
 OUT = r'C:\Users\Trilex\AppData\Local\Temp\opencode\dubbing-qa\resynth_intro_piper'
 os.makedirs(OUT, exist_ok=True)
 PIPER = r'C:\Users\Trilex\vr-mods\.piper_tools\bin\piper.exe'
@@ -24,7 +36,9 @@ for n, a in enumerate(ASSETS, 1):
     fin = os.path.join(OUT, a + '.pl.wav')
     if os.path.exists(raw):
         os.remove(raw)
-    r1 = subprocess.run([PIPER, '-m', VOICE, '-i', txt, '-f', raw],
+    voice, length_scale, noise_scale = CAST[a]
+    r1 = subprocess.run([PIPER, '-m', VOICES[voice], '--length-scale', str(length_scale),
+                         '--noise-scale', str(noise_scale), '-i', txt, '-f', raw],
                         capture_output=True, text=True, errors='replace')
     if r1.returncode != 0 or not os.path.exists(raw):
         man.append({'file': a + '.pl.wav', 'asset': a,
@@ -50,7 +64,8 @@ for n, a in enumerate(ASSETS, 1):
             w.setsampwidth(2)
             w.setframerate(24000)
             w.writeframes(array.array('h', s2).tobytes())
-    man.append({'file': a + '.pl.wav', 'asset': a, 'voice': 'piper-darkman-fallback',
+    man.append({'file': a + '.pl.wav', 'asset': a, 'voice': 'piper-' + voice,
+                'length_scale': length_scale, 'noise_scale': noise_scale,
                 'text_pl': text, 'dur_s': round(fr / 24000, 2),
                 'budget_s': pl[a].get('dur'),
                 'sha16': hashlib.sha256(open(fin, 'rb').read()).hexdigest()[:16]})
