@@ -241,6 +241,10 @@ peak ≤ −1,0 dBFS. WAV-y w temp (nie w gicie); MAIN kopiuje do banków.
   per plik decyzją użytkownika. UWAGA: C:\PL-dubbing to junction do cutscene-packa,
   NIE katalog stagingowy — finał trafi do osobnego folderu po werdykcie.
 - bc0ee3caa zostaje v2 (fix 2,5 s nieprawdopodobne dla 13 słów).
+- WERDYKT 2026-10-16: użytkownik wybrał fix65b (8 plików). Manifesty zsynchronizowane
+  z dyskiem (attempt=3). FINAŁ w `C:\Dubbing-aktualny\story` (159) + `\intro` (7):
+  166/166 sha OK, dekod pełny OK. `C:\PL-dubbing` to junction do cutscene-packa —
+  NIE ruszać (deployment czyta stamtąd; podmianę robi MAIN).
 
 ## Co NIE działa / następny krok
 
