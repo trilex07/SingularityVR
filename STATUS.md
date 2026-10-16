@@ -1,18 +1,19 @@
 # STATUS — session handoff
 
-LATEST 2026-10-17 SIDE side/mirror-screenshot-fix: MAIN root-cause accepted —
-UE3 binds viewport + Present region to the window (dumped frame: right half
-black at x>=2952 on a 5904x3012 backbuffer), so the SetWindowPos fit path is
-REMOVED; Window=1 now fits the right eye into the visible client region of
-the untouched SBS window (zero engine interaction, VR res intact by
-construction). Guard stays as fail-open tripwire + anti-war fuse; contract
-test_window_never_resized added. L1_PASS full mirror/guard/stamp/fuse CPU +
-D3D9Ex pixels/scope/viewport/Reset + 8 Python contracts + six menu/cinema
-regressions. L2_PASS clean tree,
-x86 PE32 /O2 DLL SHA-256
-594D11ABFCA21985FC6159A2A0E2B66628FC892B12F56F3619D751E7A47BCB49.
-L3/L4 UNKNOWN. ZERO Steam. MAIN L3: ok>0 rising, skipRect quiet, bb=SBS
-stable, no reset-guard lines, then F12/Share on two live halves.
+LATEST 2026-10-17 MAIN fix/revert-opaque-alpha: opaque-alpha screenshot fix
+REVERTED (user order: artifacts + per-eye intro divergence, screenshots
+deferred). Steam restored to accepted F5E9252420... + INI a6f4b973... from
+deployment/install-backups/20261017-002500 (both hash-verified on disk, game
+was closed; broken 31844559 + f9cb9651 preserved under
+install-backups/20261017-005909-pre-revert). Runner Rollback refused (no
+manifest.json in that backup — manual copy with pre/post hash verify,
+deviation recorded). Git: clean `git revert 2a69d02` on new branch
+fix/revert-opaque-alpha (no history rewrite, no other branch touched).
+L1_PASS mirror ps1 green on revert HEAD. L2_PASS clean x86 PE32 /O2 build,
+DLL SHA-256 420B0AB257F2DF7C1C9B01A3A3BAD9B3080026807670D85DFF88BDEFE717CCD4
+(local candidate only, NOT deployed). READY_FOR_PHYSICAL_ACCEPTANCE of the
+restored accepted install: intro same in both eyes, no artifacts, monitor
+single image, HMD normal. Screenshots explicitly NOT retested per user.
 
 LATEST 2026-10-16 SIDE fix/right-eye-mirror-steam-capture (PR #43): complete right-eye
 aspect fit, opt-in monitor work-area window cap 1920x1080 (physical client px),
