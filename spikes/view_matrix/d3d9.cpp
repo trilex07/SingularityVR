@@ -4303,6 +4303,32 @@ void ApplyHeadRotation(Reg4* r, int conv,
     }
 }
 
+void CancelMatrixRoll(Reg4* r, int conv) {
+    float right[3], up[3], forward[3];
+    AxisCols(r, conv, right, up, forward);
+    if (!NormaliseVec3(right) || !NormaliseVec3(up) || !NormaliseVec3(forward)) return;
+    if (fabsf(right[2]) < 1e-4f) return;
+
+    float ro[3], uo[3], fo[3], R[3][3];
+    if (!CancelBasisRoll(right, up, forward, ro, uo, fo, R)) return;
+
+    if (conv == CONV_ROW) {
+        Reg4 out[3];
+        for (int i = 0; i < 3; ++i)
+            for (int k = 0; k < 4; ++k)
+                (&out[i].x)[k] = R[i][0]*(&r[0].x)[k]
+                               + R[i][1]*(&r[1].x)[k]
+                               + R[i][2]*(&r[2].x)[k];
+        for (int i = 0; i < 3; ++i) r[i] = out[i];
+    } else {
+        for (int i = 0; i < 4; ++i) {
+            const float x = r[i].x, y = r[i].y, z = r[i].z;
+            for (int k = 0; k < 3; ++k)
+                (&r[i].x)[k] = x*R[k][0] + y*R[k][1] + z*R[k][2];
+        }
+    }
+}
+
 void ApplyOffset(Reg4* r, int conv, const float* o) {
     if (conv == CONV_ROW) {
         float* r3 = &r[3].x;
@@ -4320,7 +4346,7 @@ XrSession  g_xrSession  = XR_NULL_HANDLE;
 XrSpace    g_xrSpace    = XR_NULL_HANDLE;
 static cinemascreen::Anchor g_cinemaWorldAnchor;
 static LONG g_cutsceneWorldScreen=0; // default-OFF world-space presentation experiment
-static LONG g_menuWorldScreen=1;     // default-ON anchored cinema screen for main menu
+static LONG g_menuWorldScreen=0;     // default-OFF anchored cinema screen for main menu
 static LONG g_cutsceneScreenDistanceMm=2000;
 static XrTime g_cinemaReferenceChangeTime=0;
 static bool g_eyePositionsValid=false;
@@ -5578,8 +5604,6 @@ void StampCaptureState(CopySlot& cap) {
     // composition keeps stereo stamping, so the bridge cannot submit an
     // uncomposed half crop to both eyes.
     const bool isVideoFlat = (g_sceneMode.Current() == vrscene::Mode::VideoFlat);
-    const bool isMainMenuFlat = (g_sceneMode.Current() == vrscene::Mode::MenuFlat) &&
-        (cap.menuClass == 1 || cap.menuClass == 2 || cap.menuClass == 4);
     if (isVideoFlat) {
         const float scale = ClampVideoCinemaScale((int)Rd(g_videoCinemaScalePct)) * 0.005f;
         const int left   = (int)((0.25f - 0.5f * scale) * (float)g_srcW);
@@ -5588,9 +5612,6 @@ void StampCaptureState(CopySlot& cap) {
         const int bottom = (int)((0.5f + 0.5f * scale) * (float)g_srcH);
         cap.cineFlat = (right > left && bottom > top);
         cap.cineImage = CutsceneMonoRect{ left, top, right, bottom };
-    } else if (isMainMenuFlat && Rd(g_menuWorldScreen)) {
-        cap.cineFlat = true;
-        cap.cineImage = CutsceneMonoRect{ 0, 0, (int)(g_srcW / 2), (int)g_srcH };
     } else {
         cap.cineFlat = g_cineMonoReady && CutsceneMonoComposeArmed() && !cap.menuFlat;
         cap.cineImage = cap.cineFlat ? g_cineMonoImage : CutsceneMonoRect{};
@@ -6033,6 +6054,7 @@ int    g_devDrawFrames[2] = { 0, 0 };
 // would mean the camera actor is not what the view matrix is built from, which is a premise this
 // whole approach rests on and has never been checked directly.
 volatile LONG g_camRotDirty = 1;
+volatile LONG g_camFrameDirty = 1;
 int32_t g_camYawUU = 0, g_camPitchUU = 0;
 bool    g_camRotKnown = false;
 double  g_residSum = 0.0, g_residMax = 0.0;
@@ -12271,12 +12293,8 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
 
     const int64_t diagBridge = g_diagEnabled ? DiagQpc() : 0;
     const bool isVideoFlat = (g_sceneMode.Current() == vrscene::Mode::VideoFlat);
-    const bool isMainMenuFlat = (g_sceneMode.Current() == vrscene::Mode::MenuFlat) &&
-        (Rd(g_vrMenuClass) == 1 || Rd(g_vrMenuClass) == 2 || Rd(g_vrMenuClass) == 4);
-    const bool isMainMenuCinema = (Rd(g_menuWorldScreen) != 0) && isMainMenuFlat;
-    const bool activeWorldAnchor = (Rd(g_inCinematic) != 0) || isVideoFlat || isMainMenuCinema;
-    const bool cinemaWorldPermitted = (isMainMenuCinema && Rd(g_menuWorldScreen) != 0) || (Rd(g_cutsceneWorldScreen) != 0);
-    g_cinemaWorldAnchor.Observe(activeWorldAnchor, cinemaWorldPermitted);
+    const bool activeWorldAnchor = (Rd(g_inCinematic) != 0) || isVideoFlat;
+    g_cinemaWorldAnchor.Observe(activeWorldAnchor, Rd(g_cutsceneWorldScreen) != 0);
     if(g_cinemaReferenceChangeTime && fs.predictedDisplayTime>=g_cinemaReferenceChangeTime) {
         g_cinemaWorldAnchor.Reset();g_cinemaReferenceChangeTime=0;
     }
@@ -12294,7 +12312,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // half (validated composition coordinates, not a blind half reuse). Both
     // eyes share that same half crop; never one half per eye.
     const bool cineCrop = frame && frame->cineFlat && frame->dup && !frame->stereo &&
-                          (!frame->menuFlat || isVideoFlat || isMainMenuCinema) && g_srcW >= 2;
+                          (!frame->menuFlat || isVideoFlat) && g_srcW >= 2;
     const bool monoCrop = cropEyes || cineCrop;
     g_scCropped = monoCrop;
     if (frame) {
@@ -12491,9 +12509,8 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                     // Same proved composed pixels; the compositor places the screen in LOCAL
                     // space instead of interpreting it as a head-following projection image.
                     // A pause/menu keeps its established presentation and retains this anchor.
-                    const bool menuPermitted = (!Rd(g_vrMenuClass) || Rd(g_vrMenuClass) == 3 || (isVideoFlat && Rd(g_vrMenuClass) == 1) ||
-                                                (Rd(g_menuWorldScreen) && (Rd(g_vrMenuClass) == 1 || Rd(g_vrMenuClass) == 2 || Rd(g_vrMenuClass) == 4)));
-                    if(cineCrop && cinemaWorldPermitted && activeWorldAnchor &&
+                    const bool menuPermitted = (!Rd(g_vrMenuClass) || Rd(g_vrMenuClass) == 3 || (isVideoFlat && Rd(g_vrMenuClass) == 1));
+                    if(cineCrop && Rd(g_cutsceneWorldScreen) && activeWorldAnchor &&
                        menuPermitted && !Rd(g_panelOpen) &&
                        cinemascreen::TrackingAllowsAnchor(g_cinemaWorldAnchor.valid,frame->eyePositionsValid)) {
                         const auto& r=frame->cineImage;
@@ -12506,13 +12523,10 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                             {l.x,l.y,l.z,q.x,q.y,q.z,q.w},
                             {right.x,right.y,right.z,rq.x,rq.y,rq.z,rq.w});
                         const bool wasAnchored=g_cinemaWorldAnchor.valid;
-                        const float aspect = (isMainMenuCinema && g_srcH > 0)
-                            ? ((float)g_srcW / (float)g_srcH)
-                            : (imageH > 0 ? (float)imageW / imageH : 16.f / 9.f);
                         if(r.left>=0 && r.top>=0 && r.right<=(int)g_scWidth && r.bottom<=(int)g_scHeight &&
                            imageW>0 && imageH>0 && g_cinemaWorldAnchor.Latch(head,
                             Rd(g_cutsceneScreenDistanceMm)/1000.f,halfTan,
-                            (float)imageW/g_scWidth,aspect)) {
+                            (float)imageW/g_scWidth,(float)imageW/imageH)) {
                             const auto& a=g_cinemaWorldAnchor;
                             cinemaQuad.space=g_xrSpace;
                             cinemaQuad.eyeVisibility=XR_EYE_VISIBILITY_BOTH;
@@ -12615,6 +12629,52 @@ extern int           g_upXformDump;
 extern volatile LONG g_hudConstsWritten;
 extern volatile LONG g_hudXformLive;   // ⭐ run 253, defined with the UI census
 extern bool          g_inHudRemap;
+
+void UpdateCameraStabilizationThisFrame() {
+    if (!VrModeOn() || !Rd(g_vrTranslationStabilization)) return;
+    const uintptr_t cam = g_camera;
+    if (!cam) return;
+
+    if (Readable((void*)(cam + CAM_POV_LOC), 12)) {
+        memcpy(g_povPos, (void*)(cam + CAM_POV_LOC), 12);
+        InterlockedExchange(&g_camPosValid, 1);
+    } else if (Readable((void*)(cam + ACTOR_LOCATION), 12)) {
+        memcpy(g_povPos, (void*)(cam + ACTOR_LOCATION), 12);
+        InterlockedExchange(&g_camPosValid, 1);
+    }
+    if (Readable((void*)(cam + ACTOR_LOCATION), 12)) {
+        memcpy(g_camPos, (void*)(cam + ACTOR_LOCATION), 12);
+    }
+
+    if (Rd(g_vrCameraShakeSuppression) && !CutsceneNativeCameraArmed()) {
+        if (Readable((void*)(cam + CAM_POV_ROT), 12)) {
+            int32_t* povRot = reinterpret_cast<int32_t*>(cam + CAM_POV_ROT);
+            povRot[2] = 0;
+            povRot[0] = g_wantPitch;
+            povRot[1] = g_wantYaw;
+        }
+        if (Readable((void*)(cam + ACTOR_ROTATION), 12)) {
+            int32_t* actRot = reinterpret_cast<int32_t*>(cam + ACTOR_ROTATION);
+            actRot[2] = 0;
+            actRot[0] = g_wantPitch;
+            actRot[1] = g_wantYaw;
+        }
+    }
+
+    const uintptr_t pawn = g_playerPawn;
+    const int eyeOffset = (g_offBaseEyeHeight >= 0) ? g_offBaseEyeHeight : g_offEyeHeight;
+    if (pawn && eyeOffset >= 0 &&
+        Readable((void*)(pawn + ACTOR_LOCATION), 12) &&
+        Readable((void*)(pawn + eyeOffset), 4)) {
+        PawnCameraSample sample{};
+        if (TryReadPawnCameraSample(pawn, ACTOR_LOCATION, eyeOffset, &sample)) {
+            if (ComputeVrCameraStabilization(g_povPos, sample.location, sample.eyeHeight, g_vrCameraStabOffset)) {
+                InterlockedExchange(&g_vrCameraStabValid, 1);
+                return;
+            }
+        }
+    }
+}
 
 HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
                                            const float* data, UINT vec4Count) {
@@ -12897,6 +12957,10 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
         // Otherwise offset along the camera's RIGHT axis, not a world axis - that is the
         // actual stereo primitive, and it keeps the effect the same whichever way the player
         // happens to be facing.
+        if (InterlockedExchange(&g_camFrameDirty, 0)) {
+            UpdateCameraStabilizationThisFrame();
+        }
+
         float o[3] = {0,0,0};
         if (inject) {
             if (posOffset) {
@@ -12960,6 +13024,8 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
             const float curYaw   = (g_camRotKnown ? g_camYawUU   : g_matCurYawUU)   * kUUToRad;
             ApplyHeadRotation(m, c, curPitch, curYaw,
                               g_matDesPitchUU * kUUToRad, g_matDesYawUU * kUUToRad);
+        } else if (VrModeOn() && Rd(g_vrCameraShakeSuppression) && !CutsceneNativeCameraArmed()) {
+            CancelMatrixRoll(m, c);
         }
         if (inject) ApplyOffset(m, c, o);
         if (forceProj) {
@@ -28299,13 +28365,14 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         // locomotion/elevation, but remove that residual translation from the
         // VR view. HMD position remains in g_hmdOffset and is never smoothed.
         InterlockedExchange(&g_vrCameraStabValid, 0);
+        const int eyeOffset = (g_offBaseEyeHeight >= 0) ? g_offBaseEyeHeight : g_offEyeHeight;
         if (VrModeOn() && Rd(g_vrTranslationStabilization) && g_playerPawn &&
-            Rd(g_camPosValid) && g_offEyeHeight >= 0 &&
+            Rd(g_camPosValid) && eyeOffset >= 0 &&
             Readable((void*)(g_playerPawn + ACTOR_LOCATION), 12) &&
-            Readable((void*)(g_playerPawn + g_offEyeHeight), 4)) {
+            Readable((void*)(g_playerPawn + eyeOffset), 4)) {
             const uintptr_t pawnAddress = g_playerPawn;
             PawnCameraSample pawn{};
-            if (!TryReadPawnCameraSample(pawnAddress, ACTOR_LOCATION, g_offEyeHeight, &pawn)) {
+            if (!TryReadPawnCameraSample(pawnAddress, ACTOR_LOCATION, eyeOffset, &pawn)) {
                 // Only the stale pawn cache is invalidated; next bounded scan
                 // reacquires it. Never publish residual translation from a failed read.
                 if (g_playerPawn == pawnAddress) { g_playerPawn = 0; g_playerPawnClass = 0; }
@@ -29996,6 +30063,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     ApplyPadTestOverrides();   // must follow SyncXRInput - see the note on the function
     UpdateAutoPad();           // and after that, so a test override is never what keeps it awake
     InterlockedExchange(&g_camRotDirty, 1);   // re-read the camera's real rotation next frame
+    InterlockedExchange(&g_camFrameDirty, 1); // re-read the camera stabilization next frame
 
     // Yaw is not carried by the detour's seam, so write it directly - the mechanism proven
     // in the earlier spike. Pitch deliberately left alone here; the detour owns it.
@@ -30731,8 +30799,8 @@ void LoadIniSettings() {
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));
     Log("ini: CutsceneWorldScreen=%ld distance=%ldmm (LOCAL anchored quad, default OFF)",
         Rd(g_cutsceneWorldScreen),Rd(g_cutsceneScreenDistanceMm));
-    g_menuWorldScreen=GetPrivateProfileIntA("Render","MenuWorldScreen",1,path)?1:0;
-    Log("ini: MenuWorldScreen=%ld (anchored cinema screen for main menu, default ON)", Rd(g_menuWorldScreen));
+    g_menuWorldScreen=GetPrivateProfileIntA("Render","MenuWorldScreen",0,path)?1:0;
+    Log("ini: MenuWorldScreen=%ld (anchored cinema screen for main menu, default OFF)", Rd(g_menuWorldScreen));
     Log("ini: VideoStereo=%ld (%s)", InterlockedCompareExchange(&g_videoStereo, 0, 0),
         InterlockedCompareExchange(&g_videoStereo, 0, 0)
             ? "Bink video drawn once per eye"

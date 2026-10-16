@@ -30,6 +30,42 @@ int main() {
         op == 100 && oy == 200 && oroll == 0, "rotation stabilization locks pitch/yaw and zeros roll");
     Check(StabilizeVrCameraRotation(100, 200, 115, 205, 50, op, oy, oroll, false) &&
         op == 115 && oy == 205 && oroll == 0, "rotation stabilization without shake suppression keeps pov pitch/yaw and zeros roll");
+
+    // Test CancelBasisRoll:
+    // 1. Unrolled baseline basis (forward=+X, right=+Y, up=+Z)
+    {
+        const float fIn[3] = {1, 0, 0}, rIn[3] = {0, 1, 0}, uIn[3] = {0, 0, 1};
+        float rOut[3]{}, uOut[3]{}, fOut[3]{}, R[3][3]{};
+        Check(CancelBasisRoll(rIn, uIn, fIn, rOut, uOut, fOut, R), "unrolled basis processed");
+        Check(std::fabs(rOut[2]) < 1e-5f && std::fabs(rOut[1] - 1.0f) < 1e-5f, "unrolled right preserved");
+        Check(std::fabs(fOut[0] - 1.0f) < 1e-5f && std::fabs(fOut[1]) < 1e-5f && std::fabs(fOut[2]) < 1e-5f, "unrolled forward preserved");
+    }
+    // 2. Basis with 30 deg roll shake injected
+    {
+        const float ang = 0.523598775f; // 30 deg
+        const float fIn[3] = {1, 0, 0};
+        const float rIn[3] = {0, std::cos(ang), std::sin(ang)};
+        const float uIn[3] = {0, -std::sin(ang), std::cos(ang)};
+        float rOut[3]{}, uOut[3]{}, fOut[3]{}, R[3][3]{};
+        Check(CancelBasisRoll(rIn, uIn, fIn, rOut, uOut, fOut, R), "rolled basis processed");
+        Check(std::fabs(rOut[2]) < 1e-5f && std::fabs(rOut[1] - 1.0f) < 1e-5f, "roll eliminated (right.z == 0, right.y == 1)");
+        Check(std::fabs(uOut[2] - 1.0f) < 1e-5f && std::fabs(uOut[1]) < 1e-5f, "upright vertical (up.z == 1, up.y == 0)");
+        Check(std::fabs(fOut[0] - 1.0f) < 1e-5f && std::fabs(fOut[1]) < 1e-5f && std::fabs(fOut[2]) < 1e-5f, "forward look invariant");
+        // Verify R rotates rIn to rOut and leaves fIn unchanged
+        float rotatedR[3] = {
+            R[0][0]*rIn[0] + R[0][1]*rIn[1] + R[0][2]*rIn[2],
+            R[1][0]*rIn[0] + R[1][1]*rIn[1] + R[1][2]*rIn[2],
+            R[2][0]*rIn[0] + R[2][1]*rIn[1] + R[2][2]*rIn[2]
+        };
+        float rotatedF[3] = {
+            R[0][0]*fIn[0] + R[0][1]*fIn[1] + R[0][2]*fIn[2],
+            R[1][0]*fIn[0] + R[1][1]*fIn[1] + R[1][2]*fIn[2],
+            R[2][0]*fIn[0] + R[2][1]*fIn[1] + R[2][2]*fIn[2]
+        };
+        Check(std::fabs(rotatedR[2]) < 1e-5f && std::fabs(rotatedR[1] - 1.0f) < 1e-5f, "R matrix unrolls right vector");
+        Check(std::fabs(rotatedF[0] - 1.0f) < 1e-5f && std::fabs(rotatedF[1]) < 1e-5f && std::fabs(rotatedF[2]) < 1e-5f, "R matrix preserves forward look vector");
+    }
+
     const PawnCameraSample before = out;
 
     DWORD previous = 0;
