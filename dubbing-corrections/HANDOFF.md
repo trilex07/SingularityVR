@@ -126,6 +126,29 @@ albo statusie innym niż `machine_draft` — 42 wiersze `full_native_text_review
 - Dla MAIN/re-TTS: syntetyzować `text_pl` tych 130 wierszy, po regeneracji wyrównać
   `tts_text=text_pl`; `full_native_text_review` dopiero po uchu reżysera.
 
+## Resynteza 130 kwestii (2026-10-16, na polecenie użytkownika)
+
+Skrypty: `dubbing-corrections/resynth_corrected.py` (dawca=własny EN oryginał linii:
+38× `_refs_en` + 92× własny ogg EN z gry dla wierszy SD_*; temp 0.65, fresh state/chunk,
+split >25, PCM16 mono 24 kHz peak −1 dBFS), `regen_sentences.py` (fix early-stop),
+`asr_qa_resynth.py` (faster-whisper-small, recall tokenowy), `validate_gain.py` (re-walidacja).
+WAV-y TYLKO w `%TEMP%\opencode\dubbing-qa\resynth130` (cudzego worktree nietknięte);
+w branchu: `resynth_manifest.jsonl` (plik, dawca, profil, tekst, chunki, dur, gain, sha),
+`resynth_validation.jsonl`, `asr_qa_resynth.jsonl`, `resynth_regen_log.jsonl`.
+- Synteza: 130/130 ok (~2 min). Walidacja: peak −1,00 wszystkie, 0 decode/format fails.
+- ASR-QA: mean recall 0,83; 9× <0,5 + 4× =0,50. Większość to artefakty ortografii ASR
+  (treść obecna: CZISTO/Czysto, NAPSZUT/Naprzód, NACZERAJ/Nacierają, O gnia/Ognia).
+- Udowodniony early-stop TTS na długich liniach (2. połowa nie istnieje w audio):
+  5× regen zdaniem-po-zdaniu (attempt2, ten sam dawca), reguła treści (recall):
+  wszystkie 5 podmienione (recall 0,57–1,00; packowa norma tempa PL/EN 2,38 usprawiedliwia długość).
+- Do ucha ludzkiego (REVIEW, treść nieudowodniona): chrysie/Kryj się, Cez dienty/Cel zdjęty,
+  STAP SHOOT/Naprzód, Powocy/Pomocy, Devin/Devlin, Mamy ich/Mam ich + 8× needs_human z wordingu.
+- `tts_text` wyrównane do `text_pl` dla 130 wierszy (weryfikacja per pole: tylko `tts_text`);
+  status bez zmian (audio świeże, bez weryfikacji uchem).
+- Dla MAIN: pliki hash-nazwane = drop-in do `story_voicepack_xlingual`; pliki `SD_*` to
+  kandydaci do packa barków (przemianować na konwencję `SD_*.pl.wav`; format już zgodny:
+  PCM16 mono 24 kHz, peak −1 dBFS). Nie wdrażać bez odsłuchu REVIEW.
+
 ## Co NIE działa / następny krok
 
 - Korekty to propozycje tekstowe (L1): zero weryfikacji w grze (verified_in_game=false
