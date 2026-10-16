@@ -2218,6 +2218,7 @@ int g_centurionReload=0,g_centurionNativeTap=0,g_centurionReloadProbe=0;
 int g_centurionClipPreview=0;
 static hipknife::Renderer g_centurionClipRenderer;
 static bool g_centurionClipReady=false,g_centurionClipFault=false;
+static centurionclip::PresentationSafety g_centurionPresentationSafety;
 static centurionclip::Config g_centurionClipConfig;
 centurionreload::Config g_centurionConfig{};
 centurionreload::State g_centurionState{};
@@ -9155,6 +9156,7 @@ bool InitXRInput() {
     // draw hooks. Missing/bad cache fails closed without changing normal input.
     g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipReady=false;g_centurionClipFault=false;
+    g_centurionPresentationSafety.Reset();
     if(g_centurionReload&&g_centurionClipPreview){
         char path[MAX_PATH]{};
         if(IniPath(path)){
@@ -25552,6 +25554,7 @@ void ReleaseWristResources() {
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     g_hipKnifeRenderer.ReleaseGPU();
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipFault=false;
+    g_centurionPresentationSafety.Reset();
     hipknife::Release(g_centurionMarkerState);
     shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();worldshadowfix::Release();
     PauseRttProbe::ReleaseContent();
@@ -25941,7 +25944,7 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched){
 }
 
 static void DrawCenturionReload(IDirect3DDevice9* dev){
-    if(!g_centurionReload||!dev||!VrModeOn()||!InGameplay()||!Rd(g_dupDraws)||
+    if(!g_centurionReload||!g_centurionPresentationSafety.Allowed()||!dev||!VrModeOn()||!InGameplay()||!Rd(g_dupDraws)||
        !g_haveEyes||Rd(g_gamePaused)||Rd(g_vrUiMenu)||Rd(g_panelOpen)||
        Rd(g_weaponWheelOpen)||CutsceneNativeCameraArmed()||!g_origDrawPrimUP||
        !WeaponInHands()||Rd(g_weaponHolstered)||Rd(g_gunVerts)!=5799)return;
@@ -25962,7 +25965,7 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
         shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport};
     if(!calls.Valid()){back->Release();return;}
     hipknife::StateGuard<> guard(dev,g_centurionMarkerState,calls);
-    if(!guard.valid){back->Release();return;}
+    const auto drawResult=g_centurionPresentationSafety.Render(guard,[&](){
     // Warm the private GPU resources at the first eligible gameplay frame,
     // before a gesture. CPU mesh/texture reads already happened at XR init.
     bool previewAvailable=g_centurionClipPreview&&g_centurionClipReady&&!g_centurionClipFault;
@@ -26023,12 +26026,15 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
                 {p.orientation.x,p.orientation.y,p.orientation.z,p.orientation.w}};}
         const bool drawn=g_centurionClipRenderer.Draw(dev,calls,back,clipPose,eyes,g_targetTanX,g_targetTanY);
         static unsigned notes=0;
-        if(!drawn){g_centurionClipFault=true;Log("centurion clip preview: draw/restore failed; cyan marker fallback until Reset/XR init");}
+        if(!drawn){ok=false;g_centurionClipFault=true;Log("centurion clip preview: draw/restore failed; cyan marker fallback only if outer restore succeeds");}
         else if(notes++<2)Log("centurion clip preview: two-eye draw submitted (not pixel/physical proof)");
     }
-    const bool restored=guard.Restore();back->Release();
-    static unsigned faults=0;if((!ok||!restored)&&faults++<3)
-        Log("centurion reload: calibration draw/restore failure draw=%d restore=%d",ok?1:0,restored?1:0);
+    return ok;
+    });
+    back->Release();
+    static unsigned faults=0;if(drawResult!=centurionclip::DrawResult::Success&&faults++<3)
+        Log("centurion reload: presentation failure result=%d latched=%d (capture/restore faults disable only presentation until Reset/XR init)",
+            (int)drawResult,g_centurionPresentationSafety.Allowed()?0:1);
 }
 
 void DrawWeaponWheel(IDirect3DDevice9* dev) {

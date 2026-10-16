@@ -1,10 +1,30 @@
 #pragma once
 #include "centurion_reload.h"
+#include <atomic>
 
 // Presentation-only calibration. The original cylinder remains on the native
 // gun. No animation palette, engine socket or inventory operation is inferred.
 namespace centurionclip {
 using hipknife::Pose;using hipknife::V;using hipknife::Q;
+enum class DrawResult {Success,Disabled,CaptureFailed,DrawFailed,RestoreFailed};
+// Render-only fault policy. This never reserves a hand or changes reload state.
+// Lifecycle code may reset it; normal frames cannot clear a failed restore.
+class PresentationSafety {
+    std::atomic<bool> fault{false};
+    static_assert(std::atomic<bool>::is_always_lock_free,"No lock in render fault latch");
+public:
+    bool Allowed()const{return !fault.load(std::memory_order_relaxed);}
+    void Reset(){fault.store(false,std::memory_order_relaxed);}
+    template<class Guard,class Draw> DrawResult Render(Guard& guard,Draw draw){
+        if(!Allowed())return DrawResult::Disabled;
+        if(!guard.valid){fault.store(true,std::memory_order_relaxed);return DrawResult::CaptureFailed;}
+        const bool drawn=draw();
+        // Attempt the complete outer restore even when drawing failed midway.
+        const bool restored=guard.Restore();
+        if(!restored){fault.store(true,std::memory_order_relaxed);return DrawResult::RestoreFailed;}
+        return drawn?DrawResult::Success:DrawResult::DrawFailed;
+    }
+};
 struct Config {V offset{0,0,-.08f};Q rotation{};}; // authored aim-space mount
 struct Snapshot {
     bool visible=false;

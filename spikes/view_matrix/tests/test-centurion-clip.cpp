@@ -3,7 +3,48 @@
 #include <limits>
 #include <cstdio>
 using namespace centurionclip;
+struct FakeGuard {
+    bool valid=true,restoreOk=true;
+    unsigned restores=0;
+    bool Restore(){assert(valid);valid=false;++restores;return restoreOk;}
+};
+static void TestPresentationSafety(){
+    PresentationSafety safety;
+    unsigned draws=0;
+    auto draw=[&](){++draws;return true;};
+    FakeGuard normal;
+    assert(safety.Render(normal,draw)==DrawResult::Success);
+    assert(draws==1&&normal.restores==1&&safety.Allowed());
+    // Early draw failure still restores; a healthy outer restore allows retry.
+    for(unsigned failedStage=0;failedStage<8;++failedStage){
+        FakeGuard guard;
+        unsigned stages=0;
+        auto partial=[&](){for(unsigned i=0;i<8;++i){++stages;if(i==failedStage)return false;}return true;};
+        assert(safety.Render(guard,partial)==DrawResult::DrawFailed);
+        assert(stages==failedStage+1&&guard.restores==1&&safety.Allowed());
+    }
+    FakeGuard restoreFault;restoreFault.restoreOk=false;
+    assert(safety.Render(restoreFault,draw)==DrawResult::RestoreFailed);
+    assert(restoreFault.restores==1&&!safety.Allowed());
+    const unsigned before=draws;
+    for(unsigned frame=0;frame<100000;++frame){
+        FakeGuard guard;
+        assert(safety.Render(guard,draw)==DrawResult::Disabled);
+        assert(guard.restores==0&&draws==before&&!safety.Allowed());
+    }
+    // Reset is the sole recovery route, not a successful later input frame.
+    safety.Reset();FakeGuard recovered;
+    assert(safety.Render(recovered,draw)==DrawResult::Success&&safety.Allowed());
+    FakeGuard captureFault;captureFault.valid=false;
+    const unsigned beforeCapture=draws;
+    assert(safety.Render(captureFault,draw)==DrawResult::CaptureFailed);
+    assert(draws==beforeCapture&&captureFault.restores==0&&!safety.Allowed());
+    safety.Reset();FakeGuard both;both.restoreOk=false;
+    assert(safety.Render(both,[](){return false;})==DrawResult::RestoreFailed);
+    assert(both.restores==1&&!safety.Allowed());
+}
 int main(){
+    TestPresentationSafety();
     Snapshot s;s.visible=true;s.phase=centurionreload::Phase::Carrying;
     s.pawn=20;s.weapon=10;s.sampledMs=1000;s.hand={{.2f,1,-.5f},{}};
     assert(Eligible(s,true,20,10,1000)&&Eligible(s,true,20,10,1100));
@@ -41,5 +82,5 @@ int main(){
     assert(!Mount(s.hand,cfg,pose)&&!Current(s,20,10,1000));
     for(int p=-180;p<=180;p+=10)for(int y=-180;y<=180;y+=10)for(int r=-180;r<=180;r+=10)
         assert(hipknife::Valid(Degrees((float)p,(float)y,(float)r)));
-    std::puts("centurion clip L1 PASS: default OFF/context/phase/freshness/identity/controller mount/50653 rotations");
+    std::puts("centurion clip L1 PASS: default OFF/context/phase/freshness/identity/controller mount/50653 rotations + presentation fault latch/100000 disabled frames");
 }
