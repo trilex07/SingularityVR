@@ -1,4 +1,4 @@
-param([string]$NativeEvidence,[string]$AnimationCache)
+param([string]$NativeEvidence,[string]$AnimationCache,[string]$ShellAssets)
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $out=Join-Path $repo 'build\centurion-reload\tests'
@@ -6,7 +6,7 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $vswhere="${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $vcvars=Join-Path $vs 'VC\Auxiliary\Build\vcvarsall.bat'
-foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-clip','test-centurion-animation','test-manual-reload','test-hip-knife','test-weapon-holster','test-hand-anchor-math','test-knife-renderer')){
+foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-clip','test-centurion-animation','test-centurion-shells','test-centurion-shoulder','test-manual-reload','test-hip-knife','test-weapon-holster','test-hand-anchor-math','test-knife-renderer')){
     $source=Join-Path $repo "spikes\view_matrix\tests\$test.cpp"
     $exe=Join-Path $out "$test.exe"
     $obj=Join-Path $out "$test.obj"
@@ -50,6 +50,8 @@ python (Join-Path $PSScriptRoot 'test_inspect_native_reload.py')
 if($LASTEXITCODE -ne 0){throw 'Native reload offline mapper tests failed'}
 python (Join-Path $PSScriptRoot 'test_cylinder_animation.py')
 if($LASTEXITCODE -ne 0){throw 'Cylinder animation cache tests failed'}
+python (Join-Path $PSScriptRoot 'test_prepare_centurion_shells.py')
+if($LASTEXITCODE -ne 0){throw 'Original shell extraction tests failed'}
 # Optional own-process D3D resource test: never loads the proxy or game.
 $source=Join-Path $repo 'spikes/view_matrix/tests/test-centurion-animation-ib.cpp'
 $exe=Join-Path $out 'test-centurion-animation-ib.exe'
@@ -58,3 +60,12 @@ cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:
 if($LASTEXITCODE -ne 0){throw 'IB witness fixture compile failed'}
 & $exe
 if($LASTEXITCODE -ne 0){throw 'IB witness fixture failed'}
+if($ShellAssets){
+    $source=Join-Path $repo 'spikes/view_matrix/tests/test-centurion-shells-gpu.cpp'
+    $exe=Join-Path $out 'test-centurion-shells-gpu.exe'
+    $obj=Join-Path $out 'test-centurion-shells-gpu.obj'
+    cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:`"$exe`" /Fo:`"$obj`" `"$source`""
+    if($LASTEXITCODE -ne 0){throw 'Shell GPU fixture compile failed'}
+    & $exe $ShellAssets
+    if($LASTEXITCODE -ne 0){throw 'Shell GPU fixture failed'}
+}

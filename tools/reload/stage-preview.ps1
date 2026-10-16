@@ -1,6 +1,6 @@
 # SIDE-only private staging. Fixed output beneath this checkout's ignored build
 # directory; no Steam targets, INI copy, launch, deployment or game restoration.
-param([string]$OriginalAssets,[string]$AnimationCache)
+param([string]$OriginalAssets,[string]$AnimationCache,[string]$ShellAssets)
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $build=Join-Path $repo 'build\centurion-reload'
@@ -15,7 +15,8 @@ if($manifest.branch -notin @('feature/centurion-manual-reload','fix/centurion-gr
 if((Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash -ne $manifest.sha256){throw 'DLL/build-manifest mismatch'}
 & git -C $repo diff --quiet $manifest.commit -- spikes/view_matrix third_party tools/Resolve-OpenXrSdk.ps1
 if($LASTEXITCODE -ne 0){throw 'Runtime source differs from the built commit; rebuild first'}
-$output=Join-Path $build $(if($AnimationCache){'animation-candidate'}else{'candidate'})
+if($ShellAssets -and -not $AnimationCache){throw 'Shell experiment also requires original native animation cache'}
+$output=Join-Path $build $(if($ShellAssets){'ejection-candidate'}elseif($AnimationCache){'animation-candidate'}else{'candidate'})
 if(-not $OriginalAssets){$OriginalAssets=Join-Path $build 'native-clip'}
 $assets=Join-Path $output 'vr-assets\reload\centurion'
 $resolvedOutput=[IO.Path]::GetFullPath($output)
@@ -32,6 +33,12 @@ foreach($name in $expected.Keys){$inputs[$name]=Join-Path $OriginalAssets $name}
 if($AnimationCache){
     $expected['centurion_reload.svca']='85ABCDDE7C9F1971C7B3BD5457672D69987FF332F8EC8C52953604505A945EA6'
     $inputs['centurion_reload.svca']=$AnimationCache
+}
+if($ShellAssets){
+    $expected['centurion_shell.svrk']='AB61034E9E35D2C5BEAC937E3E3BB90D15272828FF2BBBE2CD26ED443E5E5CAC'
+    $expected['centurion_shell.svrt']='F804945B8160EC47C6C5B5C94844C9A8B8CCE43E28499799606051B5909FE8D0'
+    $inputs['centurion_shell.svrk']=Join-Path $ShellAssets 'centurion_shell.svrk'
+    $inputs['centurion_shell.svrt']=Join-Path $ShellAssets 'centurion_shell.svrt'
 }
 # Verify every input before writing the private candidate; refuse stale or
 # differently calibrated assets, rather than silently accepting new hashes.
@@ -62,8 +69,8 @@ $receipt=[ordered]@{
     architecture=$manifest.architecture
     optimization=$manifest.optimization
     files=$files
-    flagsDefaultOff=@('CenturionManualReload','CenturionNativeReloadTap','CenturionReloadProbe','CenturionClipPreview','CenturionReloadMarkers','ReloadControlLayout','CenturionCylinderGestures','CenturionNativeReloadGuard','CenturionCylinderAnimation')
-    limitations='Native palette animation is render-only, exact IB content witness required; no individual casing assets/particles; detached spare remains albedo-only; ammo UE3-owned; L3/L4 UNKNOWN'
+    flagsDefaultOff=@('CenturionManualReload','CenturionNativeReloadTap','CenturionReloadProbe','CenturionClipPreview','CenturionReloadMarkers','ReloadControlLayout','CenturionCylinderGestures','CenturionNativeReloadGuard','CenturionCylinderAnimation','CenturionShellEjection')
+    limitations='Native palette animation is render-only; original case mesh/albedo with short cosmetic flight, NOT native particle/collision/audio/world occlusion; detached spare remains albedo-only; ammo UE3-owned; L3/L4 UNKNOWN'
 }
 $receipt | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $output 'centurion-preview.manifest.json') -Encoding UTF8
 $receipt | ConvertTo-Json -Depth 6

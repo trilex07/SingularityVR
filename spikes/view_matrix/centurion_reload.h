@@ -15,6 +15,15 @@ struct Config {
     float socketRadius=.075f,pullDistance=.15f,insertRadius=.16f;
     std::uint64_t timeoutMs=15000,ackMs=4000,cooldownMs=500,grabWindowMs=650;
 };
+inline float ShoulderLeftMetres(int centimetres){
+    return std::fmin(.40f,std::fmax(.15f,std::fabs(float(centimetres)*.01f)));
+}
+inline bool HeadCentre(V leftEye,V rightEye,V& out){
+    if(!hipknife::Finite(leftEye)||!hipknife::Finite(rightEye))return false;
+    const float separation=hipknife::Length(rightEye-leftEye);
+    if(separation<.005f||separation>.20f)return false;
+    out=(leftEye+rightEye)*.5f;return true;
+}
 inline Pose Pouch(V head,float yaw,const Config& c={}) {
     const hipknife::Q q{0,std::sin(yaw*.5f),0,std::cos(yaw*.5f)};
     return {head+hipknife::Rotate(q,{-c.shoulderLeft,-c.shoulderDown,c.shoulderBack}),q};

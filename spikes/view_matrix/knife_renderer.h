@@ -213,9 +213,16 @@ public:
     }
     bool Draw(IDirect3DDevice9* dev,const Calls& c,IDirect3DSurface9* back,
               const Pose& knife,const Pose (&eyes)[2],float tx,float ty,float modelScale=1.f){
+        return DrawInstances(dev,c,back,&knife,1,eyes,tx,ty,modelScale);
+    }
+    // Bounded cosmetic instances share one private depth clear and state scope.
+    // One instance is exactly the pre-existing knife/cylinder draw route.
+    bool DrawInstances(IDirect3DDevice9* dev,const Calls& c,IDirect3DSurface9* back,
+              const Pose* poses,unsigned count,const Pose (&eyes)[2],float tx,float ty,float modelScale=1.f){
         D3DMATRIX proj{},ident{};
-        if(!state||!texture||!c.Valid()||!back||!Valid(knife.q)||!Finite(knife.p)||
+        if(!state||!texture||!c.Valid()||!back||!poses||!count||count>6||
            !Projection(tx,ty,proj.m)||!std::isfinite(modelScale)||modelScale<.01f||modelScale>16.f)return false;
+        for(unsigned i=0;i<count;++i)if(!Valid(poses[i].q)||!Finite(poses[i].p))return false;
         for(const auto& eye:eyes)if(!Valid(eye.q)||!Finite(eye.p))return false;
         for(int i=0;i<4;++i)ident.m[i][i]=1;
         StateGuard<> guard(dev,state,c);if(!guard.valid)return false;
@@ -253,13 +260,16 @@ public:
         for(unsigned e=0;e<2;++e){
             const D3DVIEWPORT9 vp{e*width/2,0,width/2,height,0,1};
             if(FAILED(c.viewport(dev,&vp)))return false;
-            for(size_t i=0;i<source.size();++i){
-                const auto& v=source[i];const V p=EyeLocal(knife.p+Rotate(knife.q,
-                    {v.x*modelScale,v.y*modelScale,v.z*modelScale}),eyes[e]);
-                scratch[i]={p.x,p.y,p.z,0xffffffff,v.u,v.v};
+            for(unsigned instance=0;instance<count;++instance){
+                const auto& knife=poses[instance];
+                for(size_t i=0;i<source.size();++i){
+                    const auto& v=source[i];const V p=EyeLocal(knife.p+Rotate(knife.q,
+                        {v.x*modelScale,v.y*modelScale,v.z*modelScale}),eyes[e]);
+                    scratch[i]={p.x,p.y,p.z,0xffffffff,v.u,v.v};
+                }
+                if(FAILED(c.draw(dev,D3DPT_TRIANGLELIST,0,UINT(scratch.size()),UINT(indices.size()/3),
+                                indices.data(),D3DFMT_INDEX16,scratch.data(),sizeof(Vertex))))return false;
             }
-            if(FAILED(c.draw(dev,D3DPT_TRIANGLELIST,0,UINT(scratch.size()),UINT(indices.size()/3),
-                            indices.data(),D3DFMT_INDEX16,scratch.data(),sizeof(Vertex))))return false;
         }
         return guard.Restore();
     }

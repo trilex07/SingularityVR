@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE original Centurion cases + shoulder audit:
+Default-OFF CenturionShellEjection reuses real FX_handgunShellsEject mesh/UV/
+albedo, bounded6-case650ms cosmetic world-space flight after Dumped only;
+requires native cylinder content witness, input counts/inventory unchanged.
+Fixed g_headPosXR=LEFT-EYE bias: shoulder uses valid two-eye midpoint now.
+Physical yaw-at-start is latched, signed legacy left distance becomes magnitude.
+L1_PASS16 CPU executables +40 Python tests,27,075 shoulder producer/basis checks;
+own-process D3D9Ex original textured pixels in BOTH eyes +fault/state/Reset PASS.
+No native collision/impact audio/world or hand occlusion/full scene lighting.
+No independent torso tracker: start facing forward. L3/L4 UNKNOWN; ZERO Steam.
+Clean L2 receipt follows. See docs/centurion-shells-shoulder.md.
+
 LATEST 2026-10-16 SIDE Centurion native cylinder animation: default-OFF
 CenturionCylinderAnimation retimes original Reload clip/clip_release tracks on
 native gun palette, material/shader retained, exact cooked IB content witness,

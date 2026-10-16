@@ -1,5 +1,9 @@
 # Native Centurion cylinder animation — SIDE, 2026-10-16
 
+Newer opt-in shell/shoulder follow-up: [original cases and mid-eye anchor](centurion-shells-shoulder.md).
+It adds cosmetic case flight, not native collision/audio; earlier no-cases scope
+below describes the original animation commit, not the newer follow-up.
+
 ## Review of the supplied feedback / SIDE c70b36f
 
 The user reports three blocked native AttemptReload calls and an empty clip.
