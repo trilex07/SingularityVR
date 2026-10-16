@@ -202,6 +202,16 @@ Te same bajty raz dają treść, raz bełkot (zmierzone na plikach batcha 1). Dl
 wszystkie powyżej to średnie z 2–3 procesów; pojedynczy recall to wskazówka, nie dowód.
 Ucho użytkownika rozstrzyga.
 
+## Kandydaci dawcy głosu z sieci (2026-10-16, na polecenie użytkownika)
+
+M-AILABS (LibriVox public domain — legalne jak reszta castingu):
+- `donor_en_m.wav` (temp/odsluch): mężczyzna US, 13,0 s, 16 kHz, peak −1,6 dBFS —
+  POLECANY na pilota (amerykański kolor + ekspresja audiobookowa).
+- `donor_pl_m.wav` (temp/odsluch): mężczyzna PL, 12,3 s, 16 kHz, peak −9,1 dBFS —
+  alternatywa czysto polska (cichsze nagranie, więcej szumu po wzmocnieniu).
+Oryginały 16 kHz w `%TEMP%\opencode\dubbing-qa\mailabs_{en_,}m.wav`. Po wyborze użytkownika:
+klonowanie tym samym łańcuchem (dawca zamiast own-EN), bramka multi-draw, ucho decyduje.
+
 ## Co NIE działa / następny krok
 
 - Korekty to propozycje tekstowe (L1): zero weryfikacji w grze (verified_in_game=false
