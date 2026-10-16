@@ -8,7 +8,9 @@ original VB/UV/skin/material/scale retained. No gun-finger/anchor changes;
 knife private depth uses the selected colour IB's triangle count.
 L1_PASS new topology/axial/skin-seam/source roundtrip +2048 runtime context
 combinations/decoder/IB guard tests and existing glove/knife regressions.
-L2 pending clean build; ZERO Steam, L3/L4 UNKNOWN. Private assets are not in
+L2_PASS cleanb50e5c9 /O2 x86 PE32; DLL SHA-256
+20996B8FA461F51E0D0B538E64E6AA667C16669824715B2543ED5F0B45A953B9.
+ZERO Steam, L3/L4 UNKNOWN. Private assets are not in
 Git; MAIN must integrate/rebuild on current source and guard exact cache+flag.
 See docs/native-glove-cuffs.md.
 

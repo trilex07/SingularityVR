@@ -80,3 +80,23 @@ the knife and verify unchanged grip/occlusion/scale in both eyes. Check the
 TMD-equipped save if available, pause/resume, close normally and report holes,
 material seams, tracking, gun aim and FPS; absence of a TMD save leaves that
 physical scope UNKNOWN, not implicitly accepted.
+
+## Offline receipt
+
+L1_PASS: original-source Python4/4 (no skipped source test), four original
+hand/profile axial views and21 synthetic skin-seam poses each; new C++ gates/
+decoder/IB tests with the50680-byte real cache; existing six glove CPU tests
+(276 synthetic animation checks +101 native pose levels), nine glove Python
+tests (two private GLB cases not supplied), six knife/holster/anchor CPU tests
+and existing knife Python tests. Original joint golden replay2218 hand+1324
+knife vertices both sides PASS. Accepted-profile guard38 rejection cases PASS,
+including enabled cuff feature without its exact cache pin. CPU previews were
+rendered and inspected from the proximal cuff direction; these show topology,
+not the native game's material response, stereo or physical visibility.
+
+L2_PASS: clean source `b50e5c958d6a34456dbbb96047f5031e6e046491`,
+x86 PE32 `/O2`, instrumentation OFF, empty workingTreeStatus. DLL SHA-256:
+`20996B8FA461F51E0D0B538E64E6AA667C16669824715B2543ED5F0B45A953B9`.
+Build log has no new native_glove_cuffs.h warning; pre-existing unrelated
+warnings remain. No installed file or accepted profile changed, no Steam
+launch/deployment. L3 and physical appearance/occlusion acceptance UNKNOWN.
