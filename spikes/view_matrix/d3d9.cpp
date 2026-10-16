@@ -96,6 +96,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "pawn_camera_sample.h"
 #include "menu_submit_policy.h"
 #include "menu_hud_scale.h"
+#include "holster_marker.h"
 #include "pause_menu_space.h"
 #include <shlobj.h>
 #include "async_thread_snapshot.h"
@@ -6164,6 +6165,8 @@ volatile LONG g_vrUiEnabled=1,g_vrUiMenu=0,g_vrUiValid=0,g_vrUiU=500000,g_vrUiV=
 volatile LONG g_vrMenuOverlay=1;
 volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=100;
 volatile LONG g_vrMenuDistanceMm=1200;
+volatile LONG g_frontMenuScalePct=100,g_frontMenuDistanceMm=0;
+static int g_holsterMarkerStyle=0;
 volatile LONG g_vrUiEyeCentreU[2]={500000,500000};
 volatile LONG g_vrShadows=0;
 volatile LONG g_vrUiDown=0,g_vrUiBack=0,g_vrUiNativeReady=0;
@@ -16352,7 +16355,8 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     const bool wristAnchor = freeWrist || (gloves && Rd(g_noTmdPaletteFix) && Rd(g_gloveIsolate)==2 && !supportGrip && handValid[0] && handValid[1] &&
         handanchor::GameplaySource(Rd(g_noTmdWristAnchorFix)!=0,Rd(g_inCinematic)!=0,
             Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo));
-    const bool offWristAnchor = !wristAnchor && gloves && NativeKnifeOffHandEligible() &&
+    const bool nativeOffKnife = NativeKnifeOffHandEligible();
+    const bool offWristAnchor = !wristAnchor && gloves && nativeOffKnife &&
         handValid[0] && handValid[1];
     if(wristAnchor) {
         // Undo the camera transform actually used by StereoPairBody, not the live controller
@@ -16528,7 +16532,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // left than the native gun-hold, while the right hand stays on its controller.
     const bool weaponInHand = Rd(g_weaponObj)!=0 &&
         InterlockedCompareExchange(&g_gunVerts, 0, 0) != 0 && !Rd(g_weaponHolstered);
-    const float leftShift = (wristAnchor || offWristAnchor || !weaponInHand) ? 0.f
+    const float leftShift = (wristAnchor || offWristAnchor || nativeOffKnife || !weaponInHand) ? 0.f
         : (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
     // Idle shift parks the free left glove off the native gun-hold. During an authored
     // pistol grip that same nudge is what puts the support hand beside the weapon.
@@ -16589,7 +16593,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // Original GPU skin, UVs and material remain; when aiming a weapon, only the off-hand
     // fingers/thumb are posed while the weapon hand keeps its native grip fingers.
     const bool nativeBoth = wristAnchor && NativeGlovesEligible();
-    const bool nativeOffKnife = offWristAnchor && NativeKnifeOffHandEligible();
+    if (nativeOffKnife) {
+        static LONG saidOffKnife = 0;
+        if (InterlockedCompareExchange(&saidOffKnife, 1, 0) == 0)
+            Log("PrepareIndependentLeft: nativeOffKnife active (joint glove+knife pose while weapon held)");
+    }
     if(gloves&&(nativeBoth||nativeOffKnife)&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount&&
        g_nativeGloveRenderer.Ensure(dev)){
         const bool joint=g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&g_hipKnifeVisible&&
@@ -19561,9 +19569,11 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
          InterlockedCompareExchange(&g_menuFnHits[5], 0, 0) == 0)) {
         // Class 1 only: the captured log used MenuInsetPct=100 and landed on
         // the shared 0.84 clamp, which still put the IIS title on the eye edge.
-        // Classes 2 and 3 keep 0.84. Distance and ndcShift are untouched.
+        // Producer keeps its 0.84 clamp; optional class-2 presentation tuning
+        // below applies only to the backbuffer fallback, not a second RT inset.
         const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
-        const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
+        float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
+        if(Rd(g_rtIsBackbuffer))k=FrontMenuInset((int)menuClassNow,Rd(g_panelOpen)!=0,k,(int)Rd(g_frontMenuScalePct));
         Reg4* q = reinterpret_cast<Reg4*>(cIn);
         for (int i=0;i<4;++i) { q[i].x*=k; q[i].y*=k; }
         if (InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
@@ -25657,7 +25667,10 @@ static void MaybeLoadHudAtlas(IDirect3DDevice9* dev) {
 void DrawHipKnife(IDirect3DDevice9* dev){
     // Held joint assembly was already drawn with the native hand's actual eye
     // matrices/shared depth. Never redraw it on top as an independent overlay.
-    if(g_knifeHandGrip&&g_hipKnifeState.held>=0&&g_knifeJointFrame==Rd(g_sceneModeFrame)&&g_knifeJointEyes!=0)return;
+    const LONG frame = Rd(g_sceneModeFrame);
+    if(g_knifeHandGrip && g_hipKnifeState.held >= 0 &&
+       (g_knifeJointFrame == frame || g_knifeJointFrame == frame - 1) &&
+       g_knifeJointEyes != 0) return;
     // MAIN round 18: gate on dupDraws (TRUE stereo, the normal VR path — same
     // signal the belt ring uses), NOT g_stereo (the F12 alternate-eye debug
     // method that SetVrMode/F1 deliberately clear, so the knife could NEVER
@@ -26807,6 +26820,63 @@ static bool DrawFlatRingAt(IDirect3DDevice9* dev, uipointer::V c, const char* ta
     return drewFrame;
 }
 
+// New style shares the exact legacy XR anchors. The interaction state machine
+// and activation radii do not consume this geometry or its proximity colour.
+static bool DrawHolsterCueAt(IDirect3DDevice9* dev,uipointer::V centre,
+                            holstermarker::Item item,int hand){
+    if(!dev||!g_origDrawPrimUP)return false;
+    if(!holstermarker::Eligible(g_sceneMode.Current()==vrscene::Mode::GameplayStereo,
+        Rd(g_gamePaused)!=0,Rd(g_vrUiMenu)!=0,Rd(g_panelOpen)!=0,Rd(g_inCinematic)!=0,
+        g_xrSessionState==XR_SESSION_STATE_FOCUSED))return false;
+    IDirect3DSurface9 *back=nullptr,*target=nullptr;D3DSURFACE_DESC desc{};
+    if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return false;
+    const bool valid=SUCCEEDED(back->GetDesc(&desc))&&desc.Width>=8&&desc.Height>=8&&
+        SUCCEEDED(dev->GetRenderTarget(0,&target))&&target==back;
+    if(target)target->Release();back->Release();if(!valid)return false;
+    if(!g_wristState&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&g_wristState)))return false;
+    float proximityWeight=0;
+    for(int side=0;side<2;++side)if(hand<0||hand==side){
+        const auto& h=g_handLastPos[side];
+        proximityWeight=std::max(proximityWeight,holstermarker::Proximity(centre,{h.x,h.y,h.z},g_handPositionValid[side]&&g_handPoseValid[side]));
+    }
+    holstermarker::Mesh mesh;holstermarker::Build(item,proximityWeight,mesh);
+    struct Pass {
+        IDirect3DDevice9* dev;bool active=false;
+        bool Begin(unsigned width,unsigned height){
+            if(FAILED(g_wristState->Capture()))return false;active=true;
+            const D3DVIEWPORT9 vp{0,0,width,height,0,1};bool ok=SUCCEEDED(dev->SetViewport(&vp));
+            const auto rs=[&](D3DRENDERSTATETYPE state,DWORD value){if(FAILED(dev->SetRenderState(state,value)))ok=false;};
+            if(FAILED(g_origSetVS?g_origSetVS(dev,nullptr):dev->SetVertexShader(nullptr)))ok=false;
+            if(FAILED(shadowOriginalPS?shadowOriginalPS(dev,nullptr):dev->SetPixelShader(nullptr))||
+               FAILED(g_origSetTexture?g_origSetTexture(dev,0,nullptr):dev->SetTexture(0,nullptr))||
+               FAILED(dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE)))ok=false;
+            rs(D3DRS_ZENABLE,FALSE);rs(D3DRS_ZWRITEENABLE,FALSE);rs(D3DRS_STENCILENABLE,FALSE);
+            rs(D3DRS_ALPHATESTENABLE,FALSE);rs(D3DRS_FOGENABLE,FALSE);rs(D3DRS_LIGHTING,FALSE);
+            rs(D3DRS_FILLMODE,D3DFILL_SOLID);rs(D3DRS_SRGBWRITEENABLE,FALSE);
+            rs(D3DRS_CULLMODE,D3DCULL_NONE);rs(D3DRS_SCISSORTESTENABLE,TRUE);
+            rs(D3DRS_ALPHABLENDENABLE,TRUE);rs(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);rs(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+            rs(D3DRS_BLENDOP,D3DBLENDOP_ADD);rs(D3DRS_SEPARATEALPHABLENDENABLE,FALSE);
+            rs(D3DRS_COLORWRITEENABLE,D3DCOLORWRITEENABLE_RED|D3DCOLORWRITEENABLE_GREEN|D3DCOLORWRITEENABLE_BLUE);
+            const auto ts=[&](DWORD stage,D3DTEXTURESTAGESTATETYPE state,DWORD value){if(FAILED(dev->SetTextureStageState(stage,state,value)))ok=false;};
+            ts(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);ts(0,D3DTSS_COLORARG1,D3DTA_DIFFUSE);
+            ts(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);ts(0,D3DTSS_ALPHAARG1,D3DTA_DIFFUSE);
+            ts(0,D3DTSS_RESULTARG,D3DTA_CURRENT);
+            ts(1,D3DTSS_COLOROP,D3DTOP_DISABLE);ts(1,D3DTSS_ALPHAOP,D3DTOP_DISABLE);
+            if(!ok)End();return ok;
+        }
+        bool Eye(int eye,unsigned width,unsigned height){
+            const LONG half=(LONG)width/2;const RECT r{eye?half:0,0,eye?(LONG)width:half,(LONG)height};
+            return SUCCEEDED(dev->SetScissorRect(&r));
+        }
+        bool Draw(unsigned count,const holstermarker::ScreenVertex* v){return SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLELIST,count/3,v,sizeof(*v)));}
+        bool End(){if(!active)return true;active=false;const bool restored=SUCCEEDED(g_wristState->Apply());
+            static unsigned notes=0;if(!restored&&notes++<2)Log("holster cue: ALL-state restore failed");return restored;}
+    } pass{dev};
+    const bool drew=holstermarker::Render(pass,mesh,centre,g_centreYaw,desc.Width,desc.Height,VrUiProjectEye);
+    static unsigned notes=0;if(drew&&notes++<2)Log("holster cue: segmented stereo %s; same anchor; interaction unchanged",item==holstermarker::Item::Gun?"gun":"knife");
+    return drew;
+}
+
 void DrawHolsterMarker(IDirect3DDevice9* dev) {
     if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
         Rd(g_weaponWheelOpen) || !g_holsterEnabled || !WeaponInHands() ||
@@ -26846,6 +26916,7 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
     // outer 0.1127m / inner 0.0877m (2.5cm rim, empty middle), lying in the
     // XR horizontal plane at hip height. Yaw-invariant by construction.
     static bool saidDrew = false, saidProj = false;
+    if(g_holsterMarkerStyle==1){DrawHolsterCueAt(dev,hip,holstermarker::Item::Gun,AimHand());return;}
     DrawFlatRingAt(dev, hip, "holster marker", saidDrew, saidProj);
 }
 
@@ -26870,6 +26941,7 @@ void DrawKnifeBeltMarker(IDirect3DDevice9* dev) {
     }
     const uipointer::V belt{ g_hipKnifeBelt.x, g_hipKnifeBelt.y, g_hipKnifeBelt.z };
     static bool saidDrew = false, saidProj = false;
+    if(g_holsterMarkerStyle==1){DrawHolsterCueAt(dev,belt,holstermarker::Item::Knife,g_hipKnifeState.held);return;}
     DrawFlatRingAt(dev, belt, "knife belt marker", saidDrew, saidProj);
 }
 
@@ -30814,6 +30886,12 @@ void LoadIniSettings() {
     if(menuDistance<600)menuDistance=600;if(menuDistance>3000)menuDistance=3000;
     InterlockedExchange(&g_vrMenuDistanceMm,menuDistance);
     Log("ini: VrMenuDistanceMm=%ld (shared OpenXR menu plane for render, laser and hit test)",menuDistance);
+    LONG frontScale=GetPrivateProfileIntA("Render","FrontMenuScalePct",100,path);
+    frontScale=std::max(70L,std::min(100L,frontScale));InterlockedExchange(&g_frontMenuScalePct,frontScale);
+    LONG frontDistance=GetPrivateProfileIntA("Render","FrontMenuDistanceMm",0,path);
+    if(frontDistance!=0)frontDistance=std::max(600L,std::min(3000L,frontDistance));InterlockedExchange(&g_frontMenuDistanceMm,frontDistance);
+    g_holsterMarkerStyle=GetPrivateProfileIntA("Render","HolsterMarkerStyle",0,path)==1?1:0;
+    Log("ini: frontend scale=%ld distanceMm=%ld (class2 only); holsterMarkerStyle=%d (visual only)",frontScale,frontDistance,g_holsterMarkerStyle);
     LONG noteIni = GetPrivateProfileIntA("Render", "NoteInsetPct", 40, path);
     if (noteIni < 25)  noteIni = 25;
     if (noteIni > 100) noteIni = 100;

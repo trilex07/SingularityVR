@@ -56,5 +56,23 @@ int main() {
         Expect(main.Ray({0,0,0},point,hit) && Near(hit.u,(k&1)?1.f:0.f)
                && Near(hit.v,(k&2)?1.f:0.f), "translated menu corners and laser agree");
     }
+    for(int cls:{0,1,3,4}){
+        Expect(Near(FrontMenuInset(cls,false,.84f,88),.84f),"other menu classes keep accepted size");
+        Expect(Near(FrontMenuDistance(cls,false,950,1400),.95f),"other menu classes keep accepted depth");
+    }
+    Expect(Near(FrontMenuInset(2,true,.84f,88),.84f)&&Near(FrontMenuDistance(2,true,950,1400),.95f),"VR mod panel does not inherit frontend tuning");
+    Expect(Near(FrontMenuInset(2,false,.84f,100),.84f)&&Near(FrontMenuDistance(2,false,950,0),.95f),"frontend exact opt-out");
+    Expect(Near(FrontMenuInset(2,false,.84f,88),.7392f),"frontend is 12 percent smaller");
+    Expect(Near(FrontMenuInset(2,false,.84f,-10),.588f)&&Near(FrontMenuInset(2,false,.84f,500),.84f),"scale bounds");
+    Expect(Near(FrontMenuDistance(2,false,950,1),.6f)&&Near(FrontMenuDistance(2,false,950,4000),3.f),"distance bounds");
+    const float scale=FrontMenuInset(2,false,.84f,88),distance=FrontMenuDistance(2,false,950,1400);
+    HeadPlane({0,0,0},{0,0,-1},{1,0,0},{0,1,0},distance,1.3f,1.33f,scale,main.plane);
+    main.plane.centre=main.plane.centre+main.plane.up*(MenuPlacementClipY(2)*main.plane.halfHeight);
+    for(unsigned k=0;k<4;++k){
+        Hit hit;const auto point=main.Corner(k);
+        Expect(main.Ray({.15f,-.1f,.1f},point-V{.15f,-.1f,.1f},hit)&&Near(hit.u,(k&1)?1.f:0.f)&&Near(hit.v,(k&2)?1.f:0.f),"new presentation corner matches controller canvas UV");
+        Expect(ProjectPoint(point,{0,0,0},{0,0,-1},{1,0,0},{0,1,0},1.3f,1.33f,screen)&&
+            Near(screen.u,.5f+((k&1)?.5f:-.5f)*scale)&&Near(screen.v,.58f+((k&2)?.5f:-.5f)*scale),"new menu projection matches native backbuffer fallback scale/offset");
+    }
     return g_fails == 0 ? 0 : 1;
 }

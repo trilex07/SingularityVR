@@ -15,6 +15,19 @@ receipt in docs/centurion-manual-reload.md.
 L3/L4 UNKNOWN. ZERO Steam. Integrate onto current accepted MAIN and rebuild,
 never replace newer knife/menu work with this older standalone base.
 
+LATEST 2026-10-16 SIDE feature/menu-holster-polish: class-2 frontend-only
+scale/depth candidate 88% / 1400 mm, same provider/pointer/fallback geometry;
+native source RT/crop, pause/boot and mod panel unchanged. Original thin
+segmented hip cues, gun/knife icons, valid-hand proximity highlight; SAME
+anchors and grab radii. Missing config keeps exact legacy layout/white ring.
+L1_PASS six CPU test executables, original procedural CPU preview inspected;
+L2_PASS clean44b4bf7 /O2 x86 PE32, DLL SHA-256
+04C5B55AA6400F4F68FFABE246DF9120E967CF497D60B55A6A527F8E198BDDF8.
+Private candidate/provenance verified, no wholesale INI; ZERO Steam, L3/L4
+UNKNOWN. Isolated tree based on
+MAIN committed17bf1ed, no MAIN dirty edits copied; integrate follow-up onto
+current MAIN, never replace newer work. See docs/menu-holster-polish.md.
+
 LATEST 2026-10-16 SIDE fix/knife-shading-thumb: physical feedback accepts
 joint mount/size, rejects bright unlit knife and thumb interpenetration.
 Default-OFF HandThumbPoseFix: original thumb rig only, separate knife pose and

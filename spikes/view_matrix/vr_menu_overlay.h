@@ -208,11 +208,11 @@ static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& 
             (g_eyePose[0].position.z + g_eyePose[1].position.z) * .5f};
         g_vrMenuPanelValid = uipointer::HeadPlane(
             head, VrUiRotate(q, {0,0,-1}), VrUiRotate(q, {1,0,0}),
-            VrUiRotate(q, {0,1,0}), Rd(g_vrMenuDistanceMm) / 1000.0f,
+            VrUiRotate(q, {0,1,0}), FrontMenuDistance((int)menuClass,false,(int)Rd(g_vrMenuDistanceMm),(int)Rd(g_frontMenuDistanceMm)),
             g_targetTanX, g_targetTanY,
-            (menuClass == 2 || menuClass == 3)
+            FrontMenuInset((int)menuClass,false,(menuClass == 2 || menuClass == 3)
                 ? std::min(0.84f, Rd(g_menuInsetPct) / 100.0f)
-                : Rd(g_menuInsetPct) / 100.0f,
+                : Rd(g_menuInsetPct) / 100.0f,(int)Rd(g_frontMenuScalePct)),
             g_vrMenuPanel.plane);
         if (!g_vrMenuPanelValid) return;
         g_vrMenuPanel.plane.centre = g_vrMenuPanel.plane.centre +
@@ -277,7 +277,8 @@ void UpdateVrUiPointer(float,bool available) {
     const LONG menuClass=Rd(g_vrMenuClass);
     if (!panel && menuClass == 1) inset = ClassBackbufferScale(1, true, (int)Rd(g_menuInsetPct));
     else if ((menuClass==2 || menuClass==3) && inset>0.84f) inset=0.84f;
-    const float distance=Rd(g_vrMenuDistanceMm)/1000.0f;
+    inset=FrontMenuInset((int)menuClass,panel,inset,(int)Rd(g_frontMenuScalePct));
+    const float distance=FrontMenuDistance((int)menuClass,panel,(int)Rd(g_vrMenuDistanceMm),(int)Rd(g_frontMenuDistanceMm));
     g_vrMenuPanelValid=uipointer::HeadPlane(head,VrUiRotate(q,{0,0,-1}),VrUiRotate(q,{1,0,0}),VrUiRotate(q,{0,1,0}),distance,g_targetTanX,g_targetTanY,inset,g_vrMenuPanel.plane);
     if (!panel && g_vrMenuPanelValid)
         g_vrMenuPanel.plane.centre = g_vrMenuPanel.plane.centre +
@@ -383,9 +384,9 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     if ((placementNow == 1 || placementNow == 2) && ++placementFrames == 30 &&
         !(placementCaptured & (1u << placementNow))) {
         placementCaptured |= 1u << placementNow;
-        Log("menu-placement proof class=%ld inset=%.2f clipY=%.2f", placementNow,
-            ClassBackbufferScale((int)placementNow,true,(int)Rd(g_menuInsetPct)),
-            MenuPlacementClipY((int)placementNow));
+        Log("menu-placement proof class=%ld inset=%.4f clipY=%.2f distance=%.3fm", placementNow,
+            FrontMenuInset((int)placementNow,false,ClassBackbufferScale((int)placementNow,true,(int)Rd(g_menuInsetPct)),(int)Rd(g_frontMenuScalePct)),
+            MenuPlacementClipY((int)placementNow),FrontMenuDistance((int)placementNow,false,(int)Rd(g_vrMenuDistanceMm),(int)Rd(g_frontMenuDistanceMm)));
         InterlockedExchange(&g_pauseCaptureRequested,1);
     }
     const bool dedicatedPause = PauseRttProbe::Ready();
