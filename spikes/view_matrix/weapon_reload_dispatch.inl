@@ -170,6 +170,8 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
     if(!g_nextReload[index]||!g_nextReady[index]||Rd(g_nextFault[index])||!g_nextPresentation.Allowed()||
        part==weaponreload::Part::None||
        !dev||!g_origSetVSConstF||GetCurrentThreadId()!=g_mainThreadId||!FgMatchWindow()||g_thisDrawMoved!=1||!Rd(g_rtIsScene)||
+       Rd(g_gamePaused)||Rd(g_vrUiMenu)||Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||
+       Rd(g_weaponHolstered)||CutsceneNativeCameraArmed()||
        g_sceneMode.Current()!=vrscene::Mode::GameplayStereo||g_xrSessionState!=XR_SESSION_STATE_FOCUSED)return 0;
     NextReloadVisual visual;
     if(!TryAcquireSRWLockShared(&g_nextVisualLock))return 0;
