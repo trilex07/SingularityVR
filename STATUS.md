@@ -5,7 +5,10 @@ class-constructor/vtable and original BeginFire reload/fallback path identified.
 New default-OFF CenturionNativeReloadGuard 1=observe /2=conditional suppression
 experiment, derived ABI/slot + method-shape validation; one close-token, native
 inventory untouched. L1_PASS13 CPU executables +31 Python checks, original
-archived wrapper/body match and own-process x86 detour replay. L2 pending;
+archived wrapper/body match and own-process x86 detour replay.
+L2_PASS clean a2b77ac /O2 x86 PE32 DLL SHA256
+89A5209153F194ED858553EAE2C3B99CC1BC2E52C9DD9B1DEBD9C43977458339.
+Private candidate/manifest/assets checked, NO INI staged.
 L3/L4 UNKNOWN. Actual cylinder animation OPEN.
 See docs/centurion-native-reload.md. ZERO Steam, preserve current MAIN integration.
 

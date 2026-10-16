@@ -121,3 +121,14 @@ by this document. One native mode per session:
 
 Actual animated cylinder opening/ejected cases/fitted hand/scene-lit preview
 remain OPEN. This seam does not itself complete those visuals.
+
+## Clean build receipt
+
+L1_PASS:13 optimized CPU executables,31 Python checks, original archived
+wrapper/body validation and own-process x86 MinHook ABI replay PASS.
+L2_PASS: source `a2b77ac5f16fc8218799443ce26e17644ea49e71`, clean working tree,
+`/O2`, x86 PE32 (014C/010B). DLL SHA256:
+`89A5209153F194ED858553EAE2C3B99CC1BC2E52C9DD9B1DEBD9C43977458339`.
+Private candidate/manifest and existing original cylinder/albedo hashes checked.
+No INI staged or installed files changed. Existing unrelated compiler/analyzer
+warnings remain, not a warning-free build. L3/L4 still UNKNOWN.

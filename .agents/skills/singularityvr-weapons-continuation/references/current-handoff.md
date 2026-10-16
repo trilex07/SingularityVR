@@ -8,6 +8,12 @@ verified; no actual cylinder opening/ejection animation added. Existing receipt
 below identifies the earlier gesture DLL only; read latest STATUS/build manifest
 for the new artifact, never assume it is installed.
 
+Latest native source `a2b77ac5f16fc8218799443ce26e17644ea49e71`: L1 13 CPU/31
+Python + archived original and own-process x86 detour PASS; clean L2 /O2 PE32.
+DLL SHA `89A5209153F194ED858553EAE2C3B99CC1BC2E52C9DD9B1DEBD9C43977458339`.
+Private candidate manifest updated/verified, no INI/Steam writes. Native mode1
+observation then mode2 guarded test are MAIN's next integration gate; L3/L4 UNKNOWN.
+
 ## Location and delivery
 
 - Repository: https://github.com/trilex07/SingularityVR
