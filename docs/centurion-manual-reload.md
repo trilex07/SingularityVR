@@ -1,6 +1,8 @@
 # Centurion reload — first controlled prototype
 
-SIDE, 2026-10-16. Base: committed MAIN `5763e6c`. No Steam operations.
+SIDE, 2026-10-16. Initial base: MAIN `5763e6c`; synchronized into this own
+branch with current committed MAIN `db4a261`, preserving its menu/holster,
+knife-joint and PSVR2 bridge changes. No Steam operations.
 Scope: Centurion only, right-hand weapon, left-hand interaction; existing left
 knife and right gun holsters retain their positions, radii and mechanics.
 The new ammo zone is front-centre, yaw-relative and head-height-relative, so
@@ -50,6 +52,14 @@ or removed from the original gun. Do not promote this as completed manual reload
 - Independent default-OFF native reload observer, existing script hook only,
   at most 16 records per exported name: ServerStartReload, ReloadFinished,
   AttemptReload, IsReloading. Absence may mean native/script coverage mismatch.
+- Probe-only mode now independently logs ammo changes (maximum 128), plus the
+  current weapon name/class and class-chain UFunction bindings. Uses only the
+  existing measured Children/Next/Super and voted Func offsets: maximum eight
+  weapon identities, 2048 field reads/identity and 16 binding records/identity.
+  Logs shared-interpreter versus game-text binding, never calls it. Function
+  identity is not an ABI or execution proof. No new hook is installed.
+- Off-hand trigger latch requires a physical trigger release after handling
+  ammo, so a held L2 cannot leak into a TMD/aim action on insertion/cancellation.
 
 ## Original asset measurement
 
@@ -71,6 +81,13 @@ socket ownership remain to be captured; no guessed texture is assigned.
 and report. Cache SHA-256:
 `F21961145D6645EE93A8A2C73AE89380535D918352BABB1FD4F811C67422D89B`.
 No game assets are committed/distributed or copied to Steam.
+
+The private three-axis wireframe preview was inspected: this really is a
+six-chamber cylinder, not a box magazine. The validated RvGame package export
+table also contains `RvComponent_Weapon_PistolCylinder` with named cylinder
+controller/current/desired rotation properties, plus the shared weapon Reload
+state and its reload functions. Their presence does not prove a safe write or
+call path. Do not apply an unrelated generic slide-pistol reload to this mesh.
 
 ## Flags and independent gates
 
@@ -122,11 +139,13 @@ failed backend, not success. The 120 ms X tap is not a dedicated Reload call.
 L1_PASS: six optimized CPU executables (transaction + old gesture + existing
 knife, holster, hand anchor, D3D fake-state regressions) and four Python
 extraction tests; actual original-asset extraction/UV/bind round trip.
-L2_PASS: clean source `01d7e2817580b610a983361ff0eab82dc3fbdde8`,
+Initial L2_PASS (older base; retained for provenance only): clean source
+`01d7e2817580b610a983361ff0eab82dc3fbdde8`,
 `/O2`, x86 PE32 (`014C/010B`), empty working-tree status in build manifest.
 DLL SHA-256:
 `71C733C6DA7DC1BA4648BC13C3DBB50DDCE19E4DA058D883DECF96D322CA03BA`.
-Private local DLL/manifest are in `build/centurion-reload/candidate`.
+Latest local DLL/manifest are in `build/centurion-reload/candidate`; latest
+receipt is recorded below after rebuilding the synchronized source.
 Compiler analysis retains inherited warnings; no fatal format-string gate
 violations or compile errors. L3/L4 UNKNOWN; not physical acceptance of reload.
 

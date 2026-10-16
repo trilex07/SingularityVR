@@ -18,14 +18,15 @@ int main(){
     for(int i=0;i<10;++i)assert(!tick(false,f.socket).requestNative);
     f.clip=6;f.reserve=21;assert(tick(false,f.socket).event==Event::Acknowledged);
     // Full gun, no reserve, tracking, knife and support ownership refuse entry.
-    for(int gate=0;gate<7;++gate){
+    for(int gate=0;gate<8;++gate){
         s={};f.clip=2;f.reserve=25;f.capacity=6;f.grip=false;f.hand=f.socket;Update(s,f);
         f.grip=true;f.nowMs+=20;
         if(gate==0)f.clip=6;if(gate==1)f.reserve=0;if(gate==2)f.tracked=false;
         if(gate==3)f.knifeNear=true;if(gate==4)f.supportLatched=true;
         if(gate==5)f.supported=false;if(gate==6)f.firing=true;
+        if(gate==7)f.handBusy=true;
         assert(Update(s,f).event==Event::None&&s.phase==Phase::Idle);
-        f.tracked=f.supported=true;f.knifeNear=f.supportLatched=f.firing=false;
+        f.tracked=f.supported=true;f.knifeNear=f.supportLatched=f.firing=f.handBusy=false;
     }
     // Cancelled held squeeze never leaks into TMD; must release/re-grip.
     s={};f.clip=2;f.reserve=25;tick(false,f.socket);tick(true,f.socket);
@@ -57,6 +58,12 @@ int main(){
     for(int i=0;i<100;++i)assert(!tick(true,f.socket).requestNative);
     s={};f.capacity=-1;tick(false,f.socket);assert(tick(true,f.socket).event==Event::None);
     f.capacity=6;
+    // Trigger pressed while carrying must be released before TMD can fire.
+    hipknife::TriggerGate trigger;
+    assert(trigger.Update(true,.8f)==0);
+    assert(trigger.Update(false,.8f)==0);
+    assert(trigger.Update(false,0)==0);
+    assert(trigger.Update(false,.8f)==.8f);
     const auto p=Pouch({0,1.1f,0},0);assert(p.p.x==0&&p.p.y<1.1f&&p.p.z<0);
     const auto turned=Pouch({0,1.1f,0},3.14159265f/2);
     assert(std::fabs(turned.p.x+.34f)<1e-5f);

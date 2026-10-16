@@ -2216,6 +2216,7 @@ int g_centurionReload=0,g_centurionNativeTap=0,g_centurionReloadProbe=0;
 centurionreload::Config g_centurionConfig{};
 centurionreload::State g_centurionState{};
 centurionreload::NativeTap g_centurionTap{};
+hipknife::TriggerGate g_centurionTrigger[2]{};
 bool g_centurionOwnsGrip=false;
 static SRWLOCK g_centurionVisualLock=SRWLOCK_INIT;
 struct CenturionVisual {bool visible=false;hipknife::V pouch{},socket{},hand{};int phase=0;};
@@ -10288,7 +10289,7 @@ void SyncXRInput(XrTime displayTime) {
     WORD panelMask = 0;
     const bool primaryGrip = getGrip(AimHand());
     const bool rawSupportGrip = getGrip(OffHand());
-    if(g_centurionReload)UpdateCenturionReload(
+    if(g_centurionReload||g_centurionReloadProbe)UpdateCenturionReload(
         feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
         !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed(),
         rawSupportGrip,g_supportLatch.Latched());
@@ -11211,7 +11212,8 @@ void SyncXRInput(XrTime displayTime) {
             g_handPositionValid[0]&&g_handPoseValid[0]&&g_handPositionValid[1]&&g_handPoseValid[1]&&
             g_xrSessionState==XR_SESSION_STATE_FOCUSED;
         if(g_centurionTap.Update(valid,false,GetTickCount64()))btns|=XI_X;
-        if(g_centurionOwnsGrip)lt=0; // off-hand TMD trigger, not gun trigger
+        rt=g_centurionTrigger[fireHand].Update(g_centurionOwnsGrip&&fireHand==0,rt);
+        lt=g_centurionTrigger[altHand].Update(g_centurionOwnsGrip&&altHand==0,lt);
     }
     UpdateVrUiPointer(fireHand==1?rt:lt,true);
     const auto primaryGate=g_vrUiTrigger[fireHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,rt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
@@ -25709,6 +25711,49 @@ void DrawHipKnife(IDirect3DDevice9* dev){
         Log("hip knife: GPU allocation unavailable; disabled until next XR init (normal inputs retained)");}
     back->Release();
 }
+static void ObserveCenturionReloadBindings(uintptr_t weapon){
+    // Use ONLY the existing measured reflection layout / UFunction::Func vote.
+    // No assumed FunctionFlags/FFrame fields and no native invocation.
+    static uintptr_t observed[8]{};static unsigned count=0;
+    if(!weapon||g_funcOffset<0||g_upChildren<=0||g_upNext<=0||FnIdx(24)<0||count>=8)return;
+    for(unsigned i=0;i<count;++i)if(observed[i]==weapon)return;
+    int32_t classBits=0;
+    if(!TryLoadAlignedI32(weapon+OBJ_CLASS,&classBits)||!classBits)return;
+    observed[count++]=weapon;
+    uintptr_t cls=(uintptr_t)(uint32_t)classBits;
+    char weaponName[80]{},className[80]{};
+    GuardedNameOf(weapon,weaponName,sizeof(weaponName));GuardedNameOf(cls,className,sizeof(className));
+    Log("centurion reload binding: weapon=%08X %s class=%08X %s FuncVoteOffset=%d",
+        (unsigned)weapon,weaponName,(unsigned)cls,className,g_funcOffset);
+    unsigned found=0,visited=0;
+    for(unsigned depth=0;cls&&depth<32&&visited<2048&&found<16;++depth){
+        int32_t childBits=0;if(!TryLoadAlignedI32(cls+g_upChildren,&childBits))break;
+        uintptr_t field=(uintptr_t)(uint32_t)childBits;
+        for(unsigned n=0;field&&n<512&&visited<2048&&found<16;++n,++visited){
+            int32_t name=-1;
+            if(!TryLoadAlignedI32(field+OBJ_NAME,&name))break;
+            for(int fn=24;fn<28;++fn)if(FnIdx(fn)>=0&&name==FnIdx(fn)){
+                int32_t fieldClassBits=0,funcBits=0;char type[48]{},owner[80]{};
+                if(!TryLoadAlignedI32(field+OBJ_CLASS,&fieldClassBits)||
+                   !GuardedNameOf((uintptr_t)(uint32_t)fieldClassBits,type,sizeof(type))||strcmp(type,"Function"))continue;
+                const bool readable=TryLoadAlignedI32(field+g_funcOffset,&funcBits);
+                const uintptr_t func=(uintptr_t)(uint32_t)funcBits;
+                const bool executable=readable&&func>=g_textLo&&func<g_textHi;
+                GuardedNameOf(cls,owner,sizeof(owner));++found;
+                Log("centurion reload binding: %s owner=%s UFunction=%08X Func=%08X inGameText=%d sharedInterpreter=%d (NOT called)",
+                    g_scriptFns[fn].name,owner,(unsigned)field,(unsigned)func,executable?1:0,func==g_processInternal?1:0);
+            }
+            int32_t next=0;if(!TryLoadAlignedI32(field+g_upNext,&next))break;
+            if((uintptr_t)(uint32_t)next==field)break;
+            field=(uintptr_t)(uint32_t)next;
+        }
+        int32_t super=0;if(!TryLoadAlignedI32(cls+g_upNext-4,&super))break;
+        if((uintptr_t)(uint32_t)super==cls)break;
+        cls=(uintptr_t)(uint32_t)super;
+    }
+    Log("centurion reload binding: matches=%u fieldsVisited=%u (structural identity only; not reload execution proof)",found,visited);
+}
+
 static void UpdateCenturionReload(bool context,bool grip,bool supportLatched){
     // Input-thread sampler, 10 Hz maximum, only for this opt-in prototype.
     // HUD fields are observers, NEVER the authoritative write target.
@@ -25739,6 +25784,15 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched){
         }
         if(hud&&klass)for(int i=0;i<3;++i)if(offsets[i]>=0){
             int32_t value=-1;if(TryLoadAlignedI32(hud+offsets[i],&value))ammo[i]=value;
+        }
+        if(g_centurionReloadProbe){
+            ObserveCenturionReloadBindings(weapon);
+            static int prior[3]{-2,-2,-2};static uintptr_t priorWeapon=0;static unsigned notes=0;
+            if(notes<128&&(priorWeapon!=weapon||prior[0]!=ammo[0]||prior[1]!=ammo[1]||prior[2]!=ammo[2])){
+                ++notes;priorWeapon=weapon;for(int i=0;i<3;++i)prior[i]=ammo[i];
+                Log("centurion reload ammo: weapon=%08X hud=%08X class=%08X clip=%d reserve=%d size=%d (observer only)",
+                    (unsigned)weapon,(unsigned)hud,(unsigned)klass,ammo[0],ammo[1],ammo[2]);
+            }
         }
     }
     centurionreload::Frame f;

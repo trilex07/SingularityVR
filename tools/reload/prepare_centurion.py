@@ -74,9 +74,10 @@ def extract(psk, units=52.5):
     cache += b''.join(struct.pack('<3fI2f',*v) for v in vertices)
     cache += struct.pack('<'+'H'*len(indices),*indices)
     # Full round trip, not a count-only proof of coordinate conversion.
-    local_uu = np.c_[xyz*units,np.ones(len(xyz))]
+    encoded_xyz=np.array([struct.unpack_from('<3f',cache,16+24*i) for i in range(len(vertices))])
+    local_uu = np.c_[encoded_xyz*units,np.ones(len(xyz))]
     source_ids = [key[0] for key in remap]
-    if not np.allclose((local_uu @ raw_bind[clip])[:,:3],points[source_ids],atol=1e-5):
+    if not np.allclose((local_uu @ raw_bind[clip])[:,:3],points[source_ids],rtol=0,atol=2e-5):
         raise ValueError('bind roundtrip failed')
     relative = raw_bind[clip] @ np.linalg.inv(raw_bind[wrist])
     return cache,dict(source_wedges=len(wedges),source_triangles=len(faces),
@@ -87,9 +88,30 @@ def extract(psk, units=52.5):
         dimensions_metres=np.ptp(xyz,axis=0).tolist(),units_per_metre=units,
         clip_to_wrist_bind=relative.tolist(),uv='original PSK, upper-left V; no flip',
         axes='original clip bone-local, NOT controller grip-local',
-        roundtrip='every extracted vertex reconstructed in raw PSK bind space',
+        roundtrip='every encoded FLOAT32 cache vertex reconstructed in raw PSK bind space, absolute error <= 2e-5 UU',
         texture='not inferred; native material capture remains separate',
         output_sha256=hashlib.sha256(cache).hexdigest())
+
+
+def preview(cache, destination):
+    """Three-axis geometry inspection, no synthetic texture/material claim."""
+    from PIL import Image, ImageDraw
+    _,version,n,count=struct.unpack_from('<4sIII',cache)
+    if version!=2 or len(cache)!=16+24*n+count*2:
+        raise ValueError('invalid preview cache')
+    rows=np.array([struct.unpack_from('<3fI2f',cache,16+24*i)[:3] for i in range(n)])
+    indices=np.frombuffer(cache,'<u2',count,16+24*n).reshape(-1,3)
+    image=Image.new('RGB',(1440,520),'#10171b');draw=ImageDraw.Draw(image)
+    for view,axes in enumerate(((0,1),(0,2),(1,2))):
+        xy=rows[:,axes];centre=(xy.min(0)+xy.max(0))*.5
+        scale=380/max(np.ptp(xy,axis=0).max(),.001)
+        xy=(xy-centre)*[scale,-scale]+[240+view*480,270]
+        for face in indices:
+            points=[tuple(xy[i]) for i in face]
+            draw.line(points+[points[0]],fill='#72868d',width=1)
+        draw.text((view*480+24,20),f'Original Centurion clip | axes {axes}',fill='white')
+    draw.text((24,490),'Geometry only / original UV preserved / no material or runtime pose proof',fill='white')
+    image.save(destination)
 
 
 if __name__=='__main__':
@@ -97,6 +119,7 @@ if __name__=='__main__':
     ap.add_argument('--psk',type=Path,required=True)
     ap.add_argument('--output',type=Path,required=True)
     ap.add_argument('--units-per-metre',type=float,default=52.5)
+    ap.add_argument('--preview',action='store_true',help='write private 3-axis wireframe PNG (Pillow)')
     args=ap.parse_args()
     if args.psk.name!='ch_inview_alt_pistol_mesh.psk':
         ap.error('requires measured Centurion asset, not generic slide pistol')
@@ -108,4 +131,5 @@ if __name__=='__main__':
     args.output.mkdir(parents=True,exist_ok=True)
     (args.output/'centurion_clip.svrk').write_bytes(data)
     (args.output/'report.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
+    if args.preview:preview(data,args.output/'clip-geometry.png')
     print(json.dumps(report,indent=2))
