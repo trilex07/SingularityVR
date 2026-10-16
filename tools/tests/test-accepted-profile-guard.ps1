@@ -173,4 +173,11 @@ Must-Reject {
 } 'actual runner rejected regressed live INI before process/writes'
 Write-Fixture $iniPath $iniText
 Must-Reject { & (Join-Path $repo 'spikes/view_matrix/build.ps1') -Install } 'legacy build Install bypass disabled before SDK/build/writes'
+$cuffProfile=Read-GuardJson $profilePath
+$cuffProfile.ini | Add-Member -NotePropertyName 'Render/NativeGloveCuffClosure' -NotePropertyValue '1'
+$cuffProfilePath=Join-Path $testRoot 'cuff-profile-without-asset.json';Write-JsonFixture $cuffProfilePath $cuffProfile
+$dependencyError=''
+try{[void](Assert-AcceptedDeployment -GameRoot $game -ProfilePath $cuffProfilePath)}catch{$dependencyError=$_.Exception.Message}
+Assert-True ($dependencyError -like 'Enabled feature dependency is not pinned:*native_cuffs.svnc') 'cuff feature did not require its exact dependent asset'
+$script:checks++
 Write-Output "PASS: $script:checks fail-closed cases; semantic INI preservation, pinned assets, pre/post, exact synthetic rollback; ZERO Steam. Fixtures: $testRoot"

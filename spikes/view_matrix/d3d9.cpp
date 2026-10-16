@@ -106,6 +106,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include <d3d9.h>
 #include "glove_renderer.h"
 #include "glove_native.h"
+#include "native_glove_cuffs.h"
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include "bink_audio_observation.h"
 #include "bink_intro_audio.h"
@@ -6222,6 +6223,8 @@ XrQuaternionf g_handAimOrientation[2]={{0,0,0,1},{0,0,0,1}};
 static bool g_gloveExperiment=false,g_gloveCpuAttempted=false;
 static bool g_nativeGloveExperiment=false,g_nativeGlovePoseThisDraw=false;
 static nativegloves::Renderer g_nativeGloveRenderer;
+static glovecuffs::Renderer g_nativeCuffRenderer;
+static bool g_nativeCuffClosure=false;
 static bool NativeGlovesEligible();
 static bool NativeKnifeOffHandEligible();
 static bool g_knifeHandGrip = false;
@@ -9538,6 +9541,14 @@ bool InitXRInput() {
         char ini[MAX_PATH]{};
         g_nativeGloveExperiment=IniPath(ini) &&
             GetPrivateProfileIntA("Render","GloveNativeEnabled",0,ini)!=0;
+        g_nativeCuffClosure=IniPath(ini)&&GetPrivateProfileIntA("Render","NativeGloveCuffClosure",0,ini)!=0;
+        if(g_nativeCuffClosure){
+            char cuffPath[MAX_PATH]{};bool loaded=false;
+            try{loaded=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation\\native_cuffs.svnc",cuffPath)&&g_nativeCuffRenderer.Load(cuffPath);}
+            catch(...){loaded=false;}
+            Log("native-cuffs: startup %s noTMD=%u TMD=%u; original complete cuffs, held finger poses unchanged",
+                loaded?"CPU ready":"FAILED; old native route retained",g_nativeCuffRenderer.Triangles(0),g_nativeCuffRenderer.Triangles(1));
+        }
         g_gloveExperiment=IniPath(ini) &&
             GetPrivateProfileIntA("Render","GloveRendererEnabled",0,ini)!=0;
         if(g_nativeGloveExperiment) {
@@ -17132,7 +17143,7 @@ static void KnifeHandDisable(const char* reason){
     g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};g_knifeHandPoseThisDraw=false;
     static unsigned notes=0;if(notes++<8)Log("knife-hand: disabled (%s); original gun/hands retained",reason);
 }
-static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT vertices){
+static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT vertices,UINT gloveTriangles){
     if(!g_knifeHandGrip||!g_knifeHandPoseThisDraw||!g_hipKnifeReady||
        !g_hipKnifeVisible||g_hipKnifeState.held<0||g_hipKnifeState.held>1||g_knifeStereoEye<0)return;
     const LONG frame=Rd(g_sceneModeFrame);
@@ -17170,7 +17181,7 @@ static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT v
         ok=SUCCEEDED(dev->SetRenderState((D3DRENDERSTATETYPE)(i?D3DRS_COLORWRITEENABLE1+i-1:D3DRS_COLORWRITEENABLE),0));
     // Same original VB/IB/declaration/skin/VS/PS as the preceding glove colour
     // draw, colour masked. Its real fingers therefore occlude the real handle.
-    if(ok)ok=SUCCEEDED(g_origDrawIndexedPrim(dev,D3DPT_TRIANGLELIST,baseVertex,0,vertices,0,g_nativeGloveRenderer.Triangles()));
+    if(ok)ok=SUCCEEDED(g_origDrawIndexedPrim(dev,D3DPT_TRIANGLELIST,baseVertex,0,vertices,0,gloveTriangles));
     armbind::Mat a,b,clip;
     if(ok){
         skeletal::Multiply(a.m,g_knifeHandData.mount[g_hipKnifeState.held].m,g_knifeHandWrist.m);
@@ -18847,13 +18858,24 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     const bool nativeCuff=independentRegs&&g_nativeGlovePoseThisDraw&&(NativeGlovesEligible()||NativeKnifeOffHandEligible())&&
         t==D3DPT_TRIANGLELIST&&(numVertices==3314||numVertices==2924)&&
         startIndex==0&&primCount==4830&&nSeg==1&&segStart[0]==0&&segPrims[0]==4830;
-    nativegloves::IndexGuard<> nativeIndices(dev,nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr);
+    const int cuffProfile=glovecuffs::Profile(numVertices,startIndex,primCount);
+    const bool fullCuff=independentRegs&&minIndex==0&&nSeg==1&&segStart[0]==0&&segPrims[0]==primCount&&cuffProfile>=0&&
+        glovecuffs::Eligible(g_nativeCuffClosure,g_gloveExperiment&&g_nativeGloveExperiment,
+            g_nativeCuffRenderer.Ready(),g_independentHands,(int)Rd(g_gloveIsolate),
+            g_sceneMode.Current()==vrscene::Mode::GameplayStereo,g_xrSessionState==XR_SESSION_STATE_FOCUSED,
+            Rd(g_rtIsScene)!=0,g_boundShaderLayout.shadow,Rd(g_gamePaused)!=0,Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0);
+    IDirect3DIndexBuffer9* cuffBuffer=fullCuff?g_nativeCuffRenderer.Ensure(dev,cuffProfile):nullptr;
+    const UINT gloveTriangles=cuffBuffer?g_nativeCuffRenderer.Triangles(cuffProfile):g_nativeGloveRenderer.Triangles();
+    nativegloves::IndexGuard<> nativeIndices(dev,cuffBuffer?cuffBuffer:(nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr),
+        cuffBuffer?g_nativeCuffRenderer.SourceBytes(cuffProfile):16512*2);
     const HRESULT dhr = StereoPair(dev, [&] {
         HRESULT hr = D3D_OK;
         if(nativeIndices.valid){
             ++g_nativeGloveRenderer.draws;
-            const HRESULT h=g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,0,g_nativeGloveRenderer.Triangles());
-            if(SUCCEEDED(h))DrawKnifeWithNativeGlove(dev,baseVertex,numVertices);
+            const HRESULT h=g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,0,gloveTriangles);
+            if(SUCCEEDED(h)&&nativeCuff)DrawKnifeWithNativeGlove(dev,baseVertex,numVertices,gloveTriangles);
+            if(cuffBuffer){static unsigned logs=0;if(logs++<8)Log("native-cuffs: profile=%d verts=%u tris=%u fullCuff=1 held=%d hr=%08lX",
+                cuffProfile,numVertices,gloveTriangles,WeaponInHands()?1:0,h);}
             return h;
         }
         if (isolateNoTmdFaces) {
@@ -25668,6 +25690,7 @@ void ReleaseWristResources() {
     nativefx::Release();
     g_knifeHandPoseThisDraw=false;g_knifeJointFrame=-1;g_knifeJointEyes=0;
     g_nativeGloveRenderer.ReleaseGPU();g_nativeGlovePoseThisDraw=false;
+    g_nativeCuffRenderer.ReleaseGPU();
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     g_hipKnifeRenderer.ReleaseGPU();
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipFault=false;

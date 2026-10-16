@@ -5,6 +5,16 @@ Przygotowałem prototypy przeładowania Valkyrie, Volk S4 i Kasimova: gesty, zab
 Przeszło 30 000 symulowanych przeładowań, 9 programów testowych C++, 33 testy Python i build x86 /O2. Zmiany są w [PR #37](https://github.com/trilex07/SingularityVR/pull/37).
 To jeszcze prototypy offline — następny etap to podłączenie renderowania i natywnej amunicji. Steam oraz działanie Centuriona pozostały nietknięte.
 
+LATEST 2026-10-16 SIDE fix/native-glove-cuffs (PR #41): original full native cuffs
+(noTMD 10.786UU behind wrist instead of old 3.5UU cut), closed cuff backs for
+free hands AND held-gun native noTMD/TMD sections. New default-OFF
+NativeGloveCuffClosure uses separate native_cuffs.svnc (two exact profiles),
+original VB/UV/skin/material/scale retained. No gun-finger/anchor changes;
+knife private depth uses the selected colour IB's triangle count.
+L1_PASS new topology/axial/skin-seam/source roundtrip +2048 runtime context
+combinations/decoder/IB guard tests and existing glove/knife regressions.
+L2_PASS clean b50e5c9 /O2 x86 PE32.
+
 LATEST 2026-10-16 SIDE fix/frontend-menu-comfort (PR #40): default-OFF class2-only
 FrontMenuCleanBackdrop replaces the glitch-prone UE3 backdrop with neutral dark
 colour and retains both eye projections of the existing current-token GFx panel.

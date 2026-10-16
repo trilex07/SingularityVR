@@ -38,3 +38,12 @@ pair loaded; BGRA/alpha preserved. Existing knife renderer reused with explicit
 albedo API, legacy default unchanged; SYSTEMMEM->DEFAULT upload/private depth,
 Reset and nested state restoration. Authored controller mount is NOT UE3 socket
 proof. 100 ms pawn/weapon snapshot gate and 50653 quaternion test cases added.
+
+# Native cuff correction — SIDE, 2026-10-16
+
+Branch fix/native-glove-cuffs from origin/main 644be25. No Steam operations.
+Route: existing native hand draw; original wedge/skin/material retained, only
+full finger-connected cuff indices and cap triangles substituted. Evidence,
+rejected unconstrained triangulation, source hashes and test route are in
+docs/native-glove-cuffs.md. Private geometry/report/preview:
+build/gloves/cuff-repair; extracted assets/cache never committed.

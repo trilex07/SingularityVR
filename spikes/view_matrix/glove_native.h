@@ -39,10 +39,10 @@ inline bool Decode(const unsigned char* p,std::size_t bytes,Data& out){
 template<class Dev=IDirect3DDevice9,class Buffer=IDirect3DIndexBuffer9>
 struct IndexGuard {
     Dev* dev;Buffer* saved=nullptr;bool valid=false;
-    IndexGuard(Dev* d,Buffer* replacement):dev(d){
+    IndexGuard(Dev* d,Buffer* replacement,unsigned minimumBytes=16512*2):dev(d){
         if(!replacement||FAILED(dev->GetIndices(&saved))||!saved)return;
         D3DINDEXBUFFER_DESC desc{};
-        if(FAILED(saved->GetDesc(&desc))||desc.Format!=D3DFMT_INDEX16||desc.Size<16512*2)return;
+        if(FAILED(saved->GetDesc(&desc))||desc.Format!=D3DFMT_INDEX16||desc.Size<minimumBytes)return;
         valid=SUCCEEDED(dev->SetIndices(replacement));
     }
     HRESULT Restore(){
