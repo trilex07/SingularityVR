@@ -139,7 +139,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -152,7 +152,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -737,7 +737,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -750,7 +750,7 @@
   "speaker": "barisov",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -763,7 +763,7 @@
   "speaker": "barisov",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -776,7 +776,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=None file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=None file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -789,7 +789,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -802,7 +802,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -2648,7 +2648,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -2661,7 +2661,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -2674,7 +2674,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -2687,7 +2687,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -2700,7 +2700,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=None file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=None file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -2726,7 +2726,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -2739,7 +2739,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -2752,7 +2752,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -2791,7 +2791,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -2804,7 +2804,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -3363,7 +3363,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -3376,7 +3376,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -3389,7 +3389,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -3961,7 +3961,7 @@
   "speaker": "barisov",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -3974,7 +3974,7 @@
   "speaker": "barisov",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -3987,7 +3987,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -4000,7 +4000,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -4013,7 +4013,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -5885,7 +5885,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=None file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=None file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -5911,7 +5911,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -5924,7 +5924,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -5937,7 +5937,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -5950,7 +5950,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -5963,7 +5963,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -5976,7 +5976,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -6002,7 +6002,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -6015,7 +6015,7 @@
   "speaker": "demichev",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -6028,7 +6028,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=None file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=None file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -6587,7 +6587,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -6600,7 +6600,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -7185,7 +7185,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -7198,7 +7198,7 @@
   "speaker": "barisov",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -7211,7 +7211,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -9096,7 +9096,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -9109,7 +9109,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -9122,7 +9122,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=None file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=None file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -9135,7 +9135,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -9161,7 +9161,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -9187,7 +9187,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -9200,7 +9200,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -9213,7 +9213,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -9226,7 +9226,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -9239,7 +9239,7 @@
   "speaker": "demichev",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -9811,7 +9811,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -9824,7 +9824,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -10396,7 +10396,7 @@
   "speaker": "renko",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=None file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=None file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -10409,7 +10409,7 @@
   "speaker": "barisov",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -10422,7 +10422,7 @@
   "speaker": "barisov",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -10435,7 +10435,7 @@
   "speaker": "kathryn",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -10448,7 +10448,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -10461,7 +10461,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -12320,7 +12320,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -12372,7 +12372,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -12385,7 +12385,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -12398,7 +12398,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -12411,7 +12411,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -12450,7 +12450,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -12463,7 +12463,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -12476,7 +12476,7 @@
   "speaker": "unclassified",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13100,7 +13100,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13243,7 +13243,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13321,7 +13321,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13334,7 +13334,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13347,7 +13347,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13360,7 +13360,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13425,7 +13425,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13438,7 +13438,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13490,7 +13490,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13503,7 +13503,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13516,7 +13516,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13529,7 +13529,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13620,7 +13620,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13685,7 +13685,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13698,7 +13698,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13724,7 +13724,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13737,7 +13737,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13867,7 +13867,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -13880,7 +13880,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14153,7 +14153,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14192,7 +14192,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14205,7 +14205,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14231,7 +14231,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14270,7 +14270,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14283,7 +14283,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14296,7 +14296,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14361,7 +14361,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14374,7 +14374,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14387,7 +14387,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14413,7 +14413,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14426,7 +14426,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14439,7 +14439,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14491,7 +14491,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14530,7 +14530,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14543,7 +14543,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14556,7 +14556,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14569,7 +14569,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14595,7 +14595,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14608,7 +14608,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14621,7 +14621,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14647,7 +14647,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14933,7 +14933,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14946,7 +14946,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14959,7 +14959,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14972,7 +14972,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14985,7 +14985,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -14998,7 +14998,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15011,7 +15011,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15050,7 +15050,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15128,7 +15128,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15141,7 +15141,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15180,7 +15180,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15193,7 +15193,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15206,7 +15206,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15232,7 +15232,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15245,7 +15245,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15258,7 +15258,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15271,7 +15271,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15284,7 +15284,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15310,7 +15310,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15323,7 +15323,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15336,7 +15336,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15349,7 +15349,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15362,7 +15362,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15375,7 +15375,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15518,7 +15518,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15531,7 +15531,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15557,7 +15557,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15648,7 +15648,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15661,7 +15661,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15700,7 +15700,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15713,7 +15713,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15726,7 +15726,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15765,7 +15765,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15843,7 +15843,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15856,7 +15856,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15869,7 +15869,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15882,7 +15882,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15895,7 +15895,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15973,7 +15973,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -15986,7 +15986,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -16090,7 +16090,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -16103,7 +16103,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -16116,7 +16116,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -16129,7 +16129,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -16168,7 +16168,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -16194,7 +16194,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -16207,7 +16207,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -16272,7 +16272,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -16350,7 +16350,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -16363,7 +16363,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -16389,7 +16389,7 @@
   "speaker": "soldier",
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
-  "evidence": "translation_status=machine_draft native_replaced=1 file=yes",
+  "evidence": "translation_status=side_text_review_applied native_replaced=1 file=yes",
   "action": "native text review of machine draft, then human listening"
  },
  {
@@ -31677,7 +31677,7 @@
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
   "occurrences": 1,
-  "evidence": "pl=yes pl_status=machine_draft audio=yes",
+  "evidence": "pl=yes pl_status=side_text_review_applied audio=yes",
   "action": "native text review of machine draft"
  },
  {
@@ -31690,7 +31690,7 @@
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
   "occurrences": 1,
-  "evidence": "pl=yes pl_status=machine_draft audio=yes",
+  "evidence": "pl=yes pl_status=side_text_review_applied audio=yes",
   "action": "native text review of machine draft"
  },
  {
@@ -31755,7 +31755,7 @@
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
   "occurrences": 1,
-  "evidence": "pl=yes pl_status=machine_draft audio=yes",
+  "evidence": "pl=yes pl_status=side_text_review_applied audio=yes",
   "action": "native text review of machine draft"
  },
  {
@@ -31768,7 +31768,7 @@
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
   "occurrences": 1,
-  "evidence": "pl=yes pl_status=machine_draft audio=yes",
+  "evidence": "pl=yes pl_status=side_text_review_applied audio=yes",
   "action": "native text review of machine draft"
  },
  {
@@ -31781,7 +31781,7 @@
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
   "occurrences": 1,
-  "evidence": "pl=yes pl_status=machine_draft audio=yes",
+  "evidence": "pl=yes pl_status=side_text_review_applied audio=yes",
   "action": "native text review of machine draft"
  },
  {
@@ -31807,7 +31807,7 @@
   "status": "TRANSLATION_NEEDS_CORRECTION",
   "verified_in_game": false,
   "occurrences": 1,
-  "evidence": "pl=yes pl_status=machine_draft audio=yes",
+  "evidence": "pl=yes pl_status=side_text_review_applied audio=yes",
   "action": "native text review of machine draft"
  },
  {
