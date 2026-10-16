@@ -23467,7 +23467,8 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     if(nativefx::Probe()&&fnIdx>=0&&FnIdx(kFnFireFirst)>=0&&fnIdx==FnIdx(kFnFireFirst)&&
        reinterpret_cast<uintptr_t>(self)==(uintptr_t)(uint32_t)Rd(g_weaponObj))
         InterlockedIncrement(&nativefx::shots); // Native fire seam, independent of custom VFX host.
-    if(g_centurionReloadProbe&&fnIdx>=0){
+    if(g_centurionReloadProbe&&fnIdx>=0&&
+       reinterpret_cast<uintptr_t>(self)==(uintptr_t)(uint32_t)Rd(g_weaponObj)){
         static volatile LONG events[4]{};
         for(int i=24;i<28;++i)if(FnIdx(i)>=0&&fnIdx==FnIdx(i)&&InterlockedIncrement(&events[i-24])<=16){
             char obj[80]{},cls[80]{};

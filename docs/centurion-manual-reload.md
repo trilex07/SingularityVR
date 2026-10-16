@@ -52,6 +52,8 @@ or removed from the original gun. Do not promote this as completed manual reload
 - Independent default-OFF native reload observer, existing script hook only,
   at most 16 records per exported name: ServerStartReload, ReloadFinished,
   AttemptReload, IsReloading. Absence may mean native/script coverage mismatch.
+  Events must target the current player weapon, so NPC reloads cannot exhaust
+  the budget before the player's measured attempt.
 - Probe-only mode now independently logs ammo changes (maximum 128), plus the
   current weapon name/class and class-chain UFunction bindings. Uses only the
   existing measured Children/Next/Super and voted Func offsets: maximum eight
