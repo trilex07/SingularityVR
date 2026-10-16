@@ -533,69 +533,6 @@ inline bool StampCaptureRt(IDirect3DDevice9* dev) {
     return done;
 }
 
-// Ensure surface alpha channel is 0xFF (opaque) without modifying RGB.
-// UE3 renders scene geometry with alpha=0; SteamVR and DWM composite screenshots
-// treat alpha=0 as transparent, resulting in black screenshots for everything
-// except UI/HUD elements.
-inline bool EnsureOpaqueAlpha(IDirect3DDevice9* dev, IDirect3DSurface9* target) {
-    if (!dev || !target) return false;
-    D3DSURFACE_DESC d{};
-    if (FAILED(target->GetDesc(&d)) || d.Width < 2 || d.Height < 2) return false;
-
-    IDirect3DStateBlock9* sb = nullptr;
-    if (FAILED(dev->CreateStateBlock(D3DSBT_ALL, &sb)) || !sb) return false;
-    if (FAILED(sb->Capture())) { sb->Release(); return false; }
-
-    IDirect3DSurface9* oldRt = nullptr;
-    IDirect3DSurface9* oldDs = nullptr;
-    D3DVIEWPORT9 oldVp{};
-    dev->GetRenderTarget(0, &oldRt);
-    dev->GetDepthStencilSurface(&oldDs);
-    dev->GetViewport(&oldVp);
-
-    dev->SetRenderTarget(0, target);
-    dev->SetDepthStencilSurface(nullptr);
-
-    D3DVIEWPORT9 vp{ 0, 0, d.Width, d.Height, 0.0f, 1.0f };
-    dev->SetViewport(&vp);
-    dev->SetVertexShader(nullptr);
-    dev->SetPixelShader(nullptr);
-    dev->SetTexture(0, nullptr);
-    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
-
-    dev->SetRenderState(D3DRS_ZENABLE, FALSE);
-    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
-    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
-    dev->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
-    dev->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_ALPHA);
-
-    struct Vtx { float x, y, z, rhw; DWORD c; };
-    const float w = (float)d.Width, h = (float)d.Height;
-    const DWORD col = 0xFF000000;
-    const Vtx v[4] = {
-        { 0.0f, 0.0f, 0.0f, 1.0f, col },
-        { w,    0.0f, 0.0f, 1.0f, col },
-        { 0.0f, h,    0.0f, 1.0f, col },
-        { w,    h,    0.0f, 1.0f, col }
-    };
-    const bool ownScene = SUCCEEDED(dev->BeginScene());
-    const HRESULT hr = dev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, v, sizeof(Vtx));
-    if (ownScene) dev->EndScene();
-
-    sb->Apply();
-    sb->Release();
-    if (oldRt) {
-        dev->SetRenderTarget(0, oldRt);
-        oldRt->Release();
-    }
-    dev->SetDepthStencilSurface(oldDs);
-    if (oldDs) oldDs->Release();
-    dev->SetViewport(&oldVp);
-    return SUCCEEDED(hr);
-}
-
 inline bool Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
                   const RECT* presentDst, HWND overrideWindow, bool cineCrop = false) {
     const bool fitWindow = InterlockedCompareExchange(&g_desktopMirrorWindow, 0, 0) != 0;
@@ -716,7 +653,6 @@ inline bool Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
         else InterlockedIncrement(&Diag::failStretch2);
         EmitMaybe(); return false;
     }
-    EnsureOpaqueAlpha(dev, back);
     InterlockedIncrement(&Diag::ok);
     Diag::lastHr = S_OK;
     back->Release();

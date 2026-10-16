@@ -322,7 +322,6 @@ void Log(_Printf_format_string_ const char* fmt, ...) {
 }
 
 #include "pause_menu_diagnostic.h"
-#include "desktop_mirror.h"
 
 void LogSupportGripTransition(bool acquired, long gunVerts, IndependentReject reject,
                                 bool weaponDeltaUsed, bool fallbackUsed) {
@@ -5761,10 +5760,6 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     D3DSURFACE_DESC sd{};
     back->GetDesc(&sd);
     if (!EnsureCopyResources(dev, sd.Width, sd.Height, sd.Format)) { back->Release(); return nullptr; }
-    // Enforce 100% opaque alpha (0xFF) across the backbuffer: UE3 renders scene geometry
-    // with alpha=0, which causes SteamVR / OpenXR / DWM screenshots to treat the 3D scene
-    // as transparent/black while only UI/HUD (with alpha>0) appears.
-    desktop_mirror::EnsureOpaqueAlpha(dev, back);
 
     CopySlot& cap = g_slot[g_slotCur];
 
@@ -25774,6 +25769,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
     g_wristState->Apply();
 }
 
+#include "desktop_mirror.h"
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
     g_knifeMeleeReference.Reset();
