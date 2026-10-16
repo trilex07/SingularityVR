@@ -27,8 +27,9 @@ This is an **assisted gesture prototype**, not finished physical/manual reload:
 native automatic reload and the full original animation remain. There is no
 intermediate engine cylinder opening, cartridge transfer or firing lockout.
 Calibration boxes represent the pouch/socket/carried token, not final art.
-Original extracted clip geometry is prepared OFFLINE but is NOT yet rendered
-or removed from the original gun. Do not promote this as completed manual reload.
+Original extracted clip geometry now has an independent default-OFF,
+albedo-only carried preview (implemented, not GPU/headset verified). It is NOT
+removed from the original gun. Do not promote this as completed manual reload.
 
 ## Implemented
 
@@ -87,8 +88,8 @@ Diffuse SHA-256:
 normal `AE206388BB839175C3D3D0DB453A7B7A0F0505B6DB76FC3DC46D950EC23AE2D8`;
 specular `9189EEC3AC33B84A32FA4EEB4FA1C251B984FA2C9C1AD41DC5A3120D5ADCDF4E`;
 rim `FFD873DD23120D67AA36EAFBB7ADB65A5283C428A5E1032A948B44374F73DA70`.
-These assets are staged only for later integration; current DLL still renders
-the calibration boxes, not a falsely labelled complete material implementation.
+These assets are staged privately. Current DLL renders calibration boxes by
+default; opt-in carried preview is albedo only, NOT a complete native material.
 
 Original `Alt_pistol` exports 10 sequences, 78 tracks / 228 frames / 17784
 keys. Private PSA SHA-256:
@@ -162,17 +163,71 @@ call path. Do not apply an unrelated generic slide-pistol reload to this mesh.
 
 ## Flags and independent gates
 
-All are `[Input]`, restart required; omitted values are OFF:
+### Optional carried-cylinder preview (implemented, NOT physically accepted)
+
+Hypothesis: the measured rigid cylinder and its original albedo can replace the
+cyan carrying marker without altering native gun/clip triangles or inventory.
+Falsifiers: marker/asset disagrees between eyes, old-pawn snapshot stays visible,
+the same grip triggers other actions, or any D3D state/COM reference leaks.
+
+`CenturionClipPreview=1` requires `CenturionManualReload=1`, with the native tap
+still OFF for this presentation-only round. Original private assets are
+`vr-assets/reload/centurion/centurion_clip.svrk` and `centurion_clip.svrt` next
+to the DLL. The preparation tool's explicit `--diffuse AR_Pistol_d.dds` option
+creates the second cache with original BGRA channels/alpha data preserved.
+Texture cache SHA-256:
+`17A3355AD6CC7E2F35A03883FDF4B314577FEE908773262C5BC199C006C6CD60`.
+The textured three-axis CPU preview was inspected: six chamber bases and native
+metal/surface detail match the extracted cylinder UVs. No generated repaint.
+
+Reuses the existing tested knife renderer with an explicit mesh/albedo loader;
+its original `Load(file,sceneLit)` path remains `knife.svrt` with identical
+rendering behavior. Eager CPU loading at XR input initialization took 2.166 ms
+in one local run (not a GPU or hitch guarantee). GPU resources warm at the first
+eligible gameplay frame, before the gesture; fixed scratch arrays allocate at
+load, not while carrying. Two indexed calls per carrying frame, one per eye,
+same symmetric eye/half-FOV projection contract as existing knife/menu overlays.
+No new shader/hook, D3DPOOL_MANAGED or direct DEFAULT LockRect. SYSTEMMEM upload,
+DEFAULT texture, private depth, nested full-state/RT/MRT/depth/viewport restore;
+Reset releases GPU resources. Missing asset/GPU fault logs and keeps cyan marker.
+
+Fresh input/render snapshot is bound to pawn+weapon, expires at 100 ms and
+requires focus, tracking, gameplay and Carrying. Pausing, holstering, swapping,
+returning to menus or releasing the cylinder hides it. The authored mount is
+8 cm forward in left aim-space by default; configurable XYZ/Y-X-Z rotation,
+not inferred from the engine bind matrix. Original mesh scale remains unchanged.
+There is NO glove/scene-depth occlusion, fitted finger grip, dynamic lighting,
+normal/specular shading, native cylinder removal or firing lockout here.
+This remains presentation calibration, not completed physical reload.
+
+Eight CPU executables /14 Python tests cover lifecycle, 50653 mount rotations,
+projection equivalence, stale identity gates, original UV/FLOAT32 geometry,
+BGRA/alpha preservation, bounded texture input, and existing D3D fake-state /
+texture upload failures. Actual 1067-vertex /1252-triangle +1024x1024 cache
+pair loaded through the explicit renderer API. No GPU/Steam/headset proof.
+`tools/reload/stage-preview.ps1` stages ONLY this checkout's ignored private
+candidate directory, verifies DLL/manifest/source and both fixed asset hashes,
+and writes a separate receipt; no INI copy, launch or deployment. MAIN must
+integrate on its current accepted base and own the actual installation lease.
+
+All are `[Input]`, restart required; omitted feature flags are OFF:
 
 ```ini
 CenturionManualReload=0
 CenturionNativeReloadTap=0
 CenturionReloadProbe=0
+CenturionClipPreview=0
 ReloadPouchDownCm=42
 ReloadPouchForwardCm=34
 ReloadSocketRightMm=-35
 ReloadSocketUpMm=-35
 ReloadSocketBackMm=-80
+ReloadClipRightMm=0
+ReloadClipUpMm=0
+ReloadClipBackMm=-80
+ReloadClipPitchDeg=0
+ReloadClipYawDeg=0
+ReloadClipRollDeg=0
 ```
 
 The socket numbers are bounded **authored calibration controls**, not measured
@@ -180,7 +235,7 @@ engine offsets. Pouch X stays physical centre; yaw only, never pitch/roll.
 Its visible box is smaller than its 10 cm acquisition radius. White socket
 box has a 7.5 cm acquisition radius; extraction travel is 15 cm.
 
-First MAIN L3: `CenturionReloadProbe=1`, other two OFF. Load Centurion save,
+First MAIN L3: `CenturionReloadProbe=1`, other three OFF. Load Centurion save,
 fire two shots and perform one ordinary existing native reload away from
 interactables. Collect object/function identities, before/after HUD counts,
 and check input/performance baseline. No new headset debugging requirement.
@@ -192,6 +247,13 @@ HUD ownership and the shared-X semantics may MAIN enable
 `CenturionNativeReloadTap=1` for an assisted reload away from interactables.
 Require `native-ammo-ack` with conserved counts; an interaction instead is a
 failed backend, not success. The 120 ms X tap is not a dedicated Reload call.
+
+Optional separate MAIN presentation check after the gesture dry-run: enable
+only the clip preview in addition to manual mode; native tap remains OFF.
+Carry the fresh cylinder, roll/pitch the left hand, insert/release, pause and
+holster. Expected: only the carried object uses the original albedo; native
+cylinder remains on the gun for now. Assess mount/scale/eye agreement separately
+from inventory semantics, and never credit a draw log as physical acceptance.
 
 ### Three-sentence physical script for MAIN
 

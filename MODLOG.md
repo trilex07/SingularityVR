@@ -30,3 +30,11 @@ own branch; resolved one input conflict preserving both left-grip arbitration
 and MAIN's new knife impulse attack window. No accepted-source rollback:
 canonical INI, knife, cinema and muzzle policy files match new base exactly.
 Clean 9c164eb /O2 x86 PE32 rebuilt and candidate hash verified; receipt in doc.
+
+Continuation: independent OFF CenturionClipPreview renders measured original
+cylinder/albedo while Carrying only. No native cylinder removal, animation or
+inventory writes. Original UV/albedo CPU preview inspected and exact cache
+pair loaded; BGRA/alpha preserved. Existing knife renderer reused with explicit
+albedo API, legacy default unchanged; SYSTEMMEM->DEFAULT upload/private depth,
+Reset and nested state restoration. Authored controller mount is NOT UE3 socket
+proof. 100 ms pawn/weapon snapshot gate and 50653 quaternion test cases added.

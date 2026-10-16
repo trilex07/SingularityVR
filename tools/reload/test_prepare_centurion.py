@@ -1,7 +1,8 @@
 import unittest
 import struct
 import numpy as np
-from prepare_centurion import extract
+from prepare_centurion import extract, diffuse_cache
+from PIL import Image
 
 def fixture():
     names=['r_arm_wrist','clip']
@@ -11,6 +12,14 @@ def fixture():
             [(i,float(i==1),float(i==2)) for i in range(3)],[(0,1,2,0,0,0)])
 
 class Tests(unittest.TestCase):
+    def test_diffuse_channels_alpha_and_determinism(self):
+        image=Image.new('RGBA',(2,1));image.putdata([(61,47,31,0),(1,2,3,127)])
+        data=diffuse_cache(image);self.assertEqual(data,diffuse_cache(image))
+        self.assertEqual(struct.unpack_from('<4sIII',data),(b'SVRT',1,2,1))
+        self.assertEqual(data[16:],bytes([31,47,61,0,3,2,1,127]))
+    def test_diffuse_bounds(self):
+        for size in ((0,1),(1,0),(2049,1)):
+            with self.assertRaises(ValueError):diffuse_cache(Image.new('RGBA',size))
     def test_roundtrip_uv_and_determinism(self):
         data,report=extract(fixture());self.assertEqual((data,report),extract(fixture()))
         self.assertEqual(struct.unpack_from('<4sIII',data),(b'SVRK',2,3,3))

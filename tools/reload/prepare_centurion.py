@@ -16,6 +16,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'gloves'))
 from prepare_gloves import read_psk
 
 
+def diffuse_cache(image):
+    """Exact original albedo -> existing SVRT upload format; alpha is data."""
+    w,h=image.size
+    if not 0<w<=2048 or not 0<h<=2048:
+        raise ValueError('diffuse dimensions exceed bounded upload')
+    rgba=image.convert('RGBA')
+    data=struct.pack('<4sIII',b'SVRT',1,w,h)+rgba.tobytes('raw','BGRA')
+    if data[16:]!=np.array(rgba)[:,:,[2,1,0,3]].tobytes():
+        raise ValueError('diffuse channel roundtrip failed')
+    return data
+
+
 def extract(psk, units=52.5):
     names, parents, _, bind, points, weights, wedges, faces = psk
     if not np.isfinite(units) or not 10 <= units <= 1000:
@@ -114,12 +126,57 @@ def preview(cache, destination):
     image.save(destination)
 
 
+def textured_preview(cache, texture, destination):
+    """CPU orthographic z-buffer: original UV/albedo only, not UE3 lighting."""
+    from PIL import Image, ImageDraw
+    magic,version,n,count=struct.unpack_from('<4sIII',cache)
+    tm,tv,w,h=struct.unpack_from('<4sIII',texture)
+    if magic!=b'SVRK' or version!=2 or len(cache)!=16+24*n+count*2 or count%3:
+        raise ValueError('invalid preview mesh')
+    if tm!=b'SVRT' or tv!=1 or not 0<w<=2048 or not 0<h<=2048 or len(texture)!=16+w*h*4:
+        raise ValueError('invalid preview texture')
+    rows=[struct.unpack_from('<3fI2f',cache,16+24*i) for i in range(n)]
+    xyz=np.array([v[:3] for v in rows]);uv=np.array([v[4:] for v in rows])
+    faces=np.frombuffer(cache,'<u2',count,16+24*n).reshape(-1,3)
+    if not n or faces.max()>=n or not np.isfinite(xyz).all() or not np.isfinite(uv).all():
+        raise ValueError('invalid preview vertices')
+    pixels=np.frombuffer(texture,'u1',w*h*4,16).reshape(h,w,4)[:,:,[2,1,0]]
+    xyz-=(xyz.min(0)+xyz.max(0))*.5
+    image=Image.new('RGB',(1440,540),'#10171b');draw=ImageDraw.Draw(image)
+    for view,axes in enumerate(((0,1,2),(0,2,1),(2,1,0))):
+        camera=xyz[:,axes];scale=350/max(np.ptp(camera[:,:2],axis=0).max(),.001)
+        xy=camera[:,:2]*[scale,-scale]+[240,250]
+        rgb=np.full((480,480,3),[16,23,27],dtype=np.uint8)
+        depth=np.full((480,480),-np.inf)
+        for face in faces:
+            a,b,c=xy[face];lo=np.maximum(np.floor(xy[face].min(0)).astype(int),0)
+            hi=np.minimum(np.ceil(xy[face].max(0)).astype(int),479)
+            if (hi<lo).any():continue
+            det=(b[1]-c[1])*(a[0]-c[0])+(c[0]-b[0])*(a[1]-c[1])
+            if abs(det)<1e-12:continue
+            yy,xx=np.mgrid[lo[1]:hi[1]+1,lo[0]:hi[0]+1]
+            u=((b[1]-c[1])*(xx+.5-c[0])+(c[0]-b[0])*(yy+.5-c[1]))/det
+            v=((c[1]-a[1])*(xx+.5-c[0])+(a[0]-c[0])*(yy+.5-c[1]))/det
+            t=1-u-v;z=u*camera[face[0],2]+v*camera[face[1],2]+t*camera[face[2],2]
+            region=depth[lo[1]:hi[1]+1,lo[0]:hi[0]+1]
+            mask=(u>=0)&(v>=0)&(t>=0)&(z>region)
+            coords=u[:,:,None]*uv[face[0]]+v[:,:,None]*uv[face[1]]+t[:,:,None]*uv[face[2]]
+            texel=np.floor(coords*[w,h]).astype(int)%[w,h]
+            dest=rgb[lo[1]:hi[1]+1,lo[0]:hi[0]+1]
+            dest[mask]=pixels[texel[:,:,1],texel[:,:,0]][mask];region[mask]=z[mask]
+        image.paste(Image.fromarray(rgb),(view*480,25))
+        draw.text((view*480+20,12),f'Original Centurion cylinder | axes {axes[:2]}',fill='white')
+    draw.text((20,515),'CPU original UV/albedo only / no normal, specular, scene lighting or runtime-pose claim',fill='white')
+    image.save(destination)
+
+
 if __name__=='__main__':
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--psk',type=Path,required=True)
     ap.add_argument('--output',type=Path,required=True)
     ap.add_argument('--units-per-metre',type=float,default=52.5)
     ap.add_argument('--preview',action='store_true',help='write private 3-axis wireframe PNG (Pillow)')
+    ap.add_argument('--diffuse',type=Path,help='original AR_Pistol_d DDS from the measured material; private only')
     args=ap.parse_args()
     if args.psk.name!='ch_inview_alt_pistol_mesh.psk':
         ap.error('requires measured Centurion asset, not generic slide pistol')
@@ -129,6 +186,17 @@ if __name__=='__main__':
     data,report=extract(psk,args.units_per_metre)
     report['source_sha256']=hashlib.sha256(args.psk.read_bytes()).hexdigest()
     args.output.mkdir(parents=True,exist_ok=True)
+    if args.diffuse:
+        if args.diffuse.name!='AR_Pistol_d.dds':
+            ap.error('requires measured AR_Pistol_d, not a guessed generic handgun texture')
+        from PIL import Image
+        with Image.open(args.diffuse) as image:
+            texture=diffuse_cache(image)
+        (args.output/'centurion_clip.svrt').write_bytes(texture)
+        report['texture']=dict(source_sha256=hashlib.sha256(args.diffuse.read_bytes()).hexdigest(),
+            output_sha256=hashlib.sha256(texture).hexdigest(),channels='BGRA, unchanged alpha data',
+            scope='original albedo preview only; NOT complete native material')
+        if args.preview:textured_preview(data,texture,args.output/'clip-textured.png')
     (args.output/'centurion_clip.svrk').write_bytes(data)
     (args.output/'report.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
     if args.preview:preview(data,args.output/'clip-geometry.png')

@@ -1,14 +1,20 @@
 # STATUS — session handoff
 
 LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN f0b96ad:
+Continuation: CenturionClipPreview default OFF; original cylinder/albedo in
+left hand only during Carrying, 100 ms identity/focus/tracking snapshot guard.
+Shared knife loader keeps original defaults; no native cylinder suppression,
+ammo/animation changes, fitted grip or native-lighting claim. Eight CPU
+executables +14 Python tests PASS; actual mesh/albedo load and textured CPU
+preview inspected. Prior DLL below is superseded pending clean L2 rebuild.
 Centurion-only assisted gesture prototype, NOT completed physical reload.
 Front-centre pouch, unchanged left knife/right gun holsters; allocation-free
 remove/discard/pouch/insert/ack FSM, ownership/cancel guards, bounded calibration
 overlay, named read-only HUD observers and existing-hook native reload probe.
-All three flags OFF. Shared native Use/reload tap is independently opt-in;
+All four flags OFF. Shared native Use/reload tap is independently opt-in;
 no engine ammo writes, cylinder animation control or auto-reload suppression.
 Original clip extracted offline: 1067 UV verts /1252 tris, no mixed boundary;
-prepared asset is not yet rendered. L1_PASS six CPU executables +four Python
+optional unlit carried preview implemented, not GPU verified. Initial L1 six CPU executables +four Python
 tests + actual FLOAT32 asset roundtrip, plus six menu/holster regression exes.
 Probe-only mode records named ammo changes and bounded per-weapon UFunction
 binding identities (never called); original six-chamber cylinder inspected.
