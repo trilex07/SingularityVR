@@ -86,11 +86,21 @@ struct Diag {
     static inline volatile LONG placeCount = 0;
 };
 
+// CapturePlacement is read-only diagnostics (max 2 logs/session): window
+// outer + client rects plus the nearest monitor. The window is NEVER resized
+// by the mirror — MAIN proved with a dumped frame that UE3 binds its render
+// viewport AND its Present region to the window size, so shrinking the window
+// leaves the right-eye half black in both the backbuffer and the XR copy.
+// The fit therefore happens inside the visible client region (VisibleEyeDst),
+// with the window left at the SBS size the engine renders.
 inline void CapturePlacement(HWND window) {
     const LONG slot = InterlockedIncrement(&Diag::placeCount);
     if (slot != 1 && slot != 2) return;
-    RECT wr{ 0, 0, 0, 0 };
-    if (window) GetWindowRect(window, &wr);
+    RECT wr{ 0, 0, 0, 0 }, cr{ 0, 0, 0, 0 };
+    if (window) {
+        GetWindowRect(window, &wr);
+        GetClientRect(window, &cr);
+    }
     RECT mr{ 0, 0, 0, 0 };
     if (window) {
         HMONITOR mon = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
@@ -100,8 +110,9 @@ inline void CapturePlacement(HWND window) {
             if (GetMonitorInfoA(mon, &mi)) mr = mi.rcMonitor;
         }
     }
-    Log("mirror-place: win=(%ld,%ld,%ld,%ld) mon=(%ld,%ld,%ld,%ld)",
+    Log("mirror-place: win=(%ld,%ld,%ld,%ld) client=(%ld,%ld) mon=(%ld,%ld,%ld,%ld) (window never resized; eye fits the visible client region)",
         wr.left, wr.top, wr.right, wr.bottom,
+        cr.right, cr.bottom,
         mr.left, mr.top, mr.right, mr.bottom);
 }
 
@@ -247,49 +258,13 @@ inline bool VisibleEyeDst(LONG visX, LONG visY, LONG visW, LONG visH,
     return out.right <= (LONG)bw && out.bottom <= (LONG)bh && out.left >= 0 && out.top >= 0;
 }
 
-// Work-area geometry, including frame/title bar. Pure CPU; monitor origins may
-// be negative. The cap is CLIENT pixels, never a stereo render-target size.
-inline bool WindowBox(const RECT& work, LONG frameW, LONG frameH, RECT& out) {
-    const LONG aw = work.right - work.left, ah = work.bottom - work.top;
-    if (frameW < 0 || frameH < 0 || aw <= frameW || ah <= frameH) return false;
-    const LONG cw = (aw - frameW < 1920) ? aw - frameW : 1920;
-    const LONG ch = (ah - frameH < 1080) ? ah - frameH : 1080;
-    if (cw < 64 || ch < 64) return false;
-    const LONG w = cw + frameW, h = ch + frameH;
-    const LONG l = work.left + (aw - w) / 2, t = work.top + (ah - h) / 2;
-    out = {l, t, l + w, t + h};
-    return true;
-}
-
-inline void FitWindow(HWND window, bool windowed) {
-    if (!window || !windowed || IsIconic(window)) return;
-    // Window messages can be owned by a different thread. Never synchronously
-    // wait for it from the render thread, activate it, or change fullscreen.
-    static HWND lastWindow = nullptr;
-    static HMONITOR lastMonitor = nullptr;
-    static RECT lastWork{};
-    static ULONGLONG retryAt = 0;
-    const ULONGLONG now = GetTickCount64();
-    if (now < retryAt) return;
-    retryAt = now + 1000;
-    HMONITOR mon = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
-    MONITORINFO mi{}; mi.cbSize = sizeof(mi);
-    if (!mon || !GetMonitorInfoW(mon, &mi)) return;
-    // Fit once per window/monitor/work-area change, not every frame: users can
-    // subsequently resize or move the window without fighting an auto-maximizer.
-    if (lastWindow == window && lastMonitor == mon && EqualRect(&mi.rcWork, &lastWork)) return;
-    RECT wr{}, cr{}, target{};
-    if (!GetWindowRect(window, &wr) || !GetClientRect(window, &cr)) return;
-    const LONG fw = (wr.right - wr.left) - (cr.right - cr.left);
-    const LONG fh = (wr.bottom - wr.top) - (cr.bottom - cr.top);
-    if (!WindowBox(mi.rcWork, fw, fh, target)) return;
-    if (!SetWindowPos(window, nullptr, target.left, target.top,
-                      target.right-target.left, target.bottom-target.top,
-                      SWP_NOZORDER | SWP_NOACTIVATE | SWP_ASYNCWINDOWPOS)) return;
-    lastWindow = window; lastMonitor = mon; lastWork = mi.rcWork;
-    Log("mirror-window: requested outer=(%ld,%ld,%ld,%ld) frame=%ldx%ld client-cap=1920x1080; render targets unchanged by mirror",
-        target.left,target.top,target.right,target.bottom,fw,fh);
-}
+// REMOVED 2026-10-17: the Win32 window-resize helpers. MAIN proved with
+// a dumped frame that UE3 binds its render viewport AND its Present region
+// to the window size: shrinking the window leaves the right-eye half black
+// in both the backbuffer and the XR copy, and the engine Presents a
+// window-sized subrect the mirror contract must bypass. The fit therefore
+// happens inside the visible client region (VisibleEyeDst) with the window
+// left at the SBS size the engine renders. See docs/right-eye-mirror-capture.md.
 
 // The Steam overlay may sample RT0 at Present. It must see the *completed*
 // backbuffer rather than a restored UE3 offscreen target. No shader/constants
@@ -424,13 +399,18 @@ inline bool ComputeMirrorDestination(UINT bw, UINT bh, UINT sw, UINT sh,
         : FitDestination(bw, bh, sw, sh, ww, wh, outDst);
 }
 
-// ---- Reset guard: keep the window fit display-only ----
+// ---- Reset guard: tripwire + safety net (fail-open) ----
 //
-// MAIN observed on the centurion branch that fitting the game window shrinks
-// the UE3 backbuffer and drops VR resolution: the engine follows WM_SIZE with
-// a Reset sized to the window. The window fit must stay display-only while
-// the render stays at the SteamVR SBS size, so Reset requests that merely
-// follow the fitted window are redirected to the trusted SBS size.
+// History: MAIN first observed that fitting the game window shrinks the UE3
+// backbuffer (engine follows WM_SIZE with a window-sized Reset). The guard
+// redirected such Resets to the measured SBS size. Then MAIN's dumped frame
+// proved the deeper fact: UE3 binds its render viewport AND its Present
+// region to the window size, so even a force-kept backbuffer renders only a
+// window-sized corner (black right eye). The window is therefore NEVER
+// resized anymore — the eye fits the visible client region instead — and
+// this guard remains as a tripwire: any future `reset-guard:` line proves
+// something DID shrink the window path, and the fuse still protects against
+// a Reset war (pass-through instead of blackout).
 //
 // Pure decision function (L1-testable). The trusted size is the MEASURED copy
 // size (g_srcW/H), never the AutoRes cache: a refused -ResX must not be
@@ -607,7 +587,9 @@ inline bool Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
     bool haveVis;
     {
         PhysicalPixelScope pixels;
-        if (fitWindow) FitWindow(window, params.Windowed != FALSE);
+        // The window is NEVER resized here: UE3 binds its render viewport and
+        // Present region to the window size (MAIN root-cause, dumped frame),
+        // so the eye is fitted into the visible client region instead.
         if (window && GetClientRect(window, &client) && client.right > 0 && client.bottom > 0) {
             ww = UINT(client.right); wh = UINT(client.bottom);
         }

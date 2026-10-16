@@ -1,19 +1,18 @@
 # STATUS — session handoff
 
-LATEST 2026-10-16 SIDE side/mirror-screenshot-fix (base 9576f5e): right-eye
-mirror fitted in monitor + VR keeps SteamVR resolution, and persistent RT0
-pixel stamp for black Steam screenshots (transient RT0 binding was falsified
-by MAIN). Reset guard redirects window-following Resets to the measured SBS
-size (fail-open; explicit user sizes pass); stamp copies the finished mirror
-into same-size RT0 without rebinding/viewport side effects, scope kept
-underneath, all under SteamCaptureBackbuffer=1 (shipped ON). Fixture proved
-this stack resets the viewport on every SetRenderTarget — stamp avoids it by
-construction. L1_PASS mirror/guard/stamp CPU + D3D9Ex pixels/scope/viewport/
-Reset + 7 Python contracts + six menu/cinema regressions. L2_PASS clean tree,
+LATEST 2026-10-17 SIDE side/mirror-screenshot-fix: MAIN root-cause accepted —
+UE3 binds viewport + Present region to the window (dumped frame: right half
+black at x>=2952 on a 5904x3012 backbuffer), so the SetWindowPos fit path is
+REMOVED; Window=1 now fits the right eye into the visible client region of
+the untouched SBS window (zero engine interaction, VR res intact by
+construction). Guard stays as fail-open tripwire + anti-war fuse; contract
+test_window_never_resized added. L1_PASS full mirror/guard/stamp/fuse CPU +
+D3D9Ex pixels/scope/viewport/Reset + 8 Python contracts + six menu/cinema
+regressions. L2_PASS clean tree,
 x86 PE32 /O2 DLL SHA-256
-573A038B120AD7FA99F4F2922CAEFB7386FC2FE4DBC3D387A51F175264D8FA3F.
-L3/L4 UNKNOWN. ZERO Steam. See docs/right-eye-mirror-capture.md for the MAIN
-L3 script and both falsifiers.
+594D11ABFCA21985FC6159A2A0E2B66628FC892B12F56F3619D751E7A47BCB49.
+L3/L4 UNKNOWN. ZERO Steam. MAIN L3: ok>0 rising, skipRect quiet, bb=SBS
+stable, no reset-guard lines, then F12/Share on two live halves.
 
 LATEST 2026-10-16 SIDE fix/right-eye-mirror-steam-capture: complete right-eye
 aspect fit, opt-in monitor work-area window cap 1920x1080 (physical client px),

@@ -4,6 +4,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 CPP = (ROOT / "spikes/view_matrix/d3d9.cpp").read_text(encoding="utf-8-sig")
+MIRROR_H = (ROOT / "spikes/view_matrix/desktop_mirror.h").read_text(encoding="utf-8-sig")
 
 
 class Contract(unittest.TestCase):
@@ -39,6 +40,14 @@ class Contract(unittest.TestCase):
         self.assertIn("pp->BackBufferHeight = d.h", CPP)
         self.assertIn("reset-guard:", CPP)
         self.assertIn("FUSE BLOWN", CPP)
+
+    def test_window_never_resized(self):
+        # MAIN root cause (dumped frame): UE3 binds viewport + Present region
+        # to the window size, so SetWindowPos blackens the right eye. The eye
+        # fits the visible client region instead; the window stays SBS-sized.
+        self.assertNotIn("SetWindowPos", MIRROR_H)
+        self.assertNotIn("FitWindow", MIRROR_H)
+        self.assertNotIn("WindowBox", MIRROR_H)
 
     def test_sample_config(self):
         ini = (ROOT / "spikes/view_matrix/SingularityVR.ini").read_text(encoding="utf-8-sig")
