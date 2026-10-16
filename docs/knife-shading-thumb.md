@@ -91,7 +91,24 @@ non-thumb/opposite-hand matrices. Original joint golden and state/upload/holster
 tracking regressions remain mandatory. Our SM3 shaders compile offline; malformed
 caches, tangent orthonormality and native depth-alpha arithmetic are tested.
 
-L2 and exact artifact SHA are recorded in the receipt after the clean build.
+L2_PASS: clean source `230c62e3bbb3275989387b1056155e8669e4b227`, x86 PE32
+(014C/010B), `/O2`, instrumentation OFF, manifest working-tree status empty.
+DLL SHA256 `E71EF4E18ACF99418AC50F6A2E9BB0C294C2886559582ABB2F6EAD8DE8F086A2`.
+Later receipt-only commits do not change compiled source. Existing unrelated
+compiler warnings remain. Optional old GLB Python checks skip two unavailable
+asset cases; native-rig, joint replay and new material/pose gates above pass.
+
+Private combined candidate (DLL/provenance + dependent original/new caches):
+`C:\Users\Trilex\vr-mods\SingularityVR-knife-shading-thumb\build\knife-shading-thumb\candidate`.
+It intentionally contains NO INI to overwrite user calibration. New cache SHA256:
+
+* `hand_thumb.svnt`: `430DA39EE16B00FA254DD5579EF49A3BC04514B37B8C93614E91A4F70183E8E7`.
+* `knife.svnl`: `CC52EBD38F77F86D5BDE3F4763057AA33F461A57B1730F46AB0CAB27FA09AAE2`.
+* `knife_normal.svrt`: `B711D8EC97744080F7A742782F8867043F5D19E6A4D02BBAD535309E1B9C99C1`.
+* `knife_specular.svrt`: `BDC06EB79C91CC18FC8D9272A817C47E82380E33766588C0D46DAECE05822802`.
+
+Accepted input native SVNI, knife mesh/albedo and joint mount caches retain the
+exact hashes in `docs/knife-hand-grip.md`; they were not edited by this work.
 L3/GPU output/lighting match/performance/Reset in-game and L4 PSVR2 are UNKNOWN.
 No claim that all shadow defects are fixed or that the knife casts a new shadow.
 
