@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE fix/knife-shading-thumb: physical feedback accepts
+joint mount/size, rejects bright unlit knife and thumb interpenetration.
+Default-OFF HandThumbPoseFix: original thumb rig only, separate knife pose and
+11-key empty-fist path; zero measured crossings at 201 FLOAT32 samples/hand.
+Default-OFF KnifeSceneLighting: original normal/specular, audited native scene
+SH/direct/ambient light and depth-alpha encoding; exact captured shader gate.
+This is a scene-lit approximation, NOT full Mat_Knife or a new shadow caster.
+L1_PASS: 13308 original-rig golden vertices, 101 palette levels, unchanged
+non-thumb/opposite-hand/rig/cuff/mount, SM3 compile + tangent/cache tests and
+existing upload/state/holster/hand regressions. L2 clean build pending.
+Base includes MAIN aef042f (joint PR32 + Bink stills); integrate follow-up onto
+current MAIN, don't deploy stale standalone source. ZERO Steam, L3/L4 UNKNOWN.
+See docs/knife-shading-thumb.md for flags, limits and two independent tests.
+
 LATEST 2026-10-15 MAIN round 19 DEPLOYED (DLL
 F303DA28CA6B387A5DEBBF31B72D9D1CE71F798B728EF315D10B9A3EB6A88C48/source
 branch plates-l3-main, x86 PE32 /O2, built==installed via

@@ -19,6 +19,7 @@ struct Calls {
     HRESULT (STDMETHODCALLTYPE* texture)(IDirect3DDevice9*,DWORD,IDirect3DBaseTexture9*)=nullptr;
     HRESULT (STDMETHODCALLTYPE* clear)(IDirect3DDevice9*,DWORD,const D3DRECT*,DWORD,D3DCOLOR,float,DWORD)=nullptr;
     HRESULT (STDMETHODCALLTYPE* viewport)(IDirect3DDevice9*,const D3DVIEWPORT9*)=nullptr;
+    HRESULT (STDMETHODCALLTYPE* vsConstants)(IDirect3DDevice9*,UINT,const float*,UINT)=nullptr;
     bool Valid()const{return draw&&target&&vs&&ps&&texture&&clear&&viewport;}
 };
 template<class T> inline void Release(T*& p){if(p){p->Release();p=nullptr;}}
@@ -112,6 +113,9 @@ inline bool UploadAlbedo(Dev* dev,UINT w,UINT h,const std::vector<unsigned char>
     if(ok)ok=SUCCEEDED(dev->UpdateTexture(staging,gpu));
     Release(staging);if(!ok)Release(gpu);return ok;
 }
+} // hipknife: the optional material uses the same tested upload contract.
+#include "knife_scene_lighting.h"
+namespace hipknife {
 class Renderer {
     std::vector<Vertex> source,scratch;std::vector<WORD> indices;
     std::vector<knifehand::ScreenVertex> jointScratch;std::vector<WORD> jointIndices;
@@ -119,8 +123,9 @@ class Renderer {
     IDirect3DTexture9* texture=nullptr;std::vector<unsigned char> texels;
     UINT textureWidth=0,textureHeight=0;
     UINT width=0,height=0;bool failed=false;
+    knifelight::Renderer lighting;bool sceneLighting=false;
 public:
-    bool Load(const std::string& file){
+    bool Load(const std::string& file,bool sceneLit=false){
         ReleaseGPU();source.clear();scratch.clear();indices.clear();texels.clear();textureWidth=textureHeight=0;
         std::vector<unsigned char> data;std::vector<Vertex> vertices;std::vector<WORD> ix;
         if(!Read(file,data,2*1024*1024)||!Decode(data.data(),data.size(),vertices,ix))return false;
@@ -128,6 +133,8 @@ public:
         const auto path=(slash==std::string::npos?std::string():file.substr(0,slash+1))+"knife.svrt";
         if(!Read(path,data,16+2048*2048*4)||!DecodeTexture(data.data(),data.size(),textureWidth,textureHeight,texels))return false;
         source=std::move(vertices);indices=std::move(ix);scratch.resize(source.size());
+        sceneLighting=sceneLit;
+        if(sceneLighting&&!lighting.Load(slash==std::string::npos?std::string():file.substr(0,slash+1)))return false;
         if(Triangles()<=5000){jointScratch.resize(Triangles()*12);jointIndices.resize(jointScratch.size());
             for(unsigned i=0;i<jointIndices.size();++i)jointIndices[i]=(WORD)i;}
         return true;
@@ -136,7 +143,7 @@ public:
     unsigned Triangles()const{return unsigned(indices.size()/3);}
     unsigned TextureWidth()const{return textureWidth;}
     unsigned TextureHeight()const{return textureHeight;}
-    void ReleaseGPU(){Release(depth);Release(state);Release(texture);width=height=0;failed=false;}
+    void ReleaseGPU(){lighting.Release();Release(depth);Release(state);Release(texture);width=height=0;failed=false;}
     bool Ensure(IDirect3DDevice9* dev,UINT w,UINT h){
         if(source.empty()||texels.empty()||failed||w<2||w%2||h<2)return false;
         if(state&&w==width&&h==height)return true;
@@ -147,7 +154,11 @@ public:
     }
     bool EnsureShared(IDirect3DDevice9* dev,UINT w,UINT h){
         if(source.size()!=662||Triangles()!=1010||jointScratch.empty()||failed)return false;
-        return Ensure(dev,w,h);
+        return Ensure(dev,w,h)&&(!sceneLighting||lighting.Ensure(dev));
+    }
+    bool LightingMatch(IDirect3DDevice9* dev){return sceneLighting&&lighting.Match(dev);}
+    bool DrawLitShared(IDirect3DDevice9* dev,const Calls& c,const float world[4][4],const float clip[4][4]){
+        return lighting.Draw(dev,c,texture,world,clip);
     }
     IDirect3DStateBlock9* SharedState()const{return state;}
     IDirect3DSurface9* SharedDepth()const{return depth;}
