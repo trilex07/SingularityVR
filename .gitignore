@@ -91,4 +91,12 @@ _work_u/
 # Local game-derived knife exports/cache; never distribute game assets in Git.
 /build/knife/
 /vr-assets/knife/
+/build/knife-hand-grip/
+/build/knife-shading-thumb/
+/build/native-muzzle/
+/build/menu-holster-polish/
 
+# ---- bink stills pipeline: intermediates local ----
+work/
+offline-deliverables/
+*.intermediate.mkv

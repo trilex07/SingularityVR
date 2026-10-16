@@ -1,5 +1,47 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE feature/menu-holster-polish: class-2 frontend-only
+scale/depth candidate 88% / 1400 mm, same provider/pointer/fallback geometry;
+native source RT/crop, pause/boot and mod panel unchanged. Original thin
+segmented hip cues, gun/knife icons, valid-hand proximity highlight; SAME
+anchors and grab radii. Missing config keeps exact legacy layout/white ring.
+L1_PASS six CPU test executables, original procedural CPU preview inspected;
+L2_PASS clean44b4bf7 /O2 x86 PE32, DLL SHA-256
+04C5B55AA6400F4F68FFABE246DF9120E967CF497D60B55A6A527F8E198BDDF8.
+Private candidate/provenance verified, no wholesale INI; ZERO Steam, L3/L4
+UNKNOWN. Isolated tree based on
+MAIN committed17bf1ed, no MAIN dirty edits copied; integrate follow-up onto
+current MAIN, never replace newer work. See docs/menu-holster-polish.md.
+
+LATEST 2026-10-16 SIDE fix/knife-shading-thumb: physical feedback accepts
+joint mount/size, rejects bright unlit knife and thumb interpenetration.
+Default-OFF HandThumbPoseFix: original thumb rig only, separate knife pose and
+11-key empty-fist path; zero measured crossings at 201 FLOAT32 samples/hand.
+Default-OFF KnifeSceneLighting: original normal/specular, audited native scene
+SH/direct/ambient light and depth-alpha encoding; exact captured shader gate.
+This is a scene-lit approximation, NOT full Mat_Knife or a new shadow caster.
+L1_PASS: 13308 original-rig golden vertices, 101 palette levels, unchanged
+non-thumb/opposite-hand/rig/cuff/mount, SM3 compile + tangent/cache tests and
+existing upload/state/holster/hand regressions. L2_PASS clean 230c62e /O2 x86
+PE32, DLL SHA E71EF4E18ACF99418AC50F6A2E9BB0C294C2886559582ABB2F6EAD8DE8F086A2.
+Base includes MAIN aef042f (joint PR32 + Bink stills); integrate follow-up onto
+current MAIN, don't deploy stale standalone source. ZERO Steam, L3/L4 UNKNOWN.
+See docs/knife-shading-thumb.md for flags, limits and two independent tests.
+
+LATEST 2026-10-15 SIDE fix/native-muzzle-stereo, base fb73156: original FX
+continuation, no Steam. Original pistol light ownership now separately proven
+offline: mMuzzleFlashLights -> export918 RvGameShared_ExplosionLightComponent;
+flash/smoke template remains FX_MuzzleLockedFX_MuzzleLocked. Stride72 identity
+was DISPROVED historically, not reused. Implemented default-OFF idle/3-shot
+driver capture + exact shader-pair drop discriminator + guarded CTAB-camera
+alias repair. L1_PASS (cache/COM/restore/alias/sequence +6 Python + accepted
+shadow/hand/holster regressions). Contributing live draw still UNKNOWN; alias
+hypothesis NOT established. No generated replacement FX or native object edits.
+L2_PASS clean469c99a /O2 x86 PE32; DLL SHA256
+4A8DB99F20E354CFB6D274BA74F92E6DC84ACE85FE94DD749A6CDBF20314EA23.
+Full receipt in docs/native-muzzle-stereo.md; L3/L4 requires MAIN. Do not enable
+mode2 without the selected-pair/content and exact-alias evidence.
+
 LATEST 2026-10-15 MAIN round 19 DEPLOYED (DLL
 F303DA28CA6B387A5DEBBF31B72D9D1CE71F798B728EF315D10B9A3EB6A88C48/source
 branch plates-l3-main, x86 PE32 /O2, built==installed via

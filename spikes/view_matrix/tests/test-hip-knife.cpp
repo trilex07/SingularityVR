@@ -56,10 +56,16 @@ int main(){
      CHECK(s.Pulse(f.nowMs));
      f.nowMs+=11;
      CHECK(Update(s,f)==Event::None); // holding trigger does not retrigger
-     f.trigger[0]=false;f.nowMs+=350;
+     f.trigger[0]=false;f.nowMs+=450;
      CHECK(Update(s,f)==Event::None);
      f.trigger[0]=true;f.nowMs+=11;
      CHECK(Update(s,f)==Event::Swing); // rising edge after cooldown triggers again
+    }
+    {State s;Frame f=Base();Pick(s,f,0);Away(s,f);
+     const V p=f.hand[0].p;
+     // Casual hand movement (~0.91 m/s over 7 cm) must not trigger a slash.
+     for(int i=1;i<=7;++i){f.nowMs+=11;f.hand[0].p=p+V{.010f*float(i),0,0};CHECK(Update(s,f)==Event::None);}
+     CHECK(!s.Pulse(f.nowMs));
     }
     for(int gate=0;gate<9;++gate){State s;Frame f=Base();Pick(s,f);Away(s,f);
         switch(gate){case 0:f.enabled=false;break;case 1:f.gameplay=false;break;

@@ -9,6 +9,8 @@ void Log(_Printf_format_string_ const char* fmt, ...);
 extern volatile LONG g_dupDraws;
 extern volatile LONG g_swapEyes;
 extern volatile LONG g_desktopMirrorEye;
+extern volatile LONG g_desktopMirrorFill;
+extern volatile LONG g_inCinematic;
 extern bool g_scCropped;
 extern bool g_xrRunning;
 extern unsigned g_srcW;
@@ -167,9 +169,9 @@ inline bool FitDestination(UINT bw, UINT bh, UINT sw, UINT sh,
 // mode 1 = left eye, mode 2 = right eye. Swap follows the same half the XR
 // bridge uses. A cropped menu/cutscene frame already repeated one half, so
 // the mirror takes that half instead of the empty one.
-inline UINT SourceLeft(UINT width, LONG mode, bool swap, bool cropped) {
+inline UINT SourceLeft(UINT width, LONG mode, bool swap, bool cropped, bool monoOrCutscene = false) {
     const UINT half = width / 2;
-    if (cropped) return swap ? half : 0;
+    if (cropped || monoOrCutscene) return swap ? half : 0;
     const bool right = mode == 2;
     const UINT halfIndex = right ? (swap ? 0u : 1u) : (swap ? 1u : 0u);
     return halfIndex * half;
@@ -233,13 +235,52 @@ inline bool VisibleClientBox(HWND window, UINT ww, UINT wh,
     return true;
 }
 
+// Fit/fill presentation geometry:
+// fillMode 0 = aspect-fit with black margins (default legacy)
+// fillMode 1 = full backbuffer stretch (fills 100% of backbuffer, no black borders on F12/TV)
+// fillMode 2 = aspect-crop 16:9 (center-crops source eye to match backbuffer aspect, fills 100% with zero distortion)
+inline bool ComputeMirrorDestination(UINT bw, UINT bh, UINT sw, UINT sh,
+                                     UINT ww, UINT wh, LONG fillMode,
+                                     bool haveVis, LONG vx, LONG vy, LONG vw, LONG vh,
+                                     RECT& outDst, RECT& outScratchSrc, bool& outUseScratchSrc, bool& outNeedClear) {
+    if (!bw || !bh || !sw || !sh) return false;
+    outUseScratchSrc = false;
+    outNeedClear = true;
+    if (fillMode == 1) {
+        outDst = { 0, 0, (LONG)bw, (LONG)bh };
+        outNeedClear = false;
+        return true;
+    }
+    if (fillMode == 2) {
+        outDst = { 0, 0, (LONG)bw, (LONG)bh };
+        outNeedClear = false;
+        const double targetAspect = double(bw) / double(bh);
+        const double eyeAspect = double(sw) / double(sh);
+        if (targetAspect > eyeAspect) {
+            const UINT cropH = (UINT)(double(sw) / targetAspect + 0.5);
+            const UINT cropTop = (sh > cropH) ? (sh - cropH) / 2 : 0;
+            outScratchSrc = { 0, (LONG)cropTop, (LONG)sw, (LONG)(cropTop + cropH) };
+            outUseScratchSrc = true;
+        } else {
+            const UINT cropW = (UINT)(double(sh) * targetAspect + 0.5);
+            const UINT cropLeft = (sw > cropW) ? (sw - cropW) / 2 : 0;
+            outScratchSrc = { (LONG)cropLeft, 0, (LONG)(cropLeft + cropW), (LONG)sh };
+            outUseScratchSrc = true;
+        }
+        return true;
+    }
+    return haveVis
+        ? VisibleEyeDst(vx, vy, vw, vh, bw, bh, ww, wh, sw, sh, outDst)
+        : FitDestination(bw, bh, sw, sh, ww, wh, outDst);
+}
+
 inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
                   const RECT* presentDst, HWND overrideWindow) {
     const LONG mode = InterlockedCompareExchange(&g_desktopMirrorEye, 0, 0);
     Diag::lastMode = mode;
     const LONG dup = InterlockedCompareExchange(&g_dupDraws, 0, 0);
     if (mode <= 0) { InterlockedIncrement(&Diag::skipMode); EmitMaybe(); return; }
-    if (!dup) { InterlockedIncrement(&Diag::skipDup); EmitMaybe(); return; }
+    if (!dup && !g_xrRunning) { InterlockedIncrement(&Diag::skipDup); EmitMaybe(); return; }
     if (!dev) { InterlockedIncrement(&Diag::skipRect); EmitMaybe(); return; }
 
     IDirect3DSurface9* back = nullptr;
@@ -287,13 +328,16 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
     }
     Diag::lastWw = ww; Diag::lastWh = wh;
     CapturePlacement(window);
+    const LONG fillMode = InterlockedCompareExchange(&g_desktopMirrorFill, 0, 0);
     RECT dst{};
+    RECT scratchSrc{};
+    bool useScratchSrc = false;
+    bool needClear = true;
     LONG vx = 0, vy = 0, vw = (LONG)ww, vh = (LONG)wh;
     const bool haveVis = VisibleClientBox(window, ww, wh, vx, vy, vw, vh);
-    const bool fitOk = haveVis
-        ? VisibleEyeDst(vx, vy, vw, vh, desc.Width, desc.Height, ww, wh,
-                        desc.Width / 2, desc.Height, dst)
-        : FitDestination(desc.Width, desc.Height, desc.Width / 2, desc.Height, ww, wh, dst);
+    const bool fitOk = ComputeMirrorDestination(desc.Width, desc.Height, desc.Width / 2, desc.Height,
+                                                ww, wh, fillMode, haveVis, vx, vy, vw, vh,
+                                                dst, scratchSrc, useScratchSrc, needClear);
     if (!fitOk) {
         back->Release();
         InterlockedIncrement(&Diag::failFit); EmitMaybe(); return;
@@ -314,7 +358,8 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
     }
 
     const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
-    const UINT srcLeft = SourceLeft(desc.Width, mode, swap, g_scCropped);
+    const bool monoOrCutscene = !dup || g_scCropped || (InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0);
+    const UINT srcLeft = SourceLeft(desc.Width, mode, swap, g_scCropped, monoOrCutscene);
     Diag::lastSrcLeft = srcLeft;
     Diag::lastDst = dst;
     const RECT src{ (LONG)srcLeft, 0, (LONG)(srcLeft + desc.Width / 2), (LONG)desc.Height };
@@ -324,13 +369,15 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
         back->Release();
         InterlockedIncrement(&Diag::failStretch1); EmitMaybe(); return;
     }
-    hr = dev->ColorFill(back, nullptr, D3DCOLOR_XRGB(0, 0, 0));
-    if (FAILED(hr)) {
-        Diag::lastHr = (LONG)hr;
-        back->Release();
-        InterlockedIncrement(&Diag::failFill); EmitMaybe(); return;
+    if (needClear) {
+        hr = dev->ColorFill(back, nullptr, D3DCOLOR_XRGB(0, 0, 0));
+        if (FAILED(hr)) {
+            Diag::lastHr = (LONG)hr;
+            back->Release();
+            InterlockedIncrement(&Diag::failFill); EmitMaybe(); return;
+        }
     }
-    hr = dev->StretchRect(g_scratch, nullptr, back, &dst, D3DTEXF_LINEAR);
+    hr = dev->StretchRect(g_scratch, useScratchSrc ? &scratchSrc : nullptr, back, &dst, D3DTEXF_LINEAR);
     if (FAILED(hr)) {
         Diag::lastHr = (LONG)hr;
         back->Release();

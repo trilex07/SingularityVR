@@ -59,7 +59,8 @@ int main() {
     for(int cls=0;cls<=4;++cls) {
         assert(!vrscene::FrontendMenuPresentation(false,cls,true));
         assert(!vrscene::FrontendMenuPresentation(true,cls,false));
-        assert(vrscene::FrontendMenuPresentation(true,cls,true)==(cls==2));
+        assert(vrscene::FrontendMenuPresentation(true,cls,true)==(cls==2 || cls==4));
+        assert(!vrscene::FrontendMenuPresentation(true,cls,true,true,true));
     }
     Controller frontend;
     frontend.Advance({true,false,false,false});
@@ -81,20 +82,17 @@ int main() {
     for(int cine=0;cine<=1;++cine)for(int paused=0;paused<=1;++paused) {
         assert(!CinemaMenuIdenticalCrop(false,cls,focus,cine,paused));
         assert(CinemaMenuIdenticalCrop(true,cls,focus,cine,paused)==
-            (focus && (cls==2 || (cls==3 && cine && paused))));
-        assert(CinemaMenuPauseOwnsPresentation(true,cls,focus,cine,paused)==
-            (cls==3 && focus && cine && paused));
+            (focus && !(cine && paused) && (cls==2 || cls==4)));
+        assert(!CinemaMenuPauseOwnsPresentation(true,cls,focus,cine,paused));
     }
     Controller cinemaPause;
     cinemaPause.Advance({true,false,false,false});
     cinemaPause.Advance({true,false,false,false});
     assert(cinemaPause.Current()==Mode::CutsceneFlat);
-    auto p=cinemaPause.Advance({true,true,true,true,false,true});
-    assert(p.to==Mode::MenuFlat && p.reason==32 && !cinemaPause.Flat());
+    // Pause during cutscene stays in CutsceneFlat (flat Cinema Mode screen).
+    auto p=cinemaPause.Advance({true,false,true,true,false,false});
+    assert(!p.changed && cinemaPause.Current()==Mode::CutsceneFlat && cinemaPause.Flat());
     assert(cinemaPause.NeedsMonoPair());
-    cinemaPause.Advance({true,false,false,false});
-    cinemaPause.Advance({true,false,false,false});
-    assert(cinemaPause.Current()==Mode::CutsceneFlat);
     for(unsigned i=0;i<Controller::kExitFrames;++i)cinemaPause.Advance(gameplay);
     assert(cinemaPause.Current()==Mode::GameplayStereo);
     std::puts("PASS: cinematic hysteresis, video mono, noisy signal, menu classification");

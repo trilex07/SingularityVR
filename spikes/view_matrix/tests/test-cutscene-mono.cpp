@@ -127,10 +127,10 @@ static void test_camera_change_gate() {    using C = CameraChangeCtx;
     // Matinee cuts (menuClass=0) are untouched by the experiment flag.
     CHECK((!CameraChangeClearsCine(C{ true, true, true, false, true, true })));
     CHECK((!CameraChangeClearsCine(C{ true, true, true, false, false, true })));
-    // Changed pawn with menu focused still follows the old order.
-    CHECK((!CameraChangeClearsCine(C{ true, false, true, true, true, true })));
+    // Changed pawn with menu focused clears CINE (save load or menu quit).
+    CHECK((CameraChangeClearsCine(C{ true, false, true, true, true, true })));
     // Latch variant: menu closed before the cut (menuClass=0 at cut time)
-    // after a frontend menu visit still clears when the flag is on.
+    // after a menu visit (pause or frontend) clears CINE on load regardless of pawn identity.
     CHECK((CameraChangeClearsCine(C{ true, true, true, false, true, true, true })));
     CHECK((CameraChangeClearsCine(C{ true, false, true, false, true, true, true })));
     CHECK((!CameraChangeClearsCine(C{ true, true, true, false, true, false, true })));
@@ -139,24 +139,30 @@ static void test_camera_change_gate() {    using C = CameraChangeCtx;
 
 static void test_menu_load_latch() {
     MenuLoadLatch l;
-    // Boot menu (no gameplay yet) never arms.
+    // Boot menu (no gameplay/cutscene yet) never arms.
     MenuLoadLatchObserve(l, false, true);
-    CHECK(!l.menuSeen && !l.gameplaySeen);
-    // Pause menu (not frontend) never arms.
+    CHECK(!l.menuSeen && !l.gameplaySeen && !l.cineSeen);
+    // Unpaused non-menu before gameplay or cutscene never arms.
     MenuLoadLatchObserve(l, false, false);
     CHECK(!l.menuSeen);
-    // Gameplay arms the session; frontend menu sets the latch.
+    // Gameplay arms the session; menu sets the latch.
     MenuLoadLatchObserve(l, true, false);
     CHECK(l.gameplaySeen && !l.menuSeen);
     MenuLoadLatchObserve(l, false, true);
     CHECK(l.menuSeen);
     // Latch survives non-gameplay phases (loading movie closed the menu
-    // before the camera cut in the 2026-10-15 session).
+    // before the camera cut).
     MenuLoadLatchObserve(l, false, false);
     CHECK(l.menuSeen);
     // Gameplay clears.
     MenuLoadLatchObserve(l, true, false);
     CHECK(!l.menuSeen && l.gameplaySeen);
+    // Cutscene arms cineSeen; menu during/after cutscene sets menuSeen.
+    MenuLoadLatch l2;
+    MenuLoadLatchObserve(l2, false, false, true); // active cutscene
+    CHECK(l2.cineSeen && !l2.menuSeen);
+    MenuLoadLatchObserve(l2, false, true, false); // menu opened during/after cutscene
+    CHECK(l2.menuSeen);
 }
 
 int main() {

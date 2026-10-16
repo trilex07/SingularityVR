@@ -3,7 +3,7 @@
 #include <cmath>
 #include <cstdarg>
 
-static void Log(const char* fmt, ...) {
+void Log(const char* fmt, ...) {
     (void)fmt;
     va_list ap; va_start(ap, fmt); va_end(ap);
 }
@@ -22,6 +22,8 @@ int main() {
     Expect(desktop_mirror::SourceLeft(5264, 1, true, false) == 2632, "swapped left eye is the second half");
     Expect(desktop_mirror::SourceLeft(5264, 2, false, true) == 0, "cropped frame keeps the repeated half");
     Expect(desktop_mirror::SourceLeft(5264, 2, true, true) == 2632, "cropped swap keeps the other repeated half");
+    Expect(desktop_mirror::SourceLeft(5264, 2, false, false, true) == 0, "mono/cutscene frame forces left half even for mode 2");
+    Expect(desktop_mirror::SourceLeft(5264, 2, true, false, true) == 2632, "mono/cutscene swap frame forces swapped half even for mode 2");
     RECT dst{};
     Expect(desktop_mirror::FitDestination(3840,1080,1920,1080,1920,1080,dst) &&
            dst.left==0 && dst.right==3840 && dst.top==0 && dst.bottom==1080,
@@ -61,5 +63,19 @@ int main() {
            "fully visible window matches legacy centering");
     Expect(desktop_mirror::VisibleEyeDst(0, 0, 0, 0, 5264, 2684, 5264, 2684, 2632, 2684, vdst),
            "empty visible box falls back without failing");
+    RECT mdst{}, msrc{}; bool useSrc = false, needClr = true;
+    Expect(desktop_mirror::ComputeMirrorDestination(5264, 2684, 2632, 2684, 5264, 2684, 0, false, 0, 0, 0, 0, mdst, msrc, useSrc, needClr) &&
+           needClr && !useSrc && mdst.left == fdst.left && mdst.right == fdst.right,
+           "ComputeMirrorDestination mode 0 matches legacy fit");
+    Expect(desktop_mirror::ComputeMirrorDestination(5264, 2684, 2632, 2684, 1920, 1080, 1, false, 0, 0, 0, 0, mdst, msrc, useSrc, needClr) &&
+           !needClr && !useSrc && mdst.left == 0 && mdst.top == 0 && mdst.right == 5264 && mdst.bottom == 2684,
+           "ComputeMirrorDestination mode 1 stretches to full backbuffer");
+    Expect(desktop_mirror::ComputeMirrorDestination(5264, 2684, 2632, 2684, 1920, 1080, 2, false, 0, 0, 0, 0, mdst, msrc, useSrc, needClr) &&
+           !needClr && useSrc && mdst.left == 0 && mdst.top == 0 && mdst.right == 5264 && mdst.bottom == 2684,
+           "ComputeMirrorDestination mode 2 fills full backbuffer with cropped scratch");
+    const double cropAspect = double(msrc.right - msrc.left) / double(msrc.bottom - msrc.top);
+    const double targetAspect = 5264.0 / 2684.0;
+    Expect(std::fabs(cropAspect - targetAspect) < .002,
+           "ComputeMirrorDestination mode 2 preserves target aspect ratio");
     return g_fails == 0 ? 0 : 1;
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "hip_knife.h"
+#include "knife_hand_grip.h"
 #include <d3d9.h>
 #include <algorithm>
 #include <cstdio>
@@ -18,9 +19,16 @@ struct Calls {
     HRESULT (STDMETHODCALLTYPE* texture)(IDirect3DDevice9*,DWORD,IDirect3DBaseTexture9*)=nullptr;
     HRESULT (STDMETHODCALLTYPE* clear)(IDirect3DDevice9*,DWORD,const D3DRECT*,DWORD,D3DCOLOR,float,DWORD)=nullptr;
     HRESULT (STDMETHODCALLTYPE* viewport)(IDirect3DDevice9*,const D3DVIEWPORT9*)=nullptr;
+    HRESULT (STDMETHODCALLTYPE* vsConstants)(IDirect3DDevice9*,UINT,const float*,UINT)=nullptr;
     bool Valid()const{return draw&&target&&vs&&ps&&texture&&clear&&viewport;}
 };
 template<class T> inline void Release(T*& p){if(p){p->Release();p=nullptr;}}
+template<class Dev,class Surf,class Api>
+inline bool PrimePrivateDepth(Dev* dev,Surf* privateDepth,Surf* originalDepth,const Api& api){
+    if(!privateDepth||privateDepth==originalDepth)return false;
+    return SUCCEEDED(dev->SetDepthStencilSurface(privateDepth))&&
+        SUCCEEDED(api.clear(dev,0,nullptr,D3DCLEAR_ZBUFFER,0,1.f,0));
+}
 // ALL state restores stream0/indexbuffer cleared by DrawIndexedPrimitiveUP,
 // but does NOT save RT/MRT/depth. Raw driver calls leave hook CPU caches alone.
 template<class Dev=IDirect3DDevice9,class Block=IDirect3DStateBlock9,
@@ -105,27 +113,37 @@ inline bool UploadAlbedo(Dev* dev,UINT w,UINT h,const std::vector<unsigned char>
     if(ok)ok=SUCCEEDED(dev->UpdateTexture(staging,gpu));
     Release(staging);if(!ok)Release(gpu);return ok;
 }
+} // hipknife: the optional material uses the same tested upload contract.
+#include "knife_scene_lighting.h"
+namespace hipknife {
 class Renderer {
     std::vector<Vertex> source,scratch;std::vector<WORD> indices;
+    std::vector<knifehand::ScreenVertex> jointScratch;std::vector<WORD> jointIndices;
     IDirect3DSurface9* depth=nullptr;IDirect3DStateBlock9* state=nullptr;
     IDirect3DTexture9* texture=nullptr;std::vector<unsigned char> texels;
     UINT textureWidth=0,textureHeight=0;
     UINT width=0,height=0;bool failed=false;
+    knifelight::Renderer lighting;bool sceneLighting=false;
 public:
-    bool Load(const std::string& file){
+    bool Load(const std::string& file,bool sceneLit=false){
         ReleaseGPU();source.clear();scratch.clear();indices.clear();texels.clear();textureWidth=textureHeight=0;
         std::vector<unsigned char> data;std::vector<Vertex> vertices;std::vector<WORD> ix;
         if(!Read(file,data,2*1024*1024)||!Decode(data.data(),data.size(),vertices,ix))return false;
         const auto slash=file.find_last_of("\\/");
         const auto path=(slash==std::string::npos?std::string():file.substr(0,slash+1))+"knife.svrt";
         if(!Read(path,data,16+2048*2048*4)||!DecodeTexture(data.data(),data.size(),textureWidth,textureHeight,texels))return false;
-        source=std::move(vertices);indices=std::move(ix);scratch.resize(source.size());return true;
+        source=std::move(vertices);indices=std::move(ix);scratch.resize(source.size());
+        sceneLighting=sceneLit;
+        if(sceneLighting&&!lighting.Load(slash==std::string::npos?std::string():file.substr(0,slash+1)))return false;
+        if(Triangles()<=5000){jointScratch.resize(Triangles()*12);jointIndices.resize(jointScratch.size());
+            for(unsigned i=0;i<jointIndices.size();++i)jointIndices[i]=(WORD)i;}
+        return true;
     }
     unsigned Vertices()const{return unsigned(source.size());}
     unsigned Triangles()const{return unsigned(indices.size()/3);}
     unsigned TextureWidth()const{return textureWidth;}
     unsigned TextureHeight()const{return textureHeight;}
-    void ReleaseGPU(){Release(depth);Release(state);Release(texture);width=height=0;failed=false;}
+    void ReleaseGPU(){lighting.Release();Release(depth);Release(state);Release(texture);width=height=0;failed=false;}
     bool Ensure(IDirect3DDevice9* dev,UINT w,UINT h){
         if(source.empty()||texels.empty()||failed||w<2||w%2||h<2)return false;
         if(state&&w==width&&h==height)return true;
@@ -133,6 +151,60 @@ public:
         if(FAILED(dev->CreateDepthStencilSurface(w,h,D3DFMT_D16,D3DMULTISAMPLE_NONE,0,TRUE,&depth,nullptr))||
            FAILED(dev->CreateStateBlock(D3DSBT_ALL,&state))||!UploadAlbedo(dev,textureWidth,textureHeight,texels,texture)){ReleaseGPU();failed=true;return false;}
         width=w;height=h;return true;
+    }
+    bool EnsureShared(IDirect3DDevice9* dev,UINT w,UINT h){
+        if(source.size()!=662||Triangles()!=1010||jointScratch.empty()||failed)return false;
+        return Ensure(dev,w,h)&&(!sceneLighting||lighting.Ensure(dev));
+    }
+    bool LightingMatch(IDirect3DDevice9* dev){return sceneLighting&&lighting.Match(dev);}
+    bool DrawLitShared(IDirect3DDevice9* dev,const Calls& c,const float world[4][4],const float clip[4][4]){
+        return lighting.Draw(dev,c,texture,world,clip);
+    }
+    IDirect3DStateBlock9* SharedState()const{return state;}
+    IDirect3DSurface9* SharedDepth()const{return depth;}
+    // Called INSIDE the original hand StereoPair, with that eye's real camera,
+    // viewport/scissor. Caller has installed a PRIVATE depth shared with an
+    // original-native glove depth prepass, not the world's/native depth buffer.
+    bool DrawShared(IDirect3DDevice9* dev,const Calls& c,const float componentToClip[4][4]){
+        if(!state||!texture||!c.Valid()||jointScratch.empty())return false;
+        D3DVIEWPORT9 v{};if(FAILED(dev->GetViewport(&v)))return false;
+        const knifehand::Viewport vp{(float)v.X,(float)v.Y,(float)v.Width,(float)v.Height,v.MinZ,v.MaxZ};
+        unsigned count=0;
+        for(unsigned i=0;i<indices.size();i+=3){
+            knifehand::ClipVertex input[3],clipped[12];
+            for(unsigned c0=0;c0<3;++c0){const auto& p=source[indices[i+c0]];
+                if(!knifehand::Transform(input[c0],{p.x,p.y,p.z},p.u,p.v,componentToClip))return false;}
+            const unsigned n=knifehand::ClipTriangle(input,clipped);
+            if(count+n>jointScratch.size())return false;
+            for(unsigned j=0;j<n;++j)if(!knifehand::Screen(clipped[j],vp,jointScratch[count+j]))return false;
+            count+=n;
+        }
+        if(!count)return true; // entirely outside near/far: no draw, not a GPU error.
+        if(FAILED(c.vs(dev,nullptr))||FAILED(c.ps(dev,nullptr))||FAILED(c.texture(dev,0,texture))||
+           FAILED(dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1)))return false;
+        const struct RS{D3DRENDERSTATETYPE key;DWORD value;} rs[]={
+            {D3DRS_ZENABLE,D3DZB_TRUE},{D3DRS_ZWRITEENABLE,TRUE},{D3DRS_ZFUNC,D3DCMP_LESSEQUAL},
+            {D3DRS_ALPHABLENDENABLE,FALSE},{D3DRS_SEPARATEALPHABLENDENABLE,FALSE},
+            {D3DRS_ALPHATESTENABLE,FALSE},{D3DRS_CULLMODE,D3DCULL_NONE},{D3DRS_LIGHTING,FALSE},
+            {D3DRS_FOGENABLE,FALSE},{D3DRS_STENCILENABLE,FALSE},{D3DRS_CLIPPLANEENABLE,0},
+            {D3DRS_SRGBWRITEENABLE,FALSE},{D3DRS_COLORWRITEENABLE,15},{D3DRS_FILLMODE,D3DFILL_SOLID},
+            {D3DRS_VERTEXBLEND,D3DVBF_DISABLE},{D3DRS_INDEXEDVERTEXBLENDENABLE,FALSE}};
+        // Preserve viewport/scissor/RT, private shared DS, depth range and bias.
+        for(const auto& x:rs)if(FAILED(dev->SetRenderState(x.key,x.value)))return false;
+        const struct TS{D3DTEXTURESTAGESTATETYPE key;DWORD value;} ts[]={
+            {D3DTSS_COLOROP,D3DTOP_SELECTARG1},{D3DTSS_COLORARG1,D3DTA_TEXTURE},
+            {D3DTSS_ALPHAOP,D3DTOP_SELECTARG1},{D3DTSS_ALPHAARG1,D3DTA_DIFFUSE},
+            {D3DTSS_RESULTARG,D3DTA_CURRENT},{D3DTSS_TEXCOORDINDEX,0},
+            {D3DTSS_TEXTURETRANSFORMFLAGS,D3DTTFF_DISABLE}};
+        for(const auto& x:ts)if(FAILED(dev->SetTextureStageState(0,x.key,x.value)))return false;
+        if(FAILED(dev->SetTextureStageState(1,D3DTSS_COLOROP,D3DTOP_DISABLE)))return false;
+        const struct SS{D3DSAMPLERSTATETYPE key;DWORD value;} ss[]={
+            {D3DSAMP_MINFILTER,D3DTEXF_LINEAR},{D3DSAMP_MAGFILTER,D3DTEXF_LINEAR},
+            {D3DSAMP_MIPFILTER,D3DTEXF_NONE},{D3DSAMP_ADDRESSU,D3DTADDRESS_WRAP},
+            {D3DSAMP_ADDRESSV,D3DTADDRESS_WRAP},{D3DSAMP_SRGBTEXTURE,FALSE},
+            {D3DSAMP_MAXMIPLEVEL,0},{D3DSAMP_MIPMAPLODBIAS,0}};
+        for(const auto& x:ss)if(FAILED(dev->SetSamplerState(0,x.key,x.value)))return false;
+        return SUCCEEDED(c.draw(dev,D3DPT_TRIANGLELIST,0,count,count/3,jointIndices.data(),D3DFMT_INDEX16,jointScratch.data(),sizeof(jointScratch[0])));
     }
     bool Draw(IDirect3DDevice9* dev,const Calls& c,IDirect3DSurface9* back,
               const Pose& knife,const Pose (&eyes)[2],float tx,float ty){

@@ -72,29 +72,36 @@ struct CameraChangeCtx {
     bool menuSeenSinceGameplay = false;
 };
 
-// Frontend-menu latch for the menu-load experiment. Pure state machine over
-// per-frame scene signals (L1-tested below in spirit via test-cutscene-mono):
-// set when a frontend menu shows after gameplay this session; cleared on
-// GameplayStereo. Boot menus (no gameplay yet) never arm it, and pause menus
-// (not frontend) never touch it, so Matinee cuts keep the latch false.
+// Frontend-menu latch for menu-driven loads. Pure state machine over
+// per-frame scene signals (L1-tested via test-cutscene-mono):
+// set when a menu shows or game pauses after gameplay or an active cutscene;
+// cleared on active uninterrupted gameplay or active uninterrupted cutscene.
+// Boot menus (no gameplay/cutscene yet) never arm it, so New Game intro handoff keeps CINE.
 struct MenuLoadLatch {
     bool gameplaySeen = false;
+    bool cineSeen = false;
     bool menuSeen = false;
 };
 
-inline void MenuLoadLatchObserve(MenuLoadLatch& l, bool gameplay, bool frontendMenu) {
+inline void MenuLoadLatchObserve(MenuLoadLatch& l, bool gameplay, bool menuOrPause, bool activeCutscene = false) {
     if (gameplay) {
         l.gameplaySeen = true;
         l.menuSeen = false;
-    } else if (frontendMenu && l.gameplaySeen) {
+    } else if (activeCutscene) {
+        l.cineSeen = true;
+        l.menuSeen = false;
+    } else if (menuOrPause && (l.gameplaySeen || l.cineSeen)) {
         l.menuSeen = true;
     }
 }
 
 inline bool CameraChangeClearsCine(CameraChangeCtx c) {
     if (!c.cineOn) return false;                    // nothing latched
-    if (c.menuLoadClear && ((c.menuFocused && c.pawnSame) || c.menuSeenSinceGameplay)) return true;
-    if (c.videoHandoff) return false;              // new pawn/loading menu is expected here
+    // Menu-driven load or quit: if a menu is focused or was visited since gameplay/cutscene,
+    // this camera change is a load/restart, NOT an in-cutscene Matinee cut! Clears regardless
+    // of video handoff or pawn identity so a save loaded after abandoning a cutscene recovers to VR stereo.
+    if (c.menuLoadClear && (c.menuFocused || c.menuSeenSinceGameplay)) return true;
+    if (c.videoHandoff) return false;              // uninterrupted video -> cutscene handoff (PID5052)
     if (!c.pawnValid || !c.pawnSame) return true;   // world went away
     if (c.menuFocused) return true;                 // quit to menu
     return false;                                   // Matinee cut: keep CINE

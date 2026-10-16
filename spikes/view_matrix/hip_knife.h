@@ -28,8 +28,8 @@ inline float Length(V v){return std::sqrt(Dot(v,v));}
 struct Config {
     // Tracking metres: left is literal physical left, never mirrored by AimHand.
     float left=.25f,down=.50f,forward=.06f,radius=.28f;
-    float minSpeed=0.60f,resetSpeed=.30f,minTravel=.04f;
-    std::uint64_t pickupGraceMs=150,cooldownMs=350,pulseMs=120;
+    float minSpeed=1.35f,resetSpeed=.45f,minTravel=.11f;
+    std::uint64_t pickupGraceMs=180,cooldownMs=450,pulseMs=120;
     // MAIN round 20/21: wider grab window and radius for effortless pickup
     std::uint64_t grabWindowMs=800;
 };

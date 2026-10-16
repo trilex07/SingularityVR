@@ -95,6 +95,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "pawn_camera_sample.h"
 #include "menu_submit_policy.h"
 #include "menu_hud_scale.h"
+#include "holster_marker.h"
 #include "pause_menu_space.h"
 #include <shlobj.h>
 #include "async_thread_snapshot.h"
@@ -105,6 +106,10 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include "bink_audio_observation.h"
 #include "bink_intro_audio.h"
+#include "psvr2_trigger.h"
+#include "psvr2_trigger_config.h"
+#include "trigger_shot.h"
+#include "psvr2_client.h"
 #include <d3d11.h>
 #include <dinput.h>
 
@@ -1139,6 +1144,7 @@ extern volatile LONG   g_meleeArmsMs, g_meleeDelayMs, g_meleePending;
 extern volatile LONG64 g_meleeUntilMs, g_meleeFromMs;
 extern volatile LONG   g_armsAnimActiveCached;
 extern volatile LONG64 g_lastMeleeEdgeMs, g_lastJumpEdgeMs;   // fix-G/perf (defined with melee state)
+void ArmMeleeWindowFromKnife();
 extern volatile LONG g_forceDesktopAutomation;                // defined with desktop-HMD diagnostics
 volatile LONG g_desktopAutomationFrame = 0;                   // shared deterministic input-script clock
 
@@ -2209,6 +2215,7 @@ weaponholster::State g_holsterState{};
 // stay at HolsterHipWorld. Default 0 (trigger==ring). Same precedent as the
 // run-217 gun anchor tuning: the user measures in-headset, no guessed const.
 float g_holsterTrimFcm=0,g_holsterTrimRcm=0,g_holsterTrimUcm=0;
+static int g_knifeStereoEye=-1;
 // Independent, default-OFF pre-TMD knife candidate; render/input state is
 // updated by the existing XR frame owner, never a new hook or worker thread.
 int g_hipKnifeEnabled=0;
@@ -4305,6 +4312,126 @@ bool InitXRInput();
 // Which OpenXR session state we are in. Actions only deliver data while FOCUSED, and the
 // difference between "not focused" and "not working" is invisible without this.
 XrSessionState g_xrSessionState = XR_SESSION_STATE_UNKNOWN;
+extern volatile LONG g_vrUiMenu, g_vrMenuClass, g_panelOpen;
+extern int g_leftHanded;
+static bool g_psvr2RuntimeCompatible = false;
+static bool g_adaptiveTriggersEnabled = false;
+static bool g_psvr2ClientStarted = false;
+static psvr2config::Profiles g_psvr2Profiles{};
+static psvr2client::Client g_psvr2Client;
+static triggershot::ShotRunner g_shotRun;
+static SRWLOCK g_shotRunLock = SRWLOCK_INIT;
+
+static bool StartPsvr2TriggerClient() {
+    if (!g_adaptiveTriggersEnabled || !g_psvr2RuntimeCompatible || g_psvr2ClientStarted)
+        return false;
+    char localAppData[MAX_PATH]{};
+    if (FAILED(SHGetFolderPathA(nullptr, CSIDL_LOCAL_APPDATA, nullptr, SHGFP_TYPE_CURRENT,
+                                localAppData))) return false;
+    char stateDir[MAX_PATH]{};
+    if (sprintf_s(stateDir, "%s\\SingularityVR", localAppData) > 0)
+        CreateDirectoryA(stateDir, nullptr);
+    char sessionPath[MAX_PATH]{};
+    if (sprintf_s(sessionPath, "%s\\SingularityVR\\psvr2-trigger.session", localAppData) <= 0)
+        return false;
+
+    char token[psvr2ipc::kMaxTokenBytes + 1]{};
+    DWORD got = 0;
+    const bool pipeAlreadyOpen = WaitNamedPipeW(L"\\\\.\\pipe\\SingularityPsvr2", 50) != FALSE;
+    if (pipeAlreadyOpen) {
+        HANDLE file = CreateFileA(sessionPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (file != INVALID_HANDLE_VALUE) {
+            const BOOL readOk = ReadFile(file, token, (DWORD)psvr2ipc::kMaxTokenBytes, &got, nullptr);
+            CloseHandle(file);
+            while (got && (token[got - 1] == '\r' || token[got - 1] == '\n' || token[got - 1] == ' '))
+                token[--got] = '\0';
+            if (!readOk || !psvr2ipc::TokenValid((const std::uint8_t*)token, got)) got = 0;
+        }
+    }
+    if (!got) {
+        char bridgePath[MAX_PATH]{};
+        if (SiblingIniPath("SingularityPsvr2Bridge.exe", bridgePath) &&
+            GetFileAttributesA(bridgePath) != INVALID_FILE_ATTRIBUTES) {
+            static const char kHex[] = "0123456789ABCDEF";
+            LARGE_INTEGER qpc{}; QueryPerformanceCounter(&qpc);
+            std::uint64_t seed = ((std::uint64_t)qpc.QuadPart) ^
+                ((std::uint64_t)GetCurrentProcessId() << 32) ^ GetTickCount64();
+            for (int i = 0; i < 32; ++i) {
+                seed = seed * 6364136223846793005ULL + 1442695040888963407ULL;
+                token[i] = kHex[(seed >> 60) & 0xF];
+            }
+            token[32] = '\0';
+            got = 32;
+            HANDLE file = CreateFileA(sessionPath, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+                                      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+            if (file != INVALID_HANDLE_VALUE) {
+                DWORD written = 0;
+                WriteFile(file, token, got, &written, nullptr);
+                CloseHandle(file);
+            }
+            const char* loaderPath =
+                "C:\\Program Files (x86)\\Steam\\steamapps\\common\\PlayStation VR2 App\\PSVR2Toolkit\\CAPIApps-Windows\\psvr2_toolkit_capi_loader.dll";
+            char cmdLine[1024]{};
+            sprintf_s(cmdLine, "\"%s\" \"%s\" %s --hardware --parent %lu",
+                      bridgePath, loaderPath, token, (unsigned long)GetCurrentProcessId());
+            STARTUPINFOA si{}; si.cb = sizeof(si);
+            PROCESS_INFORMATION pi{};
+            if (CreateProcessA(bridgePath, cmdLine, nullptr, nullptr, FALSE,
+                               CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
+                Log("PSVR2 trigger bridge spawned (PID %lu, parent %lu)",
+                    (unsigned long)pi.dwProcessId, (unsigned long)GetCurrentProcessId());
+                CloseHandle(pi.hThread);
+                CloseHandle(pi.hProcess);
+            } else {
+                Log("PSVR2 trigger bridge spawn failed (err=%lu)", (unsigned long)GetLastError());
+            }
+        }
+    }
+    if (!got) {
+        HANDLE file = CreateFileA(sessionPath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                                  FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (file == INVALID_HANDLE_VALUE) return false;
+        const BOOL readOk = ReadFile(file, token, (DWORD)psvr2ipc::kMaxTokenBytes, &got, nullptr);
+        CloseHandle(file);
+        while (got && (token[got - 1] == '\r' || token[got - 1] == '\n' || token[got - 1] == ' '))
+            token[--got] = '\0';
+        if (!readOk || !got || !psvr2ipc::TokenValid((const std::uint8_t*)token, got)) return false;
+    }
+    g_psvr2ClientStarted = g_psvr2Client.Start("\\\\.\\pipe\\SingularityPsvr2", (const std::uint8_t*)token, got);
+    SecureZeroMemory(token, sizeof(token));
+    if (g_psvr2ClientStarted) Log("PSVR2 trigger client connected asynchronously (pipe session configured)");
+    return g_psvr2ClientStarted;
+}
+
+static void UpdateAdaptiveTriggers() {
+    if (!g_adaptiveTriggersEnabled) return;
+    const bool focused = g_xrSessionState == XR_SESSION_STATE_FOCUSED;
+    const bool gameplay = InGameplay() && !Rd(g_vrUiMenu) && !Rd(g_vrMenuClass) && !Rd(g_panelOpen);
+    const auto triggerHand = g_leftHanded ? psvr2trigger::Hand::Left : psvr2trigger::Hand::Right;
+    const auto weapon = triggershot::WeaponFromGunVerts((unsigned)InterlockedCompareExchange(&g_gunVerts, 0, 0));
+    psvr2trigger::Command command = psvr2trigger::OffCommand(psvr2trigger::OffReason::Inactive);
+    command.hand = triggerHand;
+    if (g_psvr2ClientStarted && g_psvr2RuntimeCompatible && focused && gameplay && g_psvr2Profiles.enabled) {
+        psvr2trigger::Command baseWall = psvr2config::ProfileFromConfig(weapon, false, g_psvr2Profiles);
+        baseWall.hand = triggerHand;
+        AcquireSRWLockExclusive(&g_shotRunLock);
+        g_shotRun.SetHand(triggerHand);
+        command = g_shotRun.Select(baseWall, (unsigned)GetTickCount());
+        ReleaseSRWLockExclusive(&g_shotRunLock);
+    } else if (!focused) {
+        AcquireSRWLockExclusive(&g_shotRunLock);
+        g_shotRun.Reset();
+        ReleaseSRWLockExclusive(&g_shotRunLock);
+        command = psvr2trigger::OffCommand(psvr2trigger::OffReason::Unfocused);
+    } else {
+        AcquireSRWLockExclusive(&g_shotRunLock);
+        g_shotRun.Reset();
+        ReleaseSRWLockExclusive(&g_shotRunLock);
+    }
+    command.hand = triggerHand;
+    if (g_psvr2ClientStarted) g_psvr2Client.Submit(command);
+}
 
 bool InitXR() {
     const char* exts[] = { XR_KHR_D3D11_ENABLE_EXTENSION_NAME };
@@ -4321,6 +4448,15 @@ bool InitXR() {
         if (XR_SUCCEEDED(r)) break;
     }
     if (XR_FAILED(r)) { Log("no OpenXR instance (headset not connected?) - detour still usable via F2"); return false; }
+
+    XrInstanceProperties instanceProps{ XR_TYPE_INSTANCE_PROPERTIES };
+    if (XR_SUCCEEDED(xrGetInstanceProperties(g_xrInstance, &instanceProps))) {
+        g_psvr2RuntimeCompatible = strstr(instanceProps.runtimeName, "SteamVR") != nullptr;
+        Log("OpenXR runtime: %s; adaptive PSVR2 triggers %s", instanceProps.runtimeName,
+            g_psvr2RuntimeCompatible ? "eligible (SteamVR)" : "inert (not SteamVR)");
+    }
+    if (g_adaptiveTriggersEnabled && g_psvr2RuntimeCompatible)
+        StartPsvr2TriggerClient();
 
     XrSystemGetInfo sgi{ XR_TYPE_SYSTEM_GET_INFO };
     sgi.formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
@@ -4598,6 +4734,7 @@ struct ShaderLayoutEntry { IDirect3DVertexShader9* shader; skeletal::Layout layo
 ShaderLayoutEntry g_shaderLayouts[1024]{};
 unsigned g_shaderLayoutNext=0;
 skeletal::Layout g_boundShaderLayout;
+#include "native_muzzle_stereo.h"
 // Opt-in first-person TMD arm evidence. Only the last relevant palette upload
 // metadata is retained; matrix reads happen in the bounded draw capture below.
 volatile LONG g_armPaletteTraceFrames=0;
@@ -4640,6 +4777,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVS(IDirect3DDevice9* dev,IDirect3DVertexShader
     const HRESULT hr=g_origSetVS(dev,shader);
     if(FAILED(hr))return hr;
     shadowtrace::bound.vs=shader;
+    nativefx::BindVS(shader);
     shadowfix::BindVS(shader);
     worldshadowfix::BindVS(shader);
     g_boundShaderLayout={};
@@ -5243,6 +5381,7 @@ static void SnapshotMenuOnSlot(CopySlot& cap);
 extern volatile LONG g_sceneFlatEnabled;
 extern volatile LONG g_inCinematic;
 extern volatile LONG g_cineArgRaw;
+extern volatile LONG g_videoCinemaScalePct;
 // Original SetRenderTarget, defined with the render-target hook far below.
 // Declared here so the mono composer can bypass hook bookkeeping exactly
 // like the cinema matte does.
@@ -5290,7 +5429,7 @@ static bool CutsceneNativeCameraArmed() {
 }
 static LONG g_cutsceneVideoHandoffFix = 1;
 static LONG g_cutsceneMenuHandoffFix = 0; // opt-in frontend presentation ownership
-static LONG g_cineMenuLoadClear = 0; // experiment: menu-focused + same-pawn cut clears CINE despite video handoff
+static LONG g_cineMenuLoadClear = 1; // menu-focused or menu-visited cut clears CINE (save load / quit)
 // Frontend-menu latch for the experiment (pure state machine in
 // cutscene_mono.h): set in UpdateSceneModeFrame, read by the camera policy
 // in RefreshCameraPosition below.
@@ -5330,7 +5469,7 @@ static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR 
 // left half. Failed composition restores pixels/state where possible and keeps
 // the previous submission behaviour. A restore fault disables retries until Reset.
 static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
-    g_cineMonoReady = false;
+    if (g_cineMonoReady) return true;
     if (!dev) return false;
     if (g_cineMonoFault) { CutsceneMonoNote("restore-fault-latched", E_FAIL); return false; }
     if (!CutsceneMonoComposeArmed()) {
@@ -5350,7 +5489,7 @@ static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
     bool ok = SUCCEEDED(descHr) && d.Width >= 8 && d.Height >= 8;
     // The bridge crop uses the capture dimensions; composing against anything
     // else would misalign the submitted half.
-    if (ok && (d.Width != g_srcW || d.Height != g_srcH)) {
+    if (ok && g_srcW && g_srcH && (d.Width != g_srcW || d.Height != g_srcH)) {
         static LONG saidDim = 0;
         if (!InterlockedExchange(&saidDim, 1))
             Log("cutscene-mono: backbuffer %ux%u != capture %ux%u - mono pair OFF this frame",
@@ -5410,9 +5549,20 @@ void StampCaptureState(CopySlot& cap) {
     // Mono submission only for a frame this Present actually composed. A failed
     // composition keeps stereo stamping, so the bridge cannot submit an
     // uncomposed half crop to both eyes.
-    cap.cineFlat = g_cineMonoReady && CutsceneMonoComposeArmed() && !cap.menuFlat;
-    cap.cineImage = cap.cineFlat ? g_cineMonoImage : CutsceneMonoRect{};
-    cap.eyePositionsValid=g_eyePositionsValid;
+    const bool isVideoFlat = (g_sceneMode.Current() == vrscene::Mode::VideoFlat);
+    if (isVideoFlat) {
+        const float scale = ClampVideoCinemaScale((int)Rd(g_videoCinemaScalePct)) * 0.005f;
+        const int left   = (int)((0.25f - 0.5f * scale) * (float)g_srcW);
+        const int right  = (int)((0.25f + 0.5f * scale) * (float)g_srcW);
+        const int top    = (int)((0.5f - 0.5f * scale) * (float)g_srcH);
+        const int bottom = (int)((0.5f + 0.5f * scale) * (float)g_srcH);
+        cap.cineFlat = (right > left && bottom > top);
+        cap.cineImage = CutsceneMonoRect{ left, top, right, bottom };
+    } else {
+        cap.cineFlat = g_cineMonoReady && CutsceneMonoComposeArmed() && !cap.menuFlat;
+        cap.cineImage = cap.cineFlat ? g_cineMonoImage : CutsceneMonoRect{};
+    }
+    cap.eyePositionsValid = g_eyePositionsValid;
     if (cap.cineFlat) {
         cap.stereo = false;
         cap.dup = true;
@@ -5990,6 +6140,18 @@ static bool g_gloveExperiment=false,g_gloveCpuAttempted=false;
 static bool g_nativeGloveExperiment=false,g_nativeGlovePoseThisDraw=false;
 static nativegloves::Renderer g_nativeGloveRenderer;
 static bool NativeGlovesEligible();
+static bool NativeKnifeOffHandEligible();
+static bool g_knifeHandGrip = false;
+static bool g_knifeTrackedMelee = false;
+static knifehand::MeleeReference g_knifeMeleeReference;
+static bool g_knifeHandAssetReady = false;
+static knifehand::Data g_knifeHandData{};
+static bool g_knifeHandPoseThisDraw = false;
+static armbind::Mat g_knifeHandWrist{}, g_knifeHandLocal{};
+static LONG g_knifeJointFrame = -1;
+static unsigned g_knifeJointEyes = 0;
+static unsigned long g_knifeJointDraws = 0;
+static hipknife::Calls NativeKnifeDriverCalls();
 static bool g_glovePoseValid[2]{};
 static bool g_gloveReplacementSeen=false;
 static gloves::Renderer g_gloveRenderer;
@@ -6003,6 +6165,8 @@ volatile LONG g_vrUiEnabled=1,g_vrUiMenu=0,g_vrUiValid=0,g_vrUiU=500000,g_vrUiV=
 volatile LONG g_vrMenuOverlay=1;
 volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=100;
 volatile LONG g_vrMenuDistanceMm=1200;
+volatile LONG g_frontMenuScalePct=100,g_frontMenuDistanceMm=0;
+static int g_holsterMarkerStyle=0;
 volatile LONG g_vrUiEyeCentreU[2]={500000,500000};
 volatile LONG g_vrShadows=0;
 volatile LONG g_vrUiDown=0,g_vrUiBack=0,g_vrUiNativeReady=0;
@@ -6284,7 +6448,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev);
 void DrawVrMenuPointer(IDirect3DDevice9* dev);
 void ReleaseVrMenuResources();
 void ReleaseFpCasterCache();
-static void HolsterHipWorld(float H[3], bool includeHmdOffset = true);
+static void HolsterHipWorld(float H[3], bool includeHmdOffset = false);
 static void GunPivotWorld(float H[3]);
 static void GunAimDir(float d[3]);
 void DrawWeaponWheel(IDirect3DDevice9* dev);
@@ -7467,6 +7631,7 @@ inline int PanelRowId(int i) {
 // exactly, with no rebuild.
 volatile LONG g_startInVr = 1;      // ini [Render] StartInVr
 volatile LONG g_desktopMirrorEye = 0; // ini [Render] DesktopMirrorEye: 0 off, 1 left, 2 right
+volatile LONG g_desktopMirrorFill = 0; // ini [Render] DesktopMirrorFill: 0=letterbox, 1=full stretch, 2=crop 16:9
 // Diagnostic-only desktop HMD: exercise stereo/backbuffer hooks without an XR system.
 // This never changes normal PSVR2 startup behavior unless explicitly enabled in [Diagnostic].
 volatile LONG g_forceDesktopVr = 0; // ini [Diagnostic] ForceDesktopVr
@@ -8974,7 +9139,13 @@ bool InitXRInput() {
             std::string directory(path);const auto slash=directory.find_last_of("\\/");
             if(slash!=std::string::npos){
                 directory.resize(slash);
-                g_hipKnifeReady=g_hipKnifeRenderer.Load(directory+"\\vr-assets\\knife\\knife.svrk");
+                g_hipKnifeReady=g_hipKnifeRenderer.Load(directory+"\\vr-assets\\knife\\knife.svrk",
+                    GetPrivateProfileIntA("Render","KnifeSceneLighting",0,path)!=0);
+                if(g_knifeHandGrip){
+                    std::vector<unsigned char> bytes;
+                    g_knifeHandAssetReady=hipknife::Read(directory+"\\vr-assets\\knife\\knife_hand.svng",bytes,1024)&&
+                        knifehand::Decode(bytes.data(),bytes.size(),g_knifeHandData);
+                }
             }
         }
         Log("hip knife: cache=%s verts=%u tris=%u original diffuse=%ux%u; pre-TMD both hands, post-TMD right hand only, native camera trace",
@@ -9267,6 +9438,11 @@ bool InitXRInput() {
             try {
                 g_gloveExperiment=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation\\native_hands.svni",path)&&
                     g_nativeGloveRenderer.Load(path);
+                if(g_gloveExperiment&&GetPrivateProfileIntA("Render","HandThumbPoseFix",0,ini)){
+                    const bool loaded=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation\\hand_thumb.svnt",path)&&
+                        g_nativeGloveRenderer.LoadThumbs(path);
+                    Log("native-gloves: separate fist/knife thumb poses %s",loaded?"ready":"FAILED; old pose retained");
+                }
             }catch(...){g_gloveExperiment=false;}
             Log("native-gloves: startup %s triangles=%u cap=%u; original VB/material/shaders, no replacement texture; GLB suppressed",
                 g_gloveExperiment?"CPU ready":"FAILED, native baseline kept",
@@ -10173,8 +10349,7 @@ void SyncXRInput(XrTime displayTime) {
                 event==hipknife::Event::Picked?"PICKED":event==hipknife::Event::Sheathed?"SHEATHED":
                 event==hipknife::Event::Swing?"SWING -> RB pulse":"RESET",g_hipKnifeState.held,f.pawn);
             if(event==hipknife::Event::Swing){
-                InterlockedOr(&g_vrRecorderEventFlags,vrrec::Melee);
-                InterlockedExchange64(&g_lastMeleeEdgeMs,(LONG64)f.nowMs);
+                ArmMeleeWindowFromKnife();
             }
         }
         // MAIN round 11/12/13/14 pickup-refusal probe: grip held with a hand at
@@ -10307,7 +10482,7 @@ void SyncXRInput(XrTime displayTime) {
     // STORED hand==hip at centre would prove misalignment; edge ring
     // contacts prove radius, not offset.
     float holsterHip[3]{};
-    HolsterHipWorld(holsterHip, true); // same point the ring draws / gun renders
+    HolsterHipWorld(holsterHip, false); // head-relative UU, matching handX/Y/Z (which is hand-head)
     // MAIN round 16: user trim moves the TRIGGER onto the felt ring without
     // touching the ring or the stored-gun render. Body frame like HipPoint;
     // cm values apply only when the user sets non-zero INI values.
@@ -10517,8 +10692,17 @@ void SyncXRInput(XrTime displayTime) {
     if (trianglePressed) btns |= XI_START;
     static bool healthWasDown = false;
     bool healthDown = false;
+    static bool knifeImpulseWasDown = false;
     for (int i = 0; i < kPadButtonCount; ++i) {
         bool down = getBool(g_padButtons[i].action);
+        if (i == g_impulseBtnIdx && g_hipKnifeState.held >= 0) {
+            if (down && !knifeImpulseWasDown && !uiMenu && !Rd(g_gamePaused)) {
+                g_hipKnifeState.TriggerAttack(GetTickCount64(), g_hipKnifeConfig.pulseMs);
+                ArmMeleeWindowFromKnife();
+                Log("hip knife: IMPULSE BTN ATTACK -> RB pulse held=%d", g_hipKnifeState.held);
+            }
+            knifeImpulseWasDown = down;
+        }
         if((i==g_impulseBtnIdx&&(g_hipKnifeState.held>=0||g_hipKnifeTrigger[OffHand()].blocked))||
            (!strcmp(g_padButtons[i].name,"use")&&hipknife::Reserves(g_hipKnifeState,AimHand())))down=false;
         if (i >= 0 && !strcmp(g_padButtons[i].name, "health")) {
@@ -11003,6 +11187,7 @@ void SyncXRInput(XrTime displayTime) {
         const bool knifeTrigDown = knifeTrig > 0.5f;
         if(g_hipKnifeState.held >= 0 && knifeTrigDown && !knifeTrigWasDown && !uiMenu && !Rd(g_gamePaused)){
             g_hipKnifeState.TriggerAttack(GetTickCount64(), g_hipKnifeConfig.pulseMs);
+            ArmMeleeWindowFromKnife();
             Log("hip knife: TRIGGER ATTACK -> RB pulse held=%d pawn=%08X", g_hipKnifeState.held, (uint32_t)g_playerPawn);
         }
         knifeTrigWasDown = knifeTrigDown;
@@ -11118,6 +11303,7 @@ void SyncXRInput(XrTime displayTime) {
 void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     if (!g_xrReady) { NoteXrHeartbeat(-1, -1); return; }
     PumpXR();
+    UpdateAdaptiveTriggers();
     if (!g_xrRunning) { NoteXrHeartbeat(-1, -1); return; }
 
     XrFrameState fs{ XR_TYPE_FRAME_STATE };
@@ -12011,7 +12197,9 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     uint32_t layerCount = 0;
 
     const int64_t diagBridge = g_diagEnabled ? DiagQpc() : 0;
-    g_cinemaWorldAnchor.Observe(Rd(g_inCinematic)!=0,Rd(g_cutsceneWorldScreen)!=0);
+    const bool isVideoFlat = (g_sceneMode.Current() == vrscene::Mode::VideoFlat);
+    const bool activeWorldAnchor = (Rd(g_inCinematic) != 0) || isVideoFlat;
+    g_cinemaWorldAnchor.Observe(activeWorldAnchor, Rd(g_cutsceneWorldScreen) != 0);
     if(g_cinemaReferenceChangeTime && fs.predictedDisplayTime>=g_cinemaReferenceChangeTime) {
         g_cinemaWorldAnchor.Reset();g_cinemaReferenceChangeTime=0;
     }
@@ -12029,7 +12217,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // half (validated composition coordinates, not a blind half reuse). Both
     // eyes share that same half crop; never one half per eye.
     const bool cineCrop = frame && frame->cineFlat && frame->dup && !frame->stereo &&
-                          !frame->menuFlat && g_srcW >= 2;
+                          (!frame->menuFlat || isVideoFlat) && g_srcW >= 2;
     const bool monoCrop = cropEyes || cineCrop;
     g_scCropped = monoCrop;
     if (frame) {
@@ -12226,7 +12414,9 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                     // Same proved composed pixels; the compositor places the screen in LOCAL
                     // space instead of interpreting it as a head-following projection image.
                     // A pause/menu keeps its established presentation and retains this anchor.
-                    if(cineCrop && Rd(g_cutsceneWorldScreen) && Rd(g_inCinematic) &&
+                    const bool menuPermitted = (!Rd(g_vrMenuClass) || Rd(g_vrMenuClass) == 3 || (isVideoFlat && Rd(g_vrMenuClass) == 1));
+                    if(cineCrop && Rd(g_cutsceneWorldScreen) && activeWorldAnchor &&
+                       menuPermitted && !Rd(g_panelOpen) &&
                        cinemascreen::TrackingAllowsAnchor(g_cinemaWorldAnchor.valid,frame->eyePositionsValid)) {
                         const auto& r=frame->cineImage;
                         const int imageW=r.right-r.left,imageH=r.bottom-r.top;
@@ -12793,6 +12983,7 @@ extern volatile LONG g_inForeground;
 extern int g_thisDrawMoved;
 extern volatile LONG g_fgDrawCount;
 static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT first,UINT prims) {
+    if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,0,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
@@ -12800,6 +12991,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMIT
     const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativePrim(dev,t,first,prims);});shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,INT base,UINT min,UINT verts,UINT start,UINT prims) {
+    if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
@@ -12807,6 +12999,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRI
     const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeIndexed(dev,t,base,min,verts,start,prims);});shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT prims,const void* data,UINT stride) {
+    if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,0,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
@@ -12814,6 +13007,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIV
     const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeUP(dev,t,prims,data,stride);});shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexedUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT min,UINT verts,UINT prims,const void* indices,D3DFORMAT format,const void* data,UINT stride) {
+    if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
@@ -12830,7 +13024,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceStretch(IDirect3DDevice9* dev,IDirec
 }
 static ShadowSetPS shadowOriginalPS=nullptr;
 static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
-    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);}return hr;
+    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);nativefx::BindPS(ps);}return hr;
 }
 // Fix-I/menu census: wire the dormant MenuDrawTrace recorder into the four draw hooks
 // (calls below) with path masks in StereoPairBody (1) and HudStereoPair (2); provider
@@ -13114,6 +13308,10 @@ static void VfxCaptureBaseCam(const float* mat, int conv) {
 
 template <typename DrawFn>
 HRESULT StereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
+    if(nativefx::Probe()&&shadowtrace::active)
+        nativefx::Observe(dev,g_camMats,g_camMatUsed,Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed());
+    nativefx::AliasScope<IDirect3DDevice9,CamMatSlot,PFN_SetVSConstF> alias(dev,g_camMats,g_camMatUsed,kMaxCamMats,g_origSetVSConstF,
+        nativefx::selected.mode==2&&Rd(g_dupDraws)&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed());
     if (!g_timeOurWork) return StereoPairBody(dev, draw);
     const LARGE_INTEGER t0 = Now();
     const HRESULT hr = StereoPairBody(dev, draw);
@@ -13340,7 +13538,9 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             }
             g_origSetVSConstF(dev, cs.reg, mat, 4);
         }
+        if(g_knifeHandGrip)g_knifeStereoEye=0;
         hr = draw();
+        if(g_knifeHandGrip)g_knifeStereoEye=-1;
         VfxEyeDraw(dev, 0); // host VFX, left eye: matrices for this eye still bound
     }
 
@@ -13366,7 +13566,9 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             }
             g_origSetVSConstF(dev, cs.reg, mat, 4);
         }
+        if(g_knifeHandGrip)g_knifeStereoEye=1;
         HRESULT hr2 = draw();
+        if(g_knifeHandGrip)g_knifeStereoEye=-1;
         if (dbg == 2) hr = hr2;
         VfxEyeDraw(dev, 1); // host VFX, right eye: matrices for this eye still bound
     }
@@ -15032,9 +15234,30 @@ inline bool MeleeWindowActive() {
 // 32-bit word. The prior active-window path executed two locked cmpxchg8b operations plus
 // GetTickCount64 for every mesh draw, exactly during the knife animation where the headset regressed.
 inline void RefreshArmsAnimActive() {
-    InterlockedExchange(&g_armsAnimActiveCached,(HealWindowActive()||MeleeWindowActive())?1:0);
+    const bool heal=HealWindowActive(),melee=MeleeWindowActive();
+    const int holder=g_hipKnifeState.held;
+    const bool tracked=(holder==0||holder==1)&&g_handPositionValid[holder]&&g_handPoseValid[holder];
+    const bool keep=knifehand::KeepTrackedMelee(g_knifeTrackedMelee&&g_knifeHandGrip&&g_knifeHandAssetReady,
+        melee&&(NativeGlovesEligible()||NativeKnifeOffHandEligible()),g_hipKnifeReady,g_hipKnifeVisible,holder,tracked,melee,heal);
+    InterlockedExchange(&g_armsAnimActiveCached,(heal||(melee&&!keep))?1:0);
+    static bool wasKept=false;static unsigned notes=0;
+    if(keep&&!wasKept&&notes++<8)Log("knife-hand: melee display stays controller-tracked holder=%d; native damage untouched",holder);
+    wasKept=keep;
 }
 inline bool ArmsAnimActive() { return Rd(g_armsAnimActiveCached)!=0; }
+
+inline void ArmMeleeWindowFromKnife() {
+    if (InterlockedCompareExchange(&g_meleeArmsMs, 0, 0) <= 0) return;
+    InterlockedOr(&g_vrRecorderEventFlags, vrrec::Melee);
+    const LONG64 now = (LONG64)GetTickCount64();
+    InterlockedExchange64(&g_lastMeleeEdgeMs, now);
+    const LONG dly = InterlockedCompareExchange(&g_meleeDelayMs, 0, 0);
+    const LONG end = InterlockedCompareExchange(&g_meleeArmsMs, 0, 0);
+    InterlockedExchange64(&g_meleeFromMs, now + dly);
+    InterlockedExchange64(&g_meleeUntilMs, now + (end > dly ? end : dly + 1));
+    InterlockedExchange(&g_meleePending, 1);
+    RefreshArmsAnimActive();
+}
 
 // Was this mesh on screen when the latch was taken?
 static bool FgIsBaseline(UINT verts) {
@@ -15535,7 +15758,12 @@ static void GunPivotWorld(float H[3]) {
     if (Rd(g_weaponHolstered)) {
         // A stored weapon is body-locked at the hip. Do not run controller
         // follow, ADS pullback or HMD-relative hand translation on this path.
-        HolsterHipWorld(H);
+        HolsterHipWorld(H, false);
+        if (g_gunHeadOffset) {
+            H[0] += g_hmdOffset[0];
+            H[1] += g_hmdOffset[1];
+            H[2] += g_hmdOffset[2];
+        }
         return;
     }
     H[0] = G[0]; H[1] = G[1]; H[2] = G[2];      // no position following -> translation cancels
@@ -16145,6 +16373,9 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     const bool wristAnchor = freeWrist || (gloves && Rd(g_noTmdPaletteFix) && Rd(g_gloveIsolate)==2 && !supportGrip && handValid[0] && handValid[1] &&
         handanchor::GameplaySource(Rd(g_noTmdWristAnchorFix)!=0,Rd(g_inCinematic)!=0,
             Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo));
+    const bool nativeOffKnife = NativeKnifeOffHandEligible();
+    const bool offWristAnchor = !wristAnchor && gloves && nativeOffKnife &&
+        handValid[0] && handValid[1];
     if(wristAnchor) {
         // Undo the camera transform actually used by StereoPairBody, not the live controller
         // surrogate: BuildGunC can differ at a holster/ADS; BuildTmdC has its own anchor/trim.
@@ -16168,6 +16399,24 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         memcpy(primary,targetC[AimHand()],sizeof(primary));memcpy(off,targetC[OffHand()],sizeof(off));
         static LONG saidAnchor=0;
         if(!InterlockedExchange(&saidAnchor,1))Log("NoTmdWristAnchorFix: reconstructed native wrists -> own tracked targets; actual ride inverse; idle left shift bypassed only here");
+    } else if (offWristAnchor) {
+        if(g_thisDrawMoved==1)BuildGunC(base);
+        else if(g_thisDrawMoved==2)BuildTmdC(base);
+        static armbind::Mat noTmdBind[90];static bool bindReady=false;
+        if(!bindReady)bindReady=armbind::BuildReference(bindassets::noTmd,90,noTmdBind);
+        const GloveRefBone* r=GloveRefs();
+        const int offSide=OffHand();
+        const int wsOff=GloveFindSlot(sectionMap,slots,r,89,offSide?"r_arm_wrist":"l_arm_wrist");
+        float targetOff[4][4];
+        if(bindReady&&wsOff>=0){
+            armik::V h{(float)Rd(g_offHandOffX)/kHandFixed,
+                (float)Rd(g_offHandOffY)/kHandFixed,
+                (float)(g_gunSignPosZ*Rd(g_offHandOffZ))/kHandFixed};
+            if(g_gunHeadOffset){h.x+=g_hmdOffset[0];h.y+=g_hmdOffset[1];h.z+=g_hmdOffset[2];}
+            if(handanchor::TargetWrist(targetOff,noTmdBind[offSide?51:9],
+                reinterpret_cast<const float (*)[4]>(&saved[wsOff*3]),local,off,h))
+                memcpy(off,targetOff,sizeof(off));
+        }
     }
     const float (*leftTarget)[4] = off;
     if (supportGrip) {
@@ -16301,7 +16550,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // left than the native gun-hold, while the right hand stays on its controller.
     const bool weaponInHand = Rd(g_weaponObj)!=0 &&
         InterlockedCompareExchange(&g_gunVerts, 0, 0) != 0 && !Rd(g_weaponHolstered);
-    const float leftShift = (wristAnchor || !weaponInHand) ? 0.f
+    const float leftShift = (wristAnchor || offWristAnchor || nativeOffKnife || !weaponInHand) ? 0.f
         : (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
     // Idle shift parks the free left glove off the native gun-hold. During an authored
     // pistol grip that same nudge is what puts the support hand beside the weapon.
@@ -16358,11 +16607,39 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             Log("FingerScale fail-closed slots=%d (wrist descendants kept rigid)", fingerScaleRejected);
         }
     }
-    // Exact free noTMD draw only. Original GPU skin, UVs and material remain;
-    // finger rotations/cuff follow the same native wrist/scale as the gun rig.
-    if(gloves&&wristAnchor&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount&&
-       NativeGlovesEligible()&&g_nativeGloveRenderer.Ensure(dev))
-        g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,g_gloveBlend);
+    // Exact free noTMD draw, or off-hand knife grip while aiming a weapon one-handed.
+    // Original GPU skin, UVs and material remain; when aiming a weapon, only the off-hand
+    // fingers/thumb are posed while the weapon hand keeps its native grip fingers.
+    const bool nativeBoth = wristAnchor && NativeGlovesEligible();
+    if (nativeOffKnife) {
+        static LONG saidOffKnife = 0;
+        if (InterlockedCompareExchange(&saidOffKnife, 1, 0) == 0)
+            Log("PrepareIndependentLeft: nativeOffKnife active (joint glove+knife pose while weapon held)");
+    }
+    if(gloves&&(nativeBoth||nativeOffKnife)&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount&&
+       g_nativeGloveRenderer.Ensure(dev)){
+        const bool joint=g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&g_hipKnifeVisible&&
+            (g_hipKnifeState.held==0||g_hipKnifeState.held==1);
+        const int held=g_hipKnifeState.held;
+        if(joint&&g_knifeTrackedMelee){
+            const unsigned slot=held?1:18;
+            if(!g_knifeMeleeReference.Update((std::uint32_t)g_playerPawn,g_hipKnifeState.pickedMs,held,
+                MeleeWindowActive(),reinterpret_cast<const float(*)[4]>(&saved[slot*3]),
+                reinterpret_cast<float(*)[4]>(&changed[slot*3]),g_nativeGloveRenderer.WristReference((unsigned)held))){
+                static unsigned notes=0;if(notes++<4)Log("knife-hand: melee wrist correction unavailable holder=%d; joint draw skipped, no guessed orientation",held);
+                g_knifeHandPoseThisDraw=false;return 0;
+            }
+        }
+        const unsigned fingerMask=nativeBoth?3u:(1u<<(unsigned)OffHand());
+        float digits[2][5];for(unsigned side=0;side<2;++side)for(unsigned d=0;d<5;++d)
+            digits[side][d]=joint&&(int)side==held?g_knifeHandData.fingers[side][d]:g_gloveBlend[side];
+        g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,g_gloveBlend,joint?digits:nullptr,joint?held:-1,fingerMask);
+        if(joint&&g_nativeGlovePoseThisDraw){
+            const unsigned slot=held?1:18; // resolved exact cooked palette: right wrist51 / left9.
+            g_knifeHandPoseThisDraw=armbind::FromGpu(reinterpret_cast<const float(*)[4]>(&changed[slot*3]),g_knifeHandWrist);
+            std::memcpy(g_knifeHandLocal.m,local,sizeof(local));
+        }
+    }
     // Internal palette writes must bypass camera/HUD upload classification.
     if(!g_origSetVSConstF || FAILED(g_origSetVSConstF(dev,5,&changed[0][0],regs))) {
         IndependentAuditCount(IHA_PALETTE,audit);
@@ -16650,6 +16927,88 @@ static bool NativeGlovesEligible() {
         Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,g_xrSessionState==XR_SESSION_STATE_FOCUSED,
         Rd(g_dupDraws)!=0,g_haveEyes&&g_eyePositionsValid,g_glovePoseValid[0],g_glovePoseValid[1],
         Rd(g_weaponObj)!=0&&Rd(g_weaponHolstered)==0,Rd(g_twoHandActive)!=0);
+}
+static bool NativeKnifeOffHandEligible() {
+    const int offSide=OffHand();
+    return g_independentHands&&Rd(g_gloveIsolate)==2&&
+        g_gloveExperiment&&g_nativeGloveExperiment&&g_nativeGloveRenderer.Ready()&&
+        g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&g_hipKnifeVisible&&
+        g_hipKnifeState.held==offSide&&
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&
+        !Rd(g_gamePaused)&&!Rd(g_vrUiMenu)&&!Rd(g_inCinematic)&&
+        g_xrSessionState==XR_SESSION_STATE_FOCUSED&&
+        Rd(g_dupDraws)!=0&&g_haveEyes&&g_eyePositionsValid&&
+        g_glovePoseValid[offSide]&&
+        Rd(g_weaponObj)!=0&&Rd(g_weaponHolstered)==0&&!Rd(g_twoHandActive);
+}
+typedef HRESULT (STDMETHODCALLTYPE *PFN_SetViewport)(IDirect3DDevice9*, const D3DVIEWPORT9*);
+typedef HRESULT (STDMETHODCALLTYPE *PFN_Clear)(IDirect3DDevice9*, DWORD, const D3DRECT*, DWORD, D3DCOLOR, float, DWORD);
+typedef HRESULT (STDMETHODCALLTYPE *PFN_SetTexture)(IDirect3DDevice9*,DWORD,IDirect3DBaseTexture9*);
+extern PFN_SetTexture g_origSetTexture;
+extern PFN_SetViewport g_origSetViewport;
+extern PFN_Clear shadowNativeClear;
+
+static hipknife::Calls NativeKnifeDriverCalls(){
+    return {shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
+        shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport,g_origSetVSConstF};
+}
+static void KnifeHandDisable(const char* reason){
+    g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};g_knifeHandPoseThisDraw=false;
+    static unsigned notes=0;if(notes++<8)Log("knife-hand: disabled (%s); original gun/hands retained",reason);
+}
+static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT vertices){
+    if(!g_knifeHandGrip||!g_knifeHandPoseThisDraw||!g_hipKnifeReady||
+       !g_hipKnifeVisible||g_hipKnifeState.held<0||g_hipKnifeState.held>1||g_knifeStereoEye<0)return;
+    const LONG frame=Rd(g_sceneModeFrame);
+    if(g_knifeJointFrame!=frame){g_knifeJointFrame=frame;g_knifeJointEyes=0;}
+    const unsigned bit=1u<<g_knifeStereoEye;if(g_knifeJointEyes&bit)return;
+    DWORD mask=0,blend=0;
+    if(FAILED(dev->GetRenderState(D3DRS_COLORWRITEENABLE,&mask))||
+       FAILED(dev->GetRenderState(D3DRS_ALPHABLENDENABLE,&blend)))return;
+    // Depth-only and additive native light passes do not own final base colour.
+    if((mask&7)!=7||blend)return;
+    const auto layout=g_boundShaderLayout;
+    float eye[4][4];
+    if(layout.viewProjection<0||FAILED(dev->GetVertexShaderConstantF((UINT)layout.viewProjection,&eye[0][0],4))||
+       !knifehand::StandardDepth(eye)){KnifeHandDisable("unsupported native eye/depth projection");return;}
+    IDirect3DSurface9* target=nullptr;D3DSURFACE_DESC desc{};
+    if(FAILED(dev->GetRenderTarget(0,&target))||!target){KnifeHandDisable("missing native colour target");return;}
+    const bool targetOk=SUCCEEDED(target->GetDesc(&desc))&&desc.MultiSampleType==D3DMULTISAMPLE_NONE;
+    target->Release();
+    if(!targetOk||!g_hipKnifeRenderer.EnsureShared(dev,desc.Width,desc.Height)){
+        KnifeHandDisable("joint GPU resources unavailable");return;
+    }
+    const bool sceneLit=desc.Format==D3DFMT_A16B16G16R16F&&g_hipKnifeRenderer.LightingMatch(dev);
+    const hipknife::Calls calls=NativeKnifeDriverCalls();
+    if(!calls.Valid()){KnifeHandDisable("raw driver callbacks unavailable");return;}
+    hipknife::StateGuard<> guard(dev,g_hipKnifeRenderer.SharedState(),calls);
+    if(!guard.valid){KnifeHandDisable("native state capture failed");return;}
+    // The original foreground/world depth is NEVER cleared or written by this
+    // experiment. The pair shares this private depth, at the original eye VP.
+    bool ok=hipknife::PrimePrivateDepth(dev,g_hipKnifeRenderer.SharedDepth(),guard.ds,calls)&&
+        SUCCEEDED(dev->SetRenderState(D3DRS_ZENABLE,D3DZB_TRUE))&&
+        SUCCEEDED(dev->SetRenderState(D3DRS_ZWRITEENABLE,TRUE))&&
+        SUCCEEDED(dev->SetRenderState(D3DRS_ZFUNC,D3DCMP_LESSEQUAL))&&
+        SUCCEEDED(dev->SetRenderState(D3DRS_STENCILENABLE,FALSE));
+    for(unsigned i=0;i<guard.count&&ok;++i)
+        ok=SUCCEEDED(dev->SetRenderState((D3DRENDERSTATETYPE)(i?D3DRS_COLORWRITEENABLE1+i-1:D3DRS_COLORWRITEENABLE),0));
+    // Same original VB/IB/declaration/skin/VS/PS as the preceding glove colour
+    // draw, colour masked. Its real fingers therefore occlude the real handle.
+    if(ok)ok=SUCCEEDED(g_origDrawIndexedPrim(dev,D3DPT_TRIANGLELIST,baseVertex,0,vertices,0,g_nativeGloveRenderer.Triangles()));
+    armbind::Mat a,b,clip;
+    if(ok){
+        skeletal::Multiply(a.m,g_knifeHandData.mount[g_hipKnifeState.held].m,g_knifeHandWrist.m);
+        skeletal::Multiply(b.m,a.m,g_knifeHandLocal.m);
+        skeletal::Multiply(clip.m,b.m,eye);
+        ok=sceneLit?g_hipKnifeRenderer.DrawLitShared(dev,calls,b.m,clip.m):
+            g_hipKnifeRenderer.DrawShared(dev,calls,clip.m);
+    }
+    const bool restored=guard.Restore();
+    if(!ok||!restored){KnifeHandDisable(restored?"joint draw failed":"joint state restore failed");return;}
+    g_knifeJointEyes|=bit;++g_knifeJointDraws;
+    static unsigned notes=0;if(notes++<4)
+        Log("knife-hand: native joint eye=%d frame=%ld holder=%d camera=c%d sharedDepth=%ux%u sceneLit=%d; original glove material, original knife UV",
+            g_knifeStereoEye,frame,g_hipKnifeState.held,layout.viewProjection,desc.Width,desc.Height,sceneLit);
 }
 static float g_customGloveNativeScale=1.f;
 static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangles) { // arms, in modes 2 and 3
@@ -18309,7 +18668,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         if (InterlockedCompareExchange(&reportedFaces, 1, 0) == 0)
             Log("GloveIsolation: drawing %u glove/cuff faces from audited noTMD section",gloveisolate::NativeHandFaceCount());
     }
-    const bool nativeCuff=independentRegs&&g_nativeGlovePoseThisDraw&&NativeGlovesEligible()&&
+    const bool nativeCuff=independentRegs&&g_nativeGlovePoseThisDraw&&(NativeGlovesEligible()||NativeKnifeOffHandEligible())&&
         t==D3DPT_TRIANGLELIST&&(numVertices==3314||numVertices==2924)&&
         startIndex==0&&primCount==4830&&nSeg==1&&segStart[0]==0&&segPrims[0]==4830;
     nativegloves::IndexGuard<> nativeIndices(dev,nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr);
@@ -18317,7 +18676,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         HRESULT hr = D3D_OK;
         if(nativeIndices.valid){
             ++g_nativeGloveRenderer.draws;
-            return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,0,g_nativeGloveRenderer.Triangles());
+            const HRESULT h=g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,0,g_nativeGloveRenderer.Triangles());
+            if(SUCCEEDED(h))DrawKnifeWithNativeGlove(dev,baseVertex,numVertices);
+            return h;
         }
         if (isolateNoTmdFaces) {
             for (const auto& run : gloveisolate::kNoTmdHandFaces) {
@@ -18941,6 +19302,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // only its old scene/backbuffer canvas copy. Never suppress the RTT producer.
     if (Rd(g_vrMenuClass) == 3 && Rd(g_rtIsScene) && !Rd(g_vrMenuProviderDrawing) &&
         PauseRttProbe::Presented()) return D3D_OK;
+    if (InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) && g_sceneMode.Flat()) return draw();
     if (!g_hudRemap) return StereoPair(dev, draw);
     InterlockedIncrement(&g_uiSeen);          // ⭐ run 230
 
@@ -19117,7 +19479,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     const bool menuLayout=InterlockedCompareExchange(&g_vrUiMenu,0,0)!=0;
     const LONG menuClassNow = InterlockedCompareExchange(&g_vrMenuClass, 0, 0);
     if (InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0) &&
-        (menuClassNow == 2 || menuClassNow == 3) &&
+        (menuClassNow == 2 || menuClassNow == 3 || menuClassNow == 4) &&
         pausemenuspace::IsPauseCanvasOrtho(c)) {
         menumono::NoteDraw((int)menuClassNow, true, (unsigned)vp.Width, (unsigned)vp.Height,
                            (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0), c, 1);
@@ -19126,14 +19488,13 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // shows whole. Remapping both eyes into that texture is the doubled menu.
     // The backbuffer path (title / IIS) stays split, then the XR crop shows one
     // half in each eye. Bink never reaches this function.
-    if ((menuClassNow == 2 || menuClassNow == 3) &&
+    if ((menuClassNow == 2 || menuClassNow == 3 || menuClassNow == 4) &&
         !InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
         D3DVIEWPORT9 vpMenu{};
         dev->GetViewport(&vpMenu);
         const unsigned sceneW = (unsigned)InterlockedCompareExchange(&g_srcW, 0, 0);
-        // Class 3 pause: evidence-only single draw until composition stage is proven.
-        // Class 2 may still use per-eye canvas remap on the scene-sized RT.
-        const bool perEyeCanvas = menuClassNow != 3 &&
+        // Both Class 2, Class 3 and Class 4 use per-eye canvas remap on the scene-sized RT.
+        const bool perEyeCanvas =
             pausemenuspace::DiegeticMenuCanvas(c, vpMenu.Width, sceneW);
         const int compose = perEyeCanvas ? 1 : 0;
         menumono::NoteDraw((int)menuClassNow, false, vpMenu.Width, vpMenu.Height, sceneW, c,
@@ -19158,7 +19519,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
                 dev->SetViewport(&vpMenu);
                 dev->SetScissorRect(&sc);
                 const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
-                const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3;
+                const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3 || menuClassNow == 4;
                 const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
                 float m[16];
                 memcpy(m, c, sizeof(m));
@@ -19227,16 +19588,18 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     }
     // Title corner labels only. Boot/Bink stay on their own path (class 1 scale
     // is the IIS title, which is not the video quad).
-    const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3;
+    const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3 || menuClassNow == 4;
     if (!InterlockedCompareExchange(&g_noteOpen, 0, 0) &&
         (menuSafe ||
          InterlockedCompareExchange(&g_gamePaused, 0, 0) ||
          InterlockedCompareExchange(&g_menuFnHits[5], 0, 0) == 0)) {
         // Class 1 only: the captured log used MenuInsetPct=100 and landed on
         // the shared 0.84 clamp, which still put the IIS title on the eye edge.
-        // Classes 2 and 3 keep 0.84. Distance and ndcShift are untouched.
+        // Producer keeps its 0.84 clamp; optional class-2 presentation tuning
+        // below applies only to the backbuffer fallback, not a second RT inset.
         const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
-        const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
+        float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
+        if(Rd(g_rtIsBackbuffer))k=FrontMenuInset((int)menuClassNow,Rd(g_panelOpen)!=0,k,(int)Rd(g_frontMenuScalePct));
         Reg4* q = reinterpret_cast<Reg4*>(cIn);
         for (int i=0;i<4;++i) { q[i].x*=k; q[i].y*=k; }
         if (InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
@@ -21102,7 +21465,7 @@ void RefreshCameraPosition() {
                 InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0,
                 g_playerPawn != 0 && g_playerPawn == s_lastPawn,
                 g_playerPawn != 0,
-                Rd(g_vrMenuClass) != 0,
+                Rd(g_vrMenuClass) != 0 || Rd(g_vrUiMenu) != 0 || Rd(g_gamePaused) != 0,
                 VrModeOn() && Rd(g_sceneFlatEnabled) && Rd(g_cutsceneVideoHandoffFix) &&
                     g_sceneMode.Current()==vrscene::Mode::VideoFlat && Rd(g_cineArgRaw)==1,
                 Rd(g_cineMenuLoadClear) != 0,
@@ -21110,12 +21473,12 @@ void RefreshCameraPosition() {
             };
             static unsigned cameraPolicyNotes=0;
             if(cameraPolicyNotes++<16)
-                Log("cutscene-camera: cine=%d native=%ld mode=%s videoHandoff=%d pawnSame=%d pawnValid=%d menuClass=%ld",
+                Log("cutscene-camera: cine=%d native=%ld mode=%s videoHandoff=%d pawnSame=%d pawnValid=%d menuClass=%ld menuSeen=%d",
                     cc.cineOn?1:0,Rd(g_cineArgRaw),vrscene::Name(g_sceneMode.Current()),cc.videoHandoff?1:0,
-                    cc.pawnSame?1:0,cc.pawnValid?1:0,Rd(g_vrMenuClass));
+                    cc.pawnSame?1:0,cc.pawnValid?1:0,Rd(g_vrMenuClass),cc.menuSeenSinceGameplay?1:0);
             if (CameraChangeClearsCine(cc)) {
                 if (Rd(g_cineMenuLoadClear) && cc.videoHandoff &&
-                    ((cc.menuFocused && cc.pawnSame) || cc.menuSeenSinceGameplay))
+                    (cc.menuFocused || cc.menuSeenSinceGameplay))
                     Log("menu-load cut: camera %p -> %p, clearing CINE despite video handoff (menu evidence: focused=%d latch=%d samePawn=%d)",
                         (void*)s_lastCam, (void*)cam, cc.menuFocused ? 1 : 0,
                         cc.menuSeenSinceGameplay ? 1 : 0, cc.pawnSame ? 1 : 0);
@@ -21123,6 +21486,8 @@ void RefreshCameraPosition() {
                     Log("level transition: camera %p -> %p, CINE was %s - clearing it",
                         (void*)s_lastCam, (void*)cam, cc.cineOn ? "ON" : "OFF");
                 InterlockedExchange(&g_inCinematic, 0);
+                InterlockedExchange(&g_cineArgRaw, 0);
+                g_menuLatch.menuSeen = false;
             } else if (cc.cineOn) {
                 Log("camera cut: camera %p -> %p, CINE stays ON reason=%s pawn=%p oldPawn=%p menuClass=%ld mode=%s",
                     (void*)s_lastCam, (void*)cam, cc.videoHandoff?"video-world-handoff":"same-pawn",
@@ -21772,18 +22137,17 @@ static void UpdateSceneModeFrame() {
         InterlockedCompareExchange(&g_vrUiMenu, 0, 0) != 0,
         InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
         vrscene::FrontendMenuPresentation(Rd(g_cutsceneMenuHandoffFix)!=0,
-            (int)Rd(g_vrMenuClass), Rd(g_vrUiMenu)!=0),
+            (int)Rd(g_vrMenuClass), Rd(g_vrUiMenu)!=0,
+            Rd(g_inCinematic)!=0, Rd(g_gamePaused)!=0),
         CinemaMenuPauseOwnsPresentation(Rd(g_cutsceneMenuPairFix)!=0,
             (int)Rd(g_vrMenuClass),Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0),
     };
     const vrscene::Transition t = g_sceneMode.Advance(signals);
-    // Latch for the menu-load CINE experiment: a frontend menu visited after
-    // gameplay means the next same-session camera cut may be a save/menu load
-    // (menu closes before the cut, so instantaneous menuClass misses it).
-    // Cleared on GameplayStereo; boot menus (no gameplay yet) never arm it.
-    MenuLoadLatchObserve(g_menuLatch,
-        g_sceneMode.Current() == vrscene::Mode::GameplayStereo,
-        g_sceneMode.Current() == vrscene::Mode::MenuFlat && signals.frontendMenu);
+    const bool anyMenuOrPause = signals.menu || signals.paused || signals.frontendMenu ||
+                                signals.cinemaPauseMenu || (Rd(g_vrMenuClass) != 0);
+    const bool inGameplay = (g_sceneMode.Current() == vrscene::Mode::GameplayStereo && g_playerPawn != 0 && !anyMenuOrPause);
+    const bool inActiveCutscene = (g_sceneMode.Current() == vrscene::Mode::CutsceneFlat && signals.cinematic && !anyMenuOrPause && !video);
+    MenuLoadLatchObserve(g_menuLatch, inGameplay, anyMenuOrPause, inActiveCutscene);
     static unsigned sceneTransitionNotes=0;
     if (t.changed && (Rd(g_sceneModeTrace) || (Rd(g_cutsceneVideoHandoffFix) && sceneTransitionNotes++<16))) {
         Log("SceneMode: %s -> %s reason=%lu cinematic=%d video=%d menu=%d paused=%d frontend=%d cinemaPause=%d frame=%ld",
@@ -22131,10 +22495,13 @@ static void* WINAPI ObserveBinkOpen(const char* filename, DWORD flags) {
     // Read before the call; source may be a file handle with BINKFILEHANDLE.
     const bool note=InterlockedIncrement(&g_binkOpenNotes)<=12;
     char name[256]{};
-    const bool readable=(note || (Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix))) && BinkObserveName(filename, name);
+    const bool readable=(note || (Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix))) && BinkObserveName(filename, name, flags);
     const BinkIntroAudioPlan plan=BinkPlanIntroAudio(readable?name:nullptr,
         Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix) && PolishLocalization::PL().IsPolishEnabled(),
         g_binkNativeTracksValid?g_binkNativeTracks:nullptr,g_binkNativeTrackCount,flags);
+    if (readable && BinkKnownIntroName(name)) {
+        g_menuLatch = {};
+    }
     DWORD nativeError=incomingError;
     void* result=BinkOpenWithIntroPlan(plan,
         [](std::uint32_t count,const std::uint32_t* tracks) {
@@ -23115,11 +23482,14 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch) && Stack) {
+    if ((censusOn || routeTwo || cineWatch || nativefx::Probe()) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
         if (fnIdx < 0) InterlockedIncrement(&g_peUnnamed);
     }
+    if(nativefx::Probe()&&fnIdx>=0&&FnIdx(kFnFireFirst)>=0&&fnIdx==FnIdx(kFnFireFirst)&&
+       reinterpret_cast<uintptr_t>(self)==(uintptr_t)(uint32_t)Rd(g_weaponObj))
+        InterlockedIncrement(&nativefx::shots); // Native fire seam, independent of custom VFX host.
 
     if (censusOn && Stack) {
         InterlockedIncrement(&g_peCalls);
@@ -23211,6 +23581,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
                     const LONG raw = (LONG)(*reinterpret_cast<uint32_t*>(p));
                     InterlockedExchange(&g_cineArgRaw, raw);
                     InterlockedExchange(&g_inCinematic, raw ? 1 : 0);
+                    if (raw && !Rd(g_vrUiMenu)) g_menuLatch.menuSeen = false;
                 }
             }
         }
@@ -23481,6 +23852,13 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
             // proven shot direction. Weapon class has no proven mapping, so the
             // stub alternates clips by sequence (its Unknown default). Game thread
             // only fills the mailbox; the render thread drains it in VfxEyeDraw.
+            if (g_adaptiveTriggersEnabled && firedWindow && FnIdx(kFnFireFirst) >= 0 &&
+                fnIdx == FnIdx(kFnFireFirst)) {
+                const unsigned verts = (unsigned)InterlockedCompareExchange(&g_gunVerts, 0, 0);
+                AcquireSRWLockExclusive(&g_shotRunLock);
+                g_shotRun.OnShotFired((unsigned)GetTickCount(), triggershot::WeaponFromGunVerts(verts));
+                ReleaseSRWLockExclusive(&g_shotRunLock);
+            }
             if (firedWindow && FnIdx(kFnFireFirst) >= 0 && fnIdx == FnIdx(kFnFireFirst) &&
                 Rd(g_vfxHost)) {
                 // Origin A/B: the old anchor is camera-relative and ignores the
@@ -25083,6 +25461,9 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 #include "desktop_mirror.h"
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    g_knifeMeleeReference.Reset();
+    nativefx::Release();
+    g_knifeHandPoseThisDraw=false;g_knifeJointFrame=-1;g_knifeJointEyes=0;
     g_nativeGloveRenderer.ReleaseGPU();g_nativeGlovePoseThisDraw=false;
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     g_hipKnifeRenderer.ReleaseGPU();
@@ -25296,6 +25677,12 @@ static void MaybeLoadHudAtlas(IDirect3DDevice9* dev) {
 }
 
 void DrawHipKnife(IDirect3DDevice9* dev){
+    // Held joint assembly was already drawn with the native hand's actual eye
+    // matrices/shared depth. Never redraw it on top as an independent overlay.
+    const LONG frame = Rd(g_sceneModeFrame);
+    if(g_knifeHandGrip && g_hipKnifeState.held >= 0 &&
+       (g_knifeJointFrame == frame || g_knifeJointFrame == frame - 1) &&
+       g_knifeJointEyes != 0) return;
     // MAIN round 18: gate on dupDraws (TRUE stereo, the normal VR path — same
     // signal the belt ring uses), NOT g_stereo (the F12 alternate-eye debug
     // method that SetVrMode/F1 deliberately clear, so the knife could NEVER
@@ -26313,6 +26700,63 @@ static bool DrawFlatRingAt(IDirect3DDevice9* dev, uipointer::V c, const char* ta
     return drewFrame;
 }
 
+// New style shares the exact legacy XR anchors. The interaction state machine
+// and activation radii do not consume this geometry or its proximity colour.
+static bool DrawHolsterCueAt(IDirect3DDevice9* dev,uipointer::V centre,
+                            holstermarker::Item item,int hand){
+    if(!dev||!g_origDrawPrimUP)return false;
+    if(!holstermarker::Eligible(g_sceneMode.Current()==vrscene::Mode::GameplayStereo,
+        Rd(g_gamePaused)!=0,Rd(g_vrUiMenu)!=0,Rd(g_panelOpen)!=0,Rd(g_inCinematic)!=0,
+        g_xrSessionState==XR_SESSION_STATE_FOCUSED))return false;
+    IDirect3DSurface9 *back=nullptr,*target=nullptr;D3DSURFACE_DESC desc{};
+    if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return false;
+    const bool valid=SUCCEEDED(back->GetDesc(&desc))&&desc.Width>=8&&desc.Height>=8&&
+        SUCCEEDED(dev->GetRenderTarget(0,&target))&&target==back;
+    if(target)target->Release();back->Release();if(!valid)return false;
+    if(!g_wristState&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&g_wristState)))return false;
+    float proximityWeight=0;
+    for(int side=0;side<2;++side)if(hand<0||hand==side){
+        const auto& h=g_handLastPos[side];
+        proximityWeight=std::max(proximityWeight,holstermarker::Proximity(centre,{h.x,h.y,h.z},g_handPositionValid[side]&&g_handPoseValid[side]));
+    }
+    holstermarker::Mesh mesh;holstermarker::Build(item,proximityWeight,mesh);
+    struct Pass {
+        IDirect3DDevice9* dev;bool active=false;
+        bool Begin(unsigned width,unsigned height){
+            if(FAILED(g_wristState->Capture()))return false;active=true;
+            const D3DVIEWPORT9 vp{0,0,width,height,0,1};bool ok=SUCCEEDED(dev->SetViewport(&vp));
+            const auto rs=[&](D3DRENDERSTATETYPE state,DWORD value){if(FAILED(dev->SetRenderState(state,value)))ok=false;};
+            if(FAILED(g_origSetVS?g_origSetVS(dev,nullptr):dev->SetVertexShader(nullptr)))ok=false;
+            if(FAILED(shadowOriginalPS?shadowOriginalPS(dev,nullptr):dev->SetPixelShader(nullptr))||
+               FAILED(g_origSetTexture?g_origSetTexture(dev,0,nullptr):dev->SetTexture(0,nullptr))||
+               FAILED(dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE)))ok=false;
+            rs(D3DRS_ZENABLE,FALSE);rs(D3DRS_ZWRITEENABLE,FALSE);rs(D3DRS_STENCILENABLE,FALSE);
+            rs(D3DRS_ALPHATESTENABLE,FALSE);rs(D3DRS_FOGENABLE,FALSE);rs(D3DRS_LIGHTING,FALSE);
+            rs(D3DRS_FILLMODE,D3DFILL_SOLID);rs(D3DRS_SRGBWRITEENABLE,FALSE);
+            rs(D3DRS_CULLMODE,D3DCULL_NONE);rs(D3DRS_SCISSORTESTENABLE,TRUE);
+            rs(D3DRS_ALPHABLENDENABLE,TRUE);rs(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);rs(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+            rs(D3DRS_BLENDOP,D3DBLENDOP_ADD);rs(D3DRS_SEPARATEALPHABLENDENABLE,FALSE);
+            rs(D3DRS_COLORWRITEENABLE,D3DCOLORWRITEENABLE_RED|D3DCOLORWRITEENABLE_GREEN|D3DCOLORWRITEENABLE_BLUE);
+            const auto ts=[&](DWORD stage,D3DTEXTURESTAGESTATETYPE state,DWORD value){if(FAILED(dev->SetTextureStageState(stage,state,value)))ok=false;};
+            ts(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);ts(0,D3DTSS_COLORARG1,D3DTA_DIFFUSE);
+            ts(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);ts(0,D3DTSS_ALPHAARG1,D3DTA_DIFFUSE);
+            ts(0,D3DTSS_RESULTARG,D3DTA_CURRENT);
+            ts(1,D3DTSS_COLOROP,D3DTOP_DISABLE);ts(1,D3DTSS_ALPHAOP,D3DTOP_DISABLE);
+            if(!ok)End();return ok;
+        }
+        bool Eye(int eye,unsigned width,unsigned height){
+            const LONG half=(LONG)width/2;const RECT r{eye?half:0,0,eye?(LONG)width:half,(LONG)height};
+            return SUCCEEDED(dev->SetScissorRect(&r));
+        }
+        bool Draw(unsigned count,const holstermarker::ScreenVertex* v){return SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLELIST,count/3,v,sizeof(*v)));}
+        bool End(){if(!active)return true;active=false;const bool restored=SUCCEEDED(g_wristState->Apply());
+            static unsigned notes=0;if(!restored&&notes++<2)Log("holster cue: ALL-state restore failed");return restored;}
+    } pass{dev};
+    const bool drew=holstermarker::Render(pass,mesh,centre,g_centreYaw,desc.Width,desc.Height,VrUiProjectEye);
+    static unsigned notes=0;if(drew&&notes++<2)Log("holster cue: segmented stereo %s; same anchor; interaction unchanged",item==holstermarker::Item::Gun?"gun":"knife");
+    return drew;
+}
+
 void DrawHolsterMarker(IDirect3DDevice9* dev) {
     if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
         Rd(g_weaponWheelOpen) || !g_holsterEnabled || !WeaponInHands() ||
@@ -26335,7 +26779,7 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
     // vrpose::TrackingDeltaToWorldUU (L1 roundtrip in test-vrpose-invert.cpp)
     // plus the head position — the same space plates project in.
     float H[3];
-    HolsterHipWorld(H, true); // full UU world, same input the stored gun uses
+    HolsterHipWorld(H, false); // head-relative UU, inverted to OpenXR metres to add to g_headPosXR
     const float units = MetresToUU();
     if (units <= 0.0f) return;
     const float byr = g_baseYaw * (6.2831853f / 65536.0f);
@@ -26352,6 +26796,7 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
     // outer 0.1127m / inner 0.0877m (2.5cm rim, empty middle), lying in the
     // XR horizontal plane at hip height. Yaw-invariant by construction.
     static bool saidDrew = false, saidProj = false;
+    if(g_holsterMarkerStyle==1){DrawHolsterCueAt(dev,hip,holstermarker::Item::Gun,AimHand());return;}
     DrawFlatRingAt(dev, hip, "holster marker", saidDrew, saidProj);
 }
 
@@ -26376,6 +26821,7 @@ void DrawKnifeBeltMarker(IDirect3DDevice9* dev) {
     }
     const uipointer::V belt{ g_hipKnifeBelt.x, g_hipKnifeBelt.y, g_hipKnifeBelt.z };
     static bool saidDrew = false, saidProj = false;
+    if(g_holsterMarkerStyle==1){DrawHolsterCueAt(dev,belt,holstermarker::Item::Knife,g_hipKnifeState.held);return;}
     DrawFlatRingAt(dev, belt, "knife belt marker", saidDrew, saidProj);
 }
 
@@ -26448,8 +26894,12 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     static unsigned shadowTraceStable=0;
     shadowTraceStable=shadowTraceReady?std::min(shadowTraceStable+1,30u):0;
     PollGameplayHotPath(shadowTraceStable>=15);
-    if(shadowtrace::Boundary(s,shadowTraceStable>=15,g_logPath))
+    if(shadowtrace::Boundary(s,shadowTraceStable>=15,g_logPath)){
         SaveBackbufferCapture(s,true); // Completed SBS scene, before menu/diagnostic overlays.
+        nativefx::DumpWitness();
+    }
+    nativefx::Boundary(shadowTraceStable>=15&&!CutsceneNativeCameraArmed()&&!Rd(g_gamePaused)&&!Rd(g_panelOpen)&&!Rd(g_vrUiMenu)&&Rd(g_weaponObj)&&!Rd(g_weaponHolstered),shadowtrace::active||shadowtrace::pending,(unsigned)Rd(g_weaponObj));
+    nativefx::Summary();
     PauseRttStart::Install();
     PauseRttProbe::PresentContent(s);
     hotpath::scope frameScope(g_hotPathSampler, hotpath::Family::frame_total);
@@ -26461,6 +26911,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // Sample after the frame's draws have populated the Bink signal and before
     // any matte/overlay is emitted, so presentation policy and diagnostics use
     // the same frame boundary.
+    g_cineMonoReady = false;
     UpdateSceneModeFrame();
     InstallBinkAudioObservation(); // bounded exported-API observation, no audio mutation
     // VFX host: frame serial for once-per-eye draws + effect aging. Render
@@ -26474,6 +26925,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         if (dt < 0.0005f) dt = 0.0005f; if (dt > 0.25f) dt = 0.25f;
         g_vfx.Tick(dt); // no-op without a plugin
     }
+    ComposeCutsceneMonoPair(s);
     DrawCutsceneCinemaMask(s);
     // Age the menu indicator once per frame. Without this a name that fired a minute ago looks
     // identical to one firing right now, which is the whole distinction the readout exists to show.
@@ -29904,6 +30356,16 @@ void LoadIniSettings() {
     g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
     g_cutsceneWorldScreen=GetPrivateProfileIntA("Render","CutsceneWorldScreen",0,path)?1:0;
     g_menuAssetWitness=GetPrivateProfileIntA("Diagnostic","MenuAssetWitness",0,path)?1:0;
+    {
+        char vs[32]{},ps[32]{};
+        GetPrivateProfileStringA("Diagnostic","NativeMuzzleVSHash","",vs,sizeof(vs),path);
+        GetPrivateProfileStringA("Diagnostic","NativeMuzzlePSHash","",ps,sizeof(ps),path);
+        nativefx::Configure(GetPrivateProfileIntA("Diagnostic","NativeMuzzleStereoMode",0,path),
+            GetPrivateProfileIntA("Diagnostic","NativeMuzzleProbe",0,path)!=0,vs,ps,
+            GetPrivateProfileIntA("Diagnostic","NativeMuzzleVSBytes",0,path),
+            GetPrivateProfileIntA("Diagnostic","NativeMuzzlePSBytes",0,path),
+            (int)GetPrivateProfileIntA("Diagnostic","NativeMuzzleMatrixConvention",-1,path));
+    }
     g_cutsceneScreenDistanceMm=cinemascreen::ClampDistanceMm(
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));
     Log("ini: CutsceneWorldScreen=%ld distance=%ldmm (LOCAL anchored quad, default OFF)",
@@ -29922,6 +30384,10 @@ void LoadIniSettings() {
         if (mirror < 0 || mirror > 2) mirror = 0;
         InterlockedExchange(&g_desktopMirrorEye, mirror);
         Log("ini: DesktopMirrorEye=%ld (0=SBS window, 1=left eye, 2=right eye; after XR submit)", mirror);
+        LONG fill = GetPrivateProfileIntA("Render", "DesktopMirrorFill", 0, path);
+        if (fill < 0 || fill > 2) fill = 0;
+        InterlockedExchange(&g_desktopMirrorFill, fill);
+        Log("ini: DesktopMirrorFill=%ld (0=letterbox, 1=full stretch, 2=crop 16:9; fills backbuffer for F12/TV)", fill);
     }
     Log("ini: StartInVr=%ld (%s)", InterlockedCompareExchange(&g_startInVr, 0, 0),
         InterlockedCompareExchange(&g_startInVr, 0, 0)
@@ -30290,6 +30756,12 @@ void LoadIniSettings() {
     if(menuDistance<600)menuDistance=600;if(menuDistance>3000)menuDistance=3000;
     InterlockedExchange(&g_vrMenuDistanceMm,menuDistance);
     Log("ini: VrMenuDistanceMm=%ld (shared OpenXR menu plane for render, laser and hit test)",menuDistance);
+    LONG frontScale=GetPrivateProfileIntA("Render","FrontMenuScalePct",100,path);
+    frontScale=std::max(70L,std::min(100L,frontScale));InterlockedExchange(&g_frontMenuScalePct,frontScale);
+    LONG frontDistance=GetPrivateProfileIntA("Render","FrontMenuDistanceMm",0,path);
+    if(frontDistance!=0)frontDistance=std::max(600L,std::min(3000L,frontDistance));InterlockedExchange(&g_frontMenuDistanceMm,frontDistance);
+    g_holsterMarkerStyle=GetPrivateProfileIntA("Render","HolsterMarkerStyle",0,path)==1?1:0;
+    Log("ini: frontend scale=%ld distanceMm=%ld (class2 only); holsterMarkerStyle=%d (visual only)",frontScale,frontDistance,g_holsterMarkerStyle);
     LONG noteIni = GetPrivateProfileIntA("Render", "NoteInsetPct", 40, path);
     if (noteIni < 25)  noteIni = 25;
     if (noteIni > 100) noteIni = 100;
@@ -30379,7 +30851,7 @@ void LoadIniSettings() {
                         GetPrivateProfileIntA("Render", "CutsceneFlatMode", 1, path) ? 1 : 0);
     g_cutsceneVideoHandoffFix=GetPrivateProfileIntA("Render","CutsceneVideoHandoffFix",1,path)?1:0;
     g_cutsceneMenuHandoffFix=GetPrivateProfileIntA("Render","CutsceneMenuHandoffFix",0,path)?1:0;
-    g_cineMenuLoadClear=GetPrivateProfileIntA("Render","CineMenuLoadClear",0,path)?1:0;
+    g_cineMenuLoadClear=GetPrivateProfileIntA("Render","CineMenuLoadClear",1,path)?1:0;
     g_cutsceneMenuPairFix=GetPrivateProfileIntA("Render","CutsceneMenuPairFix",0,path)?1:0;
     g_handAnchorProbe=GetPrivateProfileIntA("Render","HandAnchorProbe",0,path)?1:0;
     g_noTmdWristAnchorFix=GetPrivateProfileIntA("Render","NoTmdWristAnchorFix",0,path)?1:0;
@@ -30475,6 +30947,10 @@ void LoadIniSettings() {
     Log("ini: HolsterTrimCm fwd=%.0f right=%.0f up=%.0f (trigger-only, 0=at ring)",
         (double)g_holsterTrimFcm,(double)g_holsterTrimRcm,(double)g_holsterTrimUcm);
     g_hipKnifeEnabled=GetPrivateProfileIntA("Input","HipKnifeEnabled",0,path)?1:0;
+    g_knifeHandGrip=GetPrivateProfileIntA("Render","KnifeHandGripEnabled",0,path)!=0;
+    g_knifeTrackedMelee=GetPrivateProfileIntA("Render","KnifeTrackedMelee",0,path)!=0;
+    Log("ini: KnifeTrackedMelee=%d (keep joint knife/controller pose during native attack)",g_knifeTrackedMelee);
+    Log("ini: KnifeHandGripEnabled=%d (joint original glove/knife assembly)",g_knifeHandGrip);
     g_hipKnifeIgnoreTMD=GetPrivateProfileIntA("Input","HipKnifeIgnoreTMD",1,path)?1:0;
     Log("ini: HipKnifeIgnoreTMD=%d (0=trust engine mTMD, 1=force pre-TMD both-hands rule)",g_hipKnifeIgnoreTMD);
     g_hipKnifeConfig.left=std::max(.10f,std::min(.50f,IniSignedInt("Input","HipKnifeLeftCm",25,path)*.01f));
@@ -30844,6 +31320,30 @@ void LoadIniSettings() {
                 Log("    NISSharpen: native resolution + NIS sharpening only (%.2f)."
                     " Runtime-switchable with Off.", fsh);
         }
+    }
+    {
+        g_adaptiveTriggersEnabled = GetPrivateProfileIntA("PSVR2", "AdaptiveTriggers", 1, path) != 0;
+        g_psvr2Profiles = psvr2config::Profiles{};
+        g_psvr2Profiles.enabled = g_adaptiveTriggersEnabled;
+        char p[64]{}, r[64]{}, rf[64]{}, sg[64]{}, sn[64]{};
+        GetPrivateProfileStringA("PSVR2", "TriggerPistol", "", p, sizeof(p), path);
+        GetPrivateProfileStringA("PSVR2", "TriggerRifle", "", r, sizeof(r), path);
+        GetPrivateProfileStringA("PSVR2", "TriggerRifleFire", "", rf, sizeof(rf), path);
+        GetPrivateProfileStringA("PSVR2", "TriggerShotgun", "", sg, sizeof(sg), path);
+        GetPrivateProfileStringA("PSVR2", "TriggerSniper", "", sn, sizeof(sn), path);
+        psvr2config::Triple t{};
+        if (psvr2config::ParseTriple(p, t) && psvr2config::ClampWeaponTriple(t)) g_psvr2Profiles.pistol = t;
+        if (psvr2config::ParseTriple(r, t) && psvr2config::ClampWeaponTriple(t)) g_psvr2Profiles.rifle = t;
+        if (psvr2config::ParseTriple(rf, t) && psvr2config::ClampVibrationTriple(t)) g_psvr2Profiles.rifleFire = t;
+        if (psvr2config::ParseTriple(sg, t) && psvr2config::ClampWeaponTriple(t)) g_psvr2Profiles.shotgun = t;
+        if (psvr2config::ParseTriple(sn, t) && psvr2config::ClampWeaponTriple(t)) g_psvr2Profiles.sniper = t;
+        Log("ini: PSVR2 AdaptiveTriggers=%d pistol=%u,%u,%u rifle=%u,%u,%u rifleFire=%u,%u,%u shotgun=%u,%u,%u sniper=%u,%u,%u",
+            g_adaptiveTriggersEnabled ? 1 : 0,
+            (unsigned)g_psvr2Profiles.pistol.a, (unsigned)g_psvr2Profiles.pistol.b, (unsigned)g_psvr2Profiles.pistol.c,
+            (unsigned)g_psvr2Profiles.rifle.a, (unsigned)g_psvr2Profiles.rifle.b, (unsigned)g_psvr2Profiles.rifle.c,
+            (unsigned)g_psvr2Profiles.rifleFire.a, (unsigned)g_psvr2Profiles.rifleFire.b, (unsigned)g_psvr2Profiles.rifleFire.c,
+            (unsigned)g_psvr2Profiles.shotgun.a, (unsigned)g_psvr2Profiles.shotgun.b, (unsigned)g_psvr2Profiles.shotgun.c,
+            (unsigned)g_psvr2Profiles.sniper.a, (unsigned)g_psvr2Profiles.sniper.b, (unsigned)g_psvr2Profiles.sniper.c);
     }
 }
 
@@ -31245,6 +31745,7 @@ BOOL APIENTRY DllMain(HMODULE m, DWORD reason, LPVOID) {
         // and Present retries.
         InstallXInputHook();
     } else if (reason == DLL_PROCESS_DETACH) {
+        g_psvr2Client.Stop();
         g_vrRecorder.Stop();
     }
     return TRUE;
