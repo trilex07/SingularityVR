@@ -1,5 +1,31 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE native Centurion continuation: offline native registration,
+class-constructor/vtable and original BeginFire reload/fallback path identified.
+New default-OFF CenturionNativeReloadGuard 1=observe /2=conditional suppression
+experiment, derived ABI/slot + method-shape validation; one close-token, native
+inventory untouched. L1_PASS 13 CPU executables + 31 Python checks, original
+archived wrapper/body match and own-process x86 detour replay.
+L2_PASS clean a2b77ac /O2 x86 PE32 DLL SHA256
+89A5209153F194ED858553EAE2C3B99CC1BC2E52C9DD9B1DEBD9C43977458339.
+Private candidate/manifest/assets checked, NO INI staged.
+L3/L4 UNKNOWN. Actual cylinder animation OPEN.
+See docs/centurion-native-reload.md. ZERO Steam, preserve current MAIN integration.
+
+LATEST 2026-10-16 SIDE fix/centurion-grip-shoulder: user tested original
+Centurion prototype and reported auto-reload, gun/knife grab conflicts, squares.
+Follow-up implements left-shoulder source, bounded grip priority/no fake release,
+default-OFF Cross health/right-stick-up jump/Circle cylinder gesture layout,
+Circle/open/dump/shoulder/insert/close FSM and opt-in original stock/carried mesh.
+Markers now independently OFF. Native auto-reload/cylinder animation NOT fixed;
+native declaration/ABI/runtime producer still requires evidence, not guessed calls.
+L1_PASS eleven /O2 /W4 /WX CPU executables +27 Python tests; knife 6 CPU/14 Python.
+L2_PASS clean 80a5e34 /O2 x86 PE32 DLL SHA256
+B5352D3C9DF60F705904A0AE992EDF478E96650A1E7B6888F4B51F3985384CAA.
+Private candidate/asset hashes verified, NO INI staged. Full manual reload not ready.
+ZERO Steam, no installed-file writes; L3/L4 UNKNOWN.
+See docs/centurion-grip-shoulder.md; rebuild onto CURRENT MAIN before any test.
+
 LATEST 2026-10-16: Prototypy przeładowania Valkyrie, Volk S4 i Kasimova (PR #37):
 Przygotowałem prototypy przeładowania Valkyrie, Volk S4 i Kasimova: gesty, zabezpieczenia oraz oryginalne modele magazynków.
 Przeszło 30 000 symulowanych przeładowań, 9 programów testowych C++, 33 testy Python i build x86 /O2. Zmiany są w [PR #37](https://github.com/trilex07/SingularityVR/pull/37).
@@ -24,13 +50,23 @@ failure pixel restore, Reset-owned DEFAULT-pool resources; captured successful
 receipt disables legacy identical-left-crop for this frame only.
 L1_PASS six /O2 /W4 /WX CPU executables: policy/generation/transaction failures,
 panel/laser/parallax geometry, menu/pause/cutscene regressions.
-L2_PASS clean9b23e3f /O2 x86 PE32.
+L2_PASS clean 9b23e3f /O2 x86 PE32; DLL SHA-256
+681D3A790951E9D192377CDD4AC7433F8652A01F7FE2B7D9649315805E878C1E.
+ZERO Steam; L3/L4 UNKNOWN. No game assets/config/renders of hands/weapons changed.
+See docs/frontend-menu-comfort.md; MAIN owns L3 and physical acceptance.
 
 LATEST 2026-10-16 SIDE feature/accepted-profile-guard (PR #39): offline deployment
 regression guard, complete semantic INI + exact inventoried SHA-256 and
 reviewed per-candidate plan; denies silent Polish/hand/knife/calibration loss
 and stale rollback. Narrow deploy runner integrated, legacy build -Install
 blocked. No automatic acceptance/restore. Broad/cutscene writes fail closed.
+other standalone runners remain OUT OF SCOPE until MAIN adapts them.
+No live baseline created or promoted, ZERO Steam, no renderer/input changes.
+L1_PASS 37 rejection cases on Windows PowerShell 5.1 and PowerShell 7.
+L2_PASS clean 4e7828e /O2 x86 PE32, DLL SHA-256
+3B83750AC8C5BCABFA4C1160791BB03055C8D6F84ACAF288B8715ABC2A67F1D1.
+Build only, not staged; L3/L4 UNKNOWN. Not active on user's installation.
+See docs/accepted-profile-guard.md for contract, coverage and migration limits.
 
 LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN f0b96ad:
 Compact import: docs/handoffs/centurion-reload-compact.md. Offline correlation

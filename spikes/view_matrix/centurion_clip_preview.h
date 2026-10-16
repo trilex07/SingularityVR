@@ -1,10 +1,30 @@
 #pragma once
 #include "centurion_reload.h"
+#include <atomic>
 
 // Presentation-only calibration. The original cylinder remains on the native
 // gun. No animation palette, engine socket or inventory operation is inferred.
 namespace centurionclip {
 using hipknife::Pose;using hipknife::V;using hipknife::Q;
+enum class DrawResult {Success,Disabled,CaptureFailed,DrawFailed,RestoreFailed};
+// Render-only fault policy. This never reserves a hand or changes reload state.
+// Lifecycle code may reset it; normal frames cannot clear a failed restore.
+class PresentationSafety {
+    std::atomic<bool> fault{false};
+    static_assert(std::atomic<bool>::is_always_lock_free,"No lock in render fault latch");
+public:
+    bool Allowed()const{return !fault.load(std::memory_order_relaxed);}
+    void Reset(){fault.store(false,std::memory_order_relaxed);}
+    template<class Guard,class Draw> DrawResult Render(Guard& guard,Draw draw){
+        if(!Allowed())return DrawResult::Disabled;
+        if(!guard.valid){fault.store(true,std::memory_order_relaxed);return DrawResult::CaptureFailed;}
+        const bool drawn=draw();
+        // Attempt the complete outer restore even when drawing failed midway.
+        const bool restored=guard.Restore();
+        if(!restored){fault.store(true,std::memory_order_relaxed);return DrawResult::RestoreFailed;}
+        return drawn?DrawResult::Success:DrawResult::DrawFailed;
+    }
+};
 struct Config {V offset{0,0,-.08f};Q rotation{};}; // authored aim-space mount
 struct Snapshot {
     bool visible=false;
@@ -27,7 +47,8 @@ inline bool Current(const Snapshot& s,std::uint32_t pawn,std::uint32_t weapon,st
 }
 inline bool Eligible(const Snapshot& s,bool enabled,std::uint32_t pawn,
                      std::uint32_t weapon,std::uint64_t now){
-    return enabled&&s.phase==centurionreload::Phase::Carrying&&Current(s,pawn,weapon,now);
+    return enabled&&(s.phase==centurionreload::Phase::Carrying||s.phase==centurionreload::Phase::NeedAmmo)&&
+        Current(s,pawn,weapon,now);
 }
 inline bool Mount(const Pose& hand,const Config& c,Pose& out){
     if(!hipknife::Finite(hand.p)||!hipknife::Valid(hand.q)||
@@ -35,5 +56,12 @@ inline bool Mount(const Pose& hand,const Config& c,Pose& out){
     Pose staged{hand.p+hipknife::Rotate(hand.q,c.offset),hipknife::Multiply(hand.q,c.rotation)};
     if(!hipknife::Finite(staged.p)||!hipknife::Valid(staged.q))return false;
     out=staged;return true;
+}
+inline bool PreviewPose(const Snapshot& s,const Pose& source,const Config& c,Pose& out){
+    if(s.phase==centurionreload::Phase::Carrying)return Mount(s.hand,c,out);
+    if(s.phase!=centurionreload::Phase::NeedAmmo)return false;
+    // Stock geometry at the same shoulder centre as the actual grab target;
+    // the hand mount offset must NOT displace it from the acquisition sphere.
+    Config stock=c;stock.offset={};return Mount(source,stock,out);
 }
 } // namespace centurionclip
