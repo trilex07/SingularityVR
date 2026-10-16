@@ -149,6 +149,20 @@ w branchu: `resynth_manifest.jsonl` (plik, dawca, profil, tekst, chunki, dur, ga
   kandydaci do packa barków (przemianować na konwencję `SD_*.pl.wav`; format już zgodny:
   PCM16 mono 24 kHz, peak −1 dBFS). Nie wdrażać bez odsłuchu REVIEW.
 
+## Fix po odsłuchu użytkownika (2026-10-16): krzyk + przerwy
+
+Skrypt: `dubbing-corrections/fix_emotion_gap.py` (backup v2 w `_backup_v2/` w temp, log:
+`resynth_fix_log.jsonl`; manifest: attempt=3 dla 8 plików).
+- SD_GRD1/ESP2_RPT_PINNED1: `Pomocy!` na starym dawcy (aprobata), `Przygwoździli mnie!`
+  z dawcą-krzykiem TEGO SAMEGO aktora (jego własny okrzyk `Go, go, go!`); przerwa 0,05 s.
+- Przerwy między zdaniami 0,12 s → 0,04 s (5× attempt2 + 4fa0f0de); temp 0,5.
+- Peaki po fixie: −1,0 wszystkie (8/8); dekod pełny (konwersja odsłuchowa przeszła).
+- `bc0ee3caae5d223b.wav` (VI4_5005): regen temp 0,5 dał obcięte 2,1 s, retry 0,65 dał
+  5,2 s — ODRZUCONE progiem kompletności; wrócono do v2 (10,6 s, recall 0,78).
+  Emocja tej kwestii nadal otwarta (duży rozrzut próbkowania TTS na tej linii).
+- Kopie odsłuchowe (44,1 kHz stereo) odświeżone dla 8 plików w
+  `%TEMP%\opencode\dubbing-qa\odsluch\`; `bc0ee3caa` tam = v2 bez zmian.
+
 ## Co NIE działa / następny krok
 
 - Korekty to propozycje tekstowe (L1): zero weryfikacji w grze (verified_in_game=false
