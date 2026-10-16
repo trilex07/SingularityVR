@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST 2026-10-16 SIDE feature/accepted-profile-guard: offline deployment
+regression guard, complete semantic INI + exact inventoried SHA-256 and
+reviewed per-candidate plan; denies silent Polish/hand/knife/calibration loss
+and stale rollback. Narrow deploy runner integrated, legacy build -Install
+blocked. No automatic acceptance/restore. Broad/cutscene writes fail closed;
+other standalone runners remain OUT OF SCOPE until MAIN adapts them.
+No live baseline created or promoted, ZERO Steam, no renderer/input changes.
+See docs/accepted-profile-guard.md for contract, coverage and migration limits.
+
 LATEST 2026-10-16 SIDE feature/menu-holster-polish: class-2 frontend-only
 scale/depth candidate 88% / 1400 mm, same provider/pointer/fallback geometry;
 native source RT/crop, pause/boot and mod panel unchanged. Original thin

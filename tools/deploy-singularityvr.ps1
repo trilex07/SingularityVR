@@ -15,6 +15,8 @@ param(
     [switch]$RuntimeDllPairOnly,
     [switch]$IncludeIni,
     [string]$OpeningCutsceneManifestPath = '',
+    [string]$AcceptedProfilePath = '',
+    [string]$ChangePlanPath = '',
     [switch]$SkipTextures,
     [switch]$StopGame
 )
@@ -22,6 +24,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if($OpeningCutsceneManifestPath) {
+    if($Action -ne 'Status'){throw 'Opening-cutscene writes need an accepted-profile adapter; v1 permits read-only Status only'}
     if($DllOnly -or $RuntimeDllPairOnly -or $IncludeIni -or $StopGame -or $KeepIni -or $SkipTextures){
         throw 'Opening cutscene lease is an exclusive exact four-file deployment mode'
     }
@@ -103,6 +106,7 @@ function Copy-Verified([string]$Source, [string]$Target) {
         throw "Missing deployment source: $Source"
     }
     $sourceHash = Get-Sha256 $Source
+    Assert-GuardWriteTicket $guardTicket $Target $Source
     $temp = "$Target.new.$PID"
     try {
         if ($PSCmdlet.ShouldProcess($Target, "Install $([System.IO.Path]::GetFileName($Source))")) {
@@ -204,8 +208,12 @@ function Resolve-Source([string]$Name, [string]$Stage, [string]$Fallback) {
 }
 
 $root = if ($RepoRoot) { Get-AbsolutePath $RepoRoot } else { (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
+. (Join-Path $PSScriptRoot 'deployment/AcceptedProfileGuard.ps1')
+$guardTicket=$null
+if(-not $AcceptedProfilePath){$AcceptedProfilePath=Join-Path $root 'deployment/accepted-profile.json'}
 $steamRootAbs = Get-AbsolutePath $SteamRoot
 $gameBin = Join-Path $steamRootAbs 'steamapps\common\Singularity\Binaries'
+$guardGameRoot=Split-Path -Parent $gameBin
 $sourceDll = Join-Path $root 'spikes\view_matrix\d3d9.dll'
 $sourceIni = Join-Path $root 'spikes\view_matrix\SingularityVR.ini'
 $stage = if ($ArtifactDir) { Get-AbsolutePath $ArtifactDir } else { Join-Path $root 'deployment\vr-recorder-20261009' }
@@ -268,17 +276,36 @@ if ($Action -eq 'Rollback') {
     $backup = Get-AbsolutePath $BackupPath
     $manifest = Join-Path $backup 'manifest.json'
     if (-not (Test-Path -LiteralPath $manifest -PathType Leaf)) { throw "Backup manifest not found: $manifest" }
+    $metadataPath = Join-Path $backup 'backup_metadata.json'
+    $guardMetadata=$null
+    $guardMap=@()
+    if(Test-Path -LiteralPath $metadataPath -PathType Leaf){
+        $guardMetadata=Read-GuardJson $metadataPath
+        if(@($guardMetadata.Directories).Count){throw 'Directory rollback is not covered by profile guard v1; refusing writes'}
+        foreach($entry in @($guardMetadata.Files)){
+            $guardMap += [pscustomobject]@{Target=('Binaries/'+$entry.Name);Source=if($entry.Existed){Join-Path $backup $entry.Name}else{$null}}
+        }
+    }else{
+        foreach($name in @('d3d9.dll','SingularityVR.ini','dinput8.dll','dinput8_orig.dll','texture_override.ini')){
+            $path=Join-Path $backup $name
+            if(Test-Path -LiteralPath $path -PathType Leaf){$guardMap += [pscustomobject]@{Target=('Binaries/'+$name);Source=$path}}
+        }
+    }
+    $guardTicket=Assert-AcceptedDeployment -GameRoot $guardGameRoot -ProfilePath $AcceptedProfilePath -ChangePlanPath $ChangePlanPath -FileMap $guardMap -Direction Rollback
+    if($WhatIfPreference){Write-Host 'Accepted-profile rollback preflight PASS; WhatIf creates/writes nothing';return}
     Stop-GameIfRequested
     Assert-GameClosed
-    $metadataPath = Join-Path $backup 'backup_metadata.json'
-    if (Test-Path -LiteralPath $metadataPath -PathType Leaf) {
-        $metadata = Get-Content -LiteralPath $metadataPath -Raw | ConvertFrom-Json
+    if ($null -ne $guardMetadata) {
+        # Use the exact metadata already checked; never re-read a mutable file
+        # that could introduce directory deletes after the preflight.
+        $metadata = $guardMetadata
         foreach ($entry in @($metadata.Files)) {
             $src = Join-Path $backup $entry.Name
             $dst = Join-Path $gameBin $entry.Name
             if ($entry.Existed) {
                 if (Test-Path -LiteralPath $src -PathType Leaf) { Copy-Verified $src $dst | Out-Null }
             } elseif (Test-Path -LiteralPath $dst -PathType Leaf) {
+                Assert-GuardWriteTicket $guardTicket $dst ''
                 if ($PSCmdlet.ShouldProcess($dst, 'Remove file that did not exist before deployment')) { Remove-Item -LiteralPath $dst -Force }
             }
         }
@@ -299,11 +326,13 @@ if ($Action -eq 'Rollback') {
             if (Test-Path -LiteralPath $src -PathType Leaf) { Copy-Verified $src $dst | Out-Null }
         }
     }
-    Write-Host "Rollback complete from $backup"
+    [void](Assert-AcceptedDeployment -GameRoot $guardGameRoot -ProfilePath $AcceptedProfilePath -ChangePlanPath $ChangePlanPath -FileMap $guardMap -Direction Rollback -Phase Post)
+    Write-Host "Rollback complete from $backup; accepted-profile postflight PASS"
     exit 0
 }
 
 if (-not $stageDll) { throw 'No d3d9.dll source found in the selected artifact directory or source tree.' }
+if(-not $narrowRuntime){throw 'Profile guard v1 requires DllOnly or RuntimeDllPairOnly; broad texture/INI installs are blocked'}
 if($IncludeIni -and -not $stageIni){throw 'IncludeIni requires a verified staged INI'}
 if (-not $narrowRuntime -and -not $stageIni -and -not $KeepIni) { throw 'No SingularityVR.ini source found; use -KeepIni only if preserving the installed INI is intentional.' }
 if (-not $DllOnly -and -not (Test-Path -LiteralPath $dinputSource -PathType Leaf)) { throw "Texture injector dinput8.dll not found: $dinputSource" }
@@ -323,6 +352,11 @@ if (-not $narrowRuntime) {
 }
 $textureSources = @()
 if (-not $narrowRuntime -and -not $SkipTextures) { $textureSources = @(Get-TextureSources $assetsLocal) }
+$guardMap=@([pscustomobject]@{Target='Binaries/d3d9.dll';Source=$stageDll})
+if($RuntimeDllPairOnly){$guardMap += [pscustomobject]@{Target='Binaries/dinput8.dll';Source=$dinputSource}}
+if($IncludeIni){$guardMap += [pscustomobject]@{Target='Binaries/SingularityVR.ini';Source=$stageIni}}
+$guardTicket=Assert-AcceptedDeployment -GameRoot $guardGameRoot -ProfilePath $AcceptedProfilePath -ChangePlanPath $ChangePlanPath -FileMap $guardMap
+if($WhatIfPreference){Write-Host 'Accepted-profile install preflight PASS; WhatIf creates/writes nothing';return}
 $backupRoot = Join-Path $root 'deployment\install-backups'
 New-Item -ItemType Directory -Path $backupRoot -Force | Out-Null
 Stop-GameIfRequested
@@ -349,10 +383,14 @@ if (-not $narrowRuntime -and -not $SkipTextures) {
     }
 }
 
+[void](Assert-AcceptedDeployment -GameRoot $guardGameRoot -ProfilePath $AcceptedProfilePath -ChangePlanPath $ChangePlanPath -FileMap $guardMap -Phase Post)
+
 $reportDir = Join-Path $root 'deployment\install-reports'
 New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
 $report = [pscustomobject]@{
     Action = 'Install'
+    AcceptedProfileSha256 = $guardTicket.ProfileSha256
+    ChangePlanSha256 = $guardTicket.PlanSha256
     Timestamp = (Get-Date).ToString('o')
     GameBin = $gameBin
     BackupPath = $backup
