@@ -14,6 +14,7 @@ $inventory = @(
     'Binaries/texture_override.ini',
     'Binaries/vr-assets/hud/katorga/glove-animation/native_hands.svni',
     'Binaries/vr-assets/hud/katorga/glove-animation/hand_thumb.svnt',
+    'Binaries/vr-assets/hud/katorga/glove-animation/native_cuffs.svnc',
     'Binaries/vr-assets/knife/knife.svrk',
     'Binaries/vr-assets/knife/knife.svrt',
     'Binaries/vr-assets/knife/knife_hand.svng',

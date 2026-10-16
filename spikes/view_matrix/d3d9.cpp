@@ -7591,7 +7591,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_GOTO_TMDBONE, PR_GOTO_TMDMESH, PR_BACK_TMD,
         PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_BACK,
         PR_TEXTURES,
-        PR_SHAKESCREEN, PR_BOBSTABILIZE };   // appended last: existing IDs never renumber
+        PR_SHAKESCREEN, PR_BOBSTABILIZE, PR_GLOVECUFFS };   // appended last: existing IDs never renumber
 
 // ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
@@ -7685,10 +7685,10 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // the muscle memory should transfer.
     { PR_TMDARMSLOT, PR_TMDARMMESH, PR_TMDARMMODE, PR_TMDARMFROM, PR_TMDARMTO, PR_TMDARMSTEP,
       PR_TMDHIDE, PR_BACK_TMD },
-    { PR_GLOVEISOLATE, PR_GLOVEFACE, PR_GLOVESTUMP, PR_GLOVELEFT, PR_BACK },
+    { PR_GLOVEISOLATE, PR_GLOVEFACE, PR_GLOVECUFFS, PR_GLOVESTUMP, PR_GLOVELEFT, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 11, 10, 5, 13, 10, 7, 10, 6, 8, 5 };   // [2] COMFORT 3->5 (shake screen + head bob)
+const int kPageCount[kPanelPages] = { 11, 10, 5, 13, 10, 7, 10, 6, 8, 6 };   // [2] COMFORT 3->5, [9] HANDS 5->6 (cuffs)
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
 // page's rows can display, not to what they happen to show now - that is what keeps the box from
@@ -7945,6 +7945,8 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_GLOVELEFT:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_gloveLeftShiftUU));
             WritePrivateProfileStringA("Render", "GloveLeftShift", v, path); return;
+        case PR_GLOVECUFFS:
+            WritePrivateProfileStringA("Render", "NativeGloveCuffClosure", g_nativeCuffClosure ? "1" : "0", path); return;
         // ⭐ run 237: ONE case writes the whole TMD block, so no row can be adjustable and persist
         // nowhere - the defect PanelSaveRow was restructured to prevent.
         case PR_TMDON: {
@@ -8349,6 +8351,9 @@ void PanelRowText(int row, char* out, size_t cap) {
             break;
         case PR_GLOVELEFT:
             _snprintf_s(out, cap, _TRUNCATE, "LEFT ARM       %+ld UU", Rd(g_gloveLeftShiftUU));
+            break;
+        case PR_GLOVECUFFS:
+            _snprintf_s(out, cap, _TRUNCATE, "FULL CUFFS     %s", g_nativeCuffClosure ? "ON" : "OFF");
             break;
         case PR_GOTO_HANDS:
             _snprintf_s(out, cap, _TRUNCATE, "HANDS              >");
@@ -8881,6 +8886,10 @@ void PanelAdjust(int row, int dir) {
             Log("VR panel: GloveLeftShift=%ld UU (mesh +X, left arm)", s);
             break;
         }
+        case PR_GLOVECUFFS:
+            g_nativeCuffClosure = !g_nativeCuffClosure;
+            Log("VR panel: NativeGloveCuffClosure=%d", g_nativeCuffClosure ? 1 : 0);
+            break;
         case PR_GOTO_HANDS: g_panelPage = 9; g_panelRow = 0; return;
         case PR_WEAPONFX: {
             // Clamped, not wrapped - run 143's lesson. Wrapping would put one press past RIDE GUN
@@ -9568,14 +9577,13 @@ bool InitXRInput() {
         char ini[MAX_PATH]{};
         g_nativeGloveExperiment=IniPath(ini) &&
             GetPrivateProfileIntA("Render","GloveNativeEnabled",0,ini)!=0;
-        g_nativeCuffClosure=IniPath(ini)&&GetPrivateProfileIntA("Render","NativeGloveCuffClosure",0,ini)!=0;
-        if(g_nativeCuffClosure){
-            char cuffPath[MAX_PATH]{};bool loaded=false;
-            try{loaded=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation\\native_cuffs.svnc",cuffPath)&&g_nativeCuffRenderer.Load(cuffPath);}
-            catch(...){loaded=false;}
-            Log("native-cuffs: startup %s noTMD=%u TMD=%u; original complete cuffs, held finger poses unchanged",
-                loaded?"CPU ready":"FAILED; old native route retained",g_nativeCuffRenderer.Triangles(0),g_nativeCuffRenderer.Triangles(1));
-        }
+        char cuffPath[MAX_PATH]{}; bool cuffLoaded=false;
+        try{cuffLoaded=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation\\native_cuffs.svnc",cuffPath)&&g_nativeCuffRenderer.Load(cuffPath);}
+        catch(...){cuffLoaded=false;}
+        g_nativeCuffClosure=IniPath(ini)&&GetPrivateProfileIntA("Render","NativeGloveCuffClosure",1,ini)!=0;
+        Log("native-cuffs: startup %s noTMD=%u TMD=%u active=%d; original complete cuffs, held finger poses unchanged",
+            cuffLoaded?"CPU ready":"FAILED; old native route retained",g_nativeCuffRenderer.Triangles(0),g_nativeCuffRenderer.Triangles(1),
+            g_nativeCuffClosure?1:0);
         g_gloveExperiment=IniPath(ini) &&
             GetPrivateProfileIntA("Render","GloveRendererEnabled",0,ini)!=0;
         if(g_nativeGloveExperiment) {
