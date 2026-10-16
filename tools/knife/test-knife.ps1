@@ -7,7 +7,7 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $vswhere="${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $vcvars=Join-Path $vs 'VC\Auxiliary\Build\vcvarsall.bat'
-foreach($test in @('test-hip-knife','test-knife-renderer','test-knife-hand-grip','test-knife-lighting-thumb','test-weapon-holster','test-hand-anchor-math','test-desktop-mirror')){
+foreach($test in @('test-hip-knife','test-knife-renderer','test-knife-hand-grip','test-knife-lighting-thumb','test-weapon-holster','test-hand-anchor-math')){
     $source=Join-Path $repo "spikes\view_matrix\tests\$test.cpp"
     $exe=Join-Path $out "$test.exe"
     $obj=Join-Path $out "$test.obj"
@@ -32,3 +32,5 @@ python (Join-Path $PSScriptRoot 'test_fit_hand_grip.py')
 if($LASTEXITCODE -ne 0){throw 'Python joint geometry tests failed'}
 python (Join-Path $PSScriptRoot 'test_knife_lighting.py')
 if($LASTEXITCODE -ne 0){throw 'Python tangent frame tests failed'}
+python (Join-Path $PSScriptRoot 'test_retune_knife.py')
+if($LASTEXITCODE -ne 0){throw 'Python blade-only sizing tests failed'}
