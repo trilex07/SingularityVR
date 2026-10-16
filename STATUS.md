@@ -6,7 +6,10 @@ left hand only during Carrying, 100 ms identity/focus/tracking snapshot guard.
 Shared knife loader keeps original defaults; no native cylinder suppression,
 ammo/animation changes, fitted grip or native-lighting claim. Eight CPU
 executables +14 Python tests PASS; actual mesh/albedo load and textured CPU
-preview inspected. Prior DLL below is superseded pending clean L2 rebuild.
+preview inspected. L2_PASS clean source e0fb5e1 /O2 x86 PE32; DLL SHA
+00C49400DC5FCF6A9F9DA2F67ED35E47F7239B86FB8B1F15915AC5D3B90E502B.
+Private candidate DLL/manifest +both assets verified; no INI staged/deployed.
+Prior receipts below are superseded; user has NOT tested Centurion yet.
 Centurion-only assisted gesture prototype, NOT completed physical reload.
 Front-centre pouch, unchanged left knife/right gun holsters; allocation-free
 remove/discard/pouch/insert/ack FSM, ownership/cancel guards, bounded calibration
@@ -24,7 +27,7 @@ seven CPU executables +12 Python tests. Original Reload: 53 frames /24 Hz;
 14 notifies include AnimNotify_RefillClip at 1.47052908 s on RvSharedPawn.
 Fifth player-pawn-only probe event; no native calls. Material AR_Pistol resolved
 offline; live shader/socket and dedicated reload ABI remain unproven.
-Continuation L2_PASS clean source 9c164eb /O2 x86 PE32,
+Previous continuation L2_PASS source 9c164eb /O2 x86 PE32,
 DLL SHA 99A00CB7C636856EAAA88A829ACD09E4548045D3B4A71FB30064812CFADDD051;
 private DLL/manifest hashes verified, original textures staged offline only;
 PR base advanced during work: merged its committed f0b96ad into this branch

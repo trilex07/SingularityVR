@@ -269,11 +269,24 @@ from inventory semantics, and never credit a draw log as physical acceptance.
 
 ## Evidence / next native work
 
-Current synchronized L2_PASS: clean merge source
+Current preview L2_PASS: clean source
+`E0FB5E1E71434988ED20D24BA3AF1D97DACFB7CA`, `/O2`, x86 PE32 (`014C/010B`),
+empty build-manifest working-tree status. DLL SHA-256:
+`00C49400DC5FCF6A9F9DA2F67ED35E47F7239B86FB8B1F15915AC5D3B90E502B`.
+Eight reload CPU executables /14 Python tests pass. Six knife CPU executables /
+14 Python tests pass with the shared loader extension; original private rig
+replay and GPU execution are NOT claimed. The actual cylinder/albedo pair also
+loaded through that C++ API. Fixed-output private staging verified DLL, source
+provenance and BOTH assets; its receipt is
+`build/centurion-reload/candidate/centurion-preview.manifest.json`.
+No INI was staged or installed. L3/L4 remain UNKNOWN; user has not yet tested
+Centurion. All four feature flags remain default OFF, no Steam operations.
+
+Previous synchronized L2_PASS before carried preview: clean merge source
 `9C164EBA647C48998612C283EB4331FAC913A09F`, `/O2`, x86 PE32 (`014C/010B`),
 empty build-manifest working-tree status. DLL SHA-256:
 `99A00CB7C636856EAAA88A829ACD09E4548045D3B4A71FB30064812CFADDD051`.
-Private candidate DLL/manifest match this build. Seven reload CPU executables /
+That older candidate is superseded above. Seven reload CPU executables /
 12 Python tests pass again; the synchronized six-executable knife suite /14
 Python tests also pass. Its private original-rig replay was NOT requested and
 is not claimed. MAIN base advanced by seven commits while this continuation
