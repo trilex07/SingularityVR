@@ -90,7 +90,7 @@ public:
     // Transactional, stack-only. Source is original bind rig, not guessed slots.
     // Wrist/controller scale and position are already in the existing palette.
     // The cuff uses the same wrist transform rather than an animated elbow.
-    bool Pose(float palette[135][4],const float grip[2],const float (*digits)[5]=nullptr,int knifeSide=-1)const{
+    bool Pose(float palette[135][4],const float grip[2],const float (*digits)[5]=nullptr,int knifeSide=-1,unsigned fingerMask=3u)const{
         if(!Ready()||!palette||!grip)return false;
         if(knifeSide < -1||knifeSide>1)return false;
         for(unsigned side=0;side<2;++side)if(!std::isfinite(grip[side])||grip[side]<0||grip[side]>1)return false;
@@ -131,6 +131,7 @@ public:
         for(unsigned s=0;s<gloveisolate::kNoTmdCookedPaletteCount;++s){
             const auto b=gloveisolate::kNoTmdCookedPalette[s];
             const int side=gloveisolate::NoTmdCookedHandSide(b);if(side<0)return false;
+            if(Finger(b)&&!(fingerMask&(1u<<unsigned(side))))continue;
             armbind::Mat skin=wristSkin[side];
             if(Finger(b)){armbind::Mat delta;skeletal::Multiply(delta.m,inverse[b].m,posed[b].m);
                 skeletal::Multiply(skin.m,delta.m,wristSkin[side].m);}

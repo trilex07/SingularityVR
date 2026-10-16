@@ -105,6 +105,10 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include "bink_audio_observation.h"
 #include "bink_intro_audio.h"
+#include "psvr2_trigger.h"
+#include "psvr2_trigger_config.h"
+#include "trigger_shot.h"
+#include "psvr2_client.h"
 #include <d3d11.h>
 #include <dinput.h>
 
@@ -4306,6 +4310,126 @@ bool InitXRInput();
 // Which OpenXR session state we are in. Actions only deliver data while FOCUSED, and the
 // difference between "not focused" and "not working" is invisible without this.
 XrSessionState g_xrSessionState = XR_SESSION_STATE_UNKNOWN;
+extern volatile LONG g_vrUiMenu, g_vrMenuClass, g_panelOpen;
+extern int g_leftHanded;
+static bool g_psvr2RuntimeCompatible = false;
+static bool g_adaptiveTriggersEnabled = false;
+static bool g_psvr2ClientStarted = false;
+static psvr2config::Profiles g_psvr2Profiles{};
+static psvr2client::Client g_psvr2Client;
+static triggershot::ShotRunner g_shotRun;
+static SRWLOCK g_shotRunLock = SRWLOCK_INIT;
+
+static bool StartPsvr2TriggerClient() {
+    if (!g_adaptiveTriggersEnabled || !g_psvr2RuntimeCompatible || g_psvr2ClientStarted)
+        return false;
+    char localAppData[MAX_PATH]{};
+    if (FAILED(SHGetFolderPathA(nullptr, CSIDL_LOCAL_APPDATA, nullptr, SHGFP_TYPE_CURRENT,
+                                localAppData))) return false;
+    char stateDir[MAX_PATH]{};
+    if (sprintf_s(stateDir, "%s\\SingularityVR", localAppData) > 0)
+        CreateDirectoryA(stateDir, nullptr);
+    char sessionPath[MAX_PATH]{};
+    if (sprintf_s(sessionPath, "%s\\SingularityVR\\psvr2-trigger.session", localAppData) <= 0)
+        return false;
+
+    char token[psvr2ipc::kMaxTokenBytes + 1]{};
+    DWORD got = 0;
+    const bool pipeAlreadyOpen = WaitNamedPipeW(L"\\\\.\\pipe\\SingularityPsvr2", 50) != FALSE;
+    if (pipeAlreadyOpen) {
+        HANDLE file = CreateFileA(sessionPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (file != INVALID_HANDLE_VALUE) {
+            const BOOL readOk = ReadFile(file, token, (DWORD)psvr2ipc::kMaxTokenBytes, &got, nullptr);
+            CloseHandle(file);
+            while (got && (token[got - 1] == '\r' || token[got - 1] == '\n' || token[got - 1] == ' '))
+                token[--got] = '\0';
+            if (!readOk || !psvr2ipc::TokenValid((const std::uint8_t*)token, got)) got = 0;
+        }
+    }
+    if (!got) {
+        char bridgePath[MAX_PATH]{};
+        if (SiblingIniPath("SingularityPsvr2Bridge.exe", bridgePath) &&
+            GetFileAttributesA(bridgePath) != INVALID_FILE_ATTRIBUTES) {
+            static const char kHex[] = "0123456789ABCDEF";
+            LARGE_INTEGER qpc{}; QueryPerformanceCounter(&qpc);
+            std::uint64_t seed = ((std::uint64_t)qpc.QuadPart) ^
+                ((std::uint64_t)GetCurrentProcessId() << 32) ^ GetTickCount64();
+            for (int i = 0; i < 32; ++i) {
+                seed = seed * 6364136223846793005ULL + 1442695040888963407ULL;
+                token[i] = kHex[(seed >> 60) & 0xF];
+            }
+            token[32] = '\0';
+            got = 32;
+            HANDLE file = CreateFileA(sessionPath, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+                                      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+            if (file != INVALID_HANDLE_VALUE) {
+                DWORD written = 0;
+                WriteFile(file, token, got, &written, nullptr);
+                CloseHandle(file);
+            }
+            const char* loaderPath =
+                "C:\\Program Files (x86)\\Steam\\steamapps\\common\\PlayStation VR2 App\\PSVR2Toolkit\\CAPIApps-Windows\\psvr2_toolkit_capi_loader.dll";
+            char cmdLine[1024]{};
+            sprintf_s(cmdLine, "\"%s\" \"%s\" %s --hardware --parent %lu",
+                      bridgePath, loaderPath, token, (unsigned long)GetCurrentProcessId());
+            STARTUPINFOA si{}; si.cb = sizeof(si);
+            PROCESS_INFORMATION pi{};
+            if (CreateProcessA(bridgePath, cmdLine, nullptr, nullptr, FALSE,
+                               CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
+                Log("PSVR2 trigger bridge spawned (PID %lu, parent %lu)",
+                    (unsigned long)pi.dwProcessId, (unsigned long)GetCurrentProcessId());
+                CloseHandle(pi.hThread);
+                CloseHandle(pi.hProcess);
+            } else {
+                Log("PSVR2 trigger bridge spawn failed (err=%lu)", (unsigned long)GetLastError());
+            }
+        }
+    }
+    if (!got) {
+        HANDLE file = CreateFileA(sessionPath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                                  FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (file == INVALID_HANDLE_VALUE) return false;
+        const BOOL readOk = ReadFile(file, token, (DWORD)psvr2ipc::kMaxTokenBytes, &got, nullptr);
+        CloseHandle(file);
+        while (got && (token[got - 1] == '\r' || token[got - 1] == '\n' || token[got - 1] == ' '))
+            token[--got] = '\0';
+        if (!readOk || !got || !psvr2ipc::TokenValid((const std::uint8_t*)token, got)) return false;
+    }
+    g_psvr2ClientStarted = g_psvr2Client.Start("\\\\.\\pipe\\SingularityPsvr2", (const std::uint8_t*)token, got);
+    SecureZeroMemory(token, sizeof(token));
+    if (g_psvr2ClientStarted) Log("PSVR2 trigger client connected asynchronously (pipe session configured)");
+    return g_psvr2ClientStarted;
+}
+
+static void UpdateAdaptiveTriggers() {
+    if (!g_adaptiveTriggersEnabled) return;
+    const bool focused = g_xrSessionState == XR_SESSION_STATE_FOCUSED;
+    const bool gameplay = InGameplay() && !Rd(g_vrUiMenu) && !Rd(g_vrMenuClass) && !Rd(g_panelOpen);
+    const auto triggerHand = g_leftHanded ? psvr2trigger::Hand::Left : psvr2trigger::Hand::Right;
+    const auto weapon = triggershot::WeaponFromGunVerts((unsigned)InterlockedCompareExchange(&g_gunVerts, 0, 0));
+    psvr2trigger::Command command = psvr2trigger::OffCommand(psvr2trigger::OffReason::Inactive);
+    command.hand = triggerHand;
+    if (g_psvr2ClientStarted && g_psvr2RuntimeCompatible && focused && gameplay && g_psvr2Profiles.enabled) {
+        psvr2trigger::Command baseWall = psvr2config::ProfileFromConfig(weapon, false, g_psvr2Profiles);
+        baseWall.hand = triggerHand;
+        AcquireSRWLockExclusive(&g_shotRunLock);
+        g_shotRun.SetHand(triggerHand);
+        command = g_shotRun.Select(baseWall, (unsigned)GetTickCount());
+        ReleaseSRWLockExclusive(&g_shotRunLock);
+    } else if (!focused) {
+        AcquireSRWLockExclusive(&g_shotRunLock);
+        g_shotRun.Reset();
+        ReleaseSRWLockExclusive(&g_shotRunLock);
+        command = psvr2trigger::OffCommand(psvr2trigger::OffReason::Unfocused);
+    } else {
+        AcquireSRWLockExclusive(&g_shotRunLock);
+        g_shotRun.Reset();
+        ReleaseSRWLockExclusive(&g_shotRunLock);
+    }
+    command.hand = triggerHand;
+    if (g_psvr2ClientStarted) g_psvr2Client.Submit(command);
+}
 
 bool InitXR() {
     const char* exts[] = { XR_KHR_D3D11_ENABLE_EXTENSION_NAME };
@@ -4322,6 +4446,15 @@ bool InitXR() {
         if (XR_SUCCEEDED(r)) break;
     }
     if (XR_FAILED(r)) { Log("no OpenXR instance (headset not connected?) - detour still usable via F2"); return false; }
+
+    XrInstanceProperties instanceProps{ XR_TYPE_INSTANCE_PROPERTIES };
+    if (XR_SUCCEEDED(xrGetInstanceProperties(g_xrInstance, &instanceProps))) {
+        g_psvr2RuntimeCompatible = strstr(instanceProps.runtimeName, "SteamVR") != nullptr;
+        Log("OpenXR runtime: %s; adaptive PSVR2 triggers %s", instanceProps.runtimeName,
+            g_psvr2RuntimeCompatible ? "eligible (SteamVR)" : "inert (not SteamVR)");
+    }
+    if (g_adaptiveTriggersEnabled && g_psvr2RuntimeCompatible)
+        StartPsvr2TriggerClient();
 
     XrSystemGetInfo sgi{ XR_TYPE_SYSTEM_GET_INFO };
     sgi.formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
@@ -5333,7 +5466,7 @@ static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR 
 // left half. Failed composition restores pixels/state where possible and keeps
 // the previous submission behaviour. A restore fault disables retries until Reset.
 static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
-    g_cineMonoReady = false;
+    if (g_cineMonoReady) return true;
     if (!dev) return false;
     if (g_cineMonoFault) { CutsceneMonoNote("restore-fault-latched", E_FAIL); return false; }
     if (!CutsceneMonoComposeArmed()) {
@@ -5353,7 +5486,7 @@ static bool ComposeCutsceneMonoPair(IDirect3DDevice9* dev) {
     bool ok = SUCCEEDED(descHr) && d.Width >= 8 && d.Height >= 8;
     // The bridge crop uses the capture dimensions; composing against anything
     // else would misalign the submitted half.
-    if (ok && (d.Width != g_srcW || d.Height != g_srcH)) {
+    if (ok && g_srcW && g_srcH && (d.Width != g_srcW || d.Height != g_srcH)) {
         static LONG saidDim = 0;
         if (!InterlockedExchange(&saidDim, 1))
             Log("cutscene-mono: backbuffer %ux%u != capture %ux%u - mono pair OFF this frame",
@@ -5993,6 +6126,7 @@ static bool g_gloveExperiment=false,g_gloveCpuAttempted=false;
 static bool g_nativeGloveExperiment=false,g_nativeGlovePoseThisDraw=false;
 static nativegloves::Renderer g_nativeGloveRenderer;
 static bool NativeGlovesEligible();
+static bool NativeKnifeOffHandEligible();
 static bool g_knifeHandGrip = false;
 static bool g_knifeHandAssetReady = false;
 static knifehand::Data g_knifeHandData{};
@@ -11142,6 +11276,7 @@ void SyncXRInput(XrTime displayTime) {
 void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     if (!g_xrReady) { NoteXrHeartbeat(-1, -1); return; }
     PumpXR();
+    UpdateAdaptiveTriggers();
     if (!g_xrRunning) { NoteXrHeartbeat(-1, -1); return; }
 
     XrFrameState fs{ XR_TYPE_FRAME_STATE };
@@ -12251,6 +12386,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                     // space instead of interpreting it as a head-following projection image.
                     // A pause/menu keeps its established presentation and retains this anchor.
                     if(cineCrop && Rd(g_cutsceneWorldScreen) && Rd(g_inCinematic) &&
+                       !Rd(g_vrMenuClass) && !Rd(g_panelOpen) &&
                        cinemascreen::TrackingAllowsAnchor(g_cinemaWorldAnchor.valid,frame->eyePositionsValid)) {
                         const auto& r=frame->cineImage;
                         const int imageW=r.right-r.left,imageH=r.bottom-r.top;
@@ -16181,6 +16317,8 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     const bool wristAnchor = freeWrist || (gloves && Rd(g_noTmdPaletteFix) && Rd(g_gloveIsolate)==2 && !supportGrip && handValid[0] && handValid[1] &&
         handanchor::GameplaySource(Rd(g_noTmdWristAnchorFix)!=0,Rd(g_inCinematic)!=0,
             Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo));
+    const bool offWristAnchor = !wristAnchor && gloves && NativeKnifeOffHandEligible() &&
+        handValid[0] && handValid[1];
     if(wristAnchor) {
         // Undo the camera transform actually used by StereoPairBody, not the live controller
         // surrogate: BuildGunC can differ at a holster/ADS; BuildTmdC has its own anchor/trim.
@@ -16204,6 +16342,24 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         memcpy(primary,targetC[AimHand()],sizeof(primary));memcpy(off,targetC[OffHand()],sizeof(off));
         static LONG saidAnchor=0;
         if(!InterlockedExchange(&saidAnchor,1))Log("NoTmdWristAnchorFix: reconstructed native wrists -> own tracked targets; actual ride inverse; idle left shift bypassed only here");
+    } else if (offWristAnchor) {
+        if(g_thisDrawMoved==1)BuildGunC(base);
+        else if(g_thisDrawMoved==2)BuildTmdC(base);
+        static armbind::Mat noTmdBind[90];static bool bindReady=false;
+        if(!bindReady)bindReady=armbind::BuildReference(bindassets::noTmd,90,noTmdBind);
+        const GloveRefBone* r=GloveRefs();
+        const int offSide=OffHand();
+        const int wsOff=GloveFindSlot(sectionMap,slots,r,89,offSide?"r_arm_wrist":"l_arm_wrist");
+        float targetOff[4][4];
+        if(bindReady&&wsOff>=0){
+            armik::V h{(float)Rd(g_offHandOffX)/kHandFixed,
+                (float)Rd(g_offHandOffY)/kHandFixed,
+                (float)(g_gunSignPosZ*Rd(g_offHandOffZ))/kHandFixed};
+            if(g_gunHeadOffset){h.x+=g_hmdOffset[0];h.y+=g_hmdOffset[1];h.z+=g_hmdOffset[2];}
+            if(handanchor::TargetWrist(targetOff,noTmdBind[offSide?51:9],
+                reinterpret_cast<const float (*)[4]>(&saved[wsOff*3]),local,off,h))
+                memcpy(off,targetOff,sizeof(off));
+        }
     }
     const float (*leftTarget)[4] = off;
     if (supportGrip) {
@@ -16337,7 +16493,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // left than the native gun-hold, while the right hand stays on its controller.
     const bool weaponInHand = Rd(g_weaponObj)!=0 &&
         InterlockedCompareExchange(&g_gunVerts, 0, 0) != 0 && !Rd(g_weaponHolstered);
-    const float leftShift = (wristAnchor || !weaponInHand) ? 0.f
+    const float leftShift = (wristAnchor || offWristAnchor || !weaponInHand) ? 0.f
         : (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
     // Idle shift parks the free left glove off the native gun-hold. During an authored
     // pistol grip that same nudge is what puts the support hand beside the weapon.
@@ -16394,16 +16550,20 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             Log("FingerScale fail-closed slots=%d (wrist descendants kept rigid)", fingerScaleRejected);
         }
     }
-    // Exact free noTMD draw only. Original GPU skin, UVs and material remain;
-    // finger rotations/cuff follow the same native wrist/scale as the gun rig.
-    if(gloves&&wristAnchor&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount&&
-       NativeGlovesEligible()&&g_nativeGloveRenderer.Ensure(dev)){
+    // Exact free noTMD draw, or off-hand knife grip while aiming a weapon one-handed.
+    // Original GPU skin, UVs and material remain; when aiming a weapon, only the off-hand
+    // fingers/thumb are posed while the weapon hand keeps its native grip fingers.
+    const bool nativeBoth = wristAnchor && NativeGlovesEligible();
+    const bool nativeOffKnife = offWristAnchor && NativeKnifeOffHandEligible();
+    if(gloves&&(nativeBoth||nativeOffKnife)&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount&&
+       g_nativeGloveRenderer.Ensure(dev)){
         const bool joint=g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&g_hipKnifeVisible&&
             (g_hipKnifeState.held==0||g_hipKnifeState.held==1);
         const int held=g_hipKnifeState.held;
+        const unsigned fingerMask=nativeBoth?3u:(1u<<(unsigned)OffHand());
         float digits[2][5];for(unsigned side=0;side<2;++side)for(unsigned d=0;d<5;++d)
             digits[side][d]=joint&&(int)side==held?g_knifeHandData.fingers[side][d]:g_gloveBlend[side];
-        g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,g_gloveBlend,joint?digits:nullptr,joint?held:-1);
+        g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,g_gloveBlend,joint?digits:nullptr,joint?held:-1,fingerMask);
         if(joint&&g_nativeGlovePoseThisDraw){
             const unsigned slot=held?1:18; // resolved exact cooked palette: right wrist51 / left9.
             g_knifeHandPoseThisDraw=armbind::FromGpu(reinterpret_cast<const float(*)[4]>(&changed[slot*3]),g_knifeHandWrist);
@@ -16697,6 +16857,19 @@ static bool NativeGlovesEligible() {
         Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,g_xrSessionState==XR_SESSION_STATE_FOCUSED,
         Rd(g_dupDraws)!=0,g_haveEyes&&g_eyePositionsValid,g_glovePoseValid[0],g_glovePoseValid[1],
         Rd(g_weaponObj)!=0&&Rd(g_weaponHolstered)==0,Rd(g_twoHandActive)!=0);
+}
+static bool NativeKnifeOffHandEligible() {
+    const int offSide=OffHand();
+    return g_independentHands&&Rd(g_gloveIsolate)==2&&
+        g_gloveExperiment&&g_nativeGloveExperiment&&g_nativeGloveRenderer.Ready()&&
+        g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&g_hipKnifeVisible&&
+        g_hipKnifeState.held==offSide&&
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&
+        !Rd(g_gamePaused)&&!Rd(g_vrUiMenu)&&!Rd(g_inCinematic)&&
+        g_xrSessionState==XR_SESSION_STATE_FOCUSED&&
+        Rd(g_dupDraws)!=0&&g_haveEyes&&g_eyePositionsValid&&
+        g_glovePoseValid[offSide]&&
+        Rd(g_weaponObj)!=0&&Rd(g_weaponHolstered)==0&&!Rd(g_twoHandActive);
 }
 typedef HRESULT (STDMETHODCALLTYPE *PFN_SetViewport)(IDirect3DDevice9*, const D3DVIEWPORT9*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_Clear)(IDirect3DDevice9*, DWORD, const D3DRECT*, DWORD, D3DCOLOR, float, DWORD);
@@ -18425,7 +18598,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         if (InterlockedCompareExchange(&reportedFaces, 1, 0) == 0)
             Log("GloveIsolation: drawing %u glove/cuff faces from audited noTMD section",gloveisolate::NativeHandFaceCount());
     }
-    const bool nativeCuff=independentRegs&&g_nativeGlovePoseThisDraw&&NativeGlovesEligible()&&
+    const bool nativeCuff=independentRegs&&g_nativeGlovePoseThisDraw&&(NativeGlovesEligible()||NativeKnifeOffHandEligible())&&
         t==D3DPT_TRIANGLELIST&&(numVertices==3314||numVertices==2924)&&
         startIndex==0&&primCount==4830&&nSeg==1&&segStart[0]==0&&segPrims[0]==4830;
     nativegloves::IndexGuard<> nativeIndices(dev,nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr);
@@ -19054,12 +19227,12 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // back to, and StereoPair would just return draw() anyway.
     if (!InterlockedCompareExchange(&g_dupDraws, 0, 0)) return draw();
     if(g_boundShaderLayout.shadow)return draw();
-    if (InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) && g_sceneMode.Flat()) return draw();
     // This canonical path already identifies GFx canvas batches. Once the
     // complete native pause RTT has successfully reached both eyes, remove
     // only its old scene/backbuffer canvas copy. Never suppress the RTT producer.
     if (Rd(g_vrMenuClass) == 3 && Rd(g_rtIsScene) && !Rd(g_vrMenuProviderDrawing) &&
         PauseRttProbe::Presented()) return D3D_OK;
+    if (InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) && g_sceneMode.Flat()) return draw();
     if (!g_hudRemap) return StereoPair(dev, draw);
     InterlockedIncrement(&g_uiSeen);          // ⭐ run 230
 
@@ -23605,6 +23778,13 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
             // proven shot direction. Weapon class has no proven mapping, so the
             // stub alternates clips by sequence (its Unknown default). Game thread
             // only fills the mailbox; the render thread drains it in VfxEyeDraw.
+            if (g_adaptiveTriggersEnabled && firedWindow && FnIdx(kFnFireFirst) >= 0 &&
+                fnIdx == FnIdx(kFnFireFirst)) {
+                const unsigned verts = (unsigned)InterlockedCompareExchange(&g_gunVerts, 0, 0);
+                AcquireSRWLockExclusive(&g_shotRunLock);
+                g_shotRun.OnShotFired((unsigned)GetTickCount(), triggershot::WeaponFromGunVerts(verts));
+                ReleaseSRWLockExclusive(&g_shotRunLock);
+            }
             if (firedWindow && FnIdx(kFnFireFirst) >= 0 && fnIdx == FnIdx(kFnFireFirst) &&
                 Rd(g_vfxHost)) {
                 // Origin A/B: the old anchor is camera-relative and ignores the
@@ -25424,7 +25604,7 @@ static void MaybeLoadHudAtlas(IDirect3DDevice9* dev) {
 void DrawHipKnife(IDirect3DDevice9* dev){
     // Held joint assembly was already drawn with the native hand's actual eye
     // matrices/shared depth. Never redraw it on top as an independent overlay.
-    if(g_knifeHandGrip&&g_hipKnifeState.held>=0)return;
+    if(g_knifeHandGrip&&g_hipKnifeState.held>=0&&g_knifeJointFrame==Rd(g_sceneModeFrame)&&g_knifeJointEyes!=0)return;
     // MAIN round 18: gate on dupDraws (TRUE stereo, the normal VR path — same
     // signal the belt ring uses), NOT g_stereo (the F12 alternate-eye debug
     // method that SetVrMode/F1 deliberately clear, so the knife could NEVER
@@ -26594,6 +26774,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // Sample after the frame's draws have populated the Bink signal and before
     // any matte/overlay is emitted, so presentation policy and diagnostics use
     // the same frame boundary.
+    g_cineMonoReady = false;
     UpdateSceneModeFrame();
     InstallBinkAudioObservation(); // bounded exported-API observation, no audio mutation
     // VFX host: frame serial for once-per-eye draws + effect aging. Render
@@ -26607,6 +26788,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         if (dt < 0.0005f) dt = 0.0005f; if (dt > 0.25f) dt = 0.25f;
         g_vfx.Tick(dt); // no-op without a plugin
     }
+    ComposeCutsceneMonoPair(s);
     DrawCutsceneCinemaMask(s);
     // Age the menu indicator once per frame. Without this a name that fired a minute ago looks
     // identical to one firing right now, which is the whole distinction the readout exists to show.
@@ -30994,6 +31176,30 @@ void LoadIniSettings() {
                     " Runtime-switchable with Off.", fsh);
         }
     }
+    {
+        g_adaptiveTriggersEnabled = GetPrivateProfileIntA("PSVR2", "AdaptiveTriggers", 1, path) != 0;
+        g_psvr2Profiles = psvr2config::Profiles{};
+        g_psvr2Profiles.enabled = g_adaptiveTriggersEnabled;
+        char p[64]{}, r[64]{}, rf[64]{}, sg[64]{}, sn[64]{};
+        GetPrivateProfileStringA("PSVR2", "TriggerPistol", "", p, sizeof(p), path);
+        GetPrivateProfileStringA("PSVR2", "TriggerRifle", "", r, sizeof(r), path);
+        GetPrivateProfileStringA("PSVR2", "TriggerRifleFire", "", rf, sizeof(rf), path);
+        GetPrivateProfileStringA("PSVR2", "TriggerShotgun", "", sg, sizeof(sg), path);
+        GetPrivateProfileStringA("PSVR2", "TriggerSniper", "", sn, sizeof(sn), path);
+        psvr2config::Triple t{};
+        if (psvr2config::ParseTriple(p, t) && psvr2config::ClampWeaponTriple(t)) g_psvr2Profiles.pistol = t;
+        if (psvr2config::ParseTriple(r, t) && psvr2config::ClampWeaponTriple(t)) g_psvr2Profiles.rifle = t;
+        if (psvr2config::ParseTriple(rf, t) && psvr2config::ClampVibrationTriple(t)) g_psvr2Profiles.rifleFire = t;
+        if (psvr2config::ParseTriple(sg, t) && psvr2config::ClampWeaponTriple(t)) g_psvr2Profiles.shotgun = t;
+        if (psvr2config::ParseTriple(sn, t) && psvr2config::ClampWeaponTriple(t)) g_psvr2Profiles.sniper = t;
+        Log("ini: PSVR2 AdaptiveTriggers=%d pistol=%u,%u,%u rifle=%u,%u,%u rifleFire=%u,%u,%u shotgun=%u,%u,%u sniper=%u,%u,%u",
+            g_adaptiveTriggersEnabled ? 1 : 0,
+            (unsigned)g_psvr2Profiles.pistol.a, (unsigned)g_psvr2Profiles.pistol.b, (unsigned)g_psvr2Profiles.pistol.c,
+            (unsigned)g_psvr2Profiles.rifle.a, (unsigned)g_psvr2Profiles.rifle.b, (unsigned)g_psvr2Profiles.rifle.c,
+            (unsigned)g_psvr2Profiles.rifleFire.a, (unsigned)g_psvr2Profiles.rifleFire.b, (unsigned)g_psvr2Profiles.rifleFire.c,
+            (unsigned)g_psvr2Profiles.shotgun.a, (unsigned)g_psvr2Profiles.shotgun.b, (unsigned)g_psvr2Profiles.shotgun.c,
+            (unsigned)g_psvr2Profiles.sniper.a, (unsigned)g_psvr2Profiles.sniper.b, (unsigned)g_psvr2Profiles.sniper.c);
+    }
 }
 
 HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYPE t, HWND w, DWORD f,
@@ -31394,6 +31600,7 @@ BOOL APIENTRY DllMain(HMODULE m, DWORD reason, LPVOID) {
         // and Present retries.
         InstallXInputHook();
     } else if (reason == DLL_PROCESS_DETACH) {
+        g_psvr2Client.Stop();
         g_vrRecorder.Stop();
     }
     return TRUE;
