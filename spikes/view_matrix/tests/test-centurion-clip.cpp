@@ -3,7 +3,48 @@
 #include <limits>
 #include <cstdio>
 using namespace centurionclip;
+struct FakeGuard {
+    bool valid=true,restoreOk=true;
+    unsigned restores=0;
+    bool Restore(){assert(valid);valid=false;++restores;return restoreOk;}
+};
+static void TestPresentationSafety(){
+    PresentationSafety safety;
+    unsigned draws=0;
+    auto draw=[&](){++draws;return true;};
+    FakeGuard normal;
+    assert(safety.Render(normal,draw)==DrawResult::Success);
+    assert(draws==1&&normal.restores==1&&safety.Allowed());
+    // Early draw failure still restores; a healthy outer restore allows retry.
+    for(unsigned failedStage=0;failedStage<8;++failedStage){
+        FakeGuard guard;
+        unsigned stages=0;
+        auto partial=[&](){for(unsigned i=0;i<8;++i){++stages;if(i==failedStage)return false;}return true;};
+        assert(safety.Render(guard,partial)==DrawResult::DrawFailed);
+        assert(stages==failedStage+1&&guard.restores==1&&safety.Allowed());
+    }
+    FakeGuard restoreFault;restoreFault.restoreOk=false;
+    assert(safety.Render(restoreFault,draw)==DrawResult::RestoreFailed);
+    assert(restoreFault.restores==1&&!safety.Allowed());
+    const unsigned before=draws;
+    for(unsigned frame=0;frame<100000;++frame){
+        FakeGuard guard;
+        assert(safety.Render(guard,draw)==DrawResult::Disabled);
+        assert(guard.restores==0&&draws==before&&!safety.Allowed());
+    }
+    // Reset is the sole recovery route, not a successful later input frame.
+    safety.Reset();FakeGuard recovered;
+    assert(safety.Render(recovered,draw)==DrawResult::Success&&safety.Allowed());
+    FakeGuard captureFault;captureFault.valid=false;
+    const unsigned beforeCapture=draws;
+    assert(safety.Render(captureFault,draw)==DrawResult::CaptureFailed);
+    assert(draws==beforeCapture&&captureFault.restores==0&&!safety.Allowed());
+    safety.Reset();FakeGuard both;both.restoreOk=false;
+    assert(safety.Render(both,[](){return false;})==DrawResult::RestoreFailed);
+    assert(both.restores==1&&!safety.Allowed());
+}
 int main(){
+    TestPresentationSafety();
     Snapshot s;s.visible=true;s.phase=centurionreload::Phase::Carrying;
     s.pawn=20;s.weapon=10;s.sampledMs=1000;s.hand={{.2f,1,-.5f},{}};
     assert(Eligible(s,true,20,10,1000)&&Eligible(s,true,20,10,1100));
@@ -11,13 +52,23 @@ int main(){
     assert(!Eligible(s,true,21,10,1000)&&!Eligible(s,true,20,11,1000));
     assert(!Eligible(s,true,20,10,1101)&&!Eligible(s,true,20,10,999));
     for(auto phase:{centurionreload::Phase::Idle,centurionreload::Phase::Removing,
-        centurionreload::Phase::Discard,centurionreload::Phase::NeedAmmo,
+        centurionreload::Phase::Discard,centurionreload::Phase::Unlocked,
+        centurionreload::Phase::Open,centurionreload::Phase::Loaded,
         centurionreload::Phase::WaitingNative,centurionreload::Phase::Cooldown}){
         s.phase=phase;assert(!Eligible(s,true,20,10,1000));
     }
     s.phase=centurionreload::Phase::Carrying;s.visible=false;assert(!Eligible(s,true,20,10,1000));
     s.visible=true;Pose pose;Config cfg;assert(Mount(s.hand,cfg,pose));
     assert(std::fabs(pose.p.x-.2f)<1e-6f&&std::fabs(pose.p.z+.58f)<1e-6f);
+    s.phase=centurionreload::Phase::NeedAmmo;
+    assert(Eligible(s,true,20,10,1000));
+    const Pose stock{{-.22f,1.48f,.18f},Degrees(0,30,0)};
+    assert(PreviewPose(s,stock,cfg,pose));
+    assert(hipknife::Length(pose.p-stock.p)==0); // not displaced by hand offset
+    s.phase=centurionreload::Phase::Carrying;
+    assert(PreviewPose(s,stock,cfg,pose)&&std::fabs(pose.p.z+.58f)<1e-6f);
+    s.phase=centurionreload::Phase::Loaded;assert(!PreviewPose(s,stock,cfg,pose));
+    s.phase=centurionreload::Phase::Carrying;
     // Authored offset rotates with the controller, never the head/camera.
     s.hand.q=Degrees(0,90,0);assert(Mount(s.hand,cfg,pose));
     assert(std::fabs(pose.p.x-.12f)<1e-6f&&std::fabs(pose.p.z+.5f)<1e-6f);
@@ -41,5 +92,5 @@ int main(){
     assert(!Mount(s.hand,cfg,pose)&&!Current(s,20,10,1000));
     for(int p=-180;p<=180;p+=10)for(int y=-180;y<=180;y+=10)for(int r=-180;r<=180;r+=10)
         assert(hipknife::Valid(Degrees((float)p,(float)y,(float)r)));
-    std::puts("centurion clip L1 PASS: default OFF/context/phase/freshness/identity/controller mount/50653 rotations");
+    std::puts("centurion clip L1 PASS: default OFF/context/phase/freshness/identity/controller mount/50653 rotations + presentation fault latch/100000 disabled frames");
 }

@@ -5,17 +5,33 @@ Volk S4 and Kasimov magazines/albedo/Reload caches plus bounded offline
 hierarchical animation consumer; gun root frozen, real cooked palettes and
 native diffuse references measured. Imported f519de6 CPU gesture prototypes,
 independent left/back shoulder math and cancellation across calibration changes.
-L1_PASS ten optimized CPU executables +40 Python tests; 30000 transactions,
+L1_PASS fifteen optimized CPU executables +44 Python tests after sync with
+MAIN 513013a (including own-process native ABI regression); 30000 transactions,
 7506 original fractional track poses; own-process D3D9Ex actual textured pixels
-in BOTH eyes, state/failure/Reset checks PASS. L2_PASS clean source f5c2fb8,
+in BOTH eyes, state/failure/Reset checks PASS. Earlier L2_PASS source f5c2fb8,
 x86 PE32 /O2 regression DLL SHA-256
 7F350D7347A76239BC1E1EDB49A25A32C5BC98720CF43BFC753F7664182353DF.
+Post-sync clean L2 build pending receipt. MAIN runtime/INI match 513013a exactly.
 No runtime dispatcher/INI/native ammo backend; L3/L4 UNKNOWN, NOT headset-ready.
 ZERO Steam, no Centurion/accepted config or installed asset changes.
 See docs/next-weapon-animation-assets.md. SIDE regression DLL MUST NOT replace
 current MAIN integration; private game-derived outputs remain ignored.
 
-LATEST 2026-10-16 SIDE fix/right-eye-mirror-steam-capture: complete right-eye
+LATEST 2026-10-17 SIDE side/mirror-screenshot-fix: MAIN root-cause accepted —
+UE3 binds viewport + Present region to the window (dumped frame: right half
+black at x>=2952 on a 5904x3012 backbuffer), so the SetWindowPos fit path is
+REMOVED; Window=1 now fits the right eye into the visible client region of
+the untouched SBS window (zero engine interaction, VR res intact by
+construction). Guard stays as fail-open tripwire + anti-war fuse; contract
+test_window_never_resized added. L1_PASS full mirror/guard/stamp/fuse CPU +
+D3D9Ex pixels/scope/viewport/Reset + 8 Python contracts + six menu/cinema
+regressions. L2_PASS clean tree,
+x86 PE32 /O2 DLL SHA-256
+594D11ABFCA21985FC6159A2A0E2B66628FC892B12F56F3619D751E7A47BCB49.
+L3/L4 UNKNOWN. ZERO Steam. MAIN L3: ok>0 rising, skipRect quiet, bb=SBS
+stable, no reset-guard lines, then F12/Share on two live halves.
+
+LATEST 2026-10-16 SIDE fix/right-eye-mirror-steam-capture (PR #43): complete right-eye
 aspect fit, opt-in monitor work-area window cap 1920x1080 (physical client px),
 no changing XR/scene resolution commands. Fixed double-applied aspect scaling;
 offscreen composition then commit avoids clear-before-failed-copy black frame.
@@ -31,6 +47,32 @@ L3/L4 UNKNOWN. ZERO Steam or installed-file changes.
 See docs/right-eye-mirror-capture.md. MAIN must integrate on current source,
 preserve full accepted config/assets and validate actual saved Steam images and
 UE3 WM_SIZE behavior before accepting the window-fit flag.
+
+LATEST 2026-10-16 SIDE native Centurion continuation: offline native registration,
+class-constructor/vtable and original BeginFire reload/fallback path identified.
+New default-OFF CenturionNativeReloadGuard 1=observe /2=conditional suppression
+experiment, derived ABI/slot + method-shape validation; one close-token, native
+inventory untouched. L1_PASS 13 CPU executables + 31 Python checks, original
+archived wrapper/body match and own-process x86 detour replay.
+L2_PASS clean a2b77ac /O2 x86 PE32 DLL SHA256
+89A5209153F194ED858553EAE2C3B99CC1BC2E52C9DD9B1DEBD9C43977458339.
+Private candidate/manifest/assets checked, NO INI staged.
+L3/L4 UNKNOWN. Actual cylinder animation OPEN.
+See docs/centurion-native-reload.md. ZERO Steam, preserve current MAIN integration.
+
+LATEST 2026-10-16 SIDE fix/centurion-grip-shoulder: user tested original
+Centurion prototype and reported auto-reload, gun/knife grab conflicts, squares.
+Follow-up implements left-shoulder source, bounded grip priority/no fake release,
+default-OFF Cross health/right-stick-up jump/Circle cylinder gesture layout,
+Circle/open/dump/shoulder/insert/close FSM and opt-in original stock/carried mesh.
+Markers now independently OFF. Native auto-reload/cylinder animation NOT fixed;
+native declaration/ABI/runtime producer still requires evidence, not guessed calls.
+L1_PASS eleven /O2 /W4 /WX CPU executables +27 Python tests; knife 6 CPU/14 Python.
+L2_PASS clean 80a5e34 /O2 x86 PE32 DLL SHA256
+B5352D3C9DF60F705904A0AE992EDF478E96650A1E7B6888F4B51F3985384CAA.
+Private candidate/asset hashes verified, NO INI staged. Full manual reload not ready.
+ZERO Steam, no installed-file writes; L3/L4 UNKNOWN.
+See docs/centurion-grip-shoulder.md; rebuild onto CURRENT MAIN before any test.
 
 LATEST 2026-10-16: Prototypy przeładowania Valkyrie, Volk S4 i Kasimova (PR #37):
 Przygotowałem prototypy przeładowania Valkyrie, Volk S4 i Kasimova: gesty, zabezpieczenia oraz oryginalne modele magazynków.
@@ -56,13 +98,23 @@ failure pixel restore, Reset-owned DEFAULT-pool resources; captured successful
 receipt disables legacy identical-left-crop for this frame only.
 L1_PASS six /O2 /W4 /WX CPU executables: policy/generation/transaction failures,
 panel/laser/parallax geometry, menu/pause/cutscene regressions.
-L2_PASS clean9b23e3f /O2 x86 PE32.
+L2_PASS clean 9b23e3f /O2 x86 PE32; DLL SHA-256
+681D3A790951E9D192377CDD4AC7433F8652A01F7FE2B7D9649315805E878C1E.
+ZERO Steam; L3/L4 UNKNOWN. No game assets/config/renders of hands/weapons changed.
+See docs/frontend-menu-comfort.md; MAIN owns L3 and physical acceptance.
 
 LATEST 2026-10-16 SIDE feature/accepted-profile-guard (PR #39): offline deployment
 regression guard, complete semantic INI + exact inventoried SHA-256 and
 reviewed per-candidate plan; denies silent Polish/hand/knife/calibration loss
 and stale rollback. Narrow deploy runner integrated, legacy build -Install
 blocked. No automatic acceptance/restore. Broad/cutscene writes fail closed.
+other standalone runners remain OUT OF SCOPE until MAIN adapts them.
+No live baseline created or promoted, ZERO Steam, no renderer/input changes.
+L1_PASS 37 rejection cases on Windows PowerShell 5.1 and PowerShell 7.
+L2_PASS clean 4e7828e /O2 x86 PE32, DLL SHA-256
+3B83750AC8C5BCABFA4C1160791BB03055C8D6F84ACAF288B8715ABC2A67F1D1.
+Build only, not staged; L3/L4 UNKNOWN. Not active on user's installation.
+See docs/accepted-profile-guard.md for contract, coverage and migration limits.
 
 LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN f0b96ad:
 Compact import: docs/handoffs/centurion-reload-compact.md. Offline correlation

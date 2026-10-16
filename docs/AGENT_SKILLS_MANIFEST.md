@@ -5,6 +5,7 @@ Project-local skills are discovered from `.agents/skills/<name>/SKILL.md` by Cod
 | Project skill | Origin | Source revision / note |
 |---|---|---|
 | `singularityvr-main-engineering` | SingularityVR project | Project-authored; MAIN evidence-driven debugging, safe takeover, complete payload/restore identities, Steam/PSVR2 tests and native asset/audio integration. |
+| `singularityvr-weapons-continuation` | SingularityVR project | Compact weapons/Centurion handoff: role, project context, safety and separately dated current receipt. No Steam authority or runtime change. |
 | `singularityvr-agent-test-bridge` | SingularityVR project | Project-authored; mandatory runtime evidence gate. |
 | `vr-mod-workflow` | Adapted from `VR-Mod-Vibecoding-Wizard` | `bigbossafman/VR-Mod-Vibecoding-Wizard`, `40382b390e239f354ea3cecd1f9151c455883d7c`; local workflow is project-specific. |
 | `native-game-modding` | `universal-modder/skills/mod-any-game` | `rehan-remade/universal-modder`, `8370faa8e114baf33acdb23079aff552a7728c4b`. |

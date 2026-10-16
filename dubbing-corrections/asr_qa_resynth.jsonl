@@ -1,0 +1,130 @@
+{"file": "fc18985d1ee4277a.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_4014_GST", "asr": "muszą zagłuszać naszą łączność.  We też słychać tylko rosyjski.", "recall": 0.78, "expected": "Muszą zagłuszać naszą łączność. W eterze słychać tylko rosyjski.", "qa_note": "attempt2 sentence-split version"}
+{"file": "6d7ed3fc2945a00a.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_2005_GST", "asr": "Cholera, znowu te stwory. Weź ten karabin, musimy oczyścić drogę.", "recall": 1.0, "expected": "Cholera, znowu te stwory. Weź ten karabin, musimy oczyścić drogę."}
+{"file": "a1b3a31dfb136c34.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_2205_GST", "asr": "Świetnie strzelasz! Ruszamy!", "recall": 1.0, "expected": "Świetnie strzelasz. Ruszamy."}
+{"file": "d72fcdd0e17a5366.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_2010_GST", "asr": "Na co czekasz?  Zabierz tę strzelbę i ruszamy.", "recall": 1.0, "expected": "Na co czekasz? Zabierz tę strzelbę i ruszamy."}
+{"file": "d46aa5cf683fce12.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_3705_GST", "asr": "Lenko, obejdź ich z prawej.  Ja pójdę z lewej.", "recall": 0.88, "expected": "Renko! Obejdź ich z prawej! Ja pójdę z lewej!", "qa_note": "attempt2 sentence-split version"}
+{"file": "1d999de27e91a558.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_4410_GST", "asr": "Dalej ręko. Znajdź sposób na otwarcie drzwi.", "recall": 0.6, "expected": "Dalej, Renko. Znajdź sposób na otwarcie drzwi. Ja tu zostanę."}
+{"file": "960111000a1afdbf.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_4412_GST", "asr": "Otwórz drzwi.  Ręko.  Ja utrzymam te pozycje.", "recall": 0.57, "expected": "Otwórz drzwi, Renko. Ja utrzymam tę pozycję.", "qa_note": "attempt2 sentence-split version"}
+{"file": "aa11d61b60119507.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_4019_GST", "asr": "Cholera, ci goście nie wyglądają przyjaźnie.", "recall": 0.55, "expected": "Cholera, ci goście nie wyglądają przyjaźnie. Mam dziś naprawdę parszywy dzień."}
+{"file": "2d71a4d9c7e7ed9e.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_3005_GST", "asr": "Śmigłowiec, i to nie nasz, padmi.", "recall": 0.83, "expected": "Śmigłowiec! I to nie nasz! Padnij!"}
+{"file": "1fca8cc6e8f67644.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_4405_GST", "asr": "Cholera, zamknięte, potrzymam ten obszar, a Ty znajdź sposób na otwarcie drzwi!", "recall": 1.0, "expected": "Cholera, zamknięte. Potrzymam ten obszar, a ty znajdź sposób na otwarcie drzwi.", "qa_note": "attempt2 sentence-split version"}
+{"file": "4deb324d1abd0015.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_4018_GST", "asr": "Kto to jest do cholery?", "recall": 1.0, "expected": "Kto to jest, do cholery?"}
+{"file": "SD_GST_SEE_TARGET2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_SEE_TARGET2", "asr": "Cel.  Prosto przed nami.", "recall": 1.0, "expected": "Cel! Prosto przed nami!"}
+{"file": "SD_SPT1_FIRE_GRENADE3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_FIRE_GRENADE3", "asr": "Granat!", "recall": 1.0, "expected": "Granat!"}
+{"file": "bc90f78323ed8b2a.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI99_2205_SC1", "asr": "Ludzieli się przeciwko strażnikom, wielu zginęłowe uciekła w błąd wyspy, muszę odnaleźć na dwie.", "recall": 0.53, "expected": "Ludzie zwrócili się przeciwko strażnikom. Wielu zginęło, a większość ocalałych uciekła w głąb wyspy. Muszę odnaleźć Nadię."}
+{"file": "67e4b49e269ec73e.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_4411_GST", "asr": "Będę trzymał pozycję podczas gdy ty otworzysz drzwi.", "recall": 1.0, "expected": "Będę trzymał pozycję, podczas gdy ty otworzysz drzwi."}
+{"file": "00b31ad91a4c4bc2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_4013_GST", "asr": "Powtórz tu, Devin, cztery jeden.", "recall": 0.8, "expected": "Powtórz, tu Devlin cztery-jeden."}
+{"file": "SD_SPT2_FIRE3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_FIRE3", "asr": "Widzę cel, otwieram ogień.", "recall": 1.0, "expected": "Widzę cel, otwieram ogień!"}
+{"file": "SD_SPT1_MOVE_RETREAT3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_MOVE_RETREAT3", "asr": "Musimy się wycofać.", "recall": 1.0, "expected": "Musimy się wycofać."}
+{"file": "SD_SPT2_MOVE_RETREAT2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_MOVE_RETREAT2", "asr": "Wycofać się!", "recall": 1.0, "expected": "Wycofać się!"}
+{"file": "SD_GST_SEE_TARGET3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_SEE_TARGET3", "asr": "Zauważono wrobia!", "recall": 0.5, "expected": "Zauważono wroga!"}
+{"file": "SD_SPT2_FIRE1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_FIRE1", "asr": "Zdajmijcie go!", "recall": 0.5, "expected": "Zdejmijcie go."}
+{"file": "853f1bf4cc8acfbc.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_2011_GST", "asr": "Zgarnij ten karabin snajperski i zdejmij je czymkolwiek są.", "recall": 1.0, "expected": "Zgarnij ten karabin snajperski i zdejmij je, czymkolwiek są."}
+{"file": "53fef92e458e6caa.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_1905_GST", "asr": "Do mnie.", "recall": 1.0, "expected": "Do mnie!"}
+{"file": "934536f99f52e9af.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_3505_GST", "asr": "Otwórz drzwi i mnie osłaniaj.", "recall": 1.0, "expected": "Otwórz drzwi i mnie osłaniaj."}
+{"file": "0d1e7a471fd25a05.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_4105_GST", "asr": "CZISTO!", "recall": 0.0, "expected": "Czysto!"}
+{"file": "SD_GST_FIRE1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_FIRE1", "asr": "O gnia!", "recall": 0.0, "expected": "Ognia!"}
+{"file": "SD_GST_FIRE2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_FIRE2", "asr": "Ognia! Ognia!", "recall": 1.0, "expected": "Ognia! Ognia!"}
+{"file": "SD_GST_FIRE_SUPPRESS1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_FIRE_SUPPRESS1", "asr": "Daj ogień zaporowy!", "recall": 1.0, "expected": "Daj ogień zaporowy."}
+{"file": "SD_GST_FIRE_SUPPRESS3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_FIRE_SUPPRESS3", "asr": "Potrzebuje ognia zaporowego.", "recall": 0.67, "expected": "Potrzebuję ognia zaporowego."}
+{"file": "SD_GST_GEN1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_GEN1", "asr": "Bądźcie czujni!", "recall": 1.0, "expected": "Bądźcie czujni."}
+{"file": "SD_GST_LOC_AHD1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_LOC_AHD1", "asr": "Cel na 12.", "recall": 0.67, "expected": "Cel na dwunastej!"}
+{"file": "SD_GST_LOC_AHD2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_LOC_AHD2", "asr": "Kontakt dokładnie przed nami.", "recall": 1.0, "expected": "Kontakt dokładnie przed nami."}
+{"file": "SD_GST_MOVE_COVER1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_COVER1", "asr": "chrysie", "recall": 0.0, "expected": "Kryj się!"}
+{"file": "SD_GST_MOVE_COVER2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_COVER2", "asr": "Znajdź osłonę!", "recall": 1.0, "expected": "Znajdź osłonę!"}
+{"file": "SD_GST_MOVE_COVER3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_COVER3", "asr": "Do osłony!", "recall": 1.0, "expected": "Do osłony!"}
+{"file": "SD_GST_MOVE_LEFT1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_LEFT1", "asr": "Obyć z lewej.", "recall": 0.67, "expected": "Obejdź z lewej!"}
+{"file": "SD_GST_MOVE_RIGHT1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_RIGHT1", "asr": "Obyć z prawej!", "recall": 0.67, "expected": "Obejdź z prawej!"}
+{"file": "SD_SPT1_MOVE_IN5.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_MOVE_IN5", "asr": "Rozproszyć się.", "recall": 1.0, "expected": "Rozproszyć się!"}
+{"file": "SD_SPT1_MOVE_RETREAT1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_MOVE_RETREAT1", "asr": "Wycofać się za osłonę.", "recall": 1.0, "expected": "Wycofać się za osłonę!"}
+{"file": "SD_SPT1_MOVE_RETREAT2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_MOVE_RETREAT2", "asr": "Nie utrzymamy się tutaj.", "recall": 1.0, "expected": "Nie utrzymamy się tutaj."}
+{"file": "SD_SPT2_MOVE_COVER1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_MOVE_COVER1", "asr": "Rozproszyć się i kryć!", "recall": 1.0, "expected": "Rozproszyć się i kryć!"}
+{"file": "SD_SPT2_MOVE_COVER2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_MOVE_COVER2", "asr": "Nie wystawiajcie się!", "recall": 1.0, "expected": "Nie wystawiajcie się!"}
+{"file": "SD_GST_REPORT_BEHIND1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_BEHIND1", "asr": "Zachodzimy ich od tyłu.", "recall": 1.0, "expected": "Zachodzimy ich od tyłu!"}
+{"file": "SD_GST_REPORT_CLEAR1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_CLEAR1", "asr": "Rejon czysty.", "recall": 1.0, "expected": "Rejon czysty!"}
+{"file": "SD_GST_REPORT_DESTROY1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_DESTROY1", "asr": "Cez dienty", "recall": 0.0, "expected": "Cel zdjęty!"}
+{"file": "SD_GST_REPORT_DESTROY2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_DESTROY2", "asr": "Mamy ich!", "recall": 0.5, "expected": "Mam ich!"}
+{"file": "SD_GST_REPORT_DESTROY3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_DESTROY3", "asr": "Zdjęty!", "recall": 1.0, "expected": "Zdjęty!"}
+{"file": "SD_GST_REPORT_PINNED1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_PINNED1", "asr": "Przygwoździ im mnie.", "recall": 0.5, "expected": "Przygwoździli mnie!"}
+{"file": "SD_SPT1_RPT_PINNED1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_RPT_PINNED1", "asr": "Szygwoździli nas.", "recall": 0.5, "expected": "Przygwoździli nas!"}
+{"file": "SD_GST_REPORT_PINNED2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_PINNED2", "asr": "Jestem pod silnym ogniem.", "recall": 1.0, "expected": "Jestem pod silnym ogniem!"}
+{"file": "SD_ESP2_RPT_PINNED1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_RPT_PINNED1", "asr": "Pomocy. Czy gwoździ mi mnie?", "recall": 0.67, "expected": "Pomocy! Przygwoździli mnie!"}
+{"file": "SD_GRD1_RPT_PINNED1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GRD1_RPT_PINNED1", "asr": "Powocy, przygłośdzili mnie.", "recall": 0.33, "expected": "Pomocy! Przygwoździli mnie!"}
+{"file": "SD_GST_SEE_COVER1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_SEE_COVER1", "asr": "Cześć za osłoną!", "recall": 0.67, "expected": "Cel za osłoną!"}
+{"file": "SD_GST_SEE_COVER2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_SEE_COVER2", "asr": "Wróg za usłoną.", "recall": 0.67, "expected": "Wróg za osłoną!"}
+{"file": "SD_GST_SEE_GRENADE3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_SEE_GRENADE3", "asr": "UWAGA GRANAT!", "recall": 1.0, "expected": "Uwaga, granat!"}
+{"file": "SD_SPT1_SEE_GRENADE2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_SEE_GRENADE2", "asr": "Uwaga! Granat!", "recall": 1.0, "expected": "Uwaga, granat!"}
+{"file": "SD_SPT1_SEE_TARGET1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_SEE_TARGET1", "asr": "Widzę wroga!", "recall": 1.0, "expected": "Widzę wroga!"}
+{"file": "SD_ESP1_MOVE_IN3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_MOVE_IN3", "asr": "Naprzód!", "recall": 1.0, "expected": "Naprzód!"}
+{"file": "SD_ESP2_MOVE_IN3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_MOVE_IN3", "asr": "STAP SHOOT!", "recall": 0.0, "expected": "Naprzód!"}
+{"file": "SD_GRD1_MOVE_IN3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GRD1_MOVE_IN3", "asr": "NAPSZUT!", "recall": 0.0, "expected": "Naprzód!"}
+{"file": "SD_SPT2_MOVE_IN1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_MOVE_IN1", "asr": "Naprzód!", "recall": 1.0, "expected": "Naprzód!"}
+{"file": "SD_SPT3_MOVE_IN3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_MOVE_IN3", "asr": "Naprzód!", "recall": 1.0, "expected": "Naprzód!"}
+{"file": "SD_ESP1_MOVE_IN4.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_MOVE_IN4", "asr": "Dalej!  Dalej!", "recall": 1.0, "expected": "Dalej! Dalej! Dalej!"}
+{"file": "SD_ESP2_MOVE_IN4.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_MOVE_IN4", "asr": "Daj!  Dalej.", "recall": 1.0, "expected": "Dalej! Dalej! Dalej!"}
+{"file": "SD_GRD1_MOVE_IN4.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GRD1_MOVE_IN4", "asr": "Dalej!  Dalej!", "recall": 1.0, "expected": "Dalej! Dalej! Dalej!"}
+{"file": "SD_SPT3_MOVE_IN4.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_MOVE_IN4", "asr": "Dalej! Dalej! Dalej!", "recall": 1.0, "expected": "Dalej! Dalej! Dalej!"}
+{"file": "SD_ESP2_MOVE_IN5.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_MOVE_IN5", "asr": "Ty idź! Ja osłaniam!", "recall": 1.0, "expected": "Ty idź, ja osłaniam!"}
+{"file": "SD_GRD1_MOVE_IN5.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GRD1_MOVE_IN5", "asr": "Ty idź, ja osłaniam.", "recall": 1.0, "expected": "Ty idź, ja osłaniam!"}
+{"file": "SD_SPT3_MOVE_IN5.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_MOVE_IN5", "asr": "Dejdź! Ja osłaniam!", "recall": 0.5, "expected": "Ty idź, ja osłaniam!"}
+{"file": "SD_ESP1_MOVE_COVER2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_MOVE_COVER2", "asr": "Głowy w dół.", "recall": 1.0, "expected": "Głowy w dół!"}
+{"file": "SD_ESP2_MOVE_COVER2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_MOVE_COVER2", "asr": "Głowy w dół!", "recall": 1.0, "expected": "Głowy w dół!"}
+{"file": "SD_SPT3_MOVE_COVER2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_MOVE_COVER2", "asr": "Głowy w dół!", "recall": 1.0, "expected": "Głowy w dół!"}
+{"file": "SD_ESP1_SEE_TARGET2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_SEE_TARGET2", "asr": "Tam jest!", "recall": 1.0, "expected": "Tam jest!"}
+{"file": "SD_ESP2_SEE_TARGET2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_SEE_TARGET2", "asr": "Tam jest!", "recall": 1.0, "expected": "Tam jest!"}
+{"file": "SD_SPT3_SEE_TARGET2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_SEE_TARGET2", "asr": "Tam jest!", "recall": 1.0, "expected": "Tam jest!"}
+{"file": "SD_ESP1_SEE_TARGET5.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_SEE_TARGET5", "asr": "Pomocy!  Tutaj.", "recall": 1.0, "expected": "Pomocy! Tutaj!"}
+{"file": "SD_ESP2_SEE_TARGET5.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_SEE_TARGET5", "asr": "Pomocy!  Tutaj.", "recall": 1.0, "expected": "Pomocy! Tutaj!"}
+{"file": "SD_SPT3_SEE_TARGET5.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_SEE_TARGET5", "asr": "Pomocy!  Tutaj!", "recall": 1.0, "expected": "Pomocy! Tutaj!"}
+{"file": "SD_ESP1_SEE_TARGET1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_SEE_TARGET1", "asr": "Widzę go!  Widzę go!", "recall": 1.0, "expected": "Widzę go! Widzę go!"}
+{"file": "SD_ESP2_SEE_TARGET1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_SEE_TARGET1", "asr": "Idzie go!  Idzie go!", "recall": 0.5, "expected": "Widzę go! Widzę go!"}
+{"file": "SD_SPT3_SEE_TARGET1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_SEE_TARGET1", "asr": "Widzę go.  Widzę go!", "recall": 1.0, "expected": "Widzę go! Widzę go!"}
+{"file": "SD_ESP2_FIRE_GRENADE2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP2_FIRE_GRENADE2", "asr": "rzucam granat", "recall": 1.0, "expected": "Rzucam granat!"}
+{"file": "SD_SPT3_FIRE_GRENADE2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_FIRE_GRENADE2", "asr": "Żucam granat!", "recall": 0.5, "expected": "Rzucam granat!"}
+{"file": "SD_ESP1_SRCH_FIND1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_ESP1_SRCH_FIND1", "asr": "Gdzie się podział?", "recall": 1.0, "expected": "Gdzie się podział?"}
+{"file": "SD_GRD1_SRCH_FIND1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GRD1_SRCH_FIND1", "asr": "Gdzie się podjął?", "recall": 0.67, "expected": "Gdzie się podział?"}
+{"file": "SD_SPT3_SRCH_FIND1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT3_SRCH_FIND1", "asr": "Gdzie się podział?", "recall": 1.0, "expected": "Gdzie się podział?"}
+{"file": "SD_SPT1_FIRE_GRENADE2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_FIRE_GRENADE2", "asr": "Żucam granat.", "recall": 0.5, "expected": "Rzucam granat!"}
+{"file": "SD_SPT2_FIRE_GRENADE1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_FIRE_GRENADE1", "asr": "Używam gana tu!", "recall": 0.5, "expected": "Używam granatu!"}
+{"file": "SD_SPT2_FIRE_GRENADE2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_FIRE_GRENADE2", "asr": "Granat w powietrzu.", "recall": 1.0, "expected": "Granat w powietrzu!"}
+{"file": "SD_GST_REPORT_RELOAD2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_RELOAD2", "asr": "Muszę przeładować.", "recall": 1.0, "expected": "Muszę przeładować!"}
+{"file": "SD_GST_REPORT_RELOAD3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_RELOAD3", "asr": "Muszę przeładować.", "recall": 1.0, "expected": "Muszę przeładować!"}
+{"file": "SD_GST_ADVANCING1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_ADVANCING1", "asr": "NACZERAJĄ!", "recall": 0.0, "expected": "Nacierają!"}
+{"file": "SD_SPT2_SEE_TARGET4.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_SEE_TARGET4", "asr": "Przed siebie!  Intrus!", "recall": 0.67, "expected": "Przed siebie! Intruz!"}
+{"file": "SD_SPT2_SEE_TARGET5.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_SEE_TARGET5", "asr": "Szledzę intruza!", "recall": 0.5, "expected": "Śledzę intruza."}
+{"file": "SD_GST_SMOKE1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_SMOKE1", "asr": "Wystawili zasłonę dymną.", "recall": 1.0, "expected": "Wystawili zasłonę dymną!"}
+{"file": "SD_SPT2_SRCH_FIND1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_SRCH_FIND1", "asr": "Sprawdźcie rogi!", "recall": 1.0, "expected": "Sprawdźcie rogi!"}
+{"file": "SD_SPT2_SRCH_KILL1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT2_SRCH_KILL1", "asr": "Nie wypuszczać go stąd żywego!", "recall": 1.0, "expected": "Nie wypuszczać go stąd żywego!"}
+{"file": "SD_GST_MOVE_OUT2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_OUT2", "asr": "Tędy.", "recall": 1.0, "expected": "Tędy."}
+{"file": "9020e2e40fcb9393.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_3005_GST", "asr": "Chodźmy.", "recall": 1.0, "expected": "Chodźmy."}
+{"file": "SD_GST_MOVE_IN3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_IN3", "asr": "Chodźmy.", "recall": 1.0, "expected": "Chodźmy."}
+{"file": "SD_GST_MOVE_OUT1.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_OUT1", "asr": "Chodźmy.", "recall": 1.0, "expected": "Chodźmy."}
+{"file": "2befe61f77890b02.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_1505_GST", "asr": "Mundur jest nieco inny niż te, które widziałem, ale to zdecydowanie rosyjski żołnierz. Bez wątpienia.", "recall": 1.0, "expected": "Mundur jest nieco inny niż te, które widziałem, ale to zdecydowanie rosyjski żołnierz. Bez wątpienia."}
+{"file": "7a0e9c814e05fa5c.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_2012_GST", "asr": "Dalej weź strzelbę i ruszamy.", "recall": 1.0, "expected": "Dalej, weź strzelbę i ruszamy."}
+{"file": "f2ba505ca17f6f02.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_2011_GST", "asr": "Weź strzelbę i idziemy.", "recall": 1.0, "expected": "Weź strzelbę i idziemy."}
+{"file": "2511030751f86d5e.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_2012_GST", "asr": "Użyj tego karabinu snajperskiego i strzelaj do tych stworów na moście.", "recall": 1.0, "expected": "Użyj tego karabinu snajperskiego i strzelaj do tych stworów na moście!"}
+{"file": "c089eb962f533163.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_2010_GST", "asr": "Weź ten karabin snajperski i zabij te robaki na moście.", "recall": 1.0, "expected": "Weź ten karabin snajperski i zabij te robaki na moście."}
+{"file": "7eb11d6b4d926966.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_4015_GST", "asr": "Czy na tej cholerniej wyspie cokolwiek działa?", "recall": 0.86, "expected": "Czy na tej cholernej wyspie cokolwiek działa?"}
+{"file": "d2e9d6ec9af35475.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_4016_DEM", "asr": "To miejsce opuszczono prawie lat temu.", "recall": 1.0, "expected": "To miejsce opuszczono prawie 50 lat temu."}
+{"file": "35fe13978dcb94e6.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_5006_GST", "asr": "Tędy.", "recall": 1.0, "expected": "Tędy!"}
+{"file": "b5904f02d5fdbabe.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_4017_DEM", "asr": "Tak przynajmniej miało być.", "recall": 1.0, "expected": "Tak przynajmniej miało być."}
+{"file": "0b6dd5cca4e1bd9e.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_4005_GST", "asr": "Dalej.  Cholś.", "recall": 0.5, "expected": "Dalej, Hollis!"}
+{"file": "e521a28850b8c4bd.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_4206_GST", "asr": "Daj mi rękę!", "recall": 1.0, "expected": "Daj mi rękę!"}
+{"file": "b45a7f1912f3b363.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_3305_GST", "asr": "Szybko pomóż mi przy tej safie.", "recall": 0.83, "expected": "Szybko, pomóż mi przy tej szafie."}
+{"file": "SD_GST_GEN4.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_GEN4", "asr": "Wypatrujcie wrogów!", "recall": 1.0, "expected": "Wypatrujcie wrogów."}
+{"file": "SD_GST_GEN2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_GEN2", "asr": "Piłnujcie drzwi.", "recall": 0.5, "expected": "Pilnujcie drzwi."}
+{"file": "SD_GST_GEN5.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_GEN5", "asr": "Pilnujcie rogów.", "recall": 1.0, "expected": "Pilnujcie rogów."}
+{"file": "SD_GST_MOVE_LEFT3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_LEFT3", "asr": "W lewo!", "recall": 1.0, "expected": "W lewo!"}
+{"file": "SD_GST_MOVE_RIGHT3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_RIGHT3", "asr": "W prawo!", "recall": 1.0, "expected": "W prawo!"}
+{"file": "SD_SPT1_MOVE_IN3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_SPT1_MOVE_IN3", "asr": "zajmijcie przednie stanowiska", "recall": 1.0, "expected": "Zajmijcie przednie stanowiska!"}
+{"file": "SD_GST_MOVE_RETREAT3.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_RETREAT3", "asr": "Wycofujemy się.", "recall": 1.0, "expected": "Wycofujemy się."}
+{"file": "SD_GST_MOVE_YOU2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_MOVE_YOU2", "asr": "Stoisz mi na drodze.", "recall": 1.0, "expected": "Stoisz mi na drodze."}
+{"file": "ff9c7f68bcb9a5ca.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_4012_GST", "asr": "Znowu Ci Rosjanie!", "recall": 1.0, "expected": "Znowu ci Rosjanie."}
+{"file": "SD_GST_REPORT_FIRE2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_FIRE2", "asr": "Jesteśmy pod ogniem.", "recall": 1.0, "expected": "Jesteśmy pod ogniem!"}
+{"file": "14fb7c852b38c25d.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_4207_GST", "asr": "Tu! Do góry!  Chwyć mnie za głowę!", "recall": 1.0, "expected": "Tu, do góry! Chwyć mnie za głowę!", "qa_note": "attempt2 sentence-split version"}
+{"file": "bc0ee3caae5d223b.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_5005_GST", "asr": "Skontaktujmy się z Titanem i wynoszmy się z tego kręgu matouku.", "recall": 0.78, "expected": "Skontaktujmy się z Titanem 1 i wynośmy się z tego kręgu, matołku."}
+{"file": "7d499e1d61c63a85.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_4009_GST", "asr": "Titan 1 to Devin 4.1, dowódca.", "recall": 0.14, "expected": "Tajtan jeden, tu Devlin cztery-jeden, dowódca. Odbiór?"}
+{"file": "4fa0f0deff1c1704.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI5_1505_GST", "asr": "Bo już osiemdziesiąty szósty. Sprawdź tam ten posterunek wartowniczy.", "recall": 0.54, "expected": "To już osiemdziesiąty szósty. Sprawdź tamten posterunek wartowniczy. Może jest tam kolejny przełącznik."}
+{"file": "7087929bf1605b7e.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_3012_GST", "asr": "Ech!", "recall": 1.0, "expected": "Ech!"}
+{"file": "6f1ba0ba1b340e74.wav", "id": "story:SP_VI5_kismet03_LOC_INT:VI4_4210_GST", "asr": "Ach.", "recall": 1.0, "expected": "Ach!"}
+{"file": "SD_GST_REPORT_SNIPER2.wav", "id": "story:SP_VI5_kismet03_LOC_INT:SD_GST_REPORT_SNIPER2", "asr": "Wrogi Sniper.", "recall": 0.5, "expected": "Wrogi snajper!"}

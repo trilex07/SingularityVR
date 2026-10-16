@@ -4,6 +4,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 CPP = (ROOT / "spikes/view_matrix/d3d9.cpp").read_text(encoding="utf-8-sig")
+MIRROR_H = (ROOT / "spikes/view_matrix/desktop_mirror.h").read_text(encoding="utf-8-sig")
 
 
 class Contract(unittest.TestCase):
@@ -21,6 +22,7 @@ class Contract(unittest.TestCase):
     def test_order(self):
         present = CPP.split("const bool mirrored = desktop_mirror::Apply", 1)[1]
         self.assertLess(CPP.index("UpdateFromHeadset(s);"), CPP.index("const bool mirrored = desktop_mirror::Apply"))
+        self.assertLess(present.index("StampCaptureRt"), present.index("PresentBackbufferScope"))
         self.assertLess(present.index("PresentBackbufferScope"), present.index("g_origPresent(s, a, b, c, d)"))
 
     def test_default_off(self):
@@ -30,6 +32,22 @@ class Contract(unittest.TestCase):
     def test_reset_not_diagnostic_only(self):
         self.assertIn("if(g_diagEnabled || Rd(g_desktopMirrorWindow) || Rd(g_desktopMirrorEye))", CPP)
         self.assertIn("desktop_mirror::ReleaseScratch();", CPP)
+
+    def test_reset_guard_enforces_sbs(self):
+        self.assertEqual(CPP.count("DecideResetSize("), 1)
+        self.assertEqual(CPP.count("if (pp && dev) GuardResetSize(pp);"), 2)
+        self.assertIn("pp->BackBufferWidth = d.w", CPP)
+        self.assertIn("pp->BackBufferHeight = d.h", CPP)
+        self.assertIn("reset-guard:", CPP)
+        self.assertIn("FUSE BLOWN", CPP)
+
+    def test_window_never_resized(self):
+        # MAIN root cause (dumped frame): UE3 binds viewport + Present region
+        # to the window size, so SetWindowPos blackens the right eye. The eye
+        # fits the visible client region instead; the window stays SBS-sized.
+        self.assertNotIn("SetWindowPos", MIRROR_H)
+        self.assertNotIn("FitWindow", MIRROR_H)
+        self.assertNotIn("WindowBox", MIRROR_H)
 
     def test_sample_config(self):
         ini = (ROOT / "spikes/view_matrix/SingularityVR.ini").read_text(encoding="utf-8-sig")

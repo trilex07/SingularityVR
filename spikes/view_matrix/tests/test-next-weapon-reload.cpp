@@ -93,6 +93,11 @@ static void TestCancellation(const Profile& p){
     }
 }
 static void TestAmmoAndTimeout(const Profile& p){
+    Fixture independent(p);independent.c.gesture.cylinderGestures=true;
+    independent.c.gesture.insertRadius=9;independent.c.gesture.grabWindowMs=60000;
+    independent.Insert(); // Centurion cylinder/large socket/window never leak into magazines
+    Fixture edge(p);edge.Tick(false,edge.withdrawn);edge.Tick(true,edge.withdrawn);
+    assert(edge.Tick(true,edge.f.gesture.socket).event==E::None); // rising-edge only
     Fixture x(p);x.Insert();
     for(int i=0;i<50;++i)assert(!x.Tick(false,x.f.gesture.socket).reloadIntent);
     x.f.gesture.clip=6;x.f.gesture.reserve=25;

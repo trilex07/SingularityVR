@@ -6,7 +6,7 @@ $build=Join-Path $repo 'build\centurion-reload'
 $source=Join-Path $repo 'spikes\view_matrix'
 $manifest=Get-Content -LiteralPath (Join-Path $source 'd3d9.build.json') -Raw | ConvertFrom-Json
 $dll=Join-Path $source 'd3d9.dll'
-if($manifest.branch -ne 'feature/centurion-manual-reload' -or
+if($manifest.branch -notin @('feature/centurion-manual-reload','fix/centurion-grip-shoulder') -or
    $manifest.optimization -ne '/O2' -or $manifest.machine -ne '0x014C' -or
    $manifest.optionalHeaderMagic -ne '0x010B' -or $manifest.workingTreeStatus.Count -ne 0){
     throw 'Requires clean-source Centurion x86 PE32 /O2 provenance'
@@ -54,8 +54,8 @@ $receipt=[ordered]@{
     architecture=$manifest.architecture
     optimization=$manifest.optimization
     files=$files
-    flagsDefaultOff=@('CenturionManualReload','CenturionNativeReloadTap','CenturionReloadProbe','CenturionClipPreview')
-    limitations='Albedo-only carrying preview; native cylinder/animation/ammo untouched; L3/L4 UNKNOWN'
+    flagsDefaultOff=@('CenturionManualReload','CenturionNativeReloadTap','CenturionReloadProbe','CenturionClipPreview','CenturionReloadMarkers','ReloadControlLayout','CenturionCylinderGestures','CenturionNativeReloadGuard')
+    limitations='Native guard OFF/observe/guard experiment requires MAIN runtime proof; original cylinder animation remains, ammo UE3-owned; albedo-only preview; L3/L4 UNKNOWN'
 }
 $receipt | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $output 'centurion-preview.manifest.json') -Encoding UTF8
 $receipt | ConvertTo-Json -Depth 6

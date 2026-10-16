@@ -1,5 +1,11 @@
 # Centurion reload — first controlled prototype
 
+Current follow-up: [shoulder, grip arbitration and requested controls](centurion-grip-shoulder.md).
+The user HAS now tested the original prototype: auto-reload remains, grip
+selected gun/knife and calibration squares dominated. Historical front-belt
+placement and "not tested" statements below describe the earlier candidate,
+not the current implementation. This is still NOT complete physical reload.
+
 SIDE, 2026-10-16. Initial base: MAIN `5763e6c`; synchronized into this own
 branch first with committed MAIN `db4a261`, then `f0b96ad`, preserving its
 menu/holster, knife-joint, cinematic transition and PSVR2 changes. No Steam operations.
@@ -164,6 +170,27 @@ call path. Do not apply an unrelated generic slide-pistol reload to this mesh.
 ## Flags and independent gates
 
 ### Optional carried-cylinder preview (implemented, NOT physically accepted)
+
+Safety continuation hypothesis: the outer calibration pass currently logs a
+failed state restore but retries next frame. A repeated capture/restore failure
+could keep disturbing native gun/menu rendering. Latch ONLY this optional
+presentation pass off after capture/restore failure, until D3D Reset/XR init;
+retain gesture/input/native ammo behavior. A draw failure with successful outer
+restore must not be confused with restore failure. Falsifier: synthetic fault
+injection still executes another draw while latched, fails to restore after an
+early draw failure, or Reset cannot re-enable the pass. Existing fake-D3D tests
+separately cover actual RT/MRT/DS/viewport/reference restoration; no GPU or
+physical acceptance is claimed by this policy test.
+
+Implemented: a lock-free presentation-only latch guards both calibration markers
+and carried cylinder. Capture/outer-restore failure stops subsequent presentation
+before any D3D calls; only Reset/XR input init re-arms it. An ordinary draw failure
+still attempts the full outer restore; if that succeeds, marker retry remains
+allowed and cylinder failure retains its existing cyan fallback. CPU policy
+tests cover eight partial-draw failures, 100000 suppressed frames, capture and
+combined draw/restore failure, plus recovery. Eight reload CPU executables and
+27 Python tests PASS. This does not repair a driver's failed restore in the
+faulting frame; it prevents repeated experimental mutations afterward.
 
 Hypothesis: the measured rigid cylinder and its original albedo can replace the
 cyan carrying marker without altering native gun/clip triangles or inventory.

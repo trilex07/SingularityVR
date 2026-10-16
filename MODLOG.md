@@ -1,5 +1,15 @@
 # Reverse-engineering journal
 
+2026-10-16 native continuation: offline registration identifier -> initializer ->
+exec wrapper -> class constructor/vtable -> native AttemptReload method proved.
+Wrapper is no-param thiscall, whole EAX bool, derived slot0x4C4 in archived image.
+Original Active.BeginFire calls AttemptReload on the empty-fire branch and has
+WaitingForTriggerRelease refusal fallback. New OFF/observe/guard experiment
+requires live reflection + wrapper/method-shape validation, player identity and
+short-lived context, and grants one close-token before forwarding native call.
+No native ammo writes, ProcessInternal misuse or Steam access. Reproducer and
+falsifiers: docs/centurion-native-reload.md. Runtime/animation acceptance OPEN.
+
 2026-10-16: Centurion `ch_inview_alt_pistol_mesh.psk`: measured 5799 wedges,
 79 bones; rigid `clip` subtree yields 1067 UV vertices / 1252 triangles and
 zero crossing triangles. Read-only native reload observation added; no direct

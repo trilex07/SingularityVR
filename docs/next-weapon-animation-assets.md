@@ -98,7 +98,8 @@ Run from this checkout:
 pwsh -NoProfile -File tools/reload/test-centurion.ps1 -PreparedRoot build/next-weapon-reload/prepared -Gpu
 ```
 
-L1_PASS: ten `/O2 /W4 /WX` CPU executables, 40 Python tests, 30000 conserved
+L1_PASS after sync with MAIN 513013a: fifteen optimized CPU executables
+(including its own-process MinHook native ABI harness), 44 Python tests, 30000 conserved
 synthetic magazine transactions, 361 physical-yaw shoulder tests, all three
 original SVRK decoders, and 7506 fractional original track matrices against an
 independent NumPy double-precision oracle. Invalid/truncated/ambiguous assets,
@@ -124,7 +125,15 @@ animation test executable SHA-256
 Build retains inherited warnings; no build errors/fatal format gate issue.
 The DLL does NOT include a runtime caller for these prototypes; it is solely a
 regression build, NOT a ready-to-deploy replacement for MAIN's newer integration.
-Subsequent receipt-only commit changes no tested implementation.
+Subsequent receipt-only commit changes no tested implementation. This is the
+PRE-sync regression receipt; latest clean build is recorded separately below.
+
+Current-main compatibility: integrated MAIN 513013a without editing its renderer,
+INI, Centurion recognizer, input, mirror or localization. Resolved only additive
+STATUS/test-runner conflicts, retaining all existing native tests and optional
+`-NativeEvidence`. Explicitly freeze the magazine adapter's acquisition window
+to a rising edge and insertion radius to its own calibrated socket: new
+Centurion cylinder/16cm/window settings cannot leak into these profiles.
 
 SVWA SHA-256 (profile locked in decoder):
 

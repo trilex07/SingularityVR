@@ -93,18 +93,6 @@ int main() {
                desktop_mirror::VisibleEyeDst(0,0,(LONG)ww,(LONG)wh,5264,2684,ww,wh,2632,2684,b) &&
                EqualRect(&a,&b), "visible full client equals direct fit for arbitrary monitor shape");
     }
-    RECT work{0,0,1920,1040}, outer{};
-    Expect(desktop_mirror::WindowBox(work,16,39,outer) && EqualRect(&work,&outer),
-           "1080p work area includes title/borders/taskbar, not oversized SBS");
-    work={-3840,100,0,2220};
-    Expect(desktop_mirror::WindowBox(work,16,39,outer) && outer.right-outer.left==1936 &&
-           outer.bottom-outer.top==1119 && outer.left>=work.left && outer.right<=work.right,
-           "4K second monitor negative origin caps physical client at 1920x1080");
-    work={1920,-600,3200,120};
-    Expect(desktop_mirror::WindowBox(work,16,39,outer) && EqualRect(&work,&outer),
-           "small monitor is fully contained including negative Y");
-    work={0,0,10,10};
-    Expect(!desktop_mirror::WindowBox(work,16,39,outer), "invalid work area rejected");
     RECT mdst{}, msrc{}; bool useSrc = false, needClr = true;
     Expect(desktop_mirror::ComputeMirrorDestination(5264, 2684, 2632, 2684, 5264, 2684, 0, false, 0, 0, 0, 0, mdst, msrc, useSrc, needClr) &&
            needClr && !useSrc && mdst.left == fdst.left && mdst.right == fdst.right,
@@ -119,5 +107,68 @@ int main() {
     const double targetAspect = 5264.0 / 2684.0;
     Expect(std::fabs(cropAspect - targetAspect) < .002,
            "ComputeMirrorDestination mode 2 preserves target aspect ratio");
+    // Reset guard (tripwire + safety net): redirect window-following shrinks
+    // to the measured SBS size; fail-open otherwise. Trusted 5544x2828 SBS.
+    using desktop_mirror::DecideResetSize;
+    Expect(!DecideResetSize(5544, 2828, 5544, 2828, 1920, 1080, true, true).enforced,
+           "identical SBS passes untouched");
+    Expect(!DecideResetSize(0, 0, 0, 0, 1920, 1080, true, true).enforced,
+           "no trusted size passes through (fail-open)");
+    Expect(!DecideResetSize(1920, 1080, 5544, 2828, 1920, 1080, false, true).enforced,
+           "fit off passes the window size");
+    Expect(!DecideResetSize(1920, 1080, 5544, 2828, 1920, 1080, true, false).enforced,
+           "flat mode passes the window size");
+    {
+        const auto d = DecideResetSize(1920, 1080, 5544, 2828, 1920, 1080, true, true);
+        Expect(d.enforced && d.w == 5544 && d.h == 2828,
+               "window-following shrink redirected to SBS");
+    }
+    {
+        const auto d = DecideResetSize(0, 0, 5544, 2828, 1920, 1080, true, true);
+        Expect(d.enforced && d.w == 5544 && d.h == 2828,
+               "zero (client-sized) request redirected to SBS");
+    }
+    {
+        const auto d = DecideResetSize(1280, 720, 5544, 2828, 1920, 1080, true, true);
+        Expect(!d.enforced && d.w == 1280 && d.h == 720,
+               "explicit smaller choice kept, not fought");
+    }
+    {
+        const auto d = DecideResetSize(6000, 3000, 5544, 2828, 1920, 1080, true, true);
+        Expect(!d.enforced,
+               "explicit larger size passes for the copy path to follow");
+    }
+    {
+        const auto d = DecideResetSize(0, 0, 5544, 2828, 0, 0, true, true);
+        Expect(!d.enforced,
+               "unreadable client cannot judge a zero request");
+    }
+    // Stamp gate: same-size/format RT0 receives mirror pixels, else skipped.
+    {
+        D3DSURFACE_DESC a{}, b{};
+        a.Width = b.Width = 640; a.Height = b.Height = 360;
+        a.Format = b.Format = D3DFMT_A8R8G8B8;
+        Expect(desktop_mirror::ShouldStampRt(a, b), "same RT/backbuffer stamps");
+        b.Width = 320;
+        Expect(!desktop_mirror::ShouldStampRt(a, b), "size mismatch skips");
+        b.Width = 640; b.Format = D3DFMT_X8R8G8B8;
+        Expect(!desktop_mirror::ShouldStampRt(a, b), "format mismatch skips");
+    }
+    // Reset fuse: a burst of enforcements in a short window blows the fuse
+    // (pass-through for the session) instead of Reset-warring into a blackout.
+    {
+        desktop_mirror::ResetFuse f;
+        Expect(f.Observe(0) && f.Observe(1000) && f.Observe(2000),
+               "spaced enforcements allowed");
+        Expect(!f.Observe(3000) && f.blown,
+               "fourth enforcement inside 10 s blows the fuse");
+        Expect(!f.Observe(4000) && !f.Observe(100000),
+               "blown fuse stays pass-through for the session");
+    }
+    {
+        desktop_mirror::ResetFuse f;
+        Expect(f.Observe(0) && f.Observe(11000) && f.Observe(22000) && f.Observe(33000) && !f.blown,
+               "enforcements spaced beyond the window never blow the fuse");
+    }
     return g_fails == 0 ? 0 : 1;
 }

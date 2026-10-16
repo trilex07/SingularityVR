@@ -62,6 +62,30 @@ int main() {
     Check(Pixel(dev,back,320,180)==0x00ff00,"mirror center is right eye, not black/left");
     Check(Pixel(dev,back,0,180)==0,"full eye retained with pillarbox");
     Check(Pixel(dev,scene,320,180)==0,"unrelated RT0 pixels unchanged");
+    // Persistent stamp: same-size offscreen RT0 receives the completed mirror
+    // so pre-hook/post-restore samplers see scene, not stale black.
+    Check(desktop_mirror::StampCaptureRt(dev),"stamp mirror into offscreen RT0");
+    Check(Pixel(dev,scene,320,180)==0x00ff00,"RT0 pixels carry the completed mirror");
+    Check(Pixel(dev,back,320,180)==0x00ff00,"stamp never disturbs the committed mirror");
+    HR(dev->ColorFill(scene,nullptr,0xff000000),"restore black RT0 control");
+    // RT0 already the backbuffer: no-op without writes.
+    HR(dev->SetRenderTarget(0,back),"bind RT0 to backbuffer");
+    Check(!desktop_mirror::StampCaptureRt(dev),"identical RT0/backbuffer skips the copy");
+    HR(dev->SetRenderTarget(0,scene),"restore offscreen RT0 binding");
+    // Size mismatch: skipped, target untouched.
+    IDirect3DSurface9* tiny=nullptr;
+    HR(dev->CreateRenderTarget(320,180,p.BackBufferFormat,D3DMULTISAMPLE_NONE,0,FALSE,&tiny,nullptr),"small RT");
+    HR(dev->ColorFill(tiny,nullptr,0xff0000ff),"blue small control");
+    HR(dev->SetRenderTarget(0,tiny),"bind mismatched RT0");
+    Check(!desktop_mirror::StampCaptureRt(dev),"size mismatch skips stamp");
+    Check(Pixel(dev,tiny,160,90)==0x0000ff,"mismatched RT0 pixels untouched");
+    tiny->Release();
+    HR(dev->SetRenderTarget(0,scene),"restore offscreen RT0 binding");
+    // This stack resets the viewport on every SetRenderTarget (even an
+    // identical rebind - measured). Production overlays rebind at Present when
+    // the game viewport is already full-frame, and the capture scope saves and
+    // restores it explicitly; the fixture re-applies its custom viewport here.
+    HR(dev->SetViewport(&vp),"reapply custom viewport after rebinds");
     {
         desktop_mirror::PresentBackbufferScope disabled(dev,false);
         Check(!disabled.Active(),"OFF does not own RT0");
@@ -102,6 +126,10 @@ int main() {
     Check(Pixel(dev,back,320,180)==0xff0000,"cinema source zero even when SwapEyes=1");
     g_swapEyes=0;g_scCropped=false;
     // Test the real fit on our hidden window, never on the user's game.
+    // DesktopMirrorWindow=1 forces right eye + aspect-fit WITHOUT resizing
+    // the window (UE3 renders per window size - MAIN root cause). The hidden
+    // 320x180 window already fits its monitor, so the work-area assertions
+    // below hold trivially and prove the mirror never touches window geometry.
     g_desktopMirrorEye=1;g_desktopMirrorFill=1;g_desktopMirrorWindow=1;
     HR(dev->ColorFill(back,nullptr,0xffff0000),"restore window left");
     HR(dev->ColorFill(back,&right,0xff00ff00),"restore window right");
@@ -116,11 +144,11 @@ int main() {
         Check(client.right<=1920 && client.bottom<=1080,"client cap in physical pixels");
         MONITORINFO mi{};mi.cbSize=sizeof(mi);
         Check(GetMonitorInfoW(MonitorFromWindow(win,MONITOR_DEFAULTTONEAREST),&mi)!=FALSE,"work area");
-        Check(wr.left>=mi.rcWork.left && wr.top>=mi.rcWork.top && wr.right<=mi.rcWork.right && wr.bottom<=mi.rcWork.bottom,"whole window fits work area");
+        Check(wr.left>=mi.rcWork.left && wr.top>=mi.rcWork.top && wr.right<=mi.rcWork.right && wr.bottom<=mi.rcWork.bottom,"window untouched inside work area");
     }
     g_desktopMirrorWindow=0;g_desktopMirrorEye=2;g_desktopMirrorFill=0;
-    // Window resizing alone is display-only in D3D. UE3's WM_SIZE reaction is
-    // deliberately NOT claimed by this own-process fixture.
+    // The mirror never resizes windows (UE3 renders per window size - MAIN
+    // root cause). UE3's WM_SIZE reaction is deliberately NOT claimed here.
     HR(dev->SetRenderTarget(0,back),"bind before reset");
     HR(dev->SetDepthStencilSurface(nullptr),"unbind depth before reset");
     depth->Release();

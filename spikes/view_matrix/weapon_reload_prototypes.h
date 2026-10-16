@@ -72,6 +72,7 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
     gesture.socketLocal=c.gesture.socketLocal;gesture.socketRadius=c.gesture.socketRadius;
     gesture.pullDistance=c.gesture.pullDistance;gesture.pouchRadius=c.gesture.pouchRadius;
     gesture.timeoutMs=c.gesture.timeoutMs;gesture.ackMs=c.gesture.ackMs;gesture.cooldownMs=c.gesture.cooldownMs;
+    gesture.insertRadius=c.gesture.socketRadius;gesture.grabWindowMs=0;
     const auto result=centurionreload::Update(s.transaction,input,gesture);
     s.profile=identity?f.kind:Kind::None;
     s.calibrationRevision=calibrated?c.revision:0;s.haveCalibration=calibrated;

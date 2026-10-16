@@ -1,0 +1,6 @@
+{"asset": "INTRO_1005_NIM", "recall_single": 0.0, "loop": false, "asr_single": "Uwielbiam się.  Uwielbiam się.  Uwielbiam się.", "winner": "REJECT"}
+{"asset": "INTRO_1006_CP", "recall_single": 0.0, "loop": false, "asr_single": "Cześć, cześć!", "winner": "REJECT"}
+{"asset": "INTRO_1011_GST", "recall_single": 0.0, "loop": false, "asr_single": "Kolejny  Kolejny", "winner": "REJECT"}
+{"asset": "INTRO_1012_NIM", "recall_single": 0.0, "loop": false, "asr_single": "...  ...  ...", "winner": "REJECT"}
+{"asset": "INTRO_1014_GST", "recall_single": 0.0, "loop": false, "asr_single": "Kolejny.  Kolejny.  Kolejny.  Kolejny.", "winner": "REJECT"}
+{"asset": "INTRO_1016_CP", "recall_single": 0.0, "loop": true, "asr_single": "Nie, nie, nie, nie, nie.", "winner": "REJECT"}
