@@ -96,6 +96,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "script_node_candidate.h"
 #include "pawn_camera_sample.h"
 #include "menu_submit_policy.h"
+#include "frontend_menu_surface.h"
 #include "menu_hud_scale.h"
 #include "holster_marker.h"
 #include "pause_menu_space.h"
@@ -6248,6 +6249,9 @@ volatile LONG g_vrMenuOverlay=1;
 volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=100;
 volatile LONG g_vrMenuDistanceMm=1200;
 volatile LONG g_frontMenuScalePct=100,g_frontMenuDistanceMm=0;
+static LONG g_frontMenuCleanBackdrop=0;
+static bool g_frontMenuCleanFrame=false; // render-thread frame-local composition receipt
+static unsigned long long g_frontMenuCleanToken=0;
 static int g_holsterMarkerStyle=0;
 volatile LONG g_vrUiEyeCentreU[2]={500000,500000};
 volatile LONG g_vrShadows=0;
@@ -6301,6 +6305,11 @@ static void SnapshotMenuOnSlot(CopySlot& cap) {
     cap.menuFlat = MenuSubmitForcesFlat(cap.menuClass) ||
         CinemaMenuIdenticalCrop(Rd(g_cutsceneMenuPairFix)!=0,cap.menuClass,
             cap.uiFocus,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0);
+    const bool clean=frontmenu::CurrentReceipt(g_frontMenuCleanFrame,g_frontMenuCleanToken,VrMenuStateToken())&&cap.menuClass==2;
+    cap.menuFlat=frontmenu::UseLegacyCrop(cap.menuFlat,clean,cap.menuClass);
+    // The clean provider rendered BOTH halves from current XR eye poses even
+    // if the native world happened to be in alternate-frame stereo mode.
+    if(clean){cap.stereo=false;cap.dup=true;}
 }
 
 struct MenuSubmitDiag {
@@ -22312,6 +22321,8 @@ static void UpdateSceneModeFrame() {
         video,
         InterlockedCompareExchange(&g_vrUiMenu, 0, 0) != 0,
         InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
+        frontmenu::OwnsPresentation(Rd(g_frontMenuCleanBackdrop)!=0,(int)Rd(g_vrMenuClass),
+            Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0) ||
         vrscene::FrontendMenuPresentation(Rd(g_cutsceneMenuHandoffFix)!=0,
             (int)Rd(g_vrMenuClass), Rd(g_vrUiMenu)!=0,
             Rd(g_inCinematic)!=0, Rd(g_gamePaused)!=0),
@@ -27330,6 +27341,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // any matte/overlay is emitted, so presentation policy and diagnostics use
     // the same frame boundary.
     g_cineMonoReady = false;
+    g_frontMenuCleanFrame = false;
     UpdateSceneModeFrame();
     InstallBinkAudioObservation(); // bounded exported-API observation, no audio mutation
     // VFX host: frame serial for once-per-eye draws + effect aging. Render
@@ -31189,6 +31201,8 @@ void LoadIniSettings() {
     LONG menuDistance=GetPrivateProfileIntA("Render","VrMenuDistanceMm",1200,path);
     if(menuDistance<600)menuDistance=600;if(menuDistance>3000)menuDistance=3000;
     InterlockedExchange(&g_vrMenuDistanceMm,menuDistance);
+    g_frontMenuCleanBackdrop=GetPrivateProfileIntA("Render","FrontMenuCleanBackdrop",0,path)?1:0;
+    Log("ini: FrontMenuCleanBackdrop=%ld (class2 only; replaces 3D backdrop; default OFF)",Rd(g_frontMenuCleanBackdrop));
     Log("ini: VrMenuDistanceMm=%ld (shared OpenXR menu plane for render, laser and hit test)",menuDistance);
     LONG frontScale=GetPrivateProfileIntA("Render","FrontMenuScalePct",100,path);
     frontScale=std::max(70L,std::min(100L,frontScale));InterlockedExchange(&g_frontMenuScalePct,frontScale);

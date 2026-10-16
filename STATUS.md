@@ -5,6 +5,23 @@ Przygotowałem prototypy przeładowania Valkyrie, Volk S4 i Kasimova: gesty, zab
 Przeszło 30 000 symulowanych przeładowań, 9 programów testowych C++, 33 testy Python i build x86 /O2. Zmiany są w [PR #37](https://github.com/trilex07/SingularityVR/pull/37).
 To jeszcze prototypy offline — następny etap to podłączenie renderowania i natywnej amunicji. Steam oraz działanie Centuriona pozostały nietknięte.
 
+LATEST 2026-10-16 SIDE fix/frontend-menu-comfort (PR #40): default-OFF class2-only
+FrontMenuCleanBackdrop replaces the glitch-prone UE3 backdrop with neutral dark
+colour and retains both eye projections of the existing current-token GFx panel.
+Scoped test values: FrontMenuScalePct=80 / FrontMenuDistanceMm=1800 (no INI
+replacement). Backup-before-clear, full D3D state + RT/DS/MRT restoration,
+failure pixel restore, Reset-owned DEFAULT-pool resources; captured successful
+receipt disables legacy identical-left-crop for this frame only.
+L1_PASS six /O2 /W4 /WX CPU executables: policy/generation/transaction failures,
+panel/laser/parallax geometry, menu/pause/cutscene regressions.
+L2_PASS clean9b23e3f /O2 x86 PE32.
+
+LATEST 2026-10-16 SIDE feature/accepted-profile-guard (PR #39): offline deployment
+regression guard, complete semantic INI + exact inventoried SHA-256 and
+reviewed per-candidate plan; denies silent Polish/hand/knife/calibration loss
+and stale rollback. Narrow deploy runner integrated, legacy build -Install
+blocked. No automatic acceptance/restore. Broad/cutscene writes fail closed.
+
 LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN f0b96ad:
 Compact import: docs/handoffs/centurion-reload-compact.md. Offline correlation
 helper tools/reload/analyze_reload_log.py added: 13 synthetic tests PASS;
