@@ -1,6 +1,6 @@
 # STATUS — session handoff
 
-LATEST 2026-10-16 SIDE feature/centurion-manual-reload, base MAIN 5763e6c:
+LATEST 2026-10-16 SIDE feature/centurion-manual-reload, synced MAIN db4a261:
 Centurion-only assisted gesture prototype, NOT completed physical reload.
 Front-centre pouch, unchanged left knife/right gun holsters; allocation-free
 remove/discard/pouch/insert/ack FSM, ownership/cancel guards, bounded calibration
@@ -9,8 +9,11 @@ All three flags OFF. Shared native Use/reload tap is independently opt-in;
 no engine ammo writes, cylinder animation control or auto-reload suppression.
 Original clip extracted offline: 1067 UV verts /1252 tris, no mixed boundary;
 prepared asset is not yet rendered. L1_PASS six CPU executables +four Python
-tests + actual asset roundtrip. L2_PASS clean source 01d7e28 /O2 x86 PE32,
-DLL SHA 71C733C6DA7DC1BA4648BC13C3DBB50DDCE19E4DA058D883DECF96D322CA03BA;
+tests + actual FLOAT32 asset roundtrip, plus six menu/holster regression exes.
+Probe-only mode records named ammo changes and bounded per-weapon UFunction
+binding identities (never called); original six-chamber cylinder inspected.
+L2_PASS clean source 45dd1fa /O2 x86 PE32,
+DLL SHA 5607AA19203539725559C15258D5B9950BF363308AE5C6E006333218B1AECA39;
 receipt in docs/centurion-manual-reload.md.
 L3/L4 UNKNOWN. ZERO Steam. Integrate onto current accepted MAIN and rebuild,
 never replace newer knife/menu work with this older standalone base.

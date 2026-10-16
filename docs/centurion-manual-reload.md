@@ -139,6 +139,17 @@ failed backend, not success. The 120 ms X tap is not a dedicated Reload call.
 L1_PASS: six optimized CPU executables (transaction + old gesture + existing
 knife, holster, hand anchor, D3D fake-state regressions) and four Python
 extraction tests; actual original-asset extraction/UV/bind round trip.
+Continuation also passes the six-executable menu/holster regression suite from
+the synchronized MAIN base (including shared knife/holster tests).
+
+Latest L2_PASS: clean source `45dd1faa5dcb9d75792a5eaaa4deeab2304f4c36`,
+`/O2`, x86 PE32 (`014C/010B`), empty working-tree status in build manifest.
+Latest DLL SHA-256:
+`5607AA19203539725559C15258D5B9950BF363308AE5C6E006333218B1AECA39`.
+Local `build/centurion-reload/candidate` DLL/manifest match this exact build.
+Both the extraction cache hash and all original UVs remain unchanged after the
+stricter encoded-FLOAT32 round trip and optional wireframe inspection.
+
 Initial L2_PASS (older base; retained for provenance only): clean source
 `01d7e2817580b610a983361ff0eab82dc3fbdde8`,
 `/O2`, x86 PE32 (`014C/010B`), empty working-tree status in build manifest.
