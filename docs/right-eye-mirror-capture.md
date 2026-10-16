@@ -41,6 +41,32 @@ fully covered when Share is pressed, any window/DWM-sampling overlay path
 yields black regardless of RT0 pixels — that would be T3, inspect the
 overlay producer next. The stamp is harmless in all cases.
 
+### Discrimination script T3-vs-pixels (2026-10-17, no code change)
+
+F12 working while Share stays black points at the capture path, not our
+pixels: F12 samples the backbuffer in-process (proven good by the working
+F12), while Share/SteamVR captures elsewhere. Do NOT stack another blind
+RT0 patch. Run this instead (5 minutes, one variable at a time):
+
+1. Record installed `d3d9.dll` SHA + the 4 INI mirror flags first.
+2. Game visible on the monitor (NOT minimized, game window focused, no
+   SteamVR dashboard open), same scene: keyboard F12, then controller
+   Share. Compare the two saved files.
+3. Check WHERE each file landed: overlay screenshots live under
+   `Steam\userdata\<id>\760\remote\<appid>\screenshots`, SteamVR shots
+   elsewhere. Different folders = different producers = different paths.
+4. Repeat Share with the window deliberately minimized once (control case:
+   if minimized-F12 is black too, the path is visibility-dependent).
+5. Send back: both files (or black/not-black verdicts), their folders,
+   and the log tail (`mirror-diag:` ok>0?, `steam-capture:` lines,
+   `reset-guard:`, `xr-heartbeat:`).
+
+Verdict rules: Share-black + minimized-F12-black + visible-F12-good =
+visibility/focus path (T3 confirmed, no pixel patch can fix it).
+Share-black + visible-F12-good + minimized-F12-good = a second producer
+reading something else — only then is new code justified, aimed at the
+named producer.
+
 ## Continuation 2026-10-16 — SIDE side/mirror-screenshot-fix (base 9576f5e)
 
 Two user-reported failures, one branch:
