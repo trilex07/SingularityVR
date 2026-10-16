@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE feature/next-weapon-reload-assets: original Valkyrie,
+Volk S4 and Kasimov magazines/albedo/Reload caches plus bounded offline
+hierarchical animation consumer; gun root frozen, real cooked palettes and
+native diffuse references measured. Imported f519de6 CPU gesture prototypes,
+independent left/back shoulder math and cancellation across calibration changes.
+L1_PASS ten optimized CPU executables +40 Python tests; 30000 transactions,
+7506 original fractional track poses; own-process D3D9Ex actual textured pixels
+in BOTH eyes, state/failure/Reset checks PASS. L2 build pending clean receipt.
+No runtime dispatcher/INI/native ammo backend; L3/L4 UNKNOWN, NOT headset-ready.
+ZERO Steam, no Centurion/accepted config or installed asset changes.
+See docs/next-weapon-animation-assets.md. SIDE regression DLL MUST NOT replace
+current MAIN integration; private game-derived outputs remain ignored.
+
 LATEST 2026-10-16 SIDE fix/right-eye-mirror-steam-capture: complete right-eye
 aspect fit, opt-in monitor work-area window cap 1920x1080 (physical client px),
 no changing XR/scene resolution commands. Fixed double-applied aspect scaling;
