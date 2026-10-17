@@ -46,6 +46,7 @@ enum class Decision {Forward,Observe,Block,Permit};
 struct Context {
     bool valid=false;std::uint32_t pawn=0,weapon=0;
     std::uint64_t sampledMs=0;
+    bool canPermit=true; // false for fresh, owned HOLSTERED Centurion
 };
 // Pure CPU policy. Runtime supplies a nonblocking lock; this object itself is
 // deliberately not shared unsynchronised across the input and game threads.
@@ -59,9 +60,10 @@ struct Gate {
            c.sampledMs-current.sampledMs>250)
             permit=false;
         current=c;
+        if(!c.canPermit)permit=false;
     }
     bool Arm(std::uint32_t pawn,std::uint32_t weapon,std::uint64_t now){
-        if(!Matches(pawn,weapon,now))return false;
+        if(!Matches(pawn,weapon,now)||!current.canPermit)return false;
         permit=true;permitMs=now;return true;
     }
     bool Matches(std::uint32_t pawn,std::uint32_t weapon,std::uint64_t now)const{
@@ -69,10 +71,10 @@ struct Gate {
             now>=current.sampledMs&&now-current.sampledMs<=250;
     }
     Decision Evaluate(int mode,std::uint32_t self,std::uint32_t currentPawn,
-                      std::uint32_t currentWeapon,std::uint64_t now){
+                      std::uint32_t currentWeapon,std::uint64_t now,bool holstered=false){
         if(mode<1||mode>2||self!=currentWeapon||!Matches(currentPawn,currentWeapon,now))return Decision::Forward;
         if(mode==1)return Decision::Observe;
-        const bool allowed=permit&&now>=permitMs&&now-permitMs<=500;
+        const bool allowed=!holstered&&current.canPermit&&permit&&now>=permitMs&&now-permitMs<=500;
         permit=false; // consume BEFORE original; nested/duplicate requests cannot reuse it
         return allowed?Decision::Permit:Decision::Block;
     }

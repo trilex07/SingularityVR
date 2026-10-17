@@ -59,15 +59,26 @@ inline bool TrackingMap(V centre,float yaw,float base,float units,Mat& out){
     }
     if(!armbind::Finite(m))return false;out=m;return true;
 }
+inline bool SpareDesired(const centurionanim::Data& d,const Mat& local,const Mat& gunC,
+                         const Mat& trackingMap,const Mat& desired,float (&out)[15][4]){
+    if(!d.ready||!armbind::Finite(desired))return false;
+    Mat undoGun;const auto gun=Product(local,gunC);
+    if(!skeletal::Inverse(undoGun.m,gun.m))return false;
+    const auto clip=Product(Product(Product(d.inverse[0],desired),trackingMap),undoGun);
+    if(!armbind::Finite(clip))return false;
+    float staged[15][4]{};
+    for(unsigned slot=0;slot<5;++slot)for(unsigned row=0;row<3;++row)staged[slot*3+row][3]=clip.m[3][row];
+    armbind::ToGpu(clip,reinterpret_cast<float(*)[4]>(staged));
+    std::memcpy(out,staged,sizeof(staged));return true;
+}
 inline bool Spare(const centurionanim::Data& d,const Mat& root,const Mat& local,const Mat& gunC,
                   const Mat& trackingMap,const Pose& aim,const Pose& target,float (&out)[15][4]){
     if(!d.ready||!armbind::Rigid(root)||!armbind::Finite(local)||!armbind::Finite(gunC)||
        !armbind::Finite(trackingMap)||!hipknife::Valid(aim.q)||!hipknife::Valid(target.q)||
        !hipknife::Finite(target.p))return false;
-    Mat bind,toTracking,undoGun;
+    Mat bind,toTracking;
     const auto gun=Product(local,gunC);
-    if(!skeletal::Inverse(bind.m,d.inverse[0].m)||!skeletal::Inverse(toTracking.m,trackingMap.m)||
-       !skeletal::Inverse(undoGun.m,gun.m))return false;
+    if(!skeletal::Inverse(bind.m,d.inverse[0].m)||!skeletal::Inverse(toTracking.m,trackingMap.m))return false;
     const auto observed=Product(Product(Product(bind,root),gun),toTracking);
     Mat desired=Identity();const hipknife::Q inv{-aim.q.x,-aim.q.y,-aim.q.z,aim.q.w};
     for(unsigned r=0;r<3;++r){
@@ -77,13 +88,7 @@ inline bool Spare(const centurionanim::Data& d,const Mat& root,const Mat& local,
         desired.m[r][0]=v.x;desired.m[r][1]=v.y;desired.m[r][2]=v.z;
     }
     desired.m[3][0]=target.p.x;desired.m[3][1]=target.p.y;desired.m[3][2]=target.p.z;
-    const auto clip=Product(Product(Product(d.inverse[0],desired),trackingMap),undoGun);
-    if(!armbind::Finite(clip))return false;
-    float staged[15][4]{};
-    // All non-clip vertices collapse to the SAME point, not five distinct roots.
-    for(unsigned slot=0;slot<5;++slot)for(unsigned row=0;row<3;++row)staged[slot*3+row][3]=clip.m[3][row];
-    armbind::ToGpu(clip,reinterpret_cast<float(*)[4]>(staged));
-    std::memcpy(out,staged,sizeof(staged));return true;
+    return SpareDesired(d,local,gunC,trackingMap,desired,out);
 }
 // In production upload/draw are the original setters/DIP inside EACH eye.
 // Restore even if upload or draw fails (including drivers with partial writes).

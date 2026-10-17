@@ -37,6 +37,26 @@ class NativeSpace(unittest.TestCase):
         self.assertIn('if(!d.nativeSpace)for(', src)
         self.assertIn('reflect(staged.parent);reflect(staged.inverse[0]);reflect(staged.inverse[1]);', src)
 
+    def test_physical_mode_is_default_off_and_keeps_legacy_gate(self):
+        src=(ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf8')
+        self.assertIn('g_centurionTrackedCylinder&&GetPrivateProfileIntA("Input","CenturionPhysicalPolish",0,path)',src)
+        self.assertIn('g_centurionConfig.upwardEjection=g_centurionPhysicalPolish!=0;',src)
+        self.assertIn('ownedContext=f.context||(g_centurionPhysicalPolish&&context&&alive&&Rd(g_weaponHolstered)',src)
+
+    def test_palm_witness_after_successful_draw_restore_and_input_same_point(self):
+        src=(ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf8')
+        self.assertIn('SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)',src)
+        self.assertLess(src.index('const HRESULT handRestore='),src.index('g_centurionGrip=g_centurionGripStaged;'))
+        self.assertIn('carried.p=g_centurionGrip.identity.point;carriedValid=true;',src)
+        self.assertIn('centurionvisual::SpareDesired(clipData,local,gunC,tracking,desired,replay.clip)',src)
+
+    def test_health_plate_hidden_only_for_fresh_carry(self):
+        src=(ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf8').split('void DrawHealthPlate(IDirect3DDevice9* dev) {',1)[1]
+        gate=src.split('if (!Rd(g_healthPlate)',1)[0]
+        self.assertIn('if(g_centurionPhysicalPolish)',gate)
+        self.assertIn('centurionreload::Phase::Carrying',gate)
+        self.assertIn('centurionclip::Current(',gate)
+
 
 if __name__ == '__main__':
     unittest.main()
