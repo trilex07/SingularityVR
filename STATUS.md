@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+LATEST MAIN 2026-10-17 native muzzle mode-4 PSVR2 result: Steam/OpenXR
+confirmed exact `488BAE:27DF` world-route execution with tracked c0 and no
+mono fallback. User saw muzzle flash but persistent asymmetric glow, weak/no
+smoke; stereo/FPS apparently normal. L3 route PASS, L4 VFX FAIL. Guard plus
+independent hashes restored accepted DLL `789749E5...F361B`, injector
+`5B948DDB...729D59`, INI `8B0B0B4C...CCFAF`, UI unchanged
+`51CDAB5C...1A1A`. Offline audit revealed mode 4 displaced the accepted
+mode-1 `4FAE:2FEC` drop, confounding the glow result. Next: preserve that
+drop and add a separate default-OFF exact world-route selector; no further
+Steam test until L1/L2 and guarded candidate pass.
+
 LATEST MAIN 2026-10-17 native muzzle exact route: observe-only mode 3 was
 deployed and physically tested (supersedes the stale "not deployed" line
 below). In four runtime windows all selected `488BAE:27DF` IndexedUP draws

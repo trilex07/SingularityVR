@@ -54,6 +54,19 @@ int main(){
      context=false;assert(!WorldRoute());WorldCameraObserve(false,false);
      assert(worldCameraFallback==0);
      context=true;ps.hash=23;assert(!WorldRoute());selected={};vs={};ps={};}
+    {Configure(1,false,"4FAEF2389750DBFC","2FEC493CD52D7D78",2908,336,-1,true);
+     ConfigureWorldRoute(true,"488BAEB579E71A73","27DFE7D9C67BCC03",2968,452);
+     assert(selected.mode==1&&worldSelected.Valid());context=true;
+     vs.hash=selected.vs;vs.bytes=selected.vsBytes;ps.hash=selected.ps;ps.bytes=selected.psBytes;
+     assert(Drop()&&!WorldRoute());
+     vs.hash=worldSelected.vs;vs.bytes=worldSelected.vsBytes;
+     ps.hash=worldSelected.ps;ps.bytes=worldSelected.psBytes;
+     assert(!Drop()&&WorldRoute());WorldCameraObserve(true,true);
+     assert(worldRerouted==1&&worldCameraValid==1&&worldCameraC0==1);
+     const LONG observed=routeCounts[10];RouteObserve(10);assert(routeCounts[10]==observed+1);
+     ConfigureWorldRoute(true,"4FAEF2389750DBFC","2FEC493CD52D7D78",2908,336);
+     assert(!worldSelected.Valid()&&!WorldRoute());
+     Configure(0,false,"","",0,0,-1);assert(!selected.Valid()&&!worldSelected.Valid());}
     {Selection m1; m1.mode = 1; assert(!m1.Valid());
      assert(!m1.Match(0x4FAEF2389750DBFCull, 0x2FEC493CD52D7D78ull, 2908, 336));
      m1.vs=0x4FAEF2389750DBFCull;m1.ps=0x2FEC493CD52D7D78ull;m1.vsBytes=2908;m1.psBytes=336;

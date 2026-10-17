@@ -13963,7 +13963,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
                 ++shadowSkipped;
     if (shadowSkipped) ++g_drawsShadowProtected;
     if (nSlots > g_camMatValidPeak) g_camMatValidPeak = nSlots;
-    if (nativefx::selected.mode == 4 && nativefx::Match()) {
+    if (nativefx::WorldTargetMatch()) {
         bool cameraC0 = false;
         for (int i = 0; i < nSlots; ++i) cameraC0 |= g_camMats[slots[i]].reg == 0;
         nativefx::WorldCameraObserve(nSlots != 0, cameraC0);
@@ -31837,6 +31837,13 @@ void LoadIniSettings() {
             GetPrivateProfileIntA("Diagnostic","NativeMuzzlePSBytes",0,path),
             (int)GetPrivateProfileIntA("Diagnostic","NativeMuzzleMatrixConvention",-1,path),
             GetPrivateProfileIntA("Diagnostic","NativeMuzzlePathWitness",0,path)!=0);
+        char worldVS[32]{},worldPS[32]{};
+        GetPrivateProfileStringA("Diagnostic","NativeMuzzleWorldVSHash","",worldVS,sizeof(worldVS),path);
+        GetPrivateProfileStringA("Diagnostic","NativeMuzzleWorldPSHash","",worldPS,sizeof(worldPS),path);
+        nativefx::ConfigureWorldRoute(GetPrivateProfileIntA("Diagnostic","NativeMuzzleWorldRoute",0,path)!=0,
+            worldVS,worldPS,
+            GetPrivateProfileIntA("Diagnostic","NativeMuzzleWorldVSBytes",0,path),
+            GetPrivateProfileIntA("Diagnostic","NativeMuzzleWorldPSBytes",0,path));
     }
     g_cutsceneScreenDistanceMm=cinemascreen::ClampDistanceMm(
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));

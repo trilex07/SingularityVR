@@ -145,6 +145,15 @@ if ($ObserveRoute -and (-not $PathWitness -or -not $NoProbe -or $NativeFxOffCont
 if ($WorldRoute -and ($ObserveRoute -or $NativeFxOffControl -or -not $PathWitness -or -not $NoProbe -or -not $dropRequested)) {
     throw '-WorldRoute requires one exact shader pair, -PathWitness and -NoProbe; it cannot combine with other controls.'
 }
+if ($WorldRoute) {
+    foreach ($key in @('Diagnostic/NativeMuzzleWorldRoute','Diagnostic/NativeMuzzleWorldVSHash',
+        'Diagnostic/NativeMuzzleWorldVSBytes','Diagnostic/NativeMuzzleWorldPSHash','Diagnostic/NativeMuzzleWorldPSBytes')) {
+        if ($iniValues.ContainsKey($key) -or
+            @($profile.ini.PSObject.Properties | Where-Object { $_.Name -ceq $key }).Count) {
+            throw "World-route key already exists; refusing to overwrite: $key"
+        }
+    }
+}
 if ($PathWitness) {
     if (-not $NoProbe) { throw '-PathWitness requires -NoProbe.' }
     if ($iniValues.ContainsKey('Diagnostic/NativeMuzzlePathWitness') -or
@@ -183,15 +192,29 @@ if ($probeAfter -ne $probeBefore) {
     $iniChanges.Add([ordered]@{ key = $probeKey; before = $probeBefore; after = $probeAfter; reason = $probeReason })
 }
 if ($PathWitness) {
-    $modeAfter = if ($WorldRoute) { '4' } elseif ($ObserveRoute) { '3' } else { $modeBefore }
+    $modeAfter = if ($ObserveRoute) { '3' } else { $modeBefore }
     $newline = if ($iniText.Contains("`r`n")) { "`r`n" } else { "`n" }
-    $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "NativeMuzzleStereoMode=$modeBefore" "NativeMuzzlePathWitness=1${newline}NativeMuzzleStereoMode=$modeAfter"
+    $worldKeys = if ($WorldRoute) {
+        "NativeMuzzleWorldRoute=1${newline}NativeMuzzleWorldVSHash=$($DropVSHash.ToUpperInvariant())${newline}NativeMuzzleWorldVSBytes=$DropVSBytes${newline}NativeMuzzleWorldPSHash=$($DropPSHash.ToUpperInvariant())${newline}NativeMuzzleWorldPSBytes=$DropPSBytes${newline}"
+    } else { '' }
+    $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "NativeMuzzleStereoMode=$modeBefore" "NativeMuzzlePathWitness=1${newline}${worldKeys}NativeMuzzleStereoMode=$modeAfter"
     $iniChanges.Add([ordered]@{ key = 'Diagnostic/NativeMuzzlePathWitness'; before = $null; after = '1'; reason = 'Bounded read-only selected-pair draw-path census; no renderer behavior change.' })
-    if ($ObserveRoute -or $WorldRoute) {
-        $modeReason = if ($WorldRoute) { 'Exact selected world-space particle bypasses HUD c5-c8 remap and enters ordinary camera stereo path; all other shader pairs unchanged.' } else { 'Observe-only exact-pair mode; no shader drops or matrix edits.' }
-        $iniChanges.Add([ordered]@{ key = $modeKey; before = $modeBefore; after = $modeAfter; reason = $modeReason })
+    if ($ObserveRoute) {
+        $iniChanges.Add([ordered]@{ key = $modeKey; before = $modeBefore; after = $modeAfter; reason = 'Observe-only exact-pair mode; no shader drops or matrix edits.' })
     }
-    if ($dropRequested) {
+    if ($WorldRoute) {
+        $worldTargets = [ordered]@{
+            'Diagnostic/NativeMuzzleWorldRoute' = '1'
+            'Diagnostic/NativeMuzzleWorldVSHash' = $DropVSHash.ToUpperInvariant()
+            'Diagnostic/NativeMuzzleWorldVSBytes' = [string]$DropVSBytes
+            'Diagnostic/NativeMuzzleWorldPSHash' = $DropPSHash.ToUpperInvariant()
+            'Diagnostic/NativeMuzzleWorldPSBytes' = [string]$DropPSBytes
+        }
+        foreach ($key in $worldTargets.Keys) {
+            $iniChanges.Add([ordered]@{ key = $key; before = $null; after = [string]$worldTargets[$key]; reason = 'Separate exact world-particle route; accepted mode-1 pair and drop remain unchanged.' })
+        }
+        $planReason = 'MAIN L3 exact world-route experiment with accepted mode-1 drop preserved; only the separately selected world particle changes path; readbacks OFF.'
+    } elseif ($dropRequested) {
         $targets = [ordered]@{
             'Diagnostic/NativeMuzzleVSHash' = $DropVSHash.ToUpperInvariant()
             'Diagnostic/NativeMuzzleVSBytes' = [string]$DropVSBytes
@@ -208,9 +231,7 @@ if ($PathWitness) {
                 $iniChanges.Add([ordered]@{ key = $key; before = $before; after = $after; reason = $pairReason })
             }
         }
-        $planReason = if ($WorldRoute) {
-            'MAIN L3 exact additive-pair world-route experiment: preserve LocalToWorld c5-c8 and use tracked camera stereo path; probe/readbacks OFF, bounded route counters ON.'
-        } elseif ($ObserveRoute) {
+        $planReason = if ($ObserveRoute) {
             'MAIN L3 read-only exact additive-pair route witness after causal RvWeaponFX ON/OFF comparison; no drops, alias edits or GPU readbacks.'
         } else {
             'MAIN L3 exact additive-pair drop plus bounded path witness after causal RvWeaponFX ON/OFF comparison; probe/readbacks OFF.'

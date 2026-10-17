@@ -473,6 +473,23 @@ valid camera slots, tracked c0 and mono fallback. L1/L2 alone cannot establish
 correct placement; the next Steam/PSVR2 test must inspect both eyes and smoke
 at the actual muzzle.
 
+### MAIN mode-4 PSVR2 result and control correction
+
+Steam PID 37132 ran DLL `8D2B5305...0D23`, OpenXR session 5 rendered both
+eyes. The selected `488BAE:27DF` IndexedUP calls took `worldRoute`; bounded
+runtime counts reported valid tracked c0 every time and zero mono fallback.
+The user saw a flash at the muzzle, but the asymmetric glow persisted and smoke
+was weak or absent; stereo/FPS seemed normal. This is **L3 route PASS, L4 VFX
+FAIL**, not a fix. After normal exit the guard and independent disk hashes
+confirmed restoration of accepted DLL, injector, INI and unchanged UI.
+
+Offline audit found a confound: the accepted INI has mode 1 exact drop of
+`4FAE:2FEC`, but mode 4 reused the sole selection slot for `488BAE:27DF`.
+Thus the test not only changed the latter's route but also restored draws of
+the formerly dropped pair. The next experiment must keep mode 1 and its exact
+pair unchanged, while enabling a **separate** default-OFF exact world route
+for `488BAE:27DF`. Only then can a persistent glow falsify the route theory.
+
 Preparation receipt: source commit `e5ef2fc`, L1 native/shadow/hand tests PASS;
 L2 x86 PE32 `/O2` DLL SHA-256
 `8D2B5305108E9DC402E7543B4C2A2748277C5531D940641CF71B9B73CC1F0D23`.
