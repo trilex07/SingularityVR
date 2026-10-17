@@ -93,3 +93,35 @@ Offline regression PASS: >1 MiB burst, UTF8 boundaries, partial-line append,
 truncation, short/long pause and Options rejection. Actual session replay PASS:
 11,575,857 bytes / 91,527 lines / no leftover fragment. New recorder live
 validation remains pending; no C++ or installed-file changes in this repair.
+
+## Repeat lease and performance triage (2026-10-18)
+
+User requested test preparation plus read-only frame-drop analysis. PID15548
+launched through Steam with verified DLL 709F64A7...CE1FBA, injector
+5B948DDB...729D59, INI 38642BD6...D73B3E. Backup 20261018-001229;
+install report 20261018-001230.json. Restore watcher PID35172 armed; logs named
+projector-001229-{capture,restore}.log/.err. No performance flag was changed.
+
+Previous-session performance evidence (not a causal attribution):
+- Existing analyze-vr-perf-log.py does NOT parse the current `perf:`/`frame
+  budget:` format. Its missing budget section must not be interpreted as no
+  stalls. Direct inspection of these lines is required until parser updated.
+- Slow windows include boot/no-pawn and menu/cinematic transitions. Class0
+  alone is NOT sufficient to classify normal gameplay (e.g. line51398 has
+  CINE ON and no split draws). This prevents mislabeling loading as gameplay.
+- At line51398: 68.5 FPS, 14.61 ms total, wait5.46, copy0.01, walk0.11,
+  submit0.29, gameplay hooks0.01, residual8.72 ms. Input means in the same
+  report: sync0.154 + states0.042 + poses0.045 ms. No evidence of a sustained
+  input polling collapse in that window. Residual includes unmeasured engine,
+  driver and mod work; it is not an identified function or GPU duration.
+- End-of-canvas view is ~88–90 FPS; InputDeviceCache still shows two cumulative
+  cold WMI calls, rather than a recurring full enumeration per button hold.
+- Six automatic 5904x3012 BMPs were saved earlier. SaveBackbufferCapture does
+  GPU readback, allocation and ~71 MB file write on its calling render path;
+  menu-placement proof triggers this without a user screenshot request.
+  MenuDrawTrace also samples eight frames per generation and flushes grouped
+  records on transitions (28 flushes, 16054 groups, 6826 dropped in old log).
+  These are concrete diagnostic overhead candidates, NOT measured root causes.
+  Logger uses AsyncLogEnqueue first; do not assume every MDG line is disk I/O
+  on the rendering thread. Need scoped timings or isolated A/B after projector
+  capture before claiming either explains the user's intermittent drops.
