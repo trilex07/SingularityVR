@@ -1,5 +1,28 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN tracked-cylinder L3 DEPLOYED (SIDE 0742736, PR48):
+candidate DLL SHA-256 04CC6CA23588D7BA929365BDB56A7B50EA0DAF970D9E3AF10FCA5BF797A8FE70,
+PE32 x86 /O2, clean tree c738a97, manifest dirty=[], guard preflight+postflight
+PASS; backup deployment/install-backups/20261017-122757. STATUS: CANDIDATE
+ONLY — NOT accepted, NOT flagged 100% (SIDE corrections still expected).
+Scope (inspected before port): Circle->Open/Opened with circleOpens (OFF keeps
+legacy Unlocked); insert vs RENDERED socket + carried-mesh offset (OFF keeps
+authored socket, insertOffset zero-finite); socketFresh defaults true (shell
+gate unchanged when OFF); witness SRWLock + 100 ms + identity binding, resets
+in Cancel/XR-init/Release; shell launch needs fresh witness only when ON.
+OFF path byte-behavior preserved. L1_PASS (EXIT=0: tracked 2916 cases + wiring
+py + full suite), L2_PASS (clean). Steam: DLL=04CC6CA2 on disk, INI=9222CC60
+(+VisualFollowup=1 +TrackedCylinder=1, VfxHost=1 restored; pre-edit backup in
+122757 dir, all-CRLF). Path: rolled back 49CF1838->DADE170B (postflight PASS),
+redeployed (guard model intact, profile still pins DADE170B). Rollback: deploy
+Rollback -BackupPath 20261017-122757 (+plan paths) + drop the 3 added INI
+lines. AWAITING L3 log + L4 PSVR2 (SIDE route, NO screenshots): Circle with
+spent Centurion -> immediate LEFT open; tilt dumps cases, gun stays in right
+glove; LEFT-shoulder grip, ammo to open cylinder, release, WAIT 2 s (stays
+open); flick -> ONE refill, no second sweep; repeat, pause/Options/resume,
+normal exit. MAIN reads `tracked cylinder` rows (socketFresh/insertDist),
+native ACK, accepted systems unchanged.
+
 LATEST 2026-10-17 MAIN VFX trigger L3 (SIDE docs/vfx-trigger-diagnosis.md,
 push 25e1c50): MAIN checks DONE. Installed: SingularityVfx.dll PRESENT
 (E371EF77..., 10752 B, 7 required VfxPlugin* exports verified via dumpbin) +
