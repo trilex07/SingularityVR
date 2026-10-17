@@ -39,4 +39,16 @@ class Tests(unittest.TestCase):
         self.assertEqual(fnv(b''), 2166136261)
         self.assertEqual(fnv(b'hello'), 0x4f9f2cab)
 
+    def test_runtime_bootstrap_independent_of_centurion_and_cinema(self):
+        # Source wiring contract only: actual producer identity still needs L3.
+        source = (ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf-8')
+        block = source.split('if(g_centurionReloadProbe||g_centurionNativeGuardMode||NextReloadEnabled()){', 1)[1]
+        block = block.split('if (InterlockedCompareExchange(&g_cutsceneAuto', 1)[0]
+        for required in ('attempts<12', '++tick%240==0&&g_camera',
+                         'if(next&&(g_funcOffset<0||!g_hudObject))missing=true;',
+                         'if(next&&g_funcOffset<0)FindProcessInternal();',
+                         'if(next&&!g_hudObject)FindHudObject(true);'):
+            self.assertIn(required, block)
+        self.assertNotIn('RepointScriptHook(', block)
+
 if __name__ == '__main__': unittest.main()

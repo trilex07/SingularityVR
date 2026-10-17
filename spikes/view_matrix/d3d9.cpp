@@ -28406,17 +28406,26 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // guard on the hot path is what makes it survivable. It is switchable for exactly that reason:
     // `CutsceneAuto=0` restores the old behaviour with no rebuild, and this is the first thing to
     // suspect if a launch starts misbehaving.
-    if(g_centurionReloadProbe||g_centurionNativeGuardMode){
+    if(g_centurionReloadProbe||g_centurionNativeGuardMode||NextReloadEnabled()){
         // Resolve missing reload names even if the cinematic watch resolved its
         // own earlier. Probe-only observes the existing interpreter hook. The
         // independent native guard is resolved/validated lazily from the binding.
+        // New weapons must NOT depend on Centurion probes, CutsceneAuto or HUD
+        // overlays being enabled. Reuse the read-only producers here in Present,
+        // outside the input/draw hot paths; do not install an interpreter hook.
         static unsigned tick=0,attempts=0;
+        const bool next=NextReloadEnabled();
         bool missing=false;
         for(int i=kFnReloadFirst;i<=kFnReloadLast;++i)if(FnIdx(i)<0)missing=true;
+        if(next&&(g_funcOffset<0||!g_hudObject))missing=true;
         if(missing&&attempts<12&&++tick%240==0&&g_camera){
             ++attempts;ResolveScriptNames();
+            if(next&&g_funcOffset<0)FindProcessInternal(); // votes layout only
+            if(next&&!g_hudObject)FindHudObject(true); // bounded, bypass nested miss throttle
             Log("centurion reload probe: name attempt=%u existing script hook=%p (zero events is NOT proof of no reload)",
                 attempts,g_origProcessEvent);
+            if(next)Log("next reload: bootstrap attempt=%u FuncVoteOffset=%d HUD=%08X (readiness only, NOT runtime proof)",
+                attempts,g_funcOffset,(unsigned)g_hudObject);
         }
     }
     if (InterlockedCompareExchange(&g_cutsceneAuto, 0, 0)) {

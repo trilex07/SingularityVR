@@ -43,6 +43,11 @@ AttemptReload hook, inside native `StereoPair`, at overlay submission, and on
 XR init/camera loss/focus loss/Reset. The THREE flags automatically enable their
 own native guard and single normal XInput reload tap; Centurion flags/FSM stay
 separate. No extra MinHook owner or device slot65 hook is introduced.
+The bounded Present bootstrap independently resolves reload names, votes the
+existing UFunction::Func layout and finds the cached HUD (at most12 attempts,
+one per240 frames with a camera). It does not depend on Centurion probes,
+CutsceneAuto or HUD overlays, and does not install an interpreter hook. These
+read-only discovery walks are outside input/draw hooks; no guessed offsets.
 
 Shader constant registers come from existing CTAB reflection. The full INDEX16
 buffer must match the original FNV and exact count before any palette changes.
