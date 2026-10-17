@@ -19747,6 +19747,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
 // Returns true if the draw was consumed (split per eye), false to fall through to StereoPair.
 // The vertex rewrite (x' = 0.5*x + eyeOff) is the pure math covered by the L1 test in
 // spikes/muzzle_flash_per_eye/test_muzzle_per_eye.cpp; this hook is the only D3D9 caller.
+// Forwarded: defined with the other VFX flags below, but used here before that point.
+extern volatile LONG g_muzzleStereoPerEye;
+extern volatile LONG g_muzzleFlashPerEyeDraws;
 static bool DrawMuzzleFlashPerEye(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t, UINT minVtxIndex,
                                   UINT numVertices, UINT primCount, const void* idxData,
                                   D3DFORMAT idxFormat, const void* vtxData, UINT vtxStride) {
@@ -19768,7 +19771,7 @@ static bool DrawMuzzleFlashPerEye(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t, UIN
             float* p = reinterpret_cast<float*>(scratch + (size_t)i * vtxStride);
             p[0] = p[0] * 0.5f + xOff;
         }
-        const HRESULT r = g_origDrawIndexedPrimUp(dev, t, minVtxIndex, numVertices, primCount,
+        const HRESULT r = g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                                   idxData, idxFormat, scratch, vtxStride);
         if (FAILED(r) && SUCCEEDED(hr)) hr = r;
     }
