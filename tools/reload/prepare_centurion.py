@@ -105,7 +105,7 @@ def extract(psk, units=52.5):
         output_sha256=hashlib.sha256(cache).hexdigest())
 
 
-def preview(cache, destination):
+def preview(cache, destination, label='Original Centurion clip'):
     """Three-axis geometry inspection, no synthetic texture/material claim."""
     from PIL import Image, ImageDraw
     _,version,n,count=struct.unpack_from('<4sIII',cache)
@@ -121,12 +121,12 @@ def preview(cache, destination):
         for face in indices:
             points=[tuple(xy[i]) for i in face]
             draw.line(points+[points[0]],fill='#72868d',width=1)
-        draw.text((view*480+24,20),f'Original Centurion clip | axes {axes}',fill='white')
+        draw.text((view*480+24,20),f'{label} | axes {axes}',fill='white')
     draw.text((24,490),'Geometry only / original UV preserved / no material or runtime pose proof',fill='white')
     image.save(destination)
 
 
-def textured_preview(cache, texture, destination):
+def textured_preview(cache, texture, destination, label='Original Centurion cylinder'):
     """CPU orthographic z-buffer: original UV/albedo only, not UE3 lighting."""
     from PIL import Image, ImageDraw
     magic,version,n,count=struct.unpack_from('<4sIII',cache)
@@ -165,7 +165,7 @@ def textured_preview(cache, texture, destination):
             dest=rgb[lo[1]:hi[1]+1,lo[0]:hi[0]+1]
             dest[mask]=pixels[texel[:,:,1],texel[:,:,0]][mask];region[mask]=z[mask]
         image.paste(Image.fromarray(rgb),(view*480,25))
-        draw.text((view*480+20,12),f'Original Centurion cylinder | axes {axes[:2]}',fill='white')
+        draw.text((view*480+20,12),f'{label} | axes {axes[:2]}',fill='white')
     draw.text((20,515),'CPU original UV/albedo only / no normal, specular, scene lighting or runtime-pose claim',fill='white')
     image.save(destination)
 
