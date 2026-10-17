@@ -1,6 +1,33 @@
 # STATUS — session handoff
 
 LATEST 2026-10-17 MAIN fix/centurion-visual-followup-integration DEPLOYED for L3
+(candidate DLL SHA-256 49CF183865487901C7A6958CC18DD98BD6892D7ED3B8587B012D4A87D3F16D01,
+PE32 x86 /O2, clean tree e079e36, manifest dirty=[], guard preflight+postflight
+PASS; backup deployment/install-backups/20261017-120644).
+WHY (user: Circle dead, no plate, sessions 11:44+12:00): log proves Circle seen
+(circle=1) but ammoValid=0 — RvHUD reads clip=-1/reserve=-2 persistently; plate
+never drew either (shared FindHudObject latch, untouched code). New PR48 code
+never executed (zero Unlocked) — exonerated. Root cause: latch keeps the FIRST
+readable RvHUD-deriving instance; 12:00 session latched ONE zombie (1D429800,
+same class+offsets as good reads) all session, while the 11:21 good session
+re-latched 1D432000->33A06000 and read clip=5/6. Latch lottery, pre-existing.
+FIX (smallest experiment): HudReseatPolicy in centurion_reload.h (pure,
+203-case L1) + FindHudObjectExcept in d3d9.cpp — only a 5 s eligible invalid
+streak reseats to a DIFFERENT instance (6/epoch max, 5 s cooldown, menu gaps
+and valid reads reset; good sessions never trigger). Falsifier: reseat fires
+but all instances stay invalid -> wrong-instance theory dead, pivot to timing.
+L1_PASS (EXIT=0 full suite), L2_PASS (clean). Steam: DLL=49CF1838 on disk,
+INI=live+VisualFollowup=1 (0579F9EB, pre-edit backup in 120644 dir, all-CRLF).
+Rollback: deploy Rollback -BackupPath 20261017-120644 (+plan paths) restores
+DADE170B; INI revert = drop the one added line (verified 7ED1239C roundtrip
+earlier). Path here: 58F82A7C deployed, rolled back to DADE170B (postflight
+PASS), redeployed 49CF1838 — guard model intact, profile still pins DADE170B
+(unaccepted builds never re-pinned). AWAITING L3 log + L4 PSVR2: fresh boot,
+ammo plate visible? (expect `HUD reseat:` then `ammo ... drew`), Circle ->
+Unlocked -> compact open -> LEFT-shoulder insert -> WAIT unseated -> flick ONE
+refill; pause/cancel, reload again, exit; no regressions.
+
+LATEST 2026-10-17 MAIN fix/centurion-visual-followup-integration DEPLOYED for L3
 (candidate DLL SHA-256 58F82A7C2B75F03532B8955A2EAA0B7AB4D485CDB097A402E8CCE1CC45996147,
 PE32 x86 /O2, clean tree f7d601f, manifest dirty=[], guard preflight+postflight
 PASS via re-pinned profile 4BF0D8B0 + files-only plan DADE170B->58F82A7C;
