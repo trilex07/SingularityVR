@@ -296,7 +296,15 @@ Candidate DLL SHA-256 remains
 INI SHA-256 is
 `B04E3F01635459570BBB1961304BC45499C19A9438A277FE0FFFC2913793EB48` with probe
 OFF and the 0099 pair selected. `dinput8.dll` is unchanged. Guarded install
-preflight passed with `-WhatIf`; this package is staged but NOT installed.
+preflight passed with `-WhatIf`; the guarded install and postflight then passed.
+Backup is `deployment/install-backups/20261017-210341`; report is
+`deployment/install-reports/20261017-210342.json`. Independent live hashes match
+candidate DLL `4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`,
+INI `B04E3F01635459570BBB1961304BC45499C19A9438A277FE0FFFC2913793EB48`, and
+unchanged dinput8 `5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`;
+the original UI package remains unchanged at SHA-256
+`60E7287185300CAA2A8E64FBE14B741475D4D959944B6B0E51F84547841E8DB8`. It is
+installed as the temporary visual discriminator only, not a fix.
 The next one-session observation should distinguish whether muzzle flash or
 smoke changes when this pair is dropped, whether the broad central glow remains,
 and whether the first-shot hitch remains without probe capture. The candidate

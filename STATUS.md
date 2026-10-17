@@ -1,7 +1,7 @@
 # STATUS — session handoff
 
-LATEST MAIN 2026-10-17 native muzzle investigation: round 3 completed; accepted
-Steam install is restored and independently verified, game closed. Exact drop
+LATEST MAIN 2026-10-17 native muzzle investigation: round 3 completed, but the
+broad seam glow remains unresolved. Exact drop
 `7EB90CEBB053DA04:4377F314D1C93468` ran (12/344/170 logged drops, no alias,
 refusal, restore failure, shader overflow or fault). The user saw a muzzle flash,
 no smoke, uncertain absence of the glow, and a slight first-shot hitch. The
@@ -10,7 +10,7 @@ round is inconclusive for the broad seam glow. No mode-2 alias is justified.
 Four traces were complete (1785/591/943/957 draws; overflow=0). Evidence:
 `build/native-muzzle-main/evidence-20261017-l3-drop-7eb9/`.
 
-The next visual discriminator is now prepared offline for exact pair
+Round 4 visual discriminator is live for exact pair
 `7EB90CEBB053DA04:0099C92AE105A584` (VS 3904 bytes, PS 336 bytes), observed as
 one alpha-blended quad per eye in each post-shot trace. This round disables the
 bounded capture/readback probe to isolate any actual first-shot performance
@@ -18,8 +18,13 @@ cost. Candidate `build/native-muzzle-main/candidate-20261017-drop-0099-no-probe-
 INI SHA-256 `B04E3F01635459570BBB1961304BC45499C19A9438A277FE0FFFC2913793EB48`,
 `NativeMuzzleProbe=0`, mode 1, only this exact pair selected; candidate DLL
 remains the checked MAIN `/O2` build `4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`.
-Guarded install preflight passed (`-WhatIf`); it is not yet deployed. L1 suite
+Guarded install preflight and deployment passed. Backup
+`deployment/install-backups/20261017-210341`; report
+`deployment/install-reports/20261017-210342.json`. Independent postflight hashes
+match candidate DLL/INI/dinput8; UI package remains unchanged at
+`60E7287185300CAA2A8E64FBE14B741475D4D959944B6B0E51F84547841E8DB8`. L1 suite
 passed (six x86 C++ fixtures and six Python tests); PowerShell parser passed.
+Game is closed; candidate is live and awaiting the next PSVR2 test.
 No VFX/audio fix or physical acceptance is claimed. Full receipt and exact
 rollback record are in `docs/native-muzzle-stereo.md`.
 
