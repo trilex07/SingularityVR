@@ -180,8 +180,40 @@ and its postflight passed. Backup is
 unchanged `dinput8.dll` `5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`.
 The game is still closed; no L3 runtime or headset result is claimed.
 
-L3 first round remains the bounded native-only capture described above. Collect
-the four complete `shadow-pass-<PID>-N.txt` traces and SBS captures, run
-`analyze_native_muzzle.py`, and treat count differences only as candidates.
-Only after exact-pair drop proves the visible flash should MAIN proceed to a
-separate alias-repair test; do not combine mode 2 with per-eye splitting.
+### L3 round 1 — native-only trace (2026-10-17)
+
+User report: smoke was not visible; a brief flash was ambiguous (possibly a
+projectile impact); muzzle sound was not noticed; performance seemed okay.
+The report is not a visual/audio pass. Probe did not change audio playback.
+
+Session PID `22704` produced four complete `shadow-pass` traces (idle plus
+three post-shot frames), all `overflow=0`, plus SBS captures. The analyzer
+returned `CANDIDATES_NOT_IDENTIFIED` with 15 shot-only shader pairs. Captured
+frames `20-14-10` and `20-14-14` contain a bright muzzle-adjacent mark and a
+larger glow at the SBS seam. This is pixel evidence of shot-correlated content,
+not proof of the owning draw. Private local evidence is in
+`build/native-muzzle-main/evidence-20261017-l3/`; raw user captures remain in
+`%LOCALAPPDATA%\SingularityVR` and are not committed.
+
+### L3 round 2 — exact-pair drop discriminator (2026-10-17)
+
+Selected candidate `314D478A9CFDBE37:C118540CCDBCB241`, VS 3384 bytes and PS
+448 bytes. It has 12 draws in each post-shot trace and zero in idle. Three
+texture groups include 512x512, 256x256 and 128x256 textures; the last matches
+the dimensions of the original `muzzleFlashDir_01`. Its shader metadata shows
+particle-cloud parameters and alpha blending. These are supporting clues only;
+the pair may be shared by multiple particle types. Mode 1 now drops only this
+exact pair; bounded probe remains enabled. No shader matrix alias or generated
+per-eye path is active.
+
+The mode-1 package is installed for the next user test under the guarded runner.
+Candidate DLL SHA-256 is `4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`,
+INI SHA-256 is `6265E14D84E67B6A4393A3218278A85264AD1B7F2803B50A10FFECF83D5D0372`,
+and unchanged `dinput8.dll` remains `5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`.
+The test backup is `deployment/install-backups/20261017-202413`; install report
+is `deployment/install-reports/20261017-202414.json`. After the test, restore
+the accepted profile and verify the restored hashes. If this pair's removal
+does not remove the seam glow, do not promote this selection; test another
+measured candidate instead of jumping to mode 2. Mode 2 still requires exact
+camera-alias and matrix-convention evidence for the identified draw. Smoke, audio, original
+light, and both-eye visual correctness remain unverified.

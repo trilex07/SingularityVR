@@ -1,17 +1,30 @@
 # STATUS — session handoff
 
-LATEST MAIN 2026-10-17 native muzzle VFX probe is installed and awaiting its
-first bounded PSVR2 capture; visual behavior is NOT yet verified. Worktree
-`fix/main-native-muzzle-stereo-test` is based on accepted `origin/main` and
-requires only `[Diagnostic] NativeMuzzleProbe=1` plus `NativeMuzzleStereoMode=0`
-for the first run. MAIN L1_PASS; L2_PASS x86 PE32 `/O2`, candidate DLL SHA256
-`4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`.
-Guarded deploy and postflight accepted-profile checks passed. Steam now has
-candidate DLL `4D76F52A…F9FED85A`, probe INI `7497C897…E1881FB31` (only the two
-authorized bytes changed), and unchanged `dinput8.dll` `5B948DDB…729D59`.
-Backup: `deployment/install-backups/20261017-201056`; install report:
-`deployment/install-reports/20261017-201057.json`. User has not started the game;
-no L3 runtime or visual pass is claimed. See `docs/native-muzzle-stereo.md`.
+LATEST MAIN 2026-10-17 native muzzle investigation is at its second PSVR2 gate.
+Round 1 completed and the user did not see smoke, was unsure whether a brief
+flash was the projectile impact, did not notice muzzle sound, and reported
+performance as apparently okay. The four bounded driver traces completed with
+zero overflow; the SBS captures at 20:14:10 and 20:14:14 show a bright muzzle-
+adjacent mark plus a much larger glow at the SBS seam. These pixels do not yet
+identify their producing draw. Offline analysis found 15 shot-only shader pairs.
+
+The next drop-only discriminator is exact pair
+`314D478A9CFDBE37:C118540CCDBCB241` (VS 3384 bytes, PS 448 bytes): 12 draws in
+each post-shot trace, zero in idle, three texture groups, including a 128x256
+texture matching the original `muzzleFlashDir_01` dimensions. This is a
+measured candidate, not proven identity. Probe remains ON; mode 1 removes only
+this exact pair; no matrix repair or per-eye splitting is enabled.
+
+Current gated candidate is installed; game is closed. DLL SHA256
+`4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`, INI
+`6265E14D84E67B6A4393A3218278A85264AD1B7F2803B50A10FFECF83D5D0372`, and
+unchanged `dinput8.dll` `5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`.
+Mode 1; `NativeMuzzleProbe=1`; exact pair/byte lengths are in the INI. Guarded
+install and postflight accepted-profile checks passed. Rollback backup:
+`deployment/install-backups/20261017-202413`; report:
+`deployment/install-reports/20261017-202414.json`. After this round, restore the
+accepted profile and independently verify DLL/INI hashes. No VFX fix, audio
+fix, or physical acceptance is claimed. See `docs/native-muzzle-stereo.md`.
 
 LATEST MAIN 2026-10-17 startup readiness + Centurion tracked-cylinder stack
 promoted as the current stable build after user PSVR2 acceptance (“jest okej”).
