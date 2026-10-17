@@ -1,5 +1,27 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN refill-only L3 DEPLOYED (SIDE 6d7b201, PR48): candidate
+DLL SHA-256 4F54E47B970BD947625519DA0E439569F69BB45955C3B44EA288D2E41C4A97E7,
+PE32 x86 /O2, clean tree 55d3f66, manifest dirty=[], guard preflight+postflight
+PASS; backup deployment/install-backups/20261017-135058. STATUS: CANDIDATE
+ONLY — NOT accepted. No-delay/no-shake still needs PSVR2 (this test).
+Scope (inspected): Permit path calls ONLY fingerprinted RefillClip (+3 int
+getters), same inventory cast as AttemptReload, conservation-verified
+(clip+moved/reserve-moved) else sticky Fault; never falls back to Reload;
+holstered/changed/stale/NPC states refuse; OFF keeps legacy dispatch.
+L1_PASS (EXIT=0: refill policy + ABI refill/no-original + full suite),
+L2_PASS (clean). Steam: DLL=4F54E47B, INI=5314150A (+VisualFollowup
++TrackedCylinder +PhysicalPolish +RefillOnly, VfxHost=1/HideMuzzleFx=0;
+pre-edit backup in 135058 dir, all-CRLF). Path: rollback to DADE170B
+(postflight PASS; guard also caught leftover HideMuzzleFx=1 from isolation
+(b) — reverted), redeploy (guard model intact). Rollback: deploy Rollback
+-BackupPath 20261017-135058 (+plan paths) + drop the 5 added INI lines.
+AWAITING L3+L4 (NO screenshots): fire to partial -> Circle/open/UP-dump/
+shoulder/insert/flick -> refill must be IMMEDIATE (no ~1.5 s wait), NO camera
+shake, counts exact, no double-add; NPC/holster/store paths unchanged.
+MAIN reads `centurion refill-only: result=2` (Conserved) + absence of
+ReloadFinished after it.
+
 LATEST 2026-10-17 MAIN VFX isolation (b) RESULT (user) + log: plugin-only shows
 NO smoke + NO flash, but shot effect visible UNDER the gun instead of muzzle.
 Log 13:41: init loaded, overlay n=1 x12 (budget saturated, items flow). Both
