@@ -14,6 +14,7 @@ param(
     [switch]$ObserveRoute,
     [switch]$WorldRoute,
     [switch]$ParticleStereo,
+    [switch]$ProjectorStereo,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -124,6 +125,8 @@ if ($probeBefore -ne '0' -or $modeBefore -ne '1') {
 }
 
 $dropRequested = $DropVSHash -or $DropPSHash -or $DropVSBytes -or $DropPSBytes
+if ($ProjectorStereo -and -not $ParticleStereo) { throw 'Projector test must preserve the physically accepted particle correction via -ParticleStereo.' }
+if ($ProjectorStereo -and $iniValues.ContainsKey('Render/ProjectorWorldStereo')) { throw 'Projector key already exists; refusing an unknown baseline.' }
 if ($NoProbe -and -not ($dropRequested -or $PathWitness -or $ParticleStereo)) {
     throw '-NoProbe is only valid for an exact-pair visual discriminator; baseline capture requires the bounded probe.'
 }
@@ -299,6 +302,12 @@ if (-not $dropRequested -and -not $PathWitness -and -not $ParticleStereo -and $c
     throw 'Baseline probe substitutions unexpectedly changed the INI size.'
 }
 
+if ($ProjectorStereo) {
+    $newline = if ($iniText.Contains("`r`n")) { "`r`n" } else { "`n" }
+    $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes '[Render]' "[Render]${newline}ProjectorWorldStereo=1"
+    $iniChanges.Add([ordered]@{ key = 'Render/ProjectorWorldStereo'; before = $null; after = '1'; reason = 'Exact captured light-function pair: per-eye ScreenToLight reconstruction; retained accepted native particle stereo.' })
+    $planReason = 'MAIN projector test: preserve accepted muzzle fix and change only the exact projector reconstruction versus preceding projector capture session. No performance changes.'
+}
 New-Item -ItemType Directory -Path $artifactPath | Out-Null
 $stageDll = Join-Path $artifactPath 'd3d9.dll'
 $stageDinput = Join-Path $artifactPath 'dinput8.dll'

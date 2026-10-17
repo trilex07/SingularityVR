@@ -164,3 +164,32 @@ constants. Exact shader/resource scoped experiment only. Identical constants
 are concrete evidence, not by themselves proof of the final pixel cause.
 Falsifier: correct per-eye reconstructed projection still leaves the same
 misplaced movie, or candidate suppression leaves that content unchanged.
+
+## Scoped reconstruction candidate
+
+Default-OFF Render/ProjectorWorldStereo. Only captured VS AC4827843287AECB
+(208 bytes) + PS7F00BC7925591BE8 (1336 bytes), indexed four-vertex/two-triangle
+quad, exact scene/atlas formats and full viewport/eye scissors. Native camera
+VP is captured before head/FOV/offset correction at the validated locked c0
+upload and paired with the modified base; stale/non-ROW/nonmatching camera
+slots reject. Never infer a camera from unrelated uploaded constants.
+
+For row vectors form S(VP) with columns VP.x, VP.y, VP.w, affine1. The audited
+PS consumes [ndcX*linearDepth, ndcY*linearDepth, linearDepth,1]. Therefore
+correctedLight = inverse(S(eyeVP)) * S(nativeVP) * nativeLight.
+ScreenPositionScaleBias remains untouched: the fullscreen pass-through quad
+already samples the corresponding SBS half. Only PS c3..c6 change inside one
+draw scope, restoring on success/failure and latching any restore fault OFF.
+Resource COM refs are balanced; bounded classification cache released on Reset.
+
+L1 math PASS: identity, both-eye half remap, FOV/eye translation, world-point
+projection equivalence, singular/NaN rejection. L1 mocked scope PASS: default
+OFF, draw/camera gates, exact restoration, resource refs, failed upload and
+restore-fault latch. L2 x86 PE32 /O2 build PASS; existing compiler warnings
+remain (not a warning-clean build). No Steam deployment or visual acceptance
+of this candidate yet. Do not combine a performance change with its test.
+
+Large automatic screenshots explained: 5904*3012*4 = 71,132,352 pixel bytes
+(plus 54 BMP header bytes). Menu proof capture and requested trace capture
+produce uncompressed stereo BMPs, distinct from Steam screenshots. They remain
+unchanged for this controlled rendering candidate.
