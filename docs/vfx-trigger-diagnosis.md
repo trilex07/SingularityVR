@@ -61,3 +61,17 @@ i skrypty działają w Present niezależnie; hold zeruje tylko sticki/turn.
 `ScriptsReady()` wymaga tego samego haka i offsetów, których wymaga FILL —
 gdy hold puszcza, VFX-małżonek ma z dużym prawdopodobieństwem to, czego
 potrzebuje. Nie jest to jednak dowód, że FnIdx(FireAmmunition) się zresolve'ował.
+
+## RUNDA 2 - po VfxHost=1: co widac, co nie, i dlaczego (dowody z kodu)
+
+Stan po fixie flaga: plugin + atlasy sa, VfxHost=1, reszta flag nietknieta (VfxSmoke=0, HideMuzzleFx=0). Objaw: dym gdzies przed oczami, strzal pod bronia, blysku nie widac. Pytanie usera: czy to na pewno ORYGINALNE efekty?
+
+Odpowiedz: NIE MA tu oryginalnych efektow 'tylko przeskalowanych'. Dwa niezalezne systemy rysuja jednoczesnie w dwoch roznych (zlych) miejscach:
+
+1. DYM = natywny UE3 (dowod przez eliminacje): VfxFilterItems wyrzuca WSZYSTKIE pozycje MuzzleSmoke gdy VfxSmoke=0 (d3d9.cpp ~21284). Skoro VfxSmoke=0, kazdy widziany dym MUSI pochodzic z natywnych emitterow (HideMuzzleFx=0). Natywny dym ma znany defekt seam (native-muzzle-stereo.md) - stad 'dym przed oczami' (billboard na szwie SBS = srodek twarzy).
+2. BLYSKU NIE WIDAC, bo pluginowy flash to quad 4,5-7,5 cm na 33 ms / 3 klatki (ParamsFor + 0.033f w stubie, VfxPluginTick liczy). Maly i ultrakrotki - latwy do przeoczenia, zwlaszcza ze leci w zle miejsce (pkt 3).
+3. STRZAL POD BRONIA = blad kotwicy lufy (kod, nie zgadywanie): muzzle = GunPivotWorld (punkt ROTACJI broni = okolice chwytu, NIE wylot lufy; d3d9.cpp 16090+) + GunAimDir * 150 mm (VfxMuzzleOffsetMm; TYLKO do przodu, zero skladowej w gore). Lufa jest POWYZEJ chwytu, wiec efekt laduje POD linia lufy. Dla karabinow sam dystans 150 mm tez za maly (stary komentarz mowil o 300-500 mm). Atlasy pluginu to CC0 Reactorcore/Kenney/para (make_vfx_atlases.py wprost: 'Nothing here is game content') - NIE oryginalne efekty gry.
+
+Falsyfikowalny test izolacji (1 sesja, MAIN): (a) VfxHost=0 + HideMuzzleFx=0 = sam natywny; (b) VfxHost=1 + HideMuzzleFx=1 = sam plugin. Przewidywanie: dym zniknie w (b) (dowod ze natywny); w (b) flash maly/krotki, wciaz nisko. Logi rozstrzygajace: VFX overlay: n= (n>0 = itemy plyna), g_vfxFires, VfxDiag=1 kropka cyjanowa (osobny tor od itemow).
+
+Decyzje dla MAIN/rezysera (zadna nie jest bezpiecznym defaultem z biurka): dorzucic skladowa UP do offsetu lufy i/lub tabele per-gun (pivot!=muzzle); flash: wiekszy quad i/lub dluzszy lifetime w stubie (obecnie 4,5 cm/33 ms); JEDEN system naraz - oba jednoczesnie to podwojne efekty w dwoch miejscach (obecny stan: natywny + plugin naraz).
