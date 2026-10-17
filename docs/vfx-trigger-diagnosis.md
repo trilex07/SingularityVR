@@ -84,3 +84,19 @@ Sesja 13:21 (895 KB log, strzaly oddane, hook route-2 aktywny - 'FireAmmunition 
 - linia 118 logu: HideMuzzleFx=0 (natywny wlaczony, znany defekt seam).
 
 Wniosek: jesli TERAZ nie widac NIC (nawet natywnego), to zainstalowane INI ma VfxHost=0 I HideMuzzleFx=1 jednoczesnie - jedyna kombinacja dajaca totalna cisze: plugin zablokowany flaga + natywny ukryty flaga. MAIN: odczytac 2 linie INI (10 sekund), nie zgadywac. Edycja VfxHost=1 musiala wyparowac (rollback guard przywraca akceptowane INI po tescie) albo trafila w zly plik INI.
+
+## RUNDA 4 - kotwica lufy naprawiona po stronie hosta (SIDE, L1+L2)
+
+Wdrożone na tym branchu (SIDE zakres: tylko host `d3d9.cpp` + nowy nagłówek, zero
+dotykania worktree vfx-agentów):
+- `vfx_muzzle.h`: `ForwardMmForVerts` — tabela per-gun (pistolet 150 / strzelba
+  200 / karabin 300 / snajper 400 mm; WARTOŚCI STARTOWE do weryfikacji L3,
+  fallback = globalny `VfxMuzzleOffsetMm`), plus `ClampUpMm` 0..200 mm.
+  L1: 12/12 w `tests/test-vfx-muzzle.cpp`.
+- Nowa oś: `VfxMuzzleUpMm` (INI `[Render]`, default 0 = stare zachowanie) + wiersz
+  panelu VR `VFX MUZZLE-UP` (kroki 0/50/100/150/200, strona z VFX OFFSET;
+  limit 13 wierszy zachowany: 11/13). Fill: `muzzle = pivot + aimDir*fwd + up`.
+- L2: pełny DLL x86 PE32 /O2 + manifest; zero nowych klas warningów.
+- NIE ruszone celowo (decyzja MAIN + vfx-agent): rozmiar/czas flasha w stubie
+  (obecnie 4,5 cm/33 ms — za mało, żeby był widoczny: propozycja 9+ cm i
+  0,10-0,12 s) oraz INI `VfxHost` (zostaje decyzją MAIN po L3).

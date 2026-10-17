@@ -18,6 +18,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "weapon_wheel.h"
 #include "ammo_probe.h"
 #include "ammo_layout.h"
+#include "vfx_muzzle.h"
 #include "scripts_ready.h"
 #include "weapon_wheel_direct_select.h"
 #include "weapon_wheel_catalog_load.h"
@@ -7642,7 +7643,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_AIMPARTS,
        PR_SHADOWMODE, PR_DROPEXTRA,   // hub round 4: shadow sampling treatment + extra-target drop
        PR_SHADOWTEST, PR_VRSHADOWS, PR_VFXORIGIN,   // reversible shadow-source + visible projection A/B
-       PR_VFXHOST, PR_VFXDRAW, PR_VFXDIAG, PR_VFXLOOK, PR_VFXOFFSET, // VFX test/tuning rows
+       PR_VFXHOST, PR_VFXDRAW, PR_VFXDIAG, PR_VFXLOOK, PR_VFXOFFSET, PR_VFXUP, // VFX test/tuning rows
        PR_GLOVEONLY,
        PR_GLOVEISOLATE, PR_GLOVEFACE, PR_GLOVESTUMP, PR_GLOVELEFT, PR_GOTO_HANDS,
        // ⭐ run 217: the laser and the per-weapon alignment rows.
@@ -7728,7 +7729,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // (1,400 vs 3,800 draws was measured) and a cross-run comparison is worthless. That mistake cost a
     // test run and it was mine.
     { PR_OCCLUSION, PR_WEAPONFX, PR_AIMPARTS, PR_SHADOWMODE, PR_SHADOWTEST, PR_VRSHADOWS,
-      PR_DROPEXTRA, PR_VFXORIGIN, PR_VFXOFFSET, PR_BACK },
+      PR_DROPEXTRA, PR_VFXORIGIN, PR_VFXOFFSET, PR_VFXUP, PR_BACK },
     { PR_ALIGNGUN, PR_ALIGNFWD, PR_ALIGNRIGHT, PR_ALIGNUP, PR_ALIGNYAW, PR_ALIGNPITCH, PR_BACK },
     // ⭐ run 237: its own page, not a row on WEAPON ALIGN. That page's values are PER WEAPON and
     // change meaning when you switch guns; these are one object held one way, always the same.
@@ -7837,7 +7838,7 @@ extern volatile LONG g_fgRideAll;
 extern volatile LONG g_hideMuzzleFx;
 // Defined with the VFX host block (below); declared here so the panel rows can read them.
 extern volatile LONG g_vfxHost, g_vfxDraw, g_vfxDiag;
-extern volatile LONG g_vfxMuzzleOrigin, g_vfxMuzzleOffsetMm, g_vfxLook, g_shadowTest;
+extern volatile LONG g_vfxMuzzleOrigin, g_vfxMuzzleOffsetMm, g_vfxMuzzleUpMm, g_vfxLook, g_shadowTest;
 extern int g_showControllerArms;
 extern volatile LONG g_gloveIsolate, g_gloveFaceFilter, g_gloveStumpScalePct, g_gloveLeftShiftUU;
 // Defined beside the turn code, which is the first thing that reads them.
@@ -7972,6 +7973,9 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_VFXOFFSET:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_vfxMuzzleOffsetMm));
             WritePrivateProfileStringA("Render", "VfxMuzzleOffsetMm", v, path); return;
+        case PR_VFXUP:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_vfxMuzzleUpMm));
+            WritePrivateProfileStringA("Render", "VfxMuzzleUpMm", v, path); return;
         case PR_VFXHOST:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", InterlockedCompareExchange(&g_vfxHost, 0, 0));
             WritePrivateProfileStringA("Render", "VfxHost", v, path); return;
@@ -8476,6 +8480,9 @@ void PanelRowText(int row, char* out, size_t cap) {
         case PR_VFXOFFSET:
             _snprintf_s(out, cap, _TRUNCATE, "VFX MUZZLE    %ldMM", Rd(g_vfxMuzzleOffsetMm));
             break;
+        case PR_VFXUP:
+            _snprintf_s(out, cap, _TRUNCATE, "VFX MUZZLE-UP %ldMM", Rd(g_vfxMuzzleUpMm));
+            break;
         case PR_VFXHOST:
             _snprintf_s(out, cap, _TRUNCATE, "VFX HOST       %s",
                         InterlockedCompareExchange(&g_vfxHost, 0, 0) ? "ON" : "OFF");
@@ -8698,6 +8705,14 @@ void PanelAdjust(int row, int dir) {
             if (step < 0) step = 0; if (step >= steps) step = steps - 1;
             InterlockedExchange(&g_vfxMuzzleOffsetMm, step * 50);
             Log("VFX MUZZLE OFFSET -> %ld mm along GunAimDir", Rd(g_vfxMuzzleOffsetMm));
+            break;
+        }
+        case PR_VFXUP: {
+            const LONG usteps = 5; // 0, 50, 100, 150, 200 mm world-up muzzle lift
+            LONG ustep = vfxmuzzle::ClampUpMm(Rd(g_vfxMuzzleUpMm)) / 50 + dir;
+            if (ustep < 0) ustep = 0; if (ustep >= usteps) ustep = usteps - 1;
+            InterlockedExchange(&g_vfxMuzzleUpMm, ustep * 50);
+            Log("VFX MUZZLE-UP -> %ld mm world up", Rd(g_vfxMuzzleUpMm));
             break;
         }
         case PR_VFXHOST:
@@ -21258,6 +21273,7 @@ volatile LONG g_vfxLook = 0;
 // Forward offset from the held-gun pivot to the muzzle, in millimetres. A small
 // live A/B range lets the user align the plugin effects to the rendered barrel.
 volatile LONG g_vfxMuzzleOffsetMm = 100;
+volatile LONG g_vfxMuzzleUpMm = 0; // ini [Render] VfxMuzzleUpMm: world-up muzzle lift, mm (default 0 = legacy)
 // The original UE3 first-person emitter contains both flash and smoke.  The
 // replacement candidate deliberately keeps smoke out of the headset path: it
 // is expensive, was the source of the old centre/SBS artefact, and has no
@@ -24250,8 +24266,10 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
                 const float m2u = MetresToUU();
                 if (m2u > 0.0f && std::isfinite(m2u) &&
                     std::isfinite(G[0] + G[1] + G[2]) && std::isfinite(D[0] + D[1] + D[2])) {
-                    const float muzzleOffsetUU = (float)Rd(g_vfxMuzzleOffsetMm) * 0.001f * m2u;
+                    const int muzzleLenMm = vfxmuzzle::ForwardMmForVerts(InterlockedCompareExchange(&g_gunVerts, 0, 0), (int)Rd(g_vfxMuzzleOffsetMm));
+                    const float muzzleOffsetUU = (float)muzzleLenMm * 0.001f * m2u;
                     for (int c = 0; c < 3; ++c) G[c] += D[c] * muzzleOffsetUU;
+                    G[2] += (float)vfxmuzzle::ClampUpMm((int)Rd(g_vfxMuzzleUpMm)) * 0.001f * m2u; // world-up lift: pivot is at the grip
                     singularity_vfx::VfxFireEvent fe{};
                     fe.muzzle.x = G[0] / m2u; fe.muzzle.y = G[1] / m2u; fe.muzzle.z = G[2] / m2u;
                     fe.forward.x = D[0]; fe.forward.y = D[1]; fe.forward.z = D[2];
@@ -31856,11 +31874,17 @@ void LoadIniSettings() {
         offset = (offset / 50) * 50;
         InterlockedExchange(&g_vfxMuzzleOffsetMm, offset);
     }
+    {
+        LONG up = GetPrivateProfileIntA("Render", "VfxMuzzleUpMm", 0, path);
+        if (up < 0) up = 0; if (up > 200) up = 200;
+        up = (up / 50) * 50;
+        InterlockedExchange(&g_vfxMuzzleUpMm, up);
+    }
     Log("VFX host seams=%ld (VfxHost; plugin DLL absence still no-ops everything)",Rd(g_vfxHost));
     Log("VFX draw=%ld (0=off 1=scene/mid-scene 2=present/backbuffer), diag dot=%ld",Rd(g_vfxDraw),Rd(g_vfxDiag));
     Log("VFX muzzle origin=%ld (0=legacy camera anchor 1=GunPivotWorld); shadow test=%ld (0=normal 1=drop all shadow-layout draws)",Rd(g_vfxMuzzleOrigin),Rd(g_shadowTest));
-    Log("VFX look=%ld (0=soft mist 1=normal 2=large ref), muzzle forward offset=%ldmm; smoke=%ld screen-flash=%ld",
-        Rd(g_vfxLook),Rd(g_vfxMuzzleOffsetMm),Rd(g_vfxSmoke),Rd(g_vfxScreenFlash));
+    Log("VFX look=%ld (0=soft mist 1=normal 2=large ref), muzzle forward offset=%ldmm up=%ldmm; smoke=%ld screen-flash=%ld",
+        Rd(g_vfxLook),Rd(g_vfxMuzzleOffsetMm),Rd(g_vfxMuzzleUpMm),Rd(g_vfxSmoke),Rd(g_vfxScreenFlash));
     g_vrUiDesktopProbe=GetPrivateProfileIntA("Diagnostic","VrUiDesktopProbe",0,path)?1:0;
     Log("VR menu pointer=%ld; native GFx viewport input; no desktop cursor movement",Rd(g_vrUiEnabled));
     Log("independent hands prototype=%d; arm IK mode=%d (0=native, 1=bounded TMD two-bone, 2=TMD gloves-only); shader CTAB required; verified SP sections only",

@@ -12,13 +12,13 @@ untouched), INI [Input] WaitForScripts=1 default with opt-out, latch reset on
 camera loss; 15-case L1 gate in scripts_ready.h. (3) Holster hoop/knife-belt
 rings in menus: legacy Style==0 path had no menu gate (code default is 0).
 Fix: both legacy gates now require the same holstermarker::Eligible focused-
-gameplay predicate as Style==1. L1: 33 ammo + 15 scripts + holster-marker suite pass, x86 /O2. L2: full
-d3d9.dll PE32 build + manifest from clean HEAD 201a32b: SHA-256
-5102B8CF2EE19D980E343B121927386DC80D681D20C3AF7ED1CA541A9AD426AD (/O2,
+gameplay predicate as Style==1. L1: 33 ammo + 15 scripts + holster-marker + 12 vfx-muzzle suites pass, x86 /O2. L2: full
+d3d9.dll PE32 build + manifest, SHA-256 29C96886F01E05679DDE2DDD3BE4DC69E8486E5BE90B89928F35CFAE7E464D1E (/O2,
 no -Install, no Steam contact). NOT Steam/PSVR2 tested — MAIN L3/L4 pending. Next: MAIN review, Steam L3 on
 the three scenarios (plate single+clamped, hold releases on load, no hoops in
-menu), then user PSVR2 acceptance script. VFX trigger diagnosis (no code
-change — config+deployment root cause): see docs/vfx-trigger-diagnosis.md.
+menu), then user PSVR2 acceptance script. VFX trigger diagnosis (config+deployment root cause): see docs/vfx-trigger-diagnosis.md.
+VFX muzzle follow-up on this branch: per-gun ForwardMm table + world-UP knob (VfxMuzzleUpMm,
+VR panel row, default 0 = unchanged behaviour); stub flash size/life left for the vfx-agent.
 
 LATEST 2026-10-17 SIDE side/mirror-screenshot-fix: MAIN root-cause accepted —
 UE3 binds viewport + Present region to the window (dumped frame: right half
