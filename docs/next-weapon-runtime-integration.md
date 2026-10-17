@@ -155,6 +155,36 @@ restore, with no file replacement while Singularity.exe is running.
 
 ## Verification and physical route
 
+Current native-material receipt (2026-10-17): implementation8a3f603 plus candidate
+provenance correction, clean source `8896ff9f6a640bfde3246d04c4efdca014da4eff`.
+Seventeen CPU +TWO own-process D3D9Ex GPU executables PASS; all19 independently
+checked x86 PE32. All57 Python tests PASS. Adds12960 stock/carry/drop native-skin
+roundtrips across the THREE original magazine palettes, transactional failures
+and palette restoration, while retaining7506 original fractional child poses,
+4320 native socket checks and30000 own-process native transfer transactions.
+Synthetic shader/triangles shared-depth test gives10609/10609 visible pixels
+per profile/round, zero wrong-colour/occlusion/body pixels, both eyes and two
+resource/Reset rounds. It does NOT prove game lighting, shadows or hand ordering.
+
+Clean x86 PE32 `/O2` DLL3193856 bytes, no performance instrumentation, SHA-256
+`F5533704CD997DDB45F9EB5C1FC8514C824CD6CF0DC20D331101A1D5FAD892C6`.
+Build passed the project's existing static-analysis gate; unrelated pre-existing
+warnings remain in its log, so this is NOT a warning-free analysis claim.
+Local/private handoff:
+`C:/Users/Trilex/vr-mods/SingularityVR-next-weapons/build/next-weapon-reload/candidate-8896ff9/`.
+All11 payload sizes/SHA-256 independently verified; manifest SHA-256
+`C1862892766255AF9E75762AC161EA000A86C8945951B21198F2E7A6860527EF`,
+settings proposal SHA-256
+`11A19C0181A8408C56AE4CFE0FAE6EF98C3A6E4A7F1E333030A532069A4CFECC`.
+Manifest distinguishes actual main ancestor513013ab from the moving origin/main
+snapshot. Older folders (including candidate-8a3f603) are superseded and are NOT
+restore baselines. Logs: `build/next-weapon-reload/native-material-tests.log`,
+`native-material-final-build.log`; the final Python provenance test rerun has7
+tests (the earlier full log has6). Documentation-only later commits do not
+change binary provenance. No Steam/config/installation inspection or writes;
+L1_PASS/L2_PASS only, L3/L4 UNKNOWN. MAIN still integrates SOURCE, never blindly
+deploys this SIDE DLL over newer accepted work.
+
 Previous albedo-only offline receipt (2026-10-17), superseded for the new
 native-material opt-in by the later follow-up receipt: production source
 `4c965dd65e765b8a77aba701bfe4ac35774ca84a`, clean tree, x86 PE32 `/O2`, no

@@ -1,5 +1,29 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE PR45 native-material follow-up: Valkyrie/Volk/Kasimov
+stock/carried/dropped magazine uses original native gun draw/material and shared
+depth inside each StereoPair eye; ONLY rigid magazine bone stays alive, all
+other bones collapse together, palette restored on success/failure. Separate
+ReloadNativeMagazine=0 default-OFF; no private-depth overlay when opt-in1.
+Circle -> physical-left shoulder grip -> insert/release unchanged, NO flick.
+L1_PASS:17 CPU +2 OWN D3D9Ex GPU executables (19 checked x86 PE32),57 Python
+tests;12960 native stock/carry/drop roundtrips over the three original palettes.
+Synthetic shared-depth GPU fixture:10609/10609 visible pixels each profile/round,
+ZERO wrong-colour/occlusion/body pixels; two Reset resource rounds. NOT native
+game lighting/scene proof. L2_PASS clean source8896ff9f6a640bfde3246d04c4efdca014da4eff,
+x86 PE32 /O2, DLL3193856 bytes, no performance instrumentation, SHA-256
+F5533704CD997DDB45F9EB5C1FC8514C824CD6CF0DC20D331101A1D5FAD892C6.
+Private candidate:build/next-weapon-reload/candidate-8896ff9;11 payload hashes
+independently verified, manifest SHA-256
+C1862892766255AF9E75762AC161EA000A86C8945951B21198F2E7A6860527EF.
+Actual branch/main ancestor513013ab2da6434e926549817bf8c3ae78009d25; separate
+remote-main snapshot in manifest is NOT its base. All older candidate folders
+are superseded, NOT safe restore targets. Documentation-only receipts after
+source8896ff9 do not change this binary provenance. ZERO Steam/deploy/INI writes;
+L3/L4 UNKNOWN. MAIN integrates SOURCE into current accepted dependency profile,
+one weapon/session; verify native ammo debit/ACK, colour/depth/hands BOTH eyes
+and timing before physical acceptance. No merge authorized/performed.
+
 LATEST 2026-10-17 SIDE: THREE actual runtime connections implemented on
 feature/next-weapon-reload-assets (base main513013a), not just offline prototypes.
 Valkyrie/Volk/Kasimov: default-OFF dispatcher, shared audited AttemptReload hook,
