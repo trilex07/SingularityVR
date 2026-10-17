@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+Projector PID30976 L4 FAIL: film visible only partly in one eye and deforms
+with head motion. Log DF3D8B2AFC34C75101AF7E865A7CECA57761CC1457D368744A97E9C089A5AC4C
+confirms enabled=1 but no applied/rejected counters. Safe DLL/INI/injector/UI
+restored and independently hashed. Found finite shader cache permanently
+rejecting objects after entry 128; replaced with bounded eviction and added
+per-second classification/pair/route/shape/camera counters. Matrix math unchanged.
+L1 scope/cache saturation regression and reconstruction math PASS. Runtime
+causality pending: next test must show exact pair and both-eye execution.
+Do not mark the previous candidate accepted. Await new start before deployment.
+
 Projector candidate READY_FOR_PHYSICAL_ACCEPTANCE (NOT visually verified):
 source b9ea9ae, DLL 755DDD731E7E12E45C246CA3655BA1A79F58EBE56C12B816C05F78C9FAE9E26B,
 INI 96CE07ED75952F0B521316703B62037C8B219B5E861543950C030A7D107215A5.

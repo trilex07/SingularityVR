@@ -28,7 +28,27 @@ struct IDirect3DDevice9{
     HRESULT SetPixelShaderConstantF(UINT r,const float* p,UINT n){assert(r==3&&n==4);memcpy(ps,p,64);++writes;return (writes==1&&failWrite)||(writes==2&&failRestore)?E_FAIL:S_OK;}
 };
 #include "../projector_receiver_fix.h"
+struct CacheShader:IUnknown {
+    ULONG refs=1;DWORD code=0;unsigned queries=0;
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID,void**) override{return E_NOINTERFACE;}
+    ULONG STDMETHODCALLTYPE AddRef() override{return ++refs;}
+    ULONG STDMETHODCALLTYPE Release() override{assert(refs>1);return --refs;}
+    HRESULT GetFunction(void* data,UINT* bytes){++queries;if(data){assert(*bytes>=4);memcpy(data,&code,4);}*bytes=4;return S_OK;}
+};
 int main(){using namespace projectorfix;IDirect3DDevice9 d;float original[16];memcpy(original,d.ps,64);
+    // A late-loaded target must remain recognizable after the bounded cache fills.
+    CacheShader shaders[129];shaders[128].code=1;
+    unsigned long long hash=14695981039346656037ull;
+    for(unsigned i=0;i<4;++i){hash^=((unsigned char*)&shaders[128].code)[i];hash*=1099511628211ull;}
+    assert(!Classify(&shaders[128],4,hash)&&!shaders[128].queries);
+    enabled=true;
+    for(unsigned i=0;i<128;++i)assert(!Classify(&shaders[i],4,hash));
+    assert(used==128&&Classify(&shaders[128],4,hash)&&used==128&&evictions==1);
+    const auto queries=shaders[128].queries;
+    assert(Classify(&shaders[128],4,hash)&&shaders[128].queries==queries);
+    assert(shaders[0].refs==1&&shaders[128].refs==2);
+    Release();for(auto& shader:shaders)assert(shader.refs==1);
+    assert(used==0&&nextEviction==0);enabled=false;
     {Scope s(&d,true,4,2);}assert(!d.reads&&!d.writes);
     enabled=vsMatch=psMatch=true;NoteCamera(0,0,g_camMats[0].m,g_camMats[0].m);
     {Scope s(&d,false,4,2);}{Scope s(&d,true,8,12);}assert(!d.reads);

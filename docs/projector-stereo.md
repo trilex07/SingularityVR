@@ -193,3 +193,23 @@ Large automatic screenshots explained: 5904*3012*4 = 71,131,392 pixel bytes
 (plus 54 BMP header bytes). Menu proof capture and requested trace capture
 produce uncompressed stereo BMPs, distinct from Steam screenshots. They remain
 unchanged for this controlled rendering candidate.
+
+## PID30976 physical failure and classifier repair
+
+User reports film partially on canvas in one eye; projection changes with head
+motion. Runtime enabled=1 only, with no applied/rejected samples. Therefore
+the matrix correction was not demonstrated to execute, and this test cannot
+validate or falsify its reconstruction math. Safe install restored and DLL,
+INI, injector and UI independently verified after exit.
+
+Source defect: Classify permanently returned false for every new shader once
+128 distinct shader objects had been cached. Menus and earlier world draws
+can exhaust this before first encounter with the projector. Hypothesis:
+classification prevented reaching Scope; alternatives include pair/route gates.
+Repair replaces the oldest cache entry with balanced COM references; capacity
+remains 128. New aggregate counters identify classification, pair, route, shape
+and camera failures once per second, with no per-draw log output. No matrix
+or resource gates changed. Falsifier: exact pair hits remain absent after
+eviction, or route rejection prevents both-eye correction. L1 regression feeds
+128 nonmatching objects before a matching 129th, verifies recognition/cache hit,
+and checks all references are released. Scope restoration/math tests also pass.
