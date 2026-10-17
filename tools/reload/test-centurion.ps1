@@ -20,7 +20,7 @@ foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-cent
     }elseif($test -eq 'test-centurion-refill' -and $RefillEvidence){
         $evidence=Get-Content -LiteralPath $RefillEvidence -Raw | ConvertFrom-Json
         if((Get-FileHash -LiteralPath $evidence.text_path -Algorithm SHA256).Hash -ne $evidence.text_sha256){throw 'Archived refill evidence changed'}
-        & $exe $evidence.text_path $evidence.text_base $evidence.methods[0].method $evidence.methods[1].method $evidence.methods[2].method $evidence.methods[3].method
+        & $exe $evidence.text_path $evidence.text_base $evidence.methods[0].method $evidence.methods[1].method $evidence.methods[2].method $evidence.methods[3].method $evidence.methods[0].wrapper $evidence.methods[1].wrapper $evidence.methods[2].wrapper $evidence.methods[3].wrapper
     }elseif($test -in @('test-centurion-animation','test-centurion-visual-followup','test-centurion-tracked-cylinder') -and $AnimationCache){& $exe $AnimationCache}else{& $exe}
     if($LASTEXITCODE -ne 0){throw "test failed: $test"}
 }

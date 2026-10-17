@@ -1,5 +1,10 @@
 # Centurion: refill without the native reload sequence
 
+REOPENED after user session13:52: no animation BUT no ammo transfer, ready0
+before invocation. Source6d7b201 is NOT physically accepted; do not promote its
+L1/L2 receipt as a working backend. See `docs/centurion-refill-resolution.md` for
+the bounded stage preflight needed before another full headset reload trial.
+
 2026-10-17 SIDE, ZERO Steam. Existing physical polish is retained.
 
 ## Observation / hypothesis / falsifier BEFORE implementation

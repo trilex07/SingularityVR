@@ -36,5 +36,23 @@ class Tests(unittest.TestCase):
         self.assertNotIn('ProcessEvent(', branch)
         self.assertIn('"CenturionRefillOnly",0,path', src)
 
+    def test_preflight_is_bounded_and_cannot_transfer(self):
+        src = (Path(__file__).resolve().parents[2]/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf-8')
+        probe = src.split('if(g_centurionRefillOnly&&decision==centurionnative::Decision::Block', 1)[1].split('if(g_centurionPhysicalPolish', 1)[0]
+        self.assertIn('probes<3&&now>=nextProbe', probe)
+        self.assertIn('nextProbe=now+1000', probe)
+        self.assertIn('ResolveCenturionRefill(self,unused,&audit)', probe)
+        for call in ('centurionrefill::Commit(', '.Refill(', '.Arm(', 'g_origCenturionAttemptReload('):
+            self.assertNotIn(call, probe)
+
+    def test_failed_resolver_never_publishes_a_callable_result(self):
+        src = (Path(__file__).resolve().parents[2]/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf-8')
+        resolver = src.split('static bool ResolveCenturionRefill(', 1)[1].split('static void LogCenturionRefillAudit', 1)[0]
+        self.assertIn('report.stage="ready";result=cached;return true', resolver)
+        for reason in ('wrapper-abi','field-budget','missing-bindings','method-fingerprint','inventory-cast-target'):
+            self.assertIn('reject("'+reason+'")', resolver)
+        self.assertIn('if(field)return reject("field-budget")', resolver)
+        self.assertIn('centurionrefill::Audited', resolver) # strict checks NOT relaxed
+
 
 if __name__ == '__main__': unittest.main()

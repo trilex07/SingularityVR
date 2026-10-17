@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE REOPENED/BROKEN refill-only after physical user feedback:
+no animation but no ammo/firing. Frozen13:52 session A4A7F283...A83A4959 has THREE
+manual permits with ready0/result0/live=-1, then4s timeout; native refill was NOT
+invoked. Exact runtime rejection stage unknown, not an ammo semantics diagnosis.
+Added bounded read-only resolver stage/mask/slot/body-fingerprint report and3
+auto-BLOCK preflights1s apart before any transfer. Guards/gestures/models/native
+calls unchanged. No guessed fix or relaxed ABI/body/lookup/context checks.
+L1_PASS25 programs/58 Python incl ALL FOUR original C++ wrapper decodes PASS.
+L2 pending diagnostic; actual cause/fix still OPEN. ZERO Steam. MAIN runs the
+short empty-Centurion preflight before another full L4 reload route; do not
+promote the same unproven generic resolver from PR45. See
+docs/centurion-refill-resolution.md. PR48 source delta, not older SIDE DLL deploy.
+
 LATEST 2026-10-17 SIDE: user says physical Centurion presentation almost ideal,
 but native reload still blocks shooting/shakes camera after close. Frozen13:29
 session request->HUD ACK1563ms, ReloadFinished2078ms. Original separate native
