@@ -19753,6 +19753,20 @@ extern volatile LONG g_muzzleFlashPerEyeDraws;
 static bool DrawMuzzleFlashPerEye(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t, UINT minVtxIndex,
                                   UINT numVertices, UINT primCount, const void* idxData,
                                   D3DFORMAT idxFormat, const void* vtxData, UINT vtxStride) {
+    // Evidence-based gate: when nativefx has a selected shader pair (proven by capture+drop
+    // discriminator), only split draws whose VS+PS match that pair. Without a selected pair,
+    // fall back to the heuristic but warn once so MAIN can see it in the log.
+    if (nativefx::Enabled() && nativefx::selected.Valid()) {
+        if (!nativefx::Match()) return false;
+    } else {
+        static bool warned = false;
+        if (!warned) {
+            warned = true;
+            Log("MuzzleStereoPerEye: no nativefx selected pair - heuristic detection only. "
+                "Configure [Diagnostic] NativeMuzzleVSHash/PSHash + NativeMuzzleStereoMode for "
+                "evidence-based gating.");
+        }
+    }
     if (!vtxData || numVertices == 0 || primCount == 0) return false;
     if (vtxStride < 8 || vtxStride > 64) return false;
     // Muzzle flash is a small screen-space sprite/quad. Reject bulk scene geometry.
