@@ -18,6 +18,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "weapon_wheel.h"
 #include "ammo_probe.h"
 #include "ammo_layout.h"
+#include "scripts_ready.h"
 #include "weapon_wheel_direct_select.h"
 #include "weapon_wheel_catalog_load.h"
 #include "weapon_wheel_atlas.h"
@@ -5701,7 +5702,6 @@ void DrawLaserSight(IDirect3DDevice9* dev);
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
-void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
 void DrawHolsterMarker(IDirect3DDevice9* dev); // MAIN: white ring at the hip while a gun is held
 void DrawKnifeBeltMarker(IDirect3DDevice9* dev); // MAIN: white ring at the left belt while the knife is held
 void DrawCustomGloves(IDirect3DDevice9* dev); // default-OFF, noTMD free hands only
@@ -5742,7 +5742,6 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawLaserSight(dev);
     DrawWristHealth(dev);
     DrawHealthPlate(dev);
-    DrawAmmoPlate(dev);
     DrawAmmoPlate(dev);
     DrawHolsterMarker(dev);
     DrawKnifeBeltMarker(dev);
@@ -6604,6 +6603,60 @@ float g_headPosXR[3] = { 0.0f, 0.0f, 0.0f };
 // want it checked against what specific games call it.
 int g_walkDirection = 0;   // ini WalkDirection: 0 = head-relative (default), 1 = off-hand-relative
 int g_walkSign      = 1;   // ini WalkSign - handedness has been guessed wrong on three axes here
+
+// ---- Scripts-readiness hold: do not let VR locomotion run before the script
+// ---- layer is up. Buttons, menu nav and native game input are NOT held - only
+// ---- sticks/turn, cleared like the cutscene/wheel holds (no pile-up on release).
+volatile LONG g_waitForScripts = 1; // ini WaitForScripts: 1 = hold until ready (default), 0 = legacy
+
+// Route-2 SLC hook lives far below; only its nullness is read here.
+extern int (__fastcall *g_origSLC)(void*, void*, void*, void*, float*, float*, uint32_t, void*, void*);
+
+// Readiness latch: set once ScriptsReady() fires; cleared on camera loss.
+static bool s_scriptsReadyLatched = false;
+static unsigned long s_scriptsUnreadyFrames = 0;
+static bool s_scriptsHoldAnnounced = false;
+static bool s_scriptsTimeoutAnnounced = false;
+static bool s_scriptsReadyAnnounced = false;
+
+// True once the VR script layer is provably up: route-2 aim hook installed,
+// key gameplay offsets resolved, player armed state known. Mirrors the sentinels
+// RefreshArmedState/ResolveGameplayOffsets already maintain.
+static bool ScriptsReady() {
+    if (!g_origSLC) return false;
+    if (g_offWeapon < 0 || g_offHandsStatus < 0) return false;
+    if (PlayerArmed() == ARMED_UNKNOWN) return false;
+    return true;
+}
+
+static bool ScriptsHoldLocomotion() {
+    if (!Rd(g_waitForScripts)) return false;
+    if (s_scriptsReadyLatched) return false;
+    if (ScriptsReady()) {
+        s_scriptsReadyLatched = true;
+        if (!s_scriptsReadyAnnounced) {
+            s_scriptsReadyAnnounced = true;
+            Log("scripts: ready after %lu unready frames - VR locomotion released", s_scriptsUnreadyFrames);
+        }
+        s_scriptsUnreadyFrames = 0;
+        return false;
+    }
+    const bool hold = scriptsready::HoldActive(true, false, s_scriptsUnreadyFrames);
+    if (!hold) {
+        if (!s_scriptsTimeoutAnnounced) {
+            s_scriptsTimeoutAnnounced = true;
+            Log("scripts: hold timeout (%lu frames) - proceeding with unresolved scripts",
+                scriptsready::HoldTimeoutFrames());
+        }
+        return false;
+    }
+    if (s_scriptsUnreadyFrames == 0 && !s_scriptsHoldAnnounced) {
+        s_scriptsHoldAnnounced = true;
+        Log("scripts: holding VR locomotion until route-2/offsets/armed resolve (WaitForScripts=1)");
+    }
+    ++s_scriptsUnreadyFrames;
+    return true;
+}
 
 // ---- ⚠️ THE CONTROLLERS THEMSELVES ARE A VARIABLE, AND EVERY TEST SO FAR RAN INSIDE IT ----
 //
@@ -9349,6 +9402,7 @@ bool InitXRInput() {
             g_walkDirection = GetPrivateProfileIntA("Input", "WalkDirection", 0, path);
             g_walkSign      = GetPrivateProfileIntA("Input", "WalkSign", 1, path) >= 0 ? 1 : -1;
             g_autoPad       = GetPrivateProfileIntA("Input", "AutoPad", 0, path);
+            g_waitForScripts = GetPrivateProfileIntA("Input", "WaitForScripts", 1, path) ? 1 : 0;
             // ---- aim mode 7's gun pose, the two numbers that need calibrating ----
             // UUPer1: engine rotation units per 1.0 of anim aim offset. 16384 = 90 deg, which is
             // the common authored range - a guess, and the log prints what it should have been.
@@ -11465,6 +11519,14 @@ void SyncXRInput(XrTime displayTime) {
         if (v < -1.0f) v = -1.0f;
         return (int16_t)(v * 32767.0f);
     };
+
+    // Scripts-readiness hold: while route-2/offsets/armed are still resolving,
+    // VR locomotion stays parked (sticks zeroed, turn accumulators cleared - no
+    // pile-up on release). Buttons, menu nav and native game input are untouched.
+    if (ScriptsHoldLocomotion()) {
+        mx = 0.0f; my = 0.0f; lookX = 0.0f;
+        g_padTurnAccum = 0; g_smoothTurnRem = 0.0f;
+    }
     if (feedGame) {
         InterlockedExchange(&g_padBtns, diagMode == 4 ? (packedBtns & ~0xffffL) : packedBtns);
         InterlockedExchange(&g_padLStick, PackStick(toAxis(uiMenu?panelX:mx), toAxis(uiMenu?panelY:my)));
@@ -21690,6 +21752,11 @@ static void ResetVrAfterCameraLoss(const char* reason) {
     InterlockedExchange(&g_weaponWheelCommit, 0);
     InterlockedExchange(&g_weaponWheelPulseGap, 0);
     g_weaponWheelState = {};
+    s_scriptsReadyLatched = false;
+    s_scriptsUnreadyFrames = 0;
+    s_scriptsHoldAnnounced = false;
+    s_scriptsTimeoutAnnounced = false;
+    s_scriptsReadyAnnounced = false;
     g_supportLatch.Reset();
     InterlockedExchange(&g_vrUiValid, 0);
     InterlockedExchange(&g_vrUiDown, 0);
@@ -27170,7 +27237,8 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
                 }
             }
         }
-        const float cx = (eye + p.u) * d.Width * 0.5f;
+        const float cx = ammoplates::ClampCxToEyeHalf((eye + p.u) * d.Width * 0.5f,
+            (float)plateW, (float)d.Width, eye);
         const float cy = p.v * d.Height;
         if (!ammoDrewAny) { ammoDrewAny = true; ammoDrewCx = cx; ammoDrewCy = cy; }
         const float x0 = cx - plateW * 0.5f, y0 = cy - plateH * 0.5f;
@@ -27406,9 +27474,14 @@ static bool DrawHolsterCueAt(IDirect3DDevice9* dev,uipointer::V centre,
 }
 
 void DrawHolsterMarker(IDirect3DDevice9* dev) {
+    // SAME hide rule as the Style==1 cue below: no hoops outside focused gameplay
+    // (menus, mod panel, cinematics). Legacy path previously ignored menu state.
     if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
         Rd(g_weaponWheelOpen) || !g_holsterEnabled || !WeaponInHands() ||
-        Rd(g_weaponHolstered) || !g_origDrawPrimUP) {
+        Rd(g_weaponHolstered) || !g_origDrawPrimUP ||
+        !holstermarker::Eligible(g_sceneMode.Current()==vrscene::Mode::GameplayStereo,
+            Rd(g_gamePaused)!=0,Rd(g_vrUiMenu)!=0,Rd(g_panelOpen)!=0,
+            Rd(g_inCinematic)!=0,g_xrSessionState==XR_SESSION_STATE_FOCUSED)) {
         static bool saidGate = false;
         if (!saidGate) {
             saidGate = true;
@@ -27454,9 +27527,14 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
 // MAIN round 11: also shown while docked (held<0 no longer gates) so the
 // belt can be FOUND: the user reports never seeing the knife at all.
 void DrawKnifeBeltMarker(IDirect3DDevice9* dev) {
+    // SAME hide rule as the Style==1 cue below: no hoops outside focused gameplay
+    // (menus, mod panel, cinematics). Legacy path previously ignored menu state.
     if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
         Rd(g_weaponWheelOpen) || !g_hipKnifeEnabled || !g_hipKnifeReady ||
-        !g_origDrawPrimUP) {
+        !g_origDrawPrimUP ||
+        !holstermarker::Eligible(g_sceneMode.Current()==vrscene::Mode::GameplayStereo,
+            Rd(g_gamePaused)!=0,Rd(g_vrUiMenu)!=0,Rd(g_panelOpen)!=0,
+            Rd(g_inCinematic)!=0,g_xrSessionState==XR_SESSION_STATE_FOCUSED)) {
         static bool saidGate = false;
         if (!saidGate) {
             saidGate = true;

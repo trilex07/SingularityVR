@@ -1,5 +1,24 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE side/hud-script-holster-fixes (L1/L2 only, no Steam):
+three user-reported defects fixed in one branch, all gated to L1/L2 evidence.
+(1) Ammo hand plate drew TWICE per frame (duplicate DrawAmmoPlate call) and
+spilled into the other eye half (no clamp) — read as a second peripheral copy.
+Fix: duplicate call+decl removed; per-eye centre clamped to its own half via
+ammoplates::ClampCxToEyeHalf + 10 L1 cases. (2) Game let the player move before
+VR scripts resolved: new ScriptsReady() predicate (route-2 hooked + offsets +
+armed known) + 15 s-timeout locomotion hold (sticks/turn zeroed, buttons/menus
+untouched), INI [Input] WaitForScripts=1 default with opt-out, latch reset on
+camera loss; 15-case L1 gate in scripts_ready.h. (3) Holster hoop/knife-belt
+rings in menus: legacy Style==0 path had no menu gate (code default is 0).
+Fix: both legacy gates now require the same holstermarker::Eligible focused-
+gameplay predicate as Style==1. L1: 33 ammo + 15 scripts + holster-marker suite pass, x86 /O2. L2: full
+d3d9.dll PE32 build + manifest from clean HEAD 201a32b: SHA-256
+5102B8CF2EE19D980E343B121927386DC80D681D20C3AF7ED1CA541A9AD426AD (/O2,
+no -Install, no Steam contact). NOT Steam/PSVR2 tested — MAIN L3/L4 pending. Next: MAIN review, Steam L3 on
+the three scenarios (plate single+clamped, hold releases on load, no hoops in
+menu), then user PSVR2 acceptance script.
+
 LATEST 2026-10-17 SIDE side/mirror-screenshot-fix: MAIN root-cause accepted —
 UE3 binds viewport + Present region to the window (dumped frame: right half
 black at x>=2952 on a 5904x3012 backbuffer), so the SetWindowPos fit path is
