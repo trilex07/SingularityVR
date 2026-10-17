@@ -347,3 +347,25 @@ package remained unchanged at
 Rollback source: `deployment/install-backups/20261017-210341`; deployment
 receipt: `deployment/install-reports/20261017-210342.json`. No visual pass or
 VFX/audio fix is claimed.
+
+### Round 4 visual result and next discriminator
+
+The physical PSVR2 report arrived after rollback: no FPS drop, broad glow still
+perceived, no visible muzzle smoke or flash; the bullet impact on the wall remains
+the only clear shot effect. Thus dropping the exact `7EB90CEBB053DA04` /
+`0099C92AE105A584` pair does **not** eliminate the glow or restore muzzle FX.
+This is a negative result, not a fix. Together with the earlier negative drops
+of `314D478A9CFDBE37` / `C118540CCDBCB241` and `7EB90CEBB053DA04` /
+`4377F314D1C93468`, it rules out another count-only candidate selection.
+
+Offline shader inspection identifies `4FAEF2389750DBFC` /
+`2FEC493CD52D7D78` as a two-triangle, four-vertex foreground draw with
+`ViewProjectionMatrix` in c0-c3 and `LocalToWorld` in c5-c8. Its shader uses
+row-vector multiplication. The existing trace shows identical c0-c3 in both
+eyes, but that is not yet proof of its visible role. Critically, the current
+high-level indexed-UP hook immediately forwards draws when
+`HookUserPointerDraws` is absent/default 0; even at full hook level, a quad can
+return before `StereoPair` and its native matrix-alias logic. The next
+experiment must first record the *actual* draw entry/branch and vertex-space
+identity for this exact pair, bounded and read-only. Do not enable mode 2 or
+rewrite matrices based on these traces alone.
