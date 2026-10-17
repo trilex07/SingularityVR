@@ -91,7 +91,7 @@ public:
     // Transactional, stack-only. Source is original bind rig, not guessed slots.
     // Wrist/controller scale and position are already in the existing palette.
     // The cuff uses the same wrist transform rather than an animated elbow.
-    bool Pose(float palette[135][4],const float grip[2],const float (*digits)[5]=nullptr,int knifeSide=-1,unsigned fingerMask=3u)const{
+    bool Pose(float palette[135][4],const float grip[2],const float (*digits)[5]=nullptr,int knifeSide=-1,unsigned fingerMask=3u,bool originalCurl=false)const{
         if(!Ready()||!palette||!grip)return false;
         if(knifeSide < -1||knifeSide>1)return false;
         for(unsigned side=0;side<2;++side)if(!std::isfinite(grip[side])||grip[side]<0||grip[side]>1)return false;
@@ -110,7 +110,7 @@ public:
                 if(side<0)return false;
                 const int digit=knifehand::Digit(b);if(digit<0)return false;
                 float t=digits?digits[side][digit]:grip[side];auto q=data.curl[b];gloves::Q blend;
-                if(thumbReady&&Thumb(b)){
+                if(thumbReady&&Thumb(b)&&!originalCurl){
                     const bool knife=side==knifeSide;
                     if(!thumbpose::Sample(thumbs,(unsigned)side,thumbpose::Segment(b),grip[side],knife,q))return false;
                     t=1.f;

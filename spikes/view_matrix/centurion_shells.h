@@ -39,7 +39,7 @@ inline void Maintain(Burst& b,const centurionreload::Frame& f,centurionreload::E
 }
 // Event-only launch: repeated rendering or held buttons cannot spawn more cases.
 inline bool Launch(Burst& out,const centurionreload::Frame& f,centurionreload::Event event,
-                   bool enabled,const WorldFrame& world){
+                   bool enabled,const WorldFrame& world,bool rearward=false){
     if(!enabled||!f.enabled||!f.context||!f.tracked||!f.supported||!f.ammoFresh||
        !f.pawn||!f.weapon||!centurionreload::AmmoValid(f)||f.capacity!=6||!Valid(world)||
        event!=centurionreload::Event::Dumped||!hipknife::Finite(f.socket)||!hipknife::Valid(f.gun.q))return false;
@@ -48,12 +48,13 @@ inline bool Launch(Burst& out,const centurionreload::Frame& f,centurionreload::E
     if(out.count&&out.pawn==f.pawn&&out.weapon==f.weapon&&out.born==f.nowMs)return false;
     Burst b;b.pawn=f.pawn;b.weapon=f.weapon;b.born=f.nowMs;b.count=spent;
     b.yaw=world.baseYaw+world.centreYaw;b.units=world.units;
-    // Authored gesture-socket launch, not an unproven engine bone/socket. The
-    // native particle's mesh/material are reused, its simulator is NOT cloned.
+    // Caller supplies the fresh rendered joint in the tracked-cylinder route;
+    // legacy mode uses its authored gesture socket. Original mesh/material are
+    // reused, but the native particle simulator is NOT cloned.
     for(unsigned i=0;i<b.count;++i){
         const float a=float(i)*1.0471975512f;
         const V radial{std::cos(a)*.005f,std::sin(a)*.005f,0};
-        const V velocity=hipknife::Rotate(f.gun.q,{radial.x*5.f,radial.y*5.f,.22f})+V{0,-.15f,0};
+        const V velocity=hipknife::Rotate(f.gun.q,{radial.x*5.f,radial.y*5.f,rearward?.35f:.22f})+V{0,rearward?-.05f:-.15f,0};
         b.cases[i]={ToWorld(f.socket+hipknife::Rotate(f.gun.q,radial),world),WorldDelta(velocity,world),
                     hipknife::Multiply(f.gun.q,centurionclip::Degrees(17.f*i,43.f*i,31.f*i))};
     }
