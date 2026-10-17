@@ -1,5 +1,9 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN VFX isolation (a) RUNNING: VfxHost 1->0 (native-only,
+HideMuzzleFx=0 kept; INI 59C48A88->8D0E27E4, pre-edit backup in 132624 dir).
+Expect zero VFX lines; user records smoke/flash below. Then (b) plugin-only.
+
 LATEST 2026-10-17 MAIN physical-polish L3+L4 PASS (build 37AC0AD2 + 4 flags):
 user PSVR2 "okej dziala" + log 13:29 session proves TWO full manual cycles
 (opened->dumped->grab->loaded->inserted->close->ACK, clip 3->0, reserve
