@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN MERGED TO main (user order): d32eb54 (merge of tested
+stack: PR48 ports visual/tracked/native-space/polish/refill/diagnostics +
+MAIN reseat; PR47 grip-integration already in main via 276a952). Source tree
+spikes/tools identical to L1/L2-tested f3fe2a5; deployed Steam 6B0664ED
+unchanged and still valid. Draft PR48 now superseded for ported commits (SIDE
+branch untouched). Steam install + accepted profile unchanged by merge.
+
 LATEST 2026-10-17 MAIN resolver-fix L3+L4 PASS (build 6B0664ED + 5 flags):
 user PSVR2 "jest okej" on the counter-to-6 + fire-without-animation/shake
 route. Scoped to this build/config/route; user ordered merge to main.
