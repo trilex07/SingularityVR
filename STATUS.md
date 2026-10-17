@@ -3,24 +3,24 @@
 LATEST 2026-10-17 MAIN fix/centurion-grip-integration DEPLOYED for L3
 (candidate DLL SHA-256 D35A9EAD05EB6BA45569926156ADAC4629DEEC9EB787B00A8371D054A86F25AE,
 PE32 x86, guard preflight+postflight PASS via change-plan-centurion-integration.json;
-pre-deploy backup install-backups/20261017-105337 + restore-verified rollback path).
+pre-deploy backup install-backups/20261017-105337 verified: d3d9.dll F5E925..., dinput8.dll 5B948D..., INI a6f4b973).
 Steam verified: d3d9.dll=D35A9EAD (on disk), INI=live+CenturionCylinderAnimation=1+
 CenturionShellEjection=1 (all else byte-identical to accepted baseline),
 5 private assets staged+triple-hash-verified (side manifest==source==installed)
 under Binaries/vr-assets/reload/centurion/. Accepted profile re-pinned to the
 user-verified good state (d3d9 F5E925, Fill=1/Window=0/Capture=1, story_voice
-4FEEC18C) after the 6600708D profile pin proved unbuildable (no binary on disk).
-Port scope: ONLY missing Centurion fixes (two-eye mid-eye shoulder + latched yaw,
-cooked-IB native animation, cosmetic shell ejection, NativeSize, DrawInstances);
-accepted features preserved (cuffs, camera stabilization, menu rows, F12,
-L3+R3, mirror). L1/L2 PASS on final tree (incl. GPU fixtures vs INSTALLED
-assets). AWAITING PSVR2 (script in handoff below, NO screenshots):
+4FEEC18C...E020==live, mtime Oct-16-stable); the 6600708D profile pin had no
+matching binary on disk. Port scope: ONLY missing Centurion fixes (two-eye
+mid-eye shoulder + latched yaw, cooked-IB native animation, cosmetic shell
+ejection, NativeSize, DrawInstances); accepted features preserved (cuffs,
+camera stabilization, menu rows, F12, L3+R3, mirror). L1/L2 PASS on final
+tree (incl. GPU fixtures vs INSTALLED assets). AWAITING PSVR2 (NO screenshots):
 (1) intro identical in both eyes, (2) Circle → sideways gun motion opens →
 muzzle down ejects (watch for shell burst), (3) fresh cylinder from LEFT
 shoulder, insert, flick to close, (4) no artifacts/regressions (hands/shadow/
 menu/monitor single image/HMD normal), normal exit. On FAIL: restore backup
-DLL+INI, remove vr-assets/reload/centurion/, verify hashes, report log lines
-(centurion shoulder/mismatch/witness).
+DLL+INI (hashes above), remove vr-assets/reload/centurion/, verify hashes,
+report log lines (centurion shoulder/mismatch/witness).
 
 LATEST 2026-10-17 MAIN fix/centurion-grip-integration (base local main
 513013a): ported ONLY the missing Centurion grip/shoulder fixes from
