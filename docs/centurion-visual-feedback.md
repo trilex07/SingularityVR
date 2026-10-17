@@ -3,6 +3,13 @@
 Base: MAIN integration `9c7db48` (production code `65a3866`), not PR45's
 three-other-weapon branch. ZERO Steam/install access; separate worktree.
 
+Delivery: draft PR https://github.com/trilex07/SingularityVR/pull/48, stacked on
+`fix/centurion-grip-integration` (NOT merged). Branch `fix/centurion-visual-feedback`
+pushed. MAIN's subsequent STATUS-only db0aedb synced without changing any
+compiled source; the clean547f8e0 artifact below is unchanged. Only this task's
+feedback and candidate gates apply; MAIN's other scoped L4 report is not
+acceptance of this new experimental replay.
+
 Observed by user: cylinder travels too far; spare differs in colour and draws
 over hand/gun; inserted cylinder already appears shut; closing gesture starts
 the complete original reload again.
