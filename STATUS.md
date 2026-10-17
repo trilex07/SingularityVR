@@ -15,22 +15,15 @@ OWN GPU shared-depth/material test10609/10609 pixels, no bad pixels, Reset PASS.
 See docs/centurion-visual-feedback.md for exact source, candidate, falsifiers and
 MAIN test route. ZERO Steam/INI/installed asset writes; L3/L4 UNKNOWN.
 
-LATEST 2026-10-17 MAIN fix/centurion-grip-integration DEPLOYED for L3
-(candidate DLL SHA-256 DADE170B579A3C9D5FBDA72327BB1BCD02B7F665DECBC592D3A5A8EF2D4F51EA,
-PE32 x86 /O2 clean build from committed HEAD, guard preflight+postflight PASS
-via change-plan-hud-integration.json; pre-deploy backup
-install-backups/20261017-111929 verified: d3d9.dll D35A9EAD, dinput8.dll
-5B948D, INI live+2 Centurion flags).
-Steam verified: d3d9.dll=DADE170B (on disk), INI=live+CenturionCylinderAnimation=1+
-CenturionShellEjection=1 (mirror Fill=1/Window=0 preserved, WaitForScripts
-defaults ON), 5 Centurion assets intact. AWAITING PSVR2 (NO screenshots):
-(1) intro identical in both eyes, (2) ammo plate single + clamped per eye
-(no peripheral double), (3a) fresh boot: no movement until scripts ready
-(~seconds, log line) then free, (3b) holster/knife rings hidden in
-pause/menu/panel/cine, visible in gameplay, (4) Centurion shoulder/cylinder/
-shell behavior unchanged, no regressions. On FAIL: restore backup DLL+INI,
-remove vr-assets/reload/centurion/, verify hashes, report log lines
-(centurion shoulder/mismatch/witness, scripts ready/hold).
+LATEST 2026-10-17 MAIN fix/centurion-grip-integration L3+L4 PASS (user PSVR2:
+"dziala", render-only, NO screenshots per standing order): intro identical in
+both eyes, single clamped ammo plate per eye, scripts hold then release on
+fresh boot, holster/knife rings hidden in menu+pause, visible in gameplay,
+Centurion shoulder/cylinder/shell behavior intact, no regressions. Deployed
+build DADE170B05EB6BA45569926156ADAC4629DEEC9EB787B00A8371D054A86F25AE
+(PE32 x86 /O2, guard pre/post PASS). Rollback path verified:
+install-backups/20261017-111929 (d3d9.dll F5E925, INI a6f4b973) + remove
+vr-assets/reload/centurion/. PR to main open for review (no self-merge).
 
 LATEST 2026-10-17 MAIN fix/centurion-grip-integration DEPLOYED for L3
 (candidate DLL SHA-256 D35A9EAD05EB6BA45569926156ADAC4629DEEC9EB787B00A8371D054A86F25AE,
