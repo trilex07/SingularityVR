@@ -25,7 +25,7 @@ if ($profile.schema -cne 'singularityvr-accepted-profile-v1' -or $profile.approv
     throw 'Wrong accepted profile or change plan'
 }
 $names = @($metadata.Files | ForEach-Object Name | Sort-Object)
-if ($names.Count -ne 3 -or ($names -join ',') -cne 'SingularityVR.ini,d3d9.dll,dinput8.dll' -or
+if ($names.Count -ne 3 -or ($names -join ',') -cne 'd3d9.dll,dinput8.dll,SingularityVR.ini' -or
     @($metadata.Directories).Count -ne 0) { throw 'Restore scope must be exactly DLL, injector and INI' }
 $gameRoot = Join-Path $SteamRoot 'steamapps\common\Singularity'
 $gameBin = Join-Path $gameRoot 'Binaries'
