@@ -45,6 +45,10 @@
 ShowControllerArms=0
 VfxSmoke=0
 VfxScreenFlash=1
+; MuzzleStereoPerEye: 0 = draw the native muzzle flash once (it lands on the SBS seam), 1 =
+; split the flash draw per eye so each eye gets its own full flash instead of one seam-straddler.
+; Off by default; only meaningful while VR stereo is on.
+MuzzleStereoPerEye=0
 ; ShadowMode: 0=split shadow sampling (debug), 1=mono sample, 2=drop, 3=protect light-space (default).
 ShadowMode=3
 ; GloveIsolate: 0=off, 1=census only, 2=collapse arm flesh + hide stray sleeve section (default).

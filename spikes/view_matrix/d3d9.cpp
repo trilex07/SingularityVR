@@ -20503,6 +20503,48 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     return StereoPair(dev, [&] { return g_origDrawPrimUP(dev, t, primCount, vtxData, vtxStride); });
 }
 
+// Per-eye muzzle flash split. The native muzzle flash is drawn once at full-frame coordinates, so
+// its clip x == 0 lands on the SBS seam: each eye's scissor keeps the half that falls in its region
+// and the two halves meet at the seam. Splitting per eye rewrites clip x so each eye gets its own
+// full flash centred in its half:
+//   left eye : x' = 0.5f * x - 0.5f
+//   right eye: x' = 0.5f * x + 0.5f
+// Returns true if the draw was consumed (split per eye), false to fall through to StereoPair.
+// The vertex rewrite (x' = 0.5*x + eyeOff) is the pure math covered by the L1 test in
+// spikes/muzzle_flash_per_eye/test_muzzle_per_eye.cpp; this hook is the only D3D9 caller.
+static bool DrawMuzzleFlashPerEye(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t, UINT minVtxIndex,
+                                  UINT numVertices, UINT primCount, const void* idxData,
+                                  D3DFORMAT idxFormat, const void* vtxData, UINT vtxStride) {
+    if (!vtxData || numVertices == 0 || primCount == 0) return false;
+    if (vtxStride < 8 || vtxStride > 64) return false;
+    // Muzzle flash is a small screen-space sprite/quad. Reject bulk scene geometry.
+    if (primCount > 8 || numVertices > 16) return false;
+    if (!Readable(vtxData, (size_t)numVertices * vtxStride)) return false;
+    static uint8_t scratch[16 * 64];
+    if ((size_t)numVertices * vtxStride > sizeof(scratch)) return false;
+    memcpy(scratch, vtxData, (size_t)numVertices * vtxStride);
+    DWORD oldScissor = FALSE;
+    dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &oldScissor);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    HRESULT hr = D3D_OK;
+    for (int eye = 0; eye < 2; ++eye) {
+        const float xOff = (eye == 0) ? -0.5f : +0.5f;
+        for (UINT i = 0; i < numVertices; ++i) {
+            float* p = reinterpret_cast<float*>(scratch + (size_t)i * vtxStride);
+            p[0] = p[0] * 0.5f + xOff;
+        }
+        const HRESULT r = g_origDrawIndexedPrimUp(dev, t, minVtxIndex, numVertices, primCount,
+                                                  idxData, idxFormat, scratch, vtxStride);
+        if (FAILED(r) && SUCCEEDED(hr)) hr = r;
+    }
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldScissor);
+    if (SUCCEEDED(hr)) {
+        InterlockedIncrement(&g_muzzleFlashPerEyeDraws);
+        return true;
+    }
+    return false;
+}
+
 HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                                 UINT minVtxIndex, UINT numVertices, UINT primCount,
                                                 const void* idxData, D3DFORMAT idxFormat,
@@ -20634,6 +20676,13 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
         return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                        idxData, idxFormat, vtxData, vtxStride);
     }
+    // Per-eye muzzle flash: split the flash draw per eye before the generic StereoPair path, so each
+    // eye gets its own full flash instead of one seam-straddler. Off by default; gated on
+    // [Render] MuzzleStereoPerEye and VR mode on.
+    if (Rd(g_muzzleStereoPerEye) && VrModeOn() &&
+        DrawMuzzleFlashPerEye(dev, t, minVtxIndex, numVertices, primCount,
+                              idxData, idxFormat, vtxData, vtxStride))
+        return D3D_OK;
     NoteFirstUserPtrDraw("DrawIndexedPrimitiveUP");
     return StereoPair(dev, [&] {
         return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
@@ -21333,6 +21382,11 @@ volatile LONG g_vfxMuzzleOffsetMm = 100;
 volatile LONG g_vfxSmoke = 0;
 volatile LONG g_vfxScreenFlash = 1;
 volatile LONG g_vfxFlashUntilMs = 0;
+// MuzzleStereoPerEye: 0 = draw the native muzzle flash once (it lands on the SBS seam), 1 =
+// split the flash draw per eye so each eye gets its own full flash instead of one seam-straddler.
+// ini [Render] MuzzleStereoPerEye
+volatile LONG g_muzzleStereoPerEye = 0;
+volatile LONG g_muzzleFlashPerEyeDraws = 0;
 volatile LONG g_vfxFrame = 0; // Present serial; each eye draws VFX once per frame.
 static LONG g_vfxEyeDone[2] = { -1, -1 };
 static singularity_vfx::VfxFireEvent g_vfxFireMail;
@@ -31398,6 +31452,16 @@ void LoadIniSettings() {
         g_flashProbeLeft ? "dump the constant registers written just before each stride-72 draw - the"
                            " muzzle flash, identified in run 192"
                          : "off");
+
+    // MuzzleStereoPerEye: 0 = draw the native muzzle flash once (it lands on the SBS seam), 1 =
+    // split the flash draw per eye so each eye gets its own full flash instead of one seam-straddler.
+    // Off by default; only meaningful while VR stereo is on.
+    InterlockedExchange(&g_muzzleStereoPerEye,
+        GetPrivateProfileIntA("Render", "MuzzleStereoPerEye", 0, path) ? 1 : 0);
+    Log("ini: MuzzleStereoPerEye=%d (%s)", Rd(g_muzzleStereoPerEye),
+        Rd(g_muzzleStereoPerEye)
+            ? "split the native muzzle flash per eye"
+            : "draw the native muzzle flash once (lands on the SBS seam)");
 
     // Run 192's census has done its job (the flash is DrawIndexedPrimitiveUP stride 72), so it no longer
     // runs by default. Set it to 1-3 to re-take the baseline/fire diff for a different weapon.
