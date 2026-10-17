@@ -26404,7 +26404,8 @@ struct CenturionRefillBindings {
     uintptr_t klass=0,vtable=0,method[4]{};uint32_t slot[4]{};
 };
 static bool ResolveCenturionRefill(void* self,CenturionRefillBindings& result,centurionrefill::Audit* audit=nullptr){
-    // Only called on a permitted engine request, never each frame/draw. Names
+    // Called on a permitted request or bounded read-only preflight, never each
+    // frame/draw. Names
     // locate the wrapper; ABI + whole-body fingerprint establish what is called.
     const auto object=(uintptr_t)self;
     centurionrefill::Audit local;
@@ -26450,10 +26451,14 @@ static bool ResolveCenturionRefill(void* self,CenturionRefillBindings& result,ce
                         if(!TryLoadAlignedI32(vtable+slot,&methodBits)||!methodBits)return reject("vtable-read");
                         pending.slot[j]=slot;pending.method[j]=(uint32_t)methodBits;++found;report.matched|=1u<<j;
                     }
+                    // The required lookup is complete. Do not inspect an
+                    // unrelated tail field (14:16 preflight: matched=F but
+                    // field-name failed). Exact body/cast checks still follow.
+                    if(found==4)break;
                     int32_t next=0;if(!TryLoadAlignedI32(field+g_upNext,&next)||field==(uint32_t)next)return reject("field-next");
                     field=(uint32_t)next;
                 }
-                if(field)return reject("field-budget"); // no guess when bounded walk exhausted
+                if(field&&found!=4)return reject("field-budget"); // incomplete bounded walk still fails closed
                 break;
             }
             int32_t super=0;if(!TryLoadAlignedI32(cls+g_upNext-4,&super)||cls==(uint32_t)super)return reject("super-read");
