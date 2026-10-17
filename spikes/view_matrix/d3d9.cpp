@@ -19803,6 +19803,12 @@ static bool DrawMuzzleFlashPerEye(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t, UIN
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldScissor);
     if (SUCCEEDED(hr)) {
         InterlockedIncrement(&g_muzzleFlashPerEyeDraws);
+        static bool said = false;
+        if (!said) {
+            said = true;
+            Log("MuzzleStereoPerEye: first split draw (primCount=%u numVerts=%u stride=%u) - "
+                "per-eye flash path is live", primCount, numVertices, vtxStride);
+        }
         return true;
     }
     return false;
