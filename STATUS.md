@@ -1,5 +1,25 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN fix/centurion-visual-followup-integration DEPLOYED for L3
+(candidate DLL SHA-256 58F82A7C2B75F03532B8955A2EAA0B7AB4D485CDB097A402E8CCE1CC45996147,
+PE32 x86 /O2, clean tree f7d601f, manifest dirty=[], guard preflight+postflight
+PASS via re-pinned profile 4BF0D8B0 + files-only plan DADE170B->58F82A7C;
+pre-deploy backup deployment/install-backups/20261017-114157 verified).
+Steam verified: d3d9.dll=58F82A7C on disk; INI=live+CenturionVisualFollowup=1
+(hash 0579F9EB, pre-edit backup .../SingularityVR.ini.pre-visualfollowup,
+all-CRLF, single-key delta; CylinderAnimation=1+ShellEjection=1 retained).
+L1_PASS (cmd rerun EXIT=0: 16 CPU + ABI + 6 Python + IB witness + spare-GPU
+10609/10609 both rounds). L2_PASS (clean rebuild). Re-pin rationale: profile
+now pins user-accepted DADE170B (L3+L4 PASS render-only "dziala"); all other
+installed files hashed equal to old pins, live INI zero-drift vs old profile.
+No new assets. Rollback: deploy Rollback -BackupPath 20261017-114157, or
+restore DADE170B + INI 7ED1239C. AWAITING L3 log + L4 PSVR2 (NO screenshots):
+(1) intro identical both eyes; (2) fire, Circle/open/dump, LEFT-shoulder ammo,
+insert, WAIT 2s no flick (must stay visibly unseated); (3) flick close, ONE
+refill, no second gun sweep; (4) pause/cancel, reload again, normal exit;
+(5) no regressions (plates/rings/menu/shadows/FPS/monitor). MAIN reads
+`ini: CenturionVisualFollowup=1`, `visual followup:` lines, nativeSpareDraws.
+
 LATEST 2026-10-17 MAIN fix/centurion-visual-followup-integration (from db0aedb):
 port of SIDE draft PR #48 source ONLY (5 files, verbatim from
 origin/fix/centurion-visual-feedback@d6d427e: centurion_visual_followup.h,
