@@ -20878,6 +20878,26 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // The identification test - see g_dropStride. Returning S_OK without drawing is how the mod drops
     // draws everywhere else: device state untouched, so the next draw behaves normally.
     if (g_dropStride && vtxStride == (UINT)g_dropStride) { nativefx::RouteObserve(7); return D3D_OK; }
+    // All three audited native muzzle material pairs use c5-c8 as LocalToWorld.
+    // Their affine upload also arms HUD, whose half-frame remap corrupts the
+    // world position. Route the complete measured family through VP stereo.
+    // The exact shader pair/layout is stronger than the small-quad heuristic.
+    const int particleFamily = nativefx::ParticleTarget();
+    if (particleFamily >= 0 && Rd(g_rtIsScene) && VrModeOn() && Rd(g_dupDraws) &&
+        !CutsceneNativeCameraArmed() && !Rd(g_shadowStageMask) &&
+        !(Rd(g_sceneFlatEnabled) && g_sceneMode.Flat())) {
+        bool cameraReady = g_origSetVSConstF && nativefx::ParticleCameraReady(g_camMats,g_camMatUsed);
+        if(Rd(g_shadowMode)==3)for(int s=0;s<g_camMatUsed;++s)
+            if(g_camMats[s].valid&&g_camMats[s].reg==0&&
+               !singularity::shadow::SlotMayRemap(g_shadowRegs,(std::uint32_t)s,true))cameraReady=false;
+        nativefx::ParticleScope particle(particleFamily,cameraReady);
+        if(particle.active){
+            nativefx::ParticleLocalWitness<IDirect3DDevice9> witness(dev,particleFamily);
+            return StereoPair(dev, [&] {
+                return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,
+                    idxData,idxFormat,vtxData,vtxStride); });
+        }
+    }
     // Exact original particle shader: c5-c8 is LocalToWorld, not the HUD's clip
     // transform. The measured HUD route rewrites it and misplaces the effect.
     // Only the opted-in, exact-pair gameplay-scene candidate takes the world path.
@@ -31844,6 +31864,7 @@ void LoadIniSettings() {
             worldVS,worldPS,
             GetPrivateProfileIntA("Diagnostic","NativeMuzzleWorldVSBytes",0,path),
             GetPrivateProfileIntA("Diagnostic","NativeMuzzleWorldPSBytes",0,path));
+        nativefx::ConfigureParticles(GetPrivateProfileIntA("Render","NativeMuzzleParticleStereo",0,path)!=0);
     }
     g_cutsceneScreenDistanceMm=cinemascreen::ClampDistanceMm(
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));

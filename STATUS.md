@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+LATEST MAIN complete native particle correction: offline disassembly of all
+three emitter VS/PS pairs and audit of 15 paired draw groups prove that all
+three receive HUD's c5-c8 half-remap before projection. The previous candidate
+corrected only `488BAE:27DF`, leaving `314D:C118` malformed and `4FAE:2FEC`
+suppressed. New default-OFF `Render/NativeMuzzleParticleStereo` routes the
+three exact audited pairs through camera stereo; accepted drop is bypassed
+only inside a validated corrected draw scope. Original assets remain native.
+L1 PASS; L2 pending. Steam remains on the accepted profile. See the final
+section of `docs/native-muzzle-stereo.md` for evidence and falsifier.
+
 LATEST MAIN 2026-10-17 preserved-drop muzzle PSVR2 test: user-approved Steam
 session PID 27028 ran candidate DLL `F40CCAE2...E9F2`, INI `786C43C9...4010`.
 OpenXR session 5 rendered both eyes; bounded windows showed accepted exact-pair

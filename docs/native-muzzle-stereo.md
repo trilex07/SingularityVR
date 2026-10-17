@@ -545,3 +545,56 @@ constants and rendered contributions. Reuse bounded hooks/traces and an
 idle/post-shot comparison. Do not infer that the glow belongs to `314D:C118`
 (its prior exact drop did not remove the broad glow), or guess projection
 registers. Require a producer-specific falsifier before another correction.
+
+### Complete particle family: disassembly and trace replay
+
+The previous correction covered only `488BAE:27DF`. Review of the **other two**
+original-emitter pairs reveals the same proven local-transform corruption.
+All three captured VS binaries were disassembled offline with D3DDisassemble
+(`tools/knife/inspect_shader.py`). Each computes the particle center with a
+row-vector multiply against `LocalToWorld` c5-c8, builds its billboard, then
+multiplies that result by `ViewProjectionMatrix` c0-c3. Their pixel shaders
+sample the original texture at s0 and apply particle color/fog; none samples a
+scene-color reconstruction buffer. Original textures/materials remain in use.
+
+`tools/fx/audit_native_particle_transforms.py` audited the three complete
+post-shot traces from PID 22704. It found **15 left/right draw-group pairs**
+with identical camera c0-c3, changed local c5-c8, and exactly matching native
+local matrices after inverting the HUD half-remap (max recovery error 0).
+Each trace contains 3 groups for `314D:C118`, 1 for `488BAE:27DF`, and 1 for
+`4FAE:2FEC`, each with two eyes. This is evidence for a common transform bug
+in all three families, independent of a semantic label such as smoke or glow.
+
+The mathematical defect is applying the eye half-remap **before projection**:
+`position * LocalToWorld * half-remap * VP` instead of
+`position * LocalToWorld * VP * half-remap`. Affine LocalToWorld has w-column
+`(0,0,0,1)`, so HudStereoPair's orthographic check accepts it. The eye offset
+then uses world units instead of homogeneous clip w. A synthetic perspective
+replay in `test_native_particle_transforms.py` reproduces the difference and
+checks the correct chain while leaving the original local matrix untouched.
+
+Hypothesis: the sparks improved because only their selected material gained
+correct camera stereo; the remaining native materials retained HUD transforms.
+An isolated drop leaving the glow visible does not disprove the corruption of
+that dropped material; other malformed draws remain. The falsifier for the
+complete fix is all three corrected family counts with valid ROW c0 and
+unchanged local matrices, while the user still sees misplaced light/smoke.
+Then investigate emitter/controller anchoring using actual vertex positions.
+
+Implemented behind default-OFF `[Render] NativeMuzzleParticleStereo=1`:
+exact VS+PS hashes and byte lengths, CTAB VP=0/local=5, gameplay scene and
+tracked ROW camera guards route the three known families through StereoPair.
+The known world shader identity takes precedence over the small-quad heuristic.
+The old accepted mode-1 drop is bypassed **only within a validated corrected
+draw scope** so the third native material can render; outside that scope and
+with the flag OFF its behavior is unchanged. No new emitter, texture, vertex,
+weapon, scene-light or shader-bytecode writes. Per-eye camera/scissor restoration
+uses the existing StereoPair; a maximum of three local-matrix before/after
+samples per family checks state preservation, with bounded aggregate logging.
+A mismatch disables the new feature and retains the accepted drop behavior.
+
+L1 passes exact family/layout rejection, absent/overlapping/wrong-convention
+camera refusal, scoped drop bypass/restoration, bounded read-only local witness,
+and synthetic coordinate-space replay. Offline audit and these tests do not
+constitute L3/L4 acceptance. Candidate preparation uses `-ParticleStereo
+-NoProbe`, one new INI key, and the existing accepted-profile/restore guard.

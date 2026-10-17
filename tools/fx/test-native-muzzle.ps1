@@ -18,3 +18,5 @@ python (Join-Path $repo 'tools\tests\test-shadow-trace-analysis.py')
 if($LASTEXITCODE -ne 0){throw 'trace analysis regression failed'}
 python (Join-Path $PSScriptRoot 'test_native_muzzle_analysis.py')
 if($LASTEXITCODE -ne 0){throw 'native muzzle analysis tests failed'}
+python (Join-Path $PSScriptRoot 'test_native_particle_transforms.py')
+if($LASTEXITCODE -ne 0){throw 'native particle transform tests failed'}

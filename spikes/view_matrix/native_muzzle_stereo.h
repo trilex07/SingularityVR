@@ -5,6 +5,12 @@
 namespace nativefx {
 static Selection selected,worldSelected;
 static bool fault=false,context=false;
+static bool particleStereo=false;
+static unsigned particleDepth=0;
+struct ParticleStats {unsigned routed=0,refused=0,restored=0,restoreMismatch=0;};
+static ParticleStats particleStats[3]{};
+static unsigned particleReports=0;
+static unsigned particleSamples[3]{};
 static volatile LONG probe=0;
 inline bool Probe(){return InterlockedCompareExchange(&probe,0,0)!=0;}
 // Read-only, bounded path census for the explicitly selected shader pair.
@@ -15,7 +21,7 @@ static volatile LONG routeCounts[11]{}; // selected indexed-UP entry and mutuall
 static unsigned pathReports=0;
 inline bool PathWitness(){return InterlockedCompareExchange(&pathWitness,0,0)!=0;}
 static volatile LONG shots=0;
-struct Shader {IUnknown* object=nullptr;std::uint64_t hash=0;unsigned bytes=0;int camera=-1;};
+struct Shader {IUnknown* object=nullptr;std::uint64_t hash=0;unsigned bytes=0;int camera=-1,local=-1;};
 static Shader shaders[1024],vs,ps;static unsigned used=0,overflow=0;
 inline void PathObserve(unsigned api,bool inStereoPair){
     if(!PathWitness()||api>=4)return;
@@ -60,7 +66,7 @@ inline void DumpWitness(){
     witnessCount=witnessOverflow=0;
     if(capture.stage==4){InterlockedExchange(&probe,0);Log("native-fx: automatic capture complete; probe overhead disabled, not visual acceptance");}
 }
-inline bool Enabled(){return Probe()||selected.Valid()||worldSelected.Valid();}
+inline bool Enabled(){return Probe()||selected.Valid()||worldSelected.Valid()||particleStereo;}
 template<class T> Shader Describe(T* shader,bool vertex){
     if(!Enabled()||!shader)return {};
     unsigned slot=1024;const unsigned first=(unsigned)(((uintptr_t)shader>>4)*2654435761u)&1023;
@@ -72,14 +78,55 @@ template<class T> Shader Describe(T* shader,bool vertex){
     static thread_local DWORD code[8192];UINT bytes=sizeof(code);Shader result;
     if(SUCCEEDED(shader->GetFunction(code,&bytes))&&bytes>=8&&bytes%4==0&&bytes<=sizeof(code)){
         result.hash=Hash(code,bytes);result.bytes=bytes;
-        if(vertex)result.camera=skeletal::ReadLayout(reinterpret_cast<const uint32_t*>(code),bytes/4).viewProjection;
+        if(vertex){const auto layout=skeletal::ReadLayout(reinterpret_cast<const uint32_t*>(code),bytes/4);
+            result.camera=layout.viewProjection;result.local=layout.local;}
     }
     shader->AddRef();result.object=shader;shaders[slot]=result;++used;return result;
 }
 inline void BindVS(IDirect3DVertexShader9* shader){vs=Describe(shader,true);}
 inline void BindPS(IDirect3DPixelShader9* shader){ps=Describe(shader,false);}
 inline bool Match(){return !fault&&context&&selected.Match(vs.hash,ps.hash,vs.bytes,ps.bytes);}
-inline bool Drop(){if(selected.mode==1&&Match()){++dropped;return true;}return false;}
+inline bool Drop(){
+    // The accepted exact drop is bypassed only inside a validated correction
+    // scope, so the native third material can render at its repaired position.
+    if(particleDepth&&ParticleFamily(vs.hash,ps.hash,vs.bytes,ps.bytes)>=0)return false;
+    if(selected.mode==1&&Match()){++dropped;return true;}return false;
+}
+inline int ParticleTarget(){
+    if(!particleStereo||fault||!context||vs.camera!=0||vs.local!=5)return -1;
+    return ParticleFamily(vs.hash,ps.hash,vs.bytes,ps.bytes);
+}
+// No D3D writes: only a scoped authorization to draw the native material.
+// The regular StereoPair owns camera/scissor changes and their restoration.
+struct ParticleScope {
+    bool active=false;
+    ParticleScope(int index,bool cameraReady){
+        if(index<0||index>=3)return;
+        if(!cameraReady){++particleStats[index].refused;return;}
+        ++particleDepth;++particleStats[index].routed;active=true;
+    }
+    ~ParticleScope(){if(active)--particleDepth;}
+    ParticleScope(const ParticleScope&)=delete;
+    ParticleScope& operator=(const ParticleScope&)=delete;
+};
+inline void ConfigureParticles(bool enabled){
+    particleStereo=enabled;particleDepth=particleReports=0;
+    for(unsigned i=0;i<3;++i){particleStats[i]={};particleSamples[i]=0;}
+    Log("native-fx: particleStereo=%d; three audited original pairs, VP c0 ROW, LocalToWorld c5 preserved; scoped drop bypass",enabled?1:0);
+}
+template<class Dev> struct ParticleLocalWitness {
+    Dev* dev;int index;float before[16]{};bool read=false;
+    ParticleLocalWitness(Dev* d,int i):dev(d),index(i){
+        if(i<0||i>=3||particleSamples[i]>=3)return;
+        ++particleSamples[i];read=SUCCEEDED(dev->GetVertexShaderConstantF(5,before,4));
+    }
+    ~ParticleLocalWitness(){
+        if(!read)return;float after[16]{};
+        if(SUCCEEDED(dev->GetVertexShaderConstantF(5,after,4))&&!memcmp(before,after,sizeof(before)))
+            ++particleStats[index].restored;
+        else {++particleStats[index].restoreMismatch;particleStereo=false;}
+    }
+};
 inline bool WorldTargetMatch(){
     if(fault||!context)return false;
     if(worldSelected.Valid())return worldSelected.Match(vs.hash,ps.hash,vs.bytes,ps.bytes);
@@ -96,6 +143,8 @@ inline void Release(){
     used=0;vs={};ps={};context=false;witnessCount=witnessOverflow=0;
 }
 inline void Configure(int mode,bool trace,const char* v,const char* p,unsigned vb,unsigned pb,int convention,bool pathEnabled=false){
+    particleStereo=false;particleDepth=particleReports=0;
+    for(unsigned i=0;i<3;++i){particleStats[i]={};particleSamples[i]=0;}
     Release();selected={};worldSelected={};InterlockedExchange(&probe,trace?1:0);fault=false;capture={};captureWeapon=0;probeStart=0;InterlockedExchange(&shots,0);worldRerouted=worldCameraValid=worldCameraC0=worldCameraFallback=0;
     for(auto& row:pathCounts)for(auto& count:row)InterlockedExchange(&count,0);
     for(auto& count:routeCounts)InterlockedExchange(&count,0);
@@ -161,6 +210,13 @@ inline void Boundary(bool ready,bool busy,unsigned weapon){
 inline void Summary(){
     if(!Enabled())return;
     static ULONGLONG last=0;const ULONGLONG now=GetTickCount64();if(now-last<2000)return;last=now;
+    for(unsigned i=0;i<3;++i){auto& s=particleStats[i];
+        if((s.routed||s.refused||s.restored||s.restoreMismatch)&&particleReports<24){
+            Log("native-fx particles: family=%u routed=%u refusedCamera=%u localRestored=%u localMismatch=%u",i,s.routed,s.refused,s.restored,s.restoreMismatch);
+            ++particleReports;
+        }
+        s={};
+    }
     if(PathWitness()){
         LONG counts[4][2]{};bool any=false;
         for(unsigned a=0;a<4;++a)for(unsigned s=0;s<2;++s){

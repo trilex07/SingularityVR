@@ -13,6 +13,7 @@ param(
     [switch]$NativeFxOffControl,
     [switch]$ObserveRoute,
     [switch]$WorldRoute,
+    [switch]$ParticleStereo,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -123,8 +124,23 @@ if ($probeBefore -ne '0' -or $modeBefore -ne '1') {
 }
 
 $dropRequested = $DropVSHash -or $DropPSHash -or $DropVSBytes -or $DropPSBytes
-if ($NoProbe -and -not ($dropRequested -or $PathWitness)) {
+if ($NoProbe -and -not ($dropRequested -or $PathWitness -or $ParticleStereo)) {
     throw '-NoProbe is only valid for an exact-pair visual discriminator; baseline capture requires the bounded probe.'
+}
+if ($ParticleStereo) {
+    if (-not $NoProbe -or $dropRequested -or $PathWitness -or $WorldRoute -or $ObserveRoute -or $NativeFxOffControl) {
+        throw '-ParticleStereo requires -NoProbe and is exclusive of other experimental controls.'
+    }
+    $particleKey = 'Render/NativeMuzzleParticleStereo'
+    if ($iniValues.ContainsKey($particleKey) -or @($profile.ini.PSObject.Properties | Where-Object { $_.Name -ceq $particleKey }).Count) {
+        throw 'Particle stereo key already exists; refusing to overwrite an unknown setting.'
+    }
+    foreach ($key in @('Diagnostic/NativeMuzzleVSHash','Diagnostic/NativeMuzzlePSHash','Diagnostic/NativeMuzzleVSBytes','Diagnostic/NativeMuzzlePSBytes','Render/HideMuzzleFx','Render/VfxHost')) {
+        if ($iniValues[$key] -cne (Get-ProfileIniValue $key)) { throw "Installed particle baseline differs from profile: $key" }
+    }
+    if ($iniValues['Render/HideMuzzleFx'] -ne '0' -or $iniValues['Render/VfxHost'] -ne '0') {
+        throw 'Particle test requires original emitter ON and generated VFX OFF.'
+    }
 }
 if ($NativeFxOffControl) {
     if ($NoProbe -or $PathWitness -or $dropRequested) {
@@ -191,7 +207,13 @@ $iniChanges = [System.Collections.Generic.List[object]]::new()
 if ($probeAfter -ne $probeBefore) {
     $iniChanges.Add([ordered]@{ key = $probeKey; before = $probeBefore; after = $probeAfter; reason = $probeReason })
 }
-if ($PathWitness) {
+if ($ParticleStereo) {
+    $modeAfter = $modeBefore
+    $newline = if ($iniText.Contains("`r`n")) { "`r`n" } else { "`n" }
+    $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes '[Render]' "[Render]${newline}NativeMuzzleParticleStereo=1"
+    $iniChanges.Add([ordered]@{ key = 'Render/NativeMuzzleParticleStereo'; before = $null; after = '1'; reason = 'Route all three audited original particle pairs through VP stereo, preserve LocalToWorld; bypass accepted drop only inside validated corrected draw scope.' })
+    $planReason = 'MAIN particle family coordinate-space correction: exact three native shader pairs, default OFF, c0 ROW stereo, c5-c8 unchanged; bounded restoration witness, no readback capture or generated FX.'
+} elseif ($PathWitness) {
     $modeAfter = if ($ObserveRoute) { '3' } else { $modeBefore }
     $newline = if ($iniText.Contains("`r`n")) { "`r`n" } else { "`n" }
     $worldKeys = if ($WorldRoute) {
@@ -273,7 +295,7 @@ if ($PathWitness) {
         $planReason = 'MAIN L3 native muzzle capture: preserve accepted profile; set only NativeMuzzleProbe=1 and NativeMuzzleStereoMode=0 for native-only baseline traces.'
     }
 }
-if (-not $dropRequested -and -not $PathWitness -and $candidateIniBytes.Length -ne $iniBytes.Length) {
+if (-not $dropRequested -and -not $PathWitness -and -not $ParticleStereo -and $candidateIniBytes.Length -ne $iniBytes.Length) {
     throw 'Baseline probe substitutions unexpectedly changed the INI size.'
 }
 
