@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN VFX isolation (b) RESULT (user) + log: plugin-only shows
+NO smoke + NO flash, but shot effect visible UNDER the gun instead of muzzle.
+Log 13:41: init loaded, overlay n=1 x12 (budget saturated, items flow). Both
+SIDE predictions confirmed: smoke was native (gone in (b)); anchor bug visual
+(GunPivotWorld + 150 mm fwd, zero UP). (a)+(b) combined: native-only = total
+silence, plugin-only = misplaced small effect. DECISIONS for SIDE (needs code+
+stub+L1/L2, then MAIN L3): UP component/per-gun muzzle table (pivot!=muzzle,
+150 mm short for rifles); bigger/longer stub flash (4.5 cm/33 ms invisible);
+stay one-system (plugin-only (b) kept installed: VfxHost=1/HideMuzzleFx=1,
+INI 52CCD7D4). Native contributes nothing visible in VR.
+
 LATEST 2026-10-17 MAIN VFX isolation (b) RUNNING: VfxHost=1 + HideMuzzleFx=1
 (plugin-only; INI 8D0E27E4->52CCD7D4, pre-edit backup in 132624 dir).
 Session (a) RESULT (user): native-only shows NOTHING (no smoke, no flash) —
