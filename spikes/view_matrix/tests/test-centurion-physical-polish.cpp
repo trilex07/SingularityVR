@@ -65,6 +65,12 @@ int main(){
         const auto trackingVelocity=centurionshells::ToTracking(burst.cases[i].velocity,world);
         assert(hipknife::Dot(trackingVelocity,muzzle)<-.3f); // rearward, NEVER out of muzzle
     }
+    cfg.deliberateClose=true;s.phase=P::Loaded;s.since=f.nowMs;s.stageGun=f.gun;
+    s.startClip=f.clip;s.startReserve=f.reserve;s.startCapacity=f.capacity;
+    // Ordinary slow placement/stowing movement must NOT authorize reload.
+    for(unsigned step=0;step<12;++step){f.nowMs+=100;f.gun.p.x+=.02f;
+        assert(!centurionreload::Update(s,f,cfg).requestNative&&s.phase==P::Loaded);}
+    f.nowMs+=20;f.gun.p.x+=.09f;assert(centurionreload::Update(s,f,cfg).requestNative);
     GripWitness witness{{1,2,3,1000,{0,0,0},true},Identity()};
     assert(witness.Current(1,2,3,1100)&&!witness.Current(1,2,3,1101)&&!witness.Current(1,2,4,1000));
     f.context=false;assert(centurionreload::Update(s,f,cfg).event==E::Cancelled);

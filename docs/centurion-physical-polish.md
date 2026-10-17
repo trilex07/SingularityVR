@@ -67,6 +67,11 @@ patches, hooks or Steam/INI edits. Native ammo/notifies still execute.
   lock contention and NPC/foreign objects still take the documented safe
   forwarding fallback; this is not an all-states never-refill guarantee.
   An already admitted native reload is not undone by inventing ammo writes.
+  Closing also needs a genuinely quick local sideways/roll sample (>=.45m/s
+  or~2rad/s over <=100ms), in addition to the existing7cm/roll excursion and
+  100ms Loaded dwell. Slow placement or moving the gun toward the belt does
+  not by itself authorize reload. These are authored VR gesture thresholds,
+  not guessed engine offsets; legacy OFF controls are unchanged.
 
 New bounded input counters: `centurion physical: ... rightHeld/palmPublished/
 palmReplays` (path evidence only). Separate eight-record stored-hook budget:

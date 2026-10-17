@@ -9806,7 +9806,7 @@ bool InitXRInput() {
     }
 
     if(g_centurionPhysicalPolish&&!CenturionPhysicalHandsReady()){
-        g_centurionPhysicalPolish=0;g_centurionConfig.upwardEjection=false;
+        g_centurionPhysicalPolish=0;g_centurionConfig.upwardEjection=g_centurionConfig.deliberateClose=false;
         Log("centurion physical: required native noTMD glove path unavailable; experimental mode disabled, previous route retained");
     }
     XrActionSetCreateInfo asci{ XR_TYPE_ACTION_SET_CREATE_INFO };
@@ -32179,6 +32179,7 @@ void LoadIniSettings() {
     g_centurionConfig.circleOpens=g_centurionTrackedCylinder!=0;
     g_centurionPhysicalPolish=g_centurionTrackedCylinder&&GetPrivateProfileIntA("Input","CenturionPhysicalPolish",0,path);
     g_centurionConfig.upwardEjection=g_centurionPhysicalPolish!=0;
+    g_centurionConfig.deliberateClose=g_centurionPhysicalPolish!=0;
     Log("ini: CenturionPhysicalPolish=%d (default OFF; upward case dump, palm presentation, stored-weapon guard)",g_centurionPhysicalPolish);
     Log("ini: CenturionTrackedCylinder=%d (default OFF; Circle opens LEFT, full controller-relative root, measured render socket)",g_centurionTrackedCylinder);
     Log("ini: CenturionVisualFollowup=%d (default OFF; compact open/hold + native material/depth replay; NOT physical acceptance)",
