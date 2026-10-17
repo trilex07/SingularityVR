@@ -213,3 +213,35 @@ or resource gates changed. Falsifier: exact pair hits remain absent after
 eviction, or route rejection prevents both-eye correction. L1 regression feeds
 128 nonmatching objects before a matching 129th, verifies recognition/cache hit,
 and checks all references are released. Scope restoration/math tests also pass.
+
+## Pre-test audit: recorded matrices and diagnostic load
+
+Added CPU regression from actual PID15548 groups171/172 VS c0..3 and PS c3..6.
+For 25 sample points, converting the recorded left-screen basis to the recorded
+right-screen basis preserves the same light coordinate within 1e-5 (float).
+Leaving the recorded light matrix unchanged produces error above 0.01. A
+double-precision check at [2,-3,100,1] yields corrected error 1.39e-17 versus
+uncorrected x error 0.0137676. These are transform-coordinate errors, NOT pixels.
+The native pre-VR camera was not captured in that trace: this proves the
+eye-to-eye algebra and register convention, not absolute canvas alignment.
+Shader disassembly explicitly reconstructs depth via PS c2, combines x*depth,
+y*depth, depth with c3..c6, then divides by light z before sampling the atlas.
+
+PID30976 performance evidence: five automatic 71,131,446-byte BMP files;
+16 MenuDrawTrace flushes, 9,781 emitted groups and 4,478 dropped groups.
+Source confirms automatic captures in CopyBackbufferToD3D11 and eight-frame
+menu census with D3D state queries. Their costs are not timed individually,
+so no causal claim about the collapsing-building hitch is justified yet.
+Aggregate active-controller bucket ends around 85 FPS with 2% missed frames;
+this bucket mixes gameplay and transitions. Residual is not mod-only CPU time.
+
+Next candidate keeps aggregate timing and projector gate counters; adds opt-out
+Diagnostic/MenuDrawTrace=0 and MenuProofCapture=0. Defaults remain 1 for existing
+profiles. This skips automatic full-resolution menu proof readbacks and menu
+census, without altering menu drawing or explicit screenshots. Small native
+RTT probe images can still occur on pause; exclude pause from gameplay timing.
+No external trace/screenshot scheduler is needed for the next test.
+Acceptance: both-eye applied counters with zero restore faults AND physical
+stable projection front/side. Record separate resource/depth/constants/math
+rejections if blocked. Inspect FPS on the route before entering the room;
+improvement with diagnostics off alone does not prove engine-scene cost solved.

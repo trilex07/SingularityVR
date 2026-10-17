@@ -9,6 +9,7 @@ static float nativeVP[16]{},trackedBase[16]{};
 struct Entry{IUnknown* shader;bool match;};
 static Entry cache[128]{};static unsigned used=0,nextEviction=0;
 static unsigned classified=0,evictions=0,vsHits=0,psHits=0,pairHits=0,routeRejects=0,shapeRejects=0,cameraRejects=0;
+static unsigned resourceRejects=0,depthRejects=0,constantRejects=0,mathRejects=0;
 static unsigned applied[2]{},rejected=0,restoreFailures=0;
 inline void Release(){for(unsigned i=0;i<used;++i)cache[i].shader->Release();used=nextEviction=0;vsMatch=psMatch=nativeValid=false;}
 inline void Configure(bool on){InterlockedExchange(&configured,on?1:0);}
@@ -43,8 +44,10 @@ inline void Poll(){
     if(enabled&&(classified||vsHits||psHits||pairHits||rejected||restoreFailures)){
         Log("PROJECTOR_RECONSTRUCTION left=%u right=%u rejected=%u restoreFailures=%u fault=%d",applied[0],applied[1],rejected,restoreFailures,fault?1:0);
         Log("PROJECTOR_GATES classified=%u evictions=%u vs=%u ps=%u pair=%u routeRejected=%u shapeRejected=%u cameraRejected=%u",classified,evictions,vsHits,psHits,pairHits,routeRejects,shapeRejects,cameraRejects);
+        Log("PROJECTOR_DATA resourceRejected=%u depthRejected=%u constantRejected=%u mathRejected=%u",resourceRejects,depthRejects,constantRejects,mathRejects);
         applied[0]=applied[1]=rejected=restoreFailures=0;}
     classified=evictions=vsHits=psHits=pairHits=routeRejects=shapeRejects=cameraRejects=0;
+    resourceRejects=depthRejects=constantRejects=mathRejects=0;
 }
 struct Scope {
     IDirect3DDevice9* dev;float saved[16]{};bool changed=false;
@@ -75,9 +78,12 @@ struct Scope {
             (left||right)&&sc.top==0&&sc.bottom==(LONG)rt.Height&&
             vp.X==0&&vp.Y==0&&vp.Width==rt.Width&&vp.Height==rt.Height;
         float depth[4]{},eye[16]{},corrected[16]{};
-        if(!resources||FAILED(dev->GetPixelShaderConstantF(2,depth,1))||!worldshadowmath::WorldDepth(depth)||
-            FAILED(dev->GetVertexShaderConstantF(0,eye,4))||FAILED(dev->GetPixelShaderConstantF(3,saved,4))||
-            !projectormath::Correct(nativeVP,eye,saved,corrected)){++rejected;return;}
+        if(!resources){++rejected;++resourceRejects;return;}
+        if(FAILED(dev->GetPixelShaderConstantF(2,depth,1))||!worldshadowmath::WorldDepth(depth)){
+            ++rejected;++depthRejects;return;}
+        if(FAILED(dev->GetVertexShaderConstantF(0,eye,4))||FAILED(dev->GetPixelShaderConstantF(3,saved,4))){
+            ++rejected;++constantRejects;return;}
+        if(!projectormath::Correct(nativeVP,eye,saved,corrected)){++rejected;++mathRejects;return;}
         changed=true;
         if(FAILED(dev->SetPixelShaderConstantF(3,corrected,4))){
             ++rejected;if(FAILED(dev->SetPixelShaderConstantF(3,saved,4))){++restoreFailures;fault=true;}

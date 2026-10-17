@@ -5825,6 +5825,7 @@ void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detect
 static void StartupReadinessFrame(IDirect3DDevice9* dev);
 static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer = false);
 static volatile LONG g_pauseCaptureRequested = 0;
+static volatile LONG g_menuProofCapture = 1;
 const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::d3d9_to_d3d11_copy);
     // CutsceneFlat mono composition runs before every overlay and before either
@@ -5868,7 +5869,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     StartupReadinessFrame(dev); // LAST overlay: both GPU and CPU copies receive the same curtain
     // Bounded pause diagnostics must read the actual source passed to XR, after
     // every overlay. RT0 restored by overlays can instead be the scene texture.
-    if (InterlockedExchange(&g_pauseCaptureRequested, 0)) SaveBackbufferCapture(dev, true);
+    if (InterlockedExchange(&g_pauseCaptureRequested, 0) && Rd(g_menuProofCapture)) SaveBackbufferCapture(dev, true);
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return nullptr;
     D3DSURFACE_DESC sd{};
@@ -31696,6 +31697,9 @@ void LoadIniSettings() {
     // keys use ON, so existing INIs need no overwrite or temporary flag files.
     const bool worldShadow=GetPrivateProfileIntA("Render","ShadowWorldReceiverFix",1,path)!=0;
     projectorfix::Configure(GetPrivateProfileIntA("Render","ProjectorWorldStereo",0,path)!=0);
+    InterlockedExchange(&g_menuDrawTrace,GetPrivateProfileIntA("Diagnostic","MenuDrawTrace",1,path)!=0);
+    InterlockedExchange(&g_menuProofCapture,GetPrivateProfileIntA("Diagnostic","MenuProofCapture",1,path)!=0);
+    Log("menu diagnostics: drawTrace=%ld proofCapture=%ld",Rd(g_menuDrawTrace),Rd(g_menuProofCapture));
     const bool foregroundShadow=GetPrivateProfileIntA("Render","ShadowForegroundClearFix",1,path)!=0;
     const bool firstShadow=GetPrivateProfileIntA("Render","ShadowFirstPersonReceiverFix",1,path)!=0;
     const bool inputCache=GetPrivateProfileIntA("Input","InputEnumerationCache",1,path)!=0;

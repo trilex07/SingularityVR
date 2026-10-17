@@ -22,4 +22,30 @@ int main(){
     }
     float invalid[16]{};assert(!projectormath::Correct(native,invalid,light,same));
     invalid[0]=std::numeric_limits<float>::quiet_NaN();assert(!projectormath::Correct(invalid,native,light,same));
+    // Recorded PID15548 groups171/172. Validate eye-to-eye invariance using the
+    // actual camera/light constants, independently of the missing native VP.
+    // This proves the transform identity, not absolute placement on the canvas.
+    const float left[16]={-.608929157f,.0155705884f,.922247648f,.923170805f,
+        .162987962f,.0603301711f,.380764961f,.381146103f,
+        -.000469023362f,.749872088f,-.0497838929f,-.0498337261f,
+        .118439734f,-.54312712f,-8.92222023f,1.06884885f};
+    const float right[16]={.314241648f,.0155705884f,.922247648f,.923170805f,
+        .54413408f,.0603301711f,.380764961f,.381146103f,
+        -.0503027514f,.749872088f,-.0497838929f,-.0498337261f,
+        -.449118376f,-.54309082f,-8.9200983f,1.07097304f};
+    const float recordedLight[16]={.00283966935f,.00000402826117f,.00117985404f,0,
+        -.0000390042005f,-.00156513753f,.0000992188725f,0,
+        -.000373972754f,.0000663529063f,.000899704173f,0,
+        -.0119514465f,-.000240072608f,.168351173f,.999999821f};
+    float sl[16],sr[16],fixed[16];projectormath::Screen(left,sl);projectormath::Screen(right,sr);
+    assert(projectormath::Correct(left,right,recordedLight,fixed));
+    float maxUncorrected=0;
+    for(int z=20;z<=500;z+=20){
+        float p[4]={2,-3,(float)z,1},a[4],b[4],expected[4],actual[4],bad[4];
+        Point(p,sl,a);Point(p,sr,b);Point(a,recordedLight,expected);
+        Point(b,fixed,actual);Point(b,recordedLight,bad);
+        for(int c=0;c<3;++c){assert(std::fabs(actual[c]-expected[c])<1e-5f);
+            maxUncorrected=std::max(maxUncorrected,std::fabs(bad[c]-expected[c]));}
+    }
+    assert(maxUncorrected>.01f);
 }

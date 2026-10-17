@@ -51,7 +51,7 @@ static void MenuDrawTraceState() {
     }
     if(InterlockedExchange(&g_menuDrawTraceDump,0))MenuDrawTraceFlush();
 }
-static void MenuDrawTraceFrame(){++g_menuTraceFrame;g_menuTraceOrdinal=0;MenuDrawTraceState();}
+static void MenuDrawTraceFrame(){if(!Rd(g_menuDrawTrace))return;++g_menuTraceFrame;g_menuTraceOrdinal=0;MenuDrawTraceState();}
 static void MenuDrawTraceRecord(IDirect3DDevice9* dev,unsigned kind,D3DPRIMITIVETYPE t,
         UINT primitives,UINT vertices,UINT start,UINT minIndex,INT base,const void* data,UINT stride,bool suppressed=false) {
     if(!Rd(g_menuDrawTrace))return;

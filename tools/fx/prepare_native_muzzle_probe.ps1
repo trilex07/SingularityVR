@@ -15,6 +15,7 @@ param(
     [switch]$WorldRoute,
     [switch]$ParticleStereo,
     [switch]$ProjectorStereo,
+    [switch]$QuietMenuDiagnostics,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -307,6 +308,16 @@ if ($ProjectorStereo) {
     $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes '[Render]' "[Render]${newline}ProjectorWorldStereo=1"
     $iniChanges.Add([ordered]@{ key = 'Render/ProjectorWorldStereo'; before = $null; after = '1'; reason = 'Exact captured light-function pair: per-eye ScreenToLight reconstruction; retained accepted native particle stereo.' })
     $planReason = 'MAIN projector test: preserve accepted muzzle fix and change only the exact projector reconstruction versus preceding projector capture session. No performance changes.'
+}
+if ($QuietMenuDiagnostics) {
+    $newline = if ($iniText.Contains("`r`n")) { "`r`n" } else { "`n" }
+    foreach ($name in @('MenuDrawTrace','MenuProofCapture')) {
+        $key = "Diagnostic/$name"
+        if ($iniValues.ContainsKey($key)) { throw "Refusing to overwrite existing diagnostic setting: $key" }
+        $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes '[Diagnostic]' "[Diagnostic]${newline}${name}=0"
+        $iniChanges.Add([ordered]@{key=$key;before=$null;after='0';reason='Exclude automatic menu census and full-resolution proof readbacks from projector/performance test; aggregate timing remains.'})
+    }
+    $planReason += ' Automatic menu census and proof screenshots disabled to reduce diagnostic contamination; performance causality still requires runtime measurement.'
 }
 New-Item -ItemType Directory -Path $artifactPath | Out-Null
 $stageDll = Join-Path $artifactPath 'd3d9.dll'
