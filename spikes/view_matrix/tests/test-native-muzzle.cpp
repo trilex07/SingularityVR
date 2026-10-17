@@ -44,11 +44,14 @@ int main(){
     assert(!Hex("gggggggggggggggg",h));assert(Hex("CBF29CE484222325",h));assert(h==Hash("",0));
     assert(Hash("hello",5)==0xa430d84680aabd0bull);
     {Selection unknown{11,22,128,256,2};assert(!unknown.Valid());unknown.convention=0;assert(unknown.Valid());}
-    {Selection m1; m1.mode = 1; assert(m1.Valid());
+    {Selection m1; m1.mode = 1; assert(!m1.Valid());
+     assert(!m1.Match(0x4FAEF2389750DBFCull, 0x2FEC493CD52D7D78ull, 2908, 336));
+     m1.vs=0x4FAEF2389750DBFCull;m1.ps=0x2FEC493CD52D7D78ull;m1.vsBytes=2908;m1.psBytes=336;
+     assert(m1.Valid());
      assert(m1.Match(0x4FAEF2389750DBFCull, 0x2FEC493CD52D7D78ull, 2908, 336));
-     assert(m1.Match(0x488BAEB579E71A73ull, 0x27DFE7D9C67BCC03ull, 2968, 452));
-     assert(m1.Match(0x314D478A9CFDBE37ull, 0xC118540CCDBCB241ull, 3384, 448));
-     assert(!m1.Match(0x1234ull, 0x5678ull, 100, 100));}
+     assert(!m1.Match(0x488BAEB579E71A73ull, 0x27DFE7D9C67BCC03ull, 2968, 452));
+     assert(!m1.Match(0x4FAEF2389750DBFCull, 0x2FEC493CD52D7D78ull, 2908, 340));
+     m1.vs=0;m1.vsBytes=0;assert(!m1.Valid());}
     {FakeShader shader;selected={};probe=false;assert(!Describe(&shader,true).hash&&!shader.queries);
         probe=true;auto first=Describe(&shader,true);assert(first.camera==12&&first.bytes==88&&shader.refs==2);
         assert(Describe(&shader,true).hash==first.hash&&shader.queries==1&&used==1);

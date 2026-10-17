@@ -67,8 +67,7 @@ inline void Release(){
 inline void Configure(int mode,bool trace,const char* v,const char* p,unsigned vb,unsigned pb,int convention){
     Release();selected={};InterlockedExchange(&probe,trace?1:0);fault=false;capture={};captureWeapon=0;probeStart=0;InterlockedExchange(&shots,0);
     if(mode==1||mode==2){Selection x;x.mode=mode;x.vsBytes=vb;x.psBytes=pb;x.convention=convention;
-        Hex(v,x.vs); Hex(p,x.ps);
-        if(x.Valid())selected=x;}
+        if(Hex(v,x.vs)&&Hex(p,x.ps)&&x.Valid())selected=x;}
     Log("native-fx: probe=%d mode=%d (0 unchanged,1 selected-pair drop,2 exact camera alias); no replacement FX",Probe()?1:0,selected.mode);
 }
 // Snapshot before StereoPair. The old cache + GPU block are restored even if

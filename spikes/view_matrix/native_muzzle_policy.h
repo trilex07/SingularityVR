@@ -16,19 +16,9 @@ inline bool Hex(const char* text,std::uint64_t& out){
 }
 struct Selection {
     std::uint64_t vs=0,ps=0;unsigned vsBytes=0,psBytes=0;int mode=0,convention=-1;
-    bool Valid()const{
-        if (mode == 1) return true;
-        return (mode==2&&(convention==0||convention==1))&&vs&&ps&&vsBytes>=8&&psBytes>=8&&vsBytes<=32768&&psBytes<=32768&&vsBytes%4==0&&psBytes%4==0;
-    }
+    bool Valid()const{return (mode==1||(mode==2&&(convention==0||convention==1)))&&vs&&ps&&vsBytes>=8&&psBytes>=8&&vsBytes<=32768&&psBytes<=32768&&vsBytes%4==0&&psBytes%4==0;}
     bool Match(std::uint64_t v,std::uint64_t p,unsigned vb,unsigned pb)const{
-        if (Valid() && vs && ps && vs == v && ps == p && vsBytes == vb && psBytes == pb) return true;
-        if (mode == 1) {
-            // Proven Centurion muzzle flash, spark, and smoke particle burst signatures
-            if (v == 0x4FAEF2389750DBFCull && p == 0x2FEC493CD52D7D78ull && vb == 2908 && pb == 336) return true;
-            if (v == 0x488BAEB579E71A73ull && p == 0x27DFE7D9C67BCC03ull && vb == 2968 && pb == 452) return true;
-            if (v == 0x314D478A9CFDBE37ull && p == 0xC118540CCDBCB241ull && vb == 3384 && pb == 448) return true;
-        }
-        return false;
+        return Valid()&&vs==v&&ps==p&&vsBytes==vb&&psBytes==pb;
     }
 };
 template<class Slot> inline int Alias(const float* gpu,unsigned reg,const Slot* slots,int n){

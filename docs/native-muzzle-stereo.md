@@ -69,8 +69,10 @@ All keys are under `[Diagnostic]`, restart required:
   NaNs, raw native matrices or no exact camera alias are refused. This handles
   only the stated alias hypothesis, not every possible particle defect.
 - Modes1/2 require `NativeMuzzleVSHash`, `NativeMuzzlePSHash` (16 hex FNV1a64)
-  and `NativeMuzzleVSBytes`, `NativeMuzzlePSBytes`. Missing/invalid selection
-  disables mutation. A failed GPU constant restore latches further repair OFF.
+  and `NativeMuzzleVSBytes`, `NativeMuzzlePSBytes`. There is no built-in shader
+  allowlist: a missing, malformed, or invalid explicit selection disables
+  mutation. Mode1 drops only that exact pair and exact byte sizes. A failed GPU
+  constant restore latches further repair OFF.
   Mode2 ALSO requires `NativeMuzzleMatrixConvention=0` (ROW) or `1` (COL),
   proven from that shader's actual position instructions, matching the source
   camera's convention. Default-1 refuses repair: equal bytes and CTAB names alone
@@ -141,3 +143,39 @@ also note sound, hand tracking and stereo. Stop early for discomfort.
 After selecting and proving the responsible draw, compare mode1 removal, then
 only the supported mode2 correction in a separate controlled session. No merge
 or claim of completed FX repair until original light + flash + smoke pass L3/L4.
+
+## MAIN continuation — 2026-10-17
+
+MAIN work is on `fix/main-native-muzzle-stereo-test`, based on the current
+accepted `origin/main` (`12ab08b`), not SIDE's older `fix/native-muzzle-stereo`
+checkout. The SIDE branch's `459c8d2` DLL is stale relative to accepted MAIN;
+its stored artifact hashes to `4A8DB99F...`, not the reported `3363DC7B...`.
+Its probe/alias concepts were compared with MAIN and the needed runtime path is
+already present in MAIN. Do not deploy the SIDE DLL or merge that branch wholesale.
+
+MAIN tightened selection safety: modes 1/2 now require an explicitly configured
+nonzero VS+PS FNV64 pair and exact byte lengths; removed historical built-in
+shader pairs. Mode 2 still refuses unless the matrix convention is explicit and
+valid. Per-eye splitting stays OFF for the first native-only capture.
+
+L1_PASS: `tools/fx/test-native-muzzle.ps1` passed six C++ fixtures and six
+Python trace-analysis tests. L2_PASS: MAIN x86 PE32 (`014C/010B`) `/O2`,
+performance instrumentation OFF, SHA-256
+`4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`.
+This is compile/test evidence only; no runtime or visual success is inferred.
+
+An offline package generator, `tools/fx/prepare_native_muzzle_probe.ps1`, reads
+the installed accepted INI and binaries, verifies their profile pins, and stages
+a candidate changing only `Diagnostic/NativeMuzzleProbe=0→1` and
+`Diagnostic/NativeMuzzleStereoMode=1→0`. The staged DLL hash is the MAIN build
+above; `dinput8.dll` remains `5B948DDB...`. Accepted-profile `-WhatIf` has a
+PowerShell 7 ShouldProcess interaction, so preflight must use the read-only
+`Assert-AcceptedDeployment` function directly or the normal guarded runner after
+MAIN confirms the process is closed. No Steam file has been changed for this
+continuation; fresh user `start` is required before deployment and headset test.
+
+L3 first round remains the bounded native-only capture described above. Collect
+the four complete `shadow-pass-<PID>-N.txt` traces and SBS captures, run
+`analyze_native_muzzle.py`, and treat count differences only as candidates.
+Only after exact-pair drop proves the visible flash should MAIN proceed to a
+separate alias-repair test; do not combine mode 2 with per-eye splitting.
