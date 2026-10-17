@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+LATEST MAIN 2026-10-17 preserved-drop muzzle PSVR2 test: user-approved Steam
+session PID 27028 ran candidate DLL `F40CCAE2...E9F2`, INI `786C43C9...4010`.
+OpenXR session 5 rendered both eyes; bounded windows showed accepted exact-pair
+`drop` and separate `worldRerouted/cameraC0` simultaneously nonzero, with zero
+camera fallback, shader overflow, restore failure or fault. User saw sparks at
+the muzzle, but a strong glow low in the right eye, faint glow at the right edge
+of the left eye, and smoke at that left-eye edge. **L3 route PASS, L4 VFX FAIL**:
+rerouting `488BAE:27DF` alone does not correctly place the full effect even
+when accepted `4FAE:2FEC` suppression remains active. Game closed normally;
+guard and independent SHA checks restored accepted DLL `789749E5...F361B`,
+INI `8B0B0B4C...CCFAF`, injector `5B948DDB...729D59`; UI unchanged
+`51CDAB5C...1A1A`. No candidate is installed. Next: identify the remaining
+visible glow/smoke producer and its per-eye transform with bounded read-only
+evidence; do not promote the world route or guess another matrix.
+
 LATEST MAIN 2026-10-17 corrected muzzle test staged **offline**: candidate
 `build/native-muzzle-main/candidate-world-route-preserve-drop-488` preserves
 accepted mode-1 drop `4FAE:2FEC` and separately routes `488BAE:27DF` through

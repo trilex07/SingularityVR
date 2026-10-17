@@ -514,3 +514,34 @@ installed preimages matching. The wrapper's `-WhatIf` currently causes an
 unrelated `Get-FileHash` provider-resolution failure, so the read-only guard
 function was invoked directly; no Steam file was written. Candidate remains
 offline until the next supervised test.
+
+### MAIN preserved-drop PSVR2 result (2026-10-17)
+
+The supervised test used candidate DLL
+`F40CCAE2CB060A62488B4505A2803DD983A1251EA7EB2E55564F858F46B3E9F2`
+and INI `786C43C9B84DEA493A9B58A813D9A2FCF6854C1E0FEA36AE274701DB4F354010`.
+Steam PID 27028 entered OpenXR session 5, `shouldRender=1`, with both eyes
+valid and about 90 submitted frames/s in sampled windows. Bounded logs show
+simultaneous nonzero accepted-pair `drop` (10–70) and separate
+`worldRerouted/cameraC0` (14–63), with zero camera fallback, overflow,
+restore failure or fault. The prior confound was removed: the accepted
+`4FAE:2FEC` suppression and `488BAE:27DF` world route both executed.
+
+The user observed sparks at the muzzle, but glow low in the **right** eye,
+faint glow at the **right edge of the left** eye, and smoke at that left-eye
+edge. This is L3 path validation, **not** L4 VFX acceptance. It falsifies
+the hypothesis that routing only `488BAE:27DF` to world stereo, while
+keeping the accepted drop, sufficiently aligns the complete original emitter.
+It does not prove `488BAE` is unrelated: its isolated drop changed the broad
+appearance. A `cameraC0` count proves slot availability, not pixel placement.
+
+After exit the guard reported accepted-profile postflight PASS. Independent
+SHA checks found restored DLL `789749E5...F361B`, INI `8B0B0B4C...CCFAF`,
+injector `5B948DDB...729D59`, and unchanged UI `51CDAB5C...1A1A`.
+Backup: `deployment/install-backups/20261017-232426`. No candidate remains
+installed. Next evidence gate: identify which original emitter draws produce
+misplaced light and smoke separately, then record their actual per-eye shader
+constants and rendered contributions. Reuse bounded hooks/traces and an
+idle/post-shot comparison. Do not infer that the glow belongs to `314D:C118`
+(its prior exact drop did not remove the broad glow), or guess projection
+registers. Require a producer-specific falsifier before another correction.
