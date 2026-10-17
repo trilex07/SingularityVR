@@ -1,5 +1,12 @@
 # Three weapons: native refill, not full native reload
 
+HOLD after Centurion physical feedback13:52: its SAME resolver returned ready0
+before every transfer, despite offline PASS. These THREE weapons have no new
+physical result; do not infer they are broken in the same exact stage, but keep
+ReloadRefillOnly OFF/not promoted until PR48's bounded resolver preflight
+(source9c38667, docs/centurion-refill-resolution.md there) identifies the cause.
+Apply any resulting shared resolver correction here before headset acceptance.
+
 2026-10-17 SIDE. Applies the Centurion backend lesson from source6d7b201,
 NOT an assertion that its new camera/fire-delay experiment passed PSVR2.
 

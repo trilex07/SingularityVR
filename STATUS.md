@@ -1,5 +1,11 @@
 # STATUS — session handoff
 
+CAUTION 2026-10-17: Centurion runtime REJECTED shared refill resolver (ready0,
+NO native invocation). PR45 three weapons remain UNTESTED, not accepted merely
+from L1/L2. Keep ReloadRefillOnly OFF pending PR48 resolver preflight9c38667
+and actual cause/correction. No Steam touched. Existing native reload path flag0
+and previous material/asset work are not rejected by that Centurion result.
+
 LATEST 2026-10-17 SIDE: Centurion's native-refill lesson applied to Valkyrie,
 Volk/Kasimov via default-OFF ReloadRefillOnly, same shared hook. Original PE/text
 proves ALL12 refill/getter bindings identical across the three exact classes.
