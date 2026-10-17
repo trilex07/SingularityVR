@@ -25,6 +25,10 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "ammo_probe.h"
 #include "ammo_layout.h"
 #include "scripts_ready.h"
+#include "startup_readiness.h"
+#include "startup_loading_draw.h"
+static int g_startupPrewarm=0,g_startupLoadingGate=0,g_startupProbe=0;
+static unsigned g_startupTimeoutMs=5000;
 #include "weapon_wheel_direct_select.h"
 #include "weapon_wheel_catalog_load.h"
 #include "weapon_wheel_atlas.h"
@@ -1952,6 +1956,7 @@ WantedName g_wantNames[] = {
     { "BaseEyeHeight", -1 }, { "EyeHeight", -1 },
     // ⭐ run 227: the one question every mesh-latch heuristic has been guessing at: is a weapon EQUIPPED.
     { "Weapon", -1 },
+    { "Pawn", -1 }, { "Controller", -1 }, // startup: reflected reciprocal ownership, no guessed offsets
     // 💥 run 236b: THESE HAVE TO BE HERE. `WantedIdx` searches THIS TABLE and nothing else - a name
     // absent from it resolves to -1 and `PropOffsetUnder` bails before walking a single class. Run 236
     // added the lookups and not the registrations, so both reported "+0xFFFFFFFF (depth 13) NOT FOUND"
@@ -2646,9 +2651,36 @@ float MetresToUU();
 // is what kept Pawn.Weapon unresolved and the whole run-227 mechanism reporting UNKNOWN.
 //
 // A caller that has already paid for its own throttle should not pay for this one as well.
+static bool GuardedNameOf(uintptr_t obj,char* buf,size_t cap);
 static uintptr_t FindPlayerPawn(bool force) {
+    // Prefer the owning live controller's reflected link. Unknown names/layout
+    // or failed reciprocal ownership leave the existing bounded scan untouched.
+    if(g_startupPrewarm&&g_upChildren&&g_upNext&&g_upOffset&&g_controller&&g_ctlClass&&IsLive(g_controller)){
+        static uintptr_t ctlClass=0,pawnClass=0;static int pawnOff=-1,ctlOff=-1;
+        static ULONGLONG retry=0;const auto now=GetTickCount64();
+        int32_t liveClass=0,pawnBits=0,classBits=0,ownerBits=0;
+        if(TryLoadAlignedI32(g_controller+OBJ_CLASS,&liveClass)&&(uint32_t)liveClass==g_ctlClass){
+            if(ctlClass!=g_ctlClass){ctlClass=g_ctlClass;pawnOff=-1;retry=0;}
+            if(pawnOff<0&&now>=retry){retry=now+1000;pawnOff=PropOffsetInChain(ctlClass,"Pawn");}
+            if(pawnOff>=0&&!(pawnOff&3)&&TryLoadAlignedI32(g_controller+pawnOff,&pawnBits)&&pawnBits){
+                const uintptr_t pawn=(uint32_t)pawnBits;
+                char name[80]{};
+                if(TryLoadAlignedI32(pawn+OBJ_CLASS,&classBits)&&classBits&&
+                   GuardedNameOf((uint32_t)classBits,name,sizeof(name))&&strstr(name,"PlayerPawn")&&IsLive(pawn)){
+                    if(pawnClass!=(uint32_t)classBits){pawnClass=(uint32_t)classBits;ctlOff=PropOffsetInChain(pawnClass,"Controller");}
+                    if(ctlOff>=0&&!(ctlOff&3)&&TryLoadAlignedI32(pawn+ctlOff,&ownerBits)&&(uint32_t)ownerBits==g_controller){
+                        if(g_playerPawn!=pawn){static unsigned notes=0;if(notes++<16)
+                            Log("startup pawn: reciprocal Controller.Pawn acquired pawn=%08X controller=%08X offsets=%X/%X t=%llu (read-only)",
+                                (unsigned)pawn,(unsigned)g_controller,pawnOff,ctlOff,(unsigned long long)now);}
+                        g_playerPawn=pawn;g_playerPawnClass=pawnClass;return pawn;
+                    }
+                }
+            }
+        }
+    }
     if (g_playerPawn && g_playerPawnClass && Readable((void*)g_playerPawn, 0x40) &&
-        *reinterpret_cast<uintptr_t*>(g_playerPawn + OBJ_CLASS) == g_playerPawnClass)
+        *reinterpret_cast<uintptr_t*>(g_playerPawn + OBJ_CLASS) == g_playerPawnClass &&
+        (!g_startupPrewarm||IsLive(g_playerPawn)))
         return g_playerPawn;
     // ---- ⚠️ run 257: a pawn we HAD and lost must be re-found at once ----
     //
@@ -3091,6 +3123,8 @@ void ResolveGameplayOffsets() {
     {
         static ULONGLONG lastTry = 0;
         const ULONGLONG nowMs = GetTickCount64();
+        static uintptr_t lastPawn=0;
+        if(g_startupPrewarm&&g_playerPawn&&g_playerPawn!=lastPawn){lastPawn=g_playerPawn;lastTry=0;g_offMisses=0;}
         const ULONGLONG waitMs = (g_offMisses >= 3) ? 15000 : 2000;
         if (lastTry && nowMs - lastTry < waitMs) return;
         lastTry = nowMs;
@@ -5786,6 +5820,7 @@ void DrawWeaponWheel(IDirect3DDevice9* dev);
 void DrawHipKnife(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
+static void StartupReadinessFrame(IDirect3DDevice9* dev);
 static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer = false);
 static volatile LONG g_pauseCaptureRequested = 0;
 const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
@@ -5828,6 +5863,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawVfxOverlay(dev);
     DrawVrContextPrompt(dev);
     if (ownOverlayScene) dev->EndScene();
+    StartupReadinessFrame(dev); // LAST overlay: both GPU and CPU copies receive the same curtain
     // Bounded pause diagnostics must read the actual source passed to XR, after
     // every overlay. RT0 restored by overlays can instead be the scene texture.
     if (InterlockedExchange(&g_pauseCaptureRequested, 0)) SaveBackbufferCapture(dev, true);
@@ -28184,6 +28220,36 @@ static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
     back->Release();
 }
 
+static void StartupReadinessFrame(IDirect3DDevice9* dev){
+    if(!g_startupPrewarm&&!g_startupLoadingGate&&!g_startupProbe)return;
+    static startup::Curtain gate;static unsigned notes=0,previous=~0u;
+    static bool wasVisible=false,drawFault=false;
+    const auto now=GetTickCount64();
+    const bool eligible=VrModeOn()&&Rd(g_dupDraws)&&InGameplay()&&
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&!Rd(g_gamePaused)&&!Rd(g_vrUiMenu)&&
+        !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!Rd(g_vrMenuClass)&&!CutsceneNativeCameraArmed()&&
+        g_xrRunning&&g_xrSessionState==XR_SESSION_STATE_FOCUSED;
+    unsigned ready=0;
+    if(g_playerPawn)ready|=startup::Pawn;
+    if(g_upChildren&&g_offWeapon>=0)ready|=startup::Properties;
+    if(g_xrInputReady&&g_vrStickActive[0]&&g_handPositionValid[0]&&g_handPositionValid[1])ready|=startup::Input;
+    if(!Rd(g_cutsceneAuto)||(g_origProcessEvent&&g_hookedAt==g_processInternal))ready|=startup::Script;
+    if(Rd(g_aimMode)<6||g_origSLC)ready|=startup::Aim;
+    if(g_haveCentre&&g_haveCentrePos&&g_haveEyes&&Rd(g_camPosValid))ready|=startup::Centre;
+    const bool visible=gate.Update(eligible,(uint32_t)g_playerPawn,ready,now,g_startupTimeoutMs);
+    if(notes<64&&eligible&&(ready!=previous||visible!=wasVisible)){
+        ++notes;previous=ready;
+        Log("startup readiness: pawn=%08X ready=%02X missing=%02X elapsed=%llu hold=%d timeout=%d t=%llu (hook readiness; NOT native move-input acceptance)",
+            (unsigned)g_playerPawn,ready,startup::All&~ready,(unsigned long long)(now-gate.start),visible?1:0,
+            gate.timedOut?1:0,(unsigned long long)now);
+    }
+    wasVisible=visible;
+    if(!visible||!g_startupLoadingGate||drawFault||!g_origSetRenderTarget||!g_origSetViewport||!g_origClear)return;
+    bool restored=true;
+    startup::DrawLoading(dev,g_origSetRenderTarget,g_origSetViewport,g_origClear,TextRects,restored);
+    if(!restored){drawFault=true;Log("startup loading: state restore failed; curtain disabled for this session");}
+}
+
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
     shadowfix::Poll(g_logPath);
     worldshadowfix::Poll(g_logPath);
@@ -28985,9 +29051,11 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         // own earlier. Probe-only observes the existing interpreter hook. The
         // independent native guard is resolved/validated lazily from the binding.
         static unsigned tick=0,attempts=0;
+        static startup::Retry early;
         bool missing=false;
         for(int i=kFnReloadFirst;i<=kFnReloadLast;++i)if(FnIdx(i)<0)missing=true;
-        if(missing&&attempts<12&&++tick%240==0&&g_camera){
+        if(g_startupPrewarm?early.Due(GetTickCount64(),g_camera!=0,missing):
+           (missing&&attempts<12&&++tick%240==0&&g_camera)){
             ++attempts;ResolveScriptNames();
             Log("centurion reload probe: name attempt=%u existing script hook=%p (zero events is NOT proof of no reload)",
                 attempts,g_origProcessEvent);
@@ -28995,7 +29063,9 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     }
     if (InterlockedCompareExchange(&g_cutsceneAuto, 0, 0)) {
         static int tick = 0, attempts = 0;
-        if (FnIdx(kFnSetCinematic) < 0 && attempts < 12 && (++tick % 240) == 0 && g_camera) {
+        static startup::Retry earlyNames;
+        if (g_startupPrewarm?earlyNames.Due(GetTickCount64(),g_camera!=0,FnIdx(kFnSetCinematic)<0):
+            (FnIdx(kFnSetCinematic) < 0 && attempts < 12 && (++tick % 240) == 0 && g_camera)) {
             ++attempts;
             Log("auto-resolving script names (attempt %d) - arming the cutscene watch", attempts);
             ResolveScriptNames();
@@ -29005,12 +29075,15 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         // Both calls are no-ops once they have succeeded, so this costs one branch a frame after
         // the first success.
         static bool hooked = false;
-        if (!hooked && FnIdx(kFnSetCinematic) >= 0) {
+        static startup::Retry earlyHook;
+        if (!hooked && FnIdx(kFnSetCinematic) >= 0 &&
+            (!g_startupPrewarm||earlyHook.Due(GetTickCount64(),g_camera!=0,true))) {
             FindProcessInternal();
             RepointScriptHook();
-            hooked = true;
-            Log("cutscene watch: script hook installed automatically - CINE is live from startup"
+            hooked = !g_startupPrewarm || (g_origProcessEvent&&g_hookedAt==g_processInternal);
+            if(hooked)Log("cutscene watch: script hook installed automatically - CINE is live from startup"
                 " rather than from the first NUMPAD-dot press");
+            else Log("startup hook: installation still pending attempt=%u (not marked ready)",earlyHook.attempts);
         }
         {
             static int plTick = 0, plTries = 0;
@@ -29414,8 +29487,9 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         // walk rather than retry until the process exits.
         {
             static int cooldown = 0, attempts = 0;
+            static startup::Retry earlyRoute;
             if (InterlockedCompareExchange(&g_aimMode, 0, 0) >= 6 && !g_origSLC && attempts < 60) {
-                if (--cooldown <= 0) {
+                if (g_startupPrewarm?earlyRoute.Due(GetTickCount64(),g_camera!=0,true,60):--cooldown<=0) {
                     cooldown = 120;
                     ++attempts;
                     if (EnsureRouteTwoHooks())
@@ -32202,6 +32276,13 @@ void LoadIniSettings() {
 
     // Run 198: the reload-arms fix. Default on - it is the reported artefact, and it cannot reach the
     // gun or the 390-vertex mesh because both are in the baseline set.
+    g_startupPrewarm=GetPrivateProfileIntA("Input","StartupPrewarm",0,path)?1:0;
+    g_startupLoadingGate=GetPrivateProfileIntA("Render","StartupLoadingGate",0,path)?1:0;
+    g_startupProbe=GetPrivateProfileIntA("Diagnostic","StartupReadinessProbe",0,path)?1:0;
+    const int startupTimeout=GetPrivateProfileIntA("Render","StartupLoadingMaxMs",5000,path);
+    g_startupTimeoutMs=(unsigned)(std::max)(500,(std::min)(startupTimeout,10000));
+    Log("ini: StartupPrewarm=%d StartupLoadingGate=%d probe=%d max=%u ms (default OFF; presentation only, simulation/input untouched)",
+        g_startupPrewarm,g_startupLoadingGate,g_startupProbe,g_startupTimeoutMs);
     g_renderEvidence = GetPrivateProfileIntA("Diagnostic", "RenderEvidence", 0, path) ? 1 : 0;
     InterlockedExchange(&g_forceDesktopVr,
                         GetPrivateProfileIntA("Diagnostic", "ForceDesktopVr", 0, path) ? 1 : 0);

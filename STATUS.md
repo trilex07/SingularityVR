@@ -1,5 +1,22 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE startup readiness candidate (dedicated branch from92396ca):
+user reports immobile visible gameplay while hooks initialize. Runtime cause of
+native movement block UNKNOWN. Source/log evidence: pawn at index114610 after
+bounded512-object slices, frame-count script/aim retry latency. Default-OFF
+StartupPrewarm prefers reflected reciprocal Controller.Pawn/Pawn.Controller,
+retains original bounded fallback, rearms offset retry on new pawn, retries
+missing hooks by bounded wall time and does not mark failed installation ready.
+Separate default-OFF StartupLoadingGate is presentation ONLY, stable100ms,
+timeout5000ms, menu/pause/cine bypass, NO extra input/engine pause/clock writes.
+Probe logs exact missing core readiness, not proof of native move acceptance.
+L1_PASS6 own-process programs incl 2-round D3D9Ex/state/failure GPU fixture,
+5 Python structural guards. L2_PASS clean e243f97, x86 PE32 /O2, DLL SHA256
+CE297F0AF8BADFAE941FB500BE8A07D9D139DCCF15E427FCABD2A2CC3867F003.
+Private build/startup-readiness/candidate-e243f97 (NO INI/assets). All new flags
+remain OFF; no runtime speedup/native movement/curtain L3/L4 claimed. ZERO Steam.
+See docs/startup-readiness.md for probe-only baseline, fast-path and curtain gates.
+
 LATEST 2026-10-17 MAIN recoil-release L3+L4 PASS (build BEF82DC6 + 5 flags):
 user PSVR2 "super" on first-shots-after-close route (native recoil back, no
 frozen gun). Scoped to this build/config/route; user ordered merge to main.
