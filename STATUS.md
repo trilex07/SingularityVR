@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+LATEST MAIN 2026-10-17 native muzzle emitter A/B and third exact-pair test:
+with original `RvWeaponFX` references suppressed, the user's seam glow disappeared.
+Three shader pairs occur in both complete native-ON post-shot traces and neither
+native-OFF control trace. Dropping the remaining additive `488BAE:27DF` pair
+changed the appearance to a broad whole-eye effect, but the user still saw
+smoke in a corner. This is **not** a VFX fix or L4 acceptance. All three
+sessions ended with guarded rollback and independent accepted-file hashes.
+Selected draws for both tested pairs use `DrawIndexedPrimitiveUP` outside
+`StereoPair` (the older indexed-buffer claim below is superseded). A bounded
+default-OFF route witness now distinguishes off-thread/inert, HUD, quad, and
+stereo paths without altering pixels; it still needs L2/L3. See
+`docs/native-muzzle-stereo.md` for receipts and falsifier.
+
 LATEST MAIN 2026-10-17 native muzzle path witness: round 4 L4 report arrived:
 no FPS drop, broad glow still present, no visible muzzle smoke/flash, wall
 impact visible. This third exact-pair drop is a negative visual discriminator,

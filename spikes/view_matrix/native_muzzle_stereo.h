@@ -11,6 +11,7 @@ inline bool Probe(){return InterlockedCompareExchange(&probe,0,0)!=0;}
 // It runs before a mode-1 drop, so a suppressed draw still reveals its origin.
 static volatile LONG pathWitness=0;
 static volatile LONG pathCounts[4][2]{}; // DrawPrimitive, Indexed, UP, IndexedUP x outside/inside StereoPair
+static volatile LONG routeCounts[10]{}; // selected indexed-UP entry and mutually exclusive exits
 static unsigned pathReports=0;
 inline bool PathWitness(){return InterlockedCompareExchange(&pathWitness,0,0)!=0;}
 static volatile LONG shots=0;
@@ -19,6 +20,10 @@ static Shader shaders[1024],vs,ps;static unsigned used=0,overflow=0;
 inline void PathObserve(unsigned api,bool inStereoPair){
     if(!PathWitness()||api>=4||!selected.Match(vs.hash,ps.hash,vs.bytes,ps.bytes))return;
     InterlockedIncrement(&pathCounts[api][inStereoPair?1:0]);
+}
+inline void RouteObserve(unsigned reason){
+    if(!PathWitness()||reason>=10||!selected.Match(vs.hash,ps.hash,vs.bytes,ps.bytes))return;
+    InterlockedIncrement(&routeCounts[reason]);
 }
 static unsigned dropped=0,aliases=0,refused=0,restoreFailed=0;
 static CapturePlan capture;
@@ -77,10 +82,11 @@ inline void Release(){
 inline void Configure(int mode,bool trace,const char* v,const char* p,unsigned vb,unsigned pb,int convention,bool pathEnabled=false){
     Release();selected={};InterlockedExchange(&probe,trace?1:0);fault=false;capture={};captureWeapon=0;probeStart=0;InterlockedExchange(&shots,0);
     for(auto& row:pathCounts)for(auto& count:row)InterlockedExchange(&count,0);
+    for(auto& count:routeCounts)InterlockedExchange(&count,0);
     pathReports=0;InterlockedExchange(&pathWitness,pathEnabled?1:0);
-    if(mode==1||mode==2){Selection x;x.mode=mode;x.vsBytes=vb;x.psBytes=pb;x.convention=convention;
+    if(mode==1||mode==2||mode==3){Selection x;x.mode=mode;x.vsBytes=vb;x.psBytes=pb;x.convention=convention;
         if(Hex(v,x.vs)&&Hex(p,x.ps)&&x.Valid())selected=x;}
-    Log("native-fx: probe=%d mode=%d pathWitness=%d (0 unchanged,1 selected-pair drop,2 exact camera alias); no replacement FX",Probe()?1:0,selected.mode,PathWitness()?1:0);
+    Log("native-fx: probe=%d mode=%d pathWitness=%d (0 unchanged,1 selected-pair drop,2 exact camera alias,3 observe-only); no replacement FX",Probe()?1:0,selected.mode,PathWitness()?1:0);
 }
 // Snapshot before StereoPair. The old cache + GPU block are restored even if
 // the stereo draw returns a failed HRESULT. Never borrow stale/unverified data.
@@ -139,6 +145,10 @@ inline void Summary(){
         if(any&&pathReports<12){++pathReports;Log("native-fx path: prim=%ld/%ld indexed=%ld/%ld up=%ld/%ld indexedUP=%ld/%ld (outside/inside StereoPair; selected pair only)",
             counts[0][0],counts[0][1],counts[1][0],counts[1][1],
             counts[2][0],counts[2][1],counts[3][0],counts[3][1]);}
+        LONG routes[10]{};bool anyRoute=false;
+        for(unsigned r=0;r<10;++r){routes[r]=InterlockedExchange(&routeCounts[r],0);anyRoute|=routes[r]!=0;}
+        if(anyRoute&&pathReports<12){++pathReports;Log("native-fx route: entry=%ld shadow=%ld inert=%ld level2=%ld quad=%ld stereo=%ld menu=%ld stride=%ld hud=%ld offThread=%ld (selected indexed-UP only)",
+            routes[0],routes[1],routes[2],routes[3],routes[4],routes[5],routes[6],routes[7],routes[8],routes[9]);}
     }
     if(dropped||aliases||refused||restoreFailed||overflow){
         Log("native-fx: selected drop=%u alias=%u refused=%u restoreFailed=%u shaderOverflow=%u fault=%d",dropped,aliases,refused,restoreFailed,overflow,fault?1:0);

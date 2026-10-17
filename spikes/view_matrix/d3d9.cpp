@@ -15103,7 +15103,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,0,t,count,0,start,0,0,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
-    if (SuppressCapturedVrMenuDraw()) return D3D_OK;
+    if (SuppressCapturedVrMenuDraw()) { nativefx::RouteObserve(6); return D3D_OK; }
     ++g_vidFrameDraws;
     if(g_boundShaderLayout.shadow){
         if (Rd(g_shadowTest)) { InterlockedIncrement(&g_shadowTestDropped); return D3D_OK; }
@@ -20783,21 +20783,27 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,3,t,primCount,numVertices,0,minVtxIndex,0,vtxData,vtxStride);   // fix-I census
     if (!g_origDrawIndexedPrimUP) return D3DERR_INVALIDCALL;
+    nativefx::RouteObserve(0);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     // UP memory has no retained resource identity: do not suppress on vertex count.
     if(g_boundShaderLayout.shadow) {
+        nativefx::RouteObserve(1);
         if (Rd(g_shadowTest)) { InterlockedIncrement(&g_shadowTestDropped); return D3D_OK; }
         ShadowMode3NoteGeneration(dev);return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
     }
     ++g_vidFrameDraws;
     if (primCount <= 4) VidProbeRecord(dev, 3, t, primCount, vtxData, vtxStride);
-    if (UserPtrInert())
+    if (UserPtrInert()) {
+        nativefx::RouteObserve(OnRenderThread()?2:9);
         return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                        idxData, idxFormat, vtxData, vtxStride);
+    }
     ++g_drawsUP;
-    if (g_userPtrHookLevel == 2)
+    if (g_userPtrHookLevel == 2) {
+        nativefx::RouteObserve(3);
         return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                        idxData, idxFormat, vtxData, vtxStride);
+    }
     DumpUserPtrVertex(primCount, vtxData, vtxStride, "DrawIndexedPrimUP");
     DumpUserPtrTransform(dev, vtxStride, "DrawIndexedPrimUP");
     // Quad test first - see the note in Hook_DrawPrimUP for what happens when it is not.
@@ -20866,12 +20872,15 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     }
     // The identification test - see g_dropStride. Returning S_OK without drawing is how the mod drops
     // draws everywhere else: device state untouched, so the next draw behaves normally.
-    if (g_dropStride && vtxStride == (UINT)g_dropStride) return D3D_OK;
-    if (!quad && ((hudArmed && g_hudRemap) || PauseCanvasNeedsEyeCopy(dev)))
+    if (g_dropStride && vtxStride == (UINT)g_dropStride) { nativefx::RouteObserve(7); return D3D_OK; }
+    if (!quad && ((hudArmed && g_hudRemap) || PauseCanvasNeedsEyeCopy(dev))) {
+        nativefx::RouteObserve(8);
         return HudStereoPair(dev, primCount, vtxStride, [&] {
             return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                            idxData, idxFormat, vtxData, vtxStride); });
+    }
     if (quad) {
+        nativefx::RouteObserve(4);
         // ⭐ run 262: the same sprite split on the INDEXED hook. Run 260's census found the (0,0)
         // signatures on THIS hook, not the other one, so fixing only DrawPrimUP would fix nothing.
         // The indices are reused untouched - only the vertex x is rewritten - so a draw that indexes
@@ -20905,6 +20914,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
                                        idxData, idxFormat, vtxData, vtxStride);
     }
     NoteFirstUserPtrDraw("DrawIndexedPrimitiveUP");
+    nativefx::RouteObserve(5);
     return StereoPair(dev, [&] {
         return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                        idxData, idxFormat, vtxData, vtxStride);

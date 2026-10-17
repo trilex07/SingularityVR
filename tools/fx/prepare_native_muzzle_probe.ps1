@@ -10,6 +10,8 @@ param(
     [int]$DropPSBytes = 0,
     [switch]$NoProbe,
     [switch]$PathWitness,
+    [switch]$NativeFxOffControl,
+    [switch]$ObserveRoute,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -123,8 +125,24 @@ $dropRequested = $DropVSHash -or $DropPSHash -or $DropVSBytes -or $DropPSBytes
 if ($NoProbe -and -not ($dropRequested -or $PathWitness)) {
     throw '-NoProbe is only valid for an exact-pair visual discriminator; baseline capture requires the bounded probe.'
 }
+if ($NativeFxOffControl) {
+    if ($NoProbe -or $PathWitness -or $dropRequested) {
+        throw '-NativeFxOffControl is a bounded probe-only control; do not combine with a drop or path witness.'
+    }
+    foreach ($key in @('Render/HideMuzzleFx','Render/VfxHost')) {
+        if (-not $iniValues.ContainsKey($key) -or $iniValues[$key] -cne (Get-ProfileIniValue $key)) {
+            throw "Installed INI differs from accepted profile at $key."
+        }
+    }
+    if ($iniValues['Render/HideMuzzleFx'] -ne '0' -or $iniValues['Render/VfxHost'] -ne '0') {
+        throw 'Native-FX-off control requires native ON and generated VFX OFF in the accepted installation.'
+    }
+}
+if ($ObserveRoute -and (-not $PathWitness -or -not $NoProbe -or $NativeFxOffControl)) {
+    throw '-ObserveRoute requires -PathWitness -NoProbe and cannot suppress the native emitter.'
+}
 if ($PathWitness) {
-    if (-not $NoProbe -or $dropRequested) { throw '-PathWitness requires -NoProbe and cannot be combined with a new drop pair.' }
+    if (-not $NoProbe) { throw '-PathWitness requires -NoProbe.' }
     if ($iniValues.ContainsKey('Diagnostic/NativeMuzzlePathWitness') -or
         @($profile.ini.PSObject.Properties | Where-Object { $_.Name -ceq 'Diagnostic/NativeMuzzlePathWitness' }).Count) {
         throw 'Path witness key already exists; refusing to overwrite an unknown setting.'
@@ -161,11 +179,37 @@ if ($probeAfter -ne $probeBefore) {
     $iniChanges.Add([ordered]@{ key = $probeKey; before = $probeBefore; after = $probeAfter; reason = $probeReason })
 }
 if ($PathWitness) {
-    $modeAfter = $modeBefore
+    $modeAfter = if ($ObserveRoute) { '3' } else { $modeBefore }
     $newline = if ($iniText.Contains("`r`n")) { "`r`n" } else { "`n" }
-    $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "NativeMuzzleStereoMode=$modeBefore" "NativeMuzzlePathWitness=1${newline}NativeMuzzleStereoMode=$modeBefore"
+    $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "NativeMuzzleStereoMode=$modeBefore" "NativeMuzzlePathWitness=1${newline}NativeMuzzleStereoMode=$modeAfter"
     $iniChanges.Add([ordered]@{ key = 'Diagnostic/NativeMuzzlePathWitness'; before = $null; after = '1'; reason = 'Bounded read-only selected-pair draw-path census; no renderer behavior change.' })
-    $planReason = 'MAIN L3 read-only native muzzle path witness for the accepted exact pair; preserve accepted mode-1 drop and disable frame readbacks.'
+    if ($ObserveRoute) {
+        $iniChanges.Add([ordered]@{ key = $modeKey; before = $modeBefore; after = $modeAfter; reason = 'Observe-only exact-pair mode; no shader drops or matrix edits.' })
+    }
+    if ($dropRequested) {
+        $targets = [ordered]@{
+            'Diagnostic/NativeMuzzleVSHash' = $DropVSHash.ToUpperInvariant()
+            'Diagnostic/NativeMuzzleVSBytes' = [string]$DropVSBytes
+            'Diagnostic/NativeMuzzlePSHash' = $DropPSHash.ToUpperInvariant()
+            'Diagnostic/NativeMuzzlePSBytes' = [string]$DropPSBytes
+        }
+        foreach ($key in $targets.Keys) {
+            $name = $key.Substring($key.IndexOf('/') + 1)
+            $before = Get-ProfileIniValue $key
+            $after = [string]$targets[$key]
+            $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "$name=$before" "$name=$after"
+            if ($before -ne $after) {
+                $iniChanges.Add([ordered]@{ key = $key; before = $before; after = $after; reason = 'Causal emitter-ON/OFF traces isolated this remaining untested additive shader pair; exact mode-1 visual discriminator.' })
+            }
+        }
+        $planReason = if ($ObserveRoute) {
+            'MAIN L3 read-only exact additive-pair route witness after causal RvWeaponFX ON/OFF comparison; no drops, alias edits or GPU readbacks.'
+        } else {
+            'MAIN L3 exact additive-pair drop plus bounded path witness after causal RvWeaponFX ON/OFF comparison; probe/readbacks OFF.'
+        }
+    } else {
+        $planReason = 'MAIN L3 read-only native muzzle path witness for the accepted exact pair; preserve accepted mode-1 drop and disable frame readbacks.'
+    }
 } elseif ($dropRequested) {
     $targets = [ordered]@{
         'Diagnostic/NativeMuzzleVSHash' = $DropVSHash.ToUpperInvariant()
@@ -192,7 +236,13 @@ if ($PathWitness) {
     $modeAfter = '0'
     $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "NativeMuzzleStereoMode=$modeBefore" "NativeMuzzleStereoMode=$modeAfter"
     $iniChanges.Add([ordered]@{ key = $modeKey; before = $modeBefore; after = $modeAfter; reason = 'Keep the renderer unchanged for the native-only baseline capture.' })
-    $planReason = 'MAIN L3 native muzzle capture: preserve accepted profile; set only NativeMuzzleProbe=1 and NativeMuzzleStereoMode=0 for native-only baseline traces.'
+    if ($NativeFxOffControl) {
+        $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes 'HideMuzzleFx=0' 'HideMuzzleFx=1'
+        $iniChanges.Add([ordered]@{ key = 'Render/HideMuzzleFx'; before = '0'; after = '1'; reason = 'Suppress only the proven RvWeaponFX emitter references to causally identify their GPU draws against the completed native-ON trace.' })
+        $planReason = 'MAIN L3 causal native-FX-off control: bounded idle/three-shot trace with original muzzle emitter suppressed, generated host OFF, and no shader drops or alias repair.'
+    } else {
+        $planReason = 'MAIN L3 native muzzle capture: preserve accepted profile; set only NativeMuzzleProbe=1 and NativeMuzzleStereoMode=0 for native-only baseline traces.'
+    }
 }
 if (-not $dropRequested -and -not $PathWitness -and $candidateIniBytes.Length -ne $iniBytes.Length) {
     throw 'Baseline probe substitutions unexpectedly changed the INI size.'
@@ -222,7 +272,7 @@ $plan = [ordered]@{
             path = 'Binaries/d3d9.dll'
             before = $expectedDll
             after = $candidateDllSha
-            reason = 'MAIN build from current origin/main with explicit exact-pair native muzzle selection; bounded probe for L3 capture.'
+            reason = 'MAIN x86 build with bounded native-FX diagnostics and explicit exact-pair control; no unrelated renderer or gameplay change.'
         }
     )
     ini = @($iniChanges.ToArray())

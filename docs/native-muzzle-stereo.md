@@ -390,3 +390,51 @@ generator's `-PathWitness -NoProbe` mode retains all accepted INI values and
 adds only this diagnostic key. L3 must prove real selected-pair counts and
 OpenXR gameplay; this is not L4 proof of a repaired effect. Do not enable
 mode 2 or rewrite matrices based on the shader alone.
+
+### MAIN 2026-10-17: causal emitter control and additive-pair discriminator
+
+The path-witness run used DLL `FC474A18...` with the accepted exact-pair drop
+`4FAE:2FEC` and no full-frame readbacks. The user saw smoke and glow split
+across the inner edges of the eyes. The selected-pair counter was nonzero, but
+every measured selected draw was `DrawIndexedPrimitiveUP` **outside**
+`StereoPair`. The drop did not remove the glow. This runtime result supersedes
+the earlier inference from trace VB/IB metadata: that metadata was insufficient
+to identify the call API. The pair alone does not own the visible seam, and a
+`StereoPair`-entry alias cannot correct its observed route.
+
+A causal control then set `HideMuzzleFx=1`, kept generated VFX OFF, and captured
+bounded idle/post-shot driver traces. The user reported the seam glow **gone**.
+Comparison with emitter-ON traces found three VS:PS pairs present in every ON
+shot and absent from both OFF post-shot traces:
+`314D478A9CFDBE37:C118540CCDBCB241`,
+`4FAEF2389750DBFC:2FEC493CD52D7D78`, and
+`488BAEB579E71A73:27DFE7D9C67BCC03`. This is a cross-session difference,
+not exact per-draw object tagging. The shot-accumulating `755AEA2A...` pair
+remained in the control. The fourth trace slot was consumed by a repeated idle
+capture, so only two OFF post-shot frames are available; both are complete.
+
+The remaining additive `488BAE:27DF` pair (VS 2968 bytes, PS 452 bytes) was
+then dropped alone, with native FX enabled and readback probe OFF. Its original
+trace shows one 20-primitive draw per eye, 32x32 texture, additive blend, CTAB
+`ViewProjectionMatrix` at c0-c3 and `LocalToWorld` at c5-c8. Runtime confirmed
+selected draws were dropped; all were `DrawIndexedPrimitiveUP` **outside**
+`StereoPair`. The user reported a change to a broad whole-eye appearance, with
+smoke still in a corner. Therefore this pair contributes to the effect, but
+dropping it is not a repair. No shader pair has passed visual acceptance.
+
+Next falsifiable mechanism: one or more selected original-emitter draws take
+an `IndexedPrimitiveUP` branch that forwards once, bypassing `StereoPair` and
+therefore reuses one eye's placement for the other. The bounded route witness
+distinguishes early menu/shadow/inert/off-thread/level-2 returns, stride drop,
+HUD copy, sprite-quad, and `StereoPair`. If all selected draws reach `StereoPair`
+or a legitimate per-eye HUD path, this hypothesis is false and the correction
+must instead follow the emitter's producer/constant writes. Observe-only mode
+3 changes no shader constants, D3D9 state, or native emitter references. Do
+not enable a new stereo draw path before the route and threading are measured.
+
+Every candidate session was rolled back only after Singularity exited; guarded
+accepted-profile postflight passed. Installed accepted hashes after the final
+rollback: d3d9 `789749E5...`, INI `8B0B0B4C...`, dinput8 `5B948DDB...`.
+Next correction must address eye-specific placement of the original emitter's
+draws at their actual bypass path, retaining its three material passes. Do not
+promote single-pair drops or infer shader matrix convention from CTAB alone.
