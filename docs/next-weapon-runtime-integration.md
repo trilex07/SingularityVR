@@ -3,6 +3,11 @@
 Active scope: Valkyrie, Volk S4 and Kasimov. Preserve the separate Centurion
 cylinder implementation and every accepted non-reload system. No Steam access.
 
+Delivery: draft PR https://github.com/trilex07/SingularityVR/pull/45 against main,
+created via the authenticated GitHub browser after connector create returned403.
+Branch `feature/next-weapon-reload-assets` pushed; NOT merged. Browser confirmed
+the draft and no base conflicts. MAIN integrates/reviews and owns L3/L4.
+
 ## Mechanism and falsifiers
 
 The offline native mapper resolves the registered no-parameter AttemptReload
