@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+Projector session 37168: late canvas interval inspected, active stereo ~88–90
+FPS but NO shader capture: scheduler failed earlier on >1 MiB log backlog.
+Safe installation restored and independently hash-verified. Recorder repaired
+and offline regression/full-session replay PASS; live validation pending.
+Next route requires holding Pause 10 seconds at each of two canvas viewpoints,
+then resume/hold view 10 seconds. Await fresh start. See docs/projector-stereo.md.
+
 LATEST MAIN projector investigation: user reports first-building projected
 film off its canvas at eye edges. Offline asset ownership identifies
 LightFunction -> SpotLightComponent -> SpotLightMovable, source material

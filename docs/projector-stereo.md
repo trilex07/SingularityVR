@@ -58,8 +58,9 @@ the game PID, times out, refuses an existing request, and copies completed
 traces. No controller input or automatic movement is sent.
 
 Headset route: enter the projector room and face its canvas while the film is
-running. Open/close Pause, hold the view for 10 seconds. Move a little closer
-or to the side where the misplaced image is visible, open/close Pause again,
+running. Hold Pause open for 10 seconds, resume and hold the view for 10 seconds.
+Move a little closer or to the side where the misplaced image is visible,
+hold Pause open for 10 seconds again, resume,
 hold 10 seconds, then exit normally. No chat switching; no need to fire.
 One brief readback hitch per capture is possible.
 
@@ -68,3 +69,27 @@ shader constants using CTAB and disassembly, inspect sampler/resource chains
 and both-eye constants, and match candidates to the SBS image. Only then use
 a narrowly scoped discriminator/correction. Do not reuse muzzle shader hashes
 or apply the cinema/Bink presentation fix to this light function.
+
+## Session 37168: capture failure, not a renderer result
+
+User identifies the interval between the penultimate and final pauses as the
+canvas view. In the archived log these are class3 at line 83884, gameplay
+class0 at 85795, and class3 at 88301. This gameplay interval reports active
+OpenXR stereo and roughly 88.4–90 FPS; it does not identify projector pixels.
+The scheduler had already failed on an unread burst above 1 MiB after its
+earlier pause cue. No shadow-pass-37168 trace exists. Early SBS captures cannot
+substitute for this late canvas view. No projector shader fix is justified yet.
+
+Session evidence is local/ignored at build/projector/evidence-37168. Log SHA256:
+803AB1A8DF1024993E33D2886DC05EC3FF968A812D170895B3E6C361BEDB4997.
+Game exited; restore watcher completed and independent installed DLL/injector/
+INI/UI hashes match the accepted profile. No candidate remains installed.
+
+Recorder now drains backlog in bounded chunks, preserving partial UTF8/lines.
+Projector cues require six focused heartbeat records during Pause before
+return to gameplay, so quick travel pauses do not arm captures. Hold Pause
+for 10 seconds at each intended view. Other scheduler modes retain their cues.
+Offline regression PASS: >1 MiB burst, UTF8 boundaries, partial-line append,
+truncation, short/long pause and Options rejection. Actual session replay PASS:
+11,575,857 bytes / 91,527 lines / no leftover fragment. New recorder live
+validation remains pending; no C++ or installed-file changes in this repair.

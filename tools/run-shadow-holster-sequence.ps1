@@ -14,8 +14,8 @@ $runtime = Join-Path $env:LOCALAPPDATA 'SingularityVR'
 $logPath = Join-Path $runtime 'view_matrix.log'
 $requestPath = Join-Path $runtime 'shadow-pass.request'
 $copyRoot = Join-Path (Split-Path $PSScriptRoot -Parent) 'deployment\shadow-probe'
-$script:logOffset = 0L
-$script:fragment = ''
+. (Join-Path $PSScriptRoot 'projector\capture-log-reader.ps1')
+$script:tail = New-CaptureLogTail
 $script:ownedRequest = $null
 
 function Confirm-Game {
@@ -26,31 +26,7 @@ function Confirm-Game {
 }
 
 function Read-NewLogLines {
-    if (-not (Test-Path -LiteralPath $logPath -PathType Leaf)) { return @() }
-    $stream = [IO.File]::Open($logPath,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::ReadWrite)
-    try {
-        if ($stream.Length -lt $script:logOffset) {
-            $script:logOffset = 0L
-            $script:fragment = ''
-        }
-        $available = $stream.Length - $script:logOffset
-        if ($available -eq 0) { return @() }
-        if ($available -gt 1048576) { throw 'Log reader fell more than 1 MiB behind' }
-        [void]$stream.Seek($script:logOffset,[IO.SeekOrigin]::Begin)
-        $bytes = [byte[]]::new([int]$available)
-        $count = $stream.Read($bytes,0,$bytes.Length)
-        $script:logOffset += $count
-        $combined = $script:fragment + [Text.Encoding]::UTF8.GetString($bytes,0,$count)
-        $parts = $combined -split "`n",0,'SimpleMatch'
-        if ($parts.Count -eq 1) {
-            $script:fragment = $combined
-            return @()
-        }
-        $script:fragment = $parts[-1]
-        return @($parts[0..($parts.Count-2)] | ForEach-Object { $_.TrimEnd("`r") })
-    } finally {
-        $stream.Dispose()
-    }
+    return @(Read-CaptureLogLines -Path $logPath -State $script:tail)
 }
 
 function Wait-Until([datetime]$target,[bool]$rejectEarlyStore) {
@@ -108,7 +84,7 @@ try {
         New-Item -ItemType Directory -Path $copyRoot | Out-Null
     }
     if (Test-Path -LiteralPath $logPath) {
-        $script:logOffset = (Get-Item -LiteralPath $logPath).Length
+        $script:tail = New-CaptureLogTail -Offset (Get-Item -LiteralPath $logPath).Length
     }
     if ($Mode -in @('PauseReturn','Projector')) {
         # Runtime log confirms class3 is SPPause and class0 is gameplay.
@@ -119,10 +95,18 @@ try {
         Write-Output "WAITING_FOR_PAUSE_RETURN pid=$GamePid capture=$capture"
         $deadline = (Get-Date).AddSeconds($SyncTimeoutSeconds)
         $sawPause = $false
+        $projectorCue = @{Paused=$false; Beats=0}
         $resumedAt = $null
         while ((Get-Date) -lt $deadline -and -not $resumedAt) {
             Confirm-Game
             foreach ($line in @(Read-NewLogLines)) {
+                if ($Mode -eq 'Projector') {
+                    if (Update-ProjectorCaptureCue -State $projectorCue -Line $line) {
+                        $resumedAt = Get-Date
+                        break
+                    }
+                    continue
+                }
                 if ($line -match '^menu-submit-edge: class=3\s') { $sawPause = $true }
                 elseif ($sawPause -and $line -match '^menu-submit-edge: class=0\s') {
                     $resumedAt = Get-Date
