@@ -10,8 +10,13 @@ sessions ended with guarded rollback and independent accepted-file hashes.
 Selected draws for both tested pairs use `DrawIndexedPrimitiveUP` outside
 `StereoPair` (the older indexed-buffer claim below is superseded). A bounded
 default-OFF route witness now distinguishes off-thread/inert, HUD, quad, and
-stereo paths without altering pixels; it still needs L2/L3. See
-`docs/native-muzzle-stereo.md` for receipts and falsifier.
+stereo paths without altering pixels. L1 tests and clean x86 PE32 `/O2` build
+from `1987df8` passed; DLL SHA `56F1DDE9...E641`. Offline candidate
+`build/native-muzzle-main/candidate-route-observe-488` has INI SHA
+`4C58BD31...299E`, mode 3 observe-only, full-frame probe OFF; guarded install
+preflight (`-WhatIf`) passed. It has **not** been deployed or tested in Steam.
+Steam remains on accepted DLL `789749E5...F361B`, INI `8B0B0B4C...CCFAF`.
+See `docs/native-muzzle-stereo.md` for receipts and falsifier.
 
 LATEST MAIN 2026-10-17 native muzzle path witness: round 4 L4 report arrived:
 no FPS drop, broad glow still present, no visible muzzle smoke/flash, wall
