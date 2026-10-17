@@ -4,6 +4,10 @@ param(
     [string]$AcceptedProfilePath,
     [Parameter(Mandatory = $true)]
     [string]$ArtifactDir,
+    [string]$DropVSHash,
+    [string]$DropPSHash,
+    [int]$DropVSBytes = 0,
+    [int]$DropPSBytes = 0,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -69,7 +73,6 @@ function Get-IniSectionValues([string]$Text) {
 }
 
 function Replace-UniqueAscii([byte[]]$Bytes, [string]$Before, [string]$After) {
-    if ($Before.Length -ne $After.Length) { throw 'Probe substitutions must preserve byte length.' }
     $old = [System.Text.Encoding]::ASCII.GetBytes($Before)
     $new = [System.Text.Encoding]::ASCII.GetBytes($After)
     $positions = [System.Collections.Generic.List[int]]::new()
@@ -81,9 +84,12 @@ function Replace-UniqueAscii([byte[]]$Bytes, [string]$Before, [string]$After) {
         if ($match) { $positions.Add($i) }
     }
     if ($positions.Count -ne 1) { throw "Expected exactly one byte sequence '$Before'; found $($positions.Count)." }
-    $copy = [byte[]]::new($Bytes.Length)
-    [Array]::Copy($Bytes, $copy, $Bytes.Length)
-    for ($j = 0; $j -lt $new.Length; $j++) { $copy[$positions[0] + $j] = $new[$j] }
+    $copy = [byte[]]::new($Bytes.Length - $old.Length + $new.Length)
+    [Array]::Copy($Bytes, 0, $copy, 0, $positions[0])
+    [Array]::Copy($new, 0, $copy, $positions[0], $new.Length)
+    $tailStart = $positions[0] + $old.Length
+    $tailCount = $Bytes.Length - $tailStart
+    [Array]::Copy($Bytes, $tailStart, $copy, $positions[0] + $new.Length, $tailCount)
     return $copy
 }
 
@@ -111,9 +117,50 @@ if ($probeBefore -ne '0' -or $modeBefore -ne '1') {
     throw "Expected accepted baseline $probeKey=0 and $modeKey=1; got $probeBefore / $modeBefore."
 }
 
-$candidateIniBytes = Replace-UniqueAscii $iniBytes 'NativeMuzzleProbe=0' 'NativeMuzzleProbe=1'
-$candidateIniBytes = Replace-UniqueAscii $candidateIniBytes 'NativeMuzzleStereoMode=1' 'NativeMuzzleStereoMode=0'
-if ($candidateIniBytes.Length -ne $iniBytes.Length) { throw 'Staged INI size changed unexpectedly.' }
+$dropRequested = $DropVSHash -or $DropPSHash -or $DropVSBytes -or $DropPSBytes
+if ($dropRequested) {
+    if (-not $DropVSHash -or -not $DropPSHash -or $DropVSBytes -le 0 -or $DropPSBytes -le 0) {
+        throw 'A mode-1 drop needs all four values: VS/PS hashes and byte lengths.'
+    }
+    if ($DropVSHash -notmatch '^[0-9A-Fa-f]{16}$' -or $DropPSHash -notmatch '^[0-9A-Fa-f]{16}$') {
+        throw 'Drop shader hashes must each be exactly 16 hexadecimal characters.'
+    }
+    foreach ($size in @($DropVSBytes, $DropPSBytes)) {
+        if ($size -lt 8 -or $size -gt 32768 -or ($size % 4) -ne 0) {
+            throw "Invalid drop shader byte length: $size."
+        }
+    }
+    if ($modeBefore -ne '1') { throw 'A selected-pair drop requires the accepted baseline mode=1.' }
+}
+
+$candidateIniBytes = Replace-UniqueAscii $iniBytes "NativeMuzzleProbe=$probeBefore" 'NativeMuzzleProbe=1'
+$iniChanges = [System.Collections.Generic.List[object]]::new()
+$iniChanges.Add([ordered]@{ key = $probeKey; before = $probeBefore; after = '1'; reason = 'Enable the bounded idle plus three-shot driver traces.' })
+if ($dropRequested) {
+    $targets = [ordered]@{
+        'Diagnostic/NativeMuzzleVSHash' = $DropVSHash.ToUpperInvariant()
+        'Diagnostic/NativeMuzzleVSBytes' = [string]$DropVSBytes
+        'Diagnostic/NativeMuzzlePSHash' = $DropPSHash.ToUpperInvariant()
+        'Diagnostic/NativeMuzzlePSBytes' = [string]$DropPSBytes
+    }
+    foreach ($key in $targets.Keys) {
+        $name = $key.Substring($key.IndexOf('/') + 1)
+        $before = Get-ProfileIniValue $key
+        $after = [string]$targets[$key]
+        $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "$name=$before" "$name=$after"
+        $iniChanges.Add([ordered]@{ key = $key; before = $before; after = $after; reason = 'Exact mode-1 pair chosen for the next bounded MAIN discriminator; this is not a renderer fix.' })
+    }
+    $modeAfter = $modeBefore
+    $planReason = "MAIN L3 exact-pair drop discriminator for measured pair $($DropVSHash.ToUpperInvariant()):$($DropPSHash.ToUpperInvariant()); keep the bounded probe ON; no stereo alias repair."
+} else {
+    $modeAfter = '0'
+    $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "NativeMuzzleStereoMode=$modeBefore" "NativeMuzzleStereoMode=$modeAfter"
+    $iniChanges.Add([ordered]@{ key = $modeKey; before = $modeBefore; after = $modeAfter; reason = 'Keep the renderer unchanged for the native-only baseline capture.' })
+    $planReason = 'MAIN L3 native muzzle capture: preserve accepted profile; set only NativeMuzzleProbe=1 and NativeMuzzleStereoMode=0 for native-only baseline traces.'
+}
+if (-not $dropRequested -and $candidateIniBytes.Length -ne $iniBytes.Length) {
+    throw 'Baseline probe substitutions unexpectedly changed the INI size.'
+}
 
 New-Item -ItemType Directory -Path $artifactPath | Out-Null
 $stageDll = Join-Path $artifactPath 'd3d9.dll'
@@ -133,7 +180,7 @@ if ($candidateDllSha -eq $expectedDll) { throw 'Candidate d3d9.dll unexpectedly 
 $plan = [ordered]@{
     schema = 'singularityvr-change-plan-v1'
     profileSha256 = $profileSha
-    reason = 'MAIN L3 native muzzle capture: preserve accepted profile; set only Diagnostic/NativeMuzzleProbe=1 and NativeMuzzleStereoMode=0 for native-only baseline traces.'
+    reason = $planReason
     files = @(
         [ordered]@{
             path = 'Binaries/d3d9.dll'
@@ -142,10 +189,7 @@ $plan = [ordered]@{
             reason = 'MAIN build from current origin/main with explicit exact-pair native muzzle selection; bounded probe for L3 capture.'
         }
     )
-    ini = @(
-        [ordered]@{ key = $modeKey; before = $modeBefore; after = '0'; reason = 'Keep the renderer unchanged for the native-only baseline capture.' },
-        [ordered]@{ key = $probeKey; before = $probeBefore; after = '1'; reason = 'Enable the bounded idle plus three-shot native driver trace capture.' }
-    )
+    ini = @($iniChanges.ToArray())
 }
 $planPath = Join-Path $artifactPath 'change-plan-native-muzzle-probe.json'
 $plan | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $planPath -Encoding UTF8
@@ -159,17 +203,14 @@ $report = [ordered]@{
     candidateD3d9Sha256 = $candidateDllSha
     installedDinput8Sha256 = $actualDinput
     candidateDinput8Sha256 = $candidateDinputSha
-    iniChanges = @(
-        [ordered]@{ key = $modeKey; before = $modeBefore; after = '0' },
-        [ordered]@{ key = $probeKey; before = $probeBefore; after = '1' }
-    )
+    iniChanges = @($iniChanges.ToArray())
     steamWritten = $false
     changePlan = $planPath
 }
 $report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $artifactPath 'candidate-manifest.json') -Encoding UTF8
-Write-Host 'Native muzzle probe package prepared offline; Steam was not modified.'
+Write-Host 'Native muzzle candidate package prepared offline; Steam was not modified.'
 Write-Host "Artifact: $artifactPath"
 Write-Host "Candidate d3d9.dll SHA-256: $candidateDllSha"
 Write-Host "Candidate dinput8.dll SHA-256: $candidateDinputSha (unchanged accepted file)"
-Write-Host "Candidate SingularityVR.ini SHA-256: $candidateIniSha"
+Write-Host "Candidate SingularityVR.ini SHA-256: $candidateIniSha (probe=1, mode=$modeAfter)"
 Write-Host "Change plan: $planPath"

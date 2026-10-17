@@ -166,9 +166,11 @@ This is compile/test evidence only; no runtime or visual success is inferred.
 
 An offline package generator, `tools/fx/prepare_native_muzzle_probe.ps1`, reads
 the installed accepted INI and binaries, verifies their profile pins, and stages
-a candidate changing only `Diagnostic/NativeMuzzleProbe=0→1` and
-`Diagnostic/NativeMuzzleStereoMode=1→0`. The staged DLL hash is the MAIN build
-above; `dinput8.dll` remains `5B948DDB...`. Accepted-profile `-WhatIf` has a
+either a baseline probe (`NativeMuzzleProbe=0→1`, `NativeMuzzleStereoMode=1→0`)
+or, when all four `-DropVSHash/-DropVSBytes/-DropPSHash/-DropPSBytes` parameters
+are supplied, a mode-1 exact-pair drop while retaining `NativeMuzzleStereoMode=1`.
+The staged DLL hash is the MAIN build above; `dinput8.dll` remains `5B948DDB...`.
+Accepted-profile `-WhatIf` has a
 PowerShell 7 ShouldProcess interaction, so preflight must use the read-only
 `Assert-AcceptedDeployment` function directly or the normal guarded runner after
 MAIN confirms the process is closed. The guarded runner installed the package
@@ -206,14 +208,63 @@ the pair may be shared by multiple particle types. Mode 1 now drops only this
 exact pair; bounded probe remains enabled. No shader matrix alias or generated
 per-eye path is active.
 
-The mode-1 package is installed for the next user test under the guarded runner.
-Candidate DLL SHA-256 is `4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`,
-INI SHA-256 is `6265E14D84E67B6A4393A3218278A85264AD1B7F2803B50A10FFECF83D5D0372`,
-and unchanged `dinput8.dll` remains `5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`.
-The test backup is `deployment/install-backups/20261017-202413`; install report
-is `deployment/install-reports/20261017-202414.json`. After the test, restore
-the accepted profile and verify the restored hashes. If this pair's removal
-does not remove the seam glow, do not promote this selection; test another
-measured candidate instead of jumping to mode 2. Mode 2 still requires exact
-camera-alias and matrix-convention evidence for the identified draw. Smoke, audio, original
-light, and both-eye visual correctness remain unverified.
+#### Round 2 outcome — 314D pair rejected for the large seam glow
+
+The mode-1 exact-pair package used DLL SHA-256
+`4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`, INI
+`6265E14D84E67B6A4393A3218278A85264AD1B7F2803B50A10FFECF83D5D0372`, and
+unchanged `dinput8.dll` `5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`.
+Its backup was `deployment/install-backups/20261017-202413`; report:
+`deployment/install-reports/20261017-202414.json`.
+
+Session PID `28236` completed all four traces with zero overflow. Drop counters
+were 24, 264 and 154 over successive reporting windows; no alias, refusal,
+restore failure, shader overflow or fault was logged. The user's short report
+did not clearly distinguish muzzle flash from impact. The captured gameplay SBS
+at 20:27:46 nevertheless shows the broad center/seam glow still present, with
+smaller muzzle-adjacent flashes in both eye views. Therefore this pair is not
+the producer of the broad glow and is not promoted. The shot-only match remains
+useful provenance, not a visual identity.
+
+Rollback completed through the guarded runner and independently verified
+against both the backup and accepted profile: live `d3d9.dll`
+`789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B`, live INI
+`8B0B0B4CF2DB78514A44B72CF3E79CC1C48C74E5632CDA34A468CA61702CCFAF`, and live
+`dinput8.dll` `5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`.
+The game was closed. No VFX/audio fix or physical acceptance is claimed.
+
+#### Round 3 candidate — scene-color particle quad
+
+The next discriminator is `7EB90CEBB053DA04:4377F314D1C93468` (VS 3904 bytes,
+PS 804 bytes). In each of three post-shot traces it contributes exactly two
+four-vertex, alpha-blended draws: one in each eye's scissor rect on the full SBS
+target. The PS CTAB names `SceneColorTexture` and `ScreenPositionScaleBias`; the
+VS has particle-cloud parameters. It is a plausible broad scene-color effect,
+not yet proven to be the visible glow. The VS witness uses c0, marked tracked,
+with no distinct matrix alias (`alias=-1`); this evidence does not justify mode
+2. Test only the exact mode-1 drop, keeping probe ON and all other accepted keys
+unchanged.
+
+Offline staging command:
+
+```powershell
+tools/fx/prepare_native_muzzle_probe.ps1 `
+  -AcceptedProfilePath <accepted-profile.json> `
+  -ArtifactDir <new-candidate-directory> `
+  -DropVSHash 7EB90CEBB053DA04 -DropVSBytes 3904 `
+  -DropPSHash 4377F314D1C93468 -DropPSBytes 804
+```
+
+The prepared candidate INI SHA-256 is
+`55881D9963C2AE4A13439D889EF5691D8684142FF6CA221B7972BF99C301E9A9`; candidate
+DLL remains `4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`.
+Accepted-profile install preflight passed. The guarded runner installed it and
+postflight/independent SHA checks passed. Backup:
+`deployment/install-backups/20261017-203710`; report:
+`deployment/install-reports/20261017-203710.json`. Live DLL and INI hashes match
+the candidate; `dinput8.dll` remains accepted. The L1 native-muzzle test suite
+passed after extending the offline generator; no DLL source changed since L2.
+The game is closed and awaiting this user test. If this drop removes the broad
+glow while retaining the actual muzzle flash, it identifies a contributing
+scene-color draw, but still does not prove a safe stereo fix. Keep mode 2 OFF
+until actual matrix consumption/convention and per-eye pixels are justified.

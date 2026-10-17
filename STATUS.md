@@ -1,30 +1,43 @@
 # STATUS — session handoff
 
-LATEST MAIN 2026-10-17 native muzzle investigation is at its second PSVR2 gate.
-Round 1 completed and the user did not see smoke, was unsure whether a brief
-flash was the projectile impact, did not notice muzzle sound, and reported
-performance as apparently okay. The four bounded driver traces completed with
-zero overflow; the SBS captures at 20:14:10 and 20:14:14 show a bright muzzle-
-adjacent mark plus a much larger glow at the SBS seam. These pixels do not yet
-identify their producing draw. Offline analysis found 15 shot-only shader pairs.
+LATEST MAIN 2026-10-17 native muzzle investigation: round 2 is complete and
+round 3 candidate is installed for the next controlled Steam test. Round 1 found
+15 shot-only candidates; its SBS captures showed a bright muzzle mark and a
+much larger glow at the eye seam, without identifying a producer.
 
-The next drop-only discriminator is exact pair
-`314D478A9CFDBE37:C118540CCDBCB241` (VS 3384 bytes, PS 448 bytes): 12 draws in
-each post-shot trace, zero in idle, three texture groups, including a 128x256
-texture matching the original `muzzleFlashDir_01` dimensions. This is a
-measured candidate, not proven identity. Probe remains ON; mode 1 removes only
-this exact pair; no matrix repair or per-eye splitting is enabled.
+Round 2 dropped only `314D478A9CFDBE37:C118540CCDBCB241` (VS 3384 bytes,
+PS 448 bytes). Four bounded traces were complete with zero overflow; selected
+drop counters were 24, 264, and 154, with no fault or restore failure. The user
+could not assess the effect clearly because the shot went into a wall. More
+decisively, the captured gameplay SBS at 20:27:46 still shows the central glow
+while small muzzle-adjacent flashes remain in both eye views. Reject this pair
+as the source of the large seam glow; do not promote it or enable mode 2.
 
-Current gated candidate is installed; game is closed. DLL SHA256
-`4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`, INI
-`6265E14D84E67B6A4393A3218278A85264AD1B7F2803B50A10FFECF83D5D0372`, and
-unchanged `dinput8.dll` `5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`.
-Mode 1; `NativeMuzzleProbe=1`; exact pair/byte lengths are in the INI. Guarded
-install and postflight accepted-profile checks passed. Rollback backup:
-`deployment/install-backups/20261017-202413`; report:
-`deployment/install-reports/20261017-202414.json`. After this round, restore the
-accepted profile and independently verify DLL/INI hashes. No VFX fix, audio
-fix, or physical acceptance is claimed. See `docs/native-muzzle-stereo.md`.
+After the round, the accepted installation was restored and independently
+verified: `d3d9.dll` `789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B`,
+`SingularityVR.ini` `8B0B0B4CF2DB78514A44B72CF3E79CC1C48C74E5632CDA34A468CA61702CCFAF`,
+and `dinput8.dll` `5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`.
+Each live hash matches its round-2 backup; game is closed. Do not claim a muzzle
+fix or visual acceptance.
+
+The next single-pair discriminator is `7EB90CEBB053DA04:4377F314D1C93468`
+(VS 3904 bytes, PS 804 bytes). Offline evidence: two four-vertex draws per shot,
+one in each eye scissor; full SBS color target, alpha blend, and a pixel shader
+using `SceneColorTexture` plus `ScreenPositionScaleBias`. The vertex shader is
+particle-cloud code. This is a better hypothesis for the large scene-color
+glow, not yet its proven producer. It has camera register c0 marked tracked but
+no distinct alias witness, so this round remains a mode-1 drop discriminator,
+not mode 2. Candidate INI SHA-256 `55881D9963C2AE4A13439D889EF5691D8684142FF6CA221B7972BF99C301E9A9`;
+DLL remains the current MAIN `/O2` build `4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`.
+The guarded runner installed the mode-1 candidate; postflight and independent
+candidate/installed SHA checks passed. Current test backup:
+`deployment/install-backups/20261017-203710`; report:
+`deployment/install-reports/20261017-203710.json`. `d3d9.dll` is PE32 x86 and
+matches the candidate at `4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`;
+INI matches at `55881D9963C2AE4A13439D889EF5691D8684142FF6CA221B7972BF99C301E9A9`;
+`dinput8.dll` remains accepted. Game is closed and waiting for the user test.
+L1 suite passed; probe/config only, no new DLL code since the checked `/O2`
+build. See `docs/native-muzzle-stereo.md`.
 
 LATEST MAIN 2026-10-17 startup readiness + Centurion tracked-cylinder stack
 promoted as the current stable build after user PSVR2 acceptance (“jest okej”).
