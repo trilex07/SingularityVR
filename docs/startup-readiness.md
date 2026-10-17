@@ -108,3 +108,25 @@ only, NO INI/assets, no accepted/installed/restore identity inferred or changed.
 SOURCE integration/rebuild by MAIN on current profile, not blind old DLL deploy.
 All opt-ins default OFF. Runtime baseline/fast path/curtain remain UNKNOWN;
 L1/L2 cannot establish actual load-time reduction or movement availability.
+
+## MAIN Steam / PSVR2 acceptance and stable promotion (2026-10-17)
+
+The user accepted the combined startup-curtain and Centurion tracked-cylinder
+candidate in the physical PSVR2 test. The scoped acceptance is the tested route;
+it does NOT prove that all UE3 content finishes streaming behind the curtain or
+that pawn/hook acquisition became faster. Those remain separate measurements.
+
+Candidate `c0393dd` was promoted as a fast-forward to `main` at
+`95a04388e2340b414518192b79845003ac520f8c`; intervening commits were documentation
+and restore-lease bookkeeping, with no change under `spikes/view_matrix/`.
+Persistent Steam install was made through `tools/deploy-singularityvr.ps1` after
+the test restore had completed and the game was confirmed closed. Installed DLL
+SHA256 `789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B`,
+candidate INI SHA256 `8B0B0B4CF2DB78514A44B72CF3E79CC1C48C74E5632CDA34A468CA61702CCFAF`,
+unchanged dinput8 SHA256
+`5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`.
+Backup/receipt: `deployment/install-backups/20261017-194405` and
+`deployment/install-reports/20261017-194406.json`. Startup curtain uses the
+3000ms minimum with existing 5000ms fail-open maximum; it is not an engine asset
+streaming barrier. All four reviewed Centurion follow-up switches are enabled.
+UI package and all other protected assets were retained.

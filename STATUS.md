@@ -1,24 +1,30 @@
 # STATUS — session handoff
 
-LATEST MAIN 2026-10-17 startup/Centurion candidate deployed; L3 pending.
-User reported the prior candidate curtain only appeared briefly and the
-Centurion cylinder was detached beside the gun. Prior runtime log showed
-`ready=3F`, `hold=0 elapsed=110ms`: hook/pawn/XR readiness, not UE3 streaming.
-Prior INI had all four Centurion visual/refill flags OFF, so it did not exercise
-the tracked-cylinder path. Corrected candidate now has a 3000ms minimum visible
-curtain (5000ms existing fail-open maximum), `StartupPrewarm=1`, and the reviewed
-CenturionVisualFollowup/TrackedCylinder/PhysicalPolish/RefillOnly stack ON.
-All other parsed INI values are held at the accepted baseline. UI package is
-untouched. L2_PASS clean c0393dd, x86 PE32 /O2, DLL SHA256
-789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B.
-Deployment receipt `deployment/install-reports/20261017-192942.json` verifies
-DLL `789749E5…F361B`, INI `8B0B0B4C…2CCFAF`, unchanged dinput8
-`5B948DDB…729D59`, and backup `deployment/install-backups/20261017-192942`
-with accepted DADE170B/INI/dinput8 hashes. UI package was not a target and is
-still SHA256 `51CDAB5C…1A1A`. A 10-minute bounded restore lease is armed; it
-waits for the game to exit and restores only if candidate hashes still match.
-PSVR2 visual check is pending; the curtain is not proof that all UE3 assets
-have loaded.
+LATEST MAIN 2026-10-17 startup readiness + Centurion tracked-cylinder stack
+promoted as the current stable build after user PSVR2 acceptance (“jest okej”).
+Scope is the tested startup curtain / Centurion reload route only; it is not a
+claim that every UE3 asset has streamed before the curtain clears or that hook
+acquisition latency is faster. Candidate source `c0393dd` is unchanged in the
+production source tree at promoted `main` `95a04388e2340b414518192b79845003ac520f8c`.
+L1_PASS: startup suite and full Centurion suite (20 optimized C++ fixtures,
+own-process ABI/D3D9 witnesses, 62 Python tests). L2_PASS: x86 PE32 `/O2`, DLL
+SHA256 `789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B`.
+L3/L4 accepted by user for this tested route; no broader feature acceptance is
+inferred.
+
+Persistent Steam install uses that DLL plus the reviewed candidate INI:
+`StartupLoadingGate=1`, `StartupLoadingMinMs=3000` (bounded 5000ms fail-open),
+`StartupPrewarm=1`, and the Centurion VisualFollowup/TrackedCylinder/
+PhysicalPolish/RefillOnly flags ON. Every other protected INI value is pinned
+to the accepted profile. Installed hashes independently verified:
+DLL `789749E5…F361B`, INI `8B0B0B4C…2CCFAF`, dinput8
+`5B948DDB…729D59`; UI package was not changed and currently hashes to
+`60E72871…E8DB8`. Persistent deployment report
+`deployment/install-reports/20261017-194406.json`; pre-deploy backup
+`deployment/install-backups/20261017-194405` (accepted DLL DADE170B, prior INI,
+dinput8, and exact old accepted profile retained). Updated private profile hash
+`2D9FA6A89A65E089C444B5E6DBC3B989272DF8404636F4D24ED90658E1D02E1B` passes
+against every protected installed file and INI key. No restore lease remains.
 
 OFFLINE follow-up now adds a 3000 ms minimum visible hold, clamped to the
 existing 5000 ms fail-open timeout. It is a visible-duration policy, not a claim
