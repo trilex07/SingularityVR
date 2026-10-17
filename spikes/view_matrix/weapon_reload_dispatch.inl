@@ -155,14 +155,15 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     static unsigned records=0;static int priorReady=-1;const int ready=valid?int(kind):0;
     if(records<160&&(result.event!=Event::None||priorReady!=ready)){
         priorReady=ready;++records;
-        Log("next reload: %s kind=%d phase=%d pawn=%08X weapon=%08X clip=%d reserve=%d size=%d ready=%d native=%d renderWitness=%d permit=%d consumed=%d nativePermits=%ld nativeBlocks=%ld socketDist=%.3f shoulderDist=%.3f t=%llu (ammo observer; no writes)",
+        Log("next reload: %s kind=%d phase=%d pawn=%08X weapon=%08X clip=%d reserve=%d size=%d ready=%d native=%d renderWitness=%d permit=%d consumed=%d nativePermits=%ld nativeBlocks=%ld socketDist=%.3f shoulderDist=%.3f t=%llu nativeMagazineDraws=%ld (ammo observer; no writes)",
             Name(result.event),int(kind),int(t.phase),in.pawn,in.weapon,in.clip,in.reserve,in.capacity,
             valid?1:0,native?1:0,f.liveIdentityVerified?1:0,permit?1:0,f.nativePermitConsumed?1:0,
             Rd(g_nextNativePermits),Rd(g_nextNativeBlocks),
-            hipknife::Length(in.hand-in.socket),hipknife::Length(in.hand-in.pouch),(unsigned long long)now);
+            hipknife::Length(in.hand-in.socket),hipknife::Length(in.hand-in.pouch),(unsigned long long)now,Rd(g_nextNativeMagazineDraws));
     }
 }
-static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertices,UINT first,UINT triangles,float* saved,UINT& reg){
+static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertices,UINT first,UINT triangles,float* saved,UINT& reg,
+                             weaponreload::ReplayPlan& replay){
     if(!NextReloadEnabled())return 0;
     const auto kind=NextKind(Rd(g_gunVerts));const auto* spec=weaponreloadanim::Find(kind);
     if(!spec)return 0;const unsigned index=weaponreload::Index(kind);
@@ -221,9 +222,33 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
     if(TryAcquireSRWLockExclusive(&g_nextVisualLock)){
         g_nextWitness={true,kind,visual.pawn,visual.weapon,now,socket,clipTracking,nativeRoot};ReleaseSRWLockExclusive(&g_nextVisualLock);
     }
-    if(!weaponreload::Active(visual.phase)&&!rootHeld)return 0;
-    const float frame=g_nextTiming[index].Frame(g_nextAnimation[index],visual.phase,visual.since,now);
-    if(!weaponreload::Palette(g_nextAnimation[index],frame,weaponreload::Absent(visual.phase),parentPalette,regs,changed))return 0;
+    const bool drop=g_nextNativeMagazine&&visual.dropMs&&now>=visual.dropMs&&now-visual.dropMs<1200;
+    if(!weaponreload::Active(visual.phase)&&!rootHeld&&!drop)return 0;
+    if(weaponreload::Active(visual.phase)||rootHeld){
+        const float frame=g_nextTiming[index].Frame(g_nextAnimation[index],visual.phase,visual.since,now);
+        if(!weaponreload::Palette(g_nextAnimation[index],frame,weaponreload::Absent(visual.phase),parentPalette,regs,changed))return 0;
+    }else std::memcpy(changed,parentPalette,regs*4*sizeof(float));
+    if(g_nextNativeMagazine){
+        armbind::Mat world;
+        if(!weaponreload::TrackingMap({g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
+            g_baseYaw*(6.2831853f/65536.f),MetresToUU(),world))return 0;
+        replay.index=index;replay.regs=regs;
+        if(visual.phase==weaponreload::Phase::NeedAmmo||visual.phase==weaponreload::Phase::Carrying){
+            const auto pose=visual.phase==weaponreload::Phase::Carrying?visual.hand:visual.source;
+            armbind::Mat carried;
+            if(!weaponreload::HandMatrix(clipTracking,visual.aim,pose,g_nextClipRenderer[index].SourceCentre(),carried,
+                    visual.phase==weaponreload::Phase::Carrying?hipknife::V{0,0,-.06f}:hipknife::V{})||
+               !weaponreload::SparePalette(g_nextAnimation[index],carried,local,controller,world,regs,replay.spare[replay.count]))return 0;
+            ++replay.count;
+        }
+        if(drop){
+            auto falling=visual.drop;const float elapsed=float(now-visual.dropMs)*.001f;
+            falling.m[3][1]-=.5f*9.81f*elapsed*elapsed;
+            if(!weaponreload::SparePalette(g_nextAnimation[index],falling,local,controller,world,regs,replay.spare[replay.count]))return 0;
+            ++replay.count;
+        }
+        if(replay.count)std::memcpy(replay.attached,changed,regs*4*sizeof(float));
+    }
     }
     reg=(UINT)layout.bones;
     if(FAILED(g_origSetVSConstF(dev,reg,changed,regs))){
@@ -233,6 +258,7 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
     return int(regs); // caller restores after BOTH StereoPair eyes, even failure
 }
 static void DrawNextReload(IDirect3DDevice9* dev){
+    if(g_nextNativeMagazine)return; // native per-eye replay owns stock/carry/drop, no private-depth clear
     if(!NextReloadEnabled()||!dev||!g_nextPresentation.Allowed()||!VrModeOn()||!InGameplay()||!g_haveEyes||
        !Rd(g_dupDraws)||Rd(g_gamePaused)||Rd(g_vrUiMenu)||Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||
        CutsceneNativeCameraArmed()||g_xrSessionState!=XR_SESSION_STATE_FOCUSED)return;

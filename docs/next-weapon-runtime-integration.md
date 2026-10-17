@@ -5,8 +5,10 @@ cylinder implementation and every accepted non-reload system. No Steam access.
 
 Delivery: draft PR https://github.com/trilex07/SingularityVR/pull/45 against main,
 created via the authenticated GitHub browser after connector create returned403.
-Branch `feature/next-weapon-reload-assets` pushed; NOT merged. Browser confirmed
-the draft and no base conflicts. MAIN integrates/reviews and owns L3/L4.
+Branch `feature/next-weapon-reload-assets` pushed; NOT merged. Initial creation
+was conflict-free; that is not a current mergeability assertion. MAIN integrates/
+reviews and owns L3/L4. Native-material follow-up below supersedes the original
+albedo-only presentation when its separate default-OFF opt-in is enabled.
 
 ## Mechanism and falsifiers
 
@@ -44,7 +46,7 @@ Steam or physical PSVR2 correctness. New per-weapon flags default OFF.
 
 `weapon_reload_dispatch.inl` is included by production `d3d9.cpp`, not a detached
 prototype. It is called before knife/support routing, from the existing native
-AttemptReload hook, inside native `StereoPair`, at overlay submission, and on
+AttemptReload hook, inside native `StereoPair`, at legacy overlay submission, and on
 XR init/camera loss/focus loss/Reset. The THREE flags automatically enable their
 own native guard and single normal XInput reload tap; Centurion flags/FSM stay
 separate. No extra MinHook owner or device slot65 hook is introduced.
@@ -79,9 +81,46 @@ Cancellation restores native visuals and forwarding. A missing witness, stale
 HUD observation, lock contention, unsupported version or lost context intentionally
 leaves native behavior available; no claim of suppressing auto-reload outside a
 verified context. Full-clip/no-reserve ejection is intentionally not supported.
-The carried original albedo uses private overlay depth, not the game's complete
-normal/specular/light material or hand/world occlusion; those are NOT accepted
-visual claims. Native attached weapon materials remain untouched.
+Legacy presentation (`ReloadNativeMagazine=0`) uses original albedo/private
+overlay depth, NOT full native lighting/occlusion. See the independent opt-in
+below; neither path has physical acceptance for these three weapons yet.
+
+## Native-material magazine follow-up (user-requested PR45 update)
+
+Mechanism: the reported Centurion spare problems reveal the same limitation in
+these three weapons: the overlay has a separate unlit albedo and clears PRIVATE
+depth. An arbitrary colour multiplier cannot fix that ownership/occlusion bug.
+Hypothesis: replay the original native gun DIP inside EACH existing stereo-eye
+callback, keeping only its measured rigid magazine bone alive. Retarget that
+bone to the already-tested stock/carry/drop affine map; collapse every other
+bone to the SAME point so no body/trigger/bolt triangle remains. Exact original
+IB/CTAB/current-pawn/weapon/freshness/scene/focus checks remain mandatory.
+
+`[Input] ReloadNativeMagazine=1` (default0) selects this new presentation for
+whichever ONE weapon's manual reload flag is enabled. It does not enable or
+change the independent Centurion experiment/sequence. All three still use
+Circle eject -> physical-left shoulder grip -> insert/release, NO closing flick.
+Native ammo permit/ACK/control logic and original child/root/scope animation
+are unchanged. Existing original caches are reused; no new art/audio required.
+
+The production route now retains native VB/IB, UV, normals, material shaders,
+textures, pixel constants, render targets and depth/stencil state. ONLY the
+measured bone registers change, restore after EACH replay even on partial
+upload/draw failure, then the entire saved palette restores after BOTH eyes.
+Stock, carried and dropped magazines share this path; old private-depth overlay
+returns immediately under the opt-in. Extra DIP cost is bounded to at mostTWO
+copies per eligible pass/eye (new stock/carried plus old falling magazine), no
+draw-time allocation/file I/O/material or depth-target switch. Attachment/scope
+chunks never replay as magazines; ambiguous segmented/hand-palette draws refuse.
+
+Falsifiers: cache-metres -> bind -> native-skin/local/controller -> XR does not
+roundtrip for each actual clip slot; other bone triangles remain; material/
+texture/depth state changes; palette survives a failed second-eye draw; weapon
+or context swap reuses a stale witness. OWN D3D9Ex synthetic material/depth
+fixture checks all THREE clip slots, BOTH eyes and Reset; it is NOT a real
+game shader or scene. Same bound material does not prove all position-dependent
+lighting, shadows, hand/depth ordering or scene occlusion is correct. Native
+lighting appearance, cast shadows, alignment and performance remain MAIN L3/L4.
 
 ## MAIN integration / offline candidate
 
@@ -98,6 +137,8 @@ INI surgical edits only: `[Input] ReloadControlLayout=1`, then exactly ONE of
 All three default0. Do not replace user INI or change accepted Centurion keys.
 Right-handed/unswapped first slice: Circle eject; physical LEFT grip for ammo;
 Cross health/right-stick-up jump come from the already existing layout.
+For the native-material round add ONLY `ReloadNativeMagazine=1`; legacy control
+is0. Keep every accepted Centurion/INI/asset key untouched.
 
 Offline handoff folder generator refuses dirty source/build receipts, wrong
 PE/architecture/optimization/DLL SHA, wrong private caches and output outside
@@ -114,7 +155,8 @@ restore, with no file replacement while Singularity.exe is running.
 
 ## Verification and physical route
 
-Final offline receipt (2026-10-17): production source
+Previous albedo-only offline receipt (2026-10-17), superseded for the new
+native-material opt-in by the later follow-up receipt: production source
 `4c965dd65e765b8a77aba701bfe4ac35774ca84a`, clean tree, x86 PE32 `/O2`, no
 performance instrumentation, DLL3190272 bytes, SHA-256
 `EDBE3F35CCE9869C166AE08B4F22B3E99DBF1B5AD79363B986791065CAF2649E`.
@@ -158,6 +200,9 @@ Press Circle once, see its original magazine eject, take ammo with a NEW left
 squeeze behind the left shoulder and release it at the gun; verify a single
 refill, correct reserve debit and stable weapon/controller alignment without a
 closing flick, then repeat a partial refill if possible.
+For native-material presentation pass the carried magazine in front/behind the
+gun and glove in both eyes; check matching colour, correct occlusion, unchanged
+native gun/scope/hand appearance, and no persistent/floating full gun copies.
 Cancel once by pausing or switching weapon, check pause/Options/stereo return,
 close normally and let MAIN verify restoration; report visual/fit/lighting or
 performance failures explicitly, without calling this physically verified yet.

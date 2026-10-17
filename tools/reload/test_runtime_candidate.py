@@ -51,4 +51,15 @@ class Tests(unittest.TestCase):
             self.assertIn(required, block)
         self.assertNotIn('RepointScriptHook(', block)
 
+    def test_native_magazine_opt_in_skips_overlay_and_replays_inside_stereo(self):
+        source = (ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf-8')
+        dispatch = (ROOT/'spikes/view_matrix/weapon_reload_dispatch.inl').read_text(encoding='utf-8')
+        self.assertIn('GetPrivateProfileIntA("Input","ReloadNativeMagazine",0,path)', source)
+        self.assertIn('if(g_nextNativeMagazine)return;', dispatch.split('static void DrawNextReload(',1)[1])
+        body = source.split('float nextSaved[16*12];',1)[1].split('const HRESULT nativeRestore=',1)[0]
+        self.assertIn('StereoPair(dev', body)
+        self.assertIn('weaponreload::Replay(', body)
+        for forbidden in ('SetTexture(', 'SetRenderTarget(', 'SetDepthStencilSurface(', 'Clear('):
+            self.assertNotIn(forbidden, body)
+
 if __name__ == '__main__': unittest.main()

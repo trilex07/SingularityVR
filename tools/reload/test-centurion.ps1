@@ -71,6 +71,13 @@ if($Gpu){
     if($LASTEXITCODE -ne 0){throw 'GPU fixture compile failed'}
     & $exe $PreparedRoot
     if($LASTEXITCODE -ne 0){throw 'GPU fixture failed'}
+    $source=Join-Path $repo 'spikes/view_matrix/tests/test-next-weapon-native-spare-gpu.cpp'
+    $exe=Join-Path $out 'test-next-weapon-native-spare-gpu.exe'
+    $obj=Join-Path $out 'test-next-weapon-native-spare-gpu.obj'
+    cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:`"$exe`" /Fo:`"$obj`" `"$source`""
+    if($LASTEXITCODE -ne 0){throw 'Native magazine GPU fixture compile failed'}
+    & $exe
+    if($LASTEXITCODE -ne 0){throw 'Native magazine GPU fixture failed'}
 }
 python (Join-Path $PSScriptRoot 'test_inspect_native_reload.py')
 if($LASTEXITCODE -ne 0){throw 'Native reload offline mapper tests failed'}

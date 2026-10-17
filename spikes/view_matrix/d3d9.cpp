@@ -2252,6 +2252,8 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
 static void DrawCenturionReload(IDirect3DDevice9* dev);
 // Independent, default-OFF three-weapon path; Centurion remains untouched.
 static int g_nextReload[3]{};
+static int g_nextNativeMagazine=0; // independent default-OFF native material/depth replay
+static volatile LONG g_nextNativeMagazineDraws=0;
 static bool NextReloadEnabled(){return g_nextReload[0]||g_nextReload[1]||g_nextReload[2];}
 static centurionnative::Gate g_nextNativeGate; // protected by existing native lock
 static volatile LONG g_nextNativePermits=0,g_nextNativeBlocks=0;
@@ -2282,7 +2284,7 @@ static centurionclip::PresentationSafety g_nextPresentation;
 static void InitNextReload();
 static void ReleaseNextReloadGPU();
 static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool circleDown);
-static int PrepareNextReload(IDirect3DDevice9*,INT,UINT,UINT,UINT,UINT,float*,UINT&);
+static int PrepareNextReload(IDirect3DDevice9*,INT,UINT,UINT,UINT,UINT,float*,UINT&,weaponreload::ReplayPlan&);
 static void DrawNextReload(IDirect3DDevice9*);
 static void CancelNextReload(){
     const bool owned=g_nextOwnsGrip;
@@ -19013,9 +19015,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             Rd(g_rtIsScene)!=0,g_boundShaderLayout.shadow,Rd(g_gamePaused)!=0,Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0);
     IDirect3DIndexBuffer9* cuffBuffer=fullCuff?g_nativeCuffRenderer.Ensure(dev,cuffProfile):nullptr;
     const UINT gloveTriangles=cuffBuffer?g_nativeCuffRenderer.Triangles(cuffProfile):g_nativeGloveRenderer.Triangles();
-    float nextSaved[16*12];UINT nextReg=0;
-    const int nextRegs=t==D3DPT_TRIANGLELIST?
-        PrepareNextReload(dev,baseVertex,minIndex,numVertices,startIndex,primCount,nextSaved,nextReg):0;
+    float nextSaved[16*12];UINT nextReg=0;weaponreload::ReplayPlan nextReplay;
+    const int nextRegs=t==D3DPT_TRIANGLELIST&&(!g_nextNativeMagazine||
+        (!boneRegN&&!independentRegs&&nSeg==1&&segStart[0]==startIndex&&segPrims[0]==primCount))?
+        PrepareNextReload(dev,baseVertex,minIndex,numVertices,startIndex,primCount,nextSaved,nextReg,nextReplay):0;
     nativegloves::IndexGuard<> nativeIndices(dev,cuffBuffer?cuffBuffer:(nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr),
         cuffBuffer?g_nativeCuffRenderer.SourceBytes(cuffProfile):16512*2);
     const HRESULT dhr = StereoPair(dev, [&] {
@@ -19040,6 +19043,15 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             const HRESULT h = g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
                                                     segStart[s], segPrims[s]);
             if (FAILED(h) && SUCCEEDED(hr)) hr = h;      // keep the FIRST failure, not the last
+        }
+        for(unsigned copy=0;SUCCEEDED(hr)&&nextRegs&&copy<nextReplay.count;++copy){
+            bool restored=false;
+            const bool ok=weaponreload::Replay([&](const float* palette){
+                    return SUCCEEDED(g_origSetVSConstF(dev,nextReg,palette,nextReplay.regs));
+                },[&](){return SUCCEEDED(g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount));},
+                nextReplay.spare[copy],nextReplay.attached,restored);
+            if(!ok){InterlockedExchange(&g_nextFault[nextReplay.index],1);hr=E_FAIL;}
+            else InterlockedIncrement(&g_nextNativeMagazineDraws);
         }
         return hr;
     });
@@ -31755,12 +31767,17 @@ void LoadIniSettings() {
     g_centurionReloadMarkers=GetPrivateProfileIntA("Input","CenturionReloadMarkers",0,path)?1:0;
     g_reloadControlLayout=GetPrivateProfileIntA("Input","ReloadControlLayout",0,path)?1:0;
     const int priorNextMask=g_nextReload[0]|(g_nextReload[1]<<1)|(g_nextReload[2]<<2);
+    const int priorNativeMagazine=g_nextNativeMagazine;
     const char* nextKeys[]{"ValkyrieManualReload","VolkManualReload","KasimovManualReload"};
+    g_nextNativeMagazine=GetPrivateProfileIntA("Input","ReloadNativeMagazine",0,path)?1:0;
+    Log("ini: ReloadNativeMagazine=%d (default OFF; same native material/depth replay for three opt-in reloads; NOT L3/L4 proof)",
+        g_nextNativeMagazine);
     for(unsigned i=0;i<3;++i){
         g_nextReload[i]=g_reloadControlLayout&&GetPrivateProfileIntA("Input",nextKeys[i],0,path)!=0;
         Log("ini: %s=%d (default OFF; audited native + original IB/palette/socket/asset witnesses required)",nextKeys[i],g_nextReload[i]);
     }
-    if(priorNextMask!=(g_nextReload[0]|(g_nextReload[1]<<1)|(g_nextReload[2]<<2)))CancelNextReload();
+    if(priorNextMask!=(g_nextReload[0]|(g_nextReload[1]<<1)|(g_nextReload[2]<<2))||
+       priorNativeMagazine!=g_nextNativeMagazine)CancelNextReload();
     g_centurionConfig.cylinderGestures=g_reloadControlLayout&&
         GetPrivateProfileIntA("Input","CenturionCylinderGestures",0,path)!=0;
     g_centurionNativeGuardMode=(int)std::clamp(IniSignedInt("Input","CenturionNativeReloadGuard",0,path),0L,2L);

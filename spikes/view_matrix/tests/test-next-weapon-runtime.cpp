@@ -77,10 +77,36 @@ static void TestOriginal(const weaponreloadanim::Spec& spec,const std::string& r
             const float after=hipknife::Length({carried.m[axis][0],carried.m[axis][1],carried.m[axis][2]});
             assert(std::fabs(before-after)<.00001f);
         }
+        // Native shader replay must be the inverse of the same original cache
+        // map, not a fresh size/pose guess. Check seated/carry/drop separately.
+        armbind::Mat worldMap,invWorld;
+        assert(TrackingMap(centre,cy,by,units,worldMap)&&skeletal::Inverse(invWorld.m,worldMap.m));
+        for(unsigned pose=0;pose<3;++pose){
+            auto model=pose==0?tracking:carried;if(pose==2)model.m[3][1]-=.8f;
+            float replay[16*12];assert(SparePalette(*data,model,local,c,worldMap,data->slots*3,replay));
+            armbind::Mat skin;assert(armbind::FromGpu(reinterpret_cast<float(*)[4]>(replay+clip*12),skin));
+            const auto raw=Transform(vertex*52.5f,bind);
+            const auto actual=Transform(Transform(Transform(Transform(raw,skin),local),c),invWorld);
+            assert(hipknife::Length(actual-Transform(vertex,model))<.0002f);
+            for(unsigned slot=0;slot<data->slots;++slot)if(slot!=clip)for(unsigned row=0;row<3;++row){
+                for(unsigned col=0;col<3;++col)assert(replay[slot*12+row*4+col]==0);
+                assert(replay[slot*12+row*4+3]==replay[clip*12+row*4+3]);
+            }
+        }
     }
-    std::printf("PASS original %s: palette collapse/root restore; measured animation %.0f -> %.0f; 1440 socket roundtrips\n",stem.c_str(),timing.outFrame,timing.inFrame);
+    float sentinel[16*12];for(float& v:sentinel)v=9876;
+    auto invalid=Identity();invalid.m[0][0]=NAN;
+    assert(!SparePalette(*data,invalid,Identity(),Identity(),Identity(),data->slots*3,sentinel));
+    assert(!SparePalette(*data,Identity(),Identity(),Identity(),armbind::Mat{},data->slots*3,sentinel));
+    assert(!SparePalette(*data,Identity(),Identity(),Identity(),Identity(),data->slots*3-1,sentinel));
+    for(float v:sentinel)assert(v==9876);
+    std::printf("PASS original %s: palette collapse/root restore; measured animation %.0f -> %.0f; 1440 socket +4320 stock/carry/drop native replay roundtrips\n",stem.c_str(),timing.outFrame,timing.inFrame);
 }
 static void TestBridge(){
+    float attached[16*12]{},spare[16*12]{};spare[0]=1;
+    for(unsigned fail=0;fail<3;++fail){unsigned uploads=0,draws=0;bool restored=false;
+        assert(!Replay([&](const float*){return ++uploads!=fail;},[&](){++draws;return fail!=0;},spare,attached,restored));
+        assert(uploads==2&&draws==(fail==1?0u:1u)&&restored==(fail!=2));}
     auto scaled=Identity();scaled.m[0][0]=scaled.m[1][1]=scaled.m[2][2]=8.4f;
     assert(PhysicalMatrix(scaled)); // existing WorldScale200% / GunScale400% combination
     scaled.m[0][0]=32;assert(!PhysicalMatrix(scaled));

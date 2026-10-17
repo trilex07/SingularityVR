@@ -117,6 +117,54 @@ inline bool HandMatrix(const armbind::Mat& native,const hipknife::Pose& aim,
     result.m[3][0]=target.x-offset.x;result.m[3][1]=target.y-offset.y;result.m[3][2]=target.z-offset.z;
     if(!PhysicalMatrix(result))return false;out=result;return true;
 }
+// Native material replay: inverse of the already-tested SVRK -> tracking map.
+// No Centurion timeline/cache dependency; each original clip has its own bind.
+inline bool TrackingMap(hipknife::V centre,float yaw,float base,float units,armbind::Mat& out){
+    if(!hipknife::Finite(centre)||!std::isfinite(yaw)||!std::isfinite(base)||
+       !std::isfinite(units)||units<10||units>1000)return false;
+    armbind::Mat m;m.m[3][3]=1;
+    for(unsigned r=0;r<4;++r){
+        vrpose::V3 v{};if(r==0)v.x=1;else if(r==1)v.y=1;else if(r==2)v.z=1;
+        else v={-centre.x,-centre.y,-centre.z};
+        const auto p=vrpose::TrackingDeltaToWorldUU(v,yaw,base,units);
+        m.m[r][0]=p.x;m.m[r][1]=p.y;m.m[r][2]=p.z;
+    }
+    if(!armbind::Finite(m))return false;out=m;return true;
+}
+inline bool SparePalette(const weaponreloadanim::Data& d,const armbind::Mat& tracking,
+        const armbind::Mat& local,const armbind::Mat& controller,const armbind::Mat& trackingMap,
+        unsigned regs,float* out){
+    const auto* spec=weaponreloadanim::Find(d.kind);
+    if(!out||!d.ready||!spec||d.slots!=spec->slots||ClipSlot(d.kind)>=d.slots||
+       d.tracks>8||regs!=d.slots*3||!PhysicalMatrix(tracking)||
+       !armbind::Finite(local)||!armbind::Finite(controller)||!armbind::Finite(trackingMap))return false;
+    armbind::Mat bind,inverseBind,gun,inverseGun,inverseWorld,metres{},a,b,c,skin;
+    if(trackingMap.m[0][3]||trackingMap.m[1][3]||trackingMap.m[2][3]||trackingMap.m[3][3]!=1||
+       !skeletal::Inverse(inverseWorld.m,trackingMap.m))return false;
+    if(!ClipBind(d,bind)||!skeletal::Inverse(inverseBind.m,bind.m))return false;
+    skeletal::Multiply(gun.m,local.m,controller.m);
+    if(!skeletal::Inverse(inverseGun.m,gun.m)||!armbind::Finite(inverseWorld))return false;
+    metres.m[0][0]=metres.m[1][1]=metres.m[2][2]=1.f/52.5f;metres.m[3][3]=1;
+    skeletal::Multiply(a.m,inverseBind.m,metres.m);skeletal::Multiply(b.m,a.m,tracking.m);
+    skeletal::Multiply(c.m,b.m,trackingMap.m);skeletal::Multiply(skin.m,c.m,inverseGun.m);
+    if(!armbind::Finite(skin))return false;
+    float staged[16*12]{};
+    for(unsigned slot=0;slot<d.slots;++slot)for(unsigned r=0;r<3;++r)
+        staged[slot*12+r*4+3]=skin.m[3][r]; // SAME degenerate point for all other bones
+    armbind::ToGpu(skin,reinterpret_cast<float(*)[4]>(staged+ClipSlot(d.kind)*12));
+    std::memcpy(out,staged,regs*4*sizeof(float));return true;
+}
+// Called INSIDE each existing stereo-eye callback with the original DIP/setter.
+// No material/texture/RT/depth/IB changes. Restore even after partial upload.
+template<class Upload,class Draw>bool Replay(Upload upload,Draw draw,const float* spare,
+        const float* attached,bool& restored){
+    const bool changed=upload(spare),drawn=changed&&draw();
+    restored=upload(attached);return drawn&&restored;
+}
+struct ReplayPlan {
+    unsigned count=0,index=0,regs=0;
+    float attached[16*12],spare[2][16*12]; // initialized only for eligible native draws
+};
 inline bool Palette(const weaponreloadanim::Data& d,float frame,bool absent,const float* native,unsigned regs,float* out){
     float staged[16*12];if(!weaponreloadanim::Palette(d,true,frame,native,regs,staged))return false;
     const unsigned clip=ClipSlot(d.kind);if(clip>=d.slots)return false;
