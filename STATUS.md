@@ -1,5 +1,21 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN resolver-fix L3 DEPLOYED (SIDE 56b3f16, PR48): candidate
+DLL SHA-256 6B0664ED83EB579DBCACB2BFF4DE7BB38CF2B49A5CFFC8D6F906156739F5408F,
+PE32 x86 /O2, clean tree f3fe2a5, manifest dirty=[], guard preflight+postflight
+PASS; backup deployment/install-backups/20261017-142527. STATUS: CANDIDATE
+ONLY — counter-to-6 + no-animation/no-shake still needs PSVR2 (this test).
+WHY: 14:16 preflight proved ready=0 AFTER all 4 bindings matched (unrelated
+tail field-name failed). FIX (inspected): stop walk at found==4; incomplete
+walk still fails closed; all fingerprint/cast checks intact (py asserts order
++ single result=cached). L1_PASS (EXIT=0 full suite), L2_PASS (clean). Steam:
+DLL=6B0664ED, INI=5314150A (same 5-flag set; pre-edit backup in 142527 dir).
+Path: rollback to DADE170B (postflight PASS), redeploy (guard model intact).
+Rollback: deploy Rollback -BackupPath 20261017-142527 (+plan paths) + drop the
+5 added INI lines. AWAITING L3+L4: full manual reload -> counter to 6, then
+fire WITHOUT Reload animation and WITHOUT camera shake; exact counts, no
+double-add. MAIN reads `refill-only: result=2` (Conserved) + no ReloadFinished.
+
 LATEST 2026-10-17 MAIN refill-diagnostics L3 DEPLOYED (SIDE 9c38667): candidate
 DLL SHA-256 4105C00457D0C27A581D71B1A08B361F6A3EEDDC4D1E9F25703DDA31611645EB,
 PE32 x86 /O2, clean tree ddbdb80, manifest dirty=[], guard preflight+postflight
