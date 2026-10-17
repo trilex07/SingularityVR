@@ -472,3 +472,15 @@ modify unrelated c5-c8 constants. Bounded counters distinguish reroutes from
 valid camera slots, tracked c0 and mono fallback. L1/L2 alone cannot establish
 correct placement; the next Steam/PSVR2 test must inspect both eyes and smoke
 at the actual muzzle.
+
+Preparation receipt: source commit `e5ef2fc`, L1 native/shadow/hand tests PASS;
+L2 x86 PE32 `/O2` DLL SHA-256
+`8D2B5305108E9DC402E7543B4C2A2748277C5531D940641CF71B9B73CC1F0D23`.
+Offline candidate `build/native-muzzle-main/candidate-world-route-488` has INI
+SHA-256 `2A39EAE15A3FFB3788D28FFF85BFE7E899D379D4AC2044F78823624268A443E5`,
+mode 4, trace readback OFF, exact pair `488BAEB579E71A73:27DFE7D9C67BCC03`
+(2968/452 bytes). Direct accepted-profile guard preflight passed with all three
+installed preimages matching. The wrapper's `-WhatIf` currently causes an
+unrelated `Get-FileHash` provider-resolution failure, so the read-only guard
+function was invoked directly; no Steam file was written. Candidate remains
+offline until the next supervised test.

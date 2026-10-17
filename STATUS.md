@@ -9,7 +9,12 @@ mistakes for its clip transform; `ViewProjectionMatrix` lives at c0-c3.
 Steam was returned to accepted DLL/INI/dinput8 and independently hashed.
 The next candidate is **default-OFF mode 4**, exact shader pair only: route
 world particle via ordinary camera `StereoPair` and count valid c0/fallback.
-Offline L1/L2 preparation is in progress; no mode-4 Steam or PSVR2 PASS yet.
+L1 native/shadow/hand tests PASS; L2 x86 PE32 `/O2` from commit `e5ef2fc`
+PASS, DLL SHA `8D2B5305...0D23`. Offline candidate
+`build/native-muzzle-main/candidate-world-route-488` has INI SHA
+`2A39EAE1...43E5` (mode 4, exact `488BAE:27DF`, probe OFF). Accepted-profile
+read-only guard preflight PASS, game closed, Steam still on accepted hashes.
+No mode-4 Steam or PSVR2 PASS yet.
 See `docs/native-muzzle-stereo.md`.
 
 LATEST MAIN 2026-10-17 native muzzle emitter A/B and third exact-pair test:
