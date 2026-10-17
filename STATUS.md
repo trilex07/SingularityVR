@@ -13,7 +13,9 @@ UpdateCameraStabilization deletion (accepted features preserved).
 L1_PASS mirror ps1 + full reload suite incl. GPU fixtures vs private
 original assets (shells L/R stereo pixels) + knife suite. L2_PASS clean
 x86 PE32 /O2 DLL SHA-256
-4478C2C42A6A9A8B608DA57530300F840FFA21619FDA7B7E9182A9F145CDE1D8.
+D35A9EAD05EB6BA45569926156ADAC4629DEEC9EB787B00A8371D054A86F25AE
+(provenance: branch fix/centurion-grip-integration @76eedc7 clean tree;
+rebuilt 2026-10-17, manifest dirty=[]).
 Private assets (NOT in git, hash-verified read-only): centurion_shell.svrk
 AB61034E..., centurion_shell.svrt F804945B..., centurion_reload.svca
 85ABCDDE..., centurion_clip.svrk F2196114..., centurion_clip.svrt 17A3355A...
