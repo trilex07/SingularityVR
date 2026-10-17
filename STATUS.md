@@ -9,7 +9,14 @@ original attached clip hide/carried/drop, live IB/CTAB/socket identity, Reset.
 Centurion/accepted language/knife/hands/etc preserved; ZERO Steam or INI writes.
 See docs/next-weapon-runtime-integration.md for exact integration/test contract.
 Offline native mapper confirms all three classes share the same native method
-and Shotgun/Sniper inherit Shared script states. L1/L2 final receipt pending;
+and Shotgun/Sniper inherit Shared script states. L1_PASS:17 CPU +1 own-process
+D3D9Ex GPU fixture (18 verified x86 PE32), 55 Python tests, 30000 native-detour
+transactions, 7506 original fractional poses and4320 socket/affine roundtrips.
+L2_PASS clean source4c965dd65e765b8a77aba701bfe4ac35774ca84a, x86 PE32 /O2,
+DLL SHA-256 EDBE3F35CCE9869C166AE08B4F22B3E99DBF1B5AD79363B986791065CAF2649E.
+Independent bounded read-only bootstrap needs no Centurion/cinema/HUD-overlay flag.
+Private candidate:build/next-weapon-reload/candidate-4c965dd (11 hashes checked),
+manifest SHA-256 8796250D6C844B0F179A56B87E2A0BF3C60EDD5C72B37370678711823FD0D4C2.
 L3/L4 UNKNOWN, not "100% physically verified". Carried albedo/private depth is
 not a full native-lighting/hand-occlusion claim. Do not deploy an old SIDE DLL
 over newer MAIN; integrate SOURCE and preserve its accepted dependency profile.

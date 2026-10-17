@@ -109,6 +109,28 @@ restore, with no file replacement while Singularity.exe is running.
 
 ## Verification and physical route
 
+Final offline receipt (2026-10-17): production source
+`4c965dd65e765b8a77aba701bfe4ac35774ca84a`, clean tree, x86 PE32 `/O2`, no
+performance instrumentation, DLL3190272 bytes, SHA-256
+`EDBE3F35CCE9869C166AE08B4F22B3E99DBF1B5AD79363B986791065CAF2649E`.
+Seventeen CPU executables, one own-process D3D9Ex fixture and55 Python tests
+PASS; all18 executables independently verified PE32/x86. Includes30000 real
+MinHook detours of OWN fake inventory for three objects,7506 original fractional
+track poses and4320 socket/affine roundtrips; none invokes the game.
+Actual original albedo pixels in the GPU fixture's left/right images:
+Valkyrie302/302, Volk307/307, Kasimov210/210, with state/failure/Reset checks.
+
+Private handoff directory (absolute, local only):
+`C:/Users/Trilex/vr-mods/SingularityVR-next-weapons/build/next-weapon-reload/candidate-4c965dd/`.
+All11 payload SHA-256 values independently checked after packaging; manifest
+SHA-256 `8796250D6C844B0F179A56B87E2A0BF3C60EDD5C72B37370678711823FD0D4C2`.
+Logs: `build/next-weapon-reload/runtime-tests.log`, `runtime-build.log`;
+native static proof: `build/next-weapon-reload/native-three.json`.
+Earlier candidate folders are superseded, not accepted restore destinations.
+Documentation-only receipt commits after the production source do not change
+this binary's provenance. Installed/accepted/restore identities were NOT read;
+ZERO Steam/config/assets deployment. L1_PASS/L2_PASS only; L3/L4 UNKNOWN.
+
 Runner: `tools/reload/test-centurion.ps1 -NativeEvidence <private-original-evidence.json>
 -PreparedRoot <this-checkout>/build/next-weapon-reload/prepared -Gpu`.
 It runs existing Centurion/knife/input regressions and the three-weapon policy,
