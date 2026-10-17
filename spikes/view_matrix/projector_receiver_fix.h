@@ -7,24 +7,30 @@ static thread_local unsigned pairDepth=0;
 struct PairScope{bool active;PairScope():active(enabled){if(active)++pairDepth;}~PairScope(){if(active)--pairDepth;}};
 static float nativeVP[16]{},trackedBase[16]{};
 struct Entry{IUnknown* shader;bool match;};
-static Entry cache[128]{};static unsigned used=0;
+static Entry cache[128]{};static unsigned used=0,nextEviction=0;
+static unsigned classified=0,evictions=0,vsHits=0,psHits=0,pairHits=0,routeRejects=0,shapeRejects=0,cameraRejects=0;
 static unsigned applied[2]{},rejected=0,restoreFailures=0;
-inline void Release(){for(unsigned i=0;i<used;++i)cache[i].shader->Release();used=0;vsMatch=psMatch=nativeValid=false;}
+inline void Release(){for(unsigned i=0;i<used;++i)cache[i].shader->Release();used=nextEviction=0;vsMatch=psMatch=nativeValid=false;}
 inline void Configure(bool on){InterlockedExchange(&configured,on?1:0);}
 template<class T> bool Classify(T* s,UINT expected,unsigned long long hash){
     if(!enabled||fault||!s)return false;
     for(unsigned i=0;i<used;++i)if(cache[i].shader==s)return cache[i].match;
-    if(used==128)return false;
+    ++classified;
     DWORD code[334]{};UINT bytes=0;bool match=false;
     if(SUCCEEDED(s->GetFunction(nullptr,&bytes))&&bytes==expected){UINT capacity=sizeof(code);
         if(SUCCEEDED(s->GetFunction(code,&capacity))&&capacity==bytes){
             unsigned long long h=14695981039346656037ull;
             for(UINT i=0;i<bytes;++i){h^=((unsigned char*)code)[i];h*=1099511628211ull;}
             match=h==hash;}}
-    s->AddRef();cache[used++]={s,match};return match;
+    // Bound retained COM references, not the set of shaders we can recognize.
+    // The projector can first appear well after the initial 128 menu/world shaders.
+    unsigned slot=used;
+    if(used==128){slot=nextEviction;nextEviction=(nextEviction+1)%128;cache[slot].shader->Release();++evictions;}
+    else ++used;
+    s->AddRef();cache[slot]={s,match};return match;
 }
-inline void BindVS(IDirect3DVertexShader9* s){vsMatch=Classify(s,208,0xAC4827843287AECBull);}
-inline void BindPS(IDirect3DPixelShader9* s){psMatch=Classify(s,1336,0x7F00BC7925591BE8ull);}
+inline void BindVS(IDirect3DVertexShader9* s){vsMatch=Classify(s,208,0xAC4827843287AECBull);if(vsMatch)++vsHits;}
+inline void BindPS(IDirect3DPixelShader9* s){psMatch=Classify(s,1336,0x7F00BC7925591BE8ull);if(psMatch)++psHits;}
 inline void NoteCamera(UINT reg,int conv,const float* original,const float* modified){
     if(!enabled||reg!=0)return;
     nativeValid=conv==0&&shadowreceiver::Finite(original)&&shadowreceiver::Finite(modified);
@@ -34,18 +40,23 @@ inline void Poll(){
     static DWORD last=0;const DWORD now=GetTickCount();if(now-last<1000)return;last=now;
     const bool on=InterlockedCompareExchange(&configured,0,0)!=0;
     if(on!=enabled){Release();enabled=on;Log("PROJECTOR_RECONSTRUCTION enabled=%d",on?1:0);}
-    if(applied[0]||applied[1]||rejected||restoreFailures){
+    if(enabled&&(classified||vsHits||psHits||pairHits||rejected||restoreFailures)){
         Log("PROJECTOR_RECONSTRUCTION left=%u right=%u rejected=%u restoreFailures=%u fault=%d",applied[0],applied[1],rejected,restoreFailures,fault?1:0);
+        Log("PROJECTOR_GATES classified=%u evictions=%u vs=%u ps=%u pair=%u routeRejected=%u shapeRejected=%u cameraRejected=%u",classified,evictions,vsHits,psHits,pairHits,routeRejects,shapeRejects,cameraRejects);
         applied[0]=applied[1]=rejected=restoreFailures=0;}
+    classified=evictions=vsHits=psHits=pairHits=routeRejects=shapeRejects=cameraRejects=0;
 }
 struct Scope {
     IDirect3DDevice9* dev;float saved[16]{};bool changed=false;
     Scope(IDirect3DDevice9* d,bool eligible,UINT verts,UINT prims):dev(d){
-        if(!enabled||fault||!vsMatch||!psMatch||!eligible||verts!=4||prims!=2)return;
+        if(!enabled||fault||!vsMatch||!psMatch)return;
+        ++pairHits;
+        if(!eligible){++routeRejects;return;}
+        if(verts!=4||prims!=2){++shapeRejects;return;}
         bool camera=false;
         for(int i=0;i<g_camMatUsed;++i)if(g_camMats[i].valid&&g_camMats[i].reg==0&&g_camMats[i].conv==0&&
             nativeValid&&!memcmp(g_camMats[i].m,trackedBase,sizeof(trackedBase)))camera=true;
-        if(!camera){++rejected;return;}
+        if(!camera){++rejected;++cameraRejects;return;}
         IDirect3DBaseTexture9* textures[2]{};IDirect3DSurface9* target=nullptr;
         D3DSURFACE_DESC rt{},a{},b{};RECT sc{};D3DVIEWPORT9 vp{};DWORD scOn=0;
         bool resources=SUCCEEDED(dev->GetRenderTarget(0,&target))&&target&&SUCCEEDED(target->GetDesc(&rt));
