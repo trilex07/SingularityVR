@@ -294,8 +294,8 @@ shadow/hand/holster regressions). NEW: muzzle-flash per-eye clip-x math L1
 ahead of StereoPair, gated on [Render] MuzzleStereoPerEye (default OFF).
 Contributing live draw still UNKNOWN; alias
 hypothesis NOT established. No generated replacement FX or native object edits.
-L2_PASS clean469c99a /O2 x86 PE32; DLL SHA256
-4A8DB99F20E354CFB6D274BA74F92E6DC84ACE85FE94DD749A6CDBF20314EA23.
+L2_PASS 38faed4 /O2 x86 PE32; DLL SHA256
+E95DF78C95B277E60D5BA0D1148523DF56BCF899B72738049EA0F7D7D63622EC.
 Full receipt in docs/native-muzzle-stereo.md; L3/L4 requires MAIN. Do not enable
 mode2 without the selected-pair/content and exact-alias evidence.
 
