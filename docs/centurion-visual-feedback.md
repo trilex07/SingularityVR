@@ -64,3 +64,24 @@ Pause/cancel once, reload again and exit normally. MAIN checks IB witness,
 `nativeSpareDraws` increasing, no restore fault, conserved native ammo and
 actual frame timings; user checks size, colour and occlusion BOTH eyes.
 No mid-test chat; deployment/backup/lease/restore remain MAIN-only.
+
+## Offline receipt
+
+Implementation f7a50e7; clean integrated production source
+`547f8e0de7f1d5992282e17f75bee60e8e5da6a2`, including MAIN's newer
+HUD/scripts/holster work through2d04892 (not a rollback to the initial9c7 base).
+L1_PASS:17 CPU +2 GPU fixtures,40 Python tests; additional3 MAIN compatibility
+fixtures (ammo layout/scripts readiness/holster cue) PASS. All22 executable
+fixtures checked x86 PE32. Includes original SVCA measurement,324 full affine
+roundtrips, root hold/phase/cancellation policy and replay failure restoration.
+OWN D3D9Ex shader/geometry:10609/10609 pixels, ZERO wrong-material/occlusion/body
+pixels, two resource rounds with ResetEx; not actual game pixel proof.
+
+L2_PASS: clean x86 PE32 `/O2`, performance instrumentation OFF, DLL SHA-256
+`A2BFE0F978B4272F35E85AC7E18AFDA94DBD53D779AF3CDBC7F713C21A2A815F`.
+Private local candidate:
+`C:/Users/Trilex/vr-mods/SingularityVR-centurion-visual-feedback/build/centurion-reload/visual-candidate-547f8e0/`.
+DLL/build receipt and manifest only; existing SVCA dependency retained, no INI
+or asset pack deployed. Logs: `build/centurion-reload/visual-tests.log` and
+`visual-build.log`. Documentation-only receipt commits do not change the DLL.
+Installed/accepted/restore identities NOT inspected. L3/L4 remain UNKNOWN.

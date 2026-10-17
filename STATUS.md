@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE fix/centurion-visual-feedback: user physically rejected
+excessive cylinder withdrawal, mismatched/always-on-top spare, auto-closing Loaded
+pose and repeated native reload sweep. Added default-OFF CenturionVisualFollowup:
+compact original frame12 (3.8439UU vs old42.3398UU maximum), Loaded holds26 until
+actual flick, original26..32 close, observed gun root held through native tail.
+Spare replays same native gun geometry/material/depth INSIDE each stereo eye;
+other bones degenerate,15 CTAB bone registers restored, no private-depth overlay.
+Native UE3 execution/notifies/ammo preserved; real arm/lighting effects NOT proven.
+L1_PASS17 CPU+2 GPU,40 Python, plus3 newer MAIN compatibility fixtures;22 x86 PE32.
+L2_PASS clean547f8e0 (includes MAIN integration2d04892), /O2, DLL SHA-256
+A2BFE0F978B4272F35E85AC7E18AFDA94DBD53D779AF3CDBC7F713C21A2A815F.
+OWN GPU shared-depth/material test10609/10609 pixels, no bad pixels, Reset PASS.
+See docs/centurion-visual-feedback.md for exact source, candidate, falsifiers and
+MAIN test route. ZERO Steam/INI/installed asset writes; L3/L4 UNKNOWN.
+
 LATEST 2026-10-17 MAIN fix/centurion-grip-integration DEPLOYED for L3
 (candidate DLL SHA-256 DADE170B579A3C9D5FBDA72327BB1BCD02B7F665DECBC592D3A5A8EF2D4F51EA,
 PE32 x86 /O2 clean build from committed HEAD, guard preflight+postflight PASS
