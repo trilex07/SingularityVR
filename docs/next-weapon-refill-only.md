@@ -123,4 +123,30 @@ independent consumed/HUD ACK and no following native ReloadFinished tail from
 that operation; per-profile budget32. Results0=reject,1=counts changed,2=conserved,
 3=fault (latched, no fallback). A counter is not pixel or PSVR2 proof.
 
-L2 receipt follows; L3/L4 UNKNOWN. PR45 remains unmerged.
+## Clean L2 receipt / handoff
+
+Implementation/source `41ec7929cb6b5c78a8c718976451899b9f768825`, clean tree.
+L2_PASS x86 PE32 (014C/010B), `/O2`, performance instrumentation OFF. DLL3201024
+bytes, SHA256
+`43201D880817288416F1BD75D92DCE146FC36F07374B95FABF35AD91CEB91F5B`.
+Build receipt SHA256
+`91025A36752FD4A73D41C2D2A239B3C1A0D6C1A48BBC396085FBEE9C291E135F`.
+Existing unrelated analyzer/compiler warnings remain; not warning-free.
+
+Private candidate `build/next-weapon-reload/candidate-41ec792/`: DLL/build receipt,
+the same9 original local-only asset caches and settings proposal with ALL new
+opt-ins OFF, no INI. All11 payload size/SHA pairs independently verified; all21
+retained fixture executables verified x86 PE32. Candidate manifest SHA256
+`10384B155350DEFC22D2F7D7AD2D3E7C156C7F5DF3DBEF6F76F6170EAD2529EF`.
+Candidate preparation/build logs are in `build/next-weapon-reload/refill-only/`.
+Earlier candidate8896ff9 and other folders describe older flag0 behavior and
+are NOT safe restore baselines for a newer MAIN integration.
+
+Delivery stays on `feature/next-weapon-reload-assets`, existing draft PR45,
+without merge. Integrate source41ec792 onto CURRENT MAIN that already has the
+required PR45 runtime/material path; do not deploy this SIDE DLL over newer
+accepted features. Documentary receipts after41ec792 do not change its binary
+provenance. Installed/accepted/restore identities were not inspected/modified.
+ZERO Steam launch, deploy, restore or installed assets/config changes.
+L3/L4 UNKNOWN: physical elimination of the native fire-lock/camera tail is not
+declared from these offline passes.

@@ -11,7 +11,10 @@ Only180ms render-only seating/root/scope tail, not whole native animation.
 L1_PASS19 CPU/ABI +2 own D3D9Ex GPU programs,64 Python tests;60000 OFF/ON fake
 native transactions, partial/low reserve, duplicate/NPC/Centurion/holster isolation,
 four original body/mutation checks,15003 child poses/333 seated shoulder poses.
-L2 pending; L3/L4 UNKNOWN. Zero Steam/deploy/assets/installed INI changes.
+L2_PASS clean41ec792, x86 PE32 /O2, instrumentation OFF. DLL3201024 bytes, SHA
+43201D880817288416F1BD75D92DCE146FC36F07374B95FABF35AD91CEB91F5B.
+Private build/next-weapon-reload/candidate-41ec792; all11 payload hashes verified,
+all opt-ins OFF in proposal, NO INI. L3/L4 UNKNOWN. Zero Steam/installed changes.
 See docs/next-weapon-refill-only.md. Integrate SOURCE onto current MAIN, do not
 replace newer accepted integration with this older SIDE DLL. PR45, no merge.
 
