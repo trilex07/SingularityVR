@@ -1,16 +1,19 @@
 # STATUS — session handoff
 
-LATEST MAIN 2026-10-17 native muzzle investigation: round 3 completed, but the
-broad seam glow remains unresolved. Exact drop
-`7EB90CEBB053DA04:4377F314D1C93468` ran (12/344/170 logged drops, no alias,
-refusal, restore failure, shader overflow or fault). The user saw a muzzle flash,
-no smoke, uncertain absence of the glow, and a slight first-shot hitch. The
-20:53:22 SBS capture still shows a large central shot-correlated flare, so this
-round is inconclusive for the broad seam glow. No mode-2 alias is justified.
-Four traces were complete (1785/591/943/957 draws; overflow=0). Evidence:
-`build/native-muzzle-main/evidence-20261017-l3-drop-7eb9/`.
+LATEST MAIN 2026-10-17 native muzzle investigation: round 4 completed and the
+accepted build was restored. Exact drop
+`7EB90CEBB053DA04:0099C92AE105A584` ran (174/188/38 logged drops; no alias,
+refusal, restore failure, shader overflow or fault). Runtime log confirms active
+OpenXR gameplay (`session=5`, `shouldRender=1`, both eyes, valid captures/submits).
+NativeMuzzleProbe was OFF, so this round excludes the full-frame capture/readback
+probe overhead. The user confirmed game closure but has not yet reported whether
+the flash, smoke, central glow, or first-shot hitch changed; visual attribution
+is therefore still UNKNOWN. No mode-2 alias is justified. Accepted Steam files
+were restored and independently hashed: DLL `789749E5…F361B`, INI
+`8B0B0B4C…2CCFAF`, dinput8 `5B948DDB…729D59`; UI package unchanged
+`60E72871…E8DB8`. Full receipt is in `docs/native-muzzle-stereo.md`.
 
-Round 4 visual discriminator is live for exact pair
+Round 4 visual discriminator was staged for exact pair
 `7EB90CEBB053DA04:0099C92AE105A584` (VS 3904 bytes, PS 336 bytes), observed as
 one alpha-blended quad per eye in each post-shot trace. This round disables the
 bounded capture/readback probe to isolate any actual first-shot performance
@@ -24,9 +27,9 @@ Guarded install preflight and deployment passed. Backup
 match candidate DLL/INI/dinput8; UI package remains unchanged at
 `60E7287185300CAA2A8E64FBE14B741475D4D959944B6B0E51F84547841E8DB8`. L1 suite
 passed (six x86 C++ fixtures and six Python tests); PowerShell parser passed.
-Game is closed; candidate is live and awaiting the next PSVR2 test.
-No VFX/audio fix or physical acceptance is claimed. Full receipt and exact
-rollback record are in `docs/native-muzzle-stereo.md`.
+The round is over; candidate is not live. No VFX/audio fix or physical
+acceptance is claimed. Full receipt and exact rollback record are in
+`docs/native-muzzle-stereo.md`.
 
 LATEST MAIN 2026-10-17 startup readiness + Centurion tracked-cylinder stack
 promoted as the current stable build after user PSVR2 acceptance (“jest okej”).

@@ -319,3 +319,31 @@ guarded rollback and independent hashes confirm accepted live DLL
 unchanged `dinput8.dll`
 `5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`.
 No VFX/audio fix or physical acceptance is claimed.
+
+#### Round 4 outcome — exact `0099` drop, visual report pending
+
+User confirmed the game was closed. The fresh runtime log records
+`NativeMuzzleProbe=0`, mode 1, and the selected drop counters `174`, `188`, and
+`38`; all report `alias=0`, `refused=0`, `restoreFailed=0`, `shaderOverflow=0`,
+and `fault=0`. The log also confirms a real OpenXR gameplay session (`session=5`,
+`shouldRender=1`, `haveEyes=1`, valid captures and submits). This shows that the
+candidate draw executed in gameplay without the full-frame capture/readback
+probe; it does not identify the draw's visible role or prove a performance
+improvement. The user has not yet reported whether muzzle flash, smoke, the
+central/seam glow, or first-shot hitch changed. Do not promote or reject the
+pair visually until that A/B observation is obtained. No alias repair is
+justified by these counters.
+
+The game process was confirmed absent before guarded rollback. Rollback preflight
+and accepted-profile postflight passed. Independently verified installed hashes
+after rollback: `d3d9.dll`
+`789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B`,
+`SingularityVR.ini`
+`8B0B0B4CF2DB78514A44B72CF3E79CC1C48C74E5632CDA34A468CA61702CCFAF`, and
+`dinput8.dll`
+`5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`. The UI
+package remained unchanged at
+`60E7287185300CAA2A8E64FBE14B741475D4D959944B6B0E51F84547841E8DB8`.
+Rollback source: `deployment/install-backups/20261017-210341`; deployment
+receipt: `deployment/install-reports/20261017-210342.json`. No visual pass or
+VFX/audio fix is claimed.
