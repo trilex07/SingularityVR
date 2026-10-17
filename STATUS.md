@@ -7,8 +7,12 @@ HUD ACK94/110ms. Body recoil vs flash/smoke distinction still requested.
 Source retains2600ms root/right-hand freeze after close from old full Reload.
 New scoped candidate: CenturionRefillOnly releases BOTH native pose holds at
 close, retains280ms cylinder-only close on LIVE gun root, then no palette override.
-Flag OFF/pre-close behavior/native ammo calls/FX untouched. L1/L2 pending;
-new first-shot perception L3/L4 UNKNOWN. ZERO Steam. See
+Flag OFF/pre-close behavior/native ammo calls/FX untouched. L1_PASS25 own-process
+programs/62 Python; live-root first-shot translation/rotation +280ms cutoff
+regressions PASS. L2_PASS clean4962b7a x86 PE32 /O2, DLL SHA256
+8EC19ABE1C39D1ABB93B59FEBEFBC59E4D87F1F153D52C067E7F5FF6910A47B0.
+Private build/centurion-reload/recoil-candidate-4962b7a, NO INI/assets.
+New first-shot perception L3/L4 UNKNOWN. ZERO Steam. See
 docs/centurion-post-refill-recoil.md. Do not call all FX fixed.
 
 LATEST 2026-10-17 SIDE: MAIN14:16 preflight identifies the obstruction:

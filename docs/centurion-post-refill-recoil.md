@@ -33,3 +33,33 @@ not force StartFire/Reload or replay a synthetic animation. MAIN physical gate:
 fire immediately after manual close and again after3s; compare body recoil and
 flash/smoke separately, check cylinder closure and6-shot ammo conservation.
 No headset/chat switching. L3/L4 of this presentation change not yet obtained.
+
+## Implementation and offline verification
+
+Source `4962b7aa21e9c2273689eefd94d64883e25e92e8`, PR48 branch. Time uses the
+existing refill-only flag, no new INI setting. Gun overrides end280ms after close
+in WaitingNative/Cooldown/Idle. During that interval LiveRoot validates and uses
+the current native root; neither legacy held-root cache is consumed. RightHold
+Apply is bypassed as soon as closed is nonzero. All three Time call sites
+(gun/hand/diagnostic) use the same mode. Flag OFF behavior and pre-close poses
+are unchanged. No changes to the accepted refill resolver/transfer or native FX.
+
+L1_PASS25 own-process CPU/ABI/resource/GPU programs +62 Python checks. New CPU
+regressions compare old2600ms vs new280ms duration through16000 samples, verify
+open/carry/loaded unchanged, preserve first-shot root translation/rotation and
+body/hammer/trigger matrices during cylinder-only closure, reject NaN without
+publishing output. Two new structural guards check actual production hand
+release and live-root selection. Synthetic tests do NOT prove game recoil/FX.
+Log: `build/centurion-reload/refill-only/recoil-tests.log`.
+
+L2_PASS clean source4962b7a x86 PE32 014C/010B, `/O2`, performance
+instrumentation OFF; existing unrelated warnings remain. DLL3206144 bytes:
+`8EC19ABE1C39D1ABB93B59FEBEFBC59E4D87F1F153D52C067E7F5FF6910A47B0`.
+Build receipt SHA256
+`635062E4DC0FF3BDD74C7337F638ACC439B5FB96292048CBF0211186ED6B8647`.
+Build log: `build/centurion-reload/refill-only/recoil-build.log`.
+Private `build/centurion-reload/recoil-candidate-4962b7a/` has DLL/receipt/manifest
+only, NO INI/assets. MAIN integrates this SOURCE delta onto current accepted
+integration; do NOT replace current MAIN with an old full SIDE DLL. L3/L4 UNKNOWN
+for the recoil correction; clarification about flash/smoke remains unanswered.
+SIDE has not launched/deployed/restored Steam or changed any installed file.

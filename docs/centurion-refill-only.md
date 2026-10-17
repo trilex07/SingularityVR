@@ -1,5 +1,11 @@
 # Centurion: refill without the native reload sequence
 
+LATEST14:30 runtime/user result supersedes the old rejection below: source
+56b3f16 lookup fix reaches ready1 and TWO conserved native transfers, HUD ACK,
+user confirms reload works without old animation. First2 shots lack expected
+gun firing animation: see `docs/centurion-post-refill-recoil.md` for the separate
+presentation-hold candidate and its remaining physical gate. No full FX acceptance.
+
 REOPENED after user session13:52: no animation BUT no ammo transfer, ready0
 before invocation. Source6d7b201 is NOT physically accepted; do not promote its
 L1/L2 receipt as a working backend. See `docs/centurion-refill-resolution.md` for
