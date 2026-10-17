@@ -15,6 +15,15 @@ struct Config {
     float socketRadius=.075f,pullDistance=.15f,insertRadius=.16f;
     std::uint64_t timeoutMs=15000,ackMs=4000,cooldownMs=500,grabWindowMs=650;
 };
+inline float ShoulderLeftMetres(int centimetres){
+    return std::fmin(.40f,std::fmax(.15f,std::fabs(float(centimetres)*.01f)));
+}
+inline bool HeadCentre(V leftEye,V rightEye,V& out){
+    if(!hipknife::Finite(leftEye)||!hipknife::Finite(rightEye))return false;
+    const float separation=hipknife::Length(rightEye-leftEye);
+    if(separation<.005f||separation>.20f)return false;
+    out=(leftEye+rightEye)*.5f;return true;
+}
 inline Pose Pouch(V head,float yaw,const Config& c={}) {
     const hipknife::Q q{0,std::sin(yaw*.5f),0,std::cos(yaw*.5f)};
     return {head+hipknife::Rotate(q,{-c.shoulderLeft,-c.shoulderDown,c.shoulderBack}),q};
@@ -39,6 +48,7 @@ struct Frame {
     int clip=-1,reserve=-1,capacity=-1;
     V hand{},socket{},pouch{};
     Pose gun{};
+    float bodyYaw=0; // current tracking yaw at gesture start, not recenter yaw
     std::uint64_t nowMs=0;
 };
 struct State {
@@ -47,6 +57,7 @@ struct State {
     std::uint64_t gripPressedMs=0;
     bool pendingGrip=false;
     Pose stageGun{};
+    float bodyYaw=0;
     std::uint64_t downSince=0;
     bool downSample=false;
     std::uint32_t pawn=0,weapon=0;
@@ -76,6 +87,7 @@ struct AmmoObservation {
 inline bool AmmoValid(const Frame& f){return f.clip>=0&&f.reserve>=0&&f.capacity>0&&
     f.clip<=f.capacity&&f.capacity<=1000&&f.reserve<=1000000;}
 inline bool Active(Phase p){return p!=Phase::Idle&&p!=Phase::Cooldown;}
+inline float AnchorYaw(const State& s,float currentYaw){return Active(s.phase)?s.bodyYaw:currentYaw;}
 inline bool Flicked(const Pose& a,const Pose& b){
     // Controller-local lateral displacement or roll; deliberately NOT forward
     // translation (normal aiming) or controller pitch alone.
@@ -103,7 +115,7 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
     const bool valid=f.enabled&&f.context&&f.tracked&&f.supported&&f.pawn&&f.weapon&&
         f.ammoFresh&&AmmoValid(f)&&hipknife::Finite(f.hand)&&hipknife::Finite(f.socket)&&hipknife::Finite(f.pouch)&&
         !f.handBusy&&(!f.supportLatched||awaitingGrip)&&!f.firing&&!changed&&f.nowMs>=s.lastMs&&
-        (!c.cylinderGestures||(hipknife::Finite(f.gun.p)&&hipknife::Valid(f.gun.q)));
+        std::isfinite(f.bodyYaw)&&(!c.cylinderGestures||(hipknife::Finite(f.gun.p)&&hipknife::Valid(f.gun.q)));
     s.lastMs=f.nowMs;
     if(!valid){
         const bool had=s.phase!=Phase::Idle;
@@ -141,11 +153,11 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
     case Phase::Idle:
         if(c.cylinderGestures){
             if(f.releaseCylinder&&f.reserve>0&&f.clip<f.capacity){
-                s.stageGun=f.gun;s.startClip=f.clip;s.startReserve=f.reserve;s.startCapacity=f.capacity;
+                s.stageGun=f.gun;s.bodyYaw=f.bodyYaw;s.startClip=f.clip;s.startReserve=f.reserve;s.startCapacity=f.capacity;
                 return enter(Phase::Unlocked,Event::Unlocked);
             }
         }else if(oldIntent){
-            s.pendingGrip=false;s.ownsGrip=true;s.startClip=f.clip;s.startReserve=f.reserve;s.startCapacity=f.capacity;
+            s.pendingGrip=false;s.ownsGrip=true;s.bodyYaw=f.bodyYaw;s.startClip=f.clip;s.startReserve=f.reserve;s.startCapacity=f.capacity;
             return enter(Phase::Removing,Event::GrabOld);
         }break;
     case Phase::Removing:

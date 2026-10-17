@@ -1,18 +1,58 @@
 # STATUS — session handoff
 
-LATEST 2026-10-17 SIDE side/mirror-screenshot-fix: MAIN root-cause accepted —
-UE3 binds viewport + Present region to the window (dumped frame: right half
-black at x>=2952 on a 5904x3012 backbuffer), so the SetWindowPos fit path is
-REMOVED; Window=1 now fits the right eye into the visible client region of
-the untouched SBS window (zero engine interaction, VR res intact by
-construction). Guard stays as fail-open tripwire + anti-war fuse; contract
-test_window_never_resized added. L1_PASS full mirror/guard/stamp/fuse CPU +
-D3D9Ex pixels/scope/viewport/Reset + 8 Python contracts + six menu/cinema
-regressions. L2_PASS clean tree,
+LATEST 2026-10-17 MAIN fix/centurion-grip-integration L3+L4 PASS (user PSVR2:
+"dziala", render-only, NO screenshots per standing order): intro identical in
+both eyes, single clamped ammo plate per eye, scripts hold then release on
+fresh boot, holster/knife rings hidden in menu+pause, visible in gameplay,
+Centurion shoulder/cylinder/shell behavior intact, no regressions. Deployed
+build DADE170B05EB6BA45569926156ADAC4629DEEC9EB787B00A8371D054A86F25AE
+(PE32 x86 /O2, guard pre/post PASS). Rollback path verified:
+install-backups/20261017-111929 (d3d9.dll F5E925, INI a6f4b973) + remove
+vr-assets/reload/centurion/. PR to main open for review (no self-merge).
+
+LATEST 2026-10-17 MAIN fix/centurion-grip-integration DEPLOYED for L3
+(candidate DLL SHA-256 D35A9EAD05EB6BA45569926156ADAC4629DEEC9EB787B00A8371D054A86F25AE,
+PE32 x86, guard preflight+postflight PASS via change-plan-centurion-integration.json;
+pre-deploy backup install-backups/20261017-105337 verified: d3d9.dll F5E925..., dinput8.dll 5B948D..., INI a6f4b973).
+Steam verified: d3d9.dll=D35A9EAD (on disk), INI=live+CenturionCylinderAnimation=1+
+CenturionShellEjection=1 (all else byte-identical to accepted baseline),
+5 private assets staged+triple-hash-verified (side manifest==source==installed)
+under Binaries/vr-assets/reload/centurion/. Accepted profile re-pinned to the
+user-verified good state (d3d9 F5E925, Fill=1/Window=0/Capture=1, story_voice
+4FEEC18C...E020==live, mtime Oct-16-stable); the 6600708D profile pin had no
+matching binary on disk. Port scope: ONLY missing Centurion fixes (two-eye
+mid-eye shoulder + latched yaw, cooked-IB native animation, cosmetic shell
+ejection, NativeSize, DrawInstances); accepted features preserved (cuffs,
+camera stabilization, menu rows, F12, L3+R3, mirror). L1/L2 PASS on final
+tree (incl. GPU fixtures vs INSTALLED assets). AWAITING PSVR2 (NO screenshots):
+(1) intro identical in both eyes, (2) Circle → sideways gun motion opens →
+muzzle down ejects (watch for shell burst), (3) fresh cylinder from LEFT
+shoulder, insert, flick to close, (4) no artifacts/regressions (hands/shadow/
+menu/monitor single image/HMD normal), normal exit. On FAIL: restore backup
+DLL+INI (hashes above), remove vr-assets/reload/centurion/, verify hashes,
+report log lines (centurion shoulder/mismatch/witness).
+
+LATEST 2026-10-17 MAIN fix/centurion-grip-integration (base local main
+513013a): ported ONLY the missing Centurion grip/shoulder fixes from
+fix/centurion-grip-shoulder — two-eye-midpoint shoulder + latched yaw,
+cooked-IB native cylinder animation, cosmetic shell ejection, NativeSize
+clip scaling, DrawInstances, LoadIni flags CenturionCylinderAnimation /
+CenturionShellEjection (default OFF), INI InsertRadiusCm + shoulder
+magnitude. Deliberately EXCLUDED: glove-cuff removal, camera-stabilization
+simplification, PR_GLOVECUFFS/SHAKESCREEN/BOBSTABILIZE row removals, F12
+stereo toggle, L3+R3 screenshot trigger, mirror/scope/guard reverts,
+UpdateCameraStabilization deletion (accepted features preserved).
+L1_PASS mirror ps1 + full reload suite incl. GPU fixtures vs private
+original assets (shells L/R stereo pixels) + knife suite. L2_PASS clean
 x86 PE32 /O2 DLL SHA-256
-594D11ABFCA21985FC6159A2A0E2B66628FC892B12F56F3619D751E7A47BCB49.
-L3/L4 UNKNOWN. ZERO Steam. MAIN L3: ok>0 rising, skipRect quiet, bb=SBS
-stable, no reset-guard lines, then F12/Share on two live halves.
+D35A9EAD05EB6BA45569926156ADAC4629DEEC9EB787B00A8371D054A86F25AE
+(provenance: branch fix/centurion-grip-integration @76eedc7 clean tree;
+rebuilt 2026-10-17, manifest dirty=[]).
+Private assets (NOT in git, hash-verified read-only): centurion_shell.svrk
+AB61034E..., centurion_shell.svrt F804945B..., centurion_reload.svca
+85ABCDDE..., centurion_clip.svrk F2196114..., centurion_clip.svrt 17A3355A...
+(vr-assets/reload/centurion/ at deploy). L3/L4 UNKNOWN. READY_FOR_PHYSICAL_ACCEPTANCE of render only
+(NO screenshots per standing order).
 
 LATEST 2026-10-16 SIDE fix/right-eye-mirror-steam-capture (PR #43): complete right-eye
 aspect fit, opt-in monitor work-area window cap 1920x1080 (physical client px),
