@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+Next offline candidate: build/projector/candidate-audited-quiet, source 138b2ca,
+DLL F53E9E2A799970F0B7F43B17C45D21D4686837BFDB166149E0B5DD5B6F1B0215.
+L1 captured-matrix eye invariance + saturation/restore tests PASS; L2 /O2 x86
+PASS. Includes classifier repair, detailed gate counters, and explicit
+Diagnostic/MenuDrawTrace=0, MenuProofCapture=0. Steam NOT deployed; await start.
+Next session: arm existing tools/request-gameplay-hotpath.ps1 for 3600 gameplay
+frames, no screenshot scheduler. Observe early gameplay route then canvas
+front/side, no forced pause cues. Cleanup unconsumed owned request after exit.
+Log30976: 82 nonzero-draw reporting windows median89.8 FPS; seven <80.
+One gameplay window 77.1 FPS / peak3893 draws, xrinput~.22ms, copy.01ms,
+hooks.02ms; residual12.06ms unassigned. Early cinematic window22.8FPS /
+4555peak draws; do not label all low windows gameplay or CPU-bound.
+Runtime root cause of early-scene cost remains unproven. See projector doc.
+
 Projector PID30976 L4 FAIL: film visible only partly in one eye and deforms
 with head motion. Log DF3D8B2AFC34C75101AF7E865A7CECA57761CC1457D368744A97E9C089A5AC4C
 confirms enabled=1 but no applied/rejected counters. Safe DLL/INI/injector/UI
