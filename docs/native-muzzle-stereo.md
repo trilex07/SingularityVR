@@ -171,8 +171,14 @@ a candidate changing only `Diagnostic/NativeMuzzleProbe=0→1` and
 above; `dinput8.dll` remains `5B948DDB...`. Accepted-profile `-WhatIf` has a
 PowerShell 7 ShouldProcess interaction, so preflight must use the read-only
 `Assert-AcceptedDeployment` function directly or the normal guarded runner after
-MAIN confirms the process is closed. No Steam file has been changed for this
-continuation; fresh user `start` is required before deployment and headset test.
+MAIN confirms the process is closed. The guarded runner installed the package
+and its postflight passed. Backup is
+`deployment/install-backups/20261017-201056`; report is
+`deployment/install-reports/20261017-201057.json`. Candidate hashes: DLL
+`4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`, INI
+`7497C897FA20A06C03DEDF5FA042F4FF83118F035191B3EEB342546E1881FB31`, and
+unchanged `dinput8.dll` `5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`.
+The game is still closed; no L3 runtime or headset result is claimed.
 
 L3 first round remains the bounded native-only capture described above. Collect
 the four complete `shadow-pass-<PID>-N.txt` traces and SBS captures, run

@@ -1,16 +1,17 @@
 # STATUS — session handoff
 
-LATEST MAIN 2026-10-17 native muzzle VFX continuation is ready for its first
-bounded PSVR2 capture, but is NOT installed or visually verified. Worktree
+LATEST MAIN 2026-10-17 native muzzle VFX probe is installed and awaiting its
+first bounded PSVR2 capture; visual behavior is NOT yet verified. Worktree
 `fix/main-native-muzzle-stereo-test` is based on accepted `origin/main` and
 requires only `[Diagnostic] NativeMuzzleProbe=1` plus `NativeMuzzleStereoMode=0`
 for the first run. MAIN L1_PASS; L2_PASS x86 PE32 `/O2`, candidate DLL SHA256
 `4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`.
-Offline staged INI changes exactly two bytes; accepted-profile preflight PASS.
-Steam remains on accepted DLL `789749E5…F361B`, INI `8B0B0B4C…2CCFAF`, and
-`dinput8.dll` `5B948DDB…729D59`; no live test or merge is claimed. See
-`docs/native-muzzle-stereo.md`; MAIN must wait for explicit user `start` before
-deploying and then request the PSVR2 capture.
+Guarded deploy and postflight accepted-profile checks passed. Steam now has
+candidate DLL `4D76F52A…F9FED85A`, probe INI `7497C897…E1881FB31` (only the two
+authorized bytes changed), and unchanged `dinput8.dll` `5B948DDB…729D59`.
+Backup: `deployment/install-backups/20261017-201056`; install report:
+`deployment/install-reports/20261017-201057.json`. User has not started the game;
+no L3 runtime or visual pass is claimed. See `docs/native-muzzle-stereo.md`.
 
 LATEST MAIN 2026-10-17 startup readiness + Centurion tracked-cylinder stack
 promoted as the current stable build after user PSVR2 acceptance (“jest okej”).
