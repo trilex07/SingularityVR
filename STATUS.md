@@ -1,5 +1,24 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN recoil-release L3 DEPLOYED (SIDE 4962b7a, PR48):
+candidate DLL SHA-256 BEF82DC6A5878CE036F66E15892118647987524E667E1CA15DA22B10E0E4CBCC,
+PE32 x86 /O2, clean tree 146388e, manifest dirty=[], guard preflight+postflight
+PASS; backup deployment/install-backups/20261017-144550. STATUS: CANDIDATE
+ONLY — first-shots animation still needs PSVR2 (this test).
+WHY: user reports first two shots missing animation (not reload): refill-only
+close left the transaction idle pose + frozen right hand mounted (holds through
+2600 ms tail). FIX (inspected): in refill mode, Time() goes inactive 280 ms
+after close (close anim kept), root falls back to LIVE native constants, right
+capture stops; OFF path byte-identical (ReleaseNative=false). Fail-closed
+(LiveRoot rigid check). L1_PASS (EXIT=0 incl. 280ms/live-root + legacy tail),
+L2_PASS (clean). Steam: DLL=BEF82DC6, INI=5314150A (same 5-flag set; pre-edit
+backup in 144550 dir). Path: rollback to DADE170B (postflight PASS), redeploy
+(guard model intact). Rollback: deploy Rollback -BackupPath 20261017-144550
+(+plan paths) + drop the 5 added INI lines. AWAITING L3+L4: full manual reload
+-> close -> FIRST shots must show native recoil/fire animation (no frozen gun),
+counts exact; then normal behavior. Falsifier: shots still frozen -> release
+theory wrong. MAIN reads post-close draws (no override) + user eyes.
+
 LATEST 2026-10-17 MAIN MERGED TO main (user order): d32eb54 (merge of tested
 stack: PR48 ports visual/tracked/native-space/polish/refill/diagnostics +
 MAIN reseat; PR47 grip-integration already in main via 276a952). Source tree
