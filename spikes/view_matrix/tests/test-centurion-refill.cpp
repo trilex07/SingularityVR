@@ -13,7 +13,7 @@ struct Fake {
         counts.clip+=n;if(!bad)counts.reserve-=n;}
 };
 int main(int argc,char** argv){
-    if(argc==7){
+    if(argc==7||argc==11){
         const auto base=std::strtoul(argv[2],nullptr,0);
         std::ifstream in(argv[1],std::ios::binary);assert(in.good());
         in.seekg(0,std::ios::end);const auto n=in.tellg();assert(n>0&&n<64*1024*1024);
@@ -28,6 +28,15 @@ int main(int argc,char** argv){
                 assert(Audited(bad.data(),bad.size(),s)==(i>=s.rel&&i<s.rel+4));
             }
             assert(!Audited(raw.data(),raw.size()-1,s));
+            if(argc==11){
+                const auto wrapper=std::strtoul(argv[j+7],nullptr,0);
+                const std::size_t size=j==3?53:centurionnative::WrapperBytes;
+                assert(wrapper>=base&&wrapper-base+size<=(unsigned long)n);
+                std::vector<std::uint8_t> w(size);in.seekg(wrapper-base);in.read((char*)w.data(),size);assert(in.good());
+                std::uint32_t slot=0;
+                assert(j==3?DecodeVoidWrapper(w.data(),size,slot):centurionnative::DecodeWrapper(w.data(),size,slot));
+                std::printf("PASS original %s wrapper ABI, derived slot=%X\n",s.name,slot);
+            }
         }
         std::puts("PASS archived ORIGINAL four entire methods + every-byte mutations (not runtime)");
     }else assert(argc==1);
