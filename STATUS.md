@@ -7,8 +7,15 @@ CenturionPhysicalPolish: measured original palm fit/curl, actual rendered wrist
 witness shared with input, carry-only health hide, UP dump/rearward cases,
 controller-relative right-hand hold during native tail, fresh stored block-only
 native context/token revoke. No guessed ammo/engine animation writes.
-Own CPU/GPU and original-glove regressions in progress; L2 pending,
-new L3/L4 UNKNOWN. ZERO Steam/INI/assets changed. See
+Implementation9ccbe96+d078491; L1_PASS24 reload programs/53 Python,6 glove
+programs (actual SVNI)/7 Python with2 optional skips,3 MAIN compatibility.
+Original1482 hand/1252 clip triangles fit with0 intersections; curl45%,
+source native curl roundtrip PASS. Slow placement does not close; quick flick
+does. L2_PASS clean d078491, x86 PE32 /O2, instrumentation OFF, DLL SHA
+9F60D72CA0AC05F17E4356F65F14119B90453622301A08C37E7E3F54605E792B.
+Private build/centurion-reload/physical-candidate-d078491, integrate BOTH source
+commits onto CURRENT MAIN; never replace newer integration with this SIDE DLL.
+New L3/L4 UNKNOWN. ZERO Steam/INI/assets changed. See
 docs/centurion-physical-polish.md for evidence, exact scope and MAIN test.
 
 LATEST 2026-10-17 SIDE: latest PSVR2 feedback REJECTS0742736 cylinder/cases

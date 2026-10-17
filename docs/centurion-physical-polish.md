@@ -26,6 +26,8 @@ weapons get blocked, downward pose dumps in new mode, case initial velocity
 goes toward muzzle, carried target differs from input target, glove/material
 state leaks, held right-hand palette drifts under moving native component.
 All new results require L1/L2 then MAIN L3/L4; counters are not visual proof.
+Read-only frozen log: `build/centurion-reload/feedback-20261017/session-1256.log`,
+SHA256 `1096972D274150E5C0F65CB4F541DA25C77AB0771B4ECDA097518F23D14B2EF4`.
 
 ## Implemented candidate
 
@@ -100,3 +102,36 @@ wait3s and draw: ammo must NOT refill. Close normally; report grip/occlusion,
 cases/side, unwanted sweep, store counts, HUD restoration, stereo/FPS. Stop
 early if uncomfortable. Native engine reload still exists underneath; do not
 call its visible suppression physically accepted merely from compile/counters.
+
+## Final SIDE receipt
+
+Implementation commits9ccbe96 +d078491 on `fix/centurion-visual-feedback`;
+**both** are needed (source range6e03006..d078491), not the last small gesture
+commit alone. Draft PR48 updated, no merge. L1_PASS24 reload CPU/ABI/resource/
+GPU programs +53 Python checks; all repeated on final source. Six glove CPU
+programs also pass with the actual original SVNI, including45% carry pose
+without changing right-hand palette; glove Python7 PASS/2 optional asset tests
+SKIPPED, explicitly not an all-private-asset test claim. Three MAIN compatibility
+fixtures rebuilt/reran (ammo layout, scripts readiness, holster marker). All33
+retained own-process executables checked PE32/x86. Independent actual original
+mesh/curl fit and preview inspected. New desired-matrix GPU replay yields
+12974/12975 pixels BOTH eyes, old exported-space control remains0/0.
+
+L2_PASS **clean** source `d078491ed88034ba54cdced7e15bd76a5f86cc9b`, x86 PE32
+`/O2`, no performance instrumentation. Existing unrelated warnings remain.
+DLL3198464 bytes, SHA256
+`9F60D72CA0AC05F17E4356F65F14119B90453622301A08C37E7E3F54605E792B`.
+Build receipt SHA256
+`34A6291B9D739C5BB314BF82EB79BFD0D258FCDD9061ADA129ABEF8F779EBB10`.
+Private candidate:
+`C:/Users/Trilex/vr-mods/SingularityVR-centurion-visual-feedback/build/centurion-reload/physical-candidate-d078491/`.
+DLL + build receipt + explicit manifest; no INI or original assets bundled.
+Earlier private9ccbe96 build is superseded, not the candidate for this route.
+
+Logs: `build/centurion-reload/physical-tests-rapid-final.log`,
+`physical-build-final.log`, `physical-glove-original-tests.log`;
+fit report SHA256 `0549030BFA81C0D1DAF30A0F8D08BAE62C2BFE549647A52A70C340006E9A0F0A`.
+These are NOT installed/accepted/restore identities. Subsequent docs-only
+commits do not change the clean source/binary receipt. New L3/L4 UNKNOWN;
+whole-game animation suppression, perceptual grip and shadow behavior still
+need MAIN's physical route. ZERO Steam launch/deploy/restore/INI/asset writes.
