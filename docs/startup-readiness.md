@@ -89,3 +89,19 @@ not real game loading pixels, font legibility or physical acceptance. Timer
 tests cover each missing gate, stable debounce, late readiness, timeout, clock
 fault, pawn replacement, pause/menu/cine bypass. Log build/startup-readiness/tests.log.
 Native ownership link correctness and speedup remain runtime UNKNOWN.
+
+## Clean L2 candidate / delivery
+
+Source `e243f97fc8354c37391d11609ec5b9bc972d806d`, dedicated branch
+`fix/startup-readiness` from origin/main92396ca (accepted Centurion source kept).
+L2_PASS clean source, x86 PE32 014C/010B, `/O2`, performance instrumentation
+OFF; existing unrelated analyzer/compiler warnings remain. DLL3211264 bytes,
+SHA256 `CE297F0AF8BADFAE941FB500BE8A07D9D139DCCF15E427FCABD2A2CC3867F003`.
+Build receipt SHA256
+`26751FE75790064595BAA954749102CBA4AA0CBB6E27A26740E3E747F3E2F178`.
+Build log: `build/startup-readiness/build.log`.
+Private `build/startup-readiness/candidate-e243f97/`: DLL/build receipt/manifest
+only, NO INI/assets, no accepted/installed/restore identity inferred or changed.
+SOURCE integration/rebuild by MAIN on current profile, not blind old DLL deploy.
+All opt-ins default OFF. Runtime baseline/fast path/curtain remain UNKNOWN;
+L1/L2 cannot establish actual load-time reduction or movement availability.
