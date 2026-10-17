@@ -75,3 +75,12 @@ Odpowiedz: NIE MA tu oryginalnych efektow 'tylko przeskalowanych'. Dwa niezalezn
 Falsyfikowalny test izolacji (1 sesja, MAIN): (a) VfxHost=0 + HideMuzzleFx=0 = sam natywny; (b) VfxHost=1 + HideMuzzleFx=1 = sam plugin. Przewidywanie: dym zniknie w (b) (dowod ze natywny); w (b) flash maly/krotki, wciaz nisko. Logi rozstrzygajace: VFX overlay: n= (n>0 = itemy plyna), g_vfxFires, VfxDiag=1 kropka cyjanowa (osobny tor od itemow).
 
 Decyzje dla MAIN/rezysera (zadna nie jest bezpiecznym defaultem z biurka): dorzucic skladowa UP do offsetu lufy i/lub tabele per-gun (pivot!=muzzle); flash: wiekszy quad i/lub dluzszy lifetime w stubie (obecnie 4,5 cm/33 ms); JEDEN system naraz - oba jednoczesnie to podwojne efekty w dwoch miejscach (obecny stan: natywny + plugin naraz).
+
+## RUNDA 3 - log z zywej sesji potwierdza bramke VfxHost=0 (2026-10-17 13:21)
+
+Sesja 13:21 (895 KB log, strzaly oddane, hook route-2 aktywny - 'FireAmmunition resolved', linie 'aim mode 9: StartFire/FireAmmunition' z danymi reki/kontrolera, aim mode 11):
+- linii runtime VFX: ZERO (VFX overlay: 0, VFX host init: 0, g_vfxFires 0).
+- linia 96 logu: VFX host seams=0 = INI zaladowane z VfxHost=0. Przy 0 fill ginie w warunku Rd(g_vfxHost) (linia ~24240), a VfxHostInitDevice wychodzi przed pierwszym logiem (if (!dev || !Rd(g_vfxHost)) return; linia ~21314) - stad zero sladow w logu mimo zywego hooka i strzalow.
+- linia 118 logu: HideMuzzleFx=0 (natywny wlaczony, znany defekt seam).
+
+Wniosek: jesli TERAZ nie widac NIC (nawet natywnego), to zainstalowane INI ma VfxHost=0 I HideMuzzleFx=1 jednoczesnie - jedyna kombinacja dajaca totalna cisze: plugin zablokowany flaga + natywny ukryty flaga. MAIN: odczytac 2 linie INI (10 sekund), nie zgadywac. Edycja VfxHost=1 musiala wyparowac (rollback guard przywraca akceptowane INI po tescie) albo trafila w zly plik INI.
