@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+LATEST MAIN projector investigation: user reports first-building projected
+film off its canvas at eye edges. Offline asset ownership identifies
+LightFunction -> SpotLightComponent -> SpotLightMovable, source material
+VI3_projector.mat_projector_living in SP_VI2_kismet01_a. Live shader UNKNOWN;
+no rendering fix guessed. Two pause/resume-triggered captures prepared via
+run-shadow-holster-sequence.ps1 -Mode Projector. See docs/projector-stereo.md.
+Await fresh start before Steam. This branch inherits the muzzle candidate
+709F64A7...CE1FBA that the user physically accepted ("jest super"). The previous
+guard restored the older accepted profile; source publication to main remains
+pending after direct push was rejected. Historical entries below predate L4.
+
 LATEST MAIN complete native particle correction: offline disassembly of all
 three emitter VS/PS pairs and audit of 15 paired draw groups prove that all
 three receive HUD's c5-c8 half-remap before projection. The previous candidate

@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][ValidateRange(1,2147483647)][int]$GamePid,
-    [ValidateSet('Holster','PauseReturn')][string]$Mode = 'Holster',
+    [ValidateSet('Holster','PauseReturn','Projector')][string]$Mode = 'Holster',
     [ValidateRange(30,600)][int]$SyncTimeoutSeconds = 300,
     [ValidateRange(5,180)][int]$StageTimeoutSeconds = 120
 )
@@ -110,10 +110,13 @@ try {
     if (Test-Path -LiteralPath $logPath) {
         $script:logOffset = (Get-Item -LiteralPath $logPath).Length
     }
-    if ($Mode -eq 'PauseReturn') {
+    if ($Mode -in @('PauseReturn','Projector')) {
         # Runtime log confirms class3 is SPPause and class0 is gameplay.
-        # This mode captures a chosen live-enemy scene without a holster gate.
-        Write-Output "WAITING_FOR_PAUSE_RETURN pid=$GamePid"
+        # Projector uses two independent pause/resume cues at two viewpoints.
+        # Both captures use existing read-only hooks; no automatic game input.
+        $captureCount = if ($Mode -eq 'Projector') { 2 } else { 1 }
+        for ($capture = 1; $capture -le $captureCount; ++$capture) {
+        Write-Output "WAITING_FOR_PAUSE_RETURN pid=$GamePid capture=$capture"
         $deadline = (Get-Date).AddSeconds($SyncTimeoutSeconds)
         $sawPause = $false
         $resumedAt = $null
@@ -131,8 +134,10 @@ try {
         if (-not $resumedAt) { throw 'Timed out waiting for pause to gameplay transition' }
         Write-Output "SYNC_PAUSE_RETURN $($resumedAt.ToString('o'))"
         Wait-Until $resumedAt.AddSeconds(1) $false
-        Request-Capture 1 'EnemyScene'
-        Write-Output 'COMPLETE: one focused scene frame captured; user may close game'
+        $label = if ($Mode -eq 'Projector') { "ProjectorView$capture" } else { 'EnemyScene' }
+        Request-Capture $capture $label
+        }
+        Write-Output "COMPLETE: $captureCount focused scene frame(s) captured; user may close game"
         return
     }
     Write-Output "WAITING_FOR_DRAWN pid=$GamePid"
