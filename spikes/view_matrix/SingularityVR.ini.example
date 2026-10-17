@@ -684,6 +684,17 @@ TimeOurWork=0
 ; TurnAngle=30       ; degrees per flick, mode 1 only
 ; TurnSpeed=120      ; degrees per second, mode 2 only
 ; TurnSign=1
+;
+; WaitForScripts holds VR locomotion (sticks + turn) until the VR script
+; layer is provably up: route-2 aim hook installed, key gameplay offsets
+; resolved, player armed state known. The game itself is untouched - menus,
+; buttons and native input keep flowing. Releases automatically on ready or
+; after ~15 s, whichever comes first (then logs once and never holds again
+; until the next level load resets it).
+;
+; [Input]
+; WaitForScripts=1   ; 1 = hold VR locomotion until scripts resolve (default)
+; WaitForScripts=0   ; 0 = legacy: move/turn immediately, even half-wired
 ; ---------------------------------------------------------------------------
 
 ; ---------------------------------------------------------------------------

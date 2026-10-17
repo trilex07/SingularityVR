@@ -1,5 +1,24 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN fix/centurion-grip-integration: ported missing HUD/
+scripts/holster fixes from side/hud-script-holster-fixes onto the Centurion
+integration: single DrawAmmoPlate + per-eye ClampCxToEyeHalf, ScriptsReady
+locomotion hold (WaitForScripts=1 default, 15 s timeout, latch reset on
+camera loss), legacy holster/knife-belt menu gate via holstermarker::Eligible.
+Explicitly OUT OF SCOPE (untouched, verified by diff): F12, L3+R3,
+mirror/scope/guard/cine, camera stabilization, cuffs, native reload guard.
+L1_PASS: new ammo clamp (13) + scripts gate (15) + reload suite incl. GPU
+fixtures vs installed assets + knife + mirror ps1. L2_PASS clean x86 PE32
+/O2 DLL SHA-256 07B596CECE33E9AAE2CE496C97B1B8A29B426911EA605E8B3FBB7D5F096FFF0C
+(manifest commit == HEAD). Staged INI = live + ONLY the 2 Centurion flags
+(WaitForScripts defaults ON in code, no INI line needed). AWAITING PSVR2
+(NO screenshots): (1) intro identical in both eyes, (2) ammo plate single +
+clamped per eye (no peripheral double), (3a) fresh boot: no movement until
+scripts ready (~seconds, log line) then free, (3b) holster/knife rings hidden
+in pause/menu/panel/cine, visible in gameplay, (4) Centurion shoulder/
+cylinder/shell behavior unchanged, no regressions. On FAIL: restore backup
+DLL+INI, remove vr-assets/reload/centurion/, verify hashes, report log lines.
+
 LATEST 2026-10-17 MAIN fix/centurion-grip-integration DEPLOYED for L3
 (candidate DLL SHA-256 D35A9EAD05EB6BA45569926156ADAC4629DEEC9EB787B00A8371D054A86F25AE,
 PE32 x86, guard preflight+postflight PASS via change-plan-centurion-integration.json;
