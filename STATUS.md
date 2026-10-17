@@ -1,5 +1,21 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN refill-diagnostics L3 DEPLOYED (SIDE 9c38667): candidate
+DLL SHA-256 4105C00457D0C27A581D71B1A08B361F6A3EEDDC4D1E9F25703DDA31611645EB,
+PE32 x86 /O2, clean tree ddbdb80, manifest dirty=[], guard preflight+postflight
+PASS; backup deployment/install-backups/20261017-141545. STATUS: CANDIDATE
+ONLY — fix open. WHY: close gesture arrives but resolver ready=0 (0 rounds).
+WHAT: bounded read-only audit (named reject stages, behavior 1:1) + 3x
+auto-probe on BLOCK (engine thread, >=1 s apart, no invocation, no gesture
+needed). L1_PASS (EXIT=0 incl. refill policy/ABI), L2_PASS (clean). Steam:
+DLL=4105C004, INI=5314150A (same 5-flag set; pre-edit backup in 141545 dir).
+Path: rollback to DADE170B (postflight PASS), redeploy (guard model intact).
+Rollback: deploy Rollback -BackupPath 20261017-141545 (+plan paths) + drop the
+5 added INI lines. AWAITING SHORT MEASUREMENT (no full reload): empty
+Centurion -> fire attempt -> close game. MAIN reads `centurion refill
+resolver:` stage (which of: layout/object/class-name/children/field-*/wrapper/
+vtable/method/cast vs ready) + `refill-only: result=/ready=`.
+
 LATEST 2026-10-17 MAIN refill-only L3 DEPLOYED (SIDE 6d7b201, PR48): candidate
 DLL SHA-256 4F54E47B970BD947625519DA0E439569F69BB45955C3B44EA288D2E41C4A97E7,
 PE32 x86 /O2, clean tree 55d3f66, manifest dirty=[], guard preflight+postflight
