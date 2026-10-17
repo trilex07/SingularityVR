@@ -56,8 +56,11 @@ layout/Weapon2, XR move action/both hand positions4, enabled script hook8,
 enabled aim trace16, centred head/camera/eyes32. Optional/absent assets are NOT
 declared loaded by this mask; engine move acceptance is not inferred from it.
 
-`[Render] StartupLoadingGate=0`, `StartupLoadingMaxMs=5000` (500..10000): same
-mask feeds100ms-stable curtain only on eligible focused gameplay. Intro/Bink,
+`[Render] StartupLoadingGate=0`, `StartupLoadingMaxMs=5000` (500..10000),
+`StartupLoadingMinMs=3000` (0..max): same mask feeds a minimum-duration,
+100ms-stable curtain only on eligible focused gameplay. It stays visible until
+both the minimum display time and stable hook-readiness are met; the maximum is
+still a fail-open timeout. Intro/Bink,
 cinema, menu/settings, pause bypass immediately. No new ClearPad, movement veto,
 sleep, simulation pause, state/timer or file write. The world continues behind
 it; MAIN must NOT leave a timeout looping or claim this extends native UE3 load.

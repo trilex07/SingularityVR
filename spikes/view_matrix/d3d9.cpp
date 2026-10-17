@@ -28,7 +28,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "startup_readiness.h"
 #include "startup_loading_draw.h"
 static int g_startupPrewarm=0,g_startupLoadingGate=0,g_startupProbe=0;
-static unsigned g_startupTimeoutMs=5000;
+static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "weapon_wheel_direct_select.h"
 #include "weapon_wheel_catalog_load.h"
 #include "weapon_wheel_atlas.h"
@@ -28236,7 +28236,7 @@ static void StartupReadinessFrame(IDirect3DDevice9* dev){
     if(!Rd(g_cutsceneAuto)||(g_origProcessEvent&&g_hookedAt==g_processInternal))ready|=startup::Script;
     if(Rd(g_aimMode)<6||g_origSLC)ready|=startup::Aim;
     if(g_haveCentre&&g_haveCentrePos&&g_haveEyes&&Rd(g_camPosValid))ready|=startup::Centre;
-    const bool visible=gate.Update(eligible,(uint32_t)g_playerPawn,ready,now,g_startupTimeoutMs);
+    const bool visible=gate.Update(eligible,(uint32_t)g_playerPawn,ready,now,g_startupTimeoutMs,g_startupMinVisibleMs);
     if(notes<64&&eligible&&(ready!=previous||visible!=wasVisible)){
         ++notes;previous=ready;
         Log("startup readiness: pawn=%08X ready=%02X missing=%02X elapsed=%llu hold=%d timeout=%d t=%llu (hook readiness; NOT native move-input acceptance)",
@@ -32281,8 +32281,10 @@ void LoadIniSettings() {
     g_startupProbe=GetPrivateProfileIntA("Diagnostic","StartupReadinessProbe",0,path)?1:0;
     const int startupTimeout=GetPrivateProfileIntA("Render","StartupLoadingMaxMs",5000,path);
     g_startupTimeoutMs=(unsigned)(std::max)(500,(std::min)(startupTimeout,10000));
-    Log("ini: StartupPrewarm=%d StartupLoadingGate=%d probe=%d max=%u ms (default OFF; presentation only, simulation/input untouched)",
-        g_startupPrewarm,g_startupLoadingGate,g_startupProbe,g_startupTimeoutMs);
+    const int startupMin=GetPrivateProfileIntA("Render","StartupLoadingMinMs",3000,path);
+    g_startupMinVisibleMs=(unsigned)(std::clamp)(startupMin,0,(int)g_startupTimeoutMs);
+    Log("ini: StartupPrewarm=%d StartupLoadingGate=%d probe=%d min=%u max=%u ms (default OFF; hook readiness only, not UE3 asset-load completion; simulation/input untouched)",
+        g_startupPrewarm,g_startupLoadingGate,g_startupProbe,g_startupMinVisibleMs,g_startupTimeoutMs);
     g_renderEvidence = GetPrivateProfileIntA("Diagnostic", "RenderEvidence", 0, path) ? 1 : 0;
     InterlockedExchange(&g_forceDesktopVr,
                         GetPrivateProfileIntA("Diagnostic", "ForceDesktopVr", 0, path) ? 1 : 0);

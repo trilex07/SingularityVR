@@ -1,5 +1,28 @@
 # STATUS — session handoff
 
+LATEST MAIN L3 2026-10-17 startup-readiness test: candidate
+CE297F0AF8BADFAE941FB500BE8A07D9D139DCCF15E427FCABD2A2CC3867F003 ran and
+the user closed the game. Curtain appeared only briefly. Runtime log shows
+`ready=3F` then `hold=0 elapsed=110ms`: this is pawn/hook/XR readiness, not
+UE3 asset-stream completion or proof of native movement acceptance. Centurion
+source included the tracked-cylinder/refill paths, but this test INI had
+`CenturionVisualFollowup=0`, `CenturionTrackedCylinder=0`,
+`CenturionPhysicalPolish=0`, `CenturionRefillOnly=0`; only
+`CenturionClipPreview=1` was active. User saw the detached/adjacent cylinder,
+so this run did not test the integrated visual reload path. The candidate lease
+was rolled back after exit and installed hashes were verified by the deploy
+receipt; do not treat this candidate as the current profile.
+
+OFFLINE follow-up now adds a 3000 ms minimum visible hold, clamped to the
+existing 5000 ms fail-open timeout. It is a visible-duration policy, not a claim
+that all UE3 assets have streamed. The next candidate config will enable only
+the reviewed Centurion stack: VisualFollowup, TrackedCylinder, PhysicalPolish,
+and RefillOnly; all other accepted INI values remain unchanged.
+L1_PASS: startup suite (6 optimized C++ fixtures, 5 Python guards) and full
+Centurion suite (20 policy fixtures + own-process ABI and two D3D9 fixtures;
+62 Python tests). All own-process GPU fixtures passed; no game/Steam proof.
+L2 pending clean rebuild; no new Steam candidate yet.
+
 LATEST 2026-10-17 SIDE startup readiness candidate (dedicated branch from92396ca):
 user reports immobile visible gameplay while hooks initialize. Runtime cause of
 native movement block UNKNOWN. Source/log evidence: pawn at index114610 after
