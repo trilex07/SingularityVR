@@ -1,5 +1,9 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN MERGED TO main (user order): 92396ca (fast-forward
+d32eb54..92396ca: recoil-release fix + scoped L4 PASS). Steam 6B0664ED→BEF82DC6
+candidate now on main; deployed install unchanged by merge.
+
 LATEST 2026-10-17 MAIN recoil-release L3+L4 PASS (build BEF82DC6 + 5 flags):
 user PSVR2 "super" on first-shots-after-close route (native recoil back, no
 frozen gun). Scoped to this build/config/route; user ordered merge to main.
