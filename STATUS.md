@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN physical-polish L3+L4 PASS (build 37AC0AD2 + 4 flags):
+user PSVR2 "okej dziala" + log 13:29 session proves TWO full manual cycles
+(opened->dumped->grab->loaded->inserted->close->ACK, clip 3->0, reserve
+16->13): insertDist 0.064 m at Loaded (was 2.4-3.0 m), socketFresh=1,
+nativeSpareDraws 636->2960, rightHeld/palmPublished counting, conserved ACKs.
+Scoped to this build/config/route; SIDE small fixes still expected; NOT global
+acceptance. VFX trigger L3 PASS same session: init plugin=loaded atlas=
+vfx_atlas dir, overlay n=1 x12 (budget saturated). Visual placement (UP/size/
+smoke-source) still needs isolation (a)/(b) + user eyes.
+VFX flag check (SIDE ae62c51): installed INI = 59C48A88, VfxHost=1,
+HideMuzzleFx=0 — NOT the silent combo; single INI copy under game tree;
+13:29 log seams=1. The seams=0 session predates the flag edit. One earlier
+unexplained revert to 7ED1239C (12:56) not reproduced since; flag re-verify
+after every session continues.
+
 LATEST 2026-10-17 MAIN physical-polish L3 DEPLOYED (SIDE 9ccbe96+d078491):
 candidate DLL SHA-256 37AC0AD2AB667C1C3C5DBA18660188CAEEFB57B1478BD7495F02235DF76B6961,
 PE32 x86 /O2, clean tree 5c800b7, manifest dirty=[], guard preflight+postflight
