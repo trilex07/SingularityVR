@@ -7,7 +7,10 @@ corrected only `488BAE:27DF`, leaving `314D:C118` malformed and `4FAE:2FEC`
 suppressed. New default-OFF `Render/NativeMuzzleParticleStereo` routes the
 three exact audited pairs through camera stereo; accepted drop is bypassed
 only inside a validated corrected draw scope. Original assets remain native.
-L1 PASS; L2 pending. Steam remains on the accepted profile. See the final
+L1 PASS; L2 x86 PE32 /O2 PASS (source `fb85322`, DLL `709F64A7...CE1FBA`).
+Offline candidate `candidate-particle-family-stereo` and accepted-profile
+preflight PASS; candidate INI `38642BD6...D73B3E`. No deployment or L3/L4 yet;
+await fresh user `start`. Steam remains on the accepted profile. See the final
 section of `docs/native-muzzle-stereo.md` for evidence and falsifier.
 
 LATEST MAIN 2026-10-17 preserved-drop muzzle PSVR2 test: user-approved Steam

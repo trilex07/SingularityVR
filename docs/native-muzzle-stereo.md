@@ -598,3 +598,15 @@ camera refusal, scoped drop bypass/restoration, bounded read-only local witness,
 and synthetic coordinate-space replay. Offline audit and these tests do not
 constitute L3/L4 acceptance. Candidate preparation uses `-ParticleStereo
 -NoProbe`, one new INI key, and the existing accepted-profile/restore guard.
+
+Offline delivery: clean source `fb8532203434d0e63055fb112818b4bab079b7a2`,
+x86 PE32 `/O2` build PASS, DLL SHA-256
+`709F64A7EA0460213EED1CA285500B3A1E9C44588E2F4A0B3FAC97D26DCE1FBA`.
+Package `build/native-muzzle-main/candidate-particle-family-stereo` prepared;
+INI SHA-256 `38642BD60438C370C8DF8518B1C9FD75D0CDB104FE08652A219B3084B9D73B3E`.
+Read-only accepted-profile preflight PASS. No Steam changes or physical
+acceptance. Await fresh `start`, then use guarded deployment and the same
+save: 2–3 shots into open space, vary gun orientation, inspect both eyes for
+muzzle-local flash/smoke and misplaced glow, then exit normally without
+switching to chat during the test. Inspect all three family counters and
+local-matrix witnesses before interpreting the visual result.
