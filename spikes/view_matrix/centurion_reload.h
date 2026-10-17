@@ -84,8 +84,32 @@ struct AmmoObservation {
             now>=sampledMs&&now-sampledMs<=250;
     }
 };
-inline bool AmmoValid(const Frame& f){return f.clip>=0&&f.reserve>=0&&f.capacity>0&&
-    f.clip<=f.capacity&&f.capacity<=1000&&f.reserve<=1000000;}
+inline bool AmmoCountsValid(int clip,int reserve,int capacity){return clip>=0&&reserve>=0&&capacity>0&&
+    clip<=capacity&&capacity<=1000&&reserve<=1000000;}
+inline bool AmmoValid(const Frame& f){return AmmoCountsValid(f.clip,f.reserve,f.capacity);}
+// Reseat policy for a stuck HUD latch. The finder keeps the first readable
+// deriving instance, which can be a never-populated zombie while the live HUD
+// allocates later (same class, same offsets, garbage fields). Only a
+// persistently-invalid ELIGIBLE streak may ask for a reseat to a DIFFERENT
+// instance; valid reads, ineligible gaps and identity changes reset it.
+// Pure policy, no D3D/UE3 calls (unit-tested).
+struct HudReseatPolicy {
+    unsigned bad=0,reseats=0;
+    std::uint64_t lastReseatMs=0;
+    static constexpr unsigned kTriggerSamples=50; // ~5 s at the 10 Hz sampler
+    static constexpr std::uint64_t kCooldownMs=5000;
+    static constexpr unsigned kMaxReseatsPerEpoch=6;
+    void NoteIneligible(){bad=0;} // menu/load gaps never accumulate
+    void ResetEpoch(){bad=0;reseats=0;} // valid reads + identity changes
+    // Eligible sample only. Returns true once when a reseat is due.
+    bool NoteSample(bool valid,std::uint64_t nowMs){
+        if(valid){ResetEpoch();return false;}
+        if(reseats>=kMaxReseatsPerEpoch)return false;
+        if(++bad<kTriggerSamples)return false;
+        if(nowMs<lastReseatMs||nowMs-lastReseatMs<kCooldownMs)return false;
+        lastReseatMs=nowMs;bad=0;++reseats;return true;
+    }
+};
 inline bool Active(Phase p){return p!=Phase::Idle&&p!=Phase::Cooldown;}
 inline float AnchorYaw(const State& s,float currentYaw){return Active(s.phase)?s.bodyYaw:currentYaw;}
 inline bool Flicked(const Pose& a,const Pose& b){
