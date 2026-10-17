@@ -1,5 +1,28 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN fix/centurion-visual-followup-integration (from db0aedb):
+port of SIDE draft PR #48 source ONLY (5 files, verbatim from
+origin/fix/centurion-visual-feedback@d6d427e: centurion_visual_followup.h,
+d3d9.cpp wiring, 2 CPU/GPU fixtures, test-centurion.ps1; SIDE STATUS/docs NOT
+ported). Symptom (user physical): cylinder full 42.34UU withdrawal, albedo-only
+spare over hand/gun, Loaded auto-closes in 280ms, close re-runs native reload.
+Experiment: default-OFF CenturionVisualFollowup (requires CylinderAnimation=1,
+else forced 0): compact frame12 open, Loaded holds frame26 until flick,
+26..32 only on close, native root held through tail, spare = second native DIP
+same VB/IB/material/depth inside each eye, 15 CTAB regs restored. OFF path =
+old centurionanim::Palette (accepted behavior preserved by construction).
+Falsifiers: frame displacement > frame12; Loaded closes w/o input; non-gun draw
+modified; material/RT/depth leak; spare still over nearer geometry.
+L1: rerun via cmd in progress (first run: all 16 CPU + ABI + 6 Python suites +
+IB witness + spare-GPU 10609/10609 both rounds PASS; outer exit=1 was PS
+stderr-dot harness noise, not a suite failure). L2: PE32 x86 /O2 build SHA-256
+0A496C3A76A867CC26B9580CD444D9D5F73EFC8C12B3BD2CE508ED42BBCAEFE2 (dirty-tree;
+clean rebuild after commit). Installed Steam still DADE170B (prior L3+L4 PASS
+render-only scope; this experiment NOT covered). Game closed. Next: commit,
+push, clean rebuild (manifest dirty=[]), deploy DllOnly + INI
+CenturionVisualFollowup=1, L3 log check, user PSVR2 route. Rollback: deploy
+script timestamped backup + restore DADE170B on critical failure.
+
 LATEST 2026-10-17 MAIN fix/centurion-grip-integration L3+L4 PASS (user PSVR2:
 "dziala", render-only, NO screenshots per standing order): intro identical in
 both eyes, single clamped ammo plate per eye, scripts hold then release on
