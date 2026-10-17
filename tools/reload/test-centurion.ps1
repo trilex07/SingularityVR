@@ -1,4 +1,4 @@
-param([string]$NativeEvidence, [string]$PreparedRoot='', [switch]$Gpu)
+param([string]$NativeEvidence, [string]$PreparedRoot='', [switch]$Gpu, [string]$RefillEvidence)
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $out=Join-Path $repo 'build\centurion-reload\tests'
@@ -6,17 +6,22 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $vswhere="${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $vcvars=Join-Path $vs 'VC\Auxiliary\Build\vcvarsall.bat'
-foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-clip','test-manual-reload','test-hip-knife','test-weapon-holster','test-hand-anchor-math','test-knife-renderer','test-next-weapon-reload','test-next-weapon-animation','test-next-weapon-runtime')){
+foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-clip','test-manual-reload','test-hip-knife','test-weapon-holster','test-hand-anchor-math','test-knife-renderer','test-next-weapon-reload','test-next-weapon-animation','test-next-weapon-runtime','test-next-weapon-refill','test-next-weapon-refill-visual')){
     $source=Join-Path $repo "spikes\view_matrix\tests\$test.cpp"
     $exe=Join-Path $out "$test.exe"
     $obj=Join-Path $out "$test.obj"
     $command="`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:`"$exe`" /Fo:`"$obj`" `"$source`""
     cmd /c $command
     if($LASTEXITCODE -ne 0){throw "compile failed: $test"}
-    if($test -in @('test-next-weapon-animation','test-next-weapon-runtime') -and $PreparedRoot){ & $exe $PreparedRoot }
+    if($test -in @('test-next-weapon-animation','test-next-weapon-runtime','test-next-weapon-refill-visual') -and $PreparedRoot){ & $exe $PreparedRoot }
     elseif($test -eq 'test-next-weapon-runtime') { throw 'Runtime fixture requires explicit -PreparedRoot (private originals)' }
     elseif($test -eq 'test-next-weapon-reload' -and $PreparedRoot){
         & $exe (Join-Path $PreparedRoot 'valkyrie/valkyrie_clip.svrk') (Join-Path $PreparedRoot 'volk/volk_clip.svrk') (Join-Path $PreparedRoot 'kasimov/kasimov_clip.svrk')
+    }
+    elseif($test -eq 'test-next-weapon-refill' -and $RefillEvidence){
+        $evidence=Get-Content -LiteralPath $RefillEvidence -Raw | ConvertFrom-Json
+        if((Get-FileHash -LiteralPath $evidence.text_path -Algorithm SHA256).Hash -ne $evidence.text_sha256){throw 'Archived refill text changed'}
+        & $exe $evidence.text_path $evidence.text_base $evidence.methods[0].method $evidence.methods[1].method $evidence.methods[2].method $evidence.methods[3].method
     }
     elseif($test -eq 'test-centurion-native' -and $NativeEvidence){
         $evidence=Get-Content -LiteralPath $NativeEvidence -Raw | ConvertFrom-Json
@@ -83,5 +88,7 @@ python (Join-Path $PSScriptRoot 'test_inspect_native_reload.py')
 if($LASTEXITCODE -ne 0){throw 'Native reload offline mapper tests failed'}
 python (Join-Path $PSScriptRoot 'test_next_weapon_native.py')
 if($LASTEXITCODE -ne 0){throw 'Three-weapon inherited method checks failed'}
+python (Join-Path $PSScriptRoot 'test_next_refill.py')
+if($LASTEXITCODE -ne 0){throw 'Three-weapon refill-only inheritance/wiring checks failed'}
 python (Join-Path $PSScriptRoot 'test_runtime_candidate.py')
 if($LASTEXITCODE -ne 0){throw 'Offline candidate safety/provenance checks failed'}

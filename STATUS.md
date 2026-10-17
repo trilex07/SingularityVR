@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE: Centurion's native-refill lesson applied to Valkyrie,
+Volk/Kasimov via default-OFF ReloadRefillOnly, same shared hook. Original PE/text
+proves ALL12 refill/getter bindings identical across the three exact classes.
+Frozen permit snapshot + live original getter/refill conservation, no full native
+Reload/state/timer/camera/inventory writes by proxy; failed transfer never falls
+back to full reload. Per-profile fault latch. Stored weapons revoke tap/token,
+keep fresh block-only guard; shoulder uses mid-eye/latched physical head yaw.
+Only180ms render-only seating/root/scope tail, not whole native animation.
+L1_PASS19 CPU/ABI +2 own D3D9Ex GPU programs,64 Python tests;60000 OFF/ON fake
+native transactions, partial/low reserve, duplicate/NPC/Centurion/holster isolation,
+four original body/mutation checks,15003 child poses/333 seated shoulder poses.
+L2 pending; L3/L4 UNKNOWN. Zero Steam/deploy/assets/installed INI changes.
+See docs/next-weapon-refill-only.md. Integrate SOURCE onto current MAIN, do not
+replace newer accepted integration with this older SIDE DLL. PR45, no merge.
+
 LATEST 2026-10-17 SIDE PR45 native-material follow-up: Valkyrie/Volk/Kasimov
 stock/carried/dropped magazine uses original native gun draw/material and shared
 depth inside each StereoPair eye; ONLY rigid magazine bone stays alive, all

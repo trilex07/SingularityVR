@@ -15,6 +15,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "centurion_reload.h"
 #include "centurion_clip_preview.h"
 #include "centurion_native_reload.h"
+#include "native_refill_only.h"
 #include "weapon_reload_runtime.h"
 #include "weapon_wheel.h"
 #include "ammo_probe.h"
@@ -2253,8 +2254,11 @@ static void DrawCenturionReload(IDirect3DDevice9* dev);
 // Independent, default-OFF three-weapon path; Centurion remains untouched.
 static int g_nextReload[3]{};
 static int g_nextNativeMagazine=0; // independent default-OFF native material/depth replay
+static int g_nextRefillOnly=0; // default OFF; manual insertion -> audited native refill only
 static volatile LONG g_nextNativeMagazineDraws=0;
 static bool NextReloadEnabled(){return g_nextReload[0]||g_nextReload[1]||g_nextReload[2];}
+static weaponreload::Kind NextKind(long vertices);
+static bool NextObject(uintptr_t object,weaponreload::Kind kind);
 static centurionnative::Gate g_nextNativeGate; // protected by existing native lock
 static volatile LONG g_nextNativePermits=0,g_nextNativeBlocks=0;
 static ULONGLONG g_nextNativePermitMs=0; // same native SRW lock, no torn x86 read
@@ -2277,6 +2281,7 @@ struct NextReloadVisual {
     hipknife::Pose hand{},source{},aim{};
     armbind::Mat drop{};ULONGLONG dropMs=0;
     bool rootValid=false;armbind::Mat root{};ULONGLONG nativeEnd=0;
+    ULONGLONG insertedMs=0;
 };
 static NextReloadVisual g_nextVisual;
 static weaponreload::Witness g_nextWitness;
@@ -10775,6 +10780,13 @@ void SyncXRInput(XrTime displayTime) {
     if (holsterEvent == weaponholster::Event::Stored ||
         holsterEvent == weaponholster::Event::Drawn) {
         InterlockedExchange(&g_weaponHolstered, g_holsterState.active ? 1 : 0);
+        if(g_nextRefillOnly&&holsterEvent==weaponholster::Event::Stored){
+            g_nextReloadTap.Cancel();
+            if(TryAcquireSRWLockExclusive(&g_centurionNativeLock)){
+                g_nextNativeGate.permit=false;g_nextNativeGate.current.canPermit=false;
+                ReleaseSRWLockExclusive(&g_centurionNativeLock);
+            }
+        }
         InterlockedExchange(&g_holsterYawUU, Rd(g_handDevYawUU));
         InterlockedExchange(&g_holsterPitchUU, Rd(g_handDevPitchUU));
         InterlockedExchange(&g_holsterRollUU, Rd(g_handDevRollUU));
@@ -26122,17 +26134,21 @@ void DrawHipKnife(IDirect3DDevice9* dev){
 }
 using PFN_CenturionAttemptReload=int (__thiscall*)(void*);
 static PFN_CenturionAttemptReload g_origCenturionAttemptReload=nullptr;
+#include "native_refill_engine.inl"
 static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
     const auto object=(uint32_t)reinterpret_cast<uintptr_t>(self);
     const auto weapon=(uint32_t)Rd(g_weaponObj),pawn=(uint32_t)g_playerPawn;
     const auto now=GetTickCount64();
     auto decision=centurionnative::Decision::Forward;
+    centurionnative::Context closeSnapshot;
+    bool nextOwned=false;
     const char* owner="centurion";
     bool lockMiss=false;
     if(TryAcquireSRWLockExclusive(&g_centurionNativeLock)){
         decision=g_centurionNativeGate.Evaluate(g_centurionNativeGuardMode,object,pawn,weapon,now);
         if(decision==centurionnative::Decision::Forward&&NextReloadEnabled()){
-            decision=g_nextNativeGate.Evaluate(2,object,pawn,weapon,now);owner="next-weapon";
+            closeSnapshot=g_nextNativeGate.permitted;nextOwned=true;
+            decision=g_nextNativeGate.Evaluate(2,object,pawn,weapon,now,g_nextRefillOnly&&Rd(g_weaponHolstered));owner="next-weapon";
             if(decision==centurionnative::Decision::Permit){InterlockedIncrement(&g_nextNativePermits);g_nextNativePermitMs=now;}
             if(decision==centurionnative::Decision::Block)InterlockedIncrement(&g_nextNativeBlocks);
         }
@@ -26145,6 +26161,31 @@ static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
         if(note)Log("%s native guard: BLOCK self=%08X pawn=%08X return=%08X t=%llu (no token, no inventory write)",
             owner,object,pawn,(unsigned)reinterpret_cast<uintptr_t>(_ReturnAddress()),(unsigned long long)now);
         return 0; // audited 32-bit native bool; original BeginFire handles refusal
+    }
+    if(g_nextRefillOnly&&nextOwned&&decision==centurionnative::Decision::Permit){
+        static bool fault[3]{};static unsigned records[3]{};
+        const auto kind=NextKind(Rd(g_gunVerts));const auto index=weaponreload::Index(kind);
+        const bool eligible=index<3&&g_nextReload[index]&&g_nextReady[index]&&!Rd(g_nextFault[index])&&
+            !fault[index]&&VrModeOn()&&InGameplay()&&!Rd(g_gamePaused)&&!Rd(g_vrUiMenu)&&
+            !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!Rd(g_weaponHolstered)&&!CutsceneNativeCameraArmed()&&
+            NextObject(object,kind)&&closeSnapshot.pawn==pawn&&closeSnapshot.weapon==object&&closeSnapshot.canPermit;
+        NativeRefillBindings bindings;
+        const bool ready=eligible&&ResolveNativeRefill(self,bindings);
+        auto result=nativerefill::Result::Rejected;nativerefill::Counts before{},after{};
+        if(ready){
+            NativeRefillCalls native{self,bindings};
+            result=nativerefill::Commit({closeSnapshot.clip,closeSnapshot.reserve,closeSnapshot.capacity},native);
+            before=native.before;after=native.after;
+        }
+        if(index<3){
+            if(result==nativerefill::Result::Fault)fault[index]=true;
+            if(records[index]++<32)Log("next refill-only: kind=%d result=%d ready=%d self=%08X snapshot=%d/%d/%d live=%d/%d/%d->%d/%d/%d t=%llu fault=%d (2=conserved LIVE; native Reload NOT invoked; HUD/PSVR2 required)",
+                int(kind),int(result),ready?1:0,object,closeSnapshot.clip,closeSnapshot.reserve,closeSnapshot.capacity,
+                before.clip,before.reserve,before.capacity,after.clip,after.reserve,after.capacity,
+                (unsigned long long)now,fault[index]?1:0);
+        }
+        // Once consumed, never forward a possible transfer into full Reload.
+        return result==nativerefill::Result::Conserved?1:0;
     }
     // This is forwarding an existing native call, NOT calling ProcessInternal
     // with invented parameters. No exception masking or ammo modification.
@@ -31770,6 +31811,8 @@ void LoadIniSettings() {
     const int priorNativeMagazine=g_nextNativeMagazine;
     const char* nextKeys[]{"ValkyrieManualReload","VolkManualReload","KasimovManualReload"};
     g_nextNativeMagazine=GetPrivateProfileIntA("Input","ReloadNativeMagazine",0,path)?1:0;
+    g_nextRefillOnly=GetPrivateProfileIntA("Input","ReloadRefillOnly",0,path)?1:0;
+    Log("ini: ReloadRefillOnly=%d (default OFF; three-weapon native refill without Reload state; NOT L3/L4)",g_nextRefillOnly);
     Log("ini: ReloadNativeMagazine=%d (default OFF; same native material/depth replay for three opt-in reloads; NOT L3/L4 proof)",
         g_nextNativeMagazine);
     for(unsigned i=0;i<3;++i){

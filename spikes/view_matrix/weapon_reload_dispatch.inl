@@ -111,7 +111,16 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     if(index<3&&g_nextReady[index])calibration.gesture.ackMs=std::max<uint64_t>(4000,
         (uint64_t)std::ceil(1000.f*g_nextAnimation[index].frames/g_nextAnimation[index].fps)+1500);
     const hipknife::V head{g_headPosXR[0],g_headPosXR[1],g_headPosXR[2]};
-    const auto source=Supply(head,g_centreYaw,calibration.shoulder);in.pouch=source.p;
+    hipknife::V shoulderHead=head;float shoulderYaw=g_centreYaw;
+    if(g_nextRefillOnly){
+        const auto& le=g_eyePose[0].position;const auto& re=g_eyePose[1].position;
+        in.tracked=in.tracked&&g_haveEyes&&g_eyePositionsValid&&MidEye(
+            {le.x,le.y,le.z},{re.x,re.y,re.z},shoulderHead);
+        f.bodyYaw=g_headYawRad;
+        shoulderYaw=weaponreload::Active(g_nextReloadState.transaction.phase)?
+            g_nextReloadState.transaction.bodyYaw:f.bodyYaw;
+    }
+    const auto source=Supply(shoulderHead,shoulderYaw,calibration.shoulder);in.pouch=source.p;
     if(g_hipKnifeEnabled&&g_hipKnifeReady)in.knifeNear=centurionreload::Near(in.hand,
         hipknife::Hip(head,g_centreYaw,g_hipKnifeConfig).p,g_hipKnifeConfig.radius);
     const auto result=Update(g_nextReloadState,f,calibration);
@@ -119,7 +128,11 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     const bool valid=in.context&&in.tracked&&in.ammoFresh&&centurionreload::AmmoValid(in)&&f.liveIdentityVerified;
     bool permit=false;ULONGLONG observedPermitMs=0;
     if(TryAcquireSRWLockExclusive(&g_centurionNativeLock)){
-        g_nextNativeGate.Publish({valid,in.pawn,in.weapon,now});
+        const bool storedOwned=g_nextRefillOnly&&eligible&&Rd(g_weaponHolstered)&&native&&
+            in.tracked&&in.ammoFresh&&centurionreload::AmmoValid(in)&&
+            g_xrSessionState==XR_SESSION_STATE_FOCUSED;
+        g_nextNativeGate.Publish({valid||storedOwned,in.pawn,in.weapon,now,
+            !g_nextRefillOnly||!Rd(g_weaponHolstered),in.clip,in.reserve,in.capacity});
         if(valid&&result.reloadIntent){f.nativePermitConsumed=false;g_nextPermitStart=Rd(g_nextNativePermits);
             permit=g_nextNativeGate.Arm(in.pawn,in.weapon,now);}
         if(valid&&f.nativePermitConsumed)observedPermitMs=g_nextNativePermitMs;
@@ -139,12 +152,16 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
         if(g_nextVisual.weapon==in.weapon&&g_nextVisual.pawn==in.pawn&&next.valid){
             next.drop=g_nextVisual.drop;next.dropMs=g_nextVisual.dropMs;
             next.rootValid=g_nextVisual.rootValid;next.root=g_nextVisual.root;next.nativeEnd=g_nextVisual.nativeEnd;
+            next.insertedMs=g_nextVisual.insertedMs;
         }
         if(result.ejectMagazine){next.drop=witness.clipTracking;next.dropMs=now;
-            next.rootValid=true;next.root=witness.nativeRoot;next.nativeEnd=0;}
-        if(result.reloadIntent&&permit&&index<3)next.nativeEnd=now+
-            (ULONGLONG)std::ceil(1000.f*g_nextAnimation[index].frames/g_nextAnimation[index].fps)+300;
-        if(next.rootValid&&observedPermitMs&&index<3)next.nativeEnd=observedPermitMs+
+            next.rootValid=true;next.root=witness.nativeRoot;next.nativeEnd=0;next.insertedMs=0;}
+        if(result.reloadIntent&&permit&&index<3){
+            next.insertedMs=now;
+            next.nativeEnd=now+(g_nextRefillOnly?weaponreload::Animation::RefillSeatMs:
+                (ULONGLONG)std::ceil(1000.f*g_nextAnimation[index].frames/g_nextAnimation[index].fps)+300);
+        }
+        if(!g_nextRefillOnly&&next.rootValid&&observedPermitMs&&index<3)next.nativeEnd=observedPermitMs+
             (ULONGLONG)std::ceil(1000.f*g_nextAnimation[index].frames/g_nextAnimation[index].fps)+150;
         if(result.event==Event::Cancelled||result.event==Event::Rejected||
            (!weaponreload::Active(t.phase)&&(!next.nativeEnd||now>=next.nativeEnd)))next.rootValid=false;
@@ -225,7 +242,8 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
     const bool drop=g_nextNativeMagazine&&visual.dropMs&&now>=visual.dropMs&&now-visual.dropMs<1200;
     if(!weaponreload::Active(visual.phase)&&!rootHeld&&!drop)return 0;
     if(weaponreload::Active(visual.phase)||rootHeld){
-        const float frame=g_nextTiming[index].Frame(g_nextAnimation[index],visual.phase,visual.since,now);
+        const float frame=g_nextRefillOnly?g_nextTiming[index].RefillFrame(g_nextAnimation[index],visual.phase,
+            visual.since,visual.insertedMs,now):g_nextTiming[index].Frame(g_nextAnimation[index],visual.phase,visual.since,now);
         if(!weaponreload::Palette(g_nextAnimation[index],frame,weaponreload::Absent(visual.phase),parentPalette,regs,changed))return 0;
     }else std::memcpy(changed,parentPalette,regs*4*sizeof(float));
     if(g_nextNativeMagazine){

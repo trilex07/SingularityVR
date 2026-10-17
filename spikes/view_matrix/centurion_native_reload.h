@@ -46,33 +46,37 @@ enum class Decision {Forward,Observe,Block,Permit};
 struct Context {
     bool valid=false;std::uint32_t pawn=0,weapon=0;
     std::uint64_t sampledMs=0;
+    bool canPermit=true; // false for fresh, owned HOLSTERED Centurion
+    int clip=-1,reserve=-1,capacity=-1; // observer snapshot, NEVER inventory writes
 };
 // Pure CPU policy. Runtime supplies a nonblocking lock; this object itself is
 // deliberately not shared unsynchronised across the input and game threads.
 struct Gate {
     Context current{};
+    Context permitted{}; // frozen at completed manual close, not later HUD polls
     bool permit=false;std::uint64_t permitMs=0;
-    void Clear(){current={};permit=false;permitMs=0;}
+    void Clear(){current={};permitted={};permit=false;permitMs=0;}
     void Publish(const Context& c){
         if(!c.valid||!c.pawn||!c.weapon){Clear();return;}
         if(!current.valid||current.pawn!=c.pawn||current.weapon!=c.weapon||c.sampledMs<current.sampledMs||
            c.sampledMs-current.sampledMs>250)
             permit=false;
         current=c;
+        if(!c.canPermit)permit=false;
     }
     bool Arm(std::uint32_t pawn,std::uint32_t weapon,std::uint64_t now){
-        if(!Matches(pawn,weapon,now))return false;
-        permit=true;permitMs=now;return true;
+        if(!Matches(pawn,weapon,now)||!current.canPermit)return false;
+        permit=true;permitMs=now;permitted=current;return true;
     }
     bool Matches(std::uint32_t pawn,std::uint32_t weapon,std::uint64_t now)const{
         return current.valid&&pawn&&weapon&&pawn==current.pawn&&weapon==current.weapon&&
             now>=current.sampledMs&&now-current.sampledMs<=250;
     }
     Decision Evaluate(int mode,std::uint32_t self,std::uint32_t currentPawn,
-                      std::uint32_t currentWeapon,std::uint64_t now){
+                      std::uint32_t currentWeapon,std::uint64_t now,bool holstered=false){
         if(mode<1||mode>2||self!=currentWeapon||!Matches(currentPawn,currentWeapon,now))return Decision::Forward;
         if(mode==1)return Decision::Observe;
-        const bool allowed=permit&&now>=permitMs&&now-permitMs<=500;
+        const bool allowed=!holstered&&current.canPermit&&permit&&now>=permitMs&&now-permitMs<=500;
         permit=false; // consume BEFORE original; nested/duplicate requests cannot reuse it
         return allowed?Decision::Permit:Decision::Block;
     }

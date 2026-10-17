@@ -8,6 +8,12 @@
 // Reuse observation types, NEVER the Centurion cylinder FSM or native tap.
 namespace weaponreloadproto {
 struct Shoulder {float left=.22f,down=.12f,back=.18f;};
+inline bool MidEye(hipknife::V left,hipknife::V right,hipknife::V& centre){
+    if(!hipknife::Finite(left)||!hipknife::Finite(right))return false;
+    const float separation=hipknife::Length(right-left);
+    if(separation<.005f||separation>.20f)return false;
+    centre=(left+right)*.5f;return true;
+}
 inline hipknife::Pose Supply(hipknife::V headCentre,float latchedPhysicalYaw,const Shoulder& c){
     const hipknife::Q q{0,std::sin(latchedPhysicalYaw*.5f),0,std::cos(latchedPhysicalYaw*.5f)};
     return {headCentre+hipknife::Rotate(q,{-c.left,-c.down,c.back}),q};
@@ -42,6 +48,7 @@ struct Frame {
     const char* objectName=nullptr; // resolved base FName, not a class substring
     long meshWedges=0;
     int aimHand=1; // first slice: right weapon, physical left interaction only
+    float bodyYaw=0; // physical head yaw for the independent shoulder anchor
     bool magazineReleaseDown=false; // named action LEVEL, PSVR2 binding: Circle
     bool nativePermitRequired=false,nativePermitConsumed=false; // real dispatcher evidence, not just conserved HUD change
     centurionreload::Frame gesture{};
@@ -60,6 +67,7 @@ struct Transaction {
     std::uint32_t pawn=0,weapon=0;
     int startClip=-1,startReserve=-1,startCapacity=-1;
     std::uint64_t since=0,lastMs=0;
+    float bodyYaw=0; // physical head yaw latched on eject, not stick-turn/body yaw
 };
 struct State {
     Kind profile=Kind::None;
@@ -131,6 +139,7 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
         // Keep the prior native-transfer eligibility until per-weapon ammo
         // semantics are proven. No fake native clip=0 or discarded-round writes.
         if(eject&&in.reserve>0&&in.clip<in.capacity){
+            t.bodyYaw=std::isfinite(f.bodyYaw)?f.bodyYaw:0;
             t.startClip=in.clip;t.startReserve=in.reserve;t.startCapacity=in.capacity;
             return enter(Phase::NeedAmmo,Event::Ejected);
         }break;

@@ -88,7 +88,7 @@ def prepare(prepared, output):
     settings = dict(section='Input', preserve_other_keys=True, defaults_all_off=True,
                     test_one_weapon_per_session=True, required={'ReloadControlLayout': 1},
                     opt_in={'ValkyrieManualReload': 0, 'VolkManualReload': 0, 'KasimovManualReload': 0,
-                            'ReloadNativeMagazine': 0})
+                            'ReloadNativeMagazine': 0, 'ReloadRefillOnly': 0})
     (output/'settings-proposal.json').write_text(json.dumps(settings, indent=2)+'\n', encoding='utf-8')
     manifest = dict(scope='OFFLINE SIDE CANDIDATE; NOT installed/accepted or L3/L4', source_commit=head,
                     source_branch=git('branch', '--show-current'), base_main=git('merge-base', 'HEAD', 'origin/main'),

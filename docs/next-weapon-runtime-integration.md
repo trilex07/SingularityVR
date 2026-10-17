@@ -1,5 +1,11 @@
 # Three-weapon runtime integration (SIDE)
 
+2026-10-17 newer follow-up: `docs/next-weapon-refill-only.md` adds separate
+default-OFF ReloadRefillOnly: native conserved refill without starting the full
+Reload state,180ms render-only seating tail, physical-left shoulder and block-only
+holstered ownership. Older native-animation timing/receipts below describe flag0.
+The new experiment has its own source/L2 receipt; neither is physical acceptance.
+
 Active scope: Valkyrie, Volk S4 and Kasimov. Preserve the separate Centurion
 cylinder implementation and every accepted non-reload system. No Steam access.
 

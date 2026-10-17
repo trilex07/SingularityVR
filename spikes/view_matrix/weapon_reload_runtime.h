@@ -174,6 +174,7 @@ inline bool Palette(const weaponreloadanim::Data& d,float frame,bool absent,cons
     std::memcpy(out,staged,regs*4*sizeof(float));return true;
 }
 struct Animation {
+    static constexpr std::uint64_t RefillSeatMs=180;
     float outFrame=0,inFrame=0;
     bool Measure(const weaponreloadanim::Data& d){
         armbind::Mat bind;if(!ClipBind(d,bind))return false;
@@ -195,6 +196,17 @@ struct Animation {
         if(phase==Phase::Carrying)return outFrame;
         if(phase==Phase::WaitingNative)return std::min(float(d.frames-1),inFrame+elapsed);
         return 0;
+    }
+    float RefillFrame(const weaponreloadanim::Data& d,Phase phase,std::uint64_t since,
+                      std::uint64_t inserted,std::uint64_t now)const{
+        if(!inserted||now<inserted||(Active(phase)&&phase!=Phase::WaitingNative))
+            return Frame(d,phase,since,now);
+        const auto elapsed=now-inserted;
+        if(elapsed>=RefillSeatMs)return 0; // no native tail; rest exactly frame0
+        const float t=float(elapsed)/float(RefillSeatMs),smooth=t*t*(3.f-2.f*t);
+        // The already-seated original return segment only; root stays native.
+        // Rendering interpolation is NOT an engine animation/timer write.
+        return inFrame+(float(d.frames-1)-inFrame)*smooth;
     }
 };
 struct Witness {
