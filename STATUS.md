@@ -7,7 +7,10 @@ flash/smoke template remains FX_MuzzleLockedFX_MuzzleLocked. Stride72 identity
 was DISPROVED historically, not reused. Implemented default-OFF idle/3-shot
 driver capture + exact shader-pair drop discriminator + guarded CTAB-camera
 alias repair. L1_PASS (cache/COM/restore/alias/sequence +6 Python + accepted
-shadow/hand/holster regressions). Contributing live draw still UNKNOWN; alias
+shadow/hand/holster regressions). NEW: muzzle-flash per-eye clip-x math L1
+(10 checks, x86) PASS; DrawMuzzleFlashPerEye wired into Hook_DrawIndexedPrimUP
+ahead of StereoPair, gated on [Render] MuzzleStereoPerEye (default OFF).
+Contributing live draw still UNKNOWN; alias
 hypothesis NOT established. No generated replacement FX or native object edits.
 L2_PASS clean469c99a /O2 x86 PE32; DLL SHA256
 4A8DB99F20E354CFB6D274BA74F92E6DC84ACE85FE94DD749A6CDBF20314EA23.
