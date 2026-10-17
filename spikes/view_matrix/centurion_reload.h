@@ -7,9 +7,6 @@ namespace centurionreload {
 using hipknife::V; using hipknife::Pose;
 struct Config {
     bool cylinderGestures=false; // optional circle/open/dump/insert/close path
-    bool circleOpens=false; // separate default-OFF tracked-cylinder experiment
-    bool upwardEjection=false; // physical-polish opt-in; old route unchanged
-    bool deliberateClose=false; // do not treat slow placement/holstering as flick
     // Physical left shoulder, tracking metres. Yaw only: usable seated and
     // looking down, separate from both existing hip holsters. Old belt INI
     // keys intentionally do not move this anchor back into the knife zone.
@@ -18,15 +15,6 @@ struct Config {
     float socketRadius=.075f,pullDistance=.15f,insertRadius=.16f;
     std::uint64_t timeoutMs=15000,ackMs=4000,cooldownMs=500,grabWindowMs=650;
 };
-inline float ShoulderLeftMetres(int centimetres){
-    return std::fmin(.40f,std::fmax(.15f,std::fabs(float(centimetres)*.01f)));
-}
-inline bool HeadCentre(V leftEye,V rightEye,V& out){
-    if(!hipknife::Finite(leftEye)||!hipknife::Finite(rightEye))return false;
-    const float separation=hipknife::Length(rightEye-leftEye);
-    if(separation<.005f||separation>.20f)return false;
-    out=(leftEye+rightEye)*.5f;return true;
-}
 inline Pose Pouch(V head,float yaw,const Config& c={}) {
     const hipknife::Q q{0,std::sin(yaw*.5f),0,std::cos(yaw*.5f)};
     return {head+hipknife::Rotate(q,{-c.shoulderLeft,-c.shoulderDown,c.shoulderBack}),q};
@@ -47,13 +35,10 @@ struct Frame {
     bool enabled=false,context=false,tracked=false,supported=false,grip=false,firing=false;
     bool handBusy=false,supportLatched=false,knifeNear=false,ammoFresh=false;
     bool releaseCylinder=false;
-    bool socketFresh=true; // legacy authored socket; tracked experiment requires render witness
     std::uint32_t pawn=0,weapon=0;
     int clip=-1,reserve=-1,capacity=-1;
     V hand{},socket{},pouch{};
-    V insertOffset{}; // carried mesh centre relative to controller; legacy zero
     Pose gun{};
-    float bodyYaw=0; // current tracking yaw at gesture start, not recenter yaw
     std::uint64_t nowMs=0;
 };
 struct State {
@@ -62,8 +47,6 @@ struct State {
     std::uint64_t gripPressedMs=0;
     bool pendingGrip=false;
     Pose stageGun{};
-    Pose previousGun{};std::uint64_t previousGunMs=0;
-    float bodyYaw=0;
     std::uint64_t downSince=0;
     bool downSample=false;
     std::uint32_t pawn=0,weapon=0;
@@ -90,47 +73,15 @@ struct AmmoObservation {
             now>=sampledMs&&now-sampledMs<=250;
     }
 };
-inline bool AmmoCountsValid(int clip,int reserve,int capacity){return clip>=0&&reserve>=0&&capacity>0&&
-    clip<=capacity&&capacity<=1000&&reserve<=1000000;}
-inline bool AmmoValid(const Frame& f){return AmmoCountsValid(f.clip,f.reserve,f.capacity);}
-// Reseat policy for a stuck HUD latch. The finder keeps the first readable
-// deriving instance, which can be a never-populated zombie while the live HUD
-// allocates later (same class, same offsets, garbage fields). Only a
-// persistently-invalid ELIGIBLE streak may ask for a reseat to a DIFFERENT
-// instance; valid reads, ineligible gaps and identity changes reset it.
-// Pure policy, no D3D/UE3 calls (unit-tested).
-struct HudReseatPolicy {
-    unsigned bad=0,reseats=0;
-    std::uint64_t lastReseatMs=0;
-    static constexpr unsigned kTriggerSamples=50; // ~5 s at the 10 Hz sampler
-    static constexpr std::uint64_t kCooldownMs=5000;
-    static constexpr unsigned kMaxReseatsPerEpoch=6;
-    void NoteIneligible(){bad=0;} // menu/load gaps never accumulate
-    void ResetEpoch(){bad=0;reseats=0;} // valid reads + identity changes
-    // Eligible sample only. Returns true once when a reseat is due.
-    bool NoteSample(bool valid,std::uint64_t nowMs){
-        if(valid){ResetEpoch();return false;}
-        if(reseats>=kMaxReseatsPerEpoch)return false;
-        if(++bad<kTriggerSamples)return false;
-        if(nowMs<lastReseatMs||nowMs-lastReseatMs<kCooldownMs)return false;
-        lastReseatMs=nowMs;bad=0;++reseats;return true;
-    }
-};
+inline bool AmmoValid(const Frame& f){return f.clip>=0&&f.reserve>=0&&f.capacity>0&&
+    f.clip<=f.capacity&&f.capacity<=1000&&f.reserve<=1000000;}
 inline bool Active(Phase p){return p!=Phase::Idle&&p!=Phase::Cooldown;}
-inline float AnchorYaw(const State& s,float currentYaw){return Active(s.phase)?s.bodyYaw:currentYaw;}
 inline bool Flicked(const Pose& a,const Pose& b){
     // Controller-local lateral displacement or roll; deliberately NOT forward
     // translation (normal aiming) or controller pitch alone.
     const V delta=hipknife::Rotate({-a.q.x,-a.q.y,-a.q.z,a.q.w},b.p-a.p);
     const auto relative=hipknife::Multiply({-a.q.x,-a.q.y,-a.q.z,a.q.w},b.q);
     return std::fabs(delta.x)>=.07f||std::fabs(relative.z)>=.24f;
-}
-inline bool QuickFlick(const Pose& a,const Pose& b,std::uint64_t before,std::uint64_t now){
-    if(!before||now<=before||now-before>100)return false;
-    const float dt=float(now-before)*.001f;
-    const V delta=hipknife::Rotate({-a.q.x,-a.q.y,-a.q.z,a.q.w},b.p-a.p);
-    const auto q=hipknife::Multiply({-a.q.x,-a.q.y,-a.q.z,a.q.w},b.q);
-    return std::fabs(delta.x)/dt>=.45f||2.f*std::fabs(q.z)/dt>=2.f;
 }
 inline Result Update(State& s,const Frame& f,const Config& c={}){
     const bool edge=f.grip&&!s.priorGrip;
@@ -150,9 +101,9 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
         (c.cylinderGestures&&!s.ownsGrip))&&!s.ownsGrip;
     const bool changed=(s.weapon&&s.weapon!=f.weapon)||(s.pawn&&s.pawn!=f.pawn);
     const bool valid=f.enabled&&f.context&&f.tracked&&f.supported&&f.pawn&&f.weapon&&
-        f.ammoFresh&&AmmoValid(f)&&hipknife::Finite(f.hand)&&hipknife::Finite(f.socket)&&hipknife::Finite(f.pouch)&&hipknife::Finite(f.insertOffset)&&
+        f.ammoFresh&&AmmoValid(f)&&hipknife::Finite(f.hand)&&hipknife::Finite(f.socket)&&hipknife::Finite(f.pouch)&&
         !f.handBusy&&(!f.supportLatched||awaitingGrip)&&!f.firing&&!changed&&f.nowMs>=s.lastMs&&
-        std::isfinite(f.bodyYaw)&&(!c.cylinderGestures||(hipknife::Finite(f.gun.p)&&hipknife::Valid(f.gun.q)));
+        (!c.cylinderGestures||(hipknife::Finite(f.gun.p)&&hipknife::Valid(f.gun.q)));
     s.lastMs=f.nowMs;
     if(!valid){
         const bool had=s.phase!=Phase::Idle;
@@ -163,8 +114,6 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
         return {had?Event::Cancelled:Event::None,blocked,false};
     }
     s.pawn=f.pawn;s.weapon=f.weapon;
-    const bool quick=QuickFlick(s.previousGun,f.gun,s.previousGunMs,f.nowMs);
-    s.previousGun=f.gun;s.previousGunMs=f.nowMs;
     if(!f.grip)s.ownsGrip=false;
     auto out=[&](Event e=Event::None,bool request=false){return Result{e,s.ownsGrip,request};};
     auto enter=[&](Phase p,Event e){s.phase=p;s.since=f.nowMs;return out(e);};
@@ -192,11 +141,11 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
     case Phase::Idle:
         if(c.cylinderGestures){
             if(f.releaseCylinder&&f.reserve>0&&f.clip<f.capacity){
-                s.stageGun=f.gun;s.bodyYaw=f.bodyYaw;s.startClip=f.clip;s.startReserve=f.reserve;s.startCapacity=f.capacity;
-                return c.circleOpens?enter(Phase::Open,Event::Opened):enter(Phase::Unlocked,Event::Unlocked);
+                s.stageGun=f.gun;s.startClip=f.clip;s.startReserve=f.reserve;s.startCapacity=f.capacity;
+                return enter(Phase::Unlocked,Event::Unlocked);
             }
         }else if(oldIntent){
-            s.pendingGrip=false;s.ownsGrip=true;s.bodyYaw=f.bodyYaw;s.startClip=f.clip;s.startReserve=f.reserve;s.startCapacity=f.capacity;
+            s.pendingGrip=false;s.ownsGrip=true;s.startClip=f.clip;s.startReserve=f.reserve;s.startCapacity=f.capacity;
             return enter(Phase::Removing,Event::GrabOld);
         }break;
     case Phase::Removing:
@@ -212,7 +161,7 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
         }break;
     case Phase::Carrying:
         if(release){
-            if(f.socketFresh&&Near(f.hand+f.insertOffset,f.socket,c.insertRadius)){
+            if(Near(f.hand,f.socket,c.insertRadius)){
                 if(c.cylinderGestures){s.stageGun=f.gun;return enter(Phase::Loaded,Event::Loaded);}
                 s.phase=Phase::WaitingNative;s.since=f.nowMs;
                 return out(Event::Inserted,true);
@@ -223,17 +172,16 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
         if(Flicked(s.stageGun,f.gun))return enter(Phase::Open,Event::Opened);
         break;
     case Phase::Open:{
-        // Legacy downward / opt-in physical upward muzzle for 100ms, not noise.
-        // Gesture observation only; no fabricated inventory/animation writes.
+        // Downward muzzle held for 100ms, not one noisy pose. This is a gesture
+        // observation only; no fabricated inventory/cylinder animation writes.
         const V forward=hipknife::Rotate(f.gun.q,{0,0,-1});
-        if(c.upwardEjection?forward.y>.55f:forward.y<-.55f){
+        if(forward.y<-.55f){
             if(!s.downSample){s.downSince=f.nowMs;s.downSample=true;}
             if(f.nowMs-s.downSince>=100)return enter(Phase::NeedAmmo,Event::Dumped);
         }else s.downSample=false;
         break;}
     case Phase::Loaded:
-        if(f.nowMs-s.since>=100&&hipknife::Rotate(f.gun.q,{0,0,-1}).y>-.25f&&Flicked(s.stageGun,f.gun)&&
-           (!c.deliberateClose||quick)){
+        if(f.nowMs-s.since>=100&&hipknife::Rotate(f.gun.q,{0,0,-1}).y>-.25f&&Flicked(s.stageGun,f.gun)){
             s.phase=Phase::WaitingNative;s.since=f.nowMs;return out(Event::Inserted,true);
         }break;
     default:break;

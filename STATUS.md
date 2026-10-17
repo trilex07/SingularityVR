@@ -1,353 +1,130 @@
 # STATUS — session handoff
 
-LATEST 2026-10-17 MAIN recoil-release L3+L4 PASS (build BEF82DC6 + 5 flags):
-user PSVR2 "super" on first-shots-after-close route (native recoil back, no
-frozen gun). Scoped to this build/config/route; user ordered merge to main.
+LATEST 2026-10-17 SIDE, port Centurion-proven lessons to ALL3 profiles:
+Valkyrie/Volk/Kasimov resolver stops at4 distinct bindings BEFORE unrelated Next;
+all live ABI/body/cast/conservation guards retained. Exact-stage diagnostics,
+3 engine-thread read-only preflights PER profile, no new hook/permit/invocation.
+ReloadRefillOnly now releases root/scope IMMEDIATELY on insertion; only original
+magazine child seats180ms on LIVE root; every other native bone copied byte-exact.
+No child override after seat, even when HUD ACK is late. Flag0 behavior/input/
+models/materials/shoulder/native ammo authority unchanged. L1/L2 pending.
+Centurion was accepted by user, these3 are NOT physically verified by analogy.
+ZERO Steam; integrate SOURCE into current MAIN, not old full SIDE DLL. PR45.
+See docs/next-weapon-refill-only.md (new top section supersedes old HOLD below).
 
-LATEST 2026-10-17 MAIN recoil-release L3 DEPLOYED (SIDE 4962b7a, PR48):
-candidate DLL SHA-256 BEF82DC6A5878CE036F66E15892118647987524E667E1CA15DA22B10E0E4CBCC,
-PE32 x86 /O2, clean tree 146388e, manifest dirty=[], guard preflight+postflight
-PASS; backup deployment/install-backups/20261017-144550. STATUS: CANDIDATE
-ONLY — first-shots animation still needs PSVR2 (this test).
-WHY: user reports first two shots missing animation (not reload): refill-only
-close left the transaction idle pose + frozen right hand mounted (holds through
-2600 ms tail). FIX (inspected): in refill mode, Time() goes inactive 280 ms
-after close (close anim kept), root falls back to LIVE native constants, right
-capture stops; OFF path byte-identical (ReleaseNative=false). Fail-closed
-(LiveRoot rigid check). L1_PASS (EXIT=0 incl. 280ms/live-root + legacy tail),
-L2_PASS (clean). Steam: DLL=BEF82DC6, INI=5314150A (same 5-flag set; pre-edit
-backup in 144550 dir). Path: rollback to DADE170B (postflight PASS), redeploy
-(guard model intact). Rollback: deploy Rollback -BackupPath 20261017-144550
-(+plan paths) + drop the 5 added INI lines. AWAITING L3+L4: full manual reload
--> close -> FIRST shots must show native recoil/fire animation (no frozen gun),
-counts exact; then normal behavior. Falsifier: shots still frozen -> release
-theory wrong. MAIN reads post-close draws (no override) + user eyes.
+CAUTION 2026-10-17: Centurion runtime REJECTED shared refill resolver (ready0,
+NO native invocation). PR45 three weapons remain UNTESTED, not accepted merely
+from L1/L2. Keep ReloadRefillOnly OFF pending PR48 resolver preflight9c38667
+and actual cause/correction. No Steam touched. Existing native reload path flag0
+and previous material/asset work are not rejected by that Centurion result.
 
-LATEST 2026-10-17 MAIN MERGED TO main (user order): d32eb54 (merge of tested
-stack: PR48 ports visual/tracked/native-space/polish/refill/diagnostics +
-MAIN reseat; PR47 grip-integration already in main via 276a952). Source tree
-spikes/tools identical to L1/L2-tested f3fe2a5; deployed Steam 6B0664ED
-unchanged and still valid. Draft PR48 now superseded for ported commits (SIDE
-branch untouched). Steam install + accepted profile unchanged by merge.
+LATEST 2026-10-17 SIDE: Centurion's native-refill lesson applied to Valkyrie,
+Volk/Kasimov via default-OFF ReloadRefillOnly, same shared hook. Original PE/text
+proves ALL12 refill/getter bindings identical across the three exact classes.
+Frozen permit snapshot + live original getter/refill conservation, no full native
+Reload/state/timer/camera/inventory writes by proxy; failed transfer never falls
+back to full reload. Per-profile fault latch. Stored weapons revoke tap/token,
+keep fresh block-only guard; shoulder uses mid-eye/latched physical head yaw.
+Only180ms render-only seating/root/scope tail, not whole native animation.
+L1_PASS19 CPU/ABI +2 own D3D9Ex GPU programs,64 Python tests;60000 OFF/ON fake
+native transactions, partial/low reserve, duplicate/NPC/Centurion/holster isolation,
+four original body/mutation checks,15003 child poses/333 seated shoulder poses.
+L2_PASS clean41ec792, x86 PE32 /O2, instrumentation OFF. DLL3201024 bytes, SHA
+43201D880817288416F1BD75D92DCE146FC36F07374B95FABF35AD91CEB91F5B.
+Private build/next-weapon-reload/candidate-41ec792; all11 payload hashes verified,
+all opt-ins OFF in proposal, NO INI. L3/L4 UNKNOWN. Zero Steam/installed changes.
+See docs/next-weapon-refill-only.md. Integrate SOURCE onto current MAIN, do not
+replace newer accepted integration with this older SIDE DLL. PR45, no merge.
 
-LATEST 2026-10-17 MAIN resolver-fix L3+L4 PASS (build 6B0664ED + 5 flags):
-user PSVR2 "jest okej" on the counter-to-6 + fire-without-animation/shake
-route. Scoped to this build/config/route; user ordered merge to main.
-SIDE small fixes may still follow; NOT global acceptance.
+LATEST 2026-10-17 SIDE PR45 native-material follow-up: Valkyrie/Volk/Kasimov
+stock/carried/dropped magazine uses original native gun draw/material and shared
+depth inside each StereoPair eye; ONLY rigid magazine bone stays alive, all
+other bones collapse together, palette restored on success/failure. Separate
+ReloadNativeMagazine=0 default-OFF; no private-depth overlay when opt-in1.
+Circle -> physical-left shoulder grip -> insert/release unchanged, NO flick.
+L1_PASS:17 CPU +2 OWN D3D9Ex GPU executables (19 checked x86 PE32),57 Python
+tests;12960 native stock/carry/drop roundtrips over the three original palettes.
+Synthetic shared-depth GPU fixture:10609/10609 visible pixels each profile/round,
+ZERO wrong-colour/occlusion/body pixels; two Reset resource rounds. NOT native
+game lighting/scene proof. L2_PASS clean source8896ff9f6a640bfde3246d04c4efdca014da4eff,
+x86 PE32 /O2, DLL3193856 bytes, no performance instrumentation, SHA-256
+F5533704CD997DDB45F9EB5C1FC8514C824CD6CF0DC20D331101A1D5FAD892C6.
+Private candidate:build/next-weapon-reload/candidate-8896ff9;11 payload hashes
+independently verified, manifest SHA-256
+C1862892766255AF9E75762AC161EA000A86C8945951B21198F2E7A6860527EF.
+Actual branch/main ancestor513013ab2da6434e926549817bf8c3ae78009d25; separate
+remote-main snapshot in manifest is NOT its base. All older candidate folders
+are superseded, NOT safe restore targets. Documentation-only receipts after
+source8896ff9 do not change this binary provenance. ZERO Steam/deploy/INI writes;
+L3/L4 UNKNOWN. MAIN integrates SOURCE into current accepted dependency profile,
+one weapon/session; verify native ammo debit/ACK, colour/depth/hands BOTH eyes
+and timing before physical acceptance. No merge authorized/performed.
 
-LATEST 2026-10-17 MAIN resolver-fix L3 DEPLOYED (SIDE 56b3f16, PR48): candidate
-DLL SHA-256 6B0664ED83EB579DBCACB2BFF4DE7BB38CF2B49A5CFFC8D6F906156739F5408F,
-PE32 x86 /O2, clean tree f3fe2a5, manifest dirty=[], guard preflight+postflight
-PASS; backup deployment/install-backups/20261017-142527. STATUS: CANDIDATE
-ONLY — counter-to-6 + no-animation/no-shake still needs PSVR2 (this test).
-WHY: 14:16 preflight proved ready=0 AFTER all 4 bindings matched (unrelated
-tail field-name failed). FIX (inspected): stop walk at found==4; incomplete
-walk still fails closed; all fingerprint/cast checks intact (py asserts order
-+ single result=cached). L1_PASS (EXIT=0 full suite), L2_PASS (clean). Steam:
-DLL=6B0664ED, INI=5314150A (same 5-flag set; pre-edit backup in 142527 dir).
-Path: rollback to DADE170B (postflight PASS), redeploy (guard model intact).
-Rollback: deploy Rollback -BackupPath 20261017-142527 (+plan paths) + drop the
-5 added INI lines. AWAITING L3+L4: full manual reload -> counter to 6, then
-fire WITHOUT Reload animation and WITHOUT camera shake; exact counts, no
-double-add. MAIN reads `refill-only: result=2` (Conserved) + no ReloadFinished.
+LATEST 2026-10-17 SIDE: THREE actual runtime connections implemented on
+feature/next-weapon-reload-assets (base main513013a), not just offline prototypes.
+Valkyrie/Volk/Kasimov: default-OFF dispatcher, shared audited AttemptReload hook,
+native one-shot permit + ordinary reload tap + consumed/conserved ammo ACK;
+Circle/left-shoulder/insert, native gun/attachment root hold + child animation,
+original attached clip hide/carried/drop, live IB/CTAB/socket identity, Reset.
+Centurion/accepted language/knife/hands/etc preserved; ZERO Steam or INI writes.
+See docs/next-weapon-runtime-integration.md for exact integration/test contract.
+Offline native mapper confirms all three classes share the same native method
+and Shotgun/Sniper inherit Shared script states. L1_PASS:17 CPU +1 own-process
+D3D9Ex GPU fixture (18 verified x86 PE32), 55 Python tests, 30000 native-detour
+transactions, 7506 original fractional poses and4320 socket/affine roundtrips.
+L2_PASS clean source4c965dd65e765b8a77aba701bfe4ac35774ca84a, x86 PE32 /O2,
+DLL SHA-256 EDBE3F35CCE9869C166AE08B4F22B3E99DBF1B5AD79363B986791065CAF2649E.
+Independent bounded read-only bootstrap needs no Centurion/cinema/HUD-overlay flag.
+Private candidate:build/next-weapon-reload/candidate-4c965dd (11 hashes checked),
+manifest SHA-256 8796250D6C844B0F179A56B87E2A0BF3C60EDD5C72B37370678711823FD0D4C2.
+L3/L4 UNKNOWN, not "100% physically verified". Carried albedo/private depth is
+not a full native-lighting/hand-occlusion claim. Do not deploy an old SIDE DLL
+over newer MAIN; integrate SOURCE and preserve its accepted dependency profile.
 
-LATEST 2026-10-17 MAIN refill-diagnostics L3 DEPLOYED (SIDE 9c38667): candidate
-DLL SHA-256 4105C00457D0C27A581D71B1A08B361F6A3EEDDC4D1E9F25703DDA31611645EB,
-PE32 x86 /O2, clean tree ddbdb80, manifest dirty=[], guard preflight+postflight
-PASS; backup deployment/install-backups/20261017-141545. STATUS: CANDIDATE
-ONLY — fix open. WHY: close gesture arrives but resolver ready=0 (0 rounds).
-WHAT: bounded read-only audit (named reject stages, behavior 1:1) + 3x
-auto-probe on BLOCK (engine thread, >=1 s apart, no invocation, no gesture
-needed). L1_PASS (EXIT=0 incl. refill policy/ABI), L2_PASS (clean). Steam:
-DLL=4105C004, INI=5314150A (same 5-flag set; pre-edit backup in 141545 dir).
-Path: rollback to DADE170B (postflight PASS), redeploy (guard model intact).
-Rollback: deploy Rollback -BackupPath 20261017-141545 (+plan paths) + drop the
-5 added INI lines. AWAITING SHORT MEASUREMENT (no full reload): empty
-Centurion -> fire attempt -> close game. MAIN reads `centurion refill
-resolver:` stage (which of: layout/object/class-name/children/field-*/wrapper/
-vtable/method/cast vs ready) + `refill-only: result=/ready=`.
+LATEST 2026-10-17 SIDE next-weapon control decision: Valkyrie/Volk/Kasimov use
+Circle eject -> physical-left shoulder grip -> insert/release, no old-magazine
+pull or closing flick. Independent default-OFF CPU policy replaces the shared
+Centurion pull/discard adapter; no Centurion/input/renderer/INI/Steam edits.
+L1_PASS: 15 CPU executables +44 Python tests, 30000 Circle/shoulder/insert
+transactions, held/context rearm, free-left ownership and partial conserved
+refill checks; existing original-asset GPU/state/Reset regression PASS.
+L2_PASS clean 0d33568, x86 PE32 /O2, DLL SHA-256
+EF0555EF941F4E50ACA5A1194FBF661867A03EB639722ED224F1D581C6D90F37.
+No physical/runtime acceptance claimed; DLL is a regression artifact only.
+Centurion sequence unchanged: Circle unlock -> sideways open -> muzzle-down
+dump -> shoulder ammunition -> insert -> closing flick. NOT a dropped cylinder.
+These remain offline prototypes; no additional weapon backend/runtime install.
 
-LATEST 2026-10-17 MAIN refill-only L3 DEPLOYED (SIDE 6d7b201, PR48): candidate
-DLL SHA-256 4F54E47B970BD947625519DA0E439569F69BB45955C3B44EA288D2E41C4A97E7,
-PE32 x86 /O2, clean tree 55d3f66, manifest dirty=[], guard preflight+postflight
-PASS; backup deployment/install-backups/20261017-135058. STATUS: CANDIDATE
-ONLY — NOT accepted. No-delay/no-shake still needs PSVR2 (this test).
-Scope (inspected): Permit path calls ONLY fingerprinted RefillClip (+3 int
-getters), same inventory cast as AttemptReload, conservation-verified
-(clip+moved/reserve-moved) else sticky Fault; never falls back to Reload;
-holstered/changed/stale/NPC states refuse; OFF keeps legacy dispatch.
-L1_PASS (EXIT=0: refill policy + ABI refill/no-original + full suite),
-L2_PASS (clean). Steam: DLL=4F54E47B, INI=5314150A (+VisualFollowup
-+TrackedCylinder +PhysicalPolish +RefillOnly, VfxHost=1/HideMuzzleFx=0;
-pre-edit backup in 135058 dir, all-CRLF). Path: rollback to DADE170B
-(postflight PASS; guard also caught leftover HideMuzzleFx=1 from isolation
-(b) — reverted), redeploy (guard model intact). Rollback: deploy Rollback
--BackupPath 20261017-135058 (+plan paths) + drop the 5 added INI lines.
-AWAITING L3+L4 (NO screenshots): fire to partial -> Circle/open/UP-dump/
-shoulder/insert/flick -> refill must be IMMEDIATE (no ~1.5 s wait), NO camera
-shake, counts exact, no double-add; NPC/holster/store paths unchanged.
-MAIN reads `centurion refill-only: result=2` (Conserved) + absence of
-ReloadFinished after it.
+LATEST 2026-10-17 SIDE feature/next-weapon-reload-assets: original Valkyrie,
+Volk S4 and Kasimov magazines/albedo/Reload caches plus bounded offline
+hierarchical animation consumer; gun root frozen, real cooked palettes and
+native diffuse references measured. Imported f519de6 CPU gesture prototypes,
+independent left/back shoulder math and cancellation across calibration changes.
+L1_PASS fifteen optimized CPU executables +44 Python tests after sync with
+MAIN 513013a (including own-process native ABI regression); 30000 transactions,
+7506 original fractional track poses; own-process D3D9Ex actual textured pixels
+in BOTH eyes, state/failure/Reset checks PASS. L2_PASS clean source 36681f4,
+x86 PE32 /O2 regression DLL SHA-256
+14DEECAEA1E63EF77A3936226121AEF6D6A89E99632BAFFD1792B43ABAC031F8.
+MAIN runtime/INI match 513013a exactly; 16 fixture binaries verified x86 PE32.
+No runtime dispatcher/INI/native ammo backend; L3/L4 UNKNOWN, NOT headset-ready.
+ZERO Steam, no Centurion/accepted config or installed asset changes.
+See docs/next-weapon-animation-assets.md. SIDE regression DLL MUST NOT replace
+current MAIN integration; private game-derived outputs remain ignored.
 
-LATEST 2026-10-17 MAIN VFX isolation (b) RESULT (user) + log: plugin-only shows
-NO smoke + NO flash, but shot effect visible UNDER the gun instead of muzzle.
-Log 13:41: init loaded, overlay n=1 x12 (budget saturated, items flow). Both
-SIDE predictions confirmed: smoke was native (gone in (b)); anchor bug visual
-(GunPivotWorld + 150 mm fwd, zero UP). (a)+(b) combined: native-only = total
-silence, plugin-only = misplaced small effect. DECISIONS for SIDE (needs code+
-stub+L1/L2, then MAIN L3): UP component/per-gun muzzle table (pivot!=muzzle,
-150 mm short for rifles); bigger/longer stub flash (4.5 cm/33 ms invisible);
-stay one-system (plugin-only (b) kept installed: VfxHost=1/HideMuzzleFx=1,
-INI 52CCD7D4). Native contributes nothing visible in VR.
-
-LATEST 2026-10-17 MAIN VFX isolation (b) RUNNING: VfxHost=1 + HideMuzzleFx=1
-(plugin-only; INI 8D0E27E4->52CCD7D4, pre-edit backup in 132624 dir).
-Session (a) RESULT (user): native-only shows NOTHING (no smoke, no flash) —
-native FX invisible in VR regardless of seam. Expect (b): smoke gone (was
-native), flash small/low per SIDE prediction. Then decisions (UP/per-gun
-muzzle, bigger stub flash, one system).
-
-LATEST 2026-10-17 MAIN VFX isolation (a) RUNNING: VfxHost 1->0 (native-only,
-HideMuzzleFx=0 kept; INI 59C48A88->8D0E27E4, pre-edit backup in 132624 dir).
-Expect zero VFX lines; user records smoke/flash below. Then (b) plugin-only.
-
-LATEST 2026-10-17 MAIN physical-polish L3+L4 PASS (build 37AC0AD2 + 4 flags):
-user PSVR2 "okej dziala" + log 13:29 session proves TWO full manual cycles
-(opened->dumped->grab->loaded->inserted->close->ACK, clip 3->0, reserve
-16->13): insertDist 0.064 m at Loaded (was 2.4-3.0 m), socketFresh=1,
-nativeSpareDraws 636->2960, rightHeld/palmPublished counting, conserved ACKs.
-Scoped to this build/config/route; SIDE small fixes still expected; NOT global
-acceptance. VFX trigger L3 PASS same session: init plugin=loaded atlas=
-vfx_atlas dir, overlay n=1 x12 (budget saturated). Visual placement (UP/size/
-smoke-source) still needs isolation (a)/(b) + user eyes.
-VFX flag check (SIDE ae62c51): installed INI = 59C48A88, VfxHost=1,
-HideMuzzleFx=0 — NOT the silent combo; single INI copy under game tree;
-13:29 log seams=1. The seams=0 session predates the flag edit. One earlier
-unexplained revert to 7ED1239C (12:56) not reproduced since; flag re-verify
-after every session continues.
-
-LATEST 2026-10-17 MAIN physical-polish L3 DEPLOYED (SIDE 9ccbe96+d078491):
-candidate DLL SHA-256 37AC0AD2AB667C1C3C5DBA18660188CAEEFB57B1478BD7495F02235DF76B6961,
-PE32 x86 /O2, clean tree 5c800b7, manifest dirty=[], guard preflight+postflight
-PASS; backup deployment/install-backups/20261017-132624. STATUS: CANDIDATE
-ONLY — NOT accepted, NOT flagged 100%.
-Scope (inspected): UP-only dump + rearward cases + palm-fit spare + right-hand
-hold (flag-gated; OFF keeps legacy down-dump/slow-close/authored paths);
-holster Stored cancels tap + revokes permit, native gate block-only when
-holstered; health plate hides ONLY in fresh Carrying; deliberate close needs
-QuickFlick (0.45 m/s or 2 rad/s <=100 ms); PhysicalPolish auto-disables without
-native noTMD glove path (log line). L1_PASS (EXIT=0: 216-case polish + full
-suite), L2_PASS (clean). Steam: DLL=37AC0AD2, INI=59C48A88 (+VisualFollowup
-+TrackedCylinder +PhysicalPolish, VfxHost=1; pre-edit backup in 132624 dir,
-all-CRLF). NOTE: INI found reverted to 7ED1239C before this deploy (all 3 prior
-flags gone; cause unknown — panel save suspected; re-verify flags after every
-session from now on). Path: rollback to DADE170B (postflight PASS), redeploy
-(guard model intact). Rollback: deploy Rollback -BackupPath 20261017-132624
-(+plan paths) + drop the 4 added INI lines. AWAITING L3+L4 (SIDE route, NO
-screenshots): 3 shots -> Circle -> muzzle UP (cases toward shooter) -> shoulder
-ammo (plate clears, clip between fingers) -> insert -> 1 s -> fast flick (only
-cylinder moves, ONE refill) -> 2 shots -> Circle -> STORE w/o reload -> 3 s ->
-draw (must NOT refill). MAIN reads `centurion physical` + `tracked cylinder`
-rows + native ACK/BLOCK.
-
-LATEST 2026-10-17 MAIN VFX isolation (a) NATIVE-ONLY staged (SIDE runda 2,
-b957289): 12:29 log proves plugin path alive (init loaded, atlas=vfx_atlas
-dir, overlay n=1 x6) — placement/size question only. Session (a): VfxHost 1->0
-(HideMuzzleFx=0 kept; INI 9222CC60->D8050DF2, pre-edit backup in 125231 dir).
-Expect: no host-init/overlay lines; native smoke+flash as before (seam defect
-included). Next (b): VfxHost=1 + HideMuzzleFx=1 (plugin-only; expect smoke
-gone, flash small/low) -> decisions: UP component/per-gun muzzle table, bigger
-stub flash, one system at a time. Centurion flags untouched throughout.
-
-LATEST 2026-10-17 MAIN native-space L3 DEPLOYED (SIDE 5d5afd7, PR48):
-candidate DLL SHA-256 E58E3E57C4BA6CCACB6CA5CA49BA86038CC5DF09E080DB4770EB9FA52662E188,
-PE32 x86 /O2, clean tree cf71a4a, manifest dirty=[], guard preflight+postflight
-PASS; backup deployment/install-backups/20261017-125231. STATUS: CANDIDATE
-ONLY — NOT accepted, NOT flagged 100%.
-WHY: 12:29 session on 0742736 (04CC6CA2) proves the bug SIDE fixed — ammo valid
-(clip 5->3 fired), plate drew, Circle->cylinder-opened, but tracked socket at
-y≈-2.4 (2.4-3.0 m insertDist, grab/discard loop, zero inserts): ActorX/export
-vs UE3-space mixing. FIX (inspected): ToNative undoes bind reflection ONCE on
-parent/inverse (SVCA file stays v1); Sample skips legacy reflect only for
-nativeSpace data; tracked Attached+Spare use NativeAnimation; legacy paths keep
-export-space Data (OFF behavior byte-identical); fail-closed when unready.
-shells.h change comment-only. LIMIT: NativeVertices GPU oracle needs SIDE
-private assets — NOT run here (CPU + spare-GPU + IB fixtures green).
-L1_PASS (EXIT=0 full suite incl. test_native_space.py), L2_PASS (clean).
-Steam: DLL=E58E3E57, INI=9222CC60 (+VisualFollowup +TrackedCylinder, VfxHost=1
-restored; pre-edit backup in 125231 dir, all-CRLF). Path: killed lingering
-12:46 PID 37480 (user auth), rolled back to DADE170B (postflight PASS),
-redeployed (guard model intact). Rollback: deploy Rollback -BackupPath
-20261017-125231 (+plan paths) + drop the 3 added INI lines. AWAITING L3+L4
-(SIDE route, NO screenshots): Circle -> LEFT open at gun (no meter jump);
-tilt dumps, gun held; shoulder ammo -> rendered socket, insertDist <0.2 m;
-WAIT 2 s open; flick ONE refill; repeat, pause/resume, exit. MAIN reads
-`native space` + `tracked cylinder` rows + native ACK.
-
-LATEST 2026-10-17 MAIN tracked-cylinder L3 DEPLOYED (SIDE 0742736, PR48):
-candidate DLL SHA-256 04CC6CA23588D7BA929365BDB56A7B50EA0DAF970D9E3AF10FCA5BF797A8FE70,
-PE32 x86 /O2, clean tree c738a97, manifest dirty=[], guard preflight+postflight
-PASS; backup deployment/install-backups/20261017-122757. STATUS: CANDIDATE
-ONLY — NOT accepted, NOT flagged 100% (SIDE corrections still expected).
-Scope (inspected before port): Circle->Open/Opened with circleOpens (OFF keeps
-legacy Unlocked); insert vs RENDERED socket + carried-mesh offset (OFF keeps
-authored socket, insertOffset zero-finite); socketFresh defaults true (shell
-gate unchanged when OFF); witness SRWLock + 100 ms + identity binding, resets
-in Cancel/XR-init/Release; shell launch needs fresh witness only when ON.
-OFF path byte-behavior preserved. L1_PASS (EXIT=0: tracked 2916 cases + wiring
-py + full suite), L2_PASS (clean). Steam: DLL=04CC6CA2 on disk, INI=9222CC60
-(+VisualFollowup=1 +TrackedCylinder=1, VfxHost=1 restored; pre-edit backup in
-122757 dir, all-CRLF). Path: rolled back 49CF1838->DADE170B (postflight PASS),
-redeployed (guard model intact, profile still pins DADE170B). Rollback: deploy
-Rollback -BackupPath 20261017-122757 (+plan paths) + drop the 3 added INI
-lines. AWAITING L3 log + L4 PSVR2 (SIDE route, NO screenshots): Circle with
-spent Centurion -> immediate LEFT open; tilt dumps cases, gun stays in right
-glove; LEFT-shoulder grip, ammo to open cylinder, release, WAIT 2 s (stays
-open); flick -> ONE refill, no second sweep; repeat, pause/Options/resume,
-normal exit. MAIN reads `tracked cylinder` rows (socketFresh/insertDist),
-native ACK, accepted systems unchanged.
-
-LATEST 2026-10-17 MAIN VFX trigger L3 (SIDE docs/vfx-trigger-diagnosis.md,
-push 25e1c50): MAIN checks DONE. Installed: SingularityVfx.dll PRESENT
-(E371EF77..., 10752 B, 7 required VfxPlugin* exports verified via dumpbin) +
-vfx_atlas/ PRESENT (4 DDS + manifest v1 abi 1, CC0 packs). INI was VfxHost=0 /
-VfxSmoke=0 / VfxScreenFlash=0 / HideMuzzleFx=0. Log 12:00 session (65 shots):
-ZERO `VFX overlay:` + ZERO `VFX host init:` — fully explained by VfxHost=0
-(init returns early line 21494, FILL+DRAIN gated; aim-mode gate never reached).
-FIX (single variable): INI VfxHost 0->1 (hash 0579F9EB->ACB368DD, pre-edit
-backup .../120644/SingularityVR.ini.pre-vfxhost, all-CRLF). Smoke/Flash/
-HideMuzzleFx untouched (smoke deliberately out of headset path line 21446;
-native flash stays as fallback so player never left with nothing). No DLL
-change, no guard deploy. AWAITING L3: fresh boot, fire shots, expect `VFX host
-init: plugin=loaded ... atlas=vfx_atlas dir` + `VFX overlay: n>0`; user reports
-flash visible per eye / double-flash with native / nothing. Rollback: set
-VfxHost=0 (backup hash 0579F9EB).
-
-LATEST 2026-10-17 MAIN fix/centurion-visual-followup-integration DEPLOYED for L3
-STATUS: CANDIDATE ONLY — NOT accepted, NOT flagged 100% working (user order);
-SIDE visual followup still needs corrections. Preserved as-is, no claims.
-(candidate DLL SHA-256 49CF183865487901C7A6958CC18DD98BD6892D7ED3B8587B012D4A87D3F16D01,
-PE32 x86 /O2, clean tree e079e36, manifest dirty=[], guard preflight+postflight
-PASS; backup deployment/install-backups/20261017-120644).
-WHY (user: Circle dead, no plate, sessions 11:44+12:00): log proves Circle seen
-(circle=1) but ammoValid=0 — RvHUD reads clip=-1/reserve=-2 persistently; plate
-never drew either (shared FindHudObject latch, untouched code). New PR48 code
-never executed (zero Unlocked) — exonerated. Root cause: latch keeps the FIRST
-readable RvHUD-deriving instance; 12:00 session latched ONE zombie (1D429800,
-same class+offsets as good reads) all session, while the 11:21 good session
-re-latched 1D432000->33A06000 and read clip=5/6. Latch lottery, pre-existing.
-FIX (smallest experiment): HudReseatPolicy in centurion_reload.h (pure,
-203-case L1) + FindHudObjectExcept in d3d9.cpp — only a 5 s eligible invalid
-streak reseats to a DIFFERENT instance (6/epoch max, 5 s cooldown, menu gaps
-and valid reads reset; good sessions never trigger). Falsifier: reseat fires
-but all instances stay invalid -> wrong-instance theory dead, pivot to timing.
-L1_PASS (EXIT=0 full suite), L2_PASS (clean). Steam: DLL=49CF1838 on disk,
-INI=live+VisualFollowup=1 (0579F9EB, pre-edit backup in 120644 dir, all-CRLF).
-Rollback: deploy Rollback -BackupPath 20261017-120644 (+plan paths) restores
-DADE170B; INI revert = drop the one added line (verified 7ED1239C roundtrip
-earlier). Path here: 58F82A7C deployed, rolled back to DADE170B (postflight
-PASS), redeployed 49CF1838 — guard model intact, profile still pins DADE170B
-(unaccepted builds never re-pinned). AWAITING L3 log + L4 PSVR2: fresh boot,
-ammo plate visible? (expect `HUD reseat:` then `ammo ... drew`), Circle ->
-Unlocked -> compact open -> LEFT-shoulder insert -> WAIT unseated -> flick ONE
-refill; pause/cancel, reload again, exit; no regressions.
-
-LATEST 2026-10-17 MAIN fix/centurion-visual-followup-integration DEPLOYED for L3
-(candidate DLL SHA-256 58F82A7C2B75F03532B8955A2EAA0B7AB4D485CDB097A402E8CCE1CC45996147,
-PE32 x86 /O2, clean tree f7d601f, manifest dirty=[], guard preflight+postflight
-PASS via re-pinned profile 4BF0D8B0 + files-only plan DADE170B->58F82A7C;
-pre-deploy backup deployment/install-backups/20261017-114157 verified).
-Steam verified: d3d9.dll=58F82A7C on disk; INI=live+CenturionVisualFollowup=1
-(hash 0579F9EB, pre-edit backup .../SingularityVR.ini.pre-visualfollowup,
-all-CRLF, single-key delta; CylinderAnimation=1+ShellEjection=1 retained).
-L1_PASS (cmd rerun EXIT=0: 16 CPU + ABI + 6 Python + IB witness + spare-GPU
-10609/10609 both rounds). L2_PASS (clean rebuild). Re-pin rationale: profile
-now pins user-accepted DADE170B (L3+L4 PASS render-only "dziala"); all other
-installed files hashed equal to old pins, live INI zero-drift vs old profile.
-No new assets. Rollback: deploy Rollback -BackupPath 20261017-114157, or
-restore DADE170B + INI 7ED1239C. AWAITING L3 log + L4 PSVR2 (NO screenshots):
-(1) intro identical both eyes; (2) fire, Circle/open/dump, LEFT-shoulder ammo,
-insert, WAIT 2s no flick (must stay visibly unseated); (3) flick close, ONE
-refill, no second gun sweep; (4) pause/cancel, reload again, normal exit;
-(5) no regressions (plates/rings/menu/shadows/FPS/monitor). MAIN reads
-`ini: CenturionVisualFollowup=1`, `visual followup:` lines, nativeSpareDraws.
-
-LATEST 2026-10-17 MAIN fix/centurion-visual-followup-integration (from db0aedb):
-port of SIDE draft PR #48 source ONLY (5 files, verbatim from
-origin/fix/centurion-visual-feedback@d6d427e: centurion_visual_followup.h,
-d3d9.cpp wiring, 2 CPU/GPU fixtures, test-centurion.ps1; SIDE STATUS/docs NOT
-ported). Symptom (user physical): cylinder full 42.34UU withdrawal, albedo-only
-spare over hand/gun, Loaded auto-closes in 280ms, close re-runs native reload.
-Experiment: default-OFF CenturionVisualFollowup (requires CylinderAnimation=1,
-else forced 0): compact frame12 open, Loaded holds frame26 until flick,
-26..32 only on close, native root held through tail, spare = second native DIP
-same VB/IB/material/depth inside each eye, 15 CTAB regs restored. OFF path =
-old centurionanim::Palette (accepted behavior preserved by construction).
-Falsifiers: frame displacement > frame12; Loaded closes w/o input; non-gun draw
-modified; material/RT/depth leak; spare still over nearer geometry.
-L1: rerun via cmd in progress (first run: all 16 CPU + ABI + 6 Python suites +
-IB witness + spare-GPU 10609/10609 both rounds PASS; outer exit=1 was PS
-stderr-dot harness noise, not a suite failure). L2: PE32 x86 /O2 build SHA-256
-0A496C3A76A867CC26B9580CD444D9D5F73EFC8C12B3BD2CE508ED42BBCAEFE2 (dirty-tree;
-clean rebuild after commit). Installed Steam still DADE170B (prior L3+L4 PASS
-render-only scope; this experiment NOT covered). Game closed. Next: commit,
-push, clean rebuild (manifest dirty=[]), deploy DllOnly + INI
-CenturionVisualFollowup=1, L3 log check, user PSVR2 route. Rollback: deploy
-script timestamped backup + restore DADE170B on critical failure.
-
-LATEST 2026-10-17 MAIN fix/centurion-grip-integration L3+L4 PASS (user PSVR2:
-"dziala", render-only, NO screenshots per standing order): intro identical in
-both eyes, single clamped ammo plate per eye, scripts hold then release on
-fresh boot, holster/knife rings hidden in menu+pause, visible in gameplay,
-Centurion shoulder/cylinder/shell behavior intact, no regressions. Deployed
-build DADE170B05EB6BA45569926156ADAC4629DEEC9EB787B00A8371D054A86F25AE
-(PE32 x86 /O2, guard pre/post PASS). Rollback path verified:
-install-backups/20261017-111929 (d3d9.dll F5E925, INI a6f4b973) + remove
-vr-assets/reload/centurion/. PR to main open for review (no self-merge).
-
-LATEST 2026-10-17 MAIN fix/centurion-grip-integration DEPLOYED for L3
-(candidate DLL SHA-256 D35A9EAD05EB6BA45569926156ADAC4629DEEC9EB787B00A8371D054A86F25AE,
-PE32 x86, guard preflight+postflight PASS via change-plan-centurion-integration.json;
-pre-deploy backup install-backups/20261017-105337 verified: d3d9.dll F5E925..., dinput8.dll 5B948D..., INI a6f4b973).
-Steam verified: d3d9.dll=D35A9EAD (on disk), INI=live+CenturionCylinderAnimation=1+
-CenturionShellEjection=1 (all else byte-identical to accepted baseline),
-5 private assets staged+triple-hash-verified (side manifest==source==installed)
-under Binaries/vr-assets/reload/centurion/. Accepted profile re-pinned to the
-user-verified good state (d3d9 F5E925, Fill=1/Window=0/Capture=1, story_voice
-4FEEC18C...E020==live, mtime Oct-16-stable); the 6600708D profile pin had no
-matching binary on disk. Port scope: ONLY missing Centurion fixes (two-eye
-mid-eye shoulder + latched yaw, cooked-IB native animation, cosmetic shell
-ejection, NativeSize, DrawInstances); accepted features preserved (cuffs,
-camera stabilization, menu rows, F12, L3+R3, mirror). L1/L2 PASS on final
-tree (incl. GPU fixtures vs INSTALLED assets). AWAITING PSVR2 (NO screenshots):
-(1) intro identical in both eyes, (2) Circle → sideways gun motion opens →
-muzzle down ejects (watch for shell burst), (3) fresh cylinder from LEFT
-shoulder, insert, flick to close, (4) no artifacts/regressions (hands/shadow/
-menu/monitor single image/HMD normal), normal exit. On FAIL: restore backup
-DLL+INI (hashes above), remove vr-assets/reload/centurion/, verify hashes,
-report log lines (centurion shoulder/mismatch/witness).
-
-LATEST 2026-10-17 MAIN fix/centurion-grip-integration (base local main
-513013a): ported ONLY the missing Centurion grip/shoulder fixes from
-fix/centurion-grip-shoulder — two-eye-midpoint shoulder + latched yaw,
-cooked-IB native cylinder animation, cosmetic shell ejection, NativeSize
-clip scaling, DrawInstances, LoadIni flags CenturionCylinderAnimation /
-CenturionShellEjection (default OFF), INI InsertRadiusCm + shoulder
-magnitude. Deliberately EXCLUDED: glove-cuff removal, camera-stabilization
-simplification, PR_GLOVECUFFS/SHAKESCREEN/BOBSTABILIZE row removals, F12
-stereo toggle, L3+R3 screenshot trigger, mirror/scope/guard reverts,
-UpdateCameraStabilization deletion (accepted features preserved).
-L1_PASS mirror ps1 + full reload suite incl. GPU fixtures vs private
-original assets (shells L/R stereo pixels) + knife suite. L2_PASS clean
+LATEST 2026-10-17 SIDE side/mirror-screenshot-fix: MAIN root-cause accepted —
+UE3 binds viewport + Present region to the window (dumped frame: right half
+black at x>=2952 on a 5904x3012 backbuffer), so the SetWindowPos fit path is
+REMOVED; Window=1 now fits the right eye into the visible client region of
+the untouched SBS window (zero engine interaction, VR res intact by
+construction). Guard stays as fail-open tripwire + anti-war fuse; contract
+test_window_never_resized added. L1_PASS full mirror/guard/stamp/fuse CPU +
+D3D9Ex pixels/scope/viewport/Reset + 8 Python contracts + six menu/cinema
+regressions. L2_PASS clean tree,
 x86 PE32 /O2 DLL SHA-256
-D35A9EAD05EB6BA45569926156ADAC4629DEEC9EB787B00A8371D054A86F25AE
-(provenance: branch fix/centurion-grip-integration @76eedc7 clean tree;
-rebuilt 2026-10-17, manifest dirty=[]).
-Private assets (NOT in git, hash-verified read-only): centurion_shell.svrk
-AB61034E..., centurion_shell.svrt F804945B..., centurion_reload.svca
-85ABCDDE..., centurion_clip.svrk F2196114..., centurion_clip.svrt 17A3355A...
-(vr-assets/reload/centurion/ at deploy). L3/L4 UNKNOWN. READY_FOR_PHYSICAL_ACCEPTANCE of render only
-(NO screenshots per standing order).
+594D11ABFCA21985FC6159A2A0E2B66628FC892B12F56F3619D751E7A47BCB49.
+L3/L4 UNKNOWN. ZERO Steam. MAIN L3: ok>0 rising, skipRect quiet, bb=SBS
+stable, no reset-guard lines, then F12/Share on two live halves.
 
 LATEST 2026-10-16 SIDE fix/right-eye-mirror-steam-capture (PR #43): complete right-eye
 aspect fit, opt-in monitor work-area window cap 1920x1080 (physical client px),

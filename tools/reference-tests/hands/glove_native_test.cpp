@@ -99,14 +99,6 @@ int main(int argc,char** argv){
     }
     assert(leftMoved);std::memcpy(palette,before,sizeof(before));assert(renderer.Pose(palette,release));
     assert(!std::memcmp(palette,open,sizeof(open)));
-    const float cylinderGrip[]={.45f,1.f};
-    std::memcpy(palette,before,sizeof(before));
-    assert(renderer.Pose(palette,cylinderGrip,nullptr,-1,1u,true));
-    for(unsigned slot=0;slot<gloveisolate::kNoTmdCookedPaletteCount;++slot){
-        const auto b=gloveisolate::kNoTmdCookedPalette[slot];
-        if(gloveisolate::NoTmdCookedHandSide(b)==1)
-            assert(!memcmp(palette+slot*3,before+slot*3,3*4*sizeof(float)));
-    }
     const auto start=std::chrono::steady_clock::now();
     for(unsigned i=0;i<3600;++i){std::memcpy(palette,before,sizeof(before));assert(renderer.Pose(palette,leftOnly));}
     const auto ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count()/3600;

@@ -4,23 +4,14 @@
 using namespace centurionreload;
 int main(){
     State s;Config c;c.cylinderGestures=true;
-    // Left is a positive local distance. Facing 180 degrees is NOT a reason
-    // to invert its sign: the shoulder must rotate with the active body frame.
-    for(float yaw:{0.f,1.5707963f,3.14159265f,-1.5707963f}){
-        const auto pouch=Pouch({0,1,0},yaw,c);
-        const V local=hipknife::Rotate({0,-std::sin(yaw*.5f),0,std::cos(yaw*.5f)},pouch.p-V{0,1,0});
-        assert(local.x<-.21f&&local.z>.17f);
-    }
     Frame f;f.enabled=f.context=f.tracked=f.supported=f.ammoFresh=true;
     f.pawn=20;f.weapon=10;f.clip=2;f.reserve=25;f.capacity=6;
     f.socket={.2f,1,-.5f};f.gun={f.socket,{}};
     f.pouch=Pouch({0,1.1f,0},0).p;f.hand=f.socket;f.nowMs=1000;
     auto tick=[&](unsigned dt=20){f.nowMs+=dt;return Update(s,f,c);};
-    f.bodyYaw=3.14159265f;
     tick();f.grip=true;assert(tick().event==Event::None); // no old-grip acquisition
     f.grip=false;tick();f.releaseCylinder=true;
     assert(tick().event==Event::Unlocked);f.releaseCylinder=false;
-    assert(std::fabs(AnchorYaw(s,-1.f)-f.bodyYaw)<1e-6f); // no shoulder chase while looking back
     for(unsigned i=0;i<100;++i)assert(!tick().requestNative); // no free reload
     f.gun.p.z-=.3f;assert(tick().event==Event::None); // forward motion != opening
     f.gun.p.x+=.08f;assert(tick().event==Event::Opened);
@@ -33,7 +24,7 @@ int main(){
     assert(tick().event==Event::None);
     f.grip=false;f.knifeNear=false;tick();f.grip=true;f.hand=f.pouch;
     assert(tick().event==Event::GrabFresh);
-    f.hand=f.socket+V{.093f,0,0};tick();f.grip=false; // observed 9.3 cm now accepted
+    f.hand=f.socket;tick();f.grip=false;
     assert(tick().event==Event::Loaded&&!tick().requestNative);
     f.gun.q={};assert(!tick(100).requestNative); // pitch back alone != close
     f.gun.p.x-=.08f;
@@ -54,8 +45,5 @@ int main(){
     // A full cylinder does not begin, and a circle press alone never spends ammo.
     s={};f.context=f.tracked=f.ammoFresh=true;f.weapon=10;f.clip=6;
     f.releaseCylinder=true;assert(tick().event==Event::None&&f.clip==6&&f.reserve==25);
-    // 16 cm is INSERT tolerance only: old extraction remains 7.5 cm.
-    assert(!Near(V{.093f,0,0},V{},c.socketRadius)&&Near(V{.093f,0,0},V{},c.insertRadius));
-    assert(!Near(V{.161f,0,0},V{},c.insertRadius));
     std::puts("Centurion cylinder L1 PASS: circle/open/dump/shoulder/insert/flick/one native request/cancel");
 }

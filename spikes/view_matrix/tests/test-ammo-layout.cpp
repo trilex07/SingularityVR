@@ -83,22 +83,6 @@ int main() {
         Expect(LayoutNumber(7, 0, R, T, H, q, 4) == 0, "no digits refused");
         Expect(LayoutNumber(7, 4, R, T, H, q, 0) == 0, "no capacity refused");
     }
-    // Eye-half clamp: the whole quad must stay inside its own half, otherwise
-    // it spills into the other eye and reads as a second peripheral copy.
-    // Backbuffer 2000x1000, plate 160 wide: halves [0,1000) and [1000,2000).
-    {
-        const float W = 2000.0f, PW = 160.0f;
-        Expect(ClampCxToEyeHalf(500.0f, PW, W, 0) == 500.0f, "centre untouched");
-        Expect(ClampCxToEyeHalf(1500.0f, PW, W, 1) == 1500.0f, "centre untouched eye1");
-        Expect(ClampCxToEyeHalf(950.0f, PW, W, 0) == 920.0f, "seam clamped left");
-        Expect(ClampCxToEyeHalf(1050.0f, PW, W, 1) == 1080.0f, "seam clamped right");
-        Expect(ClampCxToEyeHalf(-300.0f, PW, W, 0) == 80.0f, "offscreen clamped left edge");
-        Expect(ClampCxToEyeHalf(2400.0f, PW, W, 1) == 1920.0f, "offscreen clamped right edge");
-        Expect(ClampCxToEyeHalf(500.0f, PW, W, 1) == 1080.0f, "wrong-half anchor reined in");
-        Expect(ClampCxToEyeHalf(1500.0f, PW, W, 0) == 920.0f, "wrong-half anchor reined in eye0");
-        Expect(ClampCxToEyeHalf(500.0f, 1200.0f, W, 0) == 500.0f, "oversize plate centred");
-        Expect(ClampCxToEyeHalf(2000.0f, 0.0f, W, 0) == 1000.0f, "zero width clamps to seam");
-    }
     if (g_fails == 0) std::puts("ammo plates: layout L1");
     return g_fails == 0 ? 0 : 1;
 }

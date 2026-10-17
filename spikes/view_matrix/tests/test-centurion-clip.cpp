@@ -45,23 +45,6 @@ static void TestPresentationSafety(){
 }
 int main(){
     TestPresentationSafety();
-    float size=0;
-    assert(NativeSize(52.5f,100.f,size)&&std::fabs(size-1.f)<1e-6f);
-    assert(NativeSize(65.625f,75.f,size)&&std::fabs(size-.6f)<1e-6f);
-    // Compare every native UU point with the exported metre point under the
-    // same world/gun transforms; no arbitrary independent ammo-size tuning.
-    for(int world=50;world<=200;world+=5)for(int gun=25;gun<=400;gun+=5){
-        const float uu=52.5f*100.f/(float)world;
-        assert(NativeSize(uu,(float)gun,size));
-        for(float localUU:{-5.2f,0.f,3.3f})
-            assert(std::fabs((localUU/52.5f)*size-(localUU/uu)*(float(gun)/100.f))<1e-6f);
-    }
-    for(float bad:{0.f,-1.f,1001.f,std::numeric_limits<float>::quiet_NaN(),std::numeric_limits<float>::infinity()}){
-        size=7;assert(!NativeSize(bad,75,size)&&size==7);
-    }
-    for(float bad:{0.f,24.f,401.f,std::numeric_limits<float>::quiet_NaN()}){
-        size=7;assert(!NativeSize(65.625f,bad,size)&&size==7);
-    }
     Snapshot s;s.visible=true;s.phase=centurionreload::Phase::Carrying;
     s.pawn=20;s.weapon=10;s.sampledMs=1000;s.hand={{.2f,1,-.5f},{}};
     assert(Eligible(s,true,20,10,1000)&&Eligible(s,true,20,10,1100));

@@ -93,23 +93,6 @@ inline float DigitGapFrac() { return 0.08f; } // × digit display height
 // never covered: the left mag icon stays visible in both states.
 inline bool MagEmpty(int clip) { return clip <= 2; }
 
-// Clamp a per-eye plate centre so the whole quad stays inside its eye half
-// of the side-by-side backbuffer. Without this, a hand at the frame edge (or
-// near the centre seam) spills the eye-0 quad into eye-1's half and vice
-// versa, which reads in the headset as a second peripheral copy of the plate.
-// eye is 0 (left half [0, W/2)) or 1 (right half [W/2, W)). If the plate is
-// wider than a half (pathological backbuffer), centre it on the seam.
-inline float ClampCxToEyeHalf(float cx, float plateW, float fullW, int eye) {
-    const float halfW = fullW * 0.5f;
-    const float half0 = (eye == 0) ? 0.0f : halfW;
-    const float lo = half0 + plateW * 0.5f;
-    const float hi = half0 + halfW - plateW * 0.5f;
-    if (!(hi > lo)) return half0 + halfW * 0.5f;
-    if (cx < lo) return lo;
-    if (cx > hi) return hi;
-    return cx;
-}
-
 // Right-aligned number layout in plate px. Returns digit quads (glyph ids +
 // rects); value clamps to [0, 9999]. Returns 0 and leaves output untouched
 // when maxDigits <= 0 or cap <= 0.
