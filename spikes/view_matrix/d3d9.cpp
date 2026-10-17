@@ -13490,7 +13490,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMIT
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,INT base,UINT min,UINT verts,UINT start,UINT prims) {
     nativefx::PathObserve(1,g_nativeFxStereoPairDepth!=0);
-    projectorfix::Scope projector(dev,projectorfix::pairDepth!=0&&Rd(g_rtIsScene)&&!g_thisDrawMoved&&!CutsceneNativeCameraArmed(),verts,prims);
+    projectorfix::Scope projector(dev,projectorfix::pairDepth!=0&&Rd(g_dupDraws)&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!g_thisDrawMoved&&!CutsceneNativeCameraArmed(),verts,prims);
     if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);

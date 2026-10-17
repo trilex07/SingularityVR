@@ -189,7 +189,7 @@ restore-fault latch. L2 x86 PE32 /O2 build PASS; existing compiler warnings
 remain (not a warning-clean build). No Steam deployment or visual acceptance
 of this candidate yet. Do not combine a performance change with its test.
 
-Large automatic screenshots explained: 5904*3012*4 = 71,132,352 pixel bytes
+Large automatic screenshots explained: 5904*3012*4 = 71,131,392 pixel bytes
 (plus 54 BMP header bytes). Menu proof capture and requested trace capture
 produce uncompressed stereo BMPs, distinct from Steam screenshots. They remain
 unchanged for this controlled rendering candidate.
