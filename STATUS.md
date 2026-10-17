@@ -1,5 +1,26 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE second Centurion physical feedback: prior compact frame12
+and model-only RootHold rejected (wrong side/drift/no usable carried ammo).
+Last session12:07:36->12:09:57 log SHA E385B6E7...EAF9906 shows32 successful
+shoulder grabs +32 discards, zero Loaded/request/ACK; authored socket distances
+38.5–100cm, not a proven missing grab. HUD reseat worked; valid counts thereafter.
+New default-OFF CenturionTrackedCylinder: Circle OPENS LEFT, tilt dumps cases;
+full controller-relative root through CURRENT local/gun/tracking chain, held
+hammer/trigger parent, compact measured-size lateral clip offset, fresh100ms
+rendered-joint insertion witness and actual carried mesh-centre test. Radii
+unchanged; no speculative giant shoulder/insert tolerance. Existing native
+ammo/one-permit backend, accepted control layout/knife/gloves/language untouched.
+Synced MAIN HUD fix2a596f9 first. Source0742736a2c5c127f35b7c67b48bbdb8101e73a7d,
+L1_PASS25 own-process test programs (incl3 MAIN compatibility),46 Python tests,
+2916 full-chain/left-side/real-SVCA math cases; L2_PASS clean x86 PE32 /O2,
+DLL SHA256 867644F4980EFECE47D56084C6EDD47784CFE48C22A18936E5A6AF03845426F3.
+No instrumentation, existing analysis warnings remain. Private candidate:
+build/centurion-reload/tracked-candidate-0742736; no new assets or installed INI.
+L3/L4 UNKNOWN; physical gun/clip appearance/fit still requires MAIN's test.
+See docs/centurion-tracked-cylinder.md for exact experiment, evidence and route.
+ZERO Steam launch/deploy/restore/writes. Update PR48 only; no merge.
+
 LATEST 2026-10-17 SIDE fix/centurion-visual-feedback: user physically rejected
 excessive cylinder withdrawal, mismatched/always-on-top spare, auto-closing Loaded
 pose and repeated native reload sweep. Added default-OFF CenturionVisualFollowup:

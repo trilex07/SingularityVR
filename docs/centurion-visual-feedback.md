@@ -1,5 +1,10 @@
 # Centurion physical feedback — 2026-10-17, SIDE
 
+Second physical rejection/new decision supersedes the previous test protocol:
+see [Circle opens LEFT / tracked root and render socket](centurion-tracked-cylinder.md).
+The earlier frame12/model-only-root experiment below is NOT accepted by that
+feedback. New independent opt-in defaults OFF; keep receipts separate.
+
 Base: MAIN integration `9c7db48` (production code `65a3866`), not PR45's
 three-other-weapon branch. ZERO Steam/install access; separate worktree.
 
