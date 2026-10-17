@@ -102,5 +102,20 @@ store or duplicate transfer. Check limited reserve if that save permits it.
 Any wrong side, lost tracking, inventory change, camera jerk or full native tail
 rejects the candidate. Keep the existing bounded restore lease and hashes.
 
-L2 build receipt follows. L3/L4 UNKNOWN; physical removal of shake/fire delay
-is a justified experiment, not a declaration of success.
+## Clean L2 receipt
+
+Source `6d7b201687c5d898fc2011ddf3b3ef87d0479911`, clean tree. L2_PASS
+x86 PE32 (014C/010B), `/O2`, performance instrumentation OFF. Existing unrelated
+compiler/analyzer warnings remain, not a warning-free build. DLL3204096 bytes:
+`0EDD6DF07AA0F5F59A3E3904E557222BD3C11F5E8EF3D9E53BCEEF3F45C23B3A`.
+Build receipt SHA256:
+`6C118A95D04455D2625A433C24373341128DCCCF7E6FE13BE3B59B8DEF4725EA`.
+Private candidate `build/centurion-reload/refill-candidate-6d7b201/` contains
+DLL, build receipt and manifest, NO INI/assets. Build log:
+`build/centurion-reload/refill-only/build.log`. This is not installed, accepted
+or a restore baseline. Integrate ONLY source6d7b201 onto current MAIN that
+already has the physically tested polish, then rebuild THERE.
+
+L3/L4 UNKNOWN; physical removal of shake/fire delay is a justified experiment,
+not a declaration of success. ZERO Steam launch/deploy/restore or installed-file
+changes. Work remains on the existing PR48 branch, no merge.

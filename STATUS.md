@@ -10,7 +10,10 @@ frozen snapshot, finite6-round scope, fault latch, no full-reload fallback.
 No inventory/state/timer/camera writes. Existing physical polish retained.
 L1_PASS25 own-process CPU/ABI/resource/GPU programs +56 Python tests, including
 four archived ORIGINAL bodies/every-byte mutations and own-process void/int
-thiscall ABI/NPC/no-original dispatch. L2 pending; L3/L4 UNKNOWN. ZERO Steam.
+thiscall ABI/NPC/no-original dispatch. L2_PASS clean6d7b201, x86 PE32 /O2,
+instrumentation OFF, DLL SHA256
+0EDD6DF07AA0F5F59A3E3904E557222BD3C11F5E8EF3D9E53BCEEF3F45C23B3A.
+Private build/centurion-reload/refill-candidate-6d7b201. L3/L4 UNKNOWN. ZERO Steam.
 See docs/centurion-refill-only.md for mechanism, falsifiers and MAIN route;
 integrate source onto CURRENT MAIN, never deploy an older SIDE full DLL.
 
