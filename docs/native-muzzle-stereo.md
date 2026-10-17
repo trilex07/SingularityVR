@@ -362,10 +362,31 @@ Offline shader inspection identifies `4FAEF2389750DBFC` /
 `2FEC493CD52D7D78` as a two-triangle, four-vertex foreground draw with
 `ViewProjectionMatrix` in c0-c3 and `LocalToWorld` in c5-c8. Its shader uses
 row-vector multiplication. The existing trace shows identical c0-c3 in both
-eyes, but that is not yet proof of its visible role. Critically, the current
-high-level indexed-UP hook immediately forwards draws when
-`HookUserPointerDraws` is absent/default 0; even at full hook level, a quad can
-return before `StereoPair` and its native matrix-alias logic. The next
-experiment must first record the *actual* draw entry/branch and vertex-space
-identity for this exact pair, bounded and read-only. Do not enable mode 2 or
-rewrite matrices based on these traces alone.
+eyes, but that is not yet proof of its visible role. A second pass over the raw
+trace corrects the earlier API inference: this group has a real VB and IB and
+`verts=4`, so it is an indexed-buffer draw, **not** indexed-UP. `type=4` in the
+trace is `D3DPT_TRIANGLELIST`, not a draw API code. Consequently the UP-hook
+early-return theory was wrong. The accepted profile already drops this exact
+pair in mode 1, while the glow persists, making it especially important to
+separate this pair's role from the seam glow.
+
+### Next read-only experiment: selected-pair draw-path witness
+
+Hypothesis: the accepted selected pair is submitted through a route that
+bypasses `StereoPair`, which would explain why a matrix alias at its entry
+cannot affect it. Supporting evidence is that the raw pass trace sees the
+pair, but the prior `StereoPair`-entry witness log does not. Falsifier: new
+final-driver counts show it inside `StereoPair`; then investigate camera
+tracking/geometry instead of bypass. A second falsifier is zero selected-pair
+draws despite firing, which means the test did not reach the same producer.
+
+`NativeMuzzlePathWitness=1` is a default-OFF, selected-pair-only diagnostic.
+It counts which of the four D3D9 draw APIs reached the final wrapper and
+whether that call was inside `StereoPair`. It records **before** the existing
+mode-1 drop, changes no D3D9 state or pixels, allocates nothing per draw, and
+emits at most 12 aggregate lines. It deliberately leaves full-frame
+`NativeMuzzleProbe` OFF; no GPU readback is required. The offline package
+generator's `-PathWitness -NoProbe` mode retains all accepted INI values and
+adds only this diagnostic key. L3 must prove real selected-pair counts and
+OpenXR gameplay; this is not L4 proof of a repaired effect. Do not enable
+mode 2 or rewrite matrices based on the shader alone.

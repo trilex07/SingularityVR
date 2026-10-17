@@ -1,14 +1,25 @@
 # STATUS — session handoff
 
+LATEST MAIN 2026-10-17 native muzzle path witness: round 4 L4 report arrived:
+no FPS drop, broad glow still present, no visible muzzle smoke/flash, wall
+impact visible. This third exact-pair drop is a negative visual discriminator,
+not a repair. The raw trace's `4FAE...:2FEC...` group has VB+IB and uses the
+indexed-buffer draw API (the earlier indexed-UP inference was wrong). A
+default-OFF read-only `NativeMuzzlePathWitness` now counts which final draw
+API carries the accepted selected pair and whether it ran inside
+`StereoPair`, before the existing drop. L1 tests and L2 x86 `/O2` build pass;
+offline accepted-profile guard preflight passes with candidate INI adding
+only this diagnostic key. No new Steam deployment or L3/L4 claim yet. See
+`docs/native-muzzle-stereo.md` for falsifiers and exact receipts.
+
 LATEST MAIN 2026-10-17 native muzzle investigation: round 4 completed and the
 accepted build was restored. Exact drop
 `7EB90CEBB053DA04:0099C92AE105A584` ran (174/188/38 logged drops; no alias,
 refusal, restore failure, shader overflow or fault). Runtime log confirms active
 OpenXR gameplay (`session=5`, `shouldRender=1`, both eyes, valid captures/submits).
 NativeMuzzleProbe was OFF, so this round excludes the full-frame capture/readback
-probe overhead. The user confirmed game closure but has not yet reported whether
-the flash, smoke, central glow, or first-shot hitch changed; visual attribution
-is therefore still UNKNOWN. No mode-2 alias is justified. Accepted Steam files
+probe overhead. The later headset report is recorded above; no mode-2 alias is
+justified. Accepted Steam files
 were restored and independently hashed: DLL `789749E5…F361B`, INI
 `8B0B0B4C…2CCFAF`, dinput8 `5B948DDB…729D59`; UI package unchanged
 `60E72871…E8DB8`. Full receipt is in `docs/native-muzzle-stereo.md`.

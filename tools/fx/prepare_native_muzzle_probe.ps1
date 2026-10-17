@@ -9,6 +9,7 @@ param(
     [int]$DropVSBytes = 0,
     [int]$DropPSBytes = 0,
     [switch]$NoProbe,
+    [switch]$PathWitness,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -119,8 +120,19 @@ if ($probeBefore -ne '0' -or $modeBefore -ne '1') {
 }
 
 $dropRequested = $DropVSHash -or $DropPSHash -or $DropVSBytes -or $DropPSBytes
-if ($NoProbe -and -not $dropRequested) {
+if ($NoProbe -and -not ($dropRequested -or $PathWitness)) {
     throw '-NoProbe is only valid for an exact-pair visual discriminator; baseline capture requires the bounded probe.'
+}
+if ($PathWitness) {
+    if (-not $NoProbe -or $dropRequested) { throw '-PathWitness requires -NoProbe and cannot be combined with a new drop pair.' }
+    if ($iniValues.ContainsKey('Diagnostic/NativeMuzzlePathWitness') -or
+        @($profile.ini.PSObject.Properties | Where-Object { $_.Name -ceq 'Diagnostic/NativeMuzzlePathWitness' }).Count) {
+        throw 'Path witness key already exists; refusing to overwrite an unknown setting.'
+    }
+    foreach ($key in @('Diagnostic/NativeMuzzleVSHash','Diagnostic/NativeMuzzlePSHash',
+        'Diagnostic/NativeMuzzleVSBytes','Diagnostic/NativeMuzzlePSBytes')) {
+        if ($iniValues[$key] -cne (Get-ProfileIniValue $key)) { throw "Installed selected pair differs from accepted profile: $key" }
+    }
 }
 if ($dropRequested) {
     if (-not $DropVSHash -or -not $DropPSHash -or $DropVSBytes -le 0 -or $DropPSBytes -le 0) {
@@ -148,7 +160,13 @@ $iniChanges = [System.Collections.Generic.List[object]]::new()
 if ($probeAfter -ne $probeBefore) {
     $iniChanges.Add([ordered]@{ key = $probeKey; before = $probeBefore; after = $probeAfter; reason = $probeReason })
 }
-if ($dropRequested) {
+if ($PathWitness) {
+    $modeAfter = $modeBefore
+    $newline = if ($iniText.Contains("`r`n")) { "`r`n" } else { "`n" }
+    $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "NativeMuzzleStereoMode=$modeBefore" "NativeMuzzlePathWitness=1${newline}NativeMuzzleStereoMode=$modeBefore"
+    $iniChanges.Add([ordered]@{ key = 'Diagnostic/NativeMuzzlePathWitness'; before = $null; after = '1'; reason = 'Bounded read-only selected-pair draw-path census; no renderer behavior change.' })
+    $planReason = 'MAIN L3 read-only native muzzle path witness for the accepted exact pair; preserve accepted mode-1 drop and disable frame readbacks.'
+} elseif ($dropRequested) {
     $targets = [ordered]@{
         'Diagnostic/NativeMuzzleVSHash' = $DropVSHash.ToUpperInvariant()
         'Diagnostic/NativeMuzzleVSBytes' = [string]$DropVSBytes
@@ -176,7 +194,7 @@ if ($dropRequested) {
     $iniChanges.Add([ordered]@{ key = $modeKey; before = $modeBefore; after = $modeAfter; reason = 'Keep the renderer unchanged for the native-only baseline capture.' })
     $planReason = 'MAIN L3 native muzzle capture: preserve accepted profile; set only NativeMuzzleProbe=1 and NativeMuzzleStereoMode=0 for native-only baseline traces.'
 }
-if (-not $dropRequested -and $candidateIniBytes.Length -ne $iniBytes.Length) {
+if (-not $dropRequested -and -not $PathWitness -and $candidateIniBytes.Length -ne $iniBytes.Length) {
     throw 'Baseline probe substitutions unexpectedly changed the INI size.'
 }
 

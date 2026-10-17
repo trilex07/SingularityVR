@@ -52,6 +52,14 @@ int main(){
      assert(!m1.Match(0x488BAEB579E71A73ull, 0x27DFE7D9C67BCC03ull, 2968, 452));
      assert(!m1.Match(0x4FAEF2389750DBFCull, 0x2FEC493CD52D7D78ull, 2908, 340));
      m1.vs=0;m1.vsBytes=0;assert(!m1.Valid());}
+    {selected={0x4FAEF2389750DBFCull,0x2FEC493CD52D7D78ull,2908,336,1,-1};
+     vs.hash=selected.vs;vs.bytes=selected.vsBytes;ps.hash=selected.ps;ps.bytes=selected.psBytes;
+     InterlockedExchange(&pathWitness,0);PathObserve(1,false);assert(pathCounts[1][0]==0);
+     InterlockedExchange(&pathWitness,1);PathObserve(1,false);PathObserve(1,true);
+     PathObserve(4,false);ps.hash=0;PathObserve(1,false);
+     assert(pathCounts[1][0]==1&&pathCounts[1][1]==1);
+     InterlockedExchange(&pathWitness,0);InterlockedExchange(&pathCounts[1][0],0);
+     InterlockedExchange(&pathCounts[1][1],0);selected={};vs={};ps={};}
     {FakeShader shader;selected={};probe=false;assert(!Describe(&shader,true).hash&&!shader.queries);
         probe=true;auto first=Describe(&shader,true);assert(first.camera==12&&first.bytes==88&&shader.refs==2);
         assert(Describe(&shader,true).hash==first.hash&&shader.queries==1&&used==1);
