@@ -17,7 +17,8 @@ d3d9.dll PE32 build + manifest from clean HEAD 201a32b: SHA-256
 5102B8CF2EE19D980E343B121927386DC80D681D20C3AF7ED1CA541A9AD426AD (/O2,
 no -Install, no Steam contact). NOT Steam/PSVR2 tested — MAIN L3/L4 pending. Next: MAIN review, Steam L3 on
 the three scenarios (plate single+clamped, hold releases on load, no hoops in
-menu), then user PSVR2 acceptance script.
+menu), then user PSVR2 acceptance script. VFX trigger diagnosis (no code
+change — config+deployment root cause): see docs/vfx-trigger-diagnosis.md.
 
 LATEST 2026-10-17 SIDE side/mirror-screenshot-fix: MAIN root-cause accepted —
 UE3 binds viewport + Present region to the window (dumped frame: right half
