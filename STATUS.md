@@ -1,17 +1,24 @@
 # STATUS — session handoff
 
-LATEST MAIN L3 2026-10-17 startup-readiness test: candidate
-CE297F0AF8BADFAE941FB500BE8A07D9D139DCCF15E427FCABD2A2CC3867F003 ran and
-the user closed the game. Curtain appeared only briefly. Runtime log shows
-`ready=3F` then `hold=0 elapsed=110ms`: this is pawn/hook/XR readiness, not
-UE3 asset-stream completion or proof of native movement acceptance. Centurion
-source included the tracked-cylinder/refill paths, but this test INI had
-`CenturionVisualFollowup=0`, `CenturionTrackedCylinder=0`,
-`CenturionPhysicalPolish=0`, `CenturionRefillOnly=0`; only
-`CenturionClipPreview=1` was active. User saw the detached/adjacent cylinder,
-so this run did not test the integrated visual reload path. The candidate lease
-was rolled back after exit and installed hashes were verified by the deploy
-receipt; do not treat this candidate as the current profile.
+LATEST MAIN 2026-10-17 startup/Centurion candidate deployed; L3 pending.
+User reported the prior candidate curtain only appeared briefly and the
+Centurion cylinder was detached beside the gun. Prior runtime log showed
+`ready=3F`, `hold=0 elapsed=110ms`: hook/pawn/XR readiness, not UE3 streaming.
+Prior INI had all four Centurion visual/refill flags OFF, so it did not exercise
+the tracked-cylinder path. Corrected candidate now has a 3000ms minimum visible
+curtain (5000ms existing fail-open maximum), `StartupPrewarm=1`, and the reviewed
+CenturionVisualFollowup/TrackedCylinder/PhysicalPolish/RefillOnly stack ON.
+All other parsed INI values are held at the accepted baseline. UI package is
+untouched. L2_PASS clean c0393dd, x86 PE32 /O2, DLL SHA256
+789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B.
+Deployment receipt `deployment/install-reports/20261017-192942.json` verifies
+DLL `789749E5…F361B`, INI `8B0B0B4C…2CCFAF`, unchanged dinput8
+`5B948DDB…729D59`, and backup `deployment/install-backups/20261017-192942`
+with accepted DADE170B/INI/dinput8 hashes. UI package was not a target and is
+still SHA256 `51CDAB5C…1A1A`. A 10-minute bounded restore lease is armed; it
+waits for the game to exit and restores only if candidate hashes still match.
+PSVR2 visual check is pending; the curtain is not proof that all UE3 assets
+have loaded.
 
 OFFLINE follow-up now adds a 3000 ms minimum visible hold, clamped to the
 existing 5000 ms fail-open timeout. It is a visible-duration policy, not a claim
@@ -21,7 +28,10 @@ and RefillOnly; all other accepted INI values remain unchanged.
 L1_PASS: startup suite (6 optimized C++ fixtures, 5 Python guards) and full
 Centurion suite (20 policy fixtures + own-process ABI and two D3D9 fixtures;
 62 Python tests). All own-process GPU fixtures passed; no game/Steam proof.
-L2 pending clean rebuild; no new Steam candidate yet.
+L2_PASS clean c0393dd, x86 PE32 /O2, DLL SHA256
+789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B.
+Candidate source and test notes: docs/startup-readiness.md. New flags remain
+default-OFF in the source; only the guarded test INI enables them.
 
 LATEST 2026-10-17 SIDE startup readiness candidate (dedicated branch from92396ca):
 user reports immobile visible gameplay while hooks initialize. Runtime cause of
