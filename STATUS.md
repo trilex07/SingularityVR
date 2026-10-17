@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN VFX isolation (b) RUNNING: VfxHost=1 + HideMuzzleFx=1
+(plugin-only; INI 8D0E27E4->52CCD7D4, pre-edit backup in 132624 dir).
+Session (a) RESULT (user): native-only shows NOTHING (no smoke, no flash) —
+native FX invisible in VR regardless of seam. Expect (b): smoke gone (was
+native), flash small/low per SIDE prediction. Then decisions (UP/per-gun
+muzzle, bigger stub flash, one system).
+
 LATEST 2026-10-17 MAIN VFX isolation (a) RUNNING: VfxHost 1->0 (native-only,
 HideMuzzleFx=0 kept; INI 59C48A88->8D0E27E4, pre-edit backup in 132624 dir).
 Expect zero VFX lines; user records smoke/flash below. Then (b) plugin-only.
