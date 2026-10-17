@@ -12,6 +12,7 @@ param(
     [switch]$PathWitness,
     [switch]$NativeFxOffControl,
     [switch]$ObserveRoute,
+    [switch]$WorldRoute,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -141,6 +142,9 @@ if ($NativeFxOffControl) {
 if ($ObserveRoute -and (-not $PathWitness -or -not $NoProbe -or $NativeFxOffControl)) {
     throw '-ObserveRoute requires -PathWitness -NoProbe and cannot suppress the native emitter.'
 }
+if ($WorldRoute -and ($ObserveRoute -or $NativeFxOffControl -or -not $PathWitness -or -not $NoProbe -or -not $dropRequested)) {
+    throw '-WorldRoute requires one exact shader pair, -PathWitness and -NoProbe; it cannot combine with other controls.'
+}
 if ($PathWitness) {
     if (-not $NoProbe) { throw '-PathWitness requires -NoProbe.' }
     if ($iniValues.ContainsKey('Diagnostic/NativeMuzzlePathWitness') -or
@@ -154,7 +158,7 @@ if ($PathWitness) {
 }
 if ($dropRequested) {
     if (-not $DropVSHash -or -not $DropPSHash -or $DropVSBytes -le 0 -or $DropPSBytes -le 0) {
-        throw 'A mode-1 drop needs all four values: VS/PS hashes and byte lengths.'
+        throw 'An exact-pair candidate needs all four values: VS/PS hashes and byte lengths.'
     }
     if ($DropVSHash -notmatch '^[0-9A-Fa-f]{16}$' -or $DropPSHash -notmatch '^[0-9A-Fa-f]{16}$') {
         throw 'Drop shader hashes must each be exactly 16 hexadecimal characters.'
@@ -164,7 +168,7 @@ if ($dropRequested) {
             throw "Invalid drop shader byte length: $size."
         }
     }
-    if ($modeBefore -ne '1') { throw 'A selected-pair drop requires the accepted baseline mode=1.' }
+    if ($modeBefore -ne '1') { throw 'An exact-pair candidate requires the accepted baseline mode=1.' }
 }
 
 $probeAfter = if ($NoProbe) { '0' } else { '1' }
@@ -179,12 +183,13 @@ if ($probeAfter -ne $probeBefore) {
     $iniChanges.Add([ordered]@{ key = $probeKey; before = $probeBefore; after = $probeAfter; reason = $probeReason })
 }
 if ($PathWitness) {
-    $modeAfter = if ($ObserveRoute) { '3' } else { $modeBefore }
+    $modeAfter = if ($WorldRoute) { '4' } elseif ($ObserveRoute) { '3' } else { $modeBefore }
     $newline = if ($iniText.Contains("`r`n")) { "`r`n" } else { "`n" }
     $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "NativeMuzzleStereoMode=$modeBefore" "NativeMuzzlePathWitness=1${newline}NativeMuzzleStereoMode=$modeAfter"
     $iniChanges.Add([ordered]@{ key = 'Diagnostic/NativeMuzzlePathWitness'; before = $null; after = '1'; reason = 'Bounded read-only selected-pair draw-path census; no renderer behavior change.' })
-    if ($ObserveRoute) {
-        $iniChanges.Add([ordered]@{ key = $modeKey; before = $modeBefore; after = $modeAfter; reason = 'Observe-only exact-pair mode; no shader drops or matrix edits.' })
+    if ($ObserveRoute -or $WorldRoute) {
+        $modeReason = if ($WorldRoute) { 'Exact selected world-space particle bypasses HUD c5-c8 remap and enters ordinary camera stereo path; all other shader pairs unchanged.' } else { 'Observe-only exact-pair mode; no shader drops or matrix edits.' }
+        $iniChanges.Add([ordered]@{ key = $modeKey; before = $modeBefore; after = $modeAfter; reason = $modeReason })
     }
     if ($dropRequested) {
         $targets = [ordered]@{
@@ -199,10 +204,13 @@ if ($PathWitness) {
             $after = [string]$targets[$key]
             $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "$name=$before" "$name=$after"
             if ($before -ne $after) {
-                $iniChanges.Add([ordered]@{ key = $key; before = $before; after = $after; reason = 'Causal emitter-ON/OFF traces isolated this remaining untested additive shader pair; exact mode-1 visual discriminator.' })
+                $pairReason = if ($WorldRoute) { 'Exact world-particle shader identity measured by causal emitter ON/OFF trace and selected draw-path witness.' } else { 'Causal emitter-ON/OFF traces isolated this additive shader pair for exact-path testing.' }
+                $iniChanges.Add([ordered]@{ key = $key; before = $before; after = $after; reason = $pairReason })
             }
         }
-        $planReason = if ($ObserveRoute) {
+        $planReason = if ($WorldRoute) {
+            'MAIN L3 exact additive-pair world-route experiment: preserve LocalToWorld c5-c8 and use tracked camera stereo path; probe/readbacks OFF, bounded route counters ON.'
+        } elseif ($ObserveRoute) {
             'MAIN L3 read-only exact additive-pair route witness after causal RvWeaponFX ON/OFF comparison; no drops, alias edits or GPU readbacks.'
         } else {
             'MAIN L3 exact additive-pair drop plus bounded path witness after causal RvWeaponFX ON/OFF comparison; probe/readbacks OFF.'

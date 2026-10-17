@@ -438,3 +438,37 @@ rollback: d3d9 `789749E5...`, INI `8B0B0B4C...`, dinput8 `5B948DDB...`.
 Next correction must address eye-specific placement of the original emitter's
 draws at their actual bypass path, retaining its three material passes. Do not
 promote single-pair drops or infer shader matrix convention from CTAB alone.
+
+### MAIN 2026-10-17: exact IndexedUP route resolved
+
+Observe-only candidate DLL `56F1DDE9...` (source `1987df8`, x86 PE32 `/O2`),
+INI `4C58BD31...`, ran in Steam PID 21324 with OpenXR session 5 and both eyes
+submitting. In four measurement windows the selected `488BAE:27DF` pair had
+`entry=14/44/23/22`, **every entry exited via `HudStereoPair`**, and no selected
+entry exited through inert/off-thread, quad, shadow, or ordinary `StereoPair`.
+The raw draw count was twice each entry because `HudStereoPair` redrew it for
+both eyes. The user still saw asymmetric glow and no clear muzzle smoke. The
+guard restored the accepted DLL/INI after normal exit; independent hashes
+matched. The installed UI package was observed unchanged in this test.
+
+This is a concrete register-ownership conflict, not just a route guess. The
+post-shot trace's additive 20-primitive group 234/235 (VS 742 words/2968 bytes,
+PS 113 words/452 bytes) shows world-space `LocalToWorld` at VS c5-c8 (c8
+translation `-9425.135,18269.559,-197.927,1`) and `ViewProjectionMatrix` at
+c0-c3. `HudStereoPair` reads c5-c8 as an orthographic HUD transform and applies
+an eye remap there. An affine world transform passes its w-column check, so
+that check does not protect this particle. The smallest falsifiable correction
+is an exact-shader, gameplay-scene-only route around `HudStereoPair` into
+`StereoPair`, which should remap the tracked camera c0-c3 and leave c5-c8
+untouched. Falsifier: exact reroute executes but the effect remains misplaced,
+or `StereoPair` reports mono fallback/no valid c0-c3 camera. Other original
+emitter passes remain unchanged until separately identified.
+
+Mode 4 implements that isolated falsifier behind the exact VS/PS hashes and
+byte lengths. Only gameplay-scene, non-quad, non-cutscene `DrawIndexedPrimitiveUP`
+draws with the selected pair bypass `HudStereoPair`; other passes retain their
+accepted route. It does not drop original particles, alter the emitter, or
+modify unrelated c5-c8 constants. Bounded counters distinguish reroutes from
+valid camera slots, tracked c0 and mono fallback. L1/L2 alone cannot establish
+correct placement; the next Steam/PSVR2 test must inspect both eyes and smoke
+at the actual muzzle.

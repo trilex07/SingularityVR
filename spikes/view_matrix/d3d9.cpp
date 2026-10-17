@@ -13963,6 +13963,11 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
                 ++shadowSkipped;
     if (shadowSkipped) ++g_drawsShadowProtected;
     if (nSlots > g_camMatValidPeak) g_camMatValidPeak = nSlots;
+    if (nativefx::selected.mode == 4 && nativefx::Match()) {
+        bool cameraC0 = false;
+        for (int i = 0; i < nSlots; ++i) cameraC0 |= g_camMats[slots[i]].reg == 0;
+        nativefx::WorldCameraObserve(nSlots != 0, cameraC0);
+    }
 
     // If we cannot remap this draw, do NOT split it either - draw it once, full frame, untouched.
     //
@@ -20873,6 +20878,16 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // The identification test - see g_dropStride. Returning S_OK without drawing is how the mod drops
     // draws everywhere else: device state untouched, so the next draw behaves normally.
     if (g_dropStride && vtxStride == (UINT)g_dropStride) { nativefx::RouteObserve(7); return D3D_OK; }
+    // Exact original particle shader: c5-c8 is LocalToWorld, not the HUD's clip
+    // transform. The measured HUD route rewrites it and misplaces the effect.
+    // Only the opted-in, exact-pair gameplay-scene candidate takes the world path.
+    if (!quad && Rd(g_rtIsScene) && VrModeOn() && !CutsceneNativeCameraArmed() &&
+        nativefx::WorldRoute()) {
+        nativefx::RouteObserve(10);
+        return StereoPair(dev, [&] {
+            return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
+                                           idxData, idxFormat, vtxData, vtxStride); });
+    }
     if (!quad && ((hudArmed && g_hudRemap) || PauseCanvasNeedsEyeCopy(dev))) {
         nativefx::RouteObserve(8);
         return HudStereoPair(dev, primCount, vtxStride, [&] {

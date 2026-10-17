@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+LATEST MAIN 2026-10-17 native muzzle exact route: observe-only mode 3 was
+deployed and physically tested (supersedes the stale "not deployed" line
+below). In four runtime windows all selected `488BAE:27DF` IndexedUP draws
+entered `HudStereoPair` (14/44/23/22); the user still saw asymmetric glow and
+no clear smoke. Original `LocalToWorld` lives at c5-c8, which the HUD path
+mistakes for its clip transform; `ViewProjectionMatrix` lives at c0-c3.
+Steam was returned to accepted DLL/INI/dinput8 and independently hashed.
+The next candidate is **default-OFF mode 4**, exact shader pair only: route
+world particle via ordinary camera `StereoPair` and count valid c0/fallback.
+Offline L1/L2 preparation is in progress; no mode-4 Steam or PSVR2 PASS yet.
+See `docs/native-muzzle-stereo.md`.
+
 LATEST MAIN 2026-10-17 native muzzle emitter A/B and third exact-pair test:
 with original `RvWeaponFX` references suppressed, the user's seam glow disappeared.
 Three shader pairs occur in both complete native-ON post-shot traces and neither

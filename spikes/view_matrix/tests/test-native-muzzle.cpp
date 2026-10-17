@@ -47,6 +47,13 @@ int main(){
     {Selection observe{11,22,128,256,3};assert(observe.Valid());
      selected=observe;context=true;fault=false;vs.hash=11;vs.bytes=128;ps.hash=22;ps.bytes=256;
      assert(Match()&&!Drop());selected={};vs={};ps={};}
+    {Selection world{11,22,128,256,4};assert(world.Valid());
+     selected=world;context=true;fault=false;vs.hash=11;vs.bytes=128;ps.hash=22;ps.bytes=256;
+     assert(WorldRoute()&&!Drop());WorldCameraObserve(true,true);
+     assert(worldRerouted==1&&worldCameraValid==1&&worldCameraC0==1);
+     context=false;assert(!WorldRoute());WorldCameraObserve(false,false);
+     assert(worldCameraFallback==0);
+     context=true;ps.hash=23;assert(!WorldRoute());selected={};vs={};ps={};}
     {Selection m1; m1.mode = 1; assert(!m1.Valid());
      assert(!m1.Match(0x4FAEF2389750DBFCull, 0x2FEC493CD52D7D78ull, 2908, 336));
      m1.vs=0x4FAEF2389750DBFCull;m1.ps=0x2FEC493CD52D7D78ull;m1.vsBytes=2908;m1.psBytes=336;
