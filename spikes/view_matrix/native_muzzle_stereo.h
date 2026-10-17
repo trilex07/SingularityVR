@@ -3,14 +3,40 @@
 // Included after D3D9/Log/skeletal declarations. No new hooks. Classify only
 // at existing shader setters, keep bounded references until Reset/shutdown.
 namespace nativefx {
-static Selection selected;
+static Selection selected,worldSelected;
 static bool fault=false,context=false;
+static bool particleStereo=false;
+static unsigned particleDepth=0;
+struct ParticleStats {unsigned routed=0,refused=0,restored=0,restoreMismatch=0;};
+static ParticleStats particleStats[3]{};
+static unsigned particleReports=0;
+static unsigned particleSamples[3]{};
 static volatile LONG probe=0;
 inline bool Probe(){return InterlockedCompareExchange(&probe,0,0)!=0;}
+// Read-only, bounded path census for the explicitly selected shader pair.
+// It runs before a mode-1 drop, so a suppressed draw still reveals its origin.
+static volatile LONG pathWitness=0;
+static volatile LONG pathCounts[4][2]{}; // DrawPrimitive, Indexed, UP, IndexedUP x outside/inside StereoPair
+static volatile LONG routeCounts[11]{}; // selected indexed-UP entry and mutually exclusive exits
+static unsigned pathReports=0;
+inline bool PathWitness(){return InterlockedCompareExchange(&pathWitness,0,0)!=0;}
 static volatile LONG shots=0;
-struct Shader {IUnknown* object=nullptr;std::uint64_t hash=0;unsigned bytes=0;int camera=-1;};
+struct Shader {IUnknown* object=nullptr;std::uint64_t hash=0;unsigned bytes=0;int camera=-1,local=-1;};
 static Shader shaders[1024],vs,ps;static unsigned used=0,overflow=0;
-static unsigned dropped=0,aliases=0,refused=0,restoreFailed=0;
+inline void PathObserve(unsigned api,bool inStereoPair){
+    if(!PathWitness()||api>=4)return;
+    const Selection& observed=worldSelected.Valid()?worldSelected:selected;
+    if(!observed.Match(vs.hash,ps.hash,vs.bytes,ps.bytes))return;
+    InterlockedIncrement(&pathCounts[api][inStereoPair?1:0]);
+}
+inline void RouteObserve(unsigned reason){
+    if(!PathWitness()||reason>=11)return;
+    const Selection& observed=worldSelected.Valid()?worldSelected:selected;
+    if(!observed.Match(vs.hash,ps.hash,vs.bytes,ps.bytes))return;
+    InterlockedIncrement(&routeCounts[reason]);
+}
+static unsigned dropped=0,aliases=0,refused=0,restoreFailed=0,worldRerouted=0;
+static unsigned worldCameraValid=0,worldCameraC0=0,worldCameraFallback=0;
 static CapturePlan capture;
 static unsigned captureWeapon=0;
 static ULONGLONG probeStart=0;
@@ -40,7 +66,7 @@ inline void DumpWitness(){
     witnessCount=witnessOverflow=0;
     if(capture.stage==4){InterlockedExchange(&probe,0);Log("native-fx: automatic capture complete; probe overhead disabled, not visual acceptance");}
 }
-inline bool Enabled(){return Probe()||selected.Valid();}
+inline bool Enabled(){return Probe()||selected.Valid()||worldSelected.Valid()||particleStereo;}
 template<class T> Shader Describe(T* shader,bool vertex){
     if(!Enabled()||!shader)return {};
     unsigned slot=1024;const unsigned first=(unsigned)(((uintptr_t)shader>>4)*2654435761u)&1023;
@@ -52,24 +78,89 @@ template<class T> Shader Describe(T* shader,bool vertex){
     static thread_local DWORD code[8192];UINT bytes=sizeof(code);Shader result;
     if(SUCCEEDED(shader->GetFunction(code,&bytes))&&bytes>=8&&bytes%4==0&&bytes<=sizeof(code)){
         result.hash=Hash(code,bytes);result.bytes=bytes;
-        if(vertex)result.camera=skeletal::ReadLayout(reinterpret_cast<const uint32_t*>(code),bytes/4).viewProjection;
+        if(vertex){const auto layout=skeletal::ReadLayout(reinterpret_cast<const uint32_t*>(code),bytes/4);
+            result.camera=layout.viewProjection;result.local=layout.local;}
     }
     shader->AddRef();result.object=shader;shaders[slot]=result;++used;return result;
 }
 inline void BindVS(IDirect3DVertexShader9* shader){vs=Describe(shader,true);}
 inline void BindPS(IDirect3DPixelShader9* shader){ps=Describe(shader,false);}
 inline bool Match(){return !fault&&context&&selected.Match(vs.hash,ps.hash,vs.bytes,ps.bytes);}
-inline bool Drop(){if(selected.mode==1&&Match()){++dropped;return true;}return false;}
+inline bool Drop(){
+    // The accepted exact drop is bypassed only inside a validated correction
+    // scope, so the native third material can render at its repaired position.
+    if(particleDepth&&ParticleFamily(vs.hash,ps.hash,vs.bytes,ps.bytes)>=0)return false;
+    if(selected.mode==1&&Match()){++dropped;return true;}return false;
+}
+inline int ParticleTarget(){
+    if(!particleStereo||fault||!context||vs.camera!=0||vs.local!=5)return -1;
+    return ParticleFamily(vs.hash,ps.hash,vs.bytes,ps.bytes);
+}
+// No D3D writes: only a scoped authorization to draw the native material.
+// The regular StereoPair owns camera/scissor changes and their restoration.
+struct ParticleScope {
+    bool active=false;
+    ParticleScope(int index,bool cameraReady){
+        if(index<0||index>=3)return;
+        if(!cameraReady){++particleStats[index].refused;return;}
+        ++particleDepth;++particleStats[index].routed;active=true;
+    }
+    ~ParticleScope(){if(active)--particleDepth;}
+    ParticleScope(const ParticleScope&)=delete;
+    ParticleScope& operator=(const ParticleScope&)=delete;
+};
+inline void ConfigureParticles(bool enabled){
+    particleStereo=enabled;particleDepth=particleReports=0;
+    for(unsigned i=0;i<3;++i){particleStats[i]={};particleSamples[i]=0;}
+    Log("native-fx: particleStereo=%d; three audited original pairs, VP c0 ROW, LocalToWorld c5 preserved; scoped drop bypass",enabled?1:0);
+}
+template<class Dev> struct ParticleLocalWitness {
+    Dev* dev;int index;float before[16]{};bool read=false;
+    ParticleLocalWitness(Dev* d,int i):dev(d),index(i){
+        if(i<0||i>=3||particleSamples[i]>=3)return;
+        ++particleSamples[i];read=SUCCEEDED(dev->GetVertexShaderConstantF(5,before,4));
+    }
+    ~ParticleLocalWitness(){
+        if(!read)return;float after[16]{};
+        if(SUCCEEDED(dev->GetVertexShaderConstantF(5,after,4))&&!memcmp(before,after,sizeof(before)))
+            ++particleStats[index].restored;
+        else {++particleStats[index].restoreMismatch;particleStereo=false;}
+    }
+};
+inline bool WorldTargetMatch(){
+    if(fault||!context)return false;
+    if(worldSelected.Valid())return worldSelected.Match(vs.hash,ps.hash,vs.bytes,ps.bytes);
+    return selected.mode==4&&selected.Match(vs.hash,ps.hash,vs.bytes,ps.bytes);
+}
+inline bool WorldRoute(){if(WorldTargetMatch()){++worldRerouted;return true;}return false;}
+inline void WorldCameraObserve(bool valid,bool c0){
+    if(!WorldTargetMatch())return;
+    if(valid){++worldCameraValid;if(c0)++worldCameraC0;}
+    else ++worldCameraFallback;
+}
 inline void Release(){
     for(auto& shader:shaders){if(shader.object)shader.object->Release();shader={};}
     used=0;vs={};ps={};context=false;witnessCount=witnessOverflow=0;
 }
-inline void Configure(int mode,bool trace,const char* v,const char* p,unsigned vb,unsigned pb,int convention){
-    Release();selected={};InterlockedExchange(&probe,trace?1:0);fault=false;capture={};captureWeapon=0;probeStart=0;InterlockedExchange(&shots,0);
-    if(mode==1||mode==2){Selection x;x.mode=mode;x.vsBytes=vb;x.psBytes=pb;x.convention=convention;
-        Hex(v,x.vs); Hex(p,x.ps);
-        if(x.Valid())selected=x;}
-    Log("native-fx: probe=%d mode=%d (0 unchanged,1 selected-pair drop,2 exact camera alias); no replacement FX",Probe()?1:0,selected.mode);
+inline void Configure(int mode,bool trace,const char* v,const char* p,unsigned vb,unsigned pb,int convention,bool pathEnabled=false){
+    particleStereo=false;particleDepth=particleReports=0;
+    for(unsigned i=0;i<3;++i){particleStats[i]={};particleSamples[i]=0;}
+    Release();selected={};worldSelected={};InterlockedExchange(&probe,trace?1:0);fault=false;capture={};captureWeapon=0;probeStart=0;InterlockedExchange(&shots,0);worldRerouted=worldCameraValid=worldCameraC0=worldCameraFallback=0;
+    for(auto& row:pathCounts)for(auto& count:row)InterlockedExchange(&count,0);
+    for(auto& count:routeCounts)InterlockedExchange(&count,0);
+    pathReports=0;InterlockedExchange(&pathWitness,pathEnabled?1:0);
+    if(mode==1||mode==2||mode==3||mode==4){Selection x;x.mode=mode;x.vsBytes=vb;x.psBytes=pb;x.convention=convention;
+        if(Hex(v,x.vs)&&Hex(p,x.ps)&&x.Valid())selected=x;}
+    Log("native-fx: probe=%d mode=%d pathWitness=%d (0 unchanged,1 drop,2 alias,3 observe,4 exact world route); no replacement FX",Probe()?1:0,selected.mode,PathWitness()?1:0);
+}
+inline void ConfigureWorldRoute(bool enabled,const char* v,const char* p,unsigned vb,unsigned pb){
+    worldSelected={};
+    if(!enabled)return;
+    Selection x;x.mode=4;x.vsBytes=vb;x.psBytes=pb;
+    if(selected.mode==1&&Hex(v,x.vs)&&Hex(p,x.ps)&&x.Valid()&&
+       !selected.Match(x.vs,x.ps,x.vsBytes,x.psBytes))worldSelected=x;
+    Log("native-fx: separate world route requested=%d armed=%d; accepted selected mode=%d retained",
+        enabled?1:0,worldSelected.Valid()?1:0,selected.mode);
 }
 // Snapshot before StereoPair. The old cache + GPU block are restored even if
 // the stereo draw returns a failed HRESULT. Never borrow stale/unverified data.
@@ -119,9 +210,30 @@ inline void Boundary(bool ready,bool busy,unsigned weapon){
 inline void Summary(){
     if(!Enabled())return;
     static ULONGLONG last=0;const ULONGLONG now=GetTickCount64();if(now-last<2000)return;last=now;
-    if(dropped||aliases||refused||restoreFailed||overflow){
-        Log("native-fx: selected drop=%u alias=%u refused=%u restoreFailed=%u shaderOverflow=%u fault=%d",dropped,aliases,refused,restoreFailed,overflow,fault?1:0);
-        dropped=aliases=refused=restoreFailed=overflow=0;
+    for(unsigned i=0;i<3;++i){auto& s=particleStats[i];
+        if((s.routed||s.refused||s.restored||s.restoreMismatch)&&particleReports<24){
+            Log("native-fx particles: family=%u routed=%u refusedCamera=%u localRestored=%u localMismatch=%u",i,s.routed,s.refused,s.restored,s.restoreMismatch);
+            ++particleReports;
+        }
+        s={};
+    }
+    if(PathWitness()){
+        LONG counts[4][2]{};bool any=false;
+        for(unsigned a=0;a<4;++a)for(unsigned s=0;s<2;++s){
+            counts[a][s]=InterlockedExchange(&pathCounts[a][s],0);
+            any|=counts[a][s]!=0;
+        }
+        if(any&&pathReports<12){++pathReports;Log("native-fx path: prim=%ld/%ld indexed=%ld/%ld up=%ld/%ld indexedUP=%ld/%ld (outside/inside StereoPair; selected pair only)",
+            counts[0][0],counts[0][1],counts[1][0],counts[1][1],
+            counts[2][0],counts[2][1],counts[3][0],counts[3][1]);}
+        LONG routes[11]{};bool anyRoute=false;
+        for(unsigned r=0;r<11;++r){routes[r]=InterlockedExchange(&routeCounts[r],0);anyRoute|=routes[r]!=0;}
+        if(anyRoute&&pathReports<12){++pathReports;Log("native-fx route: entry=%ld shadow=%ld inert=%ld level2=%ld quad=%ld stereo=%ld menu=%ld stride=%ld hud=%ld offThread=%ld worldRoute=%ld (selected indexed-UP only)",
+            routes[0],routes[1],routes[2],routes[3],routes[4],routes[5],routes[6],routes[7],routes[8],routes[9],routes[10]);}
+    }
+    if(dropped||aliases||refused||restoreFailed||overflow||worldRerouted||worldCameraValid||worldCameraFallback){
+        Log("native-fx: selected drop=%u alias=%u refused=%u restoreFailed=%u shaderOverflow=%u worldRerouted=%u cameraValid=%u cameraC0=%u cameraFallback=%u fault=%d",dropped,aliases,refused,restoreFailed,overflow,worldRerouted,worldCameraValid,worldCameraC0,worldCameraFallback,fault?1:0);
+        dropped=aliases=refused=restoreFailed=overflow=worldRerouted=worldCameraValid=worldCameraC0=worldCameraFallback=0;
     }
 }
 } // namespace nativefx

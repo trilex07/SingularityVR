@@ -13472,10 +13472,12 @@ static PFN_DrawPrim shadowNativePrim=nullptr;
 static PFN_DrawIndexedPrim shadowNativeIndexed=nullptr;
 static PFN_DrawPrimUP shadowNativeUP=nullptr;
 static PFN_DrawIndexedPrimUP shadowNativeIndexedUP=nullptr;
+static thread_local unsigned g_nativeFxStereoPairDepth=0;
 extern volatile LONG g_inForeground;
 extern int g_thisDrawMoved;
 extern volatile LONG g_fgDrawCount;
 static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT first,UINT prims) {
+    nativefx::PathObserve(0,g_nativeFxStereoPairDepth!=0);
     if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,0,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
@@ -13484,6 +13486,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMIT
     const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativePrim(dev,t,first,prims);});shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,INT base,UINT min,UINT verts,UINT start,UINT prims) {
+    nativefx::PathObserve(1,g_nativeFxStereoPairDepth!=0);
     if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
@@ -13492,6 +13495,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRI
     const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeIndexed(dev,t,base,min,verts,start,prims);});shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT prims,const void* data,UINT stride) {
+    nativefx::PathObserve(2,g_nativeFxStereoPairDepth!=0);
     if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,0,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
@@ -13500,6 +13504,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIV
     const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeUP(dev,t,prims,data,stride);});shadowtrace::After(id,hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexedUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT min,UINT verts,UINT prims,const void* indices,D3DFORMAT format,const void* data,UINT stride) {
+    nativefx::PathObserve(3,g_nativeFxStereoPairDepth!=0);
     if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
@@ -13801,6 +13806,11 @@ static void VfxCaptureBaseCam(const float* mat, int conv) {
 
 template <typename DrawFn>
 HRESULT StereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
+    struct PathScope {
+        bool active;
+        PathScope():active(nativefx::PathWitness()){if(active)++g_nativeFxStereoPairDepth;}
+        ~PathScope(){if(active)--g_nativeFxStereoPairDepth;}
+    } pathScope;
     if(nativefx::Probe()&&shadowtrace::active)
         nativefx::Observe(dev,g_camMats,g_camMatUsed,Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed());
     nativefx::AliasScope<IDirect3DDevice9,CamMatSlot,PFN_SetVSConstF> alias(dev,g_camMats,g_camMatUsed,kMaxCamMats,g_origSetVSConstF,
@@ -13953,6 +13963,11 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
                 ++shadowSkipped;
     if (shadowSkipped) ++g_drawsShadowProtected;
     if (nSlots > g_camMatValidPeak) g_camMatValidPeak = nSlots;
+    if (nativefx::WorldTargetMatch()) {
+        bool cameraC0 = false;
+        for (int i = 0; i < nSlots; ++i) cameraC0 |= g_camMats[slots[i]].reg == 0;
+        nativefx::WorldCameraObserve(nSlots != 0, cameraC0);
+    }
 
     // If we cannot remap this draw, do NOT split it either - draw it once, full frame, untouched.
     //
@@ -15093,7 +15108,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,0,t,count,0,start,0,0,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
-    if (SuppressCapturedVrMenuDraw()) return D3D_OK;
+    if (SuppressCapturedVrMenuDraw()) { nativefx::RouteObserve(6); return D3D_OK; }
     ++g_vidFrameDraws;
     if(g_boundShaderLayout.shadow){
         if (Rd(g_shadowTest)) { InterlockedIncrement(&g_shadowTestDropped); return D3D_OK; }
@@ -20763,6 +20778,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     return StereoPair(dev, [&] { return g_origDrawPrimUP(dev, t, primCount, vtxData, vtxStride); });
 }
 
+extern volatile LONG g_shadowStageMask;
+extern singularity::shadow::ShadowRegisterCensus g_shadowRegs;
 HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                                 UINT minVtxIndex, UINT numVertices, UINT primCount,
                                                 const void* idxData, D3DFORMAT idxFormat,
@@ -20773,21 +20790,27 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,3,t,primCount,numVertices,0,minVtxIndex,0,vtxData,vtxStride);   // fix-I census
     if (!g_origDrawIndexedPrimUP) return D3DERR_INVALIDCALL;
+    nativefx::RouteObserve(0);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     // UP memory has no retained resource identity: do not suppress on vertex count.
     if(g_boundShaderLayout.shadow) {
+        nativefx::RouteObserve(1);
         if (Rd(g_shadowTest)) { InterlockedIncrement(&g_shadowTestDropped); return D3D_OK; }
         ShadowMode3NoteGeneration(dev);return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
     }
     ++g_vidFrameDraws;
     if (primCount <= 4) VidProbeRecord(dev, 3, t, primCount, vtxData, vtxStride);
-    if (UserPtrInert())
+    if (UserPtrInert()) {
+        nativefx::RouteObserve(OnRenderThread()?2:9);
         return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                        idxData, idxFormat, vtxData, vtxStride);
+    }
     ++g_drawsUP;
-    if (g_userPtrHookLevel == 2)
+    if (g_userPtrHookLevel == 2) {
+        nativefx::RouteObserve(3);
         return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                        idxData, idxFormat, vtxData, vtxStride);
+    }
     DumpUserPtrVertex(primCount, vtxData, vtxStride, "DrawIndexedPrimUP");
     DumpUserPtrTransform(dev, vtxStride, "DrawIndexedPrimUP");
     // Quad test first - see the note in Hook_DrawPrimUP for what happens when it is not.
@@ -20856,12 +20879,45 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     }
     // The identification test - see g_dropStride. Returning S_OK without drawing is how the mod drops
     // draws everywhere else: device state untouched, so the next draw behaves normally.
-    if (g_dropStride && vtxStride == (UINT)g_dropStride) return D3D_OK;
-    if (!quad && ((hudArmed && g_hudRemap) || PauseCanvasNeedsEyeCopy(dev)))
+    if (g_dropStride && vtxStride == (UINT)g_dropStride) { nativefx::RouteObserve(7); return D3D_OK; }
+    // All three audited native muzzle material pairs use c5-c8 as LocalToWorld.
+    // Their affine upload also arms HUD, whose half-frame remap corrupts the
+    // world position. Route the complete measured family through VP stereo.
+    // The exact shader pair/layout is stronger than the small-quad heuristic.
+    const int particleFamily = nativefx::ParticleTarget();
+    if (particleFamily >= 0 && Rd(g_rtIsScene) && VrModeOn() && Rd(g_dupDraws) &&
+        !CutsceneNativeCameraArmed() && !Rd(g_shadowStageMask) &&
+        !(Rd(g_sceneFlatEnabled) && g_sceneMode.Flat())) {
+        bool cameraReady = g_origSetVSConstF && nativefx::ParticleCameraReady(g_camMats,g_camMatUsed);
+        if(Rd(g_shadowMode)==3)for(int s=0;s<g_camMatUsed;++s)
+            if(g_camMats[s].valid&&g_camMats[s].reg==0&&
+               !singularity::shadow::SlotMayRemap(g_shadowRegs,(std::uint32_t)s,true))cameraReady=false;
+        nativefx::ParticleScope particle(particleFamily,cameraReady);
+        if(particle.active){
+            nativefx::ParticleLocalWitness<IDirect3DDevice9> witness(dev,particleFamily);
+            return StereoPair(dev, [&] {
+                return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,
+                    idxData,idxFormat,vtxData,vtxStride); });
+        }
+    }
+    // Exact original particle shader: c5-c8 is LocalToWorld, not the HUD's clip
+    // transform. The measured HUD route rewrites it and misplaces the effect.
+    // Only the opted-in, exact-pair gameplay-scene candidate takes the world path.
+    if (!quad && Rd(g_rtIsScene) && VrModeOn() && !CutsceneNativeCameraArmed() &&
+        nativefx::WorldRoute()) {
+        nativefx::RouteObserve(10);
+        return StereoPair(dev, [&] {
+            return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
+                                           idxData, idxFormat, vtxData, vtxStride); });
+    }
+    if (!quad && ((hudArmed && g_hudRemap) || PauseCanvasNeedsEyeCopy(dev))) {
+        nativefx::RouteObserve(8);
         return HudStereoPair(dev, primCount, vtxStride, [&] {
             return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                            idxData, idxFormat, vtxData, vtxStride); });
+    }
     if (quad) {
+        nativefx::RouteObserve(4);
         // ⭐ run 262: the same sprite split on the INDEXED hook. Run 260's census found the (0,0)
         // signatures on THIS hook, not the other one, so fixing only DrawPrimUP would fix nothing.
         // The indices are reused untouched - only the vertex x is rewritten - so a draw that indexes
@@ -20895,6 +20951,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
                                        idxData, idxFormat, vtxData, vtxStride);
     }
     NoteFirstUserPtrDraw("DrawIndexedPrimitiveUP");
+    nativefx::RouteObserve(5);
     return StereoPair(dev, [&] {
         return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
                                        idxData, idxFormat, vtxData, vtxStride);
@@ -31800,7 +31857,16 @@ void LoadIniSettings() {
             GetPrivateProfileIntA("Diagnostic","NativeMuzzleProbe",0,path)!=0,vs,ps,
             GetPrivateProfileIntA("Diagnostic","NativeMuzzleVSBytes",0,path),
             GetPrivateProfileIntA("Diagnostic","NativeMuzzlePSBytes",0,path),
-            (int)GetPrivateProfileIntA("Diagnostic","NativeMuzzleMatrixConvention",-1,path));
+            (int)GetPrivateProfileIntA("Diagnostic","NativeMuzzleMatrixConvention",-1,path),
+            GetPrivateProfileIntA("Diagnostic","NativeMuzzlePathWitness",0,path)!=0);
+        char worldVS[32]{},worldPS[32]{};
+        GetPrivateProfileStringA("Diagnostic","NativeMuzzleWorldVSHash","",worldVS,sizeof(worldVS),path);
+        GetPrivateProfileStringA("Diagnostic","NativeMuzzleWorldPSHash","",worldPS,sizeof(worldPS),path);
+        nativefx::ConfigureWorldRoute(GetPrivateProfileIntA("Diagnostic","NativeMuzzleWorldRoute",0,path)!=0,
+            worldVS,worldPS,
+            GetPrivateProfileIntA("Diagnostic","NativeMuzzleWorldVSBytes",0,path),
+            GetPrivateProfileIntA("Diagnostic","NativeMuzzleWorldPSBytes",0,path));
+        nativefx::ConfigureParticles(GetPrivateProfileIntA("Render","NativeMuzzleParticleStereo",0,path)!=0);
     }
     g_cutsceneScreenDistanceMm=cinemascreen::ClampDistanceMm(
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));

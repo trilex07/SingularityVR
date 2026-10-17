@@ -1,5 +1,130 @@
 # STATUS — session handoff
 
+LATEST MAIN complete native particle correction: offline disassembly of all
+three emitter VS/PS pairs and audit of 15 paired draw groups prove that all
+three receive HUD's c5-c8 half-remap before projection. The previous candidate
+corrected only `488BAE:27DF`, leaving `314D:C118` malformed and `4FAE:2FEC`
+suppressed. New default-OFF `Render/NativeMuzzleParticleStereo` routes the
+three exact audited pairs through camera stereo; accepted drop is bypassed
+only inside a validated corrected draw scope. Original assets remain native.
+L1 PASS; L2 x86 PE32 /O2 PASS (source `fb85322`, DLL `709F64A7...CE1FBA`).
+Offline candidate `candidate-particle-family-stereo` and accepted-profile
+preflight PASS; candidate INI `38642BD6...D73B3E`. No deployment or L3/L4 yet;
+await fresh user `start`. Steam remains on the accepted profile. See the final
+section of `docs/native-muzzle-stereo.md` for evidence and falsifier.
+
+LATEST MAIN 2026-10-17 preserved-drop muzzle PSVR2 test: user-approved Steam
+session PID 27028 ran candidate DLL `F40CCAE2...E9F2`, INI `786C43C9...4010`.
+OpenXR session 5 rendered both eyes; bounded windows showed accepted exact-pair
+`drop` and separate `worldRerouted/cameraC0` simultaneously nonzero, with zero
+camera fallback, shader overflow, restore failure or fault. User saw sparks at
+the muzzle, but a strong glow low in the right eye, faint glow at the right edge
+of the left eye, and smoke at that left-eye edge. **L3 route PASS, L4 VFX FAIL**:
+rerouting `488BAE:27DF` alone does not correctly place the full effect even
+when accepted `4FAE:2FEC` suppression remains active. Game closed normally;
+guard and independent SHA checks restored accepted DLL `789749E5...F361B`,
+INI `8B0B0B4C...CCFAF`, injector `5B948DDB...729D59`; UI unchanged
+`51CDAB5C...1A1A`. No candidate is installed. Next: identify the remaining
+visible glow/smoke producer and its per-eye transform with bounded read-only
+evidence; do not promote the world route or guess another matrix.
+
+LATEST MAIN 2026-10-17 corrected muzzle test staged **offline**: candidate
+`build/native-muzzle-main/candidate-world-route-preserve-drop-488` preserves
+accepted mode-1 drop `4FAE:2FEC` and separately routes `488BAE:27DF` through
+world stereo. L1 tests PASS; L2 x86 PE32 `/O2` DLL from `2d2f892` SHA
+`F40CCAE2...E9F2` PASS; candidate INI SHA `786C43C9...4010`. Read-only
+accepted-profile preflight PASS. Game closed; Steam is restored to accepted
+DLL/INI/injector hashes. Await fresh user `start` before install/PSVR2 test.
+The prior mode-4 L4 result remains confounded and is not a VFX fix.
+
+LATEST MAIN 2026-10-17 native muzzle mode-4 PSVR2 result: Steam/OpenXR
+confirmed exact `488BAE:27DF` world-route execution with tracked c0 and no
+mono fallback. User saw muzzle flash but persistent asymmetric glow, weak/no
+smoke; stereo/FPS apparently normal. L3 route PASS, L4 VFX FAIL. Guard plus
+independent hashes restored accepted DLL `789749E5...F361B`, injector
+`5B948DDB...729D59`, INI `8B0B0B4C...CCFAF`, UI unchanged
+`51CDAB5C...1A1A`. Offline audit revealed mode 4 displaced the accepted
+mode-1 `4FAE:2FEC` drop, confounding the glow result. Next: preserve that
+drop and add a separate default-OFF exact world-route selector; no further
+Steam test until L1/L2 and guarded candidate pass.
+
+LATEST MAIN 2026-10-17 native muzzle exact route: observe-only mode 3 was
+deployed and physically tested (supersedes the stale "not deployed" line
+below). In four runtime windows all selected `488BAE:27DF` IndexedUP draws
+entered `HudStereoPair` (14/44/23/22); the user still saw asymmetric glow and
+no clear smoke. Original `LocalToWorld` lives at c5-c8, which the HUD path
+mistakes for its clip transform; `ViewProjectionMatrix` lives at c0-c3.
+Steam was returned to accepted DLL/INI/dinput8 and independently hashed.
+The next candidate is **default-OFF mode 4**, exact shader pair only: route
+world particle via ordinary camera `StereoPair` and count valid c0/fallback.
+L1 native/shadow/hand tests PASS; L2 x86 PE32 `/O2` from commit `e5ef2fc`
+PASS, DLL SHA `8D2B5305...0D23`. Offline candidate
+`build/native-muzzle-main/candidate-world-route-488` has INI SHA
+`2A39EAE1...43E5` (mode 4, exact `488BAE:27DF`, probe OFF). Accepted-profile
+read-only guard preflight PASS, game closed, Steam still on accepted hashes.
+No mode-4 Steam or PSVR2 PASS yet.
+See `docs/native-muzzle-stereo.md`.
+
+LATEST MAIN 2026-10-17 native muzzle emitter A/B and third exact-pair test:
+with original `RvWeaponFX` references suppressed, the user's seam glow disappeared.
+Three shader pairs occur in both complete native-ON post-shot traces and neither
+native-OFF control trace. Dropping the remaining additive `488BAE:27DF` pair
+changed the appearance to a broad whole-eye effect, but the user still saw
+smoke in a corner. This is **not** a VFX fix or L4 acceptance. All three
+sessions ended with guarded rollback and independent accepted-file hashes.
+Selected draws for both tested pairs use `DrawIndexedPrimitiveUP` outside
+`StereoPair` (the older indexed-buffer claim below is superseded). A bounded
+default-OFF route witness now distinguishes off-thread/inert, HUD, quad, and
+stereo paths without altering pixels. L1 tests and clean x86 PE32 `/O2` build
+from `1987df8` passed; DLL SHA `56F1DDE9...E641`. Offline candidate
+`build/native-muzzle-main/candidate-route-observe-488` has INI SHA
+`4C58BD31...299E`, mode 3 observe-only, full-frame probe OFF; guarded install
+preflight (`-WhatIf`) passed. It has **not** been deployed or tested in Steam.
+Steam remains on accepted DLL `789749E5...F361B`, INI `8B0B0B4C...CCFAF`.
+See `docs/native-muzzle-stereo.md` for receipts and falsifier.
+
+LATEST MAIN 2026-10-17 native muzzle path witness: round 4 L4 report arrived:
+no FPS drop, broad glow still present, no visible muzzle smoke/flash, wall
+impact visible. This third exact-pair drop is a negative visual discriminator,
+not a repair. The raw trace's `4FAE...:2FEC...` group has VB+IB and uses the
+indexed-buffer draw API (the earlier indexed-UP inference was wrong). A
+default-OFF read-only `NativeMuzzlePathWitness` now counts which final draw
+API carries the accepted selected pair and whether it ran inside
+`StereoPair`, before the existing drop. L1 tests and L2 x86 `/O2` build pass;
+offline accepted-profile guard preflight passes with candidate INI adding
+only this diagnostic key. No new Steam deployment or L3/L4 claim yet. See
+`docs/native-muzzle-stereo.md` for falsifiers and exact receipts.
+
+LATEST MAIN 2026-10-17 native muzzle investigation: round 4 completed and the
+accepted build was restored. Exact drop
+`7EB90CEBB053DA04:0099C92AE105A584` ran (174/188/38 logged drops; no alias,
+refusal, restore failure, shader overflow or fault). Runtime log confirms active
+OpenXR gameplay (`session=5`, `shouldRender=1`, both eyes, valid captures/submits).
+NativeMuzzleProbe was OFF, so this round excludes the full-frame capture/readback
+probe overhead. The later headset report is recorded above; no mode-2 alias is
+justified. Accepted Steam files
+were restored and independently hashed: DLL `789749E5…F361B`, INI
+`8B0B0B4C…2CCFAF`, dinput8 `5B948DDB…729D59`; UI package unchanged
+`60E72871…E8DB8`. Full receipt is in `docs/native-muzzle-stereo.md`.
+
+Round 4 visual discriminator was staged for exact pair
+`7EB90CEBB053DA04:0099C92AE105A584` (VS 3904 bytes, PS 336 bytes), observed as
+one alpha-blended quad per eye in each post-shot trace. This round disables the
+bounded capture/readback probe to isolate any actual first-shot performance
+cost. Candidate `build/native-muzzle-main/candidate-20261017-drop-0099-no-probe-v3`:
+INI SHA-256 `B04E3F01635459570BBB1961304BC45499C19A9438A277FE0FFFC2913793EB48`,
+`NativeMuzzleProbe=0`, mode 1, only this exact pair selected; candidate DLL
+remains the checked MAIN `/O2` build `4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`.
+Guarded install preflight and deployment passed. Backup
+`deployment/install-backups/20261017-210341`; report
+`deployment/install-reports/20261017-210342.json`. Independent postflight hashes
+match candidate DLL/INI/dinput8; UI package remains unchanged at
+`60E7287185300CAA2A8E64FBE14B741475D4D959944B6B0E51F84547841E8DB8`. L1 suite
+passed (six x86 C++ fixtures and six Python tests); PowerShell parser passed.
+The round is over; candidate is not live. No VFX/audio fix or physical
+acceptance is claimed. Full receipt and exact rollback record are in
+`docs/native-muzzle-stereo.md`.
+
 LATEST MAIN 2026-10-17 startup readiness + Centurion tracked-cylinder stack
 promoted as the current stable build after user PSVR2 acceptance (“jest okej”).
 Scope is the tested startup curtain / Centurion reload route only; it is not a
