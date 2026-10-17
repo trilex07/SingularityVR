@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN VFX isolation (a) NATIVE-ONLY staged (SIDE runda 2,
+b957289): 12:29 log proves plugin path alive (init loaded, atlas=vfx_atlas
+dir, overlay n=1 x6) — placement/size question only. Session (a): VfxHost 1->0
+(HideMuzzleFx=0 kept; INI 9222CC60->D8050DF2, pre-edit backup in 125231 dir).
+Expect: no host-init/overlay lines; native smoke+flash as before (seam defect
+included). Next (b): VfxHost=1 + HideMuzzleFx=1 (plugin-only; expect smoke
+gone, flash small/low) -> decisions: UP component/per-gun muzzle table, bigger
+stub flash, one system at a time. Centurion flags untouched throughout.
+
 LATEST 2026-10-17 MAIN native-space L3 DEPLOYED (SIDE 5d5afd7, PR48):
 candidate DLL SHA-256 E58E3E57C4BA6CCACB6CA5CA49BA86038CC5DF09E080DB4770EB9FA52662E188,
 PE32 x86 /O2, clean tree cf71a4a, manifest dirty=[], guard preflight+postflight
