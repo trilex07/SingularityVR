@@ -2,6 +2,7 @@
 #include "projector_receiver_math.h"
 namespace projectorfix {
 static bool enabled=false,fault=false,vsMatch=false,psMatch=false,nativeValid=false;
+static volatile LONG configured=0;
 static thread_local unsigned pairDepth=0;
 struct PairScope{bool active;PairScope():active(enabled){if(active)++pairDepth;}~PairScope(){if(active)--pairDepth;}};
 static float nativeVP[16]{},trackedBase[16]{};
@@ -9,7 +10,7 @@ struct Entry{IUnknown* shader;bool match;};
 static Entry cache[128]{};static unsigned used=0;
 static unsigned applied[2]{},rejected=0,restoreFailures=0;
 inline void Release(){for(unsigned i=0;i<used;++i)cache[i].shader->Release();used=0;vsMatch=psMatch=nativeValid=false;}
-inline void Configure(bool on){if(enabled!=on){Release();enabled=on;} }
+inline void Configure(bool on){InterlockedExchange(&configured,on?1:0);}
 template<class T> bool Classify(T* s,UINT expected,unsigned long long hash){
     if(!enabled||fault||!s)return false;
     for(unsigned i=0;i<used;++i)if(cache[i].shader==s)return cache[i].match;
@@ -31,6 +32,8 @@ inline void NoteCamera(UINT reg,int conv,const float* original,const float* modi
 }
 inline void Poll(){
     static DWORD last=0;const DWORD now=GetTickCount();if(now-last<1000)return;last=now;
+    const bool on=InterlockedCompareExchange(&configured,0,0)!=0;
+    if(on!=enabled){Release();enabled=on;Log("PROJECTOR_RECONSTRUCTION enabled=%d",on?1:0);}
     if(applied[0]||applied[1]||rejected||restoreFailures){
         Log("PROJECTOR_RECONSTRUCTION left=%u right=%u rejected=%u restoreFailures=%u fault=%d",applied[0],applied[1],rejected,restoreFailures,fault?1:0);
         applied[0]=applied[1]=rejected=restoreFailures=0;}
