@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE: user says physical Centurion presentation almost ideal,
+but native reload still blocks shooting/shakes camera after close. Frozen13:29
+session request->HUD ACK1563ms, ReloadFinished2078ms. Original separate native
+RefillClip + three int getters identified by registration/vtable and full-body
+normalized fingerprints. New default-OFF CenturionRefillOnly calls ONLY native
+refill on one consumed manual permit, game thread; live pre/post conservation,
+frozen snapshot, finite6-round scope, fault latch, no full-reload fallback.
+No inventory/state/timer/camera writes. Existing physical polish retained.
+L1_PASS25 own-process CPU/ABI/resource/GPU programs +56 Python tests, including
+four archived ORIGINAL bodies/every-byte mutations and own-process void/int
+thiscall ABI/NPC/no-original dispatch. L2 pending; L3/L4 UNKNOWN. ZERO Steam.
+See docs/centurion-refill-only.md for mechanism, falsifiers and MAIN route;
+integrate source onto CURRENT MAIN, never deploy an older SIDE full DLL.
+
 LATEST 2026-10-17 SIDE physical feedback: native-space visibility accepted by
 user; remaining clip/glove penetration, health obstruction, wrong DOWN dump,
 native sweep and auto reload on store reopened. New default-OFF

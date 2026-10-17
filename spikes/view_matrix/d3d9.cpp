@@ -20,6 +20,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "centurion_physical_polish.h"
 #include "centurion_shells.h"
 #include "centurion_native_reload.h"
+#include "centurion_refill_only.h"
 #include "weapon_wheel.h"
 #include "ammo_probe.h"
 #include "ammo_layout.h"
@@ -2235,6 +2236,7 @@ weaponholster::State g_holsterState{};
 int g_centurionReload=0,g_centurionNativeTap=0,g_centurionReloadProbe=0;
 int g_reloadControlLayout=0;
 int g_centurionNativeGuardMode=0; // 0=OFF, 1=observe native seam, 2=guard experiment
+static int g_centurionRefillOnly=0; // default OFF; no native Reload state/animation
 static SRWLOCK g_centurionNativeLock=SRWLOCK_INIT;
 static centurionnative::Gate g_centurionNativeGate;
 static volatile LONG g_centurionNativeTarget=0,g_centurionNativeSlot=0;
@@ -26398,13 +26400,100 @@ void DrawHipKnife(IDirect3DDevice9* dev){
 }
 using PFN_CenturionAttemptReload=int (__thiscall*)(void*);
 static PFN_CenturionAttemptReload g_origCenturionAttemptReload=nullptr;
+struct CenturionRefillBindings {
+    uintptr_t klass=0,vtable=0,method[4]{};uint32_t slot[4]{};
+};
+static bool ResolveCenturionRefill(void* self,CenturionRefillBindings& result){
+    // Only called on a permitted engine request, never each frame/draw. Names
+    // locate the wrapper; ABI + whole-body fingerprint establish what is called.
+    const auto object=(uintptr_t)self;
+    int32_t clsBits=0,vtBits=0;
+    if(g_funcOffset<0||g_upChildren<=0||g_upNext<=0||
+       !TryLoadAlignedI32(object+OBJ_CLASS,&clsBits)||!clsBits||
+       !TryLoadAlignedI32(object,&vtBits)||!vtBits)return false;
+    const uintptr_t klass=(uint32_t)clsBits,vtable=(uint32_t)vtBits;
+    static CenturionRefillBindings cached;
+    if(cached.klass!=klass||cached.vtable!=vtable){
+        CenturionRefillBindings pending;pending.klass=klass;pending.vtable=vtable;
+        uintptr_t cls=klass;unsigned visited=0,found=0;
+        for(unsigned depth=0;cls&&depth<32&&visited<2048;++depth){
+            char owner[80]{};
+            if(!GuardedNameOf(cls,owner,sizeof(owner)))return false;
+            if(!strcmp(owner,"RvWeaponShared")){
+                int32_t bits=0;if(!TryLoadAlignedI32(cls+g_upChildren,&bits))return false;
+                uintptr_t field=(uint32_t)bits;
+                for(unsigned n=0;field&&n<512&&visited<2048;++n,++visited){
+                    char name[80]{};
+                    if(!GuardedNameOf(field,name,sizeof(name)))return false;
+                    for(unsigned j=0;j<4;++j)if(!strcmp(name,centurionrefill::Specs[j].name)){
+                        char type[48]{};int32_t typeBits=0,funcBits=0;
+                        if(pending.method[j]||!TryLoadAlignedI32(field+OBJ_CLASS,&typeBits)||
+                           !GuardedNameOf((uint32_t)typeBits,type,sizeof(type))||strcmp(type,"Function")||
+                           !TryLoadAlignedI32(field+g_funcOffset,&funcBits))return false;
+                        const uintptr_t wrapper=(uint32_t)funcBits;
+                        const std::size_t bytes=j==3?53:centurionnative::WrapperBytes;
+                        if(wrapper<g_textLo||wrapper>=g_textHi||g_textHi-wrapper<bytes||
+                           !Readable((void*)wrapper,bytes))return false;
+                        uint32_t slot=0;
+                        const bool abi=j==3?centurionrefill::DecodeVoidWrapper((const uint8_t*)wrapper,bytes,slot):
+                            centurionnative::DecodeWrapper((const uint8_t*)wrapper,bytes,slot);
+                        int32_t methodBits=0;
+                        if(!abi||!TryLoadAlignedI32(vtable+slot,&methodBits)||!methodBits)return false;
+                        pending.slot[j]=slot;pending.method[j]=(uint32_t)methodBits;++found;
+                    }
+                    int32_t next=0;if(!TryLoadAlignedI32(field+g_upNext,&next)||field==(uint32_t)next)return false;
+                    field=(uint32_t)next;
+                }
+                if(field)return false; // bounded walk exhausted: identity incomplete
+                break;
+            }
+            int32_t super=0;if(!TryLoadAlignedI32(cls+g_upNext-4,&super)||cls==(uint32_t)super)return false;
+            cls=(uint32_t)super;
+        }
+        if(found!=4)return false;
+        cached=pending;
+    }
+    // Recheck on EVERY permit: no stale overridden/patched methods. All four
+    // exact bodies must call the same inventory cast as the audited AttemptReload.
+    const uintptr_t attempt=(uint32_t)Rd(g_centurionNativeTarget);
+    if(!attempt||attempt<g_textLo||attempt>=g_textHi||g_textHi-attempt<centurionnative::MethodBytes||
+       !Readable((void*)attempt,centurionnative::MethodBytes)||*((const uint8_t*)attempt+0x131)!=0xe8)return false;
+    int32_t castRel=0;std::memcpy(&castRel,(const void*)(attempt+0x132),4);
+    const uintptr_t inventoryCast=attempt+0x136+castRel;
+    if(inventoryCast<g_textLo||inventoryCast>=g_textHi)return false;
+    for(unsigned j=0;j<4;++j){
+        const auto& spec=centurionrefill::Specs[j];const uintptr_t method=cached.method[j];
+        int32_t live=0,rel=0;
+        if(!TryLoadAlignedI32(vtable+cached.slot[j],&live)||(uint32_t)live!=method||
+           method<g_textLo||method>=g_textHi||g_textHi-method<spec.bytes||
+           !Readable((void*)method,spec.bytes)||
+           !centurionrefill::Audited((const uint8_t*)method,spec.bytes,spec))return false;
+        std::memcpy(&rel,(const void*)(method+spec.rel),4);
+        if(method+spec.rel+4+rel!=inventoryCast)return false;
+    }
+    result=cached;return true;
+}
+struct CenturionRefillNative {
+    void* object;CenturionRefillBindings bindings;
+    unsigned reads=0;centurionrefill::Counts before{},after{};
+    centurionrefill::Counts Read(){
+        const centurionrefill::Counts counts{((PFN_CenturionAttemptReload)bindings.method[0])(object),
+            ((PFN_CenturionAttemptReload)bindings.method[1])(object),
+            ((PFN_CenturionAttemptReload)bindings.method[2])(object)};
+        if(!reads++)before=counts;
+        after=counts;return counts;
+    }
+    void Refill()const{((void (__thiscall*)(void*))bindings.method[3])(object);}
+};
 static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
     const auto object=(uint32_t)reinterpret_cast<uintptr_t>(self);
     const auto weapon=(uint32_t)Rd(g_weaponObj),pawn=(uint32_t)g_playerPawn;
     const auto now=GetTickCount64();
     auto decision=centurionnative::Decision::Forward;
+    centurionnative::Context closeSnapshot;
     bool lockMiss=false;
     if(TryAcquireSRWLockExclusive(&g_centurionNativeLock)){
+        closeSnapshot=g_centurionNativeGate.permitted;
         decision=g_centurionNativeGate.Evaluate(g_centurionNativeGuardMode,object,pawn,weapon,now,
             g_centurionPhysicalPolish&&Rd(g_weaponHolstered));
         ReleaseSRWLockExclusive(&g_centurionNativeLock);
@@ -26421,6 +26510,30 @@ static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
         if(note)Log("centurion native guard: BLOCK self=%08X pawn=%08X return=%08X t=%llu (no token, no inventory write)",
             object,pawn,(unsigned)reinterpret_cast<uintptr_t>(_ReturnAddress()),(unsigned long long)now);
         return 0; // audited 32-bit native bool; original BeginFire handles refusal
+    }
+    if(g_centurionRefillOnly&&decision==centurionnative::Decision::Permit){
+        static bool fault=false;static unsigned refillRecords=0;
+        CenturionRefillBindings bindings;
+        const bool eligible=!fault&&g_centurionPhysicalPolish&&VrModeOn()&&InGameplay()&&
+            !Rd(g_gamePaused)&&!Rd(g_vrUiMenu)&&!Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&
+            !Rd(g_weaponHolstered)&&!CutsceneNativeCameraArmed()&&
+            closeSnapshot.pawn==pawn&&closeSnapshot.weapon==object&&closeSnapshot.canPermit;
+        auto committed=centurionrefill::Result::Rejected;
+        centurionrefill::Counts before{},after{};
+        const bool ready=eligible&&ResolveCenturionRefill(self,bindings);
+        if(ready){
+            CenturionRefillNative native{self,bindings};
+            committed=centurionrefill::Commit({closeSnapshot.clip,closeSnapshot.reserve,closeSnapshot.capacity},native);
+            before=native.before;after=native.after;
+        }
+        if(committed==centurionrefill::Result::Fault)fault=true;
+        if(refillRecords++<32)Log("centurion refill-only: result=%d ready=%d self=%08X pawn=%08X snapshot=%d/%d/%d live=%d/%d/%d->%d/%d/%d t=%llu fault=%d (2=conserved LIVE; native Reload NOT invoked; HUD/PSVR2 still required)",
+            (int)committed,ready?1:0,object,pawn,closeSnapshot.clip,closeSnapshot.reserve,closeSnapshot.capacity,
+            before.clip,before.reserve,before.capacity,after.clip,after.reserve,after.capacity,
+            (unsigned long long)now,fault?1:0);
+        // Never fall back after a possible transfer: that would spend/add twice
+        // and reintroduce Reload's animation/fire lock/camera side effects.
+        return committed==centurionrefill::Result::Conserved?1:0;
     }
     // This is forwarding an existing native call, NOT calling ProcessInternal
     // with invented parameters. No exception masking or ammo modification.
@@ -26663,7 +26776,7 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
             g_xrSessionState==XR_SESSION_STATE_FOCUSED);
         const bool valid=ownedContext&&f.supported&&f.tracked&&f.ammoFresh&&
             centurionreload::AmmoValid(f)&&sameMethod;
-        g_centurionNativeGate.Publish({valid,f.pawn,f.weapon,now,!Rd(g_weaponHolstered)});
+        g_centurionNativeGate.Publish({valid,f.pawn,f.weapon,now,!Rd(g_weaponHolstered),f.clip,f.reserve,f.capacity});
         if(valid&&result.requestNative&&g_centurionNativeTap&&g_centurionConfig.cylinderGestures)
             g_centurionNativeGate.Arm(f.pawn,f.weapon,now);
         ReleaseSRWLockExclusive(&g_centurionNativeLock);
@@ -32197,6 +32310,10 @@ void LoadIniSettings() {
     if(g_centurionNativeGuardMode==2&&(!g_centurionReload||!g_centurionConfig.cylinderGestures)){
         g_centurionNativeGuardMode=1;Log("centurion native guard: gate requires manual+layout+cylinder flags; downgraded to observe");}
     Log("ini: CenturionNativeReloadGuard=%d (0=OFF 1=native observation 2=unverified suppression experiment; validated ABI required)",g_centurionNativeGuardMode);
+    g_centurionRefillOnly=GetPrivateProfileIntA("Input","CenturionRefillOnly",0,path)?1:0;
+    if(g_centurionRefillOnly&&(!g_centurionPhysicalPolish||!g_centurionNativeTap||g_centurionNativeGuardMode!=2)){
+        g_centurionRefillOnly=0;Log("centurion refill-only: requires physical polish + native tap + guard2; disabled");}
+    Log("ini: CenturionRefillOnly=%d (default OFF; audited native refill without starting Reload; NOT runtime acceptance)",g_centurionRefillOnly);
     Log("ini: ReloadControlLayout=%d CylinderGestures=%d (default OFF; right-handed/unswapped only: Cross=health Circle=cylinder right-stick-up=jump; wheel retained, hold-Cross laser disabled)",
         g_reloadControlLayout,g_centurionConfig.cylinderGestures?1:0);
     g_centurionClipConfig.offset={

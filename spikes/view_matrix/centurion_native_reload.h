@@ -47,13 +47,15 @@ struct Context {
     bool valid=false;std::uint32_t pawn=0,weapon=0;
     std::uint64_t sampledMs=0;
     bool canPermit=true; // false for fresh, owned HOLSTERED Centurion
+    int clip=-1,reserve=-1,capacity=-1; // observer snapshot, NEVER inventory writes
 };
 // Pure CPU policy. Runtime supplies a nonblocking lock; this object itself is
 // deliberately not shared unsynchronised across the input and game threads.
 struct Gate {
     Context current{};
+    Context permitted{}; // frozen at completed manual close, not later HUD polls
     bool permit=false;std::uint64_t permitMs=0;
-    void Clear(){current={};permit=false;permitMs=0;}
+    void Clear(){current={};permitted={};permit=false;permitMs=0;}
     void Publish(const Context& c){
         if(!c.valid||!c.pawn||!c.weapon){Clear();return;}
         if(!current.valid||current.pawn!=c.pawn||current.weapon!=c.weapon||c.sampledMs<current.sampledMs||
@@ -64,7 +66,7 @@ struct Gate {
     }
     bool Arm(std::uint32_t pawn,std::uint32_t weapon,std::uint64_t now){
         if(!Matches(pawn,weapon,now)||!current.canPermit)return false;
-        permit=true;permitMs=now;return true;
+        permit=true;permitMs=now;permitted=current;return true;
     }
     bool Matches(std::uint32_t pawn,std::uint32_t weapon,std::uint64_t now)const{
         return current.valid&&pawn&&weapon&&pawn==current.pawn&&weapon==current.weapon&&
