@@ -20778,6 +20778,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     return StereoPair(dev, [&] { return g_origDrawPrimUP(dev, t, primCount, vtxData, vtxStride); });
 }
 
+extern volatile LONG g_shadowStageMask;
+extern singularity::shadow::ShadowRegisterCensus g_shadowRegs;
 HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                                 UINT minVtxIndex, UINT numVertices, UINT primCount,
                                                 const void* idxData, D3DFORMAT idxFormat,
