@@ -1,5 +1,29 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN physical-polish L3 DEPLOYED (SIDE 9ccbe96+d078491):
+candidate DLL SHA-256 37AC0AD2AB667C1C3C5DBA18660188CAEEFB57B1478BD7495F02235DF76B6961,
+PE32 x86 /O2, clean tree 5c800b7, manifest dirty=[], guard preflight+postflight
+PASS; backup deployment/install-backups/20261017-132624. STATUS: CANDIDATE
+ONLY — NOT accepted, NOT flagged 100%.
+Scope (inspected): UP-only dump + rearward cases + palm-fit spare + right-hand
+hold (flag-gated; OFF keeps legacy down-dump/slow-close/authored paths);
+holster Stored cancels tap + revokes permit, native gate block-only when
+holstered; health plate hides ONLY in fresh Carrying; deliberate close needs
+QuickFlick (0.45 m/s or 2 rad/s <=100 ms); PhysicalPolish auto-disables without
+native noTMD glove path (log line). L1_PASS (EXIT=0: 216-case polish + full
+suite), L2_PASS (clean). Steam: DLL=37AC0AD2, INI=59C48A88 (+VisualFollowup
++TrackedCylinder +PhysicalPolish, VfxHost=1; pre-edit backup in 132624 dir,
+all-CRLF). NOTE: INI found reverted to 7ED1239C before this deploy (all 3 prior
+flags gone; cause unknown — panel save suspected; re-verify flags after every
+session from now on). Path: rollback to DADE170B (postflight PASS), redeploy
+(guard model intact). Rollback: deploy Rollback -BackupPath 20261017-132624
+(+plan paths) + drop the 4 added INI lines. AWAITING L3+L4 (SIDE route, NO
+screenshots): 3 shots -> Circle -> muzzle UP (cases toward shooter) -> shoulder
+ammo (plate clears, clip between fingers) -> insert -> 1 s -> fast flick (only
+cylinder moves, ONE refill) -> 2 shots -> Circle -> STORE w/o reload -> 3 s ->
+draw (must NOT refill). MAIN reads `centurion physical` + `tracked cylinder`
+rows + native ACK/BLOCK.
+
 LATEST 2026-10-17 MAIN VFX isolation (a) NATIVE-ONLY staged (SIDE runda 2,
 b957289): 12:29 log proves plugin path alive (init loaded, atlas=vfx_atlas
 dir, overlay n=1 x6) — placement/size question only. Session (a): VfxHost 1->0
