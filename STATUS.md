@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE, port Centurion-proven lessons to ALL3 profiles:
+Valkyrie/Volk/Kasimov resolver stops at4 distinct bindings BEFORE unrelated Next;
+all live ABI/body/cast/conservation guards retained. Exact-stage diagnostics,
+3 engine-thread read-only preflights PER profile, no new hook/permit/invocation.
+ReloadRefillOnly now releases root/scope IMMEDIATELY on insertion; only original
+magazine child seats180ms on LIVE root; every other native bone copied byte-exact.
+No child override after seat, even when HUD ACK is late. Flag0 behavior/input/
+models/materials/shoulder/native ammo authority unchanged. L1/L2 pending.
+Centurion was accepted by user, these3 are NOT physically verified by analogy.
+ZERO Steam; integrate SOURCE into current MAIN, not old full SIDE DLL. PR45.
+See docs/next-weapon-refill-only.md (new top section supersedes old HOLD below).
+
 CAUTION 2026-10-17: Centurion runtime REJECTED shared refill resolver (ready0,
 NO native invocation). PR45 three weapons remain UNTESTED, not accepted merely
 from L1/L2. Keep ReloadRefillOnly OFF pending PR48 resolver preflight9c38667

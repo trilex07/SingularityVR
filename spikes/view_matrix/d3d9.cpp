@@ -26158,6 +26158,18 @@ static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
     const bool note=(decision!=centurionnative::Decision::Forward||object==weapon)&&
         InterlockedIncrement(&records)<=48;
     if(decision==centurionnative::Decision::Block){
+        // Bounded engine-thread lookup only. No permit/getter/refill/original
+        // invocation; three attempts per exact profile, at least1s apart.
+        if(g_nextRefillOnly&&nextOwned&&object==weapon&&pawn&&!Rd(g_weaponHolstered)){
+            static unsigned probes[3]{};static ULONGLONG nextProbe[3]{};static bool complete[3]{};
+            const auto index=weaponreload::Index(NextKind(Rd(g_gunVerts)));
+            if(index<3&&g_nextReload[index]&&g_nextReady[index]&&!complete[index]&&probes[index]<3&&now>=nextProbe[index]){
+                ++probes[index];nextProbe[index]=now+1000;
+                NativeRefillBindings unused;nativerefill::Audit audit;
+                const bool ready=ResolveNativeRefill(self,unused,&audit);
+                LogNativeRefillAudit("auto-block-preflight",index,ready,audit);complete[index]=ready;
+            }
+        }
         if(note)Log("%s native guard: BLOCK self=%08X pawn=%08X return=%08X t=%llu (no token, no inventory write)",
             owner,object,pawn,(unsigned)reinterpret_cast<uintptr_t>(_ReturnAddress()),(unsigned long long)now);
         return 0; // audited 32-bit native bool; original BeginFire handles refusal
@@ -26170,7 +26182,8 @@ static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
             !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!Rd(g_weaponHolstered)&&!CutsceneNativeCameraArmed()&&
             NextObject(object,kind)&&closeSnapshot.pawn==pawn&&closeSnapshot.weapon==object&&closeSnapshot.canPermit;
         NativeRefillBindings bindings;
-        const bool ready=eligible&&ResolveNativeRefill(self,bindings);
+        nativerefill::Audit audit;audit.stage="context";
+        const bool ready=eligible&&ResolveNativeRefill(self,bindings,&audit);
         auto result=nativerefill::Result::Rejected;nativerefill::Counts before{},after{};
         if(ready){
             NativeRefillCalls native{self,bindings};
@@ -26178,6 +26191,7 @@ static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
             before=native.before;after=native.after;
         }
         if(index<3){
+            if(records[index]<32)LogNativeRefillAudit(eligible?"manual-permit":"context-rejected",index,ready,audit);
             if(result==nativerefill::Result::Fault)fault[index]=true;
             if(records[index]++<32)Log("next refill-only: kind=%d result=%d ready=%d self=%08X snapshot=%d/%d/%d live=%d/%d/%d->%d/%d/%d t=%llu fault=%d (2=conserved LIVE; native Reload NOT invoked; HUD/PSVR2 required)",
                 int(kind),int(result),ready?1:0,object,closeSnapshot.clip,closeSnapshot.reserve,closeSnapshot.capacity,

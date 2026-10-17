@@ -5,6 +5,12 @@
 // Original no-param native thunks, NOT ProcessInternal. No game bodies/assets
 // distributed: fingerprints cover all method bytes except the one cast rel32.
 namespace nativerefill {
+struct Audit {
+    const char* stage="not-run";
+    unsigned matched=0,visited=0,index=4;
+    std::uint32_t klass=0,field=0,wrapper=0,method=0,slot=0;
+    std::uint64_t fingerprint=0;
+}; // bounded evidence only; failed binding is NEVER a permission to invoke
 struct Spec {const char* name;std::size_t bytes,rel;std::uint64_t fingerprint;};
 constexpr Spec Specs[]={
     {"GetAmmoInClip",53,14,0x814290bcd87ed31dULL},

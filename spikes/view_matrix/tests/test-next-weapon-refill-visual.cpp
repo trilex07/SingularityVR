@@ -20,6 +20,42 @@ int main(int argc,char** argv){
             assert(std::isfinite(frame)&&frame>=0&&frame<data.frames);
             if(ms>=Animation::RefillSeatMs)assert(frame==0);
             armbind::Mat sample[8];assert(weaponreloadanim::Sample(data,frame,sample));
+            // Release body/scope immediately on insertion, not after the short
+            // child-only seating tail or a delayed HUD ACK. Flag OFF unchanged.
+            for(const auto p:{Phase::Idle,Phase::NeedAmmo,Phase::Carrying,Phase::WaitingNative,Phase::Cooldown}){
+                const bool oldHeld=Active(p)||1000+ms<5000;
+                assert(Animation::HoldRoot(false,true,p,1000,5000,1000+ms)==oldHeld);
+                assert(!Animation::HoldRoot(true,true,p,1000,5000,1000+ms));
+                assert(!Animation::HoldRoot(false,false,p,1000,5000,1000+ms));
+                assert(Animation::AnimateMagazine(true,p,1000,1000+ms,false)==(ms<Animation::RefillSeatMs));
+                assert(Animation::AnimateMagazine(false,p,1000,1000+ms,oldHeld)==(Active(p)||oldHeld));
+            }
+        }
+        assert(!Animation::AnimateMagazine(true,Phase::WaitingNative,1000,999,false));
+        assert(Animation::HoldRoot(true,true,Phase::Carrying,0,0,1000));
+        assert(Animation::AnimateMagazine(true,Phase::Carrying,0,1000,true));
+        const unsigned regs=data.slots*3;
+        for(unsigned shot=0;shot<3;++shot){
+            float native[16*12]{},out[16*12]{},allTracks[16*12]{};
+            for(unsigned slot=0;slot<data.slots;++slot){
+                const float angle=float(shot)*.13f;armbind::Mat m{};
+                m.m[0][0]=m.m[1][1]=std::cos(angle);m.m[0][1]=std::sin(angle);m.m[1][0]=-std::sin(angle);
+                m.m[2][2]=m.m[3][3]=1;m.m[3][0]=float(slot)+float(shot)*.7f;m.m[3][2]=float(shot)*-.9f;
+                armbind::ToGpu(m,reinterpret_cast<float(*)[4]>(native+slot*12));
+            }
+            const auto at=1000+shot*60;const float seatFrame=animation.RefillFrame(data,Phase::Cooldown,1000,1000,at);
+            assert(weaponreloadanim::Palette(data,true,seatFrame,native,regs,allTracks));
+            assert(SeatingPalette(data,seatFrame,native,regs,out));
+            for(unsigned slot=0;slot<data.slots;++slot){
+                const auto* expected=slot==ClipSlot(profile.kind)?allTracks:native;
+                assert(!std::memcmp(out+slot*12,expected+slot*12,12*sizeof(float)));
+            } // every non-magazine native bone, including root/scope/fire tracks, byte-exact
+            float parent[16*12]{};assert(ParentPalette(data,native,regs,nullptr,parent));
+            assert(!std::memcmp(parent,native,regs*4*sizeof(float)));
+            std::memset(out,0x11,sizeof(out));float sentinel[16*12];std::memcpy(sentinel,out,sizeof(out));
+            assert(!SeatingPalette(data,seatFrame,native,regs-1,out)&&!std::memcmp(out,sentinel,sizeof(out)));
+            native[data.root*12]=NAN;
+            assert(!SeatingPalette(data,seatFrame,native,regs,out)&&!std::memcmp(out,sentinel,sizeof(out)));
         }
         assert(animation.RefillFrame(data,Phase::Carrying,1000,0,1100)==animation.outFrame);
         assert(animation.RefillFrame(data,Phase::NeedAmmo,1000,0,1100)==animation.Frame(data,Phase::NeedAmmo,1000,1100));
@@ -49,5 +85,5 @@ int main(int argc,char** argv){
     }
     hipknife::V centre;assert(!weaponreloadproto::MidEye({},{},centre));
     assert(!weaponreloadproto::MidEye({},{1,0,0},centre));
-    std::printf("PASS 3 original clip return tracks: 15003 samples, seating rest at180ms; %u mid-eye physical-left shoulder poses incl floor-seated\n",poses);
+    std::printf("PASS 3 original clip tracks: 15003 samples,180ms child-only seat/live first-shot bones, immediate root/scope release and legacy OFF; %u physical-left shoulder poses\n",poses);
 }

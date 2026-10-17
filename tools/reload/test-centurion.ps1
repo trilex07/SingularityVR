@@ -21,7 +21,7 @@ foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-cent
     elseif($test -eq 'test-next-weapon-refill' -and $RefillEvidence){
         $evidence=Get-Content -LiteralPath $RefillEvidence -Raw | ConvertFrom-Json
         if((Get-FileHash -LiteralPath $evidence.text_path -Algorithm SHA256).Hash -ne $evidence.text_sha256){throw 'Archived refill text changed'}
-        & $exe $evidence.text_path $evidence.text_base $evidence.methods[0].method $evidence.methods[1].method $evidence.methods[2].method $evidence.methods[3].method
+        & $exe $evidence.text_path $evidence.text_base $evidence.methods[0].method $evidence.methods[1].method $evidence.methods[2].method $evidence.methods[3].method $evidence.methods[0].wrapper $evidence.methods[1].wrapper $evidence.methods[2].wrapper $evidence.methods[3].wrapper
     }
     elseif($test -eq 'test-centurion-native' -and $NativeEvidence){
         $evidence=Get-Content -LiteralPath $NativeEvidence -Raw | ConvertFrom-Json

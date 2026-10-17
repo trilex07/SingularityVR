@@ -66,5 +66,35 @@ class Tests(unittest.TestCase):
         self.assertIn('next.insertedMs=now', src)
         self.assertIn('!g_nextRefillOnly&&next.rootValid&&observedPermitMs', src)
 
+    def test_discovery_completes_before_next_field_and_keeps_all_audits(self):
+        src = (ROOT/'spikes/view_matrix/native_refill_engine.inl').read_text(encoding='utf-8')
+        scan = src.split('for(unsigned n=0;', 1)[1].split('if(found!=4)', 1)[0]
+        self.assertLess(scan.index('++found;report.matched|=1u<<j;'), scan.index('if(found==4)break;'))
+        self.assertLess(scan.index('if(found==4)break;'), scan.index('TryLoadAlignedI32(field+g_upNext'))
+        self.assertIn('if(pending.method[j]||', scan)
+        self.assertIn('if(field&&found!=4)return reject("field-budget")', scan)
+        resolver = src.split('static bool ResolveNativeRefill(', 1)[1].split('static void LogNativeRefillAudit', 1)[0]
+        for stage in ('missing-bindings','wrapper-abi','method-range/slot','method-fingerprint','inventory-cast-target'):
+            self.assertLess(resolver.index('reject("'+stage+'")'), resolver.index('result=cached;return true;'))
+        self.assertEqual(resolver.count('result=cached'), 1)
+
+    def test_each_profile_preflight_is_bounded_and_read_only(self):
+        src = (ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf-8')
+        probe = src.split('if(g_nextRefillOnly&&nextOwned&&object==weapon', 1)[1].split('if(note)Log(', 1)[0]
+        for guard in ('index<3','probes[index]<3','now>=nextProbe[index]','nextProbe[index]=now+1000',
+                      'complete[index]=ready','ResolveNativeRefill(self,unused,&audit)'):
+            self.assertIn(guard, probe)
+        for forbidden in ('.Arm(', '.Refill(', 'nativerefill::Commit(', 'g_origCenturionAttemptReload('):
+            self.assertNotIn(forbidden, probe)
+
+    def test_body_scope_and_magazine_share_refill_only_release_policy(self):
+        src = (ROOT/'spikes/view_matrix/weapon_reload_dispatch.inl').read_text(encoding='utf-8')
+        prepare = src.split('static int PrepareNextReload(', 1)[1].split('static void DrawNextReload(', 1)[0]
+        for call in ('Animation::HoldRoot(g_nextRefillOnly!=0', 'Animation::AnimateMagazine(g_nextRefillOnly!=0',
+                     'if(!rootHeld||!armbind::Finite(visual.root))return 0;', 'rootHeld?&visual.root:nullptr',
+                     'if(!animateMagazine&&!rootHeld&&!drop)return 0;', 'weaponreload::SeatingPalette('):
+            self.assertIn(call, prepare)
+        self.assertIn('if(g_nextRefillOnly&&visual.insertedMs)', prepare)
+
 
 if __name__ == '__main__': unittest.main()

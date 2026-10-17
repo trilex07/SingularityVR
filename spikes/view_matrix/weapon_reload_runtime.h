@@ -173,8 +173,28 @@ inline bool Palette(const weaponreloadanim::Data& d,float frame,bool absent,cons
     if(absent)for(unsigned r=0;r<3;++r)for(unsigned c=0;c<3;++c)staged[clip*12+r*4+c]=0;
     std::memcpy(out,staged,regs*4*sizeof(float));return true;
 }
+// After refill-only insertion, animate ONLY the rigid magazine. All native
+// receiver/bolt/trigger/scope bones must retain first-shot animation byte-exact.
+inline bool SeatingPalette(const weaponreloadanim::Data& d,float frame,const float* native,unsigned regs,float* out){
+    float animated[16*12];
+    if(!native||!out||!weaponreloadanim::Palette(d,true,frame,native,regs,animated))return false;
+    const unsigned clip=ClipSlot(d.kind);if(clip>=d.slots)return false;
+    float staged[16*12];std::memcpy(staged,native,regs*4*sizeof(float));
+    std::memcpy(staged+clip*12,animated+clip*12,12*sizeof(float));
+    std::memcpy(out,staged,regs*4*sizeof(float));return true;
+}
 struct Animation {
     static constexpr std::uint64_t RefillSeatMs=180;
+    static bool HoldRoot(bool refillOnly,bool valid,Phase phase,std::uint64_t inserted,
+                         std::uint64_t nativeEnd,std::uint64_t now){
+        if(!valid||(refillOnly&&inserted))return false;
+        return Active(phase)||(nativeEnd&&now<nativeEnd);
+    }
+    static bool AnimateMagazine(bool refillOnly,Phase phase,std::uint64_t inserted,
+                                std::uint64_t now,bool rootHeld){
+        if(!refillOnly||!inserted)return Active(phase)||rootHeld;
+        return now>=inserted&&now-inserted<RefillSeatMs;
+    }
     float outFrame=0,inFrame=0;
     bool Measure(const weaponreloadanim::Data& d){
         armbind::Mat bind;if(!ClipBind(d,bind))return false;

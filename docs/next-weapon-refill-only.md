@@ -1,5 +1,39 @@
 # Three weapons: native refill, not full native reload
 
+## Centurion-proven follow-up / 2026-10-17
+
+User now confirms Centurion works including first-shot animation. Its fixes
+were PR48 source56b3f16 (stop required binding discovery before unrelated tail)
+and4962b7a (release native pose after close). Frozen Centurion14:16 preflight
+matchedF/stagefield-name and14:30 ready1/two conserved transfers are recorded in
+that branch's docs/centurion-refill-resolution.md and post-refill-recoil.md.
+This is NOT a physical result for Valkyrie/Volk/Kasimov.
+
+Observed here: SAME generic resolver still walks beyond all4 bindings; native
+root and scope are held for180ms after insertion, and the seat pass overwrites
+ALL named reload tracks rather than just the magazine. The existing original
+native evidence identifies all12 getters/refill targets as identical inherited
+methods. There is no reason to preserve a full-reload pose when only native
+RefillClip runs.
+
+Hypothesis / controlled port: stop discovery on4 distinct ABI-checked bindings,
+keep every body/cast/context/conservation guard. Port bounded stage diagnostics
+and3 read-only preflights PER profile. At insertion release gun/root and scope
+immediately; keep ONLY the magazine's original180ms seating track on the LIVE
+root, then stop replacing native child poses. No new hook, guessed engine calls,
+timers, input mapping, engine state or inventory writes. Existing flag OFF path
+unchanged; Circle/physical-left shoulder/insert-release, NO flick, unchanged.
+
+Falsifiers: a profile rejects exact live methods, transfer is not conserved,
+old native Reload/fire lock/camera jerk remains, first-shot/scope recoil still
+missing, seating/stock magazine or material/depth regresses. Offline tests must
+exercise EACH original profile, preserve non-magazine matrices byte-for-byte
+during seating, flag0 legacy hold, and all prior ABI/asset/Reset gates. MAIN
+still owns new L3/L4 separately for each weapon; SIDE does ZERO Steam.
+
+The HOLD and older receipts below are historical; the measured Centurion cause
+is now known, but these three profiles are not physically accepted by analogy.
+
 HOLD after Centurion physical feedback13:52: its SAME resolver returned ready0
 before every transfer, despite offline PASS. These THREE weapons have no new
 physical result; do not infer they are broken in the same exact stage, but keep

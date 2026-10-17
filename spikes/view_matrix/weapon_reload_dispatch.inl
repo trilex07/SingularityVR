@@ -198,8 +198,10 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
     if(!visual.valid||visual.kind!=kind||visual.pawn!=(uint32_t)g_playerPawn||visual.weapon!=(uint32_t)Rd(g_weaponObj)||
        now<visual.sampledMs||now-visual.sampledMs>150)return 0;
     const auto layout=g_boundShaderLayout;
-    const bool rootHeld=visual.rootValid&&(weaponreload::Active(visual.phase)||
-        (visual.nativeEnd&&now<visual.nativeEnd));
+    const bool rootHeld=weaponreload::Animation::HoldRoot(g_nextRefillOnly!=0,visual.rootValid,
+        visual.phase,visual.insertedMs,visual.nativeEnd,now);
+    const bool animateMagazine=weaponreload::Animation::AnimateMagazine(g_nextRefillOnly!=0,
+        visual.phase,visual.insertedMs,now,rootHeld);
     const unsigned regs=part==weaponreload::Part::Attachment?3:spec->slots*3;
     if(layout.shadow||layout.bones<0||layout.boneRegs<int(regs)||unsigned(layout.bones)+regs>256||
        (part==weaponreload::Part::Body&&(layout.local<0||unsigned(layout.local)+4>256)))return 0;
@@ -240,11 +242,13 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
         g_nextWitness={true,kind,visual.pawn,visual.weapon,now,socket,clipTracking,nativeRoot};ReleaseSRWLockExclusive(&g_nextVisualLock);
     }
     const bool drop=g_nextNativeMagazine&&visual.dropMs&&now>=visual.dropMs&&now-visual.dropMs<1200;
-    if(!weaponreload::Active(visual.phase)&&!rootHeld&&!drop)return 0;
-    if(weaponreload::Active(visual.phase)||rootHeld){
+    if(!animateMagazine&&!rootHeld&&!drop)return 0;
+    if(animateMagazine){
         const float frame=g_nextRefillOnly?g_nextTiming[index].RefillFrame(g_nextAnimation[index],visual.phase,
             visual.since,visual.insertedMs,now):g_nextTiming[index].Frame(g_nextAnimation[index],visual.phase,visual.since,now);
-        if(!weaponreload::Palette(g_nextAnimation[index],frame,weaponreload::Absent(visual.phase),parentPalette,regs,changed))return 0;
+        if(g_nextRefillOnly&&visual.insertedMs){
+            if(!weaponreload::SeatingPalette(g_nextAnimation[index],frame,parentPalette,regs,changed))return 0;
+        }else if(!weaponreload::Palette(g_nextAnimation[index],frame,weaponreload::Absent(visual.phase),parentPalette,regs,changed))return 0;
     }else std::memcpy(changed,parentPalette,regs*4*sizeof(float));
     if(g_nextNativeMagazine){
         armbind::Mat world;
