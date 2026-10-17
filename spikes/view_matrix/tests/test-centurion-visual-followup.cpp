@@ -1,5 +1,7 @@
 #define NOMINMAX
 #include "../centurion_visual_followup.h"
+#include "../centurion_tracked_cylinder.h"
+#include "../centurion_clip_preview.h"
 #include <cassert>
 #include <cstdio>
 #include <vector>
@@ -18,7 +20,16 @@ int main(int argc,char** argv){
         assert(Time(P::Open,0,0,ms).frame<=12);
         assert(Time(P::Carrying,0,0,ms).hideClip);
         assert(Time(P::Cooldown,100,100,100+ms).active==(ms<2600));
+        for(const auto phase:{P::WaitingNative,P::Cooldown,P::Idle})
+            assert(Time(phase,100,100,100+ms,true).active==(ms<280));
+        // Flag ON must not change any pre-close open/carry/loaded presentation.
+        for(const auto phase:{P::Open,P::NeedAmmo,P::Carrying,P::Loaded}){
+            const auto old=Time(phase,0,0,ms),current=Time(phase,0,0,ms,true);
+            assert(old.active==current.active&&old.hideClip==current.hideClip&&old.frame==current.frame);
+        }
     }
+    assert(!ReleaseNative(false,100)&&!ReleaseNative(true,0)&&ReleaseNative(true,100));
+    assert(Time(P::Cooldown,100,100,379,true).active&&!Time(P::Cooldown,100,100,380,true).active);
     assert(Time(P::WaitingNative,100,100,100).frame==26);
     assert(Time(P::Cooldown,100,100,500).frame==32&&!Tail(100,99));
     centurionanim::Data d;d.ready=true;d.parent=d.inverse[0]=d.inverse[1]=Identity();
@@ -68,11 +79,29 @@ int main(int argc,char** argv){
         const bool ok=Replay([&](const float (&)[15][4]){return ++calls!=fail;},[&](){++draws;return fail!=0;},
             native,attached,restored);
         assert(calls==2&&restored==(fail!=2)&&!ok);assert(draws==(fail==1?0u:1u));}
+    // A live native root must keep the FIRST and second shot's rotation and
+    // translation even during the short cylinder-close interpolation. Legacy
+    // RootHold deliberately discards this motion: preserve that negative control.
+    auto scaled=Identity();for(unsigned r=0;r<3;++r)scaled.m[r][r]=.02f;
+    for(unsigned shot=0;shot<3;++shot){
+        const auto recoil=PoseMatrix({{float(shot)*.7f,0,float(shot)*-.9f},
+            centurionclip::Degrees(float(shot)*7,0,0)});
+        for(unsigned slot=0;slot<5;++slot)
+            armbind::ToGpu(recoil,reinterpret_cast<float(*)[4]>(native+slot*3));
+        Mat live;assert(LiveRoot(native,live));Near(live,recoil);
+        V socket;
+        assert(centuriontracked::Attached(d,Time(P::Cooldown,100,100,100+shot*100,true),
+            1.f-float(shot)/3.f,native,live,Identity(),scaled,Identity(),{},attached,socket));
+        for(unsigned slot=1;slot<4;++slot){Mat body;
+            assert(armbind::FromGpu(reinterpret_cast<float(*)[4]>(attached+slot*3),body));Near(body,recoil);}
+    }
+    Mat sentinel=Identity(),badLive;std::memcpy(badLive.m,sentinel.m,sizeof(badLive.m));
+    native[3][0]=NAN;assert(!LiveRoot(native,badLive));Near(badLive,sentinel);
     assert(cases==324);
     Mat rejected;assert(!TrackingMap({},0,0,0,rejected));
-    float sentinel[15][4];std::memset(sentinel,0x11,sizeof(sentinel));float unchanged[15][4];std::memcpy(unchanged,sentinel,sizeof(sentinel));
+    float unchangedPalette[15][4];std::memset(unchangedPalette,0x11,sizeof(unchangedPalette));float unchanged[15][4];std::memcpy(unchanged,unchangedPalette,sizeof(unchangedPalette));
     auto bad=Identity();bad.m[0][0]=NAN;
-    assert(!Spare(d,bad,Identity(),Identity(),Identity(),{}, {},sentinel));
-    assert(!std::memcmp(sentinel,unchanged,sizeof(sentinel)));
-    puts("PASS compact/open-until-flick/native-tail root hold, 324 full native/tracking scale roundtrips, transactional replay faults; NOT Steam/PSVR2");
+    assert(!Spare(d,bad,Identity(),Identity(),Identity(),{}, {},unchangedPalette));
+    assert(!std::memcmp(unchangedPalette,unchanged,sizeof(unchangedPalette)));
+    puts("PASS compact/open-until-flick, legacy tail unchanged, refill-only 280ms/live-root recoil, 324 full native/tracking scale roundtrips, replay faults; NOT Steam/PSVR2");
 }

@@ -12,9 +12,19 @@ inline V Point(V v,const Mat& m){return {
     v.x*m.m[0][1]+v.y*m.m[1][1]+v.z*m.m[2][1]+m.m[3][1],
     v.x*m.m[0][2]+v.y*m.m[1][2]+v.z*m.m[2][2]+m.m[3][2]};}
 inline bool Tail(std::uint64_t closed,std::uint64_t now){return closed&&now>=closed&&now-closed<2600;}
+// A refill-only commit does not start the native reload sweep. Once closed,
+// stop replacing native recoil with the transaction's captured idle pose.
+inline bool ReleaseNative(bool refillOnly,std::uint64_t closed){return refillOnly&&closed!=0;}
+inline bool LiveRoot(const float (&native)[15][4],Mat& out){
+    Mat root;
+    if(!armbind::FromGpu(reinterpret_cast<const float(*)[4]>(native+3),root)||!armbind::Rigid(root))return false;
+    out=root;return true;
+}
 inline centurionanim::PoseTime Time(centurionreload::Phase phase,std::uint64_t since,
-                                    std::uint64_t closed,std::uint64_t now){
+                                    std::uint64_t closed,std::uint64_t now,bool refillOnly=false){
     if(now<since)return {};
+    // Cylinder closure is280ms. Legacy full Reload still needs its2600ms mask.
+    if(ReleaseNative(refillOnly,closed)&&now>=closed&&now-closed>=280)return {};
     const float age=float(std::min<std::uint64_t>(now-since,1000));
     using P=centurionreload::Phase;
     if(Tail(closed,now))return {true,false,26.f+6.f*std::min(float(now-closed)/280.f,1.f)};

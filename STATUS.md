@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE: physical refill/no native Reload now works, but user
+reports first2 shots missing gun firing animation, then normal. Frozen14:30
+session9688CE9B...950FD69 proves TWO conserved transfers0/16->6/10 and0/10->6/4,
+HUD ACK94/110ms. Body recoil vs flash/smoke distinction still requested.
+Source retains2600ms root/right-hand freeze after close from old full Reload.
+New scoped candidate: CenturionRefillOnly releases BOTH native pose holds at
+close, retains280ms cylinder-only close on LIVE gun root, then no palette override.
+Flag OFF/pre-close behavior/native ammo calls/FX untouched. L1/L2 pending;
+new first-shot perception L3/L4 UNKNOWN. ZERO Steam. See
+docs/centurion-post-refill-recoil.md. Do not call all FX fixed.
+
 LATEST 2026-10-17 SIDE: MAIN14:16 preflight identifies the obstruction:
 ALL3 attempts stage=field-name matched=F visited=126. Four required bindings
 were already found, but lookup continued into an unrelated undecodable field.

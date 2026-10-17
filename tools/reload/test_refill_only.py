@@ -76,5 +76,21 @@ class Tests(unittest.TestCase):
                             after_lookup.index('report.stage="ready";result=cached;return true'))
         self.assertEqual(resolver.count('result=cached'), 1)
 
+    def test_refill_only_releases_native_hand_hold_on_close(self):
+        src = (Path(__file__).resolve().parents[2]/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf-8')
+        self.assertIn('if(!centurionvisual::ReleaseNative(g_centurionRefillOnly!=0,physicalVisual.closed)&&\n'
+                      '               g_centurionRightHand.Apply(', src)
+        self.assertIn('physicalVisual.closed,physicalNow,g_centurionRefillOnly!=0).active', src)
+
+    def test_short_cylinder_close_uses_live_root_without_hold(self):
+        src = (Path(__file__).resolve().parents[2]/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf-8')
+        prepare = src.split('static int PrepareCenturionCylinder(', 1)[1].split('HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim', 1)[0]
+        self.assertIn('visual.closed,now,g_centurionRefillOnly!=0)', prepare)
+        self.assertIn('const bool liveRoot=centurionvisual::ReleaseNative(g_centurionRefillOnly!=0,visual.closed);', prepare)
+        self.assertIn('if(liveRoot&&!centurionvisual::LiveRoot(saved,root))return -1;', prepare)
+        for hold in ('g_centurionTrackedRoot.Get', 'g_centurionRootHold.Get'):
+            self.assertIn('!liveRoot&&!'+hold, prepare)
+        self.assertLess(prepare.index('if(!time.active)return -1;'), prepare.index('LiveRoot(saved,root)'))
+
 
 if __name__ == '__main__': unittest.main()
