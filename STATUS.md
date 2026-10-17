@@ -11,8 +11,13 @@ Sample avoids second reflection. Original caches/materials/assets/radii/native
 ammo authority unchanged. New exact original-VB/IB two-eye GPU oracle includes
 old-cache negative control PASS (0/0 old vs12974/12975 corrected pixels).
 Corrected joint feeds shell Launch/Sample within5.1mm; original-shell GPU PASS.
-26 own-process programs/50 Python PASS; optimized DLL build pending. See top of
-docs/centurion-tracked-cylinder.md. ZERO Steam changes; no physical PASS.
+26 own-process programs/50 Python PASS; L2_PASS clean source
+5d5afd7798dcdc40d2ed291573edcc37c4ee1567, x86 PE32 /O2, instrumentation OFF,
+DLL SHA716B453BEB963FD9B666829DAFBD2C723F55A71F476543ECF242EB42BC461210.
+Private build/centurion-reload/native-space-candidate-5d5afd7 retained with
+verified manifest; integrate SOURCE onto CURRENT MAIN, not older SIDE DLL.
+See top of docs/centurion-tracked-cylinder.md. ZERO Steam changes;
+new L3/L4 UNKNOWN, old physical candidate REJECTED; no physical PASS.
 
 LATEST 2026-10-17 SIDE second Centurion physical feedback: prior compact frame12
 and model-only RootHold rejected (wrong side/drift/no usable carried ammo).

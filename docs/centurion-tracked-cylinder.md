@@ -89,6 +89,45 @@ After normal exit MAIN checks fresh socket proximity, ONE ACK/refill, both-eye
 appearance and unchanged accepted systems. New candidate is not a restore target
 or physically accepted build merely because this offline oracle passed.
 
+### Final candidate receipt
+
+Source `5d5afd7798dcdc40d2ed291573edcc37c4ee1567`, own branch
+`fix/centurion-visual-feedback`, draft PR48. L1_PASS26 OWN CPU/ABI/resource/GPU
+programs (3 MAIN compatibility programs separately),50 Python tests;
+the full23-program runner was repeated on the clean final source with the
+new exact native fixture. Native Sample conjugacy passes1042 original poses,
+cache conversion is idempotent and refuses invalid data without publishing it.
+L2_PASS x86 PE32 `/O2`, no performance instrumentation; independent PE/hash
+checks agree with the build receipt. Existing unrelated compiler/static-analysis
+warnings remain, so this is NOT a warning-free build claim.
+
+- DLL3190784bytes SHA256
+  `716B453BEB963FD9B666829DAFBD2C723F55A71F476543ECF242EB42BC461210`.
+- Build receipt SHA256
+  `EE3CA1636611EF6CF52D5EDA79639895A2C9886F244275FF0AC2D194C00405A0`.
+- Private candidate:
+  `C:/Users/Trilex/vr-mods/SingularityVR-centurion-visual-feedback/build/centurion-reload/native-space-candidate-5d5afd7/`.
+- Full rerun: `build/centurion-reload/native-space-tests-final.log`;
+  build: `build/centurion-reload/native-space-build.log`;
+  exact vertex audit: `build/centurion-reload/native-space-audit-final/`.
+
+Reproduce the native fixture with explicit original offline inputs:
+`python tools/reload/audit_native_cylinder.py --psk <original-psk> --cooked <original-decompressed-package> --output build/centurion-reload/<NEW-directory>`.
+Run `tools/reload/test-centurion.ps1` with existing `-NativeEvidence`,
+`-AnimationCache`, `-ShellAssets` and NEW `-NativeVertices <audit>/native.svnv`.
+No derived game geometry/bytecode or install assets are committed to Git.
+Documentation-only receipt commits after5d5afd7 do not alter binary provenance.
+
+MAIN should integrate the scoped production delta in animation header/d3d9.cpp
+(shell header only clarifies its comment), plus tests/tools as useful, WITHOUT
+overwriting its STATUS/current VFX work. Existing flags/assets are sufficient;
+`centurion native space: cache=READY` identifies the new startup route.
+The same exported/native-space risk should be audited on the THREE OTHER
+weapons' actual cooked bytes before claiming their carried magazines correct;
+this Centurion-specific proof does not validate their binds or change PR45.
+Installed/accepted/restore identities remain MAIN-owned, not these hashes.
+New L3/L4 UNKNOWN. ZERO Steam launch/deploy/restore/installed-file writes.
+
 ### Previous candidate history (superseded)
 
 SIDE, zero launches/deployment/installed-file writes. User rejects rightward
