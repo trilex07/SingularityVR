@@ -8,6 +8,7 @@ using hipknife::V; using hipknife::Pose;
 struct Config {
     bool cylinderGestures=false; // optional circle/open/dump/insert/close path
     bool circleOpens=false; // separate default-OFF tracked-cylinder experiment
+    bool upwardEjection=false; // physical-polish opt-in; old route unchanged
     // Physical left shoulder, tracking metres. Yaw only: usable seated and
     // looking down, separate from both existing hip holsters. Old belt INI
     // keys intentionally do not move this anchor back into the knife zone.
@@ -211,10 +212,10 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
         if(Flicked(s.stageGun,f.gun))return enter(Phase::Open,Event::Opened);
         break;
     case Phase::Open:{
-        // Downward muzzle held for 100ms, not one noisy pose. This is a gesture
-        // observation only; no fabricated inventory/cylinder animation writes.
+        // Legacy downward / opt-in physical upward muzzle for 100ms, not noise.
+        // Gesture observation only; no fabricated inventory/animation writes.
         const V forward=hipknife::Rotate(f.gun.q,{0,0,-1});
-        if(forward.y<-.55f){
+        if(c.upwardEjection?forward.y>.55f:forward.y<-.55f){
             if(!s.downSample){s.downSince=f.nowMs;s.downSample=true;}
             if(f.nowMs-s.downSince>=100)return enter(Phase::NeedAmmo,Event::Dumped);
         }else s.downSample=false;

@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE physical feedback: native-space visibility accepted by
+user; remaining clip/glove penetration, health obstruction, wrong DOWN dump,
+native sweep and auto reload on store reopened. New default-OFF
+CenturionPhysicalPolish: measured original palm fit/curl, actual rendered wrist
+witness shared with input, carry-only health hide, UP dump/rearward cases,
+controller-relative right-hand hold during native tail, fresh stored block-only
+native context/token revoke. No guessed ammo/engine animation writes.
+Own CPU/GPU and original-glove regressions in progress; L2 pending,
+new L3/L4 UNKNOWN. ZERO Steam/INI/assets changed. See
+docs/centurion-physical-polish.md for evidence, exact scope and MAIN test.
+
 LATEST 2026-10-17 SIDE: latest PSVR2 feedback REJECTS0742736 cylinder/cases
 visibility. Session12:29:07→12:30:29 (SHA119CC80D...71A7) has fresh socket
 2.37–3.06m from hand despite draw counts. Native cooked VB audit proves ALL5799

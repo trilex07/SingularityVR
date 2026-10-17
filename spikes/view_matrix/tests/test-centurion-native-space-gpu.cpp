@@ -82,9 +82,14 @@ int main(int argc,char** argv){
     auto chain=Identity();chain.m[0][0]=chain.m[1][1]=chain.m[2][2]=1/52.5f;
     auto projection=Identity();projection.m[0][0]=projection.m[1][1]=10;
     Check(SUCCEEDED(dev->SetVertexShaderConstantF(40,&chain.m[0][0],4)),"local chain");
-    for(unsigned mode=0;mode<3;++mode){
+    for(unsigned mode=0;mode<4;++mode){
         const Pose target{{0,0,.6f},{}};float pal[15][4];
         Check(centurionvisual::Spare(mode==0?legacy:d,root,Identity(),chain,Identity(),{},target,pal),"carried native palette");
+        if(mode==3){
+            auto desired=chain;desired.m[3][0]=0;desired.m[3][1]=0;desired.m[3][2]=.6f;
+            Check(centurionvisual::SpareDesired(d,Identity(),chain,Identity(),desired,pal),"measured-palm matrix replay");
+            projection.m[3][0]=projection.m[3][2]=0;
+        }
         // Same original geometry and chain in both negative and positive tests.
         if(mode==2){
             float original[15][4];for(unsigned slot=0;slot<5;++slot)armbind::ToGpu(root,reinterpret_cast<float(*)[4]>(original+slot*3));
