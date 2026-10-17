@@ -1,22 +1,20 @@
 # STATUS — session handoff
 
-LATEST 2026-10-17 MAIN VFX-muzzle L3 DEPLOYED (SIDE runda 4, hand-ported: their
-d3d9 base diverged 400 lines, so verbatim checkout impossible — ported ONLY the
-10 VFX hunks + vfx_muzzle.h + test; zero hud/plate code touched): candidate DLL
-SHA-256 6AC439907517888BB4144CC03800A6495A32DFB1B155A271E0395307CD6FFCC8, PE32
-x86 /O2, clean tree e8b1baa, manifest dirty=[], guard preflight+postflight
-PASS; backup deployment/install-backups/20261017-145746. NO-REGRESSION gate
-per user order: FULL reload suite EXIT=0 on final tree + vfx-muzzle 12/12 +
-static analysis; pistol forward 150 = old default, UpMm=0 = legacy, panel page
-11/13 rows. STATUS: CANDIDATE ONLY — Centurion-only test scope (other guns'
-table values are unverified starting values). Steam: DLL=6AC43990,
-INI=5314150A (same 5-flag set; pre-edit backup in 145746 dir). Path: rollback
-to DADE170B (postflight PASS), redeploy (guard model intact). Rollback: deploy
-Rollback -BackupPath 20261017-145746 (+plan paths) + drop the 5 added INI
-lines. AWAITING L3+L4 (Centurion ONLY, NO screenshots): fire Centurion ->
-tune VR panel VFX MUZZLE-UP live (0/50/100/150/200) until effect sits on muzzle
-tip; report value + flash visibility/size both eyes + FPS. MAIN reads muzzle
-up=/forward log + overlay n>.
+LATEST 2026-10-17 MAIN VFX-muzzle L3 DEPLOYED → ROLLED BACK (user: cienie
+przestały działać). Incydent: po wdrożeniu DLL 6AC43990 w zainstalowanym INI
+pojawiły się klucze ShadowTest=1 (drop-all classified shadow draws — log
+`SHADOW TEST: drop-all=1 ... this window=841`), VfxMuzzleOffsetMm=200,
+VfxMuzzleUpMm=200 — te klucze NIE pochodzą z mojego commita (dodałem tylko
+PR_VFXUP + ForwardMm table, brak dotyku shadow-pass). Prawdopodobna przyczyna:
+panel VR gry zapisał ShadowTest=1 przy regulacji wiersza VFX, lub poprzedni
+stan INI. Nie zgaduję quale — fakt: cienie zniknęły przy ShadowTest=1.
+AKCJA: rollback deploy do DADE170B (guard preflight+postflight PASS), INI
+przywrócone do 7ED1239C (bez ShadowTest/VfxMuzzle*). Steam ponownie na
+DADE170B, akceptowany. Commit e8b1baa (VFX-muzzle port) zachowany w gałęzi,
+NIE wdrażany dalej bez expresznej zgody użytkownika. Wniosek: przed każdą
+próbą VFX-muzzle INI musi być wyczyszczone ze ShadowTest (ustaw 0) i
+VfxMuzzle* — weryfikacja hash INI po każdej sesji od teraz obowiązkowa.
+
 
 LATEST 2026-10-17 MAIN MERGED TO main (user order): 92396ca (fast-forward
 d32eb54..92396ca: recoil-release fix + scoped L4 PASS). Steam 6B0664ED→BEF82DC6
