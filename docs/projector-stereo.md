@@ -125,3 +125,42 @@ Previous-session performance evidence (not a causal attribution):
   Logger uses AsyncLogEnqueue first; do not assume every MDG line is disk I/O
   on the rendering thread. Need scoped timings or isolated A/B after projector
   capture before claiming either explains the user's intermittent drops.
+
+### Repeat result: complete canvas frame, native light-function candidate found
+
+User closed normally and reports drops mainly just after the crash/collapsing
+building, not after entering the first room. Do not attribute these exclusively
+to screenshot/menu overhead. That remains a separate performance hypothesis.
+Restore completed; independent hashes of DLL/injector/INI/UI all match the
+accepted baseline. No Singularity process remained.
+
+One capture succeeded at 00:14:59: shadow-pass-15548-1.txt, 911 draws, 271 groups,
+111 shaders; complete_budget=true, shader_budget_overflow=0,
+shader_unavailable=0. The SBS image visibly faces the illuminated canvas with
+film content toward its right edge. Second capture did not fire: next Pause
+transition went through class4 before class0 (exit flow), which the deliberate
+cue rejects. First complete frame is usable; no need to repeat baseline now.
+Private log, parsed trace, bytecode and preview: build/projector/evidence-15548.
+
+Native candidate PS FNV64 7F00BC7925591BE8, SHA256
+993d7174be6c2f947a395ab9f9d1eaecbc28209af8428e1cf32060dc28178f64.
+CTAB proves ScreenToLight at PS c3..c6, ScreenPositionScaleBias c1,
+MinZ_MaxZRatio c2; s0 is scene/depth source, s1 the 2048x2048 DXT1 atlas.
+Disassembly reads s0 alpha, reconstructs depth through c2, multiplies screen
+coordinates/depth by c3..c6, divides by resulting z, and selects atlas tile
+using c8/c9 (4x4 in this captured frame). Thus this is animated light-function
+projection, not a fullscreen Bink or ordinary movie-screen mesh UV path.
+
+Groups171/172, draws634/635: same full 5904x3012 viewport with left/right
+scissors, same textures, PS c1..c6 identical across eyes. Their VS SHA256
+fceb34c84385427e464bb2e59ca82737934116b0892c6ff989d63f793bf23023
+is a three-instruction clip-position/texcoord pass-through with local def c0;
+the uploaded camera VS constants are NOT consumed by this VS.
+No existing ScreenToLight correction was found in source.
+
+Next: inspect the exact quad stereo route and reconstruction convention; prove
+the screen-coordinate mapping and derive per-eye transform before touching
+constants. Exact shader/resource scoped experiment only. Identical constants
+are concrete evidence, not by themselves proof of the final pixel cause.
+Falsifier: correct per-eye reconstructed projection still leaves the same
+misplaced movie, or candidate suppression leaves that content unchanged.

@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+Projector repeat PID15548 CLOSED; independent DLL/injector/INI/UI hashes match
+safe profile. One complete canvas capture (911 draws/271 groups/111 shaders,
+no overflows/unavailable shaders). PS 7F00BC7925591BE8 uses ScreenToLight
+c3..c6; groups171/172 have identical PS reconstruction across eye scissors.
+VS is clip/texcoord pass-through. Native light-function candidate now known;
+no correction implemented yet. See docs/projector-stereo.md final section.
+User locates FPS drops at crash/collapsing building, not inside first room.
+
 Projector session 37168: late canvas interval inspected, active stereo ~88–90
 FPS but NO shader capture: scheduler failed earlier on >1 MiB log backlog.
 Safe installation restored and independently hash-verified. Recorder repaired
