@@ -6,8 +6,12 @@ were already found, but lookup continued into an unrelated undecodable field.
 Frozen session-1416 SHA9EC0CA13...316D55F76 (see refill-resolution doc).
 Fix stops required lookup BEFORE Next after4 distinct ABI-checked bindings;
 incomplete-set limits and ALL subsequent live slot/body/cast checks retained.
-No native-call/permit/gesture/model/inventory changes. Regression wiring tests
-pass; full L1/L2 pending. Native transfer/physical acceptance STILL OPEN;
+No native-call/permit/gesture/model/inventory changes. L1_PASS25 own-process
+programs/60 Python, including2 new structural regression guards. L2_PASS clean
+56b3f16, x86 PE32 /O2, performance instrumentation OFF, DLL SHA256
+4A5A8BA49868442E46169634287BE4601810CB987BDA714DC18F7939E731992E.
+Private build/centurion-reload/lookup-candidate-56b3f16 (NO INI/assets).
+Native transfer/physical acceptance STILL OPEN;
 this addresses the measured lookup obstruction, not proof of restored firing.
 ZERO Steam. MAIN integrates source delta onto current baseline, not old SIDE DLL.
 

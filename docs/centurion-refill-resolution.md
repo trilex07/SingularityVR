@@ -31,6 +31,32 @@ result publication. These are structural checks, not a simulated UE3 runtime.
 Earlier UNKNOWN-stage / diagnostic-only sections below are historical receipts,
 superseded by this measured runtime result and the narrowly scoped source fix.
 
+### Lookup fix verification / delivery
+
+Source `56b3f16f77ea7836cbe57119043b0bd9e8d173f2`, existing PR48. L1_PASS25
+own-process CPU/ABI/resource/GPU programs +60 Python tests. Original four native
+bodies/every-byte mutations, all four actual archived wrappers, permit/transfer
+and visual-state tests remain PASS. The2 new checks are production source-order
+regressions, not a live UE3 field-walk simulation. Test log:
+`build/centurion-reload/refill-only/lookup-tests.log`.
+
+L2_PASS clean source56b3f16, x86 PE32 014C/010B, `/O2`, performance
+instrumentation OFF; existing unrelated warnings remain. DLL3205632 bytes,
+SHA256 `4A5A8BA49868442E46169634287BE4601810CB987BDA714DC18F7939E731992E`.
+Build receipt SHA256
+`8F7C36FD0B3EC05755CD04EB79A52F1B84AA1A74EB90483BCA58DB27EA098F23`.
+Log: `build/centurion-reload/refill-only/lookup-build.log`. Private candidate
+`build/centurion-reload/lookup-candidate-56b3f16/`: DLL/receipt/manifest only,
+NO INI/assets. ZERO Steam install/launch/restore/live memory by SIDE.
+
+MAIN integrates the source delta onto CURRENT accepted integration, preserving
+its dependencies. Do NOT deploy this older full SIDE DLL blindly. Same flags;
+no gesture recalibration. Next controlled session: bounded preflight must reach
+ready1; one full manual insert/close should yield conserved ammo transfer and
+HUD acknowledgement, then firing without native animation/lock/camera shake.
+Read resolver stage and refill result from that session. A ready1 preflight is
+not proof of successful transfer. L3/L4 of this fix remain UNKNOWN.
+
 2026-10-17 SIDE. User: no native animation, but clip never refills and cannot
 shoot. This REJECTS physical acceptance of source6d7b201's refill-only backend.
 Do not promote the corresponding PR45 generic resolver on its L1/L2 alone.
