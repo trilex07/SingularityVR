@@ -1,5 +1,9 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN recoil-release L3+L4 PASS (build BEF82DC6 + 5 flags):
+user PSVR2 "super" on first-shots-after-close route (native recoil back, no
+frozen gun). Scoped to this build/config/route; user ordered merge to main.
+
 LATEST 2026-10-17 MAIN recoil-release L3 DEPLOYED (SIDE 4962b7a, PR48):
 candidate DLL SHA-256 BEF82DC6A5878CE036F66E15892118647987524E667E1CA15DA22B10E0E4CBCC,
 PE32 x86 /O2, clean tree 146388e, manifest dirty=[], guard preflight+postflight
