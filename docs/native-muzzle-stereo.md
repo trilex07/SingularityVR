@@ -490,6 +490,19 @@ the formerly dropped pair. The next experiment must keep mode 1 and its exact
 pair unchanged, while enabling a **separate** default-OFF exact world route
 for `488BAE:27DF`. Only then can a persistent glow falsify the route theory.
 
+The separate selector now keeps `NativeMuzzleStereoMode=1` and exact accepted
+`4FAE:2FEC` hashes/lengths unchanged. Five new `NativeMuzzleWorld*` INI keys
+enable only the `488BAE:27DF` route; the existing drop still runs in the
+driver wrapper. L1 tests prove simultaneous accepted drop and world reroute,
+including non-overlap and invalid-identity refusal. L2 x86 PE32 `/O2` from
+`2d2f892` PASS: DLL SHA-256
+`F40CCAE2CB060A62488B4505A2803DD983A1251EA7EB2E55564F858F46B3E9F2`.
+Offline candidate `build/native-muzzle-main/candidate-world-route-preserve-drop-488`
+has INI SHA-256 `786C43C9B84DEA493A9B58A813D9A2FCF6854C1E0FEA36AE274701DB4F354010`;
+read-only accepted-profile guard preflight PASS, no Steam write. Next L3 must
+show both nonzero `drop` for the accepted pair and `worldRerouted/cameraC0`
+for the new pair. PSVR2 must then check whether the seam glow changes.
+
 Preparation receipt: source commit `e5ef2fc`, L1 native/shadow/hand tests PASS;
 L2 x86 PE32 `/O2` DLL SHA-256
 `8D2B5305108E9DC402E7543B4C2A2748277C5531D940641CF71B9B73CC1F0D23`.

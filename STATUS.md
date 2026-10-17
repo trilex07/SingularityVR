@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+LATEST MAIN 2026-10-17 corrected muzzle test staged **offline**: candidate
+`build/native-muzzle-main/candidate-world-route-preserve-drop-488` preserves
+accepted mode-1 drop `4FAE:2FEC` and separately routes `488BAE:27DF` through
+world stereo. L1 tests PASS; L2 x86 PE32 `/O2` DLL from `2d2f892` SHA
+`F40CCAE2...E9F2` PASS; candidate INI SHA `786C43C9...4010`. Read-only
+accepted-profile preflight PASS. Game closed; Steam is restored to accepted
+DLL/INI/injector hashes. Await fresh user `start` before install/PSVR2 test.
+The prior mode-4 L4 result remains confounded and is not a VFX fix.
+
 LATEST MAIN 2026-10-17 native muzzle mode-4 PSVR2 result: Steam/OpenXR
 confirmed exact `488BAE:27DF` world-route execution with tracked c0 and no
 mono fallback. User saw muzzle flash but persistent asymmetric glow, weak/no
