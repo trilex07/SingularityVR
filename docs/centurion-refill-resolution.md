@@ -72,4 +72,18 @@ wrappers, whose exact identities are the missing evidence. New wiring tests
 check the preflight cannot Arm/Commit/Refill/forward and that all strict failure
 guards remain. Prior gesture/palm/native-space/shell/state/Reset tests pass.
 Log: `build/centurion-reload/refill-only/resolver-tests.log`.
-L2 receipt follows. No repaired native transfer or new L3/L4 acceptance claimed.
+L2_PASS clean source `9c386676a472829b015604271f2c180742d8ae74`, x86 PE32
+014C/010B, `/O2`, performance instrumentation OFF (bounded diagnostic still ON
+under the existing experimental switch). Existing unrelated warnings remain.
+DLL3205632 bytes, SHA256
+`F5242ABCF5F3CE1150350BEEC30AF458DE5CBD55F022B1B7D8BE0CE79EAEDE94`.
+Build receipt SHA256
+`4CC80F1075F65EF170855BE66DE0311B4BDE3C6E2DA079E83AACEE12CDA3B0CE`.
+Private `build/centurion-reload/resolver-candidate-9c38667/`: DLL/build receipt/
+explicit DIAGNOSTIC manifest only, NO INI/assets. Build log
+`build/centurion-reload/refill-only/resolver-build.log`. Not an installed,
+accepted or restore baseline; source integration by MAIN required. Source9c38667
+is on the existing PR48 branch, no merge. PR45 rollout warning also updated.
+No repaired native transfer or new L3/L4 acceptance claimed. Further functional
+changes require the runtime rejection stage; SIDE cannot obtain live evidence
+by launching/attaching to Steam. The prepared preflight is that next safe gate.

@@ -8,7 +8,10 @@ Added bounded read-only resolver stage/mask/slot/body-fingerprint report and3
 auto-BLOCK preflights1s apart before any transfer. Guards/gestures/models/native
 calls unchanged. No guessed fix or relaxed ABI/body/lookup/context checks.
 L1_PASS25 programs/58 Python incl ALL FOUR original C++ wrapper decodes PASS.
-L2 pending diagnostic; actual cause/fix still OPEN. ZERO Steam. MAIN runs the
+L2_PASS clean9c38667 diagnostic, x86 PE32 /O2, DLL SHA256
+F5242ABCF5F3CE1150350BEEC30AF458DE5CBD55F022B1B7D8BE0CE79EAEDE94.
+Private build/centurion-reload/resolver-candidate-9c38667 (NO INI/assets).
+Actual cause/fix still OPEN, L3/L4 UNKNOWN for diagnostic. ZERO Steam. MAIN runs the
 short empty-Centurion preflight before another full L4 reload route; do not
 promote the same unproven generic resolver from PR45. See
 docs/centurion-refill-resolution.md. PR48 source delta, not older SIDE DLL deploy.
