@@ -1,5 +1,10 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN resolver-fix L3+L4 PASS (build 6B0664ED + 5 flags):
+user PSVR2 "jest okej" on the counter-to-6 + fire-without-animation/shake
+route. Scoped to this build/config/route; user ordered merge to main.
+SIDE small fixes may still follow; NOT global acceptance.
+
 LATEST 2026-10-17 MAIN resolver-fix L3 DEPLOYED (SIDE 56b3f16, PR48): candidate
 DLL SHA-256 6B0664ED83EB579DBCACB2BFF4DE7BB38CF2B49A5CFFC8D6F906156739F5408F,
 PE32 x86 /O2, clean tree f3fe2a5, manifest dirty=[], guard preflight+postflight
