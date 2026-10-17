@@ -91,7 +91,8 @@ def prepare(prepared, output):
                             'ReloadNativeMagazine': 0})
     (output/'settings-proposal.json').write_text(json.dumps(settings, indent=2)+'\n', encoding='utf-8')
     manifest = dict(scope='OFFLINE SIDE CANDIDATE; NOT installed/accepted or L3/L4', source_commit=head,
-                    source_branch=git('branch', '--show-current'), base_main=git('rev-parse', 'origin/main'),
+                    source_branch=git('branch', '--show-current'), base_main=git('merge-base', 'HEAD', 'origin/main'),
+                    origin_main_at_packaging=git('rev-parse', 'origin/main'),
                     warning='MAIN integrates source into current accepted dependency profile; no blind SIDE DLL deployment',
                     files=files, settings='settings-proposal.json', live_tests='UNKNOWN', proprietary_assets='local only; do not publish')
     (output/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n', encoding='utf-8')

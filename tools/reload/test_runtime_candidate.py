@@ -39,6 +39,11 @@ class Tests(unittest.TestCase):
         self.assertEqual(fnv(b''), 2166136261)
         self.assertEqual(fnv(b'hello'), 0x4f9f2cab)
 
+    def test_manifest_distinguishes_branch_base_from_moving_remote_tip(self):
+        source = (ROOT/'tools/reload/prepare_runtime_candidate.py').read_text(encoding='utf-8')
+        self.assertIn("base_main=git('merge-base', 'HEAD', 'origin/main')", source)
+        self.assertIn("origin_main_at_packaging=git('rev-parse', 'origin/main')", source)
+
     def test_runtime_bootstrap_independent_of_centurion_and_cinema(self):
         # Source wiring contract only: actual producer identity still needs L3.
         source = (ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf-8')
