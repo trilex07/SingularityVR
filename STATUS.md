@@ -13,8 +13,9 @@ camera loss; 15-case L1 gate in scripts_ready.h. (3) Holster hoop/knife-belt
 rings in menus: legacy Style==0 path had no menu gate (code default is 0).
 Fix: both legacy gates now require the same holstermarker::Eligible focused-
 gameplay predicate as Style==1. L1: 33 ammo + 15 scripts + holster-marker suite pass, x86 /O2. L2: full
-d3d9.dll PE32 build + manifest on the branch (SHA recorded below after the
-clean-HEAD rebuild). NOT Steam/PSVR2 tested — MAIN L3/L4 pending. Next: MAIN review, Steam L3 on
+d3d9.dll PE32 build + manifest from clean HEAD 201a32b: SHA-256
+5102B8CF2EE19D980E343B121927386DC80D681D20C3AF7ED1CA541A9AD426AD (/O2,
+no -Install, no Steam contact). NOT Steam/PSVR2 tested — MAIN L3/L4 pending. Next: MAIN review, Steam L3 on
 the three scenarios (plate single+clamped, hold releases on load, no hoops in
 menu), then user PSVR2 acceptance script.
 
