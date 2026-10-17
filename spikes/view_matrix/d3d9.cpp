@@ -16839,7 +16839,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     if(g_centurionPhysicalPolish&&gloves&&TryAcquireSRWLockShared(&g_centurionVisualLock)){
         physicalVisual=g_centurionVisual;ReleaseSRWLockShared(&g_centurionVisualLock);
         physicalActive=!Rd(g_weaponHolstered)&&centurionclip::Current(physicalVisual.clip,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),physicalNow)&&
-            centurionvisual::Time((centurionreload::Phase)physicalVisual.phase,physicalVisual.since,physicalVisual.closed,physicalNow).active;
+            centurionvisual::Time((centurionreload::Phase)physicalVisual.phase,physicalVisual.since,physicalVisual.closed,physicalNow,g_centurionRefillOnly!=0).active;
     }
     const bool nativeCarry=physicalActive&&physicalVisual.phase==(int)centurionreload::Phase::Carrying;
     const bool nativeOffKnife = NativeKnifeOffHandEligible();
@@ -17123,7 +17123,8 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             bool right[45]{};for(int i=0;i<slots;++i)right[i]=gloveisolate::NoTmdCookedHandSide(sectionMap[i])==1;
             const bool capture=physicalVisual.phase!=(int)centurionreload::Phase::WaitingNative&&
                 physicalVisual.phase!=(int)centurionreload::Phase::Cooldown;
-            if(g_centurionRightHand.Apply(physicalVisual.clip.pawn,physicalVisual.clip.weapon,physicalVisual.transaction,
+            if(!centurionvisual::ReleaseNative(g_centurionRefillOnly!=0,physicalVisual.closed)&&
+               g_centurionRightHand.Apply(physicalVisual.clip.pawn,physicalVisual.clip.weapon,physicalVisual.transaction,
                 capture,changed,(unsigned)slots,right,chain,tracking,physicalVisual.aim))InterlockedIncrement(&g_centurionRightHeld);
             if(nativeCarry&&g_nativeGlovePoseThisDraw&&wristSlot[0]>=0){
                 armbind::Mat desired;
@@ -18872,7 +18873,7 @@ static int PrepareCenturionCylinder(IDirect3DDevice9* dev,INT baseVertex,UINT ve
        Rd(g_weaponWheelOpen)||CutsceneNativeCameraArmed()||
        g_sceneMode.Current()!=vrscene::Mode::GameplayStereo||g_xrSessionState!=XR_SESSION_STATE_FOCUSED))return -1;
     const auto time=g_centurionVisualFollowup?
-        centurionvisual::Time((centurionreload::Phase)visual.phase,visual.since,visual.closed,now):
+        centurionvisual::Time((centurionreload::Phase)visual.phase,visual.since,visual.closed,now,g_centurionRefillOnly!=0):
         centurionanim::Time((centurionreload::Phase)visual.phase,visual.since,now);
     if(!time.active)return -1;
     IDirect3DIndexBuffer9* ib=nullptr;
@@ -18899,6 +18900,8 @@ static int PrepareCenturionCylinder(IDirect3DDevice9* dev,INT baseVertex,UINT ve
         InterlockedExchange(&g_centurionShellSeenGun,0);return -1;
     }
     armbind::Mat root;
+    const bool liveRoot=centurionvisual::ReleaseNative(g_centurionRefillOnly!=0,visual.closed);
+    if(liveRoot&&!centurionvisual::LiveRoot(saved,root))return -1;
     if(g_centurionVisualFollowup){
         armbind::Mat local,gunC,tracking;
         const bool needsChain=g_centurionTrackedCylinder||(g_centurionClipPreview&&
@@ -18912,13 +18915,13 @@ static int PrepareCenturionCylinder(IDirect3DDevice9* dev,INT baseVertex,UINT ve
         }
         if(g_centurionTrackedCylinder){
             hipknife::V socket;
-            if(!g_centurionTrackedRoot.Get(visual.clip.pawn,visual.clip.weapon,visual.transaction,saved,
-                local,gunC,tracking,visual.aim,root)||
+            if((!liveRoot&&!g_centurionTrackedRoot.Get(visual.clip.pawn,visual.clip.weapon,visual.transaction,saved,
+                local,gunC,tracking,visual.aim,root))||
                !centuriontracked::Attached(g_centurionNativeAnimation,time,
                 centuriontracked::OpenAmount((centurionreload::Phase)visual.phase,visual.since,visual.closed,now),
                 saved,root,local,gunC,tracking,visual.aim,changed,socket))return -1;
             replay.socket={visual.clip.pawn,visual.clip.weapon,visual.transaction,now,socket,true};
-        }else if(!g_centurionRootHold.Get(visual.clip.pawn,visual.clip.weapon,visual.transaction,saved,root)||
+        }else if((!liveRoot&&!g_centurionRootHold.Get(visual.clip.pawn,visual.clip.weapon,visual.transaction,saved,root))||
                  !centurionvisual::Attached(g_centurionAnimation,time,saved,root,changed))return -1;
         if(g_centurionClipPreview&&(visual.phase==(int)centurionreload::Phase::NeedAmmo||
            visual.phase==(int)centurionreload::Phase::Carrying)){
@@ -26865,7 +26868,7 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
             (unsigned long long)observation.sampledMs,f.ammoFresh?1:0);
         static unsigned visualRecords=0;
         if(g_centurionVisualFollowup&&visualRecords++<64){
-            const auto pose=centurionvisual::Time(g_centurionState.phase,g_centurionState.since,g_centurionVisualClose,now);
+            const auto pose=centurionvisual::Time(g_centurionState.phase,g_centurionState.since,g_centurionVisualClose,now,g_centurionRefillOnly!=0);
             Log("centurion visual followup: phase=%d originalFrame=%.2f hidden=%d nativeSpareDraws=%ld closeMs=%llu (same native draw/depth; NOT pixel/PSVR2 proof)",
                 (int)g_centurionState.phase,pose.frame,pose.hideClip?1:0,Rd(g_centurionSpareDraws),(unsigned long long)g_centurionVisualClose);
             if(g_centurionTrackedCylinder)Log("centurion tracked cylinder: event=%s socketFresh=%d socket=(%.3f %.3f %.3f) hand=(%.3f %.3f %.3f) insertDist=%.3f transaction=%llu (render joint, NOT physical acceptance)",
