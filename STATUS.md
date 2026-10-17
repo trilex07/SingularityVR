@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE: latest PSVR2 feedback REJECTS0742736 cylinder/cases
+visibility. Session12:29:07→12:30:29 (SHA119CC80D...71A7) has fresh socket
+2.37–3.06m from hand despite draw counts. Native cooked VB audit proves ALL5799
+positions are Y-reflected relative to ActorX PSK; old SVCA binds are exported
+space, native geometry is not. Wrong bind origin differs226.221775UU.
+Correction implemented: one-time native-space SVCA copy selected ONLY under
+default-OFF CenturionTrackedCylinder for attached socket AND carried replay;
+Sample avoids second reflection. Original caches/materials/assets/radii/native
+ammo authority unchanged. New exact original-VB/IB two-eye GPU oracle includes
+old-cache negative control PASS (0/0 old vs12974/12975 corrected pixels).
+Corrected joint feeds shell Launch/Sample within5.1mm; original-shell GPU PASS.
+26 own-process programs/50 Python PASS; optimized DLL build pending. See top of
+docs/centurion-tracked-cylinder.md. ZERO Steam changes; no physical PASS.
+
 LATEST 2026-10-17 SIDE second Centurion physical feedback: prior compact frame12
 and model-only RootHold rejected (wrong side/drift/no usable carried ammo).
 Last session12:07:36->12:09:57 log SHA E385B6E7...EAF9906 shows32 successful

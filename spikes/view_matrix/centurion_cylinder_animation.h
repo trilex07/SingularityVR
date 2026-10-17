@@ -13,6 +13,7 @@ inline unsigned ReadableUsage(bool enabled,unsigned bytes,bool index16,unsigned 
 }
 struct Data {
     bool ready=false;
+    bool nativeSpace=false; // runtime only; SVCA stays ActorX/export-space v1
     std::uint32_t indexHash=0;
     armbind::Mat parent{},inverse[2]{};
     float keys[53][2][7]{}; // original PSA position xyz/quaternion xyzw
@@ -38,6 +39,22 @@ inline bool Decode(const unsigned char* p,std::size_t size,Data& out){
     }
     d.ready=true;out=d;return true;
 }
+// Actual cooked 5799-vertex stream is UE3-space, unlike the ActorX cache.
+// Convert bind transforms ONCE, not native GPU vertices or live bone constants.
+inline bool ToNative(const Data& source,Data& out){
+    if(!source.ready)return false;
+    Data staged=source;
+    if(!staged.nativeSpace){
+        auto reflect=[](armbind::Mat& m){
+            for(unsigned r=0;r<4;++r)for(unsigned c=0;c<4;++c)
+                m.m[r][c]*=(r==1?-1.f:1.f)*(c==1?-1.f:1.f);
+        };
+        reflect(staged.parent);reflect(staged.inverse[0]);reflect(staged.inverse[1]);
+        staged.nativeSpace=true;
+    }
+    if(!armbind::Rigid(staged.parent)||!armbind::Rigid(staged.inverse[0])||!armbind::Rigid(staged.inverse[1]))return false;
+    out=staged;return true;
+}
 struct PoseTime {bool active=false,hideClip=false;float frame=0;};
 inline PoseTime Time(centurionreload::Phase phase,std::uint64_t since,std::uint64_t now){
     if(now<since)return {};
@@ -62,8 +79,10 @@ inline bool Sample(const Data& d,unsigned bone,float frame,armbind::Mat& out){
     key.pskPosition={ka[0]+(kb[0]-ka[0])*t,ka[1]+(kb[1]-ka[1])*t,ka[2]+(kb[2]-ka[2])*t};
     for(int i=0;i<4;++i)key.pskQuaternion[i]=ka[i+3]*(1-t)+kb[i+3]*t*(dot<0?-1.f:1.f);
     armbind::Mat local;if(!armbind::PskLocal(key,false,local))return false;
-    // PSK/PSA reflection reversal, identical to the exporter's geometry path.
-    for(int r=0;r<4;++r)for(int c=0;c<4;++c)local.m[r][c]*=(r==1?-1.f:1.f)*(c==1?-1.f:1.f);
+    // PskLocal already reverses ActorX reflection into UE3 native space.
+    // Only the legacy cache-space route reflects back into exported geometry.
+    if(!d.nativeSpace)for(int r=0;r<4;++r)for(int c=0;c<4;++c)
+        local.m[r][c]*=(r==1?-1.f:1.f)*(c==1?-1.f:1.f);
     armbind::Mat absolute;skeletal::Multiply(absolute.m,local.m,d.parent.m);
     skeletal::Multiply(out.m,d.inverse[bone].m,absolute.m);
     return armbind::Rigid(out);

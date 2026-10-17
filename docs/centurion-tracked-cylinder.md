@@ -1,5 +1,96 @@
 # Centurion second physical feedback — 2026-10-17
 
+## UPDATE: latest physical rejection — native/export-space mismatch
+
+The previous 0742736 candidate is **REJECTED for cylinder/case visibility**,
+not physically accepted. Its synthetic chain tests used matching source
+conventions on both sides and therefore missed the actual native vertex space.
+Do not redeploy its historical binary as a corrected build.
+
+Read-only last-session snapshot: header12:29:07, ending12:30:29,
+`build/centurion-reload/feedback-20261017/session-1230.log`, SHA-256
+`119CC80DC8986EF30978B6B3956609C14B7CA20D41E3AC35A4E83588D88871A7`.
+TrackedCylinder=1; Circle/open/dump and shoulder grabs ran. Socket at dump
+(-1.356,-1.340,1.238), hand(-.416,-.154,-.587), distance2.371m. Later
+insertion distances2.5–3.06m. Three cosmetic shell bursts and growing native
+spare draw counts do NOT establish visible content. User sees neither.
+
+### Mechanism proved offline
+
+The exact original cooked 5799-vertex GPU stream stores position(x,-y,z)
+relative to the ActorX PSK export. All5799 positions, all influence slots and
+quantized weights, and all6767 triangle windings agree under that mapping.
+1067 rigid clip GPU wedges (seams included) are mapped to palette slot0.
+The old SVCA cache instead contains reflected/export-space binds. Applying its
+inverse bind to native vertices misplaces the clip joint by226.221775UU;
+native joint Y=-113.110887 vs exported Y=+113.110887. This is independent
+evidence from the actual original bytes, not an inference from a draw count.
+
+Inputs (private, not redistributed):
+
+- PSK SHA256 `4E18A25D5241DE1B3F18100E3BD9373D464EE16BAF3E29D7C60289AE18FE73D4`.
+- Decompressed original package SHA256
+  `0534C5C9A5878D280294168BD12711B99CB3948503D4ED53608A0316479D1B18`.
+- Exact VB/IB fixture SHA256
+  `8D380463597586DE4D55DBF176B2396AE39316D7E54B5991214F272A9EC0FA80`.
+
+Separately, an existing archived actual skinned-arm colour shader was decoded
+offline with `tools/reload/inspect_reload_shader.py`; SHA256
+`C27DA11EE20D69FADAE58D3C828EA8CF688BAE80762391301E9978DA5C446330`.
+It uses three skinning dot products then row-vector LocalToWorld and projection.
+This supports the existing matrix convention; it is NOT a current Centurion
+shader capture. No speculative transposition or register change is justified.
+
+### Controlled correction and falsifier
+
+Under the existing default-OFF TrackedCylinder flag only, build a native-space
+copy of the original SVCA once at initialization: S*bind*S, S*inverse*S with
+S=diag(1,-1,1,1). PskLocal already undoes ActorX reflection; native-space Sample
+must not reflect it a second time. Both attached clip/socket and carried clip
+use this SAME native cache. Original files, materials/UVs, vertices, live bone
+constants, radii, original OFF route and ammo/one-permit authority are unchanged.
+The shell launch already uses the fresh rendered socket; correcting that socket
+corrects its spawn origin without a new cosmetic hand offset.
+
+Falsifier: exact native GPU vertices still map far from the joint, the old
+cache produces the same expected pixels, corrected carried/attached clip fails
+the two-eye pixel oracle, or a MAIN session still places its fresh socket metres
+from the physical gun. In that last case investigate the current gun shader/
+chain with bounded capture; do not inflate radii or call successful DIP proof.
+
+`audit_native_cylinder.py` writes only a NEW directory under this worktree's
+ignored lab. `test-centurion-native-space-gpu.cpp` reads the exact private
+VB/IB, uses a synthetic shader implementing the observed skin→local→projection
+chain, and compares old/native mapping. It is an OWN D3D9Ex process, not Steam,
+not the proxy and not evidence of real-game lighting or physical acceptance.
+Final build/test receipt follows below when complete.
+
+Offline result: exact cooked geometry with the old cache gives0/0 pixels;
+native-space carried AND attached clip give12974/12975 pixels in the two
+fixture eye viewports, with expected bounds/disparity. All1067 rigid GPU clip
+wedges are within10UU of the corrected joint and >220UU from the old one.
+The corrected attached socket feeds the actual shell Launch/Sample policy;
+all3 spent cases start within5.1mm of that joint after full world/tracking
+conversion, rather than metres away. Existing original-shell own-GPU fixture
+still shows110/114 textured pixels and passes Reset/state restoration.
+26 OWN CPU/ABI/resource/GPU programs (including3 MAIN compatibility fixtures)
+and50 Python tests PASS; this remains L1/L2-side evidence, not installed L3/L4.
+
+MAIN next test is **visibility first**, not another blind insertion exercise:
+integrate just the new source delta into CURRENT MAIN, preserve its newer VFX,
+HUD, hands, knife, Polish files and baseline restore hashes; rebuild/verify
+candidate and use the approved deployment lease. Original SVCA/shell assets
+and INI remain unchanged; existing TrackedCylinder/VisualFollowup flags suffice.
+Check `centurion native space: cache=READY`, then one continuous headset route:
+Circle opens LEFT beside the gun → tilt and SEE cases → take left-shoulder
+ammo and SEE it in the left hand → only if visible, insert/release and flick.
+Stop that route if either object is still invisible; no mid-headset chat.
+After normal exit MAIN checks fresh socket proximity, ONE ACK/refill, both-eye
+appearance and unchanged accepted systems. New candidate is not a restore target
+or physically accepted build merely because this offline oracle passed.
+
+### Previous candidate history (superseded)
+
 SIDE, zero launches/deployment/installed-file writes. User rejects rightward
 opening, travel on tilt, invisible/unusable shoulder ammo and gun drifting when
 empty. New decision: Circle OPENS the cylinder; tilt only dumps the cases.

@@ -1,4 +1,4 @@
-param([string]$NativeEvidence,[string]$AnimationCache,[string]$ShellAssets)
+param([string]$NativeEvidence,[string]$AnimationCache,[string]$ShellAssets,[string]$NativeVertices)
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $out=Join-Path $repo 'build\centurion-reload\tests'
@@ -54,6 +54,18 @@ python (Join-Path $PSScriptRoot 'test_prepare_centurion_shells.py')
 if($LASTEXITCODE -ne 0){throw 'Original shell extraction tests failed'}
 python (Join-Path $PSScriptRoot 'test_tracked_cylinder_wiring.py')
 if($LASTEXITCODE -ne 0){throw 'Tracked cylinder wiring guards failed'}
+python (Join-Path $PSScriptRoot 'test_native_space.py')
+if($LASTEXITCODE -ne 0){throw 'Native space evidence guards failed'}
+if($NativeVertices){
+    if(!$AnimationCache){throw 'Native vertex oracle requires original animation cache'}
+    $source=Join-Path $repo 'spikes/view_matrix/tests/test-centurion-native-space-gpu.cpp'
+    $exe=Join-Path $out 'test-centurion-native-space-gpu.exe'
+    $obj=Join-Path $out 'test-centurion-native-space-gpu.obj'
+    cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:`"$exe`" /Fo:`"$obj`" `"$source`""
+    if($LASTEXITCODE -ne 0){throw 'Native vertex oracle compile failed'}
+    & $exe $AnimationCache $NativeVertices
+    if($LASTEXITCODE -ne 0){throw 'Native vertex oracle failed'}
+}
 # Optional own-process D3D resource test: never loads the proxy or game.
 $source=Join-Path $repo 'spikes/view_matrix/tests/test-centurion-animation-ib.cpp'
 $exe=Join-Path $out 'test-centurion-animation-ib.exe'
