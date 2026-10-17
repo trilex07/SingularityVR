@@ -1,6 +1,24 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN VFX trigger L3 (SIDE docs/vfx-trigger-diagnosis.md,
+push 25e1c50): MAIN checks DONE. Installed: SingularityVfx.dll PRESENT
+(E371EF77..., 10752 B, 7 required VfxPlugin* exports verified via dumpbin) +
+vfx_atlas/ PRESENT (4 DDS + manifest v1 abi 1, CC0 packs). INI was VfxHost=0 /
+VfxSmoke=0 / VfxScreenFlash=0 / HideMuzzleFx=0. Log 12:00 session (65 shots):
+ZERO `VFX overlay:` + ZERO `VFX host init:` — fully explained by VfxHost=0
+(init returns early line 21494, FILL+DRAIN gated; aim-mode gate never reached).
+FIX (single variable): INI VfxHost 0->1 (hash 0579F9EB->ACB368DD, pre-edit
+backup .../120644/SingularityVR.ini.pre-vfxhost, all-CRLF). Smoke/Flash/
+HideMuzzleFx untouched (smoke deliberately out of headset path line 21446;
+native flash stays as fallback so player never left with nothing). No DLL
+change, no guard deploy. AWAITING L3: fresh boot, fire shots, expect `VFX host
+init: plugin=loaded ... atlas=vfx_atlas dir` + `VFX overlay: n>0`; user reports
+flash visible per eye / double-flash with native / nothing. Rollback: set
+VfxHost=0 (backup hash 0579F9EB).
+
 LATEST 2026-10-17 MAIN fix/centurion-visual-followup-integration DEPLOYED for L3
+STATUS: CANDIDATE ONLY — NOT accepted, NOT flagged 100% working (user order);
+SIDE visual followup still needs corrections. Preserved as-is, no claims.
 (candidate DLL SHA-256 49CF183865487901C7A6958CC18DD98BD6892D7ED3B8587B012D4A87D3F16D01,
 PE32 x86 /O2, clean tree e079e36, manifest dirty=[], guard preflight+postflight
 PASS; backup deployment/install-backups/20261017-120644).
