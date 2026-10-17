@@ -7,6 +7,7 @@ namespace centurionreload {
 using hipknife::V; using hipknife::Pose;
 struct Config {
     bool cylinderGestures=false; // optional circle/open/dump/insert/close path
+    bool circleOpens=false; // separate default-OFF tracked-cylinder experiment
     // Physical left shoulder, tracking metres. Yaw only: usable seated and
     // looking down, separate from both existing hip holsters. Old belt INI
     // keys intentionally do not move this anchor back into the knife zone.
@@ -44,9 +45,11 @@ struct Frame {
     bool enabled=false,context=false,tracked=false,supported=false,grip=false,firing=false;
     bool handBusy=false,supportLatched=false,knifeNear=false,ammoFresh=false;
     bool releaseCylinder=false;
+    bool socketFresh=true; // legacy authored socket; tracked experiment requires render witness
     std::uint32_t pawn=0,weapon=0;
     int clip=-1,reserve=-1,capacity=-1;
     V hand{},socket{},pouch{};
+    V insertOffset{}; // carried mesh centre relative to controller; legacy zero
     Pose gun{};
     float bodyYaw=0; // current tracking yaw at gesture start, not recenter yaw
     std::uint64_t nowMs=0;
@@ -137,7 +140,7 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
         (c.cylinderGestures&&!s.ownsGrip))&&!s.ownsGrip;
     const bool changed=(s.weapon&&s.weapon!=f.weapon)||(s.pawn&&s.pawn!=f.pawn);
     const bool valid=f.enabled&&f.context&&f.tracked&&f.supported&&f.pawn&&f.weapon&&
-        f.ammoFresh&&AmmoValid(f)&&hipknife::Finite(f.hand)&&hipknife::Finite(f.socket)&&hipknife::Finite(f.pouch)&&
+        f.ammoFresh&&AmmoValid(f)&&hipknife::Finite(f.hand)&&hipknife::Finite(f.socket)&&hipknife::Finite(f.pouch)&&hipknife::Finite(f.insertOffset)&&
         !f.handBusy&&(!f.supportLatched||awaitingGrip)&&!f.firing&&!changed&&f.nowMs>=s.lastMs&&
         std::isfinite(f.bodyYaw)&&(!c.cylinderGestures||(hipknife::Finite(f.gun.p)&&hipknife::Valid(f.gun.q)));
     s.lastMs=f.nowMs;
@@ -178,7 +181,7 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
         if(c.cylinderGestures){
             if(f.releaseCylinder&&f.reserve>0&&f.clip<f.capacity){
                 s.stageGun=f.gun;s.bodyYaw=f.bodyYaw;s.startClip=f.clip;s.startReserve=f.reserve;s.startCapacity=f.capacity;
-                return enter(Phase::Unlocked,Event::Unlocked);
+                return c.circleOpens?enter(Phase::Open,Event::Opened):enter(Phase::Unlocked,Event::Unlocked);
             }
         }else if(oldIntent){
             s.pendingGrip=false;s.ownsGrip=true;s.bodyYaw=f.bodyYaw;s.startClip=f.clip;s.startReserve=f.reserve;s.startCapacity=f.capacity;
@@ -197,7 +200,7 @@ inline Result Update(State& s,const Frame& f,const Config& c={}){
         }break;
     case Phase::Carrying:
         if(release){
-            if(Near(f.hand,f.socket,c.insertRadius)){
+            if(f.socketFresh&&Near(f.hand+f.insertOffset,f.socket,c.insertRadius)){
                 if(c.cylinderGestures){s.stageGun=f.gun;return enter(Phase::Loaded,Event::Loaded);}
                 s.phase=Phase::WaitingNative;s.since=f.nowMs;
                 return out(Event::Inserted,true);

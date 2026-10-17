@@ -6,7 +6,7 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $vswhere="${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $vcvars=Join-Path $vs 'VC\Auxiliary\Build\vcvarsall.bat'
-foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-clip','test-centurion-animation','test-centurion-visual-followup','test-centurion-shells','test-centurion-shoulder','test-manual-reload','test-hip-knife','test-hud-reseat','test-weapon-holster','test-hand-anchor-math','test-knife-renderer')){
+foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-clip','test-centurion-animation','test-centurion-visual-followup','test-centurion-tracked-cylinder','test-centurion-shells','test-centurion-shoulder','test-manual-reload','test-hip-knife','test-hud-reseat','test-weapon-holster','test-hand-anchor-math','test-knife-renderer')){
     $source=Join-Path $repo "spikes\view_matrix\tests\$test.cpp"
     $exe=Join-Path $out "$test.exe"
     $obj=Join-Path $out "$test.obj"
@@ -17,7 +17,7 @@ foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-cent
         $evidence=Get-Content -LiteralPath $NativeEvidence -Raw | ConvertFrom-Json
         if((Get-FileHash -LiteralPath $evidence.text_path -Algorithm SHA256).Hash -ne $evidence.text_sha256){throw 'Archived text changed after offline mapping'}
         & $exe $evidence.text_path $evidence.text_base $evidence.registration.wrapper $evidence.method
-    }elseif($test -in @('test-centurion-animation','test-centurion-visual-followup') -and $AnimationCache){& $exe $AnimationCache}else{& $exe}
+    }elseif($test -in @('test-centurion-animation','test-centurion-visual-followup','test-centurion-tracked-cylinder') -and $AnimationCache){& $exe $AnimationCache}else{& $exe}
     if($LASTEXITCODE -ne 0){throw "test failed: $test"}
 }
 # This detours only the fake method in its OWN test process, never the game.
@@ -52,6 +52,8 @@ python (Join-Path $PSScriptRoot 'test_cylinder_animation.py')
 if($LASTEXITCODE -ne 0){throw 'Cylinder animation cache tests failed'}
 python (Join-Path $PSScriptRoot 'test_prepare_centurion_shells.py')
 if($LASTEXITCODE -ne 0){throw 'Original shell extraction tests failed'}
+python (Join-Path $PSScriptRoot 'test_tracked_cylinder_wiring.py')
+if($LASTEXITCODE -ne 0){throw 'Tracked cylinder wiring guards failed'}
 # Optional own-process D3D resource test: never loads the proxy or game.
 $source=Join-Path $repo 'spikes/view_matrix/tests/test-centurion-animation-ib.cpp'
 $exe=Join-Path $out 'test-centurion-animation-ib.exe'
