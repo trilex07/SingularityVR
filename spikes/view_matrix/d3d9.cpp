@@ -19758,6 +19758,31 @@ static bool DrawMuzzleFlashPerEye(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t, UIN
     // Muzzle flash is a small screen-space sprite/quad. Reject bulk scene geometry.
     if (primCount > 8 || numVertices > 16) return false;
     if (!Readable(vtxData, (size_t)numVertices * vtxStride)) return false;
+    // Safety: every vertex must be in clip space (SpriteQuadNeedsSplit rule). World geometry that
+    // happens to start near the origin must never have its x rewritten.
+    {
+        float minX = 0, maxX = 0;
+        bool first = true;
+        for (UINT i = 0; i < numVertices && i < 16; ++i) {
+            const uint8_t* p = static_cast<const uint8_t*>(vtxData) + (size_t)i * vtxStride;
+            if (!Readable(p, 8)) return false;
+            const float* v = reinterpret_cast<const float*>(p);
+            if (first) { minX = maxX = v[0]; first = false; }
+            else { if (v[0] < minX) minX = v[0]; if (v[0] > maxX) maxX = v[0]; }
+        }
+        if (first) return false;
+        if (minX < -1.5f || maxX > 1.5f) return false;
+        // Only split draws that actually straddle the seam: a flash that lives entirely in one half
+        // does not need (and must not receive) a per-eye rewrite.
+        if (!(minX < 0.0f && maxX > 0.0f)) return false;
+        // Reject genuine fullscreen quads (they already span both halves by design and must pass
+        // through untouched, like the composite/UI paths).
+        if (maxX - minX > 1.0f) return false;
+    }
+    // idxData must be present and readable: we re-issue the original indexed draw. A NULL index
+    // buffer cannot be safely re-issued (the original may rely on sequential indices we cannot
+    // reproduce without knowing minVtxIndex/numVertices semantics).
+    if (!idxData) return false;
     static uint8_t scratch[16 * 64];
     if ((size_t)numVertices * vtxStride > sizeof(scratch)) return false;
     memcpy(scratch, vtxData, (size_t)numVertices * vtxStride);
