@@ -2854,6 +2854,42 @@ static uintptr_t FindHudObject(bool force = false) {
     return 0;
 }
 
+// Reseat the HUD latch to a DIFFERENT deriving instance when the latched one
+// stays readable but never populates ammo (boot/menu zombie vs live HUD).
+// Same scan as FindHudObject, skipping the banned address. Returns the new
+// object or 0 (latch untouched). Aligned pointer writes are atomic on x86;
+// the render thread may observe the old or the new latch, never a mixture.
+static uintptr_t FindHudObjectExcept(uintptr_t banned) {
+    if (!g_upChildren) return 0;
+    if (!g_hudBaseClass) g_hudBaseClass = FindClassByName("RvGameSharedHUD");
+    if (!g_hudBaseClass) return 0;
+    if (!Readable((void*)kGObjectsTArray, 12)) return 0;
+    uintptr_t data = *reinterpret_cast<uintptr_t*>(kGObjectsTArray);
+    int32_t count = *reinterpret_cast<int32_t*>(kGObjectsTArray + 4);
+    if (!data || count <= 0) return 0;
+    uintptr_t* objs = reinterpret_cast<uintptr_t*>(data);
+    for (int32_t i = 0; i < count; ++i) {
+        uintptr_t o = objs[i];
+        if (!o || o == banned || !Readable((void*)o, 0x40)) continue;
+        char nm[80];
+        if (!NameOf(o, nm, sizeof(nm)) || strncmp(nm, "Default__", 9) == 0) continue;
+        uintptr_t cls = *reinterpret_cast<uintptr_t*>(o + OBJ_CLASS);
+        if (!cls || cls == g_hudBaseClass) continue;
+        if (!ClassDerivesFrom(cls, g_hudBaseClass)) continue;
+        const uintptr_t before = g_hudObject;
+        g_hudObject = o;
+        g_hudClass = cls;
+        char cn[80];
+        NameOf(cls, cn, sizeof(cn));
+        static unsigned reseatNotes = 0;
+        if (reseatNotes++ < 16)
+            Log("HUD reseat: 0x%08X -> 0x%08X (%s / %s) after persistently-invalid ammo",
+                (unsigned)before, (unsigned)o, nm, cn);
+        return o;
+    }
+    return 0;
+}
+
 // true only when a heal could actually do something. `unknown` is reported separately so a failure to
 // read never silently disables the feature - it falls back to the old always-open behaviour and says so.
 //
@@ -26387,6 +26423,12 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
     const bool eligible=context&&supported&&alive&&hud&&pawn&&weapon;
     const bool sameSource=observation.pawn==(uint32_t)pawn&&observation.weapon==(uint32_t)weapon&&
         observation.hud==(uint32_t)hud;
+    // A persistently-invalid eligible streak means the latched HUD never
+    // populates ammo (zombie instance); identity changes and valid reads
+    // open a new epoch, menu/load gaps never accumulate toward a reseat.
+    static centurionreload::HudReseatPolicy hudReseat;
+    if(observation.present&&!sameSource)hudReseat.ResetEpoch();
+    if(!eligible)hudReseat.NoteIneligible();
     // Invalid counts must not reset the rate limiter on every input frame.
     // Identity/context changes re-arm immediately; read failures remain 10 Hz.
     if(!eligible||(observation.present&&(!sameSource||now<observation.sampledMs))){
@@ -26413,6 +26455,8 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
             int32_t value=-1;if(TryLoadAlignedI32(hud+offsets[i],&value))ammo[i]=value;
         }
         observation.Capture((uint32_t)pawn,(uint32_t)weapon,(uint32_t)hud,ammo,now);
+        if(centurionreload::AmmoCountsValid(ammo[0],ammo[1],ammo[2]))hudReseat.ResetEpoch();
+        else if(hudReseat.NoteSample(false,now))FindHudObjectExcept((uintptr_t)(uint32_t)hud);
         if(g_centurionReloadProbe||g_centurionNativeGuardMode){
             ObserveCenturionReloadBindings(weapon);
             ObserveCenturionReloadBindings(pawn);

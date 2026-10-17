@@ -15,6 +15,76 @@ OWN GPU shared-depth/material test10609/10609 pixels, no bad pixels, Reset PASS.
 See docs/centurion-visual-feedback.md for exact source, candidate, falsifiers and
 MAIN test route. ZERO Steam/INI/installed asset writes; L3/L4 UNKNOWN.
 
+LATEST 2026-10-17 MAIN fix/centurion-visual-followup-integration DEPLOYED for L3
+(candidate DLL SHA-256 49CF183865487901C7A6958CC18DD98BD6892D7ED3B8587B012D4A87D3F16D01,
+PE32 x86 /O2, clean tree e079e36, manifest dirty=[], guard preflight+postflight
+PASS; backup deployment/install-backups/20261017-120644).
+WHY (user: Circle dead, no plate, sessions 11:44+12:00): log proves Circle seen
+(circle=1) but ammoValid=0 — RvHUD reads clip=-1/reserve=-2 persistently; plate
+never drew either (shared FindHudObject latch, untouched code). New PR48 code
+never executed (zero Unlocked) — exonerated. Root cause: latch keeps the FIRST
+readable RvHUD-deriving instance; 12:00 session latched ONE zombie (1D429800,
+same class+offsets as good reads) all session, while the 11:21 good session
+re-latched 1D432000->33A06000 and read clip=5/6. Latch lottery, pre-existing.
+FIX (smallest experiment): HudReseatPolicy in centurion_reload.h (pure,
+203-case L1) + FindHudObjectExcept in d3d9.cpp — only a 5 s eligible invalid
+streak reseats to a DIFFERENT instance (6/epoch max, 5 s cooldown, menu gaps
+and valid reads reset; good sessions never trigger). Falsifier: reseat fires
+but all instances stay invalid -> wrong-instance theory dead, pivot to timing.
+L1_PASS (EXIT=0 full suite), L2_PASS (clean). Steam: DLL=49CF1838 on disk,
+INI=live+VisualFollowup=1 (0579F9EB, pre-edit backup in 120644 dir, all-CRLF).
+Rollback: deploy Rollback -BackupPath 20261017-120644 (+plan paths) restores
+DADE170B; INI revert = drop the one added line (verified 7ED1239C roundtrip
+earlier). Path here: 58F82A7C deployed, rolled back to DADE170B (postflight
+PASS), redeployed 49CF1838 — guard model intact, profile still pins DADE170B
+(unaccepted builds never re-pinned). AWAITING L3 log + L4 PSVR2: fresh boot,
+ammo plate visible? (expect `HUD reseat:` then `ammo ... drew`), Circle ->
+Unlocked -> compact open -> LEFT-shoulder insert -> WAIT unseated -> flick ONE
+refill; pause/cancel, reload again, exit; no regressions.
+
+LATEST 2026-10-17 MAIN fix/centurion-visual-followup-integration DEPLOYED for L3
+(candidate DLL SHA-256 58F82A7C2B75F03532B8955A2EAA0B7AB4D485CDB097A402E8CCE1CC45996147,
+PE32 x86 /O2, clean tree f7d601f, manifest dirty=[], guard preflight+postflight
+PASS via re-pinned profile 4BF0D8B0 + files-only plan DADE170B->58F82A7C;
+pre-deploy backup deployment/install-backups/20261017-114157 verified).
+Steam verified: d3d9.dll=58F82A7C on disk; INI=live+CenturionVisualFollowup=1
+(hash 0579F9EB, pre-edit backup .../SingularityVR.ini.pre-visualfollowup,
+all-CRLF, single-key delta; CylinderAnimation=1+ShellEjection=1 retained).
+L1_PASS (cmd rerun EXIT=0: 16 CPU + ABI + 6 Python + IB witness + spare-GPU
+10609/10609 both rounds). L2_PASS (clean rebuild). Re-pin rationale: profile
+now pins user-accepted DADE170B (L3+L4 PASS render-only "dziala"); all other
+installed files hashed equal to old pins, live INI zero-drift vs old profile.
+No new assets. Rollback: deploy Rollback -BackupPath 20261017-114157, or
+restore DADE170B + INI 7ED1239C. AWAITING L3 log + L4 PSVR2 (NO screenshots):
+(1) intro identical both eyes; (2) fire, Circle/open/dump, LEFT-shoulder ammo,
+insert, WAIT 2s no flick (must stay visibly unseated); (3) flick close, ONE
+refill, no second gun sweep; (4) pause/cancel, reload again, normal exit;
+(5) no regressions (plates/rings/menu/shadows/FPS/monitor). MAIN reads
+`ini: CenturionVisualFollowup=1`, `visual followup:` lines, nativeSpareDraws.
+
+LATEST 2026-10-17 MAIN fix/centurion-visual-followup-integration (from db0aedb):
+port of SIDE draft PR #48 source ONLY (5 files, verbatim from
+origin/fix/centurion-visual-feedback@d6d427e: centurion_visual_followup.h,
+d3d9.cpp wiring, 2 CPU/GPU fixtures, test-centurion.ps1; SIDE STATUS/docs NOT
+ported). Symptom (user physical): cylinder full 42.34UU withdrawal, albedo-only
+spare over hand/gun, Loaded auto-closes in 280ms, close re-runs native reload.
+Experiment: default-OFF CenturionVisualFollowup (requires CylinderAnimation=1,
+else forced 0): compact frame12 open, Loaded holds frame26 until flick,
+26..32 only on close, native root held through tail, spare = second native DIP
+same VB/IB/material/depth inside each eye, 15 CTAB regs restored. OFF path =
+old centurionanim::Palette (accepted behavior preserved by construction).
+Falsifiers: frame displacement > frame12; Loaded closes w/o input; non-gun draw
+modified; material/RT/depth leak; spare still over nearer geometry.
+L1: rerun via cmd in progress (first run: all 16 CPU + ABI + 6 Python suites +
+IB witness + spare-GPU 10609/10609 both rounds PASS; outer exit=1 was PS
+stderr-dot harness noise, not a suite failure). L2: PE32 x86 /O2 build SHA-256
+0A496C3A76A867CC26B9580CD444D9D5F73EFC8C12B3BD2CE508ED42BBCAEFE2 (dirty-tree;
+clean rebuild after commit). Installed Steam still DADE170B (prior L3+L4 PASS
+render-only scope; this experiment NOT covered). Game closed. Next: commit,
+push, clean rebuild (manifest dirty=[]), deploy DllOnly + INI
+CenturionVisualFollowup=1, L3 log check, user PSVR2 route. Rollback: deploy
+script timestamped backup + restore DADE170B on critical failure.
+
 LATEST 2026-10-17 MAIN fix/centurion-grip-integration L3+L4 PASS (user PSVR2:
 "dziala", render-only, NO screenshots per standing order): intro identical in
 both eyes, single clamped ammo plate per eye, scripts hold then release on
