@@ -39,8 +39,19 @@ int main(int argc,char** argv){
         std::vector<unsigned char> cache(3208);assert(fread(cache.data(),1,cache.size(),f)==cache.size());fclose(f);
         Data actual;assert(Decode(cache.data(),cache.size(),actual));
         assert(actual.indexHash==147026316u);
-        for(unsigned b=0;b<2;++b)for(unsigned frame=0;frame<=520;++frame)
+        Data converted;assert(!actual.nativeSpace&&ToNative(actual,converted)&&converted.nativeSpace);
+        assert(!memcmp(actual.keys,converted.keys,sizeof(actual.keys))); // keys not double-reflected
+        for(unsigned b=0;b<2;++b)for(unsigned frame=0;frame<=520;++frame){
             assert(Sample(actual,b,float(frame)*.1f,sample)&&armbind::Rigid(sample));
+            armbind::Mat nativeSample;assert(Sample(converted,b,float(frame)*.1f,nativeSample));
+            for(unsigned r=0;r<4;++r)for(unsigned c=0;c<4;++c)
+                assert(std::fabs(nativeSample.m[r][c]-sample.m[r][c]*(r==1?-1.f:1.f)*(c==1?-1.f:1.f))<.0002f);
+        }
+        Data idempotent;assert(ToNative(converted,idempotent));
+        assert(!memcmp(converted.inverse,idempotent.inverse,sizeof(converted.inverse))&&
+               !memcmp(converted.parent.m,idempotent.parent.m,sizeof(converted.parent.m)));
+        Data notReady;assert(!ToNative(notReady,idempotent)&&idempotent.nativeSpace);
+        auto invalid=actual;invalid.parent.m[0][0]=NAN;assert(!ToNative(invalid,idempotent));
         for(unsigned b=0;b<2;++b){
             assert(Sample(actual,b,0,sample));
             const auto id=Identity();

@@ -2254,6 +2254,7 @@ static bool g_centurionClipReady=false,g_centurionClipFault=false;
 static centurionclip::PresentationSafety g_centurionPresentationSafety;
 static centurionclip::Config g_centurionClipConfig;
 static centurionanim::Data g_centurionAnimation;
+static centurionanim::Data g_centurionNativeAnimation;
 static IDirect3DIndexBuffer9* g_centurionAnimationIB=nullptr;
 static bool g_centurionAnimationIBValid=false,g_centurionAnimationFault=false;
 static unsigned g_centurionAnimationIBAttempts=0;
@@ -9411,7 +9412,7 @@ bool InitXRInput() {
     g_centurionShellRenderer.ReleaseGPU();g_centurionShellReady=false;g_centurionShellFault=false;g_centurionShellWarmed=false;
     InterlockedExchange(&g_centurionShellSeenGun,0);InterlockedIncrement(&g_centurionShellGeneration);
     g_centurionPresentationSafety.Reset();
-    g_centurionAnimation={};g_centurionAnimationFault=false;g_centurionRootHold={};g_centurionTrackedRoot={};
+    g_centurionAnimation={};g_centurionNativeAnimation={};g_centurionAnimationFault=false;g_centurionRootHold={};g_centurionTrackedRoot={};
     hipknife::Release(g_centurionAnimationIB);g_centurionAnimationIBValid=false;g_centurionAnimationIBAttempts=0;
     if(g_centurionReload&&g_centurionCylinderAnimation){
         char path[MAX_PATH]{};
@@ -9420,11 +9421,14 @@ bool InitXRInput() {
             if(slash!=std::string::npos){
                 directory.resize(slash);directory+="\\vr-assets\\reload\\centurion\\centurion_reload.svca";
                 std::vector<unsigned char> data;
-                if(hipknife::Read(directory,data,16384))centurionanim::Decode(data.data(),data.size(),g_centurionAnimation);
+                if(hipknife::Read(directory,data,16384)&&centurionanim::Decode(data.data(),data.size(),g_centurionAnimation))
+                    centurionanim::ToNative(g_centurionAnimation,g_centurionNativeAnimation);
             }
         }
         Log("centurion animation: original two-track cache=%s; render-only; IB content witness and CTAB still required",
             g_centurionAnimation.ready?"READY":"MISSING/INVALID (native unchanged)");
+        if(g_centurionTrackedCylinder)Log("centurion native space: cache=%s (ActorX bind reflection undone ONCE; native VB/material unchanged)",
+            g_centurionNativeAnimation.ready?"READY":"MISSING/INVALID (tracked draw refused)");
     }
     if(g_centurionReload&&g_centurionShellEjection){
         char path[MAX_PATH]{};
@@ -18851,7 +18855,7 @@ static int PrepareCenturionCylinder(IDirect3DDevice9* dev,INT baseVertex,UINT ve
             hipknife::V socket;
             if(!g_centurionTrackedRoot.Get(visual.clip.pawn,visual.clip.weapon,visual.transaction,saved,
                 local,gunC,tracking,visual.aim,root)||
-               !centuriontracked::Attached(g_centurionAnimation,time,
+               !centuriontracked::Attached(g_centurionNativeAnimation,time,
                 centuriontracked::OpenAmount((centurionreload::Phase)visual.phase,visual.since,visual.closed,now),
                 saved,root,local,gunC,tracking,visual.aim,changed,socket))return -1;
             replay.socket={visual.clip.pawn,visual.clip.weapon,visual.transaction,now,socket,true};
@@ -18861,7 +18865,8 @@ static int PrepareCenturionCylinder(IDirect3DDevice9* dev,INT baseVertex,UINT ve
            visual.phase==(int)centurionreload::Phase::Carrying)){
             hipknife::Pose target;
             if(!centurionclip::PreviewPose(visual.clip,visual.source,g_centurionClipConfig,target))return -1;
-            if(!centurionvisual::Spare(g_centurionAnimation,root,local,gunC,tracking,visual.aim,target,replay.clip))return -1;
+            const auto& clipData=g_centurionTrackedCylinder?g_centurionNativeAnimation:g_centurionAnimation;
+            if(!centurionvisual::Spare(clipData,root,local,gunC,tracking,visual.aim,target,replay.clip))return -1;
             replay.spare=true;std::memcpy(replay.attached,changed,sizeof(changed));
         }
     }else if(!centurionanim::Palette(g_centurionAnimation,time,saved,changed))return -1;

@@ -48,8 +48,9 @@ inline bool Launch(Burst& out,const centurionreload::Frame& f,centurionreload::E
     if(out.count&&out.pawn==f.pawn&&out.weapon==f.weapon&&out.born==f.nowMs)return false;
     Burst b;b.pawn=f.pawn;b.weapon=f.weapon;b.born=f.nowMs;b.count=spent;
     b.yaw=world.baseYaw+world.centreYaw;b.units=world.units;
-    // Authored gesture-socket launch, not an unproven engine bone/socket. The
-    // native particle's mesh/material are reused, its simulator is NOT cloned.
+    // Caller supplies the fresh rendered joint in the tracked-cylinder route;
+    // legacy mode uses its authored gesture socket. Original mesh/material are
+    // reused, but the native particle simulator is NOT cloned.
     for(unsigned i=0;i<b.count;++i){
         const float a=float(i)*1.0471975512f;
         const V radial{std::cos(a)*.005f,std::sin(a)*.005f,0};
