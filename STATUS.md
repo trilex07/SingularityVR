@@ -1,5 +1,30 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 MAIN native-space L3 DEPLOYED (SIDE 5d5afd7, PR48):
+candidate DLL SHA-256 E58E3E57C4BA6CCACB6CA5CA49BA86038CC5DF09E080DB4770EB9FA52662E188,
+PE32 x86 /O2, clean tree cf71a4a, manifest dirty=[], guard preflight+postflight
+PASS; backup deployment/install-backups/20261017-125231. STATUS: CANDIDATE
+ONLY — NOT accepted, NOT flagged 100%.
+WHY: 12:29 session on 0742736 (04CC6CA2) proves the bug SIDE fixed — ammo valid
+(clip 5->3 fired), plate drew, Circle->cylinder-opened, but tracked socket at
+y≈-2.4 (2.4-3.0 m insertDist, grab/discard loop, zero inserts): ActorX/export
+vs UE3-space mixing. FIX (inspected): ToNative undoes bind reflection ONCE on
+parent/inverse (SVCA file stays v1); Sample skips legacy reflect only for
+nativeSpace data; tracked Attached+Spare use NativeAnimation; legacy paths keep
+export-space Data (OFF behavior byte-identical); fail-closed when unready.
+shells.h change comment-only. LIMIT: NativeVertices GPU oracle needs SIDE
+private assets — NOT run here (CPU + spare-GPU + IB fixtures green).
+L1_PASS (EXIT=0 full suite incl. test_native_space.py), L2_PASS (clean).
+Steam: DLL=E58E3E57, INI=9222CC60 (+VisualFollowup +TrackedCylinder, VfxHost=1
+restored; pre-edit backup in 125231 dir, all-CRLF). Path: killed lingering
+12:46 PID 37480 (user auth), rolled back to DADE170B (postflight PASS),
+redeployed (guard model intact). Rollback: deploy Rollback -BackupPath
+20261017-125231 (+plan paths) + drop the 3 added INI lines. AWAITING L3+L4
+(SIDE route, NO screenshots): Circle -> LEFT open at gun (no meter jump);
+tilt dumps, gun held; shoulder ammo -> rendered socket, insertDist <0.2 m;
+WAIT 2 s open; flick ONE refill; repeat, pause/resume, exit. MAIN reads
+`native space` + `tracked cylinder` rows + native ACK.
+
 LATEST 2026-10-17 MAIN tracked-cylinder L3 DEPLOYED (SIDE 0742736, PR48):
 candidate DLL SHA-256 04CC6CA23588D7BA929365BDB56A7B50EA0DAF970D9E3AF10FCA5BF797A8FE70,
 PE32 x86 /O2, clean tree c738a97, manifest dirty=[], guard preflight+postflight
