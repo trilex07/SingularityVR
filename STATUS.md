@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+LATEST 2026-10-17 SIDE: MAIN14:16 preflight identifies the obstruction:
+ALL3 attempts stage=field-name matched=F visited=126. Four required bindings
+were already found, but lookup continued into an unrelated undecodable field.
+Frozen session-1416 SHA9EC0CA13...316D55F76 (see refill-resolution doc).
+Fix stops required lookup BEFORE Next after4 distinct ABI-checked bindings;
+incomplete-set limits and ALL subsequent live slot/body/cast checks retained.
+No native-call/permit/gesture/model/inventory changes. Regression wiring tests
+pass; full L1/L2 pending. Native transfer/physical acceptance STILL OPEN;
+this addresses the measured lookup obstruction, not proof of restored firing.
+ZERO Steam. MAIN integrates source delta onto current baseline, not old SIDE DLL.
+
 LATEST 2026-10-17 SIDE REOPENED/BROKEN refill-only after physical user feedback:
 no animation but no ammo/firing. Frozen13:52 session A4A7F283...A83A4959 has THREE
 manual permits with ready0/result0/live=-1, then4s timeout; native refill was NOT

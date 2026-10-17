@@ -1,5 +1,36 @@
 # Reopened: refill rejected BEFORE invocation
 
+## 14:16 runtime result / bounded lookup fix hypothesis
+
+The next MAIN session (14:16:26, read-only log inspected by SIDE) reports all
+three preflights identically: `stage=field-name matched=F visited=126`, class
+`0D5A6180`, field `13EA2040`. All FOUR required wrappers/slots were discovered
+before this unrelated tail field failed name decoding. Method body/cast checks
+were never reached; this is NOT evidence those checks pass or fail.
+Frozen log: `build/centurion-reload/feedback-20261017/session-1416.log`.
+SHA256 `9EC0CA13A2BB5C6A8A59EC938ABEA6CC14B82AD56A9A813949FC640316D55F76`.
+
+Hypothesis: completing the required named lookup must end the discovery walk,
+not continue into unrelated fields. Smallest fix: stop BEFORE reading Next as
+soon as the four distinct, ABI-checked bindings are found; require a completed
+set to bypass the remaining-tail budget error. Missing bindings, malformed
+required wrappers and all subsequent method/body/inventory-cast checks remain
+fail-closed. No changes to native calls, permissions, counts, gestures or models.
+
+Falsifier: corrected runtime still rejects a body/cast/context check, or reaches
+ready but native transfer/postcondition fails. Then this removes only the proven
+lookup obstruction, not the remaining cause; do not call reload physically fixed.
+Regression must pin the production break BEFORE Next and guard incomplete-set
+rejection, while the original ABI/body/mutation and conservation tests remain.
+
+Implemented: discovery breaks immediately after the fourth distinct binding,
+before reading Next. The remaining field pointer is permitted only for that
+complete set; an incomplete bounded walk still rejects. Two source-wiring
+regressions pin that ordering and ALL later validation failures before the only
+result publication. These are structural checks, not a simulated UE3 runtime.
+Earlier UNKNOWN-stage / diagnostic-only sections below are historical receipts,
+superseded by this measured runtime result and the narrowly scoped source fix.
+
 2026-10-17 SIDE. User: no native animation, but clip never refills and cannot
 shoot. This REJECTS physical acceptance of source6d7b201's refill-only backend.
 Do not promote the corresponding PR45 generic resolver on its L1/L2 alone.
