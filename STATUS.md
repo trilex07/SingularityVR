@@ -7,7 +7,13 @@ all live ABI/body/cast/conservation guards retained. Exact-stage diagnostics,
 ReloadRefillOnly now releases root/scope IMMEDIATELY on insertion; only original
 magazine child seats180ms on LIVE root; every other native bone copied byte-exact.
 No child override after seat, even when HUD ACK is late. Flag0 behavior/input/
-models/materials/shoulder/native ammo authority unchanged. L1/L2 pending.
+models/materials/shoulder/native ammo authority unchanged. L1_PASS19 CPU/ABI
++2 own D3D9Ex GPU programs,67 Python. Actual original4 wrappers and every-byte
+body audit PASS; all3 original child-track/live-recoil bone tests PASS.
+L2_PASS clean2128a4d, x86 PE32 /O2, performance instrumentation OFF; DLL SHA256
+90B6AB1D84E2DBAC3A29B072F7CAFF38E30BD867A3930010A2C57CA2E0A0E402.
+Private build/next-weapon-reload/candidate-2128a4d has11 verified payload hashes,
+all proposed opt-ins OFF, NO INI. New runtime/perceptual result remains UNKNOWN.
 Centurion was accepted by user, these3 are NOT physically verified by analogy.
 ZERO Steam; integrate SOURCE into current MAIN, not old full SIDE DLL. PR45.
 See docs/next-weapon-refill-only.md (new top section supersedes old HOLD below).
