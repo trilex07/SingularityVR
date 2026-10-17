@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+Projector candidate READY_FOR_PHYSICAL_ACCEPTANCE (NOT visually verified):
+source b9ea9ae, DLL 755DDD731E7E12E45C246CA3655BA1A79F58EBE56C12B816C05F78C9FAE9E26B,
+INI 96CE07ED75952F0B521316703B62037C8B219B5E861543950C030A7D107215A5.
+L1 math + mocked resource/restore scope PASS; L2 x86 PE32 /O2 PASS;
+accepted-profile install -WhatIf preflight PASS. Steam unchanged.
+Package build/projector/candidate-world-light, change-plan-native-muzzle-probe.json.
+Only INI difference from previous user-accepted-muzzle/projector capture package
+is ProjectorWorldStereo=1. No performance changes. Await fresh start to deploy
+with existing restore watcher and inspect PROJECTOR_RECONSTRUCTION counters.
+Test: closest save, projector canvas from front/side, normal exit; no long
+pause cue required unless a new trace is explicitly scheduled. Preserve all
+accepted systems; don't claim success from counters alone.
+
 Projector repeat PID15548 CLOSED; independent DLL/injector/INI/UI hashes match
 safe profile. One complete canvas capture (911 draws/271 groups/111 shaders,
 no overflows/unavailable shaders). PS 7F00BC7925591BE8 uses ScreenToLight
