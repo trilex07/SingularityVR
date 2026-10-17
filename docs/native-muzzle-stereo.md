@@ -236,14 +236,14 @@ The game was closed. No VFX/audio fix or physical acceptance is claimed.
 #### Round 3 candidate — scene-color particle quad
 
 The next discriminator is `7EB90CEBB053DA04:4377F314D1C93468` (VS 3904 bytes,
-PS 804 bytes). In each of three post-shot traces it contributes exactly two
-four-vertex, alpha-blended draws: one in each eye's scissor rect on the full SBS
-target. The PS CTAB names `SceneColorTexture` and `ScreenPositionScaleBias`; the
-VS has particle-cloud parameters. It is a plausible broad scene-color effect,
-not yet proven to be the visible glow. The VS witness uses c0, marked tracked,
-with no distinct matrix alias (`alias=-1`); this evidence does not justify mode
-2. Test only the exact mode-1 drop, keeping probe ON and all other accepted keys
-unchanged.
+PS 804 bytes). In each of three post-shot traces from round 2 it contributes
+two to four four-vertex, alpha-blended draws: one or two in each eye's scissor
+rect on the full SBS target. The PS CTAB names `SceneColorTexture` and
+`ScreenPositionScaleBias`; the VS has particle-cloud parameters. It is a
+plausible broad scene-color effect, not proven to be the visible glow. The VS
+witness uses c0, marked tracked, with no distinct matrix alias (`alias=-1`);
+this evidence does not justify mode 2. Round 3 tested only the exact mode-1
+drop.
 
 Offline staging command:
 
@@ -264,7 +264,50 @@ postflight/independent SHA checks passed. Backup:
 `deployment/install-reports/20261017-203710.json`. Live DLL and INI hashes match
 the candidate; `dinput8.dll` remains accepted. The L1 native-muzzle test suite
 passed after extending the offline generator; no DLL source changed since L2.
-The game is closed and awaiting this user test. If this drop removes the broad
-glow while retaining the actual muzzle flash, it identifies a contributing
-scene-color draw, but still does not prove a safe stereo fix. Keep mode 2 OFF
-until actual matrix consumption/convention and per-eye pixels are justified.
+
+#### Round 3 outcome — 7EB90:4377 drop, inconclusive for the glow
+
+Session PID `38304` completed all four read-only driver traces: draws
+1785/591/943/957, all `overflow=0`, with no shader-budget overflow or unavailable
+shader. The selected-pair counters logged 12, 344 and 170 drops; `alias=0`,
+`refused=0`, `restoreFailed=0`, `fault=0`. This proves the exact-pair drop ran,
+not that it owned all visible pixels. The user reported a muzzle flash, no
+smoke, uncertain absence of the glow, and a small first-shot hitch. The
+20:53:22 SBS capture still contains a bright central shot-correlated flare, so
+the round does not establish that this pair alone produces/removes the seam
+glow. The captured frame is not a pixel-exact headset comparison, and the
+user's visual report remains useful but inconclusive. `camera=0 tracked=1`
+`alias=-1` again forbids a mode-2 guess.
+
+The bounded trace takes full-frame captures/readbacks, so it can itself cause a
+one-off shot hitch. Next run isolates that cost: exact-pair drop for
+`7EB90CEBB053DA04:0099C92AE105A584` (VS 3904 bytes, PS 336 bytes), observed as
+two four-vertex alpha-blended sprite draws per post-shot frame, one per eye,
+with a simple `Texture2D_0` pixel shader. Treat it as a candidate, not an
+identified muzzle asset. The staged next visual test keeps `NativeMuzzleProbe=0`
+and drops only this pair, so it adds no trace/readback overhead.
+
+The offline helper gained a `-NoProbe` switch for exact-pair visual-only tests;
+it omits unchanged INI entries from the exact-change plan so the accepted-profile
+guard sees only actual deltas. Staged candidate:
+`build/native-muzzle-main/candidate-20261017-drop-0099-no-probe-v3/`.
+Candidate DLL SHA-256 remains
+`4D76F52AE582447E404111C36C732BA5BB1DE50957B24DCB3EAA1F0BF9FED85A`; candidate
+INI SHA-256 is
+`B04E3F01635459570BBB1961304BC45499C19A9438A277FE0FFFC2913793EB48` with probe
+OFF and the 0099 pair selected. `dinput8.dll` is unchanged. Guarded install
+preflight passed with `-WhatIf`; this package is staged but NOT installed.
+The next one-session observation should distinguish whether muzzle flash or
+smoke changes when this pair is dropped, whether the broad central glow remains,
+and whether the first-shot hitch remains without probe capture. The candidate
+is only a discriminator; no repair/alias mode is enabled.
+
+Round 3 evidence is archived in
+`build/native-muzzle-main/evidence-20261017-l3-drop-7eb9/` (four traces, runtime
+log, idle and first-shot SBS frames). The game closed before rollback. The
+guarded rollback and independent hashes confirm accepted live DLL
+`789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B`, INI
+`8B0B0B4CF2DB78514A44B72CF3E79CC1C48C74E5632CDA34A468CA61702CCFAF`, and
+unchanged `dinput8.dll`
+`5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59`.
+No VFX/audio fix or physical acceptance is claimed.

@@ -8,6 +8,7 @@ param(
     [string]$DropPSHash,
     [int]$DropVSBytes = 0,
     [int]$DropPSBytes = 0,
+    [switch]$NoProbe,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -118,6 +119,9 @@ if ($probeBefore -ne '0' -or $modeBefore -ne '1') {
 }
 
 $dropRequested = $DropVSHash -or $DropPSHash -or $DropVSBytes -or $DropPSBytes
+if ($NoProbe -and -not $dropRequested) {
+    throw '-NoProbe is only valid for an exact-pair visual discriminator; baseline capture requires the bounded probe.'
+}
 if ($dropRequested) {
     if (-not $DropVSHash -or -not $DropPSHash -or $DropVSBytes -le 0 -or $DropPSBytes -le 0) {
         throw 'A mode-1 drop needs all four values: VS/PS hashes and byte lengths.'
@@ -133,9 +137,17 @@ if ($dropRequested) {
     if ($modeBefore -ne '1') { throw 'A selected-pair drop requires the accepted baseline mode=1.' }
 }
 
-$candidateIniBytes = Replace-UniqueAscii $iniBytes "NativeMuzzleProbe=$probeBefore" 'NativeMuzzleProbe=1'
+$probeAfter = if ($NoProbe) { '0' } else { '1' }
+$probeReason = if ($NoProbe) {
+    'Keep the bounded trace/capture probe OFF so its GPU readback cannot contaminate the visual/performance discriminator.'
+} else {
+    'Enable the bounded idle plus three-shot driver traces.'
+}
+$candidateIniBytes = Replace-UniqueAscii $iniBytes "NativeMuzzleProbe=$probeBefore" "NativeMuzzleProbe=$probeAfter"
 $iniChanges = [System.Collections.Generic.List[object]]::new()
-$iniChanges.Add([ordered]@{ key = $probeKey; before = $probeBefore; after = '1'; reason = 'Enable the bounded idle plus three-shot driver traces.' })
+if ($probeAfter -ne $probeBefore) {
+    $iniChanges.Add([ordered]@{ key = $probeKey; before = $probeBefore; after = $probeAfter; reason = $probeReason })
+}
 if ($dropRequested) {
     $targets = [ordered]@{
         'Diagnostic/NativeMuzzleVSHash' = $DropVSHash.ToUpperInvariant()
@@ -148,10 +160,16 @@ if ($dropRequested) {
         $before = Get-ProfileIniValue $key
         $after = [string]$targets[$key]
         $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "$name=$before" "$name=$after"
-        $iniChanges.Add([ordered]@{ key = $key; before = $before; after = $after; reason = 'Exact mode-1 pair chosen for the next bounded MAIN discriminator; this is not a renderer fix.' })
+        if ($before -ne $after) {
+            $iniChanges.Add([ordered]@{ key = $key; before = $before; after = $after; reason = 'Exact mode-1 pair chosen for the next bounded MAIN discriminator; this is not a renderer fix.' })
+        }
     }
     $modeAfter = $modeBefore
-    $planReason = "MAIN L3 exact-pair drop discriminator for measured pair $($DropVSHash.ToUpperInvariant()):$($DropPSHash.ToUpperInvariant()); keep the bounded probe ON; no stereo alias repair."
+    if ($NoProbe) {
+        $planReason = "MAIN L3 visual-only exact-pair drop discriminator for measured pair $($DropVSHash.ToUpperInvariant()):$($DropPSHash.ToUpperInvariant()); bounded probe OFF to avoid capture hitches; no stereo alias repair."
+    } else {
+        $planReason = "MAIN L3 exact-pair drop discriminator for measured pair $($DropVSHash.ToUpperInvariant()):$($DropPSHash.ToUpperInvariant()); keep the bounded probe ON; no stereo alias repair."
+    }
 } else {
     $modeAfter = '0'
     $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes "NativeMuzzleStereoMode=$modeBefore" "NativeMuzzleStereoMode=$modeAfter"
@@ -212,5 +230,5 @@ Write-Host 'Native muzzle candidate package prepared offline; Steam was not modi
 Write-Host "Artifact: $artifactPath"
 Write-Host "Candidate d3d9.dll SHA-256: $candidateDllSha"
 Write-Host "Candidate dinput8.dll SHA-256: $candidateDinputSha (unchanged accepted file)"
-Write-Host "Candidate SingularityVR.ini SHA-256: $candidateIniSha (probe=1, mode=$modeAfter)"
+Write-Host "Candidate SingularityVR.ini SHA-256: $candidateIniSha (probe=$probeAfter, mode=$modeAfter)"
 Write-Host "Change plan: $planPath"
