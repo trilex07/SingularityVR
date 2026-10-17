@@ -12,9 +12,10 @@ untouched), INI [Input] WaitForScripts=1 default with opt-out, latch reset on
 camera loss; 15-case L1 gate in scripts_ready.h. (3) Holster hoop/knife-belt
 rings in menus: legacy Style==0 path had no menu gate (code default is 0).
 Fix: both legacy gates now require the same holstermarker::Eligible focused-
-gameplay predicate as Style==1. L1: 33 ammo + 15 scripts + holster-marker + 12 vfx-muzzle suites pass, x86 /O2. L2: full
-d3d9.dll PE32 build + manifest, SHA-256 29C96886F01E05679DDE2DDD3BE4DC69E8486E5BE90B89928F35CFAE7E464D1E (/O2,
-no -Install, no Steam contact). NOT Steam/PSVR2 tested — MAIN L3/L4 pending. Next: MAIN review, Steam L3 on
+gameplay predicate as Style==1. L1: 33 ammo + 15 scripts + holster-marker + 12 vfx-muzzle suites pass, x86 /O2. L2: full d3d9.dll PE32 builds + manifests, both /O2, no -Install, no Steam contact:
+HUD/scripts/holster set: SHA-256 29C96886F01E05679DDE2DDD3BE4DC69E8486E5BE90B89928F35CFAE7E464D1E;
+with VFX muzzle table + UP knob: SHA-256 B9897F21E9870B85EE49AB2E97F88734AAE568569BC7BCF1647B2E1E701E7AC8.
+NOT Steam/PSVR2 tested — MAIN L3/L4 pending. Next: MAIN review, Steam L3 on
 the three scenarios (plate single+clamped, hold releases on load, no hoops in
 menu), then user PSVR2 acceptance script. VFX trigger diagnosis (config+deployment root cause): see docs/vfx-trigger-diagnosis.md.
 VFX muzzle follow-up on this branch: per-gun ForwardMm table + world-UP knob (VfxMuzzleUpMm,
