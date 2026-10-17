@@ -6,7 +6,7 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $vswhere="${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $vcvars=Join-Path $vs 'VC\Auxiliary\Build\vcvarsall.bat'
-foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-clip','test-centurion-animation','test-centurion-shells','test-centurion-shoulder','test-manual-reload','test-hip-knife','test-weapon-holster','test-hand-anchor-math','test-knife-renderer')){
+foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-clip','test-centurion-animation','test-centurion-visual-followup','test-centurion-shells','test-centurion-shoulder','test-manual-reload','test-hip-knife','test-weapon-holster','test-hand-anchor-math','test-knife-renderer')){
     $source=Join-Path $repo "spikes\view_matrix\tests\$test.cpp"
     $exe=Join-Path $out "$test.exe"
     $obj=Join-Path $out "$test.obj"
@@ -17,7 +17,7 @@ foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-cent
         $evidence=Get-Content -LiteralPath $NativeEvidence -Raw | ConvertFrom-Json
         if((Get-FileHash -LiteralPath $evidence.text_path -Algorithm SHA256).Hash -ne $evidence.text_sha256){throw 'Archived text changed after offline mapping'}
         & $exe $evidence.text_path $evidence.text_base $evidence.registration.wrapper $evidence.method
-    }elseif($test -eq 'test-centurion-animation' -and $AnimationCache){& $exe $AnimationCache}else{& $exe}
+    }elseif($test -in @('test-centurion-animation','test-centurion-visual-followup') -and $AnimationCache){& $exe $AnimationCache}else{& $exe}
     if($LASTEXITCODE -ne 0){throw "test failed: $test"}
 }
 # This detours only the fake method in its OWN test process, never the game.
@@ -60,6 +60,13 @@ cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:
 if($LASTEXITCODE -ne 0){throw 'IB witness fixture compile failed'}
 & $exe
 if($LASTEXITCODE -ne 0){throw 'IB witness fixture failed'}
+$source=Join-Path $repo 'spikes/view_matrix/tests/test-centurion-native-spare-gpu.cpp'
+$exe=Join-Path $out 'test-centurion-native-spare-gpu.exe'
+$obj=Join-Path $out 'test-centurion-native-spare-gpu.obj'
+cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:`"$exe`" /Fo:`"$obj`" `"$source`""
+if($LASTEXITCODE -ne 0){throw 'Native spare GPU fixture compile failed'}
+& $exe
+if($LASTEXITCODE -ne 0){throw 'Native spare GPU fixture failed'}
 if($ShellAssets){
     $source=Join-Path $repo 'spikes/view_matrix/tests/test-centurion-shells-gpu.cpp'
     $exe=Join-Path $out 'test-centurion-shells-gpu.exe'
