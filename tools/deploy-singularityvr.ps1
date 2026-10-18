@@ -34,7 +34,9 @@ if($OpeningCutsceneManifestPath) {
     return
 }
 if($DllOnly -and $RuntimeDllPairOnly){throw 'Select one narrow deployment mode only'}
-if($IncludeIni -and (-not $RuntimeDllPairOnly -or $KeepIni)){throw 'IncludeIni requires the explicit runtime pair mode without KeepIni'}
+if($IncludeIni -and ((-not $RuntimeDllPairOnly -and -not $DllOnly) -or $KeepIni)){
+    throw 'IncludeIni requires an explicit DllOnly or RuntimeDllPairOnly deployment without KeepIni'
+}
 $narrowRuntime=$DllOnly -or $RuntimeDllPairOnly
 
 function Assert-GameClosed {

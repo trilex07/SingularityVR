@@ -159,7 +159,16 @@ $fakePe=New-Object byte[] 512;$fakePe[0]=0x4d;$fakePe[1]=0x5a
 [BitConverter]::GetBytes([uint16]0x014c).CopyTo($fakePe,132)
 [BitConverter]::GetBytes([uint16]0x010b).CopyTo($fakePe,152)
 [IO.File]::WriteAllBytes($candidateDll,$fakePe)
-$plan.files[0].after=Get-GuardHash $candidateDll;$plan.ini=@();Write-JsonFixture $planPath $plan
+$plan.files[0].after=Get-GuardHash $candidateDll
+$plan.ini=@([pscustomobject]@{key='Render/VrCameraShakeSuppression';before='0';after='1';reason='candidate renderer setting'})
+Write-JsonFixture $planPath $plan
+$countBefore=@(Get-ChildItem -LiteralPath $testRoot -File -Recurse).Count
+$runner=Join-Path $repo 'tools/deploy-singularityvr.ps1'
+& $runner -DllOnly -IncludeIni -SteamRoot (Join-Path $testRoot 'fake-steam') -ArtifactDir (Split-Path -Parent $candidateDll) `
+    -AcceptedProfilePath $profilePath -ChangePlanPath $planPath -WhatIf
+Assert-True (@(Get-ChildItem -LiteralPath $testRoot -File -Recurse).Count -eq $countBefore) 'renderer+INI WhatIf created files'
+Assert-True ((Get-GuardHash $dllPath) -eq $baselineDllHash -and (Get-GuardHash $iniPath) -eq $baselineIniHash) 'renderer+INI WhatIf wrote live files'
+$plan.ini=@();Write-JsonFixture $planPath $plan
 $runner=Join-Path $repo 'tools/deploy-singularityvr.ps1'
 $countBefore=@(Get-ChildItem -LiteralPath $testRoot -File -Recurse).Count
 & $runner -DllOnly -SteamRoot (Join-Path $testRoot 'fake-steam') -ArtifactDir (Split-Path -Parent $candidateDll) `

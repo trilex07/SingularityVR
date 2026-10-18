@@ -111,6 +111,9 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "menu_submit_policy.h"
 #include "frontend_menu_surface.h"
 #include "menu_hud_scale.h"
+#include "hand_hud_policy.h"
+#include "menu_pointer_design.h"
+#include "modal_menu_policy.h"
 #include "holster_marker.h"
 #include "pause_menu_space.h"
 #include <shlobj.h>
@@ -6381,12 +6384,14 @@ static float g_gloveBlend[2]{};
 static XrAction g_actGloveSqueeze=XR_NULL_HANDLE,g_actGlovePose=XR_NULL_HANDLE;
 static XrSpace g_gloveSpace[2]={XR_NULL_HANDLE,XR_NULL_HANDLE};
 volatile LONG g_vrUiEnabled=1,g_vrUiMenu=0,g_vrUiValid=0,g_vrUiU=500000,g_vrUiV=500000;
+alignas(8) volatile LONG64 g_vrUiPairPacked=((LONG64)500000<<32)|500000;
+volatile LONG g_vrUiEverHit=0;
 // Hub round 4: provider-overlay kill switch for A/B (black-quad diagnosis). The in-scene
 // menu copy stays, so menus remain visible; only our head-locked overlay+laser go away.
 volatile LONG g_vrMenuOverlay=1;
 volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=100;
 volatile LONG g_vrMenuDistanceMm=1200;
-volatile LONG g_frontMenuScalePct=100,g_frontMenuDistanceMm=0;
+volatile LONG g_frontMenuScalePct=72,g_frontMenuDistanceMm=0;
 static LONG g_frontMenuCleanBackdrop=0;
 static bool g_frontMenuCleanFrame=false; // render-thread frame-local composition receipt
 static unsigned long long g_frontMenuCleanToken=0;
@@ -6408,6 +6413,10 @@ volatile LONG g_firstPersonShadowSkipped=0;
 static IDirect3DTexture9* g_vrMenuTexture=nullptr;
 static IDirect3DTexture9* g_vrMenuSources[8]={};
 static unsigned g_vrMenuSourceCount=0;
+static IDirect3DTexture9* g_vrModalParentSources[8]={};
+static unsigned g_vrModalParentSourceCount=0;
+volatile LONG g_vrModalParentStageBound[4]={0,0,0,0};
+volatile LONG g_modalSlotsActive=0,g_modalSlotsCapturePending=0,g_vrModalDialogSurface=0;
 static float g_vrMenuTextureScore=1e9f;
 static uipointer::VrMenuPanel g_vrMenuPanel;
 inline bool SuppressCapturedVrMenuDraw();
@@ -6422,6 +6431,16 @@ struct VrRuntimeCounters {
 } g_vrCounters;
 alignas(8) volatile LONG64 g_vrMenuStateToken=0;
 static unsigned long long VrMenuStateToken(){return (unsigned long long)InterlockedCompareExchange64(&g_vrMenuStateToken,0,0);}
+static void PublishVrUiPair(LONG u,LONG v) {
+    const ULONGLONG packed=((ULONGLONG)(DWORD)u<<32)|(DWORD)v;
+    InterlockedExchange64(&g_vrUiPairPacked,(LONG64)packed);
+    InterlockedExchange(&g_vrUiU,u); InterlockedExchange(&g_vrUiV,v);
+}
+static bool ReadVrUiPair(LONG& u,LONG& v) {
+    const ULONGLONG packed=(ULONGLONG)InterlockedCompareExchange64(&g_vrUiPairPacked,0,0);
+    u=(LONG)(DWORD)(packed>>32);v=(LONG)(DWORD)packed;
+    return true;
+}
 static menucapture::Owner g_vrCaptureOwner;
 volatile LONG g_vrStaleRejected=0;
 void SyncVrMenuCaptureState();
@@ -6675,7 +6694,7 @@ void UpdateVrUiPointer(float rightTrigger,bool available);
 bool VrPanelHitNormalized(LONG u, LONG v, int* rowIndex);
 void CaptureVrMenuTarget(IDirect3DDevice9* dev);
 void DrawVrMenuPointer(IDirect3DDevice9* dev);
-void ReleaseVrMenuResources();
+void ReleaseVrMenuResources(bool menuFocusTransition=false);
 void ReleaseFpCasterCache();
 static void HolsterHipWorld(float H[3], bool includeHmdOffset = false);
 static void GunPivotWorld(float H[3]);
@@ -11376,7 +11395,8 @@ void SyncXRInput(XrTime displayTime) {
         InterlockedExchange(&g_vrUiDown, panelPointerHeld ? 1 : 0);
         if (panelPointerPressed && Rd(g_vrUiValid)) {
             int hitRow = -1;
-            if (VrPanelHitNormalized(Rd(g_vrUiU), Rd(g_vrUiV), &hitRow)) {
+            LONG pointerU=500000,pointerV=500000;ReadVrUiPair(pointerU,pointerV);
+            if (VrPanelHitNormalized(pointerU, pointerV, &hitRow)) {
                 g_panelRow = hitRow;
                 PanelAdjust(PanelRowId(hitRow), +1);
                 Log("VR settings laser click: row=%d id=%d", hitRow, PanelRowId(hitRow));
@@ -21869,6 +21889,7 @@ static void ReleaseVrShadowResources() {
 HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDirect3DBaseTexture9* texture) {
     PauseRttProbe::Sample(texture);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::set_texture);
+    bool modalParentSource = false;
     // Fix-C/menu round 3: match the captured menu texture(s) on stages 0-3, not
     // only stage 0. g_vrMenuSourceBound keeps its stage-0-only meaning for existing
     // readers; the suppress gate uses any-of-4 (see MenuSourceBoundAny).
@@ -21881,8 +21902,16 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
             if (g_vrMenuTexture && texture==g_vrMenuTexture) menuSource = true;
             for (unsigned i=0; !menuSource && i<g_vrMenuSourceCount; ++i)
                 if (texture==g_vrMenuSources[i]) menuSource = true;
+            if(Rd(g_modalSaveDialog)&&Rd(g_modalSlotsActive)){
+                for(unsigned i=0;i<g_vrModalParentSourceCount;++i)
+                    if(texture==g_vrModalParentSources[i]){modalParentSource=true;break;}
+                // A shared Slots/Dialog RTT is one live composite. It remains
+                // owned by the current dialog provider, not the parent-only gate.
+                if(modalParentSource&&menuSource)modalParentSource=false;
+            }
         }
         InterlockedExchange(&g_vrMenuStageBound[stage],menuSource?1:0);
+        InterlockedExchange(&g_vrModalParentStageBound[stage],modalParentSource?1:0);
         if (menuSource) { InterlockedIncrement(&g_vrMenuSourceMatches); ++g_menuStageSets[stage]; if (stage==0) ++g_menuSourceSets; }
         if (stage == 0) InterlockedExchange(&g_vrMenuSourceBound,menuSource?1:0);
     }
@@ -21899,7 +21928,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
     unsigned protectedFlags=0;
     if(Rd(g_textureBridgeOwned)&&g_textureBridgeBind)
         protectedFlags=(ProjectedShadowTexture(texture)||texture==g_vrMenuTexture||
-            (stage<4&&Rd(g_vrMenuStageBound[stage])))?texbridge::protectedSource:0;
+            (stage<4&&(Rd(g_vrMenuStageBound[stage])||modalParentSource)))?texbridge::protectedSource:0;
     const HRESULT bindResult=(Rd(g_textureBridgeOwned)&&g_textureBridgeBind)?
         g_textureBridgeBind(dev,stage,texture,g_origSetTexture,texbridge::version,protectedFlags):g_origSetTexture(dev,stage,texture);
     if(SUCCEEDED(bindResult) && stage<8)shadowtrace::bound.tex[stage]=texture;
@@ -21912,7 +21941,7 @@ inline bool SuppressCapturedVrMenuDraw() {
     // Not a menu draw at all - the normal case for scene geometry. Source check first,
     // so the fail mask below only ever describes menu-source draws. Any-of-stages-0-3
     // since round 3 (the captured menu is sampled off stage 0).
-    if (!Rd(g_vrUiMenu) || !MenuSourceBoundAny()) return false;
+    if (!Rd(g_vrUiMenu)) return false;
     // MenuOverlay=0 is the in-scene menu. Suppressing that copy while the head
     // overlay is off removes the main menu, pause, and the notepad.
     if (!Rd(g_vrMenuOverlay)) {
@@ -21921,6 +21950,16 @@ inline bool SuppressCapturedVrMenuDraw() {
             Log("menu suppress: overlay off, keeping the in-scene menu and notes");
         return false;
     }
+    const bool modalParentBound=Rd(g_vrModalParentStageBound[0])||Rd(g_vrModalParentStageBound[1])||
+        Rd(g_vrModalParentStageBound[2])||Rd(g_vrModalParentStageBound[3]);
+    const bool dialogSourceReady=Rd(g_modalSaveDialog)&&Rd(g_modalSlotsActive)&&g_vrMenuTexture&&
+        Rd(g_vrModalDialogSurface)&&g_vrCaptureOwner.CanProvide(VrMenuStateToken());
+    if(modalmenu::SuppressParentSlots(Rd(g_modalSaveDialog)!=0,dialogSourceReady,
+                                      modalParentBound,false)){
+        InterlockedIncrement(&g_vrMenuSuppressed);
+        return true;
+    }
+    if(!MenuSourceBoundAny())return false;
     if (Rd(g_vrMenuClass) == 3 && !PauseRttProbe::Presented()) return false;
     // Fix-4/menus round 2: suppressed=0 while the provider serves frames means the scene
     // keeps its own copy (nested views). Record WHY as a sticky per-window bitmask:
@@ -26294,8 +26333,13 @@ void DrawCustomGloves(IDirect3DDevice9* dev) {
     back->Release();
 }
 void DrawWristHealth(IDirect3DDevice9* dev) {
-    if (!Rd(g_wristHealth) || !VrModeOn() || !Rd(g_offHandValid) || !g_origDrawPrimUP ||
-        !Rd(g_dupDraws) || Rd(g_gamePaused) || g_offHealth < 0 || g_offHealthMax < 0) return;
+    const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
+        !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
+    if (!handhud::Visible(Rd(g_wristHealth) != 0, VrModeOn(), Rd(g_dupDraws) != 0,
+                          hudGameplay, Rd(g_gamePaused) != 0, Rd(g_vrUiMenu) != 0,
+                          Rd(g_panelOpen) != 0, Rd(g_inCinematic) != 0) ||
+        !Rd(g_offHandValid) || !g_origDrawPrimUP ||
+        g_offHealth < 0 || g_offHealthMax < 0) return;
     const uintptr_t pawn = g_playerPawn; // Never initiate an object scan from overlay rendering.
     if (!pawn || !Readable((void*)(pawn + g_offHealth), 4) ||
         !Readable((void*)(pawn + g_offHealthMax), 4)) return;
@@ -26326,7 +26370,9 @@ void DrawWristHealth(IDirect3DDevice9* dev) {
     dev->SetVertexShader(nullptr); dev->SetPixelShader(nullptr);
     dev->SetTexture(0, nullptr); dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
     dev->SetRenderState(D3DRS_ZENABLE, FALSE);
-    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
     dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
     dev->SetRenderState(D3DRS_LIGHTING, FALSE);
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
@@ -26345,9 +26391,12 @@ void DrawWristHealth(IDirect3DDevice9* dev) {
         if(eye) ApplyOffset(reinterpret_cast<Reg4*>(m),conv,g_eyeDeltaUU);
         ApplyEyeRemap(reinterpret_cast<Reg4*>(m),conv,eye?.5f:-.5f);
         for(int layer=0;layer<2;++layer) {
-            const float halfWidth=.03f*scale, halfHeight=.006f*scale;
+            const float halfWidth=.03f*scale*(handhud::kScalePct/100.0f);
+            const float halfHeight=.006f*scale*(handhud::kScalePct/100.0f);
             const float end = layer ? -halfWidth+2*halfWidth*fraction : halfWidth;
-            const DWORD colour=layer ? (fraction<.25f?0xFFFF3030:0xFF30E060) : 0xFF182028;
+            const DWORD colour=layer
+                ? handhud::WithAlphaPct(fraction<.25f?0xFFFF3030u:0xFF30E060u,handhud::kDigitAlphaPct)
+                : handhud::WithAlphaPct(0xFF182028u,handhud::kPlateAlphaPct);
             LaserVtx vertices[4]; bool visible=true;
             for(int k=0;k<4;++k) {
                 const float x=(k&1)?end:-halfWidth, y=(k&2)?-halfHeight:halfHeight;
@@ -27524,7 +27573,11 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
                centurionclip::Current(visual.clip,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64()))return;
         }
     }
-    if (!Rd(g_healthPlate) || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
+    const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
+        !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
+    if (!handhud::Visible(Rd(g_healthPlate) != 0, VrModeOn(), Rd(g_dupDraws) != 0,
+                          hudGameplay, Rd(g_gamePaused) != 0, Rd(g_vrUiMenu) != 0,
+                          Rd(g_panelOpen) != 0, Rd(g_inCinematic) != 0) ||
         !g_handPositionValid[0] || !g_haveEyes || !g_origSetRenderTarget || !g_origDrawPrimUP) {
         // MAIN falsifier probe: names the exact blocking gate (one line per
         // session). A full gameplay session without any plate line means this
@@ -27628,8 +27681,8 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     struct PlateVtx { float x, y, z, rhw; DWORD c; float u, v; };
     const float AW = (float)g_platesSheet.width, AH = (float)g_platesSheet.height;
     // Two-hand plate rides smaller and lower so it never covers the gunfight.
-    const int plateW = twoHand ? std::max(48, (int)(d.Height * 0.10f))
-                               : std::max(64, (int)(d.Height * 0.18f));
+    const int plateW = handhud::ScaledExtent(twoHand ? std::max(48, (int)(d.Height * 0.10f))
+                               : std::max(64, (int)(d.Height * 0.18f)));
     const int plateH = std::max(10, plateW * 330 / 2001);
     // Two-hand plate sits left of the gun line so it never covers it.
     // MAIN 2026-10-15: user "jeszcze bardziej w lewo i nizej".
@@ -27646,10 +27699,10 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
         const float x0 = cx - plateW * 0.5f, y0 = cy - plateH * 0.5f;
         const float x1 = cx + plateW * 0.5f, y1 = cy + plateH * 0.5f;
         PlateVtx v[4] = {
-            { x0, y0, 0, 1, 0xFFFFFFFF, bgR->x / AW, bgR->y / AH },
-            { x1, y0, 0, 1, 0xFFFFFFFF, (bgR->x + bgR->w) / AW, bgR->y / AH },
-            { x0, y1, 0, 1, 0xFFFFFFFF, bgR->x / AW, (bgR->y + bgR->h) / AH },
-            { x1, y1, 0, 1, 0xFFFFFFFF, (bgR->x + bgR->w) / AW, (bgR->y + bgR->h) / AH },
+            { x0, y0, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct), bgR->x / AW, bgR->y / AH },
+            { x1, y0, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct), (bgR->x + bgR->w) / AW, bgR->y / AH },
+            { x0, y1, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct), bgR->x / AW, (bgR->y + bgR->h) / AH },
+            { x1, y1, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct), (bgR->x + bgR->w) / AW, (bgR->y + bgR->h) / AH },
         };
         g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(PlateVtx));
         for (int i = 0; i < healthbar::SegmentSlots(); ++i) {
@@ -27659,10 +27712,10 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
             const float sx0 = x0 + fx0 * plateW, sy0 = y0 + fy0 * plateH;
             const float sx1 = x0 + fx1 * plateW, sy1 = y0 + fy1 * plateH;
             PlateVtx s[4] = {
-                { sx0, sy0, 0, 1, 0xFFFFFFFF, cell->x / AW, cell->y / AH },
-                { sx1, sy0, 0, 1, 0xFFFFFFFF, (cell->x + cell->w) / AW, cell->y / AH },
-                { sx0, sy1, 0, 1, 0xFFFFFFFF, cell->x / AW, (cell->y + cell->h) / AH },
-                { sx1, sy1, 0, 1, 0xFFFFFFFF, (cell->x + cell->w) / AW, (cell->y + cell->h) / AH },
+                { sx0, sy0, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kDigitAlphaPct), cell->x / AW, cell->y / AH },
+                { sx1, sy0, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kDigitAlphaPct), (cell->x + cell->w) / AW, cell->y / AH },
+                { sx0, sy1, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kDigitAlphaPct), cell->x / AW, (cell->y + cell->h) / AH },
+                { sx1, sy1, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kDigitAlphaPct), (cell->x + cell->w) / AW, (cell->y + cell->h) / AH },
             };
             g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, s, sizeof(PlateVtx));
         }
@@ -27774,7 +27827,11 @@ static void MaybeLoadAmmoArt(IDirect3DDevice9* dev) {
 }
 
 void DrawAmmoPlate(IDirect3DDevice9* dev) {
-    if (!Rd(g_ammoPlate) || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
+    const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
+        !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
+    if (!handhud::Visible(Rd(g_ammoPlate) != 0, VrModeOn(), Rd(g_dupDraws) != 0,
+                          hudGameplay, Rd(g_gamePaused) != 0, Rd(g_vrUiMenu) != 0,
+                          Rd(g_panelOpen) != 0, Rd(g_inCinematic) != 0) ||
         Rd(g_weaponWheelOpen) || !WeaponInHands() ||
         !g_handPositionValid[AimHand()] || !g_haveEyes ||
         !g_origSetRenderTarget || !g_origDrawPrimUP) {
@@ -27911,18 +27968,22 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
                 }
             }
         }
+        const int drawW = handhud::ScaledExtent(plateW);
+        const int drawH = std::max(18, drawW * 724 / 2172);
         const float cx = ammoplates::ClampCxToEyeHalf((eye + p.u) * d.Width * 0.5f,
-            (float)plateW, (float)d.Width, eye);
+            (float)drawW, (float)d.Width, eye);
         const float cy = p.v * d.Height;
         if (!ammoDrewAny) { ammoDrewAny = true; ammoDrewCx = cx; ammoDrewCy = cy; }
-        const float x0 = cx - plateW * 0.5f, y0 = cy - plateH * 0.5f;
-        const float x1 = cx + plateW * 0.5f, y1 = cy + plateH * 0.5f;
+        const float x0 = cx - drawW * 0.5f, y0 = cy - drawH * 0.5f;
+        const float x1 = cx + drawW * 0.5f, y1 = cy + drawH * 0.5f;
+        const DWORD plateTint = handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct);
+        const DWORD digitTint = handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kDigitAlphaPct);
         dev->SetTexture(0, g_ammoPlateTex[plate]);
         AmmoVtx v[4] = {
-            { x0, y0, 0, 1, 0xFFFFFFFF, 0, 0 },
-            { x1, y0, 0, 1, 0xFFFFFFFF, 1, 0 },
-            { x0, y1, 0, 1, 0xFFFFFFFF, 0, 1 },
-            { x1, y1, 0, 1, 0xFFFFFFFF, 1, 1 },
+            { x0, y0, 0, 1, plateTint, 0, 0 },
+            { x1, y0, 0, 1, plateTint, 1, 0 },
+            { x0, y1, 0, 1, plateTint, 0, 1 },
+            { x1, y1, 0, 1, plateTint, 1, 1 },
         };
         g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(AmmoVtx));
         // Opaque covers use the diffuse channel (no texture).
@@ -27931,10 +27992,10 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
         dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
         auto cover = [&](float fx0, float fy0, float fx1, float fy1) {
             AmmoVtx r[4] = {
-                { x0 + fx0 * plateW, y0 + fy0 * plateH, 0, 1, coverCol, 0, 0 },
-                { x0 + fx1 * plateW, y0 + fy0 * plateH, 0, 1, coverCol, 0, 0 },
-                { x0 + fx0 * plateW, y0 + fy1 * plateH, 0, 1, coverCol, 0, 0 },
-                { x0 + fx1 * plateW, y0 + fy1 * plateH, 0, 1, coverCol, 0, 0 },
+                { x0 + fx0 * drawW, y0 + fy0 * drawH, 0, 1, coverCol, 0, 0 },
+                { x0 + fx1 * drawW, y0 + fy0 * drawH, 0, 1, coverCol, 0, 0 },
+                { x0 + fx0 * drawW, y0 + fy1 * drawH, 0, 1, coverCol, 0, 0 },
+                { x0 + fx1 * drawW, y0 + fy1 * drawH, 0, 1, coverCol, 0, 0 },
             };
             g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, r, sizeof(AmmoVtx));
         };
@@ -27948,14 +28009,14 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
         auto digits = [&](int value, int maxDigits, float rightEdge, float top, float height) {
             ammoplates::DigitQuad q[4];
             const int n = ammoplates::LayoutNumber(value, maxDigits,
-                x0 + rightEdge * plateW, y0 + top * plateH, height * plateH, q, 4);
+                x0 + rightEdge * drawW, y0 + top * drawH, height * drawH, q, 4);
             for (int i = 0; i < n; ++i) {
                 const ammoplates::GlyphRect g = ammoplates::DigitGlyph(q[i].glyph);
                 AmmoVtx t[4] = {
-                    { q[i].x0, q[i].y0, 0, 1, 0xFFFFFFFF, g.x0 / DW, g.y0 / DH },
-                    { q[i].x1, q[i].y0, 0, 1, 0xFFFFFFFF, g.x1 / DW, g.y0 / DH },
-                    { q[i].x0, q[i].y1, 0, 1, 0xFFFFFFFF, g.x0 / DW, (g.y1) / DH },
-                    { q[i].x1, q[i].y1, 0, 1, 0xFFFFFFFF, g.x1 / DW, (g.y1) / DH },
+                    { q[i].x0, q[i].y0, 0, 1, digitTint, g.x0 / DW, g.y0 / DH },
+                    { q[i].x1, q[i].y0, 0, 1, digitTint, g.x1 / DW, g.y0 / DH },
+                    { q[i].x0, q[i].y1, 0, 1, digitTint, g.x0 / DW, (g.y1) / DH },
+                    { q[i].x1, q[i].y1, 0, 1, digitTint, g.x1 / DW, (g.y1) / DH },
                 };
                 g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, t, sizeof(AmmoVtx));
             }
@@ -32275,7 +32336,7 @@ void LoadIniSettings() {
     g_frontMenuCleanBackdrop=GetPrivateProfileIntA("Render","FrontMenuCleanBackdrop",0,path)?1:0;
     Log("ini: FrontMenuCleanBackdrop=%ld (class2 only; replaces 3D backdrop; default OFF)",Rd(g_frontMenuCleanBackdrop));
     Log("ini: VrMenuDistanceMm=%ld (shared OpenXR menu plane for render, laser and hit test)",menuDistance);
-    LONG frontScale=GetPrivateProfileIntA("Render","FrontMenuScalePct",100,path);
+    LONG frontScale=GetPrivateProfileIntA("Render","FrontMenuScalePct",72,path);
     frontScale=std::max(70L,std::min(100L,frontScale));InterlockedExchange(&g_frontMenuScalePct,frontScale);
     LONG frontDistance=GetPrivateProfileIntA("Render","FrontMenuDistanceMm",0,path);
     if(frontDistance!=0)frontDistance=std::max(600L,std::min(3000L,frontDistance));InterlockedExchange(&g_frontMenuDistanceMm,frontDistance);

@@ -62,6 +62,19 @@ static bool NativeResourceContract(uintptr_t target, uintptr_t resource) {
         memcmp((void*)(method + 0x28), signature, sizeof(signature)) == 0;
 }
 
+static IDirect3DSurface9* NativeSurface(uintptr_t target, uintptr_t resource) {
+    if (!NativeResourceContract(target, resource)) return nullptr;
+    const uintptr_t surfaceRhi = Pointer(resource + 0x48);
+    const uintptr_t image = (uintptr_t)GetModuleHandleA(nullptr);
+    // The target's RenderTexture resource exposes the same UE3 surface wrapper
+    // validated by ExactTexture below. Do not infer a D3D pointer from an
+    // arbitrary UObject field or a matching render-target size.
+    if (surfaceRhi < 12 ||
+        Pointer(surfaceRhi - 12) != image + 0x013B4474) return nullptr;
+    const uintptr_t surface = Pointer(surfaceRhi - 4);
+    return surface >= 0x10000 ? (IDirect3DSurface9*)surface : nullptr;
+}
+
 static bool ExactTexture(uintptr_t target, uintptr_t resource, IDirect3DTexture9* texture,
                          IDirect3DSurface9* surface) {
     if (!texture || !NativeResourceContract(target, resource)) return false;

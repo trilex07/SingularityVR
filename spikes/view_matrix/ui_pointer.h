@@ -83,6 +83,12 @@ struct VrMenuPanel {
     }
 };
 
+inline V PointAtCanvasUv(const Plane& plane, float u, float v) {
+    const float x = (u - .5f) * 2.0f * plane.halfWidth * plane.inset;
+    const float y = (.5f - v) * 2.0f * plane.halfHeight * plane.inset;
+    return plane.centre + plane.right * x + plane.up * y;
+}
+
 enum class Context { Gameplay, Menu };
 struct TriggerResult { bool selectPressed=false,fireHeld=false; };
 // One instance per physical trigger. Run ONCE on action update, never per eye.

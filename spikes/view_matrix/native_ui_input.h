@@ -11,6 +11,7 @@ extern volatile LONG g_panelOpen;
 void* PatchVTable(void* obj,int index,void* repl);
 extern volatile LONG g_vrMenuReleaseRequested; // render thread consumes COM invalidation
 extern volatile LONG g_modalSaveDialog; // 1 while RvUIGFxMovie_Dialog owns focus
+extern volatile LONG g_modalSlotsActive,g_modalSlotsCapturePending,g_vrModalDialogSurface;
 extern volatile LONG g_menuAssetWitness;
 
 namespace NativeVrUi {
@@ -31,6 +32,18 @@ static int lastX=-1,lastY=-1;
 static LONG installs=0, ticks=0;
 static uintptr_t ReadPointer(uintptr_t p) {
  return p && Readable((void*)p,4) ? *reinterpret_cast<uintptr_t*>(p) : 0;
+}
+static uintptr_t ExactDialogSurface(uintptr_t movie,uintptr_t cls) {
+ if(!movie||!cls)return 0;
+ __try {
+  const int targetOff=PauseRttProbe::Property(cls,"RenderTexture","ObjectProperty");
+  const uintptr_t target=targetOff>=0?ReadPointer(movie+(uintptr_t)targetOff):0;
+  const uintptr_t resource=target?ReadPointer(target+0xA4u):0;
+  if(!target||!resource)return 0;
+  return (uintptr_t)PauseRttProbe::NativeSurface(target,resource);
+ } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
+  return 0;
+ }
 }
 static void ObserveMovieAsset(uintptr_t movie,uintptr_t cls,const char* focusClass) {
  if(!Rd(g_menuAssetWitness))return;
@@ -111,14 +124,33 @@ static bool UpdateMenu() {
   const LONG kind=!cachedMenu?0:!strcmp(className,"RvUIGFxMovie_IIS")?1:!strcmp(className,"RvUIGFxMovie_Main")?2:!strcmp(className,"RvUIGFxMovie_Pause")?3:4;
   static unsigned generation=0;
   InterlockedExchange64(&g_vrMenuStateToken,((LONG64)++generation<<32)|(unsigned)kind);
+  // Do not carry a cursor coordinate or pressed edge into another GFx movie.
+  // The first ray hit in the new movie republishes the live controller UV.
+  PublishVrUiPair(500000,500000);
+  InterlockedExchange(&g_vrUiValid,0);
+  InterlockedExchange(&g_vrUiDown,0);
+  InterlockedExchange(&g_vrUiEverHit,0);
   static char prevClass[96]{};
-  if (className[0] && !strcmp(className, "RvUIGFxMovie_Dialog") && prevClass[0] &&
-      (!strcmp(prevClass, "RvUIGFxMovie_Slots") || !strcmp(prevClass, "RvUIGFxMovie_SlotsBase"))) {
+  const bool dialogFocus=className[0]&&!strcmp(className,"RvUIGFxMovie_Dialog");
+  const bool slotsFocus=prevClass[0]&&(!strcmp(prevClass,"RvUIGFxMovie_Slots")||!strcmp(prevClass,"RvUIGFxMovie_SlotsBase"));
+  const bool saveDialogTransition=modalmenu::IsSaveDialogTransition(slotsFocus,dialogFocus);
+  if(saveDialogTransition) {
+   InterlockedExchange(&g_modalSlotsActive,1);
+   InterlockedExchange(&g_modalSlotsCapturePending,1);
    InterlockedExchange(&g_vrMenuReleaseRequested, 1);
    Log("menu modal: save-slot -> dialog focus; render-thread slots RTT invalidation requested");
   }
-  InterlockedExchange(&g_modalSaveDialog,
-      (className[0] && !strcmp(className, "RvUIGFxMovie_Dialog")) ? 1 : 0);
+  if(!dialogFocus){
+   InterlockedExchange(&g_modalSlotsActive,0);
+   InterlockedExchange(&g_modalSlotsCapturePending,0);
+   InterlockedExchange(&g_vrModalDialogSurface,0);
+  } else {
+   const uintptr_t dialogSurface=ExactDialogSurface(movie,cls);
+   InterlockedExchange(&g_vrModalDialogSurface,(LONG)dialogSurface);
+   if(dialogFocus)Log("menu modal: Dialog exact RTT surface=%p verified=%d; capture and parent suppression require this identity",
+                      (void*)dialogSurface,dialogSurface?1:0);
+  }
+  InterlockedExchange(&g_modalSaveDialog,dialogFocus?1:0);
   if (className[0]) strcpy_s(prevClass, className);
   InterlockedExchange(&g_vrMenuClass,kind);
   Log("VR UI focus: movie=%p object=%s class=%s menu=%d",(void*)movie,objectName,className,cachedMenu?1:0);
@@ -136,9 +168,8 @@ static bool UpdateMenu() {
     const int modeOff=PauseRttProbe::Property(cls,"RenderTextureMode","ByteProperty");
     const uintptr_t target=targetOff>=0?ReadPointer(movie+targetOff):0;
     const uintptr_t resource=target?ReadPointer(target+0xA4):0;
-    const bool contract=resource && PauseRttProbe::NativeResourceContract(target,resource);
-    const uintptr_t rhi=contract?ReadPointer(resource+0x48):0;
-    const uintptr_t surface=rhi>=12?ReadPointer(rhi-4):0;
+    const uintptr_t surface=target&&resource?(uintptr_t)PauseRttProbe::NativeSurface(target,resource):0;
+    const bool contract=surface!=0;
     Log("modal-ui identity n=%u token=%llu focus=%p class=%s MovieInfo=%p RenderTexture=%p resource=%p contract=%d surface=%p modeOffset=%d mode=%d; no render changes",
         modalNotes,VrMenuStateToken(),(void*)movie,className,(void*)(infoOff>=0?ReadPointer(movie+infoOff):0),
         (void*)target,(void*)resource,contract?1:0,(void*)surface,modeOff,
@@ -164,15 +195,20 @@ static bool UpdateMenu() {
 }
 static bool Coordinates(void* self,int& x,int& y) {
  if(self!=viewport || !InterlockedCompareExchange(&g_vrUiMenu,0,0)
-    || !InterlockedCompareExchange(&g_vrUiValid,0,0) || !Readable(self,0x64))return false;
+    || !Readable(self,0x64))return false;
  // FViewport SizeX/SizeY (live 5264/2684); no desktop/window coordinate assumption.
  const int w=*reinterpret_cast<int*>((uintptr_t)self+0x4Cu);
  const int h=*reinterpret_cast<int*>((uintptr_t)self+0x50u);
  if(w<64 || h<64 || w>32768 || h>32768)return false;
- LONG u=InterlockedCompareExchange(&g_vrUiU,0,0),v=InterlockedCompareExchange(&g_vrUiV,0,0);
- if(u<0 || u>1000000 || v<0 || v>1000000)return false;
+ LONG u=500000,v=500000;
+ if(!ReadVrUiPair(u,v)){u=500000;v=500000;}
+ if(u<0 || u>1000000 || v<0 || v>1000000){u=500000;v=500000;}
  // Native getter 0x011CFC40 returns ScreenToClient POINT.y unchanged (top-left).
  // MouseY delta inversion in Drain is an axis convention, not an absolute-coordinate flip.
+ // When the controller ray misses the panel, pin the native mouse at the last VR
+ // coordinates instead of falling through to the desktop getter (which exposes
+ // the game's arrow cursor at an unrelated location). UpdateVrUiPointer clears
+ // the click edge on a miss, so this cannot activate an item.
  return uipointer::MapCanvas(u/1000000.0f,v/1000000.0f,(unsigned)w,(unsigned)h,g_vrMenuPanel.canvas,x,y);
 }
 static int __fastcall GetX(void* self,void*){int x,y;return Coordinates(self,x,y)?x:originalX(self);}
@@ -239,8 +275,8 @@ static void Drain(float dt) {
   lastX=x;lastY=y;
  }else lastX=lastY=-1;
  const bool down=valid&&InterlockedCompareExchange(&g_vrUiDown,0,0)!=0;
- const bool pauseSettingsRow=valid && PauseVrSettingsHitNormalized(
-     InterlockedCompareExchange(&g_vrUiU,0,0), InterlockedCompareExchange(&g_vrUiV,0,0));
+ LONG pointerU=500000,pointerV=500000;ReadVrUiPair(pointerU,pointerV);
+ const bool pauseSettingsRow=valid && PauseVrSettingsHitNormalized(pointerU,pointerV);
  if(down!=held) {
   if (pauseSettingsRow) {
    // This row is supplied by the mod, so it has no native GFx widget to receive

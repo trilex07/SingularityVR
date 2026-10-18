@@ -204,7 +204,8 @@ static bool VrUiProjectEye(int eye,uipointer::V point,uipointer::ScreenPoint& ou
 static void DrawVrMenuLaser(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d) {
     if(!Rd(g_vrMenuLaser)||!Rd(g_vrUiValid)||!g_handPositionValid[1]||!g_origDrawPrimUP)return;
     const uipointer::V A{g_handLastPos[1].x,g_handLastPos[1].y,g_handLastPos[1].z};
-    const uipointer::V B=g_vrUiHit.world;
+    LONG pointerU=500000,pointerV=500000;ReadVrUiPair(pointerU,pointerV);
+    const uipointer::V B=uipointer::PointAtCanvasUv(g_vrMenuPanel.plane,pointerU/1000000.0f,pointerV/1000000.0f);
     const float halfW=(float)d.Width*.5f;
     dev->SetTexture(0,nullptr);dev->SetVertexShader(nullptr);dev->SetPixelShader(nullptr);
     dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE);
@@ -222,6 +223,57 @@ static void DrawVrMenuLaser(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d) {
         const float px=-dy*w,py=dx*w;LaserVtx v[4]={{x0+px,y0+py,0,1,col},{x1+px,y1+py,0,1,col},{x0-px,y0-py,0,1,col},{x1-px,y1-py,0,1,col}};
         g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(LaserVtx));
     }
+}
+static void DrawVrMenuReticle(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,
+                              uipointer::V point,bool pressed) {
+    if(!dev||!g_origDrawPrimUP||!g_haveEyes||d.Width<8||d.Height<8)return;
+    static constexpr int kSegments=32;
+    DWORD oldTextureOp=0,oldAlphaOp=0;
+    dev->GetTextureStageState(0,D3DTSS_COLOROP,&oldTextureOp);
+    dev->GetTextureStageState(0,D3DTSS_ALPHAOP,&oldAlphaOp);
+    if(g_origSetTexture)g_origSetTexture(dev,0,nullptr);else dev->SetTexture(0,nullptr);
+    dev->SetVertexShader(nullptr);dev->SetPixelShader(nullptr);
+    dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE);
+    dev->SetRenderState(D3DRS_ZENABLE,FALSE);dev->SetRenderState(D3DRS_ZWRITEENABLE,FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,TRUE);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_DIFFUSE);
+    const menupointer::Style style=menupointer::AtTime(GetTickCount64(),pressed,(float)d.Height);
+    const DWORD ringColour=pressed?0xEE56FF9Au:0xE650E8F2u;
+    const DWORD innerColour=pressed?0xD8FFFFFFu:0xD5FFFFFFu;
+    for(int eye=0;eye<2;++eye){
+        uipointer::ScreenPoint projected;if(!VrUiProjectEye(eye,point,projected))continue;
+        const float cx=(eye+projected.u)*(float)d.Width*.5f,cy=projected.v*(float)d.Height;
+        const LONG half=(LONG)d.Width/2;const RECT clip{eye?half:0,0,eye?(LONG)d.Width:half,(LONG)d.Height};
+        dev->SetScissorRect(&clip);
+        auto ring=[&](float radius,float thickness,DWORD colour){
+            LaserVtx vertices[2*(kSegments+1)];
+            for(int i=0;i<=kSegments;++i){
+                const float a=(float)i*(6.28318530718f/(float)kSegments);
+                const float co=cosf(a),si=sinf(a);
+                vertices[2*i]={cx+co*radius,cy+si*radius,0,1,colour};
+                vertices[2*i+1]={cx+co*(radius-thickness),cy+si*(radius-thickness),0,1,colour};
+            }
+            g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2*kSegments,vertices,sizeof(LaserVtx));
+        };
+        ring(style.outerRadius,style.ringThickness,ringColour);
+        ring(style.outerRadius*.67f,1.35f,innerColour);
+        LaserVtx core[kSegments+2]{};
+        core[0]={cx,cy,0,1,0xEBFFFFFFu};
+        for(int i=0;i<=kSegments;++i){
+            const float a=(float)i*(6.28318530718f/(float)kSegments);
+            core[i+1]={cx+cosf(a)*style.coreRadius,cy+sinf(a)*style.coreRadius,0,1,0xEBFFFFFFu};
+        }
+        g_origDrawPrimUP(dev,D3DPT_TRIANGLEFAN,kSegments,core,sizeof(LaserVtx));
+    }
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,oldTextureOp);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,oldAlphaOp);
 }
 static uipointer::V PauseVrSettingsWorld(float u, float v) {
     const float x = (u - .5f) * 2.0f * g_vrMenuPanel.plane.halfWidth * g_vrMenuPanel.plane.inset;
@@ -263,8 +315,9 @@ static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& 
         Log("VR settings row: visible in %s menu at normalized V %.2f-%.2f",
             menuClass == 2 ? "main" : "pause", rowV0, rowV1);
     }
+    LONG hoverU=500000,hoverV=500000;ReadVrUiPair(hoverU,hoverV);
     const bool hovered = Rd(g_vrUiValid) && pausevrsettings::Hit(
-        (int)menuClass, Rd(g_vrUiU) / 1000000.0f, Rd(g_vrUiV) / 1000000.0f);
+        (int)menuClass, hoverU / 1000000.0f, hoverV / 1000000.0f);
     const float halfW = d.Width * .5f;
     const int px = std::max(2, (int)d.Height / 420);
     const int textW = 10 * (kGlyphW + 1) * px;
@@ -298,10 +351,14 @@ void UpdateVrUiPointer(float,bool available) {
     // Requiring g_vrUiNativeReady here made the laser disappear exactly when the
     // user opened VR Settings during the early menu frames.
     const bool menu=Rd(g_vrUiEnabled)&&(panel || Rd(g_vrUiNativeReady))&&(Rd(g_vrUiMenu)||panel);
+    static unsigned long long pointerToken=~0ull;
+    const unsigned long long token=VrMenuStateToken();
+    if(token!=pointerToken){pointerToken=token;PublishVrUiPair(500000,500000);InterlockedExchange(&g_vrUiEverHit,0);}
     if(menu&&Rd(g_vrUiDesktopProbe))return; // Explicit debugger-controlled test coordinates; never staged for headset use.
     if(!available || !menu || !g_handPoseValid[1] || !g_handPositionValid[1] || !g_haveEyes || g_targetTanX<=0 || g_targetTanY<=0) {
-        g_vrMenuPanelValid=false;
+        if(!available || !menu)g_vrMenuPanelValid=false;
         InterlockedExchange(&g_vrUiValid,0);InterlockedExchange(&g_vrUiDown,0);
+        if(!menu&&Rd(g_vrUiEverHit))InterlockedExchange(&g_vrUiEverHit,0);
         if(!available)for(auto& gate:g_vrUiTrigger)gate.Update(menu?uipointer::Context::Menu:uipointer::Context::Gameplay,false,false,false);
         return;
     }
@@ -326,13 +383,42 @@ void UpdateVrUiPointer(float,bool available) {
     bool valid=g_vrMenuPanelValid && g_vrMenuPanel.Ray({pos.x,pos.y,pos.z},VrUiRotate(g_handAimOrientation[1],{0,0,-1}),hit);
     if(valid){
         InterlockedIncrement(&g_vrCounters.vrPointerUpdates);
-        g_vrUiHit=hit;InterlockedExchange(&g_vrUiU,(LONG)lroundf(hit.u*1000000));InterlockedExchange(&g_vrUiV,(LONG)lroundf(hit.v*1000000));
+        g_vrUiHit=hit;PublishVrUiPair((LONG)lroundf(hit.u*1000000),(LONG)lroundf(hit.v*1000000));
+        InterlockedExchange(&g_vrUiEverHit,1);
         for(int eye=0;eye<2;++eye){uipointer::ScreenPoint c;if(VrUiProjectEye(eye,g_vrMenuPanel.plane.centre,c))InterlockedExchange(&g_vrUiEyeCentreU[eye],(LONG)lroundf(c.u*1000000));}
     }
     else InterlockedExchange(&g_vrUiDown,0);
     InterlockedExchange(&g_vrUiValid,valid?1:0);
 }
+static void ReleaseModalParentSources() {
+    for(unsigned i=0;i<g_vrModalParentSourceCount;++i)
+        if(g_vrModalParentSources[i])g_vrModalParentSources[i]->Release();
+    memset(g_vrModalParentSources,0,sizeof(g_vrModalParentSources));
+    g_vrModalParentSourceCount=0;
+    for(int stage=0;stage<4;++stage)InterlockedExchange(&g_vrModalParentStageBound[stage],0);
+}
+static void PreserveModalParentSources() {
+    if(g_vrModalParentSourceCount||!Rd(g_modalSlotsCapturePending)||
+       !Rd(g_modalSaveDialog)||!Rd(g_modalSlotsActive))return;
+    InterlockedExchange(&g_modalSlotsCapturePending,0);
+    for(unsigned i=0;i<g_vrMenuSourceCount&&g_vrModalParentSourceCount<8;++i){
+        IDirect3DTexture9* texture=g_vrMenuSources[i];
+        if(!texture)continue;
+        texture->AddRef();g_vrModalParentSources[g_vrModalParentSourceCount++]=texture;
+    }
+    for(int stage=0;stage<4;++stage)
+        if(Rd(g_vrMenuStageBound[stage]))InterlockedExchange(&g_vrModalParentStageBound[stage],1);
+    if(g_vrModalParentSourceCount)
+        Log("menu modal: retained %u exact Slots source textures for suppression until Dialog closes",g_vrModalParentSourceCount);
+    else
+        Log("menu modal: Slots source list empty at focus transition; no parent suppression until exact source capture");
+}
 void SyncVrMenuCaptureState() {
+    // This function is called from draw hooks. Retained COM sources are released
+    // only once when the modal lifetime ends; do not pay interlocked writes on
+    // every scene draw while no modal source is retained.
+    if((!Rd(g_modalSaveDialog)||!Rd(g_modalSlotsActive))&&g_vrModalParentSourceCount)
+        ReleaseModalParentSources();
     const auto token=VrMenuStateToken();
     if(g_vrCaptureOwner.state==token)return;
     if(g_vrMenuTexture)InterlockedIncrement(&g_vrStaleRejected);
@@ -354,7 +440,9 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
     // Pause now has an identity-proven native RTT; generic size candidates
     // are never allowed to select or suppress its source.
     if (Rd(g_vrMenuClass) == 3) return;
-    if (Rd(g_modalSaveDialog)) return;
+    const bool exactModalDialog=modalmenu::CaptureExactDialog(
+        Rd(g_modalSaveDialog)!=0,Rd(g_modalSlotsActive)!=0,Rd(g_vrModalDialogSurface)!=0);
+    if (Rd(g_modalSaveDialog) && !exactModalDialog) return;
     const auto captureState=VrMenuStateToken();
     if(!Rd(g_vrUiEnabled)||!Rd(g_vrUiMenu)||!Rd(g_vrUiNativeReady)||g_boundShaderLayout.shadow)return;
     // GFx menu surfaces are not guaranteed to carry the identity c5 orthographic constants.
@@ -366,6 +454,9 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
     // keep the read only as optional diagnostics and never make capture depend on it.
     float c[16];(void)dev->GetVertexShaderConstantF(5,c,4);
     IDirect3DSurface9* surface=nullptr;if(FAILED(dev->GetRenderTarget(0,&surface))||!surface)return;
+    if(exactModalDialog&&surface!=(IDirect3DSurface9*)(uintptr_t)(DWORD)Rd(g_vrModalDialogSurface)){
+        surface->Release();return;
+    }
     D3DSURFACE_DESC desc{};surface->GetDesc(&desc);
     if(desc.Width<640||desc.Height<360||desc.Width>2048||desc.Height>1536||
        (desc.Format!=D3DFMT_A8R8G8B8&&desc.Format!=D3DFMT_X8R8G8B8)){surface->Release();return;}
@@ -379,7 +470,7 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
             InterlockedIncrement(&g_vrMenuCaptured);
             if(Rd(g_vrMenuClass)==1)InterlockedIncrement(&g_vrCounters.bootMenuCaptured);
             if(Rd(g_vrMenuClass)==2)InterlockedIncrement(&g_vrCounters.mainMenuCaptured);
-            Log("VR menu sink: private GFx candidate %ux%u registered rt=%p texture=%p class=%ld token=%llu; all matching scene draws will be suppressed",desc.Width,desc.Height,(void*)surface,(void*)texture,Rd(g_vrMenuClass),captureState);
+            Log("VR menu sink: private GFx candidate %ux%u registered rt=%p texture=%p class=%ld token=%llu exactDialog=%d; all matching scene draws will be suppressed",desc.Width,desc.Height,(void*)surface,(void*)texture,Rd(g_vrMenuClass),captureState,exactModalDialog?1:0);
         }
         // Prefer the candidate whose aspect is closest to the native GFx canvas.  The source list
         // is retained as well because the physical menu can be submitted through more than one
@@ -397,7 +488,10 @@ void CaptureVrMenuTarget(IDirect3DDevice9* dev) {
     }
     surface->Release();
 }
-void ReleaseVrMenuResources(){
+void ReleaseVrMenuResources(bool menuFocusTransition){
+    if(menuFocusTransition&&Rd(g_modalSlotsCapturePending)&&Rd(g_modalSaveDialog)&&Rd(g_modalSlotsActive))
+        PreserveModalParentSources();
+    else if(!Rd(g_modalSaveDialog)||!Rd(g_modalSlotsActive))ReleaseModalParentSources();
     g_frontMenuResources.Release();g_frontMenuCleanFrame=false;
     g_vrCaptureOwner.Invalidate(VrMenuStateToken());
     ReleaseFpCasterCache();
@@ -410,7 +504,7 @@ void ReleaseVrMenuResources(){
 // Render the captured GFx menu texture as a single head-relative quad at VrMenuDistanceMm.
 // Also draws the laser pointer and prompt legend.
 void DrawVrMenuPointer(IDirect3DDevice9* dev) {
-    if (InterlockedExchange(&g_vrMenuReleaseRequested, 0)) ReleaseVrMenuResources();
+    if (InterlockedExchange(&g_vrMenuReleaseRequested, 0)) ReleaseVrMenuResources(true);
     ++g_vrMenuFrame;
     SyncVrMenuCaptureState();
     // One stable boot and main proof image per process, actual XR source only.
@@ -487,7 +581,9 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
 
     // ---- RENDER MENU QUAD ----
     unsigned pauseEyesDrawn = 0;
-    if (!cleanFrontend && nativeMenu && !Rd(g_modalSaveDialog) && g_vrMenuTexture && g_vrMenuPanelValid &&
+    const bool modalDialogEligible=modalmenu::CaptureExactDialog(
+        Rd(g_modalSaveDialog)!=0,Rd(g_modalSlotsActive)!=0,Rd(g_vrModalDialogSurface)!=0);
+    if (!cleanFrontend && nativeMenu && (!Rd(g_modalSaveDialog)||modalDialogEligible) && g_vrMenuTexture && g_vrMenuPanelValid &&
         (Rd(g_vrMenuClass) != 3 || dedicatedPause) && g_vrCaptureOwner.CanProvide(VrMenuStateToken())) {
         // RGB capture proves Objectives has nonzero RGB with zero stored alpha.
         // Preserve the native AlphaComposite RGB term instead of multiplying it
@@ -561,16 +657,13 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     if (menuRow && !panel) DrawPauseVrSettingsRow(dev, d);
 
     // ---- LASER + HIT MARKER ----
-    if (menu && Rd(g_vrUiValid)) {
-        DrawVrMenuLaser(dev, d);
-        D3DRECT outline[6], dot[6]; int n = 0; const int radius = std::max(3, (int)d.Height / 420);
-        for (int eye = 0; eye < 2; ++eye) {
-            uipointer::ScreenPoint p; if (!VrUiProjectEye(eye, g_vrUiHit.world, p)) continue;
-            const int x = (int)lroundf((eye + p.u) * d.Width * .5f), y = (int)lroundf(p.v * d.Height);
-            const int rows[3] = { radius - 1, radius, radius - 1 };
-            for (int j = 0; j < 3; ++j) { const int yy = y + j - 1, rr = rows[j]; outline[n] = { x - rr - 1, yy - 1, x + rr + 2, yy + 2 }; dot[n] = { x - rr, yy, x + rr + 1, yy + 1 }; ++n; }
-        }
-        ClearRects(dev, outline, n, 0xFF000000); ClearRects(dev, dot, n, Rd(g_vrUiDown) ? 0xFF50FF80 : 0xFFFFFFFF);
+    if (menu && g_vrMenuPanelValid) {
+        LONG pointerU=500000,pointerV=500000;
+        ReadVrUiPair(pointerU,pointerV);
+        const uipointer::V endpoint=uipointer::PointAtCanvasUv(
+            g_vrMenuPanel.plane,pointerU/1000000.0f,pointerV/1000000.0f);
+        if(Rd(g_vrUiValid))DrawVrMenuLaser(dev,d);
+        if(Rd(g_vrUiEverHit))DrawVrMenuReticle(dev,d,endpoint,Rd(g_vrUiDown)!=0);
     }
 
     // Menu legends are intentionally omitted.  PS icons are reserved for
