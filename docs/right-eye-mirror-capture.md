@@ -1,5 +1,15 @@
 # Right-eye window and Steam screenshots
 
+## MAIN 2026-10-18: scoped physical acceptance, PID15380
+
+User confirms desktop framing and Steam screenshots with DLL `A9E2B49B...AE7D2`.
+Actual Steam JPEG `20261018185351_1.jpg` shows the complete world; XR source
+alpha is255 at all131072 sampled pixels after `XrCaptureOpaqueAlpha=1`.
+The prior D3D9-only capture workaround did not resolve SteamVR's screenshot
+path; opaque final XR pixels did on this setup. See
+[receipt and remaining note/prompt work](menu-test-regression-20261018.md).
+The combined test is not promoted: notes still had opposite-edge clipping.
+
 ## MAIN 2026-10-18: physical failure; separate SteamVR screenshots
 
 Candidate `5478D2A3...` failed user TV/screenshot acceptance. Mirror reported

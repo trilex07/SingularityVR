@@ -1,5 +1,12 @@
 # Original weapon FX stereo — controlled continuation
 
+MAIN configuration continuity, 2026-10-18: PID15380 physically confirms native
+VFX with `Render/NativeMuzzleParticleStereo=1`. The earlier menu test omitted
+this default-OFF flag and visibly regressed despite containing the merged code.
+Preserve this key when staging future menu/HUD candidates; a historical restore
+profile is not a complete specification of subsequently accepted features.
+See [regression receipt](menu-test-regression-20261018.md).
+
 SIDE, no Steam. Base origin/main fb73156 (includes current knife/hand integration).
 Goal: keep original UE3 muzzle flash, smoke and light/materials, not generated
 plugin replacements. Known failure: native muzzle effect appeared at the SBS seam.

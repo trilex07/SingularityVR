@@ -37,13 +37,18 @@ if($NotePrompts){$keys+='Render/VrPromptTokens'}
 foreach($key in $keys){
     if(@($plan.ini | Where-Object key -eq $key).Count){throw "Source already plans $key; inspect before reusing"}
     $before=$profile.ini.PSObject.Properties[$key]
-    $plan.ini+= [pscustomobject]@{key=$key;before=$(if($before){$before.Value}else{$null});after='1';reason='Preserve accepted VFX / isolated opaque XR capture / bounded read-only knife pose evidence'}
+    $reason=if($key -eq 'Render/VrPromptTokens'){'Replace exact native action tokens with current VR control labels'}else{'Preserve tested VFX/capture and bounded read-only knife pose evidence'}
+    $plan.ini+= [pscustomobject]@{key=$key;before=$(if($before){$before.Value}else{$null});after='1';reason=$reason}
 }
 $entry=@($plan.files | Where-Object path -eq 'Binaries/d3d9.dll')
 if($entry.Count -ne 1){throw 'Expected one DLL change'}
 $entry[0].after=$hash
 $entry[0].reason='Menu and health changes retained; opaque XR capture experiment and read-only knife pose probe'
 $plan.reason='Correct missing accepted VFX flag; verify opaque VR screenshots and investigate right-hand native melee motion'
+if($NotePrompts){
+    $entry[0].reason='Normalize note panel homogeneous scale; preserve tested HUD, VFX and capture paths'
+    $plan.reason='Notes and native action-token label followup; preserve PID15380 tested feature configuration'
+}
 $plan | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $output 'change-plan.json') -Encoding UTF8
 Copy-Item -LiteralPath $dll,$manifest -Destination $output
 Write-Output "Offline candidate prepared; no installation or launch: $output"

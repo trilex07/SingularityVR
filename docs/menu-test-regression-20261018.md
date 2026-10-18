@@ -112,3 +112,13 @@ Token rewriting has deterministic tests for layout/fallback/unknown/overflow;
 the existing engine FString allocator handles expanded labels. Runtime token
 consumption remains unproven until a pickup/tutorial/reload hint is encountered.
 If it still shows PadN, inspect the actual post-localization alias producer.
+
+Prepared offline bundle: `build/note-prompt-20261018`, production sources
+`ec54bba`, x86 PE32 `/O2`, DLL SHA-256
+`780AEC1F92AB3D2E5715CC95D25D3350B3418A764BFD0620399A3E0F5ABAC954`;
+INI SHA-256 `3005844204DA388A574DE366B971D84FAACFB6DB347652A5DFBC7409CF354294`.
+Menu/pointer/prompt CPU checks PASS; full accepted-profile preflight PASS.
+Semantic INI comparison against the PID15380 bundle has exactly one difference:
+`Render/VrPromptTokens` added at1. The accepted HUD/VFX/alpha/mirror settings
+are retained. Preparation-script wording changes after the build do not change
+production sources. No deployment or launch in this followup; await user start.
