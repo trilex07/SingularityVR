@@ -124,14 +124,16 @@ for your headset and must not be copied from another user's setup.
 
 ## Known issues and work in progress
 
-- **TV/desktop mirror:** the requested complete right-eye view fitted to the
-  monitor is still failing physical acceptance. Successful copy counters are
-  not proof that the displayed image is correct.
-- **Steam screenshots:** recent captures are SteamVR screenshot imports and can
-  show black/loading/HUD-only content. The D3D9 F12 capture changes have not
-  resolved that path. See [mirror/capture investigation](docs/right-eye-mirror-capture.md).
-- **Health HUD:** the smaller, translucent, face-raise-only plate is built and
-  passes offline gesture tests; physical acceptance is pending.
+- **TV/desktop mirror, Steam screenshots and health HUD:** confirmed in the
+  October 18 PSVR2 candidate test. Steam VR captures required opaque alpha on
+  the final XR copy (`XrCaptureOpaqueAlpha=1`); the source RGB was already correct.
+  The smaller translucent health plate appears on face raise. These scoped
+  results do not promote the temporary test bundle to a persistent install.
+  See [capture evidence](docs/menu-test-regression-20261018.md).
+- **Notes and control hints:** the latest test exposed note pages clipped at
+  opposite eye edges and outdated pad/reload labels. Corrections are in progress.
+- **Knife melee:** a prior test reported right-hand lowering during a left-knife
+  swing; native weapon-palette evidence is collected, acceptance remains open.
 - A short FPS dip remains during the early collapsing-building sequence.
   Smaller general hitches improved, but no complete fix for that scene is claimed.
   There is no universal 90/120 FPS guarantee.

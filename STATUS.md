@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+2026-10-18 PID15380 physical result: user confirms health HUD, restored native
+VFX, Steam screenshots and desktop view. Source alpha131072/131072 opaque;
+actual Steam JPEG20261018185351_1 shows complete world (previously stale HUD).
+Do not promote whole candidate: notepad renders opposite clipped outer edges.
+Mirror probe group1 confirms this; class4 null RTT/mode0, inset.4, no XR crop.
+Normalize projective GFx matrices by plane depth before half-eye remap; math
+tests include the affine implicit-W case at.6/.95/2.2/3m. Native token labels
+candidate replaces reload->(O), use->right grip, health->(X), jump->right-stick-up
+under the active reload layout, preserving unknown tokens and the sentence.
+The old geometry-only unconditional R1 overlay is bypassed with VrPromptTokens.
+Offline tests pass; new note/prompt physical acceptance pending. Knife remains
+unresolved/unreported in this feedback. Restored DLL/INI independently hashed.
+
 2026-10-18 PID20864 followup: user accepts desktop framing only; health HUD
 untested. VFX regressed because menu candidate INI omitted the default-OFF
 NativeMuzzleParticleStereo flag, despite the fix being merged. Generator now

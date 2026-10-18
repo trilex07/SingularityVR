@@ -74,3 +74,41 @@ Read-only complete accepted-profile/change-plan preflight PASS. Steam untouched.
 Next physical route: gameplay, a few shots, several left-knife swings while
 holding the right controller still, one Steam screenshot, normal exit. No chat
 switch while in PSVR2. Knife remains diagnostic; screenshots remain experimental.
+
+## PID15380 physical acceptance and note/prompt followup
+
+User confirms the smaller health plate, native VFX, Steam screenshots and
+desktop framing. Runtime confirms particleStereo=1. All131072 sampled XR source
+pixels now have A=255; Steam JPEG `20261018185351_1.jpg` contains the complete
+world, without stale loading/HUD accumulation. Screenshot fix has physical and
+actual saved-pixel evidence on this SteamVR setup. No blanket runtime claim.
+Watchdog restored the exact historical backup; independent DLL/INI hashes match.
+
+New failure: `mirror-probe-15380-1-xr-source.bmp` shows left-page content at
+the far left and right-page content at the far right. SPNotepad reflection
+identifies class4, null RTT/mode0; submit remains SBS half-rect (no crop).
+The shared panel path used inset.4. ProjectCanvasMatrix left the homogeneous
+scale in metres; ApplyEyeRemap therefore wrote +/-0.5*panelDepth into clip X.
+For an affine GFx consumer with implicit W=1 this becomes +/-1.1 at2.2m,
+consistent with the clipped opposite edges. Dividing all output coefficients
+by panel depth is homogeneous-equivalent for full XYZW consumers and restores
+W=1 for parallel affine canvases. Existing projective tests still pass; new
+tests emulate affine XY output and SBS placement at.6/.95/2.2/3m. The shader's
+implicit-W behavior is a hypothesis supported by these pixels, not a completed
+runtime shader disassembly. Next physical note check is the falsifier.
+
+The old prompt overlay unconditionally painted R1 based only on draw geometry;
+it cannot identify reload versus use. Default-OFF `Render/VrPromptTokens=1`
+instead rewrites exact `[reload]`/`[use]`/`[health]`/`[jump]` tokens in the existing
+audited Localize FString result, before native pad alias substitution. Active
+right-handed, unswapped ReloadControlLayout maps reload to `(O)`, health to
+`(X)`, jump to `PRAWA GALKA W GORE`; use is `PRAWY CHWYT`. Normal reload/use
+fallback follows the weapon-hand grip. Unknown tokens, markup and sentence
+bytes are preserved; overflow keeps original text. Bounded logs identify which
+templates are actually consumed. No blanket `Pad 11` substring replacement.
+The unconditional icon overlay is bypassed while these native labels are enabled.
+
+Token rewriting has deterministic tests for layout/fallback/unknown/overflow;
+the existing engine FString allocator handles expanded labels. Runtime token
+consumption remains unproven until a pickup/tutorial/reload hint is encountered.
+If it still shows PadN, inspect the actual post-localization alias producer.

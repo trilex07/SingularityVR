@@ -124,8 +124,12 @@ inline bool ProjectCanvasMatrix(const Plane& p,V eye,V forward,V right,V up,
         const int i=row*4;
         for(int k=0;k<4;++k)if(!std::isfinite(source[i+k]))return false;
         const V point=a*source[i]+b*source[i+1]+c*source[i+3];
-        result[i]=Dot(point,r)/tanX;result[i+1]=Dot(point,u)/tanY;
-        result[i+2]=source[i+2]*depth;result[i+3]=Dot(point,f);
+        // Homogeneous scale is arbitrary, but GFx affine variants consume XY
+        // with an implicit output W=1. Normalize by panel depth before the SBS
+        // remap: its +/- half-eye translation must not be multiplied by metres.
+        // Full XYZW shaders retain exactly the same projected positions.
+        result[i]=Dot(point,r)/(tanX*depth);result[i+1]=Dot(point,u)/(tanY*depth);
+        result[i+2]=source[i+2];result[i+3]=Dot(point,f)/depth;
         for(int k=0;k<4;++k)if(!std::isfinite(result[i+k]))return false;
     }
     for(int i=0;i<16;++i)out[i]=result[i];

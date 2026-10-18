@@ -122,6 +122,9 @@ static void DrawVrPromptLegend(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,bo
 extern volatile LONG g_contextPromptVisible;
 void DrawVrContextPrompt(IDirect3DDevice9* dev) {
     const LONG active=InterlockedExchange(&g_contextPromptVisible,0);
+    // A draw shape cannot distinguish reload from use. When native tokens
+    // carry the actual control label, do not add the old unconditional R1.
+    if(g_vrPromptTokens)return;
     if(!active || !dev || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_vrUiMenu) || !g_origDrawPrimUP) return;
     static LONG contextIconLogCount=0;
     LONG cil=InterlockedIncrement(&contextIconLogCount);

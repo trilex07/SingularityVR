@@ -56,6 +56,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "camera_lookup_guard.h"
 #include "video_cinema_placement.h"
 #include "input_remap.h"
+#include "prompt_tokens.h"
 #include "reload_controls.h"
 #include "polish_localization.h"
 
@@ -6574,6 +6575,7 @@ static void NoteXrHeartbeat(int shouldRender, int layerCount) {
     }
 }
 volatile LONG g_contextPromptVisible=0; // set by the measured native pickup/use prompt draw
+static bool g_vrPromptTokens=false; // action-token text replaces ambiguous native pad aliases
 static void ReportVrRuntimeCounters() {
     const auto& c=g_vrCounters;
     Log("VR counters boot captured/suppressed/provided=%ld/%ld/%ld main=%ld/%ld/%ld unknown=%ld pointer=%ld",
@@ -23531,7 +23533,9 @@ static bool PolishLookupByKey(const wchar_t* section, const wchar_t* key,
 
 static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
                                  const wchar_t* key = nullptr, const wchar_t* package = nullptr) {
-    if (!result || !PolishLocalization::PL().IsPolishEnabled()) return;
+    const bool polish=PolishLocalization::PL().IsPolishEnabled();
+    const bool prompts=g_vrPromptTokens&&VrModeOn();
+    if (!result || (!polish&&!prompts)) return;
     if (!Readable(result, 12)) return;
     wchar_t* data = *reinterpret_cast<wchar_t**>(result);
     const int num = *reinterpret_cast<int*>(reinterpret_cast<char*>(result) + 4);
@@ -23557,18 +23561,30 @@ static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
         ++seen;
         Log("polish localize saw: \"%s\"", en);
     }
-    const bool mappedByKey = PolishLookupByKey(section, key, package, pl, sizeof(pl));
+    const bool mappedByKey = polish&&PolishLookupByKey(section, key, package, pl, sizeof(pl));
     bool mapped = mappedByKey;
-    if (!mapped) mapped = PolishLocalization::PL().PolishForEnglish(en, pl, sizeof(pl));
+    if (!mapped&&polish) mapped = PolishLocalization::PL().PolishForEnglish(en, pl, sizeof(pl));
     static LONG cineTextNotes=0;
     if (Rd(g_inCinematic) && InterlockedIncrement(&cineTextNotes)<=16)
         Log("polish cine text: mapped=%d chars=%d english=\"%s\"", mapped?1:0,num-1,en);
-    if (!mapped) return;
+    char prompt[16384]{};
+    const char* visible=mapped?pl:en;
+    prompttokens::Result rewritten;
+    if(prompts){
+        const bool layout=g_reloadControlLayout&&AimHand()==1&&!Rd(g_swapSticks);
+        rewritten=prompttokens::Rewrite(visible,prompt,sizeof(prompt),layout,AimHand()==1);
+        if(rewritten.changed&&!rewritten.overflow){
+            visible=prompt;
+            static unsigned notes=0;if(notes++<24)Log("vr-prompt token rewrite: reloadLayout=%d replacements=%u source=\"%.240s\" visible=\"%.300s\"",
+                layout?1:0,rewritten.replaced,mapped?pl:en,visible);
+        }
+    }
+    if (!mapped&&!rewritten.changed) return;
     wchar_t wide[4096]{};
     const bool notes = mappedByKey || PolishNotesSection(section);
     // FString/GFx receives Unicode; a code-page round trip neither creates
     // glyphs nor proves their coverage and can replace unsupported text by '?'.
-    const int wn = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, pl, -1, wide, 4096);
+    const int wn = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, visible, -1, wide, 4096);
     if (wn <= 1) return;
     static LONG saidNoteUnicode = 0;
     if (notes && InterlockedCompareExchange(&saidNoteUnicode, 1, 0) == 0)
@@ -31883,6 +31899,7 @@ void LoadIniSettings() {
     // ---- Polish Localization initialization ----
     InterlockedExchange(&g_modalUiProbe, GetPrivateProfileIntA("Render","ModalUiProbe",0,path)?1:0);
     InterlockedExchange(&g_contextPointerProjection,GetPrivateProfileIntA("Render","ContextPointerProjection",0,path)?1:0);
+    g_vrPromptTokens=GetPrivateProfileIntA("Render","VrPromptTokens",0,path)!=0;
     InterlockedExchange(&g_contextCursorSuppress,
         GetPrivateProfileIntA("Render","ContextCursorSuppress",0,path)?1:0);
     Log("ini: ContextCursorSuppress=%ld (measured modal GFx pointer only; default OFF)",

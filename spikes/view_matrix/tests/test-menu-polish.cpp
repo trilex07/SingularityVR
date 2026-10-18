@@ -7,6 +7,7 @@
 #include "../menu_pointer_design.h"
 #include "../modal_menu_policy.h"
 #include "../ui_pointer.h"
+#include "../prompt_tokens.h"
 
 static bool Near(float a,float b,float epsilon=1e-5f){return std::fabs(a-b)<=epsilon;}
 static std::array<float,4> Transform(const float* m,float x,float y){
@@ -17,12 +18,12 @@ static std::array<float,4> Transform(const float* m,float x,float y){
 static void TestDirectCanvasProjection(){
     // Real GFx convention: native pixel coordinates first become clip XY.
     const float source[16]={.002f,0,0,0,0,-.003f,0,0,0,0,1,0,-.7f,.5f,0,1};
-    for(float inset:{.84f,.4f})for(float yaw:{0.f,.65f}){
+    for(float inset:{.84f,.4f})for(float yaw:{0.f,.65f})for(float distance:{.6f,.95f,2.2f,3.f}){
         const float sy=std::sin(yaw*.5f),cy=std::cos(yaw*.5f);
         auto rotate=[&](uipointer::V v){return uipointer::Rotate(0,sy,0,cy,v);};
         uipointer::Plane plane;
         assert(uipointer::HeadPlane({.2f,-.1f,.3f},rotate({0,0,-1}),rotate({1,0,0}),
-            rotate({0,1,0}),.95f,1.3f,1.1f,inset,plane));
+            rotate({0,1,0}),distance,1.3f,1.1f,inset,plane));
         for(int eye=0;eye<2;++eye){
             const auto eyePos=uipointer::V{.2f,-.1f,.3f}+rotate({eye?.035f:-.035f,eye?.003f:0.f,eye?.002f:0.f});
             // Also exercise a small eye rotation; centre-only offsets cannot
@@ -47,10 +48,43 @@ static void TestDirectCanvasProjection(){
             for(auto value:sentinel)assert(value==123.f);
         }
     }
+    // Notes reproduced at opposite outer SBS edges at 2.2m: the old
+    // unnormalised W=depth shifted each affine GFx copy by +/-1.1 clip X.
+    for(float distance:{.6f,.95f,2.2f,3.f})for(int eye=0;eye<2;++eye){
+        uipointer::Plane p;const uipointer::V eyePos{eye?.032f:-.032f,0,0};
+        assert(uipointer::HeadPlane({0,0,0},{0,0,-1},{1,0,0},{0,1,0},distance,1.3f,1.1f,.4f,p));
+        float m[16];assert(uipointer::ProjectCanvasMatrix(p,eyePos,{0,0,-1},{1,0,0},{0,1,0},1.3f,1.1f,source,m));
+        assert(Near(m[15],1.f)&&Near(m[3],0)&&Near(m[7],0));
+        for(float u:{0.f,.5f,1.f})for(float v:{0.f,.5f,1.f}){
+            const float x=(2*u-1-source[12])/source[0],y=(1-2*v-source[13])/source[5];
+            const auto before=Transform(m,x,y);
+            uipointer::ScreenPoint expected;assert(uipointer::ProjectPoint(uipointer::PointAtCanvasUv(p,u,v),eyePos,{0,0,-1},{1,0,0},{0,1,0},1.3f,1.1f,expected));
+            // Emulate only XY output + hardcoded W=1, including ApplyEyeRemap.
+            const float ndc=.5f*before[0]+(eye?.5f:-.5f)*before[3];
+            assert(Near(.5f+.5f*ndc,(eye+expected.u)*.5f));
+            assert(Near(.5f-.5f*before[1],expected.v));
+        }
+    }
 }
 
 int main(){
     TestDirectCanvasProjection();
+    {
+        char text[256];
+        auto r=prompttokens::Rewrite("Nacisnij [reload], aby przeladowac. [use] Apteczka",text,sizeof(text),true,true);
+        assert(r.changed&&!r.overflow&&r.replaced==2);
+        assert(!strcmp(text,"Nacisnij (O), aby przeladowac. PRAWY CHWYT Apteczka"));
+        r=prompttokens::Rewrite("[health] / [jump] / [unknown] <b>PL</b>",text,sizeof(text),true,true);
+        assert(!strcmp(text,"(X) / PRAWA GALKA W GORE / [unknown] <b>PL</b>"));
+        assert(r.replaced==2);
+        r=prompttokens::Rewrite("[use] [reload] [health]",text,sizeof(text),false,false);
+        assert(!strcmp(text,"LEWY CHWYT LEWY CHWYT [health]"));
+        r=prompttokens::Rewrite("Pad 11 / [reloadable] / [use",text,sizeof(text),true,true);
+        assert(!r.changed&&!strcmp(text,"Pad 11 / [reloadable] / [use"));
+        char tiny[4]={'a','b','c',0};
+        r=prompttokens::Rewrite("[use]",tiny,sizeof(tiny),true,true);
+        assert(r.overflow&&!r.changed&&tiny[0]==0);
+    }
     for(bool flip:{false,true})for(float u:{0.f,.13f,.5f,.91f,1.f})for(float v:{0.f,.2f,.7f,1.f}){
         uipointer::CanvasMap crop{.1f,.2f,.9f,.85f,flip};
         int x=0,y=0;float actualU=0,actualV=0;

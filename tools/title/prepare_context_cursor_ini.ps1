@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory)][string]$InputIni,
     [Parameter(Mandatory)][string]$OutputIni,
     [switch]$RightEyeMirror,
-    [switch]$OpaqueXrCapture
+    [switch]$OpaqueXrCapture,
+    [switch]$NativePromptTokens
 )
 
 Set-StrictMode -Version Latest
@@ -32,6 +33,7 @@ if($endsWithNewline -and $lines.Count -gt 0 -and $lines[$lines.Count-1] -eq ''){
 # Keep its physical acceptance separate from the historical restore hash.
 $targets=@{ContextPointerProjection='1';ContextCursorSuppress='0';ContextCursorNative='1';NativeMuzzleParticleStereo='1'}
 if($OpaqueXrCapture){$targets.XrCaptureOpaqueAlpha='1'}
+if($NativePromptTokens){$targets.VrPromptTokens='1'}
 if($RightEyeMirror){
     $targets.DesktopMirrorEye='2'
     $targets.DesktopMirrorFill='0'
