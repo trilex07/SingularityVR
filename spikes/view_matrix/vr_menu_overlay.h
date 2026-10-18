@@ -369,7 +369,10 @@ void UpdateVrUiPointer(float,bool available) {
         inset=(Rd(g_vrUiNoteCanvas)||Rd(g_noteOpen))?Rd(g_noteInsetPct)/100.f:
             ClassBackbufferScale(4,true,(int)Rd(g_menuInsetPct));
     inset=FrontMenuInset((int)menuClass,panel,inset,(int)Rd(g_frontMenuScalePct));
-    const float distance=FrontMenuDistance((int)menuClass,panel,(int)Rd(g_vrMenuDistanceMm),(int)Rd(g_frontMenuDistanceMm));
+    const float distance=ContextMenuDistance((int)menuClass,panel,
+        Rd(g_contextPointerProjection)&&Rd(g_vrUiDirectCanvas),
+        FrontMenuDistance((int)menuClass,panel,(int)Rd(g_vrMenuDistanceMm),(int)Rd(g_frontMenuDistanceMm)),
+        (int)Rd(g_frontMenuDistanceMm));
     g_vrMenuPanelValid=uipointer::HeadPlane(head,VrUiRotate(q,{0,0,-1}),VrUiRotate(q,{1,0,0}),VrUiRotate(q,{0,1,0}),distance,g_targetTanX,g_targetTanY,inset,g_vrMenuPanel.plane);
     if (!panel && g_vrMenuPanelValid)
         g_vrMenuPanel.plane.centre = g_vrMenuPanel.plane.centre +

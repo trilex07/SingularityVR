@@ -2,9 +2,10 @@
 
 namespace contextcursor {
 
-// Narrow signature from the live RvUIGFxMovie_Dialog MenuDrawTrace census:
+// Historical candidate signature, FALSIFIED by the class-4 runtime census:
 // DrawIndexedPrimitiveUP, triangle list, 4 primitives, 8 vertices, 72-byte
-// vertices. This is an experiment gate, not a general Scaleform classifier.
+// vertices. It appeared in class 2, not Dialog. Retained for diagnostic
+// comparison only; it must never authorize suppression.
 inline bool MatchesObservedDraw(bool vrMode, bool vrUiEnabled, bool modalMovie,
                                bool directCanvas, bool sceneTarget,
                                unsigned primitiveType, unsigned primitiveCount,
@@ -14,12 +15,9 @@ inline bool MatchesObservedDraw(bool vrMode, bool vrUiEnabled, bool modalMovie,
            stride == 72u;
 }
 
-inline bool ShouldSuppress(bool enabled, bool vrMode, bool vrUiEnabled,
-                           bool modalMovie, bool directCanvas, bool sceneTarget,
-                           unsigned primitiveType, unsigned primitiveCount,
-                           unsigned vertexCount, unsigned stride) {
-    return enabled && MatchesObservedDraw(vrMode, vrUiEnabled, modalMovie,
-        directCanvas, sceneTarget, primitiveType, primitiveCount, vertexCount, stride);
+inline bool ShouldSuppress(bool, bool, bool, bool, bool, bool,
+                           unsigned, unsigned, unsigned, unsigned) {
+    return false;
 }
 
 } // namespace contextcursor

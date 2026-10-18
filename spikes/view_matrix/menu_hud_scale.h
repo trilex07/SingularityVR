@@ -35,3 +35,11 @@ inline float FrontMenuDistance(int menuClass,bool modPanel,int sharedMm,int fron
     const int mm=frontMm<600?600:(frontMm>3000?3000:frontMm);
     return mm/1000.f;
 }
+
+// Direct contextual canvases and their input ray must use the same comfort
+// depth. Keep pause, RTT movies and the mod settings panel unchanged.
+inline float ContextMenuDistance(int menuClass,bool modPanel,bool projectDirect,
+                                 float existing,int frontMm){
+    if(menuClass!=4||modPanel||!projectDirect||frontMm<=0)return existing;
+    return FrontMenuDistance(2,false,0,frontMm);
+}

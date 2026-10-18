@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string]$InputIni,
-    [Parameter(Mandatory)][string]$OutputIni
+    [Parameter(Mandatory)][string]$OutputIni,
+    [switch]$RightEyeMirror
 )
 
 Set-StrictMode -Version Latest
@@ -25,8 +26,15 @@ $lines=[Collections.Generic.List[string]]::new()
 foreach($line in [regex]::Split($text,'\r\n|\n|\r')){$lines.Add($line)}
 if($endsWithNewline -and $lines.Count -gt 0 -and $lines[$lines.Count-1] -eq ''){$lines.RemoveAt($lines.Count-1)}
 
-$targets=@{ContextPointerProjection='1';ContextCursorSuppress='1'}
-$seen=@{ContextPointerProjection=0;ContextCursorSuppress=0}
+$targets=@{ContextPointerProjection='1';ContextCursorSuppress='0'}
+if($RightEyeMirror){
+    $targets.DesktopMirrorEye='2'
+    $targets.DesktopMirrorFill='0'
+    $targets.DesktopMirrorWindow='1'
+    $targets.SteamCaptureBackbuffer='1'
+}
+$seen=@{}
+foreach($key in $targets.Keys){$seen[$key]=0}
 $insideRender=$false
 $renderHeader=-1
 for($i=0;$i -lt $lines.Count;$i++){
@@ -80,8 +88,8 @@ foreach($line in $before){
     }
 }
 foreach($key in $beforeSections.Keys){
-    if($key -in @('Render/ContextPointerProjection','Render/ContextCursorSuppress')){continue}
+    if($key.StartsWith('Render/') -and $targets.ContainsKey($key.Substring(7))){continue}
     if(-not $values.ContainsKey($key) -or $values[$key] -cne $beforeSections[$key]){throw "Unrelated INI value changed: $key"}
 }
 Write-Output "Prepared outside-install candidate INI: $outputFull"
-Write-Output 'Changed only Render/ContextPointerProjection=1 and Render/ContextCursorSuppress=1'
+foreach($key in $targets.Keys){Write-Output ('Scoped candidate value Render/'+$key+'='+$targets[$key])}

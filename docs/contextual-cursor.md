@@ -1,5 +1,27 @@
 # Contextual cursor: confirmation, notes and pickup dialogs
 
+## Latest physical feedback and next bounded candidate
+
+User confirms 722FDF33 did NOT crash. Dialog depth, native arrow and laser
+alignment remain rejected. The earlier 4/8/72 suppression predicate is now
+unconditionally inert, even with its flag enabled: its identity was falsified.
+
+Direct class-4 canvas projection now takes the configured frontend comfort depth
+(installed 1800 mm rather than shared 950 mm) for the SAME plane used by native
+GFx projection and laser intersection. RTT, pause and mod-panel paths stay intact.
+CPU tests cover scope, opt-out and depth. This is not cursor identity proof.
+
+Monitor log proves right-eye selection succeeded but was stretched to the full
+5904x3012 client (`dst=(0,0,5904,3012)`, Fill=1, Window=0). Screenshot pixel stamp
+was disabled (SteamCaptureBackbuffer=0). The INI generator's opt-in
+`-RightEyeMirror` selects existing visible-client aspect fitting and pixel stamp.
+It does NOT resize UE3's window/backbuffer (that previously broke VR rendering).
+Own-process D3D9Ex pixels/state and CPU fit tests pass; Steam screenshots still
+require inspection of actual saved images, not merely successful StretchRect.
+
+No package mutation is permitted by this candidate. Native arrow identity and
+remaining alignment need further investigation; do not label them fixed.
+
 The 2026-10-18 PSVR2 test accepted save-slot/confirmation separation but still
 showed an arrow and laser offset in contextual windows. The current follow-up
 is L1_PASS/L2_PASS and awaits physical validation; no runtime/pixel acceptance

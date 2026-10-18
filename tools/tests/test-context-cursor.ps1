@@ -40,4 +40,4 @@ if($renderer -notmatch 'g_vrUiMenu\) != 0 && Rd\(g_vrMenuClass\) == 4' -or
    $renderer -notmatch 'g_vrUiDirectCanvas\) != 0, Rd\(g_rtIsScene\) != 0'){
     throw 'native cursor gate lost its modal/direct-canvas/scene-only guards'
 }
-Write-Output 'PASS: exact modal cursor shape gate; shipped default OFF; no RvGame Dialog package edit'
+Write-Output 'PASS: historical suppression disabled; contextual depth policy; no RvGame Dialog package edit'
