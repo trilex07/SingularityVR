@@ -63,11 +63,29 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     const uintptr_t pawn=g_playerPawn,weapon=(uintptr_t)(uint32_t)Rd(g_weaponObj),hud=g_hudObject;
     int32_t health=0;
     const bool alive=pawn&&g_offHealth>=0&&TryLoadAlignedI32(pawn+g_offHealth,&health)&&health>0;
+    const bool objectMatch=profile&&NextObject(weapon,kind);
     const bool identity=profile&&index<3&&g_nextReload[index]&&g_nextReady[index]&&!Rd(g_nextFault[index])&&
-        g_nextPresentation.Allowed()&&AimHand()==1&&OffHand()==0&&NextObject(weapon,kind);
+        g_nextPresentation.Allowed()&&AimHand()==1&&OffHand()==0&&objectMatch;
     static centurionreload::AmmoObservation ammo;
     static uintptr_t hudClass=0;static int offsets[3]{-1,-1,-1};static ULONGLONG nextSample=0,nextResolve=0;
     const bool eligible=identity&&context&&alive&&pawn&&weapon&&hud;
+    // The first physical Valkyrie trial reached ARMachineGun but produced no
+    // reload event. Record each gate on a Circle rising edge, plus one sample
+    // when a supported weapon first appears; no reads or writes to game state.
+    static Kind priorKind=Kind::None;static bool priorCircle=false;static unsigned gateNotes=0;
+    const bool circleEdge=circleDown&&!priorCircle;
+    priorCircle=circleDown;
+    if(gateNotes<20&&((kind!=Kind::None&&kind!=priorKind)||circleEdge)){
+        ++gateNotes;
+        Log("next reload gate: kind=%d verts=%ld circleEdge=%d context=%d alive=%d pawn=%08X weapon=%08X hud=%08X enabled=%d assets=%d fault=%ld present=%d aim=%d off=%d object=%d identity=%d holstered=%ld focus=%d",
+            int(kind),Rd(g_gunVerts),circleEdge?1:0,context?1:0,alive?1:0,
+            (unsigned)pawn,(unsigned)weapon,(unsigned)hud,
+            index<3?g_nextReload[index]:0,index<3?g_nextReady[index]:0,
+            index<3?Rd(g_nextFault[index]):0,g_nextPresentation.Allowed()?1:0,
+            AimHand(),OffHand(),objectMatch?1:0,identity?1:0,
+            Rd(g_weaponHolstered),g_xrSessionState==XR_SESSION_STATE_FOCUSED?1:0);
+    }
+    priorKind=kind;
     if(!eligible||(ammo.present&&(ammo.pawn!=(uint32_t)pawn||ammo.weapon!=(uint32_t)weapon||ammo.hud!=(uint32_t)hud))){
         ammo.Clear();nextSample=0;
     }
@@ -126,6 +144,12 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     const auto result=Update(g_nextReloadState,f,calibration);
     const auto& t=g_nextReloadState.transaction;
     const bool valid=in.context&&in.tracked&&in.ammoFresh&&centurionreload::AmmoValid(in)&&f.liveIdentityVerified;
+    if(circleEdge&&kind!=Kind::None&&gateNotes<=20)
+        Log("next reload witness: kind=%d phase=%d grip=%d tracked=%d ammoFresh=%d clip=%d reserve=%d capacity=%d native=%d witness=%d valid=%d event=%d socketDist=%.3f shoulderDist=%.3f",
+            int(kind),int(t.phase),grip?1:0,in.tracked?1:0,in.ammoFresh?1:0,
+            in.clip,in.reserve,in.capacity,native?1:0,f.liveIdentityVerified?1:0,
+            valid?1:0,int(result.event),hipknife::Length(in.hand-in.socket),
+            hipknife::Length(in.hand-in.pouch));
     bool permit=false;ULONGLONG observedPermitMs=0;
     if(TryAcquireSRWLockExclusive(&g_centurionNativeLock)){
         const bool storedOwned=g_nextRefillOnly&&eligible&&Rd(g_weaponHolstered)&&native&&

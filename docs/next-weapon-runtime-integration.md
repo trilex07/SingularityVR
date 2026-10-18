@@ -242,3 +242,22 @@ native gun/scope/hand appearance, and no persistent/floating full gun copies.
 Cancel once by pausing or switching weapon, check pause/Options/stereo return,
 close normally and let MAIN verify restoration; report visual/fit/lighting or
 performance failures explicitly, without calling this physically verified yet.
+
+# MAIN PSVR2 follow-up, 2026-10-18
+
+The first Valkyrie Steam trial loaded OpenXR and validated the original clip
+assets (`CPU assets=READY`), but Circle did not begin manual reload and native
+`AttemptReload` forwarded twice for `ARMachineGun/RvWeaponShared`. The only
+`kind=none` sample preceded rifle equip; it is **not** evidence of a class
+identity failure. The next build logs the individual identity, context,
+ammo-freshness, render-witness and native gates on bounded Circle edges. Do
+not bypass any gate based on this trial. Physical reload remains unverified.
+
+The same trial exposed a separate weapon-wheel bug: `g_wwSeen` called
+`InterlockedCompareExchange` with the exchange/comparand reversed, so the
+Valkyrie was logged as newly seen every frame but never stored. This has a
+direct source-level fix and a regression contract. The wheel also now begins
+with no orange selection until actual hand/stick movement; sector zero remains
+selectable. `ValkyrieSingleGrip` is a default-OFF, one-hand A/B reusing the
+accepted pistol's weapon-delta target for the right glove; its visual effect
+still requires PSVR2.

@@ -52,4 +52,8 @@ if($overlay -notmatch 'DrawVrMenuReticle\(dev,d,endpoint' -or
 if($renderer -notmatch 'InterlockedExchange64\(&g_vrUiPairPacked' -or
    $renderer -notmatch 'InterlockedCompareExchange64\(&g_vrUiPairPacked'){throw 'input and overlay coordinates are not published as one atomic UV pair'}
 if($input -notmatch 'pin the native mouse at the last VR'){throw 'missed rays can fall through to the desktop cursor'}
+if($renderer -notmatch 'InterlockedCompareExchange\(&g_wwSeen\[k\], curV, 0\)' -or
+   $renderer -match 'InterlockedCompareExchange\(&g_wwSeen\[k\], 0, curV\)'){
+    throw 'weapon wheel seen-set must atomically write the current weapon into an empty slot'
+}
 Write-Host 'PASS: projective GFx/pointer agreement, shared laser endpoint, modal source retention and HUD policies'

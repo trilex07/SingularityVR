@@ -9,7 +9,7 @@ enum class Event { None, Open, SelectionChanged, Commit, Cancel };
 struct State {
     bool open = false;
     bool priorR3 = false;
-    int selection = 0;
+    int selection = -1; // no highlighted target until the hand/stick leaves its deadzone
     // Set on the first highlight change of one open. Release commits only a
     // touched wheel: tapping R3 without ever leaving the deadzone cancels
     // instead of committing the resting sector. Shared by stick and hand.
@@ -47,6 +47,7 @@ inline int SectorForStick(float x, float y, int slots, float deadzone = 0.35f) {
 inline Event Update(State& state, bool r3Held, bool l3Held, bool gameplay,
                     bool weaponInHands, bool holstered, float stickX, float stickY,
                     int slots, int handSector = -2) {
+    (void)holstered; // holster state is already reflected by weaponInHands at the caller
     const bool pressed = r3Held && !state.priorR3;
     const bool released = !r3Held && state.priorR3;
     state.priorR3 = r3Held;
@@ -55,7 +56,7 @@ inline Event Update(State& state, bool r3Held, bool l3Held, bool gameplay,
     if (l3Held) {
         if (state.open) {
             state.open = false;
-            state.selection = 0;
+            state.selection = -1;
             return Event::Cancel;
         }
         return Event::None;
@@ -63,7 +64,7 @@ inline Event Update(State& state, bool r3Held, bool l3Held, bool gameplay,
     if (!state.open) {
         if (valid && pressed) {
             state.open = true;
-            state.selection = 0;
+            state.selection = -1;
             state.touched = false;
             state.loggedSel = false;
             return Event::Open;
@@ -74,7 +75,7 @@ inline Event Update(State& state, bool r3Held, bool l3Held, bool gameplay,
     if (!r3Held || !valid) {
         const bool touched = state.touched;
         state.open = false;
-        state.selection = 0;
+        state.selection = -1;
         // Commit only a touched wheel: every sector holds a real weapon now,
         // so an untouched release (tap, stick/hand never left the deadzone)
         // must cancel rather than commit the resting sector.

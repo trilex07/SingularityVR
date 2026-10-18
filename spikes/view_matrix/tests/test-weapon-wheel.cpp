@@ -21,12 +21,14 @@ int main() {
     State s{};
     assert(Update(s, false, false, true, true, false, 0, 0, 4) == Event::None);
     assert(Update(s, true,  false, true, true, false, 0, -1, 4) == Event::Open);
-    assert(s.open && s.selection == 0);
+    assert(s.open && s.selection == -1); // opening does not falsely highlight top
+    assert(Update(s, true, false, true, true, false, 0, -1, 4) == Event::SelectionChanged);
+    assert(s.selection == 0); // upward motion can now select top
     assert(Update(s, true, false, true, true, false, 1, 0, 4) == Event::SelectionChanged);
     assert(s.selection == 1);
     assert(Update(s, true, false, true, true, false, 1, 0, 4) == Event::None);
     assert(Update(s, false, false, true, true, false, 1, 0, 4) == Event::Commit);
-    assert(!s.open && s.selection == 0);
+    assert(!s.open && s.selection == -1);
     assert(Update(s, false, false, true, true, false, 0, 0, 4) == Event::None);
 
     // L3 cancels a held wheel and cannot leak a commit on R3 release.

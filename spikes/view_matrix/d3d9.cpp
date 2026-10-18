@@ -6785,6 +6785,7 @@ bool g_handPositionValid[2] = { false, false };
 bool g_handActionActive[2] = { false, false };
 volatile LONG g_twoHandEnabled = 1, g_twoHandActive = 0;
 static int g_valkyrieAuthoredGrip = 0; // isolated A/B: retain UE3's authored two-hand relation
+static int g_valkyrieSingleGrip = 0; // isolated A/B: right glove follows the same weapon delta as pistol
 // Run 190: the gun-pose timing experiment. See the long note in SyncXRInput.
 int      g_poseLeadFrames = 0;          // ini [Input] PoseLeadFrames: display periods to predict ahead
 XrTime   g_lastHandPoseTime = 0;        // what time the previous sample was predicted FOR
@@ -11197,7 +11198,9 @@ void SyncXRInput(XrTime displayTime) {
             }
             if (!known) {
                 for (int k = 0; k < 8; ++k) {
-                    if (InterlockedCompareExchange(&g_wwSeen[k], 0, curV) == 0) {
+                    // Exchange=curV, Comparand=0. The reversed arguments left
+                    // every slot empty and logged this weapon on EVERY frame.
+                    if (InterlockedCompareExchange(&g_wwSeen[k], curV, 0) == 0) {
                         Log("weapon wheel: new weapon seen verts=%ld", curV);
                         break;
                     }
@@ -11231,7 +11234,7 @@ void SyncXRInput(XrTime displayTime) {
         WeaponInHands(), Rd(g_weaponHolstered), tx, ty, (int)g_weaponWheelSlots, handSector);
     if (wheelEvent == weaponwheel::Event::Open) {
         InterlockedExchange(&g_weaponWheelOpen, 1);
-        InterlockedExchange(&g_weaponWheelSelection, 0);
+        InterlockedExchange(&g_weaponWheelSelection, -1);
         InterlockedExchange(&g_weaponWheelCommit, 0);
         InterlockedExchange(&g_weaponWheelPulseGap, 0);
         if (handPick && g_handPositionValid[1]) {
@@ -17103,13 +17106,15 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     float aimTarget[4][4]{};
     const bool supportGrip = Rd(g_twoHandActive) != 0;
     const long supportGunVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
-    const bool pistolSingleHand = handanchor::PistolGrip(gloves,Rd(g_weaponObj)!=0,
-        Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip);
-    if (pistolSingleHand) {
+    const bool weaponSingleHand = handanchor::PistolGrip(gloves,Rd(g_weaponObj)!=0,
+        Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip) ||
+        handanchor::ValkyrieSingleGrip(g_valkyrieSingleGrip!=0,gloves,Rd(g_weaponObj)!=0,
+            Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip);
+    if (weaponSingleHand) {
         BuildGunC(aimTarget);
         static LONG saidPistolAimGrip = 0;
         if (InterlockedCompareExchange(&saidPistolAimGrip, 1, 0) == 0)
-            Log("pistol aim grip: right glove delta follows BuildGunC (weapon pose), not open controller");
+            Log("single-hand weapon grip: right glove delta follows BuildGunC (weapon pose), not open controller; gunVerts=%ld",supportGunVerts);
     }
     bool weaponDeltaUsed = false;
     bool paletteFallback = false;
@@ -17198,7 +17203,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     memcpy(changed,saved,regs*4*sizeof(float));
     float rightDelta[4][4];
     bool paired = skeletal::LocalDeltaPair(delta, rightDelta, local, base, leftTarget,
-        handanchor::AimTarget(pistolSingleHand, aimTarget, primary));
+        handanchor::AimTarget(weaponSingleHand, aimTarget, primary));
     if (!paired && supportGrip && weaponDeltaUsed) {
         paired = skeletal::LocalDeltaPair(delta, rightDelta, local, base, off, primary);
         paletteFallback = paired;
@@ -23791,6 +23796,13 @@ static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
             Log("reload tutorial localization: polish=%d promptTokens=%d changed=%d text=\"%.240s\"",
                 polish?1:0,prompts?1:0,rewritten.changed?1:0,visible);
     }
+    if(prompts&&(strstr(en,"[reload]")||strstr(en,"Pad 11")||strstr(en,"Pad11"))){
+        static LONG aliasNotes=0;
+        if(InterlockedIncrement(&aliasNotes)<=12)
+            Log("reload prompt producer: section=%ls key=%ls package=%ls changed=%d mapped=%d source=\"%.200s\" visible=\"%.200s\"",
+                section?section:L"",key?key:L"",package?package:L"",
+                rewritten.changed?1:0,mapped?1:0,en,visible);
+    }
     if (!mapped&&!rewritten.changed) return;
     wchar_t wide[4096]{};
     const bool notes = mappedByKey || PolishNotesSection(section);
@@ -27684,7 +27696,7 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
 
     const int slots = weaponwheel::ClampSlots((int)g_weaponWheelSlots);
-    const int selected = std::max(0, std::min(slots - 1,
+    const int selected = std::max(-1, std::min(slots - 1,
         (int)InterlockedCompareExchange(&g_weaponWheelSelection, 0, 0)));
     const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
     const bool haveCatalog = InterlockedCompareExchange(&g_wwCatalogState, 0, 0) == 1 &&
@@ -27813,7 +27825,7 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
                 ring[k].z = 0; ring[k].rhw = 1; ring[k].c = ringCol;
             }
             g_origDrawPrimUP(dev, D3DPT_LINESTRIP, (UINT)m.ringSteps, ring, sizeof(WwVtx));
-            {
+            if (selected >= 0) {
                 float a0 = 0, a1 = 0;
                 wheel_layout::WedgeBounds(selected, slots, 0.10f, a0, a1);
                 WwVtx arc[2 + 6 + 1];
@@ -33036,6 +33048,8 @@ void LoadIniSettings() {
     g_valkyrieAuthoredGrip = GetPrivateProfileIntA("Input", "ValkyrieAuthoredGrip", 0, path) ? 1 : 0;
     Log("ini: ValkyrieAuthoredGrip=%d (default OFF; compare shipped paired left-hand pose against guessed fore-end offset)",
         g_valkyrieAuthoredGrip);
+    g_valkyrieSingleGrip = GetPrivateProfileIntA("Input", "ValkyrieSingleGrip", 0, path) ? 1 : 0;
+    Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
     g_holsterEnabled = GetPrivateProfileIntA("Input", "HolsterEnabled", 1, path) ? 1 : 0;
     // MAIN 2026-10-15: hip lower and further out (pelvis level, clear of the
     // torso) per user; installed INIs pinning older values need the same

@@ -11,6 +11,11 @@ int main(){
     assert(!handanchor::PistolGrip(true,true,false,5799,true));
     assert(!handanchor::PistolGrip(true,true,false,6100,false));
     assert(!handanchor::PistolGrip(false,true,false,5799,false));
+    assert(handanchor::ValkyrieSingleGrip(true,true,true,false,11387,false));
+    assert(!handanchor::ValkyrieSingleGrip(false,true,true,false,11387,false));
+    assert(!handanchor::ValkyrieSingleGrip(true,true,true,false,11387,true));
+    assert(!handanchor::ValkyrieSingleGrip(true,true,true,true,11387,false));
+    assert(!handanchor::ValkyrieSingleGrip(true,true,true,false,5799,false));
     assert(handanchor::FreeWristAnchor(true,false,2,false));
     assert(!handanchor::FreeWristAnchor(true,true,2,false));
     assert(!handanchor::FreeWristAnchor(true,false,0,false));

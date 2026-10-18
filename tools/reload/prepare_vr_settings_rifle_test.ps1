@@ -31,10 +31,12 @@ if($profile.schema -cne 'singularityvr-accepted-profile-v1' -or -not $profile.ap
    $acceptedDll.Count -ne 1){throw 'Accepted profile identity invalid'}
 $targets=[ordered]@{
     'Render/VrPromptTokens'='1'
+    'Render/DesktopMirrorWindow'='1'
     'Input/ValkyrieManualReload'='1'
     'Input/ReloadRefillOnly'='1'
     'Input/ReloadNativeMagazine'='1'
     'Input/ValkyrieAuthoredGrip'='1'
+    'Input/ValkyrieSingleGrip'='1'
 }
 $text=[IO.File]::ReadAllText((Resolve-Path -LiteralPath $InstalledIni).Path,[Text.UTF8Encoding]::new($false,$true))
 $newline=if($text.Contains("`r`n")){"`r`n"}else{"`n"}
