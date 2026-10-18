@@ -5,8 +5,10 @@ physically accepted first-building projector stereo reconstruction by default
 and bound its shader identity cache to 1024x4 entries. Physical report: the
 projector looked good; later micro-dips were negligible, while the collapse dip
 remained around 76 FPS and recovered. No causal FPS fix for collapse is claimed.
-L1/L2 revalidation after rebase to current `main` is pending. Steam files were
-not changed.
+L1 projector math/cache/scope, six related renderer regressions and six Python
+checks PASS after rebase. L2 x86 PE32 `/O2` PASS from `c6aa6c6`, DLL SHA-256
+`D2778CA8652F00BECD8C88D9660C11352A523B32DBE151E33AB7BCEF49AA04E4`.
+Existing repository build warnings remain. Steam files were not changed.
 
 LATEST MAIN complete native particle correction: offline disassembly of all
 three emitter VS/PS pairs and audit of 15 paired draw groups prove that all

@@ -236,9 +236,9 @@ enabled and does not establish a frame-time gain from it. The isolated collapse
 dip remains unresolved; this change does not claim to fix it.
 
 Integration validation on `fix/main-projector-optimizations`, source
-`1b3c9c9e6516407e419b74b7233565d2ab9824cb`: projector math and cache/scope L1
+`c6aa6c6670e94777c64f3c1ff9ddc289af6cae32`: projector math and cache/scope L1
 PASS; six related renderer regressions and six Python checks PASS. Production
 x86 PE32 `/O2` build PASS, DLL SHA-256
-`FB18CF24A30EFC243A9DA4202341DF2EBB5CE459D93963DF4498D5229CE8906F`.
+`D2778CA8652F00BECD8C88D9660C11352A523B32DBE151E33AB7BCEF49AA04E4`.
 The build reports existing repository warnings; this is not warning-clean.
 Steam remains untouched by this integration branch.
