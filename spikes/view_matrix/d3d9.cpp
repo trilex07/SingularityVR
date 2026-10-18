@@ -31695,7 +31695,7 @@ void LoadIniSettings() {
     // The physically accepted shadow/input combination is persistent: missing
     // keys use ON, so existing INIs need no overwrite or temporary flag files.
     const bool worldShadow=GetPrivateProfileIntA("Render","ShadowWorldReceiverFix",1,path)!=0;
-    projectorfix::Configure(GetPrivateProfileIntA("Render","ProjectorWorldStereo",0,path)!=0);
+    projectorfix::Configure(GetPrivateProfileIntA("Render","ProjectorWorldStereo",1,path)!=0);
     const bool foregroundShadow=GetPrivateProfileIntA("Render","ShadowForegroundClearFix",1,path)!=0;
     const bool firstShadow=GetPrivateProfileIntA("Render","ShadowFirstPersonReceiverFix",1,path)!=0;
     const bool inputCache=GetPrivateProfileIntA("Input","InputEnumerationCache",1,path)!=0;

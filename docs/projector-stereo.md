@@ -167,7 +167,8 @@ misplaced movie, or candidate suppression leaves that content unchanged.
 
 ## Scoped reconstruction candidate
 
-Default-OFF Render/ProjectorWorldStereo. Only captured VS AC4827843287AECB
+`Render/ProjectorWorldStereo` is enabled by default in this integration, with
+explicit `0` available as an opt-out. Only captured VS AC4827843287AECB
 (208 bytes) + PS7F00BC7925591BE8 (1336 bytes), indexed four-vertex/two-triangle
 quad, exact scene/atlas formats and full viewport/eye scissors. Native camera
 VP is captured before head/FOV/offset correction at the validated locked c0
@@ -213,3 +214,23 @@ or resource gates changed. Falsifier: exact pair hits remain absent after
 eviction, or route rejection prevents both-eye correction. L1 regression feeds
 128 nonmatching objects before a matching 129th, verifies recognition/cache hit,
 and checks all references are released. Scope restoration/math tests also pass.
+
+## MAIN integration decision
+
+The later PSVR2 run confirmed the projector image landed correctly on its
+canvas; the user reported the projector route looked good. Integrate the exact
+shader/resource-gated per-eye reconstruction and enable it by default. A user
+INI can still explicitly set `Render/ProjectorWorldStereo=0` to disable it.
+Only the captured projector light-function quad is eligible; other draws retain
+their original constants. The change preserves guarded failure and state restore.
+
+The 128-entry linear shader cache was directly observed to churn: a runtime
+window recorded 17,584 classifications and evictions in one second. Replace it
+with the fixed 1024-set, four-way cache (4096 bounded COM references, at most
+four pointer comparisons per shader bind) and release references on Reset.
+L1 tests cover collisions, eviction, exact shader recognition, and COM balance.
+The user later reported only negligible residual micro-stutters outside the
+building-collapse event. That subjective improvement is useful acceptance
+evidence, but the collapse capture used a diagnostic profile without this cache
+enabled and does not establish a frame-time gain from it. The isolated collapse
+dip remains unresolved; this change does not claim to fix it.

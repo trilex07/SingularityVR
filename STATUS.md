@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+MAIN integration candidate `fix/main-projector-optimizations`: enable the
+physically accepted first-building projector stereo reconstruction by default
+and bound its shader identity cache to 1024x4 entries. Physical report: the
+projector looked good; later micro-dips were negligible, while the collapse dip
+remained around 76 FPS and recovered. No causal FPS fix for collapse is claimed.
+L1/L2 results for this rebased candidate are recorded below after verification.
+Steam files were not changed.
+
 LATEST MAIN complete native particle correction: offline disassembly of all
 three emitter VS/PS pairs and audit of 15 paired draw groups prove that all
 three receive HUD's c5-c8 half-remap before projection. The previous candidate
