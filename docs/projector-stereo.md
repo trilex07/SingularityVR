@@ -245,3 +245,31 @@ Acceptance: both-eye applied counters with zero restore faults AND physical
 stable projection front/side. Record separate resource/depth/constants/math
 rejections if blocked. Inspect FPS on the route before entering the room;
 improvement with diagnostics off alone does not prove engine-scene cost solved.
+
+## Physical acceptance PID20296, 2026-10-18
+
+User: "projektor dziala super, dalej byly spadki klatek". Tested package
+candidate-audited-quiet (DLL F53E9E2A...1B0215, INI87DB3899...70CD1).
+Renderer log SHA C1D0B5245E61134458D0FCF03FDFEBB0F93C48C39F58BAC940406B0E2EB34615:
+2945 applied draws per eye, zero rejected/restore failures/faults; zero large
+BMP saves and zero menu census dumps. Guard restored original DLL/INI/injector;
+independent hashes also verified protected UI. Projector L3/L4 PASS.
+
+3600-frame profile: first240 SetTexture estimate5.7624ms/frame, full3600
+.7476ms/frame. Final Present total6.5745 includes wait3.6038, copy/overlays1.9105,
+XR images.0915, submit.2514 and residual~.50. Do not sum nested scopes or treat
+the copy/overlay scope as pure transfer; no total game GPU measurement exists.
+Injector log preserved beside renderer evidence: synchronous replacements up to
+8192x8192, resource-owned cache hits after first use. Source bridge callback
+performs HashLevel0, LoadDDS, CreateReplacement (all mips + UpdateTexture) on
+the calling render thread. Hypothesis: cold texture preparation contributes
+early hitches. Native driver waits remain an alternative cause of inclusive
+SetTexture cost. No speculative texture quality or scene-render changes made.
+
+Next offline package candidate-texture-cost-split: DLL
+57338F7F3FB698DC46889FA014B130DFF13308690090F9371CBAC13A4BAF876D,
+same INI as accepted projector test. Adds two existing-sampler families:
+texture_bridge inclusive callback and texture_driver actual forward. Subtract
+nested driver estimate from bridge, never add them. Falsifier: driver accounts
+for most of the cold-bind spike, or spikes persist without bridge-exclusive
+cost. L1 existing sampler PASS; L2 /O2 x86 PE32 PASS. Not deployed.
