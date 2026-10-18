@@ -16,17 +16,20 @@ static Callback originalCallback=nullptr;
 static InputEnumerationCache cache;
 static HCMNOTIFICATION notification=nullptr;
 static bool busy=false,recording=false;
+// Read-only miss attribution: PID31668 contains a 520ms native discovery stall.
+// Counters are incremented on existing invalidation paths, never log on CM thread.
+static volatile LONG topologyChanges=0,contextChanges=0,unexpectedCallbacks=0;
 static DWORD ReadIdentity(){
  const void* address=(void*)0x01D1FC7Cu;
  return Readable((void*)address,sizeof(DWORD))?*(const DWORD*)address:0;
 }
 static DWORD (*interfaceIdentity)()=&ReadIdentity;
 static DWORD CALLBACK TopologyChanged(HCMNOTIFICATION,PVOID,CM_NOTIFY_ACTION,PCM_NOTIFY_EVENT_DATA,DWORD){
- cache.Invalidate();return ERROR_SUCCESS;
+ InterlockedIncrement(&topologyChanges);cache.Invalidate();return ERROR_SUCCESS;
 }
 static BOOL CALLBACK ObserveCallback(const DIDEVICEINSTANCEW* instance,void* user){
  const bool owner=(LONG)GetCurrentThreadId()==InterlockedCompareExchange(&ownerThread,0,0);
- if(owner && recording){InterlockedIncrement(&capturedCallbacks);cache.Append(instance);}else cache.Invalidate();
+ if(owner && recording){InterlockedIncrement(&capturedCallbacks);cache.Append(instance);}else {InterlockedIncrement(&unexpectedCallbacks);cache.Invalidate();}
  const BOOL result=originalCallback(instance,user);
  if(owner && recording && !result)cache.Abort(); // A partial enumeration is not a complete snapshot.
  return result;
@@ -36,7 +39,7 @@ static void SetContext(bool allowed) {
  const LONG tid=(LONG)GetCurrentThreadId();
  InterlockedCompareExchange(&ownerThread,tid,0);
  if(InterlockedCompareExchange(&ownerThread,0,0)==tid){
-  if(InterlockedExchange(&eligible,allowed?1:0)!=(allowed?1:0))cache.Invalidate();
+  if(InterlockedExchange(&eligible,allowed?1:0)!=(allowed?1:0)){InterlockedIncrement(&contextChanges);cache.Invalidate();}
  }
 }
 static void Poll(const char* logPath) {
@@ -45,13 +48,16 @@ static void Poll(const char* logPath) {
  const LONG calls=InterlockedExchange(&nativeCalls,0),deferred=InterlockedExchange(&deferredCalls,0);
  const LONG captured=InterlockedExchange(&capturedCallbacks,0),replayed=InterlockedExchange(&replayedCallbacks,0),rejected=InterlockedExchange(&rejectedSnapshots,0);
  if(calls||deferred||captured||replayed||rejected)Log("INPUT_ENUM_SCAN native=%ld deferred=%ld enabled=%d callback_capture=%ld callback_replay=%ld rejected=%ld",calls,deferred,inputenumthrottle::Enabled()?1:0,captured,replayed,rejected);
+ const LONG topology=InterlockedExchange(&topologyChanges,0),context=InterlockedExchange(&contextChanges,0),unexpected=InterlockedExchange(&unexpectedCallbacks,0);
+ if(topology||context||unexpected)Log("INPUT_ENUM_INVALIDATION topology=%ld context=%ld unexpected_callback=%ld",topology,context,unexpected);
 }
 static DWORD __cdecl Observe() {
  const bool allowed=InterlockedCompareExchange(&eligible,0,0)!=0 &&
   InterlockedCompareExchange(&ownerThread,0,0)==(LONG)GetCurrentThreadId();
  const bool experiment=inputenumthrottle::Enabled() && allowed && originalCallback && notification;
  const DWORD identity=experiment?interfaceIdentity():0;
- if(experiment && !busy && cache.Ready(identity)) {
+ const bool ready=experiment && cache.Ready(identity);
+ if(experiment && !busy && ready) {
   hotpath::scope replayMeasured(g_hotPathSampler,hotpath::Family::native_gamepad_callback_replay);
   InterlockedIncrement(&deferredCalls);
   busy=true;

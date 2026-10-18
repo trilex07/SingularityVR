@@ -22,6 +22,9 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if ($StabilizeWalking) {
+    throw 'PID31668 physically rejected walking translation stabilization (shake and hand flicker). Keep OFF until camera/hand coordinate ownership is proven.'
+}
 
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 $artifactPath = [System.IO.Path]::GetFullPath($ArtifactDir)

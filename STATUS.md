@@ -1,5 +1,24 @@
 # STATUS — session handoff
 
+PID31668 CLOSED: user rejects walking stabilization (screen shake + hand flicker);
+FPS dips persist. DLL789749E5/INI8B0B0B4C/injector5B948DDB/UI51CDAB5C restored
+and independently hashed. evidence-31668 logs saved; no running game.
+Do NOT reuse candidate-cache-walking. Prepare helper now refuses StabilizeWalking.
+Shader cache improvement mechanically confirmed: ZERO evictions; peak180 new
+classifications/sec versus17584 before. Does NOT establish FPS improvement.
+New decisive hitch: native_gamepad_enum one520.3407ms call by frame1920.
+Nearby120-frame interval15.418ms vs11.11ms target:520/120=4.336ms/frame,
+consistent with this one stall explaining the interval (temporal correlation).
+Added read-only invalidation-source counters to existing input-cache paths;
+do not suppress topology changes or native callbacks without evidence.
+Walking source audit: view adds g_vrCameraStabOffset while hand anchors only
+include g_hmdOffset. This is a coordinate inconsistency; flicker cause not proven.
+Existing translation stabilization remains OFF; no new offset guessed.
+Next read-only input invalidation candidate L1 enum replay regression PASS;
+L2 x86 /O2 SHA AADAFE328CFB697D2FFB9068981FAA9383BAEF6080E0A4EE8F328807D0D3DCD5.
+Package candidate-enum-invalidation uses original walking-stabilization OFF.
+Await start; no FPS fix or camera fix claimed from this diagnostic.
+
 2026-10-18 PID5860 CLOSED; baseline DLL789749E5/INI8B0B0B4C/injector5B948DDB/
 UI51CDAB5C independently verified; request consumed, evidence-5860 preserved.
 3600-frame profile: set_texture .7532ms/frame; inclusive bridge .4435,
