@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+ACTIVE COMPACT CPU TEST PID28884 after user start2026-10-18 11:34:55.
+Same tested DLL3ED38B96...89AA7020/INI0EFC595B...9669789F installed+verified.
+UAC-approved recorderPID12800 READY: deployment/shadow-probe/
+cpu-20261018-113418-741/recorder.log; compact128MiB ring,30seconds AFTER
+fresh cinema-exit marker, then own-instance stop/export. Owned after-cinema
+profile request armed before Steam; guardPID16556 READY with backup
+deployment/install-backups/20261018-113430 and logs113430-watch.out/err.log.
+Next: inspect whether WPR actually started/saved (READY alone is NOT capture),
+confirm target PID/time window/lost events, filtered xperf stack analysis.
+Do not rerun/replace files while game runs; restore baseline after normal exit.
+
 PID22160 CLOSED, user: FPS still drops, hands/image OK. Guard restore verified
 independently: DLL789749E5/INI8B0B0B4C/injector5B948DDB/UI51CDAB5C; owned
 profile request consumed. Private evidence-22160 logSHA8A4A0F47...D9A45895.
