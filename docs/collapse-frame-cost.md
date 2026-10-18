@@ -71,3 +71,11 @@ request instead. Stay in PSVR2: closest crash save -> walk through the collapse
 GPU scene timeline, CPU sampler and invalidation counters together. Restore and
 independently hash the safe install; remove an unconsumed owned request only
 after confirmed exit. No screenshots, no mid-test chat, no quality reduction.
+
+L2 build from6201c193a4f7de4de6d1051970ae1115f2ae56a4, x86 PE32/O2;
+DLL `3ED38B9603D7FAE6DCA11141DF939AA5315EDDB4394626EB1C4DD1D389AA7020`.
+INI `0EFC595BBBB70B0DE0066081550BF089A13B389C871F204DC6CE90E79669789F`.
+Offline package `build/projector/candidate-collapse-cost`; approved-profile
+Install -WhatIf passes without Steam writes. Candidate is NOT L3/L4 verified.
+The prior PID31100 test did not arm a3600-frame request: only aggregate counters
+exist for that run. Next test MUST arm the existing request before launch.

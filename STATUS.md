@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+READY_FOR_PHYSICAL_ACCEPTANCE (L1/L2, NOT Steam/PSVR2-tested): collapse-cost
+candidate from6201c193a4f7de4de6d1051970ae1115f2ae56a4, x86 PE32/O2,
+DLL3ED38B9603D7FAE6DCA11141DF939AA5315EDDB4394626EB1C4DD1D389AA7020,
+INI0EFC595BBBB70B0DE0066081550BF089A13B389C871F204DC6CE90E79669789F.
+Package build/projector/candidate-collapse-cost; approved-profile Install
+-WhatIf PASS, no Steam writes. Diff vs PID31100 INI exactly two new settings:
+TextureBindDeduplicate=1, FrameGpuProbe=1. Seven CPU tests + real standalone
+D3D9Ex fixture10/10 PASS. Fresh start required; backup/exact restore guard,
+arm existing gameplay profile request before Steam (previous PID31100 had no
+3600-frame profile request; aggregate windows alone cannot assign the remainder).
+No claimed FPS gain until measured in actual collapse. See collapse-frame-cost.md.
+
 2026-10-18 PID31100 CLOSED; baseline DLL789749E5/INI8B0B0B4C/injector5B948DDB
 independently verified after restore. User: remaining dip~72FPS at building
 collapse, otherwise acceptable. Log gameplay77.4FPS/12.92ms, peak3802draws,
