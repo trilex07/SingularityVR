@@ -356,7 +356,7 @@ $plan = [ordered]@{
             path = 'Binaries/d3d9.dll'
             before = $expectedDll
             after = $candidateDllSha
-            reason = 'MAIN x86 build with bounded native-FX diagnostics and explicit exact-pair control; no unrelated renderer or gameplay change.'
+            reason = $planReason
         }
     )
     ini = @($iniChanges.ToArray())

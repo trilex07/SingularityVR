@@ -1,6 +1,6 @@
 # Native camera comfort and menu-resume hitch (2026-10-18)
 
-Status: L1_PASS; native hook and cache eligibility correction implemented.
+Status: L1_PASS, L2_PASS; native hook and cache eligibility correction implemented.
 Runtime/physical acceptance pending. This is not proof that all FPS dips are gone.
 
 ## Evidence and hypothesis before patching
@@ -65,6 +65,12 @@ enum call. Their remaining residual is not yet assigned to an exact producer.
 Do not present the520ms discovery fix as proof of a locked90FPS throughout the
 collapse. Retain bounded timing in the same physical camera-fix test; no extra
 diagnostic-only headset round, screenshots or mid-test chat switches.
+
+Candidate built from8899f72, x86 PE32 `/O2`, DLL SHA-256
+`89966207B8A13959BF27895E38ED78460BE7BC6FE7B4A94AEB6FB8517FD62A14`.
+Offline package `build/projector/candidate-native-comfort`; accepted-profile
+install `-WhatIf` preflight PASS (no writes). INI SHA-256
+`03ADF50D40ECEE4D8F2112E0B3FCC5A315B63A4B5D721AEDB99281B7681661C7`.
 
 Next authorized test (fresh `start` only): closest early-game save, walk/run and
 crouch through the affected area, briefly inspect both hands, pause/options and

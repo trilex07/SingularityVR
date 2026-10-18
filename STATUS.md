@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+READY_FOR_PHYSICAL_ACCEPTANCE (not L3/L4): candidate-native-comfort, built from
+8899f72298e3a058a210bf5c30fbaac2af3ed9ea, x86 PE32 /O2, six focused C++ programs PASS.
+DLL89966207B8A13959BF27895E38ED78460BE7BC6FE7B4A94AEB6FB8517FD62A14
+INI03ADF50D40ECEE4D8F2112E0B3FCC5A315B63A4B5D721AEDB99281B7681661C7
+build/projector/candidate-native-comfort/candidate-manifest.json and change plan.
+Accepted-profile Install -WhatIf preflight PASS, zero writes. Installed game
+closed and DLL789749E5/INI8B0B0B4C/injector5B948DDB/UI51CDAB5C rehashed unchanged.
+Fresh start required before deploy. Candidate has real camera/cache changes
+plus bounded timing; no extra diagnostic-only headset round. After start use
+existing600s lease/exact restore and gameplay3600-frame request, no screenshots.
+
 2026-10-18 user requests BOTH camera/FPS fixes before another PSVR2 request.
 Implemented native POV comfort (default-OFF NativeCameraComfort), not rejected
 shader-space translation. Offline native RE proves vtable438 output -> camera
