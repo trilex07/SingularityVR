@@ -234,3 +234,11 @@ building-collapse event. That subjective improvement is useful acceptance
 evidence, but the collapse capture used a diagnostic profile without this cache
 enabled and does not establish a frame-time gain from it. The isolated collapse
 dip remains unresolved; this change does not claim to fix it.
+
+Integration validation on `fix/main-projector-optimizations`, source
+`1b3c9c9e6516407e419b74b7233565d2ab9824cb`: projector math and cache/scope L1
+PASS; six related renderer regressions and six Python checks PASS. Production
+x86 PE32 `/O2` build PASS, DLL SHA-256
+`FB18CF24A30EFC243A9DA4202341DF2EBB5CE459D93963DF4498D5229CE8906F`.
+The build reports existing repository warnings; this is not warning-clean.
+Steam remains untouched by this integration branch.
