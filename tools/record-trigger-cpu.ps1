@@ -2,15 +2,25 @@
 param([ValidateRange(30,120)][int]$CaptureSeconds=90,
       [ValidateRange(30,180)][int]$LaunchWindowSeconds=120,
       [switch]$AfterCinemaExit,
+      [switch]$CompactProfile,
+      [switch]$PreflightOnly,
       [ValidateRange(30,300)][int]$CinemaExitWindowSeconds=180)
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'cinema-exit-trace-cue.ps1')
+$wpr=(Get-Command wpr.exe -ErrorAction Stop).Source
+$captureProfile=if($CompactProfile){(Join-Path $PSScriptRoot 'profiling\SingularityCpu.wprp')+'!SingularityCpu'}else{'CPU.Verbose'}
+if($CompactProfile -and $CaptureSeconds -gt 45){throw 'Compact ring capture is limited to45s; use CaptureSeconds30 or45.'}
+if($PreflightOnly){
+    & $wpr -profiledetails $captureProfile
+    if($LASTEXITCODE -ne 0){throw 'CPU capture profile rejected by WPR'}
+    Write-Output 'PASS profile parser preflight only; no recording, game, UAC or installation changes'
+    return
+}
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 if(-not ([Security.Principal.WindowsPrincipal]::new($identity)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     throw 'Windows CPU stack tracing requires an administrator token (UAC).'
 }
-$wpr=(Get-Command wpr.exe -ErrorAction Stop).Source
 $status=(& $wpr -status | Out-String)
 if($LASTEXITCODE -ne 0 -or $status -notmatch 'WPR is not recording') {
     throw 'Existing or unclear WPR session; refusing to interfere.'
@@ -25,9 +35,12 @@ New-Item -ItemType Directory -Path $run -ErrorAction Stop | Out-Null
 Start-Transcript -LiteralPath (Join-Path $run 'recorder.log') | Out-Null
 $trace=Join-Path $run 'trigger-cpu.etl'
 $started=$false
+$startArgs=@('-start',$captureProfile)
+if(-not $CompactProfile){$startArgs+='-filemode'}
+$startArgs+=@('-instancename',$instance)
 try {
     if(-not $AfterCinemaExit) {
-        & $wpr -start CPU.Verbose -filemode -instancename $instance
+        & $wpr @startArgs
         if($LASTEXITCODE -ne 0) {throw 'WPR start failed; inspect the named instance before retrying.'}
         $started=$true
         Write-Output "READY CPU STACK TRACE: $run instance=$instance; no game/input/file changes"
@@ -76,7 +89,7 @@ try {
         if($LASTEXITCODE -ne 0 -or $status -notmatch 'WPR is not recording') {throw 'WPR session appeared while waiting.'}
         $sessions=(& logman.exe query -ets | Out-String)
         if($LASTEXITCODE -ne 0 -or $sessions -match 'WPR_initiated_') {throw 'Named WPR session appeared while waiting.'}
-        & $wpr -start CPU.Verbose -filemode -instancename $instance
+        & $wpr @startArgs
         if($LASTEXITCODE -ne 0){throw 'WPR start failed; inspect the named instance before retrying.'}
         $started=$true
         Write-Output "CPU TRACE STARTED AFTER CINEMA EXIT: PID $gameId instance=$instance"

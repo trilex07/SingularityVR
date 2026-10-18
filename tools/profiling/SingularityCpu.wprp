@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WindowsPerformanceRecorder Version="1.0" Author="SingularityVR">
+  <Profiles>
+    <SystemCollector Id="CollapseCpuCollector" Name="NT Kernel Logger">
+      <BufferSize Value="1024" />
+      <Buffers Value="128" />
+    </SystemCollector>
+    <SystemProvider Id="CollapseCpuProvider">
+      <Keywords>
+        <Keyword Value="CpuConfig" />
+        <Keyword Value="ProcessThread" />
+        <Keyword Value="Loader" />
+        <Keyword Value="SampledProfile" />
+        <Keyword Value="CSwitch" />
+        <Keyword Value="ReadyThread" />
+      </Keywords>
+      <Stacks>
+        <Stack Value="SampledProfile" />
+      </Stacks>
+    </SystemProvider>
+    <Profile Id="SingularityCpu.Verbose.File" Name="SingularityCpu" Description="CPU sampled stacks and scheduling, fixed 128MiB buffers" LoggingMode="File" DetailLevel="Verbose">
+      <Collectors>
+        <SystemCollectorId Value="CollapseCpuCollector">
+          <SystemProviderId Value="CollapseCpuProvider" />
+        </SystemCollectorId>
+      </Collectors>
+    </Profile>
+    <Profile Id="SingularityCpu.Verbose.Memory" Name="SingularityCpu" Description="Bounded CPU ring; sampled stacks only" Base="SingularityCpu.Verbose.File" LoggingMode="Memory" DetailLevel="Verbose" />
+  </Profiles>
+</WindowsPerformanceRecorder>

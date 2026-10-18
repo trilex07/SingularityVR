@@ -79,3 +79,67 @@ Offline package `build/projector/candidate-collapse-cost`; approved-profile
 Install -WhatIf passes without Steam writes. Candidate is NOT L3/L4 verified.
 The prior PID31100 test did not arm a3600-frame request: only aggregate counters
 exist for that run. Next test MUST arm the existing request before launch.
+
+## PID22160 physical result and measured boundary
+
+User: remaining FPS drops; hands/image good. Safe DLL789749E5,INI8B0B0B4C,
+injector5B948DDB,UI51CDAB5C independently rehashed after guard restoration.
+Private evidence-22160 logSHA2568A4A0F47B059F8827BAD191BE983178BB2CC65B143A371C2E1F40445D9A45895.
+The owned request was consumed. Last sampler report3120frames is PARTIAL;
+there is no complete3600frame result. Frame scope also later includes a return
+to cinematic/menu, so do not merge that with the measured collapse interval.
+
+The collapse aggregate itself is72.9FPS/13.710ms, peak3459original draws,
+present-thread CPU10.807ms/frame; process-wide user23.177+kernel3.906ms is
+summed across threads, NOT additional wall time. Fence wait2.84ms, copy.01ms,
+XR submit.27ms, gameplay hooks.02ms. This does not fully name a native function.
+One native enum64.664ms occurs earlier, separately from the collapse interval.
+
+273GPU samples completed with no dropped ring/invalid/query errors. GPU timeline
+has a19.573ms maximum during the early sampled interval. That sample belongs to
+the CPU-wall-under-budget bucket: GPU commands execute asynchronously, so the
+bucket alone cannot exonerate GPU workload or attribute the following CPU stall.
+Average GPU timeline over the whole active period is likewise not a worst-frame
+budget. Preserve this limitation in all summaries.
+
+By3120frames texture memoization removed6952375 redundant classifications.
+This proves that optimization executed, not that the remaining dip is fixed.
+
+### Falsified offline wait experiments
+
+The accepted zero-copy path repeatedly polls GetData with FLUSH while waiting
+for GPU completion. This consumes render-thread CPU, but does not prove changing
+the wait can shorten GPU execution. Test two alternatives before any Steam patch:
+yield after100us (SwitchToThread), or FLUSH only every64polls. Same completion,
+100ms timeout and error behavior retained; synthetic tests pass.
+
+Standalone D3D9Ex,1280x720,2048clears/frame,ABCCBA,80frames/policy:
+native spin wall2.2699ms/8,289,025cycles per frame; yield2.2988ms/8,426,533cycles;
+coalescedFLUSH2.2843ms/8,324,598cycles. Zero failures for all; thread CPU times
+are coarse and report2.3438ms for all three. Neither improves wait latency or
+CPU cycles. Thus neither is integrated. Source is ONLY under tests/support and
+tests/benchmark-gpu-fence-wait.cpp. Do not present fewer polls as an FPS fix.
+Reference: https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-switchtothread
+
+### Next productive measurement
+
+After two unsuccessful mechanisms, use actual sampled CPU call stacks to find
+the producer. Existing Windows tools WPR/xperf/WPAExporter are available; current
+token is non-admin. No recorder has started. Built-in CPU.Verbose would allocate
+1592x1MiB plus20x1MiB buffers on this host, so a compact custom profile is now
+provided: tools/profiling/SingularityCpu.wprp,128x1MiB circular memory buffers,
+CPU/IP stacks,process/image identity and scheduling events, no user providers.
+This bounds capture buffers, not an absolute final ETL/rundown file size.
+WPR -profiledetails validates exact128 buffers and only SampledProfile stacks.
+Reference: https://learn.microsoft.com/en-us/windows-hardware/test/wpt/logging-mode
+
+Next fresh start: use exact previously tested candidate3ED38B96, arm the existing
+cinema-exit request and restore guard. Start hidden recorder with Windows UAC
+before headset entry:
+tools/record-trigger-cpu.ps1 -CompactProfile -CaptureSeconds30 -AfterCinemaExit
+-LaunchWindowSeconds180 -CinemaExitWindowSeconds300.
+It waits for this process's new cinema-exit marker; no chat/keyboard during play.
+Trace stays private/system-wide; analyze only Singularity PID and its render
+thread, module RVAs and unique sampled stack-frame hits. Check lost events and
+trace time coverage before causal claims. No new shader, quality or wait-policy
+change is authorized by these offline experiments.

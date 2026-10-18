@@ -1,5 +1,24 @@
 # STATUS — session handoff
 
+PID22160 CLOSED, user: FPS still drops, hands/image OK. Guard restore verified
+independently: DLL789749E5/INI8B0B0B4C/injector5B948DDB/UI51CDAB5C; owned
+profile request consumed. Private evidence-22160 logSHA8A4A0F47...D9A45895.
+Actual collapse aggregate72.9FPS/13.710ms, peak3459draws; render-thread CPU
+10.807ms/frame (interval), GPU fence2.84ms/frame. CPU process total27.083ms is
+across threads and MUST NOT be added to wall time. No enum in collapse span.
+One64.664ms enum elsewhere is separate. Last sampler3120partial, NOT3600complete;
+273valid GPU samples, zero ring drops/invalid/failures, largest timeline19.573ms.
+Async GPU elapsed may include starvation; bucket-by-CPU-wall does not establish
+pure GPU busy or game-only causality. Texture memoization avoided6952375 calls
+by3120frames; improved FPS remains physically unconfirmed.
+Offline ABCCBA80frames/policy D3D9Ex fence benchmark: spin2.2699ms vs yield
+2.2988 vs coalesced-flush2.2843, zero errors. No benefit: DO NOT integrate either
+policy. Helpers retained ONLY in tests/support. Prepared compact CPU stack
+recorder: -CompactProfile -CaptureSeconds30 -AfterCinemaExit; WPR parser proves
+128x1MiB memory ring, sampled CPU stacks/scheduling only. Does not run on its
+own; real capture needs Windows UAC/admin token + fresh start. Parser/cue/CSV
+tests PASS; no new runtime DLL or speculative renderer change.
+
 ACTIVE MAIN TEST PID22160 after fresh user start,2026-10-18 11:09:50.
 Installed collapse DLL3ED38B96...89AA7020/INI0EFC595B...9669789F/injector5B948DDB
 verified. SteamVR/OpenXR ready,PSVR2 target2952x3012 per eye,90Hz; both new
