@@ -7,6 +7,13 @@ misalignment in confirmation dialogs, notes and pickup messages: BROKEN, follow-
 in progress. Test ended normally; declared pre-test DLL/INI restored and hashed.
 See `docs/menu-pointer-hud-polish.md` for scoped evidence.
 
+Contextual-cursor follow-up: native Dialogs Mouse arrow identified in RvGame.xxx
+by the same RawData fingerprint as the live session. Default-OFF direct-GFx
+projection now shares the laser panel; length-preserving cursor core candidates
+for iis/SPMenus/Dialogs passed native decode and unrelated-byte preservation.
+L1/L2 PASS; physical appearance remains pending a fresh user `start`.
+Real Steam is on the verified pre-test baseline. See `docs/contextual-cursor.md`.
+
 MAIN integration candidate `fix/main-projector-optimizations`: enable the
 physically accepted first-building projector stereo reconstruction by default
 and bound its shader identity cache to 1024x4 entries. Physical report: the

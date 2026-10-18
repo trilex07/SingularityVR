@@ -71,10 +71,13 @@ if($manifest.Kind -cin @('SingularityVR post-opening asset delta v2',
    if($p -notlike 'RvGame\CookedPC\*.xxx' -or $p -notlike '*_LOC_INT.xxx'){throw ('v7 rejects: '+$p)}
   }
   $allowed=$paths;$expectedCount=102
+ }elseif($manifest.Kind -ceq 'SingularityVR contextual cursor delta v8'){
+  $allowed=@('RvGame\CookedPC\UI_SinglePlayer_SF.xxx','RvGame\CookedPC\RvGame.xxx')
+  $expectedCount=2
  }else{throw 'Unknown exact delta profile'}
 }
 if(@($manifest.Files).Count -ne $expectedCount -or
- (($manifest.Files|ForEach-Object {$_.RelativePath}|Sort-Object) -join '|') -cne (($allowed|Sort-Object) -join '|')){throw 'Exact32/34/37/38 delta targets required'}
+ (($manifest.Files|ForEach-Object {$_.RelativePath}|Sort-Object) -join '|') -cne (($allowed|Sort-Object) -join '|')){throw "Exact$expectedCount delta targets required"}
 Closed
 foreach($f in $manifest.Files){
  if($f.BaselineSha256 -cnotmatch '^([A-F0-9]{64}|ABSENT)$' -or $f.CandidateSha256 -cnotmatch '^[A-F0-9]{64}$'){throw 'Invalid hash'}

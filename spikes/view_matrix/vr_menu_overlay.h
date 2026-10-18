@@ -6,7 +6,6 @@
 static uintptr_t g_vrMenuSurface=0;
 static unsigned g_vrMenuFrame=0,g_vrMenuTextureFrame=0;
 static uipointer::Hit g_vrUiHit;
-static bool g_vrMenuPanelValid=false;
 // Kenney's CC0 PSVR2 prompt subset is packed once into a tiny BMP atlas. The atlas is loaded
 // lazily on the first menu frame and then stays resident; the pointer path never performs file I/O.
 static IDirect3DTexture9* g_vrPromptAtlas=nullptr;
@@ -190,9 +189,7 @@ void DrawVrContextPrompt(IDirect3DDevice9* dev) {
     if(depth) depth->Release();
 }
 static uipointer::V VrUiRotate(const XrQuaternionf& q,uipointer::V v) {
-    const uipointer::V axis{q.x,q.y,q.z};
-    const auto cross=[](uipointer::V a,uipointer::V b){return uipointer::V{a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x};};
-    const auto t=cross(axis,v)*2.f;return v+t*q.w+cross(axis,t);
+    return uipointer::Rotate(q.x,q.y,q.z,q.w,v);
 }
 static bool VrUiProjectEye(int eye,uipointer::V point,uipointer::ScreenPoint& out) {
     if(eye<0||eye>1||!g_haveEyes||g_targetTanX<=0||g_targetTanY<=0)return false;
@@ -201,11 +198,9 @@ static bool VrUiProjectEye(int eye,uipointer::V point,uipointer::ScreenPoint& ou
         VrUiRotate(p.orientation,{0,0,-1}),VrUiRotate(p.orientation,{1,0,0}),
         VrUiRotate(p.orientation,{0,1,0}),g_targetTanX,g_targetTanY,out);
 }
-static void DrawVrMenuLaser(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d) {
+static void DrawVrMenuLaser(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,uipointer::V B) {
     if(!Rd(g_vrMenuLaser)||!Rd(g_vrUiValid)||!g_handPositionValid[1]||!g_origDrawPrimUP)return;
     const uipointer::V A{g_handLastPos[1].x,g_handLastPos[1].y,g_handLastPos[1].z};
-    LONG pointerU=500000,pointerV=500000;ReadVrUiPair(pointerU,pointerV);
-    const uipointer::V B=uipointer::PointAtCanvasUv(g_vrMenuPanel.plane,pointerU/1000000.0f,pointerV/1000000.0f);
     const float halfW=(float)d.Width*.5f;
     dev->SetTexture(0,nullptr);dev->SetVertexShader(nullptr);dev->SetPixelShader(nullptr);
     dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE);
@@ -370,6 +365,9 @@ void UpdateVrUiPointer(float,bool available) {
     const LONG menuClass=Rd(g_vrMenuClass);
     if (!panel && menuClass == 1) inset = ClassBackbufferScale(1, true, (int)Rd(g_menuInsetPct));
     else if ((menuClass==2 || menuClass==3) && inset>0.84f) inset=0.84f;
+    if(!panel&&menuClass==4&&Rd(g_contextPointerProjection)&&Rd(g_vrUiDirectCanvas))
+        inset=(Rd(g_vrUiNoteCanvas)||Rd(g_noteOpen))?Rd(g_noteInsetPct)/100.f:
+            ClassBackbufferScale(4,true,(int)Rd(g_menuInsetPct));
     inset=FrontMenuInset((int)menuClass,panel,inset,(int)Rd(g_frontMenuScalePct));
     const float distance=FrontMenuDistance((int)menuClass,panel,(int)Rd(g_vrMenuDistanceMm),(int)Rd(g_frontMenuDistanceMm));
     g_vrMenuPanelValid=uipointer::HeadPlane(head,VrUiRotate(q,{0,0,-1}),VrUiRotate(q,{1,0,0}),VrUiRotate(q,{0,1,0}),distance,g_targetTanX,g_targetTanY,inset,g_vrMenuPanel.plane);
@@ -668,7 +666,7 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
         ReadVrUiPair(pointerU,pointerV);
         const uipointer::V endpoint=uipointer::PointAtCanvasUv(
             g_vrMenuPanel.plane,pointerU/1000000.0f,pointerV/1000000.0f);
-        if(Rd(g_vrUiValid))DrawVrMenuLaser(dev,d);
+        if(Rd(g_vrUiValid))DrawVrMenuLaser(dev,d,endpoint);
         if(Rd(g_vrUiEverHit))DrawVrMenuReticle(dev,d,endpoint,Rd(g_vrUiDown)!=0);
     }
 

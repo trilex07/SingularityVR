@@ -13,6 +13,7 @@ extern volatile LONG g_vrMenuReleaseRequested; // render thread consumes COM inv
 extern volatile LONG g_modalSaveDialog; // 1 while RvUIGFxMovie_Dialog owns focus
 extern volatile LONG g_modalSlotsActive,g_modalSlotsCapturePending,g_vrModalDialogSurface,g_vrModalDirectDialog;
 extern volatile LONG g_menuAssetWitness;
+extern volatile LONG g_vrUiDirectCanvas,g_vrUiNoteCanvas;
 
 namespace NativeVrUi {
 struct Name { unsigned index, number; };
@@ -136,6 +137,10 @@ static bool UpdateMenu() {
   if(movie && NameOf(movie,objectName,sizeof(objectName)) && strncmp(objectName,"Default__",9)
      && cls && NameOf(cls,className,sizeof(className)))cachedMenu=MenuClass(className);
   const LONG kind=!cachedMenu?0:!strcmp(className,"RvUIGFxMovie_IIS")?1:!strcmp(className,"RvUIGFxMovie_Main")?2:!strcmp(className,"RvUIGFxMovie_Pause")?3:4;
+  const bool directCanvas=kind==4&&ExactDirectDialogPath(movie,cls);
+  InterlockedExchange(&g_vrUiDirectCanvas,directCanvas?1:0);
+  InterlockedExchange(&g_vrUiNoteCanvas,directCanvas&&!strcmp(className,"RvUIGFxMovie_Notepad")?1:0);
+  if(directCanvas)Log("context-pointer: focus=%s reflected null RenderTexture / mode 0",className);
   static unsigned generation=0;
   InterlockedExchange64(&g_vrMenuStateToken,((LONG64)++generation<<32)|(unsigned)kind);
   // Do not carry a cursor coordinate or pressed edge into another GFx movie.

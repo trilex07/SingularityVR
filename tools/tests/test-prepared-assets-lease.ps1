@@ -9,6 +9,7 @@ $out=[IO.Path]::GetFullPath($OutputRoot)
 if(-not $out.StartsWith($repo+'\deployment\hands-dubbing\',[StringComparison]::OrdinalIgnoreCase) -or (Test-Path $out)){throw 'Fresh owned private test directory required'}
 $fake=Join-Path $out 'fake-Singularity';New-Item -ItemType Directory -Path $fake | Out-Null
 $manifest=Get-Content $ManifestPath -Raw | ConvertFrom-Json
+$conflictRelative=if($manifest.Kind -ceq 'SingularityVR contextual cursor delta v8'){'RvGame\CookedPC\UI_SinglePlayer_SF.xxx'}else{'Binaries\texture_override.ini'}
 function Hash([string]$p){if(Test-Path -LiteralPath $p){return (Get-FileHash $p).Hash};return 'ABSENT'}
 foreach($f in $manifest.Files){
  $dest=Join-Path $fake $f.RelativePath;New-Item -ItemType Directory -Path (Split-Path $dest) -Force | Out-Null
@@ -25,7 +26,7 @@ $installed|Write-Output
 $lines=@($installed|Where-Object {$_ -is [string] -and $_.StartsWith('ASSET BACKUP: ')})
 if($lines.Count -ne 1){throw 'Backup identity missing'};$backup=$lines[0].Substring(14)
 foreach($f in $manifest.Files){if((Hash (Join-Path $fake $f.RelativePath)) -cne $f.CandidateSha256){throw 'Install mismatch'}}
-$saved=Join-Path $backup 'Binaries/texture_override.ini';$bytes=[IO.File]::ReadAllBytes($saved);$bad=$bytes.Clone();$bad[0]=$bad[0] -bxor 1;[IO.File]::WriteAllBytes($saved,$bad)
+$saved=Join-Path $backup $conflictRelative;$bytes=[IO.File]::ReadAllBytes($saved);$bad=$bytes.Clone();$bad[0]=$bad[0] -bxor 1;[IO.File]::WriteAllBytes($saved,$bad)
 $refused=$false;try{& $tool -Action Restore -ManifestPath $ManifestPath -GameRoot $fake -BackupPath $backup}catch{$refused=$true}
 if(-not $refused){throw 'Bad backup accepted'}
 foreach($f in $manifest.Files){if((Hash (Join-Path $fake $f.RelativePath)) -cne $f.CandidateSha256){throw 'Partial restore before full backup check'}}
@@ -34,13 +35,13 @@ foreach($f in $manifest.Files){if((Hash (Join-Path $fake $f.RelativePath)) -cne 
 foreach($f in $manifest.Files){if((Hash (Join-Path $fake $f.RelativePath)) -cne $f.BaselineSha256){throw 'Restore mismatch'}}
 $installed=@(& $tool -Action Install -ManifestPath $ManifestPath -GameRoot $fake)
 $backup=(@($installed|Where-Object {$_ -is [string] -and $_.StartsWith('ASSET BACKUP: ')})[0]).Substring(14)
-$userConfig=Join-Path $fake 'Binaries/texture_override.ini';[IO.File]::AppendAllText($userConfig,"`r`n; synthetic user edit preserved")
+$userConfig=Join-Path $fake $conflictRelative;[IO.File]::AppendAllText($userConfig,"`r`n; synthetic user edit preserved")
 $userHash=Hash $userConfig;$refused=$false
 try{& $tool -Action Restore -ManifestPath $ManifestPath -GameRoot $fake -BackupPath $backup}catch{$refused=$true}
 if(-not $refused -or (Hash $userConfig) -cne $userHash){throw 'User conflict overwritten'}
-foreach($f in $manifest.Files){if($f.RelativePath -cne 'Binaries\texture_override.ini' -and (Hash (Join-Path $fake $f.RelativePath)) -cne $f.BaselineSha256){throw 'Unconflicted file not restored'}}
+foreach($f in $manifest.Files){if($f.RelativePath -cne $conflictRelative -and (Hash (Join-Path $fake $f.RelativePath)) -cne $f.BaselineSha256){throw 'Unconflicted file not restored'}}
 # Restore only our synthetic fixture config, not the user's installation.
-Copy-Item -LiteralPath (Join-Path $RealGameRoot 'Binaries/texture_override.ini') -Destination $userConfig
+Copy-Item -LiteralPath (Join-Path $RealGameRoot $conflictRelative) -Destination $userConfig
 $badManifest=Join-Path $out 'bad.json';$manifest.Files[0].RelativePath='..\escape.xxx';$manifest|ConvertTo-Json -Depth 6|Set-Content $badManifest -Encoding UTF8
 $refused=$false;try{& $tool -Action Install -ManifestPath $badManifest -GameRoot $fake}catch{$refused=$true}
 if(-not $refused){throw 'Path escape accepted'}

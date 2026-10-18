@@ -10,6 +10,11 @@ inline V operator*(V a,float s){return {a.x*s,a.y*s,a.z*s};}
 inline float Dot(V a,V b){return a.x*b.x+a.y*b.y+a.z*b.z;}
 inline bool Finite(V a){return std::isfinite(a.x)&&std::isfinite(a.y)&&std::isfinite(a.z);}
 inline bool Unit(V a,V& b){float n=std::sqrt(Dot(a,a));if(!std::isfinite(n)||n<1e-6f)return false;b=a*(1/n);return true;}
+inline V Rotate(float x,float y,float z,float w,V v){
+    const V axis{x,y,z};
+    const auto cross=[](V a,V b){return V{a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x};};
+    const V t=cross(axis,v)*2.f;return v+t*w+cross(axis,t);
+}
 struct Plane { V centre,right,up,normal; float halfWidth=0,halfHeight=0,inset=.70f; };
 // Native pause RTT is 16:9. Half the previous centre-to-edge distance moves
 // both text columns inward without cropping their UVs or changing eye poses.
@@ -87,6 +92,33 @@ inline V PointAtCanvasUv(const Plane& plane, float u, float v) {
     const float x = (u - .5f) * 2.0f * plane.halfWidth * plane.inset;
     const float y = (.5f - v) * 2.0f * plane.halfHeight * plane.inset;
     return plane.centre + plane.right * x + plane.up * y;
+}
+
+// Compose a ROW-convention GFx clip matrix with the actual tracking-space
+// panel and eye projection. Unlike translating only its centre, this also
+// matches panel extent, eye height/depth and nonparallel eye orientations.
+inline bool ProjectCanvasMatrix(const Plane& p,V eye,V forward,V right,V up,
+                                float tanX,float tanY,const float* source,float* out){
+    if(!source||!out||!Finite(eye)||!Finite(p.centre)||!Finite(p.right)||!Finite(p.up)||
+       !std::isfinite(tanX)||!std::isfinite(tanY)||tanX<=0||tanY<=0||
+       !std::isfinite(p.halfWidth)||!std::isfinite(p.halfHeight)||
+       p.halfWidth<=0||p.halfHeight<=0||!std::isfinite(p.inset)||p.inset<=0||p.inset>1)return false;
+    V f,r,u;if(!Unit(forward,f)||!Unit(right,r)||!Unit(up,u))return false;
+    if(std::fabs(Dot(f,r))>1e-3f||std::fabs(Dot(f,u))>1e-3f||std::fabs(Dot(r,u))>1e-3f)return false;
+    const V a=p.right*(p.halfWidth*p.inset),b=p.up*(p.halfHeight*p.inset),c=p.centre-eye;
+    const float depth=Dot(c,f);
+    if(depth-std::fabs(Dot(a,f))-std::fabs(Dot(b,f))<=1e-5f)return false;
+    float result[16];
+    for(int row=0;row<4;++row){
+        const int i=row*4;
+        for(int k=0;k<4;++k)if(!std::isfinite(source[i+k]))return false;
+        const V point=a*source[i]+b*source[i+1]+c*source[i+3];
+        result[i]=Dot(point,r)/tanX;result[i+1]=Dot(point,u)/tanY;
+        result[i+2]=source[i+2]*depth;result[i+3]=Dot(point,f);
+        for(int k=0;k<4;++k)if(!std::isfinite(result[i+k]))return false;
+    }
+    for(int i=0;i<16;++i)out[i]=result[i];
+    return true;
 }
 
 enum class Context { Gameplay, Menu };

@@ -39,8 +39,9 @@ if($syncBody.IndexOf('PreserveModalParentSources();') -lt 0 -or
  throw 'exact parent Slots source must be retained before token transition clears it'
 }
 if($overlay -notmatch 'DrawVrMenuReticle\(dev,d,endpoint' -or
-   $overlay -notmatch 'PointAtCanvasUv\(g_vrMenuPanel.plane'){throw 'reticle does not share the normalized input point'}
+   $overlay -notmatch 'DrawVrMenuLaser\(dev,d,endpoint' -or
+   $overlay -notmatch 'PointAtCanvasUv\(\s*g_vrMenuPanel.plane'){throw 'laser and reticle do not share the normalized input point'}
 if($renderer -notmatch 'InterlockedExchange64\(&g_vrUiPairPacked' -or
    $renderer -notmatch 'InterlockedCompareExchange64\(&g_vrUiPairPacked'){throw 'input and overlay coordinates are not published as one atomic UV pair'}
 if($input -notmatch 'pin the native mouse at the last VR'){throw 'missed rays can fall through to the desktop cursor'}
-Write-Host 'PASS: HUD/pointer checks, direct modal proof and source retention ordering, exact source suppression integration'
+Write-Host 'PASS: projective GFx/pointer agreement, shared laser endpoint, modal source retention and HUD policies'

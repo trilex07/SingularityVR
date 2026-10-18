@@ -6417,8 +6417,10 @@ static IDirect3DTexture9* g_vrModalParentSources[8]={};
 static unsigned g_vrModalParentSourceCount=0;
 volatile LONG g_vrModalParentStageBound[4]={0,0,0,0};
 volatile LONG g_modalSlotsActive=0,g_modalSlotsCapturePending=0,g_vrModalDialogSurface=0,g_vrModalDirectDialog=0;
+volatile LONG g_vrUiDirectCanvas=0,g_vrUiNoteCanvas=0,g_contextPointerProjection=0;
 static float g_vrMenuTextureScore=1e9f;
 static uipointer::VrMenuPanel g_vrMenuPanel;
+static bool g_vrMenuPanelValid=false;
 inline bool SuppressCapturedVrMenuDraw();
 // Atomic counters only on hot paths; report through the existing async logger on transitions.
 struct VrRuntimeCounters {
@@ -20190,6 +20192,43 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // Apply to the complete GFx layout before eye remapping, never to world geometry.
     const bool menuLayout=InterlockedCompareExchange(&g_vrUiMenu,0,0)!=0;
     const LONG menuClassNow = InterlockedCompareExchange(&g_vrMenuClass, 0, 0);
+    // Runtime reflection proves these movies have no RTT. Render their GFx
+    // canvas through the very panel intersected by the laser, using the source
+    // matrix before the independent note/menu inset. Keep full-screen note
+    // dimming on its existing path; it is not part of the interactive page.
+    const bool contextNote=Rd(g_vrUiNoteCanvas)||Rd(g_noteOpen);
+    if(Rd(g_contextPointerProjection)&&menuLayout&&menuClassNow==4&&
+       Rd(g_vrUiDirectCanvas)&&g_vrMenuPanelValid&&g_haveEyes&&
+       !(contextNote&&fabsf(c[12])>=1.f)){
+        float matrices[2][16];bool ready=true;
+        for(int eye=0;eye<2;++eye){
+            const auto& pose=g_eyePose[eye];const auto& q=pose.orientation;
+            ready=ready&&uipointer::ProjectCanvasMatrix(g_vrMenuPanel.plane,
+                {pose.position.x,pose.position.y,pose.position.z},
+                uipointer::Rotate(q.x,q.y,q.z,q.w,{0,0,-1}),
+                uipointer::Rotate(q.x,q.y,q.z,q.w,{1,0,0}),
+                uipointer::Rotate(q.x,q.y,q.z,q.w,{0,1,0}),g_targetTanX,g_targetTanY,c,matrices[eye]);
+        }
+        if(ready){
+            static unsigned notes=0;static unsigned long long notedToken=~0ull;
+            if(notes<12&&notedToken!=VrMenuStateToken()){
+                notedToken=VrMenuStateToken();++notes;
+                Log("context-pointer: token=%llu direct GFx canvas matches laser panel; note=%d inset=%.3f bothEyes=1",
+                    notedToken,contextNote?1:0,g_vrMenuPanel.plane.inset);
+            }
+            const LONG half=(LONG)vp.Width/2;HRESULT result=S_OK;
+            for(int eye=0;eye<2;++eye){
+                ApplyEyeRemap(reinterpret_cast<Reg4*>(matrices[eye]),CONV_ROW,eye?+.5f:-.5f);
+                const RECT sc={(LONG)vp.X+(eye?half:0),(LONG)vp.Y,
+                    (LONG)vp.X+(eye?(LONG)vp.Width:half),(LONG)(vp.Y+vp.Height)};
+                dev->SetScissorRect(&sc);dev->SetVertexShaderConstantF(5,matrices[eye],4);
+                const HRESULT status=draw();if(FAILED(status))result=status;
+            }
+            dev->SetVertexShaderConstantF(5,c,4);dev->SetScissorRect(&oldRect);
+            dev->SetRenderState(D3DRS_SCISSORTESTENABLE,oldOn);g_inHudRemap=false;
+            return result;
+        }
+    }
     if (InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0) &&
         (menuClassNow == 2 || menuClassNow == 3 || menuClassNow == 4) &&
         pausemenuspace::IsPauseCanvasOrtho(c)) {
@@ -31780,6 +31819,7 @@ void LoadIniSettings() {
 
     // ---- Polish Localization initialization ----
     InterlockedExchange(&g_modalUiProbe, GetPrivateProfileIntA("Render","ModalUiProbe",0,path)?1:0);
+    InterlockedExchange(&g_contextPointerProjection,GetPrivateProfileIntA("Render","ContextPointerProjection",0,path)?1:0);
     // Initialize Polish localization manager and read PolishLanguage from INI
     // Paths are relative to the game Binaries directory where the DLL lives
     {

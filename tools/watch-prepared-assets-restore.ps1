@@ -12,7 +12,8 @@ $record=Get-Content (Join-Path $BackupPath 'lease.json') -Raw | ConvertFrom-Json
 $profileOk=($manifest.Kind -ceq 'SingularityVR prepared asset delta v1' -and @($manifest.Files).Count -eq 32) -or
  ($manifest.Kind -ceq 'SingularityVR post-opening asset delta v2' -and @($manifest.Files).Count -eq 34) -or
  ($manifest.Kind -ceq 'SingularityVR first-area polish delta v3' -and @($manifest.Files).Count -eq 37) -or
- ($manifest.Kind -ceq 'SingularityVR first-area font polish delta v4' -and @($manifest.Files).Count -eq 38)
+ ($manifest.Kind -ceq 'SingularityVR first-area font polish delta v4' -and @($manifest.Files).Count -eq 38) -or
+ ($manifest.Kind -ceq 'SingularityVR contextual cursor delta v8' -and @($manifest.Files).Count -eq 2)
 if(-not $profileOk -or
  $record.GameRoot -cne [IO.Path]::GetFullPath($GameRoot) -or $record.ManifestSha256 -cne (Get-FileHash $ManifestPath).Hash){throw 'Wrong delta guard lease'}
 foreach($f in $manifest.Files){
