@@ -30,8 +30,17 @@ $acceptedDll=@($profile.files | Where-Object path -ceq 'Binaries/d3d9.dll')
 if($profile.schema -cne 'singularityvr-accepted-profile-v1' -or -not $profile.approved -or
    $acceptedDll.Count -ne 1){throw 'Accepted profile identity invalid'}
 $targets=[ordered]@{
+    # Preserve the already accepted native particle correction. Omitting this
+    # default-OFF key caused the 2026-10-18 headset VFX regression.
+    'Render/NativeMuzzleParticleStereo'='1'
     'Render/VrPromptTokens'='1'
     'Render/DesktopMirrorWindow'='1'
+    # 65.625 UU/m: center moves from ~27 to ~21 cm off the torso; the store
+    # sphere shrinks from ~24 to ~14 cm. Keep the proven draw tolerance.
+    'Input/HolsterRight'='14'
+    'Input/HolsterRadius'='9'
+    'Input/HipKnifeLeftCm'='20'
+    'Input/HipKnifeRadiusCm'='18'
     'Input/ValkyrieManualReload'='1'
     'Input/ReloadRefillOnly'='1'
     'Input/ReloadNativeMagazine'='1'
@@ -70,13 +79,13 @@ foreach($name in $targets.Keys){
         key=$name
         before=if($before){$before.Value}else{$null}
         after=$targets[$name]
-        reason='Isolated Valkyrie/VR Settings PSVR2 candidate; accepted profile restored after test'
+        reason='Isolated Valkyrie/VR Settings/VFX/holster PSVR2 candidate; accepted profile restored after test'
     }
 }
 $plan=[pscustomobject]@{
     schema='singularityvr-change-plan-v1'
     profileSha256=$profileHash
-    reason='Verify VR Settings pointer, exact reload prompt and guarded Valkyrie manual reload'
+    reason='Verify preserved native VFX, safer holster reach, VR pointer and guarded Valkyrie reload'
     files=@([pscustomobject]@{path='Binaries/d3d9.dll';before=$acceptedDll[0].sha256;after=$dllHash;reason='Clean x86 /O2 candidate'})
     ini=$changes
 }
