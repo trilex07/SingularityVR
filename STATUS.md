@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+ACTIVE MAIN TEST PID22160 after fresh user start,2026-10-18 11:09:50.
+Installed collapse DLL3ED38B96...89AA7020/INI0EFC595B...9669789F/injector5B948DDB
+verified. SteamVR/OpenXR ready,PSVR2 target2952x3012 per eye,90Hz; both new
+flags confirmed. Backup deployment/install-backups/20261018-110852; exact
+watcher PID15012 READY (logs20261018-110852-watch.out/err.log); restores after
+exit or600s no-launch timeout. Owned cinema-exit gameplay profile request armed
+BEFORE launch; guard removes only matching unconsumed request after restore.
+Route: crash save -> collapse ->45s gameplay ->normal exit, no chat switches.
+Await physical result; do not deploy/restore over running game or promote yet.
+
 READY_FOR_PHYSICAL_ACCEPTANCE (L1/L2, NOT Steam/PSVR2-tested): collapse-cost
 candidate from6201c193a4f7de4de6d1051970ae1115f2ae56a4, x86 PE32/O2,
 DLL3ED38B9603D7FAE6DCA11141DF939AA5315EDDB4394626EB1C4DD1D389AA7020,

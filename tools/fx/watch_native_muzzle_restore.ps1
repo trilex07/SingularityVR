@@ -6,6 +6,7 @@ param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9A-Fa-f]{64}$')][string]$AcceptedIniSha256,
     [ValidateRange(60, 1800)][int]$LaunchWindowSeconds = 600,
     [switch]$PreflightOnly,
+    [switch]$CleanupCinemaExitRequest,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -99,4 +100,13 @@ foreach ($name in $names) {
     }
 }
 if ((Get-FileHash -LiteralPath $ui -Algorithm SHA256).Hash -cne $uiSha) { throw 'Protected UI changed during restore' }
+if ($CleanupCinemaExitRequest) {
+    $request=Join-Path $env:LOCALAPPDATA 'SingularityVR\hotpath-gameplay.request'
+    if (Test-Path -LiteralPath $request) {
+        if ((Get-Content -LiteralPath $request -Raw) -ceq 'SingularityVR cinema exit hotpath v1') {
+            Remove-Item -LiteralPath $request
+            Write-Output 'Owned unconsumed cinema-exit profiling request removed after restore'
+        } else { Write-Output 'Different profiling request retained' }
+    }
+}
 Write-Output 'RESTORED: accepted DLL, injector and INI hashes verified; UI untouched'
