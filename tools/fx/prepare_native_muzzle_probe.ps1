@@ -324,7 +324,7 @@ if ($StabilizeWalking) {
     if ($iniValues['Render/VrTranslationStabilization'] -ne '0') { throw 'Expected reviewed translation-stabilization baseline OFF.' }
     $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes 'VrTranslationStabilization=0' 'VrTranslationStabilization=1'
     $iniChanges.Add([ordered]@{key='Render/VrTranslationStabilization';before='0';after='1';reason='User requested removal of walking bob; retain physical HMD translation and pawn locomotion.'})
-    $planReason += ' Enable existing bounded pawn/POV walking stabilization; projector shader cache optimized using PID5860 eviction evidence.'
+    $planReason = 'Preserve accepted projector and muzzle correction; optimize projector shader cache using PID5860 eviction evidence and enable existing bounded pawn/POV walking stabilization. Automatic menu diagnostics disabled. FPS and walking comfort require physical verification.'
 }
 New-Item -ItemType Directory -Path $artifactPath | Out-Null
 $stageDll = Join-Path $artifactPath 'd3d9.dll'
