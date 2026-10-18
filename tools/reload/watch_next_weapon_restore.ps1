@@ -33,7 +33,7 @@ $manifestHash=Hash $manifestPath
 $receiptHash=Hash $receiptPath
 if(-not $manifestHash -or -not $receiptHash){throw 'Missing asset manifest or backup receipt'}
 $manifest=Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
-$receipt=@(Get-Content -Raw -LiteralPath $receiptPath | ConvertFrom-Json)
+$receipt=Get-Content -Raw -LiteralPath $receiptPath | ConvertFrom-Json
 if($receipt.Count -ne 9){throw 'Expected nine exact reload assets'}
 foreach($entry in $receipt){
     $rel=[string]$entry.path
