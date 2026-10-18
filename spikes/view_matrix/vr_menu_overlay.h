@@ -417,6 +417,12 @@ void SyncVrMenuCaptureState() {
     // This function is called from draw hooks. Retained COM sources are released
     // only once when the modal lifetime ends; do not pay interlocked writes on
     // every scene draw while no modal source is retained.
+    // Preserve the exact Slots source before a token transition clears the source
+    // list. Input-thread focus can change before the render thread consumes the
+    // explicit release request, so relying only on ReleaseVrMenuResources(true)
+    // loses the parent RTT when another draw hook reaches Sync first.
+    if(Rd(g_modalSlotsCapturePending)&&Rd(g_modalSaveDialog)&&Rd(g_modalSlotsActive))
+        PreserveModalParentSources();
     if((!Rd(g_modalSaveDialog)||!Rd(g_modalSlotsActive))&&g_vrModalParentSourceCount)
         ReleaseModalParentSources();
     const auto token=VrMenuStateToken();

@@ -6416,7 +6416,7 @@ static unsigned g_vrMenuSourceCount=0;
 static IDirect3DTexture9* g_vrModalParentSources[8]={};
 static unsigned g_vrModalParentSourceCount=0;
 volatile LONG g_vrModalParentStageBound[4]={0,0,0,0};
-volatile LONG g_modalSlotsActive=0,g_modalSlotsCapturePending=0,g_vrModalDialogSurface=0;
+volatile LONG g_modalSlotsActive=0,g_modalSlotsCapturePending=0,g_vrModalDialogSurface=0,g_vrModalDirectDialog=0;
 static float g_vrMenuTextureScore=1e9f;
 static uipointer::VrMenuPanel g_vrMenuPanel;
 inline bool SuppressCapturedVrMenuDraw();
@@ -21952,10 +21952,18 @@ inline bool SuppressCapturedVrMenuDraw() {
     }
     const bool modalParentBound=Rd(g_vrModalParentStageBound[0])||Rd(g_vrModalParentStageBound[1])||
         Rd(g_vrModalParentStageBound[2])||Rd(g_vrModalParentStageBound[3]);
-    const bool dialogSourceReady=Rd(g_modalSaveDialog)&&Rd(g_modalSlotsActive)&&g_vrMenuTexture&&
+    static LONG directFallbackLogged=0;
+    if(!Rd(g_modalSaveDialog))InterlockedExchange(&directFallbackLogged,0);
+    const bool dialogOverlayReady=Rd(g_modalSaveDialog)&&Rd(g_modalSlotsActive)&&g_vrMenuTexture&&
         Rd(g_vrModalDialogSurface)&&g_vrCaptureOwner.CanProvide(VrMenuStateToken());
+    const bool directDialogReady=modalmenu::DirectDialogCanSuppressParent(
+        Rd(g_modalSaveDialog)!=0,Rd(g_modalSlotsActive)!=0,g_vrModalParentSourceCount!=0,
+        Rd(g_vrModalDirectDialog)!=0);
+    const bool dialogSourceReady=dialogOverlayReady||directDialogReady;
     if(modalmenu::SuppressParentSlots(Rd(g_modalSaveDialog)!=0,dialogSourceReady,
                                       modalParentBound,false)){
+        if(directDialogReady&&InterlockedCompareExchange(&directFallbackLogged,1,0)==0)
+            Log("menu modal: Dialog has no verified RTT; suppressing only retained exact Slots source while native Dialog draws directly");
         InterlockedIncrement(&g_vrMenuSuppressed);
         return true;
     }

@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+2026-10-18 menu polish: save-slot confirmation separation is PHYSICALLY_VERIFIED
+on Steam PID 36352 / DLL `5032B353...C2E08C1`. Exact retained Slots source and
+reflected direct Dialog path executed. User reports original cursor and laser
+misalignment in confirmation dialogs, notes and pickup messages: BROKEN, follow-up
+in progress. Test ended normally; declared pre-test DLL/INI restored and hashed.
+See `docs/menu-pointer-hud-polish.md` for scoped evidence.
+
 MAIN integration candidate `fix/main-projector-optimizations`: enable the
 physically accepted first-building projector stereo reconstruction by default
 and bound its shader identity cache to 1024x4 entries. Physical report: the

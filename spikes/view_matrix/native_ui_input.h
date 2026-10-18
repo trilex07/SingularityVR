@@ -11,7 +11,7 @@ extern volatile LONG g_panelOpen;
 void* PatchVTable(void* obj,int index,void* repl);
 extern volatile LONG g_vrMenuReleaseRequested; // render thread consumes COM invalidation
 extern volatile LONG g_modalSaveDialog; // 1 while RvUIGFxMovie_Dialog owns focus
-extern volatile LONG g_modalSlotsActive,g_modalSlotsCapturePending,g_vrModalDialogSurface;
+extern volatile LONG g_modalSlotsActive,g_modalSlotsCapturePending,g_vrModalDialogSurface,g_vrModalDirectDialog;
 extern volatile LONG g_menuAssetWitness;
 
 namespace NativeVrUi {
@@ -43,6 +43,20 @@ static uintptr_t ExactDialogSurface(uintptr_t movie,uintptr_t cls) {
   return (uintptr_t)PauseRttProbe::NativeSurface(target,resource);
  } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
   return 0;
+ }
+}
+static bool ExactDirectDialogPath(uintptr_t movie,uintptr_t cls) {
+ if(!movie||!cls)return false;
+ __try {
+  const int targetOff=PauseRttProbe::Property(cls,"RenderTexture","ObjectProperty");
+  const int modeOff=PauseRttProbe::Property(cls,"RenderTextureMode","ByteProperty");
+  if(targetOff<0||modeOff<0||!Readable((void*)(movie+(uintptr_t)targetOff),4)||
+     !Readable((void*)(movie+(uintptr_t)modeOff),1))return false;
+  const uintptr_t target=ReadPointer(movie+(uintptr_t)targetOff);
+  const unsigned char mode=*reinterpret_cast<const unsigned char*>(movie+(uintptr_t)modeOff);
+  return target==0&&mode==0;
+ } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
+  return false;
  }
 }
 static void ObserveMovieAsset(uintptr_t movie,uintptr_t cls,const char* focusClass) {
@@ -144,11 +158,15 @@ static bool UpdateMenu() {
    InterlockedExchange(&g_modalSlotsActive,0);
    InterlockedExchange(&g_modalSlotsCapturePending,0);
    InterlockedExchange(&g_vrModalDialogSurface,0);
+   InterlockedExchange(&g_vrModalDirectDialog,0);
   } else {
    const uintptr_t dialogSurface=ExactDialogSurface(movie,cls);
+   const bool directDialog=ExactDirectDialogPath(movie,cls);
    InterlockedExchange(&g_vrModalDialogSurface,(LONG)dialogSurface);
+   InterlockedExchange(&g_vrModalDirectDialog,directDialog?1:0);
    if(dialogFocus)Log("menu modal: Dialog exact RTT surface=%p verified=%d; capture and parent suppression require this identity",
                       (void*)dialogSurface,dialogSurface?1:0);
+   if(directDialog)Log("menu modal: Dialog direct-render proof: reflected RenderTexture is null and RenderTextureMode=0");
   }
   InterlockedExchange(&g_modalSaveDialog,dialogFocus?1:0);
   if (className[0]) strcpy_s(prevClass, className);

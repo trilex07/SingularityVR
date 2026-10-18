@@ -34,6 +34,10 @@ int main(){
     assert(modalmenu::CaptureExactDialog(true,true,true));
     assert(!modalmenu::CaptureExactDialog(true,true,false));
     assert(!modalmenu::CaptureExactDialog(true,false,true));
+    assert(modalmenu::DirectDialogCanSuppressParent(true,true,true,true));
+    assert(!modalmenu::DirectDialogCanSuppressParent(true,true,false,true));
+    assert(!modalmenu::DirectDialogCanSuppressParent(false,true,true,true));
+    assert(!modalmenu::DirectDialogCanSuppressParent(true,true,true,false));
     assert(modalmenu::SuppressParentSlots(true,true,true,false));
     assert(!modalmenu::SuppressParentSlots(true,false,true,false));
     assert(!modalmenu::SuppressParentSlots(true,true,false,false));
