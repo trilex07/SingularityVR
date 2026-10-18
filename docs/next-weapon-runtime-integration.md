@@ -261,3 +261,30 @@ with no orange selection until actual hand/stick movement; sector zero remains
 selectable. `ValkyrieSingleGrip` is a default-OFF, one-hand A/B reusing the
 accepted pistol's weapon-delta target for the right glove; its visual effect
 still requires PSVR2.
+
+## MAIN physical follow-up, 2026-10-18 (VFX/holster candidate)
+
+The guarded Steam test of DLL `56CFBCE1…DFFA8F` confirmed with the tester:
+native muzzle VFX returned, Valkyrie one-hand grip improved, accidental holster
+placement was acceptable, and Circle weapon-wheel selection worked. The
+installed accepted DLL/INI and all nine reload assets were restored and their
+hashes checked after the game closed. These observations do **not** accept
+Valkyrie manual reload or the prompt rewrite.
+
+On Circle with Valkyrie equipped, the runtime reported a valid weapon context,
+identity, fresh ammo state, native refill method, and assets, but
+`next reload witness` remained `valid=0`. The render-socket witness is a safety
+gate, so bypassing it to force ammo changes would be unjustified. The next
+default-OFF diagnostic records the first rejection at each stage of
+`PrepareNextReload` (draw part, gameplay context, visual snapshot, shader
+layout, index buffer, palette and socket reconstruction). **Hypothesis:** the
+Valkyrie mesh draw or its transform fails before socket publication.
+**Falsifier:** stage 10 (witness published) appears during gameplay while the
+Circle input still cannot begin reload; then investigate the input/FSM consumer
+instead. This diagnostic has not yet been run in Steam.
+
+The tester still saw `Pad 3` instead of `O`. An earlier `[reload]` producer log
+showed `(O)`, so it does not prove ownership of that visible `Pad 3` prompt.
+The diagnostic now also logs exact `Pad 3` text at the localization producer;
+do not globally remap this token because other actions share numbered pad
+glyphs. The VR Settings laser was not reported in this trial.

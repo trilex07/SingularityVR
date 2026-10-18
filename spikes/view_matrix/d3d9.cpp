@@ -23796,9 +23796,11 @@ static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
             Log("reload tutorial localization: polish=%d promptTokens=%d changed=%d text=\"%.240s\"",
                 polish?1:0,prompts?1:0,rewritten.changed?1:0,visible);
     }
-    if(prompts&&(strstr(en,"[reload]")||strstr(en,"Pad 11")||strstr(en,"Pad11"))){
-        static LONG aliasNotes=0;
-        if(InterlockedIncrement(&aliasNotes)<=12)
+    if(prompts&&(strstr(en,"[reload]")||strstr(en,"Pad 11")||strstr(en,"Pad11")||
+                 strstr(en,"Pad 3")||strstr(en,"Pad3")||strstr(visible,"Pad 3")||strstr(visible,"Pad3"))){
+        const bool pad3=strstr(en,"Pad 3")||strstr(en,"Pad3")||strstr(visible,"Pad 3")||strstr(visible,"Pad3");
+        static LONG aliasNotes=0,pad3Notes=0;
+        if(InterlockedIncrement(pad3?&pad3Notes:&aliasNotes)<=12)
             Log("reload prompt producer: section=%ls key=%ls package=%ls changed=%d mapped=%d source=\"%.200s\" visible=\"%.200s\"",
                 section?section:L"",key?key:L"",package?package:L"",
                 rewritten.changed?1:0,mapped?1:0,en,visible);

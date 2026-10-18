@@ -207,20 +207,36 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
                              weaponreload::ReplayPlan& replay){
     if(!NextReloadEnabled())return 0;
     const auto kind=NextKind(Rd(g_gunVerts));const auto* spec=weaponreloadanim::Find(kind);
-    if(!spec)return 0;const unsigned index=weaponreload::Index(kind);
+    const auto* profile=weaponreloadproto::Find(kind);
+    if(!spec||!profile)return 0;const unsigned index=weaponreload::Index(kind);
     const auto part=weaponreload::DrawPart(kind,base,min,vertices,first,triangles);
+    // One bounded witness per rejection stage. The live Valkyrie session had
+    // valid weapon/ammo/native identity but no render socket; do not bypass
+    // that safety gate until the producer of the missing socket is identified.
+    static volatile LONG seenStages[3]={0,0,0};
+    const auto note=[&](unsigned stage){
+        const LONG bit=LONG(1u<<stage);
+        if(!(InterlockedOr(&seenStages[index],bit)&bit))
+            Log("next reload draw gate: stage=%u kind=%d part=%d verts=%u prim=%u first=%u min=%u base=%d moved=%d fg=%d scene=%ld paused=%ld wheel=%ld thread=%d",
+                stage,int(kind),int(part),vertices,triangles,first,min,base,g_thisDrawMoved,
+                FgMatchWindow()?1:0,Rd(g_rtIsScene),Rd(g_gamePaused),Rd(g_weaponWheelOpen),
+                GetCurrentThreadId()==g_mainThreadId?1:0);
+    };
+    if(part==weaponreload::Part::None){
+        if(vertices==profile->meshWedges&&g_thisDrawMoved==1)note(0);
+        return 0;
+    }
     if(!g_nextReload[index]||!g_nextReady[index]||Rd(g_nextFault[index])||!g_nextPresentation.Allowed()||
-       part==weaponreload::Part::None||
        !dev||!g_origSetVSConstF||GetCurrentThreadId()!=g_mainThreadId||!FgMatchWindow()||g_thisDrawMoved!=1||!Rd(g_rtIsScene)||
        Rd(g_gamePaused)||Rd(g_vrUiMenu)||Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||
        Rd(g_weaponHolstered)||CutsceneNativeCameraArmed()||
-       g_sceneMode.Current()!=vrscene::Mode::GameplayStereo||g_xrSessionState!=XR_SESSION_STATE_FOCUSED)return 0;
+       g_sceneMode.Current()!=vrscene::Mode::GameplayStereo||g_xrSessionState!=XR_SESSION_STATE_FOCUSED){note(1);return 0;}
     NextReloadVisual visual;
     if(!TryAcquireSRWLockShared(&g_nextVisualLock))return 0;
     visual=g_nextVisual;ReleaseSRWLockShared(&g_nextVisualLock);
     const auto now=GetTickCount64();
     if(!visual.valid||visual.kind!=kind||visual.pawn!=(uint32_t)g_playerPawn||visual.weapon!=(uint32_t)Rd(g_weaponObj)||
-       now<visual.sampledMs||now-visual.sampledMs>150)return 0;
+       now<visual.sampledMs||now-visual.sampledMs>150){note(2);return 0;}
     const auto layout=g_boundShaderLayout;
     const bool rootHeld=weaponreload::Animation::HoldRoot(g_nextRefillOnly!=0,visual.rootValid,
         visual.phase,visual.insertedMs,visual.nativeEnd,now);
@@ -228,8 +244,8 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
         visual.phase,visual.insertedMs,now,rootHeld);
     const unsigned regs=part==weaponreload::Part::Attachment?3:spec->slots*3;
     if(layout.shadow||layout.bones<0||layout.boneRegs<int(regs)||unsigned(layout.bones)+regs>256||
-       (part==weaponreload::Part::Body&&(layout.local<0||unsigned(layout.local)+4>256)))return 0;
-    IDirect3DIndexBuffer9* ib=nullptr;if(FAILED(dev->GetIndices(&ib))||!ib)return 0;
+       (part==weaponreload::Part::Body&&(layout.local<0||unsigned(layout.local)+4>256))){note(3);return 0;}
+    IDirect3DIndexBuffer9* ib=nullptr;if(FAILED(dev->GetIndices(&ib))||!ib){note(4);return 0;}
     if(g_nextIB[index]!=ib){
         hipknife::Release(g_nextIB[index]);g_nextIB[index]=ib;ib=nullptr;g_nextIBVerified[index]=false;
         if(g_nextIBAttempts[index]<16){
@@ -241,9 +257,9 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
             }
         }
     }
-    hipknife::Release(ib);if(!g_nextIBVerified[index])return 0;
+    hipknife::Release(ib);if(!g_nextIBVerified[index]){note(5);return 0;}
     armbind::Mat local,controller;float changed[16*12],parentPalette[16*12];
-    if(FAILED(dev->GetVertexShaderConstantF((UINT)layout.bones,saved,regs)))return 0;
+    if(FAILED(dev->GetVertexShaderConstantF((UINT)layout.bones,saved,regs))){note(6);return 0;}
     if(part==weaponreload::Part::Attachment){
         // Original second palette is [cog_gun] for Valkyrie and Kasimov.
         // Freeze it too; otherwise the scope/lens follows native Reload while
@@ -251,20 +267,23 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
         if(!rootHeld||!armbind::Finite(visual.root))return 0;
         armbind::ToGpu(visual.root,reinterpret_cast<float(*)[4]>(changed));
     }else{
-    if(FAILED(dev->GetVertexShaderConstantF((UINT)layout.local,&local.m[0][0],4)))return 0;
-    if(!weaponreload::ParentPalette(g_nextAnimation[index],saved,regs,rootHeld?&visual.root:nullptr,parentPalette))return 0;
+    if(FAILED(dev->GetVertexShaderConstantF((UINT)layout.local,&local.m[0][0],4))){note(6);return 0;}
+    if(!weaponreload::ParentPalette(g_nextAnimation[index],saved,regs,rootHeld?&visual.root:nullptr,parentPalette)){note(7);return 0;}
     armbind::Mat nativeRoot;
-    if(!armbind::FromGpu(reinterpret_cast<const float(*)[4]>(parentPalette+spec->root*12),nativeRoot))return 0;
+    if(!armbind::FromGpu(reinterpret_cast<const float(*)[4]>(parentPalette+spec->root*12),nativeRoot)){note(7);return 0;}
     BuildGunC(controller.m);hipknife::V socket;armbind::Mat clipTracking;
     if(!weaponreload::Socket(g_nextAnimation[index],parentPalette,local,controller,
-        {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,g_baseYaw*(6.2831853f/65536.f),MetresToUU(),socket,&clipTracking))return 0;
+        {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,g_baseYaw*(6.2831853f/65536.f),MetresToUU(),socket,&clipTracking)){note(8);return 0;}
     // Refuse an absolute/other-space matrix rather than publishing a far-away
     // or frozen interaction point. This is a validity bound, not calibration.
     const auto& hand=g_handLastPos[1];
-    if(hipknife::Length(socket-hipknife::V{hand.x,hand.y,hand.z})>.75f)return 0;
+    if(hipknife::Length(socket-hipknife::V{hand.x,hand.y,hand.z})>.75f){note(9);return 0;}
+    bool published=false;
     if(TryAcquireSRWLockExclusive(&g_nextVisualLock)){
-        g_nextWitness={true,kind,visual.pawn,visual.weapon,now,socket,clipTracking,nativeRoot};ReleaseSRWLockExclusive(&g_nextVisualLock);
+        g_nextWitness={true,kind,visual.pawn,visual.weapon,now,socket,clipTracking,nativeRoot};published=true;
+        ReleaseSRWLockExclusive(&g_nextVisualLock);
     }
+    if(published)note(10);else note(11);
     const bool drop=g_nextNativeMagazine&&visual.dropMs&&now>=visual.dropMs&&now-visual.dropMs<1200;
     if(!animateMagazine&&!rootHeld&&!drop)return 0;
     if(animateMagazine){
