@@ -65,3 +65,12 @@ prior menu plan and freshly built DLL, preserving scoped cursor/mirror values,
 adding the accepted VFX flag and these two opt-in investigations. It checks the
 restore profile hash, PE32/O2 build manifest and refuses existing output.
 MAIN must preflight the complete plan before any new user-authorized launch.
+
+Offline receipt: source `fe7e15a`, optimized x86 PE32 build PASS, DLL SHA-256
+`A9E2B49B2FD71502295B8A57ED7415F931641CB84093948A643E6C80A09AE7D2`.
+Bundle `build/menu-regression-alpha-20261018`, INI SHA-256
+`B1C13D497AABC62311EBC622CC68C9407B60B70B4BFF377C63A5503D7D66B65D`.
+Read-only complete accepted-profile/change-plan preflight PASS. Steam untouched.
+Next physical route: gameplay, a few shots, several left-knife swings while
+holding the right controller still, one Steam screenshot, normal exit. No chat
+switch while in PSVR2. Knife remains diagnostic; screenshots remain experimental.
