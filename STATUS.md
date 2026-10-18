@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+READY_FOR_PHYSICAL_TEST, NOT runtime/PSVR2 verified: candidate-holster-cpu.
+Build e7506c702265e17417df4743dd1ff1c0fa3778f4 x86 PE32/O2,
+DLL D0B226500ED85A789413A365FDC7B071CE18CBBADC5DB3986DF505C9BC2972D0,
+INI DC3CB05E98973AC8E759CDCBCC769D6C22085DF5314E772482C5388F3682D198.
+Package build/projector/candidate-holster-cpu; accepted-profile Install WhatIf
+PASS (no writes). Config parsed comparison vs PID28884: ONLY added
+Render/HolsterProjectionPrepare=1. Existing muzzle/shadow/hand-anchor C++ suite
+and Python trace/particle tests PASS; no Steam changes this turn. Fresh start:
+verify HMD/closed game/hashes, deploy narrow DLL+INI via reviewed plan, exact
+restore lease, arm cinema-exit profile, compact UAC recorder CaptureSeconds10
+(NOT30, whose circular buffer evicted early samples), Steam launch. Route crash
+save -> collapse ->15s gameplay -> normal exit, no mid-headset chat. Read UTC
+HOTPATH_CLOCK anchors + ETL coverage before causal claims. FPS gain not yet proven.
+
 PID28884 CLOSED after user confirmation. Compact CPU trace SAVED125MiB;
 SHA9AD6F9BF...AECE5D, target23361 samples/renderTID34228:10376. Zero lost
 events BUT circular retention loses initial6s, first reliable+11.913s; next

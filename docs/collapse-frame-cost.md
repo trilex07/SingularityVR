@@ -198,3 +198,12 @@ Next candidate preserves PID28884 flags and adds only this optimization plus
 bounded clock anchors. Fresh start gate: crash save -> collapse ->15s walking
 -> normal exit, no chat switches. Arm45s/3600 native sampler and10s compact ETW
 after cinema exit, inspect coverage/cost/visuals, then exact verified restore.
+
+L2: build e7506c702265e17417df4743dd1ff1c0fa3778f4, x86 PE32/O2,
+DLL `D0B226500ED85A789413A365FDC7B071CE18CBBADC5DB3986DF505C9BC2972D0`,
+INI `DC3CB05E98973AC8E759CDCBCC769D6C22085DF5314E772482C5388F3682D198`.
+Offline package build/projector/candidate-holster-cpu; parsed INI delta vs
+PID28884 contains ONLY HolsterProjectionPrepare=1. Accepted-profile install
+WhatIf PASS/no writes. Native muzzle/shadow/hand-anchor CPU regression suite
+and Python trace/particle tests PASS. Steam remains safe restored baseline;
+candidate needs fresh start and physical verification, not promoted.
