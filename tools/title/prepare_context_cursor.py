@@ -27,12 +27,6 @@ PROFILES = {
         'movies': {'iis': '978D81A0A2F0D401', 'SPMenus': 'D2E964C936CCE902'},
         'container': 'summary',
     },
-    'dialogs': {
-        'physical': '4153c4889c90635069ed226d918cdb76be618f46b1baea152ac10cffdf59e9ef',
-        'logical': '09de450d9f620952c3701d874beb90a8bd9235263975157a641b9e3441336c92',
-        'movies': {'Dialogs': '28B71A137B55BB7A'},
-        'container': 'whole',
-    },
 }
 
 

@@ -5,13 +5,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 sys.path.insert(0, str(Path(__file__).parents[2]/'fonts'))
-from prepare_context_cursor import core_shape, patch_movie, sha
+from prepare_context_cursor import PROFILES, core_shape, patch_movie, sha
 from swf_shape import decode_shape
 from swf_title_patch import read_rect, split_tags
 from test_swf_ui_polish import fake_cursor
 
 
 class Tests(unittest.TestCase):
+    def test_rvgame_dialogs_profile_is_disabled_after_runtime_failure(self):
+        self.assertEqual(set(PROFILES), {'single-player'})
+
     def test_fixed_length_core_is_closed_centred_and_parseable(self):
         for size in (32, 248):
             result = core_shape(17, size)

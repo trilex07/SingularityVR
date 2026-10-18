@@ -44,6 +44,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "shadow_policy.h"
 #include "shadow_mode3.h"
 #include "ui_pointer.h"
+#include "context_cursor_gate.h"
 #include "menu_capture_owner.h"
 #include "recenter_chord.h"
 #include "pose_conversion.h"
@@ -6418,6 +6419,7 @@ static unsigned g_vrModalParentSourceCount=0;
 volatile LONG g_vrModalParentStageBound[4]={0,0,0,0};
 volatile LONG g_modalSlotsActive=0,g_modalSlotsCapturePending=0,g_vrModalDialogSurface=0,g_vrModalDirectDialog=0;
 volatile LONG g_vrUiDirectCanvas=0,g_vrUiNoteCanvas=0,g_contextPointerProjection=0;
+volatile LONG g_contextCursorSuppress=0,g_contextCursorSuppressLogged=0;
 static float g_vrMenuTextureScore=1e9f;
 static uipointer::VrMenuPanel g_vrMenuPanel;
 static bool g_vrMenuPanelValid=false;
@@ -6560,8 +6562,8 @@ static void ReportVrRuntimeCounters() {
         Rd(c.bootMenuCaptured),Rd(c.bootMenuSuppressed),Rd(c.bootMenuProvided),Rd(c.mainMenuCaptured),Rd(c.mainMenuSuppressed),Rd(c.mainMenuProvided),Rd(c.mainMenuUnknownDraws),Rd(c.vrPointerUpdates));
     Log("VR counters grip press/release/latch/detach/error=%ld/%ld/%ld/%ld/%ld shadow depth/skip/eye-error=%ld/%ld/%ld",
         Rd(c.gripPressEdges),Rd(c.gripReleaseEdges),Rd(c.gripLatchCount),Rd(c.gripDetachCount),Rd(c.gripLatchWithoutGripERROR),Rd(c.fpShadowDepthDraws),Rd(c.fpShadowDepthSkipped),Rd(c.fpShadowEyeModifiedERROR));
-    Log("VR counters cursor draw/suppress=%ld/%ld prompt show/hide/action=%ld/%ld/%ld icons/error=%ld/%ld; cursor/prompt hooks UNRESOLVED",
-        Rd(c.nativeCursorDraws),Rd(c.nativeCursorSuppressed),Rd(c.contextPromptShow),Rd(c.contextPromptHide),Rd(c.contextPromptAction),Rd(c.psIconDraws),Rd(c.psIconDrawWithoutPromptERROR));
+    Log("VR counters context cursor match/suppressed=%ld/%ld prompt show/hide/action=%ld/%ld/%ld icons/error=%ld/%ld (ContextCursorSuppress=%ld)",
+        Rd(c.nativeCursorDraws),Rd(c.nativeCursorSuppressed),Rd(c.contextPromptShow),Rd(c.contextPromptHide),Rd(c.contextPromptAction),Rd(c.psIconDraws),Rd(c.psIconDrawWithoutPromptERROR),Rd(g_contextCursorSuppress));
     Log("Fix-M/menu-station: FP gun/arm draws hidden over menus=%ld (HideFpInMenu=%ld; station black-diamond gate)",
         Rd(g_vrMenuFpHidden),Rd(g_hideFpInMenu));
 }
@@ -20870,6 +20872,19 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
                                        idxData, idxFormat, vtxData, vtxStride);
     }
     ++g_drawsUP;
+    const bool contextCursor = contextcursor::ShouldSuppress(
+        Rd(g_contextCursorSuppress) != 0,
+        VrModeOn(), Rd(g_vrUiEnabled) != 0,
+        Rd(g_vrUiMenu) != 0 && Rd(g_vrMenuClass) == 4,
+        Rd(g_vrUiDirectCanvas) != 0, Rd(g_rtIsScene) != 0,
+        (unsigned)t, primCount, numVertices, vtxStride);
+    if (contextCursor) {
+        InterlockedIncrement(&g_vrCounters.nativeCursorDraws);
+        InterlockedIncrement(&g_vrCounters.nativeCursorSuppressed);
+        if (InterlockedCompareExchange(&g_contextCursorSuppressLogged, 1, 0) == 0)
+            Log("context cursor: suppressed measured modal GFx arrow draw (class=4 UP tri-list prim=4 verts=8 stride=72; direct scene canvas)");
+        return D3D_OK;
+    }
     if (g_userPtrHookLevel == 2) {
         nativefx::RouteObserve(3);
         return g_origDrawIndexedPrimUP(dev, t, minVtxIndex, numVertices, primCount,
@@ -31820,6 +31835,10 @@ void LoadIniSettings() {
     // ---- Polish Localization initialization ----
     InterlockedExchange(&g_modalUiProbe, GetPrivateProfileIntA("Render","ModalUiProbe",0,path)?1:0);
     InterlockedExchange(&g_contextPointerProjection,GetPrivateProfileIntA("Render","ContextPointerProjection",0,path)?1:0);
+    InterlockedExchange(&g_contextCursorSuppress,
+        GetPrivateProfileIntA("Render","ContextCursorSuppress",0,path)?1:0);
+    Log("ini: ContextCursorSuppress=%ld (measured modal GFx pointer only; default OFF)",
+        Rd(g_contextCursorSuppress));
     // Initialize Polish localization manager and read PolishLanguage from INI
     // Paths are relative to the game Binaries directory where the DLL lives
     {
