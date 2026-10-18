@@ -3,9 +3,8 @@
 // state, so it is L1-testable in isolation. Units are meters in tracking
 // space; the caller owns hand/head poses, the two-hand latch and HP values.
 //
-// The bar appears in two situations: the left hand is raised toward the face
-// to look at it, or the pistol is held two-handed (the bar then rides above
-// the left hand). Hysteresis keeps it from flickering at the boundary.
+// The bar appears only when the left hand is raised toward the face.
+// Hysteresis keeps it from flickering; lowering the hand also hides it.
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -19,8 +18,11 @@ namespace healthbar {
 inline int SegmentSlots() { return 11; }
 
 // Show/hide radii around the head for the face-raise gesture.
-inline float ShowRadiusM() { return 0.60f; }
-inline float HideRadiusM() { return 0.80f; }
+inline float ShowRadiusM() { return 0.50f; }
+inline float HideRadiusM() { return 0.60f; }
+constexpr unsigned kBackgroundAlphaPct=65;
+constexpr unsigned kSegmentAlphaPct=80;
+inline int PlateWidth(int renderHeight) { return renderHeight>0?(int)std::fmax(1.f,renderHeight*.12f):0; }
 
 inline float Dist2(float ax, float ay, float az, float bx, float by, float bz) {
     const float dx = ax - bx, dy = ay - by, dz = az - bz;
@@ -35,7 +37,7 @@ inline bool FaceRaiseShow(float hx, float hy, float hz, float px, float py, floa
     if (!(Dist2(hx, hy, hz, px, py, pz) < r * r)) return false;
     const float dx = hx - px, dy = hy - py, dz = hz - pz;
     if (!(dx * fx + dy * fy + dz * fz > 0.0f)) return false; // behind the face
-    if (!(hy > py - 0.35f)) return false;                   // hanging low
+    if (!(hy > py - 0.22f)) return false;                   // below face
     return true;
 }
 
@@ -45,6 +47,7 @@ inline bool FaceRaiseHide(float hx, float hy, float hz, float px, float py, floa
                           float fx, float fy, float fz) {
     const float r = HideRadiusM();
     if (Dist2(hx, hy, hz, px, py, pz) > r * r) return true;
+    if (!(hy > py - 0.30f)) return true; // lowered hand must not retain the latch
     const float dx = hx - px, dy = hy - py, dz = hz - pz;
     if (!(dx * fx + dy * fy + dz * fz > 0.0f)) return true;
     return false;

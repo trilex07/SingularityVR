@@ -26015,7 +26015,6 @@ static plates_atlas::Sheet g_platesSheet;
 static volatile LONG g_platesState = 0;   // 0 unloaded, 1 ready, -1 failed (logged once)
 static volatile LONG g_hbUnknownSaid = 0; // one-shot unreadable-HP log latch
 static bool g_hbShown = false;            // face-raise hysteresis (render thread only)
-static bool g_hbTwoWas = false;           // two-hand rising edge (render thread only)
 IDirect3DStateBlock9* g_wristState = nullptr;
 void DrawLaserSight(IDirect3DDevice9* dev) {
     if (!InterlockedCompareExchange(&g_laserOn, 0, 0)) return;
@@ -27640,8 +27639,8 @@ static void MaybeLoadPlatesAtlas(IDirect3DDevice9* dev) {
 }
 
 // Left-glove Katorga health plate: bg quad + 11 stamped segment cells over a
-// left-hand anchor. Appears on face-raise (hysteresis) or while two-handing
-// the pistol. HP comes from the cached pawn (never a scan from rendering);
+// left-hand anchor. Appears only on face-raise (hysteresis).
+// HP comes from the cached pawn (never a scan from rendering);
 // unknown HP hides the bar, never a guessed full one.
 void DrawHealthPlate(IDirect3DDevice9* dev) {
     if(g_centurionPhysicalPolish){
@@ -27669,6 +27668,7 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
                 (int)Rd(g_gamePaused), g_handPositionValid[0] ? 1 : 0,
                 g_haveEyes ? 1 : 0);
         }
+        g_hbShown=false;
         return;
     }
     if (InterlockedCompareExchange(&g_platesState, 0, 0) == 0) MaybeLoadPlatesAtlas(dev);
@@ -27710,15 +27710,12 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
                                                      fwd.x, fwd.y, fwd.z)) {
         g_hbShown = false;
     }
-    const bool twoHand = Rd(g_twoHandActive) && WeaponInHands();
-    if (twoHand && !g_hbTwoWas) Log("health plate: shown (two-hand) hp=%f/%f", (double)hp, (double)maxHp);
-    g_hbTwoWas = twoHand;
-    if (!g_hbShown && !twoHand) return;
+    if (!g_hbShown) return;
     const plates_atlas::Rect* bgR = plates_atlas::Find(g_platesSheet, "plate-health-bg");
     const plates_atlas::Rect* fullR = plates_atlas::Find(g_platesSheet, "seg-full");
     const plates_atlas::Rect* emptyR = plates_atlas::Find(g_platesSheet, "seg-empty");
     if (!bgR || !fullR || !emptyR) return; // atlas mismatch: hide (logged at load)
-    const uipointer::V anchor{ hand.x, hand.y + (twoHand ? -0.02f : 0.08f), hand.z };
+    const uipointer::V anchor{ hand.x, hand.y + 0.08f, hand.z };
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
     D3DSURFACE_DESC d{};
@@ -27759,12 +27756,9 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
     struct PlateVtx { float x, y, z, rhw; DWORD c; float u, v; };
     const float AW = (float)g_platesSheet.width, AH = (float)g_platesSheet.height;
-    // Two-hand plate rides smaller and lower so it never covers the gunfight.
-    const int plateW = handhud::ScaledExtent(twoHand ? std::max(48, (int)(d.Height * 0.10f))
-                               : std::max(64, (int)(d.Height * 0.18f)));
+    const int plateW = healthbar::PlateWidth((int)d.Height);
     const int plateH = std::max(10, plateW * 330 / 2001);
-    // Two-hand plate sits left of the gun line so it never covers it.
-    // MAIN 2026-10-15: user "jeszcze bardziej w lewo i nizej".
+    // Face-raised plate remains centred above the tracked left hand.
     float hbDrewCx = 0, hbDrewCy = 0;
     bool hbDrewAny = false, hbProjFail = true;
     static bool hbSaidDrew = false, hbSaidProj = false;
@@ -27772,16 +27766,16 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
         uipointer::ScreenPoint p;
         if (!VrUiProjectEye(eye, anchor, p)) continue;
         hbProjFail = false;
-        const float cx = (eye + p.u) * d.Width * 0.5f - (twoHand ? plateW * 0.85f : 0.0f);
+        const float cx = (eye + p.u) * d.Width * 0.5f;
         const float cy = p.v * d.Height;
         if (!hbDrewAny) { hbDrewAny = true; hbDrewCx = cx; hbDrewCy = cy; }
         const float x0 = cx - plateW * 0.5f, y0 = cy - plateH * 0.5f;
         const float x1 = cx + plateW * 0.5f, y1 = cy + plateH * 0.5f;
         PlateVtx v[4] = {
-            { x0, y0, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct), bgR->x / AW, bgR->y / AH },
-            { x1, y0, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct), (bgR->x + bgR->w) / AW, bgR->y / AH },
-            { x0, y1, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct), bgR->x / AW, (bgR->y + bgR->h) / AH },
-            { x1, y1, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct), (bgR->x + bgR->w) / AW, (bgR->y + bgR->h) / AH },
+            { x0, y0, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, healthbar::kBackgroundAlphaPct), bgR->x / AW, bgR->y / AH },
+            { x1, y0, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, healthbar::kBackgroundAlphaPct), (bgR->x + bgR->w) / AW, bgR->y / AH },
+            { x0, y1, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, healthbar::kBackgroundAlphaPct), bgR->x / AW, (bgR->y + bgR->h) / AH },
+            { x1, y1, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, healthbar::kBackgroundAlphaPct), (bgR->x + bgR->w) / AW, (bgR->y + bgR->h) / AH },
         };
         g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(PlateVtx));
         for (int i = 0; i < healthbar::SegmentSlots(); ++i) {
@@ -27791,18 +27785,18 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
             const float sx0 = x0 + fx0 * plateW, sy0 = y0 + fy0 * plateH;
             const float sx1 = x0 + fx1 * plateW, sy1 = y0 + fy1 * plateH;
             PlateVtx s[4] = {
-                { sx0, sy0, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kDigitAlphaPct), cell->x / AW, cell->y / AH },
-                { sx1, sy0, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kDigitAlphaPct), (cell->x + cell->w) / AW, cell->y / AH },
-                { sx0, sy1, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kDigitAlphaPct), cell->x / AW, (cell->y + cell->h) / AH },
-                { sx1, sy1, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kDigitAlphaPct), (cell->x + cell->w) / AW, (cell->y + cell->h) / AH },
+                { sx0, sy0, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, healthbar::kSegmentAlphaPct), cell->x / AW, cell->y / AH },
+                { sx1, sy0, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, healthbar::kSegmentAlphaPct), (cell->x + cell->w) / AW, cell->y / AH },
+                { sx0, sy1, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, healthbar::kSegmentAlphaPct), cell->x / AW, (cell->y + cell->h) / AH },
+                { sx1, sy1, 0, 1, handhud::WithAlphaPct(0xFFFFFFFFu, healthbar::kSegmentAlphaPct), (cell->x + cell->w) / AW, (cell->y + cell->h) / AH },
             };
             g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, s, sizeof(PlateVtx));
         }
     }
     if (hbDrewAny && !hbSaidDrew) {
         hbSaidDrew = true;
-        Log("health plate: drew twoHand=%d %dx%d at %.0f,%.0f (backbuffer %ux%u)",
-            twoHand ? 1 : 0, plateW, plateH, (double)hbDrewCx, (double)hbDrewCy, d.Width, d.Height);
+        Log("health plate: face-only %dx%d at %.0f,%.0f alpha=65/80 (backbuffer %ux%u)",
+            plateW, plateH, (double)hbDrewCx, (double)hbDrewCy, d.Width, d.Height);
     }
     if (!hbDrewAny && hbProjFail && !hbSaidProj) {
         hbSaidProj = true;

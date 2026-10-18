@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+2026-10-18 health HUD followup: user requests smaller translucent face-only
+plate before next test. Native health plate width now12% of render height
+(previously18%*88%, ~24% reduction), background65%/segments80% opacity.
+Two-hand support no longer forces visibility. Face raise enters within50cm
+and22cm below head, exits beyond60cm or30cm below head; tracking/menu/cinema
+gates clear the visibility latch. Head-relative math supports seated testing.
+L1 gesture/HP tests PASS; physical size/gesture/opacity not yet verified.
+Ammo plate unchanged. Include this source in the next mirror diagnostic build.
+
 2026-10-18 runtime followup: DLL5478D2A3 session PID36436. User rejects TV fit
 and Steam screenshots. Native cursor API verified SPMenus D2E964C936CCE902 and
 visibility readback Hidden. Subsequent user reply confirms arrow disappeared
