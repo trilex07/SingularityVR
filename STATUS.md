@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+PID20296 projector PHYSICALLY_VERIFIED: user "projektor dziala super".
+Tested DLL F53E9E2A799970F0B7F43B17C45D21D4686837BFDB166149E0B5DD5B6F1B0215,
+INI87DB38993A10CCC8687E71C42636F3F9AF98C659574AC6FC8A643B677C670CD1.
+Both-eye applied counters~89/89 per second, zero rejection/restore faults.
+Original restore profile independently verified (DLL789749E5,INI8B0B0B4C,
+injector5B948DDB,UI51CDAB5C); candidate not promoted or installed persistently.
+Evidence private build/projector/evidence-20296 (renderer + injector logs).
+3600-frame profile complete; automatic menu trace/captures OFF, FPS still dips.
+Early SetTexture estimate5.7624ms/frame across240frames, full3600 estimate.7476.
+Injector source synchronously hashes/reads DDS/creates+uploads at first bind;
+log confirms 8K substitutions, but driver wait vs callback-exclusive cost unknown.
+Prepared sampler split texture_bridge(inclusive)/texture_driver(nested forward)
+to isolate cause; this is read-only profiling, no FPS fix claimed.
+
 Next offline candidate: build/projector/candidate-audited-quiet, source 138b2ca,
 DLL F53E9E2A799970F0B7F43B17C45D21D4686837BFDB166149E0B5DD5B6F1B0215.
 L1 captured-matrix eye invariance + saturation/restore tests PASS; L2 /O2 x86

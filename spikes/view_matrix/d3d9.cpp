@@ -21867,6 +21867,10 @@ static void ReleaseVrShadowResources() {
 // Shadow substitution disabled: the neutral-texture approach caused worse visual artifacts in headset.
 // ShadowMode now selects the sampling-pass treatment instead (0/1/2); see the stage mask below.
 // Proper fix: disable first-person arm/weapon shadow casting at engine level (bCastDynamicShadow=false).
+static HRESULT STDMETHODCALLTYPE ProfiledTextureForward(IDirect3DDevice9* dev,DWORD stage,IDirect3DBaseTexture9* texture) {
+    hotpath::scope driverScope(g_hotPathSampler,hotpath::Family::texture_driver);
+    return g_origSetTexture(dev,stage,texture);
+}
 HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDirect3DBaseTexture9* texture) {
     PauseRttProbe::Sample(texture);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::set_texture);
@@ -21901,8 +21905,13 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
     if(Rd(g_textureBridgeOwned)&&g_textureBridgeBind)
         protectedFlags=(ProjectedShadowTexture(texture)||texture==g_vrMenuTexture||
             (stage<4&&Rd(g_vrMenuStageBound[stage])))?texbridge::protectedSource:0;
-    const HRESULT bindResult=(Rd(g_textureBridgeOwned)&&g_textureBridgeBind)?
-        g_textureBridgeBind(dev,stage,texture,g_origSetTexture,texbridge::version,protectedFlags):g_origSetTexture(dev,stage,texture);
+    HRESULT bindResult;
+    if(Rd(g_textureBridgeOwned)&&g_textureBridgeBind){
+        // Inclusive callback timing versus its actual native SetTexture forward.
+        // Their difference estimates hashing/loading/upload work; do not add them.
+        hotpath::scope bridgeScope(g_hotPathSampler,hotpath::Family::texture_bridge);
+        bindResult=g_textureBridgeBind(dev,stage,texture,ProfiledTextureForward,texbridge::version,protectedFlags);
+    }else bindResult=ProfiledTextureForward(dev,stage,texture);
     if(SUCCEEDED(bindResult) && stage<8)shadowtrace::bound.tex[stage]=texture;
     return bindResult;
 }

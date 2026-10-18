@@ -21,6 +21,8 @@ enum class Family : unsigned {
 	ik_arm_solve,
 	bone_palette,
 	set_texture,
+	texture_bridge,
+	texture_driver,
 	other_set_hooks,
 	xr_wait_frame,
 	pose_input_update,
@@ -255,6 +257,8 @@ inline const char* name(Family f) noexcept {
 	case Family::ik_arm_solve: return "ik";
 	case Family::bone_palette: return "palette";
 	case Family::set_texture: return "set_texture";
+	case Family::texture_bridge: return "texture_bridge";
+	case Family::texture_driver: return "texture_driver";
 	case Family::other_set_hooks: return "other_set";
 	case Family::xr_wait_frame: return "wait_frame";
 	case Family::pose_input_update: return "pose_input";
