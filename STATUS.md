@@ -1,7 +1,7 @@
 # STATUS — session handoff
 
 L2_PASS diagnosis-only candidate: build/projector/candidate-collapse-pass-cost,
-source e822c90f (see full SHA in d3d9.build.json), x86 PE32/O2,
+source e822c900a05c0ebe39d438f5e5da60f278799487, x86 PE32/O2,
 DLL D6D1284F858CEF36605903772773E005033899B18B26F16C6C180EB6D2B0B0E8,
 INI 823AA9AA382F1A2E1453ACAEBBCCB35C98BFED80356E5E3DFDF37FFD74F7AA13.
 Install WhatIf PASS/no writes. Parsed config delta vs PID28884 ONLY
