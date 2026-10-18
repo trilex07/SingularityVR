@@ -20,6 +20,7 @@ param(
     [switch]$NativeCameraComfort,
     [switch]$CollapsePerformance,
     [switch]$HolsterProjectionPrepare,
+    [switch]$CollapsePassProbe,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -346,6 +347,14 @@ if ($CollapsePerformance) {
         $iniChanges.Add([ordered]@{key=$key;before=$null;after='1';reason='Collapse test: remove repeated per-bind shadow texture classification and collect bounded asynchronous scene GPU timeline; no quality or gameplay changes.'})
     }
     $planReason='Retain PID31100 render/camera/input behavior. Default-OFF per-bind texture classification deduplication plus bounded async GPU timeline and existing hotpath profile. FPS improvement pending runtime measurement.'
+}
+if ($CollapsePassProbe) {
+    if (-not $CollapsePerformance -or $HolsterProjectionPrepare) { throw 'Pass attribution preserves PID28884 behavior; use CollapsePerformance without new holster optimization.' }
+    if ($iniValues.ContainsKey('Diagnostic/FrameGpuPassProbe')) { throw 'Refusing to overwrite existing pass probe setting.' }
+    $newline = if ($iniText.Contains("`r`n")) { "`r`n" } else { "`n" }
+    $candidateIniBytes=Replace-UniqueAscii $candidateIniBytes '[Diagnostic]' "[Diagnostic]${newline}FrameGpuPassProbe=1"
+    $iniChanges.Add([ordered]@{key='Diagnostic/FrameGpuPassProbe';before=$null;after='1';reason='Partition every bounded sampled frame into actual RT phases and UP/non-UP draw counts; preserve image and all gameplay behavior.'})
+    $planReason+=' Focused per-RT GPU/CPU phase attribution; no ETW or screenshots; no claimed FPS fix.'
 }
 if ($HolsterProjectionPrepare) {
     if (-not $CollapsePerformance) { throw 'Holster projection comparison requires the preceding collapse candidate flags.' }

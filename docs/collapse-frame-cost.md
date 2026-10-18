@@ -207,3 +207,60 @@ PID28884 contains ONLY HolsterProjectionPrepare=1. Accepted-profile install
 WhatIf PASS/no writes. Native muzzle/shadow/hand-anchor CPU regression suite
 and Python trace/particle tests PASS. Steam remains safe restored baseline;
 candidate needs fresh start and physical verification, not promoted.
+
+## Hold the micro-optimization-only test (user direction)
+
+User explicitly requested a larger search/root cause BEFORE another headset
+round. Do not request a test of candidate-holster-cpu alone. No Steam changes.
+
+Rechecked PID28884 collapse interval:74.6FPS/13.402ms vs the90Hz11.111ms target,
+peak3741 original draws versus about2100 earlier; UP peak1131 versus about280.
+These are interval PEAKS, not averages or proof all extra draws are particles.
+They name a substantial workload change (roughly4x UP peak), not its exact shader.
+Input enumeration is zero during the profile; XR action update about.21ms and
+submit about.29ms. OcclusionQueryMode is already2 (native culling), NOT the old
+force-everything-visible workaround. Do not "fix" that stale comment again.
+
+IP samples identified diagnostic constructor706 render-thread self samples.
+Replaying the exact first480-frame per-family invocation volumes in optimized
+x86 standalone accounting-only fixture measured .061611ms/frame OFF and
+.255341ms/frame ON. This does not include ETW cost, game work or nested scope
+layout, but rules out treating this fixture as a multi-millisecond cure.
+Benchmark source: tests/benchmark-hotpath-overhead.cpp. No sampler semantics
+changed and no unmeasured atomic/cache "fix" shipped.
+
+Current evidence does NOT identify a single offending native function. Most
+importantly, the125MiB circular ETL discarded the beginning and was reliable
+only from+11.913s, whereas the collapse happens early. That cannot be repaired
+by further postprocessing or renamed as complete collapse evidence. Earlier
+timestamps also survey only1/8frames and do not identify the expensive pass.
+
+Next justified instrument (defaultOFF Diagnostic/FrameGpuPassProbe), NOT a
+claimed performance fix: partition the existing timestamp region at actual
+successful RT0 binds, retaining chronological phases and original UP/non-UP
+draw counts. No shader/texture/device-state writes, pixel readbacks, new hooks,
+filesystem I/O or allocations from draws. Keys are borrowed opaque identities,
+never dereferenced or AddRef'd. Query storage is allocated before gameplay;
+Reset releases all references. Four-slot async/drop-not-wait ring,32phase cap.
+Every frame of the existing bounded gameplay window is sampled in pass mode;
+otherwise the original1/8cadence and16queries remain. Incomplete/overflow,
+disjoint, mixed scene, backwards timestamps and failed queries cannot produce
+a "complete" pass attribution. End ready but boundary pending stays pending;
+never spin, flush or use stale boundaries. GPU intervals include starvation,
+so CPU submission wall is emitted alongside them, NOT called exclusive GPU busy.
+At report cadence log at most four phases of each worst-wall sampled bucket.
+The sum of complete phase GPU times must equal the same frame's total interval.
+
+Falsifiable question: does a specific RT phase with increased UP work dominate
+the slow frame, or is the increased time outside it / in CPU submission?
+This separates particle/lighting/postprocess work from a generic FPS report
+without disabling effects, reducing resolution or hiding geometry. If the new
+measurement still lacks complete attribution, do NOT pick a shader by guess.
+No ETW/UAC recorder is needed for this pass-cost route.
+
+L1: existing async/failure/Reset tests plus exact per-phase partition, repeated
+same target, A->B->A identity, UP counts, delayed boundary, phase overflow and
+partial expanded allocation cleanup PASS. Real standalone hidden32x32 D3D9Ex:
+80issued/80valid, no skips/invalid/failures, two complete phases sum to total;
+cull state unchanged. Probe+two clears+EndScene+poll averaged .005787ms/frame
+in THIS fixture (not a game-overhead measurement). Steam untouched.

@@ -147,7 +147,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "frame_gpu_probe.h"
 static hotpath::sampler g_hotPathSampler;
 static framegpu::Probe<IDirect3DDevice9,IDirect3DQuery9> g_frameGpu;
-static bool g_frameGpuEnabled=false,g_frameGpuGate=false;
+static bool g_frameGpuEnabled=false,g_frameGpuGate=false,g_frameGpuPassEnabled=false;
 static unsigned g_frameGpuDraws=0;
 static std::uint64_t g_frameGpuSerial=0;
 static LARGE_INTEGER g_frameGpuLastPresent{};
@@ -6619,10 +6619,23 @@ static void ReportHotPathSampler(bool complete=true) {
             if(b.samples){const auto& s=b.worstWall;
                 Log("GPU_SCENE_WORST bucket=%s frame=%llu original_draws=%u gpu_timeline_ms=%.3f first_draw_to_present_cpu_wall_ms=%.3f frame_wall_ms=%.3f display_period_ms=%.3f (same sampled frame)",
                     i?"over_110pct_period":"within_110pct_period",(unsigned long long)s.frame,s.draws,
-                    s.gpuMs,s.submissionMs,s.wallMs,s.periodMs);}
+                    s.gpuMs,s.submissionMs,s.wallMs,s.periodMs);
+                if(g_frameGpuPassEnabled){
+                    Log("GPU_PASS_FRAME frame=%llu complete=%d phases=%u (same worst-wall sampled frame; GPU timeline NOT exclusive busy time)",
+                        (unsigned long long)s.frame,s.passesComplete?1:0,s.passCount);
+                    if(s.passesComplete){
+                        unsigned order[framegpu::maxPasses];for(unsigned p=0;p<s.passCount;++p)order[p]=p;
+                        std::sort(order,order+s.passCount,[&](unsigned a,unsigned b){return s.passes[a].gpuMs>s.passes[b].gpuMs;});
+                        for(unsigned rank=0;rank<std::min(4u,s.passCount);++rank){const unsigned p=order[rank];const auto& pass=s.passes[p];
+                            Log("GPU_PASS_COST frame=%llu phase=%u rank=%u target=%p original_draws=%u user_pointer=%u gpu_timeline_ms=%.3f cpu_submission_wall_ms=%.3f",
+                                (unsigned long long)s.frame,p,rank,(void*)pass.target,pass.draws,pass.userPointerDraws,pass.gpuMs,pass.submissionMs);
+                        }
+                    }
+                }
+            }
         }
-        Log("GPU_SCENE_STATUS issued=%u skipped_ring=%u invalid=%u failures=%u unavailable=%d (1/8 frames, GetData flags=0, no flush/wait)",
-            g_frameGpu.issued,g_frameGpu.skipped,g_frameGpu.invalid,g_frameGpu.failed,g_frameGpu.Unavailable()?1:0);
+        Log("GPU_SCENE_STATUS issued=%u skipped_ring=%u invalid=%u failures=%u unavailable=%d cadence=%u (GetData flags=0, no flush/wait)",
+            g_frameGpu.issued,g_frameGpu.skipped,g_frameGpu.invalid,g_frameGpu.failed,g_frameGpu.Unavailable()?1:0,g_frameGpuPassEnabled?1u:8u);
     }
 }
 
@@ -13513,11 +13526,14 @@ static PFN_DrawIndexedPrim shadowNativeIndexed=nullptr;
 static PFN_DrawPrimUP shadowNativeUP=nullptr;
 static PFN_DrawIndexedPrimUP shadowNativeIndexedUP=nullptr;
 static thread_local unsigned g_nativeFxStereoPairDepth=0;
-static void NoteGameGpuDraw() {
+static void NoteGameGpuDraw(bool userPointer=false) {
     if(!g_frameGpuGate&&!g_frameGpu.Recording())return;
     if(GetCurrentThreadId()!=g_mainThreadId)return;
     if(g_frameGpuGate){g_frameGpuGate=false;g_frameGpu.Begin(g_frameGpuSerial);}
-    if(g_frameGpu.Recording())++g_frameGpuDraws;
+    if(g_frameGpu.Recording()){
+        ++g_frameGpuDraws;
+        g_frameGpu.Draw((uintptr_t)shadowtrace::bound.rt,userPointer);
+    }
 }
 extern volatile LONG g_inForeground;
 extern int g_thisDrawMoved;
@@ -13683,6 +13699,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
     HRESULT hr = g_origSetRenderTarget(dev, idx, surf);
     if (FAILED(hr)) return hr; // Failed binds leave the actual device target unchanged.
     if (idx == 0) shadowtrace::bound.rt=surf;
+    if (idx == 0 && g_frameGpuPassEnabled && GetCurrentThreadId()==g_mainThreadId)g_frameGpu.Target((uintptr_t)surf);
     if (idx == 0) { PauseRttProbe::Bind(surf); PauseRttProbe::ContentBind(surf); }
     // Run 116: which target the first-person pass draws into. If it switches at the foreground
     // boundary the pass is composited from its own surface, and skipping its draws leaves that
@@ -20697,7 +20714,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawPrimUP) return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
-    NoteGameGpuDraw();
+    NoteGameGpuDraw(true);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,2,t,primCount,0,0,0,0,vtxData,vtxStride);   // fix-I census
     if(g_boundShaderLayout.shadow && g_origDrawPrimUP){
@@ -20838,7 +20855,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawIndexedPrimUP) return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
-    NoteGameGpuDraw();
+    NoteGameGpuDraw(true);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,3,t,primCount,numVertices,0,minVtxIndex,0,vtxData,vtxStride);   // fix-I census
     if (!g_origDrawIndexedPrimUP) return D3DERR_INVALIDCALL;
@@ -31789,6 +31806,9 @@ void LoadIniSettings() {
     // The physically accepted shadow/input combination is persistent: missing
     // keys use ON, so existing INIs need no overwrite or temporary flag files.
     g_frameGpuEnabled=GetPrivateProfileIntA("Diagnostic","FrameGpuProbe",0,path)!=0;
+    g_frameGpuPassEnabled=GetPrivateProfileIntA("Diagnostic","FrameGpuPassProbe",0,path)!=0;
+    g_frameGpu.CapturePasses(g_frameGpuPassEnabled);
+    Log("ini: FrameGpuPassProbe=%d (bounded per-RT phases, no readback or ETW)",g_frameGpuPassEnabled?1:0);
     g_holsterProjectionPrepare=GetPrivateProfileIntA("Render","HolsterProjectionPrepare",0,path)!=0;
     Log("ini: HolsterProjectionPrepare=%d (same per-eye projection, prepared once per marker batch)",g_holsterProjectionPrepare?1:0);
     g_textureBindDeduplicate=GetPrivateProfileIntA("Render","TextureBindDeduplicate",0,path)!=0;
@@ -33216,6 +33236,9 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
         shadowOriginalPS=(ShadowSetPS)PatchVTable(*out,107,(void*)&ShadowTraceSetPS);
         shadowOriginalStretch=(ShadowStretch)PatchVTable(*out,34,(void*)&ShadowTraceStretch); // SDK-confirmed device slot.
         shadowNativeClear=g_origClear;if(shadowNativeClear)g_origClear=&ShadowTraceClear;
+        // Opt-in pass-query resources are prewarmed BEFORE gameplay. Do not
+        // attribute their creation cost to the first frame after cinema exit.
+        if(g_frameGpuEnabled&&g_frameGpuPassEnabled)g_frameGpu.Prepare(*out);
         Log("Present + SetVertexShaderConstantF + Draw + SetRenderTarget + SetTexture hooks installed.");
         Log("F7 find the matrix | F1 TRUE stereo | F12 alternate-eye | F10 6-DOF | F9 head tracking");
         if (out && *out) VfxHostInitDevice(*out); // plugin Load + drawer + atlas (absent DLL = no-op)

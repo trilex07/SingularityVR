@@ -8,8 +8,9 @@ enum {D3DQUERYTYPE_TIMESTAMP=10,D3DQUERYTYPE_TIMESTAMPDISJOINT=11,D3DQUERYTYPE_T
     D3DISSUE_BEGIN=2,D3DISSUE_END=1};
 #include "../frame_gpu_probe.h"
 static int live=0,creates=0,releases=0,openRegions=0;
+static std::uint64_t tick=1000;
 struct Query {
-    int type;bool end=false,ready=true,error=false,broken=false;
+    int type;bool end=false,ready=true,error=false,broken=false,dynamic=false;
     std::uint64_t value=0;
     explicit Query(int t,std::uint64_t v):type(t),value(v){++live;}
     HRESULT Issue(DWORD flags){
@@ -17,7 +18,7 @@ struct Query {
         if(type==D3DQUERYTYPE_TIMESTAMPDISJOINT){
             if(flags==D3DISSUE_BEGIN){assert(!end);++openRegions;end=true;}
             else {assert(end);--openRegions;end=false;}
-        }else assert(flags==D3DISSUE_END);
+        }else {assert(flags==D3DISSUE_END);if(dynamic&&type==D3DQUERYTYPE_TIMESTAMP){tick+=1000;value=tick;}}
         return S_OK;
     }
     HRESULT GetData(void* out,DWORD size,DWORD flags){
@@ -29,12 +30,12 @@ struct Query {
     void Release(){++releases;--live;delete this;}
 };
 struct Device {
-    std::vector<Query*> queries;int failAt=-1,timestamps=0;
+    std::vector<Query*> queries;int failAt=-1,timestamps=0;bool dynamic=false;
     HRESULT CreateQuery(int type,Query** out){
         *out=nullptr;if(creates++==failAt)return E_FAIL;
         const auto value=type==D3DQUERYTYPE_TIMESTAMPFREQ?1000000ull:
             type==D3DQUERYTYPE_TIMESTAMP?((timestamps++%2)==0?1000ull:14000ull):0ull;
-        *out=new Query(type,value);queries.push_back(*out);return S_OK;
+        *out=new Query(type,value);(*out)->dynamic=dynamic;queries.push_back(*out);return S_OK;
     }
 };
 using Probe=framegpu::Probe<Device,Query>;
@@ -86,5 +87,37 @@ int main(){
         p.Begin(1);p.End(true,3,11,11);p.Poll();assert(p.failed==1&&p.Unavailable());
         p.Release();assert(live==0&&openRegions==0);
     }
-    std::puts("frame GPU probe: PASS (async, full ring, invalid/disjoint/failure, Reset and ownership)");
+    {
+        Device d;d.dynamic=true;Probe p;assert(p.CapturePasses(true)&&p.Prepare(&d));
+        assert(live==4*(4+framegpu::maxPasses-1));
+        assert(!p.CapturePasses(false)); // no reconfiguration with live queries
+        p.Begin(7);p.Draw(0x1000,false);p.Draw(0x1000,true);p.Target(0x2000);p.Draw(0x2000,true);
+        p.Target(0x2000);p.Target(0x1000);p.Draw(0x1000,false);p.End(true,4,17,11.11);p.Poll();
+        const auto& s=p.over.worstWall;assert(s.passesComplete&&s.passCount==3);
+        assert(s.passes[0].target==0x1000&&s.passes[0].draws==2&&s.passes[0].userPointerDraws==1);
+        assert(s.passes[1].target==0x2000&&s.passes[1].draws==1&&s.passes[1].userPointerDraws==1);
+        assert(s.passes[2].target==0x1000&&s.passes[2].draws==1);
+        double sum=0;for(unsigned i=0;i<s.passCount;++i)sum+=s.passes[i].gpuMs;
+        assert(std::abs(sum-s.gpuMs)<1e-12&&s.passes[0].gpuMs==1&&s.passes[1].gpuMs==1);
+        p.Release();assert(live==0&&openRegions==0);
+    }
+    {
+        Device d;d.dynamic=true;Probe p;p.CapturePasses(true);assert(p.Prepare(&d));
+        p.Begin(1);for(unsigned i=0;i<framegpu::maxPasses+4;++i)p.Draw(0x1000+i,true);
+        p.End(true,40,17,11.11);p.Poll();
+        assert(p.over.samples==1&&!p.over.worstWall.passesComplete); // cap is NOT a complete attribution
+        p.Release();assert(live==0);
+    }
+    {
+        Device d;d.dynamic=true;Probe p;p.CapturePasses(true);assert(p.Prepare(&d));
+        p.Begin(1);p.Draw(1,false);p.Target(2);p.Draw(2,false);p.End(true,2,17,11.11);
+        d.queries[4]->ready=false;p.Poll();assert(p.over.samples==0);
+        d.queries[4]->ready=true;p.Poll();assert(p.over.samples==1&&p.over.worstWall.passesComplete);
+        p.Release();assert(live==0);
+    }
+    {
+        Device d;d.failAt=creates+20;Probe p;p.CapturePasses(true);assert(!p.Prepare(&d));
+        assert(p.Unavailable()&&live==0); // partial expanded-query allocation unwinds every ref
+    }
+    std::puts("frame GPU probe: PASS (async, full ring, invalid/disjoint/failure, Reset, per-RT partition, overflow refuses attribution)");
 }

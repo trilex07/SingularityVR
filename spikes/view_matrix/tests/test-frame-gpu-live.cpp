@@ -21,26 +21,39 @@ int main(){
     if(!window||FAILED(api->CreateDeviceEx(D3DADAPTER_DEFAULT,D3DDEVTYPE_HAL,window,D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,nullptr,&device))){
         if(window)DestroyWindow(window);api->Release();FreeLibrary(library);return 1;}
     framegpu::Probe<IDirect3DDevice9,IDirect3DQuery9> probe;
+    probe.CapturePasses(true);
     const bool supported=probe.Prepare(device);
     // Hidden dummy windows can be occluded, so Present need not submit work.
     // Fixture-only flush requests drive the queue; the production probe never
     // flushes or waits (the game's existing XR-copy path already submits).
     IDirect3DQuery9* fixtureSubmit=nullptr;device->CreateQuery(D3DQUERYTYPE_EVENT,&fixtureSubmit);
     DWORD cullBefore=0,cullAfter=0;device->GetRenderState(D3DRS_CULLMODE,&cullBefore);
+    double instrumentCpuMs=0;LARGE_INTEGER clock{};QueryPerformanceFrequency(&clock);
     if(supported)for(unsigned frame=0;frame<240;++frame){
         if(FAILED(device->BeginScene()))break;
+        LARGE_INTEGER t0{},t1{};QueryPerformanceCounter(&t0);
         if(frame<80)probe.Begin(frame);
+        probe.Draw(1,false);
         device->Clear(0,nullptr,D3DCLEAR_TARGET,0xff123456,1,0);
+        probe.Target(2); // synthetic boundary identity, no actual RT/state mutation
+        probe.Draw(2,true);
+        device->Clear(0,nullptr,D3DCLEAR_TARGET,0xff334455,1,0);
         device->EndScene();probe.End(true,1,11.1,1000.0/90);
+        QueryPerformanceCounter(&t1);instrumentCpuMs+=double(t1.QuadPart-t0.QuadPart)*1000/clock.QuadPart;
         device->Present(nullptr,nullptr,nullptr,nullptr);
         if(fixtureSubmit){fixtureSubmit->Issue(D3DISSUE_END);fixtureSubmit->GetData(nullptr,0,D3DGETDATA_FLUSH);}
-        Sleep(1);probe.Poll();
+        Sleep(1);QueryPerformanceCounter(&t0);probe.Poll();QueryPerformanceCounter(&t1);
+        instrumentCpuMs+=double(t1.QuadPart-t0.QuadPart)*1000/clock.QuadPart;
     }
     device->GetRenderState(D3DRS_CULLMODE,&cullAfter);
     const unsigned samples=probe.within.samples+probe.over.samples;
     std::printf("D3D9Ex fixture: supported=%d issued=%u samples=%u skipped=%u invalid=%u failures=%u stateUnchanged=%d (synthetic scene, not Steam FPS)\n",
         supported?1:0,probe.issued,samples,probe.skipped,probe.invalid,probe.failed,cullBefore==cullAfter?1:0);
-    const bool ok=supported&&samples>0&&!probe.failed&&cullBefore==cullAfter;
+    const auto& sample=probe.within.samples?probe.within.worstWall:probe.over.worstWall;
+    const double partition=sample.passes[0].gpuMs+sample.passes[1].gpuMs;
+    std::printf("pass fixture: complete=%d phases=%u sumMatches=%d\n",sample.passesComplete?1:0,sample.passCount,std::abs(partition-sample.gpuMs)<1e-9?1:0);
+    std::printf("fixture CPU probe+two clears+EndScene+poll average=%.6f ms/frame (NOT game overhead or GPU busy time)\n",instrumentCpuMs/240);
+    const bool ok=supported&&samples>0&&!probe.failed&&cullBefore==cullAfter&&sample.passesComplete&&sample.passCount==2&&std::abs(partition-sample.gpuMs)<1e-9;
     probe.Release();if(fixtureSubmit)fixtureSubmit->Release();device->Release();api->Release();DestroyWindow(window);FreeLibrary(library);
     return ok?0:supported?1:2;
 }

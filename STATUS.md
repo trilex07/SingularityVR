@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+HOLD_TEST: user asks broader optimization/root cause before another PSVR2 round.
+DO NOT request a holster-only .2ms test or repeat the30s ETL. Game untouched.
+Rechecked collapse: UP peak280->1131, original draws~2100->3741;13.402ms frame
+aggregate vs11.111ms target. NOT proof of exact particle shader/GPU-only cause.
+OcclusionQueryMode already2; no enum in gameplay. Accounting-only replay measured
+.061611ms OFF/.255341ms ON; no speculative sampler change. Existing ETL does
+not contain reliable beginning of collapse, so no single native culprit proven.
+Prepared defaultOFF FrameGpuPassProbe: per-RT chronological phases, UP/non-UP
+counts, CPU wall plus GPU timeline, every bounded frame, async four-slot ring,
+32phase cap refuses incomplete attribution, no pixels/ETW/state changes/new hooks.
+L1 + standalone D3D9Ex80/80valid PASS. Full build/candidate preparation follows.
+Keep baseline DLL789749E5/INI8B0B0B4C/UI51CDAB5C/injector5B948DDB safe.
+
 READY_FOR_PHYSICAL_TEST, NOT runtime/PSVR2 verified: candidate-holster-cpu.
 Build e7506c702265e17417df4743dd1ff1c0fa3778f4 x86 PE32/O2,
 DLL D0B226500ED85A789413A365FDC7B071CE18CBBADC5DB3986DF505C9BC2972D0,
