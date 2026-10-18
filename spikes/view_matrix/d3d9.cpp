@@ -4946,6 +4946,7 @@ struct ShaderLayoutEntry { IDirect3DVertexShader9* shader; skeletal::Layout layo
 #include "shadow_world_receiver_fix.h"
 #include "shadow_clear_gate.h"
 #include "shadow_first_person_receiver_fix.h"
+#include "projector_receiver_fix.h"
 ShaderLayoutEntry g_shaderLayouts[1024]{};
 unsigned g_shaderLayoutNext=0;
 skeletal::Layout g_boundShaderLayout;
@@ -4995,6 +4996,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVS(IDirect3DDevice9* dev,IDirect3DVertexShader
     nativefx::BindVS(shader);
     shadowfix::BindVS(shader);
     worldshadowfix::BindVS(shader);
+    projectorfix::BindVS(shader);
     g_boundShaderLayout={};
     if(shader)for(unsigned i=0;i<1024;++i) {
         const unsigned s=(ShaderLayoutHash(shader)+i)&1023;
@@ -13446,6 +13448,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
                 g_camMats[slot].conv = c;
                 g_camMats[slot].valid = true;
                 memcpy(g_camMats[slot].m, m, sizeof(g_camMats[slot].m));
+                projectorfix::NoteCamera(g_lockedReg,c,data+j*4,reinterpret_cast<const float*>(m));
             }
             g_camMatrixBound = true;
         }
@@ -13487,6 +13490,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMIT
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,INT base,UINT min,UINT verts,UINT start,UINT prims) {
     nativefx::PathObserve(1,g_nativeFxStereoPairDepth!=0);
+    projectorfix::Scope projector(dev,projectorfix::pairDepth!=0&&Rd(g_dupDraws)&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!g_thisDrawMoved&&!CutsceneNativeCameraArmed(),verts,prims);
     if(nativefx::selected.mode==1&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&!CutsceneNativeCameraArmed()&&nativefx::Drop())return D3D_OK;
     shadowfix::Scope fix(dev,Rd(g_rtIsScene)!=0,verts,prims);
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
@@ -13522,7 +13526,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceStretch(IDirect3DDevice9* dev,IDirec
 }
 static ShadowSetPS shadowOriginalPS=nullptr;
 static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
-    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);nativefx::BindPS(ps);}return hr;
+    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);projectorfix::BindPS(ps);nativefx::BindPS(ps);}return hr;
 }
 // Fix-I/menu census: wire the dormant MenuDrawTrace recorder into the four draw hooks
 // (calls below) with path masks in StereoPairBody (1) and HudStereoPair (2); provider
@@ -13806,6 +13810,7 @@ static void VfxCaptureBaseCam(const float* mat, int conv) {
 
 template <typename DrawFn>
 HRESULT StereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
+    projectorfix::PairScope projectorPath;
     struct PathScope {
         bool active;
         PathScope():active(nativefx::PathWitness()){if(active)++g_nativeFxStereoPairDepth;}
@@ -26240,7 +26245,7 @@ void ReleaseWristResources() {
     InterlockedExchange(&g_centurionShellSeenGun,0);InterlockedIncrement(&g_centurionShellGeneration);
     g_centurionPresentationSafety.Reset();
     hipknife::Release(g_centurionMarkerState);
-    shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();worldshadowfix::Release();
+    shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();worldshadowfix::Release();projectorfix::Release();
     PauseRttProbe::ReleaseContent();
     ReleaseVrMenuResources();
     ReleaseVrShadowResources();
@@ -28310,6 +28315,7 @@ static void StartupReadinessFrame(IDirect3DDevice9* dev){
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
     shadowfix::Poll(g_logPath);
     worldshadowfix::Poll(g_logPath);
+    projectorfix::Poll();
     shadowcleargate::Poll(g_logPath);
     fpshadowfix::Poll(g_logPath);
     NativeGamepadEnumProbe::Poll(g_logPath);
@@ -31689,6 +31695,7 @@ void LoadIniSettings() {
     // The physically accepted shadow/input combination is persistent: missing
     // keys use ON, so existing INIs need no overwrite or temporary flag files.
     const bool worldShadow=GetPrivateProfileIntA("Render","ShadowWorldReceiverFix",1,path)!=0;
+    projectorfix::Configure(GetPrivateProfileIntA("Render","ProjectorWorldStereo",1,path)!=0);
     const bool foregroundShadow=GetPrivateProfileIntA("Render","ShadowForegroundClearFix",1,path)!=0;
     const bool firstShadow=GetPrivateProfileIntA("Render","ShadowFirstPersonReceiverFix",1,path)!=0;
     const bool inputCache=GetPrivateProfileIntA("Input","InputEnumerationCache",1,path)!=0;
