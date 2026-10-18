@@ -279,7 +279,24 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
     // Refuse an absolute/other-space matrix rather than publishing a far-away
     // or frozen interaction point. This is a validity bound, not calibration.
     const auto& hand=g_handLastPos[1];
-    if(hipknife::Length(socket-hipknife::V{hand.x,hand.y,hand.z})>.75f){note(9);return 0;}
+    const float socketHandDistance=hipknife::Length(socket-hipknife::V{hand.x,hand.y,hand.z});
+    if(socketHandDistance>.75f){
+        // Read-only, bounded evidence for the failed native-to-XR transform.
+        // Record both spaces before changing any matrix order or safety bound.
+        static ULONGLONG nextGeometry[3]{};
+        static unsigned geometryNotes[3]{};
+        if(geometryNotes[index]<4&&now>=nextGeometry[index]){
+            ++geometryNotes[index];nextGeometry[index]=now+2000;
+            Log("next reload socket geometry: kind=%d distance=%.3f socket=(%.3f,%.3f,%.3f) hand=(%.3f,%.3f,%.3f) centre=(%.3f,%.3f,%.3f) root=(%.2f,%.2f,%.2f) local=(%.2f,%.2f,%.2f) controller=(%.2f,%.2f,%.2f) yaw=(%.3f,%.3f) units=%.3f",
+                int(kind),socketHandDistance,socket.x,socket.y,socket.z,
+                hand.x,hand.y,hand.z,g_centrePos[0],g_centrePos[1],g_centrePos[2],
+                nativeRoot.m[3][0],nativeRoot.m[3][1],nativeRoot.m[3][2],
+                local.m[3][0],local.m[3][1],local.m[3][2],
+                controller.m[3][0],controller.m[3][1],controller.m[3][2],
+                g_centreYaw,g_baseYaw*(6.2831853f/65536.f),MetresToUU());
+        }
+        note(9);return 0;
+    }
     bool published=false;
     if(TryAcquireSRWLockExclusive(&g_nextVisualLock)){
         g_nextWitness={true,kind,visual.pawn,visual.weapon,now,socket,clipTracking,nativeRoot};published=true;

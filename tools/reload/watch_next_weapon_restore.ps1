@@ -49,14 +49,14 @@ foreach($entry in $receipt){
         throw "Bad asset backup: $rel"
     }
 }
-Write-Output "READY: nine-file reload asset lease; ${LaunchWindowSeconds}s no-launch window, restore 10s after exit"
+Write-Output "READY: nine-file reload asset lease; ${LaunchWindowSeconds}s no-launch window, restore after 30s stable exit"
 $deadline=(Get-Date).AddSeconds($LaunchWindowSeconds);$seen=$false;$idle=$null
 while($true){
     if(@(Get-CimInstance Win32_Process -Filter "Name='Singularity.exe'" -ErrorAction Stop).Count){
         $seen=$true;$idle=$null
     }elseif($seen){
         if(-not $idle){$idle=Get-Date}
-        if(((Get-Date)-$idle).TotalSeconds -ge 10){break}
+        if(((Get-Date)-$idle).TotalSeconds -ge 30){break}
     }elseif((Get-Date) -ge $deadline){break}
     Start-Sleep -Seconds 2
 }

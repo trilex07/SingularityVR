@@ -75,7 +75,7 @@ if($Action -eq 'Deploy'){
     Write-Output "Next-weapon assets deployed and verified: $backup"
 }else{
     $manifest=Join-Path $backup 'assets.json'
-    $receipt=@(Get-Content -Raw -LiteralPath $manifest | ConvertFrom-Json)
+    $receipt=Get-Content -Raw -LiteralPath $manifest | ConvertFrom-Json
     if($receipt.Count -ne 9){throw 'Asset rollback manifest must have nine exact files'}
     foreach($entry in $receipt){
         $target=Target $entry.path

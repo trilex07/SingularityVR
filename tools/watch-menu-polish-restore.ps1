@@ -29,11 +29,11 @@ foreach($entry in $metadata.Files){
  $map += [pscustomobject]@{Target=('Binaries/'+$entry.Name);Source=$source}
 }
 $ticket=Assert-AcceptedDeployment -GameRoot $gameRoot -ProfilePath $profile -ChangePlanPath $plan -FileMap $map -Direction Rollback
-Write-Output "READY: exact DLL/INI menu lease; ${LaunchWindowSeconds}s no-launch window, restore 10s after exit"
+Write-Output "READY: exact DLL/INI menu lease; ${LaunchWindowSeconds}s no-launch window, restore after 30s stable exit"
 $deadline=(Get-Date).AddSeconds($LaunchWindowSeconds);$seen=$false;$idle=$null
 while($true){
  if(@(Get-CimInstance Win32_Process -Filter "Name='Singularity.exe'" -ErrorAction Stop).Count){$seen=$true;$idle=$null}
- elseif($seen){if(-not $idle){$idle=Get-Date};if(((Get-Date)-$idle).TotalSeconds -ge 10){break}}
+ elseif($seen){if(-not $idle){$idle=Get-Date};if(((Get-Date)-$idle).TotalSeconds -ge 30){break}}
  elseif((Get-Date) -ge $deadline){break}
  Start-Sleep -Seconds 2
 }

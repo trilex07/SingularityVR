@@ -288,3 +288,35 @@ showed `(O)`, so it does not prove ownership of that visible `Pad 3` prompt.
 The diagnostic now also logs exact `Pad 3` text at the localization producer;
 do not globally remap this token because other actions share numbered pad
 glyphs. The VR Settings laser was not reported in this trial.
+
+### 2026-10-19 Valkyrie headset trial
+
+The installed test DLL was `FE79F27D...`, with original reload assets temporarily
+installed. Steam/OpenXR ran at 90 FPS before gameplay. The tester confirmed that
+the new bilingual instruction appears after Circle on Valkyrie but **does not
+replace** the native `Pad 3` prompt; Centurion has no equivalent transient
+instruction. Valkyrie's Circle did not eject a magazine, while native button
+reload remained available. The Steam screenshot looked correct to the tester,
+including its eye/HUD composition; this does not validate the magazine path.
+
+Runtime evidence: exact Valkyrie object, fresh 26/144/30 ammo, native method,
+tracked hands and Circle edges all passed. `PrepareNextReload` identified the
+original Valkyrie body draw, valid palette and reconstructible socket, then
+rejected it at **stage 9** because the reconstructed socket was over 0.75 m
+from the right controller. The read-only input consumer therefore correctly
+reported `witness=0`, `valid=0`, event none. The observed 1.44-1.58 m
+`socketDist` in that line is the *left hand to an unset socket*, not the stage-9
+right-hand distance. Do not loosen the 0.75 m gate or block native reload yet.
+Next diagnostic logs four bounded samples of the two XR points and root/local/
+controller translation to identify the mismatched coordinate space. An offline
+roundtrip proves the algebra for constructed matrices, but not the live UE3
+matrix producer.
+
+The native text producer was identified as `Keyboard/Button2` -> `Pad 3`; it
+appeared both with Centurion and Valkyrie. That generic label alone does not
+prove a reload-only semantic, so a global substitution to O remains unsafe.
+After the test, exact accepted DLL/INI/UI hashes were verified and all nine
+temporary assets were removed. Both automatic restore helpers had failed on
+this run (a relaunch race and a PowerShell array wrapper respectively), so MAIN
+performed a guarded manual rollback and fixed the asset receipt parser. The
+restore leases now require 30 seconds of stable process absence before acting.
