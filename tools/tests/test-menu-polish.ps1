@@ -18,6 +18,14 @@ $overlay=Get-Content -Raw -LiteralPath (Join-Path $repo 'spikes/view_matrix/vr_m
 $input=Get-Content -Raw -LiteralPath (Join-Path $repo 'spikes/view_matrix/native_ui_input.h')
 $policy=Get-Content -Raw -LiteralPath (Join-Path $repo 'spikes/view_matrix/modal_menu_policy.h')
 $ini=Get-Content -Raw -LiteralPath (Join-Path $repo 'spikes/view_matrix/SingularityVR.ini')
+if($renderer -notmatch 'const float screenU=uipointer::CanvasToEye\(u,g_vrMenuPanel\.plane\.inset\)' -or
+   $renderer -notmatch 'const float screenV=uipointer::CanvasToEye\(v,g_vrMenuPanel\.plane\.inset\)' -or
+   $renderer -match 'const float localU = dup \?'){
+    throw 'VR Settings hit-test must use the inset head-plane UV, not a second SBS split'
+}
+if($ini -notmatch '(?m)^VrPromptTokens=1\s*$'){
+    throw 'New installations must enable exact VR action-token labels'
+}
 if($ini -notmatch '(?m)^FrontMenuScalePct=72\s*$'){throw 'frontend menu scale is not 72 percent'}
 if($renderer -notmatch 'handhud::Visible\(Rd\(g_healthPlate\)' -or
    $renderer -notmatch 'handhud::Visible\(Rd\(g_ammoPlate\)' -or
