@@ -33,6 +33,10 @@ $targets=[ordered]@{
     # Preserve the already accepted native particle correction. Omitting this
     # default-OFF key caused the 2026-10-18 headset VFX regression.
     'Render/NativeMuzzleParticleStereo'='1'
+    # SteamVR imports the completed XR surface, not the desktop F12 image.
+    # Transparent XR alpha accumulated stale HUD frames in the user screenshot;
+    # the opaque-alpha path was physically accepted on 2026-10-18.
+    'Render/XrCaptureOpaqueAlpha'='1'
     'Render/VrPromptTokens'='1'
     'Render/DesktopMirrorWindow'='1'
     # 65.625 UU/m: center moves from ~27 to ~21 cm off the torso; the store

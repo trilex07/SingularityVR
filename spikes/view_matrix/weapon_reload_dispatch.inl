@@ -177,7 +177,9 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
             next.drop=g_nextVisual.drop;next.dropMs=g_nextVisual.dropMs;
             next.rootValid=g_nextVisual.rootValid;next.root=g_nextVisual.root;next.nativeEnd=g_nextVisual.nativeEnd;
             next.insertedMs=g_nextVisual.insertedMs;
+            next.hintUntilMs=g_nextVisual.hintUntilMs;
         }
+        if(circleEdge&&next.valid)next.hintUntilMs=now+8000;
         if(result.ejectMagazine){next.drop=witness.clipTracking;next.dropMs=now;
             next.rootValid=true;next.root=witness.nativeRoot;next.nativeEnd=0;next.insertedMs=0;}
         if(result.reloadIntent&&permit&&index<3){

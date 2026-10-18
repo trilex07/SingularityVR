@@ -113,6 +113,26 @@ the existing engine FString allocator handles expanded labels. Runtime token
 consumption remains unproven until a pickup/tutorial/reload hint is encountered.
 If it still shows PadN, inspect the actual post-localization alias producer.
 
+## 2026-10-19 rifle screenshot and reload hint candidate
+
+The later Valkyrie SteamVR screenshot again shows several ammo HUD copies with
+different values. The rifle candidate generator omitted the previously
+physically accepted `Render/XrCaptureOpaqueAlpha=1`; the feature is default
+OFF. The candidate generator now carries that exact setting, with a source
+contract test for the after-overlay/before-XR-copy order. This is an evidence-
+based recurrence of the screenshot configuration regression, not yet a new
+physical pass for this candidate.
+
+The native `Pad 3` producer remains unidentified. Do not globally rewrite the
+number: native Pad 3 is not proof of the reload action. A bounded VR-owned
+hint now appears for eight seconds after Circle with a tracked supported
+magazine weapon, using the same Polish/English three-step strings as the
+in-game tutorial. Each eye gets one scaled copy; menus and cinematics exclude
+it. This communicates the intended controls but does not suppress the native
+glyph or claim the Valkyrie transaction works. The next Steam run should read
+the bounded `next reload draw gate: stage=...` lines to identify why the
+Valkyrie socket witness is missing before changing the reload mechanism.
+
 Prepared offline bundle: `build/note-prompt-20261018`, production sources
 `ec54bba`, x86 PE32 `/O2`, DLL SHA-256
 `780AEC1F92AB3D2E5715CC95D25D3350B3418A764BFD0620399A3E0F5ABAC954`;

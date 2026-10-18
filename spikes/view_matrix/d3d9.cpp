@@ -2331,6 +2331,7 @@ struct NextReloadVisual {
     armbind::Mat drop{};ULONGLONG dropMs=0;
     bool rootValid=false;armbind::Mat root{};ULONGLONG nativeEnd=0;
     ULONGLONG insertedMs=0;
+    ULONGLONG hintUntilMs=0; // explicit, short VR instruction after Circle; guarded by g_nextVisualLock
 };
 static NextReloadVisual g_nextVisual;
 static weaponreload::Witness g_nextWitness;
@@ -2340,6 +2341,7 @@ static void ReleaseNextReloadGPU();
 static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool circleDown);
 static int PrepareNextReload(IDirect3DDevice9*,INT,UINT,UINT,UINT,UINT,float*,UINT&,weaponreload::ReplayPlan&);
 static void DrawNextReload(IDirect3DDevice9*);
+static void DrawNextReloadHint(IDirect3DDevice9*);
 static void CancelNextReload(){
     const bool owned=g_nextOwnsGrip;
     g_nextReloadState={};g_nextReloadState.transaction.ownsGrip=owned;
@@ -25608,6 +25610,59 @@ static int TextRects(D3DRECT* r, int n, int cap, int x0, int y0, int px, const c
     return n;
 }
 
+// A short, VR-owned explanation for the three magazine weapons. The native
+// Pad-N glyph has not been identified, so this does not mutate its producer or
+// pretend to replace it. It appears only after Circle in tracked gameplay,
+// for eight seconds, inside EACH eye; the Settings tutorial uses the same text.
+static void DrawNextReloadHint(IDirect3DDevice9* dev) {
+    if(!dev||!NextReloadEnabled()||!VrModeOn()||!InGameplay()||!Rd(g_dupDraws)||
+       Rd(g_gamePaused)||Rd(g_vrUiMenu)||Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||
+       CutsceneNativeCameraArmed()||g_xrSessionState!=XR_SESSION_STATE_FOCUSED)return;
+    NextReloadVisual visual;
+    if(!TryAcquireSRWLockShared(&g_nextVisualLock))return;
+    visual=g_nextVisual;ReleaseSRWLockShared(&g_nextVisualLock);
+    const ULONGLONG now=GetTickCount64();
+    if(!visual.valid||visual.kind==weaponreload::Kind::None||
+       visual.weapon!=(uint32_t)Rd(g_weaponObj)||now>=visual.hintUntilMs||
+       visual.hintUntilMs-now>8000)return;
+    IDirect3DSurface9* back=nullptr;IDirect3DSurface9* oldRt=nullptr;
+    if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
+    D3DSURFACE_DESC desc{};D3DVIEWPORT9 oldVp{};DWORD oldScissor=FALSE;
+    const bool state=SUCCEEDED(back->GetDesc(&desc))&&SUCCEEDED(dev->GetViewport(&oldVp))&&
+        SUCCEEDED(dev->GetRenderState(D3DRS_SCISSORTESTENABLE,&oldScissor))&&
+        SUCCEEDED(dev->GetRenderTarget(0,&oldRt))&&oldRt;
+    if(!state||desc.Width<4||desc.Height<4){if(oldRt)oldRt->Release();back->Release();return;}
+    const auto& step=vrtutorial::GetStep(
+        PolishLocalization::PL().IsPolishEnabled()?vrtutorial::Language::Polish:vrtutorial::Language::English,3);
+    const int half=int(desc.Width/2),h=int(desc.Height);
+    int widest=0;for(int i=0;i<3;++i)widest=std::max(widest,TextGlyphCount(step.line[i]));
+    int px=std::max(2,std::min(5,h/450));
+    while(px>1&&(widest+2)*(kGlyphW+1)*px>half*84/100)--px;
+    if(px<2){oldRt->Release();back->Release();return;}
+    const int line=(kGlyphH+5)*px,boxW=(widest+2)*(kGlyphW+1)*px;
+    const int top=h*70/100,boxH=3*line+2*px;
+    if(top+boxH>=h){oldRt->Release();back->Release();return;}
+    if(g_origSetRenderTarget)g_origSetRenderTarget(dev,0,back);else dev->SetRenderTarget(0,back);
+    D3DVIEWPORT9 full{0,0,desc.Width,desc.Height,0.0f,1.0f};dev->SetViewport(&full);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
+    D3DRECT plates[2]{};
+    for(int eye=0;eye<2;++eye){const int cx=eye*half+half/2;
+        plates[eye]={(LONG)(cx-boxW/2-2*px),(LONG)top,(LONG)(cx+boxW/2+2*px),(LONG)(top+boxH)};
+    }
+    ClearRects(dev,plates,2,D3DCOLOR_XRGB(13,19,23));
+    constexpr int cap=3*64*21*2;static D3DRECT glyphs[cap];int n=0;
+    for(int eye=0;eye<2;++eye)for(int row=0;row<3;++row){
+        const int cx=eye*half+half/2;
+        n=TextRects(glyphs,n,cap,cx-TextGlyphCount(step.line[row])*(kGlyphW+1)*px/2,
+                    top+(row+1)*line,px,step.line[row]);
+    }
+    ClearRects(dev,glyphs,n,D3DCOLOR_XRGB(230,236,234));
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,oldScissor);
+    dev->SetViewport(&oldVp);
+    if(g_origSetRenderTarget)g_origSetRenderTarget(dev,0,oldRt);else dev->SetRenderTarget(0,oldRt);
+    oldRt->Release();back->Release();
+}
+
 // ---- ⭐ run 129: show the anchor where it actually IS ----
 //
 // The anchor is a point in space, and tuning it by watching what swings is inference. Drawing it
@@ -28935,6 +28990,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // the linker dropped it with all its row strings. Drawn here, with the game input
     // already owned by the panel (ClearPad) while it is open. Exactly one call.
     if (InterlockedCompareExchange(&g_panelOpen, 0, 0)) DrawVrPanel(s);
+    DrawNextReloadHint(s);
     // The in-VR engineering panel is retired from user builds. It obscured the game and made
     // headset screenshots unusable in the production DLL. This isolated options DLL exposes it
     // again because the cutscene presentation choice must be reachable without editing the INI.
