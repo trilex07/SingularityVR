@@ -6627,8 +6627,10 @@ static void ReportHotPathSampler(bool complete=true) {
                         unsigned order[framegpu::maxPasses];for(unsigned p=0;p<s.passCount;++p)order[p]=p;
                         std::sort(order,order+s.passCount,[&](unsigned a,unsigned b){return s.passes[a].gpuMs>s.passes[b].gpuMs;});
                         for(unsigned rank=0;rank<std::min(4u,s.passCount);++rank){const unsigned p=order[rank];const auto& pass=s.passes[p];
-                            Log("GPU_PASS_COST frame=%llu phase=%u rank=%u target=%p original_draws=%u user_pointer=%u gpu_timeline_ms=%.3f cpu_submission_wall_ms=%.3f",
-                                (unsigned long long)s.frame,p,rank,(void*)pass.target,pass.draws,pass.userPointerDraws,pass.gpuMs,pass.submissionMs);
+                            Log("GPU_PASS_COST frame=%llu phase=%u rank=%u target=%p api=%d original_draws=%u user_pointer=%u gpu_timeline_ms=%.3f cpu_submission_wall_ms=%.3f unknown_shader_pairs=%u",
+                                (unsigned long long)s.frame,p,rank,(void*)pass.target,pass.kind,pass.draws,pass.userPointerDraws,pass.gpuMs,pass.submissionMs,pass.unknownPairs);
+                            for(const auto& pair:pass.pairs)if(pair.draws)Log("GPU_PASS_PAIR frame=%llu phase=%u VS=%016llX PS=%016llX original_draws=%u (frequency only, NOT per-shader GPU time)",
+                                (unsigned long long)s.frame,p,(unsigned long long)pair.vs,(unsigned long long)pair.ps,pair.draws);
                         }
                     }
                 }
@@ -13532,7 +13534,7 @@ static void NoteGameGpuDraw(bool userPointer=false) {
     if(g_frameGpuGate){g_frameGpuGate=false;g_frameGpu.Begin(g_frameGpuSerial);}
     if(g_frameGpu.Recording()){
         ++g_frameGpuDraws;
-        g_frameGpu.Draw((uintptr_t)shadowtrace::bound.rt,userPointer);
+        g_frameGpu.Draw((uintptr_t)shadowtrace::bound.rt,userPointer,nativefx::vs.hash,nativefx::ps.hash);
     }
 }
 extern volatile LONG g_inForeground;

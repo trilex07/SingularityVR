@@ -237,18 +237,21 @@ timestamps also survey only1/8frames and do not identify the expensive pass.
 
 Next justified instrument (defaultOFF Diagnostic/FrameGpuPassProbe), NOT a
 claimed performance fix: partition the existing timestamp region at actual
-successful RT0 binds, retaining chronological phases and original UP/non-UP
-draw counts. No shader/texture/device-state writes, pixel readbacks, new hooks,
+successful RT0 binds AND transitions between buffered/UP drawing, retaining
+chronological phases and original UP/non-UP draw counts. Four fixed shader-pair
+hash counters per phase identify contributing bytecode; overflow is explicit.
+Pair frequencies are NOT per-shader GPU timings. No shader/texture/device-state writes, pixel readbacks, new hooks,
 filesystem I/O or allocations from draws. Keys are borrowed opaque identities,
 never dereferenced or AddRef'd. Query storage is allocated before gameplay;
-Reset releases all references. Four-slot async/drop-not-wait ring,32phase cap.
+Reset releases all references. Four-slot async/drop-not-wait ring,64phase cap.
 Every frame of the existing bounded gameplay window is sampled in pass mode;
 otherwise the original1/8cadence and16queries remain. Incomplete/overflow,
 disjoint, mixed scene, backwards timestamps and failed queries cannot produce
 a "complete" pass attribution. End ready but boundary pending stays pending;
 never spin, flush or use stale boundaries. GPU intervals include starvation,
 so CPU submission wall is emitted alongside them, NOT called exclusive GPU busy.
-At report cadence log at most four phases of each worst-wall sampled bucket.
+At report cadence log at most four phases of each worst-wall sampled bucket,
+each with at most four retained shader-pair identities.
 The sum of complete phase GPU times must equal the same frame's total interval.
 
 Falsifiable question: does a specific RT phase with increased UP work dominate
@@ -263,4 +266,6 @@ same target, A->B->A identity, UP counts, delayed boundary, phase overflow and
 partial expanded allocation cleanup PASS. Real standalone hidden32x32 D3D9Ex:
 80issued/80valid, no skips/invalid/failures, two complete phases sum to total;
 cull state unchanged. Probe+two clears+EndScene+poll averaged .005787ms/frame
-in THIS fixture (not a game-overhead measurement). Steam untouched.
+in THIS fixture (not a game-overhead measurement). With buffered/UP splitting
+and fixed shader census the subsequent fixture averaged .007498ms/frame,
+again80/80 complete partitions and no errors. Steam untouched.

@@ -91,15 +91,25 @@ int main(){
         Device d;d.dynamic=true;Probe p;assert(p.CapturePasses(true)&&p.Prepare(&d));
         assert(live==4*(4+framegpu::maxPasses-1));
         assert(!p.CapturePasses(false)); // no reconfiguration with live queries
-        p.Begin(7);p.Draw(0x1000,false);p.Draw(0x1000,true);p.Target(0x2000);p.Draw(0x2000,true);
+        p.Begin(7);p.Draw(0x1000,false,11,22);p.Draw(0x1000,false,11,22);p.Target(0x2000);p.Draw(0x2000,true,33,44);
         p.Target(0x2000);p.Target(0x1000);p.Draw(0x1000,false);p.End(true,4,17,11.11);p.Poll();
         const auto& s=p.over.worstWall;assert(s.passesComplete&&s.passCount==3);
-        assert(s.passes[0].target==0x1000&&s.passes[0].draws==2&&s.passes[0].userPointerDraws==1);
+        assert(s.passes[0].target==0x1000&&s.passes[0].draws==2&&s.passes[0].userPointerDraws==0);
+        assert(s.passes[0].kind==0&&s.passes[0].pairs[0].vs==11&&s.passes[0].pairs[0].draws==2);
         assert(s.passes[1].target==0x2000&&s.passes[1].draws==1&&s.passes[1].userPointerDraws==1);
         assert(s.passes[2].target==0x1000&&s.passes[2].draws==1);
         double sum=0;for(unsigned i=0;i<s.passCount;++i)sum+=s.passes[i].gpuMs;
         assert(std::abs(sum-s.gpuMs)<1e-12&&s.passes[0].gpuMs==1&&s.passes[1].gpuMs==1);
         p.Release();assert(live==0&&openRegions==0);
+    }
+    {
+        Device d;d.dynamic=true;Probe p;p.CapturePasses(true);assert(p.Prepare(&d));
+        p.Begin(8);p.Draw(1,false);p.Draw(1,true,11,22);p.Target(1);p.Draw(1,true,11,22);
+        for(unsigned i=1;i<=4;++i)p.Draw(1,true,11+i,22+i);
+        p.End(true,7,17,11.11);p.Poll();const auto& s=p.over.worstWall;
+        assert(s.passesComplete&&s.passCount==2&&s.passes[0].kind==0&&s.passes[1].kind==1);
+        assert(s.passes[1].pairs[0].draws==2&&s.passes[1].unknownPairs==1);
+        p.Release();assert(live==0);
     }
     {
         Device d;d.dynamic=true;Probe p;p.CapturePasses(true);assert(p.Prepare(&d));

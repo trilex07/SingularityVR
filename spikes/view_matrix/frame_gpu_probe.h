@@ -6,11 +6,14 @@
 // All methods execute on the existing render thread. No state changes, waits,
 // flushes, file I/O or hot-path allocations. Timestamp span includes GPU bubbles.
 namespace framegpu {
-inline constexpr unsigned maxPasses=32;
+inline constexpr unsigned maxPasses=64;
+struct ShaderPair {std::uint64_t vs=0,ps=0;unsigned draws=0;};
 struct Pass {
     std::uintptr_t target=0;
     unsigned draws=0,userPointerDraws=0;
     double gpuMs=0,submissionMs=0;
+    int kind=-1; // -1 no draws yet,0 buffered,1 user-pointer. Never mix kinds.
+    ShaderPair pairs[4]{};unsigned unknownPairs=0;
 };
 struct Sample {
     std::uint64_t frame=0;
@@ -84,23 +87,30 @@ public:
     }
     // Existing successful RT0 setter / game draw seams ONLY. A target is an
     // opaque observed identity, never dereferenced or retained. No Get* queries.
-    void Target(std::uintptr_t target){
+    void Target(std::uintptr_t target,int kind=-1){
         if(!passCapture||recording<0)return;
         auto& s=slots[recording];auto& sample=s.sample;
-        if(!sample.passCount){sample.passCount=1;sample.passes[0].target=target;s.passStarted=started;return;}
+        if(!sample.passCount){sample.passCount=1;sample.passes[0].target=target;sample.passes[0].kind=kind;s.passStarted=started;return;}
         auto& last=sample.passes[sample.passCount-1];
-        if(last.target==target||s.passOverflow)return;
+        if(s.passOverflow)return;
+        if(last.target==target&&(kind<0||last.kind<0||last.kind==kind)){
+            if(kind>=0)last.kind=kind;return;
+        }
         if(sample.passCount==maxPasses){s.passOverflow=true;return;}
         if(FAILED(s.boundaries[sample.passCount-1]->Issue(D3DISSUE_END))){s.passOverflow=true;++failed;unavailable=true;return;}
         LARGE_INTEGER now{};QueryPerformanceCounter(&now);
         last.submissionMs=double(now.QuadPart-s.passStarted.QuadPart)*1000/clock.QuadPart;s.passStarted=now;
-        sample.passes[sample.passCount++].target=target;
+        auto& next=sample.passes[sample.passCount++];next.target=target;next.kind=kind;
     }
-    void Draw(std::uintptr_t target,bool userPointer){
+    void Draw(std::uintptr_t target,bool userPointer,std::uint64_t vs=0,std::uint64_t ps=0){
         if(!passCapture||recording<0)return;
-        Target(target);auto& s=slots[recording];
+        Target(target,userPointer?1:0);auto& s=slots[recording];
         if(s.passOverflow)return;
         auto& pass=s.sample.passes[s.sample.passCount-1];++pass.draws;if(userPointer)++pass.userPointerDraws;
+        for(auto& pair:pass.pairs)if(!pair.draws||(pair.vs==vs&&pair.ps==ps)){
+            pair.vs=vs;pair.ps=ps;++pair.draws;return;
+        }
+        ++pass.unknownPairs; // Fixed census, never claim these four cover every shader.
     }
     void End(bool eligible,unsigned draws,double wallMs,double periodMs){
         if(recording<0)return;

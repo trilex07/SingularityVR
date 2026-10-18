@@ -9,7 +9,9 @@ OcclusionQueryMode already2; no enum in gameplay. Accounting-only replay measure
 not contain reliable beginning of collapse, so no single native culprit proven.
 Prepared defaultOFF FrameGpuPassProbe: per-RT chronological phases, UP/non-UP
 counts, CPU wall plus GPU timeline, every bounded frame, async four-slot ring,
-32phase cap refuses incomplete attribution, no pixels/ETW/state changes/new hooks.
+64phase cap refuses incomplete attribution, buffered/UP separation and four
+bounded shader-pair counters per phase (frequency, not per-shader GPU time).
+No pixels/ETW/state changes/new hooks.
 L1 + standalone D3D9Ex80/80valid PASS. Full build/candidate preparation follows.
 Keep baseline DLL789749E5/INI8B0B0B4C/UI51CDAB5C/injector5B948DDB safe.
 
