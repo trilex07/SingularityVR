@@ -278,3 +278,70 @@ Package build/projector/candidate-collapse-pass-cost; Install WhatIf PASS/no
 writes; INI delta vs PID28884 is ONLY FrameGpuPassProbe=1. The small holster
 optimization remains OFF to avoid confounding attribution. No automatic launch
 or physical result. Zero shader hashes mean no description, not a named shader.
+
+## Final review: physical session PID28632
+
+User asked for a final analysis, accepting this one scripted collapse dip if a
+safe fix cannot be demonstrated. No further physical test or speculative patch
+is proposed by this receipt.
+
+Actual source build remains e822c900, DLL D6D1284F...B0B0E8. Before launch MAIN
+repackaged it using tools/fx/prepare_collapse_pass_probe_candidate.ps1 (051d2aa),
+preserving the installed profile bytes except two new diagnostic switches:
+FrameGpuProbe=1 and FrameGpuPassProbe=1. Actual INI SHA256 is
+B447387AD19C90627EF43E1D3FF01F7676DF977A8D4C4E855914357E1357D7A5.
+This differs from the previous planned PID28884 configuration: runtime log says
+particleStereo=0, TextureBindDeduplicate=0, menu draw/proof diagnostics ON and no
+projector flag. Consequently it cannot measure the benefit of those previous
+changes or prove performance of the latest accepted projector/muzzle scope.
+Do not promote this diagnostic package as a full accepted release.
+
+Private evidence: deployment/shadow-probe/evidence-28632/view_matrix.log,
+SHA256 F8A4E4AC3CF28232A29978E796138E58467041A49503826CA1E512289388B174.
+User observed the small-building dip, then negligible micro-dips around87FPS.
+Native120-frame collapse interval reports76.3FPS/13.104ms, peak3419original
+draws/1099UP. Following intervals83.0,87.4,88.8FPS recover toward89-90.
+Those draw counts are peaks, not per-frame averages. Native enumeration remains
+zero; XR input averages.140+.033+.041ms in the collapse interval, submit.27ms.
+No evidence of a recurring trigger-discovery stall.
+
+The new measurement distinguishes two kinds of delay:
+
+- Frame3742: first-draw->Present CPU wall49.566ms and GPU timeline51.482ms.
+  Buffered HDR phase1 (891draws) takes46.795ms CPU wall/46.734ms GPU timeline.
+  Its four stored shader identities cover only18draws;873 exceed that census.
+  A matched CPU/GPU timeline cannot prove49ms of GPU busy work: submission gaps
+  and native engine/driver/hook activity between draws remain included. The UP
+  phase ranked fourth has192draws,.270ms CPU/.432ms GPU in THIS frame. This
+  falsifies identifying the UP count burst alone as the demonstrated culprit.
+- Frame3834: Present-entry period81.254ms, while current scene submission is
+  4.055ms and GPU timeline5.952ms. Most cadence delay is outside the timed scene
+  region. Entry-to-entry wall includes previous Present and current engine work
+  before the first draw, so it cannot be assigned to one current shader.
+
+Differencing rounded cumulative buckets for profile frames720->960 gives47
+over-budget samples, GPU timeline11.519ms, scene CPU wall7.096ms and entry
+period19.322ms on average. These are only that selected slow subset; within-
+budget samples in the same interval average10.844ms wall. This supports mixed
+workload/stall behavior, not a single proven GPU-only or native-game-only cause.
+
+Probe issued2641samples,2invalid,0ring skips,0failures, no flush/wait. All logged
+phase partitions are complete. However the bounded reporter retains only each
+bucket's cumulative worst-wall sample:26reports correspond to8distinct frames,
+and the maximum106.037ms GPU sample is not retained with its own phases. Thus
+there is no complete per-shader cost attribution for the whole destruction.
+Do not relabel shader frequencies, unmatched stalls or cumulative thread CPU as
+causality. Diagnostic overhead in the actual game was not separately measured.
+
+No safe, demonstrated multi-millisecond fix follows from these data. Engine
+streaming/destruction, driver work and remaining mod submission work are still
+possible producers. Keep the isolated dip as a known limitation and preserve
+the accepted visual behavior; do not repeat generic captures or reduce rendering
+quality without a new user task and a specific discriminating hypothesis.
+
+Game exited normally. Exact restore watcher session37962 exited0; independent
+on-disk SHA checks verified pre-test DLL789749E5...C5F361B, INI8B0B0B4C...702CCFAF,
+injector5B948DDB...729D59 and UI51CDAB5C...1F01A1A. Backup20261018-122806;
+owned request consumed. This restores the declared pre-test profile, not a newly
+accepted release. Earlier projector/native muzzle physical acceptances remain
+separate evidence and were not superseded by this diagnostic session.

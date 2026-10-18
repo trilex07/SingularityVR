@@ -1,5 +1,30 @@
 # STATUS — session handoff
 
+2026-10-18 FINAL COLLAPSE REVIEW / user accepts isolated scene dip if no proven fix.
+PID28632 CLOSED. User: dip at small building collapse, later only negligible ~87FPS.
+No further PSVR2 round requested; no speculative performance patch/promoted DLL.
+Private log deployment/shadow-probe/evidence-28632/view_matrix.log SHA256
+F8A4E4AC3CF28232A29978E796138E58467041A49503826CA1E512289388B174.
+Actual test used candidate-collapse-pass-probe-minimal: DLL D6D1284F...B0B0E8,
+INI B447387A...357D7A5 (ONLY two probe additions versus installed accepted profile).
+IMPORTANT: this is NOT the planned PID28884-config comparison: particleStereo=0,
+TextureBindDeduplicate=0, menu diagnostics ON; projector flag absent. Do not infer
+cross-run optimization benefit or promote this diagnostic configuration.
+Collapse aggregate76.3FPS/13.104ms, peak3419draws/1099UP; no native enumeration.
+Phase evidence: frame3742 scene CPU49.566ms/GPU timeline51.482ms, buffered HDR
+phase1 CPU46.795/GPU46.734; this is NOT proof of expensive particle shader.
+Frame3834 Present-entry period81.254ms but scene CPU4.055/GPU5.952ms: much
+delay outside current first-draw->Present region (includes previous Present).
+Exact engine/driver/mod producer remains UNPROVEN. 2641issued,2invalid,0ring
+skips/failures; logged complete partitions, but only8 distinct worst-wall frames
+retained, NOT per-frame/per-shader full timings. No safe justified fix identified.
+Supported PowerShell restore watcher session37962 exited0; independently hashed
+pre-test restoration: DLL789749E5...C5F361B, INI8B0B0B4C...702CCFAF,
+injector5B948DDB...729D59, UI51CDAB5C...1F01A1A. Request consumed, game closed.
+Backup20261018-122806. Restored PRE-TEST profile, not a newly accepted all-feature
+release. Preserve earlier projector/native muzzle physical results separately.
+See docs/collapse-frame-cost.md final review; don't restart generic profiling.
+
 L2_PASS diagnosis-only candidate: build/projector/candidate-collapse-pass-cost,
 source e822c900a05c0ebe39d438f5e5da60f278799487, x86 PE32/O2,
 DLL D6D1284F858CEF36605903772773E005033899B18B26F16C6C180EB6D2B0B0E8,
