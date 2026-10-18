@@ -1,5 +1,6 @@
 # STATUS — session handoff
 
+## Current MAIN handoff
 2026-10-18 bilingual VR tutorial: root VR Settings now includes an optional
 Tutorial page with a Polish/English chooser followed by six short lessons
 (movement/jump, grip/medkit, weapon wheel, magazine reload, Centurion, pause).
@@ -610,6 +611,128 @@ stereo toggle, L3+R3 screenshot trigger, mirror/scope/guard reverts,
 UpdateCameraStabilization deletion (accepted features preserved).
 L1_PASS mirror ps1 + full reload suite incl. GPU fixtures vs private
 original assets (shells L/R stereo pixels) + knife suite. L2_PASS clean
+## Historical SIDE reload handoff (not physical acceptance)
+LATEST 2026-10-17 SIDE, port Centurion-proven lessons to ALL3 profiles:
+Valkyrie/Volk/Kasimov resolver stops at4 distinct bindings BEFORE unrelated Next;
+all live ABI/body/cast/conservation guards retained. Exact-stage diagnostics,
+3 engine-thread read-only preflights PER profile, no new hook/permit/invocation.
+ReloadRefillOnly now releases root/scope IMMEDIATELY on insertion; only original
+magazine child seats180ms on LIVE root; every other native bone copied byte-exact.
+No child override after seat, even when HUD ACK is late. Flag0 behavior/input/
+models/materials/shoulder/native ammo authority unchanged. L1/L2 pending.
+Centurion was accepted by user, these3 are NOT physically verified by analogy.
+ZERO Steam; integrate SOURCE into current MAIN, not old full SIDE DLL. PR45.
+See docs/next-weapon-refill-only.md (new top section supersedes old HOLD below).
+
+CAUTION 2026-10-17: Centurion runtime REJECTED shared refill resolver (ready0,
+NO native invocation). PR45 three weapons remain UNTESTED, not accepted merely
+from L1/L2. Keep ReloadRefillOnly OFF pending PR48 resolver preflight9c38667
+and actual cause/correction. No Steam touched. Existing native reload path flag0
+and previous material/asset work are not rejected by that Centurion result.
+
+LATEST 2026-10-17 SIDE: Centurion's native-refill lesson applied to Valkyrie,
+Volk/Kasimov via default-OFF ReloadRefillOnly, same shared hook. Original PE/text
+proves ALL12 refill/getter bindings identical across the three exact classes.
+Frozen permit snapshot + live original getter/refill conservation, no full native
+Reload/state/timer/camera/inventory writes by proxy; failed transfer never falls
+back to full reload. Per-profile fault latch. Stored weapons revoke tap/token,
+keep fresh block-only guard; shoulder uses mid-eye/latched physical head yaw.
+Only180ms render-only seating/root/scope tail, not whole native animation.
+L1_PASS19 CPU/ABI +2 own D3D9Ex GPU programs,64 Python tests;60000 OFF/ON fake
+native transactions, partial/low reserve, duplicate/NPC/Centurion/holster isolation,
+four original body/mutation checks,15003 child poses/333 seated shoulder poses.
+L2_PASS clean41ec792, x86 PE32 /O2, instrumentation OFF. DLL3201024 bytes, SHA
+43201D880817288416F1BD75D92DCE146FC36F07374B95FABF35AD91CEB91F5B.
+Private build/next-weapon-reload/candidate-41ec792; all11 payload hashes verified,
+all opt-ins OFF in proposal, NO INI. L3/L4 UNKNOWN. Zero Steam/installed changes.
+See docs/next-weapon-refill-only.md. Integrate SOURCE onto current MAIN, do not
+replace newer accepted integration with this older SIDE DLL. PR45, no merge.
+
+LATEST 2026-10-17 SIDE PR45 native-material follow-up: Valkyrie/Volk/Kasimov
+stock/carried/dropped magazine uses original native gun draw/material and shared
+depth inside each StereoPair eye; ONLY rigid magazine bone stays alive, all
+other bones collapse together, palette restored on success/failure. Separate
+ReloadNativeMagazine=0 default-OFF; no private-depth overlay when opt-in1.
+Circle -> physical-left shoulder grip -> insert/release unchanged, NO flick.
+L1_PASS:17 CPU +2 OWN D3D9Ex GPU executables (19 checked x86 PE32),57 Python
+tests;12960 native stock/carry/drop roundtrips over the three original palettes.
+Synthetic shared-depth GPU fixture:10609/10609 visible pixels each profile/round,
+ZERO wrong-colour/occlusion/body pixels; two Reset resource rounds. NOT native
+game lighting/scene proof. L2_PASS clean source8896ff9f6a640bfde3246d04c4efdca014da4eff,
+x86 PE32 /O2, DLL3193856 bytes, no performance instrumentation, SHA-256
+F5533704CD997DDB45F9EB5C1FC8514C824CD6CF0DC20D331101A1D5FAD892C6.
+Private candidate:build/next-weapon-reload/candidate-8896ff9;11 payload hashes
+independently verified, manifest SHA-256
+C1862892766255AF9E75762AC161EA000A86C8945951B21198F2E7A6860527EF.
+Actual branch/main ancestor513013ab2da6434e926549817bf8c3ae78009d25; separate
+remote-main snapshot in manifest is NOT its base. All older candidate folders
+are superseded, NOT safe restore targets. Documentation-only receipts after
+source8896ff9 do not change this binary provenance. ZERO Steam/deploy/INI writes;
+L3/L4 UNKNOWN. MAIN integrates SOURCE into current accepted dependency profile,
+one weapon/session; verify native ammo debit/ACK, colour/depth/hands BOTH eyes
+and timing before physical acceptance. No merge authorized/performed.
+
+LATEST 2026-10-17 SIDE: THREE actual runtime connections implemented on
+feature/next-weapon-reload-assets (base main513013a), not just offline prototypes.
+Valkyrie/Volk/Kasimov: default-OFF dispatcher, shared audited AttemptReload hook,
+native one-shot permit + ordinary reload tap + consumed/conserved ammo ACK;
+Circle/left-shoulder/insert, native gun/attachment root hold + child animation,
+original attached clip hide/carried/drop, live IB/CTAB/socket identity, Reset.
+Centurion/accepted language/knife/hands/etc preserved; ZERO Steam or INI writes.
+See docs/next-weapon-runtime-integration.md for exact integration/test contract.
+Offline native mapper confirms all three classes share the same native method
+and Shotgun/Sniper inherit Shared script states. L1_PASS:17 CPU +1 own-process
+D3D9Ex GPU fixture (18 verified x86 PE32), 55 Python tests, 30000 native-detour
+transactions, 7506 original fractional poses and4320 socket/affine roundtrips.
+L2_PASS clean source4c965dd65e765b8a77aba701bfe4ac35774ca84a, x86 PE32 /O2,
+DLL SHA-256 EDBE3F35CCE9869C166AE08B4F22B3E99DBF1B5AD79363B986791065CAF2649E.
+Independent bounded read-only bootstrap needs no Centurion/cinema/HUD-overlay flag.
+Private candidate:build/next-weapon-reload/candidate-4c965dd (11 hashes checked),
+manifest SHA-256 8796250D6C844B0F179A56B87E2A0BF3C60EDD5C72B37370678711823FD0D4C2.
+L3/L4 UNKNOWN, not "100% physically verified". Carried albedo/private depth is
+not a full native-lighting/hand-occlusion claim. Do not deploy an old SIDE DLL
+over newer MAIN; integrate SOURCE and preserve its accepted dependency profile.
+
+LATEST 2026-10-17 SIDE next-weapon control decision: Valkyrie/Volk/Kasimov use
+Circle eject -> physical-left shoulder grip -> insert/release, no old-magazine
+pull or closing flick. Independent default-OFF CPU policy replaces the shared
+Centurion pull/discard adapter; no Centurion/input/renderer/INI/Steam edits.
+L1_PASS: 15 CPU executables +44 Python tests, 30000 Circle/shoulder/insert
+transactions, held/context rearm, free-left ownership and partial conserved
+refill checks; existing original-asset GPU/state/Reset regression PASS.
+L2_PASS clean 0d33568, x86 PE32 /O2, DLL SHA-256
+EF0555EF941F4E50ACA5A1194FBF661867A03EB639722ED224F1D581C6D90F37.
+No physical/runtime acceptance claimed; DLL is a regression artifact only.
+Centurion sequence unchanged: Circle unlock -> sideways open -> muzzle-down
+dump -> shoulder ammunition -> insert -> closing flick. NOT a dropped cylinder.
+These remain offline prototypes; no additional weapon backend/runtime install.
+
+LATEST 2026-10-17 SIDE feature/next-weapon-reload-assets: original Valkyrie,
+Volk S4 and Kasimov magazines/albedo/Reload caches plus bounded offline
+hierarchical animation consumer; gun root frozen, real cooked palettes and
+native diffuse references measured. Imported f519de6 CPU gesture prototypes,
+independent left/back shoulder math and cancellation across calibration changes.
+L1_PASS fifteen optimized CPU executables +44 Python tests after sync with
+MAIN 513013a (including own-process native ABI regression); 30000 transactions,
+7506 original fractional track poses; own-process D3D9Ex actual textured pixels
+in BOTH eyes, state/failure/Reset checks PASS. L2_PASS clean source 36681f4,
+x86 PE32 /O2 regression DLL SHA-256
+14DEECAEA1E63EF77A3936226121AEF6D6A89E99632BAFFD1792B43ABAC031F8.
+MAIN runtime/INI match 513013a exactly; 16 fixture binaries verified x86 PE32.
+No runtime dispatcher/INI/native ammo backend; L3/L4 UNKNOWN, NOT headset-ready.
+ZERO Steam, no Centurion/accepted config or installed asset changes.
+See docs/next-weapon-animation-assets.md. SIDE regression DLL MUST NOT replace
+current MAIN integration; private game-derived outputs remain ignored.
+
+LATEST 2026-10-17 SIDE side/mirror-screenshot-fix: MAIN root-cause accepted —
+UE3 binds viewport + Present region to the window (dumped frame: right half
+black at x>=2952 on a 5904x3012 backbuffer), so the SetWindowPos fit path is
+REMOVED; Window=1 now fits the right eye into the visible client region of
+the untouched SBS window (zero engine interaction, VR res intact by
+construction). Guard stays as fail-open tripwire + anti-war fuse; contract
+test_window_never_resized added. L1_PASS full mirror/guard/stamp/fuse CPU +
+D3D9Ex pixels/scope/viewport/Reset + 8 Python contracts + six menu/cinema
+regressions. L2_PASS clean tree,
 x86 PE32 /O2 DLL SHA-256
 D35A9EAD05EB6BA45569926156ADAC4629DEEC9EB787B00A8371D054A86F25AE
 (provenance: branch fix/centurion-grip-integration @76eedc7 clean tree;
