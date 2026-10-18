@@ -273,3 +273,39 @@ texture_bridge inclusive callback and texture_driver actual forward. Subtract
 nested driver estimate from bridge, never add them. Falsifier: driver accounts
 for most of the cold-bind spike, or spikes persist without bridge-exclusive
 cost. L1 existing sampler PASS; L2 /O2 x86 PE32 PASS. Not deployed.
+# PID5860 performance follow-up (2026-10-18)
+
+User closed the test and requested FPS repair plus removal of running camera bob.
+Private evidence: `build/projector/evidence-5860/{view_matrix,texture_override}.log`.
+Restore watcher completed; DLL, injector, INI and UI independently match baseline.
+
+Full 3600-frame sampled means: SetTexture .7532ms, bridge inclusive .4435ms,
+native texture forward .0681ms, draw inclusive1.2570ms, copy stage1.8248ms.
+Do not sum nested scopes. Sparse sampling cannot exclude rare DDS-load stalls.
+Native controller enumeration ran twice at60.1981ms average: isolated hitches
+remain possible; it does not explain every low-FPS window.
+
+The exact projector gate log records17584 classifications AND evictions in one
+second (line5155); several nearby windows exceed17000. The old128-entry FIFO
+repeatedly queried shader bytecode when the working set exceeded capacity, and
+each hit searched up to128 retained objects. This is direct evidence of redundant
+work, not a measured attribution of all frame drops to this cache.
+
+Change: fixed1024-set/four-way cache, no allocations, at most four comparisons,
+bounded4096 retained shader references; same exact identity/hash check and Reset
+release. L1 cycles129 shaders100 times without another GetFunction; overflow
+and final COM balance pass. Projector math and draw restoration unchanged.
+Falsifier: if evictions collapse but FPS dips persist, this was only one overhead
+source; inspect remaining engine/GPU and rare texture-upload time separately.
+
+Walking: tested INI had VrCameraShakeSuppression=1 but VrTranslationStabilization=0.
+The candidate opts into the existing bounded pawn+BaseEyeHeight minus POV
+translation. Refresh now invalidates previous residual before any failed read
+and excludes native cutscenes. Physical HMD translation remains separate.
+Validate walking/running, crouch, physical leaning, pause and cinematic return.
+
+Build x86 PE32 /O2 PASS; DLL
+E5A10A43E5E92E7CEFCDDF4D0DAEBF4A2309EABC6F099489ACCBB52EAC715FA1.
+L1 cache/COM, projector invariance and guarded camera/math tests PASS.
+No new Steam deployment yet. User start gates the next full route without chat.
+

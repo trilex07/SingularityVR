@@ -43,12 +43,24 @@ int main(){using namespace projectorfix;IDirect3DDevice9 d;float original[16];me
     assert(!Classify(&shaders[128],4,hash)&&!shaders[128].queries);
     enabled=true;
     for(unsigned i=0;i<128;++i)assert(!Classify(&shaders[i],4,hash));
-    assert(used==128&&Classify(&shaders[128],4,hash)&&used==128&&evictions==1);
+    assert(Classify(&shaders[128],4,hash)&&used==129&&evictions==0);
     const auto queries=shaders[128].queries;
     assert(Classify(&shaders[128],4,hash)&&shaders[128].queries==queries);
-    assert(shaders[0].refs==1&&shaders[128].refs==2);
+    assert(shaders[0].refs==2&&shaders[128].refs==2);
+    for(unsigned pass=0;pass<100;++pass)for(unsigned i=0;i<129;++i)
+        assert(Classify(&shaders[i],4,hash)==(i==128));
+    for(auto& shader:shaders)assert(shader.queries==2);
     Release();for(auto& shader:shaders)assert(shader.refs==1);
-    assert(used==0&&nextEviction==0);enabled=false;
+    assert(used==0);
+    // Overflow every set: bounded ownership, late target still recognized.
+    static CacheShader overflow[cacheSets*cacheWays+1];
+    for(auto& shader:overflow)Classify(&shader,4,hash);
+    assert(used<=cacheSets*cacheWays&&evictions>0);
+    overflow[cacheSets*cacheWays].code=1;
+    Release();
+    assert(Classify(&overflow[cacheSets*cacheWays],4,hash));
+    Release();for(auto& shader:overflow)assert(shader.refs==1);
+    enabled=false;
     {Scope s(&d,true,4,2);}assert(!d.reads&&!d.writes);
     enabled=vsMatch=psMatch=true;NoteCamera(0,0,g_camMats[0].m,g_camMats[0].m);
     {Scope s(&d,false,4,2);}{Scope s(&d,true,8,12);}assert(!d.reads);

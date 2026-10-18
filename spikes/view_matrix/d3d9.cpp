@@ -12990,7 +12990,9 @@ extern volatile LONG g_hudXformLive;   // ⭐ run 253, defined with the UI censu
 extern bool          g_inHudRemap;
 
 void UpdateCameraStabilizationThisFrame() {
-    if (!VrModeOn() || !Rd(g_vrTranslationStabilization)) return;
+    // Never reuse the preceding frame's correction after a failed read/bounds check.
+    InterlockedExchange(&g_vrCameraStabValid, 0);
+    if (!VrModeOn() || !Rd(g_vrTranslationStabilization) || CutsceneNativeCameraArmed()) return;
     const uintptr_t cam = g_camera;
     if (!cam) return;
 

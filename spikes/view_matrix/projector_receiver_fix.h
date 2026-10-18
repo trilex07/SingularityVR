@@ -7,15 +7,27 @@ static thread_local unsigned pairDepth=0;
 struct PairScope{bool active;PairScope():active(enabled){if(active)++pairDepth;}~PairScope(){if(active)--pairDepth;}};
 static float nativeVP[16]{},trackedBase[16]{};
 struct Entry{IUnknown* shader;bool match;};
-static Entry cache[128]{};static unsigned used=0,nextEviction=0;
+// PID5860: the 128-entry FIFO reclassified up to 17584 shaders/second.
+// Fixed storage, four comparisons per bind, bounded COM ownership.
+static constexpr unsigned cacheSets=1024,cacheWays=4;
+static Entry cache[cacheSets][cacheWays]{};
+static unsigned nextEviction[cacheSets]{},used=0;
+inline unsigned CacheSet(const void* shader){
+    uintptr_t h=reinterpret_cast<uintptr_t>(shader)>>4;
+    h^=h>>10;h^=h>>20;return unsigned(h)&(cacheSets-1);
+}
 static unsigned classified=0,evictions=0,vsHits=0,psHits=0,pairHits=0,routeRejects=0,shapeRejects=0,cameraRejects=0;
 static unsigned resourceRejects=0,depthRejects=0,constantRejects=0,mathRejects=0;
 static unsigned applied[2]{},rejected=0,restoreFailures=0;
-inline void Release(){for(unsigned i=0;i<used;++i)cache[i].shader->Release();used=nextEviction=0;vsMatch=psMatch=nativeValid=false;}
+inline void Release(){
+    for(auto& set:cache)for(auto& e:set){if(e.shader)e.shader->Release();e={};}
+    memset(nextEviction,0,sizeof(nextEviction));used=0;vsMatch=psMatch=nativeValid=false;
+}
 inline void Configure(bool on){InterlockedExchange(&configured,on?1:0);}
 template<class T> bool Classify(T* s,UINT expected,unsigned long long hash){
     if(!enabled||fault||!s)return false;
-    for(unsigned i=0;i<used;++i)if(cache[i].shader==s)return cache[i].match;
+    const unsigned set=CacheSet(s);
+    for(const auto& e:cache[set])if(e.shader==s)return e.match;
     ++classified;
     DWORD code[334]{};UINT bytes=0;bool match=false;
     if(SUCCEEDED(s->GetFunction(nullptr,&bytes))&&bytes==expected){UINT capacity=sizeof(code);
@@ -25,10 +37,11 @@ template<class T> bool Classify(T* s,UINT expected,unsigned long long hash){
             match=h==hash;}}
     // Bound retained COM references, not the set of shaders we can recognize.
     // The projector can first appear well after the initial 128 menu/world shaders.
-    unsigned slot=used;
-    if(used==128){slot=nextEviction;nextEviction=(nextEviction+1)%128;cache[slot].shader->Release();++evictions;}
+    unsigned slot=0;
+    while(slot<cacheWays&&cache[set][slot].shader)++slot;
+    if(slot==cacheWays){slot=nextEviction[set];nextEviction[set]=(slot+1)%cacheWays;cache[set][slot].shader->Release();++evictions;}
     else ++used;
-    s->AddRef();cache[slot]={s,match};return match;
+    s->AddRef();cache[set][slot]={s,match};return match;
 }
 inline void BindVS(IDirect3DVertexShader9* s){vsMatch=Classify(s,208,0xAC4827843287AECBull);if(vsMatch)++vsHits;}
 inline void BindPS(IDirect3DPixelShader9* s){psMatch=Classify(s,1336,0x7F00BC7925591BE8ull);if(psMatch)++psHits;}

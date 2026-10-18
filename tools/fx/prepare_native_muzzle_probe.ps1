@@ -16,6 +16,7 @@ param(
     [switch]$ParticleStereo,
     [switch]$ProjectorStereo,
     [switch]$QuietMenuDiagnostics,
+    [switch]$StabilizeWalking,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -318,6 +319,12 @@ if ($QuietMenuDiagnostics) {
         $iniChanges.Add([ordered]@{key=$key;before=$null;after='0';reason='Exclude automatic menu census and full-resolution proof readbacks from projector/performance test; aggregate timing remains.'})
     }
     $planReason += ' Automatic menu census and proof screenshots disabled to reduce diagnostic contamination; performance causality still requires runtime measurement.'
+}
+if ($StabilizeWalking) {
+    if ($iniValues['Render/VrTranslationStabilization'] -ne '0') { throw 'Expected reviewed translation-stabilization baseline OFF.' }
+    $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes 'VrTranslationStabilization=0' 'VrTranslationStabilization=1'
+    $iniChanges.Add([ordered]@{key='Render/VrTranslationStabilization';before='0';after='1';reason='User requested removal of walking bob; retain physical HMD translation and pawn locomotion.'})
+    $planReason += ' Enable existing bounded pawn/POV walking stabilization; projector shader cache optimized using PID5860 eviction evidence.'
 }
 New-Item -ItemType Directory -Path $artifactPath | Out-Null
 $stageDll = Join-Path $artifactPath 'd3d9.dll'

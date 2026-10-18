@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+2026-10-18 PID5860 CLOSED; baseline DLL789749E5/INI8B0B0B4C/injector5B948DDB/
+UI51CDAB5C independently verified; request consumed, evidence-5860 preserved.
+3600-frame profile: set_texture .7532ms/frame; inclusive bridge .4435,
+nested driver .0681. Sparse estimates do not rule out unsampled first-load stalls.
+Projector cache churn PROVEN: up to17584 classifications+evictions per second.
+Replaced 128-entry linear FIFO with fixed1024 sets x4 ways (four comparisons),
+bounded4096 COM references released on Reset. L1 repeat129 shaders100 times:
+no reclassification; overflow/release, projector matrix/scope, camera tests PASS.
+Camera walking stabilization was OFF in tested INI. Candidate enables existing
+VrTranslationStabilization; draw-time refresh now clears stale validity before
+failed reads and excludes native cinematic camera. Physical HMD math unchanged.
+L2 /O2 x86 DLL E5A10A43E5E92E7CEFCDDF4D0DAEBF4A2309EABC6F099489ACCBB52EAC715FA1.
+FPS improvement and walking comfort await PSVR2; no claim all dips are fixed.
+Prepare candidate-cache-walking with -StabilizeWalking; await fresh start.
+
 PID20296 projector PHYSICALLY_VERIFIED: user "projektor dziala super".
 Tested DLL F53E9E2A799970F0B7F43B17C45D21D4686837BFDB166149E0B5DD5B6F1B0215,
 INI87DB38993A10CCC8687E71C42636F3F9AF98C659574AC6FC8A643B677C670CD1.
