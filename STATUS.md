@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+2026-10-18 PID31100 CLOSED; baseline DLL789749E5/INI8B0B0B4C/injector5B948DDB
+independently verified after restore. User: remaining dip~72FPS at building
+collapse, otherwise acceptable. Log gameplay77.4FPS/12.92ms, peak3802draws,
+copy.01ms/submit.27ms/hooks.02ms, no native enum in that interval. Other costs
+unassigned; do not claim game-only or GPU-only bottleneck. NativeCameraComfort
+flag present but NO native-hook installed/applied lines: execution unproven.
+Preparing collapse candidate: one-bind texture classification memoization
+(default-OFF TextureBindDeduplicate) + bounded async FrameGpuProbe and existing
+sampler. L1 seven programs PASS incl672 texture combinations and GPU failure/
+Reset/ring tests. Standalone real D3D9Ex query fixture10/10 PASS (not game FPS).
+See docs/collapse-frame-cost.md. Build/package SHA and fresh start gate follow.
+
 READY_FOR_PHYSICAL_ACCEPTANCE (not L3/L4): candidate-native-comfort, built from
 8899f72298e3a058a210bf5c30fbaac2af3ed9ea, x86 PE32 /O2, six focused C++ programs PASS.
 DLL89966207B8A13959BF27895E38ED78460BE7BC6FE7B4A94AEB6FB8517FD62A14

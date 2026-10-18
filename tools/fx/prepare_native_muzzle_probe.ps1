@@ -18,6 +18,7 @@ param(
     [switch]$QuietMenuDiagnostics,
     [switch]$StabilizeWalking,
     [switch]$NativeCameraComfort,
+    [switch]$CollapsePerformance,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -331,6 +332,19 @@ if ($NativeCameraComfort) {
     $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes '[Render]' "[Render]${newline}NativeCameraComfort=1"
     $iniChanges.Add([ordered]@{key='Render/NativeCameraComfort';before=$null;after='1';reason='Verified native camera-output seam: stabilize first-person origin before stereo, not shader-space offsets.'})
     $planReason = 'Retain accepted projector/muzzle path. Native first-person POV comfort experiment plus input-cache focus invalidation fix, bounded counters. Shader translation stabilization stays OFF. Runtime and physical acceptance pending.'
+}
+if ($CollapsePerformance) {
+    if (-not $ParticleStereo -or -not $ProjectorStereo -or -not $QuietMenuDiagnostics -or -not $NativeCameraComfort) {
+        throw 'Collapse test retains all preceding candidate flags; supply ParticleStereo, ProjectorStereo, QuietMenuDiagnostics, NativeCameraComfort.'
+    }
+    $newline = if ($iniText.Contains("`r`n")) { "`r`n" } else { "`n" }
+    foreach ($setting in @(@('Render','TextureBindDeduplicate'), @('Diagnostic','FrameGpuProbe'))) {
+        $section=$setting[0];$name=$setting[1];$key="$section/$name"
+        if ($iniValues.ContainsKey($key)) { throw "Refusing to overwrite existing setting: $key" }
+        $candidateIniBytes=Replace-UniqueAscii $candidateIniBytes "[$section]" "[$section]${newline}${name}=1"
+        $iniChanges.Add([ordered]@{key=$key;before=$null;after='1';reason='Collapse test: remove repeated per-bind shadow texture classification and collect bounded asynchronous scene GPU timeline; no quality or gameplay changes.'})
+    }
+    $planReason='Retain PID31100 render/camera/input behavior. Default-OFF per-bind texture classification deduplication plus bounded async GPU timeline and existing hotpath profile. FPS improvement pending runtime measurement.'
 }
 New-Item -ItemType Directory -Path $artifactPath | Out-Null
 $stageDll = Join-Path $artifactPath 'd3d9.dll'

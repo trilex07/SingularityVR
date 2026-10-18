@@ -143,7 +143,16 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "vfx/vfx_atlas_io.h"
 #include <wincodec.h> // plates atlas PNG decode (linked windowscodecs/ole32)
 #include "hotpath_sampler.h"
+#include "texture_bind_decision.h"
+#include "frame_gpu_probe.h"
 static hotpath::sampler g_hotPathSampler;
+static framegpu::Probe<IDirect3DDevice9,IDirect3DQuery9> g_frameGpu;
+static bool g_frameGpuEnabled=false,g_frameGpuGate=false;
+static unsigned g_frameGpuDraws=0;
+static std::uint64_t g_frameGpuSerial=0;
+static LARGE_INTEGER g_frameGpuLastPresent{};
+static bool g_textureBindDeduplicate=false;
+static std::uint64_t g_textureDecisionRequests=0,g_textureDecisionExecutions=0;
 static bool g_gameplayHotPathAllowed=false;
 alignas(8) static volatile LONG64 g_hotLeftPoseFrame = 0, g_hotRightPoseFrame = 0;
 alignas(8) static volatile LONG64 g_hotHmdPoseFrame = 0, g_hotInputFrame = 0;
@@ -6591,6 +6600,23 @@ static void ReportHotPathSampler(bool complete=true) {
         g_hotPathSampler.milliseconds_per_frame(hotpath::Family::xr_submit, measuredFrames);
     append("present-hook residual estimate=%.4f ms/frame (inclusive stage estimates subtracted)", present-known);
     Log("hotpath sampler %s: %s", complete?"complete":"progress", report);
+    Log("TEXTURE_BIND_DECISION deduplicate=%d requests=%llu classifierCalls=%llu avoided=%llu (bounded profile only; binds/bridge callbacks unchanged)",
+        g_textureBindDeduplicate?1:0,(unsigned long long)g_textureDecisionRequests,
+        (unsigned long long)g_textureDecisionExecutions,
+        (unsigned long long)(g_textureDecisionRequests-g_textureDecisionExecutions));
+    if(g_frameGpuEnabled){
+        for(unsigned i=0;i<2;++i){const auto& b=i?g_frameGpu.over:g_frameGpu.within;
+            if(b.samples)Log("GPU_SCENE_WINDOW bucket=%s n=%u gpu_timeline_ms=%.3f gpu_max_ms=%.3f first_draw_to_present_cpu_wall_ms=%.3f frame_wall_ms=%.3f peak_draws=%u (cumulative; timeline may include queue starvation, not GPU busy time)",
+                i?"over_110pct_period":"within_110pct_period",b.samples,b.gpu/b.samples,b.maxGpu,
+                b.submission/b.samples,b.wall/b.samples,b.maxDraws);
+            if(b.samples){const auto& s=b.worstWall;
+                Log("GPU_SCENE_WORST bucket=%s frame=%llu original_draws=%u gpu_timeline_ms=%.3f first_draw_to_present_cpu_wall_ms=%.3f frame_wall_ms=%.3f display_period_ms=%.3f (same sampled frame)",
+                    i?"over_110pct_period":"within_110pct_period",(unsigned long long)s.frame,s.draws,
+                    s.gpuMs,s.submissionMs,s.wallMs,s.periodMs);}
+        }
+        Log("GPU_SCENE_STATUS issued=%u skipped_ring=%u invalid=%u failures=%u unavailable=%d (1/8 frames, GetData flags=0, no flush/wait)",
+            g_frameGpu.issued,g_frameGpu.skipped,g_frameGpu.invalid,g_frameGpu.failed,g_frameGpu.Unavailable()?1:0);
+    }
 }
 
 // One owned, gameplay-only request per process. Reuse the existing bounded
@@ -13480,6 +13506,12 @@ static PFN_DrawIndexedPrim shadowNativeIndexed=nullptr;
 static PFN_DrawPrimUP shadowNativeUP=nullptr;
 static PFN_DrawIndexedPrimUP shadowNativeIndexedUP=nullptr;
 static thread_local unsigned g_nativeFxStereoPairDepth=0;
+static void NoteGameGpuDraw() {
+    if(!g_frameGpuGate&&!g_frameGpu.Recording())return;
+    if(GetCurrentThreadId()!=g_mainThreadId)return;
+    if(g_frameGpuGate){g_frameGpuGate=false;g_frameGpu.Begin(g_frameGpuSerial);}
+    if(g_frameGpu.Recording())++g_frameGpuDraws;
+}
 extern volatile LONG g_inForeground;
 extern int g_thisDrawMoved;
 extern volatile LONG g_fgDrawCount;
@@ -15114,6 +15146,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0)) return g_origDrawPrim(dev,t,start,count);
+    NoteGameGpuDraw();
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,0,t,count,0,start,0,0,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
@@ -19021,6 +19054,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0)) return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);
+    NoteGameGpuDraw();
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,1,t,primCount,numVertices,startIndex,minIndex,baseVertex,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
@@ -20656,6 +20690,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawPrimUP) return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
+    NoteGameGpuDraw();
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,2,t,primCount,0,0,0,0,vtxData,vtxStride);   // fix-I census
     if(g_boundShaderLayout.shadow && g_origDrawPrimUP){
@@ -20796,6 +20831,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawIndexedPrimUP) return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
+    NoteGameGpuDraw();
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,3,t,primCount,numVertices,0,minVtxIndex,0,vtxData,vtxStride);   // fix-I census
     if (!g_origDrawIndexedPrimUP) return D3DERR_INVALIDCALL;
@@ -21877,6 +21913,9 @@ static HRESULT STDMETHODCALLTYPE ProfiledTextureForward(IDirect3DDevice9* dev,DW
 HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDirect3DBaseTexture9* texture) {
     PauseRttProbe::Sample(texture);
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::set_texture);
+    texturebind::Decision shadowDecision(g_textureBindDeduplicate);
+    const auto projectedShadow=[&]{return shadowDecision.Get([&]{
+        return ProjectedShadowTexture(texture);});};
     // Fix-C/menu round 3: match the captured menu texture(s) on stages 0-3, not
     // only stage 0. g_vrMenuSourceBound keeps its stage-0-only meaning for existing
     // readers; the suppress gate uses any-of-4 (see MenuSourceBoundAny).
@@ -21894,19 +21933,19 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
         if (menuSource) { InterlockedIncrement(&g_vrMenuSourceMatches); ++g_menuStageSets[stage]; if (stage==0) ++g_menuSourceSets; }
         if (stage == 0) InterlockedExchange(&g_vrMenuSourceBound,menuSource?1:0);
     }
-    if(VrModeOn() && !Rd(g_vrShadows) && ProjectedShadowTexture(texture)) {
+    if(VrModeOn() && !Rd(g_vrShadows) && projectedShadow()) {
         InterlockedIncrement(&g_shadowMapCandidates);
     }
     // Fix-3/shadows: record which stages hold the projected map. ProjectedShadowTexture
     // is cached per texture (no driver query after warmup); stage<16 keeps it in one LONG.
     if (VrModeOn() && stage < 16) {
-        if (ProjectedShadowTexture(texture)) InterlockedOr(&g_shadowStageMask, 1L << stage);
+        if (projectedShadow()) InterlockedOr(&g_shadowStageMask, 1L << stage);
         else InterlockedAnd(&g_shadowStageMask, ~(1L << stage));
     }
     // VR classification sees ORIGINAL identity; callback forwards to driver once.
     unsigned protectedFlags=0;
     if(Rd(g_textureBridgeOwned)&&g_textureBridgeBind)
-        protectedFlags=(ProjectedShadowTexture(texture)||texture==g_vrMenuTexture||
+        protectedFlags=(projectedShadow()||texture==g_vrMenuTexture||
             (stage<4&&Rd(g_vrMenuStageBound[stage])))?texbridge::protectedSource:0;
     HRESULT bindResult;
     if(Rd(g_textureBridgeOwned)&&g_textureBridgeBind){
@@ -21915,6 +21954,10 @@ HRESULT STDMETHODCALLTYPE Hook_SetTexture(IDirect3DDevice9* dev,DWORD stage,IDir
         hotpath::scope bridgeScope(g_hotPathSampler,hotpath::Family::texture_bridge);
         bindResult=g_textureBridgeBind(dev,stage,texture,ProfiledTextureForward,texbridge::version,protectedFlags);
     }else bindResult=ProfiledTextureForward(dev,stage,texture);
+    if(g_hotPathSampler.active()&&GetCurrentThreadId()==g_mainThreadId){
+        g_textureDecisionRequests+=shadowDecision.requests;
+        g_textureDecisionExecutions+=shadowDecision.executions;
+    }
     if(SUCCEEDED(bindResult) && stage<8)shadowtrace::bound.tex[stage]=texture;
     return bindResult;
 }
@@ -26244,6 +26287,7 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 #include "desktop_mirror.h"
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    g_frameGpuGate=false;g_frameGpu.Release();g_frameGpuLastPresent={};
     g_knifeMeleeReference.Reset();
     nativefx::Release();
     g_knifeHandPoseThisDraw=false;g_knifeJointFrame=-1;g_knifeJointEyes=0;
@@ -28328,6 +28372,20 @@ static void StartupReadinessFrame(IDirect3DDevice9* dev){
 }
 
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
+    // Close native scene timing before any diagnostic/overlay/XR copy work.
+    g_frameGpuGate=false;
+    if(g_frameGpuEnabled){
+        LARGE_INTEGER now{},frequency{};QueryPerformanceCounter(&now);QueryPerformanceFrequency(&frequency);
+        const double wall=g_frameGpuLastPresent.QuadPart&&frequency.QuadPart?
+            double(now.QuadPart-g_frameGpuLastPresent.QuadPart)*1000/frequency.QuadPart:0;
+        g_frameGpuLastPresent=now;
+        const bool scene=VrModeOn()&&g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&
+            !CutsceneNativeCameraArmed()&&!Rd(g_vrUiMenu)&&!Rd(g_gamePaused)&&!Rd(g_panelOpen)&&
+            g_xrSessionState==XR_SESSION_STATE_FOCUSED;
+        g_frameGpu.End(scene,g_frameGpuDraws,wall,g_displayPeriodMs);
+        g_frameGpu.Poll();g_frameGpuDraws=0;
+        if(g_hotPathSampler.active())g_frameGpu.Prepare(s);
+    }
     shadowfix::Poll(g_logPath);
     worldshadowfix::Poll(g_logPath);
     projectorfix::Poll();
@@ -31566,6 +31624,10 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     else if(g_hotPathSampler.active() && g_hotPathSampler.completed_frames()>0 &&
             g_hotPathSampler.completed_frames()%240==0) ReportHotPathSampler(false);
     FinishCinemaExitHotPath();
+    ++g_frameGpuSerial;
+    g_frameGpuGate=g_frameGpuEnabled&&g_hotPathSampler.active()&&VrModeOn()&&
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&!CutsceneNativeCameraArmed()&&
+        !Rd(g_vrUiMenu)&&!Rd(g_gamePaused)&&!Rd(g_panelOpen)&&g_xrSessionState==XR_SESSION_STATE_FOCUSED;
     return presentResult;
 }
 
@@ -31710,6 +31772,10 @@ void LoadIniSettings() {
     const bool hotPathEnabled = GetPrivateProfileIntA("Render", "HotPathSampler", 0, path) != 0;
     // The physically accepted shadow/input combination is persistent: missing
     // keys use ON, so existing INIs need no overwrite or temporary flag files.
+    g_frameGpuEnabled=GetPrivateProfileIntA("Diagnostic","FrameGpuProbe",0,path)!=0;
+    g_textureBindDeduplicate=GetPrivateProfileIntA("Render","TextureBindDeduplicate",0,path)!=0;
+    Log("ini: TextureBindDeduplicate=%d FrameGpuProbe=%d (bounded gameplay sampler; async timeline only)",
+        g_textureBindDeduplicate?1:0,g_frameGpuEnabled?1:0);
     const bool worldShadow=GetPrivateProfileIntA("Render","ShadowWorldReceiverFix",1,path)!=0;
     projectorfix::Configure(GetPrivateProfileIntA("Render","ProjectorWorldStereo",0,path)!=0);
     InterlockedExchange(&g_menuDrawTrace,GetPrivateProfileIntA("Diagnostic","MenuDrawTrace",1,path)!=0);
