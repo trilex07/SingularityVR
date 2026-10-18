@@ -25781,7 +25781,30 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         r[n].x2 = cx + boxW / 2 + px * 4; r[n].y2 = y0 + boxH + px * 4;
         ++n;
     }
-    ClearRects(dev, r, n, D3DCOLOR_XRGB(8, 12, 20));
+    ClearRects(dev, r, n, D3DCOLOR_XRGB(12, 17, 20));
+
+    // Katorga instrument-panel frame: restrained steel rails and a warm
+    // status marker. These are decoration only; the hit geometry is unchanged.
+    n = 0;
+    for (int eye = 0; eye < eyes && n + 5 < kCap; ++eye) {
+        const int cx = (int)(eye * halfW + halfW / 2);
+        const int left = cx - boxW / 2 - px * 4;
+        const int right = cx + boxW / 2 + px * 4;
+        const int top = y0 - px * 4;
+        const int bottom = y0 + boxH + px * 4;
+        r[n++] = {left, top, right, top + px / 2 + 1};
+        r[n++] = {left, bottom - px / 2 - 1, right, bottom};
+        r[n++] = {left, top, left + px / 2 + 1, bottom};
+        r[n++] = {right - px / 2 - 1, top, right, bottom};
+    }
+    ClearRects(dev, r, n, D3DCOLOR_XRGB(78, 88, 89));
+    n = 0;
+    for (int eye = 0; eye < eyes && n < kCap; ++eye) {
+        const int cx = (int)(eye * halfW + halfW / 2);
+        r[n++] = {cx - boxW / 2, y0 + lh - px,
+                  cx - boxW / 2 + boxW / 5, y0 + lh - px / 2 + 1};
+    }
+    ClearRects(dev, r, n, D3DCOLOR_XRGB(195, 150, 76));
 
     // The selected row's highlight bar, so the cursor is visible without a glyph for it.
     n = 0;
@@ -25792,7 +25815,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         r[n].x2 = cx + boxW / 2 + px * 2; r[n].y2 = ry + (kGlyphH + 1) * px;
         ++n;
     }
-    ClearRects(dev, r, n, D3DCOLOR_XRGB(18, 52, 88));
+    ClearRects(dev, r, n, D3DCOLOR_XRGB(43, 54, 51));
 
     // Title, rows, and the key hint - the hint matters because nothing else on screen says how to
     // get out, and a panel you cannot close is worse than no panel.
@@ -25801,7 +25824,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         const int x0 = (int)(eye * halfW + halfW / 2) - boxW / 2;
         n = TextRects(r, n, kCap, x0, y0, px, PanelPageTitle(g_panelPage));
     }
-    ClearRects(dev, r, n, D3DCOLOR_XRGB(150, 205, 255));
+    ClearRects(dev, r, n, D3DCOLOR_XRGB(229, 192, 129));
     n = 0;
     for (int eye = 0; eye < eyes; ++eye) {
         const int x0 = (int)(eye * halfW + halfW / 2) - boxW / 2;
@@ -25859,6 +25882,12 @@ bool VrPanelHitNormalized(LONG uInt, LONG vInt, int* rowIndex) {
     const int nRows = PanelRowCount();
     int px = (int)((g_srcH * 0.28) / ((kGlyphH + 6) * (kPanelRowsMax + 3)));
     if (px < 3) px = 3;
+    const int halfW = dup ? (int)g_srcW / 2 : (int)g_srcW;
+    for (;;) {
+        const int trialW = (kPageCols[g_panelPage] + 2) * (kGlyphW + 1) * px;
+        if (trialW <= halfW * 9 / 10 || px <= 2) break;
+        --px;
+    }
     const int lh = (kGlyphH + 6) * px;
     char row[96] = {};
     int widest = TextGlyphCount(PanelPageTitle(g_panelPage));
@@ -25870,12 +25899,13 @@ bool VrPanelHitNormalized(LONG uInt, LONG vInt, int* rowIndex) {
     }
     const int colsMin = kPageCols[g_panelPage];
     const int cols = (widest + 2 > colsMin) ? widest + 2 : colsMin;
-    const int halfW = dup ? (int)g_srcW / 2 : (int)g_srcW;
     const int boxW = cols * (kGlyphW + 1) * px;
     const int boxH = lh * (nRows + 3);
     const int y0 = (int)g_srcH / 2 - boxH / 2;
-    const float localU = dup ? (u * 2.0f - (u >= 0.5f ? 1.0f : 0.0f)) : u;
-    const float x = localU * (float)halfW;
+    // UpdateVrUiPointer reports panel-local UV for each eye, not a full SBS
+    // backbuffer coordinate. Re-splitting here sent the laser and click to
+    // different rows/positions in stereo.
+    const float x = u * (float)halfW;
     const float cx = (float)halfW * 0.5f;
     if (x < cx - boxW * 0.5f || x > cx + boxW * 0.5f) return false;
     const float py = v * (float)g_srcH;
