@@ -1,202 +1,196 @@
 # Singularity VR
 
-A VR mod for _Singularity_ (2010, Raven Software, Unreal Engine 3.584). It is a `d3d9.dll`
-proxy: it forwards every Direct3D 9 export to the real system library, and along the way renders
-the game in stereo to an OpenXR headset with 6-DOF head tracking, motion-controller input, and a
-weapon that follows your hand.
+A native VR mod for _Singularity_ (2010, Raven Software, Unreal Engine 3).
+The 32-bit `d3d9.dll` proxy renders the game through OpenXR with stereoscopic
+6DoF head tracking, motion controllers and controller-directed weapons.
 
-**No game files are modified.** One DLL goes in beside the game exe. Uninstalling is deleting it.
+**Alpha — actively developed and tested on PSVR2 with the PC adapter,
+SteamVR and the Steam version of the game.** Other hardware and later levels
+have less coverage. A successful build is not a completed headset test.
 
-> **This is an alpha.** It has run on very few machines so far.
-
-**[Download the latest release →](https://github.com/trilex07/SingularityVR/releases)**
-
----
-
-## Install — unzip into one folder
-
-Unzip the release into the game's `Binaries` folder, beside `Singularity.exe`:
-
-```
-d3d9.dll
-openxr_loader.dll
-SingularityVR.ini
-```
-
-`SingularityVR.ini` ships pre-configured. The in-headset settings menu changes it live and saves
-automatically, so you rarely need to touch it by hand.
-
-Keep **High Quality Decals = ON** to retain dynamic shadows. Stereo shadow
-reconstruction for the world and first-person weapon/glove, plus the foreground
-pass-boundary fix, were physically verified on PSVR2 through Steam/OpenXR.
-The accepted fixes are enabled by default, including for existing INIs. See
-[shadow/input settings](docs/accepted-shadow-input-fixes.md) for rollback switches.
-
-Connect your headset and select its active OpenXR runtime. For the tested PSVR2
-PC-adapter setup, start SteamVR and launch Singularity through Steam. Virtual
-Desktop/VDXR is the earlier Quest setup. No extra launch arguments are needed.
-
-**The first run will be at the wrong resolution.** That is expected. The mod must inject
-`-ResX`/`-ResY` before the engine reads the command line — which is before it can ask the headset
-anything — so it queries the headset during the run and uses the answer on the *next* launch.
-Launch once, quit, launch again.
+[Releases](https://github.com/trilex07/SingularityVR/releases) ·
+[Report a bug](https://github.com/trilex07/SingularityVR/issues) ·
+[Current development status](STATUS.md)
 
 ## Requirements
 
-| | |
-|---|---|
-| Game | _Singularity_ (2010) for PC — Steam or GOG |
-| Headset | Latest physical acceptance: **PSVR2** with PC adapter via Steam/OpenXR. Earlier testing: **Quest 3S** with Virtual Desktop/VDXR; other setups are not verified here. |
-| Runtime | **Visual C++ 2015–2022 Redistributable (x86)** — [installer](https://aka.ms/vs/17/release/vc_redist.x86.exe), needed to run the game with the mod installed, not just to build it |
-| OS | Windows 10 or 11 |
-| Network | Highly recommended: a dedicated router (PC on ethernet), **or** Virtual Desktop's wired USB connection (currently in beta) |
+- Windows 10 or 11 and a legally owned PC copy of Singularity.
+- An OpenXR headset and its active OpenXR runtime. Current physical testing uses
+  PSVR2 through SteamVR; earlier testing used Quest 3S with Virtual Desktop/VDXR.
+  The current GOG build and other headset/runtime combinations are not verified.
+- [Visual C++ 2015–2022 Redistributable **x86**](https://aka.ms/vs/17/release/vc_redist.x86.exe).
+  The game and proxy are 32-bit, even on 64-bit Windows.
 
-This build only supports Virtual Desktop with VDXR. SteamVR and OpenVR are planned for later —
-see `STATUS.md` for where that stands.
+SteamVR is supported through **OpenXR**. A native OpenVR renderer is not required.
+A wireless router is relevant only to a wireless headset setup, not PSVR2.
 
-## What works today
+## Installation and updating
 
-| | |
-|---|---|
-| Native stereo, real per-eye parallax | ✅ draw-call duplication; eyes align, depth correct |
-| 6-DOF head tracking | ✅ position and rotation, sampled inside the frame it is drawn for |
-| Head roll | ✅ applied in the view matrix |
-| Resolution | ✅ **100% of the headset's pixels**, inherited automatically |
-| Performance | ✅ **120 fps** on the development machine, with occasional dips or stutters |
-| Motion controllers | ✅ full Touch mapping, menus, haptics, snap or smooth turn |
-| Aim decoupling | ✅ the shot follows the controller; the view never moves |
-| Weapon follows the controller | ✅ 6-DOF, arms hidden, anchor tuned |
-| Laser pointer | ✅ toggleable aiming aid |
-| Weapon alignment | ✅ position and rotation tunable live, in the settings menu |
-| Head-tracking aim option | ✅ aim with your head instead of a motion controller — keyboard/mouse only for now |
-| HUD and menus in both eyes | ✅ health, ammo, crosshair, prompts, pause menu |
-| Sniper scope in both eyes | ✅ whole scope per eye, world drawn once |
-| Head tracking during cutscenes | ✅ automatic — look around freely, turning restored on exit |
-| VR settings menu | ✅ live changes, in the headset, saved automatically |
+Use the instructions and payload attached to the specific release you download.
+A GitHub source archive is not a ready-to-install mod.
 
-## Controls
+The core runtime files belong beside `Singularity.exe` in `Binaries`:
 
-Touch controllers act as a full gamepad, with haptics — this is every physical input on both
-controllers and what it does.
+```text
+Binaries/
+  d3d9.dll
+  openxr_loader.dll
+  SingularityVR.ini
+  vr-assets/             # when supplied by the feature/release payload
+```
 
-**Left controller**
+**The current development installation contains more than these three files.**
+Original UI/font packages can be patched locally, and localization, audio,
+glove/knife and HUD features have additional assets. Copying only a newly built
+DLL does not reproduce the complete tested installation.
 
-| | |
-|---|---|
-| Thumbstick | Move / strafe |
-| Thumbstick click | Dash |
-| Trigger | Aim |
-| Grip | Impulse / melee |
-| X | Age / renovate (TMD) |
-| Y | Flashlight — **hold ~1 s** to open the VR settings menu instead |
-| Menu | Pause menu — **hold ~1 s** to recentre (re-zeroes your view and seating) |
+The existing [make-release script](packaging/make-release.ps1) still packages
+only the two DLLs and INI. It does not yet assemble every current feature or
+generate all required game-package patches. Do not treat that archive as a
+complete distribution of the development setup.
 
-**Right controller**
+For development integration, [the guarded deployment tool](tools/deploy-singularityvr.ps1)
+checks an accepted profile and an explicit change plan, creates timestamped
+backups and verifies hashes. Read the [deployment workflow](docs/STEAM_MAIN_DEPLOY_WORKFLOW.md)
+and [accepted-profile guard](docs/accepted-profile-guard.md) before using it.
+Close the game before replacing any installed file. Preserve your own INI and
+asset payload when updating.
 
-| | |
-|---|---|
-| Thumbstick | Turn (snap or smooth, set in the settings menu) |
-| Thumbstick — tilt up | Cycle weapons |
-| Thumbstick — tilt down | Use a health item |
-| Thumbstick click | Anti-gravity |
-| Trigger | Fire |
-| Grip | Use / reload |
-| A | Jump — **hold ~1 s** to also toggle the laser sight (you'll jump once on the way, since jump has to stay instant) |
-| B | Crouch |
+Start SteamVR with the headset connected, then launch Singularity through Steam.
+Keep **High Quality Decals = ON** for dynamic shadows. Resolution is detected
+from the headset and cached; if the first launch has the wrong resolution,
+close the game normally and launch again.
 
-Every button beyond the two long presses is Raven's own binding, passed straight through.
+To uninstall a full development installation, restore its backed-up game packages
+and configuration as well as remove the mod runtime files. Deleting `d3d9.dll`
+alone disables the proxy but does not undo UI/font/audio package changes.
 
-The F-key bindings described in `STATUS.md` are development keys. They are **inert** unless
-`Debug=1`.
+## Current features
 
-## Configuration
+The following systems are implemented; acceptance applies to the tested scenes
+and configuration, not automatically to every weapon, level or headset.
 
-Settings live in `SingularityVR.ini` beside the DLL, and the in-headset panel is the intended way
-to change them. `SingularityVR.ini.example` documents every key but is **not loaded** — the
-compiled-in defaults are the tested configuration, and the panel writes its own ini when you change
-something.
+- Native per-eye stereo, 6DoF head tracking, head roll, snap/smooth turning,
+  controller aiming and live weapon alignment.
+- Controller-tracked hands/gloves, weapon holstering, a left-hip knife and
+  physical melee interaction.
+- Native pause/menu integration and in-headset VR settings.
+- Reconstructed dynamic world and first-person shadows. Keep High Quality Decals
+  enabled; see [accepted shadow/input fixes](docs/accepted-shadow-input-fixes.md).
+- Input-enumeration caching to avoid the previously measured button-held stalls.
+- Cinema presentation for videos and scripted scenes, with an anchored screen
+  and return to stereo gameplay.
+- Polish localization, locally installed voicepacks and Polish note glyphs.
+  These require their corresponding package/audio payloads; an INI switch alone
+  does not install them. See [voicepack installation](docs/story-xlingual-install-and-recovery-acceptance.md)
+  and [note fonts](docs/polish-note-glyphs.md).
+- Manual reload work for Centurion, Valkyrie, Volk and Kasimov. Centurion has
+  received repeated physical testing; the remaining weapon paths need their own
+  full gameplay acceptance. See [native reload integration](docs/centurion-native-reload.md)
+  and the [reload handoff](docs/handoffs/centurion-reload-compact.md).
+- First-building projector stereo correction and measured renderer optimizations;
+  see [projector evidence](docs/projector-stereo.md).
+- Contextual menu arrow suppression and laser/ring alignment passed the latest
+  reported PSVR2 test. See [cursor evidence](docs/contextual-cursor.md).
 
-Two traps if you hand-edit:
+Some features are opt-in and require an integration profile. Their presence in
+source does not imply that every published release enables or includes them.
 
-- **The ini takes the first key of a duplicated name, silently.** A second copy further down does
-  nothing.
-- **`AutoResX`/`AutoResY` are the mod's own cache of _your_ headset's size.** Never copy them from
-  someone else's ini.
+## Controls and configuration
 
-## Known issues
+Bindings vary with controller type, selected options and integration profile.
+The older Touch-only layout is not a reliable description of the current
+PSVR2/manual-reload setup.
 
-- This has only been tested on one machine, so your experience may vary.
-- Missing or culled geometry is mostly resolved outside of in-engine cutscenes, where it isn't
-  fixable yet. If you notice geometry not rendering elsewhere, set **OCCLUSION** to **DRAW ALL**
-  on the ADVANCED page of the settings menu.
-- A menu rotation bug: enter a game, pause, exit to the main menu, and the menu can be rotated.
-- If the game dies instantly with no message, that is usually a missing 32-bit `PhysXLoader.dll` —
-  and the **unmodded** game does it too. Run [`setup_physx.ps1`](spikes/view_matrix/setup_physx.ps1),
-  which makes the game self-contained from a copy already on your machine.
+With the requested right-handed `ReloadControlLayout=1` profile:
 
-`STATUS.md` is the live state of all of these and is always more current than this list.
+- Right **Cross (X)** uses a health item.
+- Right-stick **up** jumps.
+- Right **Circle** operates manual reload.
+- Fresh reload ammunition is taken with the left hand from behind the left shoulder.
+- Centurion uses cylinder opening, upward case ejection, fresh-ammo insertion and
+  a closing gesture. The other weapon reload paths use their weapon-specific
+  insertion procedure; their physical validation remains separate.
+- Left-hip knife and right-side weapon holster remain separate from the ammo zone.
 
-## Planned
+Use the in-headset settings and the documentation accompanying your tested
+profile for other actions. Recentring can use L3+R3 when `RecenterChord=1`;
+that chord is not a screenshot shortcut.
 
-Next up: more testing, general bug fixes, and performance improvements. Also on deck: comfort
-settings (height adjustment, vignettes), shrinking flat cutscenes so they don't fill your whole
-view in the headset, testing the late-game weapons, fixing ammo/health/radio HUD positioning for
-better headset visibility, and an improved settings menu.
+Settings live in `Binaries/SingularityVR.ini`. Restart after changing options
+that are not exposed as live settings. Avoid duplicate keys: Win32 INI reads
+can silently use the first occurrence. `AutoResX` and `AutoResY` are a cache
+for your headset and must not be copied from another user's setup.
 
-Further out: SteamVR/OpenVR support, and Xbox controller support for the head-aiming mode.
+## Known issues and work in progress
 
-Longer shots, and both will be tough: two-hand tracking, and possibly manual reloading.
+- **TV/desktop mirror:** the requested complete right-eye view fitted to the
+  monitor is still failing physical acceptance. Successful copy counters are
+  not proof that the displayed image is correct.
+- **Steam screenshots:** recent captures are SteamVR screenshot imports and can
+  show black/loading/HUD-only content. The D3D9 F12 capture changes have not
+  resolved that path. See [mirror/capture investigation](docs/right-eye-mirror-capture.md).
+- **Health HUD:** the smaller, translucent, face-raise-only plate is built and
+  passes offline gesture tests; physical acceptance is pending.
+- A short FPS dip remains during the early collapsing-building sequence.
+  Smaller general hitches improved, but no complete fix for that scene is claimed.
+  There is no universal 90/120 FPS guarantee.
+- Later weapons, later levels, controller hotplug and other runtime/hardware
+  combinations need more coverage.
+- Full reproducible release packaging for all locally patched packages/assets
+  remains work in progress.
+
+[STATUS.md](STATUS.md) contains dated evidence and historical entries.
+Read newer scoped results before relying on older “LATEST” sections.
+Test candidates are not automatically promoted to the accepted installation.
 
 ## Reporting a bug
 
-[Open an issue](https://github.com/letsgosportsteam/singularity-vr-mod/issues) and attach the log
-from `%LOCALAPPDATA%\SingularityVR\`. `view_matrix.log` is always the run that just happened;
-older runs sit beside it stamped with their start time.
+[Open an issue](https://github.com/trilex07/SingularityVR/issues) with your headset,
+runtime, game edition, mod build/commit, relevant INI settings, scene and steps
+to reproduce. Attach the relevant portion of
+`%LOCALAPPDATA%\SingularityVR\view_matrix.log`; older runs may be timestamped
+beside it. Mention whether the problem affects one eye, both eyes, or only the
+desktop/screenshot.
 
-Say which headset, which OpenXR runtime, Steam or GOG, and whether you had already relaunched once.
+For PSVR2 tests, agree the complete route before putting on the headset and
+report after normal game exit. Switching between the game and desktop chat
+has caused focus loss and invalidated earlier tests.
 
-**One control worth a minute of your time:** rename `d3d9.dll` to `d3d9.dll.off` and run the game
-again at the same resolution. If the problem is still there, it is not this mod. Please say whether
-you tried it.
+If the unmodified game also fails to start, check its original dependencies.
+The optional [PhysX helper](spikes/view_matrix/setup_physx.ps1) uses an existing
+local copy; inspect its instructions before running it.
 
 ## Building
 
 ```powershell
-.\spikes\view_matrix\build.ps1        # builds x86
-.\packaging\make-release.ps1 -Version 0.1.0-alpha
+.\spikes\view_matrix\build.ps1
 ```
 
-Needs Visual Studio 2022 with the C++ x86 toolset, and the OpenXR SDK. Point at your own SDK with
-`$env:OPENXR_SDK`; the build also runs an `/analyze` pass first that fails on format-string defects,
-which is there because one such mistake cost four debugging sessions.
+Requires Visual Studio 2022 C++ x86 tools, a Windows SDK and the OpenXR SDK.
+Set `OPENXR_SDK` or use the repository's
+[SDK resolver](tools/Resolve-OpenXrSdk.ps1).
+The production build is optimized **x86 PE32 /O2** and records provenance and
+SHA-256 in `spikes/view_matrix/d3d9.build.json`. Build checks include static
+analysis for format-string defects.
 
-**On the layout:** `spikes/view_matrix/` is the live build — a single large `d3d9.cpp`.
-`spikes/vr_render/` is the known-good fallback. The earlier spikes are kept deliberately: several
-record approaches that did *not* work, which is most of their value.
+The active renderer is `spikes/view_matrix/`, including `d3d9.cpp` and its
+supporting headers. Earlier spikes are research references, not interchangeable
+current deployment baselines. Building does not deploy or launch the game.
 
-## The development notes
+## Development and licences
 
-Unusually for a mod, the working notes are published as-is:
+Start with [AGENTS.md](AGENTS.md), [STATUS.md](STATUS.md) and the
+[agent skill index](docs/AGENT_SKILLS_MANIFEST.md).
+[ENGINE_NOTES.md](ENGINE_NOTES.md) records engine research;
+[HISTORY.md](HISTORY.md) retains earlier experiments, including superseded results.
+Deterministic checks, builds, installed-game tests and physical headset
+acceptance are recorded separately.
 
-| | |
-|---|---|
-| [`STATUS.md`](STATUS.md) | Current state, and what to do next |
-| [`ENGINE_NOTES.md`](ENGINE_NOTES.md) | Engine internals, addresses, structures, Ghidra findings |
-| [`HISTORY.md`](HISTORY.md) | The run log, newest first — search it, don't read it |
-| [`FEASIBILITY.md`](FEASIBILITY.md) | The original assessment, kept for the record |
+Project code is MIT; see [LICENSE](LICENSE) and
+[THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) for component-specific terms.
+Original game content remains the property of its owners. Locally extracted
+assets and patched game packages must be handled separately from mod source;
+do not assume the source-code licence covers those assets.
 
-They include the wrong turns, and sections marked ⛔ **SUPERSEDED** where a claim went stale in
-place. That is on purpose. The most expensive defects in this project were not hard problems — they
-were stale premises inherited from an earlier run and never re-tested.
-
-## Licence
-
-MIT — see [`LICENSE`](LICENSE), which notes one GPL-licensed development tool that is not part of
-the mod and ships in no release.
-
-Third-party components and their required notices are in
-[`THIRD-PARTY-NOTICES.txt`](THIRD-PARTY-NOTICES.txt).
-
-Not affiliated with or endorsed by Activision or Raven Software. _Singularity_ is their trademark.
-This mod contains no game code or assets, redistributes no game content, and modifies no game
-files.
+Not affiliated with or endorsed by Activision or Raven Software.
