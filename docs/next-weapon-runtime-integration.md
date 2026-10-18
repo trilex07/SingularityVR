@@ -320,3 +320,24 @@ temporary assets were removed. Both automatic restore helpers had failed on
 this run (a relaunch race and a PowerShell array wrapper respectively), so MAIN
 performed a guarded manual rollback and fixed the asset receipt parser. The
 restore leases now require 30 seconds of stable process absence before acting.
+
+### Offline continuation after the tester signed off
+
+- Centurion now uses its own four-line bilingual tutorial recipe after Circle,
+  in the same bounded per-eye hint renderer. It retains the original reload
+  mechanics. This is additive guidance, NOT proof that native `Pad 3` is gone.
+- Complete `test-centurion.ps1` passed with `-PreparedRoot` pointing to the
+  original `SingularityVR-next-weapons/build/next-weapon-reload/prepared` assets.
+  This includes all three weapon animation/socket/replay profiles, refill-only
+  first-shot palettes, own-process x86 ABI and synthetic GPU replay. Initial
+  local fixture run lacked `.svwo` oracles; that was not a runtime fix failure.
+- Eleven mirror/hint source-contract tests pass. Optimized x86 PE32 DLL builds
+  successfully (existing warnings remain), SHA-256:
+  `19BE9208CC076A37BC23AAE38996382C05675B4D82220D1899F583A6B9328B82`.
+- Stage-9 logging now includes all four affine rows of bind/root/local/controller,
+  at most four samples per weapon, two seconds apart. These are sufficient to
+  reproduce the failed composition instead of guessing from translations.
+- The last session has no such full matrix snapshot. The actual native-space
+  mismatch and semantic native prompt replacement remain open. Do not remove
+  safety gates or claim the three weapons work from CPU roundtrips alone.
+- No Steam launch/deploy: the user ended physical testing for the night.

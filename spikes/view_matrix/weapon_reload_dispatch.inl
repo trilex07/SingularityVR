@@ -294,6 +294,18 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
                 local.m[3][0],local.m[3][1],local.m[3][2],
                 controller.m[3][0],controller.m[3][1],controller.m[3][2],
                 g_centreYaw,g_baseYaw*(6.2831853f/65536.f),MetresToUU());
+            // Full affine rows make the failed composition reproducible offline;
+            // translation alone cannot distinguish basis/scale from origin errors.
+            armbind::Mat bind;
+            if(weaponreload::ClipBind(g_nextAnimation[index],bind)){
+                const armbind::Mat* matrices[]{&bind,&nativeRoot,&local,&controller};
+                const char* names[]{"bind","root","local","controller"};
+                for(unsigned m=0;m<4;++m)for(unsigned row=0;row<4;++row)
+                    Log("next reload socket matrix: kind=%d sample=%u matrix=%s row=%u values=%.9g,%.9g,%.9g,%.9g bones=%d localReg=%d",
+                        int(kind),geometryNotes[index],names[m],row,
+                        matrices[m]->m[row][0],matrices[m]->m[row][1],
+                        matrices[m]->m[row][2],matrices[m]->m[row][3],layout.bones,layout.local);
+            }
         }
         note(9);return 0;
     }

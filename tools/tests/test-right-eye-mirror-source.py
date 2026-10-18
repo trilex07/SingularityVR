@@ -70,6 +70,17 @@ class Contract(unittest.TestCase):
         self.assertIn('const int half=int(desc.Width/2)', CPP)
         self.assertIn('widest+2)*(kGlyphW+1)*px>half*84/100', CPP)
 
+    def test_centurion_hint_uses_own_four_line_recipe_and_identity(self):
+        self.assertIn('Rd(g_gunVerts)==5799&&g_centurionReload', CPP)
+        self.assertIn('visual.clip.weapon!=(uint32_t)Rd(g_weaponObj)', CPP)
+        self.assertIn('stepIndex=4;rows=4;', CPP)
+        self.assertIn('g_centurionVisual.clip.pawn==f.pawn', CPP)
+        self.assertIn('visible&&f.enabled&&f.releaseCylinder', CPP)
+        self.assertIn('if(now>=hintUntil||hintUntil-now>8000)return;', CPP)
+        self.assertIn('boxH=rows*line+2*px', CPP)
+        self.assertIn('row<rows', CPP)
+        self.assertIn('PRESS O TO OPEN THE CYLINDER', TUTORIAL)
+
 
 if __name__ == "__main__":
     unittest.main()

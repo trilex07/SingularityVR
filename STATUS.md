@@ -1,6 +1,21 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-19 end-of-night (no further Steam test authorized today): branch
+`fix/vr-settings-rifle-reload`. Steam screenshot/right-eye composition accepted
+by user. Added Centurion's four-line PL/EN Circle instruction with weapon/pawn
+identity and eight-second expiry; NOT a replacement of native `Pad 3` yet.
+All three other weapon profiles pass the complete offline reload runner using
+the original prepared assets/oracles in the next-weapons checkout. x86 PE32
+`/O2` build PASS, candidate SHA `19BE9208CC076A37BC23AAE38996382C05675B4D82220D1899F583A6B9328B82`.
+Valkyrie remains BLOCKED at native socket stage 9 in the last real session;
+do NOT advertise reload as fixed. Full bounded bind/root/local/controller
+matrix rows are now available for the next authorized session. Existing log
+does not contain these matrices, so changing their order/origin is speculative.
+Volk/Kasimov share that path and are NOT physically validated. Accepted Steam
+installation remains restored; no candidate deployed tonight. See
+`docs/next-weapon-runtime-integration.md` for evidence and exact limits.
+
 2026-10-18 bilingual VR tutorial: root VR Settings now includes an optional
 Tutorial page with a Polish/English chooser followed by six short lessons
 (movement/jump, grip/medkit, weapon wheel, magazine reload, Centurion, pause).

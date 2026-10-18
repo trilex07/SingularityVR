@@ -2295,7 +2295,7 @@ bool g_centurionOwnsGrip=false;
 static SRWLOCK g_centurionVisualLock=SRWLOCK_INIT;
 struct CenturionVisual {bool visible=false;hipknife::V pouch{},socket{},hand{};int phase=0;centurionclip::Snapshot clip{};hipknife::Pose source{};std::uint64_t since=0;
     centurionshells::Burst shells{};centurionshells::WorldFrame world{};LONG shellGeneration=0;
-    hipknife::Pose aim{};std::uint64_t transaction=0,closed=0;};
+    hipknife::Pose aim{};std::uint64_t transaction=0,closed=0,hintUntilMs=0;};
 static CenturionVisual g_centurionVisual{};
 static IDirect3DStateBlock9* g_centurionMarkerState=nullptr;
 static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,bool releaseCylinder);
@@ -25615,16 +25615,26 @@ static int TextRects(D3DRECT* r, int n, int cap, int x0, int y0, int px, const c
 // pretend to replace it. It appears only after Circle in tracked gameplay,
 // for eight seconds, inside EACH eye; the Settings tutorial uses the same text.
 static void DrawNextReloadHint(IDirect3DDevice9* dev) {
-    if(!dev||!NextReloadEnabled()||!VrModeOn()||!InGameplay()||!Rd(g_dupDraws)||
+    if(!dev||(!NextReloadEnabled()&&!g_centurionReload)||!VrModeOn()||!InGameplay()||!Rd(g_dupDraws)||
        Rd(g_gamePaused)||Rd(g_vrUiMenu)||Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||
        CutsceneNativeCameraArmed()||g_xrSessionState!=XR_SESSION_STATE_FOCUSED)return;
-    NextReloadVisual visual;
-    if(!TryAcquireSRWLockShared(&g_nextVisualLock))return;
-    visual=g_nextVisual;ReleaseSRWLockShared(&g_nextVisualLock);
     const ULONGLONG now=GetTickCount64();
-    if(!visual.valid||visual.kind==weaponreload::Kind::None||
-       visual.weapon!=(uint32_t)Rd(g_weaponObj)||now>=visual.hintUntilMs||
-       visual.hintUntilMs-now>8000)return;
+    ULONGLONG hintUntil=0;int stepIndex=3,rows=3;
+    if(Rd(g_gunVerts)==5799&&g_centurionReload){
+        CenturionVisual visual;
+        if(!TryAcquireSRWLockShared(&g_centurionVisualLock))return;
+        visual=g_centurionVisual;ReleaseSRWLockShared(&g_centurionVisualLock);
+        if(!visual.visible||visual.clip.weapon!=(uint32_t)Rd(g_weaponObj))return;
+        hintUntil=visual.hintUntilMs;stepIndex=4;rows=4;
+    }else{
+        NextReloadVisual visual;
+        if(!TryAcquireSRWLockShared(&g_nextVisualLock))return;
+        visual=g_nextVisual;ReleaseSRWLockShared(&g_nextVisualLock);
+        if(!NextReloadEnabled()||!visual.valid||visual.kind==weaponreload::Kind::None||
+           visual.weapon!=(uint32_t)Rd(g_weaponObj))return;
+        hintUntil=visual.hintUntilMs;
+    }
+    if(now>=hintUntil||hintUntil-now>8000)return;
     IDirect3DSurface9* back=nullptr;IDirect3DSurface9* oldRt=nullptr;
     if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
     D3DSURFACE_DESC desc{};D3DVIEWPORT9 oldVp{};DWORD oldScissor=FALSE;
@@ -25633,14 +25643,14 @@ static void DrawNextReloadHint(IDirect3DDevice9* dev) {
         SUCCEEDED(dev->GetRenderTarget(0,&oldRt))&&oldRt;
     if(!state||desc.Width<4||desc.Height<4){if(oldRt)oldRt->Release();back->Release();return;}
     const auto& step=vrtutorial::GetStep(
-        PolishLocalization::PL().IsPolishEnabled()?vrtutorial::Language::Polish:vrtutorial::Language::English,3);
+        PolishLocalization::PL().IsPolishEnabled()?vrtutorial::Language::Polish:vrtutorial::Language::English,stepIndex);
     const int half=int(desc.Width/2),h=int(desc.Height);
-    int widest=0;for(int i=0;i<3;++i)widest=std::max(widest,TextGlyphCount(step.line[i]));
+    int widest=0;for(int i=0;i<rows;++i)widest=std::max(widest,TextGlyphCount(step.line[i]));
     int px=std::max(2,std::min(5,h/450));
     while(px>1&&(widest+2)*(kGlyphW+1)*px>half*84/100)--px;
     if(px<2){oldRt->Release();back->Release();return;}
     const int line=(kGlyphH+5)*px,boxW=(widest+2)*(kGlyphW+1)*px;
-    const int top=h*70/100,boxH=3*line+2*px;
+    const int top=h*70/100,boxH=rows*line+2*px;
     if(top+boxH>=h){oldRt->Release();back->Release();return;}
     if(g_origSetRenderTarget)g_origSetRenderTarget(dev,0,back);else dev->SetRenderTarget(0,back);
     D3DVIEWPORT9 full{0,0,desc.Width,desc.Height,0.0f,1.0f};dev->SetViewport(&full);
@@ -25650,8 +25660,8 @@ static void DrawNextReloadHint(IDirect3DDevice9* dev) {
         plates[eye]={(LONG)(cx-boxW/2-2*px),(LONG)top,(LONG)(cx+boxW/2+2*px),(LONG)(top+boxH)};
     }
     ClearRects(dev,plates,2,D3DCOLOR_XRGB(13,19,23));
-    constexpr int cap=3*64*21*2;static D3DRECT glyphs[cap];int n=0;
-    for(int eye=0;eye<2;++eye)for(int row=0;row<3;++row){
+    constexpr int cap=4*64*21*2;static D3DRECT glyphs[cap];int n=0;
+    for(int eye=0;eye<2;++eye)for(int row=0;row<rows;++row){
         const int cx=eye*half+half/2;
         n=TextRects(glyphs,n,cap,cx-TextGlyphCount(step.line[row])*(kGlyphW+1)*px/2,
                     top+(row+1)*line,px,step.line[row]);
@@ -27539,6 +27549,8 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
         g_supportLatch.Reset();
     if(TryAcquireSRWLockExclusive(&g_centurionVisualLock)){
         const bool visible=f.context&&f.supported&&f.tracked&&f.ammoFresh&&centurionreload::AmmoValid(f);
+        const auto hintUntil=(visible&&f.enabled&&g_centurionVisual.clip.weapon==f.weapon&&
+            g_centurionVisual.clip.pawn==f.pawn)?g_centurionVisual.hintUntilMs:0;
         const auto& leftQ=g_handAimOrientation[0];
         g_centurionVisual={visible,f.pouch,f.socket,f.hand,(int)g_centurionState.phase,
             {visible,g_centurionState.phase,{f.hand,{leftQ.x,leftQ.y,leftQ.z,leftQ.w}},f.pawn,f.weapon,now}};
@@ -27548,6 +27560,7 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
         g_centurionVisual.closed=g_centurionVisualClose;
         g_centurionVisual.shells=g_centurionShellBurst;g_centurionVisual.world=shellWorld;
         g_centurionVisual.shellGeneration=shellGeneration;
+        g_centurionVisual.hintUntilMs=(visible&&f.enabled&&f.releaseCylinder)?now+8000:hintUntil;
         ReleaseSRWLockExclusive(&g_centurionVisualLock);
     }
     if(result.requestNative&&g_centurionNativeTap)g_centurionTap.Update(true,true,now);
