@@ -2,7 +2,10 @@
 
 2026-10-18 runtime followup: DLL5478D2A3 session PID36436. User rejects TV fit
 and Steam screenshots. Native cursor API verified SPMenus D2E964C936CCE902 and
-visibility readback Hidden; cursor/laser PHYSICAL result still unreported.
+visibility readback Hidden. Subsequent user reply confirms arrow disappeared
+and laser hits the ring: contextual cursor/laser PHYSICALLY_VERIFIED for this
+test scope. This does not accept contextual distance, TV or screenshots, and
+does not promote the combined candidate to the installed accepted profile.
 Guard restored DLL789749E5 / INI8B0B0B4C; independent SHA checks match.
 Steam images are type2 VR imports (not D3D9 F12); actual pixels show loading
 curtain/HUD. Mirror success counters do not prove correct content/TV output.
@@ -20,8 +23,8 @@ is now scissored per eye and ring/laser use the consumed native input coordinate
 L1 cursor/menu/mirror tests and L2 x86 PE32 `/O2` PASS; candidate SHA-256
 `5478D2A3BF530D3E9D067B9FE63FF909404E8F0B84C3320863EEB233724677D7`.
 Offline bundle: `build/context-native-cursor-20261018/`. Steam untouched.
-Combined L3/L4 still pending: contextual distance/arrow/laser, right-eye monitor
-mirror and actual Steam F12 image. Do not deploy the older followup bundle.
+Cursor/laser L3/L4 subsequently confirmed above. Contextual distance remains
+unreported; TV/VR screenshots failed. Do not deploy the older followup bundle.
 
 2026-10-18 menu polish: save-slot confirmation separation is PHYSICALLY_VERIFIED
 on Steam PID 36352 / DLL `5032B353...C2E08C1`. Exact retained Slots source and

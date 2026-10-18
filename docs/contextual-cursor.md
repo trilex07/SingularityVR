@@ -1,6 +1,14 @@
 # Contextual cursor: confirmation, notes and pickup dialogs
 
-## Native visibility replacement (offline RE, awaiting L3/L4)
+## Native visibility replacement (scoped L3/L4 acceptance)
+
+2026-10-18: Steam PID36436 / DLL SHA-256
+`5478D2A3BF530D3E9D067B9FE63FF909404E8F0B84C3320863EEB233724677D7`.
+Runtime verified SPMenus `D2E964C936CCE902` and visibility Hidden readback.
+User explicitly confirms native arrow disappeared and laser hits the ring.
+This accepts the cursor/laser result of the requested contextual test, not
+every unvisited screen or contextual distance. TV and SteamVR screenshots in
+the same candidate failed. Installation was restored; no whole-build promotion.
 
 Do not use the old polygon signature or modify RvGame. AVM1 inspection of
 Dialogs proves `com.raven.MouseCursor` attaches exported `Mouse` at depth 65535
@@ -34,7 +42,8 @@ the inverse crop/flip map accounts for pixel rounding. No guessed pixel offset.
 
 Falsifiers: native visibility readback fails/ABI refuses; arrow remains despite
 readback false (different producer); or centre/edge hit targets disagree despite
-the shared dispatched UV and panel. Those are UNKNOWN until the combined test.
+the shared dispatched UV and panel. The reported cursor/laser test passed;
+retain these falsifiers for regressions or additional unvisited screens.
 
 ## Latest physical feedback and next bounded candidate
 
