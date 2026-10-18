@@ -1261,6 +1261,7 @@ volatile LONG g_constTest = 0;    // constant-pitch proof
 const int32_t kConstPitch = 8000; // ~44 degrees up - unmissable
 
 volatile LONG g_vrCameraShakeSuppression = 1;
+volatile LONG g_nativeCameraComfort = 0; // default-OFF native POV correction, not shader translation
 int32_t g_wantPitch = 0, g_wantYaw = 0;
 // Our own last yaw write, so anything else that moved yaw since can be told apart from it and
 // folded in rather than overwritten. See the note at the write site.
@@ -12992,7 +12993,7 @@ extern bool          g_inHudRemap;
 void UpdateCameraStabilizationThisFrame() {
     // Never reuse the preceding frame's correction after a failed read/bounds check.
     InterlockedExchange(&g_vrCameraStabValid, 0);
-    if (!VrModeOn() || !Rd(g_vrTranslationStabilization) || CutsceneNativeCameraArmed()) return;
+    if (!VrModeOn() || !Rd(g_vrTranslationStabilization) || Rd(g_nativeCameraComfort) || CutsceneNativeCameraArmed()) return;
     const uintptr_t cam = g_camera;
     if (!cam) return;
 
@@ -24966,6 +24967,8 @@ void InstallProcessEventHook() {
         kProcessEventAddr);
 }
 
+#include "native_camera_comfort.h"
+
 void InstallViewHook() {
     // ALREADY_INITIALIZED is the normal case now: InstallAutoResolution runs in DllMain and gets
     // there first. Treating it as a failure here would silently disable head tracking.
@@ -29388,12 +29391,13 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     {
         LARGE_INTEGER tEng = Now();
         RefreshCameraPosition();
+        NativeCameraComfort::Poll();
         // UE3's POV includes flat-game bob and camera shake.  Keep the pawn's
         // locomotion/elevation, but remove that residual translation from the
         // VR view. HMD position remains in g_hmdOffset and is never smoothed.
         InterlockedExchange(&g_vrCameraStabValid, 0);
         const int eyeOffset = (g_offBaseEyeHeight >= 0) ? g_offBaseEyeHeight : g_offEyeHeight;
-        if (VrModeOn() && Rd(g_vrTranslationStabilization) && g_playerPawn &&
+        if (VrModeOn() && Rd(g_vrTranslationStabilization) && !Rd(g_nativeCameraComfort) && g_playerPawn &&
             Rd(g_camPosValid) && eyeOffset >= 0 &&
             Readable((void*)(g_playerPawn + ACTOR_LOCATION), 12) &&
             Readable((void*)(g_playerPawn + eyeOffset), 4)) {
@@ -32415,6 +32419,7 @@ void LoadIniSettings() {
     Log("camera translation evidence=%d; passive 10Hz, 240 samples maximum; no translation override",g_cameraTranslationEvidence);
     g_vrTranslationStabilization=GetPrivateProfileIntA("Render","VrTranslationStabilization",0,path)?1:0;
     g_vrCameraShakeSuppression=GetPrivateProfileIntA("Render","VrCameraShakeSuppression",1,path)?1:0;
+    g_nativeCameraComfort=GetPrivateProfileIntA("Render","NativeCameraComfort",0,path)?1:0;
     g_vrShadows=GetPrivateProfileIntA("Render","VrShadows",1,path)?1:0;
     g_skipExtraTarget=GetPrivateProfileIntA("Render","DropExtraTarget",0,path)?1:0;
     // Fix-E/shadows round 4: 0 = full split (measure only), 1 = mono sample, 2 = drop.

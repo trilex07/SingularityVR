@@ -17,6 +17,7 @@ param(
     [switch]$ProjectorStereo,
     [switch]$QuietMenuDiagnostics,
     [switch]$StabilizeWalking,
+    [switch]$NativeCameraComfort,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -323,11 +324,13 @@ if ($QuietMenuDiagnostics) {
     }
     $planReason += ' Automatic menu census and proof screenshots disabled to reduce diagnostic contamination; performance causality still requires runtime measurement.'
 }
-if ($StabilizeWalking) {
-    if ($iniValues['Render/VrTranslationStabilization'] -ne '0') { throw 'Expected reviewed translation-stabilization baseline OFF.' }
-    $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes 'VrTranslationStabilization=0' 'VrTranslationStabilization=1'
-    $iniChanges.Add([ordered]@{key='Render/VrTranslationStabilization';before='0';after='1';reason='User requested removal of walking bob; retain physical HMD translation and pawn locomotion.'})
-    $planReason = 'Preserve accepted projector and muzzle correction; optimize projector shader cache using PID5860 eviction evidence and enable existing bounded pawn/POV walking stabilization. Automatic menu diagnostics disabled. FPS and walking comfort require physical verification.'
+if ($NativeCameraComfort) {
+    if ($iniValues['Render/VrTranslationStabilization'] -ne '0') { throw 'Rejected shader-space walking correction must stay OFF.' }
+    if ($iniValues.ContainsKey('Render/NativeCameraComfort')) { throw 'Refusing to overwrite existing native camera setting.' }
+    $newline = if ($iniText.Contains("`r`n")) { "`r`n" } else { "`n" }
+    $candidateIniBytes = Replace-UniqueAscii $candidateIniBytes '[Render]' "[Render]${newline}NativeCameraComfort=1"
+    $iniChanges.Add([ordered]@{key='Render/NativeCameraComfort';before=$null;after='1';reason='Verified native camera-output seam: stabilize first-person origin before stereo, not shader-space offsets.'})
+    $planReason = 'Retain accepted projector/muzzle path. Native first-person POV comfort experiment plus input-cache focus invalidation fix, bounded counters. Shader translation stabilization stays OFF. Runtime and physical acceptance pending.'
 }
 New-Item -ItemType Directory -Path $artifactPath | Out-Null
 $stageDll = Join-Path $artifactPath 'd3d9.dll'

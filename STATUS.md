@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+2026-10-18 user requests BOTH camera/FPS fixes before another PSVR2 request.
+Implemented native POV comfort (default-OFF NativeCameraComfort), not rejected
+shader-space translation. Offline native RE proves vtable438 output -> camera
+cache, with shake applied AFTER mCurrentPOV. Native hook preserves calls/FOV,
+stabilizes only local style1 gameplay, shares origin with existing hand anchors.
+Excludes menus/cinematic/overrides/pending targets; exact full function fingerprint
+and reflected offsets required. L1 math900frames + real-wrapper x86 ABI mock PASS.
+FPS correction: VR+pad enum cache no longer invalidates on menu focus; callbacks
+and topology invalidation retained. Six focused C++ test executables PASS.
+Not all FPS dips assigned:77.9/83.3 windows without rescans remain unexplained.
+See docs/native-camera-comfort.md. Build/package verification follows. Steam
+unchanged; await fresh start only after candidate is fully prepared.
+
 PID31668 CLOSED: user rejects walking stabilization (screen shake + hand flicker);
 FPS dips persist. DLL789749E5/INI8B0B0B4C/injector5B948DDB/UI51CDAB5C restored
 and independently hashed. evidence-31668 logs saved; no running game.

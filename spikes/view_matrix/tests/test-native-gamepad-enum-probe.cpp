@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <cstring>
 #include <cassert>
+#include <initializer_list>
 #include "../../../third_party/minhook/include/MinHook.h"
 #include "../hotpath_sampler.h"
 static hotpath::sampler g_hotPathSampler;
@@ -48,6 +49,15 @@ int main(){
  fakeResult=0;
  assert(NativeGamepadEnumProbe::Observe()==0 && nativeCalls==5);
  assert(NativeGamepadEnumProbe::Observe()==0 && nativeCalls==5); // only enum call deferred
+ // Gameplay -> pause -> options -> gameplay: only routing/focus changes.
+ // SetContext now receives VR+pad eligibility, not the changing menu class.
+ const LONG contextBefore=NativeGamepadEnumProbe::contextChanges;
+ for(int simulatedMenu : {0,1,2,1,0}) {
+  (void)simulatedMenu;
+  NativeGamepadEnumProbe::SetContext(true);
+  assert(NativeGamepadEnumProbe::Observe()==0 && nativeCalls==5);
+ }
+ assert(NativeGamepadEnumProbe::contextChanges==contextBefore);
  NativeGamepadEnumProbe::cache.Invalidate();
  assert(NativeGamepadEnumProbe::Observe()==0 && nativeCalls==6); // device topology forces scan
  NativeGamepadEnumProbe::SetContext(false);

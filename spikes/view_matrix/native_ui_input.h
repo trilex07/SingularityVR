@@ -262,8 +262,10 @@ static void __fastcall Poll(void* self,void*,float dt) {
  ReadableForget();
  UpdateMenu(); // update mode before the game tick/XInput routes the trigger
  ObserveWeaponAssets(); // at most six weapon identities, only the explicit read-only witness
- NativeGamepadEnumProbe::SetContext(VrModeOn() && InterlockedCompareExchange(&g_padEmu,0,0)!=0 &&
-     InterlockedCompareExchange(&g_vrMenuClass,0,0)==0);
+ // Menu/dialog focus changes input routing, not the DirectInput device topology.
+ // Replay still invokes the original callbacks, so menus receive native setup.
+ // Invalidating on focus used to force a synchronous discovery scan on resume.
+ NativeGamepadEnumProbe::SetContext(VrModeOn() && InterlockedCompareExchange(&g_padEmu,0,0)!=0);
  BindViewport();
  {
   hotpath::scope inputScope(g_hotPathSampler,hotpath::Family::native_input_poll);
