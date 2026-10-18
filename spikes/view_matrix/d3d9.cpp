@@ -58,6 +58,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "input_remap.h"
 #include "prompt_tokens.h"
 #include "reload_controls.h"
+#include "vr_tutorial.h"
 #include "polish_localization.h"
 
 // view_matrix - Singularity VR mod, spike 9
@@ -7558,6 +7559,8 @@ struct PadButtonAction {
 volatile LONG g_panelOpen = 0;
 int  g_panelRow = 0;
 bool g_panelDirty = false;      // has anything changed since it was opened?
+volatile LONG g_vrTutorialLanguage = 0; // selected on the tutorial start screen: 1=PL, 2=EN
+volatile LONG g_vrTutorialStep = 0;
 extern int g_panelPage;
 
 // The settings screen is now reached from the final synthetic row in the native
@@ -7823,7 +7826,10 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_GOTO_TMDBONE, PR_GOTO_TMDMESH, PR_BACK_TMD,
         PR_GOTO_CTRL, PR_GOTO_COMFORT, PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_BACK,
         PR_TEXTURES,
-        PR_SHAKESCREEN, PR_BOBSTABILIZE, PR_GLOVECUFFS };   // appended last: existing IDs never renumber
+       PR_SHAKESCREEN, PR_BOBSTABILIZE, PR_GLOVECUFFS,
+       PR_GOTO_TUTORIAL, PR_TUT_POLISH, PR_TUT_ENGLISH, PR_TUT_STEP,
+       PR_TUT_LINE1, PR_TUT_LINE2, PR_TUT_LINE3, PR_TUT_LINE4,
+       PR_TUT_PREVIOUS, PR_TUT_NEXT, PR_TUT_LANGUAGE, PR_TUT_BACK }; // append only
 
 // ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
@@ -7858,11 +7864,11 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
 //   - No page is longer than 10 rows, which keeps every page inside the range that was drawing
 //     before any of this. It also nearly DOUBLES the glyph - px is derived from this number, and at
 //     17 it had hit the floor of 3 that the comment below calls unreadable through a lens.
-const int kPanelPages    = 10;     // + HANDS (glove knobs that used to be ini-only)
+const int kPanelPages    = 12;     // + HANDS + tutorial language chooser + tutorial
 const int kPanelRowsMax  = 13;     // DISPLAY needs 13 for TEXTURES (was 12); effective px stays 3 via floor-raiser
 const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_ENABLEVR, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_GOTO_CTRL, PR_GOTO_COMFORT,
-      PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_GOTO_TMD, PR_GOTO_HANDS },
+      PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_GOTO_TMD, PR_GOTO_HANDS, PR_GOTO_TUTORIAL },
     { PR_TURNMODE, PR_TURNSPEED, PR_SNAPANGLE, PR_TURNDIR, PR_MOVEDIR, PR_SWAPSTICKS,
       PR_LEFTHAND, PR_RECENTERCHORD, PR_RECORDING, PR_BACK },
     { PR_CINESTICK, PR_CINECAM, PR_SHAKESCREEN, PR_BOBSTABILIZE, PR_BACK },
@@ -7918,23 +7924,45 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_TMDARMSLOT, PR_TMDARMMESH, PR_TMDARMMODE, PR_TMDARMFROM, PR_TMDARMTO, PR_TMDARMSTEP,
       PR_TMDHIDE, PR_BACK_TMD },
     { PR_GLOVEISOLATE, PR_GLOVEFACE, PR_GLOVECUFFS, PR_GLOVESTUMP, PR_GLOVELEFT, PR_BACK },
+    { PR_TUT_POLISH, PR_TUT_ENGLISH, PR_BACK },
+    { PR_TUT_STEP, PR_TUT_LINE1, PR_TUT_LINE2, PR_TUT_LINE3, PR_TUT_LINE4,
+      PR_TUT_PREVIOUS, PR_TUT_NEXT, PR_TUT_LANGUAGE, PR_TUT_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 11, 10, 5, 13, 10, 7, 10, 6, 8, 6 };   // [2] COMFORT 3->5, [9] HANDS 5->6 (cuffs)
+const int kPageCount[kPanelPages] = { 12, 10, 5, 13, 10, 7, 10, 6, 8, 6, 3, 9 };
 
-// Width per page, so a two-row sub-page is not as wide as the root. Sized to the LONGEST VALUE each
-// page's rows can display, not to what they happen to show now - that is what keeps the box from
+// Width per page, so a two-row sub-page is not as wide as the root. Sized to the longest row/title/
+// footer the page can display, not to what it happens to show now - that is what keeps the box from
 // resizing as you toggle a setting. The measurement in DrawVrPanel stays underneath as a floor
 // raiser, so forgetting to update one of these costs a resize rather than text spilling off the
-// plate. The widest strings are "AIM METHOD MOTION CONTROLLER" and "MOVE DIRECTION HAND (NO
-// TRACKING)", which is why those two pages are the broad ones.
+// plate. The widest settings strings are "AIM METHOD MOTION CONTROLLER" and
+// "MOVE DIRECTION HAND (NO TRACKING)".
 // ⭐ run 249: TMD BONES is 30 for "BONE MODE      NUDGE (find it)", its longest reachable value.
-const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 32, 30, 30, 30, 30, 32 };
+const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 32, 30, 30, 30, 30, 32, 30, 40 };
 const char* kPageName[kPanelPages] = { "VR SETTINGS", "CONTROLLER", "COMFORT", "DISPLAY",
                                        "ADVANCED", "WEAPON ALIGN", "TMD ALIGN",
-                                       "TMD BONES", "TMD MESH", "HANDS" };
+                                       "TMD BONES", "TMD MESH", "HANDS", "LANGUAGE / JEZYK",
+                                       "TUTORIAL" };
 
 int g_panelPage = 0;
+inline vrtutorial::Language VrTutorialLanguage() {
+    return InterlockedCompareExchange(&g_vrTutorialLanguage, 0, 0) == 1
+        ? vrtutorial::Language::Polish : vrtutorial::Language::English;
+}
+inline int VrTutorialStep() { return InterlockedCompareExchange(&g_vrTutorialStep, 0, 0); }
+inline const char* PanelPageTitle(int page) {
+    if (page == 10) return "LANGUAGE / JEZYK";
+    if (page == 11) return VrTutorialLanguage() == vrtutorial::Language::Polish
+        ? "SAMOUCZEK" : "TUTORIAL";
+    return kPageName[page];
+}
+inline const char* PanelPageFooter(int page) {
+    if (page == 10) return "LEFT STICK MOVE   R2 SELECT";
+    if (page == 11) return VrTutorialLanguage() == vrtutorial::Language::Polish
+        ? "LEWA GALKA R2 WYBIERZ O WSTECZ"
+        : "LEFT STICK MOVE R2 SELECT O BACK";
+    return "LEFT STICK   HOLD Y TO CLOSE";
+}
 inline int PanelRowCount() { return kPageCount[g_panelPage]; }
 inline int PanelRowId(int i) {
     if (i < 0 || i >= PanelRowCount()) return PR_BACK;
@@ -8303,8 +8331,11 @@ void PanelSaveRow(int rowId, const char* path) {
         // day it names a real one.
         case PR_GOTO_CTRL: case PR_GOTO_COMFORT: case PR_GOTO_DISPLAY: case PR_GOTO_ADV:
         case PR_GOTO_WEAPON: case PR_GOTO_TMD: case PR_GOTO_TMDBONE: case PR_GOTO_TMDMESH:
-        case PR_GOTO_HANDS:
+        case PR_GOTO_HANDS: case PR_GOTO_TUTORIAL:
         case PR_BACK: case PR_BACK_TMD:
+        case PR_TUT_POLISH: case PR_TUT_ENGLISH: case PR_TUT_STEP:
+        case PR_TUT_LINE1: case PR_TUT_LINE2: case PR_TUT_LINE3: case PR_TUT_LINE4:
+        case PR_TUT_PREVIOUS: case PR_TUT_NEXT: case PR_TUT_LANGUAGE: case PR_TUT_BACK:
             return;                                   // navigation, nothing to persist
 
         default:
@@ -8721,7 +8752,48 @@ void PanelRowText(int row, char* out, size_t cap) {
             break;
         case PR_GOTO_DISPLAY: _snprintf_s(out, cap, _TRUNCATE, "DISPLAY            >"); break;
         case PR_GOTO_ADV:     _snprintf_s(out, cap, _TRUNCATE, "ADVANCED           >"); break;
-        case PR_BACK:         _snprintf_s(out, cap, _TRUNCATE, "<  BACK");              break;
+        case PR_GOTO_TUTORIAL:
+            _snprintf_s(out, cap, _TRUNCATE, "TUTORIAL / SAMOUCZEK    >"); break;
+        case PR_TUT_POLISH: _snprintf_s(out, cap, _TRUNCATE, "POLSKI"); break;
+        case PR_TUT_ENGLISH: _snprintf_s(out, cap, _TRUNCATE, "ENGLISH"); break;
+        case PR_TUT_STEP: {
+            const bool polish = VrTutorialLanguage() == vrtutorial::Language::Polish;
+            const vrtutorial::Step& step =
+                vrtutorial::GetStep(VrTutorialLanguage(), VrTutorialStep());
+            _snprintf_s(out, cap, _TRUNCATE, "%d/%d %s", VrTutorialStep() + 1,
+                        vrtutorial::kStepCount, step.title);
+            break;
+        }
+        case PR_TUT_LINE1: case PR_TUT_LINE2: case PR_TUT_LINE3: case PR_TUT_LINE4: {
+            const int line = row - PR_TUT_LINE1;
+            const char* text = vrtutorial::GetStep(VrTutorialLanguage(), VrTutorialStep()).line[line];
+            _snprintf_s(out, cap, _TRUNCATE, "%s", text);
+            break;
+        }
+        case PR_TUT_PREVIOUS:
+            _snprintf_s(out, cap, _TRUNCATE, "%s",
+                VrTutorialLanguage() == vrtutorial::Language::Polish ? "< POPRZEDNIA" : "< PREVIOUS");
+            break;
+        case PR_TUT_NEXT: {
+            const bool polish = VrTutorialLanguage() == vrtutorial::Language::Polish;
+            const bool last = VrTutorialStep() + 1 >= vrtutorial::kStepCount;
+            _snprintf_s(out, cap, _TRUNCATE, "%s",
+                last ? (polish ? "KONIEC" : "FINISH") : (polish ? "DALEJ >" : "NEXT >"));
+            break;
+        }
+        case PR_TUT_LANGUAGE:
+            _snprintf_s(out, cap, _TRUNCATE, "%s: %s",
+                VrTutorialLanguage() == vrtutorial::Language::Polish ? "JEZYK" : "LANGUAGE",
+                vrtutorial::LanguageLabel(VrTutorialLanguage()));
+            break;
+        case PR_TUT_BACK:
+            _snprintf_s(out, cap, _TRUNCATE, "%s",
+                VrTutorialLanguage() == vrtutorial::Language::Polish ? "< USTAWIENIA VR" : "< VR SETTINGS");
+            break;
+        case PR_BACK:
+            _snprintf_s(out, cap, _TRUNCATE, "%s",
+                g_panelPage == 10 ? "< BACK / WSTECZ" : "<  BACK");
+            break;
         default:
             _snprintf_s(out, cap, _TRUNCATE, "DEBUGGING      %s",
                         InterlockedCompareExchange(&g_debugOn, 0, 0) ? "ON" : "OFF");
@@ -9125,6 +9197,43 @@ void PanelAdjust(int row, int dir) {
             Log("VR panel: NativeGloveCuffClosure=%d", g_nativeCuffClosure ? 1 : 0);
             break;
         case PR_GOTO_HANDS: g_panelPage = 9; g_panelRow = 0; return;
+        case PR_GOTO_TUTORIAL:
+            InterlockedExchange(&g_vrTutorialLanguage, 0);
+            InterlockedExchange(&g_vrTutorialStep, 0);
+            g_panelPage = 10; g_panelRow = 0; return;
+        case PR_TUT_POLISH:
+            InterlockedExchange(&g_vrTutorialLanguage, 1);
+            InterlockedExchange(&g_vrTutorialStep, 0);
+            g_panelPage = 11; g_panelRow = 0; return;
+        case PR_TUT_ENGLISH:
+            InterlockedExchange(&g_vrTutorialLanguage, 2);
+            InterlockedExchange(&g_vrTutorialStep, 0);
+            g_panelPage = 11; g_panelRow = 0; return;
+        case PR_TUT_PREVIOUS: {
+            LONG step = VrTutorialStep();
+            if (step > 0) {
+                InterlockedExchange(&g_vrTutorialStep, step - 1);
+                g_panelRow = 0;
+            } else {
+                g_panelPage = 10; g_panelRow = 0;
+            }
+            return;
+        }
+        case PR_TUT_NEXT: {
+            LONG step = VrTutorialStep();
+            if (step + 1 < vrtutorial::kStepCount) {
+                InterlockedExchange(&g_vrTutorialStep, step + 1);
+                g_panelRow = 0;
+            } else {
+                g_panelPage = 0; g_panelRow = 0;
+            }
+            return;
+        }
+        case PR_TUT_LANGUAGE: g_panelPage = 10; g_panelRow = 0; return;
+        case PR_TUT_BACK:     g_panelPage = 0;  g_panelRow = 0; return;
+        case PR_TUT_STEP: case PR_TUT_LINE1: case PR_TUT_LINE2:
+        case PR_TUT_LINE3: case PR_TUT_LINE4:
+            return;
         case PR_WEAPONFX: {
             // Clamped, not wrapped - run 143's lesson. Wrapping would put one press past RIDE GUN
             // into a state that blacks out the weapon, which reads as a crash rather than a setting.
@@ -25269,6 +25378,21 @@ static const unsigned char kFont[][kGlyphH] = {
     {0x10,0x08,0x04,0x02,0x04,0x08,0x10},               // >
     {0x02,0x04,0x08,0x10,0x08,0x04,0x02},               // <
     {0x00,0x15,0x0E,0x1F,0x0E,0x15,0x00},               // *
+    {0x0E,0x11,0x11,0x1F,0x11,0x13,0x0D},               // Ą
+    {0x02,0x0E,0x11,0x10,0x10,0x11,0x0E},               // Ć
+    {0x1F,0x10,0x10,0x1E,0x10,0x12,0x0D},               // Ę
+    {0x10,0x10,0x12,0x14,0x18,0x10,0x1F},               // Ł
+    {0x02,0x11,0x19,0x15,0x13,0x11,0x11},               // Ń
+    {0x02,0x04,0x0E,0x11,0x11,0x11,0x0E},               // Ó
+    {0x02,0x0F,0x10,0x0E,0x01,0x01,0x1E},               // Ś
+    {0x02,0x04,0x1F,0x02,0x04,0x08,0x1F},               // Ź
+    {0x04,0x00,0x1F,0x02,0x04,0x08,0x1F},               // Ż
+    {0x00,0x00,0x00,0x00,0x00,0x04,0x08},               // ,
+    {0x00,0x00,0x00,0x00,0x00,0x0C,0x0C},               // .
+    {0x00,0x0C,0x0C,0x00,0x0C,0x0C,0x00},               // :
+    {0x01,0x02,0x02,0x04,0x08,0x08,0x10},               // /
+    {0x00,0x00,0x1F,0x00,0x1F,0x00,0x00},               // =
+    {0x00,0x0C,0x0C,0x00,0x04,0x08,0x00},               // ;
 };
 
 static int GlyphIndex(char ch) {
@@ -25283,17 +25407,67 @@ static int GlyphIndex(char ch) {
     if (ch == '>') return 41;
     if (ch == '<') return 42;
     if (ch == '*') return 43;
+    if (ch == ',') return 53;
+    if (ch == '.') return 54;
+    if (ch == ':') return 55;
+    if (ch == '/') return 56;
+    if (ch == '=') return 57;
+    if (ch == ';') return 58;
     // ⚠️ Falling through here draws a SPACE, which is indistinguishable from the character having
     // been left out of the string. That cost two invisible arrows and a missing pair of asterisks
     // before anyone noticed. Add the glyph rather than assuming the text was wrong.
     return 0;
 }
 
+static int GlyphIndexUtf8(const unsigned char* p, int& consumed) {
+    consumed = 1;
+    if (!p || !p[0]) return 0;
+    if (p[0] < 0x80) return GlyphIndex((char)p[0]);
+    if (!p[1]) return 0;
+    consumed = 2;
+    if (p[0] == 0xC4) {
+        switch (p[1]) {
+        case 0x84: return 44; // Ą
+        case 0x86: return 45; // Ć
+        case 0x98: return 46; // Ę
+        default: return 0;
+        }
+    }
+    if (p[0] == 0xC5) {
+        switch (p[1]) {
+        case 0x81: return 47; // Ł
+        case 0x83: return 48; // Ń
+        case 0x9A: return 50; // Ś
+        case 0xB9: return 51; // Ź
+        case 0xBB: return 52; // Ż
+        default: return 0;
+        }
+    }
+    if (p[0] == 0xC3 && p[1] == 0x93) return 49; // Ó
+    return 0;
+}
+
+static int TextGlyphCount(const char* s) {
+    if (!s) return 0;
+    int count = 0;
+    const unsigned char* p = (const unsigned char*)s;
+    while (*p) {
+        int consumed = 1;
+        (void)GlyphIndexUtf8(p, consumed);
+        p += consumed;
+        ++count;
+    }
+    return count;
+}
+
 // Append the rectangles for one line of text. Adjacent set pixels in a row are merged, so "COMBO"
 // costs about twenty rectangles rather than seventy.
 static int TextRects(D3DRECT* r, int n, int cap, int x0, int y0, int px, const char* s) {
-    for (int ci = 0; s[ci]; ++ci) {
-        const unsigned char* g = kFont[GlyphIndex(s[ci])];
+    int ci = 0;
+    const unsigned char* p = (const unsigned char*)s;
+    while (p && *p) {
+        int consumed = 1;
+        const unsigned char* g = kFont[GlyphIndexUtf8(p, consumed)];
         const int cx = x0 + ci * (kGlyphW + 1) * px;
         for (int row = 0; row < kGlyphH; ++row) {
             int col = 0;
@@ -25311,6 +25485,8 @@ static int TextRects(D3DRECT* r, int n, int cap, int x0, int y0, int px, const c
                 col += run;
             }
         }
+        p += consumed;
+        ++ci;
     }
     return n;
 }
@@ -25492,7 +25668,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     }
 
     const int nRows = PanelRowCount();
-    char rows[kPanelRowsMax][40];
+    char rows[kPanelRowsMax][96];
     for (int i = 0; i < nRows; ++i) PanelRowText(PanelRowId(i), rows[i], sizeof(rows[i]));
 
     DWORD oldScissor = FALSE;
@@ -25553,9 +25729,11 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     // Measured, not assumed. This was a hardcoded 30 "widest row plus margin", which silently
     // becomes too narrow the first time a row is added with a longer label - and the failure is
     // text spilling past the plate, not a compile error. +2 for the margin the constant included.
-    int widest = 0;
+    int widest = TextGlyphCount(PanelPageTitle(g_panelPage));
+    const int footerWidth = TextGlyphCount(PanelPageFooter(g_panelPage));
+    if (footerWidth > widest) widest = footerWidth;
     for (int i = 0; i < nRows; ++i) {
-        const int len = (int)strlen(rows[i]);
+        const int len = TextGlyphCount(rows[i]);
         if (len > widest) widest = len;
     }
     // ---- ⚠️ run 166: a FLOOR, not the width ----
@@ -25621,7 +25799,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     n = 0;
     for (int eye = 0; eye < eyes; ++eye) {
         const int x0 = (int)(eye * halfW + halfW / 2) - boxW / 2;
-        n = TextRects(r, n, kCap, x0, y0, px, kPageName[g_panelPage]);
+        n = TextRects(r, n, kCap, x0, y0, px, PanelPageTitle(g_panelPage));
     }
     ClearRects(dev, r, n, D3DCOLOR_XRGB(150, 205, 255));
     n = 0;
@@ -25636,7 +25814,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     for (int eye = 0; eye < eyes; ++eye) {
         const int x0 = (int)(eye * halfW + halfW / 2) - boxW / 2;
         n = TextRects(r, n, kCap, x0, y0 + lh * (nRows + 2), px,
-                      "LEFT STICK   HOLD Y TO CLOSE");
+                      PanelPageFooter(g_panelPage));
     }
     ClearRects(dev, r, n, D3DCOLOR_XRGB(168, 178, 190));
     n += bodyRects;
@@ -25658,7 +25836,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         if (g_panelPage != lastLogged) {
             lastLogged = g_panelPage;
             Log("VR panel: page %d (%s), %d row(s), %d text rect(s) in %d Clear batch(es), px %d eyes %d half %ld",
-                g_panelPage, kPageName[g_panelPage], nRows, n, (n + 1023) / 1024, px, eyes, halfW);
+                g_panelPage, PanelPageTitle(g_panelPage), nRows, n, (n + 1023) / 1024, px, eyes, halfW);
         }
     }
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldScissor);
@@ -25682,11 +25860,13 @@ bool VrPanelHitNormalized(LONG uInt, LONG vInt, int* rowIndex) {
     int px = (int)((g_srcH * 0.28) / ((kGlyphH + 6) * (kPanelRowsMax + 3)));
     if (px < 3) px = 3;
     const int lh = (kGlyphH + 6) * px;
-    char row[40] = {};
-    int widest = 0;
+    char row[96] = {};
+    int widest = TextGlyphCount(PanelPageTitle(g_panelPage));
+    const int footerWidth = TextGlyphCount(PanelPageFooter(g_panelPage));
+    if (footerWidth > widest) widest = footerWidth;
     for (int i = 0; i < nRows; ++i) {
         PanelRowText(PanelRowId(i), row, sizeof(row));
-        const int len = (int)strlen(row); if (len > widest) widest = len;
+        const int len = TextGlyphCount(row); if (len > widest) widest = len;
     }
     const int colsMin = kPageCols[g_panelPage];
     const int cols = (widest + 2 > colsMin) ? widest + 2 : colsMin;

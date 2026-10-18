@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+2026-10-18 bilingual VR tutorial: root VR Settings now includes an optional
+Tutorial page with a Polish/English chooser followed by six short lessons
+(movement/jump, grip/medkit, weapon wheel, magazine reload, Centurion, pause).
+Polish strings retain diacritics through a UTF-8 extension to the 5x7 panel font.
+Lesson text follows the current PSVR2 layout and user-confirmed O reload.
+Source and content are prepared; compile and PSVR2 acceptance are still pending.
+Design/evidence gate: docs/vr-tutorial.md.
+
 2026-10-18 PID15380 physical result: user confirms health HUD, restored native
 VFX, Steam screenshots and desktop view. Source alpha131072/131072 opaque;
 actual Steam JPEG20261018185351_1 shows complete world (previously stale HUD).
