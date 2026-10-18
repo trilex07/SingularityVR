@@ -41,3 +41,18 @@ if($renderer -notmatch 'g_vrUiMenu\) != 0 && Rd\(g_vrMenuClass\) == 4' -or
     throw 'native cursor gate lost its modal/direct-canvas/scene-only guards'
 }
 Write-Output 'PASS: historical suppression disabled; contextual depth policy; no RvGame Dialog package edit'
+$native=Get-Content -Raw (Join-Path $repo 'spikes/view_matrix/native_context_cursor.h')
+$overlay=Get-Content -Raw (Join-Path $repo 'spikes/view_matrix/vr_menu_overlay.h')
+$input=Get-Content -Raw (Join-Path $repo 'spikes/view_matrix/native_ui_input.h')
+if($renderer -notmatch 'GetPrivateProfileIntA\("Render","ContextCursorNative",0,path\)' -or
+   $ini -notmatch '(?m)^ContextCursorNative=0\s*$'){throw 'Native cursor must default OFF'}
+foreach($witness in @('0x28B71A137B55BB7Aull','0xD2E964C936CCE902ull','0x9D912591BFBC040Eull','0xEF5A6D846CDD5E7Bull')){
+    if(-not $native.Contains($witness)){throw "Missing native cursor identity: $witness"}
+}
+if(-not $input.Contains('focusedRecord?ReadPointer(focusedRecord+0x50u):0')){throw 'Native call must revalidate current focus after input dispatch'}
+if(-not $input.Contains('PublishVrUiDispatched(') -or -not $overlay.Contains('ReadVrUiDispatched(pointerU,pointerV)')){throw 'Reticle must consume native-dispatch receipt'}
+$begin=$overlay.IndexOf('static void DrawVrMenuLaser(')
+$end=$overlay.IndexOf('static void DrawVrMenuReticle(',$begin)
+$laser=$overlay.Substring($begin,$end-$begin)
+if(-not $laser.Contains('dev->SetScissorRect(&clip)') -or -not $laser.Contains('D3DTOP_SELECTARG1')){throw 'Laser lacks per-eye scissor or diffuse-only state'}
+Write-Output 'PASS: asset + native ABI identities, focus validation, default OFF, input receipt and per-eye laser clipping'

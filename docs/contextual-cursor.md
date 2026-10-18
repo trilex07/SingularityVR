@@ -1,5 +1,41 @@
 # Contextual cursor: confirmation, notes and pickup dialogs
 
+## Native visibility replacement (offline RE, awaiting L3/L4)
+
+Do not use the old polygon signature or modify RvGame. AVM1 inspection of
+Dialogs proves `com.raven.MouseCursor` attaches exported `Mouse` at depth 65535
+as `_root.mouse`, also aliased by `_root._pointer`. Its listener copies root
+mouse coordinates to the clip. SPMenus' Initialize and showHidePointer use the
+same clip/visibility contract. `inspect_cursor_actions.py` reproduces the audit
+on local decompressed packages, without copying assets into git.
+
+The executable's named native registration `intUGFxMovieexecSetVariableBool`
+leads to a wrapper taking an FString reference and a 32-bit boolean, then
+calling the object's vtable at +0x158. The getter is at +0x148. The original
+GFxMovie and Dialog/Main/Notepad vtables agree. Disassembly proves stack cleanup
+(setter ret 8, getter ret 4), the movie record at reflected pMovie +0x48, and
+the underlying GFx SetVariable/GetVariable virtual calls. Runtime validates
+complete native function fingerprints (214/187 bytes) and exact MovieInfo
+RawData hashes before ANY native call; no guessed GFx path or ProcessEvent ABI.
+
+`ContextCursorNative=1` uses that API only on the existing input thread and
+currently focused class-4 movie. It hides only `_root.mouse._visible`, with
+readback, after the replacement pointer has a dispatched coordinate. An owned
+marker on that same transient MovieClip preserves originally hidden cursors and
+allows restoring on refocus when VR/the option is disabled. No stale UObject
+is retained for a later call. Unknown methods/assets fail closed; shipped OFF.
+
+Laser correction has two source-proven defects: its old draw had no eye scissor
+(an off-frustum controller could draw across the SBS seam), and the overlay
+used latest ray UV rather than the integer coordinates delivered to GFx.
+The laser now has diffuse-only state and per-eye clipping. Both laser and ring
+use one token-qualified, atomically published input-dispatch receipt in class 4;
+the inverse crop/flip map accounts for pixel rounding. No guessed pixel offset.
+
+Falsifiers: native visibility readback fails/ABI refuses; arrow remains despite
+readback false (different producer); or centre/edge hit targets disagree despite
+the shared dispatched UV and panel. Those are UNKNOWN until the combined test.
+
 ## Latest physical feedback and next bounded candidate
 
 User confirms 722FDF33 did NOT crash. Dialog depth, native arrow and laser

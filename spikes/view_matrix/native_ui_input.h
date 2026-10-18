@@ -3,6 +3,7 @@
 #include "pause_rtt_start.h"
 #include "native_gamepad_enum_probe.h"
 #include "ui_asset_witness.h"
+#include "native_context_cursor.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
@@ -137,12 +138,14 @@ static bool UpdateMenu() {
   if(movie && NameOf(movie,objectName,sizeof(objectName)) && strncmp(objectName,"Default__",9)
      && cls && NameOf(cls,className,sizeof(className)))cachedMenu=MenuClass(className);
   const LONG kind=!cachedMenu?0:!strcmp(className,"RvUIGFxMovie_IIS")?1:!strcmp(className,"RvUIGFxMovie_Main")?2:!strcmp(className,"RvUIGFxMovie_Pause")?3:4;
+  NativeContextCursor::Configure(movie,cls,(int)kind);
   const bool directCanvas=kind==4&&ExactDirectDialogPath(movie,cls);
   InterlockedExchange(&g_vrUiDirectCanvas,directCanvas?1:0);
   InterlockedExchange(&g_vrUiNoteCanvas,directCanvas&&!strcmp(className,"RvUIGFxMovie_Notepad")?1:0);
   if(directCanvas)Log("context-pointer: focus=%s reflected null RenderTexture / mode 0",className);
   static unsigned generation=0;
   InterlockedExchange64(&g_vrMenuStateToken,((LONG64)++generation<<32)|(unsigned)kind);
+  InterlockedExchange64(&g_vrUiDispatchedToken,0);
   // Do not carry a cursor coordinate or pressed edge into another GFx movie.
   // The first ray hit in the new movie republishes the live controller UV.
   PublishVrUiPair(500000,500000);
@@ -295,6 +298,11 @@ static void Drain(float dt) {
   const float dx=lastX<0?0.f:(float)(x-lastX),dy=lastY<0?0.f:(float)(lastY-y);
   ((AxisFn)vt[6])((void*)client,viewport,0,mouseX,dx,dt,0);
   ((AxisFn)vt[6])((void*)client,viewport,0,mouseY,dy,dt,0);
+  float dispatchedU=0,dispatchedV=0;
+  if(uipointer::UnmapCanvas(x,y,*(const unsigned*)((uintptr_t)viewport+0x4Cu),
+       *(const unsigned*)((uintptr_t)viewport+0x50u),g_vrMenuPanel.canvas,dispatchedU,dispatchedV))
+      PublishVrUiDispatched((LONG)lroundf(dispatchedU*1000000.f),
+          (LONG)lroundf(dispatchedV*1000000.f),VrMenuStateToken());
   lastX=x;lastY=y;
  }else lastX=lastY=-1;
  const bool down=valid&&InterlockedCompareExchange(&g_vrUiDown,0,0)!=0;
@@ -329,6 +337,12 @@ static void __fastcall Poll(void* self,void*,float dt) {
   originalPoll(self,dt); // original guarded missing-mouse path preserves keyboard/XInput/OpenXR
  }
  Drain(dt); // engine UI calls stay on the game's original input thread
+ const auto engine=ReadPointer(0x01CF8778u);
+ const auto focusedRecord=engine?ReadPointer(engine+0x148u):0;
+ LONG consumedU=0,consumedV=0;
+ NativeContextCursor::Update(focusedRecord?ReadPointer(focusedRecord+0x50u):0,
+     Rd(g_contextCursorNative)&&VrModeOn()&&Rd(g_vrUiEnabled)&&Rd(g_vrMenuOverlay)&&
+     Rd(g_vrUiNativeReady)&&Rd(g_vrUiEverHit)&&ReadVrUiDispatched(consumedU,consumedV));
 }
 static void Install() {
  if(InterlockedCompareExchange(&installs,1,0)!=0)return;

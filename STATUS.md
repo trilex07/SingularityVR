@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+2026-10-18 native contextual cursor candidate: offline AVM1 proves `_root.mouse`
+in Dialogs/SPMenus; audited Get/SetVariableBool vtable ABI and full method hashes
+gate default-OFF `ContextCursorNative`. Visibility ownership/readback operates on
+the currently focused movie on the input thread, without package edits. Laser
+is now scissored per eye and ring/laser use the consumed native input coordinate.
+L1 cursor/menu/mirror tests and L2 x86 PE32 `/O2` PASS; candidate SHA-256
+`5478D2A3BF530D3E9D067B9FE63FF909404E8F0B84C3320863EEB233724677D7`.
+Offline bundle: `build/context-native-cursor-20261018/`. Steam untouched.
+Combined L3/L4 still pending: contextual distance/arrow/laser, right-eye monitor
+mirror and actual Steam F12 image. Do not deploy the older followup bundle.
+
 2026-10-18 menu polish: save-slot confirmation separation is PHYSICALLY_VERIFIED
 on Steam PID 36352 / DLL `5032B353...C2E08C1`. Exact retained Slots source and
 reflected direct Dialog path executed. User reports original cursor and laser

@@ -51,6 +51,16 @@ static void TestDirectCanvasProjection(){
 
 int main(){
     TestDirectCanvasProjection();
+    for(bool flip:{false,true})for(float u:{0.f,.13f,.5f,.91f,1.f})for(float v:{0.f,.2f,.7f,1.f}){
+        uipointer::CanvasMap crop{.1f,.2f,.9f,.85f,flip};
+        int x=0,y=0;float actualU=0,actualV=0;
+        assert(uipointer::MapCanvas(u,v,5904,3012,crop,x,y));
+        assert(uipointer::UnmapCanvas(x,y,5904,3012,crop,actualU,actualV));
+        assert(std::fabs(actualU-u)<.0003f&&std::fabs(actualV-v)<.0003f);
+    }
+    float badU=0,badV=0;
+    assert(!uipointer::UnmapCanvas(-1,0,5904,3012,{},badU,badV));
+    assert(!uipointer::UnmapCanvas(0,0,1,3012,{},badU,badV));
     assert(handhud::Visible(true,true,true,true,false,false,false,false));
     assert(!handhud::Visible(true,true,true,false,false,false,false,true));
     assert(!handhud::Visible(true,true,true,true,true,false,false,false));

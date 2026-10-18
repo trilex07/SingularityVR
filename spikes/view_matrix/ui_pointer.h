@@ -58,6 +58,17 @@ inline bool MapCanvas(float u,float v,unsigned width,unsigned height,const Canva
     if(map.flipY)v=1.f-v;
     return CanvasPixel(u,v,width,height,x,y);
 }
+// Inverse of the actual integer viewport coordinates delivered to GFx. The
+// replacement reticle must not race ahead to a newer, not-yet-dispatched ray.
+inline bool UnmapCanvas(int x,int y,unsigned width,unsigned height,const CanvasMap& map,float& u,float& v){
+    if(width<2||height<2||width>10000000||height>10000000||x<0||y<0||
+       (unsigned)x>=width||(unsigned)y>=height||map.cropU1<=map.cropU0||map.cropV1<=map.cropV0)return false;
+    float a=x/float(width-1),b=y/float(height-1);
+    if(map.flipY)b=1.f-b;
+    a=(a-map.cropU0)/(map.cropU1-map.cropU0);b=(b-map.cropV0)/(map.cropV1-map.cropV0);
+    if(!std::isfinite(a)||!std::isfinite(b)||a<-.001f||a>1.001f||b<-.001f||b>1.001f)return false;
+    u=std::max(0.f,std::min(1.f,a));v=std::max(0.f,std::min(1.f,b));return true;
+}
 // u/v address the ORIGINAL GFx logical canvas, before inset/stereo remap.
 // eyeU/eyeV address its visible inset on one eye for a matching reticle.
 // Out-of-panel rays fail rather than clamp onto an unintended menu item.

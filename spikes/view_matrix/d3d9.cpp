@@ -6386,6 +6386,7 @@ static XrAction g_actGloveSqueeze=XR_NULL_HANDLE,g_actGlovePose=XR_NULL_HANDLE;
 static XrSpace g_gloveSpace[2]={XR_NULL_HANDLE,XR_NULL_HANDLE};
 volatile LONG g_vrUiEnabled=1,g_vrUiMenu=0,g_vrUiValid=0,g_vrUiU=500000,g_vrUiV=500000;
 alignas(8) volatile LONG64 g_vrUiPairPacked=((LONG64)500000<<32)|500000;
+alignas(8) volatile LONG64 g_vrUiDispatchedPair=0,g_vrUiDispatchedToken=0;
 volatile LONG g_vrUiEverHit=0;
 // Hub round 4: provider-overlay kill switch for A/B (black-quad diagnosis). The in-scene
 // menu copy stays, so menus remain visible; only our head-locked overlay+laser go away.
@@ -6420,6 +6421,7 @@ volatile LONG g_vrModalParentStageBound[4]={0,0,0,0};
 volatile LONG g_modalSlotsActive=0,g_modalSlotsCapturePending=0,g_vrModalDialogSurface=0,g_vrModalDirectDialog=0;
 volatile LONG g_vrUiDirectCanvas=0,g_vrUiNoteCanvas=0,g_contextPointerProjection=0;
 volatile LONG g_contextCursorSuppress=0,g_contextCursorSuppressLogged=0;
+volatile LONG g_contextCursorNative=0;
 static float g_vrMenuTextureScore=1e9f;
 static uipointer::VrMenuPanel g_vrMenuPanel;
 static bool g_vrMenuPanelValid=false;
@@ -6444,6 +6446,18 @@ static bool ReadVrUiPair(LONG& u,LONG& v) {
     const ULONGLONG packed=(ULONGLONG)InterlockedCompareExchange64(&g_vrUiPairPacked,0,0);
     u=(LONG)(DWORD)(packed>>32);v=(LONG)(DWORD)packed;
     return true;
+}
+static void PublishVrUiDispatched(LONG u,LONG v,unsigned long long token){
+    InterlockedExchange64(&g_vrUiDispatchedToken,0);
+    InterlockedExchange64(&g_vrUiDispatchedPair,(LONG64)(((ULONGLONG)(DWORD)u<<32)|(DWORD)v));
+    InterlockedExchange64(&g_vrUiDispatchedToken,(LONG64)token);
+}
+static bool ReadVrUiDispatched(LONG& u,LONG& v){
+    const auto token=VrMenuStateToken();
+    if(!token||InterlockedCompareExchange64(&g_vrUiDispatchedToken,0,0)!=(LONG64)token)return false;
+    const auto packed=(ULONGLONG)InterlockedCompareExchange64(&g_vrUiDispatchedPair,0,0);
+    if(InterlockedCompareExchange64(&g_vrUiDispatchedToken,0,0)!=(LONG64)token)return false;
+    u=(LONG)(DWORD)(packed>>32);v=(LONG)(DWORD)packed;return true;
 }
 static menucapture::Owner g_vrCaptureOwner;
 volatile LONG g_vrStaleRejected=0;
@@ -31984,6 +31998,7 @@ void LoadIniSettings() {
     g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
     g_cutsceneWorldScreen=GetPrivateProfileIntA("Render","CutsceneWorldScreen",0,path)?1:0;
     g_menuAssetWitness=GetPrivateProfileIntA("Diagnostic","MenuAssetWitness",0,path)?1:0;
+    g_contextCursorNative=GetPrivateProfileIntA("Render","ContextCursorNative",0,path)?1:0;
     {
         char vs[32]{},ps[32]{};
         GetPrivateProfileStringA("Diagnostic","NativeMuzzleVSHash","",vs,sizeof(vs),path);

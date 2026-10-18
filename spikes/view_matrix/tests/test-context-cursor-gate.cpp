@@ -1,9 +1,27 @@
 #include "../context_cursor_gate.h"
 #include "../menu_hud_scale.h"
+#include "../context_cursor_policy.h"
 #include <cassert>
 #include <cstdio>
 
 int main() {
+    struct Backend {
+        bool visible=true,owned=false,refuse=false;
+        bool Visible(){return visible;} bool Owned(){return owned;}
+        void SetVisible(bool v){if(!refuse)visible=v;}
+        void SetOwned(bool v){if(!refuse)owned=v;}
+    } b;
+    using cursorvisibility::UpdateVisibility;
+    using cursorvisibility::VisibilityResult;
+    assert(UpdateVisibility(b,false)==VisibilityResult::Unchanged&&b.visible);
+    assert(UpdateVisibility(b,true)==VisibilityResult::Hidden&&!b.visible&&b.owned);
+    assert(UpdateVisibility(b,true)==VisibilityResult::Unchanged);
+    assert(UpdateVisibility(b,false)==VisibilityResult::Restored&&b.visible&&!b.owned);
+    b.visible=false;
+    assert(UpdateVisibility(b,true)==VisibilityResult::Unchanged&&!b.owned);
+    assert(UpdateVisibility(b,false)==VisibilityResult::Unchanged&&!b.visible);
+    b.visible=true;b.refuse=true;
+    assert(UpdateVisibility(b,true)==VisibilityResult::Refused&&b.visible);
     using contextcursor::MatchesObservedDraw;
     using contextcursor::ShouldSuppress;
     constexpr unsigned triangleList=4;

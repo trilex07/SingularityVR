@@ -26,7 +26,7 @@ $lines=[Collections.Generic.List[string]]::new()
 foreach($line in [regex]::Split($text,'\r\n|\n|\r')){$lines.Add($line)}
 if($endsWithNewline -and $lines.Count -gt 0 -and $lines[$lines.Count-1] -eq ''){$lines.RemoveAt($lines.Count-1)}
 
-$targets=@{ContextPointerProjection='1';ContextCursorSuppress='0'}
+$targets=@{ContextPointerProjection='1';ContextCursorSuppress='0';ContextCursorNative='1'}
 if($RightEyeMirror){
     $targets.DesktopMirrorEye='2'
     $targets.DesktopMirrorFill='0'
@@ -61,7 +61,7 @@ $candidate=($lines -join $newline)
 if($endsWithNewline){$candidate+=$newline}
 [IO.File]::WriteAllText($outputFull,$candidate,$utf8)
 
-# Verify the result differs only in the two intended [Render] values.
+# Verify the result differs only in the explicitly scoped [Render] values.
 $checkText=$utf8.GetString([IO.File]::ReadAllBytes($outputFull))
 $checkLines=[regex]::Split($checkText,'\r\n|\n|\r')
 $checkSection='';$values=@{}

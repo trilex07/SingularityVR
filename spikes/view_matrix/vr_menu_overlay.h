@@ -207,9 +207,24 @@ static void DrawVrMenuLaser(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,uipoi
     dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
     dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
     dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+    // A line belonging to one eye must not spill into the other eye's half
+    // when the controller is outside that eye's frustum. Use the same diffuse
+    // and per-eye clipping contract as the ring; no inherited GFx texture stages.
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,TRUE);
+    dev->SetRenderState(D3DRS_ZENABLE,FALSE);
+    dev->SetRenderState(D3DRS_ZWRITEENABLE,FALSE);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_DIFFUSE);
+    dev->SetTextureStageState(1,D3DTSS_COLOROP,D3DTOP_DISABLE);
+    dev->SetTextureStageState(1,D3DTSS_ALPHAOP,D3DTOP_DISABLE);
     const LONG opacity=std::max(0L,std::min(100L,Rd(g_vrMenuLaserOpacityPct)));
     const DWORD col=(DWORD)((opacity*255/100)<<24)|0x00FFFFFF;
     for(int eye=0;eye<2;++eye){
+        const LONG half=(LONG)d.Width/2;
+        const RECT clip{eye?half:0,0,eye?(LONG)d.Width:half,(LONG)d.Height};
+        dev->SetScissorRect(&clip);
         uipointer::ScreenPoint a,b;if(!VrUiProjectEye(eye,A,a)||!VrUiProjectEye(eye,B,b))continue;
         const float x0=(eye+a.u)*halfW,y0=a.v*(float)d.Height;
         const float x1=(eye+b.u)*halfW,y1=b.v*(float)d.Height;
@@ -667,6 +682,8 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     if (menu && g_vrMenuPanelValid) {
         LONG pointerU=500000,pointerV=500000;
         ReadVrUiPair(pointerU,pointerV);
+        if(!panel&&Rd(g_vrMenuClass)==4&&Rd(g_contextCursorNative))
+            ReadVrUiDispatched(pointerU,pointerV);
         const uipointer::V endpoint=uipointer::PointAtCanvasUv(
             g_vrMenuPanel.plane,pointerU/1000000.0f,pointerV/1000000.0f);
         if(Rd(g_vrUiValid))DrawVrMenuLaser(dev,d,endpoint);
