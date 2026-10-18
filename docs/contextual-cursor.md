@@ -83,3 +83,24 @@ Falsifier: correct candidate movie fingerprints and `context-pointer` projection
 logs, but a remaining arrow or position error. That requires identifying the
 remaining producer or native stage/dispatch mapping; do not add a guessed offset.
 Credits' separate Mouse export is intentionally outside this tested change.
+
+## 2026-10-18 runtime evidence (candidate `722FDF33…`)
+
+The DLL/INI-only candidate launched through Steam with OpenXR rendering at 90 Hz;
+no Windows application-error/WER crash for this run was recorded. The test lease
+restored the accepted DLL and INI after Singularity exited, and the UI/RvGame
+package hashes stayed at their accepted values.
+
+The shared panel projection path logged live for both `RvUIGFxMovie_Options`
+and `RvUIGFxMovie_Dialog` (`direct GFx canvas matches laser panel`). However,
+`ContextCursorSuppress=1` produced **0 matches / 0 suppressions**. In the class-4
+Dialog draw census, the previously assumed `DrawIndexedPrimitiveUP`, triangle
+list, 4-primitive/8-vertex/72-byte signature was absent; the same shape signature
+appeared in a different menu class. Therefore that signature is falsified as a
+Dialog cursor identity and must not be broadened into a shape-only suppression.
+
+Conclusion: this round proves candidate startup and projection-path engagement,
+not visual cursor replacement/alignment. It did not reproduce an OS-recorded
+crash, but that alone cannot rule out an in-game runtime-error dialog. The next
+change must identify the Dialog cursor's actual draw/material (or a supported
+GFx visibility control) before suppressing anything; keep `RvGame.xxx` untouched.
