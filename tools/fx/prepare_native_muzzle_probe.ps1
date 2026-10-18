@@ -19,6 +19,7 @@ param(
     [switch]$StabilizeWalking,
     [switch]$NativeCameraComfort,
     [switch]$CollapsePerformance,
+    [switch]$HolsterProjectionPrepare,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -345,6 +346,14 @@ if ($CollapsePerformance) {
         $iniChanges.Add([ordered]@{key=$key;before=$null;after='1';reason='Collapse test: remove repeated per-bind shadow texture classification and collect bounded asynchronous scene GPU timeline; no quality or gameplay changes.'})
     }
     $planReason='Retain PID31100 render/camera/input behavior. Default-OFF per-bind texture classification deduplication plus bounded async GPU timeline and existing hotpath profile. FPS improvement pending runtime measurement.'
+}
+if ($HolsterProjectionPrepare) {
+    if (-not $CollapsePerformance) { throw 'Holster projection comparison requires the preceding collapse candidate flags.' }
+    if ($iniValues.ContainsKey('Render/HolsterProjectionPrepare')) { throw 'Refusing to overwrite existing holster projection setting.' }
+    $newline = if ($iniText.Contains("`r`n")) { "`r`n" } else { "`n" }
+    $candidateIniBytes=Replace-UniqueAscii $candidateIniBytes '[Render]' "[Render]${newline}HolsterProjectionPrepare=1"
+    $iniChanges.Add([ordered]@{key='Render/HolsterProjectionPrepare';before=$null;after='1';reason='CPU IP evidence: prepare identical holster eye projection once per batch instead of per vertex; no geometry/interaction change.'})
+    $planReason+=' Prepare holster projection once per batch; physical FPS improvement unverified.'
 }
 New-Item -ItemType Directory -Path $artifactPath | Out-Null
 $stageDll = Join-Path $artifactPath 'd3d9.dll'

@@ -1,15 +1,18 @@
 # STATUS — session handoff
 
-ACTIVE COMPACT CPU TEST PID28884 after user start2026-10-18 11:34:55.
-Same tested DLL3ED38B96...89AA7020/INI0EFC595B...9669789F installed+verified.
-UAC-approved recorderPID12800 READY: deployment/shadow-probe/
-cpu-20261018-113418-741/recorder.log; compact128MiB ring,30seconds AFTER
-fresh cinema-exit marker, then own-instance stop/export. Owned after-cinema
-profile request armed before Steam; guardPID16556 READY with backup
-deployment/install-backups/20261018-113430 and logs113430-watch.out/err.log.
-Next: inspect whether WPR actually started/saved (READY alone is NOT capture),
-confirm target PID/time window/lost events, filtered xperf stack analysis.
-Do not rerun/replace files while game runs; restore baseline after normal exit.
+PID28884 CLOSED after user confirmation. Compact CPU trace SAVED125MiB;
+SHA9AD6F9BF...AECE5D, target23361 samples/renderTID34228:10376. Zero lost
+events BUT circular retention loses initial6s, first reliable+11.913s; next
+capture10s to preserve collapse. WOW64/FPO caller frames include DATA pointers;
+use checked executable SELF IP symbols, not bogus inclusive caller attribution.
+Restored and independently hashed DLL789749E5/INI8B0B0B4C/UI51CDAB5C,
+injector5B948DDB unchanged; backup20261018-113430, guard verified exit/restore.
+Measured CPU improvement prepared: defaultOFF HolsterProjectionPrepare, local
+per-eye/per-batch basis prep, same math/geometry/clipping/interaction. L1:200000
+point cases+400triangle arrays bit-identical; ABBAAB fixture .291295->.086285ms
+per frame for both markers (NOT whole-game FPS). Six existing menu/holster tests
+pass. Build/package follows; no launch until fresh user start, no persistent
+promotion. See docs/collapse-frame-cost.md for coverage and exact limits.
 
 PID22160 CLOSED, user: FPS still drops, hands/image OK. Guard restore verified
 independently: DLL789749E5/INI8B0B0B4C/injector5B948DDB/UI51CDAB5C; owned

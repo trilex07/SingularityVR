@@ -201,6 +201,14 @@ static bool VrUiProjectEye(int eye,uipointer::V point,uipointer::ScreenPoint& ou
         VrUiRotate(p.orientation,{0,0,-1}),VrUiRotate(p.orientation,{1,0,0}),
         VrUiRotate(p.orientation,{0,1,0}),g_targetTanX,g_targetTanY,out);
 }
+static bool VrUiPrepareEye(int eye,uipointer::PreparedProjection& out) {
+    out={}; // Never keep a previously valid projection after unavailable eyes.
+    if(eye<0||eye>1||!g_haveEyes||g_targetTanX<=0||g_targetTanY<=0)return false;
+    const XrPosef& p=g_eyePose[eye];
+    return out.Prepare({p.position.x,p.position.y,p.position.z},
+        VrUiRotate(p.orientation,{0,0,-1}),VrUiRotate(p.orientation,{1,0,0}),
+        VrUiRotate(p.orientation,{0,1,0}),g_targetTanX,g_targetTanY);
+}
 static void DrawVrMenuLaser(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d) {
     if(!Rd(g_vrMenuLaser)||!Rd(g_vrUiValid)||!g_handPositionValid[1]||!g_origDrawPrimUP)return;
     const uipointer::V A{g_handLastPos[1].x,g_handLastPos[1].y,g_handLastPos[1].z};

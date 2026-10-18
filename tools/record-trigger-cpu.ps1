@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([ValidateRange(30,120)][int]$CaptureSeconds=90,
+param([ValidateRange(10,120)][int]$CaptureSeconds=90,
       [ValidateRange(30,180)][int]$LaunchWindowSeconds=120,
       [switch]$AfterCinemaExit,
       [switch]$CompactProfile,
@@ -10,7 +10,7 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'cinema-exit-trace-cue.ps1')
 $wpr=(Get-Command wpr.exe -ErrorAction Stop).Source
 $captureProfile=if($CompactProfile){(Join-Path $PSScriptRoot 'profiling\SingularityCpu.wprp')+'!SingularityCpu'}else{'CPU.Verbose'}
-if($CompactProfile -and $CaptureSeconds -gt 45){throw 'Compact ring capture is limited to45s; use CaptureSeconds30 or45.'}
+if($CompactProfile -and $CaptureSeconds -gt 45){throw 'Compact ring capture is limited to45s; use CaptureSeconds10 for collapse coverage without circular eviction.'}
 if($PreflightOnly){
     & $wpr -profiledetails $captureProfile
     if($LASTEXITCODE -ne 0){throw 'CPU capture profile rejected by WPR'}
@@ -92,7 +92,7 @@ try {
         & $wpr @startArgs
         if($LASTEXITCODE -ne 0){throw 'WPR start failed; inspect the named instance before retrying.'}
         $started=$true
-        Write-Output "CPU TRACE STARTED AFTER CINEMA EXIT: PID $gameId instance=$instance"
+        Write-Output "CPU TRACE STARTED AFTER CINEMA EXIT: PID $gameId instance=$instance UTC=$([datetime]::UtcNow.ToString('o'))"
     }
     Write-Output "GAME PID $gameId; capture bounded to $CaptureSeconds seconds or process exit"
     $deadline=(Get-Date).AddSeconds($CaptureSeconds)

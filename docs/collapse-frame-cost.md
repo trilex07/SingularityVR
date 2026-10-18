@@ -143,3 +143,58 @@ Trace stays private/system-wide; analyze only Singularity PID and its render
 thread, module RVAs and unique sampled stack-frame hits. Check lost events and
 trace time coverage before causal claims. No new shader, quality or wait-policy
 change is authorized by these offline experiments.
+
+## PID28884: CPU evidence and next measured optimization
+
+Closed normally; guard restored baseline, independently rehashed DLL789749E5,
+INI8B0B0B4C, UI51CDAB5C (injector5B948DDB unchanged). Native log includes an
+early 13.402ms/74.6FPS aggregate, later mostly11.1ms. No controller enumeration
+in the profiled gameplay. No new visual feedback beyond the exit confirmation.
+
+Private ETL: deployment/shadow-probe/cpu-20261018-113418-741/trigger-cpu.etl,
+131072000bytes; SHA256
+`9AD6F9BFFCCB46414921252F7BC35345284B44D94E940F8A91B828701DAECE5D`.
+xperf: UTC09:36:31.4377378..09:37:03.0848699; zero lost buffers/events.
+IMPORTANT: circular retention first event+6.054s, first reliable+11.913s.
+Zero lost events does NOT establish full early-collapse coverage. Do not assign
+the whole collapse from this truncated early interval. Ten-second capture next
+time, same128MiB buffer budget; no recording until actual cinema-exit cue.
+HOTPATH_CLOCK at bounded report cadence now supplies UTC FILETIME/QPC/frame
+anchors rather than interpreting OpenXR XrTime as an ETL clock.
+
+Target only PID28884:23361 IP samples, render TID34228:10376. Two d3d9.dll
+modules exist: shim base59240000, system base65400000. Never resolve both with
+the shim map. Saved exact candidate3ED38B96 and its matching map privately under
+build/projector/evidence-28884. Analyzer now checks x86 PE32/map timestamp/base
+identity, executable sections and observed module base before naming SELF IP
+samples. Some WOW64/FPO caller frames point into shim DATA (g_camMats): those
+are unreliable stack unwinds, not executing functions or causal proof.
+
+Renderer self samples include VrUiRotate171, Unit144, ProjectPoint143,
+VrUiProjectEye105 and holster ProjectMesh52. These helpers have other users;
+their self samples alone do not establish exclusive holster cost. Source proves
+the holster path repeats identical three quaternion rotations, normalization
+and basis validation for every vertex:1122gun+1116knife vertices, two eyes.
+The sampled hotpath constructor itself has706 self samples: diagnostic overhead
+is present, not evidence of a native engine-only bottleneck. The prior GPU
+timeline46.291ms/CPUwall43.779ms worst frame is not exclusive GPU busy time.
+
+Small experiment: Render/HolsterProjectionPrepare, defaultOFF. A local prepared
+projection per eye per marker batch hoists ONLY invariant pose/basis/FOV work.
+No cross-frame caches, pose reuse, D3D state/resource changes, geometry changes,
+new culling, interaction changes or menu/weapon/shadow projection changes.
+Falsifier: projection/clipping/output differs, pose invalidation persists, or
+physical marker/stereo regression. Old point projection remains the default.
+
+L1 /O2 x86:200000 random point cases BIT-IDENTICAL including rejected output;
+400 full triangle-array comparisons bit-identical. Invalid poses/FOV/nonfinite
+points/near clipping/re-prepare guards pass. Existing six-program menu/holster/
+knife suite and CPU analyzer/cinema cue tests pass. No game launched.
+ABBAAB1000frames/round, both markers/two eyes, identical checksums:
+legacy .291295ms/frame, prepared .086285ms/frame, saving .205010ms/frame.
+CPU fixture proves this narrow work reduction, NOT a locked90FPS or whole-dip fix.
+
+Next candidate preserves PID28884 flags and adds only this optimization plus
+bounded clock anchors. Fresh start gate: crash save -> collapse ->15s walking
+-> normal exit, no chat switches. Arm45s/3600 native sampler and10s compact ETW
+after cinema exit, inspect coverage/cost/visuals, then exact verified restore.

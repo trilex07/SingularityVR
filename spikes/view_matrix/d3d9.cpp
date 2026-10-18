@@ -6558,6 +6558,13 @@ static void ReportVrRuntimeCounters() {
 static void ReportHotPathSampler(bool complete=true) {
     const unsigned measuredFrames=g_hotPathSampler.completed_frames();
     if(!measuredFrames)return;
+    // Bounded report cadence only: correlate native frame windows with ETL UTC,
+    // never infer timing from line order or OpenXR's opaque XrTime units.
+    FILETIME utc{};LARGE_INTEGER qpc{},frequency{};
+    GetSystemTimeAsFileTime(&utc);QueryPerformanceCounter(&qpc);QueryPerformanceFrequency(&frequency);
+    ULARGE_INTEGER wall{};wall.LowPart=utc.dwLowDateTime;wall.HighPart=utc.dwHighDateTime;
+    Log("HOTPATH_CLOCK frame=%u utc_filetime_100ns=%llu qpc=%lld frequency=%lld",
+        measuredFrames,wall.QuadPart,qpc.QuadPart,frequency.QuadPart);
     char report[4096]{};
     size_t used = 0;
     auto append = [&](const char* format, auto... args) {
@@ -28151,6 +28158,7 @@ static bool DrawFlatRingAt(IDirect3DDevice9* dev, uipointer::V c, const char* ta
 
 // New style shares the exact legacy XR anchors. The interaction state machine
 // and activation radii do not consume this geometry or its proximity colour.
+static bool g_holsterProjectionPrepare=false; // default-OFF, render-thread batch only
 static bool DrawHolsterCueAt(IDirect3DDevice9* dev,uipointer::V centre,
                             holstermarker::Item item,int hand){
     if(!dev||!g_origDrawPrimUP)return false;
@@ -28201,7 +28209,15 @@ static bool DrawHolsterCueAt(IDirect3DDevice9* dev,uipointer::V centre,
         bool End(){if(!active)return true;active=false;const bool restored=SUCCEEDED(g_wristState->Apply());
             static unsigned notes=0;if(!restored&&notes++<2)Log("holster cue: ALL-state restore failed");return restored;}
     } pass{dev};
-    const bool drew=holstermarker::Render(pass,mesh,centre,g_centreYaw,desc.Width,desc.Height,VrUiProjectEye);
+    bool drew=false;
+    if(g_holsterProjectionPrepare){
+        uipointer::PreparedProjection eyes[2];
+        VrUiPrepareEye(0,eyes[0]);VrUiPrepareEye(1,eyes[1]);
+        const auto project=[&](int eye,uipointer::V point,uipointer::ScreenPoint& out){
+            return eye>=0&&eye<2&&eyes[eye].Project(point,out);
+        };
+        drew=holstermarker::Render(pass,mesh,centre,g_centreYaw,desc.Width,desc.Height,project);
+    }else drew=holstermarker::Render(pass,mesh,centre,g_centreYaw,desc.Width,desc.Height,VrUiProjectEye);
     static unsigned notes=0;if(drew&&notes++<2)Log("holster cue: segmented stereo %s; same anchor; interaction unchanged",item==holstermarker::Item::Gun?"gun":"knife");
     return drew;
 }
@@ -31773,6 +31789,8 @@ void LoadIniSettings() {
     // The physically accepted shadow/input combination is persistent: missing
     // keys use ON, so existing INIs need no overwrite or temporary flag files.
     g_frameGpuEnabled=GetPrivateProfileIntA("Diagnostic","FrameGpuProbe",0,path)!=0;
+    g_holsterProjectionPrepare=GetPrivateProfileIntA("Render","HolsterProjectionPrepare",0,path)!=0;
+    Log("ini: HolsterProjectionPrepare=%d (same per-eye projection, prepared once per marker batch)",g_holsterProjectionPrepare?1:0);
     g_textureBindDeduplicate=GetPrivateProfileIntA("Render","TextureBindDeduplicate",0,path)!=0;
     Log("ini: TextureBindDeduplicate=%d FrameGpuProbe=%d (bounded gameplay sampler; async timeline only)",
         g_textureBindDeduplicate?1:0,g_frameGpuEnabled?1:0);

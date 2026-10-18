@@ -38,6 +38,26 @@ inline bool ProjectPoint(V point,V eye,V forward,V right,V up,float tanHalfX,flo
     ScreenPoint p;p.depth=z;p.u=.5f+.5f*Dot(d,r)/(z*tanHalfX);p.v=.5f-.5f*Dot(d,u)/(z*tanHalfY);
     if(!std::isfinite(p.u)||!std::isfinite(p.v))return false;out=p;return true;
 }
+// Local to ONE overlay batch, not a cross-frame pose cache. Keep the same
+// normalization, validation, divisions and clipping as ProjectPoint; only
+// eye-invariant work moves out of the vertex loop. No device/state ownership.
+class PreparedProjection {
+    V eye_,f_,r_,u_;float tx_=0,ty_=0;bool valid_=false;
+public:
+    bool Prepare(V eye,V forward,V right,V up,float tx,float ty){
+        valid_=false;
+        if(!Finite(eye)||!std::isfinite(tx)||!std::isfinite(ty)||tx<=0||ty<=0)return false;
+        if(!Unit(forward,f_)||!Unit(right,r_)||!Unit(up,u_))return false;
+        if(std::fabs(Dot(f_,r_))>1e-3f||std::fabs(Dot(f_,u_))>1e-3f||std::fabs(Dot(r_,u_))>1e-3f)return false;
+        eye_=eye;tx_=tx;ty_=ty;valid_=true;return true;
+    }
+    bool Project(V point,ScreenPoint& out)const{
+        if(!valid_||!Finite(point))return false;
+        const V d=point-eye_;const float z=Dot(d,f_);if(!std::isfinite(z)||z<=1e-5f)return false;
+        ScreenPoint p;p.depth=z;p.u=.5f+.5f*Dot(d,r_)/(z*tx_);p.v=.5f-.5f*Dot(d,u_)/(z*ty_);
+        if(!std::isfinite(p.u)||!std::isfinite(p.v))return false;out=p;return true;
+    }
+};
 inline float CanvasToEye(float value,float inset){return .5f+inset*(value-.5f);}
 inline bool CanvasPixel(float u,float v,unsigned width,unsigned height,int& x,int& y){
     if(!std::isfinite(u)||!std::isfinite(v)||u<0||u>1||v<0||v>1||width<2||height<2||width>10000000||height>10000000)return false;
