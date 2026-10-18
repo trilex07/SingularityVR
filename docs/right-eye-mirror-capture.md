@@ -1,5 +1,29 @@
 # Right-eye window and Steam screenshots
 
+## MAIN 2026-10-18: physical failure; separate SteamVR screenshots
+
+Candidate `5478D2A3...` failed user TV/screenshot acceptance. Mirror reported
+`bb=5904x3012 win=5904x3012 dst=(429,131,1487,1211)`, 456 successful
+compositions in one 600-frame interval. This is not proof of visible TV pixels.
+RT0 was already the same COM surface as the backbuffer; stamping did nothing.
+The original 789749E5 DLL / 8B0B0B4C INI were restored and independently hashed.
+
+Steam's `screenshots.vdf` identifies `20261018171748_1.jpg` as `type=2`,
+`imported=1`, with `_VR.png`/`_vr.jpg` companion files, width2004 height2005.
+These are VR screenshot imports, not evidence of the D3D9 F12 producer. The
+actual JPEG contains the startup curtain and HUD. The RT0 patch does not prove
+anything about this separate capture route. Do not add another RT0 patch.
+
+Next falsifiable observation: default-OFF `[Diagnostic] MirrorPixelProbe=1`
+captures the shared D3D9 surface consumed by the XR bridge, pre-Present
+backbuffer, and post-mirror backbuffer in one frame. Two groups maximum
+(gameplay, contextual UI), after 180 eligible focused frames, no active curtain.
+Each image is GPU-downsampled to512x256 before readback (about512KiB), no target
+bindings or source pixels changed. Compare these pixels with the VR-imported
+screenshot before choosing a new presentation/capture implementation. If the
+post-mirror image is fitted but TV is not, investigate actual Present consumer;
+if XR source is good but SteamVR output is not, investigate VR capture separately.
+
 ## Continuation 2026-10-17 — SIDE side/mirror-screenshot-fix: MAIN root-cause in, window resize OUT
 
 MAIN's evidence (rolled back to accepted `F5E925…`, test build `620FE76D…`

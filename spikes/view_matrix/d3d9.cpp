@@ -26342,6 +26342,9 @@ void DrawVfxOverlay(IDirect3DDevice9* dev) {
 }
 
 #include "desktop_mirror.h"
+#include "mirror_pixel_probe.h"
+static mirrorprobe::Probe g_mirrorPixelProbe;
+static bool g_mirrorProbeCurtain=false;
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
     g_knifeMeleeReference.Reset();
@@ -28443,6 +28446,7 @@ static void StartupReadinessFrame(IDirect3DDevice9* dev){
             gate.timedOut?1:0,(unsigned long long)now);
     }
     wasVisible=visible;
+    g_mirrorProbeCurtain=visible&&g_startupLoadingGate;
     if(!visible||!g_startupLoadingGate||drawFault||!g_origSetRenderTarget||!g_origSetViewport||!g_origClear)return;
     bool restored=true;
     startup::DrawLoading(dev,g_origSetRenderTarget,g_origSetViewport,g_origClear,TextRects,restored);
@@ -31645,7 +31649,10 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             g_handPositionValid[0]?1:0,g_handPositionValid[1]?1:0);
         shadowtrace::Arm(s);
     }
+    g_mirrorPixelProbe.Before(s,g_sharedSurf9,g_logPath,(int)Rd(g_vrMenuClass),
+        g_xrRunning&&g_xrSessionState==XR_SESSION_STATE_FOCUSED,g_mirrorProbeCurtain);
     const bool mirrored = desktop_mirror::Apply(s, a, b, c, g_mirrorCineCrop);
+    g_mirrorPixelProbe.After(s,g_logPath,mirrored);
     if (mirrored) desktop_mirror::StampCaptureRt(s);
     HRESULT presentResult;
     {
@@ -32045,6 +32052,7 @@ void LoadIniSettings() {
         const LONG fitWindow = GetPrivateProfileIntA("Render", "DesktopMirrorWindow", 0, path) ? 1 : 0;
         InterlockedExchange(&g_desktopMirrorWindow, fitWindow);
         const LONG steamCapture = GetPrivateProfileIntA("Render", "SteamCaptureBackbuffer", 0, path) ? 1 : 0;
+        g_mirrorPixelProbe.enabled=GetPrivateProfileIntA("Diagnostic","MirrorPixelProbe",0,path)!=0;
         InterlockedExchange(&g_steamCaptureBackbuffer, steamCapture);
         Log("ini: DesktopMirrorWindow=%ld (right eye, aspect-fit, windowed client <=1920x1080) SteamCaptureBackbuffer=%ld (Present RT0 scope, Steam acceptance pending)",
             fitWindow, steamCapture);

@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+2026-10-18 runtime followup: DLL5478D2A3 session PID36436. User rejects TV fit
+and Steam screenshots. Native cursor API verified SPMenus D2E964C936CCE902 and
+visibility readback Hidden; cursor/laser PHYSICAL result still unreported.
+Guard restored DLL789749E5 / INI8B0B0B4C; independent SHA checks match.
+Steam images are type2 VR imports (not D3D9 F12); actual pixels show loading
+curtain/HUD. Mirror success counters do not prove correct content/TV output.
+Default-OFF MirrorPixelProbe now captures tiny XR-source/pre/post-mirror images
+in at most two groups, for producer comparison before another presentation fix.
+D3D9Ex own-process pixel test and optimized x86 build PASS, SHA
+`EFC115DF57002A67116F26FF76CAB5D6CF2D51EF91092BB134D369F4D428771D`.
+No new Steam deployment/launch; see docs/right-eye-mirror-capture.md.
+
 2026-10-18 native contextual cursor candidate: offline AVM1 proves `_root.mouse`
 in Dialogs/SPMenus; audited Get/SetVariableBool vtable ABI and full method hashes
 gate default-OFF `ContextCursorNative`. Visibility ownership/readback operates on

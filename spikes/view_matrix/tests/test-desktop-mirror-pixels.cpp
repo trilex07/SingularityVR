@@ -2,6 +2,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include "../desktop_mirror.h"
+#include "../mirror_pixel_probe.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstdarg>
@@ -62,6 +63,8 @@ int main() {
     Check(Pixel(dev,back,320,180)==0x00ff00,"mirror center is right eye, not black/left");
     Check(Pixel(dev,back,0,180)==0,"full eye retained with pillarbox");
     Check(Pixel(dev,scene,320,180)==0,"unrelated RT0 pixels unchanged");
+    Check(mirrorprobe::Thumbnail(dev,back,"build\\right-eye-mirror\\probe.log",0,"fixture"),"bounded mirror thumbnail writes pixels");
+    Check(Pixel(dev,back,320,180)==0x00ff00,"thumbnail leaves source pixels unchanged");
     // Persistent stamp: same-size offscreen RT0 receives the completed mirror
     // so pre-hook/post-restore samplers see scene, not stale black.
     Check(desktop_mirror::StampCaptureRt(dev),"stamp mirror into offscreen RT0");
