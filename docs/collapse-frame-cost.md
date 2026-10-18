@@ -269,3 +269,12 @@ cull state unchanged. Probe+two clears+EndScene+poll averaged .005787ms/frame
 in THIS fixture (not a game-overhead measurement). With buffered/UP splitting
 and fixed shader census the subsequent fixture averaged .007498ms/frame,
 again80/80 complete partitions and no errors. Steam untouched.
+
+L2 diagnosis-only candidate from e822c90 (full build provenance in private
+artifact), x86 PE32/O2, DLL
+`D6D1284F858CEF36605903772773E005033899B18B26F16C6C180EB6D2B0B0E8`,
+INI `823AA9AA382F1A2E1453ACAEBBCCB35C98BFED80356E5E3DFDF37FFD74F7AA13`.
+Package build/projector/candidate-collapse-pass-cost; Install WhatIf PASS/no
+writes; INI delta vs PID28884 is ONLY FrameGpuPassProbe=1. The small holster
+optimization remains OFF to avoid confounding attribution. No automatic launch
+or physical result. Zero shader hashes mean no description, not a named shader.
