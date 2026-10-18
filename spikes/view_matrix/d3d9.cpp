@@ -122,6 +122,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
 #include <d3d9.h>
 #include "glove_renderer.h"
+#include "xr_capture_alpha.h"
 #include "glove_native.h"
 #include "native_glove_cuffs.h"
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
@@ -5829,6 +5830,8 @@ void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detect
 static void StartupReadinessFrame(IDirect3DDevice9* dev);
 static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer = false);
 static volatile LONG g_pauseCaptureRequested = 0;
+static bool g_xrCaptureOpaqueAlpha=false;
+static void PrepareXrCaptureAlpha(IDirect3DDevice9*,IDirect3DSurface9*);
 const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::d3d9_to_d3d11_copy);
     // CutsceneFlat mono composition runs before every overlay and before either
@@ -5887,6 +5890,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
         // Same size, same format, no filtering. Queued, not executed - the fence below is what
         // makes it safe for D3D11 to read.
         HRESULT hrS = dev->StretchRect(back, nullptr, g_sharedSurf9, nullptr, D3DTEXF_NONE);
+        if(SUCCEEDED(hrS)&&g_xrCaptureOpaqueAlpha)PrepareXrCaptureAlpha(dev,g_sharedSurf9);
         back->Release();
         g_msGRTD += MsSince(tS);
         if (FAILED(hrS)) {
@@ -17542,6 +17546,15 @@ static hipknife::Calls NativeKnifeDriverCalls(){
     return {shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
         shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport,g_origSetVSConstF};
 }
+static xrcapture::OpaqueAlpha g_xrCaptureAlphaPass;
+static void PrepareXrCaptureAlpha(IDirect3DDevice9* dev,IDirect3DSurface9* output){
+    const gloves::Calls calls{shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
+        shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport};
+    const bool ok=g_xrCaptureAlphaPass.Apply(dev,output,calls);
+    static unsigned notes=0;
+    if(notes++<4)Log("xr-capture-alpha: shared output alpha=opaque result=%d; RGB unchanged, Steam acceptance pending",ok?1:0);
+    if(!ok)g_xrCaptureOpaqueAlpha=false;
+}
 static void KnifeHandDisable(const char* reason){
     g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};g_knifeHandPoseThisDraw=false;
     static unsigned notes=0;if(notes++<8)Log("knife-hand: disabled (%s); original gun/hands retained",reason);
@@ -18779,6 +18792,24 @@ void DumpDpgProbe() {
 
 // Bounded one-shot evidence, queued through the asynchronous logger. No file I/O in a draw hook.
 volatile LONG g_renderEvidence=0;
+static bool g_knifeMeleePoseProbe=false;
+static void ProbeKnifeGunPose(IDirect3DDevice9* dev,UINT verts){
+    if(!g_knifeMeleePoseProbe||g_hipKnifeState.held!=OffHand())return;
+    static unsigned idle=0,active=0;static ULONGLONG last=0;
+    const bool melee=MeleeWindowActive();
+    if((melee?active>=24:idle>=4)||GetTickCount64()-last<100)return;
+    const auto layout=g_boundShaderLayout;
+    if(layout.shadow||layout.bones<0||layout.boneRegs<3||layout.bones+layout.boneRegs>256)return;
+    const UINT count=(UINT)(std::min)(layout.boneRegs,15);
+    float palette[60]{};
+    if(FAILED(dev->GetVertexShaderConstantF((UINT)layout.bones,palette,count)))return;
+    last=GetTickCount64();if(melee)++active;else ++idle;
+    Log("knife-gun-pose: melee=%d armWindow=%d verts=%u bones=c%d regs=%u holder=%d hand=(%ld,%ld,%ld) orientation=(%ld,%ld,%ld)",
+        melee?1:0,ArmsAnimActive()?1:0,verts,layout.bones,count,g_hipKnifeState.held,
+        Rd(g_handOffX),Rd(g_handOffY),Rd(g_handOffZ),Rd(g_handDevYawUU),Rd(g_handDevPitchUU),Rd(g_handDevRollUU));
+    for(UINT i=0;i<count;++i)Log("knife-gun-pose: c%u %.6g %.6g %.6g %.6g",
+        (UINT)layout.bones+i,palette[i*4],palette[i*4+1],palette[i*4+2],palette[i*4+3]);
+}
 static void CaptureRenderEvidence(IDirect3DDevice9* dev, const char* kind, UINT verts, UINT first=0, UINT triangles=0) {
     if(!Rd(g_renderEvidence))return;
     struct Seen {uintptr_t vs,ps;UINT verts,first,triangles;DWORD zwrite,zfunc,colour;LONG scene;bool shadow;};
@@ -19120,6 +19151,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         ++armCaptureOffers; CaptureRenderEvidence(dev,"arms",numVertices,startIndex,primCount);
     }
     const bool isGun = FgMoved(numVertices);
+    if(isGun)ProbeKnifeGunPose(dev,numVertices);
     if (isGun) { AdsCapture(dev); AdsFreeze(dev); AdsMask(dev); }   // ⭐ run 223: freeze before StereoPair: it only
                                                      // rewrites the camera slots, so the bones persist
                                                      // across both eye draws
@@ -26350,6 +26382,7 @@ void ReleaseWristResources() {
     nativefx::Release();
     g_knifeHandPoseThisDraw=false;g_knifeJointFrame=-1;g_knifeJointEyes=0;
     g_nativeGloveRenderer.ReleaseGPU();g_nativeGlovePoseThisDraw=false;
+    g_xrCaptureAlphaPass.Release();
     g_nativeCuffRenderer.ReleaseGPU();
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     g_hipKnifeRenderer.ReleaseGPU();
@@ -32047,6 +32080,7 @@ void LoadIniSettings() {
         InterlockedExchange(&g_desktopMirrorWindow, fitWindow);
         const LONG steamCapture = GetPrivateProfileIntA("Render", "SteamCaptureBackbuffer", 0, path) ? 1 : 0;
         g_mirrorPixelProbe.enabled=GetPrivateProfileIntA("Diagnostic","MirrorPixelProbe",0,path)!=0;
+        g_xrCaptureOpaqueAlpha=GetPrivateProfileIntA("Render","XrCaptureOpaqueAlpha",0,path)!=0;
         InterlockedExchange(&g_steamCaptureBackbuffer, steamCapture);
         Log("ini: DesktopMirrorWindow=%ld (right eye, aspect-fit, windowed client <=1920x1080) SteamCaptureBackbuffer=%ld (Present RT0 scope, Steam acceptance pending)",
             fitWindow, steamCapture);
@@ -32504,6 +32538,7 @@ void LoadIniSettings() {
     Log("ini: StartupPrewarm=%d StartupLoadingGate=%d probe=%d min=%u max=%u ms (default OFF; hook readiness only, not UE3 asset-load completion; simulation/input untouched)",
         g_startupPrewarm,g_startupLoadingGate,g_startupProbe,g_startupMinVisibleMs,g_startupTimeoutMs);
     g_renderEvidence = GetPrivateProfileIntA("Diagnostic", "RenderEvidence", 0, path) ? 1 : 0;
+    g_knifeMeleePoseProbe=GetPrivateProfileIntA("Diagnostic","KnifeMeleePoseProbe",0,path)!=0;
     InterlockedExchange(&g_forceDesktopVr,
                         GetPrivateProfileIntA("Diagnostic", "ForceDesktopVr", 0, path) ? 1 : 0);
     InterlockedExchange(&g_forceDesktopCapture,

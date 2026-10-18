@@ -2,7 +2,8 @@
 param(
     [Parameter(Mandatory)][string]$InputIni,
     [Parameter(Mandatory)][string]$OutputIni,
-    [switch]$RightEyeMirror
+    [switch]$RightEyeMirror,
+    [switch]$OpaqueXrCapture
 )
 
 Set-StrictMode -Version Latest
@@ -26,7 +27,11 @@ $lines=[Collections.Generic.List[string]]::new()
 foreach($line in [regex]::Split($text,'\r\n|\n|\r')){$lines.Add($line)}
 if($endsWithNewline -and $lines.Count -gt 0 -and $lines[$lines.Count-1] -eq ''){$lines.RemoveAt($lines.Count-1)}
 
-$targets=@{ContextPointerProjection='1';ContextCursorSuppress='0';ContextCursorNative='1'}
+# The menu test previously inherited a pre-VFX rollback INI. The code was
+# present but default-OFF, silently disabling the user's accepted muzzle fix.
+# Keep its physical acceptance separate from the historical restore hash.
+$targets=@{ContextPointerProjection='1';ContextCursorSuppress='0';ContextCursorNative='1';NativeMuzzleParticleStereo='1'}
+if($OpaqueXrCapture){$targets.XrCaptureOpaqueAlpha='1'}
 if($RightEyeMirror){
     $targets.DesktopMirrorEye='2'
     $targets.DesktopMirrorFill='0'

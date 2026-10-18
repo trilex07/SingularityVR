@@ -3,6 +3,7 @@
 #define NOMINMAX
 #include "../desktop_mirror.h"
 #include "../mirror_pixel_probe.h"
+#include "../xr_capture_alpha.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstdarg>
@@ -21,15 +22,22 @@ static void Check(bool yes,const char* what) {
 static void HR(HRESULT hr,const char* what){
     if(FAILED(hr)){std::printf("FAIL %s hr=%08lX\n",what,(unsigned long)hr);std::exit(1);}
 }
-static DWORD Pixel(IDirect3DDevice9* dev,IDirect3DSurface9* surface,UINT x,UINT y) {
+static DWORD Pixel(IDirect3DDevice9* dev,IDirect3DSurface9* surface,UINT x,UINT y,bool alpha=false) {
     D3DSURFACE_DESC d{};HR(surface->GetDesc(&d),"read description");
     IDirect3DSurface9* sys=nullptr;
     HR(dev->CreateOffscreenPlainSurface(d.Width,d.Height,d.Format,D3DPOOL_SYSTEMMEM,&sys,nullptr),"read allocation");
     HR(dev->GetRenderTargetData(surface,sys),"pixel readback");
     D3DLOCKED_RECT lock{};HR(sys->LockRect(&lock,nullptr,D3DLOCK_READONLY),"read lock");
     const DWORD value=*(const DWORD*)((const char*)lock.pBits+y*lock.Pitch+x*4);
-    HR(sys->UnlockRect(),"unlock");sys->Release();return value&0x00ffffffu;
+    HR(sys->UnlockRect(),"unlock");sys->Release();return alpha?value:value&0x00ffffffu;
 }
+static HRESULT STDMETHODCALLTYPE DrawAlpha(IDirect3DDevice9* d,D3DPRIMITIVETYPE t,UINT m,UINT v,UINT n,const void* i,D3DFORMAT f,const void* p,UINT stride){return d->DrawIndexedPrimitiveUP(t,m,v,n,i,f,p,stride);}
+static HRESULT STDMETHODCALLTYPE Target(IDirect3DDevice9* d,DWORD i,IDirect3DSurface9* s){return d->SetRenderTarget(i,s);}
+static HRESULT STDMETHODCALLTYPE VS(IDirect3DDevice9* d,IDirect3DVertexShader9* s){return d->SetVertexShader(s);}
+static HRESULT STDMETHODCALLTYPE PS(IDirect3DDevice9* d,IDirect3DPixelShader9* s){return d->SetPixelShader(s);}
+static HRESULT STDMETHODCALLTYPE Texture(IDirect3DDevice9* d,DWORD i,IDirect3DBaseTexture9* t){return d->SetTexture(i,t);}
+static HRESULT STDMETHODCALLTYPE Clear(IDirect3DDevice9* d,DWORD n,const D3DRECT* r,DWORD f,D3DCOLOR c,float z,DWORD s){return d->Clear(n,r,f,c,z,s);}
+static HRESULT STDMETHODCALLTYPE Viewport(IDirect3DDevice9* d,const D3DVIEWPORT9* v){return d->SetViewport(v);}
 int main() {
     HWND win=CreateWindowExW(0,L"STATIC",L"offline mirror fixture",WS_OVERLAPPED,
         0,0,320,180,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
@@ -59,6 +67,29 @@ int main() {
         HR(dev->SetRenderTarget(1,extra),"original MRT binding");
     }
     const D3DVIEWPORT9 vp{7,9,600,320,.2f,.8f};HR(dev->SetViewport(&vp),"custom viewport");
+    {
+        xrcapture::OpaqueAlpha alpha;
+        const gloves::Calls calls{DrawAlpha,Target,VS,PS,Texture,Clear,Viewport};
+        HR(dev->ColorFill(back,nullptr,0x00123456),"transparent world fixture");
+        HR(dev->ColorFill(back,&right,0xa8abcdef),"partial alpha HUD fixture");
+        HR(dev->SetRenderState(D3DRS_COLORWRITEENABLE,3),"nondefault write mask");
+        HR(dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE),"nondefault blending");
+        Check(alpha.Apply(dev,back,calls),"opaque final capture pass");
+        Check(Pixel(dev,back,0,0,true)==0xff123456,"top left RGB exact, alpha opaque");
+        Check(Pixel(dev,back,639,359,true)==0xffabcdef,"bottom right RGB exact, alpha opaque");
+        Check(Pixel(dev,back,319,180,true)==0xff123456,"left edge of eye seam");
+        Check(Pixel(dev,back,320,180,true)==0xffabcdef,"right edge of eye seam");
+        DWORD value=0;HR(dev->GetRenderState(D3DRS_COLORWRITEENABLE,&value),"restored mask");Check(value==3,"alpha mask restored");
+        HR(dev->GetRenderState(D3DRS_ALPHABLENDENABLE,&value),"restored blend");Check(value==TRUE,"blend restored");
+        D3DVIEWPORT9 actual{};HR(dev->GetViewport(&actual),"restored viewport");Check(!memcmp(&actual,&vp,sizeof(vp)),"alpha pass viewport restored");
+        IDirect3DSurface9* actualRt=nullptr;HR(dev->GetRenderTarget(0,&actualRt),"restored RT0");Check(actualRt==scene,"alpha pass RT0 restored");actualRt->Release();
+        HR(dev->GetDepthStencilSurface(&actualRt),"restored depth");Check(actualRt==depth,"alpha pass depth restored");actualRt->Release();
+        if(extra){HR(dev->GetRenderTarget(1,&actualRt),"restored MRT");Check(actualRt==extra,"alpha pass MRT restored");actualRt->Release();}
+        Check(Pixel(dev,scene,320,180,true)==0xff000000,"engine scene untouched");
+        alpha.Release();
+        HR(dev->ColorFill(back,nullptr,0xffff0000),"restore red fixture");
+        HR(dev->ColorFill(back,&right,0xff00ff00),"restore green fixture");
+    }
     Check(desktop_mirror::Apply(dev,nullptr,nullptr,win),"compose right eye");
     Check(Pixel(dev,back,320,180)==0x00ff00,"mirror center is right eye, not black/left");
     Check(Pixel(dev,back,0,180)==0,"full eye retained with pillarbox");

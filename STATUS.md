@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+2026-10-18 PID20864 followup: user accepts desktop framing only; health HUD
+untested. VFX regressed because menu candidate INI omitted the default-OFF
+NativeMuzzleParticleStereo flag, despite the fix being merged. Generator now
+preserves this accepted feature. Knife swing lowers the right hand: unresolved,
+bounded native-palette probe prepared. Steam VR screenshots still fail; source
+RGB correct but alpha zero in130311/131072 pixels. Default-OFF opaque XR-output
+alpha experiment passes own-process D3D9Ex RGB/state tests; physical/Steam
+acceptance pending. See docs/menu-test-regression-20261018.md. Historic DLL/INI
+restore verified; no claim that that old profile retains later accepted VFX.
+
 2026-10-18 health HUD followup: user requests smaller translucent face-only
 plate before next test. Native health plate width now12% of render height
 (previously18%*88%, ~24% reduction), background65%/segments80% opacity.
