@@ -38,6 +38,12 @@ class RifleReloadCandidateConfigTests(unittest.TestCase):
             source,
         )
 
+    def test_minimal_settings_and_opt_in_instructions(self):
+        source = (ROOT / "tools/reload/prepare_vr_settings_rifle_test.ps1").read_text(encoding="utf-8")
+        self.assertIn("if($MinimalSettings)", source)
+        self.assertIn("$targets['Render/VrSettingsMinimal']='1'", source)
+        self.assertIn("$targets['Input/ReloadHints']='0'", source)
+
     def test_change_plan_omits_unchanged_accepted_keys(self):
         source = (ROOT / "tools/reload/prepare_vr_settings_rifle_test.ps1").read_text(
             encoding="utf-8"

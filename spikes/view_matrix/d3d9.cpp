@@ -37,6 +37,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "weapon_wheel_direct_select.h"
 #include "weapon_wheel_catalog_load.h"
 #include "weapon_wheel_seek.h"
+#include "settings_panel.h"
 #include "weapon_wheel_atlas.h"
 #include "weapon_wheel_layout.h"
 #include "health_gesture.h"
@@ -6961,14 +6962,8 @@ static void RecordVrSample(float lt, float rt, float sx, float sy, float tx, flo
     g_vrRecorder.Tick(s);
 }
 
-static float ReadPanelTrigger(XrAction action, int hand, bool pollOff) {
-    if (pollOff || action == XR_NULL_HANDLE) return 0.0f;
-    XrActionStateGetInfo gi{ XR_TYPE_ACTION_STATE_GET_INFO };
-    gi.action = action;
-    gi.subactionPath = g_handSubPath[hand];
-    XrActionStateFloat st{ XR_TYPE_ACTION_STATE_FLOAT };
-    if (XR_FAILED(xrGetActionStateFloat(g_xrSession, &gi, &st)) || !st.isActive) return 0.0f;
-    return st.currentState;
+static float ReadPanelTrigger(XrAction action, bool pollOff) {
+    return settingspanel::Trigger(g_xrSession,action,pollOff,xrGetActionStateFloat);
 }
 
 // ---- ❌ run 74: the governor is dead too, and the approach changes ----
@@ -7630,6 +7625,10 @@ volatile LONG g_panelOpen = 0;
 int  g_panelRow = 0;
 bool g_panelDirty = false;      // has anything changed since it was opened?
 volatile LONG g_vrTutorialLanguage = 0; // selected on the tutorial start screen: 1=PL, 2=EN
+static int g_vrSettingsMinimal=0;
+static int g_vrSettingsSessionOnly=0; // controlled test lease: live changes, no installed INI writes
+static volatile LONG g_reloadHintsEnabled=0; // optional instruction overlay, not reload logic
+static volatile LONG g_panelBackW=0,g_panelBackH=0;
 volatile LONG g_vrTutorialStep = 0;
 extern int g_panelPage;
 
@@ -7899,7 +7898,8 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_SHAKESCREEN, PR_BOBSTABILIZE, PR_GLOVECUFFS,
        PR_GOTO_TUTORIAL, PR_TUT_POLISH, PR_TUT_ENGLISH, PR_TUT_STEP,
        PR_TUT_LINE1, PR_TUT_LINE2, PR_TUT_LINE3, PR_TUT_LINE4,
-       PR_TUT_PREVIOUS, PR_TUT_NEXT, PR_TUT_LANGUAGE, PR_TUT_BACK }; // append only
+       PR_TUT_PREVIOUS, PR_TUT_NEXT, PR_TUT_LANGUAGE, PR_TUT_BACK,
+       PR_RELOAD_HINTS, PR_CLOSE }; // append only
 
 // ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
@@ -8015,6 +8015,20 @@ const char* kPageName[kPanelPages] = { "VR SETTINGS", "CONTROLLER", "COMFORT", "
                                        "TUTORIAL" };
 
 int g_panelPage = 0;
+const int kMinimalRoot[] = { PR_GOTO_CTRL, PR_NOTESIZE, PR_POLISH, PR_UINARRATOR,
+    PR_RELOAD_HINTS, PR_GOTO_TUTORIAL, PR_CLOSE };
+const int kMinimalControls[] = { PR_TURNMODE, PR_SNAPANGLE, PR_TURNSPEED, PR_MOVEDIR,
+    PR_LEFTHAND, PR_RECENTERCHORD, PR_BACK };
+inline int PanelCountForPage(int page) {
+    if (g_vrSettingsMinimal && page == 0) return (int)_countof(kMinimalRoot);
+    if (g_vrSettingsMinimal && page == 1) return (int)_countof(kMinimalControls);
+    return kPageCount[page];
+}
+inline int PanelIdForPage(int page, int i) {
+    if (g_vrSettingsMinimal && page == 0) return kMinimalRoot[i];
+    if (g_vrSettingsMinimal && page == 1) return kMinimalControls[i];
+    return kPageRows[page][i];
+}
 inline vrtutorial::Language VrTutorialLanguage() {
     return InterlockedCompareExchange(&g_vrTutorialLanguage, 0, 0) == 1
         ? vrtutorial::Language::Polish : vrtutorial::Language::English;
@@ -8027,16 +8041,17 @@ inline const char* PanelPageTitle(int page) {
     return kPageName[page];
 }
 inline const char* PanelPageFooter(int page) {
+    if (g_vrSettingsMinimal) return "LASER + R2 SELECT   O BACK";
     if (page == 10) return "LEFT STICK MOVE   R2 SELECT";
     if (page == 11) return VrTutorialLanguage() == vrtutorial::Language::Polish
         ? "LEWA GALKA R2 WYBIERZ O WSTECZ"
         : "LEFT STICK MOVE R2 SELECT O BACK";
     return "LEFT STICK   HOLD Y TO CLOSE";
 }
-inline int PanelRowCount() { return kPageCount[g_panelPage]; }
+inline int PanelRowCount() { return PanelCountForPage(g_panelPage); }
 inline int PanelRowId(int i) {
     if (i < 0 || i >= PanelRowCount()) return PR_BACK;
-    return kPageRows[g_panelPage][i];
+    return PanelIdForPage(g_panelPage, i);
 }
 
 // ---- ⭐ run 159: VR mode on the panel, and starting in it ----
@@ -8392,6 +8407,9 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_RECENTERCHORD:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_recenterChordEnabled));
             WritePrivateProfileStringA("Input", "RecenterChord", v, path); return;
+        case PR_RELOAD_HINTS:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_reloadHintsEnabled));
+            WritePrivateProfileStringA("Input", "ReloadHints", v, path); return;
         case PR_RECORDING:
             return; // a session is an explicit runtime artifact, never persisted as ON
 
@@ -8402,7 +8420,7 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_GOTO_CTRL: case PR_GOTO_COMFORT: case PR_GOTO_DISPLAY: case PR_GOTO_ADV:
         case PR_GOTO_WEAPON: case PR_GOTO_TMD: case PR_GOTO_TMDBONE: case PR_GOTO_TMDMESH:
         case PR_GOTO_HANDS: case PR_GOTO_TUTORIAL:
-        case PR_BACK: case PR_BACK_TMD:
+        case PR_BACK: case PR_BACK_TMD: case PR_CLOSE:
         case PR_TUT_POLISH: case PR_TUT_ENGLISH: case PR_TUT_STEP:
         case PR_TUT_LINE1: case PR_TUT_LINE2: case PR_TUT_LINE3: case PR_TUT_LINE4:
         case PR_TUT_PREVIOUS: case PR_TUT_NEXT: case PR_TUT_LANGUAGE: case PR_TUT_BACK:
@@ -8419,13 +8437,20 @@ void PanelSaveRow(int rowId, const char* path) {
 // stick is moving, but the file only ever receives a value that was settled on - a mis-set number
 // you immediately corrected never reaches the ini at all.
 void PanelSave() {
+    if (g_vrSettingsSessionOnly) {
+        Log("VR panel: session-only test; live settings not written to installed INI");
+        return;
+    }
     char path[MAX_PATH]{};
     if (!IniPath(path)) { Log("VR panel: no ini path - settings NOT saved"); return; }
     // WritePrivateProfileString edits in place: comments, ordering and unrelated keys all survive.
     // Every page, every row - so the set that is SAVED is by construction the set that is SHOWN.
-    for (int page = 0; page < kPanelPages; ++page)
-        for (int i = 0; i < kPageCount[page]; ++i)
-            PanelSaveRow(kPageRows[page][i], path);
+    for (int page = 0; page < kPanelPages; ++page) {
+        // Minimal UI must not rewrite hidden renderer/hand calibration options.
+        if (g_vrSettingsMinimal && page != 0 && page != 1 && page != 10 && page != 11) continue;
+        for (int i = 0; i < PanelCountForPage(page); ++i)
+            PanelSaveRow(PanelIdForPage(page, i), path);
+    }
     Log("VR panel: saved to %s", path);
 }
 
@@ -8824,6 +8849,13 @@ void PanelRowText(int row, char* out, size_t cap) {
         case PR_GOTO_ADV:     _snprintf_s(out, cap, _TRUNCATE, "ADVANCED           >"); break;
         case PR_GOTO_TUTORIAL:
             _snprintf_s(out, cap, _TRUNCATE, "TUTORIAL / SAMOUCZEK    >"); break;
+        case PR_RELOAD_HINTS:
+            _snprintf_s(out, cap, _TRUNCATE, "%s %s",
+                PolishLocalization::PL().IsPolishEnabled() ? "POMOC PRZELADOWANIA" : "RELOAD INSTRUCTIONS",
+                Rd(g_reloadHintsEnabled) ? "ON" : "OFF"); break;
+        case PR_CLOSE:
+            _snprintf_s(out, cap, _TRUNCATE, "%s",
+                PolishLocalization::PL().IsPolishEnabled() ? "ZAMKNIJ" : "CLOSE"); break;
         case PR_TUT_POLISH: _snprintf_s(out, cap, _TRUNCATE, "POLSKI"); break;
         case PR_TUT_ENGLISH: _snprintf_s(out, cap, _TRUNCATE, "ENGLISH"); break;
         case PR_TUT_STEP: {
@@ -8873,6 +8905,14 @@ void PanelRowText(int row, char* out, size_t cap) {
 
 void PanelAdjust(int row, int dir) {
     switch (row) {
+        case PR_RELOAD_HINTS:
+            InterlockedExchange(&g_reloadHintsEnabled, Rd(g_reloadHintsEnabled) ? 0 : 1);
+            break;
+        case PR_CLOSE:
+            if (g_panelDirty) PanelSave();
+            g_panelDirty = false;
+            InterlockedExchange(&g_panelOpen, 0);
+            return;
         case PR_ENABLEVR:
             // The same call BACKSPACE makes, so the two cannot drift. Turning VR off from here is
             // safe: the panel is drawn into whichever frame layout is live, mono or split, and it
@@ -11594,6 +11634,8 @@ void SyncXRInput(XrTime displayTime) {
         InterlockedExchange(&g_panelOpen, 0);
         Log("VR settings: auto-closed when main/pause menu lost focus");
     }
+    static settingspanel::Click panelClick;
+    if (!Rd(g_panelOpen)) panelClick.Update(false, false);
     if (InterlockedCompareExchange(&g_panelOpen, 0, 0)) {
         static bool armedY = true, armedX = true;
         static bool panelBackWasHeld = false;
@@ -11623,21 +11665,22 @@ void SyncXRInput(XrTime displayTime) {
         // The panel is a mod-rendered screen, so it must use the same controller
         // ray as native GFx.  The old false/invalid call made this path stick-only.
         const int panelFireHand = AimHand();
-        const float panelRt = ReadPanelTrigger(g_actFire, panelFireHand, pollOff);
-        const float panelLt = ReadPanelTrigger(g_actAltFire, 1 - panelFireHand, pollOff);
+        const float panelRt = ReadPanelTrigger(g_actFire, pollOff);
+        const float panelLt = ReadPanelTrigger(g_actAltFire, pollOff);
         const bool panelPointerHeld = (panelFireHand == 1 ? panelRt : panelLt) > 0.5f || getBool(g_actUiSelect);
-        static bool panelPointerWasHeld = false;
-        const bool panelPointerPressed = panelPointerHeld && !panelPointerWasHeld;
-        panelPointerWasHeld = panelPointerHeld;
+        const bool panelPointerPressed = panelClick.Update(true, panelPointerHeld);
         UpdateVrUiPointer(panelPointerHeld ? 1.0f : 0.0f, true);
         InterlockedExchange(&g_vrUiDown, panelPointerHeld ? 1 : 0);
-        if (panelPointerPressed && Rd(g_vrUiValid)) {
+        if (Rd(g_vrUiValid)) {
             int hitRow = -1;
             LONG pointerU=500000,pointerV=500000;ReadVrUiPair(pointerU,pointerV);
             if (VrPanelHitNormalized(pointerU, pointerV, &hitRow)) {
                 g_panelRow = hitRow;
-                PanelAdjust(PanelRowId(hitRow), +1);
-                Log("VR settings laser click: row=%d id=%d", hitRow, PanelRowId(hitRow));
+                if (panelPointerPressed) {
+                    const int id = PanelRowId(hitRow);
+                    PanelAdjust(id, +1);
+                    Log("VR settings laser click: row=%d id=%d", hitRow, id);
+                }
             }
         }
         RecordVrSample(panelLt, panelRt, panelX, panelY, 0.0f, 0.0f);
@@ -25698,6 +25741,7 @@ static int TextRects(D3DRECT* r, int n, int cap, int x0, int y0, int px, const c
 // pretend to replace it. It appears only after Circle in tracked gameplay,
 // for eight seconds, inside EACH eye; the Settings tutorial uses the same text.
 static void DrawNextReloadHint(IDirect3DDevice9* dev) {
+    if (!Rd(g_reloadHintsEnabled)) return;
     if(!dev||(!NextReloadEnabled()&&!g_centurionReload)||!VrModeOn()||!InGameplay()||!Rd(g_dupDraws)||
        Rd(g_gamePaused)||Rd(g_vrUiMenu)||Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||
        CutsceneNativeCameraArmed()||g_xrSessionState!=XR_SESSION_STATE_FOCUSED)return;
@@ -25923,10 +25967,17 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     // a second copy in the other eye's half. Draw on the backbuffer, full frame.
     IDirect3DSurface9* panelBack = nullptr;
     IDirect3DSurface9* panelOldRt = nullptr;
+    D3DVIEWPORT9 panelOldVp{};
+    if (FAILED(dev->GetViewport(&panelOldVp))) return;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &panelBack)) || !panelBack) return;
     D3DSURFACE_DESC panelDesc{};
-    panelBack->GetDesc(&panelDesc);
-    dev->GetRenderTarget(0, &panelOldRt);
+    if (FAILED(panelBack->GetDesc(&panelDesc)) || panelDesc.Width < 8 || panelDesc.Height < 8 ||
+        FAILED(dev->GetRenderTarget(0, &panelOldRt)) || !panelOldRt) {
+        if (panelOldRt) panelOldRt->Release();
+        panelBack->Release(); return;
+    }
+    InterlockedExchange(&g_panelBackW, (LONG)panelDesc.Width);
+    InterlockedExchange(&g_panelBackH, (LONG)panelDesc.Height);
     if (g_origSetRenderTarget) g_origSetRenderTarget(dev, 0, panelBack);
     else dev->SetRenderTarget(0, panelBack);
     if (panelDesc.Width >= 4 && panelDesc.Height >= 4) {
@@ -25975,24 +26026,14 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     //
     // Sizing from kPanelRowsMax keeps the TEXT the same on every page and lets short pages simply
     // be short boxes, which is what a settings menu does.
-    const double kPanelHeightFrac = 0.28;
-    int px = (int)((g_srcH * kPanelHeightFrac) / ((kGlyphH + 6) * (kPanelRowsMax + 3)));
     // Floor of 3, not 1. A 5x7 glyph at px=1 is five pixels across on a 2688-tall display: present
     // in the frame, unreadable through a lens, and indistinguishable from the panel being broken.
     // Past roughly 20 rows this floor wins and the panel starts growing again, which is the point at
     // which it wants pages or columns rather than a smaller font.
-    if (px < 3) px = 3;
     const bool dup   = InterlockedCompareExchange(&g_dupDraws, 0, 0) != 0;
     const int  eyes  = dup ? 2 : 1;
-    const LONG halfW = dup ? (LONG)g_srcW / 2 : (LONG)g_srcW;
     // Keep one panel inside its eye half. A plate wider than the half spills
     // into the other eye and the cropped submit shows two partial panels.
-    for (;;) {
-        const int trialW = (kPageCols[g_panelPage] + 2) * (kGlyphW + 1) * px;
-        if (trialW <= (int)(halfW * 9 / 10) || px <= 2) break;
-        --px;
-    }
-    const int  lh    = (kGlyphH + 6) * px;
     // Measured, not assumed. This was a hardcoded 30 "widest row plus margin", which silently
     // becomes too narrow the first time a row is added with a longer label - and the failure is
     // text spilling past the plate, not a compile error. +2 for the margin the constant included.
@@ -26014,11 +26055,11 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     // PER PAGE - one global constant made every two-row sub-page as wide as the root, which was
     // the next thing reported. kPageCols carries each page's worst case; the measurement below it
     // only ever raises, so a row longer than its page's constant still cannot spill past the plate.
-    const int  colsMin = kPageCols[g_panelPage];
-    const int  cols    = (widest + 2 > colsMin) ? widest + 2 : colsMin;
-    const int  boxW  = cols * (kGlyphW + 1) * px;
-    const int  boxH  = lh * (nRows + 3);
-    const int  y0    = (int)(g_srcH / 2) - boxH / 2;
+    static_assert(kGlyphW == 5 && kGlyphH == 7, "settings-panel layout glyph contract");
+    const settingspanel::Layout layout = settingspanel::Make(
+        (int)panelDesc.Width,(int)panelDesc.Height,dup,nRows,widest,kPageCols[g_panelPage]);
+    const int px=layout.px,lh=layout.line,boxW=layout.width,boxH=layout.height,y0=layout.y;
+    const LONG halfW=layout.half;
 
     // ---- 💥 run 248: 8192 was not enough for a 17-row page, and it FAILED SILENTLY ----
     //
@@ -26135,6 +26176,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         else dev->SetRenderTarget(0, panelOldRt);
         panelOldRt->Release();
     }
+    dev->SetViewport(&panelOldVp);
     panelBack->Release();
 }
 
@@ -26142,20 +26184,11 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
 // beside the renderer avoids the old hard-coded 1920x1080/menu assumptions and
 // keeps pointer clicks correct for mono and SBS backbuffers.
 bool VrPanelHitNormalized(LONG uInt, LONG vInt, int* rowIndex) {
-    if (!rowIndex || !g_srcW || !g_srcH || !Rd(g_panelOpen)) return false;
+    const int width=(int)Rd(g_panelBackW),height=(int)Rd(g_panelBackH);
+    if (!rowIndex || !width || !height || !Rd(g_panelOpen)) return false;
     const bool dup = Rd(g_dupDraws) != 0;
-    const float u = std::max(0.0f, std::min(1.0f, (float)uInt / 1000000.0f));
-    const float v = std::max(0.0f, std::min(1.0f, (float)vInt / 1000000.0f));
+    const float u=(float)uInt/1000000.0f,v=(float)vInt/1000000.0f;
     const int nRows = PanelRowCount();
-    int px = (int)((g_srcH * 0.28) / ((kGlyphH + 6) * (kPanelRowsMax + 3)));
-    if (px < 3) px = 3;
-    const int halfW = dup ? (int)g_srcW / 2 : (int)g_srcW;
-    for (;;) {
-        const int trialW = (kPageCols[g_panelPage] + 2) * (kGlyphW + 1) * px;
-        if (trialW <= halfW * 9 / 10 || px <= 2) break;
-        --px;
-    }
-    const int lh = (kGlyphH + 6) * px;
     char row[96] = {};
     int widest = TextGlyphCount(PanelPageTitle(g_panelPage));
     const int footerWidth = TextGlyphCount(PanelPageFooter(g_panelPage));
@@ -26164,26 +26197,16 @@ bool VrPanelHitNormalized(LONG uInt, LONG vInt, int* rowIndex) {
         PanelRowText(PanelRowId(i), row, sizeof(row));
         const int len = TextGlyphCount(row); if (len > widest) widest = len;
     }
-    const int colsMin = kPageCols[g_panelPage];
-    const int cols = (widest + 2 > colsMin) ? widest + 2 : colsMin;
-    const int boxW = cols * (kGlyphW + 1) * px;
-    const int boxH = lh * (nRows + 3);
-    const int y0 = (int)g_srcH / 2 - boxH / 2;
+    const settingspanel::Layout layout=settingspanel::Make(
+        width,height,dup,nRows,widest,kPageCols[g_panelPage]);
     // The ray reports logical UV inside the inset head plane. DrawVrPanel is
     // drawn on the full per-eye backbuffer, so undo that inset exactly once.
     // The old SBS re-split treated this UV as a full two-eye pixel address.
-    const float screenU=uipointer::CanvasToEye(u,g_vrMenuPanel.plane.inset);
-    const float screenV=uipointer::CanvasToEye(v,g_vrMenuPanel.plane.inset);
-    const float x = screenU * (float)halfW;
-    const float cx = (float)halfW * 0.5f;
-    if (x < cx - boxW * 0.5f || x > cx + boxW * 0.5f) return false;
-    const float py = screenV * (float)g_srcH;
-    for (int i = 0; i < nRows; ++i) {
-        const float top = (float)y0 + lh * (2 + i);
-        const float bottom = top + (kGlyphH + 1) * px;
-        if (py >= top && py <= bottom) { *rowIndex = i; return true; }
-    }
-    return false;
+    float screenU=0,screenV=0;
+    if(!settingspanel::EyeUv(u,v,g_vrMenuPanel.plane.inset,screenU,screenV))return false;
+    const int hit=settingspanel::RowAt(layout,height,screenU,screenV);
+    if(hit<0)return false;
+    *rowIndex=hit;return true;
 }
 
 // Explicit probe backbuffer screenshot next to the log, for remote diagnosis.
@@ -32443,6 +32466,12 @@ void LoadIniSettings() {
     InterlockedExchange(&g_modalUiProbe, GetPrivateProfileIntA("Render","ModalUiProbe",0,path)?1:0);
     InterlockedExchange(&g_contextPointerProjection,GetPrivateProfileIntA("Render","ContextPointerProjection",0,path)?1:0);
     g_vrPromptTokens=GetPrivateProfileIntA("Render","VrPromptTokens",0,path)!=0;
+    g_vrSettingsMinimal=GetPrivateProfileIntA("Render","VrSettingsMinimal",0,path)!=0;
+    g_vrSettingsSessionOnly=GetPrivateProfileIntA("Diagnostic","VrSettingsSessionOnly",0,path)!=0;
+    InterlockedExchange(&g_reloadHintsEnabled,
+        GetPrivateProfileIntA("Input","ReloadHints",0,path)!=0);
+    Log("ini: VrSettingsMinimal=%d ReloadHints=%ld (optional PL/EN reload instructions)",
+        g_vrSettingsMinimal,Rd(g_reloadHintsEnabled));
     InterlockedExchange(&g_contextCursorSuppress,
         GetPrivateProfileIntA("Render","ContextCursorSuppress",0,path)?1:0);
     Log("ini: ContextCursorSuppress=%ld (measured modal GFx pointer only; default OFF)",

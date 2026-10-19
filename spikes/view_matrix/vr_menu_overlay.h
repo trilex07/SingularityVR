@@ -201,6 +201,13 @@ static bool VrUiProjectEye(int eye,uipointer::V point,uipointer::ScreenPoint& ou
         VrUiRotate(p.orientation,{0,0,-1}),VrUiRotate(p.orientation,{1,0,0}),
         VrUiRotate(p.orientation,{0,1,0}),g_targetTanX,g_targetTanY,out);
 }
+// Settings are flat per-eye pixels, unlike native GFx's world plane. Click,
+// ring and beam endpoint must use the same mapping, without extra IPD parallax.
+static bool VrUiProjectPointerPoint(int eye,uipointer::V point,uipointer::ScreenPoint& out) {
+    if(!Rd(g_panelOpen))return VrUiProjectEye(eye,point,out);
+    LONG u=500000,v=500000;ReadVrUiPair(u,v);
+    return settingspanel::EyeUv(u/1000000.f,v/1000000.f,g_vrMenuPanel.plane.inset,out.u,out.v);
+}
 static void DrawVrMenuLaser(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,uipointer::V B) {
     if(!Rd(g_vrMenuLaser)||!Rd(g_vrUiValid)||!g_handPositionValid[1]||!g_origDrawPrimUP)return;
     const uipointer::V A{g_handLastPos[1].x,g_handLastPos[1].y,g_handLastPos[1].z};
@@ -228,7 +235,7 @@ static void DrawVrMenuLaser(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,uipoi
         const LONG half=(LONG)d.Width/2;
         const RECT clip{eye?half:0,0,eye?(LONG)d.Width:half,(LONG)d.Height};
         dev->SetScissorRect(&clip);
-        uipointer::ScreenPoint a,b;if(!VrUiProjectEye(eye,A,a)||!VrUiProjectEye(eye,B,b))continue;
+        uipointer::ScreenPoint a,b;if(!VrUiProjectEye(eye,A,a)||!VrUiProjectPointerPoint(eye,B,b))continue;
         const float x0=(eye+a.u)*halfW,y0=a.v*(float)d.Height;
         const float x1=(eye+b.u)*halfW,y1=b.v*(float)d.Height;
         float dx=x1-x0,dy=y1-y0,L=sqrtf(dx*dx+dy*dy);if(L<.5f)continue;dx/=L;dy/=L;
@@ -260,7 +267,7 @@ static void DrawVrMenuReticle(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,
     const DWORD ringColour=pressed?0xEE56FF9Au:0xE650E8F2u;
     const DWORD innerColour=pressed?0xD8FFFFFFu:0xD5FFFFFFu;
     for(int eye=0;eye<2;++eye){
-        uipointer::ScreenPoint projected;if(!VrUiProjectEye(eye,point,projected))continue;
+        uipointer::ScreenPoint projected;if(!VrUiProjectPointerPoint(eye,point,projected))continue;
         const float cx=(eye+projected.u)*(float)d.Width*.5f,cy=projected.v*(float)d.Height;
         const LONG half=(LONG)d.Width/2;const RECT clip{eye?half:0,0,eye?(LONG)d.Width:half,(LONG)d.Height};
         dev->SetScissorRect(&clip);

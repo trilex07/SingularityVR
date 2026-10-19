@@ -1,6 +1,18 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-19 minimal settings follow-up L1_PASS: seven main rows,
+optional PL/EN reload instructions (Input/ReloadHints default OFF), aggregate
+OpenXR R2 query matching action creation, shared measured-backbuffer click/ring/
+beam endpoint mapping. Hidden engineering calibration is not rewritten by the
+minimal panel. Combined Valkyrie/wheel/Volk-grip/NPC candidate remains OFFLINE;
+new user start required. Session-only test setting prevents panel-save INI
+drift from invalidating the exact-hash restore lease. 36 C++ fixtures (including
+5184 panel hits and private original animation oracles), 108 suite Python tests,
+five candidate-config and three NPC tests PASS; frontend/menu regressions PASS.
+Clean-source optimized build receipt remains the L2 deployment authority.
+See docs/minimal-vr-settings.md.
+
 2026-10-19 additive follow-up: default-OFF `WeaponWheelObservedSelection` replaces
 the unverified catalog cycle-distance guess with one native pulse per observed
 weapon transition, bounded by repeated identity/timeout/gameplay gates. Converts

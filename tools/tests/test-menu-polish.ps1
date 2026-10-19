@@ -18,8 +18,10 @@ $overlay=Get-Content -Raw -LiteralPath (Join-Path $repo 'spikes/view_matrix/vr_m
 $input=Get-Content -Raw -LiteralPath (Join-Path $repo 'spikes/view_matrix/native_ui_input.h')
 $policy=Get-Content -Raw -LiteralPath (Join-Path $repo 'spikes/view_matrix/modal_menu_policy.h')
 $ini=Get-Content -Raw -LiteralPath (Join-Path $repo 'spikes/view_matrix/SingularityVR.ini')
-if($renderer -notmatch 'const float screenU=uipointer::CanvasToEye\(u,g_vrMenuPanel\.plane\.inset\)' -or
-   $renderer -notmatch 'const float screenV=uipointer::CanvasToEye\(v,g_vrMenuPanel\.plane\.inset\)' -or
+$settings=Get-Content -Raw -LiteralPath (Join-Path $repo 'spikes/view_matrix/settings_panel.h')
+if($renderer -notmatch 'settingspanel::EyeUv\(u,v,g_vrMenuPanel\.plane\.inset,screenU,screenV\)' -or
+   $settings -notmatch 'x=uipointer::CanvasToEye\(u,inset\);y=uipointer::CanvasToEye\(v,inset\)' -or
+   $overlay -notmatch 'settingspanel::EyeUv\(u/1000000.f,v/1000000.f,g_vrMenuPanel\.plane\.inset,out.u,out.v\)' -or
    $renderer -match 'const float localU = dup \?'){
     throw 'VR Settings hit-test must use the inset head-plane UV, not a second SBS split'
 }

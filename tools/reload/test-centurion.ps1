@@ -6,6 +6,17 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $vswhere="${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $vcvars=Join-Path $vs 'VC\Auxiliary\Build\vcvarsall.bat'
+. (Join-Path $repo 'tools/Resolve-OpenXrSdk.ps1')
+$xr=Get-OpenXrSdkPaths -RepoRoot $repo
+$panelSource=Join-Path $repo 'spikes/view_matrix/tests/test-settings-panel.cpp'
+$panelExe=Join-Path $out 'test-settings-panel.exe'
+$panelObj=Join-Path $out 'test-settings-panel.obj'
+cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W3 /O2 /MD /I`"$($xr.Inc)`" /Fe:`"$panelExe`" /Fo:`"$panelObj`" `"$panelSource`""
+if($LASTEXITCODE -ne 0){throw 'Settings panel compile failed'}
+& $panelExe
+if($LASTEXITCODE -ne 0){throw 'Settings panel math/input failed'}
+python (Join-Path $PSScriptRoot 'test_settings_panel.py')
+if($LASTEXITCODE -ne 0){throw 'Settings panel wiring failed'}
 $instructionSource=Join-Path $repo 'spikes/view_matrix/tests/test-reload-instructions.cpp'
 $instructionExe=Join-Path $out 'test-reload-instructions.exe'
 $instructionObj=Join-Path $out 'test-reload-instructions.obj'

@@ -6,7 +6,8 @@ param(
     [ValidateSet('Valkyrie','Volk','Kasimov')][string]$Weapon='Valkyrie',
     [switch]$CarryRayFix,
     [switch]$NativeFxCapture,
-    [switch]$VisualFollowup
+    [switch]$VisualFollowup,
+    [switch]$MinimalSettings
 )
 $ErrorActionPreference='Stop'
 $candidate=[IO.Path]::GetFullPath($CandidateDir)
@@ -75,6 +76,13 @@ if($VisualFollowup){
     $targets['Input/VolkAuthoredGrip']='1'
     $targets['Input/WeaponWheelObservedSelection']='1'
     $targets['Input/WeaponWheelDirectSelect']='1'
+}
+if($MinimalSettings){
+    $targets['Render/VrSettingsMinimal']='1'
+    $targets['Input/ReloadHints']='0'
+    # Toggling test settings must not invalidate the exact-hash restore lease.
+    # Normal production settings persist; this session alone is non-persistent.
+    $targets['Diagnostic/VrSettingsSessionOnly']='1'
 }
 $text=[IO.File]::ReadAllText((Resolve-Path -LiteralPath $InstalledIni).Path,[Text.UTF8Encoding]::new($false,$true))
 $newline=if($text.Contains("`r`n")){"`r`n"}else{"`n"}
