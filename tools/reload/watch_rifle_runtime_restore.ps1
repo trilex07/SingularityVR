@@ -105,9 +105,6 @@ $fileMap=@(
     [pscustomobject]@{Target='Binaries/d3d9.dll';Source=$candidateDll},
     [pscustomobject]@{Target='Binaries/SingularityVR.ini';Source=$candidateIni}
 )
-$ticket=Assert-AcceptedDeployment -GameRoot $gameRoot -ProfilePath $profile -ChangePlanPath $plan `
-    -FileMap $fileMap -Direction Install -Phase Post
-if($ticket.ProfileSha256 -cne $profileHash){throw 'Accepted profile changed during preflight'}
 if([bool]$NpcCandidateDir -ne [bool]$NpcBackupDir){throw 'NPC lease requires both candidate and backup paths'}
 if($NpcCandidateDir){
     & (Join-Path $repo 'tools/title/deploy_npc_name_test.ps1') -Action ValidateLive `
@@ -119,7 +116,16 @@ if($SessionAssetsManifestPath){
     & (Join-Path $repo 'tools/integration/session-assets.ps1') -Action ValidateLive `
         -ManifestPath $SessionAssetsManifestPath -BackupDir $SessionAssetsBackupDir -GameRoot $gameRoot
     if(-not $?){throw 'Combined session asset preflight failed'}
+    . (Join-Path $repo 'tools/integration/CombinedSessionProfile.ps1')
+    $combinedPlan=Join-Path $assetBackup 'combined-profile-plan.json'
+    $ticket=New-CombinedSessionProfileTicket -GameRoot $gameRoot -ProfilePath $profile `
+        -ChangePlanPath $plan -ManifestPath $SessionAssetsManifestPath -OutputPath $combinedPlan -FileMap $fileMap
+    $combinedPlanHash=Hash $combinedPlan
+}else{
+    $ticket=Assert-AcceptedDeployment -GameRoot $gameRoot -ProfilePath $profile -ChangePlanPath $plan `
+        -FileMap $fileMap -Direction Install -Phase Post
 }
+if($ticket.ProfileSha256 -cne $profileHash){throw 'Accepted profile changed during preflight'}
 Write-Output "READY: all-file lease armed (${LaunchWindowSeconds}s BEFORE launch only); active sessions have NO timeout; no launch/kill."
 Write-Output "Candidate DLL=$dllHash INI=$iniHash; nine reload assets verified; protected UI SHA256=$uiHash"
 $deadline=(Get-Date).AddSeconds($LaunchWindowSeconds)
@@ -162,6 +168,7 @@ if($NpcCandidateDir){
 }
 
 if($SessionAssetsManifestPath){
+    if((Hash $combinedPlan) -cne $combinedPlanHash){throw 'Composed profile allowance changed during test'}
     & (Join-Path $repo 'tools\deploy-singularityvr.ps1') -Action Rollback -SteamRoot $steam `
         -SessionAssetsManifestPath $SessionAssetsManifestPath -BackupPath $SessionAssetsBackupDir
     if(-not $?){throw 'Combined session asset restore failed'}

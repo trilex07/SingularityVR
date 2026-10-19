@@ -100,6 +100,16 @@ exact restore (including removal of a newly added, hash-matched file).
 
 ## One headset route (no chat/alt-tab during test)
 
+2026-10-19 pre-launch integration correction: the first deployment was fully
+restored before any game launch because the core postflight correctly rejected
+the changed Polish text/story manifests. The combined watcher now composes an
+exact temporary allowance for only those two profile-pinned manifest targets
+from the sealed asset delta, with source/before/after SHA checks. It does not
+edit the accepted profile or the core install/rollback plan. Campaign assets
+are restored before the original core rollback. Synthetic tests reproduce the
+old rejection, accept the exact composed state, reject unrelated dependency
+drift/bad baseline pins/broader allowances, and verify exact baseline restore.
+
 1. VR Settings: aim at rows and use R2, enable reload hints, switch PL/EN text.
 2. Valkyrie: idle5s, three short bursts3s apart into free space; inspect origin,
    VFX and both grips. Circle eject -> LEFT shoulder grip -> insert/release;
