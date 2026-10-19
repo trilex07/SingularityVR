@@ -5704,6 +5704,7 @@ static D3DFORMAT g_cineMonoTempFmt = D3DFMT_UNKNOWN;
 static bool g_cineMonoFault = false;
 static LONG g_cutsceneCinemaScalePct = 60; // complete image; user found 85% too wide
 static LONG g_cutsceneNativeCameraFix = 1; // controlled native-camera experiment, cinema only
+static LONG g_cutsceneNativeHands = 0; // default OFF: original animated foreground in native-camera cinema
 extern volatile LONG g_vrUiMenu;
 static LONG g_cutsceneMenuPairFix = 0; // exact focused menus; same-source XR crop experiment
 static LONG g_handAnchorProbe = 0;
@@ -16069,6 +16070,12 @@ inline void RefreshArmsAnimActive() {
     wasKept=keep;
 }
 inline bool ArmsAnimActive() { return Rd(g_armsAnimActiveCached)!=0; }
+static bool NativeCinematicHandsNow() {
+    return Rd(g_cutsceneNativeHands) && CutsceneNativeCameraArmed();
+}
+static bool NativeAnimatedHandsNow() {
+    return ArmsAnimActive() || NativeCinematicHandsNow();
+}
 
 inline void ArmMeleeWindowFromKnife() {
     if (InterlockedCompareExchange(&g_meleeArmsMs, 0, 0) <= 0) return;
@@ -17057,7 +17064,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         g_handPoseValid[1] && g_handPositionValid[1]
     };
     if(!handValid[0] && !handValid[1]) { IndependentAuditCount(IHA_POSITION,audit); return 0; }
-    if(ArmsAnimActive()) { IndependentAuditCount(IHA_ANIMATION,audit); return 0; }
+    if(NativeAnimatedHandsNow()) { IndependentAuditCount(IHA_ANIMATION,audit); return 0; }
     // A stored weapon still owns the same first-person hand mesh.  Keep
     // driving the tracked hands while the gun is at the hip; the weapon-only
     // transform is handled by GunPivotWorld/FgMoved separately.  This mirrors
@@ -17797,6 +17804,9 @@ static bool GlovesUntilWeaponNow() {
 }
 
 static bool FgIndependentHandsCandidate(UINT verts, UINT first, UINT triangles) {
+    // PrepareIndependentLeft deliberately preserves the native animation here.
+    // Its zero return is not tracking failure: do not suppress that native draw.
+    if (NativeAnimatedHandsNow()) return false;
     const bool exactSection=IsIndependentHandSection(verts, first, triangles);
     const bool exactSectionWindow=exactSection && Rd(g_inForeground) &&
         Rd(g_fgDrawCount) <= kFgSanePass && Rd(g_rtIsScene) && !g_boundShaderLayout.shadow;
@@ -17805,6 +17815,7 @@ static bool FgIndependentHandsCandidate(UINT verts, UINT first, UINT triangles) 
 }
 
 static bool CustomGlovesEligible() {
+    if (NativeAnimatedHandsNow()) return false;
     return gloves::Eligible(g_gloveExperiment&&!g_nativeGloveExperiment,g_gloveRenderer.Ready(),
         g_sceneMode.Current()==vrscene::Mode::GameplayStereo,Rd(g_gamePaused)!=0,
         Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,g_xrSessionState==XR_SESSION_STATE_FOCUSED,
@@ -17912,6 +17923,9 @@ static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT v
 }
 static float g_customGloveNativeScale=1.f;
 static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangles) { // arms, in modes 2 and 3
+    // Native health/animation ownership outranks replacement and sleeve clipping.
+    // The old exemption below these rules could never recover an earlier drop.
+    if (NativeAnimatedHandsNow()) return false;
     if(g_gloveExperiment && gloves::ReplaceSection(CustomGlovesEligible(),verts,first,triangles,
         Rd(g_rtIsScene)!=0,g_boundShaderLayout.shadow,g_boundShaderLayout.bones,
         g_boundShaderLayout.boneRegs,g_boundShaderLayout.local,
@@ -18246,7 +18260,7 @@ static bool FgMoved(UINT verts) {                     // gun, in modes 1 and 3
     // transformed onto the controller - which removes it from where it belongs just as surely as
     // hiding it does, and would read as the same hole.
     if (!FgMatchWindow()) return false;
-    return !ArmsAnimActive();                          // leave the gun where the animation expects it
+    return !NativeAnimatedHandsNow();                  // native actions/cinema own the original gun pose
 }
 
 // Everything else the first-person pass draws - the muzzle flash, the barrel smoke, ejected shells,
@@ -18331,7 +18345,7 @@ static bool FgRidesGun(UINT verts) {
     // that followed the controller would be the only thing off the animation. Moved BELOW the cheap
     // gates in run 203: it was the second test in the function, so every draw paid for a 64-bit
     // interlocked read.
-    if (ArmsAnimActive()) return false;
+    if (NativeAnimatedHandsNow()) return false;
     // ---- ⚠️ the boundary is LOOSE, and widening what rides it raises the stakes ----
     //
     // Run 115 set g_inForeground on "a depth-only Clear once some draws have happened" and wrote
@@ -19457,7 +19471,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // and menu hiding. Never suppress world/NPC geometry or shadow generation.
     const bool trackedCineMesh = isGun || rideTo != 0 ||
         (IsIndependentHandSection(numVertices, startIndex, primCount) && g_independentHands);
-    if (CutsceneHideTrackedForeground(CutsceneMonoCurrentMode(), Rd(g_sceneFlatEnabled) != 0,
+    if (!NativeCinematicHandsNow() && CutsceneHideTrackedForeground(CutsceneMonoCurrentMode(), Rd(g_sceneFlatEnabled) != 0,
         VrModeOn(), MenuSubmitForcesFlat((int)Rd(g_vrMenuClass)), Rd(g_rtIsScene) != 0,
         g_boundShaderLayout.shadow, FgMatchWindow(), trackedCineMesh)) {
         static bool saidHidden = false;
@@ -19500,7 +19514,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // and world geometry can share one - run 215 measured 322 such collisions in a second - and the
     // window is what has kept every count-matched rule in this file off the level.
     const bool tmdSurgeryOn = InterlockedCompareExchange(&g_tmdOnOffHand, 0, 0) != 0 &&
-                              TmdRaised() && FgMatchWindow();
+                              TmdRaised() && FgMatchWindow() && !NativeAnimatedHandsNow();
     // ArmIKMode=2 is the explicit visual fallback: suppress only the audited
     // TMD arm section while keeping the section-0 glove/hand draw alive.
     // The exact range gate prevents this from touching world geometry or a
@@ -33147,6 +33161,8 @@ void LoadIniSettings() {
     InterlockedExchange(&g_sceneFlatEnabled,
                         GetPrivateProfileIntA("Render", "CutsceneFlatMode", 1, path) ? 1 : 0);
     g_cutsceneVideoHandoffFix=GetPrivateProfileIntA("Render","CutsceneVideoHandoffFix",1,path)?1:0;
+    g_cutsceneNativeHands=GetPrivateProfileIntA("Render","CutsceneNativeHands",0,path)?1:0;
+    Log("native action hands: CutsceneNativeHands=%ld (original animation, native-camera cinema only; default OFF)",g_cutsceneNativeHands);
     g_cutsceneMenuHandoffFix=GetPrivateProfileIntA("Render","CutsceneMenuHandoffFix",0,path)?1:0;
     g_cineMenuLoadClear=GetPrivateProfileIntA("Render","CineMenuLoadClear",1,path)?1:0;
     g_cutsceneMenuPairFix=GetPrivateProfileIntA("Render","CutsceneMenuPairFix",0,path)?1:0;
