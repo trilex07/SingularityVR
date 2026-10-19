@@ -2,7 +2,8 @@
 param(
     [Parameter(Mandatory)][string]$InstalledIni,
     [Parameter(Mandatory)][string]$AcceptedProfilePath,
-    [Parameter(Mandatory)][string]$CandidateDir
+    [Parameter(Mandatory)][string]$CandidateDir,
+    [ValidateSet('Valkyrie','Volk','Kasimov')][string]$Weapon='Valkyrie'
 )
 $ErrorActionPreference='Stop'
 $candidate=[IO.Path]::GetFullPath($CandidateDir)
@@ -48,13 +49,15 @@ $targets=[ordered]@{
     # Preserve the user's approved right-handed Sense layout: Circle is the
     # manual reload edge, Cross remains health, and stick-up remains jump.
     'Input/ReloadControlLayout'='1'
-    'Input/ValkyrieManualReload'='1'
-    'Input/VolkManualReload'='1'
-    'Input/KasimovManualReload'='1'
+    # The reload FSM is a single active transaction; exactly one weapon is
+    # opted in per Steam session. Pass -Weapon to prepare another isolated run.
+    'Input/ValkyrieManualReload'=$(if($Weapon -eq 'Valkyrie'){'1'}else{'0'})
+    'Input/VolkManualReload'=$(if($Weapon -eq 'Volk'){'1'}else{'0'})
+    'Input/KasimovManualReload'=$(if($Weapon -eq 'Kasimov'){'1'}else{'0'})
     'Input/ReloadRefillOnly'='1'
     'Input/ReloadNativeMagazine'='1'
-    'Input/ValkyrieAuthoredGrip'='1'
-    'Input/ValkyrieSingleGrip'='1'
+    'Input/ValkyrieAuthoredGrip'=$(if($Weapon -eq 'Valkyrie'){'1'}else{'0'})
+    'Input/ValkyrieSingleGrip'=$(if($Weapon -eq 'Valkyrie'){'1'}else{'0'})
 }
 $text=[IO.File]::ReadAllText((Resolve-Path -LiteralPath $InstalledIni).Path,[Text.UTF8Encoding]::new($false,$true))
 $newline=if($text.Contains("`r`n")){"`r`n"}else{"`n"}
@@ -91,13 +94,13 @@ foreach($name in $targets.Keys){
         key=$name
         before=if($before){$before.Value}else{$null}
         after=$targets[$name]
-        reason='Three-weapon manual magazine PSVR2 candidate; one weapon tested at a time; accepted profile restored after test'
+        reason="Isolated $Weapon manual magazine PSVR2 session; other rifle reload gates OFF; accepted profile restored after test"
     }
 }
 $plan=[pscustomobject]@{
     schema='singularityvr-change-plan-v1'
     profileSha256=$profileHash
-    reason='Verify three guarded rifle reloads with the required Circle input layout, while preserving the tested VFX/holster/VR-settings candidate'
+    reason="Verify $Weapon guarded reload with the required Circle input layout, while preserving the tested VFX/holster/VR-settings candidate"
     files=@([pscustomobject]@{path='Binaries/d3d9.dll';before=$acceptedDll[0].sha256;after=$dllHash;reason='Clean x86 /O2 candidate'})
     ini=$changes
 }

@@ -6,19 +6,26 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class RifleReloadCandidateConfigTests(unittest.TestCase):
-    def test_candidate_enables_shared_layout_and_all_three_weapons(self):
+    def test_candidate_enables_shared_layout_and_exactly_one_weapon(self):
         source = (ROOT / "tools/reload/prepare_vr_settings_rifle_test.ps1").read_text(
             encoding="utf-8"
         )
-        for key in (
-            "ReloadControlLayout",
-            "ValkyrieManualReload",
-            "VolkManualReload",
-            "KasimovManualReload",
-            "ReloadRefillOnly",
-            "ReloadNativeMagazine",
+        self.assertIn("'Input/ReloadControlLayout'='1'", source)
+        self.assertIn("'Input/ReloadRefillOnly'='1'", source)
+        self.assertIn("'Input/ReloadNativeMagazine'='1'", source)
+        self.assertIn("[ValidateSet('Valkyrie','Volk','Kasimov')]", source)
+        for key, weapon in (
+            ("ValkyrieManualReload", "Valkyrie"),
+            ("VolkManualReload", "Volk"),
+            ("KasimovManualReload", "Kasimov"),
+            ("ValkyrieAuthoredGrip", "Valkyrie"),
+            ("ValkyrieSingleGrip", "Valkyrie"),
         ):
-            self.assertIn(f"'Input/{key}'='1'", source, key)
+            self.assertIn(
+                f"'Input/{key}'=$(if($Weapon -eq '{weapon}'){{'1'}}else{{'0'}})",
+                source,
+                key,
+            )
 
     def test_rifle_reload_fsm_requires_shared_layout(self):
         source = (ROOT / "spikes/view_matrix/d3d9.cpp").read_text(encoding="utf-8")
