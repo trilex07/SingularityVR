@@ -1,6 +1,23 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-19 combined-session asset preparation L1_PASS, Steam untouched:
+1875 unique latest SIDE WAVs audited (1949 rows include74 duplicate declarations),
+114 current native campaign bank candidates independently decoded/repacked,
+878 native waves replaced,380 baseline waves retained rather than cutting speech
+or changing immutable cue/sample timing. 104 Notes/ChronoNote translations and
+the actual delivered Revert8K diffuse/normal pair staged. No MP/UI/Bink audio,
+injector, font or unrelated texture replacement. Exact119-file private delta
+and15 protected dependency pins; real-visibility Steam baseline preflight PASS.
+Fake-install audio/texture/text and NPC package backup/deploy/drift/bad-backup/
+restore checks PASS. Explicit CombinedSession opts all three reload profiles in,
+but one observed held identity owns the shared FSM; cross-profile carry/edge
+regression added. No10-minute active-session timer: future MAIN lease uses7200s
+before-launch bound and unlimited active session, restore after normal exit.
+New start required before deploy/launch. Rifle VFX remains an exact-producer
+investigation, not declared fixed; accepted pistol correction stays enabled.
+See docs/combined-session-candidate.md; final clean build receipt owns L2 SHA.
+
 2026-10-19 minimal settings follow-up L1_PASS: seven main rows,
 optional PL/EN reload instructions (Input/ReloadHints default OFF), aggregate
 OpenXR R2 query matching action creation, shared measured-backbuffer click/ring/

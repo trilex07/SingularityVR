@@ -22,10 +22,12 @@ class RifleReloadCandidateConfigTests(unittest.TestCase):
             ("ValkyrieSingleGrip", "Valkyrie"),
         ):
             self.assertIn(
-                f"'Input/{key}'=$(if($Weapon -eq '{weapon}'){{'1'}}else{{'0'}})",
+                f"'Input/{key}'=$(if($CombinedSession -or $Weapon -eq '{weapon}'){{'1'}}else{{'0'}})",
                 source,
                 key,
             )
+        self.assertIn('[switch]$CombinedSession', source)
+        self.assertIn('User-requested combined three-weapon acceptance session', source)
 
     def test_rifle_reload_fsm_requires_shared_layout(self):
         source = (ROOT / "spikes/view_matrix/d3d9.cpp").read_text(encoding="utf-8")
@@ -60,6 +62,9 @@ class RifleReloadCandidateConfigTests(unittest.TestCase):
         self.assertIn("-Action Rollback", source)
         self.assertNotIn("Stop-Process", source)
         self.assertNotIn("Start-Process", source)
+        self.assertIn('[ValidateRange(60,7200)]', source)
+        self.assertIn('active sessions have NO timeout', source)
+        self.assertIn('elseif($seen)', source)
 
 
 if __name__ == "__main__":

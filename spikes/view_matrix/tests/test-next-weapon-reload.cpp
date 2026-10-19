@@ -248,9 +248,29 @@ static void ValidateAsset(const char* path,unsigned expectedVerts,unsigned expec
     assert(hipknife::Decode(raw.data(),raw.size(),vertices,indices));
     assert(vertices.size()==expectedVerts&&indices.size()==expectedTris*3);
 }
+static void TestSharedStateWeaponTransitions(){
+    // The combined candidate enables all profiles, but only the actual held
+    // weapon enters this ONE FSM. A carrying transaction cannot transfer a
+    // magazine, ammo credit or held Circle edge into the next weapon.
+    State shared;
+    std::uint64_t now=1000;
+    for(unsigned cycle=0;cycle<30;++cycle)for(const auto& p:profiles){
+        Fixture x(p);x.s=shared;x.f.gesture.weapon=100+cycle*3+unsigned(p.kind);
+        x.f.gesture.nowMs=now;
+        auto r=x.Tick(false,x.f.gesture.socket);
+        assert(!r.reloadIntent&&!r.ejectMagazine);
+        x.Tick(false,x.f.gesture.socket); // neutral AFTER identity settles
+        r=x.Tick(false,x.f.gesture.socket,true);
+        assert(r.event==E::Ejected&&!r.reloadIntent);
+        assert(x.Tick(true,x.f.gesture.pouch).event==E::GrabFresh);
+        // Switch while carrying: next weapon must start empty-handed and
+        // require its own fresh Circle edge, not inherit this transaction.
+        shared=x.s;now=x.f.gesture.nowMs+100;
+    }
+}
 int main(int argc,char** argv){
     assert(!std::strcmp(Name(E::Ejected),"magazine-ejected"));
-    TestCalibration();
+    TestCalibration();TestSharedStateWeaponTransitions();
     unsigned transactions=0;
     for(const auto& p:profiles){
         TestDefaultsAndIdentity(p);TestCancellation(p);TestAmmoAndTimeout(p);TestEveryPhase(p);TestCircleAndOwnership(p);

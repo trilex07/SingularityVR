@@ -7,8 +7,10 @@ param(
     [Parameter(Mandatory)][string]$ChangePlanPath,
     [string]$NpcCandidateDir,
     [string]$NpcBackupDir,
+    [string]$SessionAssetsManifestPath,
+    [string]$SessionAssetsBackupDir,
     [string]$SteamRoot='C:\Program Files (x86)\Steam',
-    [ValidateRange(60,1800)][int]$LaunchWindowSeconds=600
+    [ValidateRange(60,7200)][int]$LaunchWindowSeconds=600
 )
 
 # Bounded MAIN test lease for the runtime DLL/INI and nine reload assets. Never
@@ -113,7 +115,12 @@ if($NpcCandidateDir){
     if(-not $?){throw 'NPC package lease preflight failed'}
 }
 
-Write-Output "READY: all-file lease armed (${LaunchWindowSeconds}s launch window); no launch/kill."
+if($SessionAssetsManifestPath){
+    & (Join-Path $repo 'tools/integration/session-assets.ps1') -Action ValidateLive `
+        -ManifestPath $SessionAssetsManifestPath -BackupDir $SessionAssetsBackupDir -GameRoot $gameRoot
+    if(-not $?){throw 'Combined session asset preflight failed'}
+}
+Write-Output "READY: all-file lease armed (${LaunchWindowSeconds}s BEFORE launch only); active sessions have NO timeout; no launch/kill."
 Write-Output "Candidate DLL=$dllHash INI=$iniHash; nine reload assets verified; protected UI SHA256=$uiHash"
 $deadline=(Get-Date).AddSeconds($LaunchWindowSeconds)
 $seen=$false
@@ -154,6 +161,11 @@ if($NpcCandidateDir){
     if(-not $?){throw 'NPC package drift during lease'}
 }
 
+if($SessionAssetsManifestPath){
+    & (Join-Path $repo 'tools\deploy-singularityvr.ps1') -Action Rollback -SteamRoot $steam `
+        -SessionAssetsManifestPath $SessionAssetsManifestPath -BackupPath $SessionAssetsBackupDir
+    if(-not $?){throw 'Combined session asset restore failed'}
+}
 & (Join-Path $repo 'tools\deploy-singularityvr.ps1') -Action Rollback `
     -SteamRoot $steam -RepoRoot $repo -BackupPath $backup -AcceptedProfilePath $profile `
     -ChangePlanPath $plan

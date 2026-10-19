@@ -11,27 +11,29 @@ from pathlib import Path
 
 
 def patch(source, translations):
-    patches = {r['key']: r for r in translations}
+    # The full SIDE delivery includes Notes and ChronoNote. Older first-area
+    # callers omit section, which still means Notes; never collide by key alone.
+    patches = {(r.get('section', 'Notes'), r['key']): r for r in translations}
     if len(patches) != len(translations): raise ValueError('duplicate patch key')
     seen = set()
     out = []
     for line in source.splitlines(keepends=True):
         if not line.strip(): out.append(line); continue
         row = json.loads(line)
-        key = row.get('key')
-        if row.get('section') != 'Notes' or key not in patches:
+        key = (row.get('section'), row.get('key'))
+        if key not in patches:
             out.append(line); continue
         if key in seen: raise ValueError('duplicate source Notes key')
         p = patches[key]
         if hashlib.sha256(row['en'].encode('utf-8')).hexdigest() != p['source_sha256']:
-            raise ValueError('source text changed: '+key)
+            raise ValueError('source text changed: '+str(key))
         if not p['pl'] or p['pl'] == row['en'] or len(p['pl']) > 4095:
             raise ValueError('invalid bounded translation')
         token = lambda s: re.findall(r'\[[^\]]+\]', s)
         if token(row['en']) != token(p['pl']): raise ValueError('input tokens changed')
         if row['en'].count('\n\n') != p['pl'].count('\n\n'):
-            raise ValueError('paragraph boundaries changed: '+key)
-        row.update(pl=p['pl'], status='translated', note='First-area complete human text review; native delivery not yet physically accepted.')
+            raise ValueError('paragraph boundaries changed: '+str(key))
+        row.update(pl=p['pl'], status='translated', note='SIDE full text review; delivery not yet physically accepted.')
         out.append(json.dumps(row, ensure_ascii=False)+'\n')
         seen.add(key)
     if seen != set(patches): raise ValueError('missing source Notes keys')

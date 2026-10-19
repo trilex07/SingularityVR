@@ -7,7 +7,8 @@ param(
     [switch]$CarryRayFix,
     [switch]$NativeFxCapture,
     [switch]$VisualFollowup,
-    [switch]$MinimalSettings
+    [switch]$MinimalSettings,
+    [switch]$CombinedSession
 )
 $ErrorActionPreference='Stop'
 $candidate=[IO.Path]::GetFullPath($CandidateDir)
@@ -53,15 +54,17 @@ $targets=[ordered]@{
     # Preserve the user's approved right-handed Sense layout: Circle is the
     # manual reload edge, Cross remains health, and stick-up remains jump.
     'Input/ReloadControlLayout'='1'
-    # The reload FSM is a single active transaction; exactly one weapon is
-    # opted in per Steam session. Pass -Weapon to prepare another isolated run.
-    'Input/ValkyrieManualReload'=$(if($Weapon -eq 'Valkyrie'){'1'}else{'0'})
-    'Input/VolkManualReload'=$(if($Weapon -eq 'Volk'){'1'}else{'0'})
-    'Input/KasimovManualReload'=$(if($Weapon -eq 'Kasimov'){'1'}else{'0'})
+    # Default: isolate ONE weapon. Explicit user-requested CombinedSession
+    # permits all three; the dispatcher resolves ONE actual held identity and
+    # the shared CPU FSM cancels on weapon/profile/context changes. A combined
+    # session is an acceptance candidate, not a per-feature A/B proof.
+    'Input/ValkyrieManualReload'=$(if($CombinedSession -or $Weapon -eq 'Valkyrie'){'1'}else{'0'})
+    'Input/VolkManualReload'=$(if($CombinedSession -or $Weapon -eq 'Volk'){'1'}else{'0'})
+    'Input/KasimovManualReload'=$(if($CombinedSession -or $Weapon -eq 'Kasimov'){'1'}else{'0'})
     'Input/ReloadRefillOnly'='1'
     'Input/ReloadNativeMagazine'='1'
-    'Input/ValkyrieAuthoredGrip'=$(if($Weapon -eq 'Valkyrie'){'1'}else{'0'})
-    'Input/ValkyrieSingleGrip'=$(if($Weapon -eq 'Valkyrie'){'1'}else{'0'})
+    'Input/ValkyrieAuthoredGrip'=$(if($CombinedSession -or $Weapon -eq 'Valkyrie'){'1'}else{'0'})
+    'Input/ValkyrieSingleGrip'=$(if($CombinedSession -or $Weapon -eq 'Valkyrie'){'1'}else{'0'})
 }
 if($CarryRayFix){
     $targets['Input/ReloadPalmGrip']='1'
@@ -109,6 +112,7 @@ foreach($name in $targets.Keys){
 }
 $output=$lines -join $newline
 [IO.File]::WriteAllText($iniOut,$output,[Text.UTF8Encoding]::new($false))
+$sessionScope=if($CombinedSession){'User-requested combined three-weapon acceptance session'}else{"Isolated $Weapon manual magazine session; other rifle reload gates OFF"}
 $changes=@()
 foreach($name in $targets.Keys){
     $before=$profile.ini.PSObject.Properties[$name]
@@ -119,13 +123,13 @@ foreach($name in $targets.Keys){
         key=$name
         before=if($before){$before.Value}else{$null}
         after=$targets[$name]
-        reason="Isolated $Weapon manual magazine PSVR2 session; other rifle reload gates OFF; accepted profile restored after test"
+        reason="$sessionScope; accepted profile restored after normal test exit"
     }
 }
 $plan=[pscustomobject]@{
     schema='singularityvr-change-plan-v1'
     profileSha256=$profileHash
-    reason="Verify $Weapon guarded reload with the required Circle input layout, while preserving the tested VFX/holster/VR-settings candidate"
+    reason="$sessionScope; required Circle input layout, preserve VFX/holster/VR-settings dependencies"
     files=@([pscustomobject]@{path='Binaries/d3d9.dll';before=$acceptedDll[0].sha256;after=$dllHash;reason='Clean x86 /O2 candidate'})
     ini=$changes
 }

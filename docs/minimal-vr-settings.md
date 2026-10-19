@@ -47,6 +47,12 @@ opted into the three-weapon transaction FSM in this session; Volk grip and wheel
 visual changes are still present. Do not claim Volk/Kasimov manual reload was
 physically retested by this session.
 
+Later explicit user scope: `-CombinedSession` enables all three independent
+weapon opt-ins for one long acceptance session. The dispatcher selects only the
+actual held identity and cancels transactions on changes. Default isolated
+preparation is unchanged. See `docs/combined-session-candidate.md` for its asset
+payload, timing, coverage and unresolved rifle VFX investigation.
+
 The candidate sets `[Diagnostic] VrSettingsSessionOnly=1`: settings change live
 but PanelSave does not write the installed INI, preserving the exact-hash
 restore lease while the user tests OFF/ON. In normal production (default 0),

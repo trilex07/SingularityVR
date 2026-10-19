@@ -15,6 +15,7 @@ param(
     [switch]$RuntimeDllPairOnly,
     [switch]$IncludeIni,
     [string]$OpeningCutsceneManifestPath = '',
+    [string]$SessionAssetsManifestPath = '',
     [string]$AcceptedProfilePath = '',
     [string]$ChangePlanPath = '',
     [switch]$SkipTextures,
@@ -23,6 +24,17 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if($SessionAssetsManifestPath){
+    if($OpeningCutsceneManifestPath -or $DllOnly -or $RuntimeDllPairOnly -or $IncludeIni -or $StopGame -or $KeepIni -or $SkipTextures){
+        throw 'Session asset delta is an exclusive narrow deployment mode'
+    }
+    $assetAction=if($Action -eq 'Rollback'){'Restore'}elseif($Action -eq 'Status'){'Preflight'}else{'Deploy'}
+    if($WhatIfPreference){$assetAction='Preflight'}
+    & (Join-Path $PSScriptRoot 'integration/session-assets.ps1') -Action $assetAction `
+        -ManifestPath $SessionAssetsManifestPath -BackupDir $BackupPath `
+        -GameRoot (Join-Path $SteamRoot 'steamapps\common\Singularity')
+    return
+}
 if($OpeningCutsceneManifestPath) {
     if($Action -ne 'Status'){throw 'Opening-cutscene writes need an accepted-profile adapter; v1 permits read-only Status only'}
     if($DllOnly -or $RuntimeDllPairOnly -or $IncludeIni -or $StopGame -or $KeepIni -or $SkipTextures){
