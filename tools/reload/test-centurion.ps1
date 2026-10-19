@@ -6,6 +6,13 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $vswhere="${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $vcvars=Join-Path $vs 'VC\Auxiliary\Build\vcvarsall.bat'
+$instructionSource=Join-Path $repo 'spikes/view_matrix/tests/test-reload-instructions.cpp'
+$instructionExe=Join-Path $out 'test-reload-instructions.exe'
+$instructionObj=Join-Path $out 'test-reload-instructions.obj'
+cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:`"$instructionExe`" /Fo:`"$instructionObj`" `"$instructionSource`""
+if($LASTEXITCODE -ne 0){throw 'Reload instructions compile failed'}
+& $instructionExe
+if($LASTEXITCODE -ne 0){throw 'Four-weapon PL/EN instructions failed'}
 foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-refill','test-centurion-clip','test-centurion-animation','test-centurion-visual-followup','test-centurion-tracked-cylinder','test-centurion-physical-polish','test-centurion-shells','test-centurion-shoulder','test-manual-reload','test-hip-knife','test-hud-reseat','test-weapon-holster','test-hand-anchor-math','test-knife-renderer','test-next-weapon-reload','test-next-weapon-animation','test-next-weapon-runtime','test-next-weapon-refill','test-next-weapon-refill-visual')){
     $source=Join-Path $repo "spikes\view_matrix\tests\$test.cpp"
     $exe=Join-Path $out "$test.exe"

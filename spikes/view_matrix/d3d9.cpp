@@ -23785,7 +23785,7 @@ static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
     prompttokens::Result rewritten;
     if(prompts){
         const bool layout=g_reloadControlLayout&&AimHand()==1&&!Rd(g_swapSticks);
-        rewritten=prompttokens::Rewrite(visible,prompt,sizeof(prompt),layout,AimHand()==1);
+        rewritten=prompttokens::Rewrite(visible,prompt,sizeof(prompt),layout,AimHand()==1,polish);
         if(rewritten.changed&&!rewritten.overflow){
             visible=prompt;
             static unsigned notes=0;if(notes++<24)Log("vr-prompt token rewrite: reloadLayout=%d replacements=%u source=\"%.240s\" visible=\"%.300s\"",
@@ -25619,7 +25619,8 @@ static void DrawNextReloadHint(IDirect3DDevice9* dev) {
        Rd(g_gamePaused)||Rd(g_vrUiMenu)||Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||
        CutsceneNativeCameraArmed()||g_xrSessionState!=XR_SESSION_STATE_FOCUSED)return;
     const ULONGLONG now=GetTickCount64();
-    ULONGLONG hintUntil=0;int stepIndex=3,rows=3;
+    ULONGLONG hintUntil=0;int stepIndex=vrtutorial::ReloadStep((unsigned)Rd(g_gunVerts)),rows=4;
+    if(stepIndex<0)return;
     if(Rd(g_gunVerts)==5799&&g_centurionReload){
         CenturionVisual visual;
         if(!TryAcquireSRWLockShared(&g_centurionVisualLock))return;
@@ -25644,6 +25645,7 @@ static void DrawNextReloadHint(IDirect3DDevice9* dev) {
     if(!state||desc.Width<4||desc.Height<4){if(oldRt)oldRt->Release();back->Release();return;}
     const auto& step=vrtutorial::GetStep(
         PolishLocalization::PL().IsPolishEnabled()?vrtutorial::Language::Polish:vrtutorial::Language::English,stepIndex);
+    if(!step.line[3][0])rows=3;
     const int half=int(desc.Width/2),h=int(desc.Height);
     int widest=0;for(int i=0;i<rows;++i)widest=std::max(widest,TextGlyphCount(step.line[i]));
     int px=std::max(2,std::min(5,h/450));

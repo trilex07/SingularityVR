@@ -24,6 +24,9 @@ static void TestOriginal(const weaponreloadanim::Spec& spec,const std::string& r
     assert(timing.Frame(*data,Phase::WaitingNative,1000,1000)==timing.inFrame);
     assert(timing.Frame(*data,Phase::WaitingNative,0,100000)==float(data->frames-1));
     armbind::Mat bind;assert(ClipBind(*data,bind));
+    std::printf("original %s clip bind translation=(%.3f %.3f %.3f) UU, root bind=(%.3f %.3f %.3f) UU\n",
+        stem.c_str(),bind.m[3][0],bind.m[3][1],bind.m[3][2],
+        data->rootBind.m[3][0],data->rootBind.m[3][1],data->rootBind.m[3][2]);
     float native[16*12]{},changed[16*12];const auto id=Identity();
     for(unsigned slot=0;slot<data->slots;++slot)armbind::ToGpu(id,reinterpret_cast<float(*)[4]>(native+slot*12));
     assert(Palette(*data,timing.outFrame,true,native,data->slots*3,changed));

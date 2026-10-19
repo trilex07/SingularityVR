@@ -25,10 +25,11 @@ static constexpr Step kPolish[] = {
         "PRZYTRZYMAJ R3, ABY OTWORZY\xC4\x86 KO\xC5\x81O",
         "PORUSZ PRAW\xC4\x84 D\xC5\x81ONI\xC4\x84, ABY WYBRA\xC4\x86 SLOT",
         "PU\xC5\x9A\xC4\x86 R3, ABY ZATWIERDZI\xC4\x86; L3 ANULUJE", "" } },
-    { "MAGAZYNEK", {
+    { "VALKYRIE", {
         "NACI\xC5\x9ANIJ O, ABY ZWOLNI\xC4\x86 MAGAZYNEK",
-        "SI\xC4\x98GNIJ ZA LEWY BARK PO NOWY MAGAZYNEK",
-        "W\xC5\x81\xC3\x93\xC5\xBB NOWY MAGAZYNEK DO BRONI", "" } },
+        "LEWYM CHWYTEM WE\xC5\xB9 NOWY ZZA LEWEGO BARKU",
+        "W\xC5\x81\xC3\x93\xC5\xBB GO W BRO\xC5\x83 I PU\xC5\x9A\xC4\x86 CHWYT",
+        "BEZ MACHNI\xC4\x98" "CIA; SPRAWD\xC5\xB9 LICZNIK AMUNICJI" } },
     { "CENTURION", {
         "NACI\xC5\x9ANIJ O, ABY OTWORZY\xC4\x86 B\xC4\x98" "BEN",
         "UNIE\xC5\x9A LUF\xC4\x98, ABY WYSYPA\xC4\x86 \xC5\x81USKI",
@@ -38,6 +39,16 @@ static constexpr Step kPolish[] = {
         "NACI\xC5\x9ANIJ TR\xC3\x93JK\xC4\x84T, ABY OTWORZY\xC4\x86 MENU",
         "U\xC5\xBBYJ LASERA I R2, ABY WYBRA\xC4\x86 OPCJ\xC4\x98",
         "WR\xC3\x93\xC4\x86 PRZYCISKIEM O", "" } },
+    { "VOLK S4", {
+        "NACI\xC5\x9ANIJ O, ABY ZWOLNI\xC4\x86 MAGAZYNEK",
+        "LEWYM CHWYTEM WE\xC5\xB9 NOWY ZZA LEWEGO BARKU",
+        "W\xC5\x81\xC3\x93\xC5\xBB GO W BRO\xC5\x83 I PU\xC5\x9A\xC4\x86 CHWYT",
+        "BEZ MACHNI\xC4\x98" "CIA; SPRAWD\xC5\xB9 LICZNIK AMUNICJI" } },
+    { "KASIMOV SNV-E99", {
+        "NACI\xC5\x9ANIJ O, ABY ZWOLNI\xC4\x86 MAGAZYNEK",
+        "LEWYM CHWYTEM WE\xC5\xB9 NOWY ZZA LEWEGO BARKU",
+        "W\xC5\x81\xC3\x93\xC5\xBB GO W BRO\xC5\x83 I PU\xC5\x9A\xC4\x86 CHWYT",
+        "BEZ MACHNI\xC4\x98" "CIA; SPRAWD\xC5\xB9 LICZNIK AMUNICJI" } },
 };
 
 static constexpr Step kEnglish[] = {
@@ -53,10 +64,11 @@ static constexpr Step kEnglish[] = {
         "HOLD R3 TO OPEN THE WEAPON WHEEL",
         "MOVE YOUR RIGHT HAND TO A SLOT",
         "RELEASE R3 TO EQUIP; L3 CANCELS", "" } },
-    { "MAGAZINE RELOAD", {
+    { "VALKYRIE", {
         "PRESS O TO RELEASE THE MAGAZINE",
-        "REACH BEHIND THE LEFT SHOULDER",
-        "GRAB A FRESH MAGAZINE AND INSERT IT", "" } },
+        "LEFT GRIP: GRAB ONE BEHIND LEFT SHOULDER",
+        "INSERT INTO THE GUN AND RELEASE GRIP",
+        "NO FLICK; CHECK THE AMMO COUNTER" } },
     { "CENTURION", {
         "PRESS O TO OPEN THE CYLINDER",
         "TILT THE MUZZLE UP TO DUMP THE CASES",
@@ -66,9 +78,25 @@ static constexpr Step kEnglish[] = {
         "PRESS TRIANGLE TO OPEN THE MENU",
         "AIM THE LASER AND PRESS R2 TO SELECT",
         "PRESS O TO GO BACK", "" } },
+    { "VOLK S4", {
+        "PRESS O TO RELEASE THE MAGAZINE",
+        "LEFT GRIP: GRAB ONE BEHIND LEFT SHOULDER",
+        "INSERT INTO THE GUN AND RELEASE GRIP",
+        "NO FLICK; CHECK THE AMMO COUNTER" } },
+    { "KASIMOV SNV-E99", {
+        "PRESS O TO RELEASE THE MAGAZINE",
+        "LEFT GRIP: GRAB ONE BEHIND LEFT SHOULDER",
+        "INSERT INTO THE GUN AND RELEASE GRIP",
+        "NO FLICK; CHECK THE AMMO COUNTER" } },
 };
 
 static constexpr int kStepCount = (int)(sizeof(kEnglish) / sizeof(kEnglish[0]));
+static_assert(sizeof(kPolish)/sizeof(kPolish[0])==kStepCount,"Language pages must match");
+
+// Audited first-person mesh identities; unknown weapons receive no reload recipe.
+inline int ReloadStep(unsigned vertices) {
+    return vertices==5799?4:vertices==11387?3:vertices==8297?6:vertices==11389?7:-1;
+}
 
 inline const Step& GetStep(Language language, int index) {
     if (index < 0) index = 0;

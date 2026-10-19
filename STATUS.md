@@ -16,6 +16,16 @@ Volk/Kasimov share that path and are NOT physically validated. Accepted Steam
 installation remains restored; no candidate deployed tonight. See
 `docs/next-weapon-runtime-integration.md` for evidence and exact limits.
 
+2026-10-19 instruction followup: all four named reload pages (Centurion,
+Valkyrie, Volk, Kasimov) exist in Polish and English. The short per-eye Circle
+hint chooses the matching recipe; English prompt tokens now remain English.
+CPU instruction tests and the full original-asset reload suite pass; optimized
+x86 DLL build passes. This does NOT fix the native `Pad 3` text or the shared
+Valkyrie/Volk/Kasimov socket gate. Offline bind offsets are ~101/109/110 UE
+units; the test harness constructs a local compensation and therefore cannot
+prove the live UE3 compensation. The next diagnostic needs one actual matrix
+capture before altering socket math. See `docs/manual-reload-instructions.md`.
+
 2026-10-18 bilingual VR tutorial: root VR Settings now includes an optional
 Tutorial page with a Polish/English chooser followed by six short lessons
 (movement/jump, grip/medkit, weapon wheel, magazine reload, Centurion, pause).
