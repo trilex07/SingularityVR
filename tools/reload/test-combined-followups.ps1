@@ -16,8 +16,15 @@ foreach($test in @('test-combined-followups','test-owned-inventory-scope')){
  if($LASTEXITCODE -ne 0){throw "Test failed: $test"}
 }
 foreach($test in @('test_combined_followups.py','test_native_action_hands.py','test_inventory_registration.py')){
- python (Join-Path $PSScriptRoot $test)
- if($LASTEXITCODE -ne 0){throw "Python test failed: $test"}
+ # unittest writes its progress and summary to STDERR. With
+ # $ErrorActionPreference='Stop' a native command that writes to stderr aborts
+ # the script before the exit code is read, so the streams are merged here.
+ $ErrorActionPreference='Continue'
+ $output = & python (Join-Path $PSScriptRoot $test) 2>&1
+ $code=$LASTEXITCODE
+ $ErrorActionPreference='Stop'
+ $output | ForEach-Object { Write-Host $_ }
+ if($code -ne 0){throw "Python test failed: $test"}
 }
 & (Join-Path $repo 'tools/tests/test-combined-followups-prep.ps1')
 & (Join-Path $repo 'tools/tests/test-followup-lease.ps1')

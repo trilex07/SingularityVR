@@ -1,6 +1,35 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 wheel regression follow-up (user feedback after the 2026-10-19
+promoted baseline: "I cannot switch weapons - only one is available, the wheel
+is empty"). Root cause found from the accepted session log: the new
+owned-inventory snapshot never produced a possession list
+(`owned inventory: stage=local SP pawn class mask=0 count=0`), and the wheel
+had replaced the accepted mesh-observed naming with that always-zero mask, so
+NO icon was drawn. Three evidence-driven changes:
+* the possession chain is read through the AUDITED native layout
+  (pawn+0x3D0 -> manager+0x1E0 -> item+0x1E0, weapon name at item+0x2E8) with
+  a class-name check on every object, and the pawn comes from the engine's own
+  cached player pawn (the log already proves `player pawn: 0x1BD76400
+  (RvPlayerPawnSP)`); the reflected lookup is a cross-check, not the source;
+* the wheel falls back to the accepted mesh-observed naming whenever the
+  snapshot is not READY, so a refused snapshot can never empty the wheel again;
+* the weapon selector is identified by the audited vtable neighbour
+  (RvPlayerPawnSP vtable 0x19D0788: +0xB14 selector, +0xB18 HasWeapon
+  0x102F700, verified offline against the owned EXE) instead of a 168-byte
+  body hash that cannot be recomputed from the packed image.
+The shared-script bytecode write is WITHDRAWN: the offline token analysis
+(tools/reload/decode_switch_weapon_script.py, solve_script_tokens.py against the
+original package) shows the ThrowActiveWeapon call is a NINE byte record
+(opcode 0x1B at 200 plus the 8 byte FName at 201..208), so the previous eleven
+byte overwrite also destroyed the NEXT record. The scope checks and a scoped
+"local pickup reached SwitchWeaponByArchetype" log stay; no script byte is
+written, so the two-weapon limit itself is STILL OPEN - only the wheel is
+repaired. L1 PASS: 160 policy checks, 105 actual-handler fake-engine checks,
+4+3+5 Python suites, 16 offline preparation checks, 6 lease preflight
+scenarios; x86 PE32 /O2 build PASS. Not yet L3/L4.
+
 2026-10-19 promoted combined baseline: user explicitly requested KEEP. Installed
 DLL7DDAA0AA... and INI B94A4AA7... retained; game closed, previous guard exited.
 Canonical local profile is THIS checkout's deployment/accepted-profile.json,

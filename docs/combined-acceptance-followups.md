@@ -1,5 +1,64 @@
 # Combined physical acceptance and follow-ups — 2026-10-19
 
+## 2026-10-20 wheel follow-up (L3 feedback: "the wheel is empty")
+
+The promoted candidate shipped `Input/WeaponWheelOwnedInventory=1`. The
+accepted session log shows the ownership snapshot never succeeded:
+`owned inventory: stage=local SP pawn class mask=0 count=0`. The wheel had
+REPLACED the accepted mesh-observed naming with that always-zero mask, so no
+icon was drawn at all — a visible regression the user reported as "I cannot
+switch weapons, only one is available, the wheel is empty".
+
+What the evidence says about the cause:
+
+* the local pawn was never reached: the old path started from
+  `FindController()` plus a typed property lookup
+  (`PauseRttProbe::Property(cls,"Pawn","ObjectProperty")`). The engine's own
+  player-pawn cache is already proven at runtime
+  (`player pawn: 0x1BD76400 (RvPlayerPawnSP) acquired by bounded scan`), so the
+  snapshot now starts from that object and keeps the controller route only as a
+  fallback;
+* the possession chain is read through the audited native layout instead of
+  reflection: pawn+0x3D0 → manager+0x1E0 → item+0x1E0, weapon name at
+  item+0x2E8. Every object is validated by its CLASS name
+  (`RvPlayerPawnSP` / `RvInventoryManager` / `RvWeaponShared`), so a wrong
+  offset refuses instead of walking garbage. Reflection is a cross-check only;
+* the weapon selector is identified by the audited vtable neighbour rather
+  than a body hash: `RvPlayerPawnSP` vtable 0x19D0788 resolves +0xB14 to the
+  selector and +0xB18 to HasWeapon 0x102F700 (verified offline against the
+  owned EXE by `tools/reload/verify_pawn_weapon_selector.py`). The installed
+  image is packed, so a byte hash of the method body cannot be recomputed from
+  the file and the previous 168-byte FNV could not be confirmed either way;
+* the wheel falls back to the accepted mesh-observed naming whenever the
+  snapshot is not READY. An unresolved snapshot can therefore never empty the
+  wheel again — that was the actual regression.
+
+### The two-weapon limit is still OPEN, and the script write is withdrawn
+
+`RvInventoryManager.SwitchWeaponByArchetype` is the script that drops the
+previously held gun. The offline token analysis of the original package
+(`tools/reload/decode_switch_weapon_script.py`,
+`tools/reload/solve_script_tokens.py`) shows:
+
+* the script body is 284 bytes; every audited operand sits at a known offset;
+* a function call is opcode `0x1B` followed by an 8-byte FName, confirmed
+  independently by the `RvWeaponShared.Active.BeginFire` analysis;
+* the `ThrowActiveWeapon` call is therefore a NINE byte record: opcode at
+  offset 200, FName at 201..208. The previous implementation overwrote
+  ELEVEN bytes, which also destroyed the following record (0x4A, 0x16 at
+  209/210) — a corruption of the shared script, the same failure mode that
+  crashed the game with the rejected NPC package;
+* the record layout of the surrounding stream is not yet established (the
+  operand size is not a function of the opcode alone), so a length-preserving
+  neutralisation cannot be proven safe.
+
+The bytecode write is therefore withdrawn. The scope checks and a scoped
+`local pickup reached SwitchWeaponByArchetype` log remain, so the next
+iteration has runtime evidence for where the drop happens instead of a guess.
+`ThrowActiveWeapon` has no script export, so it is a native function and the
+script-interpreter hook cannot see it; the next step is to identify its native
+entry and intercept it, not to patch the shared script blindly.
+
 ## Persistent accepted baseline
 
 The user explicitly requested retaining the tested combined candidate as the new

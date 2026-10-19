@@ -1,5 +1,17 @@
 param([string]$NativeEvidence,[string]$AnimationCache,[string]$ShellAssets,[string]$NativeVertices,[string]$RefillEvidence,[string]$PreparedRoot='', [string]$NativeSpaceRoot='', [switch]$Gpu)
 $ErrorActionPreference='Stop'
+# unittest writes its progress and summary to STDERR. With
+# $ErrorActionPreference='Stop' a native command that writes to stderr aborts the
+# script before the exit code is ever read, so the streams are merged here and
+# the exit code is checked explicitly.
+function Invoke-PythonCheck([string]$Script,[string]$Label){
+  $ErrorActionPreference='Continue'
+  $output = & python $Script 2>&1
+  $code=$LASTEXITCODE
+  $ErrorActionPreference='Stop'
+  $output | ForEach-Object { Write-Host $_ }
+  if($code -ne 0){throw $Label}
+}
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $out=Join-Path $repo 'build\centurion-reload\tests'
 New-Item -ItemType Directory -Force -Path $out | Out-Null
@@ -15,8 +27,7 @@ cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W3 /O2 /MD /I`"$($x
 if($LASTEXITCODE -ne 0){throw 'Settings panel compile failed'}
 & $panelExe
 if($LASTEXITCODE -ne 0){throw 'Settings panel math/input failed'}
-python (Join-Path $PSScriptRoot 'test_settings_panel.py')
-if($LASTEXITCODE -ne 0){throw 'Settings panel wiring failed'}
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_settings_panel.py') 'Settings panel wiring failed'
 $instructionSource=Join-Path $repo 'spikes/view_matrix/tests/test-reload-instructions.cpp'
 $instructionExe=Join-Path $out 'test-reload-instructions.exe'
 $instructionObj=Join-Path $out 'test-reload-instructions.obj'
@@ -96,20 +107,13 @@ try{
     & $nextAbiExe
     if($LASTEXITCODE -ne 0){throw 'three-weapon native ABI harness failed'}
 }finally{Pop-Location}
-python (Join-Path $PSScriptRoot 'test_prepare_centurion.py')
-if($LASTEXITCODE -ne 0){throw 'Centurion extraction tests failed'}
-python (Join-Path $PSScriptRoot 'test_centurion_animation.py')
-if($LASTEXITCODE -ne 0){throw 'Centurion animation tests failed'}
-python (Join-Path $PSScriptRoot 'test_reload_notifies.py')
-if($LASTEXITCODE -ne 0){throw 'Centurion notification tests failed'}
-python (Join-Path $PSScriptRoot 'test_analyze_reload_log.py')
-if($LASTEXITCODE -ne 0){throw 'Centurion log analysis tests failed'}
-python (Join-Path $PSScriptRoot 'test_prepare_next_weapon.py')
-if($LASTEXITCODE -ne 0){throw 'Next weapon prototype extraction tests failed'}
-python (Join-Path $PSScriptRoot 'test_prepare_weapon_animation.py')
-if($LASTEXITCODE -ne 0){throw 'Next weapon animation tests failed'}
-python (Join-Path $PSScriptRoot 'test_audit_next_weapon_space.py')
-if($LASTEXITCODE -ne 0){throw 'Native cooked coordinate audit guards failed'}
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_prepare_centurion.py') 'Centurion extraction tests failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_centurion_animation.py') 'Centurion animation tests failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_reload_notifies.py') 'Centurion notification tests failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_analyze_reload_log.py') 'Centurion log analysis tests failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_prepare_next_weapon.py') 'Next weapon prototype extraction tests failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_prepare_weapon_animation.py') 'Next weapon animation tests failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_audit_next_weapon_space.py') 'Native cooked coordinate audit guards failed'
 if($Gpu){
     if(-not $PreparedRoot){throw 'GPU fixture requires explicit -PreparedRoot'}
     $source=Join-Path $repo 'spikes/view_matrix/tests/test-next-weapon-assets-gpu.cpp'
@@ -127,18 +131,12 @@ if($Gpu){
     & $exe
     if($LASTEXITCODE -ne 0){throw 'Native magazine GPU fixture failed'}
 }
-python (Join-Path $PSScriptRoot 'test_inspect_native_reload.py')
-if($LASTEXITCODE -ne 0){throw 'Native reload offline mapper tests failed'}
-python (Join-Path $PSScriptRoot 'test_refill_only.py')
-if($LASTEXITCODE -ne 0){throw 'Refill-only evidence/wiring tests failed'}
-python (Join-Path $PSScriptRoot 'test_cylinder_animation.py')
-if($LASTEXITCODE -ne 0){throw 'Cylinder animation cache tests failed'}
-python (Join-Path $PSScriptRoot 'test_prepare_centurion_shells.py')
-if($LASTEXITCODE -ne 0){throw 'Original shell extraction tests failed'}
-python (Join-Path $PSScriptRoot 'test_tracked_cylinder_wiring.py')
-if($LASTEXITCODE -ne 0){throw 'Tracked cylinder wiring guards failed'}
-python (Join-Path $PSScriptRoot 'test_native_space.py')
-if($LASTEXITCODE -ne 0){throw 'Native space evidence guards failed'}
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_inspect_native_reload.py') 'Native reload offline mapper tests failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_refill_only.py') 'Refill-only evidence/wiring tests failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_cylinder_animation.py') 'Cylinder animation cache tests failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_prepare_centurion_shells.py') 'Original shell extraction tests failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_tracked_cylinder_wiring.py') 'Tracked cylinder wiring guards failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_native_space.py') 'Native space evidence guards failed'
 if($NativeVertices){
     if(!$AnimationCache){throw 'Native vertex oracle requires original animation cache'}
     $source=Join-Path $repo 'spikes/view_matrix/tests/test-centurion-native-space-gpu.cpp'
@@ -173,9 +171,6 @@ if($ShellAssets){
     & $exe $ShellAssets
     if($LASTEXITCODE -ne 0){throw 'Shell GPU fixture failed'}
 }
-python (Join-Path $PSScriptRoot 'test_next_weapon_native.py')
-if($LASTEXITCODE -ne 0){throw 'Three-weapon inherited method checks failed'}
-python (Join-Path $PSScriptRoot 'test_next_refill.py')
-if($LASTEXITCODE -ne 0){throw 'Three-weapon refill-only inheritance/wiring checks failed'}
-python (Join-Path $PSScriptRoot 'test_runtime_candidate.py')
-if($LASTEXITCODE -ne 0){throw 'Offline candidate safety/provenance checks failed'}
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_next_weapon_native.py') 'Three-weapon inherited method checks failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_next_refill.py') 'Three-weapon refill-only inheritance/wiring checks failed'
+Invoke-PythonCheck (Join-Path $PSScriptRoot 'test_runtime_candidate.py') 'Offline candidate safety/provenance checks failed'

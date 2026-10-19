@@ -1986,6 +1986,10 @@ WantedName g_wantNames[] = {
     { "WeaponFireTypes", -1 },
     // Ammo probe round 7: pawn InvManager (live manager object).
     { "InvManager", -1 },
+    // 2026-10-19: the owned-inventory chain (manager -> item -> item). The
+    // audited native offsets are the source of truth; these two names are the
+    // CROSS-CHECK that the layout has not drifted.
+    { "InventoryChain", -1 }, { "Inventory", -1 },
     // Ammo probe round 5: shots-fired counter (fire proof per pull) and the
     // pawn baseline below needs no new names.
     { "mShotCount", -1 },
@@ -27947,11 +27951,25 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     long seenCopy[8]{};
     for (int k = 0; k < 8; ++k)
         seenCopy[k] = InterlockedCompareExchange(&g_wwSeen[k], 0, 0);
+    // ---- 2026-10-19: the wheel may never be empty again ----
+    // The owned-inventory snapshot is the authority when it is READY. When it
+    // is not (the possession chain could not be read, the pawn is not local
+    // yet, the level just changed) the ACCEPTED mesh-observed set stays in
+    // charge. The previous candidate replaced the observed naming with an
+    // ownership mask that was always 0 at runtime, so the wheel rendered no
+    // icons at all - a visible regression the user reported as "the wheel is
+    // empty and I cannot switch weapons".
+    long ownedSeen[8]{};
+    unsigned ownedN = 0;
+    const bool ownedReady = Rd(g_ownedWeaponWheel) && NativeOwnedInventory::Ready();
+    if (ownedReady) ownedN = NativeOwnedInventory::OwnedVerts(ownedSeen, 8);
+    const long* labelSeen = ownedReady ? ownedSeen : seenCopy;
+    const int labelSeenN = ownedReady ? (int)ownedN : 8;
     // Named wedges get icon + label; unowned weapon wedges stay empty.
     bool slotNamed[8]{};
     for (int i = 0; i < slots && i < 8; ++i) {
         const long pv = slotVerts[i];
-        if (Rd(g_ownedWeaponWheel)) {
+        if (ownedReady) {
             slotNamed[i]=(NativeOwnedInventory::Mask() & inventoryretention::WeaponBit((int)pv))!=0;
             continue;
         }
@@ -28115,7 +28133,7 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
                 bool has = false;
                 if (haveCatalog)
                     has = wheel_layout::LabelForSlot(slotLabels, slotVerts, slots, i,
-                                                     heldVerts, seenCopy, 8,
+                                                     heldVerts, labelSeen, labelSeenN,
                                                      label, sizeof(label));
                 if (!has && !haveCatalog) {
                     _snprintf_s(label, sizeof(label), _TRUNCATE, "W%d", i + 1);
