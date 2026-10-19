@@ -392,3 +392,12 @@ prove stage 10, native BLOCK/PERMIT/ACK and correct debit, then the user checks
 magazine placement in both eyes. Retain the bounded stage-9 full matrix capture
 if the new convention still fails. Native `Keyboard/Button2 -> Pad 3` remains a
 separate unresolved semantic producer; do not globally replace that label.
+
+Clean-source L2 receipt: `eaa6727e434de334fff6f33558b1e951c839455e`, x86 PE32
+`/O2`, SHA-256 `EC7DE843E2F0629CC49CE2779EA5A64C376750870C9479E62C46D6A054655E46`.
+Final full runner passes 33 C++ executables and 103 Python tests, including the
+private native-space fixtures and own-process D3D9Ex tests; logs are
+`build/next-weapon-reload/native-space-tests-final.log` and `native-space-build.log`.
+Local candidate `candidate-eaa6727-native-space/` has all 11 payload hashes
+independently checked. No Steam deployment/launch. Installed DLL/INI/UI retained
+exact accepted hashes and the nine temporary reload assets remain absent.

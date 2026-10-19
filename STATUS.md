@@ -8,11 +8,22 @@ Fixed initialization binds, animation sampling and BOTH export-local carried
 mesh/native replay transforms. All 31,073 original vertices and 36,787
 triangles audited; 974 magazine triangles reconstruct correctly while the old
 convention fails with >219 UU vertex error. 7,506 fractional original animation
-poses and independent socket/carry/drop poses pass. L1_PASS; new clean-source
-L2 build receipt pending below. No Steam deployment or launch. Last live
+poses and independent socket/carry/drop poses pass. L1_PASS/L2_PASS; clean-source
+build receipt follows below. No Steam deployment or launch. Last live
 Valkyrie stage9 failure is NOT yet re-tested; Volk/Kasimov remain L3/L4 UNKNOWN.
 Do not bypass readiness or globally replace generic `Keyboard/Button2/Pad 3`.
 Four PL/EN instructions are prepared. See docs/next-weapon-runtime-integration.md.
+
+L2 receipt: production source `eaa6727e434de334fff6f33558b1e951c839455e`, clean
+build manifest, x86 PE32 `/O2`, no performance instrumentation; DLL SHA-256
+`EC7DE843E2F0629CC49CE2779EA5A64C376750870C9479E62C46D6A054655E46`.
+Full runner: 33 C++ executables (including own-process ABI/D3D fixtures) and
+103 Python tests PASS. Private candidate is in
+`build/next-weapon-reload/candidate-eaa6727-native-space/`; all 11 payload hashes
+independently verified. Subsequent receipt-only commits do not change binary
+source provenance. Accepted installed DLL `789749E5…`, INI `8B0B0B4C…`, UI
+`51CDAB5C…` independently hashed unchanged; all nine next-weapon assets remain
+absent from Steam. No process running, deployment or launch performed.
 
 2026-10-19 end-of-night (no further Steam test authorized today): branch
 `fix/vr-settings-rifle-reload`. Steam screenshot/right-eye composition accepted
