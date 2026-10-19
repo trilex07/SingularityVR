@@ -1,6 +1,19 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-19 additive follow-up: default-OFF `WeaponWheelObservedSelection` replaces
+the unverified catalog cycle-distance guess with one native pulse per observed
+weapon transition, bounded by repeated identity/timeout/gameplay gates. Converts
+raw XR stick +Y-up exactly once; hand projection and desktop contracts unchanged.
+Default-OFF `VolkAuthoredGrip` preserves the shipped shotgun paired pose and the
+single-hand weapon delta, exact mesh8297 only. Smaller NPC name candidate changes
+only DefineEditText184's font height340->204twips (60%), owned by native HUD
+`nameTxt`/`_root.name_NPC`. Independent decoder roundtrip PASS and all unrelated
+logical package bytes preserved. NOT installed; no L3/L4. The next lease must
+include RvGame.xxx backup/restore, not just the older DLL/INI/reload assets.
+See docs/wheel-shotgun-npc-followup.md. Rifle VFX still requires the scoped
+idle/three-shot capture; no unmeasured shader fix is claimed.
+
 2026-10-19 latest physical Valkyrie result supersedes the stale stage9 note
 below: two reload transactions completed and conserved native ammo (30/104 ->
 30/74; partial 18/74 -> 30/62). User confirms reload works, but shot origin,

@@ -36,6 +36,7 @@ static int g_startupPrewarm=0,g_startupLoadingGate=0,g_startupProbe=0;
 static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "weapon_wheel_direct_select.h"
 #include "weapon_wheel_catalog_load.h"
+#include "weapon_wheel_seek.h"
 #include "weapon_wheel_atlas.h"
 #include "weapon_wheel_layout.h"
 #include "health_gesture.h"
@@ -2409,6 +2410,8 @@ volatile LONG g_weaponWheelSelection = 0;
 volatile LONG g_weaponWheelCommit = 0;
 volatile LONG g_weaponWheelPulseGap = 0;
 weaponwheel::State g_weaponWheelState{};
+static int g_weaponWheelObserved=0; // default OFF: native transitions, not catalog cycle arithmetic
+static wheelseek::State g_weaponWheelSeek{}; // input thread only
 LONG g_weaponWheelSlots = 4;
 // Direct-select wheel (Katorga HUD pack): sector->gun_verts catalog loaded
 // lazily at first R3 open when [Input] WeaponWheelDirectSelect=1 (default 0:
@@ -6795,6 +6798,7 @@ bool g_handActionActive[2] = { false, false };
 volatile LONG g_twoHandEnabled = 1, g_twoHandActive = 0;
 static int g_valkyrieAuthoredGrip = 0; // isolated A/B: retain UE3's authored two-hand relation
 static int g_valkyrieSingleGrip = 0; // isolated A/B: right glove follows the same weapon delta as pistol
+static int g_volkAuthoredGrip = 0; // default OFF: retain native shotgun hand/weapon relationship
 // Run 190: the gun-pose timing experiment. See the long note in SyncXRInput.
 int      g_poseLeadFrames = 0;          // ini [Input] PoseLeadFrames: display periods to predict ahead
 XrTime   g_lastHandPoseTime = 0;        // what time the previous sample was predicted FOR
@@ -11240,8 +11244,11 @@ void SyncXRInput(XrTime displayTime) {
     }
     const weaponwheel::Event wheelEvent = weaponwheel::Update(
         g_weaponWheelState, r3Held, l3Held, !uiMenu && feedGame && !Rd(g_gamePaused),
-        WeaponInHands(), Rd(g_weaponHolstered), tx, ty, (int)g_weaponWheelSlots, handSector);
+        WeaponInHands(), Rd(g_weaponHolstered), tx,
+        (g_weaponWheelObserved&&!Rd(g_forceDesktopAutomation))?-ty:ty,
+        (int)g_weaponWheelSlots, handSector);
     if (wheelEvent == weaponwheel::Event::Open) {
+        g_weaponWheelSeek={};
         InterlockedExchange(&g_weaponWheelOpen, 1);
         InterlockedExchange(&g_weaponWheelSelection, -1);
         InterlockedExchange(&g_weaponWheelCommit, 0);
@@ -11274,7 +11281,7 @@ void SyncXRInput(XrTime displayTime) {
         // (last SelectionChanged, never cleared on close). Reading the state
         // here yields sel=0 for every commit: highlights without switching.
         const LONG sel = InterlockedCompareExchange(&g_weaponWheelSelection, 0, 0);
-        LONG pulses = sel;
+        LONG pulses = g_weaponWheelObserved?0:sel; // unknown catalog must not guess a target
         // Direct-select: sector -> gun_verts -> forward cycle steps. Unknown
         // verts (or catalog off) keep the historical offset-pulse behavior.
         if (Rd(g_wwDirectSelect) && InterlockedCompareExchange(&g_wwCatalogState, 0, 0) == 1) {
@@ -11291,7 +11298,7 @@ void SyncXRInput(XrTime displayTime) {
                                 : (g_wwCatalog.sectors.size() < 8 ? g_wwCatalog.sectors.size() : 8);
             for (size_t i = 0; i < n; ++i) {
                 const size_t ci = gunOrder ? (size_t)order[i] : i;
-                secs[i].sector = g_wwCatalog.sectors[ci].index;
+                secs[i].sector = (int)i; // drawn position, NOT source catalog index
                 secs[i].gunVerts = g_wwCatalog.sectors[ci].verts;
             }
             size_t m = g_wwCatalog.cycle.size() < 16 ? g_wwCatalog.cycle.size() : 16;
@@ -11299,7 +11306,10 @@ void SyncXRInput(XrTime displayTime) {
             const weaponwheel_direct::Catalog view{ secs, (int)n, cyc, (int)m };
             const LONG curV = Rd(g_gunVerts);
             const LONG tgtV = weaponwheel_direct::TargetVertsForSector(view, (int)sel);
-            if (tgtV > 0 && tgtV != curV) {
+            if (g_weaponWheelObserved) {
+                pulses=wheelseek::Begin(g_weaponWheelSeek,curV,tgtV,GetTickCount64())?1:0;
+                Log("weapon wheel: observed seek sector=%ld current=%ld target=%ld firstPulse=%ld",sel,curV,tgtV,pulses);
+            } else if (tgtV > 0 && tgtV != curV) {
                 const int steps = weaponwheel_direct::ShortestCycleSteps(curV, tgtV, cyc, (int)m);
                 if (steps > 0) {
                     pulses = steps;
@@ -11321,6 +11331,7 @@ void SyncXRInput(XrTime displayTime) {
             sel, pulses);
         InterlockedExchange(&g_wwHandAnchorOk, 0);
     } else if (wheelEvent == weaponwheel::Event::Cancel) {
+        g_weaponWheelSeek={};
         InterlockedExchange(&g_weaponWheelOpen, 0);
         InterlockedExchange(&g_weaponWheelCommit, 0);
         InterlockedExchange(&g_wwHandAnchorOk, 0);
@@ -11528,6 +11539,21 @@ void SyncXRInput(XrTime displayTime) {
     // cycle-weapon button. Keep each pulse long enough for Raven's
     // PressChainButton/ReleaseChainButton pair, with a short release gap
     // between successive sectors.
+    if(g_weaponWheelObserved){
+        const auto target=g_weaponWheelSeek.target;
+        const auto r=wheelseek::Observe(g_weaponWheelSeek,Rd(g_gunVerts),GetTickCount64(),
+            // A native swap can briefly have no hand mesh. Do not cancel the
+            // seek on that transient; an explicit holster/TMD/menu still cancels.
+            !uiMenu&&feedGame&&!Rd(g_gamePaused)&&!Rd(g_weaponHolstered)&&!TmdRaised()&&!Rd(g_weaponWheelOpen));
+        if(r==wheelseek::Result::Pulse){
+            InterlockedExchange(&g_weaponWheelCommit,1);
+            InterlockedExchange(&g_weaponWheelPulseGap,3); // release edge before another native cycle
+        }
+        if(r==wheelseek::Result::Landed||r==wheelseek::Result::Failed){
+            InterlockedExchange(&g_weaponWheelCommit,0);
+            Log("weapon wheel: observed %s target=%ld actual=%ld",r==wheelseek::Result::Landed?"LANDED":"STOP",target,Rd(g_gunVerts));
+        }
+    }
     if (Rd(g_weaponWheelPulseGap) > 0 && stickHold == 0)
         InterlockedDecrement(&g_weaponWheelPulseGap);
     if (!uiMenu && !Rd(g_weaponWheelOpen) && stickHold == 0 &&
@@ -17118,6 +17144,8 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     const bool weaponSingleHand = handanchor::PistolGrip(gloves,Rd(g_weaponObj)!=0,
         Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip) ||
         handanchor::ValkyrieSingleGrip(g_valkyrieSingleGrip!=0,gloves,Rd(g_weaponObj)!=0,
+            Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip) ||
+        handanchor::VolkSingleGrip(g_volkAuthoredGrip!=0,gloves,Rd(g_weaponObj)!=0,
             Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip);
     if (weaponSingleHand) {
         BuildGunC(aimTarget);
@@ -17200,7 +17228,8 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     if (supportGrip) {
         const SupportGripSpec spec = SupportGripFor(supportGunVerts);
         if (spec.mode == SupportGripMode::AuthoredPair ||
-            (supportGunVerts == 11387 && g_valkyrieAuthoredGrip)) {
+            (supportGunVerts == 11387 && g_valkyrieAuthoredGrip) ||
+            (supportGunVerts == 8297 && g_volkAuthoredGrip)) {
             // Same rigid delta as the aim hand. The live palette already contains the
             // pistol's two-hand relationship; retargeting only the left wrist to BuildGunC
             // (or to l_hand_IK, which matches the rest pose) parks the glove beside the gun.
@@ -22543,6 +22572,7 @@ static void ResetVrAfterCameraLoss(const char* reason) {
     InterlockedExchange(&g_weaponWheelCommit, 0);
     InterlockedExchange(&g_weaponWheelPulseGap, 0);
     g_weaponWheelState = {};
+    g_weaponWheelSeek = {};
     s_scriptsReadyLatched = false;
     s_scriptsUnreadyFrames = 0;
     s_scriptsHoldAnnounced = false;
@@ -33175,6 +33205,9 @@ void LoadIniSettings() {
     Log("ini: ValkyrieAuthoredGrip=%d (default OFF; compare shipped paired left-hand pose against guessed fore-end offset)",
         g_valkyrieAuthoredGrip);
     g_valkyrieSingleGrip = GetPrivateProfileIntA("Input", "ValkyrieSingleGrip", 0, path) ? 1 : 0;
+    g_volkAuthoredGrip = GetPrivateProfileIntA("Input", "VolkAuthoredGrip", 0, path) ? 1 : 0;
+    g_weaponWheelObserved = GetPrivateProfileIntA("Input", "WeaponWheelObservedSelection", 0, path) ? 1 : 0;
+    Log("ini: VolkAuthoredGrip=%d WeaponWheelObservedSelection=%d (default OFF)",g_volkAuthoredGrip,g_weaponWheelObserved);
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
     g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;
     g_weaponTraceRigidOrigin=GetPrivateProfileIntA("Input","WeaponTraceRigidOrigin",0,path)!=0;

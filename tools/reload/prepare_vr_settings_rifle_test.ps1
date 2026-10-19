@@ -5,7 +5,8 @@ param(
     [Parameter(Mandatory)][string]$CandidateDir,
     [ValidateSet('Valkyrie','Volk','Kasimov')][string]$Weapon='Valkyrie',
     [switch]$CarryRayFix,
-    [switch]$NativeFxCapture
+    [switch]$NativeFxCapture,
+    [switch]$VisualFollowup
 )
 $ErrorActionPreference='Stop'
 $candidate=[IO.Path]::GetFullPath($CandidateDir)
@@ -69,6 +70,11 @@ if($NativeFxCapture){
     # Existing automatic idle + three-shot trace, no readback/capture BMPs.
     # Preserve the accepted exact drop and particle repair; observation only.
     $targets['Diagnostic/NativeMuzzleProbe']='1'
+}
+if($VisualFollowup){
+    $targets['Input/VolkAuthoredGrip']='1'
+    $targets['Input/WeaponWheelObservedSelection']='1'
+    $targets['Input/WeaponWheelDirectSelect']='1'
 }
 $text=[IO.File]::ReadAllText((Resolve-Path -LiteralPath $InstalledIni).Path,[Text.UTF8Encoding]::new($false,$true))
 $newline=if($text.Contains("`r`n")){"`r`n"}else{"`n"}

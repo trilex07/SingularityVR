@@ -5,6 +5,8 @@ param(
     [Parameter(Mandatory)][string]$AssetBackupDir,
     [Parameter(Mandatory)][string]$AcceptedProfilePath,
     [Parameter(Mandatory)][string]$ChangePlanPath,
+    [string]$NpcCandidateDir,
+    [string]$NpcBackupDir,
     [string]$SteamRoot='C:\Program Files (x86)\Steam',
     [ValidateRange(60,1800)][int]$LaunchWindowSeconds=600
 )
@@ -104,6 +106,12 @@ $fileMap=@(
 $ticket=Assert-AcceptedDeployment -GameRoot $gameRoot -ProfilePath $profile -ChangePlanPath $plan `
     -FileMap $fileMap -Direction Install -Phase Post
 if($ticket.ProfileSha256 -cne $profileHash){throw 'Accepted profile changed during preflight'}
+if([bool]$NpcCandidateDir -ne [bool]$NpcBackupDir){throw 'NPC lease requires both candidate and backup paths'}
+if($NpcCandidateDir){
+    & (Join-Path $repo 'tools/title/deploy_npc_name_test.ps1') -Action ValidateLive `
+        -CandidateDir $NpcCandidateDir -BackupDir $NpcBackupDir -SteamRoot $steam
+    if(-not $?){throw 'NPC package lease preflight failed'}
+}
 
 Write-Output "READY: all-file lease armed (${LaunchWindowSeconds}s launch window); no launch/kill."
 Write-Output "Candidate DLL=$dllHash INI=$iniHash; nine reload assets verified; protected UI SHA256=$uiHash"
@@ -140,6 +148,11 @@ foreach($entry in $assetReceipt){
     }
 }
 if($uiHash -and (Hash $ui) -cne $uiHash){throw 'Protected UI package changed during test'}
+if($NpcCandidateDir){
+    & (Join-Path $repo 'tools/title/deploy_npc_name_test.ps1') -Action ValidateLive `
+        -CandidateDir $NpcCandidateDir -BackupDir $NpcBackupDir -SteamRoot $steam
+    if(-not $?){throw 'NPC package drift during lease'}
+}
 
 & (Join-Path $repo 'tools\deploy-singularityvr.ps1') -Action Rollback `
     -SteamRoot $steam -RepoRoot $repo -BackupPath $backup -AcceptedProfilePath $profile `
@@ -156,5 +169,10 @@ foreach($entry in $assetReceipt){
     if((Hash $assetPath) -cne $entry.before){throw "Restored reload asset differs from baseline: $($entry.path)"}
 }
 if($uiHash -and (Hash $ui) -cne $uiHash){throw 'Protected UI package changed during rollback'}
+if($NpcCandidateDir){
+    & (Join-Path $repo 'tools/title/deploy_npc_name_test.ps1') -Action Restore `
+        -CandidateDir $NpcCandidateDir -BackupDir $NpcBackupDir -SteamRoot $steam
+    if(-not $?){throw 'NPC package rollback failed'}
+}
 $phase=if($seen){'test session ended'}else{'no session launched before timeout'}
 Write-Output "RESTORED: accepted DLL/INI and all nine reload asset states verified ($phase); UI package untouched."

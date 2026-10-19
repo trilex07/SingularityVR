@@ -69,3 +69,10 @@ implemented, with draw/restore-qualified identity/age guards. Native rifle FX
 pair is still UNKNOWN; original looping emitter differs from pistol capture.
 No speculative shader expansion or Steam write. Evidence and falsifiers:
 docs/weapon-carry-ray-followup.md; private original assets stay local.
+# 2026-10-19 — wheel/Volk/NPC follow-up (physical pending)
+
+Added opt-in observed native wheel cycling (no proposed-order pulse guessing),
+XR Y conversion, and original authored shotgun grip preservation. Prepared an
+offline NPC-name-only font-height patch with exact-field identity and native
+decoder roundtrip. No Steam deployment or accepted-build promotion. Details:
+docs/wheel-shotgun-npc-followup.md.
