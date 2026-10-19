@@ -52,7 +52,9 @@ Default-OFF `Input/KeepAcquiredWeapons` scopes a length-preserving suppression o
 the original `ThrowActiveWeapon` expression to the existing interpreter entry
 for `RvInventoryManager.SwitchWeaponByArchetype`, **only** for the current local
 SP pawn's actual inventory manager and the original input thread. It restores
-the 11 bytes in `__finally`, including on SEH unwinding. It does not patch shared
+the 11 bytes in `__finally`, including on SEH unwinding. Reentrant interpreter
+entries temporarily see the original expression; nested unwind restores both
+levels. It does not patch shared
 script for the whole session, enlarge slot arrays, grant weapons, write ammo or
 change NPC inventories. The whole 284-byte script shape, all 27 relocated object
 operands and five FNames must match independent original-package evidence.
@@ -76,12 +78,16 @@ x87 return, full213-byte FNV123BF764C6F43D2A; setter+0x15C accepts float32,
 full183-byte FNV51D61F73642B3837. Undefined, nonfinite or unexpected scales
 are refused. No package, subtitles, hint field or global font modification.
 
-L1:160 policy checks (136 individual opcode/branch mutation refusals),43 tests
+L1:160 policy checks (136 individual opcode/branch mutation refusals),86 tests
 of the actual runtime handler using an own-process fake engine (including SEH
 restoration, wrong owner/thread/name/default-OFF rejection, saved-chain ownership,
-three/four guns, cycle/foreign-owner refusal and no snapshot writes), three Python
+three/four guns, cycle/foreign-owner refusal, no snapshot writes, nested original
+dispatch and nested SEH restoration), three Python
 original-operand/wiring tests and three native-action-hands wiring tests PASS.
-These are not runtime or visual acceptance. Native heal/cinematic-hand changes
+The existing reload regression also passed37 compiled programs and108 Python
+tests, including own-process GPU fixtures (not the game).15 fake-install offline
+preparation checks preserve unrelated INI values and refuse drift/duplicates/
+dirty builds/overwrite. These are not runtime or visual acceptance. Native heal/cinematic-hand changes
 from042c967 are included; they retain native draws, not fabricate animations.
 
 `tools/reload/prepare_combined_followups.ps1` prepares only an offline DLL/INI

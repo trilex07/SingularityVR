@@ -47,11 +47,26 @@ namespace NativeContextCursor {static bool Method(uintptr_t,size_t,unsigned long
 #include "../native_owned_inventory.h"
 static unsigned checks=0,calls=0;
 static bool raiseFault=false;
+static bool nested=false;
+static bool nestedFault=false;
+static unsigned char expectedDrop[11]{};
 static void Check(bool pass){++checks;if(!pass){std::fprintf(stderr,"FAIL scope check %u\n",checks);std::exit(1);}}
+static void __fastcall OtherInventory(void*,void*,void*,void*) {
+ Check(NativeOwnedInventory::patchSuspended);
+ Check(!memcmp((void*)(NativeOwnedInventory::script+inventoryretention::DropAt),expectedDrop,sizeof(expectedDrop)));
+ if(nestedFault)RaiseException(0xE0000011,0,0,nullptr);
+}
 static void __fastcall Original(void*,void*,void*,void*) {
  ++calls;
  for(unsigned i=0;i<inventoryretention::DropBytes;++i)
   Check(*(const unsigned char*)(NativeOwnedInventory::script+inventoryretention::DropAt+i)==0x0b);
+ if(nested) {
+  uintptr_t stack[8]{};stack[2]=NativeOwnedInventory::function;
+  Check(NativeOwnedInventory::InvokeRetained((void*)0x1234,nullptr,stack,nullptr,42,8,OtherInventory));
+  Check(!NativeOwnedInventory::patchSuspended);
+  for(unsigned i=0;i<inventoryretention::DropBytes;++i)
+   Check(*(const unsigned char*)(NativeOwnedInventory::script+inventoryretention::DropAt+i)==0x0b);
+ }
  if(raiseFault)RaiseException(0xE0000011,0,0,nullptr);
 }
 static bool CatchFault(void* self,void* stack) {
@@ -91,6 +106,7 @@ int main(int argc,char** argv) {
  NativeOwnedInventory::script=(uintptr_t)code.data();NativeOwnedInventory::pawn=pawn;
  NativeOwnedInventory::manager=manager;NativeOwnedInventory::thread=GetCurrentThreadId();
  const auto original=code;
+ memcpy(expectedDrop,code.data()+inventoryretention::DropAt,sizeof(expectedDrop));
  Check(NativeOwnedInventory::ScriptIdentity((uintptr_t)code.data()));
  Check(NativeOwnedInventory::InvokeRetained((void*)manager,nullptr,stack,nullptr,42,8,Original));
  Check(calls==1&&code==original&&!NativeOwnedInventory::patchActive);
@@ -107,6 +123,14 @@ int main(int argc,char** argv) {
  code=original;raiseFault=true;
  Check(CatchFault((void*)manager,stack));
  Check(calls==2&&code==original&&!NativeOwnedInventory::patchActive);
+ raiseFault=false;nested=true;
+ Check(NativeOwnedInventory::InvokeRetained((void*)manager,nullptr,stack,nullptr,42,8,Original));
+ Check(calls==3&&code==original&&!NativeOwnedInventory::patchActive&&!NativeOwnedInventory::patchSuspended);
+ nestedFault=true;
+ Check(CatchFault((void*)manager,stack));
+ Check(calls==4&&code==original&&!NativeOwnedInventory::patchActive&&!NativeOwnedInventory::patchSuspended);
+ nestedFault=false;
+ nested=false;
  // Actual snapshot implementation, with reflected fake fields: saved guns
  // appear before any mesh observation; no inventory/ammo write is permitted.
  g_keepAcquiredWeapons=0;g_upNext=0x40;

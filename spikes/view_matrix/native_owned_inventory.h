@@ -16,6 +16,8 @@ static const char* stage="not sampled";
 static ULONGLONG resolveNext=0;
 static volatile LONG owned=0,request=0;
 static bool patchActive=false;
+static bool patchSuspended=false;
+static unsigned char originalDrop[inventoryretention::DropBytes]{};
 static uintptr_t P(uintptr_t p){return PauseRttProbe::Pointer(p);}
 static bool Named(uintptr_t p,const char* expected){char n[96]{};return p&&NameOf(p,n,sizeof(n))&&!strcmp(n,expected);}
 static bool Derives(uintptr_t cls,const char* name) {
@@ -152,6 +154,18 @@ static bool CanRetain(void* stack,int nodeOffset) {
 }
 template<class Invoke> static bool InvokeRetained(void* self,void* edx,void* stack,void* result,
  int name,int nodeOffset,Invoke original) {
+ // A callback may re-enter the same script while the local pickup is running.
+ // Such nested calls see ORIGINAL bytecode, never inherit the outer exemption.
+ if(patchActive&&!patchSuspended&&name==functionName&&nodeOffset>=0&&
+    thread==GetCurrentThreadId()&&P((uintptr_t)stack+nodeOffset)==function) {
+  patchSuspended=true;
+  memcpy((void*)(script+inventoryretention::DropAt),originalDrop,sizeof(originalDrop));
+  __try {original(self,edx,stack,result);}
+  __finally {
+   memset((void*)(script+inventoryretention::DropAt),0x0b,sizeof(originalDrop));patchSuspended=false;
+  }
+  return true;
+ }
  if(!Rd(g_keepAcquiredWeapons)||name!=functionName||!script||!function||patchActive||
     (uintptr_t)self!=manager||!manager||thread!=GetCurrentThreadId()||nodeOffset<0)return false;
  // A native-to-script entry gives a bounded synchronous scope. Never patch the
@@ -159,6 +173,7 @@ template<class Invoke> static bool InvokeRetained(void* self,void* edx,void* sta
  if(!CanRetain(stack,nodeOffset))return false;
  unsigned char saved[inventoryretention::DropBytes];
  memcpy(saved,(void*)(script+inventoryretention::DropAt),sizeof(saved));
+ memcpy(originalDrop,saved,sizeof(saved));
  patchActive=true;
  __try {
   memset((void*)(script+inventoryretention::DropAt),0x0b,sizeof(saved)); // EX_Nothing, same length

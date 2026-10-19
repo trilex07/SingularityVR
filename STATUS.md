@@ -13,7 +13,10 @@ inventory/native UI now have default-OFF guarded implementations and L1 tests.
 Local pickup drop suppression is scoped to the original interpreter call; the
 ownership snapshot/direct selector reads actual inventory, not locker availability.
 NPC sizing uses audited native GFx numeric methods, not the rejected repack.
-Combined followup regression/build/sealing in progress. No new launch yet.
+Combined followup L1 PASS:160 policy checks,86 actual-handler fake-engine checks,
+11 Python checks and15 offline preparation checks. Existing reload regression
+PASS37 compiled programs/108 Python tests. Final clean L2 sealing follows the
+nested-entry safety change; no new launch yet. Original Steam/profile retained.
 
 ### Historical test records (superseded by promotion above)
 
