@@ -37,6 +37,18 @@ class NativeSpace(unittest.TestCase):
         self.assertIn('if(!d.nativeSpace)for(', src)
         self.assertIn('reflect(staged.parent);reflect(staged.inverse[0]);reflect(staged.inverse[1]);', src)
 
+    def test_next_weapon_native_conversion_is_load_time_and_shared(self):
+        src = (ROOT/'spikes/view_matrix/weapon_reload_dispatch.inl').read_text(encoding='utf8')
+        self.assertEqual(src.count('weaponreloadanim::ToNative('), 1)
+        init, draw = src.split('static int PrepareNextReload(', 1)
+        self.assertIn('weaponreloadanim::ToNative(g_nextAnimation[i])&&', init)
+        self.assertNotIn('ToNative(', draw)
+        animation = (ROOT/'spikes/view_matrix/weapon_reload_animation.h').read_text(encoding='utf8')
+        self.assertIn('if(!d.nativeSpace)ReflectY(local);', animation)
+        runtime = (ROOT/'spikes/view_matrix/weapon_reload_runtime.h').read_text(encoding='utf8')
+        self.assertIn('d.nativeSpace&&axis==1?-52.5f:52.5f', runtime)
+        self.assertIn('if(d.nativeSpace)metres.m[1][1]=-metres.m[1][1];', runtime)
+
     def test_physical_mode_is_default_off_and_keeps_legacy_gate(self):
         src=(ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf8')
         self.assertIn('g_centurionTrackedCylinder&&GetPrivateProfileIntA("Input","CenturionPhysicalPolish",0,path)',src)

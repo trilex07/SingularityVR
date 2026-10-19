@@ -21,6 +21,7 @@ inline constexpr Spec specs[]{
 inline const Spec* Find(Kind kind){for(const auto& s:specs)if(s.kind==kind)return &s;return nullptr;}
 struct Data {
     bool ready=false;Kind kind=Kind::None;
+    bool nativeSpace=false; // runtime only; SVWA v1 remains ActorX/export space
     unsigned slots=0,root=0,tracks=0,frames=0;float fps=0;
     unsigned target[8]{};int parent[8]{};
     armbind::Mat rootBind{},inverse[8]{};
@@ -57,6 +58,23 @@ inline bool Decode(const unsigned char* p,std::size_t size,Kind requested,Data& 
     if(cursor!=size)return false;
     d.ready=true;out=d;return true;
 }
+inline void ReflectY(armbind::Mat& m){
+    for(unsigned r=0;r<4;++r)for(unsigned c=0;c<4;++c)
+        m.m[r][c]*=(r==1?-1.f:1.f)*(c==1?-1.f:1.f);
+}
+// The cooked GPU stream is UE3-space; the immutable SVWA/SVRK caches are
+// ActorX-space. Match the accepted Centurion conversion at initialization.
+// Validate before mutation, support in-place conversion, never reflect twice.
+inline bool ToNative(Data& d){
+    if(!d.ready||d.tracks>8||!armbind::Rigid(d.rootBind))return false;
+    for(unsigned i=0;i<d.tracks;++i)if(!armbind::Rigid(d.inverse[i]))return false;
+    if(!d.nativeSpace){
+        ReflectY(d.rootBind);
+        for(unsigned i=0;i<d.tracks;++i)ReflectY(d.inverse[i]);
+        d.nativeSpace=true;
+    }
+    return true;
+}
 inline bool Sample(const Data& d,float frame,armbind::Mat (&delta)[8]){
     const auto* s=weaponreloadanim::Find(d.kind);
     if(!d.ready||!s||d.tracks!=s->tracks||d.frames!=s->frames||d.slots!=s->slots||d.root!=s->root||
@@ -71,7 +89,7 @@ inline bool Sample(const Data& d,float frame,armbind::Mat (&delta)[8]){
         key.pskPosition={ka[0]+(kb[0]-ka[0])*t,ka[1]+(kb[1]-ka[1])*t,ka[2]+(kb[2]-ka[2])*t};
         for(unsigned k=0;k<4;++k)key.pskQuaternion[k]=ka[k+3]*(1-t)+kb[k+3]*t*(dot<0?-1.f:1.f);
         armbind::Mat local;if(!armbind::PskLocal(key,false,local))return false;
-        for(unsigned r=0;r<4;++r)for(unsigned c=0;c<4;++c)local.m[r][c]*=(r==1?-1.f:1.f)*(c==1?-1.f:1.f);
+        if(!d.nativeSpace)ReflectY(local); // PskLocal already returns native UE3 axes
         const auto& parent=d.parent[i]<0?d.rootBind:absolute[d.parent[i]];
         skeletal::Multiply(absolute[i].m,local.m,parent.m);
         skeletal::Multiply(staged[i].m,d.inverse[i].m,absolute[i].m);

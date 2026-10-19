@@ -60,12 +60,16 @@ actions and still needs a proven reload-specific consumer.
 ## Test readiness
 
 All four recipes and the English/Polish prompt tokens pass CPU tests. The
-three magazine weapons pass the original-asset offline suite, but their shared
-runtime socket is not ready for a physical acceptance test. The last live
+three magazine weapons pass the original-asset offline suite. The last live
 Valkyrie session rejected the reconstructed socket as more than 0.75 m from
 the right controller before Circle could eject anything. The original bind
 translations are approximately 101, 109, and 110 UE units for Valkyrie,
 Volk, and Kasimov. The offline roundtrip creates its own compensating local
-matrix, so it cannot establish the live UE3 matrix. The next authorized run
-must first capture the bounded native bind/root/local/controller rows; then
-replay that exact snapshot offline to identify the missing transform term.
+matrix, so it cannot establish the live UE3 matrix. Further offline analysis
+has now proved a missing ActorX-to-native Y conversion against all original
+cooked vertices, weights and indices for all three weapons. The new candidate
+corrects the binds, animation and carried/native-magazine paths together, and
+passes independent native-geometry/oracle tests. This still requires a live
+stage-10 witness and physical reload/debit check; it is not runtime acceptance.
+If the gate fails again, use the retained bounded bind/root/local/controller
+capture, not a larger socket tolerance. Details: `next-weapon-runtime-integration.md`.

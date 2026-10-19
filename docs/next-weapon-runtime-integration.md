@@ -341,3 +341,54 @@ restore leases now require 30 seconds of stable process absence before acting.
   mismatch and semantic native prompt replacement remain open. Do not remove
   safety gates or claim the three weapons work from CPU roundtrips alone.
 - No Steam launch/deploy: the user ended physical testing for the night.
+
+### 2026-10-19 original cooked-space correction (L1, not a live acceptance)
+
+Further offline RE found a concrete discrepancy without needing another user
+measurement: accepted Centurion converts ActorX/export binds back to native UE3
+space, but the shared three-weapon runtime did not. The old synthetic socket
+roundtrip chose `LocalToWorld` from the same wrong bind, cancelling its own
+mistake. Passing that fixture therefore could not detect the convention error.
+
+**Hypothesis/mechanism:** SVWA stores export-space root/inverse binds while
+`PskLocal` returns native-space transforms and the native shader consumes native
+vertices. Mixing them reflects Y twice for some terms and not for others. This
+can displace the reconstructed socket outside the retained 0.75 m safety gate.
+It is a proven offline convention error, NOT yet proof that this is the only
+cause of the last runtime rejection.
+
+`tools/reload/audit_next_weapon_space.py` compares ALL positions, bone slots,
+weights and triangle indices in each original cooked mesh with its ActorX
+export. Valkyrie source is the decompressed `RvGame.xxx` (not the separate weapon
+package); Volk/Kasimov use their original weapon packages. All **31,073 vertices
+and 36,787 triangles** match with native Y = -export Y and reversed winding.
+Native clip bind Y is -101.0936 / -109.3580 / -109.7098 UU respectively; the old
+runtime used the positive values. Bind-origin discrepancy: 202.187 / 218.716 /
+219.420 UU. Inputs and SHA receipts are in private
+`build/next-weapon-reload/native-space/<weapon>/report.json`; original game bytes
+and SVNV fixtures stay ignored and are not distributed.
+
+**Small correction:** convert root/inverse binds once during asset initialization,
+sample animation in that native convention, and apply the export-local Y bridge
+in BOTH the carried SVRK transform and its inverse native-material replay.
+No cache format/hash changes, new native hooks, new offsets, inventory writes,
+input remapping or widened readiness gates. Flags retain their existing OFF
+defaults. Centurion and accepted VFX/holsters/mirror are untouched.
+
+**Independent falsifiers:** `test-next-weapon-native-space.cpp` uses actual cooked
+VB/IB fixtures, not coordinates generated from the implementation. All 974 clip
+triangles / 2,922 corners reconstruct within 0.00008 UU; deliberately retaining
+the OLD convention yields 219–221 UU maximum vertex errors, so the old code
+fails this proof. All 7,506 fractional track poses match the independent NumPy
+oracle conjugated to native space. Twenty-four independently chosen model/
+controller poses per weapon test socket, carried and dropped replay without an
+inverse-bind-derived compensation. Conversion is idempotent and rejects invalid
+matrices transactionally. Synthetic parser corruption/ambiguity tests also pass.
+
+Run the full regression suite with `-PreparedRoot <private-prepared>` plus
+`-NativeSpaceRoot build/next-weapon-reload/native-space -Gpu`. This is L1/offline
+and own-process GPU evidence only. The next authorized Steam session must still
+prove stage 10, native BLOCK/PERMIT/ACK and correct debit, then the user checks
+magazine placement in both eyes. Retain the bounded stage-9 full matrix capture
+if the new convention still fails. Native `Keyboard/Button2 -> Pad 3` remains a
+separate unresolved semantic producer; do not globally replace that label.

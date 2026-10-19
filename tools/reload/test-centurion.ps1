@@ -1,4 +1,4 @@
-param([string]$NativeEvidence,[string]$AnimationCache,[string]$ShellAssets,[string]$NativeVertices,[string]$RefillEvidence,[string]$PreparedRoot='', [switch]$Gpu)
+param([string]$NativeEvidence,[string]$AnimationCache,[string]$ShellAssets,[string]$NativeVertices,[string]$RefillEvidence,[string]$PreparedRoot='', [string]$NativeSpaceRoot='', [switch]$Gpu)
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $out=Join-Path $repo 'build\centurion-reload\tests'
@@ -42,6 +42,16 @@ foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-cent
     if($LASTEXITCODE -ne 0){throw "test failed: $test"}
 }
 # This detours only the fake method in its OWN test process, never the game.
+if($NativeSpaceRoot){
+    if(-not $PreparedRoot){throw 'Native space fixture requires original -PreparedRoot'}
+    $source=Join-Path $repo 'spikes/view_matrix/tests/test-next-weapon-native-space.cpp'
+    $exe=Join-Path $out 'test-next-weapon-native-space.exe'
+    $obj=Join-Path $out 'test-next-weapon-native-space.obj'
+    cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:`"$exe`" /Fo:`"$obj`" `"$source`""
+    if($LASTEXITCODE -ne 0){throw 'Native space fixture compile failed'}
+    & $exe $PreparedRoot $NativeSpaceRoot
+    if($LASTEXITCODE -ne 0){throw 'Original native coordinate/mesh/replay proof failed'}
+}
 $abiSource=Join-Path $repo 'spikes\view_matrix\tests\test-centurion-native-abi.cpp'
 $abiExe=Join-Path $out 'test-centurion-native-abi.exe'
 $mh=Join-Path $repo 'third_party\minhook'
@@ -78,6 +88,8 @@ python (Join-Path $PSScriptRoot 'test_prepare_next_weapon.py')
 if($LASTEXITCODE -ne 0){throw 'Next weapon prototype extraction tests failed'}
 python (Join-Path $PSScriptRoot 'test_prepare_weapon_animation.py')
 if($LASTEXITCODE -ne 0){throw 'Next weapon animation tests failed'}
+python (Join-Path $PSScriptRoot 'test_audit_next_weapon_space.py')
+if($LASTEXITCODE -ne 0){throw 'Native cooked coordinate audit guards failed'}
 if($Gpu){
     if(-not $PreparedRoot){throw 'GPU fixture requires explicit -PreparedRoot'}
     $source=Join-Path $repo 'spikes/view_matrix/tests/test-next-weapon-assets-gpu.cpp'

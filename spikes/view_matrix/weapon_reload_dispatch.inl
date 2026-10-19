@@ -38,6 +38,7 @@ static void InitNextReload(){
         g_nextReady[i]=hipknife::Read(directory+stem+"_reload.svwa",bytes,256*1024)&&
             weaponreload::Hash(bytes.data(),(unsigned)bytes.size())==original.animation&&
             weaponreloadanim::Decode(bytes.data(),bytes.size(),kind,g_nextAnimation[i])&&
+            weaponreloadanim::ToNative(g_nextAnimation[i])&&
             g_nextTiming[i].Measure(g_nextAnimation[i])&&
             hipknife::Read(directory+stem+"_clip.svrk",mesh,2*1024*1024)&&
             weaponreload::Hash(mesh.data(),(unsigned)mesh.size())==original.mesh&&
@@ -50,6 +51,7 @@ static void InitNextReload(){
             stem.c_str(),g_nextReady[i]?"READY":"INVALID (native unchanged)",
             g_nextClipRenderer[i].Vertices(),g_nextClipRenderer[i].Triangles(),
             g_nextTiming[i].outFrame,g_nextTiming[i].inFrame);
+        if(g_nextReady[i])Log("next reload native space: kind=%d ActorX bind reflection undone once; SVRK local-Y bridge active",int(kind));
         }catch(const std::bad_alloc&){
             g_nextReady[i]=false;g_nextAnimation[i].ready=false;g_nextClipRenderer[i].ReleaseGPU();
             Log("next reload: CPU asset allocation failed profile=%u; native input unchanged",i);

@@ -1,6 +1,19 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-19 offline continuation supersedes the earlier "no correction without
+new matrices" conclusion: original cooked mesh bytes prove the three-weapon
+path missed the ActorX-to-native Y conversion already present for Centurion.
+Fixed initialization binds, animation sampling and BOTH export-local carried
+mesh/native replay transforms. All 31,073 original vertices and 36,787
+triangles audited; 974 magazine triangles reconstruct correctly while the old
+convention fails with >219 UU vertex error. 7,506 fractional original animation
+poses and independent socket/carry/drop poses pass. L1_PASS; new clean-source
+L2 build receipt pending below. No Steam deployment or launch. Last live
+Valkyrie stage9 failure is NOT yet re-tested; Volk/Kasimov remain L3/L4 UNKNOWN.
+Do not bypass readiness or globally replace generic `Keyboard/Button2/Pad 3`.
+Four PL/EN instructions are prepared. See docs/next-weapon-runtime-integration.md.
+
 2026-10-19 end-of-night (no further Steam test authorized today): branch
 `fix/vr-settings-rifle-reload`. Steam screenshot/right-eye composition accepted
 by user. Added Centurion's four-line PL/EN Circle instruction with weapon/pawn

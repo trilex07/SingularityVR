@@ -90,11 +90,14 @@ inline bool Socket(const weaponreloadanim::Data& d,const float* palette,
         for(unsigned axis=0;axis<3;++axis){
             // SVRK uses original clip-local UU / 52.5. Preserve the actual
             // native mesh/world scale AND handedness, not an arbitrary scale1.
-            const float ax=c.m[axis][0]*52.5f/units,ay=c.m[axis][1]*52.5f/units;
+            // SVRK vertices stay in exported clip-local axes. Convert their Y
+            // once before the native bind/skin chain; the socket origin is zero.
+            const float scale=(d.nativeSpace&&axis==1?-52.5f:52.5f)/units;
+            const float ax=c.m[axis][0]*scale,ay=c.m[axis][1]*scale;
             const float af=ax*std::cos(baseYaw)+ay*std::sin(baseYaw);
             const float ar=-ax*std::sin(baseYaw)+ay*std::cos(baseYaw);
             mapped.m[axis][0]=-std::sin(centreYaw)*af+std::cos(centreYaw)*ar;
-            mapped.m[axis][1]=c.m[axis][2]*52.5f/units;
+            mapped.m[axis][1]=c.m[axis][2]*scale;
             mapped.m[axis][2]=-std::cos(centreYaw)*af-std::sin(centreYaw)*ar;
         }
         mapped.m[3][0]=p.x;mapped.m[3][1]=p.y;mapped.m[3][2]=p.z;mapped.m[3][3]=1;
@@ -145,6 +148,8 @@ inline bool SparePalette(const weaponreloadanim::Data& d,const armbind::Mat& tra
     skeletal::Multiply(gun.m,local.m,controller.m);
     if(!skeletal::Inverse(inverseGun.m,gun.m)||!armbind::Finite(inverseWorld))return false;
     metres.m[0][0]=metres.m[1][1]=metres.m[2][2]=1.f/52.5f;metres.m[3][3]=1;
+    // Inverse of the export-local -> native-local reflection used by Socket.
+    if(d.nativeSpace)metres.m[1][1]=-metres.m[1][1];
     skeletal::Multiply(a.m,inverseBind.m,metres.m);skeletal::Multiply(b.m,a.m,tracking.m);
     skeletal::Multiply(c.m,b.m,trackingMap.m);skeletal::Multiply(skin.m,c.m,inverseGun.m);
     if(!armbind::Finite(skin))return false;
