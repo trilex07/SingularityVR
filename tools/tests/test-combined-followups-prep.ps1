@@ -16,7 +16,9 @@ function MakeCase([string]$name,[string]$extra=''){
  $profile=[ordered]@{
   schema='singularityvr-accepted-profile-v1';approved=$true
   files=@(@{path='Binaries/d3d9.dll';sha256=$sha},@{path='Binaries/SingularityVR.ini';sha256=(Get-FileHash $ini -Algorithm SHA256).Hash})
-  ini=@{'Input/KeepAcquiredWeapons'='0'}
+  ini=@{'Input/KeepAcquiredWeapons'='0';'Input/GunAlign0PitchTenths'='-28';
+        'Render/NativeMuzzleParticleStereo'='1';'Render/DesktopMirrorWindow'='1';
+        'Localization/PolishLanguage'='1'}
  }
  $profilePath=Join-Path $dir 'profile.json';$profile | ConvertTo-Json -Depth 8 | Set-Content $profilePath -Encoding UTF8
  return @{InstalledIni=$ini;AcceptedProfilePath=$profilePath;CandidateDir=$dir}
@@ -29,6 +31,12 @@ foreach($line in @('KeepAcquiredWeapons=1','WeaponWheelOwnedInventory=1','NpcNam
 $plan=Get-Content -Raw (Join-Path $good.CandidateDir 'change-plan.json') | ConvertFrom-Json
 Check ($plan.files.Count -eq 1 -and $plan.files[0].path -ceq 'Binaries/d3d9.dll') 'Scope expanded beyond DLL/INI'
 Check ($plan.ini.Count -eq 5) 'Unexpected key delta'
+$logical=MakeCase 'logical-profile'
+$p=Get-Content -Raw $logical.AcceptedProfilePath | ConvertFrom-Json
+$p.files=@($p.files | Where-Object path -cne 'Binaries/SingularityVR.ini')
+$p | ConvertTo-Json -Depth 8 | Set-Content $logical.AcceptedProfilePath -Encoding UTF8
+& $script @logical | Out-Null
+Check (Test-Path (Join-Path $logical.CandidateDir 'SingularityVR.ini')) 'Logical-only production INI profile rejected'
 $failed=$false;try{& $script @good | Out-Null}catch{$failed=$true};Check $failed 'Overwrite accepted'
 $duplicate=MakeCase 'duplicate' "KeepAcquiredWeapons=0`r`n"
 $failed=$false;try{& $script @duplicate | Out-Null}catch{$failed=$true};Check $failed 'Duplicate key accepted'

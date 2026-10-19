@@ -6,6 +6,7 @@ param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9A-Fa-f]{64}$')][string]$AcceptedIniSha256,
     [ValidateRange(60, 1800)][int]$LaunchWindowSeconds = 600,
     [switch]$PreflightOnly,
+    [switch]$RuntimeDllOnly,
     [string]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
@@ -16,6 +17,8 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $backup = (Resolve-Path -LiteralPath $BackupPath).Path
 $profilePath = (Resolve-Path -LiteralPath $AcceptedProfilePath).Path
 $planPath = (Resolve-Path -LiteralPath $ChangePlanPath).Path
+$profileHash=(Get-FileHash -LiteralPath $profilePath -Algorithm SHA256).Hash
+$planHash=(Get-FileHash -LiteralPath $planPath -Algorithm SHA256).Hash
 $profile = Get-Content -LiteralPath $profilePath -Raw | ConvertFrom-Json
 $plan = Get-Content -LiteralPath $planPath -Raw | ConvertFrom-Json
 $metadata = Get-Content -LiteralPath (Join-Path $backup 'backup_metadata.json') -Raw | ConvertFrom-Json
@@ -25,8 +28,10 @@ if ($profile.schema -cne 'singularityvr-accepted-profile-v1' -or $profile.approv
     throw 'Wrong accepted profile or change plan'
 }
 $names = @($metadata.Files | ForEach-Object Name | Sort-Object)
-if ($names.Count -ne 3 -or ($names -join ',') -cne 'd3d9.dll,dinput8.dll,SingularityVR.ini' -or
-    @($metadata.Directories).Count -ne 0) { throw 'Restore scope must be exactly DLL, injector and INI' }
+$expectedNames=if($RuntimeDllOnly){'d3d9.dll,SingularityVR.ini'}else{'d3d9.dll,dinput8.dll,SingularityVR.ini'}
+if (($names -join ',') -cne $expectedNames -or @($metadata.Directories).Count -ne 0) {
+    throw 'Restore scope does not match the explicitly selected DLL/INI or DLL/injector/INI lease'
+}
 $gameRoot = Join-Path $SteamRoot 'steamapps\common\Singularity'
 $gameBin = Join-Path $gameRoot 'Binaries'
 $accepted = @{}
@@ -50,9 +55,9 @@ if ($dllChange.Count -ne 1 -or $dllChange[0].before -cne $accepted['d3d9.dll']) 
 }
 $candidate = @{
     'd3d9.dll' = $dllChange[0].after
-    'dinput8.dll' = $accepted['dinput8.dll']
     'SingularityVR.ini' = (Get-FileHash -LiteralPath (Join-Path (Split-Path $planPath) 'SingularityVR.ini') -Algorithm SHA256).Hash
 }
+if(-not $RuntimeDllOnly){$candidate['dinput8.dll']=$accepted['dinput8.dll']}
 $ui = Join-Path $gameRoot 'RvGame\CookedPC\UI_SinglePlayer_SF.xxx'
 $uiSha = (Get-FileHash -LiteralPath $ui -Algorithm SHA256).Hash
 foreach ($name in $names) {
@@ -82,6 +87,10 @@ while ($true) {
 }
 if (@(Get-CimInstance Win32_Process -Filter "Name='Singularity.exe'" -ErrorAction Stop).Count) {
     throw 'Game still running; refusing restore'
+}
+if((Get-FileHash -LiteralPath $profilePath -Algorithm SHA256).Hash -cne $profileHash -or
+   (Get-FileHash -LiteralPath $planPath -Algorithm SHA256).Hash -cne $planHash){
+    throw 'Profile or plan changed during lease; refusing stale restore'
 }
 if ((Get-FileHash -LiteralPath $ui -Algorithm SHA256).Hash -cne $uiSha) {
     throw 'Protected UI changed during test'

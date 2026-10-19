@@ -14,9 +14,14 @@ Local pickup drop suppression is scoped to the original interpreter call; the
 ownership snapshot/direct selector reads actual inventory, not locker availability.
 NPC sizing uses audited native GFx numeric methods, not the rejected repack.
 Combined followup L1 PASS:160 policy checks,86 actual-handler fake-engine checks,
-11 Python checks and15 offline preparation checks. Existing reload regression
-PASS37 compiled programs/108 Python tests. Final clean L2 sealing follows the
-nested-entry safety change; no new launch yet. Original Steam/profile retained.
+11 Python checks and16 offline preparation checks,6 lease preflight scenarios.
+Existing reload regression
+PASS37 compiled programs/108 Python tests. L2 PASS: clean7cbfe78 source, x86 PE32
+/O2 DLL A01E3147…56E6C, private candidate build/combined-followups-candidate-7cbfe78.
+Real-install read-only WhatIf/profile preflight PASS; READY_FOR_PHYSICAL_ACCEPTANCE,
+not L3/L4. Original Steam/profile retained. Await fresh user start; deploy only
+DLL/INI. Use generic muzzle lease with -RuntimeDllOnly and accepted INI B94A4AA7…;
+NEVER use the old rifle asset lease. See docs/combined-acceptance-followups.md.
 
 ### Historical test records (superseded by promotion above)
 

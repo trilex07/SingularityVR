@@ -85,7 +85,7 @@ three/four guns, cycle/foreign-owner refusal, no snapshot writes, nested origina
 dispatch and nested SEH restoration), three Python
 original-operand/wiring tests and three native-action-hands wiring tests PASS.
 The existing reload regression also passed37 compiled programs and108 Python
-tests, including own-process GPU fixtures (not the game).15 fake-install offline
+tests, including own-process GPU fixtures (not the game).16 fake-install offline
 preparation checks preserve unrelated INI values and refuse drift/duplicates/
 dirty builds/overwrite. These are not runtime or visual acceptance. Native heal/cinematic-hand changes
 from042c967 are included; they retain native draws, not fabricate animations.
@@ -173,3 +173,28 @@ an NPC-size fix without new evidence identifying the failure mechanism.
 
 Next physical trial needs a freshly sealed candidate against the NEW accepted
 profile and a new user start. No launch was performed for these follow-ups.
+
+## Sealed candidate — ready for a fresh physical-test start
+
+Clean source7cbfe78081ff350d06b830b53ab7ec1a3af4f404, x86 PE32 `/O2`,
+DLL SHA256 A01E3147F9D467CF3C081E591AC92239CBAF365A1FA2EDB8446F2D4435E56E6C.
+Private immutable candidate: `build/combined-followups-candidate-7cbfe78/`
+(DLL, clean build receipt, INI and exact change plan). Read-only real-install
+`deploy-singularityvr.ps1 -Action Install -WhatIf -DllOnly -IncludeIni` preflight
+PASS against the promoted145-pin profile SHA445B31EE…1506. No deployment/launch.
+Installed accepted DLL7DDAA0AA… and INI B94A4AA7… are unchanged.
+
+Next test deploys **only** this DLL/INI through the normal runner, after a fresh
+start. Use `tools/fx/watch_native_muzzle_restore.ps1 -RuntimeDllOnly` with the
+new timestamped two-file backup, this profile/plan and accepted INI SHA
+B94A4AA761B0EE477B49AB7BB4CA4D1E8A8E120F30F4F5F8A2225B87D4F78931.
+This generic exact-hash lease now supports the explicit two-file scope while
+preserving its old three-file default; six fake-install preflight cases PASS.
+It has no active-session timeout and restores after normal exit/no launch only,
+refusing file drift or a changed profile/plan. Do not reuse the old rifle lease:
+it pins a superseded baseline and owns assets that are now permanently accepted.
+No campaign audio, texture, UI, font, injector or reload-asset redeployment.
+
+All features remain L1/L2 only until the fresh Steam/PSVR2 route. A scoped drop
+suppression log is required before calling the two-weapon limit fixed; no events
+or a refused script fingerprint mean implementation coverage is still unproven.

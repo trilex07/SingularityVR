@@ -20,4 +20,5 @@ foreach($test in @('test_combined_followups.py','test_native_action_hands.py','t
  if($LASTEXITCODE -ne 0){throw "Python test failed: $test"}
 }
 & (Join-Path $repo 'tools/tests/test-combined-followups-prep.ps1')
+& (Join-Path $repo 'tools/tests/test-followup-lease.ps1')
 Write-Output 'Combined followups L1 PASS; no Steam/game process access, no L3/L4 claim'

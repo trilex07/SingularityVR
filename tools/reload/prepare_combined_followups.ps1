@@ -7,6 +7,7 @@ param(
 # Offline preparation only. No launch, installation or accepted-profile mutation.
 $ErrorActionPreference='Stop'
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
+. (Join-Path $repo 'tools/deployment/AcceptedProfileGuard.ps1')
 $candidate=[IO.Path]::GetFullPath($CandidateDir)
 if(-not $candidate.StartsWith((Join-Path $repo 'build').TrimEnd('\')+'\',[StringComparison]::OrdinalIgnoreCase)){
  throw 'CandidateDir must be in this checkout/build'
@@ -24,9 +25,23 @@ $profileHash=(Get-FileHash -LiteralPath $AcceptedProfilePath -Algorithm SHA256).
 $iniPin=@($profile.files | Where-Object path -ceq 'Binaries/SingularityVR.ini')
 $dllPin=@($profile.files | Where-Object path -ceq 'Binaries/d3d9.dll')
 if($profile.schema -cne 'singularityvr-accepted-profile-v1' -or -not $profile.approved -or
- $iniPin.Count -ne 1 -or $dllPin.Count -ne 1 -or
- (Get-FileHash -LiteralPath $InstalledIni -Algorithm SHA256).Hash -cne $iniPin[0].sha256){
+ $iniPin.Count -gt 1 -or $dllPin.Count -ne 1 -or
+ ($iniPin.Count -eq 1 -and (Get-FileHash -LiteralPath $InstalledIni -Algorithm SHA256).Hash -cne $iniPin[0].sha256)){
  throw 'Accepted profile / installed INI mismatch; no stale baseline adoption'
+}
+# Production profiles pin logical INI values (and explicitly ignored caches),
+# not an INI file entry. Validate both directions without adopting unknown keys.
+$actual=Read-GuardIni $InstalledIni
+$ignored=@();if($profile.PSObject.Properties['ignoredIniKeys']){$ignored=@($profile.ignoredIniKeys)}
+foreach($p in $profile.ini.PSObject.Properties){
+ if($p.Name -in $ignored){continue}
+ if(-not $actual.ContainsKey($p.Name) -or -not (Test-GuardSame $actual[$p.Name] $p.Value)){
+  throw "Accepted INI value mismatch: $($p.Name)"
+ }
+}
+foreach($key in $actual.Keys){
+ if($key -in $ignored){continue}
+ if(-not $profile.ini.PSObject.Properties[$key]){throw "Unknown installed INI key: $key"}
 }
 $targets=[ordered]@{
  'Input/KeepAcquiredWeapons'='1'
