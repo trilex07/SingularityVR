@@ -109,3 +109,6 @@ _work_u/
 work/
 offline-deliverables/
 *.intermediate.mkv
+
+# Private accepted installation snapshots contain game-derived binaries/config.
+/deployment/accepted-combined-20261019/

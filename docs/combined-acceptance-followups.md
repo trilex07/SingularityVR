@@ -70,6 +70,41 @@ Wheel labels/icons currently use the session-local observed mesh set (`g_wwSeen`
 not a save-loaded ownership snapshot. Fix ownership initialization together with
 the inventory producer, not by exposing every unacquired catalog item.
 
+### Reproducible offline native evidence
+
+`tools/reload/inspect_inventory_registration.py` resolves BOTH registration forms:
+preinitialized PE lookup pointers and zero entries populated by a text initializer.
+Five deterministic tests cover both forms, missing/ambiguous rows and out-of-text
+targets. This matters: treating the zero HasWeapon entry as a function would
+disassemble unrelated bytes, not the method. Outputs contain identities/hashes,
+not proprietary function bodies. No process is opened.
+
+Measured against owned EXE SHA BD459ACD…0F51 and archived text SHA858F2FC3…C78A
+(text base0x402000; audit addresses, never production hardcoded calls):
+
+- Shared controller CycleWeapon wrapper dispatches vtable+0x690; GetCycleWeapon
+  +0x694; GetWeaponSlotName +0x740; SetWeaponSlotName +0x744.
+- RvPlayerController constructor callback identifies vtable0x19D4C30. Slot getter
+  reads exactly four FNames at controller+0x6C4, eight-byte stride; setter also
+  notifies the native state/HUD. Direct field writes are not equivalent.
+- Native GetCycleWeapon at0x1046FE0 searches authored slots, excluding grenade
+  slot3 in its fallback. CycleWeapon ultimately calls pawn vtable+0xB14 with the
+  selected FName; this alone does NOT establish inventory retention after pickup.
+- RvSharedPawn HasWeapon initializer resolves wrapper0xF635F0, which dispatches
+  pawn vtable+0xB18 with an FName argument, returning bool. RvPlayerPawnSP's
+  constructor identifies vtable0x19D0788; its HasWeapon target0x102F700 traverses
+  pawn+0x3D0 -> manager+0x1E0 -> item+0x1E0, casts each item and compares the
+  weapon's FName at+0x2E8/+0x2EC. Package property16108 independently names
+  `RvWeaponShared.mWeaponName`. This is actual possession, not catalog visibility.
+- Inventory ChangeToWeaponByName wrapper0xF68430 dispatches manager vtable+0x428.
+  RvInventoryManager vtable0x19CB480 routes this through reflected script dispatch
+  then virtual+0x42C; it is NOT a proven direct safe selector yet.
+
+Next: prove the pickup/removal producer and safe selection ABI; resolve live
+fields through reflection and validate target fingerprints before any call.
+Do not expand the four-slot array, grant catalog weapons or mistake locker
+availability (`mWeaponsAvailableToLocker`) for currently owned inventory.
+
 ## NPC names — still open
 
 The 60% package patch is NOT deployed. It caused a pre-device EXE+0xACA50 crash;

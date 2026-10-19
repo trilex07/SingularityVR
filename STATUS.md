@@ -1,6 +1,18 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-19 promoted combined baseline: user explicitly requested KEEP. Installed
+DLL7DDAA0AA... and INI B94A4AA7... retained; game closed, previous guard exited.
+Canonical local profile is THIS checkout's deployment/accepted-profile.json,
+SHA445B31EE...1506, 145 pins. Do not reuse historical startup-readiness profile
+or previous restore runner. See docs/combined-acceptance-followups.md.
+Next combined candidate is NOT installed: retain all acquired weapons, initialize
+wheel icons from saved ownership, shrink NPC names, native heal animation and
+native cinematic hero hands. Animation implementation has offline L1/L2 only;
+inventory/native UI investigation remains open. No new launch authorized yet.
+
+### Historical test records (superseded by promotion above)
+
 2026-10-19 22:04 original-RvGame control LIVE: PID28080, same DLL7DDAA0AA...,
 INI AC6290B6..., nine reload assets and119 campaign delta files installed and
 backup hashes verified. Original RvGame4153C488... kept; NPC-size package omitted.
