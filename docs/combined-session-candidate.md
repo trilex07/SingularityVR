@@ -100,6 +100,15 @@ exact restore (including removal of a newly added, hash-matched file).
 
 ## One headset route (no chat/alt-tab during test)
 
+Live attempt 2026-10-19 22:00 (PID25868): startup crashed before device/OpenXR
+creation, WER access violation0xC0000005 at Singularity.exe+0xACA50. Complete
+declared baseline restore was verified by the watcher. This is the same fault
+offset documented in contextual-cursor.md for the former RvGame mutation;
+the offline decoder roundtrip alone does NOT establish engine load acceptance.
+The next controlled boot keeps the original RvGame.xxx and otherwise identical
+candidate scopes. Smaller NPC names are withheld pending that control and an
+isolated producer investigation; do not call the entire package L3_PASS.
+
 2026-10-19 pre-launch integration correction: the first deployment was fully
 restored before any game launch because the core postflight correctly rejected
 the changed Polish text/story manifests. The combined watcher now composes an

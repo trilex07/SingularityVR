@@ -1,6 +1,17 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-19 live combined attempt: first pre-launch guard conflict was fixed with
+an exact composed allowance for two profile-pinned Polish manifests (accepted
+profile/core plan unchanged; synthetic fail-closed regression PASS). Commit
+3720b94 pushed. First launched PID25868 then crashed before OpenXR with WER
+0xC0000005 at EXE+0xACA50. All119 campaign files, DLL/INI, nine reload asset
+states and original RvGame.xxx were restored. Controlled retry with original
+RvGame.xxx is in progress; NPC name-size package is NOT runtime accepted.
+See docs/combined-session-candidate.md and private live-combined-20261019-02
+receipt/restore logs. Runtime still comes from clean868af305 DLL7DDAA0AA...;
+3720b94 changes deployment safety only, not the built game DLL.
+
 2026-10-19 combined-session asset preparation L1_PASS, Steam untouched:
 1875 unique latest SIDE WAVs audited (1949 rows include74 duplicate declarations),
 114 current native campaign bank candidates independently decoded/repacked,
