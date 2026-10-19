@@ -1,6 +1,26 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-19 latest physical Valkyrie result supersedes the stale stage9 note
+below: two reload transactions completed and conserved native ammo (30/104 ->
+30/74; partial 18/74 -> 30/62). User confirms reload works, but shot origin,
+missing rifle VFX and spare-magazine/hand intersections remain BROKEN.
+Accepted DLL/INI and nine asset before-states were restored by the lease and
+DLL/INI SHA independently checked; Steam has not been modified in this follow-up.
+
+New default-OFF `ReloadPalmGrip` and `WeaponTraceRigidOrigin` are
+IMPLEMENTED_NOT_VERIFIED in Steam: three original-mesh wrist fits, current
+draw/restore-qualified wrist/muzzle witnesses, and full-ray translation rather
+than moving only Start. L1_PASS: 4,000 finite ray cases, three profiles,
+reproducible original PSK geometry fit with zero intersecting triangles,
+existing C++ reload suite and 110 Python tests. An initial x86 PE32 `/O2`
+build passed; clean-source receipt belongs to the next prepared candidate.
+Valkyrie VFX is NOT fixed or identified: its original package references
+`fx_muzzleLockedPlayer_Loop_Player2`, unlike the audited pistol capture.
+The next candidate uses the existing bounded idle/three-shot probe and keeps
+the accepted exact particle repair/drop; no guessed shaders or custom FX.
+See docs/weapon-carry-ray-followup.md. Volk/Kasimov changes remain L3/L4 UNKNOWN.
+
 2026-10-19 offline continuation supersedes the earlier "no correction without
 new matrices" conclusion: original cooked mesh bytes prove the three-weapon
 path missed the ActorX-to-native Y conversion already present for Centurion.

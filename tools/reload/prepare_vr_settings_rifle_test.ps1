@@ -3,7 +3,9 @@ param(
     [Parameter(Mandatory)][string]$InstalledIni,
     [Parameter(Mandatory)][string]$AcceptedProfilePath,
     [Parameter(Mandatory)][string]$CandidateDir,
-    [ValidateSet('Valkyrie','Volk','Kasimov')][string]$Weapon='Valkyrie'
+    [ValidateSet('Valkyrie','Volk','Kasimov')][string]$Weapon='Valkyrie',
+    [switch]$CarryRayFix,
+    [switch]$NativeFxCapture
 )
 $ErrorActionPreference='Stop'
 $candidate=[IO.Path]::GetFullPath($CandidateDir)
@@ -58,6 +60,15 @@ $targets=[ordered]@{
     'Input/ReloadNativeMagazine'='1'
     'Input/ValkyrieAuthoredGrip'=$(if($Weapon -eq 'Valkyrie'){'1'}else{'0'})
     'Input/ValkyrieSingleGrip'=$(if($Weapon -eq 'Valkyrie'){'1'}else{'0'})
+}
+if($CarryRayFix){
+    $targets['Input/ReloadPalmGrip']='1'
+    $targets['Input/WeaponTraceRigidOrigin']='1'
+}
+if($NativeFxCapture){
+    # Existing automatic idle + three-shot trace, no readback/capture BMPs.
+    # Preserve the accepted exact drop and particle repair; observation only.
+    $targets['Diagnostic/NativeMuzzleProbe']='1'
 }
 $text=[IO.File]::ReadAllText((Resolve-Path -LiteralPath $InstalledIni).Path,[Text.UTF8Encoding]::new($false,$true))
 $newline=if($text.Contains("`r`n")){"`r`n"}else{"`n"}

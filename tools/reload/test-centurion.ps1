@@ -13,7 +13,7 @@ cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:
 if($LASTEXITCODE -ne 0){throw 'Reload instructions compile failed'}
 & $instructionExe
 if($LASTEXITCODE -ne 0){throw 'Four-weapon PL/EN instructions failed'}
-foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-refill','test-centurion-clip','test-centurion-animation','test-centurion-visual-followup','test-centurion-tracked-cylinder','test-centurion-physical-polish','test-centurion-shells','test-centurion-shoulder','test-manual-reload','test-hip-knife','test-hud-reseat','test-weapon-holster','test-hand-anchor-math','test-knife-renderer','test-next-weapon-reload','test-next-weapon-animation','test-next-weapon-runtime','test-next-weapon-refill','test-next-weapon-refill-visual')){
+foreach($test in @('test-centurion-reload','test-centurion-lifecycle','test-centurion-grip-routing','test-reload-controls','test-centurion-cylinder','test-centurion-native','test-centurion-refill','test-centurion-clip','test-centurion-animation','test-centurion-visual-followup','test-centurion-tracked-cylinder','test-centurion-physical-polish','test-centurion-shells','test-centurion-shoulder','test-manual-reload','test-hip-knife','test-hud-reseat','test-weapon-holster','test-hand-anchor-math','test-knife-renderer','test-next-weapon-reload','test-next-weapon-animation','test-next-weapon-runtime','test-next-weapon-refill','test-next-weapon-refill-visual','test-weapon-carry-ray')){
     $source=Join-Path $repo "spikes\view_matrix\tests\$test.cpp"
     $exe=Join-Path $out "$test.exe"
     $obj=Join-Path $out "$test.obj"

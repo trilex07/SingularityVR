@@ -193,8 +193,13 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
             (ULONGLONG)std::ceil(1000.f*g_nextAnimation[index].frames/g_nextAnimation[index].fps)+150;
         if(result.event==Event::Cancelled||result.event==Event::Rejected||
            (!weaponreload::Active(t.phase)&&(!next.nativeEnd||now>=next.nativeEnd)))next.rootValid=false;
-        if(result.event==Event::Discarded&&index<3&&weaponreload::HandMatrix(witness.clipTracking,in.gun,
-            next.hand,g_nextClipRenderer[index].SourceCentre(),next.drop))next.dropMs=now;
+        if(result.event==Event::Discarded&&index<3){
+            const bool placed=g_reloadPalmGrip&&g_nextNativeMagazine ?
+                g_nextWrist.Current(kind,in.pawn,in.weapon,g_nextVisual.since,now)&&
+                    weaponcarry::Matrix(kind,g_nextWrist.tracking,next.drop) :
+                weaponreload::HandMatrix(witness.clipTracking,in.gun,next.hand,g_nextClipRenderer[index].SourceCentre(),next.drop);
+            if(placed)next.dropMs=now;
+        }
         g_nextVisual=next;ReleaseSRWLockExclusive(&g_nextVisualLock);
     }
     static unsigned records=0;static int priorReady=-1;const int ready=valid?int(kind):0;
@@ -235,9 +240,9 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
        Rd(g_gamePaused)||Rd(g_vrUiMenu)||Rd(g_panelOpen)||Rd(g_weaponWheelOpen)||
        Rd(g_weaponHolstered)||CutsceneNativeCameraArmed()||
        g_sceneMode.Current()!=vrscene::Mode::GameplayStereo||g_xrSessionState!=XR_SESSION_STATE_FOCUSED){note(1);return 0;}
-    NextReloadVisual visual;
+    NextReloadVisual visual;weaponcarry::Wrist wrist;
     if(!TryAcquireSRWLockShared(&g_nextVisualLock))return 0;
-    visual=g_nextVisual;ReleaseSRWLockShared(&g_nextVisualLock);
+    visual=g_nextVisual;wrist=g_nextWrist;ReleaseSRWLockShared(&g_nextVisualLock);
     const auto now=GetTickCount64();
     if(!visual.valid||visual.kind!=kind||visual.pawn!=(uint32_t)g_playerPawn||visual.weapon!=(uint32_t)Rd(g_weaponObj)||
        now<visual.sampledMs||now-visual.sampledMs>150){note(2);return 0;}
@@ -311,6 +316,12 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
         }
         note(9);return 0;
     }
+    if(g_weaponTraceRigidOrigin){
+        hipknife::V muzzle;
+        if(weaponmuzzle::Position(g_nextAnimation[index],nativeRoot,local,controller,muzzle)&&
+           hipknife::Length(muzzle)<4.f*MetresToUU())
+            g_nextMuzzleStaged={true,kind,visual.pawn,visual.weapon,now,muzzle};
+    }
     bool published=false;
     if(TryAcquireSRWLockExclusive(&g_nextVisualLock)){
         g_nextWitness={true,kind,visual.pawn,visual.weapon,now,socket,clipTracking,nativeRoot};published=true;
@@ -334,10 +345,17 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
         if(visual.phase==weaponreload::Phase::NeedAmmo||visual.phase==weaponreload::Phase::Carrying){
             const auto pose=visual.phase==weaponreload::Phase::Carrying?visual.hand:visual.source;
             armbind::Mat carried;
-            if(!weaponreload::HandMatrix(clipTracking,visual.aim,pose,g_nextClipRenderer[index].SourceCentre(),carried,
-                    visual.phase==weaponreload::Phase::Carrying?hipknife::V{0,0,-.06f}:hipknife::V{})||
-               !weaponreload::SparePalette(g_nextAnimation[index],carried,local,controller,world,regs,replay.spare[replay.count]))return 0;
-            ++replay.count;
+            const bool palm=g_reloadPalmGrip&&visual.phase==weaponreload::Phase::Carrying;
+            // Wait for a successfully drawn glove witness. Never substitute an
+            // AIM-space magazine inside the hand when its wrist is unavailable.
+            const bool placed=palm ? wrist.Current(kind,visual.pawn,visual.weapon,visual.since,now)&&
+                weaponcarry::Matrix(kind,wrist.tracking,carried) :
+                weaponreload::HandMatrix(clipTracking,visual.aim,pose,g_nextClipRenderer[index].SourceCentre(),carried,
+                    visual.phase==weaponreload::Phase::Carrying?hipknife::V{0,0,-.06f}:hipknife::V{});
+            if(placed){
+                if(!weaponreload::SparePalette(g_nextAnimation[index],carried,local,controller,world,regs,replay.spare[replay.count]))return 0;
+                ++replay.count;
+            }
         }
         if(drop){
             auto falling=visual.drop;const float elapsed=float(now-visual.dropMs)*.001f;

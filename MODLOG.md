@@ -57,3 +57,15 @@ full finger-connected cuff indices and cap triangles substituted. Evidence,
 rejected unconstrained triangulation, source hashes and test route are in
 docs/native-glove-cuffs.md. Private geometry/report/preview:
 build/gloves/cuff-repair; extracted assets/cache never committed.
+
+# MAIN rifle carry/shot follow-up — 2026-10-19
+
+Valkyrie native refill now physically works, but user reports wrong shot origin,
+missing rifle VFX, magazine inside glove. Code proves AIM+6cm mount had no palm
+witness and SingleLineCheck moved Start without End. Original PSKs independently
+name muzzle_flash; three wrist fits have zero intersecting triangles (sampled
+containment also checked). Default-OFF native wrist replay/whole-ray translation
+implemented, with draw/restore-qualified identity/age guards. Native rifle FX
+pair is still UNKNOWN; original looping emitter differs from pistol capture.
+No speculative shader expansion or Steam write. Evidence and falsifiers:
+docs/weapon-carry-ray-followup.md; private original assets stay local.

@@ -23,6 +23,9 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "centurion_refill_only.h"
 #include "native_refill_only.h"
 #include "weapon_reload_runtime.h"
+#include "weapon_reload_carry.h"
+#include "weapon_trace_math.h"
+#include "weapon_muzzle_geometry.h"
 #include "weapon_wheel.h"
 #include "ammo_probe.h"
 #include "ammo_layout.h"
@@ -2335,6 +2338,10 @@ struct NextReloadVisual {
 };
 static NextReloadVisual g_nextVisual;
 static weaponreload::Witness g_nextWitness;
+static int g_reloadPalmGrip=0; // default-OFF; measured native wrist, not AIM-space mount
+static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
+static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
+static weaponmuzzle::Witness g_nextMuzzle,g_nextMuzzleStaged;
 static centurionclip::PresentationSafety g_nextPresentation;
 static void InitNextReload();
 static void ReleaseNextReloadGPU();
@@ -2350,7 +2357,7 @@ static void CancelNextReload(){
         g_nextNativeGate.Clear();ReleaseSRWLockExclusive(&g_centurionNativeLock);
     }
     if(TryAcquireSRWLockExclusive(&g_nextVisualLock)){
-        g_nextVisual={};g_nextWitness={};ReleaseSRWLockExclusive(&g_nextVisualLock);
+        g_nextVisual={};g_nextWitness={};g_nextWrist={};g_nextMuzzle={};ReleaseSRWLockExclusive(&g_nextVisualLock);
     }
 }
 static void CancelCenturionInput(){
@@ -17134,7 +17141,16 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         physicalActive=!Rd(g_weaponHolstered)&&centurionclip::Current(physicalVisual.clip,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),physicalNow)&&
             centurionvisual::Time((centurionreload::Phase)physicalVisual.phase,physicalVisual.since,physicalVisual.closed,physicalNow,g_centurionRefillOnly!=0).active;
     }
-    const bool nativeCarry=physicalActive&&physicalVisual.phase==(int)centurionreload::Phase::Carrying;
+    NextReloadVisual nextCarryVisual;bool nextCarry=false;
+    if(g_reloadPalmGrip&&gloves&&TryAcquireSRWLockShared(&g_nextVisualLock)){
+        nextCarryVisual=g_nextVisual;ReleaseSRWLockShared(&g_nextVisualLock);
+        const auto now=GetTickCount64();
+        nextCarry=g_nextNativeMagazine&&nextCarryVisual.valid&&nextCarryVisual.phase==weaponreload::Phase::Carrying&&
+            nextCarryVisual.pawn==(uint32_t)g_playerPawn&&nextCarryVisual.weapon==(uint32_t)Rd(g_weaponObj)&&
+            nextCarryVisual.since&&now>=nextCarryVisual.sampledMs&&now-nextCarryVisual.sampledMs<=150;
+    }
+    const bool centurionCarry=physicalActive&&physicalVisual.phase==(int)centurionreload::Phase::Carrying;
+    const bool nativeCarry=centurionCarry||nextCarry;
     const bool nativeOffKnife = NativeKnifeOffHandEligible();
     const bool offWristAnchor = !wristAnchor && gloves && (nativeOffKnife||nativeCarry) &&
         handValid[0] && handValid[1];
@@ -17397,13 +17413,26 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         float digits[2][5];for(unsigned side=0;side<2;++side)for(unsigned d=0;d<5;++d)
             digits[side][d]=joint&&(int)side==held?g_knifeHandData.fingers[side][d]:g_gloveBlend[side];
         float physicalBlend[2]{g_gloveBlend[0],g_gloveBlend[1]};
-        if(nativeCarry)physicalBlend[0]=centurionphysical::Curl;
+        if(nativeCarry)physicalBlend[0]=nextCarry?weaponcarry::Curl(nextCarryVisual.kind):centurionphysical::Curl;
         g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,physicalBlend,joint?digits:nullptr,joint?held:-1,fingerMask,nativeCarry);
         if(joint&&g_nativeGlovePoseThisDraw){
             const unsigned slot=held?1:18; // resolved exact cooked palette: right wrist51 / left9.
             g_knifeHandPoseThisDraw=armbind::FromGpu(reinterpret_cast<const float(*)[4]>(&changed[slot*3]),g_knifeHandWrist);
             std::memcpy(g_knifeHandLocal.m,local,sizeof(local));
         }
+    }
+    if(nextCarry&&g_nativeGlovePoseThisDraw&&wristSlot[0]>=0){
+        armbind::Mat tracking,chain,actualLocal,actualBase=centurionvisual::Identity(),desired;
+        std::memcpy(actualLocal.m,local,sizeof(local));
+        if(g_thisDrawMoved==1)BuildGunC(actualBase.m);
+        else if(g_thisDrawMoved==2)BuildTmdC(actualBase.m);
+        skeletal::Multiply(chain.m,actualLocal.m,actualBase.m);
+        if(weaponreload::TrackingMap({g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
+             g_baseYaw*(6.2831853f/65536.f),MetresToUU(),tracking)&&
+           weaponcarry::WristTracking(g_nativeGloveRenderer.WristReference(0),
+             reinterpret_cast<const float(*)[4]>(changed+wristSlot[0]*3),chain,tracking,desired))
+            g_nextWristStaged={true,nextCarryVisual.kind,nextCarryVisual.pawn,nextCarryVisual.weapon,
+                nextCarryVisual.since,GetTickCount64(),desired};
     }
     if(physicalActive&&gloves&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount){
         armbind::Mat tracking;
@@ -17420,7 +17449,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             if(!centurionvisual::ReleaseNative(g_centurionRefillOnly!=0,physicalVisual.closed)&&
                g_centurionRightHand.Apply(physicalVisual.clip.pawn,physicalVisual.clip.weapon,physicalVisual.transaction,
                 capture,changed,(unsigned)slots,right,chain,tracking,physicalVisual.aim))InterlockedIncrement(&g_centurionRightHeld);
-            if(nativeCarry&&g_nativeGlovePoseThisDraw&&wristSlot[0]>=0){
+            if(centurionCarry&&g_nativeGlovePoseThisDraw&&wristSlot[0]>=0){
                 armbind::Mat desired;
                 if(centurionphysical::Grip(g_nativeGloveRenderer.WristReference(0),
                     reinterpret_cast<const float(*)[4]>(changed+wristSlot[0]*3),chain,tracking,desired)){
@@ -19573,6 +19602,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // The ordinary path is nSeg == 1 and emits exactly the call it always did.
     float independentSaved[135][4];
     g_centurionGripStaged={};
+    g_nextWristStaged={};
     const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(dev,numVertices,startIndex,primCount,independentSaved) : 0;
     if(FgIndependentHandsCandidate(numVertices, startIndex, primCount) && !independentRegs) {
         nSeg=0;
@@ -19602,6 +19632,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     IDirect3DIndexBuffer9* cuffBuffer=fullCuff?g_nativeCuffRenderer.Ensure(dev,cuffProfile):nullptr;
     const UINT gloveTriangles=cuffBuffer?g_nativeCuffRenderer.Triangles(cuffProfile):g_nativeGloveRenderer.Triangles();
     float nextSaved[16*12];UINT nextReg=0;weaponreload::ReplayPlan nextReplay;
+    g_nextMuzzleStaged={};
     const int nextRegs=t==D3DPT_TRIANGLELIST&&(!g_nextNativeMagazine||
         (!boneRegN&&!independentRegs&&nSeg==1&&segStart[0]==startIndex&&segPrims[0]==primCount))?
         PrepareNextReload(dev,baseVertex,minIndex,numVertices,startIndex,primCount,nextSaved,nextReg,nextReplay):0;
@@ -19663,12 +19694,20 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         g_centurionSocket=cylinderReplay.socket;ReleaseSRWLockExclusive(&g_centurionSocketLock);
     }
     const HRESULT handRestore=independentRegs?g_origSetVSConstF(dev,5,&independentSaved[0][0],independentRegs):S_OK;
+    if(g_reloadPalmGrip&&independentRegs&&SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&
+       g_nextWristStaged.valid&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
+        g_nextWrist=g_nextWristStaged;ReleaseSRWLockExclusive(&g_nextVisualLock);
+    }
     if(g_centurionPhysicalPolish&&independentRegs&&SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&
        g_centurionGripStaged.identity.valid&&TryAcquireSRWLockExclusive(&g_centurionGripLock)){
         g_centurionGrip=g_centurionGripStaged;ReleaseSRWLockExclusive(&g_centurionGripLock);
         InterlockedIncrement(&g_centurionPalmPublished);
     }
     const HRESULT nextRestore=nextRegs?g_origSetVSConstF(dev,nextReg,nextSaved,(UINT)nextRegs):D3D_OK;
+    if(g_weaponTraceRigidOrigin&&SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)&&g_nextMuzzleStaged.valid&&
+       TryAcquireSRWLockExclusive(&g_nextVisualLock)){
+        g_nextMuzzle=g_nextMuzzleStaged;ReleaseSRWLockExclusive(&g_nextVisualLock);
+    }
     if(FAILED(nextRestore)){
         for(unsigned i=0;i<3;++i)InterlockedExchange(&g_nextFault[i],1);
     }
@@ -24267,7 +24306,21 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                 // available for A/B comparison without affecting non-weapon traces.
                 if (InterlockedCompareExchange(&g_traceFromGun, 0, 0)) {
                     float pivot[3]; GunPivotWorld(pivot);
-                    Start[0] += pivot[0]; Start[1] += pivot[1]; Start[2] += pivot[2];
+                    if(g_weaponTraceRigidOrigin){
+                        weaponmuzzle::Witness muzzle;
+                        if(TryAcquireSRWLockShared(&g_nextVisualLock)){
+                            muzzle=g_nextMuzzle;ReleaseSRWLockShared(&g_nextVisualLock);
+                        }
+                        const bool fresh=muzzle.Current((uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64());
+                        if(fresh){const float relative[]{muzzle.relative.x,muzzle.relative.y,muzzle.relative.z};
+                            for(unsigned axis=0;axis<3;++axis)pivot[axis]=g_camPos[axis]+relative[axis]-Start[axis];
+                        }
+                        weapontrace::Translate(Start,End,pivot);
+                        static unsigned notes=0;if(notes++<12)
+                            Log("weapon ray: muzzleWitness=%d kind=%d origin=(%.3f,%.3f,%.3f); direction/spread preserved before controller rotation",
+                                fresh?1:0,int(muzzle.kind),Start[0],Start[1],Start[2]);
+                    }
+                    else {Start[0] += pivot[0]; Start[1] += pivot[1]; Start[2] += pivot[2];}
                 }
                 const float bx = End[0], by = End[1], bz = End[2];
                 RotateTrace(Start, End, dYaw, dPitch);
@@ -33123,6 +33176,10 @@ void LoadIniSettings() {
         g_valkyrieAuthoredGrip);
     g_valkyrieSingleGrip = GetPrivateProfileIntA("Input", "ValkyrieSingleGrip", 0, path) ? 1 : 0;
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
+    g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;
+    g_weaponTraceRigidOrigin=GetPrivateProfileIntA("Input","WeaponTraceRigidOrigin",0,path)!=0;
+    Log("ini: ReloadPalmGrip=%d WeaponTraceRigidOrigin=%d (default OFF; measured wrist mount / preserve translated ray)",
+        g_reloadPalmGrip,g_weaponTraceRigidOrigin);
     g_holsterEnabled = GetPrivateProfileIntA("Input", "HolsterEnabled", 1, path) ? 1 : 0;
     // MAIN 2026-10-15: hip lower and further out (pelvis level, clear of the
     // torso) per user; installed INIs pinning older values need the same
