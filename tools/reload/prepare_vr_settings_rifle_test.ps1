@@ -45,7 +45,12 @@ $targets=[ordered]@{
     'Input/HolsterRadius'='9'
     'Input/HipKnifeLeftCm'='20'
     'Input/HipKnifeRadiusCm'='18'
+    # Preserve the user's approved right-handed Sense layout: Circle is the
+    # manual reload edge, Cross remains health, and stick-up remains jump.
+    'Input/ReloadControlLayout'='1'
     'Input/ValkyrieManualReload'='1'
+    'Input/VolkManualReload'='1'
+    'Input/KasimovManualReload'='1'
     'Input/ReloadRefillOnly'='1'
     'Input/ReloadNativeMagazine'='1'
     'Input/ValkyrieAuthoredGrip'='1'
@@ -79,17 +84,20 @@ $output=$lines -join $newline
 $changes=@()
 foreach($name in $targets.Keys){
     $before=$profile.ini.PSObject.Properties[$name]
+    if($before -and [string]::Equals([string]$before.Value,[string]$targets[$name],[StringComparison]::Ordinal)){
+        continue
+    }
     $changes += [pscustomobject]@{
         key=$name
         before=if($before){$before.Value}else{$null}
         after=$targets[$name]
-        reason='Isolated Valkyrie/VR Settings/VFX/holster PSVR2 candidate; accepted profile restored after test'
+        reason='Three-weapon manual magazine PSVR2 candidate; one weapon tested at a time; accepted profile restored after test'
     }
 }
 $plan=[pscustomobject]@{
     schema='singularityvr-change-plan-v1'
     profileSha256=$profileHash
-    reason='Verify preserved native VFX, safer holster reach, VR pointer and guarded Valkyrie reload'
+    reason='Verify three guarded rifle reloads with the required Circle input layout, while preserving the tested VFX/holster/VR-settings candidate'
     files=@([pscustomobject]@{path='Binaries/d3d9.dll';before=$acceptedDll[0].sha256;after=$dllHash;reason='Clean x86 /O2 candidate'})
     ini=$changes
 }
