@@ -28,7 +28,25 @@ byte overwrite also destroyed the NEXT record. The scope checks and a scoped
 written, so the two-weapon limit itself is STILL OPEN - only the wheel is
 repaired. L1 PASS: 160 policy checks, 105 actual-handler fake-engine checks,
 4+3+5 Python suites, 16 offline preparation checks, 6 lease preflight
-scenarios; x86 PE32 /O2 build PASS. Not yet L3/L4.
+scenarios; the full reload/reload-next-weapon suite (26 C++ programs plus 17
+Python suites) PASS; x86 PE32 /O2 build PASS.
+L3 DEPLOYED: the unsuccessful 2026-10-19 23:03 candidate (A01E3147...) was
+ROLLED BACK to the promoted baseline through
+tools/deploy-singularityvr.ps1 -Action Rollback (postflight PASS; installed
+DLL 7DDAA0AA... and INI B94A4AA7... verified again), then the new candidate was
+installed with the normal runner: installed DLL
+BC81BBAD82EDCD6753DE8F146154259D1382A77BB1A402EF21FBC5B54F7B1376, INI
+60224CA08A8E9B01E299AD4B14A069A1E854F2B5E46ADFBB0B01A86973A74ADC (accepted
+baseline plus Input/KeepAcquiredWeapons=1, Input/WeaponWheelOwnedInventory=1,
+Render/NpcNameScalePct=60, Render/CutsceneNativeHands=1; the accepted
+WeaponWheelDirectSelect=1 is retained), dinput8.dll unchanged. Backup
+deployment/install-backups/20261020-000601 (contains the accepted baseline),
+report deployment/install-reports/20261020-000602.json, private candidate
+build/wheel-followup-candidate-d93dfba. The generic exact-hash restore lease
+(tools/fx/watch_native_muzzle_restore.ps1 -RuntimeDllOnly) is armed against
+that backup, this profile/plan and accepted INI B94A4AA7...; preflight PASS.
+L3/L4 PENDING: the wheel fix is not physically accepted yet, and the two-weapon
+limit is still open.
 
 2026-10-19 promoted combined baseline: user explicitly requested KEEP. Installed
 DLL7DDAA0AA... and INI B94A4AA7... retained; game closed, previous guard exited.
