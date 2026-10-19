@@ -4,6 +4,8 @@
 #include "native_gamepad_enum_probe.h"
 #include "ui_asset_witness.h"
 #include "native_context_cursor.h"
+#include "native_npc_name.h"
+#include "native_owned_inventory.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
@@ -328,6 +330,8 @@ static void Drain(float dt) {
 static void __fastcall Poll(void* self,void*,float dt) {
  ReadableForget();
  UpdateMenu(); // update mode before the game tick/XInput routes the trigger
+ NativeNpcName::Update(); // native GFx calls stay on this engine thread
+ NativeOwnedInventory::Poll(); // bounded actual possession snapshot / queued selection
  ObserveWeaponAssets(); // at most six weapon identities, only the explicit read-only witness
  NativeGamepadEnumProbe::SetContext(VrModeOn() && InterlockedCompareExchange(&g_padEmu,0,0)!=0 &&
      InterlockedCompareExchange(&g_vrMenuClass,0,0)==0);

@@ -46,7 +46,59 @@ warnings remain). Build SHA256:
 It was built with an uncommitted source diff, is not a sealed deployment and is
 NOT the installed/accepted DLL. No visual or animation-completion PASS yet.
 
-## Inventory evidence — implementation still open
+## Followup implementation (not Steam/PSVR2 accepted)
+
+Default-OFF `Input/KeepAcquiredWeapons` scopes a length-preserving suppression of
+the original `ThrowActiveWeapon` expression to the existing interpreter entry
+for `RvInventoryManager.SwitchWeaponByArchetype`, **only** for the current local
+SP pawn's actual inventory manager and the original input thread. It restores
+the 11 bytes in `__finally`, including on SEH unwinding. It does not patch shared
+script for the whole session, enlarge slot arrays, grant weapons, write ammo or
+change NPC inventories. The whole 284-byte script shape, all 27 relocated object
+operands and five FNames must match independent original-package evidence.
+Inlined script-only callers are not claimed covered: the upcoming runtime must
+show the scoped local-pickup log. If it does not, the retention fix is not proven.
+
+`Input/WeaponWheelOwnedInventory` reads the reflected native inventory chain on
+the input thread (500 ms bound, maximum128 items, cycles/foreign owners refused)
+and publishes only a four-gun ownership mask. It initializes icons from actual
+possession after load, not the mesh-observation history. An absent earlier slot
+no longer terminates later icon rendering. Selection queues the audited pawn
+vtable+0xB14 method (168-byte FNV CB797F59504492C3), passing an existing owned
+item's real FName; no native two-slot cycling or granting occurs on this route.
+Guns already lost before this candidate are not retroactively granted. Retention
+across save/load and acquisition of a third/fourth gun remain physical tests.
+
+`Render/NpcNameScalePct=60` uses the original HUD's actual AVM1 instance path
+`_root.txtMsgContainer.npcTextField.nameTxt._xscale` / `_yscale`. HUD RawData
+must be187541 bytes, FNV21ACFC3AD63D0F40. Numeric getter vtable+0x14C is float
+x87 return, full213-byte FNV123BF764C6F43D2A; setter+0x15C accepts float32,
+full183-byte FNV51D61F73642B3837. Undefined, nonfinite or unexpected scales
+are refused. No package, subtitles, hint field or global font modification.
+
+L1:160 policy checks (136 individual opcode/branch mutation refusals),43 tests
+of the actual runtime handler using an own-process fake engine (including SEH
+restoration, wrong owner/thread/name/default-OFF rejection, saved-chain ownership,
+three/four guns, cycle/foreign-owner refusal and no snapshot writes), three Python
+original-operand/wiring tests and three native-action-hands wiring tests PASS.
+These are not runtime or visual acceptance. Native heal/cinematic-hand changes
+from042c967 are included; they retain native draws, not fabricate animations.
+
+`tools/reload/prepare_combined_followups.ps1` prepares only an offline DLL/INI
+change plan against the promoted145-pin profile. It never deploys or launches.
+No old campaign/reload-asset runner is needed: those files are already accepted.
+
+### One uninterrupted physical route (fresh start required)
+
+Load a save, inspect wheel icons before cycling, then acquire a third distinct
+supported gun and use the wheel to select each acquired gun. Confirm no formerly
+owned gun is lost; try manual reload and shooting. Use a medkit while watching
+hands and look at an NPC name. In the helicopter/engine cinematic observe native
+hero hands; after it verify tracked hands and stereo return. Pause/options and
+return-to-menu must remain normal. Close normally, then report; no headset/chat
+switching. Native retention logs and readbacks are collected independently.
+
+## Historical inventory evidence — before implementation above
 
 Read-only inspection of the independently decoded original RvGame package shows
 `RvGameSharedPlayerController.mWeaponSlots` is a four-element NameProperty.

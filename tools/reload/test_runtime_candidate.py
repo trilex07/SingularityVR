@@ -48,7 +48,9 @@ class Tests(unittest.TestCase):
         # Source wiring contract only: actual producer identity still needs L3.
         source = (ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf-8')
         block = source.split('if(g_centurionReloadProbe||g_centurionNativeGuardMode||NextReloadEnabled()){', 1)[1]
-        block = block.split('if (InterlockedCompareExchange(&g_cutsceneAuto', 1)[0]
+        # Stop at this branch's own closing brace, not an unrelated later
+        # cinematic branch: retention has a separate default-OFF bootstrap.
+        block = block.split('\n    }\n', 1)[0]
         for required in ('attempts<12', '++tick%240==0&&g_camera',
                          'if(next&&(g_funcOffset<0||!g_hudObject))missing=true;',
                          'if(next&&g_funcOffset<0)FindProcessInternal();',

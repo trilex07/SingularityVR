@@ -112,3 +112,6 @@ offline-deliverables/
 
 # Private accepted installation snapshots contain game-derived binaries/config.
 /deployment/accepted-combined-20261019/
+/build/combined-followups/
+/build/combined-followups-candidate-*/
+/build/followup-prep-tests-*/

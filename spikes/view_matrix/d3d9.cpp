@@ -6497,6 +6497,8 @@ volatile LONG g_modalSlotsActive=0,g_modalSlotsCapturePending=0,g_vrModalDialogS
 volatile LONG g_vrUiDirectCanvas=0,g_vrUiNoteCanvas=0,g_contextPointerProjection=0;
 volatile LONG g_contextCursorSuppress=0,g_contextCursorSuppressLogged=0;
 volatile LONG g_contextCursorNative=0;
+volatile LONG g_npcNameScalePct=100;
+volatile LONG g_keepAcquiredWeapons=0,g_ownedWeaponWheel=0;
 static float g_vrMenuTextureScore=1e9f;
 static uipointer::VrMenuPanel g_vrMenuPanel;
 static bool g_vrMenuPanelValid=false;
@@ -11347,7 +11349,12 @@ void SyncXRInput(XrTime displayTime) {
             const weaponwheel_direct::Catalog view{ secs, (int)n, cyc, (int)m };
             const LONG curV = Rd(g_gunVerts);
             const LONG tgtV = weaponwheel_direct::TargetVertsForSector(view, (int)sel);
-            if (g_weaponWheelObserved) {
+            if (Rd(g_ownedWeaponWheel)) {
+                // Select an actually possessed item on the engine input thread.
+                // Native two-slot cycling cannot reach retained extra guns.
+                pulses=0;
+                NativeOwnedInventory::Queue((int)tgtV);
+            } else if (g_weaponWheelObserved) {
                 pulses=wheelseek::Begin(g_weaponWheelSeek,curV,tgtV,GetTickCount64())?1:0;
                 Log("weapon wheel: observed seek sector=%ld current=%ld target=%ld firstPulse=%ld",sel,curV,tgtV,pulses);
             } else if (tgtV > 0 && tgtV != curV) {
@@ -24765,7 +24772,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch || nativefx::Probe() || g_centurionReloadProbe) && Stack) {
+    if ((censusOn || routeTwo || cineWatch || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons)) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
         if (fnIdx < 0) InterlockedIncrement(&g_peUnnamed);
@@ -25237,7 +25244,8 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         }
     }
 
-    g_origProcessEvent(self, edx, Stack, Result);
+    if (!NativeOwnedInventory::InvokeRetained(self,edx,Stack,Result,fnIdx,(int)Rd(g_nodeOffset),g_origProcessEvent))
+        g_origProcessEvent(self, edx, Stack, Result);
 
     // Mode 9's window closes here. Restoring the value that was READ rather than a cached head
     // means a nested fire function (StartFire -> BeginFire -> FireAmmunition) puts back the hand
@@ -27943,6 +27951,10 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     bool slotNamed[8]{};
     for (int i = 0; i < slots && i < 8; ++i) {
         const long pv = slotVerts[i];
+        if (Rd(g_ownedWeaponWheel)) {
+            slotNamed[i]=(NativeOwnedInventory::Mask() & inventoryretention::WeaponBit((int)pv))!=0;
+            continue;
+        }
         if (pv <= 0 || pv == heldVerts) { slotNamed[i] = true; continue; }
         for (int k = 0; k < 8; ++k) {
             if (seenCopy[k] == pv) { slotNamed[i] = true; break; }
@@ -28068,7 +28080,9 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
                 dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
                 dev->SetTexture(0, g_hudAtlasTex);
                 dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
-                for (int i = 0; i < slots && i < 8 && slotIcons[i] && slotNamed[i]; ++i) {
+                for (int i = 0; i < slots && i < 8; ++i) {
+                    // An empty earlier slot must not hide later acquired guns.
+                    if (!slotIcons[i] || !slotNamed[i]) continue;
                     const float c = wheel_layout::SectorCenter(i, slots);
                     float ix = 0, iy = 0;
                     wheel_layout::WedgePoint(fx, fy, (float)m.iconR, c, ix, iy);
@@ -29886,6 +29900,12 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 attempts,g_origProcessEvent);
             if(next)Log("next reload: bootstrap attempt=%u FuncVoteOffset=%d HUD=%08X (readiness only, NOT runtime proof)",
                 attempts,g_funcOffset,(unsigned)g_hudObject);
+        }
+    }
+    if (Rd(g_keepAcquiredWeapons) && (!g_origProcessEvent || !g_processInternal || g_hookedAt!=g_processInternal)) {
+        static startup::Retry ownedHookRetry;
+        if (ownedHookRetry.Due(GetTickCount64(),g_camera!=0,true)) {
+            ResolveScriptNames();FindProcessInternal();RepointScriptHook();
         }
     }
     if (InterlockedCompareExchange(&g_cutsceneAuto, 0, 0)) {
@@ -32636,6 +32656,9 @@ void LoadIniSettings() {
     g_cutsceneWorldScreen=GetPrivateProfileIntA("Render","CutsceneWorldScreen",0,path)?1:0;
     g_menuAssetWitness=GetPrivateProfileIntA("Diagnostic","MenuAssetWitness",0,path)?1:0;
     g_contextCursorNative=GetPrivateProfileIntA("Render","ContextCursorNative",0,path)?1:0;
+    g_npcNameScalePct=std::clamp((int)GetPrivateProfileIntA("Render","NpcNameScalePct",100,path),40,100);
+    g_keepAcquiredWeapons=GetPrivateProfileIntA("Input","KeepAcquiredWeapons",0,path)?1:0;
+    g_ownedWeaponWheel=GetPrivateProfileIntA("Input","WeaponWheelOwnedInventory",0,path)?1:0;
     {
         char vs[32]{},ps[32]{};
         GetPrivateProfileStringA("Diagnostic","NativeMuzzleVSHash","",vs,sizeof(vs),path);

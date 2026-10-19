@@ -9,7 +9,11 @@ or previous restore runner. See docs/combined-acceptance-followups.md.
 Next combined candidate is NOT installed: retain all acquired weapons, initialize
 wheel icons from saved ownership, shrink NPC names, native heal animation and
 native cinematic hero hands. Animation implementation has offline L1/L2 only;
-inventory/native UI investigation remains open. No new launch authorized yet.
+inventory/native UI now have default-OFF guarded implementations and L1 tests.
+Local pickup drop suppression is scoped to the original interpreter call; the
+ownership snapshot/direct selector reads actual inventory, not locker availability.
+NPC sizing uses audited native GFx numeric methods, not the rejected repack.
+Combined followup regression/build/sealing in progress. No new launch yet.
 
 ### Historical test records (superseded by promotion above)
 
