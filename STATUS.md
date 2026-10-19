@@ -1,6 +1,16 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-19 22:04 original-RvGame control LIVE: PID28080, same DLL7DDAA0AA...,
+INI AC6290B6..., nine reload assets and119 campaign delta files installed and
+backup hashes verified. Original RvGame4153C488... kept; NPC-size package omitted.
+Log confirms SteamVR/OpenXR, OpenXR ready and session running. This narrows the
+startup regression to the NPC-package scope, not its internal cause. L4 pending.
+Owned guardPID28880: no active-session timeout; restore after exit/30s quiet.
+Private receipt build/next-weapon-reload/live-combined-20261019-03/receipt.json;
+core backup deployment/install-backups/20261019-220218. Do not run another
+deployment or stale restore while this session is active.
+
 2026-10-19 live combined attempt: first pre-launch guard conflict was fixed with
 an exact composed allowance for two profile-pinned Polish manifests (accepted
 profile/core plan unchanged; synthetic fail-closed regression PASS). Commit

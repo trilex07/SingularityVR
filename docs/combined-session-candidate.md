@@ -108,6 +108,10 @@ the offline decoder roundtrip alone does NOT establish engine load acceptance.
 The next controlled boot keeps the original RvGame.xxx and otherwise identical
 candidate scopes. Smaller NPC names are withheld pending that control and an
 isolated producer investigation; do not call the entire package L3_PASS.
+Control PID28080 subsequently reached device creation, SteamVR/OpenXR ready and
+session running with the exact original RvGame4153C488... and otherwise identical
+candidate bytes. Scope isolated; internal package-load mechanism still unknown.
+Live receipt: build/next-weapon-reload/live-combined-20261019-03/receipt.json.
 
 2026-10-19 pre-launch integration correction: the first deployment was fully
 restored before any game launch because the core postflight correctly rejected
