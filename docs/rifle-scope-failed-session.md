@@ -44,3 +44,26 @@ independently verified restored after game exit. Do not promote this candidate.
 
 No shader constants, accepted particle matches, packages, voices, assets or
 installed configuration changed. No new Steam session requested yet.
+
+## Separate render/resolve texture follow-through
+
+Archived FTextureRenderTarget2DResource.InitDynamicRHI proves separate handles:
+creation stores TextureRHI+64h, passes that handle to targetable-surface creation,
+then stores SurfaceRHI+48h. The owned capture's full737-byte render body finishes
+the renderer and invokes the RHI resolve operation before returning. Thus a
+GetContainer relationship is not the contract: a targetable surface may be
+separate from the sampled texture. Existing ExactTexture validates BOTH native
+wrapper identities and COM pointers without requiring that relationship.
+
+Hypothesis: GetContainer silently rejects the separate render surface. Consume
+the exact resource's TextureRHI COM pointer only after ExactTexture succeeds;
+AddRef for this draw, validate its512-square level0, and sample RGB from that
+actual texture level, not merely from the drawing surface. Require the exact
+owned native render callback to finish after drawing before presenting it.
+No extra resolve/copy, borrowed texture or pointer inferred from dimensions.
+Falsifier: this contract refuses, resolved texture contains no RGB, or aperture
+draw succeeds but remains invisible. Keep stage receipts and30-frame cutoff.
+This remains an unverified producer/consumer repair, not a physical scope pass.
+Full resource initializer645/65B4A8A44C0157E5 is independently audited offline
+and fingerprinted before runtime texture access; storage instructions at+BBh
+and+159h prove the two distinct fields. No hardcoded callable address added.

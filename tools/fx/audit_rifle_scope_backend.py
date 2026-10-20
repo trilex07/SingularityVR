@@ -175,6 +175,15 @@ def audit(exe, capture, engine, rifle):
     isolation = block_contract(text, base, render, 737, 0x9CCA1CFB4E9B6123)
     isolation.update(factory_rva=factory-pe.base, constructor_rva=ctor-pe.base, render_rva=render-pe.base,
                      target_field=0x10, note='own target equality required; not a size heuristic')
+    resource_marker = bytes.fromhex('8bf18b466033db3998ac000000')
+    resource_init = base + only(list(occurrences(text, resource_marker)), 'RT resource init') - 0x28
+    resolve = block_contract(text, base, resource_init, 645, 0x65B4A8A44C0157E5)
+    at = resource_init-base
+    if (text[at+0xbb:at+0xbe] != bytes.fromhex('8d7e64') or
+            text[at+0x159:at+0x15c] != bytes.fromhex('8d4e48')):
+        raise ValueError('separate TextureRHI / SurfaceRHI storage contract')
+    resolve.update(init_rva=resource_init-pe.base, texture_rhi=0x64, surface_rhi=0x48,
+                   note='separate handles; no surface GetContainer dependency')
     weapon = class_vtable(pe, text, base, 'RvWeaponShared')
     # Native default ctor writes pure-interface tables first, implementations
     # last. Do not confuse it with the destructor's reversed sequence.
@@ -233,7 +242,7 @@ def audit(exe, capture, engine, rifle):
         exe_sha256=hashlib.sha256(pe.data).hexdigest(),
         text_sha256=hashlib.sha256(text).hexdigest(), methods=methods,
         reflected_contract=contract, helper_contract=helpers, rifle_fx=templates,
-        capture_isolation=isolation, tracer_source=tracer_source, native_loop_materials=materials,
+        capture_isolation=isolation, resolve_texture=resolve, tracer_source=tracer_source, native_loop_materials=materials,
         warning='No live execution, completed RTT pixels, native emitter identity or PSVR2 proof.')
 
 

@@ -17,6 +17,12 @@ local native muzzle receipt rather than relying solely on capped global pool;
 scope records silent refusal stages and detaches after30 completed frames
 without successful aperture draw. These are recovery/instrumentation changes,
 NOT a proven optical or ballistic fix. See docs/rifle-scope-failed-session.md.
+Further offline RE proves separate render SurfaceRHI+48 / sample TextureRHI+64
+in the complete645-byte resource initializer (65B4A8A44C0157E5). Scope now
+uses the exact validated resolved texture rather than assuming surface.GetContainer,
+and requires completed own native render/resolve before presentation. Actual
+sample-level RGB is measured. This IS a producer/consumer repair candidate,
+still NOT physical scope/aim acceptance. Earlier7bb9df7 artifact superseded.
 
 ### Prior candidate (physically rejected above)
 

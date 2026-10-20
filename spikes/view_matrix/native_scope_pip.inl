@@ -25,6 +25,7 @@ static uintptr_t completedTarget=0;
 static ULONGLONG completedMs=0;
 static volatile LONG presentationFault=0;
 static scopepip::PresentationBudget presentationBudget;
+static volatile LONG resolvedTarget=0;
 using RenderCapture=void (__thiscall*)(void*,void*);
 static RenderCapture renderOriginal=nullptr;
 static void __fastcall RenderHook(void* self,void*,void* family){
@@ -42,7 +43,15 @@ static void __fastcall RenderHook(void* self,void*,void* family){
     // Capture changes engine GPU state legitimately. Never apply a state block
     // across it (that would disagree with UE3's RHI cache). Next main-view
     // constants must revalidate; optical matrices cannot survive as eye data.
-    if(lease.own){InvalidateCamMats();g_camMatrixBound=false;}
+    if(lease.own){
+        InvalidateCamMats();g_camMatrixBound=false;
+        // Full native callback includes the RHI resolve. An RT unbind alone
+        // can occur BEFORE this texture has received the completed scene.
+        if(g_scopeNativeDraws!=draws){
+            InterlockedExchange(&resolvedTarget,(LONG)actual);
+            completedMs=GetTickCount64();
+        }
+    }
     if(receipt){++count;
         Log("scope PiP: own native render isolation target=%08X depth=%u nativeDraws=%u rawUploads=%u elapsedMs=%llu [execution only, not alignment]",
             (unsigned)actual,g_scopeNativeDepth,g_scopeNativeDraws-draws,g_scopeNativeUploads-uploads,GetTickCount64()-begin);}
@@ -256,6 +265,7 @@ static void Tick(){
 }
 static void ResetGpu(){
     completion.Reset();completedTarget=0;completedMs=0;
+    InterlockedExchange(&resolvedTarget,0);
     if(state){state->Release();state=nullptr;}
 }
 static void BindSurface(IDirect3DSurface9* surface){
@@ -315,7 +325,8 @@ static void Draw(IDirect3DDevice9* dev){
     if(!g_sniperPip||!shadowNativeUP)return;
     const auto f=Snapshot();const auto now=GetTickCount64();
     const auto rt=(uintptr_t)(uint32_t)Rd(target);
-    if(!Current(f)||!rt||rt!=completedTarget||!completion.epoch||now<completedMs||now-completedMs>150)return;
+    if(!Current(f)||!rt||rt!=completedTarget||rt!=(uintptr_t)(uint32_t)Rd(resolvedTarget)||
+       !completion.epoch||now<completedMs||now-completedMs>150)return;
     struct PresentationAttempt {
         bool shown=false;
         ~PresentationAttempt(){
@@ -325,21 +336,35 @@ static void Draw(IDirect3DDevice9* dev){
     } attempt;
     const auto resource=PauseRttProbe::Pointer(rt+0xa4);
     auto* surface=PauseRttProbe::NativeSurface(rt,resource);if(!surface){PresentationRefused(1);return;}
-    ContentReceipt(dev,surface);
-    IDirect3DTexture9* texture=nullptr;
-    const auto containerHr=surface->GetContainer(__uuidof(IDirect3DTexture9),(void**)&texture);
-    if(FAILED(containerHr)||!texture){
-        static bool reported=false;if(!reported){reported=true;
-            Log("scope PiP: container identities target=%08X resource=%08X surface=%p textureRhi=%08X textureCom=%08X",
-                (unsigned)rt,(unsigned)resource,(void*)surface,
-                (unsigned)PauseRttProbe::Pointer(resource+0x64),
-                (unsigned)PauseRttProbe::Pointer(PauseRttProbe::Pointer(resource+0x64)-4));}
-        PresentationRefused(2,containerHr);return;}
-    if(!PauseRttProbe::ExactTexture(rt,resource,texture,surface)){PresentationRefused(3);texture->Release();return;}
+    const auto resourceMethod=PauseRttProbe::Pointer(PauseRttProbe::Pointer(resource)+4);
+    static uintptr_t validatedResourceMethod=0;
+    if(resourceMethod!=validatedResourceMethod){
+        if(!CodeContract("resource/separate-render-resolve",resourceMethod,645,0x65B4A8A44C0157E5ull)){
+            PresentationRefused(16);return;
+        }
+        validatedResourceMethod=resourceMethod;
+    }
+    // InitDynamicRHI owns a render surface AND a resolved texture. Surface
+    // GetContainer is not guaranteed for a separately allocated targetable
+    // surface. Validate exact native wrappers/COM identities BEFORE any call
+    // through the texture pointer; dimensions alone never authorize it.
+    const auto textureRhi=PauseRttProbe::Pointer(resource+0x64);
+    auto* texture=textureRhi>=12 ? (IDirect3DTexture9*)PauseRttProbe::Pointer(textureRhi-4):nullptr;
+    if(!PauseRttProbe::ExactTexture(rt,resource,texture,surface)){PresentationRefused(3);return;}
+    texture->AddRef();
     // The last UE3 target is NOT necessarily the submitted eye backbuffer.
     // D3DSBT_ALL does not capture RT/DS. Use the same tested explicit target
     // guard as the custom hands, and bypass CPU-side observation hooks.
     struct TextureRef {IDirect3DTexture9* value;~TextureRef(){value->Release();}} textureRef{texture};
+    D3DSURFACE_DESC sampled{};
+    const auto textureHr=texture->GetLevelDesc(0,&sampled);
+    if(FAILED(textureHr)||sampled.Width!=512||sampled.Height!=512){PresentationRefused(2,textureHr);return;}
+    // Bounded readback now measures the SAMPLEABLE resolved texture, not just
+    // content in a potentially separate drawing surface.
+    IDirect3DSurface9* sampledSurface=nullptr;
+    if(SUCCEEDED(texture->GetSurfaceLevel(0,&sampledSurface))&&sampledSurface){
+        ContentReceipt(dev,sampledSurface);sampledSurface->Release();
+    }
     IDirect3DSurface9* back=nullptr;
     const auto backHr=dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back);
     if(FAILED(backHr)||!back){PresentationRefused(4,backHr);return;}

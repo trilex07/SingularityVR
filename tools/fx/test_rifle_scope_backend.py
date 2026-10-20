@@ -56,7 +56,7 @@ class NativeBackendTests(unittest.TestCase):
         backend = (ROOT/'spikes/view_matrix/native_scope_pip.inl').read_text()
         for guard in ('CodeContract("wrapper/Create",create,496', 'PauseRttProbe::ExactTexture',
                       'completion.epoch', 'gloves::StateGuard<> guard', 'guard.Restore()',
-                      'texture->Release()', 'if(running)return;', 'int(eye)==f.eye'):
+                      '~TextureRef(){value->Release();}', 'if(running)return;', 'int(eye)==f.eye'):
             self.assertIn(guard, backend)
         self.assertNotIn('StretchRect', backend)
         self.assertNotIn('g_vfxEyeMat', backend)
@@ -89,7 +89,12 @@ class NativeBackendTests(unittest.TestCase):
         backend = (ROOT/'spikes/view_matrix/native_scope_pip.inl').read_text()
         self.assertIn('Current(frame)&&!Rd(presentationFault)', backend)
         self.assertIn('presentationBudget.Observe(true,shown)', backend)
-        self.assertIn('PresentationRefused(2,containerHr)', backend)
+        self.assertIn('PresentationRefused(2,textureHr)', backend)
+        self.assertNotIn('surface->GetContainer(', backend)
+        self.assertIn('rt!=(uintptr_t)(uint32_t)Rd(resolvedTarget)', backend)
+        self.assertIn('texture->GetSurfaceLevel(0,&sampledSurface)', backend)
+        self.assertIn('0x65B4A8A44C0157E5ull', backend)
+        self.assertLess(backend.index('if(!PauseRttProbe::ExactTexture'), backend.index('texture->AddRef()'))
         self.assertIn('if(opticalEye&&SUCCEEDED(hr))attempt.shown=true', backend)
         rifle = (ROOT/'spikes/view_matrix/native_rifle_fx.inl').read_text()
         self.assertIn('PauseRttProbe::Pointer(received+0x90)==weapon', rifle)
