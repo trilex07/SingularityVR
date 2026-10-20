@@ -23,6 +23,11 @@ uses the exact validated resolved texture rather than assuming surface.GetContai
 and requires completed own native render/resolve before presentation. Actual
 sample-level RGB is measured. This IS a producer/consumer repair candidate,
 still NOT physical scope/aim acceptance. Earlier7bb9df7 artifact superseded.
+Clean6ca2a4a x86 PE32 /O2 build PASS: DLLE5557636...A0FD0. Candidate
+build/combined-followups/resolved-texture-6ca2a4a, seven-key INI delta only.
+Native FX/scope tests, independent full resource audit, complete reload suite,
+39 preparation /6 lease fixtures and145-pin Install -WhatIf PASS. No Steam
+writes or launch; fresh start required. Exact hashes/scripts in evidence doc.
 
 ### Prior candidate (physically rejected above)
 

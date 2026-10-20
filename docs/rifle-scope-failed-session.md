@@ -67,3 +67,35 @@ This remains an unverified producer/consumer repair, not a physical scope pass.
 Full resource initializer645/65B4A8A44C0157E5 is independently audited offline
 and fingerprinted before runtime texture access; storage instructions at+BBh
 and+159h prove the two distinct fields. No hardcoded callable address added.
+
+## Offline delivery, not physical acceptance
+
+Clean code6ca2a4a518ffa79a70e57327850a4946a24769ee, x86 PE32 /O2:
+DLL E5557636EBF03DA2DED909EA5EC0CC060A85A059EC881BE35342809545AA0FD0.
+Private candidate build/combined-followups/resolved-texture-6ca2a4a:
+INI BF2273049DF69B9714A26B54F7C38A94BA28495F881E50B4EAC80212F5AC4006,
+plan FC4A1FFB4C6074AE7079A384E1ED878510B9CA5EEF8FDCA89683C5FBD9668DB9.
+The earlier feedback-recovery-7bb9df7 directory is superseded; do not deploy it.
+
+PASS: tools/fx/test-native-muzzle.ps1 (nine native /O2 fixtures plus Python),
+tools/reload/test-centurion.ps1 -PreparedRoot build/next-weapon-reload/prepared,
+tools/tests/test-combined-followups-prep.ps1 (39 fake checks),
+tools/tests/test-followup-lease.ps1 (six fake scenarios),
+tools/fx/audit_rifle_scope_backend.py against owned PE/text/Engine.u/Valkyrie.u,
+production build and accepted145-pin deployment Install -WhatIf (zero writes).
+Logs use build/combined-followups/feedback-recovery-* and resolved-texture-*.
+No physical acceptance, no merge, installed accepted hashes unchanged.
+
+Next MAIN gate requires fresh user start, current process/accepted-profile
+checks, fresh timestamped backup and reviewed guard READY. No old backup/guard
+reuse. Proposed short route, with NO headset-to-chat switching:
+
+1. Load the save, allow ten seconds for gameplay; fire Valkyrie into open space
+   and near a distinct distant target, then Circle, shoulder ammo, insert.
+   Check native R1 does not substitute for manual reload.
+2. Switch to Kasimov, repeat Circle/shoulder/insert, raise/lower scope briefly.
+   Stop early on discomfort; no need to hold an invisible low-FPS scope.
+3. Close normally. MAIN reads HUD recovery/native block/source-hook receipts,
+   bounded actual collision-ray origin/direction vs accepted aim, exact sampled
+   texture RGB/aperture/refusal and any capture-disable receipt, then verifies
+   guard restore hashes. User reports muzzle/aim, reload and scope/FPS once.
