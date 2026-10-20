@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+## 2026-10-20 physical2016: optical direction still unresolved
+
+User reports scope present but not looking where the weapon aims; Valkyrie
+also inaccurate (native spread versus transform mismatch not distinguished).
+Rest reported OK; do not infer precise FPS or global physical acceptance.
+Candidate380F1521...FA1EB9 ran as Steam PID42312 with OpenXR. Preserved full
+private log calibrated-optics-1e27b94/physical-feedback-2016.log proves calibrated
+projection and original L3 toggle/energy gate execution, NOT ballistic alignment.
+Fresh backup20261020-201550 restored; actual installed DLL7A1DE585...9495 and
+INI60224CA0...4ADC independently hashed after feedback. This supersedes the
+ready/not-deployed wording below. Next investigation: compare rendered barrel,
+capture-camera and native shot axes; do not guess another angular offset.
+
 ## 2026-10-20 calibrated optics / native L3 follow-up
 
 Implemented default-OFF ScopeOpticalCalibration and SniperOpticalSlowTime.

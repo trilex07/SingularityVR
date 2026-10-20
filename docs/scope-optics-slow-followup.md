@@ -86,3 +86,15 @@ no Steam writes/launch. Ten scoped INI deltas retain the preceding optical/
 rifle/steady candidate and add just the two flags above; DLL only, no assets.
 READY_FOR_PHYSICAL_ACCEPTANCE; require fresh start and a fresh verified lease.
 Installed DLL/INI independently still match7A1DE585...9495/60224CA0...4ADC.
+
+## Physical2016 result (supersedes ready-only receipt)
+
+Deployed380F1521...FA1EB9 with verified fresh backup20261020-201550 and guard;
+Steam PID42312, OpenXR running/rendering confirmed. User: scope present but its
+view does not match weapon aim; Valkyrie also inaccurate; rest OK. No measured
+native-spread attribution, no claim of full scope acceptance or guaranteed FPS.
+Private physical-feedback-2016.log records calibrated4x projection, changing
+owned-proxy view, and native L3 toggle energy5.000/dilation0.100 plus native
+energy aim gate. These prove execution, not camera/barrel/shot alignment.
+Guard restored baseline; independently rehashed DLL7A1DE585...9495 and
+INI60224CA0...4ADC. No new candidate deployed after feedback.
