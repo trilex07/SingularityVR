@@ -83,3 +83,20 @@ reload and pause regression, normal exit. Stop immediately on wrong stereo,
 black silhouettes or discomfort. MAIN reads bounded execution, RGB/aperture and
 source receipts, verifies restore hashes, then compares with physical feedback.
 Neither source-call success nor aperture HRESULT proves alignment or smoke.
+
+## Prepared delivery
+
+Clean code `94c56d123e3ada5a78d11257acbc9c2b1c11208e`, pushed to the branch
+above (no merge). Production x86 PE32 `/O2`, no extra performance instrumentation,
+clean build manifest. Private candidate:
+`build/combined-followups/optical-isolation-94c56d1`.
+
+- DLL SHA256 `9F6707D3B7A3D874B836210D15E3844BB93003EFC051347E2720532FA27505E5`
+- INI SHA256 `BF2273049DF69B9714A26B54F7C38A94BA28495F881E50B4EAC80212F5AC4006`
+- Change plan SHA256 `94242EF544C829F3BC6A94E016019A96002EB686F882C9472835F0BA1796D8AC`
+
+Official deployer `Install -DllOnly -IncludeIni -WhatIf` with the exact accepted
+profile and change plan PASS: 145-pin baseline checked, no Steam writes. Actual
+installed DLL/INI independently rehashed and still match the accepted values
+above. Candidate flags default OFF in code; preparation enables the measured
+experiment explicitly. This is L1/L2 preparation, not native-runtime/PSVR2 PASS.

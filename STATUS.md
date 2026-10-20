@@ -17,6 +17,10 @@ Bounded enclosed draw/upload counts distinguish execution from mere hook entry.
 Native authored smoke presence proven; GPU smoke identity/visibility remains
 OPEN, no widened shader guesses. See docs/rifle-scope-render-isolation.md.
 No physical fix claim; older delivery history below remains historical.
+Clean94c56d1 x86 PE32 /O2 L2 PASS; DLL9F6707D3...505E5, private candidate
+build/combined-followups/optical-isolation-94c56d1. Seven-key scoped INI delta,
+145-pin Install -WhatIf PASS (no writes). Branch pushed; no merge/deployment.
+Fresh user start required. Exact artifact/INI/plan hashes in the evidence doc.
 
 ### Previous delivery (subsequently physically rejected above)
 
