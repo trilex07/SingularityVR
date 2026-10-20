@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+## 2026-10-20 physical1938: optical scope BROKEN / HUD gates accepted
+
+User confirms contextual health/ammo hiding, but no perceived magnification,
+FPS loss and no L3 sniper slow time. R1 steadiness not explicitly accepted.
+DLL0DF06FD1...5BB4AB, Steam PID4940; private complete log preserved under
+steady-hud-6815d62/physical-feedback-1938.log. See docs/weapon-steady-hud.md
+for measured native capture CPU cost and separate projection/ADS hypotheses.
+No claim that fixed20deg is calibrated zoom, or that capture alone explains
+all frame loss. Independently verified game exit and restored baseline
+DLL7A1DE585...9495 / INI60224CA0...4ADC. This supersedes ready-only prose below.
+
 ## 2026-10-20 controller steady / contextual HUD follow-up
 
 Latest native-aperture137143d physical result: user says "jest okej"; requests

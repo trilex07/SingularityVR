@@ -1,5 +1,38 @@
 # Controller steady aim and contextual HUD — 2026-10-20
 
+## Physical1938 result — scope reopened, NOT accepted
+
+DLL0DF06FD1...5BB4AB ran through Steam PID4940. User confirms health hiding
+with support and ammo hiding at lens, but reports FPS loss and a flat scope
+image with no perceptible magnification; L3 does not slow time. R1 steadiness
+itself was not explicitly accepted. Preserve the full private log at
+`build/combined-followups/steady-hud-6815d62/physical-feedback-1938.log`.
+
+Observed native scope callback CPU means include2.189–3.925ms, peaks up to
+5.409ms in the targeted excerpt; these exclude GPU execution. This proves
+extra capture work, NOT sole responsibility for every FPS loss or a measured
+GPU bottleneck. WeaponSteady routing logged held0/1 with twoHand1/sniper1.
+
+Source facts: own capture uses a fixed20-degree FOV,512x512, and the whole
+texture maps to the lens aperture. This is not calibrated magnification;
+its apparent enlargement depends on the displayed lens angular size. No
+runtime projection receipt yet proves the requested20deg reaches the final
+capture projection. Do not just reduce resolution or guess a new FOV.
+PiP explicitly writes eligible Kasimov LT=0, bypassing native ADS. The native
+description requires scope-up for [dash]/L3 slow time; ADS-dependent gating is
+a supported hypothesis, NOT a proven slow-time execution-path diagnosis.
+
+Next: audit capture projection producer/consumer and native scoped slow-time
+gate, then isolate optical magnification/capture cost from controller filtering.
+Falsifiers: actual rendered FOV differs from component FOV; or slow-time ignores
+ADS state and fails earlier in input routing. Do not turn on fullscreen ADS
+blindly: it can reintroduce fullscreen zoom/camera/weapon animation conflicts.
+
+Guard193753 reports restored. Independent installed hashes confirmed
+DLL7A1DE5854D1EC8635EE77200E3A39F0D4256C3A73ED6A69E99D3C26417B69495 /
+INI60224CA08A8E9B01E299AD4B14A069A1E854F2B5E46ADFBB0B01A86973A74ADC;
+no Singularity process remained. No new candidate installed in response.
+
 ## Evidence / hypothesis / falsifier
 
 User accepted the native-aperture scope round broadly ("jest okej"), then
