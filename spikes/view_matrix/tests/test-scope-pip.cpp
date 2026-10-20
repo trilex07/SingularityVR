@@ -101,6 +101,16 @@ int main(){
     assert(!aperture.Current(1,3,200,6488,3308));
     assert(!aperture.Current(1,2,99,6488,3308));
     assert(!aperture.Current(1,2,200,6488,2688));
+    const std::uintptr_t spreadSites[3]{0x136,0x236,0x333};
+    for(auto site:spreadSites){
+        assert(scopepip::SpreadAimAllowed(true,true,site,spreadSites,1,1));
+        assert(!scopepip::SpreadAimAllowed(false,true,site,spreadSites,1,1));
+        assert(!scopepip::SpreadAimAllowed(true,false,site,spreadSites,1,1));
+        assert(!scopepip::SpreadAimAllowed(true,true,site,spreadSites,2,1));
+        assert(!scopepip::SpreadAimAllowed(true,true,site,spreadSites,0,0));
+    }
+    assert(!scopepip::SpreadAimAllowed(true,true,0,spreadSites,1,1));
+    assert(!scopepip::SpreadAimAllowed(true,true,0x137,spreadSites,1,1));
     unsigned depth=0;
     {scopepip::RenderLease off(depth,false,1,1);assert(!depth);}
     {scopepip::RenderLease foreign(depth,true,1,2);assert(!depth);}

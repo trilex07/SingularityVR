@@ -218,15 +218,22 @@ static bool Current(const scopepip::Frame& f){
 // PiP deliberately does NOT set native ADS: that would alter the main camera,
 // hand pose and full-screen postprocess. Native slow-time's energy tick has one
 // IsAiming call which otherwise cancels it immediately. Substitute optical aim
-// ONLY at that audited call site, for the local pawn and a fresh optical frame.
+// Only audited energy/spread call sites, local pawn and fresh optical frame.
 using AimQuery=int (__thiscall*)(void*);
 static AimQuery aimOriginal=nullptr;
 static uintptr_t energyAimReturn=0,slowWeapon=0;
+static uintptr_t spreadAimReturns[3]{};
 using SlowAction=void (__thiscall*)(void*);
 static SlowAction slowToggle=nullptr,slowStop=nullptr;
 static bool slowFailed=false;
 static int __fastcall OpticalAimQuery(void* self,void*){
     const auto caller=(uintptr_t)_ReturnAddress();
+    if(g_sniperOpticalAccuracy&&scopepip::SpreadAimAllowed(true,Current(Snapshot()),
+       caller,spreadAimReturns,(uintptr_t)self,g_playerPawn)){
+        static unsigned receipts=0;if(receipts++<8)
+            Log("scope ballistics: native scoped-spread aim query accepted; native min/max/movement, no camera ADS");
+        return 1;
+    }
     if(caller==energyAimReturn&&(uintptr_t)self==g_playerPawn&&g_sniperOpticalSlowTime&&
        scopepip::SlowAimAllowed(caller,energyAimReturn,(uintptr_t)self,g_playerPawn,Current(Snapshot()))){
         static unsigned receipts=0;if(receipts++<4)Log("scope slow: native energy aim gate accepted; camera ADS unchanged");
@@ -245,6 +252,27 @@ static bool BindSlow(uintptr_t pawn,uintptr_t weapon){
        !FieldContract("mCurrentSlowMoAmount",cls,"FloatProperty",0x59c))return false;
     if(!CodeContract("slow/IsAiming",aim,13,0x2C74B5D4D5842879ull)||
        !CodeContract("slow/sniper-tick",tick,357,0xD504DE25001FD2C5ull))return false;
+    if(g_sniperOpticalAccuracy){
+        const auto table=PauseRttProbe::Pointer(weapon);
+        const auto minimum=PauseRttProbe::Pointer(table+0x4b4);
+        const auto maximum=PauseRttProbe::Pointer(table+0x4b8);
+        const auto movement=PauseRttProbe::Pointer(table+0x4bc);
+        if(!CodeContract("spread/minimum",minimum,129,0x75C0B13EC73BB9E9ull)||
+           !CodeContract("spread/maximum",maximum,129,0x272F8E27E1E67C39ull)||
+           !CodeContract("spread/movement",movement,98,0x0BBDCA92A52B52AFull)||
+           !FieldContract("mSpreadMin",cls,"FloatProperty",0x450)||
+           !FieldContract("mSpreadMax",cls,"FloatProperty",0x454)||
+           !FieldContract("mSpreadMovement",cls,"FloatProperty",0x458)||
+           !FieldContract("mIronsightSpreadMin",cls,"FloatProperty",0x414)||
+           !FieldContract("mIronsightSpreadMax",cls,"FloatProperty",0x410)||
+           !FieldContract("mIronsightSpreadMovement",cls,"FloatProperty",0x418))return false;
+        spreadAimReturns[0]=minimum+0x36;
+        spreadAimReturns[1]=maximum+0x36;
+        spreadAimReturns[2]=movement+0x33;
+        Log("scope ballistics: audited native aim callers ready; hip min/max=%.6f/%.6f aimed=%.6f/%.6f movement=%.6f",
+            *(float*)(weapon+0x450),*(float*)(weapon+0x454),
+            *(float*)(weapon+0x414),*(float*)(weapon+0x410),*(float*)(weapon+0x418));
+    }
     const auto energy=Call("slow/energy",tick,0x147,512,0xF11C945D7721EDC5ull);
     // Audited adjacent native toggle follows the full tick + alignment padding.
     // Adjacency alone authorizes NOTHING: whole-body and both tail-jump targets
@@ -265,7 +293,7 @@ static bool BindSlow(uintptr_t pawn,uintptr_t weapon){
 }
 static void SlowTick(const scopepip::Frame& frame,bool active){
     static LONG consumed=0;const LONG presses=Rd(g_scopeSlowPresses);
-    const bool eligible=g_sniperOpticalSlowTime&&active&&IsLive(frame.weapon)&&
+    const bool eligible=(g_sniperOpticalSlowTime||g_sniperOpticalAccuracy)&&active&&IsLive(frame.weapon)&&
         PauseRttProbe::Pointer(frame.weapon+0x98)==g_playerPawn;
     if(slowWeapon&&(!eligible||slowWeapon!=frame.weapon)){
         if(slowStop&&IsLive(slowWeapon)&&PauseRttProbe::Pointer(slowWeapon+0x98)==g_playerPawn)
@@ -274,8 +302,9 @@ static void SlowTick(const scopepip::Frame& frame,bool active){
     }
     if(!eligible||slowFailed){consumed=presses;return;}
     if(!BindSlow(g_playerPawn,frame.weapon)){slowFailed=true;consumed=presses;return;}
+    if(!g_sniperOpticalSlowTime){consumed=presses;return;}
     slowWeapon=frame.weapon;
-    if(presses!=consumed){consumed=presses;slowToggle((void*)slowWeapon);
+    if(presses!=consumed&&g_sniperOpticalSlowTime){consumed=presses;slowToggle((void*)slowWeapon);
         static unsigned receipts=0;if(receipts++<24)
             Log("scope slow: L3 native toggle submitted energy=%.3f dilation=%.3f [native limits, not visual proof]",
                 *(const float*)(slowWeapon+0x59c),*(const float*)(slowWeapon+0x584));}

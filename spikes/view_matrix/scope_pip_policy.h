@@ -92,6 +92,12 @@ inline bool SlowAimAllowed(std::uintptr_t caller,std::uintptr_t energyReturn,
                            std::uintptr_t pawn,std::uintptr_t local,bool optical){
     return optical&&energyReturn&&caller==energyReturn&&local&&pawn==local;
 }
+inline bool SpreadAimAllowed(bool enabled,bool optical,std::uintptr_t caller,
+    const std::uintptr_t (&sites)[3],std::uintptr_t pawn,std::uintptr_t local){
+    if(!enabled||!optical||!caller||!local||pawn!=local)return false;
+    for(auto site:sites)if(site&&site==caller)return true;
+    return false;
+}
 // The weapon shader's exact, per-eye translated-world projection. Unlike the
 // tracking/UI projection this includes the native foreground transform.
 inline bool ClipPixel(unsigned width,unsigned height,const float clip[4],Pixel& out){

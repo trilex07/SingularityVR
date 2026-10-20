@@ -9,6 +9,7 @@ param(
  [switch]$WeaponSteady,
  [switch]$CalibratedOptics,
  [switch]$MeasuredAim,
+ [switch]$OpticalAccuracy,
  [switch]$BodyEquipmentCensus
 )
 # Offline preparation only. No launch, installation or accepted-profile mutation.
@@ -91,6 +92,10 @@ if($MeasuredAim){
  $targets['Input/WeaponMeasuredAim']='1'
  $targets['Input/WeaponTraceRigidOrigin']='1'
  $targets['Render/ScopeMeasuredPose']='1'
+}
+if($OpticalAccuracy){
+ if(-not $MeasuredAim){throw 'Optical accuracy requires measured optics'}
+ $targets['Input/SniperOpticalAccuracy']='1'
 }
 if($BodyEquipmentCensus){
  if(-not $MeasuredAim){throw 'Equipment census is scoped to the measured-aim followup'}

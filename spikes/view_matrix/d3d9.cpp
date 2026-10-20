@@ -2360,6 +2360,7 @@ static bool g_nativeRifleTracer=false; // exact native visual source getter, def
 static int g_sniperPip=0;
 static int g_scopeOpticalCalibration=0;
 static int g_sniperOpticalSlowTime=0;
+static int g_sniperOpticalAccuracy=0; // native scoped spread queries only, no camera ADS
 static volatile LONG g_scopeSlowPresses=0;
 static scopepip::Frame g_scopePipFrame;
 static int g_scopeMeasuredPose=0; // default OFF; do not reuse a frozen hand-local axis
@@ -33603,6 +33604,8 @@ void LoadIniSettings() {
     g_scopeOpticalCalibration=GetPrivateProfileIntA("Render","ScopeOpticalCalibration",0,path)?1:0;
     g_scopeMeasuredPose=GetPrivateProfileIntA("Render","ScopeMeasuredPose",0,path)?1:0;
     g_sniperOpticalSlowTime=GetPrivateProfileIntA("Input","SniperOpticalSlowTime",0,path)?1:0;
+    g_sniperOpticalAccuracy=GetPrivateProfileIntA("Input","SniperOpticalAccuracy",0,path)?1:0;
+    Log("ini: SniperOpticalAccuracy=%d (default OFF; exact native spread aim callers, no zero-spread write)",g_sniperOpticalAccuracy);
     Log("ini: ScopeOpticalCalibration=%d SniperOpticalSlowTime=%d (default OFF; own4x/capture45Hz, native L3; no HMD filtering)",g_scopeOpticalCalibration,g_sniperOpticalSlowTime);
     if(g_sniperPip&&!g_sniperNearEyeScope){g_sniperPip=0;Log("scope PiP: requires measured near-eye policy; disabled");}
     Log("ini: KasimovAuthoredGrip=%d SniperNearEyeScope=%d (default OFF; native scoped view, measured lens proximity)",
