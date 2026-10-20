@@ -76,6 +76,14 @@ static void __fastcall Original(void*,void*,void*,void*) {
 }
 static uintptr_t g_processInternal=0,g_textLo=0,g_textHi=0;
 #include "../inventory_vm_hook.h"
+static unsigned pickupCalls=0;
+static void* pickupSelf=nullptr;
+static void* pickupArchetype=nullptr;
+static int pickupArgs[3]{};
+static int __fastcall OriginalPickup(void* self,void*,void* archetype,int select,int instant,int keep) {
+ ++pickupCalls;pickupSelf=self;pickupArchetype=archetype;
+ pickupArgs[0]=select;pickupArgs[1]=instant;pickupArgs[2]=keep;return 77;
+}
 static bool Scoped(void* self,void* stack,int name) {
   const bool handled=NativeOwnedInventory::InvokeRetained(self,nullptr,stack,nullptr,name,8,Original);
   if(!handled)Original(self,nullptr,stack,nullptr);
@@ -241,6 +249,49 @@ int main(int argc,char** argv) {
   memcpy((void*)(third+0x1e0),&fourth,4);
   Check(NativeOwnedInventory::Snapshot());Check(NativeOwnedInventory::Mask()==15);
   Check(NativeOwnedInventory::count==4);
+  // Native acquisition has a separate keep-existing argument. Exercise the
+  // actual ABI and scope: only that fourth argument may change; never ammo,
+  // script, objects, return value or other callers.
+  const auto beforePickup=objects;
+  InventoryVmHook::originalPickup=&OriginalPickup;
+  Check(InventoryVmHook::PickupCall((void*)pawn,nullptr,(void*)first,1,0,0)==77);
+  Check(pickupCalls==1&&pickupSelf==(void*)pawn&&pickupArchetype==(void*)first);
+  Check(pickupArgs[0]==1&&pickupArgs[1]==0&&pickupArgs[2]==1);
+  Check(objects==beforePickup); // no chain/ammo/object mutation by callback
+  g_keepAcquiredWeapons=0;
+  InventoryVmHook::PickupCall((void*)pawn,nullptr,(void*)first,1,0,0);
+  Check(pickupArgs[2]==0);g_keepAcquiredWeapons=1;
+  g_gamePaused=1;InventoryVmHook::PickupCall((void*)pawn,nullptr,(void*)first,1,0,0);
+  Check(pickupArgs[2]==0);g_gamePaused=0;
+  g_inCinematic=1;InventoryVmHook::PickupCall((void*)pawn,nullptr,(void*)first,1,0,0);
+  Check(pickupArgs[2]==0);g_inCinematic=0;
+  NativeOwnedInventory::thread^=1;
+  InventoryVmHook::PickupCall((void*)pawn,nullptr,(void*)first,1,0,0);
+  Check(pickupArgs[2]==0);NativeOwnedInventory::thread=GetCurrentThreadId();
+  InventoryVmHook::PickupCall((void*)manager,nullptr,(void*)first,1,0,0);
+  Check(pickupArgs[2]==0);
+  InventoryVmHook::PickupCall((void*)pawn,nullptr,nullptr,1,0,0);
+  Check(pickupArgs[2]==0);
+  InventoryVmHook::PickupCall((void*)pawn,nullptr,(void*)first,1,0,9);
+  Check(pickupArgs[2]==9);
+  InventoryVmHook::PickupCall((void*)pawn,nullptr,(void*)first,7,0,0);
+  Check(pickupArgs[0]==7&&pickupArgs[2]==0);
+  InventoryVmHook::PickupCall((void*)pawn,nullptr,(void*)first,1,7,0);
+  Check(pickupArgs[1]==7&&pickupArgs[2]==0);
+  const uintptr_t savedManager=NativeOwnedInventory::manager;
+  NativeOwnedInventory::manager=0;
+  InventoryVmHook::PickupCall((void*)pawn,nullptr,(void*)first,1,0,0);
+  Check(pickupArgs[2]==0);NativeOwnedInventory::manager=savedManager;
+  InventoryVmHook::PickupCall(nullptr,nullptr,(void*)first,1,0,0);
+  Check(pickupSelf==nullptr&&pickupArgs[2]==0);
+  InventoryVmHook::PickupCall((void*)pawn,nullptr,(void*)first,0,1,1);
+  Check(pickupArgs[0]==0&&pickupArgs[1]==1&&pickupArgs[2]==1);
+  Check(!inventorypickup::Retain(true,true,true,true,false,false,false,1,0,0));
+  Check(!inventorypickup::Hash(nullptr,inventorypickup::Bytes));
+  unsigned char wrongBody[inventorypickup::Bytes]{};
+  Check(inventorypickup::Hash(wrongBody,sizeof(wrongBody))!=inventorypickup::Fingerprint);
+  Check(!inventorypickup::Hash(wrongBody,sizeof(wrongBody)-1));
+  Check(objects==beforePickup);
   // Current camera ownership resolves the saved inventory even before the
   // render-side incremental pawn census reaches the new level's object.
   const uintptr_t camera=(uintptr_t)objects[54].data(),cameraClass=(uintptr_t)objects[55].data();

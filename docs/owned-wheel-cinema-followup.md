@@ -23,11 +23,53 @@ The exact proposed pickup path is falsified as a complete explanation. Other
 callers/native entry or an individual scope refusal must be distinguished next.
 Do not widen the receiver/caller policy just to force a hit.
 
-Initial saved chain publishes mask6 (Valkyrie+Volk, not Centurion). A subsequent
+PRE-explicit-load old-world chain publishes mask6 (Valkyrie+Volk). A subsequent
 level change clears the pawn cache. First open has ownedReady0/named2 even with
 all four atlas icons available; later mask3/named3 appears immediately after
 the renderer reacquires the pawn. This establishes a readiness gap, not missing
 texture bytes. It does NOT authorize spawning an old discarded Centurion.
+
+Correction: the earlier claim that mask6 described the saved possession was
+wrong. User confirms Centurion+Valkyrie in the save, Volk+Valkyrie before exit.
+The8c7a022 session independently distinguishes those pawn/load epochs below.
+
+## 2026-10-20 physical8c7a022 result and native pickup followup
+
+User reports initial wheel good, third pickup still discards, game closed.
+Private log: build/combined-followups/session-8c7a022.log. Old pawn2DDBA000
+mask6 precedes explicit load; loaded pawn1BD76400 mask3 and wheel named3/iconsF
+match the actual Centurion+Valkyrie save. After shotgun pickup the mask is6,
+not7. ZERO throw receipts despite installed opcode adapter: old interception
+does not cover the observed native pickup. Wheel passes only that physical
+scope; retention remains BROKEN and cinema has no fresh result.
+
+Owned archived text SHA070D20A0...7B0E1 and constructor-derived SP vtable prove
+native virtual+D70 (audit VA010417C0), four stack arguments, ret16. Complete
+748-byte FNV1a CC78CCB4EE3651A2. Its only fourth-argument condition at+1A4
+bypasses direct TossInventory calls+1D4/+205; creation, selection and ammo setup
+remain on the original path. Existing game-authored restore caller already
+supplies (archetype,0,0,1). This explains why ThrowActiveWeapon saw nothing.
+Verification: tools/reload/verify_native_pickup.py (no process access, no body
+output, five mutated-body refusals). Audit addresses are NOT new hardcoded
+runtime calls: runtime resolves the class vtable, checks independent HasWeapon
+neighbour and FULL function fingerprint, otherwise refuses installation.
+
+Hypothesis: pass keep-existing=1 only for a local supported pickup, preserving
+the already-owned chain without spawning guns. New callback requires enabled
+KeepAcquiredWeapons (default OFF), exact local SP pawn, linked manager, existing
+input thread, supported archetype and no pause/cinema. Preserve all other
+arguments and return value. Installation retries at most every2s; log at most12
+pickup receipts. No save, ammo, chain or shared-script writes by the callback.
+
+Current L1 PASS:160 policy checks,181 actual-handler/ABI/scope checks,12 Python
+checks,16 preparation and6 lease scenarios; independent native verifier PASS.
+These include disabled/paused/cinematic/wrong-thread/wrong-receiver/missing
+manager/null-archetype refusals, unchanged argument/result forwarding and no
+fake-object mutation. No native interception runtime claim yet.
+
+Falsifiers: no installed native adapter/keep0->1 receipt, mask remains two guns,
+new gun cannot equip, or pickup changes elsewhere. A receipt is not acceptance:
+next runtime must show three actual owned guns and physical selection of each.
 
 Followup fixes the gap with named reflected ownership, not guessed offsets:
 Engine Camera.PCOwner export2684, Controller.Pawn1870, Pawn.Controller19809.

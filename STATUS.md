@@ -1,12 +1,30 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 physical test of8c7a022: wheel visibility/selection after actual save
+load PASS (user: "1.git"); third pickup STILL drops a gun, only two remain.
+Cinema exit has no fresh physical result. Game exited; guard restored accepted
+DLL7DDAA0AA...80FCF and INI B94A4AA7...F78931, independently rehashed.
+Private log: build/combined-followups/session-8c7a022.log. Before explicit load,
+old pawn2DDBA000 has mask6. Actual loaded pawn1BD76400 has mask3 (Centurion and
+Valkyrie), then mask6 after shotgun pickup. Prior "saved mask6" inference below
+was an epoch error, NOT evidence that the user's saved Centurion was absent.
+
+Native RE now identifies a different pickup producer: RvPlayerPawnSP vtable
++D70. Full748-byte fingerprint CC78CCB4EE3651A2 verified from owned archived
+text. Its fourth argument skips BOTH direct TossInventory calls, bypassing the
+old ThrowActiveWeapon scope; the game's restore caller already passes1 there.
+New default-OFF KeepAcquiredWeapons adapter changes only that argument for the
+local supported pickup, preserving original ABI/result/other calls. No shared
+script/inventory/save/ammo writes. tools/reload/verify_native_pickup.py verifies
+the body, caller, toss wrapper and refusal mutations offline. Not L3/L4 yet.
+
 2026-10-20 physical test of8e612e5 FAILED retention and initial wheel visibility;
 cinema exit improved but remains briefly incorrect. Preserved private log:
 build/combined-followups/session-8e612e5.log. Steam exited and accepted DLL
 7DDAA0AA...80FCF / INI B94A4AA7...F78931 independently rehashed after guard restore.
 Adapter installed, but ZERO exact suppression receipts: no retention PASS.
-First loaded possession mask6 means Valkyrie+Volk, NOT Centurion; after a level
+PRE-explicit-load possession mask6 means Valkyrie+Volk in the old world; after a level
 change the first wheel had ownedReady0/named2, then mask3/named3 after pawn
 reacquisition. No historical dropped gun is silently re-created.
 
@@ -17,8 +35,8 @@ fresh original-input-thread snapshot. Missing reflected offsets retry with a
 2s bound. Losing/changing pawn/manager invalidates old function/script pointers.
 Exact throw FName receipts (12 opcode +8 native entry maximum) identify caller
 and each failed scope predicate without broadening drop suppression. The actual
-runtime throw producer is STILL UNPROVEN: the next capture must resolve it,
-not claim the lifecycle fix alone solved retention.
+runtime interception of the native pickup producer is STILL UNPROVEN: the next
+capture must confirm it, not claim the lifecycle fix alone solved retention.
 
 Cinema log: immediate first scan has0/24 valid candidates, next automatic scan
 later locks c0. Exit now retries at most8 consecutive frames, not every20; only

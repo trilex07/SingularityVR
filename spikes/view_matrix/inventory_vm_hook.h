@@ -1,16 +1,71 @@
 #pragma once
-// A single UE3 opcode table slot, not another executable detour. The exact
-// local pickup expression is consumed by policy; all other calls forward.
+#include "inventory_pickup_policy.h"
+// Audited native pickup vtable and UE3 opcode adapters, not executable detours.
+// Each policy is local-player scoped; all other calls forward unchanged.
 namespace InventoryVmHook {
 using Exec=void (__fastcall*)(void*,void*,void*,void*);
 static Exec original=nullptr;
 static uintptr_t installedSlot=0;
+using Pickup= int (__fastcall*)(void*,void*,void*,int,int,int);
+static Pickup originalPickup=nullptr;
+static uintptr_t pickupSlot=0;
+static int __fastcall PickupCall(void* self,void* edx,void* archetype,int select,int instant,int keep) {
+    using namespace NativeOwnedInventory;
+    bool supported=false,local=false,linked=false;
+    __try {
+        local=(uintptr_t)self==pawn&&pawn&&ClassHas(P(pawn+OBJ_CLASS),"RvPlayerPawnSP");
+        linked=local&&manager&&P(pawn+0x3d0)==manager;
+        const uintptr_t a=(uintptr_t)archetype;
+        if(local&&a&&ClassHas(P(a+OBJ_CLASS),"RvWeaponShared")) {
+            char n[96]{};
+            NameFromIndex(*(const int*)(a+kItemWeaponName),n,sizeof(n));
+            supported=inventoryretention::WeaponBit(inventoryretention::WeaponMesh(n))!=0;
+        }
+    } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {}
+    const bool retain=inventorypickup::Retain(Rd(g_keepAcquiredWeapons)!=0,local,
+        thread==GetCurrentThreadId(),linked,supported,Rd(g_gamePaused)!=0,
+        Rd(g_inCinematic)!=0,select,instant,keep);
+    static unsigned receipts=0;
+    if(local&&receipts++<12)
+        Log("inventory native pickup: local=%d supported=%d linked=%d thread=%d keep=%d->%d maskBefore=%X (completion still requires chain evidence)",
+            local,supported,linked,thread==GetCurrentThreadId(),keep,retain?1:keep,Mask());
+    const int result=originalPickup(self,edx,archetype,select,instant,retain?1:keep);
+    if(retain)next=0;
+    return result;
+}
+static void InstallPickup() {
+    using namespace NativeOwnedInventory;
+    if(pickupSlot||!Rd(g_keepAcquiredWeapons)||!pawn)return;
+    static ULONGLONG retry=0;
+    const ULONGLONG now=GetTickCount64();if(now<retry)return;retry=now+2000;
+    __try {
+        if(!ClassHas(P(pawn+OBJ_CLASS),"RvPlayerPawnSP"))return;
+        const uintptr_t vt=P(pawn),slot=vt+inventorypickup::Slot,target=P(slot);
+        // Independent audited class neighbour + complete native body. Refuse a
+        // different executable/override/hook; never detour executable bytes.
+        if(P(vt+0xb18)!=inventoryretention::HasWeaponImpl||target<g_textLo||
+           target>=g_textHi||!PauseRttProbe::SafeRange(target,inventorypickup::Bytes)||
+           inventorypickup::Hash((const unsigned char*)target,inventorypickup::Bytes)!=inventorypickup::Fingerprint)return;
+        DWORD old=0;if(!VirtualProtect((void*)slot,4,PAGE_READWRITE,&old))return;
+        originalPickup=(Pickup)target;
+        const LONG before=InterlockedCompareExchange((volatile LONG*)slot,(LONG)(uintptr_t)&PickupCall,(LONG)target);
+        DWORD ignored=0;const BOOL restored=VirtualProtect((void*)slot,4,old,&ignored);
+        if((uintptr_t)(uint32_t)before!=target)return;
+        if(!restored) {
+            InterlockedCompareExchange((volatile LONG*)slot,(LONG)target,(LONG)(uintptr_t)&PickupCall);
+            VirtualProtect((void*)slot,4,old,&ignored);return;
+        }
+        pickupSlot=slot;
+        Log("inventory native pickup: adapter installed slot=%X bodyHash=%llX; keep-argument only, no shared script write (NOT runtime acceptance)",inventorypickup::Slot,inventorypickup::Fingerprint);
+    } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {}
+}
 static void __fastcall VirtualCall(void* self,void* edx,void* frame,void* result) {
     NativeOwnedInventory::ObserveThrow(self,frame);
     if(NativeOwnedInventory::SkipPickupThrow(self,frame))return;
     original(self,edx,frame,result);
 }
 static void Install() {
+    InstallPickup();
     if(installedSlot||!Rd(g_keepAcquiredWeapons)||!g_processInternal)return;
     static unsigned attempts=0;
     if(attempts++>=4)return;
