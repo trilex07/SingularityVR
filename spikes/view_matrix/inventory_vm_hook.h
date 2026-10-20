@@ -6,6 +6,7 @@ using Exec=void (__fastcall*)(void*,void*,void*,void*);
 static Exec original=nullptr;
 static uintptr_t installedSlot=0;
 static void __fastcall VirtualCall(void* self,void* edx,void* frame,void* result) {
+    NativeOwnedInventory::ObserveThrow(self,frame);
     if(NativeOwnedInventory::SkipPickupThrow(self,frame))return;
     original(self,edx,frame,result);
 }

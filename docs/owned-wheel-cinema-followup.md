@@ -13,6 +13,39 @@ It never records the proposed interpreter-entry pickup scope. This disproves
 the claim that the previous implementation retained three guns. There is no
 wheel draw-plan/pixel evidence in that session to isolate its missing icon.
 
+## 2026-10-20 physical falsification of8e612e5
+
+User: Centurion missing with Valkyrie equipped on load; third pickup still drops
+the equipped gun; cinema exit better but briefly wrong. No acceptance/promotion.
+Private evidence: build/combined-followups/session-8e612e5.log. The bounded
+adapter installation line at269 is NOT success: there are NO suppression lines.
+The exact proposed pickup path is falsified as a complete explanation. Other
+callers/native entry or an individual scope refusal must be distinguished next.
+Do not widen the receiver/caller policy just to force a hit.
+
+Initial saved chain publishes mask6 (Valkyrie+Volk, not Centurion). A subsequent
+level change clears the pawn cache. First open has ownedReady0/named2 even with
+all four atlas icons available; later mask3/named3 appears immediately after
+the renderer reacquires the pawn. This establishes a readiness gap, not missing
+texture bytes. It does NOT authorize spawning an old discarded Centurion.
+
+Followup fixes the gap with named reflected ownership, not guessed offsets:
+Engine Camera.PCOwner export2684, Controller.Pawn1870, Pawn.Controller19809.
+Require current live classes and reciprocal ownership; keep the legacy fallback
+if any check fails. Cache offsets by class with bounded retries. Wheel-open
+requests a snapshot on the existing input thread, not on XR/render threads.
+Cached pickup function/script identity is invalidated on pawn/manager loss or
+change. Unrelated script calls still forward identically. Up to12 matching
+ThrowActiveWeapon opcode receipts report caller/object/receiver, exact code,
+thread and identity predicates; up to8 native-entry receipts cover a non-opcode
+producer. No per-draw logging or unrelated FName walk.
+
+The exit's first scan finds0/24 valid candidates; only the later scan locks c0.
+Recovery now scans at most8 consecutive frames. While recovering, a source with
+zero split draws is still one full image and retains mono presentation; even
+one split draw forbids that fallback. The original generic scanner remains
+unchanged outside this bounded exit. Hands/medkit/VFX/shadow transforms unchanged.
+
 ## Pickup mechanism and smallest experiment
 
 Read-only Engine inspection finds Pawn.ThrowActiveWeapon export20311 with36

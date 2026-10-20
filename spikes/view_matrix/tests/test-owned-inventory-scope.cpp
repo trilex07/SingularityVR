@@ -21,6 +21,8 @@ static int g_upChildren=0x4c,g_upNext=0x40;
 static volatile LONG g_keepAcquiredWeapons=1,g_ownedWeaponWheel=1,g_gamePaused=0,g_vrMenuClass=0;
 static volatile LONG g_inCinematic=0;
 static uintptr_t g_playerPawn=0;
+static uintptr_t g_camera=0;
+static bool IsLive(uintptr_t p){return p!=0;}
 static LONG Rd(volatile LONG& n){return InterlockedCompareExchange(&n,0,0);}
 static std::unordered_map<uintptr_t,std::string> objectNames;
 static std::unordered_map<int,std::string> globalNames;
@@ -171,6 +173,11 @@ int main(int argc,char** argv) {
   memcpy(vmFrame+0x10,&NativeOwnedInventory::function,4);
   memcpy(vmFrame+0x14,&manager,4);memcpy(vmFrame+0x18,&vmCode,4);
   memcpy((void*)(pawn+0x3d0),&manager,4);
+  NativeOwnedInventory::throwName=*(const int*)(NativeOwnedInventory::script+201);
+  NativeOwnedInventory::ObserveThrow((void*)pawn,vmFrame);
+  Check(PauseRttProbe::Pointer((uintptr_t)vmFrame+0x18)==vmCode&&code==original);
+  NativeOwnedInventory::ObserveThrowEntry((void*)pawn,vmFrame,NativeOwnedInventory::throwName,0x10);
+  Check(PauseRttProbe::Pointer((uintptr_t)vmFrame+0x18)==vmCode&&code==original);
   Check(!NativeOwnedInventory::SkipPickupThrow((void*)manager,vmFrame));
   Check(NativeOwnedInventory::SkipPickupThrow((void*)pawn,vmFrame));
   Check(PauseRttProbe::Pointer((uintptr_t)vmFrame+0x18)==NativeOwnedInventory::script+211);
@@ -234,6 +241,24 @@ int main(int argc,char** argv) {
   memcpy((void*)(third+0x1e0),&fourth,4);
   Check(NativeOwnedInventory::Snapshot());Check(NativeOwnedInventory::Mask()==15);
   Check(NativeOwnedInventory::count==4);
+  // Current camera ownership resolves the saved inventory even before the
+  // render-side incremental pawn census reaches the new level's object.
+  const uintptr_t camera=(uintptr_t)objects[54].data(),cameraClass=(uintptr_t)objects[55].data();
+  objectNames[cameraClass]="RvPlayerCamera";objectNames[cc]="RvPlayerController";
+  memcpy((void*)(camera+OBJ_CLASS),&cameraClass,4);
+  memcpy((void*)(camera+0x100),&controller,4);memcpy((void*)(pawn+0x104),&controller,4);
+  offsets["PCOwner"]=0x100;offsets["Controller"]=0x104;
+  g_camera=camera;g_playerPawn=0;
+  Check(NativeOwnedInventory::CameraOwnedPawn()==pawn);
+  Check(NativeOwnedInventory::Snapshot()&&NativeOwnedInventory::Mask()==15);
+  memset((void*)(pawn+0x104),0,4);
+  Check(NativeOwnedInventory::CameraOwnedPawn()==0); // reciprocal ownership mandatory
+  memcpy((void*)(pawn+0x104),&controller,4);
+  g_camera=0;g_playerPawn=pawn;
+  NativeOwnedInventory::next=GetTickCount64()+60000;
+  NativeOwnedInventory::count=0;
+  NativeOwnedInventory::Refresh();NativeOwnedInventory::Poll();
+  Check(NativeOwnedInventory::count==4); // open bypasses delay, not thread ownership
   // Exercise the actual virtual call, not only snapshot readiness. UObject[0]
   // is the vtable pointer; dereferencing it twice reads the first METHOD.
   NativeOwnedInventory::Queue(11387);NativeOwnedInventory::Poll();
@@ -261,5 +286,6 @@ int main(int argc,char** argv) {
   NativeOwnedInventory::next=0;NativeOwnedInventory::Poll();
   Check(NativeOwnedInventory::Mask()==0);
   Check(!NativeOwnedInventory::Ready());
+  Check(!NativeOwnedInventory::function&&!NativeOwnedInventory::script);
   std::printf("PASS %u actual-handler scope/SEH checks; fake engine only\n",checks);
 }

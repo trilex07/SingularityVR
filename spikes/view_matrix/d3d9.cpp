@@ -11300,6 +11300,7 @@ void SyncXRInput(XrTime displayTime) {
         (g_weaponWheelObserved&&!Rd(g_forceDesktopAutomation))?-ty:ty,
         (int)g_weaponWheelSlots, handSector);
     if (wheelEvent == weaponwheel::Event::Open) {
+        NativeOwnedInventory::Refresh(); // next original input poll, never XR-thread UObject access
         g_weaponWheelSeek={};
         InterlockedExchange(&g_weaponWheelOpen, 1);
         InterlockedExchange(&g_weaponWheelSelection, -1);
@@ -23407,9 +23408,11 @@ static void UpdateSceneModeFrame() {
         g_haveLock=false;g_lockMissFrames=0;g_lockVerified=false;
         g_camMatrixBound=false;InvalidateCamMats();
         g_projTanX=g_projTanY=g_forcedTanX=g_forcedTanY=0.0f;
-        InterlockedExchange(&g_cinemaExitScan,1);
+        InterlockedExchange(&g_cinemaExitScan,8);
         Log("cinema exit: completed frame remains mono; stale lock revoked, next-frame scan requested");
     }
+    g_scenePresentMode=vrscene::RecoveryFrameMode(g_scenePresentMode,
+        Rd(g_cinemaExitScan)>0,(unsigned)g_drawsDuped);
     const bool anyMenuOrPause = signals.menu || signals.paused || signals.frontendMenu ||
                                 signals.cinemaPauseMenu || (Rd(g_vrMenuClass) != 0);
     const bool inGameplay = (g_sceneMode.Current() == vrscene::Mode::GameplayStereo && g_playerPawn != 0 && !anyMenuOrPause);
@@ -31432,9 +31435,13 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     p7 = k7;
     // Arm AFTER consuming the previous scan. Otherwise Present would report
     // an empty scan before a single next-frame upload had been observed.
-    if(InterlockedExchange(&g_cinemaExitScan,0)) {
-        g_hitCount=0;InterlockedExchange(&g_scanReportOnly,0);
-        InterlockedExchange(&g_scanArmed,1);
+    if(Rd(g_cinemaExitScan)>0) {
+        if(g_haveLock)InterlockedExchange(&g_cinemaExitScan,0);
+        else {
+            InterlockedDecrement(&g_cinemaExitScan);
+            g_hitCount=0;InterlockedExchange(&g_scanReportOnly,0);
+            InterlockedExchange(&g_scanArmed,1);
+        }
     }
     // Rearm the edge detector once the trigger is released, so a held trigger spends one probe rather
     // than one per frame.

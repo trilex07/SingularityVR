@@ -28,6 +28,13 @@ inline Mode CompletedFrameMode(Mode rendered, Mode next) {
         (rendered == Mode::GameplayStereo && next == Mode::CutsceneFlat)) return rendered;
     return next;
 }
+// During bounded post-cinema reacquisition, zero split draws means the source
+// is still one full-width image. Never expose its two unrelated halves as SBS.
+// A split frame must NEVER enter the mono composer, even during recovery.
+inline Mode RecoveryFrameMode(Mode completed, bool recovering, unsigned splitDraws) {
+    return completed==Mode::GameplayStereo&&recovering&&splitDraws==0 ?
+        Mode::CutsceneFlat : completed;
+}
 
 inline bool FrontendMenuPresentation(bool enabled, int menuClass, bool focus,
                                      bool cinematic = false, bool paused = false) {

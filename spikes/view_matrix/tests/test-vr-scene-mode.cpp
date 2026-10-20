@@ -13,6 +13,11 @@ int main() {
     assert(vrscene::CompletedFrameMode(Mode::GameplayStereo,Mode::CutsceneFlat)==Mode::GameplayStereo);
     assert(vrscene::CompletedFrameMode(Mode::GameplayStereo,Mode::VideoFlat)==Mode::VideoFlat);
     assert(vrscene::CompletedFrameMode(Mode::CutsceneFlat,Mode::MenuFlat)==Mode::MenuFlat);
+    assert(vrscene::RecoveryFrameMode(Mode::GameplayStereo,true,0)==Mode::CutsceneFlat);
+    assert(vrscene::RecoveryFrameMode(Mode::GameplayStereo,true,1)==Mode::GameplayStereo);
+    assert(vrscene::RecoveryFrameMode(Mode::GameplayStereo,false,0)==Mode::GameplayStereo);
+    assert(vrscene::RecoveryFrameMode(Mode::MenuFlat,true,0)==Mode::MenuFlat);
+    assert(vrscene::RecoveryFrameMode(Mode::VideoFlat,true,0)==Mode::VideoFlat);
     Controller c;
     Signals gameplay{};
     assert(c.Current() == Mode::GameplayStereo);

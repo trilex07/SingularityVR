@@ -1,6 +1,30 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 physical test of8e612e5 FAILED retention and initial wheel visibility;
+cinema exit improved but remains briefly incorrect. Preserved private log:
+build/combined-followups/session-8e612e5.log. Steam exited and accepted DLL
+7DDAA0AA...80FCF / INI B94A4AA7...F78931 independently rehashed after guard restore.
+Adapter installed, but ZERO exact suppression receipts: no retention PASS.
+First loaded possession mask6 means Valkyrie+Volk, NOT Centurion; after a level
+change the first wheel had ownedReady0/named2, then mask3/named3 after pawn
+reacquisition. No historical dropped gun is silently re-created.
+
+Followup offline: inventory reads reflected Camera.PCOwner -> Controller.Pawn
+with reciprocal Pawn.Controller (all producers verified in owned Engine), rather
+than waiting solely for the render-side pawn census. Wheel-open requests a
+fresh original-input-thread snapshot. Missing reflected offsets retry with a
+2s bound. Losing/changing pawn/manager invalidates old function/script pointers.
+Exact throw FName receipts (12 opcode +8 native entry maximum) identify caller
+and each failed scope predicate without broadening drop suppression. The actual
+runtime throw producer is STILL UNPROVEN: the next capture must resolve it,
+not claim the lifecycle fix alone solved retention.
+
+Cinema log: immediate first scan has0/24 valid candidates, next automatic scan
+later locks c0. Exit now retries at most8 consecutive frames, not every20; only
+entirely unsplit gameplay recovery frames retain mono presentation. Any split
+frame remains SBS. Existing cutscene/medkit hands remain unchanged.
+
 2026-10-20 latest physical feedback (private preserved log
 build/combined-followups/session-2cdff06.log): hero hands in cinematics and
 medkit animation PASS for that scope. Wheel visibility, third-weapon retention

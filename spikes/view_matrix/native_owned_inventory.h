@@ -32,12 +32,13 @@ static Item items[4]{};
 static unsigned count=0;
 static uintptr_t pawn=0,manager=0,function=0,script=0;
 static int functionName=-1;
+static int throwName=-1;
 static DWORD thread=0;
 static ULONGLONG next=0;
 static unsigned reports=0;
 static const char* stage="not sampled";
 static ULONGLONG resolveNext=0;
-static volatile LONG owned=0,request=0,ready=0;
+static volatile LONG owned=0,request=0,ready=0,refresh=0;
 static uintptr_t P(uintptr_t p){return PauseRttProbe::Pointer(p);}
 static bool Named(uintptr_t p,const char* expected){char n[96]{};return p&&NameOf(p,n,sizeof(n))&&!strcmp(n,expected);}
 // Class-chain containment. The audited classes are RvPlayerPawnSP,
@@ -90,6 +91,7 @@ static void ResolveScript(uintptr_t cls) {
   }
   if(matches!=1)return;
   function=f;script=candidate;functionName=*(const int*)(f+OBJ_NAME);
+  throwName=*(const int*)(script+inventoryretention::DropAt+1);
   if(reports++<16)Log("owned inventory: SwitchWeaponByArchetype script/ref identities verified (scoped drop guard available, not runtime acceptance)");
 }
 // The pawn's inventory manager is at the audited native offset. The reflected
@@ -101,10 +103,38 @@ static const uintptr_t kItemNext=0x1e0;
 static const uintptr_t kItemWeaponName=0x2e8;
 static int reflectedInvManager=-1;
 static int reflectedChain=-1;
+struct MemberCache {
+ uintptr_t cls=0;int offset=-1;ULONGLONG retry=0;
+ int Get(uintptr_t nextClass,const char* name) {
+  if(cls!=nextClass){cls=nextClass;offset=-1;retry=0;}
+  const ULONGLONG now=GetTickCount64();
+  if(offset<0&&now>=retry){retry=now+2000;offset=PropOffsetInChain(cls,name);}
+  return offset;
+ }
+};
+// Engine.Camera.PCOwner -> Controller.Pawn, cross-checked by Pawn.Controller.
+// These three reflected producers exist in the owned Engine package. This
+// avoids waiting for the unrelated, incremental GObjects mesh/pawn census.
+static uintptr_t CameraOwnedPawn() {
+  const uintptr_t camera=g_camera,cc=camera?P(camera+OBJ_CLASS):0;
+  if(!camera||!ClassHas(cc,"Camera")||!IsLive(camera))return 0;
+  static MemberCache cameraOwner,controllerPawn,pawnController;
+  const int ownerOff=cameraOwner.Get(cc,"PCOwner");
+  if(ownerOff<0)return 0;
+  const uintptr_t ctl=P(camera+ownerOff),ct=ctl?P(ctl+OBJ_CLASS):0;
+  if(!ctl||!ClassHas(ct,"PlayerController")||!IsLive(ctl))return 0;
+  const int pawnOff=controllerPawn.Get(ct,"Pawn");
+  if(pawnOff<0)return 0;
+  const uintptr_t p=P(ctl+pawnOff),pc=p?P(p+OBJ_CLASS):0;
+  if(!p||!ClassHas(pc,"PlayerPawn")||!IsLive(p))return 0;
+  const int controllerOff=pawnController.Get(pc,"Controller");
+  return controllerOff>=0&&P(p+controllerOff)==ctl?p:0;
+}
 static bool Snapshot() {
   // ---- 1. the local pawn ----
   stage="pawn";
-  uintptr_t p=(uintptr_t)InterlockedCompareExchange((volatile LONG*)&g_playerPawn,0,0);
+  uintptr_t p=CameraOwnedPawn();
+  if(!p)p=(uintptr_t)InterlockedCompareExchange((volatile LONG*)&g_playerPawn,0,0);
   uintptr_t pc=p?P(p+OBJ_CLASS):0;
   if(!p||!pc) {
    // Fallback: the reflected controller route. Kept because the pawn cache is
@@ -162,11 +192,17 @@ static bool Snapshot() {
    if(!nxt)break;
    it=nxt;
   }
+  if(pawn!=p||manager!=m) {
+   // A level reload can recreate UFunctions/scripts. Never retain their old
+   // addresses merely because the preceding snapshot was non-empty.
+   function=script=0;functionName=-1;resolveNext=0;
+  }
   pawn=p;manager=m;count=foundCount;
   memcpy(items,found,sizeof(items));
   InterlockedExchange(&owned,(LONG)mask);
   InterlockedExchange(&ready,(LONG)(foundCount?1:0));
-  if(Rd(g_keepAcquiredWeapons)&&(!function||!script)&&GetTickCount64()>=resolveNext) {
+  if(Rd(g_keepAcquiredWeapons)&&GetTickCount64()>=resolveNext&&
+     (!function||!script||!ScriptIdentity(script))) {
    resolveNext=GetTickCount64()+2000;ResolveScript(mc);
   }
   stage=foundCount?"ready":"ownership empty";
@@ -186,11 +222,13 @@ static void Poll() {
   thread=GetCurrentThreadId();
   const ULONGLONG now=GetTickCount64();
   const LONG selected=InterlockedExchange(&request,0);
-  if(!selected&&now<next)return;
+  const bool refreshRequested=InterlockedExchange(&refresh,0)!=0;
+  if(!selected&&!refreshRequested&&now<next)return;
   next=now+500;
   __try {
    if(!Snapshot()) {
-    count=0;pawn=manager=0;InterlockedExchange(&owned,0);InterlockedExchange(&ready,0);Report();return;
+    count=0;pawn=manager=function=script=0;functionName=-1;resolveNext=0;
+    InterlockedExchange(&owned,0);InterlockedExchange(&ready,0);Report();return;
    }
    Report();
    if(!selected||!pawn||!manager||Rd(g_gamePaused)||Rd(g_inCinematic)||Rd(g_vrMenuClass)!=0)return;
@@ -230,6 +268,27 @@ static unsigned VertsFromMask(unsigned mask,long* out,int max){
 }
 static unsigned OwnedVerts(long* out,int max){return VertsFromMask(Mask(),out,max);}
 static void Queue(int mesh){InterlockedExchange(&request,mesh);}
+static void Refresh(){InterlockedExchange(&refresh,1);}
+// At most twelve receipts for the EXACT callee FName learned from the audited
+// script. No name walk, allocation or VirtualQuery on unrelated opcode calls.
+// Read-only: this diagnoses other callers and scope refusals, never widens them.
+static void ObserveThrow(void* self,void* frame) {
+  static unsigned notes=0;
+  if(notes>=12||!Rd(g_keepAcquiredWeapons)||!frame||throwName<0)return;
+  __try {
+   const uintptr_t f=(uintptr_t)frame,at=*(const uintptr_t*)(f+0x18);
+   if(!at||*(const int*)at!=throwName||*(const int*)(at+4)!=0)return;
+   ++notes;
+   const uintptr_t node=P(f+0x10),object=P(f+0x14);
+   char caller[96]{},owner[96]{},receiver[96]{};
+   NameOf(node,caller,sizeof(caller));NameOf(object,owner,sizeof(owner));
+   NameOf((uintptr_t)self,receiver,sizeof(receiver));
+   Log("inventory throw receipt: caller=%s object=%s receiver=%s self=%p pawn=%p manager=%p node=%p expected=%p code=%p exactCode=%d exactObject=%d exactReceiver=%d sameThread=%d identity=%d",
+       caller,owner,receiver,self,(void*)pawn,(void*)manager,(void*)node,(void*)function,(void*)at,
+       script&&at==script+inventoryretention::DropAt+1,object==manager,(uintptr_t)self==pawn,
+       thread==GetCurrentThreadId(),script&&ScriptIdentity(script));
+  } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {}
+}
 // Called only by the VirtualFunction opcode adapter. The interpreter has
 // consumed opcode 0x1B, but not the FName/default argument/parameter terminator.
 // No shared script or inventory memory is modified.
@@ -261,8 +320,20 @@ static bool CanRetain(void* stack,int nodeOffset) {
    return false;
   }
 }
+static void ObserveThrowEntry(void* self,void* stack,int name,int nodeOffset) {
+  static unsigned notes=0;
+  if(!Rd(g_keepAcquiredWeapons)||throwName<0||name!=throwName||notes>=8||!stack||nodeOffset<0)return;
+  __try {
+   ++notes;char receiver[96]{},nodeName[96]{};
+   const uintptr_t node=P((uintptr_t)stack+nodeOffset);
+   NameOf((uintptr_t)self,receiver,sizeof(receiver));NameOf(node,nodeName,sizeof(nodeName));
+   Log("inventory throw entry: receiver=%s self=%p pawn=%p node=%s nodePtr=%p sameThread=%d (read-only native-to-script entry)",
+       receiver,self,(void*)pawn,nodeName,(void*)node,thread==GetCurrentThreadId());
+  } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {}
+}
 template<class Invoke> static bool InvokeRetained(void* self,void* edx,void* stack,void* result,
   int name,int nodeOffset,Invoke original) {
+  ObserveThrowEntry(self,stack,name,nodeOffset);
   (void)edx;(void)result;(void)original;
   if(!Rd(g_keepAcquiredWeapons)||name!=functionName||!script||!function||
      (uintptr_t)self!=manager||!manager||thread!=GetCurrentThreadId()||nodeOffset<0)return false;

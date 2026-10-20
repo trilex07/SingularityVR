@@ -36,6 +36,11 @@ def main():
         functions.append(dict(owner=owner, export=f['index'], script_bytes=n))
     if not any(f['owner'] == 'Pawn' for f in functions):
         raise ValueError('Engine.Pawn.ThrowActiveWeapon script missing')
+    ownership = {('Camera', 'PCOwner'), ('Controller', 'Pawn'), ('Pawn', 'Controller')}
+    present = {(p['records'][f['outer']-1]['name'], f['name'])
+               for f in p['exports'] if f['outer'] > 0}
+    if not ownership <= present:
+        raise ValueError('camera/controller reciprocal ownership producer missing')
     text = a.text.read_bytes()
     off = a.interpreter-a.text_base
     if not 0 <= off <= len(text)-0x1a0:
@@ -50,6 +55,7 @@ def main():
     print(json.dumps(dict(engine_sha256=hashlib.sha256(engine).hexdigest(),
         text_sha256=hashlib.sha256(text).hexdigest(), functions=functions,
         dispatch_sites=2, table=hex(sites[0][1]), node=16, code=24, object=20,
+        ownership_producers=sorted('.'.join(pair) for pair in ownership),
         evidence='offline structural identity, NOT live suppression or L4'), indent=2))
 
 
