@@ -95,6 +95,26 @@ reload integration. Do not enable a fake inventory item to fill those gaps.
 
 ## Offline gates and next physical route
 
+### Prepared artifact receipt (2026-10-20)
+
+Outside-Steam candidate: `build/combined-followups/measured-aim-13db0f0`.
+Clean source13db0f0, x86 PE32 /O2, no performance instrumentation.
+
+- DLL SHA256: F7D26BEB2AFDD263C4CFA67FD3BBDC244BFBD13EB10FC627A3CD70E03EB9D1E9
+- INI SHA256: A1FF13DC9A57FEC192282E3062074B8EF3887DDFFBB02FE7E11247C841222B70
+- Change plan SHA256: 6AAE6B81AD128070166657D89C4E12AABD46C0F7AD4D7A2FC6EB8AE043001731
+
+Native FX/math and full four-weapon regression suites PASS; preparation58,
+fake-install lease6, carry-ray wiring3, measured wiring4 and synthetic Deadlock
+auditor4 checks PASS. Original PSK axes and native equipment auditors PASS.
+Accepted-profile deployment WhatIf PASS. No actual deployment or launch.
+Intermediate measured-aim-9d01a2e is superseded; do not deploy it instead.
+
+Installed baseline independently rehashed unchanged: DLL7A1DE585...9495,
+INI60224CA0...4ADC, accepted-profile5A60E4D1...7556E. New scope/aim remains
+L1/L2 only. User does not yet have an unlocked Deadlock/heavy save. Native
+equipment integration is incomplete, disabled, and not a physical-test feature.
+
 Run `tools/fx/test-native-muzzle.ps1`, full `tools/reload/test-centurion.ps1`
 with the existing private PreparedRoot, candidate/lease fixture tests and
 the original-mesh/native auditors. Build x86 PE32 /O2 from clean source before

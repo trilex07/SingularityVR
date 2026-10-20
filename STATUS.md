@@ -2,6 +2,15 @@
 
 ## 2026-10-20 measured barrel / body equipment preparation
 
+Final offline candidate: build/combined-followups/measured-aim-13db0f0,
+clean source13db0f0, x86 PE32 /O2, performance instrumentation disabled.
+DLL SHA256 F7D26BEB2AFDD263C4CFA67FD3BBDC244BFBD13EB10FC627A3CD70E03EB9D1E9.
+Native FX/math and full four-weapon regressions PASS; preparation58 and
+fake-install lease6 checks PASS. Accepted-profile WhatIf PASS, no Steam writes.
+READY_FOR_PHYSICAL_TEST for measured scope/shot axes ONLY, not L3/L4 accepted.
+User has no unlocked Deadlock/heavy save yet; native gameplay integration is
+still incomplete. CPU policies/read-only census do not make these playable.
+
 User clarified grenade=native Deadlock, not a newly invented frag grenade.
 Original SP power -> DeadlockGrenade relationship and complete native input
 contracts now audited offline (audit_deadlock_backend.py); opt-in census also
