@@ -1,5 +1,20 @@
 # STATUS — session handoff
 
+## 2026-10-20 physical2232 follow-up: rifle reopened / stronger R1
+
+User: Kasimov direction improved, R1 still too shaky; Valkyrie apparent missing
+rounds/inaccuracy persist. F7D26BEB...D1E9 is NOT physically accepted for these.
+Game closed; accepted DLL7A1DE585...9495 / INI60224CA0...4ADC independently
+rehashed restored. Full private log preserved, no new Steam writes/launch.
+
+Strong R1 supported-Kasimov filter200ms (mild18ms unchanged), synthetic5--12Hz
+two-hand angular tremor82--92% lower, immediate release and intentional turns
+tested. HMD NEVER filtered. Native original tracer gate is stochastic: shared
+Valkyrie chance0.8, SP override0.5, not proof of live value. Bounded read-only
+chance/spread receipts added; no silent zero-spread/every-tracer change.
+See docs/rifle-tracers-strong-steady.md. Runtime rifle accuracy remains open;
+offline mathematical stability is not PSVR2 acceptance. Build/gates pending.
+
 ## 2026-10-20 measured barrel / body equipment preparation
 
 Final offline candidate: build/combined-followups/measured-aim-13db0f0,

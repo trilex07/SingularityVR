@@ -2,6 +2,32 @@
 #include "../hand_hud_policy.h"
 #include <cassert>
 #include <cstdio>
+static void SupportedTremor(unsigned hz,float frequency){
+    weaponsteady::Filter hands[2];
+    double rawSq=0,filteredSq=0;
+    const unsigned period=1000/hz;
+    for(unsigned i=0;i<10000/period;++i){
+        const float t=float(i*period)*.001f;
+        hipknife::Pose raw[2]{};raw[0].p.z=-.35f;raw[1].p.z=-.60f;
+        // Opposed 3mm hand tremor is a conservative two-hand angular case.
+        raw[0].p.x=.003f*std::sin(6.2831853f*frequency*t);
+        raw[1].p.x=-raw[0].p.x;
+        const float a=.008726646f*std::sin(6.2831853f*frequency*t);
+        raw[0].q=raw[1].q={0,std::sin(a),0,std::cos(a)};
+        const auto left=hands[0].Update(raw[0],true,true,1,2,1000+i*period);
+        const auto right=hands[1].Update(raw[1],true,true,1,2,1000+i*period);
+        assert(hipknife::Valid(left.q)&&hipknife::Valid(right.q));
+        if(i*period>1000){
+            const float before=std::atan2(raw[1].p.x-raw[0].p.x,.25f);
+            const float after=std::atan2(right.p.x-left.p.x,.25f);
+            rawSq+=before*before;filteredSq+=after*after;
+            assert(std::fabs(left.q.y)<.002f);
+        }
+    }
+    const double ratio=std::sqrt(filteredSq/rawSq);
+    std::printf("supported tremor %uHz samples / %.0fHz motion: RMS %.3f of raw\n",hz,frequency,ratio);
+    assert(ratio<.22); // >=78% reduction in supported angular RMS, 5--12Hz.
+}
 int main(){
     using namespace weaponsteady;
     assert(Hold(true,true,true,true,true,true,false));
@@ -39,5 +65,20 @@ int main(){
         raw={};raw.q={0,std::sin(a),0,std::cos(a)};
         q=rotational.Update(raw,true,true,1,2,1000+11*i).q;
         assert(std::fabs(q.y)<.0002f&&hipknife::Valid(q));}
+    for(unsigned hz: {50u,90u,120u})for(float frequency: {5.f,8.f,12.f})
+        SupportedTremor(hz,frequency);
+    // A continuous intentional turn must not stick; release immediately
+    // re-seeds the unfiltered pose, rather than retaining strong-filter lag.
+    Filter turn;float maximumLag=0;
+    for(unsigned i=0;i<=300;++i){
+        const float angle=float(i)*.011f*.174532925f; // 10 degrees/second.
+        raw={};raw.q={0,std::sin(angle*.5f),0,std::cos(angle*.5f)};
+        const auto filtered=turn.Update(raw,true,true,1,2,1000+11*i);
+        maximumLag=std::max(maximumLag,angle-2.f*std::atan2(filtered.q.y,filtered.q.w));
+    }
+    std::printf("intentional 10deg/s turn: maximum lag %.3fdeg\n",maximumLag*57.29578f);
+    assert(maximumLag<.035f); // <2deg, and hard/fast turns still snap above.
+    auto released=turn.Update(raw,true,false,1,2,4311);
+    assert(released.q.y==raw.q.y&&released.q.w==raw.q.w);
     std::puts("PASS weapon steady: jitter attenuation, movement, identity/gap/release reset, quaternion sign and HUD gates");
 }

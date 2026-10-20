@@ -2,11 +2,25 @@
 from pathlib import Path
 import struct
 import unittest
-from audit_rifle_scope_backend import body, fnv, registration, helper_contract, block_contract
+from audit_rifle_scope_backend import body, fnv, registration, helper_contract, block_contract, tracer_visibility
 
 ROOT = Path(__file__).resolve().parents[2]
 
 class NativeBackendTests(unittest.TestCase):
+    def test_tracer_visibility_refuses_unknown_or_partial_native_method(self):
+        for raw in (b'', b'\xc3', b'\x90'*1694, b'\x90'*1693):
+            with self.assertRaises(ValueError): tracer_visibility(raw, 0x1000, 0x1000)
+
+    def test_ballistics_probe_is_bounded_and_does_not_change_native_chance(self):
+        source=(ROOT/'spikes/view_matrix/native_rifle_fx.inl').read_text()
+        self.assertIn('if(count<8){++count;',source)
+        self.assertIn('"mTracerChance","FloatProperty")==0x4c',source)
+        self.assertIn('"mTracerParticles","ObjectProperty")==0x48',source)
+        self.assertIn('FloatReceipt(weapon,"mSpreadCurrentTotal",current)',source)
+        probe=source[source.index('static bool FloatReceipt'):source.index('static hipknife::V* __fastcall SourceHook')]
+        self.assertNotIn('memcpy((void*)',probe)
+        self.assertNotIn('MH_CreateHook',probe)
+
     def test_full_block_includes_other_return_branch(self):
         raw = b'\x74\x01\xc3\x90\xc3'
         block_contract(raw, 0x1000, 0x1000, len(raw), fnv(raw))

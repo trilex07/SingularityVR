@@ -59,7 +59,7 @@ No claim that all shake originates in controller sensor noise.
 
 `[Input] WeaponSteady=0` is the default. The candidate enables it explicitly.
 Controller-only adaptive position/quaternion filter: 18ms base time constant;
-65ms while the named primary Use/grip action is held with two-hand Kasimov
+200ms while the named primary Use/grip action is held with two-hand Kasimov
 (11389 vertices), right-handed mode, valid tracking and gameplay. No new XR
 action polling, allocations, locks or engine offsets. The same filtered
 controller pose feeds gun/arm transforms, ballistic direction, native FX and

@@ -29,7 +29,11 @@ struct Filter {
         const float angle=2.f*std::acos(std::min(1.f,dot));
         if(distance>.04f||angle>.20f){value=raw;return value;}
         const float motion=std::max(distance/.012f,angle/.08f);
-        const float tau=(strong?.065f:.018f)/(1.f+motion*motion*3.f);
+        // R1 + supported Kasimov: suppress small physiological tremor, not just
+        // alternating sensor noise. Both hands use this same response because
+        // their POSITION difference is the supported barrel's aim axis.
+        // Residual-adaptive gain and the snap above keep deliberate turns live.
+        const float tau=(strong?.200f:.018f)/(1.f+motion*motion*3.f);
         const float alpha=1.f-std::exp(-dt/tau);
         value.p=value.p+(raw.p-value.p)*alpha;
         hipknife::Q q{value.q.x+(raw.q.x-value.q.x)*alpha,

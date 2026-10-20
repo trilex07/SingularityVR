@@ -51,6 +51,39 @@ static bool Code(uintptr_t address,size_t bytes,unsigned long long hash){
         PauseRttProbe::SafeRange(address,bytes)&&
         uiwitness::Fingerprint((const unsigned char*)address,bytes)==hash;
 }
+static bool FloatReceipt(uintptr_t object,const char* property,float& value){
+    if(!object||!IsLive(object))return false;
+    const auto cls=PauseRttProbe::Pointer(object+OBJ_CLASS);
+    const int offset=PauseRttProbe::Property(cls,property,"FloatProperty");
+    if(offset<0||!PauseRttProbe::SafeRange(object+offset,sizeof(value)))return false;
+    memcpy(&value,(void*)(object+offset),sizeof(value));
+    return std::isfinite(value);
+}
+static void BallisticsReceipt(uintptr_t weapon){
+    // Called only for the eight exact source replacements below. No new hook,
+    // polling loop, native spread write or forced cosmetic particle spawning.
+    uintptr_t fx=0;
+    if(TryAcquireSRWLockShared(&tracerFxLock)){
+        if(tracerWeapon==weapon&&tracerPawn==g_playerPawn)fx=tracerFx;
+        ReleaseSRWLockShared(&tracerFxLock);
+    }
+    if(!fx||!IsLive(fx)||PauseRttProbe::Pointer(fx+OBJ_CLASS)!=g_weaponFxClass||
+       PauseRttProbe::Pointer(fx+0x90)!=weapon)return;
+    // The full PlayTracerFX contract reads template+48 / chance+4C, AFTER
+    // this source getter. Reflection establishes their names in this session.
+    const bool contract=PauseRttProbe::Property(g_weaponFxClass,"mTracerChance","FloatProperty")==0x4c&&
+        PauseRttProbe::Property(g_weaponFxClass,"mTracerParticles","ObjectProperty")==0x48;
+    float chance=0,current=0,base=0,minimum=0,maximum=0;
+    const bool haveChance=contract&&FloatReceipt(fx,"mTracerChance",chance);
+    const bool haveCurrent=FloatReceipt(weapon,"mSpreadCurrentTotal",current);
+    const bool haveBase=FloatReceipt(weapon,"mSpreadBase",base);
+    const bool haveMin=FloatReceipt(weapon,"mSpreadMin",minimum);
+    const bool haveMax=FloatReceipt(weapon,"mSpreadMax",maximum);
+    Log("rifle native ballistics: weapon=%08X fx=%08X chanceValid=%d chance=%.6f template=%08X spreadValid=%d/%d/%d/%d current=%.6f base=%.6f min=%.6f max=%.6f [read-only authored values; units/pixels NOT proven]",
+        (unsigned)weapon,(unsigned)fx,haveChance?1:0,chance,
+        contract?(unsigned)PauseRttProbe::Pointer(fx+0x48):0,
+        haveCurrent?1:0,haveBase?1:0,haveMin?1:0,haveMax?1:0,current,base,minimum,maximum);
+}
 static hipknife::V* __fastcall SourceHook(void* self,void*,hipknife::V* output){
     const auto caller=(uintptr_t)_ReturnAddress();
     auto* result=sourceOriginal(self,output);
@@ -62,9 +95,11 @@ static hipknife::V* __fastcall SourceHook(void* self,void*,hipknife::V* output){
     if(riflefx::TracerSource(g_nativeRifleTracer,Scene(),caller==tracerCaller,
        (uintptr_t)self,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),w,
        {g_camPos[0],g_camPos[1],g_camPos[2]},*output,replacement)){
-        static unsigned count=0;if(count++<8)
+        static unsigned count=0;if(count<8){++count;
             Log("rifle native tracer: exact source (%.3f,%.3f,%.3f)->(%.3f,%.3f,%.3f); endpoint unchanged [not pixels]",
                 output->x,output->y,output->z,replacement.x,replacement.y,replacement.z);
+            BallisticsReceipt((uintptr_t)(uint32_t)Rd(g_weaponObj));
+        }
         *output=replacement;
     }
     return result;

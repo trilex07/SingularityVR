@@ -88,6 +88,29 @@ def block_contract(text, base, address, length, expected):
     return dict(bytes=length, fnv1a64=f'{expected:016X}', sha256=hashlib.sha256(raw).hexdigest())
 
 
+def tracer_visibility(text, base, address):
+    """Original tracer's random gate, NOT a collision/bullet gate.
+
+    Whole body includes every branch; refuse a changed random/comparison path.
+    Runtime reflection must additionally establish the field's semantic name.
+    """
+    receipt = block_contract(text, base, address, 1694, 0xB7DDF9B80E425AAB)
+    at = address-base
+    if (text[at+0x227:at+0x22b] != bytes.fromhex('837f4800') or
+            text[at+0x24a] != 0xe8 or
+            text[at+0x24f:at+0x258] != bytes.fromhex('d9474cdff1ddd80f86') or
+            text[at+0x2d0:at+0x2d4] != bytes.fromhex('8b474850')):
+        raise ValueError('tracer template/random/compare/spawn contract')
+    random = address+0x24f+struct.unpack_from('<i', text, at+0x24b)[0]
+    skip = address+0x25c+struct.unpack_from('<i', text, at+0x258)[0]
+    if skip != address+0x2ec:
+        raise ValueError('tracer chance skip destination')
+    receipt.update(chance_field=0x4c, template_field=0x48,
+                   random_helper=random, skip_offset=0x2ec,
+                   note='cosmetic spawn is conditional; source getter runs before the random gate')
+    return receipt
+
+
 def capture_vtable(pe, text, base):
     # Measured native registration callback has a short tail jump to the
     # component ctor, unlike Raven's placement-new thunk. Refuse ambiguity.
@@ -188,6 +211,17 @@ def audit(exe, capture, engine, rifle):
     # Native default ctor writes pure-interface tables first, implementations
     # last. Do not confuse it with the destructor's reversed sequence.
     block_contract(text, base, weapon['constructor'], 74, 0x76B208AF5D452BBD)
+    spread_wrapper=registration(pe,text,base,'intARvWeaponSharedexecGetWeaponSpread')
+    block_contract(text,base,spread_wrapper,58,0x63D37CBC1C2582C4)
+    spread=u32(pe.read(weapon['vtable']+0x45c,4),0)
+    # Includes the fallback branch AFTER the first return, unlike body().
+    spread_receipt=block_contract(text,base,spread,117,0xA07CE9D71DC4EC2A)
+    add_wrapper=registration(pe,text,base,'intARvWeaponSharedexecAddSpread')
+    block_contract(text,base,add_wrapper,132,0x4BD340D01E7502E5)
+    add_spread=u32(pe.read(weapon['vtable']+0x428,4),0)
+    spread_receipt['add']=block_contract(text,base,add_spread,536,0x90E1F845D48FC976)
+    spread_receipt.update(get_rva=spread-pe.base,add_rva=add_spread-pe.base,
+                          note='original random radial spread precedes the mod collision-ray hook; do not zero it to hide an axis error')
     start = weapon['constructor']-base
     pattern = b'\xc7\x86\xd4\x02\x00\x00'
     stores = list(occurrences(text[start:start+74], pattern))
@@ -210,7 +244,8 @@ def audit(exe, capture, engine, rifle):
         except ValueError:
             continue
     tracer = u32(pe.read(only(fx_tables, 'FX native vtable')+0x128, 4), 0)
-    block_contract(text, base, tracer, 1694, 0xB7DDF9B80E425AAB)
+    visibility = tracer_visibility(text, base, tracer)
+    visibility['random_helper_rva'] = visibility.pop('random_helper')-pe.base
     if text[tracer-base+0x8c:tracer-base+0x8e] != b'\xff\xd2':
         raise ValueError('tracer source getter callsite')
     tracer_source.update(interface_offset=0x2d4, getter_rva=getter-pe.base,
@@ -238,11 +273,38 @@ def audit(exe, capture, engine, rifle):
     materials = [dict(export=e['index'], properties=[p for p in e['properties']
                  if p['name'] in ('Material', 'bUseLocalSpace')]) for e in pkg['exports']
                  if e['outer']==loop and e['class_name']=='ParticleModuleRequired']
+    # Preserve export/archetype identity: single-player and multiplayer FX
+    # share display names but override tracer chance independently.
+    chances = []
+    raw_rifle = Path(rifle).read_bytes()
+    for e in fx:
+        for p in e.get('properties', []):
+            if p['name'] == 'mTracerChance' and p['type'] == 'FloatProperty':
+                if p['tag_bytes'] != 28:
+                    raise ValueError('tracer chance FloatProperty size')
+                chance = struct.unpack_from('<f', raw_rifle, p['tag_offset']+24)[0]
+                if not 0 <= chance <= 1:
+                    raise ValueError('tracer chance range')
+                chances.append(dict(export=e['index'], outer=e['outer'],
+                                    outer_name=pkg['records'][e['outer']-1]['name'],
+                                    archetype=e['archetype'], chance=chance))
+    weapon_defaults=[]
+    for e in pkg['exports']:
+        values={}
+        for p in e.get('properties',[]):
+            if 'Spread' not in p['name']: continue
+            if p['type']=='FloatProperty' and p['tag_bytes']==28:
+                values[p['name']]=struct.unpack_from('<f',raw_rifle,p['tag_offset']+24)[0]
+            elif p['type']=='BoolProperty': values[p['name']]=p['value']
+        if values: weapon_defaults.append(dict(export=e['index'],name=e['name'],
+                                               archetype=e['archetype'],values=values))
     return dict(status='OFFLINE_STRUCTURAL_ONLY',
         exe_sha256=hashlib.sha256(pe.data).hexdigest(),
         text_sha256=hashlib.sha256(text).hexdigest(), methods=methods,
         reflected_contract=contract, helper_contract=helpers, rifle_fx=templates,
-        capture_isolation=isolation, resolve_texture=resolve, tracer_source=tracer_source, native_loop_materials=materials,
+        capture_isolation=isolation, resolve_texture=resolve, tracer_source=tracer_source,
+        tracer_visibility=visibility, tracer_chances=chances, native_spread=spread_receipt,
+        weapon_spread_defaults=weapon_defaults, native_loop_materials=materials,
         warning='No live execution, completed RTT pixels, native emitter identity or PSVR2 proof.')
 
 
