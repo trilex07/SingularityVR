@@ -6,6 +6,16 @@ using Method=void (__thiscall*)(void*,const hipknife::V*,int);
 static Method original=nullptr;
 static unsigned notes=0;
 static uintptr_t hooked=0;
+using SetLocation=int (__thiscall*)(void*,hipknife::V);
+using SetRotation=int (__thiscall*)(void*,int,int,int);
+static_assert(sizeof(hipknife::V)==12&&sizeof(int)==4,"audited x86 native pose ABI");
+static SetLocation setLocation=nullptr;
+static SetRotation setRotation=nullptr;
+static uintptr_t movingFx=0,movingWeapon=0,movingPawn=0,movingEmitter=0,movingPsc=0,movingTemplate=0;
+static int pscOffset=-1,templateOffset=-1;
+static uintptr_t emitterLayout=0,pscLayout=0;
+static ULONGLONG firedAt=0;
+static unsigned moveNotes=0;
 // Engine-thread-only follow-through: PlayMuzzleFX can return an existing looping
 // emitter without touching its transform. Record both the call and later state,
 // rather than treating a changed spawn argument as proof of visible particles.
@@ -34,6 +44,82 @@ static bool Code(uintptr_t address,size_t bytes,unsigned long long hash){
     return address>=g_textLo&&address<g_textHi&&bytes<=g_textHi-address&&
         PauseRttProbe::SafeRange(address,bytes)&&
         uiwitness::Fingerprint((const unsigned char*)address,bytes)==hash;
+}
+static uintptr_t Helper(uintptr_t wrapper,unsigned offset,size_t bytes,unsigned long long hash){
+    if(!wrapper||!PauseRttProbe::SafeRange(wrapper+offset,5)||*(const unsigned char*)(wrapper+offset)!=0xe8)return 0;
+    const auto address=wrapper+offset+5+*(const int32_t*)(wrapper+offset+1);
+    return Code(address,bytes,hash)?address:0;
+}
+static bool BindMovement(){
+    if(setLocation&&setRotation)return true; // No repeated image scans while waiting for a live FX object.
+    const auto location=NativeRegistry::Find("intAActorexecSetLocation");
+    const auto rotation=NativeRegistry::Find("intAActorexecSetRotation");
+    if(!Code(location,121,0xD75050CD7801E36Bull)||!Code(rotation,109,0xCB407E96A5DEE5B3ull)){
+        Log("rifle native pose: REFUSE wrapper locations=%08X rotation=%08X",(unsigned)location,(unsigned)rotation);return false;}
+    // Exact exec -> E8 helper -> full body proves FVector/FRotator BY VALUE,
+    // ret 0xC. These are native movement functions, not reflected exec ABIs.
+    setLocation=(SetLocation)Helper(location,0x67,29,0x8A32507F9F7A934Aull);
+    setRotation=(SetRotation)Helper(rotation,0x5b,139,0xAA63F1F63DEFF3D8ull);
+    if(!setLocation||!setRotation)Log("rifle native pose: REFUSE helper location=%08X rotation=%08X",(unsigned)(uintptr_t)setLocation,(unsigned)(uintptr_t)setRotation);
+    return setLocation&&setRotation;
+}
+static bool Scene(){return VrModeOn()&&!CutsceneNativeCameraArmed()&&!Rd(g_gamePaused)&&
+    !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!Rd(g_weaponHolstered);}
+static void MaintainTick(){
+    if(!firedAt)return;
+    static thread_local bool running=false;if(running)return;
+    weaponmuzzle::Witness w;
+    if(!TryAcquireSRWLockShared(&g_nextVisualLock))return;
+    w=g_nextMuzzle;ReleaseSRWLockShared(&g_nextVisualLock);
+    const auto now=GetTickCount64();
+    if(!setLocation||!setRotation||movingPawn!=g_playerPawn||
+       movingWeapon!=(uintptr_t)(uint32_t)Rd(g_weaponObj)||
+       !riflefx::Lease(g_nativeRifleMuzzle,Scene(),firedAt,now,(uint32_t)movingPawn,(uint32_t)movingWeapon,w)||
+       !IsLive(movingPawn)||!IsLive(movingWeapon)||!IsLive(movingFx)||!IsLive(movingEmitter)||!IsLive(movingPsc)||
+       PauseRttProbe::Pointer(movingEmitter+OBJ_CLASS)!=emitterLayout||
+       PauseRttProbe::Pointer(movingPsc+OBJ_CLASS)!=pscLayout||
+       PauseRttProbe::Pointer(movingFx+0x90)!=movingWeapon||
+       PauseRttProbe::Pointer(movingFx+0x88)!=movingEmitter||
+       PauseRttProbe::Pointer(movingEmitter+pscOffset)!=movingPsc||
+       PauseRttProbe::Pointer(movingPsc+templateOffset)!=movingTemplate){firedAt=0;return;}
+    const hipknife::V camera{g_camPos[0],g_camPos[1],g_camPos[2]};
+    hipknife::V position{};float aim[3]{};int pitch=0,yaw=0;
+    GunAimDir(aim); // Same engine-space axis as the accepted bullet/laser path.
+    if(!riflefx::Origin(3,true,true,(uint32_t)movingWeapon,(uint32_t)movingPawn,
+       (uint32_t)movingWeapon,now,w,camera,camera,position)||
+       !riflefx::Rotation({aim[0],aim[1],aim[2]},pitch,yaw)){firedAt=0;return;}
+    running=true;
+    const int moved=setLocation((void*)movingEmitter,position);
+    const int turned=moved?setRotation((void*)movingEmitter,pitch,yaw,0):0;
+    running=false;
+    if(moveNotes++<12)Log("rifle native pose: emitter=%08X template=%08X moved=%d turned=%d position=(%.3f,%.3f,%.3f) rot=(%d,%d,0) [native transform receipt, NOT draw proof]",
+        (unsigned)movingEmitter,(unsigned)movingTemplate,moved,turned,position.x,position.y,position.z,pitch,yaw);
+    if(!moved||!turned)firedAt=0;
+}
+static void TrackRefusal(const char* stage){static unsigned count=0;if(count<8){++count;Log("rifle native pose: REFUSE emitter/%s; no movement",stage);}}
+static void Track(uintptr_t fx,uintptr_t weapon,const weaponmuzzle::Witness& w){
+    if(g_nativeRifleMuzzle!=3||!setLocation||!setRotation||!Scene()||
+       !w.Current((uint32_t)g_playerPawn,(uint32_t)weapon,GetTickCount64())||
+       w.kind!=weaponreload::Kind::Valkyrie)return;
+    const auto emitter=PauseRttProbe::Pointer(fx+0x88);
+    if(!emitter||!IsLive(emitter)){TrackRefusal("live");return;}
+    const auto cls=PauseRttProbe::Pointer(emitter+OBJ_CLASS);char name[64]{};
+    if(!GuardedNameOf(cls,name,sizeof(name))||strcmp(name,"RvEmitter")){TrackRefusal("class");return;}
+    const int component=emitterLayout==cls?pscOffset:
+        PauseRttProbe::Property(cls,"ParticleSystemComponent","ComponentProperty");
+    const auto psc=component>=0?PauseRttProbe::Pointer(emitter+component):0;
+    if(!psc||!IsLive(psc)){TrackRefusal("component");return;}
+    const auto pscClass=PauseRttProbe::Pointer(psc+OBJ_CLASS);
+    const int templ=pscLayout==pscClass?templateOffset:PauseRttProbe::Property(pscClass,"Template","ObjectProperty");
+    const auto asset=templ>=0?PauseRttProbe::Pointer(psc+templ):0;
+    // These two original first-person slots are proven by the full native
+    // PlayMuzzleFX fingerprint: regular loop + iron-sight loop. Never move AI
+    // effects, impact actors, templates or an unrelated pooled emitter.
+    if(!asset||(asset!=PauseRttProbe::Pointer(fx+0x6c)&&asset!=PauseRttProbe::Pointer(fx+0x84))){TrackRefusal("first-person-template");return;}
+    movingFx=fx;movingWeapon=weapon;movingPawn=g_playerPawn;movingEmitter=emitter;
+    movingPsc=psc;movingTemplate=asset;pscOffset=component;templateOffset=templ;
+    emitterLayout=cls;pscLayout=pscClass;
+    firedAt=GetTickCount64();MaintainTick();
 }
 static void EmitterReceipt(const char* phase,uintptr_t fx,uintptr_t emitter){
     if(!emitter||!IsLive(emitter)){
@@ -83,7 +169,7 @@ static void __fastcall Hook(void* self,void*,const hipknife::V* location,int fir
     const auto owner=PauseRttProbe::Pointer((uintptr_t)self+0x90);
     hipknife::V replacement{};
     const bool readable=location&&PauseRttProbe::SafeRange((uintptr_t)location,sizeof(*location));
-    const bool scene=VrModeOn()&&!CutsceneNativeCameraArmed()&&!Rd(g_gamePaused)&&!Rd(g_weaponHolstered);
+    const bool scene=Scene();
     const bool changed=readable&&riflefx::Origin(g_nativeRifleMuzzle,scene,firstPerson!=0,
         (uint32_t)owner,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),
         witness,{g_camPos[0],g_camPos[1],g_camPos[2]},*location,replacement);
@@ -95,6 +181,7 @@ static void __fastcall Hook(void* self,void*,const hipknife::V* location,int fir
             int(witness.kind),changed?1:0,location->x,location->y,location->z,
             changed?replacement.x:location->x,changed?replacement.y:location->y,changed?replacement.z:location->z);
     original(self,changed?&replacement:location,firstPerson);
+    if(changed)Track((uintptr_t)self,owner,witness);
     if(receipt){
         const auto emitter=PauseRttProbe::Pointer((uintptr_t)self+0x88);
         char name[96]{};
@@ -113,6 +200,8 @@ static void Install(){
     static unsigned attempts=0;static ULONGLONG next=0;
     if(attempts>=3||GetTickCount64()<next)return;
     ++attempts;next=GetTickCount64()+2000;
+    if(g_nativeRifleMuzzle==3&&!BindMovement()){
+        Log("rifle native pose: refused exact SetLocation/SetRotation contracts; no movement hook");return;}
     const auto wrapper=Function(g_weaponFxClass,"PlayMuzzleFX");
     // Full wrapper proves the vector-reference + UBOOL stack order and ret8.
     if(!Code(wrapper,197,0x1153B073558EDE80ull)||

@@ -63,7 +63,7 @@ if($RifleSniperFollowups){
 if($OpticalScopeAndRifleOrigin){
  if(-not $RifleSniperFollowups){throw 'Optical experiment requires -RifleSniperFollowups'}
  $targets['Render/SniperPictureInPicture']='1'
- $targets['Diagnostic/NativeRifleMuzzleOrigin']='2'
+ $targets['Diagnostic/NativeRifleMuzzleOrigin']='3'
  # No additional four-frame pass dumps in the perceptual test. Bounded native
  # emitter / owned RTT receipts remain enabled by their experiment flags.
  $targets['Diagnostic/NativeMuzzleProbe']='0'

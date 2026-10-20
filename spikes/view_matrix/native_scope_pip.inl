@@ -70,13 +70,20 @@ static bool FindClasses(){
     return captureClass&&targetClass;
 }
 static bool Bind(uintptr_t pawn){
-    const auto create=NativeRifleFx::Function(targetClass,"Create");
-    const auto setView=NativeRifleFx::Function(captureClass,"SetView");
-    const auto setParams=NativeRifleFx::Function(captureClass,"SetCaptureParameters");
-    const auto setRate=NativeRifleFx::Function(captureClass,"SetFrameRate");
+    // Bind the exact engine class's registered exec, not a possibly unbound
+    // UFunction::Func or a script override inherited by the current pawn.
+    // The registration rows are independently measured by the offline auditor.
+    const auto create=NativeRegistry::Find("intUTextureRenderTarget2DexecCreate");
+    const auto setView=NativeRegistry::Find("intUSceneCapture2DComponentexecSetView");
+    const auto setParams=NativeRegistry::Find("intUSceneCapture2DComponentexecSetCaptureParameters");
+    const auto setRate=NativeRegistry::Find("intUSceneCaptureComponentexecSetFrameRate");
     const auto cls=PauseRttProbe::Pointer(pawn+OBJ_CLASS);
-    const auto add=NativeRifleFx::Function(cls,"AttachComponent");
-    const auto remove=NativeRifleFx::Function(cls,"DetachComponent");
+    const auto add=NativeRegistry::Find("intAActorexecAttachComponent");
+    const auto remove=NativeRegistry::Find("intAActorexecDetachComponent");
+    Log("scope PiP: native registry Create=%08X reflected=%08X SetView=%08X reflected=%08X Attach=%08X reflected=%08X [all code/field contracts still required]",
+        (unsigned)create,(unsigned)NativeRifleFx::Function(targetClass,"Create"),
+        (unsigned)setView,(unsigned)NativeRifleFx::Function(captureClass,"SetView"),
+        (unsigned)add,(unsigned)NativeRifleFx::Function(cls,"AttachComponent"));
     Log("scope PiP: preflight captureClass=%08X targetClass=%08X pawnClass=%08X funcOffset=%X children=%X next=%X propertyOffset=%X",
         (unsigned)captureClass,(unsigned)targetClass,(unsigned)cls,g_funcOffset,g_upChildren,g_upNext,g_upOffset);
     if(!CodeContract("wrapper/Create",create,496,0x55FEB9FBD0D3F0A5ull)||
@@ -323,7 +330,7 @@ static void Draw(IDirect3DDevice9* dev){
     state->Apply();texture->Release();
 }
 }
-void NativeScopeTick(){NativeRifleFx::ObserveTick();NativeScopePip::Tick();}
+void NativeScopeTick(){NativeRifleFx::MaintainTick();NativeRifleFx::ObserveTick();NativeScopePip::Tick();}
 void NativeScopeBind(IDirect3DSurface9* surface){NativeScopePip::BindSurface(surface);}
 void NativeScopeReceipt(HRESULT hr){NativeScopePip::Receipt(hr);}
 void DrawScopePip(IDirect3DDevice9* dev){NativeScopePip::Draw(dev);}

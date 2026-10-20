@@ -27405,6 +27405,7 @@ struct CenturionRefillNative {
     void Refill()const{((void (__thiscall*)(void*))bindings.method[3])(object);}
 };
 #include "native_refill_engine.inl"
+#include "native_registry.inl"
 #include "native_rifle_fx.inl"
 #include "native_scope_pip.inl"
 static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
@@ -32831,8 +32832,8 @@ void LoadIniSettings() {
         nativefx::ConfigureParticles(GetPrivateProfileIntA("Render","NativeMuzzleParticleStereo",0,path)!=0);
         nativefx::ConfigureProbeGun((unsigned)GetPrivateProfileIntA("Diagnostic","NativeMuzzleProbeGunVerts",0,path));
         g_nativeRifleMuzzle=(int)GetPrivateProfileIntA("Diagnostic","NativeRifleMuzzleOrigin",0,path);
-        if(g_nativeRifleMuzzle<0||g_nativeRifleMuzzle>2)g_nativeRifleMuzzle=0;
-        Log("ini: NativeRifleMuzzleOrigin=%d (0 unchanged, 1 observe, 2 exact owned looping emitter origin)",g_nativeRifleMuzzle);
+        if(g_nativeRifleMuzzle<0||g_nativeRifleMuzzle>3)g_nativeRifleMuzzle=0;
+        Log("ini: NativeRifleMuzzleOrigin=%d (0 unchanged, 1 observe, 2 spawn origin, 3 owned loop native pose)",g_nativeRifleMuzzle);
     }
     g_cutsceneScreenDistanceMm=cinemascreen::ClampDistanceMm(
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));

@@ -43,7 +43,7 @@ Check ($riflePlan.ini.Count -eq 4) 'Rifle/sniper key scope expanded'
 Check ($riflePlan.files.Count -eq 1) 'Rifle/sniper changed assets'
 $optical=MakeCase 'optical'; & $script @optical -RifleSniperFollowups -OpticalScopeAndRifleOrigin | Out-Null
 $opticalText=[IO.File]::ReadAllText((Join-Path $optical.CandidateDir 'SingularityVR.ini'))
-foreach($line in @('SniperPictureInPicture=1','NativeRifleMuzzleOrigin=2','NativeMuzzleProbe=0',
+foreach($line in @('SniperPictureInPicture=1','NativeRifleMuzzleOrigin=3','NativeMuzzleProbe=0',
  'NativeMuzzleParticleStereo=1','PolishLanguage=1','DesktopMirrorWindow=1')){
  Check $opticalText.Contains($line) "Optical experiment regressed $line"
 }

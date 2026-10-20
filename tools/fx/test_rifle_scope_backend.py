@@ -57,5 +57,12 @@ class NativeBackendTests(unittest.TestCase):
         self.assertIn('original(self,changed?&replacement:location,firstPerson)', rifle)
         self.assertIn('0xDEA566CA454CAFEBull', rifle)
         self.assertIn('notes++<24', rifle)
+        for guard in ('BindMovement()', '0x8A32507F9F7A934Aull', '0xAA63F1F63DEFF3D8ull',
+                      'movingFx+0x88', 'movingPsc+templateOffset', 'riflefx::Lease(',
+                      'if(changed)Track(', 'setLocation((void*)movingEmitter,position)'):
+            self.assertIn(guard, rifle)
+        self.assertIn('NativeRifleFx::MaintainTick()', backend)
+        self.assertIn('NativeRegistry::Find("intUTextureRenderTarget2DexecCreate")', backend)
+        self.assertNotIn('*(hipknife::V*)', rifle)  # No raw actor transform writes.
 
 if __name__ == '__main__': unittest.main()

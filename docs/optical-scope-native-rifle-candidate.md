@@ -115,6 +115,10 @@ are explicit initial quality/magnification choices, not calibrated optics.
 
 ## Configuration / protected baseline
 
+Update: the current offline repair candidate selects mode3 (native loop pose),
+not the historical mode2 described below. See rifle-scope-pose-repair.md; the
+mode2 physical test disproved origin-only sufficiency.
+
 Use offline `prepare_combined_followups.ps1 -RifleSniperFollowups
 -OpticalScopeAndRifleOrigin`. Carries authored Kasimov grip / near-eye gate;
 adds Render/SniperPictureInPicture=1 and Diagnostic/NativeRifleMuzzleOrigin=2.

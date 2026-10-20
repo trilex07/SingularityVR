@@ -8,12 +8,27 @@ inline bool Origin(int mode,bool scene,bool firstPerson,std::uint32_t owner,
                    std::uint32_t pawn,std::uint32_t weapon,std::uint64_t now,
                    const weaponmuzzle::Witness& witness,hipknife::V camera,
                    hipknife::V original,hipknife::V& result) {
-    if(mode!=2||!scene||!firstPerson||!owner||owner!=weapon||
+    if((mode!=2&&mode!=3)||!scene||!firstPerson||!owner||owner!=weapon||
        witness.kind!=weaponreload::Kind::Valkyrie||!witness.Current(pawn,weapon,now)||
        !hipknife::Finite(camera)||!hipknife::Finite(original))return false;
     const auto position=camera+witness.relative;
     // Refuse a different world/origin epoch; this is not an offset calibration.
     if(!hipknife::Finite(position)||hipknife::Length(position-original)>520.f)return false;
     result=position;return true;
+}
+// A firing call leases an existing native emitter briefly; movement must never
+// extend that lease or restart a particle system after the game stops firing.
+inline bool Lease(int mode,bool scene,std::uint64_t fired,std::uint64_t now,
+                  std::uint32_t pawn,std::uint32_t weapon,const weaponmuzzle::Witness& w){
+    return mode==3&&scene&&fired&&now>=fired&&now-fired<=150&&
+        w.kind==weaponreload::Kind::Valkyrie&&w.Current(pawn,weapon,now);
+}
+inline bool Rotation(hipknife::V direction,int& pitch,int& yaw){
+    const auto length=hipknife::Length(direction);
+    if(!hipknife::Finite(direction)||!std::isfinite(length)||length<.99f||length>1.01f)return false;
+    constexpr float uu=65536.f/6.28318530718f;
+    pitch=(int)std::lround(std::atan2(direction.z,std::sqrt(direction.x*direction.x+direction.y*direction.y))*uu);
+    yaw=(int)std::lround(std::atan2(direction.y,direction.x)*uu);
+    return true;
 }
 }

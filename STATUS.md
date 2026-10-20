@@ -1,6 +1,17 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 ongoing offline repair: mode3 native Valkyrie loop pose maintenance
+(audited Actor.SetLocation/SetRotation, exact local emitter/template, 150ms
+firing lease) replaces origin-only insufficiency. Scope binding now uses the
+audited native registry while preserving all existing ABI/layout guards. The
+old live refusal stage is UNKNOWN, so this is not a proven root-cause claim.
+See docs/rifle-scope-pose-repair.md. Nine native FX/scope/registry regressions,
+12 Python FX/backend tests, 341 fake-handler/opcode checks, 35 preparation checks
+and six restore-lease scenarios PASS. Nine wrapper and nine helper contracts
+re-audited against owned archived code PASS. Clean L2 delivery pending; Steam
+untouched; do not launch/deploy without fresh user start. Older history below.
+
 2026-10-20 physical4c8a0a7 FAILED VFX/scope; second launch view normal.
 Private preserved log build/combined-followups/session-4c8a0a7-second.log:
 Valkyrie PlayMuzzleFX reached24 bounded receipts, firstPerson1/fresh1/changed1,

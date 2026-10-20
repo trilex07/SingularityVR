@@ -89,11 +89,26 @@ def audit(exe, capture, engine, rifle):
              'intUSceneCapture2DComponentexecSetCaptureParameters',
              'intUSceneCaptureComponentexecSetFrameRate',
              'intUTextureRenderTarget2DexecCreate', 'intAActorexecAttachComponent',
-             'intAActorexecDetachComponent')
+             'intAActorexecDetachComponent', 'intAActorexecSetLocation',
+             'intAActorexecSetRotation')
     methods = {}
+    expected_wrappers = {
+        'intURvWeaponFXexecPlayMuzzleFX': (197, 0x1153B073558EDE80),
+        'intUSceneCapture2DComponentexecSetView': (165, 0x6AE16D2B13BDB57C),
+        'intUSceneCapture2DComponentexecSetCaptureParameters': (455, 0x3EE3F90D93363B69),
+        'intUSceneCaptureComponentexecSetFrameRate': (95, 0x4E3E6769F20272E3),
+        'intUTextureRenderTarget2DexecCreate': (496, 0x55FEB9FBD0D3F0A5),
+        'intAActorexecAttachComponent': (91, 0xB40193EDB4C6A38B),
+        'intAActorexecDetachComponent': (91, 0x87A7C6584939B487),
+        'intAActorexecSetLocation': (121, 0xD75050CD7801E36B),
+        'intAActorexecSetRotation': (109, 0xCB407E96A5DEE5B3),
+    }
     for name in names:
         address = registration(pe, text, base, name)
         instructions, receipt = body(text, base, address)
+        expected_bytes, expected_hash = expected_wrappers[name]
+        if (receipt['bytes'], receipt['fnv1a64']) != (expected_bytes, f'{expected_hash:016X}'):
+            raise ValueError(name+' full wrapper contract')
         receipt.update(rva=address-pe.base,
                        direct_call_rvas=[v-pe.base for v in direct_calls(instructions)])
         methods[name] = receipt
@@ -106,6 +121,8 @@ def audit(exe, capture, engine, rifle):
         ('rate', 'intUSceneCaptureComponentexecSetFrameRate', 0x52, 31, 0x67123D70BB9B9A26),
         ('attach', 'intAActorexecAttachComponent', 0x4e, 117, 0xA43F290EA3F897E0),
         ('detach', 'intAActorexecDetachComponent', 0x4e, 41, 0x04E0A3B0BBD603DB),
+        ('emitter-location', 'intAActorexecSetLocation', 0x67, 29, 0x8A32507F9F7A934A),
+        ('emitter-rotation', 'intAActorexecSetRotation', 0x5b, 139, 0xAA63F1F63DEFF3D8),
     ):
         receipt = helper_contract(text, base, pe.base+methods[name]['rva'], offset, length, expected)
         receipt['rva'] = receipt.pop('target') - pe.base
