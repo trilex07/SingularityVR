@@ -26,6 +26,13 @@ static ULONGLONG completedMs=0;
 static volatile LONG presentationFault=0;
 static scopepip::PresentationBudget presentationBudget;
 static volatile LONG resolvedTarget=0;
+// SetView changes the COMPONENT matrix (+A0). The fingerprinted info ctor
+// COPIES it into the render proxy (+50), which is what Render actually reads.
+// Transfer only our owned view through a mailbox, never share engine pointers
+// across threads or modify another capture's matrix.
+static SRWLOCK viewLock=SRWLOCK_INIT;
+struct ViewSample{uintptr_t target=0;ULONGLONG tick=0;unsigned sequence=0;float matrix[16]{};};
+static ViewSample viewSample;
 using RenderCapture=void (__thiscall*)(void*,void*);
 static RenderCapture renderOriginal=nullptr;
 static void __fastcall RenderHook(void* self,void*,void* family){
@@ -35,15 +42,41 @@ static void __fastcall RenderHook(void* self,void*,void* family){
     // TextureRenderTarget2D, NOT an inferred dimensions/format match.
     const auto actual=PauseRttProbe::Pointer((uintptr_t)self+0x10);
     scopepip::RenderLease lease(g_scopeNativeDepth,g_sniperPip,expected,actual);
+    if(lease.own){
+        ViewSample latest;
+        if(TryAcquireSRWLockShared(&viewLock)){
+            latest=viewSample;ReleaseSRWLockShared(&viewLock);
+        }
+        const auto now=GetTickCount64();
+        if(latest.target!=actual||!latest.sequence||now<latest.tick||now-latest.tick>150||
+           !PauseRttProbe::SafeRange((uintptr_t)self+0x50,64))return;
+        float difference=0;const auto* prior=(const float*)((uintptr_t)self+0x50);
+        for(unsigned i=0;i<16;++i)difference=std::max(difference,std::fabs(prior[i]-latest.matrix[i]));
+        static unsigned views=0;
+        if(views<8&&difference>.00001f){++views;
+            Log("scope PiP: owned proxy view delta=%.7g sequence=%u age=%llu ms; component A0 -> exact info50",difference,latest.sequence,now-latest.tick);}
+        std::memcpy((void*)((uintptr_t)self+0x50),latest.matrix,64);
+    }
     static unsigned count=0;
     const bool receipt=lease.own&&count<3;
     const auto draws=g_scopeNativeDraws,uploads=g_scopeNativeUploads;
-    const auto begin=receipt?GetTickCount64():0;
+    LARGE_INTEGER begin{},end{},frequency{};
+    if(lease.own){QueryPerformanceFrequency(&frequency);QueryPerformanceCounter(&begin);}
     renderOriginal(self,family);
     // Capture changes engine GPU state legitimately. Never apply a state block
     // across it (that would disagree with UE3's RHI cache). Next main-view
     // constants must revalidate; optical matrices cannot survive as eye data.
     if(lease.own){
+        QueryPerformanceCounter(&end);
+        const double elapsed=1000.0*double(end.QuadPart-begin.QuadPart)/double(frequency.QuadPart);
+        static ULONGLONG window=0;static unsigned samples=0,windows=0;
+        static double sum=0,peak=0;
+        sum+=elapsed;peak=std::max(peak,elapsed);++samples;
+        const auto now=GetTickCount64();if(!window)window=now;
+        if(now-window>=1000&&windows<30){++windows;
+            Log("scope PiP: CPU callback timing samples=%u meanMs=%.3f maxMs=%.3f draws=%u uploads=%u [GPU execution NOT measured]",
+                samples,sum/samples,peak,g_scopeNativeDraws-draws,g_scopeNativeUploads-uploads);
+            window=now;samples=0;sum=peak=0;}
         InvalidateCamMats();g_camMatrixBound=false;
         // Full native callback includes the RHI resolve. An RT unbind alone
         // can occur BEFORE this texture has received the completed scene.
@@ -54,7 +87,8 @@ static void __fastcall RenderHook(void* self,void*,void* family){
     }
     if(receipt){++count;
         Log("scope PiP: own native render isolation target=%08X depth=%u nativeDraws=%u rawUploads=%u elapsedMs=%llu [execution only, not alignment]",
-            (unsigned)actual,g_scopeNativeDepth,g_scopeNativeDraws-draws,g_scopeNativeUploads-uploads,GetTickCount64()-begin);}
+            (unsigned)actual,g_scopeNativeDepth,g_scopeNativeDraws-draws,g_scopeNativeUploads-uploads,
+            (ULONGLONG)(1000.0*double(end.QuadPart-begin.QuadPart)/double(frequency.QuadPart)));}
 }
 
 static bool CodeContract(const char* stage,uintptr_t address,size_t bytes,unsigned long long hash){
@@ -261,10 +295,19 @@ static void Tick(){
     if(!scopepip::Angles(ahead-relative,up-relative,pitch,yaw,roll))return;
     if(!attached){attach((void*)pawn,(void*)capture);attached=true;}
     view((void*)capture,{g_camPos[0]+relative.x,g_camPos[1]+relative.y,g_camPos[2]+relative.z},pitch,yaw,roll);
+    if(PauseRttProbe::SafeRange(capture+0xa0,64)){
+        const auto* matrix=(const float*)(capture+0xa0);bool finite=true;
+        for(unsigned i=0;i<16;++i)finite=finite&&std::isfinite(matrix[i]);
+        if(finite){AcquireSRWLockExclusive(&viewLock);
+            viewSample.target=(uintptr_t)(uint32_t)Rd(target);viewSample.tick=GetTickCount64();
+            ++viewSample.sequence;std::memcpy(viewSample.matrix,matrix,64);
+            ReleaseSRWLockExclusive(&viewLock);}
+    }
     if(notes++<3)Log("scope PiP: native view updated on engine PlayerTick; optical origin=(%.3f,%.3f,%.3f)",relative.x,relative.y,relative.z);
 }
 static void ResetGpu(){
     completion.Reset();completedTarget=0;completedMs=0;
+    g_scopeAperture={};
     InterlockedExchange(&resolvedTarget,0);
     if(state){state->Release();state=nullptr;}
 }
@@ -371,6 +414,10 @@ static void Draw(IDirect3DDevice9* dev){
     struct SurfaceRef {IDirect3DSurface9* value;~SurfaceRef(){value->Release();}} backRef{back};
     D3DSURFACE_DESC desc{};
     if(FAILED(back->GetDesc(&desc))||desc.Width<4||(desc.Width&1)||!desc.Height){PresentationRefused(5);return;}
+    const auto aperture=g_scopeAperture;
+    if(!aperture.Current(f.pawn,f.weapon,now,desc.Width,desc.Height)){
+        PresentationRefused(17);return;
+    }
     const gloves::Calls calls{shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
         shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport};
     if(!calls.Valid()){PresentationRefused(6);return;}
@@ -408,14 +455,11 @@ static void Draw(IDirect3DDevice9* dev){
         for(unsigned eye=0;eye<2;++eye){
             RECT clip{(LONG)(vp.X+eye*(vp.Width/2)),(LONG)vp.Y,(LONG)(vp.X+(eye+1)*(vp.Width/2)),(LONG)(vp.Y+vp.Height)};
             dev->SetScissorRect(&clip);
-            Vertex vertices[66]{};bool visible=true;
+            Vertex vertices[66]{};const bool visible=aperture.eye[eye];
             for(unsigned i=0;i<66;++i){
                 const float a=(i?i-1:0)*(6.2831853f/64.f);
                 const float x=i?std::cos(a):0.f,y=i?std::sin(a):0.f;
-                const V t=f.lens+(right*x+vertical*y)*f.radius;
-                uipointer::ScreenPoint p{};scopepip::Pixel pixel{};
-                if(!VrUiProjectEye((int)eye,{t.x,t.y,t.z},p)||
-                   !scopepip::EyePixel(eye,desc.Width,desc.Height,p,pixel)){visible=false;break;}
+                const auto pixel=aperture.points[eye][i];
                 vertices[i]={pixel.x,pixel.y,0,pixel.rhw,0xffffffff,.5f+x*.5f,.5f-y*.5f};
             }
             if(visible){
@@ -425,7 +469,7 @@ static void Draw(IDirect3DDevice9* dev){
                 const auto hr=shadowNativeUP(dev,D3DPT_TRIANGLEFAN,64,vertices,sizeof(Vertex));
                 if(opticalEye&&SUCCEEDED(hr))attempt.shown=true;
                 static unsigned receipts=0;
-                if(opticalEye&&receipts++<3)Log("scope PiP: aperture draw eye=%u epoch=%u hr=%08X back=%ux%u centre=(%.1f,%.1f) tracking projection [PSVR2 verification required]",eye,completion.epoch,(unsigned)hr,desc.Width,desc.Height,vertices[0].x,vertices[0].y);
+                if(opticalEye&&receipts++<3)Log("scope PiP: aperture draw eye=%u epoch=%u hr=%08X back=%ux%u centre=(%.1f,%.1f) native lens draw projection [PSVR2 verification required]",eye,completion.epoch,(unsigned)hr,desc.Width,desc.Height,vertices[0].x,vertices[0].y);
                 if(opticalEye){
                     // Scope-local reticle: projected through the SAME aperture,
                     // never a fullscreen/native ADS crosshair.

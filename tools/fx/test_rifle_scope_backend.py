@@ -61,7 +61,15 @@ class NativeBackendTests(unittest.TestCase):
         self.assertNotIn('StretchRect', backend)
         self.assertNotIn('g_vfxEyeMat', backend)
         for guard in ('dev->GetBackBuffer(', 'calls.target(dev,0,back)',
-                      'VrUiProjectEye(', 'scopepip::EyePixel(', 'shadowNativeUP(dev,D3DPT_TRIANGLEFAN'):
+                      'aperture.Current(', 'aperture.points[eye][i]', 'shadowNativeUP(dev,D3DPT_TRIANGLEFAN'):
+            self.assertIn(guard, backend)
+        self.assertNotIn('VrUiProjectEye(', backend)
+        self.assertIn('int(cs.reg)==g_boundShaderLayout.viewProjection', source)
+        self.assertIn('ScopeProjectNativeLens(mat,cs.conv,0,full)', source)
+        self.assertIn('ScopeProjectNativeLens(mat,cs.conv,1,full)', source)
+        for guard in ('latest.target!=actual', 'now-latest.tick>150',
+                      'std::memcpy((void*)((uintptr_t)self+0x50),latest.matrix,64)',
+                      'QueryPerformanceCounter(&end)', 'GPU execution NOT measured'):
             self.assertIn(guard, backend)
         rifle = (ROOT/'spikes/view_matrix/native_rifle_fx.inl').read_text()
         self.assertIn('original(self,changed?&replacement:location,firstPerson)', rifle)

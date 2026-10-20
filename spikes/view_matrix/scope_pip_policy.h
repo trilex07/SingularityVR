@@ -65,6 +65,25 @@ struct PresentationBudget {
 // Project directly from tracking poses, never from a camera matrix last seen
 // during an unrelated UE3 draw (which may belong to the optical capture).
 struct Pixel { float x=0,y=0,rhw=0; };
+// The weapon shader's exact, per-eye translated-world projection. Unlike the
+// tracking/UI projection this includes the native foreground transform.
+inline bool ClipPixel(unsigned width,unsigned height,const float clip[4],Pixel& out){
+    if(width<4||(width&1)||!height||width>32768||height>32768)return false;
+    for(unsigned i=0;i<4;++i)if(!std::isfinite(clip[i]))return false;
+    if(clip[3]<=1e-5f)return false;
+    const Pixel p{(clip[0]/clip[3]+1.f)*(.5f*width),
+                  (1.f-clip[1]/clip[3])*(.5f*height),1.f/clip[3]};
+    if(!std::isfinite(p.x)||!std::isfinite(p.y)||!std::isfinite(p.rhw))return false;
+    out=p;return true;
+}
+struct Aperture {
+    std::uint32_t pawn=0,weapon=0;std::uint64_t tick=0;
+    unsigned width=0,height=0;bool eye[2]{};Pixel points[2][66]{};
+    bool Current(std::uint32_t p,std::uint32_t w,std::uint64_t now,
+                 unsigned x,unsigned y)const{
+        return p&&w&&pawn==p&&weapon==w&&now>=tick&&now-tick<=150&&width==x&&height==y;
+    }
+};
 struct RenderLease {
     unsigned& depth;bool own;
     RenderLease(unsigned& d,bool enabled,std::uintptr_t expected,std::uintptr_t actual):

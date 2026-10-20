@@ -2356,6 +2356,11 @@ static int g_nativeRifleMuzzle=0; // 0 unchanged, 1 observe, 2 native Valkyrie o
 static bool g_nativeRifleTracer=false; // exact native visual source getter, default OFF
 static int g_sniperPip=0;
 static scopepip::Frame g_scopePipFrame;
+// Render-thread only. Staged exclusively by the fingerprinted Kasimov body;
+// consumed while that SAME draw's native camera and controller matrix are bound.
+static bool g_scopeLensStaged=false;
+static hipknife::V g_scopeLensCentre{},g_scopeLensEdge{},g_scopeLensTop{};
+static scopepip::Aperture g_scopeAperture;
 inline bool ScopeActive();
 static int g_sniperNearEyeScope=0;
 static centurionclip::PresentationSafety g_nextPresentation;
@@ -14186,6 +14191,24 @@ static void VfxEyeDraw(IDirect3DDevice9* dev, int eye);
 // draw-hook shadow early-outs, which run before StereoPairBody.
 inline void ShadowMode3NoteGeneration(IDirect3DDevice9* dev);
 static void WorldToClip(const float* m, int conv, const float pt[3], float out[4]);
+static void ScopeProjectNativeLens(const float* matrix,int convention,unsigned eye,const D3DVIEWPORT9& vp){
+    if(!g_scopeLensStaged||eye>1)return;
+    if(!eye){g_scopeAperture={};g_scopeAperture.pawn=(uint32_t)g_playerPawn;
+        g_scopeAperture.weapon=(uint32_t)Rd(g_weaponObj);g_scopeAperture.tick=GetTickCount64();
+        g_scopeAperture.width=vp.Width;g_scopeAperture.height=vp.Height;}
+    if(vp.X||vp.Y)return; // final SBS is origin-zero; refuse another target.
+    bool valid=true;
+    for(unsigned i=0;i<66;++i){
+        const float a=(i?i-1:0)*(6.2831853f/64.f);
+        const float x=i?std::cos(a):0.f,y=i?std::sin(a):0.f;
+        const auto point=g_scopeLensCentre+(g_scopeLensEdge-g_scopeLensCentre)*x+
+            (g_scopeLensTop-g_scopeLensCentre)*y;
+        const float p[3]{point.x,point.y,point.z};float clip[4]{};
+        WorldToClip(matrix,convention,p,clip);
+        if(!scopepip::ClipPixel(vp.Width,vp.Height,clip,g_scopeAperture.points[eye][i])){valid=false;break;}
+    }
+    g_scopeAperture.eye[eye]=valid;
+}
 static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR colour);
 // VFX reentrancy: DrawItems draws through the vtable, so our own per-eye quads
 // re-enter the draw hooks. While set, hooks forward straight to the original.
@@ -14462,6 +14485,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
                 if (g_thisDrawMoved == 2) BuildTmdC(C); else BuildGunC(C);   // ⭐ run 237
                 ApplyWorldMatrix(reinterpret_cast<Reg4*>(mat), cs.conv, C);
             }
+            if(int(cs.reg)==g_boundShaderLayout.viewProjection&&g_thisDrawMoved==1)ScopeProjectNativeLens(mat,cs.conv,0,full);
             g_origSetVSConstF(dev, cs.reg, mat, 4);
         }
         if(g_knifeHandGrip)g_knifeStereoEye=0;
@@ -14490,6 +14514,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
                 if (g_thisDrawMoved == 2) BuildTmdC(C); else BuildGunC(C);   // ⭐ run 237
                 ApplyWorldMatrix(reinterpret_cast<Reg4*>(mat), cs.conv, C);
             }
+            if(int(cs.reg)==g_boundShaderLayout.viewProjection&&g_thisDrawMoved==1)ScopeProjectNativeLens(mat,cs.conv,1,full);
             g_origSetVSConstF(dev, cs.reg, mat, 4);
         }
         if(g_knifeHandGrip)g_knifeStereoEye=1;
@@ -19826,6 +19851,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     const UINT gloveTriangles=cuffBuffer?g_nativeCuffRenderer.Triangles(cuffProfile):g_nativeGloveRenderer.Triangles();
     float nextSaved[16*12];UINT nextReg=0;weaponreload::ReplayPlan nextReplay;
     g_nextMuzzleStaged={};
+    g_scopeLensStaged=false;
     const int nextRegs=t==D3DPT_TRIANGLELIST&&(!g_nextNativeMagazine||
         (!boneRegN&&!independentRegs&&nSeg==1&&segStart[0]==startIndex&&segPrims[0]==primCount))?
         PrepareNextReload(dev,baseVertex,minIndex,numVertices,startIndex,primCount,nextSaved,nextReg,nextReplay):0;
@@ -19877,6 +19903,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         }
         return hr;
     });
+    g_scopeLensStaged=false;
+    if(FAILED(dhr))g_scopeAperture={};
     const HRESULT nativeRestore=nativeIndices.Restore();
     if(cylinderBase>=0&&FAILED(g_origSetVSConstF(dev,cylinderBase,&cylinderSaved[0][0],15))){
         g_centurionAnimationFault=true;InterlockedExchange(&g_centurionShellSeenGun,0);

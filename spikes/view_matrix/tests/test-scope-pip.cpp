@@ -1,6 +1,7 @@
 #include "../scope_pip_policy.h"
 #include "../weapon_muzzle_geometry.h"
 #include <cassert>
+#include <array>
 #include <limits>
 int main(){
     using hipknife::V;
@@ -56,6 +57,28 @@ int main(){
     assert(!scopepip::EyePixel(0,6488,3308,{.5f,.5f,0},pixel));
     assert(!scopepip::EyePixel(0,6488,3308,{.5f,.5f,-.2f},pixel));
     assert(pixel.x==1&&pixel.y==2&&pixel.rhw==3);
+    // Native half-frame camera matrices already encode eye remapping. Do not
+    // apply UI half-width conversion again. Point movement changes placement.
+    for(unsigned eye=0;eye<2;++eye){
+        const float clip[4]{eye?1.f:-1.f,0,1,2};
+        assert(scopepip::ClipPixel(6488,3308,clip,pixel));
+        assert(pixel.x==(eye+.5f)*3244&&pixel.y==1654&&pixel.rhw==.5f);
+        const float shifted[4]{clip[0]+.1f,.2f,1,2};
+        scopepip::Pixel moved{};assert(scopepip::ClipPixel(6488,3308,shifted,moved));
+        assert(moved.x>pixel.x&&moved.y<pixel.y);
+    }
+    for(const auto& clip: {std::array<float,4>{0,0,1,0},std::array<float,4>{nan,0,1,1},
+                          std::array<float,4>{0,0,1,-1}})
+        assert(!scopepip::ClipPixel(6488,3308,clip.data(),pixel));
+    const float clip[4]{0,0,1,1};
+    assert(!scopepip::ClipPixel(6487,3308,clip,pixel));
+    scopepip::Aperture aperture{};aperture.pawn=1;aperture.weapon=2;aperture.tick=100;
+    aperture.width=6488;aperture.height=3308;
+    assert(aperture.Current(1,2,250,6488,3308));
+    assert(!aperture.Current(1,2,251,6488,3308));
+    assert(!aperture.Current(1,3,200,6488,3308));
+    assert(!aperture.Current(1,2,99,6488,3308));
+    assert(!aperture.Current(1,2,200,6488,2688));
     unsigned depth=0;
     {scopepip::RenderLease off(depth,false,1,1);assert(!depth);}
     {scopepip::RenderLease foreign(depth,true,1,2);assert(!depth);}

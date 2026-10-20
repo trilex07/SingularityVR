@@ -302,6 +302,12 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
         // Material1 is the97-point,168-triangle original lens, entirely on
         // cog_sniper. Centre measured offline in native cog space (UU).
         const hipknife::V lensRoot{-.00000279783f,-11.1806386f,-3.49776761f};
+        // Preserve pre-controller native points: StereoPair supplies the EXACT
+        // same C + eye projection used by the gun, once (never apply C twice).
+        armbind::Mat identity{};for(unsigned axis=0;axis<4;++axis)identity.m[axis][axis]=1.f;
+        g_scopeLensStaged=weaponmuzzle::RootPosition(g_nextAnimation[index],nativeRoot,local,identity,lensRoot,g_scopeLensCentre)&&
+            weaponmuzzle::RootPosition(g_nextAnimation[index],nativeRoot,local,identity,lensRoot+hipknife::V{.821847f,0,0},g_scopeLensEdge)&&
+            weaponmuzzle::RootPosition(g_nextAnimation[index],nativeRoot,local,identity,lensRoot+hipknife::V{0,-.821847f,0},g_scopeLensTop);
         hipknife::V lens,ahead,trackingLens,trackingAhead,top,edge,trackingTop,trackingEdge;
         const hipknife::V centre{g_centrePos[0],g_centrePos[1],g_centrePos[2]};
         const float baseYaw=g_baseYaw*(6.2831853f/65536.f);
