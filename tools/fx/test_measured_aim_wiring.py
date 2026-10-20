@@ -33,6 +33,10 @@ class Wiring(unittest.TestCase):
         self.assertIn('reports>=32', source)
         self.assertIn('now+1000', source)
         self.assertIn('0xAD9AEEB598427D84ull', source)
+        self.assertIn('0x3F880641281843C5ull', source)
+        self.assertIn('0xB26B7A29EA360695ull', source)
+        self.assertIn('mIndexedPowers', source)
+        self.assertIn('reports>=8', source)
         for forbidden in ['SpawnActor(', 'TriggerActiveWeaponThrow(', 'Select)', 'SetTimer(']:
             self.assertNotIn(forbidden, source)
         native_input = (ROOT/'spikes/view_matrix/native_ui_input.h').read_text(encoding='utf8')

@@ -2,6 +2,15 @@
 
 ## 2026-10-20 measured barrel / body equipment preparation
 
+User clarified grenade=native Deadlock, not a newly invented frag grenade.
+Original SP power -> DeadlockGrenade relationship and complete native input
+contracts now audited offline (audit_deadlock_backend.py); opt-in census also
+observes the reflected local TMD's indexed Deadlock power/held-prop identities.
+No native charge/launch calls are enabled. Still requires actual live readiness,
+release velocity/pose and native resource/cleanup integration; not ready for a
+grenade/heavy physical-feature acceptance test. Do not confuse CPU policies
+or a populated native pointer with the completed gameplay implementation.
+
 IMPLEMENTED_NOT_VERIFIED (runtime): default-OFF WeaponMeasuredAim and
 ScopeMeasuredPose use the exact rendered palette + BuildGunC, not independent
 Euler aim / a latched controller-local lens. Native spread is retained by a

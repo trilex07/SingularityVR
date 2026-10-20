@@ -15,6 +15,9 @@ User equipment layout: ammo left shoulder, grenade right shoulder, heavy weapon
 lower back behind right hip; existing knife/ordinary-gun hips remain unchanged.
 Grenade: right grab, left grip at pin then pull, right swing/release. A gesture
 must not create inventory or arm a fuse before its native mechanism is proven.
+User clarified during preparation: **native Deadlock**, NOT a new frag grenade.
+Treat the requested left-hand gesture as a design requirement to integrate with
+the original power; do not infer that the original model contains a removable pin.
 
 Offline original package control.u confirms distinct enum slots HeavyWeapon2 /
 GrenadeSlot3, native-heavy classification and projectile functions. It does NOT
@@ -44,6 +47,11 @@ offset, function or FName may be guessed to make a gesture appear integrated.
   wrapper58/B06FD8D75EF187D2 dispatches virtual554 to the complete13-byte
   getter AD9AEEB598427D84, reading flags2D8 mask80. Reflection cross-checks
   owner/chain/name fields. No native calls, new hooks or writes.
+  Separately samples the local pawn's reflected mTMD -> mPowerSet ->
+  mIndexedPowers[ETP_Deadlock=3] and mDeadlock, maximum8 identity receipts.
+  Full native TMD input241/3F880641281843C5 and Deadlock handler1504/
+  B26B7A29EA360695 contracts include branches after early returns. It does not
+  call either function or charge, spawn, launch or change energy.
 - `body_equipment_policy.h` is NOT wired to gameplay. It provides exclusive
   nearest-zone resolution, yaw-only right-shoulder/lower-back anchors,
   identity/sequence-bound native acknowledgement transactions, left-grip pin
@@ -66,6 +74,24 @@ Output is hashes/contracts only, not game code or assets. The package contains
 DeadlockGrenade, ARGrenadeLauncher and GrenadeSteerable classes; that is NOT
 proof of the requested player's frag/pin/fuse/inventory path. In particular,
 the four-gun ownership mask must not be reused as grenade/heavy ownership.
+
+### Native Deadlock clarification / additional offline proof
+
+`tools/fx/audit_deadlock_backend.py` traces original registration to final
+constructor vptr, ignoring base/interface stores. The TMD constructor has63
+bytes/F2C5B1B22F49E767; Deadlock power constructor27/4C7198611BD3DB7C.
+Original Default__RvTMDPower_Deadlock is ETP_Deadlock (enum3),
+EPCT_Constant; the SP power archetype points to DeadlockGrenade. This is a
+TMD power relationship, not evidence for ammo in EWS_GrenadeSlot. Native
+input and power Start/Stop wrappers are independently fingerprinted. The
+auditor refuses altered or partial contracts and exports hashes only.
+
+Remaining integration work is NOT just tests: establish actual unlocked/live
+TMD ownership and ready/held/consumed transitions, bind the physical gesture to
+the original charge/launch path without bypassing energy/perk gates, prove the
+native prop's right-hand placement and release velocity/collision lifecycle.
+Heavy draw/stow likewise needs an owned heavy identity and native equip/pose/
+reload integration. Do not enable a fake inventory item to fill those gaps.
 
 ## Offline gates and next physical route
 

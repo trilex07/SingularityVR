@@ -24,3 +24,5 @@ python (Join-Path $PSScriptRoot 'test_rifle_scope_backend.py')
 if($LASTEXITCODE -ne 0){throw 'rifle/scope backend guard tests failed'}
 python (Join-Path $PSScriptRoot 'test_measured_aim_wiring.py')
 if($LASTEXITCODE -ne 0){throw 'measured aim/equipment wiring failed'}
+python (Join-Path $PSScriptRoot 'test_deadlock_backend_audit.py')
+if($LASTEXITCODE -ne 0){throw 'Deadlock constructor identity tests failed'}

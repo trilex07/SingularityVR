@@ -2,6 +2,37 @@
 // Evidence collection only: no UObject calls, writes, grants, selector,
 // projectile spawn, timer changes, input consumption or new native hooks.
 namespace NativeBodyEquipmentProbe {
+// Deadlock is a TMD power, not a RvWeaponShared inventory item. Keep this
+// independent of the gun-chain census. Both contracts cover ALL return paths;
+// an early-ret prefix would not identify the native input producer.
+static void Tmd(uintptr_t local){
+    using namespace NativeOwnedInventory;
+    static unsigned reports=0;static uintptr_t lastTmd=0,lastPower=0,lastHeld=0;
+    if(reports>=8)return;
+    const auto cls=P(local+OBJ_CLASS);
+    static MemberCache tmdMember,setMember,heldMember,indexMember;
+    const int tmdOff=tmdMember.Get(cls,"mTMD");
+    const auto tmd=tmdOff>=0?P(local+tmdOff):0,tc=P(tmd+OBJ_CLASS);
+    if(!tmd||!IsLive(tmd)||!ClassHas(tc,"RvTMD"))return;
+    const int setOff=setMember.Get(tc,"mPowerSet"),heldOff=heldMember.Get(tc,"mDeadlock");
+    const auto set=setOff>=0?P(tmd+setOff):0,sc=P(set+OBJ_CLASS);
+    if(!set||!IsLive(set)||!ClassHas(sc,"RvTMDPowerSet")||heldOff<0)return;
+    // Original TMD input consumes mIndexedPowers[ETP_Deadlock=3], not the
+    // grenade inventory slot. Cross-check the reflected producer and bounds.
+    if(indexMember.Get(sc,"mIndexedPowers")!=0x48||!PauseRttProbe::SafeRange(set+0x48,12))return;
+    const auto table=P(set+0x48);
+    const int n=*(const int*)(set+0x4c),cap=*(const int*)(set+0x50);
+    if(n<=3||n>32||cap<n||cap>128||!PauseRttProbe::SafeRange(table,size_t(n)*4))return;
+    const auto power=P(table+3*4),pc=P(power+OBJ_CLASS),held=P(tmd+heldOff);
+    if(!power||!IsLive(power)||!ClassHas(pc,"RvTMDPower_Deadlock"))return;
+    if(tmd==lastTmd&&power==lastPower&&held==lastHeld)return;
+    const bool input=NativeContextCursor::Method(P(P(tmd)+0x4e8),241,0x3F880641281843C5ull);
+    const bool handler=NativeContextCursor::Method(P(P(power)+0x128),1504,0xB26B7A29EA360695ull);
+    if(held&&(!IsLive(held)||!ClassHas(P(held+OBJ_CLASS),"RvProp_DeadlockGrenade")))return;
+    lastTmd=tmd;lastPower=power;lastHeld=held;++reports;
+    Log("body equipment Deadlock: pawn=%08X tmd=%08X power=%08X held=%08X indexedCount=%d inputContract=%d handlerContract=%d [read-only; NO charge/launch/energy writes]",
+        (unsigned)local,(unsigned)tmd,(unsigned)power,(unsigned)held,n,input?1:0,handler?1:0);
+}
 static void Poll(){
     if(!g_bodyEquipmentProbe)return;
     static ULONGLONG next=0;static unsigned reports=0;
@@ -11,6 +42,7 @@ static void Poll(){
         using namespace NativeOwnedInventory;
         const auto local=CameraOwnedPawn();
         if(!local)return;
+        Tmd(local);
         const auto cls=P(local+OBJ_CLASS);
         static MemberCache invMember;
         const int invOff=invMember.Get(cls,"InvManager");
