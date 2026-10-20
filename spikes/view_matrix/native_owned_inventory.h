@@ -245,7 +245,7 @@ static bool SkipPickupThrow(void* self, void* frame) {
    // Context changes the call receiver (self) to Instigator, but keeps the
    // caller's frame Object (manager). Consume the entire remaining call.
    *(uintptr_t*)(f+0x18)=script+inventoryretention::DropAt+inventoryretention::DropBytes;
-   InterlockedExchange(&request,0);next=0; // refresh possession on next input poll
+   next=0; // refresh possession on next input poll; preserve queued selection
    if(reports++<32)Log("owned inventory: suppressed exact local pickup ThrowActiveWeapon opcode; script unchanged");
    return true;
   } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
