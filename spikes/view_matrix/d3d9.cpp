@@ -50,6 +50,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "support_grip_palette.h"
 #include "fp_shadow.h"
 #include "camera_stabilization.h"
+#include "weapon_steady.h"
 #include "shadow_policy.h"
 #include "shadow_mode3.h"
 #include "ui_pointer.h"
@@ -2363,6 +2364,9 @@ static hipknife::V g_scopeLensCentre{},g_scopeLensEdge{},g_scopeLensTop{};
 static scopepip::Aperture g_scopeAperture;
 inline bool ScopeActive();
 static int g_sniperNearEyeScope=0;
+static int g_weaponSteady=0; // default OFF; no HMD filtering
+static weaponsteady::Filter g_weaponSteadyFilter[2]; // input thread only
+static volatile LONG g_opticalHudHidden=0;
 static centurionclip::PresentationSafety g_nextPresentation;
 static void InitNextReload();
 static void ReleaseNextReloadGPU();
@@ -10620,6 +10624,7 @@ void SyncXRInput(XrTime displayTime) {
     g_glovePoseValid[0]=g_glovePoseValid[1]=false;
     g_gloveBlend[0]=g_gloveBlend[1]=0;
     const bool feedGame = !pollOff && InterlockedCompareExchange(&g_xrInputOff, 0, 0) == 0 && diagMode != 2 && diagMode != 3;
+    InterlockedExchange(&g_opticalHudHidden,0); // clear on focus/menu/early return
     const bool hapticsAllowed = feedGame && diagMode != 1;
 
     XrActiveActionSet aas{ g_actionSet, XR_NULL_PATH };
@@ -10643,6 +10648,7 @@ void SyncXRInput(XrTime displayTime) {
     // are simply inactive. Zeroing here is what stops the player walking on for ever because the
     // stick was held when the headset was taken off or a system overlay took focus.
     if (sr != XR_SUCCESS) {
+        g_weaponSteadyFilter[0]={};g_weaponSteadyFilter[1]={};
         CancelCenturionInput();
         g_hipKnifeState={};g_hipKnifeVisible=false;
         UpdateVrUiPointer(0,false);
@@ -10892,16 +10898,18 @@ void SyncXRInput(XrTime displayTime) {
         // Held or on a desk, decided by movement. The threshold is well above sensor noise for a
         // stationary controller and far below anything a hand does, even a still one - a hand at
         // rest still drifts by millimetres a frame, and a desk does not.
+        static XrVector3f priorRaw[2]{};
         if (g_handHavePos[i]) {
-            const float dx = loc.pose.position.x - g_handLastPos[i].x;
-            const float dy = loc.pose.position.y - g_handLastPos[i].y;
-            const float dz = loc.pose.position.z - g_handLastPos[i].z;
+            const float dx = loc.pose.position.x - priorRaw[i].x;
+            const float dy = loc.pose.position.y - priorRaw[i].y;
+            const float dz = loc.pose.position.z - priorRaw[i].z;
             const float d = sqrtf(dx*dx + dy*dy + dz*dz);
             g_handSpeed[i] = g_handSpeed[i] * 0.95f + d * 0.05f;
         }
         g_handPositionValid[i] = (loc.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) &&
                                  (loc.locationFlags & XR_SPACE_LOCATION_POSITION_TRACKED_BIT);
         if (g_handPositionValid[i]) g_handLastPos[i] = loc.pose.position;
+        priorRaw[i]=loc.pose.position;
         g_handHavePos[i] = true;
 
         g_handPoseValid[i] = true;
@@ -11175,6 +11183,16 @@ void SyncXRInput(XrTime displayTime) {
     else g_supportLatch.Update(supportGrip,supportAcquire?0.f:1e9f,supportTracked,
                                (uint32_t)Rd(g_weaponObj),GetTickCount64());
     const bool supportActive=supportGrip && supportWeaponValid && g_supportLatch.Latched();
+    const bool steadyBusy=g_nextBlockFire||g_nextOwnsGrip||g_centurionOwnsGrip||
+        g_hipKnifeState.held>=0||Rd(g_weaponHolstered)||Rd(g_weaponWheelOpen);
+    const bool steadyAimHeld=weaponsteady::Hold(g_weaponSteady!=0&&AimHand()==1,
+        reloadInputContext,supportTracked,Rd(g_gunVerts)==11389,supportActive,
+        sampledButtons[2],steadyBusy);
+    static bool priorSteady=false;static unsigned steadyNotes=0;
+    if(priorSteady!=steadyAimHeld&&steadyNotes++<32)
+        Log("weapon steady: held=%d twoHand=%d sniper=%d (primary Use/grip; no HMD filter)",
+            steadyAimHeld?1:0,supportActive?1:0,Rd(g_gunVerts)==11389?1:0);
+    priorSteady=steadyAimHeld;
     const LONG previousSupport=InterlockedExchange(&g_twoHandActive,supportActive?1:0);
     if(g_supportLatch.Latched() && !supportGrip)InterlockedIncrement(&g_vrCounters.gripLatchWithoutGripERROR);
     if(previousSupport!=(supportActive?1:0)) {
@@ -11451,6 +11469,9 @@ void SyncXRInput(XrTime displayTime) {
         const auto routed=reloadcontrols::RouteFace(reloadLayout,InGameplay()&&!uiMenu,
             face,sampledButtons[i],g_padButtons[i].mask,legacyHealth,reloadActions);
         bool down=routed.down;const WORD outputMask=routed.mask;const bool healthAction=routed.health;
+        // R1 = the existing primary Use/grip action. Consume only in the
+        // scoped two-hand context; never emit native use/reload while steadying.
+        if(steadyAimHeld&&i==2)down=false;
         if((g_centurionOwnsGrip||g_nextOwnsGrip)&&((OffHand()==0&&i==g_impulseBtnIdx)||
            (AimHand()==0&&!strcmp(g_padButtons[i].name,"use"))))down=false;
         // During a transaction, reserve the shared Use/reload bit as well:
@@ -11971,6 +11992,23 @@ void SyncXRInput(XrTime displayTime) {
     if (lt < 0.10f) lt = 0.0f;
     if (rt < 0.10f) rt = 0.0f;
     bool nearEyeRequested=false,nearEyeEligible=false;
+    // After gesture/holster/reload and UI processing, before EVERY aim consumer:
+    // gun/arms matrix, ballistic ray, native FX and optical capture share this
+    // controller sample. Raw HMD/eye poses are deliberately never changed.
+    for(int h=0;h<2;++h){
+        const bool valid=g_handPositionValid[h]&&g_handPoseValid[h]&&g_handTracked[h];
+        const bool enabled=g_weaponSteady&&reloadInputContext&&WeaponInHands()&&valid&&
+            !steadyBusy&&!(g_centurionReload&&centurionreload::Active(g_centurionState.phase));
+        const auto& p=g_handLastPos[h];const auto& q=g_handAimOrientation[h];
+        const auto pose=g_weaponSteadyFilter[h].Update({{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}},
+            enabled,steadyAimHeld,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64());
+        if(enabled){
+            g_handLastPos[h]={pose.p.x,pose.p.y,pose.p.z};
+            g_handAimOrientation[h]={pose.q.x,pose.q.y,pose.q.z,pose.q.w};
+            const auto angles=vrpose::DecomposeOpenXrYXZ({pose.q.x,pose.q.y,pose.q.z,pose.q.w});
+            g_handPitchRad[h]=angles.pitchX;g_handYawRad[h]=angles.yawY;g_handRollRad[h]=angles.rollZ;
+        }
+    }
     if(g_sniperNearEyeScope){
         sniperscope::Mount mount;
         if(TryAcquireSRWLockShared(&g_nextVisualLock)){
@@ -12007,6 +12045,7 @@ void SyncXRInput(XrTime displayTime) {
         // later knife/reload/menu ownership gates can still consume this input.
         if(eligible)lt=g_sniperPip?0.f:(scopeRequested?1.f:0.f);
     }
+    InterlockedExchange(&g_opticalHudHidden,nearEyeRequested&&g_sniperPip?1:0);
     if(g_hipKnifeEnabled){
         const float knifeTrig = g_hipKnifeState.held == fireHand ? rt : (g_hipKnifeState.held == altHand ? lt : 0.0f);
         static bool knifeTrigWasDown = false;
@@ -28495,6 +28534,7 @@ static void MaybeLoadPlatesAtlas(IDirect3DDevice9* dev) {
 // HP comes from the cached pawn (never a scan from rendering);
 // unknown HP hides the bar, never a guessed full one.
 void DrawHealthPlate(IDirect3DDevice9* dev) {
+    if(handhud::HideHealth(Rd(g_twoHandActive)!=0)){g_hbShown=false;return;}
     if(g_centurionPhysicalPolish){
         CenturionVisual visual;
         if(TryAcquireSRWLockShared(&g_centurionVisualLock)){
@@ -28752,6 +28792,7 @@ static void MaybeLoadAmmoArt(IDirect3DDevice9* dev) {
 }
 
 void DrawAmmoPlate(IDirect3DDevice9* dev) {
+    if(handhud::HideAmmo(Rd(g_opticalHudHidden)!=0))return;
     const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
         !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
     if (!handhud::Visible(Rd(g_ammoPlate) != 0, VrModeOn(), Rd(g_dupDraws) != 0,
@@ -33514,6 +33555,8 @@ void LoadIniSettings() {
     g_volkAuthoredGrip = GetPrivateProfileIntA("Input", "VolkAuthoredGrip", 0, path) ? 1 : 0;
     g_kasimovAuthoredGrip=GetPrivateProfileIntA("Input","KasimovAuthoredGrip",0,path)?1:0;
     g_sniperNearEyeScope=GetPrivateProfileIntA("Input","SniperNearEyeScope",0,path)?1:0;
+    g_weaponSteady=GetPrivateProfileIntA("Input","WeaponSteady",0,path)?1:0;
+    Log("ini: WeaponSteady=%d (default OFF; adaptive controller-only filter; two-hand Kasimov + primary grip = strong)",g_weaponSteady);
     g_sniperPip=GetPrivateProfileIntA("Render","SniperPictureInPicture",0,path)?1:0;
     if(g_sniperPip&&!g_sniperNearEyeScope){g_sniperPip=0;Log("scope PiP: requires measured near-eye policy; disabled");}
     Log("ini: KasimovAuthoredGrip=%d SniperNearEyeScope=%d (default OFF; native scoped view, measured lens proximity)",

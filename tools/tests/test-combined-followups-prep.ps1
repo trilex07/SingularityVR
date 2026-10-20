@@ -57,6 +57,14 @@ Check ($tracerPlan.ini.Count -eq 7) 'Tracer key scope expanded'
 Check $tracerText.Contains('NativeRifleTracerOrigin=1') 'Tracer flag absent'
 Check $tracerText.Contains('PolishLanguage=1') 'Tracer regressed localization'
 $invalidTracer=MakeCase 'invalid-tracer'
+$steady=MakeCase 'steady'
+& $script @steady -RifleSniperFollowups -OpticalScopeAndRifleOrigin -RifleTracerOrigin -WeaponSteady | Out-Null
+$steadyPlan=Get-Content -Raw (Join-Path $steady.CandidateDir 'change-plan.json') | ConvertFrom-Json
+Check ($steadyPlan.ini.Count -eq 8) 'Steady key scope expanded'
+Check ([IO.File]::ReadAllText((Join-Path $steady.CandidateDir 'SingularityVR.ini')).Contains('WeaponSteady=1')) 'Steady flag absent'
+$invalidSteady=MakeCase 'invalid-steady'
+$failed=$false;try{& $script @invalidSteady -WeaponSteady | Out-Null}catch{$failed=$true}
+Check $failed 'Unscoped steady candidate accepted'
 $failed=$false;try{& $script @invalidTracer -RifleTracerOrigin | Out-Null}catch{$failed=$true}
 Check $failed 'Unscoped tracer candidate accepted'
 $logical=MakeCase 'logical-profile'

@@ -3,6 +3,8 @@
 #include <cstdint>
 
 namespace handhud {
+inline bool HideHealth(bool twoHand){return twoHand;}
+inline bool HideAmmo(bool opticalActive){return opticalActive;}
 constexpr int kScalePct = 88;
 constexpr unsigned kPlateAlphaPct = 82;
 constexpr unsigned kDigitAlphaPct = 94;

@@ -5,7 +5,8 @@ param(
  [Parameter(Mandatory)][string]$CandidateDir,
  [switch]$RifleSniperFollowups,
  [switch]$OpticalScopeAndRifleOrigin,
- [switch]$RifleTracerOrigin
+ [switch]$RifleTracerOrigin,
+ [switch]$WeaponSteady
 )
 # Offline preparation only. No launch, installation or accepted-profile mutation.
 $ErrorActionPreference='Stop'
@@ -72,6 +73,10 @@ if($OpticalScopeAndRifleOrigin){
 if($RifleTracerOrigin){
  if(-not $OpticalScopeAndRifleOrigin){throw 'Tracer experiment requires -OpticalScopeAndRifleOrigin'}
  $targets['Diagnostic/NativeRifleTracerOrigin']='1'
+}
+if($WeaponSteady){
+ if(-not $OpticalScopeAndRifleOrigin){throw 'Weapon steady requires the optical candidate'}
+ $targets['Input/WeaponSteady']='1'
 }
 $text=[IO.File]::ReadAllText((Resolve-Path -LiteralPath $InstalledIni).Path,[Text.UTF8Encoding]::new($false,$true))
 $newline=if($text.Contains("`r`n")){"`r`n"}else{"`n"}

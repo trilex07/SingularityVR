@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+## 2026-10-20 controller steady / contextual HUD follow-up
+
+Latest native-aperture137143d physical result: user says "jest okej"; requests
+health hidden with two-hand grip, ammo hidden in optical scope and R1 steady
+for two-hand Kasimov. Scope acceptance is scoped, not a 90-FPS guarantee.
+Session log preserved in native-aperture-137143d/physical-feedback-1919.log.
+Game exit and actual accepted DLL7A1DE585...9495 / INI60224CA0...4ADC verified.
+New default-OFF WeaponSteady controller-only filter + contextual HUD gates
+implemented; NO HMD smoothing or new camera matrix modifications. See
+docs/weapon-steady-hud.md for source evidence, test gates and fresh-start route.
+Native sniper description uses [dash] (L3) for slow time, separate from R1
+steady. Exact observed Pad11 producer still UNKNOWN; no numeric alias guess.
+This section supersedes stale failure-only handoff below for current scope.
+
 ## Current MAIN handoff
 2026-10-20 physical9F6707D3 FAILED: Circle does nothing / R1 native reload
 returns on Valkyrie and Kasimov; smoke physically at muzzle, projectile origin/
