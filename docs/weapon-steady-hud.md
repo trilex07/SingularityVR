@@ -65,3 +65,24 @@ released/held while supporting Kasimov, then make a deliberate large aim turn;
 check target, scope, hit and VFX agree. Check Circle manual reload, one-hand
 Use, pause/resume and return to menu. Stay in the headset until normal exit.
 Report any lag/discomfort; do not smooth head motion to mask it.
+
+## Offline delivery (L1_PASS / L2_PASS, not L3/L4)
+
+Code `6815d6247f861e01b0360393f48b69580a25552b`, clean x86 PE32 `/O2`, no
+PERFORMANCE_BUILD instrumentation. Candidate `build/combined-followups/steady-hud-6815d62`:
+
+- DLL `0DF06FD1EF5486B6766CD1570CDA0F32AE1E8B94EE65962D9604446C825BB4AB`
+- INI `E498F125D29C02DC2F9C3018309CB1FF9D05E5FFB53F58B69FC3DA2767BC2D92`
+- plan `3EFA534B1ECEAF87BACE44FE1E4AC94A3BFDAE49068D49BED116E202E9B01FD9`
+
+Ten optimized native FX/scope/steady fixtures + Python suites PASS; full
+`test-centurion.ps1 -PreparedRoot build/next-weapon-reload/prepared` PASS,
+including four-weapon refill/first-shot, original animation/math, grip/knife,
+native own-process x86 ABI and both-eye shared-depth GPU replay/Reset.
+42 private preparation checks and six fake-install lease scenarios PASS.
+145-pin accepted-profile Install -WhatIf PASS, no writes. Build retains
+pre-existing analysis/deprecation warnings; no compilation error.
+
+Eight scoped INI keys (previous optical seven plus WeaponSteady) and DLL only;
+assets/localization/native UI untouched. Fresh start required before installing.
+Use fresh backup/guard, never reuse the prior session's lease or backup blindly.

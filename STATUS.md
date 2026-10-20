@@ -13,6 +13,11 @@ docs/weapon-steady-hud.md for source evidence, test gates and fresh-start route.
 Native sniper description uses [dash] (L3) for slow time, separate from R1
 steady. Exact observed Pad11 producer still UNKNOWN; no numeric alias guess.
 This section supersedes stale failure-only handoff below for current scope.
+Code6815d62 clean L2 x86 PE32 /O2 PASS; DLL0DF06FD1...5BB4AB.
+Candidate build/combined-followups/steady-hud-6815d62: full reload/native FX/
+scope/steady regressions PASS,42 prep/6 lease checks,145-pin Install -WhatIf
+PASS (no writes). See evidence doc for full hashes. READY_FOR_PHYSICAL_ACCEPTANCE,
+not deployed; require fresh user start. Accepted install left unchanged.
 
 ## Current MAIN handoff
 2026-10-20 physical9F6707D3 FAILED: Circle does nothing / R1 native reload
