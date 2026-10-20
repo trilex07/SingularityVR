@@ -35,7 +35,7 @@ cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W4 /WX /O2 /MD /Fe:
 if($LASTEXITCODE -ne 0){throw 'Reload instructions compile failed'}
 & $instructionExe
 if($LASTEXITCODE -ne 0){throw 'Four-weapon PL/EN instructions failed'}
-foreach($visualTest in @('test-wheel-grip-followup','test-weapon-wheel','test-weapon-wheel-layout','test-weapon-wheel-catalog')){
+foreach($visualTest in @('test-sniper-scope','test-wheel-grip-followup','test-weapon-wheel','test-weapon-wheel-layout','test-weapon-wheel-catalog')){
     $source=Join-Path $repo "spikes/view_matrix/tests/$visualTest.cpp"
     $exe=Join-Path $out "$visualTest.exe"
     $obj=Join-Path $out "$visualTest.obj"

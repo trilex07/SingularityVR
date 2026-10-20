@@ -1,6 +1,15 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 NEW feedback: Valkyrie muzzle VFX absent; Kasimov one/two-hand grip
+wrong; user requests near-eye scope. Offline work on fix/rifle-vfx-sniper-grip-scope:
+default-OFF Kasimov authored grips and measured original-lens proximity trigger
+for native per-eye scope; independent muzzle witness no longer waits for clip
+socket-distance validation. Native rifle VFX itself remains BROKEN/under
+investigation: new rifle-only bounded capture filter, no guessed shader fix.
+See docs/rifle-vfx-sniper-optics.md for oracle, hypotheses, falsifiers and route.
+L1 regression suite PASS; L2 pending final clean build. Steam unchanged.
+
 2026-10-20 ACCEPTED / PHYSICALLY_VERIFIED for acquired-gun retention and initial
 owned wheel: user "super działa ... dajemy na main ... bazowa wersje". Source
 663a49ad3964cdbbc7777a176f0afcd8bbd3d345, tested x86 /O2 DLL SHA256

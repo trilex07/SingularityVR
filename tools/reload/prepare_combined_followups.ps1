@@ -2,7 +2,8 @@
 param(
  [Parameter(Mandatory)][string]$InstalledIni,
  [Parameter(Mandatory)][string]$AcceptedProfilePath,
- [Parameter(Mandatory)][string]$CandidateDir
+ [Parameter(Mandatory)][string]$CandidateDir,
+ [switch]$RifleSniperFollowups
 )
 # Offline preparation only. No launch, installation or accepted-profile mutation.
 $ErrorActionPreference='Stop'
@@ -49,6 +50,14 @@ $targets=[ordered]@{
  'Input/WeaponWheelDirectSelect'='1'
  'Render/NpcNameScalePct'='60'
  'Render/CutsceneNativeHands'='1'
+}
+if($RifleSniperFollowups){
+ $targets=[ordered]@{
+  'Input/KasimovAuthoredGrip'='1'
+  'Input/SniperNearEyeScope'='1'
+  'Diagnostic/NativeMuzzleProbe'='1'
+  'Diagnostic/NativeMuzzleProbeGunVerts'='11387'
+ }
 }
 $text=[IO.File]::ReadAllText((Resolve-Path -LiteralPath $InstalledIni).Path,[Text.UTF8Encoding]::new($false,$true))
 $newline=if($text.Contains("`r`n")){"`r`n"}else{"`n"}

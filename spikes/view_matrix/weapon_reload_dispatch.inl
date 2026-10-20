@@ -281,6 +281,37 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
     armbind::Mat nativeRoot;
     if(!armbind::FromGpu(reinterpret_cast<const float(*)[4]>(parentPalette+spec->root*12),nativeRoot)){note(7);return 0;}
     BuildGunC(controller.m);hipknife::V socket;armbind::Mat clipTracking;
+    // Muzzle/optics are independent of the clip insertion socket. Previously
+    // stage9 (clip farther than75cm) silently suppressed their valid witnesses.
+    if(g_weaponTraceRigidOrigin){
+        hipknife::V muzzle;
+        if(weaponmuzzle::Position(g_nextAnimation[index],nativeRoot,local,controller,muzzle)&&
+           hipknife::Length(muzzle)<4.f*MetresToUU())
+            g_nextMuzzleStaged={true,kind,visual.pawn,visual.weapon,now,muzzle};
+    }
+    if(g_sniperNearEyeScope&&kind==weaponreload::Kind::Kasimov&&!ScopeActive()){
+        // Material1 is the97-point,168-triangle original lens, entirely on
+        // cog_sniper. Centre measured offline in native cog space (UU).
+        const hipknife::V lensRoot{-.00000279783f,-11.1806386f,-3.49776761f};
+        hipknife::V lens,ahead,trackingLens,trackingAhead;
+        const hipknife::V centre{g_centrePos[0],g_centrePos[1],g_centrePos[2]};
+        const float baseYaw=g_baseYaw*(6.2831853f/65536.f);
+        if(weaponmuzzle::RootPosition(g_nextAnimation[index],nativeRoot,local,controller,lensRoot,lens)&&
+           weaponmuzzle::RootPosition(g_nextAnimation[index],nativeRoot,local,controller,lensRoot+hipknife::V{0,0,10},ahead)&&
+           weaponmuzzle::ToTracking(lens,centre,g_centreYaw,baseYaw,MetresToUU(),trackingLens)&&
+           weaponmuzzle::ToTracking(ahead,centre,g_centreYaw,baseYaw,MetresToUU(),trackingAhead)){
+            const auto& p=g_handLastPos[AimHand()];const auto& q=g_handAimOrientation[AimHand()];
+            sniperscope::Mount mount;
+            if(g_handPositionValid[AimHand()]&&g_handPoseValid[AimHand()]&&
+               sniperscope::Capture(mount,visual.pawn,visual.weapon,
+                   {{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}},trackingLens,trackingAhead)&&
+               TryAcquireSRWLockExclusive(&g_nextVisualLock)){
+                g_sniperScopeMount=mount;ReleaseSRWLockExclusive(&g_nextVisualLock);
+                static unsigned notes=0;if(notes++<3)Log("sniper lens: original97-point centre controller-local=(%.4f,%.4f,%.4f) forward=(%.4f,%.4f,%.4f)",
+                    mount.lens.x,mount.lens.y,mount.lens.z,mount.forward.x,mount.forward.y,mount.forward.z);
+            }
+        }
+    }
     if(!weaponreload::Socket(g_nextAnimation[index],parentPalette,local,controller,
         {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,g_baseYaw*(6.2831853f/65536.f),MetresToUU(),socket,&clipTracking)){note(8);return 0;}
     // Refuse an absolute/other-space matrix rather than publishing a far-away
@@ -315,12 +346,6 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
             }
         }
         note(9);return 0;
-    }
-    if(g_weaponTraceRigidOrigin){
-        hipknife::V muzzle;
-        if(weaponmuzzle::Position(g_nextAnimation[index],nativeRoot,local,controller,muzzle)&&
-           hipknife::Length(muzzle)<4.f*MetresToUU())
-            g_nextMuzzleStaged={true,kind,visual.pawn,visual.weapon,now,muzzle};
     }
     bool published=false;
     if(TryAcquireSRWLockExclusive(&g_nextVisualLock)){

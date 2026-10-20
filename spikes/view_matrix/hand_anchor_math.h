@@ -13,6 +13,10 @@ inline bool VolkSingleGrip(bool enabled,bool gloves,bool liveWeapon,bool holster
                            long gunVertices,bool supportGrip) {
     return enabled && gloves && liveWeapon && !holstered && gunVertices==8297 && !supportGrip;
 }
+inline bool KasimovSingleGrip(bool enabled,bool gloves,bool liveWeapon,bool holstered,
+                              long gunVertices,bool supportGrip) {
+    return enabled && gloves && liveWeapon && !holstered && gunVertices==11389 && !supportGrip;
+}
 // Free hands miss the pads by the measured gun-anchor residual (~50 UU left,
 // ~41 UU right). That correction runs only while no weapon is live. A held
 // pistol keeps BuildGunC through AimTarget.

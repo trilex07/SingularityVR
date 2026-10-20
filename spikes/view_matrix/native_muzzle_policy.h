@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cmath>
 namespace nativefx {
+inline bool ProbeWeapon(unsigned requested,unsigned current){return !requested||requested==current;}
 inline std::uint64_t Hash(const void* data,unsigned bytes){
     auto p=static_cast<const unsigned char*>(data);std::uint64_t h=14695981039346656037ull;
     for(unsigned i=0;i<bytes;++i){h^=p[i];h*=1099511628211ull;}return h;

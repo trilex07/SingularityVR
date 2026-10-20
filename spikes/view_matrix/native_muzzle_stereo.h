@@ -12,6 +12,11 @@ static ParticleStats particleStats[3]{};
 static unsigned particleReports=0;
 static unsigned particleSamples[3]{};
 static volatile LONG probe=0;
+static unsigned probeGunVerts=0;
+inline void ConfigureProbeGun(unsigned vertices){
+    probeGunVerts=(vertices==5799||vertices==11387||vertices==8297||vertices==11389)?vertices:0;
+    Log("native-fx: capture gun filter=%u (0 any; no change to particle rendering)",probeGunVerts);
+}
 inline bool Probe(){return InterlockedCompareExchange(&probe,0,0)!=0;}
 // Read-only, bounded path census for the explicitly selected shader pair.
 // It runs before a mode-1 drop, so a suppressed draw still reveals its origin.
@@ -183,9 +188,12 @@ template<class Dev,class Slot,class Upload> struct AliasScope {
         if(FAILED(upload(dev,reg,gpu,4))){fault=true;++restoreFailed;}
     }}
 };
-inline void Boundary(bool ready,bool busy,unsigned weapon){
+inline void Boundary(bool ready,bool busy,unsigned weapon,unsigned gunVerts=0){
     context=ready;
     if(!Probe())return;
+    // Wait for the requested gun BEFORE starting the idle/timeout budget.
+    // Never restrict context: accepted particles of other weapons still draw.
+    ready=ready&&ProbeWeapon(probeGunVerts,gunVerts);
     if(ready&&!probeStart)probeStart=GetTickCount64();
     if(probeStart&&GetTickCount64()-probeStart>120000){
         InterlockedExchange(&probe,0);Log("native-fx: two-minute diagnostic timeout; incomplete capture, not a PASS");return;

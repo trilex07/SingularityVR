@@ -8,7 +8,7 @@ function Check($ok,$message){if(-not $ok){throw $message};$script:checks++}
 function MakeCase([string]$name,[string]$extra=''){
  $dir=Join-Path $root $name;New-Item -ItemType Directory -Path $dir | Out-Null
  $ini=Join-Path $dir 'accepted.ini'
- [IO.File]::WriteAllText($ini,"[Input]`r`nKeepAcquiredWeapons=0`r`nGunAlign0PitchTenths=-28`r`n$extra[Render]`r`nNativeMuzzleParticleStereo=1`r`nDesktopMirrorWindow=1`r`n[Localization]`r`nPolishLanguage=1`r`n",[Text.UTF8Encoding]::new($false))
+ [IO.File]::WriteAllText($ini,"[Input]`r`nKeepAcquiredWeapons=0`r`nGunAlign0PitchTenths=-28`r`n$extra[Render]`r`nNativeMuzzleParticleStereo=1`r`nDesktopMirrorWindow=1`r`n[Localization]`r`nPolishLanguage=1`r`n[Diagnostic]`r`n",[Text.UTF8Encoding]::new($false))
  $dll=Join-Path $dir 'd3d9.dll';[IO.File]::WriteAllBytes($dll,[byte[]](1,2,3))
  $sha=(Get-FileHash $dll -Algorithm SHA256).Hash
  $manifest=[ordered]@{sha256=$sha;architecture='x86 PE32';optimization='/O2';workingTreeStatus=@()}
@@ -31,6 +31,16 @@ foreach($line in @('KeepAcquiredWeapons=1','WeaponWheelOwnedInventory=1','NpcNam
 $plan=Get-Content -Raw (Join-Path $good.CandidateDir 'change-plan.json') | ConvertFrom-Json
 Check ($plan.files.Count -eq 1 -and $plan.files[0].path -ceq 'Binaries/d3d9.dll') 'Scope expanded beyond DLL/INI'
 Check ($plan.ini.Count -eq 5) 'Unexpected key delta'
+$rifle=MakeCase 'rifle-sniper'; & $script @rifle -RifleSniperFollowups | Out-Null
+$rifleText=[IO.File]::ReadAllText((Join-Path $rifle.CandidateDir 'SingularityVR.ini'))
+foreach($line in @('KeepAcquiredWeapons=0','KasimovAuthoredGrip=1','SniperNearEyeScope=1',
+ 'NativeMuzzleProbe=1','NativeMuzzleProbeGunVerts=11387','NativeMuzzleParticleStereo=1',
+ 'DesktopMirrorWindow=1','PolishLanguage=1','GunAlign0PitchTenths=-28')){
+ Check $rifleText.Contains($line) "Rifle/sniper scope regressed $line"
+}
+$riflePlan=Get-Content -Raw (Join-Path $rifle.CandidateDir 'change-plan.json') | ConvertFrom-Json
+Check ($riflePlan.ini.Count -eq 4) 'Rifle/sniper key scope expanded'
+Check ($riflePlan.files.Count -eq 1) 'Rifle/sniper changed assets'
 $logical=MakeCase 'logical-profile'
 $p=Get-Content -Raw $logical.AcceptedProfilePath | ConvertFrom-Json
 $p.files=@($p.files | Where-Object path -cne 'Binaries/SingularityVR.ini')

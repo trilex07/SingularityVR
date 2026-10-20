@@ -158,5 +158,13 @@ int main(){
     assert(interrupted.Tick(true,1,false)==1);
     // Relative/overlapping data never qualifies just because it resembles a matrix.
     Slot slots[2]{};slots[0].valid=true;slots[0].reg=11;float m[16]{};assert(Alias(m,12,slots,1)<0);
-    std::puts("PASS native muzzle: exact shader identity, hash parsing, alias isolation/restoration/failure, bounded idle/fire plan; no GPU");
+    assert(ProbeWeapon(0,5799)&&ProbeWeapon(11387,11387)&&!ProbeWeapon(11387,5799));
+    {capture={};probeStart=0;captureWeapon=0;InterlockedExchange(&probe,1);ConfigureProbeGun(11387);
+        shadowtrace::pending=shadowtrace::active=false;shadowtrace::sequence=0;
+        for(unsigned i=0;i<100;++i)Boundary(true,false,17,5799);
+        assert(context&&capture.stage==0&&probeStart==0&&!shadowtrace::pending);
+        for(unsigned i=0;i<90;++i)Boundary(true,false,18,11387);
+        assert(context&&capture.stage==1&&shadowtrace::pending);
+        InterlockedExchange(&probe,0);ConfigureProbeGun(0);}
+    std::puts("PASS native muzzle: exact shader identity, alias restoration, gun-filtered bounded idle/fire plan; no GPU");
 }

@@ -26,6 +26,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "weapon_reload_carry.h"
 #include "weapon_trace_math.h"
 #include "weapon_muzzle_geometry.h"
+#include "sniper_scope.h"
 #include "weapon_wheel.h"
 #include "ammo_probe.h"
 #include "ammo_layout.h"
@@ -2348,6 +2349,9 @@ static int g_reloadPalmGrip=0; // default-OFF; measured native wrist, not AIM-sp
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
 static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
 static weaponmuzzle::Witness g_nextMuzzle,g_nextMuzzleStaged;
+static sniperscope::Mount g_sniperScopeMount;
+static sniperscope::State g_sniperScopeState; // input thread only
+static int g_sniperNearEyeScope=0;
 static centurionclip::PresentationSafety g_nextPresentation;
 static void InitNextReload();
 static void ReleaseNextReloadGPU();
@@ -2363,7 +2367,7 @@ static void CancelNextReload(){
         g_nextNativeGate.Clear();ReleaseSRWLockExclusive(&g_centurionNativeLock);
     }
     if(TryAcquireSRWLockExclusive(&g_nextVisualLock)){
-        g_nextVisual={};g_nextWitness={};g_nextWrist={};g_nextMuzzle={};ReleaseSRWLockExclusive(&g_nextVisualLock);
+        g_nextVisual={};g_nextWitness={};g_nextWrist={};g_nextMuzzle={};g_sniperScopeMount={};ReleaseSRWLockExclusive(&g_nextVisualLock);
     }
 }
 static void CancelCenturionInput(){
@@ -6812,6 +6816,7 @@ volatile LONG g_twoHandEnabled = 1, g_twoHandActive = 0;
 static int g_valkyrieAuthoredGrip = 0; // isolated A/B: retain UE3's authored two-hand relation
 static int g_valkyrieSingleGrip = 0; // isolated A/B: right glove follows the same weapon delta as pistol
 static int g_volkAuthoredGrip = 0; // default OFF: retain native shotgun hand/weapon relationship
+static int g_kasimovAuthoredGrip = 0; // default OFF: same native paired-pose route
 // Run 190: the gun-pose timing experiment. See the long note in SyncXRInput.
 int      g_poseLeadFrames = 0;          // ini [Input] PoseLeadFrames: display periods to predict ahead
 XrTime   g_lastHandPoseTime = 0;        // what time the previous sample was predicted FOR
@@ -11929,6 +11934,30 @@ void SyncXRInput(XrTime displayTime) {
     // into a byte that flickers between 0 and 1, and that is a state change every frame.
     if (lt < 0.10f) lt = 0.0f;
     if (rt < 0.10f) rt = 0.0f;
+    if(g_sniperNearEyeScope){
+        sniperscope::Mount mount;
+        if(TryAcquireSRWLockShared(&g_nextVisualLock)){
+            mount=g_sniperScopeMount;ReleaseSRWLockShared(&g_nextVisualLock);
+        }
+        const auto& p=g_handLastPos[fireHand];const auto& q=g_handAimOrientation[fireHand];
+        sniperscope::Pose eyes[2];
+        for(unsigned e=0;e<2;++e){const auto& ep=g_eyePose[e];
+            eyes[e]={{ep.position.x,ep.position.y,ep.position.z},
+                {ep.orientation.x,ep.orientation.y,ep.orientation.z,ep.orientation.w}};}
+        const bool eligible=feedGame&&!uiMenu&&!Rd(g_gamePaused)&&!Rd(g_panelOpen)&&
+            !Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed()&&!Rd(g_weaponHolstered)&&
+            g_hipKnifeState.held<0&&!g_nextBlockFire&&!g_nextOwnsGrip&&
+            Rd(g_gunVerts)==11389&&g_haveEyes&&g_eyePositionsValid&&g_handPositionValid[fireHand]&&g_handPoseValid[fireHand]&&
+            g_xrSessionState==XR_SESSION_STATE_FOCUSED;
+        const bool prior=g_sniperScopeState.active;
+        const bool scopeRequested=g_sniperScopeState.Update(eligible,mount,(uint32_t)g_playerPawn,
+            (uint32_t)Rd(g_weaponObj),{{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}},eyes,GetTickCount64());
+        if(prior!=scopeRequested){static unsigned notes=0;if(notes++<24)
+            Log("sniper near-eye: active=%d native AltFire request; measured lens mount=%d",scopeRequested?1:0,mount.valid?1:0);}
+        // Retain normal L2 elsewhere. Only Kasimov's scoped aim is owned here;
+        // later knife/reload/menu ownership gates can still consume this input.
+        if(eligible)lt=scopeRequested?1.f:0.f;
+    }
     if(g_hipKnifeEnabled){
         const float knifeTrig = g_hipKnifeState.held == fireHand ? rt : (g_hipKnifeState.held == altHand ? lt : 0.0f);
         static bool knifeTrigWasDown = false;
@@ -17213,6 +17242,8 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         handanchor::ValkyrieSingleGrip(g_valkyrieSingleGrip!=0,gloves,Rd(g_weaponObj)!=0,
             Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip) ||
         handanchor::VolkSingleGrip(g_volkAuthoredGrip!=0,gloves,Rd(g_weaponObj)!=0,
+            Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip) ||
+        handanchor::KasimovSingleGrip(g_kasimovAuthoredGrip!=0,gloves,Rd(g_weaponObj)!=0,
             Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip);
     if (weaponSingleHand) {
         BuildGunC(aimTarget);
@@ -17296,7 +17327,8 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         const SupportGripSpec spec = SupportGripFor(supportGunVerts);
         if (spec.mode == SupportGripMode::AuthoredPair ||
             (supportGunVerts == 11387 && g_valkyrieAuthoredGrip) ||
-            (supportGunVerts == 8297 && g_volkAuthoredGrip)) {
+            (supportGunVerts == 8297 && g_volkAuthoredGrip) ||
+            (supportGunVerts == 11389 && g_kasimovAuthoredGrip)) {
             // Same rigid delta as the aim hand. The live palette already contains the
             // pistol's two-hand relationship; retargeting only the left wrist to BuildGunC
             // (or to l_hand_IK, which matches the rest pose) parks the glove beside the gun.
@@ -29166,7 +29198,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         SaveBackbufferCapture(s,true); // Completed SBS scene, before menu/diagnostic overlays.
         nativefx::DumpWitness();
     }
-    nativefx::Boundary(shadowTraceStable>=15&&!CutsceneNativeCameraArmed()&&!Rd(g_gamePaused)&&!Rd(g_panelOpen)&&!Rd(g_vrUiMenu)&&Rd(g_weaponObj)&&!Rd(g_weaponHolstered),shadowtrace::active||shadowtrace::pending,(unsigned)Rd(g_weaponObj));
+    nativefx::Boundary(shadowTraceStable>=15&&!CutsceneNativeCameraArmed()&&!Rd(g_gamePaused)&&!Rd(g_panelOpen)&&!Rd(g_vrUiMenu)&&Rd(g_weaponObj)&&!Rd(g_weaponHolstered),shadowtrace::active||shadowtrace::pending,(unsigned)Rd(g_weaponObj),(unsigned)Rd(g_gunVerts));
     nativefx::Summary();
     PauseRttStart::Install();
     PauseRttProbe::PresentContent(s);
@@ -32757,6 +32789,7 @@ void LoadIniSettings() {
             GetPrivateProfileIntA("Diagnostic","NativeMuzzleWorldVSBytes",0,path),
             GetPrivateProfileIntA("Diagnostic","NativeMuzzleWorldPSBytes",0,path));
         nativefx::ConfigureParticles(GetPrivateProfileIntA("Render","NativeMuzzleParticleStereo",0,path)!=0);
+        nativefx::ConfigureProbeGun((unsigned)GetPrivateProfileIntA("Diagnostic","NativeMuzzleProbeGunVerts",0,path));
     }
     g_cutsceneScreenDistanceMm=cinemascreen::ClampDistanceMm(
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));
@@ -33354,6 +33387,10 @@ void LoadIniSettings() {
         g_valkyrieAuthoredGrip);
     g_valkyrieSingleGrip = GetPrivateProfileIntA("Input", "ValkyrieSingleGrip", 0, path) ? 1 : 0;
     g_volkAuthoredGrip = GetPrivateProfileIntA("Input", "VolkAuthoredGrip", 0, path) ? 1 : 0;
+    g_kasimovAuthoredGrip=GetPrivateProfileIntA("Input","KasimovAuthoredGrip",0,path)?1:0;
+    g_sniperNearEyeScope=GetPrivateProfileIntA("Input","SniperNearEyeScope",0,path)?1:0;
+    Log("ini: KasimovAuthoredGrip=%d SniperNearEyeScope=%d (default OFF; native scoped view, measured lens proximity)",
+        g_kasimovAuthoredGrip,g_sniperNearEyeScope);
     g_weaponWheelObserved = GetPrivateProfileIntA("Input", "WeaponWheelObservedSelection", 0, path) ? 1 : 0;
     Log("ini: VolkAuthoredGrip=%d WeaponWheelObservedSelection=%d (default OFF)",g_volkAuthoredGrip,g_weaponWheelObserved);
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
