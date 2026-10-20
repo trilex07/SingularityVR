@@ -11,6 +11,7 @@ param(
  [switch]$MeasuredAim,
  [switch]$OpticalAccuracy,
  [switch]$StrongerPrecision,
+ [switch]$ReviewedGore,
  [switch]$BodyEquipmentCensus
 )
 # Offline preparation only. No launch, installation or accepted-profile mutation.
@@ -106,6 +107,10 @@ if($BodyEquipmentCensus){
  if(-not $MeasuredAim){throw 'Equipment census is scoped to the measured-aim followup'}
  $targets['Diagnostic/BodyEquipmentProbe']='1'
 }
+if($ReviewedGore){
+ $targets['Gameplay/GoreDismemberment']='1'
+ $targets['Gameplay/GoreChancePct']='100'
+}
 $text=[IO.File]::ReadAllText((Resolve-Path -LiteralPath $InstalledIni).Path,[Text.UTF8Encoding]::new($false,$true))
 $newline=if($text.Contains("`r`n")){"`r`n"}else{"`n"}
 $lines=[Collections.Generic.List[string]]::new()
@@ -125,7 +130,10 @@ for($i=0;$i -lt $lines.Count;$i++){
 foreach($key in $targets.Keys){
  if($seen.ContainsKey($key)){continue}
  $parts=$key.Split('/');$section=$parts[0]
- if(-not $end.ContainsKey($section)){throw "Missing section: $section"}
+ if(-not $end.ContainsKey($section)){
+  if($section -ne 'Gameplay' -or -not $ReviewedGore){throw "Missing section: $section"}
+  $lines.Add('');$lines.Add('[Gameplay]');$end[$section]=$lines.Count-1
+ }
  $at=[int]$end[$section]+1
  $lines.Insert($at,$parts[1]+'='+$targets[$key])
  foreach($s in @($end.Keys)){if($end[$s] -ge $at-1){$end[$s]++}}

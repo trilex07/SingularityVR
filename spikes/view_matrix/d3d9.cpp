@@ -2142,6 +2142,8 @@ static uintptr_t FindClassByName(const char* want) {
     return 0;
 }
 
+#include "gore_dismember.h"
+
 // Offsets on RvWeaponFX, filled by the solve. -1 = not found, and the suppression refuses to write.
 int g_offMuzzle1st = -1, g_offMuzzleLoop1st = -1, g_offMuzzleIron = -1,
     g_offMuzzleLoopIron = -1, g_offMuzzleEmitter = -1;
@@ -23500,6 +23502,7 @@ ScriptFn g_scriptFns[] = {
     { "AttemptReload",      -1 },
     { "IsReloading",        -1 },
     { "AnimNotify_RefillClip",-1 }, // original Centurion Reload notify targets RvSharedPawn
+    { "TakeDamage",         -1 }, // [29] scoped reviewed gore experiment
 };
 const int kFnGetAdjustedAim = 0;
 const int kFnTick           = 5;
@@ -23519,6 +23522,7 @@ const int kFnSetPause       = 23;   // the only one that fires - see the table
 const int kFnReloadFirst    = 24;
 const int kFnReloadLast     = 28;
 const int kFnRefillClip     = 28;
+const int kFnGoreDamage     = 29;
 const int kScriptFnCount    = (int)(sizeof(g_scriptFns) / sizeof(g_scriptFns[0]));
 
 // Which menu candidate fired last, and how many frames ago. The readout shows it by NAME so the
@@ -25030,7 +25034,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons)) && Stack) {
+    if ((censusOn || routeTwo || cineWatch || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
         if (fnIdx < 0) InterlockedIncrement(&g_peUnnamed);
@@ -25502,8 +25506,12 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         }
     }
 
-    if (!NativeOwnedInventory::InvokeRetained(self,edx,Stack,Result,fnIdx,(int)Rd(g_nodeOffset),g_origProcessEvent))
-        g_origProcessEvent(self, edx, Stack, Result);
+    {
+        singularity_gore::DamageScope gore((uintptr_t)self,
+            fnIdx>=0&&FnIdx(kFnGoreDamage)>=0&&fnIdx==FnIdx(kFnGoreDamage));
+        if (!NativeOwnedInventory::InvokeRetained(self,edx,Stack,Result,fnIdx,(int)Rd(g_nodeOffset),g_origProcessEvent))
+            g_origProcessEvent(self, edx, Stack, Result);
+    }
     if(fnIdx>=0&&fnIdx==FnIdx(kFnPlayerTick)&&
        (uintptr_t)self==(uintptr_t)(uint32_t)Rd(g_ctlForXi))NativeScopeTick();
 
@@ -32799,6 +32807,7 @@ void LoadIniSettings() {
 
     char path[MAX_PATH]{};
     if (!IniPath(path)) return;
+    singularity_gore::LoadConfig(path);
 
     const bool hotPathEnabled = GetPrivateProfileIntA("Render", "HotPathSampler", 0, path) != 0;
     // The physically accepted shadow/input combination is persistent: missing

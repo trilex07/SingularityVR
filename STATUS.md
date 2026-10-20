@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+## Candidate — 2026-10-21 reviewed gore + stronger Kasimov R1 (not deployed)
+
+Dedicated branch `fix/gore-stronger-r1-integration`, based on stronger-hold 7695772.
+SIDE 9c75c68 reviewed, NOT blindly merged: unsafe default-ON/CDO/packed-bool/global
+censorship writes excluded. Candidate contains a default-OFF scoped enemy damage
+chance experiment plus `WeaponSteadyPrecision=2`. TMD sever-all and auto-death
+flags remain unimplemented pending native mask/consumer evidence. No L3/L4 claim.
+See `docs/gore-reviewed-candidate.md`. Stable Steam/main unchanged; fresh `start`
+required before any deployment or launch. Previous optical acceptance still holds
+only for the stable build, not this rebuilt candidate.
+
 ## LATEST — 2026-10-20 optical alignment accepted and stable promotion
 
 User physically confirms scope aiming now OK; requests main + stable baseline.
