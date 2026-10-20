@@ -263,3 +263,17 @@ Przeprowadzono gruntowną diagnostykę evidence-driven i wygenerowano/skorygowan
 1. **Audio**: Skopiować pliki z `C:\Dubbing-aktualny\` zgodnie z `deploy_manifest.jsonl` (791 plików) lub `deploy_full_manifest.jsonl` (1875 plików) do pakietów/banków gry.
 2. **Notatki**: Wdrożyć `all_notes_pl.json` i `chrono_notes_pl.json` do `RvGame.int` (rekompilacja/patch `Coalesced_INT.bin`), zachowując patch fontu `TypekaMix` (`ui_GFx_fonts.xxx`).
 3. **Weryfikacja w grze**: Przeprowadzić odsłuch i test fizyczny VR w headsetcie PSVR2 (wyrazistość i emocje okrzyków bojowych, brak opóźnień w dialogach, idealna głośność radia w intro, poprawne napisy kredowe i czytelność notatek w PDA).
+
+### E. Ostateczna autentyczność obsady i mastering radiowy (2026-10-20, XTTS-v2 & Broadcast Gain):
+1. **Oryginalna autentyczna obsada aktorska ze Singularity:**
+   - **Devlin (Partner Renko):** Klonowanie z oryginalnego aktora gry (`d4b361c6a632d1f5_en.wav`), surowy, szorstki żołnierz amerykański.
+   - **Dr Victor Barisov:** Klonowanie z oryginalnego głosu Barisowa (`5fbf4d3b1d830376_en.wav`), radziecki fizyk o wyważonym, mądrym tonie.
+   - **Gen. Nikołaj Demiczew:** Klonowanie z oryginalnego głosu Demiczewa (`425e388a18d457a5_en.wav`), zimny dyktator.
+   - **Kathryn (Mir-12):** Zatwierdzony przez użytkownika **Wariant B** (`72400162a8a1f767_en.wav`), naturalna, spokojna kobieca intonacja z sekwencji pociągu.
+   - **Dowódca Nimitz:** Klonowanie ze skompilowanego wielo-próbkowego profilu Nimitza (`nimitz_combined_donor.wav`).
+2. **Styl Radiowy / Intercom Helikoptera (`v3_05_nimitz_radio.wav` style):**
+   - Zgodnie z decyzją użytkownika, wszystkie kwestie mówione w helikopterze i przez radio otrzymały filtr pasmowy VHF/UHF (350 Hz – 3600 Hz) z odcięciem niskiego dudnienia (<350 Hz), by mowa krystalicznie przebijała się przez ryk silników i łopat wirnika w VR.
+   - Wszystkie 11 plików w `C:\Dubbing-aktualny\intro\` zostały zresyntetyzowane przez XTTS-v2 z autentycznymi głosami i zmasterowane w stylu radiowym.
+3. **Podbicie głośności całej biblioteki do standardu -12 LUFS:**
+   - Wszystkie 1864 pliki z folderów `story`, `barks`, `mp`, `skipped` i `vignette` przeszły przez analogowy limiter nasycenia `tanh` (`ceiling = 0.88`), podnosząc głośność dialogów o +3 do +5 dB do poziomu -12.0 do -13.5 LUFS bez jakiegokolwiek przesterowania cyfrowego (`True Peak <= -1.0 dBFS`).
+   - Manifesty `deploy_full_manifest.jsonl` i `deploy_manifest.jsonl` zaktualizowane o nowe sumy kontrolne sha16 i rozmiary.
