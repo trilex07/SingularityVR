@@ -7,7 +7,7 @@
 #include <cstdarg>
 #include "../skeletal_palette.h"
 static void Log(const char*,...){}
-namespace shadowtrace {static bool pending=false,active=false;static unsigned sequence=0;}
+namespace shadowtrace {constexpr unsigned kGroups=1024;static bool pending=false,active=false;static unsigned sequence=0;}
 #include "../native_muzzle_stereo.h"
 struct Slot {unsigned reg=0;int conv=0;bool valid=false;float m[16]{};};
 struct Dev {float matrix[16]{};unsigned reads=0,writes=0;bool failRead=false,failWrite=false;
@@ -33,6 +33,14 @@ static void Init(Dev& d,Slot* slots,int& n){
 }
 int main(){
     using namespace nativefx;
+    // No silent128-pair camera truncation in a1024-group driver capture.
+    {Dev dev;Slot camera[1]{};Configure(0,true,"","",0,0,-1);
+     shadowtrace::active=true;
+     for(unsigned i=0;i<kWitnesses;++i){vs.hash=i+1;ps.hash=2;vs.camera=-1;Observe(&dev,camera,0,true);}
+     assert(witnessCount==kWitnesses&&witnessOverflow==0);
+     Observe(&dev,camera,0,true);assert(witnessOverflow==0); // duplicate
+     vs.hash=kWitnesses+1;Observe(&dev,camera,0,true);assert(witnessOverflow==1);
+     shadowtrace::active=false;Release();assert(witnessCount==0&&witnessOverflow==0);}
     {const Selection family[]={
         {0x314D478A9CFDBE37ull,0xC118540CCDBCB241ull,3384,448,4},
         {0x488BAEB579E71A73ull,0x27DFE7D9C67BCC03ull,2968,452,4},

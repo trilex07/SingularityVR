@@ -4,7 +4,9 @@
 // No bytecode query, allocation or disk logging in the draw path. COM references
 // retained only for bounded unique groups and released by Present/reset.
 namespace shadowtrace {
-constexpr unsigned kGroups=1024, kDraws=24000, kShaders=192;
+// Every retained group can introduce at most one VS and one PS. The old192
+// export limit truncated all four rifle captures despite zero draw overflow.
+constexpr unsigned kGroups=1024, kDraws=24000, kShaders=2*kGroups;
 constexpr D3DRENDERSTATETYPE kPipelineStates[]={D3DRS_COLORWRITEENABLE,D3DRS_ZENABLE,
     D3DRS_ZWRITEENABLE,D3DRS_ZFUNC,D3DRS_STENCILENABLE,D3DRS_STENCILFUNC,D3DRS_STENCILREF,
     D3DRS_ALPHABLENDENABLE,D3DRS_SRCBLEND,D3DRS_DESTBLEND,D3DRS_SEPARATEALPHABLENDENABLE,

@@ -1,8 +1,43 @@
 # Rifle VFX / Kasimov grip and eye proximity (2026-10-20)
 
+## Failed physical test / justified followup
+
+PID38848, sourcec81d01c: user reports no rifle VFX and no sniper scope.
+`build/combined-followups/session-c81d01c.log` retained privately. Post-exit
+guard restored exact promoted DLL/INI, independently rehashed. Grip was not
+separately accepted in this terse feedback. No main merge.
+
+Independent rifle muzzle sampling now yields witness1, but that does NOT prove
+emitter placement. Driver trace draw/group overflow0 is insufficient: shader
+export overflow is1/27/42/44 at the old192limit, so the analyzer refuses all
+comparisons. The separate camera witness overflows2/4 on the last frames too.
+Do not guess a replacement shader family from that incomplete inventory. The
+next bounded capture keeps4frames and increases exports to2*1024groups (max
+unique VS+PS by construction), camera witnesses to1024groups, with refusal
+retained on any overflow/unavailable shader. No new particle material patch.
+
+The original lens was captured. Near-eye generated repeated1/0 transitions,
+LT255 reached published input, native FOV changed, but no scope-overlay receipt
+appeared. Hypothesis (not yet causal runtime proof): render-side native ADS
+animation changes lens mount before ScopeActive becomes true, causing feedback
+into its own proximity gate. Keep the measured mount for a dwell/hold; still
+recompute current hand/eye geometry every input tick and cancel on context,
+identity or physical displacement. Synthetic animated-mount mutation now
+reproduces the old cancellation and proves the policy correction offline.
+Bounded delivery logs include final LT, each downstream suppression latch,
+nearest eye/axial/radial/alignment, overlay and timestamp. Falsifier: stable
+requested+delivered LT with a valid frozen mount but still no native scope.
+Then follow the native aim producer, rather than relaxing proximity bounds.
+
 Accepted installation remains the user's promoted663a49a artifact7A1DE585…9495,
 INI60224CA0…4ADC. Work is on `fix/rifle-vfx-sniper-grip-scope`, not main.
 No deployment or Steam launch in this preparation.
+
+Followup L1: full `tools/reload/test-centurion.ps1` suite and rerun of
+`tools/fx/test-native-muzzle.ps1` PASS, including witness capacity/dedup/refusal
+and synthetic animated optic mount tests. Dirty-tree x86 PE32 `/O2` build PASS;
+clean build and candidate hashes are recorded separately in private provenance.
+These are offline results, not physical scope/VFX acceptance.
 
 ## Observations, mechanisms, falsifiers
 

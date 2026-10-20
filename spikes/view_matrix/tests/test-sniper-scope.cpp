@@ -23,6 +23,17 @@ int main(){
     // No timeout tied to mesh visibility: the native fullscreen scope hides it.
     hand={};s={};assert(!s.Update(true,m,1,2,hand,eyes,100));
     assert(s.Update(true,m,1,2,hand,eyes,200));assert(s.Update(true,m,1,2,hand,eyes,10000));
+    // An aim animation moves the rendered lens before ScopeActive sees an
+    // overlay. That must not cancel the proximity-generated native aim input.
+    s={};assert(!s.Update(true,m,1,2,hand,eyes,100));
+    auto animated=m;animated.lens.z-=.5f;
+    assert(s.Update(true,animated,1,2,hand,eyes,200));
+    assert(s.Update(true,animated,1,2,hand,eyes,250));
+    assert(s.eyeIndex>=0&&s.axial>.11f&&s.axial<.13f);
+    hand.p.x=.3f;assert(!s.Update(true,animated,1,2,hand,eyes,260));
+    hand={};assert(!s.Update(false,m,1,2,hand,eyes,270));
+    assert(!s.Update(true,m,1,2,hand,eyes,280));
+    assert(s.Update(true,m,1,2,hand,eyes,380));
     for(unsigned i=0;i<360;++i){
         const float yaw=float(i)*.01745329252f;
         const hipknife::Q rotation{0,std::sin(yaw*.5f),0,std::cos(yaw*.5f)};

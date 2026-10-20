@@ -2351,6 +2351,7 @@ static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
 static weaponmuzzle::Witness g_nextMuzzle,g_nextMuzzleStaged;
 static sniperscope::Mount g_sniperScopeMount;
 static sniperscope::State g_sniperScopeState; // input thread only
+inline bool ScopeActive();
 static int g_sniperNearEyeScope=0;
 static centurionclip::PresentationSafety g_nextPresentation;
 static void InitNextReload();
@@ -11934,6 +11935,7 @@ void SyncXRInput(XrTime displayTime) {
     // into a byte that flickers between 0 and 1, and that is a state change every frame.
     if (lt < 0.10f) lt = 0.0f;
     if (rt < 0.10f) rt = 0.0f;
+    bool nearEyeRequested=false,nearEyeEligible=false;
     if(g_sniperNearEyeScope){
         sniperscope::Mount mount;
         if(TryAcquireSRWLockShared(&g_nextVisualLock)){
@@ -11952,8 +11954,11 @@ void SyncXRInput(XrTime displayTime) {
         const bool prior=g_sniperScopeState.active;
         const bool scopeRequested=g_sniperScopeState.Update(eligible,mount,(uint32_t)g_playerPawn,
             (uint32_t)Rd(g_weaponObj),{{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}},eyes,GetTickCount64());
+        nearEyeRequested=scopeRequested;nearEyeEligible=eligible;
         if(prior!=scopeRequested){static unsigned notes=0;if(notes++<24)
-            Log("sniper near-eye: active=%d native AltFire request; measured lens mount=%d",scopeRequested?1:0,mount.valid?1:0);}
+            Log("sniper near-eye: active=%d eligible=%d mount=%d eye=%d axial=%.4f radial=%.4f alignment=%.4f t=%llu",
+                scopeRequested?1:0,eligible?1:0,mount.valid?1:0,g_sniperScopeState.eyeIndex,
+                g_sniperScopeState.axial,g_sniperScopeState.radial,g_sniperScopeState.alignment,GetTickCount64());}
         // Retain normal L2 elsewhere. Only Kasimov's scoped aim is owned here;
         // later knife/reload/menu ownership gates can still consume this input.
         if(eligible)lt=scopeRequested?1.f:0.f;
@@ -12023,6 +12028,15 @@ void SyncXRInput(XrTime displayTime) {
     }
     InterlockedExchange(&g_rawTrigger, (LONG)(rt * 255.0f));
     InterlockedExchange(&g_rawAltTrigger, (LONG)(lt * 255.0f));   // run 213 - see the scope census
+    if(g_sniperNearEyeScope&&nearEyeEligible){
+        static unsigned notes=0;static ULONGLONG next=0;const ULONGLONG now=GetTickCount64();
+        if(notes<24&&now>=next){++notes;next=now+1000;
+            Log("sniper delivery: request=%d LT=%u ui=%d knife=%d centurionGate=%d nextGate=%d pointerBlocked=%d eye=%d axial=%.4f radial=%.4f alignment=%.4f overlay=%d t=%llu",
+                nearEyeRequested?1:0,unsigned(lt*255.f),uiMenu?1:0,g_hipKnifeTrigger[altHand].blocked?1:0,
+                g_centurionTrigger[altHand].blocked?1:0,g_nextReloadTrigger[altHand].blocked?1:0,
+                g_vrUiTrigger[altHand].blocked?1:0,g_sniperScopeState.eyeIndex,g_sniperScopeState.axial,
+                g_sniperScopeState.radial,g_sniperScopeState.alignment,ScopeActive()?1:0,now);}
+    }
     g_msActionStates += msStates;
     if (msStates > g_pkActionStates) g_pkActionStates = msStates;
     const LONG packedBtns = (LONG)btns

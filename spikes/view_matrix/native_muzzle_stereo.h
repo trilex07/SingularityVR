@@ -47,11 +47,12 @@ static unsigned captureWeapon=0;
 static ULONGLONG probeStart=0;
 struct Witness {std::uint64_t vs=0,ps=0;unsigned vb=0,pb=0,slots=0;int camera=-1,alias=-1,convention=-1;
     bool read=false,tracked=false;float gpu[16]{};};
-static Witness witness[128];static unsigned witnessCount=0,witnessOverflow=0;
+constexpr unsigned kWitnesses=shadowtrace::kGroups;
+static Witness witness[kWitnesses];static unsigned witnessCount=0,witnessOverflow=0;
 template<class Dev,class Slot> void Observe(Dev* dev,const Slot* slots,int n,bool allowed){
     if(!Probe()||!shadowtrace::active||!allowed)return;
     for(unsigned i=0;i<witnessCount;++i)if(witness[i].vs==vs.hash&&witness[i].ps==ps.hash)return;
-    if(witnessCount==128){++witnessOverflow;return;}
+    if(witnessCount==kWitnesses){++witnessOverflow;return;}
     auto& w=witness[witnessCount++];w={};w.vs=vs.hash;w.ps=ps.hash;w.vb=vs.bytes;w.pb=ps.bytes;w.camera=vs.camera;
     for(int i=0;i<n&&i<32;++i)if(slots[i].valid){w.slots|=1u<<i;if((int)slots[i].reg==vs.camera)w.tracked=true;}
     if(vs.camera>=0&&SUCCEEDED(dev->GetVertexShaderConstantF((UINT)vs.camera,w.gpu,4))){

@@ -1,6 +1,22 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 physical c81d01c FAILED: user no rifle VFX and no sniper scope.
+Game exited; post-exit guard restored promoted DLL7A1DE585...9495 and
+INI60224CA0...4ADC; independent installed hashes PASS. Private saved session:
+build/combined-followups/session-c81d01c.log, PID38848. Rifle muzzleWitness=1,
+four captures completed, but shader exports overflow1/27/42/44 (192limit);
+camera witnesses overflow0/0/2/4. Count-difference analyzer correctly REFUSES:
+do NOT identify new muzzle pairs or claim absence from these incomplete dumps.
+Sniper original lens captured; input LT255 observed, repeated active1/0 and
+no scope-overlay receipt. Native FOV changed, not proof of scope rendering.
+Followup hypothesis: refreshing lens from an ADS-animated render pose feeds
+aim back into its own proximity gate. Retain measured controller-local mount
+through dwell/hold (context/identity/distance still cancel), deterministic ADS
+mount-mutation test; bounded downstream gate/geometry/timestamp receipts.
+Raise shader export cap to2*group cap and camera witness cap togroup cap,
+still4 frames, to collect complete rifle evidence. Not yet visual acceptance.
+
 2026-10-20 NEW feedback: Valkyrie muzzle VFX absent; Kasimov one/two-hand grip
 wrong; user requests near-eye scope. Offline work on fix/rifle-vfx-sniper-grip-scope:
 default-OFF Kasimov authored grips and measured original-lens proximity trigger
