@@ -1,0 +1,542 @@
+{
+  "Shoot him!": [
+    "Strzelaj do niego!"
+  ],
+  "Kill him, kill him!": [
+    "Zabijcie go! Zabijcie go!"
+  ],
+  "Keep me covered!": [
+    "Trzymaj mnie przykrytym!"
+  ],
+  "Throwing grenade!": [
+    "Rzucają granat!"
+  ],
+  "Get down!": [
+    "Złaź!"
+  ],
+  "Keep your head down!": [
+    "Trzymaj głowę w dół!"
+  ],
+  "Let's go!": [
+    "Chodźmy! Chodźmy!"
+  ],
+  "Go get him!": [
+    "Idź go złapać!"
+  ],
+  "Push forward!": [
+    "Wciśnijcie do przodu!"
+  ],
+  "Go, go, go!": [
+    "Idź, idź, idź!"
+  ],
+  "You go, I'll cover!": [
+    "Ty idź, ja się zajmę!"
+  ],
+  "Let's get out of here!": [
+    "Wynośmy się stąd!"
+  ],
+  "Help! I'm pinned down!": [
+    "Pomocy, zamknęłam się!"
+  ],
+  "I see him! I see him!": [
+    "Widzę go!"
+  ],
+  "There he is!": [
+    "Tu jest!"
+  ],
+  "Over there!": [
+    "Tam jest!"
+  ],
+  "I have him!": [
+    "Mam go!"
+  ],
+  "Help, over here!": [
+    "Pomoc, tutaj!"
+  ],
+  "Where'd he go?": [
+    "- Gdzie on jest?"
+  ],
+  "Anybody see him?": [
+    "Ktoś go widział?"
+  ],
+  "Let's just get outta here!": [
+    "Wynośmy się stąd!"
+  ],
+  "Their making a push!": [
+    "Wciśnięcie!"
+  ],
+  "Enemy advancing!": [
+    "Wróg zbliża się!"
+  ],
+  "Checking left.": [
+    "Sprawdzam w lewo."
+  ],
+  "Checking right.": [
+    "Sprawdzam w prawo."
+  ],
+  "Open fire!": [
+    "Otwórz ogień!"
+  ],
+  "Engage! Engage!": [
+    "Zaangażuj się!"
+  ],
+  "Light 'em up!": [
+    "Zapalcie je!"
+  ],
+  "Give me suppressing fire.": [
+    "Daj mi tłumienie ognia."
+  ],
+  "Cover me.": [
+    "Zaopiekuj mnie."
+  ],
+  "I need suppressing fire.": [
+    "Potrzebuję tłumienia ognia."
+  ],
+  "Stay frosty.": [
+    "Zostań mroźny."
+  ],
+  "Watch the doorways.": [
+    "Uważaj na drzwi."
+  ],
+  "Take it slow.": [
+    "Powoli."
+  ],
+  "Keep scanning for hostiles.": [
+    "Kontynuuj skanowanie na wrogów."
+  ],
+  "Watch the corners.": [
+    "Uważaj na kąty."
+  ],
+  "Renko, help me out here!": [
+    "Renko, pomóż mi!"
+  ],
+  "Gimme a hand!": [
+    "Pomóż mi!"
+  ],
+  "Contact on the bridge!": [
+    "Kontakt na moscie!"
+  ],
+  "Enemy in the window!": [
+    "Wróg w oknie!"
+  ],
+  "Hostile on the stairs!": [
+    "Nieprzyjaciół na schodach!"
+  ],
+  "Contact on the roof!": [
+    "Kontakt na dachu!"
+  ],
+  "Contact above us.": [
+    "Kontakt nad nami."
+  ],
+  "Enemy up top.": [
+    "Wróg na górze."
+  ],
+  "Target 12 o'clock.": [
+    "Cel o 12.00."
+  ],
+  "Contact dead ahead.": [
+    "Kontakt martwy z przodu."
+  ],
+  "Enemy to the left.": [
+    "Wróg po lewej stronie."
+  ],
+  "Contact to the left.": [
+    "Kontakt z lewej strony."
+  ],
+  "Look left.": [
+    "Spójrz w lewo."
+  ],
+  "Contact to the right.": [
+    "Kontakt po prawej stronie."
+  ],
+  "Enemy to the right.": [
+    "Wróg po prawej stronie."
+  ],
+  "To the right.": [
+    "Po prawej."
+  ],
+  "Take cover!": [
+    "Ukryj się!"
+  ],
+  "Find cover!": [
+    "Znajdź kryjówkę!"
+  ],
+  "Get to cover!": [
+    "Zabezpieczcie się!"
+  ],
+  "Hold up.": [
+    "Poczekajcie."
+  ],
+  "Hold position!": [
+    "Trzymaj pozycję!"
+  ],
+  "Move up.": [
+    "Ruszaj się."
+  ],
+  "Let's go.": [
+    "- Chodźmy."
+  ],
+  "You mind moving this?": [
+    "Możesz to przesunąć?"
+  ],
+  "Could you get this out of my way?": [
+    "Możesz mi to zabrać?"
+  ],
+  "Flank left.": [
+    "Z lewej skrzydła."
+  ],
+  "Go left.": [
+    "Idź w lewo."
+  ],
+  "This way.": [
+    "- W tę stronę."
+  ],
+  "Follow me.": [
+    "Chodź za mną."
+  ],
+  "Let's pull back.": [
+    "Wracajmy wstecz."
+  ],
+  "Flank right!": [
+    "Po prawej stronie!"
+  ],
+  "Go right!": [
+    "Idź w prawo!"
+  ],
+  "You mind moving?": [
+    "Możesz się ruszyć?"
+  ],
+  "You're in my way.": [
+    "Jesteś mi w drodze."
+  ],
+  "Circle around behind them.": [
+    "Za nimi krąg."
+  ],
+  "This area is clear.": [
+    "To miejsce jest czyste."
+  ],
+  "All clear.": [
+    "Wszystko w porządku."
+  ],
+  "Target down.": [
+    "Cel w dół."
+  ],
+  "Got 'em.": [
+    "Mam je."
+  ],
+  "He's down.": [
+    "Jest na dole."
+  ],
+  "I just heard shots.": [
+    "Słyszałem strzały."
+  ],
+  "Taking fire!": [
+    "Strzelają!"
+  ],
+  "I'm hit!": [
+    "Zostałem trafiony!"
+  ],
+  "I'm pinned down!": [
+    "Jestem uwięziony!"
+  ],
+  "I'm taking heavy fire!": [
+    "Wzię ciężki ogień!"
+  ],
+  "I have to reload.": [
+    "Muszę się przeładować."
+  ],
+  "Need to reload.": [
+    "Muszę się przeładować."
+  ],
+  "We've got a sniper!": [
+    "Mamy snajpera!"
+  ],
+  "Target in cover.": [
+    "Cel w ukryciu."
+  ],
+  "Enemy is behind cover.": [
+    "Wróg jest za kryjówką."
+  ],
+  "Grenade incoming!": [
+    "Granata wchodząca!"
+  ],
+  "Target! Dead ahead!": [
+    "Celem!"
+  ],
+  "Enemy spotted.": [
+    "Wróg zauważył."
+  ],
+  "They popped smoke!": [
+    "Wybuchł dym!"
+  ],
+  "Check the rooms.": [
+    "Sprawdź pokoje."
+  ],
+  "Keep it quiet.": [
+    "Trzymaj się cicho."
+  ],
+  "Let's take it slow.": [
+    "Zróbmy to powoli."
+  ],
+  "Look above us.": [
+    "Spójrz nad nami."
+  ],
+  "Look up there!": [
+    "Spójrz tam!"
+  ],
+  "Right ahead of us!": [
+    "Tuż przed nami!"
+  ],
+  "Dead ahead.": [
+    "Zatrzymaj się."
+  ],
+  "There's an enemy to the left.": [
+    "Jest wróg po lewej stronie."
+  ],
+  "There's one to the left.": [
+    "Jest jeden po lewej."
+  ],
+  "There's one to the right.": [
+    "Jeden po prawej."
+  ],
+  "Look right!": [
+    "Spójrz w prawo!"
+  ],
+  "Get behind something!": [
+    "Zatrzymaj się za czymś!"
+  ],
+  "Move forward.": [
+    "Ruszajcie naprzód."
+  ],
+  "Let's move up!": [
+    "Ruszamy w górę!"
+  ],
+  "Could you move this?": [
+    "Możesz to przesunąć?"
+  ],
+  "Move left.": [
+    "Idź w lewo."
+  ],
+  "Let's fallback.": [
+    "Zwróćmy się."
+  ],
+  "We need to fall back.": [
+    "Musimy się odwrócić."
+  ],
+  "Move right!": [
+    "Ruszajcie w prawo!"
+  ],
+  "Would you move please?": [
+    "Możesz się ruszyć?"
+  ],
+  "If you don't mind.": [
+    "Jeśli nie masz nic przeciwko."
+  ],
+  "Go behind them.": [
+    "Idź za nimi."
+  ],
+  "All's clear.": [
+    "Wszystko jest w porządku."
+  ],
+  "It's safe.": [
+    "To bezpieczne."
+  ],
+  "Got one!": [
+    "Mam jedną!"
+  ],
+  "We're taking fire!": [
+    "Strzelają!"
+  ],
+  "I've been hit!": [
+    "Zostałem uderzony!"
+  ],
+  "I'm taking fire!": [
+    "Zabieram ogień!"
+  ],
+  "There's a sniper!": [
+    "Jest snajper!"
+  ],
+  "They're behind cover.": [
+    "Są za kryjówką."
+  ],
+  "There's a grenade!": [
+    "Jest granata!"
+  ],
+  "There's one!": [
+    "Jest jeden!"
+  ],
+  "Look over there!": [
+    "Spójrz tam!"
+  ],
+  "Engaging target!": [
+    "Włączamy cel!"
+  ],
+  "I got him!": [
+    "Mam go!"
+  ],
+  "Frag out!": [
+    "Zjeżdżaj!"
+  ],
+  "Tossing frag!": [
+    "Rzucałam frag!"
+  ],
+  "Grenade out!": [
+    "Granata!"
+  ],
+  "Cover fire!": [
+    "Strzelaj!"
+  ],
+  "Pin him down!": [
+    "Zatrzymaj go!"
+  ],
+  "Give me cover fire!": [
+    "Daj mi ogień kryjówki!"
+  ],
+  "We're moving up!": [
+    "Idziemy w górę!"
+  ],
+  "Take forward positions!": [
+    "Weźcie pozycje naprzód!"
+  ],
+  "Spread out!": [
+    "Rozprosz się!"
+  ],
+  "Retreat to cover!": [
+    "Wycofać się do kryjówki!"
+  ],
+  "We can't hold here.": [
+    "Nie możemy tu trzymać."
+  ],
+  "??? ????? ?????????!": [
+    "Czy to nie ma znaczenia?"
+  ],
+  "We are pinned down.": [
+    "Jesteśmy zamknięci."
+  ],
+  "Enemy sighted!": [
+    "Wroga widziany!"
+  ],
+  "Tango in range!": [
+    "Tango w zasięgu!"
+  ],
+  "Let's get him.": [
+    "Złapmy go."
+  ],
+  "I see him.": [
+    "Widzę go."
+  ],
+  "Got him.": [
+    "Mam go."
+  ],
+  "Get those things!": [
+    "Zabierzcie te rzeczy!"
+  ],
+  "I'll find him.": [
+    "Znajdę go."
+  ],
+  "He's here somewhere.": [
+    "Jest gdzieś tutaj."
+  ],
+  "He's dead when I find him.": [
+    "Kiedy go znajdę, będzie martwy."
+  ],
+  "Take him out.": [
+    "Zabierzcie go."
+  ],
+  "Target sighted, firing now!": [
+    "Cel widoczny, strzelaj natychmiast!"
+  ],
+  "Using grenade!": [
+    "Korzystając z granaty!"
+  ],
+  "Grenade in air!": [
+    "Granata w powietrzu!"
+  ],
+  "Suppressing fire!": [
+    "Stłumienie ognia!"
+  ],
+  "Someone cover me!": [
+    "Niech ktoś mnie kryje!"
+  ],
+  "Spread out and take cover!": [
+    "Rozprosz się i ukryj się!"
+  ],
+  "Don't give him a target!": [
+    "Nie daj mu celu!"
+  ],
+  "Hunker down!": [
+    "W dół!"
+  ],
+  "Hold this position.": [
+    "Trzymaj tę pozycję."
+  ],
+  "Everybody -- move!": [
+    "Wszyscy... ruszajcie się!"
+  ],
+  "Take those positions!": [
+    "Weźcie pozycje!"
+  ],
+  "Up and out, let's go!": [
+    "W górę i na zewnątrz, chodźmy!"
+  ],
+  "Move it!": [
+    "Ruszajcie!"
+  ],
+  "We're leaving!": [
+    "Wyjeżdżamy!"
+  ],
+  "Fall back!": [
+    "Odwróć się!"
+  ],
+  "Can't move!": [
+    "Nie mogę się ruszyć!"
+  ],
+  "I have a target!": [
+    "Mam cel!"
+  ],
+  "We have contact!": [
+    "Mamy kontakt!"
+  ],
+  "Eyes front -- intruder!": [
+    "Oczami naprzód - włamywacz!"
+  ],
+  "Tracking intruder.": [
+    "Śledzenie włamywacza."
+  ],
+  "Check the corners!": [
+    "Sprawdź kąty!"
+  ],
+  "Don't let him out of here alive!": [
+    "Nie wypuszczaj go stąd żywego!"
+  ],
+  "Everybody search!": [
+    "Wszyscy szukajcie!"
+  ],
+  "Gimme cover!": [
+    "Daj mi kryj!"
+  ],
+  "I need cover fire!": [
+    "Potrzebuję ognia kryjówki!"
+  ],
+  "Shoot him, shoot him!": [
+    "Strzelaj! Strzelaj!"
+  ],
+  "You got it!": [
+    "Masz to!"
+  ],
+  "Sector's clear, I think.": [
+    "Sektor jest czysty, myślę."
+  ],
+  "Alpha team checking in.": [
+    "Zespół Alpha przyjeżdża."
+  ],
+  "Bravo team here.": [
+    "Zespół Bravo."
+  ],
+  "Delta squad reporting in.": [
+    "Oddział Delta zgłasza się."
+  ],
+  "Help! Monsters!": [
+    "Pomocy, potwory!"
+  ]
+}
