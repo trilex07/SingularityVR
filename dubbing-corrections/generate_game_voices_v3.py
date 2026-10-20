@@ -60,7 +60,7 @@ VOICES = [
     {
         'id': 'v3_04_kathryn',
         'character': 'Kathryn (Mir-12)',
-        'donor': os.path.join(REFS_DIR, 'af9bb0574e14bff7_en.wav'),
+        'donor': os.path.join(REFS_DIR, '72400162a8a1f767_en.wav'), # Approved Wariant B
         'text': 'Doktorze Barisow, słyszy mnie pan? Proszę się trzymać, jesteśmy już w drodze do doków.',
         'has_radio': True
     },
