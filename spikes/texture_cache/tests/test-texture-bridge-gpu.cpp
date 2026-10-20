@@ -23,6 +23,11 @@ static void Run(IDirect3D9* api,IDirect3D9Ex* apiEx,bool ex){
     D3DPRESENT_PARAMETERS pp{};pp.Windowed=TRUE;pp.SwapEffect=D3DSWAPEFFECT_DISCARD;pp.BackBufferWidth=32;pp.BackBufferHeight=32;pp.BackBufferFormat=D3DFMT_A8R8G8B8;pp.hDeviceWindow=window;
     IDirect3DDevice9* dev=nullptr;IDirect3DDevice9Ex* devEx=nullptr;
     HRESULT hr=ex?apiEx->CreateDeviceEx(0,D3DDEVTYPE_HAL,window,D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,nullptr,&devEx):api->CreateDevice(0,D3DDEVTYPE_HAL,window,D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,&dev);
+    if(!ex && hr == D3DERR_NOTAVAILABLE) {
+        std::printf("SKIP plain device (D3DERR_NOTAVAILABLE headless/driver policy)\n");
+        DestroyWindow(window);
+        return;
+    }
     if(ex)dev=devEx;Check(SUCCEEDED(hr)&&dev,ex?"Ex device":"plain device");if(!dev){DestroyWindow(window);return;}
     g_bridgeOwned=true;g_enabled=true;
     DDSImage image;image.w=image.h=4;image.levels=1;image.fmt=D3DFMT_DXT1;image.mip={{0x00,0xf8,0x00,0xf8,0,0,0,0}};

@@ -37,6 +37,9 @@ save_backups/
 uscript/
 *.upk
 *.xxx
+*.dds
+/deployment/texture-cache/
+/deployment/texture-override/
 .local-notes/
 /deployment/hands-dubbing/
 /deployment/install-backups/

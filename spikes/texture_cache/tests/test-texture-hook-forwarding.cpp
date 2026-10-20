@@ -21,14 +21,26 @@ static void Exercise(IDirect3DDevice9* dev,IDirect3DTexture9* input,IDirect3DTex
 int main() {
     HMODULE system9=LoadLibraryExW(L"d3d9.dll",nullptr,LOAD_LIBRARY_SEARCH_SYSTEM32);
     auto create=system9?reinterpret_cast<IDirect3D9* (WINAPI*)(UINT)>(GetProcAddress(system9,"Direct3DCreate9")):nullptr;
-    IDirect3D9* d3d=create?create(D3D_SDK_VERSION):nullptr;if(!d3d)return 1;
+    auto createEx=system9?reinterpret_cast<HRESULT (WINAPI*)(UINT,IDirect3D9Ex**)>(GetProcAddress(system9,"Direct3DCreate9Ex")):nullptr;
+    IDirect3D9* d3d=create?create(D3D_SDK_VERSION):nullptr;
+    IDirect3D9Ex* d3dEx=nullptr;
+    if(createEx)createEx(D3D_SDK_VERSION,&d3dEx);
+    if(!d3d && !d3dEx)return 1;
     HWND window=CreateWindowExW(0,L"STATIC",L"Private hook test",WS_POPUP,0,0,32,32,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
     D3DPRESENT_PARAMETERS pp{};pp.Windowed=TRUE;pp.SwapEffect=D3DSWAPEFFECT_DISCARD;
-    pp.hDeviceWindow=window;pp.BackBufferWidth=32;pp.BackBufferHeight=32;
+    pp.hDeviceWindow=window;pp.BackBufferWidth=32;pp.BackBufferHeight=32;pp.BackBufferFormat=D3DFMT_A8R8G8B8;
     IDirect3DDevice9* dev=nullptr;
-    if(FAILED(d3d->CreateDevice(0,D3DDEVTYPE_HAL,window,D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,&dev)))return 1;
+    IDirect3DDevice9Ex* devEx=nullptr;
+    if(d3dEx){
+        if(SUCCEEDED(d3dEx->CreateDeviceEx(0,D3DDEVTYPE_HAL,window,D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,nullptr,&devEx)))dev=devEx;
+    }
+    if(!dev && d3d){
+        if(FAILED(d3d->CreateDevice(0,D3DDEVTYPE_HAL,window,D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,&dev)))return 1;
+    }
+    if(!dev)return 1;
     IDirect3DTexture9* textures[4]{};
-    for(auto& texture:textures)if(FAILED(dev->CreateTexture(32,32,1,0,D3DFMT_A8R8G8B8,D3DPOOL_MANAGED,&texture,nullptr)))return 1;
+    const D3DPOOL pool=devEx?D3DPOOL_DEFAULT:D3DPOOL_MANAGED;
+    for(auto& texture:textures)if(FAILED(dev->CreateTexture(32,32,1,0,D3DFMT_A8R8G8B8,pool,&texture,nullptr)))return 1;
     RealSetTexture=Forward;g_textureTiming.Start();
     g_enabled=false;Exercise(dev,textures[0],textures[0],"disabled actual hook preserves pointer/stage/HRESULT/exact forward count");
     g_enabled=true;Exercise(dev,nullptr,nullptr,"null binding preserved");
@@ -46,6 +58,6 @@ int main() {
     Check(forwarded==before+20000 && g_textureTiming.Read(textiming::Route::native_hit).samples>0,"actual native-hit hook produces bounded sparse samples with no dropped binds");
     g_textureTiming.Stop();dev->SetTexture(1,nullptr);
     g_cache[0]=Entry{};g_cache[1]=Entry{};g_cacheCount=0;
-    for(auto* texture:textures)texture->Release();dev->Release();DestroyWindow(window);d3d->Release();FreeLibrary(system9);
+    for(auto* texture:textures)texture->Release();dev->Release();DestroyWindow(window);if(d3d)d3d->Release();if(d3dEx)d3dEx->Release();FreeLibrary(system9);
     return failures?1:0;
 }

@@ -6301,6 +6301,8 @@ void ReleaseFpCasterCache();
 static void HolsterHipWorld(float H[3], bool includeHmdOffset = true);
 static void GunPivotWorld(float H[3]);
 static void GunAimDir(float d[3]);
+static void TmdPivotWorld(float H[3]);
+static void TmdAimDir(float d[3]);
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 bool     g_handPoseValid[2] = { false, false };
 bool g_handPositionValid[2] = { false, false };
@@ -11906,15 +11908,22 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         // detached from it.
         // The hand's aim in engine units, computed unconditionally so modes 2 and 3 can use it
         // without any of the matrix-split machinery being involved.
+        // Which hand drives aiming: normally AimHand() (gun hand).
+        // When TMD is raised and configured on off-hand, off-hand drives TMD aiming.
+        const int activeAimHand = (TmdRaised() && Rd(g_tmdOnOffHand) && g_handPoseValid[OffHand()])
+                                  ? OffHand() : AimHand();
+        const float handYawOff   = (activeAimHand == AimHand() && g_haveHandOffset) ? g_handYawOffset : 0.0f;
+        const float handPitchOff = (activeAimHand == AimHand() && g_haveHandOffset) ? g_handPitchOffset : 0.0f;
+
         g_aimYawUU = g_wantYaw;
         g_aimPitchUU = g_wantPitch;
-        if (g_handPoseValid[AimHand()]) {
-            float dh = g_handYawRad[AimHand()] - (g_haveHandOffset ? g_handYawOffset : 0.0f) - g_centreYaw;
+        if (g_handPoseValid[activeAimHand]) {
+            float dh = g_handYawRad[activeAimHand] - handYawOff - g_centreYaw;
             while (dh >  3.14159265f) dh -= 6.2831853f;
             while (dh < -3.14159265f) dh += 6.2831853f;
             g_aimYawUU = g_baseYaw + (int32_t)(g_yawSign * dh * kRadToUU);
             int32_t ap = (int32_t)(g_pitchSign
-                         * (g_handPitchRad[AimHand()] - (g_haveHandOffset ? g_handPitchOffset : 0.0f))
+                         * (g_handPitchRad[activeAimHand] - handPitchOff)
                          * kRadToUU);
             if (ap >  16000) ap =  16000;
             if (ap < -16000) ap = -16000;
@@ -11924,18 +11933,15 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         const bool aimOn = InterlockedCompareExchange(&g_aimDecouple, 0, 0) != 0;
         int32_t engineYawTarget  = g_wantYaw;      // where the ENGINE should point
         int32_t enginePitchTarget = g_wantPitch;
-        if (aimOn && g_handPoseValid[AimHand()]) {
-            // The right hand, mapped through exactly the transform the head uses - same centre,
-            // same signs - and then corrected by the neutral captured at recentre, so "pointing
-            // where I am looking" comes out as zero deviation rather than whatever your grip
-            // happens to be.
-            float dYawHand = g_handYawRad[AimHand()] - (g_haveHandOffset ? g_handYawOffset : 0.0f)
-                           - g_centreYaw;
+        if (aimOn && g_handPoseValid[activeAimHand]) {
+            // The active aiming hand (gun hand or TMD off-hand), mapped through exactly the transform
+            // the head uses - same centre, same signs - and then corrected by the neutral captured at recentre.
+            float dYawHand = g_handYawRad[activeAimHand] - handYawOff - g_centreYaw;
             while (dYawHand >  3.14159265f) dYawHand -= 6.2831853f;
             while (dYawHand < -3.14159265f) dYawHand += 6.2831853f;
             engineYawTarget = g_baseYaw + (int32_t)(g_yawSign * dYawHand * kRadToUU);
             int32_t hp = (int32_t)(g_pitchSign
-                         * (g_handPitchRad[AimHand()] - (g_haveHandOffset ? g_handPitchOffset : 0.0f))
+                         * (g_handPitchRad[activeAimHand] - handPitchOff)
                          * kRadToUU);
             if (hp >  16000) hp =  16000;
             if (hp < -16000) hp = -16000;
@@ -15646,8 +15652,9 @@ inline void ApplyMeshScale(float C[4][4], const float H[3]) {
     for (int i = 0; i < 3; ++i) { C[i][0] *= s; C[i][1] *= s; C[i][2] *= s; }
     for (int j = 0; j < 3; ++j) C[3][j] = s * C[3][j] + (1.0f - s) * H[j];
 }
-static void BuildTmdC(float C[4][4]) {    float G[3]; TmdAnchorWorld(G);
-    float H[3] = { G[0], G[1], G[2] };
+static void TmdPivotWorld(float H[3]) {
+    float G[3]; TmdAnchorWorld(G);
+    H[0] = G[0]; H[1] = G[1]; H[2] = G[2];
     if (g_gunFollowPos) {
         H[0] = (float)Rd(g_offHandOffX) / kHandFixed;
         H[1] = (float)Rd(g_offHandOffY) / kHandFixed;
@@ -15656,6 +15663,19 @@ static void BuildTmdC(float C[4][4]) {    float G[3]; TmdAnchorWorld(G);
     if (g_gunHeadOffset) {
         H[0] += g_hmdOffset[0]; H[1] += g_hmdOffset[1]; H[2] += g_hmdOffset[2];
     }
+}
+
+static void TmdAimDir(float d[3]) {
+    const float kU2R = 6.2831853f / 65536.0f;
+    const float yaw   = ((float)g_wantYaw   + (float)g_traceSignYaw * (float)Rd(g_offHandDevYawUU)) * kU2R;
+    const float pitch = ((float)g_wantPitch + (float)g_traceSignPitch * (float)Rd(g_offHandDevPitchUU)) * kU2R;
+    const float cp = cosf(pitch);
+    d[0] = cp * cosf(yaw); d[1] = cp * sinf(yaw); d[2] = sinf(pitch);
+}
+
+static void BuildTmdC(float C[4][4]) {
+    float G[3]; TmdAnchorWorld(G);
+    float H[3]; TmdPivotWorld(H);
     int sy, sp, sr; GunSigns(sy, sp, sr);
     const int32_t trimYaw   = (int32_t)(Rd(g_tmdYawTenths)   * 18.2044f);
     const int32_t trimPitch = (int32_t)(Rd(g_tmdPitchTenths) * 18.2044f);
@@ -22767,9 +22787,12 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                 // run 213h - see the note at g_scopeUpMs. Both trace sites, or the shot would follow
                 // the head on one path and the hand on the other depending on which one decides it.
                 const bool scoped = g_scopeHeadAim && ScopeActive();
+                const bool tmdOffHand = Rd(g_tmdOnOffHand) && TmdRaised();
                 const int32_t dYaw   = scoped ? 0 : (am == 12) ? kTestYaw
+                                     : tmdOffHand ? (int32_t)InterlockedCompareExchange(&g_offHandDevYawUU, 0, 0)
                                      : (int32_t)InterlockedCompareExchange(&g_handDevYawUU, 0, 0);
                 const int32_t dPitch = scoped ? 0 : (am == 12) ? 0
+                                     : tmdOffHand ? (int32_t)InterlockedCompareExchange(&g_offHandDevPitchUU, 0, 0)
                                      : (int32_t)InterlockedCompareExchange(&g_handDevPitchUU, 0, 0);
                 // The original trace starts at the engine eye. That is acceptable for a flat
                 // crosshair, but it creates measurable parallax at close range when the visible
@@ -22777,7 +22800,8 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                 // laser, then rotate the trace from that origin. The ini gate keeps the old path
                 // available for A/B comparison without affecting non-weapon traces.
                 if (InterlockedCompareExchange(&g_traceFromGun, 0, 0)) {
-                    float pivot[3]; GunPivotWorld(pivot);
+                    float pivot[3];
+                    if (tmdOffHand) TmdPivotWorld(pivot); else GunPivotWorld(pivot);
                     Start[0] += pivot[0]; Start[1] += pivot[1]; Start[2] += pivot[2];
                 }
                 const float bx = End[0], by = End[1], bz = End[2];
@@ -23431,7 +23455,11 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
             if (FnIdx(fk) >= 0 && fnIdx == FnIdx(fk)) { isFireFn = true; break; }
         if (isFireFn) {
             InterlockedOr(&g_vrRecorderEventFlags, vrrec::Fire);
-            GunPivotWorld(g_vrRecorderMuzzle);
+            if (Rd(g_tmdOnOffHand) && TmdRaised()) {
+                TmdPivotWorld(g_vrRecorderMuzzle);
+            } else {
+                GunPivotWorld(g_vrRecorderMuzzle);
+            }
             const int32_t hp = InterlockedCompareExchange(&g_aimPitchForXi, 0, 0);
             const int32_t hy = InterlockedCompareExchange(&g_aimYawForXi, 0, 0);
             fireCtl = (uintptr_t)InterlockedCompareExchange(&g_ctlForXi, 0, 0);
@@ -23511,8 +23539,14 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
                 // attached to the held gun. Hub VFX ORIGIN can restore legacy for
                 // a direct in-headset comparison.
                 float G[3];
-                if (Rd(g_vfxMuzzleOrigin)) GunPivotWorld(G); else GunAnchorWorld(G);
-                float D[3]; GunAimDir(D);
+                float D[3];
+                if (Rd(g_tmdOnOffHand) && TmdRaised()) {
+                    TmdPivotWorld(G);
+                    TmdAimDir(D);
+                } else {
+                    if (Rd(g_vfxMuzzleOrigin)) GunPivotWorld(G); else GunAnchorWorld(G);
+                    GunAimDir(D);
+                }
                 const float m2u = MetresToUU();
                 if (m2u > 0.0f && std::isfinite(m2u) &&
                     std::isfinite(G[0] + G[1] + G[2]) && std::isfinite(D[0] + D[1] + D[2])) {
@@ -24815,10 +24849,16 @@ void DrawLaserSight(IDirect3DDevice9* dev) {
     // aid that already works. Off while it is up.
     if (ScopeActive()) return;
 
-    float dir[3]; GunAimDir(dir);      // ⭐ run 219: shared with the ADS pull-back - see GunAimDir
-
-    // ⭐ run 218: the gun's real pivot, not the view anchor. See GunPivotWorld for what run 217 got wrong.
-    float A[3]; GunPivotWorld(A);
+    float dir[3];
+    float A[3];
+    if (Rd(g_tmdOnOffHand) && TmdRaised()) {
+        TmdAimDir(dir);
+        TmdPivotWorld(A);
+    } else {
+        GunAimDir(dir);      // ⭐ run 219: shared with the ADS pull-back - see GunAimDir
+        // ⭐ run 218: the gun's real pivot, not the view anchor. See GunPivotWorld for what run 217 got wrong.
+        GunPivotWorld(A);
+    }
     const float len = (float)InterlockedCompareExchange(&g_laserLenUU, 0, 0);
     const float B[3] = { A[0] + dir[0]*len, A[1] + dir[1]*len, A[2] + dir[2]*len };
 

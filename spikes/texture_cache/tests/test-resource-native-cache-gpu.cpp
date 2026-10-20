@@ -18,19 +18,32 @@ int main(){
     HMODULE system9=LoadLibraryExW(L"d3d9.dll",nullptr,LOAD_LIBRARY_SEARCH_SYSTEM32);
     Check(system9!=nullptr,"system D3D9 loaded without installed mod proxy");if(!system9)return 1;
     auto create=reinterpret_cast<IDirect3D9* (WINAPI*)(UINT)>(GetProcAddress(system9,"Direct3DCreate9"));
+    auto createEx=reinterpret_cast<HRESULT (WINAPI*)(UINT,IDirect3D9Ex**)>(GetProcAddress(system9,"Direct3DCreate9Ex"));
     IDirect3D9* d3d=create?create(D3D_SDK_VERSION):nullptr;
-    Check(d3d!=nullptr,"native D3D9 interface");if(!d3d)return 1;
+    IDirect3D9Ex* d3dEx=nullptr;
+    if(createEx)createEx(D3D_SDK_VERSION,&d3dEx);
+    Check(d3d!=nullptr || d3dEx!=nullptr,"native D3D9 interface");if(!d3d && !d3dEx)return 1;
     HWND window=CreateWindowExW(0,L"STATIC",L"Private cache test",WS_POPUP,0,0,32,32,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
     D3DPRESENT_PARAMETERS pp{};pp.Windowed=TRUE;pp.SwapEffect=D3DSWAPEFFECT_DISCARD;
-    pp.hDeviceWindow=window;pp.BackBufferWidth=32;pp.BackBufferHeight=32;pp.BackBufferFormat=D3DFMT_UNKNOWN;
+    pp.hDeviceWindow=window;pp.BackBufferWidth=32;pp.BackBufferHeight=32;pp.BackBufferFormat=D3DFMT_A8R8G8B8;
     IDirect3DDevice9* device=nullptr;
-    HRESULT hr=d3d->CreateDevice(D3DADAPTER_DEFAULT,D3DDEVTYPE_HAL,window,D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,&device);
-    Check(SUCCEEDED(hr) && device,"hidden synthetic native device");if(!device){DestroyWindow(window);d3d->Release();return 1;}
+    IDirect3DDevice9Ex* deviceEx=nullptr;
+    HRESULT hr=E_FAIL;
+    if(d3dEx){
+        hr=d3dEx->CreateDeviceEx(0,D3DDEVTYPE_HAL,window,D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,nullptr,&deviceEx);
+        if(SUCCEEDED(hr))device=deviceEx;
+    }
+    if(!device && d3d){
+        hr=d3d->CreateDevice(D3DADAPTER_DEFAULT,D3DDEVTYPE_HAL,window,D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,&device);
+    }
+    Check(SUCCEEDED(hr) && device,"hidden synthetic native device");if(!device){DestroyWindow(window);if(d3d)d3d->Release();if(d3dEx)d3dEx->Release();return 1;}
+    const DWORD usage=deviceEx?D3DUSAGE_DYNAMIC:0;
+    const D3DPOOL pool=deviceEx?D3DPOOL_DEFAULT:D3DPOOL_MANAGED;
     std::vector<IDirect3DTexture9*> textures;
     bool all=true;
     for(unsigned i=0;i<655;++i){
         IDirect3DTexture9* texture=nullptr;
-        hr=device->CreateTexture(4,4,1,0,D3DFMT_A8R8G8B8,D3DPOOL_MANAGED,&texture,nullptr);
+        hr=device->CreateTexture(4,4,1,usage,D3DFMT_A8R8G8B8,pool,&texture,nullptr);
         if(FAILED(hr)||!texture){all=false;break;}
         textures.push_back(texture);
         if(texnative::KnownNative(texture) || !Pixels(texture,0xff123400u+i,true) ||
@@ -53,8 +66,8 @@ int main(){
     Check(all,"managed resource decisions/pixels retained across reset");
     for(auto* texture:textures)texture->Release();
     IDirect3DTexture9* fresh=nullptr;
-    hr=device->CreateTexture(4,4,1,0,D3DFMT_A8R8G8B8,D3DPOOL_MANAGED,&fresh,nullptr);
+    hr=device->CreateTexture(4,4,1,usage,D3DFMT_A8R8G8B8,pool,&fresh,nullptr);
     Check(SUCCEEDED(hr) && fresh && !texnative::KnownNative(fresh),"released resources cannot stamp a fresh lifetime");
-    if(fresh)fresh->Release();device->Release();DestroyWindow(window);d3d->Release();FreeLibrary(system9);
+    if(fresh)fresh->Release();device->Release();DestroyWindow(window);if(d3d)d3d->Release();if(d3dEx)d3dEx->Release();FreeLibrary(system9);
     return failures?1:0;
 }
