@@ -73,3 +73,13 @@ bursts into open space3s apart; equip Kasimov, inspect one/two-hand holds,
 raise the actual scope to either eye, lower it, repeat, then pause/resume and
 close normally. Read trace completion/overflow and lens/request receipts before
 interpreting feedback. Retain the current145-pin accepted baseline for restore.
+
+Delivery: clean source `c81d01c251ef84a01d8eb0dd3164d6b81c62490f`, x86 PE32
+`/O2` DLL SHA256 `6ACB6194577254A7678C05542CE5B24146D41E6C284676B46C10BBF4F865EFE0`.
+Candidate INI SHA256 `BC1848B9B317781FE10801368E995EC8F330C8B1D7ABC7890F7B625ED06E4F4C`.
+Actual delta is3 INI additions (Probe was already1). Offline preparation fixture
+27checks PASS; read-only145-file accepted-profile/candidate preflight PASS.
+Artifact at `build/combined-followups/rifle-sniper-c81d01c` only; installed
+DLL/INI independently hash-match promoted baseline. Native muzzle/hand/shadow
+suite, full reload regression with original private caches, optics oracle and
+updated scope test PASS. Build warnings inherited; no compile/link errors.

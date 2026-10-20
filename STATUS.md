@@ -8,7 +8,12 @@ for native per-eye scope; independent muzzle witness no longer waits for clip
 socket-distance validation. Native rifle VFX itself remains BROKEN/under
 investigation: new rifle-only bounded capture filter, no guessed shader fix.
 See docs/rifle-vfx-sniper-optics.md for oracle, hypotheses, falsifiers and route.
-L1 regression suite PASS; L2 pending final clean build. Steam unchanged.
+L1 regression suite PASS; clean source c81d01c, L2 x86 PE32 /O2 PASS, DLL
+6ACB6194577254A7678C05542CE5B24146D41E6C284676B46C10BBF4F865EFE0.
+Offline candidate build/combined-followups/rifle-sniper-c81d01c; read-only
+145-pin baseline/candidate preflight PASS. Installed DLL7A1DE585…9495 and
+INI60224CA0…4ADC independently reverified unchanged. Await fresh start; no
+L3/L4 for these changes and rifle VFX is NOT declared fixed.
 
 2026-10-20 ACCEPTED / PHYSICALLY_VERIFIED for acquired-gun retention and initial
 owned wheel: user "super działa ... dajemy na main ... bazowa wersje". Source
