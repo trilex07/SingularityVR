@@ -93,5 +93,17 @@ int main(){
     assert(clutch.Update(raw,true,true,1,2,1911).q.y==raw.q.y);
     raw.p.x=.014f;
     assert(clutch.Update(raw,true,false,1,2,1922).p.x==raw.p.x);
+    Filter stronger;raw={};stronger.Update(raw,true,true,1,2,1000,2);
+    for(unsigned i=1;i<=80;++i){
+        raw.p.x=.029f*std::sin(float(i));
+        raw.q={0,std::sin(.0275f),0,std::cos(.0275f)};
+        const auto held=stronger.Update(raw,true,true,1,2,1000+11*i,2);
+        assert(held.p.x==0&&held.q.y==0);
+    }
+    raw.p.x=.031f;assert(stronger.Update(raw,true,true,1,2,1900,2).p.x==raw.p.x);
+    raw.q={0,std::sin(.0605f),0,std::cos(.0605f)};
+    assert(stronger.Update(raw,true,true,1,2,1911,2).q.y==raw.q.y);
+    raw.p.x=.032f;assert(stronger.Update(raw,true,false,1,2,1922,2).p.x==raw.p.x);
+    raw.p.x=.033f;assert(stronger.Update(raw,true,true,1,2,1933,1).p.x==raw.p.x);
     std::puts("PASS weapon steady: jitter attenuation, movement, identity/gap/release reset, quaternion sign and HUD gates");
 }

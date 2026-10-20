@@ -2374,6 +2374,7 @@ inline bool ScopeActive();
 static int g_sniperNearEyeScope=0;
 static int g_weaponSteady=0; // default OFF; no HMD filtering
 static weaponsteady::Filter g_weaponSteadyFilter[2]; // input thread only
+static unsigned g_weaponSteadyPrecision=1; // baseline 1; optional stronger R1 = 2
 static volatile LONG g_opticalHudHidden=0;
 static centurionclip::PresentationSafety g_nextPresentation;
 static void InitNextReload();
@@ -12011,7 +12012,7 @@ void SyncXRInput(XrTime displayTime) {
             !steadyBusy&&!(g_centurionReload&&centurionreload::Active(g_centurionState.phase));
         const auto& p=g_handLastPos[h];const auto& q=g_handAimOrientation[h];
         const auto pose=g_weaponSteadyFilter[h].Update({{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}},
-            enabled,steadyAimHeld,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64());
+            enabled,steadyAimHeld,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),g_weaponSteadyPrecision);
         if(enabled){
             g_handLastPos[h]={pose.p.x,pose.p.y,pose.p.z};
             g_handAimOrientation[h]={pose.q.x,pose.q.y,pose.q.z,pose.q.w};
@@ -33604,6 +33605,8 @@ void LoadIniSettings() {
     g_kasimovAuthoredGrip=GetPrivateProfileIntA("Input","KasimovAuthoredGrip",0,path)?1:0;
     g_sniperNearEyeScope=GetPrivateProfileIntA("Input","SniperNearEyeScope",0,path)?1:0;
     g_weaponSteady=GetPrivateProfileIntA("Input","WeaponSteady",0,path)?1:0;
+    g_weaponSteadyPrecision=GetPrivateProfileIntA("Input","WeaponSteadyPrecision",1,path)==2?2:1;
+    Log("ini: WeaponSteadyPrecision=%u (1 baseline; 2 wider R1 hold, no HMD filtering)",g_weaponSteadyPrecision);
     Log("ini: WeaponSteady=%d (default OFF; adaptive controller-only filter; two-hand Kasimov + primary grip = strong)",g_weaponSteady);
     g_sniperPip=GetPrivateProfileIntA("Render","SniperPictureInPicture",0,path)?1:0;
     g_scopeOpticalCalibration=GetPrivateProfileIntA("Render","ScopeOpticalCalibration",0,path)?1:0;

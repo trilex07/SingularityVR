@@ -14,13 +14,15 @@ struct Filter {
     std::uint32_t pawn=0,weapon=0;
     std::uint64_t tick=0;
     bool active=false,lastStrong=false;
+    unsigned lastPrecision=1;
     hipknife::Pose Update(hipknife::Pose raw,bool enabled,bool strong,
-                         std::uint32_t p,std::uint32_t w,std::uint64_t now){
+                         std::uint32_t p,std::uint32_t w,std::uint64_t now,unsigned precision=1){
+        precision=precision==2?2:1;
         const bool valid=hipknife::Finite(raw.p)&&hipknife::Valid(raw.q);
-        const bool reset=!enabled||!valid||!active||lastStrong!=strong||pawn!=p||weapon!=w||
+        const bool reset=!enabled||!valid||!active||lastStrong!=strong||lastPrecision!=precision||pawn!=p||weapon!=w||
             !tick||now<=tick||now-tick>100;
         const float dt=reset?0.f:float(now-tick)*.001f;
-        pawn=p;weapon=w;tick=now;lastStrong=strong;active=enabled&&valid&&p&&w;
+        pawn=p;weapon=w;tick=now;lastStrong=strong;lastPrecision=precision;active=enabled&&valid&&p&&w;
         if(reset||!active){value=raw;return raw;}
         const float distance=hipknife::Length(raw.p-value.p);
         float dot=value.q.x*raw.q.x+value.q.y*raw.q.y+value.q.z*raw.q.z+value.q.w*raw.q.w;
@@ -34,7 +36,10 @@ struct Filter {
         // Crossing either boundary re-anchors immediately; release/identity/
         // tracking gaps still re-seed above. Never apply to head tracking.
         if(strong){
-            if(distance>.012f||angle>.025f)value=raw;
+            // Optional stronger R1 envelope; baseline mode 1 stays unchanged.
+            const float positionLimit=precision==2?.030f:.012f;
+            const float angleLimit=precision==2?.060f:.025f;
+            if(distance>positionLimit||angle>angleLimit)value=raw;
             return value;
         }
         const float motion=std::max(distance/.012f,angle/.08f);
