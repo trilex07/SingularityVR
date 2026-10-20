@@ -33,6 +33,13 @@ int main(){
     assert(!weapontrace::Align(start,end,from,nan));
     assert(end[0]==4&&end[1]==5&&end[2]==6);
     assert(!weapontrace::Align(nullptr,end,from,from));
+    // Native centre is not necessarily the cached HMD axis (native aim/recoil).
+    // Rotate the native pre-spread centre to the barrel, keeping the cone.
+    const float bias=.8f*pi/180.f;
+    const float nativeCentre[]{std::cos(bias),0,std::sin(bias)};
+    float biasedStart[]{0,0,0},biasedEnd[]{1000*nativeCentre[0],0,1000*nativeCentre[2]};
+    assert(weapontrace::Align(biasedStart,biasedEnd,nativeCentre,from));
+    assert(std::fabs(biasedEnd[2])<.001f&&std::fabs(biasedEnd[0]-1000)<.001f);
     // Current measured draw pose follows the weapon, not a cached controller
     // mount. Identity and age must refuse stale poses on switch/transition.
     scopepip::Frame pose{true,1,2,100,{.1f,1.5f,-.3f},{0,0,-1},{0,1,0},.016f,0};

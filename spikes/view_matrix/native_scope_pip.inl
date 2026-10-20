@@ -33,6 +33,7 @@ static volatile LONG resolvedTarget=0;
 static SRWLOCK viewLock=SRWLOCK_INIT;
 struct ViewSample{uintptr_t target=0;ULONGLONG tick=0;unsigned sequence=0;float matrix[16]{},projection[16]{};};
 static ViewSample viewSample;
+static ViewSample renderedViewSample;
 struct OpticalSample{uintptr_t target=0;ULONGLONG tick=0;float degrees=0;};
 static OpticalSample opticalSample;
 static scopepip::CaptureCadence cadence;
@@ -45,6 +46,7 @@ static void __fastcall RenderHook(void* self,void*,void* family){
     // TextureRenderTarget2D, NOT an inferred dimensions/format match.
     const auto actual=PauseRttProbe::Pointer((uintptr_t)self+0x10);
     scopepip::RenderLease lease(g_scopeNativeDepth,g_sniperPip,expected,actual);
+    ViewSample submitted;
     if(lease.own){
         if(!cadence.Due(actual,GetTickCount64(),g_scopeOpticalCalibration!=0))return;
         ViewSample latest;
@@ -63,6 +65,7 @@ static void __fastcall RenderHook(void* self,void*,void* family){
         // Same fingerprinted ctor copies component E0 -> info90. Updating
         // only the component leaves the renderer's old projection frozen.
         if(g_scopeOpticalCalibration)std::memcpy((void*)((uintptr_t)self+0x90),latest.projection,64);
+        submitted=latest;
     }
     static unsigned count=0;
     const bool receipt=lease.own&&count<3;
@@ -88,6 +91,9 @@ static void __fastcall RenderHook(void* self,void*,void* family){
         // Full native callback includes the RHI resolve. An RT unbind alone
         // can occur BEFORE this texture has received the completed scene.
         if(g_scopeNativeDraws!=draws){
+            AcquireSRWLockExclusive(&viewLock);
+            renderedViewSample=submitted;
+            ReleaseSRWLockExclusive(&viewLock);
             InterlockedExchange(&resolvedTarget,(LONG)actual);
             completedMs=GetTickCount64();
         }
@@ -226,6 +232,38 @@ static uintptr_t spreadAimReturns[3]{};
 using SlowAction=void (__thiscall*)(void*);
 static SlowAction slowToggle=nullptr,slowStop=nullptr;
 static bool slowFailed=false;
+using AddSpread=int* (__thiscall*)(void*,int*,int,int,int);
+static AddSpread spreadOriginal=nullptr;
+struct ShotAxis {uintptr_t pawn=0,weapon=0;ULONGLONG tick=0;LONG sequence=0;V centre{},spread{};};
+static thread_local ShotAxis shotAxis;
+static V RotatorDirection(int pitch,int yaw){
+    const float scale=6.28318530718f/65536.f,p=pitch*scale,y=yaw*scale,c=std::cos(p);
+    return {c*std::cos(y),c*std::sin(y),std::sin(p)};
+}
+static int* __fastcall OpticalAddSpread(void* self,void*,int* output,int pitch,int yaw,int roll){
+    shotAxis={};
+    auto* result=spreadOriginal(self,output,pitch,yaw,roll);
+    const auto frame=Snapshot();
+    if(g_sniperOpticalAccuracy&&g_weaponMeasuredAim&&Rd(g_fireDepth)>0&&
+       (uintptr_t)self==frame.weapon&&Current(frame)&&result==output&&output&&
+       PauseRttProbe::SafeRange((uintptr_t)output,12)){
+        shotAxis={g_playerPawn,(uintptr_t)self,GetTickCount64(),Rd(g_fireSeq),
+            RotatorDirection(pitch,yaw),RotatorDirection(output[0],output[1])};
+    }
+    return result;
+}
+static bool BindSpread(uintptr_t weapon){
+    if(spreadOriginal)return true;
+    const auto method=PauseRttProbe::Pointer(PauseRttProbe::Pointer(weapon)+0x428);
+    // Full native body: hidden result pointer, three FRotator ints, ret 0x10.
+    if(!CodeContract("spread/AddSpread",method,536,0x90E1F845D48FC976ull))return false;
+    if(MH_CreateHook((void*)method,(void*)&OpticalAddSpread,(void**)&spreadOriginal)!=MH_OK){
+        spreadOriginal=nullptr;return false;}
+    if(MH_EnableHook((void*)method)!=MH_OK){
+        MH_RemoveHook((void*)method);spreadOriginal=nullptr;return false;}
+    Log("scope ballistics: exact native pre/post spread axis capture ready; no spread writes");
+    return true;
+}
 static int __fastcall OpticalAimQuery(void* self,void*){
     const auto caller=(uintptr_t)_ReturnAddress();
     if(g_sniperOpticalAccuracy&&scopepip::SpreadAimAllowed(true,Current(Snapshot()),
@@ -242,7 +280,7 @@ static int __fastcall OpticalAimQuery(void* self,void*){
     return aimOriginal?aimOriginal(self):0;
 }
 static bool BindSlow(uintptr_t pawn,uintptr_t weapon){
-    if(aimOriginal)return true;
+    if(aimOriginal)return !g_sniperOpticalAccuracy||BindSpread(weapon);
     const auto wrapper=NativeRegistry::Find("intARvPlayerPawnexecIsAiming");
     if(!CodeContract("slow/IsAiming-wrapper",wrapper,58,0x580673B4EE303833ull))return false;
     const auto aim=PauseRttProbe::Pointer(PauseRttProbe::Pointer(pawn)+0xa98);
@@ -289,7 +327,7 @@ static bool BindSlow(uintptr_t pawn,uintptr_t weapon){
     if(status!=MH_OK){MH_RemoveHook((void*)aim);aimOriginal=nullptr;energyAimReturn=0;return false;}
     slowToggle=(SlowAction)toggle;slowStop=(SlowAction)stop;
     Log("scope slow: fingerprinted native toggle/energy/stop bridge ready; L3 only, no native ADS");
-    return true;
+    return !g_sniperOpticalAccuracy||BindSpread(weapon);
 }
 static void SlowTick(const scopepip::Frame& frame,bool active){
     static LONG consumed=0;const LONG presses=Rd(g_scopeSlowPresses);
@@ -638,6 +676,51 @@ static void Draw(IDirect3DDevice9* dev){
 }
 }
 void NativeScopeTick(){NativeRifleFx::MaintainTick();NativeRifleFx::ObserveTick();NativeScopePip::Tick();}
+bool NativeScopeAlignShot(float* start,float* end){
+    const auto& shot=NativeScopePip::shotAxis;
+    const auto now=GetTickCount64();
+    if(!g_sniperOpticalAccuracy||!g_weaponMeasuredAim||!shot.weapon||
+       shot.weapon!=(uintptr_t)(uint32_t)Rd(g_weaponObj)||shot.pawn!=g_playerPawn||
+       shot.sequence!=Rd(g_fireSeq)||now<shot.tick||now-shot.tick>50||
+       !NativeScopePip::Current(NativeScopePip::Snapshot()))return false;
+    hipknife::V ray{};
+    if(!scopepip::Unit({end[0]-start[0],end[1]-start[1],end[2]-start[2]},ray)||
+       hipknife::Dot(ray,shot.spread)<.999999f)return false;
+    float measured[3];if(!GunAimDir(measured))return false;
+    const float centre[]{shot.centre.x,shot.centre.y,shot.centre.z};
+    const bool aligned=weapontrace::Align(start,end,centre,measured);
+    static unsigned receipts=0;if(aligned&&receipts++<8)
+        Log("scope native axis: rigid native centre -> measured barrel; matched post-spread ray; cone preserved seq=%ld",shot.sequence);
+    return aligned;
+}
+void NativeScopeShotReceipt(const float* start,const float* end,const float* rawDirection){
+    // Same collision callback, not independent pose receipts from other frames.
+    // Read only; bounded to eight shots. No projection convention assumed here.
+    static unsigned receipts=0;
+    if(receipts>=8||!g_sniperOpticalAccuracy||!start||!end||!rawDirection)return;
+    const auto frame=NativeScopePip::Snapshot();
+    if(!NativeScopePip::Current(frame))return;
+    NativeScopePip::ViewSample rendered;
+    if(!TryAcquireSRWLockShared(&NativeScopePip::viewLock))return;
+    rendered=NativeScopePip::renderedViewSample;
+    ReleaseSRWLockShared(&NativeScopePip::viewLock);
+    const auto now=GetTickCount64();
+    if(!rendered.sequence||now<rendered.tick||now-rendered.tick>150||
+       rendered.target!=(uintptr_t)(uint32_t)Rd(NativeScopePip::target))return;
+    ++receipts;
+    float current=0,base=0;
+    const auto weapon=(uintptr_t)(uint32_t)Rd(g_weaponObj);
+    const bool haveCurrent=NativeRifleFx::FloatReceipt(weapon,"mSpreadCurrentTotal",current);
+    const bool haveBase=NativeRifleFx::FloatReceipt(weapon,"mSpreadBase",base);
+    Log("scope paired shot: n=%u seq=%u ageMs=%llu headUU=%d/%d raw=(%.7f,%.7f,%.7f) start=(%.7f,%.7f,%.7f) end=(%.7f,%.7f,%.7f) spreadValid=%d/%d current=%.7f base=%.7f [collision and completed capture, read-only]",
+        receipts,rendered.sequence,now-rendered.tick,int(g_wantYaw),int(g_wantPitch),
+        rawDirection[0],rawDirection[1],rawDirection[2],start[0],start[1],start[2],end[0],end[1],end[2],
+        haveCurrent?1:0,haveBase?1:0,current,base);
+    const auto* m=rendered.matrix;const auto* p=rendered.projection;
+    Log("scope paired view: n=%u matrix=[%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g] projection=[%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g]",
+        receipts,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15],
+        p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8],p[9],p[10],p[11],p[12],p[13],p[14],p[15]);
+}
 void NativeScopeBind(IDirect3DSurface9* surface){NativeScopePip::BindSurface(surface);}
 void NativeScopeReceipt(HRESULT hr){NativeScopePip::Receipt(hr);}
 void DrawScopePip(IDirect3DDevice9* dev){NativeScopePip::Draw(dev);}

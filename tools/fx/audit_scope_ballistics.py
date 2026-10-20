@@ -28,7 +28,12 @@ def audit(exe, archive):
             raise ValueError('Pawn.IsAiming virtual slot missing: ' + name)
         receipt['aim_return_offset'] = ret
         receipts[name] = receipt
-    return dict(status='OFFLINE_STRUCTURAL_PASS', getters=receipts,
+    method = u32(pe.read(table + 0x428, 4), 0)
+    spread = block_contract(text, base, method, 536, 0x90E1F845D48FC976)
+    body = text[method-base:method-base+536]
+    if body[6:12] != bytes.fromhex('8b450c8b5514') or body[13:16] != bytes.fromhex('8b7508') or body[19:30] != bytes.fromhex('8b4d108906894e04895608') or body[-3:] != bytes.fromhex('c21000'):
+        raise ValueError('AddSpread hidden result / input rotator / callee cleanup ABI')
+    return dict(status='OFFLINE_STRUCTURAL_PASS', getters=receipts, add_spread=spread,
                 limitation='Native caller identity only; no physical hit/pixel proof')
 
 

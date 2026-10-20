@@ -5939,6 +5939,8 @@ void DrawLaserSight(IDirect3DDevice9* dev);
 void DrawScopePip(IDirect3DDevice9* dev);
 void ResetScopePip();
 void NativeScopeTick();
+void NativeScopeShotReceipt(const float* start,const float* end,const float* rawDirection);
+bool NativeScopeAlignShot(float* start,float* end);
 void NativeScopeBind(IDirect3DSurface9* surface);
 void NativeScopeReceipt(HRESULT hr);
 // Only the audited render callback for OUR optical target enters this scope.
@@ -24634,15 +24636,18 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                     }
                     else {Start[0] += pivot[0]; Start[1] += pivot[1]; Start[2] += pivot[2];}
                 }
+                const float rawDirection[]{End[0]-Start[0],End[1]-Start[1],End[2]-Start[2]};
                 const float bx = End[0], by = End[1], bz = End[2];
-                RotateTrace(Start, End, dYaw, dPitch);
-                if(g_weaponMeasuredAim&&am==11&&!scoped){
+                const bool nativeOpticalAxis=g_sniperOpticalAccuracy&&am==11&&!scoped&&NativeScopeAlignShot(Start,End);
+                if(!nativeOpticalAxis)RotateTrace(Start, End, dYaw, dPitch);
+                if(!nativeOpticalAxis&&g_weaponMeasuredAim&&am==11&&!scoped){
                     float from[3],to[3];LegacyGunAimDir(from);const bool measured=GunAimDir(to);
                     const bool aligned=measured&&weapontrace::Align(Start,End,from,to);
                     static unsigned aimReceipts=0;if(aimReceipts++<16)
                         Log("weapon measured aim: fresh=%d rigid=%d from=(%.6f,%.6f,%.6f) to=(%.6f,%.6f,%.6f); native spread retained",
                             measured?1:0,aligned?1:0,from[0],from[1],from[2],to[0],to[1],to[2]);
                 }
+                if(g_sniperOpticalAccuracy)NativeScopeShotReceipt(Start,End,rawDirection);
                 // Observe the ACTUAL outgoing collision ray separately from
                 // PlayTracerFX's cosmetic source. A tracer repair cannot prove
                 // hit direction, and successful smoke pose is unrelated.
