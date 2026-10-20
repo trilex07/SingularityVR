@@ -100,3 +100,11 @@ profile and change plan PASS: 145-pin baseline checked, no Steam writes. Actual
 installed DLL/INI independently rehashed and still match the accepted values
 above. Candidate flags default OFF in code; preparation enables the measured
 experiment explicitly. This is L1/L2 preparation, not native-runtime/PSVR2 PASS.
+
+Final full regression rerun with explicit private `build/next-weapon-reload/prepared`
+fixtures PASS: original four-weapon animation/coordinate replay, refill/first-shot,
+hand/knife/holster/wheel, native x86 ABI handlers, own-process shared-depth/material
+GPU replay and Python preparation/wiring checks. Six fake restore-lease scenarios
+also PASS. Logs: `build/combined-followups/optical-isolation-reload-regression.log`
+and `optical-isolation-lease.log` (the latter may be regenerated from the fake-only
+test command). No game session is implied by those isolated GPU checks.
