@@ -31,8 +31,11 @@ static volatile LONG resolvedTarget=0;
 // Transfer only our owned view through a mailbox, never share engine pointers
 // across threads or modify another capture's matrix.
 static SRWLOCK viewLock=SRWLOCK_INIT;
-struct ViewSample{uintptr_t target=0;ULONGLONG tick=0;unsigned sequence=0;float matrix[16]{};};
+struct ViewSample{uintptr_t target=0;ULONGLONG tick=0;unsigned sequence=0;float matrix[16]{},projection[16]{};};
 static ViewSample viewSample;
+struct OpticalSample{uintptr_t target=0;ULONGLONG tick=0;float degrees=0;};
+static OpticalSample opticalSample;
+static scopepip::CaptureCadence cadence;
 using RenderCapture=void (__thiscall*)(void*,void*);
 static RenderCapture renderOriginal=nullptr;
 static void __fastcall RenderHook(void* self,void*,void* family){
@@ -43,19 +46,23 @@ static void __fastcall RenderHook(void* self,void*,void* family){
     const auto actual=PauseRttProbe::Pointer((uintptr_t)self+0x10);
     scopepip::RenderLease lease(g_scopeNativeDepth,g_sniperPip,expected,actual);
     if(lease.own){
+        if(!cadence.Due(actual,GetTickCount64(),g_scopeOpticalCalibration!=0))return;
         ViewSample latest;
         if(TryAcquireSRWLockShared(&viewLock)){
             latest=viewSample;ReleaseSRWLockShared(&viewLock);
         }
         const auto now=GetTickCount64();
         if(latest.target!=actual||!latest.sequence||now<latest.tick||now-latest.tick>150||
-           !PauseRttProbe::SafeRange((uintptr_t)self+0x50,64))return;
+           !PauseRttProbe::SafeRange((uintptr_t)self+0x50,128))return;
         float difference=0;const auto* prior=(const float*)((uintptr_t)self+0x50);
         for(unsigned i=0;i<16;++i)difference=std::max(difference,std::fabs(prior[i]-latest.matrix[i]));
         static unsigned views=0;
         if(views<8&&difference>.00001f){++views;
             Log("scope PiP: owned proxy view delta=%.7g sequence=%u age=%llu ms; component A0 -> exact info50",difference,latest.sequence,now-latest.tick);}
         std::memcpy((void*)((uintptr_t)self+0x50),latest.matrix,64);
+        // Same fingerprinted ctor copies component E0 -> info90. Updating
+        // only the component leaves the renderer's old projection frozen.
+        if(g_scopeOpticalCalibration)std::memcpy((void*)((uintptr_t)self+0x90),latest.projection,64);
     }
     static unsigned count=0;
     const bool receipt=lease.own&&count<3;
@@ -208,6 +215,71 @@ static bool Current(const scopepip::Frame& f){
         !Rd(g_gamePaused)&&!Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!Rd(g_weaponHolstered)&&
         f.Current((uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64());
 }
+// PiP deliberately does NOT set native ADS: that would alter the main camera,
+// hand pose and full-screen postprocess. Native slow-time's energy tick has one
+// IsAiming call which otherwise cancels it immediately. Substitute optical aim
+// ONLY at that audited call site, for the local pawn and a fresh optical frame.
+using AimQuery=int (__thiscall*)(void*);
+static AimQuery aimOriginal=nullptr;
+static uintptr_t energyAimReturn=0,slowWeapon=0;
+using SlowAction=void (__thiscall*)(void*);
+static SlowAction slowToggle=nullptr,slowStop=nullptr;
+static bool slowFailed=false;
+static int __fastcall OpticalAimQuery(void* self,void*){
+    const auto caller=(uintptr_t)_ReturnAddress();
+    if(caller==energyAimReturn&&(uintptr_t)self==g_playerPawn&&g_sniperOpticalSlowTime&&
+       scopepip::SlowAimAllowed(caller,energyAimReturn,(uintptr_t)self,g_playerPawn,Current(Snapshot()))){
+        static unsigned receipts=0;if(receipts++<4)Log("scope slow: native energy aim gate accepted; camera ADS unchanged");
+        return 1;
+    }
+    return aimOriginal?aimOriginal(self):0;
+}
+static bool BindSlow(uintptr_t pawn,uintptr_t weapon){
+    if(aimOriginal)return true;
+    const auto wrapper=NativeRegistry::Find("intARvPlayerPawnexecIsAiming");
+    if(!CodeContract("slow/IsAiming-wrapper",wrapper,58,0x580673B4EE303833ull))return false;
+    const auto aim=PauseRttProbe::Pointer(PauseRttProbe::Pointer(pawn)+0xa98);
+    const auto tick=PauseRttProbe::Pointer(PauseRttProbe::Pointer(weapon)+0x21c);
+    const auto cls=PauseRttProbe::Pointer(weapon+OBJ_CLASS);
+    if(!FieldContract("mSlowMoTimeDilation",cls,"FloatProperty",0x584)||
+       !FieldContract("mCurrentSlowMoAmount",cls,"FloatProperty",0x59c))return false;
+    if(!CodeContract("slow/IsAiming",aim,13,0x2C74B5D4D5842879ull)||
+       !CodeContract("slow/sniper-tick",tick,357,0xD504DE25001FD2C5ull))return false;
+    const auto energy=Call("slow/energy",tick,0x147,512,0xF11C945D7721EDC5ull);
+    // Audited adjacent native toggle follows the full tick + alignment padding.
+    // Adjacency alone authorizes NOTHING: whole-body and both tail-jump targets
+    // must match before a call or hook. No executable VA is embedded here.
+    const auto toggle=tick+0x170;
+    if(!energy||!CodeContract("slow/toggle",toggle,87,0x05EFAB4C30C5C71Dull)||
+       !PauseRttProbe::SafeRange(toggle+0x4a,5)||*(const unsigned char*)(toggle+0x4a)!=0xe9)return false;
+    const auto stop=toggle+0x4f+*(const int32_t*)(toggle+0x4b);
+    if(!CodeContract("slow/stop",stop,128,0x4DB623B969EF1939ull))return false;
+    auto status=MH_CreateHook((void*)aim,(void*)&OpticalAimQuery,(void**)&aimOriginal);
+    if(status!=MH_OK){aimOriginal=nullptr;return false;}
+    energyAimReturn=energy+0xd4;
+    status=MH_EnableHook((void*)aim);
+    if(status!=MH_OK){MH_RemoveHook((void*)aim);aimOriginal=nullptr;energyAimReturn=0;return false;}
+    slowToggle=(SlowAction)toggle;slowStop=(SlowAction)stop;
+    Log("scope slow: fingerprinted native toggle/energy/stop bridge ready; L3 only, no native ADS");
+    return true;
+}
+static void SlowTick(const scopepip::Frame& frame,bool active){
+    static LONG consumed=0;const LONG presses=Rd(g_scopeSlowPresses);
+    const bool eligible=g_sniperOpticalSlowTime&&active&&IsLive(frame.weapon)&&
+        PauseRttProbe::Pointer(frame.weapon+0x98)==g_playerPawn;
+    if(slowWeapon&&(!eligible||slowWeapon!=frame.weapon)){
+        if(slowStop&&IsLive(slowWeapon)&&PauseRttProbe::Pointer(slowWeapon+0x98)==g_playerPawn)
+            slowStop((void*)slowWeapon);
+        slowWeapon=0;
+    }
+    if(!eligible||slowFailed){consumed=presses;return;}
+    if(!BindSlow(g_playerPawn,frame.weapon)){slowFailed=true;consumed=presses;return;}
+    slowWeapon=frame.weapon;
+    if(presses!=consumed){consumed=presses;slowToggle((void*)slowWeapon);
+        static unsigned receipts=0;if(receipts++<24)
+            Log("scope slow: L3 native toggle submitted energy=%.3f dilation=%.3f [native limits, not visual proof]",
+                *(const float*)(slowWeapon+0x59c),*(const float*)(slowWeapon+0x584));}
+}
 static bool Relative(V p,V& out){return scopepip::Relative(p,
     {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
     g_baseYaw*(6.2831853f/65536.f),MetresToUU(),out);}
@@ -235,6 +307,7 @@ static void Tick(){
         attached=false;capture=0;InterlockedExchange(&target,0);return;
     }
     const auto frame=Snapshot();const bool active=Current(frame)&&!Rd(presentationFault);
+    SlowTick(frame,active);
     static bool entered=false;
     if(active&&!entered){entered=true;Log("scope PiP: engine PlayerTick reached with fresh measured lens");}
     // Only called after the local controller's PlayerTick, on the engine thread.
@@ -293,14 +366,36 @@ static void Tick(){
        !Relative(frame.lens+frame.up,up)||!scopepip::Basis(ahead-relative,up-relative,right,vertical))return;
     int pitch=0,yaw=0,roll=0;
     if(!scopepip::Angles(ahead-relative,up-relative,pitch,yaw,roll))return;
+    if(g_scopeOpticalCalibration){
+        OpticalSample optical;
+        if(TryAcquireSRWLockShared(&viewLock)){optical=opticalSample;ReleaseSRWLockShared(&viewLock);}
+        const auto now=GetTickCount64();
+        if(optical.target==(uintptr_t)(uint32_t)Rd(target)&&now>=optical.tick&&now-optical.tick<=150&&
+           optical.degrees>=.1f&&optical.degrees<=80.f&&
+           std::fabs(*(float*)(capture+0x84)-optical.degrees)>.02f){
+            *(float*)(capture+0x84)=optical.degrees;
+            *(uint32_t*)(capture+0x90)|=1;rebuild((void*)capture);
+            *(uint32_t*)(capture+0x90)&=~1u;
+            const float expected=1.f/(std::tan(optical.degrees*.008726646192f)*.75f);
+            const float actual=*(float*)(capture+0xe0);
+            if(!std::isfinite(actual)||std::fabs(actual-expected)>expected*.005f){
+                failed=true;InterlockedExchange(&presentationFault,1);
+                Log("scope PiP: REFUSE optical projection expected=%.6f actual=%.6f",expected,actual);
+                if(attached){detach((void*)pawn,(void*)capture);attached=false;}return;
+            }
+            static unsigned optics=0;if(optics++<12)
+                Log("scope PiP: calibrated4x FOV=%.4f projectionX=%.6f capture<=45.5Hz; HMD unchanged",optical.degrees,*(float*)(capture+0xe0));
+        }
+    }
     if(!attached){attach((void*)pawn,(void*)capture);attached=true;}
     view((void*)capture,{g_camPos[0]+relative.x,g_camPos[1]+relative.y,g_camPos[2]+relative.z},pitch,yaw,roll);
-    if(PauseRttProbe::SafeRange(capture+0xa0,64)){
+    if(PauseRttProbe::SafeRange(capture+0xa0,128)){
         const auto* matrix=(const float*)(capture+0xa0);bool finite=true;
-        for(unsigned i=0;i<16;++i)finite=finite&&std::isfinite(matrix[i]);
+        for(unsigned i=0;i<32;++i)finite=finite&&std::isfinite(matrix[i]);
         if(finite){AcquireSRWLockExclusive(&viewLock);
             viewSample.target=(uintptr_t)(uint32_t)Rd(target);viewSample.tick=GetTickCount64();
             ++viewSample.sequence;std::memcpy(viewSample.matrix,matrix,64);
+            std::memcpy(viewSample.projection,matrix+16,64);
             ReleaseSRWLockExclusive(&viewLock);}
     }
     if(notes++<3)Log("scope PiP: native view updated on engine PlayerTick; optical origin=(%.3f,%.3f,%.3f)",relative.x,relative.y,relative.z);
@@ -417,6 +512,14 @@ static void Draw(IDirect3DDevice9* dev){
     const auto aperture=g_scopeAperture;
     if(!aperture.Current(f.pawn,f.weapon,now,desc.Width,desc.Height)){
         PresentationRefused(17);return;
+    }
+    if(g_scopeOpticalCalibration&&f.eye>=0&&f.eye<2&&aperture.eye[f.eye]){
+        float left=aperture.points[f.eye][1].x,right=left;
+        for(unsigned i=2;i<66;++i){left=std::min(left,aperture.points[f.eye][i].x);right=std::max(right,aperture.points[f.eye][i].x);}
+        float degrees=0;
+        if(scopepip::OpticalFov(right-left,desc.Width*.5f,g_targetTanX,4.f,degrees)){
+            AcquireSRWLockExclusive(&viewLock);opticalSample={rt,now,degrees};ReleaseSRWLockExclusive(&viewLock);
+        }
     }
     const gloves::Calls calls{shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
         shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport};

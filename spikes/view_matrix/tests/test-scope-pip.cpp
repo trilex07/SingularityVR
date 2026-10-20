@@ -5,6 +5,28 @@
 #include <limits>
 int main(){
     using hipknife::V;
+    // Magnification is a source/destination angular ratio, not an arbitrary
+    // small-looking FOV. Round-trip through the audited native 0.75 factor.
+    for(float pixels:{40.f,120.f,500.f,1200.f})for(float tanEye:{.7f,1.2f,1.8f}){
+        float fov=0;assert(scopepip::OpticalFov(pixels,3244.f,tanEye,4.f,fov));
+        const float captured=std::tan(fov*.008726646192f)*.75f;
+        assert(std::fabs(((pixels/3244.f)*tanEye)/captured-4.f)<.0001f);
+    }
+    float unchanged=123;
+    assert(!scopepip::OpticalFov(0,3244,1,4,unchanged));
+    assert(!scopepip::OpticalFov(4000,3244,1,4,unchanged));
+    assert(!scopepip::OpticalFov(100,3244,1,0,unchanged));assert(unchanged==123);
+    scopepip::CaptureCadence cadence;
+    assert(cadence.Due(1,0,true));assert(!cadence.Due(1,11,true));
+    assert(cadence.Due(1,22,true));assert(!cadence.Due(1,33,true));
+    assert(cadence.Due(2,34,true));assert(cadence.Due(2,0,true));
+    assert(!cadence.Due(0,100,true));assert(cadence.Due(2,1,false));
+    assert(cadence.Due(2,2,true));
+    assert(scopepip::SlowAimAllowed(1,1,2,2,true));
+    assert(!scopepip::SlowAimAllowed(3,1,2,2,true));
+    assert(!scopepip::SlowAimAllowed(1,1,3,2,true));
+    assert(!scopepip::SlowAimAllowed(1,1,2,2,false));
+    assert(!scopepip::SlowAimAllowed(0,0,2,2,true));
     for(int n=0;n<360;++n){
         const float yaw=n*.0174532925f,base=(359-n)*.0174532925f;
         const V p{17,-23,9},centre{.12f,1.8f,-.7f};V tracking{},back{};

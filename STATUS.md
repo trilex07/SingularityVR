@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+## 2026-10-20 calibrated optics / native L3 follow-up
+
+Implemented default-OFF ScopeOpticalCalibration and SniperOpticalSlowTime.
+Actual aperture + forced eye projection determines4x, owned capture projection
+is synchronized componentE0->proxy90 and validated; optical render capped45.5Hz
+(headset unchanged). Native L3 uses original toggle/energy/stop, no global ADS
+or time-dilation write. See docs/scope-optics-slow-followup.md for evidence,
+falsifiers, private-input auditor and physical route. Not physically accepted;
+accepted Steam installation remains untouched while preparing this candidate.
+
 ## 2026-10-20 physical1938: optical scope BROKEN / HUD gates accepted
 
 User confirms contextual health/ammo hiding, but no perceived magnification,

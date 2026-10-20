@@ -62,6 +62,17 @@ $steady=MakeCase 'steady'
 $steadyPlan=Get-Content -Raw (Join-Path $steady.CandidateDir 'change-plan.json') | ConvertFrom-Json
 Check ($steadyPlan.ini.Count -eq 8) 'Steady key scope expanded'
 Check ([IO.File]::ReadAllText((Join-Path $steady.CandidateDir 'SingularityVR.ini')).Contains('WeaponSteady=1')) 'Steady flag absent'
+$calibrated=MakeCase 'calibrated-optics'
+& $script @calibrated -RifleSniperFollowups -OpticalScopeAndRifleOrigin -RifleTracerOrigin -WeaponSteady -CalibratedOptics | Out-Null
+$calibratedPlan=Get-Content -Raw (Join-Path $calibrated.CandidateDir 'change-plan.json') | ConvertFrom-Json
+$calibratedText=[IO.File]::ReadAllText((Join-Path $calibrated.CandidateDir 'SingularityVR.ini'))
+Check ($calibratedPlan.ini.Count -eq 10) 'Calibrated optics key scope expanded'
+foreach($line in @('ScopeOpticalCalibration=1','SniperOpticalSlowTime=1','WeaponSteady=1','PolishLanguage=1','NativeMuzzleParticleStereo=1')){
+ Check $calibratedText.Contains($line) "Calibrated optics regressed $line"
+}
+$invalidOptics=MakeCase 'invalid-calibrated'
+$failed=$false;try{& $script @invalidOptics -CalibratedOptics | Out-Null}catch{$failed=$true}
+Check $failed 'Unscoped optical calibration accepted'
 $invalidSteady=MakeCase 'invalid-steady'
 $failed=$false;try{& $script @invalidSteady -WeaponSteady | Out-Null}catch{$failed=$true}
 Check $failed 'Unscoped steady candidate accepted'

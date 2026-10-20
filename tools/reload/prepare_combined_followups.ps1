@@ -6,7 +6,8 @@ param(
  [switch]$RifleSniperFollowups,
  [switch]$OpticalScopeAndRifleOrigin,
  [switch]$RifleTracerOrigin,
- [switch]$WeaponSteady
+ [switch]$WeaponSteady,
+ [switch]$CalibratedOptics
 )
 # Offline preparation only. No launch, installation or accepted-profile mutation.
 $ErrorActionPreference='Stop'
@@ -77,6 +78,11 @@ if($RifleTracerOrigin){
 if($WeaponSteady){
  if(-not $OpticalScopeAndRifleOrigin){throw 'Weapon steady requires the optical candidate'}
  $targets['Input/WeaponSteady']='1'
+}
+if($CalibratedOptics){
+ if(-not $WeaponSteady){throw 'Calibrated optics requires the steady optical candidate'}
+ $targets['Render/ScopeOpticalCalibration']='1'
+ $targets['Input/SniperOpticalSlowTime']='1'
 }
 $text=[IO.File]::ReadAllText((Resolve-Path -LiteralPath $InstalledIni).Path,[Text.UTF8Encoding]::new($false,$true))
 $newline=if($text.Contains("`r`n")){"`r`n"}else{"`n"}

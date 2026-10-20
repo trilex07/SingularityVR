@@ -2356,6 +2356,9 @@ static sniperscope::State g_sniperScopeState; // input thread only
 static int g_nativeRifleMuzzle=0; // 0 unchanged, 1 observe, 2 native Valkyrie origin
 static bool g_nativeRifleTracer=false; // exact native visual source getter, default OFF
 static int g_sniperPip=0;
+static int g_scopeOpticalCalibration=0;
+static int g_sniperOpticalSlowTime=0;
+static volatile LONG g_scopeSlowPresses=0;
 static scopepip::Frame g_scopePipFrame;
 // Render-thread only. Staged exclusively by the fingerprinted Kasimov body;
 // consumed while that SAME draw's native camera and controller matrix are bound.
@@ -12028,6 +12031,11 @@ void SyncXRInput(XrTime displayTime) {
         const bool scopeRequested=g_sniperScopeState.Update(eligible,mount,(uint32_t)g_playerPawn,
             (uint32_t)Rd(g_weaponObj),{{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}},eyes,GetTickCount64());
         nearEyeRequested=scopeRequested;nearEyeEligible=eligible;
+        static bool slowHeld=false;
+        const bool slowNow=g_sniperPip&&g_sniperOpticalSlowTime&&scopeRequested&&(btns&XI_LTHUMB);
+        if(slowNow&&!slowHeld)InterlockedIncrement(&g_scopeSlowPresses);
+        slowHeld=slowNow;
+        if(g_sniperPip&&g_sniperOpticalSlowTime&&scopeRequested)btns&=~XI_LTHUMB;
         if(g_sniperPip&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
             const auto& m=g_sniperScopeState.trackingMount;
             const hipknife::Q orientation{q.x,q.y,q.z,q.w};
@@ -33558,6 +33566,9 @@ void LoadIniSettings() {
     g_weaponSteady=GetPrivateProfileIntA("Input","WeaponSteady",0,path)?1:0;
     Log("ini: WeaponSteady=%d (default OFF; adaptive controller-only filter; two-hand Kasimov + primary grip = strong)",g_weaponSteady);
     g_sniperPip=GetPrivateProfileIntA("Render","SniperPictureInPicture",0,path)?1:0;
+    g_scopeOpticalCalibration=GetPrivateProfileIntA("Render","ScopeOpticalCalibration",0,path)?1:0;
+    g_sniperOpticalSlowTime=GetPrivateProfileIntA("Input","SniperOpticalSlowTime",0,path)?1:0;
+    Log("ini: ScopeOpticalCalibration=%d SniperOpticalSlowTime=%d (default OFF; own4x/capture45Hz, native L3; no HMD filtering)",g_scopeOpticalCalibration,g_sniperOpticalSlowTime);
     if(g_sniperPip&&!g_sniperNearEyeScope){g_sniperPip=0;Log("scope PiP: requires measured near-eye policy; disabled");}
     Log("ini: KasimovAuthoredGrip=%d SniperNearEyeScope=%d (default OFF; native scoped view, measured lens proximity)",
         g_kasimovAuthoredGrip,g_sniperNearEyeScope);

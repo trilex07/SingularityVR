@@ -65,6 +65,33 @@ struct PresentationBudget {
 // Project directly from tracking poses, never from a camera matrix last seen
 // during an unrelated UE3 draw (which may belong to the optical capture).
 struct Pixel { float x=0,y=0,rhw=0; };
+// Native square SceneCapture projection uses tan(FOV/2)*0.75 (audited
+// SetCaptureParameters rebuild). Match source angular width to the actual
+// foreground aperture, not to the full headset FOV. A 4x scope therefore
+// samples 1/4 of the angular width occupied by its lens.
+inline bool OpticalFov(float diameter,float eyeWidth,float eyeTan,float zoom,float& degrees){
+    if(!std::isfinite(diameter)||!std::isfinite(eyeWidth)||!std::isfinite(eyeTan)||
+       !std::isfinite(zoom)||diameter<2||eyeWidth<4||diameter>eyeWidth||
+       eyeTan<=0||eyeTan>8||zoom<1||zoom>12)return false;
+    const float sourceTan=(diameter/eyeWidth)*eyeTan/zoom;
+    const float result=2.f*std::atan(sourceTan/.75f)*57.295779513f;
+    if(!std::isfinite(result)||result<.1f||result>80)return false;
+    degrees=result;return true;
+}
+struct CaptureCadence {
+    std::uintptr_t target=0;std::uint64_t last=0;bool sampled=false;
+    bool Due(std::uintptr_t identity,std::uint64_t now,bool enabled){
+        if(!enabled){target=0;sampled=false;return true;}
+        if(!identity)return false;
+        if(identity!=target||!sampled||now<last||now-last>=22){
+            target=identity;last=now;sampled=true;return true;}
+        return false;
+    }
+};
+inline bool SlowAimAllowed(std::uintptr_t caller,std::uintptr_t energyReturn,
+                           std::uintptr_t pawn,std::uintptr_t local,bool optical){
+    return optical&&energyReturn&&caller==energyReturn&&local&&pawn==local;
+}
 // The weapon shader's exact, per-eye translated-world projection. Unlike the
 // tracking/UI projection this includes the native foreground transform.
 inline bool ClipPixel(unsigned width,unsigned height,const float clip[4],Pixel& out){
