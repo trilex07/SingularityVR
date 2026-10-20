@@ -1,7 +1,7 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
-2026-10-20 optical-scope/native rifle-origin candidate L1_PASS on
+2026-10-20 optical-scope/native rifle-origin candidate L1_PASS / L2_PASS on
 fix/rifle-vfx-sniper-grip-scope. Physical5aa5f33: rifle VFX still absent; native
 scope appears but is not acceptable. Complete four-frame rifle traces have
 zero shader/group/witness overflow; pistol's accepted muzzle pairs are absent.
@@ -16,7 +16,15 @@ Accepted Steam DLL7A1DE585...9495 / INI60224CA0...4ADC remain untouched.
 Full reload/hand/shoulder/knife/native replay regression, muzzle/shadow math,
 new scope inverse/basis/lease tests,3 backend guards,35 candidate-preparation
 checks and6 restore-lease fixtures PASS. No L3/L4 for the optical path or rifle
-origin experiment; require clean final L2 artifact before preparation/deploy.
+origin experiment. Clean source4c8a0a792eab73a3d7b73f50852dbf4801ea9567,
+x86 PE32 /O2 DLL CBE169B7AAB63AEF23E68ADED3457EF45CF67196BAC3B1B4B0071781DA54DF5D.
+Prepared outside Steam: build/combined-followups/optical-rifle-4c8a0a7;
+INI26F0D8C8986476459468E9AFD0ECABBFC151034041508BF0074F1C9701BE214D.
+Independent PE/SHA/clean manifest and read-only145-pin candidate preflight PASS.
+Actual reviewed delta: DLL plus6 INI keys (including Probe1->0); no assets.
+Installed accepted DLL/INI independently rehashed unchanged. Await fresh
+start for guarded deployment and the combined headset route; no active guard.
+
 
 2026-10-20 physical c81d01c FAILED: user no rifle VFX and no sniper scope.
 Game exited; post-exit guard restored promoted DLL7A1DE585...9495 and

@@ -107,3 +107,14 @@ L1 covers deterministic coordinate/lease/failure guards and existing regressions
 L2 covers actual x86 /O2 build and provenance. Neither proves a live native call,
 useful texture, correct per-eye alignment, or working rifle VFX. No L3/L4 PASS
 for this candidate until the corresponding evidence exists.
+
+## Offline delivery
+
+Clean code commit `4c8a0a792eab73a3d7b73f50852dbf4801ea9567`, L1/L2 PASS.
+DLL SHA256 `CBE169B7AAB63AEF23E68ADED3457EF45CF67196BAC3B1B4B0071781DA54DF5D`.
+Candidate INI SHA256 `26F0D8C8986476459468E9AFD0ECABBFC151034041508BF0074F1C9701BE214D`.
+Private artifact: `build/combined-followups/optical-rifle-4c8a0a7` with exact
+change plan and clean-source build manifest.145-pin accepted-profile preflight
+PASS read-only; accepted installed DLL/INI rehashed unchanged. Later delivery
+documentation commits do not change this artifact's code provenance.
+No runtime/physical acceptance; wait for fresh start. No PR/merge claimed.
