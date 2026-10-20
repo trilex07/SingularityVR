@@ -1,6 +1,21 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 native-pose/registry repair candidate L1_PASS / L2_PASS, NOT L3/L4.
+Clean code acc2f2bc542a127e1f6622326dab276fd255e17b; x86 PE32 /O2, no extra
+performance instrumentation, DLL51BF3212431E582529E5249A12179E887B698580385C671B34E7406BADC278DC.
+Private candidate build/combined-followups/pose-repair-acc2f2b; INI
+28DA83E2759216F15A8806D688591E5A38033286896DD3A8CB1192B4FB325642.
+DLL plus six INI keys only (mode3 native loop pose, own optical PiP, authored
+grip/eye gate, bounded probe scope, large dumps OFF). Clean manifest/SHA and
+145-pin accepted-profile Install -WhatIf preflight PASS; no Steam writes.
+Full reload/hand/knife/wheel/native-space/native ABI and own-process GPU replay
+regressions PASS in addition to the nine FX/scope/registry native tests, Python
+checks, fake handlers and lease/preparation fixtures below. Not native game
+pixels or physical proof. Installed accepted DLL7A1DE585...9495 and
+INI60224CA0...4ADC rehashed unchanged. Wait for fresh start before deployment;
+use docs/rifle-scope-pose-repair.md single no-chat headset route and rollback.
+
 2026-10-20 ongoing offline repair: mode3 native Valkyrie loop pose maintenance
 (audited Actor.SetLocation/SetRotation, exact local emitter/template, 150ms
 firing lease) replaces origin-only insufficiency. Scope binding now uses the
@@ -9,8 +24,8 @@ old live refusal stage is UNKNOWN, so this is not a proven root-cause claim.
 See docs/rifle-scope-pose-repair.md. Nine native FX/scope/registry regressions,
 12 Python FX/backend tests, 341 fake-handler/opcode checks, 35 preparation checks
 and six restore-lease scenarios PASS. Nine wrapper and nine helper contracts
-re-audited against owned archived code PASS. Clean L2 delivery pending; Steam
-untouched; do not launch/deploy without fresh user start. Older history below.
+re-audited against owned archived code PASS. Clean L2 delivery is recorded
+above; do not launch/deploy without fresh user start. Older history below.
 
 2026-10-20 physical4c8a0a7 FAILED VFX/scope; second launch view normal.
 Private preserved log build/combined-followups/session-4c8a0a7-second.log:
