@@ -80,5 +80,18 @@ int main(){
     assert(maximumLag<.035f); // <2deg, and hard/fast turns still snap above.
     auto released=turn.Update(raw,true,false,1,2,4311);
     assert(released.q.y==raw.q.y&&released.q.w==raw.q.w);
+    Filter clutch;raw={};clutch.Update(raw,true,true,1,2,1000);
+    for(unsigned i=1;i<=80;++i){
+        raw.p.x=.011f*std::sin(float(i));
+        raw.q={0,std::sin(.01f),0,std::cos(.01f)};
+        auto held=clutch.Update(raw,true,true,1,2,1000+11*i);
+        assert(held.p.x==0.f&&held.q.y==0.f); // exact hold, no accumulated creep
+    }
+    raw.p.x=.013f;
+    assert(clutch.Update(raw,true,true,1,2,1900).p.x==raw.p.x);
+    raw.q={0,std::sin(.03f),0,std::cos(.03f)};
+    assert(clutch.Update(raw,true,true,1,2,1911).q.y==raw.q.y);
+    raw.p.x=.014f;
+    assert(clutch.Update(raw,true,false,1,2,1922).p.x==raw.p.x);
     std::puts("PASS weapon steady: jitter attenuation, movement, identity/gap/release reset, quaternion sign and HUD gates");
 }
