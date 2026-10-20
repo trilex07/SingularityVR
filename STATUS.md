@@ -13,7 +13,16 @@ tested. HMD NEVER filtered. Native original tracer gate is stochastic: shared
 Valkyrie chance0.8, SP override0.5, not proof of live value. Bounded read-only
 chance/spread receipts added; no silent zero-spread/every-tracer change.
 See docs/rifle-tracers-strong-steady.md. Runtime rifle accuracy remains open;
-offline mathematical stability is not PSVR2 acceptance. Build/gates pending.
+offline mathematical stability is not PSVR2 acceptance.
+
+L1/L2_PASS: clean source011876d, x86 PE32 /O2, no performance instrumentation.
+Candidate build/combined-followups/strong-r1-011876d, DLL EB2EAA43...D6F41D.
+Native FX/steady tests and full four-weapon regression suite PASS; prep58 /
+fake lease6 PASS; accepted-profile Install -WhatIf PASS, no writes. Original
+FX/spread auditor PASS. READY_FOR_PHYSICAL_ACCEPTANCE for stronger R1 only;
+Valkyrie chance/spread probe is diagnostic, NOT an accuracy-fix acceptance claim.
+Candidate not installed. Read-only body-equipment census disabled this round;
+Deadlock/heavy integration remains incomplete. Require fresh user start.
 
 ## 2026-10-20 measured barrel / body equipment preparation
 

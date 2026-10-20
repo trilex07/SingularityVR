@@ -76,3 +76,27 @@ use stationary separated single shots, then one short burst at the same wall;
 compare hit locations separately from visible streaks. Exit normally; MAIN
 collects bounded live chance/spread receipts and verifies restoration. No
 Deadlock/heavy test claim: their native integration remains incomplete.
+
+## Offline delivery receipt
+
+Clean code011876d01b26156708f40c57b1662c313788ebba, x86 PE32 /O2,
+no performance instrumentation. Outside-Steam directory:
+build/combined-followups/strong-r1-011876d.
+
+- DLL EB2EAA430AC465974356D73BBC19E8974E358B0A51003CB8CDA7636861D6F41D
+- INI 7412EE4A43F73770A08139B999CCC80B988BB484AFC1EDD33BC2ECCB99583835
+- plan 1ED2C60A6C3F69D0C60F7D39C3D5742CFA9A880F842C37F85B56E89CA4FADBF2
+- preserved physical2232 log 8D71EED515D7A79374127B5EADF64DA8128866AE4E7A479D1202F2F4EC9612F9
+
+Native FX/steady optimized fixtures and Python guard suites PASS. Full
+test-centurion.ps1 with private PreparedRoot PASS, including all four weapons,
+original animation/first-shot, own-process x86 ABI and both-eye GPU replay/Reset.
+Preparation58 / fake lease6 / carry wiring3 PASS. Complete original native
+tracer/spread auditor PASS. Accepted-profile Install -WhatIf PASS;145 pins,
+no actual installation or launch. BodyEquipmentProbe remains OFF: unrelated
+read-only equipment census is unnecessary in this rifle/steady round.
+
+READY_FOR_PHYSICAL_ACCEPTANCE applies to stronger R1, not a claim of repaired
+Valkyrie accuracy. Known native stochastic tracers are NOT a dropped-shot fix.
+Require fresh start; verify backup/deployed hash, arm a new guard, preserve
+all accepted assets. Installed accepted DLL/INI remain unchanged.
