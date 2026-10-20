@@ -1255,3 +1255,14 @@ WeaponFxRideGun=1
 ; RenderScale=1.0
 ; OutputScale=1.0
 ; Sharpness=0.35
+
+[Gameplay]
+; Native Gore & Dismemberment subsystem
+; 1 = unlocks native UE3 dismemberment and gore mechanics (bypasses region/low-gore locks)
+GoreDismemberment=1
+; 1 = TMD impulse blast tears off all limbs on impulse death (mSeverAllLimbsOnImpulseDeath)
+GoreTmdImpulseSeverAll=1
+; 1 = lethal damage automatically severs limbs on death (mbAutomaticDismembermentOnDeath)
+GoreAutoOnDeath=1
+; Probability (0-100%) of limb severing during combat / damage (mRandomChanceToSeverLimb)
+GoreChancePct=100

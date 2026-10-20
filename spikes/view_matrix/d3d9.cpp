@@ -1945,6 +1945,14 @@ WantedName g_wantNames[] = {
     { "mShotCount", -1 },
     // Ammo probe round 9: HUD display cache (mag/reserve as shown on screen).
     { "mClipAmmo", -1 }, { "mBinAmmo", -1 }, { "mClipSize", -1 },
+    // Native Gore & Dismemberment subsystem
+    { "mbAutomaticDismembermentOnDeath", -1 },
+    { "mSeverAllLimbsOnImpulseDeath", -1 },
+    { "mbPlaySeveredLimbAnimation", -1 },
+    { "mLimbSettings", -1 },
+    { "mAlternateLimbSettings", -1 },
+    { "mRandomChanceToSeverLimb", -1 },
+    { "mHealthPercentToTryRandomSever", -1 },
 };
 const int kWantNameCount = (int)(sizeof(g_wantNames) / sizeof(g_wantNames[0]));
 
@@ -2088,6 +2096,8 @@ static uintptr_t FindClassByName(const char* want) {
     }
     return 0;
 }
+
+#include "gore_dismember.h"
 
 // Offsets on RvWeaponFX, filled by the solve. -1 = not found, and the suppression refuses to write.
 int g_offMuzzle1st = -1, g_offMuzzleLoop1st = -1, g_offMuzzleIron = -1,
@@ -2950,7 +2960,8 @@ void ResolveGameplayOffsets() {
     // the whole run-227/228 mechanism silently inert while looking implemented.
     // A "done" test that does not name everything the function resolves is a test that stops the
     // function before it finishes.
-    if (g_offHealth >= 0 && g_offHealthMax >= 0 && g_offHealthPacks >= 0 && g_offWeapon >= 0) return;
+    if (g_offHealth >= 0 && g_offHealthMax >= 0 && g_offHealthPacks >= 0 && g_offWeapon >= 0 &&
+        (!singularity_gore::g_goreEnabled || singularity_gore::g_ref.initialized)) return;
     // ⭐ Not in gameplay: the pawn and HUD cannot exist, so asking costs a full object walk for nothing.
     if (!InterlockedCompareExchange(&g_camPosValid, 0, 0)) return;
     {
@@ -2970,6 +2981,9 @@ void ResolveGameplayOffsets() {
     if ((g_offHealth < 0 || g_offHealthMax < 0 || g_offBaseEyeHeight < 0 || g_offWeapon < 0))
     if (const uintptr_t pawn = FindPlayerPawn(true)) {   // ⭐ run 228d: this caller is already throttled
         const uintptr_t pc = *reinterpret_cast<uintptr_t*>(pawn + OBJ_CLASS);
+        if (singularity_gore::g_goreEnabled && !singularity_gore::g_ref.initialized) {
+            singularity_gore::ResolveReflection(pc);
+        }
         int dh = 0, dm = 0;
         if (g_offHealth    < 0) g_offHealth    = PropOffsetInChain(pc, "Health", &dh);
         if (g_offHealthMax < 0) g_offHealthMax = PropOffsetInChain(pc, "HealthMax", &dm);
@@ -21685,6 +21699,10 @@ ScriptFn g_scriptFns[] = {
     { "IsAnyMenuOpen",      -1 },   // [21] never fires
     { "IsMenuOpen",         -1 },   // [22] never fires
     { "SetPause",           -1 },   // [23] ⭐ THE ONE. Fires on every pause transition.
+    // ---- Native Gore & Dismemberment ----
+    { "AllowGore",          -1 },   // [24]
+    { "UseLowGore",         -1 },   // [25]
+    { "TakeDamage",         -1 },   // [26]
 };
 const int kFnGetAdjustedAim = 0;
 const int kFnTick           = 5;
@@ -21701,6 +21719,9 @@ const int kFnCineLast       = 17;
 const int kFnMenuFirst      = 18;   // [18..23] the pause-menu candidates
 const int kFnMenuLast       = 23;
 const int kFnSetPause       = 23;   // the only one that fires - see the table
+const int kFnAllowGore      = 24;
+const int kFnUseLowGore     = 25;
+const int kFnTakeDamage     = 26;
 const int kScriptFnCount    = (int)(sizeof(g_scriptFns) / sizeof(g_scriptFns[0]));
 
 // Which menu candidate fired last, and how many frames ago. The readout shows it by NAME so the
@@ -23114,8 +23135,9 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     // forgetting that is what made run 137's cutscene watch silently mute.
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
+    const bool goreWatch = singularity_gore::g_goreEnabled != 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch) && Stack) {
+    if ((censusOn || routeTwo || cineWatch || goreWatch) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
         if (fnIdx < 0) InterlockedIncrement(&g_peUnnamed);
@@ -23560,7 +23582,27 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         }
     }
 
+    // ---- Native Gore & Dismemberment: patch pawn on TakeDamage ----
+    if (singularity_gore::g_goreEnabled && fnIdx >= 0 && FnIdx(kFnTakeDamage) >= 0 && fnIdx == FnIdx(kFnTakeDamage)) {
+        singularity_gore::ApplyToPawn(reinterpret_cast<uintptr_t>(self));
+    }
+
     g_origProcessEvent(self, edx, Stack, Result);
+
+    // ---- Native Gore & Dismemberment: force AllowGore=true, UseLowGore=false ----
+    if (singularity_gore::g_goreEnabled && fnIdx >= 0) {
+        if (FnIdx(kFnAllowGore) >= 0 && fnIdx == FnIdx(kFnAllowGore)) {
+            if (Result && Readable(Result, 4)) {
+                *reinterpret_cast<uint32_t*>(Result) = 1;
+                InterlockedIncrement(&singularity_gore::g_allowGoreIntercepts);
+            }
+        } else if (FnIdx(kFnUseLowGore) >= 0 && fnIdx == FnIdx(kFnUseLowGore)) {
+            if (Result && Readable(Result, 4)) {
+                *reinterpret_cast<uint32_t*>(Result) = 0;
+                InterlockedIncrement(&singularity_gore::g_useLowGoreIntercepts);
+            }
+        }
+    }
 
     // Mode 9's window closes here. Restoring the value that was READ rather than a cached head
     // means a nested fire function (StartFire -> BeginFire -> FireAmmunition) puts back the hand
@@ -29739,6 +29781,7 @@ void LoadIniSettings() {
 
     char path[MAX_PATH]{};
     if (!IniPath(path)) return;
+    singularity_gore::LoadConfig(path);
 
     const bool hotPathEnabled = GetPrivateProfileIntA("Render", "HotPathSampler", 0, path) != 0;
     // The physically accepted shadow/input combination is persistent: missing
