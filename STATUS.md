@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+## LATEST — 2026-10-20 optical alignment accepted and stable promotion
+
+User physically confirms scope aiming now OK; requests main + stable baseline.
+Tested source a53a180, installed DLL EF3A1F3B9F0641A291F9285DD7283EC7D3B4433A8F87BC210DBC98B721B7B753,
+INI 55A3ED4DBC6E158F01A2219177D825C066E7306DABCE6ACFB1C7118EC9E3F659.
+Guard completed before persistent official reinstall; backup 20261020-234216.
+Previous accepted assets/pins retained; profile updated only for tested delta.
+See docs/scope-alignment-accepted.md. R1 stability remains requested improvement;
+do not conflate a stronger future candidate with this exact physical acceptance.
+Older open-scope receipts below are chronological, superseded for alignment only.
+
 ## 2026-10-20 physical2305 / R1 precision clutch
 
 EB2EAA43 physical feedback: VFX and handling/reload OK in tested scope;

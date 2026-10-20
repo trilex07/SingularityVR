@@ -1,5 +1,9 @@
 # Kasimov optical accuracy — controlled correction
 
+LATEST: source a53a180 / DLL EF3A1F3B physically accepted for alignment and promoted
+persistently on user instruction. See scope-alignment-accepted.md. The failed
+intermediate stages below remain historical evidence. R1 comfort is still open.
+
 Observed: physical scope remains off-target. The last recorded outgoing native
 Kasimov rays differed from the measured barrel by approximately 0.8–7.8 degrees;
 the scope camera and barrel receipts agreed geometrically. This does not prove
