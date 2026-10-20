@@ -155,3 +155,26 @@ change plan and clean-source build manifest.145-pin accepted-profile preflight
 PASS read-only; accepted installed DLL/INI rehashed unchanged. Later delivery
 documentation commits do not change this artifact's code provenance.
 No runtime/physical acceptance; wait for fresh start. No PR/merge claimed.
+
+## Follow-through diagnostic delivery (2026-10-20)
+
+Physical4c8a0a7 failed: user saw no rifle VFX or optical scope. The second run
+had a normal view. Native PlayMuzzleFX returned a live emitter with the origin
+change applied, falsifying origin-only sufficiency. Scope engine tick reached
+Bind, which refused ABI/layout before object construction; no scope RGB exists.
+
+Clean code bb5c1abcdcd7ee8d50aeb68f6fda4c0b16d104bd adds bounded emitter
+after-call/delayed state receipts and exact scope contract refusal stages.
+Read-only scope preflight no longer needs eye proximity; do not ask the user
+to repeat unchanged invisible-scope behavior just to reach the refusal.
+All seven archived helper contracts and native FX regression tests PASS.
+Clean x86 PE32 /O2 DLL SHA256:
+`47D90EF72240805E57DE47D336F628FE8087A94EAAA579EC72592A8B1D9E5160`.
+Private artifact: `build/combined-followups/followthrough-bb5c1ab`.
+INI retains the six-key experiment delta and SHA25626F0D8C8...BE214D.
+Full accepted-profile candidate preflight via deployer Install -WhatIf PASS;
+installed accepted DLL7A1DE585...9495 / INI60224CA0...4ADC rehashed unchanged.
+No Steam write/launch and no L3/L4 acceptance for this diagnostic build.
+Next route after fresh start: known save, Valkyrie three spaced short bursts,
+brief pause/resume, normal exit, no headset/chat switching. Scope contract
+stage is collected automatically; only its actual result justifies a fix.

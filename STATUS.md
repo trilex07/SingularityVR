@@ -20,8 +20,13 @@ targets/whole helper bodies, not just wrappers. Their archived contracts PASS;
 the actual live refusal stage is still unavailable. This is diagnostic progress,
 NOT a working VFX/scope fix; obtain the stage before another implementation.
 L1: eight native-FX/scope/shadow/hand/holster executables and parser/transform/
-backend tests PASS. Initial L2 x86 PE32 /O2 build PASS; candidate provenance below
-will be recorded only after a clean-source build. Steam remains accepted.
+backend tests PASS. Clean L2 x86 PE32 /O2 build from bb5c1abcdcd7ee8d50aeb68f6fda4c0b16d104bd
+PASS: DLL47D90EF72240805E57DE47D336F628FE8087A94EAAA579EC72592A8B1D9E5160.
+Private candidate build/combined-followups/followthrough-bb5c1ab; same six-key
+INI delta, SHA26F0D8C8986476459468E9AFD0ECABBFC151034041508BF0074F1C9701BE214D.
+Deployer Install -WhatIf full accepted-profile preflight PASS; no writes.
+Installed accepted DLL/INI independently rehashed unchanged. No L3/L4 for this
+diagnostic candidate; require fresh start. Steam remains accepted.
 
 2026-10-20 optical-scope/native rifle-origin candidate L1_PASS / L2_PASS on
 fix/rifle-vfx-sniper-grip-scope. Physical5aa5f33: rifle VFX still absent; native
