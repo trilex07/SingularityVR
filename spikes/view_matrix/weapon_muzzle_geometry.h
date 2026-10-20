@@ -33,8 +33,14 @@ inline bool ToTracking(hipknife::V p,hipknife::V centre,float yaw,float base,flo
 struct Witness {
     bool valid=false;weaponreload::Kind kind=weaponreload::Kind::None;
     std::uint32_t pawn=0,weapon=0;std::uint64_t tick=0;hipknife::V relative{};
+    hipknife::V forward{}; // exact rendered root +Z, native world axes
     bool Current(std::uint32_t p,std::uint32_t w,std::uint64_t now)const{
         return valid&&p&&w&&p==pawn&&w==weapon&&now>=tick&&now-tick<=150&&hipknife::Finite(relative);
+    }
+    bool Direction(std::uint32_t p,std::uint32_t w,std::uint64_t now,hipknife::V& out)const{
+        const float n=hipknife::Length(forward);
+        if(!Current(p,w,now)||!hipknife::Finite(forward)||!std::isfinite(n)||std::fabs(n-1.f)>.001f)return false;
+        out=forward;return true;
     }
 };
 }

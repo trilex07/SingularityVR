@@ -2350,6 +2350,8 @@ static weaponreload::Witness g_nextWitness;
 static int g_reloadPalmGrip=0; // default-OFF; measured native wrist, not AIM-space mount
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
 static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
+static int g_weaponMeasuredAim=0; // default OFF; exact rendered barrel direction
+static int g_bodyEquipmentProbe=0; // default OFF; bounded read-only engine-thread census
 static weaponmuzzle::Witness g_nextMuzzle,g_nextMuzzleStaged;
 static sniperscope::Mount g_sniperScopeMount;
 static sniperscope::State g_sniperScopeState; // input thread only
@@ -2360,6 +2362,8 @@ static int g_scopeOpticalCalibration=0;
 static int g_sniperOpticalSlowTime=0;
 static volatile LONG g_scopeSlowPresses=0;
 static scopepip::Frame g_scopePipFrame;
+static int g_scopeMeasuredPose=0; // default OFF; do not reuse a frozen hand-local axis
+static scopepip::Frame g_scopeMeasuredFrame,g_scopeMeasuredStaged;
 // Render-thread only. Staged exclusively by the fingerprinted Kasimov body;
 // consumed while that SAME draw's native camera and controller matrix are bound.
 static bool g_scopeLensStaged=false;
@@ -2385,7 +2389,7 @@ static void CancelNextReload(){
         g_nextNativeGate.Clear();ReleaseSRWLockExclusive(&g_centurionNativeLock);
     }
     if(TryAcquireSRWLockExclusive(&g_nextVisualLock)){
-        g_nextVisual={};g_nextWitness={};g_nextWrist={};g_nextMuzzle={};g_sniperScopeMount={};g_scopePipFrame={};ReleaseSRWLockExclusive(&g_nextVisualLock);
+        g_nextVisual={};g_nextWitness={};g_nextWrist={};g_nextMuzzle={};g_sniperScopeMount={};g_scopePipFrame={};g_scopeMeasuredFrame={};ReleaseSRWLockExclusive(&g_nextVisualLock);
     }
 }
 static void CancelCenturionInput(){
@@ -6850,7 +6854,7 @@ void ReleaseVrMenuResources(bool menuFocusTransition=false);
 void ReleaseFpCasterCache();
 static void HolsterHipWorld(float H[3], bool includeHmdOffset = false);
 static void GunPivotWorld(float H[3]);
-static void GunAimDir(float d[3]);
+static bool GunAimDir(float d[3]);
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 bool     g_handPoseValid[2] = { false, false };
 bool g_handPositionValid[2] = { false, false };
@@ -12043,6 +12047,13 @@ void SyncXRInput(XrTime displayTime) {
             g_scopePipFrame={scopeRequested,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),
                 position+hipknife::Rotate(orientation,m.lens),hipknife::Rotate(orientation,m.forward),
                 hipknife::Rotate(orientation,m.up),m.radius,g_sniperScopeState.eyeIndex};
+            if(g_scopeMeasuredPose){
+                const auto measured=g_scopeMeasuredFrame;
+                if(measured.Current((uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64())){
+                    g_scopePipFrame=measured;g_scopePipFrame.active=scopeRequested;
+                    g_scopePipFrame.eye=g_sniperScopeState.eyeIndex;
+                }else g_scopePipFrame.active=false;
+            }
             ReleaseSRWLockExclusive(&g_nextVisualLock);
         }
         if(prior!=scopeRequested){static unsigned notes=0;if(notes++<24)
@@ -16729,7 +16740,7 @@ static void GunAnchorWorld(float G[3]) {
 // Shared for the reason run 218 had to learn the hard way: a second copy of "where is the gun pointing"
 // is a second thing to keep in step.
 extern LONG g_traceSignYaw, g_traceSignPitch;
-static void GunAimDir(float d[3]) {
+static void LegacyGunAimDir(float d[3]) {
     const float kU2R = 6.2831853f / 65536.0f;
     const float yaw   = ((float)g_wantYaw   + (float)g_traceSignYaw *
                          (float)InterlockedCompareExchange(&g_handDevYawUU, 0, 0)) * kU2R;
@@ -16737,6 +16748,19 @@ static void GunAimDir(float d[3]) {
                          (float)InterlockedCompareExchange(&g_handDevPitchUU, 0, 0)) * kU2R;
     const float cp = cosf(pitch);
     d[0] = cp * cosf(yaw); d[1] = cp * sinf(yaw); d[2] = sinf(pitch);
+}
+static bool GunAimDir(float d[3]) {
+    LegacyGunAimDir(d);
+    if(!g_weaponMeasuredAim||Rd(g_weaponHolstered))return false;
+    weaponmuzzle::Witness witness;
+    if(TryAcquireSRWLockShared(&g_nextVisualLock)){
+        witness=g_nextMuzzle;ReleaseSRWLockShared(&g_nextVisualLock);
+    }
+    hipknife::V direction{};
+    if(witness.Direction((uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),direction)){
+        d[0]=direction.x;d[1]=direction.y;d[2]=direction.z;return true;
+    }
+    return false;
 }
 
 // ⭐ run 219: how far ADS pulls the weapon back along that axis, in engine units. 0 disables.
@@ -19898,6 +19922,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     const UINT gloveTriangles=cuffBuffer?g_nativeCuffRenderer.Triangles(cuffProfile):g_nativeGloveRenderer.Triangles();
     float nextSaved[16*12];UINT nextReg=0;weaponreload::ReplayPlan nextReplay;
     g_nextMuzzleStaged={};
+    g_scopeMeasuredStaged={};
     g_scopeLensStaged=false;
     const int nextRegs=t==D3DPT_TRIANGLELIST&&(!g_nextNativeMagazine||
         (!boneRegN&&!independentRegs&&nSeg==1&&segStart[0]==startIndex&&segPrims[0]==primCount))?
@@ -19972,9 +19997,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         InterlockedIncrement(&g_centurionPalmPublished);
     }
     const HRESULT nextRestore=nextRegs?g_origSetVSConstF(dev,nextReg,nextSaved,(UINT)nextRegs):D3D_OK;
-    if(g_weaponTraceRigidOrigin&&SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)&&g_nextMuzzleStaged.valid&&
+    if((g_weaponTraceRigidOrigin||g_weaponMeasuredAim||g_scopeMeasuredPose)&&SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)&&g_nextMuzzleStaged.valid&&
        TryAcquireSRWLockExclusive(&g_nextVisualLock)){
-        g_nextMuzzle=g_nextMuzzleStaged;ReleaseSRWLockExclusive(&g_nextVisualLock);
+        g_nextMuzzle=g_nextMuzzleStaged;
+        if(g_scopeMeasuredStaged.active)g_scopeMeasuredFrame=g_scopeMeasuredStaged;
+        ReleaseSRWLockExclusive(&g_nextVisualLock);
     }
     if(FAILED(nextRestore)){
         for(unsigned i=0;i<3;++i)InterlockedExchange(&g_nextFault[i],1);
@@ -24608,6 +24635,13 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                 }
                 const float bx = End[0], by = End[1], bz = End[2];
                 RotateTrace(Start, End, dYaw, dPitch);
+                if(g_weaponMeasuredAim&&am==11&&!scoped){
+                    float from[3],to[3];LegacyGunAimDir(from);const bool measured=GunAimDir(to);
+                    const bool aligned=measured&&weapontrace::Align(Start,End,from,to);
+                    static unsigned aimReceipts=0;if(aimReceipts++<16)
+                        Log("weapon measured aim: fresh=%d rigid=%d from=(%.6f,%.6f,%.6f) to=(%.6f,%.6f,%.6f); native spread retained",
+                            measured?1:0,aligned?1:0,from[0],from[1],from[2],to[0],to[1],to[2]);
+                }
                 // Observe the ACTUAL outgoing collision ray separately from
                 // PlayTracerFX's cosmetic source. A tracer repair cannot prove
                 // hit direction, and successful smoke pose is unrelated.
@@ -33567,6 +33601,7 @@ void LoadIniSettings() {
     Log("ini: WeaponSteady=%d (default OFF; adaptive controller-only filter; two-hand Kasimov + primary grip = strong)",g_weaponSteady);
     g_sniperPip=GetPrivateProfileIntA("Render","SniperPictureInPicture",0,path)?1:0;
     g_scopeOpticalCalibration=GetPrivateProfileIntA("Render","ScopeOpticalCalibration",0,path)?1:0;
+    g_scopeMeasuredPose=GetPrivateProfileIntA("Render","ScopeMeasuredPose",0,path)?1:0;
     g_sniperOpticalSlowTime=GetPrivateProfileIntA("Input","SniperOpticalSlowTime",0,path)?1:0;
     Log("ini: ScopeOpticalCalibration=%d SniperOpticalSlowTime=%d (default OFF; own4x/capture45Hz, native L3; no HMD filtering)",g_scopeOpticalCalibration,g_sniperOpticalSlowTime);
     if(g_sniperPip&&!g_sniperNearEyeScope){g_sniperPip=0;Log("scope PiP: requires measured near-eye policy; disabled");}
@@ -33577,6 +33612,13 @@ void LoadIniSettings() {
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
     g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;
     g_weaponTraceRigidOrigin=GetPrivateProfileIntA("Input","WeaponTraceRigidOrigin",0,path)!=0;
+    g_weaponMeasuredAim=GetPrivateProfileIntA("Input","WeaponMeasuredAim",0,path)!=0;
+    g_bodyEquipmentProbe=GetPrivateProfileIntA("Diagnostic","BodyEquipmentProbe",0,path)!=0;
+    if(g_weaponMeasuredAim&&(!g_weaponTraceRigidOrigin||!Rd(g_traceFromGun))){
+        g_weaponMeasuredAim=0;Log("measured aim: requires WeaponTraceRigidOrigin + TraceFromGun; disabled");
+    }
+    Log("ini: WeaponMeasuredAim=%d ScopeMeasuredPose=%d BodyEquipmentProbe=%d (default OFF; render-axis alignment / read-only census)",
+        g_weaponMeasuredAim,g_scopeMeasuredPose,g_bodyEquipmentProbe);
     Log("ini: ReloadPalmGrip=%d WeaponTraceRigidOrigin=%d (default OFF; measured wrist mount / preserve translated ray)",
         g_reloadPalmGrip,g_weaponTraceRigidOrigin);
     g_holsterEnabled = GetPrivateProfileIntA("Input", "HolsterEnabled", 1, path) ? 1 : 0;

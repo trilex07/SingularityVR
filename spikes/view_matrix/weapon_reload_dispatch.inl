@@ -292,11 +292,18 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
     BuildGunC(controller.m);hipknife::V socket;armbind::Mat clipTracking;
     // Muzzle/optics are independent of the clip insertion socket. Previously
     // stage9 (clip farther than75cm) silently suppressed their valid witnesses.
-    if(g_weaponTraceRigidOrigin){
-        hipknife::V muzzle;
+    if(g_weaponTraceRigidOrigin||g_weaponMeasuredAim||g_scopeMeasuredPose){
+        hipknife::V muzzle,ahead;
         if(weaponmuzzle::Position(g_nextAnimation[index],nativeRoot,local,controller,muzzle)&&
-           hipknife::Length(muzzle)<4.f*MetresToUU())
+           hipknife::Length(muzzle)<4.f*MetresToUU()){
             g_nextMuzzleStaged={true,kind,visual.pawn,visual.weapon,now,muzzle};
+            hipknife::V root{};
+            if(weaponmuzzle::RootPoint(kind,root)&&
+               weaponmuzzle::RootPosition(g_nextAnimation[index],nativeRoot,local,controller,root+hipknife::V{0,0,10},ahead)){
+                const auto axis=ahead-muzzle;const float n=hipknife::Length(axis);
+                if(std::isfinite(n)&&n>.001f)g_nextMuzzleStaged.forward=axis*(1.f/n);
+            }
+        }
     }
     if(g_sniperNearEyeScope&&kind==weaponreload::Kind::Kasimov&&!ScopeActive()){
         // Material1 is the97-point,168-triangle original lens, entirely on
@@ -329,6 +336,10 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
                 const float length=hipknife::Length(vertical);
                 if(length>.001f)mount.up=hipknife::Rotate(inverse,vertical*(1.f/length));
                 mount.radius=hipknife::Length(trackingEdge-trackingLens);
+                hipknife::V axis{},verticalUnit{};
+                if(scopepip::Unit(trackingAhead-trackingLens,axis)&&scopepip::Unit(vertical,verticalUnit))
+                    g_scopeMeasuredStaged={true,visual.pawn,visual.weapon,now,
+                        trackingLens,axis,verticalUnit,mount.radius,0};
                 if(TryAcquireSRWLockExclusive(&g_nextVisualLock)){
                 g_sniperScopeMount=mount;ReleaseSRWLockExclusive(&g_nextVisualLock);
                 static unsigned notes=0;if(notes++<3)Log("sniper lens: original97-point centre controller-local=(%.4f,%.4f,%.4f) forward=(%.4f,%.4f,%.4f)",

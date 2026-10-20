@@ -7,7 +7,9 @@ param(
  [switch]$OpticalScopeAndRifleOrigin,
  [switch]$RifleTracerOrigin,
  [switch]$WeaponSteady,
- [switch]$CalibratedOptics
+ [switch]$CalibratedOptics,
+ [switch]$MeasuredAim,
+ [switch]$BodyEquipmentCensus
 )
 # Offline preparation only. No launch, installation or accepted-profile mutation.
 $ErrorActionPreference='Stop'
@@ -83,6 +85,16 @@ if($CalibratedOptics){
  if(-not $WeaponSteady){throw 'Calibrated optics requires the steady optical candidate'}
  $targets['Render/ScopeOpticalCalibration']='1'
  $targets['Input/SniperOpticalSlowTime']='1'
+}
+if($MeasuredAim){
+ if(-not $CalibratedOptics){throw 'Measured aim requires the calibrated optical candidate'}
+ $targets['Input/WeaponMeasuredAim']='1'
+ $targets['Input/WeaponTraceRigidOrigin']='1'
+ $targets['Render/ScopeMeasuredPose']='1'
+}
+if($BodyEquipmentCensus){
+ if(-not $MeasuredAim){throw 'Equipment census is scoped to the measured-aim followup'}
+ $targets['Diagnostic/BodyEquipmentProbe']='1'
 }
 $text=[IO.File]::ReadAllText((Resolve-Path -LiteralPath $InstalledIni).Path,[Text.UTF8Encoding]::new($false,$true))
 $newline=if($text.Contains("`r`n")){"`r`n"}else{"`n"}

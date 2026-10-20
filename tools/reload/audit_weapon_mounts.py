@@ -1,6 +1,7 @@
 """Read-only original PSK oracle for the measured muzzle and magazine mounts."""
 import argparse
 import json
+import hashlib
 from pathlib import Path
 import numpy as np
 from fit_magazine_palm import fit, read_psk
@@ -15,7 +16,7 @@ SPECS = {
 }
 
 
-def audit(hands, originals):
+def audit(hands, originals, axes_only=False):
     reports = {}
     for kind, (package, stem, muzzle, curl, rotation, translation) in SPECS.items():
         gun = originals / package / 'SkeletalMesh3' / f'ch_inview_{stem}_mesh.psk'
@@ -25,17 +26,26 @@ def audit(hands, originals):
         actual = (bind[names.index('muzzle_flash')] @ np.linalg.inv(bind[root]))[3, :3]
         if not np.allclose(actual, muzzle, rtol=0, atol=1e-5):
             raise ValueError(f'{kind} muzzle source mismatch')
-        result = fit(hands, gun)
-        if result['curl'] != curl or not np.allclose(result['rotation'], rotation, rtol=0, atol=1e-7) or not np.allclose(
-                result['translation_uu'], translation, rtol=0, atol=1e-6):
+        # The muzzle bone's +X is the native emitter forward. Prove it equals
+        # cog +Z before using that axis for scope/ballistic alignment.
+        forward = (bind[names.index('muzzle_flash')] @ np.linalg.inv(bind[root]))[0, :3]
+        if not np.allclose(forward, [0, 0, 1], rtol=0, atol=1e-5):
+            raise ValueError(f'{kind} muzzle forward/cog axis mismatch')
+        result = None if axes_only else fit(hands, gun)
+        if result is not None and (result['curl'] != curl or not np.allclose(result['rotation'], rotation, rtol=0, atol=1e-7) or not np.allclose(
+                result['translation_uu'], translation, rtol=0, atol=1e-6)):
             raise ValueError(f'{kind} authored fit is not reproducible')
-        reports[kind] = dict(muzzle_root_uu=actual.tolist(), magazine_fit=result)
+        reports[kind] = dict(source_sha256=hashlib.sha256(gun.read_bytes()).hexdigest(),
+                            muzzle_root_uu=actual.tolist(), muzzle_forward_root=forward.tolist(), magazine_fit=result)
     return reports
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--hands', type=Path, required=True)
+    parser.add_argument('--hands', type=Path)
     parser.add_argument('--originals', type=Path, required=True)
+    parser.add_argument('--axes-only', action='store_true', help='Audit original muzzle axes without rerunning the palm fit')
     args = parser.parse_args()
-    print(json.dumps(audit(args.hands, args.originals), indent=2))
+    if not args.axes_only and args.hands is None:
+        parser.error('--hands required unless --axes-only')
+    print(json.dumps(audit(args.hands, args.originals, args.axes_only), indent=2))

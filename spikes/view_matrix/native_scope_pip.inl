@@ -366,6 +366,23 @@ static void Tick(){
        !Relative(frame.lens+frame.up,up)||!scopepip::Basis(ahead-relative,up-relative,right,vertical))return;
     int pitch=0,yaw=0,roll=0;
     if(!scopepip::Angles(ahead-relative,up-relative,pitch,yaw,roll))return;
+    if(g_scopeMeasuredPose){
+        static ULONGLONG nextReceipt=0;static unsigned receipts=0;
+        const auto now=GetTickCount64();
+        if(receipts<16&&now>=nextReceipt){
+            nextReceipt=now+1000;++receipts;
+            V direction{},barrel{};weaponmuzzle::Witness muzzle;
+            if(TryAcquireSRWLockShared(&g_nextVisualLock)){
+                muzzle=g_nextMuzzle;ReleaseSRWLockShared(&g_nextVisualLock);
+            }
+            const bool paired=scopepip::Unit(ahead-relative,direction)&&
+                muzzle.Direction(frame.pawn,frame.weapon,now,barrel);
+            Log("scope measured pose: paired=%d barrelDot=%.7f lens=(%.3f,%.3f,%.3f) forward=(%.6f,%.6f,%.6f) age=%llu ms twoHand=%ld [input geometry, not pixel alignment]",
+                paired?1:0,paired?hipknife::Dot(direction,barrel):-2.f,
+                relative.x,relative.y,relative.z,direction.x,direction.y,direction.z,
+                now>=frame.tick?now-frame.tick:0,Rd(g_twoHandActive));
+        }
+    }
     if(g_scopeOpticalCalibration){
         OpticalSample optical;
         if(TryAcquireSRWLockShared(&viewLock)){optical=opticalSample;ReleaseSRWLockShared(&viewLock);}

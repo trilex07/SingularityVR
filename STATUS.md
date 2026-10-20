@@ -1,5 +1,23 @@
 # STATUS — session handoff
 
+## 2026-10-20 measured barrel / body equipment preparation
+
+IMPLEMENTED_NOT_VERIFIED (runtime): default-OFF WeaponMeasuredAim and
+ScopeMeasuredPose use the exact rendered palette + BuildGunC, not independent
+Euler aim / a latched controller-local lens. Native spread is retained by a
+rigid rotation. Original three PSKs prove muzzle +X == cog +Z; see
+docs/body-slots-measured-aim.md. Bounded native heavy-equipment census is
+read-only, default-OFF BodyEquipmentProbe, using the complete audited native
+IsHeavyWeapon getter rather than a guessed bool offset.
+
+Body equipment gesture/slot transactions are CPU prototypes ONLY, not bound to
+UE3 inventory/spawn/fire. Native hand-grenade ownership/pin/fuse/debit and heavy
+draw/pose/reload integration remain UNPROVEN/UNIMPLEMENTED. Distinct native
+enum slots2/3 do NOT establish a carried frag grenade. Do not advertise the
+whole requested equipment candidate as ready, enable phantom inventory, or
+map TriggerActiveWeaponThrow to a grenade toss. No Steam write/launch in prep;
+preserve the accepted profile and require fresh start for any physical test.
+
 ## 2026-10-20 physical2016: optical direction still unresolved
 
 User reports scope present but not looking where the weapon aims; Valkyrie

@@ -71,6 +71,20 @@ foreach($line in @('ScopeOpticalCalibration=1','SniperOpticalSlowTime=1','Weapon
  Check $calibratedText.Contains($line) "Calibrated optics regressed $line"
 }
 $invalidOptics=MakeCase 'invalid-calibrated'
+$measured=MakeCase 'measured-aim'
+& $script @measured -RifleSniperFollowups -OpticalScopeAndRifleOrigin -RifleTracerOrigin -WeaponSteady -CalibratedOptics -MeasuredAim -BodyEquipmentCensus | Out-Null
+$measuredPlan=Get-Content -Raw (Join-Path $measured.CandidateDir 'change-plan.json') | ConvertFrom-Json
+$measuredText=[IO.File]::ReadAllText((Join-Path $measured.CandidateDir 'SingularityVR.ini'))
+Check ($measuredPlan.ini.Count -eq 14) 'Measured aim/census key scope expanded'
+foreach($line in @('WeaponMeasuredAim=1','WeaponTraceRigidOrigin=1','ScopeMeasuredPose=1','BodyEquipmentProbe=1','PolishLanguage=1','NativeMuzzleParticleStereo=1')){
+ Check $measuredText.Contains($line) "Measured aim regressed $line"
+}
+$invalidMeasured=MakeCase 'invalid-measured'
+$failed=$false;try{& $script @invalidMeasured -MeasuredAim | Out-Null}catch{$failed=$true}
+Check $failed 'Unscoped measured aim accepted'
+$invalidCensus=MakeCase 'invalid-census'
+$failed=$false;try{& $script @invalidCensus -BodyEquipmentCensus | Out-Null}catch{$failed=$true}
+Check $failed 'Unscoped equipment census accepted'
 $failed=$false;try{& $script @invalidOptics -CalibratedOptics | Out-Null}catch{$failed=$true}
 Check $failed 'Unscoped optical calibration accepted'
 $invalidSteady=MakeCase 'invalid-steady'
