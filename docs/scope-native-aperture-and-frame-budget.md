@@ -42,3 +42,26 @@ hash/provenance and145-pin deploy preflight before a fresh user start. Physical
 test without chat switches: rifle regression; scope to eye, move only gun,
 then move head and lower gun; normal exit and feedback on placement, direction,
 scope-on/off FPS. No claim of physical verification before that run.
+
+## Offline delivery (2026-10-20)
+
+Code137143d pushed on `fix/rifle-vfx-sniper-grip-scope`, no merge.
+Nine native FX/math/registry executables and parser/backend checks PASS.
+Full four-weapon reload/hand/knife/wheel, original coordinate/animation replay,
+x86 native ABI and own-process GPU state/depth/reset fixtures PASS. These are
+NOT Steam or headset results. Preparation39 checks and fake restore-lease6
+checks PASS. Clean production x86 PE32 `/O2`, instrumentation define OFF;
+existing runtime diagnostics and new bounded scope timing remain enabled.
+
+Private candidate: `build/combined-followups/native-aperture-137143d`.
+SHA256 DLL:
+`D32848C0B9BC9AA3FD91531E62415F5391E00B219C9DEF3A29987793E3050EC7`.
+INI `BF2273049DF69B9714A26B54F7C38A94BA28495F881E50B4EAC80212F5AC4006`;
+plan `052CD4517BDD8827D25D79D0B3724ADD3650CE1D9DD09F39BD2A668E4FC27959`.
+Full145-pin accepted-profile Install-WhatIf preflight PASS, zero Steam writes.
+Installed accepted DLL7A1DE585...9495, INI60224CA0...4ADC and
+profile5A60E4D1...556E independently rehashed unchanged. No guard/launch/deploy.
+No claim that this fixes the overall frame budget: the main-view slowdown is
+still open. Native camera correction may affect capture culling, but that is
+not measured performance proof. Do not lower resolution or scene quality
+silently, or report stable90Hz without a new physical/runtime measurement.
