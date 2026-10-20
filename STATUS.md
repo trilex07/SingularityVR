@@ -1,6 +1,20 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 ACCEPTED / PHYSICALLY_VERIFIED for acquired-gun retention and initial
+owned wheel: user "super działa ... dajemy na main ... bazowa wersje". Source
+663a49ad3964cdbbc7777a176f0afcd8bbd3d345, tested x86 /O2 DLL SHA256
+7A1DE5854D1EC8635EE77200E3A39F0D4256C3A73ED6A69E99D3C26417B69495.
+Private session-663a49a-accepted.log proves native keep0->1, chain3->7->F,
+wheel named7/F and existing-gun selection. This supersedes the failed retention
+results below, not their historical evidence. Cinema exit still has no new
+physical acceptance. Original guard completed and restored old baseline first;
+MAIN reinstalled EXACT tested DLL/INI persistently at user's request, no active
+restore guard. Accepted INI SHA60224CA08A8E9B01E299AD4B14A069A1E854F2B5E46ADFBB0B01A86973A74ADC.
+Canonical local accepted-profile now pins the tested runtime/scoped keys and
+preserves all145 protected file identities. Previous profile and backups kept.
+Do NOT run old change plans/restore scripts over this promoted baseline.
+
 2026-10-20 physical test of8c7a022: wheel visibility/selection after actual save
 load PASS (user: "1.git"); third pickup STILL drops a gun, only two remain.
 Cinema exit has no fresh physical result. Game exited; guard restored accepted

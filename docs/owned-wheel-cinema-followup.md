@@ -2,6 +2,24 @@
 
 ## Observations and evidence
 
+## Accepted native pickup result —2026-10-20
+
+User physically accepts source663a49a: "super działa" and requests main plus
+persistent baseline. Private log session-663a49a-accepted.log: adapter installed
+at1508; local supported linked input-thread pickup keep0->1 at18646, chain
+mask3->7/count3 at18647; existing selections5799/8297/11387 follow. Another
+pickup at52127 changes mask7->F/count4; wheel namedF/iconsF at56896. This proves
+native retention, not merely initialization. Initial saved wheel and selection
+accepted. No fresh cinema-exit acceptance; persistence across later save reload
+has not yet been independently tested.
+
+Exact tested DLL7A1DE5854D1EC8635EE77200E3A39F0D4256C3A73ED6A69E99D3C26417B69495
+and INI60224CA08A8E9B01E299AD4B14A069A1E854F2B5E46ADFBB0B01A86973A74ADC
+reinstalled persistently after original guard completed; previous baseline
+retained in timestamped backups. Canonical local accepted profile updated,
+no active rollback guard. No campaign/font/audio/mesh packages changed.
+Historical failed approaches below remain evidence, not the current status.
+
 Physical result on source2cdff06: hero hands work in cinema and medkit use.
 User had two actual saved guns but saw only Centurion on the wheel; picking a
 third gun still discarded one; stereo briefly looked wrong after cinema.
