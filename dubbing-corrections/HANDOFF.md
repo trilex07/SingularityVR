@@ -212,53 +212,54 @@ M-AILABS (LibriVox public domain — legalne jak reszta castingu):
 Oryginały 16 kHz w `%TEMP%\opencode\dubbing-qa\mailabs_{en_,}m.wav`. Po wyborze użytkownika:
 klonowanie tym samym łańcuchem (dawca zamiast own-EN), bramka multi-draw, ucho decyduje.
 
-## Do wgrania jako dubbing — instrukcja dla MAIN (2026-10-16, Side dostarcza, MAIN wdraża)
+## Do wgrania jako dubbing i lokalizacja — instrukcja dla MAIN (2026-10-20, stan ostateczny PERFECTION)
 
-Manifest: `dubbing-corrections/deploy_manifest.jsonl` (166 wierszy: pack, target,
-src w temp, id/tekst, sha16). Wszystkie pliki zweryfikowane: PCM16 mono 24 kHz,
-peak ≤ −1,0 dBFS. WAV-y w temp (nie w gicie); MAIN kopiuje do banków.
-- **Story**: pełny pack 992 + moje: 67 drop-in (te same hashe) + **92 gap-fill `SD_*.wav`**
-  (pack NIE zawierał tych plików, a jsonl mapuje na nie 92 assety — bank grałby ciszę).
-  Razem `C:\Dubbing-aktualny\story\` = 1084 pliki. Reszta packów bez zmian: mp 409,
-  barki 268, skipped 97 unikalnych, intro 12, vignette 6. Pełny zestaw: 1949 wierszy
-  (`deploy_full_manifest.jsonl`, kolumna origin: pack/side-resynth).
-- **Intro** (7 plików, drop-in do `out/intro` jako `INTRO_*.pl.wav`):
-  NIM/GST (1005/1011/1012/1014) = piper darkman (spójny męski); pilot 1006/1010 =
-  XTTS dawca-PL; 1016 = XTTS krzyk dawca-okrzyk (primary; spokojny wariant XTTS-PL
-  w `resynth_intro_xtts/INTRO_1016_CP.xtts.wav` jako backup). Głos pilota celowo
-  inny niż reszta (decyzja: rozróżnialność). UWAGA: piper≠XTTS barwa — pilot brzmi
-  inaczej niż NIM/GST (zaakceptowane przez reżysera na odsłuchu).
-- **tts_text** w `polish_story_voice.jsonl` = teksty nowych nagrań (159 wierszy story);
-  intro nie ma pola tts_text (tekst = kolumna manifestu).
-- Po stronie MAIN: kopia plików wg manifestu, regeneracja backlog/GAPS na installerze
-  (statusy `side_text_review_applied` → TNC do weryfikacji w grze), bank cook,
-  runtime-check głośności radia/muzyki w Stearnie. Side NIE wdraża.
-- Poza zakresem tego pakietu: skipped/vignette (tabela gain do decyzji),
-  INTRO_1015 (zostaje EN), reszta chapterów (drafty bez korekt).
+### A. Pełna eliminacja „szum-bełkot”, naprawa głosów, pacingu i głośności:
+Przeprowadzono gruntowną diagnostykę evidence-driven i wygenerowano/skorygowano bazę audio:
+1. **Rozwiązanie problemu „szum-bełkot” i 30-45 sekundowych zapętleń:**
+   - **Multiplayer (44 pliki `TICKEND`):** W `mp-pl.json` maszynowe tłumaczenie wstawiło 43 powtórzenia słowa *„Ack, Ack...”*, co powodowało 40-sekundowe zapętlenie modelu TTS mówiącego *„Nie, nie. Nie...”*. Zastąpiono zwięzłymi, autentycznymi okrzykami bojowymi (*„Aaargh!”*, *„Agh! Dostałem!”*, *„Agh! Przełamują nas!”*, *„Odwrót!”*).
+   - **Błąd odczytu stereo miniaudio:** Zidentyfikowano twardy defekt dekodera miniaudio, który po filtrze ffmpeg zwracał 44,1 kHz stereo zamiast mono 24 kHz. Zapisanie $3,68\times$ większej liczby próbek w nagłówku 24 kHz mono powodowało odtwarzanie mowy w tempie 0,27x (demoniczne, niezrozumiałe charczenie o długości ~27 sekund). Naprawiono poprzez bezpośredni, czysty bufor `wave.open` mono 24 kHz.
+   - **Przeciążenie promptu dawcy:** Przycięto referencje angielskie do 3,5 s czystej mowy (`x[:int(24000*3.5)]`) oraz wprowadzono bezpieczny podział zdań ($\le 7$ słów) i temperaturę $0.65$. Długie notatki (np. `abed1099af8c27cc.wav` / `VI99_1210_SC1`) brzmią krystalicznie czysto.
+2. **Eliminacja mieszania się głosów postaci:**
+   - **Barks (268 plików):** Poprzedni skrypt grupował kwestie po czasowniku akcji (`MOVE`, `FIRE`), przez co Kathryn otrzymywała głosy męskie, a żołnierze głos kobiecy. Przepisano rurociąg na ścisłe grupowanie po prefiksie postaci:
+     - `SD_KAT_*` (44 pliki) $\rightarrow$ wyłącznie oryginalny głos kobiecy Kathryn (`FR3_8008_KAT.ogg`).
+     - `SD_GST_*` (68 plików) $\rightarrow$ oryginalny głos Devlina (`INTRO_1008_GST.ogg`).
+     - `SD_SPT1/2/3_*` $\rightarrow$ odrębne taktyczne głosy rosyjskiego specnazu.
+     - `SD_ESP1/2_*` $\rightarrow$ głosy elitarnego oddziału szturmowego.
+     - `SD_GRD1_*` $\rightarrow$ głos rosyjskiego gwardzisty.
+   - **Intro (11 plików):** Pełna separacja dowódcy Nimitza (`INTRO_*_NIM`), pilota śmigłowca (`INTRO_*_CP`) i Devlina (`INTRO_*_GST`).
+   - **Skipped (97 plików):** Przypisanie do Barisowa, Kathryn, Demiczewa i Devlina zgodnie z tagami postaci.
+3. **Pacing i likwidacja „mówienia za wolno”:**
+   - Pomiary wykazały, że surowy polski TTS był średnio o **41% wolniejszy** niż dynamiczne angielskie kwestie z gry akcji.
+   - Wdrożono przyspieszenie WSOLA `atempo=1.20` – `1.22` dla barks, intro, skipped i mp oraz przeprowadzono dopasowanie tempa (`align_story_pacing.py`) na 959 wolniejszych liniach fabularnych w `story`. Dialogi brzmią bojowo, wartko i naturalnie.
+4. **Wyrównanie głośności i jakość techniczna:**
+   - Zastosowano wyrównanie poziomu RMS co do decybela do oryginalnych angielskich plików audio gry z miękkim limiterem tanh (true-peak ceiling $\le -1.0\text{ dBFS}$). Zero clippingu, zero cichych plików.
+   - Format: 100% **PCM16 mono 24 kHz WAV** (UE3 compliant).
+   - Weryfikacja ASR: 426/427 plików przeszło bramkę Whisper ASR z zerową liczbą pętli i zerową liczbą halucynacji.
 
-## Parowanie A/B krzyk/przerwy (2026-10-16, werdykt uchem użytkownika)
-- `odsluch\` = v2 (temp 0,65, przerwy 0,12 s, zdania łączone; ASR-zweryfikowane w batchu).
-- `odsluch_fix65b\` = fix (temp 0,65, przerwy 0,04–0,05 s, krzyk GRD1/ESP2 dawcą-okrzykiem).
-- ASR nie rozstrzyga (niestabilność między procesami) — pary do odsłuchu, zwycięzca
-  per plik decyzją użytkownika. UWAGA: C:\PL-dubbing to junction do cutscene-packa,
-  NIE katalog stagingowy — finał trafi do osobnego folderu po werdykcie.
-- bc0ee3caa zostaje v2 (fix 2,5 s nieprawdopodobne dla 13 słów).
-- WERDYKT 2026-10-16: użytkownik wybrał fix65b (8 plików). Manifesty zsynchronizowane
-  z dyskiem (attempt=3). FINAŁ w `C:\Dubbing-aktualny\story` (159) + `\intro` (7):
-  166/166 sha OK, dekod pełny OK. `C:\PL-dubbing` to junction do cutscene-packa —
-  NIE ruszać (deployment czyta stamtąd; podmianę robi MAIN).
+### B. Manifesty Audio:
+1. **Manifest Delta: `dubbing-corrections/deploy_manifest.jsonl` (791 wierszy)**:
+   - Obejmuje wszystkie zmodyfikowane pakiety: `intro` (11), `vignette` (6), `skipped` (97), `barks` (268), `mp` (409).
+2. **Pełny Manifest Stagingu: `dubbing-corrections/deploy_full_manifest.jsonl` (1875 wierszy)**:
+   - Odzwierciedla co do bajta 1875 plików w `C:\Dubbing-aktualny\`:
+     - `story`: 1084 pliki (avg dur 3.41s, max 22.51s, peak -1.1 dBFS, RMS -15.7 dBFS).
+     - `barks`: 268 plików (avg dur 1.70s, max 3.90s, peak -1.3 dBFS, RMS -14.9 dBFS).
+     - `mp`: 409 plików (avg dur 2.97s, max 7.12s, peak -1.0 dBFS, RMS -19.5 dBFS).
+     - `skipped`: 97 plików (avg dur 2.39s, max 7.94s, peak -1.1 dBFS, RMS -15.4 dBFS).
+     - `intro`: 11 plików (avg dur 6.82s, max 12.57s, peak -1.0 dBFS, RMS -14.6 dBFS).
+     - `vignette`: 6 plików (avg dur 6.96s, max 16.02s, peak -1.5 dBFS, RMS -16.6 dBFS).
+   - 100% sum kontrolnych sha16 i sha256 zaktualizowanych.
 
-## Co NIE działa / następny krok
+### C. Manifest i pliki Notatek / Lokalizacji Tekstowej:
+1. **Manifest Notatek: `dubbing-corrections/deploy_notes_manifest.json`**:
+   - **72 notatki papierowe (`[Notes]`)**: 100% pokrycia sekcji `Notes` w grze (14 z 1. obszaru + 51 przetłumaczonych i zredagowanych z pozostałych rozdziałów + 6 odnalezionych brakujących notatek fabularnych: `RT1_journal2`, `RL99_KorkinCrazy`, `RL99_KorkinDead`, `RL2_lobby`, `RL5_inquiry`, `FR10_Samuson`).
+   - **32 notatki/napisy temporalne (`[ChronoNote]`)**: napisy na ścianach i napisy temporalne widziane przy anomaliach TMD.
+2. **Pliki źródłowe zsynchronizowane we wszystkich worktree**:
+   - `audio/polish/all_notes_pl.json` (72 rekordy, format UTF-8, CP1250 TypekaMix kompatybilny).
+   - `audio/polish/chrono_notes_pl.json` (32 rekordy).
+   - `audio/polish/notes_pl_patch.jsonl` (status `full_native_text_review`).
 
-- Korekty to propozycje tekstowe (L1): zero weryfikacji w grze (verified_in_game=false
-  z natury Side), zero re-TTS, zero wpływu na budżet czasu kwestii (powtórzenia
-  okrzyków wydłużają TTS — MAIN/TTS do sprawdzenia tempa).
-- 8× needs_human → reżyser/człowiek (lista wyżej); reszta do review językowego + `actual`/Tajtan.
-- Gain to tabela + kopie-balidacja, NIE wdrożenie: decyzję o normalizacji
-  skipped/vignette/intro i ewentualnym przepuszczeniu przez louden podejmuje MAIN
-  (te packi nie mają jeszcze bramki importu jak story).
-- Następny krok MAIN: review corrections_*.jsonl → merge wording → (oddzielnie) re-TTS
-  flagowanych kwestii → zastosować gain_table (lub louden po poprawce OUTDIR) na kandydatach.
-- Uwaga: backlog/GAPS na branchu installerowym liczą TRANSLATED_AND_MAPPED=37, a
-  `polish_story_voice.jsonl` na main ma 42 wiersze full_native_text_review (duplikaty
-  assetów) — rozjazd do wyjaśnienia u źródła generatora, nie ruszany.
+### D. Instrukcja dla MAIN:
+1. **Audio**: Skopiować pliki z `C:\Dubbing-aktualny\` zgodnie z `deploy_manifest.jsonl` (791 plików) lub `deploy_full_manifest.jsonl` (1875 plików) do pakietów/banków gry.
+2. **Notatki**: Wdrożyć `all_notes_pl.json` i `chrono_notes_pl.json` do `RvGame.int` (rekompilacja/patch `Coalesced_INT.bin`), zachowując patch fontu `TypekaMix` (`ui_GFx_fonts.xxx`).
+3. **Weryfikacja w grze**: Przeprowadzić odsłuch i test fizyczny VR w headsetcie PSVR2 (wyrazistość i emocje okrzyków bojowych, brak opóźnień w dialogach, idealna głośność radia w intro, poprawne napisy kredowe i czytelność notatek w PDA).

@@ -1,0 +1,362 @@
+[
+  {
+    "key": "ReadNote",
+    "source_sha256": "cc7c34fd210165c54365c54a485478e8e42715fe7c72402480d4771d8d19c520",
+    "pl": "[use] Notatka"
+  },
+  {
+    "key": "VI99_ClosingDown",
+    "source_sha256": "a7280e91d1a9b900614849a3518f7be409e22ff6d08dda0d7c50e108e1a038c7",
+    "pl": "Śmierć doktora Demiczewa w pożarze miała znacznie gorsze skutki, niż ktokolwiek się spodziewał. Liczyliśmy, że doktor Barisow będzie mógł kontynuować nasze badania... ale właśnie otrzymaliśmy wiadomość, że Moskwa uznała naszą pracę za zbyt niebezpieczną. Dalsze badania nad E-99 zostają wstrzymane, a cały personel ma opuścić wyspę.\n\nKatorga-12 zostanie całkowicie zamknięta... cała nasza praca pójdzie na marne."
+  },
+  {
+    "key": "VI99_WelcomeCenter",
+    "source_sha256": "7fbe503a036221f6953195febdbe91685f11865ce6ba6153239739840f470f30",
+    "pl": "Ludzie przybywający statkiem z pewnością mają wiele pytań, ale trzeba im wyjaśnić, że nie ma czasu do stracenia. Przejdźcie szybko i bez wahania przez listę przygotowanych pytań. Po wypełnieniu całego formularza skierujcie nowo przybyłego do następnego stanowiska.\n\nZawsze jest mnóstwo osób do obsłużenia. Im szybciej pracujecie, tym szybciej wszyscy skończą swoje zadania."
+  },
+  {
+    "key": "VI99_Mutant",
+    "source_sha256": "94c1b9b23bc29ce02859e5be5c8000a728fc953c73d419928fce07c22f1fdd1e",
+    "pl": "Kiedy Kasza wróciła z laboratorium, powiedziała mi, że źle się czuje, bo miała kontakt z roztworem E-99. Zaproponowałem, że zabiorę ją do lekarza, ale odmówiła, mówiąc, że mogą ją zlikwidować. Błagała, żebym nikomu nie mówił i pozwolił chorobie minąć... potem jednak zrobiła się agresywna, więc zamknąłem jej drzwi łańcuchem. Słyszę stamtąd tak straszne odgłosy, że nie potrafię już nawet do niej zajrzeć."
+  },
+  {
+    "key": "VI99_Principal",
+    "source_sha256": "c89814a179a0298d91e09c848f6abeaa0c111b4cf7b247f14e697fd65520f323",
+    "pl": "Na rozkaz doktora Demiczewa wprowadziliśmy w stołówce wyznaczone miejsca oraz przydzielane posiłki. Kilku nauczycieli i uczniów skarżyło mi się na to, ale Demiczew kazał mi nic nie mówić... i właśnie tak zrobię."
+  },
+  {
+    "key": "VI99_TeacherDesk",
+    "source_sha256": "62d59758f1082916109c2ae4cf41e0c714920d52d626249873b6cb35ca85c63e",
+    "pl": "Nie wiem, co knuje dyrektor, ale odkąd wprowadzono wyznaczone miejsca podczas obiadu, kilkoro uczniów zachorowało — niektórzy bardzo ciężko. Dziś wieczorem zajrzę do kuchni, żeby sprawdzić, czym karmimy dzieci. Jeśli coś będzie nie tak, powiadomię doktora Demiczewa. On wszystko naprawi."
+  },
+  {
+    "key": "VI99_WorkingHard",
+    "source_sha256": "2ef0b02b4a1f8d3186b5d938e140be13d3020d35da8e7bf5a31cca01f51455ae",
+    "pl": "Przeklinam dzień, w którym przybyliśmy do Katorgi-12. Jurij zapracowuje się w laboratoriach na śmierć. Ciągle pytam go, co jest tak ważne, że nie może wrócić do domu i się wyspać. Mówi jednak, że nie wolno mu opowiadać o swojej pracy — oboje zostalibyśmy ukarani."
+  },
+  {
+    "key": "VI99_BadBack",
+    "source_sha256": "ecd54184daad5de37ecf8860a2d493ddc7c40d928abe6e0ecc494704d62ca58e",
+    "pl": "Ja i moja rodzina\n\nMój tatuś pracuje w dużym zakładzie tutaj na KatOrdze. Wrócił wczoraj do domu i powiedział, że bolą go plecy. Kiedy się obudził, miał coś na plecach. Mamusia krzyczała.\n\nnapisał Maks"
+  },
+  {
+    "key": "VI99_FirstDay",
+    "source_sha256": "46c924c33d2f4af28bc7438609031c883aa793dedc503fae0a6660c14abef7d5",
+    "pl": "To mój pierwszy dzień w szkole. Nasza rodzina przeprowadziła się na wyspę w zeszłym tygodniu. Bałam się zostawić wszystkich przyjaciół, ale tata mówi, że znajdę nowych. Nie chce nam powiedzieć, nad czym pracuje w nowej pracy, ale zapewnia, że nam to pomoże i dostanę szczeniaczka, o którego prosiłam. Dzisiaj na lekcji oglądaliśmy film o doktorze E99. Ciekawe, czy tata pracuje z doktorem E99 w swojej nowej pracy.\n\n— Natalia Rose"
+  },
+  {
+    "key": "VI99_Oleg",
+    "source_sha256": "5ba5027d5a096b890b3b54293906056fcb4e752980f522937bb91074ee5617d6",
+    "pl": "Miś Oleg lubi lody\n\nMój rysunek „Misia Olega” wygrał nagrodę. Pan, któremu się spodobał, powiedział, że użyje go na ich lodach. Dostałem darmowe lody i pojechaliśmy odwiedzić fabrykę, w której robią te smakołyki.\n\nPan Demiczew przyszedł się z nami spotkać i zapytał o obrożę Olega na moim rysunku.\nPowiedziałem, że ją wymyśliłem, ale widziałem ją na ręce pewnego pana, kiedy czekałem, aż mamusia skończy załatwiać swoje sprawy w laboratoriach. Świeciła i dobrze wygląda na Olegu.\n\nIwan"
+  },
+  {
+    "key": "VI99_BadBoy",
+    "source_sha256": "30436ba1a43011d881b619e5f1b71589981b102085a434d515d85743eb87f1b0",
+    "pl": "Szanowni Państwo Mojicavich,\n\nPaństwa syn Jakow nieustannie zakłóca lekcje. Kpi ze mnie przy innych uczniach i odmawia zdejmowania czapki podczas zajęć. Jego grubiańskie zachowanie nie będzie tolerowane. Jeśli to się powtórzy, zostanie wydalony ze szkoły lub spotka go coś gorszego.\n\n— Pani Kozłow"
+  },
+  {
+    "key": "VI99_DrE99_1",
+    "source_sha256": "0fee4fbf123f049df019a68fc42644a946f448880fca1682df2930a6e54d5bc5",
+    "pl": "Wiadomość od doktora E-99\n\nWitajcie, dzieci!\n\nDoktor E-99 przypomina wam, byście bawili się bezpiecznie.\nZabawa ma ogromne znaczenie dla waszego zdrowia i samopoczucia, ale pamiętajcie o ostrożności. Na Katordze-12 jest wiele rzeczy, które mogą być niebezpieczne dla was i innych.\n\n— Doktor E-99"
+  },
+  {
+    "key": "VI99_DrE99_2",
+    "source_sha256": "50e0ca062b1906d53a4ee1aa86c4cc81360cde7378fd76ced7814877bede0701",
+    "pl": "Wiadomość od doktora E-99\n\nWitajcie, dzieci!\n\nPamiętajcie, żeby myć ręce po skorzystaniu z toalety.\nDbanie o higienę osobistą jest bardzo ważne dla zdrowia i samopoczucia waszego oraz innych osób.\nNie chcielibyście przecież zmartwić rodziców, zarażając się chorobą zakaźną lub roznosząc ją wśród innych.\n\n— Doktor E-99"
+  },
+  {
+    "key": "VI99_Substitute",
+    "source_sha256": "5562cdf3b89b90c9299f75d93dac408cf218638c7a558777f16bf01942c06d22",
+    "pl": "Będę bardzo wdzięczny, jeśli ktoś może mnie jutro zastąpić. Chyba coś złapałem i nie przyjdę.\n\nDziękuję,\nPan Morozo"
+  },
+  {
+    "key": "VI99_Kitchen",
+    "source_sha256": "df98e8ef75365ca0227cd1907374a72c7cd88e548d24478fa0739df4b7678a41",
+    "pl": "Personel kuchni,\n\nProszę dodawać po jednej uncji tego proszku do jedzenia każdego ucznia siedzącego przy stole nr 1. To całkowicie bezpieczny eksperymentalny środek wzmacniający.\n\nDziękuję,\n— Dyrektor"
+  },
+  {
+    "key": "VI5_Diary_1",
+    "source_sha256": "d308b80700fd0c81315198f17ac445a7cd0fe1bca2fe95360bc4b9175b5cfacf",
+    "pl": "Dzień 83\n\nAleksiej wciąż gromadzi jedzenie — i wymienia je na przysługi u kobiet, jeśli nie mają nic innego.\nMy przymieramy głodem, a ten mały łajdak siedzi zabarykadowany w swoim tunelu i drwi z nas wszystkich.\n\nRazem z chłopakami szykujemy dla niego niespodziankę. Maks znalazł obluzowaną kratę prowadzącą do tuneli parowych — zobaczymy, kto będzie się śmiał dziś w nocy.\n\n\nDzień 84\n\nZe zdrajcą Aleksiejem policzone.\nZostawiliśmy go przy życiu, ale po laniu, jakie spuścił mu Izaak, wątpię, by pociągnął długo. Mamy teraz zapasy.\n\n\nDzień 85\n\nKrzyki Aleksieja ucichły. Jeśli wyzionął ducha, wyniesiemy jego ciało i zajmiemy jego schron... zaczęły się deszcze.\n\n\nDzień 89\n\nJedzenie prawie się skończyło. Oleg i Izaak nie żyją — próbowali zwinąć więcej niż wynosił ich przydział, więc musieliśmy się z nimi rozprawić.\nNikt nie jest w stanie zasnąć w schronie Aleksieja — ludzie przysięgają, że słyszą jego jęki i widzą echa tego, co mu zrobiliśmy."
+  },
+  {
+    "key": "VI5_Diary_2",
+    "source_sha256": "0e7852420b38353c5478f3de7f33dba9aba657e045cd46dd8bcc411e4b689deb",
+    "pl": "Dzień 93\n\nDruga grupa robocza wyruszyła w głąb wyspy w poszukiwaniu pożywienia.\nZostało nas jedenastu. Stary Ilja powłóczył się gdzieś w nocy i od tamtej pory go nie widzieliśmy.\n\n\nDzień 94\n\nW nocy zaatakowali zeki.\nTylko sześcioro z nas zdołało dotrzeć do schronu.\nSzczury coraz trudniej złapać, jest ich coraz mniej.\n\n\nDzień 105\n\nMam złamaną nogę. Ania teraz śpi. Zeszłej nocy za schronem słychać było jakieś hałasy.\nNiech Bóg nam dopomoże, bo ludzie z pewnością tego nie zrobili."
+  },
+  {
+    "key": "VI99_Censored",
+    "source_sha256": "2d0606c0d37340b76f99d4f20407ff69df95b03caf296480fac5303f1b8cf0cf",
+    "pl": "Droga Swietłano!\n\nMoja kochana córeczko, jak ci tam leci? U nas wszystko układa się całkiem dobrze, chociaż twój ojciec i ja trochę się o ciebie martwimy. Nigdy nie powinniśmy byli pozwolić ci wyjechać na tę wyspę. Krążą plotki, że --------------------------------------------------------------- i nie tylko tam, ale również --------------------------\nNawet w gazecie coś o tym wspomnieli, ale dopiero na ostatniej stronie i tak, jakby to było nic takiego. Jeśli to, co mówią, to prawda, ------------------------------------------.\nWygląda na to, że rząd ----------- ale jedyne, co powtarzają, to ----------------------\n-------------------------------------------------------------------------------------------------------------------------\nW każdym razie mam nadzieję, że po prostu niepotrzebnie panikuję. Odpisz i daj znać, że wszystko u ciebie w porządku.\n\nŚciskam z całego serca,\nMama"
+  },
+  {
+    "key": "RL1_chess",
+    "source_sha256": "126ccfc5cfd3c7a2fbc59fe27c8ec12a81a7f2d87d6010a07a218add71570f65",
+    "pl": "SZACH-MAT.\nSkoczek broni wieży, ale goniec bije króla.\nWybacz, Pawle."
+  },
+  {
+    "key": "RL2_Cave_Tmd",
+    "source_sha256": "1bdfefae766de188cf19af10721c21914293386148dc3cc0ce0642dbde0c6fbb",
+    "pl": "Prototyp jest ukończony.\nTo dość toporna, potężna bestia...\nPotrzebuję bardziej... eleganckiego... rozwiązania.\nAle na ten moment to wystarczy.\n\nDr Wiktor Barisow"
+  },
+  {
+    "key": "RL2_Cave",
+    "source_sha256": "b85a71c98c07a45f7731f5c0d75956623f2bce24ef5816a05f775b6b1cf8d93a",
+    "pl": "W jaskini znajduje się obfite złoże rudy, a górnicy zostawili trochę sprzętu.\nPowinienem móc prowadzić eksperymenty w spokoju, bez niczyjej ingerencji.\n\nData: 30 października 1954 r.\nDr Barisow"
+  },
+  {
+    "key": "RL2_Cave2",
+    "source_sha256": "5c7249854eab073b962027cf617deaf511dd8d6f6e9c8fcb7e032068b87e5395",
+    "pl": "Sukces!\nUdało mi się skonstruować Urządzenie Manipulacji Czasem w formie znacznie mniejszej od pierwotnego prototypu.\nTeraz muszę je ukryć tam, gdzie doktor Demiczew nigdy go nie odnajdzie.\n\nDr Wiktor Barisow"
+  },
+  {
+    "key": "RL2_lightheavy",
+    "source_sha256": "7fa89653f66f3288a6df514e1096ac87c8266e6680cfcb10394f36326af87f0c",
+    "pl": "Kanister wykonany z metalu nasyconego E-99 zdaje się reagować z urządzeniem! HAHA\n\nData: 6 stycznia 1955 r.\nDr Barisow"
+  },
+  {
+    "key": "RL1_paper",
+    "source_sha256": "5d45eec2a0b86023832ca9028390f1a24040e1149a678a068d113d78caf39c81",
+    "pl": "UWAGA: Do całego personelu Działu Papieru i Zaopatrzenia.\nOd przyszłego tygodnia nasz dział zostaje przekształcony w Magazynowanie i Transport Rudy.\nStanowiska oraz stawki płac pozostają bez zmian.\n\nData: 1 września 1953 r.\nNaczelnik Zaopatrzenia Smirnow"
+  },
+  {
+    "key": "RL2_lab1",
+    "source_sha256": "e8218816b9050426cab4d19a04f90cf35590a44ff4458befd6bebaf895c26a88",
+    "pl": "Szczury reagują na zastrzyki z E-99.\nPrzyrost czystej masy, siła oraz hipertrofia przekraczają wszelkie normy.\nMuszę zgłosić to Towarzyszowi ds. Badań nad Ludźmi, gdyż odkrycie to stwarza potencjał do zastosowań u ludzi.\n\nData: 22 grudnia 1953 r.\nSpecjalistka ds. Badań Maria Czechowa"
+  },
+  {
+    "key": "RL2_plants",
+    "source_sha256": "720fc127b9a73296afd10a836380474f487bf12644ed42654d3ced3d38d29de8",
+    "pl": "Część roślin wchłonęła właściwości E-99.\nByć może na nie również da się wpłynąć za pomocą urządzenia?\n\nData: 3 marca 1955 r.\nDr Barisow"
+  },
+  {
+    "key": "RL3_powerfulStuff",
+    "source_sha256": "45f2e9e51e5a03c3a3f9f0ac596ddd7204f4c53cbc693c8717f65efbd29f914b",
+    "pl": "E-99 kryje w sobie moc przewyższającą wszystko, co mogłem sobie wyobrazić.\nDzisiaj doszło do wypadku\n...prototyp TMD eksplodował...\npromieniowanie zabiło trzech moich asystentów.\nNie mogę jednak pozwolić, by to powstrzymało moje badania. Są zbyt ważne.\n\nCała ludzkość na tym skorzysta, jeśli odniosę sukces.\n\nDr Wiktor Barisow"
+  },
+  {
+    "key": "RL3_deadlock",
+    "source_sha256": "8e86298c8441b64597dcdce1d10d31fa1c0347b3f0756cf053dddacb93b022aa",
+    "pl": "Niewiarygodne!\nOdkrycie E-99 otworzyło przed nami więcej możliwości, niż początkowo przypuszczałem.\nZdołaliśmy okiełznać jego potencjał w urządzeniu, które doktor Demiczew nazywa „Deadlockiem”.\nJest ono w stanie generować pole spowalniające sam upływ czasu.\n\nPo prostu niezwykłe...\n\nDr Wiktor Barisow"
+  },
+  {
+    "key": "RL4_burner",
+    "source_sha256": "b9ce6cbe2608ad7c85b739a013cd11f16ce79ffdbc7cf4a11f2bc1495951d93d",
+    "pl": "Starszy techniku Dmitrijew!\n\nCoś jest nie tak z moim palnikiem Bunsena.\nNie działa, nawet przy zaworze odkręconym do samego końca.\nMógłbyś na to rzucić okiem?\n\n— Iwan"
+  },
+  {
+    "key": "RL4_gravModule",
+    "source_sha256": "d8e5161b6620c6e9dbd21f048dd43004969c5822d597c1b2e2bf3137bfb44121",
+    "pl": "8 maja 1953 r.\n\nPonownie przetestowaliśmy Moduł Antygrawitacyjny i ponownie próba zakończyła się fiaskiem.\nTym razem obiekt testowy przebił wzmocnioną podłogę.\nIwan cudem uniknął zmiażdżenia, co uważam za niefortunne.\nNie znoszę gościa.\n\nStarszy technik Dmitrijew"
+  },
+  {
+    "key": "RL4_horrors",
+    "source_sha256": "8e005f24beadb1b755dde2adba466dbd3210bee8979a54936eb5496bc314158e",
+    "pl": "Mój Boże...\nrobiliśmy patrol pod laboratoriami\nte... RZECZY... wyłoniły się z cienia...\nŻukow i Kłopotow nie żyją... zostałem tylko ja\n...chyba jestem już bezpieczny..."
+  },
+  {
+    "key": "RL4_milk",
+    "source_sha256": "e253cb9433adadf7bd73d2f5466d233d3ee639d8825d29c1b42049e4251ea44f",
+    "pl": "Nie smakuje mi to nowe mleko, które podają w stołówce.\nJest pomarańczowe i świeci w ciemności.\nKiedy je piję, czuję się staro, a ciastka rozpadają się w proch, gdy je w nim zamoczę..."
+  },
+  {
+    "key": "RL4_invoice",
+    "source_sha256": "d99adde2945681d6d3b81ab992265351dfd841af1149d144589475bbf5b82386",
+    "pl": "FAKTURA\n\n4 palniki Bunsena\n1 obiekt testowy antygrawitacji\n3 maszyny do pisania\n50 paczek ciastek\n12 galonów mleka nasyconego E-99"
+  },
+  {
+    "key": "RL5_ill",
+    "source_sha256": "045170d37a7c3bc6989e4707a12eec34b2b7aa91cb53dde784be05ed47e95e3f",
+    "pl": "28 lutego 1953 r.\n\nChciałbym, żeby doktor Demiczew pozwolił mi pójść do domu.\nBardzo źle się dzisiaj czuję.\nGdzie jest moje wiadro?"
+  },
+  {
+    "key": "RL5_suspicion",
+    "source_sha256": "01d7ee453f2a5c395e93db279724cbf6dbcfd98ff25284cfb5a3b45324fb7173",
+    "pl": "Nadal nie odnaleźliśmy Amerykanina, lecz z pewnością wciąż przebywa na wyspie.\nMoi ludzie będą szukać dalej.\n\nByć może doktor Barisow wie więcej, niż chce przyznać.\n\nDr Demiczew"
+  },
+  {
+    "key": "RL5_ivan",
+    "source_sha256": "c504ac2744ba44098b13eeb97c7ef2bbad74e3e3474a648a1e03a71ada7deed5",
+    "pl": "Iwan!\n\nZejdź do gabinetu doktora Barisowa i zainstaluj ten podsłuch.\nUpewnij się, że ukryjesz go tam, gdzie na pewno go nie znajdzie.\nSzybko... zanim wróci ze swojego laboratorium.\n\nD."
+  },
+  {
+    "key": "RL5_propaganda",
+    "source_sha256": "9dfa1726ec23326ea0ae5faa33c94ee6dcbe849489e9d7283b1e19890f989d5a",
+    "pl": "Do całego personelu!\n\nBrakuje nam kilku archiwalnych numerów „Propagandy Ilustrowanej”.\nJeśli zabieracie materiały z Pokoju Archiwalnego, odnoście je po zakończeniu lektury.\nI nie zostawiajcie ich w toalecie.\n\nOficer ds. Propagandy Jukow"
+  },
+  {
+    "key": "RL5_vault",
+    "source_sha256": "560c44e5126c1b6fd37065b14e94f579800f5620eef7890e48bb4181420597b0",
+    "pl": "Sporządziłem nowe plany skarbca, w którym zabezpieczę TMD.\nJego budowa będzie ogromnym przedsięwzięciem i trudno będzie zachować ją w tajemnicy.\nKomu mogę na tyle zaufać, by powierzyć mu pomoc przy budowie?\n\nDr Wiktor Barisow"
+  },
+  {
+    "key": "RL5_humanTesting",
+    "source_sha256": "62f7b5433a052bea0b8750cba11830ad39b9d7a3cf13929fcba0056508d92715",
+    "pl": "Właśnie odkryłem, że doktor Demiczew potajemnie kontynuował eksperymenty na ludziach, mimo że zostały oficjalnie zawieszone.\nMuszę powiadomić doktora Barisowa.\nNie będzie zadowolony."
+  },
+  {
+    "key": "RL99_Cave",
+    "source_sha256": "52b1228662d8ca3c2596cfe07453348df4509c2fbd69cb25658c2a87d0f10e10",
+    "pl": "14 stycznia 1953 r.\n\nDziennik prac doktora Wiktora Barisowa\n\nRobotnicy odkryli niedawno jaskinię pełną złóż E-99 tuż pod moim laboratorium. Wyjaśniałoby to, dlaczego nasze odczyty były tak zakłócone. Kazałem zamurować wejście, by odizolować naszą pracę od jej wpływu."
+  },
+  {
+    "key": "WL5_Locker",
+    "source_sha256": "883b8fd8a052d5f02704e390dec4575f75f8ef15b16315814aa79de3d8804241",
+    "pl": "Mój sąsiad to straszny wrzód na tyłku.\nJa dostaję niedźwiedzia ze skóry, on musi dostać niedźwiedzia ze skóry.\nJa dostaję puszkę mięsa, on musi dostać puszkę mięsa.\nJa dostaję technologie E-99... a na to go nie stać.\n\nWielki sukces!"
+  },
+  {
+    "key": "WL6_food_note",
+    "source_sha256": "e1c084e5fc5bb721e0fff1e92e8090b992eed05c8646eec0a690519a1ed78d60",
+    "pl": "Najnowsza partia upraw wciąż wykazuje obiecujące rezultaty.\nPrzy obecnym tempie wzrostu roślin znacznie przekroczymy normy wyznaczone przez Moskwę.\nJeśli chodzi o program szkolny — dzieci reagują znakomicie.\nRodzice zaczęli dopytywać, dlaczego musimy być tak rygorystyczni w kwestii przydziału posiłków.\nNie zdają sobie oczywiście sprawy z tego, jakim szczęściem obdarzono ich pociechy.\n\nDr Pietrowa"
+  },
+  {
+    "key": "WL6_e99_note",
+    "source_sha256": "aac499a0dd27bb134dc895c3ede42c1374842f48e3466b5256abc6ac45518398",
+    "pl": "„Piec” — co za prymitywna nazwa dla tak niezwykłego urządzenia.\nIzolowanie izotopów E-99 okazało się trudne, lecz wysiłek był tego wart.\nKażdego dnia ktoś wpada na kolejny pomysł ich wykorzystania.\nWiele prób kończy się fiaskiem — niektóre tak makabrycznym, że nigdy nie zostaną zaraportowane Moskwie.\nI tak jest lepiej — oni na górze i tak nie byliby w stanie pojąć tego, co tutaj tworzymy.\n\nPrzypomnienie: zapytać doktora Barisowa, czy nadal ma problem z odczytami elektromagnetycznymi w swoim eksperymencie.\nChoć doprawdy nie pojmuję, jak może uzyskiwać tak wysokie wartości bez aparatury o gabarytach naszego Pieca.\n\nDr Pietrowa"
+  },
+  {
+    "key": "WL6_flytrap_note",
+    "source_sha256": "54217c77c2a108297a37c7a986e7d8fac628b398e8c5773eadf1fb5478f8862a",
+    "pl": "Początkowo byłam wściekła, że muszę zajmować się pobocznymi projektami dla dowództwa Katorgi, lecz muszę przyznać, że rezultaty są porażające.\nTo naturalna flora i fauna wyspy — my daliśmy jej zaledwie drobny impuls.\n\nDr Pietrowa"
+  },
+  {
+    "key": "WL6_mutations_note",
+    "source_sha256": "c094ddc0f2e09824e600b6f18852882d1141584b73bd2ecdb3c6392cd62773c0",
+    "pl": "Te mutacje nie mają żadnego sensu.\nE-99 stanowi część równania, lecz katalizatorem musi być coś zupełnie innego.\nNiech to szlag, kończy nam się czas.\nDoktor Demiczew szuka byle pretekstu, by ukrócić to, co uważa za jałowe badania naukowe.\n\nDr Pietrowa"
+  },
+  {
+    "key": "WL6_tripwire_note",
+    "source_sha256": "2c5420c9649a46ffbf6cbbf185e453cd1c35bd8326ab4818c92e9eda6e04ad46",
+    "pl": "I do tego w końcu doszło — jedynym sposobem na utrzymanie finansowania badań nad przyspieszonym wzrostem upraw jest praca nad tymi ustrojstwami.\nTrzeba im jednak oddać, że znakomicie sprawdzają się przy tępieniu szkodników na polach.\n\nDr Pietrowa"
+  },
+  {
+    "key": "WL6_electro_mag_note",
+    "source_sha256": "7ed9d3a81bccc402fea31f0ea29f4595c20037db12f0bdfee3136b77784af0c0",
+    "pl": "Wielu pracowników zgłaszało zawroty i silne bóle głowy po kontakcie z próbkami E-99.\nŻadnych takich objawów nie odnotowywaliśmy przy pracy z uranem — izotopy E-99 nie przypominają jednak niczego, z czym kiedykolwiek mieliśmy do czynienia.\n\nDr Pietrowa"
+  },
+  {
+    "key": "WL99_Trouble1",
+    "source_sha256": "b6bddbd197de3a46b58041302794fe4df7e552fa700de6edb8cdabb2f4016411",
+    "pl": "19 lutego 1954 r.\n\nOsobisty dziennik doktora Nikołaja Demiczewa\n\nRozmawiałem z doktorem Barisowem o testowaniu TMD na ludziach i, co osobliwe, kategorycznie odmówił. Miałem go za człowieka nauki... w laboratorium nie ma miejsca na moralność.\n\nJestem przekonany, że gdy ponowię prośbę, pójdzie po rozum do głowy. Jeśli nie, będę zmuszony wziąć sprawy we własne ręce."
+  },
+  {
+    "key": "WL99_Trouble2",
+    "source_sha256": "36e471d28234cd2f16f5858450cd2b8804bfa0eae503268d2bfa107b47f6e0b6",
+    "pl": "4 marca 1954 r.\n\nOsobisty dziennik doktora Nikołaja Demiczewa\n\nZ doktorem Barisowem nie da się dojść do porozumienia — odmawia przekazania mi planów Urządzenia Manipulacji Czasem. Twierdzi, że testy na ludziach są niemoralne.\n\nNie pozwolę, aby podwładny lekceważył moje polecenia. Wygląda na to, że będę musiał sięgnąć po bardziej zdecydowane środki."
+  },
+  {
+    "key": "WL99_TMD",
+    "source_sha256": "b189f94619e170d65010f4dea4cb0e994caeffe927fe276e3d2fe67adbd5edd0",
+    "pl": "12 marca 1954 r.\n\nDziennik prac doktora Wiktora Barisowa\n\nDoktor Demiczew ponownie zażądał ode mnie przekazania TMD, by móc rozpocząć testy na ludziach. Kiedy odmówiłem, wpadł we wściekłość i groził mi wyrzuceniem. Pozostałem jednak nieugięty — nie pozwolę, by owoc mojego życia posłużył do nieetycznych eksperymentów."
+  },
+  {
+    "key": "BT1_riot",
+    "source_sha256": "5c90516f42ff7f69bde5cb3efd3a77df3649263470a9aa8061e6778c965d280b",
+    "pl": "Osobisty dziennik Barisowa — wpis 1.\nPo tamtym incydencie musiałem zaryglować wieżę. Ludzie tłoczyli się przy dolnej windzie, a wyraz ich twarzy bynajmniej nie zwiastował przyjacielskich zamiarów."
+  },
+  {
+    "key": "BT1_food",
+    "source_sha256": "a2386a44ae529b3dc7481c6e58b4a2788deeb15d501ba0df3a3cb3ee22c5d259",
+    "pl": "Osobisty dziennik Barisowa — wpis 2.\nI oto siedzę w wieży, a moje zapasy powoli topnieją.\nCo jakiś czas z dołu wpełza samotny kleszcz fazowy, zapewne szukając miejsca na gniazdo.\nTrzeba je gotować we wrzątku z odrobiną mojej domowej mikstury przeciwradiacyjnej, złożonej z czosnku, oregano i pewnego endemicznego ziela z Katorgi, które neutralizuje promieniowanie. Smakuje całkiem znośnie!"
+  },
+  {
+    "key": "BT1_travel",
+    "source_sha256": "c664a8c47f043565c71144f1c78ec494cd5451c8c3e3e7b3972fe6c9953fa237",
+    "pl": "Osobisty dziennik Barisowa — wpis 3.\nOdkryłem sieć tuneli chłodzących łączących ze sobą kompleksy i instalacje na wyspie.\nTunele te łączyły się niegdyś z podziemnymi jaskiniami, w których po raz pierwszy odkryto rudę E-99."
+  },
+  {
+    "key": "BT1_future1",
+    "source_sha256": "8532e01eec7803167edef910b3c2906bae3e3ae6807f78515afb9759cce7b116",
+    "pl": "Osobisty dziennik Barisowa — wpis 4.\nPrzygotowując się na przybycie człowieka z przyszłości, rozmieściłem na wyspie specjalne stacje zaopatrzeniowe, które pomogą mu pokonać Demiczewa. Mam nadzieję, że okażą się pomocne."
+  },
+  {
+    "key": "BT1_bear",
+    "source_sha256": "38e952a7c64ee6653a1334a34222d48508f1d2a24ed37c3e6ef50e20c4d85328",
+    "pl": "Osobisty dziennik Barisowa — wpis 5.\nTen pluszowy miś należał do mojej córki.\nNigdy nie przyjechała ze mną na Katorgę — została z matką na stałym lądzie.\nTeraz jest już dorosłą kobietą. Zastanawiam się, czy kiedykolwiek jeszcze ją ujrzę? Jeśli tak, oddam jej misia... Lecz na razie pomaga mi w eksperymentach i muszę przyznać, że jest świetnym słuchaczem!"
+  },
+  {
+    "key": "BT1_future2",
+    "source_sha256": "d6c55ca0341d53b40cfe40926aca527d9b94ce9173aeb6727e1e9113e74bb9ef",
+    "pl": "Osobisty dziennik Barisowa — wpis 6.\nRozmyślam nad pochodzeniem człowieka z przyszłości — jak to w ogóle mogło być możliwe?\nKiedy powróci? Muszę uczynić wszystko, co w mojej mocy, by zastał wszystko gotowe, gdy się pojawi.\nWracam do moich dawnych zapisków."
+  },
+  {
+    "key": "BT1_future3",
+    "source_sha256": "ed90ff58210836aec12f83846673fff2f2d83360c6a6805fde6439f840eed542",
+    "pl": "Osobisty dziennik Barisowa — wpis 7.\nWłaśnie wróciłem z kompleksu badawczego. Zamontowałem monitory i ukryłem fiolki z rafinowaną rudą E-99. To był długi, wyczerpujący dzień. Właśnie złapałem kleszcza — pora na posiłek."
+  },
+  {
+    "key": "RT1_journal1",
+    "source_sha256": "14675bf811d1c135b3bd075f2a9af977e07dd211f9e26c70a1f8b7ffda99f3d7",
+    "pl": "Dziennik Pawła Fiodorowa.\n\nCieszę się z przydziału na Katorgę-12. Trudno o ambitniejsze wyzwanie inżynieryjne niż budowa mostu kolejowego nad wąwozem Botkina. Przedsięwzięcie jest kolosalne, lecz jestem pewien, że mój zespół sprosta zadaniu.\n\nMoja żona i syn zdążyli się już zadomowić w miasteczku. Zaprzyjaźnili się z doktor Pietrową, naukowcem prowadzącym jakieś badania nad roślinami. Jej praca owiana jest ścisłą tajemnicą, choć to zdaje się regułą przy wszystkich projektach na tej wyspie."
+  },
+  {
+    "key": "RT1_journal3",
+    "source_sha256": "3109a605f10bf0cf0808a58c9fad125548d05674ea930025904efb518bfeaa49",
+    "pl": "Dziennik Pawła Fiodorowa.\n\nOgarnia mnie coraz większy niepokój o Grigorija — nie mam od niego wieści już od czterech dni. Wspominał, że ma pomóc w testach jakiegoś nowatorskiego środka transportu. Oby ten młody narwaniec nie zgłosił się na ochotnika do czegoś niebezpiecznego."
+  },
+  {
+    "key": "RT1_journal4",
+    "source_sha256": "dc39b106ebe360d4e1441c8338ebb119c6bdd4ac871cc59148806935df3a5404",
+    "pl": "Dziennik Pawła Fiodorowa.\n\nKilka dni temu skontaktowałem się z doktorem Korkinem w nadziei na jakiekolwiek wieści o Grigoriju, lecz ten twierdził, że nigdy o nim nie słyszał. Gdy zacząłem drążyć temat, Korkin zrobił się nerwowy i rzucił tylko, że mój młody przyjaciel został przeniesiony do innego wydziału.\n\nDziś rano rozmawiałem z doktorem Barisowem, szefem całego programu naukowego na Katordze-12. Przekazał mi, że doktor Korkin nie żyje — został zamordowany przez nieznanego sprawcę. Ta przeklęta wyspa kryje zbyt wiele tajemnic."
+  },
+  {
+    "key": "FR1_manifest",
+    "source_sha256": "ad2c26268870375f0580033c5337ec692bd69da2f6736db48f7707298adffab0",
+    "pl": "Dziennik Przeładunkowy Portu\n\n15.10.1955\nLena — Wypłynięcie — Ładunek: Odpady, ruda E-99, posągi\n\n20.10.1955\nPerła — Przybicie — Ładunek: Stal, drewno, rury, odzież, żywność, zaopatrzenie rekreacyjne\n\n23.10.1955\nPerła — Wypłynięcie — Ładunek: Odpady, amunicja specjalna E-99, posągi"
+  },
+  {
+    "key": "FR4_tired",
+    "source_sha256": "10b70cdd3625b1c9cd749c1a22892849f51fa42aeb3cfd7c936d24024bd238ac",
+    "pl": "Dziennik Brygadzisty — 20 listopada 1954 r.\n\nTrzeci statek w ciągu dwóch tygodni. Niewiarygodne, jak potężne ilości towarów płyną na Katorgę-12 i jak błyskawicznie to wszystko rośnie.\n\nNie wiem jednak, jak długo zdołamy utrzymać to tempo. Robotnicy padają ze zmęczenia. Prędzej czy później dojdzie do nieszczęścia."
+  },
+  {
+    "key": "FR10_Gregor",
+    "source_sha256": "c1662efcc0423dbf1d6021f3e27ee41c783824941ecf441a19a020c9b9481f66",
+    "pl": "Grigorij przekazał mi, że z rozkazu Kapitana mamy absolutny zakaz wchodzenia do tylnej ładowni. Załadowaliśmy jakiś nowy typ bomby przeznaczonej dla Moskwy. Ciekawe, jak ona wygląda?"
+  },
+  {
+    "key": "FR13_trips",
+    "source_sha256": "42e41c9ddb801874a9fe007b993cc6cbe3b218a120613f1eb53398b0324cad2e",
+    "pl": "Moja najdroższa Aniu!\n\nWłaśnie odbijamy od Katorgi po raz drugi w tym miesiącu. Zostały nam jeszcze dwa kursy i wreszcie dostanę przepustkę. Nie mogę się doczekać, aż cię zobaczę i opowiem ci o tej wyspie. To przechodzi ludzkie pojęcie, co oni tutaj wyprawiają.\n\nŚciskam cię najmocniej,\nTimur"
+  },
+  {
+    "key": "FR13_orders",
+    "source_sha256": "8f7e44c32b81be2c9651220a824b60aa7c42471ad7d453f532a137cbe51ddda7",
+    "pl": "Rozkaz Kapitana:\n\nNiniejszym nakazuję bezwzględne trzymanie się z daleka od tylnej ładowni. Przyjęliśmy na pokład niebezpieczny ładunek wojskowy i nie pozwolę, by ktokolwiek naraził go na szwank. Wyznaczeni marynarze będą kontrolować stan zabezpieczeń trzy razy na dobę lub wedle mojego bezpośredniego polecenia.\n\nZa Ojczyznę!"
+  },
+  {
+    "key": "FR16_heads",
+    "source_sha256": "005855d9c22590e8eac7bbce48c69a4c67e01b4770c39e04818b428fc603fa3d",
+    "pl": "Doktor Demiczew nakazał usunięcie z Katorgi-12 wszelkich wizerunków wielkiego Lenina. Twierdzi, że wyspa stanie się kolebką nowego Związku Radzieckiego i musimy odrzucić relikty przeszłości.\n\nI oto muszę spędzić cały rejs, pilnując, by gigantyczna kamienna głowa Lenina nie zerwała się z lin. Założę się, że Demiczew po prostu każe wstawić swój własny łeb na korpus Lenina."
+  },
+  {
+    "key": "RL2_lobby",
+    "source_sha256": "66d8d61eb7b549ca18b37ea6a7e4977305a7ebebd783e2651c17c7701a6157b8",
+    "pl": "Nastąpił gwałtowny napływ personelu: żołnierzy i naukowców.\nMuszą pracować nad czymś naprawdę wielkim.\nAnna, moja znajoma z Administracji, mówi, że biorą nadgodziny, by nadążyć z wprowadzaniem danych i archiwizacją akt.\nTo chyba dobrze, prawda?\n\nData: 2 sierpnia 1953 r.\nAlejna Kozłowa, sekretarka Laboratorium Badawczego"
+  },
+  {
+    "key": "RL5_inquiry",
+    "source_sha256": "1c8262928432ee46d43ba95fe8f9a51042608b3bdd7fca8eed2888d8a9a704e6",
+    "pl": "Oficerze ds. Propagandy Jukow!\n\nZ moich informacji wynika, że doktor Barisow spędza tam na dole podejrzanie dużo czasu.\nNad czym on właściwie pracuje?\nMiejcie na niego oko i natychmiast meldujcie o wszelkich podejrzanych zachowaniach.\n\nDr Demiczew"
+  },
+  {
+    "key": "RL99_KorkinCrazy",
+    "source_sha256": "ee64b71f425dee8c68c9a54253c175b54df0f57078f91148ad4c5d6afef55bd6",
+    "pl": "DO: Pułkownik Iwanow — Wydział Uzbrojenia\nOD: Dr Głuszkowa\n\nPułkowniku Iwanow, proszę zrozumieć, że darzę doktora Korkina najwyższym szacunkiem... jednak ostatnimi czasy jego zachowanie stało się wyjątkowo niepokojące. Mamrocze coś pod nosem. Jest skrajnie drażliwy i nerwowy aż do granic paranoi. Obawiam się, że przechodzi załamanie nerwowe. Czy mógłby Pan spotkać się z doktorem Korkinem? Być może zdoła Pan nakłonić go do wzięcia urlopu lub skorzystania z pomocy specjalisty.\n\nZ poważaniem,\nDr Ania Głuszkowa"
+  },
+  {
+    "key": "RL99_KorkinDead",
+    "source_sha256": "f83d5f1885ea0b94b492c5d359b93f153c78646cc0c57b99280305ed212c1427",
+    "pl": "DO: Pułkownik Iwanow — Wydział Uzbrojenia\nOD: Sierżant Czertok — Ochrona Bazy\n\nPułkowniku Iwanow, z przykrością melduję, że doktor Korkin, kierownik Pańskiego zespołu badawczego ds. teleportacji, został późną nocą odnaleziony martwy we własnym mieszkaniu. Został zamordowany.\n\nNajbardziej zagadkowe pozostaje to, w jaki sposób napastnik zdołał dostać się do środka. Wszystkie drzwi i okna były zabite deskami i zaryglowane gwoździami od wewnątrz. Aby wejść, musieliśmy wyważyć drzwi. Będę informował o wszelkich nowych ustaleniach w tej sprawie."
+  },
+  {
+    "key": "RT1_journal2",
+    "source_sha256": "1251677377c079e575dee3b75917904996e7e20e665a4f55a38fe898f81cb34a",
+    "pl": "Dziennik Pawła Fiodorowa.\n\nDoktor Korkin poprosił właśnie, aby jeden z moich młodszych inżynierów pomógł mu przy eksperymencie w Laboratorium Uzbrojenia. Wysłałem Grigorija Nikolskiego — to niezwykle energiczny młody człowiek.\n\nKorkin zapewniał, że nie będzie potrzebował Grigorija na dłużej niż dwa, trzy dni. I dobrze, bo jesteśmy blisko ukończenia budowy mostu i potrzebuję go z powrotem jak najszybciej."
+  },
+  {
+    "key": "FR10_Samuson",
+    "source_sha256": "3b3a6224d983da80daab67ee0eb7a1dd1baa3a5b6f5c59aab3bd751ad350bd4f",
+    "pl": "Podczas rutynowego nurkowania natknęliśmy się dziś na niezwykle fascynujący okaz. Stworzenie to jest unikalnym drapieżnikiem, który przyczepia się do głowy ofiary w celach odżywczych i rozrodczych. Co ciekawe, członkowie załogi zaatakowani przez tę istotę wykazują dziwne zachowanie — zwijają się w pozycji embrionalnej i turlają po pokładzie. Będziemy kontynuować badania nad tym stworzeniem.\n\n— S.A."
+  }
+]

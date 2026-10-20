@@ -1,0 +1,681 @@
+{
+  "FR3_2805_SPT4": {
+    "asset": "FR3_2805_SPT4",
+    "en": "Let's go.",
+    "pl": "Chodźmy.",
+    "package": "SP_Freight_Script_1950Dock_LOC_INT",
+    "source": "SP_Freight_Script_1950Dock_LOC_INT/SoundNodeWave/FR3_2805_SPT4.ogg"
+  },
+  "FR3_2807_SPT4": {
+    "asset": "FR3_2807_SPT4",
+    "en": "Ah, yes, Lee.",
+    "pl": "Tak, Lee.",
+    "package": "SP_Freight_Script_1950Dock_LOC_INT",
+    "source": "SP_Freight_Script_1950Dock_LOC_INT/SoundNodeWave/FR3_2807_SPT4.ogg"
+  },
+  "FR3_9503_BAR": {
+    "asset": "FR3_9503_BAR",
+    "en": "Ugh!",
+    "pl": "W porządku.",
+    "package": "sp_freight_script_end_LOC_INT",
+    "source": "sp_freight_script_end_LOC_INT/SoundNodeWave/FR3_9503_BAR.ogg"
+  },
+  "RL1_0407_KAT": {
+    "asset": "RL1_0407_KAT",
+    "en": "Now go.",
+    "pl": "Teraz idź.",
+    "package": "SP_RL1_kismet01_LOC_INT",
+    "source": "SP_RL1_kismet01_LOC_INT/SoundNodeWave/RL1_0407_KAT.ogg"
+  },
+  "RL3_3705_BARY": {
+    "asset": "RL3_3705_BARY",
+    "en": "There is no time to wait, Captain.",
+    "pl": "Nie ma czasu na czekanie, kapitanie.",
+    "package": "SP_RL3_kismet01_1950_LOC_INT",
+    "source": "SP_RL3_kismet01_1950_LOC_INT/SoundNodeWave/RL3_3705_BARY.ogg"
+  },
+  "RL3_3706_BARY": {
+    "asset": "RL3_3706_BARY",
+    "en": "We should probably go.",
+    "pl": "Powinniśmy już iść.",
+    "package": "SP_RL3_kismet01_1950_LOC_INT",
+    "source": "SP_RL3_kismet01_1950_LOC_INT/SoundNodeWave/RL3_3706_BARY.ogg"
+  },
+  "RL3_3717_BARY": {
+    "asset": "RL3_3717_BARY",
+    "en": "Look out.",
+    "pl": "Uważaj na siebie.",
+    "package": "SP_RL2_kismet05_1950_LOC_INT",
+    "source": "SP_RL2_kismet05_1950_LOC_INT/SoundNodeWave/RL3_3717_BARY.ogg"
+  },
+  "RL3_3725_BARY": {
+    "asset": "RL3_3725_BARY",
+    "en": "Over here!",
+    "pl": "Tutaj!",
+    "package": "SP_RL3_kismet01_1950_LOC_INT",
+    "source": "SP_RL3_kismet01_1950_LOC_INT/SoundNodeWave/RL3_3725_BARY.ogg"
+  },
+  "RL3_3726_BARY": {
+    "asset": "RL3_3726_BARY",
+    "en": "Quickly.",
+    "pl": "Szybko.",
+    "package": "SP_RL3_kismet01_1950_LOC_INT",
+    "source": "SP_RL3_kismet01_1950_LOC_INT/SoundNodeWave/RL3_3726_BARY.ogg"
+  },
+  "RL3_3727_BARY": {
+    "asset": "RL3_3727_BARY",
+    "en": "Follow me.",
+    "pl": "Chodź za mną.",
+    "package": "SP_RL2_kismet05_1950_LOC_INT",
+    "source": "SP_RL2_kismet05_1950_LOC_INT/SoundNodeWave/RL3_3727_BARY.ogg"
+  },
+  "RL6_2210_KAT": {
+    "asset": "RL6_2210_KAT",
+    "en": "Damn it.",
+    "pl": "Cholera!",
+    "package": "SP_RL6_kismet01_LOC_INT",
+    "source": "SP_RL6_kismet01_LOC_INT/SoundNodeWave/RL6_2210_KAT.ogg"
+  },
+  "RL6_2211_KAT": {
+    "asset": "RL6_2211_KAT",
+    "en": "I've got it!",
+    "pl": "Mam go!",
+    "package": "SP_RL6_katya_LOC_INT",
+    "source": "SP_RL6_katya_LOC_INT/SoundNodeWave/RL6_2211_KAT.ogg"
+  },
+  "RL6_2230_KAT": {
+    "asset": "RL6_2230_KAT",
+    "en": "Come on, this way!",
+    "pl": "Chodź, tędy!",
+    "package": "SP_RL6_kismet01_LOC_INT",
+    "source": "SP_RL6_kismet01_LOC_INT/SoundNodeWave/RL6_2230_KAT.ogg"
+  },
+  "RL6_2231_KAT": {
+    "asset": "RL6_2231_KAT",
+    "en": "Let's go!",
+    "pl": "Idziemy! Idziemy!",
+    "package": "SP_RL6_kismet01_LOC_INT",
+    "source": "SP_RL6_kismet01_LOC_INT/SoundNodeWave/RL6_2231_KAT.ogg"
+  },
+  "RL6_2232_KAT": {
+    "asset": "RL6_2232_KAT",
+    "en": "Follow me.",
+    "pl": "Chodź za mną.",
+    "package": "SP_RL6_katya_LOC_INT",
+    "source": "SP_RL6_katya_LOC_INT/SoundNodeWave/RL6_2232_KAT.ogg"
+  },
+  "RL6_2233_KAT": {
+    "asset": "RL6_2233_KAT",
+    "en": "This way, Renko!",
+    "pl": "Tędy, Renko!",
+    "package": "SP_RL6_kismet01_LOC_INT",
+    "source": "SP_RL6_kismet01_LOC_INT/SoundNodeWave/RL6_2233_KAT.ogg"
+  },
+  "RL6_2405_KAT": {
+    "asset": "RL6_2405_KAT",
+    "en": "Here we go.",
+    "pl": "W porządku.",
+    "package": "SP_RL6_kismet01_LOC_INT",
+    "source": "SP_RL6_kismet01_LOC_INT/SoundNodeWave/RL6_2405_KAT.ogg"
+  },
+  "RL6_2605_KAT": {
+    "asset": "RL6_2605_KAT",
+    "en": "SHIT!",
+    "pl": "Kurwa!",
+    "package": "SP_RL6_kismet01_LOC_INT",
+    "source": "SP_RL6_kismet01_LOC_INT/SoundNodeWave/RL6_2605_KAT.ogg"
+  },
+  "RL6_5008_BAR": {
+    "asset": "RL6_5008_BAR",
+    "en": "It's on the way.",
+    "pl": "Już w drodze.",
+    "package": "SP_RL6_katya_LOC_INT",
+    "source": "SP_RL6_katya_LOC_INT/SoundNodeWave/RL6_5008_BAR.ogg"
+  },
+  "RL6_7011_KAT": {
+    "asset": "RL6_7011_KAT",
+    "en": "Follow me!",
+    "pl": "Chodź za mną!",
+    "package": "SP_RL6_kismet01_LOC_INT",
+    "source": "SP_RL6_kismet01_LOC_INT/SoundNodeWave/RL6_7011_KAT.ogg"
+  },
+  "RL99_0105_SPT1": {
+    "asset": "RL99_0105_SPT1",
+    "en": "You know where it is, tell me!",
+    "pl": "Wiesz, gdzie to jest, powiedz mi!",
+    "package": "SP_RL2_kismet02_LOC_INT",
+    "source": "SP_RL2_kismet02_LOC_INT/SoundNodeWave/RL99_0105_SPT1.ogg"
+  },
+  "RT1_1509_KAT": {
+    "asset": "RT1_1509_KAT",
+    "en": "Watch out, Renko. More patrols are headed your way.",
+    "pl": "Uważaj, Renko, nadchodzą do ciebie kolejne patrole.",
+    "package": "sp_rt3_cistern_LOC_INT",
+    "source": "sp_rt3_cistern_LOC_INT/SoundNodeWave/RT1_1509_KAT.ogg"
+  },
+  "RT1_2008_KAT": {
+    "asset": "RT1_2008_KAT",
+    "en": "I hope Barisov is right about this.",
+    "pl": "Mam nadzieję, że Barisow ma w tej sprawie rację.",
+    "package": "SP_RT1_kismet0_LOC_INT",
+    "source": "SP_RT1_kismet0_LOC_INT/SoundNodeWave/RT1_2008_KAT.ogg"
+  },
+  "RT2_9005_BAR": {
+    "asset": "RT2_9005_BAR",
+    "en": "Nice build, Captain!",
+    "pl": "Piękny budynek, kapitanie!",
+    "package": "SP_RT2_kismet01_LOC_INT",
+    "source": "SP_RT2_kismet01_LOC_INT/SoundNodeWave/RT2_9005_BAR.ogg"
+  },
+  "RT3_5007_ESP2": {
+    "asset": "RT3_5007_ESP2",
+    "en": "Kathryn, hear him.",
+    "pl": "Kathryn, posłuchaj go.",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT3_5007_ESP2.ogg"
+  },
+  "RT3_5010_KAT": {
+    "asset": "RT3_5010_KAT",
+    "en": "Wait a minute.",
+    "pl": "Poczekaj chwilę.",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT3_5010_KAT.ogg"
+  },
+  "RT3_7007_KAT": {
+    "asset": "RT3_7007_KAT",
+    "en": "Could you try to open it?",
+    "pl": "Możesz spróbować ją otworzyć?",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT3_7007_KAT.ogg"
+  },
+  "RT3_7012_KAT": {
+    "asset": "RT3_7012_KAT",
+    "en": "Having any luck with the door?",
+    "pl": "Masz szczęście z drzwiami?",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT3_7012_KAT.ogg"
+  },
+  "RT3_7021_KAT": {
+    "asset": "RT3_7021_KAT",
+    "en": "It looks like I can open it from the other side.",
+    "pl": "Wygląda na to, że mogę ją otworzyć z drugiej strony.",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT3_7021_KAT.ogg"
+  },
+  "RT3_7806_1_KAT": {
+    "asset": "RT3_7806_1_KAT",
+    "en": "Could you help me up, Renko?",
+    "pl": "Pomożesz mi wstać, Renko?",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT3_7806_1_KAT.ogg"
+  },
+  "RT3_7806_2_KAT": {
+    "asset": "RT3_7806_2_KAT",
+    "en": "I need your help to get up to the vent.",
+    "pl": "Potrzebuję twojej pomocy, żeby dostać się do wentylacji.",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT3_7806_2_KAT.ogg"
+  },
+  "RT3_7807_KAT": {
+    "asset": "RT3_7807_KAT",
+    "en": "Thanks.",
+    "pl": "Dziękuję.",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT3_7807_KAT.ogg"
+  },
+  "RT3_8005_2_KAT": {
+    "asset": "RT3_8005_2_KAT",
+    "en": "This way, Renko.",
+    "pl": "Tędy, Renko.",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT3_8005_2_KAT.ogg"
+  },
+  "RT4B_1512_5_KAT": {
+    "asset": "RT4B_1512_5_KAT",
+    "en": "They found us!",
+    "pl": "Znaleźli nas!",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT4B_1512_5_KAT.ogg"
+  },
+  "RT4B_1512_6_KAT": {
+    "asset": "RT4B_1512_6_KAT",
+    "en": "I want them off when I work.",
+    "pl": "Chcę, żeby były wyłączone, gdy pracuję.",
+    "package": "SP_RT4_kismet03_LOC_INT",
+    "source": "SP_RT4_kismet03_LOC_INT/SoundNodeWave/RT4B_1512_6_KAT.ogg"
+  },
+  "RT4B_3005_KAT": {
+    "asset": "RT4B_3005_KAT",
+    "en": "Renko, I can't reach, I need your help.",
+    "pl": "Renko, nie mogę do ciebie dotrzeć. Potrzebuję twojej pomocy.",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT4B_3005_KAT.ogg"
+  },
+  "RT4B_3007_KAT": {
+    "asset": "RT4B_3007_KAT",
+    "en": "I need your help getting up, Renko.",
+    "pl": "Potrzebuję twojej pomocy, Renko.",
+    "package": "SP_RT4_kismet03_LOC_INT",
+    "source": "SP_RT4_kismet03_LOC_INT/SoundNodeWave/RT4B_3007_KAT.ogg"
+  },
+  "RT4B_3009_KAT": {
+    "asset": "RT4B_3009_KAT",
+    "en": "Thanks.",
+    "pl": "Dziękuję.",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT4B_3009_KAT.ogg"
+  },
+  "RT4B_5008_KAT": {
+    "asset": "RT4B_5008_KAT",
+    "en": "There's a loose connection here!",
+    "pl": "Jest tu luźna połączenie!",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT4B_5008_KAT.ogg"
+  },
+  "RT4B_5013_KAT": {
+    "asset": "RT4B_5013_KAT",
+    "en": "Come on, Renko, take my hand.",
+    "pl": "Daj spokój, Renko, weź mi rękę.",
+    "package": "sp_rt3_katya_LOC_INT",
+    "source": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT4B_5013_KAT.ogg"
+  },
+  "RT4_1002_KAT": {
+    "asset": "RT4_1002_KAT",
+    "en": "Let's follow the track and SHIT!",
+    "pl": "Idźmy po szlaku i SCHIT!",
+    "package": "SP_RT4_kismet02_LOC_INT",
+    "source": "SP_RT4_kismet02_LOC_INT/SoundNodeWave/RT4_1002_KAT.ogg"
+  },
+  "RT4_1010_KAT": {
+    "asset": "RT4_1010_KAT",
+    "en": "Damn, Spetsnolds!",
+    "pl": "Cholera, Spetsnolds!",
+    "package": "SP_RT5_kismet01_LOC_INT",
+    "source": "SP_RT5_kismet01_LOC_INT/SoundNodeWave/RT4_1010_KAT.ogg"
+  },
+  "RT4_1011_KAT": {
+    "asset": "RT4_1011_KAT",
+    "en": "Love me!",
+    "pl": "Kochaj mnie!",
+    "package": "SP_RT4_kismet01_LOC_INT",
+    "source": "SP_RT4_kismet01_LOC_INT/SoundNodeWave/RT4_1011_KAT.ogg"
+  },
+  "RT4_1012_KAT": {
+    "asset": "RT4_1012_KAT",
+    "en": "Watch it, Renko.",
+    "pl": "Uważaj, Renko.",
+    "package": "SP_RT4_kismet01_LOC_INT",
+    "source": "SP_RT4_kismet01_LOC_INT/SoundNodeWave/RT4_1012_KAT.ogg"
+  },
+  "RT4_1014_KAT": {
+    "asset": "RT4_1014_KAT",
+    "en": "Shoot them!",
+    "pl": "Strzelaj do nich!",
+    "package": "SP_RT4_kismet02_LOC_INT",
+    "source": "SP_RT4_kismet02_LOC_INT/SoundNodeWave/RT4_1014_KAT.ogg"
+  },
+  "RT4_1020_KAT": {
+    "asset": "RT4_1020_KAT",
+    "en": "Good shot, Renko!",
+    "pl": "Dobry strzał, Renko!",
+    "package": "SP_RT4_kismet01_LOC_INT",
+    "source": "SP_RT4_kismet01_LOC_INT/SoundNodeWave/RT4_1020_KAT.ogg"
+  },
+  "RT4_1021_KAT": {
+    "asset": "RT4_1021_KAT",
+    "en": "Nice shot!",
+    "pl": "Świetny strzał!",
+    "package": "SP_RT4_kismet01_LOC_INT",
+    "source": "SP_RT4_kismet01_LOC_INT/SoundNodeWave/RT4_1021_KAT.ogg"
+  },
+  "RT4_1022_KAT": {
+    "asset": "RT4_1022_KAT",
+    "en": "Well done.",
+    "pl": "Dobrze zrobiłeś.",
+    "package": "SP_RT4_kismet02_LOC_INT",
+    "source": "SP_RT4_kismet02_LOC_INT/SoundNodeWave/RT4_1022_KAT.ogg"
+  },
+  "RT4_1023_KAT": {
+    "asset": "RT4_1023_KAT",
+    "en": "Brilliant!",
+    "pl": "Świetnie!",
+    "package": "SP_RT5_kismet01_LOC_INT",
+    "source": "SP_RT5_kismet01_LOC_INT/SoundNodeWave/RT4_1023_KAT.ogg"
+  },
+  "RT4_1024_KAT": {
+    "asset": "RT4_1024_KAT",
+    "en": "Keep it up, Renko.",
+    "pl": "Trzymaj się, Renko.",
+    "package": "SP_RT4_kismet01_LOC_INT",
+    "source": "SP_RT4_kismet01_LOC_INT/SoundNodeWave/RT4_1024_KAT.ogg"
+  },
+  "RT4_5010_KAT": {
+    "asset": "RT4_5010_KAT",
+    "en": "Me!",
+    "pl": "Mnie!",
+    "package": "SP_RT5_kismet01_LOC_INT",
+    "source": "SP_RT5_kismet01_LOC_INT/SoundNodeWave/RT4_5010_KAT.ogg"
+  },
+  "RT4_5011_KAT": {
+    "asset": "RT4_5011_KAT",
+    "en": "Damn it, put me down!",
+    "pl": "Cholera, odłóż mnie!",
+    "package": "SP_RT4_kismet01_LOC_INT",
+    "source": "SP_RT4_kismet01_LOC_INT/SoundNodeWave/RT4_5011_KAT.ogg"
+  },
+  "RT5_1507_DEM": {
+    "asset": "RT5_1507_DEM",
+    "en": "Kill them.",
+    "pl": "Zabijcie ich.",
+    "package": "SP_RT5_kismet01_LOC_INT",
+    "source": "SP_RT5_kismet01_LOC_INT/SoundNodeWave/RT5_1507_DEM.ogg"
+  },
+  "VI1_0107_CP2": {
+    "asset": "VI1_0107_CP2",
+    "en": "Choppers down.",
+    "pl": "Maszyny spadły!",
+    "package": "SP_VI2_kismet01_LOC_INT",
+    "source": "SP_VI2_kismet01_LOC_INT/SoundNodeWave/VI1_0107_CP2.ogg"
+  },
+  "VI1_0110_CP2": {
+    "asset": "VI1_0110_CP2",
+    "en": "Burning wreckage on the southeastern dock.",
+    "pl": "Płonący wrak na południowo-wschodnim doku.",
+    "package": "SP_VI2_kismet01_LOC_INT",
+    "source": "SP_VI2_kismet01_LOC_INT/SoundNodeWave/VI1_0110_CP2.ogg"
+  },
+  "VI1_0113_CP2": {
+    "asset": "VI1_0113_CP2",
+    "en": "Spartan team do you read?",
+    "pl": "Zespół Spartan, słyszycie mnie?",
+    "package": "SP_VI2_kismet01_LOC_INT",
+    "source": "SP_VI2_kismet01_LOC_INT/SoundNodeWave/VI1_0113_CP2.ogg"
+  },
+  "VI1_0115_NIM": {
+    "asset": "VI1_0115_NIM",
+    "en": "All Alert-Five aircraft have launched and are in the air.",
+    "pl": "Wszystkie samoloty pięciominutowej gotowości wystartowały i są już w powietrzu.",
+    "package": "SP_VI2_kismet01_LOC_INT",
+    "source": "SP_VI2_kismet01_LOC_INT/SoundNodeWave/VI1_0115_NIM.ogg"
+  },
+  "VI2_4009_SPT1": {
+    "asset": "VI2_4009_SPT1",
+    "en": "Make sure everyone is out!",
+    "pl": "Sprawdźcie, czy wszyscy wyszli!",
+    "package": "SP_VI2_kismet03_LOC_INT",
+    "source": "SP_VI2_kismet03_LOC_INT/SoundNodeWave/VI2_4009_SPT1.ogg"
+  },
+  "VI2_7508_GST": {
+    "asset": "VI2_7508_GST",
+    "en": "Okay, okay, eyes forward. Keep to the original directive. Continue to the radio tower.",
+    "pl": "Ok, dobrze, patrz w przód, trzymaj się oryginalnej dyrektywy, idź do wieży radiowej.",
+    "package": "SP_VI3_kismet01_LOC_INT",
+    "source": "SP_VI3_kismet01_LOC_INT/SoundNodeWave/VI2_7508_GST.ogg"
+  },
+  "VI3_6806_GST": {
+    "asset": "VI3_6806_GST",
+    "en": "There's something going on here, Renko. We gotta contact the bird farm.",
+    "pl": "Coś tu się dzieje, Renko, musimy skontaktować się z farmem ptaków.",
+    "package": "SP_VI3_kismet03_LOC_INT",
+    "source": "SP_VI3_kismet03_LOC_INT/SoundNodeWave/VI3_6806_GST.ogg"
+  },
+  "VI3_6910_GST": {
+    "asset": "VI3_6910_GST",
+    "en": "This is Devlin 4-1. Do you copy Titan 1?",
+    "pl": "Tu Devlin 4-1. Słyszysz mnie, Titan 1?",
+    "package": "SP_VI4_kismet01_LOC_INT",
+    "source": "SP_VI4_kismet01_LOC_INT/SoundNodeWave/VI3_6910_GST.ogg"
+  },
+  "VI3_7005_GST": {
+    "asset": "VI3_7005_GST",
+    "en": "Let's stick to the plan. Get to the radio tower. Maybe we can salvage equipment there if we need it.",
+    "pl": "Zatrzymajmy się planu, pójdźmy do wieży radiowej, może uda nam się tam uratować sprzęt, jeśli go potrzebujemy.",
+    "package": "SP_VI3_kismet03_LOC_INT",
+    "source": "SP_VI3_kismet03_LOC_INT/SoundNodeWave/VI3_7005_GST.ogg"
+  },
+  "VI4_2005_GST": {
+    "asset": "VI4_2005_GST",
+    "en": "Grab that shotgun, let's go.",
+    "pl": "Weź tę strzelbę. Ruszamy!",
+    "package": "SP_VI4_kismet01_LOC_INT",
+    "source": "SP_VI4_kismet01_LOC_INT/SoundNodeWave/VI4_2005_GST.ogg"
+  },
+  "VI4_3005_GST": {
+    "asset": "VI4_3005_GST",
+    "en": "Let's go.",
+    "pl": "Chodźmy.",
+    "package": "SP_VI4_kismet01_LOC_INT",
+    "source": "SP_VI4_kismet01_LOC_INT/SoundNodeWave/VI4_3005_GST.ogg"
+  },
+  "VI4_3006_GST": {
+    "asset": "VI4_3006_GST",
+    "en": "AHHH!",
+    "pl": "W porządku.",
+    "package": "SP_VI4_kismet01_LOC_INT",
+    "source": "SP_VI4_kismet01_LOC_INT/SoundNodeWave/VI4_3006_GST.ogg"
+  },
+  "VI4_3010_GST": {
+    "asset": "VI4_3010_GST",
+    "en": "Ugh!",
+    "pl": "W porządku.",
+    "package": "SP_VI4_kismet01_a_LOC_INT",
+    "source": "SP_VI4_kismet01_a_LOC_INT/SoundNodeWave/VI4_3010_GST.ogg"
+  },
+  "VI4_3012_GST": {
+    "asset": "VI4_3012_GST",
+    "en": "Ugh!",
+    "pl": "Ech!",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI4_3012_GST.ogg"
+  },
+  "VI4_3505_GST": {
+    "asset": "VI4_3505_GST",
+    "en": "Open the door then cover me.",
+    "pl": "Otwórz drzwi i mnie osłaniaj.",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI4_3505_GST.ogg"
+  },
+  "VI4_3510_GST": {
+    "asset": "VI4_3510_GST",
+    "en": "ON ME!",
+    "pl": "Do mnie!",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI4_3510_GST.ogg"
+  },
+  "VI4_3705_GST": {
+    "asset": "VI4_3705_GST",
+    "en": "Renko! Flank right! I'll go left!",
+    "pl": "Renko, skrzydło po prawej stronie!",
+    "package": "SP_VI4_kismet01_LOC_INT",
+    "source": "SP_VI4_kismet01_LOC_INT/SoundNodeWave/VI4_3705_GST.ogg"
+  },
+  "VI4_4005_GST": {
+    "asset": "VI4_4005_GST",
+    "en": "Come on, Hollis!",
+    "pl": "Chodź, Hollis!",
+    "package": "SP_VI4_kismet01_LOC_INT",
+    "source": "SP_VI4_kismet01_LOC_INT/SoundNodeWave/VI4_4005_GST.ogg"
+  },
+  "VI4_4105_GST": {
+    "asset": "VI4_4105_GST",
+    "en": "All clear!",
+    "pl": "Czysto!",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI4_4105_GST.ogg"
+  },
+  "VI4_4205_GST": {
+    "asset": "VI4_4205_GST",
+    "en": "Renko!",
+    "pl": "Renko!",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI4_4205_GST.ogg"
+  },
+  "VI4_4206_GST": {
+    "asset": "VI4_4206_GST",
+    "en": "Take my hand!",
+    "pl": "Podaj mi rękę!",
+    "package": "SP_VI4_kismet01_LOC_INT",
+    "source": "SP_VI4_kismet01_LOC_INT/SoundNodeWave/VI4_4206_GST.ogg"
+  },
+  "VI4_4208_GST": {
+    "asset": "VI4_4208_GST",
+    "en": "Come on, take my hand!",
+    "pl": "Chodź, złap mnie za rękę!",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI4_4208_GST.ogg"
+  },
+  "VI4_4210_GST": {
+    "asset": "VI4_4210_GST",
+    "en": "Argh!",
+    "pl": "Ach!",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI4_4210_GST.ogg"
+  },
+  "VI4_4220_GST": {
+    "asset": "VI4_4220_GST",
+    "en": "On May.",
+    "pl": "W maju.",
+    "package": "SP_VI4_kismet01_LOC_INT",
+    "source": "SP_VI4_kismet01_LOC_INT/SoundNodeWave/VI4_4220_GST.ogg"
+  },
+  "VI5_1208_GST": {
+    "asset": "VI5_1208_GST",
+    "en": "Hahaha.",
+    "pl": "Ha, ha, ha!",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI5_1208_GST.ogg"
+  },
+  "VI5_1805_GST": {
+    "asset": "VI5_1805_GST",
+    "en": "Alright, we're asking Mike, head back to my position.",
+    "pl": "W porządku, Mike. Wracaj na moje stanowisko.",
+    "package": "SP_VI5_kismet02_LOC_INT",
+    "source": "SP_VI5_kismet02_LOC_INT/SoundNodeWave/VI5_1805_GST.ogg"
+  },
+  "VI5_1905_GST": {
+    "asset": "VI5_1905_GST",
+    "en": "On me.",
+    "pl": "Do mnie!",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI5_1905_GST.ogg"
+  },
+  "VI5_2012_GST": {
+    "asset": "VI5_2012_GST",
+    "en": "Use that sniper rifle to shoot those things on the bridge!",
+    "pl": "Użyj tego karabinu snajperskiego i strzelaj do tych stworów na moście!",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI5_2012_GST.ogg"
+  },
+  "VI5_4009_GST": {
+    "asset": "VI5_4009_GST",
+    "en": "Titan 1, this is Devlin 4.1, actual. Do you copy?",
+    "pl": "Tajtan jeden, tu Devlin cztery-jeden, dowódca. Odbiór?",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI5_4009_GST.ogg"
+  },
+  "VI5_4011_SPT1": {
+    "asset": "VI5_4011_SPT1",
+    "en": "All Spartans are hurt!",
+    "pl": "Wszyscy Spartanie są ranni!",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI5_4011_SPT1.ogg"
+  },
+  "VI5_4013_GST": {
+    "asset": "VI5_4013_GST",
+    "en": "Say again, this is Devlin 4-1.",
+    "pl": "Powtórz, tu Devlin cztery-jeden.",
+    "package": "SP_VI5_kismet03_LOC_INT",
+    "source": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI5_4013_GST.ogg"
+  },
+  "VI5_5006_GST": {
+    "asset": "VI5_5006_GST",
+    "en": "THIS WAY!",
+    "pl": "W ten sposób!",
+    "package": "SP_VI5_kismet02_LOC_INT",
+    "source": "SP_VI5_kismet02_LOC_INT/SoundNodeWave/VI5_5006_GST.ogg"
+  },
+  "VI5_5007_GST": {
+    "asset": "VI5_5007_GST",
+    "en": "Move, soldier!",
+    "pl": "Ruszaj, żołnierzu!",
+    "package": "SP_VI5_kismet02_LOC_INT",
+    "source": "SP_VI5_kismet02_LOC_INT/SoundNodeWave/VI5_5007_GST.ogg"
+  },
+  "VI6_1005_KAT": {
+    "asset": "VI6_1005_KAT",
+    "en": "Just follow the open doors.",
+    "pl": "Idź za otwartymi drzwiami.",
+    "package": "SP_VI6_kismet01_LOC_INT",
+    "source": "SP_VI6_kismet01_LOC_INT/SoundNodeWave/VI6_1005_KAT.ogg"
+  },
+  "VI6_1010_KAT": {
+    "asset": "VI6_1010_KAT",
+    "en": "Good, now down the stairs and turn right.",
+    "pl": "Dobra, teraz schodź po schodach i skręć w prawo.",
+    "package": "SP_VI6_kismet02_LOC_INT",
+    "source": "SP_VI6_kismet02_LOC_INT/SoundNodeWave/VI6_1010_KAT.ogg"
+  },
+  "VI6_1020_KAT": {
+    "asset": "VI6_1020_KAT",
+    "en": "Turn left.",
+    "pl": "Zwróć się w lewo.",
+    "package": "SP_VI6_kismet04_LOC_INT",
+    "source": "SP_VI6_kismet04_LOC_INT/SoundNodeWave/VI6_1020_KAT.ogg"
+  },
+  "VI6_1021_KAT": {
+    "asset": "VI6_1021_KAT",
+    "en": "Turn right!",
+    "pl": "Zwróć się w prawo!",
+    "package": "SP_VI6_kismet02_LOC_INT",
+    "source": "SP_VI6_kismet02_LOC_INT/SoundNodeWave/VI6_1021_KAT.ogg"
+  },
+  "VI6_1062_KAT": {
+    "asset": "VI6_1062_KAT",
+    "en": "Run! Run!",
+    "pl": "Uciekaj!",
+    "package": "SP_VI6_kismet02_LOC_INT",
+    "source": "SP_VI6_kismet02_LOC_INT/SoundNodeWave/VI6_1062_KAT.ogg"
+  },
+  "WL1_0510_BAR": {
+    "asset": "WL1_0510_BAR",
+    "en": "Go on, Captain!",
+    "pl": "Dalej, kapitanie!",
+    "package": "SP_WL2_kismet01_LOC_INT",
+    "source": "SP_WL2_kismet01_LOC_INT/SoundNodeWave/WL1_0510_BAR.ogg"
+  },
+  "WL1_0511_BAR": {
+    "asset": "WL1_0511_BAR",
+    "en": "Please, you should go!",
+    "pl": "Proszę, powinieneś iść!",
+    "package": "SP_WL1_kismet01_LOC_INT",
+    "source": "SP_WL1_kismet01_LOC_INT/SoundNodeWave/WL1_0511_BAR.ogg"
+  },
+  "WL4_4405_SPT2": {
+    "asset": "WL4_4405_SPT2",
+    "en": "I'm the owner of the United States, and I'm the owner of the U.S.",
+    "pl": "Jestem właścicielem Stanów Zjednoczonych i jestem właścicielem Stanów Zjednoczonych.",
+    "package": "SP_WL4_kismet08_LOC_INT",
+    "source": "SP_WL4_kismet08_LOC_INT/SoundNodeWave/WL4_4405_SPT2.ogg"
+  },
+  "WL6_5207_SPT1": {
+    "asset": "WL6_5207_SPT1",
+    "en": "We are a security starter, Sir Ed.",
+    "pl": "Jesteśmy startem bezpieczeństwa, sir Ed.",
+    "package": "SP_WL6_kismet_1950_LOC_INT",
+    "source": "SP_WL6_kismet_1950_LOC_INT/SoundNodeWave/WL6_5207_SPT1.ogg"
+  },
+  "WL6_9309_PA": {
+    "asset": "WL6_9309_PA",
+    "en": "Exclusive system failure, imminent.",
+    "pl": "Wyłączna awaria systemu, niespodziewana.",
+    "package": "SP_WL6_kismet_1950_LOC_INT",
+    "source": "SP_WL6_kismet_1950_LOC_INT/SoundNodeWave/WL6_9309_PA.ogg"
+  },
+  "WL6_9516_BAR": {
+    "asset": "WL6_9516_BAR",
+    "en": "Let's go, Captain!",
+    "pl": "Chodźmy, kapitanie!",
+    "package": "SP_WL6_zone1_2010_d1_LOC_INT",
+    "source": "SP_WL6_zone1_2010_d1_LOC_INT/SoundNodeWave/WL6_9516_BAR.ogg"
+  }
+}
