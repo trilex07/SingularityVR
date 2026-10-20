@@ -5,6 +5,43 @@ scope proposal in rifle-vfx-sniper-optics.md, not the accepted runtime profile.
 All new behavior is default OFF. No new game assets, package edits, custom
 flash replacement, inventory changes, or source from another worktree.
 
+## Physical result4c8a0a7 and next bounded discriminator
+
+Second session PID40208: user reports normal view, absent Valkyrie VFX and no
+Kasimov scope. Preserved private session-4c8a0a7-second.log proves:
+
+- 24 local first-person rifle receipts with fresh muzzle witness and changed
+  origin; the original method returned a live RvEmitter. This falsifies
+  **origin-only sufficiency**, not the emitter's downstream render path.
+- Near-eye active1 (axial0.2201/radial0.0046/alignment0.9988), engine PlayerTick,
+  then ABI/layout refusal before allocation. The proximity/input path is not
+  the reason the PiP has no image. No completed capture or pixel claim.
+
+Native method disassembly also proves that an existing matching looping
+emitter returns without a new spawn/location write. A corrected call argument
+is therefore NOT proof of a corrected component transform. Attachment,
+activation and cloud rendering remain hypotheses, not established causes.
+
+Next discriminator is read-only, not another guessed matrix/offset change:
+each scope refusal names its wrapper/helper/field/error-device stage and exact
+actual fingerprint/offset. Check ABI before requiring eye proximity. Keep all
+guards; never allocate after refusal. Offline audit independently rechecked all
+seven helpers, including detach; archive matches alone cannot explain the live
+refusal. Three rifle samples compare the returned emitter and its reflected
+actor position/base, component/template and raw packed state after the call and
+>=50ms later on the engine thread. No bool is interpreted without a mask, no
+emitter/component/template is modified, no extra hook or giant GPU dump.
+
+Do not repeat the4c8a0a7 visual test expecting a fix. Next session's purpose is
+to identify the actual refusing scope contract and follow through the rifle
+producer. It can collect the scope preflight without bringing the rifle to an
+eye; use the same save and three spaced Valkyrie bursts, no chat switching.
+The user need not judge an unchanged invisible scope again. Continue from the
+exact new evidence before declaring another rendering implementation ready.
+
+Post-exit guard restored accepted DLL7A1DE585...9495 / INI60224CA0...4ADC;
+independent actual installed hash verification PASS. Nothing promoted/merged.
+
 ## Observations, hypotheses, falsifiers
 
 Physical test5aa5f33: rifle VFX absent; native scope visible but unacceptable.

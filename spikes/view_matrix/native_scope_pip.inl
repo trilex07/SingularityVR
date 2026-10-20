@@ -16,6 +16,7 @@ static Construct construct=nullptr;static InitTarget init=nullptr;
 static Component attach=nullptr,detach=nullptr;static SetView view=nullptr;
 static Rate rate=nullptr;static Rebuild rebuild=nullptr;static void* errors=nullptr;
 static bool attached=false,failed=false;
+static bool bound=false;
 static unsigned allocations=0;
 static unsigned notes=0;
 static scopepip::Completion completion;
@@ -23,10 +24,29 @@ static IDirect3DStateBlock9* state=nullptr;
 static uintptr_t completedTarget=0;
 static ULONGLONG completedMs=0;
 
-static uintptr_t Call(uintptr_t wrapper,unsigned offset,size_t bytes,unsigned long long hash){
-    if(!PauseRttProbe::SafeRange(wrapper+offset,5)||*(const unsigned char*)(wrapper+offset)!=0xe8)return 0;
+static bool CodeContract(const char* stage,uintptr_t address,size_t bytes,unsigned long long hash){
+    if(NativeRifleFx::Code(address,bytes,hash))return true;
+    const bool readable=address>=g_textLo&&address<g_textHi&&bytes<=g_textHi-address&&
+        PauseRttProbe::SafeRange(address,bytes);
+    const auto actual=readable?uiwitness::Fingerprint((const unsigned char*)address,bytes):0ull;
+    Log("scope PiP: REFUSE stage=%s address=%08X bytes=%u readable=%d expected=%016llX actual=%016llX; no engine writes",
+        stage,(unsigned)address,(unsigned)bytes,readable?1:0,hash,actual);
+    return false;
+}
+static bool FieldContract(const char* name,uintptr_t cls,const char* type,int expected){
+    const int actual=PauseRttProbe::Property(cls,name,type);
+    if(actual==expected)return true;
+    Log("scope PiP: REFUSE stage=field/%s class=%08X type=%s expected=%X actual=%X; no engine writes",
+        name,(unsigned)cls,type,expected,actual);
+    return false;
+}
+static uintptr_t Call(const char* stage,uintptr_t wrapper,unsigned offset,size_t bytes,unsigned long long hash){
+    if(!PauseRttProbe::SafeRange(wrapper+offset,5)||*(const unsigned char*)(wrapper+offset)!=0xe8){
+        Log("scope PiP: REFUSE stage=%s/direct-call wrapper=%08X offset=%X; no engine writes",stage,(unsigned)wrapper,offset);
+        return 0;
+    }
     const auto result=wrapper+offset+5+*(const int32_t*)(wrapper+offset+1);
-    return NativeRifleFx::Code(result,bytes,hash)?result:0;
+    return CodeContract(stage,result,bytes,hash)?result:0;
 }
 static bool FindClasses(){
     if(captureClass&&targetClass)return true;
@@ -57,30 +77,33 @@ static bool Bind(uintptr_t pawn){
     const auto cls=PauseRttProbe::Pointer(pawn+OBJ_CLASS);
     const auto add=NativeRifleFx::Function(cls,"AttachComponent");
     const auto remove=NativeRifleFx::Function(cls,"DetachComponent");
-    if(!NativeRifleFx::Code(create,496,0x55FEB9FBD0D3F0A5ull)||
-       !NativeRifleFx::Code(setView,165,0x6AE16D2B13BDB57Cull)||
-       !NativeRifleFx::Code(setParams,455,0x3EE3F90D93363B69ull)||
-       !NativeRifleFx::Code(setRate,95,0x4E3E6769F20272E3ull)||
-       !NativeRifleFx::Code(add,91,0xB40193EDB4C6A38Bull)||
-       !NativeRifleFx::Code(remove,91,0x87A7C6584939B487ull))return false;
-    construct=(Construct)Call(create,0x159,528,0x80DA10E4224515C4ull);
-    init=(InitTarget)Call(create,0x1dd,44,0xEC5B63A8BE57148Full);
-    view=(SetView)Call(setView,0x98,246,0x78C58D8F4194A021ull);
-    rebuild=(Rebuild)Call(setParams,0x188,373,0x9D3D895A33EACBBDull);
-    rate=(Rate)Call(setRate,0x52,31,0x67123D70BB9B9A26ull);
-    attach=(Component)Call(add,0x4e,117,0xA43F290EA3F897E0ull);
-    detach=(Component)Call(remove,0x4e,41,0x04E0A3B0BBD603DBull);
+    Log("scope PiP: preflight captureClass=%08X targetClass=%08X pawnClass=%08X funcOffset=%X children=%X next=%X propertyOffset=%X",
+        (unsigned)captureClass,(unsigned)targetClass,(unsigned)cls,g_funcOffset,g_upChildren,g_upNext,g_upOffset);
+    if(!CodeContract("wrapper/Create",create,496,0x55FEB9FBD0D3F0A5ull)||
+       !CodeContract("wrapper/SetView",setView,165,0x6AE16D2B13BDB57Cull)||
+       !CodeContract("wrapper/SetCaptureParameters",setParams,455,0x3EE3F90D93363B69ull)||
+       !CodeContract("wrapper/SetFrameRate",setRate,95,0x4E3E6769F20272E3ull)||
+       !CodeContract("wrapper/AttachComponent",add,91,0xB40193EDB4C6A38Bull)||
+       !CodeContract("wrapper/DetachComponent",remove,91,0x87A7C6584939B487ull))return false;
+    construct=(Construct)Call("helper/construct",create,0x159,528,0x80DA10E4224515C4ull);
+    init=(InitTarget)Call("helper/init",create,0x1dd,44,0xEC5B63A8BE57148Full);
+    view=(SetView)Call("helper/view",setView,0x98,246,0x78C58D8F4194A021ull);
+    rebuild=(Rebuild)Call("helper/rebuild",setParams,0x188,373,0x9D3D895A33EACBBDull);
+    rate=(Rate)Call("helper/rate",setRate,0x52,31,0x67123D70BB9B9A26ull);
+    attach=(Component)Call("helper/attach",add,0x4e,117,0xA43F290EA3F897E0ull);
+    detach=(Component)Call("helper/detach",remove,0x4e,41,0x04E0A3B0BBD603DBull);
     const auto errorGlobal=PauseRttProbe::Pointer(create+0x137);
     errors=(void*)PauseRttProbe::Pointer(errorGlobal);
+    if(!errors)Log("scope PiP: REFUSE stage=error-device global=%08X; no engine writes",(unsigned)errorGlobal);
     // These exact fields are independently read/written by the audited native
     // helpers. Refuse another engine layout before constructing anything.
-    const bool fields=PauseRttProbe::Property(captureClass,"TextureTarget","ObjectProperty")==0x80&&
-        PauseRttProbe::Property(captureClass,"FieldOfView","FloatProperty")==0x84&&
-        PauseRttProbe::Property(captureClass,"NearPlane","FloatProperty")==0x88&&
-        PauseRttProbe::Property(captureClass,"FarPlane","FloatProperty")==0x8c&&
-        PauseRttProbe::Property(captureClass,"bUpdateMatrices","BoolProperty")==0x90&&
-        PauseRttProbe::Property(targetClass,"SizeX","IntProperty")==0xac&&
-        PauseRttProbe::Property(targetClass,"SizeY","IntProperty")==0xb0;
+    const bool fields=FieldContract("TextureTarget",captureClass,"ObjectProperty",0x80)&&
+        FieldContract("FieldOfView",captureClass,"FloatProperty",0x84)&&
+        FieldContract("NearPlane",captureClass,"FloatProperty",0x88)&&
+        FieldContract("FarPlane",captureClass,"FloatProperty",0x8c)&&
+        FieldContract("bUpdateMatrices",captureClass,"BoolProperty",0x90)&&
+        FieldContract("SizeX",targetClass,"IntProperty",0xac)&&
+        FieldContract("SizeY",targetClass,"IntProperty",0xb0);
     return fields&&construct&&init&&view&&rebuild&&rate&&attach&&detach&&errors;
 }
 static scopepip::Frame Snapshot(){
@@ -126,6 +149,15 @@ static void Tick(){
     if(active&&!entered){entered=true;Log("scope PiP: engine PlayerTick reached with fresh measured lens");}
     // Only called after the local controller's PlayerTick, on the engine thread.
     if(!pawn||!IsLive(pawn))return;
+    // ABI preflight is read-only and does not need the lens held at an eye.
+    // It must finish before construction, and runs once (classes spread over
+    // <=1024 objects/tick). A mismatch is now observable without another visual
+    // scope attempt, not hidden behind the proximity gate.
+    if(!bound){
+        if(!FindClasses())return;
+        if(!Bind(pawn)){failed=true;Log("scope PiP: native ABI/layout refused; no engine objects created");return;}
+        bound=true;Log("scope PiP: complete native ABI/layout preflight ready; no engine objects created yet");
+    }
     if(owner&&owner!=pawn){
         // Old pawn and components are owned by UE3 GC. Do not call into a
         // potentially destroyed level. No raw pointer is re-used for the new pawn.
@@ -141,10 +173,8 @@ static void Tick(){
         if(attached&&owner==pawn&&ObjectsCurrent())detach((void*)pawn,(void*)capture);
         attached=false;return;
     }
-    if(!FindClasses())return;
     if(!capture){
         if(allocations>=3){failed=true;Log("scope PiP: allocation budget exhausted; capture disabled");return;}
-        if(!Bind(pawn)){failed=true;Log("scope PiP: native ABI/layout refused; no engine objects created");return;}
         // StaticConstructObject's full argument order is proven in execNew and
         // TextureRenderTarget2D.Create. Pawn.Components and TextureTarget own the
         // strong references; no borrowed RT, root-set flag or raw asset writes.
@@ -293,7 +323,7 @@ static void Draw(IDirect3DDevice9* dev){
     state->Apply();texture->Release();
 }
 }
-void NativeScopeTick(){NativeScopePip::Tick();}
+void NativeScopeTick(){NativeRifleFx::ObserveTick();NativeScopePip::Tick();}
 void NativeScopeBind(IDirect3DSurface9* surface){NativeScopePip::BindSurface(surface);}
 void NativeScopeReceipt(HRESULT hr){NativeScopePip::Receipt(hr);}
 void DrawScopePip(IDirect3DDevice9* dev){NativeScopePip::Draw(dev);}

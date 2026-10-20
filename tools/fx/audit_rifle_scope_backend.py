@@ -62,6 +62,21 @@ def direct_calls(instructions):
             if i.mnemonic == 'call' and i.op_str.startswith('0x')]
 
 
+def helper_contract(text, base, wrapper, offset, length, expected):
+    """Decode the actual relative call; refuse truncation/opcode/hash drift."""
+    pos = wrapper - base + offset
+    if pos < 0 or pos + 5 > len(text) or text[pos] != 0xE8:
+        raise ValueError('helper direct-call contract')
+    target = wrapper + offset + 5 + struct.unpack_from('<i', text, pos + 1)[0]
+    start = target - base
+    if start < 0 or start + length > len(text):
+        raise ValueError('helper code bounds')
+    raw = text[start:start+length]
+    if fnv(raw) != expected:
+        raise ValueError('helper full-body fingerprint')
+    return dict(bytes=length, fnv1a64=f'{expected:016X}', target=target)
+
+
 def audit(exe, capture, engine, rifle):
     pe = PE(Path(exe).read_bytes())
     text = Path(capture).read_bytes()
@@ -73,7 +88,8 @@ def audit(exe, capture, engine, rifle):
              'intUSceneCapture2DComponentexecSetView',
              'intUSceneCapture2DComponentexecSetCaptureParameters',
              'intUSceneCaptureComponentexecSetFrameRate',
-             'intUTextureRenderTarget2DexecCreate', 'intAActorexecAttachComponent')
+             'intUTextureRenderTarget2DexecCreate', 'intAActorexecAttachComponent',
+             'intAActorexecDetachComponent')
     methods = {}
     for name in names:
         address = registration(pe, text, base, name)
@@ -81,6 +97,19 @@ def audit(exe, capture, engine, rifle):
         receipt.update(rva=address-pe.base,
                        direct_call_rvas=[v-pe.base for v in direct_calls(instructions)])
         methods[name] = receipt
+    helpers = {}
+    for stage, name, offset, length, expected in (
+        ('construct', 'intUTextureRenderTarget2DexecCreate', 0x159, 528, 0x80DA10E4224515C4),
+        ('init', 'intUTextureRenderTarget2DexecCreate', 0x1dd, 44, 0xEC5B63A8BE57148F),
+        ('view', 'intUSceneCapture2DComponentexecSetView', 0x98, 246, 0x78C58D8F4194A021),
+        ('rebuild', 'intUSceneCapture2DComponentexecSetCaptureParameters', 0x188, 373, 0x9D3D895A33EACBBD),
+        ('rate', 'intUSceneCaptureComponentexecSetFrameRate', 0x52, 31, 0x67123D70BB9B9A26),
+        ('attach', 'intAActorexecAttachComponent', 0x4e, 117, 0xA43F290EA3F897E0),
+        ('detach', 'intAActorexecDetachComponent', 0x4e, 41, 0x04E0A3B0BBD603DB),
+    ):
+        receipt = helper_contract(text, base, pe.base+methods[name]['rva'], offset, length, expected)
+        receipt['rva'] = receipt.pop('target') - pe.base
+        helpers[stage] = receipt
     pkg = inspect(engine, include_all=True)
     classes = {e['index']: e for e in pkg['exports']}
     contract = {}
@@ -101,7 +130,7 @@ def audit(exe, capture, engine, rifle):
     return dict(status='OFFLINE_STRUCTURAL_ONLY',
         exe_sha256=hashlib.sha256(pe.data).hexdigest(),
         text_sha256=hashlib.sha256(text).hexdigest(), methods=methods,
-        reflected_contract=contract, rifle_fx=templates,
+        reflected_contract=contract, helper_contract=helpers, rifle_fx=templates,
         warning='No live execution, completed RTT pixels, native emitter identity or PSVR2 proof.')
 
 

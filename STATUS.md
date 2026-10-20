@@ -1,6 +1,28 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 physical4c8a0a7 FAILED VFX/scope; second launch view normal.
+Private preserved log build/combined-followups/session-4c8a0a7-second.log:
+Valkyrie PlayMuzzleFX reached24 bounded receipts, firstPerson1/fresh1/changed1,
+live RvEmitter returned. Origin-only change does NOT solve absent rifle VFX.
+Kasimov measured lens gate active1 and engine PlayerTick reached; backend
+refused ABI/layout BEFORE construction. Do NOT tune lens proximity or bypass
+fingerprints on this result. No scoped RTT pixels or aperture were produced.
+Game exited; actual installed accepted DLL7A1DE585...9495 / INI60224CA0...4ADC
+independently rehashed after guard restore. No active test/installation changes.
+
+Follow-through candidate instrumentation: named wrapper/helper/field/error-device
+refusal with actual vs expected fingerprint; read-only ABI preflight before eye
+proximity. Three native emitter after-call/50ms-later snapshots (reflected actor
+position/base, PSC/template and RAW packed state; no invented bool masks).
+Offline re-audit now checks DetachComponent and ALL seven actual direct-call
+targets/whole helper bodies, not just wrappers. Their archived contracts PASS;
+the actual live refusal stage is still unavailable. This is diagnostic progress,
+NOT a working VFX/scope fix; obtain the stage before another implementation.
+L1: eight native-FX/scope/shadow/hand/holster executables and parser/transform/
+backend tests PASS. Initial L2 x86 PE32 /O2 build PASS; candidate provenance below
+will be recorded only after a clean-source build. Steam remains accepted.
+
 2026-10-20 optical-scope/native rifle-origin candidate L1_PASS / L2_PASS on
 fix/rifle-vfx-sniper-grip-scope. Physical5aa5f33: rifle VFX still absent; native
 scope appears but is not acceptable. Complete four-frame rifle traces have

@@ -2,11 +2,28 @@
 from pathlib import Path
 import struct
 import unittest
-from audit_rifle_scope_backend import body, fnv, registration
+from audit_rifle_scope_backend import body, fnv, registration, helper_contract
 
 ROOT = Path(__file__).resolve().parents[2]
 
 class NativeBackendTests(unittest.TestCase):
+    def test_helper_target_requires_exact_call_bounds_and_body(self):
+        raw = bytearray(b'\x90'*64)
+        raw[8:13] = b'\xe8'+struct.pack('<i', 32-13)
+        raw[32:35] = b'\x55\x5d\xc3'
+        fingerprint = fnv(raw[32:35])
+        receipt = helper_contract(raw, 0x1000, 0x1000, 8, 3, fingerprint)
+        self.assertEqual(receipt['target'], 0x1020)
+        for changed in (0, 8, 32):
+            mutated = raw[:]; mutated[changed] ^= 1
+            if changed == 0:  # Unrelated wrapper bytes are not part of the helper.
+                self.assertEqual(helper_contract(mutated, 0x1000, 0x1000, 8, 3, fingerprint), receipt)
+            else:
+                with self.assertRaises(ValueError): helper_contract(mutated, 0x1000, 0x1000, 8, 3, fingerprint)
+        with self.assertRaises(ValueError): helper_contract(raw, 0x1000, 0x1000, 61, 3, fingerprint)
+        raw[9:13] = struct.pack('<i', -0x2000)
+        with self.assertRaises(ValueError): helper_contract(raw, 0x1000, 0x1000, 8, 3, fingerprint)
+
     def test_hash_and_bounded_epilogue(self):
         self.assertEqual(fnv(b''), 14695981039346656037)
         self.assertEqual(fnv(b'a'), 0xAF63DC4C8601EC8C)
@@ -31,7 +48,7 @@ class NativeBackendTests(unittest.TestCase):
         for key in ('"SniperPictureInPicture",0,path', '"NativeRifleMuzzleOrigin",0,path'):
             self.assertIn(key, source)
         backend = (ROOT/'spikes/view_matrix/native_scope_pip.inl').read_text()
-        for guard in ('NativeRifleFx::Code(create,496', 'PauseRttProbe::ExactTexture',
+        for guard in ('CodeContract("wrapper/Create",create,496', 'PauseRttProbe::ExactTexture',
                       'completion.epoch', 'state->Capture()', 'state->Apply()',
                       'texture->Release()', 'if(running)return;', 'int(eye)==f.eye'):
             self.assertIn(guard, backend)

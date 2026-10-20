@@ -6,6 +6,12 @@ using Method=void (__thiscall*)(void*,const hipknife::V*,int);
 static Method original=nullptr;
 static unsigned notes=0;
 static uintptr_t hooked=0;
+// Engine-thread-only follow-through: PlayMuzzleFX can return an existing looping
+// emitter without touching its transform. Record both the call and later state,
+// rather than treating a changed spawn argument as proof of visible particles.
+static uintptr_t observedFx=0,observedWeapon=0,observedEmitter=0;
+static ULONGLONG observeAfter=0;
+static unsigned observations=0;
 static uintptr_t Function(uintptr_t cls,const char* wanted){
     for(unsigned depth=0;cls&&depth<24;++depth){
         uintptr_t field=PauseRttProbe::Pointer(cls+g_upChildren);
@@ -28,6 +34,45 @@ static bool Code(uintptr_t address,size_t bytes,unsigned long long hash){
     return address>=g_textLo&&address<g_textHi&&bytes<=g_textHi-address&&
         PauseRttProbe::SafeRange(address,bytes)&&
         uiwitness::Fingerprint((const unsigned char*)address,bytes)==hash;
+}
+static void EmitterReceipt(const char* phase,uintptr_t fx,uintptr_t emitter){
+    if(!emitter||!IsLive(emitter)){
+        Log("rifle native follow: phase=%s fx=%08X emitter=%08X not-live [read-only]",phase,(unsigned)fx,(unsigned)emitter);
+        return;
+    }
+    const auto cls=PauseRttProbe::Pointer(emitter+OBJ_CLASS);
+    const int location=PauseRttProbe::Property(cls,"Location","StructProperty");
+    const int base=PauseRttProbe::Property(cls,"Base","ObjectProperty");
+    const int component=PauseRttProbe::Property(cls,"ParticleSystemComponent","ComponentProperty");
+    const auto psc=component>=0?PauseRttProbe::Pointer(emitter+component):0;
+    const auto pscClass=psc?PauseRttProbe::Pointer(psc+OBJ_CLASS):0;
+    const int templ=pscClass?PauseRttProbe::Property(pscClass,"Template","ObjectProperty"):-1;
+    const auto asset=templ>=0?PauseRttProbe::Pointer(psc+templ):0;
+    char name[96]{};if(asset)GuardedNameOf(asset,name,sizeof(name));
+    hipknife::V p{};const bool have=location>=0&&PauseRttProbe::SafeRange(emitter+location,sizeof(p));
+    if(have)memcpy(&p,(void*)(emitter+location),sizeof(p));
+    Log("rifle native follow: phase=%s fx=%08X emitter=%08X base=%08X locationValid=%d location=(%.3f,%.3f,%.3f) componentOff=%X component=%08X templateOff=%X template=%08X name=%s [read-only, not draw proof]",
+        phase,(unsigned)fx,(unsigned)emitter,(unsigned)(base>=0?PauseRttProbe::Pointer(emitter+base):0),
+        have?1:0,p.x,p.y,p.z,component,(unsigned)psc,templ,(unsigned)asset,name);
+    if(!pscClass)return;
+    // Shared bool dwords are logged RAW: no guessed bit masks or state writes.
+    const char* flags[]={"bIsActive","bWasDeactivated","HiddenGame","bOwnerNoSee","DepthPriorityGroup"};
+    const char* types[]={"BoolProperty","BoolProperty","BoolProperty","BoolProperty","ByteProperty"};
+    for(unsigned i=0;i<5;++i){
+        const int offset=PauseRttProbe::Property(pscClass,flags[i],types[i]);
+        const unsigned value=offset>=0&&PauseRttProbe::SafeRange(psc+offset,4)?
+            *(const uint32_t*)(psc+offset):0;
+        Log("rifle native follow: phase=%s field=%s offset=%X raw=%08X [packed bytes, NOT interpreted bool]",phase,flags[i],offset,value);
+    }
+}
+static void ObserveTick(){
+    if(!observedFx||!g_nativeRifleMuzzle||GetTickCount64()<observeAfter)return;
+    const auto fx=observedFx;observedFx=0;
+    if(observedWeapon!=(uintptr_t)(uint32_t)Rd(g_weaponObj)||!IsLive(fx)||
+       PauseRttProbe::Pointer(fx+0x90)!=observedWeapon)return;
+    const auto emitter=PauseRttProbe::Pointer(fx+0x88);
+    Log("rifle native follow: delayed emitter retained=%d",emitter==observedEmitter?1:0);
+    EmitterReceipt("after-tick",fx,emitter);
 }
 static void __fastcall Hook(void* self,void*,const hipknife::V* location,int firstPerson){
     if(!original)return;
@@ -56,6 +101,11 @@ static void __fastcall Hook(void* self,void*,const hipknife::V* location,int fir
         if(emitter)GuardedNameOf(emitter,name,sizeof(name));
         Log("rifle native emitter: after original fx=%08X emitter=%08X name=%s [emitter identity, not visible content]",
             (unsigned)(uintptr_t)self,(unsigned)emitter,name);
+        if(emitter&&observations<3&&!observedFx){
+            ++observations;observedFx=(uintptr_t)self;observedWeapon=owner;
+            observedEmitter=emitter;observeAfter=GetTickCount64()+50;
+            EmitterReceipt("after-call",observedFx,emitter);
+        }
     }
 }
 static void Install(){
