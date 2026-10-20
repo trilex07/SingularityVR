@@ -2353,6 +2353,7 @@ static weaponmuzzle::Witness g_nextMuzzle,g_nextMuzzleStaged;
 static sniperscope::Mount g_sniperScopeMount;
 static sniperscope::State g_sniperScopeState; // input thread only
 static int g_nativeRifleMuzzle=0; // 0 unchanged, 1 observe, 2 native Valkyrie origin
+static bool g_nativeRifleTracer=false; // exact native visual source getter, default OFF
 static int g_sniperPip=0;
 static scopepip::Frame g_scopePipFrame;
 inline bool ScopeActive();
@@ -5911,6 +5912,12 @@ void ResetScopePip();
 void NativeScopeTick();
 void NativeScopeBind(IDirect3DSurface9* surface);
 void NativeScopeReceipt(HRESULT hr);
+// Only the audited render callback for OUR optical target enters this scope.
+// Texture dimensions cannot identify a view: capture intermediates are shared
+// full-scene-sized surfaces too.
+static thread_local unsigned g_scopeNativeDepth=0;
+static thread_local unsigned g_scopeNativeDraws=0,g_scopeNativeUploads=0;
+static bool NativeScopeRendering(){return g_scopeNativeDepth!=0;}
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
@@ -13414,6 +13421,7 @@ void UpdateCameraStabilizationThisFrame() {
 HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
                                            const float* data, UINT vec4Count) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
+    if(NativeScopeRendering()){++g_scopeNativeUploads;return g_origSetVSConstF(dev,startReg,data,vec4Count);}
     // The draw-time gate is too late: HMD position, rotation and projection are
     // already written here. A light/reflection view can pass the matrix shape
     // test, so exclude the same offscreen targets before learning or editing.
@@ -14049,6 +14057,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
             D3DSURFACE_DESC d{};
             if (SUCCEEDED(surf->GetDesc(&d))) {
                 if (g_srcW && g_srcH) scene = (d.Width == g_srcW && d.Height == g_srcH);
+                if(NativeScopeRendering())scene=false;
                 if (g_diagEnabled && scene && (d.Format == D3DFMT_A8R8G8B8 || d.Format == D3DFMT_X8R8G8B8)) {
                     InterlockedExchange(&g_diagSceneW, LONG(d.Width));
                     InterlockedExchange(&g_diagSceneH, LONG(d.Height));
@@ -15499,6 +15508,7 @@ void VidProbeFrameEnd() {
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                         UINT start, UINT count) {
+    if(NativeScopeRendering()){const auto hr=shadowNativePrim(dev,t,start,count);NativeScopeReceipt(hr);return hr;}
     PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0)) return g_origDrawPrim(dev,t,start,count);
@@ -19135,6 +19145,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetViewport(IDirect3DDevice9* dev, const D3DVIEWP
 
 HRESULT STDMETHODCALLTYPE Hook_Clear(IDirect3DDevice9* dev, DWORD count, const D3DRECT* rects,
                                      DWORD flags, D3DCOLOR colour, float z, DWORD stencil) {
+    if(NativeScopeRendering())return shadowNativeClear(dev,count,rects,flags,colour,z,stencil);
     DpgRecord(1, z, 0.0f, flags, count, 0, 0);
     // The late depth clear opens the first-person pass. Draw 50 is well past the scene setup
     // clear at draw 0 and far short of the ~1088 where the real boundary sits, so it separates
@@ -19477,6 +19488,7 @@ static int PrepareCenturionCylinder(IDirect3DDevice9* dev,INT baseVertex,UINT ve
 HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                                INT baseVertex, UINT minIndex, UINT numVertices,
                                                UINT startIndex, UINT primCount) {
+    if(NativeScopeRendering()){const auto hr=shadowNativeIndexed(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);NativeScopeReceipt(hr);return hr;}
     PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0)) return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);
@@ -21178,6 +21190,7 @@ static bool PauseCanvasNeedsEyeCopy(IDirect3DDevice9* dev) {
 
 HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYPE t,
                                           UINT primCount, const void* vtxData, UINT vtxStride) {
+    if(NativeScopeRendering()){const auto hr=shadowNativeUP(dev,t,primCount,vtxData,vtxStride);NativeScopeReceipt(hr);return hr;}
     PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawPrimUP) return g_origDrawPrimUP(dev,t,primCount,vtxData,vtxStride);
@@ -21318,6 +21331,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
                                                 UINT minVtxIndex, UINT numVertices, UINT primCount,
                                                 const void* idxData, D3DFORMAT idxFormat,
                                                 const void* vtxData, UINT vtxStride) {
+    if(NativeScopeRendering()){const auto hr=shadowNativeIndexedUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);NativeScopeReceipt(hr);return hr;}
     PauseRttProbe::DrawAttempt();
     // VFX reentrancy: our own per-eye quads draw through the vtable.
     if (InterlockedCompareExchange(&g_inVfxDraw, 0, 0) && g_origDrawIndexedPrimUP) return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
@@ -32834,6 +32848,8 @@ void LoadIniSettings() {
         g_nativeRifleMuzzle=(int)GetPrivateProfileIntA("Diagnostic","NativeRifleMuzzleOrigin",0,path);
         if(g_nativeRifleMuzzle<0||g_nativeRifleMuzzle>3)g_nativeRifleMuzzle=0;
         Log("ini: NativeRifleMuzzleOrigin=%d (0 unchanged, 1 observe, 2 spawn origin, 3 owned loop native pose)",g_nativeRifleMuzzle);
+        g_nativeRifleTracer=GetPrivateProfileIntA("Diagnostic","NativeRifleTracerOrigin",0,path)!=0;
+        Log("ini: NativeRifleTracerOrigin=%d (exact local Valkyrie source; endpoints unchanged)",g_nativeRifleTracer?1:0);
     }
     g_cutsceneScreenDistanceMm=cinemascreen::ClampDistanceMm(
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));

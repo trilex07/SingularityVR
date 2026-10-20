@@ -22,6 +22,10 @@ static unsigned moveNotes=0;
 static uintptr_t observedFx=0,observedWeapon=0,observedEmitter=0;
 static ULONGLONG observeAfter=0;
 static unsigned observations=0;
+using SourceGetter=hipknife::V* (__thiscall*)(void*,hipknife::V*);
+static SourceGetter sourceOriginal=nullptr;
+static uintptr_t tracerCaller=0;
+static bool Scene();
 static uintptr_t Function(uintptr_t cls,const char* wanted){
     for(unsigned depth=0;cls&&depth<24;++depth){
         uintptr_t field=PauseRttProbe::Pointer(cls+g_upChildren);
@@ -45,6 +49,24 @@ static bool Code(uintptr_t address,size_t bytes,unsigned long long hash){
         PauseRttProbe::SafeRange(address,bytes)&&
         uiwitness::Fingerprint((const unsigned char*)address,bytes)==hash;
 }
+static hipknife::V* __fastcall SourceHook(void* self,void*,hipknife::V* output){
+    const auto caller=(uintptr_t)_ReturnAddress();
+    auto* result=sourceOriginal(self,output);
+    if(result!=output||!output||!PauseRttProbe::SafeRange((uintptr_t)output,sizeof(*output)))return result;
+    weaponmuzzle::Witness w;
+    if(!TryAcquireSRWLockShared(&g_nextVisualLock))return result;
+    w=g_nextMuzzle;ReleaseSRWLockShared(&g_nextVisualLock);
+    hipknife::V replacement{};
+    if(riflefx::TracerSource(g_nativeRifleTracer,Scene(),caller==tracerCaller,
+       (uintptr_t)self,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),w,
+       {g_camPos[0],g_camPos[1],g_camPos[2]},*output,replacement)){
+        static unsigned count=0;if(count++<8)
+            Log("rifle native tracer: exact source (%.3f,%.3f,%.3f)->(%.3f,%.3f,%.3f); endpoint unchanged [not pixels]",
+                output->x,output->y,output->z,replacement.x,replacement.y,replacement.z);
+        *output=replacement;
+    }
+    return result;
+}
 static uintptr_t Helper(uintptr_t wrapper,unsigned offset,size_t bytes,unsigned long long hash){
     if(!wrapper||!PauseRttProbe::SafeRange(wrapper+offset,5)||*(const unsigned char*)(wrapper+offset)!=0xe8)return 0;
     const auto address=wrapper+offset+5+*(const int32_t*)(wrapper+offset+1);
@@ -65,6 +87,39 @@ static bool BindMovement(){
 }
 static bool Scene(){return VrModeOn()&&!CutsceneNativeCameraArmed()&&!Rd(g_gamePaused)&&
     !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!Rd(g_weaponHolstered);}
+static void InstallTracer(){
+    if(!g_nativeRifleTracer||sourceOriginal||!Scene()||!g_weaponFxClass)return;
+    weaponmuzzle::Witness w;
+    if(!TryAcquireSRWLockShared(&g_nextVisualLock))return;
+    w=g_nextMuzzle;ReleaseSRWLockShared(&g_nextVisualLock);
+    const auto weapon=(uintptr_t)(uint32_t)Rd(g_weaponObj);
+    if(w.kind!=weaponreload::Kind::Valkyrie||!w.Current((uint32_t)g_playerPawn,(uint32_t)weapon,GetTickCount64()))return;
+    static unsigned attempts=0;if(attempts>=3)return;
+    uintptr_t object=0;
+    for(int i=0;i<g_fxN;++i)if(g_fx[i].have&&IsLive(g_fx[i].obj)&&
+       PauseRttProbe::Pointer(g_fx[i].obj+OBJ_CLASS)==g_weaponFxClass&&
+       PauseRttProbe::Pointer(g_fx[i].obj+0x90)==weapon){object=g_fx[i].obj;break;}
+    if(!object)return;
+    ++attempts;
+    const auto wrapper=Function(g_weaponFxClass,"PlayTracerFX");
+    const auto tracer=PauseRttProbe::Pointer(PauseRttProbe::Pointer(object)+0x128);
+    const auto getter=PauseRttProbe::Pointer(PauseRttProbe::Pointer(weapon+0x2d4)+8);
+    // Wrapper: one const FVector& ENDPOINT, virtual +128. Native body calls
+    // source-interface +8 at +8C (return +8E). Never replace the endpoint.
+    // Getter contract includes BOTH return branches (156 bytes), not the
+    // 114-byte prefix ending at its first conditional-path ret.
+    if(!Code(wrapper,141,0xF637C8C8C78F8557ull)||
+       !Code(tracer,1694,0xB7DDF9B80E425AABull)||
+       !Code(getter,156,0xDC2F29F0817B2902ull)){
+        Log("rifle native tracer: REFUSE exact wrapper/method/interface contracts");return;
+    }
+    auto status=MH_CreateHook((void*)getter,(void*)&SourceHook,(void**)&sourceOriginal);
+    if(status!=MH_OK){sourceOriginal=nullptr;return;}
+    tracerCaller=tracer+0x8e;
+    status=MH_EnableHook((void*)getter);
+    if(status!=MH_OK){MH_RemoveHook((void*)getter);sourceOriginal=nullptr;tracerCaller=0;return;}
+    Log("rifle native tracer: source-only hook armed; impact/spread/endpoint untouched");
+}
 static void MaintainTick(){
     if(!firedAt)return;
     static thread_local bool running=false;if(running)return;
@@ -196,6 +251,7 @@ static void __fastcall Hook(void* self,void*,const hipknife::V* location,int fir
     }
 }
 static void Install(){
+    InstallTracer();
     if(!g_nativeRifleMuzzle||original||!g_weaponFxClass||g_funcOffset<0||g_upChildren<=0||g_upNext<=0)return;
     static unsigned attempts=0;static ULONGLONG next=0;
     if(attempts>=3||GetTickCount64()<next)return;

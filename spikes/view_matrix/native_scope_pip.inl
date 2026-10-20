@@ -23,6 +23,28 @@ static scopepip::Completion completion;
 static IDirect3DStateBlock9* state=nullptr;
 static uintptr_t completedTarget=0;
 static ULONGLONG completedMs=0;
+using RenderCapture=void (__thiscall*)(void*,void*);
+static RenderCapture renderOriginal=nullptr;
+static void __fastcall RenderHook(void* self,void*,void* family){
+    if(!renderOriginal)return;
+    const auto expected=(uintptr_t)(uint32_t)Rd(target);
+    // Factory -> capture-info constructor proves +0x10 is the exact owned
+    // TextureRenderTarget2D, NOT an inferred dimensions/format match.
+    const auto actual=PauseRttProbe::Pointer((uintptr_t)self+0x10);
+    scopepip::RenderLease lease(g_scopeNativeDepth,g_sniperPip,expected,actual);
+    static unsigned count=0;
+    const bool receipt=lease.own&&count<3;
+    const auto draws=g_scopeNativeDraws,uploads=g_scopeNativeUploads;
+    const auto begin=receipt?GetTickCount64():0;
+    renderOriginal(self,family);
+    // Capture changes engine GPU state legitimately. Never apply a state block
+    // across it (that would disagree with UE3's RHI cache). Next main-view
+    // constants must revalidate; optical matrices cannot survive as eye data.
+    if(lease.own){InvalidateCamMats();g_camMatrixBound=false;}
+    if(receipt){++count;
+        Log("scope PiP: own native render isolation target=%08X depth=%u nativeDraws=%u rawUploads=%u elapsedMs=%llu [execution only, not alignment]",
+            (unsigned)actual,g_scopeNativeDepth,g_scopeNativeDraws-draws,g_scopeNativeUploads-uploads,GetTickCount64()-begin);}
+}
 
 static bool CodeContract(const char* stage,uintptr_t address,size_t bytes,unsigned long long hash){
     if(NativeRifleFx::Code(address,bytes,hash))return true;
@@ -47,6 +69,22 @@ static uintptr_t Call(const char* stage,uintptr_t wrapper,unsigned offset,size_t
     }
     const auto result=wrapper+offset+5+*(const int32_t*)(wrapper+offset+1);
     return CodeContract(stage,result,bytes,hash)?result:0;
+}
+static bool BindRender(uintptr_t component){
+    if(renderOriginal)return true;
+    const auto factory=PauseRttProbe::Pointer(PauseRttProbe::Pointer(component)+0x164);
+    if(!CodeContract("capture-info/factory",factory,205,0xC87668CD09D29B85ull))return false;
+    const auto ctor=Call("capture-info/constructor",factory,0xb7,195,0xF2ECDE1DE85EA63Aull);
+    if(!ctor||!PauseRttProbe::SafeRange(ctor+0x63,6)||
+       *(const uint16_t*)(ctor+0x63)!=0x06c7)return false;
+    const auto table=PauseRttProbe::Pointer(ctor+0x65);
+    const auto method=PauseRttProbe::Pointer(table+4);
+    if(!CodeContract("capture-info/render",method,737,0x9CCA1CFB4E9B6123ull))return false;
+    auto status=MH_CreateHook((void*)method,(void*)&RenderHook,(void**)&renderOriginal);
+    if(status!=MH_OK){renderOriginal=nullptr;return false;}
+    status=MH_EnableHook((void*)method);
+    if(status!=MH_OK){MH_RemoveHook((void*)method);renderOriginal=nullptr;return false;}
+    Log("scope PiP: exact owned render isolation armed [not runtime render proof]");return true;
 }
 static bool FindClasses(){
     if(captureClass&&targetClass)return true;
@@ -190,6 +228,7 @@ static void Tick(){
         const auto component=(uintptr_t)construct((void*)captureClass,(void*)pawn,0,0,0,0,nullptr,errors,0,0);
         if(!rt||!component||PauseRttProbe::Pointer(rt+OBJ_CLASS)!=targetClass||
            PauseRttProbe::Pointer(component+OBJ_CLASS)!=captureClass){failed=true;Log("scope PiP: object construction refused");return;}
+        if(!BindRender(component)){failed=true;Log("scope PiP: REFUSE capture isolation; component never attached");return;}
         init((void*)rt,512,512,2); // native PF_A8R8G8B8, same format as native Create
         *(uintptr_t*)(component+0x80)=rt;
         *(float*)(component+0x84)=20.f;
@@ -231,7 +270,10 @@ static void BindSurface(IDirect3DSurface9* surface){
         if(receipts++<3)Log("scope PiP: own RTT draw epoch=%u completed binding [not pixel-content proof]",completion.epoch);
     }
 }
-static void Receipt(HRESULT hr){if(g_sniperPip)completion.Draw(SUCCEEDED(hr));}
+static void Receipt(HRESULT hr){
+    if(NativeScopeRendering())++g_scopeNativeDraws;
+    if(g_sniperPip)completion.Draw(SUCCEEDED(hr));
+}
 struct Vertex{float x,y,z,rhw;DWORD colour;float u,v;};
 static void ContentReceipt(IDirect3DDevice9* dev,IDirect3DSurface9* surface){
     static unsigned attempts=0;
@@ -261,7 +303,7 @@ static void ContentReceipt(IDirect3DDevice9* dev,IDirect3DSurface9* surface){
     cpu->Release();
 }
 static void Draw(IDirect3DDevice9* dev){
-    if(!g_sniperPip||!g_origDrawPrimUP)return;
+    if(!g_sniperPip||!shadowNativeUP)return;
     const auto f=Snapshot();const auto now=GetTickCount64();
     const auto rt=(uintptr_t)(uint32_t)Rd(target);
     if(!Current(f)||!rt||rt!=completedTarget||!completion.epoch||now<completedMs||now-completedMs>150)return;
@@ -271,19 +313,40 @@ static void Draw(IDirect3DDevice9* dev){
     IDirect3DTexture9* texture=nullptr;
     if(FAILED(surface->GetContainer(__uuidof(IDirect3DTexture9),(void**)&texture))||!texture)return;
     if(!PauseRttProbe::ExactTexture(rt,resource,texture,surface)){texture->Release();return;}
-    if(!state&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&state))){texture->Release();return;}
-    if(!state||FAILED(state->Capture())){texture->Release();return;}
-    D3DVIEWPORT9 vp{};const bool viewport=SUCCEEDED(dev->GetViewport(&vp));
+    // The last UE3 target is NOT necessarily the submitted eye backbuffer.
+    // D3DSBT_ALL does not capture RT/DS. Use the same tested explicit target
+    // guard as the custom hands, and bypass CPU-side observation hooks.
+    struct TextureRef {IDirect3DTexture9* value;~TextureRef(){value->Release();}} textureRef{texture};
+    IDirect3DSurface9* back=nullptr;
+    if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
+    struct SurfaceRef {IDirect3DSurface9* value;~SurfaceRef(){value->Release();}} backRef{back};
+    D3DSURFACE_DESC desc{};
+    if(FAILED(back->GetDesc(&desc))||desc.Width<4||(desc.Width&1)||!desc.Height)return;
+    const gloves::Calls calls{shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
+        shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport};
+    if(!calls.Valid())return;
+    if(!state&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&state)))return;
+    if(!state)return;
+    gloves::StateGuard<> guard(dev,state,calls);if(!guard.valid)return;
+    if(FAILED(dev->SetDepthStencilSurface(nullptr)))return;
+    for(unsigned i=1;i<guard.count;++i)if(FAILED(calls.target(dev,i,nullptr)))return;
+    if(FAILED(calls.target(dev,0,back)))return;
+    const D3DVIEWPORT9 vp{0,0,desc.Width,desc.Height,0.f,1.f};
+    if(FAILED(calls.viewport(dev,&vp)))return;
     V right{},vertical{};
-    if(viewport&&scopepip::Basis(f.forward,f.up,right,vertical)){
-        dev->SetVertexShader(nullptr);dev->SetPixelShader(nullptr);
-        dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1);dev->SetTexture(0,texture);
+    if(scopepip::Basis(f.forward,f.up,right,vertical)){
+        if(FAILED(calls.vs(dev,nullptr))||FAILED(calls.ps(dev,nullptr))||
+           FAILED(dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1))||
+           FAILED(calls.texture(dev,0,texture)))return;
         dev->SetRenderState(D3DRS_ZENABLE,FALSE);dev->SetRenderState(D3DRS_ZWRITEENABLE,FALSE);
         dev->SetRenderState(D3DRS_ALPHABLENDENABLE,FALSE);dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
         dev->SetRenderState(D3DRS_ALPHATESTENABLE,FALSE);dev->SetRenderState(D3DRS_STENCILENABLE,FALSE);
         dev->SetRenderState(D3DRS_FOGENABLE,FALSE);dev->SetRenderState(D3DRS_CLIPPLANEENABLE,0);
         dev->SetRenderState(D3DRS_FILLMODE,D3DFILL_SOLID);dev->SetRenderState(D3DRS_COLORWRITEENABLE,0xf);
         dev->SetRenderState(D3DRS_LIGHTING,FALSE);dev->SetRenderState(D3DRS_SCISSORTESTENABLE,TRUE);
+        dev->SetRenderState(D3DRS_VERTEXBLEND,D3DVBF_DISABLE);
+        dev->SetRenderState(D3DRS_INDEXEDVERTEXBLENDENABLE,FALSE);
+        dev->SetRenderState(D3DRS_SRGBWRITEENABLE,FALSE);
         dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
         dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
         dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_DISABLE);
@@ -292,29 +355,27 @@ static void Draw(IDirect3DDevice9* dev){
         dev->SetTextureStageState(1,D3DTSS_COLOROP,D3DTOP_DISABLE);
         dev->SetSamplerState(0,D3DSAMP_ADDRESSU,D3DTADDRESS_CLAMP);dev->SetSamplerState(0,D3DSAMP_ADDRESSV,D3DTADDRESS_CLAMP);
         dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_LINEAR);dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_LINEAR);
+        dev->SetSamplerState(0,D3DSAMP_SRGBTEXTURE,FALSE);
         for(unsigned eye=0;eye<2;++eye){
-            if(!g_vfxEyeMatValid[eye])continue;
             RECT clip{(LONG)(vp.X+eye*(vp.Width/2)),(LONG)vp.Y,(LONG)(vp.X+(eye+1)*(vp.Width/2)),(LONG)(vp.Y+vp.Height)};
             dev->SetScissorRect(&clip);
             Vertex vertices[66]{};bool visible=true;
             for(unsigned i=0;i<66;++i){
                 const float a=(i?i-1:0)*(6.2831853f/64.f);
                 const float x=i?std::cos(a):0.f,y=i?std::sin(a):0.f;
-                V p{},t=f.lens+(right*x+vertical*y)*f.radius;
-                if(!Relative(t,p)){visible=false;break;}
-                float position[3]{p.x,p.y,p.z},c[4]{};
-                WorldToClip(g_vfxEyeMat[eye],g_vfxEyeConv[eye],position,c);
-                if(!std::isfinite(c[3])||c[3]<=.001f){visible=false;break;}
-                vertices[i]={vp.X+(c[0]/c[3]*.5f+.5f)*vp.Width,
-                    vp.Y+(-c[1]/c[3]*.5f+.5f)*vp.Height,0,1.f/c[3],0xffffffff,.5f+x*.5f,.5f-y*.5f};
+                const V t=f.lens+(right*x+vertical*y)*f.radius;
+                uipointer::ScreenPoint p{};scopepip::Pixel pixel{};
+                if(!VrUiProjectEye((int)eye,{t.x,t.y,t.z},p)||
+                   !scopepip::EyePixel(eye,desc.Width,desc.Height,p,pixel)){visible=false;break;}
+                vertices[i]={pixel.x,pixel.y,0,pixel.rhw,0xffffffff,.5f+x*.5f,.5f-y*.5f};
             }
             if(visible){
                 const bool opticalEye=int(eye)==f.eye;
                 dev->SetTextureStageState(0,D3DTSS_COLORARG1,opticalEye?D3DTA_TEXTURE:D3DTA_DIFFUSE);
                 if(!opticalEye)for(auto& v:vertices)v.colour=0xff000000;
-                const auto hr=g_origDrawPrimUP(dev,D3DPT_TRIANGLEFAN,64,vertices,sizeof(Vertex));
+                const auto hr=shadowNativeUP(dev,D3DPT_TRIANGLEFAN,64,vertices,sizeof(Vertex));
                 static unsigned receipts=0;
-                if(opticalEye&&receipts++<3)Log("scope PiP: aperture draw eye=%u epoch=%u hr=%08X [PSVR2 verification required]",eye,completion.epoch,(unsigned)hr);
+                if(opticalEye&&receipts++<3)Log("scope PiP: aperture draw eye=%u epoch=%u hr=%08X back=%ux%u centre=(%.1f,%.1f) tracking projection [PSVR2 verification required]",eye,completion.epoch,(unsigned)hr,desc.Width,desc.Height,vertices[0].x,vertices[0].y);
                 if(opticalEye){
                     // Scope-local reticle: projected through the SAME aperture,
                     // never a fullscreen/native ADS crosshair.
@@ -322,12 +383,15 @@ static void Draw(IDirect3DDevice9* dev){
                     for(auto& v:lines){v.x=vertices[0].x+(v.x-vertices[0].x)*.85f;
                         v.y=vertices[0].y+(v.y-vertices[0].y)*.85f;v.colour=0xff101010;}
                     dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_DIFFUSE);
-                    g_origDrawPrimUP(dev,D3DPT_LINELIST,2,lines,sizeof(Vertex));
+                    shadowNativeUP(dev,D3DPT_LINELIST,2,lines,sizeof(Vertex));
                 }
-            }
+            }else {static unsigned refused=0;if(refused++<3)Log("scope PiP: aperture refused tracking projection eye=%u haveEyes=%d",eye,g_haveEyes?1:0);}
         }
     }
-    state->Apply();texture->Release();
+    if(!guard.Restore()){
+        g_sniperPip=false; // Tick detaches on its engine thread, not here.
+        Log("scope PiP: target/state restore FAILED; optical capture disabled");
+    }
 }
 }
 void NativeScopeTick(){NativeRifleFx::MaintainTick();NativeRifleFx::ObserveTick();NativeScopePip::Tick();}

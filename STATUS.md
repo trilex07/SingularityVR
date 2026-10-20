@@ -1,6 +1,25 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 physical51BF3212 FAILED scope / partial rifle VFX: flash visible,
+smoke absent/uncertain, tracer beside barrel; Kasimov black displaced duplicate.
+Preserved physical-feedback.log under build/combined-followups/pose-repair-acc2f2b.
+Actual scope binding, own RTT completion and RGB content succeeded; no aperture
+draw receipt. Accepted DLL7A1DE585...9495 / INI60224CA0...4ADC restored and
+independently verified. No Steam writes/launch in this repair turn.
+
+Offline follow-through isolates the exact owned native SceneCapture from main
+stereo/foreground hooks (whole factory/constructor/render contracts), binds
+the submitted backbuffer explicitly with tested state/COM restoration and
+projects the lens directly from tracking poses. Exact local Valkyrie tracer
+SOURCE getter correction is separately default-OFF; endpoint untouched.
+Bounded enclosed draw/upload counts distinguish execution from mere hook entry.
+Native authored smoke presence proven; GPU smoke identity/visibility remains
+OPEN, no widened shader guesses. See docs/rifle-scope-render-isolation.md.
+No physical fix claim; older delivery history below remains historical.
+
+### Previous delivery (subsequently physically rejected above)
+
 2026-10-20 native-pose/registry repair candidate L1_PASS / L2_PASS, NOT L3/L4.
 Clean code acc2f2bc542a127e1f6622326dab276fd255e17b; x86 PE32 /O2, no extra
 performance instrumentation, DLL51BF3212431E582529E5249A12179E887B698580385C671B34E7406BADC278DC.

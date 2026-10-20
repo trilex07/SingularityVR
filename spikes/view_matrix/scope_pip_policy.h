@@ -1,5 +1,6 @@
 #pragma once
 #include "sniper_scope.h"
+#include "ui_pointer.h"
 namespace scopepip {
 using hipknife::V;
 struct Frame {
@@ -49,4 +50,23 @@ struct Completion {
     void Bind(bool target){if(bound&&!target&&draws){++epoch;draws=0;}bound=target;}
     void Draw(bool succeeded){if(bound&&succeeded&&draws<0xffffffffu)++draws;}
 };
+// Project directly from tracking poses, never from a camera matrix last seen
+// during an unrelated UE3 draw (which may belong to the optical capture).
+struct Pixel { float x=0,y=0,rhw=0; };
+struct RenderLease {
+    unsigned& depth;bool own;
+    RenderLease(unsigned& d,bool enabled,std::uintptr_t expected,std::uintptr_t actual):
+        depth(d),own(enabled&&expected&&expected==actual){if(own)++depth;}
+    ~RenderLease(){if(own)--depth;}
+    RenderLease(const RenderLease&)=delete;
+    RenderLease& operator=(const RenderLease&)=delete;
+};
+inline bool EyePixel(unsigned eye,unsigned width,unsigned height,
+                     const uipointer::ScreenPoint& p,Pixel& out){
+    if(eye>1||width<4||(width&1)||!height||width>32768||height>32768||
+       !std::isfinite(p.u)||!std::isfinite(p.v)||!std::isfinite(p.depth)||p.depth<=1e-5f)return false;
+    const Pixel result{(eye+p.u)*(width*.5f),p.v*height,1.f/p.depth};
+    if(!std::isfinite(result.x)||!std::isfinite(result.y)||!std::isfinite(result.rhw))return false;
+    out=result;return true;
+}
 }

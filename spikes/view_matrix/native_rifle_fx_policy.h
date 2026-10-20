@@ -31,4 +31,13 @@ inline bool Rotation(hipknife::V direction,int& pitch,int& yaw){
     yaw=(int)std::lround(std::atan2(direction.y,direction.x)*uu);
     return true;
 }
+inline bool TracerSource(bool enabled,bool scene,bool callsite,std::uintptr_t object,
+                         std::uint32_t pawn,std::uint32_t weapon,std::uint64_t now,
+                         const weaponmuzzle::Witness& w,hipknife::V camera,
+                         hipknife::V original,hipknife::V& result){
+    // +0x2d4 is the source-interface subobject proven by the owned constructor
+    // and both branches of the complete getter, not a guessed actor field.
+    return enabled&&callsite&&weapon&&object==std::uintptr_t(weapon)+0x2d4&&
+        Origin(3,scene,true,weapon,pawn,weapon,now,w,camera,original,result);
+}
 }

@@ -11,7 +11,7 @@ import struct
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'reload'))
-from inspect_native_reload import PE, occurrences, only, u32
+from inspect_native_reload import PE, occurrences, only, u32, class_vtable
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'title'))
 from ue3_layout import inspect
 
@@ -77,6 +77,42 @@ def helper_contract(text, base, wrapper, offset, length, expected):
     return dict(bytes=length, fnv1a64=f'{expected:016X}', target=target)
 
 
+def block_contract(text, base, address, length, expected):
+    """Whole known extent, including branches after an early return."""
+    start = address-base
+    if start < 0 or length <= 0 or start+length > len(text):
+        raise ValueError('complete block bounds')
+    raw = text[start:start+length]
+    if fnv(raw) != expected:
+        raise ValueError('complete block fingerprint')
+    return dict(bytes=length, fnv1a64=f'{expected:016X}', sha256=hashlib.sha256(raw).hexdigest())
+
+
+def capture_vtable(pe, text, base):
+    # Measured native registration callback has a short tail jump to the
+    # component ctor, unlike Raven's placement-new thunk. Refuse ambiguity.
+    name = only(list(occurrences(pe.data, ('SceneCapture2DComponent\0').encode('utf-16le'))), 'capture class')
+    push = only(list(occurrences(text, b'\x68'+struct.pack('<I', pe.address(name)))), 'capture class push')
+    rows = []
+    for pos in range(max(0, push-48), push-4):
+        if text[pos] != 0x68:
+            continue
+        callback = u32(text, pos+1)
+        try:
+            block_contract(text, base, callback, 18, 0x9DB79AF8F2F197BB)
+            off = callback-base
+            if text[off+11] != 0xe9:
+                continue
+            ctor = callback+16+struct.unpack_from('<i', text, off+12)[0]
+            block_contract(text, base, ctor, 134, 0xA1AFCED08AA559A7)
+            if text[ctor-base+12:ctor-base+14] != b'\xc7\x06':
+                continue
+            rows.append(u32(text, ctor-base+14))
+        except ValueError:
+            continue
+    return only(rows, 'capture ctor vtable')
+
+
 def audit(exe, capture, engine, rifle):
     pe = PE(Path(exe).read_bytes())
     text = Path(capture).read_bytes()
@@ -84,7 +120,7 @@ def audit(exe, capture, engine, rifle):
     if len(text) != section[1]:
         raise ValueError('archive length does not match executable .text')
     base = pe.base+section[2]
-    names = ('intURvWeaponFXexecPlayMuzzleFX',
+    names = ('intURvWeaponFXexecPlayMuzzleFX', 'intURvWeaponFXexecPlayTracerFX',
              'intUSceneCapture2DComponentexecSetView',
              'intUSceneCapture2DComponentexecSetCaptureParameters',
              'intUSceneCaptureComponentexecSetFrameRate',
@@ -94,6 +130,7 @@ def audit(exe, capture, engine, rifle):
     methods = {}
     expected_wrappers = {
         'intURvWeaponFXexecPlayMuzzleFX': (197, 0x1153B073558EDE80),
+        'intURvWeaponFXexecPlayTracerFX': (141, 0xF637C8C8C78F8557),
         'intUSceneCapture2DComponentexecSetView': (165, 0x6AE16D2B13BDB57C),
         'intUSceneCapture2DComponentexecSetCaptureParameters': (455, 0x3EE3F90D93363B69),
         'intUSceneCaptureComponentexecSetFrameRate': (95, 0x4E3E6769F20272E3),
@@ -127,6 +164,49 @@ def audit(exe, capture, engine, rifle):
         receipt = helper_contract(text, base, pe.base+methods[name]['rva'], offset, length, expected)
         receipt['rva'] = receipt.pop('target') - pe.base
         helpers[stage] = receipt
+    table = capture_vtable(pe, text, base)
+    factory = u32(pe.read(table+0x164, 4), 0)
+    block_contract(text, base, factory, 205, 0xC87668CD09D29B85)
+    ctor = helper_contract(text, base, factory, 0xb7, 195, 0xF2ECDE1DE85EA63A)['target']
+    if text[ctor-base+0x63:ctor-base+0x65] != b'\xc7\x06':
+        raise ValueError('capture-info vtable store')
+    info = u32(text, ctor-base+0x65)
+    render = u32(pe.read(info+4, 4), 0)
+    isolation = block_contract(text, base, render, 737, 0x9CCA1CFB4E9B6123)
+    isolation.update(factory_rva=factory-pe.base, constructor_rva=ctor-pe.base, render_rva=render-pe.base,
+                     target_field=0x10, note='own target equality required; not a size heuristic')
+    weapon = class_vtable(pe, text, base, 'RvWeaponShared')
+    # Native default ctor writes pure-interface tables first, implementations
+    # last. Do not confuse it with the destructor's reversed sequence.
+    block_contract(text, base, weapon['constructor'], 74, 0x76B208AF5D452BBD)
+    start = weapon['constructor']-base
+    pattern = b'\xc7\x86\xd4\x02\x00\x00'
+    stores = list(occurrences(text[start:start+74], pattern))
+    if len(stores) != 2:
+        raise ValueError('weapon source-interface construction/unwind stores')
+    source_table = u32(text, start+stores[-1]+len(pattern))
+    getter = u32(pe.read(source_table+8, 4), 0)
+    tracer_source = block_contract(text, base, getter, 156, 0xDC2F29F0817B2902)
+    fx_name = only(list(occurrences(pe.data, ('RvWeaponFX\0').encode('utf-16le'))), 'FX class')
+    fx_push = only(list(occurrences(text, b'\x68'+struct.pack('<I', pe.address(fx_name)))), 'FX class push')
+    fx_tables = []
+    for pos in range(max(0, fx_push-48), fx_push-4):
+        if text[pos] != 0x68:
+            continue
+        callback = u32(text, pos+1)
+        try:
+            block_contract(text, base, callback, 27, 0x64F1971B60F898FB)
+            if text[callback-base+18:callback-base+20] == b'\xc7\x06':
+                fx_tables.append(u32(text, callback-base+20))
+        except ValueError:
+            continue
+    tracer = u32(pe.read(only(fx_tables, 'FX native vtable')+0x128, 4), 0)
+    block_contract(text, base, tracer, 1694, 0xB7DDF9B80E425AAB)
+    if text[tracer-base+0x8c:tracer-base+0x8e] != b'\xff\xd2':
+        raise ValueError('tracer source getter callsite')
+    tracer_source.update(interface_offset=0x2d4, getter_rva=getter-pe.base,
+                         tracer_rva=tracer-pe.base, caller_rva=tracer+0x8e-pe.base,
+                         note='both return branches; endpoint never replaced')
     pkg = inspect(engine, include_all=True)
     classes = {e['index']: e for e in pkg['exports']}
     contract = {}
@@ -144,10 +224,16 @@ def audit(exe, capture, engine, rifle):
                         for p in e.get('properties', []))]
     if len(templates) != 1:
         raise ValueError('ambiguous rifle first-person template')
+    template = only([p['value'] for p in templates[0]['properties'] if p['name']=='mLoopingMuzzleFlash1stPerson'], 'native loop')
+    loop = only([e['index'] for e in pkg['exports'] if e['name']==template and e['class_name']=='ParticleSystem'], 'loop export')
+    materials = [dict(export=e['index'], properties=[p for p in e['properties']
+                 if p['name'] in ('Material', 'bUseLocalSpace')]) for e in pkg['exports']
+                 if e['outer']==loop and e['class_name']=='ParticleModuleRequired']
     return dict(status='OFFLINE_STRUCTURAL_ONLY',
         exe_sha256=hashlib.sha256(pe.data).hexdigest(),
         text_sha256=hashlib.sha256(text).hexdigest(), methods=methods,
         reflected_contract=contract, helper_contract=helpers, rifle_fx=templates,
+        capture_isolation=isolation, tracer_source=tracer_source, native_loop_materials=materials,
         warning='No live execution, completed RTT pixels, native emitter identity or PSVR2 proof.')
 
 

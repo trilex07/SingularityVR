@@ -33,6 +33,13 @@ int main(){
     assert(!riflefx::Origin(2,true,true,2,1,2,99,w,{}, {},out));
     assert(!riflefx::Origin(2,true,true,2,1,2,110,w,{10000,0,0}, {},out));
     assert(!riflefx::Origin(2,true,true,2,1,2,110,w,{std::numeric_limits<float>::quiet_NaN(),0,0}, {},out));
+    assert(riflefx::TracerSource(true,true,true,2+0x2d4,1,2,110,w,{100,200,300},{100,200,300},out));
+    assert(out.x==105&&out.y==206&&out.z==307);
+    assert(!riflefx::TracerSource(false,true,true,2+0x2d4,1,2,110,w,{}, {},out));
+    assert(!riflefx::TracerSource(true,false,true,2+0x2d4,1,2,110,w,{}, {},out));
+    assert(!riflefx::TracerSource(true,true,false,2+0x2d4,1,2,110,w,{}, {},out));
+    assert(!riflefx::TracerSource(true,true,true,3+0x2d4,1,2,110,w,{}, {},out));
+    assert(!riflefx::TracerSource(true,true,true,2+0x2d4,1,2,251,w,{}, {},out));
     w.kind=weaponreload::Kind::Kasimov;
     assert(!riflefx::Origin(2,true,true,2,1,2,110,w,{}, {},out));
 }

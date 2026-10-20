@@ -4,7 +4,8 @@ param(
  [Parameter(Mandatory)][string]$AcceptedProfilePath,
  [Parameter(Mandatory)][string]$CandidateDir,
  [switch]$RifleSniperFollowups,
- [switch]$OpticalScopeAndRifleOrigin
+ [switch]$OpticalScopeAndRifleOrigin,
+ [switch]$RifleTracerOrigin
 )
 # Offline preparation only. No launch, installation or accepted-profile mutation.
 $ErrorActionPreference='Stop'
@@ -67,6 +68,10 @@ if($OpticalScopeAndRifleOrigin){
  # No additional four-frame pass dumps in the perceptual test. Bounded native
  # emitter / owned RTT receipts remain enabled by their experiment flags.
  $targets['Diagnostic/NativeMuzzleProbe']='0'
+}
+if($RifleTracerOrigin){
+ if(-not $OpticalScopeAndRifleOrigin){throw 'Tracer experiment requires -OpticalScopeAndRifleOrigin'}
+ $targets['Diagnostic/NativeRifleTracerOrigin']='1'
 }
 $text=[IO.File]::ReadAllText((Resolve-Path -LiteralPath $InstalledIni).Path,[Text.UTF8Encoding]::new($false,$true))
 $newline=if($text.Contains("`r`n")){"`r`n"}else{"`n"}

@@ -50,6 +50,15 @@ foreach($line in @('SniperPictureInPicture=1','NativeRifleMuzzleOrigin=3','Nativ
 $opticalPlan=Get-Content -Raw (Join-Path $optical.CandidateDir 'change-plan.json') | ConvertFrom-Json
 Check ($opticalPlan.ini.Count -eq 6) 'Optical experiment key scope expanded'
 Check ($opticalPlan.files.Count -eq 1) 'Optical experiment changed game assets'
+$tracer=MakeCase 'optical-tracer'; & $script @tracer -RifleSniperFollowups -OpticalScopeAndRifleOrigin -RifleTracerOrigin | Out-Null
+$tracerPlan=Get-Content -Raw (Join-Path $tracer.CandidateDir 'change-plan.json') | ConvertFrom-Json
+$tracerText=[IO.File]::ReadAllText((Join-Path $tracer.CandidateDir 'SingularityVR.ini'))
+Check ($tracerPlan.ini.Count -eq 7) 'Tracer key scope expanded'
+Check $tracerText.Contains('NativeRifleTracerOrigin=1') 'Tracer flag absent'
+Check $tracerText.Contains('PolishLanguage=1') 'Tracer regressed localization'
+$invalidTracer=MakeCase 'invalid-tracer'
+$failed=$false;try{& $script @invalidTracer -RifleTracerOrigin | Out-Null}catch{$failed=$true}
+Check $failed 'Unscoped tracer candidate accepted'
 $logical=MakeCase 'logical-profile'
 $p=Get-Content -Raw $logical.AcceptedProfilePath | ConvertFrom-Json
 $p.files=@($p.files | Where-Object path -cne 'Binaries/SingularityVR.ini')

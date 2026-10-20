@@ -2,11 +2,17 @@
 from pathlib import Path
 import struct
 import unittest
-from audit_rifle_scope_backend import body, fnv, registration, helper_contract
+from audit_rifle_scope_backend import body, fnv, registration, helper_contract, block_contract
 
 ROOT = Path(__file__).resolve().parents[2]
 
 class NativeBackendTests(unittest.TestCase):
+    def test_full_block_includes_other_return_branch(self):
+        raw = b'\x74\x01\xc3\x90\xc3'
+        block_contract(raw, 0x1000, 0x1000, len(raw), fnv(raw))
+        mutated = raw[:-1]+b'\x90'
+        with self.assertRaises(ValueError): block_contract(mutated, 0x1000, 0x1000, len(raw), fnv(raw))
+        with self.assertRaises(ValueError): block_contract(raw, 0x1000, 0x1000, len(raw)+1, fnv(raw))
     def test_helper_target_requires_exact_call_bounds_and_body(self):
         raw = bytearray(b'\x90'*64)
         raw[8:13] = b'\xe8'+struct.pack('<i', 32-13)
@@ -49,10 +55,14 @@ class NativeBackendTests(unittest.TestCase):
             self.assertIn(key, source)
         backend = (ROOT/'spikes/view_matrix/native_scope_pip.inl').read_text()
         for guard in ('CodeContract("wrapper/Create",create,496', 'PauseRttProbe::ExactTexture',
-                      'completion.epoch', 'state->Capture()', 'state->Apply()',
+                      'completion.epoch', 'gloves::StateGuard<> guard', 'guard.Restore()',
                       'texture->Release()', 'if(running)return;', 'int(eye)==f.eye'):
             self.assertIn(guard, backend)
         self.assertNotIn('StretchRect', backend)
+        self.assertNotIn('g_vfxEyeMat', backend)
+        for guard in ('dev->GetBackBuffer(', 'calls.target(dev,0,back)',
+                      'VrUiProjectEye(', 'scopepip::EyePixel(', 'shadowNativeUP(dev,D3DPT_TRIANGLEFAN'):
+            self.assertIn(guard, backend)
         rifle = (ROOT/'spikes/view_matrix/native_rifle_fx.inl').read_text()
         self.assertIn('original(self,changed?&replacement:location,firstPerson)', rifle)
         self.assertIn('0xDEA566CA454CAFEBull', rifle)
@@ -63,6 +73,11 @@ class NativeBackendTests(unittest.TestCase):
             self.assertIn(guard, rifle)
         self.assertIn('NativeRifleFx::MaintainTick()', backend)
         self.assertIn('NativeRegistry::Find("intUTextureRenderTarget2DexecCreate")', backend)
+        for guard in ('RenderLease lease', '0x9CCA1CFB4E9B6123ull', 'BindRender(component)'):
+            self.assertIn(guard, backend)
+        self.assertIn('NativeRifleTracerOrigin",0,path', source)
+        self.assertIn('caller==tracerCaller', rifle)
+        self.assertIn('0xDC2F29F0817B2902ull', rifle)
         self.assertNotIn('*(hipknife::V*)', rifle)  # No raw actor transform writes.
 
 if __name__ == '__main__': unittest.main()
