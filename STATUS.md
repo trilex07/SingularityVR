@@ -1,5 +1,23 @@
 # STATUS — session handoff
 
+## 2026-10-20 physical2305 / R1 precision clutch
+
+EB2EAA43 physical feedback: VFX and handling/reload OK in tested scope;
+Kasimov scope/hit correspondence still uncertain, R1 still shaky. After exit,
+baseline DLL7A1DE585 / INI60224CA0 independently rehashed restored. Full log:
+build/combined-followups/strong-r1-011876d/physical-feedback-2305.log.
+Eight Kasimov collision receipts show aimDot0.990634--0.999913, NOT pixel
+alignment. Need distinguish native spread from transform/timing; no guessed
+optic offset or zero-spread patch. Rifle live tracer chance0.5 confirmed.
+
+User-requested R1 precision clutch implemented in e4326cf: exact held controller
+poses inside12mm/0.025rad, deliberate threshold escape and immediate release;
+HMD untouched. L1 nativeFX/steady suites PASS, clean L2 x86 PE32 /O2 PASS.
+DLL C8DA7D19C11EDFDFAA7BE5A709346FA2D3C20B75E52FED777BF6CC5D7C057A63.
+Candidate build/combined-followups/r1-clutch-e4326cf prepared OFFLINE; accepted
+profile WhatIf PASS. NOT installed, no launch; require fresh start. Scope/hit
+issue remains OPEN, not advertised as fixed. See docs/r1-precision-clutch.md.
+
 ## 2026-10-20 physical2232 follow-up: rifle reopened / stronger R1
 
 User: Kasimov direction improved, R1 still too shaky; Valkyrie apparent missing
