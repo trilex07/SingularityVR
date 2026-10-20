@@ -251,18 +251,34 @@ Przeprowadzono gruntowną diagnostykę evidence-driven i wygenerowano/skorygowan
    - 100% sum kontrolnych sha16 i sha256 zaktualizowanych.
 
 ### C. Manifest i pliki Notatek / Lokalizacji Tekstowej:
-1. **Manifest Notatek: `dubbing-corrections/deploy_notes_manifest.json`**:
-   - **72 notatki papierowe (`[Notes]`)**: 100% pokrycia sekcji `Notes` w grze (14 z 1. obszaru + 51 przetłumaczonych i zredagowanych z pozostałych rozdziałów + 6 odnalezionych brakujących notatek fabularnych: `RT1_journal2`, `RL99_KorkinCrazy`, `RL99_KorkinDead`, `RL2_lobby`, `RL5_inquiry`, `FR10_Samuson`).
+1. **Manifest Notatek dla MAIN: `dubbing-corrections/deploy_notes_manifest.json`**:
+   - Zawiera pełną strukturę sekcji `[Notes]` oraz `[ChronoNote]` w standardzie INI/INT silnika UE3 z sumami kontrolnymi sha256 każdej pozycji.
+   - **72 notatki papierowe (`[Notes]`)**: 100% pokrycia sekcji `Notes` w grze (14 z 1. obszaru + 51 przetłumaczonych i zredagowanych z pozostałych rozdziałów + 6 odnalezionych brakujących notatek fabularnych).
    - **32 notatki/napisy temporalne (`[ChronoNote]`)**: napisy na ścianach i napisy temporalne widziane przy anomaliach TMD.
-2. **Pliki źródłowe zsynchronizowane we wszystkich worktree**:
-   - `audio/polish/all_notes_pl.json` (72 rekordy, format UTF-8, CP1250 TypekaMix kompatybilny).
-   - `audio/polish/chrono_notes_pl.json` (32 rekordy).
-   - `audio/polish/notes_pl_patch.jsonl` (status `full_native_text_review`).
+   - **6 odnalezionych brakujących notatek fabularnych (wcześniej nieprzetłumaczonych w żadnym buildzie)**:
+     1. `RT1_journal2` – Dziennik badawczy dr. Barisowa #2 (wieża badawcza)
+     2. `RL99_KorkinCrazy` – Dziennik dr. Korkina o postępującym obłędzie (laboratoria 1999)
+     3. `RL99_KorkinDead` – Ostatnia notatka przy ciele Korkina
+     4. `RL2_lobby` – Ostrzeżenie administracyjne w holu placówki (1955)
+     5. `RL5_inquiry` – Notatka śledcza Trybunału Wojskowego
+     6. `FR10_Samuson` – Raport kapitański o ładunku na frachtowcu Pearl
+2. **Pliki źródłowe przygotowane i zsynchronizowane w katalogu `dubbing-corrections/`**:
+   - `dubbing-corrections/all_notes_pl.json` – 72 notatki PDA w formacie klucz-wartość (gotowe do wstrzyknięcia do `[Notes]`).
+   - `dubbing-corrections/chrono_notes_pl.json` – 32 napisy kredowe i temporalne (gotowe do `[ChronoNote]`).
+   - `dubbing-corrections/notes_pl_patch.jsonl` – pełny audyt i historia zmian z angielskimi oryginałami i tłumaczeniem.
+   - Kopie zapasowe umieszczono także w `localization/pl/` oraz `audio/polish/`.
 
-### D. Instrukcja dla MAIN:
-1. **Audio**: Skopiować pliki z `C:\Dubbing-aktualny\` zgodnie z `deploy_manifest.jsonl` (791 plików) lub `deploy_full_manifest.jsonl` (1875 plików) do pakietów/banków gry.
-2. **Notatki**: Wdrożyć `all_notes_pl.json` i `chrono_notes_pl.json` do `RvGame.int` (rekompilacja/patch `Coalesced_INT.bin`), zachowując patch fontu `TypekaMix` (`ui_GFx_fonts.xxx`).
-3. **Weryfikacja w grze**: Przeprowadzić odsłuch i test fizyczny VR w headsetcie PSVR2 (wyrazistość i emocje okrzyków bojowych, brak opóźnień w dialogach, idealna głośność radia w intro, poprawne napisy kredowe i czytelność notatek w PDA).
+### D. Instrukcja dla MAIN (Deployment Playbook):
+1. **Audio**:
+   - Skopiować zawartość `C:\Dubbing-aktualny\` do odpowiednich folderów gry `Binaries/vr-assets/audio/polish/` (`story`, `barks`, `mp`, `skipped`, `intro`, `vignette`) zgodnie z `deploy_manifest.jsonl` lub `deploy_full_manifest.jsonl`.
+2. **Notatki i napisy w grze (tekst)**:
+   - **Plik docelowy gry:** `Singularity\RvGame\Localization\INT\RvGame.int` oraz re-kompilacja do `Singularity\RvGame\CookedPC\Coalesced_INT.bin`.
+   - Wstrzyknąć klucze z `all_notes_pl.json` do sekcji `[Notes]`.
+   - Wstrzyknąć klucze z `chrono_notes_pl.json` do sekcji `[ChronoNote]`.
+   - Upewnić się, że zainstalowany jest font `TypekaMix` (`Singularity\RvGame\CookedPC\ui_GFx_fonts.xxx`), aby polskie znaki diakrytyczne (ą, ć, ę, ł, ń, ó, ś, ź, ż) renderowały się poprawnie na kartkach w grze i napisach kredowych.
+3. **Weryfikacja w grze**:
+   - Sprawdzić w grze otwarcie PDA z notatkami (klawisz notatek / menu VR) – zweryfikować czytelność polskich znaków i obecność 6 wcześniej brakujących wpisów.
+   - Przeprowadzić odsłuch w headsetcie PSVR2: wyrazistość dialogów z odległości 3D, brak przesterów, styl radiowy w helikopterze i autentyczne głosy postaci.
 
 ### E. Ostateczna autentyczność obsady i mastering radiowy (2026-10-20, XTTS-v2 & Broadcast Gain):
 1. **Oryginalna autentyczna obsada aktorska ze Singularity:**
