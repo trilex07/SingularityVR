@@ -1,6 +1,23 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 optical-scope/native rifle-origin candidate L1_PASS on
+fix/rifle-vfx-sniper-grip-scope. Physical5aa5f33: rifle VFX still absent; native
+scope appears but is not acceptable. Complete four-frame rifle traces have
+zero shader/group/witness overflow; pistol's accepted muzzle pairs are absent.
+No new shader pair is identified by count differences. New owned SceneCapture
+512 RTT / measured physical lens path replaces fullscreen ADS only behind
+Render/SniperPictureInPicture (default OFF). Native calls derive from reflected
+wrappers plus exact fingerprints/layout, engine PlayerTick only. Native rifle
+looping emitter receives measured muzzle origin only behind Diagnostic/
+NativeRifleMuzzleOrigin=2 (default0). This is a falsifiable experiment, NOT
+working/physically verified VFX. See docs/optical-scope-native-rifle-candidate.md.
+Accepted Steam DLL7A1DE585...9495 / INI60224CA0...4ADC remain untouched.
+Full reload/hand/shoulder/knife/native replay regression, muzzle/shadow math,
+new scope inverse/basis/lease tests,3 backend guards,35 candidate-preparation
+checks and6 restore-lease fixtures PASS. No L3/L4 for the optical path or rifle
+origin experiment; require clean final L2 artifact before preparation/deploy.
+
 2026-10-20 physical c81d01c FAILED: user no rifle VFX and no sniper scope.
 Game exited; post-exit guard restored promoted DLL7A1DE585...9495 and
 INI60224CA0...4ADC; independent installed hashes PASS. Private saved session:

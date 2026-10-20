@@ -9,6 +9,7 @@ using hipknife::V;using hipknife::Pose;
 struct Mount {
     bool valid=false;std::uint32_t pawn=0,weapon=0;
     V lens{},forward{}; // physical aim-controller LOCAL metres
+    V up{0,1,0};float radius=0; // measured lens plane, required only by PiP
 };
 inline bool Capture(Mount& out,std::uint32_t pawn,std::uint32_t weapon,
                     Pose hand,V lens,V ahead) {

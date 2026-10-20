@@ -1,0 +1,44 @@
+"""Synthetic guard and wiring tests; no game/process or proprietary fixtures."""
+from pathlib import Path
+import struct
+import unittest
+from audit_rifle_scope_backend import body, fnv, registration
+
+ROOT = Path(__file__).resolve().parents[2]
+
+class NativeBackendTests(unittest.TestCase):
+    def test_hash_and_bounded_epilogue(self):
+        self.assertEqual(fnv(b''), 14695981039346656037)
+        self.assertEqual(fnv(b'a'), 0xAF63DC4C8601EC8C)
+        ins, receipt = body(b'\x55\x8b\xec\xc2\x18\x00', 0x1000, 0x1000)
+        self.assertEqual(ins[-1].op_str, '0x18')
+        self.assertEqual(receipt['bytes'], 6)
+        with self.assertRaises(ValueError): body(b'\x90'*16, 0x1000, 0x1000, 16)
+        with self.assertRaises(ValueError): body(b'\xc3', 0x1000, 0xfff)
+
+    def test_registration_refuses_ambiguous_or_outside_code(self):
+        class FakePE:
+            data = b''
+            def address(self, offset): return offset + 0x400000
+        pe = FakePE()
+        with self.assertRaises(ValueError): registration(pe, b'\xc3', 0x1000, 'missing')
+        name = 'native\0'.encode('utf-16le')
+        pe.data = name + b'\0'*(32-len(name)) + struct.pack('<II', 0x400000, 0x900000)
+        with self.assertRaises(ValueError): registration(pe, b'\xc3', 0x1000, 'native')
+
+    def test_default_off_exact_identity_and_no_fullscreen_crop(self):
+        source = (ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf-8')
+        for key in ('"SniperPictureInPicture",0,path', '"NativeRifleMuzzleOrigin",0,path'):
+            self.assertIn(key, source)
+        backend = (ROOT/'spikes/view_matrix/native_scope_pip.inl').read_text()
+        for guard in ('NativeRifleFx::Code(create,496', 'PauseRttProbe::ExactTexture',
+                      'completion.epoch', 'state->Capture()', 'state->Apply()',
+                      'texture->Release()', 'if(running)return;', 'int(eye)==f.eye'):
+            self.assertIn(guard, backend)
+        self.assertNotIn('StretchRect', backend)
+        rifle = (ROOT/'spikes/view_matrix/native_rifle_fx.inl').read_text()
+        self.assertIn('original(self,changed?&replacement:location,firstPerson)', rifle)
+        self.assertIn('0xDEA566CA454CAFEBull', rifle)
+        self.assertIn('notes++<24', rifle)
+
+if __name__ == '__main__': unittest.main()

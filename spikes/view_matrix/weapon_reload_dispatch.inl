@@ -293,22 +293,32 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
         // Material1 is the97-point,168-triangle original lens, entirely on
         // cog_sniper. Centre measured offline in native cog space (UU).
         const hipknife::V lensRoot{-.00000279783f,-11.1806386f,-3.49776761f};
-        hipknife::V lens,ahead,trackingLens,trackingAhead;
+        hipknife::V lens,ahead,trackingLens,trackingAhead,top,edge,trackingTop,trackingEdge;
         const hipknife::V centre{g_centrePos[0],g_centrePos[1],g_centrePos[2]};
         const float baseYaw=g_baseYaw*(6.2831853f/65536.f);
         if(weaponmuzzle::RootPosition(g_nextAnimation[index],nativeRoot,local,controller,lensRoot,lens)&&
            weaponmuzzle::RootPosition(g_nextAnimation[index],nativeRoot,local,controller,lensRoot+hipknife::V{0,0,10},ahead)&&
            weaponmuzzle::ToTracking(lens,centre,g_centreYaw,baseYaw,MetresToUU(),trackingLens)&&
-           weaponmuzzle::ToTracking(ahead,centre,g_centreYaw,baseYaw,MetresToUU(),trackingAhead)){
+           weaponmuzzle::ToTracking(ahead,centre,g_centreYaw,baseYaw,MetresToUU(),trackingAhead)&&
+           weaponmuzzle::RootPosition(g_nextAnimation[index],nativeRoot,local,controller,lensRoot+hipknife::V{0,-10,0},top)&&
+           weaponmuzzle::RootPosition(g_nextAnimation[index],nativeRoot,local,controller,lensRoot+hipknife::V{.821847f,0,0},edge)&&
+           weaponmuzzle::ToTracking(top,centre,g_centreYaw,baseYaw,MetresToUU(),trackingTop)&&
+           weaponmuzzle::ToTracking(edge,centre,g_centreYaw,baseYaw,MetresToUU(),trackingEdge)){
             const auto& p=g_handLastPos[AimHand()];const auto& q=g_handAimOrientation[AimHand()];
             sniperscope::Mount mount;
             if(g_handPositionValid[AimHand()]&&g_handPoseValid[AimHand()]&&
                sniperscope::Capture(mount,visual.pawn,visual.weapon,
-                   {{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}},trackingLens,trackingAhead)&&
-               TryAcquireSRWLockExclusive(&g_nextVisualLock)){
+                   {{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}},trackingLens,trackingAhead)){
+                const hipknife::Q inverse{-q.x,-q.y,-q.z,q.w};
+                const auto vertical=trackingTop-trackingLens;
+                const float length=hipknife::Length(vertical);
+                if(length>.001f)mount.up=hipknife::Rotate(inverse,vertical*(1.f/length));
+                mount.radius=hipknife::Length(trackingEdge-trackingLens);
+                if(TryAcquireSRWLockExclusive(&g_nextVisualLock)){
                 g_sniperScopeMount=mount;ReleaseSRWLockExclusive(&g_nextVisualLock);
                 static unsigned notes=0;if(notes++<3)Log("sniper lens: original97-point centre controller-local=(%.4f,%.4f,%.4f) forward=(%.4f,%.4f,%.4f)",
                     mount.lens.x,mount.lens.y,mount.lens.z,mount.forward.x,mount.forward.y,mount.forward.z);
+                }
             }
         }
     }

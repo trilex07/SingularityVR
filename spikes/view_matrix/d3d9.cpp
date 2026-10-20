@@ -27,6 +27,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "weapon_trace_math.h"
 #include "weapon_muzzle_geometry.h"
 #include "sniper_scope.h"
+#include "scope_pip_policy.h"
 #include "weapon_wheel.h"
 #include "ammo_probe.h"
 #include "ammo_layout.h"
@@ -2351,6 +2352,9 @@ static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
 static weaponmuzzle::Witness g_nextMuzzle,g_nextMuzzleStaged;
 static sniperscope::Mount g_sniperScopeMount;
 static sniperscope::State g_sniperScopeState; // input thread only
+static int g_nativeRifleMuzzle=0; // 0 unchanged, 1 observe, 2 native Valkyrie origin
+static int g_sniperPip=0;
+static scopepip::Frame g_scopePipFrame;
 inline bool ScopeActive();
 static int g_sniperNearEyeScope=0;
 static centurionclip::PresentationSafety g_nextPresentation;
@@ -2368,7 +2372,7 @@ static void CancelNextReload(){
         g_nextNativeGate.Clear();ReleaseSRWLockExclusive(&g_centurionNativeLock);
     }
     if(TryAcquireSRWLockExclusive(&g_nextVisualLock)){
-        g_nextVisual={};g_nextWitness={};g_nextWrist={};g_nextMuzzle={};g_sniperScopeMount={};ReleaseSRWLockExclusive(&g_nextVisualLock);
+        g_nextVisual={};g_nextWitness={};g_nextWrist={};g_nextMuzzle={};g_sniperScopeMount={};g_scopePipFrame={};ReleaseSRWLockExclusive(&g_nextVisualLock);
     }
 }
 static void CancelCenturionInput(){
@@ -3332,7 +3336,8 @@ void ResolveGameplayOffsets() {
 //
 // So nulling the first-person muzzle TEMPLATES stops both from ever spawning. The templates, not the
 // spawned component: nothing is created in the first place, so there is nothing to chase, move or
-// clean up. `PlayMuzzleFX(bool bFirstPerson, vector muzzleLoc)` is native and reads these pointers.
+// clean up. Native PlayMuzzleFX takes (const FVector& muzzleLoc, UBOOL bFirstPerson)
+// (audited wrapper + vtable method); it reads these template pointers.
 //
 // ⚠️ The THIRD-PERSON variants are deliberately left alone. They are what other viewers and mirrors
 // see, they are authored at world scale, and they are not the artefact.
@@ -5901,6 +5906,11 @@ void StampCaptureState(CopySlot& cap) {
 // In pipelined mode the very first frame returns nullptr because nothing has been captured yet -
 // that is normal startup, not a failure.
 void DrawLaserSight(IDirect3DDevice9* dev);
+void DrawScopePip(IDirect3DDevice9* dev);
+void ResetScopePip();
+void NativeScopeTick();
+void NativeScopeBind(IDirect3DSurface9* surface);
+void NativeScopeReceipt(HRESULT hr);
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
@@ -5944,6 +5954,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     // the zero-copy and CPU paths - the laser cannot end up in one and not the other.
     const bool ownOverlayScene = SUCCEEDED(dev->BeginScene());
     DrawCustomGloves(dev);
+    DrawScopePip(dev);
     DrawLaserSight(dev);
     DrawWristHealth(dev);
     DrawHealthPlate(dev);
@@ -11955,13 +11966,22 @@ void SyncXRInput(XrTime displayTime) {
         const bool scopeRequested=g_sniperScopeState.Update(eligible,mount,(uint32_t)g_playerPawn,
             (uint32_t)Rd(g_weaponObj),{{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}},eyes,GetTickCount64());
         nearEyeRequested=scopeRequested;nearEyeEligible=eligible;
+        if(g_sniperPip&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
+            const auto& m=g_sniperScopeState.trackingMount;
+            const hipknife::Q orientation{q.x,q.y,q.z,q.w};
+            const hipknife::V position{p.x,p.y,p.z};
+            g_scopePipFrame={scopeRequested,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),
+                position+hipknife::Rotate(orientation,m.lens),hipknife::Rotate(orientation,m.forward),
+                hipknife::Rotate(orientation,m.up),m.radius,g_sniperScopeState.eyeIndex};
+            ReleaseSRWLockExclusive(&g_nextVisualLock);
+        }
         if(prior!=scopeRequested){static unsigned notes=0;if(notes++<24)
             Log("sniper near-eye: active=%d eligible=%d mount=%d eye=%d axial=%.4f radial=%.4f alignment=%.4f t=%llu",
                 scopeRequested?1:0,eligible?1:0,mount.valid?1:0,g_sniperScopeState.eyeIndex,
                 g_sniperScopeState.axial,g_sniperScopeState.radial,g_sniperScopeState.alignment,GetTickCount64());}
         // Retain normal L2 elsewhere. Only Kasimov's scoped aim is owned here;
         // later knife/reload/menu ownership gates can still consume this input.
-        if(eligible)lt=scopeRequested?1.f:0.f;
+        if(eligible)lt=g_sniperPip?0.f:(scopeRequested?1.f:0.f);
     }
     if(g_hipKnifeEnabled){
         const float knifeTrig = g_hipKnifeState.held == fireHand ? rt : (g_hipKnifeState.held == altHand ? lt : 0.0f);
@@ -13858,7 +13878,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMIT
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
     const int id=shadowtrace::Before(dev,(unsigned)t,0,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
-    const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativePrim(dev,t,first,prims);});shadowtrace::After(id,hr);return hr;
+    const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativePrim(dev,t,first,prims);});shadowtrace::After(id,hr);NativeScopeReceipt(hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,INT base,UINT min,UINT verts,UINT start,UINT prims) {
     nativefx::PathObserve(1,g_nativeFxStereoPairDepth!=0);
@@ -13868,7 +13888,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRI
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
     const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
-    const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeIndexed(dev,t,base,min,verts,start,prims);});shadowtrace::After(id,hr);return hr;
+    const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeIndexed(dev,t,base,min,verts,start,prims);});shadowtrace::After(id,hr);NativeScopeReceipt(hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT prims,const void* data,UINT stride) {
     nativefx::PathObserve(2,g_nativeFxStereoPairDepth!=0);
@@ -13877,7 +13897,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIV
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,0,prims,(unsigned)g_thisDrawMoved);
     const int id=shadowtrace::Before(dev,(unsigned)t,0,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
-    const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeUP(dev,t,prims,data,stride);});shadowtrace::After(id,hr);return hr;
+    const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeUP(dev,t,prims,data,stride);});shadowtrace::After(id,hr);NativeScopeReceipt(hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceIndexedUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT min,UINT verts,UINT prims,const void* indices,D3DFORMAT format,const void* data,UINT stride) {
     nativefx::PathObserve(3,g_nativeFxStereoPairDepth!=0);
@@ -13886,7 +13906,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceIndexedUP(IDirect3DDevice9* dev,D3DP
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
     const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
-    const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeIndexedUP(dev,t,min,verts,prims,indices,format,data,stride);});shadowtrace::After(id,hr);return hr;
+    const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeIndexedUP(dev,t,min,verts,prims,indices,format,data,stride);});shadowtrace::After(id,hr);NativeScopeReceipt(hr);return hr;
 }
 typedef HRESULT (STDMETHODCALLTYPE *ShadowSetPS)(IDirect3DDevice9*,IDirect3DPixelShader9*);
 typedef HRESULT (STDMETHODCALLTYPE *ShadowStretch)(IDirect3DDevice9*,IDirect3DSurface9*,const RECT*,IDirect3DSurface9*,const RECT*,D3DTEXTUREFILTERTYPE);
@@ -14012,7 +14032,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
     HRESULT hr = g_origSetRenderTarget(dev, idx, surf);
     if (FAILED(hr)) return hr; // Failed binds leave the actual device target unchanged.
     if (idx == 0) shadowtrace::bound.rt=surf;
-    if (idx == 0) { PauseRttProbe::Bind(surf); PauseRttProbe::ContentBind(surf); }
+    if (idx == 0) { PauseRttProbe::Bind(surf); PauseRttProbe::ContentBind(surf); NativeScopeBind(surf); }
     // Run 116: which target the first-person pass draws into. If it switches at the foreground
     // boundary the pass is composited from its own surface, and skipping its draws leaves that
     // surface at its cleared value - which would explain "black but still occluding" without any
@@ -25317,6 +25337,8 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
 
     if (!NativeOwnedInventory::InvokeRetained(self,edx,Stack,Result,fnIdx,(int)Rd(g_nodeOffset),g_origProcessEvent))
         g_origProcessEvent(self, edx, Stack, Result);
+    if(g_sniperPip&&fnIdx>=0&&fnIdx==FnIdx(kFnPlayerTick)&&
+       (uintptr_t)self==(uintptr_t)(uint32_t)Rd(g_ctlForXi))NativeScopeTick();
 
     // Mode 9's window closes here. Restoring the value that was READ rather than a cached head
     // means a nested fire function (StartFire -> BeginFire -> FireAmmunition) puts back the hand
@@ -26989,6 +27011,7 @@ static mirrorprobe::Probe g_mirrorPixelProbe;
 static bool g_mirrorProbeCurtain=false;
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    ResetScopePip();
     g_knifeMeleeReference.Reset();
     nativefx::Release();
     g_knifeHandPoseThisDraw=false;g_knifeJointFrame=-1;g_knifeJointEyes=0;
@@ -27382,6 +27405,8 @@ struct CenturionRefillNative {
     void Refill()const{((void (__thiscall*)(void*))bindings.method[3])(object);}
 };
 #include "native_refill_engine.inl"
+#include "native_rifle_fx.inl"
+#include "native_scope_pip.inl"
 static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
     const auto object=(uint32_t)reinterpret_cast<uintptr_t>(self);
     const auto weapon=(uint32_t)Rd(g_weaponObj),pawn=(uint32_t)g_playerPawn;
@@ -30429,6 +30454,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         // call because it only ACTS on a change of state - a few interlocked reads while nothing is
         // happening, and a GObjects walk only when the cached objects stop validating (a weapon swap).
         TIME_HOOK(3, ApplyMuzzleFxSuppression());
+        NativeRifleFx::Install();
         #undef TIME_HOOK
         {
             const double dGp = MsSince(tGp);
@@ -32804,6 +32830,9 @@ void LoadIniSettings() {
             GetPrivateProfileIntA("Diagnostic","NativeMuzzleWorldPSBytes",0,path));
         nativefx::ConfigureParticles(GetPrivateProfileIntA("Render","NativeMuzzleParticleStereo",0,path)!=0);
         nativefx::ConfigureProbeGun((unsigned)GetPrivateProfileIntA("Diagnostic","NativeMuzzleProbeGunVerts",0,path));
+        g_nativeRifleMuzzle=(int)GetPrivateProfileIntA("Diagnostic","NativeRifleMuzzleOrigin",0,path);
+        if(g_nativeRifleMuzzle<0||g_nativeRifleMuzzle>2)g_nativeRifleMuzzle=0;
+        Log("ini: NativeRifleMuzzleOrigin=%d (0 unchanged, 1 observe, 2 exact owned looping emitter origin)",g_nativeRifleMuzzle);
     }
     g_cutsceneScreenDistanceMm=cinemascreen::ClampDistanceMm(
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));
@@ -33403,6 +33432,8 @@ void LoadIniSettings() {
     g_volkAuthoredGrip = GetPrivateProfileIntA("Input", "VolkAuthoredGrip", 0, path) ? 1 : 0;
     g_kasimovAuthoredGrip=GetPrivateProfileIntA("Input","KasimovAuthoredGrip",0,path)?1:0;
     g_sniperNearEyeScope=GetPrivateProfileIntA("Input","SniperNearEyeScope",0,path)?1:0;
+    g_sniperPip=GetPrivateProfileIntA("Render","SniperPictureInPicture",0,path)?1:0;
+    if(g_sniperPip&&!g_sniperNearEyeScope){g_sniperPip=0;Log("scope PiP: requires measured near-eye policy; disabled");}
     Log("ini: KasimovAuthoredGrip=%d SniperNearEyeScope=%d (default OFF; native scoped view, measured lens proximity)",
         g_kasimovAuthoredGrip,g_sniperNearEyeScope);
     g_weaponWheelObserved = GetPrivateProfileIntA("Input", "WeaponWheelObservedSelection", 0, path) ? 1 : 0;

@@ -41,6 +41,15 @@ foreach($line in @('KeepAcquiredWeapons=0','KasimovAuthoredGrip=1','SniperNearEy
 $riflePlan=Get-Content -Raw (Join-Path $rifle.CandidateDir 'change-plan.json') | ConvertFrom-Json
 Check ($riflePlan.ini.Count -eq 4) 'Rifle/sniper key scope expanded'
 Check ($riflePlan.files.Count -eq 1) 'Rifle/sniper changed assets'
+$optical=MakeCase 'optical'; & $script @optical -RifleSniperFollowups -OpticalScopeAndRifleOrigin | Out-Null
+$opticalText=[IO.File]::ReadAllText((Join-Path $optical.CandidateDir 'SingularityVR.ini'))
+foreach($line in @('SniperPictureInPicture=1','NativeRifleMuzzleOrigin=2','NativeMuzzleProbe=0',
+ 'NativeMuzzleParticleStereo=1','PolishLanguage=1','DesktopMirrorWindow=1')){
+ Check $opticalText.Contains($line) "Optical experiment regressed $line"
+}
+$opticalPlan=Get-Content -Raw (Join-Path $optical.CandidateDir 'change-plan.json') | ConvertFrom-Json
+Check ($opticalPlan.ini.Count -eq 6) 'Optical experiment key scope expanded'
+Check ($opticalPlan.files.Count -eq 1) 'Optical experiment changed game assets'
 $logical=MakeCase 'logical-profile'
 $p=Get-Content -Raw $logical.AcceptedProfilePath | ConvertFrom-Json
 $p.files=@($p.files | Where-Object path -cne 'Binaries/SingularityVR.ini')
