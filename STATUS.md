@@ -9,6 +9,10 @@ is synchronized componentE0->proxy90 and validated; optical render capped45.5Hz
 or time-dilation write. See docs/scope-optics-slow-followup.md for evidence,
 falsifiers, private-input auditor and physical route. Not physically accepted;
 accepted Steam installation remains untouched while preparing this candidate.
+Code1e27b94 clean L2 x86 PE32 /O2 PASS, DLL380F1521...FA1EB9.
+Full native FX/steady/four-weapon regressions +49 prep/6 lease checks PASS.
+145-pin accepted-profile WhatIf PASS. Candidate calibrated-optics-1e27b94
+READY_FOR_PHYSICAL_ACCEPTANCE, NOT deployed. Fresh user start required.
 
 ## 2026-10-20 physical1938: optical scope BROKEN / HUD gates accepted
 

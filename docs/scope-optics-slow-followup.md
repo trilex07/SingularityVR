@@ -66,3 +66,23 @@ with scope down/up, aim at a different target, hold R1 with two hands, click L3
 with the scope up, then lower it. Check health/ammo hiding, Circle reload and
 native muzzle FX. Stay in headset; close normally, then report magnification,
 slow time and FPS. MAIN collects the bounded receipts without chat switching.
+
+## Candidate receipt (L1_PASS / L2_PASS only)
+
+Clean source 1e27b9424c1982018f3038d647e6d0d50c10f910, x86 PE32 /O2,
+no PERFORMANCE_BUILD. Native FX/scope/steady fixtures, complete four-weapon
+reload/first-shot/animation/grip/ABI/GPU regression,49 private prep checks and
+six fake-install lease checks PASS. Private original executable audit PASS.
+Existing unrelated static-analysis/deprecation warnings remain; build succeeds.
+
+Candidate: build/combined-followups/calibrated-optics-1e27b94
+
+- DLL: 380F15213259B036DAD8D9C4135C215F09661F912A11CD6D45A04B2078FA1EB9
+- INI: 9CB5A44E8DE1462E7C97C277894186BF831E8B233643749F93AFAD66D724EBBE
+- plan: 4954BD4B0E25A99B0F76422934440AFA868FE0E4DECEE2E256FE90CD3482C759
+
+Accepted-profile Install -WhatIf PASS across145 pinned files and logical INI;
+no Steam writes/launch. Ten scoped INI deltas retain the preceding optical/
+rifle/steady candidate and add just the two flags above; DLL only, no assets.
+READY_FOR_PHYSICAL_ACCEPTANCE; require fresh start and a fresh verified lease.
+Installed DLL/INI independently still match7A1DE585...9495/60224CA0...4ADC.
