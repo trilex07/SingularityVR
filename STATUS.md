@@ -1,6 +1,13 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 requested shoulder pickup tolerance: shared reload supply radius
+13cm ->17cm, same physical-left/back anchor and grip ownership. Rejected20cm
+after the existing 1440-pose regression proved overlap with the knife region;
+17cm preserves geometric separation. Insertion stays16cm, holsters unchanged.
+Added inside16cm/outside18cm boundary checks; updated held-grip approach fixture
+to start outside the new supply radius. Not physically accepted yet.
+
 2026-10-20 further wheel review: corrected an extra UObject vtable dereference
 in the owned selector (read pawn[0], not pawn[0][0]). The actual-handler test
 now executes the selector ABI, checks pawn/FName delivery, paused refusal and

@@ -13,7 +13,7 @@ struct Config {
     // Physical left shoulder, tracking metres. Yaw only: usable seated and
     // looking down, separate from both existing hip holsters. Old belt INI
     // keys intentionally do not move this anchor back into the knife zone.
-    float shoulderLeft=.22f,shoulderDown=.12f,shoulderBack=.18f,pouchRadius=.13f;
+    float shoulderLeft=.22f,shoulderDown=.12f,shoulderBack=.18f,pouchRadius=.17f;
     V socketLocal{-.035f,-.035f,-.08f}; // authored calibration, NOT a UE3 offset
     float socketRadius=.075f,pullDistance=.15f,insertRadius=.16f;
     std::uint64_t timeoutMs=15000,ackMs=4000,cooldownMs=500,grabWindowMs=650;

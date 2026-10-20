@@ -19,7 +19,7 @@ class Wiring(unittest.TestCase):
     def test_legacy_circle_and_radius_not_replaced(self):
         self.assertIn('bool circleOpens=false;', self.policy)
         self.assertIn('c.circleOpens?enter(Phase::Open,Event::Opened):enter(Phase::Unlocked,Event::Unlocked)', self.policy)
-        self.assertIn('pouchRadius=.13f', self.policy)
+        self.assertIn('pouchRadius=.17f', self.policy)
         self.assertIn('insertRadius=.16f', self.policy)
 
     def test_render_socket_only_published_after_success_and_restore(self):

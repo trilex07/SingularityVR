@@ -37,7 +37,7 @@ int main(){
     assert(tick(true,f.socket+V{0,0,-.2f}).event==Event::Removed);
     assert(tick(false,f.socket+V{0,0,-.2f}).event==Event::Discarded);
     // Squeeze just before reaching the shoulder works, without a knife grab.
-    assert(tick(true,f.pouch+V{-.16f,0,0}).event==Event::None);
+    assert(tick(true,f.pouch+V{-.23f,0,0}).event==Event::None);
     assert(tick(true,f.pouch).event==Event::GrabFresh&&knife.held<0);
     // Cancellation while physically held cannot hand over that squeeze to
     // a knife, even after moving all the way to the hip.

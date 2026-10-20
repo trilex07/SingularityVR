@@ -6,6 +6,11 @@
 using namespace centurionreload;
 int main(){
     Config c;unsigned checked=0;
+    // More forgiving supply pickup, not a wider insertion/holster region.
+    assert(std::fabs(c.pouchRadius-.17f)<1e-6f);
+    assert(Near({.16f,0,0},{},c.pouchRadius));
+    assert(!Near({.18f,0,0},{},c.pouchRadius));
+    assert(std::fabs(c.insertRadius-.16f)<1e-6f);
     for(int raw:{-22,22,-2000,2000,0}){
         c.shoulderLeft=ShoulderLeftMetres(raw);
         assert(c.shoulderLeft>=.15f&&c.shoulderLeft<=.40f);
