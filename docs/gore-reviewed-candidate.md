@@ -39,3 +39,18 @@ normally. No mid-headset chat. TMD sever-all is not part of this test.
 
 Stable Steam installation and main are untouched during offline preparation.
 L1/L2 never establish native severing or physical aim comfort.
+
+## Preparation receipt
+
+Source commit: `2539ee4`, branch `fix/gore-stronger-r1-integration` (pushed).
+Candidate directory: `build/combined-followups/gore-r1-2539ee4` (local, ignored).
+DLL SHA-256: `CF7AA4665C1C3C9D398BADC98C3B8C7A725EFC951FE1DB90FB27872B3D815D91`.
+Clean-source x86 PE32 `/O2` build PASS; existing static-analysis warnings remain.
+L1: 13 optimized CPU fixtures plus 24 Python regression checks PASS, including
+mocked scoped settings restoration, nested calls, typed-field refusal and NPC
+exclusion. These are not actual engine execution evidence.
+Official deployment `-WhatIf`: accepted-profile preflight PASS, no files written.
+Change plan: DLL plus only WeaponSteadyPrecision=2, GoreDismemberment=1,
+GoreChancePct=100. All other promoted config/assets retained.
+Installed hashes verified unchanged: DLL `EF3A1F3B…721B7B753`, INI `55A3ED4D…E3F659`.
+L3/L4 pending. No deployment, game launch, main merge or stable promotion.
