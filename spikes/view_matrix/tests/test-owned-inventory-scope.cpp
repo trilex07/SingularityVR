@@ -54,6 +54,12 @@ static uintptr_t Pointer(uintptr_t p){return SafeRange(p,4)?*(const uintptr_t*)p
 #include "../native_owned_inventory.h"
 static unsigned checks=0,calls=0;
 static bool raiseFault=false;
+static unsigned selections=0;
+static void* selectedPawn=nullptr;
+static NativeOwnedInventory::Name selectedName{};
+static void __fastcall SelectWeapon(void* self,void*,NativeOwnedInventory::Name name) {
+  ++selections;selectedPawn=self;selectedName=name;
+}
 static unsigned char expectedDrop[11]{};
 static void Check(bool pass){++checks;if(!pass){std::fprintf(stderr,"FAIL scope check %u\n",checks);std::exit(1);}}
 // The original interpreter entry. The production call site runs it whenever
@@ -141,9 +147,9 @@ int main(int argc,char** argv) {
   memcpy((void*)(controller+OBJ_CLASS),&cc,4);memcpy((void*)(controller+0x100),&pawn,4);
   memcpy((void*)(pawn+OBJ_CLASS),&pc,4);memcpy((void*)(manager+OBJ_CLASS),&mc,4);
   // The pawn's vtable: +0xB14 is the selector, +0xB18 the audited HasWeapon.
-  static unsigned char vtable[0x200];
+  static unsigned char vtable[0xb20];
   const uintptr_t hasWeapon=inventoryretention::HasWeaponImpl;
-  const uintptr_t selector=(uintptr_t)&Original;
+  const uintptr_t selector=(uintptr_t)&SelectWeapon;
   memcpy(vtable+0xb14,&selector,4);memcpy(vtable+0xb18,&hasWeapon,4);
   const uintptr_t vt=(uintptr_t)vtable;
   memcpy((void*)pawn,&vt,4);
@@ -171,6 +177,17 @@ int main(int argc,char** argv) {
   memcpy((void*)(third+0x1e0),&fourth,4);
   Check(NativeOwnedInventory::Snapshot());Check(NativeOwnedInventory::Mask()==15);
   Check(NativeOwnedInventory::count==4);
+  // Exercise the actual virtual call, not only snapshot readiness. UObject[0]
+  // is the vtable pointer; dereferencing it twice reads the first METHOD.
+  NativeOwnedInventory::Queue(11387);NativeOwnedInventory::Poll();
+  Check(selections==1&&selectedPawn==(void*)pawn);
+  Check(selectedName.index==201&&selectedName.number==0);
+  g_gamePaused=1;NativeOwnedInventory::Queue(5799);NativeOwnedInventory::Poll();
+  Check(selections==1);g_gamePaused=0;
+  const uintptr_t wrongTarget=0;
+  memcpy(vtable+0xb18,&wrongTarget,4);
+  NativeOwnedInventory::Queue(5799);NativeOwnedInventory::Poll();Check(selections==1);
+  memcpy(vtable+0xb18,&hasWeapon,4);
   memcpy((void*)(fourth+0x1e0),&first,4); // cycle must fail closed
   NativeOwnedInventory::next=0;NativeOwnedInventory::Poll();
   Check(NativeOwnedInventory::Mask()==0);

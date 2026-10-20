@@ -61,6 +61,9 @@ class CombinedFollowupTests(unittest.TestCase):
         self.assertIn('NativeOwnedInventory::Ready()', source)
         self.assertIn('const bool ownedReady = Rd(g_ownedWeaponWheel) && NativeOwnedInventory::Ready();', source)
         self.assertIn('labelSeen = ownedReady ? ownedSeen : seenCopy', source)
+        self.assertIn('if (Rd(g_ownedWeaponWheel) && NativeOwnedInventory::Ready())', source)
+        self.assertIn('const uintptr_t vt=P(pawn);', native)
+        self.assertNotIn('const uintptr_t vt=P(P(pawn));', native)
         # The possession chain is read through the audited native layout and
         # every object is validated by its class name.
         self.assertIn('kPawnInvManager=0x3d0', native)

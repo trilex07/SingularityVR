@@ -200,7 +200,7 @@ static void Poll() {
     // (0x102F700, verified against the owned EXE vtable at 0x19D0788). That
     // pins the vtable far more strongly than a body hash that cannot be
     // recomputed from the installed (packed) image.
-    const uintptr_t vt=P(P(pawn));
+    const uintptr_t vt=P(pawn);
     const uintptr_t cross=P(vt+0xb18);
     if(cross!=inventoryretention::HasWeaponImpl){if(reports++<24)Log("owned inventory: pawn vtable identity refused (cross=%p expected=%p)",(void*)cross,(void*)inventoryretention::HasWeaponImpl);return;}
     const uintptr_t target=P(vt+0xb14);

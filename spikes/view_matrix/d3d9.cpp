@@ -11353,7 +11353,7 @@ void SyncXRInput(XrTime displayTime) {
             const weaponwheel_direct::Catalog view{ secs, (int)n, cyc, (int)m };
             const LONG curV = Rd(g_gunVerts);
             const LONG tgtV = weaponwheel_direct::TargetVertsForSector(view, (int)sel);
-            if (Rd(g_ownedWeaponWheel)) {
+            if (Rd(g_ownedWeaponWheel) && NativeOwnedInventory::Ready()) {
                 // Select an actually possessed item on the engine input thread.
                 // Native two-slot cycling cannot reach retained extra guns.
                 pulses=0;

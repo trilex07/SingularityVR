@@ -1,6 +1,15 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 further wheel review: corrected an extra UObject vtable dereference
+in the owned selector (read pawn[0], not pawn[0][0]). The actual-handler test
+now executes the selector ABI, checks pawn/FName delivery, paused refusal and
+wrong-vtable refusal; its fixture also fixes an undersized vtable allocation.
+When the ownership snapshot is unavailable, selection now follows the SAME
+accepted observed/cycle fallback as the displayed icons. L1 PASS:160 policy,
+109 handler checks,12 Python tests,16 preparation and6 lease scenarios.
+No new Steam deployment or physical acceptance for these corrections yet.
+
 2026-10-20 wheel regression follow-up (user feedback after the 2026-10-19
 promoted baseline: "I cannot switch weapons - only one is available, the wheel
 is empty"). Root cause found from the accepted session log: the new
