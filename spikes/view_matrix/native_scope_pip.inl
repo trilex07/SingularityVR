@@ -108,11 +108,19 @@ static bool ObjectsCurrent(){
         PauseRttProbe::Pointer(rt+OBJ_OUTER)==owner;
 }
 static void Tick(){
-    if(!g_sniperPip||failed||g_funcOffset<0||g_upChildren<=0||g_upNext<=0)return;
+    if(!g_sniperPip&&!attached)return;
+    if(failed||g_funcOffset<0||g_upChildren<=0||g_upNext<=0)return;
     static thread_local bool running=false;
     if(running)return;
     struct Guard{bool& value;Guard(bool& v):value(v){value=true;}~Guard(){value=false;}}guard(running);
     const auto pawn=g_playerPawn;
+    if(!g_sniperPip){
+        // A live config disable must stop native background work as well as
+        // hiding the aperture. Never detach from the render/config thread.
+        if(attached&&owner==pawn&&pawn&&IsLive(pawn)&&ObjectsCurrent())
+            detach((void*)pawn,(void*)capture);
+        attached=false;capture=0;InterlockedExchange(&target,0);return;
+    }
     const auto frame=Snapshot();const bool active=Current(frame);
     static bool entered=false;
     if(active&&!entered){entered=true;Log("scope PiP: engine PlayerTick reached with fresh measured lens");}

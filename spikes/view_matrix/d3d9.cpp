@@ -25337,7 +25337,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
 
     if (!NativeOwnedInventory::InvokeRetained(self,edx,Stack,Result,fnIdx,(int)Rd(g_nodeOffset),g_origProcessEvent))
         g_origProcessEvent(self, edx, Stack, Result);
-    if(g_sniperPip&&fnIdx>=0&&fnIdx==FnIdx(kFnPlayerTick)&&
+    if(fnIdx>=0&&fnIdx==FnIdx(kFnPlayerTick)&&
        (uintptr_t)self==(uintptr_t)(uint32_t)Rd(g_ctlForXi))NativeScopeTick();
 
     // Mode 9's window closes here. Restoring the value that was READ rather than a cached head

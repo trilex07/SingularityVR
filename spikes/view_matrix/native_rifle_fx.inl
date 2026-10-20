@@ -42,7 +42,8 @@ static void __fastcall Hook(void* self,void*,const hipknife::V* location,int fir
     const bool changed=readable&&riflefx::Origin(g_nativeRifleMuzzle,scene,firstPerson!=0,
         (uint32_t)owner,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),
         witness,{g_camPos[0],g_camPos[1],g_camPos[2]},*location,replacement);
-    const bool receipt=readable&&owner==(uintptr_t)(uint32_t)Rd(g_weaponObj)&&notes++<24;
+    const bool rifle=witness.kind==weaponreload::Kind::Valkyrie||Rd(g_gunVerts)==11387;
+    const bool receipt=readable&&rifle&&owner==(uintptr_t)(uint32_t)Rd(g_weaponObj)&&notes++<24;
     if(receipt)
         Log("rifle native emitter: mode=%d first=%d fresh=%d kind=%d changed=%d source=(%.3f,%.3f,%.3f) destination=(%.3f,%.3f,%.3f) [call receipt, not pixels]",
             g_nativeRifleMuzzle,firstPerson,witness.Current((uint32_t)g_playerPawn,(uint32_t)owner,GetTickCount64())?1:0,
