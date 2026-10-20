@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <initializer_list>
 
 static int g_fails = 0;
 static void Expect(bool cond, const char* name) {
@@ -14,6 +15,13 @@ static void Expect(bool cond, const char* name) {
 int main() {
     using namespace wheel_layout;
     const float pi = 3.14159265358979323846f;
+    for(int extent : {1654,2160,3244,3308}) {
+        const int r=RoundMetrics(3308).outerR;
+        for(int pos=-100;pos<=200;++pos) {
+            const float c=VisibleCenter((float)pos/100,extent,r)*extent;
+            Expect(c-r>=7 && c+r<=extent-7,"complete wheel stays inside eye");
+        }
+    }
 
     // Sector centres: 0 = up, clockwise. Matches the square-card placement
     // (cos/sin at -pi/2 + 2*pi*i/slots) and SectorForStick.

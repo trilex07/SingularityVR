@@ -20,6 +20,15 @@ struct Signals {
     bool cinemaPauseMenu = false; // explicit focused pause owns presentation, not raw cinema
 };
 
+// Present classifies the NEXT draw frame. A completed cinema frame must not
+// suddenly be interpreted as SBS (nor a completed SBS frame as full-width mono).
+// Video/menu keep their existing immediate, self-rendered presentation routes.
+inline Mode CompletedFrameMode(Mode rendered, Mode next) {
+    if ((rendered == Mode::CutsceneFlat && next == Mode::GameplayStereo) ||
+        (rendered == Mode::GameplayStereo && next == Mode::CutsceneFlat)) return rendered;
+    return next;
+}
+
 inline bool FrontendMenuPresentation(bool enabled, int menuClass, bool focus,
                                      bool cinematic = false, bool paused = false) {
     return enabled && focus && !(cinematic && paused) &&

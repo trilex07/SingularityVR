@@ -5684,6 +5684,8 @@ typedef HRESULT (STDMETHODCALLTYPE *PFN_CutsceneSetRenderTarget)(IDirect3DDevice
 extern PFN_CutsceneSetRenderTarget g_origSetRenderTarget;
 extern CinemaClear g_origClear;
 
+static vrscene::Mode g_scenePresentMode = vrscene::Mode::GameplayStereo;
+static volatile LONG g_cinemaExitScan = 0;
 static CutsceneMonoMode CutsceneMonoCurrentMode() {
     switch (g_sceneMode.Current()) {
     case vrscene::Mode::CutsceneFlat: return CutsceneMonoMode::CutsceneFlat;
@@ -5698,7 +5700,10 @@ static bool CutsceneMonoComposeArmed() {
     if (!VrModeOn()) return false;
     if (!InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0)) return false;
     const bool menuFlat = MenuSubmitForcesFlat((int)Rd(g_vrMenuClass));
-    return CutsceneMonoShouldCompose(CutsceneMonoCurrentMode(), true, menuFlat, true);
+    const CutsceneMonoMode completed = g_scenePresentMode==vrscene::Mode::CutsceneFlat ?
+        CutsceneMonoMode::CutsceneFlat : (g_scenePresentMode==vrscene::Mode::VideoFlat ?
+        CutsceneMonoMode::VideoFlat : CutsceneMonoMode::Other);
+    return CutsceneMonoShouldCompose(completed, true, menuFlat, true);
 }
 
 static IDirect3DTexture9* g_cineMonoTexture = nullptr;
@@ -5845,7 +5850,7 @@ void StampCaptureState(CopySlot& cap) {
     // Mono submission only for a frame this Present actually composed. A failed
     // composition keeps stereo stamping, so the bridge cannot submit an
     // uncomposed half crop to both eyes.
-    const bool isVideoFlat = (g_sceneMode.Current() == vrscene::Mode::VideoFlat);
+    const bool isVideoFlat = (g_scenePresentMode == vrscene::Mode::VideoFlat);
     if (isVideoFlat) {
         const float scale = ClampVideoCinemaScale((int)Rd(g_videoCinemaScalePct)) * 0.005f;
         const int left   = (int)((0.25f - 0.5f * scale) * (float)g_srcW);
@@ -23393,7 +23398,18 @@ static void UpdateSceneModeFrame() {
         CinemaMenuPauseOwnsPresentation(Rd(g_cutsceneMenuPairFix)!=0,
             (int)Rd(g_vrMenuClass),Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0),
     };
+    const vrscene::Mode renderedMode = g_sceneMode.Current();
     const vrscene::Transition t = g_sceneMode.Advance(signals);
+    g_scenePresentMode = vrscene::CompletedFrameMode(renderedMode, g_sceneMode.Current());
+    if(t.changed && t.from==vrscene::Mode::CutsceneFlat && t.to==vrscene::Mode::GameplayStereo) {
+        // The cinematic projection is not a valid gameplay lock. Waiting for
+        // the generic 60-frame failure timeout exposed stale projection state.
+        g_haveLock=false;g_lockMissFrames=0;g_lockVerified=false;
+        g_camMatrixBound=false;InvalidateCamMats();
+        g_projTanX=g_projTanY=g_forcedTanX=g_forcedTanY=0.0f;
+        InterlockedExchange(&g_cinemaExitScan,1);
+        Log("cinema exit: completed frame remains mono; stale lock revoked, next-frame scan requested");
+    }
     const bool anyMenuOrPause = signals.menu || signals.paused || signals.frontendMenu ||
                                 signals.cinemaPauseMenu || (Rd(g_vrMenuClass) != 0);
     const bool inGameplay = (g_sceneMode.Current() == vrscene::Mode::GameplayStereo && g_playerPawn != 0 && !anyMenuOrPause);
@@ -24640,6 +24656,8 @@ volatile LONG g_peFiringCalls = 0; // ⚠️ if this stays 0 the split never hap
                                    // table means nothing - run 82 dumped a census of 5544 calls
                                    // with zero firing samples and reported "nothing", which reads
                                    // identically to "the fire path uses no script"
+
+#include "inventory_vm_hook.h"
 
 void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Result) {
     // ---- run 102: never call a null trampoline ----
@@ -27961,8 +27979,11 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     // empty and I cannot switch weapons".
     long ownedSeen[8]{};
     unsigned ownedN = 0;
-    const bool ownedReady = Rd(g_ownedWeaponWheel) && NativeOwnedInventory::Ready();
-    if (ownedReady) ownedN = NativeOwnedInventory::OwnedVerts(ownedSeen, 8);
+    // One atomic publication for the whole draw plan. Reading engine-thread
+    // items/count here raced Snapshot() and could mix two possession states.
+    const unsigned ownedMask=NativeOwnedInventory::Mask();
+    const bool ownedReady = Rd(g_ownedWeaponWheel) && ownedMask!=0;
+    if (ownedReady) ownedN = NativeOwnedInventory::VertsFromMask(ownedMask,ownedSeen,8);
     const long* labelSeen = ownedReady ? ownedSeen : seenCopy;
     const int labelSeenN = ownedReady ? (int)ownedN : 8;
     // Named wedges get icon + label; unowned weapon wedges stay empty.
@@ -27970,12 +27991,32 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     for (int i = 0; i < slots && i < 8; ++i) {
         const long pv = slotVerts[i];
         if (ownedReady) {
-            slotNamed[i]=(NativeOwnedInventory::Mask() & inventoryretention::WeaponBit((int)pv))!=0;
+            slotNamed[i]=(ownedMask & inventoryretention::WeaponBit((int)pv))!=0;
             continue;
         }
         if (pv <= 0 || pv == heldVerts) { slotNamed[i] = true; continue; }
         for (int k = 0; k < 8; ++k) {
             if (seenCopy[k] == pv) { slotNamed[i] = true; break; }
+        }
+    }
+    // Inventory readiness alone does not prove the renderer consumed it.
+    // Record the resolved draw plan, bounded and only when it changes.
+    {
+        static unsigned lastPlan = ~0u, planReports = 0;
+        unsigned namedMask = 0, iconMask = 0;
+        for (int i = 0; i < slots && i < 8; ++i) {
+            if (slotNamed[i]) namedMask |= 1u << i;
+            if (slotIcons[i]) iconMask |= 1u << i;
+        }
+        const unsigned plan = namedMask | (iconMask << 8) |
+            ((unsigned)ownedReady << 16) | ((unsigned)katorgaIcons << 17) |
+            ((unsigned)gunOrder << 18) | ((unsigned)roundOn << 19);
+        if (plan != lastPlan && planReports < 24) {
+            lastPlan = plan; ++planReports;
+            Log("weapon wheel draw plan: ownedReady=%d ownedMask=%X named=%X icons=%X atlas=%d gunOrder=%d round=%d slots=%d verts=%ld,%ld,%ld,%ld",
+                (int)ownedReady, ownedMask,
+                namedMask, iconMask, (int)katorgaIcons, (int)gunOrder,
+                (int)roundOn, slots, slotVerts[0], slotVerts[1], slotVerts[2], slotVerts[3]);
         }
     }
     struct HudIconVtx { float x, y, z, rhw; DWORD c; float u, v; };
@@ -27998,9 +28039,15 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     const float pi = 3.14159265358979323846f;
     for (int eye = 0; eye < 2; ++eye) {
         uipointer::ScreenPoint p;
-        if (!VrUiProjectEye(eye, hand, p)) continue;
-        const int cx = (int)lroundf((eye + p.u) * d.Width * 0.5f);
-        const int cy = (int)lroundf(p.v * d.Height);
+        if (!VrUiProjectEye(eye, hand, p)) {
+            if(!roundOn)continue;
+            p.u=0.5f;p.v=0.5f; // open wheel stays visible when its hand is outside the frustum
+        }
+        const wheel_layout::Metrics safeMetrics = wheel_layout::RoundMetrics((int)d.Height);
+        const float wheelU=roundOn ? wheel_layout::VisibleCenter(p.u,(int)d.Width/2,safeMetrics.outerR) : p.u;
+        const float wheelV=roundOn ? wheel_layout::VisibleCenter(p.v,(int)d.Height,safeMetrics.outerR) : p.v;
+        const int cx = (int)lroundf((eye + wheelU) * d.Width * 0.5f);
+        const int cy = (int)lroundf(wheelV * d.Height);
         if (roundOn) {
             // Round layout (reference mockup): wedge sectors + outer ring +
             // centre disc, icons at mid-radius, catalog labels near the rim.
@@ -29019,7 +29066,8 @@ void DrawKnifeBeltMarker(IDirect3DDevice9* dev) {
 static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
     if (!dev || !VrModeOn() || !InterlockedCompareExchange(&g_dupDraws, 0, 0) ||
         !InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) ||
-        !InterlockedCompareExchange(&g_sceneCinemaMask, 0, 0) || !g_sceneMode.Flat()) return;
+        !InterlockedCompareExchange(&g_sceneCinemaMask, 0, 0) ||
+        (g_scenePresentMode!=vrscene::Mode::CutsceneFlat && g_scenePresentMode!=vrscene::Mode::VideoFlat)) return;
     // A composed mono frame already carries its own letterbox bars; the matte
     // would clear over the composed image. It still applies to uncomposed flat
     // frames (composition failed or VideoFlat self-handled path).
@@ -29926,6 +29974,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             ResolveScriptNames();FindProcessInternal();RepointScriptHook();
         }
     }
+    InventoryVmHook::Install();
     if (InterlockedCompareExchange(&g_cutsceneAuto, 0, 0)) {
         static int tick = 0, attempts = 0;
         static startup::Retry earlyNames;
@@ -31381,6 +31430,12 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         }
     }
     p7 = k7;
+    // Arm AFTER consuming the previous scan. Otherwise Present would report
+    // an empty scan before a single next-frame upload had been observed.
+    if(InterlockedExchange(&g_cinemaExitScan,0)) {
+        g_hitCount=0;InterlockedExchange(&g_scanReportOnly,0);
+        InterlockedExchange(&g_scanArmed,1);
+    }
     // Rearm the edge detector once the trigger is released, so a held trigger spends one probe rather
     // than one per frame.
     if (InterlockedCompareExchange(&g_rawTrigger, 0, 0) < 20) g_probeTrigWasDown = false;

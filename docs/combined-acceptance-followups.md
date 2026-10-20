@@ -2,6 +2,13 @@
 
 ## 2026-10-20 wheel follow-up (L3 feedback: "the wheel is empty")
 
+**Correction after the next physical session:** see
+[owned-wheel-cinema-followup.md](owned-wheel-cinema-followup.md). The inventory
+snapshot now does succeed, but icon visibility is still reported wrong. The
+flat-token conclusion and the claim of a native-only ThrowActiveWeapon below
+were disproved by the Engine package and interpreter dispatch analysis. They
+are retained only as historical failed reasoning, NOT implementation evidence.
+
 The promoted candidate shipped `Input/WeaponWheelOwnedInventory=1`. The
 accepted session log shows the ownership snapshot never succeeded:
 `owned inventory: stage=local SP pawn class mask=0 count=0`. The wheel had
@@ -55,9 +62,9 @@ previously held gun. The offline token analysis of the original package
 The bytecode write is therefore withdrawn. The scope checks and a scoped
 `local pickup reached SwitchWeaponByArchetype` log remain, so the next
 iteration has runtime evidence for where the drop happens instead of a guess.
-`ThrowActiveWeapon` has no script export, so it is a native function and the
-script-interpreter hook cannot see it; the next step is to identify its native
-entry and intercept it, not to patch the shared script blindly.
+CORRECTION: it has no export in RvGame, but DOES have script exports in Engine
+(Pawn20311, Vehicle24533). The native-to-script entry detour does not cover this
+nested call. Do not hunt an imagined native ThrowActiveWeapon wrapper.
 
 ## Persistent accepted baseline
 

@@ -1,6 +1,38 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 latest physical feedback (private preserved log
+build/combined-followups/session-2cdff06.log): hero hands in cinematics and
+medkit animation PASS for that scope. Wheel visibility, third-weapon retention
+and immediate cinema-to-stereo handoff remain BROKEN/await new physical test.
+User confirms TWO guns really existed in the save, not historical dropped guns.
+The log has ready masks6/3 and successful existing-gun selections, then mask5
+after shotgun pickup: the original drop still ran. No retention success claim.
+
+New offline implementation: immutable-script VirtualFunction opcode adapter
+suppresses ONLY the audited local pickup expression (caller function, frame
+Object, receiver pawn, manager link, thread, full script identity and exact Code
+position must all match). Other calls forward through the original ABI. The
+table is discovered from two matching dispatch sites in the resolved interpreter;
+no hardcoded GNatives address and no shared script write. Default OFF through
+KeepAcquiredWeapons. Original Engine.Pawn.ThrowActiveWeapon IS SCRIPT (36 bytes,
+export20311); the old nine-byte/"native only" conclusions below are INVALID.
+The rejected flat solver now refuses execution. See
+docs/owned-wheel-cinema-followup.md for evidence, falsifiers and current gates.
+
+Wheel renderer now consumes ONE atomic ownership mask for icons AND labels;
+it never reads the mutable engine-thread items/count array. Its full circular
+layout is kept in the central eye view, with a centre fallback for an off-frustum
+hand. Bounded draw-plan evidence distinguishes ownership, missing atlas icons
+and mapping failures. These address demonstrated code hazards; the exact cause
+of the reported missing second icon is NOT yet physically established.
+
+Cinema presentation now retains the mode used to RENDER the completed transition
+frame instead of interpreting mono as SBS. On exit the stale cinematic camera
+lock is revoked immediately and a scan is armed AFTER the current scan-consume
+point, rather than waiting up to60 missed frames. No hand/shadow/VFX changes.
+All new changes are offline-only until a fresh user start and verified deployment.
+
 2026-10-20 requested shoulder pickup tolerance: shared reload supply radius
 13cm ->17cm, same physical-left/back anchor and grip ownership. Rejected20cm
 after the existing 1440-pose regression proved overlap with the knife region;

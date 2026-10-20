@@ -72,6 +72,8 @@ static void __fastcall Original(void*,void*,void*,void*) {
    Check(*(const unsigned char*)(NativeOwnedInventory::script+inventoryretention::DropAt+i)==expectedDrop[i]);
   if(raiseFault)RaiseException(0xE0000011,0,0,nullptr);
 }
+static uintptr_t g_processInternal=0,g_textLo=0,g_textHi=0;
+#include "../inventory_vm_hook.h"
 static bool Scoped(void* self,void* stack,int name) {
   const bool handled=NativeOwnedInventory::InvokeRetained(self,nullptr,stack,nullptr,name,8,Original);
   if(!handled)Original(self,nullptr,stack,nullptr);
@@ -85,6 +87,13 @@ static bool CatchFault(void* self,void* stack) {
   return false;
 }
 int main(int argc,char** argv) {
+  unsigned char dispatch[128]{};
+  const unsigned char site[]={0x8b,0x14,0x95,0x30,0x87,0xcc,0x01};
+  memcpy(dispatch+20,site,sizeof(site));memcpy(dispatch+80,site,sizeof(site));
+  Check(inventoryvm::DispatchTable(dispatch,sizeof(dispatch))==0x1cc8730);
+  dispatch[83]^=4;Check(inventoryvm::DispatchTable(dispatch,sizeof(dispatch))==0);
+  dispatch[83]^=4;dispatch[80]=0;Check(inventoryvm::DispatchTable(dispatch,sizeof(dispatch))==0);
+  Check(inventoryvm::DispatchTable(nullptr,128)==0);
   g_keepAcquiredWeapons=g_ownedWeaponWheel=0;
   NativeOwnedInventory::Poll();NativeOwnedInventory::Queue(0);Check(NativeOwnedInventory::Mask()==0);
   g_keepAcquiredWeapons=g_ownedWeaponWheel=1;
@@ -156,6 +165,44 @@ int main(int argc,char** argv) {
   offsets={{"Pawn",0x100},{"InvManager",0x3d0},{"InventoryChain",0x1e0},
           {"Inventory",0x1e0},{"mWeaponName",0x2e8}};
   g_playerPawn=pawn;
+  // Exact nested VirtualFunction seam: consume only this local pickup call.
+  unsigned char vmFrame[40]{};
+  uintptr_t vmCode=NativeOwnedInventory::script+inventoryretention::DropAt+1;
+  memcpy(vmFrame+0x10,&NativeOwnedInventory::function,4);
+  memcpy(vmFrame+0x14,&manager,4);memcpy(vmFrame+0x18,&vmCode,4);
+  memcpy((void*)(pawn+0x3d0),&manager,4);
+  Check(!NativeOwnedInventory::SkipPickupThrow((void*)manager,vmFrame));
+  Check(NativeOwnedInventory::SkipPickupThrow((void*)pawn,vmFrame));
+  Check(PauseRttProbe::Pointer((uintptr_t)vmFrame+0x18)==NativeOwnedInventory::script+211);
+  Check(code==original); // never edits shared bytecode
+  Check(!NativeOwnedInventory::SkipPickupThrow((void*)pawn,vmFrame));
+  memcpy(vmFrame+0x18,&vmCode,4);g_keepAcquiredWeapons=0;
+  Check(!NativeOwnedInventory::SkipPickupThrow((void*)pawn,vmFrame));g_keepAcquiredWeapons=1;
+  NativeOwnedInventory::thread^=1;
+  Check(!NativeOwnedInventory::SkipPickupThrow((void*)pawn,vmFrame));
+  NativeOwnedInventory::thread=GetCurrentThreadId();
+  uintptr_t wrongNode=0;memcpy(vmFrame+0x10,&wrongNode,4);
+  Check(!NativeOwnedInventory::SkipPickupThrow((void*)pawn,vmFrame));
+  memcpy(vmFrame+0x10,&NativeOwnedInventory::function,4);
+  code[209]^=1;Check(!NativeOwnedInventory::SkipPickupThrow((void*)pawn,vmFrame));code=original;
+  // Exercise the actual opcode table adapter and its original-call ABI.
+  static unsigned char interpreter[0x200]{};
+  static uintptr_t opcodeTable[256]{};
+  const uint32_t tableAddress=(uint32_t)(uintptr_t)opcodeTable;
+  memcpy(interpreter+5+20,site,sizeof(site));memcpy(interpreter+5+80,site,sizeof(site));
+  memcpy(interpreter+5+23,&tableAddress,4);memcpy(interpreter+5+83,&tableAddress,4);
+  const unsigned char frameNode[]={0x8b,0x46,0x10};
+  const unsigned char frameStep[]={0x8b,0x46,0x18,0x0f,0xb6,0x10,0x8b,0x4e,0x14};
+  memcpy(interpreter+110,frameNode,sizeof(frameNode));memcpy(interpreter+130,frameStep,sizeof(frameStep));
+  opcodeTable[0x1b]=(uintptr_t)&Original;
+  g_processInternal=(uintptr_t)interpreter;g_textLo=(uintptr_t)&Original;g_textHi=g_textLo+1;
+  InventoryVmHook::Install();
+  Check(opcodeTable[0x1b]==(uintptr_t)&InventoryVmHook::VirtualCall);
+  unsigned callsBefore=calls;
+  ((InventoryVmHook::Exec)opcodeTable[0x1b])((void*)pawn,nullptr,vmFrame,nullptr);
+  Check(calls==callsBefore&&PauseRttProbe::Pointer((uintptr_t)vmFrame+0x18)==NativeOwnedInventory::script+211);
+  ((InventoryVmHook::Exec)opcodeTable[0x1b])((void*)manager,nullptr,vmFrame,nullptr);
+  Check(calls==callsBefore+1&&code==original);
   const uintptr_t first=(uintptr_t)objects[49].data();memcpy((void*)(manager+0x1e0),&first,4);
   const char* gunNames[]={"ARPistol","ARMachineGun","ARShotgun","ARSniperRifle"};
   for(unsigned i=0;i<4;++i){
@@ -173,6 +220,16 @@ int main(int argc,char** argv) {
   long owned[8]{};
   Check(NativeOwnedInventory::OwnedVerts(owned,8)==3);
   Check(owned[0]==5799&&owned[1]==11387&&owned[2]==8297);
+  for(unsigned mask=0;mask<16;++mask) {
+    long published[4]{};unsigned resultMask=0;
+    unsigned n=NativeOwnedInventory::VertsFromMask(mask,published,4);
+    for(unsigned i=0;i<n;++i)resultMask|=inventoryretention::WeaponBit((int)published[i]);
+    Check(resultMask==mask); // labels and icon gating consume the SAME atomic snapshot
+  }
+  // Renderer never reads the mutable engine-thread list/count.
+  NativeOwnedInventory::count=0;
+  Check(NativeOwnedInventory::OwnedVerts(owned,8)==3);
+  NativeOwnedInventory::count=3;
   const uintptr_t third=(uintptr_t)objects[51].data(),fourth=(uintptr_t)objects[52].data();
   memcpy((void*)(third+0x1e0),&fourth,4);
   Check(NativeOwnedInventory::Snapshot());Check(NativeOwnedInventory::Mask()==15);

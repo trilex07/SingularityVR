@@ -86,6 +86,18 @@ inline Metrics RoundMetrics(int backbufferH) {
     return m;
 }
 
+// A hand near a shoulder/hip can project outside the eye. Keep the complete
+// wheel in the central view instead of clipping acquired sectors offscreen.
+// Selection still uses the unchanged hand/stick directions, not this centre.
+inline float VisibleCenter(float projected, int extent, int radius) {
+    if (extent <= 0 || !std::isfinite(projected)) return 0.5f;
+    const float margin = (float)(radius+8)/(float)extent;
+    if (margin >= 0.5f) return 0.5f;
+    const float lo = margin > 0.35f ? margin : 0.35f;
+    const float hi = 1.0f-lo;
+    return projected < lo ? lo : (projected > hi ? hi : projected);
+}
+
 // Label sanitation for the 5x7 glyph renderer (kFont in d3d9.cpp): it knows
 // A-Z (case-insensitive), 0-9, space and + - ( ). Anything else renders as a
 // silent SPACE, which is indistinguishable from a missing character — so the

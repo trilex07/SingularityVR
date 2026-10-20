@@ -1,15 +1,12 @@
-"""Offline token-boundary solver for the audited UE3 script token stream.
+"""REJECTED historical flat token-boundary experiment; NOT a UE3 decoder.
 
 Reads the private original package fixture only. Never opens a process, never
 launches Steam and never writes to the installation.
 
-The token stream is a flat byte array of [opcode][operand] records. The
-operand size depends on the opcode. The audited operand positions (object
-references and FNames) are known exactly, so the record boundaries can be
-recovered by a constraint search instead of guessed.
-
-Output: the record layout, the exact byte range of the ThrowActiveWeapon call
-and the byte budget a length-preserving neutralisation may use.
+UE3 expressions are recursive and include zero-operand tokens, call arguments
+and terminators. This solver excludes those cases and its output CANNOT prove
+call length or justify any runtime/package write. Kept as a recorded failed
+approach; command-line execution refuses to avoid repeating that mistake.
 """
 import json
 import re
@@ -115,4 +112,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit('Rejected flat model: not a UE3 decoder. Use observed VM dispatch and original package operands instead.')

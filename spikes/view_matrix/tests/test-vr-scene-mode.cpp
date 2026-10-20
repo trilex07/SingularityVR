@@ -9,6 +9,10 @@ using vrscene::Mode;
 using vrscene::Signals;
 
 int main() {
+    assert(vrscene::CompletedFrameMode(Mode::CutsceneFlat,Mode::GameplayStereo)==Mode::CutsceneFlat);
+    assert(vrscene::CompletedFrameMode(Mode::GameplayStereo,Mode::CutsceneFlat)==Mode::GameplayStereo);
+    assert(vrscene::CompletedFrameMode(Mode::GameplayStereo,Mode::VideoFlat)==Mode::VideoFlat);
+    assert(vrscene::CompletedFrameMode(Mode::CutsceneFlat,Mode::MenuFlat)==Mode::MenuFlat);
     Controller c;
     Signals gameplay{};
     assert(c.Current() == Mode::GameplayStereo);

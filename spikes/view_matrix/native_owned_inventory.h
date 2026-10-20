@@ -1,5 +1,6 @@
 #pragma once
 #include "inventory_retention_policy.h"
+#include "inventory_vm_policy.h"
 // Only the existing engine input/script threads touch engine objects. The XR
 // and renderer sides exchange a mask/selection request, never UObject pointers.
 //
@@ -214,19 +215,43 @@ static void Poll() {
    count=0;pawn=manager=function=script=0;functionName=-1;InterlockedExchange(&owned,0);InterlockedExchange(&ready,0);
   }
 }
-static unsigned Mask(){return (unsigned)Rd(owned);}
+static unsigned Mask(){return (unsigned)InterlockedCompareExchange(&owned,0,0);}
 // True only when a snapshot actually produced a possession list. The wheel
 // uses this to decide between the owned mask and the accepted mesh-observed
 // fallback, so a refused snapshot can never empty the wheel again.
-static bool Ready(){return Rd(ready)!=0;}
+static bool Ready(){return Mask()!=0;}
 // The possessed mesh ids, for the wheel's label ownership test.
-static unsigned OwnedVerts(long* out,int max){
+static unsigned VertsFromMask(unsigned mask,long* out,int max){
   unsigned n=0;
   if(!out||max<=0)return 0;
-  for(unsigned i=0;i<count&&n<(unsigned)max;++i)out[n++]=items[i].mesh;
+  const long meshes[]={5799,11387,8297,11389};
+  for(unsigned i=0;i<4&&n<(unsigned)max;++i)if(mask&(1u<<i))out[n++]=meshes[i];
   return n;
 }
+static unsigned OwnedVerts(long* out,int max){return VertsFromMask(Mask(),out,max);}
 static void Queue(int mesh){InterlockedExchange(&request,mesh);}
+// Called only by the VirtualFunction opcode adapter. The interpreter has
+// consumed opcode 0x1B, but not the FName/default argument/parameter terminator.
+// No shared script or inventory memory is modified.
+static bool SkipPickupThrow(void* self, void* frame) {
+  if(!Rd(g_keepAcquiredWeapons)||!frame||!script||!function||
+     (uintptr_t)self!=pawn||!pawn||!manager||thread!=GetCurrentThreadId())return false;
+  __try {
+   const uintptr_t f=(uintptr_t)frame;
+   if(P(f+0x18)!=script+inventoryretention::DropAt+1 || P(f+0x10)!=function ||
+      P(f+0x14)!=manager || P(pawn+kPawnInvManager)!=manager ||
+      !ScriptIdentity(script) ||
+      !inventoryvm::DropTail((const unsigned char*)(script+inventoryretention::DropAt),11))return false;
+   // Context changes the call receiver (self) to Instigator, but keeps the
+   // caller's frame Object (manager). Consume the entire remaining call.
+   *(uintptr_t*)(f+0x18)=script+inventoryretention::DropAt+inventoryretention::DropBytes;
+   InterlockedExchange(&request,0);next=0; // refresh possession on next input poll
+   if(reports++<32)Log("owned inventory: suppressed exact local pickup ThrowActiveWeapon opcode; script unchanged");
+   return true;
+  } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
+   return false;
+  }
+}
 static bool CanRetain(void* stack,int nodeOffset) {
   __try {
    return P((uintptr_t)stack+nodeOffset)==function&&
@@ -243,15 +268,9 @@ template<class Invoke> static bool InvokeRetained(void* self,void* edx,void* sta
      (uintptr_t)self!=manager||!manager||thread!=GetCurrentThreadId()||nodeOffset<0)return false;
   if(!CanRetain(stack,nodeOffset))return false;
   // ---- 2026-10-19: the bytecode write is WITHDRAWN ----
-  // The offline token analysis (tools/reload/decode_switch_weapon_script.py and
-  // solve_script_tokens.py, against the original package) shows the
-  // ThrowActiveWeapon call is a NINE byte record: opcode 0x1B at offset 200
-  // followed by the 8 byte FName at 201..208 - the 11 byte range this code
-  // used to overwrite also destroyed the NEXT record (0x4A,0x16 at 209/210).
-  // The record layout of the surrounding stream is not yet established, so a
-  // length preserving neutralisation cannot be proven safe, and writing into
-  // the shared script is exactly the failure mode that crashed the game with
-  // the rejected NPC package. The scope checks stay, the write does not.
+  // Shared bytecode is never changed. The old flat token solver incorrectly
+  // excluded EmptyParmValue/EndFunctionParms from the virtual call. Nested
+  // script calls bypass this entry; SkipPickupThrow handles the exact opcode.
   if(reports++<24)Log("owned inventory: local pickup reached SwitchWeaponByArchetype (scoped, no bytecode write)");
   return false;
 }

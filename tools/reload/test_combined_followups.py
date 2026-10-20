@@ -39,11 +39,8 @@ class CombinedFollowupTests(unittest.TestCase):
         native = (ROOT / 'spikes/view_matrix/native_owned_inventory.h').read_text()
         self.assertIn('(uintptr_t)self!=manager', native)
         self.assertIn('thread!=GetCurrentThreadId()', native)
-        # 2026-10-19: the bytecode write is WITHDRAWN. The offline token
-        # analysis proved the ThrowActiveWeapon call is a NINE byte record
-        # (opcode 0x1B at 200 plus the 8 byte FName at 201..208), so the old
-        # eleven byte overwrite also destroyed the NEXT record. A shared script
-        # must not be written without a proven length preserving neutralisation.
+        # Shared script is immutable. The exact opcode adapter consumes the
+        # call including EmptyParmValue/EndFunctionParms on the caller frame.
         self.assertNotIn('memcpy((void*)(script+inventoryretention::DropAt),saved', native)
         self.assertNotIn('memset((void*)(script+inventoryretention::DropAt),0x0b', native)
         self.assertIn('no bytecode write', native)
@@ -51,7 +48,11 @@ class CombinedFollowupTests(unittest.TestCase):
         self.assertIn('"KeepAcquiredWeapons",0,path', source)
         self.assertIn('"WeaponWheelOwnedInventory",0,path', source)
         self.assertIn('NativeOwnedInventory::Queue((int)tgtV)', source)
-        self.assertIn('NativeOwnedInventory::Mask() & inventoryretention::WeaponBit', source)
+        self.assertIn('ownedMask & inventoryretention::WeaponBit', source)
+        hook = (ROOT / 'spikes/view_matrix/inventory_vm_hook.h').read_text()
+        self.assertIn('NativeOwnedInventory::SkipPickupThrow(self,frame)', hook)
+        self.assertIn('original(self,edx,frame,result)', hook)
+        self.assertIn('InventoryVmHook::Install();', source)
 
     def test_wheel_never_empty_and_ownership_uses_audited_layout(self):
         native = (ROOT / 'spikes/view_matrix/native_owned_inventory.h').read_text()
@@ -59,7 +60,8 @@ class CombinedFollowupTests(unittest.TestCase):
         # The wheel falls back to the accepted mesh-observed set whenever the
         # possession snapshot is not ready: an empty wheel is a regression.
         self.assertIn('NativeOwnedInventory::Ready()', source)
-        self.assertIn('const bool ownedReady = Rd(g_ownedWeaponWheel) && NativeOwnedInventory::Ready();', source)
+        self.assertIn('const bool ownedReady = Rd(g_ownedWeaponWheel) && ownedMask!=0;', source)
+        self.assertIn('NativeOwnedInventory::VertsFromMask(ownedMask,ownedSeen,8)', source)
         self.assertIn('labelSeen = ownedReady ? ownedSeen : seenCopy', source)
         self.assertIn('if (Rd(g_ownedWeaponWheel) && NativeOwnedInventory::Ready())', source)
         self.assertIn('const uintptr_t vt=P(pawn);', native)
