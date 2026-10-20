@@ -25,6 +25,8 @@ static unsigned observations=0;
 using SourceGetter=hipknife::V* (__thiscall*)(void*,hipknife::V*);
 static SourceGetter sourceOriginal=nullptr;
 static uintptr_t tracerCaller=0;
+static SRWLOCK tracerFxLock=SRWLOCK_INIT;
+static uintptr_t tracerFx=0,tracerPawn=0,tracerWeapon=0;
 static bool Scene();
 static uintptr_t Function(uintptr_t cls,const char* wanted){
     for(unsigned depth=0;cls&&depth<24;++depth){
@@ -96,10 +98,23 @@ static void InstallTracer(){
     if(w.kind!=weaponreload::Kind::Valkyrie||!w.Current((uint32_t)g_playerPawn,(uint32_t)weapon,GetTickCount64()))return;
     static unsigned attempts=0;if(attempts>=3)return;
     uintptr_t object=0;
+    uintptr_t received=0,receivedPawn=0,receivedWeapon=0;
+    if(TryAcquireSRWLockShared(&tracerFxLock)){
+        received=tracerFx;receivedPawn=tracerPawn;receivedWeapon=tracerWeapon;
+        ReleaseSRWLockShared(&tracerFxLock);
+    }
+    // The suppression census is capped at eight global FX instances. Its pool
+    // can be full BEFORE the player's FX is spawned. The native muzzle callback
+    // has already proved the exact current local object: prefer that receipt,
+    // revalidating ownership/class/liveness before using its vtable.
+    if(received&&receivedWeapon==weapon&&receivedPawn==g_playerPawn&&IsLive(received)&&
+       PauseRttProbe::Pointer(received+OBJ_CLASS)==g_weaponFxClass&&
+       PauseRttProbe::Pointer(received+0x90)==weapon)object=received;
     for(int i=0;i<g_fxN;++i)if(g_fx[i].have&&IsLive(g_fx[i].obj)&&
        PauseRttProbe::Pointer(g_fx[i].obj+OBJ_CLASS)==g_weaponFxClass&&
        PauseRttProbe::Pointer(g_fx[i].obj+0x90)==weapon){object=g_fx[i].obj;break;}
-    if(!object)return;
+    if(!object){static unsigned missing=0;if(missing++<3)
+        Log("rifle native tracer: waiting exact local FX; census=%d full=%d receivedLocal=%d",g_fxN,g_fxN==kFxMax?1:0,received?1:0);return;}
     ++attempts;
     const auto wrapper=Function(g_weaponFxClass,"PlayTracerFX");
     const auto tracer=PauseRttProbe::Pointer(PauseRttProbe::Pointer(object)+0x128);
@@ -236,6 +251,10 @@ static void __fastcall Hook(void* self,void*,const hipknife::V* location,int fir
             int(witness.kind),changed?1:0,location->x,location->y,location->z,
             changed?replacement.x:location->x,changed?replacement.y:location->y,changed?replacement.z:location->z);
     original(self,changed?&replacement:location,firstPerson);
+    if(changed&&TryAcquireSRWLockExclusive(&tracerFxLock)){
+        tracerFx=(uintptr_t)self;tracerPawn=g_playerPawn;tracerWeapon=owner;
+        ReleaseSRWLockExclusive(&tracerFxLock);
+    }
     if(changed)Track((uintptr_t)self,owner,witness);
     if(receipt){
         const auto emitter=PauseRttProbe::Pointer((uintptr_t)self+0x88);

@@ -50,6 +50,18 @@ struct Completion {
     void Bind(bool target){if(bound&&!target&&draws){++epoch;draws=0;}bound=target;}
     void Draw(bool succeeded){if(bound&&succeeded&&draws<0xffffffffu)++draws;}
 };
+// Bound expensive native rendering when completed content cannot be presented.
+// Only eligible, completed frames count: menus/missing eye poses do not trip it.
+struct PresentationBudget {
+    unsigned missed=0;
+    bool fault=false;
+    bool Observe(bool complete,bool presented){
+        if(fault)return false;
+        if(presented)missed=0;
+        else if(complete&&++missed>=30)fault=true;
+        return !fault;
+    }
+};
 // Project directly from tracking poses, never from a camera matrix last seen
 // during an unrelated UE3 draw (which may belong to the optical capture).
 struct Pixel { float x=0,y=0,rhw=0; };

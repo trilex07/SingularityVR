@@ -3014,6 +3014,18 @@ static uintptr_t FindHudObjectExcept(uintptr_t banned) {
         uintptr_t cls = *reinterpret_cast<uintptr_t*>(o + OBJ_CLASS);
         if (!cls || cls == g_hudBaseClass) continue;
         if (!ClassDerivesFrom(cls, g_hudBaseClass)) continue;
+        // Reseating to another readable menu/zombie instance just alternates
+        // invalid caches. Require populated reflected ammo, never guess offsets
+        // or substitute zero for an unknown count. This scan is already bounded
+        // by HudReseatPolicy, not executed per frame/trigger.
+        const char* fields[]{"mClipAmmo","mBinAmmo","mClipSize"};
+        int32_t values[3]{-1,-1,-1};bool populated=true;
+        for(unsigned k=0;k<3;++k){
+            const int off=PropOffsetInChain(cls,fields[k]);
+            if(off<0||!TryLoadAlignedI32(o+off,&values[k])){populated=false;break;}
+        }
+        if(!populated||values[0]<0||values[1]<0||values[1]>1000000||
+           values[2]<=0||values[2]>1000||values[0]>values[2])continue;
         const uintptr_t before = g_hudObject;
         g_hudObject = o;
         g_hudClass = cls;
@@ -24521,6 +24533,31 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                 }
                 const float bx = End[0], by = End[1], bz = End[2];
                 RotateTrace(Start, End, dYaw, dPitch);
+                // Observe the ACTUAL outgoing collision ray separately from
+                // PlayTracerFX's cosmetic source. A tracer repair cannot prove
+                // hit direction, and successful smoke pose is unrelated.
+                if(g_nativeRifleTracer){
+                    static unsigned rayReceipts[3]{};
+                    weaponmuzzle::Witness muzzle;
+                    if(TryAcquireSRWLockShared(&g_nextVisualLock)){
+                        muzzle=g_nextMuzzle;ReleaseSRWLockShared(&g_nextVisualLock);
+                    }
+                    const auto index=weaponreload::Index(muzzle.kind);
+                    if(index<3&&rayReceipts[index]<8&&muzzle.Current((uint32_t)g_playerPawn,
+                       (uint32_t)Rd(g_weaponObj),GetTickCount64())){
+                        const hipknife::V delta{End[0]-Start[0],End[1]-Start[1],End[2]-Start[2]};
+                        const float length=hipknife::Length(delta);
+                        float aim[3]{};GunAimDir(aim);
+                        const hipknife::V offset{Start[0]-g_camPos[0]-muzzle.relative.x,
+                            Start[1]-g_camPos[1]-muzzle.relative.y,Start[2]-g_camPos[2]-muzzle.relative.z};
+                        if(std::isfinite(length)&&length>1){++rayReceipts[index];
+                            Log("weapon actual ray: kind=%d muzzleDeltaUU=%.4f aimDot=%.6f start=(%.3f,%.3f,%.3f) direction=(%.6f,%.6f,%.6f) flags=%X [collision input, not tracer pixels]",
+                                int(muzzle.kind),hipknife::Length(offset),
+                                hipknife::Dot(delta*(1.f/length),{aim[0],aim[1],aim[2]}),
+                                Start[0],Start[1],Start[2],delta.x/length,delta.y/length,delta.z/length,flags);
+                        }
+                    }
+                }
                 const LONG n = InterlockedIncrement(&g_slcRotated);
                 if (n <= 8)
                     Log("SingleLineCheck rotated: start (%.0f %.0f %.0f) end (%.0f %.0f %.0f) ->"

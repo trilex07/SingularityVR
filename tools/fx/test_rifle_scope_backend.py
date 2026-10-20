@@ -80,4 +80,21 @@ class NativeBackendTests(unittest.TestCase):
         self.assertIn('0xDC2F29F0817B2902ull', rifle)
         self.assertNotIn('*(hipknife::V*)', rifle)  # No raw actor transform writes.
 
+    def test_failed_session_recovery_and_bounded_scope(self):
+        dispatch = (ROOT/'spikes/view_matrix/weapon_reload_dispatch.inl').read_text()
+        self.assertIn('centurionreload::HudReseatPolicy hudReseat', dispatch)
+        self.assertIn('hudReseat.NoteSample(false,now)', dispatch)
+        self.assertIn('FindHudObjectExcept(hud)', dispatch)
+        self.assertIn('centurionreload::AmmoValid(in)', dispatch)
+        backend = (ROOT/'spikes/view_matrix/native_scope_pip.inl').read_text()
+        self.assertIn('Current(frame)&&!Rd(presentationFault)', backend)
+        self.assertIn('presentationBudget.Observe(true,shown)', backend)
+        self.assertIn('PresentationRefused(2,containerHr)', backend)
+        self.assertIn('if(opticalEye&&SUCCEEDED(hr))attempt.shown=true', backend)
+        rifle = (ROOT/'spikes/view_matrix/native_rifle_fx.inl').read_text()
+        self.assertIn('PauseRttProbe::Pointer(received+0x90)==weapon', rifle)
+        self.assertIn('object=received', rifle)
+        self.assertIn('TryAcquireSRWLockShared(&tracerFxLock)', rifle)
+        self.assertIn('TryAcquireSRWLockExclusive(&tracerFxLock)', rifle)
+
 if __name__ == '__main__': unittest.main()

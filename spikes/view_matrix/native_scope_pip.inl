@@ -23,6 +23,8 @@ static scopepip::Completion completion;
 static IDirect3DStateBlock9* state=nullptr;
 static uintptr_t completedTarget=0;
 static ULONGLONG completedMs=0;
+static volatile LONG presentationFault=0;
+static scopepip::PresentationBudget presentationBudget;
 using RenderCapture=void (__thiscall*)(void*,void*);
 static RenderCapture renderOriginal=nullptr;
 static void __fastcall RenderHook(void* self,void*,void* family){
@@ -189,7 +191,7 @@ static void Tick(){
             detach((void*)pawn,(void*)capture);
         attached=false;capture=0;InterlockedExchange(&target,0);return;
     }
-    const auto frame=Snapshot();const bool active=Current(frame);
+    const auto frame=Snapshot();const bool active=Current(frame)&&!Rd(presentationFault);
     static bool entered=false;
     if(active&&!entered){entered=true;Log("scope PiP: engine PlayerTick reached with fresh measured lens");}
     // Only called after the local controller's PlayerTick, on the engine thread.
@@ -275,6 +277,13 @@ static void Receipt(HRESULT hr){
     if(g_sniperPip)completion.Draw(SUCCEEDED(hr));
 }
 struct Vertex{float x,y,z,rhw;DWORD colour;float u,v;};
+static void PresentationRefused(unsigned stage,HRESULT hr=S_OK){
+    // One receipt per exact stage, not per frame/draw. HRESULT distinguishes a
+    // detached render surface from an actual texture and state/target failures.
+    static unsigned seen=0;
+    if(stage<32&&!(seen&(1u<<stage))){seen|=1u<<stage;
+        Log("scope PiP: aperture stopped stage=%u hr=%08X [no presentation proof]",stage,(unsigned)hr);}
+}
 static void ContentReceipt(IDirect3DDevice9* dev,IDirect3DSurface9* surface){
     static unsigned attempts=0;
     if(attempts>=3)return;
@@ -307,37 +316,52 @@ static void Draw(IDirect3DDevice9* dev){
     const auto f=Snapshot();const auto now=GetTickCount64();
     const auto rt=(uintptr_t)(uint32_t)Rd(target);
     if(!Current(f)||!rt||rt!=completedTarget||!completion.epoch||now<completedMs||now-completedMs>150)return;
+    struct PresentationAttempt {
+        bool shown=false;
+        ~PresentationAttempt(){
+            if(!presentationBudget.Observe(true,shown)&&!InterlockedExchange(&presentationFault,1))
+                Log("scope PiP: 30 completed frames without aperture; native capture disabled on engine tick (GPU work bounded)");
+        }
+    } attempt;
     const auto resource=PauseRttProbe::Pointer(rt+0xa4);
-    auto* surface=PauseRttProbe::NativeSurface(rt,resource);if(!surface)return;
+    auto* surface=PauseRttProbe::NativeSurface(rt,resource);if(!surface){PresentationRefused(1);return;}
     ContentReceipt(dev,surface);
     IDirect3DTexture9* texture=nullptr;
-    if(FAILED(surface->GetContainer(__uuidof(IDirect3DTexture9),(void**)&texture))||!texture)return;
-    if(!PauseRttProbe::ExactTexture(rt,resource,texture,surface)){texture->Release();return;}
+    const auto containerHr=surface->GetContainer(__uuidof(IDirect3DTexture9),(void**)&texture);
+    if(FAILED(containerHr)||!texture){
+        static bool reported=false;if(!reported){reported=true;
+            Log("scope PiP: container identities target=%08X resource=%08X surface=%p textureRhi=%08X textureCom=%08X",
+                (unsigned)rt,(unsigned)resource,(void*)surface,
+                (unsigned)PauseRttProbe::Pointer(resource+0x64),
+                (unsigned)PauseRttProbe::Pointer(PauseRttProbe::Pointer(resource+0x64)-4));}
+        PresentationRefused(2,containerHr);return;}
+    if(!PauseRttProbe::ExactTexture(rt,resource,texture,surface)){PresentationRefused(3);texture->Release();return;}
     // The last UE3 target is NOT necessarily the submitted eye backbuffer.
     // D3DSBT_ALL does not capture RT/DS. Use the same tested explicit target
     // guard as the custom hands, and bypass CPU-side observation hooks.
     struct TextureRef {IDirect3DTexture9* value;~TextureRef(){value->Release();}} textureRef{texture};
     IDirect3DSurface9* back=nullptr;
-    if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
+    const auto backHr=dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back);
+    if(FAILED(backHr)||!back){PresentationRefused(4,backHr);return;}
     struct SurfaceRef {IDirect3DSurface9* value;~SurfaceRef(){value->Release();}} backRef{back};
     D3DSURFACE_DESC desc{};
-    if(FAILED(back->GetDesc(&desc))||desc.Width<4||(desc.Width&1)||!desc.Height)return;
+    if(FAILED(back->GetDesc(&desc))||desc.Width<4||(desc.Width&1)||!desc.Height){PresentationRefused(5);return;}
     const gloves::Calls calls{shadowNativeIndexedUP,g_origSetRenderTarget,g_origSetVS,
         shadowOriginalPS,g_origSetTexture,shadowNativeClear,g_origSetViewport};
-    if(!calls.Valid())return;
-    if(!state&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&state)))return;
-    if(!state)return;
-    gloves::StateGuard<> guard(dev,state,calls);if(!guard.valid)return;
-    if(FAILED(dev->SetDepthStencilSurface(nullptr)))return;
-    for(unsigned i=1;i<guard.count;++i)if(FAILED(calls.target(dev,i,nullptr)))return;
-    if(FAILED(calls.target(dev,0,back)))return;
+    if(!calls.Valid()){PresentationRefused(6);return;}
+    if(!state&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&state))){PresentationRefused(7);return;}
+    if(!state){PresentationRefused(8);return;}
+    gloves::StateGuard<> guard(dev,state,calls);if(!guard.valid){PresentationRefused(9);return;}
+    if(FAILED(dev->SetDepthStencilSurface(nullptr))){PresentationRefused(10);return;}
+    for(unsigned i=1;i<guard.count;++i)if(FAILED(calls.target(dev,i,nullptr))){PresentationRefused(11);return;}
+    if(FAILED(calls.target(dev,0,back))){PresentationRefused(12);return;}
     const D3DVIEWPORT9 vp{0,0,desc.Width,desc.Height,0.f,1.f};
-    if(FAILED(calls.viewport(dev,&vp)))return;
+    if(FAILED(calls.viewport(dev,&vp))){PresentationRefused(13);return;}
     V right{},vertical{};
     if(scopepip::Basis(f.forward,f.up,right,vertical)){
         if(FAILED(calls.vs(dev,nullptr))||FAILED(calls.ps(dev,nullptr))||
            FAILED(dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1))||
-           FAILED(calls.texture(dev,0,texture)))return;
+           FAILED(calls.texture(dev,0,texture))){PresentationRefused(14);return;}
         dev->SetRenderState(D3DRS_ZENABLE,FALSE);dev->SetRenderState(D3DRS_ZWRITEENABLE,FALSE);
         dev->SetRenderState(D3DRS_ALPHABLENDENABLE,FALSE);dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
         dev->SetRenderState(D3DRS_ALPHATESTENABLE,FALSE);dev->SetRenderState(D3DRS_STENCILENABLE,FALSE);
@@ -374,6 +398,7 @@ static void Draw(IDirect3DDevice9* dev){
                 dev->SetTextureStageState(0,D3DTSS_COLORARG1,opticalEye?D3DTA_TEXTURE:D3DTA_DIFFUSE);
                 if(!opticalEye)for(auto& v:vertices)v.colour=0xff000000;
                 const auto hr=shadowNativeUP(dev,D3DPT_TRIANGLEFAN,64,vertices,sizeof(Vertex));
+                if(opticalEye&&SUCCEEDED(hr))attempt.shown=true;
                 static unsigned receipts=0;
                 if(opticalEye&&receipts++<3)Log("scope PiP: aperture draw eye=%u epoch=%u hr=%08X back=%ux%u centre=(%.1f,%.1f) tracking projection [PSVR2 verification required]",eye,completion.epoch,(unsigned)hr,desc.Width,desc.Height,vertices[0].x,vertices[0].y);
                 if(opticalEye){
@@ -387,7 +412,7 @@ static void Draw(IDirect3DDevice9* dev){
                 }
             }else {static unsigned refused=0;if(refused++<3)Log("scope PiP: aperture refused tracking projection eye=%u haveEyes=%d",eye,g_haveEyes?1:0);}
         }
-    }
+    }else PresentationRefused(15);
     if(!guard.Restore()){
         g_sniperPip=false; // Tick detaches on its engine thread, not here.
         Log("scope PiP: target/state restore FAILED; optical capture disabled");

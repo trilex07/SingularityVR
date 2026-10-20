@@ -28,6 +28,13 @@ int main(){
     c.Bind(true);c.Draw(false);c.Bind(false);assert(!c.epoch);
     c.Bind(true);c.Draw(true);assert(!c.epoch);c.Bind(false);assert(c.epoch==1);
     c.Reset();assert(!c.bound&&!c.draws&&!c.epoch);
+    scopepip::PresentationBudget budget;
+    for(unsigned n=0;n<200;++n)assert(budget.Observe(false,false));
+    for(unsigned n=0;n<29;++n)assert(budget.Observe(true,false));
+    assert(budget.Observe(true,true)&&budget.missed==0);
+    for(unsigned n=0;n<29;++n)assert(budget.Observe(true,false));
+    assert(!budget.Observe(true,false)&&budget.fault);
+    assert(!budget.Observe(true,true)); // explicit restart, no endless retries
     // Each eye's centre lands at 1/4 or 3/4 of the final SBS backbuffer,
     // not at the centre of a stale offscreen viewport or the opposite eye.
     for(unsigned eye=0;eye<2;++eye){

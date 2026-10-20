@@ -69,6 +69,7 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     const bool identity=profile&&index<3&&g_nextReload[index]&&g_nextReady[index]&&!Rd(g_nextFault[index])&&
         g_nextPresentation.Allowed()&&AimHand()==1&&OffHand()==0&&objectMatch;
     static centurionreload::AmmoObservation ammo;
+    static centurionreload::HudReseatPolicy hudReseat;
     static uintptr_t hudClass=0;static int offsets[3]{-1,-1,-1};static ULONGLONG nextSample=0,nextResolve=0;
     const bool eligible=identity&&context&&alive&&pawn&&weapon&&hud;
     // The first physical Valkyrie trial reached ARMachineGun but produced no
@@ -88,6 +89,9 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
             Rd(g_weaponHolstered),g_xrSessionState==XR_SESSION_STATE_FOCUSED?1:0);
     }
     priorKind=kind;
+    const bool sameSource=ammo.pawn==(uint32_t)pawn&&ammo.weapon==(uint32_t)weapon&&ammo.hud==(uint32_t)hud;
+    if(ammo.present&&!sameSource)hudReseat.ResetEpoch();
+    if(!eligible)hudReseat.NoteIneligible();
     if(!eligible||(ammo.present&&(ammo.pawn!=(uint32_t)pawn||ammo.weapon!=(uint32_t)weapon||ammo.hud!=(uint32_t)hud))){
         ammo.Clear();nextSample=0;
     }
@@ -101,6 +105,11 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
         int values[3]{-1,-1,-1};for(unsigned i=0;i<3;++i)if(offsets[i]>=0){int32_t value=-1;
             if(TryLoadAlignedI32(hud+offsets[i],&value))values[i]=value;}
         ammo.Capture((uint32_t)pawn,(uint32_t)weapon,(uint32_t)hud,values,now);
+        // A readable boot HUD can retain -1/-2/-1 forever. Centurion already
+        // recovers this case; all three next-weapon paths need the SAME bounded
+        // recovery, not an input remap or fabricated ammunition counts.
+        if(centurionreload::AmmoCountsValid(values[0],values[1],values[2]))hudReseat.ResetEpoch();
+        else if(hudReseat.NoteSample(false,now))FindHudObjectExcept(hud);
         ObserveCenturionReloadBindings(weapon); // same registered wrapper, ONE shared hook
     }
     weaponreload::Witness witness;

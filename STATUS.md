@@ -1,6 +1,25 @@
 # STATUS — session handoff
 
 ## Current MAIN handoff
+2026-10-20 physical9F6707D3 FAILED: Circle does nothing / R1 native reload
+returns on Valkyrie and Kasimov; smoke physically at muzzle, projectile origin/
+aim still wrong; optical scope invisible with FPS40. Preserved log at
+build/combined-followups/optical-isolation-94c56d1/physical-feedback.log.
+Live reload witness proves identity/native/tracking OK but HUD counts
+-1/-2/-1, valid=0, guard FORWARD. Scope encloses618 draws/2184 uploads and
+RGB but no aperture receipts. Tracer hook never armed; FX census full8.
+Accepted DLL7A1DE585...9495 / INI60224CA0...4ADC restored and independently
+verified after exit. No new Steam launch/deployment in this repair turn.
+
+Offline follow-through: share bounded invalid-HUD recovery with all three
+weapons, only reseat to populated reflected counts; tracer binds from exact
+local native muzzle receipt rather than relying solely on capped global pool;
+scope records silent refusal stages and detaches after30 completed frames
+without successful aperture draw. These are recovery/instrumentation changes,
+NOT a proven optical or ballistic fix. See docs/rifle-scope-failed-session.md.
+
+### Prior candidate (physically rejected above)
+
 2026-10-20 physical51BF3212 FAILED scope / partial rifle VFX: flash visible,
 smoke absent/uncertain, tracer beside barrel; Kasimov black displaced duplicate.
 Preserved physical-feedback.log under build/combined-followups/pose-repair-acc2f2b.
