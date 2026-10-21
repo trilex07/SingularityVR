@@ -86,6 +86,30 @@ and assets stay installed until a fresh start.
 
 ## Prepared diagnostic receipt
 
+Superseded for the next round by correction source5832409aae13b010f38b6b0835e1569616232f8c:
+x86 PE32 `/O2`, no PERFORMANCE define, tracked source clean at build (only private
+untracked deployment/leases). DLL
+CD571D464085D3C77696DF40A7B4BFE40EFE744692AF032021E836B27EE2C055;
+INI7BE40621888DB8913C1F6BA1388CDB9027DC984EDA5708AA9979284E92095673.
+Private core artifact build/combined-followups/kathryn-fix-5832409 adds only
+Render/CinematicEventBridge=1 to the prior diagnostic candidate's INI.
+Official core `Install -WhatIf` and native-bank `Status` preflights PASS, read-only.
+Native manifest build/next-weapon-reload/xtts-kathryn-native-20261021/asset-manifest.json
+SHA F3E705731A7ED09409413806BAE12373135D21C9C2B30481DF737472AA8FCE9C.
+Python tests: hand/source5, native-bank4, staging3, session-assets6 PASS; CPU bridge40
+PASS. The earlier mistyped test_prepare_xtts_native_banks.py path did not run;
+the actual test_xtts_native_banks.py was then run and passed all4 tests.
+
+Fresh-start installation sequence: confirm full-process visibility and game exit;
+deploy core with its original exact plan FIRST, then26 native banks with their
+separate asset manifest/backups. Arm a combined exact-hash lease before launch.
+Restore banks BEFORE core rollback, so the latter's full frozen profile validates.
+Do not reuse the nine-reload-asset guard or the overlay-WAV guard: neither owns
+this26-bank transaction. Preparation is not a claim that such a lease was armed,
+nor authorization to launch without the user's fresh start. No Steam writes yet.
+
+### Earlier diagnostics-only artifact (not the next candidate)
+
 Source f39008fd88ae8121c7e0b8085dffaec33f7e3b61; x86 PE32 `/O2` PASS.
 DLL D7DA8A8C1179F336437EDD957E01ABC9B306F2EFA4A526F113414FAC5D17910E.
 Private artifact: build/combined-followups/kathryn-scene-f39008f. Tracked source
