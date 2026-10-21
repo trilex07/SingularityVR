@@ -393,8 +393,6 @@ void UpdateVrUiPointer(float,bool available) {
     if(!panel&&menuClass==4&&Rd(g_contextPointerProjection)&&Rd(g_vrUiDirectCanvas))
         inset=(Rd(g_vrUiNoteCanvas)||Rd(g_noteOpen))?Rd(g_noteInsetPct)/100.f:
             StationMenuInset(4,true,ClassBackbufferScale(4,true,(int)Rd(g_menuInsetPct)),(int)Rd(g_stationMenuScalePct));
-    else if (!panel && menuClass == 2 && Rd(g_mainMenuVideoStereo) && !g_playerPawn)
-        inset = 1.0f;
     else
         inset=FrontMenuInset((int)menuClass,panel,inset,(int)Rd(g_frontMenuScalePct));
     const float distance=ContextMenuDistance((int)menuClass,panel,

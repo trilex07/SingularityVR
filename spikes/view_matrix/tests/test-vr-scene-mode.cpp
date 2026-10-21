@@ -1,6 +1,7 @@
 #include "../vr_scene_mode.h"
 #include "../cutscene_mono.h"
 #include "../menu_submit_policy.h"
+#include "../frontend_menu_comfort.h"
 #include <cassert>
 #include <cstdio>
 
@@ -105,23 +106,32 @@ int main() {
     assert(cinemaPause.NeedsMonoPair());
     for(unsigned i=0;i<Controller::kExitFrames;++i)cinemaPause.Advance(gameplay);
     assert(cinemaPause.Current()==Mode::GameplayStereo);
-    Controller bootBink;
-    auto bv = bootBink.Advance({false, true, false, false, false, false, true});
-    assert(bv.to == Mode::VideoFlat && bootBink.Flat());
-    Controller bootMenu;
-    auto bm = bootMenu.Advance({false, false, false, false, false, false, true});
-    assert(bm.to == Mode::GameplayStereo && !bootMenu.Flat());
-    Controller mainHold;
-    mainHold.Advance({true, false, true, false, false, false, false, true});
-    assert(mainHold.Current() == Mode::GameplayStereo && !mainHold.NeedsMonoPair());
+    // Reproduce sparse Bink observations followed by a focused frontend with
+    // stale native cinema. Missing video observations retain hysteresis; frontend
+    // ownership must enable the clean provider rather than force GameplayStereo.
+    Controller cold;
+    cold.Advance({false,true});
+    for(unsigned i=0;i<Controller::kExitFrames-1;++i) {
+        cold.Advance({}); assert(cold.Current()==Mode::VideoFlat);
+        cold.Advance({false,true});
+    }
+    const bool owns=frontmenu::OwnsPresentation(true,2,true,true,false);
+    assert(owns);
+    cold.Advance({true,false,true,false,owns});
+    assert(cold.Current()==Mode::MenuFlat && cold.NeedsMonoPair());
+    frontmenu::Signals clean{true,true,true,true,true,false,false,true,true,true,false,2};
+    assert(frontmenu::Eligible(clean));
+    clean.menuMode=false; assert(!frontmenu::Eligible(clean));
+    // Returning from gameplay with a pawn must use exactly the same ownership.
+    cold.Advance({}); assert(cold.Current()==Mode::GameplayStereo);
+    cold.Advance({true,false,true,false,owns});
+    assert(cold.Current()==Mode::MenuFlat);
     Controller scripted;
-    assert(!scripted.Advance({true, false, false, false, false, false, false}).changed);
-    auto sf = scripted.Advance({true, false, false, false, false, false, false});
+    assert(!scripted.Advance({true, false, false, false, false, false}).changed);
+    auto sf = scripted.Advance({true, false, false, false, false, false});
     assert(sf.changed && sf.to == Mode::CutsceneFlat);
     assert(vrscene::ScriptedCameraFlatPresentation(true, true, true, false, false, false));
     assert(!vrscene::ScriptedCameraFlatPresentation(true, true, false, false, false, false));
     assert(!vrscene::ScriptedCameraFlatPresentation(true, false, true, false, false, false));
-    assert(vrscene::BootMenuVideoStereo(true, false, false));
-    assert(!vrscene::BootMenuVideoStereo(true, true, false));
-    std::puts("PASS: cinematic hysteresis, video mono, noisy signal, menu classification, scripted/boot video");
+    std::puts("PASS: cinematic hysteresis, video mono, noisy signal, menu classification, scripted cinema and owned frontend");
 }

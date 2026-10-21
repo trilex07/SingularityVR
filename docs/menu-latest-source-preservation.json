@@ -1,0 +1,10 @@
+{
+  "sourceSnapshot": "1fd1801",
+  "changed": [
+    "d3d9.cpp",
+    "vr_menu_overlay.h",
+    "vr_scene_mode.h",
+    "tests/test-vr-scene-mode.cpp"
+  ],
+  "unchangedLatestSourceFiles": 325
+}

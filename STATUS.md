@@ -1,5 +1,10 @@
 # STATUS — session handoff
 
+## 2026-10-21 latest-source menu repair — L1_PASS / L2_PASS
+
+User requests the newest full feature set plus ONLY menu repair; no older DLL rollback. Own branch codex/menu-latest-only-20261021 preserves the full inherited source layer in1fd1801. Only four source/test files then change: remove unaccepted no-pawn mode/FOV/inset overrides so frontend ownership and clean backdrop can run. Latest scripted gameplay cinema, restraint, sprint, inventory, Bink and class4 station changes remain. Six x86 /O2 menu/pause/cinema test executables and production build PASS. No physical acceptance claimed. See docs/menu-latest-only-20261021.md and source-preservation receipt.
+
+
 ## 2026-10-21 camera-owned player / ComponentProperty / visible gameplay followup
 
 Physical1161168 FAILED: Kathryn still VR/flickering, free hands during bound

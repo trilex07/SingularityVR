@@ -213,7 +213,6 @@ extern vrscene::Controller g_sceneMode;
 extern volatile LONG g_sceneModeTrace;
 extern volatile LONG g_gameOwnsCamera;
 static LONG g_scriptedCameraFlat = 1;
-static LONG g_mainMenuVideoStereo = 1;
 extern volatile LONG g_sceneVideoSeen;
 extern volatile LONG g_sceneModeFrame;
 static void UpdateSceneModeFrame();
@@ -6645,9 +6644,7 @@ static void SnapshotMenuOnSlot(CopySlot& cap) {
     if (cls < 0 || cls > 4) cls = 0;
     cap.menuClass = cls;
     cap.uiFocus = Rd(g_vrUiMenu) != 0;
-    const bool stereoMenuHold =
-        (Rd(g_mainMenuVideoStereo) != 0 && !g_playerPawn && cap.menuClass == 2) ||
-        InteractiveStationMenu(cap.menuClass, cap.uiFocus);
+    const bool stereoMenuHold = InteractiveStationMenu(cap.menuClass, cap.uiFocus);
     cap.menuFlat = MenuSubmitForcesFlat(cap.menuClass) ||
         CinemaMenuIdenticalCrop(Rd(g_cutsceneMenuPairFix) != 0, cap.menuClass,
             cap.uiFocus, Rd(g_inCinematic) != 0, Rd(g_gamePaused) != 0,
@@ -20918,8 +20915,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
                 const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
                 const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3 || menuClassNow == 4;
                 float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
-                if (menuClassNow == 2 && Rd(g_mainMenuVideoStereo) && !g_playerPawn) k = 1.0f;
-                else if (menuClassNow == 4)
+                if (menuClassNow == 4)
                     k = StationMenuInset(4, false, k, (int)Rd(g_stationMenuScalePct));
                 float m[16];
                 memcpy(m, c, sizeof(m));
@@ -20999,8 +20995,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         // below applies only to the backbuffer fallback, not a second RT inset.
         const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
         float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
-        if (menuClassNow == 2 && Rd(g_mainMenuVideoStereo) && !g_playerPawn) k = 1.0f;
-        else if (menuClassNow == 4)
+        if (menuClassNow == 4)
             k = StationMenuInset(4, Rd(g_panelOpen) != 0, k, (int)Rd(g_stationMenuScalePct));
         else if(Rd(g_rtIsBackbuffer))k=FrontMenuInset((int)menuClassNow,Rd(g_panelOpen)!=0,k,(int)Rd(g_frontMenuScalePct));
         Reg4* q = reinterpret_cast<Reg4*>(cIn);
@@ -23037,14 +23032,6 @@ void RefreshCameraPosition() {
 void ApplyVrFov() {
     if (!InterlockedCompareExchange(&g_vrProjection, 0, 0)) return;
     if (!g_haveEyes || g_srcW == 0 || g_srcH == 0) return;
-    if (!g_playerPawn && Rd(g_mainMenuVideoStereo)) {
-        static bool saidMenuFov = false;
-        if (!saidMenuFov) {
-            saidMenuFov = true;
-            Log("VR FOV: main menu without pawn - leaving engine FOV (MainMenuVideoStereo)");
-        }
-        return;
-    }
     uintptr_t cam = FindCamera();
     if (!cam) return;
 
@@ -23959,9 +23946,6 @@ static void UpdateSceneModeFrame() {
         video, InterlockedCompareExchange(&g_vrUiMenu, 0, 0) != 0,
         InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0);
     const bool presentationCine = engineCine || scriptedFlat;
-    const bool bootVideoStereo = vrscene::BootMenuVideoStereo(
-        Rd(g_mainMenuVideoStereo) != 0, g_playerPawn != 0, engineCine);
-    const bool mainMenuStereoHold = Rd(g_mainMenuVideoStereo) != 0 && !g_playerPawn;
     // REVERTED hub round 4b (melee->flat looked bad + different images per eye):
     // the flat gate lives only in StereoPairBody, so HUD/user-pointer draws kept
     // their per-eye remap over a mono world. Either the gate must cover every path
@@ -23978,8 +23962,6 @@ static void UpdateSceneModeFrame() {
             presentationCine, Rd(g_gamePaused)!=0),
         CinemaMenuPauseOwnsPresentation(Rd(g_cutsceneMenuPairFix)!=0,
             (int)Rd(g_vrMenuClass),Rd(g_vrUiMenu)!=0,presentationCine,Rd(g_gamePaused)!=0),
-        bootVideoStereo,
-        mainMenuStereoHold,
     };
     static unsigned scriptedNotes = 0;
     if (scriptedFlat && !engineCine && scriptedNotes++ < 16)
@@ -34115,9 +34097,8 @@ void LoadIniSettings() {
     g_nativeRestraintHands=GetPrivateProfileIntA("Render","NativeRestraintHands",0,path)?1:0;
     Log("ini: NativeRestraintHands=%ld (default OFF; exact native rope mesh, independent of cinema)",g_nativeRestraintHands);
     g_scriptedCameraFlat=GetPrivateProfileIntA("Render","ScriptedCameraFlat",1,path)?1:0;
-    g_mainMenuVideoStereo=GetPrivateProfileIntA("Render","MainMenuVideoStereo",1,path)?1:0;
-    Log("ini: ScriptedCameraFlat=%ld MainMenuVideoStereo=%ld (Matinee/Kathryn presentation + boot menu VR)",
-        g_scriptedCameraFlat,g_mainMenuVideoStereo);
+    Log("ini: ScriptedCameraFlat=%ld (gameplay Matinee); frontend uses owned menu presentation, configured inset and engine FOV",
+        g_scriptedCameraFlat);
     Log("followup: WeaponNativeAxis=%d CinematicHandsOwnership=%ld (default OFF)",g_weaponNativeAxis,g_cinematicHandsOwnership);
     Log("ini: SniperOpticalAccuracy=%d (default OFF; exact native spread aim callers, no zero-spread write)",g_sniperOpticalAccuracy);
     Log("ini: ScopeOpticalCalibration=%d SniperOpticalSlowTime=%d (default OFF; own4x/capture45Hz, native L3; no HMD filtering)",g_scopeOpticalCalibration,g_sniperOpticalSlowTime);
