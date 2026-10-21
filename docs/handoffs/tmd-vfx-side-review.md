@@ -98,7 +98,8 @@ L1: DDS validation/alpha/negative-input tests and exact-scope CPU test.
 L2: x86 PE32 `/O2` dinput8, static format analysis, resource-native-cache CPU15,
 GPU8, timing7/disabled, actual-hook forwarding9 and bridge GPU plain/Ex checks.
 These are own-process synthetic GPU tests, not Steam or game-pixel validation.
-No new d3d9 renderer is built because this branch does not change it.
+The initial effects-only review at `7a525a7` did not change d3d9. Subsequent
+TMD and NIS follow-ups do build a new candidate DLL; use their specific notes.
 
 MAIN must stage DDS only into a separate remasterdir candidate, preserve the
 accepted renderer/INI and other remaster assets, and use normal verified backup
@@ -107,10 +108,10 @@ one impact/blood scene; compare both eyes, alpha edges, smoke, exposure and FPS.
 Collect exact `BRIDGE MATCH` / `SUBSTITUTE` names; missing matches falsify runtime
 integration even if files exist. Effects quality, TMD aim, TMD emitter placement
 and TMD gore remain **NOT PHYSICALLY VERIFIED** by this branch.
-# Additional NIS follow-up
+
+## Additional NIS follow-up
 
 User additionally requested sharpening and a live VR Settings control on this
 same branch. See [NIS candidate and MAIN test](../nis-sharpen-repair.md).
 NIS, TmdNativeAim and effects_remaster are independent switches; do not enable
 all three in the first integration test or replace the current accepted INI.
-
