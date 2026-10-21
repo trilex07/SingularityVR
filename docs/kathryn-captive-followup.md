@@ -1,5 +1,46 @@
 # Kathryn radio and captive scene — unresolved physical result
 
+## Latest physical receipt: CD571D46, 2026-10-21
+
+User clarified: native hands visible DURING cinema; free tracked hands during
+the subsequent escape are the missing restraint. Kathryn radio remains English
+and scene presentation remains unsatisfactory. None is physically accepted.
+The outer event bridge had zero logged invocations although its names resolved
+early. Existing SetCinematicMode ON/OFF and mono composition did execute; logs
+do not identify those windows as the exact failing Kathryn sequence. Repeating
+the bridge unchanged or forcing cinema after every cinematic exit is unjustified.
+
+Preserved private log: build/combined-followups/kathryn-fix-5832409/physical-20261021-1201.log,
+SHA256 BCCB78DA5C82722A75568045F6BDDF4FFEAB39573B95ED9586CF0B95B2F4B9CC.
+Guard successfully restored26 native banks first, then core, full accepted
+postflight PASS. MAIN independently rehashed accepted DLL EF3A1F3B / INI55A3ED4D;
+neither Singularity nor the guard remains running. Older "No Steam writes yet"
+paragraphs below describe preparation only and are superseded by this receipt.
+
+Offline RE confirms EPlayerHandsStatus has only NothingEquipped/TMD/Weapon/MAX,
+not a bound state. The shared RvGame asset package has original noTMD/TMD arm
+meshes but no literal restraint asset identity; this does not exclude level-local
+animations. The old two-Outer witness stopped at TheWorld, NOT the map Package.
+Expanded default-OFF scene witness now walks a guarded/cycle-checked maximum16
+Outer chain to a verified Package class, and records pawn, named native hand
+components, SkeletalMesh and Animations-root identities. Offset discovery uses
+the existing validated reflection layout, cached per class. No new hooks, GPU
+reads, state classification, engine writes or automatic restraint timer. Root
+identity is NOT an active-animation traversal or proof that rope pixels exist.
+Hypothesis: escape retains native animation ownership independently of cinema;
+falsifier: actual native components/animation producer show no bound animation
+when free controller hands are observed. Need exact producer before policy edits.
+
+Audio coverage is also partial, not a failed copy: exact package/asset audit of
+the staged lookup rows labelled speaker_guess=kathryn finds263 rows:95 explicit
+native replacements,167 retained,1 not covered. These counts differ from reports'
+cast/asset-based "97 Kathryn" total; do not combine different selection rules.
+Examples RT1_2008_KAT and RT1_2005_KAT need tempo2.29/2.20 to fit original windows,
+so accepted audio was intentionally retained. No cropping/unsafe speed-up allowed.
+New tools/audio/audit_native_voice_coverage.py refuses overlapping receipts and
+never interprets lookup native_replaced=1 or a staged WAV as delivery proof.
+It does not identify the line actually heard or validate live file hashes.
+
 ## Observed versus inferred
 
 Physical feedback: bound hands absent; Kathryn radio English; Kathryn scene stays

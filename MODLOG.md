@@ -1,5 +1,17 @@
 # Reverse-engineering journal
 
+2026-10-21 physical CD571D46: event bridge had zero invocations; existing cinema
+ON/OFF nevertheless occurred. User distinguishes visible cinematic hands from
+free tracked hands during subsequent escape. EPlayerHandsStatus has no bound
+entry (only Nothing/TMD/Weapon/MAX). No blanket post-cinema restraint policy.
+Old two-Outer log reported TheWorld, not the actual package. Read-only witness
+now follows a cycle-checked16-ancestor chain to Package and named native hand
+component/mesh/animation-root identities, behind existing default-OFF probe.
+Exact audio receipts for lookup speaker_guess=kathryn:95 replaced,167 retained,
+1 uncovered (263 total); staged WAV/native_replaced tags are not delivery proof.
+RT1_2008/2005 require unsafe2.29/2.20 tempo; do not crop or silently speed them.
+Seven hand/source guards and four coverage tests PASS; live fix remains OPEN.
+
 2026-10-21: RvGame.u export11870 SetPlayerCinematicMode is a49-byte script
 delegate to SetCinematicMode with six bool parameters, not a native wrapper.
 OnToggleCinematicModeNative consumes one object; never read it as a bool.

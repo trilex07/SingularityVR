@@ -1985,6 +1985,9 @@ WantedName g_wantNames[] = {
     // property with `NameOf`, so it can see names the lookup is structurally blind to. That is why they
     // disagreed, and it is worth knowing before trusting a "not found" from this resolver again.
     { "mPlayerHandsStatus", -1 }, { "mTMD", -1 },
+    // Read-only scene witness: actual native hand components and their assets.
+    { "mArmMeshComponent", -1 }, { "mInviewMesh", -1 },
+    { "SkeletalMesh", -1 }, { "Animations", -1 },
     // Ammo probe round 4: UT-pattern firemode object (WeaponFireTypes[0])
     // carries the live counters. Resolved per weapon class, never assumed.
     { "WeaponFireTypes", -1 },
@@ -23576,6 +23579,46 @@ static volatile LONG g_cineControllerObserved = 0;
 // call SetCinematicMode: prove its controller/pawn state and draw ownership
 // before accepting a new classifier. At most 120 notes: transitions and a ten
 // second heartbeat, sampled at one Hz. No GPU reads or engine writes.
+static void ObserveSceneObjectIdentity(uintptr_t object, const char* role) {
+    char objectName[96]{},className[80]{},packageName[96]{};
+    int32_t cls=0;
+    const bool valid=object && TryLoadAlignedI32(object+OBJ_CLASS,&cls) && cls &&
+        GuardedNameOf(object,objectName,sizeof(objectName)) &&
+        GuardedNameOf((uint32_t)cls,className,sizeof(className));
+    uintptr_t ancestors[16]{};unsigned count=0;bool packageFound=false;
+    uintptr_t current=valid?object:0;
+    while(current && count<16) {
+        bool repeated=false;
+        for(unsigned i=0;i<count;++i)if(ancestors[i]==current)repeated=true;
+        if(repeated)break;
+        ancestors[count++]=current;
+        int32_t type=0,parent=0;char typeName[80]{};
+        if(!TryLoadAlignedI32(current+OBJ_CLASS,&type) || !type ||
+           !GuardedNameOf((uint32_t)type,typeName,sizeof(typeName)))break;
+        if(!strcmp(typeName,"Package")) {
+            packageFound=GuardedNameOf(current,packageName,sizeof(packageName));break;
+        }
+        if(!TryLoadAlignedI32(current+0x28,&parent))break;
+        current=(uint32_t)parent;
+    }
+    Log("cinematic-identity: role=%s object=%p name=%s class=%s package=%s packageProven=%d ancestors=%u (read-only identity, not restraint proof)",
+        role,(void*)object,valid?objectName:"<unvalidated>",valid?className:"<unvalidated>",
+        packageFound?packageName:"<unresolved>",packageFound?1:0,count);
+}
+
+// Cached named offsets only. This never scans GObjects, interprets a bool or
+// makes a policy decision from an asset name. A class change invalidates cache.
+static uintptr_t SceneObjectProperty(uintptr_t object,const char* field,
+                                    uintptr_t& cachedClass,int& cachedOffset) {
+    int32_t cls=0,value=0;
+    if(!object || !g_upChildren || !g_upNext || !g_upOffset ||
+       !TryLoadAlignedI32(object+OBJ_CLASS,&cls) || !cls)return 0;
+    if(cachedClass!=(uint32_t)cls) {
+        cachedClass=(uint32_t)cls;cachedOffset=PropOffsetInChain(cachedClass,field);
+    }
+    return cachedOffset>=0 && TryLoadAlignedI32(object+cachedOffset,&value)?(uint32_t)value:0;
+}
+
 static void ObserveCinematicSceneProducer() {
     if(!Rd(g_cinematicSceneProbe))return;
     static ULONGLONG last=0;
@@ -23586,7 +23629,7 @@ static void ObserveCinematicSceneProducer() {
     const uintptr_t controller=(uintptr_t)(uint32_t)Rd(g_cineControllerObserved);
     const auto cs=ReadCinematicStateObservation(controller);
     const auto ps=ReadCinematicStateObservation(g_playerPawn);
-    char controllerState[80]{},pawnState[80]{},stateClass[80]{},world[80]{};
+    char controllerState[80]{},pawnState[80]{},stateClass[80]{};
     const bool cv=cs.valid && GuardedNameOf(cs.stateClass,stateClass,sizeof(stateClass)) &&
         !_stricmp(stateClass,"State") && GuardedNameOf(cs.stateNode,controllerState,sizeof(controllerState));
     const bool pv=ps.valid && GuardedNameOf(ps.stateClass,stateClass,sizeof(stateClass)) &&
@@ -23599,20 +23642,20 @@ static void ObserveCinematicSceneProducer() {
        oldPawnNode==ps.stateNode && oldCine==Rd(g_inCinematic) && oldRaw==Rd(g_cineArgRaw) &&
        oldMode==g_sceneMode.Current() && ++quiet<10)return;
     quiet=0;++samples;
+    ObserveSceneObjectIdentity(g_playerPawn,"pawn");
+    const char* const fields[]{"mArmMeshComponent","mInviewMesh"};
+    static uintptr_t pawnClasses[2]{},meshClasses[2]{},animationClasses[2]{};
+    static int componentOffsets[2]{-1,-1},meshOffsets[2]{-1,-1},animationOffsets[2]{-1,-1};
+    for(unsigned i=0;i<2;++i) {
+        const uintptr_t component=SceneObjectProperty(g_playerPawn,fields[i],pawnClasses[i],componentOffsets[i]);
+        ObserveSceneObjectIdentity(component,fields[i]);
+        ObserveSceneObjectIdentity(SceneObjectProperty(component,"SkeletalMesh",meshClasses[i],meshOffsets[i]),"SkeletalMesh");
+        ObserveSceneObjectIdentity(SceneObjectProperty(component,"Animations",animationClasses[i],animationOffsets[i]),"Animations");
+    }
     oldPawn=g_playerPawn;oldCamera=g_camera;oldControllerNode=cs.stateNode;oldPawnNode=ps.stateNode;
     oldCine=Rd(g_inCinematic);oldRaw=Rd(g_cineArgRaw);oldMode=g_sceneMode.Current();
-    // UObject.Outer+0x28 is the existing validated object identity chain. Read
-    // two ancestors only; never scan GObjects or change a native flag here.
-    uintptr_t parent=0;
-    if(g_playerPawn && Readable((void*)(g_playerPawn+0x28),4)) {
-        parent=*(uintptr_t*)(g_playerPawn+0x28);
-        if(parent && Readable((void*)(parent+0x28),4)) {
-            const uintptr_t package=*(uintptr_t*)(parent+0x28);
-            GuardedNameOf(package,world,sizeof(world));
-        }
-    }
-    Log("cinematic-producer: sample=%u world=%s pawn=%p controller=%p camera=%p controllerState=%s pawnState=%s cine=%ld raw=%ld mode=%s nativeHands=%d indexedFgSeen=%ld indexedFgKept=%ld (since last note; census, not mesh/content proof)",
-        samples,world,(void*)g_playerPawn,(void*)controller,(void*)g_camera,
+    Log("cinematic-producer: sample=%u pawn=%p controller=%p camera=%p controllerState=%s pawnState=%s cine=%ld raw=%ld mode=%s nativeHands=%d indexedFgSeen=%ld indexedFgKept=%ld (since last note; census, not mesh/content proof)",
+        samples,(void*)g_playerPawn,(void*)controller,(void*)g_camera,
         cv?controllerState:"<unvalidated>",pv?pawnState:"<unvalidated>",Rd(g_inCinematic),Rd(g_cineArgRaw),
         vrscene::Name(g_sceneMode.Current()),NativeCinematicHandsNow()?1:0,
         InterlockedExchange(&g_cineProbeFgSeen,0),InterlockedExchange(&g_cineProbeFgKept,0));

@@ -1,5 +1,23 @@
 # STATUS — session handoff
 
+## 2026-10-21 physical CD571D46 — NOT accepted; restraint scope clarified
+
+Latest user: Kathryn radio and scene still fail; original hands ARE visible in
+the cutscene, but hands become freely controller-tracked during the escape when
+they should remain bound. Do not describe cinematic hand visibility as absent.
+The SetPlayerCinematicMode bridge logged ZERO invocations; do not repeat it as a
+proven fix. Existing cinema does switch ON then OFF in this session; neither a
+global cinema failure nor the identity of the failing sequence follows from it.
+Private log physical-20261021-1201.log SHA
+BCCB78DA5C82722A75568045F6BDDF4FFEAB39573B95ED9586CF0B95B2F4B9CC.
+
+Guard restored26 banks before core rollback and passed full accepted postflight.
+Independent DLL EF3A1F3B / INI55A3ED4D hashes confirmed; game and guard exited.
+No subsequent Steam writes/launches. Current work is OFFLINE: bounded actual
+Package/native mesh/animation-root identity witness (not a restraint classifier),
+and exact native voice coverage audit. No new fix or L4 acceptance claimed.
+See docs/kathryn-captive-followup.md. Fresh start required for any new session.
+
 ## 2026-10-21 prepared correction, not diagnostics-only
 
 Render/CinematicEventBridge is default OFF and covers the statically proven

@@ -54,6 +54,23 @@ class NativeActionHandsTests(unittest.TestCase):
         self.assertIn('GetPrivateProfileIntA("Render","CinematicEventBridge",0,path)', SOURCE)
         self.assertIn('fnIdx==FnIdx(kFnPlayerCinematicProbeFirst))ApplyCinematicEventBridge(self,Stack)', SOURCE)
 
+    def test_scene_identity_walk_proves_package_and_stops_cycles(self):
+        body = SOURCE.split('static void ObserveSceneObjectIdentity(', 1)[1].split('\n}', 1)[0]
+        for token in ('count<16', 'ancestors[i]==current', 'if(repeated)break;',
+                      '"Package"', 'packageProven=', 'TryLoadAlignedI32'):
+            self.assertIn(token, body)
+        self.assertNotIn('InterlockedExchange', body)
+        self.assertNotIn('kGObjects', body)
+
+    def test_native_mesh_witness_is_observation_not_classifier(self):
+        body = SOURCE.split('static void ObserveCinematicSceneProducer() {', 1)[1].split('\n}', 1)[0]
+        for field in ('mArmMeshComponent', 'mInviewMesh', 'SkeletalMesh', 'Animations'):
+            self.assertIn('"' + field + '"', body)
+        self.assertIn('ObserveSceneObjectIdentity(g_playerPawn,"pawn")', body)
+        policy = SOURCE.split('static bool NativeCinematicHandsNow()', 1)[1].split('\n}', 1)[0]
+        self.assertNotIn('SceneObjectProperty', policy)
+        self.assertNotIn('ObserveSceneObjectIdentity', policy)
+
 
 if __name__ == '__main__':
     unittest.main()
