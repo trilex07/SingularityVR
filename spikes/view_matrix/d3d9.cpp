@@ -16952,7 +16952,7 @@ static void BuildTmdC(float C[4][4]) {    float G[3]; TmdAnchorWorld(G);
         GunViewFrame() ? g_wantYaw : 0,
         H[0] - G[0], H[1] - G[1], H[2] - G[2]);
     ApplyMeshScale(C, H);   // Fix-E/gunsize
-    if(Rd(g_tmdNativeAim)&&Rd(g_tmdOnOffHand)&&TmdRaised()&&Rd(g_offHandValid)&&Rd(g_camPosValid)) {
+    if(NativeTmdAim::Enabled()&&Rd(g_tmdOnOffHand)&&TmdRaised()&&Rd(g_offHandValid)&&Rd(g_camPosValid)) {
         tmdaim::Pose sample;
         memcpy(sample.matrix,C,sizeof(sample.matrix));
         const float k=6.2831853f/65536.f;
@@ -34133,7 +34133,7 @@ void LoadIniSettings() {
     g_weaponMeasuredAim=GetPrivateProfileIntA("Input","WeaponMeasuredAim",0,path)!=0;
     g_bodyEquipmentProbe=GetPrivateProfileIntA("Diagnostic","BodyEquipmentProbe",0,path)!=0;
     InterlockedExchange(&g_tmdNativeAim,GetPrivateProfileIntA("Input","TmdNativeAim",0,path)!=0);
-    Log("ini: TmdNativeAim=%ld (default OFF; local native aim/aging getter outputs only)",Rd(g_tmdNativeAim));
+    Log("ini: TmdNativeAim=%d (default OFF; local native aim/aging getter outputs only)",NativeTmdAim::Enabled()?1:0);
     if(g_weaponMeasuredAim&&(!g_weaponTraceRigidOrigin||!Rd(g_traceFromGun))){
         g_weaponMeasuredAim=0;Log("measured aim: requires WeaponTraceRigidOrigin + TraceFromGun; disabled");
     }

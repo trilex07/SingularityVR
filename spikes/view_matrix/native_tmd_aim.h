@@ -11,6 +11,13 @@ static DWORD engineThread=0;
 static SRWLOCK poseLock=SRWLOCK_INIT;
 static tmdaim::Pose pose{};
 static thread_local unsigned agingDepth=0;
+static volatile LONG hooksReady=0;
+static bool Enabled(){return InterlockedCompareExchange(&g_tmdNativeAim,0,0)!=0;}
+static void Fault(const char* site) {
+    InterlockedExchange(&g_tmdNativeAim,0);
+    static unsigned notes=0;
+    if(notes<4){++notes;Log("TMD native aim: unreadable %s context; gate OFF, native forwarding retained",site);}
+}
 static void Publish(const tmdaim::Pose& next) {
     if(TryAcquireSRWLockExclusive(&poseLock)) {
         pose=next;ReleaseSRWLockExclusive(&poseLock);
@@ -33,7 +40,7 @@ static uintptr_t LocalTmd(uintptr_t& pawn) {
     return P(tmd+0x98)==pawn?tmd:0;
 }
 static void Rewrite(void* self,float* start,float* direction,bool aging) {
-    if(!Rd(g_tmdNativeAim)||engineThread!=GetCurrentThreadId())return;
+    if(!Enabled()||engineThread!=GetCurrentThreadId()||!InterlockedCompareExchange(&hooksReady,0,0))return;
     __try {
         const bool game=VrModeOn()&&!Rd(g_gamePaused)&&!Rd(g_inCinematic)&&
             !Rd(g_vrMenuClass)&&!Rd(g_vrUiMenu)&&!Rd(g_panelOpen)&&TmdRaised();
@@ -58,7 +65,9 @@ static void Rewrite(void* self,float* start,float* direction,bool aging) {
         if(n<12){++n;Log("TMD native aim: %s pawn=%08X tmd=%08X age=%llums origin=(%.3f,%.3f,%.3f) direction=(%.6f,%.6f,%.6f) [getter output only; not pixel proof]",
             aging?"aging":"aim",(unsigned)pawn,(unsigned)tmd,
             (unsigned long long)(GetTickCount64()-sample.time),origin[0],origin[1],origin[2],axis[0],axis[1],axis[2]);}
-    } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {}
+    } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
+        Fault("getter");
+    }
 }
 static void __fastcall Aim(void* self,void* edx,float* start,float* direction) {
     originalAim(self,edx,start,direction);
@@ -71,7 +80,7 @@ static void __fastcall Aging(void* self,void* edx,float* start,float* direction)
     Rewrite(self,start,direction,true);
 }
 static void Poll() {
-    if(!Rd(g_tmdNativeAim))return;
+    if(!Enabled())return;
     if(Rd(g_gamePaused)||Rd(g_inCinematic)||Rd(g_vrMenuClass)||Rd(g_vrUiMenu)||Rd(g_panelOpen)||!VrModeOn()) {
         if(TryAcquireSRWLockExclusive(&poseLock)){pose.time=0;ReleaseSRWLockExclusive(&poseLock);}
         return;
@@ -103,9 +112,11 @@ static void Poll() {
             InterlockedExchange(&g_tmdNativeAim,0);
             Log("TMD native aim: enable failed, gate OFF; trampolines retained");return;
         }
-        aimTarget=aim;agingTarget=aging;
+        aimTarget=aim;agingTarget=aging;InterlockedExchange(&hooksReady,1);
         Log("TMD native aim: verified getters installed aim=%08X aging=%08X pawn=%08X [runtime/physical acceptance pending]",
             (unsigned)aimTarget,(unsigned)agingTarget,(unsigned)pawn);
-    } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {}
+    } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
+        Fault("installer");
+    }
 }
 }
