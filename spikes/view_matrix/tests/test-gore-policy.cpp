@@ -57,6 +57,16 @@ int main(){
         assert(*a==1&&*b==1);
     }
     assert(*a==-1&&*b==-1);
+    // Reproduce the real RvSharedPawn chain (field at index 477).
+    auto head=settings;
+    for(unsigned i=0;i<477;++i){auto f=Object("UnrelatedField");Link(f,g_upNext,head);head=f;}
+    Link(soldier,g_upChildren,head);
+    {singularity_gore::DamageScope s(pawn,true);assert(s.active&&*a==1);}
+    assert(*a==-1&&*b==-1);
+    const auto derived=Object("DerivedLimbSettings");
+    Link(derived,g_upNext-4,limbClass);Link(limb,OBJ_CLASS,derived);
+    {singularity_gore::DamageScope s(pawn,true);assert(s.active&&*a==1);}
+    assert(*a==-1&&*b==-1);
     names[soldier]="RvAI_PawnCombatNPC";
     {singularity_gore::DamageScope s(pawn,true);assert(!s.active&&*a==-1);}
     names[soldier]="RvAI_PawnSoldierBase";names[floatType]="BoolProperty";

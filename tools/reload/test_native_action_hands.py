@@ -28,7 +28,9 @@ class NativeActionHandsTests(unittest.TestCase):
         self.assertIn('if (tmdSurgeryOn && primCount > 0', SOURCE)
 
     def test_cinema_requires_opt_in_and_native_camera(self):
-        self.assertIn('return Rd(g_cutsceneNativeHands) && CutsceneNativeCameraArmed();', SOURCE)
+        self.assertIn('return Rd(g_cutsceneNativeHands) &&', SOURCE)
+        self.assertIn('Rd(g_cinematicHandsOwnership) && Rd(g_inCinematic) && VrModeOn()', SOURCE)
+        self.assertIn('GetPrivateProfileIntA("Render","CinematicHandsOwnership",0,path)', SOURCE)
         self.assertIn('GetPrivateProfileIntA("Render","CutsceneNativeHands",0,path)', SOURCE)
         self.assertIn('!NativeCinematicHandsNow() && CutsceneHideTrackedForeground(', SOURCE)
         self.assertIn('return !NativeAnimatedHandsNow();', SOURCE)

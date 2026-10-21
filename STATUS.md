@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+## 2026-10-21 native shot axis / bound hands follow-up (offline)
+
+Last gore/R1 physical session ended normally and accepted DLL EF3A1F3B… was
+verified restored. User observed gore and acceptable FPS, but scoped gore code
+actually refused `limb-property-type`: no module-write claim is justified.
+New candidate fixes the proven 478th-field traversal and asset validation,
+extends audited native pre/post-spread alignment beyond near-eye scope, and
+lets original cinematic hands own the mesh outside the cinema-camera path.
+Stronger R1 and accepted scope are retained. See
+`docs/native-axis-bound-hands-candidate.md`. New flags default OFF; Steam not
+modified. Runtime matching, impact alignment and captive scene require PSVR2.
+
 ## Candidate — 2026-10-21 reviewed gore + stronger Kasimov R1 (not deployed)
 
 Dedicated branch `fix/gore-stronger-r1-integration`, based on stronger-hold 7695772.

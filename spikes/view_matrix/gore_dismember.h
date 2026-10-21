@@ -38,13 +38,15 @@ inline int Field(uintptr_t cls,const char* wanted,const char* type) {
     if(!g_upChildren||!g_upNext||!g_upOffset)return -1;
     for(unsigned d=0;cls&&d<64;++d){
         auto f=Ptr(cls+g_upChildren);
-        for(unsigned n=0;f&&n<400;++n){
+        // Owned RvGame export chain: mLimbSettings is the 478th field from
+        // RvSharedPawn.Children. A 400-node cap silently hid the real property.
+        for(unsigned n=0;f&&n<4096;++n){
             char name[96]{},kind[64]{};
             if(!Readable((void*)f,0x100))return -1;
             if(NameOf(f,name,sizeof(name))&&!strcmp(name,wanted)){
                 if(!NameOf(Ptr(f+OBJ_CLASS),kind,sizeof(kind))||strcmp(kind,type))return -1;
                 const int off=*(const int*)(f+g_upOffset);
-                return off>=0x40&&off<=0x8000&&(off%4)==0?off:-1;
+                return off>=0x3c&&off<=0x8000&&(off%4)==0?off:-1;
             }
             f=Ptr(f+g_upNext);
         }
@@ -66,9 +68,18 @@ struct DamageScope {
         const int settings=Field(pawnClass,"mLimbSettings","ObjectProperty");
         if(settings<0){Refuse("limb-property-type");return;}
         limb=Ptr(pawn+settings);
-        if(!limb||!IsLive(limb)){Refuse("limb-live");return;}
+        // Settings are a referenced UObject asset, not a pawn in PersistentLevel.
+        // IsLive intentionally rejects assets and is inappropriate for this field.
+        if(!limb||!Readable((void*)limb,0x40)){Refuse("limb-readable");return;}
         cls=Ptr(limb+OBJ_CLASS);char name[96]{};
-        if(!NameOf(cls,name,sizeof(name))||strcmp(name,"RvLimbSettings")){Refuse("limb-class");return;}
+        bool settingsClass=false;
+        for(unsigned depth=0;cls&&depth<64;++depth){
+            if(!NameOf(cls,name,sizeof(name)))break;
+            if(!strcmp(name,"RvLimbSettings")){settingsClass=true;break;}
+            cls=Ptr(cls+g_upNext-4);
+        }
+        cls=Ptr(limb+OBJ_CLASS);
+        if(!settingsClass){Refuse("limb-class");return;}
         offsets[0]=Field(cls,"mRandomChanceToSeverLimb","FloatProperty");
         offsets[1]=Field(cls,"mHealthPercentToTryRandomSever","FloatProperty");
         if(offsets[0]<0||offsets[1]<0||offsets[0]==offsets[1]){Refuse("float-properties");return;}
@@ -85,7 +96,7 @@ struct DamageScope {
     }
     void Refuse(const char* stage){if(refusals++<12)Log("gore REFUSE stage=%s; no writes",stage);}
     ~DamageScope(){
-        if(!active||!IsLive(limb)||Ptr(limb+OBJ_CLASS)!=cls)return;
+        if(!active||!Readable((void*)limb,0x40)||Ptr(limb+OBJ_CLASS)!=cls)return;
         for(unsigned i=0;i<2;++i)if(Writable(limb+offsets[i],4)&&*(const float*)(limb+offsets[i])==after[i])
             *(float*)(limb+offsets[i])=before[i];
     }

@@ -244,8 +244,11 @@ static int* __fastcall OpticalAddSpread(void* self,void*,int* output,int pitch,i
     shotAxis={};
     auto* result=spreadOriginal(self,output,pitch,yaw,roll);
     const auto frame=Snapshot();
-    if(g_sniperOpticalAccuracy&&g_weaponMeasuredAim&&Rd(g_fireDepth)>0&&
-       (uintptr_t)self==frame.weapon&&Current(frame)&&result==output&&output&&
+    const bool scoped=g_sniperOpticalAccuracy&&Current(frame)&&(uintptr_t)self==frame.weapon;
+    const bool ordinary=g_weaponNativeAxis&&VrModeOn()&&InGameplay()&&
+        !Rd(g_inCinematic)&&!Rd(g_gamePaused)&&!Rd(g_weaponHolstered)&&Rd(g_handDevValid)&&
+        (uintptr_t)self==(uintptr_t)(uint32_t)Rd(g_weaponObj);
+    if(g_weaponMeasuredAim&&Rd(g_fireDepth)>0&&(scoped||ordinary)&&result==output&&output&&
        PauseRttProbe::SafeRange((uintptr_t)output,12)){
         shotAxis={g_playerPawn,(uintptr_t)self,GetTickCount64(),Rd(g_fireSeq),
             RotatorDirection(pitch,yaw),RotatorDirection(output[0],output[1])};
@@ -675,22 +678,37 @@ static void Draw(IDirect3DDevice9* dev){
     }
 }
 }
-void NativeScopeTick(){NativeRifleFx::MaintainTick();NativeRifleFx::ObserveTick();NativeScopePip::Tick();}
+void NativeScopeTick(){
+    NativeRifleFx::MaintainTick();NativeRifleFx::ObserveTick();NativeScopePip::Tick();
+    if(g_weaponNativeAxis&&VrModeOn()&&InGameplay()&&!Rd(g_inCinematic)){
+        // Audited common RvWeaponShared method, not a guessed subclass offset.
+        static ULONGLONG lastAttempt=0;const auto now=GetTickCount64();
+        if(!NativeScopePip::spreadOriginal&&now-lastAttempt>=2000){
+            lastAttempt=now;const auto weapon=(uintptr_t)(uint32_t)Rd(g_weaponObj);
+            if(weapon&&PauseRttProbe::SafeRange(weapon,4))NativeScopePip::BindSpread(weapon);
+        }
+    }
+}
 bool NativeScopeAlignShot(float* start,float* end){
     const auto& shot=NativeScopePip::shotAxis;
     const auto now=GetTickCount64();
-    if(!g_sniperOpticalAccuracy||!g_weaponMeasuredAim||!shot.weapon||
+    const bool scoped=g_sniperOpticalAccuracy&&NativeScopePip::Current(NativeScopePip::Snapshot());
+    const bool ordinary=g_weaponNativeAxis&&VrModeOn()&&InGameplay()&&
+        !Rd(g_inCinematic)&&!Rd(g_gamePaused)&&!Rd(g_weaponHolstered)&&Rd(g_handDevValid);
+    if(!(scoped||ordinary)||!g_weaponMeasuredAim||!shot.weapon||
        shot.weapon!=(uintptr_t)(uint32_t)Rd(g_weaponObj)||shot.pawn!=g_playerPawn||
-       shot.sequence!=Rd(g_fireSeq)||now<shot.tick||now-shot.tick>50||
-       !NativeScopePip::Current(NativeScopePip::Snapshot()))return false;
+       shot.sequence!=Rd(g_fireSeq)||now<shot.tick||now-shot.tick>50)return false;
     hipknife::V ray{};
     if(!scopepip::Unit({end[0]-start[0],end[1]-start[1],end[2]-start[2]},ray)||
        hipknife::Dot(ray,shot.spread)<.999999f)return false;
-    float measured[3];if(!GunAimDir(measured))return false;
+    float measured[3];const bool meshAxis=GunAimDir(measured);
+    // Centurion has no next-weapon mesh witness. Its existing controller axis
+    // remains the target; never mislabel that fallback as measured geometry.
+    if(!meshAxis&&scoped)return false;
     const float centre[]{shot.centre.x,shot.centre.y,shot.centre.z};
     const bool aligned=weapontrace::Align(start,end,centre,measured);
     static unsigned receipts=0;if(aligned&&receipts++<8)
-        Log("scope native axis: rigid native centre -> measured barrel; matched post-spread ray; cone preserved seq=%ld",shot.sequence);
+        Log("weapon native axis: matched post-spread ray; cone preserved seq=%ld target=%s scoped=%d",shot.sequence,meshAxis?"measured-barrel":"controller-axis",scoped?1:0);
     return aligned;
 }
 void NativeScopeShotReceipt(const float* start,const float* end,const float* rawDirection){

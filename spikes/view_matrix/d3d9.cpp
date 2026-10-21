@@ -2363,6 +2363,8 @@ static int g_sniperPip=0;
 static int g_scopeOpticalCalibration=0;
 static int g_sniperOpticalSlowTime=0;
 static int g_sniperOpticalAccuracy=0; // native scoped spread queries only, no camera ADS
+static int g_weaponNativeAxis=0; // exact local pre/post-spread basis, default OFF
+static LONG g_cinematicHandsOwnership=0; // native hands even when cinematic presentation stays stereo
 static volatile LONG g_scopeSlowPresses=0;
 static scopepip::Frame g_scopePipFrame;
 static int g_scopeMeasuredPose=0; // default OFF; do not reuse a frozen hand-local axis
@@ -16262,7 +16264,8 @@ inline void RefreshArmsAnimActive() {
 }
 inline bool ArmsAnimActive() { return Rd(g_armsAnimActiveCached)!=0; }
 static bool NativeCinematicHandsNow() {
-    return Rd(g_cutsceneNativeHands) && CutsceneNativeCameraArmed();
+    return Rd(g_cutsceneNativeHands) && (CutsceneNativeCameraArmed() ||
+        (Rd(g_cinematicHandsOwnership) && Rd(g_inCinematic) && VrModeOn()));
 }
 static bool NativeAnimatedHandsNow() {
     return ArmsAnimActive() || NativeCinematicHandsNow();
@@ -24643,7 +24646,7 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                 }
                 const float rawDirection[]{End[0]-Start[0],End[1]-Start[1],End[2]-Start[2]};
                 const float bx = End[0], by = End[1], bz = End[2];
-                const bool nativeOpticalAxis=g_sniperOpticalAccuracy&&am==11&&!scoped&&NativeScopeAlignShot(Start,End);
+                const bool nativeOpticalAxis=(g_sniperOpticalAccuracy||g_weaponNativeAxis)&&am==11&&!scoped&&NativeScopeAlignShot(Start,End);
                 if(!nativeOpticalAxis)RotateTrace(Start, End, dYaw, dPitch);
                 if(!nativeOpticalAxis&&g_weaponMeasuredAim&&am==11&&!scoped){
                     float from[3],to[3];LegacyGunAimDir(from);const bool measured=GunAimDir(to);
@@ -33622,6 +33625,9 @@ void LoadIniSettings() {
     g_scopeMeasuredPose=GetPrivateProfileIntA("Render","ScopeMeasuredPose",0,path)?1:0;
     g_sniperOpticalSlowTime=GetPrivateProfileIntA("Input","SniperOpticalSlowTime",0,path)?1:0;
     g_sniperOpticalAccuracy=GetPrivateProfileIntA("Input","SniperOpticalAccuracy",0,path)?1:0;
+    g_weaponNativeAxis=GetPrivateProfileIntA("Input","WeaponNativeAxis",0,path)?1:0;
+    g_cinematicHandsOwnership=GetPrivateProfileIntA("Render","CinematicHandsOwnership",0,path)?1:0;
+    Log("followup: WeaponNativeAxis=%d CinematicHandsOwnership=%ld (default OFF)",g_weaponNativeAxis,g_cinematicHandsOwnership);
     Log("ini: SniperOpticalAccuracy=%d (default OFF; exact native spread aim callers, no zero-spread write)",g_sniperOpticalAccuracy);
     Log("ini: ScopeOpticalCalibration=%d SniperOpticalSlowTime=%d (default OFF; own4x/capture45Hz, native L3; no HMD filtering)",g_scopeOpticalCalibration,g_sniperOpticalSlowTime);
     if(g_sniperPip&&!g_sniperNearEyeScope){g_sniperPip=0;Log("scope PiP: requires measured near-eye policy; disabled");}

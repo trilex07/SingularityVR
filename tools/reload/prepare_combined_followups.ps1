@@ -12,6 +12,7 @@ param(
  [switch]$OpticalAccuracy,
  [switch]$StrongerPrecision,
  [switch]$ReviewedGore,
+ [switch]$NativeAxisAndCinematicHands,
  [switch]$BodyEquipmentCensus
 )
 # Offline preparation only. No launch, installation or accepted-profile mutation.
@@ -60,6 +61,7 @@ $targets=[ordered]@{
  'Render/NpcNameScalePct'='60'
  'Render/CutsceneNativeHands'='1'
 }
+if($NativeAxisAndCinematicHands -and -not $MeasuredAim){throw 'Native axis requires measured aim infrastructure'}
 if($RifleSniperFollowups){
  $targets=[ordered]@{
   'Input/KasimovAuthoredGrip'='1'
@@ -110,6 +112,11 @@ if($BodyEquipmentCensus){
 if($ReviewedGore){
  $targets['Gameplay/GoreDismemberment']='1'
  $targets['Gameplay/GoreChancePct']='100'
+}
+if($NativeAxisAndCinematicHands){
+ $targets['Input/WeaponNativeAxis']='1'
+ $targets['Render/CinematicHandsOwnership']='1'
+ $targets['Render/CutsceneNativeHands']='1'
 }
 $text=[IO.File]::ReadAllText((Resolve-Path -LiteralPath $InstalledIni).Path,[Text.UTF8Encoding]::new($false,$true))
 $newline=if($text.Contains("`r`n")){"`r`n"}else{"`n"}
