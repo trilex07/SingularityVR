@@ -41,6 +41,16 @@ New tools/audio/audit_native_voice_coverage.py refuses overlapping receipts and
 never interprets lookup native_replaced=1 or a staged WAV as delivery proof.
 It does not identify the line actually heard or validate live file hashes.
 
+Witness build receipt: source f0cdc81308fd0358052570471bb8c3778462a605,
+tracked source clean (only private deployment/leases untracked), x86 PE32 /O2,
+no performance instrumentation. DLL
+5811BBD68D140974A8A49221181CC1BFAE8503223D225EE6BEC3AED3DC624FC4,
+preserved at build/combined-followups/captive-identity-f0cdc81. Build completes
+with existing static-analysis warnings; not a warning-free claim. Seven static
+hand/source guards and four synthetic coverage tests PASS. No L3/L4 for this
+build; it is a read-only producer witness, NOT a claimed restraint/audio fix,
+not an installed or fully deployment-preflighted test package.
+
 ## Observed versus inferred
 
 Physical feedback: bound hands absent; Kathryn radio English; Kathryn scene stays
