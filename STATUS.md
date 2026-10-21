@@ -114,6 +114,14 @@ flags remain unimplemented pending native mask/consumer evidence. No L3/L4 claim
 See `docs/gore-reviewed-candidate.md`. Stable Steam/main unchanged; fresh `start`
 required before any deployment or launch. Previous optical acceptance still holds
 only for the stable build, not this rebuilt candidate.
+## 2026-10-21 side integration candidate (offline; not deployed)
+
+TMD native aim + NIS stereo sharpening and texture remaster staging are being
+ported onto the physically accepted DF7A menu baseline. TMD and effects-remaster
+remain OFF by default; NIS starts Off and is user-toggleable in VR Settings.
+SIDE branch is older than this renderer; only audited feature changes are being
+integrated. No new Steam acceptance yet. See the SIDE handoffs and candidate test plan.
+
 ## LATEST — 2026-10-20 optical alignment accepted and stable promotion
 
 User physically confirms scope aiming now OK; requests main + stable baseline.

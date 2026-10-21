@@ -4,15 +4,26 @@
 `side/enemy-detail-proposal`, based on `origin/main` `8ffa2d1`.
 No Steam process access, launches, deployment, restore, saves or installed writes.
 
+## Follow-up: replacement native TMD candidate
+
+User requested implementing TMD after the review. The unsafe original changes
+remain rejected; this branch now adds a different default-OFF `TmdNativeAim`
+getter-only candidate. It changes renderer source only to publish its existing
+TMD matrix, not to select shared gun/controller aim. See
+[`tmd-native-aim.md`](../tmd-native-aim.md) for original-binary ABI evidence,
+failure gates, offline tests and MAIN's physical route. Existing effects scope
+and its default-OFF gate are unchanged; test these two features separately.
+
 ## Decision
 
 Do **not** merge the original SIDE branch wholesale. It also contains `9c75c68`
 (the global gore/CDO experiment), and its base predates accepted renderer work.
-This reviewed branch deliberately leaves `spikes/view_matrix/d3d9.cpp` and its
-INI byte-for-byte equal to the base. It does not supersede MAIN's scoped gore,
+The initial review commit7a525a7 left `spikes/view_matrix/d3d9.cpp` and its
+INI byte-for-byte equal to the base. The follow-up only adds the getter candidate
+described above; shipped INI remains unchanged. It does not supersede MAIN's scoped gore,
 aiming, cutscene or audio candidates.
 
-### TMD aiming: original implementation rejected, still OPEN
+### TMD aiming: original implementation rejected; replacement awaiting L3/L4
 
 1. In `UpdateFromHeadset`, SIDE selects OffHand for shared `g_aimYawUU`,
    `g_aimPitchUU` and engine targets whenever `TmdRaised()`. These feed ordinary
