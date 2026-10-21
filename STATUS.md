@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+## 2026-10-22 NIS physical PASS; station presentation L1/L2 PASS
+
+User confirms NIS works. Smaller/centred station RTT presentation now shares
+the provider and laser plane; exact station owners only, no notes/dialog drift.
+CPU test and production x86 /O2 build PASS; local DLL 1730B5A9… is NOT installed.
+Native locker four-slot work is OPEN: offline Start proves two explicit slot
+reads; PopMenu commits all entries to native controller slots. Do not expand
+the array or overwrite special slots. See docs/station-locker-followup-20261022.md.
+
 ## 2026-10-21 latest-source menu repair — L1_PASS / L2_PASS
 
 User requests the newest full feature set plus ONLY menu repair; no older DLL rollback. Own branch codex/menu-latest-only-20261021 preserves the full inherited source layer in1fd1801. Only four source/test files then change: remove unaccepted no-pawn mode/FOV/inset overrides so frontend ownership and clean backdrop can run. Latest scripted gameplay cinema, restraint, sprint, inventory, Bink and class4 station changes remain. Six x86 /O2 menu/pause/cinema test executables and production build PASS. No physical acceptance claimed. See docs/menu-latest-only-20261021.md and source-preservation receipt.

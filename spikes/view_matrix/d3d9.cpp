@@ -6560,6 +6560,7 @@ volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=1
 volatile LONG g_vrMenuDistanceMm=1200;
 volatile LONG g_frontMenuScalePct=72,g_frontMenuDistanceMm=0;
 volatile LONG g_stationMenuScalePct=50,g_stationMenuDistanceMm=1400;
+volatile LONG g_vrUiStationMovie=0;
 static LONG g_frontMenuCleanBackdrop=0;
 static bool g_frontMenuCleanFrame=false; // render-thread frame-local composition receipt
 static unsigned long long g_frontMenuCleanToken=0;

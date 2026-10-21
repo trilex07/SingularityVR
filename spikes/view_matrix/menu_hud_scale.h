@@ -50,3 +50,20 @@ inline float ContextMenuDistance(int menuClass,bool modPanel,bool projectDirect,
     const int mm = stationMm < 600 ? 600 : (stationMm > 3000 ? 3000 : stationMm);
     return mm / 1000.f;
 }
+
+// Exact station RTT owners only. Class 4 also contains notes and confirmations;
+// those must not inherit the station's smaller, centred presentation.
+inline bool StationMovieClass(const char* name) {
+    if (!name) return false;
+    const char* names[]={"RvUIGFxMovie_UseStation","RvUIGFxMovie_BarisovStation",
+                         "RvUIGFxMovie_WeaponLocker"};
+    for (const char* expected:names) {
+        const char* a=name; const char* b=expected;
+        while (*a && *a==*b) { ++a; ++b; }
+        if (!*a && !*b) return true;
+    }
+    return false;
+}
+inline float StationCapturedInset(bool station,bool modPanel,float inset,int percent) {
+    return station ? StationMenuInset(4,modPanel,inset,percent) : inset;
+}

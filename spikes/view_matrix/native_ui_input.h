@@ -19,6 +19,7 @@ extern volatile LONG g_modalSaveDialog; // 1 while RvUIGFxMovie_Dialog owns focu
 extern volatile LONG g_modalSlotsActive,g_modalSlotsCapturePending,g_vrModalDialogSurface,g_vrModalDirectDialog;
 extern volatile LONG g_menuAssetWitness;
 extern volatile LONG g_vrUiDirectCanvas,g_vrUiNoteCanvas;
+extern volatile LONG g_vrUiStationMovie;
 
 namespace NativeVrUi {
 struct Name { unsigned index, number; };
@@ -120,6 +121,29 @@ static void ObserveWeaponAssets() {
   Log("native-fx witness: guarded read failed UNKNOWN; no writes");
  }
 }
+// The native locker is a separate producer from the owned-weapon VR wheel.
+// Never resize its TArrays or call equip with an invented GFx slot index.
+static void ObserveLockerSlots(uintptr_t movie,uintptr_t cls) {
+ if(!Rd(g_menuAssetWitness))return;
+ static unsigned remaining=4;
+ if(!remaining)return;--remaining;
+ __try {
+  const char* fields[]={"mEquippedWeapons","mOriginalWeapons"};
+  for(const char* field:fields) {
+   const int off=PauseRttProbe::Property(cls,field,"ArrayProperty");
+   if(off<0||!Readable((void*)(movie+off),12)) {
+    Log("locker slots witness: %s unresolved (no mutation)",field);continue;
+   }
+   const uintptr_t data=ReadPointer(movie+off);
+   const int count=*(const int*)(movie+off+4),capacity=*(const int*)(movie+off+8);
+   const bool valid=count>=0&&count<=64&&capacity>=count&&capacity<=256&&(!count||data);
+   Log("locker slots witness: %s offset=%d count=%d capacity=%d bounds=%d; native UI not expanded",
+       field,off,count,capacity,valid?1:0);
+  }
+ } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
+  Log("locker slots witness: guarded read refused; no mutation");
+ }
+}
 static bool MenuClass(const char* n) {
  static const char* names[]={"RvUIGFxMovie_Main","RvUIGFxMovie_IIS","RvUIGFxMovie_Pause",
  "RvUIGFxMovie_Dialog","RvUIGFxMovie_Slots","RvUIGFxMovie_SlotsBase","RvUIGFxMovie_LoadGame",
@@ -142,6 +166,7 @@ static bool UpdateMenu() {
   if(movie && NameOf(movie,objectName,sizeof(objectName)) && strncmp(objectName,"Default__",9)
      && cls && NameOf(cls,className,sizeof(className)))cachedMenu=MenuClass(className);
   const LONG kind=!cachedMenu?0:!strcmp(className,"RvUIGFxMovie_IIS")?1:!strcmp(className,"RvUIGFxMovie_Main")?2:!strcmp(className,"RvUIGFxMovie_Pause")?3:4;
+  InterlockedExchange(&g_vrUiStationMovie,cachedMenu&&StationMovieClass(className)?1:0);
   NativeContextCursor::Configure(movie,cls,(int)kind);
   const bool directCanvas=kind==4&&ExactDirectDialogPath(movie,cls);
   InterlockedExchange(&g_vrUiDirectCanvas,directCanvas?1:0);
@@ -185,6 +210,7 @@ static bool UpdateMenu() {
   InterlockedExchange(&g_vrMenuClass,kind);
   Log("VR UI focus: movie=%p object=%s class=%s menu=%d",(void*)movie,objectName,className,cachedMenu?1:0);
   if(cachedMenu)ObserveMovieAsset(movie,cls,className);
+  if(cachedMenu&&!strcmp(className,"RvUIGFxMovie_WeaponLocker"))ObserveLockerSlots(movie,cls);
   // NewGame: actual focus log proves SPSlots -> dialog. This probe establishes
   // whether each has its own RTT, shares a parent's RTT, or draws directly.
   // Four cold snapshots/session; no new hook, matrix write or resource ref.

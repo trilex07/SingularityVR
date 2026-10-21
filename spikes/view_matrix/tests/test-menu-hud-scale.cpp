@@ -20,6 +20,13 @@ static bool Near(float a, float b) {
 }
 
 int main() {
+    Expect(StationMovieClass("RvUIGFxMovie_WeaponLocker"),"exact locker RTT owner");
+    Expect(StationMovieClass("RvUIGFxMovie_BarisovStation") && StationMovieClass("RvUIGFxMovie_UseStation"),"upgrade station RTT owners");
+    Expect(!StationMovieClass(nullptr) && !StationMovieClass("RvUIGFxMovie_Notepad") &&
+           !StationMovieClass("RvUIGFxMovie_Dialog") && !StationMovieClass("RvUIGFxMovie_WeaponLockerOther"),"notes/dialogs and lookalikes unchanged");
+    Expect(Near(StationCapturedInset(true,false,.84f,50),.42f),"captured station gets configured half-size");
+    Expect(Near(StationCapturedInset(false,false,.84f,50),.84f) &&
+           Near(StationCapturedInset(true,true,.84f,50),.84f),"nonstation and mod panel preserve size");
     // Captured INI is 100. The old shared clamp produced 0.84 for class 1.
     Expect(Near(ClassBackbufferScale(1, true, 100), 0.45f),
            "class 1 with MenuInsetPct 100 uses the 0.45 safe area");
