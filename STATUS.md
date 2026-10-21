@@ -114,7 +114,6 @@ flags remain unimplemented pending native mask/consumer evidence. No L3/L4 claim
 See `docs/gore-reviewed-candidate.md`. Stable Steam/main unchanged; fresh `start`
 required before any deployment or launch. Previous optical acceptance still holds
 only for the stable build, not this rebuilt candidate.
-
 ## LATEST — 2026-10-20 optical alignment accepted and stable promotion
 
 User physically confirms scope aiming now OK; requests main + stable baseline.

@@ -60,6 +60,9 @@ static void Run(IDirect3D9* api,IDirect3D9Ex* apiEx,bool ex){
 int main(){
     Check(remasterscope::Contains("AR_shotgun_d")&&remasterscope::Contains("inview_glove_n"),"exact remaster material scope");
     Check(!remasterscope::Contains("360_A")&&!remasterscope::Contains("brightFlash_01")&&!remasterscope::Contains("AR_shotgun_d_more")&&!remasterscope::Contains(nullptr),"glyphs/FX/substring/unknown are not remastered");
+    Check(remasterscope::Contains("brightFlash_01",true)&&remasterscope::Contains("bsplat_decal_d",true)&&
+        !remasterscope::Contains("bsplat_decal_d")&&!remasterscope::Contains("360_A",true)&&
+        !remasterscope::Contains("brightFlash_01_more",true),"effects require exact explicit opt-in; glyphs/substring remain protected");
     HMODULE system=LoadLibraryExW(L"d3d9.dll",nullptr,LOAD_LIBRARY_SEARCH_SYSTEM32);
     auto plain=reinterpret_cast<IDirect3D9* (WINAPI*)(UINT)>(GetProcAddress(system,"Direct3DCreate9"));
     auto createEx=reinterpret_cast<HRESULT (WINAPI*)(UINT,IDirect3D9Ex**)>(GetProcAddress(system,"Direct3DCreate9Ex"));

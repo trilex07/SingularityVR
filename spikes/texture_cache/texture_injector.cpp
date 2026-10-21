@@ -54,6 +54,7 @@ static bool      g_apply = true;              // false = log only
 static bool      g_resourceNativeCache = true;
 static bool      g_bridgeOwned = false; // new route default OFF; never arms MinHook
 static bool      g_remasterApply=false;
+static bool      g_effectsRemaster=false; // reviewed effects candidate, startup-only, default OFF
 static char      g_remasterDir[MAX_PATH]="texture-override-remaster";
 struct alignas(8) CacheCounters {
     volatile LONG64 binds=0, nativeHits=0, legacyHits=0, hashes=0;
@@ -137,6 +138,7 @@ static void LoadConfig() {
     g_resourceNativeCache=iniInt("general","resource_native_cache",1,ini)!=0;
     g_bridgeOwned=iniInt("general","bridge_owned",0,ini)!=0;
     g_remasterApply=iniInt("general","remaster_apply",0,ini)!=0;
+    g_effectsRemaster=iniInt("general","effects_remaster",0,ini)!=0;
     iniStr("general","remasterdir","texture-override-remaster",g_remasterDir,MAX_PATH,ini);
     iniStr("general", "texturesdir", "texture-override", g_texturesDir, MAX_PATH, ini);
     g_capture = iniInt("general", "capture", 0, ini) != 0;
@@ -562,6 +564,7 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
     InterlockedIncrement64(&g_cacheCounters.hashes);
     uint64_t hash = 0; bool have = HashLevel0(t, desc, hash);
     const Target* hit = MatchTarget(desc, hash, have);
+    if(hit&&remasterscope::IsAddedBlood(hit->name)&&!g_effectsRemaster)hit=nullptr;
     if (hit && !texgroups::GroupAllows(g_groupOn,
             texgroups::GroupIndex(hit->group))) {
         Log("group off: %s (%s)", hit->name, hit->group);
@@ -593,11 +596,12 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
         if (hit && g_apply) {
             DDSImage img;
             char ddsPath[MAX_PATH];
-            _snprintf_s(ddsPath, _TRUNCATE, "%s\\%s", g_texturesDir, hit->dds);
+            const bool effects= g_remasterApply && g_effectsRemaster && remasterscope::EffectsContains(hit->name);
+            _snprintf_s(ddsPath, _TRUNCATE, "%s\\%s", effects?g_remasterDir:g_texturesDir, hit->dds);
             char full[MAX_PATH];
             if (ddsPath[0] == '\\' || (ddsPath[0] && ddsPath[1] == ':')) strcpy_s(full, ddsPath);
             else BuildPath(ddsPath, full, sizeof(full));
-            if (LoadDDS(full, img)) {
+            if (LoadDDS(full, img) && img.fmt==desc.Format) {
                 IDirect3DTexture9* repl = nullptr;
                 if (CreateReplacement(dev, img, &repl)) {
                     e->replacement = repl;   // kept for process lifetime
@@ -642,7 +646,9 @@ extern "C" HRESULT WINAPI SingularityTextureBridgeV1(IDirect3DDevice9* dev,DWORD
     bool have=HashLevel0(original,desc,hash);
     const Target* target=MatchTarget(desc,hash,have);
     if(target&&!texgroups::GroupAllows(g_groupOn,texgroups::GroupIndex(target->group)))target=nullptr;
-    const bool remaster=target&&remasterscope::Contains(target->name);
+    // New blood identities must not widen baseline replacement when OFF.
+    if(target&&remasterscope::IsAddedBlood(target->name)&&!g_effectsRemaster)target=nullptr;
+    const bool remaster=target&&remasterscope::Contains(target->name,g_effectsRemaster);
     if(target){
         static volatile LONG seen[kTargetCount]{};
         const unsigned slot=unsigned(target-kTargets);

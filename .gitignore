@@ -1,4 +1,5 @@
 # ---- build output ----
+/build/effects-review/
 /build/accepted-profile-guard/
 /build/frontend-menu-comfort/
 /deployment/accepted-profile.json
