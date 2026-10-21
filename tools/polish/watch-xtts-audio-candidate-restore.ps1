@@ -3,6 +3,8 @@ param(
     [Parameter(Mandatory)][string]$EvidenceDirectory,
     [Parameter(Mandatory)][string]$CandidateDirectory,
     [Parameter(Mandatory)][string]$AcceptedProfilePath,
+    [string]$RuntimeBackupPath='',
+    [string]$ChangePlanPath='',
     [string]$GameRoot='C:\Program Files (x86)\Steam\steamapps\common\Singularity',
     [ValidateRange(60,1800)][int]$LaunchWindowSeconds=1800
 )
@@ -46,6 +48,47 @@ $manifestData=Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json
 if((Get-FileHash -LiteralPath $profile -Algorithm SHA256).Hash.ToLowerInvariant() -cne $manifestData.acceptedProfileSha256){
     throw 'Accepted profile changed since audio lease creation'
 }
+$runtimeBackup=$null
+$changePlan=$null
+if([string]::IsNullOrWhiteSpace($RuntimeBackupPath) -xor [string]::IsNullOrWhiteSpace($ChangePlanPath)){
+    throw 'RuntimeBackupPath and ChangePlanPath must be supplied together'
+}
+if(-not [string]::IsNullOrWhiteSpace($RuntimeBackupPath)){
+    $runtimeBackup=(Resolve-Path -LiteralPath $RuntimeBackupPath).Path
+    $changePlan=(Resolve-Path -LiteralPath $ChangePlanPath).Path
+    $metadata=Get-Content -LiteralPath (Join-Path $runtimeBackup 'backup_metadata.json') -Raw | ConvertFrom-Json
+    $names=@($metadata.Files|ForEach-Object Name|Sort-Object)
+    if(($names -join ',') -cne 'd3d9.dll,SingularityVR.ini' -or @($metadata.Directories).Count -ne 0){
+        throw 'Combined lease requires an exact DLL/INI-only runtime backup'
+    }
+    $profileData=Get-Content -LiteralPath $profile -Raw | ConvertFrom-Json
+    $planData=Get-Content -LiteralPath $changePlan -Raw | ConvertFrom-Json
+    if($planData.schema -cne 'singularityvr-change-plan-v1' -or
+       $planData.profileSha256.ToLowerInvariant() -cne (Get-FileHash -LiteralPath $profile -Algorithm SHA256).Hash.ToLowerInvariant()){
+        throw 'Runtime change plan does not match the accepted profile'
+    }
+    $dllPin=@($profileData.files|Where-Object{$_.path -ceq 'Binaries/d3d9.dll'})
+    $iniPin=@($profileData.files|Where-Object{$_.path -ceq 'Binaries/SingularityVR.ini'})
+    $dllPlan=@($planData.files|Where-Object{$_.path -ceq 'Binaries/d3d9.dll'})
+    if($dllPin.Count -ne 1 -or $iniPin.Count -ne 1 -or $dllPlan.Count -ne 1){
+        throw 'Accepted profile or change plan has ambiguous DLL/INI identities'
+    }
+    $dllBackup=Join-Path $runtimeBackup 'd3d9.dll'
+    $iniBackup=Join-Path $runtimeBackup 'SingularityVR.ini'
+    $dllTarget=Join-Path $game 'Binaries/d3d9.dll'
+    $iniTarget=Join-Path $game 'Binaries/SingularityVR.ini'
+    $dllCandidate=Join-Path $candidate 'd3d9.dll'
+    $iniCandidate=Join-Path $candidate 'SingularityVR.ini'
+    $dllBefore=$dllPlan[0].before.ToUpperInvariant()
+    $dllAfter=$dllPlan[0].after.ToUpperInvariant()
+    if((Get-FileHash -LiteralPath $dllBackup -Algorithm SHA256).Hash.ToUpperInvariant() -cne $dllBefore -or
+       (Get-FileHash -LiteralPath $iniBackup -Algorithm SHA256).Hash.ToUpperInvariant() -cne $iniPin[0].sha256.ToUpperInvariant() -or
+       (Get-FileHash -LiteralPath $dllCandidate -Algorithm SHA256).Hash.ToUpperInvariant() -cne $dllAfter -or
+       (Get-FileHash -LiteralPath $dllTarget -Algorithm SHA256).Hash.ToUpperInvariant() -cne $dllAfter -or
+       (Get-FileHash -LiteralPath $iniTarget -Algorithm SHA256).Hash.ToUpperInvariant() -cne (Get-FileHash -LiteralPath $iniCandidate -Algorithm SHA256).Hash.ToUpperInvariant()){
+        throw 'Runtime backup or installed DLL/INI does not match the combined lease'
+    }
+}
 if(@(Get-Process -Name Singularity -ErrorAction SilentlyContinue).Count){
     throw 'Arm the XTTS restore lease before launching Singularity'
 }
@@ -53,7 +96,11 @@ if(@(Get-Process -Name Singularity -ErrorAction SilentlyContinue).Count){
 $deadline=(Get-Date).AddSeconds($LaunchWindowSeconds)
 $seen=$false
 $idleSince=$null
-Write-Output "READY: XTTS WAV/lookup restore lease; ${LaunchWindowSeconds}s no-launch window, restore 10s after stable game exit"
+if($runtimeBackup){
+    Write-Output "READY: combined XTTS + DLL/INI restore lease; ${LaunchWindowSeconds}s no-launch window, restore 10s after stable game exit"
+}else{
+    Write-Output "READY: XTTS WAV/lookup restore lease; ${LaunchWindowSeconds}s no-launch window, restore 10s after stable game exit"
+}
 while($true){
     $running=@(Get-Process -Name Singularity -ErrorAction SilentlyContinue)
     if($running.Count){
@@ -74,3 +121,27 @@ if(@(Get-Process -Name Singularity -ErrorAction SilentlyContinue).Count){
     -AcceptedProfilePath $profile -EvidenceDirectory $evidence
 if(-not $?){throw 'XTTS rollback command failed'}
 Write-Output 'RESTORED: XTTS WAV and story lookup backups verified; no DLL/INI writes'
+if($runtimeBackup){
+    $profileData=Get-Content -LiteralPath $profile -Raw | ConvertFrom-Json
+    $lookupPin=@($profileData.files|Where-Object{$_.path -ceq $lease.LookupPath})
+    $lookupTarget=Join-Path $game ($lease.LookupPath -replace '/', '\')
+    if($lookupPin.Count -ne 1 -or
+       (Get-FileHash -LiteralPath $lookupTarget -Algorithm SHA256).Hash.ToUpperInvariant() -cne $lookupPin[0].sha256.ToUpperInvariant()){
+        throw 'Story lookup did not return to the accepted profile; refusing DLL/INI rollback'
+    }
+    if(@(Get-Process -Name Singularity -ErrorAction SilentlyContinue).Count){
+        throw 'Game relaunched after audio restore; refusing DLL/INI rollback'
+    }
+    & (Join-Path $repo 'tools/deploy-singularityvr.ps1') -Action Rollback `
+        -BackupPath $runtimeBackup -AcceptedProfilePath $profile -ChangePlanPath $changePlan
+    if(-not $?){throw 'DLL/INI rollback command failed after audio restore'}
+    foreach($relative in @('Binaries/d3d9.dll','Binaries/SingularityVR.ini')){
+        $pin=@($profileData.files|Where-Object{$_.path -ceq $relative})
+        $target=Join-Path $game ($relative -replace '/', '\')
+        if($pin.Count -ne 1 -or
+           (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToUpperInvariant() -cne $pin[0].sha256.ToUpperInvariant()){
+            throw "Post-restore runtime hash mismatch: $relative"
+        }
+    }
+    Write-Output 'RESTORED: accepted DLL/INI hashes verified after XTTS restore'
+}
