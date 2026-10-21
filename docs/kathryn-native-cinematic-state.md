@@ -72,3 +72,24 @@ during escape and their release only when freed; then check normal stereo,
 hands, pause/options and exit normally. MAIN checks native-cinematic binding,
 ON/OFF and native-restraint transitions against the user's observations.
 Dubbing remains SIDE-owned and is not generated or deployed here.
+
+## Prepared core candidate receipt
+
+Source `116116883179604b377a92902de39a7b283d865d`, tracked source clean at
+build (only private deployment/leases untracked). DLL SHA-256
+`5C9E6E62F64BAFB912A33A1F29DD71DB64D93C9292168932065CD61315BD707C`;
+INI `A1AD10A1BA2C1FA8EEF650F1F38F18A91871F5DC0645314CF9A6EDD2E43EC3A9`.
+Private immutable core directory: build/combined-followups/kathryn-native-1161168.
+Preserves the prior combined test's gore, steady-aim/native-axis and native
+cinematic-hand flags; adds NativeCinematicState/NativeRestraintHands, disables
+the unobserved bridge, retains the bounded scene witness. This is NOT permission
+to reuse the obsolete audio bank lease. SIDE delivery must be reviewed separately.
+
+Official `deploy-singularityvr.ps1 -Action Install -WhatIf -DllOnly -IncludeIni`
+accepted-profile preflight PASS, zero writes. CPU restraint47, scene-mode,
+cutscene-mono, exit-profile and new packed-bit/fingerprint suite PASS;
+Python native-action9 and native-cinematic3 PASS. Runtime and L4 UNVERIFIED.
+
+Steam independently rehashed unchanged: DLL EF3A1F3B9F0641A291F9285DD7283EC7D3B4433A8F87BC210DBC98B721B7B753;
+INI55A3ED4DBC6E158F01A2219177D825C066E7306DABCE6ACFB1C7118EC9E3F659.
+No game process observed. No guard armed and no live candidate installed.

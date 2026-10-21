@@ -8,7 +8,9 @@ bCinematicMode, exact local reciprocal ownership, typed reflected packed bit,
 fingerprinted Singularity VM reader. PCOwner registration was missing and is
 now present. Not another SetPlayerCinematicMode bridge (zero prior events).
 Pair NativeRestraintHands=1; CinematicEventBridge=0 for next private candidate.
-Producer/mask audit and CPU/source tests PASS; x86 /O2 build receipt follows.
+Producer/mask audit and CPU/source tests PASS; clean source1161168 x86 PE32 /O2
+DLL5C9E6E62…15BD707C, private core kathryn-native-1161168, official WhatIf
+preflight PASS (zero writes). Steam still DLL EF3A1F3B / INI55A3ED4D.
 No Steam writes/launches or physical PASS. See docs/kathryn-native-cinematic-state.md.
 
 ## 2026-10-21 exact native restraint ownership (offline)
