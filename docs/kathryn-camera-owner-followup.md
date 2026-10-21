@@ -71,3 +71,16 @@ view-target producer rather than adding a timer/Matinee-name classifier. If
 restraint identity matches active1 but hands remain wrong, inspect the native
 draw ownership path rather than broadening the mesh criterion. Preserve the
 combined scope/native-axis/VFX/gore settings for optional later checks.
+
+## Prepared candidate
+
+Source `da690c7821000b87ffaac18bca8541c88184dfc4`, production x86 PE32 /O2,
+DLL `928767EA3B844D99A1F43776046524E6DCA0D2A724F423178B10DB1D182982DA`.
+Private directory `build/combined-followups/kathryn-owner-da690c7` holds the
+DLL, build provenance, unchanged combined INI and reviewed change plan.
+INI `A1AD10A1BA2C1FA8EEF650F1F38F18A91871F5DC0645314CF9A6EDD2E43EC3A9`.
+Official DLL+INI Install WhatIf accepted-profile preflight PASS, zero writes.
+Build provenance lists only the pre-existing SIDE localization edits and
+private lease files as dirty; they were excluded from this source commit and
+candidate deployment. Accepted installation remains restored. No launch or
+physical PASS for this candidate yet; next user start begins its test window.
