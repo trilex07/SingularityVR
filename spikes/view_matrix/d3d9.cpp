@@ -64,6 +64,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "cinematic_state_observation.h"
 #include "cinematic_event_bridge.h"
 #include "native_restraint_hands.h"
+#include "native_cinematic_state.h"
 #include "cinema_exit_profile.h"
 #include "camera_lookup_guard.h"
 #include "video_cinema_placement.h"
@@ -1976,6 +1977,7 @@ WantedName g_wantNames[] = {
     // ⭐ run 227: the one question every mesh-latch heuristic has been guessing at: is a weapon EQUIPPED.
     { "Weapon", -1 },
     { "Pawn", -1 }, { "Controller", -1 }, // startup: reflected reciprocal ownership, no guessed offsets
+    { "PCOwner", -1 }, // exact local Camera owner; unregistered names cannot resolve
     // 💥 run 236b: THESE HAVE TO BE HERE. `WantedIdx` searches THIS TABLE and nothing else - a name
     // absent from it resolves to -1 and `PropOffsetUnder` bails before walking a single class. Run 236
     // added the lookups and not the registrations, so both reported "+0xFFFFFFFF (depth 13) NOT FOUND"
@@ -2372,6 +2374,8 @@ static int g_weaponNativeAxis=0; // exact local pre/post-spread basis, default O
 static LONG g_cinematicHandsOwnership=0; // native hands even when cinematic presentation stays stereo
 static LONG g_cinematicSceneProbe=0; // bounded read-only scene/foreground witness; default OFF
 static LONG g_cinematicEventBridge=0; // exact local six-bool Raven event -> existing cinema state; default OFF
+static LONG g_nativeCinematicState=0; // exact native PlayerController bit, no engine writes; default OFF
+static void RefreshNativeCinematicState();
 static LONG g_nativeRestraintHands=0; // exact native rope mesh owns hands independently of cinema; default OFF
 static volatile LONG g_nativeRestraintActive=0;
 static uintptr_t g_nativeRestraintPawn=0;
@@ -23675,6 +23679,84 @@ static bool RestraintIdentity(uintptr_t object,char* name,size_t nameSize,char* 
         GuardedNameOf(object,name,nameSize) && GuardedNameOf((uint32_t)type,typeName,typeSize);
 }
 
+static void RefreshNativeCinematicState() {
+    if(!Rd(g_nativeCinematicState) || !VrModeOn())return;
+    // Do not cache -1 offsets before the independent Actor layout controls pass.
+    if(g_upChildren!=0x4c || g_upNext!=0x40 || g_upOffset!=0x64)return;
+    // Read the authoritative local controller, not the last object seen by an
+    // event. Script->script calls need not re-enter ProcessInternal.
+    static uintptr_t cameraClass=0,pcClass=0,pawnClass=0;
+    static int ownerOff=-1,pawnOff=-1,controllerOff=-1;
+    const uintptr_t pc=RestraintObjectProperty(g_camera,"PCOwner",cameraClass,ownerOff);
+    char type[80]{};int32_t cls=0;
+    if(!pc || !IsLive(pc) || !TryLoadAlignedI32(pc+OBJ_CLASS,&cls) ||
+       !GuardedNameOf((uint32_t)cls,type,sizeof(type)) || strcmp(type,"RvPlayerController"))return;
+    const uintptr_t pawn=RestraintObjectProperty(pc,"Pawn",pcClass,pawnOff);
+    if(!pawn || pawn!=g_playerPawn || !IsLive(pawn) ||
+       RestraintObjectProperty(pawn,"Controller",pawnClass,controllerOff)!=pc)return;
+    static int reader=-1;
+    if(reader<0) {
+        const auto code=reinterpret_cast<const unsigned char*>(GetModuleHandleA(nullptr))+nativecine::BoolExecRva;
+        reader=Readable(code,82)&&nativecine::SupportedReader(code,82)?1:0;
+        Log("native-cinematic: execBoolVariable fingerprint=%d; unsupported reader refuses correction",reader);
+    }
+    if(!reader || g_upChildren!=0x4c || g_upNext!=0x40 || g_upOffset!=0x64)return;
+    static uintptr_t boundClass=0,property=0;
+    static int offset=-1;static uint32_t mask=0;static ULONGLONG retry=0;
+    const ULONGLONG now=GetTickCount64();
+    if(boundClass!=(uint32_t)cls) {boundClass=(uint32_t)cls;property=0;offset=-1;mask=0;retry=0;}
+    if(!property && (!retry || now-retry>=1000)) {
+        retry=now;
+        for(uintptr_t c=boundClass,depth=0;c && depth<64;++depth) {
+            char cn[80]{},package[64]{};int32_t outer=0,child=0;
+            if(!GuardedNameOf(c,cn,sizeof(cn)) || !TryLoadAlignedI32(c+OBJ_OUTER,&outer))break;
+            if(!strcmp(cn,"PlayerController") && outer &&
+               GuardedNameOf((uint32_t)outer,package,sizeof(package)) && !strcmp(package,"Engine") &&
+               TryLoadAlignedI32(c+g_upChildren,&child)) {
+                // The old external census stopped at 400 without reporting truncation.
+                // Bounded complete-enough walk; no assumption that absence proves OFF.
+                unsigned visited=0;
+                for(;child && visited<4096;++visited) {
+                    const uintptr_t p=(uint32_t)child;char field[96]{},pt[64]{};
+                    int32_t owner=0,pcType=0,off=-1,elements=0,size=0,bits=0,next=0;
+                    if(!GuardedNameOf(p,field,sizeof(field)))break;
+                    if(!strcmp(field,"bCinematicMode")) {
+                        if(TryLoadAlignedI32(p+OBJ_OUTER,&owner) && (uint32_t)owner==c &&
+                           TryLoadAlignedI32(p+OBJ_CLASS,&pcType) &&
+                           GuardedNameOf((uint32_t)pcType,pt,sizeof(pt)) && !strcmp(pt,"BoolProperty") &&
+                           TryLoadAlignedI32(p+g_upOffset,&off) && TryLoadAlignedI32(p+0x44,&elements) &&
+                           TryLoadAlignedI32(p+0x48,&size) && TryLoadAlignedI32(p+nativecine::MaskMember,&bits) &&
+                           nativecine::ValidField(off,elements,size,(uint32_t)bits)) {
+                            property=p;offset=off;mask=(uint32_t)bits;
+                            Log("native-cinematic: bound Engine.PlayerController.bCinematicMode property=%p offset=%X mask=%08X ordinal=%u (read-only)",
+                                (void*)p,offset,mask,visited+1);
+                        }
+                        break;
+                    }
+                    if(!TryLoadAlignedI32(p+g_upNext,&next) || next==child)break;
+                    child=next;
+                }
+                static unsigned misses=0;
+                if(!property && misses++<4)Log("native-cinematic: field unresolved visited=%u truncated=%d; existing classifier retained",visited,visited==4096?1:0);
+                break;
+            }
+            int32_t parent=0;if(!TryLoadAlignedI32(c+g_upNext-4,&parent) || (uint32_t)parent==c)break;
+            c=(uint32_t)parent;
+        }
+    }
+    int32_t word=0;
+    if(!property || !TryLoadAlignedI32(pc+offset,&word))return;
+    const LONG active=nativecine::Active((uint32_t)word,mask)?1:0;
+    const LONG previous=InterlockedExchange(&g_inCinematic,active);
+    InterlockedExchange(&g_cineArgRaw,active);
+    InterlockedExchange(&g_cineControllerObserved,(LONG)pc);
+    if(active && !Rd(g_vrUiMenu))g_menuLatch.menuSeen=false;
+    static uintptr_t oldPc=0;static LONG old=-1;static unsigned notes=0;
+    if((oldPc!=pc || old!=active || previous!=active) && notes++<64)
+        Log("native-cinematic: controller=%p active=%ld previous=%ld word=%08X mask=%08X (mod state only)",(void*)pc,active,previous,(uint32_t)word,mask);
+    oldPc=pc;old=active;
+}
+
 static void RefreshNativeRestraintHands() {
     bool active=false;uintptr_t mesh=0;
     // Not a sticky event/timer: reread the current native asset every frame.
@@ -29691,6 +29773,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     PauseRttProbe::PresentContent(s);
     hotpath::scope frameScope(g_hotPathSampler, hotpath::Family::frame_total);
     DiagStart();
+    RefreshNativeCinematicState();
     RefreshNativeRestraintHands();
     RefreshArmsAnimActive();
     // Whoever calls Present owns the device. Recorded so the user-pointer draw hooks can tell
@@ -33897,6 +33980,8 @@ void LoadIniSettings() {
     g_cinematicHandsOwnership=GetPrivateProfileIntA("Render","CinematicHandsOwnership",0,path)?1:0;
     g_cinematicSceneProbe=GetPrivateProfileIntA("Diagnostic","CinematicSceneProbe",0,path)?1:0;
     g_cinematicEventBridge=GetPrivateProfileIntA("Render","CinematicEventBridge",0,path)?1:0;
+    g_nativeCinematicState=GetPrivateProfileIntA("Render","NativeCinematicState",0,path)?1:0;
+    Log("ini: NativeCinematicState=%ld (default OFF; fingerprinted native packed bit, read-only)",g_nativeCinematicState);
     g_nativeRestraintHands=GetPrivateProfileIntA("Render","NativeRestraintHands",0,path)?1:0;
     Log("ini: NativeRestraintHands=%ld (default OFF; exact native rope mesh, independent of cinema)",g_nativeRestraintHands);
     Log("followup: WeaponNativeAxis=%d CinematicHandsOwnership=%ld (default OFF)",g_weaponNativeAxis,g_cinematicHandsOwnership);

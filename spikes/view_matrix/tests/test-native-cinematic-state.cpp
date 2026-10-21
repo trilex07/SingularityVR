@@ -1,0 +1,29 @@
+#include "../native_cinematic_state.h"
+#include <cassert>
+#include <cstdio>
+int main() {
+    // Byte fixture from the owned Singularity opcode 0x2d reader, not another UE build.
+    unsigned char code[]{0x55,0x8b,0xec,0x8b,0x45,0x08,0x56,0x8b,0xf1,0x8b,0x48,0x18,0x8a,0x11,0x57,0x41,0x89,0x48,0x18,0x8b,0x39,0x0f,0xb6,0xd2,0x6a,0x00,0x50,0x8b,0x04,0x95,0x30,0x87,0xcc,0x01,0x8b,0xce,0xff,0xd0,0x8b,0x45,0x0c,0x89,0x3d,0x60,0xe1,0xbf,0x01,0x89,0x35,0x7c,0xe1,0xbf,0x01,0x85,0xc0,0x74,0x25,0x8b,0x0d,0x78,0xe1,0xbf,0x01,0x85,0xc9,0x74,0x17,0x8b,0x97,0x84,0x00,0x00,0x00,0x85,0x11,0x74,0x0d,0xb9,0x01,0x00,0x00,0x00};
+    assert(nativecine::SupportedReader(code,sizeof(code)));
+    assert(!nativecine::SupportedReader(nullptr,sizeof(code)));
+    assert(!nativecine::SupportedReader(code,sizeof(code)-1));
+    for(unsigned i=0;i<sizeof(code);++i) {
+        if(i>=34 && i<67)continue;
+        code[i]^=1;assert(!nativecine::SupportedReader(code,sizeof(code)));code[i]^=1;
+    }
+    for(unsigned b=0;b<32;++b) {
+        const uint32_t mask=uint32_t(1)<<b;
+        assert(nativecine::ValidField(0x200,1,4,mask));
+        assert(nativecine::Active(mask,mask));
+        assert(!nativecine::Active(~mask,mask)); // neighbouring bools must NOT imply cinema
+        assert(nativecine::Active(~uint32_t(0),mask));
+    }
+    assert(!nativecine::ValidField(0x200,1,4,0));
+    assert(!nativecine::ValidField(0x200,1,4,3));
+    assert(!nativecine::ValidField(0x201,1,4,1));
+    assert(!nativecine::ValidField(0x200,2,4,1));
+    assert(!nativecine::ValidField(0x200,1,1,1));
+    assert(!nativecine::ValidField(-1,1,4,1));
+    assert(!nativecine::ValidField(0x4004,1,4,1));
+    puts("native cinematic state CPU PASS (fingerprint refusal, 32 independent packed bits, field bounds)");
+}

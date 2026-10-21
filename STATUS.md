@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+## 2026-10-21 Kathryn native cinematic correction (offline only)
+
+User requested Kathryn repaired BEFORE next combined test. Added default-OFF
+Render/NativeCinematicState: authoritative native Engine.PlayerController
+bCinematicMode, exact local reciprocal ownership, typed reflected packed bit,
+fingerprinted Singularity VM reader. PCOwner registration was missing and is
+now present. Not another SetPlayerCinematicMode bridge (zero prior events).
+Pair NativeRestraintHands=1; CinematicEventBridge=0 for next private candidate.
+Producer/mask audit and CPU/source tests PASS; x86 /O2 build receipt follows.
+No Steam writes/launches or physical PASS. See docs/kathryn-native-cinematic-state.md.
+
 ## 2026-10-21 exact native restraint ownership (offline)
 
 SIDE owns dubbing; no audio generation/deployment here. Decoded VI6 Kismet
