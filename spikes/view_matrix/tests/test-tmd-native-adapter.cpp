@@ -15,8 +15,10 @@ static bool IsLive(uintptr_t p){return p!=0;}
 static void Log(const char*,...){}
 namespace PauseRttProbe {static bool SafeRange(uintptr_t p,size_t){return p!=0;}}
 namespace NativeOwnedInventory {
+static bool badContext=false;
 static uintptr_t CameraOwnedPawn(){return 10;}
 static uintptr_t P(uintptr_t a){
+    if(badContext)RaiseException(EXCEPTION_ACCESS_VIOLATION,0,0,nullptr);
     if(a==10+OBJ_CLASS)return 20;
     if(a==1000+OBJ_CLASS)return 30;
     if(a==18)return 1000;
@@ -59,6 +61,7 @@ int main(){
     NativeTmdAim::originalAim=NativeAim;NativeTmdAim::originalAging=NativeAging;
     NativeTmdAim::engineThread=GetCurrentThreadId();
     NativeTmdAim::installedClass=30;
+    InterlockedExchange(&NativeTmdAim::hooksReady,1);
     tmdaim::Pose sample;sample.pawn=10;sample.time=GetTickCount64();
     sample.matrix[0][1]=1;sample.matrix[1][0]=-1;sample.matrix[2][2]=1;sample.matrix[3][3]=1;
     sample.anchor[0]=10;sample.camera[0]=100;sample.forward[0]=1;
@@ -78,6 +81,17 @@ int main(){
     NativeTmdAim::Aim((void*)1000,nullptr,o,d);assert(calls==9&&o[0]==7);
     NativeTmdAim::engineThread=GetCurrentThreadId();sample.time=1;NativeTmdAim::Publish(sample);
     NativeTmdAim::Aim((void*)1000,nullptr,o,d);assert(calls==10&&o[0]==7);
+    sample.time=GetTickCount64();NativeTmdAim::Publish(sample);
+    InterlockedExchange(&NativeTmdAim::hooksReady,0);
+    NativeTmdAim::Aim((void*)1000,nullptr,o,d);assert(calls==11&&o[0]==7);
+    InterlockedExchange(&NativeTmdAim::hooksReady,1);
+    float overlap[4]{},expected[4]{};
+    NativeAim(nullptr,nullptr,expected,expected+1);
+    NativeTmdAim::Aim((void*)1000,nullptr,overlap,overlap+1);
+    assert(!std::memcmp(overlap,expected,sizeof(overlap)));
     TestUnwind();
+    NativeOwnedInventory::badContext=true;
+    NativeTmdAim::Aim((void*)1000,nullptr,o,d);
+    assert(!g_tmdNativeAim&&o[0]==7&&d[0]==1);
     std::puts("PASS TMD native adapter: original forwarded exactly once; local-only outputs, nested aging, SEH unwind, OFF/pause/cinema/stale/invalid/gun/thread refusal");
 }
