@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+## 2026-10-21 SIDE TMD/VFX review — offline only
+
+Reviewed side/enemy-detail-proposal a437c8c/7d3a762 against current main.
+Rejected shared-aim/weapon-trace TMD edits: native power/trace/emitter ownership
+is not proved; TMD correction remains OPEN. No renderer/installed INI changes.
+Prepared explicit default-OFF effects scope and portable, hash-checked 11-DDS
+staging with preserved formats/aspect and complete mipmaps. CPU suites and
+independent D3D9/D3D9Ex bridge tests PASS; x86 PE32 /O2 injector build PASS.
+No Steam access, deployment, L3 or PSVR2 claim. MAIN handoff and falsifiers:
+docs/handoffs/tmd-vfx-side-review.md. Do not merge the original SIDE branch wholesale.
+
 ## LATEST — 2026-10-20 optical alignment accepted and stable promotion
 
 User physically confirms scope aiming now OK; requests main + stable baseline.

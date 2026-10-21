@@ -12,7 +12,7 @@ $vcvars=Join-Path $vsPath 'VC\Auxiliary\Build\vcvarsall.bat'
 $mh=Join-Path $root 'third_party\minhook'
 Push-Location $out
 try {
-    foreach($name in @('resource-native-cache','resource-native-cache-gpu','texture-hook-timing','texture-hook-timing-disabled')) {
+    foreach($name in @('resource-native-cache','resource-native-cache-gpu','texture-hook-timing','texture-hook-timing-disabled','effects-scope')) {
         $test=Join-Path $here "tests\test-$name.cpp"
         & cmd /c "`"$vcvars`" x86 >nul && cl /nologo /O2 /EHsc /W3 /MD /std:c++17 /Fe:test-$name.exe `"$test`" /link user32.lib"
         if($LASTEXITCODE -ne 0){throw "Test compile failed: $name"}

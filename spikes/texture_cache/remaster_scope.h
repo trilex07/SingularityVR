@@ -1,8 +1,19 @@
 #pragma once
 #include <cstring>
 namespace remasterscope {
-inline bool Contains(const char* name){
+inline bool IsAddedBlood(const char* name){
+    return name && (!std::strcmp(name,"bsplat_decal_d") || !std::strcmp(name,"t_blood_splat02_d"));
+}
+inline bool EffectsContains(const char* name){
     if(!name)return false;
+    static const char* names[]={"muzzleflashCenter","muzzleFlashDir_01","brightFlash_01","spark_hit01",
+        "sparks1_subuv","explosion","fireball_base_intense_02","bsplat3_d","bsplat_decal_d",
+        "t_blood_splat02_d","t_decal_metal_d_v4"};
+    for(const auto* entry:names)if(!std::strcmp(name,entry))return true;return false;
+}
+inline bool Contains(const char* name,bool effects=false){
+    if(!name)return false;
+    if(effects && EffectsContains(name))return true;
     static const char* names[]={"AR_E99Rifle_alt_d","AR_E99Rifle_n","AR_shotgun_d","AR_shotgun_n",
         "ar_gatling_gun_d","ar_gatling_gun_n","laser_d","laser_n","revert_d2","revert_n2",
         "phasetick_d","phasetick_n","Spetsnaz_MP_helmet_d","Spetsnaz_MP_helmet_n","Spetsnaz_MP_Body_d",

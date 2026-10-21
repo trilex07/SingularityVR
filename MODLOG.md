@@ -1,5 +1,12 @@
 # Reverse-engineering journal
 
+2026-10-21 SIDE review: TmdRaised selects shared gun aim/weapon-fire traces,
+not a proved TMD action. VfxFireEvent is the mod muzzle mailbox, not evidence
+of native Chronolight/Deadlock emitter repair. Excluded these edits and old gore
+changes. Corrected DDS compressed linear-size/mips, verified original mip0 FNV,
+restricted staging to 11 registered identities, and gated added effects OFF.
+Details: docs/handoffs/tmd-vfx-side-review.md. Offline evidence only; Steam untouched.
+
 2026-10-16 native continuation: offline registration identifier -> initializer ->
 exec wrapper -> class constructor/vtable -> native AttemptReload method proved.
 Wrapper is no-param thiscall, whole EAX bool, derived slot0x4C4 in archived image.
