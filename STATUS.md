@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+## 2026-10-21 exact native restraint ownership (offline)
+
+SIDE owns dubbing; no audio generation/deployment here. Decoded VI6 Kismet
+identifies wp_rope.Skeletal.ch_inview_noTMD_rope_mesh and the native handler
+sets it on Pawn.Mesh, not only mArmMeshComponent/mInviewMesh. Added default-OFF
+Render/NativeRestraintHands: typed reflected current-asset identity preserves
+native hands independently of cinema, releases on asset/pawn/VR/flag changes.
+47 CPU cases +9 source guards and x86 PE32 /O2 build PASS; no Steam writes or
+runtime/physical proof. Kathryn camera/flicker remains OPEN: arbitrary Matinee,
+unarmed state and scene-name timers are not accepted classifiers. See
+docs/native-restraint-ownership.md. Fresh start required before any test.
+
 ## 2026-10-21 physical CD571D46 — NOT accepted; restraint scope clarified
 
 Latest user: Kathryn radio and scene still fail; original hands ARE visible in

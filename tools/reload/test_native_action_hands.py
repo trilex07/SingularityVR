@@ -32,7 +32,7 @@ class NativeActionHandsTests(unittest.TestCase):
         self.assertIn('Rd(g_cinematicHandsOwnership) && Rd(g_inCinematic) && VrModeOn()', SOURCE)
         self.assertIn('GetPrivateProfileIntA("Render","CinematicHandsOwnership",0,path)', SOURCE)
         self.assertIn('GetPrivateProfileIntA("Render","CutsceneNativeHands",0,path)', SOURCE)
-        self.assertIn('!NativeCinematicHandsNow() && CutsceneHideTrackedForeground(', SOURCE)
+        self.assertIn('!NativeCinematicHandsNow() && !NativeRestraintHandsNow() && CutsceneHideTrackedForeground(', SOURCE)
         self.assertIn('return !NativeAnimatedHandsNow();', SOURCE)
 
     def test_scene_probe_is_bounded_and_does_not_classify_by_state_name(self):
@@ -64,12 +64,35 @@ class NativeActionHandsTests(unittest.TestCase):
 
     def test_native_mesh_witness_is_observation_not_classifier(self):
         body = SOURCE.split('static void ObserveCinematicSceneProducer() {', 1)[1].split('\n}', 1)[0]
-        for field in ('mArmMeshComponent', 'mInviewMesh', 'SkeletalMesh', 'Animations'):
+        for field in ('mArmMeshComponent', 'mInviewMesh', 'Mesh', 'SkeletalMesh', 'Animations'):
             self.assertIn('"' + field + '"', body)
         self.assertIn('ObserveSceneObjectIdentity(g_playerPawn,"pawn")', body)
         policy = SOURCE.split('static bool NativeCinematicHandsNow()', 1)[1].split('\n}', 1)[0]
         self.assertNotIn('SceneObjectProperty', policy)
         self.assertNotIn('ObserveSceneObjectIdentity', policy)
+
+    def test_restraint_is_exact_native_mesh_not_camera_or_state_latch(self):
+        body = SOURCE.split('static void RefreshNativeRestraintHands() {', 1)[1].split('\n}', 1)[0]
+        for token in ('IsLive(g_playerPawn)', '"Mesh"', '"SkeletalMesh"',
+                      'restraint::OwnsHands', 'outer==0', 'notes++<32',
+                      'g_nativeRestraintPawn=active?g_playerPawn:0'):
+            self.assertIn(token, body)
+        for token in ('g_inCinematic', 'SetCutsceneMode', 'memcpy(', 'kGObjects', 'WriteProcessMemory'):
+            self.assertNotIn(token, body)
+        self.assertIn('GetPrivateProfileIntA("Render","NativeRestraintHands",0,path)', SOURCE)
+        for signature in ('static bool NativeGlovesEligible() {',
+                          'static bool NativeKnifeOffHandEligible() {'):
+            body = SOURCE.split(signature, 1)[1].split('\n}', 1)[0]
+            self.assertIn('if (NativeRestraintHandsNow()) return false;', body)
+        self.assertLess(SOURCE.index('    RefreshNativeRestraintHands();'),
+                        SOURCE.index('    RefreshArmsAnimActive();', SOURCE.index('    DiagStart();')))
+
+    def test_restraint_reflection_is_typed_bounded_and_named(self):
+        body = SOURCE.split('static int RestraintObjectOffset(', 1)[1].split('\n}', 1)[0]
+        for token in ('WantedIdx(field)', '"ObjectProperty"', 'depth<64', 'n<400',
+                      'TryLoadAlignedI32', 'offset%4'):
+            self.assertIn(token, body)
+        self.assertNotIn('kGObjects', body)
 
 
 if __name__ == '__main__':

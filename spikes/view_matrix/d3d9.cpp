@@ -63,6 +63,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "cinema_world_screen.h"
 #include "cinematic_state_observation.h"
 #include "cinematic_event_bridge.h"
+#include "native_restraint_hands.h"
 #include "cinema_exit_profile.h"
 #include "camera_lookup_guard.h"
 #include "video_cinema_placement.h"
@@ -1986,7 +1987,7 @@ WantedName g_wantNames[] = {
     // disagreed, and it is worth knowing before trusting a "not found" from this resolver again.
     { "mPlayerHandsStatus", -1 }, { "mTMD", -1 },
     // Read-only scene witness: actual native hand components and their assets.
-    { "mArmMeshComponent", -1 }, { "mInviewMesh", -1 },
+    { "mArmMeshComponent", -1 }, { "mInviewMesh", -1 }, { "Mesh", -1 },
     { "SkeletalMesh", -1 }, { "Animations", -1 },
     // Ammo probe round 4: UT-pattern firemode object (WeaponFireTypes[0])
     // carries the live counters. Resolved per weapon class, never assumed.
@@ -2371,6 +2372,10 @@ static int g_weaponNativeAxis=0; // exact local pre/post-spread basis, default O
 static LONG g_cinematicHandsOwnership=0; // native hands even when cinematic presentation stays stereo
 static LONG g_cinematicSceneProbe=0; // bounded read-only scene/foreground witness; default OFF
 static LONG g_cinematicEventBridge=0; // exact local six-bool Raven event -> existing cinema state; default OFF
+static LONG g_nativeRestraintHands=0; // exact native rope mesh owns hands independently of cinema; default OFF
+static volatile LONG g_nativeRestraintActive=0;
+static uintptr_t g_nativeRestraintPawn=0;
+static void RefreshNativeRestraintHands();
 static volatile LONG g_cineProbeFgSeen=0, g_cineProbeFgKept=0;
 static volatile LONG g_scopeSlowPresses=0;
 static scopepip::Frame g_scopePipFrame;
@@ -16274,8 +16279,12 @@ static bool NativeCinematicHandsNow() {
     return Rd(g_cutsceneNativeHands) && (CutsceneNativeCameraArmed() ||
         (Rd(g_cinematicHandsOwnership) && Rd(g_inCinematic) && VrModeOn()));
 }
+static bool NativeRestraintHandsNow() {
+    return Rd(g_nativeRestraintHands) && Rd(g_nativeRestraintActive) &&
+        g_playerPawn && g_playerPawn==g_nativeRestraintPawn && VrModeOn();
+}
 static bool NativeAnimatedHandsNow() {
-    return ArmsAnimActive() || NativeCinematicHandsNow();
+    return ArmsAnimActive() || NativeCinematicHandsNow() || NativeRestraintHandsNow();
 }
 
 inline void ArmMeleeWindowFromKnife() {
@@ -18040,6 +18049,7 @@ static bool CustomGlovesEligible() {
         Rd(g_weaponObj)!=0&&Rd(g_weaponHolstered)==0,Rd(g_twoHandActive)!=0);
 }
 static bool NativeGlovesEligible() {
+    if (NativeRestraintHandsNow()) return false;
     return g_independentHands&&Rd(g_gloveIsolate)==2&&
         gloves::Eligible(g_gloveExperiment&&g_nativeGloveExperiment,g_nativeGloveRenderer.Ready(),
         g_sceneMode.Current()==vrscene::Mode::GameplayStereo,Rd(g_gamePaused)!=0,
@@ -18048,6 +18058,7 @@ static bool NativeGlovesEligible() {
         Rd(g_weaponObj)!=0&&Rd(g_weaponHolstered)==0,Rd(g_twoHandActive)!=0);
 }
 static bool NativeKnifeOffHandEligible() {
+    if (NativeRestraintHandsNow()) return false;
     const int offSide=OffHand();
     return g_independentHands&&Rd(g_gloveIsolate)==2&&
         g_gloveExperiment&&g_nativeGloveExperiment&&g_nativeGloveRenderer.Ready()&&
@@ -19694,7 +19705,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // and menu hiding. Never suppress world/NPC geometry or shadow generation.
     const bool trackedCineMesh = isGun || rideTo != 0 ||
         (IsIndependentHandSection(numVertices, startIndex, primCount) && g_independentHands);
-    if (!NativeCinematicHandsNow() && CutsceneHideTrackedForeground(CutsceneMonoCurrentMode(), Rd(g_sceneFlatEnabled) != 0,
+    if (!NativeCinematicHandsNow() && !NativeRestraintHandsNow() && CutsceneHideTrackedForeground(CutsceneMonoCurrentMode(), Rd(g_sceneFlatEnabled) != 0,
         VrModeOn(), MenuSubmitForcesFlat((int)Rd(g_vrMenuClass)), Rd(g_rtIsScene) != 0,
         g_boundShaderLayout.shadow, FgMatchWindow(), trackedCineMesh)) {
         static bool saidHidden = false;
@@ -23619,6 +23630,80 @@ static uintptr_t SceneObjectProperty(uintptr_t object,const char* field,
     return cachedOffset>=0 && TryLoadAlignedI32(object+cachedOffset,&value)?(uint32_t)value:0;
 }
 
+// Only ObjectProperty fields qualify for the ownership experiment. Resolve once
+// per class using the existing proven UField layout; never enumerate GObjects.
+static int RestraintObjectOffset(uintptr_t cls,const char* field) {
+    const int32_t wanted=WantedIdx(field);
+    if(wanted<0 || !g_upChildren || !g_upNext || !g_upOffset)return -1;
+    for(unsigned depth=0;cls && depth<64;++depth) {
+        int32_t property=0;
+        if(!TryLoadAlignedI32(cls+g_upChildren,&property))return -1;
+        for(unsigned n=0;property && n<400;++n) {
+            int32_t name=-1,type=0,offset=-1,next=0;char typeName[64]{};
+            const uintptr_t p=(uint32_t)property;
+            if(!TryLoadAlignedI32(p+OBJ_NAME,&name))return -1;
+            if(name==wanted) {
+                if(!TryLoadAlignedI32(p+OBJ_CLASS,&type) || !type ||
+                   !GuardedNameOf((uint32_t)type,typeName,sizeof(typeName)) ||
+                   strcmp(typeName,"ObjectProperty") ||
+                   !TryLoadAlignedI32(p+g_upOffset,&offset) || offset<0 || offset>0x8000 || offset%4)return -1;
+                return offset;
+            }
+            if(!TryLoadAlignedI32(p+g_upNext,&next))return -1;
+            property=next;
+        }
+        int32_t parent=0;
+        if(!TryLoadAlignedI32(cls+g_upNext-4,&parent))return -1;
+        cls=(uint32_t)parent;
+    }
+    return -1;
+}
+
+static uintptr_t RestraintObjectProperty(uintptr_t object,const char* field,
+                                       uintptr_t& cachedClass,int& cachedOffset) {
+    int32_t cls=0,value=0;
+    if(!object || !TryLoadAlignedI32(object+OBJ_CLASS,&cls) || !cls)return 0;
+    if(cachedClass!=(uint32_t)cls) {
+        cachedClass=(uint32_t)cls;cachedOffset=RestraintObjectOffset(cachedClass,field);
+    }
+    return cachedOffset>=0 && TryLoadAlignedI32(object+cachedOffset,&value)?(uint32_t)value:0;
+}
+
+static bool RestraintIdentity(uintptr_t object,char* name,size_t nameSize,char* typeName,size_t typeSize) {
+    int32_t type=0;
+    return object && TryLoadAlignedI32(object+OBJ_CLASS,&type) && type &&
+        GuardedNameOf(object,name,nameSize) && GuardedNameOf((uint32_t)type,typeName,typeSize);
+}
+
+static void RefreshNativeRestraintHands() {
+    bool active=false;uintptr_t mesh=0;
+    // Not a sticky event/timer: reread the current native asset every frame.
+    // Native mesh restoration, travel, nulls, and opt-out all release ownership.
+    if(Rd(g_nativeRestraintHands) && VrModeOn() && g_playerPawn && IsLive(g_playerPawn) &&
+       g_upChildren && g_upNext && g_upOffset) {
+        static uintptr_t pawnClass=0,componentClass=0;
+        static int meshOffset=-1,assetOffset=-1;
+        const uintptr_t component=RestraintObjectProperty(g_playerPawn,"Mesh",pawnClass,meshOffset);
+        mesh=RestraintObjectProperty(component,"SkeletalMesh",componentClass,assetOffset);
+        int32_t group=0,root=0,outer=1;
+        char mn[96]{},mt[64]{},gn[64]{},gt[64]{},rn[64]{},rt[64]{};
+        const bool identities=RestraintIdentity(mesh,mn,sizeof(mn),mt,sizeof(mt)) &&
+            TryLoadAlignedI32(mesh+OBJ_OUTER,&group) && group && (uint32_t)group!=mesh &&
+            RestraintIdentity((uint32_t)group,gn,sizeof(gn),gt,sizeof(gt)) &&
+            TryLoadAlignedI32((uint32_t)group+OBJ_OUTER,&root) && root && root!=group && (uint32_t)root!=mesh &&
+            RestraintIdentity((uint32_t)root,rn,sizeof(rn),rt,sizeof(rt)) &&
+            TryLoadAlignedI32((uint32_t)root+OBJ_OUTER,&outer);
+        active=restraint::OwnsHands(true,true,identities && meshOffset>=0 && assetOffset>=0,
+            mt,mn,gt,gn,rt,rn,outer==0);
+    }
+    g_nativeRestraintPawn=active?g_playerPawn:0;
+    const LONG previous=InterlockedExchange(&g_nativeRestraintActive,active?1:0);
+    static unsigned notes=0;
+    if(previous!=(active?1:0) && notes++<32)
+        Log("native-restraint: active=%d pawn=%p mesh=%p (exact wp_rope.Skeletal identity; no camera or engine writes)",
+            active?1:0,(void*)g_playerPawn,(void*)mesh);
+}
+
 static void ObserveCinematicSceneProducer() {
     if(!Rd(g_cinematicSceneProbe))return;
     static ULONGLONG last=0;
@@ -23643,10 +23728,10 @@ static void ObserveCinematicSceneProducer() {
        oldMode==g_sceneMode.Current() && ++quiet<10)return;
     quiet=0;++samples;
     ObserveSceneObjectIdentity(g_playerPawn,"pawn");
-    const char* const fields[]{"mArmMeshComponent","mInviewMesh"};
-    static uintptr_t pawnClasses[2]{},meshClasses[2]{},animationClasses[2]{};
-    static int componentOffsets[2]{-1,-1},meshOffsets[2]{-1,-1},animationOffsets[2]{-1,-1};
-    for(unsigned i=0;i<2;++i) {
+    const char* const fields[]{"mArmMeshComponent","mInviewMesh","Mesh"};
+    static uintptr_t pawnClasses[3]{},meshClasses[3]{},animationClasses[3]{};
+    static int componentOffsets[3]{-1,-1,-1},meshOffsets[3]{-1,-1,-1},animationOffsets[3]{-1,-1,-1};
+    for(unsigned i=0;i<3;++i) {
         const uintptr_t component=SceneObjectProperty(g_playerPawn,fields[i],pawnClasses[i],componentOffsets[i]);
         ObserveSceneObjectIdentity(component,fields[i]);
         ObserveSceneObjectIdentity(SceneObjectProperty(component,"SkeletalMesh",meshClasses[i],meshOffsets[i]),"SkeletalMesh");
@@ -27608,6 +27693,7 @@ static void MaybeLoadHudAtlas(IDirect3DDevice9* dev) {
 }
 
 void DrawHipKnife(IDirect3DDevice9* dev){
+    if(NativeRestraintHandsNow())return;
     // Held joint assembly was already drawn with the native hand's actual eye
     // matrices/shared depth. Never redraw it on top as an independent overlay.
     const LONG frame = Rd(g_sceneModeFrame);
@@ -29468,6 +29554,7 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
 // MAIN round 11: also shown while docked (held<0 no longer gates) so the
 // belt can be FOUND: the user reports never seeing the knife at all.
 void DrawKnifeBeltMarker(IDirect3DDevice9* dev) {
+    if(NativeRestraintHandsNow())return;
     // SAME hide rule as the Style==1 cue below: no hoops outside focused gameplay
     // (menus, mod panel, cinematics). Legacy path previously ignored menu state.
     if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
@@ -29604,6 +29691,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     PauseRttProbe::PresentContent(s);
     hotpath::scope frameScope(g_hotPathSampler, hotpath::Family::frame_total);
     DiagStart();
+    RefreshNativeRestraintHands();
     RefreshArmsAnimActive();
     // Whoever calls Present owns the device. Recorded so the user-pointer draw hooks can tell
     // render-thread calls from movie-playback-thread ones and stay completely inert on the latter.
@@ -33809,6 +33897,8 @@ void LoadIniSettings() {
     g_cinematicHandsOwnership=GetPrivateProfileIntA("Render","CinematicHandsOwnership",0,path)?1:0;
     g_cinematicSceneProbe=GetPrivateProfileIntA("Diagnostic","CinematicSceneProbe",0,path)?1:0;
     g_cinematicEventBridge=GetPrivateProfileIntA("Render","CinematicEventBridge",0,path)?1:0;
+    g_nativeRestraintHands=GetPrivateProfileIntA("Render","NativeRestraintHands",0,path)?1:0;
+    Log("ini: NativeRestraintHands=%ld (default OFF; exact native rope mesh, independent of cinema)",g_nativeRestraintHands);
     Log("followup: WeaponNativeAxis=%d CinematicHandsOwnership=%ld (default OFF)",g_weaponNativeAxis,g_cinematicHandsOwnership);
     Log("ini: SniperOpticalAccuracy=%d (default OFF; exact native spread aim callers, no zero-spread write)",g_sniperOpticalAccuracy);
     Log("ini: ScopeOpticalCalibration=%d SniperOpticalSlowTime=%d (default OFF; own4x/capture45Hz, native L3; no HMD filtering)",g_scopeOpticalCalibration,g_sniperOpticalSlowTime);
