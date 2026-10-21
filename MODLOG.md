@@ -1,5 +1,12 @@
 # Reverse-engineering journal
 
+2026-10-21 native TMD: primary +440 GetAimVectors has two out FVectors/ret8,
+119-byte complete body19B6BABB20248999; owner getter7/940DBEC1332B5EEE reads+98.
+Secondary aging interface at+1E0 slot+C has59/73C3C6D548B0AF74, copies its cached
+source and nests primary+440 for direction. Replaced shared-aim proposal with
+default-OFF local getter outputs tied to actual BuildTmdC. Details/falsifiers:
+docs/tmd-native-aim.md. Native ABI proof is offline; no Steam/physical claim.
+
 2026-10-21 SIDE review: TmdRaised selects shared gun aim/weapon-fire traces,
 not a proved TMD action. VfxFireEvent is the mod muzzle mailbox, not evidence
 of native Chronolight/Deadlock emitter repair. Excluded these edits and old gore

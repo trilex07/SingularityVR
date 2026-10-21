@@ -7,6 +7,7 @@
 #include "native_npc_name.h"
 #include "native_owned_inventory.h"
 #include "native_body_equipment_probe.h"
+#include "native_tmd_aim.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
@@ -334,6 +335,7 @@ static void __fastcall Poll(void* self,void*,float dt) {
  NativeNpcName::Update(); // native GFx calls stay on this engine thread
  NativeOwnedInventory::Poll(); // bounded actual possession snapshot / queued selection
  NativeBodyEquipmentProbe::Poll(); // opt-in read-only heavy/grenade ownership census
+ NativeTmdAim::Poll(); // OFF by default; audited pure TMD getters, not shared gun aim
  ObserveWeaponAssets(); // at most six weapon identities, only the explicit read-only witness
  NativeGamepadEnumProbe::SetContext(VrModeOn() && InterlockedCompareExchange(&g_padEmu,0,0)!=0 &&
      InterlockedCompareExchange(&g_vrMenuClass,0,0)==0);

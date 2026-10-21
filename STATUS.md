@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+## 2026-10-21 SIDE follow-up — local native TMD getter candidate
+
+User requested a corrected TMD implementation on review/tmd-vfx-side-safety.
+Audited complete original GetAimVectors/GetAgingVectors/owner methods and wrapper
+ABIs, including secondary-interface/nested-getter relationship. Implemented
+default-OFF Input/TmdNativeAim via local-owned pure outputs, paired actual
+BuildTmdC matrix snapshot, no shared gun/camera aim writes. See
+docs/tmd-native-aim.md. L1 math/adapter/wiring and original binary audit PASS;
+L2 final build receipt accompanies handoff. L3/L4 and native effect pixels OPEN.
+No Steam access. Existing effects_remaster gate stays OFF, independently tested.
+
 ## 2026-10-21 SIDE TMD/VFX review — offline only
 
 Reviewed side/enemy-detail-proposal a437c8c/7d3a762 against current main.

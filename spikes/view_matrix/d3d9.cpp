@@ -3836,6 +3836,7 @@ volatile LONG g_tmdYawTenths = 0, g_tmdPitchTenths = 0;
 // could only report "it needs roll" and then wait for this build anyway.
 volatile LONG g_tmdRollTenths = 0;
 volatile LONG g_tmdOnOffHand = 1;      // ini [Input] TmdOnOffHand - the whole feature's off switch
+volatile LONG g_tmdNativeAim = 0;     // [Input] TmdNativeAim: audited local TMD getter experiment, OFF
 
 // ---- ⭐ run 230: the note is a full-screen 2D panel, and a headset FOV is not a monitor ----
 //
@@ -16913,6 +16914,17 @@ static void BuildTmdC(float C[4][4]) {    float G[3]; TmdAnchorWorld(G);
         GunViewFrame() ? g_wantYaw : 0,
         H[0] - G[0], H[1] - G[1], H[2] - G[2]);
     ApplyMeshScale(C, H);   // Fix-E/gunsize
+    if(Rd(g_tmdNativeAim)&&Rd(g_tmdOnOffHand)&&TmdRaised()&&Rd(g_offHandValid)&&Rd(g_camPosValid)) {
+        tmdaim::Pose sample;
+        memcpy(sample.matrix,C,sizeof(sample.matrix));
+        const float k=6.2831853f/65536.f;
+        const float yaw=g_wantYaw*k,pitch=g_wantPitch*k;
+        sample.forward[0]=cosf(pitch)*cosf(yaw);
+        sample.forward[1]=cosf(pitch)*sinf(yaw);sample.forward[2]=sinf(pitch);
+        for(unsigned i=0;i<3;++i){sample.anchor[i]=G[i];sample.camera[i]=g_camPos[i];}
+        sample.pawn=g_playerPawn;sample.time=GetTickCount64();
+        NativeTmdAim::Publish(sample);
+    }
 }
 
 // 0 = leave it where the engine put it, 1 = the gun hand, 2 = the OFF hand.
@@ -33622,6 +33634,8 @@ void LoadIniSettings() {
     g_weaponTraceRigidOrigin=GetPrivateProfileIntA("Input","WeaponTraceRigidOrigin",0,path)!=0;
     g_weaponMeasuredAim=GetPrivateProfileIntA("Input","WeaponMeasuredAim",0,path)!=0;
     g_bodyEquipmentProbe=GetPrivateProfileIntA("Diagnostic","BodyEquipmentProbe",0,path)!=0;
+    InterlockedExchange(&g_tmdNativeAim,GetPrivateProfileIntA("Input","TmdNativeAim",0,path)!=0);
+    Log("ini: TmdNativeAim=%ld (default OFF; local native aim/aging getter outputs only)",Rd(g_tmdNativeAim));
     if(g_weaponMeasuredAim&&(!g_weaponTraceRigidOrigin||!Rd(g_traceFromGun))){
         g_weaponMeasuredAim=0;Log("measured aim: requires WeaponTraceRigidOrigin + TraceFromGun; disabled");
     }
