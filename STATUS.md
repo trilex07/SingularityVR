@@ -1,5 +1,24 @@
 # STATUS — session handoff
 
+## 2026-10-21 Kathryn/captive physical failure — OPEN
+
+User reached only the captive/Kathryn scene: bound hands absent, radio English,
+Kathryn sequence not in cinema and character flickering. Scope/R1, shot-axis and
+gore were NOT tested this round. Candidate F2387D10 was active; accepted DLL
+EF3A1F3B and INI55A3ED4D restored and independently rehashed. All1667 previous
+WAVs restored, all103 added WAVs removed; lookup restored. Guard reported a
+Windows replacement error despite eventual complete restoration; atomic-copy
+repair passes a synthetic full-access test, not a new Steam acceptance.
+
+Proven delivery error: staged XTTS overlay WAVs do not replace SoundNodeWave
+Vorbis consumed by NPC/radio. Prepared26 native-bank candidates offline from29
+explicit accepted-profile-pinned banks:144 takes replaced (97 Kathryn),228
+retained to avoid unsafe fitting;3 banks have no safe takes. Independent native
+decoder roundtrips PASS. Nothing installed; no claim the heard radio line is
+among replacements. Captive/cinema producer unresolved; default-OFF bounded
+CinematicSceneProbe observes existing hooks without interpreting unknown wrapper
+arguments or driving cinema. See docs/kathryn-captive-followup.md.
+
 ## 2026-10-21 native shot axis / bound hands follow-up (offline)
 
 Last gore/R1 physical session ended normally and accepted DLL EF3A1F3B… was

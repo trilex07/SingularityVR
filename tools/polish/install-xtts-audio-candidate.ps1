@@ -36,7 +36,15 @@ function Copy-Verified([string]$Source,[string]$Destination,[string]$Expected){
         Copy-Item -LiteralPath $Source -Destination $temporary
         if((Hash $temporary) -cne $Expected){throw 'Temporary copy hash mismatch'}
         Assert-Closed
-        Move-Item -LiteralPath $temporary -Destination $Destination -Force
+        # Move-Item -Force does not reliably replace an existing Windows file
+        # (the completed PSVR2 lease reported ERROR_ALREADY_EXISTS). Both paths
+        # below use same-directory atomic operations; never delete the accepted
+        # destination before the verified replacement is ready.
+        if([IO.File]::Exists($Destination)){
+            [IO.File]::Replace($temporary,$Destination,[System.Management.Automation.Language.NullString]::Value)
+        }else{
+            [IO.File]::Move($temporary,$Destination)
+        }
         if((Hash $Destination) -cne $Expected){throw 'Destination hash mismatch'}
     }finally{if(Test-Path -LiteralPath $temporary){Remove-Item -LiteralPath $temporary -Force}}
 }

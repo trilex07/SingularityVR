@@ -76,3 +76,11 @@ XR Y conversion, and original authored shotgun grip preservation. Prepared an
 offline NPC-name-only font-height patch with exact-field identity and native
 decoder roundtrip. No Steam deployment or accepted-build promotion. Details:
 docs/wheel-shotgun-npc-followup.md.
+
+# 2026-10-21 — Kathryn native audio delivery / scene witness
+
+Physical captive-scene failure recorded, not promoted. Found overlay/native-bank
+delivery mismatch;26 offline bank candidates independently decoded, unsafe takes
+retain accepted audio. Added default-OFF bounded scene/wrapper witness, not an
+unproven cinema classifier. Accepted installation rehashed restored. Details and
+falsifier: docs/kathryn-captive-followup.md. No new Steam launch/deployment.

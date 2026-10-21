@@ -1,6 +1,6 @@
 # Native shot axis, cinematic hands and scoped gore
 
-Offline candidate; no physical verification yet. Preserve accepted scope alignment,
+Historical preparation receipt; see physical result below. Preserve accepted scope alignment,
 R1 precision and all installed assets. New features default OFF.
 
 ## Build receipt
@@ -37,7 +37,16 @@ to Git. Auditory/ASR quality has not been independently rechecked in this turn.
 Steam DLL `EF3A1F3B…` and INI `55A3ED4D…` plus the installed lookup were rehashed
 after staging and remain unchanged. `install-xtts-audio-candidate.ps1 -Action Plan`
 passed for all 1770 files and 103 lookup updates; the script backs up and can
-restore only those exact files. It was not run with `-Action Install`.
+restore only those exact files. This paragraph records staging, not final test status.
+
+## Physical result (supersedes preparation-only status)
+
+Candidate was installed and tested on2026-10-21. User could only reach the captive/
+Kathryn sequence: no bound hands, English Kathryn radio, sequence not in cinema
+and Kathryn flickering. Scope, gun axis and gore untested. Accepted runtime,
+lookup and all audio were independently verified restored after exit. New overlay
+WAVs alone cannot replace native radio banks; follow-up and bounded evidence plan:
+`kathryn-captive-followup.md`. Do NOT repeat this candidate as a claimed fix.
 
 ## Evidence and falsifiers
 

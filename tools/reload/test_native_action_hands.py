@@ -35,6 +35,15 @@ class NativeActionHandsTests(unittest.TestCase):
         self.assertIn('!NativeCinematicHandsNow() && CutsceneHideTrackedForeground(', SOURCE)
         self.assertIn('return !NativeAnimatedHandsNow();', SOURCE)
 
+    def test_scene_probe_is_bounded_and_does_not_classify_by_state_name(self):
+        body = SOURCE.split('static void ObserveCinematicSceneProducer() {', 1)[1].split('\n}', 1)[0]
+        self.assertIn('if(!Rd(g_cinematicSceneProbe))return;', body)
+        self.assertIn('samples>=120', body)
+        self.assertIn('now-last<1000', body)
+        self.assertNotIn('InterlockedExchange(&g_inCinematic', body)
+        self.assertIn('indexedFgSeen=', body)
+        self.assertIn('GetPrivateProfileIntA("Diagnostic","CinematicSceneProbe",0,path)', SOURCE)
+
 
 if __name__ == '__main__':
     unittest.main()

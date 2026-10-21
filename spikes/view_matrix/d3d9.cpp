@@ -2365,6 +2365,8 @@ static int g_sniperOpticalSlowTime=0;
 static int g_sniperOpticalAccuracy=0; // native scoped spread queries only, no camera ADS
 static int g_weaponNativeAxis=0; // exact local pre/post-spread basis, default OFF
 static LONG g_cinematicHandsOwnership=0; // native hands even when cinematic presentation stays stereo
+static LONG g_cinematicSceneProbe=0; // bounded read-only scene/foreground witness; default OFF
+static volatile LONG g_cineProbeFgSeen=0, g_cineProbeFgKept=0;
 static volatile LONG g_scopeSlowPresses=0;
 static scopepip::Frame g_scopePipFrame;
 static int g_scopeMeasuredPose=0; // default OFF; do not reuse a frozen hand-local axis
@@ -19636,6 +19638,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     if (InterlockedCompareExchange(&g_inForeground, 0, 0)) {
         const LONG k = InterlockedIncrement(&g_fgDrawCount);
         FgLearnSignature(numVertices);
+        if(Rd(g_cinematicSceneProbe) && k<=kFgSanePass)
+            InterlockedIncrement(&g_cineProbeFgSeen);
         // Confirm the depth-clear boundary only after a known first-person
         // mesh arrives.  Shadow/reflection passes can clear depth too, but they
         // do not contain the latched gun/arms signature.
@@ -19655,6 +19659,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         // WEAPON FX = HIDE PASS. Deliberately after the learn, per the note above and FgHideWholePass.
         if (FgHideWholePass()) return D3D_OK;
         if (FgHidden(dev,numVertices, startIndex, primCount)) return D3D_OK;
+        if(Rd(g_cinematicSceneProbe) && k<=kFgSanePass)
+            InterlockedIncrement(&g_cineProbeFgKept);
         // Returning S_OK without drawing is how the mod already drops draws elsewhere - the
         // device state is untouched, so the next draw behaves normally.
     } else if (FgMatchesSignature(numVertices)) {
@@ -23506,6 +23512,8 @@ ScriptFn g_scriptFns[] = {
     { "IsReloading",        -1 },
     { "AnimNotify_RefillClip",-1 }, // original Centurion Reload notify targets RvSharedPawn
     { "TakeDamage",         -1 }, // [29] scoped reviewed gore experiment
+    { "SetPlayerCinematicMode",-1 }, // [30] RvPlayerController native wrapper; observation only
+    { "OnToggleCinematicModeNative",-1 }, // [31] sequence action recipient; observation only
 };
 const int kFnGetAdjustedAim = 0;
 const int kFnTick           = 5;
@@ -23526,6 +23534,8 @@ const int kFnReloadFirst    = 24;
 const int kFnReloadLast     = 28;
 const int kFnRefillClip     = 28;
 const int kFnGoreDamage     = 29;
+const int kFnPlayerCinematicProbeFirst=30;
+const int kFnPlayerCinematicProbeLast=31;
 const int kScriptFnCount    = (int)(sizeof(g_scriptFns) / sizeof(g_scriptFns[0]));
 
 // Which menu candidate fired last, and how many frames ago. The readout shows it by NAME so the
@@ -23560,6 +23570,52 @@ volatile LONG g_cineArgRaw = 0;
 volatile LONG g_inCinematic = 0;
 static volatile LONG g_cineControllerObserved = 0;
 
+// This deliberately does NOT drive cinema. A scripted conversation need not
+// call SetCinematicMode: prove its controller/pawn state and draw ownership
+// before accepting a new classifier. At most 120 notes: transitions and a ten
+// second heartbeat, sampled at one Hz. No GPU reads or engine writes.
+static void ObserveCinematicSceneProducer() {
+    if(!Rd(g_cinematicSceneProbe))return;
+    static ULONGLONG last=0;
+    static unsigned samples=0;
+    const ULONGLONG now=GetTickCount64();
+    if(samples>=120 || (last && now-last<1000))return;
+    last=now;
+    const uintptr_t controller=(uintptr_t)(uint32_t)Rd(g_cineControllerObserved);
+    const auto cs=ReadCinematicStateObservation(controller);
+    const auto ps=ReadCinematicStateObservation(g_playerPawn);
+    char controllerState[80]{},pawnState[80]{},stateClass[80]{},world[80]{};
+    const bool cv=cs.valid && GuardedNameOf(cs.stateClass,stateClass,sizeof(stateClass)) &&
+        !_stricmp(stateClass,"State") && GuardedNameOf(cs.stateNode,controllerState,sizeof(controllerState));
+    const bool pv=ps.valid && GuardedNameOf(ps.stateClass,stateClass,sizeof(stateClass)) &&
+        !_stricmp(stateClass,"State") && GuardedNameOf(ps.stateNode,pawnState,sizeof(pawnState));
+    static uintptr_t oldPawn=0,oldCamera=0,oldControllerNode=0,oldPawnNode=0;
+    static LONG oldCine=-1,oldRaw=-1;
+    static vrscene::Mode oldMode=vrscene::Mode::Unknown;
+    static unsigned quiet=0;
+    if(oldPawn==g_playerPawn && oldCamera==g_camera && oldControllerNode==cs.stateNode &&
+       oldPawnNode==ps.stateNode && oldCine==Rd(g_inCinematic) && oldRaw==Rd(g_cineArgRaw) &&
+       oldMode==g_sceneMode.Current() && ++quiet<10)return;
+    quiet=0;++samples;
+    oldPawn=g_playerPawn;oldCamera=g_camera;oldControllerNode=cs.stateNode;oldPawnNode=ps.stateNode;
+    oldCine=Rd(g_inCinematic);oldRaw=Rd(g_cineArgRaw);oldMode=g_sceneMode.Current();
+    // UObject.Outer+0x28 is the existing validated object identity chain. Read
+    // two ancestors only; never scan GObjects or change a native flag here.
+    uintptr_t parent=0;
+    if(g_playerPawn && Readable((void*)(g_playerPawn+0x28),4)) {
+        parent=*(uintptr_t*)(g_playerPawn+0x28);
+        if(parent && Readable((void*)(parent+0x28),4)) {
+            const uintptr_t package=*(uintptr_t*)(parent+0x28);
+            GuardedNameOf(package,world,sizeof(world));
+        }
+    }
+    Log("cinematic-producer: sample=%u world=%s pawn=%p controller=%p camera=%p controllerState=%s pawnState=%s cine=%ld raw=%ld mode=%s nativeHands=%d indexedFgSeen=%ld indexedFgKept=%ld (since last note; census, not mesh/content proof)",
+        samples,world,(void*)g_playerPawn,(void*)controller,(void*)g_camera,
+        cv?controllerState:"<unvalidated>",pv?pawnState:"<unvalidated>",Rd(g_inCinematic),Rd(g_cineArgRaw),
+        vrscene::Name(g_sceneMode.Current()),NativeCinematicHandsNow()?1:0,
+        InterlockedExchange(&g_cineProbeFgSeen,0),InterlockedExchange(&g_cineProbeFgKept,0));
+}
+
 static void ObserveCinematicControllerState() {
     if(!Rd(g_cutsceneNativeCameraFix))return;
     static ULONGLONG last=0;
@@ -23585,6 +23641,7 @@ static void ObserveCinematicControllerState() {
 }
 
 static void UpdateSceneModeFrame() {
+    ObserveCinematicSceneProducer();
     ObserveCinematicControllerState();
     const bool video = InterlockedExchange(&g_sceneVideoSeen, 0) != 0;
     // REVERTED hub round 4b (melee->flat looked bad + different images per eye):
@@ -25126,6 +25183,24 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     if (aimMode == 7 && FnIdx(kFnSetAim) >= 0 && fnIdx == FnIdx(kFnSetAim))
         RewriteSetAimParams(Stack);
 
+    if(Rd(g_cinematicSceneProbe) &&
+       ((FnIdx(kFnPlayerCinematicProbeFirst)>=0 && fnIdx==FnIdx(kFnPlayerCinematicProbeFirst)) ||
+        (FnIdx(kFnPlayerCinematicProbeLast)>=0 && fnIdx==FnIdx(kFnPlayerCinematicProbeLast)))) {
+        static unsigned notes=0;
+        if(notes<24) {
+            char recipient[80]{};uintptr_t cls=0;
+            if(self && Readable((uint8_t*)self+0x34,4))cls=*(uintptr_t*)((uint8_t*)self+0x34);
+            if(GuardedNameOf(cls,recipient,sizeof(recipient)) && !_stricmp(recipient,"RvPlayerController")) {
+                ++notes;
+                InterlockedExchange(&g_cineControllerObserved,(LONG)(uintptr_t)self);
+                // Wrapper parameter sizes/semantics have not been proven.
+                // Invocation identity is sufficient here: do not inspect locals.
+                Log("cinematic-wrapper: fn=%s self=%p class=%s; no parameter read or mode change",
+                    fnIdx==FnIdx(kFnPlayerCinematicProbeFirst)?"SetPlayerCinematicMode":"OnToggleCinematicModeNative",
+                    self,recipient);
+            }
+        }
+    }
     // ---- ⭐ run 133: watch for a cutscene starting. Observation only ----
     //
     // Three integer compares on a hot path, and only when the names resolved. Nothing here
@@ -33627,6 +33702,7 @@ void LoadIniSettings() {
     g_sniperOpticalAccuracy=GetPrivateProfileIntA("Input","SniperOpticalAccuracy",0,path)?1:0;
     g_weaponNativeAxis=GetPrivateProfileIntA("Input","WeaponNativeAxis",0,path)?1:0;
     g_cinematicHandsOwnership=GetPrivateProfileIntA("Render","CinematicHandsOwnership",0,path)?1:0;
+    g_cinematicSceneProbe=GetPrivateProfileIntA("Diagnostic","CinematicSceneProbe",0,path)?1:0;
     Log("followup: WeaponNativeAxis=%d CinematicHandsOwnership=%ld (default OFF)",g_weaponNativeAxis,g_cinematicHandsOwnership);
     Log("ini: SniperOpticalAccuracy=%d (default OFF; exact native spread aim callers, no zero-spread write)",g_sniperOpticalAccuracy);
     Log("ini: ScopeOpticalCalibration=%d SniperOpticalSlowTime=%d (default OFF; own4x/capture45Hz, native L3; no HMD filtering)",g_scopeOpticalCalibration,g_sniperOpticalSlowTime);
