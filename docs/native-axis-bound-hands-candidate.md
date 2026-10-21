@@ -3,6 +3,19 @@
 Offline candidate; no physical verification yet. Preserve accepted scope alignment,
 R1 precision and all installed assets. New features default OFF.
 
+## Build receipt
+
+Source `5370fb859a7f1bb0722562228aca36294be9cdfb`, clean x86 PE32 `/O2`.
+DLL SHA256 `F2387D10C6916B94D34BD27D8A4E271DA67AEA113F391B594FA099623979CE33`.
+Private prepared directory `build/combined-followups/native-axis-5370fb8`.
+Native muzzle/math suite, full Centurion/three-weapon regression suite and native
+action-hands checks PASS. Own-process GPU replay is not game-pixel evidence.
+Accepted-profile deployment `WhatIf` preflight PASS; writes/launches none.
+MSVC analysis emitted existing warnings; this is not a warning-free claim.
+Stable installed DLL EF3A1F3B9F0641A291F9285DD7283EC7D3B4433A8F87BC210DBC98B721B7B753
+and INI 55A3ED4DBC6E158F01A2219177D825C066E7306DABCE6ACFB1C7118EC9E3F659
+were verified unchanged before preparation.
+
 ## Evidence and falsifiers
 
 - Valkyrie logs contain rays starting at the measured muzzle but not pointing along
