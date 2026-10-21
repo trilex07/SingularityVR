@@ -16,6 +16,29 @@ Stable installed DLL EF3A1F3B9F0641A291F9285DD7283EC7D3B4433A8F87BC210DBC98B721B
 and INI 55A3ED4DBC6E158F01A2219177D825C066E7306DABCE6ACFB1C7118EC9E3F659
 were verified unchanged before preparation.
 
+## XTTS dubbing payload added
+
+The private candidate now also contains the fresh `story` (1667), `skipped` (97)
+and `vignette` (6) WAVs at the runtime's `Binaries/vr-assets/audio/polish/story`
+lookup directory. Exact source/package identities from the curated side manifests
+were used to point the 97 skipped and 6 vignette rows at their new `.pl.wav`
+names. All 1667 story output filenames already had exact asset matches in the
+accepted lookup. The candidate lookup updates 103 of 1672 rows.
+
+Every staged WAV was read and checked as nonempty mono PCM16 24 kHz; source and
+staged SHA-256 values match. The fresh lookup is based on the installed accepted
+file, SHA256 `579C82AE3C97DA76A5829E8E019FBEBBDD0454C99E0435C4B592E5159D8AF5BF`;
+candidate lookup SHA256 is `ADD7309DE85C1AEFCC510520D415633D025679013D55BE6A810CE1B2AF8D0D2F`.
+`audio-payload-manifest.json` SHA256 is
+`B413A6D44028199A9431E09510ACAC33FD59410A768C3E2F8B0D3F60502A3C7A`.
+The one-off local payload lives in
+`build/combined-followups/native-axis-5370fb8/payload`; do not add these large WAVs
+to Git. Auditory/ASR quality has not been independently rechecked in this turn.
+Steam DLL `EF3A1F3B…` and INI `55A3ED4D…` plus the installed lookup were rehashed
+after staging and remain unchanged. `install-xtts-audio-candidate.ps1 -Action Plan`
+passed for all 1770 files and 103 lookup updates; the script backs up and can
+restore only those exact files. It was not run with `-Action Install`.
+
 ## Evidence and falsifiers
 
 - Valkyrie logs contain rays starting at the measured muzzle but not pointing along
