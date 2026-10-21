@@ -69,9 +69,15 @@ int main() {
     for(int cls=0;cls<=4;++cls) {
         assert(!vrscene::FrontendMenuPresentation(false,cls,true));
         assert(!vrscene::FrontendMenuPresentation(true,cls,false));
-        assert(vrscene::FrontendMenuPresentation(true,cls,true)==(cls==2));
+        assert(vrscene::FrontendMenuPresentation(true,cls,true)==(cls==1 || cls==2));
         assert(!vrscene::FrontendMenuPresentation(true,cls,true,true,true));
     }
+    // Real Steam trace: nativeOn=1 at frame941, then SPIIS Start/Quit focus.
+    Controller iis;
+    iis.Advance({true,false}); iis.Advance({true,false});
+    assert(iis.Current()==Mode::CutsceneFlat);
+    iis.Advance({true,false,true,false,vrscene::FrontendMenuPresentation(true,1,true,true,false)});
+    assert(iis.Current()==Mode::MenuFlat && iis.NeedsMonoPair() && MenuSubmitForcesFlat(1));
     Controller frontend;
     frontend.Advance({true,false,false,false});
     frontend.Advance({true,false,false,false});

@@ -45,8 +45,10 @@ inline Mode RecoveryFrameMode(Mode completed, bool recovering, unsigned splitDra
 
 inline bool FrontendMenuPresentation(bool enabled, int menuClass, bool focus,
                                      bool cinematic = false, bool paused = false) {
-    // Class 4 stations stay on the stereo world route (see InteractiveStationMenu).
-    return enabled && focus && !(cinematic && paused) && menuClass == 2;
+    // SPIIS boot (class1) also has Start/Quit labels. A native cinematic bit
+    // during attract must not run its per-eye UI through the cinema composer.
+    // Class4 stations stay on the stereo world route.
+    return enabled && focus && !(cinematic && paused) && (menuClass == 1 || menuClass == 2);
 }
 
 struct Transition {
