@@ -23738,7 +23738,10 @@ static bool RestraintIdentity(uintptr_t object,char* name,size_t nameSize,char* 
 
 static void RefreshNativeCinematicState() {
     if(!Rd(g_nativeCinematicState) || !VrModeOn())return;
-    if (InteractiveStationMenu((int)Rd(g_vrMenuClass), Rd(g_vrUiMenu) != 0)) return;
+    // Focused SPIIS/main menu owns presentation; its native cinematic backdrop
+    // is not a gameplay cutscene. Keep the engine bit read-only.
+    if (InteractiveStationMenu((int)Rd(g_vrMenuClass), Rd(g_vrUiMenu) != 0) ||
+        vrscene::FrontendMenuPresentation(true,(int)Rd(g_vrMenuClass),Rd(g_vrUiMenu)!=0)) return;
     // Do not cache -1 offsets before the independent Actor layout controls pass.
     if(g_upChildren!=0x4c || g_upNext!=0x40 || g_upOffset!=0x64)return;
     // Read the authoritative local controller, not the last object seen by an
@@ -23930,13 +23933,18 @@ static void UpdateSceneModeFrame() {
     ObserveCinematicControllerState();
     const int menuClassNow = (int)Rd(g_vrMenuClass);
     const bool menuFocused = Rd(g_vrUiMenu) != 0;
-    if (InteractiveStationMenu(menuClassNow, menuFocused)) {
+    if (InteractiveStationMenu(menuClassNow, menuFocused) ||
+        vrscene::FrontendMenuPresentation(true,menuClassNow,menuFocused)) {
+        // Native bCinematicMode is ON for the observed SPIIS attract pawn.
+        // Clear only our presentation latch, as for stations; polling above
+        // must not reassert it while this identified native menu has focus.
         InterlockedExchange(&g_inCinematic, 0);
         InterlockedExchange(&g_cineArgRaw, 0);
-        static bool saidStationCine = false;
-        if (!saidStationCine) {
-            saidStationCine = true;
-            Log("station-menu: class=4 focus=1 -> cleared stale cinematic latch (weapon locker stays stereo)");
+        static unsigned notedClasses = 0;
+        const unsigned bit = 1u << menuClassNow;
+        if (!(notedClasses & bit)) {
+            notedClasses |= bit;
+            Log("native-menu: class=%d focus=1 -> cleared mod cinematic latch; native engine bit unchanged",menuClassNow);
         }
     }
     const bool video = InterlockedExchange(&g_sceneVideoSeen, 0) != 0;
