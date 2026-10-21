@@ -61,17 +61,16 @@ if(-not [string]::IsNullOrWhiteSpace($RuntimeBackupPath)){
     if(($names -join ',') -cne 'd3d9.dll,SingularityVR.ini' -or @($metadata.Directories).Count -ne 0){
         throw 'Combined lease requires an exact DLL/INI-only runtime backup'
     }
-    $profileData=Get-Content -LiteralPath $profile -Raw | ConvertFrom-Json
     $planData=Get-Content -LiteralPath $changePlan -Raw | ConvertFrom-Json
     if($planData.schema -cne 'singularityvr-change-plan-v1' -or
        $planData.profileSha256.ToLowerInvariant() -cne (Get-FileHash -LiteralPath $profile -Algorithm SHA256).Hash.ToLowerInvariant()){
         throw 'Runtime change plan does not match the accepted profile'
     }
-    $dllPin=@($profileData.files|Where-Object{$_.path -ceq 'Binaries/d3d9.dll'})
-    $iniPin=@($profileData.files|Where-Object{$_.path -ceq 'Binaries/SingularityVR.ini'})
+    $dllBackupMeta=@($metadata.Files|Where-Object{$_.Name -ceq 'd3d9.dll'})
+    $iniBackupMeta=@($metadata.Files|Where-Object{$_.Name -ceq 'SingularityVR.ini'})
     $dllPlan=@($planData.files|Where-Object{$_.path -ceq 'Binaries/d3d9.dll'})
-    if($dllPin.Count -ne 1 -or $iniPin.Count -ne 1 -or $dllPlan.Count -ne 1){
-        throw 'Accepted profile or change plan has ambiguous DLL/INI identities'
+    if($dllBackupMeta.Count -ne 1 -or $iniBackupMeta.Count -ne 1 -or $dllPlan.Count -ne 1){
+        throw 'Runtime backup metadata or change plan has ambiguous DLL/INI identities'
     }
     $dllBackup=Join-Path $runtimeBackup 'd3d9.dll'
     $iniBackup=Join-Path $runtimeBackup 'SingularityVR.ini'
@@ -82,7 +81,7 @@ if(-not [string]::IsNullOrWhiteSpace($RuntimeBackupPath)){
     $dllBefore=$dllPlan[0].before.ToUpperInvariant()
     $dllAfter=$dllPlan[0].after.ToUpperInvariant()
     if((Get-FileHash -LiteralPath $dllBackup -Algorithm SHA256).Hash.ToUpperInvariant() -cne $dllBefore -or
-       (Get-FileHash -LiteralPath $iniBackup -Algorithm SHA256).Hash.ToUpperInvariant() -cne $iniPin[0].sha256.ToUpperInvariant() -or
+       (Get-FileHash -LiteralPath $iniBackup -Algorithm SHA256).Hash.ToUpperInvariant() -cne $iniBackupMeta[0].Sha256.ToUpperInvariant() -or
        (Get-FileHash -LiteralPath $dllCandidate -Algorithm SHA256).Hash.ToUpperInvariant() -cne $dllAfter -or
        (Get-FileHash -LiteralPath $dllTarget -Algorithm SHA256).Hash.ToUpperInvariant() -cne $dllAfter -or
        (Get-FileHash -LiteralPath $iniTarget -Algorithm SHA256).Hash.ToUpperInvariant() -cne (Get-FileHash -LiteralPath $iniCandidate -Algorithm SHA256).Hash.ToUpperInvariant()){
@@ -135,11 +134,13 @@ if($runtimeBackup){
     & (Join-Path $repo 'tools/deploy-singularityvr.ps1') -Action Rollback `
         -BackupPath $runtimeBackup -AcceptedProfilePath $profile -ChangePlanPath $changePlan
     if(-not $?){throw 'DLL/INI rollback command failed after audio restore'}
+    $metadata=Get-Content -LiteralPath (Join-Path $runtimeBackup 'backup_metadata.json') -Raw | ConvertFrom-Json
     foreach($relative in @('Binaries/d3d9.dll','Binaries/SingularityVR.ini')){
-        $pin=@($profileData.files|Where-Object{$_.path -ceq $relative})
+        $name=Split-Path $relative -Leaf
+        $pin=@($metadata.Files|Where-Object{$_.Name -ceq $name})
         $target=Join-Path $game ($relative -replace '/', '\')
         if($pin.Count -ne 1 -or
-           (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToUpperInvariant() -cne $pin[0].sha256.ToUpperInvariant()){
+           (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToUpperInvariant() -cne $pin[0].Sha256.ToUpperInvariant()){
             throw "Post-restore runtime hash mismatch: $relative"
         }
     }
