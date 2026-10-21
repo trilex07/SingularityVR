@@ -60,6 +60,18 @@ normally and report. Collect producer log automatically; never request typing in
 headset. No launch is part of this offline preparation. Stable accepted runtime
 and assets stay installed until a fresh start.
 
+## Prepared diagnostic receipt
+
+Source f39008fd88ae8121c7e0b8085dffaec33f7e3b61; x86 PE32 `/O2` PASS.
+DLL D7DA8A8C1179F336437EDD957E01ABC9B306F2EFA4A526F113414FAC5D17910E.
+Private artifact: build/combined-followups/kathryn-scene-f39008f. Tracked source
+clean at build (only private untracked deployment/leases). Native-hand guards4,
+native identity tests4 and room voice audit5 PASS; opening-dialogue fixture test
+not run (requires its separate original intro fixture). Read-only official
+accepted-profile install preflight `-WhatIf` PASS. No installed files changed.
+Candidate retains prior five test flags and adds only CinematicSceneProbe=1;
+native-bank candidates remain separate, not advertised as installed or accepted.
+
 ## Restore evidence
 
 DLL EF3A1F3B9F0641A291F9285DD7283EC7D3B4433A8F87BC210DBC98B721B7B753;
