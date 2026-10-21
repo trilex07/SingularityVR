@@ -17,9 +17,11 @@ struct Curtain {
     bool Update(bool eligible,std::uint32_t pawn,unsigned ready,std::uint64_t now,
                 unsigned timeout=5000,unsigned minVisible=0){
         if(!eligible){if(!done){begun=false;stable=0;}return false;}
-        if(identity&&pawn&&identity!=pawn){begun=done=timedOut=false;stable=0;}
-        if(pawn)identity=pawn;
+        // Once play was exposed, reacquisition/respawn must not rearm a loading
+        // notice (and especially not the historical opaque curtain).
         if(done)return false;
+        if(identity&&pawn&&identity!=pawn){begun=false;timedOut=false;stable=0;}
+        if(pawn)identity=pawn;
         if(!begun){begun=true;start=now;stable=0;}
         if(now<start){done=true;timedOut=true;return false;}
         timeout=(std::max)(500u,(std::min)(timeout,10000u));

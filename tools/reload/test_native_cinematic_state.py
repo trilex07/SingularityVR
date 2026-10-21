@@ -8,7 +8,7 @@ class NativeCinemaTests(unittest.TestCase):
         self.assertIn('GetPrivateProfileIntA("Render","NativeCinematicState",0,path)',SOURCE)
     def test_typed_local_ownership(self):
         body=SOURCE.split('static void RefreshNativeCinematicState() {',1)[1].split('\n}',1)[0]
-        for token in ('"PCOwner"','"Pawn"','"Controller"','pawn!=g_playerPawn','"RvPlayerController"',
+        for token in ('ReadNativeLocalPlayer()', 'local.controller',
                       '"PlayerController"','"Engine"','"BoolProperty"','"bCinematicMode"',
                       'nativecine::SupportedReader','nativecine::ValidField','visited<4096','now-retry>=1000'):
             self.assertIn(token,body)
@@ -16,7 +16,8 @@ class NativeCinemaTests(unittest.TestCase):
             self.assertNotIn(token,body)
         registered=SOURCE.split('WantedName g_wantNames[] = {',1)[1].split('};',1)[0]
         self.assertIn('{ "PCOwner", -1 }',registered)
-        self.assertLess(body.index('g_upChildren!=0x4c'),body.index('RestraintObjectProperty('))
+        self.assertLess(body.index('g_upChildren!=0x4c'),body.index('ReadNativeLocalPlayer('))
+        self.assertNotIn('pawn!=g_playerPawn',body)
     def test_refresh_before_scene_and_hands(self):
         present=SOURCE.split('HRESULT STDMETHODCALLTYPE Hook_Present(',1)[1]
         self.assertLess(present.index('RefreshNativeCinematicState();'),present.index('RefreshNativeRestraintHands();'))

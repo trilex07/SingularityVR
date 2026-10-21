@@ -89,8 +89,8 @@ class NativeActionHandsTests(unittest.TestCase):
 
     def test_restraint_reflection_is_typed_bounded_and_named(self):
         body = SOURCE.split('static int RestraintObjectOffset(', 1)[1].split('\n}', 1)[0]
-        for token in ('WantedIdx(field)', '"ObjectProperty"', 'depth<64', 'n<400',
-                      'TryLoadAlignedI32', 'offset%4'):
+        for token in ('WantedIdx(field)', 'nativeplayer::ObjectField', 'depth<64', 'n<4096',
+                      'TryLoadAlignedI32'):
             self.assertIn(token, body)
         self.assertNotIn('kGObjects', body)
 

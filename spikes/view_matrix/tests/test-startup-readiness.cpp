@@ -19,9 +19,16 @@ int main(){
     assert(c.Update(true,0,0,1000));assert(c.Update(true,1,startup::All,1200));
     assert(c.Update(true,1,startup::All,1299));assert(!c.Update(true,1,startup::All,1300)&&!c.timedOut);
     assert(!c.Update(false,1,0,1400));assert(!c.Update(true,1,0,1500)); // pause/tracking loss cannot re-cover live play
-    assert(c.Update(true,2,0,1600));assert(c.Update(true,2,startup::All,1700));
-    assert(c.Update(true,2,0,1750));assert(c.Update(true,2,startup::All,1800));
-    assert(c.Update(true,2,startup::All,1899));assert(!c.Update(true,2,startup::All,1900));
+    assert(!c.Update(true,2,0,1600));assert(!c.Update(true,2,startup::All,1700));
+    assert(!c.Update(true,2,0,1750)); // reacquired/respawned pawn never re-arms
+    // Reproduce physical session: no pawn for 5s, then a different pawn after
+    // 10.7s. The old curtain exposed the world and covered it AGAIN for 3s.
+    startup::Curtain trace;
+    assert(trace.Update(true,100,startup::All,1000,5000,0));
+    assert(!trace.Update(true,100,startup::All,1100,5000,0));
+    assert(!trace.Update(false,0,0,1500,5000,0));
+    assert(!trace.Update(true,0,62,2000,5000,0));
+    assert(!trace.Update(true,200,startup::All,12766,5000,0));
     startup::Curtain minVisible;
     assert(minVisible.Update(true,1,startup::All,1000,5000,3000));
     assert(minVisible.Update(true,1,startup::All,1099,5000,3000));
@@ -38,5 +45,5 @@ int main(){
     assert(menu.Update(true,1,0,20000));assert(!menu.Update(false,1,0,20001)); // immediate menu/cine escape
     assert(menu.Update(true,1,0,30000));assert(!menu.Update(true,1,0,29999)&&menu.timedOut); // clock fault fails open
     startup::Curtain clamp;assert(clamp.Update(true,1,0,1000,0,3000));assert(!clamp.Update(true,1,0,1500,0));
-    puts("PASS startup policy: wall-clock retry cap,100ms stable, minimum visible duration, each missing gate, timeout/fail-open, pause/cine escape, identity rearm");
+    puts("PASS startup policy: wall-clock retry cap,100ms stable, missing gates, timeout/fail-open, pause/cine escape, no respawn/reacquisition rearm");
 }

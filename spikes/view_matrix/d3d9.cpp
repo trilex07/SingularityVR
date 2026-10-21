@@ -65,6 +65,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "cinematic_event_bridge.h"
 #include "native_restraint_hands.h"
 #include "native_cinematic_state.h"
+#include "native_local_player.h"
 #include "cinema_exit_profile.h"
 #include "camera_lookup_guard.h"
 #include "video_cinema_placement.h"
@@ -1703,7 +1704,18 @@ inline bool ScanAllowed(ULONGLONG& gate) {
     return true;
 }
 
+static nativeplayer::Identity ReadNativeLocalPlayer();
 uintptr_t FindController() {
+    if(g_startupPrewarm) {
+        const auto local=ReadNativeLocalPlayer();
+        if(local.controller) {
+            int32_t cls=0;
+            if(TryLoadAlignedI32(local.controller+OBJ_CLASS,&cls)) {
+                g_controller=local.controller;g_ctlClass=(uint32_t)cls;
+                return g_controller;
+            }
+        }
+    }
     if (g_controller && g_ctlClass && Readable((void*)g_controller, 0x600) &&
         *reinterpret_cast<uintptr_t*>(g_controller + OBJ_CLASS) == g_ctlClass) return g_controller;
     g_controller = 0;
@@ -1978,6 +1990,7 @@ WantedName g_wantNames[] = {
     { "Weapon", -1 },
     { "Pawn", -1 }, { "Controller", -1 }, // startup: reflected reciprocal ownership, no guessed offsets
     { "PCOwner", -1 }, // exact local Camera owner; unregistered names cannot resolve
+    { "PlayerCamera", -1 }, // reciprocal local controller -> current camera
     // 💥 run 236b: THESE HAVE TO BE HERE. `WantedIdx` searches THIS TABLE and nothing else - a name
     // absent from it resolves to -1 and `PropOffsetUnder` bails before walking a single class. Run 236
     // added the lookups and not the registrations, so both reported "+0xFFFFFFFF (depth 13) NOT FOUND"
@@ -2781,28 +2794,17 @@ static bool GuardedNameOf(uintptr_t obj,char* buf,size_t cap);
 static uintptr_t FindPlayerPawn(bool force) {
     // Prefer the owning live controller's reflected link. Unknown names/layout
     // or failed reciprocal ownership leave the existing bounded scan untouched.
-    if(g_startupPrewarm&&g_upChildren&&g_upNext&&g_upOffset&&g_controller&&g_ctlClass&&IsLive(g_controller)){
-        static uintptr_t ctlClass=0,pawnClass=0;static int pawnOff=-1,ctlOff=-1;
-        static ULONGLONG retry=0;const auto now=GetTickCount64();
-        int32_t liveClass=0,pawnBits=0,classBits=0,ownerBits=0;
-        if(TryLoadAlignedI32(g_controller+OBJ_CLASS,&liveClass)&&(uint32_t)liveClass==g_ctlClass){
-            if(ctlClass!=g_ctlClass){ctlClass=g_ctlClass;pawnOff=-1;retry=0;}
-            if(pawnOff<0&&now>=retry){retry=now+1000;pawnOff=PropOffsetInChain(ctlClass,"Pawn");}
-            if(pawnOff>=0&&!(pawnOff&3)&&TryLoadAlignedI32(g_controller+pawnOff,&pawnBits)&&pawnBits){
-                const uintptr_t pawn=(uint32_t)pawnBits;
-                char name[80]{};
-                if(TryLoadAlignedI32(pawn+OBJ_CLASS,&classBits)&&classBits&&
-                   GuardedNameOf((uint32_t)classBits,name,sizeof(name))&&strstr(name,"PlayerPawn")&&IsLive(pawn)){
-                    if(pawnClass!=(uint32_t)classBits){pawnClass=(uint32_t)classBits;ctlOff=PropOffsetInChain(pawnClass,"Controller");}
-                    if(ctlOff>=0&&!(ctlOff&3)&&TryLoadAlignedI32(pawn+ctlOff,&ownerBits)&&(uint32_t)ownerBits==g_controller){
-                        if(g_playerPawn!=pawn){static unsigned notes=0;if(notes++<16)
-                            Log("startup pawn: reciprocal Controller.Pawn acquired pawn=%08X controller=%08X offsets=%X/%X t=%llu (read-only)",
-                                (unsigned)pawn,(unsigned)g_controller,pawnOff,ctlOff,(unsigned long long)now);}
-                        g_playerPawn=pawn;g_playerPawnClass=pawnClass;return pawn;
-                    }
-                }
-            }
+    if(g_startupPrewarm) {
+        const auto local=ReadNativeLocalPlayer();
+        int32_t cls=0;
+        if(local.pawn && TryLoadAlignedI32(local.pawn+OBJ_CLASS,&cls)) {
+            if(g_playerPawn!=local.pawn){static unsigned notes=0;if(notes++<32)
+                Log("startup pawn: camera-owned reciprocal pawn=%08X controller=%08X t=%llu (read-only)",
+                    (unsigned)local.pawn,(unsigned)local.controller,(unsigned long long)GetTickCount64());}
+            g_playerPawn=local.pawn;g_playerPawnClass=(uint32_t)cls;return local.pawn;
         }
+        // A proven current owner supersedes a readable pawn from the old level.
+        if(local.controller) {g_playerPawn=0;g_playerPawnClass=0;return 0;}
     }
     if (g_playerPawn && g_playerPawnClass && Readable((void*)g_playerPawn, 0x40) &&
         *reinterpret_cast<uintptr_t*>(g_playerPawn + OBJ_CLASS) == g_playerPawnClass &&
@@ -23634,7 +23636,8 @@ static uintptr_t SceneObjectProperty(uintptr_t object,const char* field,
     return cachedOffset>=0 && TryLoadAlignedI32(object+cachedOffset,&value)?(uint32_t)value:0;
 }
 
-// Only ObjectProperty fields qualify for the ownership experiment. Resolve once
+// Native Pawn.Mesh is ComponentProperty (Engine.u export19664), not ObjectProperty.
+// All other links below are ObjectProperty. Resolve once
 // per class using the existing proven UField layout; never enumerate GObjects.
 static int RestraintObjectOffset(uintptr_t cls,const char* field) {
     const int32_t wanted=WantedIdx(field);
@@ -23642,18 +23645,19 @@ static int RestraintObjectOffset(uintptr_t cls,const char* field) {
     for(unsigned depth=0;cls && depth<64;++depth) {
         int32_t property=0;
         if(!TryLoadAlignedI32(cls+g_upChildren,&property))return -1;
-        for(unsigned n=0;property && n<400;++n) {
-            int32_t name=-1,type=0,offset=-1,next=0;char typeName[64]{};
+        for(unsigned n=0;property && n<4096;++n) {
+            int32_t name=-1,type=0,offset=-1,next=0,count=0,size=0;char typeName[64]{};
             const uintptr_t p=(uint32_t)property;
             if(!TryLoadAlignedI32(p+OBJ_NAME,&name))return -1;
             if(name==wanted) {
                 if(!TryLoadAlignedI32(p+OBJ_CLASS,&type) || !type ||
                    !GuardedNameOf((uint32_t)type,typeName,sizeof(typeName)) ||
-                   strcmp(typeName,"ObjectProperty") ||
-                   !TryLoadAlignedI32(p+g_upOffset,&offset) || offset<0 || offset>0x8000 || offset%4)return -1;
+                   !TryLoadAlignedI32(p+g_upOffset,&offset) || !TryLoadAlignedI32(p+0x44,&count) ||
+                   !TryLoadAlignedI32(p+0x48,&size) || !nativeplayer::ObjectField(field,typeName,offset,count,size))return -1;
                 return offset;
             }
             if(!TryLoadAlignedI32(p+g_upNext,&next))return -1;
+            if(next==property)return -1;
             property=next;
         }
         int32_t parent=0;
@@ -23663,14 +23667,53 @@ static int RestraintObjectOffset(uintptr_t cls,const char* field) {
     return -1;
 }
 
-static uintptr_t RestraintObjectProperty(uintptr_t object,const char* field,
-                                       uintptr_t& cachedClass,int& cachedOffset) {
+struct NativeObjectFieldCache {uintptr_t cls=0;int offset=-1;ULONGLONG retry=0;};
+static uintptr_t RestraintObjectProperty(uintptr_t object,const char* field,NativeObjectFieldCache& cache) {
     int32_t cls=0,value=0;
-    if(!object || !TryLoadAlignedI32(object+OBJ_CLASS,&cls) || !cls)return 0;
-    if(cachedClass!=(uint32_t)cls) {
-        cachedClass=(uint32_t)cls;cachedOffset=RestraintObjectOffset(cachedClass,field);
+    if(!object || g_upChildren!=0x4c || g_upNext!=0x40 || g_upOffset!=0x64 ||
+       WantedIdx(field)<0 || !TryLoadAlignedI32(object+OBJ_CLASS,&cls) || !cls)return 0;
+    if(cache.cls!=(uint32_t)cls)cache={(uint32_t)cls,-1,0};
+    const auto now=GetTickCount64();
+    if(cache.offset<0 && now>=cache.retry) {
+        cache.retry=now+1000;cache.offset=RestraintObjectOffset(cache.cls,field);
     }
-    return cachedOffset>=0 && TryLoadAlignedI32(object+cachedOffset,&value)?(uint32_t)value:0;
+    return cache.offset>=0 && TryLoadAlignedI32(object+cache.offset,&value)?(uint32_t)value:0;
+}
+
+struct NativePlayerAccess {
+    static bool Live(uintptr_t object) {
+        __try {return IsLive(object);}
+        __except(MemoryFaultFilter(GetExceptionCode())) {return false;}
+    }
+    bool ClassIs(uintptr_t object,const char* expected,bool derive=false) {
+        int32_t cls=0;
+        if(!object || !Live(object) || !TryLoadAlignedI32(object+OBJ_CLASS,&cls))return false;
+        for(unsigned depth=0;cls && depth<64;++depth) {
+            char name[80]{};
+            if(!GuardedNameOf((uint32_t)cls,name,sizeof(name)))return false;
+            if(!_stricmp(name,expected))return true;
+            if(!derive)return false;
+            int32_t parent=0;
+            if(!TryLoadAlignedI32((uint32_t)cls+g_upNext-4,&parent) || parent==cls)return false;
+            cls=parent;
+        }
+        return false;
+    }
+    bool IsCamera(uintptr_t p){return ClassIs(p,"RvPlayerCamera");}
+    bool IsController(uintptr_t p){return ClassIs(p,"RvPlayerController");}
+    bool IsPawn(uintptr_t p){return ClassIs(p,"RvPlayerPawn",true);}
+    uintptr_t Link(uintptr_t object,const char* field) {
+        static thread_local NativeObjectFieldCache fields[4];
+        const char* names[]{"PCOwner","PlayerCamera","Pawn","Controller"};
+        for(unsigned i=0;i<4;++i)if(!strcmp(field,names[i]))return RestraintObjectProperty(object,field,fields[i]);
+        return 0;
+    }
+};
+
+static nativeplayer::Identity ReadNativeLocalPlayer() {
+    if(g_upChildren!=0x4c || g_upNext!=0x40 || g_upOffset!=0x64)return {};
+    NativePlayerAccess access;
+    return nativeplayer::Resolve(g_camera,access);
 }
 
 static bool RestraintIdentity(uintptr_t object,char* name,size_t nameSize,char* typeName,size_t typeSize) {
@@ -23685,15 +23728,10 @@ static void RefreshNativeCinematicState() {
     if(g_upChildren!=0x4c || g_upNext!=0x40 || g_upOffset!=0x64)return;
     // Read the authoritative local controller, not the last object seen by an
     // event. Script->script calls need not re-enter ProcessInternal.
-    static uintptr_t cameraClass=0,pcClass=0,pawnClass=0;
-    static int ownerOff=-1,pawnOff=-1,controllerOff=-1;
-    const uintptr_t pc=RestraintObjectProperty(g_camera,"PCOwner",cameraClass,ownerOff);
-    char type[80]{};int32_t cls=0;
-    if(!pc || !IsLive(pc) || !TryLoadAlignedI32(pc+OBJ_CLASS,&cls) ||
-       !GuardedNameOf((uint32_t)cls,type,sizeof(type)) || strcmp(type,"RvPlayerController"))return;
-    const uintptr_t pawn=RestraintObjectProperty(pc,"Pawn",pcClass,pawnOff);
-    if(!pawn || pawn!=g_playerPawn || !IsLive(pawn) ||
-       RestraintObjectProperty(pawn,"Controller",pawnClass,controllerOff)!=pc)return;
+    const auto local=ReadNativeLocalPlayer();
+    const uintptr_t pc=local.controller;
+    int32_t cls=0;
+    if(!pc || !TryLoadAlignedI32(pc+OBJ_CLASS,&cls))return;
     static int reader=-1;
     if(reader<0) {
         const auto code=reinterpret_cast<const unsigned char*>(GetModuleHandleA(nullptr))+nativecine::BoolExecRva;
@@ -23762,11 +23800,11 @@ static void RefreshNativeRestraintHands() {
     // Not a sticky event/timer: reread the current native asset every frame.
     // Native mesh restoration, travel, nulls, and opt-out all release ownership.
     if(Rd(g_nativeRestraintHands) && VrModeOn() && g_playerPawn && IsLive(g_playerPawn) &&
+       ReadNativeLocalPlayer().pawn==g_playerPawn &&
        g_upChildren && g_upNext && g_upOffset) {
-        static uintptr_t pawnClass=0,componentClass=0;
-        static int meshOffset=-1,assetOffset=-1;
-        const uintptr_t component=RestraintObjectProperty(g_playerPawn,"Mesh",pawnClass,meshOffset);
-        mesh=RestraintObjectProperty(component,"SkeletalMesh",componentClass,assetOffset);
+        static NativeObjectFieldCache meshField,assetField;
+        const uintptr_t component=RestraintObjectProperty(g_playerPawn,"Mesh",meshField);
+        mesh=RestraintObjectProperty(component,"SkeletalMesh",assetField);
         int32_t group=0,root=0,outer=1;
         char mn[96]{},mt[64]{},gn[64]{},gt[64]{},rn[64]{},rt[64]{};
         const bool identities=RestraintIdentity(mesh,mn,sizeof(mn),mt,sizeof(mt)) &&
@@ -23775,8 +23813,14 @@ static void RefreshNativeRestraintHands() {
             TryLoadAlignedI32((uint32_t)group+OBJ_OUTER,&root) && root && root!=group && (uint32_t)root!=mesh &&
             RestraintIdentity((uint32_t)root,rn,sizeof(rn),rt,sizeof(rt)) &&
             TryLoadAlignedI32((uint32_t)root+OBJ_OUTER,&outer);
-        active=restraint::OwnsHands(true,true,identities && meshOffset>=0 && assetOffset>=0,
+        active=restraint::OwnsHands(true,true,identities && meshField.offset>=0 && assetField.offset>=0,
             mt,mn,gt,gn,rt,rn,outer==0);
+        static uintptr_t lastMesh=0;static unsigned receipts=0;
+        if(mesh!=lastMesh && receipts++<24) {
+            Log("native-restraint identity: component=%p mesh=%p type=%s name=%s group=%s/%s root=%s/%s rootOuter=%08X fields=%X/%X valid=%d active=%d",
+                (void*)component,(void*)mesh,mt,mn,gt,gn,rt,rn,(unsigned)outer,meshField.offset,assetField.offset,identities?1:0,active?1:0);
+            lastMesh=mesh;
+        }
     }
     g_nativeRestraintPawn=active?g_playerPawn:0;
     const LONG previous=InterlockedExchange(&g_nativeRestraintActive,active?1:0);
@@ -23809,6 +23853,9 @@ static void ObserveCinematicSceneProducer() {
        oldPawnNode==ps.stateNode && oldCine==Rd(g_inCinematic) && oldRaw==Rd(g_cineArgRaw) &&
        oldMode==g_sceneMode.Current() && ++quiet<10)return;
     quiet=0;++samples;
+    const auto local=ReadNativeLocalPlayer();
+    Log("cinematic-local: camera=%p cachedController=%p currentController=%p currentPawn=%p stage=%s",
+        (void*)g_camera,(void*)g_controller,(void*)local.controller,(void*)local.pawn,nativeplayer::Name(local.stage));
     ObserveSceneObjectIdentity(g_playerPawn,"pawn");
     const char* const fields[]{"mArmMeshComponent","mInviewMesh","Mesh"};
     static uintptr_t pawnClasses[3]{},meshClasses[3]{},animationClasses[3]{};
@@ -29735,7 +29782,9 @@ static void StartupReadinessFrame(IDirect3DDevice9* dev){
     if(!Rd(g_cutsceneAuto)||(g_origProcessEvent&&g_hookedAt==g_processInternal))ready|=startup::Script;
     if(Rd(g_aimMode)<6||g_origSLC)ready|=startup::Aim;
     if(g_haveCentre&&g_haveCentrePos&&g_haveEyes&&Rd(g_camPosValid))ready|=startup::Centre;
-    const bool visible=gate.Update(eligible,(uint32_t)g_playerPawn,ready,now,g_startupTimeoutMs,g_startupMinVisibleMs);
+    // InGameplay is already a running simulation. Never obscure combat to wait
+    // for our own bookkeeping, or impose another minimum after a cutscene.
+    const bool visible=gate.Update(eligible,(uint32_t)g_playerPawn,ready,now,g_startupTimeoutMs,0);
     if(notes<64&&eligible&&(ready!=previous||visible!=wasVisible)){
         ++notes;previous=ready;
         Log("startup readiness: pawn=%08X ready=%02X missing=%02X elapsed=%llu hold=%d timeout=%d t=%llu (hook readiness; NOT native move-input acceptance)",
@@ -29743,10 +29792,10 @@ static void StartupReadinessFrame(IDirect3DDevice9* dev){
             gate.timedOut?1:0,(unsigned long long)now);
     }
     wasVisible=visible;
-    g_mirrorProbeCurtain=visible&&g_startupLoadingGate;
+    g_mirrorProbeCurtain=false; // a small readiness notice is not a replacement frame
     if(!visible||!g_startupLoadingGate||drawFault||!g_origSetRenderTarget||!g_origSetViewport||!g_origClear)return;
     bool restored=true;
-    startup::DrawLoading(dev,g_origSetRenderTarget,g_origSetViewport,g_origClear,TextRects,restored);
+    startup::DrawLoading(dev,g_origSetRenderTarget,g_origSetViewport,g_origClear,TextRects,restored,true);
     if(!restored){drawFault=true;Log("startup loading: state restore failed; curtain disabled for this session");}
 }
 
@@ -29773,6 +29822,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     PauseRttProbe::PresentContent(s);
     hotpath::scope frameScope(g_hotPathSampler, hotpath::Family::frame_total);
     DiagStart();
+    if(g_startupPrewarm)FindPlayerPawn(); // current camera owner before cinema/restraint policy
     RefreshNativeCinematicState();
     RefreshNativeRestraintHands();
     RefreshArmsAnimActive();

@@ -1,5 +1,18 @@
 # STATUS — session handoff
 
+## 2026-10-21 camera-owned player / ComponentProperty / visible gameplay followup
+
+Physical1161168 FAILED: Kathryn still VR/flickering, free hands during bound
+escape, combat behind loading. Scope/VFX/gore NOT tested. Official rollback and
+independent accepted DLL EF3A1F3B / INI55A3ED4D verification PASS.
+Corrected current camera/controller reciprocal ownership without requiring a
+previously found pawn; fixed proven Pawn.Mesh ComponentProperty rejection;
+removed opaque gameplay loading and late-pawn rearm. Read-only ownership and
+asset receipts are bounded. CPU/Python/own-D3D9Ex scene-preservation tests and
+x86 PE32 /O2 build PASS; physical result remains OPEN. SIDE localization edits
+are excluded. See docs/kathryn-camera-owner-followup.md. Candidate preparation
+does not deploy; next continuous PSVR2 scene/escape test begins on user start.
+
 ## 2026-10-21 Kathryn native cinematic correction (offline only)
 
 User requested Kathryn repaired BEFORE next combined test. Added default-OFF

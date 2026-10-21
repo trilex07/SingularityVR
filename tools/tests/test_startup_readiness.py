@@ -11,16 +11,16 @@ class Tests(unittest.TestCase):
         self.assertIn('(std::max)(500,(std::min)(startupTimeout,10000))', SRC)
         self.assertIn('GetPrivateProfileIntA("Render","StartupLoadingMinMs",3000,path)', SRC)
         self.assertIn('(std::clamp)(startupMin,0,(int)g_startupTimeoutMs)', SRC)
-        self.assertIn('g_startupTimeoutMs,g_startupMinVisibleMs', SRC)
+        self.assertIn('g_startupTimeoutMs,0', SRC)
 
     def test_reciprocal_reflected_pawn_not_guessed_or_global_scan(self):
         block=SRC.split('static uintptr_t FindPlayerPawn(bool force) {',1)[1].split('if (g_playerPawn &&',1)[0]
-        for s in ('g_startupPrewarm&&g_upChildren','PropOffsetInChain(ctlClass,"Pawn")',
-                  'PropOffsetInChain(pawnClass,"Controller")','(uint32_t)ownerBits==g_controller','IsLive(pawn)'):
+        for s in ('g_startupPrewarm','ReadNativeLocalPlayer()', 'g_playerPawn=local.pawn'):
             self.assertIn(s,block)
         for forbidden in ('FindController(', 'kGObjectsTArray', 'Sleep(', 'WriteProcessMemory('):
             self.assertNotIn(forbidden,block)
         self.assertIn('{ "Pawn", -1 }, { "Controller", -1 }',SRC)
+        self.assertIn('{ "PlayerCamera", -1 }',SRC)
 
     def test_failed_install_not_marked_ready_in_fast_mode(self):
         self.assertIn('hooked = !g_startupPrewarm || (g_origProcessEvent&&g_hookedAt==g_processInternal)',SRC)
@@ -39,5 +39,7 @@ class Tests(unittest.TestCase):
         for forbidden in ('ClearPad(', 'Sleep(', 'SetCinematicMode(', 'ProcessEvent(', 'WriteProcessMemory('):
             self.assertNotIn(forbidden,frame)
         self.assertIn('notes<64',frame)
+        self.assertIn('TextRects,restored,true)',frame)
+        self.assertIn('g_mirrorProbeCurtain=false',frame)
 
 if __name__=='__main__': unittest.main()

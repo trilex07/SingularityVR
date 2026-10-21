@@ -51,6 +51,34 @@ int main(){
         }
         assert(pixels[0]>100&&pixels[0]==pixels[1]);assert(SUCCEEDED(read->UnlockRect()));
         printf("PASS own GPU startup curtain round%u pixels=%u/%u; viewport/scissor/RT/depth restored after success/failures\n",round,pixels[0],pixels[1]);
+        // A live-game readiness notice must not hide combat. Seed the actual
+        // backbuffer, render the notice from an unrelated RT, and read it back.
+        const D3DCOLOR scene=0xff314159;
+        assert(SUCCEEDED(dev->ColorFill(back,nullptr,scene)));
+        bool noticeRestored=false;
+        assert(startup::DrawLoading(dev,
+            [](IDirect3DDevice9* d,DWORD i,IDirect3DSurface9* s){return d->SetRenderTarget(i,s);},
+            [](IDirect3DDevice9* d,const D3DVIEWPORT9* v){return d->SetViewport(v);},
+            [](IDirect3DDevice9* d,DWORD n,const D3DRECT* r,DWORD f,D3DCOLOR c,float z,DWORD s){
+                assert(n>0 && r);return d->Clear(n,r,f,c,z,s);},text,noticeRestored,true)&&noticeRestored);
+        D3DVIEWPORT9 noticeVp{};IDirect3DSurface9 *noticeRt=nullptr,*noticeDs=nullptr;
+        RECT noticeSc{};DWORD noticeEnabled=0;
+        assert(SUCCEEDED(dev->GetViewport(&noticeVp))&&!memcmp(&noticeVp,&vp,sizeof(vp)));
+        assert(SUCCEEDED(dev->GetScissorRect(&noticeSc))&&!memcmp(&noticeSc,&sc,sizeof(sc)));
+        assert(SUCCEEDED(dev->GetRenderState(D3DRS_SCISSORTESTENABLE,&noticeEnabled))&&noticeEnabled);
+        assert(SUCCEEDED(dev->GetRenderTarget(0,&noticeRt))&&noticeRt==rt);
+        assert(SUCCEEDED(dev->GetDepthStencilSurface(&noticeDs))&&noticeDs==ds);Drop(noticeRt);Drop(noticeDs);
+        assert(SUCCEEDED(dev->GetRenderTargetData(back,read))&&SUCCEEDED(read->LockRect(&lock,nullptr,D3DLOCK_READONLY)));
+        unsigned preserved=0,noticePixels=0;
+        for(unsigned y=0;y<256;++y)for(unsigned x=0;x<256;++x){
+            auto row=reinterpret_cast<const DWORD*>((const char*)lock.pBits+y*lock.Pitch);
+            assert(row[x]==row[x+256]);
+            if(row[x]==scene)++preserved;
+            else {assert(row[x]==0xffc8d9e8&&y>=188&&y<195);++noticePixels;}
+        }
+        assert(preserved>65000-1000&&noticePixels>100);
+        assert(SUCCEEDED(read->UnlockRect()));
+        printf("PASS own GPU live notice round%u preserved=%u text=%u per eye; no full clear\n",round,preserved,noticePixels);
         assert(SUCCEEDED(dev->SetDepthStencilSurface(nullptr))&&SUCCEEDED(dev->SetRenderTarget(0,back)));
         Drop(read);Drop(back);Drop(ds);Drop(rt);
     }
