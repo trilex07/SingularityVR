@@ -6,6 +6,12 @@ inline bool MenuSubmitForcesFlat(int menuClass) {
     return menuClass == 1;
 }
 
+// Weapon locker / upgrade station GFx (class 4): world-visible stereo UI, not
+// frontend MenuFlat or native cinema presentation.
+inline bool InteractiveStationMenu(int menuClass, bool menuFocus) {
+    return menuFocus && menuClass == 4;
+}
+
 // Opt-in: reuse the established identical-crop bridge for focused frontend.
 // Pause over native cinema stays in CutsceneFlat so the pause menu remains flat
 // inside the Cinema Mode screen without jumping to a 2x half-crop zoom.
@@ -15,7 +21,9 @@ inline bool CinemaMenuPauseOwnsPresentation(bool enabled, int menuClass,
     return false;
 }
 inline bool CinemaMenuIdenticalCrop(bool enabled, int menuClass,
-                                   bool focus, bool cinematic, bool paused) {
+                                   bool focus, bool cinematic, bool paused,
+                                   bool stereoPresentationHold = false) {
+    if (stereoPresentationHold) return false;
     return enabled && focus && !(cinematic && paused) &&
            (menuClass == 2 || menuClass == 4);
 }

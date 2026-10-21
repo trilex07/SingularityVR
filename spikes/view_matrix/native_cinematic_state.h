@@ -21,4 +21,7 @@ inline bool ValidField(int offset, int elements, int size, uint32_t mask) {
         mask && !(mask&(mask-1));
 }
 inline bool Active(uint32_t word,uint32_t mask) { return (word&mask)!=0; }
+// Singularity Matinee/Kathryn segments can run with bCinematicMode still clear while
+// SetCinematicMode already latched the mod ON. Native polling may only ASSERT ON.
+inline bool PublishesOn(int nativeActive) { return nativeActive!=0; }
 }

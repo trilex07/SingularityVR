@@ -25,5 +25,7 @@ int main() {
     assert(!nativecine::ValidField(0x200,1,1,1));
     assert(!nativecine::ValidField(-1,1,4,1));
     assert(!nativecine::ValidField(0x4004,1,4,1));
-    puts("native cinematic state CPU PASS (fingerprint refusal, 32 independent packed bits, field bounds)");
+    assert(!nativecine::PublishesOn(0));
+    assert(nativecine::PublishesOn(1));
+    puts("native cinematic state CPU PASS (fingerprint refusal, 32 independent packed bits, field bounds, assert-only publish)");
 }

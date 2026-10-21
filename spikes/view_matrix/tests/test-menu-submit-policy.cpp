@@ -18,6 +18,9 @@ int main() {
     Expect(!MenuSubmitForcesFlat(2), "class 2 main menu does not force flat");
     Expect(!MenuSubmitForcesFlat(3), "class 3 pause menu does not force flat");
     Expect(!MenuSubmitForcesFlat(4), "class 4 station/dialog does not force flat");
+    Expect(InteractiveStationMenu(4, true), "class 4 focused is an interactive station");
+    Expect(!InteractiveStationMenu(4, false), "class 4 unfocused is not station-gated");
+    Expect(!InteractiveStationMenu(2, true), "class 2 is not the station gate");
     Expect(!MenuSubmitForcesFlat(5), "unknown class does not force flat");
     Expect(!MenuSubmitForcesFlat(-1), "negative class does not force flat");
     Expect(MenuSubmitKind(true, true, false) == 1, "crop submission is its own kind");

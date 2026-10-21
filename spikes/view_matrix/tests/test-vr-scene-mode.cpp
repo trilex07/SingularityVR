@@ -68,7 +68,7 @@ int main() {
     for(int cls=0;cls<=4;++cls) {
         assert(!vrscene::FrontendMenuPresentation(false,cls,true));
         assert(!vrscene::FrontendMenuPresentation(true,cls,false));
-        assert(vrscene::FrontendMenuPresentation(true,cls,true)==(cls==2 || cls==4));
+        assert(vrscene::FrontendMenuPresentation(true,cls,true)==(cls==2));
         assert(!vrscene::FrontendMenuPresentation(true,cls,true,true,true));
     }
     Controller frontend;
@@ -92,6 +92,7 @@ int main() {
         assert(!CinemaMenuIdenticalCrop(false,cls,focus,cine,paused));
         assert(CinemaMenuIdenticalCrop(true,cls,focus,cine,paused)==
             (focus && !(cine && paused) && (cls==2 || cls==4)));
+        assert(!CinemaMenuIdenticalCrop(true,cls,focus,cine,paused,true));
         assert(!CinemaMenuPauseOwnsPresentation(true,cls,focus,cine,paused));
     }
     Controller cinemaPause;
@@ -104,5 +105,23 @@ int main() {
     assert(cinemaPause.NeedsMonoPair());
     for(unsigned i=0;i<Controller::kExitFrames;++i)cinemaPause.Advance(gameplay);
     assert(cinemaPause.Current()==Mode::GameplayStereo);
-    std::puts("PASS: cinematic hysteresis, video mono, noisy signal, menu classification");
+    Controller bootBink;
+    auto bv = bootBink.Advance({false, true, false, false, false, false, true});
+    assert(bv.to == Mode::VideoFlat && bootBink.Flat());
+    Controller bootMenu;
+    auto bm = bootMenu.Advance({false, false, false, false, false, false, true});
+    assert(bm.to == Mode::GameplayStereo && !bootMenu.Flat());
+    Controller mainHold;
+    mainHold.Advance({true, false, true, false, false, false, false, true});
+    assert(mainHold.Current() == Mode::GameplayStereo && !mainHold.NeedsMonoPair());
+    Controller scripted;
+    assert(!scripted.Advance({true, false, false, false, false, false, false}).changed);
+    auto sf = scripted.Advance({true, false, false, false, false, false, false});
+    assert(sf.changed && sf.to == Mode::CutsceneFlat);
+    assert(vrscene::ScriptedCameraFlatPresentation(true, true, true, false, false, false));
+    assert(!vrscene::ScriptedCameraFlatPresentation(true, true, false, false, false, false));
+    assert(!vrscene::ScriptedCameraFlatPresentation(true, false, true, false, false, false));
+    assert(vrscene::BootMenuVideoStereo(true, false, false));
+    assert(!vrscene::BootMenuVideoStereo(true, true, false));
+    std::puts("PASS: cinematic hysteresis, video mono, noisy signal, menu classification, scripted/boot video");
 }

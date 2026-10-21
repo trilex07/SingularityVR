@@ -44,6 +44,9 @@ int main() {
            "class 2 without menuSafe is not given the class-1 cap");
     Expect(Near(MenuPlacementClipY(2), -.16f), "main menu shifts 8 percent down");
     for(int cls:{0,1,3,4}) Expect(Near(MenuPlacementClipY(cls),0.f), "other menus have no vertical shift");
+    Expect(Near(StationMenuInset(4, false, 0.84f, 50), 0.84f * 0.50f),
+           "class 4 station inset scales from menuSafe baseline");
+    Expect(Near(StationMenuClipY(4), -0.12f), "class 4 station vertical centering nudge");
     using namespace uipointer;
     VrMenuPanel main;
     HeadPlane({0,0,0},{0,0,-1},{1,0,0},{0,1,0},1.2f,1.3f,1.33f,.84f,main.plane);

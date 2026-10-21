@@ -1,6 +1,8 @@
 #pragma once
 #include "inventory_retention_policy.h"
 #include "inventory_vm_policy.h"
+#include "menu_submit_policy.h"
+extern volatile LONG g_vrUiMenu;
 // Only the existing engine input/script threads touch engine objects. The XR
 // and renderer sides exchange a mask/selection request, never UObject pointers.
 //
@@ -231,7 +233,10 @@ static void Poll() {
     InterlockedExchange(&owned,0);InterlockedExchange(&ready,0);Report();return;
    }
    Report();
-   if(!selected||!pawn||!manager||Rd(g_gamePaused)||Rd(g_inCinematic)||Rd(g_vrMenuClass)!=0)return;
+   const int menuCls=(int)Rd(g_vrMenuClass);
+   const bool stationMenu=InteractiveStationMenu(menuCls,Rd(g_vrUiMenu)!=0);
+   if(!selected||!pawn||!manager||Rd(g_gamePaused)||Rd(g_inCinematic)||
+      (menuCls!=0&&!stationMenu))return;
    for(unsigned i=0;i<count;++i)if(items[i].mesh==selected) {
     // The audited selector: RvPlayerPawnSP vtable+0xB14 takes the weapon FName.
     // The identity check is the vtable ITSELF: slot +0xB18 of the same vtable
