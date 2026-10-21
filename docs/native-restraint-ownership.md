@@ -73,6 +73,15 @@ The cache can lag a native asset transition by one completed frame, not seconds.
 Optimized x86 PE32 build PASS; existing analysis warnings remain (not warning-free).
 No installed DLL/INI/UI/audio/assets changed. No L3/L4 claimed.
 
+Clean-source build receipt: source b6ba0dba4971471af7564ec0ddf1bc1fe99d0762,
+DLL SHA256 2C937E58CD785AB857DA71B3464E9FB9292146569B0EB5762D5E2AAD6E841283,
+no PERFORMANCE define. Private artifact build/combined-followups/native-restraint-b6ba0db
+contains DLL and build provenance. This is not a deployed test package.
+Independent post-build installed DLL EF3A1F3B / INI55A3ED4D match accepted hashes;
+no Singularity process was observed. Only untracked private deployment/leases
+remained in worktree at build. Existing failed bridge remains default OFF;
+do not enable it as though it had new supporting evidence.
+
 After a fresh user start and normal deployment/hash/backup preflight, collect
 `native-restraint: active=1/0` plus Mesh/SkeletalMesh witness for the same escape.
 Physical route (no mid-headset chat): load captive save; observe bound hands
