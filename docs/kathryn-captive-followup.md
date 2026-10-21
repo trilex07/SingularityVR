@@ -36,7 +36,31 @@ the accepted profile does not pin it. These are OFFLINE_CONTAINER_PASS only;
 actual heard radio identity and auditory quality remain unverified. Large private
 game packages/audio must not be committed.
 
-## Scene experiment, not a speculative cinema fix
+## Controlled correction: outer script-event coverage
+
+Owned RvGame.u export11870 contains a49-byte script body delegating all six
+named bool parameters from SetPlayerCinematicMode to SetCinematicMode. This is
+a native-to-script event, NOT a native exec wrapper. ProcessInternal need not
+re-enter the hook for the inner script-to-script call. OnToggleCinematicModeNative
+instead consumes one Action object; it must never be decoded as bools.
+
+Render/CinematicEventBridge=1 covers that outer event through the existing hook.
+Default OFF; exact Function/owner class, local Camera.PCOwner identity, six named
+BoolProperty offsets0,4,8,12,16,20, readable voted FFrame locals and canonical
+0/1 words are all required. Any mismatch refuses without touching engine data.
+The resulting mod cinema bit feeds the existing presentation/native-hand policies;
+there is no forced scene name, timer, new native hook or engine parameter write.
+Forty CPU gate checks and five hand/bridge source guards pass. Runtime match,
+bound-hand pixels and Kathryn cinema remain UNVERIFIED. Falsifier: no accepted
+outer event in the scene, or the existing cinema bit already ON when it fails.
+In either case investigate the actual camera/mesh producer, not another override.
+
+The next candidate contains this correction AND the read-only witness below,
+not a diagnostics-only session. Native audio uses26 bank candidates, not merely
+overlay WAV copies. Three no-safe banks and228 retained takes remain unchanged;
+do not promise every English line has been replaced.
+
+## Bounded scene witness accompanying the correction
 
 Owned RvGame exports prove RvPlayerController.SetPlayerCinematicMode and
 OnToggleCinematicModeNative exist. Their invocation in the failing sequence is

@@ -113,7 +113,14 @@ foreach($f in $m.files){
     if((Hash $temporary) -cne $expected){throw 'Staged asset SHA mismatch'}
     Stopped
     if((Hash $target) -cne $current){throw 'Asset changed during staging'}
-    Move-Item -LiteralPath $temporary -Destination $target -Force
+    # Same-directory atomic replacement. Move-Item -Force can refuse an
+    # existing Windows target (ERROR_ALREADY_EXISTS); never delete the baseline
+    # first. The complete backup and drift checks above remain mandatory.
+    if([IO.File]::Exists($target)){
+        [IO.File]::Replace($temporary,$target,[System.Management.Automation.Language.NullString]::Value)
+    }else{
+        [IO.File]::Move($temporary,$target)
+    }
     if((Hash $target) -cne $expected){throw 'Installed/restored asset SHA mismatch'}
 }
 foreach($f in $m.files){

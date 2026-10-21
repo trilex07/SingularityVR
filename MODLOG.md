@@ -1,5 +1,14 @@
 # Reverse-engineering journal
 
+2026-10-21: RvGame.u export11870 SetPlayerCinematicMode is a49-byte script
+delegate to SetCinematicMode with six bool parameters, not a native wrapper.
+OnToggleCinematicModeNative consumes one object; never read it as a bool.
+New default-OFF outer-event bridge uses exact local-owner and reflected six-word
+ABI gates; no engine writes. CPU40/source5 PASS; scene invocation/pixels pending.
+XTTS native26-bank delivery staged with independent package decoder receipts;
+session asset atomic replacement passes isolated fake-install tests. No Steam
+mutation; audio or bound-hand physical acceptance must not be inferred.
+
 2026-10-16 native continuation: offline registration identifier -> initializer ->
 exec wrapper -> class constructor/vtable -> native AttemptReload method proved.
 Wrapper is no-param thiscall, whole EAX bool, derived slot0x4C4 in archived image.

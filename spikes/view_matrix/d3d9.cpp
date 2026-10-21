@@ -62,6 +62,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "cutscene_mono.h" // CutsceneFlat mono-to-both-eyes fit math (no D3D)
 #include "cinema_world_screen.h"
 #include "cinematic_state_observation.h"
+#include "cinematic_event_bridge.h"
 #include "cinema_exit_profile.h"
 #include "camera_lookup_guard.h"
 #include "video_cinema_placement.h"
@@ -2366,6 +2367,7 @@ static int g_sniperOpticalAccuracy=0; // native scoped spread queries only, no c
 static int g_weaponNativeAxis=0; // exact local pre/post-spread basis, default OFF
 static LONG g_cinematicHandsOwnership=0; // native hands even when cinematic presentation stays stereo
 static LONG g_cinematicSceneProbe=0; // bounded read-only scene/foreground witness; default OFF
+static LONG g_cinematicEventBridge=0; // exact local six-bool Raven event -> existing cinema state; default OFF
 static volatile LONG g_cineProbeFgSeen=0, g_cineProbeFgKept=0;
 static volatile LONG g_scopeSlowPresses=0;
 static scopepip::Frame g_scopePipFrame;
@@ -23512,7 +23514,7 @@ ScriptFn g_scriptFns[] = {
     { "IsReloading",        -1 },
     { "AnimNotify_RefillClip",-1 }, // original Centurion Reload notify targets RvSharedPawn
     { "TakeDamage",         -1 }, // [29] scoped reviewed gore experiment
-    { "SetPlayerCinematicMode",-1 }, // [30] RvPlayerController native wrapper; observation only
+    { "SetPlayerCinematicMode",-1 }, // [30] native-to-script event delegates six bools to SetCinematicMode
     { "OnToggleCinematicModeNative",-1 }, // [31] sequence action recipient; observation only
 };
 const int kFnGetAdjustedAim = 0;
@@ -23761,6 +23763,64 @@ static void NoteNested(int32_t idx) {
 static int LocalsOffset() {
     const LONG node = InterlockedCompareExchange(&g_nodeOffset, 0, 0);
     return node >= 0 ? (int)node + 0xC : -1;
+}
+// RvGame's SetPlayerCinematicMode event delegates its six named booleans to
+// SetCinematicMode in script. ProcessInternal need not re-enter our hook for
+// that inner script call. Observe the OUTER native->script event as well.
+// Reflection must independently confirm the complete parameter layout before
+// the first word is consumed. OnToggleCinematicModeNative is NOT a bool event.
+static void ApplyCinematicEventBridge(void* self,void* frame) {
+    if(!Rd(g_cinematicEventBridge))return;
+    const uintptr_t object=(uintptr_t)self, f=(uintptr_t)frame;
+    int32_t cls=0,node=0,owner=0,locals=0;
+    char name[80]{};
+    bool identity=object&&TryLoadAlignedI32(object+OBJ_CLASS,&cls)&&
+        GuardedNameOf((uint32_t)cls,name,sizeof(name))&&!strcmp(name,"RvPlayerController");
+    const LONG no=Rd(g_nodeOffset);const int lo=LocalsOffset();
+    identity=identity&&no>=0&&lo>=0&&TryLoadAlignedI32(f+no,&node)&&node&&
+        TryLoadAlignedI32((uint32_t)node+OBJ_CLASS,&owner)&&
+        GuardedNameOf((uint32_t)owner,name,sizeof(name))&&!strcmp(name,"Function")&&
+        TryLoadAlignedI32((uint32_t)node+0x28,&owner)&&
+        GuardedNameOf((uint32_t)owner,name,sizeof(name))&&!strcmp(name,"RvPlayerController");
+    bool local=false;
+    if(identity&&g_camera&&g_camClass&&g_upChildren&&g_upNext&&g_upOffset){
+        const int po=PropOffsetInChain(g_camClass,"PCOwner");int32_t pc=0;
+        local=po>=0&&TryLoadAlignedI32(g_camera+po,&pc)&&(uint32_t)pc==object;
+    }
+    bool layout=identity&&g_upChildren&&g_upNext&&g_upOffset;
+    const char* const fields[]{"bInCinematicMode","bHidePlayer","bAffectsHUD",
+        "bAffectsMovement","bAffectsTurning","bAffectsButtons"};
+    for(unsigned i=0;layout&&i<6;++i){
+        int32_t child=0;bool found=false;
+        if(!TryLoadAlignedI32((uint32_t)node+g_upChildren,&child)){layout=false;break;}
+        for(unsigned n=0;child&&n<16;++n){
+            char field[80]{},type[40]{};int32_t typePtr=0,offset=-1,next=0;
+            if(!GuardedNameOf((uint32_t)child,field,sizeof(field))){layout=false;break;}
+            if(!strcmp(field,fields[i])){
+                found=TryLoadAlignedI32((uint32_t)child+OBJ_CLASS,&typePtr)&&
+                    GuardedNameOf((uint32_t)typePtr,type,sizeof(type))&&!strcmp(type,"BoolProperty")&&
+                    TryLoadAlignedI32((uint32_t)child+g_upOffset,&offset)&&offset==(int)i*4;
+                break;
+            }
+            if(!TryLoadAlignedI32((uint32_t)child+g_upNext,&next)){layout=false;break;}
+            child=next;
+        }
+        layout=layout&&found;
+    }
+    uint32_t values[6]{};
+    bool readable=layout&&local&&TryLoadAlignedI32(f+lo,&locals)&&locals;
+    for(unsigned i=0;readable&&i<6;++i)
+        readable=TryLoadAlignedI32((uint32_t)locals+i*4,reinterpret_cast<int32_t*>(&values[i]));
+    const bool accepted=cineevent::Accept(true,identity,local,layout,readable,values);
+    if(accepted){
+        InterlockedExchange(&g_cineControllerObserved,(LONG)object);
+        InterlockedExchange(&g_cineArgRaw,(LONG)values[0]);
+        InterlockedExchange(&g_inCinematic,(LONG)values[0]);
+        if(values[0]&&!Rd(g_vrUiMenu))g_menuLatch.menuSeen=false;
+    }
+    static unsigned notes=0;
+    if(notes++<24)Log("cinematic-event-bridge: self=%p identity=%d local=%d layout=%d readable=%d accept=%d cine=%u (engine params untouched)",
+        self,identity?1:0,local?1:0,layout?1:0,readable?1:0,accepted?1:0,values[0]);
 }
 LONG  g_aimPoseUUPer1 = 16384;    // engine units per 1.0 of anim aim. 16384 = 90 deg.
 float g_aimPoseSignX  = 1.0f;
@@ -25094,7 +25154,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled) && Stack) {
+    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
         if (fnIdx < 0) InterlockedIncrement(&g_peUnnamed);
@@ -25183,6 +25243,8 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     if (aimMode == 7 && FnIdx(kFnSetAim) >= 0 && fnIdx == FnIdx(kFnSetAim))
         RewriteSetAimParams(Stack);
 
+    if(Rd(g_cinematicEventBridge)&&FnIdx(kFnPlayerCinematicProbeFirst)>=0&&
+       fnIdx==FnIdx(kFnPlayerCinematicProbeFirst))ApplyCinematicEventBridge(self,Stack);
     if(Rd(g_cinematicSceneProbe) &&
        ((FnIdx(kFnPlayerCinematicProbeFirst)>=0 && fnIdx==FnIdx(kFnPlayerCinematicProbeFirst)) ||
         (FnIdx(kFnPlayerCinematicProbeLast)>=0 && fnIdx==FnIdx(kFnPlayerCinematicProbeLast)))) {
@@ -33703,6 +33765,7 @@ void LoadIniSettings() {
     g_weaponNativeAxis=GetPrivateProfileIntA("Input","WeaponNativeAxis",0,path)?1:0;
     g_cinematicHandsOwnership=GetPrivateProfileIntA("Render","CinematicHandsOwnership",0,path)?1:0;
     g_cinematicSceneProbe=GetPrivateProfileIntA("Diagnostic","CinematicSceneProbe",0,path)?1:0;
+    g_cinematicEventBridge=GetPrivateProfileIntA("Render","CinematicEventBridge",0,path)?1:0;
     Log("followup: WeaponNativeAxis=%d CinematicHandsOwnership=%ld (default OFF)",g_weaponNativeAxis,g_cinematicHandsOwnership);
     Log("ini: SniperOpticalAccuracy=%d (default OFF; exact native spread aim callers, no zero-spread write)",g_sniperOpticalAccuracy);
     Log("ini: ScopeOpticalCalibration=%d SniperOpticalSlowTime=%d (default OFF; own4x/capture45Hz, native L3; no HMD filtering)",g_scopeOpticalCalibration,g_sniperOpticalSlowTime);

@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+## 2026-10-21 prepared correction, not diagnostics-only
+
+Render/CinematicEventBridge is default OFF and covers the statically proven
+six-bool SetPlayerCinematicMode -> SetCinematicMode script delegate. Complete
+reflection/local-owner/parameter gates fail closed; existing cinema/native-hand
+policies consume the result.40 CPU cases +5 source guards PASS, L3/L4 pending.
+Native XTTS delivery staged as26 accepted-profile-pinned campaign banks; official
+read-only asset preflight PASS.144 takes replaced,97 Kathryn;228 retained and
+three no-safe banks unchanged. No Steam writes or launches. See
+docs/kathryn-captive-followup.md; previous diagnostic DLL is superseded for the
+next test, not accepted. Fresh user start required before deployment.
+
 ## 2026-10-21 Kathryn/captive physical failure — OPEN
 
 User reached only the captive/Kathryn scene: bound hands absent, radio English,

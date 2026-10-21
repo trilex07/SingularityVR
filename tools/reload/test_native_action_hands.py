@@ -44,6 +44,16 @@ class NativeActionHandsTests(unittest.TestCase):
         self.assertIn('indexedFgSeen=', body)
         self.assertIn('GetPrivateProfileIntA("Diagnostic","CinematicSceneProbe",0,path)', SOURCE)
 
+    def test_event_bridge_requires_exact_local_reflected_bool_layout(self):
+        body = SOURCE.split('static void ApplyCinematicEventBridge(void* self,void* frame) {', 1)[1].split('\n}', 1)[0]
+        self.assertIn('if(!Rd(g_cinematicEventBridge))return;', body)
+        for token in ('"PCOwner"', '"RvPlayerController"', '"Function"', '"BoolProperty"',
+                      '"bInCinematicMode"', 'offset==(int)i*4', 'n<16', 'cineevent::Accept'):
+            self.assertIn(token, body)
+        self.assertNotIn('memcpy(', body)
+        self.assertIn('GetPrivateProfileIntA("Render","CinematicEventBridge",0,path)', SOURCE)
+        self.assertIn('fnIdx==FnIdx(kFnPlayerCinematicProbeFirst))ApplyCinematicEventBridge(self,Stack)', SOURCE)
+
 
 if __name__ == '__main__':
     unittest.main()
