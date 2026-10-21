@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+## 2026-10-21 SIDE NIS sharpening candidate
+
+Corrected menu-only NIS gate to captured gameplay SBS, isolated per-eye filter
+input, matched scaler/sharpen config+dispatch, same-res NISSharpen, safe native
+fallback before swapchain sizing. Added minimal/full VR Settings ON/OFF and
+strength with INI persistence. Default OFF; see docs/nis-sharpen-repair.md.
+L1 math/wiring and synthetic WARP pixel checks PASS; production x86 PE32 /O2
+build and TMD/weapon/settings regression suites PASS. Use the final clean-source
+d3d9.build.json receipt. No Steam, OpenXR or physical acceptance on this SIDE branch.
+
 ## 2026-10-21 SIDE follow-up — local native TMD getter candidate
 
 User requested a corrected TMD implementation on review/tmd-vfx-side-safety.

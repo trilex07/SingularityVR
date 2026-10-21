@@ -12,7 +12,7 @@
 //   NisBridge_OutputEye(...)         swapchain eye size from recommended
 //   NisBridge_ShouldEngage(...)      pure gate (Off/unready/mono -> native)
 //   NisBridge_EnsureFrame(...)       persistent stage+output textures
-//   NisBridge_ProcessStereo(...)     stage copy + 2 per-eye dispatches
+//   NisBridge_ProcessStereo(...)     2 isolated half-copies + 2 per-eye dispatches
 //   NisBridge_PollTiming(...)        harvest GPU timestamps without stalling
 //   NisBridge_Shutdown(...)          release everything (device reset/exit)
 //
@@ -29,14 +29,14 @@ struct NisBridge {
     NisRuntime rt;
     volatile LONG mode = 0;          // nis_upscale::Mode as LONG (0 Off, 1 NIS, 2 NISSharpen)
     float outputScale = 1.0f;        // swapchain multiplier (recommended-based)
-    float sharpness = 0.20f;         // NIS sharpness 0..1. VR default is
+    volatile LONG sharpnessPct = 20; // atomic UI->render setting, 0..100
     // gentle: the official curve hits USM strength ~1.1 at 0.35, which
     // reads as haloing through the lenses. Live-tuned from the panel.
     // NOTE: renderScale lives in d3d9.cpp as g_nisRenderScaleF (needed at
     // DllMain-time for the command-line hook, before any bridge exists) -
     // deliberately NOT duplicated here.
-    ID3D11Texture2D* stageTex = nullptr;        // SBS staging (SRV-capable)
-    ID3D11ShaderResourceView* stageSrv = nullptr;
+    ID3D11Texture2D* stageTex[2] = {};  // isolated eyes: filter cannot cross seam
+    ID3D11ShaderResourceView* stageSrv[2] = {};
     UINT stageW = 0, stageH = 0;
     unsigned numStageCreates = 0;    // lifetime counter: must not move per frame
     // Accumulated stats (flushed on the existing per-second perf cadence).
@@ -45,6 +45,11 @@ struct NisBridge {
     double msStage = 0.0;
     int stageFrames = 0;
 };
+
+static float NisBridge_Sharpness(const NisBridge* b) {
+    return nis_upscale::ClampSharpness((float)InterlockedCompareExchange(
+        const_cast<volatile LONG*>(&b->sharpnessPct),0,0) * .01f);
+}
 
 // <dll-dir>\nis\NIS_Main.hlsl, beside this DLL (never CWD-dependent).
 // Header-inline in the d3d9 TU, so the module handle is the mod DLL itself.
@@ -65,6 +70,9 @@ static void NisBridge_OutputEye(const NisBridge* b,
                                 UINT recEyeW, UINT recEyeH,
                                 UINT fbEyeW, UINT fbEyeH,
                                 UINT* w, UINT* h) {
+    // Sharpen-only means no resampling, no swapchain resolution change.
+    if (InterlockedCompareExchange(const_cast<volatile LONG*>(&b->mode),0,0)
+            == nis_upscale::kNISSharpen) { *w = fbEyeW; *h = fbEyeH; return; }
     nis_upscale::ComputeOutputEye(recEyeW, recEyeH, b->outputScale,
                                   fbEyeW, fbEyeH, w, h);
 }
@@ -86,20 +94,24 @@ static bool NisBridge_InitIfNeeded(NisBridge* b, ID3D11Device* dev,
 
 static bool NisBridge_EnsureStage(NisBridge* b, ID3D11Device* dev,
                                   UINT sbsW, UINT sbsH) {
-    if (b->stageTex && sbsW == b->stageW && sbsH == b->stageH) return true;
-    if (b->stageSrv) { b->stageSrv->Release(); b->stageSrv = nullptr; }
-    if (b->stageTex) { b->stageTex->Release(); b->stageTex = nullptr; }
+    if (b->stageTex[0] && b->stageSrv[0] && b->stageTex[1] && b->stageSrv[1] &&
+        sbsW == b->stageW && sbsH == b->stageH) return true;
+    for (int eye=0; eye<2; ++eye) {
+        if (b->stageSrv[eye]) { b->stageSrv[eye]->Release(); b->stageSrv[eye] = nullptr; }
+        if (b->stageTex[eye]) { b->stageTex[eye]->Release(); b->stageTex[eye] = nullptr; }
+    }
     b->stageW = b->stageH = 0;
-    if (!dev || !sbsW || !sbsH) return false;
+    if (!dev || sbsW < 2 || (sbsW % 2) || !sbsH) return false;
     D3D11_TEXTURE2D_DESC td = {};
-    td.Width = sbsW; td.Height = sbsH; td.MipLevels = 1; td.ArraySize = 1;
+    td.Width = sbsW / 2; td.Height = sbsH; td.MipLevels = 1; td.ArraySize = 1;
     td.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     td.SampleDesc.Count = 1;
     td.Usage = D3D11_USAGE_DEFAULT;
     td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    if (FAILED(dev->CreateTexture2D(&td, nullptr, &b->stageTex))) return false;
-    if (FAILED(dev->CreateShaderResourceView(b->stageTex, nullptr, &b->stageSrv))) {
-        b->stageTex->Release(); b->stageTex = nullptr; return false;
+    for (int eye=0; eye<2; ++eye) {
+        if (FAILED(dev->CreateTexture2D(&td, nullptr, &b->stageTex[eye]))) return false;
+        if (FAILED(dev->CreateShaderResourceView(b->stageTex[eye], nullptr, &b->stageSrv[eye])))
+            return false;
     }
     b->stageW = sbsW; b->stageH = sbsH;
     ++b->numStageCreates;
@@ -113,26 +125,31 @@ static bool NisBridge_EnsureFrame(NisBridge* b, ID3D11Device* dev,
     return NisEnsureOutput(&b->rt, dev, sbsW / 2, sbsH, eyeOutW, eyeOutH);
 }
 
-// Stage copy + timestamped per-eye dispatches. Returns false when the caller
+// Eye stage copies + timestamped per-eye dispatches. Returns false when the caller
 // must submit the native halves for this frame instead.
 static bool NisBridge_ProcessStereo(NisBridge* b, ID3D11DeviceContext* ctx,
         ID3D11Texture2D* srcTex, UINT sbsW, UINT sbsH,
         UINT eyeOutW, UINT eyeOutH) {
-    if (!b->rt.ready || !srcTex || !b->stageTex || !b->stageSrv) return false;
+    if (!b->rt.ready || !srcTex || !b->stageTex[0] || !b->stageSrv[0] ||
+        !b->stageTex[1] || !b->stageSrv[1]) return false;
     LARGE_INTEGER t0{}; QueryPerformanceCounter(&t0);
-    ctx->CopyResource(b->stageTex, srcTex);
+    for (UINT eye=0; eye<2; ++eye) {
+        D3D11_BOX box{eye*(sbsW/2),0,0,(eye+1)*(sbsW/2),sbsH,1};
+        ctx->CopySubresourceRegion(b->stageTex[eye],0,0,0,0,srcTex,0,&box);
+    }
     LARGE_INTEGER t1{}; QueryPerformanceCounter(&t1);
     LARGE_INTEGER freq{}; QueryPerformanceFrequency(&freq);
     if (freq.QuadPart) {
         b->msStage += 1000.0 * (double)(t1.QuadPart - t0.QuadPart) / (double)freq.QuadPart;
         ++b->stageFrames;
     }
-    const bool sharpenOnly = (b->mode == nis_upscale::kNISSharpen);    NisTimingBegin(&b->rt, ctx);
-    const float sharp = nis_upscale::ClampSharpness(b->sharpness);
-    const bool ok0 = NisDispatchEye(&b->rt, ctx, b->stageSrv,
-        sbsW, sbsH, 0, eyeOutW, eyeOutH, sharp, sharpenOnly);
-    const bool ok1 = NisDispatchEye(&b->rt, ctx, b->stageSrv,
-        sbsW, sbsH, 1, eyeOutW, eyeOutH, sharp, sharpenOnly);
+    const bool sharpenOnly = (b->mode == nis_upscale::kNISSharpen);
+    NisTimingBegin(&b->rt, ctx);
+    const float sharp = NisBridge_Sharpness(b);
+    const bool ok0 = NisDispatchEye(&b->rt, ctx, b->stageSrv[0],
+        sbsW/2, sbsH, 0, eyeOutW, eyeOutH, sharp, sharpenOnly);
+    const bool ok1 = NisDispatchEye(&b->rt, ctx, b->stageSrv[1],
+        sbsW/2, sbsH, 1, eyeOutW, eyeOutH, sharp, sharpenOnly);
     NisTimingEnd(&b->rt, ctx);
     return ok0 && ok1;
 }
@@ -158,7 +175,9 @@ static void NisBridge_ResetStats(NisBridge* b) {
 
 static void NisBridge_Shutdown(NisBridge* b) {
     NisShutdown(&b->rt);
-    if (b->stageSrv) { b->stageSrv->Release(); b->stageSrv = nullptr; }
-    if (b->stageTex) { b->stageTex->Release(); b->stageTex = nullptr; }
+    for (int eye=0; eye<2; ++eye) {
+        if (b->stageSrv[eye]) { b->stageSrv[eye]->Release(); b->stageSrv[eye] = nullptr; }
+        if (b->stageTex[eye]) { b->stageTex[eye]->Release(); b->stageTex[eye] = nullptr; }
+    }
     b->stageW = b->stageH = 0;
 }

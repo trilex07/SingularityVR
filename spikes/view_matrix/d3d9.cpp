@@ -7967,7 +7967,8 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_GOTO_TUTORIAL, PR_TUT_POLISH, PR_TUT_ENGLISH, PR_TUT_STEP,
        PR_TUT_LINE1, PR_TUT_LINE2, PR_TUT_LINE3, PR_TUT_LINE4,
        PR_TUT_PREVIOUS, PR_TUT_NEXT, PR_TUT_LANGUAGE, PR_TUT_BACK,
-       PR_RELOAD_HINTS, PR_CLOSE }; // append only
+       PR_RELOAD_HINTS, PR_CLOSE,
+       PR_GOTO_NIS, PR_NIS_SHARPEN, PR_NIS_STRENGTH }; // append only
 
 // ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
@@ -8002,11 +8003,11 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
 //   - No page is longer than 10 rows, which keeps every page inside the range that was drawing
 //     before any of this. It also nearly DOUBLES the glyph - px is derived from this number, and at
 //     17 it had hit the floor of 3 that the comment below calls unreadable through a lens.
-const int kPanelPages    = 12;     // + HANDS + tutorial language chooser + tutorial
+const int kPanelPages    = 13;     // + NIS sharpening controls
 const int kPanelRowsMax  = 13;     // DISPLAY needs 13 for TEXTURES (was 12); effective px stays 3 via floor-raiser
 const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_ENABLEVR, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_GOTO_CTRL, PR_GOTO_COMFORT,
-      PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_GOTO_TMD, PR_GOTO_HANDS, PR_GOTO_TUTORIAL },
+      PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_GOTO_TMD, PR_GOTO_HANDS, PR_GOTO_TUTORIAL, PR_GOTO_NIS },
     { PR_TURNMODE, PR_TURNSPEED, PR_SNAPANGLE, PR_TURNDIR, PR_MOVEDIR, PR_SWAPSTICKS,
       PR_LEFTHAND, PR_RECENTERCHORD, PR_RECORDING, PR_BACK },
     { PR_CINESTICK, PR_CINECAM, PR_SHAKESCREEN, PR_BOBSTABILIZE, PR_BACK },
@@ -8065,9 +8066,10 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_TUT_POLISH, PR_TUT_ENGLISH, PR_BACK },
     { PR_TUT_STEP, PR_TUT_LINE1, PR_TUT_LINE2, PR_TUT_LINE3, PR_TUT_LINE4,
       PR_TUT_PREVIOUS, PR_TUT_NEXT, PR_TUT_LANGUAGE, PR_TUT_BACK },
+    { PR_NIS_SHARPEN, PR_NIS_STRENGTH, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 12, 10, 5, 13, 10, 7, 10, 6, 8, 6, 3, 9 };
+const int kPageCount[kPanelPages] = { 13, 10, 5, 13, 10, 7, 10, 6, 8, 6, 3, 9, 3 };
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the longest row/title/
 // footer the page can display, not to what it happens to show now - that is what keeps the box from
@@ -8076,15 +8078,15 @@ const int kPageCount[kPanelPages] = { 12, 10, 5, 13, 10, 7, 10, 6, 8, 6, 3, 9 };
 // plate. The widest settings strings are "AIM METHOD MOTION CONTROLLER" and
 // "MOVE DIRECTION HAND (NO TRACKING)".
 // ⭐ run 249: TMD BONES is 30 for "BONE MODE      NUDGE (find it)", its longest reachable value.
-const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 32, 30, 30, 30, 30, 32, 30, 40 };
+const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 32, 30, 30, 30, 30, 32, 30, 40, 34 };
 const char* kPageName[kPanelPages] = { "VR SETTINGS", "CONTROLLER", "COMFORT", "DISPLAY",
                                        "ADVANCED", "WEAPON ALIGN", "TMD ALIGN",
                                        "TMD BONES", "TMD MESH", "HANDS", "LANGUAGE / JEZYK",
-                                       "TUTORIAL" };
+                                       "TUTORIAL", "NIS SHARPENING" };
 
 int g_panelPage = 0;
 const int kMinimalRoot[] = { PR_GOTO_CTRL, PR_NOTESIZE, PR_POLISH, PR_UINARRATOR,
-    PR_RELOAD_HINTS, PR_GOTO_TUTORIAL, PR_CLOSE };
+    PR_RELOAD_HINTS, PR_GOTO_NIS, PR_GOTO_TUTORIAL, PR_CLOSE };
 const int kMinimalControls[] = { PR_TURNMODE, PR_SNAPANGLE, PR_TURNSPEED, PR_MOVEDIR,
     PR_LEFTHAND, PR_RECENTERCHORD, PR_BACK };
 inline int PanelCountForPage(int page) {
@@ -8207,6 +8209,13 @@ inline int OffHand() { return g_leftHanded ? 1 : 0; }
 void PanelSaveRow(int rowId, const char* path) {
     char v[32];
     switch (rowId) {
+        case PR_NIS_SHARPEN:
+            WritePrivateProfileStringA("Upscaling", "Mode",
+                nis_upscale::ModeName((nis_upscale::Mode)Rd(g_nis.mode)), path); return;
+        case PR_NIS_STRENGTH:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%.2f", NisBridge_Sharpness(&g_nis));
+            WritePrivateProfileStringA("Upscaling", "Sharpness", v, path); return;
+        case PR_GOTO_NIS: return;
         // ⚠️ StartInVr is the panel's LIVE VR mode, saved so the state you leave it in is the next
         // cold start. BACKSPACE deliberately does not save - it is a toggle, not a setting, and a
         // key you press to peek at the flat game should not change how the game launches tomorrow.
@@ -8515,7 +8524,7 @@ void PanelSave() {
     // Every page, every row - so the set that is SAVED is by construction the set that is SHOWN.
     for (int page = 0; page < kPanelPages; ++page) {
         // Minimal UI must not rewrite hidden renderer/hand calibration options.
-        if (g_vrSettingsMinimal && page != 0 && page != 1 && page != 10 && page != 11) continue;
+        if (g_vrSettingsMinimal && page != 0 && page != 1 && page != 10 && page != 11 && page != 12) continue;
         for (int i = 0; i < PanelCountForPage(page); ++i)
             PanelSaveRow(PanelIdForPage(page, i), path);
     }
@@ -8527,6 +8536,16 @@ void PanelSave() {
 // the value column carries the explanation instead.
 void PanelRowText(int row, char* out, size_t cap) {
     switch (row) {
+        case PR_GOTO_NIS:
+            _snprintf_s(out, cap, _TRUNCATE, "%s...",
+                PolishLocalization::PL().IsPolishEnabled() ? "WYOSTRZANIE NIS" : "NIS SHARPENING"); break;
+        case PR_NIS_SHARPEN:
+            _snprintf_s(out, cap, _TRUNCATE, "%s %s",
+                PolishLocalization::PL().IsPolishEnabled() ? "WYOSTRZANIE" : "SHARPENING",
+                Rd(g_nis.mode) ? "ON" : "OFF"); break;
+        case PR_NIS_STRENGTH:
+            _snprintf_s(out, cap, _TRUNCATE, "%s %ld%%",
+                PolishLocalization::PL().IsPolishEnabled() ? "SILA" : "STRENGTH", Rd(g_nis.sharpnessPct)); break;
         case PR_ENABLEVR:
             _snprintf_s(out, cap, _TRUNCATE, "VR MODE        %s", VrModeOn() ? "ON" : "OFF");
             break;
@@ -8973,6 +8992,16 @@ void PanelRowText(int row, char* out, size_t cap) {
 
 void PanelAdjust(int row, int dir) {
     switch (row) {
+        case PR_GOTO_NIS: g_panelPage=12; g_panelRow=0; return;
+        case PR_NIS_SHARPEN:
+            InterlockedExchange(&g_nis.mode, Rd(g_nis.mode) ? nis_upscale::kOff : nis_upscale::kNISSharpen);
+            Log("VR panel: NIS %s", Rd(g_nis.mode) ? "sharpen ON" : "OFF"); break;
+        case PR_NIS_STRENGTH: {
+            LONG strength = Rd(g_nis.sharpnessPct) + dir*10;
+            if (strength<0) strength=0;
+            if (strength>100) strength=100;
+            InterlockedExchange(&g_nis.sharpnessPct,strength); break;
+        }
         case PR_RELOAD_HINTS:
             InterlockedExchange(&g_reloadHintsEnabled, Rd(g_reloadHintsEnabled) ? 0 : 1);
             break;
@@ -13157,11 +13186,13 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     }
     // research/nvidia-vr-upscaling: NIS engages only on the SBS true-stereo
     // path (two independent eye viewports, seam never in the kernel). Mono and
-    // alternate-eye stereo keep the native path. Output is sized from the
-    // RECOMMENDED eye size, never from the (possibly reduced) render size.
+    // alternate-eye stereo keep the native path. NIS upscale uses recommended
+    // output; NISSharpen keeps the actual captured eye resolution unchanged.
     bool nisFrame = false;
     UINT nisOutW = 0, nisOutH = 0;
-    if (cropEyes && frame && g_frameSrc11 &&
+    const bool nisStereoSbs = frame && nis_upscale::IsStereoSbs(frame->dup,
+        frame->stereo, frame->menuFlat, frame->cineFlat, g_srcW, g_srcH);
+    if (nisStereoSbs && g_frameSrc11 &&
         InterlockedCompareExchange(&g_nis.mode, 0, 0) != 0) {
         UINT fbW = g_srcW / 2, fbH = g_srcH;
         NisBridge_OutputEye(&g_nis, g_recEyeW, g_recEyeH, fbW, fbH, &nisOutW, &nisOutH);
@@ -13174,7 +13205,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 kNisSharpenCS, kNisSharpenCS_Size,
                 hlsl[0] ? hlsl : nullptr, NisLogAdapter);
         }
-        nisFrame = nisFrame && NisBridge_ShouldEngage(&g_nis, cropEyes, true);
+        nisFrame = nisFrame && NisBridge_ShouldEngage(&g_nis, nisStereoSbs, true);
         if (nisFrame && !NisBridge_EnsureFrame(&g_nis, g_dev11,
                 g_srcW, g_srcH, nisOutW, nisOutH)) {
             static bool saidOut = false;
@@ -13184,7 +13215,17 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             }
             g_nis.rt.failedOnce = true; nisFrame = false;
         }
+        // Resolve failure BEFORE allocating/acquiring a differently sized XR
+        // image. Native fallback then always uses native dimensions, not an
+        // out-of-bounds native copy into an enlarged NIS swapchain.
+        if (nisFrame && !NisBridge_ProcessStereo(&g_nis, g_ctx11, g_frameSrc11,
+                g_srcW, g_srcH, nisOutW, nisOutH)) {
+            Log("nis: dispatch FAILED - native submission, disabled for session");
+            g_nis.rt.failedOnce = true; nisFrame = false;
+        }
     }
+    const bool splitOutput = monoCrop || nisFrame;
+    g_scCropped = splitOutput;
     const UINT wantW = nisFrame ? nisOutW : (monoCrop ? g_srcW / 2 : g_srcW);
     const UINT wantH = nisFrame ? nisOutH : g_srcH;
     if (frame && EnsureSwapchain(wantW, wantH)) {
@@ -13212,23 +13253,18 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 // the copy into the swapchain image is identical either way.
                 LARGE_INTEGER tUp = Now();
                 g_gpuCopyTiming.Begin(g_ctx11);
-                // research/nvidia-vr-upscaling: NIS path = 1 stage copy +
-                // 2 per-eye dispatches + 2 final copies (vs 2 native
-                // half-copies). All policy lives in nis_bridge.h.
-                bool nisDone = false;
+                // NIS processing completed before swapchain size selection;
+                // here only the two final per-eye copies remain.
+                const bool nisDone = nisFrame;
                 if (nisFrame) {
-                    nisDone = NisBridge_ProcessStereo(&g_nis, g_ctx11, g_frameSrc11,
-                        g_srcW, g_srcH, nisOutW, nisOutH);
-                    if (nisDone) {
-                        const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
-                        g_ctx11->CopyResource(g_scImages[0][idx],
-                            g_nis.rt.outTex[swap ? 1 : 0]);
-                    } else {
-                        static bool saidCfg = false;
-                        if (!saidCfg) {
-                            saidCfg = true;
-                            Log("nis: dispatch FAILED - native halves for this frame");
-                        }
+                    const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
+                    g_ctx11->CopyResource(g_scImages[0][idx],
+                        g_nis.rt.outTex[swap ? 1 : 0]);
+                    static LONG nisSubmitNotes=0;
+                    if (InterlockedIncrement(&nisSubmitNotes)<=4) {
+                        Log("nis: stereo submit mode=%s input=%ux%u output-eye=%ux%u sharp=%.2f",
+                            nis_upscale::ModeName((nis_upscale::Mode)Rd(g_nis.mode)),
+                            g_srcW,g_srcH,nisOutW,nisOutH,NisBridge_Sharpness(&g_nis));
                     }
                 }
                 if (!nisDone && g_frameSrc11) {
@@ -13256,7 +13292,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 if (!stereo) { g_renderPose[0] = frame->pose[0]; g_renderPose[1] = frame->pose[1]; }
 
                 bool rightReady = true;
-                if (monoCrop) {
+                if (splitOutput) {
                     uint32_t rightIndex = 0;
                     const int64_t ta = g_diagEnabled ? DiagQpc() : 0;
                     const XrResult ar = xrAcquireSwapchainImage(g_swapchain[1], &ai, &rightIndex);
@@ -13314,12 +13350,12 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 // came from lets it reproject correctly instead of mismatching the two eyes.
                 const bool dupNow = frame->dup;
                 for (int i = 0; i < 2; ++i) {
-                    const int src = (stereo || monoCrop) ? i : 0;
+                    const int src = (stereo || splitOutput) ? i : 0;
                     projViews[i] = { XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW };
                     projViews[i].pose = frame->pose[i];
                     projViews[i].fov  = frame->useDerived ? frame->derived : frame->fov[i];
                     projViews[i].subImage.swapchain = g_swapchain[src];
-                    if (dupNow && !monoCrop) {
+                    if (dupNow && !splitOutput) {
                         // Both eyes live in one image, side by side. Hand each eye its half by
                         // rect - no extra copy, and both were drawn in the same instant.
                         const int32_t halfW = (int32_t)g_scWidth / 2;
@@ -31227,7 +31263,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                         " | lifetimes: shaders %u, stage %u, outputs %u",
                         nis_upscale::ModeName(
                             (nis_upscale::Mode)InterlockedCompareExchange(&g_nis.mode, 0, 0)),
-                        g_nis.sharpness, g_nisRenderScaleF, g_nis.outputScale,
+                        NisBridge_Sharpness(&g_nis), g_nisRenderScaleF, g_nis.outputScale,
                         g_nis.rt.inW, g_nis.rt.inH, g_nis.rt.outW, g_nis.rt.outH,
                         g_nis.msGpu / g_nis.gpuFrames, g_nis.msGpuPeak,
                         g_nis.stageFrames ? g_nis.msStage / g_nis.stageFrames : 0.0,
@@ -34080,13 +34116,13 @@ void LoadIniSettings() {
         char rs[32] = {}, os[32] = {}, sh[32] = {};
         GetPrivateProfileStringA("Upscaling", "RenderScale", "1.0", rs, sizeof(rs), path);
         GetPrivateProfileStringA("Upscaling", "OutputScale", "1.0", os, sizeof(os), path);
-        GetPrivateProfileStringA("Upscaling", "Sharpness", "0.35", sh, sizeof(sh), path);
+        GetPrivateProfileStringA("Upscaling", "Sharpness", "0.20", sh, sizeof(sh), path);
         float frs = nis_upscale::ClampRenderScale((float)strtod(rs, nullptr));
         float fos = nis_upscale::ClampOutputScale((float)strtod(os, nullptr));
         float fsh = nis_upscale::ClampSharpness((float)strtod(sh, nullptr));
         g_nisRenderScaleF = frs;   // keep DllMain-time read and this one in agreement
         g_nis.outputScale = fos;
-        g_nis.sharpness = fsh;
+        InterlockedExchange(&g_nis.sharpnessPct, (LONG)(fsh*100.f+0.5f));
         InterlockedExchange(&g_nis.mode, m);
         {
             UINT effW = 0, effH = 0;

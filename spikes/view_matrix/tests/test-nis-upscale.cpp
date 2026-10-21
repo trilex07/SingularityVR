@@ -215,6 +215,17 @@ static void TestSeamBounds() {
 }
 
 int main() {
+    CHECK(nis_upscale::IsStereoSbs(true,false,false,false,132,35));
+    CHECK(!nis_upscale::IsStereoSbs(true,false,true,false,132,35));
+    CHECK(!nis_upscale::IsStereoSbs(true,false,false,true,132,35));
+    CHECK(!nis_upscale::IsStereoSbs(false,false,false,false,132,35));
+    CHECK(!nis_upscale::IsStereoSbs(true,true,false,false,132,35));
+    CHECK(!nis_upscale::IsStereoSbs(true,false,false,false,133,35));
+    CHECK(!nis_upscale::IsStereoSbs(true,false,false,false,0,35));
+    CHECK(!nis_upscale::IsStereoSbs(true,false,false,false,132,0));
+    CHECK(nis_upscale::UseSharpenShader(true,66,35,66,35));
+    CHECK(!nis_upscale::UseSharpenShader(true,66,35,132,70));
+    CHECK(!nis_upscale::UseSharpenShader(false,66,35,66,35));
     TestParseMode();
     TestClamps();
     TestRenderSizes();
