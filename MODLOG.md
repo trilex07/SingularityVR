@@ -11,6 +11,12 @@ Exact audio receipts for lookup speaker_guess=kathryn:95 replaced,167 retained,
 1 uncovered (263 total); staged WAV/native_replaced tags are not delivery proof.
 RT1_2008/2005 require unsafe2.29/2.20 tempo; do not crop or silently speed them.
 Seven hand/source guards and four coverage tests PASS; live fix remains OPEN.
+2026-10-21 NIS: inherited cropEyes now means menuFlat, excluding real gameplay.
+Changed classification to captured simultaneous SBS and per-eye submission.
+Fixed shader/config/group-size mismatch and full-SBS filter seam support by
+isolating eye SRVs. Same-res sharpening + strength in both VR settings layouts.
+Synthetic WARP readback proves RGB/seam/bounds and strength-dependent pixels;
+not a game/PSVR2 result. Details: docs/nis-sharpen-repair.md.
 2026-10-21 native TMD: primary +440 GetAimVectors has two out FVectors/ret8,
 119-byte complete body19B6BABB20248999; owner getter7/940DBEC1332B5EEE reads+98.
 Secondary aging interface at+1E0 slot+C has59/73C3C6D548B0AF74, copies its cached

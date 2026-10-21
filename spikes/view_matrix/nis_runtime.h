@@ -2,8 +2,8 @@
 //
 // Official algorithm: NVIDIA Image Scaling SDK v1.0.3 (MIT).
 // Host config math: nis/NIS_Config.h -> NVScalerUpdateConfig / NVSharpenUpdateConfig.
-// Shader: nis/NIS_Main.hlsl compiled with NIS_VIEWPORT_SUPPORT=1 so each eye is
-// sampled directly from the full SBS texture (no eye-temp copy).
+// Shader: official embedded nis/NIS_Main.hlsl with NIS_VIEWPORT_SUPPORT=1.
+// Each source SRV is an isolated eye; clamp-to-edge cannot cross the SBS seam.
 //
 // Color space: game backbuffer is sRGB-ENCODED LDR (D3D9 A8R8G8B8). Bridge and
 // NIS output are B8G8R8A8_UNORM (bit-identical layout). NIS runs with
@@ -53,6 +53,7 @@ struct NisRuntime {
     ID3D11Query* tsStart = nullptr;
     ID3D11Query* tsEnd = nullptr;
     bool timingPending = false;
+    bool timingRecording = false;
     double msGpu = 0.0, msGpuPeak = 0.0;
     int timingFrames = 0;
 };
@@ -250,7 +251,7 @@ static void NisShutdown(NisRuntime* nis) {
 static bool NisEnsureOutput(NisRuntime* nis, ID3D11Device* dev,
                             uint32_t eyeInW, uint32_t eyeInH,
                             uint32_t eyeOutW, uint32_t eyeOutH) {
-    if (nis->outTex[0] && !nis_upscale::NeedsRecreate(
+    if (nis->outTex[0] && nis->outTex[1] && nis->outUav[0] && nis->outUav[1] && !nis_upscale::NeedsRecreate(
             nis->inW, nis->inH, nis->outW, nis->outH,
             eyeInW, eyeInH, eyeOutW, eyeOutH))
         return true;
@@ -279,19 +280,23 @@ static bool NisEnsureOutput(NisRuntime* nis, ID3D11Device* dev,
     return true;
 }
 
-// Dispatch one eye. srcSrv = full SBS texture SRV. Returns false on config error.
-// sharpenOnly: NVSharpen path (same-size). If sizes differ, falls back to a
-// 1:1 NVScaler config so the call still sharpens without corrupting geometry.
+// Dispatch one eye. srcSrv contains ONE eye of dimensions sbsW x sbsH
+// (legacy parameter names). eye selects the output only. Mismatched dimensions
+// use the scaler shader AND its 32x24 dispatch, never sharpen's 32x32 dispatch.
 static bool NisDispatchEye(NisRuntime* nis, ID3D11DeviceContext* ctx,
                            ID3D11ShaderResourceView* srcSrv,
                            uint32_t sbsW, uint32_t sbsH,
                            int eye, uint32_t eyeOutW, uint32_t eyeOutH,
                            float sharpness, bool sharpenOnly) {
     if (!nis->ready || !srcSrv || eye < 0 || eye > 1) return false;
-    nis_upscale::Rect src = nis_upscale::EyeSrcRect(eye, sbsW, sbsH);
+    // Each SRV contains ONE eye. Sampler clamp now clamps the filter's support
+    // at that eye's border rather than sampling the neighbouring SBS half.
+    nis_upscale::Rect src = {0, 0, sbsW, sbsH};
+    const bool useSharpen = nis_upscale::UseSharpenShader(sharpenOnly,
+        src.w, src.h, eyeOutW, eyeOutH);
     NISConfig cfg = {};
     bool ok;
-    if (sharpenOnly && src.w == eyeOutW && src.h == eyeOutH) {
+    if (useSharpen) {
         ok = NVSharpenUpdateConfig(cfg, nis_upscale::ClampSharpness(sharpness),
             src.x, src.y, src.w, src.h, sbsW, sbsH, 0, 0);
     } else {
@@ -307,10 +312,10 @@ static bool NisDispatchEye(NisRuntime* nis, ID3D11DeviceContext* ctx,
 
     ID3D11Buffer* cbs[1] = { nis->cb };
     ID3D11SamplerState* samps[1] = { nis->sampler };
-    ctx->CSSetShader(sharpenOnly ? nis->csSharpen : nis->csScaler, nullptr, 0);
+    ctx->CSSetShader(useSharpen ? nis->csSharpen : nis->csScaler, nullptr, 0);
     ctx->CSSetConstantBuffers(0, 1, cbs);
     ctx->CSSetSamplers(0, 1, samps);
-    if (sharpenOnly && src.w == eyeOutW && src.h == eyeOutH) {
+    if (useSharpen) {
         ID3D11ShaderResourceView* s1[1] = { srcSrv };
         ctx->CSSetShaderResources(0, 1, s1);
     } else {
@@ -321,7 +326,7 @@ static bool NisDispatchEye(NisRuntime* nis, ID3D11DeviceContext* ctx,
     ID3D11UnorderedAccessView* uavs[1] = { nis->outUav[eye] };
     ctx->CSSetUnorderedAccessViews(0, 1, uavs, nullptr);
     uint32_t bw = 32;
-    uint32_t bh = sharpenOnly ? 32 : 24;
+    uint32_t bh = useSharpen ? 32 : 24;
     ctx->Dispatch((eyeOutW + bw - 1) / bw, (eyeOutH + bh - 1) / bh, 1);
     // Unbind UAV (required before CopyResource from outTex) + SRVs + shader.
     ID3D11UnorderedAccessView* nullUav[1] = { nullptr };
@@ -337,12 +342,15 @@ static bool NisDispatchEye(NisRuntime* nis, ID3D11DeviceContext* ctx,
 // harvest the result without stalling. MEASURED GPU time, not CPU Dispatch.
 static void NisTimingBegin(NisRuntime* nis, ID3D11DeviceContext* ctx) {
     if (!nis->ready || !nis->disjoint || !nis->tsStart || !nis->tsEnd) return;
+    if (nis->timingPending) return; // never overwrite an unread timestamp pair
+    nis->timingRecording = true;
     ctx->Begin(nis->disjoint);
     ctx->End(nis->tsStart);
 }
 
 static void NisTimingEnd(NisRuntime* nis, ID3D11DeviceContext* ctx) {
-    if (!nis->ready || !nis->disjoint || !nis->tsStart || !nis->tsEnd) return;
+    if (!nis->timingRecording) return;
+    nis->timingRecording = false;
     ctx->End(nis->tsEnd);
     ctx->End(nis->disjoint);
     nis->timingPending = true;
@@ -352,12 +360,12 @@ static void NisTimingPoll(NisRuntime* nis, ID3D11DeviceContext* ctx) {
     if (!nis->timingPending) return;
     D3D11_QUERY_DATA_TIMESTAMP_DISJOINT dj = {};
     // S_FALSE = not ready yet; leave pending for a later frame (no stall).
-    if (ctx->GetData(nis->disjoint, &dj, sizeof(dj), 0) != S_OK) return;
+    if (ctx->GetData(nis->disjoint, &dj, sizeof(dj), D3D11_ASYNC_GETDATA_DONOTFLUSH) != S_OK) return;
     UINT64 t0 = 0, t1 = 0;
-    if (ctx->GetData(nis->tsStart, &t0, sizeof(t0), 0) != S_OK) return;
-    if (ctx->GetData(nis->tsEnd, &t1, sizeof(t1), 0) != S_OK) return;
+    if (ctx->GetData(nis->tsStart, &t0, sizeof(t0), D3D11_ASYNC_GETDATA_DONOTFLUSH) != S_OK) return;
+    if (ctx->GetData(nis->tsEnd, &t1, sizeof(t1), D3D11_ASYNC_GETDATA_DONOTFLUSH) != S_OK) return;
     nis->timingPending = false;
-    if (dj.Disjoint) return;
+    if (dj.Disjoint || !dj.Frequency || t1 < t0) return;
     double ms = (double)(t1 - t0) * 1000.0 / (double)dj.Frequency;
     nis->msGpu = ms;
     if (ms > nis->msGpuPeak) nis->msGpuPeak = ms;

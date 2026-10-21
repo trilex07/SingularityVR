@@ -107,3 +107,10 @@ one impact/blood scene; compare both eyes, alpha edges, smoke, exposure and FPS.
 Collect exact `BRIDGE MATCH` / `SUBSTITUTE` names; missing matches falsify runtime
 integration even if files exist. Effects quality, TMD aim, TMD emitter placement
 and TMD gore remain **NOT PHYSICALLY VERIFIED** by this branch.
+# Additional NIS follow-up
+
+User additionally requested sharpening and a live VR Settings control on this
+same branch. See [NIS candidate and MAIN test](../nis-sharpen-repair.md).
+NIS, TmdNativeAim and effects_remaster are independent switches; do not enable
+all three in the first integration test or replace the current accepted INI.
+

@@ -5,7 +5,8 @@
 //
 // Design:
 //   SBS D3D11 source (g_frameSrc11, full side-by-side)
-//     -> per-eye NIS dispatch sampling eye viewport directly (NIS_VIEWPORT_SUPPORT=1)
+//     -> isolated per-eye SRVs (filter taps clamp to each eye, not the full SBS)
+//     -> per-eye NIS dispatch (NIS_VIEWPORT_SUPPORT=1)
 //     -> per-eye UAV output texture (persistent)
 //     -> CopyResource to OpenXR swapchain image (swapchains stay non-UAV)
 //
@@ -131,6 +132,18 @@ inline Rect EyeSrcRect(int eye, uint32_t sbsW, uint32_t sbsH) {
     r.w = eyeW;
     r.h = sbsH;
     return r;
+}
+
+// A flat menu/cinema may also have dup=true, but its halves are not two eyes.
+inline bool IsStereoSbs(bool dup, bool alternate, bool menuFlat, bool cineFlat,
+                        uint32_t width, uint32_t height) {
+    return dup && !alternate && !menuFlat && !cineFlat && width >= 2 &&
+           (width % 2) == 0 && height != 0;
+}
+
+inline bool UseSharpenShader(bool requested, uint32_t inW, uint32_t inH,
+                            uint32_t outW, uint32_t outH) {
+    return requested && inW == outW && inH == outH;
 }
 
 // Engagement predicate: the ONLY conditions under which NIS may run.
