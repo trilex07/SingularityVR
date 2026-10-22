@@ -1,25 +1,21 @@
 # STATUS — session handoff
 
-## SIDE TMD short-gauntlet runtime — L1_PASS / L2_PASS, L3/L4 NOT RUN
+## 2026-10-23 MAIN integrate dual weapon + short gauntlet — IN PROGRESS
 
-`fix/tmd-short-gauntlet-runtime`, based on exact `332cc98`: accepts the measured
-4818/2626 draw after full decoded-index bounds validation; prevents acquired
-TMD Impulse from arming false melee windows at both producers while preserving
-native heal/knife/cinema/restraint ownership. Two-eye receipt now follows index
-AND palette restoration. Original geometry/checksum and 49-run fallback remain.
-Standalone D3D9/Ex pixel tests passed; one pre-existing NIS source-text test
-fails identically on the baseline (math/pixel/bytecode tests pass).
-See [runtime handoff](docs/handoffs/tmd-short-gauntlet-runtime.md). No Steam changes.
+Branch `feature/integrate-dual-weapon-short-gauntlet` from `7e7d8208` with Astra
+`ac07d16` merged: Sol short-gauntlet SVTG route stays authoritative when
+`TmdShortGauntlet=1`; dual-weapon presentation/input ownership is opt-in via
+`DualWeaponTmdReady`. Combined Impulse melee policy uses both
+`tmdgauntlet::ArmImpulseMelee` and `dualtmd::MeleeWindow`.
 
-## 2026-10-23 short TMD gauntlet — SIDE L1/L2 candidate, physical OPEN
+## SIDE TMD short-gauntlet runtime — L1_PASS / L2_PASS, PSVR2 cuff visible
 
-Separate default-OFF `TmdShortGauntlet` composes the original native glove/cuff,
-all 6527 animated hardware faces and 560 original short-sleeve faces plus a
-23-face proximal cap. It excludes the 280-face long forearm island and draws
-the mixed section in one indexed draw per eye. Private source/index identity,
-geometry and decoder tests PASS; x86 PE32 `/O2` build PASS. Steam untouched.
-Native material appearance, wrist seam, tracking and PSVR2 comfort remain
-UNKNOWN. See docs/tmd-short-gauntlet-model.md.
+See [runtime handoff](docs/handoffs/tmd-short-gauntlet-runtime.md) and
+docs/tmd-short-gauntlet-model.md.
+
+## SIDE dual weapon/TMD — L1_PASS / L2_PASS, integrated on short-gauntlet base
+
+See `docs/handoffs/dual-weapon-tmd-ready.md`.
 
 ## 2026-10-22 NIS physical PASS; station presentation L1/L2 PASS
 

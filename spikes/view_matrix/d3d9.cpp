@@ -1,4 +1,5 @@
 #include "two_hand_grip.h"
+#include "dual_weapon_tmd_policy.h"
 #include "skeletal_palette.h"
 #include "hand_anchor_probe.h"
 #include "hand_anchor_math.h"
@@ -2251,6 +2252,10 @@ volatile LONG g_haveTMD = -1;
 enum { HANDS_NONE = 0, HANDS_TMD = 1, HANDS_WEAPON = 2 };
 inline bool TmdRaised()      { return Rd(g_handsStatus) == HANDS_TMD; }
 inline bool WeaponInHands()  { return Rd(g_handsStatus) == HANDS_WEAPON; }
+static LONG g_dualWeaponTmdReady=0,g_dualWeaponTmdProbe=0;
+static dualtmd::Census g_dualTmdCensus; // render thread only
+static bool DualWeaponTmdContext();
+static bool WeaponPresentationInHands();
 
 static uintptr_t FindPlayerPawn(bool force = false);   // defined just below; cached, not a walk
 
@@ -11175,7 +11180,7 @@ void SyncXRInput(XrTime displayTime) {
         if(g_hipKnifeIgnoreTMD){f.hasTMD=false;f.nativeKnife=impulseOk;}
         f.alive=pawn&&g_offHealth>=0&&Readable((void*)(pawn+g_offHealth),4)&&
             *reinterpret_cast<const int*>(pawn+g_offHealth)>0;
-        f.noWeapon=!WeaponInHands()||Rd(g_weaponHolstered);
+        f.noWeapon=!WeaponPresentationInHands()||Rd(g_weaponHolstered);
         f.head={g_headPosXR[0],g_headPosXR[1],g_headPosXR[2]};
         f.hip=hipknife::Hip(f.head,g_centreYaw,g_hipKnifeConfig);
         f.nowMs=GetTickCount64();
@@ -11184,7 +11189,7 @@ void SyncXRInput(XrTime displayTime) {
             f.hand[h]={{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}};
             f.tracked[h]=g_handPositionValid[h]&&g_handPoseValid[h]&&g_handTracked[h];
             f.grip[h]=h==AimHand()?primaryGrip:rawSupportGrip;
-            f.free[h]=h!=AimHand()||!WeaponInHands()||Rd(g_weaponHolstered);
+            f.free[h]=h!=AimHand()||!WeaponPresentationInHands()||Rd(g_weaponHolstered);
             // Preserve the physical edge history; fabricating grip=false here
             // can produce a new knife pickup when reload ownership ends.
             if(h==0&&(g_centurionOwnsGrip||g_nextOwnsGrip)){f.free[h]=false;g_hipKnifeState.edgeMs[h]=0;}
@@ -11312,7 +11317,7 @@ void SyncXRInput(XrTime displayTime) {
     const float supportForward[3]={-sinf(supportYaw)*cosf(supportPitch),sinf(supportPitch),-cosf(supportYaw)*cosf(supportPitch)};
     const bool supportTracked=g_handPositionValid[AimHand()] && g_handPositionValid[OffHand()] &&
                               g_handPoseValid[AimHand()] && g_handPoseValid[OffHand()];
-    const bool supportWeaponValid=Rd(g_twoHandEnabled) && feedGame && WeaponInHands() &&
+    const bool supportWeaponValid=Rd(g_twoHandEnabled) && feedGame && WeaponPresentationInHands() &&
                                   !Rd(g_weaponHolstered) && !Rd(g_gamePaused) && !Rd(g_vrUiMenu);
     // Pistol support is a close side-by-side grip, not a fore-end grip. The authored
     // pistol pair (5799 vertices) is keyed in support_grip.h; use the relaxed acquisition
@@ -11356,7 +11361,7 @@ void SyncXRInput(XrTime displayTime) {
     priorPrimaryGrip = primaryGrip;
     const LONG holsterWeapon = Rd(g_gunVerts);
     const LONG holsterIdentity = Rd(g_weaponObj);
-    const bool holsterValid = g_holsterEnabled && feedGame && WeaponInHands() &&
+    const bool holsterValid = g_holsterEnabled && feedGame && WeaponPresentationInHands() &&
                               g_handPositionValid[AimHand()] && g_handPoseValid[AimHand()] &&
                               holsterWeapon != 0 && holsterIdentity != 0;
     // MAIN round 13: trigger uses EXACTLY the ring/stored-gun point
@@ -11498,7 +11503,7 @@ void SyncXRInput(XrTime displayTime) {
         InteractiveStationMenu((int)Rd(g_vrMenuClass), uiMenu);
     const weaponwheel::Event wheelEvent = weaponwheel::Update(
         g_weaponWheelState, r3Held, l3Held, ((!uiMenu || stationWheel) && feedGame && !Rd(g_gamePaused)),
-        WeaponInHands(), Rd(g_weaponHolstered), tx,
+        WeaponPresentationInHands(), Rd(g_weaponHolstered), tx,
         (g_weaponWheelObserved&&!Rd(g_forceDesktopAutomation))?-ty:ty,
         (int)g_weaponWheelSlots, handSector);
     if (wheelEvent == weaponwheel::Event::Open) {
@@ -11606,6 +11611,11 @@ void SyncXRInput(XrTime displayTime) {
     static bool healthWasDown = false;
     bool healthDown = false;
     static bool knifeImpulseWasDown = false;
+    static dualtmd::PowerLatch dualPowerLatch[2];
+    const bool dualContext=DualWeaponTmdContext();
+    const bool dualOwnsPower=Rd(g_dualWeaponTmdReady)&&Rd(g_haveTMD)==1&&AimHand()==1&&g_hipKnifeState.held<0;
+    const bool dualPowerReserved=!dualContext||supportActive||g_centurionOwnsGrip||g_nextOwnsGrip||
+        Rd(g_weaponWheelOpen)||!g_handPoseValid[0]||!g_handPositionValid[0];
     for (int i = 0; i < kPadButtonCount; ++i) {
         const bool legacyHealth=!strcmp(g_padButtons[i].name,"health");
         const auto face=i==g_jumpBtnIdx?reloadcontrols::Face::Cross:
@@ -11613,6 +11623,9 @@ void SyncXRInput(XrTime displayTime) {
         const auto routed=reloadcontrols::RouteFace(reloadLayout,InGameplay()&&!uiMenu,
             face,sampledButtons[i],g_padButtons[i].mask,legacyHealth,reloadActions);
         bool down=routed.down;const WORD outputMask=routed.mask;const bool healthAction=routed.health;
+        const int dualPower=i==g_impulseBtnIdx?0:!strcmp(g_padButtons[i].name,"ageyoung")?1:-1;
+        if(dualPower>=0)
+            down=dualPowerLatch[dualPower].Update(dualOwnsPower,dualPowerReserved,down);
         // R1 = the existing primary Use/grip action. Consume only in the
         // scoped two-hand context; never emit native use/reload while steadying.
         if(steadyAimHeld&&i==2)down=false;
@@ -11665,8 +11678,10 @@ void SyncXRInput(XrTime displayTime) {
         // must not re-arm every frame, hence the edge.
         if (i == g_impulseBtnIdx) {
             static bool wasDown = false;
-            if (down && !wasDown && InterlockedCompareExchange(&g_meleeArmsMs, 0, 0) > 0 &&
-                tmdgauntlet::ArmImpulseMelee(g_tmdShortGauntlet,Rd(g_haveTMD)==1,g_hipKnifeState.held>=0)) {
+            if (down && !wasDown &&
+                tmdgauntlet::ArmImpulseMelee(g_tmdShortGauntlet,Rd(g_haveTMD)==1,g_hipKnifeState.held>=0) &&
+                dualtmd::MeleeWindow(dualContext,g_hipKnifeState.held>=0) &&
+                InterlockedCompareExchange(&g_meleeArmsMs, 0, 0) > 0) {
                 InterlockedOr(&g_vrRecorderEventFlags, vrrec::Melee);
                 const LONG64 now = (LONG64)GetTickCount64();
                 InterlockedExchange64(&g_lastMeleeEdgeMs, now);   // fix-G/perf: edge age for spike attribution
@@ -12142,7 +12157,7 @@ void SyncXRInput(XrTime displayTime) {
     // controller sample. Raw HMD/eye poses are deliberately never changed.
     for(int h=0;h<2;++h){
         const bool valid=g_handPositionValid[h]&&g_handPoseValid[h]&&g_handTracked[h];
-        const bool enabled=g_weaponSteady&&reloadInputContext&&WeaponInHands()&&valid&&
+        const bool enabled=g_weaponSteady&&reloadInputContext&&WeaponPresentationInHands()&&valid&&
             !steadyBusy&&!(g_centurionReload&&centurionreload::Active(g_centurionState.phase));
         const auto& p=g_handLastPos[h];const auto& q=g_handAimOrientation[h];
         const auto pose=g_weaponSteadyFilter[h].Update({{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}},
@@ -12308,7 +12323,8 @@ void SyncXRInput(XrTime displayTime) {
                           | ((LONG)(BYTE)(rt * 255.0f) << 24);
     if (g_diagEnabled) InterlockedExchange(&g_diagRawBtns, packedBtns);
     if ((btns & XI_RSHOULDER) && !uiMenu && !Rd(g_gamePaused) &&
-        tmdgauntlet::ArmImpulseMelee(g_tmdShortGauntlet,Rd(g_haveTMD)==1,g_hipKnifeState.held>=0)) {
+        tmdgauntlet::ArmImpulseMelee(g_tmdShortGauntlet,Rd(g_haveTMD)==1,g_hipKnifeState.held>=0) &&
+        dualtmd::MeleeWindow(dualContext,g_hipKnifeState.held>=0)) {
         ArmMeleeWindowFromKnife();
     }
 
@@ -16456,6 +16472,15 @@ static bool NativeAnimatedHandsNow() {
     }
     return arms || cinema || restraint;
 }
+static bool DualWeaponTmdContext() {
+    if(!Rd(g_dualWeaponTmdReady))return false;
+    return dualtmd::Context(Rd(g_dualWeaponTmdReady)!=0,VrModeOn(),InGameplay(),Rd(g_haveTMD)==1,
+        NativeCinematicHandsNow()||NativeRestraintHandsNow()||Rd(g_inCinematic)!=0,
+        Rd(g_vrUiMenu)!=0||Rd(g_panelOpen)!=0,Rd(g_gamePaused)!=0,AimHand()==1);
+}
+static bool WeaponPresentationInHands() {
+    return dualtmd::Weapon(WeaponInHands(),DualWeaponTmdContext(),Rd(g_weaponObj)!=0,(int)Rd(g_handsStatus));
+}
 
 inline void ArmMeleeWindowFromKnife() {
     if (InterlockedCompareExchange(&g_meleeArmsMs, 0, 0) <= 0) return;
@@ -18380,6 +18405,13 @@ static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangle
     // Native health/animation ownership outranks replacement and sleeve clipping.
     // The old exemption below these rules could never recover an earlier drop.
     if (NativeAnimatedHandsNow()) return false;
+    // Selection only: reuse Sol's original-index hardware cut and wrist palette.
+    // Never admit this mixed hardware/forearm section without the downstream
+    // cut. Missing palette/tracking must remain hidden, not expose a full arm.
+    if(g_independentHands&&
+       gloveisolate::TmdHardwareCutApplies((int)Rd(g_gloveIsolate),verts,first,triangles)&&DualWeaponTmdContext()&&
+       Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&FgMatchWindow())
+        return Rd(g_twoHandActive)||!g_handPoseValid[0]||!g_handPositionValid[0];
     if(g_gloveExperiment && gloves::ReplaceSection(CustomGlovesEligible(),verts,first,triangles,
         Rd(g_rtIsScene)!=0,g_boundShaderLayout.shadow,g_boundShaderLayout.bones,
         g_boundShaderLayout.boneRegs,g_boundShaderLayout.local,
@@ -19862,6 +19894,12 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             Log("tmd-short-gauntlet: exact mixed draw seen min=%u type=%u foreground=%ld scene=%ld shadow=%d",
                 minIndex,(unsigned)t,Rd(g_inForeground),Rd(g_rtIsScene),g_boundShaderLayout.shadow?1:0);
     }
+    const bool dualProbe=Rd(g_dualWeaponTmdProbe)&&g_dualTmdCensus.Active()&&Rd(g_rtIsScene)&&
+        !g_boundShaderLayout.shadow&&FgMatchWindow();
+    const bool dualProbeGun=dualProbe&&Rd(g_gunVerts)>0&&numVertices==(UINT)Rd(g_gunVerts);
+    const bool dualProbeHardware=dualProbe&&gloveisolate::TmdHardwareCutApplies(2,numVertices,startIndex,primCount);
+    if(dualProbeGun||dualProbeHardware)
+        g_dualTmdCensus.Add((int)Rd(g_handsStatus),dualProbeHardware,false,false,NativeAnimatedHandsNow());
     CaptureArmPaletteTrace(dev,baseVertex,minIndex,numVertices,startIndex,primCount);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     if(g_boundShaderLayout.shadow)InterlockedIncrement(&g_vrCounters.fpShadowDepthDraws);
@@ -20171,6 +20209,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         nSeg=0;
         LogShortTmdGate(admittedGate,numVertices,startIndex,primCount);
     }
+    const bool dualHardware=g_independentHands&&
+        gloveisolate::TmdHardwareCutApplies((int)Rd(g_gloveIsolate),numVertices,startIndex,primCount)&&DualWeaponTmdContext()&&
+        Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&FgMatchWindow();
+    if(dualHardware&&(!independentRegs||Rd(g_twoHandActive)||!g_handPoseValid[0]||!g_handPositionValid[0]))nSeg=0;
     if(FgIndependentHandsCandidate(numVertices, startIndex, primCount) && !independentRegs) {
         nSeg=0;
         static LONG saidIndependentSuppressed=0;
@@ -20182,6 +20224,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         t == D3DPT_TRIANGLELIST && (numVertices == 3314 || numVertices == 2924) &&
         startIndex == 0 && primCount == 4830 && nSeg == 1 &&
         segStart[0] == 0 && segPrims[0] == 4830;
+    if(dualProbeGun||dualProbeHardware)
+        g_dualTmdCensus.Add((int)Rd(g_handsStatus),dualProbeHardware,true,rideTo==1,NativeAnimatedHandsNow());
     const bool isolateTmdHardware = independentRegs && g_independentHands &&
         t == D3DPT_TRIANGLELIST &&
         gloveisolate::TmdHardwareCutApplies((int)Rd(g_gloveIsolate),numVertices,startIndex,primCount) &&
@@ -28697,7 +28741,7 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
         }
     }
     centurionreload::Frame f;
-    f.enabled=g_centurionReload!=0;f.context=context&&alive&&WeaponInHands()&&!Rd(g_weaponHolstered)&&
+    f.enabled=g_centurionReload!=0;f.context=context&&alive&&WeaponPresentationInHands()&&!Rd(g_weaponHolstered)&&
         g_xrSessionState==XR_SESSION_STATE_FOCUSED;
     f.supported=supported;f.pawn=(uint32_t)pawn;f.weapon=(uint32_t)weapon;
     f.clip=observation.counts[0];f.reserve=observation.counts[1];f.capacity=observation.counts[2];f.nowMs=now;f.grip=grip;
@@ -28851,7 +28895,7 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
     if(!g_centurionReload||!g_centurionPresentationSafety.Allowed()||!dev||!VrModeOn()||!InGameplay()||!Rd(g_dupDraws)||
        !g_haveEyes||Rd(g_gamePaused)||Rd(g_vrUiMenu)||Rd(g_panelOpen)||
        Rd(g_weaponWheelOpen)||CutsceneNativeCameraArmed()||!g_origDrawPrimUP||
-       !WeaponInHands()||Rd(g_weaponHolstered)||Rd(g_gunVerts)!=5799)return;
+       !WeaponPresentationInHands()||Rd(g_weaponHolstered)||Rd(g_gunVerts)!=5799)return;
     if(g_xrSessionState!=XR_SESSION_STATE_FOCUSED)return;
     CenturionVisual visual;
     if(!TryAcquireSRWLockShared(&g_centurionVisualLock))return;
@@ -30104,7 +30148,7 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     if (!handhud::Visible(Rd(g_ammoPlate) != 0, VrModeOn(), Rd(g_dupDraws) != 0,
                           hudGameplay, Rd(g_gamePaused) != 0, Rd(g_vrUiMenu) != 0,
                           Rd(g_panelOpen) != 0, Rd(g_inCinematic) != 0) ||
-        Rd(g_weaponWheelOpen) || !WeaponInHands() ||
+        Rd(g_weaponWheelOpen) || !WeaponPresentationInHands() ||
         !g_handPositionValid[AimHand()] || !g_haveEyes ||
         !g_origSetRenderTarget || !g_origDrawPrimUP) {
         static bool saidGate = false;
@@ -30484,7 +30528,7 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
     // SAME hide rule as the Style==1 cue below: no hoops outside focused gameplay
     // (menus, mod panel, cinematics). Legacy path previously ignored menu state.
     if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
-        Rd(g_weaponWheelOpen) || !g_holsterEnabled || !WeaponInHands() ||
+        Rd(g_weaponWheelOpen) || !g_holsterEnabled || !WeaponPresentationInHands() ||
         Rd(g_weaponHolstered) || !g_origDrawPrimUP ||
         !holstermarker::Eligible(g_sceneMode.Current()==vrscene::Mode::GameplayStereo,
             Rd(g_gamePaused)!=0,Rd(g_vrUiMenu)!=0,Rd(g_panelOpen)!=0,
@@ -30677,6 +30721,20 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     RefreshNativeCinematicState();
     RefreshNativeRestraintHands();
     RefreshArmsAnimActive();
+    if(Rd(g_dualWeaponTmdProbe)&&g_dualTmdCensus.Active()&&InGameplay()&&
+       Rd(g_haveTMD)==1&&Rd(g_weaponObj)&&!Rd(g_vrUiMenu)&&!Rd(g_gamePaused)){
+        ++g_dualTmdCensus.frames;
+        if(g_dualTmdCensus.frames%450==0){
+            ++g_dualTmdCensus.notes;
+            for(int hands=0;hands<3;++hands)for(int part=0;part<2;++part){
+                const auto& r=g_dualTmdCensus.rows[hands][part];
+                Log("dual-tmd census: frame=%u hands=%d part=%s raw=%u reachedStereo=%u gunRide=%u nativeHands=%u weapon=%08X gunVerts=%ld support=%ld [signature counts, NOT pixels]",
+                    g_dualTmdCensus.frames,hands,part?"hardware":"gun",r.raw,r.passed,r.gunRide,r.nativeHands,
+                    (unsigned)Rd(g_weaponObj),Rd(g_gunVerts),Rd(g_twoHandActive));
+            }
+            g_dualTmdCensus.Clear();
+        }
+    }
     // Whoever calls Present owns the device. Recorded so the user-pointer draw hooks can tell
     // render-thread calls from movie-playback-thread ones and stay completely inert on the latter.
     g_mainThreadId = GetCurrentThreadId();
@@ -34948,6 +35006,10 @@ void LoadIniSettings() {
     g_centurionAimProbe=GetPrivateProfileIntA("Diagnostic","CenturionAimProbe",0,path)!=0;
     g_bodyEquipmentProbe=GetPrivateProfileIntA("Diagnostic","BodyEquipmentProbe",0,path)!=0;
     InterlockedExchange(&g_tmdNativeAim,GetPrivateProfileIntA("Input","TmdNativeAim",0,path)!=0);
+    InterlockedExchange(&g_dualWeaponTmdReady,GetPrivateProfileIntA("Input","DualWeaponTmdReady",0,path)!=0);
+    InterlockedExchange(&g_dualWeaponTmdProbe,GetPrivateProfileIntA("Diagnostic","DualWeaponTmdProbe",0,path)!=0);
+    Log("ini: DualWeaponTmdReady=%ld DualWeaponTmdProbe=%ld (default OFF; native draws only, no pawn state writes)",
+        Rd(g_dualWeaponTmdReady),Rd(g_dualWeaponTmdProbe));
     Log("ini: TmdNativeAim=%d (default OFF; local native aim/aging getter outputs only)",NativeTmdAim::Enabled()?1:0);
     InterlockedExchange(&g_lockerVirtualOrdinary,GetPrivateProfileIntA("Input","LockerVirtualOrdinary",0,path)!=0);
     Log("ini: LockerVirtualOrdinary=%ld (default OFF; locker virtual plan logs only; no TArray hooks)",
