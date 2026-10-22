@@ -6542,6 +6542,7 @@ static nativegloves::Renderer g_nativeGloveRenderer;
 static glovecuffs::Renderer g_nativeCuffRenderer;
 static tmdgauntlet::Renderer g_tmdShortGauntletRenderer;
 static bool g_tmdShortGauntlet=false;
+static volatile LONG g_tmdShortSuccessfulFrame=-1, g_tmdShortSuccessfulDraw=-1;
 static bool g_nativeCuffClosure=false;
 static bool NativeGlovesEligible();
 static bool NativeKnifeOffHandEligible();
@@ -20121,11 +20122,16 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         t == D3DPT_TRIANGLELIST &&
         gloveisolate::TmdHardwareCutApplies((int)Rd(g_gloveIsolate),numVertices,startIndex,primCount) &&
         nSeg == 1 && segStart[0] == startIndex && segPrims[0] == primCount;
+    // A later material-2 tail may only use a receipt from THIS mixed-section
+    // draw. Invalidate the previous receipt even if allocation/binding fails.
+    if(isolateTmdHardware)InterlockedExchange(&g_tmdShortSuccessfulFrame,-1);
     const bool shortTmdCandidate = isolateTmdHardware && minIndex==0 &&
         tmdgauntlet::Eligible(g_tmdShortGauntlet,g_tmdShortGauntletRenderer.Ready(),
             g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_gloveExperiment && g_nativeGloveExperiment,
             g_independentHands,(int)Rd(g_gloveIsolate),
-            Rd(g_rtIsScene)!=0 && g_xrSessionState==XR_SESSION_STATE_FOCUSED &&
+            Rd(g_rtIsScene)!=0 && Rd(g_dupDraws)!=0 &&
+                g_sceneMode.Current()==vrscene::Mode::GameplayStereo &&
+                g_xrSessionState==XR_SESSION_STATE_FOCUSED &&
                 !Rd(g_gamePaused) && !Rd(g_vrUiMenu),g_boundShaderLayout.shadow,
             Rd(g_inCinematic)!=0);
     IDirect3DIndexBuffer9* shortTmdBuffer=shortTmdCandidate?
@@ -20135,9 +20141,13 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         tmdgauntlet::Eligible(g_tmdShortGauntlet,g_tmdShortGauntletRenderer.Ready(),
             g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_gloveExperiment && g_nativeGloveExperiment,
             g_independentHands,(int)Rd(g_gloveIsolate),
-            Rd(g_rtIsScene)!=0 && g_xrSessionState==XR_SESSION_STATE_FOCUSED &&
+            Rd(g_rtIsScene)!=0 && Rd(g_dupDraws)!=0 &&
+                g_sceneMode.Current()==vrscene::Mode::GameplayStereo &&
+                g_xrSessionState==XR_SESSION_STATE_FOCUSED &&
                 !Rd(g_gamePaused) && !Rd(g_vrUiMenu),g_boundShaderLayout.shadow,
-            Rd(g_inCinematic)!=0);
+            Rd(g_inCinematic)!=0) &&
+        tmdgauntlet::TailAfterSuccessfulBase(Rd(g_armPaletteFrameToken),Rd(g_frameDrawIdx),
+            Rd(g_tmdShortSuccessfulFrame),Rd(g_tmdShortSuccessfulDraw));
     if (isolateNoTmdFaces) {
         static LONG reportedFaces = 0;
         if (InterlockedCompareExchange(&reportedFaces, 1, 0) == 0)
@@ -20193,16 +20203,30 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             }
         }
     }
+    unsigned shortEyeDraws=0;
     const HRESULT dhr = StereoPair(dev, [&] {
         HRESULT hr = D3D_OK;
         if (shortTmdTail) return hr; // audited 17-face right forearm tail, no hardware
-        if(nativeIndices.valid){
-            ++g_nativeGloveRenderer.draws;
-            const HRESULT h=g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,0,gloveTriangles);
-            if(SUCCEEDED(h)&&nativeCuff)DrawKnifeWithNativeGlove(dev,baseVertex,numVertices,gloveTriangles);
-            if(cuffBuffer){static unsigned logs=0;if(logs++<8)Log("native-cuffs: profile=%d verts=%u tris=%u fullCuff=1 held=%d hr=%08lX",
-                cuffProfile,numVertices,gloveTriangles,WeaponInHands()?1:0,h);}
-            return h;
+        const auto bound=tmdgauntlet::DispatchBound(shortTmdBuffer!=nullptr,nativeIndices.valid,
+            g_tmdShortGauntletRenderer.Triangles(),gloveTriangles,
+            [&](UINT first,UINT triangles){
+                const HRESULT h=g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,first,triangles);
+                if(SUCCEEDED(h))++shortEyeDraws;
+                return h;
+            },
+            [&](UINT first,UINT triangles){
+                ++g_nativeGloveRenderer.draws;
+                const HRESULT h=g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,first,triangles);
+                if(SUCCEEDED(h)&&nativeCuff)DrawKnifeWithNativeGlove(dev,baseVertex,numVertices,triangles);
+                if(cuffBuffer){static unsigned logs=0;if(logs++<8)Log("native-cuffs: profile=%d verts=%u tris=%u fullCuff=1 held=%d hr=%08lX",
+                    cuffProfile,numVertices,triangles,WeaponInHands()?1:0,h);}
+                return h;
+            });
+        if(bound.handled){
+            if(bound.shortTmd){static LONG reportedShort=0;
+                if(InterlockedCompareExchange(&reportedShort,1,0)==0)
+                    Log("tmd-short-gauntlet: original hardware + short closed sleeve, 1 material-1 draw/eye");}
+            return bound.hr;
         }
         if (isolateNoTmdFaces) {
             for (const auto& run : gloveisolate::kNoTmdHandFaces) {
@@ -20213,19 +20237,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             return hr;
         }
         if (isolateTmdHardware) {
-            if (shortTmdBuffer && nativeIndices.valid) {
-                static LONG reportedShort=0;
-                if (InterlockedCompareExchange(&reportedShort,1,0)==0)
-                    Log("tmd-short-gauntlet: original hardware + short closed sleeve, 1 material-1 draw/eye");
-                return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,0,
-                    g_tmdShortGauntletRenderer.Triangles());
-            }
-            for (const auto& run : gloveisolate::kTmdHardwareFaces) {
-                const HRESULT h = g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,
-                    startIndex + run.first * 3,run.last-run.first+1);
-                if (FAILED(h) && SUCCEEDED(hr)) hr=h;
-            }
-            return hr;
+            return tmdgauntlet::DrawHardwareFallback(startIndex,[&](UINT first,UINT triangles){
+                return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,first,triangles);
+            });
         }
         for (int s = 0; s < nSeg; ++s) {
             const HRESULT h = g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
@@ -20255,6 +20269,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     g_scopeLensStaged=false;
     if(FAILED(dhr))g_scopeAperture={};
     const HRESULT nativeRestore=nativeIndices.Restore();
+    if(tmdgauntlet::SuccessfulStereoBoundDraw(shortTmdBuffer!=nullptr,shortEyeDraws,dhr,nativeRestore)) {
+        InterlockedExchange(&g_tmdShortSuccessfulFrame,Rd(g_armPaletteFrameToken));
+        InterlockedExchange(&g_tmdShortSuccessfulDraw,Rd(g_frameDrawIdx));
+    }
     if(cylinderBase>=0&&FAILED(g_origSetVSConstF(dev,cylinderBase,&cylinderSaved[0][0],15))){
         g_centurionAnimationFault=true;InterlockedExchange(&g_centurionShellSeenGun,0);
         g_thisDrawMoved=0;return E_FAIL;
@@ -27930,6 +27948,8 @@ void ReleaseWristResources() {
     g_xrCaptureAlphaPass.Release();
     g_nativeCuffRenderer.ReleaseGPU();
     g_tmdShortGauntletRenderer.ReleaseGPU();
+    InterlockedExchange(&g_tmdShortSuccessfulFrame,-1);
+    InterlockedExchange(&g_tmdShortSuccessfulDraw,-1);
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     g_hipKnifeRenderer.ReleaseGPU();
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipFault=false;

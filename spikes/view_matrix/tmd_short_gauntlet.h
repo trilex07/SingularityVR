@@ -28,6 +28,38 @@ inline bool IsRightForearmTail(unsigned verts,unsigned first,unsigned triangles)
     // Original TMD material 2: 17 faces, exclusively r_arm_elbow/forearm.
     return (verts==7444 || verts==37) && first==36318 && triangles==17;
 }
+// This function IS the runtime's bound-index dispatch. Keep short TMD before
+// the generic glove/cuff route: both use IndexGuard::valid, but their triangle
+// counts and side effects differ. Tests call this exact function with fake
+// D3D9 draw callbacks rather than inspecting source text.
+struct BoundDraw { bool handled=false, shortTmd=false; HRESULT hr=S_OK; };
+template<class ShortDraw,class NativeDraw>
+inline BoundDraw DispatchBound(bool shortBuffer, bool indexBound,
+                               unsigned shortTriangles, unsigned gloveTriangles,
+                               ShortDraw&& shortDraw, NativeDraw&& nativeDraw) {
+    if (shortBuffer && indexBound)
+        return {true,true,shortDraw(0,shortTriangles)};
+    if (indexBound)
+        return {true,false,nativeDraw(0,gloveTriangles)};
+    return {};
+}
+template<class Draw>
+inline HRESULT DrawHardwareFallback(unsigned startIndex,Draw&& draw) {
+    HRESULT result=S_OK;
+    for(const auto& run:gloveisolate::kTmdHardwareFaces) {
+        const HRESULT h=draw(startIndex+run.first*3,run.last-run.first+1);
+        if(FAILED(h)&&SUCCEEDED(result))result=h;
+    }
+    return result;
+}
+inline bool SuccessfulStereoBoundDraw(bool shortBuffer,unsigned eyeDraws,HRESULT draw,HRESULT restore) {
+    return shortBuffer && eyeDraws>=2 && SUCCEEDED(draw) && SUCCEEDED(restore);
+}
+inline bool TailAfterSuccessfulBase(long frame,long draw,long successfulFrame,long successfulDraw) {
+    // Material 2 follows the mixed material-1 draw. A stale receipt after
+    // Present/Reset or a different section may never suppress this draw.
+    return frame==successfulFrame && draw>successfulDraw && draw-successfulDraw<=8;
+}
 class Renderer {
     Data data; IDirect3DIndexBuffer9* ib=nullptr; bool ready=false,failed=false;
 public:

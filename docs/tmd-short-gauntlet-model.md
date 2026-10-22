@@ -34,6 +34,21 @@ Flag 0, missing/corrupt SVTG, unavailable GPU index buffer, loss of gameplay
 focus or a different section preserves the accepted original-hardware cut.
 The index buffer is DEFAULT-pool and released on Reset.
 
+## Runtime routing correction
+
+Review found that the generic native-index branch ran before the SVTG branch:
+`IndexGuard::valid` was true for both, so the generic glove triangle count
+won and the intended 7110-triangle draw was unreachable. The bound-index
+dispatch now gives the short TMD buffer priority; the generic cuff/glove path
+is unchanged. A missing/corrupt asset or failed allocation/bind uses the
+original 49-run hardware-only cut. The separate 17-face tail is omitted only
+after two successful short draws and successful index-buffer restoration in
+the same stereo frame. Failed draws, stale frames and Reset keep the original
+tail. The x86 test calls the same dispatch helper as the hook with a fake
+D3D9 index device; it checks two 7110-face eye draws, native flag-OFF routing,
+fallback, bind/restore failure and Reset invalidation. This remains L1/L2,
+not a physical PSVR2 result.
+
 ## Private generation and offline tests
 
 Use original, locally owned PSK and decompressed RvGame; never commit them or

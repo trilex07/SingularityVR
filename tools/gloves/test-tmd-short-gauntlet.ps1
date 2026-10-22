@@ -10,7 +10,7 @@ $source=Join-Path $repo 'spikes/view_matrix/tests/test-tmd-short-gauntlet.cpp'
 $exe=Join-Path $out 'test-tmd-short-gauntlet.exe'
 cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W3 /O2 /MD /Fe:`"$exe`" /Fo:`"$out/gauntlet.obj`" `"$source`""
 if($LASTEXITCODE -ne 0){throw 'TMD gauntlet C++ compile failed'}
-& $exe
+if($Asset){ & $exe $Asset } else { & $exe }
 if($LASTEXITCODE -ne 0){throw 'TMD gauntlet C++ test failed'}
 if($Tmd -and $Cooked -and $Asset){
     py -3 (Join-Path $PSScriptRoot 'test_tmd_short_gauntlet.py') --tmd $Tmd --cooked $Cooked --asset $Asset
