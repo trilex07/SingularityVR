@@ -2,9 +2,12 @@
 // Bounded read-only witness for RvUIGFxMovie_WeaponLocker native exec + pickup.
 // Default OFF ([Diagnostic] LockerNativeTrace=0). No TArray writes, grants, or scans.
 #include "MinHook.h"
+#include "locker_availability_witness.h"
 #include "locker_native_trace_witness.h"
+#include "inventory_retention_policy.h"
 #include "native_owned_inventory.h"
 #include "pause_rtt_probe.h"
+#include <cstring>
 #include <intrin.h>
 
 extern uintptr_t g_textLo, g_textHi;
@@ -22,9 +25,17 @@ constexpr uintptr_t kFnStart = 0x00F11430u;
 constexpr uintptr_t kFnPopMenu = 0x00F17F60u;
 constexpr uintptr_t kFnLoad = 0x00F23840u;
 constexpr uintptr_t kFnEquip = 0x00F00F50u;
+// Page exec bodies: inspect_locker_page_methods.py (registration, NOT vtable slots).
+constexpr uintptr_t kFnLoadUpgrades = 0x00F87C80u;
+constexpr uintptr_t kFnUpgrade = 0x00F87E60u;
+constexpr const char* kPrefixLoadUpgrades16 =
+    "7d4a11aa21143fd090b972fa6cd4d88bec7c600407e1e350f5d0df71c754784f";
+constexpr const char* kPrefixUpgrade16 =
+    "1b661138265681c86fe875c0be9bdd9a70cc8f9767b68a868f230dbf96a63ce6";
 
-constexpr unsigned kMaxEvents = 64u;
-constexpr unsigned kMaxPerMethod = 20u;
+constexpr unsigned kMethodCount = 6u;
+constexpr unsigned kMaxEvents = 96u;
+constexpr unsigned kMaxPerMethod = 24u;
 constexpr unsigned kMaxPickupNotes = 24u;
 constexpr unsigned kMaxFNameLines = 32u;
 constexpr unsigned kMaxInventoryLines = 32u;
@@ -37,6 +48,7 @@ constexpr unsigned kMaxLoadCallerWitness = 16u;
 using StartFn = void(__thiscall*)(void* self, void* frame);
 using FrameFn = void(__thiscall*)(void* self, void* frame);
 using EquipFn = void(__thiscall*)(void* self, void* frame, void* slotNum, void* stackArg10);
+using ScriptExecFn = void(__thiscall*)(void* self, void* frame);
 
 inline volatile LONG g_session = 0;
 inline volatile LONG g_seq = 0;
@@ -52,12 +64,20 @@ inline uintptr_t g_movie = 0;
 inline uintptr_t g_cls = 0;
 inline int g_offEquipped = -1;
 inline int g_offOriginal = -1;
-inline volatile LONG g_methodCounts[4]{};
+inline int g_offActiveSlot = -1;
+inline int g_offRequestedPackages = -1;
+inline volatile LONG g_methodCounts[6]{};
+inline volatile LONG g_lastPageLoadSignal = 0; // 0 unknown, 1 LoadEquipped, 2 LoadUpgrades
+inline volatile LONG g_pageHooksLive = 0;
+inline volatile LONG g_availWitnessLines = 0;
+constexpr unsigned kMaxAvailWitnessLines = 24u;
 
 inline StartFn g_origStart = nullptr;
 inline EquipFn g_origEquip = nullptr;
 inline FrameFn g_origLoad = nullptr;
 inline FrameFn g_origPop = nullptr;
+inline ScriptExecFn g_origLoadUpgrades = nullptr;
+inline ScriptExecFn g_origUpgrade = nullptr;
 
 inline bool Enabled() {
     return InterlockedCompareExchange(&g_lockerNativeTrace, 0, 0) != 0;
@@ -72,10 +92,10 @@ inline bool HooksLive() {
 }
 
 inline thread_local int t_reenter = 0;
-inline thread_local bool t_logExec[4]{};
+inline thread_local bool t_logExec[6]{};
 
 inline bool TryBudget(unsigned methodIdx, unsigned* outSeq) {
-    if (methodIdx >= 4 || !outSeq) return false;
+    if (methodIdx >= kMethodCount || !outSeq) return false;
     const LONG total = InterlockedIncrement(&g_events);
     if ((unsigned)total > kMaxEvents) {
         InterlockedDecrement(&g_events);
@@ -123,6 +143,62 @@ inline void CacheMovieLayout(uintptr_t movie, uintptr_t cls) {
     g_cls = cls;
     g_offEquipped = PauseRttProbe::Property(cls, "mEquippedWeapons", "ArrayProperty");
     g_offOriginal = PauseRttProbe::Property(cls, "mOriginalWeapons", "ArrayProperty");
+    g_offActiveSlot = PauseRttProbe::Property(cls, "mActiveWeaponSlot", "IntProperty");
+    g_offRequestedPackages = PauseRttProbe::Property(cls, "mRequestedPackages", "IntProperty");
+}
+
+inline const char* PageLoadLabel(LONG signal) {
+    switch (signal) {
+    case 1: return "LoadEquippedWeapons";
+    case 2: return "LoadUpgrades";
+    default: return "Unknown";
+    }
+}
+
+inline bool ReadEquippedSlotFName(uintptr_t movie, int index, char* out, unsigned outLen) {
+    if (!out || outLen < 2 || g_offEquipped < 0 || !movie) return false;
+    out[0] = 0;
+    if (!PauseRttProbe::SafeRange(movie + (uintptr_t)g_offEquipped, 12)) return false;
+    const uintptr_t data = PauseRttProbe::Pointer(movie + (uintptr_t)g_offEquipped);
+    const int count = *reinterpret_cast<const int*>(movie + (uintptr_t)g_offEquipped + 4);
+    if (index < 0 || index >= count || !data) return false;
+    if (!PauseRttProbe::SafeRange(data + (uintptr_t)index * 8, 8)) return false;
+    const NativeOwnedInventory::Name nm =
+        *reinterpret_cast<const NativeOwnedInventory::Name*>(data + (uintptr_t)index * 8);
+    NameFromIndex(nm.index, out, (int)outLen);
+    return out[0] != 0;
+}
+
+inline void LogEventContext(unsigned seq, const char* method, void* self) {
+    const uintptr_t movie = (uintptr_t)self;
+    int activeSlot = -999, reqPkg = -999;
+    if (movie == g_movie && g_cls) {
+        if (g_offActiveSlot >= 0 && PauseRttProbe::SafeRange(movie + (uintptr_t)g_offActiveSlot, 4))
+            activeSlot = *reinterpret_cast<const int*>(movie + (uintptr_t)g_offActiveSlot);
+        if (g_offRequestedPackages >= 0 && PauseRttProbe::SafeRange(movie + (uintptr_t)g_offRequestedPackages, 4))
+            reqPkg = *reinterpret_cast<const int*>(movie + (uintptr_t)g_offRequestedPackages);
+    }
+    char eq0[64]{}, eq1[64]{};
+    if (movie == g_movie) {
+        ReadEquippedSlotFName(movie, 0, eq0, sizeof(eq0));
+        ReadEquippedSlotFName(movie, 1, eq1, sizeof(eq1));
+    }
+    const unsigned owned = NativeOwnedInventory::Mask();
+    const int m0 = inventoryretention::WeaponMesh(eq0);
+    const int m1 = inventoryretention::WeaponMesh(eq1);
+    Log("locker native trace: ctx #%u %s tid=%u movie=%p activeSlot=%d reqPkg=%d eq0=%s(%d) eq1=%s(%d) "
+        "owned=0x%X lastPageLoad=%s",
+        seq, method, GetCurrentThreadId(), (void*)movie, activeSlot, reqPkg, eq0[0] ? eq0 : "-", m0,
+        eq1[0] ? eq1 : "-", m1, owned, PageLoadLabel(InterlockedCompareExchange(&g_lastPageLoadSignal, 0, 0)));
+}
+
+inline void MaybeLogAvailability(const char* method) {
+    if (InterlockedIncrement(&g_availWitnessLines) > (LONG)kMaxAvailWitnessLines) {
+        InterlockedDecrement(&g_availWitnessLines);
+        return;
+    }
+    LockerAvailabilityWitness::LogInventoryAvailability(method);
+    LockerAvailabilityWitness::LogSessionWeaponsTable(method);
 }
 
 inline void LogCachedOwned(const char* tag) {
@@ -171,11 +247,14 @@ inline void LogEnter(const char* method, unsigned methodIdx, void* self, const c
     if (cls) NameOf(cls, clsName, sizeof(clsName));
     Log("locker native trace: #%u %s ENTER tid=%u movie=%p sessionMovie=%p frameNote=%s obj=%s cls=%s",
         seq, method, GetCurrentThreadId(), (void*)movie, (void*)g_movie, argNote ? argNote : "-", obj, clsName);
+    if (movie == g_movie && cls == g_cls) LogEventContext(seq, method, self);
     if (movie == g_movie && cls == g_cls) {
         LogEquippedTArray("ENTER", movie, g_offEquipped, "mEquippedWeapons");
         LogEquippedTArray("ENTER", movie, g_offOriginal, "mOriginalWeapons");
     }
     LogCachedOwned("ENTER");
+    if (!strcmp(method, "equip") || !strcmp(method, "LoadEquippedWeapons") || !strcmp(method, "LoadUpgrades"))
+        MaybeLogAvailability(method);
 }
 
 inline void LogExit(const char* method, unsigned methodIdx, void* self) {
@@ -191,12 +270,14 @@ inline void LogExit(const char* method, unsigned methodIdx, void* self) {
 }
 
 inline void ResetSessionCounters() {
-    for (unsigned i = 0; i < 4; ++i) InterlockedExchange(&g_methodCounts[i], 0);
+    for (unsigned i = 0; i < kMethodCount; ++i) InterlockedExchange(&g_methodCounts[i], 0);
     InterlockedExchange(&g_events, 0);
     InterlockedExchange(&g_seq, 0);
     InterlockedExchange(&g_pickupNotes, 0);
     InterlockedExchange(&g_fnameLines, 0);
     InterlockedExchange(&g_inventoryLines, 0);
+    InterlockedExchange(&g_availWitnessLines, 0);
+    InterlockedExchange(&g_lastPageLoadSignal, 0);
 }
 
 inline bool TryArmSessionFromStart(void* self) {
@@ -245,6 +326,7 @@ struct ExecHooks {
     static void __thiscall Load(void* self, void* frame) {
         ++t_reenter;
         if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) {
+            InterlockedExchange(&g_lastPageLoadSignal, 1);
             char note[96]{};
             if (TryLineCap(&g_loadCallerWitness, kMaxLoadCallerWitness)) {
                 const uintptr_t callerRet = (uintptr_t)_ReturnAddress();
@@ -265,6 +347,23 @@ struct ExecHooks {
         if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogExit("PopMenu", 3, self);
         --t_reenter;
     }
+    static void __thiscall LoadUpgrades(void* self, void* frame) {
+        ++t_reenter;
+        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) {
+            InterlockedExchange(&g_lastPageLoadSignal, 2);
+            LogEnter("LoadUpgrades", 4, self, "frame");
+        }
+        g_origLoadUpgrades(self, frame);
+        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogExit("LoadUpgrades", 4, self);
+        --t_reenter;
+    }
+    static void __thiscall Upgrade(void* self, void* frame) {
+        ++t_reenter;
+        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogEnter("Upgrade", 5, self, "frame");
+        g_origUpgrade(self, frame);
+        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogExit("Upgrade", 5, self);
+        --t_reenter;
+    }
 };
 
 inline void DisableOne(uintptr_t target, void** origSlot) {
@@ -279,7 +378,21 @@ inline void RollbackAllHooks() {
     DisableOne(kFnEquip, (void**)&g_origEquip);
     DisableOne(kFnLoad, (void**)&g_origLoad);
     DisableOne(kFnPopMenu, (void**)&g_origPop);
+    DisableOne(kFnLoadUpgrades, (void**)&g_origLoadUpgrades);
+    DisableOne(kFnUpgrade, (void**)&g_origUpgrade);
     InterlockedExchange(&g_hooksLive, 0);
+    InterlockedExchange(&g_pageHooksLive, 0);
+}
+
+inline bool Prefix16Matches(uintptr_t body) {
+    if (!body || !PauseRttProbe::SafeRange(body, 16)) return false;
+    static const unsigned char kLoadUpgradesPrefix[16] = {0x55, 0x8B, 0xEC, 0x6A, 0xFF, 0x68, 0x68, 0x67,
+                                                          0x6E, 0x01, 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00};
+    static const unsigned char kUpgradePrefix[16] = {0x55, 0x8B, 0xEC, 0x6A, 0xFF, 0x68, 0xC8, 0x67,
+                                                   0x6E, 0x01, 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00};
+    if (body == kFnLoadUpgrades) return memcmp((void*)body, kLoadUpgradesPrefix, 16) == 0;
+    if (body == kFnUpgrade) return memcmp((void*)body, kUpgradePrefix, 16) == 0;
+    return false;
 }
 
 inline bool InstallOne(uintptr_t target, void* detour, void** orig, const char* label) {
@@ -304,6 +417,27 @@ inline bool InstallOne(uintptr_t target, void* detour, void** orig, const char* 
     return true;
 }
 
+inline bool InstallPageHooks() {
+    if (InterlockedCompareExchange(&g_pageHooksLive, 0, 0) != 0) return true;
+    if (!Prefix16Matches(kFnLoadUpgrades) || !Prefix16Matches(kFnUpgrade)) {
+        Log("locker native trace: page exec prefix refused (re-run inspect_locker_page_methods.py)");
+        return false;
+    }
+    const bool ok =
+        InstallOne(kFnLoadUpgrades, (void*)&ExecHooks::LoadUpgrades, (void**)&g_origLoadUpgrades, "LoadUpgrades") &&
+        InstallOne(kFnUpgrade, (void*)&ExecHooks::Upgrade, (void**)&g_origUpgrade, "Upgrade");
+    if (!ok) {
+        DisableOne(kFnLoadUpgrades, (void**)&g_origLoadUpgrades);
+        DisableOne(kFnUpgrade, (void**)&g_origUpgrade);
+        Log("locker native trace: page hook install aborted");
+        return false;
+    }
+    InterlockedExchange(&g_pageHooksLive, 1);
+    Log("locker native trace: page hooks live LoadUpgrades=%p Upgrade=%p (ret8 script exec; not vtable)",
+        (void*)kFnLoadUpgrades, (void*)kFnUpgrade);
+    return true;
+}
+
 inline bool InstallExecHooks(uintptr_t vt) {
     if (!Enabled()) return false;
     if (HooksLive()) return true;
@@ -320,9 +454,14 @@ inline bool InstallExecHooks(uintptr_t vt) {
         Log("locker native trace: install aborted — all hooks removed");
         return false;
     }
+    if (!InstallPageHooks()) {
+        RollbackAllHooks();
+        Log("locker native trace: install aborted — page hooks failed");
+        return false;
+    }
     InterlockedExchange(&g_hooksLive, 1);
-    Log("locker native trace: exec hooks live (max %u events, %u/method; ABI Start/Load/Pop=ret4 equip=ret12)",
-        kMaxEvents, kMaxPerMethod);
+    Log("locker native trace: exec hooks live (max %u events, %u/method x%u; ctx logs activeSlot/reqPkg/eq0/eq1)",
+        kMaxEvents, kMaxPerMethod, kMethodCount);
     return true;
 }
 
@@ -360,8 +499,10 @@ inline void OnFocus(uintptr_t movie, uintptr_t cls) {
     InterlockedExchange(&g_session, 1);
     char obj[96]{};
     NameOf(movie, obj, sizeof(obj));
-    Log("locker native trace: SESSION OPEN movie=%p cls=%p obj=%s tid=%u equippedOff=%d originalOff=%d",
-        (void*)movie, (void*)cls, obj, GetCurrentThreadId(), g_offEquipped, g_offOriginal);
+    Log("locker native trace: SESSION OPEN movie=%p cls=%p obj=%s tid=%u equippedOff=%d originalOff=%d "
+        "activeSlotOff=%d reqPkgOff=%d",
+        (void*)movie, (void*)cls, obj, GetCurrentThreadId(), g_offEquipped, g_offOriginal, g_offActiveSlot,
+        g_offRequestedPackages);
     LogCachedOwned("SESSION");
 }
 
@@ -377,6 +518,9 @@ inline void OnDefocus() {
     g_cls = 0;
     g_offEquipped = -1;
     g_offOriginal = -1;
+    g_offActiveSlot = -1;
+    g_offRequestedPackages = -1;
+    InterlockedExchange(&g_lastPageLoadSignal, 0);
 }
 
 inline void ObservePickup(void* self, void* archetype, int keepIn, int keepOut, int result) {

@@ -70,6 +70,29 @@ class LockerNativeTracePolicy(unittest.TestCase):
         for cap in ("kMaxEvents", "kMaxPerMethod", "kMaxPickupNotes", "kMaxFNameLines", "kMaxInventoryLines"):
             self.assertIn(cap, self.text)
 
+    def test_page_exec_hooks_and_ctx(self):
+        self.assertIn("kFnLoadUpgrades", self.text)
+        self.assertIn("kFnUpgrade", self.text)
+        self.assertIn("LogEventContext", self.text)
+        self.assertIn("g_offActiveSlot", self.text)
+        self.assertIn("g_offRequestedPackages", self.text)
+        self.assertIn("locker avail witness", (REPO / "spikes/view_matrix/locker_availability_witness.h").read_text(encoding="utf-8"))
+
+    def test_page_methods_offline_witness(self):
+        tool = REPO / "tools/reload/inspect_locker_page_methods.py"
+        exe = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries\Singularity.exe")
+        if not CAPTURE.is_file() or not exe.is_file():
+            self.skipTest("capture or exe missing")
+        proc = subprocess.run(
+            [sys.executable, str(tool), "--exe", str(exe), "--text", str(CAPTURE)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("0xf87c80", proc.stdout.lower())
+        self.assertIn("0xf87e60", proc.stdout.lower())
+
     def test_first_level_exec_witness_not_blocked_by_reenter_guard(self):
         self.assertTrue(allow_outer_exec_witness(1))
         self.assertTrue(log_enter_permitted(1))
