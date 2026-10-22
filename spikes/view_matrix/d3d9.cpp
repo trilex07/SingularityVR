@@ -28844,20 +28844,74 @@ static void DrawLockerOwnedDisplay(IDirect3DDevice9* dev) {
     back->Release();
 }
 
-static void LockerLoadoutClampEyePanel(int eye, float fullW, float fullH, float halfW, float& cx, float& cy,
-                                       float halfPanelW, float halfPanelH, float margin) {
-    const float eyeMinX = eye == 0 ? margin : halfW + margin;
-    const float eyeMaxX = eye == 0 ? halfW - margin : fullW - margin;
-    const float minY = margin + halfPanelH;
-    const float maxY = fullH - margin - halfPanelH;
-    const float preferredCx = eyeMaxX - halfPanelW - margin * .5f;
-    if (cx < preferredCx) cx = preferredCx;
-    if (cx - halfPanelW < eyeMinX) cx = eyeMinX + halfPanelW;
-    if (cx + halfPanelW > eyeMaxX) cx = eyeMaxX - halfPanelW;
-    if (cy - halfPanelH < minY - halfPanelH) cy = minY;
-    if (cy + halfPanelH > maxY + halfPanelH) cy = maxY;
-    if (cy < margin + 12.f) cy = margin + 12.f;
-    if (cy > fullH - margin - 12.f) cy = fullH - margin - 12.f;
+static bool LockerLoadoutFillEyeProjector(int eye, locker_loadout_layout::EyeProjector& out) {
+    if (eye < 0 || eye > 1 || !g_haveEyes || g_targetTanX <= 0 || g_targetTanY <= 0) return false;
+    const XrPosef& p = g_eyePose[eye];
+    out.pos = {p.position.x, p.position.y, p.position.z};
+    out.fwd = WwRotate(p.orientation, {0, 0, -1});
+    out.right = WwRotate(p.orientation, {1, 0, 0});
+    out.up = WwRotate(p.orientation, {0, 1, 0});
+    out.tanHalfX = g_targetTanX;
+    out.tanHalfY = g_targetTanY;
+    return true;
+}
+
+static locker_loadout_layout::EquipLabelKind LockerLoadoutEquipLabel(bool pending, bool uiQueued) {
+    if (!pending) return locker_loadout_layout::EquipLabelKind::AllOwned;
+    return uiQueued ? locker_loadout_layout::EquipLabelKind::Queued : locker_loadout_layout::EquipLabelKind::EquipAll;
+}
+
+static bool LockerLoadoutBuildLayoutForEye(int eye, float fullW, float fullH, bool dataReady, bool pending,
+                                           bool uiQueued, locker_loadout_layout::Layout& outLayout) {
+    if (!g_vrMenuPanelValid) return false;
+    locker_loadout_layout::EyeProjector ep{};
+    if (!LockerLoadoutFillEyeProjector(eye, ep)) return false;
+    const float halfW = fullW * .5f;
+    locker_loadout_layout::PanelProjectParams pp{&g_vrMenuPanel.plane, eye, halfW, fullH, &ep};
+    float ax = 0, ay = 0;
+    if (!locker_loadout_layout::ProjectCanvasUvToScreen(pp, locker_loadout_layout::kAnchorU,
+                                                          locker_loadout_layout::kAnchorV, ax, ay))
+        return false;
+    locker_loadout_layout::ComputeParams cp{};
+    cp.eye = eye;
+    cp.fullW = fullW;
+    cp.fullH = fullH;
+    cp.halfW = halfW;
+    cp.anchorSx = ax;
+    cp.anchorSy = ay;
+    cp.fontPx = LockerVrLoadout::Layout::kFontPx;
+    cp.dataReady = dataReady;
+    cp.pending = pending;
+    cp.equipLabel = LockerLoadoutEquipLabel(pending, uiQueued);
+    return locker_loadout_layout::ComputeLayout(cp, outLayout) && outLayout.valid;
+}
+
+LockerLoadoutScreen::PointerHit LockerLoadoutScreen::HitCanvas(float canvasU, float canvasV, int* tileIndex) {
+    if (tileIndex) *tileIndex = -1;
+    if (!g_vrMenuPanelValid || !g_haveEyes || !g_srcW || !g_srcH) return PointerHit::None;
+    const float fullW = (float)g_srcW, fullH = (float)g_srcH;
+    const bool dataReady = LockerVrLoadoutPublish::DataReady();
+    const uint32_t pending = LockerVrLoadoutPublish::Pending();
+    const uint32_t uiQueued = LockerVrLoadoutPublish::UiQueued();
+    for (int eye = 0; eye < 2; ++eye) {
+        locker_loadout_layout::Layout layout{};
+        if (!LockerLoadoutBuildLayoutForEye(eye, fullW, fullH, dataReady, pending != 0, uiQueued != 0, layout))
+            continue;
+        locker_loadout_layout::EyeProjector ep{};
+        if (!LockerLoadoutFillEyeProjector(eye, ep)) continue;
+        const float halfW = fullW * .5f;
+        locker_loadout_layout::PanelProjectParams pp{&g_vrMenuPanel.plane, eye, halfW, fullH, &ep};
+        float px = 0, py = 0;
+        if (!locker_loadout_layout::ProjectCanvasUvToScreen(pp, canvasU, canvasV, px, py)) continue;
+        int tile = -1;
+        const auto kind = locker_loadout_layout::HitTestPointer(layout, px, py, tile);
+        if (kind == locker_loadout_layout::HitKind::EquipAll) return PointerHit::EquipAll;
+        if (kind == locker_loadout_layout::HitKind::Tile) {
+            if (tileIndex) *tileIndex = tile;
+            return PointerHit::Tile;
+        }
+    }
+    return PointerHit::None;
 }
 
 static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
@@ -28919,40 +28973,32 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
 
     struct HudIconVtx { float x, y, z, rhw; DWORD c; float u, v; };
     struct WwVtx { float x, y, z, rhw; DWORD c; };
-    const float halfW = (float)d.Width * .5f;
     const int px = LockerVrLoadout::Layout::kFontPx;
     const float iconHalf = LockerVrLoadout::Layout::kIconHalfPx;
-    const float anchorU = LockerVrLoadout::Layout::kAnchorU;
-    const float anchorV = LockerVrLoadout::Layout::kAnchorV;
-    const float spacingX = LockerVrLoadout::Layout::kTileSpacingXPx;
-    const float spacingY = LockerVrLoadout::Layout::kTileSpacingYPx;
-    const float tileOffX[4] = {-spacingX * .5f, spacingX * .5f, -spacingX * .5f, spacingX * .5f};
-    const float tileOffY[4] = {-spacingY * .5f, -spacingY * .5f, spacingY * .5f, spacingY * .5f};
     const uint32_t pending = LockerVrLoadoutPublish::Pending();
 
     const float fullW = (float)d.Width;
     const float fullH = (float)d.Height;
-    const float panelHalfW = spacingX * .5f + iconHalf + 14.f;
-    const float panelHalfH = spacingY * .5f + iconHalf + 48.f;
-    const float margin = 28.f;
 
     for (int eye = 0; eye < 2; ++eye) {
-        float anchorSx = 0, anchorSy = 0;
-        if (!LockerProjectPanelUv(eye, anchorU, anchorV, anchorSx, anchorSy, halfW, fullH)) continue;
-        LockerLoadoutClampEyePanel(eye, fullW, fullH, halfW, anchorSx, anchorSy, panelHalfW, panelHalfH, margin);
+        locker_loadout_layout::Layout layout{};
+        if (!LockerLoadoutBuildLayoutForEye(eye, fullW, fullH, dataReady, pending != 0, uiQueued != 0, layout))
+            continue;
+        const float anchorSx = layout.anchorSx;
+        const float anchorSy = layout.anchorSy;
 
         if (!dataReady) {
             D3DRECT loading[96];
-            const int lw = 15 * (kGlyphW + 1) * px;
-            const int lx = (int)anchorSx - lw / 2;
-            const int ly = (int)anchorSy - (kGlyphH * px) / 2;
+            const int lx = (int)layout.loadingLabel.x0;
+            const int ly = (int)layout.loadingLabel.y0;
             const int ln = TextRects(loading, 0, 96, lx, ly, px, "VR LOADOUT ...");
             ClearRects(dev, loading, ln, 0xCC8899AA);
             continue;
         }
 
-        D3DRECT panel = {(LONG)(anchorSx - panelHalfW), (LONG)(anchorSy - panelHalfH),
-                         (LONG)(anchorSx + panelHalfW), (LONG)(anchorSy + panelHalfH)};
+        const float panelHalfW = (layout.panel.x1 - layout.panel.x0) * .5f;
+        const float panelHalfH = (layout.panel.y1 - layout.panel.y0) * .5f;
+        D3DRECT panel = {(LONG)layout.panel.x0, (LONG)layout.panel.y0, (LONG)layout.panel.x1, (LONG)layout.panel.y1};
         ClearRects(dev, &panel, 1, 0xAA101820);
         WwVtx frame[5];
         const DWORD frameCol = 0xAA8899AA;
@@ -28983,8 +29029,8 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
             if (!isOwned && !isAvail) continue;
             const hud_atlas::Rect* ir = LockerAtlasIconForMesh(kMeshes[ti]);
             if (!ir) continue;
-            const float cx = anchorSx + tileOffX[ti];
-            const float cy = anchorSy + tileOffY[ti] + 6.f;
+            const float cx = layout.tileCenterX[ti];
+            const float cy = layout.tileCenterY[ti];
             const float u0 = (float)ir->x / (float)g_hudAtlas.width;
             const float v0 = (float)ir->y / (float)g_hudAtlas.height;
             const float duv = (float)ir->w / (float)g_hudAtlas.width;
@@ -29020,13 +29066,12 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
         }
 
         {
-            const float bx = anchorSx;
-            const float by = anchorSy + panelHalfH - 22.f;
             const char* label = pending ? (uiQueued ? "QUEUED" : "EQUIP ALL") : "ALL OWNED";
-            const int labelLen = (int)strlen(label);
-            const int bw = labelLen * (kGlyphW + 1) * px;
-            const int bh = kGlyphH * px + 4;
-            D3DRECT btnPlate = {(LONG)(bx - bw / 2 - 4), (LONG)(by - 2), (LONG)(bx + bw / 2 + 4), (LONG)(by + bh)};
+            const int bw = (int)(layout.equipAll.x1 - layout.equipAll.x0 - 8.f);
+            const float bx = (layout.equipAll.x0 + layout.equipAll.x1) * .5f;
+            const float by = layout.equipAll.y0 + 2.f;
+            D3DRECT btnPlate = {(LONG)layout.equipAll.x0, (LONG)layout.equipAll.y0, (LONG)layout.equipAll.x1,
+                                (LONG)layout.equipAll.y1};
             const DWORD plateCol =
                 pending ? (uiQueued ? 0x88443300 : 0x66183355) : 0x44202020;
             ClearRects(dev, &btnPlate, 1, plateCol);

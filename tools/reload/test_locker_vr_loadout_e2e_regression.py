@@ -5,6 +5,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 LOADOUT_H = REPO / "spikes" / "view_matrix" / "locker_vr_loadout.h"
+LAYOUT_H = REPO / "spikes" / "view_matrix" / "locker_vr_loadout_layout.h"
 IDENTITY_H = REPO / "spikes" / "view_matrix" / "locker_vr_loadout_identity.h"
 NATIVE_UI = REPO / "spikes" / "view_matrix" / "native_ui_input.h"
 D3D9 = REPO / "spikes" / "view_matrix" / "d3d9.cpp"
@@ -92,7 +93,29 @@ class E2eRegression(unittest.TestCase):
 
     def test_panel_clamped_in_eye_space(self):
         text = D3D9.read_text(encoding="utf-8", errors="replace")
-        self.assertIn("LockerLoadoutClampEyePanel", text)
+        self.assertIn("locker_loadout_layout::ComputeLayout", text)
+        self.assertIn("ClampEyePanel", LAYOUT_H.read_text(encoding="utf-8"))
+
+    def test_render_and_hit_share_layout_helper(self):
+        text = D3D9.read_text(encoding="utf-8", errors="replace")
+        self.assertIn("LockerLoadoutBuildLayoutForEye", text)
+        self.assertIn("LockerLoadoutScreen::HitCanvas", text)
+        draw = self._draw_body()
+        self.assertIn("LockerLoadoutBuildLayoutForEye", draw)
+
+    def test_uv_hit_constants_not_authoritative(self):
+        body = LOADOUT_H.read_text(encoding="utf-8")
+        self.assertNotIn("HitEquipAll", body)
+        self.assertNotIn("HitTileIndex", body)
+        self.assertNotIn("kBtnU", body)
+        self.assertNotIn("kCu", body)
+        self.assertIn("LockerLoadoutScreen::HitCanvas", body)
+
+    def test_hit_canvas_uses_screen_projection(self):
+        text = D3D9.read_text(encoding="utf-8", errors="replace")
+        block = text.split("LockerLoadoutScreen::HitCanvas", 1)[1].split("static void DrawLockerVrLoadout", 1)[0]
+        self.assertIn("ProjectCanvasUvToScreen", block)
+        self.assertIn("HitTestPointer", block)
 
     def test_can_interact_gated_on_data_ready(self):
         body = LOADOUT_H.read_text(encoding="utf-8")
@@ -123,8 +146,7 @@ class E2eRegression(unittest.TestCase):
         self.assertIn("SnapshotValid(){returnInterlockedCompareExchange(&snapshotValid", inv.replace(" ", ""))
 
     def test_tile_geometry_no_overlap(self):
-        body = LOADOUT_H.read_text(encoding="utf-8")
-        layout = body.split("namespace Layout", 1)[1].split("} // namespace Layout", 1)[0]
+        layout = LAYOUT_H.read_text(encoding="utf-8")
         compact = layout.replace(" ", "")
         self.assertIn("kIconHalfPx=42.f", compact)
         self.assertIn("kTileSpacingXPx=110.f", compact)
@@ -133,9 +155,11 @@ class E2eRegression(unittest.TestCase):
         self.assertGreater(105, 2 * 42)
 
     def test_panel_anchor_moved_right(self):
+        layout = LAYOUT_H.read_text(encoding="utf-8")
+        self.assertIn("kAnchorU=0.93f", layout.replace(" ", ""))
         body = LOADOUT_H.read_text(encoding="utf-8")
-        self.assertIn("kAnchorU=0.93f", body.replace(" ", ""))
         self.assertNotIn("kCu = 0.84f", body.replace(" ", ""))
+        self.assertNotIn("kCu=", body.split("namespace Layout", 1)[1].split("} // namespace Layout", 1)[0])
 
     def test_draw_shows_loading_without_data_ready(self):
         draw = self._draw_body()

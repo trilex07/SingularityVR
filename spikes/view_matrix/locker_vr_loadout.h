@@ -3,6 +3,8 @@
 #include "locker_vr_loadout_acquire.h"
 #include "locker_vr_loadout_publish.h"
 #include "locker_vr_loadout_runtime.h"
+#include "locker_vr_loadout_layout.h"
+#include "locker_vr_loadout_screen.h"
 #include "native_owned_inventory.h"
 #include "pause_rtt_probe.h"
 #include <cstring>
@@ -40,22 +42,12 @@ inline volatile LONG g_acquireRequested = 0;
 inline volatile LONG g_focusGeneration = 0;
 
 namespace Layout {
-// Right-side locker panel (empty region); tile centers use pixel offsets from anchor.
-constexpr float kTitleU = 0.93f;
-constexpr float kTitleV = 0.38f;
-constexpr float kAnchorU = 0.93f;
-constexpr float kAnchorV = 0.50f;
-constexpr float kBtnU = 0.93f;
-constexpr float kBtnV = 0.58f;
+constexpr float kAnchorU = locker_loadout_layout::kAnchorU;
+constexpr float kAnchorV = locker_loadout_layout::kAnchorV;
 constexpr int kFontPx = 3;
-constexpr float kIconHalfPx = 42.f;
-constexpr float kTileSpacingXPx = 110.f;
-constexpr float kTileSpacingYPx = 105.f;
-// UV hit boxes (approximate inverse of anchor projection).
-constexpr float kCu = kAnchorU;
-constexpr float kCv = kAnchorV;
-constexpr float kDu = 0.055f;
-constexpr float kDv = 0.052f;
+constexpr float kIconHalfPx = locker_loadout_layout::kIconHalfPx;
+constexpr float kTileSpacingXPx = locker_loadout_layout::kTileSpacingXPx;
+constexpr float kTileSpacingYPx = locker_loadout_layout::kTileSpacingYPx;
 } // namespace Layout
 
 inline FrameFn g_origPop = nullptr;
@@ -304,27 +296,12 @@ inline void TryInstallEarly() {
     if (Enabled()) TryInstallHooks();
 }
 
-inline bool HitEquipAll(float u, float v) {
-    return u >= Layout::kBtnU - 0.06f && u <= Layout::kBtnU + 0.06f && v >= Layout::kBtnV - 0.025f &&
-           v <= Layout::kBtnV + 0.025f;
-}
-
-inline int HitTileIndex(float u, float v) {
-    const float cu = Layout::kCu, cv = Layout::kCv, du = Layout::kDu, dv = Layout::kDv;
-    const float tiles[4][2] = {{cu - du, cv - dv}, {cu + du, cv - dv}, {cu - du, cv + dv}, {cu + du, cv + dv}};
-    for (int i = 0; i < 4; ++i) {
-        if (u >= tiles[i][0] - 0.035f && u <= tiles[i][0] + 0.035f && v >= tiles[i][1] - 0.035f &&
-            v <= tiles[i][1] + 0.035f)
-            return i;
-    }
-    return -1;
-}
-
 inline bool PointerHitsModTarget(float u, float v) {
     if (!LockerVrLoadoutPublish::CanInteract()) return false;
-    if (HitEquipAll(u, v) && LockerVrLoadoutPublish::Pending()) return true;
-    const int tile = HitTileIndex(u, v);
-    if (tile < 0) return false;
+    int tile = -1;
+    const auto hit = LockerLoadoutScreen::HitCanvas(u, v, &tile);
+    if (hit == LockerLoadoutScreen::PointerHit::EquipAll && LockerVrLoadoutPublish::Pending()) return true;
+    if (hit != LockerLoadoutScreen::PointerHit::Tile || tile < 0) return false;
     static const uint32_t kBits[4] = {1u, 2u, 4u, 8u};
     const uint32_t bit = kBits[tile];
     const uint32_t avail = LockerVrLoadoutPublish::Available();
@@ -334,7 +311,9 @@ inline bool PointerHitsModTarget(float u, float v) {
 
 inline bool OnPointerSelect(float u, float v) {
     if (!LockerVrLoadoutPublish::CanInteract()) return false;
-    if (HitEquipAll(u, v)) {
+    int tile = -1;
+    const auto hit = LockerLoadoutScreen::HitCanvas(u, v, &tile);
+    if (hit == LockerLoadoutScreen::PointerHit::EquipAll) {
         if (!LockerVrLoadoutPublish::Pending()) return false;
         const uint32_t pending = LockerVrLoadoutPublish::Pending();
         InterlockedExchange(&g_queuedMask, static_cast<LONG>(pending));
@@ -342,8 +321,7 @@ inline bool OnPointerSelect(float u, float v) {
         Log("locker vr loadout: EQUIP ALL queued pending=0x%X (XR path)", pending);
         return true;
     }
-    const int tile = HitTileIndex(u, v);
-    if (tile < 0) return false;
+    if (hit != LockerLoadoutScreen::PointerHit::Tile || tile < 0) return false;
     static const uint32_t kBits[4] = {1u, 2u, 4u, 8u};
     const uint32_t bit = kBits[tile];
     const uint32_t avail = LockerVrLoadoutPublish::Available();
