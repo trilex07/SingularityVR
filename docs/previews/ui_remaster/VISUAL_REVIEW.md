@@ -164,7 +164,9 @@ Following explicit user approval of the **V2.1 gray-dominant Soviet industrial a
 ## 4. Documentation Index & Cross-References
 
 - **Localization Mapping:** [`ui_localization_pl_en.json`](file:///C:/Users/Trilex/vr-mods/SingularityVR-ui-utility-remaster/ui_localization_pl_en.json)
+- **Localization Audit Table (89 Keys):** [`LOCALIZATION_AUDIT.md`](file:///C:/Users/Trilex/vr-mods/SingularityVR-ui-utility-remaster/docs/previews/ui_remaster/LOCALIZATION_AUDIT.md)
 - **Localization Coverage Report:** [`LOCALIZATION_COVERAGE.md`](file:///C:/Users/Trilex/vr-mods/SingularityVR-ui-utility-remaster/docs/previews/ui_remaster/LOCALIZATION_COVERAGE.md)
 - **Implementation Guide for MAIN:** [`IMPLEMENTATION_GUIDE.md`](file:///C:/Users/Trilex/vr-mods/SingularityVR-ui-utility-remaster/docs/previews/ui_remaster/IMPLEMENTATION_GUIDE.md)
 - **Design Tokens & System Rules:** [`DESIGN_SYSTEM.md`](file:///C:/Users/Trilex/vr-mods/SingularityVR-ui-utility-remaster/docs/previews/ui_remaster/DESIGN_SYSTEM.md)
 - **Atlas UV Mapping:** [`ui_atlas_neutral.json`](file:///C:/Users/Trilex/vr-mods/SingularityVR-ui-utility-remaster/assets/processed/ui_remaster/atlas/ui_atlas_neutral.json)
+- **Automated QA Validation Suite:** [`test_ui_atlas_qa.py`](file:///C:/Users/Trilex/vr-mods/SingularityVR-ui-utility-remaster/asset-tools/test_ui_atlas_qa.py) (Bit-exact alpha compositing, zero-bleed gutters, 50% VRAM reduction verified)

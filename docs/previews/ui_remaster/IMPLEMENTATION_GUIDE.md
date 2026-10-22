@@ -20,21 +20,23 @@ To achieve maximum performance and prevent VRAM bloat on PSVR2, all interface ge
 │                       MAIN RUNTIME MEMORY PIPELINE                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  [ui_atlas_neutral.png] (4096x4096)  <-- LOAD ONCE INTO VRAM                │
-│  ├── Console plates, terminal slates, rotary sectors                        │
-│  ├── Toggle switches, calibration sliders, focus frames                     │
+│  [ui_atlas_neutral.png] (4096x2048, 32 MiB)  <-- LOAD ONCE INTO VRAM        │
+│  ├── Console plates, terminal slates, rotary sectors (deduplicated)         │
+│  ├── Toggle wells/levers, calibration sliders, focus frames, reticles       │
+│  ├── Zero-bleed 8px gutters (pad=4px) around every packed sprite            │
 │  └── All action icons, status symbols, and PSVR2 button glyphs              │
 │                                                                             │
-│  [LANGUAGE SWITCHING: ZERO GPU OVERHEAD]                                    │
-│  ├── Method A (Recommended): D3D9 Dynamic Font Rendering                    │
+│  [LANGUAGE SWITCHING & LOCALIZED TEXT PIPELINE: 50% VRAM SAVINGS]           │
+│  ├── Method A (Recommended): D3D9 Dynamic Font / Canvas Rendering          │
 │  │   MAIN renders neutral plate quad from ui_atlas_neutral,                 │
 │  │   then draws font text using string from ui_localization_pl_en.json.     │
-│  │   GPU Cost on Language Switch: 0 bytes VRAM, 0 texture rebinds.          │
+│  │   Active VRAM: 32 MiB total. 0 bytes extra VRAM on language switch.      │
 │  │                                                                          │
-│  └── Method B: Secondary Localized Atlas Swap                               │
-│      MAIN binds ui_atlas_localized_pl.png (PL) OR                           │
-│      ui_atlas_localized_en.png (EN) into Texture Stage 1.                   │
-│      GPU Cost on Language Switch: 1 texture handle swap (no stall).         │
+│  └── Method B: Two-Quad Multi-Pass Texture Overlay                          │
+│      Pass 1: Draw Neutral Plate Quad (UVs from ui_atlas_neutral.json)       │
+│      Pass 2: Draw Localized Text Quad (UVs from ui_atlas_localized_{pl,en}) │
+│      Active VRAM: 32 MiB (neutral) + 8 MiB (active language) = 40 MiB.      │
+│      (Down from 80 MiB in unoptimized layout — 50% memory reduction).       │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -48,12 +50,12 @@ All assets are exported under [`assets/processed/ui_remaster/`](file:///C:/Users
 ```
 assets/processed/ui_remaster/
 ├── atlas/
-│   ├── ui_atlas_neutral.png        (4096x4096 Master language-neutral texture sheet)
-│   ├── ui_atlas_neutral.json       (UV mapping coordinates [u0, v0, u1, v1] & pixel rects)
-│   ├── ui_atlas_localized_pl.png   (2048x2048 Polish baked text atlas)
-│   ├── ui_atlas_localized_pl.json  (Polish UV mapping descriptors)
-│   ├── ui_atlas_localized_en.png   (2048x2048 English baked text atlas)
-│   └── ui_atlas_localized_en.json  (English UV mapping descriptors)
+│   ├── ui_atlas_neutral.png        (4096x2048 Master language-neutral texture sheet, 32 MiB RGBA8)
+│   ├── ui_atlas_neutral.json       (UV mapping coordinates [u0, v0, u1, v1], pixel rects, aliases)
+│   ├── ui_atlas_localized_pl.png   (2048x1024 Polish baked text atlas, 8 MiB RGBA8)
+│   ├── ui_atlas_localized_pl.json  (Polish UV mapping descriptors, 36 sprites)
+│   ├── ui_atlas_localized_en.png   (2048x1024 English baked text atlas, 8 MiB RGBA8)
+│   └── ui_atlas_localized_en.json  (English UV mapping descriptors, 36 sprites)
 ├── weapon_wheel/                   (Wheel chassis, 4 sectors x 5 states, needle, weapon icons)
 ├── vr_settings/                    (Console plate, tabs, toggle wells/levers, slider track/knob)
 ├── pause_menu/                     (Terminal slate, header plates, push buttons, modal dialogs)
@@ -151,6 +153,22 @@ dev->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
 dev->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
 dev->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 ```
+
+### 4.4 Two-Quad Multi-Pass Rendering Architecture (For Baked Localized Sprites)
+> [!IMPORTANT]
+> **Independent UV Spaces Between Atlases:**
+> Because `ui_atlas_neutral` (plates/frames) and `ui_atlas_localized_{lang}` (text labels) have independent UV coordinates, **do not attempt to bind both textures to a single quad using multi-texturing unless your vertex stream provides distinct `TEXCOORD0` and `TEXCOORD1` channels.**
+> 
+> The standard and robust rendering pattern in D3D9 / UE3 is **Two-Pass (Two-Quad) Compositing**:
+> 1. **Pass 1 (Background Plate):** Bind `ui_atlas_neutral.png` to Stage 0. Draw the button/panel quad using UVs from `ui_atlas_neutral.json`.
+> 2. **Pass 2 (Localized Label):** Bind `ui_atlas_localized_{lang}.png` to Stage 0. Draw the text overlay quad centered over the plate using UVs from `ui_atlas_localized_{lang}.json` with `D3DBLEND_SRCALPHA / D3DBLEND_INVSRCALPHA`.
+> 
+> Alternatively, **Method A (Dynamic Canvas/Font)** only draws Pass 1 from `ui_atlas_neutral`, then renders the localized string directly via UE3 Canvas / Font engine using `ui_localization_pl_en.json`.
+
+### 4.5 Bilinear Gutters & Zero Edge Bleeding (QA Verified)
+- In D3D9, bilinear texture filtering interpolates neighboring texels. In tight atlas packing, this causes neighboring sprites to bleed into transparent edges when projected onto stereoscopic VR quads.
+- All atlases in V2.1 enforce a **strict 8px transparent gutter** (`pad = 4px` margin around every packed sprite).
+- Bit-exact roundtrip extraction tests verify that every sprite extracts with `max_diff == 0` and zero adjacent texel contamination.
 
 ---
 

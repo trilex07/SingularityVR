@@ -723,70 +723,125 @@ def generate_production_assets():
     print("Successfully generated all transparent PNG production slices.")
 
 # ---------------------------------------------------------------------------
-# 2. GENERATE UI TEXTURE ATLASES WITH PRECISE UV COORDINATES
+# 2. GENERATE UI TEXTURE ATLASES WITH PRECISE UV COORDINATES & CORRECT BLIT
 # ---------------------------------------------------------------------------
 def generate_production_atlases():
     print("\n[2/5] Packing UI Texture Atlases & Computing UV Mappings...")
     atlas_dir = os.path.join(PROCESSED_DIR, "atlas")
+    pad = 4  # 4px padding around each sprite = 8px gutter between sprites (eliminates bilinear bleeding)
 
-    # Pack 1: Language-Neutral Atlas (2048x2048)
-    # Collect all *_neutral.png, icons, widgets
-    neutral_files = []
+    # 1. Collect TRULY Language-Neutral files (strictly exclude _pl.png and _en.png)
+    neutral_files_all = []
     for root, _, files in os.walk(PROCESSED_DIR):
         if "atlas" in root: continue
         for f in files:
-            if f.endswith(".png") and ("neutral" in f or "icon_" in f or "pointer_" in f or "toggle_" in f or "indicator_" in f or "slider_" in f or "hud_" in f or "wheel_sector" in f):
-                neutral_files.append((f, os.path.join(root, f)))
+            if not f.endswith(".png"): continue
+            # STRICT EXCLUSION: If file ends with _pl.png or _en.png, it is LOCALIZED, not neutral!
+            if f.endswith("_pl.png") or f.endswith("_en.png"): continue
+            neutral_files_all.append((f, os.path.join(root, f)))
 
-    neutral_files.sort(key=lambda x: x[0])
+    # Deduplicate sector wedges: top, right, bottom, left are identical 360x240 images across the 5 states
+    # We pack the 5 prototype states into the atlas and map directional aliases to the same UV rect
+    neutral_files_to_pack = []
+    directional_sector_aliases = {
+        "disabled": ["wheel_sector_top_disabled.png", "wheel_sector_right_disabled.png", "wheel_sector_bottom_disabled.png", "wheel_sector_left_disabled.png"],
+        "held":     ["wheel_sector_top_held.png",     "wheel_sector_right_held.png",     "wheel_sector_bottom_held.png",     "wheel_sector_left_held.png"],
+        "hover":    ["wheel_sector_top_hover.png",    "wheel_sector_right_hover.png",    "wheel_sector_bottom_hover.png",    "wheel_sector_left_hover.png"],
+        "idle":     ["wheel_sector_top_idle.png",     "wheel_sector_right_idle.png",     "wheel_sector_bottom_idle.png",     "wheel_sector_left_idle.png"],
+        "selected": ["wheel_sector_top_selected.png", "wheel_sector_right_selected.png", "wheel_sector_bottom_selected.png", "wheel_sector_left_selected.png"]
+    }
 
-    def pack_images_into_atlas(items, atlas_size=4096):
-        # Preload and sort descending by height for optimal shelf bin-packing
+    for f_name, f_path in neutral_files_all:
+        if "wheel_sector_" in f_name:
+            # Only pack the top_ variants as canonical prototypes
+            if "wheel_sector_top_" in f_name:
+                neutral_files_to_pack.append((f_name, f_path))
+        else:
+            neutral_files_to_pack.append((f_name, f_path))
+
+    def pack_images_into_atlas(items, atlas_w, atlas_h, gutter=4):
+        # Preload and sort descending by height, then width for optimal shelf bin-packing
         loaded = []
         for name, path in items:
             im = Image.open(path).convert("RGBA")
             loaded.append((name, path, im, im.size[0], im.size[1]))
         loaded.sort(key=lambda x: (x[4], x[3]), reverse=True)
 
-        atlas = Image.new("RGBA", (atlas_size, atlas_size), (0, 0, 0, 0))
+        atlas = Image.new("RGBA", (atlas_w, atlas_h), (0, 0, 0, 0))
         mapping = {}
-        cur_x, cur_y = 16, 16
+        cur_x, cur_y = gutter, gutter
         row_max_h = 0
         for name, path, im, iw, ih in loaded:
-            if cur_x + iw + 16 > atlas_size:
-                cur_x = 16
-                cur_y += row_max_h + 16
+            if cur_x + iw + gutter > atlas_w:
+                cur_x = gutter
+                cur_y += row_max_h + gutter * 2
                 row_max_h = 0
-            if cur_y + ih + 16 > atlas_size:
-                print(f"Warning: Atlas overflow for {name} ({iw}x{ih}) at {cur_x},{cur_y}")
-                break
-            atlas.paste(im, (cur_x, cur_y), im)
-            u0 = round(cur_x / atlas_size, 6)
-            v0 = round(cur_y / atlas_size, 6)
-            u1 = round((cur_x + iw) / atlas_size, 6)
-            v1 = round((cur_y + ih) / atlas_size, 6)
+            if cur_y + ih + gutter > atlas_h:
+                print(f"ERROR: Atlas overflow for {name} ({iw}x{ih}) at {cur_x},{cur_y} in {atlas_w}x{atlas_h}")
+                raise RuntimeError(f"Atlas overflow for {name}")
+
+            # DIRECT ASSIGNMENT (NO MASK): Preserves exact source RGBA values (0%, 25%, 50%, 75%, 100% alpha)
+            atlas.paste(im, (cur_x, cur_y))
+
+            # Verify bit-exact alpha preservation on the fly
+            cropped = atlas.crop((cur_x, cur_y, cur_x + iw, cur_y + ih))
+            diff = np.max(np.abs(np.array(im) - np.array(cropped)))
+            if diff != 0:
+                raise ValueError(f"Alpha corruption detected for {name}: max diff {diff}")
+
+            u0 = round(cur_x / atlas_w, 6)
+            v0 = round(cur_y / atlas_h, 6)
+            u1 = round((cur_x + iw) / atlas_w, 6)
+            v1 = round((cur_y + ih) / atlas_h, 6)
             mapping[name] = {
                 "pixel_rect": [cur_x, cur_y, iw, ih],
                 "uv_rect": [u0, v0, u1, v1],
                 "width": iw,
                 "height": ih
             }
-            cur_x += iw + 16
+            cur_x += iw + gutter * 2
             if ih > row_max_h:
                 row_max_h = ih
         return atlas, mapping
 
-    atlas_n, map_n = pack_images_into_atlas(neutral_files, atlas_size=4096)
+    # Pack 1: Language-Neutral Atlas (4096x2048 - 32 MiB, 50% VRAM reduction from 4096x4096)
+    atlas_n, map_n = pack_images_into_atlas(neutral_files_to_pack, 4096, 2048, gutter=pad)
+
+    # Add directional sector aliases so all lookups (top, right, bottom, left) map to the exact prototype UVs
+    for st, aliases in directional_sector_aliases.items():
+        proto_name = f"wheel_sector_top_{st}.png"
+        if proto_name in map_n:
+            proto_info = map_n[proto_name]
+            for alias in aliases:
+                map_n[alias] = {
+                    "pixel_rect": list(proto_info["pixel_rect"]),
+                    "uv_rect": list(proto_info["uv_rect"]),
+                    "width": proto_info["width"],
+                    "height": proto_info["height"],
+                    "prototype": proto_name
+                }
+            # Also provide canonical state name
+            map_n[f"wheel_sector_{st}.png"] = {
+                "pixel_rect": list(proto_info["pixel_rect"]),
+                "uv_rect": list(proto_info["uv_rect"]),
+                "width": proto_info["width"],
+                "height": proto_info["height"],
+                "prototype": proto_name
+            }
+
     atlas_n.save(os.path.join(atlas_dir, "ui_atlas_neutral.png"), "PNG")
     with open(os.path.join(atlas_dir, "ui_atlas_neutral.json"), "w", encoding="utf-8") as f:
         json.dump({
             "atlas_name": "ui_atlas_neutral",
-            "dimensions": [4096, 4096],
-            "description": "Language-neutral visual plates, frames, buttons, and icons for Singularity VR",
+            "dimensions": [4096, 2048],
+            "vram_bytes_rgba8": 4096 * 2048 * 4,
+            "vram_mib": 32.0,
+            "gutter_px": pad * 2,
+            "description": "Language-neutral visual plates, frames, buttons, and icons for Singularity VR (Deduplicated, zero-bleed 8px gutters)",
             "elements": map_n
         }, f, indent=2)
 
-    # Pack 2 & 3: Localized Atlases (PL & EN) (2048x2048 each)
+    # Pack 2 & 3: Localized Atlases (PL & EN) (2048x1024 - 8 MiB each, 50% VRAM reduction from 2048x2048)
     for lang in ["pl", "en"]:
         loc_files = []
         for root, _, files in os.walk(PROCESSED_DIR):
@@ -794,18 +849,21 @@ def generate_production_atlases():
             for f in files:
                 if f.endswith(f"_{lang}.png"):
                     loc_files.append((f, os.path.join(root, f)))
-        atlas_l, map_l = pack_images_into_atlas(loc_files, atlas_size=2048)
+        atlas_l, map_l = pack_images_into_atlas(loc_files, 2048, 1024, gutter=pad)
         atlas_l.save(os.path.join(atlas_dir, f"ui_atlas_localized_{lang}.png"), "PNG")
         with open(os.path.join(atlas_dir, f"ui_atlas_localized_{lang}.json"), "w", encoding="utf-8") as f:
             json.dump({
                 "atlas_name": f"ui_atlas_localized_{lang}",
                 "language": lang,
-                "dimensions": [2048, 2048],
-                "description": f"Baked localized UI textures ({lang.upper()}) for Singularity VR",
+                "dimensions": [2048, 1024],
+                "vram_bytes_rgba8": 2048 * 1024 * 4,
+                "vram_mib": 8.0,
+                "gutter_px": pad * 2,
+                "description": f"Baked localized UI textures ({lang.upper()}) for Singularity VR (Zero-bleed 8px gutters)",
                 "elements": map_l
             }, f, indent=2)
 
-    print("Successfully built and mapped ui_atlas_neutral, ui_atlas_localized_pl, ui_atlas_localized_en.")
+    print("Successfully built and mapped ui_atlas_neutral (4096x2048, 32MB), ui_atlas_localized_pl (2048x1024, 8MB), ui_atlas_localized_en (2048x1024, 8MB).")
 
 # ---------------------------------------------------------------------------
 # 3. GENERATE EDITABLE VECTOR SVG SOURCES

@@ -20,6 +20,14 @@ def main():
     if ret.returncode != 0:
         print(f"ERROR: build_v2_1_production.py failed with return code {ret.returncode}")
         sys.exit(ret.returncode)
+
+    print("\nRunning Production Package Final QA Validation...")
+    qa_script = os.path.join(SCRIPT_DIR, "test_ui_atlas_qa.py")
+    ret_qa = subprocess.run([sys.executable, qa_script], cwd=SCRIPT_DIR)
+    if ret_qa.returncode != 0:
+        print(f"ERROR: test_ui_atlas_qa.py failed with return code {ret_qa.returncode}")
+        sys.exit(ret_qa.returncode)
+
     print("\n=====================================================================")
     print("SUCCESS: V2.1 Remaster Package Fully Rebuilt & Validated.")
     print("=====================================================================")
