@@ -23,9 +23,21 @@ class E2eRegression(unittest.TestCase):
 
     def test_defocus_clears_page_and_publish(self):
         body = LOADOUT_H.read_text(encoding="utf-8")
-        defocus = body.split("OnDefocus()", 1)[1].split("struct ExecHooks", 1)[0]
+        defocus = body.split("OnDefocus()", 1)[1].split("OnFocus", 1)[0]
         self.assertIn("g_pageSignal", defocus)
         self.assertIn("Publish::Clear", defocus)
+        self.assertNotIn("g_acquireRequested", defocus)
+        self.assertNotIn("g_postPopAcquireMask", defocus)
+
+    def test_deferred_acquire_consumes_post_pop_request(self):
+        body = LOADOUT_H.read_text(encoding="utf-8")
+        deferred = body.split("TryRunDeferredAcquire()", 1)[1].split("inline void OnDefocus", 1)[0]
+        self.assertIn("g_acquireRequested", deferred)
+        self.assertIn("g_postPopAcquireMask", deferred)
+        self.assertIn("ApplyPendingMask", deferred)
+        schedule = body.split("OnPopMenuScheduleAcquire()", 1)[1].split("TryRunDeferredAcquire", 1)[0]
+        self.assertIn("g_acquireRequested", schedule)
+        self.assertIn("g_postPopAcquireMask", schedule)
 
     def _draw_body(self):
         text = D3D9.read_text(encoding="utf-8", errors="replace")

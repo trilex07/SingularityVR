@@ -139,8 +139,6 @@ inline void OnDefocus() {
     InterlockedExchange(&g_queuedMask, 0);
     InterlockedExchange(&g_uiQueuedMask, 0);
     InterlockedExchange(&g_pageSignal, 0);
-    InterlockedExchange(&g_acquireRequested, 0);
-    InterlockedExchange(&g_postPopAcquireMask, 0);
     LockerVrLoadoutPublish::Clear();
 }
 
