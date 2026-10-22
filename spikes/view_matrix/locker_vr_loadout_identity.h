@@ -6,7 +6,8 @@
 // GGameSystem (RvGameSystem) vtable +0x20C factory — recovered offline from:
 //   mission unlock 0xF03450 (add vtable+0x20C, 0x4AFFD0, indirect call)
 //   duplicate pickup 0x11B4B6E (same sequence)
-//   vtable anchor: GetFeaturesUnlocked @ +0x1F0 -> 0xF55B30 -> RvGameSystem vtable 0x1BCF9C4
+//   vtable anchor: GetFeaturesUnlocked @ +0x1F0 -> 0xFAA240 (C++ virtual method in RvGameSystem vtable 0x019CDBF8;
+//                  0xF55B30 is its script exec wrapper in GNatives table 0x01BCF9C4)
 #include "pause_rtt_probe.h"
 #include <Windows.h>
 #include <cstring>
@@ -21,11 +22,11 @@ constexpr uintptr_t kCaptureImageBase = 0x400000u;
 constexpr uintptr_t kPinnedAppendFNameVa = 0x4AFFD0u;
 constexpr uintptr_t kAppendFNameRvaFromImage = kPinnedAppendFNameVa - kCaptureImageBase;
 
-constexpr uintptr_t kPinnedFactoryVa = 0xF85E30u;
+constexpr uintptr_t kPinnedFactoryVa = 0x00FD2320u;
 constexpr uintptr_t kExpectedFactoryRvaFromImage = kPinnedFactoryVa - kCaptureImageBase;
-constexpr uint64_t kExpectedFactoryFingerprint = 0x293E6200F76D1A77ull;
+constexpr uint64_t kExpectedFactoryFingerprint = 0xF2B5EBD13E8B220Full;
 
-constexpr uintptr_t kPinnedRvGameSystemVtableVa = 0x1BCF9C4u;
+constexpr uintptr_t kPinnedRvGameSystemVtableVa = 0x019CDBF8u;
 constexpr uintptr_t kExpectedRvGameSystemVtableRvaFromImage =
     kPinnedRvGameSystemVtableVa - kCaptureImageBase;
 constexpr unsigned kGameSystemFactoryVtableOff = 0x20Cu;
@@ -36,7 +37,7 @@ inline const unsigned char kAppendFNamePrologue[kPrologueBytes] = {
     0x55, 0x8B, 0xEC, 0x8B, 0x45, 0x0C, 0x56, 0x6A, 0x01, 0x50, 0x8B, 0xF1, 0x8B, 0x4D, 0x08, 0x6A};
 
 inline const unsigned char kFactoryPrologue[kPrologueBytes] = {
-    0x55, 0x8B, 0xEC, 0x6A, 0xFF, 0x68, 0xE8, 0x61, 0x6E, 0x01, 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00};
+    0x55, 0x8B, 0xEC, 0x6A, 0xFF, 0x68, 0x78, 0xE9, 0x6E, 0x01, 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00};
 
 inline uintptr_t ImageBase() {
     return reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr));
@@ -72,32 +73,42 @@ inline bool FactoryIdentityOk(uintptr_t fn) {
     return memcmp(reinterpret_cast<const void*>(fn), kFactoryPrologue, kPrologueBytes) == 0;
 }
 
-// Catalog / availability: live GGameSystem instance (native getter), RvGameSystem class, weapon catalog layout.
+// Live GGameSystem instance: vtable must resolve to RvGameSystem C++ vtable (0x019CDBF8),
+// and vtable+0x20C must resolve to native archetype factory method (0x00FD2320).
+inline bool GameSystemObjectIdentityOk(uintptr_t gs) {
+    if (!gs || !PauseRttProbe::SafeRange(gs, 4)) return false;
+    const uintptr_t vt = PauseRttProbe::Pointer(gs);
+    const uintptr_t base = ImageBase();
+    if (!base || !vt) return false;
+    const uintptr_t expectedVt = base + kExpectedRvGameSystemVtableRvaFromImage;
+    if (vt != expectedVt) return false;
+    if (!PauseRttProbe::SafeRange(vt + kGameSystemFactoryVtableOff, 4)) return false;
+    const uintptr_t factoryFn = PauseRttProbe::Pointer(vt + kGameSystemFactoryVtableOff);
+    return FactoryIdentityOk(factoryFn);
+}
+
+// Catalog / availability: validated RvGameSystem object, class name check, and readable catalog layout.
 inline bool GameSystemCatalogSourceOk(uintptr_t gs) {
     constexpr int kObjClass = 0x34;
     constexpr uintptr_t kCatalogDataOff = 0x160u;
     constexpr uintptr_t kCatalogCountOff = 0x164u;
     constexpr uintptr_t kCatalogStride = 0x50u;
-    if (!gs || !PauseRttProbe::SafeRange(gs + kCatalogCountOff, 8)) return false;
+    if (!GameSystemObjectIdentityOk(gs)) return false;
+    if (!PauseRttProbe::SafeRange(gs + kCatalogCountOff, 8)) return false;
     const int count = *reinterpret_cast<const int*>(gs + kCatalogCountOff);
     if (count <= 0 || count > 32) return false;
     const uintptr_t data = PauseRttProbe::Pointer(gs + kCatalogDataOff);
     if (!data || !PauseRttProbe::SafeRange(data, kCatalogStride)) return false;
-    if (!PauseRttProbe::SafeRange(gs + kObjClass, 4)) return false;
-    const uintptr_t cls = PauseRttProbe::Pointer(gs + kObjClass);
-    if (!cls) return false;
-    char className[96]{};
-    if (!NameOf(cls, className, sizeof(className))) return false;
-    return !strcmp(className, "RvGameSystem");
-}
-
-// Mutation / factory: vtable+0x20C must resolve to pinned archetype factory (acquire only).
-inline bool GameSystemObjectIdentityOk(uintptr_t gs) {
-    if (!gs || !PauseRttProbe::SafeRange(gs, 4)) return false;
-    const uintptr_t vt = PauseRttProbe::Pointer(gs);
-    if (!vt || !PauseRttProbe::SafeRange(vt + kGameSystemFactoryVtableOff, 4)) return false;
-    const uintptr_t factoryFn = PauseRttProbe::Pointer(vt + kGameSystemFactoryVtableOff);
-    return FactoryIdentityOk(factoryFn);
+    if (PauseRttProbe::SafeRange(gs + kObjClass, 4)) {
+        const uintptr_t cls = PauseRttProbe::Pointer(gs + kObjClass);
+        if (cls) {
+            char className[96]{};
+            if (NameOf(cls, className, sizeof(className)) && strcmp(className, "RvGameSystem") != 0) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 } // namespace LockerVrLoadoutIdentity

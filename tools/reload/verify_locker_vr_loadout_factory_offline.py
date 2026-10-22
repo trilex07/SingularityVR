@@ -17,6 +17,7 @@ REPO = Path(__file__).resolve().parents[2]
 TEXT_PATH = REPO.parent / "research" / "etw" / "capture-20261006-205508" / "Singularity.text-memory.bin"
 EXE_CANDIDATES = [
     REPO.parent / "test-games" / "assets" / "Singularity" / "Binaries" / "Singularity.exe",
+    Path(r"C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries\Singularity.exe"),
     REPO / "build" / "next-weapon-reload" / "asset-lease-fixture-c656fb9b0d1841e3b0e462d4349e9ae9"
     / "steamapps" / "common" / "Singularity" / "Binaries" / "Singularity.exe",
 ]
@@ -28,13 +29,20 @@ FNV_OFFSET = 1469598103934665603
 FNV_PRIME = 1099511628211
 
 # Offline pins (must match locker_vr_loadout_identity.h)
-EXPECTED_FACTORY_VA = 0xF85E30
+# C++ vtable in .rdata is 0x019CDBF8; slot +0x1F0 is GetFeaturesUnlocked (0xFAA240);
+# slot +0x20C is the C++ archetype factory method (0x00FD2320).
+EXPECTED_FACTORY_VA = 0x00FD2320
 EXPECTED_FACTORY_RVA = EXPECTED_FACTORY_VA - IMAGE_BASE
-EXPECTED_FACTORY_FINGERPRINT = 0x293E6200F76D1A77
-EXPECTED_GS_VTABLE_VA = 0x1BCF9C4
-GET_FEATURES_VA = 0xF55B30
+EXPECTED_FACTORY_FINGERPRINT = 0xF2B5EBD13E8B220F
+EXPECTED_GS_VTABLE_VA = 0x019CDBF8
+GET_FEATURES_VA = 0x00FAA240
 VTABLE_SLOT_FACTORY = 0x20C
 VTABLE_SLOT_GET_FEATURES = 0x1F0
+
+# Historical script native registration table in .data (mistakenly pinned in early audits)
+SCRIPT_NATIVE_TABLE_VA = 0x01BCF9C4
+SCRIPT_GET_FEATURES_EXEC_VA = 0x00F55B30
+SCRIPT_FACTORY_EXEC_VA = 0x00F85E30
 
 CHAIN_SITES = (
     (0xF03460, "mission_unlock_0xF03450"),
@@ -118,6 +126,18 @@ class FactoryOfflineProof(unittest.TestCase):
         self.assertGreaterEqual(EXPECTED_FACTORY_VA, TEXT_BASE)
         self.assertLess(EXPECTED_FACTORY_VA, TEXT_BASE + len(self.text))
 
+    def test_script_table_distinction_witness(self):
+        # 0x01BCF9C4 is the GNatives script exec wrapper array in .data, NOT the C++ vtable in .rdata
+        exec_features = struct.unpack(
+            "<I", self.pe.read(SCRIPT_NATIVE_TABLE_VA + VTABLE_SLOT_GET_FEATURES, 4)
+        )[0]
+        self.assertEqual(exec_features, SCRIPT_GET_FEATURES_EXEC_VA)
+        exec_factory = struct.unpack(
+            "<I", self.pe.read(SCRIPT_NATIVE_TABLE_VA + VTABLE_SLOT_FACTORY, 4))[0]
+        self.assertEqual(exec_factory, SCRIPT_FACTORY_EXEC_VA)
+        self.assertNotEqual(EXPECTED_GS_VTABLE_VA, SCRIPT_NATIVE_TABLE_VA)
+        self.assertNotEqual(EXPECTED_FACTORY_VA, SCRIPT_FACTORY_EXEC_VA)
+
     def test_factory_in_text_and_fingerprint(self):
         off = EXPECTED_FACTORY_VA - TEXT_BASE
         prologue = self.text[off : off + PROLOGUE_BYTES]
@@ -129,6 +149,7 @@ class FactoryOfflineProof(unittest.TestCase):
         self.assertTrue(good)
         self.assertFalse(gate_accepts(self.text, IMAGE_BASE, EXPECTED_FACTORY_VA + 4))
         self.assertFalse(gate_accepts(self.text, IMAGE_BASE, 0xF23DF0))  # WeaponLocker +0x20C, not GS factory
+        self.assertFalse(gate_accepts(self.text, IMAGE_BASE, SCRIPT_FACTORY_EXEC_VA))  # Script wrapper rejected
 
 
 if __name__ == "__main__":

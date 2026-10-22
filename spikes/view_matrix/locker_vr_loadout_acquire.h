@@ -75,7 +75,6 @@ inline void* LookupArchetypeViaNativeAbi(void* gameSystem, const void* fstringAt
         mov eax, dword ptr [eax + kGsVtableLookupOff]
         call eax
         mov archetype, eax
-        add esp, 16
     }
     return archetype;
 }

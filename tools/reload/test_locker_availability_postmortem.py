@@ -63,7 +63,7 @@ class PostmortemOffline(unittest.TestCase):
         self.assertIn("equip @ 0xF00F50", doc)
         self.assertIn("4409F0", doc)
         self.assertIn("ReadFStringAscii(row+0)", doc)
-        self.assertIn("Strongest offline producer candidate", doc)
+        self.assertIn("strongest offered-list seed candidate", doc)
         reaudit = REPO / "docs" / "weapon-locker-offered-list-reaudit-20261022.md"
         self.assertTrue(reaudit.is_file())
         body = reaudit.read_text(encoding="utf-8")
