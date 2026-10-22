@@ -1266,3 +1266,26 @@ WeaponFxRideGun=1
 ; RenderScale=1.0
 ; OutputScale=1.0
 ; Sharpness=0.35
+
+; ---------------------------------------------------------------------------
+; [OLED] -- SDR Color Grading optimized for PSVR2 OLED displays
+;
+; Display-referred conservative grading designed for OLED black levels and
+; retrofuturistic atmosphere.
+;
+;   Preset=0    Off / Original (default, bit-identical to game backbuffer)
+;   Preset=1    OLED Balanced (subtle contrast and vibrance enhancement)
+;   Preset=2    OLED Cinematic (richer blacks, enhanced cyan E99, amber lamps)
+;   Preset=3    Custom (uses custom parameters below)
+;
+; Custom parameters:
+;   Contrast=0.08          (0.0 .. 0.5: S-curve midtone contrast)
+;   ShadowToe=1.06         (1.0 .. 1.4: shadow curve without black crush)
+;   Vibrance=0.10          (0.0 .. 0.5: selective vibrance for muted tones)
+;   E99CyanBoost=0.12      (0.0 .. 0.5: cyan E99 luminescence enhancement)
+;   AmberWarmBoost=0.08    (0.0 .. 0.5: Soviet incandescent light boost)
+;   RedAlarmBoost=0.10     (0.0 .. 0.5: alarm beacon saturation)
+;   HighlightShoulder=0.88 (0.5 .. 1.0: highlight protection roll-off)
+; ---------------------------------------------------------------------------
+; [OLED]
+; Preset=0

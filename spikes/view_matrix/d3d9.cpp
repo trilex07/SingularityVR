@@ -5419,6 +5419,8 @@ ID3D11Texture2D*    g_sharedTex11  = nullptr;   // the same memory, opened by D3
 ID3D11Texture2D*    g_frameSrc11   = nullptr;   // what the submit block copies into the swapchain
 
 #include "gpu_copy_timing.h"
+#include "oled_grading.h"
+static oled_grading::OledGrading g_oledGrading;
 // research/nvidia-vr-upscaling: NIS production surface (nis_bridge.h).
 // d3d9.cpp owns ONE NisBridge instance and calls NisBridge_*; all staging,
 // dispatch, timing and lifetime policy lives in the bridge + runtime headers.
@@ -13211,12 +13213,18 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 // the copy into the swapchain image is identical either way.
                 LARGE_INTEGER tUp = Now();
                 g_gpuCopyTiming.Begin(g_ctx11);
+
+                ID3D11Texture2D* effectiveSrc = g_frameSrc11;
+                if (g_oledGrading.IsEnabled() && g_frameSrc11) {
+                    effectiveSrc = g_oledGrading.Process(g_dev11, g_ctx11, g_frameSrc11, g_srcW, g_srcH);
+                }
+
                 // research/nvidia-vr-upscaling: NIS path = 1 stage copy +
                 // 2 per-eye dispatches + 2 final copies (vs 2 native
                 // half-copies). All policy lives in nis_bridge.h.
                 bool nisDone = false;
                 if (nisFrame) {
-                    nisDone = NisBridge_ProcessStereo(&g_nis, g_ctx11, g_frameSrc11,
+                    nisDone = NisBridge_ProcessStereo(&g_nis, g_ctx11, effectiveSrc,
                         g_srcW, g_srcH, nisOutW, nisOutH);
                     if (nisDone) {
                         const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
@@ -13230,7 +13238,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                         }
                     }
                 }
-                if (!nisDone && g_frameSrc11) {
+                if (!nisDone && effectiveSrc) {
                     if (monoCrop) {
                         const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
                         // Menus follow the eye-swap half; the composed cutscene
@@ -13243,8 +13251,8 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                                 Log("cutscene-mono: XR bridge submits one identical full-image crop"
                                     " to both eyes (%ux%u at x=%u)", g_scWidth, g_scHeight, left);
                         }
-                        g_ctx11->CopySubresourceRegion(g_scImages[0][idx], 0, 0, 0, 0, g_frameSrc11, 0, &box);
-                    } else g_ctx11->CopyResource(g_scImages[filled][idx], g_frameSrc11);
+                        g_ctx11->CopySubresourceRegion(g_scImages[0][idx], 0, 0, 0, 0, effectiveSrc, 0, &box);
+                    } else g_ctx11->CopyResource(g_scImages[filled][idx], effectiveSrc);
                 }
                 g_msUpload += MsSince(tUp);
                 XrSwapchainImageReleaseInfo ri{ XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO };
@@ -13265,13 +13273,13 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                         const int64_t tw = g_diagEnabled ? DiagQpc() : 0;
                         const XrResult wr = xrWaitSwapchainImage(g_swapchain[1], &wi);
                         DiagPhaseAdd(DP_SWAPWAIT, tw);
-                        rightReady = XR_SUCCEEDED(wr) && (g_frameSrc11 || nisFrame);
+                        rightReady = XR_SUCCEEDED(wr) && (effectiveSrc || nisFrame);
                         if (rightReady) {
                             const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
                             if (nisFrame && nisDone) {
                                 g_ctx11->CopyResource(g_scImages[1][rightIndex],
                                     g_nis.rt.outTex[swap ? 0 : 1]);
-                            } else if (g_frameSrc11) {
+                            } else if (effectiveSrc) {
                                 const UINT left = frame->cineFlat
                                     ? 0
                                     : (frame->menuFlat ? (swap ? g_srcW / 2 : 0)
@@ -13283,7 +13291,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                                             g_scWidth, g_scHeight);
                                 }
                                 const D3D11_BOX box{ left, 0, 0, left + g_scWidth, g_scHeight, 1 };
-                                g_ctx11->CopySubresourceRegion(g_scImages[1][rightIndex], 0, 0, 0, 0, g_frameSrc11, 0, &box);
+                                g_ctx11->CopySubresourceRegion(g_scImages[1][rightIndex], 0, 0, 0, 0, effectiveSrc, 0, &box);
                             } else {
                                 rightReady = false;
                             }
@@ -34097,6 +34105,16 @@ void LoadIniSettings() {
         g_adaptiveTriggersEnabled = GetPrivateProfileIntA("PSVR2", "AdaptiveTriggers", 1, path) != 0;
         g_psvr2Profiles = psvr2config::Profiles{};
         g_psvr2Profiles.enabled = g_adaptiveTriggersEnabled;
+    }
+    {
+        wchar_t wpath[MAX_PATH] = {};
+        MultiByteToWideChar(CP_ACP, 0, path, -1, wpath, MAX_PATH);
+        g_oledGrading.LoadConfig(wpath);
+        Log("ini: OLED Color Grading preset=%d (%s)",
+            (int)g_oledGrading.GetPreset(),
+            g_oledGrading.GetPreset() == oled_grading::Preset::Off ? "Off" :
+            g_oledGrading.GetPreset() == oled_grading::Preset::Balanced ? "Balanced" :
+            g_oledGrading.GetPreset() == oled_grading::Preset::Cinematic ? "Cinematic" : "Custom");
         char p[64]{}, r[64]{}, rf[64]{}, sg[64]{}, sn[64]{};
         GetPrivateProfileStringA("PSVR2", "TriggerPistol", "", p, sizeof(p), path);
         GetPrivateProfileStringA("PSVR2", "TriggerRifle", "", r, sizeof(r), path);
