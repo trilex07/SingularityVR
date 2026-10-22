@@ -1,0 +1,87 @@
+[
+  {
+    "id": "centurion",
+    "name": "Centurion Revolver",
+    "resolution": [
+      4096,
+      4096
+    ],
+    "diffuse_dds": "centurion_diffuse.dds",
+    "diffuse_fourcc": "DXT5",
+    "diffuse_bytes": 22369776,
+    "normal_dds": "centurion_normal.dds",
+    "normal_fourcc": "DXT1",
+    "normal_bytes": 11184952,
+    "specular_dds": "centurion_specular.dds",
+    "specular_bytes": 11184952,
+    "preview_png": "centurion_texture_comparison.png"
+  },
+  {
+    "id": "valkyrie",
+    "name": "Valkyrie AR9 Rifle",
+    "resolution": [
+      4096,
+      2048
+    ],
+    "diffuse_dds": "valkyrie_diffuse.dds",
+    "diffuse_fourcc": "DXT5",
+    "diffuse_bytes": 11184976,
+    "normal_dds": "valkyrie_normal.dds",
+    "normal_fourcc": "DXT1",
+    "normal_bytes": 5592552,
+    "specular_dds": "valkyrie_specular.dds",
+    "specular_bytes": 5592552,
+    "preview_png": "valkyrie_texture_comparison.png"
+  },
+  {
+    "id": "spikeshot",
+    "name": "Spikeshot Shotgun",
+    "resolution": [
+      4096,
+      4096
+    ],
+    "diffuse_dds": "spikeshot_diffuse.dds",
+    "diffuse_fourcc": "DXT5",
+    "diffuse_bytes": 22369776,
+    "normal_dds": "spikeshot_normal.dds",
+    "normal_fourcc": "DXT1",
+    "normal_bytes": 11184952,
+    "specular_dds": "spikeshot_specular.dds",
+    "specular_bytes": 11184952,
+    "preview_png": "spikeshot_texture_comparison.png"
+  },
+  {
+    "id": "kasimov",
+    "name": "Kasimov SNV-E99 Sniper Rifle",
+    "resolution": [
+      4096,
+      2048
+    ],
+    "diffuse_dds": "kasimov_diffuse.dds",
+    "diffuse_fourcc": "DXT5",
+    "diffuse_bytes": 11184976,
+    "normal_dds": "kasimov_normal.dds",
+    "normal_fourcc": "DXT1",
+    "normal_bytes": 5592552,
+    "specular_dds": "kasimov_specular.dds",
+    "specular_bytes": 5592552,
+    "preview_png": "kasimov_texture_comparison.png"
+  },
+  {
+    "id": "tmd_glove",
+    "name": "Left Glove & TMD Bio-Monitor",
+    "resolution": [
+      4096,
+      4096
+    ],
+    "diffuse_dds": "tmd_glove_diffuse.dds",
+    "diffuse_fourcc": "DXT5",
+    "diffuse_bytes": 22369776,
+    "normal_dds": "tmd_glove_normal.dds",
+    "normal_fourcc": "DXT1",
+    "normal_bytes": 11184952,
+    "specular_dds": "tmd_glove_specular.dds",
+    "specular_bytes": 11184952,
+    "preview_png": "tmd_glove_texture_comparison.png"
+  }
+]
