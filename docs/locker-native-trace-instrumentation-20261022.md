@@ -23,7 +23,11 @@ Default **`LockerNativeTrace=0`** — zero hooks, zero overhead.
 | `PopMenu` | `0xF17F60` | same |
 | Native pickup | Existing `+0xD70` adapter | tid, `armed` session flag, archetype **name/class pointer**, keep in/out, rc, mask |
 
-**Budget:** 64 total events, 20 per exec method, 24 pickup lines per run. **No** TArray writes, **no** `RunAuditedPickupRestore`, **no** GObjects scan, **no** per-frame logging.
+**Budget:** 64 total exec ENTER events, 20 per method; separate caps for pickup (24), FName TArray lines (32), owned-cache lines (32). EXIT/FName/inventory lines only after a budgeted ENTER. **No** TArray writes, **no** inventory `Refresh()`/`SnapshotNow()` in hooks, **no** GObjects scan, **no** per-frame logging.
+
+**ABI (capture-20261006-205508):** `Start` / `LoadEquippedWeapons` / `PopMenu` → `ret 4` (`FrameFn`/`StartFn`); `equip` → `ret 0x0C` (`EquipFn`, slot at `[ebp+0xC]`). Verified by `tools/reload/inspect_locker_abi.py --strict`.
+
+**Install:** Hooks attach at RVAs after vtable @ `0x019A0948` identity check; **all-or-nothing** rollback on failure. `TryInstallEarly()` on INI enable + input `Poll()` so `Start` before first locker focus is observable when MinHook is ready.
 
 ## Log prefix
 

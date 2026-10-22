@@ -156,6 +156,7 @@ static bool MenuClass(const char* n) {
  return false;
 }
 static bool UpdateMenu() {
+ if (LockerNativeTrace::Enabled()) LockerNativeTrace::TryInstallEarly();
  // Exact native GetFocusMovie body at 0x00D7C2C0; read only, no native call needed.
  const uintptr_t engine=ReadPointer(0x01CF8778u);
  const uintptr_t record=ReadPointer(engine ? engine+0x148u:0);
@@ -209,7 +210,7 @@ static bool UpdateMenu() {
   }
   InterlockedExchange(&g_modalSaveDialog,dialogFocus?1:0);
   if (prevClass[0] && !strcmp(prevClass, "RvUIGFxMovie_WeaponLocker") &&
-      className[0] && strcmp(className, "RvUIGFxMovie_WeaponLocker"))
+      (!className[0] || strcmp(className, "RvUIGFxMovie_WeaponLocker")))
     LockerNativeTrace::OnDefocus();
   if (className[0]) strcpy_s(prevClass, className);
   InterlockedExchange(&g_vrMenuClass,kind);

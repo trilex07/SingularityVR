@@ -33534,6 +33534,7 @@ void LoadIniSettings() {
     InterlockedExchange(&g_lockerNativeTrace,GetPrivateProfileIntA("Diagnostic","LockerNativeTrace",0,path)!=0);
     Log("ini: LockerNativeTrace=%ld (default OFF; bounded read-only WeaponLocker exec/pickup witness; no writes)",
         Rd(g_lockerNativeTrace));
+    if (Rd(g_lockerNativeTrace)) LockerNativeTrace::TryInstallEarly();
     g_contextCursorNative=GetPrivateProfileIntA("Render","ContextCursorNative",0,path)?1:0;
     g_npcNameScalePct=std::clamp((int)GetPrivateProfileIntA("Render","NpcNameScalePct",100,path),40,100);
     g_keepAcquiredWeapons=GetPrivateProfileIntA("Input","KeepAcquiredWeapons",0,path)?1:0;
