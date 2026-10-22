@@ -82,7 +82,7 @@ Therefore **names offered while cycling are chosen in GFx/script** (or a script 
 | `equip` registration | `0x00F87D60` (full script path); hot write **`0x00F00F50`** |
 | GFx batch invoke | vtable **`+0x130`** → **`0x00D83500`** |
 
-**Next offline step (no headset):** Scaleform / `UI_SinglePlayer_SF` ActionScript for WeaponLocker equip list (dataProvider / `equip("ARMachineGun", …)` callers).
+**GFx / AS follow-up (2026-10-22):** `docs/weapon-locker-gfx-availability-20261022.md` — scanned UI + RvGame SWF exports; **strong candidate** = `UseStation` list API + `WeaponLocker.equip`; isolated locker SWF **not found**; HUD `constants.WeaponNames` alias map documented.
 
 ### (C) Deprioritized — `RvInventoryItem.mWeaponsAvailableToLocker`
 

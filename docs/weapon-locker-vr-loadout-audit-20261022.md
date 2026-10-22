@@ -16,56 +16,35 @@ investigation (`build/locker-grant-investigation-20261022/REPORT.md`), live trac
 
 ---
 
-## 1. Equip vs Upgrade page state — what we know vs what we must witness
+## 1. Equip vs Upgrade page state — **PROVEN** (no further tracing)
 
-### 1.1 Proven from package export (not yet runtime-correlated)
+**PSVR2 pass:** build `33A84173…`, movie `3E17BFA0`, thread `44964`. Same locker visit:
 
-`RvUIGFxMovie_WeaponLocker` exposes **separate native exec entry points** for equip vs upgrade
-workflows (export block immediately preceding the class token at index 15724):
+`LoadEquippedWeapons` (#2) → `LoadUpgrades` (#5) → `LoadEquippedWeapons` (#6).
 
-| Native exec | Export symbol | Role (inferred from names + disassembly tier) |
-|-------------|---------------|-----------------------------------------------|
-| Equip load path | `LoadEquippedWeapons` | Enumerates **`mEquippedWeapons` TArray** and drives load/grant (`0xF23840`; not a fixed 0/1 loop) |
-| Upgrade load path | `LoadUpgrades` | Distinct callback; **not** analyzed in runtime contract script yet |
-| Per-slot GFx commit | `equip` | Writes `mEquippedWeapons[slotNum]` (unbounded index — contract hazard) |
-| Perk/upgrade commit | `Upgrade` | Separate from `equip` |
-| Session setup | `Start` | Rebuilds equipped from **controller slots 0/1 only** |
-| Close | `PopMenu` | Compare original/equipped, destroy/spawn, `SetWeaponSlotName(i)` for **every** equipped index |
+**Accepted session-scoped rule (WeaponLocker focus session):**
 
-**UObject fields on the movie (same export block):**
+| Latest native load callback in session | User-facing tab |
+|----------------------------------------|-----------------|
+| **`LoadEquippedWeapons`** | **Equip** (WYPOSAŻ) |
+| **`LoadUpgrades`** | **Upgrade** (ULEPSZENIA) |
 
-- `mEquippedWeapons` / `mOriginalWeapons` — `ArrayProperty` (+ duplicate `NameProperty` entries in export)
-- `mActiveWeaponSlot` — `IntProperty`
-- `mRequestedPackages` — `IntProperty`
+There is still **no** reflected `EquipPage` / `mCurrentTab` bool on `RvUIGFxMovie_WeaponLocker`; the
+**native callback order above is the gate** for future VR Loadout (do not use pointer Y or overlay
+heuristics).
 
-**There is no exported `BoolProperty` or `ByteProperty` named `EquipPage`, `UpgradePage`, `mCurrentTab`,
-or similar on `RvUIGFxMovie_WeaponLocker`.** Equip vs Upgrade is therefore **not** something we can
-gate today by a single reflected “page id” without runtime proof.
+**Do not schedule further page-state tracing.** Details: `docs/locker-trace-diagnostic-pass-20261022.md`,
+`docs/locker-trace-crash-20261022.md` (ABI fix `7d440d5`).
 
-**Falsifier:** If toggling WYPOSAŻ ↔ ULEPSZENIA in-headset **never** calls `LoadUpgrades` / `Upgrade`
-and **always** leaves `LoadEquippedWeapons` traffic unchanged, the page is **GFx-only** and we must
-witness GFx state (ActionScript) or a side effect (e.g. only `mRequestedPackages` changes).
+Export reference (exec names only):
 
-### 1.2 Recommended runtime witness (next instrumented pass, default OFF)
-
-Extend **`LockerNativeTrace`** (or a sibling `LockerPageWitness`) — **read-only**, same budgets:
-
-1. Hook/log **`LoadUpgrades`** and **`Upgrade`** at their vtable slots (resolve from export → live
-   vtable `0x019A0948` neighbour scan, same as existing four methods).
-2. On every bounded ENTER for **any** locker exec, log:
-   - `mActiveWeaponSlot`, `mRequestedPackages` (reflected offsets, once per session)
-   - `mEquippedWeapons` / `mOriginalWeapons` FName lists (already partially logged)
-3. User protocol on PSVR2: open locker → stay on **Equip** 10 s → switch to **Upgrade** 10 s → back
-   → close. Grep log for method order.
-
-**Acceptance for “Equip page only” UI gate:**
-
-- **PASS:** VR Loadout draw allowed only when **`LoadUpgrades` / `Upgrade` have not run** since last
-  Equip entry **or** when a **proven** field transition matches Equip (document exact rule from log).
-- **FAIL (do not ship UI):** Upgrade tab triggers the same exec set as Equip, or page state lives only
-  in GFx with no stable native discriminator.
-
-**Do not** use pointer Y/U coordinates or “bottom of panel” heuristics as the page gate.
+| Native exec | Role |
+|-------------|------|
+| `LoadEquippedWeapons` | Equip-tab load path (`0xF23840`) |
+| `LoadUpgrades` | Upgrade-tab load path (`0xF87C80`, `LoadUpgrades` hook ABI validated) |
+| `equip` | GFx → native slot FName write (`0xF00F50`, no ownership gate) |
+| `Upgrade` | Upgrade commit (separate from `equip`) |
+| `Start` / `PopMenu` | Open/close session (two controller slots at open) |
 
 ---
 
