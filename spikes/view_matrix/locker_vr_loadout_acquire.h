@@ -72,7 +72,9 @@ inline void* LookupArchetypeViaNativeAbi(void* gameSystem, const void* fstringAt
         call eax
         mov ecx, gameSystem
         mov eax, dword ptr [ecx]
-        mov eax, dword ptr [eax + kGsVtableLookupOff]
+        // MSVC inline asm treats a C++ constexpr here as a symbol address.
+        // Keep the native vtable byte displacement literal (verified in PE).
+        mov eax, dword ptr [eax + 20Ch]
         call eax
         mov archetype, eax
     }
