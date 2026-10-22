@@ -85,7 +85,12 @@ RvUIGFxMovie
 | `Upgrade` | `perk`, … | Upgrade tab commit |
 | `GetPoints`, `BuyClipForWeapon`, … | … | Upgrade economy |
 
-**Inheritance implication:** GFx likely fills a scrolling list via **`GetItemAt` / `TransferData`**
+**Package correction (2026-10-22 offline):** **`GetItemAt` / `TransferData` UFunction exports
+live on `RvUIGFxMovie_BarisovStation` only**, not on `WeaponLocker`. WeaponLocker still inherits
+C++ vtable slots **`+0x200` / `+0x204`** (same impl as Barisov). See
+`docs/weapon-locker-availability-producer-20261022.md`.
+
+**Inheritance implication (Barisov):** GFx likely fills a scrolling list via **`GetItemAt` / `TransferData`**
 (from `UseStation`) with **weapon rows**, then calls **`equip(Weapon, slot)`** when the user cycles —
 not `NativeOwnedInventory::Mask()`.
 
