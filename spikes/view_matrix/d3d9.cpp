@@ -12275,7 +12275,8 @@ void SyncXRInput(XrTime displayTime) {
     if(!uiMenu&&feedGame&&VrModeOn()&&InGameplay()&&!Rd(g_gamePaused)&&
        !Rd(g_panelOpen)&&AimHand()==1&&Rd(g_haveTMD)==1&&
        g_impulseBtnIdx>=0&&g_impulseBtnIdx<kPadButtonCount&&
-       g_padButtons[g_impulseBtnIdx].mask==XI_RSHOULDER&&!nearEyeRequested)
+       g_padButtons[g_impulseBtnIdx].mask==XI_RSHOULDER&&
+       sampledButtons[g_impulseBtnIdx]&&!nearEyeRequested)
         lt=0.f;
     InterlockedExchange(&g_rawTrigger, (LONG)(rt * 255.0f));
     InterlockedExchange(&g_rawAltTrigger, (LONG)(lt * 255.0f));   // run 213 - see the scope census
@@ -17725,7 +17726,16 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
                     side == OffHand() ? delta : rightDelta);
             continue;
         }
-        if (gloveisolate::IsTmdDevice(boneName)) continue;
+        if (gloveisolate::IsTmdDevice(boneName)) {
+            // Hardware retains its native animated palette, but must receive
+            // the SAME rigid correction as the anatomical left wrist. Leaving
+            // it native here detached it from the independently tracked glove.
+            // Apply to each original skin matrix: hinge/disc animation survives.
+            if((tmdBase||tmdGloves||tmdExtra)&&handValid[0])
+                skeletal::TransformBone(&changed[b*3],&saved[b*3],
+                    OffHand()==0?delta:rightDelta);
+            continue;
+        }
         if (rigidGloves &&
             gloveisolate::Classify(boneName) == gloveisolate::BoneRole::Collapse) {
             const int physicalSide = gloveisolate::HandSide(boneName);
