@@ -143,8 +143,7 @@ If runtime confirmation is still needed, prefer **one** of:
 1. **Log `equip(Weapon, slotNum)`** on WeaponLocker when the user cycles the replacement row
    (proves GFx producer string per step; compare to `ownedMask` and to sniper lock station).
 
-2. **Log subobject `vtable+0x484`** inside **`0xF23B60`** only when **`LockerNativeTrace`**-style
-   hook is authorized — keys **`0x19` / `0x37`** and returned wide strings (bounded).
+2. **Prefer `RvInventoryManager+0x3E4`** (bitmask; see **`docs/weapon-locker-progression-features-20261022.md`**) at **`equip(Weapon)`** time — not **`vtable+0x484`** (Barisov UI metrics only).
 
 3. **Optional:** Barisov station **`GetItemAt(Index)`** at **`0xF6E5A0`** — validates list API
    for **Barisov**, not necessarily WeaponLocker Equip tab.

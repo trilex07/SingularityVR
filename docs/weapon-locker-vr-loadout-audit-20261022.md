@@ -214,7 +214,7 @@ Reference: GFx **`Menu_WeaponsLocker`** private RTT **1280×720**, station plane
 | Step | Status | Deliverable |
 |------|--------|-------------|
 | Equip vs Upgrade page state | **Done** (§1, commit `4209bca`) | Latest `LoadEquippedWeapons` = Equip; latest `LoadUpgrades` = Upgrade — **no further PSVR2 page trace** |
-| **`availableOrdinaryMask` producer** | **Blocker** | Offline audit **(B)** — `docs/weapon-locker-availability-producer-20261022.md`; GetItemAt/TransferData **do not** index `mWeapons`; WeaponLocker has **no** list exports; one minimal witness §6 there |
+| **`availableOrdinaryMask` producer** | **Blocker (narrowed)** | **`+0x484/+0x44C` = (C) Barisov UI only** — `docs/weapon-locker-progression-features-20261022.md`; **(B) candidate: `RvInventoryManager+0x3E4`** via EnableAll/catalog path; witness §6 there |
 | Pick **4.1 vs 4.2** pickup path | Blocked on producer + thread-safe pickup evidence | — |
 | VR Loadout **display-only** | Not started | Equip gate + layout §6 after producer proven |
 | PSVR2 one-visit multi-acquire | Not scheduled | After VR Loadout + EQUIP ALL design |
