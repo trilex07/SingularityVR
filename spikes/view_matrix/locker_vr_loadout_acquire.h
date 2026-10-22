@@ -6,7 +6,6 @@
 #include <intrin.h>
 
 extern uintptr_t g_textLo, g_textHi;
-extern uintptr_t g_playerPawn;
 extern volatile LONG g_keepAcquiredWeapons;
 extern volatile LONG g_inCinematic;
 void Log(_Printf_format_string_ const char* fmt, ...);
@@ -93,7 +92,7 @@ inline bool ArchetypeInWeaponSharedHierarchy(void* archetype) {
     return cls && NativeOwnedInventory::ClassHas(cls, "RvWeaponShared");
 }
 
-inline bool TryPickupOrdinary(uint32_t vrBit, int* pickupResult) {
+inline bool TryPickupOrdinary(uint32_t vrBit, uintptr_t pawn, int* pickupResult) {
     if (pickupResult) *pickupResult = -1;
     if (!WitnessFactoryOnEngineThread() || !LockerVrLoadoutIdentity::FactoryIdentityOk(g_factoryFn)) return false;
 
@@ -104,7 +103,6 @@ inline bool TryPickupOrdinary(uint32_t vrBit, int* pickupResult) {
         !LockerVrLoadoutPolicy::RowEligible(row))
         return false;
 
-    const uintptr_t pawn = g_playerPawn;
     if (!pawn || !PauseRttProbe::SafeRange(pawn, 4)) return false;
     if (!LockerVrLoadoutRuntime::ResolveInventoryManager(pawn)) return false;
     if (NativeOwnedInventory::Mask() & vrBit) return false;
@@ -133,23 +131,31 @@ inline void ApplyPendingMask(uint32_t pendingNow, uint32_t ownedBefore) {
     if (!InterlockedCompareExchange(&g_keepAcquiredWeapons, 0, 0)) return;
     if (InterlockedCompareExchange(&g_inCinematic, 0, 0)) return;
 
+    const uintptr_t pawn = NativeOwnedInventory::SnapshotPawn();
+    if (!pawn) {
+        Log("locker vr loadout acquire batch: requested=0x%X refused (no validated snapshot pawn)", pendingNow);
+        return;
+    }
+
     uint32_t pickupCalled = 0;
     for (uint32_t bit = 1; bit <= 8; bit <<= 1) {
         if ((pendingNow & bit) == 0) continue;
         if (ownedBefore & bit) continue;
         int pr = -1;
-        if (TryPickupOrdinary(bit, &pr)) pickupCalled |= bit;
+        if (TryPickupOrdinary(bit, pawn, &pr)) pickupCalled |= bit;
     }
 
     const bool snap = NativeOwnedInventory::SnapshotNow();
     const uint32_t ownedAfter = snap ? NativeOwnedInventory::Mask() : 0;
-    const uint32_t success = snap ? (pendingNow & ownedAfter & ~ownedBefore) : 0;
-    const uint32_t failed = snap ? (pendingNow & ~ownedAfter & ~ownedBefore) : pendingNow;
+    const uint32_t success = snap ? (pickupCalled & ownedAfter & ~ownedBefore) : 0;
+    const uint32_t notCalled = pendingNow & ~pickupCalled;
+    const uint32_t calledButMissing = pickupCalled & ~ownedAfter;
+    const uint32_t failed = pendingNow & ~success;
 
     if (snap) {
         Log("locker vr loadout acquire batch: requested=0x%X pickupCalled=0x%X ownedBefore=0x%X ownedAfter=0x%X "
-            "success=0x%X failed=0x%X",
-            pendingNow, pickupCalled, ownedBefore, ownedAfter, success, failed);
+            "success=0x%X notCalled=0x%X calledButMissing=0x%X failed=0x%X",
+            pendingNow, pickupCalled, ownedBefore, ownedAfter, success, notCalled, calledButMissing, failed);
         if (success) NativeOwnedInventory::Refresh();
     } else {
         Log("locker vr loadout acquire batch: requested=0x%X pickupCalled=0x%X ownedBefore=0x%X ownedAfter=UNKNOWN "

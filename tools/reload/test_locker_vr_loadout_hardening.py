@@ -54,6 +54,8 @@ class HardeningContract(unittest.TestCase):
         self.assertIn("SnapshotNow()", body)
         self.assertIn("acquire batch:", body)
         self.assertNotIn("pickup=success", body)
+        self.assertIn("SnapshotPawn()", body)
+        self.assertNotIn("g_playerPawn", body)
 
     def test_factory_identity_offline_pinned(self):
         body = ACQUIRE_H.read_text(encoding="utf-8")

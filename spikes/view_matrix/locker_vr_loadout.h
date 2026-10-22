@@ -16,7 +16,6 @@ extern volatile LONG g_panelOpen;
 extern volatile LONG g_inCinematic;
 extern volatile LONG g_gamePaused;
 extern uintptr_t g_textLo, g_textHi;
-extern uintptr_t g_playerPawn;
 void Log(_Printf_format_string_ const char* fmt, ...);
 
 namespace LockerVrLoadout {
@@ -83,10 +82,12 @@ inline bool EngineCanInteract() {
     return true;
 }
 
+inline uintptr_t EngineLoadoutPawn() { return NativeOwnedInventory::SnapshotPawn(); }
+
 inline bool EngineLoadoutDataReady() {
-    if (!g_playerPawn) return false;
-    if (!LockerVrLoadoutRuntime::AvailabilitySourcesReady(g_playerPawn)) return false;
-    return NativeOwnedInventory::SnapshotValid();
+    const uintptr_t pawn = EngineLoadoutPawn();
+    if (!pawn) return false;
+    return LockerVrLoadoutRuntime::AvailabilitySourcesReady(pawn);
 }
 
 inline void PublishFromEngine() {
@@ -99,7 +100,8 @@ inline void PublishFromEngine() {
         LockerVrLoadoutPublish::Publish(0, 0, 0, false, uiQueued, false);
         return;
     }
-    const uint32_t available = LockerVrLoadoutRuntime::AvailableOrdinaryMask(g_playerPawn);
+    const uintptr_t pawn = EngineLoadoutPawn();
+    const uint32_t available = LockerVrLoadoutRuntime::AvailableOrdinaryMask(pawn);
     const uint32_t owned = NativeOwnedInventory::Mask();
     const uint32_t pending = LockerVrLoadoutPolicy::PendingMask(available, owned);
     LockerVrLoadoutPublish::Publish(available, owned, pending, true, uiQueued, true);
@@ -110,7 +112,12 @@ inline void OnPopMenuScheduleAcquire() {
     const uint32_t queued = static_cast<uint32_t>(InterlockedCompareExchange(&g_queuedMask, 0, 0));
     InterlockedExchange(&g_uiQueuedMask, 0);
     if (!queued) return;
-    const uint32_t available = LockerVrLoadoutRuntime::AvailableOrdinaryMask(g_playerPawn);
+    const uintptr_t pawn = EngineLoadoutPawn();
+    if (!pawn) {
+        PublishFromEngine();
+        return;
+    }
+    const uint32_t available = LockerVrLoadoutRuntime::AvailableOrdinaryMask(pawn);
     const uint32_t owned = NativeOwnedInventory::Mask();
     const uint32_t pendingNow = LockerVrLoadoutPolicy::RevalidateQueuedMask(queued, available, owned);
     if (!pendingNow) {
@@ -138,7 +145,13 @@ inline void TryRunDeferredAcquire() {
         static_cast<uint32_t>(InterlockedExchange(&g_postPopAcquireMask, 0));
     if (!requested) return;
 
-    const uint32_t available = LockerVrLoadoutRuntime::AvailableOrdinaryMask(g_playerPawn);
+    const uintptr_t pawn = EngineLoadoutPawn();
+    if (!pawn) {
+        Log("locker vr loadout: deferred acquire dropped (no validated snapshot pawn)");
+        PublishFromEngine();
+        return;
+    }
+    const uint32_t available = LockerVrLoadoutRuntime::AvailableOrdinaryMask(pawn);
     const uint32_t ownedBefore = NativeOwnedInventory::Mask();
     const uint32_t pendingNow = LockerVrLoadoutPolicy::RevalidateQueuedMask(requested, available, ownedBefore);
     if (!pendingNow) {
@@ -146,7 +159,8 @@ inline void TryRunDeferredAcquire() {
         PublishFromEngine();
         return;
     }
-    Log("locker vr loadout: deferred acquire pendingNow=0x%X thread=%u", pendingNow, GetCurrentThreadId());
+    Log("locker vr loadout: deferred acquire pendingNow=0x%X thread=%u pawn=%p", pendingNow, GetCurrentThreadId(),
+        (void*)pawn);
     LockerVrLoadoutAcquire::ApplyPendingMask(pendingNow, ownedBefore);
     PublishFromEngine();
 }

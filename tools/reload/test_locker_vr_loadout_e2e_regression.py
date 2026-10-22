@@ -71,8 +71,30 @@ class E2eRegression(unittest.TestCase):
     def test_can_interact_gated_on_data_ready(self):
         body = LOADOUT_H.read_text(encoding="utf-8")
         pub = body.split("PublishFromEngine", 1)[1].split("OnPopMenuScheduleAcquire", 1)[0]
-        self.assertIn("EngineLoadoutDataReady", pub)
+        self.assertIn("EngineLoadoutPawn", pub)
+        self.assertNotIn("g_playerPawn", pub)
         self.assertIn("Publish(0, 0, 0, false, uiQueued, false)", pub)
+
+    def test_loadout_uses_snapshot_pawn_not_global(self):
+        body = LOADOUT_H.read_text(encoding="utf-8")
+        self.assertIn("EngineLoadoutPawn()", body)
+        self.assertIn("NativeOwnedInventory::SnapshotPawn()", body)
+        ready = body.split("EngineLoadoutDataReady", 1)[1].split("PublishFromEngine", 1)[0]
+        self.assertNotIn("g_playerPawn", ready)
+
+    def test_deferred_acquire_uses_snapshot_pawn(self):
+        body = LOADOUT_H.read_text(encoding="utf-8")
+        deferred = body.split("TryRunDeferredAcquire()", 1)[1].split("inline void OnDefocus", 1)[0]
+        self.assertIn("EngineLoadoutPawn()", deferred)
+        self.assertNotIn("g_playerPawn", deferred)
+
+    def test_snapshot_valid_separate_from_ready(self):
+        inv = (REPO / "spikes" / "view_matrix" / "native_owned_inventory.h").read_text(encoding="utf-8")
+        self.assertIn("snapshotValid", inv)
+        self.assertIn("InterlockedExchange(&snapshotValid,1)", inv.replace(" ", ""))
+        self.assertIn("Ready(){returnMask()!=0;}", inv.replace(" ", ""))
+        self.assertIn("SnapshotPawn()", inv)
+        self.assertIn("SnapshotValid(){returnInterlockedCompareExchange(&snapshotValid", inv.replace(" ", ""))
 
     def test_tile_geometry_no_overlap(self):
         body = LOADOUT_H.read_text(encoding="utf-8")

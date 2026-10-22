@@ -40,7 +40,7 @@ static ULONGLONG next=0;
 static unsigned reports=0;
 static const char* stage="not sampled";
 static ULONGLONG resolveNext=0;
-static volatile LONG owned=0,request=0,ready=0,refresh=0;
+static volatile LONG owned=0,request=0,ready=0,snapshotValid=0,refresh=0;
 static uintptr_t P(uintptr_t p){return PauseRttProbe::Pointer(p);}
 static bool Named(uintptr_t p,const char* expected){char n[96]{};return p&&NameOf(p,n,sizeof(n))&&!strcmp(n,expected);}
 // Class-chain containment. The audited classes are RvPlayerPawnSP,
@@ -203,6 +203,7 @@ static bool Snapshot() {
   memcpy(items,found,sizeof(items));
   InterlockedExchange(&owned,(LONG)mask);
   InterlockedExchange(&ready,(LONG)(foundCount?1:0));
+  InterlockedExchange(&snapshotValid,1);
   if(Rd(g_keepAcquiredWeapons)&&GetTickCount64()>=resolveNext&&
      (!function||!script||!ScriptIdentity(script))) {
    resolveNext=GetTickCount64()+2000;ResolveScript(mc);
@@ -230,7 +231,7 @@ static void Poll() {
   __try {
    if(!Snapshot()) {
     count=0;pawn=manager=function=script=0;functionName=-1;resolveNext=0;
-    InterlockedExchange(&owned,0);InterlockedExchange(&ready,0);Report();return;
+    InterlockedExchange(&owned,0);InterlockedExchange(&ready,0);InterlockedExchange(&snapshotValid,0);Report();return;
    }
    Report();
    const int menuCls=(int)Rd(g_vrMenuClass);
@@ -256,6 +257,7 @@ static void Poll() {
    }
   } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
    count=0;pawn=manager=function=script=0;functionName=-1;InterlockedExchange(&owned,0);InterlockedExchange(&ready,0);
+   InterlockedExchange(&snapshotValid,0);
   }
 }
 static unsigned Mask(){return (unsigned)InterlockedCompareExchange(&owned,0,0);}
@@ -265,7 +267,8 @@ static DWORD PollThreadId(){return thread;}
 // uses this to decide between the owned mask and the accepted mesh-observed
 // fallback, so a refused snapshot can never empty the wheel again.
 static bool Ready(){return Mask()!=0;}
-static bool SnapshotValid(){return InterlockedCompareExchange(&ready,0,0)!=0;}
+static bool SnapshotValid(){return InterlockedCompareExchange(&snapshotValid,0,0)!=0;}
+static uintptr_t SnapshotPawn(){return SnapshotValid()?pawn:0;}
 // Synchronous snapshot for locker virtual apply (input thread, same as wheel poll).
 static bool SnapshotNow() {
   if(!Rd(g_keepAcquiredWeapons)&&!Rd(g_ownedWeaponWheel))return false;
