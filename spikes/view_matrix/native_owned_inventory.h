@@ -263,6 +263,17 @@ static unsigned Mask(){return (unsigned)InterlockedCompareExchange(&owned,0,0);}
 // uses this to decide between the owned mask and the accepted mesh-observed
 // fallback, so a refused snapshot can never empty the wheel again.
 static bool Ready(){return Mask()!=0;}
+// Synchronous snapshot for locker virtual apply (input thread, same as wheel poll).
+static bool SnapshotNow() {
+  if(!Rd(g_keepAcquiredWeapons)&&!Rd(g_ownedWeaponWheel))return false;
+  __try {return Snapshot();}
+  __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH){return false;}
+}
+static bool WeaponIdent(int mesh,Name* out) {
+  if(!out)return false;
+  for(unsigned i=0;i<count;++i)if(items[i].mesh==mesh){*out=items[i].name;return true;}
+  return false;
+}
 // The possessed mesh ids, for the wheel's label ownership test.
 static unsigned VertsFromMask(unsigned mask,long* out,int max){
   unsigned n=0;

@@ -9,7 +9,7 @@ static uintptr_t installedSlot=0;
 using Pickup= int (__fastcall*)(void*,void*,void*,int,int,int);
 static Pickup originalPickup=nullptr;
 static uintptr_t pickupSlot=0;
-static int __fastcall PickupCall(void* self,void* edx,void* archetype,int select,int instant,int keep) {
+inline int __fastcall PickupCall(void* self,void* edx,void* archetype,int select,int instant,int keep) {
     using namespace NativeOwnedInventory;
     bool supported=false,local=false,linked=false;
     __try {
@@ -32,6 +32,18 @@ static int __fastcall PickupCall(void* self,void* edx,void* archetype,int select
     const int result=originalPickup(self,edx,archetype,select,instant,retain?1:keep);
     if(retain)next=0;
     return result;
+}
+static void InstallPickup();
+inline int RunAuditedPickup(void* pawn, void* archetype) {
+    InstallPickup();
+    if (!originalPickup || !pawn || !archetype) return -1;
+    return PickupCall(pawn, nullptr, archetype, 0, 0, 0);
+}
+// Game-authored restore path uses keep-existing=1 (verify_native_pickup.py @ 0xFF7804).
+inline int RunAuditedPickupRestore(void* pawn, void* archetype) {
+    InstallPickup();
+    if (!originalPickup || !pawn || !archetype) return -1;
+    return PickupCall(pawn, nullptr, archetype, 0, 0, 1);
 }
 static void InstallPickup() {
     using namespace NativeOwnedInventory;

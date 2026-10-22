@@ -3863,6 +3863,9 @@ volatile LONG g_tmdYawTenths = 0, g_tmdPitchTenths = 0;
 volatile LONG g_tmdRollTenths = 0;
 volatile LONG g_tmdOnOffHand = 1;      // ini [Input] TmdOnOffHand - the whole feature's off switch
 volatile LONG g_tmdNativeAim = 0;     // [Input] TmdNativeAim: audited local TMD getter experiment, OFF
+volatile LONG g_lockerVirtualOrdinary = 0; // [Input] LockerVirtualOrdinary: phase B plan logs only, OFF
+volatile LONG g_lockerVirtualApply = 0;    // [Input] LockerVirtualApply: phase C TArray rewrite on focus, OFF
+volatile LONG g_lockerStationGrantOrdinary = 0; // [Input] LockerStationGrantOrdinary: station grant + wheel test, OFF
 
 // ---- ⭐ run 230: the note is a full-screen 2D panel, and a headset FOV is not a monitor ----
 //
@@ -25381,6 +25384,28 @@ volatile LONG g_peFiringCalls = 0; // ⚠️ if this stays 0 the split never hap
                                    // identically to "the fire path uses no script"
 
 #include "inventory_vm_hook.h"
+#include "locker_station_grant.h"
+#include "menu_submit_policy.h"
+
+unsigned LockerStationOrdinaryWheelMask() {
+    (void)0;
+    return 0;
+}
+
+void LockerStationGrantOrdinaryTry(uintptr_t movie, uintptr_t cls) {
+    (void)movie;
+    (void)cls;
+    if (!Rd(g_lockerStationGrantOrdinary)) return;
+    static unsigned notes = 0;
+    if (notes++ >= 4) return;
+    Log("locker station grant: DISABLED (LoadEquipped/GObjects paths withdrawn after hitch/crash;"
+        " mask unchanged; use KeepAcquiredWeapons pickup + owned wheel only until phase F hook)");
+    using namespace NativeOwnedInventory;
+    Refresh();
+    if (SnapshotNow())
+        Log("locker station grant: inventory snapshot mask=0x%X count=%u (read-only witness)",
+            Mask(), count);
+}
 
 void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Result) {
     // ---- run 102: never call a null trampoline ----
@@ -34171,6 +34196,15 @@ void LoadIniSettings() {
     g_bodyEquipmentProbe=GetPrivateProfileIntA("Diagnostic","BodyEquipmentProbe",0,path)!=0;
     InterlockedExchange(&g_tmdNativeAim,GetPrivateProfileIntA("Input","TmdNativeAim",0,path)!=0);
     Log("ini: TmdNativeAim=%d (default OFF; local native aim/aging getter outputs only)",NativeTmdAim::Enabled()?1:0);
+    InterlockedExchange(&g_lockerVirtualOrdinary,GetPrivateProfileIntA("Input","LockerVirtualOrdinary",0,path)!=0);
+    Log("ini: LockerVirtualOrdinary=%ld (default OFF; locker virtual plan logs only; no TArray hooks)",
+        Rd(g_lockerVirtualOrdinary));
+    InterlockedExchange(&g_lockerVirtualApply,GetPrivateProfileIntA("Input","LockerVirtualApply",0,path)!=0);
+    Log("ini: LockerVirtualApply=%ld (default OFF; phase C FName TArray rewrite on locker focus; PopMenu unhooked)",
+        Rd(g_lockerVirtualApply));
+    InterlockedExchange(&g_lockerStationGrantOrdinary,GetPrivateProfileIntA("Input","LockerStationGrantOrdinary",0,path)!=0);
+    Log("ini: LockerStationGrantOrdinary=%ld (default OFF; grant 4 ordinary at station locker; wheel selection only)",
+        Rd(g_lockerStationGrantOrdinary));
     if(g_weaponMeasuredAim&&(!g_weaponTraceRigidOrigin||!Rd(g_traceFromGun))){
         g_weaponMeasuredAim=0;Log("measured aim: requires WeaponTraceRigidOrigin + TraceFromGun; disabled");
     }

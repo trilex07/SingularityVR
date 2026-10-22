@@ -8,6 +8,7 @@
 #include "native_owned_inventory.h"
 #include "native_body_equipment_probe.h"
 #include "native_tmd_aim.h"
+#include "locker_virtual_runtime.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
@@ -208,9 +209,16 @@ static bool UpdateMenu() {
   InterlockedExchange(&g_modalSaveDialog,dialogFocus?1:0);
   if (className[0]) strcpy_s(prevClass, className);
   InterlockedExchange(&g_vrMenuClass,kind);
+  // Publish menu focus before locker grant/virtual hooks; they gate on g_vrUiMenu + class 4.
+  const bool menuFocusNow=cachedMenu && InterlockedCompareExchange(&g_vrUiEnabled,0,0)!=0;
+  InterlockedExchange(&g_vrUiMenu,menuFocusNow?1:0);
+  if(menuFocusNow)InterlockedAnd(&g_padBtns,0x0000FCFF);
   Log("VR UI focus: movie=%p object=%s class=%s menu=%d",(void*)movie,objectName,className,cachedMenu?1:0);
   if(cachedMenu)ObserveMovieAsset(movie,cls,className);
-  if(cachedMenu&&!strcmp(className,"RvUIGFxMovie_WeaponLocker"))ObserveLockerSlots(movie,cls);
+  if(cachedMenu&&!strcmp(className,"RvUIGFxMovie_WeaponLocker")) {
+   ObserveLockerSlots(movie,cls);
+   LockerVirtualRuntime::OnWeaponLockerFocus(movie,cls);
+  }
   // NewGame: actual focus log proves SPSlots -> dialog. This probe establishes
   // whether each has its own RTT, shares a parent's RTT, or draws directly.
   // Four cold snapshots/session; no new hook, matrix write or resource ref.

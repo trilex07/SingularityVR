@@ -37,9 +37,18 @@ Read-only disassembly of the owned executable and archived `.text` proves:
   Consequently merely growing the list to four is not a correct fix: it can
   overwrite special native slots and discard inventory at close.
 
-Reproduce the bounded witness with `tools/reload/inspect_locker_contract.py`
-and an owned EXE + archived text (`--text-base 0x402000`). No process access,
-native mutation or proprietary extracted assets are added to Git.
+Reproduce the bounded witness with:
+
+- `tools/reload/inspect_locker_contract.py` — owned EXE vtable + capstone on archived text.
+- `tools/reload/inspect_locker_runtime_contract.py` — byte-pattern tier on the same capture
+  (`research/etw/capture-20261006-205508/Singularity.text-memory.bin`, `--text-base 0x402000`).
+  PopMenu re-equip uses `push 0xF0B470` into generic dispatcher `0x41F380`, not a direct call.
+- `python tools/reload/test_locker_runtime_contract.py` — synthetic fixtures + negative refusals.
+
+No process access, native mutation or proprietary extracted assets are added to Git.
+
+Implementation sketch (phase B in source, default OFF): `docs/locker-virtual-contract-sketch.md`,
+`locker_virtual_contract.h`, `LockerVirtualOrdinary=0`.
 
 Next implementation must virtualize the ordinary-firearm locker load/commit
 contract against the already acquired inventory, preserve heavy/grenade native
