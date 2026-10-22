@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+## 2026-10-23 SIDE dual weapon/TMD — L1_PASS / L2_PASS, runtime unverified
+
+Branch `feature/dual-weapon-tmd-ready`, base `641fcd5`. Default-OFF
+`[Input] DualWeaponTmdReady` separates presentation ownership from native HANDS:
+fixes both false TMD-to-melee animation windows, admits only existing wrist-cut
+TMD hardware, preserves support/holster/reload access and release-to-rearm power
+suppression. Original native state, geometry pipeline and haptics untouched.
+Right-hand weapon / physical-left TMD only; no Steam writes or game launch.
+Focused optimized CPU/ABI regressions, original hardware index roundtrip, OLED
+D3D11 and PE32 `/O2` build pass. Inherited broad VR interaction test has an
+unrelated shadow-size assertion failure, documented rather than hidden.
+Native simultaneous fire, lower/raise animation and visual coexistence remain
+unverified; not production acceptance. See `docs/handoffs/dual-weapon-tmd-ready.md`.
+
 ## 2026-10-22 NIS physical PASS; station presentation L1/L2 PASS
 
 User confirms NIS works. Smaller/centred station RTT presentation now shares
