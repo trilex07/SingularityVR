@@ -2,6 +2,7 @@
 // Input-thread cache for WeaponLocker owned overlay (no dependency on diagnostic trace hooks).
 #include "inventory_retention_policy.h"
 #include "locker_owned_display_planner.h"
+#include "locker_owned_display_session.h"
 #include "native_owned_inventory.h"
 #include "pause_rtt_probe.h"
 
@@ -40,54 +41,67 @@ inline int ReadEquippedFNameMesh(uintptr_t movie, int propOff, int index) {
     return inventoryretention::WeaponMesh(buf);
 }
 
-inline void RefreshNativeMeshes(uintptr_t movie, uintptr_t cls) {
-    if (!movie || !cls) {
+inline uintptr_t g_movie = 0;
+inline uintptr_t g_cls = 0;
+inline int g_offEquipped = -1;
+
+inline void RefreshNativeMeshesFromCachedOffset(uintptr_t movie) {
+    if (!movie || g_offEquipped < 0) {
         PublishNativeMesh(0, 0);
         PublishNativeMesh(1, 0);
         return;
     }
-    const int off = PauseRttProbe::Property(cls, "mEquippedWeapons", "ArrayProperty");
-    const int m0 = ReadEquippedFNameMesh(movie, off, 0);
-    const int m1 = ReadEquippedFNameMesh(movie, off, 1);
-    PublishNativeMesh(0, m0);
-    PublishNativeMesh(1, m1);
+    PublishNativeMesh(0, ReadEquippedFNameMesh(movie, g_offEquipped, 0));
+    PublishNativeMesh(1, ReadEquippedFNameMesh(movie, g_offEquipped, 1));
 }
 
-inline uintptr_t g_movie = 0;
-inline uintptr_t g_cls = 0;
+inline bool g_sessionLive = false;
 inline ULONGLONG g_nextRefresh = 0;
 
 inline void OnFocus(uintptr_t movie, uintptr_t cls) {
     InterlockedExchange(&g_vrUiWeaponLocker, 1);
+    if (lockerowned::SameLockerFocusSession(g_sessionLive, g_movie, g_cls, movie, cls)) return;
+
     g_movie = movie;
     g_cls = cls;
-    g_nextRefresh = 0;
+    g_sessionLive = true;
+    g_offEquipped = cls ? PauseRttProbe::Property(cls, "mEquippedWeapons", "ArrayProperty") : -1;
+    if (g_offEquipped < 0)
+        Log("locker owned display: mEquippedWeapons offset unresolved on focus transition");
+
     if (!Enabled()) return;
+
     NativeOwnedInventory::Refresh();
-    RefreshNativeMeshes(movie, cls);
+    RefreshNativeMeshesFromCachedOffset(movie);
+    const ULONGLONG now = GetTickCount64();
+    g_nextRefresh = now + 250;
+
     static unsigned notes = 0;
     if (notes++ < 8)
-        Log("locker owned display: focus native=%d,%d mask=0x%X",
+        Log("locker owned display: focus transition native=%d,%d mask=0x%X off=%d",
             (int)InterlockedCompareExchange(&g_lockerDisplayNativeMesh[0], 0, 0),
             (int)InterlockedCompareExchange(&g_lockerDisplayNativeMesh[1], 0, 0),
-            NativeOwnedInventory::Mask());
+            NativeOwnedInventory::Mask(), g_offEquipped);
 }
 
 inline void OnDefocus() {
     InterlockedExchange(&g_vrUiWeaponLocker, 0);
+    g_sessionLive = false;
     g_movie = 0;
     g_cls = 0;
+    g_offEquipped = -1;
+    g_nextRefresh = 0;
     PublishNativeMesh(0, 0);
     PublishNativeMesh(1, 0);
 }
 
 inline void TickWhileActive() {
     if (!Enabled() || !InterlockedCompareExchange(&g_vrUiWeaponLocker, 0, 0)) return;
-    if (!g_movie || !g_cls) return;
+    if (!g_movie || g_offEquipped < 0) return;
     const ULONGLONG now = GetTickCount64();
     if (g_nextRefresh && now < g_nextRefresh) return;
     g_nextRefresh = now + 250;
-    RefreshNativeMeshes(g_movie, g_cls);
+    RefreshNativeMeshesFromCachedOffset(g_movie);
 }
 
 } // namespace LockerOwnedDisplayCache

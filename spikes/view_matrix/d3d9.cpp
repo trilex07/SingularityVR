@@ -28701,9 +28701,10 @@ static bool LockerProjectPanelUv(int eye, float u, float v, float& sx, float& sy
 }
 
 static void DrawLockerOwnedDisplay(IDirect3DDevice9* dev) {
-    if (!dev || !VrModeOn() || !Rd(g_dupDraws) || !Rd(g_lockerOwnedDisplay) || !Rd(g_keepAcquiredWeapons) ||
-        !Rd(g_vrUiWeaponLocker) || !Rd(g_vrUiMenu) || !Rd(g_vrUiStationMovie) || Rd(g_vrMenuClass) != 4 ||
-        !g_vrMenuPanelValid || !g_haveEyes || !g_origDrawPrimUP || !g_origSetRenderTarget) return;
+    if (!dev || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_weaponWheelOpen) || !Rd(g_lockerOwnedDisplay) ||
+        !Rd(g_keepAcquiredWeapons) || !Rd(g_vrUiWeaponLocker) || !Rd(g_vrUiMenu) || !Rd(g_vrUiStationMovie) ||
+        Rd(g_vrMenuClass) != 4 || !g_vrMenuPanelValid || !g_haveEyes || !g_origDrawPrimUP ||
+        !g_origSetRenderTarget) return;
 
     const int native0 = (int)InterlockedCompareExchange(&g_lockerDisplayNativeMesh[0], 0, 0);
     const int native1 = (int)InterlockedCompareExchange(&g_lockerDisplayNativeMesh[1], 0, 0);
@@ -28809,6 +28810,7 @@ static void DrawLockerOwnedDisplay(IDirect3DDevice9* dev) {
         }
     }
     dev->SetTexture(0, nullptr);
+    if (old) g_origSetRenderTarget(dev, 0, old);
     g_wristState->Apply();
     dev->SetDepthStencilSurface(depth);
     if (old) old->Release();
