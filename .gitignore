@@ -75,6 +75,10 @@ assets/reference/**
 assets/ui/kenney-input-prompts/kenney_input-prompts_*.zip
 assets/ui/kenney-input-prompts/source/**
 
+# ---- local private audio remaster workspace ----
+/build/audio-remaster/
+/audio-remaster-private/
+
 # ---- local Polish dubbing audio ----
 # Generated/proprietary audio stays local (174 MB xlingual pack etc.); manifests,
 # scripts, QA logs and casting docs ARE tracked.
