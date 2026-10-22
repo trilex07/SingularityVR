@@ -60,4 +60,4 @@ locker focus transitions; default remains OFF, no readback or captures.
 Do not call this a four-slot candidate, bless it as accepted, or deploy an older
 SIDE DLL. Preserve the current combined candidate and verified asset lease.
 
-**Follow-up investigation (2026-10-22, no deploy):** `docs/weapon-locker-native-contract-20261022.md` — native call sequence, availability vs ownership vs controller slots, wheel root cause, minimal Phase F (post-PopMenu pickup + Phase D guard).
+**Follow-up investigation (2026-10-22, no deploy):** `docs/weapon-locker-native-contract-20261022.md` — native call sequence; station availability vs acquired ownership vs two controller slots; wheel root cause; Phase D only if GFx equipped arrays exceed two; retention path to `mask=0xF` (663a49a); Phase F blockers documented.

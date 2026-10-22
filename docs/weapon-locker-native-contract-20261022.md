@@ -8,7 +8,7 @@
 - `python tools/reload/inspect_locker_contract.py` — owned `Singularity.exe` + capture text
 - `python tools/reload/inspect_locker_runtime_contract.py` — capture `research/etw/capture-20261006-205508/Singularity.text-memory.bin`, base `0x402000`
 
-**Runtime context (Arm A accepted, not re-tested here):** `%LOCALAPPDATA%\SingularityVR\view_matrix.log` attach `2026-10-22 11:20:03`, `LockerStationGrantOrdinary=0`, `WeaponWheelOwnedInventory=1`, `KeepAcquiredWeapons=1`. Locker focus: `ownedMask=0x1`, Phase B plan `uiOrdinary=1`; wheel later `ownedMask=0x3` after commits — **no crash, no hitch (user confirmed)**.
+**Runtime context (Arm A accepted):** `%LOCALAPPDATA%\SingularityVR\view_matrix.log` attach `2026-10-22 11:20:03`, `LockerStationGrantOrdinary=0`, `WeaponWheelOwnedInventory=1`, `KeepAcquiredWeapons=1`. Locker focus: `ownedMask=0x1`, Phase B plan `uiOrdinary=1`; wheel later `ownedMask=0x3` after commits — no crash, no hitch (user confirmed).
 
 ---
 
@@ -55,7 +55,7 @@ sequenceDiagram
     GFx->>Equip: equip(slotNum, weaponFName)
     Equip->>Arr: equipped.data[slotNum] = FName (no bounds check)
 
-    Note over GFx,Inv: Optional load / station grant path
+    Note over GFx,Inv: Station grant path (ordering not fully proven)
     GFx->>Load: LoadEquippedWeapons()
     Load->>Arr: read count +0xB4, data +0xB0
     Load->>Inv: grant/spawn per equipped entry (not hardcoded 0/1 loop)
@@ -70,163 +70,157 @@ sequenceDiagram
     Pop->>GFx: script callback 0xF0B470 via 0x41F380 (re-equip hands)
 ```
 
-**Start (confirmed):** Rebuilds **only two** ordinary entries from controller slots **0 and 1** (`push 0`, `push 1`, two `+0x740` dispatches, two `TArray::Append`). Does **not** read equipped count from `+0xB4` for its producer loop.
+**Start (confirmed):** Rebuilds **only two** entries from controller slots **0 and 1**. Does **not** use equipped count from `+0xB4` for its producer loop.
 
-**equip (confirmed):** Script `slotNum` → `[ebp+0xC]` → store at `equipped.data[slotNum]` with **no capacity check** (heap corruption if GFx index ≥ capacity).
+**equip (confirmed):** Script `slotNum` → store at `equipped.data[slotNum]` with **no capacity check**.
 
-**LoadEquippedWeapons (confirmed):** Iterates **whatever count** is in the equipped TArray (`+0xB4` / `+0xB0`). It is the **load-time grant producer** for names already in that array — not a substitute for Start’s two-slot controller read.
+**LoadEquippedWeapons (confirmed):** Iterates **`equipped.Count`** — grant producer for names **already in that array**, not a substitute for Start’s two-slot controller read.
 
-**PopMenu (confirmed):** Inventory diff + **`SetWeaponSlotName(i, …)` for every equipped index `i`**. If `equipped.Count > 2`, indices **2+ overwrite controller slots reserved for heavy/grenade/special** (offline conclusion in `inspect_locker_runtime_contract.py`). Destroys originals absent from equipped; restores active hand via `+0xC0` and scripted callback.
-
----
-
-## 3. Three layers: availability vs ownership vs equipped slots
-
-| Layer | What it is | Producer in vanilla | VR mod reads |
-|--------|------------|---------------------|--------------|
-| **Station / GFx availability** | Which weapons the **UI may offer** at this station (often four ordinary archetypes in design docs) | Scaleform + script calls into `equip` / `LoadEquippedWeapons`; **not** fully reverse-engineered in this pass (no ActionScript extract in repo) | `MenuAssetWitness` → locker slot **counts** only (Arm A: `count=2`, `cap=6` / `cap=2`) |
-| **Inventory ownership** | Which weapons exist on **`RvInventoryManager` chain** | Pickups (`RvPlayerPawnSP` vtable **`+0xD70`**, 4-arg, keep-existing at `+1A4`), `SwitchWeaponByArchetype` script path, locker **`PopMenu` destroy** / **`LoadEquippedWeapons` grant** | `NativeOwnedInventory` snapshot: pawn `+0x3D0` → chain `+0x1E0`, `mWeaponName` `+0x2E8` → **mask bits 0x1/0x2/0x4/0x8** |
-| **Equipped controller slots** | Which FNames are bound to **weapon controller indices 0…N−1** (Start uses **0 and 1** only) | `Start` ← GetWeaponSlotName(0,1); **`PopMenu` → SetWeaponSlotName(i, …)** for all equipped indices | Not mirrored into VR wheel directly |
-
-**Key separation:** The **VR weapon wheel** (`WeaponWheelOwnedInventory=1`) gates sectors on **`NativeOwnedInventory` mask**, not on GFx TArray contents or controller slot names. The **native locker UI** is seeded by **two controller slots** at Start, regardless of how many icons GFx draws.
+**PopMenu (confirmed):** Inventory diff + **`SetWeaponSlotName(i, …)` for every equipped index `i`**. If **`equipped.Count > 2`**, indices **2+ can overwrite controller slots used for heavy/grenade/special** (offline witness). This risk applies to **GFx/UI paths that grow the equipped TArray past two** — not to an **inventory-only** VR path that never increases that count or never maps extra ordinaries into controller indices ≥ 2.
 
 ---
 
-## 4. Why the VR wheel does not show four ordinary weapons (root cause)
+## 3. Three distinct concepts (do not conflate)
 
-### 4.1 Primary cause (confirmed in Arm A log)
+These are **orthogonal**. The VR wheel bug class comes from mixing them.
 
-**The wheel only enables sectors for weapons actually present on the inventory chain.**
+### 3.1 Station weapon **availability**
 
-- At locker focus: `locker virtual: plan … mask=0x1` → one ordinary owned (pistol mesh 5799).
-- Wheel draw plan: `ownedMask=1` → **one named sector** (later `ownedMask=3` after gameplay commits).
-- This matches `DrawWeaponWheel` logic: with `ownedReady`, `slotNamed[i] = (ownedMask & WeaponBit(verts)) != 0`.
+- **Meaning:** Which ordinary weapons **this weapon station level design allows the player to choose among** (often four archetypes in product intent).
+- **Native store (partial):** GFx `WeaponLocker` script + calls to `equip` / `LoadEquippedWeapons`; **ActionScript not in repo** — exact list and UI layout **not proven** here.
+- **Mod observation:** `MenuAssetWitness` reports TArray **shape** only (Arm A: `mEquippedWeapons count=2 cap=6`, `mOriginalWeapons count=2 cap=2`). That witnesses **native Start’s two-entry seed**, not the full station catalog.
+- **Does not imply:** All four are on the **inventory chain** or in **controller slots 0/1** until vanilla (or mod) **grant/pickup** runs.
 
-The station locker **did not** add three missing ordinaries to ownership during focus. That is expected with **`LockerStationGrantOrdinary=0`** and **no** working grant path.
+### 3.2 **Previously acquired ownership** (persistent inventory)
 
-### 4.2 Failed grant path (historical evidence — do not repeat)
+- **Meaning:** Which weapons **`RvInventoryManager`** chain currently holds — what the save/campaign has **already granted** via pickups, locker commits, scripts, etc.
+- **Native producers (known pieces):** Pawn pickup **`+0xD70`** (keep-existing branch), `SwitchWeaponByArchetype` script graph, locker **`LoadEquippedWeapons`**, **`PopMenu` destroy** of deselected items.
+- **Mod authority for wheel:** `NativeOwnedInventory` walk (pawn `+0x3D0` → chain `+0x1E0`, `mWeaponName` `+0x2E8`) → mask **0x1 / 0x2 / 0x4 / 0x8** for four ordinaries.
+- **VR wheel (`WeaponWheelOwnedInventory=1`):** Sectors are **gated on this mask**, not on station availability or GFx TArray contents.
 
-Focus-time **`mEquippedWeapons` 2→4 + `LoadEquippedWeapons`** (deploy `7EFFFD02…`):
+### 3.3 Player’s **two equipped controller slots** (loadout pair)
 
-- Log: grant line then **`mask 0x1 -> 0x1 count=1`** — **inventory unchanged**.
-- User: hitch/crash.
+- **Meaning:** The **pair of weapon FNames** bound to the **weapon controller** at indices **0 and 1** — the “what I’m carrying in the two ordinary holsters” abstraction Singularity uses at **`Start`** and commits at **`PopMenu`** via **`SetWeaponSlotName(i, …)`** for each **`equipped[i]`** (when count is 2, only **i ∈ {0,1}** touch those slots).
+- **Native seed:** `GetWeaponSlotName(0)` and `(1)` in **`Start`**.
+- **Not the same as:** Owning four guns on the chain, or the station offering four choices. You can **own 3–4 ordinaries** (wheel) while the locker UI still **displays/commits a two-wide** equipped list unless GFx or mod changes that list.
 
-So **`LoadEquippedWeapons` after TArray rewrite on focus is not a correct “give me four guns” integration**; it either does not touch `NativeOwnedInventory`’s chain or runs in an unsafe re-entrancy window.
-
-### 4.3 Secondary factors (mod policy, not engine bugs)
-
-| Factor | Effect |
-|--------|--------|
-| `KeepAcquiredWeapons` pickup adapter | Rewrites **keep=0→1** only on **vtable +0xD70** pickup when scoped (`inventory_vm_hook.h`). Arm A log once showed `keep=0->0` — pickup path may not run at station at all. |
-| `SwitchWeaponByArchetype` hook | **Does not** force retention (bytecode write withdrawn); only logs / opcode throw guard. |
-| Wheel fallback | If `ownedMask==0`, wheel falls back to **mesh-observed** set — not station catalog. With `ownedReady=1`, fallback is **disabled** for naming. |
-| Archetype grant experiments | GObjects / unloaded archetype scans **excluded** by policy; earlier attempts failed when classes not loaded. |
-
-**Hypothesis (falsifiable, not yet runtime-proven at station close):** Vanilla gives station ordinaries via **`LoadEquippedWeapons` + PopMenu** when GFx has populated **`mEquippedWeapons`** through **`equip`** and/or level setup — **not** by expanding the wheel mask. VR never observes four owned items because **that grant never ran successfully** for this save/state, not because the wheel renderer is capped at two sectors.
+**Arm A snapshot:** availability (design) likely four; **ownership** `mask=0x1`; **controller/equipped TArray witness** count **2**; wheel **one** named sector until later pickups raised **ownership** to `mask=0x3`.
 
 ---
 
-## 5. Can four VR wheel weapons coexist with the native two-slot locker?
+## 4. Historical evidence: four owned, selectable ordinaries already achieved (retention path)
 
-**Yes, with separation of concerns — but not by “making the locker GFx array four wide” alone.**
+**This is separate from locker grant experiments and remains the accepted product direction for “four on the wheel.”**
 
-| Approach | Coexistence | Risk |
-|----------|-------------|------|
-| **A. Wheel-only (current Arm A)** | Wheel shows **owned** count (1–4); locker stays native **two-slot Start** | User expectation mismatch at station (“four icons in design” vs two native slots) — **UX**, not crash |
-| **B. Phase C TArray rewrite on focus** | UI arrays show four FNames | **PopMenu still writes SetWeaponSlotName(i)** for i≥2 unless **Phase D** filter; **`mOriginalWeapons cap=2`** in witness → partial apply / inconsistency |
-| **C. Inventory grant via audited pickup (+0xD70, keep=1)** | Four **owned** entries; wheel OK; locker can stay 2-slot UI | Must run on **input/script thread**, correct **archetype** pointers, **not** during GFx re-entrancy; verify **PopMenu destroy** does not strip grants |
-| **D. Fake wheel mask (`0xF`) without ownership** | Shows four sectors | **Selection fails** — `NativeOwnedInventory::Queue` + pawn selector `+0xB14` only equips **owned** FNames |
+From `docs/owned-wheel-cinema-followup.md` (session **663a49a**, user accepted “super działa”):
 
-**Conclusion:** Four **selectable** VR weapons require **inventory ownership** alignment, not GFx TArray surgery alone. Native two-slot locker can remain for **controller slots 0/1** if **Phase D** prevents ordinary names from being written to slots **≥ 2** and grants go through **inventory**, not SetWeaponSlotName(2/3).
+- Native pickup adapter installed; **`keep 0→1`** on scoped **`+0xD70`** pickup (input thread).
+- Chain evidence: **`mask 0x3 → 0x7 / count 3`**, then another pickup **`mask 0x7 → 0xF / count 4`**.
+- Wheel: **`namedF / iconsF`** with all four ordinary sectors — **selectable**, not a fake mask latch.
 
----
-
-## 6. Existing retention / pickup path (mod, audited)
-
-| Mechanism | Thread | ABI / identity | Purpose |
-|-----------|--------|----------------|---------|
-| Native pickup adapter | Engine input poll thread (`NativeOwnedInventory::thread`) | `RvPlayerPawnSP` vtable **`+0xD70`**, `__fastcall`, 748-byte body hash **`CC78CCB4EE3651A2`**, neighbour **`+0xB18` → HasWeapon `0x0102F700`** | **`keep` 4th arg 0→1** when `Retain()` true (`KeepAcquiredWeapons=1`, local pawn, linked manager, supported ordinary archetype, !pause/!cinematic) |
-| `RunAuditedPickupRestore` | Same (calls `PickupCall` with keep=1) | Same | Game-authored restore shape (`verify_native_pickup.py`) — **intended Phase F primitive** |
-| VirtualFunction opcode adapter | Script thread | Opcode `0x1B` table slot | Suppress exact **`ThrowActiveWeapon`** tail on `SwitchWeaponByArchetype` drop path |
-| Pawn weapon select | Input poll | Vtable **`+0xB14`**, FName arg | Wheel commit → existing owned weapon |
-| Inventory snapshot | Input poll / locker focus | Chain walk | **Authoritative wheel mask** |
-
-**Not evidence of station grant:** `InvokeRetained` on `SwitchWeaponByArchetype` **forwards** without mutation (log-only).
+**Conclusion for Phase F planning:** The engine **can** hold four ordinary **`RvWeaponShared`** entries on the chain with **`KeepAcquiredWeapons=1`** and the audited pickup adapter during **normal gameplay pickups**. The station locker gap is **not** “wheel cannot render four”; it is **“this save/state did not yet have four owned at the station”** and **locker-focused grant hacks did not add them**.
 
 ---
 
-## 7. Minimal Phase F proposal (implementation later — not in this branch)
+## 5. Why the VR wheel did not show four at the station (Arm A root cause)
 
-**Goal:** Up to **four ordinary weapons owned** for the VR wheel at/after weapon **station**, without GFx TArray expansion on focus, without GObjects scans, without fake wheel masks.
+**Confirmed:** With `ownedReady`, the wheel enables sectors only where **`ownedMask & WeaponBit(mesh)`**.
 
-### 7.1 Required prerequisites (order matters)
+- Locker focus: **`mask=0x1`** → one sector.
+- No **`LockerStationGrantOrdinary`** / no successful inventory grant at station.
+- Failed historical path (withdrawn): focus **`mEquippedWeapons` 2→4 + `LoadEquippedWeapons`** left **`mask 0x1 → 0x1`** and correlated with hitch/crash — **not** inventory grant.
 
-1. **Phase D — PopMenu guard (mandatory before any four-name UI):** Wrap `PopMenu` (`0xF17F60`); intercept **`SetWeaponSlotName`** loop so **`DecidePopMenuControllerWrite(i, count)`** from `locker_virtual_contract.h` — **only `i ∈ {0,1}`** for ordinary FNames. *Regression risk:* wrong filter → special slots blank or wrong re-hand at `+0xC0`.
-
-2. **Phase E — equip guard (recommended):** Wrap `equip` (`0xF00F50`); refuse `slotNum >= equipped.Count` / `>= 4` per `DecideEquipIndex`. *Regression risk:* GFx script assumes silent write — UI desync vs safety.
-
-### 7.2 Smallest grant integration point (recommended)
-
-**When:** **`PopMenu` return** (menu close), on the **same thread** as GFx native call (typically script/game thread — **must match pickup adapter thread evidence**; refuse if `thread != GetCurrentThreadId()`).
-
-**What:**
-
-1. If focus class was **`RvUIGFxMovie_WeaponLocker`** and station menu (class 4) — bounded one-shot flag.
-2. `NativeOwnedInventory::SnapshotNow()` → `maskBefore`.
-3. For each ordinary archetype **authorized for this station** (source TBD — see §7.3) whose bit is **missing** from `maskBefore`:
-   - Resolve **`RvWeaponShared` archetype object** via **existing possessed item template** or **offline name→archetype table** (no full GObjects walk).
-   - Call **`InventoryVmHook::RunAuditedPickupRestore(pawn, archetype)`** (keep=1).
-4. `Refresh()` + snapshot; log **`maskBefore -> maskAfter`, count** (same receipt style as pickup adapter, cap 12).
-5. **Do not** call **`LoadEquippedWeapons`** from mod code until a read-only probe proves it is safe on close (failed on focus).
-
-**Why close, not open:** Start resets arrays from **two controller slots**; open grant fought Start/LoadEquipped re-entrancy. Close follows native **commit** ordering (PopMenu already reconciled equipped vs original).
-
-### 7.3 Open evidence gaps (must close before coding)
-
-| Gap | Smallest experiment (read-only / default OFF) |
-|-----|-----------------------------------------------|
-| Station **authorized four-pack** vs player **choice of two** | Log **FName list** in `mEquippedWeapons` at **PopMenu entry** (reflection read only, `MenuAssetWitness`-style) across one station visit |
-| **`LoadEquippedWeapons` caller** | One-shot return-address log inside existing vtable wrap (no body patch) |
-| **Archetype pointer source** | Prove one station ordinary can be resolved from **inventory chain template** or **cached archetype from prior pickup** without scan |
-| **PopMenu destroy vs new grants** | Compare chain **before/after PopMenu** when pickup restore runs **after** native PopMenu |
-
-### 7.4 Regression risks (explicit)
-
-- **Special weapons:** Unfiltered PopMenu with four equipped entries → **SetWeaponSlotName(2/3)** clobber (offline proven).
-- **Inventory strip:** PopMenu **destroyItem** may remove weapons player deselected in GFx — grants after PopMenu must respect **final** equipped/original diff.
-- **Thread / lifetime:** Pickup from render or XR thread → refuse (existing policy).
-- **Save pollution:** User asked not to persist experimental inventory during A/B — Phase F tests need **non-save** or rollback discipline.
-- **Stereo / menu / hands:** Any hook on Start/PopMenu/equip must stay scoped to **WeaponLocker** vtable identity check (`0x019A0948`).
-
-### 7.5 Explicit non-goals for Phase F v1
-
-- No **`LockerStationGrantOrdinary` on-focus** TArray + LoadEquipped (withdrawn).
-- No wheel **`ownedMask | 0xF`** latch.
-- No **Phase C `LockerVirtualApply` on focus** without Phase D.
-- No **catalog unlock** or save edits.
+**Falsifiable hypothesis (station vanilla, not proven):** Station may grant missing choices via **`LoadEquippedWeapons`** / **`PopMenu`** when GFx has populated **`mEquippedWeapons`** — see §8 missing evidence.
 
 ---
 
-## 8. Summary table (per ordinary weapon — Arm A + design intent)
+## 6. Coexistence: four VR wheel weapons vs native two-slot locker UI
 
-| Weapon | Bit | Station “available” (design) | Owned at locker (log) | Native pickup at station | Wheel sector |
-|--------|-----|------------------------------|------------------------|---------------------------|--------------|
-| Pistol / Centurion | 0x1 | Likely | **Yes** (`mask=0x1`) | Not observed | **Yes** |
-| MG / Valkyrie | 0x2 | Likely | No | No | No |
-| Shotgun | 0x4 | Likely | No | No | No |
-| Sniper | 0x8 | Likely | No | No | No |
+| Approach | Wheel | Locker UI | Phase D (PopMenu filter) |
+|----------|-------|-----------|---------------------------|
+| **A. Inventory-only (preferred direction)** | Up to **four owned** via **retention pickup path** (proven to `0xF`) | Native **two-entry Start** unchanged; player uses **wheel** for full owned set | **Not required** if mod does **not** expand GFx **`equipped.Count` > 2** and does **not** cause PopMenu to **`SetWeaponSlotName(i≥2)`** with ordinary names |
+| **B. Phase C TArray rewrite (four FNames on focus)** | Depends on ownership | GFx arrays show four names | **Required** — PopMenu would otherwise write **i ≥ 2** to controller (offline proven) |
+| **C. Fake `ownedMask \| 0xF`** | Four labels | Unchanged | N/A — **selection fails** without chain entries |
 
----
-
-## 9. References in repo
-
-- Offline locker: `tools/reload/inspect_locker_contract.py`, `inspect_locker_runtime_contract.py`, `docs/station-locker-followup-20261022.md`
-- Virtual policy: `spikes/view_matrix/locker_virtual_contract.h`, `docs/locker-virtual-contract-sketch.md`
-- Ownership / wheel: `spikes/view_matrix/native_owned_inventory.h`, `DrawWeaponWheel` in `d3d9.cpp`
-- Pickup ABI: `inventory_pickup_policy.h`, `tools/reload/verify_native_pickup.py`, `inventory_vm_hook.h`
-- Arm A: `build/locker-grant-investigation-20261022/TEST-ARM-A.md`
-- Historical acceptance (four ordinaries via retention): `docs/owned-wheel-cinema-followup.md` (mask `0xF` session — **different path than locker grant**)
+Four **selectable** wheel weapons require **ownership alignment** with the **663a49a** path, not GFx surgery alone.
 
 ---
 
-**Investigation status:** Native **two-slot Start + PopMenu commit** and **wheel owned-mask gating** are **confirmed**. Four wheel sectors require **inventory ownership** produced outside fake UI masks; **smallest correct grant locus** is **post-PopMenu audited pickup (keep=1)** with **mandatory PopMenu slot filter**, not focus-time LoadEquipped/TArray hacks.
+## 7. Existing mod retention / pickup path (audited)
+
+| Mechanism | Thread (evidence level) | Role |
+|-----------|-------------------------|------|
+| Pickup adapter `+0xD70` | **`NativeOwnedInventory::thread`** set in **`Poll()`** on engine input path; adapter logs **`sameThread=1`** in acceptance session | **`keep 0→1`** when `Retain()` |
+| `RunAuditedPickupRestore` | Same call path as adapter | Game-shaped **`keep=1`** invoke — **API exists**, station use **unverified** |
+| Opcode throw guard | Script / VM thread | Drop suppression on exact `SwitchWeaponByArchetype` tail |
+| Wheel commit | Input poll | Pawn **`+0xB14`** selector for **already-owned** FNames |
+
+---
+
+## 8. Missing evidence (blockers before any Phase F implementation)
+
+| Blocker | What we do **not** know yet | Smallest next experiment (read-only / default OFF) |
+|---------|-----------------------------|-----------------------------------------------------|
+| **Non-owned archetype resolution** | How to obtain a valid **`RvWeaponShared*`** for an ordinary the player **does not** yet own **without** full GObjects scan (failed grant used unloaded classes) | Prove resolution from **template on an owned sibling item**, **station-placed world pickup**, or **offline name→CDO table** with **one** round-trip in log; document refusal otherwise |
+| **Native station event sequence** | Order and callers of **`Start` / `equip` / `LoadEquippedWeapons` / `PopMenu`** for **this** station; whether availability is **UI-only** until **`LoadEquippedWeapons`** | Vtable wrap or script exec log: **method name + equipped count + FNames** at entry/return (bounded); **`LoadEquippedWeapons` return address** once |
+| **Pickup thread safety at station** | Whether **`PopMenu` / GFx close** runs on the **same thread** as **`Poll()`** / pickup adapter (`thread` id); calling **`RunAuditedPickupRestore` from menu thread** may be **unsafe or a no-op** | Log **`GetCurrentThreadId()`** at **`PopMenu` entry**, at **`PickupCall`**, and at locker **focus loss**; refuse cross-thread grant until proven |
+| **PopMenu destroy vs new grants** | If grants run **after** PopMenu, does **destroyItem** already removed desired weapons? | Snapshot **mask/count** immediately before PopMenu, after PopMenu, after any experimental grant (witness only) |
+| **Station “give all four” vs “pick two”** | Design intent vs vanilla **two-slot Start** | GFx/asset RE or FName list at close vs **`PlanVirtualLoad`** from ownership only |
+
+---
+
+## 9. Phase F — options (documentation only; nothing preferred for station yet)
+
+**Goal (unchanged):** Up to four **owned** ordinaries for the wheel at a weapon station **without** withdrawn focus hacks, GObjects scans, or fake wheel masks.
+
+### 9.1 Preferred product path (evidence-backed)
+
+**Extend the proven retention stack** (`KeepAcquiredWeapons=1`, pickup adapter, wheel owned inventory):
+
+- Trigger **scoped native pickup (`keep=1`)** only when a **real archetype instance** is already known (world pickup, scripted grant, or resolved template) — same mechanism that reached **`mask=0xF`** in session 663a49a.
+- **Do not** require Phase D/E **unless** the mod also implements **Phase C** (GFx equipped TArray **> 2**).
+
+### 9.2 Unverified hypothesis (not preferred)
+
+**Post-`PopMenu` batch `RunAuditedPickupRestore`:**
+
+- Rationale sketched: avoid Start/LoadEquipped re-entrancy on **open**; run after native commit.
+- **Status:** **Unverified** — thread mismatch, missing archetype pointers, and **destroyItem** ordering may invalidate it. **Do not implement** until §8 blockers have log proof.
+
+### 9.3 GFx virtualization (Phase C + D + E)
+
+Only if product requires **four names inside native locker UI**:
+
+- Phase C TArray rewrite + **mandatory** Phase D PopMenu filter + Phase E equip bounds.
+
+### 9.4 Explicit non-goals
+
+- Focus **`LockerStationGrantOrdinary`** TArray + **`LoadEquippedWeapons`** (withdrawn).
+- Wheel **`ownedMask | 0xF`** without chain entries.
+- Catalog unlock / save edits.
+
+---
+
+## 10. Summary table (Arm A + design intent)
+
+| Weapon | Bit | Station availability (intent) | Acquired ownership (log) | Two-slot equipped witness | Wheel sector |
+|--------|-----|--------------------------------|---------------------------|----------------------------|--------------|
+| Pistol / Centurion | 0x1 | Likely offered | **Yes** (`mask=0x1`) | In 2-wide list | **Yes** |
+| MG / Valkyrie | 0x2 | Likely offered | No | Not in ownership | No |
+| Shotgun | 0x4 | Likely offered | No | No | No |
+| Sniper | 0x8 | Likely offered | No | No | No |
+
+---
+
+## 11. References
+
+- Locker offline: `tools/reload/inspect_locker_contract.py`, `inspect_locker_runtime_contract.py`, `docs/station-locker-followup-20261022.md`
+- Policy: `spikes/view_matrix/locker_virtual_contract.h`, `docs/locker-virtual-contract-sketch.md`
+- Ownership / wheel: `native_owned_inventory.h`, `DrawWeaponWheel` in `d3d9.cpp`
+- Pickup ABI: `inventory_pickup_policy.h`, `verify_native_pickup.py`, `inventory_vm_hook.h`
+- **Four owned ordinaries accepted:** `docs/owned-wheel-cinema-followup.md` (663a49a, **`mask=0xF`**)
+- Arm A stability: `build/locker-grant-investigation-20261022/TEST-ARM-A.md`
+
+---
+
+**Investigation status:** Native **two-slot Start + PopMenu commit** and **wheel owned-mask gating** are **confirmed**. Four **selectable** wheel sectors were **already demonstrated** via **retention pickup**, not locker TArray hacks. Station work is blocked on **§8 evidence**, not on wheel rendering. **No preferred station grant design** until archetype resolution, station call order, and pickup thread safety are proven.
