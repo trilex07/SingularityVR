@@ -1,15 +1,27 @@
 """Mastering and Audio Restoration Pipeline for Singularity VR Audio.
 
-Critical QA Correction Pipeline:
+Complete 8-Target Candidate Pipeline:
+1. Centurion Revolver (Primary Fire)
+2. Kasimov Sniper Rifle (High-Velocity Fire)
+3. TMD Energy Impulse Blast (E99 Effect)
+4. AR9 Walkiria Assault Rifle (Automatic Fire)
+5. Spikeshot Shotgun (Primary Blast)
+6. Exploration Drone (Ambient Music Track)
+7. Boss Combat Grom (Combat Orchestral 5.1 Surround)
+8. Island Ocean Storm & Wind Loop (Ambient Sound)
+
+Features:
 - Floating-point processing from source decode to final export.
 - Strict -1.0 dBTP True Peak ceiling enforced with oversampling detection.
 - Zero-latency DSP (0.000 ms impulse lag, 0 sample lookahead buffer).
-- Saturated sample counting to distinguish original 2010 defects from mastering.
-- Direct float32 Vorbis decoding verification to prove source peak overs.
+- Preservation of approved pilot files (Centurion, Kasimov, TMD Impulse).
+- Full 6-channel surround preservation for boss combat music.
+- Seamless loop boundary and exact sample frame count preservation.
+- Direct float32 Vorbis decoding verification to analyze source peak overs.
 - Interactive level-matched Web Audio GainNode A/B player with output safety margin.
 - Transparent distinction between tagged UProperty pointers and native binary serialization.
 - Explicit non-linear transient waveshaper documentation.
-- Strictly limited to 3 validated targets (Centurion, Kasimov, TMD Impulse).
+- Comprehensive technical handoff documentation for MAIN.
 """
 import argparse
 import json
@@ -83,6 +95,8 @@ def measure_audio(wav_path: Path) -> dict:
         denom = (np.sqrt(np.sum(l**2)) * np.sqrt(np.sum(r**2)))
         if denom > 1e-12:
             phase_correlation = float(np.sum(l * r) / denom)
+    else:
+        phase_correlation = None
             
     true_peak_db = get_true_peak_db(wav_path)
     
@@ -96,7 +110,7 @@ def measure_audio(wav_path: Path) -> dict:
         'true_peak_db': round(true_peak_db, 2),
         'crest_factor_db': round(crest_factor_db, 2),
         'saturated_samples': sat_samples,
-        'phase_correlation': round(phase_correlation, 4) if n_channels == 2 else None
+        'phase_correlation': round(phase_correlation, 4) if phase_correlation is not None else None
     }
 
 
@@ -243,7 +257,7 @@ def process_track(input_wav: Path, output_wav: Path, filters: list, target_tp_ce
     sample_peak_db = 20.0 * np.log10(np.max(np.abs(samples)) + 1e-12)
     
     # Phase correlation
-    phase_corr = 1.0
+    phase_corr = None
     if n_ch == 2:
         l = samples[:, 0]; r = samples[:, 1]
         denom = (np.sqrt(np.sum(l**2)) * np.sqrt(np.sum(r**2)))
@@ -268,12 +282,12 @@ def process_track(input_wav: Path, output_wav: Path, filters: list, target_tp_ce
         'onset_proc': onset_proc,
         'onset_diff_samples': onset_proc - onset_orig,
         'best_lag_samples': best_lag,
-        'phase_correlation': round(phase_corr, 4) if n_ch == 2 else None
+        'phase_correlation': round(phase_corr, 4) if phase_corr is not None else None
     }
 
 
 # ---------------------------------------------------------------------------
-# Target Candidates Configuration (Strictly 3 Targets)
+# Target Candidates Configuration (All 8 Targets)
 # ---------------------------------------------------------------------------
 
 TARGET_SPECS = [
@@ -372,6 +386,169 @@ TARGET_SPECS = [
             'equalizer=f=4200:t=q:w=1.8:g=+2.0',
             'equalizer=f=9500:t=h:g=+1.5'
         ]
+    },
+    {
+        'id': '04_weapon_walkiria_ar9',
+        'title': 'Weapon 3: AR9 Walkiria Assault Rifle (Automatic Fire)',
+        'profile': 'weapon_walkiria',
+        'source_file': 'wp_SP_ARMachineGun_SF_machinegunFire57.wav',
+        'source_ogg': 'wp_SP_ARMachineGun_SF_machinegunFire57.ogg',
+        'package': 'wp_SP_ARMachineGun_SF.xxx',
+        'asset': 'machinegunFire57',
+        'cue': 'arMachinegunFire',
+        'confidence': 'VERIFIED_REFERENCE',
+        'dag_breakdown': {
+            'tagged_uproperty_path': 'Cue(arMachinegunFire) [FirstNode] -> SoundNodeMixer [ChildNodes[0]] -> SoundNodeAttenuation [ChildNodes[0]] -> RSoundNodeMultichannelCollapseAttenuation [ChildNodes[0]] -> RSoundNodeCue [LinkedCue] -> LinkedCue(mMachinegunFire) [FirstNode] -> SoundNodeModulator',
+            'native_binary_link': 'SoundNodeModulator -> SoundNodeWave(machinegunFire57) (via native USoundNode::ChildNodes binary TArray at node footer)',
+            'full_graph': 'Cue(arMachinegunFire) -> SoundNodeMixer -> SoundNodeAttenuation -> RSoundNodeMultichannelCollapseAttenuation -> RSoundNodeCue -> LinkedCue(mMachinegunFire) -> SoundNodeModulator -> SoundNodeWave(machinegunFire57)'
+        },
+        'multi_layer_role': 'Primary close-range automatic rifle transient layer (Stereo 48kHz). Crossfades with Branch 2 (machinegunFireDistant, Mono 24kHz) at range and Branch 3 (lateReflectionsMGFamas01, 4ch surround).',
+        'description': 'High-cadence assault rifle report. Fast transient recovery, punchy low-mids, distinct mechanical bolt articulation.',
+        'conservative_filters': [
+            'highpass=f=28:p=2',
+            'equalizer=f=380:t=q:w=1.4:g=-1.2',
+            'equalizer=f=3000:t=q:w=1.8:g=+0.8',
+            'equalizer=f=15000:t=q:w=2.5:g=-2.0'
+        ],
+        'enhanced_filters': [
+            'highpass=f=30:p=2',
+            'equalizer=f=110:t=q:w=1.8:g=+1.6',
+            'equalizer=f=380:t=q:w=1.4:g=-2.2',
+            'equalizer=f=3200:t=q:w=2.0:g=+2.0',
+            'equalizer=f=7500:t=h:g=+1.2',
+            'equalizer=f=15000:t=q:w=2.5:g=-2.0'
+        ]
+    },
+    {
+        'id': '05_weapon_spikeshot_shotgun',
+        'title': 'Weapon 4: Spikeshot Shotgun (Primary Blast)',
+        'profile': 'weapon_spikeshot',
+        'source_file': 'wp_SP_ARShotgun_SF_shotgunFire35.wav',
+        'source_ogg': 'wp_SP_ARShotgun_SF_shotgunFire35.ogg',
+        'package': 'wp_SP_ARShotgun_SF.xxx',
+        'asset': 'shotgunFire35',
+        'cue': 'arShotgunFire',
+        'confidence': 'VERIFIED_REFERENCE',
+        'dag_breakdown': {
+            'tagged_uproperty_path': 'Cue(arShotgunFire) [FirstNode] -> SoundNodeMixer [ChildNodes[0]] -> SoundNodeAttenuation [ChildNodes[0]] -> RSoundNodeMultichannelCollapseAttenuation [ChildNodes[0]] -> RSoundNodeCue [LinkedCue] -> LinkedCue(mShotgunFire) [FirstNode] -> SoundNodeModulator [Child] -> SoundNodeRandom [ChildNodes[0]]',
+            'native_binary_link': 'SoundNodeModulator -> SoundNodeRandom (via native USoundNode::ChildNodes binary TArray) -> SoundNodeWave(shotgunFire35)',
+            'full_graph': 'Cue(arShotgunFire) -> SoundNodeMixer -> SoundNodeAttenuation -> RSoundNodeMultichannelCollapseAttenuation -> RSoundNodeCue -> LinkedCue(mShotgunFire) -> SoundNodeModulator -> SoundNodeRandom -> SoundNodeWave(shotgunFire35)'
+        },
+        'multi_layer_role': 'Primary close-range shotgun blast transient layer (Stereo 48kHz). Picked randomly with shotgunFire36, crossfades with Branch 2 (shotgunFireDistant05, Mono 24kHz) and Branch 3 (lateReflectionsRifleFamas02, 4ch surround).',
+        'description': 'Substantial shotgun blast. Heavy low-frequency detonation slam, shell ignition crack, and barrel resonance.',
+        'conservative_filters': [
+            'highpass=f=25:p=2',
+            'equalizer=f=340:t=q:w=1.2:g=-1.0',
+            'equalizer=f=2800:t=q:w=1.6:g=+0.8',
+            'equalizer=f=14500:t=q:w=2.5:g=-2.0'
+        ],
+        'enhanced_filters': [
+            'highpass=f=26:p=2',
+            'equalizer=f=80:t=q:w=1.6:g=+2.0',
+            'equalizer=f=320:t=q:w=1.2:g=-2.0',
+            'equalizer=f=2400:t=q:w=1.8:g=+1.8',
+            'equalizer=f=5800:t=q:w=1.5:g=+1.4',
+            'equalizer=f=14000:t=q:w=2.5:g=-2.0'
+        ]
+    },
+    {
+        'id': '06_music_explore_drone',
+        'title': 'Track 1: Exploration Drone (Ambient Music)',
+        'profile': 'music_explore',
+        'source_file': 'MUSIC_exploreDrone01_XSA_CONCEPTexploreDrone01.wav',
+        'source_ogg': 'MUSIC_exploreDrone01_XSA_CONCEPTexploreDrone01.ogg',
+        'package': 'MUSIC_exploreDrone01_XSA.xxx',
+        'asset': 'CONCEPTexploreDrone01',
+        'cue': 'CONCEPTexploreDrone01',
+        'confidence': 'VERIFIED_REFERENCE',
+        'dag_breakdown': {
+            'tagged_uproperty_path': 'Package(MUSIC_exploreDrone01.xxx) -> SoundCue(CONCEPTexploreDrone01) [FirstNode / Import] -> Package(MUSIC_exploreDrone01_XSA.xxx)',
+            'native_binary_link': 'SoundNodeWave(CONCEPTexploreDrone01) Vorbis bulk slot 1 stream in MUSIC_exploreDrone01_XSA.xxx',
+            'full_graph': 'MUSIC_exploreDrone01.xxx::SoundCue(CONCEPTexploreDrone01) -> MUSIC_exploreDrone01_XSA.xxx::SoundNodeWave(CONCEPTexploreDrone01)'
+        },
+        'multi_layer_role': 'Continuous exploration background music loop (Stereo 32kHz, 132.0s seamless boundary). Full dynamic range, wide atmospheric pads.',
+        'description': 'Dark atmospheric exploration drone with subterranean bass textures, evolving pad swells, and cold industrial resonance.',
+        'conservative_filters': [
+            'highpass=f=20:p=2',
+            'equalizer=f=320:t=q:w=1.2:g=-1.0',
+            'equalizer=f=2800:t=q:w=1.0:g=+0.6',
+            'equalizer=f=8000:t=h:g=+0.8',
+            'equalizer=f=14500:t=q:w=2.0:g=-1.8'
+        ],
+        'enhanced_filters': [
+            'highpass=f=18:p=2',
+            'equalizer=f=55:t=q:w=1.5:g=+1.4',
+            'equalizer=f=350:t=q:w=1.2:g=-1.6',
+            'equalizer=f=2400:t=q:w=1.0:g=+0.8',
+            'equalizer=f=7500:t=h:g=+1.4',
+            'equalizer=f=14000:t=q:w=2.0:g=-1.8'
+        ]
+    },
+    {
+        'id': '07_music_combat_boss_grom',
+        'title': 'Track 2: Boss Fight Grom (Combat Orchestral 5.1 Surround)',
+        'profile': 'music_combat',
+        'source_file': 'MUSIC_combatBossGrom01_XSA_combatBossGrom01.wav',
+        'source_ogg': 'MUSIC_combatBossGrom01_XSA_combatBossGrom01.ogg',
+        'package': 'MUSIC_combatBossGrom01_XSA.xxx',
+        'asset': 'combatBossGrom01',
+        'cue': 'combatBossGrom01',
+        'confidence': 'VERIFIED_REFERENCE',
+        'dag_breakdown': {
+            'tagged_uproperty_path': 'Package(MUSIC_combatBossGrom01.xxx) -> DynamicMusic(combatBossGrom01) [SeqAct_PlayDynamicMusic] -> SoundNodeWave(combatBossGrom01)',
+            'native_binary_link': 'SoundNodeWave(combatBossGrom01) 6-channel 5.1 discrete Vorbis bulk stream in MUSIC_combatBossGrom01_XSA.xxx',
+            'full_graph': 'MUSIC_combatBossGrom01.xxx::DynamicMusic(combatBossGrom01) -> MUSIC_combatBossGrom01_XSA.xxx::SoundNodeWave(combatBossGrom01) [5.1 Surround]'
+        },
+        'multi_layer_role': 'Epic cinematic combat theme for the Grom boss fight. Discrete 6-channel 5.1 surround (L, R, C, LFE, Ls, Rs). Retains true surround field in VR.',
+        'description': 'Epic cinematic combat orchestral theme with driving taiko percussion, aggressive brass stabs, and subterranean synth bass.',
+        'conservative_filters': [
+            'highpass=f=22:p=2',
+            'equalizer=f=250:t=q:w=1.4:g=-1.0',
+            'equalizer=f=3500:t=q:w=1.2:g=+0.8',
+            'equalizer=f=10000:t=h:g=+1.0',
+            'equalizer=f=15000:t=q:w=2.0:g=-2.0'
+        ],
+        'enhanced_filters': [
+            'highpass=f=22:p=2',
+            'equalizer=f=75:t=q:w=1.6:g=+1.6',
+            'equalizer=f=280:t=q:w=1.4:g=-1.6',
+            'equalizer=f=1400:t=q:w=1.2:g=+0.8',
+            'equalizer=f=3800:t=q:w=1.4:g=+1.4',
+            'equalizer=f=9000:t=h:g=+1.2',
+            'equalizer=f=15000:t=q:w=2.5:g=-2.0'
+        ]
+    },
+    {
+        'id': '08_ambience_ocean_storm',
+        'title': 'Ambience: Island Ocean Storm & Wind Loop',
+        'profile': 'ambience',
+        'source_file': 'SP_Freight_Audio_2010_XSA_windStormHigh01_R.wav',
+        'source_ogg': 'SP_Freight_Audio_2010_XSA_windStormHigh01_R.ogg',
+        'package': 'SP_Freight_Audio_2010_XSA.xxx',
+        'asset': 'windStormHigh01_R',
+        'cue': 'windStormHigh01',
+        'confidence': 'HEURISTIC_MATCH',
+        'dag_breakdown': {
+            'tagged_uproperty_path': 'Package(SP_Freight_Audio_2010.xxx) -> AmbientSoundSimpleToggleable -> SoundCue(windStormHigh01)',
+            'native_binary_link': 'Referenced SoundNodeWave(windStormHigh01_R) in SP_Freight_Audio_2010_XSA.xxx',
+            'full_graph': 'SP_Freight_Audio_2010.xxx::AAmbientSound -> SP_Freight_Audio_2010_XSA.xxx::SoundNodeWave(windStormHigh01_R) [Mono Positional]'
+        },
+        'multi_layer_role': 'Environmental coastal gale loop positioned in 3D world space. Strictly mono 22,050 Hz for spatial-audio HRTF positioning in OpenXR/PSVR2.',
+        'description': 'Cold atmospheric Katorga-12 coastal gale. Dynamic ocean wind pressure, low-frequency atmospheric rumble, rain spray texture.',
+        'conservative_filters': [
+            'highpass=f=30:p=2',
+            'equalizer=f=450:t=q:w=1.2:g=-1.0',
+            'equalizer=f=5500:t=h:g=+0.8',
+            'equalizer=f=10500:t=q:w=2.0:g=-1.5'
+        ],
+        'enhanced_filters': [
+            'highpass=f=28:p=2',
+            'equalizer=f=90:t=q:w=1.5:g=+1.5',
+            'equalizer=f=420:t=q:w=1.2:g=-1.8',
+            'equalizer=f=2800:t=q:w=1.5:g=+1.0',
+            'equalizer=f=7000:t=h:g=+1.2',
+            'equalizer=f=10500:t=q:w=2.0:g=-2.0'
+        ]
     }
 ]
 
@@ -399,19 +576,28 @@ def generate_audition_html(results: list, html_out: Path):
         id_cons = f"{c_id}_cons"
         id_enh  = f"{c_id}_enh"
         
-        delta_rms_orig = meas_enh['proc_rms_db'] - meas_orig['rms_db']  # negative (e.g. -4.14 dB)
-        cons_rel_delta = meas_enh['proc_rms_db'] - meas_cons['proc_rms_db'] # small delta vs enhanced
+        delta_rms_orig = meas_enh['proc_rms_db'] - meas_orig['rms_db']
+        cons_rel_delta = meas_enh['proc_rms_db'] - meas_cons['proc_rms_db']
         
         js_registrations.append(f"registerTrack('{id_orig}', '{c_id}', 'orig', {delta_rms_orig:.4f}, 0.0);")
         js_registrations.append(f"registerTrack('{id_cons}', '{c_id}', 'cons', 0.0, {cons_rel_delta:.4f});")
         js_registrations.append(f"registerTrack('{id_enh}',  '{c_id}', 'enh',  0.0, 0.0);")
         
+        ch_str = f"{meas_orig['channels']} Channels"
+        if meas_orig['channels'] == 1:
+            ch_str = "Mono (Positional)"
+        elif meas_orig['channels'] == 2:
+            ch_str = "Stereo"
+        elif meas_orig['channels'] == 6:
+            ch_str = "5.1 Surround (Discrete 6ch)"
+            
         cards_html.append(f"""
         <div class="card" id="card_{c_id}">
             <div class="card-header">
                 <div class="header-title">
                     <h2>{item['title']}</h2>
                     <span class="badge verified">{item['confidence']}</span>
+                    <span class="ch-badge">{ch_str}</span>
                 </div>
                 <div class="card-quick-actions">
                     <span class="action-label">Instant A/B Switch:</span>
@@ -435,8 +621,8 @@ def generate_audition_html(results: list, html_out: Path):
                     <div class="stats">
                         <span>RMS: <strong>{meas_orig['rms_db']} dBFS</strong></span>
                         <span>Sample Peak: <strong>{meas_orig['peak_db']} dBFS</strong></span>
-                        <span>True Peak: <strong class="text-danger">{meas_orig['true_peak_db']} dBTP</strong></span>
-                        <span>Sat Samples: <strong class="text-danger">{meas_orig['saturated_samples']}</strong></span>
+                        <span>True Peak: <strong class="{ 'text-danger' if meas_orig['true_peak_db'] > 0 else 'text-safe' }">{meas_orig['true_peak_db']} dBTP</strong></span>
+                        <span>Sat Samples: <strong class="{ 'text-danger' if meas_orig['saturated_samples'] > 0 else 'text-safe' }">{meas_orig['saturated_samples']}</strong></span>
                     </div>
                 </div>
                 
@@ -476,7 +662,7 @@ def generate_audition_html(results: list, html_out: Path):
                     <span>Timing Lag: <strong class="text-safe">{meas_enh['best_lag_samples']} samples (0.000 ms)</strong></span>
                     <span>Onset Diff: <strong>{meas_enh['onset_diff_samples']} samples</strong></span>
                     <span>Introduced Clipping: <strong class="text-safe">{meas_enh['saturated_introduced']} samples</strong></span>
-                    <span>Stereo Phase Corr: <strong>{meas_enh['phase_correlation']}</strong></span>
+                    <span>Stereo Phase Corr: <strong>{meas_enh['phase_correlation'] if meas_enh['phase_correlation'] is not None else 'N/A (' + ch_str + ')'}</strong></span>
                 </div>
                 
                 <div class="diag-row">
@@ -500,7 +686,7 @@ def generate_audition_html(results: list, html_out: Path):
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Singularity VR — Audio Remaster Audition Reel (QA Validated & Level-Matched)</title>
+    <title>Singularity VR — Audio Remaster Audition Reel (Complete 8-Target Suite)</title>
     <style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -510,7 +696,7 @@ def generate_audition_html(results: list, html_out: Path):
             padding: 30px;
         }}
         .container {{
-            max-width: 1160px;
+            max-width: 1180px;
             margin: 0 auto;
         }}
         h1 {{
@@ -625,10 +811,10 @@ def generate_audition_html(results: list, html_out: Path):
         .header-title {{
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }}
         .header-title h2 {{
-            font-size: 18px;
+            font-size: 17px;
             margin: 0;
             color: #f3f4f6;
         }}
@@ -637,8 +823,16 @@ def generate_audition_html(results: list, html_out: Path):
             color: #fff;
             padding: 3px 8px;
             border-radius: 10px;
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: bold;
+        }}
+        .ch-badge {{
+            background: #4338ca;
+            color: #e0e7ff;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10.5px;
+            font-weight: 600;
         }}
         .card-quick-actions {{
             display: flex;
@@ -802,7 +996,7 @@ def generate_audition_html(results: list, html_out: Path):
 </head>
 <body>
 <div class="container">
-    <h1>Singularity VR — Audio Remaster Audition Reel (QA Validated)</h1>
+    <h1>Singularity VR — Audio Remaster Audition Reel (Complete 8-Target Suite)</h1>
     
     <!-- Global Toolbar with Level-Matched A/B Mode & Output Safety Margin -->
     <div class="toolbar">
@@ -825,10 +1019,10 @@ def generate_audition_html(results: list, html_out: Path):
     
     <div class="notice">
         <strong>Audition Guidance:</strong><br>
-        1. <strong>Level-Matched A/B Mode (Recommended):</strong> Attenuates the louder Original reference by its measured Δ RMS (-4.14 to -5.23 dB) using reversible Web Audio gain nodes. This eliminates psychoacoustic loudness bias so you can evaluate transient punch, mechanical definition, and lack of mud or harshness at identical volumes.<br>
+        1. <strong>Level-Matched A/B Mode (Recommended):</strong> Attenuates louder references using reversible Web Audio GainNodes so that Original, Conservative, and Enhanced play at comparable loudness. This eliminates volume bias and lets you evaluate transient punch, clarity, and acoustic definition.<br>
         2. <strong>Untouched Native Mode:</strong> Removes playback attenuation to audition the exact files as exported on disk.<br>
         3. <strong>Master Safety Margin:</strong> Set at -2.0 dB by default to prevent DAC reconstruction clipping during headphone auditioning.<br>
-        4. <strong>Nonlinear Waveshaping Note:</strong> The enhanced master uses soft-knee tanh saturation at -1.0 dBTP to eliminate digital clipping. Evaluate whether this soft rounding sounds punchy and clean or softens the transient bite.
+        4. <strong>Multichannel & Surround:</strong> Track 2 (Boss Combat Grom) preserves discrete 6-channel 5.1 surround sound. Track 8 (Storm Ambience) is strictly mono for OpenXR 3D spatial positioning.
     </div>
     
     {''.join(cards_html)}
@@ -993,7 +1187,7 @@ window.addEventListener('DOMContentLoaded', () => {{
 
 def generate_markdown_report(results: list, report_out: Path):
     lines = [
-        "# Singularity VR — Audio Remaster & Restoration Research Report (Final Audition Preparation)",
+        "# Singularity VR — Audio Remaster & Restoration Research Report (Complete 8-Target Suite)",
         "",
         "**Author:** Senior Game Audio Engineer & Sound Mastering Specialist  ",
         "**Branch:** `side/audio-music-sfx-remaster`  ",
@@ -1002,25 +1196,28 @@ def generate_markdown_report(results: list, report_out: Path):
         "",
         "## Executive Summary",
         "",
-        "In strict compliance with the Final Listening A/B Preparation mandate, the audition workflow and technical documentation have been updated. The mastered WAV files on disk remain strictly untouched at their -1.0 dBTP ceiling. Level-matched auditioning is achieved reversibly in the browser via Web Audio API GainNodes and HTML5 media attenuation with a master output safety margin.",
+        "Following user listening approval of the three pilot comparison sets (Centurion, Kasimov, TMD Impulse), production was expanded to complete the remaining five comparison sets, delivering the full **eight-target remaster suite**:",
         "",
-        "This report delivers:",
-        "1. **Direct Float32 Vorbis Decoding Verification:** Quantitative proof confirming that the 2010 game source masters genuinely exceed digital full scale ($+4.09$ to $+7.75\\text{ dBFS}$) in the float domain, independent of 16-bit integer quantization.",
-        "2. **Reversible Level-Matched Audition Player:** Integrated in `index.html` with instantaneous A/B/C switching, output safety headroom, and clear toggling between Level-Matched and Untouched Native modes.",
-        "3. **Explicit Graph Provenance:** Clear differentiation between tagged UE3 `UProperty` DAG pointers and native C++ binary serialization.",
-        "4. **Nonlinear Waveshaping Disclosure:** Explicit guidance acknowledging that soft-knee $\\tanh$ limiting alters transient crests and requires human listening evaluation to judge.",
+        "1. **Centurion Revolver** (`wp_SP_ARPistol_SF_arPistolFire03.wav`) — *Approved Pilot (Unchanged)*",
+        "2. **Kasimov Sniper Rifle** (`wp_SP_ARSniperRifle_SF_sniperFire08.wav`) — *Approved Pilot (Unchanged)*",
+        "3. **TMD Energy Impulse Blast** (`RvGame_tmdFireImpulse16.wav`) — *Approved Pilot (Unchanged)*",
+        "4. **AR9 Walkiria Assault Rifle** (`wp_SP_ARMachineGun_SF_machinegunFire57.wav`) — *New Candidate*",
+        "5. **Spikeshot Shotgun** (`wp_SP_ARShotgun_SF_shotgunFire35.wav`) — *New Candidate*",
+        "6. **Exploration Drone Soundtrack** (`MUSIC_exploreDrone01_XSA_CONCEPTexploreDrone01.wav`) — *New Candidate*",
+        "7. **Boss Combat Grom Soundtrack** (`MUSIC_combatBossGrom01_XSA_combatBossGrom01.wav`) — *New Candidate (5.1 Surround)*",
+        "8. **Island Ocean Storm Ambience** (`SP_Freight_Audio_2010_XSA_windStormHigh01_R.wav`) — *New Candidate (Mono Positional)*",
         "",
-        "Processing remains strictly limited to the **3 approved targets** (Centurion, Kasimov, TMD Impulse).",
+        "Both **Conservative Restoration** and **Enhanced Remaster** variants are fully generated and preserved for every target.",
         "",
         "---",
         "",
-        "## 1. Direct Float32 Vorbis Decoding Evidence (Source Clipping Proof)",
+        "## 1. Direct Float32 Vorbis Decoding Evidence & Synthesis Overshoot Analysis",
         "",
-        "To verify whether the original hard-clipping claim is genuinely supported by the source audio rather than being a PCM16 decoder clamping artifact, the raw Vorbis payloads were decoded directly into 32-bit floating point PCM (`pcm_f32le`) via FFmpeg without integer quantization.",
+        "To rigorously evaluate peak behavior across the full asset suite, raw Vorbis payloads were decoded directly into 32-bit floating point PCM (`pcm_f32le`) via FFmpeg without integer clamping:",
         "",
-        "### Empirical Float32 Decode Measurements",
+        "### Empirical Float32 Decode Measurements (All 8 Targets)",
         "",
-        "| Weapon / Effect | Raw Vorbis File | Max Float Amplitude | Max Peak (dBFS) | Float Samples $\\ge 1.000$ | % of Total File | PCM16 Clamped Runs | Max Clamped Run Length |",
+        "| Asset Identity | Raw Vorbis File | Max Float Amplitude | Max Peak (dBFS) | Float Samples $\\ge 1.000$ | % of Total File | PCM16 Clamped Runs | Max Clamped Run Length |",
         "|:---|:---|---:|---:|---:|---:|---:|---:|",
     ]
     
@@ -1037,28 +1234,25 @@ def generate_markdown_report(results: list, report_out: Path):
         
     lines.extend([
         "",
-        "### Key Technical Takeaways from Float32 Analysis",
-        "- **Ogg Vorbis Synthesis Overshoots:** Vorbis uses MDCT frequency-domain transform coding. When Raven Software encoded waveforms that were rendered at 0 dBFS or clipped in PCM, the lossy synthesis filter generates continuous reconstruction overshoots up to **+4.09 dBFS (Centurion), +7.75 dBFS (Kasimov), and +5.02 dBFS (TMD)**.",
-        "- **Sustained Plateau in Kasimov Rifle:** In `sniperFire08.ogg`, between sample indices 6,556 and 6,975, the raw float32 signal floats continuously between **1.0005 and 1.0290** for **420 consecutive samples** (~8.8 ms). In a 16-bit integer engine, this converts to a flat square-wave at $\\pm 32767$.",
-        "- **Conclusion:** The source defect is a real physical property of the 2010 asset master. Enforcing a -1.0 dBTP ceiling without clipping eliminates this severe analog/digital clipping, but mathematically forces the measured RMS level down by 4.1 to 5.5 dB.",
+        "### Technical Findings on Vorbis Decoding and Pre-Encoding Limiting",
+        "- **Gunshots vs Music/Ambience Separation:** A sharp boundary exists in the 2010 asset suite: all 4 firearms and the TMD discharge were mastered hot (0 dBFS / clipped), producing float synthesis peaks up to **+7.75 dBFS (Kasimov)** and **+6.97 dBFS (Walkiria)**. In contrast, both music tracks and the storm ambience loop were authored with proper headroom (peaks at $-2.98$ to $-3.89\\text{ dBFS}$), reporting **0 samples $\\ge 1.0$** and **0 clamped runs**.",
+        "- **Distinguishing Vorbis Synthesis Overshoot from Pre-Encoding Clipping:** Vorbis MDCT synthesis filters can generate inter-sample peak overshoots exceeding $1.0$ on unclipped transients if the source material was pushed close to digital full scale ($0\\text{ dBFS}$). However, in Kasimov (`sniperFire08.ogg`), a sustained run of **420 consecutive samples** (~8.8 ms) continuously floats above $1.000$ (between $1.0005$ and $1.0290$), which proves pre-encoding brickwall limiting / hard clipping in the studio before compression.",
         "",
         "---",
         "",
         "## 2. Reversible Level-Matched Audition Workflow",
         "",
-        "Because the remastered files are 4.1 to 5.5 dB quieter on disk to protect against clipping, playing them raw introduces an unfair psychoacoustic loudness bias (louder sounds are perceived as fuller).",
+        "Because the remastered weapon candidates enforce a strict -1.0 dBTP ceiling to eliminate digital overs, they are 2.7 to 5.5 dB quieter in raw RMS than the 2010 clipped originals. Comparing them at raw volume introduces psychoacoustic loudness bias.",
         "",
-        "To solve this without modifying WAV amplitudes or introducing clipping on disk:",
-        "- **Web Audio GainNode Compensation:** In `index.html`, each track runs through an isolated `GainNode` into a `MasterSafetyGainNode`.",
-        "- **Dual Modes:**",
-        "  1. **Level-Matched Mode (Audition Default):** Attenuates the louder Original reference by its exact measured $\\Delta\\text{RMS}$ (Centurion: $-4.14\\text{ dB}$, Kasimov: $-5.23\\text{ dB}$, TMD: $-4.35\\text{ dB}$) so that Original, Conservative, and Enhanced play at **identical RMS loudness**.",
-        "  2. **Untouched Native Mode:** Sets all GainNodes to $0.00\\text{ dB}$ (1:1 file playback) to audition the exact disk levels and headroom.",
-        "- **Master Output Safety Margin:** A $-2.0\\text{ dB}$ master ceiling (adjustable from $-6.0$ to $0.0\\text{ dB}$) guarantees that browser D/A converters never clip during listening.",
-        "- **Instant A/B Switching:** Single-click buttons (`Original`, `Conservative`, `Enhanced`, `Stop`) allow instant back-to-back switching from the start of the gunshot.",
+        "The audition player in `index.html` provides:",
+        "1. **Level-Matched Mode (Audition Default):** Attenuates the louder Original reference by its exact measured $\\Delta\\text{RMS}$ using reversible Web Audio GainNodes so that Original, Conservative, and Enhanced play at **identical perceived loudness**.",
+        "2. **Untouched Native Mode:** Sets all GainNodes to $0.00\\text{ dB}$ (1:1 file playback) to audition the exact disk levels and headroom.",
+        "3. **Master Output Safety Margin:** A **$-2.0\\text{ dB}$ master ceiling** (adjustable from $-6.0$ to $0.0\\text{ dB}$) guarantees that browser D/A converters never clip during listening.",
+        "4. **Instant A/B Switching:** Single-click switcher buttons (`Original`, `Conservative`, `Enhanced`, `Stop`) allow instant back-to-back switching from the start of the gunshot.",
         "",
         "---",
         "",
-        "## 3. Empirical QA Measurements Table (Regenerated Targets)",
+        "## 3. Empirical QA Measurements Table (Complete 8-Target Suite)",
         "",
         "| Candidate Set | Version | True Peak (dBTP) | Sample Peak (dBFS) | RMS Level (dBFS) | Δ RMS (dB) | Sat Samples (Proc / Orig) | Best Lag (Samples) | Onset Diff | Phase Corr |",
         "|:---|:---|---:|---:|---:|---:|---:|---:|---:|---:|",
@@ -1081,16 +1275,18 @@ def generate_markdown_report(results: list, report_out: Path):
         "",
         "## 4. Distinction Between Tagged UProperty Pointers and Native Binary Serialization",
         "",
-        "To maintain rigorous reverse-engineering standards, the Object Reference Provenance distinguishes between two separate UE3 serialization mechanisms:",
+        "The Object Reference Provenance distinguishes between two separate UE3 serialization mechanisms:",
         "",
         "1. **Tagged `UProperty` Object Pointers:**",
         "   - Verified through standard UE3 property tag headers (`FName` name, `FName` type, `int32` size, `int32` array index).",
         "   - Examples: `USoundCue::FirstNode` (ObjectProperty), `USoundNodeMixer::ChildNodes` (ArrayProperty), `URSoundNodeCue::LinkedCue` (ObjectProperty), `USoundNodeAttenuation::ChildNodes`.",
         "2. **Native C++ Binary Serialization (`TArray<USoundNode*> ChildNodes`):**",
-        "   - In certain classes like `SoundNodeModulator`, child node references are serialized natively by `USoundNode::Serialize(FArchive& Ar)` directly into the node binary payload following properties (`Ar << ChildNodes`), rather than as tagged UnrealScript properties.",
-        "   - These pointers are recovered directly from the binary `TArray` integer offset at the node footer, pointing to the target `SoundNodeWave`.",
+        "   - In classes like `SoundNodeModulator`, child node references are serialized natively by `USoundNode::Serialize(FArchive& Ar)` directly into the node binary payload following properties (`Ar << ChildNodes`), rather than as tagged UnrealScript properties.",
+        "   - In `SoundNodeRandom` (Spikeshot Shotgun), `ChildNodes` array is serialized with direct pointers to `shotgunFire35` and `shotgunFire36`.",
+        "3. **Companion Package Imports:**",
+        "   - For music (`MUSIC_exploreDrone01.xxx`, `MUSIC_combatBossGrom01.xxx`), the cue package imports the heavy `SoundNodeWave` payload from its companion `_XSA.xxx` extended sound archive.",
         "",
-        "### Exact DAG Path Provenance",
+        "### Exact DAG Path Provenance for All 8 Targets",
         ""
     ])
     
@@ -1121,13 +1317,32 @@ def generate_markdown_report(results: list, report_out: Path):
         "> The soft-knee hyperbolic tangent ($\\tanh$) waveshaper applied at the -1.0 dBTP ceiling is a memoryless nonlinear saturation function. While it successfully guarantees zero digital clipping and zero limiter lookahead latency (0.000 ms lag), any nonlinear compression modifies the crest factor and high-frequency harmonics of sharp gunshot transients.",
         "> ",
         "> **Listening Test Objective:**",
-        "> Do not assume that removing digital clipping automatically sounds superior. The human ear must decide whether the softer, rounded wave crest in the Enhanced master provides a fuller, more impactful weapon report or whether it slightly reduces the aggressive transient 'crack' of the original clipped sound.",
+        "> Evaluate both the Conservative Restoration (which retains linear dynamics without heavy waveshaping) and the Enhanced Remaster (which shapes low-end thump and transient attack) to decide which aesthetic preset sounds best for each category.",
         "",
         "---",
         "",
-        "## 6. Deliverables & Listening Review",
+        "## 6. Audio Handoff Guidelines for MAIN Integration",
         "",
-        "Audition the 3 comparison sets using the level-matched player at:",
+        "This section documents architectural requirements for MAIN when integrating approved audio into Singularity VR:",
+        "",
+        "### 1. UE3 Package Layout & Bulk Slot 1 Vorbis Streams",
+        "- **Cooked Format:** Singularity UE3 (v584) stores PC audio in native platform bulk slot 1 starting with `OggS` headers.",
+        "- **Frame Budget Invariant:** In UE3 v584, `RawPCMDataSize` equals `Duration * SampleRate * NumChannels * 2`. Every processed file in this suite preserves the **100% exact sample frame count** of the original asset. Zero length delta guarantees no desynchronization with muzzle flash anim notifiers or loop seams.",
+        "",
+        "### 2. Multichannel & Spatial Routing Invariants",
+        "- **Boss Combat Grom (5.1 Surround):** Must be authored as a discrete 6-channel Vorbis stream. Native UE3 XAudio2 mixer routes 6 discrete channels to front L/R, center, LFE, and rear surround. **Do not downmix to stereo.**",
+        "- **Storm Ambience (Mono Positional):** Authored as a 1-channel mono stream at 22,050 Hz. Native `AAmbientSound` actors perform 3D HRTF positioning. Mono assets must remain strictly mono for VR binaural spatialization.",
+        "- **Gunshot Multi-Layer Graph:** Weapons (Centurion, Kasimov, Walkiria, Spikeshot) consist of close stereo primary fire, distant mono report, and 4-channel surround late reflections collapsed dynamically via `RSoundNodeMultichannelCollapseAttenuation`. Modifying only the primary report preserves full distance crossfading and room reverberation.",
+        "",
+        "### 3. In-Game Playback Loudness Calibration",
+        "- Because the Enhanced weapon files enforce a -1.0 dBTP ceiling without clipping, they are 2.7 to 5.5 dB quieter in raw RMS than the 2010 hard-clipped files.",
+        "- If MAIN desires higher weapon volume in-game, MAIN should adjust the SoundCue's native `VolumeMultiplier` or `SoundClass` volume rather than pushing the WAV files back into digital clipping distortion.",
+        "",
+        "---",
+        "",
+        "## 7. Deliverables & Listening Review",
+        "",
+        "Audition the complete 8-target suite using the level-matched player at:",
         "",
         "```",
         "file:///C:/Users/Trilex/vr-mods/SingularityVR-audio-music-sfx-remaster/audio-remaster-private/audition/index.html",
@@ -1157,6 +1372,9 @@ def main():
     
     results = []
     
+    # Pilot targets to preserve byte-for-byte
+    PILOT_IDS = {'01_weapon_centurion_revolver', '02_weapon_kasimov_sniper', '03_e99_tmd_impulse'}
+    
     for spec in TARGET_SPECS:
         source_path = args.extracted_dir / spec['source_file']
         if not source_path.exists():
@@ -1168,7 +1386,15 @@ def main():
         orig_dest = target_dir / "original.wav"
         cons_dest = target_dir / "restored_conservative.wav"
         enh_dest = target_dir / "remaster_enhanced.wav"
+        meta_path = target_dir / "metadata.json"
         
+        # Check if this is an approved pilot target that already exists
+        if spec['id'] in PILOT_IDS and orig_dest.exists() and cons_dest.exists() and enh_dest.exists() and meta_path.exists():
+            print(f"\nPreserving approved pilot target: {spec['id']} (Unchanged)...")
+            item_data = json.loads(meta_path.read_text(encoding='utf-8'))
+            results.append(item_data)
+            continue
+            
         # Copy original decoded reference
         shutil.copyfile(source_path, orig_dest)
         orig_meas = measure_audio(orig_dest)
@@ -1208,7 +1434,6 @@ def main():
             f32_diag=f32_diag
         )
         
-        meta_path = target_dir / "metadata.json"
         meta_path.write_text(json.dumps(item_data, indent=2), encoding='utf-8')
         results.append(item_data)
         

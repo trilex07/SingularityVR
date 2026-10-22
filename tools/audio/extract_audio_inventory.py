@@ -321,7 +321,7 @@ def analyze_sound_cues(logical_data: bytes, package_info: dict) -> tuple:
                 trailing_idx = struct.unpack_from('<i', blob, len(blob)-12)[0]
                 if 0 < trailing_idx <= len(exports) and trailing_idx not in visited:
                     t_node = exports[trailing_idx - 1]
-                    if t_node.get('class_name') in ('SoundNodeWave', 'SoundNodeModulator', 'RSoundNodeAudioOcclusionModifier', 'RSoundNodeCue'):
+                    if t_node.get('class_name') in ('SoundNodeWave', 'SoundNodeModulator', 'RSoundNodeAudioOcclusionModifier', 'RSoundNodeCue', 'SoundNodeRandom'):
                         queue.append((trailing_idx, curr_path))
                         
     # Build complete classification for all waves
