@@ -62,7 +62,8 @@ class HardeningContract(unittest.TestCase):
         self.assertIn("AppendFNameIdentityOk", body)
         self.assertIn("FactoryIdentityOk", body)
         self.assertIn("GameSystemObjectIdentityOk", body)
-        self.assertIn("kExpectedFactoryTextRva", ident)
+        self.assertIn("kExpectedFactoryRvaFromImage", ident)
+        self.assertIn("ImageBase()", ident)
         self.assertIn("kExpectedFactoryFingerprint", ident)
         self.assertIn("kExpectedRvGameSystemVtableRvaFromImage", ident)
         self.assertNotIn("PinFactoryOffsetFromLiveSlot", ident)
@@ -79,6 +80,8 @@ class HardeningContract(unittest.TestCase):
         self.assertTrue(PUBLISH_H.is_file())
         pub = PUBLISH_H.read_text(encoding="utf-8")
         self.assertIn("g_publishedAvailableMask", pub)
+        self.assertIn("g_publishedDataReady", pub)
+        self.assertIn("DataReady()", pub)
 
     def test_derived_weapon_class_policy(self):
         def class_has(chain, needle):

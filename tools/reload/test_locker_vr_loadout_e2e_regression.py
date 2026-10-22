@@ -59,8 +59,41 @@ class E2eRegression(unittest.TestCase):
     def test_gamesystem_vtable_rva_from_image_base(self):
         ident = IDENTITY_H.read_text(encoding="utf-8")
         self.assertIn("kExpectedRvGameSystemVtableRvaFromImage", ident)
-        self.assertIn("ModuleBaseFromTextLo", ident)
+        self.assertIn("ImageBase()", ident)
+        self.assertNotIn("ModuleBaseFromTextLo", ident)
         self.assertNotIn("kExpectedRvGameSystemVtableOffsetFromCaptureText", ident)
+
+    def test_focus_requests_owned_refresh(self):
+        body = LOADOUT_H.read_text(encoding="utf-8")
+        focus = body.split("OnFocus", 1)[1].split("struct ExecHooks", 1)[0]
+        self.assertIn("NativeOwnedInventory::Refresh()", focus)
+
+    def test_can_interact_gated_on_data_ready(self):
+        body = LOADOUT_H.read_text(encoding="utf-8")
+        pub = body.split("PublishFromEngine", 1)[1].split("OnPopMenuScheduleAcquire", 1)[0]
+        self.assertIn("EngineLoadoutDataReady", pub)
+        self.assertIn("Publish(0, 0, 0, false, uiQueued, false)", pub)
+
+    def test_tile_geometry_no_overlap(self):
+        body = LOADOUT_H.read_text(encoding="utf-8")
+        layout = body.split("namespace Layout", 1)[1].split("} // namespace Layout", 1)[0]
+        compact = layout.replace(" ", "")
+        self.assertIn("kIconHalfPx=42.f", compact)
+        self.assertIn("kTileSpacingXPx=110.f", compact)
+        self.assertIn("kTileSpacingYPx=105.f", compact)
+        self.assertGreater(110, 2 * 42)
+        self.assertGreater(105, 2 * 42)
+
+    def test_panel_anchor_moved_right(self):
+        body = LOADOUT_H.read_text(encoding="utf-8")
+        self.assertIn("kAnchorU=0.93f", body.replace(" ", ""))
+        self.assertNotIn("kCu = 0.84f", body.replace(" ", ""))
+
+    def test_draw_shows_loading_without_data_ready(self):
+        draw = self._draw_body()
+        self.assertIn("DataReady()", draw)
+        self.assertIn("IsEquipPage()", draw)
+        self.assertIn('"..."', draw)
 
     def test_load_upgrades_and_load_hooks_preserved(self):
         body = LOADOUT_H.read_text(encoding="utf-8")

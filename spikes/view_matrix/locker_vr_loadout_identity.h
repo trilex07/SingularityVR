@@ -8,6 +8,7 @@
 //   duplicate pickup 0x11B4B6E (same sequence)
 //   vtable anchor: GetFeaturesUnlocked @ +0x1F0 -> 0xF55B30 -> RvGameSystem vtable 0x1BCF9C4
 #include "pause_rtt_probe.h"
+#include <Windows.h>
 #include <cstring>
 
 extern uintptr_t g_textLo, g_textHi;
@@ -15,14 +16,12 @@ extern uintptr_t g_textLo, g_textHi;
 namespace LockerVrLoadoutIdentity {
 
 constexpr uintptr_t kCaptureImageBase = 0x400000u;
-constexpr uintptr_t kCaptureTextBase = 0x402000u;
-constexpr uintptr_t kTextRvaFromImage = kCaptureTextBase - kCaptureImageBase;
 
 constexpr uintptr_t kPinnedAppendFNameVa = 0x4AFFD0u;
-constexpr uintptr_t kAppendFNameTextRva = kPinnedAppendFNameVa - kCaptureTextBase;
+constexpr uintptr_t kAppendFNameRvaFromImage = kPinnedAppendFNameVa - kCaptureImageBase;
 
 constexpr uintptr_t kPinnedFactoryVa = 0xF85E30u;
-constexpr uintptr_t kExpectedFactoryTextRva = kPinnedFactoryVa - kCaptureTextBase;
+constexpr uintptr_t kExpectedFactoryRvaFromImage = kPinnedFactoryVa - kCaptureImageBase;
 constexpr uint64_t kExpectedFactoryFingerprint = 0x293E6200F76D1A77ull;
 
 constexpr uintptr_t kPinnedRvGameSystemVtableVa = 0x1BCF9C4u;
@@ -36,6 +35,10 @@ inline const unsigned char kAppendFNamePrologue[kPrologueBytes] = {
 
 inline const unsigned char kFactoryPrologue[kPrologueBytes] = {
     0x55, 0x8B, 0xEC, 0x6A, 0xFF, 0x68, 0xE8, 0x61, 0x6E, 0x01, 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00};
+
+inline uintptr_t ImageBase() {
+    return reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr));
+}
 
 inline bool FnInText(uintptr_t fn) { return fn >= g_textLo && fn < g_textHi; }
 
@@ -51,30 +54,28 @@ inline unsigned long long HashPrologue(uintptr_t fn) {
 }
 
 inline bool AppendFNameIdentityOk() {
-    if (!g_textLo) return false;
-    const uintptr_t fn = g_textLo + kAppendFNameTextRva;
+    const uintptr_t base = ImageBase();
+    if (!base) return false;
+    const uintptr_t fn = base + kAppendFNameRvaFromImage;
     if (!FnInText(fn)) return false;
     return memcmp(reinterpret_cast<const void*>(fn), kAppendFNamePrologue, kPrologueBytes) == 0;
 }
 
 inline bool FactoryIdentityOk(uintptr_t fn) {
-    if (!g_textLo) return false;
-    const uintptr_t expected = g_textLo + kExpectedFactoryTextRva;
+    const uintptr_t base = ImageBase();
+    if (!base) return false;
+    const uintptr_t expected = base + kExpectedFactoryRvaFromImage;
     if (fn != expected || !FnInText(fn)) return false;
     if (HashPrologue(fn) != kExpectedFactoryFingerprint) return false;
     return memcmp(reinterpret_cast<const void*>(fn), kFactoryPrologue, kPrologueBytes) == 0;
 }
 
-inline uintptr_t ModuleBaseFromTextLo() {
-    return g_textLo ? (g_textLo - kTextRvaFromImage) : 0;
-}
-
 inline bool GameSystemObjectIdentityOk(uintptr_t gs) {
-    if (!gs || !PauseRttProbe::SafeRange(gs, 4) || !g_textLo) return false;
+    if (!gs || !PauseRttProbe::SafeRange(gs, 4)) return false;
+    const uintptr_t base = ImageBase();
+    if (!base) return false;
     const uintptr_t vt = PauseRttProbe::Pointer(gs);
-    const uintptr_t moduleBase = ModuleBaseFromTextLo();
-    if (!moduleBase) return false;
-    const uintptr_t expectedVt = moduleBase + kExpectedRvGameSystemVtableRvaFromImage;
+    const uintptr_t expectedVt = base + kExpectedRvGameSystemVtableRvaFromImage;
     return vt == expectedVt;
 }
 

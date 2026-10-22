@@ -41,16 +41,22 @@ inline volatile LONG g_acquireRequested = 0;
 inline volatile LONG g_focusGeneration = 0;
 
 namespace Layout {
-constexpr float kTitleU = 0.84f;
-constexpr float kTitleV = 0.34f;
-constexpr float kCu = 0.84f;
-constexpr float kCv = 0.44f;
-constexpr float kDu = 0.038f;
-constexpr float kDv = 0.038f;
-constexpr float kBtnU = 0.84f;
-constexpr float kBtnV = 0.52f;
+// Right-side locker panel (empty region); tile centers use pixel offsets from anchor.
+constexpr float kTitleU = 0.93f;
+constexpr float kTitleV = 0.38f;
+constexpr float kAnchorU = 0.93f;
+constexpr float kAnchorV = 0.50f;
+constexpr float kBtnU = 0.93f;
+constexpr float kBtnV = 0.58f;
 constexpr int kFontPx = 3;
-constexpr float kIconHalfPx = 58.f;
+constexpr float kIconHalfPx = 42.f;
+constexpr float kTileSpacingXPx = 110.f;
+constexpr float kTileSpacingYPx = 105.f;
+// UV hit boxes (approximate inverse of anchor projection).
+constexpr float kCu = kAnchorU;
+constexpr float kCv = kAnchorV;
+constexpr float kDu = 0.055f;
+constexpr float kDv = 0.052f;
 } // namespace Layout
 
 inline FrameFn g_origPop = nullptr;
@@ -77,16 +83,26 @@ inline bool EngineCanInteract() {
     return true;
 }
 
+inline bool EngineLoadoutDataReady() {
+    if (!g_playerPawn) return false;
+    if (!LockerVrLoadoutRuntime::AvailabilitySourcesReady(g_playerPawn)) return false;
+    return NativeOwnedInventory::SnapshotValid();
+}
+
 inline void PublishFromEngine() {
     if (!EngineCanInteract()) {
         LockerVrLoadoutPublish::Clear();
         return;
     }
+    const uint32_t uiQueued = static_cast<uint32_t>(InterlockedCompareExchange(&g_uiQueuedMask, 0, 0));
+    if (!EngineLoadoutDataReady()) {
+        LockerVrLoadoutPublish::Publish(0, 0, 0, false, uiQueued, false);
+        return;
+    }
     const uint32_t available = LockerVrLoadoutRuntime::AvailableOrdinaryMask(g_playerPawn);
     const uint32_t owned = NativeOwnedInventory::Mask();
     const uint32_t pending = LockerVrLoadoutPolicy::PendingMask(available, owned);
-    const uint32_t uiQueued = static_cast<uint32_t>(InterlockedCompareExchange(&g_uiQueuedMask, 0, 0));
-    LockerVrLoadoutPublish::Publish(available, owned, pending, true, uiQueued);
+    LockerVrLoadoutPublish::Publish(available, owned, pending, true, uiQueued, true);
 }
 
 inline void OnPopMenuScheduleAcquire() {
@@ -149,6 +165,7 @@ inline void OnFocus(uintptr_t /*movie*/, uintptr_t /*cls*/) {
     InterlockedExchange(&g_acquireRequested, 0);
     InterlockedExchange(&g_postPopAcquireMask, 0);
     InterlockedExchange(&g_pageSignal, 1);
+    NativeOwnedInventory::Refresh();
 }
 
 struct ExecHooks {

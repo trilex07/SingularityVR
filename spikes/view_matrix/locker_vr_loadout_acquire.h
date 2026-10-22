@@ -35,23 +35,23 @@ inline uintptr_t ResolveGameSystemFactoryFn() {
 
 inline bool WitnessFactoryOnEngineThread() {
     if (InterlockedCompareExchange(&g_factoryWitnessed, 0, 0)) {
-        return g_factoryFn != 0 && LockerVrLoadoutIdentity::FactoryIdentityOk(g_factoryFn);
+        if (g_factoryFn && LockerVrLoadoutIdentity::FactoryIdentityOk(g_factoryFn)) return true;
+        InterlockedExchange(&g_factoryWitnessed, 0);
+        g_factoryFn = 0;
     }
     if (!LockerVrLoadoutIdentity::AppendFNameIdentityOk()) {
-        InterlockedExchange(&g_factoryWitnessed, 1);
         Log("locker vr loadout acquire: AppendFName identity refused (0x4AFFD0 prologue)");
         return false;
     }
     const uintptr_t fn = ResolveGameSystemFactoryFn();
     if (!fn) {
-        InterlockedExchange(&g_factoryWitnessed, 1);
         Log("locker vr loadout acquire: factory identity refused (offline vtable+0x20C gate)");
         return false;
     }
     g_factoryFn = fn;
     InterlockedExchange(&g_factoryWitnessed, 1);
     Log("locker vr loadout acquire: factory verified fn=%p rva=0x%X (0xF03450 / 0x11B4B6E)",
-        (void*)fn, LockerVrLoadoutIdentity::kExpectedFactoryTextRva);
+        (void*)fn, (unsigned)LockerVrLoadoutIdentity::kExpectedFactoryRvaFromImage);
     return true;
 }
 
@@ -59,7 +59,7 @@ inline bool WitnessFactoryOnEngineThread() {
 
 inline void* LookupArchetypeViaNativeAbi(void* gameSystem, const void* fstringAtRowC) {
     if (!gameSystem || !fstringAtRowC || !LockerVrLoadoutIdentity::AppendFNameIdentityOk()) return nullptr;
-    const uintptr_t append = g_textLo + LockerVrLoadoutIdentity::kAppendFNameTextRva;
+    const uintptr_t append = LockerVrLoadoutIdentity::ImageBase() + LockerVrLoadoutIdentity::kAppendFNameRvaFromImage;
     void* archetype = nullptr;
     __asm {
         push 1
@@ -150,6 +150,7 @@ inline void ApplyPendingMask(uint32_t pendingNow, uint32_t ownedBefore) {
         Log("locker vr loadout acquire batch: requested=0x%X pickupCalled=0x%X ownedBefore=0x%X ownedAfter=0x%X "
             "success=0x%X failed=0x%X",
             pendingNow, pickupCalled, ownedBefore, ownedAfter, success, failed);
+        if (success) NativeOwnedInventory::Refresh();
     } else {
         Log("locker vr loadout acquire batch: requested=0x%X pickupCalled=0x%X ownedBefore=0x%X ownedAfter=UNKNOWN "
             "(SnapshotNow failed; Refresh queued)",

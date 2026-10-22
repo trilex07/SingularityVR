@@ -22,13 +22,14 @@ EXE_CANDIDATES = [
 ]
 
 TEXT_BASE = 0x402000
+IMAGE_BASE = 0x400000
 PROLOGUE_BYTES = 16
 FNV_OFFSET = 1469598103934665603
 FNV_PRIME = 1099511628211
 
 # Offline pins (must match locker_vr_loadout_identity.h)
 EXPECTED_FACTORY_VA = 0xF85E30
-EXPECTED_FACTORY_RVA = EXPECTED_FACTORY_VA - TEXT_BASE
+EXPECTED_FACTORY_RVA = EXPECTED_FACTORY_VA - IMAGE_BASE
 EXPECTED_FACTORY_FINGERPRINT = 0x293E6200F76D1A77
 EXPECTED_GS_VTABLE_VA = 0x1BCF9C4
 GET_FEATURES_VA = 0xF55B30
@@ -79,8 +80,8 @@ def disasm_has_factory_chain(text: bytes, add_va: int) -> bool:
     return False
 
 
-def gate_accepts(text: bytes, text_lo: int, live_fn: int) -> bool:
-    expected = text_lo + EXPECTED_FACTORY_RVA
+def gate_accepts(text: bytes, image_base: int, live_fn: int) -> bool:
+    expected = image_base + EXPECTED_FACTORY_RVA
     if live_fn != expected:
         return False
     if fnv1a64_prologue(text, live_fn) != EXPECTED_FACTORY_FINGERPRINT:
@@ -124,11 +125,10 @@ class FactoryOfflineProof(unittest.TestCase):
         self.assertEqual(fnv1a64_prologue(self.text, EXPECTED_FACTORY_VA), EXPECTED_FACTORY_FINGERPRINT)
 
     def test_runtime_gate_fail_closed_on_wrong_target(self):
-        text_lo = TEXT_BASE  # simulate unrelocated audit base
-        good = gate_accepts(self.text, text_lo, text_lo + EXPECTED_FACTORY_RVA)
+        good = gate_accepts(self.text, IMAGE_BASE, EXPECTED_FACTORY_VA)
         self.assertTrue(good)
-        self.assertFalse(gate_accepts(self.text, text_lo, text_lo + EXPECTED_FACTORY_RVA + 4))
-        self.assertFalse(gate_accepts(self.text, text_lo, 0xF23DF0))  # WeaponLocker +0x20C, not GS factory
+        self.assertFalse(gate_accepts(self.text, IMAGE_BASE, EXPECTED_FACTORY_VA + 4))
+        self.assertFalse(gate_accepts(self.text, IMAGE_BASE, 0xF23DF0))  # WeaponLocker +0x20C, not GS factory
 
 
 if __name__ == "__main__":

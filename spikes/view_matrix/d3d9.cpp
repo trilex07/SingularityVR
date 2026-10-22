@@ -6651,6 +6651,7 @@ volatile LONG g_publishedOwnedMask = 0;
 volatile LONG g_publishedPendingMask = 0;
 volatile LONG g_publishedCanInteract = 0;
 volatile LONG g_publishedUiQueuedMask = 0;
+volatile LONG g_publishedDataReady = 0;
 volatile LONG g_vrUiWeaponLocker = 0; // 1 while RvUIGFxMovie_WeaponLocker has focus (input thread)
 volatile LONG g_lockerDisplayNativeMesh[2] = {0, 0}; // published ordinary mesh ids for native GFx slots 0/1
 volatile LONG g_vrMenuReleaseRequested = 0; // input publishes; render thread owns COM release
@@ -28845,9 +28846,10 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
     if (!dev || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_weaponWheelOpen) || !Rd(g_lockerVrLoadout) ||
         !Rd(g_keepAcquiredWeapons) || !Rd(g_vrUiWeaponLocker) || !Rd(g_vrUiMenu) || !Rd(g_vrUiStationMovie) ||
         Rd(g_vrMenuClass) != 4 || !g_vrMenuPanelValid || !g_haveEyes || !g_origDrawPrimUP ||
-        !g_origSetRenderTarget || !LockerVrLoadoutPublish::CanInteract())
+        !g_origSetRenderTarget || !LockerVrLoadout::IsEquipPage())
         return;
 
+    const bool dataReady = LockerVrLoadoutPublish::DataReady();
     const uint32_t avail = LockerVrLoadoutPublish::Available();
     const uint32_t owned = LockerVrLoadoutPublish::Owned();
     const uint32_t uiQueued = LockerVrLoadoutPublish::UiQueued();
@@ -28902,17 +28904,19 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
     const float halfW = (float)d.Width * .5f;
     const int px = LockerVrLoadout::Layout::kFontPx;
     const float iconHalf = LockerVrLoadout::Layout::kIconHalfPx;
-    const float cu = LockerVrLoadout::Layout::kCu, cv = LockerVrLoadout::Layout::kCv;
-    const float du = LockerVrLoadout::Layout::kDu, dv = LockerVrLoadout::Layout::kDv;
-    const float tileU[4] = {cu - du, cu + du, cu - du, cu + du};
-    const float tileV[4] = {cv - dv, cv - dv, cv + dv, cv + dv};
+    const float anchorU = LockerVrLoadout::Layout::kAnchorU;
+    const float anchorV = LockerVrLoadout::Layout::kAnchorV;
+    const float spacingX = LockerVrLoadout::Layout::kTileSpacingXPx;
+    const float spacingY = LockerVrLoadout::Layout::kTileSpacingYPx;
+    const float tileOffX[4] = {-spacingX * .5f, spacingX * .5f, -spacingX * .5f, spacingX * .5f};
+    const float tileOffY[4] = {-spacingY * .5f, -spacingY * .5f, spacingY * .5f, spacingY * .5f};
     const uint32_t pending = LockerVrLoadoutPublish::Pending();
 
     for (int eye = 0; eye < 2; ++eye) {
         float panelCx = 0, panelCy = 0;
-        if (LockerProjectPanelUv(eye, cu, cv, panelCx, panelCy, halfW, (float)d.Height)) {
-            const float pw = iconHalf * 2.6f + 24.f;
-            const float ph = iconHalf * 2.6f + 56.f;
+        if (LockerProjectPanelUv(eye, anchorU, anchorV, panelCx, panelCy, halfW, (float)d.Height)) {
+            const float pw = spacingX * .5f + iconHalf + 18.f;
+            const float ph = spacingY * .5f + iconHalf + 52.f;
             D3DRECT panel = {(LONG)(panelCx - pw), (LONG)(panelCy - ph * .55f), (LONG)(panelCx + pw),
                              (LONG)(panelCy + ph * .55f)};
             ClearRects(dev, &panel, 1, 0xAA101820);
@@ -28939,6 +28943,19 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
             ClearRects(dev, title, tn, 0xCCB0C8D8);
         }
 
+        if (!dataReady) {
+            float lx = 0, ly = 0;
+            if (LockerProjectPanelUv(eye, anchorU, anchorV, lx, ly, halfW, (float)d.Height)) {
+                D3DRECT dots[64];
+                const int dn = TextRects(dots, 0, 64, (int)lx - 3 * px, (int)ly, px, "...");
+                ClearRects(dev, dots, dn, 0xCC8899AA);
+            }
+            continue;
+        }
+
+        float anchorSx = 0, anchorSy = 0;
+        if (!LockerProjectPanelUv(eye, anchorU, anchorV, anchorSx, anchorSy, halfW, (float)d.Height)) continue;
+
         for (int ti = 0; ti < 4; ++ti) {
             const uint32_t bit = kBits[ti];
             const bool isOwned = (owned & bit) != 0;
@@ -28946,8 +28963,8 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
             if (!isOwned && !isAvail) continue;
             const hud_atlas::Rect* ir = LockerAtlasIconForMesh(kMeshes[ti]);
             if (!ir) continue;
-            float cx = 0, cy = 0;
-            if (!LockerProjectPanelUv(eye, tileU[ti], tileV[ti], cx, cy, halfW, (float)d.Height)) continue;
+            const float cx = anchorSx + tileOffX[ti];
+            const float cy = anchorSy + tileOffY[ti];
             const float u0 = (float)ir->x / (float)g_hudAtlas.width;
             const float v0 = (float)ir->y / (float)g_hudAtlas.height;
             const float duv = (float)ir->w / (float)g_hudAtlas.width;

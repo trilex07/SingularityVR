@@ -265,6 +265,7 @@ static DWORD PollThreadId(){return thread;}
 // uses this to decide between the owned mask and the accepted mesh-observed
 // fallback, so a refused snapshot can never empty the wheel again.
 static bool Ready(){return Mask()!=0;}
+static bool SnapshotValid(){return InterlockedCompareExchange(&ready,0,0)!=0;}
 // Synchronous snapshot for locker virtual apply (input thread, same as wheel poll).
 static bool SnapshotNow() {
   if(!Rd(g_keepAcquiredWeapons)&&!Rd(g_ownedWeaponWheel))return false;
