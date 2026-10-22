@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Singularity VR — Diegetic HUD & Remastered 3D Preview Renderer (V2).
+"""Singularity VR — Diegetic HUD & Remastered 3D Preview Renderer (V2 Fixed).
 Renders presentation-grade, texture-mapped 1920x1080 visual previews:
 - Centurion Revolver
 - Valkyrie AR9 Rifle
@@ -8,10 +8,13 @@ Renders presentation-grade, texture-mapped 1920x1080 visual previews:
 - Left Glove / TMD Bio-Monitor
 
 Features:
-- Numba-vectorized software rasterizer with per-pixel barycentric interpolation & texture sampling
+- Fixed Numba JIT software rasterizer with mathematically consistent barycentric edge functions
+- Two-sided triangle handling preventing backface drops on open/planar meshes
+- Exact perspective-correct depth and UV interpolation: (u/z, v/z, 1/z)
+- Automatic blank image detection (>5000 pixels drawn assertion)
 - PBR studio lighting: Key light, fill light, rim light, ambient occlusion, metallic specular highlights
 - Multi-radius E99 phosphor bloom
-- True textured weapon surfaces showing the remastered 4K materials directly in 3D
+- Genuine side-by-side comparisons: Original geometry + actual vanilla texture vs Modified V2 + 4K remastered texture
 """
 import io
 import math
@@ -25,15 +28,14 @@ from PIL import Image, ImageDraw, ImageFilter
 REPO_ROOT = Path(r"C:\Users\Trilex\vr-mods")
 WORKTREE_ROOT = REPO_ROOT / "SingularityVR-diegetic-hud"
 MODELS_V2_DIR = WORKTREE_ROOT / "assets" / "processed" / "hud" / "diegetic" / "models_v2"
-MODELS_ORIG_DIR = WORKTREE_ROOT / "assets" / "processed" / "hud" / "diegetic" / "models"
-TEX_DIR = WORKTREE_ROOT / "assets" / "processed" / "textures_remastered"
 OUT_PREVIEWS_DIR = WORKTREE_ROOT / "docs" / "previews" / "hud" / "diegetic_v2"
 ARTIFACT_DIR = Path(r"C:\Users\Trilex\.gemini\antigravity\brain\37e373c5-dc1a-4785-b9b3-94b614b04e5d")
 
 OUT_PREVIEWS_DIR.mkdir(parents=True, exist_ok=True)
+ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 
 # -----------------------------------------------------------------------------
-# Fast Numba JIT Software Rasterizer with Texture Mapping
+# Fixed Numba JIT Software Rasterizer with Perspective-Correct Texture Mapping
 # -----------------------------------------------------------------------------
 @numba.njit(fastmath=True, parallel=False)
 def rasterize_textured_triangles(
@@ -51,9 +53,39 @@ def rasterize_textured_triangles(
     num_tris = tri_verts.shape[0]
 
     for i in range(num_tris):
-        x0, y0, z0 = tri_verts[i, 0, 0], tri_verts[i, 0, 1], tri_verts[i, 0, 2]
-        x1, y1, z1 = tri_verts[i, 1, 0], tri_verts[i, 1, 1], tri_verts[i, 1, 2]
-        x2, y2, z2 = tri_verts[i, 2, 0], tri_verts[i, 2, 1], tri_verts[i, 2, 2]
+        x0 = tri_verts[i, 0, 0]
+        y0 = tri_verts[i, 0, 1]
+        z0 = tri_verts[i, 0, 2] # 1/z0
+
+        x1 = tri_verts[i, 1, 0]
+        y1 = tri_verts[i, 1, 1]
+        z1 = tri_verts[i, 1, 2] # 1/z1
+
+        x2 = tri_verts[i, 2, 0]
+        y2 = tri_verts[i, 2, 1]
+        z2 = tri_verts[i, 2, 2] # 1/z2
+
+        u0 = tri_uvs[i, 0, 0]
+        v0 = tri_uvs[i, 0, 1]
+        u1 = tri_uvs[i, 1, 0]
+        v1 = tri_uvs[i, 1, 1]
+        u2 = tri_uvs[i, 2, 0]
+        v2 = tri_uvs[i, 2, 1]
+
+        area = (x1 - x0) * (y2 - y0) - (y1 - y0) * (x2 - x0)
+        if abs(area) < 1e-5:
+            continue
+
+        # Two-sided rendering: if area < 0, swap vertices 1 and 2 to guarantee positive winding
+        if area < 0.0:
+            x1, x2 = x2, x1
+            y1, y2 = y2, y1
+            z1, z2 = z2, z1
+            u1, u2 = u2, u1
+            v1, v2 = v2, v1
+            area = -area
+
+        inv_area = 1.0 / area
 
         min_x = max(0, int(min(x0, x1, x2)))
         max_x = min(width - 1, int(max(x0, x1, x2)))
@@ -63,15 +95,13 @@ def rasterize_textured_triangles(
         if min_x > max_x or min_y > max_y:
             continue
 
-        area = (x1 - x0) * (y2 - y0) - (y1 - y0) * (x2 - x0)
-        if area <= 0.0: # Backface culling
-            continue
-
-        inv_area = 1.0 / area
-
-        u0, v0 = tri_uvs[i, 0, 0], tri_uvs[i, 0, 1]
-        u1, v1 = tri_uvs[i, 1, 0], tri_uvs[i, 1, 1]
-        u2, v2 = tri_uvs[i, 2, 0], tri_uvs[i, 2, 1]
+        # Perspective-correct attribute pre-multiplication by 1/z
+        u0_z = u0 * z0
+        v0_z = v0 * z0
+        u1_z = u1 * z1
+        v1_z = v1 * z1
+        u2_z = u2 * z2
+        v2_z = v2 * z2
 
         base_r = tri_colors[i, 0]
         base_g = tri_colors[i, 1]
@@ -93,12 +123,16 @@ def rasterize_textured_triangles(
                 fx = float(px) + 0.5
                 fy = float(py) + 0.5
 
-                w0 = (fx - x1) * (y2 - y1) - (fy - y1) * (x2 - x1)
-                w1 = (fx - x2) * (y0 - y2) - (fy - y2) * (x0 - x2)
-                w2 = (fx - x0) * (y1 - y0) - (fy - y0) * (x1 - x0)
+                w0 = (x2 - x1) * (fy - y1) - (y2 - y1) * (fx - x1)
+                w1 = (x0 - x2) * (fy - y2) - (y0 - y2) * (fx - x2)
+                w2 = (x1 - x0) * (fy - y0) - (y1 - y0) * (fx - x0)
 
                 if w0 >= 0.0 and w1 >= 0.0 and w2 >= 0.0:
-                    inv_z = (w0 * z0 + w1 * z1 + w2 * z2) * inv_area
+                    l0 = w0 * inv_area
+                    l1 = w1 * inv_area
+                    l2 = w2 * inv_area
+
+                    inv_z = l0 * z0 + l1 * z1 + l2 * z2
                     if inv_z <= 0.0:
                         continue
                     z_depth = 1.0 / inv_z
@@ -107,13 +141,21 @@ def rasterize_textured_triangles(
                         out_depth[py, px] = z_depth
 
                         if is_textured:
-                            # Perspective-correct UV interpolation
-                            u = (w0 * u0 + w1 * u1 + w2 * u2) * inv_area
-                            v = (w0 * v0 + w1 * v1 + w2 * v2) * inv_area
-                            tx = int(u * (tex_w - 1)) % tex_w
-                            ty = int(v * (tex_h - 1)) % tex_h
+                            # Exact perspective-correct UV interpolation
+                            u = (l0 * u0_z + l1 * u1_z + l2 * u2_z) / inv_z
+                            v = (l0 * v0_z + l1 * v1_z + l2 * v2_z) / inv_z
 
-                            # Sample texture diffuse & combine with lighting
+                            # Standard texture address wrapping [0.0, 1.0]
+                            u_norm = u - math.floor(u)
+                            v_norm = v - math.floor(v)
+                            tx = int(u_norm * (tex_w - 1))
+                            ty = int((1.0 - v_norm) * (tex_h - 1))
+
+                            if tx < 0: tx = 0
+                            elif tx >= tex_w: tx = tex_w - 1
+                            if ty < 0: ty = 0
+                            elif ty >= tex_h: ty = tex_h - 1
+
                             td_r = tex_diffuse[ty, tx, 0]
                             td_g = tex_diffuse[ty, tx, 1]
                             td_b = tex_diffuse[ty, tx, 2]
@@ -172,11 +214,9 @@ def compute_lighting(verts, faces, face_types, hp_state="cyan"):
         d2 = float(dot2[i])
         d3 = float(dot3[i])
 
-        if ft == -1: # Weapon Surface (multiplied by sampled texture)
-            # Light multiplier
+        if ft == -1: # Weapon Surface (multiplied by sampled diffuse texture)
             light = amb + d1 * l1_col + d2 * l2_col
             colors[i] = np.clip(light, 0.0, 1.5)
-            # Specular highlight
             sp1 = (d1 ** 28) * 0.48
             sp3 = (d3 ** 16) * 0.30
             spec[i] = np.array([sp1 + sp3, sp1 + sp3, sp1 + sp3], dtype=np.float32)
@@ -212,7 +252,7 @@ def compute_lighting(verts, faces, face_types, hp_state="cyan"):
             colors[i] = c_glow
             emissive[i] = c_glow
 
-        elif ft == 4: # Accent Metal (Brass / Side shock ribs / Cross badge)
+        elif ft == 4: # Accent Metal (Brass / Medical cross badge / Knurled studs)
             diff = np.array([0.70, 0.52, 0.24], dtype=np.float32)
             colors[i] = amb * diff + d1 * l1_col * diff
             sp1 = (d1 ** 36) * 0.70
@@ -221,7 +261,7 @@ def compute_lighting(verts, faces, face_types, hp_state="cyan"):
     return colors, spec, emissive
 
 # -----------------------------------------------------------------------------
-# Scene Renderer
+# Scene Renderer with Automatic Blank Image Validation
 # -----------------------------------------------------------------------------
 def render_textured_scene(
     verts, faces, face_types, uvs,
@@ -291,6 +331,12 @@ def render_textured_scene(
         out_color, out_emissive, out_depth
     )
 
+    # Automatic blank image detection
+    pixels_drawn = int(np.count_nonzero(out_depth < 1e8))
+    if pixels_drawn < 5000:
+        raise RuntimeError(f"RENDER FAILURE: Blank image detected! Only {pixels_drawn} pixels drawn. Verify camera coordinates or geometry bounds.")
+    print(f"      [Rasterized OK: {pixels_drawn:,} pixels covered]")
+
     # Multi-radius bloom for E99 phosphor glow
     em_bytes = np.clip(out_emissive * 255.0, 0, 255).astype(np.uint8)
     em_img = Image.fromarray(em_bytes, mode='RGB')
@@ -329,7 +375,7 @@ def load_obj_with_uvs(obj_path):
                 elif mat == "BezelSoviet": current_ft = 0
                 elif mat == "CathodeGlass": current_ft = 1
                 elif mat == "RivetMetal": current_ft = 2
-                elif mat == "EmissivePhosphor": current_ft = 3
+                elif mat in ("EmissivePhosphor", "EmissivePhosphorDemonstration"): current_ft = 3
                 elif mat == "AccentBrass": current_ft = 4
                 else: current_ft = -1
             elif line.startswith('f '):
@@ -364,7 +410,7 @@ def add_header_and_badge_v2(img, title, subtitle, badge_text="DIEGETIC HUD V2 //
     draw = ImageDraw.Draw(img)
     w, h = img.size
 
-    draw.rectangle([40, 35, 520, 110], fill=(12, 16, 22, 230), outline=(45, 58, 75, 255), width=2)
+    draw.rectangle([40, 35, 540, 110], fill=(12, 16, 22, 230), outline=(45, 58, 75, 255), width=2)
     draw.rectangle([40, 35, 48, 110], fill=(0, 229, 255, 255))
     
     draw.text((62, 44), title.upper(), fill=(255, 255, 255, 255))
@@ -391,10 +437,10 @@ def create_side_by_side_comparison_v2(img_orig, img_mod, title, subtitle, callou
     draw = ImageDraw.Draw(comp)
     draw.line([half_w, 0, half_w, h], fill=(0, 229, 255, 220), width=3)
 
-    # Left Badge (Original)
-    draw.rectangle([40, 40, 380, 100], fill=(12, 14, 18, 230), outline=(75, 85, 100, 255), width=2)
-    draw.text((60, 52), "ORIGINAL VANILLA BASE", fill=(185, 195, 210, 255))
-    draw.text((60, 74), "Stock 2010 Asset // No Diegetic HUD", fill=(125, 135, 150, 255))
+    # Left Badge (Original Vanilla)
+    draw.rectangle([40, 40, 420, 100], fill=(12, 14, 18, 230), outline=(75, 85, 100, 255), width=2)
+    draw.text((60, 52), "ORIGINAL VANILLA ASSET", fill=(185, 195, 210, 255))
+    draw.text((60, 74), "Stock 2010 Texture + Geometry // No Diegetic HUD", fill=(125, 135, 150, 255))
 
     # Right Badge (Remaster V2)
     draw.rectangle([half_w + 40, 40, half_w + 460, 100], fill=(10, 16, 24, 230), outline=(0, 229, 255, 255), width=2)
@@ -407,21 +453,20 @@ def create_side_by_side_comparison_v2(img_orig, img_mod, title, subtitle, callou
     for idx, c in enumerate(callouts):
         draw.text((half_w + 60, h - 114 + idx * 20), f"◆ {c}", fill=(210, 230, 245, 255))
 
-    draw.text((half_w - 220, 20), f"=== {title.upper()} // V2 REMASTER COMPARISON ===", fill=(255, 255, 255, 255))
+    draw.text((half_w - 240, 20), f"=== {title.upper()} // GENUINE SIDE-BY-SIDE COMPARISON ===", fill=(255, 255, 255, 255))
     return comp
 
 # -----------------------------------------------------------------------------
 # Main Visual Preview Workflow
 # -----------------------------------------------------------------------------
 def run_all_previews_v2():
-    print("=== Starting Singularity VR Diegetic HUD & Remaster 3D Renderer (V2) ===")
+    print("=== Starting Singularity VR Diegetic HUD & Remaster 3D Renderer (V2 Fixed) ===")
 
     assets_config = [
         # 1. Centurion Revolver
         {
             'id': 'centurion',
             'name': 'Centurion Revolver',
-            'tex': 'centurion_diffuse_4k.png',
             'cams': {
                 'overview': {'cam': np.array([24.0, 125.0, 28.0]), 'target': np.array([0.0, 107.0, 49.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 42.0},
                 'closeup': {'cam': np.array([2.5, 123.0, 36.5]), 'target': np.array([0.0, 115.3, 43.5]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 22.0},
@@ -437,7 +482,6 @@ def run_all_previews_v2():
         {
             'id': 'valkyrie',
             'name': 'Valkyrie AR9 Rifle',
-            'tex': 'valkyrie_diffuse_4k.png',
             'cams': {
                 'overview': {'cam': np.array([42.0, 130.0, 24.0]), 'target': np.array([0.0, 106.0, 52.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 46.0},
                 'closeup': {'cam': np.array([3.5, 125.5, 28.0]), 'target': np.array([0.0, 117.2, 35.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 22.0},
@@ -453,7 +497,6 @@ def run_all_previews_v2():
         {
             'id': 'spikeshot',
             'name': 'Spikeshot Shotgun',
-            'tex': 'spikeshot_diffuse_4k.png',
             'cams': {
                 'overview': {'cam': np.array([42.0, 130.0, 28.0]), 'target': np.array([0.0, 110.0, 50.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 48.0},
                 'closeup': {'cam': np.array([3.5, 125.0, 34.0]), 'target': np.array([0.0, 116.8, 42.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 22.0},
@@ -469,7 +512,6 @@ def run_all_previews_v2():
         {
             'id': 'kasimov',
             'name': 'Kasimov SNV-E99 Sniper Rifle',
-            'tex': 'kasimov_diffuse_4k.png',
             'cams': {
                 'overview': {'cam': np.array([52.0, 134.0, 24.0]), 'target': np.array([0.0, 112.0, 48.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 50.0},
                 'closeup': {'cam': np.array([3.5, 124.5, 32.5]), 'target': np.array([0.0, 116.5, 40.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 22.0},
@@ -485,7 +527,6 @@ def run_all_previews_v2():
         {
             'id': 'tmd_glove',
             'name': 'Left Glove / TMD Bio-Monitor',
-            'tex': 'tmd_glove_diffuse_4k.png',
             'cams': {
                 'overview': {'cam': np.array([58.0, 126.0, 22.0]), 'target': np.array([39.5, 99.5, -3.2]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 46.0},
                 'closeup': {'cam': np.array([32.0, 108.0, 5.0]), 'target': np.array([39.5, 99.5, -3.2]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 20.0},
@@ -502,26 +543,40 @@ def run_all_previews_v2():
     for cfg in assets_config:
         model_id = cfg['id']
         name = cfg['name']
-        print(f"\n--- Rendering {name} (V2) ---")
+        print(f"\n=======================================================")
+        print(f"--- Processing {name} (V2) ---")
+        print(f"=======================================================")
 
-        # Load models
+        # Load models from models_v2
         mod_obj = MODELS_V2_DIR / f"{model_id}_diegetic_v2.obj"
-        orig_obj = MODELS_ORIG_DIR / f"{model_id}_original.obj"
+        orig_obj = MODELS_V2_DIR / f"{model_id}_original_v2.obj"
 
+        print(f"Loading modified model: {mod_obj.name}")
         v_mod, f_mod, ft_mod, uv_mod = load_obj_with_uvs(str(mod_obj))
+        print(f"  {len(v_mod)} vertices, {len(f_mod)} faces")
+
+        print(f"Loading vanilla original model: {orig_obj.name}")
         v_orig, f_orig, ft_orig, uv_orig = load_obj_with_uvs(str(orig_obj))
+        print(f"  {len(v_orig)} vertices, {len(f_orig)} faces")
 
         # Load Remastered 4K Texture
-        tex_path = TEX_DIR / cfg['tex']
-        tex_im = Image.open(tex_path).convert('RGB')
-        tex_diffuse = np.array(tex_im, dtype=np.float32) / 255.0
+        tex_mod_path = MODELS_V2_DIR / f"{model_id}_diffuse_4k.png"
+        print(f"Loading remastered 4K texture: {tex_mod_path.name}")
+        tex_mod_im = Image.open(tex_mod_path).convert('RGB')
+        tex_diffuse_mod = np.array(tex_mod_im, dtype=np.float32) / 255.0
+
+        # Load Authentic Vanilla Texture
+        tex_vanilla_path = MODELS_V2_DIR / f"{model_id}_vanilla.png"
+        print(f"Loading authentic vanilla texture: {tex_vanilla_path.name}")
+        tex_vanilla_im = Image.open(tex_vanilla_path).convert('RGB')
+        tex_diffuse_vanilla = np.array(tex_vanilla_im, dtype=np.float32) / 255.0
 
         cams = cfg['cams']
 
-        # 1. Overview Render
-        print("Rendering Overview...")
+        # 1. Overview Render (Modified V2 + 4K Remaster)
+        print("  [1/4] Rendering Overview...")
         img_ov = render_textured_scene(
-            v_mod, f_mod, ft_mod, uv_mod, tex_diffuse,
+            v_mod, f_mod, ft_mod, uv_mod, tex_diffuse_mod,
             cams['overview']['cam'], cams['overview']['target'], cams['overview']['up'],
             cams['overview']['fov']
         )
@@ -529,10 +584,10 @@ def run_all_previews_v2():
         img_ov.save(OUT_PREVIEWS_DIR / f"{model_id}_overview_v2.png")
         img_ov.save(ARTIFACT_DIR / f"{model_id}_overview_v2.png")
 
-        # 2. Close-up Render
-        print("Rendering Macro Close-up...")
+        # 2. Close-up Render (Macro view of diegetic display fixture)
+        print("  [2/4] Rendering Macro Close-up...")
         img_cu = render_textured_scene(
-            v_mod, f_mod, ft_mod, uv_mod, tex_diffuse,
+            v_mod, f_mod, ft_mod, uv_mod, tex_diffuse_mod,
             cams['closeup']['cam'], cams['closeup']['target'], cams['closeup']['up'],
             cams['closeup']['fov']
         )
@@ -540,10 +595,10 @@ def run_all_previews_v2():
         img_cu.save(OUT_PREVIEWS_DIR / f"{model_id}_closeup_v2.png")
         img_cu.save(ARTIFACT_DIR / f"{model_id}_closeup_v2.png")
 
-        # 3. VR First-Person Render
-        print("Rendering First-Person VR Sightline...")
+        # 3. VR First-Person Render (Authentic ADS / weapon hold sightline)
+        print("  [3/4] Rendering First-Person VR Sightline...")
         img_vr = render_textured_scene(
-            v_mod, f_mod, ft_mod, uv_mod, tex_diffuse,
+            v_mod, f_mod, ft_mod, uv_mod, tex_diffuse_mod,
             cams['vr_ads']['cam'], cams['vr_ads']['target'], cams['vr_ads']['up'],
             cams['vr_ads']['fov']
         )
@@ -551,15 +606,17 @@ def run_all_previews_v2():
         img_vr.save(OUT_PREVIEWS_DIR / f"{model_id}_first_person_v2.png")
         img_vr.save(ARTIFACT_DIR / f"{model_id}_first_person_v2.png")
 
-        # 4. Side-by-Side Comparison (Vanilla Original vs. Remastered V2)
-        print("Rendering Side-by-Side Comparison...")
+        # 4. Genuine Side-by-Side Comparison (Vanilla Original vs. Remastered V2)
+        print("  [4/4] Rendering Genuine Side-by-Side Comparison...")
+        # Left: Original geometry + authentic vanilla texture (identical lighting/exposure)
         img_orig_raw = render_textured_scene(
-            v_orig, f_orig, ft_orig, uv_orig, tex_diffuse * 0.65, # un-remastered darker/flatter look for vanilla
+            v_orig, f_orig, ft_orig, uv_orig, tex_diffuse_vanilla,
             cams['overview']['cam'], cams['overview']['target'], cams['overview']['up'],
             cams['overview']['fov']
         )
+        # Right: Modified V2 geometry + remastered 4K PBR texture (identical lighting/exposure)
         img_mod_raw = render_textured_scene(
-            v_mod, f_mod, ft_mod, uv_mod, tex_diffuse,
+            v_mod, f_mod, ft_mod, uv_mod, tex_diffuse_mod,
             cams['overview']['cam'], cams['overview']['target'], cams['overview']['up'],
             cams['overview']['fov']
         )
@@ -569,9 +626,9 @@ def run_all_previews_v2():
 
         # 5. For Glove: Render Health State Variants
         if model_id == 'tmd_glove':
-            print("Rendering TMD Glove Health State Variants...")
+            print("  [Extra] Rendering TMD Glove Health State Variants...")
             img_amber = render_textured_scene(
-                v_mod, f_mod, ft_mod, uv_mod, tex_diffuse,
+                v_mod, f_mod, ft_mod, uv_mod, tex_diffuse_mod,
                 cams['closeup']['cam'], cams['closeup']['target'], cams['closeup']['up'],
                 cams['closeup']['fov'], hp_state="amber"
             )
@@ -580,7 +637,7 @@ def run_all_previews_v2():
             img_amber.save(ARTIFACT_DIR / f"{model_id}_health_amber_v2.png")
 
             img_crim = render_textured_scene(
-                v_mod, f_mod, ft_mod, uv_mod, tex_diffuse,
+                v_mod, f_mod, ft_mod, uv_mod, tex_diffuse_mod,
                 cams['closeup']['cam'], cams['closeup']['target'], cams['closeup']['up'],
                 cams['closeup']['fov'], hp_state="crimson"
             )
@@ -588,7 +645,9 @@ def run_all_previews_v2():
             img_crim.save(OUT_PREVIEWS_DIR / f"{model_id}_health_crimson_v2.png")
             img_crim.save(ARTIFACT_DIR / f"{model_id}_health_crimson_v2.png")
 
-    print("\n=== All 22 V2 Visual Previews Rendered & Saved Successfully ===")
+    print("\n=======================================================")
+    print("=== All 22 V2 Visual Previews Rendered & Verified Successfully ===")
+    print("=======================================================")
 
 if __name__ == '__main__':
     run_all_previews_v2()

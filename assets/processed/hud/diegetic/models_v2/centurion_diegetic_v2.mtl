@@ -2,38 +2,39 @@
 newmtl WeaponRemastered
 Ka 1.0 1.0 1.0
 Kd 1.0 1.0 1.0
-Ks 0.4 0.4 0.4
+Ks 0.45 0.45 0.45
 Ns 32.0
-map_Kd ../textures_remastered/centurion_diffuse_4k.png
+map_Kd centurion_diffuse_4k.png
 
 newmtl BezelSoviet
-Ka 0.2 0.25 0.3
+Ka 0.20 0.24 0.28
 Kd 0.22 0.26 0.32
-Ks 0.6 0.65 0.7
+Ks 0.65 0.65 0.70
 Ns 45.0
 
 newmtl CathodeGlass
-Ka 0.05 0.08 0.1
-Kd 0.08 0.12 0.15
-Ks 0.9 0.95 1.0
+Ka 0.02 0.05 0.08
+Kd 0.06 0.10 0.14
+Ks 0.90 0.95 1.0
 Ns 90.0
 d 0.85
 
 newmtl RivetMetal
-Ka 0.4 0.45 0.5
+Ka 0.45 0.50 0.55
 Kd 0.55 0.60 0.68
-Ks 0.8 0.85 0.9
+Ks 0.85 0.85 0.90
 Ns 64.0
 
-newmtl EmissivePhosphor
-Ka 0.0 0.9 1.0
-Kd 0.0 0.9 1.0
+newmtl EmissivePhosphorDemonstration
+Ka 0.0 0.92 1.0
+Kd 0.0 0.92 1.0
 Ke 0.0 0.95 1.0
+Ks 0.1 0.1 0.1
 Ns 128.0
 
 newmtl AccentBrass
-Ka 0.6 0.45 0.2
+Ka 0.65 0.48 0.22
 Kd 0.75 0.55 0.25
-Ks 0.85 0.75 0.4
+Ks 0.85 0.75 0.40
 Ns 50.0
 

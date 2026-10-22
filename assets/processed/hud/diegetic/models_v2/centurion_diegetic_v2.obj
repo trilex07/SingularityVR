@@ -1,4 +1,4 @@
-# Singularity VR Diegetic HUD V2 — centurion
+# Singularity VR Model — centurion_diegetic_v2
 mtllib centurion_diegetic_v2.mtl
 v 0.281058 106.586571 49.226681
 v 0.288669 106.846031 49.354725
@@ -16539,7 +16539,7 @@ f 3379/9706 3392/9707 3393/9708
 f 3379/9709 3394/9710 3395/9711
 f 3379/9712 3396/9713 3397/9714
 f 3379/9715 3398/9716 3399/9717
-usemtl EmissivePhosphor
+usemtl EmissivePhosphorDemonstration
 f 3400/9718 3401/9719 3402/9720
 f 3400/9721 3402/9722 3403/9723
 f 3404/9724 3405/9725 3406/9726
