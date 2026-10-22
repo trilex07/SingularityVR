@@ -25,8 +25,12 @@ class LockerRetainOffline(unittest.TestCase):
         self.assertIn("0x00F1805E", pol)
         self.assertIn("0x00A05790", pol)
         self.assertIn("EstablishedThreadMatches", pol)
-        self.assertIn("ManagerMatches", pol)
-        self.assertNotIn("if (!establishedThread) return true", pol.replace(" ", ""))
+        self.assertIn("PopMenuManagerMatches", pol)
+        self.assertIn("kPopMenuInventoryGlobal", pol)
+        self.assertIn("PopMenuDestroyArgsMatch", pol)
+        hook = HEADER.read_text(encoding="utf-8", errors="replace")
+        self.assertNotIn("NativeOwnedInventory::manager", hook)
+        self.assertIn("ReadPopMenuGlobalManager", hook)
 
     def test_detour_never_calls_null_orig(self):
         text = HEADER.read_text(encoding="utf-8", errors="replace")
