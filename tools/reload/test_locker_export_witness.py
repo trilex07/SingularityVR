@@ -44,7 +44,7 @@ class LockerExportWitness(unittest.TestCase):
     def test_weapons_available_to_locker_on_inventory_item(self):
         idx = self.text.find("IntProperty mWeaponsAvailableToLocker")
         self.assertGreater(idx, 0)
-        window = self.text[max(0, idx - 400 : idx + 200]
+        window = self.text[max(0, idx - 400) : idx + 200]
         self.assertIn("Class RvInventoryItem", window)
 
     def test_session_manager_weapons_array(self):
