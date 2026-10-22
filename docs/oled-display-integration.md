@@ -1,0 +1,7 @@
+# OLED / NIS in VR Settings
+
+The `DISPLAY` page links to `DISPLAY IMAGE`, which contains NIS MODE, NIS SHARPNESS, OLED and TEXTURES. Controller navigation and laser/R2 selection use the existing panel row IDs and hit geometry. Back returns to the page that opened it. The existing texture selector still writes `texture_override.ini` and requires a restart; NIS and OLED mode changes take effect at runtime. NIS render scale remains an INI/restart setting.
+
+Processing order is D3D9 capture → optional OLED grade of the full side-by-side BGRA8 image → optional NIS on each eye separately → OpenXR swapchain. OLED OFF does not call the shader; unsupported input format, failed initialization or allocation falls back to the original captured image. The OLED output has the original dimensions and format, so it is passed through the existing NIS bridge rather than allocating a second combined image-processing path. Cutscene mono cropping and per-eye submission remain downstream of this selection.
+
+Offline verification covers x86 `/O2` PE32 build, OLED D3D11 GPU/CPU pixel agreement and resource recreation, NIS stereo pixel isolation, panel hit tests at 5264×2684, configuration wiring, texture-selector preservation and WeaponLocker PreviewOnly/factory ABI regressions. This is not a Steam/OpenXR or physical PSVR2 pass. MAIN should first test OLED OFF and existing NIS mode, then BALANCED, CINEMATIC and NIS+OLED together, including menu and cutscene transitions.

@@ -37,8 +37,8 @@ int main(){
     assert(click.Update(true,true));
 
     unsigned hits=0;
-    for(int width:{1920,3840,5376})for(int height:{1080,2160,2688})
-    for(bool stereo:{false,true})for(int rows:{3,7,9,13})for(int cols:{30,35,40}){
+    for(int width:{1920,3840,5264,5376})for(int height:{1080,2160,2684,2688})
+    for(bool stereo:{false,true})for(int rows:{3,5,7,9,13})for(int cols:{30,34,35,40}){
         const auto p=settingspanel::Make(width,height,stereo,rows,cols+2,cols);
         assert(p.px>0&&p.width+8*p.px<=p.half*9/10);
         for(int row=0;row<rows;++row){

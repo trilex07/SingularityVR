@@ -5454,9 +5454,11 @@ ID3D11Texture2D*    g_frameSrc11   = nullptr;   // what the submit block copies 
 // d3d9.cpp owns ONE NisBridge instance and calls NisBridge_*; all staging,
 // dispatch, timing and lifetime policy lives in the bridge + runtime headers.
 #include "nis_bridge.h"
+#include "oled_grading.h"
 #include "nis/NIS_Scaler_CS.h"    // embedded official bytecode (primary)
 #include "nis/NIS_Sharpen_CS.h"
 static NisBridge g_nis;           // the mod's entire NIS state
+static oled_grading::OledGrading g_oledGrading;
 static void NisLogAdapter(const char* msg) { Log("%s", msg); }
 
 // Create the XR swapchain lazily, sized to the game's backbuffer - we are pasting the game's
@@ -8020,7 +8022,8 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_TUT_LINE1, PR_TUT_LINE2, PR_TUT_LINE3, PR_TUT_LINE4,
        PR_TUT_PREVIOUS, PR_TUT_NEXT, PR_TUT_LANGUAGE, PR_TUT_BACK,
        PR_RELOAD_HINTS, PR_CLOSE,
-       PR_GOTO_NIS, PR_NIS_SHARPEN, PR_NIS_STRENGTH }; // append only
+       PR_GOTO_NIS, PR_NIS_SHARPEN, PR_NIS_STRENGTH,
+       PR_OLED_PRESET }; // append only
 
 // ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
@@ -8076,7 +8079,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
     { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE,
-      PR_POLISH, PR_UINARRATOR, PR_GLOVEONLY, PR_VFXLOOK, PR_TEXTURES, PR_BACK },
+      PR_POLISH, PR_UINARRATOR, PR_GLOVEONLY, PR_VFXLOOK, PR_GOTO_NIS, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
     // headset is dominated by where you are LOOKING, so two runs "in the same place" can differ by 3x
@@ -8118,10 +8121,10 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_TUT_POLISH, PR_TUT_ENGLISH, PR_BACK },
     { PR_TUT_STEP, PR_TUT_LINE1, PR_TUT_LINE2, PR_TUT_LINE3, PR_TUT_LINE4,
       PR_TUT_PREVIOUS, PR_TUT_NEXT, PR_TUT_LANGUAGE, PR_TUT_BACK },
-    { PR_NIS_SHARPEN, PR_NIS_STRENGTH, PR_BACK },
+    { PR_NIS_SHARPEN, PR_NIS_STRENGTH, PR_OLED_PRESET, PR_TEXTURES, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 13, 10, 5, 13, 10, 7, 10, 6, 8, 6, 3, 9, 3 };
+const int kPageCount[kPanelPages] = { 13, 10, 5, 13, 10, 7, 10, 6, 8, 6, 3, 9, 5 };
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the longest row/title/
 // footer the page can display, not to what it happens to show now - that is what keeps the box from
@@ -8134,9 +8137,10 @@ const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 32, 30, 30, 30, 30, 32, 30,
 const char* kPageName[kPanelPages] = { "VR SETTINGS", "CONTROLLER", "COMFORT", "DISPLAY",
                                        "ADVANCED", "WEAPON ALIGN", "TMD ALIGN",
                                        "TMD BONES", "TMD MESH", "HANDS", "LANGUAGE / JEZYK",
-                                       "TUTORIAL", "NIS SHARPENING" };
+                                       "TUTORIAL", "DISPLAY IMAGE" };
 
 int g_panelPage = 0;
+int g_panelImageParent = 3;
 const int kMinimalRoot[] = { PR_GOTO_CTRL, PR_NOTESIZE, PR_POLISH, PR_UINARRATOR,
     PR_RELOAD_HINTS, PR_GOTO_NIS, PR_GOTO_TUTORIAL, PR_CLOSE };
 const int kMinimalControls[] = { PR_TURNMODE, PR_SNAPANGLE, PR_TURNSPEED, PR_MOVEDIR,
@@ -8267,6 +8271,9 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_NIS_STRENGTH:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%.2f", NisBridge_Sharpness(&g_nis));
             WritePrivateProfileStringA("Upscaling", "Sharpness", v, path); return;
+        case PR_OLED_PRESET:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%d", (int)g_oledGrading.GetPreset());
+            WritePrivateProfileStringA("OLED", "Preset", v, path); return;
         case PR_GOTO_NIS: return;
         // ⚠️ StartInVr is the panel's LIVE VR mode, saved so the state you leave it in is the next
         // cold start. BACKSPACE deliberately does not save - it is a toggle, not a setting, and a
@@ -8590,14 +8597,19 @@ void PanelRowText(int row, char* out, size_t cap) {
     switch (row) {
         case PR_GOTO_NIS:
             _snprintf_s(out, cap, _TRUNCATE, "%s...",
-                PolishLocalization::PL().IsPolishEnabled() ? "WYOSTRZANIE NIS" : "NIS SHARPENING"); break;
+                PolishLocalization::PL().IsPolishEnabled() ? "OBRAZ NIS/OLED" : "DISPLAY NIS/OLED"); break;
         case PR_NIS_SHARPEN:
-            _snprintf_s(out, cap, _TRUNCATE, "%s %s",
-                PolishLocalization::PL().IsPolishEnabled() ? "WYOSTRZANIE" : "SHARPENING",
-                Rd(g_nis.mode) ? "ON" : "OFF"); break;
+            _snprintf_s(out, cap, _TRUNCATE, "NIS MODE       %s",
+                Rd(g_nis.mode) == nis_upscale::kNIS ? "UPSCALE" :
+                Rd(g_nis.mode) == nis_upscale::kNISSharpen ? "SHARPEN" : "OFF"); break;
         case PR_NIS_STRENGTH:
-            _snprintf_s(out, cap, _TRUNCATE, "%s %ld%%",
-                PolishLocalization::PL().IsPolishEnabled() ? "SILA" : "STRENGTH", Rd(g_nis.sharpnessPct)); break;
+            _snprintf_s(out, cap, _TRUNCATE, "NIS SHARPNESS  %ld%%", Rd(g_nis.sharpnessPct)); break;
+        case PR_OLED_PRESET: {
+            const int preset = (int)g_oledGrading.GetPreset();
+            const char* label = preset == 1 ? "BALANCED" : preset == 2 ? "CINEMATIC" :
+                                preset == 3 ? "CUSTOM" : "OFF";
+            _snprintf_s(out, cap, _TRUNCATE, "OLED           %s", label); break;
+        }
         case PR_ENABLEVR:
             _snprintf_s(out, cap, _TRUNCATE, "VR MODE        %s", VrModeOn() ? "ON" : "OFF");
             break;
@@ -9044,15 +9056,28 @@ void PanelRowText(int row, char* out, size_t cap) {
 
 void PanelAdjust(int row, int dir) {
     switch (row) {
-        case PR_GOTO_NIS: g_panelPage=12; g_panelRow=0; return;
+        case PR_GOTO_NIS: g_panelImageParent=g_panelPage; g_panelPage=12; g_panelRow=0; return;
         case PR_NIS_SHARPEN:
-            InterlockedExchange(&g_nis.mode, Rd(g_nis.mode) ? nis_upscale::kOff : nis_upscale::kNISSharpen);
-            Log("VR panel: NIS %s", Rd(g_nis.mode) ? "sharpen ON" : "OFF"); break;
+        {
+            const LONG oldMode = Rd(g_nis.mode);
+            const int ordinal = oldMode == nis_upscale::kNISSharpen ? 1 :
+                                oldMode == nis_upscale::kNIS ? 2 : 0;
+            const int next = (ordinal + (dir >= 0 ? 1 : 2)) % 3;
+            InterlockedExchange(&g_nis.mode, next == 1 ? nis_upscale::kNISSharpen :
+                                             next == 2 ? nis_upscale::kNIS : nis_upscale::kOff);
+            Log("VR panel: NIS mode %s", nis_upscale::ModeName((nis_upscale::Mode)Rd(g_nis.mode))); break;
+        }
         case PR_NIS_STRENGTH: {
             LONG strength = Rd(g_nis.sharpnessPct) + dir*10;
             if (strength<0) strength=0;
             if (strength>100) strength=100;
             InterlockedExchange(&g_nis.sharpnessPct,strength); break;
+        }
+        case PR_OLED_PRESET: {
+            const int current = (int)g_oledGrading.GetPreset();
+            const int next = current == 3 ? 0 : (current + (dir >= 0 ? 1 : 2)) % 3;
+            g_oledGrading.SetPreset((oled_grading::Preset)next);
+            Log("VR panel: OLED preset %d", next); break;
         }
         case PR_RELOAD_HINTS:
             InterlockedExchange(&g_reloadHintsEnabled, Rd(g_reloadHintsEnabled) ? 0 : 1);
@@ -9596,7 +9621,8 @@ void PanelAdjust(int row, int dir) {
             else                           g->pitchTenths += dir;
             break;
         }
-        case PR_BACK:         g_panelPage = 0; g_panelRow = 0; return;
+        case PR_BACK:         g_panelPage = g_panelPage == 12 ? g_panelImageParent : 0;
+                              g_panelRow = 0; return;
         default:
             // Always recoverable, by two independent routes: the panel is opened by holding a
             // controller button and driven by the thumbstick, so it never went through the keyboard
@@ -13254,6 +13280,12 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         PauseMenuDiagNoteSubmit(frame->dup, frame->stereo, frame->menuFlat, cropEyes, g_srcW,
                                 g_srcH, (int)Rd(g_vrMenuClass));
     }
+    // D3D9 capture -> optional OLED grade on the complete SBS image -> optional
+    // per-eye NIS -> XR. The OLED output is dimension/format compatible with
+    // the capture; a failed/unsupported pass returns the original source.
+    ID3D11Texture2D* displaySrc = g_frameSrc11;
+    if (displaySrc && g_oledGrading.IsEnabled())
+        displaySrc = g_oledGrading.Process(g_dev11, g_ctx11, displaySrc, g_srcW, g_srcH);
     // research/nvidia-vr-upscaling: NIS engages only on the SBS true-stereo
     // path (two independent eye viewports, seam never in the kernel). Mono and
     // alternate-eye stereo keep the native path. NIS upscale uses recommended
@@ -13262,7 +13294,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     UINT nisOutW = 0, nisOutH = 0;
     const bool nisStereoSbs = frame && nis_upscale::IsStereoSbs(frame->dup,
         frame->stereo, frame->menuFlat, frame->cineFlat, g_srcW, g_srcH);
-    if (nisStereoSbs && g_frameSrc11 &&
+    if (nisStereoSbs && displaySrc &&
         InterlockedCompareExchange(&g_nis.mode, 0, 0) != 0) {
         UINT fbW = g_srcW / 2, fbH = g_srcH;
         NisBridge_OutputEye(&g_nis, g_recEyeW, g_recEyeH, fbW, fbH, &nisOutW, &nisOutH);
@@ -13288,7 +13320,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         // Resolve failure BEFORE allocating/acquiring a differently sized XR
         // image. Native fallback then always uses native dimensions, not an
         // out-of-bounds native copy into an enlarged NIS swapchain.
-        if (nisFrame && !NisBridge_ProcessStereo(&g_nis, g_ctx11, g_frameSrc11,
+        if (nisFrame && !NisBridge_ProcessStereo(&g_nis, g_ctx11, displaySrc,
                 g_srcW, g_srcH, nisOutW, nisOutH)) {
             Log("nis: dispatch FAILED - native submission, disabled for session");
             g_nis.rt.failedOnce = true; nisFrame = false;
@@ -13337,7 +13369,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                             g_srcW,g_srcH,nisOutW,nisOutH,NisBridge_Sharpness(&g_nis));
                     }
                 }
-                if (!nisDone && g_frameSrc11) {
+                if (!nisDone && displaySrc) {
                     if (monoCrop) {
                         const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
                         // Menus follow the eye-swap half; the composed cutscene
@@ -13350,8 +13382,8 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                                 Log("cutscene-mono: XR bridge submits one identical full-image crop"
                                     " to both eyes (%ux%u at x=%u)", g_scWidth, g_scHeight, left);
                         }
-                        g_ctx11->CopySubresourceRegion(g_scImages[0][idx], 0, 0, 0, 0, g_frameSrc11, 0, &box);
-                    } else g_ctx11->CopyResource(g_scImages[filled][idx], g_frameSrc11);
+                        g_ctx11->CopySubresourceRegion(g_scImages[0][idx], 0, 0, 0, 0, displaySrc, 0, &box);
+                    } else g_ctx11->CopyResource(g_scImages[filled][idx], displaySrc);
                 }
                 g_msUpload += MsSince(tUp);
                 XrSwapchainImageReleaseInfo ri{ XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO };
@@ -13372,13 +13404,13 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                         const int64_t tw = g_diagEnabled ? DiagQpc() : 0;
                         const XrResult wr = xrWaitSwapchainImage(g_swapchain[1], &wi);
                         DiagPhaseAdd(DP_SWAPWAIT, tw);
-                        rightReady = XR_SUCCEEDED(wr) && (g_frameSrc11 || nisFrame);
+                        rightReady = XR_SUCCEEDED(wr) && (displaySrc || nisFrame);
                         if (rightReady) {
                             const bool swap = InterlockedCompareExchange(&g_swapEyes, 0, 0) != 0;
                             if (nisFrame && nisDone) {
                                 g_ctx11->CopyResource(g_scImages[1][rightIndex],
                                     g_nis.rt.outTex[swap ? 0 : 1]);
-                            } else if (g_frameSrc11) {
+                            } else if (displaySrc) {
                                 const UINT left = frame->cineFlat
                                     ? 0
                                     : (frame->menuFlat ? (swap ? g_srcW / 2 : 0)
@@ -13390,7 +13422,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                                             g_scWidth, g_scHeight);
                                 }
                                 const D3D11_BOX box{ left, 0, 0, left + g_scWidth, g_scHeight, 1 };
-                                g_ctx11->CopySubresourceRegion(g_scImages[1][rightIndex], 0, 0, 0, 0, g_frameSrc11, 0, &box);
+                                g_ctx11->CopySubresourceRegion(g_scImages[1][rightIndex], 0, 0, 0, 0, displaySrc, 0, &box);
                             } else {
                                 rightReady = false;
                             }
@@ -33797,6 +33829,12 @@ void LoadIniSettings() {
     char path[MAX_PATH]{};
     if (!IniPath(path)) return;
     singularity_gore::LoadConfig(path);
+    wchar_t oledIniPath[MAX_PATH]{};
+    if (MultiByteToWideChar(CP_ACP, 0, path, -1, oledIniPath, MAX_PATH) > 0) {
+        g_oledGrading.SetLogCallback([](const char* msg) { Log("%s", msg); });
+        g_oledGrading.LoadConfig(oledIniPath);
+        Log("ini: OLED preset=%d", (int)g_oledGrading.GetPreset());
+    }
 
     const bool hotPathEnabled = GetPrivateProfileIntA("Render", "HotPathSampler", 0, path) != 0;
     // The physically accepted shadow/input combination is persistent: missing

@@ -1266,3 +1266,9 @@ WeaponFxRideGun=1
 ; RenderScale=1.0
 ; OutputScale=1.0
 ; Sharpness=0.35
+
+; DISPLAY IMAGE in VR Settings: OLED grades the complete SBS capture before
+; optional per-eye NIS, then OpenXR receives the result. OFF bypasses OLED.
+; Texture quality remains a separate restart-required texture_override.ini setting.
+; [OLED]
+; Preset=0    ; 0 OFF (default), 1 BALANCED, 2 CINEMATIC; 3 custom INI values
