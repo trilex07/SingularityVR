@@ -1,5 +1,6 @@
 #pragma once
 #include "inventory_pickup_policy.h"
+namespace LockerNativeTrace { void ObservePickup(void*, void*, int, int, int); }
 // Audited native pickup vtable and UE3 opcode adapters, not executable detours.
 // Each policy is local-player scoped; all other calls forward unchanged.
 namespace InventoryVmHook {
@@ -29,8 +30,10 @@ inline int __fastcall PickupCall(void* self,void* edx,void* archetype,int select
     if(local&&receipts++<12)
         Log("inventory native pickup: local=%d supported=%d linked=%d thread=%d keep=%d->%d maskBefore=%X (completion still requires chain evidence)",
             local,supported,linked,thread==GetCurrentThreadId(),keep,retain?1:keep,Mask());
-    const int result=originalPickup(self,edx,archetype,select,instant,retain?1:keep);
+    const int keepOut=retain?1:keep;
+    const int result=originalPickup(self,edx,archetype,select,instant,keepOut);
     if(retain)next=0;
+    ::LockerNativeTrace::ObservePickup(self, archetype, keep, keepOut, result);
     return result;
 }
 static void InstallPickup();

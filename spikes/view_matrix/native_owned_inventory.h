@@ -259,6 +259,8 @@ static void Poll() {
   }
 }
 static unsigned Mask(){return (unsigned)InterlockedCompareExchange(&owned,0,0);}
+static unsigned PossessionCount(){return count;}
+static DWORD PollThreadId(){return thread;}
 // True only when a snapshot actually produced a possession list. The wheel
 // uses this to decide between the owned mask and the accepted mesh-observed
 // fallback, so a refused snapshot can never empty the wheel again.

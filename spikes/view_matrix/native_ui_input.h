@@ -9,6 +9,7 @@
 #include "native_body_equipment_probe.h"
 #include "native_tmd_aim.h"
 #include "locker_virtual_runtime.h"
+#include "locker_native_trace.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
@@ -207,6 +208,9 @@ static bool UpdateMenu() {
    if(directDialog)Log("menu modal: Dialog direct-render proof: reflected RenderTexture is null and RenderTextureMode=0");
   }
   InterlockedExchange(&g_modalSaveDialog,dialogFocus?1:0);
+  if (prevClass[0] && !strcmp(prevClass, "RvUIGFxMovie_WeaponLocker") &&
+      className[0] && strcmp(className, "RvUIGFxMovie_WeaponLocker"))
+    LockerNativeTrace::OnDefocus();
   if (className[0]) strcpy_s(prevClass, className);
   InterlockedExchange(&g_vrMenuClass,kind);
   // Publish menu focus before locker grant/virtual hooks; they gate on g_vrUiMenu + class 4.
@@ -217,6 +221,7 @@ static bool UpdateMenu() {
   if(cachedMenu)ObserveMovieAsset(movie,cls,className);
   if(cachedMenu&&!strcmp(className,"RvUIGFxMovie_WeaponLocker")) {
    ObserveLockerSlots(movie,cls);
+   LockerNativeTrace::OnFocus(movie, cls);
    LockerVirtualRuntime::OnWeaponLockerFocus(movie,cls);
   }
   // NewGame: actual focus log proves SPSlots -> dialog. This probe establishes
