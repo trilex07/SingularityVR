@@ -40,6 +40,8 @@ static void TestEye(int eye, float yaw) {
     const Layout loading = MakeLayout(false);
     const float comfortRight = (eye + 1) * halfW - halfW * .10f;
     Expect(layout.panel.x0 > rightEdge, "no native menu overlap");
+    Expect(std::fabs(layout.panel.x0 - rightEdge - kNativeMenuGapPx) < .1f,
+           "shared projected panel/native gap");
     Expect(layout.panel.x1 <= comfortRight && layout.panel.y0 >= kMarginPx &&
            layout.panel.y1 <= fullH - kMarginPx, "panel inside comfort bounds");
     Expect(loading.loadingLabel.x0 > rightEdge && loading.loadingLabel.x1 <= comfortRight,
@@ -47,6 +49,10 @@ static void TestEye(int eye, float yaw) {
     Expect(layout.equipAll.x0 >= layout.panel.x0 && layout.equipAll.x1 <= layout.panel.x1 &&
            layout.equipAll.y0 >= layout.panel.y0 && layout.equipAll.y1 <= layout.panel.y1,
            "equip button inside panel");
+    const float titleWidth = 10.f * (kGlyphW + 1) * 3.f; // VR LOADOUT
+    Expect(layout.anchorSx - titleWidth * .5f >= layout.panel.x0 &&
+           layout.anchorSx + titleWidth * .5f <= layout.panel.x1,
+           "complete title inside panel");
     float topX = 0, topY = 0, bottomX = 0, bottomY = 0;
     ProjectCanvasUvToScreen(pp, .5f, 0.f, topX, topY);
     ProjectCanvasUvToScreen(pp, .5f, 1.f, bottomX, bottomY);

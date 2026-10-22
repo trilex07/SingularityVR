@@ -11,6 +11,7 @@ constexpr float kIconHalfPx = 42.f;
 constexpr float kTileSpacingXPx = 110.f;
 constexpr float kTileSpacingYPx = 105.f;
 constexpr float kMarginPx = 28.f;
+constexpr float kNativeMenuGapPx = 12.f;
 constexpr int kGlyphW = 5;
 constexpr int kGlyphH = 7;
 
@@ -59,7 +60,7 @@ inline bool ProjectAdjacentAnchor(const PanelProjectParams& p, float panelHalfW,
     const float eyeStart = p.eye * p.halfW;
     const float comfortLeft = eyeStart + p.halfW * .10f;
     const float comfortRight = eyeStart + p.halfW * .90f;
-    const float gap = kMarginPx;
+    const float gap = kNativeMenuGapPx;
     const float besideRight = right + gap + panelHalfW;
     const float besideLeft = left - gap - panelHalfW;
     if (besideRight + panelHalfW <= comfortRight) sx = besideRight;

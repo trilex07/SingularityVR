@@ -41,6 +41,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "weapon_wheel_seek.h"
 #include "settings_panel.h"
 #include "weapon_wheel_atlas.h"
+#include "locker_loadout_icons.h"
 #include "weapon_wheel_layout.h"
 #include "health_gesture.h"
 #include "plates_atlas.h"
@@ -28696,16 +28697,8 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
 // WeaponLocker owned overlay — panel UV anchors (tune against GFx 1280x720 layout):
 // native interactive pair ~ v 0.40-0.52; overlay label v≈0.56; extra icons v≈0.66 u≈0.38/0.62.
 static const hud_atlas::Rect* LockerAtlasIconForMesh(int mesh) {
-    if (InterlockedCompareExchange(&g_wwCatalogState, 0, 0) != 1 || g_wwCatalog.sectors.empty()) return nullptr;
-    const char* iconId = nullptr;
-    for (const auto& s : g_wwCatalog.sectors) {
-        if (s.verts == mesh) {
-            iconId = s.atlas.c_str();
-            break;
-        }
-    }
-    if (!iconId || !g_hudAtlasTex || g_hudAtlas.width <= 0) return nullptr;
-    return hud_atlas::Find(g_hudAtlas, iconId);
+    if (!g_hudAtlasTex) return nullptr;
+    return locker_loadout_icons::FindValid(g_hudAtlas, mesh);
 }
 
 static bool LockerProjectPanelUv(int eye, float u, float v, float& sx, float& sy, float halfW, float height) {
@@ -28964,6 +28957,10 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
     dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
     dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
     dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    // The native GFx menu may leave a restrictive scissor or color mask behind.
+    // This draw is state-block scoped; neither setting leaks back to GFx.
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetRenderState(D3DRS_COLORWRITEENABLE, 0xF);
     dev->SetTexture(0, g_hudAtlasTex);
     dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
     dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
@@ -28981,11 +28978,17 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
 
     const float fullW = (float)d.Width;
     const float fullH = (float)d.Height;
+    static unsigned diagnosticFrames = 0;
+    const bool diagnose = diagnosticFrames < 2;
 
     for (int eye = 0; eye < 2; ++eye) {
         locker_loadout_layout::Layout layout{};
         if (!LockerLoadoutBuildLayoutForEye(eye, fullW, fullH, dataReady, pending != 0, uiQueued != 0, layout))
             continue;
+        if (diagnose && dataReady)
+            Log("locker loadout draw: eye=%d panel=(%.1f,%.1f)-(%.1f,%.1f) atlas=%dx%d scissor=off",
+                eye, layout.panel.x0, layout.panel.y0, layout.panel.x1, layout.panel.y1,
+                g_hudAtlas.width, g_hudAtlas.height);
         const float anchorSx = layout.anchorSx;
         const float anchorSy = layout.anchorSy;
 
@@ -29016,11 +29019,12 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
         dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
 
         {
-            D3DRECT title[64];
-            const int tw = 11 * (kGlyphW + 1) * px;
+            D3DRECT title[128]; // "VR LOADOUT" needs 100 merged glyph runs.
+            const int tw = TextGlyphCount("VR LOADOUT") * (kGlyphW + 1) * px;
             const int titleX = (int)anchorSx - tw / 2;
             const int titleY = (int)(anchorSy - panelHalfH + 8.f);
-            const int tn = TextRects(title, 0, 64, titleX, titleY, px, "VR LOADOUT");
+            const int tn = TextRects(title, 0, (int)(sizeof(title) / sizeof(title[0])), titleX, titleY, px, "VR LOADOUT");
+            if (diagnose) Log("locker loadout title: eye=%d rects=%d cap=%u", eye, tn, (unsigned)(sizeof(title) / sizeof(title[0])));
             ClearRects(dev, title, tn, 0xCCB0C8D8);
         }
 
@@ -29030,7 +29034,10 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
             const bool isAvail = (avail & bit) != 0;
             if (!isOwned && !isAvail) continue;
             const hud_atlas::Rect* ir = LockerAtlasIconForMesh(kMeshes[ti]);
-            if (!ir) continue;
+            if (!ir) {
+                if (diagnose) Log("locker loadout icon: eye=%d mesh=%d missing-valid-atlas-rect", eye, kMeshes[ti]);
+                continue;
+            }
             const float cx = layout.tileCenterX[ti];
             const float cy = layout.tileCenterY[ti];
             const float u0 = (float)ir->x / (float)g_hudAtlas.width;
@@ -29047,7 +29054,9 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
                 {x0, y1, 0, 1, tint, u0, v0 + dvv},
                 {x1, y1, 0, 1, tint, u0 + duv, v0 + dvv},
             };
-            g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, quad, sizeof(HudIconVtx));
+            const HRESULT iconHr = g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, quad, sizeof(HudIconVtx));
+            if (diagnose) Log("locker loadout icon: eye=%d mesh=%d sprite=%s uv=(%.3f,%.3f)-(%.3f,%.3f) hr=%08lX",
+                eye, kMeshes[ti], ir->id.c_str(), u0, v0, u0 + duv, v0 + dvv, (unsigned long)iconHr);
             WwVtx border[5];
             const DWORD edge = isOwned ? 0x88666666 : (queued ? 0xCCFFCC44 : 0xAA6688AA);
             border[0] = {x0, y0, 0, 1, edge};
@@ -29083,6 +29092,7 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
             ClearRects(dev, btn, bn, textCol);
         }
     }
+    if (diagnose && dataReady) ++diagnosticFrames;
     dev->SetTexture(0, nullptr);
     if (old) g_origSetRenderTarget(dev, 0, old);
     g_wristState->Apply();
