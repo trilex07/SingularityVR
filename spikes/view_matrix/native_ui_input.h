@@ -388,7 +388,7 @@ static void __fastcall Poll(void* self,void*,float dt) {
  NativeNpcName::Update(); // native GFx calls stay on this engine thread
  NativeOwnedInventory::Poll(); // bounded actual possession snapshot / queued selection
  LockerOwnedDisplayCache::TickWhileActive();
- LockerVrLoadout::PollInstall();
+ LockerVrLoadout::PollEngine();
  NativeBodyEquipmentProbe::Poll(); // opt-in read-only heavy/grenade ownership census
  NativeTmdAim::Poll(); // OFF by default; audited pure TMD getters, not shared gun aim
  ObserveWeaponAssets(); // at most six weapon identities, only the explicit read-only witness

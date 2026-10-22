@@ -6646,6 +6646,11 @@ volatile LONG g_lockerAvailabilityTrace = 0; // [Diagnostic] LockerAvailabilityT
 volatile LONG g_lockerRetainOrdinary = 0; // [Input] LockerRetainOrdinary: PopMenu destroyItem gate (requires KeepAcquiredWeapons)
 volatile LONG g_lockerOwnedDisplay = 0; // [Input] LockerOwnedDisplay: VR wheel owned tiles under WeaponLocker (requires KeepAcquiredWeapons)
 volatile LONG g_lockerVrLoadout = 0; // [Input] LockerVrLoadout: compact VR LOADOUT + EQUIP ALL queue (requires KeepAcquiredWeapons)
+volatile LONG g_publishedAvailableMask = 0;
+volatile LONG g_publishedOwnedMask = 0;
+volatile LONG g_publishedPendingMask = 0;
+volatile LONG g_publishedCanInteract = 0;
+volatile LONG g_publishedUiQueuedMask = 0;
 volatile LONG g_vrUiWeaponLocker = 0; // 1 while RvUIGFxMovie_WeaponLocker has focus (input thread)
 volatile LONG g_lockerDisplayNativeMesh[2] = {0, 0}; // published ordinary mesh ids for native GFx slots 0/1
 volatile LONG g_vrMenuReleaseRequested = 0; // input publishes; render thread owns COM release
@@ -12192,15 +12197,22 @@ void SyncXRInput(XrTime displayTime) {
     const auto primaryGate=g_vrUiTrigger[fireHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,rt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
     const auto alternateGate=g_vrUiTrigger[altHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,lt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
     if(uiMenu) {
+        static settingspanel::Click lockerLoadoutClick;
         const bool selectPressed=fireHand==1?primaryGate.selectPressed:alternateGate.selectPressed;
-        if (selectPressed && Rd(g_vrUiValid) && Rd(g_lockerVrLoadout) && Rd(g_vrUiWeaponLocker)) {
-            LONG pointerU = 500000, pointerV = 500000;
-            ReadVrUiPair(pointerU, pointerV);
-            const float u = pointerU / 1000000.0f, v = pointerV / 1000000.0f;
-            LockerVrLoadout::OnPointerSelect(u, v);
-        }
-        if(selectPressed)InterlockedExchange(&g_vrUiDown,1);
-        else if((fireHand==1?rt:lt)<=.5f || !Rd(g_vrUiValid))InterlockedExchange(&g_vrUiDown,0);
+        const bool lockerUi=Rd(g_lockerVrLoadout)&&Rd(g_vrUiWeaponLocker)&&LockerVrLoadoutPublish::CanInteract();
+        LONG pointerU=500000,pointerV=500000;
+        if(Rd(g_vrUiValid))ReadVrUiPair(pointerU,pointerV);
+        const float pointerUf=pointerU/1000000.0f,pointerVf=pointerV/1000000.0f;
+        const bool lockerTarget=lockerUi&&Rd(g_vrUiValid)&&
+            LockerVrLoadout::PointerHitsModTarget(pointerUf,pointerVf);
+        const bool menuPointerHeld=(fireHand==1?rt:lt)>0.5f||getBool(g_actUiSelect);
+        const bool lockerPressed=lockerUi&&lockerLoadoutClick.Update(lockerTarget,menuPointerHeld&&lockerTarget);
+        bool lockerConsumed=false;
+        if(lockerPressed)lockerConsumed=LockerVrLoadout::OnPointerSelect(pointerUf,pointerVf);
+        if(!lockerUi)lockerLoadoutClick.Update(false,false);
+        if(selectPressed&&!lockerConsumed)InterlockedExchange(&g_vrUiDown,1);
+        else if((fireHand==1?rt:lt)<=.5f||!Rd(g_vrUiValid)||lockerConsumed||lockerTarget)
+            InterlockedExchange(&g_vrUiDown,0);
         rt=lt=0; // Menu selection cannot publish gameplay trigger state.
         btns&=~WORD(XI_A|XI_B);
         if(getBool(g_actUiSelect))btns|=XI_A;
@@ -28833,12 +28845,12 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
     if (!dev || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_weaponWheelOpen) || !Rd(g_lockerVrLoadout) ||
         !Rd(g_keepAcquiredWeapons) || !Rd(g_vrUiWeaponLocker) || !Rd(g_vrUiMenu) || !Rd(g_vrUiStationMovie) ||
         Rd(g_vrMenuClass) != 4 || !g_vrMenuPanelValid || !g_haveEyes || !g_origDrawPrimUP ||
-        !g_origSetRenderTarget || !LockerVrLoadout::CanDrawOrInteract())
+        !g_origSetRenderTarget || !LockerVrLoadoutPublish::CanInteract())
         return;
 
-    const uint32_t avail = LockerVrLoadout::AvailableMask();
-    const uint32_t owned = LockerVrLoadout::OwnedMask();
-    const uint32_t uiQueued = static_cast<uint32_t>(InterlockedCompareExchange(&LockerVrLoadout::g_uiQueuedMask, 0, 0));
+    const uint32_t avail = LockerVrLoadoutPublish::Available();
+    const uint32_t owned = LockerVrLoadoutPublish::Owned();
+    const uint32_t uiQueued = LockerVrLoadoutPublish::UiQueued();
     static const int kMeshes[4] = {5799, 11387, 8297, 11389};
     static const uint32_t kBits[4] = {1u, 2u, 4u, 8u};
 
@@ -28945,7 +28957,7 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
             }
         }
 
-        const uint32_t pending = LockerVrLoadout::PendingMaskNow();
+        const uint32_t pending = LockerVrLoadoutPublish::Pending();
         if (pending) {
             float bx = 0, by = 0;
             if (LockerProjectPanelUv(eye, 0.78f, 0.57f, bx, by, halfW, (float)d.Height)) {

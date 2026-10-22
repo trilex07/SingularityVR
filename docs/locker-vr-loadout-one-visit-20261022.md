@@ -36,7 +36,14 @@ Pure policy: `locker_vr_loadout_policy.h` / `locker_vr_loadout_runtime.h`.
 Runtime pins factory pointer from live **`GGameSystem`** vtable slot (logged once with prologue hash).  
 **No** GObjects scan, **no** `LoadEquippedWeapons` grant, **no** `AddWeapon +0x434` on the mod path.
 
+## Threading (hardening)
+
+- Engine/input `PollEngine()` publishes `g_published*` masks; render/XR read only `LockerVrLoadoutPublish`.
+- PopMenu hook schedules `g_acquireRequested`; `+D70` runs on next safe input tick after locker defocus.
+- Mod overlay clicks consume GFx mouse-down when hit targets match.
+
 ## Tests
 
 - `tools/reload/test_locker_vr_loadout_policy.py`
+- `tools/reload/test_locker_vr_loadout_hardening.py`
 - `spikes/view_matrix/tests/test-locker-vr-loadout-policy.cpp`
