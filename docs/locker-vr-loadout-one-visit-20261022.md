@@ -33,7 +33,7 @@ Pure policy: `locker_vr_loadout_policy.h` / `locker_vr_loadout_runtime.h`.
 | Duplicate +D70 chain | **`0x11B4B6E`–`0x11B4BB3`**: same factory, then **`0xF69590`**, then pawn vtable **`+0xD70`** `keep=1` |
 | Pickup adapter | `InventoryVmHook::RunAuditedPickupRestore` / `inventory_pickup_policy.h` |
 
-Runtime pins factory pointer from live **`GGameSystem`** vtable slot (logged once with prologue hash).  
+Runtime requires offline-pinned **`GGameSystem` (`RvGameSystem`) vtable `0x1BCF9C4` +0x20C → `0xF85E30`** (prologue fingerprint in `locker_vr_loadout_identity.h`). Live session verifies; it does not define the expected target. Witness: `tools/reload/verify_locker_vr_loadout_factory_offline.py`.  
 **No** GObjects scan, **no** `LoadEquippedWeapons` grant, **no** `AddWeapon +0x434` on the mod path.
 
 ## Threading (hardening)

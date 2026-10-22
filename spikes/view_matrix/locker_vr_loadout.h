@@ -73,9 +73,6 @@ inline void PublishFromEngine() {
     const uint32_t pending = LockerVrLoadoutPolicy::PendingMask(available, owned);
     const uint32_t uiQueued = static_cast<uint32_t>(InterlockedCompareExchange(&g_uiQueuedMask, 0, 0));
     LockerVrLoadoutPublish::Publish(available, owned, pending, true, uiQueued);
-
-    const uintptr_t fn = LockerVrLoadoutAcquire::ResolveGameSystemFactoryFn();
-    if (fn) LockerVrLoadoutIdentity::PinFactoryOffsetFromLiveSlot(fn);
 }
 
 inline void OnPopMenuScheduleAcquire() {

@@ -25,11 +25,11 @@ inline uintptr_t g_factoryFn = 0;
 
 inline uintptr_t ResolveGameSystemFactoryFn() {
     const uintptr_t gs = PauseRttProbe::Pointer(LockerVrLoadoutRuntime::kGGameSystemPtr);
-    if (!gs || !PauseRttProbe::SafeRange(gs, 4)) return 0;
+    if (!LockerVrLoadoutIdentity::GameSystemObjectIdentityOk(gs)) return 0;
     const uintptr_t vt = PauseRttProbe::Pointer(gs);
     if (!PauseRttProbe::SafeRange(vt + kGsVtableLookupOff, 4)) return 0;
     const uintptr_t fn = PauseRttProbe::Pointer(vt + kGsVtableLookupOff);
-    if (!LockerVrLoadoutIdentity::FnInText(fn)) return 0;
+    if (!LockerVrLoadoutIdentity::FactoryIdentityOk(fn)) return 0;
     return fn;
 }
 
@@ -43,15 +43,15 @@ inline bool WitnessFactoryOnEngineThread() {
         return false;
     }
     const uintptr_t fn = ResolveGameSystemFactoryFn();
-    if (!fn || !LockerVrLoadoutIdentity::PinFactoryOffsetFromLiveSlot(fn)) {
+    if (!fn) {
         InterlockedExchange(&g_factoryWitnessed, 1);
-        Log("locker vr loadout acquire: factory identity refused (vtable+0x20C)");
+        Log("locker vr loadout acquire: factory identity refused (offline vtable+0x20C gate)");
         return false;
     }
     g_factoryFn = fn;
     InterlockedExchange(&g_factoryWitnessed, 1);
-    Log("locker vr loadout acquire: factory pinned fn=%p rva=0x%X (0xF03450 / row+0x0C)",
-        (void*)fn, (unsigned)(fn - g_textLo));
+    Log("locker vr loadout acquire: factory verified fn=%p rva=0x%X (0xF03450 / 0x11B4B6E)",
+        (void*)fn, LockerVrLoadoutIdentity::kExpectedFactoryTextRva);
     return true;
 }
 

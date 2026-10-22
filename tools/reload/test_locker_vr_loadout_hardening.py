@@ -7,6 +7,7 @@ REPO = Path(__file__).resolve().parents[2]
 D3D9 = REPO / "spikes" / "view_matrix" / "d3d9.cpp"
 LOADOUT_H = REPO / "spikes" / "view_matrix" / "locker_vr_loadout.h"
 ACQUIRE_H = REPO / "spikes" / "view_matrix" / "locker_vr_loadout_acquire.h"
+IDENTITY_H = REPO / "spikes" / "view_matrix" / "locker_vr_loadout_identity.h"
 PUBLISH_H = REPO / "spikes" / "view_matrix" / "locker_vr_loadout_publish.h"
 NATIVE_UI = REPO / "spikes" / "view_matrix" / "native_ui_input.h"
 
@@ -54,10 +55,18 @@ class HardeningContract(unittest.TestCase):
         self.assertIn("acquire batch:", body)
         self.assertNotIn("pickup=success", body)
 
-    def test_factory_identity_pinned(self):
+    def test_factory_identity_offline_pinned(self):
         body = ACQUIRE_H.read_text(encoding="utf-8")
+        ident = IDENTITY_H.read_text(encoding="utf-8")
+        loadout = LOADOUT_H.read_text(encoding="utf-8")
         self.assertIn("AppendFNameIdentityOk", body)
         self.assertIn("FactoryIdentityOk", body)
+        self.assertIn("GameSystemObjectIdentityOk", body)
+        self.assertIn("kExpectedFactoryTextRva", ident)
+        self.assertIn("kExpectedFactoryFingerprint", ident)
+        self.assertNotIn("PinFactoryOffsetFromLiveSlot", ident)
+        self.assertNotIn("g_factoryOffsetPinned", ident)
+        self.assertNotIn("PinFactoryOffsetFromLiveSlot", loadout)
         self.assertNotIn("F69590", body)
 
     def test_tile_queue_or_semantics(self):
