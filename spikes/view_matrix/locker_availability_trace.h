@@ -5,6 +5,7 @@
 #include "MinHook.h"
 #include "inventory_retention_policy.h"
 #include "pause_rtt_probe.h"
+#include <cstdint>
 #include <cstring>
 #include <intrin.h>
 
@@ -23,6 +24,7 @@ constexpr uintptr_t kCatalogDataOff = 0x160u;
 constexpr uintptr_t kCatalogCountOff = 0x164u;
 constexpr uintptr_t kCatalogStride = 0x50u;
 constexpr uintptr_t kPawnInvManager = 0x3D0u;
+constexpr uintptr_t kInventoryManagerVtable = 0x019CB480u;
 constexpr uintptr_t kMgrNativeMaskOff = 0x3E4u;
 
 constexpr unsigned kMaxCatalogScan = 32u;
@@ -39,13 +41,16 @@ inline uintptr_t g_cls = 0;
 inline int g_offEquipped = -1;
 inline uint32_t g_sessionNativeMask = 0;
 inline uint32_t g_observedVrMask = 0;
+inline uintptr_t g_sessionMgr = 0;
+inline volatile LONG g_managerValid = 0;
+inline volatile LONG g_mgrIdentityRefuseLogged = 0;
 inline EquipFn g_origEquip = nullptr;
 
 struct OrdinaryRow {
     const char* path;
     int runtimeIndex;
     uint32_t nativeMask;
-    int row24;
+    uint8_t row24;
     int row4C;
     bool known;
 };
@@ -125,10 +130,31 @@ inline const OrdinaryRow* FindRowByPath(const char* path) {
     return (r && r->known) ? r : nullptr;
 }
 
-inline uintptr_t ResolveInventoryManager() {
+inline void MaybeLogMgrIdentityRefused(const char* reason, uintptr_t pawn, uintptr_t mgr, uintptr_t vt) {
+    if (InterlockedCompareExchange(&g_mgrIdentityRefuseLogged, 0, 0)) return;
+    InterlockedExchange(&g_mgrIdentityRefuseLogged, 1);
+    Log("locker avail: inventory manager identity refused %s pawn=%p mgr=%p vt=%p expected=0x%X", reason,
+        (void*)pawn, (void*)mgr, (void*)vt, (unsigned)kInventoryManagerVtable);
+}
+
+inline uintptr_t ResolveInventoryManager(bool logRefuse) {
     const uintptr_t pawn = g_playerPawn;
-    if (!pawn || !PauseRttProbe::SafeRange(pawn + kPawnInvManager, 4)) return 0;
-    return PauseRttProbe::Pointer(pawn + kPawnInvManager);
+    if (!pawn || !PauseRttProbe::SafeRange(pawn + kPawnInvManager, 4)) {
+        if (logRefuse) MaybeLogMgrIdentityRefused("pawn missing or pawn+0x3D0 unreadable", pawn, 0, 0);
+        return 0;
+    }
+    const uintptr_t mgr = PauseRttProbe::Pointer(pawn + kPawnInvManager);
+    if (!mgr || !PauseRttProbe::SafeRange(mgr, 4)) {
+        if (logRefuse) MaybeLogMgrIdentityRefused("manager null or object header unreadable", pawn, mgr, 0);
+        return 0;
+    }
+    const uintptr_t vt = PauseRttProbe::Pointer(mgr);
+    if (!PauseRttProbe::SafeRange(vt, 4) || vt != kInventoryManagerVtable) {
+        if (logRefuse)
+            MaybeLogMgrIdentityRefused("vtable mismatch", pawn, mgr, vt);
+        return 0;
+    }
+    return mgr;
 }
 
 inline void ResetOrdinaryRows() {
@@ -144,7 +170,7 @@ inline void ResetOrdinaryRows() {
     }
 }
 
-inline void ScanLiveCatalog(uint32_t managerMask) {
+inline void ScanLiveCatalog(uint32_t managerMask, bool managerValid) {
     const uintptr_t gs = PauseRttProbe::Pointer(kGGameSystemPtr);
     if (!gs || !PauseRttProbe::SafeRange(gs + kCatalogCountOff, 8)) {
         Log("locker avail: catalog scan refused GGameSystem=%p", (void*)gs);
@@ -153,8 +179,12 @@ inline void ScanLiveCatalog(uint32_t managerMask) {
     const uintptr_t data = PauseRttProbe::Pointer(gs + kCatalogDataOff);
     const int count = *reinterpret_cast<const int*>(gs + kCatalogCountOff);
     const int n = count < 0 ? 0 : (count > (int)kMaxCatalogScan ? (int)kMaxCatalogScan : count);
-    Log("locker avail: session catalog GGameSystem=%p data=%p count=%d scan=%d managerMask=0x%X",
-        (void*)gs, (void*)data, count, n, managerMask);
+    if (managerValid)
+        Log("locker avail: session catalog GGameSystem=%p data=%p count=%d scan=%d managerMask=0x%X",
+            (void*)gs, (void*)data, count, n, managerMask);
+    else
+        Log("locker avail: session catalog GGameSystem=%p data=%p count=%d scan=%d managerMask=UNKNOWN",
+            (void*)gs, (void*)data, count, n);
     for (int i = 0; i < n; ++i) {
         const uintptr_t row = data + static_cast<uintptr_t>(i) * kCatalogStride;
         if (!PauseRttProbe::SafeRange(row, kCatalogStride)) break;
@@ -164,12 +194,19 @@ inline void ScanLiveCatalog(uint32_t managerMask) {
         if (!slot) continue;
         slot->runtimeIndex = i;
         slot->nativeMask = 1u << static_cast<unsigned>(i);
-        slot->row24 = PauseRttProbe::SafeRange(row + 0x24, 4) ? *reinterpret_cast<const int*>(row + 0x24) : -1;
+        slot->row24 = PauseRttProbe::SafeRange(row + 0x24, 1)
+                          ? *reinterpret_cast<const uint8_t*>(row + 0x24)
+                          : static_cast<uint8_t>(0xFFu);
         slot->row4C = PauseRttProbe::SafeRange(row + 0x4C, 4) ? *reinterpret_cast<const int*>(row + 0x4C) : -1;
         slot->known = true;
-        const int bitSet = (managerMask & slot->nativeMask) ? 1 : 0;
-        Log("locker avail: path=%s runtimeIndex=%d nativeMask=0x%X bitSet=%d row24=%d row4C=%d", path, i,
-            slot->nativeMask, bitSet, slot->row24, slot->row4C);
+        if (!managerValid)
+            Log("locker avail: path=%s runtimeIndex=%d nativeMask=0x%X bitSet=- row24=%u row4C=%d", path, i,
+                slot->nativeMask, static_cast<unsigned>(slot->row24), slot->row4C);
+        else {
+            const int bitSet = (managerMask & slot->nativeMask) ? 1 : 0;
+            Log("locker avail: path=%s runtimeIndex=%d nativeMask=0x%X bitSet=%d row24=%u row4C=%d", path, i,
+                slot->nativeMask, bitSet, static_cast<unsigned>(slot->row24), slot->row4C);
+        }
     }
     for (unsigned k = 0; k < 4; ++k) {
         if (!g_rows[k].known)
@@ -199,32 +236,45 @@ inline uint32_t NativeProgressionOrdinaryVrMask(uint32_t managerMask) {
     return vr;
 }
 
-inline uint32_t ReadManagerMask(uintptr_t mgr) {
-    if (mgr && PauseRttProbe::SafeRange(mgr + kMgrNativeMaskOff, 4))
-        return *reinterpret_cast<const uint32_t*>(mgr + kMgrNativeMaskOff);
-    return g_sessionNativeMask;
+inline uint32_t ReadManagerMask() {
+    if (!InterlockedCompareExchange(&g_managerValid, 0, 0) || !g_sessionMgr) return 0;
+    if (!PauseRttProbe::SafeRange(g_sessionMgr + kMgrNativeMaskOff, 4)) return g_sessionNativeMask;
+    return *reinterpret_cast<const uint32_t*>(g_sessionMgr + kMgrNativeMaskOff);
 }
 
 inline void LogSessionOpen(uintptr_t movie, uintptr_t cls) {
     ResetOrdinaryRows();
     g_offEquipped = PauseRttProbe::Property(cls, "mEquippedWeapons", "ArrayProperty");
-    const uintptr_t mgr = ResolveInventoryManager();
+    InterlockedExchange(&g_mgrIdentityRefuseLogged, 0);
+    InterlockedExchange(&g_managerValid, 0);
+    g_sessionMgr = 0;
+    g_sessionNativeMask = 0;
+    const uintptr_t mgr = ResolveInventoryManager(true);
+    const bool managerValid = mgr != 0;
     uint32_t managerMask = 0;
-    if (mgr && PauseRttProbe::SafeRange(mgr + kMgrNativeMaskOff, 4))
-        managerMask = *reinterpret_cast<const uint32_t*>(mgr + kMgrNativeMaskOff);
-    g_sessionNativeMask = managerMask;
+    if (managerValid) {
+        g_sessionMgr = mgr;
+        InterlockedExchange(&g_managerValid, 1);
+        if (PauseRttProbe::SafeRange(mgr + kMgrNativeMaskOff, 4))
+            managerMask = *reinterpret_cast<const uint32_t*>(mgr + kMgrNativeMaskOff);
+        g_sessionNativeMask = managerMask;
+    }
     g_observedVrMask = 0;
     InterlockedExchange(&g_equipLogs, 0);
     char obj[96]{};
     NameOf(movie, obj, sizeof(obj));
-    Log("locker avail: SESSION OPEN movie=%p mgr=%p nativeProgressionMask=0x%X obj=%s tid=%u",
-        (void*)movie, (void*)mgr, managerMask, obj, GetCurrentThreadId());
-    ScanLiveCatalog(managerMask);
+    if (managerValid)
+        Log("locker avail: SESSION OPEN movie=%p mgr=%p nativeProgressionMask=0x%X obj=%s tid=%u",
+            (void*)movie, (void*)mgr, managerMask, obj, GetCurrentThreadId());
+    else
+        Log("locker avail: SESSION OPEN movie=%p mgr=0 nativeProgressionMask=UNKNOWN obj=%s tid=%u",
+            (void*)movie, obj, GetCurrentThreadId());
+    ScanLiveCatalog(managerMask, managerValid);
 }
 
 inline void LogSessionClose() {
-    const uint32_t mgrMask = ReadManagerMask(ResolveInventoryManager());
-    const uint32_t nativeVr = NativeProgressionOrdinaryVrMask(mgrMask);
+    const bool managerValid = InterlockedCompareExchange(&g_managerValid, 0, 0) != 0;
+    const uint32_t mgrMask = managerValid ? ReadManagerMask() : 0;
     const uint32_t offered = g_observedVrMask;
     char observed[160]{};
     int pos = 0;
@@ -239,6 +289,13 @@ inline void LogSessionClose() {
     }
     if (pos < (int)sizeof(observed) - 1) observed[pos++] = '}';
     observed[pos] = 0;
+    if (!managerValid) {
+        Log("locker avail summary: offeredOrdinary=0x%X nativeProgressionOrdinary=UNKNOWN observed=%s "
+            "(VR bits 1/2/4/8; manager+0x3E4 unreadable — inventory manager identity refused)",
+            offered, observed);
+        return;
+    }
+    const uint32_t nativeVr = NativeProgressionOrdinaryVrMask(mgrMask);
     Log("locker avail summary: offeredOrdinary=0x%X nativeProgressionOrdinary=0x%X observed=%s "
         "(VR bits 1/2/4/8; native catalog bits separate; manager+0x3E4=0x%X)",
         offered, nativeVr, observed, mgrMask);
@@ -263,11 +320,21 @@ inline void MaybeLogEquip(void* self, void* slotNum) {
     const int mesh = inventoryretention::WeaponMesh(fname);
     const char* path = PathForMesh(mesh);
     const OrdinaryRow* row = path ? FindRowByPath(path) : nullptr;
-    const uint32_t managerMask = ReadManagerMask(ResolveInventoryManager());
+    const bool managerValid = InterlockedCompareExchange(&g_managerValid, 0, 0) != 0;
+    const uint32_t managerMask = managerValid ? ReadManagerMask() : 0;
     if (path) g_observedVrMask |= VrBitForPath(path);
     if (!path || !row || !row->known) {
-        Log("locker avail equip: slot=%d Weapon=%s path=- idx=- nativeBit=- managerMask=0x%X bitSet=-",
-            slot, fname[0] ? fname : "-", managerMask);
+        if (managerValid)
+            Log("locker avail equip: slot=%d Weapon=%s path=- idx=- nativeBit=- managerMask=0x%X bitSet=-",
+                slot, fname[0] ? fname : "-", managerMask);
+        else
+            Log("locker avail equip: slot=%d Weapon=%s path=- idx=- nativeBit=- managerMask=UNKNOWN bitSet=-",
+                slot, fname[0] ? fname : "-");
+        return;
+    }
+    if (!managerValid) {
+        Log("locker avail equip: slot=%d Weapon=%s path=%s idx=%d nativeBit=0x%X managerMask=UNKNOWN bitSet=-",
+            slot, fname, path, row->runtimeIndex, row->nativeMask);
         return;
     }
     const int bitSet = (managerMask & row->nativeMask) ? 1 : 0;
@@ -338,6 +405,8 @@ inline void OnDefocus() {
     if (!Armed()) return;
     LogSessionClose();
     InterlockedExchange(&g_session, 0);
+    InterlockedExchange(&g_managerValid, 0);
+    g_sessionMgr = 0;
     g_movie = 0;
     g_cls = 0;
     g_offEquipped = -1;

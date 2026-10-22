@@ -45,6 +45,27 @@ class LockerAvailabilityTracePolicy(unittest.TestCase):
         self.assertIn("kMgrNativeMaskOff = 0x3E4u", self.text)
         self.assertIn("kPawnInvManager = 0x3D0u", self.text)
 
+    def test_catalog_row24_byte_read(self):
+        self.assertIn("uint8_t row24", self.text)
+        self.assertIn("SafeRange(row + 0x24, 1)", self.text)
+        self.assertIn("reinterpret_cast<const uint8_t*>(row + 0x24)", self.text)
+        self.assertNotIn("reinterpret_cast<const int*>(row + 0x24)", self.text)
+
+    def test_inventory_manager_identity_before_mask(self):
+        self.assertIn("kInventoryManagerVtable = 0x019CB480u", self.text)
+        self.assertIn("inventory manager identity refused", self.text)
+        self.assertIn("g_managerValid", self.text)
+        self.assertIn("nativeProgressionOrdinary=UNKNOWN", self.text)
+        # +0x3E4 read must not precede vtable validation in ResolveInventoryManager
+        resolve = self.text.split("inline uintptr_t ResolveInventoryManager", 1)[1].split(
+            "inline void ResetOrdinaryRows", 1
+        )[0]
+        self.assertIn("kInventoryManagerVtable", resolve)
+        self.assertNotIn("kMgrNativeMaskOff", resolve)
+        open_body = self.text.split("inline void LogSessionOpen", 1)[1].split("inline void LogSessionClose", 1)[0]
+        self.assertIn("ResolveInventoryManager(true)", open_body)
+        self.assertLess(open_body.index("ResolveInventoryManager"), open_body.index("kMgrNativeMaskOff"))
+
     def test_log_prefixes(self):
         self.assertIn("locker avail: path=", self.text)
         self.assertIn("locker avail equip:", self.text)
