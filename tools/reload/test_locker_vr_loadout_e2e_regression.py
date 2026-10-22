@@ -67,6 +67,32 @@ class E2eRegression(unittest.TestCase):
         body = LOADOUT_H.read_text(encoding="utf-8")
         focus = body.split("OnFocus", 1)[1].split("struct ExecHooks", 1)[0]
         self.assertIn("NativeOwnedInventory::Refresh()", focus)
+        self.assertIn("NativeOwnedInventory::SnapshotNow()", focus)
+
+    def test_snapshot_clears_valid_at_start(self):
+        inv = (REPO / "spikes" / "view_matrix" / "native_owned_inventory.h").read_text(encoding="utf-8")
+        snap = inv.split("static bool Snapshot()", 1)[1].split("static void Report", 1)[0]
+        self.assertIn("InterlockedExchange(&snapshotValid,0)", snap.replace(" ", ""))
+
+    def test_native_local_player_pawn_fallback(self):
+        inv = (REPO / "spikes" / "view_matrix" / "native_owned_inventory.h").read_text(encoding="utf-8")
+        self.assertIn("EngineNativeLocalPlayerPawn()", inv)
+
+    def test_ready_transition_log(self):
+        body = LOADOUT_H.read_text(encoding="utf-8")
+        self.assertIn("locker vr loadout ready:", body)
+        self.assertIn("EngineLoadoutNotReadyReason", body)
+
+    def test_loading_ui_no_large_panel(self):
+        draw = self._draw_body()
+        self.assertIn("VR LOADOUT ...", draw)
+        idx = draw.index("if (!dataReady)")
+        loading = draw[idx : idx + 400]
+        self.assertNotIn("0xAA101820", loading)
+
+    def test_panel_clamped_in_eye_space(self):
+        text = D3D9.read_text(encoding="utf-8", errors="replace")
+        self.assertIn("LockerLoadoutClampEyePanel", text)
 
     def test_can_interact_gated_on_data_ready(self):
         body = LOADOUT_H.read_text(encoding="utf-8")
@@ -115,7 +141,7 @@ class E2eRegression(unittest.TestCase):
         draw = self._draw_body()
         self.assertIn("DataReady()", draw)
         self.assertIn("IsEquipPage()", draw)
-        self.assertIn('"..."', draw)
+        self.assertIn("VR LOADOUT ...", draw)
 
     def test_load_upgrades_and_load_hooks_preserved(self):
         body = LOADOUT_H.read_text(encoding="utf-8")

@@ -23812,6 +23812,8 @@ static nativeplayer::Identity ReadNativeLocalPlayer() {
     return nativeplayer::Resolve(g_camera,access);
 }
 
+std::uintptr_t EngineNativeLocalPlayerPawn() { return ReadNativeLocalPlayer().pawn; }
+
 static bool RestraintIdentity(uintptr_t object,char* name,size_t nameSize,char* typeName,size_t typeSize) {
     int32_t type=0;
     return object && TryLoadAlignedI32(object+OBJ_CLASS,&type) && type &&
@@ -28842,6 +28844,22 @@ static void DrawLockerOwnedDisplay(IDirect3DDevice9* dev) {
     back->Release();
 }
 
+static void LockerLoadoutClampEyePanel(int eye, float fullW, float fullH, float halfW, float& cx, float& cy,
+                                       float halfPanelW, float halfPanelH, float margin) {
+    const float eyeMinX = eye == 0 ? margin : halfW + margin;
+    const float eyeMaxX = eye == 0 ? halfW - margin : fullW - margin;
+    const float minY = margin + halfPanelH;
+    const float maxY = fullH - margin - halfPanelH;
+    const float preferredCx = eyeMaxX - halfPanelW - margin * .5f;
+    if (cx < preferredCx) cx = preferredCx;
+    if (cx - halfPanelW < eyeMinX) cx = eyeMinX + halfPanelW;
+    if (cx + halfPanelW > eyeMaxX) cx = eyeMaxX - halfPanelW;
+    if (cy - halfPanelH < minY - halfPanelH) cy = minY;
+    if (cy + halfPanelH > maxY + halfPanelH) cy = maxY;
+    if (cy < margin + 12.f) cy = margin + 12.f;
+    if (cy > fullH - margin - 12.f) cy = fullH - margin - 12.f;
+}
+
 static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
     if (!dev || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_weaponWheelOpen) || !Rd(g_lockerVrLoadout) ||
         !Rd(g_keepAcquiredWeapons) || !Rd(g_vrUiWeaponLocker) || !Rd(g_vrUiMenu) || !Rd(g_vrUiStationMovie) ||
@@ -28912,49 +28930,51 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
     const float tileOffY[4] = {-spacingY * .5f, -spacingY * .5f, spacingY * .5f, spacingY * .5f};
     const uint32_t pending = LockerVrLoadoutPublish::Pending();
 
-    for (int eye = 0; eye < 2; ++eye) {
-        float panelCx = 0, panelCy = 0;
-        if (LockerProjectPanelUv(eye, anchorU, anchorV, panelCx, panelCy, halfW, (float)d.Height)) {
-            const float pw = spacingX * .5f + iconHalf + 18.f;
-            const float ph = spacingY * .5f + iconHalf + 52.f;
-            D3DRECT panel = {(LONG)(panelCx - pw), (LONG)(panelCy - ph * .55f), (LONG)(panelCx + pw),
-                             (LONG)(panelCy + ph * .55f)};
-            ClearRects(dev, &panel, 1, 0xAA101820);
-            WwVtx frame[5];
-            const DWORD frameCol = 0xAA8899AA;
-            frame[0] = {(float)panel.x1, (float)panel.y1, 0, 1, frameCol};
-            frame[1] = {(float)panel.x2, (float)panel.y1, 0, 1, frameCol};
-            frame[2] = {(float)panel.x2, (float)panel.y2, 0, 1, frameCol};
-            frame[3] = {(float)panel.x1, (float)panel.y2, 0, 1, frameCol};
-            frame[4] = {(float)panel.x1, (float)panel.y1, 0, 1, frameCol};
-            dev->SetTexture(0, nullptr);
-            dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
-            g_origDrawPrimUP(dev, D3DPT_LINESTRIP, 4, frame, sizeof(WwVtx));
-            dev->SetTexture(0, g_hudAtlasTex);
-            dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
-        }
+    const float fullW = (float)d.Width;
+    const float fullH = (float)d.Height;
+    const float panelHalfW = spacingX * .5f + iconHalf + 14.f;
+    const float panelHalfH = spacingY * .5f + iconHalf + 48.f;
+    const float margin = 28.f;
 
-        float tx = 0, ty = 0;
-        if (LockerProjectPanelUv(eye, LockerVrLoadout::Layout::kTitleU, LockerVrLoadout::Layout::kTitleV, tx, ty,
-                                 halfW, (float)d.Height)) {
-            D3DRECT title[64];
-            const int tw = 11 * (kGlyphW + 1) * px;
-            const int tn = TextRects(title, 0, 64, (int)tx - tw / 2, (int)ty, px, "VR LOADOUT");
-            ClearRects(dev, title, tn, 0xCCB0C8D8);
-        }
+    for (int eye = 0; eye < 2; ++eye) {
+        float anchorSx = 0, anchorSy = 0;
+        if (!LockerProjectPanelUv(eye, anchorU, anchorV, anchorSx, anchorSy, halfW, fullH)) continue;
+        LockerLoadoutClampEyePanel(eye, fullW, fullH, halfW, anchorSx, anchorSy, panelHalfW, panelHalfH, margin);
 
         if (!dataReady) {
-            float lx = 0, ly = 0;
-            if (LockerProjectPanelUv(eye, anchorU, anchorV, lx, ly, halfW, (float)d.Height)) {
-                D3DRECT dots[64];
-                const int dn = TextRects(dots, 0, 64, (int)lx - 3 * px, (int)ly, px, "...");
-                ClearRects(dev, dots, dn, 0xCC8899AA);
-            }
+            D3DRECT loading[96];
+            const int lw = 15 * (kGlyphW + 1) * px;
+            const int lx = (int)anchorSx - lw / 2;
+            const int ly = (int)anchorSy - (kGlyphH * px) / 2;
+            const int ln = TextRects(loading, 0, 96, lx, ly, px, "VR LOADOUT ...");
+            ClearRects(dev, loading, ln, 0xCC8899AA);
             continue;
         }
 
-        float anchorSx = 0, anchorSy = 0;
-        if (!LockerProjectPanelUv(eye, anchorU, anchorV, anchorSx, anchorSy, halfW, (float)d.Height)) continue;
+        D3DRECT panel = {(LONG)(anchorSx - panelHalfW), (LONG)(anchorSy - panelHalfH),
+                         (LONG)(anchorSx + panelHalfW), (LONG)(anchorSy + panelHalfH)};
+        ClearRects(dev, &panel, 1, 0xAA101820);
+        WwVtx frame[5];
+        const DWORD frameCol = 0xAA8899AA;
+        frame[0] = {(float)panel.x1, (float)panel.y1, 0, 1, frameCol};
+        frame[1] = {(float)panel.x2, (float)panel.y1, 0, 1, frameCol};
+        frame[2] = {(float)panel.x2, (float)panel.y2, 0, 1, frameCol};
+        frame[3] = {(float)panel.x1, (float)panel.y2, 0, 1, frameCol};
+        frame[4] = {(float)panel.x1, (float)panel.y1, 0, 1, frameCol};
+        dev->SetTexture(0, nullptr);
+        dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+        g_origDrawPrimUP(dev, D3DPT_LINESTRIP, 4, frame, sizeof(WwVtx));
+        dev->SetTexture(0, g_hudAtlasTex);
+        dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+
+        {
+            D3DRECT title[64];
+            const int tw = 11 * (kGlyphW + 1) * px;
+            const int titleX = (int)anchorSx - tw / 2;
+            const int titleY = (int)(anchorSy - panelHalfH + 8.f);
+            const int tn = TextRects(title, 0, 64, titleX, titleY, px, "VR LOADOUT");
+            ClearRects(dev, title, tn, 0xCCB0C8D8);
+        }
 
         for (int ti = 0; ti < 4; ++ti) {
             const uint32_t bit = kBits[ti];
@@ -28964,7 +28984,7 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
             const hud_atlas::Rect* ir = LockerAtlasIconForMesh(kMeshes[ti]);
             if (!ir) continue;
             const float cx = anchorSx + tileOffX[ti];
-            const float cy = anchorSy + tileOffY[ti];
+            const float cy = anchorSy + tileOffY[ti] + 6.f;
             const float u0 = (float)ir->x / (float)g_hudAtlas.width;
             const float v0 = (float)ir->y / (float)g_hudAtlas.height;
             const float duv = (float)ir->w / (float)g_hudAtlas.width;
@@ -28999,9 +29019,9 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
             }
         }
 
-        float bx = 0, by = 0;
-        if (LockerProjectPanelUv(eye, LockerVrLoadout::Layout::kBtnU, LockerVrLoadout::Layout::kBtnV, bx, by, halfW,
-                                 (float)d.Height)) {
+        {
+            const float bx = anchorSx;
+            const float by = anchorSy + panelHalfH - 22.f;
             const char* label = pending ? (uiQueued ? "QUEUED" : "EQUIP ALL") : "ALL OWNED";
             const int labelLen = (int)strlen(label);
             const int bw = labelLen * (kGlyphW + 1) * px;

@@ -84,10 +84,44 @@ inline bool EngineCanInteract() {
 
 inline uintptr_t EngineLoadoutPawn() { return NativeOwnedInventory::SnapshotPawn(); }
 
-inline bool EngineLoadoutDataReady() {
+inline const char* EngineLoadoutNotReadyReason() {
+    if (!NativeOwnedInventory::SnapshotValid()) return "no_snapshot";
     const uintptr_t pawn = EngineLoadoutPawn();
-    if (!pawn) return false;
-    return LockerVrLoadoutRuntime::AvailabilitySourcesReady(pawn);
+    if (!pawn) return "no_pawn";
+    if (!LockerVrLoadoutRuntime::AvailabilitySourcesReady(pawn)) return "availability_sources";
+    return nullptr;
+}
+
+inline bool EngineLoadoutDataReady() { return EngineLoadoutNotReadyReason() == nullptr; }
+
+namespace LoadoutReadyLog {
+inline int& LastState() {
+    static int v = -1;
+    return v;
+}
+inline const char*& LastReason() {
+    static const char* v = "";
+    return v;
+}
+} // namespace LoadoutReadyLog
+
+inline void LogReadyTransition(bool ready, const char* reason, uintptr_t pawn, uint32_t available, uint32_t owned,
+                               uint32_t pending) {
+    if (ready) {
+        if (LoadoutReadyLog::LastState() == 1) return;
+        LoadoutReadyLog::LastState() = 1;
+        LoadoutReadyLog::LastReason() = "";
+        Log("locker vr loadout ready: state=1 pawn=%p available=0x%X owned=0x%X pending=0x%X", (void*)pawn, available,
+            owned, pending);
+        return;
+    }
+    if (!reason) reason = "unknown";
+    if (LoadoutReadyLog::LastState() == 0 && LoadoutReadyLog::LastReason() &&
+        !strcmp(LoadoutReadyLog::LastReason(), reason))
+        return;
+    LoadoutReadyLog::LastState() = 0;
+    LoadoutReadyLog::LastReason() = reason;
+    Log("locker vr loadout ready: state=0 reason=%s", reason);
 }
 
 inline void PublishFromEngine() {
@@ -96,7 +130,9 @@ inline void PublishFromEngine() {
         return;
     }
     const uint32_t uiQueued = static_cast<uint32_t>(InterlockedCompareExchange(&g_uiQueuedMask, 0, 0));
-    if (!EngineLoadoutDataReady()) {
+    const char* notReady = EngineLoadoutNotReadyReason();
+    if (notReady) {
+        LogReadyTransition(false, notReady, 0, 0, 0, 0);
         LockerVrLoadoutPublish::Publish(0, 0, 0, false, uiQueued, false);
         return;
     }
@@ -104,6 +140,7 @@ inline void PublishFromEngine() {
     const uint32_t available = LockerVrLoadoutRuntime::AvailableOrdinaryMask(pawn);
     const uint32_t owned = NativeOwnedInventory::Mask();
     const uint32_t pending = LockerVrLoadoutPolicy::PendingMask(available, owned);
+    LogReadyTransition(true, nullptr, pawn, available, owned, pending);
     LockerVrLoadoutPublish::Publish(available, owned, pending, true, uiQueued, true);
 }
 
@@ -169,6 +206,8 @@ inline void OnDefocus() {
     InterlockedExchange(&g_queuedMask, 0);
     InterlockedExchange(&g_uiQueuedMask, 0);
     InterlockedExchange(&g_pageSignal, 0);
+    LoadoutReadyLog::LastState() = -1;
+    LoadoutReadyLog::LastReason() = "";
     LockerVrLoadoutPublish::Clear();
 }
 
@@ -180,6 +219,7 @@ inline void OnFocus(uintptr_t /*movie*/, uintptr_t /*cls*/) {
     InterlockedExchange(&g_postPopAcquireMask, 0);
     InterlockedExchange(&g_pageSignal, 1);
     NativeOwnedInventory::Refresh();
+    NativeOwnedInventory::SnapshotNow();
 }
 
 struct ExecHooks {

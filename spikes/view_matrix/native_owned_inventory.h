@@ -1,8 +1,10 @@
 #pragma once
 #include "inventory_retention_policy.h"
 #include "inventory_vm_policy.h"
+#include "engine_local_player.h"
 #include "menu_submit_policy.h"
 extern volatile LONG g_vrUiMenu;
+extern uintptr_t g_playerPawn;
 // Only the existing engine input/script threads touch engine objects. The XR
 // and renderer sides exchange a mask/selection request, never UObject pointers.
 //
@@ -133,10 +135,12 @@ static uintptr_t CameraOwnedPawn() {
   return controllerOff>=0&&P(p+controllerOff)==ctl?p:0;
 }
 static bool Snapshot() {
+  InterlockedExchange(&snapshotValid,0);
   // ---- 1. the local pawn ----
   stage="pawn";
   uintptr_t p=CameraOwnedPawn();
-  if(!p)p=(uintptr_t)InterlockedCompareExchange((volatile LONG*)&g_playerPawn,0,0);
+  if(!p)p=EngineNativeLocalPlayerPawn();
+  if(!p)p=g_playerPawn;
   uintptr_t pc=p?P(p+OBJ_CLASS):0;
   if(!p||!pc) {
    // Fallback: the reflected controller route. Kept because the pawn cache is
