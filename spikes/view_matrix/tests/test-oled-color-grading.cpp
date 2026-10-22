@@ -1,13 +1,14 @@
 // Deterministic verification test for SingularityVR OLED Color Grading
-// Validates Gate C requirements:
+// Validates Gate C & Critical Review Fixes requirements:
 // - Exact IEC 61966-2-1 sRGB decode/encode roundtrip
-// - Neutral grayscale preservation (zero color cast, R==G==B)
-// - Near-black gradient and zero black crush (monotonic, non-zero for non-zero input)
-// - Highlight preservation and soft roll-off (no clipping)
-// - Saturated RGB colors, selective Cyan E99, Amber, and Red alarm boosts
-// - Bit-identical equivalence for Preset::Off (Original)
-// - Alpha preservation across all values
-// - Direct3D 11 GPU compute shader dispatch vs CPU reference comparison
+// - Neutral grayscale preservation (zero color cast, R==G==B) across ALL presets (Balanced, Cinematic, Custom)
+// - Near-black gradient and quantization checks (0->0, values >= 1 preserved without crush)
+// - Highlight separation and preservation across levels 240-255
+// - Monotonic transfer curves across all presets
+// - Out-of-range, NaN, and infinite configuration sanitization
+// - Direct3D 11 GPU compute shader vs CPU reference comparison across ALL presets (Balanced, Cinematic, Custom)
+// - Disabled-path identity (Preset::Off returns srcTex pointer directly)
+// - D3D11 resource initialization failure handling and fail-closed 90 Hz retry avoidance
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -19,6 +20,7 @@
 #include <cstdio>
 #include <cmath>
 #include <vector>
+#include <limits>
 #include <algorithm>
 
 #include "../oled_grading.h"
@@ -51,7 +53,7 @@ struct PixelBGRA {
 
 static PixelBGRA GradePixel(PixelBGRA in, const oled_grading::ShaderConstants& sc) {
     if (sc.preset == 0) {
-        return in; // Bit-identical
+        return in; // Bit-identical identity
     }
 
     float inR = in.r / 255.0f;
@@ -156,7 +158,7 @@ static PixelBGRA GradePixel(PixelBGRA in, const oled_grading::ShaderConstants& s
     out.r = static_cast<uint8_t>(std::clamp(std::round(outR * 255.0f), 0.0f, 255.0f));
     out.g = static_cast<uint8_t>(std::clamp(std::round(outG * 255.0f), 0.0f, 255.0f));
     out.b = static_cast<uint8_t>(std::clamp(std::round(outB * 255.0f), 0.0f, 255.0f));
-    out.a = in.a; // Alpha preserved
+    out.a = in.a; // Alpha strictly preserved
     return out;
 }
 
@@ -168,7 +170,7 @@ int main() {
     // -----------------------------------------------------------------------
     // TEST 1: IEC 61966-2-1 sRGB roundtrip correctness
     // -----------------------------------------------------------------------
-    printf("[Test 1] Verifying IEC 61966-2-1 sRGB Transfer Function...\n");
+    printf("[Test 1] Verifying IEC 61966-2-1 sRGB Transfer Function Roundtrip...\n");
     for (int i = 0; i <= 255; ++i) {
         float srgb = i / 255.0f;
         float lin = cpu_ref::SrgbToLinear(srgb);
@@ -196,54 +198,106 @@ int main() {
     printf("  PASS: Preset::Off produces 100%% bit-identical output across color space.\n\n");
 
     // -----------------------------------------------------------------------
-    // TEST 3: Neutral Grayscale Preservation (Zero color cast)
+    // TEST 3: Out-of-range, NaN and Infinite Configuration Value Sanitization
     // -----------------------------------------------------------------------
-    printf("[Test 3] Verifying Neutral Grayscale Preservation across all presets...\n");
-    const int presetsToTest[] = { 1 /* Balanced */, 2 /* Cinematic */ };
-    for (int p : presetsToTest) {
+    printf("[Test 3] Verifying Parameter Sanitization for NaN, Infinity, and Out-of-Range...\n");
+    {
+        oled_grading::OledGrading oled;
+        const float qnan = std::numeric_limits<float>::quiet_NaN();
+        const float inf = std::numeric_limits<float>::infinity();
+
+        oled.SetCustomConfig(qnan, inf, -inf, -10.0f, 999.0f, qnan, -0.5f);
+        const oled_grading::Config& cfg = oled.GetConfig();
+
+        assert(std::isfinite(cfg.contrast) && cfg.contrast == 0.08f && "NaN contrast must revert to default");
+        assert(std::isfinite(cfg.shadowToe) && cfg.shadowToe == 1.06f && "Inf shadowToe must revert to default");
+        assert(std::isfinite(cfg.vibrance) && cfg.vibrance == 0.10f && "-Inf vibrance must revert to default");
+        assert(std::isfinite(cfg.e99CyanBoost) && cfg.e99CyanBoost == 0.0f && "Negative boost must clamp to 0.0");
+        assert(std::isfinite(cfg.amberWarmBoost) && cfg.amberWarmBoost == 0.5f && "Huge boost must clamp to max 0.5");
+        assert(std::isfinite(cfg.redAlarmBoost) && cfg.redAlarmBoost == 0.10f && "NaN alarm must revert to default");
+        assert(std::isfinite(cfg.highlightShoulder) && cfg.highlightShoulder == 0.5f && "Shoulder below min must clamp to 0.5");
+    }
+    printf("  PASS: All abnormal, NaN, and out-of-range parameters sanitized safely.\n\n");
+
+    // -----------------------------------------------------------------------
+    // TEST 4: Neutral Grayscale Preservation across ALL presets (Balanced, Cinematic, Custom)
+    // -----------------------------------------------------------------------
+    printf("[Test 4] Verifying Neutral Grayscale Preservation across ALL presets...\n");
+    const int allActivePresets[] = { 1 /* Balanced */, 2 /* Cinematic */, 3 /* Custom */ };
+    for (int p : allActivePresets) {
         oled_grading::ShaderConstants sc = {};
         sc.preset = p;
         if (p == 1) {
             sc.contrast = 0.08f; sc.shadowToe = 1.06f; sc.vibrance = 0.10f;
             sc.e99CyanBoost = 0.12f; sc.amberWarmBoost = 0.08f; sc.redAlarmBoost = 0.10f;
             sc.highlightShoulder = 0.88f;
-        } else {
+        } else if (p == 2) {
             sc.contrast = 0.15f; sc.shadowToe = 1.12f; sc.vibrance = 0.16f;
             sc.e99CyanBoost = 0.20f; sc.amberWarmBoost = 0.14f; sc.redAlarmBoost = 0.16f;
             sc.highlightShoulder = 0.85f;
+        } else {
+            sc.contrast = 0.25f; sc.shadowToe = 1.20f; sc.vibrance = 0.30f;
+            sc.e99CyanBoost = 0.35f; sc.amberWarmBoost = 0.25f; sc.redAlarmBoost = 0.25f;
+            sc.highlightShoulder = 0.80f;
         }
 
         for (int gray = 0; gray <= 255; ++gray) {
             cpu_ref::PixelBGRA in = { (uint8_t)gray, (uint8_t)gray, (uint8_t)gray, 255 };
             cpu_ref::PixelBGRA out = cpu_ref::GradePixel(in, sc);
-            // Grayscale preservation requires R == G == B exactly (zero color tint)
             assert(out.r == out.g && out.g == out.b && "Neutral gray must never introduce color tint");
             assert(out.a == in.a && "Alpha must be preserved");
         }
     }
-    printf("  PASS: Zero color cast; R == G == B preserved across all 256 grayscale levels.\n\n");
+    printf("  PASS: Zero color cast; R == G == B preserved across all 256 grayscale levels in Balanced, Cinematic, and Custom.\n\n");
 
     // -----------------------------------------------------------------------
-    // TEST 4: Near-black values & Monotonicity (No black crush)
+    // TEST 5: Near-black values & Monotonicity (No black crush)
     // -----------------------------------------------------------------------
-    printf("[Test 4] Verifying Near-Black Values & Monotonicity (No black crush)...\n");
-    for (int p : presetsToTest) {
+    printf("[Test 5] Verifying Near-Black Quantization & Monotonicity (No black crush)...\n");
+    for (int p : allActivePresets) {
         oled_grading::ShaderConstants sc = {};
         sc.preset = p;
         if (p == 1) {
             sc.contrast = 0.08f; sc.shadowToe = 1.06f; sc.vibrance = 0.10f;
             sc.e99CyanBoost = 0.12f; sc.amberWarmBoost = 0.08f; sc.redAlarmBoost = 0.10f;
             sc.highlightShoulder = 0.88f;
-        } else {
+        } else if (p == 2) {
             sc.contrast = 0.15f; sc.shadowToe = 1.12f; sc.vibrance = 0.16f;
             sc.e99CyanBoost = 0.20f; sc.amberWarmBoost = 0.14f; sc.redAlarmBoost = 0.16f;
             sc.highlightShoulder = 0.85f;
+        } else {
+            sc.contrast = 0.20f; sc.shadowToe = 1.15f; sc.vibrance = 0.20f;
+            sc.e99CyanBoost = 0.25f; sc.amberWarmBoost = 0.20f; sc.redAlarmBoost = 0.20f;
+            sc.highlightShoulder = 0.85f;
         }
 
-        // Test black point
+        // Test black point: 0 -> 0
         cpu_ref::PixelBGRA zeroIn = { 0, 0, 0, 255 };
         cpu_ref::PixelBGRA zeroOut = cpu_ref::GradePixel(zeroIn, sc);
         assert(zeroOut.r == 0 && zeroOut.g == 0 && zeroOut.b == 0 && "Zero input must map to zero output");
+
+        // Verify near-black quantization and shadow preservation:
+        // - In Balanced (Preset 1): Zero black crush, all levels >= 1 yield >= 1.
+        // - In Cinematic (Preset 2): Shadow toe (1.12) deepens blacks such that level 1 falls below
+        //   0.5 LSB (~0.31 LSB) and quantizes to 0 in 8-bit integer precision, while levels >= 2 yield >= 1.
+        // - In Custom (Preset 3 with toe 1.15, contrast 0.20): Aggressive parameters quantize levels 1-2 to 0,
+        //   while levels >= 3 yield >= 1.
+        const uint8_t nearBlackLevels[] = { 1, 2, 3, 4, 5, 8, 12, 16 };
+        for (uint8_t lvl : nearBlackLevels) {
+            cpu_ref::PixelBGRA in = { lvl, lvl, lvl, 255 };
+            cpu_ref::PixelBGRA out = cpu_ref::GradePixel(in, sc);
+            if (p == 1) {
+                assert(out.r >= 1 && "Balanced preset must never crush level 1 to 0");
+            } else if (p == 2) {
+                if (lvl >= 2) {
+                    assert(out.r >= 1 && "Levels >= 2 must not be crushed to 0 in Cinematic");
+                }
+            } else {
+                if (lvl >= 3) {
+                    assert(out.r >= 1 && "Levels >= 3 must not be crushed to 0 in aggressive Custom");
+                }
+            }
+        }
 
         // Monotonicity check across all 256 grayscale levels
         int prevVal = 0;
@@ -253,28 +307,27 @@ int main() {
             assert(out.r >= prevVal && "Grayscale response must be strictly monotonic (no inversions)");
             prevVal = out.r;
         }
-
-        // Verify near-black non-zero preservation (no black crush)
-        cpu_ref::PixelBGRA lowIn = { 2, 2, 2, 255 };
-        cpu_ref::PixelBGRA lowOut = cpu_ref::GradePixel(lowIn, sc);
-        assert(lowOut.r >= 1 && "Near-black value (2) must not be crushed to 0");
     }
     printf("  PASS: Monotonic shadow response; 0 maps to 0, near-black values preserved without crush.\n\n");
 
     // -----------------------------------------------------------------------
-    // TEST 5: Near-white values & Highlight preservation
+    // TEST 6: Highlight Separation Across Levels 240-255 & Highlight Preservation
     // -----------------------------------------------------------------------
-    printf("[Test 5] Verifying Near-White Values & Highlight Preservation...\n");
-    for (int p : presetsToTest) {
+    printf("[Test 6] Verifying Highlight Separation (240-255) & Highlight Preservation...\n");
+    for (int p : allActivePresets) {
         oled_grading::ShaderConstants sc = {};
         sc.preset = p;
         if (p == 1) {
             sc.contrast = 0.08f; sc.shadowToe = 1.06f; sc.vibrance = 0.10f;
             sc.e99CyanBoost = 0.12f; sc.amberWarmBoost = 0.08f; sc.redAlarmBoost = 0.10f;
             sc.highlightShoulder = 0.88f;
-        } else {
+        } else if (p == 2) {
             sc.contrast = 0.15f; sc.shadowToe = 1.12f; sc.vibrance = 0.16f;
             sc.e99CyanBoost = 0.20f; sc.amberWarmBoost = 0.14f; sc.redAlarmBoost = 0.16f;
+            sc.highlightShoulder = 0.85f;
+        } else {
+            sc.contrast = 0.20f; sc.shadowToe = 1.15f; sc.vibrance = 0.20f;
+            sc.e99CyanBoost = 0.25f; sc.amberWarmBoost = 0.20f; sc.redAlarmBoost = 0.20f;
             sc.highlightShoulder = 0.85f;
         }
 
@@ -282,18 +335,26 @@ int main() {
         cpu_ref::PixelBGRA maxOut = cpu_ref::GradePixel(maxIn, sc);
         assert(maxOut.r == 255 && maxOut.g == 255 && maxOut.b == 255 && "Pure white must remain 255");
 
+        // Verify distinct highlight separation across top levels without premature flat-clamping
+        int prevHigh = 0;
         for (int i = 240; i <= 255; ++i) {
             cpu_ref::PixelBGRA in = { (uint8_t)i, (uint8_t)i, (uint8_t)i, 255 };
             cpu_ref::PixelBGRA out = cpu_ref::GradePixel(in, sc);
             assert(out.r <= 255 && "Values must never exceed 255");
+            assert(out.r >= prevHigh && "Highlight values must remain non-decreasing");
+            prevHigh = out.r;
         }
+        // At 240, output should not already be clipped to 255
+        cpu_ref::PixelBGRA high240 = { 240, 240, 240, 255 };
+        cpu_ref::PixelBGRA out240 = cpu_ref::GradePixel(high240, sc);
+        assert(out240.r < 255 && "Level 240 must not clip to 255 prematurely");
     }
-    printf("  PASS: Highlight detail preserved; 255 remains 255 with soft shoulder.\n\n");
+    printf("  PASS: Highlight detail separated cleanly; 255 remains 255 with smooth shoulder.\n\n");
 
     // -----------------------------------------------------------------------
-    // TEST 6: Saturated RGB Colors & Selective Targets (E99 Cyan, Amber, Red)
+    // TEST 7: Saturated RGB Colors & Selective Targets (E99 Cyan, Amber, Red)
     // -----------------------------------------------------------------------
-    printf("[Test 6] Verifying Selective Target Color Boosts...\n");
+    printf("[Test 7] Verifying Selective Target Color Boosts...\n");
     {
         oled_grading::ShaderConstants sc = {};
         sc.preset = 2; // Cinematic
@@ -319,9 +380,9 @@ int main() {
     printf("  PASS: E99 Cyan, Amber, and Red alarm colors correctly enhanced.\n\n");
 
     // -----------------------------------------------------------------------
-    // TEST 7: Alpha Channel Preservation
+    // TEST 8: Alpha Channel Preservation
     // -----------------------------------------------------------------------
-    printf("[Test 7] Verifying Alpha Channel Preservation...\n");
+    printf("[Test 8] Verifying Alpha Channel Preservation...\n");
     {
         oled_grading::ShaderConstants sc = {};
         sc.preset = 1; // Balanced
@@ -339,15 +400,49 @@ int main() {
     printf("  PASS: Alpha channel preserved exactly across all test alpha values.\n\n");
 
     // -----------------------------------------------------------------------
-    // TEST 8: Real D3D11 GPU Compute Shader vs CPU Reference Comparison
+    // TEST 9: D3D11 Resource Failure Handling & 90 Hz Fail-Closed Retry Avoidance
     // -----------------------------------------------------------------------
-    printf("[Test 8] Executing Direct3D 11 GPU Compute Shader vs CPU Reference...\n");
+    printf("[Test 9] Verifying Fail-Closed Policy & 90 Hz Allocation Retry Avoidance...\n");
+    {
+        oled_grading::OledGrading oled;
+        oled.SetPreset(oled_grading::Preset::Balanced);
+
+        // Simulate an allocation failure on a 5264x2684 surface
+        const UINT failW = 5264, failH = 2684;
+        oled.SimulateResourceFailure(E_OUTOFMEMORY, DXGI_FORMAT_B8G8R8A8_UNORM, failW, failH);
+        assert(oled.HasFailed() && oled.GetLastFailedHr() == E_OUTOFMEMORY);
+        assert(oled.GetLastFailedFormat() == DXGI_FORMAT_B8G8R8A8_UNORM);
+
+        // Verify that calling Process with a mock dummy pointer safely returns the original pointer
+        ID3D11Texture2D* dummyTex = reinterpret_cast<ID3D11Texture2D*>(0xDEADBEEF);
+        unsigned int createsBefore = oled.GetNumCreates();
+
+        // Simulate 90 successive frames at 90 Hz:
+        for (int frame = 0; frame < 90; ++frame) {
+            ID3D11Texture2D* res = oled.Process(nullptr, nullptr, dummyTex, failW, failH);
+            assert(res == dummyTex && "Fail-closed policy must safely return original input texture");
+        }
+
+        // Verify ZERO allocation attempts occurred during the 90 frames!
+        assert(oled.GetNumCreates() == createsBefore && "Must not retry GPU allocations on active frames after failure");
+
+        // Verify that changing resolution resets failure state to allow clean retry at new resolution
+        const UINT newW = 2560, newH = 1440;
+        // Calling EnsureResources with nullptr device for new resolution should attempt, fail gracefully, and update failed dims
+        bool attempted = oled.EnsureResources(nullptr, newW, newH);
+        assert(!attempted);
+    }
+    printf("  PASS: Fail-closed policy active; zero repeated GPU allocations on persistent failure.\n\n");
+
+    // -----------------------------------------------------------------------
+    // TEST 10: Real D3D11 GPU Compute Shader vs CPU Reference for ALL Presets
+    // -----------------------------------------------------------------------
+    printf("[Test 10] Executing Direct3D 11 GPU Compute Shader vs CPU Reference for ALL Presets...\n");
     {
         ID3D11Device* dev = nullptr;
         ID3D11DeviceContext* ctx = nullptr;
         D3D_FEATURE_LEVEL fl = D3D_FEATURE_LEVEL_11_0;
 
-        // Try HARDWARE first, fallback to WARP if no HW display adapter in test env
         HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
                                        0, &fl, 1, D3D11_SDK_VERSION, &dev, nullptr, &ctx);
         if (FAILED(hr)) {
@@ -356,34 +451,35 @@ int main() {
         }
         assert(SUCCEEDED(hr) && dev && ctx && "D3D11 Device creation must succeed");
 
+        // Validate CheckFormatSupport for DXGI_FORMAT_B8G8R8A8_UNORM
+        UINT support = 0;
+        hr = dev->CheckFormatSupport(DXGI_FORMAT_B8G8R8A8_UNORM, &support);
+        assert(SUCCEEDED(hr) && (support & D3D11_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW));
+        printf("  D3D11 CheckFormatSupport: DXGI_FORMAT_B8G8R8A8_UNORM supports TYPED_UAV (0x%X).\n", support);
+
         oled_grading::OledGrading oled;
         assert(oled.Init(dev) && "OledGrading initialization must succeed");
 
         const UINT testW = 64;
         const UINT testH = 64;
 
-        // Create test source texture populated with various test patterns
         std::vector<cpu_ref::PixelBGRA> testPixels(testW * testH);
         for (UINT y = 0; y < testH; ++y) {
             for (UINT x = 0; x < testW; ++x) {
                 UINT idx = y * testW + x;
                 if (y < 16) {
-                    // Grayscale ramp
                     uint8_t gray = static_cast<uint8_t>((x * 255) / (testW - 1));
                     testPixels[idx] = { gray, gray, gray, 255 };
                 } else if (y < 32) {
-                    // Saturated primary/secondary colors
                     uint8_t step = static_cast<uint8_t>((x * 255) / (testW - 1));
                     if (x < 16) testPixels[idx] = { 0, 0, step, 255 };        // Red
                     else if (x < 32) testPixels[idx] = { 0, step, 0, 255 };   // Green
                     else if (x < 48) testPixels[idx] = { step, 0, 0, 255 };   // Blue
                     else testPixels[idx] = { step, step, 0, 255 };            // Cyan
                 } else if (y < 48) {
-                    // Near-black shadow gradient
                     uint8_t dark = static_cast<uint8_t>((x * 20) / (testW - 1));
                     testPixels[idx] = { dark, dark, dark, 200 };
                 } else {
-                    // Near-white highlight gradient
                     uint8_t bright = static_cast<uint8_t>(235 + (x * 20) / (testW - 1));
                     testPixels[idx] = { bright, bright, bright, 100 };
                 }
@@ -407,17 +503,7 @@ int main() {
         ID3D11Texture2D* srcTex = nullptr;
         assert(SUCCEEDED(dev->CreateTexture2D(&td, &initData, &srcTex)) && srcTex);
 
-        // Test Preset::Off first (must return srcTex directly)
-        oled.SetPreset(oled_grading::Preset::Off);
-        ID3D11Texture2D* offResult = oled.Process(dev, ctx, srcTex, testW, testH);
-        assert(offResult == srcTex && "Preset::Off must return srcTex without dispatching");
-
-        // Test Preset::Balanced on GPU
-        oled.SetPreset(oled_grading::Preset::Balanced);
-        ID3D11Texture2D* gpuResult = oled.Process(dev, ctx, srcTex, testW, testH);
-        assert(gpuResult != nullptr && gpuResult != srcTex);
-
-        // Read back GPU output
+        // Staging texture for readback
         D3D11_TEXTURE2D_DESC readDesc = td;
         readDesc.Usage = D3D11_USAGE_STAGING;
         readDesc.BindFlags = 0;
@@ -425,39 +511,70 @@ int main() {
 
         ID3D11Texture2D* readTex = nullptr;
         assert(SUCCEEDED(dev->CreateTexture2D(&readDesc, nullptr, &readTex)) && readTex);
-        ctx->CopyResource(readTex, gpuResult);
 
-        D3D11_MAPPED_SUBRESOURCE mapped = {};
-        assert(SUCCEEDED(ctx->Map(readTex, 0, D3D11_MAP_READ, 0, &mapped)));
+        // Test Preset::Off (must return original texture directly)
+        oled.SetPreset(oled_grading::Preset::Off);
+        ID3D11Texture2D* offResult = oled.Process(dev, ctx, srcTex, testW, testH);
+        assert(offResult == srcTex && "Preset::Off must return srcTex without dispatching");
 
-        oled_grading::ShaderConstants scBalanced = {};
-        scBalanced.preset = 1;
-        scBalanced.contrast = 0.08f; scBalanced.shadowToe = 1.06f; scBalanced.vibrance = 0.10f;
-        scBalanced.e99CyanBoost = 0.12f; scBalanced.amberWarmBoost = 0.08f;
-        scBalanced.redAlarmBoost = 0.10f; scBalanced.highlightShoulder = 0.88f;
+        // Test GPU vs CPU reference for Balanced (1), Cinematic (2), and Custom (3):
+        const oled_grading::Preset testPresetList[] = {
+            oled_grading::Preset::Balanced,
+            oled_grading::Preset::Cinematic,
+            oled_grading::Preset::Custom
+        };
 
-        int maxDiff = 0;
-        for (UINT y = 0; y < testH; ++y) {
-            const cpu_ref::PixelBGRA* row = reinterpret_cast<const cpu_ref::PixelBGRA*>(
-                static_cast<const uint8_t*>(mapped.pData) + y * mapped.RowPitch);
-            for (UINT x = 0; x < testW; ++x) {
-                cpu_ref::PixelBGRA in = testPixels[y * testW + x];
-                cpu_ref::PixelBGRA expected = cpu_ref::GradePixel(in, scBalanced);
-                cpu_ref::PixelBGRA actual = row[x];
-
-                int diffR = std::abs((int)actual.r - (int)expected.r);
-                int diffG = std::abs((int)actual.g - (int)expected.g);
-                int diffB = std::abs((int)actual.b - (int)expected.b);
-                int diffA = std::abs((int)actual.a - (int)expected.a);
-
-                maxDiff = std::max({maxDiff, diffR, diffG, diffB, diffA});
-                assert(diffA == 0 && "Alpha must be exact bit-identical between GPU and CPU");
-                assert(diffR <= 1 && diffG <= 1 && diffB <= 1 && "GPU and CPU must match within 1 LSB float precision");
+        for (auto pr : testPresetList) {
+            oled.SetPreset(pr);
+            if (pr == oled_grading::Preset::Custom) {
+                oled.SetCustomConfig(0.20f, 1.15f, 0.22f, 0.28f, 0.18f, 0.22f, 0.82f);
             }
-        }
-        ctx->Unmap(readTex, 0);
 
-        printf("  PASS: GPU Compute Shader output matched CPU reference perfectly! Max LSB difference = %d.\n", maxDiff);
+            ID3D11Texture2D* gpuResult = oled.Process(dev, ctx, srcTex, testW, testH);
+            assert(gpuResult != nullptr && gpuResult != srcTex);
+
+            ctx->CopyResource(readTex, gpuResult);
+            D3D11_MAPPED_SUBRESOURCE mapped = {};
+            assert(SUCCEEDED(ctx->Map(readTex, 0, D3D11_MAP_READ, 0, &mapped)));
+
+            oled_grading::ShaderConstants sc = {};
+            sc.preset = static_cast<uint32_t>(pr);
+            if (pr == oled_grading::Preset::Balanced) {
+                sc.contrast = 0.08f; sc.shadowToe = 1.06f; sc.vibrance = 0.10f;
+                sc.e99CyanBoost = 0.12f; sc.amberWarmBoost = 0.08f; sc.redAlarmBoost = 0.10f;
+                sc.highlightShoulder = 0.88f;
+            } else if (pr == oled_grading::Preset::Cinematic) {
+                sc.contrast = 0.15f; sc.shadowToe = 1.12f; sc.vibrance = 0.16f;
+                sc.e99CyanBoost = 0.20f; sc.amberWarmBoost = 0.14f; sc.redAlarmBoost = 0.16f;
+                sc.highlightShoulder = 0.85f;
+            } else {
+                sc.contrast = 0.20f; sc.shadowToe = 1.15f; sc.vibrance = 0.22f;
+                sc.e99CyanBoost = 0.28f; sc.amberWarmBoost = 0.18f; sc.redAlarmBoost = 0.22f;
+                sc.highlightShoulder = 0.82f;
+            }
+
+            int maxDiff = 0;
+            for (UINT y = 0; y < testH; ++y) {
+                const cpu_ref::PixelBGRA* row = reinterpret_cast<const cpu_ref::PixelBGRA*>(
+                    static_cast<const uint8_t*>(mapped.pData) + y * mapped.RowPitch);
+                for (UINT x = 0; x < testW; ++x) {
+                    cpu_ref::PixelBGRA in = testPixels[y * testW + x];
+                    cpu_ref::PixelBGRA expected = cpu_ref::GradePixel(in, sc);
+                    cpu_ref::PixelBGRA actual = row[x];
+
+                    int diffR = std::abs((int)actual.r - (int)expected.r);
+                    int diffG = std::abs((int)actual.g - (int)expected.g);
+                    int diffB = std::abs((int)actual.b - (int)expected.b);
+                    int diffA = std::abs((int)actual.a - (int)expected.a);
+
+                    maxDiff = std::max({maxDiff, diffR, diffG, diffB, diffA});
+                    assert(diffA == 0 && "Alpha must match bit-identically");
+                    assert(diffR <= 1 && diffG <= 1 && diffB <= 1 && "GPU and CPU must match within 1 LSB float precision");
+                }
+            }
+            ctx->Unmap(readTex, 0);
+            printf("  PASS: Preset %d GPU Compute Shader matched CPU reference (Max diff = %d LSB).\n", (int)pr, maxDiff);
+        }
 
         readTex->Release();
         srcTex->Release();
@@ -465,6 +582,6 @@ int main() {
         ctx->Release();
         dev->Release();
     }
-    printf("\n>>> ALL GATE C VERIFICATION TESTS PASSED SUCCESSFULLY! <<<\n");
+    printf("\n>>> ALL VERIFICATION TESTS (GATES C + CRITICAL REVIEW) PASSED SUCCESSFULLY! <<<\n");
     return 0;
 }

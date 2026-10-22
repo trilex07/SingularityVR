@@ -7,8 +7,9 @@
 
 #include <d3d11.h>
 #include <cstdint>
-#include <algorithm>
+#include <cstdio>
 #include <cmath>
+#include <algorithm>
 
 #include "oled_grading_cs.h" // Embedded precompiled bytecode kOledGradingCS
 
@@ -52,6 +53,8 @@ struct alignas(16) ShaderConstants {
 
 static_assert(sizeof(ShaderConstants) % 16 == 0, "ShaderConstants must be 16-byte aligned");
 
+typedef void (*LogFn)(const char* msg);
+
 class OledGrading {
 public:
     OledGrading() = default;
@@ -59,6 +62,15 @@ public:
 
     OledGrading(const OledGrading&) = delete;
     OledGrading& operator=(const OledGrading&) = delete;
+
+    void SetLogCallback(LogFn fn) {
+        m_logFn = fn;
+    }
+
+    static float SanitizeFloat(float val, float defVal, float minVal, float maxVal) {
+        if (!std::isfinite(val)) return defVal;
+        return std::clamp(val, minVal, maxVal);
+    }
 
     void LoadConfig(const wchar_t* iniPath) {
         if (!iniPath) return;
@@ -74,7 +86,7 @@ public:
             wchar_t buf[64] = {};
             if (GetPrivateProfileStringW(L"OLED", key, L"", buf, 64, iniPath) > 0) {
                 float val = static_cast<float>(_wtof(buf));
-                return std::clamp(val, minVal, maxVal);
+                return SanitizeFloat(val, defVal, minVal, maxVal);
             }
             return defVal;
         };
@@ -86,6 +98,18 @@ public:
         m_config.amberWarmBoost = readFloat(L"AmberWarmBoost", 0.08f, 0.0f, 0.5f);
         m_config.redAlarmBoost = readFloat(L"RedAlarmBoost", 0.10f, 0.0f, 0.5f);
         m_config.highlightShoulder = readFloat(L"HighlightShoulder", 0.88f, 0.5f, 1.0f);
+    }
+
+    void SetCustomConfig(float contrast, float shadowToe, float vibrance,
+                         float e99CyanBoost, float amberWarmBoost, float redAlarmBoost,
+                         float highlightShoulder) {
+        m_config.contrast = SanitizeFloat(contrast, 0.08f, 0.0f, 0.5f);
+        m_config.shadowToe = SanitizeFloat(shadowToe, 1.06f, 1.0f, 1.4f);
+        m_config.vibrance = SanitizeFloat(vibrance, 0.10f, 0.0f, 0.5f);
+        m_config.e99CyanBoost = SanitizeFloat(e99CyanBoost, 0.12f, 0.0f, 0.5f);
+        m_config.amberWarmBoost = SanitizeFloat(amberWarmBoost, 0.08f, 0.0f, 0.5f);
+        m_config.redAlarmBoost = SanitizeFloat(redAlarmBoost, 0.10f, 0.0f, 0.5f);
+        m_config.highlightShoulder = SanitizeFloat(highlightShoulder, 0.88f, 0.5f, 1.0f);
     }
 
     bool IsEnabled() const {
@@ -106,19 +130,50 @@ public:
 
     bool Init(ID3D11Device* dev) {
         if (!dev) return false;
+
+        // Reset if device instance changed
+        if (m_lastDevice != dev) {
+            Shutdown();
+            m_lastDevice = dev;
+            m_failedOnce = false;
+            m_reportedFailure = false;
+            m_formatSupportChecked = false;
+            m_formatSupportValid = false;
+        }
+
         if (m_ready) return true;
         if (m_failedOnce) return false;
 
         m_initAttempted = true;
 
-        // 1. Create compute shader from precompiled bytecode
+        // 1. Validate DXGI_FORMAT_B8G8R8A8_UNORM UAV support via CheckFormatSupport
+        if (!m_formatSupportChecked) {
+            UINT support = 0;
+            HRESULT hrFmt = dev->CheckFormatSupport(DXGI_FORMAT_B8G8R8A8_UNORM, &support);
+            m_formatSupportChecked = true;
+            if (FAILED(hrFmt) || !(support & D3D11_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW)) {
+                m_failedOnce = true;
+                m_formatSupportValid = false;
+                m_lastFailedHr = FAILED(hrFmt) ? hrFmt : E_NOTIMPL;
+                m_lastFailedFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+                ReportFailureOnce("CheckFormatSupport(B8G8R8A8_UNORM UAV)", m_lastFailedHr, m_lastFailedFormat, 0, 0);
+                return false;
+            }
+            m_formatSupportValid = true;
+        }
+
+        if (!m_formatSupportValid) return false;
+
+        // 2. Create compute shader from precompiled bytecode
         HRESULT hr = dev->CreateComputeShader(kOledGradingCS, sizeof(kOledGradingCS), nullptr, &m_cs);
         if (FAILED(hr) || !m_cs) {
             m_failedOnce = true;
+            m_lastFailedHr = hr;
+            ReportFailureOnce("CreateComputeShader", hr, DXGI_FORMAT_UNKNOWN, 0, 0);
             return false;
         }
 
-        // 2. Create constant buffer
+        // 3. Create constant buffer
         D3D11_BUFFER_DESC bd = {};
         bd.ByteWidth = sizeof(ShaderConstants);
         bd.Usage = D3D11_USAGE_DEFAULT;
@@ -126,8 +181,10 @@ public:
         bd.CPUAccessFlags = 0;
         hr = dev->CreateBuffer(&bd, nullptr, &m_cb);
         if (FAILED(hr) || !m_cb) {
-            if (m_cs) { m_cs->Release(); m_cs = nullptr; }
             m_failedOnce = true;
+            m_lastFailedHr = hr;
+            ReportFailureOnce("CreateBuffer(ConstantBuffer)", hr, DXGI_FORMAT_UNKNOWN, 0, 0);
+            if (m_cs) { m_cs->Release(); m_cs = nullptr; }
             return false;
         }
 
@@ -139,6 +196,17 @@ public:
         if (!dev || width == 0 || height == 0) return false;
         if (m_stageTex && m_outTex && width == m_width && height == m_height) {
             return true;
+        }
+
+        // Fail-closed policy: If a previous allocation failed for this exact resolution, do NOT retry every frame!
+        if (m_failedOnce && width == m_lastFailedWidth && height == m_lastFailedHeight) {
+            return false;
+        }
+
+        // If resolution changed after a failure, reset failure flag to allow clean attempt at new resolution
+        if (width != m_lastFailedWidth || height != m_lastFailedHeight) {
+            m_failedOnce = false;
+            m_reportedFailure = false;
         }
 
         ReleaseTextures();
@@ -154,12 +222,16 @@ public:
         std_desc.Usage = D3D11_USAGE_DEFAULT;
         std_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 
-        if (FAILED(dev->CreateTexture2D(&std_desc, nullptr, &m_stageTex)) || !m_stageTex) {
+        HRESULT hr = dev->CreateTexture2D(&std_desc, nullptr, &m_stageTex);
+        if (FAILED(hr) || !m_stageTex) {
+            RecordFailure("CreateTexture2D(stage)", hr, std_desc.Format, width, height);
             ReleaseTextures();
             return false;
         }
 
-        if (FAILED(dev->CreateShaderResourceView(m_stageTex, nullptr, &m_stageSrv)) || !m_stageSrv) {
+        hr = dev->CreateShaderResourceView(m_stageTex, nullptr, &m_stageSrv);
+        if (FAILED(hr) || !m_stageSrv) {
+            RecordFailure("CreateShaderResourceView(stage)", hr, std_desc.Format, width, height);
             ReleaseTextures();
             return false;
         }
@@ -175,7 +247,9 @@ public:
         otd_desc.Usage = D3D11_USAGE_DEFAULT;
         otd_desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
 
-        if (FAILED(dev->CreateTexture2D(&otd_desc, nullptr, &m_outTex)) || !m_outTex) {
+        hr = dev->CreateTexture2D(&otd_desc, nullptr, &m_outTex);
+        if (FAILED(hr) || !m_outTex) {
+            RecordFailure("CreateTexture2D(out)", hr, otd_desc.Format, width, height);
             ReleaseTextures();
             return false;
         }
@@ -183,7 +257,9 @@ public:
         D3D11_UNORDERED_ACCESS_VIEW_DESC uav_desc = {};
         uav_desc.Format = otd_desc.Format;
         uav_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
-        if (FAILED(dev->CreateUnorderedAccessView(m_outTex, &uav_desc, &m_outUav)) || !m_outUav) {
+        hr = dev->CreateUnorderedAccessView(m_outTex, &uav_desc, &m_outUav);
+        if (FAILED(hr) || !m_outUav) {
+            RecordFailure("CreateUnorderedAccessView(out)", hr, otd_desc.Format, width, height);
             ReleaseTextures();
             return false;
         }
@@ -202,11 +278,13 @@ public:
             return srcTex;
         }
 
-        if (!m_ready && !m_failedOnce) {
-            Init(dev);
-        }
-        if (!m_ready) {
+        // Fail-closed gate: if initialization or previous allocation failed, safely return original texture without retrying
+        if (m_failedOnce && (!m_ready || (width == m_lastFailedWidth && height == m_lastFailedHeight))) {
             return srcTex;
+        }
+
+        if (!m_ready) {
+            if (!Init(dev)) return srcTex;
         }
 
         if (!EnsureResources(dev, width, height)) {
@@ -289,11 +367,21 @@ public:
         if (m_cs) { m_cs->Release(); m_cs = nullptr; }
         m_ready = false;
         m_failedOnce = false;
+        m_reportedFailure = false;
         m_initAttempted = false;
+        m_lastDevice = nullptr;
     }
 
     unsigned int GetNumCreates() const { return m_numCreates; }
     uint64_t GetProcessedFrames() const { return m_processedFrames; }
+    bool HasFailed() const { return m_failedOnce; }
+    HRESULT GetLastFailedHr() const { return m_lastFailedHr; }
+    DXGI_FORMAT GetLastFailedFormat() const { return m_lastFailedFormat; }
+
+    // For test simulation only
+    void SimulateResourceFailure(HRESULT hr, DXGI_FORMAT fmt, UINT width, UINT height) {
+        RecordFailure("SimulatedFailure", hr, fmt, width, height);
+    }
 
 private:
     void ReleaseTextures() {
@@ -305,7 +393,33 @@ private:
         m_height = 0;
     }
 
+    void RecordFailure(const char* operation, HRESULT hr, DXGI_FORMAT fmt, UINT width, UINT height) {
+        m_failedOnce = true;
+        m_lastFailedHr = hr;
+        m_lastFailedFormat = fmt;
+        m_lastFailedWidth = width;
+        m_lastFailedHeight = height;
+        ReportFailureOnce(operation, hr, fmt, width, height);
+    }
+
+    void ReportFailureOnce(const char* operation, HRESULT hr, DXGI_FORMAT fmt, UINT width, UINT height) {
+        if (m_reportedFailure) return;
+        m_reportedFailure = true;
+        char buf[256] = {};
+        _snprintf_s(buf, sizeof(buf), _TRUNCATE,
+            "oled: %s failed hr=0x%08lX (format=%u, res=%ux%u) - fail-closed fallback active",
+            operation, (unsigned long)hr, (unsigned)fmt, width, height);
+        if (m_logFn) {
+            m_logFn(buf);
+        } else {
+            OutputDebugStringA(buf);
+        }
+    }
+
     Config m_config;
+    LogFn m_logFn = nullptr;
+
+    ID3D11Device* m_lastDevice = nullptr;
     ID3D11ComputeShader* m_cs = nullptr;
     ID3D11Buffer* m_cb = nullptr;
 
@@ -321,7 +435,16 @@ private:
 
     bool m_ready = false;
     bool m_failedOnce = false;
+    bool m_reportedFailure = false;
     bool m_initAttempted = false;
+
+    bool m_formatSupportChecked = false;
+    bool m_formatSupportValid = false;
+
+    HRESULT m_lastFailedHr = S_OK;
+    DXGI_FORMAT m_lastFailedFormat = DXGI_FORMAT_UNKNOWN;
+    UINT m_lastFailedWidth = 0;
+    UINT m_lastFailedHeight = 0;
 };
 
 } // namespace oled_grading

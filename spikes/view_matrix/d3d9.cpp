@@ -34109,6 +34109,7 @@ void LoadIniSettings() {
     {
         wchar_t wpath[MAX_PATH] = {};
         MultiByteToWideChar(CP_ACP, 0, path, -1, wpath, MAX_PATH);
+        g_oledGrading.SetLogCallback([](const char* msg) { Log("%s", msg); });
         g_oledGrading.LoadConfig(wpath);
         Log("ini: OLED Color Grading preset=%d (%s)",
             (int)g_oledGrading.GetPreset(),
