@@ -47,7 +47,16 @@ See audit doc § test protocol (Equip → cycle → Upgrade → back → cycle �
 - **Corrected candidate (not deployed):** `33A8417393B49A1ADE7F7AA8772786FC35D0098F701AE465636A8EC1980DA7CA`
 - **Provenance:** `spikes/view_matrix/d3d9.build.json`
 
-## Steam deploy (2026-10-22)
+## Steam deploy — corrected trace `7d440d5` (2026-10-22 ~14:15)
+
+- **Pre backup:** `deployment/install-backups/20261022-locker-trace-7d440d5-pre/` (`d3d9.dll` `9E7CEFF9…`, INI `ACCABCA1…`)
+- **Installed DLL:** `33A8417393B49A1ADE7F7AA8772786FC35D0098F701AE465636A8EC1980DA7CA`
+- **INI:** `LockerNativeTrace=1`; overlay off; Phase F retention unchanged
+- **Stop rollback:** restore pre backup DLL `9E7CEFF9…`, set `LockerNativeTrace=0`
+
+**Post-PSVR2 stable restore (2026-10-22):** Steam `d3d9.dll` `9E7CEFF998741F229810B5FCB00B3220ED12893789EB27676D1CCDA87F178CCD`; `LockerNativeTrace=0`, `LockerOwnedDisplay=0`; retention flags unchanged. Availability research continues offline only.
+
+## Steam deploy (2026-10-22) — superseded NO-GO build
 
 Accepted-profile guard blocked (live `d3d9.dll` / extra INI keys drift from pinned profile). Manual controlled deploy:
 

@@ -88,7 +88,7 @@ Extend **`LockerNativeTrace`** (or a sibling `LockerPageWitness`) — **read-onl
 
 | Candidate | Location (export) | Hypothesis | Risk if misused |
 |-----------|-------------------|------------|-----------------|
-| **A. Session weapon table** | `SessionManager` → `ArrayProperty mWeapons` of struct **`WeaponInfo`** (`mName`, `mPath`, `mType`, `mbIsHeavyWeapon`, …) | Progression-wide catalog; filter `mbIsHeavyWeapon` + ordinary FNames → bitmask | May ignore **station** subset; needs `Initialize` / `LoadEquippedWeapons` read witness |
+| **A. Session weapon table** | **`RvGameSystem`** (`GGameSystem @ 0x01CF394C`) → `ArrayProperty mWeapons` of **`WeaponInfo`** (stride **0x190**) | Progression-wide catalog; filter `mbIsHeavyWeapon` + ordinary FNames → bitmask | **Not** `UEngine.SessionManager`; separate `StructProperty mWeapons` on checkpoint data is unrelated. See **`docs/weapon-locker-availability-contract-20261022.md`**. |
 | **B. `mWeaponsAvailableToLocker`** | **`RvInventoryItem`** `IntProperty` (export index 10573) | Bitmask or enum of locker-eligible weapons for an item/station context | Documented warning: **not** owned inventory (`docs/combined-acceptance-followups.md`); semantics **unknown** (bit width? per-weapon? per-station?) |
 | **C. GFx data providers** | e.g. `RvUIDataProvider_*` with `ArrayProperty mWeapon` | UI list driving cyclable replacements | May be **upgrade** or narrative-gated; needs Equip-page correlation |
 | **D. `mRequestedPackages`** | On `RvUIGFxMovie_WeaponLocker` | Package load flags when switching weapon packages in UI | Unknown mapping to ordinary four |
