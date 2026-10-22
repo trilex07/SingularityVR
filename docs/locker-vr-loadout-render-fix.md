@@ -17,3 +17,9 @@ Base: `387c90a8fcd94ee1300a654990b4bc59cb8ea38c`. Scope: rendering and shared sc
 ## Acceptance boundary
 
 This is L1/L2 only. MAIN should review before any deployment, then verify all four icons, full title, modest left shift, laser targeting and native WeaponLocker interaction in PSVR2. EQUIP ALL must not be exercised as part of this UI-only review until its crash fix is separately accepted.
+
+## UI-only PreviewOnly guard
+
+`[Input] LockerVrLoadoutPreviewOnly=1` is an explicit opt-in for MAIN's UI-only test; the code and sample INI default to 0. It leaves READY, available/owned masks, title, icons, panel geometry, laser targeting and native GFx alone. On preview clicks, no mask is queued. Engine publication clears stale queue masks. PopMenu cannot schedule acquisition, deferred execution clears and refuses any pending request, and the acquisition entry point refuses before both the native archetype factory and audited pickup call. Switching the flag off preserves the pre-existing acquisition path; no ownership is synthesized. The flag is loaded from the INI before hook installation.
+
+Offline coverage: preview queue policy ON/OFF, source-path guard placement, the existing loadout policy regression and x86 `/O2` PE32 build. Actual PE disassembly retains `8B 80 0C 02 00 00` (`mov eax,[eax+20Ch]`). No Steam or PSVR2 validation has been claimed.

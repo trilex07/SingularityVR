@@ -1,12 +1,14 @@
 #pragma once
 #include "locker_vr_loadout_identity.h"
 #include "locker_vr_loadout_runtime.h"
+#include "locker_vr_loadout_preview_policy.h"
 #include "native_owned_inventory.h"
 #include "pause_rtt_probe.h"
 #include <intrin.h>
 
 extern uintptr_t g_textLo, g_textHi;
 extern volatile LONG g_keepAcquiredWeapons;
+extern volatile LONG g_lockerVrLoadoutPreviewOnly;
 extern volatile LONG g_inCinematic;
 void Log(_Printf_format_string_ const char* fmt, ...);
 
@@ -95,6 +97,8 @@ inline bool ArchetypeInWeaponSharedHierarchy(void* archetype) {
 
 inline bool TryPickupOrdinary(uint32_t vrBit, uintptr_t pawn, int* pickupResult) {
     if (pickupResult) *pickupResult = -1;
+    if (LockerVrLoadoutPreviewPolicy::BlocksAcquisition(
+            InterlockedCompareExchange(&g_lockerVrLoadoutPreviewOnly, 0, 0) != 0)) return false;
     if (!WitnessFactoryOnEngineThread() || !LockerVrLoadoutIdentity::FactoryIdentityOk(g_factoryFn)) return false;
 
     const unsigned index = LockerVrLoadoutPolicy::CatalogIndexForVrBit(vrBit);
@@ -112,9 +116,13 @@ inline bool TryPickupOrdinary(uint32_t vrBit, uintptr_t pawn, int* pickupResult)
     if (!fstr) return false;
 
     void* gs = reinterpret_cast<void*>(LockerVrLoadoutRuntime::GameSystemInstance());
+    if (LockerVrLoadoutPreviewPolicy::BlocksAcquisition(
+            InterlockedCompareExchange(&g_lockerVrLoadoutPreviewOnly, 0, 0) != 0)) return false;
     void* archetype = LookupArchetypeViaNativeAbi(gs, fstr);
     if (!ArchetypeInWeaponSharedHierarchy(archetype)) return false;
 
+    if (LockerVrLoadoutPreviewPolicy::BlocksAcquisition(
+            InterlockedCompareExchange(&g_lockerVrLoadoutPreviewOnly, 0, 0) != 0)) return false;
     const int result = InventoryVmHook::RunAuditedPickupRestore(reinterpret_cast<void*>(pawn), archetype);
     if (pickupResult) *pickupResult = result;
 
@@ -128,6 +136,8 @@ inline bool TryPickupOrdinary(uint32_t vrBit, uintptr_t pawn, int* pickupResult)
 }
 
 inline void ApplyPendingMask(uint32_t pendingNow, uint32_t ownedBefore) {
+    if (LockerVrLoadoutPreviewPolicy::BlocksAcquisition(
+            InterlockedCompareExchange(&g_lockerVrLoadoutPreviewOnly, 0, 0) != 0)) return;
     if (!pendingNow) return;
     if (!InterlockedCompareExchange(&g_keepAcquiredWeapons, 0, 0)) return;
     if (InterlockedCompareExchange(&g_inCinematic, 0, 0)) return;

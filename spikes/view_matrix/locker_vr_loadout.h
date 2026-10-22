@@ -2,6 +2,7 @@
 #include "MinHook.h"
 #include "locker_vr_loadout_acquire.h"
 #include "locker_vr_loadout_publish.h"
+#include "locker_vr_loadout_preview_policy.h"
 #include "locker_vr_loadout_runtime.h"
 #include "locker_vr_loadout_layout.h"
 #include "locker_vr_loadout_screen.h"
@@ -11,6 +12,7 @@
 #include <intrin.h>
 
 extern volatile LONG g_lockerVrLoadout;
+extern volatile LONG g_lockerVrLoadoutPreviewOnly;
 extern volatile LONG g_keepAcquiredWeapons;
 extern volatile LONG g_vrUiWeaponLocker;
 extern volatile LONG g_weaponWheelOpen;
@@ -54,6 +56,16 @@ inline FrameFn g_origLoad = nullptr;
 inline ScriptExecFn g_origLoadUpgrades = nullptr;
 
 inline thread_local int t_reenter = 0;
+
+inline bool PreviewOnly() {
+    return LockerVrLoadoutPreviewPolicy::BlocksAcquisition(
+        InterlockedCompareExchange(&g_lockerVrLoadoutPreviewOnly, 0, 0) != 0);
+}
+
+inline void ClearPreviewQueue() {
+    LockerVrLoadoutPreviewPolicy::ClearQueuedMasks(&g_queuedMask, &g_uiQueuedMask,
+        &g_postPopAcquireMask, &g_acquireRequested, &g_publishedUiQueuedMask);
+}
 
 inline bool Enabled() {
     return InterlockedCompareExchange(&g_lockerVrLoadout, 0, 0) != 0 &&
@@ -116,6 +128,7 @@ inline void LogReadyTransition(bool ready, const char* reason, uintptr_t pawn, u
 }
 
 inline void PublishFromEngine() {
+    if (PreviewOnly()) ClearPreviewQueue();
     if (!EngineCanInteract()) {
         LockerVrLoadoutPublish::Clear();
         return;
@@ -136,6 +149,10 @@ inline void PublishFromEngine() {
 }
 
 inline void OnPopMenuScheduleAcquire() {
+    if (PreviewOnly()) {
+        ClearPreviewQueue();
+        return;
+    }
     if (!Enabled()) return;
     const uint32_t queued = static_cast<uint32_t>(InterlockedCompareExchange(&g_queuedMask, 0, 0));
     InterlockedExchange(&g_uiQueuedMask, 0);
@@ -161,6 +178,10 @@ inline void OnPopMenuScheduleAcquire() {
 }
 
 inline void TryRunDeferredAcquire() {
+    if (PreviewOnly()) {
+        ClearPreviewQueue();
+        return;
+    }
     if (!Enabled()) return;
     if (!InterlockedCompareExchange(&g_acquireRequested, 0, 0)) return;
     if (InterlockedCompareExchange(&g_vrUiWeaponLocker, 0, 0)) return;
@@ -189,6 +210,10 @@ inline void TryRunDeferredAcquire() {
     }
     Log("locker vr loadout: deferred acquire pendingNow=0x%X thread=%u pawn=%p", pendingNow, GetCurrentThreadId(),
         (void*)pawn);
+    if (PreviewOnly()) {
+        ClearPreviewQueue();
+        return;
+    }
     LockerVrLoadoutAcquire::ApplyPendingMask(pendingNow, ownedBefore);
     PublishFromEngine();
 }
@@ -314,6 +339,7 @@ inline bool OnPointerSelect(float u, float v) {
     const auto hit = LockerLoadoutScreen::HitCanvas(u, v, &tile);
     if (hit == LockerLoadoutScreen::PointerHit::EquipAll) {
         if (!LockerVrLoadoutPublish::Pending()) return false;
+        if (PreviewOnly()) { ClearPreviewQueue(); return true; }
         const uint32_t pending = LockerVrLoadoutPublish::Pending();
         InterlockedExchange(&g_queuedMask, static_cast<LONG>(pending));
         InterlockedExchange(&g_uiQueuedMask, static_cast<LONG>(pending));
@@ -326,6 +352,7 @@ inline bool OnPointerSelect(float u, float v) {
     const uint32_t avail = LockerVrLoadoutPublish::Available();
     const uint32_t owned = LockerVrLoadoutPublish::Owned();
     if ((avail & bit) == 0 || (owned & bit) != 0) return false;
+    if (PreviewOnly()) { ClearPreviewQueue(); return true; }
 
     LONG prev = InterlockedCompareExchange(&g_queuedMask, 0, 0);
     if (prev & bit) {

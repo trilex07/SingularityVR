@@ -6647,6 +6647,7 @@ volatile LONG g_lockerAvailabilityTrace = 0; // [Diagnostic] LockerAvailabilityT
 volatile LONG g_lockerRetainOrdinary = 0; // [Input] LockerRetainOrdinary: PopMenu destroyItem gate (requires KeepAcquiredWeapons)
 volatile LONG g_lockerOwnedDisplay = 0; // [Input] LockerOwnedDisplay: VR wheel owned tiles under WeaponLocker (requires KeepAcquiredWeapons)
 volatile LONG g_lockerVrLoadout = 0; // [Input] LockerVrLoadout: compact VR LOADOUT + EQUIP ALL queue (requires KeepAcquiredWeapons)
+volatile LONG g_lockerVrLoadoutPreviewOnly = 0; // [Input] LockerVrLoadoutPreviewOnly: UI-only, never acquire
 volatile LONG g_publishedAvailableMask = 0;
 volatile LONG g_publishedOwnedMask = 0;
 volatile LONG g_publishedPendingMask = 0;
@@ -33995,6 +33996,11 @@ void LoadIniSettings() {
     Log("ini: LockerOwnedDisplay=%ld (default OFF; retained VR wheel tiles under WeaponLocker; requires KeepAcquiredWeapons=1)",
         Rd(g_lockerOwnedDisplay));
     InterlockedExchange(&g_lockerVrLoadout, GetPrivateProfileIntA("Input", "LockerVrLoadout", 0, path) != 0);
+    InterlockedExchange(&g_lockerVrLoadoutPreviewOnly,
+        GetPrivateProfileIntA("Input", "LockerVrLoadoutPreviewOnly", 0, path) != 0);
+    if (LockerVrLoadout::PreviewOnly()) LockerVrLoadout::ClearPreviewQueue();
+    Log("ini: LockerVrLoadoutPreviewOnly=%ld (default OFF; UI visible, acquisition blocked)",
+        Rd(g_lockerVrLoadoutPreviewOnly));
     Log("ini: LockerVrLoadout=%ld (default OFF; compact VR LOADOUT on WYPOSAŻ + post-PopMenu pickup queue; requires KeepAcquiredWeapons=1)",
         Rd(g_lockerVrLoadout));
     if (Rd(g_lockerVrLoadout) && Rd(g_keepAcquiredWeapons)) LockerVrLoadout::TryInstallEarly();
