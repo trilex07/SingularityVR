@@ -5987,6 +5987,7 @@ void DrawKnifeBeltMarker(IDirect3DDevice9* dev); // MAIN: white ring at the left
 void DrawCustomGloves(IDirect3DDevice9* dev); // default-OFF, noTMD free hands only
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 static void DrawLockerOwnedDisplay(IDirect3DDevice9* dev);
+static void DrawLockerVrLoadout(IDirect3DDevice9* dev);
 void DrawHipKnife(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
@@ -6032,6 +6033,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawKnifeBeltMarker(dev);
     DrawWeaponWheel(dev);
     DrawLockerOwnedDisplay(dev);
+    DrawLockerVrLoadout(dev);
     DrawHipKnife(dev);
     DrawCenturionReload(dev);
     DrawNextReload(dev);
@@ -6643,6 +6645,7 @@ volatile LONG g_lockerNativeTrace = 0; // [Diagnostic] LockerNativeTrace: read-o
 volatile LONG g_lockerAvailabilityTrace = 0; // [Diagnostic] LockerAvailabilityTrace: minimal +0x3E4/catalog/equip witness
 volatile LONG g_lockerRetainOrdinary = 0; // [Input] LockerRetainOrdinary: PopMenu destroyItem gate (requires KeepAcquiredWeapons)
 volatile LONG g_lockerOwnedDisplay = 0; // [Input] LockerOwnedDisplay: VR wheel owned tiles under WeaponLocker (requires KeepAcquiredWeapons)
+volatile LONG g_lockerVrLoadout = 0; // [Input] LockerVrLoadout: compact VR LOADOUT + EQUIP ALL queue (requires KeepAcquiredWeapons)
 volatile LONG g_vrUiWeaponLocker = 0; // 1 while RvUIGFxMovie_WeaponLocker has focus (input thread)
 volatile LONG g_lockerDisplayNativeMesh[2] = {0, 0}; // published ordinary mesh ids for native GFx slots 0/1
 volatile LONG g_vrMenuReleaseRequested = 0; // input publishes; render thread owns COM release
@@ -12190,6 +12193,12 @@ void SyncXRInput(XrTime displayTime) {
     const auto alternateGate=g_vrUiTrigger[altHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,lt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
     if(uiMenu) {
         const bool selectPressed=fireHand==1?primaryGate.selectPressed:alternateGate.selectPressed;
+        if (selectPressed && Rd(g_vrUiValid) && Rd(g_lockerVrLoadout) && Rd(g_vrUiWeaponLocker)) {
+            LONG pointerU = 500000, pointerV = 500000;
+            ReadVrUiPair(pointerU, pointerV);
+            const float u = pointerU / 1000000.0f, v = pointerV / 1000000.0f;
+            LockerVrLoadout::OnPointerSelect(u, v);
+        }
         if(selectPressed)InterlockedExchange(&g_vrUiDown,1);
         else if((fireHand==1?rt:lt)<=.5f || !Rd(g_vrUiValid))InterlockedExchange(&g_vrUiDown,0);
         rt=lt=0; // Menu selection cannot publish gameplay trigger state.
@@ -25394,6 +25403,7 @@ volatile LONG g_peFiringCalls = 0; // ⚠️ if this stays 0 the split never hap
 #include "inventory_vm_hook.h"
 #include "locker_native_trace.h"
 #include "locker_retain_ordinary.h"
+#include "locker_vr_loadout.h"
 #include "locker_station_grant.h"
 #include "menu_submit_policy.h"
 
@@ -28808,6 +28818,143 @@ static void DrawLockerOwnedDisplay(IDirect3DDevice9* dev) {
             g_origDrawPrimUP(dev, D3DPT_LINESTRIP, 4, border, sizeof(WwVtx));
             dev->SetTexture(0, g_hudAtlasTex);
             dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+        }
+    }
+    dev->SetTexture(0, nullptr);
+    if (old) g_origSetRenderTarget(dev, 0, old);
+    g_wristState->Apply();
+    dev->SetDepthStencilSurface(depth);
+    if (old) old->Release();
+    if (depth) depth->Release();
+    back->Release();
+}
+
+static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
+    if (!dev || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_weaponWheelOpen) || !Rd(g_lockerVrLoadout) ||
+        !Rd(g_keepAcquiredWeapons) || !Rd(g_vrUiWeaponLocker) || !Rd(g_vrUiMenu) || !Rd(g_vrUiStationMovie) ||
+        Rd(g_vrMenuClass) != 4 || !g_vrMenuPanelValid || !g_haveEyes || !g_origDrawPrimUP ||
+        !g_origSetRenderTarget || !LockerVrLoadout::CanDrawOrInteract())
+        return;
+
+    const uint32_t avail = LockerVrLoadout::AvailableMask();
+    const uint32_t owned = LockerVrLoadout::OwnedMask();
+    const uint32_t uiQueued = static_cast<uint32_t>(InterlockedCompareExchange(&LockerVrLoadout::g_uiQueuedMask, 0, 0));
+    static const int kMeshes[4] = {5799, 11387, 8297, 11389};
+    static const uint32_t kBits[4] = {1u, 2u, 4u, 8u};
+
+    if (Rd(g_katorgaHud)) MaybeLoadHudAtlas(dev);
+    if (InterlockedCompareExchange(&g_hudAtlasState, 0, 0) != 1 || !g_hudAtlasTex) return;
+
+    IDirect3DSurface9* back = nullptr;
+    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
+    D3DSURFACE_DESC d{};
+    if (FAILED(back->GetDesc(&d)) || d.Width < 8 || d.Height < 8) {
+        back->Release();
+        return;
+    }
+    if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) {
+        back->Release();
+        return;
+    }
+    if (FAILED(g_wristState->Capture())) {
+        back->Release();
+        return;
+    }
+    IDirect3DSurface9* old = nullptr;
+    IDirect3DSurface9* depth = nullptr;
+    dev->GetRenderTarget(0, &old);
+    dev->GetDepthStencilSurface(&depth);
+    dev->SetDepthStencilSurface(nullptr);
+    g_origSetRenderTarget(dev, 0, back);
+    D3DVIEWPORT9 vp{0, 0, d.Width, d.Height, 0.f, 1.f};
+    dev->SetViewport(&vp);
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetRenderState(D3DRS_ZENABLE, FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetTexture(0, g_hudAtlasTex);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+
+    struct HudIconVtx { float x, y, z, rhw; DWORD c; float u, v; };
+    struct WwVtx { float x, y, z, rhw; DWORD c; };
+    const float halfW = (float)d.Width * .5f;
+    const float iconHalf = std::max(20.f, (float)d.Height * .034f);
+    const float cu = 0.78f, cv = 0.47f, du = 0.055f, dv = 0.055f;
+    const float tileU[4] = {cu - du, cu + du, cu - du, cu + du};
+    const float tileV[4] = {cv - dv, cv - dv, cv + dv, cv + dv};
+
+    for (int eye = 0; eye < 2; ++eye) {
+        const int px = std::max(1, (int)((float)d.Height * .016f));
+        float tx = 0, ty = 0;
+        if (LockerProjectPanelUv(eye, 0.78f, 0.36f, tx, ty, halfW, (float)d.Height)) {
+            D3DRECT title[64];
+            const int tn = TextRects(title, 0, 64, (int)tx - 5 * (kGlyphW + 1) * px, (int)ty, px, "VR LOADOUT");
+            ClearRects(dev, title, tn, 0xAAE8F0FF);
+        }
+
+        for (int ti = 0; ti < 4; ++ti) {
+            const uint32_t bit = kBits[ti];
+            const bool isOwned = (owned & bit) != 0;
+            const bool isAvail = (avail & bit) != 0;
+            if (!isOwned && !isAvail) continue;
+            const hud_atlas::Rect* ir = LockerAtlasIconForMesh(kMeshes[ti]);
+            if (!ir) continue;
+            float cx = 0, cy = 0;
+            if (!LockerProjectPanelUv(eye, tileU[ti], tileV[ti], cx, cy, halfW, (float)d.Height)) continue;
+            const float u0 = (float)ir->x / (float)g_hudAtlas.width;
+            const float v0 = (float)ir->y / (float)g_hudAtlas.height;
+            const float duv = (float)ir->w / (float)g_hudAtlas.width;
+            const float dvv = (float)ir->h / (float)g_hudAtlas.height;
+            const bool queued = (uiQueued & bit) != 0;
+            DWORD tint = isOwned ? 0x66FFFFFF : (queued ? 0xCCFFE088 : 0xCCFFFFFF);
+            if (!isOwned && !queued && isAvail) tint = 0xCC88FFAA;
+            const float x0 = cx - iconHalf, y0 = cy - iconHalf, x1 = cx + iconHalf, y1 = cy + iconHalf;
+            HudIconVtx quad[4] = {
+                {x0, y0, 0, 1, tint, u0, v0},
+                {x1, y0, 0, 1, tint, u0 + duv, v0},
+                {x0, y1, 0, 1, tint, u0, v0 + dvv},
+                {x1, y1, 0, 1, tint, u0 + duv, v0 + dvv},
+            };
+            g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, quad, sizeof(HudIconVtx));
+            WwVtx border[5];
+            const DWORD edge = isOwned ? 0xAA88AA88 : 0xCC44CCFF;
+            border[0] = {x0, y0, 0, 1, edge};
+            border[1] = {x1, y0, 0, 1, edge};
+            border[2] = {x1, y1, 0, 1, edge};
+            border[3] = {x0, y1, 0, 1, edge};
+            border[4] = {x0, y0, 0, 1, edge};
+            dev->SetTexture(0, nullptr);
+            dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+            g_origDrawPrimUP(dev, D3DPT_LINESTRIP, 4, border, sizeof(WwVtx));
+            dev->SetTexture(0, g_hudAtlasTex);
+            dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+            if (isOwned) {
+                D3DRECT mark[32];
+                const int mn = TextRects(mark, 0, 32, (int)x1 - 3 * px, (int)y0, px, "+");
+                ClearRects(dev, mark, mn, 0xAAFFFFFF);
+            }
+        }
+
+        const uint32_t pending = LockerVrLoadout::PendingMaskNow();
+        if (pending) {
+            float bx = 0, by = 0;
+            if (LockerProjectPanelUv(eye, 0.78f, 0.57f, bx, by, halfW, (float)d.Height)) {
+                D3DRECT btn[96];
+                const char* label = uiQueued ? "QUEUED" : "EQUIP ALL";
+                const int bw = (int)strlen(label) * (kGlyphW + 1) * px;
+                const int bn = TextRects(btn, 0, 96, (int)bx - bw / 2, (int)by, px, label);
+                ClearRects(dev, btn, bn, uiQueued ? 0xAA888888 : 0xAA2266CC);
+            }
         }
     }
     dev->SetTexture(0, nullptr);
@@ -33711,6 +33858,10 @@ void LoadIniSettings() {
     InterlockedExchange(&g_lockerOwnedDisplay, GetPrivateProfileIntA("Input", "LockerOwnedDisplay", 0, path) != 0);
     Log("ini: LockerOwnedDisplay=%ld (default OFF; retained VR wheel tiles under WeaponLocker; requires KeepAcquiredWeapons=1)",
         Rd(g_lockerOwnedDisplay));
+    InterlockedExchange(&g_lockerVrLoadout, GetPrivateProfileIntA("Input", "LockerVrLoadout", 0, path) != 0);
+    Log("ini: LockerVrLoadout=%ld (default OFF; compact VR LOADOUT on WYPOSAŻ + post-PopMenu pickup queue; requires KeepAcquiredWeapons=1)",
+        Rd(g_lockerVrLoadout));
+    if (Rd(g_lockerVrLoadout) && Rd(g_keepAcquiredWeapons)) LockerVrLoadout::TryInstallEarly();
     g_ownedWeaponWheel=GetPrivateProfileIntA("Input","WeaponWheelOwnedInventory",0,path)?1:0;
     {
         char vs[32]{},ps[32]{};

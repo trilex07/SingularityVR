@@ -13,6 +13,7 @@
 #include "locker_availability_trace.h"
 #include "locker_retain_ordinary.h"
 #include "locker_owned_display_cache.h"
+#include "locker_vr_loadout.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
@@ -161,6 +162,7 @@ static bool MenuClass(const char* n) {
 static bool UpdateMenu() {
  if (LockerNativeTrace::Enabled()) LockerNativeTrace::TryInstallEarly();
  if (LockerAvailabilityTrace::Enabled()) LockerAvailabilityTrace::TryInstallEarly();
+ LockerVrLoadout::TryInstallEarly();
  if (LockerRetainOrdinary::Enabled()) LockerRetainOrdinary::TryInstall();
  // Exact native GetFocusMovie body at 0x00D7C2C0; read only, no native call needed.
  const uintptr_t engine=ReadPointer(0x01CF8778u);
@@ -219,6 +221,7 @@ static bool UpdateMenu() {
     LockerNativeTrace::OnDefocus();
     LockerAvailabilityTrace::OnDefocus();
     LockerOwnedDisplayCache::OnDefocus();
+    LockerVrLoadout::OnDefocus();
   }
   if (className[0]) strcpy_s(prevClass, className);
   InterlockedExchange(&g_vrMenuClass,kind);
@@ -385,6 +388,7 @@ static void __fastcall Poll(void* self,void*,float dt) {
  NativeNpcName::Update(); // native GFx calls stay on this engine thread
  NativeOwnedInventory::Poll(); // bounded actual possession snapshot / queued selection
  LockerOwnedDisplayCache::TickWhileActive();
+ LockerVrLoadout::PollInstall();
  NativeBodyEquipmentProbe::Poll(); // opt-in read-only heavy/grenade ownership census
  NativeTmdAim::Poll(); // OFF by default; audited pure TMD getters, not shared gun aim
  ObserveWeaponAssets(); // at most six weapon identities, only the explicit read-only witness
