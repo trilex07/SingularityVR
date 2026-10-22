@@ -139,40 +139,218 @@ def classify_asset(package_name: str, asset_name: str, cue_names: list, num_chan
     return 'UNKNOWN'
 
 
-def analyze_sound_cues(logical_data: bytes, package_info: dict) -> dict:
-    """Map SoundNodeWave names to referencing SoundCues and extract cue parameters."""
+def parse_package_full(data: bytes) -> dict:
+    """Parse UE3 package exports and properties across all classes for SoundCue DAG analysis."""
+    tag = struct.unpack_from('<I', data, 0)[0]
+    assert tag == 0x9E2A83C1
+    ver, lver = struct.unpack_from('<HH', data, 4)
+    folder_len = struct.unpack_from('<i', data, 12)[0]
+    p = 16 + abs(folder_len) * (2 if folder_len < 0 else 1) + 4
+    nc, no, ec, eo, ic, io = struct.unpack_from('<6I', data, p)
+    
+    names = []
+    p = no
+    for _ in range(nc):
+        n = struct.unpack_from('<i', data, p)[0]
+        p += 4
+        stop = p + abs(n) * (2 if n < 0 else 1)
+        raw = data[p:stop]
+        names.append(raw.decode('utf-16le' if n < 0 else 'latin1').rstrip('\0'))
+        p = stop + 8
+        
+    def get_name(i):
+        return names[i] if 0 <= i < len(names) else f"Name_{i}"
+        
+    imports = []
+    for j in range(ic):
+        imp = struct.unpack_from('<7i', data, io + j * 28)
+        imports.append(imp)
+        
+    exports = []
+    p = eo
+    for j in range(ec):
+        rec_off = p
+        e = struct.unpack_from('<6iQ4i', data, p)
+        p += 68 + e[10] * 4
+        exports.append({
+            'index': j + 1,
+            'cls_idx': e[0],
+            'super_idx': e[1],
+            'outer_idx': e[2],
+            'name_idx': e[3],
+            'name': get_name(e[3]),
+            'size': e[7],
+            'offset': e[8],
+            'rec_offset': rec_off
+        })
+        
+    def resolve_ref(idx):
+        if idx > 0:
+            return exports[idx - 1]['name']
+        elif idx < 0:
+            imp = imports[-idx - 1]
+            return get_name(imp[5])
+        return 'None'
+
+    for e in exports:
+        e['class_name'] = resolve_ref(e['cls_idx'])
+
+    # Property parser for all objects
+    for e in exports:
+        p = e['offset'] + 4
+        end = e['offset'] + e['size']
+        props = []
+        try:
+            while p < end:
+                ni, num = struct.unpack_from('<ii', data, p)
+                p += 8
+                nm = get_name(ni)
+                if nm == 'None':
+                    break
+                ti, tn, size, idx = struct.unpack_from('<4i', data, p)
+                p += 16
+                typ = get_name(ti)
+                
+                val = None
+                if typ == 'BoolProperty':
+                    val = bool(struct.unpack_from('<I', data, p)[0])
+                    p += 4
+                elif typ == 'ObjectProperty' and size == 4:
+                    obj_idx = struct.unpack_from('<i', data, p)[0]
+                    p += 4
+                    val = {'index': obj_idx, 'name': resolve_ref(obj_idx)}
+                elif typ == 'ArrayProperty':
+                    count = struct.unpack_from('<i', data, p)[0]
+                    p += 4
+                    elem_bytes = (size - 4) // count if count > 0 else 0
+                    elems = []
+                    if elem_bytes == 4 and nm == 'ChildNodes':
+                        for _ in range(count):
+                            c_idx = struct.unpack_from('<i', data, p)[0]
+                            p += 4
+                            elems.append({'index': c_idx, 'name': resolve_ref(c_idx)})
+                    else:
+                        p += (size - 4)
+                        elems = f"{count} items"
+                    val = elems
+                elif typ == 'FloatProperty' and size == 4:
+                    val = struct.unpack_from('<f', data, p)[0]
+                    p += 4
+                elif typ == 'IntProperty' and size == 4:
+                    val = struct.unpack_from('<i', data, p)[0]
+                    p += 4
+                elif typ == 'NameProperty' and size == 8:
+                    val = get_name(struct.unpack_from('<i', data, p)[0])
+                    p += 8
+                else:
+                    p += size
+                    val = f"<{typ} {size}b>"
+                props.append({'name': nm, 'type': typ, 'value': val})
+        except Exception:
+            pass
+        e['properties'] = props
+
+    return {'names': names, 'imports': imports, 'exports': exports}
+
+
+def analyze_sound_cues(logical_data: bytes, package_info: dict) -> tuple:
+    """Map SoundNodeWave names to referencing SoundCues with explicit confidence:
+    - VERIFIED_REFERENCE: Parsed directly from UE3 SoundCue DAG / object pointers.
+    - HEURISTIC_MATCH: Name/prefix similarity without direct pointer proof.
+    - UNRESOLVED: Standalone wave with no verified reference.
+    Returns: (wave_to_cues, wave_to_confidence, wave_to_paths)
+    """
     names = package_info['names']
     exports = package_info['exports']
-    wave_to_cues = {}
     
-    # Build list of SoundCue and RSoundNodeCue and SoundNode exports
     cues = [e for e in exports if e.get('class_name') in ('SoundCue', 'RSoundNodeCue')]
-    nodes = {e['index']: e for e in exports if 'SoundNode' in e.get('class_name', '')}
-    waves = {e['index']: e for e in exports if e.get('class_name') == 'SoundNodeWave'}
+    waves = {e['index']: e['name'] for e in exports if e.get('class_name') == 'SoundNodeWave'}
     
-    # For every cue, find its tree of child nodes
+    verified_w2c = {}
+    verified_w2paths = {}
+    
+    # Trace SoundCue DAG
     for cue in cues:
         cue_name = cue['name']
-        child_indices = [e['index'] for e in exports if e.get('outer') == cue['index']]
-        # Find referenced waves directly or via child nodes
-        for idx in child_indices:
-            e = exports[idx - 1]
-            # Check properties for wave references
-            for p in e.get('properties', []):
-                val = p.get('value')
-                if isinstance(val, str) and val in [w['name'] for w in waves.values()]:
-                    wave_to_cues.setdefault(val, []).append(cue_name)
-    
-    # Heuristic name matching for loose cues
-    for w in waves.values():
-        w_name = w['name']
-        for c in cues:
-            c_name = c['name']
-            if w_name.lower().startswith(c_name.lower()) or c_name.lower().startswith(w_name.lower()):
-                if c_name not in wave_to_cues.get(w_name, []):
-                    wave_to_cues.setdefault(w_name, []).append(c_name)
+        first_p = next((p['value'] for p in cue.get('properties', []) if p['name'] == 'FirstNode'), None)
+        first_idx = first_p.get('index', 0) if isinstance(first_p, dict) else (first_p if isinstance(first_p, int) else 0)
+        
+        if first_idx <= 0 or first_idx > len(exports):
+            continue
+            
+        visited = set()
+        queue = [(first_idx, [f"Cue({cue_name})"])]
+        
+        while queue:
+            curr_idx, path = queue.pop(0)
+            if curr_idx in visited or curr_idx <= 0 or curr_idx > len(exports):
+                continue
+            visited.add(curr_idx)
+            
+            node = exports[curr_idx - 1]
+            node_name = node['name']
+            node_cls = node.get('class_name', 'Node')
+            curr_path = path + [f"{node_cls}({node_name})"]
+            
+            if node_cls == 'SoundNodeWave':
+                verified_w2c.setdefault(node_name, []).append(cue_name)
+                verified_w2paths.setdefault(node_name, []).append(" -> ".join(curr_path))
+                continue
+                
+            # Check properties for LinkedCue
+            linked = next((p['value'] for p in node.get('properties', []) if p['name'] == 'LinkedCue'), None)
+            l_idx = linked.get('index', 0) if isinstance(linked, dict) else (linked if isinstance(linked, int) else 0)
+            if l_idx > 0 and l_idx <= len(exports):
+                l_cue = exports[l_idx - 1]
+                l_first = next((p['value'] for p in l_cue.get('properties', []) if p['name'] == 'FirstNode'), None)
+                lf_idx = l_first.get('index', 0) if isinstance(l_first, dict) else (l_first if isinstance(l_first, int) else 0)
+                if lf_idx > 0:
+                    queue.append((lf_idx, curr_path + [f"LinkedCue({l_cue['name']})"]))
                     
-    return wave_to_cues
+            # Check properties for ChildNodes array
+            c_nodes = next((p['value'] for p in node.get('properties', []) if p['name'] == 'ChildNodes'), None)
+            if c_nodes and isinstance(c_nodes, list):
+                for child in c_nodes:
+                    ch_idx = child.get('index', 0) if isinstance(child, dict) else (child if isinstance(child, int) else 0)
+                    if ch_idx > 0:
+                        queue.append((ch_idx, curr_path))
+                        
+            # Check raw binary end of node for int32 ChildNodes
+            blob = logical_data[node['offset']:node['offset']+node['size']]
+            if len(blob) >= 12:
+                trailing_idx = struct.unpack_from('<i', blob, len(blob)-12)[0]
+                if 0 < trailing_idx <= len(exports) and trailing_idx not in visited:
+                    t_node = exports[trailing_idx - 1]
+                    if t_node.get('class_name') in ('SoundNodeWave', 'SoundNodeModulator', 'RSoundNodeAudioOcclusionModifier', 'RSoundNodeCue'):
+                        queue.append((trailing_idx, curr_path))
+                        
+    # Build complete classification for all waves
+    wave_to_cues = {}
+    wave_to_confidence = {}
+    wave_to_paths = {}
+    
+    for w_idx, w_name in waves.items():
+        if w_name in verified_w2c:
+            wave_to_cues[w_name] = list(set(verified_w2c[w_name]))
+            wave_to_confidence[w_name] = 'VERIFIED_REFERENCE'
+            wave_to_paths[w_name] = verified_w2paths[w_name]
+        else:
+            # Check for heuristic match
+            matched_cues = []
+            for c in cues:
+                c_name = c['name']
+                if (w_name.lower().startswith(c_name.lower()) or c_name.lower().startswith(w_name.lower())) and len(c_name) > 3:
+                    matched_cues.append(c_name)
+            if matched_cues:
+                wave_to_cues[w_name] = matched_cues
+                wave_to_confidence[w_name] = 'HEURISTIC_MATCH'
+                wave_to_paths[w_name] = [f"NameMatch({matched_cues[0]})"]
+            else:
+                wave_to_cues[w_name] = []
+                wave_to_confidence[w_name] = 'UNRESOLVED'
+                wave_to_paths[w_name] = []
+                
+    return wave_to_cues, wave_to_confidence, wave_to_paths
 
 
 def process_package(pkg_path: Path, out_dir: Path, tools_dir: Path, extract_audio: bool = True) -> list:
@@ -186,8 +364,9 @@ def process_package(pkg_path: Path, out_dir: Path, tools_dir: Path, extract_audi
     
     logical_data = temp_u.read_bytes()
     pkg_info = inspect(logical_data)
+    full_info = parse_package_full(logical_data)
     
-    wave_to_cues = analyze_sound_cues(logical_data, pkg_info)
+    wave_to_cues, wave_to_conf, wave_to_paths = analyze_sound_cues(logical_data, full_info)
     
     records = []
     waves = [e for e in pkg_info['exports'] if e.get('class_name') == 'SoundNodeWave']
@@ -220,21 +399,27 @@ def process_package(pkg_path: Path, out_dir: Path, tools_dir: Path, extract_audi
                 raw_ogg_path.parent.mkdir(parents=True, exist_ok=True)
                 raw_wav_path.parent.mkdir(parents=True, exist_ok=True)
                 
-                raw_ogg_path.write_bytes(payload)
+                if not raw_ogg_path.exists():
+                    raw_ogg_path.write_bytes(payload)
                 
-                # Decode to 16-bit PCM WAV with ffmpeg
-                cmd = ['ffmpeg', '-y', '-v', 'error', '-i', str(raw_ogg_path), '-c:a', 'pcm_s16le', str(raw_wav_path)]
-                res = subprocess.run(cmd, capture_output=True, text=True)
-                if res.returncode == 0 and raw_wav_path.exists():
+                if raw_wav_path.exists() and raw_wav_path.stat().st_size > 44:
                     decoding_status = 'DECODED_PCM16'
                 else:
-                    decoding_status = f"FFMPEG_ERROR: {res.stderr.strip()[:100]}"
+                    # Decode to 16-bit PCM WAV with ffmpeg
+                    cmd = ['ffmpeg', '-y', '-v', 'error', '-i', str(raw_ogg_path), '-c:a', 'pcm_s16le', str(raw_wav_path)]
+                    res = subprocess.run(cmd, capture_output=True, text=True)
+                    if res.returncode == 0 and raw_wav_path.exists():
+                        decoding_status = 'DECODED_PCM16'
+                    else:
+                        decoding_status = f"FFMPEG_ERROR: {res.stderr.strip()[:100]}"
             else:
                 decoding_status = 'AVAILABLE_NOT_EXTRACTED'
         except Exception as ex:
             decoding_status = f"PARSE_ERROR: {str(ex)[:100]}"
             
         associated_cues = wave_to_cues.get(asset_name, [])
+        mapping_confidence = wave_to_conf.get(asset_name, 'UNRESOLVED')
+        cue_paths = wave_to_paths.get(asset_name, [])
         classification = classify_asset(pkg_name, asset_name, associated_cues, num_channels, duration)
         
         records.append({
@@ -243,7 +428,9 @@ def process_package(pkg_path: Path, out_dir: Path, tools_dir: Path, extract_audi
             'export_index': w['index'],
             'class_name': 'SoundNodeWave',
             'classification': classification,
+            'mapping_confidence': mapping_confidence,
             'associated_cues': associated_cues,
+            'cue_paths': cue_paths,
             'codec': 'Ogg Vorbis (PC)',
             'channels': num_channels,
             'sample_rate': sample_rate,
@@ -300,15 +487,16 @@ def generate_markdown_inventory(records: list, out_path: Path):
         items = by_cat[cat]
         lines.append(f"### {cat} ({len(items)} assets)")
         lines.append("")
-        lines.append("| Package | Asset Name | Ch | Rate (Hz) | Duration | RMS | SoundCue Identity | SHA-256 (Source Vorbis) | Status |")
-        lines.append("|---------|------------|---:|----------:|---------:|----:|-------------------|--------------------------|--------|")
+        lines.append("| Package | Asset Name | Ch | Rate (Hz) | Duration | RMS | Confidence | SoundCue Identity | SHA-256 (Source Vorbis) | Status |")
+        lines.append("|---------|------------|---:|----------:|---------:|----:|-----------:|-------------------|--------------------------|--------|")
         for r in items[:50]: # Bounded table
-            cues = ", ".join(r['associated_cues'][:2]) if r['associated_cues'] else "Direct"
+            cues = ", ".join(r['associated_cues'][:2]) if r['associated_cues'] else "None"
             rms = f"{r['volume_rms']:.4f}" if r['volume_rms'] is not None else "-"
             sha_short = r['payload_sha256'][:12] + "..." if r['payload_sha256'] else "-"
-            lines.append(f"| {r['package']} | `{r['asset_name']}` | {r['channels']} | {r['sample_rate']} | {r['duration_sec']}s | {rms} | {cues} | `{sha_short}` | {r['decoding_status']} |")
+            conf = r.get('mapping_confidence', 'UNRESOLVED')
+            lines.append(f"| {r['package']} | `{r['asset_name']}` | {r['channels']} | {r['sample_rate']} | {r['duration_sec']}s | {rms} | **{conf}** | {cues} | `{sha_short}` | {r['decoding_status']} |")
         if len(items) > 50:
-            lines.append(f"| ... | *({len(items)-50} additional {cat} assets cataloged in JSON)* | | | | | | | |")
+            lines.append(f"| ... | *({len(items)-50} additional {cat} assets cataloged in JSON)* | | | | | | | | |")
         lines.append("")
         
     out_path.parent.mkdir(parents=True, exist_ok=True)
