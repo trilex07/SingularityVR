@@ -1,7 +1,7 @@
 # Singularity VR — Diegetic HUD V2 & Full Texture Remaster
 
 **Branch:** [`side/diegetic-hud-native`](https://github.com/trilex07/SingularityVR/tree/side/diegetic-hud-native)  
-**Commit:** [`2192ab2`](https://github.com/trilex07/SingularityVR/commit/2192ab2)
+**Commit:** [`e46bddf`](https://github.com/trilex07/SingularityVR/commit/e46bddf)
 
 ---
 
