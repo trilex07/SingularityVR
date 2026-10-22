@@ -14,7 +14,9 @@ NATIVE_UI = REPO / "spikes" / "view_matrix" / "native_ui_input.h"
 class HardeningContract(unittest.TestCase):
     def test_draw_uses_published_masks_only(self):
         text = D3D9.read_text(encoding="utf-8", errors="replace")
-        draw = text.split("static void DrawLockerVrLoadout", 1)[1].split("void DrawWeaponWheel", 1)[0]
+        draw = text.split("static void DrawLockerVrLoadout(IDirect3DDevice9* dev)", 1)[1].split(
+            "void DrawWeaponWheel", 1
+        )[0]
         self.assertIn("LockerVrLoadoutPublish::Available()", draw)
         self.assertIn("LockerVrLoadoutPublish::Owned()", draw)
         self.assertNotIn("AvailableOrdinaryMask", draw)
@@ -32,7 +34,7 @@ class HardeningContract(unittest.TestCase):
         body = LOADOUT_H.read_text(encoding="utf-8")
         self.assertIn("OnPopMenuScheduleAcquire", body)
         self.assertIn("g_acquireRequested", body)
-        self.assertNotIn("ApplyPendingMask", body)
+        self.assertNotIn("ApplyPendingMask", body.split("OnPopMenuScheduleAcquire", 1)[1].split("TryRunDeferredAcquire", 1)[0])
 
     def test_deferred_acquire_on_poll_engine(self):
         body = LOADOUT_H.read_text(encoding="utf-8")

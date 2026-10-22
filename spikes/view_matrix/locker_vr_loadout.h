@@ -78,15 +78,6 @@ inline void PublishFromEngine() {
     if (fn) LockerVrLoadoutIdentity::PinFactoryOffsetFromLiveSlot(fn);
 }
 
-inline void QueueEquipAllFromPublished() {
-    const uint32_t pending = LockerVrLoadoutPublish::Pending();
-    if (!pending) return;
-    InterlockedExchange(&g_queuedMask, static_cast<LONG>(pending));
-    InterlockedExchange(&g_uiQueuedMask, static_cast<LONG>(pending));
-    PublishFromEngine();
-    Log("locker vr loadout: EQUIP ALL queued pending=0x%X", pending);
-}
-
 inline void OnPopMenuScheduleAcquire() {
     if (!Enabled()) return;
     const uint32_t queued = static_cast<uint32_t>(InterlockedCompareExchange(&g_queuedMask, 0, 0));
