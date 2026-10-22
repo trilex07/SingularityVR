@@ -49,8 +49,20 @@ inline void LogGameSystemIdentityWitnessOnce(uintptr_t gs) {
     int count = -1;
     if (gs && PauseRttProbe::SafeRange(gs + kCatalogCountOff, 4))
         count = *reinterpret_cast<const int*>(gs + kCatalogCountOff);
-    Log("locker vr loadout gamesystem witness: base=%p slot=%p raw=%p gs=%p vt=%p vtExp=%p fn20c=%p count=%d",
-        (void*)base, (void*)slot, (void*)raw, (void*)gs, (void*)vt, (void*)vtExp, (void*)fn, count);
+    char objName[96]{};
+    char className[96]{};
+    constexpr int kObjClass = 0x34;
+    if (gs) {
+        NameOf(gs, objName, sizeof(objName));
+        if (PauseRttProbe::SafeRange(gs + kObjClass, 4)) {
+            const uintptr_t cls = PauseRttProbe::Pointer(gs + kObjClass);
+            if (cls) NameOf(cls, className, sizeof(className));
+        }
+    }
+    Log("locker vr loadout gamesystem witness: base=%p slot=%p raw=%p gs=%p vt=%p vtExp=%p fn20c=%p count=%d "
+        "obj=%s class=%s",
+        (void*)base, (void*)slot, (void*)raw, (void*)gs, (void*)vt, (void*)vtExp, (void*)fn, count,
+        objName[0] ? objName : "?", className[0] ? className : "?");
 }
 
 inline uintptr_t ExpectedInventoryManagerVtable() {
@@ -107,7 +119,7 @@ inline const char* AvailabilityBlockReason(uintptr_t pawn) {
     if (!pawn) return "no_pawn";
     const uintptr_t gs = GameSystemInstance();
     if (!gs || !PauseRttProbe::SafeRange(gs + kCatalogCountOff, 8)) return "availability_gamesystem";
-    if (!LockerVrLoadoutIdentity::GameSystemObjectIdentityOk(gs)) {
+    if (!LockerVrLoadoutIdentity::GameSystemCatalogSourceOk(gs)) {
         LogGameSystemIdentityWitnessOnce(gs);
         return "availability_gamesystem_identity";
     }

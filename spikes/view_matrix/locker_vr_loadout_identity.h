@@ -12,6 +12,7 @@
 #include <cstring>
 
 extern uintptr_t g_textLo, g_textHi;
+bool NameOf(uintptr_t obj, char* buf, size_t cap);
 
 namespace LockerVrLoadoutIdentity {
 
@@ -71,7 +72,26 @@ inline bool FactoryIdentityOk(uintptr_t fn) {
     return memcmp(reinterpret_cast<const void*>(fn), kFactoryPrologue, kPrologueBytes) == 0;
 }
 
-// Audited RvGameSystem identity: vtable+0x20C must resolve to pinned factory (not raw vtable VA equality).
+// Catalog / availability: live GGameSystem instance (native getter), RvGameSystem class, weapon catalog layout.
+inline bool GameSystemCatalogSourceOk(uintptr_t gs) {
+    constexpr int kObjClass = 0x34;
+    constexpr uintptr_t kCatalogDataOff = 0x160u;
+    constexpr uintptr_t kCatalogCountOff = 0x164u;
+    constexpr uintptr_t kCatalogStride = 0x50u;
+    if (!gs || !PauseRttProbe::SafeRange(gs + kCatalogCountOff, 8)) return false;
+    const int count = *reinterpret_cast<const int*>(gs + kCatalogCountOff);
+    if (count <= 0 || count > 32) return false;
+    const uintptr_t data = PauseRttProbe::Pointer(gs + kCatalogDataOff);
+    if (!data || !PauseRttProbe::SafeRange(data, kCatalogStride)) return false;
+    if (!PauseRttProbe::SafeRange(gs + kObjClass, 4)) return false;
+    const uintptr_t cls = PauseRttProbe::Pointer(gs + kObjClass);
+    if (!cls) return false;
+    char className[96]{};
+    if (!NameOf(cls, className, sizeof(className))) return false;
+    return !strcmp(className, "RvGameSystem");
+}
+
+// Mutation / factory: vtable+0x20C must resolve to pinned archetype factory (acquire only).
 inline bool GameSystemObjectIdentityOk(uintptr_t gs) {
     if (!gs || !PauseRttProbe::SafeRange(gs, 4)) return false;
     const uintptr_t vt = PauseRttProbe::Pointer(gs);

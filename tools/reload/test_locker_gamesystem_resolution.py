@@ -37,6 +37,32 @@ class GameSystemResolution(unittest.TestCase):
         self.assertIn("kGameSystemFactoryVtableOff", body)
         self.assertNotIn("expectedVt", body)
 
+    def test_availability_uses_catalog_source_not_factory_identity(self):
+        ident = IDENTITY_H.read_text(encoding="utf-8")
+        self.assertIn("GameSystemCatalogSourceOk", ident)
+        runtime = RUNTIME_H.read_text(encoding="utf-8")
+        avail = runtime.split("AvailabilityBlockReason", 1)[1].split("AvailabilitySourcesReady", 1)[0]
+        self.assertIn("GameSystemCatalogSourceOk", avail)
+        self.assertNotIn("GameSystemObjectIdentityOk", avail)
+        acquire = (REPO / "spikes" / "view_matrix" / "locker_vr_loadout_acquire.h").read_text(encoding="utf-8")
+        self.assertIn("GameSystemObjectIdentityOk", acquire)
+
+    def test_psvr2_b3bec91_witness_values_match_pe_vtables(self):
+        """2026-10-22 PSVR2 @ b3bec91: live gs vtable was 0x019CDBF8, not pinned 0x01BCF9C4."""
+        from inspect_native_reload import PE
+
+        exe = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries\Singularity.exe")
+        if not exe.is_file():
+            self.skipTest("Singularity.exe missing")
+        pe = PE(exe.read_bytes())
+        live_vt = 0x019CDBF8
+        pinned_vt = 0x01BCF9C4
+        live_fn = struct.unpack("<I", pe.read(live_vt + 0x20C, 4))[0]
+        pinned_fn = struct.unpack("<I", pe.read(pinned_vt + 0x20C, 4))[0]
+        self.assertEqual(live_fn, 0x00FD2320)
+        self.assertEqual(pinned_fn, 0x00F85E30)
+        self.assertNotEqual(live_vt, pinned_vt)
+
     def test_native_getgamesystem_loads_relocated_global_immediate(self):
         if not TEXT_PATH.is_file():
             self.skipTest("archived text capture missing")
