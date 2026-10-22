@@ -17457,8 +17457,8 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     const bool tmdGloves=(verts==7444 || verts==2626) && first==0 && triangles==4402;
     const bool tmdBase=(verts==7444 || verts==4818 || verts==4781) && first==13206 && triangles==7704;
     const bool tmdExtra=(verts==7444 || verts==37) && first==36318 && triangles==17;
-    if (tmdBase && InterlockedCompareExchange(&g_gloveIsolate, 0, 0) >= 2)
-        return 0;
+    // tmdBase is mixed hardware/arm material. The draw hook below filters its
+    // original indices after this palette receives the wrist delta.
     // These exact sections contain both model-side hands.  They must receive
     // both controller deltas even if the surrounding foreground classifier
     // temporarily labels the draw as riding the gun/off-hand transform.
@@ -17731,9 +17731,12 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             // the SAME rigid correction as the anatomical left wrist. Leaving
             // it native here detached it from the independently tracked glove.
             // Apply to each original skin matrix: hinge/disc animation survives.
-            if((tmdBase||tmdGloves||tmdExtra)&&handValid[0])
+            // This hardware is attached to the mesh's physical LEFT wrist.
+            // In left-handed mode that wrist consumes the aim delta instead of
+            // the off-hand delta; its validity remains physical side 0.
+            if((tmdBase||tmdGloves||tmdExtra)&&handValid[gloveisolate::TmdHardwareTrackedSide()])
                 skeletal::TransformBone(&changed[b*3],&saved[b*3],
-                    OffHand()==0?delta:rightDelta);
+                    gloveisolate::TmdHardwareDelta(OffHand())==0?delta:rightDelta);
             continue;
         }
         if (rigidGloves &&
@@ -19918,7 +19921,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // The exact range gate prevents this from touching world geometry or a
     // different first-person mesh that happens to share a vertex count.
     const bool tmdArmSection = numVertices==7444 && startIndex==13206 && primCount==7704;
-    if (g_armIkMode == 2 && tmdSurgeryOn && tmdArmSection) {
+    if (g_armIkMode == 2 && tmdSurgeryOn && tmdArmSection &&
+        Rd(g_gloveIsolate) < 2) {
         g_thisDrawMoved = 0;
         return D3D_OK;
     }
@@ -19932,7 +19936,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     UINT segStart[kTmdArmSlots * 2 + 2] = { startIndex };
     UINT segPrims[kTmdArmSlots * 2 + 2] = { primCount };
     int  nSeg = 1;
-    if (tmdSurgeryOn && primCount > 0 && TmdTriSlotApplies(numVertices))
+    // In hands-only mode the verified original-index hardware cut owns this
+    // mixed section. Do not let legacy TMD range surgery split it first and
+    // accidentally fall through to a full forearm draw.
+    if (tmdSurgeryOn && primCount > 0 && TmdTriSlotApplies(numVertices) &&
+        !gloveisolate::TmdHardwareCutApplies((int)Rd(g_gloveIsolate),numVertices,startIndex,primCount))
         nSeg = TmdTriSegments(numVertices, startIndex, primCount,
                               segStart, segPrims, (int)_countof(segStart));
     // ---- ⭐ run 237f: collapse a bone range for this draw, then put it back ----
@@ -20099,6 +20107,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         t == D3DPT_TRIANGLELIST && (numVertices == 3314 || numVertices == 2924) &&
         startIndex == 0 && primCount == 4830 && nSeg == 1 &&
         segStart[0] == 0 && segPrims[0] == 4830;
+    const bool isolateTmdHardware = independentRegs && g_independentHands &&
+        t == D3DPT_TRIANGLELIST &&
+        gloveisolate::TmdHardwareCutApplies((int)Rd(g_gloveIsolate),numVertices,startIndex,primCount) &&
+        nSeg == 1 && segStart[0] == startIndex && segPrims[0] == primCount;
     if (isolateNoTmdFaces) {
         static LONG reportedFaces = 0;
         if (InterlockedCompareExchange(&reportedFaces, 1, 0) == 0)
@@ -20168,6 +20180,14 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 const HRESULT h = g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
                     startIndex + run.first * 3, run.last - run.first + 1);
                 if (FAILED(h) && SUCCEEDED(hr)) hr = h;
+            }
+            return hr;
+        }
+        if (isolateTmdHardware) {
+            for (const auto& run : gloveisolate::kTmdHardwareFaces) {
+                const HRESULT h = g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,
+                    startIndex + run.first * 3,run.last-run.first+1);
+                if (FAILED(h) && SUCCEEDED(hr)) hr=h;
             }
             return hr;
         }
@@ -25262,10 +25282,8 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                         Log("weapon measured aim: fresh=%d rigid=%d from=(%.6f,%.6f,%.6f) to=(%.6f,%.6f,%.6f); native spread retained",
                             measured?1:0,aligned?1:0,from[0],from[1],from[2],to[0],to[1],to[2]);
                 }
-                // The measured-muzzle witness covers the three long guns, NOT Centurion.
-                // Do not guess a Centurion barrel socket or rotate its damage ray here.
-                // This bounded receipt distinguishes controller/trace disagreement from
-                // a mesh-only alignment error before either path is changed.
+                // Read-only Centurion receipt: the original muzzle_flash bone
+                // now feeds the same measured-muzzle witness as the long guns.
                 if(g_centurionAimProbe&&am==11&&!scoped&&Rd(g_gunVerts)==5799&&
                    Rd(g_weaponObj)&&g_playerPawn&&!Rd(g_weaponHolstered)){
                     static unsigned receipts=0;

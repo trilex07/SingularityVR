@@ -26,7 +26,7 @@ int main() {
     Expect(!gloveisolate::HandsOnly(0, 1), "census mode does not hide the arm");
 
     Expect(gloveisolate::IsArmFleshSection(7444, 13206, 7704),
-           "the long TMD forearm section is the hidden arm");
+           "the mixed TMD hardware/forearm section is identified exactly");
     Expect(gloveisolate::IsArmFleshSection(4818, 13206, 7704),
            "the gauntlet forearm section is the same hidden draw");
     Expect(!gloveisolate::IsArmFleshSection(7444, 0, 4402),
@@ -35,6 +35,27 @@ int main() {
            "the pistol glove section is not the hidden arm");
     Expect(gloveisolate::IsStrayFingerSection(390, 14490, 674),
            "the detached sleeve stays a separate hidden draw");
+    Expect(gloveisolate::TmdHardwareFaceCount()==6527,
+           "TMD hardware remains visible without 1177 arm faces");
+    Expect(gloveisolate::TmdHardwareCutApplies(2,7444,13206,7704)&&
+           gloveisolate::TmdHardwareCutApplies(3,4818,13206,7704)&&
+           !gloveisolate::TmdHardwareCutApplies(1,7444,13206,7704)&&
+           !gloveisolate::TmdHardwareCutApplies(2,7444,0,4402),
+           "hardware filter is gated to the exact mixed section in isolate mode");
+    unsigned previous=0;bool runsValid=true;
+    for(const auto& run:gloveisolate::kTmdHardwareFaces){
+        if(run.first<previous||run.last<run.first||run.last>=7704)runsValid=false;
+        previous=run.last+1;
+    }
+    Expect(runsValid,"TMD hardware face runs are disjoint and within material 1");
+    Expect(gloveisolate::TmdHardwareTrackedSide()==0&&
+           gloveisolate::TmdHardwareDelta(0)==0&&
+           gloveisolate::TmdHardwareDelta(1)==1,
+           "native left TMD hardware shares physical left wrist delta in both handedness modes");
+    Expect(gloveisolate::IsTmdDevice("tmd_base")&&gloveisolate::IsTmdDevice("hinge1")&&
+           gloveisolate::IsTmdDevice("rail_rot")&&gloveisolate::IsTmdDevice("nixie1")&&
+           gloveisolate::IsTmdDevice("faceplate")&&gloveisolate::IsTmdDevice("wheel1"),
+           "original animated TMD palette entries remain hardware");
 
     gloveisolate::Mat4 stump;
     const float wrist[3] = { 10.0f, 0.0f, 0.0f };

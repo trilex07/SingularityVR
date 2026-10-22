@@ -53,11 +53,37 @@ inline bool IsStrayFingerSection(unsigned verts, unsigned first, unsigned triang
     return (verts == 390u || verts == 3314u) && first == 14490u && triangles == 674u;
 }
 
-// Skinned forearm section (7704 tris @ first 13206). Hidden in gloves-only mode instead
-// of collapsing palette entries (collapse stretches blended vertices).
+// Material 1 of ch_inview_tmd_mesh is MIXED: 6527 hardware-only faces and
+// 1177 arm/sleeve faces. ActorX's entire 12123-face index array was matched
+// byte-for-byte (apart from its 0/1 winding swap) to RvGame.decompressed.xxx.
+// These material-1-relative runs retain only faces whose three wedges are
+// weighted exclusively to tmd_base or its named hardware children. Keep the
+// original index buffer and native material; draw only these runs in mode 2.
+inline constexpr FaceRun kTmdHardwareFaces[] = {
+    {0,0},{2,9},{13,27},{63,66},{73,78},{86,90},{92,134},{137,202},
+    {204,204},{268,269},{533,536},{546,550},{558,565},{577,577},
+    {588,591},{598,644},{997,1016},{1022,1022},{1135,1242},
+    {1254,1772},{1776,1781},{1818,1818},{1822,1828},{1831,1863},
+    {1867,1964},{1975,1977},{2021,2026},{2031,2049},{2057,2308},
+    {2312,2316},{2320,2405},{2409,2418},{2422,3968},{3970,3971},
+    {3976,3980},{3986,3992},{3997,6889},{6894,6894},{6901,6902},
+    {6943,7227},{7254,7367},{7382,7469},{7493,7511},{7514,7541},
+    {7543,7543},{7547,7556},{7560,7561},{7563,7622},{7635,7703}
+};
+inline constexpr unsigned TmdHardwareFaceCount(){
+    unsigned n=0;for(const auto& run:kTmdHardwareFaces)n+=run.last-run.first+1;return n;
+}
+static_assert(TmdHardwareFaceCount()==6527,"preserve measured TMD hardware cut");
+inline int TmdHardwareTrackedSide() { return 0; } // original rig: physical left wrist
+inline int TmdHardwareDelta(int offHand) { return offHand==0 ? 0 : offHand==1 ? 1 : -1; }
+
+// Exact mixed section identity, never a vertex-count-only match.
 inline bool IsArmFleshSection(unsigned verts, unsigned first, unsigned triangles) {
     return (verts == 7444u || verts == 4818u || verts == 4781u) && first == 13206u &&
            triangles == 7704u;
+}
+inline bool TmdHardwareCutApplies(int isolateMode,unsigned verts,unsigned first,unsigned triangles){
+    return isolateMode>=2 && IsArmFleshSection(verts,first,triangles);
 }
 
 // Hands-only rendering: gloves stay on the controllers, the long forearm section
