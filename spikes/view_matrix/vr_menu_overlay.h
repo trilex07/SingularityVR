@@ -412,7 +412,14 @@ void UpdateVrUiPointer(float,bool available) {
         uipointer::CompactNativePause(g_vrMenuPanel.plane);
         g_vrMenuPanel.canvas = uipointer::CanvasMap{};
     }
-    bool valid=g_vrMenuPanelValid && g_vrMenuPanel.Ray({pos.x,pos.y,pos.z},VrUiRotate(g_handAimOrientation[1],{0,0,-1}),hit);
+    const uipointer::V rayOrigin{pos.x,pos.y,pos.z};
+    const uipointer::V rayDirection=VrUiRotate(g_handAimOrientation[1],{0,0,-1});
+    bool valid=g_vrMenuPanelValid && g_vrMenuPanel.Ray(rayOrigin,rayDirection,hit);
+    // The loadout sits beside the native GFx canvas. Extend the ray only for
+    // an actual loadout target, never for the native game's menu dispatch.
+    if(!valid && station && Rd(g_lockerVrLoadout) && Rd(g_keepAcquiredWeapons) &&
+       LockerVrLoadout::IsEquipPage() && g_vrMenuPanel.RayBesideCanvas(rayOrigin,rayDirection,hit))
+        valid=LockerLoadoutScreen::HitCanvas(hit.u,hit.v,nullptr)!=LockerLoadoutScreen::PointerHit::None;
     if(valid){
         InterlockedIncrement(&g_vrCounters.vrPointerUpdates);
         g_vrUiHit=hit;PublishVrUiPair((LONG)lroundf(hit.u*1000000),(LONG)lroundf(hit.v*1000000));
@@ -698,7 +705,8 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
     if (menu && g_vrMenuPanelValid) {
         LONG pointerU=500000,pointerV=500000;
         ReadVrUiPair(pointerU,pointerV);
-        if(!panel&&Rd(g_vrMenuClass)==4&&Rd(g_contextCursorNative))
+        if(!panel&&Rd(g_vrMenuClass)==4&&Rd(g_contextCursorNative)&&
+           pointerU>=0&&pointerU<=1000000&&pointerV>=0&&pointerV<=1000000)
             ReadVrUiDispatched(pointerU,pointerV);
         const uipointer::V endpoint=uipointer::PointAtCanvasUv(
             g_vrMenuPanel.plane,pointerU/1000000.0f,pointerV/1000000.0f);

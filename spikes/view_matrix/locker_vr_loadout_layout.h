@@ -6,7 +6,6 @@
 
 namespace locker_loadout_layout {
 
-constexpr float kAnchorU = 0.93f;
 constexpr float kAnchorV = 0.50f;
 constexpr float kIconHalfPx = 42.f;
 constexpr float kTileSpacingXPx = 110.f;
@@ -49,14 +48,32 @@ inline bool ProjectCanvasUvToScreen(const PanelProjectParams& p, float canvasU, 
     return std::isfinite(sx) && std::isfinite(sy);
 }
 
+// The native locker occupies canvas U=[0,1]. Place our panel beside its
+// projected edge, not at the edge of the entire eye backbuffer. The controller
+// ray is allowed to reach this adjacent area only while targeting this panel.
+inline bool ProjectAdjacentAnchor(const PanelProjectParams& p, float panelHalfW, float& sx, float& sy) {
+    float left = 0, right = 0, unusedY = 0;
+    if (!ProjectCanvasUvToScreen(p, 0.f, kAnchorV, left, unusedY) ||
+        !ProjectCanvasUvToScreen(p, 1.f, kAnchorV, right, sy) || right <= left)
+        return false;
+    const float eyeStart = p.eye * p.halfW;
+    const float comfortLeft = eyeStart + p.halfW * .10f;
+    const float comfortRight = eyeStart + p.halfW * .90f;
+    const float gap = kMarginPx;
+    const float besideRight = right + gap + panelHalfW;
+    const float besideLeft = left - gap - panelHalfW;
+    if (besideRight + panelHalfW <= comfortRight) sx = besideRight;
+    else if (besideLeft - panelHalfW >= comfortLeft) sx = besideLeft;
+    else return false; // Never put an apparently clickable panel over native GFx.
+    return true;
+}
+
 inline void ClampEyePanel(int eye, float fullW, float fullH, float halfW, float& cx, float& cy, float halfPanelW,
                           float halfPanelH, float margin) {
-    const float eyeMinX = eye == 0 ? margin : halfW + margin;
-    const float eyeMaxX = eye == 0 ? halfW - margin : fullW - margin;
+    const float eyeMinX = eye * halfW + std::max(margin, halfW * .10f);
+    const float eyeMaxX = (eye + 1) * halfW - std::max(margin, halfW * .10f);
     const float minY = margin + halfPanelH;
     const float maxY = fullH - margin - halfPanelH;
-    const float preferredCx = eyeMaxX - halfPanelW - margin * .5f;
-    if (cx < preferredCx) cx = preferredCx;
     if (cx - halfPanelW < eyeMinX) cx = eyeMinX + halfPanelW;
     if (cx + halfPanelW > eyeMaxX) cx = eyeMaxX - halfPanelW;
     if (cy - halfPanelH < minY - halfPanelH) cy = minY;
@@ -138,11 +155,11 @@ inline bool ComputeLayout(ComputeParams p, Layout& out) {
     }
 
     const float bx = p.anchorSx;
-    const float by = p.anchorSy + panelHalfH - 22.f;
     const int labelLen = EquipLabelCharCount(p.equipLabel);
     const int px = p.fontPx;
     const int bw = labelLen * (kGlyphW + 1) * px;
     const int bh = kGlyphH * px + 4;
+    const float by = p.anchorSy + panelHalfH - bh - 6.f;
     out.equipAll = {bx - bw * .5f - 4.f, by - 2.f, bx + bw * .5f + 4.f, by + (float)bh};
     return true;
 }

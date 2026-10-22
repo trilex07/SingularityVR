@@ -42,7 +42,6 @@ inline volatile LONG g_acquireRequested = 0;
 inline volatile LONG g_focusGeneration = 0;
 
 namespace Layout {
-constexpr float kAnchorU = locker_loadout_layout::kAnchorU;
 constexpr float kAnchorV = locker_loadout_layout::kAnchorV;
 constexpr int kFontPx = 3;
 constexpr float kIconHalfPx = locker_loadout_layout::kIconHalfPx;

@@ -72,7 +72,8 @@ inline bool UnmapCanvas(int x,int y,unsigned width,unsigned height,const CanvasM
 // u/v address the ORIGINAL GFx logical canvas, before inset/stereo remap.
 // eyeU/eyeV address its visible inset on one eye for a matching reticle.
 // Out-of-panel rays fail rather than clamp onto an unintended menu item.
-inline bool Intersect(V origin,V direction,const Plane& p,unsigned canvasWidth,unsigned canvasHeight,Hit& out){
+inline bool Intersect(V origin,V direction,const Plane& p,unsigned canvasWidth,unsigned canvasHeight,Hit& out,
+                      float minU=0.f,float maxU=1.f){
     if(!Finite(origin)||!Finite(p.centre)||!Finite(p.right)||!Finite(p.up)||!Finite(p.normal)||!std::isfinite(p.halfWidth)||!std::isfinite(p.halfHeight)||p.halfWidth<=0||p.halfHeight<=0||!std::isfinite(p.inset)||p.inset<=0||p.inset>1||canvasWidth<2||canvasHeight<2||canvasWidth>10000000||canvasHeight>10000000)return false;
     if(std::fabs(Dot(p.normal,p.normal)-1)>1e-3f||std::fabs(Dot(p.right,p.right)-1)>1e-3f||std::fabs(Dot(p.up,p.up)-1)>1e-3f||std::fabs(Dot(p.normal,p.right))>1e-3f||std::fabs(Dot(p.normal,p.up))>1e-3f||std::fabs(Dot(p.right,p.up))>1e-3f)return false;
     V dir;if(!Unit(direction,dir))return false;
@@ -81,9 +82,12 @@ inline bool Intersect(V origin,V direction,const Plane& p,unsigned canvasWidth,u
     Hit h;h.world=origin+dir*t;h.distance=t;V relative=h.world-p.centre;
     const float x=Dot(relative,p.right)/p.halfWidth,y=Dot(relative,p.up)/p.halfHeight;
     h.eyeU=.5f+.5f*x;h.eyeV=.5f-.5f*y;h.u=.5f+.5f*x/p.inset;h.v=.5f-.5f*y/p.inset;
-    if(!Finite(h.world)||!std::isfinite(h.u)||!std::isfinite(h.v)||h.u<-.000001f||h.u>1.000001f||h.v<-.000001f||h.v>1.000001f)return false;
-    h.u=std::max(0.f,std::min(1.f,h.u));h.v=std::max(0.f,std::min(1.f,h.v));
-    if(!CanvasPixel(h.u,h.v,canvasWidth,canvasHeight,h.pixelX,h.pixelY))return false;out=h;return true;
+    if(!Finite(h.world)||!std::isfinite(h.u)||!std::isfinite(h.v)||
+       !std::isfinite(minU)||!std::isfinite(maxU)||minU>maxU||
+       h.u<minU-.000001f||h.u>maxU+.000001f||h.v<-.000001f||h.v>1.000001f)return false;
+    h.u=std::max(minU,std::min(maxU,h.u));h.v=std::max(0.f,std::min(1.f,h.v));
+    if(!CanvasPixel(std::max(0.f,std::min(1.f,h.u)),h.v,canvasWidth,canvasHeight,h.pixelX,h.pixelY))return false;
+    out=h;return true;
 }
 // One panel owns geometry and texture crop for rendering and interaction.
 struct VrMenuPanel {
@@ -96,6 +100,9 @@ struct VrMenuPanel {
     }
     bool Ray(V origin,V direction,Hit& hit) const {
         return Intersect(origin,direction,plane,2,2,hit);
+    }
+    bool RayBesideCanvas(V origin,V direction,Hit& hit) const {
+        return Intersect(origin,direction,plane,2,2,hit,-.5f,1.5f);
     }
 };
 

@@ -2,92 +2,86 @@
 #include <cmath>
 #include <cstdio>
 
-static int g_fails = 0;
-static void Expect(bool cond, const char* name) {
-    if (cond) {
-        std::printf("PASS %s\n", name);
-        return;
+using namespace locker_loadout_layout;
+static int fails = 0;
+static void Expect(bool ok, const char* label) {
+    if (!ok) { std::printf("FAIL %s\n", label); ++fails; }
+}
+
+static void TestEye(int eye, float yaw) {
+    constexpr float fullW = 5264.f, fullH = 2684.f, halfW = fullW * .5f;
+    const float a = yaw * 3.14159265f / 180.f;
+    const uipointer::V forward{std::sin(a), 0, -std::cos(a)};
+    const uipointer::V right{std::cos(a), 0, std::sin(a)};
+    const uipointer::V up{0, 1, 0};
+    uipointer::Plane plane{};
+    Expect(uipointer::HeadPlane({}, forward, right, up, 1.4f, 1.f, 1.f, .42f, plane), "head plane");
+    EyeProjector ep{};
+    ep.pos = right * (eye ? .032f : -.032f);
+    ep.fwd = forward; ep.right = right; ep.up = up;
+    ep.tanHalfX = ep.tanHalfY = 1.f;
+    const PanelProjectParams pp{&plane, eye, halfW, fullH, &ep};
+    float left = 0, rightEdge = 0, ignored = 0;
+    Expect(ProjectCanvasUvToScreen(pp, 0.f, .5f, left, ignored), "left edge projection");
+    Expect(ProjectCanvasUvToScreen(pp, 1.f, .5f, rightEdge, ignored), "right edge projection");
+
+    auto MakeLayout = [&](bool ready) {
+        ComputeParams cp{};
+        cp.eye = eye; cp.fullW = fullW; cp.fullH = fullH; cp.halfW = halfW;
+        cp.dataReady = ready;
+        const float halfPanel = ready ? kTileSpacingXPx * .5f + kIconHalfPx + 14.f
+                                      : 15.f * (kGlyphW + 1) * cp.fontPx * .5f;
+        Expect(ProjectAdjacentAnchor(pp, halfPanel, cp.anchorSx, cp.anchorSy), "project adjacent anchor");
+        Layout layout{};
+        Expect(ComputeLayout(cp, layout), "layout built");
+        return layout;
+    };
+    const Layout layout = MakeLayout(true);
+    const Layout loading = MakeLayout(false);
+    const float comfortRight = (eye + 1) * halfW - halfW * .10f;
+    Expect(layout.panel.x0 > rightEdge, "no native menu overlap");
+    Expect(layout.panel.x1 <= comfortRight && layout.panel.y0 >= kMarginPx &&
+           layout.panel.y1 <= fullH - kMarginPx, "panel inside comfort bounds");
+    Expect(loading.loadingLabel.x0 > rightEdge && loading.loadingLabel.x1 <= comfortRight,
+           "loading label visible beside menu");
+    Expect(layout.equipAll.x0 >= layout.panel.x0 && layout.equipAll.x1 <= layout.panel.x1 &&
+           layout.equipAll.y0 >= layout.panel.y0 && layout.equipAll.y1 <= layout.panel.y1,
+           "equip button inside panel");
+    float topX = 0, topY = 0, bottomX = 0, bottomY = 0;
+    ProjectCanvasUvToScreen(pp, .5f, 0.f, topX, topY);
+    ProjectCanvasUvToScreen(pp, .5f, 1.f, bottomX, bottomY);
+    auto CheckHit = [&](float sx, float sy, HitKind expected, int expectedTile) {
+        const float u = (sx - left) / (rightEdge - left);
+        const float v = (sy - topY) / (bottomY - topY);
+        const uipointer::V target = uipointer::PointAtCanvasUv(plane, u, v);
+        uipointer::Hit hit{};
+        Expect(uipointer::Intersect(ep.pos, target - ep.pos, plane, 2, 2, hit, -.5f, 1.5f),
+               "extended controller ray");
+        float projectedX = 0, projectedY = 0;
+        Expect(ProjectCanvasUvToScreen(pp, hit.u, hit.v, projectedX, projectedY), "project ray target");
+        Expect(std::fabs(projectedX - sx) < .1f && std::fabs(projectedY - sy) < .1f,
+               "laser/render alignment");
+        int tile = -1;
+        Expect(HitTestPointer(layout, projectedX, projectedY, tile) == expected && tile == expectedTile,
+               "correct hit target");
+    };
+    for (int i = 0; i < 4; ++i) {
+        Expect(layout.tiles[i].x0 >= layout.panel.x0 && layout.tiles[i].x1 <= layout.panel.x1 &&
+               layout.tiles[i].y0 >= layout.panel.y0 && layout.tiles[i].y1 <= layout.panel.y1,
+               "tile inside panel");
+        CheckHit(layout.tileCenterX[i], layout.tileCenterY[i], HitKind::Tile, i);
     }
-    std::printf("FAIL %s\n", name);
-    ++g_fails;
+    float eqX = 0, eqY = 0;
+    layout.equipAll.Center(eqX, eqY);
+    CheckHit(eqX, eqY, HitKind::EquipAll, -1);
+    std::printf("eye=%d yaw=%.0f nativeRight=%.1f panel=[%.1f,%.1f] equip=[%.1f,%.1f] loading=[%.1f,%.1f]\n",
+                eye, yaw, rightEdge, layout.panel.x0, layout.panel.x1,
+                layout.equipAll.x0, layout.equipAll.x1,
+                loading.loadingLabel.x0, loading.loadingLabel.x1);
 }
 
 int main() {
-    using namespace locker_loadout_layout;
-
-    ComputeParams cp{};
-    cp.fullW = 3840.f;
-    cp.fullH = 2160.f;
-    cp.halfW = cp.fullW * .5f;
-    cp.eye = 1;
-    cp.anchorSx = 1200.f;
-    cp.anchorSy = 900.f;
-    cp.dataReady = true;
-    cp.pending = true;
-    cp.equipLabel = EquipLabelKind::EquipAll;
-
-    cp.eye = 0;
-    cp.anchorSx = 1770.f;
-    cp.anchorSy = 1080.f;
-    Layout base{};
-    ComputeLayout(cp, base);
-    const float equipCx0 = (base.equipAll.x0 + base.equipAll.x1) * .5f;
-
-    cp.anchorSx = 1780.f;
-    Layout shifted{};
-    ComputeLayout(cp, shifted);
-    const float equipCx1 = (shifted.equipAll.x0 + shifted.equipAll.x1) * .5f;
-    Expect(std::fabs(shifted.anchorSx - base.anchorSx - 10.f) < 0.01f, "anchor clamp preserves +10px shift in band");
-    Expect(std::fabs(equipCx1 - equipCx0 - 10.f) < 0.01f, "equip rect shifts +10px with anchor");
-
-    Layout& clamped = shifted;
-    for (int i = 0; i < 4; ++i) {
-        float cx = 0, cy = 0;
-        clamped.tiles[i].Center(cx, cy);
-        Expect(clamped.tiles[i].Contains(clamped.tileCenterX[i], clamped.tileCenterY[i]),
-               "tile center inside clickable rect");
-        Expect(std::fabs(cx - clamped.tileCenterX[i]) < 1e-3f && std::fabs(cy - clamped.tileCenterY[i]) < 1e-3f,
-               "tile center matches rect center");
-    }
-    float eqCx = 0, eqCy = 0;
-    clamped.equipAll.Center(eqCx, eqCy);
-    Expect(clamped.equipAll.Contains(eqCx, eqCy), "equip label center inside equip rect");
-
-    Expect(clamped.panel.x0 >= kMarginPx - 1.f, "panel inside left eye min X");
-    Expect(clamped.panel.x1 <= cp.halfW - kMarginPx + 1.f, "panel inside left eye max X");
-    Expect(clamped.panel.y0 >= kMarginPx - 1.f && clamped.panel.y1 <= cp.fullH - kMarginPx + 1.f,
-           "panel inside vertical viewport");
-
-    int tile = -1;
-    Expect(HitTestPointer(clamped, clamped.tileCenterX[0], clamped.tileCenterY[0], tile) == HitKind::Tile &&
-               tile == 0,
-           "pointer at tile center hits tile 0");
-    Expect(HitTestPointer(clamped, eqCx, eqCy, tile) == HitKind::EquipAll, "pointer at equip center hits equip");
-
-    cp.dataReady = false;
-    Layout loading{};
-    ComputeLayout(cp, loading);
-    Expect(loading.loadingLabel.x1 - loading.loadingLabel.x0 > 0.f, "loading label has width");
-    Expect(loading.equipAll.x1 <= loading.equipAll.x0, "loading layout has no equip rect");
-
-    for (int eye : {0, 1}) {
-        ComputeParams lp{};
-        lp.eye = eye;
-        lp.fullW = 3840.f;
-        lp.fullH = 2160.f;
-        lp.halfW = lp.fullW * .5f;
-        lp.anchorSx = eye == 0 ? 400.f : 3400.f;
-        lp.anchorSy = 1080.f;
-        lp.dataReady = false;
-        Layout loadEye{};
-        ComputeLayout(lp, loadEye);
-        const float eyeMinX = eye == 0 ? kMarginPx : lp.halfW + kMarginPx;
-        const float eyeMaxX = eye == 0 ? lp.halfW - kMarginPx : lp.fullW - kMarginPx;
-        Expect(loadEye.loadingLabel.x0 >= eyeMinX - 0.5f, "loading label min X inside eye");
-        Expect(loadEye.loadingLabel.x1 <= eyeMaxX + 0.5f, "loading label max X inside eye");
-        Expect(loadEye.loadingLabel.y0 >= kMarginPx - 0.5f, "loading label min Y inside viewport");
-        Expect(loadEye.loadingLabel.y1 <= lp.fullH - kMarginPx + 0.5f, "loading label max Y inside viewport");
-    }
-
-    return g_fails == 0 ? 0 : 1;
+    for (float yaw : {0.f, 25.f, -25.f})
+        for (int eye = 0; eye < 2; ++eye) TestEye(eye, yaw);
+    return fails ? 1 : 0;
 }

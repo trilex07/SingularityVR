@@ -12211,7 +12211,7 @@ void SyncXRInput(XrTime displayTime) {
         bool lockerConsumed=false;
         if(lockerPressed)lockerConsumed=LockerVrLoadout::OnPointerSelect(pointerUf,pointerVf);
         if(!lockerUi)lockerLoadoutClick.Update(false,false);
-        if(selectPressed&&!lockerConsumed)InterlockedExchange(&g_vrUiDown,1);
+        if(selectPressed&&!lockerConsumed&&!lockerTarget)InterlockedExchange(&g_vrUiDown,1);
         else if((fireHand==1?rt:lt)<=.5f||!Rd(g_vrUiValid)||lockerConsumed||lockerTarget)
             InterlockedExchange(&g_vrUiDown,0);
         rt=lt=0; // Menu selection cannot publish gameplay trigger state.
@@ -28869,9 +28869,11 @@ static bool LockerLoadoutBuildLayoutForEye(int eye, float fullW, float fullH, bo
     const float halfW = fullW * .5f;
     locker_loadout_layout::PanelProjectParams pp{&g_vrMenuPanel.plane, eye, halfW, fullH, &ep};
     float ax = 0, ay = 0;
-    if (!locker_loadout_layout::ProjectCanvasUvToScreen(pp, locker_loadout_layout::kAnchorU,
-                                                          locker_loadout_layout::kAnchorV, ax, ay))
-        return false;
+    const float halfPanelW = dataReady ? locker_loadout_layout::kTileSpacingXPx * .5f +
+                                                locker_loadout_layout::kIconHalfPx + 14.f
+                                          : 15.f * (locker_loadout_layout::kGlyphW + 1) *
+                                                LockerVrLoadout::Layout::kFontPx * .5f;
+    if (!locker_loadout_layout::ProjectAdjacentAnchor(pp, halfPanelW, ax, ay)) return false;
     locker_loadout_layout::ComputeParams cp{};
     cp.eye = eye;
     cp.fullW = fullW;
