@@ -53,6 +53,10 @@ GloveIsolate=2
 GloveFaceFilter=0
 ; Independent hands on tracked controllers (required for glove face filter + palette path).
 IndependentHandsPrototype=1
+; Experimental original TMD glove + short forearm composition. Requires
+; GloveNativeEnabled=1, NativeGloveCuffClosure=1 and a private SVTG cache.
+; Default OFF; leaving this at 0 preserves the accepted TMD hardware cut.
+TmdShortGauntlet=0
 
 [PSVR2]
 ; Opt-in only. Requires tools/psvr2-bridge/run-session.ps1 and a working SteamVR PSVR2 driver.

@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+## 2026-10-23 short TMD gauntlet — SIDE L1/L2 candidate, physical OPEN
+
+Separate default-OFF `TmdShortGauntlet` composes the original native glove/cuff,
+all 6527 animated hardware faces and 560 original short-sleeve faces plus a
+23-face proximal cap. It excludes the 280-face long forearm island and draws
+the mixed section in one indexed draw per eye. Private source/index identity,
+geometry and decoder tests PASS; x86 PE32 `/O2` build PASS. Steam untouched.
+Native material appearance, wrist seam, tracking and PSVR2 comfort remain
+UNKNOWN. See docs/tmd-short-gauntlet-model.md.
+
 ## 2026-10-22 NIS physical PASS; station presentation L1/L2 PASS
 
 User confirms NIS works. Smaller/centred station RTT presentation now shares

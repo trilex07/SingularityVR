@@ -142,6 +142,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "xr_capture_alpha.h"
 #include "glove_native.h"
 #include "native_glove_cuffs.h"
+#include "tmd_short_gauntlet.h"
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include "bink_audio_observation.h"
 #include "bink_intro_audio.h"
@@ -6539,6 +6540,8 @@ static bool g_gloveExperiment=false,g_gloveCpuAttempted=false;
 static bool g_nativeGloveExperiment=false,g_nativeGlovePoseThisDraw=false;
 static nativegloves::Renderer g_nativeGloveRenderer;
 static glovecuffs::Renderer g_nativeCuffRenderer;
+static tmdgauntlet::Renderer g_tmdShortGauntletRenderer;
+static bool g_tmdShortGauntlet=false;
 static bool g_nativeCuffClosure=false;
 static bool NativeGlovesEligible();
 static bool NativeKnifeOffHandEligible();
@@ -10261,6 +10264,13 @@ bool InitXRInput() {
         try{cuffLoaded=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation\\native_cuffs.svnc",cuffPath)&&g_nativeCuffRenderer.Load(cuffPath);}
         catch(...){cuffLoaded=false;}
         g_nativeCuffClosure=IniPath(ini)&&GetPrivateProfileIntA("Render","NativeGloveCuffClosure",1,ini)!=0;
+        char gauntletPath[MAX_PATH]{};bool gauntletLoaded=false;
+        try {gauntletLoaded=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation\\tmd_short_gauntlet.svtg",gauntletPath)&&
+            g_tmdShortGauntletRenderer.Load(gauntletPath);} catch(...) {gauntletLoaded=false;}
+        g_tmdShortGauntlet=IniPath(ini)&&GetPrivateProfileIntA("Render","TmdShortGauntlet",0,ini)!=0;
+        Log("tmd-short-gauntlet: %s enabled=%d tris=%u (original hardware 6527 + short cuff, no new material)",
+            gauntletLoaded?"CPU ready":"unavailable; native fallback",g_tmdShortGauntlet?1:0,
+            g_tmdShortGauntletRenderer.Triangles());
         Log("native-cuffs: startup %s noTMD=%u TMD=%u active=%d; original complete cuffs, held finger poses unchanged",
             cuffLoaded?"CPU ready":"FAILED; old native route retained",g_nativeCuffRenderer.Triangles(0),g_nativeCuffRenderer.Triangles(1),
             g_nativeCuffClosure?1:0);
@@ -20111,6 +20121,23 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         t == D3DPT_TRIANGLELIST &&
         gloveisolate::TmdHardwareCutApplies((int)Rd(g_gloveIsolate),numVertices,startIndex,primCount) &&
         nSeg == 1 && segStart[0] == startIndex && segPrims[0] == primCount;
+    const bool shortTmdCandidate = isolateTmdHardware && minIndex==0 &&
+        tmdgauntlet::Eligible(g_tmdShortGauntlet,g_tmdShortGauntletRenderer.Ready(),
+            g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_gloveExperiment && g_nativeGloveExperiment,
+            g_independentHands,(int)Rd(g_gloveIsolate),
+            Rd(g_rtIsScene)!=0 && g_xrSessionState==XR_SESSION_STATE_FOCUSED &&
+                !Rd(g_gamePaused) && !Rd(g_vrUiMenu),g_boundShaderLayout.shadow,
+            Rd(g_inCinematic)!=0);
+    IDirect3DIndexBuffer9* shortTmdBuffer=shortTmdCandidate?
+        g_tmdShortGauntletRenderer.Ensure(dev):nullptr;
+    const bool shortTmdTail=independentRegs && g_independentHands &&
+        tmdgauntlet::IsRightForearmTail(numVertices,startIndex,primCount) &&
+        tmdgauntlet::Eligible(g_tmdShortGauntlet,g_tmdShortGauntletRenderer.Ready(),
+            g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_gloveExperiment && g_nativeGloveExperiment,
+            g_independentHands,(int)Rd(g_gloveIsolate),
+            Rd(g_rtIsScene)!=0 && g_xrSessionState==XR_SESSION_STATE_FOCUSED &&
+                !Rd(g_gamePaused) && !Rd(g_vrUiMenu),g_boundShaderLayout.shadow,
+            Rd(g_inCinematic)!=0);
     if (isolateNoTmdFaces) {
         static LONG reportedFaces = 0;
         if (InterlockedCompareExchange(&reportedFaces, 1, 0) == 0)
@@ -20134,8 +20161,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     const int nextRegs=t==D3DPT_TRIANGLELIST&&(!g_nextNativeMagazine||
         (!boneRegN&&!independentRegs&&nSeg==1&&segStart[0]==startIndex&&segPrims[0]==primCount))?
         PrepareNextReload(dev,baseVertex,minIndex,numVertices,startIndex,primCount,nextSaved,nextReg,nextReplay):0;
-    nativegloves::IndexGuard<> nativeIndices(dev,cuffBuffer?cuffBuffer:(nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr),
-        cuffBuffer?g_nativeCuffRenderer.SourceBytes(cuffProfile):16512*2);
+    nativegloves::IndexGuard<> nativeIndices(dev,shortTmdBuffer?shortTmdBuffer:
+        (cuffBuffer?cuffBuffer:(nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr)),
+        shortTmdBuffer?36369*2:(cuffBuffer?g_nativeCuffRenderer.SourceBytes(cuffProfile):16512*2));
     float cylinderSaved[15][4];CenturionDrawReplay cylinderReplay;
     const int cylinderBase=t==D3DPT_TRIANGLELIST&&nSeg==1&&!boneRegN&&!independentRegs
         ?PrepareCenturionCylinder(dev,baseVertex,numVertices,startIndex,primCount,cylinderSaved,cylinderReplay):-1;
@@ -20167,6 +20195,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     }
     const HRESULT dhr = StereoPair(dev, [&] {
         HRESULT hr = D3D_OK;
+        if (shortTmdTail) return hr; // audited 17-face right forearm tail, no hardware
         if(nativeIndices.valid){
             ++g_nativeGloveRenderer.draws;
             const HRESULT h=g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,0,gloveTriangles);
@@ -20184,6 +20213,13 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             return hr;
         }
         if (isolateTmdHardware) {
+            if (shortTmdBuffer && nativeIndices.valid) {
+                static LONG reportedShort=0;
+                if (InterlockedCompareExchange(&reportedShort,1,0)==0)
+                    Log("tmd-short-gauntlet: original hardware + short closed sleeve, 1 material-1 draw/eye");
+                return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,0,
+                    g_tmdShortGauntletRenderer.Triangles());
+            }
             for (const auto& run : gloveisolate::kTmdHardwareFaces) {
                 const HRESULT h = g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,
                     startIndex + run.first * 3,run.last-run.first+1);
@@ -27893,6 +27929,7 @@ void ReleaseWristResources() {
     g_nativeGloveRenderer.ReleaseGPU();g_nativeGlovePoseThisDraw=false;
     g_xrCaptureAlphaPass.Release();
     g_nativeCuffRenderer.ReleaseGPU();
+    g_tmdShortGauntletRenderer.ReleaseGPU();
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     g_hipKnifeRenderer.ReleaseGPU();
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipFault=false;
