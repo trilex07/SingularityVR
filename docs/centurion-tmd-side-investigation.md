@@ -1,5 +1,31 @@
 # Centurion aim and TMD — SIDE evidence receipt
 
+## Implementation follow-up (2026-10-23; supersedes diagnostic-only disposition)
+
+Original PSK located under research/etw/controller-features-20261006/assets/
+wp_SP_ARPistol_SF/SkeletalMesh3. Its muzzle_flash bone54 is parented to
+cog_alt_pistol53; native muzzle position is (0.00000544,114.69569557,63.52872816).
+The bone's +X points along native +Z. The new draw receipt reads live cooked
+palette slot1, then local transform and BuildGunC (including pistol yaw trim).
+The existing weapon-muzzle witness and native spread-cone alignment consume
+this result. Long-gun handling is unchanged. Requires existing WeaponMeasuredAim,
+WeaponTraceRigidOrigin and WeaponNativeAxis configuration; no defaults changed.
+
+TMD hardware was explicitly skipped in the independent glove palette loop.
+It now receives the same anatomical-left rigid delta as the wrist, composed
+with the original animated hardware matrices. Existing section hiding remains.
+The L2 ADS suppression additionally requires the actual Impulse action to be
+held. Native TMD aim remains independently switchable with Input/TmdNativeAim=1;
+its verified getter hooks and native power/energy rules remain unchanged.
+
+Validation: original PSK muzzle position/direction test PASS; settings wiring
+7 tests PASS; PE32 /O2 build PASS; compiled WeaponLocker literal +20Ch and FName
+stack regression PASS. The NIS source-text test expects an obsolete condition
+already absent in baseline d49b64a; it remains failing, no NIS code was edited.
+No Steam launch/deployment or physical PASS. MAIN should verify pistol impacts
+at two head/wrist orientations, TMD device/glove attachment while animated,
+left-hand power targeting and inactive-TMD weapon aiming in one session.
+
 Baseline: `9aa6070df3fca86b25b9ee216474f4a2818c3e1c`. Steam and installed
 configuration were not changed. This branch is **not a physical aim fix**.
 
