@@ -47,7 +47,9 @@ class LockerOwnedDisplayOffline(unittest.TestCase):
         draw = D3D9.read_text(encoding="utf-8", errors="replace")
         start = draw.find("static void DrawLockerOwnedDisplay(IDirect3DDevice9* dev) {")
         self.assertGreater(start, 0)
-        chunk = draw[start : start + 4500]
+        end = draw.find("\nvoid DrawWeaponWheel(", start)
+        self.assertGreater(end, start)
+        chunk = draw[start:end]
         self.assertIn("g_weaponWheelOpen", chunk)
         self.assertIn("g_origSetRenderTarget(dev, 0, old)", chunk)
 
