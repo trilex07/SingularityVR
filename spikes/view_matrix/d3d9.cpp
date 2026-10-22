@@ -747,6 +747,13 @@ DWORD WINAPI Hook_XInputSetState(DWORD idx, XiVibration* v) {
         if (v) {
             InterlockedExchange(&g_rumbleL, v->wLeftMotorSpeed);
             InterlockedExchange(&g_rumbleR, v->wRightMotorSpeed);
+            static unsigned s_rumbleReceipts = 0;
+            if (s_rumbleReceipts < 16 && (v->wLeftMotorSpeed > 0 || v->wRightMotorSpeed > 0)) {
+                ++s_rumbleReceipts;
+                Log("[Haptics Trace] XINPUT RUMBLE [%u/16]: idx=%lu left=%u right=%u padEmu=%ld",
+                    s_rumbleReceipts, idx, (unsigned)v->wLeftMotorSpeed, (unsigned)v->wRightMotorSpeed,
+                    InterlockedCompareExchange(&g_padEmu, 0, 0));
+            }
         }
         // Answered here rather than passed on, for the same reason as GetState: there is no
         // physical pad on port 0, so the real call can only fail, and slowly.
@@ -4678,6 +4685,7 @@ bool InitXRInput();
 XrSessionState g_xrSessionState = XR_SESSION_STATE_UNKNOWN;
 extern volatile LONG g_vrUiMenu, g_vrMenuClass, g_panelOpen;
 extern int g_leftHanded;
+namespace NativeTmdHaptics { void ClearAll(); }
 static bool g_psvr2RuntimeCompatible = false;
 static bool g_adaptiveTriggersEnabled = false;
 static bool g_psvr2ClientStarted = false;
@@ -4909,6 +4917,7 @@ void PumpXR() {
         if (ev.type == XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED) {
             auto* s = reinterpret_cast<XrEventDataSessionStateChanged*>(&ev);
             g_xrSessionState = s->state;
+            if (s->state != XR_SESSION_STATE_FOCUSED) NativeTmdHaptics::ClearAll();
             if (s->state == XR_SESSION_STATE_READY) {
                 XrSessionBeginInfo bi{ XR_TYPE_SESSION_BEGIN_INFO };
                 bi.primaryViewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
@@ -7751,6 +7760,14 @@ volatile LONG g_vrTutorialLanguage = 0; // selected on the tutorial start screen
 static int g_vrSettingsMinimal=0;
 static int g_vrSettingsSessionOnly=0; // controlled test lease: live changes, no installed INI writes
 static volatile LONG g_reloadHintsEnabled=0; // optional instruction overlay, not reload logic
+// [Haptics]: Enabled=1 / Level=1 (NORMAL) is the identity configuration, i.e. exactly the accepted
+// pre-existing rumble behaviour. TmdPulses is the default-OFF native TMD power overlay.
+static volatile LONG g_hapticsEnabled=1, g_hapticLevel=1, g_tmdPulses=0;
+static void ApplyHapticConfig() {
+    LONG lv = Rd(g_hapticLevel); if (lv < 0) lv = 0; if (lv > 2) lv = 2;
+    NativeTmdHaptics::Configure(Rd(g_hapticsEnabled) != 0, (tmdhaptics::Level)lv, Rd(g_tmdPulses) != 0);
+    if (!Rd(g_hapticsEnabled) || !Rd(g_tmdPulses)) NativeTmdHaptics::ClearAll();
+}
 static volatile LONG g_panelBackW=0,g_panelBackH=0;
 volatile LONG g_vrTutorialStep = 0;
 extern int g_panelPage;
@@ -8025,7 +8042,8 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_TUT_PREVIOUS, PR_TUT_NEXT, PR_TUT_LANGUAGE, PR_TUT_BACK,
        PR_RELOAD_HINTS, PR_CLOSE,
        PR_GOTO_NIS, PR_NIS_SHARPEN, PR_NIS_STRENGTH,
-       PR_OLED_PRESET }; // append only
+       PR_OLED_PRESET,
+       PR_HAPTICS, PR_HAPTIC_LEVEL }; // append only
 
 // ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
@@ -8066,7 +8084,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_ENABLEVR, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_GOTO_CTRL, PR_GOTO_COMFORT,
       PR_GOTO_DISPLAY, PR_GOTO_ADV, PR_GOTO_WEAPON, PR_GOTO_TMD, PR_GOTO_HANDS, PR_GOTO_TUTORIAL, PR_GOTO_NIS },
     { PR_TURNMODE, PR_TURNSPEED, PR_SNAPANGLE, PR_TURNDIR, PR_MOVEDIR, PR_SWAPSTICKS,
-      PR_LEFTHAND, PR_RECENTERCHORD, PR_RECORDING, PR_BACK },
+      PR_LEFTHAND, PR_RECENTERCHORD, PR_RECORDING, PR_HAPTICS, PR_HAPTIC_LEVEL, PR_BACK },
     { PR_CINESTICK, PR_CINECAM, PR_SHAKESCREEN, PR_BOBSTABILIZE, PR_BACK },
     // MUZZLE FX joins CROSSHAIR here rather than going on ADVANCED: both are "the game draws something
     // at the centre of your view that VR makes wrong", both are things a player judges by looking, and
@@ -8127,7 +8145,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_NIS_SHARPEN, PR_NIS_STRENGTH, PR_OLED_PRESET, PR_TEXTURES, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 13, 10, 5, 13, 10, 7, 13, 6, 8, 6, 3, 9, 5 };
+const int kPageCount[kPanelPages] = { 13, 12, 5, 13, 10, 7, 13, 6, 8, 6, 3, 9, 5 };
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the longest row/title/
 // footer the page can display, not to what it happens to show now - that is what keeps the box from
@@ -8277,6 +8295,12 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_OLED_PRESET:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%d", (int)g_oledGrading.GetPreset());
             WritePrivateProfileStringA("OLED", "Preset", v, path); return;
+        case PR_HAPTICS:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_hapticsEnabled));
+            WritePrivateProfileStringA("Haptics", "Enabled", v, path); return;
+        case PR_HAPTIC_LEVEL:
+            _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld", Rd(g_hapticLevel));
+            WritePrivateProfileStringA("Haptics", "Level", v, path); return;
         case PR_GOTO_NIS: return;
         // ⚠️ StartInVr is the panel's LIVE VR mode, saved so the state you leave it in is the next
         // cold start. BACKSPACE deliberately does not save - it is a toggle, not a setting, and a
@@ -8608,6 +8632,11 @@ void PanelRowText(int row, char* out, size_t cap) {
                 Rd(g_nis.mode) == nis_upscale::kNISSharpen ? "SHARPEN" : "OFF"); break;
         case PR_NIS_STRENGTH:
             _snprintf_s(out, cap, _TRUNCATE, "NIS SHARPNESS  %ld%%", Rd(g_nis.sharpnessPct)); break;
+        case PR_HAPTICS:
+            _snprintf_s(out, cap, _TRUNCATE, "HAPTICS         %s", Rd(g_hapticsEnabled) ? "ON" : "OFF"); break;
+        case PR_HAPTIC_LEVEL:
+            _snprintf_s(out, cap, _TRUNCATE, "HAPTIC STRENGTH %s",
+                Rd(g_hapticLevel) == 0 ? "LOW" : Rd(g_hapticLevel) == 2 ? "STRONG" : "NORMAL"); break;
         case PR_OLED_PRESET: {
             const int preset = (int)g_oledGrading.GetPreset();
             const char* label = preset == 1 ? "BALANCED" : preset == 2 ? "CINEMATIC" :
@@ -9082,6 +9111,16 @@ void PanelAdjust(int row, int dir) {
             if (strength<0) strength=0;
             if (strength>100) strength=100;
             InterlockedExchange(&g_nis.sharpnessPct,strength); break;
+        }
+        case PR_HAPTICS:
+            InterlockedExchange(&g_hapticsEnabled, Rd(g_hapticsEnabled) ? 0 : 1);
+            ApplyHapticConfig(); break;
+        case PR_HAPTIC_LEVEL: {
+            LONG lv = Rd(g_hapticLevel) + (dir >= 0 ? 1 : -1);
+            if (lv > 2) lv = 0;
+            if (lv < 0) lv = 2;
+            InterlockedExchange(&g_hapticLevel, lv);
+            ApplyHapticConfig(); break;
         }
         case PR_OLED_PRESET: {
             const int current = (int)g_oledGrading.GetPreset();
@@ -10327,8 +10366,13 @@ bool InitXRInput() {
         aci.actionType = XR_ACTION_TYPE_VIBRATION_OUTPUT;
         aci.countSubactionPaths = 2;
         aci.subactionPaths = g_handSubPath;
-        if (XR_FAILED(xrCreateAction(g_actionSet, &aci, &g_actHaptic)))
+        if (XR_FAILED(xrCreateAction(g_actionSet, &aci, &g_actHaptic))) {
             g_actHaptic = XR_NULL_HANDLE;   // haptics only; input carries on
+            Log("openxr: xrCreateAction failed for g_actHaptic");
+        } else {
+            Log("openxr: created haptic action g_actHaptic=%p (subpaths: 0x%llX, 0x%llX)",
+                (void*)g_actHaptic, (unsigned long long)g_handSubPath[0], (unsigned long long)g_handSubPath[1]);
+        }
     }
 
     {
@@ -10580,7 +10624,13 @@ bool InitXRInput() {
             add(g_padButtons[i].action, g_padButtons[i].path, true, false);
         }
         const char* hp[2] = { "/user/hand/left/output/haptic", "/user/hand/right/output/haptic" };
-        if (!prof.poseOnly) for (int i = 0; i < 2; ++i) add(g_actHaptic, hp[i], false, false);
+        if (!prof.poseOnly) {
+            for (int i = 0; i < 2; ++i) {
+                add(g_actHaptic, hp[i], false, false);
+                Log("openxr: bound haptic output [%s] for hand %d on profile [%s]",
+                    hp[i], i, prof.path);
+            }
+        }
 
         // Unlike grasp, this is an intentional press. On Index the profile mapper translates
         // squeeze/value to squeeze/force for button intent; on Touch it remains squeeze/value.
@@ -12338,15 +12388,29 @@ void SyncXRInput(XrTime displayTime) {
         const LONG raw[2] = { InterlockedCompareExchange(&g_rumbleL, 0, 0),
                               InterlockedCompareExchange(&g_rumbleR, 0, 0) };
         for (int hand = 0; hand < 2; ++hand) {
-            // Nothing sent to a controller that is not being tracked. A sleeping Touch controller
-            // is a plausible source of a slow runtime call, and this mod asks for haptics every
-            // time the game rumbles - which in combat is constantly. Cheap to rule out, and
-            // correct on its own terms regardless: buzzing a controller on a desk helps nobody.
-            const float amp = (hapticsAllowed && g_handHeld[hand]) ? (float)raw[hand] / 65535.0f : 0.0f;
+            // Authoritative OpenXR controller tracking gate: checks whether the controller
+            // orientation or position is valid and tracked. Avoids false negatives from Touch
+            // capacitive grasp heuristics (g_handHeld) on PSVR2 Sense or during steady aim.
+            const bool handTracked = (g_handPoseValid[hand] || g_handPositionValid[hand]);
+            const bool tmdHand = (hand == OffHand());
+            const float nativeAmp = (float)raw[hand] / 65535.0f;
+            // One overlay sample per frame, TMD hand only. Any failed gate clears pulse.
+            float overlay = 0.0f;
+            if (tmdHand) {
+                const bool tmdGates = hapticsAllowed && handTracked && !Rd(g_gamePaused) &&
+                    !Rd(g_inCinematic) && !uiMenu && !Rd(g_panelOpen) &&
+                    g_xrSessionState == XR_SESSION_STATE_FOCUSED;
+                overlay = NativeTmdHaptics::Overlay(tmdGates);
+            }
+            const LONG lvl = Rd(g_hapticLevel) < 0 ? 0 : (Rd(g_hapticLevel) > 2 ? 2 : Rd(g_hapticLevel));
+            const float merged = tmdhaptics::Merge(nativeAmp, overlay, tmdHand,
+                tmdhaptics::Config{ Rd(g_hapticsEnabled) != 0, (tmdhaptics::Level)lvl, Rd(g_tmdPulses) != 0 });
+            const float amp = (hapticsAllowed && handTracked) ? merged : 0.0f;
             const bool changed = fabsf(amp - lastAmp[hand]) > 0.02f;
             const bool expiring = amp > 0.0f && (refresh % 15) == 0;
             if (!changed && !expiring) continue;
             if (g_diagEnabled) { ++g_diagCurrent.hapticCalls; g_diagCurrent.hapticAmplitudeMilli = uint32_t(amp * 1000.0f); }
+            const float prevAmp = lastAmp[hand];
             lastAmp[hand] = amp;
 
             XrHapticActionInfo hai{ XR_TYPE_HAPTIC_ACTION_INFO };
@@ -12355,15 +12419,32 @@ void SyncXRInput(XrTime displayTime) {
             const int64_t hapticApiStart = g_diagEnabled ? DiagQpc() : 0;
             if (amp <= 0.0f) {
                 if (g_diagEnabled) ++g_diagCurrent.hapticStopCalls;
-                xrStopHapticFeedback(g_xrSession, &hai);
+                const XrResult stopRes = xrStopHapticFeedback(g_xrSession, &hai);
+                static unsigned s_hapticStopReceipts = 0;
+                if (s_hapticStopReceipts < 16 && prevAmp > 0.02f) {
+                    ++s_hapticStopReceipts;
+                    Log("[Haptics Trace] STOP [%u/16]: hand=%d (%s) wasAmp=%.3f -> xrStop result=%d",
+                        s_hapticStopReceipts, hand, hand == 0 ? "LEFT" : "RIGHT", prevAmp, (int)stopRes);
+                }
             } else {
                 if (g_diagEnabled) ++g_diagCurrent.hapticApplyCalls;
                 XrHapticVibration hv{ XR_TYPE_HAPTIC_VIBRATION };
                 hv.duration  = 200LL * 1000000LL;      // 200 ms in ns - longer than the refresh
                 hv.frequency = XR_FREQUENCY_UNSPECIFIED;
                 hv.amplitude = amp;
-                xrApplyHapticFeedback(g_xrSession, &hai,
+                const XrResult hr = xrApplyHapticFeedback(g_xrSession, &hai,
                                       reinterpret_cast<const XrHapticBaseHeader*>(&hv));
+                static unsigned s_hapticSubmitReceipts = 0;
+                if (s_hapticSubmitReceipts < 32) {
+                    ++s_hapticSubmitReceipts;
+                    Log("[Haptics Trace] SUBMIT [%u/32]: hand=%d (%s) nativeAmp=%.3f (raw=%ld) overlay=%.3f merged=%.3f | gate(allowed=%d tracked=%d poseValid=%d posValid=%d focus=%d) | amp=%.3f -> xrResult=%d",
+                        s_hapticSubmitReceipts, hand, hand == 0 ? "LEFT" : "RIGHT",
+                        nativeAmp, raw[hand], overlay, merged,
+                        hapticsAllowed ? 1 : 0, handTracked ? 1 : 0,
+                        g_handPoseValid[hand] ? 1 : 0, g_handPositionValid[hand] ? 1 : 0,
+                        (g_xrSessionState == XR_SESSION_STATE_FOCUSED) ? 1 : 0,
+                        amp, (int)hr);
+                }
             }
             if (g_diagEnabled) g_diagCurrent.hapticCallUs += DiagUs(hapticApiStart);
         }
@@ -25877,6 +25958,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
                     const LONG raw = (LONG)(*reinterpret_cast<uint32_t*>(p));
                     InterlockedExchange(&g_pauseArgRaw, raw);
                     InterlockedExchange(&g_gamePaused, raw ? 1 : 0);
+                    if (raw) NativeTmdHaptics::ClearAll();
                     // Same check the cutscene latch got, for the same reason: if this is ever
                     // something other than 0 or 1 the frame layout assumption is wrong and the
                     // state is meaningless even when it happens to look right.
@@ -33965,6 +34047,12 @@ void LoadIniSettings() {
     g_vrSettingsSessionOnly=GetPrivateProfileIntA("Diagnostic","VrSettingsSessionOnly",0,path)!=0;
     InterlockedExchange(&g_reloadHintsEnabled,
         GetPrivateProfileIntA("Input","ReloadHints",0,path)!=0);
+    InterlockedExchange(&g_hapticsEnabled,GetPrivateProfileIntA("Haptics","Enabled",1,path)!=0);
+    InterlockedExchange(&g_hapticLevel,GetPrivateProfileIntA("Haptics","Level",1,path));
+    InterlockedExchange(&g_tmdPulses,GetPrivateProfileIntA("Haptics","TmdPulses",0,path)!=0);
+    ApplyHapticConfig();
+    Log("ini: Haptics Enabled=%ld Level=%ld TmdPulses=%ld (defaults 1/1/0 = unchanged native rumble)",
+        Rd(g_hapticsEnabled),Rd(g_hapticLevel),Rd(g_tmdPulses));
     Log("ini: VrSettingsMinimal=%d ReloadHints=%ld (optional PL/EN reload instructions)",
         g_vrSettingsMinimal,Rd(g_reloadHintsEnabled));
     InterlockedExchange(&g_contextCursorSuppress,
