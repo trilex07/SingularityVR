@@ -1,30 +1,35 @@
-# Singularity VR — UI & Utility Graphics Design System (v2 Corrected)
+# Singularity VR — UI & Utility Graphics Design System (v2.1 Rebalanced)
 
-## 1. Aesthetic Vision: Soviet Industrial Retrofuturism
+## 1. Aesthetic Vision: Abandoned Soviet Research Facility
 
-The visual language of Singularity VR bridges 1950s Soviet scientific-industrial architecture on Katorga-12 with advanced, decaying Element-99 (E99) temporal technology. The interface rejects generic cyberpunk neon, floating holographic panels, and flat smartphone conventions in favor of **tactile industrial brutalism, vacuum tube luminescence, oxidized steel, dark olive enamel, and weathered brass**.
+The visual language of Singularity VR bridges 1950s Soviet scientific-industrial architecture on Katorga-12 with decaying, crude Element-99 (E99) temporal technology. The interface rejects generic modern cyberpunk neon, floating holographic panels, and flat digital dashboard conventions in favor of **tactile laboratory brutalism, vacuum tube luminescence, weathered dark steel, graphite, ash, aged ivory enamel, and worn brass**.
 
-The design metaphor represents:
-> *A heavy military control panel manufactured in a Soviet research facility in 1955, abandoned for decades inside Katorga-12, then retrofitted with experimental E99 laboratory instrumentation.*
+The core design metaphor represents:
+> *A heavy laboratory control console and military terminal manufactured in a Soviet research facility in 1955, abandoned for decades inside Katorga-12, then modified with crude experimental E99 instrumentation.*
 
 ---
 
-## 2. Revised Material & Color Palette
+## 2. Material Hierarchy & Color Calibration (v2.1 Proportions)
 
-| Color / Material Role | Hex Code | RGB | Visual Character |
-|---|---|---|---|
-| **Graphite Cast Iron (Base)** | `#262A26` | `(38, 42, 38)` | Deep chassis metal, recessed sockets, dark backplates |
-| **Recessed Deep Graphite** | `#181B18` | `(24, 27, 24)` | Switch wells, track grooves, inner chambers |
-| **Soviet Military Olive** | `#3E4436` | `(62, 68, 54)` | Front panel enamel, chipped at worn edges |
-| **Dark Aged Olive** | `#2D3228` | `(45, 50, 40)` | Weathered panel bodies, unselected sectors |
-| **Weathered Brass / Bronze** | `#8E8369` | `(142, 131, 105)` | Milled knobs, nameplates, selector needle, screws |
-| **Aged Ivory (Typography)** | `#D3C6A2` | `(211, 198, 162)` | Primary functional typography, stenciled labels |
-| **Oxidized Rust** | `#91552D` | `(145, 85, 45)` | Corner patina, screw socket corrosion, scratches |
-| **Bare Steel Chipped Edge** | `#737D78` | `(115, 125, 120)` | Paint wear showing exposed cold steel |
-| **Selector Amber (Vacuum Tube)**| `#D77D23` | `(215, 125, 35)` | Active sector highlight, laser hover focus notch |
-| **Bright Amber Indicator** | `#F5A541` | `(245, 165, 65)` | Active indicator bulb, selected label glow |
-| **Restrained E99 Cyan** | `#41AFAA` | `(65, 175, 170)` | Concentrated active E99 filaments, core status |
-| **Industrial Caution Yellow** | `#CDA52D` | `(205, 165, 45)` | Faded 45-degree safety hazard stripes |
+The visual space is strictly calibrated to the **70 / 15 / 8 / 5 / 2** material balance:
+
+| Component Role | Target Share | Hex Code | RGB | Material Characteristic |
+|---|---|---|---|---|
+| **Deep Graphite Chassis** | **70%** | `#1C2024` | `(28, 32, 36)` | Base chassis metal, switch wells, dark faceplates |
+| **Weathered Gray Steel** | **70%** | `#24292E` | `(36, 41, 46)` | Main console faceplates, rotary wheel sectors, plates |
+| **Cold-Rolled Steel Plate**| **70%** | `#343B42` | `(52, 59, 66)` | Elevated panels, bezels, mechanical push-buttons |
+| **Bare Steel Chipped Edge**| **70%** | `#6C7882` | `(108, 120, 130)`| Scratched highlights, worn corners revealing bare metal |
+| **Concrete & Ash Undertone**| **70%** | `#202428` | `(32, 36, 40)` | Dark background environment, soot, dirty crevices |
+| **Aged Ivory Typography** | **15%** | `#DDD6C0` | `(222, 214, 192)`| High-contrast stenciled lettering (Polish UI text) |
+| **Bright Ivory Enamel** | **15%** | `#F4EEDE` | `(244, 238, 222)`| Active headers, selected row text, calibration marks |
+| **Secondary Olive Accent** | **8%** | `#3C4234` | `(60, 66, 52)` | Faded inspection tags, clipboard headers, backing bars |
+| **Muted Olive Tag** | **8%** | `#2E3428` | `(46, 52, 40)` | Secondary equipment borders and dark accents |
+| **Weathered Brass Hardware**| **5%** | `#8C8166` | `(140, 129, 102)`| Milled knobs, screws, slider handles, dial needles |
+| **Oxidized Crevice Rust** | **5%** | `#884E26` | `(136, 78, 38)` | Realistic seam oxidation, patina around screw heads |
+| **Selector Amber Light** | **5%** | `#D97E26` | `(217, 126, 38)` | Vacuum-tube amber backlight for selected rows & sectors |
+| **Bright Amber Bulb** | **5%** | `#F8A83E` | `(248, 168, 62)` | Active switch indicator lamps, high-priority warnings |
+| **Restrained E99 Cyan** | **2%** | `#41AFAA` | `(65, 175, 170)` | Active Element-99 core filaments only (strictly isolated) |
+| **E99 Core Filament** | **2%** | `#82F0EB` | `(130, 240, 235)`| Focused energy core luminescence (strictly restrained) |
 
 ---
 
@@ -44,8 +49,9 @@ The design metaphor represents:
 
 ## 4. Mechanical Surface & Weathering Rules
 
-1. **Physical Credibility:** All panels feature mechanical mounting hardware (hex bolts, slotted brass screws, flathead chassis fasteners).
-2. **Edge Wear & Paint Peeling:** Edges show subtle chipping where the dark olive paint has worn away to reveal the bare oxidized steel underneath (`#737D78`).
-3. **Corner Rust:** Rust stains and dirt accumulate realistically in corners, recessed grooves, and around screw heads without obscuring legible UI text.
-4. **No Digital Neon Borders:** Borders are physical milled bevels or engraved metal seams, never electric neon glow strokes.
-5. **Restrained E99 Phosphor:** Cyan is treated as an exotic, dangerous element—present only as a controlled core filament or active status indicator.
+1. **Weathered Steel Dominance:** Panels and dial faces are cold-rolled steel, oxidized iron, and graphite. Military olive green is strictly a secondary accent (stamped tags, clipboard headers, inspection bands).
+2. **Physical Credibility:** All panels feature mechanical mounting hardware (hex bolts, slotted brass screws, flathead chassis fasteners).
+3. **Edge Wear & Bare Metal Highlights:** Edges show subtle chipping and scratches where the surface finish has worn away to reveal bare steel underneath (`#6C7882`).
+4. **Corner Rust:** Rust stains and dirt accumulate realistically in corners, recessed grooves, and around screw heads without obscuring legible UI text.
+5. **No Digital Neon Borders:** Borders are physical milled bevels or engraved metal seams, never electric neon glow strokes.
+6. **Restrained E99 Phosphor:** Cyan is treated as an exotic, dangerous element—present only as a controlled core filament or active status indicator (occupying ≤ 2% of visual surface).
