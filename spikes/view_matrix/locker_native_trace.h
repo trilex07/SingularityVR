@@ -2,8 +2,10 @@
 // Bounded read-only witness for RvUIGFxMovie_WeaponLocker native exec + pickup.
 // Default OFF ([Diagnostic] LockerNativeTrace=0). No TArray writes, grants, or scans.
 #include "MinHook.h"
+#include "locker_native_trace_witness.h"
 #include "native_owned_inventory.h"
 #include "pause_rtt_probe.h"
+#include <intrin.h>
 
 extern uintptr_t g_textLo, g_textHi;
 extern volatile LONG g_lockerNativeTrace;
@@ -26,6 +28,8 @@ constexpr unsigned kMaxPerMethod = 20u;
 constexpr unsigned kMaxPickupNotes = 24u;
 constexpr unsigned kMaxFNameLines = 32u;
 constexpr unsigned kMaxInventoryLines = 32u;
+constexpr unsigned kMaxPreFocusStart = 4u;
+constexpr unsigned kMaxLoadCallerWitness = 16u;
 
 // ABI witnesses (inspect_locker_abi.py on capture-20261006-205508):
 // Start / LoadEquippedWeapons / PopMenu: ret 4 -> one stack arg after ECX=self.
@@ -41,6 +45,8 @@ inline volatile LONG g_pickupNotes = 0;
 inline volatile LONG g_fnameLines = 0;
 inline volatile LONG g_inventoryLines = 0;
 inline volatile LONG g_hooksLive = 0;
+inline volatile LONG g_preFocusStartOpens = 0;
+inline volatile LONG g_loadCallerWitness = 0;
 
 inline uintptr_t g_movie = 0;
 inline uintptr_t g_cls = 0;
@@ -103,6 +109,15 @@ inline bool IdentityOk(uintptr_t vt) {
            VtSlot(vt, kSlotLoad) == kFnLoad && VtSlot(vt, kSlotEquip) == kFnEquip;
 }
 
+inline bool IsWeaponLockerMovie(uintptr_t movie) {
+    if (!movie || !PauseRttProbe::SafeRange(movie + OBJ_CLASS, 4)) return false;
+    const uintptr_t vt = PauseRttProbe::Pointer(movie);
+    if (!IdentityOk(vt)) return false;
+    const uintptr_t cls = PauseRttProbe::Pointer(movie + OBJ_CLASS);
+    char clsName[96]{};
+    return cls && NameOf(cls, clsName, sizeof(clsName)) && !strcmp(clsName, "RvUIGFxMovie_WeaponLocker");
+}
+
 inline void CacheMovieLayout(uintptr_t movie, uintptr_t cls) {
     g_movie = movie;
     g_cls = cls;
@@ -145,7 +160,7 @@ inline void LogEquippedTArray(const char* tag, uintptr_t movie, int off, const c
 }
 
 inline void LogEnter(const char* method, unsigned methodIdx, void* self, const char* argNote) {
-    if (!Enabled() || !Armed() || t_reenter > 0) return;
+    if (!Enabled() || !Armed() || !LockerNativeTraceWitness::LogEnterPermitted(t_reenter)) return;
     unsigned seq = 0;
     if (!TryBudget(methodIdx, &seq)) return;
     t_logExec[methodIdx] = true;
@@ -175,37 +190,79 @@ inline void LogExit(const char* method, unsigned methodIdx, void* self) {
     LogCachedOwned("EXIT");
 }
 
+inline void ResetSessionCounters() {
+    for (unsigned i = 0; i < 4; ++i) InterlockedExchange(&g_methodCounts[i], 0);
+    InterlockedExchange(&g_events, 0);
+    InterlockedExchange(&g_seq, 0);
+    InterlockedExchange(&g_pickupNotes, 0);
+    InterlockedExchange(&g_fnameLines, 0);
+    InterlockedExchange(&g_inventoryLines, 0);
+}
+
+inline bool TryArmSessionFromStart(void* self) {
+    const uintptr_t movie = (uintptr_t)self;
+    if (!IsWeaponLockerMovie(movie)) return Armed();
+    if (Armed() && g_movie == movie) return true;
+    const LONG n = InterlockedIncrement(&g_preFocusStartOpens);
+    if ((unsigned)n > kMaxPreFocusStart) {
+        InterlockedDecrement(&g_preFocusStartOpens);
+        return false;
+    }
+    const uintptr_t cls = PauseRttProbe::Pointer(movie + OBJ_CLASS);
+    CacheMovieLayout(movie, cls);
+    ResetSessionCounters();
+    InterlockedExchange(&g_session, 1);
+    char obj[96]{};
+    NameOf(movie, obj, sizeof(obj));
+    Log("locker native trace: SESSION OPEN (pre-focus Start) movie=%p cls=%p obj=%s tid=%u",
+        (void*)movie, (void*)cls, obj, GetCurrentThreadId());
+    LogCachedOwned("SESSION");
+    return true;
+}
+
 struct ExecHooks {
     static void __thiscall Start(void* self, void* frame) {
         ++t_reenter;
-        if (t_reenter == 1) LogEnter("Start", 0, self, "frame");
+        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) {
+            TryArmSessionFromStart(self);
+            LogEnter("Start", 0, self, "frame");
+        }
         g_origStart(self, frame);
-        if (t_reenter == 1) LogExit("Start", 0, self);
+        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogExit("Start", 0, self);
         --t_reenter;
     }
     static void __thiscall Equip(void* self, void* frame, void* slotNum, void* stackArg10) {
         ++t_reenter;
-        char note[64]{};
-        if (t_reenter == 1) {
+        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) {
+            char note[64]{};
             _snprintf_s(note, _TRUNCATE, "slot=%d stackArg10=%p", (int)(intptr_t)slotNum, stackArg10);
             LogEnter("equip", 1, self, note);
         }
         g_origEquip(self, frame, slotNum, stackArg10);
-        if (t_reenter == 1) LogExit("equip", 1, self);
+        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogExit("equip", 1, self);
         --t_reenter;
     }
     static void __thiscall Load(void* self, void* frame) {
         ++t_reenter;
-        if (t_reenter == 1) LogEnter("LoadEquippedWeapons", 2, self, "frame");
+        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) {
+            char note[96]{};
+            if (TryLineCap(&g_loadCallerWitness, kMaxLoadCallerWitness)) {
+                const uintptr_t callerRet = (uintptr_t)_ReturnAddress();
+                _snprintf_s(note, _TRUNCATE, "frame callerRet=%p", (void*)callerRet);
+            } else {
+                _snprintf_s(note, _TRUNCATE, "frame callerRet=cap");
+            }
+            LogEnter("LoadEquippedWeapons", 2, self, note);
+        }
         g_origLoad(self, frame);
-        if (t_reenter == 1) LogExit("LoadEquippedWeapons", 2, self);
+        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogExit("LoadEquippedWeapons", 2, self);
         --t_reenter;
     }
     static void __thiscall Pop(void* self, void* frame) {
         ++t_reenter;
-        if (t_reenter == 1) LogEnter("PopMenu", 3, self, "frame");
+        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogEnter("PopMenu", 3, self, "frame");
         g_origPop(self, frame);
-        if (t_reenter == 1) LogExit("PopMenu", 3, self);
+        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogExit("PopMenu", 3, self);
         --t_reenter;
     }
 };
@@ -275,15 +332,6 @@ inline void TryInstallEarly() {
     InstallExecHooks(kWeaponLockerVtable);
 }
 
-inline void ResetSessionCounters() {
-    for (unsigned i = 0; i < 4; ++i) InterlockedExchange(&g_methodCounts[i], 0);
-    InterlockedExchange(&g_events, 0);
-    InterlockedExchange(&g_seq, 0);
-    InterlockedExchange(&g_pickupNotes, 0);
-    InterlockedExchange(&g_fnameLines, 0);
-    InterlockedExchange(&g_inventoryLines, 0);
-}
-
 inline void OnFocus(uintptr_t movie, uintptr_t cls) {
     if (!Enabled() || !movie || !cls) return;
     const uintptr_t vt = PauseRttProbe::Pointer(movie);
@@ -296,6 +344,12 @@ inline void OnFocus(uintptr_t movie, uintptr_t cls) {
     TryInstallEarly();
     if (!HooksLive()) {
         Log("locker native trace: SESSION refused — hooks not live");
+        return;
+    }
+    if (Armed() && g_movie == movie) {
+        CacheMovieLayout(movie, cls);
+        Log("locker native trace: SESSION reaffirm (focus after pre-focus Start) movie=%p tid=%u",
+            (void*)movie, GetCurrentThreadId());
         return;
     }
     CacheMovieLayout(movie, cls);

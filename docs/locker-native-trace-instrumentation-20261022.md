@@ -27,7 +27,11 @@ Default **`LockerNativeTrace=0`** — zero hooks, zero overhead.
 
 **ABI (capture-20261006-205508):** `Start` / `LoadEquippedWeapons` / `PopMenu` → `ret 4` (`FrameFn`/`StartFn`); `equip` → `ret 0x0C` (`EquipFn`, slot at `[ebp+0xC]`). Verified by `tools/reload/inspect_locker_abi.py --strict`.
 
-**Install:** Hooks attach at RVAs after vtable @ `0x019A0948` identity check; **all-or-nothing** rollback on failure. `TryInstallEarly()` on INI enable + input `Poll()` so `Start` before first locker focus is observable when MinHook is ready.
+**Install:** Hooks attach at RVAs after vtable @ `0x019A0948` identity check; **all-or-nothing** rollback on failure. `TryInstallEarly()` on INI enable + input `Poll()` so hooks exist before focus.
+
+**Pre-focus Start:** Verified `WeaponLocker::Start` may open a bounded session (`kMaxPreFocusStart`) before `UpdateMenu()` focus; focus later **reaffirms** without resetting seq/events. Unrelated GFx movies never arm (class + vtable gate).
+
+**LoadEquippedWeapons caller:** One `_ReturnAddress()` witness per bounded ENTER (`callerRet=` in frameNote).
 
 ## Log prefix
 
