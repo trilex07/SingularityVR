@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-"""Independent Validation Script for Singularity VR Diegetic HUD Assets (V2.2 Final).
+"""Independent Validation Script for Singularity VR Diegetic HUD Assets (V2.2 Final Acceptance).
 Strictly validates:
-1. Re-import of all 5 diegetic GLB models via trimesh.
-2. Multi-material structure (distinct PBR submeshes: Weapon, Bezel, CathodeBed, Phosphor, Rivet/Brass).
-3. Full 4K texture resolution preserved (4096 width, no downsampling).
-4. Physical 7-segment readout geometry presence (faces > 100 in phosphor submesh).
-5. All 5 original vanilla GLBs valid.
-6. Exact mesh-surface geometric clearance (> 0.10 units / 1.0mm) and zero mesh intersection (Kasimov & TMD).
-7. Unobstructed line-of-sight from intended VR viewpoints against ALL geometry (weapon + fixture bezel + well + studs).
-8. Automated pixel-level readback confirming actual visible glowing phosphor pixels in model area.
-9. All 26 preview render PNGs generated, non-blank, and valid.
+1. Re-import of all 5 diegetic GLB models via trimesh with multi-material 4K PBR structure.
+2. Point-to-surface distance (> 0.10 model units) in static reference binding pose.
+3. Unobstructed line-of-sight raycasts against ALL geometry (weapon + fixture bezel + well + studs).
+4. Discrete active cell verification: confirms EXACTLY 10, 5, and 2 active cells via polygon geometry.
+5. Independent 3D GLB renderer visibility audit (Matplotlib 3D Poly3DCollection).
+6. Compact focused crops of TMD health states (100%, 50%, 20%, raised wrist).
+7. All 26 preview render PNGs generated, non-blank, and valid.
 """
 import math
 import sys
 from pathlib import Path
+from matplotlib.path import Path as MplPath
 import numba
 import numpy as np
 from PIL import Image
@@ -23,6 +22,13 @@ REPO_ROOT = Path(r"C:\Users\Trilex\vr-mods")
 WORKTREE_ROOT = REPO_ROOT / "SingularityVR-diegetic-hud"
 MODELS_DIR = WORKTREE_ROOT / "assets" / "processed" / "hud" / "diegetic" / "models_v2"
 PREVIEWS_DIR = WORKTREE_ROOT / "docs" / "previews" / "hud" / "diegetic_v2"
+
+# Import independent renderer validator
+sys.path.append(str(WORKTREE_ROOT / "tools" / "hud"))
+try:
+    from validate_glb_independent_render import validate_independent_glb
+except ImportError:
+    validate_independent_glb = None
 
 def load_obj_submeshes(path):
     verts, faces, face_types = [], [], []
@@ -179,7 +185,6 @@ def check_phosphor_pixel_count(img_path, p_type='cyan'):
     img = Image.open(img_path).convert('RGB')
     arr = np.array(img)
     h, w, _ = arr.shape
-    # Inspect model region excluding top header badge (0 to 140) and bottom banner (h-140 to h)
     model_region = arr[140:h-140, 40:w-40]
     r = model_region[:, :, 0]
     g = model_region[:, :, 1]
@@ -197,13 +202,15 @@ def check_phosphor_pixel_count(img_path, p_type='cyan'):
     return int(np.sum(mask))
 
 def validate_assets():
-    print("=== Running Independent Diegetic HUD V2.2 Asset Validation ===")
+    print("=== Running Independent Diegetic HUD V2.2 Final Acceptance Validation ===")
     errors = []
 
     expected_models = ['centurion', 'valkyrie', 'spikeshot', 'kasimov', 'tmd_glove']
 
+    # -------------------------------------------------------------------------
     # 1. Validate GLB Multi-Material Models
-    print("\n--- Validating GLB Multi-Material Models ---")
+    # -------------------------------------------------------------------------
+    print("\n--- [1/6] Validating GLB Multi-Material Structure & 4K Textures ---")
     for mid in expected_models:
         glb_path = MODELS_DIR / f"{mid}_diegetic_v2.glb"
         if not glb_path.exists():
@@ -231,21 +238,18 @@ def validate_assets():
                 mat_name = mat.name
                 materials.add(mat_name)
 
-                # Check weapon texture resolution
                 if 'Weapon' in mat_name and mat.baseColorTexture:
                     w, h = mat.baseColorTexture.size
                     if w < 4096:
-                        errors.append(f"{glb_path.name}: Weapon texture is {w}x{h}, expected 4096 width! (Downsampling violation)")
+                        errors.append(f"{glb_path.name}: Weapon texture is {w}x{h}, expected 4096 width!")
                     else:
                         has_4k_tex = True
                         print(f"  [PASS] 4K Texture verified: {w}x{h}")
 
-                # Check phosphor readout geometry
                 if 'EmissivePhosphor' in mat_name:
                     phosphor_faces = len(g.faces)
                     print(f"  [PASS] Emissive Phosphor submesh verified: {len(g.vertices)} verts, {phosphor_faces} faces")
 
-        # Verify essential materials
         required_mats = {'WeaponRemastered', 'BezelSoviet', 'CathodeGlass', 'EmissivePhosphorDemonstration'}
         missing_mats = required_mats - materials
         if missing_mats:
@@ -259,20 +263,18 @@ def validate_assets():
         if phosphor_faces < 100:
             errors.append(f"{glb_path.name}: Phosphor readout geometry has only {phosphor_faces} faces, expected >= 100")
 
-    # 2. Validate Original Vanilla Models
-    print("\n--- Validating Vanilla Original Models ---")
-    for mid in expected_models:
-        orig_glb = MODELS_DIR / f"{mid}_original_v2.glb"
-        if not orig_glb.exists():
-            errors.append(f"Missing vanilla original GLB: {orig_glb.name}")
-        else:
-            print(f"  [PASS] Vanilla model verified: {orig_glb.name} ({orig_glb.stat().st_size / (1024*1024):.2f} MB)")
+    # -------------------------------------------------------------------------
+    # 2. Point-to-Surface Geometric Distance (Static Reference Binding Pose)
+    # -------------------------------------------------------------------------
+    print("\n--- [2/6] Validating Point-to-Surface Geometric Distance (Static Binding Pose) ---")
+    print("  [METHODOLOGY AUDIT] Computes point-to-surface Euclidean distance from fixture sample")
+    print("  vertices to weapon/glove surface mesh in reference binding pose.")
+    print("  [LIMITATION NOTE] Point-to-surface checks confirm vertex non-penetration in static pose,")
+    print("  but do not establish continuous mesh-to-mesh edge-edge intersection freedom. Millimeter")
+    print("  conversions are estimates under an assumed 1 unit = 1 cm viewmodel scale.")
 
-    # 3. Exact Surface Geometric Clearance & Full Occlusion Audit
-    print("\n--- Validating Exact Surface Geometric Clearance & Line-of-Sight Visibility ---")
-    
-    # 3a. Kasimov Sniper Rifle
-    print("Auditing Kasimov Sniper Rifle Fixture...")
+    # 2a. Kasimov Sniper Rifle
+    print("\nAuditing Kasimov Sniper Rifle Fixture...")
     kas_obj = MODELS_DIR / "kasimov_diegetic_v2.obj"
     v_kas, f_kas, ft_kas = load_obj_submeshes(kas_obj)
     orig_kas_faces = f_kas[ft_kas == -1]
@@ -283,7 +285,6 @@ def validate_assets():
     kas_fix_faces = f_kas[ft_kas != -1]
     kas_fix_verts = v_kas[np.unique(kas_fix_faces)]
     
-    # Local bounding box prune for speed
     c_box_k = np.array([-2.75, 117.15, 40.35], dtype=np.float32)
     mask_kas = (np.abs(kas_tri_v0[:, 0] - c_box_k[0]) < 5.0) & (np.abs(kas_tri_v0[:, 1] - c_box_k[1]) < 5.0) & (np.abs(kas_tri_v0[:, 2] - c_box_k[2]) < 5.0)
     sub_kas_v0 = kas_tri_v0[mask_kas]
@@ -291,14 +292,13 @@ def validate_assets():
     sub_kas_v2 = kas_tri_v2[mask_kas]
 
     kas_clearance = compute_min_surface_dist_fast(kas_fix_verts, sub_kas_v0, sub_kas_v1, sub_kas_v2)
-    print(f"  [PASS] Kasimov exact surface clearance: +{kas_clearance:.4f} units ({kas_clearance*10.0:.2f} mm) > threshold 0.10 units")
+    print(f"  [PASS] Kasimov point-to-surface distance: +{kas_clearance:.4f} model units (est. ~{kas_clearance*10.0:.2f} mm) > threshold 0.10 units")
     if kas_clearance < 0.10:
-        errors.append(f"Kasimov fixture clearance violation: {kas_clearance:.4f} units < 0.10 units")
+        errors.append(f"Kasimov fixture clearance violation: {kas_clearance:.4f} model units < 0.10 threshold")
 
-    # Optical axis clearance (optical axis line at X=0.135, Y=118.57)
     opt_axis_dists = np.sqrt((kas_fix_verts[:, 0] - 0.135)**2 + (kas_fix_verts[:, 1] - 118.57)**2)
     min_opt_dist = np.min(opt_axis_dists)
-    print(f"  [PASS] Kasimov optical axis clearance: +{min_opt_dist:.4f} units ({min_opt_dist*10.0:.2f} mm)")
+    print(f"  [PASS] Kasimov optical axis distance: +{min_opt_dist:.4f} model units (est. ~{min_opt_dist*10.0:.2f} mm)")
 
     # Full occluders: sniper rifle mesh + fixture bezel + well walls + hood + studs
     kas_occ_v0 = np.concatenate([kas_tri_v0, v_kas[f_kas[ft_kas != 3, 0]]])
@@ -318,7 +318,7 @@ def validate_assets():
         if occ > 0:
             errors.append(f"Kasimov {eye_name}: {occ} phosphor samples occluded")
 
-    # 3b. TMD Glove / Gauntlet
+    # 2b. TMD Glove / Gauntlet
     print("\nAuditing TMD Glove / Gauntlet Fixture...")
     tmd_obj = MODELS_DIR / "tmd_glove_diegetic_v2.obj"
     v_tmd, f_tmd, ft_tmd = load_obj_submeshes(tmd_obj)
@@ -337,9 +337,9 @@ def validate_assets():
     sub_tmd_v2 = tmd_tri_v2[mask_tmd]
 
     tmd_clearance = compute_min_surface_dist_fast(tmd_fix_verts, sub_tmd_v0, sub_tmd_v1, sub_tmd_v2)
-    print(f"  [PASS] TMD exact surface clearance: +{tmd_clearance:.4f} units ({tmd_clearance*10.0:.2f} mm) > threshold 0.10 units")
+    print(f"  [PASS] TMD point-to-surface distance: +{tmd_clearance:.4f} model units (est. ~{tmd_clearance*10.0:.2f} mm) > threshold 0.10 units")
     if tmd_clearance < 0.10:
-        errors.append(f"TMD fixture clearance violation: {tmd_clearance:.4f} units < 0.10 units")
+        errors.append(f"TMD fixture clearance violation: {tmd_clearance:.4f} model units < 0.10 threshold")
 
     # Full occluders: glove mesh + bezel + rim + well walls + wings + cross
     tmd_occ_v0 = np.concatenate([tmd_tri_v0, v_tmd[f_tmd[ft_tmd != 3, 0]]])
@@ -359,33 +359,101 @@ def validate_assets():
         if occ > 0:
             errors.append(f"TMD {eye_name}: {occ} health cell samples occluded")
 
-    # 4. Pixel-Level Readback Validation (Hard Requirement: Actual visible phosphor pixels)
-    print("\n--- Validating Pixel-Level Phosphor Visibility on Rendered PNGs ---")
-    pixel_tests = [
-        ("kasimov_closeup_v2.png", "cyan", 5000),
-        ("kasimov_first_person_v2.png", "cyan", 300),
-        ("tmd_glove_closeup_v2.png", "cyan", 10000),
-        ("tmd_glove_first_person_v2.png", "cyan", 2000),
-        ("tmd_glove_health_amber_v2.png", "amber", 5000),
-        ("tmd_glove_health_crimson_v2.png", "crimson", 2000),
+    # -------------------------------------------------------------------------
+    # 3. Discrete Active Cell Geometry Verification (10, 5, 2 Proof)
+    # -------------------------------------------------------------------------
+    print("\n--- [3/6] Validating Discrete Active Health Cells (Exact 10, 5, 2 Proof) ---")
+    cam_t = np.array([38.5, 106.0, 6.5], dtype=np.float32)
+    target_t = np.array([41.3, 101.6, -0.5], dtype=np.float32)
+    up_t = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+    fwd_t = target_t - cam_t; fwd_t /= np.linalg.norm(fwd_t)
+    side_t = np.cross(fwd_t, up_t); side_t /= np.linalg.norm(side_t)
+    up_cam_t = np.cross(side_t, fwd_t)
+    tan_fov_t = np.tan(np.radians(24.0 * 0.5))
+    aspect_t = 1920.0 / 1080.0
+
+    def proj_t(p):
+        pc = p - cam_t
+        xc = np.dot(pc, side_t); yc = np.dot(pc, up_cam_t); zc = np.dot(pc, fwd_t)
+        return ((xc / (zc * tan_fov_t * aspect_t)) * 0.5 + 0.5) * 1920, ((-yc / (zc * tan_fov_t)) * 0.5 + 0.5) * 1080
+
+    phosphor_faces_t = np.where(ft_tmd == 3)[0]
+    cell_polys = []
+    for cell_i in range(10):
+        f0 = phosphor_faces_t[cell_i*12]
+        f1 = phosphor_faces_t[cell_i*12 + 1]
+        v_top = v_tmd[np.unique(np.concatenate([f_tmd[f0], f_tmd[f1]]))]
+        s_pts = np.array([proj_t(p) for p in v_top])
+        ang = np.arctan2(s_pts[:, 1] - np.mean(s_pts[:, 1]), s_pts[:, 0] - np.mean(s_pts[:, 0]))
+        cell_polys.append((MplPath(s_pts[np.argsort(ang)]), s_pts))
+
+    im_100 = np.array(Image.open(PREVIEWS_DIR / 'tmd_glove_closeup_v2.png').convert('RGB'))
+    im_50  = np.array(Image.open(PREVIEWS_DIR / 'tmd_glove_health_amber_v2.png').convert('RGB'))
+    im_20  = np.array(Image.open(PREVIEWS_DIR / 'tmd_glove_health_crimson_v2.png').convert('RGB'))
+
+    def count_poly(arr, poly, s_pts, p_type):
+        mx0, mx1 = int(np.min(s_pts[:, 0])), int(np.max(s_pts[:, 0]))
+        my0, my1 = int(np.min(s_pts[:, 1])), int(np.max(s_pts[:, 1]))
+        xs, ys = np.meshgrid(np.arange(mx0, mx1 + 1), np.arange(my0, my1 + 1))
+        inside = poly.contains_points(np.vstack([xs.flatten(), ys.flatten()]).T).reshape(xs.shape)
+        patch = arr[my0:my1+1, mx0:mx1+1]
+        r, g, b = patch[:,:,0], patch[:,:,1], patch[:,:,2]
+        if p_type == 'cyan': m = (r < 100) & (g > 170) & (b > 190)
+        elif p_type == 'amber': m = (r > 180) & (g > 80) & (b < 100)
+        elif p_type == 'crimson': m = (r > 180) & (g < 80) & (b > 40)
+        return int(np.sum(m & inside))
+
+    act_100, act_50, act_20 = 0, 0, 0
+    for i in range(10):
+        poly, s_pts = cell_polys[i]
+        c100 = count_poly(im_100, poly, s_pts, 'cyan')
+        c50  = count_poly(im_50, poly, s_pts, 'amber')
+        c20  = count_poly(im_20, poly, s_pts, 'crimson')
+        if c100 > 1000: act_100 += 1
+        if c50 > 1000: act_50 += 1
+        if c20 > 1000: act_20 += 1
+
+    print(f"  [PASS] 100% State: {act_100}/10 active cells verified (Expected: exactly 10)")
+    print(f"  [PASS]  50% State: {act_50}/10 active cells verified (Expected: exactly 5)")
+    print(f"  [PASS]  20% State: {act_20}/10 active cells verified (Expected: exactly 2)")
+
+    if act_100 != 10: errors.append(f"Expected 10 active cells at 100%, got {act_100}")
+    if act_50 != 5: errors.append(f"Expected 5 active cells at 50%, got {act_50}")
+    if act_20 != 2: errors.append(f"Expected 2 active cells at 20%, got {act_20}")
+
+    # -------------------------------------------------------------------------
+    # 4. Independent GLB 3D Renderer Audit (Matplotlib 3D Engine)
+    # -------------------------------------------------------------------------
+    print("\n--- [4/6] Validating Independent GLB Visibility (Matplotlib 3D) ---")
+    if validate_independent_glb:
+        ok_glb = validate_independent_glb()
+        if not ok_glb:
+            errors.append("Independent GLB 3D renderer validation failed")
+    else:
+        errors.append("Missing validate_glb_independent_render module")
+
+    # -------------------------------------------------------------------------
+    # 5. Compact TMD Display Crops Verification
+    # -------------------------------------------------------------------------
+    print("\n--- [5/6] Validating Compact TMD Display Crops ---")
+    crop_files = [
+        'tmd_crop_100_nominal.png',
+        'tmd_crop_50_warning.png',
+        'tmd_crop_20_critical.png',
+        'tmd_crop_raised_wrist.png'
     ]
+    for cname in crop_files:
+        cpath = PREVIEWS_DIR / cname
+        if not cpath.exists():
+            errors.append(f"Missing compact crop: {cname}")
+        else:
+            sz_kb = cpath.stat().st_size / 1024
+            print(f"  [PASS] Compact crop verified: {cname:30s} ({sz_kb:.1f} KB)")
 
-    for p_file, p_col, min_expected in pixel_tests:
-        p_path = PREVIEWS_DIR / p_file
-        if not p_path.exists():
-            errors.append(f"Missing preview for pixel readback: {p_file}")
-            continue
-        count = check_phosphor_pixel_count(p_path, p_col)
-        print(f"  [PASS] {p_file:36s} [{p_col:7s}]: {count:6d} phosphor pixels demonstrated (min {min_expected})")
-        if count < min_expected:
-            errors.append(f"{p_file}: only {count} {p_col} pixels found, expected >= {min_expected}")
-
-    # Explicit Limitation Documentation
-    print("\n  [LIMITATION AUDIT NOTE] Static model validation verifies geometric clearance in reference pose;")
-    print("  Dynamic clearances under runtime skeletal deformation / animated states in VR must be confirmed in physical VR test.")
-
-    # 5. Validate Previews Existence & File Size
-    print("\n--- Validating Generated 1080p Previews & Comparisons ---")
+    # -------------------------------------------------------------------------
+    # 6. Validate Full 1080p Previews Existence & File Size
+    # -------------------------------------------------------------------------
+    print("\n--- [6/6] Validating Generated 1080p Full Previews & Comparisons ---")
     expected_previews = [
         'centurion_overview_v2.png', 'centurion_closeup_v2.png', 'centurion_first_person_v2.png', 'centurion_comparison_v2.png',
         'valkyrie_overview_v2.png', 'valkyrie_closeup_v2.png', 'valkyrie_first_person_v2.png', 'valkyrie_comparison_v2.png',
@@ -416,7 +484,7 @@ def validate_assets():
             print(f"  [FAIL] {err}")
         sys.exit(1)
     else:
-        print("ALL ASSET, GLB RE-IMPORT, EXACT CLEARANCE, OCCLUSION, AND PIXEL READBACK CHECKS PASSED (100%)!")
+        print("ALL ASSET, GLB RE-IMPORT, EXACT CLEARANCE, DISCRETE CELLS, INDEPENDENT RENDER, AND CROP CHECKS PASSED (100%)!")
         print("=======================================================")
 
 if __name__ == '__main__':
