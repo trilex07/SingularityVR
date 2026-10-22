@@ -4677,6 +4677,7 @@ bool InitXRInput();
 XrSessionState g_xrSessionState = XR_SESSION_STATE_UNKNOWN;
 extern volatile LONG g_vrUiMenu, g_vrMenuClass, g_panelOpen;
 extern int g_leftHanded;
+namespace NativeTmdHaptics { void ClearAll(); }
 static bool g_psvr2RuntimeCompatible = false;
 static bool g_adaptiveTriggersEnabled = false;
 static bool g_psvr2ClientStarted = false;
@@ -4908,6 +4909,7 @@ void PumpXR() {
         if (ev.type == XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED) {
             auto* s = reinterpret_cast<XrEventDataSessionStateChanged*>(&ev);
             g_xrSessionState = s->state;
+            if (s->state != XR_SESSION_STATE_FOCUSED) NativeTmdHaptics::ClearAll();
             if (s->state == XR_SESSION_STATE_READY) {
                 XrSessionBeginInfo bi{ XR_TYPE_SESSION_BEGIN_INFO };
                 bi.primaryViewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
@@ -25817,6 +25819,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
                     const LONG raw = (LONG)(*reinterpret_cast<uint32_t*>(p));
                     InterlockedExchange(&g_pauseArgRaw, raw);
                     InterlockedExchange(&g_gamePaused, raw ? 1 : 0);
+                    if (raw) NativeTmdHaptics::ClearAll();
                     // Same check the cutscene latch got, for the same reason: if this is ever
                     // something other than 0 or 1 the frame layout assumption is wrong and the
                     // state is meaningless even when it happens to look right.

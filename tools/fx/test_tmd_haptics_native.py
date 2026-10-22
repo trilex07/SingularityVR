@@ -3,7 +3,7 @@
 Disassembles the OWNED original executable's archived .text (skipped, not passed, if the private
 inputs are absent) and checks the facts native_tmd_haptics.h relies on: body fingerprints, the
 exec-wrapper -> direct-thiscall relationship, `ret 4`, and the early-out/return structure of the
-Start path. Also verifies the header constants match what was measured.
+Start path. Also verifies the CheckPowerFail implementation (0x100CD00) and return codes.
 """
 import os, re, sys, unittest
 from pathlib import Path
@@ -72,6 +72,19 @@ class BinaryEvidence(unittest.TestCase):
         # The activation body (state call + FX/owner hooks) lies strictly between them.
         idx = [i.address for i in ins]
         self.assertTrue(0x100D7B3 in idx and 0x100D87F in idx)
+
+    def test_check_power_fail_at_100cd00_returns_exact_codes(self):
+        ins = list(self.md.disasm(self.body(0x100CD00, 260), 0x100CD00))
+        txt = [f'{i.mnemonic} {i.op_str}' for i in ins]
+        # Check cooldown return code 3
+        self.assertTrue(any('mov al, 3' in t for t in txt))
+        # Check energy check call 0xffcd50
+        self.assertTrue(any('call 0xffcd50' in t for t in txt))
+        # Check energy return code 2
+        self.assertTrue(any('mov al, 2' in t for t in txt))
+        # Check success calculation (neg eax; sbb al, al; and al, 0xfe; add al, 2) which yields 0
+        self.assertTrue(any('sbb al, al' in t for t in txt))
+        self.assertTrue(any('add al, 2' in t for t in txt))
 
 if __name__ == '__main__':
     unittest.main()
