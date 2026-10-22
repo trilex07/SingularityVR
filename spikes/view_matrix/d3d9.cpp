@@ -2376,6 +2376,7 @@ static int g_reloadPalmGrip=0; // default-OFF; measured native wrist, not AIM-sp
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
 static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
 static int g_weaponMeasuredAim=0; // default OFF; exact rendered barrel direction
+static int g_centurionAimProbe=0; // read-only: compare native shot, controller aim and rendered +X
 static int g_bodyEquipmentProbe=0; // default OFF; bounded read-only engine-thread census
 static weaponmuzzle::Witness g_nextMuzzle,g_nextMuzzleStaged;
 static sniperscope::Mount g_sniperScopeMount;
@@ -8012,6 +8013,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_TMDBONELO, PR_TMDBONEHI, PR_TMDBONEMESH, PR_TMDBONESLOT,   // ⭐ run 239
        PR_TMDBONEMODE,               // ⭐ run 241
        PR_TMDROLL,                   // ⭐ run 245
+       PR_TMD_HELP_IMPULSE, PR_TMD_HELP_AGE, PR_TMD_HELP_RULES,
        PR_GOTO_TMD,
        // ⭐ run 249: the TMD page split into three. See kPageRows.
        PR_GOTO_TMDBONE, PR_GOTO_TMDMESH, PR_BACK_TMD,
@@ -8098,7 +8100,8 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // adjustment, every session. The bone and triangle rows are hunting tools: reached when a mesh
     // is wrong, not while aiming, and each is a self-contained job.
     { PR_TMDON, PR_TMDFWD, PR_TMDRIGHT, PR_TMDUP, PR_TMDYAW, PR_TMDPITCH, PR_TMDROLL,
-      PR_GOTO_TMDBONE, PR_GOTO_TMDMESH, PR_BACK },
+      PR_GOTO_TMDBONE, PR_GOTO_TMDMESH, PR_TMD_HELP_IMPULSE, PR_TMD_HELP_AGE,
+      PR_TMD_HELP_RULES, PR_BACK },
     // ⭐ run 239: the per-slot bone rows. BONE SLOT selects which of the four ranges the three rows
     // below it are editing, so they belong together and nowhere else.
     { PR_TMDBONESLOT, PR_TMDBONEMESH, PR_TMDBONELO, PR_TMDBONEHI, PR_TMDBONEMODE, PR_BACK_TMD },
@@ -8124,7 +8127,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_NIS_SHARPEN, PR_NIS_STRENGTH, PR_OLED_PRESET, PR_TEXTURES, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 13, 10, 5, 13, 10, 7, 10, 6, 8, 6, 3, 9, 5 };
+const int kPageCount[kPanelPages] = { 13, 10, 5, 13, 10, 7, 13, 6, 8, 6, 3, 9, 5 };
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the longest row/title/
 // footer the page can display, not to what it happens to show now - that is what keeps the box from
@@ -8487,6 +8490,7 @@ void PanelSaveRow(int rowId, const char* path) {
         }
         case PR_TMDFWD: case PR_TMDRIGHT: case PR_TMDUP:
         case PR_TMDYAW: case PR_TMDPITCH: case PR_TMDROLL:
+        case PR_TMD_HELP_IMPULSE: case PR_TMD_HELP_AGE: case PR_TMD_HELP_RULES:
         case PR_TMDARMFROM: case PR_TMDARMTO: case PR_TMDARMSTEP:
         case PR_TMDARMSLOT: case PR_TMDARMMESH: case PR_TMDARMMODE:
         case PR_TMDHIDE: case PR_TMDBONELO: case PR_TMDBONEHI:
@@ -8721,6 +8725,12 @@ void PanelRowText(int row, char* out, size_t cap) {
             _snprintf_s(out, cap, _TRUNCATE, "TMD PITCH  %+.1f", Rd(g_tmdPitchTenths) / 10.0f); break;
         case PR_TMDROLL:
             _snprintf_s(out, cap, _TRUNCATE, "TMD ROLL   %+.1f", Rd(g_tmdRollTenths) / 10.0f);  break;
+        case PR_TMD_HELP_IMPULSE:
+            _snprintf_s(out, cap, _TRUNCATE, "L2: IMPULSE (LEFT TRIGGER)"); break;
+        case PR_TMD_HELP_AGE:
+            _snprintf_s(out, cap, _TRUNCATE, "LEFT SQUARE: AGE / RENOVATE"); break;
+        case PR_TMD_HELP_RULES:
+            _snprintf_s(out, cap, _TRUNCATE, "POWERS / ENERGY: GAME RULES"); break;
         case PR_GOTO_TMD: _snprintf_s(out, cap, _TRUNCATE, "TMD ALIGN..."); break;
         // ---- 💥 run 249: these three rows had NO text case and fell through to `default` ----
         //
@@ -9244,6 +9254,8 @@ void PanelAdjust(int row, int dir) {
         case PR_TMDON:
             InterlockedExchange(&g_tmdOnOffHand, Rd(g_tmdOnOffHand) ? 0 : 1);
             break;
+        case PR_TMD_HELP_IMPULSE: case PR_TMD_HELP_AGE: case PR_TMD_HELP_RULES:
+            return; // Help is read-only: never fall through to the DEBUG toggle.
         case PR_TMDFWD: case PR_TMDRIGHT: case PR_TMDUP: {
             // 1 UU a press, like the gun anchor. 1 UU is about 1.9 cm - the finest step worth a press.
             volatile LONG* t = row == PR_TMDFWD ? &g_tmdFwd
@@ -25204,6 +25216,33 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                         Log("weapon measured aim: fresh=%d rigid=%d from=(%.6f,%.6f,%.6f) to=(%.6f,%.6f,%.6f); native spread retained",
                             measured?1:0,aligned?1:0,from[0],from[1],from[2],to[0],to[1],to[2]);
                 }
+                // The measured-muzzle witness covers the three long guns, NOT Centurion.
+                // Do not guess a Centurion barrel socket or rotate its damage ray here.
+                // This bounded receipt distinguishes controller/trace disagreement from
+                // a mesh-only alignment error before either path is changed.
+                if(g_centurionAimProbe&&am==11&&!scoped&&Rd(g_gunVerts)==5799&&
+                   Rd(g_weaponObj)&&g_playerPawn&&!Rd(g_weaponHolstered)){
+                    static unsigned receipts=0;
+                    if(receipts<16){
+                        const float v[3]={End[0]-Start[0],End[1]-Start[1],End[2]-Start[2]};
+                        const float len=sqrtf(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+                        if(std::isfinite(len)&&len>1.0f){
+                            float expected[3],C[4][4];LegacyGunAimDir(expected);BuildGunC(C);
+                            const float trace[3]={v[0]/len,v[1]/len,v[2]/len};
+                            const float meshX[3]={C[0][0],C[0][1],C[0][2]};
+                            const float meshLen=sqrtf(meshX[0]*meshX[0]+meshX[1]*meshX[1]+meshX[2]*meshX[2]);
+                            if(std::isfinite(meshLen)&&meshLen>0.01f){
+                                ++receipts;
+                                Log("centurion aim probe: shot=%u pawn=%p weapon=%p nativeRay=(%.5f %.5f %.5f) controller=(%.5f %.5f %.5f) meshPlusX=(%.5f %.5f %.5f) rayControllerDot=%.6f rayMeshPlusXDot=%.6f spread/recoil NOT removed; mesh +X is NOT a proven barrel socket",
+                                    receipts,(void*)g_playerPawn,(void*)Rd(g_weaponObj),
+                                    trace[0],trace[1],trace[2],expected[0],expected[1],expected[2],
+                                    meshX[0]/meshLen,meshX[1]/meshLen,meshX[2]/meshLen,
+                                    trace[0]*expected[0]+trace[1]*expected[1]+trace[2]*expected[2],
+                                    (trace[0]*meshX[0]+trace[1]*meshX[1]+trace[2]*meshX[2])/meshLen);
+                            }
+                        }
+                    }
+                }
                 if(g_sniperOpticalAccuracy)NativeScopeShotReceipt(Start,End,rawDirection);
                 // Observe the ACTUAL outgoing collision ray separately from
                 // PlayTracerFX's cosmetic source. A tracer repair cannot prove
@@ -34703,6 +34742,7 @@ void LoadIniSettings() {
     g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;
     g_weaponTraceRigidOrigin=GetPrivateProfileIntA("Input","WeaponTraceRigidOrigin",0,path)!=0;
     g_weaponMeasuredAim=GetPrivateProfileIntA("Input","WeaponMeasuredAim",0,path)!=0;
+    g_centurionAimProbe=GetPrivateProfileIntA("Diagnostic","CenturionAimProbe",0,path)!=0;
     g_bodyEquipmentProbe=GetPrivateProfileIntA("Diagnostic","BodyEquipmentProbe",0,path)!=0;
     InterlockedExchange(&g_tmdNativeAim,GetPrivateProfileIntA("Input","TmdNativeAim",0,path)!=0);
     Log("ini: TmdNativeAim=%d (default OFF; local native aim/aging getter outputs only)",NativeTmdAim::Enabled()?1:0);

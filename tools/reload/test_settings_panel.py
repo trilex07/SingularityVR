@@ -46,6 +46,25 @@ class SettingsPanelTests(unittest.TestCase):
         config = (ROOT / "tools/reload/prepare_vr_settings_rifle_test.ps1").read_text(encoding="utf-8")
         self.assertIn("$targets['Diagnostic/VrSettingsSessionOnly']='1'", config)
 
+    def test_tmd_help_matches_shipped_sense_actions(self):
+        self.assertIn('"/user/hand/left/input/trigger/value",     "Impulse"', SOURCE)
+        self.assertIn('"/user/hand/left/input/x/click",           "AgeYoung"', SOURCE)
+        self.assertIn('"L2: IMPULSE (LEFT TRIGGER)"', SOURCE)
+        self.assertIn('"LEFT SQUARE: AGE / RENOVATE"', SOURCE)
+        self.assertIn('case PR_TMD_HELP_IMPULSE: case PR_TMD_HELP_AGE: case PR_TMD_HELP_RULES:', SOURCE)
+
+    def test_centurion_probe_does_not_write_a_new_shot_direction(self):
+        start = SOURCE.index('if(g_centurionAimProbe&&am==11')
+        end = SOURCE.index('if(g_sniperOpticalAccuracy)NativeScopeShotReceipt', start)
+        audit = SOURCE[start:end]
+        self.assertIn('Rd(g_gunVerts)==5799', audit)
+        self.assertIn('LegacyGunAimDir(expected)', audit)
+        self.assertIn('BuildGunC(C)', audit)
+        self.assertIn('spread/recoil NOT removed', audit)
+        self.assertNotIn('RotateTrace(', audit)
+        self.assertNotIn('weapontrace::Align(', audit)
+        self.assertIn('GetPrivateProfileIntA("Diagnostic","CenturionAimProbe",0,path)', SOURCE)
+
 
 if __name__ == "__main__":
     unittest.main()
