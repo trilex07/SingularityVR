@@ -53,6 +53,10 @@ PINNED = {
     "uobject_outer_helper_40bef0": 0x0040BEF0,
     "progression_unlock_loop": 0x00F03350,
     "fd5ba0_call_sites": [0x00F03431, 0x00F41675, 0x010419F7],
+    "wrong_class_vtable_fstring_dtor": 0x0189DC00,
+    "wrong_class_ctor_b40c80": 0x00B40C80,
+    "wrong_class_dtor_b40db0": 0x00B40DB0,
+    "invmgr_vtable_store": 0x01027912,
 }
 
 VTABLE_484_LOAD = bytes([0x8B, 0x90, 0x84, 0x04, 0x00, 0x00])  # mov edx, [eax+484h]
@@ -113,17 +117,59 @@ def find_call_sites(text: bytes, target: int) -> list[str]:
 
 
 def verify_fd5ac0(text: bytes) -> dict:
+    import capstone
+
     va = PINNED["catalog_path_to_mask"]
     chunk = text[va - TEXT_BASE : va - TEXT_BASE + 0xD8]
+    md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
+    ecx_used_as_this = False
+    for ins in md.disasm(chunk, va):
+        if ins.address >= va + 0x45:
+            break
+        if ins.mnemonic in ("mov", "cmp", "test", "lea", "add", "or", "and", "xor") and ins.op_str.startswith(
+            "ecx,"
+        ):
+            ecx_used_as_this = True
+            break
+        if "[ecx" in ins.op_str and "ebp" not in ins.op_str:
+            ecx_used_as_this = True
+            break
+    reads_ebp8 = chunk.find(bytes([0x8D, 0x4D, 0x08])) >= 0  # lea ecx,[ebp+8]
     return {
         "va": hex(va),
         "ret_imm": scan_ret(chunk, va),
         "expected_ret_imm": 8,
         "call_gamesystem": chunk.find(bytes([0xE8])) >= 0,
-        "failure_returns_minus_one": bytes([0x0F, 0x83]) not in chunk
-        and chunk.find(bytes([0x83, 0xC8, 0xFF])) >= 0,  # or eax,-1
-        "success_shl": chunk.find(bytes([0xD3, 0xE0])) >= 0,  # shl eax, cl
+        "failure_returns_minus_one": chunk.find(bytes([0x83, 0xC8, 0xFF])) >= 0,
+        "success_shl": chunk.find(bytes([0xD3, 0xE0])) >= 0,
         "callers": find_call_sites(text, va),
+        "incoming_ecx_is_not_this": not ecx_used_as_this,
+        "formal_args_from_ebp8": reads_ebp8,
+        "signature": (
+            "uint32 __stdcall CatalogWeaponPathToBitMask(const wchar_t* pathData, int pathNum); "
+            "ECX at entry is caller spill (Incidental, not part of ABI)"
+        ),
+        "fd5ba0_pushes_before_call": "push pathNum; push pathData; (FString components)",
+        "ffa950_pushes_before_call": "push [ebp-8]; push [ebp-0xC] after 4AFFD0",
+    }
+
+
+def verify_manager_3e4_lifetime(pe: PE, text: bytes) -> dict:
+    wrong_vt = PINNED["wrong_class_vtable_fstring_dtor"]
+    inv_vt = PINNED["inventory_manager_vtable"]
+    dtor_vt_store = PINNED["wrong_class_dtor_b40db0"] + 0x2A
+    off = dtor_vt_store - TEXT_BASE
+    dtor_sets = struct.unpack("<I", text[off + 2 : off + 6])[0]
+    inv_off = PINNED["invmgr_vtable_store"] - TEXT_BASE
+    inv_sets = struct.unpack("<I", text[inv_off + 2 : inv_off + 6])[0]
+    return {
+        "resolution": "A_B40E78_not_RvInventoryManager",
+        "b40db0_sets_vtable": hex(dtor_sets),
+        "invmgr_vtable_at_1027912": hex(inv_sets),
+        "vtable_match_at_dtor": dtor_sets == wrong_vt,
+        "invmgr_ctor_stores_vtable": inv_sets == inv_vt,
+        "manager_plus_3e4_type": "uint32 catalog_bitmask (OR/AND only; no 403B00 free on InvMgr path)",
+        "fstring_free_sites_at_3e4": ["0xB40E78 (class vtable 0x0189DC00 only)"],
     }
 
 
@@ -205,16 +251,21 @@ def classify_484_callers(sites: list[dict]) -> dict:
 
 
 def classify_3e4_xrefs(hits: list[dict]) -> dict:
-    manager_vas = {0xFFA9DC, 0xFFA9E6, 0xFD5BC0, 0xFD5BCD, 0xB40D56, 0xB40E78}
+    manager_bitmask_vas = {0xFFA9DC, 0xFFA9E6, 0xFD5BC0, 0xFD5BCD}
+    wrong_class_fstring_vas = {0xB40D56, 0xB40E78}
     manager: list[dict] = []
     gfx: list[dict] = []
+    wrong_class: list[dict] = []
     other: list[dict] = []
     for h in hits:
         va_int = int(h["va"], 16)
         entry = {**h}
-        if va_int in manager_vas:
-            entry["class_hint"] = "RvInventoryManager"
+        if va_int in manager_bitmask_vas:
+            entry["class_hint"] = "RvInventoryManager_bitmask"
             manager.append(entry)
+        elif va_int in wrong_class_fstring_vas:
+            entry["class_hint"] = "vtable_0x0189DC00_FString_field"
+            wrong_class.append(entry)
         elif va_int == 0x91B241:
             entry["class_hint"] = "vtable_0x019D4488_not_WeaponLocker"
             gfx.append(entry)
@@ -223,6 +274,7 @@ def classify_3e4_xrefs(hits: list[dict]) -> dict:
             other.append(entry)
     return {
         "inventory_manager_bitmask": manager,
+        "wrong_class_fstring_at_same_offset": wrong_class,
         "gfx_consumer_91b241": gfx,
         "other_offset_collisions": other,
     }
@@ -253,9 +305,10 @@ def main() -> None:
     sites = scan_484_sites(text)
     mask_hits = scan_text_patterns(text, MASK_3E4_PATTERNS)
     fd5 = verify_fd5ac0(text)
+    lifetime = verify_manager_3e4_lifetime(pe, text)
 
     report = {
-        "schema": "singularityvr-locker-progression-features-v2",
+        "schema": "singularityvr-locker-progression-features-v3",
         "exe_sha256": hashlib.sha256(exe).hexdigest(),
         "text_sha256": hashlib.sha256(text).hexdigest(),
         "text_base": hex(TEXT_BASE),
@@ -270,19 +323,28 @@ def main() -> None:
         },
         "fd5ac0_catalog_path_to_mask": {
             **fd5,
-            "abi": "stdcall ret 8; arg0 FString* weapon path; GGameSystem via 0xEFA070",
             "skip_row_if": ["row[+0x24]!=0", "row[+0x4C]&1"],
             "success_return": "1u << catalogIndex",
             "failure_return": "0xFFFFFFFF",
             "match_helpers": ["0x4AC340", "0x4409F0"],
+            "gamesystem_via": "0xEFA070",
         },
         "fd5ba0_apply_mask": {
             "va": hex(PINNED["catalog_mask_apply"]),
-            "abi": "thiscall ret 0xC; [ebp+0x10] bool enable -> or/and not [this+0x3E4]",
+            "signature": (
+                "void __thiscall ApplyCatalogBit(RvInventoryManager* this, "
+                "const wchar_t* pathData, int pathNum, bool enable)"
+            ),
             "call_sites": [hex(v) for v in PINNED["fd5ba0_call_sites"]],
             "call_sites_match": find_call_sites(text, PINNED["catalog_mask_apply"])
             == [hex(v) for v in PINNED["fd5ba0_call_sites"]],
+            "progression_paths": {
+                "0xF03431": "Mission unlock loop 0xF03350: FString from catalog row -> FD5BA0(true); may AddWeapon +0x434",
+                "0xF41675": "Pickup bundle: pairs at [item+0xC8 + i*8] (data,num) -> FD5BA0(true)",
+                "0x10419F7": "Pickup: [pickup+0x2E8/0x2EC] weapon identity -> FD5BA0(true)",
+            },
         },
+        "manager_plus_3e4_lifetime": lifetime,
         "catalog_row_layout_partial": {
             "gamesystem_offset_data": hex(PINNED["catalog_gamesystem_data"]),
             "gamesystem_offset_count": hex(PINNED["catalog_gamesystem_count"]),
@@ -322,11 +384,14 @@ def main() -> None:
         "slot_44c_ret_imm": scan_ret(v44c, PINNED["vtable_slot_44c"]["impl"]),
         "vtable_verify": verify_vtable(pe),
         "vtable_484_call_sites": classify_484_callers(sites),
-        "ordinary_weapon_bit_map": "NOT_PROVEN_offline",
+        "catalog_offline_tool": "tools/reload/dump_gamesystem_weapon_catalog_offline.py",
+        "ordinary_weapon_bit_map": "INFERRED_Default__RvGameSystem_path_order",
         "verdict": {
-            "manager_plus_3e4_bitmask_semantics": "PROVEN_via_FD5AC0_FD5BA0",
+            "manager_plus_3e4_bitmask_semantics": "PROVEN_uint32_via_FD5BA0",
+            "manager_plus_3e4_lifetime": "PROVEN_not_FString_on_InvMgr",
+            "catalog_index_order": "INFERRED_blob_order_equals_runtime_index",
             "weapon_locker_consumes_3e4": "NOT_PROVEN_91B221_retired",
-            "overall_vr_loadout": "B_strong_candidate_plus_minimal_witness_for_AR_identity",
+            "overall_vr_loadout": "B_ready_for_minimal_runtime_witness_on_locker_consumption",
         },
         "minimal_witness_shape": (
             "Weapon=<path> catalogIndex=i nativeBitIndex=i nativeMask=(1<<i) "
@@ -345,6 +410,12 @@ def main() -> None:
     ok &= report["vtable_verify"]["gfx_consumer_vtable_578"]["match"]
     ok &= report["vtable_verify"]["inventory_manager_vtable_578"]["expected_not_91b220"]
     ok &= report["vtable_verify"]["weapon_locker_vtable_578"]["resolved"] == "0x5b93c0"
+    ok &= fd5["incoming_ecx_is_not_this"]
+    ok &= fd5["formal_args_from_ebp8"]
+    ok &= lifetime["invmgr_ctor_stores_vtable"]
+    ok &= lifetime["resolution"] == "A_B40E78_not_RvInventoryManager"
+    ok &= len(report["mask_3e4_xrefs"]["wrong_class_fstring_at_same_offset"]) == 2
+    ok &= len(report["mask_3e4_xrefs"]["inventory_manager_bitmask"]) >= 4
     report["_witness_ok"] = ok
 
     print(json.dumps(report, indent=2))

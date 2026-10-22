@@ -13,10 +13,11 @@
 | `GGameSystem+0x160` row layout | **PARTIAL** — identity + filters **`+0x24`**, **`+0x4C`** documented; full **`0x50`** bytes not all classified |
 | `EnableAllWeaponsForLocker` filters | **PROVEN** — same skip rules as `FD5AC0`; bool OR/AND-NOT on manager **`+0x3E4`** |
 | Does **`0x91B221`** prove WeaponLocker reads the mask? | **NO — (C) wrong subsystem** — not `RvInventoryManager`, not `RvUIGFxMovie_WeaponLocker` |
-| Ordinary AR* → bit index | **NOT PROVEN** offline (catalog order / strings not in `.text`) |
-| Is **`+0x3E4`** still a progression bitmask on the manager? | **YES (B)** — written only via **`0xFD5BA0`**; normal game sets bits at pickup / mission paths |
+| Ordinary AR* → bit index | **INFERRED** — `Default__RvGameSystem` blob path order (`dump_gamesystem_weapon_catalog_offline.py`); runtime index bind not named in exports |
+| Is **`+0x3E4`** a safe **`uint32_t`** on **`RvInventoryManager`**? | **PROVEN** — **`0xB40E78`** is **not** InvMgr (vtable **`0x0189DC00`**); InvMgr only **OR/AND** via **`0xFD5BA0`** |
+| **`+0x3E4` mask meaning** | **Catalog unlock / locker-eligibility bit** (not owned inventory); bits can be set without **`ownedMask`** reflecting all weapons |
 
-**Overall for VR loadout:** **(B) STRONG CANDIDATE** — native mask semantics and row→bit math are proven; **WeaponLocker GFx consumer of this dword is not proven**; retire **`0x91B221`** as locker evidence. Next boundary remains **GFx `equip(Weapon)` / `LoadEquippedWeapons`** unless a read-only witness ties catalog rows to AR* names.
+**Overall for VR loadout:** **(B) READY FOR ONE RUNTIME WITNESS** — ABI, field type, row→bit math, and **inferred** AR* indices are offline; **WeaponLocker consumer** still unproven (`0x91B221` retired).
 
 ---
 
@@ -27,9 +28,9 @@
 | Item | Value |
 |------|--------|
 | **VA** | **`0x00FD5AC0`** |
-| **ABI** | **`__stdcall`**, **`ret 8`** |
-| **Arg0 `[ebp+8]`** | **`FString*`** — weapon path / export name to match (caller builds via **`0x4AFFD0`**) |
-| **Implicit `this`** | **`RvInventoryManager*`** in **`ecx`** on entry from direct callers (wrapper passes manager as `this`) |
+| **ABI** | **`uint32 __stdcall CatalogWeaponPathToBitMask(const wchar_t* pathData, int pathNum)`** — **`ret 8`** |
+| **Stack args** | **`[ebp+8]`** = path character pointer; **`[ebp+0xC]`** = path length/count (FString components pushed by callers) |
+| **ECX at entry** | **Not part of the ABI** — callers often hold **`RvInventoryManager*`** in ECX for the **next** **`FD5BA0`** call, but **`0xFD5AC0` never dereferences incoming ECX** |
 | **GameSystem** | **`call 0xEFA070`** → **`GGameSystem*`** in **`esi`** |
 | **Catalog** | **`data = [gsi+0x160]`**, **`count = [gsi+0x164]`**, **`stride = 0x50`**, loop index **`i = [ebp-8]`** |
 
@@ -146,14 +147,23 @@ for (i = 0; i < gsi.count_164; ++i) {
 
 ---
 
-## 6. All `.text` xrefs to **`[reg+0x3E4]`** (manager vs other types)
+## 6. **`+0x3E4` lifetime — `0xB40D56` / `0xB40E78` resolved (A)**
+
+| Function | Vtable set | Class |
+|----------|------------|--------|
+| **`0xB40C80`–`0xB40DA1`** ctor | **`0x0189DC00`** @ **`0xB40C8A`** | **Not** **`RvInventoryManager`** |
+| **`0xB40DB0`… dtor | **`0x0189DC00`** @ **`0xB40DDA`** | Same — **`0xB40E78`** frees **`+0x3E4` as FString** |
+| **`0x1027912`** | **`0x019CB480`** | **`RvInventoryManager`** vtable store (separate type) |
+
+**Conclusion:** **`+0x3E4` FString dtor is offset collision on vtable `0x0189DC00`**. On **`RvInventoryManager`**, **`+0x3E4` is a plain `uint32` bitmask** (only **`or`/`and`** sites **`0xFD5BC0`/`0xFD5BCD`/`0xFFA9DC`/`0xFFA9E6`**).
+
+## 7. All `.text` xrefs to **`[reg+0x3E4]`** (manager vs other types)
 
 | VA | Op | Likely `this` | Role |
 |----|-----|---------------|------|
 | **`0xFFA9DC` / `0xFFA9E6`** | or/and | **InvMgr** | EnableAll bitmask |
 | **`0xFD5BC0` / `0xFD5BCD`** | or/and | **InvMgr** | **`FD5BA0`** |
-| **`0xB40D56`** | mov | **InvMgr ctor** | Zero init |
-| **`0xB40E78`** | mov/free | **InvMgr dtor** | Treats field as **heap FString** (lifetime); coexists with integer OR — field may stay **0** until first bit set without allocation |
+| **`0xB40D56` / `0xB40E78`** | mov/free | **vtable `0x0189DC00`** | **Not InvMgr** (see §6) |
 | **`0x6D626C` / `0x6DAAA2`** | mov | UI/state object | Init parallel **`+0x3D8..+0x3EC`** block |
 | **`0x6D94A2` / `0xE6A997`** | mov | UI object | **`+0x3E4` = pointer to int array**, indexed |
 | **`0x91B241`** | mov | **vtable `0x019D4488`** | UObject\* for **`0x40BEF0`** |
@@ -164,17 +174,48 @@ for (i = 0; i < gsi.count_164; ++i) {
 
 ---
 
-## 7. Ordinary weapon bit mapping
+## 8. Catalog population source
 
-**Rule (proven):** bit **`N`** = **`1 << catalogIndex`** where **`catalogIndex`** is the **`i`** in the **`+0x160`** loop when **`FD5AC0`** succeeds.
+| Item | Evidence |
+|------|----------|
+| **Runtime container** | **`GGameSystem+0x160`** data, **`+0x164`** count, row **`0x50`** |
+| **Static source** | **`Default__RvGameSystem`** export (**10319**, size **13416**) in **`RvGame.decompressed.xxx`** |
+| **Mechanism** | UE3 **default-property serialization** into the live singleton (not the debug bool importer at **`0xBF9860`**, which touches unrelated **`esi+0x160`** bool flags) |
+| **Tool** | **`tools/reload/dump_gamesystem_weapon_catalog_offline.py`** |
 
-**Not proven:** which **`i`** corresponds to **`ARPistol` / `ARMachineGun` / `ARShotgun` / `ARSniperRifle`** (no AR* strings in `.text`; catalog lives in cooked data).
+**Nine `wp_SP_*` paths** recovered in blob ascending order (inferred catalog indices **0..8**).
 
-**Do not assume** VR wheel bits **`1/2/4/8`** match native indices.
+## 9. Ordinary weapon bit mapping (inferred)
+
+**Rule (proven):** bit **`N`** = **`1 << catalogIndex`**.
+
+**Inferred indices** (blob path order = runtime index — not export-bound):
+
+| Weapon path | Index | Native mask |
+|-------------|------:|-------------|
+| **`wp_SP_ARPistol`** | **0** | **`0x1`** |
+| **`wp_SP_ARMachineGun`** | **1** | **`0x2`** |
+| **`wp_SP_ARShotgun`** | **2** | **`0x4`** |
+| **`wp_SP_ARSniperRifle`** | **5** | **`0x20`** |
+
+(Gatling **3**, Railgun **4**, etc. occupy indices **3–4**, **6–8**.)
+
+**VR wheel:** translate from native masks — **do not assume** **`1/2/4/8`** equals catalog indices.
+
+## 10. Normal progression writers (`FD5BA0`)
+
+| Site | Path into **`FD5BA0`** | Semantics |
+|------|------------------------|-----------|
+| **`0xF03431`** | Catalog row identity FString (**`0xF03350`**) | Mission/story unlock: set bit, then **`vtable+0x434`** may **AddWeapon** if not already owned |
+| **`0xF41675`** | **`[item+0xC8 + i*8]`** (data,num) | Pickup bundle grants locker bit per listed weapon |
+| **`0x10419F7`** | **`[pickup+0x2E8/0x2EC]`** | Pickup weapon identity → enable bit (matches **`kItemWeaponName=0x2E8`**) |
+| **`0xFFA950`** | Same as catalog loop | Cheat **`EnableAllWeaponsForLocker`**: bits only, **no** **`+0x434`** add |
+
+**Meaning:** **`+0x3E4`** tracks **catalog / locker progression bits** independent of **`ownedMask`**. MG + Shotgun can be **offered** with **`ownedMask=0x1`** if their bits were set by progression while pistol remains the only owned weapon.
 
 ---
 
-## 8. Minimal runtime witness (only if authorized later)
+## 11. Minimal runtime witness (only if authorized later)
 
 Prefer **read-only** correlation using proven offline math:
 
@@ -191,11 +232,11 @@ Avoid logging **`mask=` alone** while cycling weapons — mask may be constant a
 
 ---
 
-## 9. Tooling
+## 12. Tooling
 
 ```text
 python tools/reload/inspect_locker_progression_features.py --strict
 python tools/reload/test_locker_progression_features.py
+python tools/reload/dump_gamesystem_weapon_catalog_offline.py
+python tools/reload/test_gamesystem_weapon_catalog_offline.py
 ```
-
-Pins: **`FD5AC0`**, **`FD5BA0`**, **`FFA950`**, **`+0x3E4` xrefs**, **`0x91B220` vtable gate**, **`FD5BA0` call sites**.
