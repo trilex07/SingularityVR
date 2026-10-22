@@ -85,12 +85,43 @@ class E2eRegression(unittest.TestCase):
         self.assertIn("EngineLoadoutNotReadyReason", body)
         runtime = (REPO / "spikes/view_matrix/locker_vr_loadout_runtime.h").read_text(encoding="utf-8")
         self.assertIn("AvailabilityBlockReason", runtime)
-        self.assertIn("SnapshotValid()", runtime.split("AvailabilityBlockReason", 1)[1])
+        avail = runtime.split("AvailabilityBlockReason", 1)[1].split("AvailabilitySourcesReady", 1)[0]
+        self.assertIn("SnapshotBoundManager", avail)
 
     def test_availability_manager_uses_image_relative_vtable(self):
         runtime = (REPO / "spikes/view_matrix/locker_vr_loadout_runtime.h").read_text(encoding="utf-8")
         self.assertIn("ExpectedInventoryManagerVtable", runtime)
         self.assertIn("RelocatedDataAddress", runtime)
+
+    def test_snapshot_manager_exposed(self):
+        inv = (REPO / "spikes/view_matrix/native_owned_inventory.h").read_text(encoding="utf-8")
+        self.assertIn("SnapshotManager()", inv)
+        self.assertIn("SnapshotValid()?manager:0", inv.replace(" ", ""))
+
+    def test_ready_and_native_mask_share_snapshot_manager(self):
+        runtime = (REPO / "spikes/view_matrix/locker_vr_loadout_runtime.h").read_text(encoding="utf-8")
+        self.assertIn("SnapshotBoundManager", runtime)
+        avail = runtime.split("AvailabilityBlockReason", 1)[1].split("AvailabilitySourcesReady", 1)[0]
+        mask = runtime.split("ReadNativeProgressionMask", 1)[1].split("AvailabilityBlockReason", 1)[0]
+        self.assertIn("SnapshotBoundManager", avail)
+        self.assertIn("SnapshotBoundManager", mask)
+        self.assertNotIn("ResolveInventoryManager(pawn)", avail)
+
+    def test_acquire_uses_gamesystem_instance_only(self):
+        acquire = (REPO / "spikes/view_matrix/locker_vr_loadout_acquire.h").read_text(encoding="utf-8")
+        self.assertIn("GameSystemInstance()", acquire)
+        self.assertNotIn("Pointer(LockerVrLoadoutRuntime::kGGameSystemPtr)", acquire)
+        self.assertNotIn("kGGameSystemPtr)", acquire.replace(" ", ""))
+
+    def test_runtime_pinned_data_addresses_relocated(self):
+        runtime = (REPO / "spikes/view_matrix/locker_vr_loadout_runtime.h").read_text(encoding="utf-8")
+        self.assertIn("RelocatedDataAddress(kDefaultEmptyFString)", runtime)
+        self.assertNotIn(
+            "reinterpret_cast<const void*>(kDefaultEmptyFString)",
+            runtime.replace(" ", ""),
+        )
+        gs_block = runtime.split("GameSystemInstance()", 1)[0]
+        self.assertNotIn("Pointer(kGGameSystemPtr)", runtime.split("FStringPtrAtCatalogRowSecondary", 1)[0])
 
     def test_loading_ui_no_large_panel(self):
         draw = self._draw_body()

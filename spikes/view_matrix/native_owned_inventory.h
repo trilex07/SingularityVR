@@ -273,6 +273,7 @@ static DWORD PollThreadId(){return thread;}
 static bool Ready(){return Mask()!=0;}
 static bool SnapshotValid(){return InterlockedCompareExchange(&snapshotValid,0,0)!=0;}
 static uintptr_t SnapshotPawn(){return SnapshotValid()?pawn:0;}
+static uintptr_t SnapshotManager(){return SnapshotValid()?manager:0;}
 // Synchronous snapshot for locker virtual apply (input thread, same as wheel poll).
 static bool SnapshotNow() {
   if(!Rd(g_keepAcquiredWeapons)&&!Rd(g_ownedWeaponWheel))return false;

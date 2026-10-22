@@ -23,7 +23,7 @@ inline volatile LONG g_factoryWitnessed = 0;
 inline uintptr_t g_factoryFn = 0;
 
 inline uintptr_t ResolveGameSystemFactoryFn() {
-    const uintptr_t gs = PauseRttProbe::Pointer(LockerVrLoadoutRuntime::kGGameSystemPtr);
+    const uintptr_t gs = LockerVrLoadoutRuntime::GameSystemInstance();
     if (!LockerVrLoadoutIdentity::GameSystemObjectIdentityOk(gs)) return 0;
     const uintptr_t vt = PauseRttProbe::Pointer(gs);
     if (!PauseRttProbe::SafeRange(vt + kGsVtableLookupOff, 4)) return 0;
@@ -104,13 +104,13 @@ inline bool TryPickupOrdinary(uint32_t vrBit, uintptr_t pawn, int* pickupResult)
         return false;
 
     if (!pawn || !PauseRttProbe::SafeRange(pawn, 4)) return false;
-    if (!LockerVrLoadoutRuntime::ResolveInventoryManager(pawn)) return false;
+    if (!LockerVrLoadoutRuntime::SnapshotBoundManager(pawn)) return false;
     if (NativeOwnedInventory::Mask() & vrBit) return false;
 
     const void* fstr = LockerVrLoadoutRuntime::FStringPtrAtCatalogRowSecondary(index);
     if (!fstr) return false;
 
-    void* gs = reinterpret_cast<void*>(PauseRttProbe::Pointer(LockerVrLoadoutRuntime::kGGameSystemPtr));
+    void* gs = reinterpret_cast<void*>(LockerVrLoadoutRuntime::GameSystemInstance());
     void* archetype = LookupArchetypeViaNativeAbi(gs, fstr);
     if (!ArchetypeInWeaponSharedHierarchy(archetype)) return false;
 

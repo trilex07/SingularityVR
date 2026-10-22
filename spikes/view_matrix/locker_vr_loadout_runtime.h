@@ -57,9 +57,18 @@ inline uintptr_t ResolveInventoryManager(uintptr_t pawn) {
     return mgr;
 }
 
-inline uint32_t ReadNativeProgressionMask(uintptr_t pawn) {
-    const uintptr_t mgr = ResolveInventoryManager(pawn);
+// VR loadout availability reads native mask only from the manager committed by the current owned snapshot.
+inline uintptr_t SnapshotBoundManager(uintptr_t pawn) {
+    if (!NativeOwnedInventory::SnapshotValid()) return 0;
+    if (NativeOwnedInventory::SnapshotPawn() != pawn) return 0;
+    const uintptr_t mgr = NativeOwnedInventory::SnapshotManager();
     if (!mgr || !PauseRttProbe::SafeRange(mgr + kMgrNativeMaskOff, 4)) return 0;
+    return mgr;
+}
+
+inline uint32_t ReadNativeProgressionMask(uintptr_t pawn) {
+    const uintptr_t mgr = SnapshotBoundManager(pawn);
+    if (!mgr) return 0;
     return *reinterpret_cast<const uint32_t*>(mgr + kMgrNativeMaskOff);
 }
 
@@ -68,9 +77,7 @@ inline const char* AvailabilityBlockReason(uintptr_t pawn) {
     const uintptr_t gs = GameSystemInstance();
     if (!gs || !PauseRttProbe::SafeRange(gs + kCatalogCountOff, 8)) return "availability_gamesystem";
     if (!LockerVrLoadoutIdentity::GameSystemObjectIdentityOk(gs)) return "availability_gamesystem_identity";
-    // Owned inventory snapshot already validated pawn+0x3D0 manager via class chain (same thread as loadout poll).
-    if (NativeOwnedInventory::SnapshotValid() && NativeOwnedInventory::SnapshotPawn() == pawn) return nullptr;
-    if (!ResolveInventoryManager(pawn)) return "availability_manager";
+    if (!SnapshotBoundManager(pawn)) return "availability_manager";
     return nullptr;
 }
 
@@ -94,7 +101,7 @@ inline const void* FStringPtrAtCatalogRowSecondary(unsigned index) {
     const uintptr_t row = data + static_cast<uintptr_t>(index) * kCatalogStride;
     if (!PauseRttProbe::SafeRange(row + 0x10, 4)) return nullptr;
     if (*reinterpret_cast<const int*>(row + 0x10) == 0)
-        return reinterpret_cast<const void*>(kDefaultEmptyFString);
+        return reinterpret_cast<const void*>(RelocatedDataAddress(kDefaultEmptyFString));
     if (!PauseRttProbe::SafeRange(row + 0xC, 8)) return nullptr;
     return reinterpret_cast<const void*>(PauseRttProbe::Pointer(row + 0xC));
 }
