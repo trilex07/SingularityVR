@@ -1,0 +1,67 @@
+"""
+Generates clean, scalable SVG vector sources for Pause Menu and Confirmation Modal.
+"""
+
+import os
+
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+SVG_DIR = os.path.join(BASE_DIR, "assets", "source", "ui_remaster", "pause_menu")
+os.makedirs(SVG_DIR, exist_ok=True)
+
+pause_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 860" width="680" height="860">
+  <defs>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#121A24"/>
+      <stop offset="100%" stop-color="#1A2533"/>
+    </linearGradient>
+    <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Panel Base Plate -->
+  <rect x="16" y="16" width="648" height="828" rx="8" fill="#0D1118" fill-opacity="0.95" stroke="#415566" stroke-width="3"/>
+  <rect x="22" y="22" width="636" height="816" rx="6" fill="none" stroke="#1C2630" stroke-width="2"/>
+
+  <!-- Corner Brackets -->
+  <g fill="#202C3C">
+    <polygon points="16,16 76,16 76,36 36,76 16,76"/>
+    <polygon points="664,16 604,16 604,36 644,76 664,76"/>
+    <polygon points="16,844 76,844 76,824 36,784 16,784"/>
+    <polygon points="664,844 604,844 604,824 644,784 664,784"/>
+  </g>
+  <g fill="#374B5F" stroke="#6E8CA5" stroke-width="1.5">
+    <circle cx="36" cy="36" r="6"/>
+    <circle cx="644" cy="36" r="6"/>
+    <circle cx="36" cy="824" r="6"/>
+    <circle cx="644" cy="824" r="6"/>
+  </g>
+
+  <!-- Header Box -->
+  <rect x="36" y="36" width="608" height="80" fill="url(#headerGrad)" stroke="#2CE8E4" stroke-width="2"/>
+  <rect x="42" y="42" width="70" height="68" fill="#144150" stroke="#78FFFA" stroke-width="2"/>
+  <text x="77" y="84" font-family="Bahnschrift, Arial" font-size="22" font-weight="bold" fill="#78FFFA" text-anchor="middle">E99</text>
+  <text x="130" y="72" font-family="Bahnschrift, Arial" font-size="22" font-weight="bold" fill="#F5FAFF">ПАУЗА // PAUSE TERMINAL</text>
+  <text x="130" y="96" font-family="Bahnschrift, Arial" font-size="11" fill="#82A0B4">НАУЧНО-ИССЛЕДОВАТЕЛЬСКИЙ СЕКТОР КАТОРГА-12</text>
+
+  <!-- Sample Buttons -->
+  <!-- Resume -->
+  <rect x="70" y="150" width="540" height="56" fill="#0F151D" stroke="#374B5F" stroke-width="2"/>
+  <text x="340" y="185" font-family="Bahnschrift, Arial" font-size="18" font-weight="bold" fill="#EBF4FA" text-anchor="middle">ПРОДОЛЖИТЬ // RESUME</text>
+
+  <!-- VR Settings (Hovered) -->
+  <rect x="70" y="360" width="540" height="56" fill="#144152" stroke="#78FFFA" stroke-width="3" filter="url(#cyanGlow)"/>
+  <rect x="70" y="360" width="16" height="56" fill="#78FFFA"/>
+  <text x="340" y="390" font-family="Bahnschrift, Arial" font-size="18" font-weight="bold" fill="#FFFFFF" text-anchor="middle">ПАРАМЕТРЫ VR // VR SETTINGS</text>
+  <text x="340" y="408" font-family="Bahnschrift, Arial" font-size="11" fill="#78FFFA" text-anchor="middle">КОНФИГУРАЦИЯ СИСТЕМЫ И ПРИЦЕЛА</text>
+</svg>
+"""
+
+with open(os.path.join(SVG_DIR, "pause_menu_panel.svg"), "w", encoding="utf-8") as f:
+    f.write(pause_svg)
+
+print("Generated pause_menu_panel.svg")

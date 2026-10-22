@@ -1,0 +1,67 @@
+"""
+Generates clean, scalable SVG vector sources for interaction icons.
+"""
+
+import os
+
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+SVG_DIR = os.path.join(BASE_DIR, "assets", "source", "ui_remaster", "interaction_icons")
+os.makedirs(SVG_DIR, exist_ok=True)
+
+icons_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 1. Interact / Gear -->
+  <g transform="translate(64, 64)" stroke="#2CE8E4" fill="none" stroke-width="4">
+    <circle cx="0" cy="0" r="36" fill="#0E1620" fill-opacity="0.8"/>
+    <circle cx="0" cy="0" r="22"/>
+    <circle cx="0" cy="0" r="8" fill="#2CE8E4"/>
+    <line x1="0" y1="-28" x2="0" y2="-22" stroke-width="6"/>
+    <line x1="0" y1="22" x2="0" y2="28" stroke-width="6"/>
+    <line x1="-28" y1="0" x2="-22" y2="0" stroke-width="6"/>
+    <line x1="22" y1="0" x2="28" y2="0" stroke-width="6"/>
+  </g>
+
+  <!-- 2. Pickup / Chevron -->
+  <g transform="translate(192, 64)" stroke="#2CE8E4" fill="none" stroke-width="4">
+    <circle cx="0" cy="0" r="36" fill="#0E1620" fill-opacity="0.8"/>
+    <polygon points="0,-18 -15,0 -6,0 -6,12 6,12 6,0 15,0" fill="#2CE8E4"/>
+    <line x1="-20" y1="16" x2="-20" y2="22"/>
+    <line x1="-20" y1="22" x2="20" y2="22"/>
+    <line x1="20" y1="22" x2="20" y2="16"/>
+  </g>
+
+  <!-- 3. TMD Chronal Loop -->
+  <g transform="translate(320, 64)" stroke="#2CE8E4" fill="none" stroke-width="4">
+    <circle cx="0" cy="0" r="36" fill="#0E1620" fill-opacity="0.8"/>
+    <circle cx="0" cy="0" r="20" stroke-dasharray="8,4"/>
+    <polygon points="20,0 28,-10 32,0" fill="#2CE8E4"/>
+    <polygon points="-10,17 -22,22 -16,12" fill="#2CE8E4"/>
+    <polygon points="-10,-17 -16,-12 -22,-22" fill="#2CE8E4"/>
+    <circle cx="0" cy="0" r="7" fill="#78FFFA" filter="url(#cyanGlow)"/>
+  </g>
+
+  <!-- 4. Reload -->
+  <g transform="translate(448, 64)" stroke="#2CE8E4" fill="none" stroke-width="4">
+    <circle cx="0" cy="0" r="36" fill="#0E1620" fill-opacity="0.8"/>
+    <path d="M -16,10 A 20,20 0 0,1 -10,-16"/>
+    <path d="M 16,-10 A 20,20 0 0,1 10,16"/>
+    <polygon points="12,14 18,24 8,24" fill="#2CE8E4"/>
+    <polygon points="-12,-14 -18,-24 -8,-24" fill="#2CE8E4"/>
+    <rect x="-3" y="-10" width="6" height="20" rx="3" fill="#2CE8E4"/>
+  </g>
+</svg>
+"""
+
+with open(os.path.join(SVG_DIR, "interaction_icons.svg"), "w", encoding="utf-8") as f:
+    f.write(icons_svg)
+
+print("Generated interaction_icons.svg")
