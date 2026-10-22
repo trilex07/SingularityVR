@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
-"""Singularity VR — Diegetic HUD & Remastered 3D Preview Renderer (V2 Fixed).
+"""Singularity VR — Diegetic HUD & Remastered 3D Preview Renderer (V2.1 Final).
 Renders presentation-grade, texture-mapped 1920x1080 visual previews:
-- Centurion Revolver
-- Valkyrie AR9 Rifle
-- Spikeshot Shotgun
-- Kasimov SNV-E99 Sniper Rifle
-- Left Glove / TMD Bio-Monitor
+- Centurion Revolver ('06/24' authentic 7-segment VFD)
+- Valkyrie AR9 Rifle ('30/120' authentic 7-segment VFD)
+- Spikeshot Shotgun ('08/32' authentic 7-segment VFD)
+- Kasimov SNV-E99 Sniper Rifle ('05/20' authentic 7-segment VFD)
+- Left Glove / TMD Bio-Monitor (100% Cyan / 50% Amber / 20% Crimson health states)
 
 Features:
-- Fixed Numba JIT software rasterizer with mathematically consistent barycentric edge functions
-- Two-sided triangle handling preventing backface drops on open/planar meshes
-- Exact perspective-correct depth and UV interpolation: (u/z, v/z, 1/z)
-- Automatic blank image detection (>5000 pixels drawn assertion)
-- PBR studio lighting: Key light, fill light, rim light, ambient occlusion, metallic specular highlights
-- Multi-radius E99 phosphor bloom
-- Genuine side-by-side comparisons: Original geometry + actual vanilla texture vs Modified V2 + 4K remastered texture
+- Numba JIT software rasterizer with exact perspective-correct UV & depth interpolation
+- Balanced studio lighting optimized to reveal surface detail, Cyrillic proof marks, and edge wear equally on vanilla and remaster
+- Zero opaque occlusion: 7-segment phosphor readouts positioned cleanly in recessed display wells
+- Segmented health bar demonstration: 10/10 cells at 100%, 5/10 cells at 50%, 2/10 cells at 20%
+- Genuine side-by-side comparisons: Original vanilla asset vs V2.1 remaster with diegetic HUD
 """
 import io
 import math
@@ -44,7 +42,7 @@ def rasterize_textured_triangles(
     tri_colors,      # (N, 3)    -> material base / tint
     tri_spec,        # (N, 3)    -> specular highlight
     tri_emissive,    # (N, 3)    -> emissive glow
-    face_types,      # (N,)      -> -1=textured weapon, 0=bezel, 1=glass, 2=rivet, 3=phosphor, 4=accent
+    face_types,      # (N,)      -> -1=textured weapon, 0=bezel, 1=bed, 2=rivet, 3=phosphor, 4=accent
     tex_diffuse,     # (H, W, 3) -> float32
     width, height,
     out_color, out_emissive, out_depth
@@ -76,7 +74,7 @@ def rasterize_textured_triangles(
         if abs(area) < 1e-5:
             continue
 
-        # Two-sided rendering: if area < 0, swap vertices 1 and 2 to guarantee positive winding
+        # Two-sided rendering: guarantee positive winding
         if area < 0.0:
             x1, x2 = x2, x1
             y1, y2 = y2, y1
@@ -95,7 +93,7 @@ def rasterize_textured_triangles(
         if min_x > max_x or min_y > max_y:
             continue
 
-        # Perspective-correct attribute pre-multiplication by 1/z
+        # Perspective-correct pre-multiplication by 1/z
         u0_z = u0 * z0
         v0_z = v0 * z0
         u1_z = u1 * z1
@@ -145,7 +143,6 @@ def rasterize_textured_triangles(
                             u = (l0 * u0_z + l1 * u1_z + l2 * u2_z) / inv_z
                             v = (l0 * v0_z + l1 * v1_z + l2 * v2_z) / inv_z
 
-                            # Standard texture address wrapping [0.0, 1.0]
                             u_norm = u - math.floor(u)
                             v_norm = v - math.floor(v)
                             tx = int(u_norm * (tex_w - 1))
@@ -173,9 +170,9 @@ def rasterize_textured_triangles(
                         out_emissive[py, px, 2] = em_b
 
 # -----------------------------------------------------------------------------
-# Studio Lighting & Material System
+# Studio Lighting & Surface Detail System (Balanced for Both Models)
 # -----------------------------------------------------------------------------
-def compute_lighting(verts, faces, face_types, hp_state="cyan"):
+def compute_lighting(verts, faces, face_types, hp_state="cyan", is_glove=False):
     v0 = verts[faces[:, 0]]
     v1 = verts[faces[:, 1]]
     v2 = verts[faces[:, 2]]
@@ -184,20 +181,23 @@ def compute_lighting(verts, faces, face_types, hp_state="cyan"):
     lens[lens < 1e-6] = 1.0
     normals = normals / lens
 
-    # Studio 3-point lighting
-    l1_dir = np.array([0.45, 0.75, -0.48], dtype=np.float32)
+    # Optimized 3-Point Studio Lighting (Equally illuminates both vanilla & remaster)
+    # Key light: high right-front
+    l1_dir = np.array([0.45, 0.70, -0.55], dtype=np.float32)
     l1_dir /= np.linalg.norm(l1_dir)
-    l1_col = np.array([0.92, 0.96, 1.0], dtype=np.float32)
+    l1_col = np.array([1.0, 1.0, 1.0], dtype=np.float32)
 
-    l2_dir = np.array([-0.60, -0.30, 0.74], dtype=np.float32)
+    # Fill light: left-front fill to lift dark cavities
+    l2_dir = np.array([-0.65, 0.20, 0.72], dtype=np.float32)
     l2_dir /= np.linalg.norm(l2_dir)
-    l2_col = np.array([0.48, 0.44, 0.42], dtype=np.float32)
+    l2_col = np.array([0.55, 0.58, 0.62], dtype=np.float32)
 
-    l3_dir = np.array([0.0, -0.65, 0.76], dtype=np.float32)
+    # Glancing rim light: accents chamfers, machined cuts, and screws
+    l3_dir = np.array([0.0, -0.60, 0.80], dtype=np.float32)
     l3_dir /= np.linalg.norm(l3_dir)
-    l3_col = np.array([0.75, 0.85, 0.98], dtype=np.float32)
+    l3_col = np.array([0.80, 0.85, 0.95], dtype=np.float32)
 
-    amb = np.array([0.22, 0.24, 0.28], dtype=np.float32)
+    amb = np.array([0.28, 0.30, 0.34], dtype=np.float32)
 
     dot1 = np.clip(np.dot(normals, l1_dir), 0.0, 1.0)
     dot2 = np.clip(np.dot(normals, l2_dir), 0.0, 1.0)
@@ -208,6 +208,10 @@ def compute_lighting(verts, faces, face_types, hp_state="cyan"):
     spec = np.zeros((n_faces, 3), dtype=np.float32)
     emissive = np.zeros((n_faces, 3), dtype=np.float32)
 
+    # Identify TMD glove phosphor cells (10 cells, 12 faces per box = 120 faces)
+    phosphor_indices = np.where(face_types == 3)[0]
+    total_phosphor_faces = len(phosphor_indices)
+
     for i in range(n_faces):
         ft = face_types[i]
         d1 = float(dot1[i])
@@ -215,53 +219,70 @@ def compute_lighting(verts, faces, face_types, hp_state="cyan"):
         d3 = float(dot3[i])
 
         if ft == -1: # Weapon Surface (multiplied by sampled diffuse texture)
-            light = amb + d1 * l1_col + d2 * l2_col
-            colors[i] = np.clip(light, 0.0, 1.5)
-            sp1 = (d1 ** 28) * 0.48
-            sp3 = (d3 ** 16) * 0.30
+            light = amb + d1 * l1_col * 0.95 + d2 * l2_col * 0.75
+            colors[i] = np.clip(light, 0.0, 1.6)
+            sp1 = (d1 ** 24) * 0.42
+            sp3 = (d3 ** 16) * 0.32
             spec[i] = np.array([sp1 + sp3, sp1 + sp3, sp1 + sp3], dtype=np.float32)
 
-        elif ft == 0: # Bezel Metal (Milled Soviet steel)
+        elif ft == 0: # Bezel Metal (Milled Soviet dark steel)
             diff = np.array([0.20, 0.24, 0.28], dtype=np.float32)
             colors[i] = amb * diff + d1 * l1_col * diff + d2 * l2_col * diff
-            sp1 = (d1 ** 32) * 0.65
+            sp1 = (d1 ** 32) * 0.70
             sp3 = (d3 ** 20) * 0.40
             spec[i] = np.array([sp1 + sp3, sp1 + sp3, sp1 + sp3], dtype=np.float32)
 
-        elif ft == 1: # Screen Glass (Dark cathode glass)
-            colors[i] = np.array([0.02, 0.05, 0.08], dtype=np.float32)
-            sp1 = (d1 ** 48) * 0.35
+        elif ft == 1: # Cathode Display Bed (Recessed dark substrate)
+            colors[i] = np.array([0.03, 0.05, 0.08], dtype=np.float32)
+            sp1 = (d1 ** 48) * 0.25
             spec[i] = np.array([sp1, sp1, sp1], dtype=np.float32)
 
-        elif ft == 2: # Rivets / Bolts
-            diff = np.array([0.55, 0.60, 0.68], dtype=np.float32)
+        elif ft == 2: # Rivets / Screws (Polished steel fasteners)
+            diff = np.array([0.60, 0.65, 0.72], dtype=np.float32)
             colors[i] = amb * diff + d1 * l1_col * diff
-            sp1 = (d1 ** 48) * 0.85
+            sp1 = (d1 ** 48) * 0.90
             spec[i] = np.array([sp1, sp1, sp1], dtype=np.float32)
 
         elif ft == 3: # Emissive Phosphor Display
-            if hp_state == "cyan":
-                c_glow = np.array([0.0, 0.92, 1.0], dtype=np.float32)
-            elif hp_state == "amber":
-                c_glow = np.array([1.0, 0.58, 0.0], dtype=np.float32)
-            elif hp_state == "crimson":
-                c_glow = np.array([1.0, 0.09, 0.27], dtype=np.float32)
+            if is_glove:
+                # TMD glove 10-segment health state demonstration
+                cell_idx = int(np.where(phosphor_indices == i)[0][0] / max(1, (total_phosphor_faces / 10.0)))
+                if hp_state == "cyan": # 100% nominal (all 10 cells)
+                    c_glow = np.array([0.0, 0.92, 1.0], dtype=np.float32)
+                    is_active = True
+                elif hp_state == "amber": # 50% warning (first 5 cells lit, last 5 dark)
+                    c_glow = np.array([1.0, 0.58, 0.0], dtype=np.float32)
+                    is_active = (cell_idx < 5)
+                elif hp_state == "crimson": # 20% critical (first 2 cells lit, last 8 dark)
+                    c_glow = np.array([1.0, 0.09, 0.27], dtype=np.float32)
+                    is_active = (cell_idx < 2)
+                else:
+                    c_glow = np.array([0.0, 0.92, 1.0], dtype=np.float32)
+                    is_active = True
+
+                if is_active:
+                    colors[i] = c_glow
+                    emissive[i] = c_glow
+                else:
+                    # Unlit dark segment
+                    colors[i] = np.array([0.04, 0.06, 0.09], dtype=np.float32)
+                    emissive[i] = np.array([0.0, 0.0, 0.0], dtype=np.float32)
             else:
+                # Weapon 7-segment ammunition digits (always cyan E99 phosphor)
                 c_glow = np.array([0.0, 0.92, 1.0], dtype=np.float32)
+                colors[i] = c_glow
+                emissive[i] = c_glow
 
-            colors[i] = c_glow
-            emissive[i] = c_glow
-
-        elif ft == 4: # Accent Metal (Brass / Medical cross badge / Knurled studs)
-            diff = np.array([0.70, 0.52, 0.24], dtype=np.float32)
+        elif ft == 4: # Accent Brass (Brackets / Medical cross badge / Shock ribs)
+            diff = np.array([0.72, 0.54, 0.26], dtype=np.float32)
             colors[i] = amb * diff + d1 * l1_col * diff
-            sp1 = (d1 ** 36) * 0.70
+            sp1 = (d1 ** 36) * 0.75
             spec[i] = np.array([sp1, sp1*0.8, sp1*0.4], dtype=np.float32)
 
     return colors, spec, emissive
 
 # -----------------------------------------------------------------------------
-# Scene Renderer with Automatic Blank Image Validation
+# Scene Renderer with Non-Blank Image Validation
 # -----------------------------------------------------------------------------
 def render_textured_scene(
     verts, faces, face_types, uvs,
@@ -269,9 +290,9 @@ def render_textured_scene(
     cam_pos, target, up,
     fov_deg=42.0,
     width=1920, height=1080,
-    hp_state="cyan"
+    hp_state="cyan", is_glove=False
 ):
-    colors, spec, emissive = compute_lighting(verts, faces, face_types, hp_state=hp_state)
+    colors, spec, emissive = compute_lighting(verts, faces, face_types, hp_state=hp_state, is_glove=is_glove)
 
     forward = target - cam_pos
     f_len = np.linalg.norm(forward)
@@ -334,19 +355,19 @@ def render_textured_scene(
     # Automatic blank image detection
     pixels_drawn = int(np.count_nonzero(out_depth < 1e8))
     if pixels_drawn < 5000:
-        raise RuntimeError(f"RENDER FAILURE: Blank image detected! Only {pixels_drawn} pixels drawn. Verify camera coordinates or geometry bounds.")
+        raise RuntimeError(f"RENDER FAILURE: Blank image detected! Only {pixels_drawn} pixels drawn.")
     print(f"      [Rasterized OK: {pixels_drawn:,} pixels covered]")
 
     # Multi-radius bloom for E99 phosphor glow
     em_bytes = np.clip(out_emissive * 255.0, 0, 255).astype(np.uint8)
     em_img = Image.fromarray(em_bytes, mode='RGB')
-    bloom1 = em_img.filter(ImageFilter.GaussianBlur(radius=3))
-    bloom2 = em_img.filter(ImageFilter.GaussianBlur(radius=8))
-    bloom3 = em_img.filter(ImageFilter.GaussianBlur(radius=18))
+    bloom1 = em_img.filter(ImageFilter.GaussianBlur(radius=2))
+    bloom2 = em_img.filter(ImageFilter.GaussianBlur(radius=6))
+    bloom3 = em_img.filter(ImageFilter.GaussianBlur(radius=14))
 
-    final_np = out_color + (np.array(bloom1, dtype=np.float32)/255.0)*0.75 + \
+    final_np = out_color + (np.array(bloom1, dtype=np.float32)/255.0)*0.85 + \
                            (np.array(bloom2, dtype=np.float32)/255.0)*0.45 + \
-                           (np.array(bloom3, dtype=np.float32)/255.0)*0.25
+                           (np.array(bloom3, dtype=np.float32)/255.0)*0.20
     final_np = np.clip(final_np * 255.0, 0, 255).astype(np.uint8)
     return Image.fromarray(final_np, mode='RGB')
 
@@ -373,7 +394,7 @@ def load_obj_with_uvs(obj_path):
                 mat = line.strip().split()[1]
                 if mat == "WeaponRemastered": current_ft = -1
                 elif mat == "BezelSoviet": current_ft = 0
-                elif mat == "CathodeGlass": current_ft = 1
+                elif mat in ("CathodeGlass", "CathodeBed"): current_ft = 1
                 elif mat == "RivetMetal": current_ft = 2
                 elif mat in ("EmissivePhosphor", "EmissivePhosphorDemonstration"): current_ft = 3
                 elif mat == "AccentBrass": current_ft = 4
@@ -406,7 +427,7 @@ def load_obj_with_uvs(obj_path):
 # -----------------------------------------------------------------------------
 # Presentation Layout & Side-by-Side Comparison Generator
 # -----------------------------------------------------------------------------
-def add_header_and_badge_v2(img, title, subtitle, badge_text="DIEGETIC HUD V2 // 4K REMASTER"):
+def add_header_and_badge_v2(img, title, subtitle, badge_text="DIEGETIC HUD V2.1 // 4K REMASTER"):
     draw = ImageDraw.Draw(img)
     w, h = img.size
 
@@ -442,14 +463,14 @@ def create_side_by_side_comparison_v2(img_orig, img_mod, title, subtitle, callou
     draw.text((60, 52), "ORIGINAL VANILLA ASSET", fill=(185, 195, 210, 255))
     draw.text((60, 74), "Stock 2010 Texture + Geometry // No Diegetic HUD", fill=(125, 135, 150, 255))
 
-    # Right Badge (Remaster V2)
+    # Right Badge (Remaster V2.1)
     draw.rectangle([half_w + 40, 40, half_w + 460, 100], fill=(10, 16, 24, 230), outline=(0, 229, 255, 255), width=2)
-    draw.text((half_w + 60, 52), "REMASTERED V2 + DIEGETIC HUD", fill=(255, 255, 255, 255))
+    draw.text((half_w + 60, 52), "REMASTERED V2.1 + DIEGETIC HUD", fill=(255, 255, 255, 255))
     draw.text((half_w + 60, 74), "4K PBR Surface // Bespoke Milled Housing", fill=(0, 229, 255, 255))
 
     # Bottom Specs Box
     draw.rectangle([half_w + 40, h - 150, w - 40, h - 35], fill=(10, 16, 24, 240), outline=(0, 229, 255, 220), width=2)
-    draw.text((half_w + 60, h - 138), "V2 REMASTER & DIEGETIC HUD HIGHLIGHTS:", fill=(0, 229, 255, 255))
+    draw.text((half_w + 60, h - 138), "V2.1 REMASTER & DIEGETIC HUD HIGHLIGHTS:", fill=(0, 229, 255, 255))
     for idx, c in enumerate(callouts):
         draw.text((half_w + 60, h - 114 + idx * 20), f"◆ {c}", fill=(210, 230, 245, 255))
 
@@ -460,21 +481,22 @@ def create_side_by_side_comparison_v2(img_orig, img_mod, title, subtitle, callou
 # Main Visual Preview Workflow
 # -----------------------------------------------------------------------------
 def run_all_previews_v2():
-    print("=== Starting Singularity VR Diegetic HUD & Remaster 3D Renderer (V2 Fixed) ===")
+    print("=== Starting Singularity VR Diegetic HUD & Remaster 3D Renderer (V2.1 Final) ===")
 
     assets_config = [
         # 1. Centurion Revolver
         {
             'id': 'centurion',
             'name': 'Centurion Revolver',
+            'readout': '06 / 24',
             'cams': {
                 'overview': {'cam': np.array([24.0, 125.0, 28.0]), 'target': np.array([0.0, 107.0, 49.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 42.0},
-                'closeup': {'cam': np.array([2.5, 123.0, 36.5]), 'target': np.array([0.0, 115.3, 43.5]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 22.0},
+                'closeup': {'cam': np.array([2.0, 122.5, 37.0]), 'target': np.array([0.0, 115.3, 43.5]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 20.0},
                 'vr_ads': {'cam': np.array([0.0, 117.8, 30.0]), 'target': np.array([0.0, 115.5, 62.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 45.0}
             },
             'callouts': [
                 "Bespoke arched top-strap fixture wrapping the revolver frame with knurled brass bolts",
-                "4K blued steel patina with micro-scratched edge highlights along cylinder fluting",
+                "Authentic 7-segment Soviet VFD numerals: '06' clip counter with '24' reserve ammo",
                 "+18° rearward tilt: Front sight blade remains perfectly centered in rear notch"
             ]
         },
@@ -482,14 +504,15 @@ def run_all_previews_v2():
         {
             'id': 'valkyrie',
             'name': 'Valkyrie AR9 Rifle',
+            'readout': '30 / 120',
             'cams': {
                 'overview': {'cam': np.array([42.0, 130.0, 24.0]), 'target': np.array([0.0, 106.0, 52.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 46.0},
-                'closeup': {'cam': np.array([3.5, 125.5, 28.0]), 'target': np.array([0.0, 117.2, 35.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 22.0},
+                'closeup': {'cam': np.array([3.0, 125.0, 29.0]), 'target': np.array([0.0, 117.2, 35.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 20.0},
                 'vr_ads': {'cam': np.array([0.0, 119.8, 14.0]), 'target': np.array([0.0, 117.5, 85.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 48.0}
             },
             'callouts': [
                 "Integral low-profile receiver top-plate housing with countersunk hex socket screws",
-                "4K stamped sheet steel receiver with crisp Cyrillic markings ('ОД'/'АВ') and rivets",
+                "Authentic 7-segment Soviet VFD numerals: '30' clip counter with '120' reserve ammo",
                 "+20° rearward tilt provides clear sightline without raising gun or blocking iron sights"
             ]
         },
@@ -497,14 +520,15 @@ def run_all_previews_v2():
         {
             'id': 'spikeshot',
             'name': 'Spikeshot Shotgun',
+            'readout': '08 / 32',
             'cams': {
                 'overview': {'cam': np.array([42.0, 130.0, 28.0]), 'target': np.array([0.0, 110.0, 50.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 48.0},
-                'closeup': {'cam': np.array([3.5, 125.0, 34.0]), 'target': np.array([0.0, 116.8, 42.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 22.0},
+                'closeup': {'cam': np.array([3.0, 124.5, 35.5]), 'target': np.array([0.0, 116.8, 42.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 20.0},
                 'vr_ads': {'cam': np.array([0.0, 119.6, 22.0]), 'target': np.array([0.0, 117.0, 105.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 48.0}
             },
             'callouts': [
                 "Heavy ruggedized cast housing with lateral shock-absorbing ribs for 12-gauge recoil",
-                "Deep recessed well (-2.5mm) with thick protective cathode glass protecting phosphor",
+                "Authentic 7-segment Soviet VFD numerals: '08' clip counter with '32' reserve ammo",
                 "4K cast-iron heavy breech with tactile polymer pump serrations and glowing E99 conduits"
             ]
         },
@@ -512,14 +536,15 @@ def run_all_previews_v2():
         {
             'id': 'kasimov',
             'name': 'Kasimov SNV-E99 Sniper Rifle',
+            'readout': '05 / 20',
             'cams': {
                 'overview': {'cam': np.array([52.0, 134.0, 24.0]), 'target': np.array([0.0, 112.0, 48.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 50.0},
-                'closeup': {'cam': np.array([3.5, 124.5, 32.5]), 'target': np.array([0.0, 116.5, 40.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 22.0},
+                'closeup': {'cam': np.array([3.0, 124.0, 33.5]), 'target': np.array([0.0, 116.5, 40.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 20.0},
                 'vr_ads': {'cam': np.array([0.0, 120.2, 16.0]), 'target': np.array([0.0, 118.0, 112.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 48.0}
             },
             'callouts': [
                 "Cantilever scope bracket mount nestled flush beneath optical axis with anti-glare visor",
-                "Visible in peripheral view when looking down sightline without blocking scope eye-relief",
+                "Authentic 7-segment Soviet VFD numerals: '05' clip counter with '20' reserve ammo",
                 "4K anti-glare matte sniper chassis with knurled brass elevation/windage adjustment turrets"
             ]
         },
@@ -527,15 +552,16 @@ def run_all_previews_v2():
         {
             'id': 'tmd_glove',
             'name': 'Left Glove / TMD Bio-Monitor',
+            'readout': '10-Cell Bio-Gauge',
             'cams': {
                 'overview': {'cam': np.array([58.0, 126.0, 22.0]), 'target': np.array([39.5, 99.5, -3.2]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 46.0},
-                'closeup': {'cam': np.array([32.0, 108.0, 5.0]), 'target': np.array([39.5, 99.5, -3.2]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 20.0},
-                'vr_ads': {'cam': np.array([28.0, 120.0, 12.0]), 'target': np.array([39.5, 99.5, -3.2]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 35.0}
+                'closeup': {'cam': np.array([31.0, 107.5, 4.5]), 'target': np.array([39.5, 99.5, -3.2]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 18.0},
+                'vr_ads': {'cam': np.array([28.0, 118.0, 11.0]), 'target': np.array([39.5, 99.5, -3.2]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 32.0}
             },
             'callouts': [
                 "Curved ergonomic dorsal cuff with embossed Soviet medical cross badge and bezel screws",
                 "10-segment vacuum-tube health gauge with distinct physical divider ribs and glass casing",
-                "4K military cordura canvas weave with tactile leather palm and dual nylon stitching"
+                "Dynamic state demonstration: 10/10 Cyan (100%), 5/10 Amber (50%), 2/10 Crimson (20%)"
             ]
         }
     ]
@@ -543,8 +569,11 @@ def run_all_previews_v2():
     for cfg in assets_config:
         model_id = cfg['id']
         name = cfg['name']
+        readout_desc = cfg['readout']
+        is_glove = (model_id == 'tmd_glove')
+
         print(f"\n=======================================================")
-        print(f"--- Processing {name} (V2) ---")
+        print(f"--- Processing {name} (V2.1 Readout: {readout_desc}) ---")
         print(f"=======================================================")
 
         # Load models from models_v2
@@ -573,25 +602,25 @@ def run_all_previews_v2():
 
         cams = cfg['cams']
 
-        # 1. Overview Render (Modified V2 + 4K Remaster)
+        # 1. Overview Render (Modified V2.1 + 4K Remaster)
         print("  [1/4] Rendering Overview...")
         img_ov = render_textured_scene(
             v_mod, f_mod, ft_mod, uv_mod, tex_diffuse_mod,
             cams['overview']['cam'], cams['overview']['target'], cams['overview']['up'],
-            cams['overview']['fov']
+            cams['overview']['fov'], is_glove=is_glove
         )
-        img_ov = add_header_and_badge_v2(img_ov, name, "Studio 3-Point Overview // 4K Remastered PBR Surface")
+        img_ov = add_header_and_badge_v2(img_ov, name, f"Studio 3-Point Overview // Readout [{readout_desc}]")
         img_ov.save(OUT_PREVIEWS_DIR / f"{model_id}_overview_v2.png")
         img_ov.save(ARTIFACT_DIR / f"{model_id}_overview_v2.png")
 
-        # 2. Close-up Render (Macro view of diegetic display fixture)
+        # 2. Close-up Render (Macro view of diegetic display fixture & 7-segment digits)
         print("  [2/4] Rendering Macro Close-up...")
         img_cu = render_textured_scene(
             v_mod, f_mod, ft_mod, uv_mod, tex_diffuse_mod,
             cams['closeup']['cam'], cams['closeup']['target'], cams['closeup']['up'],
-            cams['closeup']['fov']
+            cams['closeup']['fov'], is_glove=is_glove
         )
-        img_cu = add_header_and_badge_v2(img_cu, name, "Macro Close-Up // Bespoke Milled Housing & E99 Display")
+        img_cu = add_header_and_badge_v2(img_cu, name, f"Macro Close-Up // Readout [{readout_desc}]")
         img_cu.save(OUT_PREVIEWS_DIR / f"{model_id}_closeup_v2.png")
         img_cu.save(ARTIFACT_DIR / f"{model_id}_closeup_v2.png")
 
@@ -600,53 +629,52 @@ def run_all_previews_v2():
         img_vr = render_textured_scene(
             v_mod, f_mod, ft_mod, uv_mod, tex_diffuse_mod,
             cams['vr_ads']['cam'], cams['vr_ads']['target'], cams['vr_ads']['up'],
-            cams['vr_ads']['fov']
+            cams['vr_ads']['fov'], is_glove=is_glove
         )
-        img_vr = add_header_and_badge_v2(img_vr, name, "First-Person VR Perspective // Clean Sightline & Clear ADS")
+        img_vr = add_header_and_badge_v2(img_vr, name, f"First-Person VR Perspective // Legible [{readout_desc}]")
         img_vr.save(OUT_PREVIEWS_DIR / f"{model_id}_first_person_v2.png")
         img_vr.save(ARTIFACT_DIR / f"{model_id}_first_person_v2.png")
 
-        # 4. Genuine Side-by-Side Comparison (Vanilla Original vs. Remastered V2)
+        # 4. Genuine Side-by-Side Comparison (Vanilla Original vs. Remastered V2.1)
         print("  [4/4] Rendering Genuine Side-by-Side Comparison...")
-        # Left: Original geometry + authentic vanilla texture (identical lighting/exposure)
         img_orig_raw = render_textured_scene(
             v_orig, f_orig, ft_orig, uv_orig, tex_diffuse_vanilla,
             cams['overview']['cam'], cams['overview']['target'], cams['overview']['up'],
-            cams['overview']['fov']
+            cams['overview']['fov'], is_glove=is_glove
         )
-        # Right: Modified V2 geometry + remastered 4K PBR texture (identical lighting/exposure)
         img_mod_raw = render_textured_scene(
             v_mod, f_mod, ft_mod, uv_mod, tex_diffuse_mod,
             cams['overview']['cam'], cams['overview']['target'], cams['overview']['up'],
-            cams['overview']['fov']
+            cams['overview']['fov'], is_glove=is_glove
         )
-        comp_img = create_side_by_side_comparison_v2(img_orig_raw, img_mod_raw, name, "Vanilla Stock vs. Remaster V2 with Diegetic HUD", cfg['callouts'])
+        comp_img = create_side_by_side_comparison_v2(img_orig_raw, img_mod_raw, name, f"Vanilla Stock vs. Remaster V2.1 [{readout_desc}]", cfg['callouts'])
         comp_img.save(OUT_PREVIEWS_DIR / f"{model_id}_comparison_v2.png")
         comp_img.save(ARTIFACT_DIR / f"{model_id}_comparison_v2.png")
 
         # 5. For Glove: Render Health State Variants
-        if model_id == 'tmd_glove':
-            print("  [Extra] Rendering TMD Glove Health State Variants...")
+        if is_glove:
+            print("  [Extra 1] Rendering TMD Glove Warning Health State (50% Amber, 5 Cells)...")
             img_amber = render_textured_scene(
                 v_mod, f_mod, ft_mod, uv_mod, tex_diffuse_mod,
                 cams['closeup']['cam'], cams['closeup']['target'], cams['closeup']['up'],
-                cams['closeup']['fov'], hp_state="amber"
+                cams['closeup']['fov'], hp_state="amber", is_glove=True
             )
-            img_amber = add_header_and_badge_v2(img_amber, name, "Warning Health State (50% Amber E99 Glow)")
+            img_amber = add_header_and_badge_v2(img_amber, name, "Warning Health State (5/10 Cells Amber E99 Glow)")
             img_amber.save(OUT_PREVIEWS_DIR / f"{model_id}_health_amber_v2.png")
             img_amber.save(ARTIFACT_DIR / f"{model_id}_health_amber_v2.png")
 
+            print("  [Extra 2] Rendering TMD Glove Critical Health State (20% Crimson, 2 Cells)...")
             img_crim = render_textured_scene(
                 v_mod, f_mod, ft_mod, uv_mod, tex_diffuse_mod,
                 cams['closeup']['cam'], cams['closeup']['target'], cams['closeup']['up'],
-                cams['closeup']['fov'], hp_state="crimson"
+                cams['closeup']['fov'], hp_state="crimson", is_glove=True
             )
-            img_crim = add_header_and_badge_v2(img_crim, name, "Critical Health State (20% Crimson Alarm Glow)")
+            img_crim = add_header_and_badge_v2(img_crim, name, "Critical Health State (2/10 Cells Crimson Alarm Glow)")
             img_crim.save(OUT_PREVIEWS_DIR / f"{model_id}_health_crimson_v2.png")
             img_crim.save(ARTIFACT_DIR / f"{model_id}_health_crimson_v2.png")
 
     print("\n=======================================================")
-    print("=== All 22 V2 Visual Previews Rendered & Verified Successfully ===")
+    print("=== All 22 V2.1 Visual Previews Rendered & Verified Successfully ===")
     print("=======================================================")
 
 if __name__ == '__main__':
