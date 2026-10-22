@@ -11,7 +11,7 @@
 | Track | Verdict | Meaning |
 |-------|---------|---------|
 | **`vtable +0x484` / `+0x44C` on `[pawn+0x3D0]`** | **(C) unrelated to WeaponLocker availability** | Barisov-style **GFx list UI metrics** (counters at `+0x364`, floats at `+0x374`). Not used on `equip` / `LoadEquippedWeapons` / `Initialize`. |
-| **`RvInventoryManager+0x3E4` bitmask** | **(B) strong runtime candidate for locker-eligible weapons** | Updated by **`EnableAllWeaponsForLocker`** from **`GGameSystem` catalog** (`+0x160`, stride **`0x50`**). Native GFx path at **`0x91B241`** consumes this mask for UI gating. **Ordinary weapon bit map not proven** offline. |
+| **`RvInventoryManager+0x3E4` bitmask** | **(B) progression bitmask on manager — not proven WeaponLocker consumer** | **`FD5AC0` / `FD5BA0`** prove catalog row → **`1<<i`** on manager. **`0x91B221` retired** (wrong vtable — see **`docs/weapon-locker-mask-3e4-contract-20261022.md`**). **Ordinary AR* bit map not proven** offline. |
 | **`RvGameSystem.mFeaturesUnlocked`** | **(B) parallel story/progression byte** | `GetFeaturesUnlocked` / `SetFeaturesUnlocked` → vtable **`+0x1F0` / `+0x1F4`**. Not the same storage as manager **`+0x3E4`**. |
 
 **Do not** use `GetItemAt` keys **`0x19` / `0x37`** as weapon-unlock IDs — they are **third stack argument deltas** in **`0xFC4C10`**, not FName ordinals.
@@ -88,7 +88,7 @@ return *(uint32_t*)(this + 0x364 + arg*4);
 |-----------|----------|
 | **`GetFeaturesUnlocked` / `SetFeaturesUnlocked`** | **`RvGameSystem`**, exec **`0xF55B30` / `0xF55B70`**, impl vtable **`+0x1F0` / `+0x1F4`** |
 | Export | **`ByteProperty mFeaturesUnlocked`**, enum **`EFeaturesUnlocked`** |
-| GFx gate using **`+0x3E4`** | **`0x91B221`**: `mov ecx, [esi+0x3E4]` → **`0x40BEF0`** (bit scan) → GFx object **`vtable+0x120`** |
+| ~~GFx gate using **`+0x3E4`~~ | **Retired:** **`0x91B221`** is **`vtable 0x019D4488` (+578)**, not InvMgr / WeaponLocker; treats **`+0x3E4` as `UObject*`** → **`0x40BEF0`**, not bitmask. |
 
 **Why MG + Shotgun can show with `ownedMask = 0x1`:** GFx **`equip(Weapon)`** still has **no owned check**; cyclable names are **not** explained by **`+0x484`**. If progression gates exist in native UI, **`+0x3E4`** (or GFx-only) is the **next** boundary — **not** GetItemAt keys.
 
