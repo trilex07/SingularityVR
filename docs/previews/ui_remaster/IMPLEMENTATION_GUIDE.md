@@ -1,132 +1,218 @@
 # Singularity VR — UI Utility Graphics Implementation Guide for MAIN
 
-This guide details how the MAIN engineering agent can integrate, load, slice, and scale the remastered UI assets created in `side/ui-utility-graphics-remaster`.
+**Package:** Singularity VR UI & Utility Graphics Remaster (V2.1 Production)  
+**Branch:** `side/ui-utility-graphics-remaster`  
+**Approved Art Direction:** Soviet Laboratory Brutalism / Weathered Gray Steel & Graphite (70/15/8/5/2)  
+**Target Headset:** PSVR2 / SteamVR / OpenXR  
+**Author:** Senior Game UI / UX Artist & Technical UI Prototype Designer  
 
 ---
 
-## 1. Asset Classification: What Is What
+## 1. Executive Architecture: Language-Neutral Graphics + Dynamic Text
 
-The assets produced in this package fall into three distinct operational tiers:
+To achieve maximum performance and prevent VRAM bloat on PSVR2, all interface geometry in V2.1 is strictly separated into:
+1. **Language-Neutral Visual Plates (`ui_atlas_neutral.png`):** Heavy gray steel faceplates, recessed toggle wells, slider scales, button push-plates, outer rotary dials, and stenciled icons. These contain **zero baked language text**.
+2. **Localization Map ([`ui_localization_pl_en.json`](file:///C:/Users/Trilex/vr-mods/SingularityVR-ui-utility-remaster/ui_localization_pl_en.json)):** Contains stable keys, official Polish and English text, intended UI elements, and recommended bounding boxes with alignment and font sizes.
+3. **Baked Localized Fallback Atlases (`ui_atlas_localized_pl.png` & `ui_atlas_localized_en.png`):** Pre-rendered texture variants for headless or fixed-pipeline D3D9 overlays that cannot render dynamic glyphs at runtime.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ 1. Direct Drop-In Replacements                                              │
-│    - vr_prompt_atlas_remastered.bmp / .png (replaces vr_prompt_atlas.bmp)   │
-│    - Laser pointer reticle dots & feedback sprites                         │
-│    - Synthetic Pause / Main Menu "VR SETTINGS" button                       │
+│                       MAIN RUNTIME MEMORY PIPELINE                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 2. Modular & Sliced 9-Slice Assets                                          │
-│    - Panel corners (panel_corner_tl, tr, bl, br) & borders (border_h, v)    │
-│    - Option row backgrounds (row_bg_default, hover, selected)               │
-│    - Toggle switch states & Slider track/knob sprites                       │
-│    - Scroll track, thumb, and chevron arrows                                │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 3. Presentation Mockups & Design Concepts                                   │
-│    - Full screen 1920x1080 concept mockups (reference targets only)         │
-│    - Not loaded as single textures at runtime                              │
+│                                                                             │
+│  [ui_atlas_neutral.png] (4096x4096)  <-- LOAD ONCE INTO VRAM                │
+│  ├── Console plates, terminal slates, rotary sectors                        │
+│  ├── Toggle switches, calibration sliders, focus frames                     │
+│  └── All action icons, status symbols, and PSVR2 button glyphs              │
+│                                                                             │
+│  [LANGUAGE SWITCHING: ZERO GPU OVERHEAD]                                    │
+│  ├── Method A (Recommended): D3D9 Dynamic Font Rendering                    │
+│  │   MAIN renders neutral plate quad from ui_atlas_neutral,                 │
+│  │   then draws font text using string from ui_localization_pl_en.json.     │
+│  │   GPU Cost on Language Switch: 0 bytes VRAM, 0 texture rebinds.          │
+│  │                                                                          │
+│  └── Method B: Secondary Localized Atlas Swap                               │
+│      MAIN binds ui_atlas_localized_pl.png (PL) OR                           │
+│      ui_atlas_localized_en.png (EN) into Texture Stage 1.                   │
+│      GPU Cost on Language Switch: 1 texture handle swap (no stall).         │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Drop-In Replacements
+## 2. Directory Structure & Production Assets
 
-### 2.1 Remastered VR Prompt Atlas
-- **Current Runtime Path:** `vr-assets\vr_prompt_atlas.bmp` (referenced in `spikes/view_matrix/vr_menu_overlay.h:22`).
-- **Remastered Asset:** `assets/processed/ui_remaster/interaction_icons/vr_prompt_atlas_remastered.bmp`
-  - Dimensions: `512x128` (32bpp ARGB format, exactly matching `LoadVrPromptAtlas` bitmap requirements).
-  - UV Mapping Descriptor: `assets/processed/ui_remaster/interaction_icons/vr_prompt_atlas_remastered.json`
-- **Mapping Comparison:**
-  - *Vanilla Kenney Atlas:* 5 icons at 320x64 (R2, Circle, Cross, R1, Options).
-  - *Remastered Atlas:* 16 icons at 512x128 (8 columns x 2 rows, 64x64 each).
-  - Row 0: `R2`, `R1`, `Cross`, `Circle`, `L2`, `L1`, `Square`, `Triangle`.
-  - Row 1: `Interact`, `Pickup`, `TMD`, `Reload`, `Melee`, `Locked`, `R3`, `L3`.
-- **Integration Steps for MAIN:**
-  1. Copy `vr_prompt_atlas_remastered.bmp` to `vr-assets/vr_prompt_atlas.bmp`.
-  2. In `spikes/view_matrix/prompt_atlas_generated.h` (or corresponding header), update:
-     - `kVrPromptAtlasWidth = 512;`
-     - `kVrPromptAtlasHeight = 128;`
-     - `kVrPromptIconPx = 64;`
-     - `kVrPromptIconCount = 16;`
-  3. Load UV coordinates directly from `vr_prompt_atlas_remastered.json`.
+All assets are exported under [`assets/processed/ui_remaster/`](file:///C:/Users/Trilex/vr-mods/SingularityVR-ui-utility-remaster/assets/processed/ui_remaster/):
 
-### 2.2 Synthetic "VR SETTINGS" Button in Pause / Main Menu
-- **Current Runtime Behavior:** `vr_menu_overlay.h:247-252` draws a raw D3D clear box using:
-  ```cpp
-  ClearRects(dev, &box, 1, hovered ? 0xD0507040 : 0xB0081218);
-  ClearRects(dev, text, n, hovered ? 0xFFFFFFFF : 0xFF50FF90);
-  ```
-- **Remastered Replacement:**
-  - `btn_vr_settings_default.png` (Default state)
-  - `btn_vr_settings_hover.png` (Hover state)
-  - `btn_vr_settings_pressed.png` (Pressed state)
-- **Integration Recommendation:**
-  Instead of primitive `ClearRects` bitmap font draws, load these textures during menu initialization and render via two textured quads (left and right eyes) using `DrawVrPromptIcon`-style `D3DPT_TRIANGLESTRIP` UP.
+```
+assets/processed/ui_remaster/
+├── atlas/
+│   ├── ui_atlas_neutral.png        (4096x4096 Master language-neutral texture sheet)
+│   ├── ui_atlas_neutral.json       (UV mapping coordinates [u0, v0, u1, v1] & pixel rects)
+│   ├── ui_atlas_localized_pl.png   (2048x2048 Polish baked text atlas)
+│   ├── ui_atlas_localized_pl.json  (Polish UV mapping descriptors)
+│   ├── ui_atlas_localized_en.png   (2048x2048 English baked text atlas)
+│   └── ui_atlas_localized_en.json  (English UV mapping descriptors)
+├── weapon_wheel/                   (Wheel chassis, 4 sectors x 5 states, needle, weapon icons)
+├── vr_settings/                    (Console plate, tabs, toggle wells/levers, slider track/knob)
+├── pause_menu/                     (Terminal slate, header plates, push buttons, modal dialogs)
+├── interaction_icons/              (Action stencils, status markers, PSVR2 buttons, prompt pills)
+├── laser_pointer/                  (Optical reticle dot, hover ring, click shockwave, focus brackets)
+└── utility_hud/                    (Ammo counter bracket, vitals frame, E99 tube, compass, hazard)
+```
 
-### 2.3 Laser Pointer Feedback Kit
-- **Current Runtime Behavior:** `vr_menu_overlay.h:186` draws a single 1-pixel flat line from hand to hit point.
-- **Remastered Replacement:**
-  - `laser_dot_idle_64px.png` and `laser_dot_active_64px.png`: Render as a textured billboard sprite at `uipointer::Hit hit.world`.
-  - `laser_hover_ring.png`: Draw when `valid && isHoveredInteractive`.
-  - `laser_click_burst.png`: Flash for 6 to 8 frames upon `XI_A` or right trigger pull confirmation.
+Vector source files are located in [`assets/source/ui_remaster/`](file:///C:/Users/Trilex/vr-mods/SingularityVR-ui-utility-remaster/assets/source/ui_remaster/).
 
 ---
 
-## 3. Modular Assets: Slicing & Scaling Rules
+## 3. Localization Integration (`ui_localization_pl_en.json`)
 
-### 3.1 9-Slice Panel Framing
-- **Assets:**
-  - `panel_corner_tl.png`, `tr`, `bl`, `br` (128x128 px)
-  - `panel_border_h.png` (128x32 px)
-  - `panel_border_v.png` (32x128 px)
-  - Central plate fill: Flat color `rgba(12, 17, 24, 0.94)`
-- **Slicing Geometry:**
-  - Corners remain fixed at 1:1 scale (or scaled with eye resolution).
-  - Horizontal borders tile or stretch along X.
-  - Vertical borders tile or stretch along Y.
-
-### 3.2 Option Row Backgrounds
-- **Assets:**
-  - `row_bg_default.png` (800x56)
-  - `row_bg_hover.png` (800x56)
-  - `row_bg_selected.png` (800x56)
-  - `row_bg_disabled.png` (800x56)
-- **Scaling Method:** 3-slice horizontal (left cap 16px, center 1px stretch, right cap 16px).
-
-### 3.3 Interactive Widgets
-- **Toggle Switches:** `toggle_switch_off.png` / `toggle_switch_on.png` (120x48 px, fixed aspect ratio).
-- **Sliders:**
-  - Base: `slider_track_empty.png` (320x32 px).
-  - Fill: `slider_track_fill.png` (UV-clipped along X according to `(value - min) / (max - min)`).
-  - Thumb: `slider_knob_normal.png` / `slider_knob_hover.png` (32x48 px, centered at thumb position).
-
----
-
-## 4. D3D9 Render State & Blending Guidance
-
-When rendering these UI utility textures in D3D9 via `DrawPrimitiveUP`:
+MAIN should parse [`ui_localization_pl_en.json`](file:///C:/Users/Trilex/vr-mods/SingularityVR-ui-utility-remaster/ui_localization_pl_en.json) during engine initialization into a fast key-value lookup:
 
 ```cpp
-// Set Alpha Blending for clean anti-aliased edges
+struct LocalizationBounds {
+    int maxWidthPx;
+    int maxHeightPx;
+    int fontSizePt;
+    std::string textAlign; // "left", "center", "right"
+    bool lineWrap;
+};
+
+struct LocalizationEntry {
+    std::string pl;
+    std::string en;
+    std::string uiElement;
+    LocalizationBounds bounds;
+};
+
+// Global lookup map in C++
+std::unordered_map<std::string, LocalizationEntry> g_uiLocalization;
+
+inline const char* LocText(const std::string& key, int languageId) {
+    auto it = g_uiLocalization.find(key);
+    if (it == g_uiLocalization.end()) return key.c_str();
+    return (languageId == 1) ? it->second.pl.c_str() : it->second.en.c_str();
+}
+```
+
+### Verified Polish Diacritics:
+All Polish strings have been validated for native font rendering:
+- `ą`, `ć`, `ę`, `ł`, `ń`, `ó`, `ś`, `ź`, `ż`
+- `Ą`, `Ć`, `Ę`, `Ł`, `Ń`, `Ó`, `Ś`, `Ź`, `Ż`
+- Use typeface `Bahnschrift` or `DIN 1451 Mittelschrift` with UTF-8 character encoding.
+
+---
+
+## 4. D3D9 Vertex Buffer & Quad Rendering Pipeline
+
+When rendering sprites from `ui_atlas_neutral.png` or localized atlases:
+
+### 4.1 Vertex Structure
+```cpp
+struct UiVertex {
+    float x, y, z, rhw; // Transformed screen coordinates
+    DWORD color;        // Diffuse color / tint (e.g. 0xFFFFFFFF)
+    float u, v;         // Normalized texture coordinates
+};
+
+#define D3DFVF_UIVERTEX (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
+```
+
+### 4.2 Drawing an Atlas Quad
+Given `uv_rect = [u0, v0, u1, v1]` from the atlas JSON:
+```cpp
+void DrawAtlasSprite(IDirect3DDevice9* dev, float x, float y, float w, float h,
+                     float u0, float v0, float u1, float v1, DWORD color = 0xFFFFFFFF) {
+    UiVertex verts[4] = {
+        { x,     y,     0.0f, 1.0f, color, u0, v0 },
+        { x + w, y,     0.0f, 1.0f, color, u1, v0 },
+        { x,     y + h, 0.0f, 1.0f, color, u0, v1 },
+        { x + w, y + h, 0.0f, 1.0f, color, u1, v1 }
+    };
+    dev->SetFVF(D3DFVF_UIVERTEX);
+    dev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, verts, sizeof(UiVertex));
+}
+```
+
+### 4.3 D3D9 Render States
+```cpp
+// Transparency and blending
 dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
+dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 
-// Bilinear texture filtering to avoid shimmering under head motion
+// Bilinear filtering for smooth VR projection
 dev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 dev->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
-
-// Clamp addressing to prevent wrap bleeding on 9-slice borders
 dev->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
 dev->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 ```
 
 ---
 
-## 5. Scope Boundaries Reminder
+## 5. Screen Layout & Component Mapping
 
-This package provides visual designs, source vectors, and production raster assets.
-- **Do not** modify weapon wheel logic (`SectorForStick`, etc.).
-- **Do not** change native GFx hooking or scaleform bytecode.
-- **Do not** attempt to fix the native pause render-target bug with these graphics; pause graphics are designed for the head-relative projected overlay.
+### 5.1 Weapon Wheel (Center: Screen 960, 560)
+- **Outer Housing:** `wheel_chassis_outer.png` (800x800).
+- **Four Sectors:**
+  - `wheel_sector_top_*` (Sector 1: **Centurion .44**)
+  - `wheel_sector_right_*` (Sector 2: **AR9 Walkiria / Valkyrie**)
+  - `wheel_sector_bottom_*` (Sector 3: **Spikeshot**)
+  - `wheel_sector_left_*` (Sector 4: **Kasimov SNV-E99**)
+- **States:** `idle`, `hover`, `selected` (warm amber glow), `held` (bright steel), `disabled`.
+- **Center Selector Knob:** `wheel_center_hub_neutral.png` (260x260) with `wheel_pointer_needle.png` rotated by sector angle.
+- **Telemetry Card:** Positioned at (1420, 450), 420x220px. Displays caliber, magazine status, and fire mode.
+
+### 5.2 VR Settings Console (1200x840 at Screen 360, 120)
+- **Chassis Plate:** `settings_console_plate_neutral.png`.
+- **Tabs (Top Row):** `tab_frame_idle_neutral.png` / `tab_frame_active_neutral.png` (140x36px).
+- **Row Focus Frame:** `row_focus_amber_frame.png` (1120x48px). Rendered when a row is hovered or laser-pointed.
+- **Toggle Controls:** `toggle_well_neutral.png` (110x44) + `toggle_lever_off.png` / `toggle_lever_on.png` + `indicator_lamp_on.png`.
+- **Slider Controls:** `slider_track_recessed.png` (360x32) + `slider_knob_brass.png` (36x44) positioned proportionally to the setting value.
+
+### 5.3 Pause Menu Operations Terminal (680x840 at Screen 620, 120)
+- **Terminal Slate:** `terminal_slate_neutral.png`.
+- **Header Plate:** `header_plate_neutral.png` (560x90). Displays authentic Katorga-12 seal and localized title.
+- **Buttons (480x54px):** `btn_plate_idle_neutral.png`, `btn_plate_hover_neutral.png`, `btn_plate_pressed_neutral.png`.
+- **Dedicated VR Settings Row:** `btn_plate_special_amber_idle_neutral.png` / `btn_plate_special_amber_hover_neutral.png` (accented brass frame).
+
+### 5.4 Confirmation Modal Dialogs (640x380 at Screen 640, 320)
+- **Chassis Plate:** `modal_dialog_plate_neutral.png`.
+- **Action Buttons:** `btn_confirm_pl.png` (R2) and `btn_cancel_pl.png` (Circle).
+
+### 5.5 Interaction Prompts & Utility Icons
+- **Prompt Pills:** 320x52px rounded steel plate with stenciled icon and key prompt.
+- **PSVR2 Buttons:** 64x64px high-contrast icons for Cross, Circle, Triangle, Square, L1, L2, R1, R2, Left Stick, Right Stick, and Options.
+
+### 5.6 Collimated Optical Laser Pointer
+- **Reticle Dot:** 32x32px collimated red-amber focal dot (`pointer_reticle_dot.png`).
+- **Hover Ring:** 64x64px micrometer ring (`pointer_hover_ring.png`) active over interactive controls.
+- **Click Feedback Ping:** 96x96px expanding amber shockwave (`pointer_click_ping.png`) triggered on R2 click for 6–8 frames.
+
+---
+
+## 6. Language Switching Runtime Instructions
+
+To switch language between Polish and English without restarting the game or stalling the GPU:
+
+```cpp
+void SetInterfaceLanguage(int langId) { // 0 = EN, 1 = PL
+    g_currentLanguage = langId;
+    
+    // If using Method A (Dynamic font rendering over neutral plates):
+    // No texture reload is needed! Next frame DrawVrPanel() simply queries:
+    // LocText("SETTINGS_PAGE_ROOT", g_currentLanguage);
+    
+    // If using Method B (Secondary baked atlas texture swap):
+    const char* atlasFile = (langId == 1) 
+        ? "vr-assets/ui_atlas_localized_pl.png" 
+        : "vr-assets/ui_atlas_localized_en.png";
+    dev->SetTexture(1, g_pLocalizedAtlasTextures[langId]);
+}
+```
+
+This guarantees **zero allocation stalls** during active VR gameplay.

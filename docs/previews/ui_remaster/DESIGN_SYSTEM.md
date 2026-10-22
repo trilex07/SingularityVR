@@ -1,4 +1,4 @@
-# Singularity VR — UI & Utility Graphics Design System (v2.1 Rebalanced)
+# Singularity VR — UI & Utility Graphics Design System (v2.1 Production)
 
 ## 1. Aesthetic Vision: Abandoned Soviet Research Facility
 
@@ -20,7 +20,7 @@ The visual space is strictly calibrated to the **70 / 15 / 8 / 5 / 2** material 
 | **Cold-Rolled Steel Plate**| **70%** | `#343B42` | `(52, 59, 66)` | Elevated panels, bezels, mechanical push-buttons |
 | **Bare Steel Chipped Edge**| **70%** | `#6C7882` | `(108, 120, 130)`| Scratched highlights, worn corners revealing bare metal |
 | **Concrete & Ash Undertone**| **70%** | `#202428` | `(32, 36, 40)` | Dark background environment, soot, dirty crevices |
-| **Aged Ivory Typography** | **15%** | `#DDD6C0` | `(222, 214, 192)`| High-contrast stenciled lettering (Polish UI text) |
+| **Aged Ivory Typography** | **15%** | `#DDD6C0` | `(222, 214, 192)`| High-contrast stenciled lettering (Polish & English UI) |
 | **Bright Ivory Enamel** | **15%** | `#F4EEDE` | `(244, 238, 222)`| Active headers, selected row text, calibration marks |
 | **Secondary Olive Accent** | **8%** | `#3C4234` | `(60, 66, 52)` | Faded inspection tags, clipboard headers, backing bars |
 | **Muted Olive Tag** | **8%** | `#2E3428` | `(46, 52, 40)` | Secondary equipment borders and dark accents |
@@ -33,17 +33,24 @@ The visual space is strictly calibrated to the **70 / 15 / 8 / 5 / 2** material 
 
 ---
 
-## 3. Language & Typography Policy
+## 3. Bilingual Language & Typography Policy
 
-- **Primary User-Facing Language: Polish (`pl`).**
-  - All interactive buttons, section titles, row descriptions, and controller legend prompts must appear in standard Polish.
-  - Examples: `WZNOWIENIE GRY`, `METODA CELOWANIA`, `WYBÓR BRONI`, `AR9 WALKIRIA`, `[ZWOLNIJ R3] WYBIERZ`.
+- **Full Bilingual Support: Polish (`pl`) & English (`en`).**
+  - Every interactive button, header, option row, status pill, and controller prompt is mapped across both languages in [`ui_localization_pl_en.json`](file:///C:/Users/Trilex/vr-mods/SingularityVR-ui-utility-remaster/ui_localization_pl_en.json).
+  - Language-neutral visual plates are combined with dynamic font rendering or localized texture atlases (`ui_atlas_localized_pl.png` vs `ui_atlas_localized_en.png`).
+  - Examples (PL / EN):
+    - `WZNOWIENIE GRY` / `RESUME GAME`
+    - `METODA CELOWANIA` / `AIM METHOD`
+    - `WYBÓR BRONI` / `WEAPON SELECT`
+    - `AR9 WALKIRIA` / `AR9 VALKYRIE`
+    - `[ZWOLNIJ R3] WYBIERZ` / `[RELEASE R3] SELECT`
 - **Authentic Cyrillic Markings:**
   - Cyrillic is reserved strictly for environmental and manufacturing markings on equipment nameplates and serial stamps.
   - Examples: `ГОСТ 1955 // КАТОРГА-12`, `ЗАВ. № 1955 // СЕРИЯ 4-С`.
 - **Typeface:** `DIN 1451` / `Bahnschrift` (Mittelschrift & Engschrift).
   - Authentic Cold War European/Soviet engineering standard.
   - High x-height, sturdy uniform stems (never <3px at 1080p equivalent) to prevent optical blur or distortion across VR headset lenses.
+  - Full support for Polish diacritics: `ą`, `ć`, `ę`, `ł`, `ń`, `ó`, `ś`, `ź`, `ż`, `Ą`, `Ć`, `Ę`, `Ł`, `Ń`, `Ó`, `Ś`, `Ź`, `Ż`.
 
 ---
 

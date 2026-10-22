@@ -1,58 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="840" viewBox="0 0 1200 840">
+  <!-- Soviet Laboratory VR Settings Console (V2.1) - Singularity VR UI Remaster V2.1 -->
+  <!-- Material Proportions: 70% Weathered Steel (#24292E), 15% Ivory (#DDD6C0), 8% Olive (#3C4234), 5% Amber (#D97E26), 2% Cyan (#41AFAA) -->
   <defs>
-    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#121A24"/>
-      <stop offset="100%" stop-color="#1A2533"/>
+    <linearGradient id="steelBase" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#343B42"/>
+      <stop offset="50%" stop-color="#24292E"/>
+      <stop offset="100%" stop-color="#1C2024"/>
     </linearGradient>
-    <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="4" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
+    <linearGradient id="amberGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F8A83E"/>
+      <stop offset="100%" stop-color="#D97E26"/>
+    </linearGradient>
   </defs>
-
-  <!-- Panel Base Plate -->
-  <rect x="20" y="20" width="1160" height="860" rx="8" fill="#0C1118" fill-opacity="0.95" stroke="#415566" stroke-width="3"/>
-  <rect x="28" y="28" width="1144" height="844" rx="6" fill="none" stroke="#1E2A36" stroke-width="2"/>
-
-  <!-- Corner Brackets -->
-  <g fill="#202C3A">
-    <polygon points="20,20 100,20 100,50 50,100 20,100"/>
-    <polygon points="1180,20 1100,20 1100,50 1150,100 1180,100"/>
-    <polygon points="20,880 100,880 100,850 50,800 20,800"/>
-    <polygon points="1180,880 1100,880 1100,850 1150,800 1180,800"/>
-  </g>
-  <!-- Hex Bolts -->
-  <g fill="#374B5F" stroke="#6E8CA5" stroke-width="1.5">
-    <circle cx="45" cy="45" r="8"/>
-    <circle cx="1155" cy="45" r="8"/>
-    <circle cx="45" cy="855" r="8"/>
-    <circle cx="1155" cy="855" r="8"/>
-  </g>
-
-  <!-- Top Header Bar -->
-  <rect x="40" y="40" width="1120" height="55" fill="url(#headerGrad)" stroke="#2D3C4B" stroke-width="2"/>
-  <!-- Hazard Tab -->
-  <g fill="#F5C323">
-    <polygon points="40,40 56,40 44,95 40,95"/>
-    <polygon points="60,40 76,40 64,95 48,95"/>
-    <polygon points="80,40 96,40 84,95 68,95"/>
-    <polygon points="100,40 116,40 104,95 88,95"/>
-  </g>
-  <text x="140" y="75" font-family="Bahnschrift, Arial" font-size="22" font-weight="bold" fill="#F0F8FF" letter-spacing="2">ПАРАМЕТРЫ VR // VR SYSTEM CONFIGURATION</text>
-  <text x="1130" y="75" font-family="Bahnschrift, Arial" font-size="14" fill="#2CE8E4" text-anchor="end" letter-spacing="2">КАТОРГА-12 // ОБЪЕКТ-99</text>
-
-  <!-- Sample Hover Row -->
-  <rect x="280" y="240" width="840" height="52" fill="#143244" fill-opacity="0.9" stroke="#2CE8E4" stroke-width="2" filter="url(#cyanGlow)"/>
-  <text x="300" y="272" font-family="Bahnschrift, Arial" font-size="16" font-weight="bold" fill="#78FFFA">AIM METHOD // СПОСОБ ПРИЦЕЛИВАНИЯ</text>
-  <rect x="880" y="248" width="220" height="36" fill="#0C1219" stroke="#2CE8E4" stroke-width="1.5"/>
-  <text x="990" y="272" font-family="Bahnschrift, Arial" font-size="14" font-weight="bold" fill="#78FFFA" text-anchor="middle">MOTION CONTROLLER</text>
-
-  <!-- Toggle Switch ON -->
-  <rect x="1000" y="178" width="100" height="40" rx="8" fill="#0E1218" stroke="#374B5F" stroke-width="2"/>
-  <rect x="1045" y="182" width="50" height="32" rx="6" fill="#2D4155" stroke="#2CE8E4" stroke-width="2"/>
-  <circle cx="1020" cy="198" r="6" fill="#78FFFA" filter="url(#cyanGlow)"/>
-  <text x="1035" y="203" font-family="Bahnschrift, Arial" font-size="11" font-weight="bold" fill="#2CE8E4">ВКЛ</text>
+  <rect width="1200" height="840" fill="url(#steelBase)" stroke="#6C7882" stroke-width="3" rx="8"/>
+  <rect x="4" y="4" width="1192" height="28" fill="#3C4234" opacity="0.9"/>
+  <text x="24" y="22" font-family="Bahnschrift, DIN 1451, Arial" font-size="13" font-weight="bold" fill="#DDD6C0">SOVIET LABORATORY VR SETTINGS CONSOLE (V2.1)</text>
+  <circle cx="20" cy="20" r="4" fill="#8C8166" stroke="#1C2024"/>
+  <circle cx="1180" cy="20" r="4" fill="#8C8166" stroke="#1C2024"/>
+  <circle cx="20" cy="820" r="4" fill="#8C8166" stroke="#1C2024"/>
+  <circle cx="1180" cy="820" r="4" fill="#8C8166" stroke="#1C2024"/>
 </svg>
