@@ -119,10 +119,10 @@ See **`docs/weapon-locker-offered-list-reaudit-20261022.md`** (§1 catalog contr
 
 ---
 
-## Deliverable verdict: **B**
+## Deliverable verdict: **A1** (supersedes interim **B**)
 
-**Strongest offline producer candidate = `Initialize` → `F11570` → `vtable+0x130`; exact GFx offered-list bytes not runtime-proven.** One **minimal init-time witness** remains after catalog **content** logging (not “row+0 isn’t FString”).
+**`RvInventoryManager+0x3E4` → `0xFE2500` → `F11570` → Initialize GFx offered-list source: PROVEN offline** — see **`docs/weapon-locker-fe2500-3e4-bridge-20261022.md`**.
 
-**Not A** — offered list not observed in PSVR2 run.
+PSVR2 catalog **FString content** miss remains a **string-encoding** issue, not eligibility. **No init-time availability witness** required for **`+0x3E4`**.
 
-**Not C** — **`+0x3E4`** still consistent with catalog progression bits; **`0x27`** matches ordinary OR of inferred indices; no offered-vs-bit contradiction captured.
+**Not C** — **`+0x3E4`** is the direct progression input to Initialize’s weapon list.

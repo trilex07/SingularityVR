@@ -34,12 +34,23 @@ class PostmortemOffline(unittest.TestCase):
         self.assertEqual(data["equip_at_f00f50"]["classification"].split()[0], "COMMIT")
         self.assertEqual(data["equip_at_f00f50"]["direct_call_sites_in_text"], [])
 
+    def test_fe2500_a1_bridge(self):
+        out = subprocess.check_output(
+            [sys.executable, str(TOOLS / "inspect_fe2500_locker_progression.py")], text=True
+        )
+        data = json.loads(out)
+        self.assertEqual(data["verdict"], "A1")
+        self.assertTrue(data["fe2500"]["reads_manager_3e4_directly"])
+        self.assertFalse(data["fe2500"]["reads_fd5ac0"])
+        self.assertTrue(data["f11570_call_chain"]["chain_proven"])
+        self.assertFalse(data["witness_v2_required"])
+
     def test_reaudit_tool_and_verdict(self):
         out = subprocess.check_output(
             [sys.executable, str(TOOLS / "inspect_locker_offered_list_reaudit.py")], text=True
         )
         data = json.loads(out)
-        self.assertEqual(data["verdict"], "B")
+        self.assertEqual(data["verdict"], "A1")
         self.assertEqual(data["load_equipped_weapons"]["classification"], "A")
         self.assertFalse(data["f00b60"]["is_vtable_1dc"])
         self.assertFalse(data["f00b60"]["preview_callback_proven"])

@@ -143,7 +143,9 @@ for (i = 0; i < gsi.count_164; ++i) {
 
 **Conclusion:** **`0x91B221` does not read `RvInventoryManager`’s bitmask.** Same offset **`0x3E4`** on another type is treated as a **UObject\*** (then **`0x40BEF0`**). **Do not** cite this path for WeaponLocker availability.
 
-**WeaponLocker natives (`equip` / `LoadEquippedWeapons` / `Initialize`):** **no** **`+0x3E4`**, **`FD5AC0`**, or **`FD5BA0`** references in disassembly scan.
+**WeaponLocker `Initialize` path:** **`F11570` → `FE2500(RvInventoryManager*)`** reads **`+0x3E4`** directly (catalog bit **`1<<i`** gate). See **`docs/weapon-locker-fe2500-3e4-bridge-20261022.md`**.
+
+**Other WeaponLocker natives (`equip` / `LoadEquippedWeapons`):** **no** direct **`+0x3E4`** in those bodies.
 
 ---
 

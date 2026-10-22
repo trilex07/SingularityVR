@@ -5,9 +5,9 @@
 `RvGame.decompressed.xxx`, export inventory `rvgame-assets.txt`.  
 **No** runtime hooks, **no** Steam deploy, **no** PSVR2.
 
-**Verdict: (B)** — progression mask / catalog plumbing is understood offline; the **exact GFx offered-list bytes** are **not** runtime-proven. The **strongest native→GFx producer candidate** is **`Initialize @ 0xF237C0` → `0xF11570` → movie `vtable+0x130`**. One **minimal init-time witness** remains before claiming **(A)**.
+**Verdict: (A1)** — see **`docs/weapon-locker-fe2500-3e4-bridge-20261022.md`**: **`RvInventoryManager+0x3E4` → `0xFE2500` → `F11570` → Initialize GFx** is **PROVEN offline**. Init-time **availability** witness is **not required** for the **`+0x3E4` offered-list contract**.
 
-Do **not** state that the full offered-list producer boundary is already known.
+Earlier **(B)** sections below remain as historical RE context (F00B60, LoadEquipped **A**, etc.).
 
 ---
 

@@ -75,10 +75,9 @@ def main() -> None:
 
     report = {
         "schema": "singularityvr-locker-offered-list-reaudit-v1",
-        "verdict": "B",
+        "verdict": "A1",
         "verdict_note": (
-            "Strongest GFx list producer candidate: Initialize -> F11570 -> vtable+0x130; "
-            "not A until init payload logged at runtime."
+            "Superseded by FE2500 bridge: manager+0x3E4 -> FE2500 -> F11570 -> Initialize GFx (see inspect_fe2500_locker_progression.py)."
         ),
         "f00b60": {
             "va": hex(PINNED["set_requested_packages"]),
@@ -136,11 +135,10 @@ def main() -> None:
             "no_wp_sp_prefilter": True,
         },
         "witness_v2_design": [
-            "1: one-shot log after F11570 in Initialize (GFx seed payload)",
-            "2: optional vtable+0x130 invoke args",
-            "3: once/session catalog contract (17 rows max)",
-            "avoid: equip@F00F50, LockerNativeTrace, LoadUpgrades, F00B60 unless preview proven",
+            "NOT REQUIRED for +0x3E4 offered-list after A1 (FE2500 bridge).",
+            "Optional: catalog FString content log if VR path strings fail — identity encoding only.",
         ],
+        "fe2500_bridge_doc": "docs/weapon-locker-fe2500-3e4-bridge-20261022.md",
     }
     print(json.dumps(report, indent=2))
 
