@@ -34,6 +34,17 @@ class PostmortemOffline(unittest.TestCase):
         self.assertEqual(data["equip_at_f00f50"]["classification"].split()[0], "COMMIT")
         self.assertEqual(data["equip_at_f00f50"]["direct_call_sites_in_text"], [])
 
+    def test_reaudit_tool_and_verdict(self):
+        out = subprocess.check_output(
+            [sys.executable, str(TOOLS / "inspect_locker_offered_list_reaudit.py")], text=True
+        )
+        data = json.loads(out)
+        self.assertEqual(data["verdict"], "B")
+        self.assertEqual(data["load_equipped_weapons"]["classification"], "A")
+        self.assertFalse(data["f00b60"]["is_vtable_1dc"])
+        self.assertFalse(data["f00b60"]["preview_callback_proven"])
+        self.assertTrue(data["initialize"]["strongest_gfx_list_producer"])
+
     def test_doc_and_witness_correction(self):
         self.assertTrue(DOC.is_file())
         doc = DOC.read_text(encoding="utf-8")
@@ -41,6 +52,12 @@ class PostmortemOffline(unittest.TestCase):
         self.assertIn("equip @ 0xF00F50", doc)
         self.assertIn("4409F0", doc)
         self.assertIn("ReadFStringAscii(row+0)", doc)
+        self.assertIn("Strongest offline producer candidate", doc)
+        reaudit = REPO / "docs" / "weapon-locker-offered-list-reaudit-20261022.md"
+        self.assertTrue(reaudit.is_file())
+        body = reaudit.read_text(encoding="utf-8")
+        self.assertIn("Native_SetRequestedPackageState", body)
+        self.assertIn("catalog[i] primary=", body)
 
 
 if __name__ == "__main__":

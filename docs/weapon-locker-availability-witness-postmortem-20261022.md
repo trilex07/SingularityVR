@@ -70,9 +70,9 @@ Tool: `tools/reload/decode_gamesystem_mweapons_default.py`
 |--------|-----|------|
 | **`equip` hot** | **`0xF00F50`** | **COMMIT** — writes **`mEquippedWeapons[slot]`** FName from script **`Weapon`** parm; **no** `.text` `call` sites |
 | **`equip` full** | **`0xF00FA0`** | Ownership / **`vtable+0x208`** (`0xF23CB0`) before inventory add |
-| **`LoadEquippedWeapons`** | **`0xF23840`** | **Seed GFx** via **`0x4AE4C0` / `0x4498C0`** (invoke payloads) |
+| **`LoadEquippedWeapons`** | **`0xF23840`** | **Classification A** — syncs **equipped slots only** (`+0xB4` count, `+0xB0` FNames); **not** full offered catalog |
 | **`Start`** | **`0xF11430`** | Clears **`mRequestedPackages` (+0xBC)**, resizes equipped arrays |
-| **`Initialize`** | **`0xF237C0`** | **`0xF11570`** + script **`vtable+0x130`** |
+| **`Initialize`** | **`0xF237C0`** | **`0xF11570`** (catalog × progression → GFx buffer) + **`vtable+0x130`** — **strongest offered-list seed candidate (offline)** |
 
 **Classification:** Left/right preview **did not** hit **`equip @ 0xF00F50`** → treat preview as **GFx-side list index** until disproven; native **`equip`** is **commit**.
 
@@ -84,10 +84,12 @@ Tool: `tools/reload/inspect_locker_preview_navigation.py`
 
 - **`IntProperty`** bitfield on **`RvUIGFxMovie_WeaponLocker`**
 - **`Start`** zeroes it (`mov [ebx+0xBC], ecx` @ **`0xF11497`**)
-- Native **`0xF00B60`** (`vtable+0x1DC`, **`ret 0x14`**) toggles bits **0 / 2 / 4** from script args **`[ebp+0x10..0x18]`** when GFx updates package flags
-- Follow-on **`0xF00C50`** may call **`GGameSystem` vtable+0x160`** with **`mActiveWeaponSlot`** scalar (**`+0xB8`**)
+- Native **`0xF00B60`** (**not** `vtable+0x1DC`; slot **`+0x1DC` = `0xEF7370`**) — **`ret 0x14`**, toggles **bits 0 / 1 / 2** of **`+0xBC`** from **`[ebp+0x10..0x18]`**, float **`[ebp+0xC]` → **`mActiveWeaponSlot (+0xB8)`**. **Unexported** UFunction name; **not proven** L/R preview callback.
+- Follow-on **`0xF00C50`** mirrors **`+0xBC`** into profile/game and calls **`GGameSystem` subobject `vtable+0x160/0x15C`** (package streaming — **no weapon FName**).
 
-**Cheapest future read-only witness (design only):** log **`0xF00B60`** entry or **`mRequestedPackages`** deltas — **not** hooked in this pass.
+**Not** `offeredOrdinaryMask`. Full xref table: `docs/weapon-locker-offered-list-reaudit-20261022.md`.
+
+**Witness v2 (design only):** prefer **`Initialize` / `F11570` GFx seed** log; **`F00B60`** only if runtime proves dispatch.
 
 ---
 
@@ -107,17 +109,19 @@ Does **not** include gattling (**bit 3 / 0x8**) or railgun (**bit 4 / 0x10**).
 
 ## Next witness (design only — do not implement until reviewed)
 
-1. **Session open:** bounded **`wchar` log** for **every** catalog row at **`+0`** and **`+0x0C`** (17 max), plus filters **`+0x24`**, **`+0x4C`**.
-2. **Session open (seed):** capture **`LoadEquippedWeapons`** GFx invoke string table once.
-3. **Preview (optional):** **`vtable+0x1DC` (`0xF00B60`)** or **`mRequestedPackages`** read-only trace.
+See **`docs/weapon-locker-offered-list-reaudit-20261022.md`** (§1 catalog contract, §9 witness v2).
 
-**Do not** use **`equip @ 0xF00F50`** for L/R preview.
+1. **Best:** one-shot log after **`F11570`** inside **`Initialize`** (GFx offered-list seed).
+2. **Second:** once/session **catalog v2** lines (`primary`/`secondary` full bounded wchar — **no** `wp_SP_*` pre-filter).
+3. **`F00B60` / `mRequestedPackages`:** only if runtime proves preview dispatch (**unproven**).
+
+**Do not** use **`equip @ 0xF00F50`** for L/R preview or **`LoadEquippedWeapons`** as full-list witness.
 
 ---
 
 ## Deliverable verdict: **B**
 
-**Exact producer boundary known; one tiny runtime witness remains** after correcting catalog string capture and moving offered-list observation to **Initialize/LoadEquipped GFx seed** and/or **`mRequestedPackages` / vtable+0x1DC**.
+**Strongest offline producer candidate = `Initialize` → `F11570` → `vtable+0x130`; exact GFx offered-list bytes not runtime-proven.** One **minimal init-time witness** remains after catalog **content** logging (not “row+0 isn’t FString”).
 
 **Not A** — offered list not observed in PSVR2 run.
 
