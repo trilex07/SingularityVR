@@ -118,6 +118,69 @@ class MeshBuilder:
         # Right (+r outward)
         self.add_quad(p1, p2, p6, p5, face_type=face_type)
 
+    def add_recessed_housing(self, center, size, inner_size, well_depth, right, fwd, up, face_type_outer=0, face_type_bed=1):
+        """
+        Adds an open recessed display housing with:
+        - 5 solid outer perimeter faces (bottom, front, back, left, right)
+        - 4 top rim frame quads surrounding the open display window
+        - 4 inner well step-down walls
+        - 1 recessed cathode bed floor quad at the bottom of the well (+up)
+        All 14 quads have strictly outward-pointing unit normals.
+        """
+        c = np.array(center, dtype=np.float32)
+        sx, sy, sz = size
+        ix, iz = inner_size
+        r = np.array(right, dtype=np.float32) * (sx * 0.5)
+        u = np.array(up, dtype=np.float32) * (sy * 0.5)
+        f = np.array(fwd, dtype=np.float32) * (sz * 0.5)
+
+        # Outer corners
+        p0 = c - r - f + u
+        p1 = c + r - f + u
+        p2 = c + r + f + u
+        p3 = c - r + f + u
+        p4 = c - r - f - u
+        p5 = c + r - f - u
+        p6 = c + r + f - u
+        p7 = c - r + f - u
+
+        # 5 outer perimeter faces
+        self.add_quad(p4, p5, p6, p7, face_type=face_type_outer) # Bottom (-u outward)
+        self.add_quad(p0, p1, p5, p4, face_type=face_type_outer) # Front (-f outward)
+        self.add_quad(p2, p3, p7, p6, face_type=face_type_outer) # Back (+f outward)
+        self.add_quad(p3, p0, p4, p7, face_type=face_type_outer) # Left (-r outward)
+        self.add_quad(p1, p2, p6, p5, face_type=face_type_outer) # Right (+r outward)
+
+        # Opening corners on outer top rim (+u)
+        ir = np.array(right, dtype=np.float32) * (ix * 0.5)
+        ifwd = np.array(fwd, dtype=np.float32) * (iz * 0.5)
+        q0 = c - ir - ifwd + u
+        q1 = c + ir - ifwd + u
+        q2 = c + ir + ifwd + u
+        q3 = c - ir + ifwd + u
+
+        # 4 top rim quads surrounding the opening (+u outward)
+        self.add_quad(p0, q0, q1, p1, face_type=face_type_outer) # Front rim
+        self.add_quad(q3, p3, p2, q2, face_type=face_type_outer) # Back rim
+        self.add_quad(p0, p3, q3, q0, face_type=face_type_outer) # Left rim
+        self.add_quad(q1, q2, p2, p1, face_type=face_type_outer) # Right rim
+
+        # Recessed floor corners at (+u - well_depth*up)
+        u_floor = np.array(up, dtype=np.float32) * (sy * 0.5 - well_depth)
+        k0 = c - ir - ifwd + u_floor
+        k1 = c + ir - ifwd + u_floor
+        k2 = c + ir + ifwd + u_floor
+        k3 = c - ir + ifwd + u_floor
+
+        # 4 inner step-down walls into the well (facing inward into the well)
+        self.add_quad(q1, q0, k0, k1, face_type=face_type_outer) # Inner front (+fwd)
+        self.add_quad(q3, q2, k2, k3, face_type=face_type_outer) # Inner back (-fwd)
+        self.add_quad(q0, q3, k3, k0, face_type=face_type_outer) # Inner left (+right)
+        self.add_quad(q2, q1, k1, k2, face_type=face_type_outer) # Inner right (-right)
+
+        # Recessed cathode bed floor at bottom of well (+u outward)
+        self.add_quad(k0, k3, k2, k1, face_type=face_type_bed)
+
     def add_cylinder(self, center, radius, height, axis, segments=12, face_type=2):
         """Adds a cylinder aligned with `axis` with outward normals."""
         c = np.array(center, dtype=np.float32)
@@ -416,30 +479,28 @@ def build_kasimov_fixture_v2(center, size, pitch_deg=15.0, cant_deg=32.0):
     fwd = np.cross(right, norm)
     fwd /= np.linalg.norm(fwd)
 
-    # 1. Main Scope Mount Chassis (Canted Left-Rail Housing)
-    b.add_box(center, size, right, fwd, norm, face_type=0)
+    # 1. Main Scope Mount Chassis: Recessed display well with hollow open top window (zero opaque lid)
+    inner_size = (sx * 0.90, sz * 0.90)
+    well_depth = 0.04
+    b.add_recessed_housing(center, size, inner_size, well_depth, right, fwd, norm, face_type_outer=0, face_type_bed=1)
 
     # 2. Anti-glare Hood Visor forward of screen
     hood_c = np.array(center) + fwd * (sz * 0.52) + norm * (sy * 0.45)
     b.add_box(hood_c, (sx * 0.95, sy * 0.35, sz * 0.16), right, fwd, norm, face_type=0)
 
-    # 3. Recessed Dark Cathode Display Bed
-    bed_center = np.array(center) + norm * (sy * 0.38)
-    bed_size = (sx * 0.78, sy * 0.08, sz * 0.74)
-    b.add_box(bed_center, bed_size, right, fwd, norm, face_type=1)
-
-    # 4. Cantilever Clamp Arm bridging from housing inner edge towards scope rail dovetail
+    # 3. Cantilever Clamp Arm bridging from housing inner edge towards scope rail dovetail
     arm_c = np.array(center) + right * (sx * 0.5 + 0.12) - norm * (sy * 0.15)
     arm_sz = (0.28, sy * 0.70, sz * 0.60)
     b.add_box(arm_c, arm_sz, right, fwd, norm, face_type=0)
 
-    # 5. Brass Knurled Scope Bracket Clamp Studs
+    # 4. Brass Knurled Scope Bracket Clamp Studs
     b.add_cylinder(np.array(center) - right*(sx*0.42) + fwd*(sz*0.35), radius=0.14, height=sy*0.8, axis=norm, segments=10, face_type=2)
     b.add_cylinder(np.array(center) - right*(sx*0.42) - fwd*(sz*0.35), radius=0.14, height=sy*0.8, axis=norm, segments=10, face_type=2)
 
-    # 6. True 7-Segment Ammo Readout Elements (Ammo: 05 / 20)
-    disp_center = bed_center + norm * (bed_size[1] * 0.5 + 0.015)
-    add_ammo_counter(b, disp_center, '05', '20', right, fwd, norm, total_width=sx*0.70, total_height=sz*0.65, face_type=3)
+    # 5. True 7-Segment Ammo Readout Elements (Ammo: 05 / 20) inside recessed display well
+    floor_c = np.array(center) + norm * (sy * 0.5 - well_depth)
+    disp_center = floor_c + norm * (0.03 * 0.5 + 0.003)
+    add_ammo_counter(b, disp_center, '05', '20', right, fwd, norm, total_width=sx*0.68, total_height=sz*0.60, face_type=3)
 
     return np.array(b.verts, dtype=np.float32), np.array(b.faces, dtype=np.int32), np.array(b.uvs, dtype=np.float32), np.array(b.face_types, dtype=np.int32)
 
@@ -449,41 +510,48 @@ def build_tmd_wrist_fixture_v2(center, size):
     cx, cy, cz = center
     sx, sy, sz = size
 
-    # Strictly right-handed orthonormal basis matching dorsal wrist curvature
-    norm = np.array([-0.2500689, 0.45012403, 0.8572362], dtype=np.float32)
+    base_norm = np.array([-0.2500689, 0.45012403, 0.8572362], dtype=np.float32)
+    base_norm /= np.linalg.norm(base_norm)
+    base_fwd = np.array([-0.1694995, 0.85134184, -0.49647456], dtype=np.float32)
+    base_fwd /= np.linalg.norm(base_fwd)
+    base_right = np.cross(base_norm, base_fwd)
+    base_right /= np.linalg.norm(base_right)
+
+    # Adjusted center shifted along outward normal and rearward to match dorsal crest curvature
+    c = np.array(center, dtype=np.float32) + base_norm * 0.18 + base_fwd * (-0.20)
+    rad = math.radians(-4.0)
+    norm = base_norm * math.cos(rad) + base_fwd * math.sin(rad)
     norm /= np.linalg.norm(norm)
-    fwd = np.array([-0.1694995, 0.85134184, -0.49647456], dtype=np.float32)
+    fwd = np.cross(base_right, norm)
     fwd /= np.linalg.norm(fwd)
     right = np.cross(norm, fwd)
     right /= np.linalg.norm(right)
-    fwd = np.cross(right, norm)
-    fwd /= np.linalg.norm(fwd)
 
-    # 1. Main Ergonomic Dorsal Crest Housing
-    b.add_box(center, size, right, fwd, norm, face_type=0)
+    # 1. Main Ergonomic Dorsal Crest Housing with recessed display well (zero opaque lid)
+    inner_size = (sx * 0.88, sz * 0.90)
+    well_depth = 0.05
+    b.add_recessed_housing(c, (sx, sy, sz), inner_size, well_depth, right, fwd, norm, face_type_outer=0, face_type_bed=1)
 
     # 2. Contoured Ergonomic Saddle Clamping Wings
-    wing_w = 0.22
-    wing_drop = 0.10
-    wing_l = np.array(center) - right * (sx * 0.5 + wing_w * 0.5) - norm * (wing_drop * 0.5)
-    wing_r = np.array(center) + right * (sx * 0.5 + wing_w * 0.5) - norm * (wing_drop * 0.5)
+    wing_w = 0.20
+    wing_drop = 0.08
+    wing_l = c - right * (sx * 0.5 + wing_w * 0.5) - norm * (wing_drop * 0.5)
+    wing_r = c + right * (sx * 0.5 + wing_w * 0.5) - norm * (wing_drop * 0.5)
     b.add_box(wing_l, (wing_w, sy + wing_drop, sz * 0.92), right, fwd, norm, face_type=0)
     b.add_box(wing_r, (wing_w, sy + wing_drop, sz * 0.92), right, fwd, norm, face_type=0)
 
     # 3. Recessed Dark Cathode Display Bed
-    bed_c = np.array(center) + norm * (sy * 0.38)
-    bed_sz = (sx * 0.82, sy * 0.08, sz * 0.84)
-    b.add_box(bed_c, bed_sz, right, fwd, norm, face_type=1)
+    floor_c = c + norm * (sy * 0.5 - well_depth)
 
     # 4. Embossed Soviet Medical Cross Plate on Left
-    cross_c = bed_c - right * (sx * 0.28) + norm * (bed_sz[1] * 0.5 + 0.015)
+    cross_c = floor_c - right * (sx * 0.28) + norm * 0.015
     b.add_box(cross_c, (sx*0.14, 0.02, sz*0.06), right, fwd, norm, face_type=4)
     b.add_box(cross_c, (sx*0.05, 0.02, sz*0.18), right, fwd, norm, face_type=4)
 
     # 5. 10 Segmented Vacuum-Tube Health Cells with Physical Divider Ribs
-    gauge_c = bed_c + right * (sx * 0.10) + norm * (bed_sz[1] * 0.5 + 0.015)
-    cell_w = sx * 0.48
-    cell_h = sz * 0.70
+    gauge_c = floor_c + right * (sx * 0.12) + norm * 0.015
+    cell_w = sx * 0.44
+    cell_h = sz * 0.75
     num_cells = 10
     step_z = cell_h / num_cells
 
@@ -494,13 +562,6 @@ def build_tmd_wrist_fixture_v2(center, size):
         if i < num_cells - 1:
             rib_center = gauge_c + fwd * (-cell_h * 0.5 + (i + 1) * step_z)
             b.add_box(rib_center, (cell_w * 0.95, 0.025, step_z * 0.20), right, fwd, norm, face_type=0)
-
-    # 6. Corner Bezel Screws
-    rx = sx * 0.42
-    rz = sz * 0.44
-    for ox in (-rx, rx):
-        for oz in (-rz, rz):
-            b.add_cylinder(np.array(center) + right*ox + fwd*oz + norm*(sy*0.48), radius=0.12, height=sy*0.14, axis=norm, segments=8, face_type=2)
 
     return np.array(b.verts, dtype=np.float32), np.array(b.faces, dtype=np.int32), np.array(b.uvs, dtype=np.float32), np.array(b.face_types, dtype=np.int32)
 
@@ -743,7 +804,7 @@ def run_all_models_v2():
         {
             'id': 'kasimov',
             'psk': REPO_ROOT / r"research\native-hands-20261007\assets\RvGameMPLoader_SF\SkeletalMesh3\ch_inview_sniper_mesh.psk",
-            'params': {'center': (-2.6, 117.0, 40.5), 'size': (2.2, 0.38, 1.55), 'pitch': 15.0, 'cant': 32.0},
+            'params': {'center': (-2.75, 117.15, 40.35), 'size': (2.2, 0.38, 1.55), 'pitch': 15.0, 'cant': 32.0},
             'builder': build_kasimov_fixture_v2,
             'remaster_tex': TEX_DIR / "kasimov_diffuse_4k.png",
             'normal_tex': TEX_DIR / "kasimov_normal_4k.png"
@@ -752,7 +813,7 @@ def run_all_models_v2():
         {
             'id': 'tmd_glove',
             'psk': REPO_ROOT / r"research\native-hands-20261007\assets\RvGame\SkeletalMesh3\ch_inview_tmd_mesh.psk",
-            'params': {'center': (41.66, 101.75, -0.88), 'size': (1.8, 0.45, 4.8)},
+            'params': {'center': (41.68, 101.76, -0.86), 'size': (1.8, 0.45, 4.4)},
             'builder': lambda c, s: build_tmd_wrist_fixture_v2(c, s),
             'remaster_tex': TEX_DIR / "tmd_glove_diffuse_4k.png",
             'normal_tex': TEX_DIR / "tmd_glove_normal_4k.png"

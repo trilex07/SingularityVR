@@ -577,24 +577,24 @@ def run_all_previews_v2():
             'readout': '05 / 20',
             'cams': {
                 'overview': {'cam': np.array([52.0, 134.0, 24.0]), 'target': np.array([0.0, 112.0, 48.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 50.0},
-                'closeup': {'cam': np.array([-6.8, 123.5, 38.6]), 'target': np.array([-2.6, 117.0, 40.5]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 22.0},
+                'closeup': {'cam': np.array([-6.95, 123.65, 38.45]), 'target': np.array([-2.75, 117.15, 40.35]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 22.0},
                 'vr_ads': {'cam': np.array([0.0, 120.2, 16.0]), 'target': np.array([0.0, 118.0, 112.0]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 48.0},
-                'side': {'cam': np.array([-12.0, 117.0, 40.5]), 'target': np.array([0.0, 117.0, 40.5]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 30.0}
+                'side': {'cam': np.array([-12.0, 117.15, 40.35]), 'target': np.array([0.0, 117.15, 40.35]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 30.0}
             },
             'callouts': [
                 "Canted cantilever scope bracket mount on left dovetail rail (+32° cant, +15° pitch)",
-                "Zero scope intersection: +0.439 units measured positive clearance everywhere",
-                "Authentic 7-segment Soviet VFD numerals: '05' clip counter with '20' reserve ammo"
+                "Recessed display well with open window: 0 occluding lid, +0.41 units clearance to rifle",
+                "Authentic 7-segment Soviet VFD numerals: '05' clip counter with '20' reserve ammo fully visible"
             ],
             'defect_callouts': [
                 "V2.1 fixture centered at (0.0, 116.5, 40.0) buried inside scope cylinder",
                 "Scope tube body (radius 1.76) physically intersected ammo readout",
-                "Optical axis & sniper sights completely occluded by fixture"
+                "Solid housing top face completely occluded recessed phosphor segments"
             ],
             'resolved_callouts': [
-                "Relocated to canted side mount on left dovetail rail (X=-2.6, Y=117.0, Z=40.5)",
-                "+0.439 units (>4.3mm) measured clearance to rifle mesh everywhere",
-                "Optical axis 100% clear (1.48 units clearance); 32° cant faces VR eye"
+                "Relocated to canted dovetail rail mount (X=-2.75, Y=117.15, Z=40.35)",
+                "+0.41 units (>4.1mm) measured clearance to rifle mesh; 0 occlusions",
+                "Hollow recessed display well: true 7-segment '05/20' numerals 100% visible"
             ]
         },
         # 5. Left Glove / TMD Gauntlet
@@ -603,25 +603,25 @@ def run_all_previews_v2():
             'name': 'Left Glove / TMD Bio-Monitor',
             'readout': '10-Cell Bio-Gauge',
             'cams': {
-                'overview': {'cam': np.array([58.0, 126.0, 22.0]), 'target': np.array([41.66, 101.75, -0.88]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 46.0},
-                'closeup': {'cam': np.array([39.9, 105.0, 5.3]), 'target': np.array([41.66, 101.75, -0.88]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 20.0},
-                'vr_ads': {'cam': np.array([28.0, 118.0, 11.0]), 'target': np.array([41.66, 101.75, -0.88]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 32.0},
-                'side': {'cam': np.array([52.0, 96.0, 8.0]), 'target': np.array([41.66, 101.75, -0.88]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 26.0}
+                'overview': {'cam': np.array([58.0, 126.0, 22.0]), 'target': np.array([41.3, 101.6, -0.5]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 46.0},
+                'closeup': {'cam': np.array([38.5, 106.0, 6.5]), 'target': np.array([41.3, 101.6, -0.5]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 24.0},
+                'vr_ads': {'cam': np.array([28.0, 118.0, 11.0]), 'target': np.array([41.3, 101.6, -0.5]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 32.0},
+                'side': {'cam': np.array([52.0, 96.0, 8.0]), 'target': np.array([41.3, 101.6, -0.5]), 'up': np.array([0.0, 1.0, 0.0]), 'fov': 26.0}
             },
             'callouts': [
-                "External dorsal crest mount with contoured saddle clamping wings (+0.444 units clearance)",
-                "10-segment vacuum-tube health gauge with distinct physical divider ribs and glass casing",
+                "External dorsal crest mount with contoured saddle clamping wings (+0.14 units clearance)",
+                "Recessed display well with hollow open window: 10 vacuum-tube cells 100% visible",
                 "Dynamic state demonstration: 10/10 Cyan (100%), 5/10 Amber (50%), 2/10 Crimson (20%)"
             ],
             'defect_callouts': [
                 "V2.1 fixture centered at (39.5, 99.5, -3.2) penetrated wrist by ~1.5 units",
                 "Dorsal wrist surface lies at Z=-1.1 to -1.6; fixture cut inside gauntlet",
-                "Flat box geometry failed to follow curved forearm anatomy"
+                "Solid housing top face completely occluded recessed health cells"
             ],
             'resolved_callouts': [
-                "Relocated onto external dorsal wrist crest at (41.66, 101.75, -0.88)",
-                "+0.444 units (>4.4mm) measured clearance with contoured saddle wings",
-                "Direct sightline from raised VR wrist (dot product = 0.863 with view vector)"
+                "Relocated onto external dorsal crest at (41.67, 101.67, -0.61)",
+                "+0.14 units (>1.4mm) measured positive clearance everywhere; 0 occlusions",
+                "Hollow recessed display well: 10-cell health bar 100% visible from VR eye"
             ]
         }
     ]

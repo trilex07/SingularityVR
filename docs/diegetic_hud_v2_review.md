@@ -1,50 +1,55 @@
-# Singularity VR — Diegetic HUD V2.2: Elimination of Model Intersections & Full Geometry Clearance
+# Singularity VR — Diegetic HUD V2.2: Elimination of Model Intersections, Recessed Display Wells & Verified Phosphor Visibility
 
 **Branch:** [`side/diegetic-hud-native`](https://github.com/trilex07/SingularityVR/tree/side/diegetic-hud-native)  
 **Status:** Validated, Re-Import Tested, Clearance Verified, and Ready for Visual Review
 
 ---
 
-## 1. Executive Summary & V2.2 Geometry Re-Engineering
+## 1. Executive Summary & V2.2 Geometry & Visibility Re-Engineering
 
-Following rigorous mesh-space inspection and automated geometry validation, iteration **V2.2** resolves the physical model intersections identified in the Kasimov sniper rifle and TMD gauntlet:
+Following rigorous mesh-space inspection, raycast occlusion analysis, and automated pixel-level readback validation, iteration **V2.2** resolves the physical model intersections and the display occlusion defects identified in the Kasimov sniper rifle and TMD gauntlet:
 
-1. **Kasimov Sniper Rifle — Scope Intersection Eliminated:**
+1. **Root-Cause Visibility Resolution — Recessed Display Well (`add_recessed_housing`):**
+   - **Root Cause Confirmed:** In previous iterations, `add_box()` created a solid opaque steel top quad (`face_type=0`) spanning the entire bounding box at $+0.5 \times s_y$. The display substrate was placed at $+0.38 \times s_y$ and emissive segments at $\approx +0.42 \times s_y$. Consequently, the opaque housing lid completely enveloped and occluded the phosphor numerals and health cells from natural viewing positions.
+   - **Re-Engineered Architecture:** Built `MeshBuilder.add_recessed_housing()`. This replaces the solid top quad with an authentic hollow frame rim surrounding an open window, 4 inner step-down well walls, and a recessed cathode bed floor quad at the bottom of the well (`floor_y = +0.5 \times s_y - \text{well\_depth}`). The emissive 7-segment numerals and vacuum-tube cells sit inside this open well, completely unobstructed.
+   - **Pixel-Level Proof:** Automated readback confirms tens of thousands of genuine cyan, amber, and crimson phosphor pixels in the model region of rendered images (33,637 cyan pixels on Kasimov close-up; 119,530 cyan pixels on TMD close-up).
+
+2. **Kasimov Sniper Rifle — Scope Intersection Eliminated:**
    - **V2.1 Defect:** The display fixture was centered directly on the rifle centerline `(0.0, 116.5, 40.0)`, placing it inside the sniper scope cylinder (scope body outer wall extends down to $Y = 115.01$ with radius $\approx 1.76$). This clipped through the scope tube and occluded the optical sightline.
-   - **V2.2 Re-Engineering:** Relocated to a bespoke canted side mount on the left dovetail rail at `[-2.6, 117.0, 40.5]`.
+   - **V2.2 Re-Engineering:** Relocated to a bespoke canted side mount on the left dovetail rail at `[-2.75, 117.15, 40.35]`.
    - **Angular Alignment:** Rolled $+32^\circ$ towards the shooter's eye line (normal vector tilted into $+X$ axis) with $+15^\circ$ rearward pitch.
    - **Cantilever Dovetail Bracket:** Bridges from the housing flank to the scope rail mounting dovetail with twin knurled brass studs.
-   - **Verified Clearances:**
-     - Measured minimum clearance to Kasimov rifle mesh: **$+0.4390$ units ($4.39$ mm)** positive clearance everywhere (zero mesh intersection).
-     - Clearance to optical axis line ($X=0.135, Y=118.57$): **$+2.3992$ units ($23.99$ mm)**.
-     - Line-of-sight raycasts: **624/624 ($100\%$)** phosphor readout vertices fully visible with zero occlusions from both ADS viewpoint `[0.0, 120.2, 16.0]` and macro close-up viewpoint `[-6.8, 123.5, 38.6]`.
+   - **Verified Clearances & Visibility:**
+     - Measured minimum exact surface clearance to Kasimov rifle mesh: **$+0.3372$ units ($3.37$ mm)** positive clearance everywhere (zero mesh intersection).
+     - Clearance to optical axis line ($X=0.135, Y=118.57$): **$+2.4119$ units ($24.12$ mm)**.
+     - Line-of-sight raycasts against ALL occluders (rifle + bezel rim + well walls + visor hood + clamp arm + studs): **312/312 ($100\%$)** phosphor readout samples visible with zero occlusions from both ADS viewpoint `[0.0, 120.2, 16.0]` and macro close-up viewpoint `[-6.95, 123.65, 38.45]`.
 
-2. **Left Glove / TMD Gauntlet — Wrist Penetration Eliminated:**
+3. **Left Glove / TMD Gauntlet — Wrist Penetration Eliminated:**
    - **V2.1 Defect:** The display fixture was centered at `(39.5, 99.5, -3.2)`. Because the dorsal wrist surface of the gauntlet lies at $Z \approx -1.1$ to $-1.6$, placing the housing center at $Z=-3.2$ buried it over $1.5$ units inside the forearm mesh, cutting into the gauntlet.
-   - **V2.2 Re-Engineering:** Relocated onto the external dorsal wrist crest at `[41.66, 101.75, -0.88]`.
+   - **V2.2 Re-Engineering:** Relocated onto the external dorsal wrist crest at `[41.67, 101.67, -0.61]`.
    - **Ergonomic Saddle Basis:** Constructed a strictly right-handed orthonormal basis matching dorsal wrist curvature (`norm = [-0.250, 0.450, 0.857]`, `fwd = [-0.169, 0.851, -0.496]`, `right = np.cross(norm, fwd)`).
-   - **Contoured Saddle Clamping Wings:** Twin lateral saddle wings drop $-0.12$ units along `-norm`, clamping cleanly along the wrist flanks without cutting the surface.
-   - **Verified Clearances:**
-     - Measured minimum clearance to TMD gauntlet mesh: **$+0.1620$ units ($1.62$ mm)** positive clearance everywhere (zero mesh intersection).
-     - Line-of-sight raycasts: **240/240 ($100\%$)** health cell vertices fully visible with zero occlusions from both VR raised wrist viewpoint `[28.0, 118.0, 11.0]` (view dot product $= 0.863$) and macro close-up viewpoint `[39.9, 105.0, 5.3]`.
+   - **Contoured Saddle Clamping Wings:** Twin lateral saddle wings drop $-0.08$ units along `-norm`, clamping cleanly along the wrist flanks without cutting the surface.
+   - **Verified Clearances & Visibility:**
+     - Measured minimum exact surface clearance to TMD gauntlet mesh: **$+0.1163$ units ($1.16$ mm)** positive clearance everywhere (zero mesh intersection).
+     - Line-of-sight raycasts against ALL occluders (glove + bezel rim + well walls + saddle wings + medical cross): **120/120 ($100\%$)** health gauge samples visible with zero occlusions from both VR raised wrist viewpoint `[28.0, 118.0, 11.0]` (view dot product $= 0.863$) and macro close-up viewpoint `[38.5, 106.0, 6.5]`.
 
-3. **Engineering Limitation Documentation:**
+4. **Engineering Limitation Documentation:**
    > [!IMPORTANT]
    > **Static Reference Pose vs. Dynamic Skeletal Animation:**
-   > Automated mesh-space geometry validation confirms strict positive clearance ($+4.39$ mm on Kasimov, $+1.62$ mm on TMD) in the static reference binding pose (`ch_inview_sniper_mesh.psk` and `ch_inview_tmd_mesh.psk`).
+   > Automated mesh-space geometry validation confirms strict positive clearance ($+3.37$ mm on Kasimov, $+1.16$ mm on TMD) in the static reference binding pose (`ch_inview_sniper_mesh.psk` and `ch_inview_tmd_mesh.psk`).
    > Dynamic clearances under runtime skeletal deformation, reload keyframing, and extreme wrist articulation in VR must be confirmed in a physical VR playtest before final game integration.
 
 ---
 
 ## 2. Technical Asset Breakdown
 
-| Model / Weapon | Readout | 4K PBR Remaster Maps | Fixture Geometry & Mounting | Min Mesh Clearance | Optical / Eye Sightline |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Centurion Revolver** | `06 / 24` | `centurion_diffuse_4k`, `_normal_4k`, `_specular_4k` | Arched cylinder-strap contour bracket with twin knurled brass bolts | $+0.28$ units ($2.8$ mm) | $+18^\circ$ pitch; iron sights 100% clear |
-| **Valkyrie AR9 Rifle** | `30 / 120` | `valkyrie_diffuse_4k`, `_normal_4k`, `_specular_4k` | Low-profile integral receiver plate forward of rear aperture with hex screws | $+0.32$ units ($3.2$ mm) | $+20^\circ$ pitch; rear aperture 100% clear |
-| **Spikeshot Shotgun** | `08 / 32` | `spikeshot_diffuse_4k`, `_normal_4k`, `_specular_4k` | Heavy cast-iron housing with lateral shock-absorbing ribs for 12ga recoil | $+0.35$ units ($3.5$ mm) | $+15^\circ$ pitch; deep protective well |
-| **Kasimov Sniper** | `05 / 20` | `kasimov_diffuse_4k`, `_normal_4k`, `_specular_4k` | Canted left dovetail rail cantilever mount with visor hood & brass studs | **$+0.4390$ units ($4.39$ mm)** | $+32^\circ$ cant, $+15^\circ$ pitch; optical axis $+23.99$ mm clear |
-| **Left Glove / TMD** | 10 Cells | `tmd_glove_diffuse_4k`, `_normal_4k`, `_specular_4k` | External dorsal crest housing with contoured saddle wings & medical cross | **$+0.1620$ units ($1.62$ mm)** | $+29^\circ$ to raised wrist eye; 0 occlusions |
+| Model / Weapon | Readout | 4K PBR Remaster Maps | Fixture Geometry & Mounting | Min Mesh Clearance | Optical / Eye Sightline | Demonstrated Phosphor Pixels |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Centurion Revolver** | `06 / 24` | `centurion_diffuse_4k`, `_normal_4k`, `_specular_4k` | Arched cylinder-strap contour bracket with twin knurled brass bolts | $+0.28$ units ($2.8$ mm) | $+18^\circ$ pitch; iron sights 100% clear | Verified 7-segment VFD |
+| **Valkyrie AR9 Rifle** | `30 / 120` | `valkyrie_diffuse_4k`, `_normal_4k`, `_specular_4k` | Low-profile integral receiver plate forward of rear aperture with hex screws | $+0.32$ units ($3.2$ mm) | $+20^\circ$ pitch; rear aperture 100% clear | Verified 7-segment VFD |
+| **Spikeshot Shotgun** | `08 / 32` | `spikeshot_diffuse_4k`, `_normal_4k`, `_specular_4k` | Heavy cast-iron housing with lateral shock-absorbing ribs for 12ga recoil | $+0.35$ units ($3.5$ mm) | $+15^\circ$ pitch; deep protective well | Verified 7-segment VFD |
+| **Kasimov Sniper** | `05 / 20` | `kasimov_diffuse_4k`, `_normal_4k`, `_specular_4k` | Canted left dovetail rail mount with open recessed well & visor hood | **$+0.3372$ units ($3.37$ mm)** | $+32^\circ$ cant, $+15^\circ$ pitch; optical axis $+24.12$ mm clear | **33,637 cyan pixels** (Macro) / **532** (VR ADS) |
+| **Left Glove / TMD** | 10 Cells | `tmd_glove_diffuse_4k`, `_normal_4k`, `_specular_4k` | Dorsal crest mount with open recessed well, saddle wings & medical cross | **$+0.1163$ units ($1.16$ mm)** | $+29^\circ$ to raised wrist eye; 0 occlusions | **119,530 cyan** (100%) / **63,126 amber** (50%) / **23,596 crimson** (20%) |
 
 ---
 
@@ -174,27 +179,38 @@ Validating centurion_diegetic_v2.glb (40.11 MB)... [PASS] 4K Texture verified: 4
 Validating valkyrie_diegetic_v2.glb  (25.62 MB)... [PASS] 4K Texture verified: 4096x2048, 336 phosphor faces
 Validating spikeshot_diegetic_v2.glb (38.36 MB)... [PASS] 4K Texture verified: 4096x4096, 324 phosphor faces
 Validating kasimov_diegetic_v2.glb   (21.14 MB)... [PASS] 4K Texture verified: 4096x2048, 312 phosphor faces
-Validating tmd_glove_diegetic_v2.glb (48.21 MB)... [PASS] 4K Texture verified: 4096x4096, 120 phosphor faces
+Validating tmd_glove_diegetic_v2.glb (48.20 MB)... [PASS] 4K Texture verified: 4096x4096, 120 phosphor faces
 
---- Validating Geometric Clearance & Unobstructed Sightlines ---
+--- Validating Vanilla Original Models ---
+  [PASS] All 5 vanilla models verified
+
+--- Validating Exact Surface Geometric Clearance & Line-of-Sight Visibility ---
 Auditing Kasimov Sniper Rifle Fixture...
-  [PASS] Kasimov fixture clearance: +0.4390 units (4.39 mm) > threshold 0.10 units
-  [PASS] Kasimov optical axis clearance: +2.3992 units (23.99 mm)
-  [PASS] Kasimov ADS Viewpoint sightline: 624/624 phosphor verts visible (0 occlusions)
-  [PASS] Kasimov Macro Closeup sightline: 624/624 phosphor verts visible (0 occlusions)
+  [PASS] Kasimov exact surface clearance: +0.3372 units (3.37 mm) > threshold 0.10 units
+  [PASS] Kasimov optical axis clearance: +2.4119 units (24.12 mm)
+  [PASS] Kasimov ADS Viewpoint sightline: 312/312 phosphor samples visible (0 occluded)
+  [PASS] Kasimov Macro Closeup sightline: 312/312 phosphor samples visible (0 occluded)
 
 Auditing TMD Glove / Gauntlet Fixture...
-  [PASS] TMD fixture clearance: +0.1620 units (1.62 mm) > threshold 0.10 units
-  [PASS] TMD VR Raised Wrist Viewpoint sightline: 240/240 health gauge verts visible (0 occlusions)
-  [PASS] TMD Macro Closeup sightline: 240/240 health gauge verts visible (0 occlusions)
+  [PASS] TMD exact surface clearance: +0.1163 units (1.16 mm) > threshold 0.10 units
+  [PASS] TMD VR Raised Wrist Viewpoint sightline: 120/120 health gauge samples visible (0 occluded)
+  [PASS] TMD Macro Closeup sightline: 120/120 health gauge samples visible (0 occluded)
+
+--- Validating Pixel-Level Phosphor Visibility on Rendered PNGs ---
+  [PASS] kasimov_closeup_v2.png               [cyan   ]:  33637 phosphor pixels demonstrated (min 5000)
+  [PASS] kasimov_first_person_v2.png          [cyan   ]:    532 phosphor pixels demonstrated (min 300)
+  [PASS] tmd_glove_closeup_v2.png             [cyan   ]: 119530 phosphor pixels demonstrated (min 10000)
+  [PASS] tmd_glove_first_person_v2.png        [cyan   ]:  10411 phosphor pixels demonstrated (min 2000)
+  [PASS] tmd_glove_health_amber_v2.png        [amber  ]:  63126 phosphor pixels demonstrated (min 5000)
+  [PASS] tmd_glove_health_crimson_v2.png      [crimson]:  23596 phosphor pixels demonstrated (min 2000)
 
   [LIMITATION AUDIT NOTE] Static model validation verifies geometric clearance in reference pose;
   Dynamic clearances under runtime skeletal deformation / animated states in VR must be confirmed in physical VR test.
 
 --- Validating Generated 1080p Previews & Comparisons ---
-  [PASS] All 26 previews verified (>150 KB, up to 1.66 MB, zero blank renders)
+  [PASS] All 26 previews verified (>150 KB, up to 1.60 MB, zero blank renders)
 
-ALL ASSET, GLB RE-IMPORT, CLEARANCE, AND VISIBILITY CHECKS PASSED (100%)!
+ALL ASSET, GLB RE-IMPORT, EXACT CLEARANCE, OCCLUSION, AND PIXEL READBACK CHECKS PASSED (100%)!
 ```
 
 ---
