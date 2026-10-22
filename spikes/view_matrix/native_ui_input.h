@@ -8,6 +8,7 @@
 #include "native_owned_inventory.h"
 #include "native_body_equipment_probe.h"
 #include "native_tmd_aim.h"
+#include "native_tmd_haptics.h"
 #include "locker_virtual_runtime.h"
 #include "locker_native_trace.h"
 #include "locker_availability_trace.h"
@@ -391,6 +392,7 @@ static void __fastcall Poll(void* self,void*,float dt) {
  LockerOwnedDisplayCache::TickWhileActive();
  LockerVrLoadout::PollEngine();
  NativeBodyEquipmentProbe::Poll(); // opt-in read-only heavy/grenade ownership census
+ NativeTmdHaptics::Poll(); // default OFF; verified Start/StopFirePower observers
  NativeTmdAim::Poll(); // OFF by default; audited pure TMD getters, not shared gun aim
  ObserveWeaponAssets(); // at most six weapon identities, only the explicit read-only witness
  NativeGamepadEnumProbe::SetContext(VrModeOn() && InterlockedCompareExchange(&g_padEmu,0,0)!=0 &&
