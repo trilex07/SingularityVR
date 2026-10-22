@@ -12267,6 +12267,16 @@ void SyncXRInput(XrTime displayTime) {
         if(!primaryGate.fireHeld)rt=0;
         if(!alternateGate.fireHeld)lt=0;
     }
+    // Sense L2 is also bound to the native Impulse button. Once the native
+    // TMD is owned, forwarding the same pull as XInput LT starts weapon ADS
+    // concurrently (including its hand animation and GunPivotWorld pullback).
+    // Keep Impulse in btns; consume only its duplicate analog ADS channel.
+    // Optical Kasimov requests have their own ownership and remain intact.
+    if(!uiMenu&&feedGame&&VrModeOn()&&InGameplay()&&!Rd(g_gamePaused)&&
+       !Rd(g_panelOpen)&&AimHand()==1&&Rd(g_haveTMD)==1&&
+       g_impulseBtnIdx>=0&&g_impulseBtnIdx<kPadButtonCount&&
+       g_padButtons[g_impulseBtnIdx].mask==XI_RSHOULDER&&!nearEyeRequested)
+        lt=0.f;
     InterlockedExchange(&g_rawTrigger, (LONG)(rt * 255.0f));
     InterlockedExchange(&g_rawAltTrigger, (LONG)(lt * 255.0f));   // run 213 - see the scope census
     if(g_sniperNearEyeScope&&nearEyeEligible){
