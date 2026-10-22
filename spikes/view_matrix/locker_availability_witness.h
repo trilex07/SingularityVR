@@ -1,7 +1,8 @@
 #pragma once
-// Read-only availability probes for WeaponLocker diagnostic pass.
-// Catalog path: GGameSystem @ 0x01CF394C -> RvGameSystem.mWeapons (WeaponInfo stride 0x190).
-// Do NOT use GEngine @ 0x01CF8778 SessionManager (wrong object). See docs/weapon-locker-availability-contract-20261022.md.
+// Read-only availability probes for WeaponLocker diagnostic pass (legacy LockerNativeTrace helper).
+// Runtime catalog: GGameSystem @ 0x01CF394C, +0x160/+0x164, stride 0x50 (FD5AC0 / 4409F0 FString at row+0).
+// Do NOT treat row+0 as a raw char* path; see docs/weapon-locker-availability-witness-postmortem-20261022.md.
+// Do NOT use GEngine @ 0x01CF8778 SessionManager (wrong object).
 #include "inventory_retention_policy.h"
 #include "native_owned_inventory.h"
 #include "pause_rtt_probe.h"

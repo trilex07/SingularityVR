@@ -71,8 +71,9 @@ def main() -> None:
         },
         "population_note": (
             "Runtime TArray at GGameSystem+0x160/+0x164 (stride 0x50) is hydrated from "
-            "Default__RvGameSystem via UE3 default-property serialization (native init); "
-            "not written by debug config import at 0xBF9860."
+            "Default__RvGameSystem.mWeapons (ArrayProperty count=17); not written by debug "
+            "config import at 0xBF9860. Prefer decode_gamesystem_mweapons_default.py for "
+            "row-index binding; runtime identity is FString at row+0 per FD5AC0/4409F0."
         ),
         "catalog_rows_by_blob_path_order": rows,
         "ordinary_weapons_inferred": ordinary,

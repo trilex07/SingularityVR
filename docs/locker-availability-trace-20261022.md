@@ -1,5 +1,7 @@
 # LockerAvailabilityTrace — minimal read-only witness
 
+**PSVR2 v1 postmortem:** run was **INCONCLUSIVE** (wrong catalog scan + wrong preview hook). See [`weapon-locker-availability-witness-postmortem-20261022.md`](weapon-locker-availability-witness-postmortem-20261022.md). **No v2 deploy** until design review.
+
 **Flag:** `[Diagnostic] LockerAvailabilityTrace=0` (default OFF). Independent of `LockerNativeTrace`.
 
 ## Hooks installed when enabled

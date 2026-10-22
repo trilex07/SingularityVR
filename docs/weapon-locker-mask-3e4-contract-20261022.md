@@ -85,7 +85,7 @@ if (row[+0x4C] & 1) continue;
 
 | Offset | Size | Used as | Semantics (evidence-based) |
 |--------|------|---------|----------------------------|
-| **`+0x00` / `+0x04`** | FString | Match key vs equip path | Primary weapon identity string (package path / export name) |
+| **`+0x00` / `+0x04`** | FString | Match key vs equip path | Primary weapon identity string (compared via **`0x4409F0`** — not a raw `char*` at row base; see postmortem doc) |
 | **`+0x0C` / `+0x10`** | FString | **`0xF0343C`** secondary push to **`GGameSystem` vtable `+0x20C`** | Secondary label / display / alternate path (exact role unknown) |
 | **`+0x24`** | **`byte`** | Skip if **`!= 0`** | **Exclude from locker bitmask catalog** (heavy/special/non-locker — sniper gating candidate) |
 | **`+0x4C`** | **`dword`** | Skip if **`& 1`** | **Second exclusion flag** (bit0 = skip EnableAll / FD5AC0 row) |
