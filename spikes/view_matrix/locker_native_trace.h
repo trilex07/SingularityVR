@@ -27,13 +27,11 @@ constexpr uintptr_t kFnLoad = 0x00F23840u;
 constexpr uintptr_t kFnEquip = 0x00F00F50u;
 // Page exec bodies: inspect_locker_page_methods.py (registration, NOT vtable slots).
 constexpr uintptr_t kFnLoadUpgrades = 0x00F87C80u;
-constexpr uintptr_t kFnUpgrade = 0x00F87E60u;
+constexpr uintptr_t kFnUpgrade = 0x00F87E60u; // witness-only; do not hook (purchase/action exec)
 constexpr const char* kPrefixLoadUpgrades16 =
     "7d4a11aa21143fd090b972fa6cd4d88bec7c600407e1e350f5d0df71c754784f";
-constexpr const char* kPrefixUpgrade16 =
-    "1b661138265681c86fe875c0be9bdd9a70cc8f9767b68a868f230dbf96a63ce6";
 
-constexpr unsigned kMethodCount = 6u;
+constexpr unsigned kMethodCount = 5u;
 constexpr unsigned kMaxEvents = 96u;
 constexpr unsigned kMaxPerMethod = 24u;
 constexpr unsigned kMaxPickupNotes = 24u;
@@ -48,7 +46,8 @@ constexpr unsigned kMaxLoadCallerWitness = 16u;
 using StartFn = void(__thiscall*)(void* self, void* frame);
 using FrameFn = void(__thiscall*)(void* self, void* frame);
 using EquipFn = void(__thiscall*)(void* self, void* frame, void* slotNum, void* stackArg10);
-using ScriptExecFn = void(__thiscall*)(void* self, void* frame);
+// ret 8: FFrame* + RESULT_DECL (inspect_locker_page_methods.py ABI witness).
+using ScriptExecFn = void(__thiscall*)(void* self, void* frame, void* result);
 
 inline volatile LONG g_session = 0;
 inline volatile LONG g_seq = 0;
@@ -66,7 +65,7 @@ inline int g_offEquipped = -1;
 inline int g_offOriginal = -1;
 inline int g_offActiveSlot = -1;
 inline int g_offRequestedPackages = -1;
-inline volatile LONG g_methodCounts[6]{};
+inline volatile LONG g_methodCounts[5]{};
 inline volatile LONG g_lastPageLoadSignal = 0; // 0 unknown, 1 LoadEquipped, 2 LoadUpgrades
 inline volatile LONG g_pageHooksLive = 0;
 inline volatile LONG g_availWitnessLines = 0;
@@ -77,7 +76,6 @@ inline EquipFn g_origEquip = nullptr;
 inline FrameFn g_origLoad = nullptr;
 inline FrameFn g_origPop = nullptr;
 inline ScriptExecFn g_origLoadUpgrades = nullptr;
-inline ScriptExecFn g_origUpgrade = nullptr;
 
 inline bool Enabled() {
     return InterlockedCompareExchange(&g_lockerNativeTrace, 0, 0) != 0;
@@ -253,7 +251,7 @@ inline void LogEnter(const char* method, unsigned methodIdx, void* self, const c
         LogEquippedTArray("ENTER", movie, g_offOriginal, "mOriginalWeapons");
     }
     LogCachedOwned("ENTER");
-    if (!strcmp(method, "equip") || !strcmp(method, "LoadEquippedWeapons") || !strcmp(method, "LoadUpgrades"))
+    if (!strcmp(method, "equip") || !strcmp(method, "LoadEquippedWeapons"))
         MaybeLogAvailability(method);
 }
 
@@ -347,21 +345,14 @@ struct ExecHooks {
         if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogExit("PopMenu", 3, self);
         --t_reenter;
     }
-    static void __thiscall LoadUpgrades(void* self, void* frame) {
+    static void __thiscall LoadUpgrades(void* self, void* frame, void* result) {
         ++t_reenter;
         if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) {
             InterlockedExchange(&g_lastPageLoadSignal, 2);
             LogEnter("LoadUpgrades", 4, self, "frame");
         }
-        g_origLoadUpgrades(self, frame);
+        g_origLoadUpgrades(self, frame, result);
         if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogExit("LoadUpgrades", 4, self);
-        --t_reenter;
-    }
-    static void __thiscall Upgrade(void* self, void* frame) {
-        ++t_reenter;
-        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogEnter("Upgrade", 5, self, "frame");
-        g_origUpgrade(self, frame);
-        if (LockerNativeTraceWitness::AllowOuterExecWitness(t_reenter)) LogExit("Upgrade", 5, self);
         --t_reenter;
     }
 };
@@ -379,7 +370,6 @@ inline void RollbackAllHooks() {
     DisableOne(kFnLoad, (void**)&g_origLoad);
     DisableOne(kFnPopMenu, (void**)&g_origPop);
     DisableOne(kFnLoadUpgrades, (void**)&g_origLoadUpgrades);
-    DisableOne(kFnUpgrade, (void**)&g_origUpgrade);
     InterlockedExchange(&g_hooksLive, 0);
     InterlockedExchange(&g_pageHooksLive, 0);
 }
@@ -388,10 +378,7 @@ inline bool Prefix16Matches(uintptr_t body) {
     if (!body || !PauseRttProbe::SafeRange(body, 16)) return false;
     static const unsigned char kLoadUpgradesPrefix[16] = {0x55, 0x8B, 0xEC, 0x6A, 0xFF, 0x68, 0x68, 0x67,
                                                           0x6E, 0x01, 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00};
-    static const unsigned char kUpgradePrefix[16] = {0x55, 0x8B, 0xEC, 0x6A, 0xFF, 0x68, 0xC8, 0x67,
-                                                   0x6E, 0x01, 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00};
     if (body == kFnLoadUpgrades) return memcmp((void*)body, kLoadUpgradesPrefix, 16) == 0;
-    if (body == kFnUpgrade) return memcmp((void*)body, kUpgradePrefix, 16) == 0;
     return false;
 }
 
@@ -419,21 +406,19 @@ inline bool InstallOne(uintptr_t target, void* detour, void** orig, const char* 
 
 inline bool InstallPageHooks() {
     if (InterlockedCompareExchange(&g_pageHooksLive, 0, 0) != 0) return true;
-    if (!Prefix16Matches(kFnLoadUpgrades) || !Prefix16Matches(kFnUpgrade)) {
-        Log("locker native trace: page exec prefix refused (re-run inspect_locker_page_methods.py)");
+    if (!Prefix16Matches(kFnLoadUpgrades)) {
+        Log("locker native trace: LoadUpgrades prefix refused (re-run inspect_locker_page_methods.py)");
         return false;
     }
     const bool ok =
-        InstallOne(kFnLoadUpgrades, (void*)&ExecHooks::LoadUpgrades, (void**)&g_origLoadUpgrades, "LoadUpgrades") &&
-        InstallOne(kFnUpgrade, (void*)&ExecHooks::Upgrade, (void**)&g_origUpgrade, "Upgrade");
+        InstallOne(kFnLoadUpgrades, (void*)&ExecHooks::LoadUpgrades, (void**)&g_origLoadUpgrades, "LoadUpgrades");
     if (!ok) {
         DisableOne(kFnLoadUpgrades, (void**)&g_origLoadUpgrades);
-        DisableOne(kFnUpgrade, (void**)&g_origUpgrade);
         Log("locker native trace: page hook install aborted");
         return false;
     }
     InterlockedExchange(&g_pageHooksLive, 1);
-    Log("locker native trace: page hooks live LoadUpgrades=%p Upgrade=%p (ret8 script exec; not vtable)",
+    Log("locker native trace: page hook live LoadUpgrades=%p (ScriptExecFn ret8; Upgrade @ %p unhooked)",
         (void*)kFnLoadUpgrades, (void*)kFnUpgrade);
     return true;
 }

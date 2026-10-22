@@ -8,8 +8,8 @@
 
 | Method | VA (body) | Vtable slot | ABI (capture) | Registration |
 |--------|-----------|-------------|---------------|--------------|
-| LoadUpgrades | `0x00F87C80` | **none** | `ret 8` (`ScriptExecFn`) | `intURvUIGFxMovie_WeaponLockerexecLoadUpgrades` |
-| Upgrade | `0x00F87E60` | **none** | `ret 8` | `intURvUIGFxMovie_WeaponLockerexecUpgrade` |
+| LoadUpgrades | `0x00F87C80` | **none** | `ret 8`; `[ebp+8]→esi` FFrame | `ScriptExecFn(self,frame,result)` — **hook** |
+| Upgrade | `0x00F87E60` | **none** | `ret 8` (same shape) | witness only — **do not hook** |
 
 Core vtable (`0x019A0948`) unchanged: Start `0x11C`, PopMenu `0x190`, LoadEquippedWeapons `0x1F4`, equip `0x1F8`.
 
@@ -43,7 +43,8 @@ See audit doc § test protocol (Equip → cycle → Upgrade → back → cycle �
 
 ## Build (x86 `/O2`)
 
-- **DLL SHA-256:** `DA8CD473AEC62BE33CFCF072706B1922E1D067FE4FB2BEFF57182555CCE47A79`
+- **Crash build (NO-GO):** `DA8CD473…` — see `docs/locker-trace-crash-20261022.md`
+- **Corrected candidate (not deployed):** `33A8417393B49A1ADE7F7AA8772786FC35D0098F701AE465636A8EC1980DA7CA`
 - **Provenance:** `spikes/view_matrix/d3d9.build.json`
 
 ## Steam deploy (2026-10-22)

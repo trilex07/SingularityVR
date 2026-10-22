@@ -56,10 +56,9 @@ inline void LogSessionWeaponsTable(const char* tag) {
 
 inline void LogInventoryAvailability(const char* tag) {
     using namespace NativeOwnedInventory;
-    if (!manager) Poll();
     const uintptr_t m = manager;
     if (!m) {
-        Log("locker avail witness: %s no inventory manager sampled", tag);
+        Log("locker avail witness: %s inventory manager not cached (no Poll from hook)", tag);
         return;
     }
     constexpr uintptr_t kChain = 0x1e0;

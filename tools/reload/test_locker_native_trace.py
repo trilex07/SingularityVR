@@ -43,6 +43,19 @@ class LockerNativeTracePolicy(unittest.TestCase):
         for token in forbidden:
             self.assertNotIn(token, self.text, f"forbidden in trace header: {token}")
 
+    def test_no_poll_from_availability_witness(self):
+        avail = (REPO / "spikes/view_matrix/locker_availability_witness.h").read_text(encoding="utf-8")
+        self.assertNotIn("Poll()", avail)
+
+    def test_loadupgrades_script_exec_abi_and_no_upgrade_hook(self):
+        self.assertIn("void* result", self.text)
+        self.assertIn("g_origLoadUpgrades(self, frame, result)", self.text)
+        self.assertNotIn("ExecHooks::Upgrade", self.text)
+        self.assertNotIn('InstallOne(kFnUpgrade', self.text)
+        self.assertIn("Upgrade @ %p unhooked", self.text)
+        self.assertNotIn('strcmp(method, "LoadUpgrades")', self.text)  # no avail witness on page hook
+        self.assertIn("kMethodCount = 5u", self.text)
+
     def test_separate_abi_typedefs(self):
         self.assertIn("using StartFn", self.text)
         self.assertIn("using FrameFn", self.text)
@@ -84,7 +97,7 @@ class LockerNativeTracePolicy(unittest.TestCase):
         if not CAPTURE.is_file() or not exe.is_file():
             self.skipTest("capture or exe missing")
         proc = subprocess.run(
-            [sys.executable, str(tool), "--exe", str(exe), "--text", str(CAPTURE)],
+            [sys.executable, str(tool), "--exe", str(exe), "--text", str(CAPTURE), "--strict"],
             capture_output=True,
             text=True,
             check=False,
@@ -92,6 +105,9 @@ class LockerNativeTracePolicy(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         self.assertIn("0xf87c80", proc.stdout.lower())
         self.assertIn("0xf87e60", proc.stdout.lower())
+        self.assertIn('"stack_args_after_ecx": 2', proc.stdout)
+        self.assertIn('"install_hook": true', proc.stdout)
+        self.assertIn('"install_hook": false', proc.stdout)
 
     def test_first_level_exec_witness_not_blocked_by_reenter_guard(self):
         self.assertTrue(allow_outer_exec_witness(1))

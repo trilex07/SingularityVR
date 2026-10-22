@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import struct
+import sys
 from pathlib import Path
 
 from inspect_inventory_registration import resolve_wrapper
@@ -31,6 +32,32 @@ def primary_ret_imm(code, origin):
         if r != 0:
             return r
     return 0
+
+
+def witness_script_exec_abi(text, base, body, scan_size=0xE0):
+    """UE3 native exec: this=ECX, FFrame* at [ebp+8], RESULT_DECL at [ebp+0xC] -> ret 8."""
+    off = body - base
+    chunk = text[off : off + scan_size]
+    if chunk[:3] != b"\x55\x8b\xec":
+        raise ValueError("prologue changed")
+    ret = primary_ret_imm(chunk, body)
+    if ret != 8:
+        raise ValueError(f"expected primary ret 8, got {ret}")
+    # mov ebx, ecx  (this)
+    if b"\x8b\xd9" not in chunk[:0x40]:
+        raise ValueError("missing mov ebx, ecx (this in ECX)")
+    # mov esi, dword ptr [ebp+8]  (FFrame / script stack)
+    if b"\x8b\x75\x08" not in chunk[:0x40]:
+        raise ValueError("missing mov esi, [ebp+8] (FFrame stack arg)")
+    return {
+        "primary_ret_imm": ret,
+        "stack_bytes_popped": ret,
+        "stack_args_after_ecx": 2,
+        "frame_stack_arg": "[ebp+8] -> esi",
+        "result_stack_arg": "[ebp+0xC] (RESULT_DECL; may be unused in body)",
+        "hook_typedef": "ScriptExecFn",
+        "hook_signature": "void(__thiscall*)(void* self, void* frame, void* result)",
+    }
 
 
 def inspect(exe_bytes, text, base):
@@ -59,14 +86,14 @@ def inspect(exe_bytes, text, base):
         chunk = text[body - base : body - base + 16]
         if chunk[:3] != b"\x55\x8b\xec":
             raise ValueError(f"{short} prologue changed")
-        ret = primary_ret_imm(text[body - base : body - base + 0x200], body)
+        abi = witness_script_exec_abi(text, base, body)
         methods[short] = {
             "registration": name,
             "body_va": hex(body),
             "prefix16_sha256": hashlib.sha256(chunk).hexdigest(),
-            "primary_ret_imm": ret,
-            "hook_typedef": "ScriptExecFn",
+            "install_hook": short == "LoadUpgrades",
             "in_weapon_locker_vtable": False,
+            **abi,
         }
     return {
         "schema": "singularityvr-locker-page-methods-v1",
@@ -76,7 +103,7 @@ def inspect(exe_bytes, text, base):
         "vtable_core_slots": vtable_core,
         "methods": methods,
         "conclusion": "LoadUpgrades/Upgrade are registered native exec entry points (not vtable slots). "
-        "Hook body_va after prefix hash verification at install.",
+        "Hook only LoadUpgrades with ScriptExecFn (frame+result); do not hook Upgrade until needed.",
     }
 
 
@@ -85,5 +112,15 @@ if __name__ == "__main__":
     ap.add_argument("--exe", type=Path, required=True)
     ap.add_argument("--text", type=Path, required=True)
     ap.add_argument("--text-base", type=lambda x: int(x, 0), default=0x402000)
+    ap.add_argument("--strict", action="store_true", help="exit 1 on ABI witness failure")
     args = ap.parse_args()
-    print(json.dumps(inspect(args.exe.read_bytes(), args.text.read_bytes(), args.text_base), indent=2))
+    try:
+        report = inspect(args.exe.read_bytes(), args.text.read_bytes(), args.text_base)
+    except ValueError as exc:
+        if args.strict:
+            print(json.dumps({"error": str(exc)}, indent=2))
+            raise SystemExit(1) from exc
+        raise
+    print(json.dumps(report, indent=2))
+    if args.strict and report["methods"]["LoadUpgrades"]["primary_ret_imm"] != 8:
+        raise SystemExit(1)
