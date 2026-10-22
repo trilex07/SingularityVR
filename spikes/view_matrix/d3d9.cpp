@@ -5986,6 +5986,7 @@ void DrawHolsterMarker(IDirect3DDevice9* dev); // MAIN: white ring at the hip wh
 void DrawKnifeBeltMarker(IDirect3DDevice9* dev); // MAIN: white ring at the left belt while the knife is held
 void DrawCustomGloves(IDirect3DDevice9* dev); // default-OFF, noTMD free hands only
 void DrawWeaponWheel(IDirect3DDevice9* dev);
+static void DrawLockerOwnedDisplay(IDirect3DDevice9* dev);
 void DrawHipKnife(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
@@ -6030,6 +6031,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawHolsterMarker(dev);
     DrawKnifeBeltMarker(dev);
     DrawWeaponWheel(dev);
+    DrawLockerOwnedDisplay(dev);
     DrawHipKnife(dev);
     DrawCenturionReload(dev);
     DrawNextReload(dev);
@@ -6639,6 +6641,9 @@ volatile LONG g_modalSaveDialog = 0; // save-slot confirmation dialog; suppress 
 volatile LONG g_menuAssetWitness = 0; // default-OFF, cold identity/coordinate evidence, no render mutation
 volatile LONG g_lockerNativeTrace = 0; // [Diagnostic] LockerNativeTrace: read-only WeaponLocker exec + pickup witness
 volatile LONG g_lockerRetainOrdinary = 0; // [Input] LockerRetainOrdinary: PopMenu destroyItem gate (requires KeepAcquiredWeapons)
+volatile LONG g_lockerOwnedDisplay = 0; // [Input] LockerOwnedDisplay: VR wheel owned tiles under WeaponLocker (requires KeepAcquiredWeapons)
+volatile LONG g_vrUiWeaponLocker = 0; // 1 while RvUIGFxMovie_WeaponLocker has focus (input thread)
+volatile LONG g_lockerDisplayNativeMesh[2] = {0, 0}; // published ordinary mesh ids for native GFx slots 0/1
 volatile LONG g_vrMenuReleaseRequested = 0; // input publishes; render thread owns COM release
 // XR bridge: crop one SBS half to both eyes only for the IIS boot/title menu.
 // Classes 2-4 keep whatever stereo/dup the scene already captured.
@@ -27866,6 +27871,7 @@ void DrawWristHealth(IDirect3DDevice9* dev) {
 }
 
 #include "vr_menu_overlay.h"
+#include "locker_owned_display_planner.h"
 
 // R3 weapon selector. This is intentionally a tiny screen-space overlay: the
 // anchor is projected from the tracked right-controller pose, while the sector
@@ -28659,6 +28665,155 @@ static void DrawCenturionReload(IDirect3DDevice9* dev){
     static unsigned faults=0;if(drawResult!=centurionclip::DrawResult::Success&&faults++<3)
         Log("centurion reload: presentation failure result=%d latched=%d (capture/restore faults disable only presentation until Reset/XR init)",
             (int)drawResult,g_centurionPresentationSafety.Allowed()?0:1);
+}
+
+// WeaponLocker owned overlay — panel UV anchors (tune against GFx 1280x720 layout):
+// native interactive pair ~ v 0.40-0.52; overlay label v≈0.56; extra icons v≈0.66 u≈0.38/0.62.
+static const hud_atlas::Rect* LockerAtlasIconForMesh(int mesh) {
+    if (InterlockedCompareExchange(&g_wwCatalogState, 0, 0) != 1 || g_wwCatalog.sectors.empty()) return nullptr;
+    const char* iconId = nullptr;
+    for (const auto& s : g_wwCatalog.sectors) {
+        if (s.verts == mesh) {
+            iconId = s.atlas.c_str();
+            break;
+        }
+    }
+    if (!iconId || !g_hudAtlasTex || g_hudAtlas.width <= 0) return nullptr;
+    return hud_atlas::Find(g_hudAtlas, iconId);
+}
+
+static bool LockerProjectPanelUv(int eye, float u, float v, float& sx, float& sy, float halfW, float height) {
+    if (eye < 0 || eye > 1 || !g_haveEyes || g_targetTanX <= 0 || g_targetTanY <= 0 || !g_vrMenuPanelValid) return false;
+    const float x = (u - .5f) * 2.f * g_vrMenuPanel.plane.halfWidth * g_vrMenuPanel.plane.inset;
+    const float y = (.5f - v) * 2.f * g_vrMenuPanel.plane.halfHeight * g_vrMenuPanel.plane.inset;
+    const uipointer::V point = g_vrMenuPanel.plane.centre + g_vrMenuPanel.plane.right * x + g_vrMenuPanel.plane.up * y;
+    const XrPosef& p = g_eyePose[eye];
+    uipointer::ScreenPoint sp{};
+    if (!uipointer::ProjectPoint(point, {p.position.x, p.position.y, p.position.z},
+            uipointer::Rotate(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w, {0, 0, -1}),
+            uipointer::Rotate(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w, {1, 0, 0}),
+            uipointer::Rotate(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w, {0, 1, 0}),
+            g_targetTanX, g_targetTanY, sp))
+        return false;
+    sx = (eye + sp.u) * halfW;
+    sy = sp.v * height;
+    return std::isfinite(sx) && std::isfinite(sy);
+}
+
+static void DrawLockerOwnedDisplay(IDirect3DDevice9* dev) {
+    if (!dev || !VrModeOn() || !Rd(g_dupDraws) || !Rd(g_lockerOwnedDisplay) || !Rd(g_keepAcquiredWeapons) ||
+        !Rd(g_vrUiWeaponLocker) || !Rd(g_vrUiMenu) || !Rd(g_vrUiStationMovie) || Rd(g_vrMenuClass) != 4 ||
+        !g_vrMenuPanelValid || !g_haveEyes || !g_origDrawPrimUP || !g_origSetRenderTarget) return;
+
+    const int native0 = (int)InterlockedCompareExchange(&g_lockerDisplayNativeMesh[0], 0, 0);
+    const int native1 = (int)InterlockedCompareExchange(&g_lockerDisplayNativeMesh[1], 0, 0);
+    const unsigned ownedMask = NativeOwnedInventory::Mask();
+    const lockerowned::ExtraTilePlan plan = lockerowned::PlanExtraTiles(ownedMask, native0, native1);
+    if (plan.count <= 0) return;
+
+    if (Rd(g_katorgaHud)) MaybeLoadHudAtlas(dev);
+    if (InterlockedCompareExchange(&g_hudAtlasState, 0, 0) != 1 || !g_hudAtlasTex) return;
+
+    IDirect3DSurface9* back = nullptr;
+    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
+    D3DSURFACE_DESC d{};
+    if (FAILED(back->GetDesc(&d)) || d.Width < 8 || d.Height < 8) {
+        back->Release();
+        return;
+    }
+    if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) {
+        back->Release();
+        return;
+    }
+    if (FAILED(g_wristState->Capture())) {
+        back->Release();
+        return;
+    }
+    IDirect3DSurface9* old = nullptr;
+    IDirect3DSurface9* depth = nullptr;
+    dev->GetRenderTarget(0, &old);
+    dev->GetDepthStencilSurface(&depth);
+    dev->SetDepthStencilSurface(nullptr);
+    g_origSetRenderTarget(dev, 0, back);
+    D3DVIEWPORT9 vp{0, 0, d.Width, d.Height, 0.f, 1.f};
+    dev->SetViewport(&vp);
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetRenderState(D3DRS_ZENABLE, FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetTexture(0, g_hudAtlasTex);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+
+    struct HudIconVtx { float x, y, z, rhw; DWORD c; float u, v; };
+    struct WwVtx { float x, y, z, rhw; DWORD c; };
+    const float halfW = (float)d.Width * .5f;
+    const float iconHalf = std::max(22.f, (float)d.Height * .038f);
+    const float tileU[2] = {0.38f, 0.62f};
+    const float tileV = 0.66f;
+    static unsigned planLog = 0;
+    if (planLog++ < 6)
+        Log("locker owned display: draw extras=%d mask=0x%X native=%d,%d meshes=%d,%d",
+            plan.count, ownedMask, native0, native1, plan.meshes[0], plan.count > 1 ? plan.meshes[1] : 0);
+
+    for (int eye = 0; eye < 2; ++eye) {
+        float lx = 0, ly = 0;
+        if (!LockerProjectPanelUv(eye, 0.5f, 0.56f, lx, ly, halfW, (float)d.Height)) continue;
+        const int px = std::max(1, (int)((float)d.Height * .018f));
+        D3DRECT label[256];
+        const char* caption = "OWNED - VR WHEEL";
+        const int tw = (int)strlen(caption) * (kGlyphW + 1) * px;
+        const int n = TextRects(label, 0, (int)(sizeof(label) / sizeof(label[0])), (int)lx - tw / 2, (int)ly, px, caption);
+        ClearRects(dev, label, n, 0xCCB8D8F0);
+
+        for (int ti = 0; ti < plan.count && ti < 2; ++ti) {
+            if (!lockerowned::MeshAllowedInPlan(plan.meshes[ti], ownedMask)) continue;
+            const hud_atlas::Rect* ir = LockerAtlasIconForMesh(plan.meshes[ti]);
+            if (!ir) continue;
+            float cx = 0, cy = 0;
+            if (!LockerProjectPanelUv(eye, tileU[ti], tileV, cx, cy, halfW, (float)d.Height)) continue;
+            const float u0 = (float)ir->x / (float)g_hudAtlas.width;
+            const float v0 = (float)ir->y / (float)g_hudAtlas.height;
+            const float du = (float)ir->w / (float)g_hudAtlas.width;
+            const float dv = (float)ir->h / (float)g_hudAtlas.height;
+            const DWORD tint = 0x99FFFFFF;
+            const float x0 = cx - iconHalf, y0 = cy - iconHalf, x1 = cx + iconHalf, y1 = cy + iconHalf;
+            HudIconVtx quad[4] = {
+                {x0, y0, 0, 1, tint, u0, v0},
+                {x1, y0, 0, 1, tint, u0 + du, v0},
+                {x0, y1, 0, 1, tint, u0, v0 + dv},
+                {x1, y1, 0, 1, tint, u0 + du, v0 + dv},
+            };
+            g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, quad, sizeof(HudIconVtx));
+            WwVtx border[5];
+            const DWORD edge = 0xCC6AD4FF;
+            border[0] = {x0, y0, 0, 1, edge};
+            border[1] = {x1, y0, 0, 1, edge};
+            border[2] = {x1, y1, 0, 1, edge};
+            border[3] = {x0, y1, 0, 1, edge};
+            border[4] = {x0, y0, 0, 1, edge};
+            dev->SetTexture(0, nullptr);
+            dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+            g_origDrawPrimUP(dev, D3DPT_LINESTRIP, 4, border, sizeof(WwVtx));
+            dev->SetTexture(0, g_hudAtlasTex);
+            dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+        }
+    }
+    dev->SetTexture(0, nullptr);
+    g_wristState->Apply();
+    dev->SetDepthStencilSurface(depth);
+    if (old) old->Release();
+    if (depth) depth->Release();
+    back->Release();
 }
 
 void DrawWeaponWheel(IDirect3DDevice9* dev) {
@@ -33545,6 +33700,9 @@ void LoadIniSettings() {
     Log("ini: LockerRetainOrdinary=%ld (default OFF; PopMenu destroyItem gate; requires KeepAcquiredWeapons=1)",
         Rd(g_lockerRetainOrdinary));
     if (Rd(g_lockerRetainOrdinary) && Rd(g_keepAcquiredWeapons)) LockerRetainOrdinary::TryInstall();
+    InterlockedExchange(&g_lockerOwnedDisplay, GetPrivateProfileIntA("Input", "LockerOwnedDisplay", 0, path) != 0);
+    Log("ini: LockerOwnedDisplay=%ld (default OFF; retained VR wheel tiles under WeaponLocker; requires KeepAcquiredWeapons=1)",
+        Rd(g_lockerOwnedDisplay));
     g_ownedWeaponWheel=GetPrivateProfileIntA("Input","WeaponWheelOwnedInventory",0,path)?1:0;
     {
         char vs[32]{},ps[32]{};

@@ -11,6 +11,7 @@
 #include "locker_virtual_runtime.h"
 #include "locker_native_trace.h"
 #include "locker_retain_ordinary.h"
+#include "locker_owned_display_cache.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
@@ -212,8 +213,10 @@ static bool UpdateMenu() {
   }
   InterlockedExchange(&g_modalSaveDialog,dialogFocus?1:0);
   if (prevClass[0] && !strcmp(prevClass, "RvUIGFxMovie_WeaponLocker") &&
-      (!className[0] || strcmp(className, "RvUIGFxMovie_WeaponLocker")))
+      (!className[0] || strcmp(className, "RvUIGFxMovie_WeaponLocker"))) {
     LockerNativeTrace::OnDefocus();
+    LockerOwnedDisplayCache::OnDefocus();
+  }
   if (className[0]) strcpy_s(prevClass, className);
   InterlockedExchange(&g_vrMenuClass,kind);
   // Publish menu focus before locker grant/virtual hooks; they gate on g_vrUiMenu + class 4.
@@ -226,6 +229,7 @@ static bool UpdateMenu() {
    ObserveLockerSlots(movie,cls);
    LockerNativeTrace::OnFocus(movie, cls);
    LockerVirtualRuntime::OnWeaponLockerFocus(movie,cls);
+   LockerOwnedDisplayCache::OnFocus(movie, cls);
   }
   // NewGame: actual focus log proves SPSlots -> dialog. This probe establishes
   // whether each has its own RTT, shares a parent's RTT, or draws directly.
@@ -376,6 +380,7 @@ static void __fastcall Poll(void* self,void*,float dt) {
  UpdateMenu(); // update mode before the game tick/XInput routes the trigger
  NativeNpcName::Update(); // native GFx calls stay on this engine thread
  NativeOwnedInventory::Poll(); // bounded actual possession snapshot / queued selection
+ LockerOwnedDisplayCache::TickWhileActive();
  NativeBodyEquipmentProbe::Poll(); // opt-in read-only heavy/grenade ownership census
  NativeTmdAim::Poll(); // OFF by default; audited pure TMD getters, not shared gun aim
  ObserveWeaponAssets(); // at most six weapon identities, only the explicit read-only witness
