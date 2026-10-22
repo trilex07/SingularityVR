@@ -237,6 +237,7 @@ static bool UpdateMenu() {
    LockerAvailabilityTrace::OnFocus(movie, cls);
    LockerVirtualRuntime::OnWeaponLockerFocus(movie,cls);
    LockerOwnedDisplayCache::OnFocus(movie, cls);
+   LockerVrLoadout::OnFocus(movie, cls);
   }
   // NewGame: actual focus log proves SPSlots -> dialog. This probe establishes
   // whether each has its own RTT, shares a parent's RTT, or draws directly.

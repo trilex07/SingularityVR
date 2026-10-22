@@ -38,6 +38,20 @@ inline volatile LONG g_queuedMask = 0;
 inline volatile LONG g_uiQueuedMask = 0;
 inline volatile LONG g_postPopAcquireMask = 0;
 inline volatile LONG g_acquireRequested = 0;
+inline volatile LONG g_focusGeneration = 0;
+
+namespace Layout {
+constexpr float kTitleU = 0.84f;
+constexpr float kTitleV = 0.34f;
+constexpr float kCu = 0.84f;
+constexpr float kCv = 0.44f;
+constexpr float kDu = 0.038f;
+constexpr float kDv = 0.038f;
+constexpr float kBtnU = 0.84f;
+constexpr float kBtnV = 0.52f;
+constexpr int kFontPx = 3;
+constexpr float kIconHalfPx = 58.f;
+} // namespace Layout
 
 inline FrameFn g_origPop = nullptr;
 inline FrameFn g_origLoad = nullptr;
@@ -125,7 +139,18 @@ inline void OnDefocus() {
     InterlockedExchange(&g_queuedMask, 0);
     InterlockedExchange(&g_uiQueuedMask, 0);
     InterlockedExchange(&g_pageSignal, 0);
+    InterlockedExchange(&g_acquireRequested, 0);
+    InterlockedExchange(&g_postPopAcquireMask, 0);
     LockerVrLoadoutPublish::Clear();
+}
+
+inline void OnFocus(uintptr_t /*movie*/, uintptr_t /*cls*/) {
+    InterlockedIncrement(&g_focusGeneration);
+    InterlockedExchange(&g_queuedMask, 0);
+    InterlockedExchange(&g_uiQueuedMask, 0);
+    InterlockedExchange(&g_acquireRequested, 0);
+    InterlockedExchange(&g_postPopAcquireMask, 0);
+    InterlockedExchange(&g_pageSignal, 1);
 }
 
 struct ExecHooks {
@@ -211,15 +236,16 @@ inline void TryInstallEarly() {
 }
 
 inline bool HitEquipAll(float u, float v) {
-    return u >= 0.73f && u <= 0.88f && v >= 0.54f && v <= 0.60f;
+    return u >= Layout::kBtnU - 0.06f && u <= Layout::kBtnU + 0.06f && v >= Layout::kBtnV - 0.025f &&
+           v <= Layout::kBtnV + 0.025f;
 }
 
 inline int HitTileIndex(float u, float v) {
-    const float cu = 0.78f, cv = 0.47f, du = 0.055f, dv = 0.055f;
+    const float cu = Layout::kCu, cv = Layout::kCv, du = Layout::kDu, dv = Layout::kDv;
     const float tiles[4][2] = {{cu - du, cv - dv}, {cu + du, cv - dv}, {cu - du, cv + dv}, {cu + du, cv + dv}};
     for (int i = 0; i < 4; ++i) {
-        if (u >= tiles[i][0] - 0.045f && u <= tiles[i][0] + 0.045f && v >= tiles[i][1] - 0.045f &&
-            v <= tiles[i][1] + 0.045f)
+        if (u >= tiles[i][0] - 0.035f && u <= tiles[i][0] + 0.035f && v >= tiles[i][1] - 0.035f &&
+            v <= tiles[i][1] + 0.035f)
             return i;
     }
     return -1;

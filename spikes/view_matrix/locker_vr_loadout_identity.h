@@ -14,7 +14,9 @@ extern uintptr_t g_textLo, g_textHi;
 
 namespace LockerVrLoadoutIdentity {
 
+constexpr uintptr_t kCaptureImageBase = 0x400000u;
 constexpr uintptr_t kCaptureTextBase = 0x402000u;
+constexpr uintptr_t kTextRvaFromImage = kCaptureTextBase - kCaptureImageBase;
 
 constexpr uintptr_t kPinnedAppendFNameVa = 0x4AFFD0u;
 constexpr uintptr_t kAppendFNameTextRva = kPinnedAppendFNameVa - kCaptureTextBase;
@@ -24,8 +26,8 @@ constexpr uintptr_t kExpectedFactoryTextRva = kPinnedFactoryVa - kCaptureTextBas
 constexpr uint64_t kExpectedFactoryFingerprint = 0x293E6200F76D1A77ull;
 
 constexpr uintptr_t kPinnedRvGameSystemVtableVa = 0x1BCF9C4u;
-constexpr uintptr_t kExpectedRvGameSystemVtableOffsetFromCaptureText =
-    kPinnedRvGameSystemVtableVa - kCaptureTextBase;
+constexpr uintptr_t kExpectedRvGameSystemVtableRvaFromImage =
+    kPinnedRvGameSystemVtableVa - kCaptureImageBase;
 
 constexpr unsigned kPrologueBytes = 16u;
 
@@ -63,10 +65,16 @@ inline bool FactoryIdentityOk(uintptr_t fn) {
     return memcmp(reinterpret_cast<const void*>(fn), kFactoryPrologue, kPrologueBytes) == 0;
 }
 
+inline uintptr_t ModuleBaseFromTextLo() {
+    return g_textLo ? (g_textLo - kTextRvaFromImage) : 0;
+}
+
 inline bool GameSystemObjectIdentityOk(uintptr_t gs) {
     if (!gs || !PauseRttProbe::SafeRange(gs, 4) || !g_textLo) return false;
     const uintptr_t vt = PauseRttProbe::Pointer(gs);
-    const uintptr_t expectedVt = g_textLo + kExpectedRvGameSystemVtableOffsetFromCaptureText;
+    const uintptr_t moduleBase = ModuleBaseFromTextLo();
+    if (!moduleBase) return false;
+    const uintptr_t expectedVt = moduleBase + kExpectedRvGameSystemVtableRvaFromImage;
     return vt == expectedVt;
 }
 

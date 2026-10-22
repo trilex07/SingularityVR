@@ -28900,18 +28900,43 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
     struct HudIconVtx { float x, y, z, rhw; DWORD c; float u, v; };
     struct WwVtx { float x, y, z, rhw; DWORD c; };
     const float halfW = (float)d.Width * .5f;
-    const float iconHalf = std::max(20.f, (float)d.Height * .034f);
-    const float cu = 0.78f, cv = 0.47f, du = 0.055f, dv = 0.055f;
+    const int px = LockerVrLoadout::Layout::kFontPx;
+    const float iconHalf = LockerVrLoadout::Layout::kIconHalfPx;
+    const float cu = LockerVrLoadout::Layout::kCu, cv = LockerVrLoadout::Layout::kCv;
+    const float du = LockerVrLoadout::Layout::kDu, dv = LockerVrLoadout::Layout::kDv;
     const float tileU[4] = {cu - du, cu + du, cu - du, cu + du};
     const float tileV[4] = {cv - dv, cv - dv, cv + dv, cv + dv};
+    const uint32_t pending = LockerVrLoadoutPublish::Pending();
 
     for (int eye = 0; eye < 2; ++eye) {
-        const int px = std::max(1, (int)((float)d.Height * .016f));
+        float panelCx = 0, panelCy = 0;
+        if (LockerProjectPanelUv(eye, cu, cv, panelCx, panelCy, halfW, (float)d.Height)) {
+            const float pw = iconHalf * 2.6f + 24.f;
+            const float ph = iconHalf * 2.6f + 56.f;
+            D3DRECT panel = {(LONG)(panelCx - pw), (LONG)(panelCy - ph * .55f), (LONG)(panelCx + pw),
+                             (LONG)(panelCy + ph * .55f)};
+            ClearRects(dev, &panel, 1, 0xAA101820);
+            WwVtx frame[5];
+            const DWORD frameCol = 0xAA8899AA;
+            frame[0] = {(float)panel.x1, (float)panel.y1, 0, 1, frameCol};
+            frame[1] = {(float)panel.x2, (float)panel.y1, 0, 1, frameCol};
+            frame[2] = {(float)panel.x2, (float)panel.y2, 0, 1, frameCol};
+            frame[3] = {(float)panel.x1, (float)panel.y2, 0, 1, frameCol};
+            frame[4] = {(float)panel.x1, (float)panel.y1, 0, 1, frameCol};
+            dev->SetTexture(0, nullptr);
+            dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+            g_origDrawPrimUP(dev, D3DPT_LINESTRIP, 4, frame, sizeof(WwVtx));
+            dev->SetTexture(0, g_hudAtlasTex);
+            dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+        }
+
         float tx = 0, ty = 0;
-        if (LockerProjectPanelUv(eye, 0.78f, 0.36f, tx, ty, halfW, (float)d.Height)) {
+        if (LockerProjectPanelUv(eye, LockerVrLoadout::Layout::kTitleU, LockerVrLoadout::Layout::kTitleV, tx, ty,
+                                 halfW, (float)d.Height)) {
             D3DRECT title[64];
-            const int tn = TextRects(title, 0, 64, (int)tx - 5 * (kGlyphW + 1) * px, (int)ty, px, "VR LOADOUT");
-            ClearRects(dev, title, tn, 0xAAE8F0FF);
+            const int tw = 11 * (kGlyphW + 1) * px;
+            const int tn = TextRects(title, 0, 64, (int)tx - tw / 2, (int)ty, px, "VR LOADOUT");
+            ClearRects(dev, title, tn, 0xCCB0C8D8);
         }
 
         for (int ti = 0; ti < 4; ++ti) {
@@ -28928,8 +28953,8 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
             const float duv = (float)ir->w / (float)g_hudAtlas.width;
             const float dvv = (float)ir->h / (float)g_hudAtlas.height;
             const bool queued = (uiQueued & bit) != 0;
-            DWORD tint = isOwned ? 0x66FFFFFF : (queued ? 0xCCFFE088 : 0xCCFFFFFF);
-            if (!isOwned && !queued && isAvail) tint = 0xCC88FFAA;
+            DWORD tint = isOwned ? 0x88AAAAAA : (queued ? 0xCCFFFFFF : 0xCCFFFFFF);
+            if (!isOwned && !queued && isAvail) tint = 0xCCDDEEFF;
             const float x0 = cx - iconHalf, y0 = cy - iconHalf, x1 = cx + iconHalf, y1 = cy + iconHalf;
             HudIconVtx quad[4] = {
                 {x0, y0, 0, 1, tint, u0, v0},
@@ -28939,7 +28964,7 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
             };
             g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, quad, sizeof(HudIconVtx));
             WwVtx border[5];
-            const DWORD edge = isOwned ? 0xAA88AA88 : 0xCC44CCFF;
+            const DWORD edge = isOwned ? 0x88666666 : (queued ? 0xCCFFCC44 : 0xAA6688AA);
             border[0] = {x0, y0, 0, 1, edge};
             border[1] = {x1, y0, 0, 1, edge};
             border[2] = {x1, y1, 0, 1, edge};
@@ -28957,16 +28982,21 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
             }
         }
 
-        const uint32_t pending = LockerVrLoadoutPublish::Pending();
-        if (pending) {
-            float bx = 0, by = 0;
-            if (LockerProjectPanelUv(eye, 0.78f, 0.57f, bx, by, halfW, (float)d.Height)) {
-                D3DRECT btn[96];
-                const char* label = uiQueued ? "QUEUED" : "EQUIP ALL";
-                const int bw = (int)strlen(label) * (kGlyphW + 1) * px;
-                const int bn = TextRects(btn, 0, 96, (int)bx - bw / 2, (int)by, px, label);
-                ClearRects(dev, btn, bn, uiQueued ? 0xAA888888 : 0xAA2266CC);
-            }
+        float bx = 0, by = 0;
+        if (LockerProjectPanelUv(eye, LockerVrLoadout::Layout::kBtnU, LockerVrLoadout::Layout::kBtnV, bx, by, halfW,
+                                 (float)d.Height)) {
+            const char* label = pending ? (uiQueued ? "QUEUED" : "EQUIP ALL") : "ALL OWNED";
+            const int labelLen = (int)strlen(label);
+            const int bw = labelLen * (kGlyphW + 1) * px;
+            const int bh = kGlyphH * px + 4;
+            D3DRECT btnPlate = {(LONG)(bx - bw / 2 - 4), (LONG)(by - 2), (LONG)(bx + bw / 2 + 4), (LONG)(by + bh)};
+            const DWORD plateCol =
+                pending ? (uiQueued ? 0x88443300 : 0x66183355) : 0x44202020;
+            ClearRects(dev, &btnPlate, 1, plateCol);
+            D3DRECT btn[96];
+            const DWORD textCol = pending ? (uiQueued ? 0xCCFFEE88 : 0xCC88CCFF) : 0x88888888;
+            const int bn = TextRects(btn, 0, 96, (int)bx - bw / 2, (int)by, px, label);
+            ClearRects(dev, btn, bn, textCol);
         }
     }
     dev->SetTexture(0, nullptr);

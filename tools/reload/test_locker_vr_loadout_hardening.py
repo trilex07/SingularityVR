@@ -64,6 +64,7 @@ class HardeningContract(unittest.TestCase):
         self.assertIn("GameSystemObjectIdentityOk", body)
         self.assertIn("kExpectedFactoryTextRva", ident)
         self.assertIn("kExpectedFactoryFingerprint", ident)
+        self.assertIn("kExpectedRvGameSystemVtableRvaFromImage", ident)
         self.assertNotIn("PinFactoryOffsetFromLiveSlot", ident)
         self.assertNotIn("g_factoryOffsetPinned", ident)
         self.assertNotIn("PinFactoryOffsetFromLiveSlot", loadout)
