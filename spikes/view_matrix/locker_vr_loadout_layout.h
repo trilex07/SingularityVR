@@ -101,21 +101,28 @@ inline int EquipLabelCharCount(EquipLabelKind kind) {
 inline bool ComputeLayout(ComputeParams p, Layout& out) {
     out = Layout{};
     if (p.fullW <= 0 || p.fullH <= 0 || p.halfW <= 0) return false;
-    const float panelHalfW = p.spacingX * .5f + p.iconHalf + 14.f;
-    const float panelHalfH = p.spacingY * .5f + p.iconHalf + 48.f;
-    ClampEyePanel(p.eye, p.fullW, p.fullH, p.halfW, p.anchorSx, p.anchorSy, panelHalfW, panelHalfH, kMarginPx);
     out.valid = true;
-    out.anchorSx = p.anchorSx;
-    out.anchorSy = p.anchorSy;
 
     if (!p.dataReady) {
         const int px = p.fontPx;
         const int lw = 15 * (kGlyphW + 1) * px;
-        const float lx = p.anchorSx - lw * .5f;
-        const float ly = p.anchorSy - (kGlyphH * px) * .5f;
-        out.loadingLabel = {lx, ly, lx + (float)lw, ly + (float)(kGlyphH * px)};
+        const int lh = kGlyphH * px;
+        const float halfLabelW = lw * .5f;
+        const float halfLabelH = lh * .5f;
+        ClampEyePanel(p.eye, p.fullW, p.fullH, p.halfW, p.anchorSx, p.anchorSy, halfLabelW, halfLabelH, kMarginPx);
+        out.anchorSx = p.anchorSx;
+        out.anchorSy = p.anchorSy;
+        const float lx = p.anchorSx - halfLabelW;
+        const float ly = p.anchorSy - halfLabelH;
+        out.loadingLabel = {lx, ly, lx + (float)lw, ly + (float)lh};
         return true;
     }
+
+    const float panelHalfW = p.spacingX * .5f + p.iconHalf + 14.f;
+    const float panelHalfH = p.spacingY * .5f + p.iconHalf + 48.f;
+    ClampEyePanel(p.eye, p.fullW, p.fullH, p.halfW, p.anchorSx, p.anchorSy, panelHalfW, panelHalfH, kMarginPx);
+    out.anchorSx = p.anchorSx;
+    out.anchorSy = p.anchorSy;
 
     out.panel = {p.anchorSx - panelHalfW, p.anchorSy - panelHalfH, p.anchorSx + panelHalfW,
                  p.anchorSy + panelHalfH};

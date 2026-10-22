@@ -1,6 +1,7 @@
 #pragma once
 #include "locker_vr_loadout_identity.h"
 #include "locker_vr_loadout_policy.h"
+#include "native_owned_inventory.h"
 #include "pause_rtt_probe.h"
 #include <cstring>
 
@@ -15,10 +16,20 @@ constexpr uintptr_t kInventoryManagerVtable = 0x019CB480u;
 constexpr uintptr_t kMgrNativeMaskOff = 0x3E4u;
 constexpr uintptr_t kDefaultEmptyFString = 0x179E4D0u;
 
+inline uintptr_t RelocatedDataAddress(uintptr_t pinnedVa) {
+    return LockerVrLoadoutIdentity::ImageBase() + (pinnedVa - LockerVrLoadoutIdentity::kCaptureImageBase);
+}
+
+inline uintptr_t GameSystemInstance() { return PauseRttProbe::Pointer(RelocatedDataAddress(kGGameSystemPtr)); }
+
+inline uintptr_t ExpectedInventoryManagerVtable() {
+    return RelocatedDataAddress(kInventoryManagerVtable);
+}
+
 inline bool ReadCatalogRow(unsigned index, LockerVrLoadoutPolicy::CatalogRowView* out) {
     if (!out) return false;
     *out = {};
-    const uintptr_t gs = PauseRttProbe::Pointer(kGGameSystemPtr);
+    const uintptr_t gs = GameSystemInstance();
     if (!gs || !PauseRttProbe::SafeRange(gs + kCatalogCountOff, 8)) return false;
     const int count = *reinterpret_cast<const int*>(gs + kCatalogCountOff);
     if (index >= static_cast<unsigned>(count)) return false;
@@ -41,7 +52,8 @@ inline uintptr_t ResolveInventoryManager(uintptr_t pawn) {
     const uintptr_t mgr = PauseRttProbe::Pointer(pawn + kPawnInvManager);
     if (!mgr || !PauseRttProbe::SafeRange(mgr, 4)) return 0;
     const uintptr_t vt = PauseRttProbe::Pointer(mgr);
-    if (!PauseRttProbe::SafeRange(vt, 4) || vt != kInventoryManagerVtable) return 0;
+    const uintptr_t expectedVt = ExpectedInventoryManagerVtable();
+    if (!PauseRttProbe::SafeRange(vt, 4) || vt != expectedVt) return 0;
     return mgr;
 }
 
@@ -51,24 +63,29 @@ inline uint32_t ReadNativeProgressionMask(uintptr_t pawn) {
     return *reinterpret_cast<const uint32_t*>(mgr + kMgrNativeMaskOff);
 }
 
-inline bool AvailabilitySourcesReady(uintptr_t pawn) {
-    if (!pawn) return false;
-    const uintptr_t gs = PauseRttProbe::Pointer(kGGameSystemPtr);
-    if (!gs || !PauseRttProbe::SafeRange(gs + kCatalogCountOff, 8)) return false;
-    if (!LockerVrLoadoutIdentity::GameSystemObjectIdentityOk(gs)) return false;
-    return ResolveInventoryManager(pawn) != 0;
+inline const char* AvailabilityBlockReason(uintptr_t pawn) {
+    if (!pawn) return "no_pawn";
+    const uintptr_t gs = GameSystemInstance();
+    if (!gs || !PauseRttProbe::SafeRange(gs + kCatalogCountOff, 8)) return "availability_gamesystem";
+    if (!LockerVrLoadoutIdentity::GameSystemObjectIdentityOk(gs)) return "availability_gamesystem_identity";
+    // Owned inventory snapshot already validated pawn+0x3D0 manager via class chain (same thread as loadout poll).
+    if (NativeOwnedInventory::SnapshotValid() && NativeOwnedInventory::SnapshotPawn() == pawn) return nullptr;
+    if (!ResolveInventoryManager(pawn)) return "availability_manager";
+    return nullptr;
 }
+
+inline bool AvailabilitySourcesReady(uintptr_t pawn) { return AvailabilityBlockReason(pawn) == nullptr; }
 
 inline uint32_t AvailableOrdinaryMask(uintptr_t pawn) {
     if (!AvailabilitySourcesReady(pawn)) return 0;
-    const uintptr_t gs = PauseRttProbe::Pointer(kGGameSystemPtr);
+    const uintptr_t gs = GameSystemInstance();
     if (!gs || !PauseRttProbe::SafeRange(gs + kCatalogCountOff, 8)) return 0;
     const uint32_t nativeMask = ReadNativeProgressionMask(pawn);
     return LockerVrLoadoutPolicy::AvailableOrdinaryMaskFromNative(nativeMask, RowAtCallback);
 }
 
 inline const void* FStringPtrAtCatalogRowSecondary(unsigned index) {
-    const uintptr_t gs = PauseRttProbe::Pointer(kGGameSystemPtr);
+    const uintptr_t gs = GameSystemInstance();
     if (!gs || !PauseRttProbe::SafeRange(gs + kCatalogCountOff, 4)) return nullptr;
     const int count = *reinterpret_cast<const int*>(gs + kCatalogCountOff);
     if (index >= static_cast<unsigned>(count)) return nullptr;

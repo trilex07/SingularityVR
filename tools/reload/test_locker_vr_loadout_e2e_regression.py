@@ -83,6 +83,14 @@ class E2eRegression(unittest.TestCase):
         body = LOADOUT_H.read_text(encoding="utf-8")
         self.assertIn("locker vr loadout ready:", body)
         self.assertIn("EngineLoadoutNotReadyReason", body)
+        runtime = (REPO / "spikes/view_matrix/locker_vr_loadout_runtime.h").read_text(encoding="utf-8")
+        self.assertIn("AvailabilityBlockReason", runtime)
+        self.assertIn("SnapshotValid()", runtime.split("AvailabilityBlockReason", 1)[1])
+
+    def test_availability_manager_uses_image_relative_vtable(self):
+        runtime = (REPO / "spikes/view_matrix/locker_vr_loadout_runtime.h").read_text(encoding="utf-8")
+        self.assertIn("ExpectedInventoryManagerVtable", runtime)
+        self.assertIn("RelocatedDataAddress", runtime)
 
     def test_loading_ui_no_large_panel(self):
         draw = self._draw_body()

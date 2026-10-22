@@ -70,5 +70,24 @@ int main() {
     Expect(loading.loadingLabel.x1 - loading.loadingLabel.x0 > 0.f, "loading label has width");
     Expect(loading.equipAll.x1 <= loading.equipAll.x0, "loading layout has no equip rect");
 
+    for (int eye : {0, 1}) {
+        ComputeParams lp{};
+        lp.eye = eye;
+        lp.fullW = 3840.f;
+        lp.fullH = 2160.f;
+        lp.halfW = lp.fullW * .5f;
+        lp.anchorSx = eye == 0 ? 400.f : 3400.f;
+        lp.anchorSy = 1080.f;
+        lp.dataReady = false;
+        Layout loadEye{};
+        ComputeLayout(lp, loadEye);
+        const float eyeMinX = eye == 0 ? kMarginPx : lp.halfW + kMarginPx;
+        const float eyeMaxX = eye == 0 ? lp.halfW - kMarginPx : lp.fullW - kMarginPx;
+        Expect(loadEye.loadingLabel.x0 >= eyeMinX - 0.5f, "loading label min X inside eye");
+        Expect(loadEye.loadingLabel.x1 <= eyeMaxX + 0.5f, "loading label max X inside eye");
+        Expect(loadEye.loadingLabel.y0 >= kMarginPx - 0.5f, "loading label min Y inside viewport");
+        Expect(loadEye.loadingLabel.y1 <= lp.fullH - kMarginPx + 0.5f, "loading label max Y inside viewport");
+    }
+
     return g_fails == 0 ? 0 : 1;
 }

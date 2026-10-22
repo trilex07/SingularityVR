@@ -80,7 +80,7 @@ inline const char* EngineLoadoutNotReadyReason() {
     if (!NativeOwnedInventory::SnapshotValid()) return "no_snapshot";
     const uintptr_t pawn = EngineLoadoutPawn();
     if (!pawn) return "no_pawn";
-    if (!LockerVrLoadoutRuntime::AvailabilitySourcesReady(pawn)) return "availability_sources";
+    if (const char* avail = LockerVrLoadoutRuntime::AvailabilityBlockReason(pawn)) return avail;
     return nullptr;
 }
 
