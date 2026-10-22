@@ -28,8 +28,11 @@ class LockerRetainOffline(unittest.TestCase):
         self.assertIn("PopMenuManagerMatches", pol)
         self.assertIn("kPopMenuInventoryGlobal", pol)
         self.assertIn("PopMenuDestroyArgsMatch", pol)
+        self.assertNotIn("managerClassOk", pol)
         hook = HEADER.read_text(encoding="utf-8", errors="replace")
         self.assertNotIn("NativeOwnedInventory::manager", hook)
+        self.assertNotIn("ClassInventoryManager", hook)
+        self.assertNotIn("manager-class", hook)
         self.assertIn("ReadPopMenuGlobalManager", hook)
 
     def test_detour_never_calls_null_orig(self):

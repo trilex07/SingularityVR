@@ -12,29 +12,24 @@ int main() {
     assert(kPopMenuDestroyReturn == kPopMenuDestroyCallSite + 5);
     assert(kPopMenuInventoryGlobal == 0x01CF74E4u);
 
-    auto accept = [&]() {
-        return ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, true, true, true,
-                              true);
+    auto acceptPopMenuShape = [&]() {
+        return ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, true, true, true);
     };
-    assert(accept());
+    assert(acceptPopMenuShape());
 
-    assert(!ShouldSuppress(false, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, true, true, true, true));
-    assert(!ShouldSuppress(true, false, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, true, true, true, true));
-    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn + 1, kTid, kTid, kMgr, kMgr, 0, 1, true, true, true,
-                            true));
-    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, 0, kTid, kMgr, kMgr, 0, 1, true, true, true, true));
-    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid + 1, kMgr, kMgr, 0, 1, true, true, true,
-                            true));
-    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, 0, kMgr, 0, 1, true, true, true, true));
-    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, 0, 0, 1, true, true, true, true));
-    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kOtherMgr, kMgr, 0, 1, true, true, true,
-                            true));
-    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, false, true, true, true));
-    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 1, 1, true, true, true, true));
-    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 0, true, true, true, true));
-    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, true, false, true, true));
-    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, true, true, false, true));
-    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, true, true, true, false));
+    assert(!ShouldSuppress(false, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, true, true, true));
+    assert(!ShouldSuppress(true, false, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, true, true, true));
+    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn + 1, kTid, kTid, kMgr, kMgr, 0, 1, true, true, true));
+    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, 0, kTid, kMgr, kMgr, 0, 1, true, true, true));
+    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid + 1, kMgr, kMgr, 0, 1, true, true, true));
+    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, 0, kMgr, 0, 1, true, true, true));
+    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, 0, 0, 1, true, true, true));
+    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kOtherMgr, kMgr, 0, 1, true, true, true));
+    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 1, 1, true, true, true));
+    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 0, true, true, true));
+    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, false, true, true));
+    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, true, false, true));
+    assert(!ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, true, true, false));
 
     assert(PopMenuDestroyArgsMatch(0, 1));
     assert(!PopMenuDestroyArgsMatch(1, 1));

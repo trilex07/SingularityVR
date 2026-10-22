@@ -34,14 +34,13 @@ inline bool PopMenuDestroyArgsMatch(int arg2, int arg3) {
 
 inline bool ShouldSuppress(bool lockerRetainOrdinary, bool keepAcquiredWeapons, uintptr_t retAddr,
                             DWORD establishedThread, DWORD currentThread, uintptr_t callManager,
-                            uintptr_t globalManager, int arg2, int arg3, bool managerClassOk,
-                            bool itemReadable, bool weaponSharedClass, bool supportedOrdinaryWeapon) {
+                            uintptr_t globalManager, int arg2, int arg3, bool itemReadable,
+                            bool weaponSharedClass, bool supportedOrdinaryWeapon) {
     if (!lockerRetainOrdinary || !keepAcquiredWeapons) return false;
     if (!CallerIsPopMenuDestroy(retAddr)) return false;
     if (!EstablishedThreadMatches(establishedThread, currentThread)) return false;
     if (!PopMenuManagerMatches(callManager, globalManager)) return false;
     if (!PopMenuDestroyArgsMatch(arg2, arg3)) return false;
-    if (!managerClassOk) return false;
     if (!itemReadable || !weaponSharedClass || !supportedOrdinaryWeapon) return false;
     return true;
 }

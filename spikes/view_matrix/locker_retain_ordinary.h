@@ -51,16 +51,19 @@ inline bool TryLogReject(uintptr_t callerRet, void* item, const char* weapon, co
     return true;
 }
 
-inline bool TryLogSuppress(uintptr_t callerRet, void* item, const char* weapon, void* callManager,
-                            void* globalManager) {
+inline bool TryLogSuppress(uintptr_t callerRet, void* item, const char* weapon, void* callManager, void* globalManager,
+                            const char* mgrObjectName, const char* mgrClassName, void* mgrClassPtr) {
     if (InterlockedIncrement(&g_suppressLog) > (LONG)kMaxSuppressLog) {
         InterlockedDecrement(&g_suppressLog);
         return false;
     }
     const LONG n = InterlockedCompareExchange(&g_suppressLog, 0, 0);
     if (n <= 4)
-        Log("locker retention: suppress destroy caller=%p item=%p weapon=%s manager=%p globalManager=%p thread=%u",
-            (void*)callerRet, item, weapon, callManager, globalManager, GetCurrentThreadId());
+        Log("locker retention: suppress destroy caller=%p item=%p weapon=%s manager=%p globalManager=%p "
+            "mgrName=%s mgrClass=%s mgrClassPtr=%p thread=%u",
+            (void*)callerRet, item, weapon, callManager, globalManager,
+            mgrObjectName && mgrObjectName[0] ? mgrObjectName : "(none)",
+            mgrClassName && mgrClassName[0] ? mgrClassName : "(none)", mgrClassPtr, GetCurrentThreadId());
     else
         Log("locker retention: suppress destroy caller=%p item=%p weapon=%s thread=%u", (void*)callerRet, item,
             weapon, GetCurrentThreadId());
@@ -77,12 +80,6 @@ inline bool ClassWeaponShared(uintptr_t item) {
     using namespace NativeOwnedInventory;
     const uintptr_t cls = PauseRttProbe::Pointer(item + OBJ_CLASS);
     return cls && ClassHas(cls, "RvWeaponShared");
-}
-
-inline bool ClassInventoryManager(uintptr_t manager) {
-    using namespace NativeOwnedInventory;
-    const uintptr_t cls = PauseRttProbe::Pointer(manager + OBJ_CLASS);
-    return cls && ClassHas(cls, "InventoryManager");
 }
 
 inline bool SupportedOrdinaryFromItem(uintptr_t item, char* outWeapon, unsigned outLen) {
@@ -121,14 +118,22 @@ struct DestroyHooks {
             return ForwardDestroy(inv, item, arg2, arg3);
 
         uintptr_t globalMgr = 0;
-        bool managerClassOk = false;
         char weapon[96]{};
+        char mgrObjectName[96]{};
+        char mgrClassName[96]{};
+        void* mgrClassPtr = nullptr;
         bool itemOk = false;
         bool shared = false;
         bool ordinary = false;
         __try {
             globalMgr = ReadPopMenuGlobalManager();
-            if (callMgr) managerClassOk = ClassInventoryManager(callMgr);
+            if (callMgr) {
+                using namespace NativeOwnedInventory;
+                NameOf(callMgr, mgrObjectName, sizeof(mgrObjectName));
+                const uintptr_t cls = PauseRttProbe::Pointer(callMgr + OBJ_CLASS);
+                mgrClassPtr = (void*)cls;
+                if (cls) NameOf(cls, mgrClassName, sizeof(mgrClassName));
+            }
             const uintptr_t it = (uintptr_t)item;
             itemOk = it && PauseRttProbe::SafeRange(it, 8);
             if (itemOk) {
@@ -139,14 +144,13 @@ struct DestroyHooks {
                                                                      : EXCEPTION_CONTINUE_SEARCH) {
             itemOk = false;
             globalMgr = 0;
-            managerClassOk = false;
         }
 
         const bool keep = InterlockedCompareExchange(&g_keepAcquiredWeapons, 0, 0) != 0;
         const bool retain = InterlockedCompareExchange(&g_lockerRetainOrdinary, 0, 0) != 0;
         if (LockerRetainPolicy::ShouldSuppress(retain, keep, ret, established, tid, callMgr, globalMgr, arg2, arg3,
-                                               managerClassOk, itemOk, shared, ordinary)) {
-            TryLogSuppress(ret, item, weapon, inv, (void*)globalMgr);
+                                               itemOk, shared, ordinary)) {
+            TryLogSuppress(ret, item, weapon, inv, (void*)globalMgr, mgrObjectName, mgrClassName, mgrClassPtr);
             NativeOwnedInventory::Refresh();
             return 0;
         }
@@ -157,7 +161,6 @@ struct DestroyHooks {
         else if (!globalMgr) TryLogReject(ret, item, weapon, "no-popmenu-manager");
         else if (!callMgr || !LockerRetainPolicy::PopMenuManagerMatches(callMgr, globalMgr))
             TryLogReject(ret, item, weapon, "manager");
-        else if (!managerClassOk) TryLogReject(ret, item, weapon, "manager-class");
         else if (!LockerRetainPolicy::PopMenuDestroyArgsMatch(arg2, arg3))
             TryLogReject(ret, item, weapon, "args");
         else if (!itemOk) TryLogReject(ret, item, weapon, "item");
