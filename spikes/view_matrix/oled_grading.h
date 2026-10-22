@@ -135,16 +135,19 @@ public:
         if (m_lastDevice != dev) {
             Shutdown();
             m_lastDevice = dev;
-            m_failedOnce = false;
-            m_reportedFailure = false;
-            m_formatSupportChecked = false;
-            m_formatSupportValid = false;
         }
 
-        if (m_ready) return true;
-        if (m_failedOnce) return false;
+        if (m_ready && m_lastDevice == dev) return true;
+        if (m_failedOnce && m_lastDevice == dev) return false;
 
         m_initAttempted = true;
+
+        if (m_simulateInitFailure) {
+            m_failedOnce = true;
+            m_lastFailedHr = E_FAIL;
+            ReportFailureOnce("Init(simulated)", E_FAIL, DXGI_FORMAT_UNKNOWN, 0, 0);
+            return false;
+        }
 
         // 1. Validate DXGI_FORMAT_B8G8R8A8_UNORM UAV support via CheckFormatSupport
         if (!m_formatSupportChecked) {
@@ -198,18 +201,28 @@ public:
             return true;
         }
 
-        // Fail-closed policy: If a previous allocation failed for this exact resolution, do NOT retry every frame!
+        // Fail-closed policy: If a previous allocation failed for this exact resolution and device,
+        // do NOT retry every frame!
         if (m_failedOnce && width == m_lastFailedWidth && height == m_lastFailedHeight) {
             return false;
         }
 
-        // If resolution changed after a failure, reset failure flag to allow clean attempt at new resolution
+        // If resolution changed after a failure on this device, reset failure flag to allow clean attempt at new resolution
         if (width != m_lastFailedWidth || height != m_lastFailedHeight) {
             m_failedOnce = false;
             m_reportedFailure = false;
         }
 
         ReleaseTextures();
+
+        // Increment allocation attempt counter
+        ++m_numAllocAttempts;
+
+        if (m_simulateAllocFailure) {
+            RecordFailure("CreateTexture2D(simulated)", E_OUTOFMEMORY, DXGI_FORMAT_B8G8R8A8_UNORM, width, height);
+            ReleaseTextures();
+            return false;
+        }
 
         // 1. Stage texture (SRV capable, matching input format DXGI_FORMAT_B8G8R8A8_UNORM)
         D3D11_TEXTURE2D_DESC std_desc = {};
@@ -266,6 +279,8 @@ public:
 
         m_width = width;
         m_height = height;
+        m_lastFailedWidth = 0;
+        m_lastFailedHeight = 0;
         ++m_numCreates;
         return true;
     }
@@ -278,23 +293,39 @@ public:
             return srcTex;
         }
 
-        // Fail-closed gate: if initialization or previous allocation failed, safely return original texture without retrying
-        if (m_failedOnce && (!m_ready || (width == m_lastFailedWidth && height == m_lastFailedHeight))) {
+        // 1. Validate device identity FIRST before evaluating failure state or ready state.
+        // If a new D3D11 device is passed (e.g. device recreation, adapter switch, or first run),
+        // safely invalidate previous device resources and reset device-scoped state.
+        if (m_lastDevice != dev) {
+            Shutdown();
+            m_lastDevice = dev;
+        }
+
+        // 2. If initialization previously failed for this device, fail-closed: return original texture
+        if (m_failedOnce && !m_ready) {
             return srcTex;
         }
 
+        // 3. Initialize device resources (CS, CB) on this device if not yet ready
         if (!m_ready) {
             if (!Init(dev)) return srcTex;
         }
 
+        // 4. Fail-closed gate: if allocation previously failed for this resolution on this device,
+        // safely return original texture without attempting any GPU allocations
+        if (m_failedOnce && width == m_lastFailedWidth && height == m_lastFailedHeight) {
+            return srcTex;
+        }
+
+        // 5. Ensure resolution-sized textures (stageTex, outTex, UAV, SRV)
         if (!EnsureResources(dev, width, height)) {
             return srcTex;
         }
 
-        // 1. Transfer frame to persistent staging texture
+        // 6. Transfer frame to persistent staging texture
         ctx->CopyResource(m_stageTex, srcTex);
 
-        // 2. Prepare shader constants according to active preset
+        // 7. Prepare shader constants according to active preset
         ShaderConstants sc = {};
         sc.preset = static_cast<uint32_t>(m_config.preset);
         sc.width = width;
@@ -337,7 +368,7 @@ public:
 
         ctx->UpdateSubresource(m_cb, 0, nullptr, &sc, 0, 0);
 
-        // 3. Dispatch Compute Shader
+        // 8. Dispatch Compute Shader
         ID3D11ShaderResourceView* srvs[1] = { m_stageSrv };
         ID3D11UnorderedAccessView* uavs[1] = { m_outUav };
 
@@ -350,11 +381,13 @@ public:
         UINT groupsY = (height + 15) / 16;
         ctx->Dispatch(groupsX, groupsY, 1);
 
-        // 4. Unbind resources to clear pipeline hazards
+        // 9. Unbind resources to clear pipeline hazards and prevent state leakage
         ID3D11UnorderedAccessView* nullUav[1] = { nullptr };
         ctx->CSSetUnorderedAccessViews(0, 1, nullUav, nullptr);
         ID3D11ShaderResourceView* nullSrv[1] = { nullptr };
         ctx->CSSetShaderResources(0, 1, nullSrv);
+        ID3D11Buffer* nullCb[1] = { nullptr };
+        ctx->CSSetConstantBuffers(0, 1, nullCb);
         ctx->CSSetShader(nullptr, nullptr, 0);
 
         ++m_processedFrames;
@@ -369,19 +402,27 @@ public:
         m_failedOnce = false;
         m_reportedFailure = false;
         m_initAttempted = false;
+        m_formatSupportChecked = false;
+        m_formatSupportValid = false;
+        m_lastFailedHr = S_OK;
+        m_lastFailedFormat = DXGI_FORMAT_UNKNOWN;
+        m_lastFailedWidth = 0;
+        m_lastFailedHeight = 0;
         m_lastDevice = nullptr;
     }
 
     unsigned int GetNumCreates() const { return m_numCreates; }
+    unsigned int GetNumAllocAttempts() const { return m_numAllocAttempts; }
     uint64_t GetProcessedFrames() const { return m_processedFrames; }
     bool HasFailed() const { return m_failedOnce; }
+    bool IsReady() const { return m_ready; }
+    ID3D11Device* GetLastDevice() const { return m_lastDevice; }
     HRESULT GetLastFailedHr() const { return m_lastFailedHr; }
     DXGI_FORMAT GetLastFailedFormat() const { return m_lastFailedFormat; }
 
-    // For test simulation only
-    void SimulateResourceFailure(HRESULT hr, DXGI_FORMAT fmt, UINT width, UINT height) {
-        RecordFailure("SimulatedFailure", hr, fmt, width, height);
-    }
+    // For controlled test simulation only
+    void SetSimulateAllocFailure(bool fail) { m_simulateAllocFailure = fail; }
+    void SetSimulateInitFailure(bool fail) { m_simulateInitFailure = fail; }
 
 private:
     void ReleaseTextures() {
@@ -431,6 +472,7 @@ private:
     UINT m_width = 0;
     UINT m_height = 0;
     unsigned int m_numCreates = 0;
+    unsigned int m_numAllocAttempts = 0;
     uint64_t m_processedFrames = 0;
 
     bool m_ready = false;
@@ -445,6 +487,9 @@ private:
     DXGI_FORMAT m_lastFailedFormat = DXGI_FORMAT_UNKNOWN;
     UINT m_lastFailedWidth = 0;
     UINT m_lastFailedHeight = 0;
+
+    bool m_simulateAllocFailure = false;
+    bool m_simulateInitFailure = false;
 };
 
 } // namespace oled_grading

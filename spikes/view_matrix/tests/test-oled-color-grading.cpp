@@ -400,39 +400,192 @@ int main() {
     printf("  PASS: Alpha channel preserved exactly across all test alpha values.\n\n");
 
     // -----------------------------------------------------------------------
-    // TEST 9: D3D11 Resource Failure Handling & 90 Hz Fail-Closed Retry Avoidance
+    // TEST 9: D3D11 Device Lifetime & Fail-Closed Regression Suite
+    // (Testing production code paths with real valid D3D11 devices/contexts)
     // -----------------------------------------------------------------------
-    printf("[Test 9] Verifying Fail-Closed Policy & 90 Hz Allocation Retry Avoidance...\n");
+    printf("[Test 9] Verifying D3D11 Device Lifetime & Fail-Closed Regression Suite...\n");
     {
-        oled_grading::OledGrading oled;
-        oled.SetPreset(oled_grading::Preset::Balanced);
+        // Helper lambda to create a valid D3D11 device and context
+        auto CreateTestDevice = [](D3D_DRIVER_TYPE driverType, ID3D11Device** outDev, ID3D11DeviceContext** outCtx) -> bool {
+            D3D_FEATURE_LEVEL fl = D3D_FEATURE_LEVEL_11_0;
+            HRESULT hr = D3D11CreateDevice(nullptr, driverType, nullptr, 0, &fl, 1, D3D11_SDK_VERSION, outDev, nullptr, outCtx);
+            if (FAILED(hr)) {
+                hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, nullptr, 0, &fl, 1, D3D11_SDK_VERSION, outDev, nullptr, outCtx);
+            }
+            return SUCCEEDED(hr) && *outDev && *outCtx;
+        };
 
-        // Simulate an allocation failure on a 5264x2684 surface
-        const UINT failW = 5264, failH = 2684;
-        oled.SimulateResourceFailure(E_OUTOFMEMORY, DXGI_FORMAT_B8G8R8A8_UNORM, failW, failH);
-        assert(oled.HasFailed() && oled.GetLastFailedHr() == E_OUTOFMEMORY);
-        assert(oled.GetLastFailedFormat() == DXGI_FORMAT_B8G8R8A8_UNORM);
+        // Helper lambda to create a simple test texture on a given device
+        auto CreateTestTex = [](ID3D11Device* dev, UINT w, UINT h) -> ID3D11Texture2D* {
+            if (!dev || w == 0 || h == 0) return nullptr;
+            D3D11_TEXTURE2D_DESC td = {};
+            td.Width = w;
+            td.Height = h;
+            td.MipLevels = 1;
+            td.ArraySize = 1;
+            td.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+            td.SampleDesc.Count = 1;
+            td.Usage = D3D11_USAGE_DEFAULT;
+            td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+            ID3D11Texture2D* tex = nullptr;
+            HRESULT hr = dev->CreateTexture2D(&td, nullptr, &tex);
+            return SUCCEEDED(hr) ? tex : nullptr;
+        };
 
-        // Verify that calling Process with a mock dummy pointer safely returns the original pointer
-        ID3D11Texture2D* dummyTex = reinterpret_cast<ID3D11Texture2D*>(0xDEADBEEF);
-        unsigned int createsBefore = oled.GetNumCreates();
+        // Create Device A and Device B
+        ID3D11Device* devA = nullptr; ID3D11DeviceContext* ctxA = nullptr;
+        ID3D11Device* devB = nullptr; ID3D11DeviceContext* ctxB = nullptr;
+        bool okA = CreateTestDevice(D3D_DRIVER_TYPE_HARDWARE, &devA, &ctxA);
+        bool okB = CreateTestDevice(D3D_DRIVER_TYPE_WARP, &devB, &ctxB);
+        assert(okA && okB && devA && ctxA && devB && ctxB);
+        assert(devA != devB && "devA and devB must be distinct device instances");
 
-        // Simulate 90 successive frames at 90 Hz:
-        for (int frame = 0; frame < 90; ++frame) {
-            ID3D11Texture2D* res = oled.Process(nullptr, nullptr, dummyTex, failW, failH);
-            assert(res == dummyTex && "Fail-closed policy must safely return original input texture");
+        // -------------------------------------------------------------------
+        // Scenario 1: Device A -> Device B transition
+        // -------------------------------------------------------------------
+        {
+            oled_grading::OledGrading oled;
+            oled.SetPreset(oled_grading::Preset::Balanced);
+
+            ID3D11Texture2D* texA = CreateTestTex(devA, 64, 64);
+            assert(texA);
+            ID3D11Texture2D* resA = oled.Process(devA, ctxA, texA, 64, 64);
+            assert(resA != nullptr && resA != texA && "Device A execution must return graded texture");
+            assert(oled.GetLastDevice() == devA);
+            assert(oled.IsReady() && !oled.HasFailed());
+
+            // Transition to Device B:
+            ID3D11Texture2D* texB = CreateTestTex(devB, 64, 64);
+            assert(texB);
+            ID3D11Texture2D* resB = oled.Process(devB, ctxB, texB, 64, 64);
+            assert(resB != nullptr && resB != texB && "Device B execution must succeed after device transition");
+            assert(oled.GetLastDevice() == devB && "Device identity must update to devB");
+            assert(oled.IsReady() && !oled.HasFailed());
+
+            texA->Release();
+            texB->Release();
+            printf("  Sub-test 9.1 PASS: Device A -> Device B transition cleanly handled.\n");
         }
 
-        // Verify ZERO allocation attempts occurred during the 90 frames!
-        assert(oled.GetNumCreates() == createsBefore && "Must not retry GPU allocations on active frames after failure");
+        // -------------------------------------------------------------------
+        // Scenario 2: Failed initialization on Device A -> valid new Device B
+        // -------------------------------------------------------------------
+        {
+            oled_grading::OledGrading oled;
+            oled.SetPreset(oled_grading::Preset::Balanced);
+            oled.SetSimulateInitFailure(true);
 
-        // Verify that changing resolution resets failure state to allow clean retry at new resolution
-        const UINT newW = 2560, newH = 1440;
-        // Calling EnsureResources with nullptr device for new resolution should attempt, fail gracefully, and update failed dims
-        bool attempted = oled.EnsureResources(nullptr, newW, newH);
-        assert(!attempted);
+            ID3D11Texture2D* texA = CreateTestTex(devA, 64, 64);
+            assert(texA);
+            ID3D11Texture2D* failResA = oled.Process(devA, ctxA, texA, 64, 64);
+            assert(failResA == texA && "Init failure must return original source texture");
+            assert(oled.HasFailed() && !oled.IsReady());
+
+            // Repeated frames on devA must stay fail-closed
+            for (int i = 0; i < 10; ++i) {
+                ID3D11Texture2D* r = oled.Process(devA, ctxA, texA, 64, 64);
+                assert(r == texA);
+            }
+
+            // Transition to Device B with valid initialization:
+            oled.SetSimulateInitFailure(false);
+            ID3D11Texture2D* texB = CreateTestTex(devB, 64, 64);
+            assert(texB);
+            ID3D11Texture2D* okResB = oled.Process(devB, ctxB, texB, 64, 64);
+            assert(okResB != nullptr && okResB != texB && "Device B must recover cleanly from Device A init failure");
+            assert(oled.GetLastDevice() == devB);
+            assert(oled.IsReady() && !oled.HasFailed());
+
+            texA->Release();
+            texB->Release();
+            printf("  Sub-test 9.2 PASS: Failed initialization -> valid new device recovery verified.\n");
+        }
+
+        // -------------------------------------------------------------------
+        // Scenario 3: Allocation failure -> repeated frames -> no retries
+        // -------------------------------------------------------------------
+        {
+            oled_grading::OledGrading oled;
+            oled.SetPreset(oled_grading::Preset::Balanced);
+
+            ID3D11Texture2D* texA64 = CreateTestTex(devA, 64, 64);
+            assert(texA64);
+
+            oled.SetSimulateAllocFailure(true);
+            ID3D11Texture2D* failRes = oled.Process(devA, ctxA, texA64, 64, 64);
+            assert(failRes == texA64 && "Allocation failure must safely return original source texture");
+            assert(oled.HasFailed());
+
+            unsigned int attemptsBefore = oled.GetNumAllocAttempts();
+            assert(attemptsBefore == 1 && "Initial allocation attempt must count as 1");
+            assert(oled.GetNumCreates() == 0 && "Failed allocation must produce 0 successful creates");
+
+            // Simulate 90 successive frames at 90 Hz with valid device and context:
+            for (int frame = 0; frame < 90; ++frame) {
+                ID3D11Texture2D* r = oled.Process(devA, ctxA, texA64, 64, 64);
+                assert(r == texA64 && "Fail-closed policy must safely return original source texture");
+            }
+
+            // Verify ZERO new allocation attempts occurred during the 90 frames!
+            assert(oled.GetNumAllocAttempts() == attemptsBefore &&
+                   "Fail-closed policy must NOT retry GPU allocations on 90 active frames after failure");
+            printf("  Sub-test 9.3 PASS: 90 frames at 90 Hz verified with ZERO repeated allocation attempts.\n");
+
+            // ---------------------------------------------------------------
+            // Scenario 4: Allocation failure -> legitimate resolution change -> controlled retry
+            // ---------------------------------------------------------------
+            oled.SetSimulateAllocFailure(false);
+            ID3D11Texture2D* texA128 = CreateTestTex(devA, 128, 128);
+            assert(texA128);
+
+            ID3D11Texture2D* resNew = oled.Process(devA, ctxA, texA128, 128, 128);
+            assert(resNew != nullptr && resNew != texA128 && "Resolution change must succeed");
+            assert(oled.GetNumAllocAttempts() == attemptsBefore + 1 &&
+                   "Legitimate resolution change must trigger exactly 1 controlled retry");
+            assert(oled.GetNumCreates() == 1 && "New resolution allocation must succeed");
+            assert(!oled.HasFailed() && "Failure state must clear on successful resolution change");
+
+            texA64->Release();
+            texA128->Release();
+            printf("  Sub-test 9.4 PASS: Legitimate resolution change triggered exactly 1 controlled retry and succeeded.\n");
+        }
+
+        // -------------------------------------------------------------------
+        // Scenario 5: Correct passthrough to original source texture on failure & bypass
+        // -------------------------------------------------------------------
+        {
+            oled_grading::OledGrading oled;
+            ID3D11Texture2D* tex = CreateTestTex(devA, 64, 64);
+            assert(tex);
+
+            // Bypass: Preset::Off
+            oled.SetPreset(oled_grading::Preset::Off);
+            ID3D11Texture2D* rOff = oled.Process(devA, ctxA, tex, 64, 64);
+            assert(rOff == tex && "Preset::Off must return original source texture pointer");
+
+            // Failure: simulated init failure
+            oled.SetPreset(oled_grading::Preset::Balanced);
+            oled.SetSimulateInitFailure(true);
+            ID3D11Texture2D* rInitFail = oled.Process(devA, ctxA, tex, 64, 64);
+            assert(rInitFail == tex && "Init failure must return original source texture pointer");
+
+            // Failure: simulated alloc failure
+            oled.Shutdown();
+            oled.SetSimulateInitFailure(false);
+            oled.SetSimulateAllocFailure(true);
+            ID3D11Texture2D* rAllocFail = oled.Process(devA, ctxA, tex, 64, 64);
+            assert(rAllocFail == tex && "Alloc failure must return original source texture pointer");
+
+            tex->Release();
+            printf("  Sub-test 9.5 PASS: Correct pointer passthrough to original source texture verified across all bypass/failure modes.\n");
+        }
+
+        devA->Release();
+        ctxA->Release();
+        devB->Release();
+        ctxB->Release();
     }
-    printf("  PASS: Fail-closed policy active; zero repeated GPU allocations on persistent failure.\n\n");
+    printf("  PASS: All D3D11 Device Lifetime & Fail-Closed Regression Scenarios Passed!\n\n");
 
     // -----------------------------------------------------------------------
     // TEST 10: Real D3D11 GPU Compute Shader vs CPU Reference for ALL Presets
