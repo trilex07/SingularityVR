@@ -6638,6 +6638,7 @@ volatile LONG g_vrMenuClass=0; // 0 none, 1 IIS boot, 2 Main, 3 Pause, 4 other n
 volatile LONG g_modalSaveDialog = 0; // save-slot confirmation dialog; suppress stale slots RTT overlay
 volatile LONG g_menuAssetWitness = 0; // default-OFF, cold identity/coordinate evidence, no render mutation
 volatile LONG g_lockerNativeTrace = 0; // [Diagnostic] LockerNativeTrace: read-only WeaponLocker exec + pickup witness
+volatile LONG g_lockerRetainOrdinary = 0; // [Input] LockerRetainOrdinary: PopMenu destroyItem gate (requires KeepAcquiredWeapons)
 volatile LONG g_vrMenuReleaseRequested = 0; // input publishes; render thread owns COM release
 // XR bridge: crop one SBS half to both eyes only for the IIS boot/title menu.
 // Classes 2-4 keep whatever stereo/dup the scene already captured.
@@ -25386,6 +25387,7 @@ volatile LONG g_peFiringCalls = 0; // ⚠️ if this stays 0 the split never hap
 
 #include "inventory_vm_hook.h"
 #include "locker_native_trace.h"
+#include "locker_retain_ordinary.h"
 #include "locker_station_grant.h"
 #include "menu_submit_policy.h"
 
@@ -33538,6 +33540,11 @@ void LoadIniSettings() {
     g_contextCursorNative=GetPrivateProfileIntA("Render","ContextCursorNative",0,path)?1:0;
     g_npcNameScalePct=std::clamp((int)GetPrivateProfileIntA("Render","NpcNameScalePct",100,path),40,100);
     g_keepAcquiredWeapons=GetPrivateProfileIntA("Input","KeepAcquiredWeapons",0,path)?1:0;
+    InterlockedExchange(&g_lockerRetainOrdinary,
+        GetPrivateProfileIntA("Input", "LockerRetainOrdinary", 0, path) != 0);
+    Log("ini: LockerRetainOrdinary=%ld (default OFF; PopMenu destroyItem gate; requires KeepAcquiredWeapons=1)",
+        Rd(g_lockerRetainOrdinary));
+    if (Rd(g_lockerRetainOrdinary) && Rd(g_keepAcquiredWeapons)) LockerRetainOrdinary::TryInstall();
     g_ownedWeaponWheel=GetPrivateProfileIntA("Input","WeaponWheelOwnedInventory",0,path)?1:0;
     {
         char vs[32]{},ps[32]{};

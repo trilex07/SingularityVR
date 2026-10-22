@@ -10,6 +10,7 @@
 #include "native_tmd_aim.h"
 #include "locker_virtual_runtime.h"
 #include "locker_native_trace.h"
+#include "locker_retain_ordinary.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
 // This bridge runs on the original platform input thread, never the render thread.
 bool PauseVrSettingsHitNormalized(LONG u, LONG v);
@@ -157,6 +158,7 @@ static bool MenuClass(const char* n) {
 }
 static bool UpdateMenu() {
  if (LockerNativeTrace::Enabled()) LockerNativeTrace::TryInstallEarly();
+ if (LockerRetainOrdinary::Enabled()) LockerRetainOrdinary::TryInstall();
  // Exact native GetFocusMovie body at 0x00D7C2C0; read only, no native call needed.
  const uintptr_t engine=ReadPointer(0x01CF8778u);
  const uintptr_t record=ReadPointer(engine ? engine+0x148u:0);

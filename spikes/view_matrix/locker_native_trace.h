@@ -328,6 +328,9 @@ inline bool InstallExecHooks(uintptr_t vt) {
 
 inline void TryInstallEarly() {
     if (!Enabled() || HooksLive()) return;
+    // InstallOne compares hook RVAs against g_textLo/g_textHi; attempting before the
+    // executable .text range is logged causes thousands of refuse/aborted lines per session.
+    if (!g_textLo || !g_textHi || g_textLo >= g_textHi) return;
     if (!PauseRttProbe::SafeRange(kWeaponLockerVtable, 16)) return;
     InstallExecHooks(kWeaponLockerVtable);
 }
