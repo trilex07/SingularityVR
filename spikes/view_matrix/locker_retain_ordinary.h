@@ -30,6 +30,17 @@ inline bool Enabled() {
            InterlockedCompareExchange(&g_keepAcquiredWeapons, 0, 0) != 0;
 }
 
+inline int ForwardDestroy(void* inv, void* item, int arg2, int arg3) {
+    if (!g_origDestroy) {
+        static unsigned nullForward = 0;
+        if (nullForward++ < 4)
+            Log("locker retention: forward destroy refused — orig trampoline null thread=%u",
+                GetCurrentThreadId());
+        return 0;
+    }
+    return g_origDestroy(inv, item, arg2, arg3);
+}
+
 inline bool TryLogReject(uintptr_t callerRet, void* item, const char* weapon, const char* reason) {
     if (InterlockedIncrement(&g_rejectLog) > (LONG)kMaxRejectLog) {
         InterlockedDecrement(&g_rejectLog);
@@ -81,45 +92,53 @@ inline bool SupportedOrdinaryFromItem(uintptr_t item, char* outWeapon, unsigned 
 
 struct DestroyHooks {
     static int __thiscall Detour(void* inv, void* item, int arg2, int arg3) {
-    if (!Enabled() || !g_origDestroy) return g_origDestroy(inv, item, arg2, arg3);
+        if (!Enabled()) return ForwardDestroy(inv, item, arg2, arg3);
 
-    const uintptr_t ret = (uintptr_t)_ReturnAddress();
-    const DWORD tid = GetCurrentThreadId();
-    const DWORD established = NativeOwnedInventory::thread;
+        const uintptr_t ret = (uintptr_t)_ReturnAddress();
+        const DWORD tid = GetCurrentThreadId();
+        const DWORD established = NativeOwnedInventory::thread;
+        const uintptr_t mgr = NativeOwnedInventory::manager;
+        const uintptr_t callMgr = (uintptr_t)inv;
 
-    if (!LockerRetainPolicy::CallerIsPopMenuDestroy(ret)) return g_origDestroy(inv, item, arg2, arg3);
+        if (!LockerRetainPolicy::CallerIsPopMenuDestroy(ret))
+            return ForwardDestroy(inv, item, arg2, arg3);
 
-    char weapon[96]{};
-    bool itemOk = false;
-    bool shared = false;
-    bool ordinary = false;
-    __try {
-        const uintptr_t it = (uintptr_t)item;
-        itemOk = it && PauseRttProbe::SafeRange(it, 8);
-        if (itemOk) {
-            shared = ClassWeaponShared(it);
-            if (shared) ordinary = SupportedOrdinaryFromItem(it, weapon, sizeof(weapon));
+        char weapon[96]{};
+        bool itemOk = false;
+        bool shared = false;
+        bool ordinary = false;
+        __try {
+            const uintptr_t it = (uintptr_t)item;
+            itemOk = it && PauseRttProbe::SafeRange(it, 8);
+            if (itemOk) {
+                shared = ClassWeaponShared(it);
+                if (shared) ordinary = SupportedOrdinaryFromItem(it, weapon, sizeof(weapon));
+            }
+        } __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION ? EXCEPTION_EXECUTE_HANDLER
+                                                                     : EXCEPTION_CONTINUE_SEARCH) {
+            itemOk = false;
         }
-    } __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION ? EXCEPTION_EXECUTE_HANDLER
-                                                                 : EXCEPTION_CONTINUE_SEARCH) {
-        itemOk = false;
-    }
 
-    const bool keep = InterlockedCompareExchange(&g_keepAcquiredWeapons, 0, 0) != 0;
-    const bool retain = InterlockedCompareExchange(&g_lockerRetainOrdinary, 0, 0) != 0;
-    if (LockerRetainPolicy::ShouldSuppress(retain, keep, ret, established, tid, itemOk, shared, ordinary)) {
-        TryLogSuppress(ret, item, weapon);
-        NativeOwnedInventory::Refresh();
-        return 0;
-    }
+        const bool keep = InterlockedCompareExchange(&g_keepAcquiredWeapons, 0, 0) != 0;
+        const bool retain = InterlockedCompareExchange(&g_lockerRetainOrdinary, 0, 0) != 0;
+        if (LockerRetainPolicy::ShouldSuppress(retain, keep, ret, established, tid, callMgr, mgr, itemOk,
+                                               shared, ordinary)) {
+            TryLogSuppress(ret, item, weapon);
+            NativeOwnedInventory::Refresh();
+            return 0;
+        }
 
-    if (LockerRetainPolicy::CallerIsPopMenuDestroy(ret)) {
-        if (!LockerRetainPolicy::ThreadMatches(established, tid)) TryLogReject(ret, item, weapon, "thread");
+        if (!established) TryLogReject(ret, item, weapon, "no-established-thread");
+        else if (!LockerRetainPolicy::EstablishedThreadMatches(established, tid))
+            TryLogReject(ret, item, weapon, "thread");
+        else if (!mgr) TryLogReject(ret, item, weapon, "no-established-manager");
+        else if (!LockerRetainPolicy::ManagerMatches(callMgr, mgr))
+            TryLogReject(ret, item, weapon, "manager");
         else if (!itemOk) TryLogReject(ret, item, weapon, "item");
         else if (!shared) TryLogReject(ret, item, weapon, "not-weapon-shared");
         else if (!ordinary) TryLogReject(ret, item, weapon, "not-ordinary");
-    }
-    return g_origDestroy(inv, item, arg2, arg3);
+
+        return ForwardDestroy(inv, item, arg2, arg3);
     }
 };
 

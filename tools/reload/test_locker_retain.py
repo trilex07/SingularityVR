@@ -24,6 +24,15 @@ class LockerRetainOffline(unittest.TestCase):
         pol = POLICY.read_text(encoding="utf-8", errors="replace")
         self.assertIn("0x00F1805E", pol)
         self.assertIn("0x00A05790", pol)
+        self.assertIn("EstablishedThreadMatches", pol)
+        self.assertIn("ManagerMatches", pol)
+        self.assertNotIn("if (!establishedThread) return true", pol.replace(" ", ""))
+
+    def test_detour_never_calls_null_orig(self):
+        text = HEADER.read_text(encoding="utf-8", errors="replace")
+        self.assertIn("ForwardDestroy", text)
+        self.assertNotIn("if (!Enabled() || !g_origDestroy) return g_origDestroy", text)
+        self.assertIn("if (!g_origDestroy)", text)
 
     def test_destroy_abi_witness_strict(self):
         self.assertTrue(CAPTURE.is_file(), "archived .text capture required")
