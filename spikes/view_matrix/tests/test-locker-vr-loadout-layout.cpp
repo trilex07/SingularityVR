@@ -26,18 +26,19 @@ int main() {
     cp.pending = true;
     cp.equipLabel = EquipLabelKind::EquipAll;
 
-    cp.anchorSx = 3200.f;
+    cp.eye = 0;
+    cp.anchorSx = 1770.f;
     cp.anchorSy = 1080.f;
     Layout base{};
     ComputeLayout(cp, base);
     const float equipCx0 = (base.equipAll.x0 + base.equipAll.x1) * .5f;
 
-    cp.anchorSx += 37.f;
+    cp.anchorSx = 1780.f;
     Layout shifted{};
     ComputeLayout(cp, shifted);
     const float equipCx1 = (shifted.equipAll.x0 + shifted.equipAll.x1) * .5f;
-    Expect(std::fabs(equipCx1 - equipCx0 - 37.f) < 0.01f, "equip rect shifts with anchor by same delta after clamp");
-    Expect(std::fabs(shifted.anchorSx - base.anchorSx - 37.f) < 0.01f, "anchor clamp preserves relative shift");
+    Expect(std::fabs(shifted.anchorSx - base.anchorSx - 10.f) < 0.01f, "anchor clamp preserves +10px shift in band");
+    Expect(std::fabs(equipCx1 - equipCx0 - 10.f) < 0.01f, "equip rect shifts +10px with anchor");
 
     Layout& clamped = shifted;
     for (int i = 0; i < 4; ++i) {
@@ -52,8 +53,8 @@ int main() {
     clamped.equipAll.Center(eqCx, eqCy);
     Expect(clamped.equipAll.Contains(eqCx, eqCy), "equip label center inside equip rect");
 
-    Expect(clamped.panel.x0 >= cp.halfW + kMarginPx - 1.f, "panel inside right eye horizontally");
-    Expect(clamped.panel.x1 <= cp.fullW - kMarginPx + 1.f, "panel inside right eye max X");
+    Expect(clamped.panel.x0 >= kMarginPx - 1.f, "panel inside left eye min X");
+    Expect(clamped.panel.x1 <= cp.halfW - kMarginPx + 1.f, "panel inside left eye max X");
     Expect(clamped.panel.y0 >= kMarginPx - 1.f && clamped.panel.y1 <= cp.fullH - kMarginPx + 1.f,
            "panel inside vertical viewport");
 
