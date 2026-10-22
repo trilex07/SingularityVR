@@ -20127,6 +20127,32 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     float cylinderSaved[15][4];CenturionDrawReplay cylinderReplay;
     const int cylinderBase=t==D3DPT_TRIANGLELIST&&nSeg==1&&!boneRegN&&!independentRegs
         ?PrepareCenturionCylinder(dev,baseVertex,numVertices,startIndex,primCount,cylinderSaved,cylinderReplay):-1;
+    // Original PSK SHA 4E18A25D...: muzzle_flash absolute bind position;
+    // local +X is the barrel's +Z in cog_alt_pistol. Native Y reflects ActorX.
+    // Cooked palette [57,53,56,55,58]: slot1 is cog_alt_pistol skin matrix.
+    if(g_weaponMeasuredAim&&t==D3DPT_TRIANGLELIST&&baseVertex==0&&numVertices==5799&&
+       startIndex==0&&primCount==6767&&g_thisDrawMoved==1&&!g_boundShaderLayout.shadow&&
+       Rd(g_rtIsScene)&&!Rd(g_weaponHolstered)&&g_boundShaderLayout.bones>=0&&
+       g_boundShaderLayout.boneRegs>=15&&g_boundShaderLayout.local>=0){
+        float palette[3][4];armbind::Mat skin,local,controller;
+        if(SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.bones+3,&palette[0][0],3))&&
+           armbind::FromGpu(palette,skin)&&
+           SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.local,&local.m[0][0],4))&&
+           armbind::Finite(local)){
+            BuildGunC(controller.m);
+            const auto chain=centurionvisual::Product(centurionvisual::Product(skin,local),controller);
+            const hipknife::V p{.000005440695f,114.69569557f,63.52872816f};
+            const auto muzzle=centurionvisual::Point(p,chain);
+            const auto ahead=centurionvisual::Point(p+hipknife::V{.00000005f,-.000000015f,1.f},chain);
+            const auto axis=ahead-muzzle;const float length=hipknife::Length(axis);
+            if(hipknife::Finite(muzzle)&&hipknife::Finite(axis)&&length>.001f&&
+               hipknife::Length(muzzle)<4.f*MetresToUU()){
+                g_nextMuzzleStaged={true,weaponreload::Kind::None,(uint32_t)g_playerPawn,
+                    (uint32_t)Rd(g_weaponObj),GetTickCount64(),muzzle};
+                g_nextMuzzleStaged.forward=axis*(1.f/length);
+            }
+        }
+    }
     const HRESULT dhr = StereoPair(dev, [&] {
         HRESULT hr = D3D_OK;
         if(nativeIndices.valid){
