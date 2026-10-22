@@ -394,20 +394,29 @@ def build_spikeshot_fixture_v2(center, size, pitch_deg=15.0):
 
     return np.array(b.verts, dtype=np.float32), np.array(b.faces, dtype=np.int32), np.array(b.uvs, dtype=np.float32), np.array(b.face_types, dtype=np.int32)
 
-# 4. Kasimov Sniper Rifle (Cantilever scope bracket mount + anti-glare visor + 05/20)
-def build_kasimov_fixture_v2(center, size, pitch_deg=15.0):
+# 4. Kasimov Sniper Rifle (Canted cantilever scope bracket mount + anti-glare visor + 05/20)
+def build_kasimov_fixture_v2(center, size, pitch_deg=15.0, cant_deg=32.0):
     b = MeshBuilder()
     cx, cy, cz = center
     sx, sy, sz = size
 
     rad_p = math.radians(pitch_deg)
-    cos_p, sin_p = math.cos(rad_p), math.sin(rad_p)
+    rad_c = math.radians(cant_deg)
 
-    fwd = np.array([0.0, sin_p, cos_p], dtype=np.float32)
-    norm = np.array([0.0, cos_p, -sin_p], dtype=np.float32)
-    right = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+    # Pitched base vectors along rifle axis
+    fwd = np.array([0.0, math.sin(rad_p), math.cos(rad_p)], dtype=np.float32)
+    norm_base = np.array([0.0, math.cos(rad_p), -math.sin(rad_p)], dtype=np.float32)
+    right_base = np.array([1.0, 0.0, 0.0], dtype=np.float32)
 
-    # 1. Main Scope Mount Chassis
+    # Cant around fwd toward shooter eye (+X direction from left mount)
+    norm = norm_base * math.cos(rad_c) + right_base * math.sin(rad_c)
+    norm /= np.linalg.norm(norm)
+    right = np.cross(norm, fwd)
+    right /= np.linalg.norm(right)
+    fwd = np.cross(right, norm)
+    fwd /= np.linalg.norm(fwd)
+
+    # 1. Main Scope Mount Chassis (Canted Left-Rail Housing)
     b.add_box(center, size, right, fwd, norm, face_type=0)
 
     # 2. Anti-glare Hood Visor forward of screen
@@ -419,42 +428,59 @@ def build_kasimov_fixture_v2(center, size, pitch_deg=15.0):
     bed_size = (sx * 0.78, sy * 0.08, sz * 0.74)
     b.add_box(bed_center, bed_size, right, fwd, norm, face_type=1)
 
-    # 4. Brass Knurled Scope Bracket Clamp Studs
-    b.add_cylinder(np.array(center) - right*(sx*0.46) + fwd*(sz*0.35), radius=0.16, height=sy*0.8, axis=right, segments=10, face_type=2)
-    b.add_cylinder(np.array(center) - right*(sx*0.46) - fwd*(sz*0.35), radius=0.16, height=sy*0.8, axis=right, segments=10, face_type=2)
+    # 4. Cantilever Clamp Arm bridging from housing inner edge towards scope rail dovetail
+    arm_c = np.array(center) + right * (sx * 0.5 + 0.12) - norm * (sy * 0.15)
+    arm_sz = (0.28, sy * 0.70, sz * 0.60)
+    b.add_box(arm_c, arm_sz, right, fwd, norm, face_type=0)
 
-    # 5. True 7-Segment Ammo Readout Elements (Ammo: 05 / 20)
+    # 5. Brass Knurled Scope Bracket Clamp Studs
+    b.add_cylinder(np.array(center) - right*(sx*0.42) + fwd*(sz*0.35), radius=0.14, height=sy*0.8, axis=norm, segments=10, face_type=2)
+    b.add_cylinder(np.array(center) - right*(sx*0.42) - fwd*(sz*0.35), radius=0.14, height=sy*0.8, axis=norm, segments=10, face_type=2)
+
+    # 6. True 7-Segment Ammo Readout Elements (Ammo: 05 / 20)
     disp_center = bed_center + norm * (bed_size[1] * 0.5 + 0.015)
     add_ammo_counter(b, disp_center, '05', '20', right, fwd, norm, total_width=sx*0.70, total_height=sz*0.65, face_type=3)
 
     return np.array(b.verts, dtype=np.float32), np.array(b.faces, dtype=np.int32), np.array(b.uvs, dtype=np.float32), np.array(b.face_types, dtype=np.int32)
 
-# 5. Left Glove / TMD Gauntlet (Curved dorsal cuff + 10 vacuum-tube cell gauge)
+# 5. Left Glove / TMD Gauntlet (Curved dorsal crest housing + contoured saddle wings + 10-cell gauge)
 def build_tmd_wrist_fixture_v2(center, size):
     b = MeshBuilder()
     cx, cy, cz = center
     sx, sy, sz = size
 
-    fwd = np.array([0.35, 0.90, -0.22], dtype=np.float32)
-    fwd /= np.linalg.norm(fwd)
-    norm = np.array([-0.35, 0.35, 0.87], dtype=np.float32)
+    # Strictly right-handed orthonormal basis matching dorsal wrist curvature
+    norm = np.array([-0.2500689, 0.45012403, 0.8572362], dtype=np.float32)
     norm /= np.linalg.norm(norm)
+    fwd = np.array([-0.1694995, 0.85134184, -0.49647456], dtype=np.float32)
+    fwd /= np.linalg.norm(fwd)
     right = np.cross(norm, fwd)
+    right /= np.linalg.norm(right)
+    fwd = np.cross(right, norm)
+    fwd /= np.linalg.norm(fwd)
 
-    # 1. Main Curved Dorsal Cuff Housing
+    # 1. Main Ergonomic Dorsal Crest Housing
     b.add_box(center, size, right, fwd, norm, face_type=0)
 
-    # 2. Recessed Dark Cathode Display Bed
+    # 2. Contoured Ergonomic Saddle Clamping Wings
+    wing_w = 0.22
+    wing_drop = 0.10
+    wing_l = np.array(center) - right * (sx * 0.5 + wing_w * 0.5) - norm * (wing_drop * 0.5)
+    wing_r = np.array(center) + right * (sx * 0.5 + wing_w * 0.5) - norm * (wing_drop * 0.5)
+    b.add_box(wing_l, (wing_w, sy + wing_drop, sz * 0.92), right, fwd, norm, face_type=0)
+    b.add_box(wing_r, (wing_w, sy + wing_drop, sz * 0.92), right, fwd, norm, face_type=0)
+
+    # 3. Recessed Dark Cathode Display Bed
     bed_c = np.array(center) + norm * (sy * 0.38)
     bed_sz = (sx * 0.82, sy * 0.08, sz * 0.84)
     b.add_box(bed_c, bed_sz, right, fwd, norm, face_type=1)
 
-    # 3. Embossed Soviet Medical Cross Plate on Left
+    # 4. Embossed Soviet Medical Cross Plate on Left
     cross_c = bed_c - right * (sx * 0.28) + norm * (bed_sz[1] * 0.5 + 0.015)
     b.add_box(cross_c, (sx*0.14, 0.02, sz*0.06), right, fwd, norm, face_type=4)
     b.add_box(cross_c, (sx*0.05, 0.02, sz*0.18), right, fwd, norm, face_type=4)
 
-    # 4. 10 Segmented Vacuum-Tube Health Cells with Physical Divider Ribs
+    # 5. 10 Segmented Vacuum-Tube Health Cells with Physical Divider Ribs
     gauge_c = bed_c + right * (sx * 0.10) + norm * (bed_sz[1] * 0.5 + 0.015)
     cell_w = sx * 0.48
     cell_h = sz * 0.70
@@ -469,7 +495,7 @@ def build_tmd_wrist_fixture_v2(center, size):
             rib_center = gauge_c + fwd * (-cell_h * 0.5 + (i + 1) * step_z)
             b.add_box(rib_center, (cell_w * 0.95, 0.025, step_z * 0.20), right, fwd, norm, face_type=0)
 
-    # 5. Corner Bezel Screws
+    # 6. Corner Bezel Screws
     rx = sx * 0.42
     rz = sz * 0.44
     for ox in (-rx, rx):
@@ -717,7 +743,7 @@ def run_all_models_v2():
         {
             'id': 'kasimov',
             'psk': REPO_ROOT / r"research\native-hands-20261007\assets\RvGameMPLoader_SF\SkeletalMesh3\ch_inview_sniper_mesh.psk",
-            'params': {'center': (0.0, 116.5, 40.0), 'size': (2.7, 0.45, 1.9), 'pitch': 15.0},
+            'params': {'center': (-2.6, 117.0, 40.5), 'size': (2.2, 0.38, 1.55), 'pitch': 15.0, 'cant': 32.0},
             'builder': build_kasimov_fixture_v2,
             'remaster_tex': TEX_DIR / "kasimov_diffuse_4k.png",
             'normal_tex': TEX_DIR / "kasimov_normal_4k.png"
@@ -726,7 +752,7 @@ def run_all_models_v2():
         {
             'id': 'tmd_glove',
             'psk': REPO_ROOT / r"research\native-hands-20261007\assets\RvGame\SkeletalMesh3\ch_inview_tmd_mesh.psk",
-            'params': {'center': (39.5, 99.5, -3.2), 'size': (1.8, 0.45, 4.8)},
+            'params': {'center': (41.66, 101.75, -0.88), 'size': (1.8, 0.45, 4.8)},
             'builder': lambda c, s: build_tmd_wrist_fixture_v2(c, s),
             'remaster_tex': TEX_DIR / "tmd_glove_diffuse_4k.png",
             'normal_tex': TEX_DIR / "tmd_glove_normal_4k.png"
@@ -754,10 +780,12 @@ def run_all_models_v2():
             vanilla_png_path
         )
 
-        # 2. Build Bespoke Fixture V2.1
+        # 2. Build Bespoke Fixture V2.2
         builder = cfg['builder']
         p = cfg['params']
-        if 'pitch' in p:
+        if 'pitch' in p and 'cant' in p:
+            f_pts, f_faces, f_uvs, f_types = builder(p['center'], p['size'], p['pitch'], p['cant'])
+        elif 'pitch' in p:
             f_pts, f_faces, f_uvs, f_types = builder(p['center'], p['size'], p['pitch'])
         else:
             f_pts, f_faces, f_uvs, f_types = builder(p['center'], p['size'])
