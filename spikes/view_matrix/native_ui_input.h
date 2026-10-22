@@ -10,6 +10,7 @@
 #include "native_tmd_aim.h"
 #include "locker_virtual_runtime.h"
 #include "locker_native_trace.h"
+#include "locker_availability_trace.h"
 #include "locker_retain_ordinary.h"
 #include "locker_owned_display_cache.h"
 // Singularity 2010 PE32: evidence in menu-*-disasm.txt and menu-live-input.json.
@@ -159,6 +160,7 @@ static bool MenuClass(const char* n) {
 }
 static bool UpdateMenu() {
  if (LockerNativeTrace::Enabled()) LockerNativeTrace::TryInstallEarly();
+ if (LockerAvailabilityTrace::Enabled()) LockerAvailabilityTrace::TryInstallEarly();
  if (LockerRetainOrdinary::Enabled()) LockerRetainOrdinary::TryInstall();
  // Exact native GetFocusMovie body at 0x00D7C2C0; read only, no native call needed.
  const uintptr_t engine=ReadPointer(0x01CF8778u);
@@ -215,6 +217,7 @@ static bool UpdateMenu() {
   if (prevClass[0] && !strcmp(prevClass, "RvUIGFxMovie_WeaponLocker") &&
       (!className[0] || strcmp(className, "RvUIGFxMovie_WeaponLocker"))) {
     LockerNativeTrace::OnDefocus();
+    LockerAvailabilityTrace::OnDefocus();
     LockerOwnedDisplayCache::OnDefocus();
   }
   if (className[0]) strcpy_s(prevClass, className);
@@ -228,6 +231,7 @@ static bool UpdateMenu() {
   if(cachedMenu&&!strcmp(className,"RvUIGFxMovie_WeaponLocker")) {
    ObserveLockerSlots(movie,cls);
    LockerNativeTrace::OnFocus(movie, cls);
+   LockerAvailabilityTrace::OnFocus(movie, cls);
    LockerVirtualRuntime::OnWeaponLockerFocus(movie,cls);
    LockerOwnedDisplayCache::OnFocus(movie, cls);
   }

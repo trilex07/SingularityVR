@@ -6640,6 +6640,7 @@ volatile LONG g_vrMenuClass=0; // 0 none, 1 IIS boot, 2 Main, 3 Pause, 4 other n
 volatile LONG g_modalSaveDialog = 0; // save-slot confirmation dialog; suppress stale slots RTT overlay
 volatile LONG g_menuAssetWitness = 0; // default-OFF, cold identity/coordinate evidence, no render mutation
 volatile LONG g_lockerNativeTrace = 0; // [Diagnostic] LockerNativeTrace: read-only WeaponLocker exec + pickup witness
+volatile LONG g_lockerAvailabilityTrace = 0; // [Diagnostic] LockerAvailabilityTrace: minimal +0x3E4/catalog/equip witness
 volatile LONG g_lockerRetainOrdinary = 0; // [Input] LockerRetainOrdinary: PopMenu destroyItem gate (requires KeepAcquiredWeapons)
 volatile LONG g_lockerOwnedDisplay = 0; // [Input] LockerOwnedDisplay: VR wheel owned tiles under WeaponLocker (requires KeepAcquiredWeapons)
 volatile LONG g_vrUiWeaponLocker = 0; // 1 while RvUIGFxMovie_WeaponLocker has focus (input thread)
@@ -33694,6 +33695,11 @@ void LoadIniSettings() {
     Log("ini: LockerNativeTrace=%ld (default OFF; bounded read-only WeaponLocker exec/pickup witness; no writes)",
         Rd(g_lockerNativeTrace));
     if (Rd(g_lockerNativeTrace)) LockerNativeTrace::TryInstallEarly();
+    InterlockedExchange(&g_lockerAvailabilityTrace,
+        GetPrivateProfileIntA("Diagnostic", "LockerAvailabilityTrace", 0, path) != 0);
+    Log("ini: LockerAvailabilityTrace=%ld (default OFF; equip@0xF00F50 + catalog/mask read-only; not LockerNativeTrace)",
+        Rd(g_lockerAvailabilityTrace));
+    if (Rd(g_lockerAvailabilityTrace)) LockerAvailabilityTrace::TryInstallEarly();
     g_contextCursorNative=GetPrivateProfileIntA("Render","ContextCursorNative",0,path)?1:0;
     g_npcNameScalePct=std::clamp((int)GetPrivateProfileIntA("Render","NpcNameScalePct",100,path),40,100);
     g_keepAcquiredWeapons=GetPrivateProfileIntA("Input","KeepAcquiredWeapons",0,path)?1:0;
