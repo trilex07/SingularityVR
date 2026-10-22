@@ -3,11 +3,15 @@
 #include "locker_vr_loadout_policy.h"
 #include "native_owned_inventory.h"
 #include "pause_rtt_probe.h"
+#include <Windows.h>
 #include <cstring>
+
+extern void Log(_Printf_format_string_ const char* fmt, ...);
 
 namespace LockerVrLoadoutRuntime {
 
 constexpr uintptr_t kGGameSystemPtr = 0x01CF394Cu;
+constexpr uintptr_t kFnGetGameSystem = 0xEFA070u;
 constexpr uintptr_t kCatalogDataOff = 0x160u;
 constexpr uintptr_t kCatalogCountOff = 0x164u;
 constexpr uintptr_t kCatalogStride = 0x50u;
@@ -20,7 +24,34 @@ inline uintptr_t RelocatedDataAddress(uintptr_t pinnedVa) {
     return LockerVrLoadoutIdentity::ImageBase() + (pinnedVa - LockerVrLoadoutIdentity::kCaptureImageBase);
 }
 
-inline uintptr_t GameSystemInstance() { return PauseRttProbe::Pointer(RelocatedDataAddress(kGGameSystemPtr)); }
+using GetGameSystemFn = uintptr_t(__cdecl*)();
+
+inline uintptr_t GameSystemInstance() {
+    const uintptr_t base = LockerVrLoadoutIdentity::ImageBase();
+    if (!base) return 0;
+    const uintptr_t fn = base + (kFnGetGameSystem - LockerVrLoadoutIdentity::kCaptureImageBase);
+    if (!LockerVrLoadoutIdentity::FnInText(fn)) return 0;
+    return reinterpret_cast<GetGameSystemFn>(fn)();
+}
+
+inline void LogGameSystemIdentityWitnessOnce(uintptr_t gs) {
+    static volatile LONG logged = 0;
+    if (InterlockedCompareExchange(&logged, 1, 0) != 0) return;
+    const uintptr_t base = LockerVrLoadoutIdentity::ImageBase();
+    const uintptr_t slot = RelocatedDataAddress(kGGameSystemPtr);
+    const uintptr_t raw = PauseRttProbe::Pointer(slot);
+    const uintptr_t vt = gs ? PauseRttProbe::Pointer(gs) : 0;
+    const uintptr_t vtExp = RelocatedDataAddress(LockerVrLoadoutIdentity::kPinnedRvGameSystemVtableVa);
+    const uintptr_t fn =
+        (vt && PauseRttProbe::SafeRange(vt + LockerVrLoadoutIdentity::kGameSystemFactoryVtableOff, 4))
+            ? PauseRttProbe::Pointer(vt + LockerVrLoadoutIdentity::kGameSystemFactoryVtableOff)
+            : 0;
+    int count = -1;
+    if (gs && PauseRttProbe::SafeRange(gs + kCatalogCountOff, 4))
+        count = *reinterpret_cast<const int*>(gs + kCatalogCountOff);
+    Log("locker vr loadout gamesystem witness: base=%p slot=%p raw=%p gs=%p vt=%p vtExp=%p fn20c=%p count=%d",
+        (void*)base, (void*)slot, (void*)raw, (void*)gs, (void*)vt, (void*)vtExp, (void*)fn, count);
+}
 
 inline uintptr_t ExpectedInventoryManagerVtable() {
     return RelocatedDataAddress(kInventoryManagerVtable);
@@ -76,7 +107,10 @@ inline const char* AvailabilityBlockReason(uintptr_t pawn) {
     if (!pawn) return "no_pawn";
     const uintptr_t gs = GameSystemInstance();
     if (!gs || !PauseRttProbe::SafeRange(gs + kCatalogCountOff, 8)) return "availability_gamesystem";
-    if (!LockerVrLoadoutIdentity::GameSystemObjectIdentityOk(gs)) return "availability_gamesystem_identity";
+    if (!LockerVrLoadoutIdentity::GameSystemObjectIdentityOk(gs)) {
+        LogGameSystemIdentityWitnessOnce(gs);
+        return "availability_gamesystem_identity";
+    }
     if (!SnapshotBoundManager(pawn)) return "availability_manager";
     return nullptr;
 }

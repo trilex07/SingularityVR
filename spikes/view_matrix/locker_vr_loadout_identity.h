@@ -27,6 +27,7 @@ constexpr uint64_t kExpectedFactoryFingerprint = 0x293E6200F76D1A77ull;
 constexpr uintptr_t kPinnedRvGameSystemVtableVa = 0x1BCF9C4u;
 constexpr uintptr_t kExpectedRvGameSystemVtableRvaFromImage =
     kPinnedRvGameSystemVtableVa - kCaptureImageBase;
+constexpr unsigned kGameSystemFactoryVtableOff = 0x20Cu;
 
 constexpr unsigned kPrologueBytes = 16u;
 
@@ -70,13 +71,13 @@ inline bool FactoryIdentityOk(uintptr_t fn) {
     return memcmp(reinterpret_cast<const void*>(fn), kFactoryPrologue, kPrologueBytes) == 0;
 }
 
+// Audited RvGameSystem identity: vtable+0x20C must resolve to pinned factory (not raw vtable VA equality).
 inline bool GameSystemObjectIdentityOk(uintptr_t gs) {
     if (!gs || !PauseRttProbe::SafeRange(gs, 4)) return false;
-    const uintptr_t base = ImageBase();
-    if (!base) return false;
     const uintptr_t vt = PauseRttProbe::Pointer(gs);
-    const uintptr_t expectedVt = base + kExpectedRvGameSystemVtableRvaFromImage;
-    return vt == expectedVt;
+    if (!vt || !PauseRttProbe::SafeRange(vt + kGameSystemFactoryVtableOff, 4)) return false;
+    const uintptr_t factoryFn = PauseRttProbe::Pointer(vt + kGameSystemFactoryVtableOff);
+    return FactoryIdentityOk(factoryFn);
 }
 
 } // namespace LockerVrLoadoutIdentity

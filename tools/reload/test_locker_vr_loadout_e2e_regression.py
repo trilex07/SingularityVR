@@ -61,6 +61,7 @@ class E2eRegression(unittest.TestCase):
         ident = IDENTITY_H.read_text(encoding="utf-8")
         self.assertIn("kExpectedRvGameSystemVtableRvaFromImage", ident)
         self.assertIn("ImageBase()", ident)
+        self.assertIn("FactoryIdentityOk", ident.split("GameSystemObjectIdentityOk", 1)[1])
         self.assertNotIn("ModuleBaseFromTextLo", ident)
         self.assertNotIn("kExpectedRvGameSystemVtableOffsetFromCaptureText", ident)
 
