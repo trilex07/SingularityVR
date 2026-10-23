@@ -1,0 +1,21 @@
+﻿{
+    "builtAt":  "2026-10-23T23:49:11.3145327+02:00",
+    "repository":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-sol-master-integration",
+    "branch":  "integration/sol-side-master-package-20261023",
+    "commit":  "bb234ba318b8330bcb87264bab9c97791cb8fa58",
+    "workingTreeStatus":  [
+                              "?? build/m01-build.out",
+                              "?? build/test-dual-weapon-tmd.out",
+                              "?? build/test-hud-live.out",
+                              "?? build/test-oled.out",
+                              "?? build/test-right-eye-mirror.out",
+                              "?? build/test-tmd-runtime-regressions.out",
+                              "?? build/test-tmd-short-gauntlet.out"
+                          ],
+    "optimization":  "/O2",
+    "performanceInstrumentation":  false,
+    "architecture":  "x86 PE32",
+    "machine":  "0x014C",
+    "optionalHeaderMagic":  "0x010B",
+    "sha256":  "78404247B78586FB42416F0A331CD11B13B4DBC0A16708B913A21F04EA374541"
+}

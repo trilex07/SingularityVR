@@ -1,0 +1,44 @@
+{
+  "session": "m01-bb234ba-psvr2-pass",
+  "date": "2026-10-24",
+  "game": "Singularity (Steam)",
+  "branch": "handoff/evidence-m01-bb234ba-psvr2-pass",
+  "integrationParent": "integration/sol-side-master-package-20261023@bb234ba",
+  "installedHashes": {
+    "d3d9.dll": "78404247B78586FB42416F0A331CD11B13B4DBC0A16708B913A21F04EA374541",
+    "SingularityVR.ini": "D2E91B0B2EC0CE2D9DC1C9933D1076AF315937E24F00E5FA88A3956C75A403D8"
+  },
+  "runtimeLog": {
+    "path": "view_matrix.log",
+    "sha256": "89D5479D9848CE109199151CB0CEEA8B71664554B4383E6F5A47455115701CBE",
+    "bytes": 5118013,
+    "lastWrite": "2026-10-24T00:06:02+02:00"
+  },
+  "deployedSessionIni": {
+    "path": "SingularityVR.ini.deployed-session",
+    "sha256": "D2E91B0B2EC0CE2D9DC1C9933D1076AF315937E24F00E5FA88A3956C75A403D8"
+  },
+  "backup": {
+    "path": "deployment/install-backups/20261023-235243 (in SingularityVR-sol-master-integration worktree)",
+    "baselineD3d9Sha256": "A61C3B534F5C4C40DC878EC68CC52A77E8599DB57C6272D85254E58B795F6E1C",
+    "baselineIniSha256": "4EA3857A0E78033C162280AB1A8FCB8A5D6CA09B72547CE75C8D55688BC904EA"
+  },
+  "acceptedProfile": {
+    "profileSha256": "D5676D1E51555481A6CC15F1F3930A90DAFEDF5FABDE35A9F34556B216668528",
+    "changePlan": "deployment/acceptance-20261023-m01/change-plan.json"
+  },
+  "physicalResult": {
+    "valkyrie": "PASS",
+    "volkS4": "PASS",
+    "tmdAndTwoHand": "PASS",
+    "carriedOver": "socket tolerance slightly strict (SOL follow-up)"
+  },
+  "logReceipts": {
+    "shoulderPickupGate": 13,
+    "grabFresh": 13,
+    "insertedRequestPermit1": 3,
+    "nativeAmmoAckConsumed": 3,
+    "nextCarryWristPublishes": 2,
+    "stage12PlacedDraws": 2
+  }
+}
