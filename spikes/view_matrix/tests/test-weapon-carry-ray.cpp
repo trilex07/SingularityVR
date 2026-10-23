@@ -8,9 +8,15 @@ static armbind::Mat Identity(){armbind::Mat m{};for(unsigned i=0;i<4;++i)m.m[i][
 int main(){
     using namespace weaponreload;
     using weaponcarry::WristSource;
+    assert(weaponcarry::CarrySectionEligible(Kind::Valkyrie,false));
+    assert(weaponcarry::CarrySectionEligible(Kind::Volk,false));
+    assert(!weaponcarry::CarrySectionEligible(Kind::Kasimov,false));
+    assert(weaponcarry::CarrySectionEligible(Kind::Kasimov,true));
     assert(weaponcarry::Source(Kind::Volk,true,false,true,false,true,9)==WristSource::Tmd);
     assert(weaponcarry::Source(Kind::Volk,true,true,false,true,true,9)==WristSource::NoTmd);
-    assert(weaponcarry::Source(Kind::Valkyrie,true,false,true,false,true,9)==WristSource::None);
+    assert(weaponcarry::Source(Kind::Valkyrie,true,false,true,false,true,9)==WristSource::Tmd);
+    assert(weaponcarry::Source(Kind::Valkyrie,true,false,true,false,false,9)==WristSource::None);
+    assert(weaponcarry::Source(Kind::Valkyrie,true,false,true,false,true,51)==WristSource::None);
     assert(weaponcarry::Source(Kind::Kasimov,true,false,true,false,true,9)==WristSource::None);
     assert(weaponcarry::Source(Kind::Volk,false,false,true,false,true,9)==WristSource::None);
     assert(weaponcarry::Source(Kind::Volk,true,false,true,false,false,9)==WristSource::None);
@@ -66,5 +72,5 @@ int main(){
     armbind::Mat out;assert(!weaponcarry::Mount(Kind::None,out));
     weaponmuzzle::Witness muzzle{true,Kind::Valkyrie,3,4,100,{1,2,3}};
     assert(muzzle.Current(3,4,250));assert(!muzzle.Current(3,4,251));assert(!muzzle.Current(3,5,120));
-    puts("L1 PASS: 4000 translated rays, three native wrist mounts, TMD/Volk source and wrist rotations, muzzle chain, stale/foreign identities");
+    puts("L1 PASS: 4000 translated rays, three native wrist mounts, TMD/Volk+Valkyrie sources and wrist rotations, muzzle chain, stale/foreign identities");
 }

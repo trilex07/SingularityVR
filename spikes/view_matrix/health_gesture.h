@@ -75,6 +75,32 @@ inline float HpFromBits(std::int32_t bits) {
     return f;
 }
 
+// One authoritative, read-only decoding step for every VR health display.
+// The legacy wrist strip once divided the raw IEEE-754 bit patterns as ints;
+// that can look almost full even at half health. The ten-cell value is for a
+// future TMD-mounted readout; the current Katorga plate keeps its 11 slots.
+struct LiveHealth {
+    float current = 0.0f;
+    float maximum = 0.0f;
+    float fraction = 0.0f;
+    int cells10 = -1;
+    int plateSlots = -1;
+    bool valid = false;
+};
+
+inline LiveHealth DecodeLiveHealth(std::int32_t currentBits, std::int32_t maximumBits) {
+    LiveHealth result;
+    result.current = HpFromBits(currentBits);
+    result.maximum = HpFromBits(maximumBits);
+    if (!std::isfinite(result.current) || !std::isfinite(result.maximum) ||
+        result.current < 0.0f || result.maximum <= 0.0f) return result;
+    result.fraction = std::fmin(1.0f, result.current / result.maximum);
+    result.cells10 = (int)std::lround(result.fraction * 10.0f);
+    result.plateSlots = FilledSegments(result.current, result.maximum);
+    result.valid = result.plateSlots >= 0;
+    return result;
+}
+
 // Slot quad fractions of the plate, measured from the mockup PNG
 // (plate 2001x330 at (84,183); slot pitch 142.9 px; frames y 246..500).
 // Slot i spans [x0,x1]x[y0,y1] in plate UV space. Indices clamp.

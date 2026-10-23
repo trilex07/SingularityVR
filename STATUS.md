@@ -1,5 +1,51 @@
 # STATUS — session handoff
 
+## 2026-10-24 — M01 shoulder pickup PHYSICALLY_VERIFIED (PSVR2 PASS @ `bb234ba`) — installation preserved
+
+User-accepted PSVR2 session (ended 2026-10-24 00:06): **Valkyrie PASS, Volk S4
+PASS** (both pickup methods; farther-left region works), TMD + two-hand PASS.
+Runtime receipts confirm the fix end-to-end: 13/13 shoulder gates accepted
+(capsule path exercised), `next carry wrist: kind=1` published (the previously
+missing Valkyrie TMD producer), `stage=12 kind=1|2` placed draws, 3×
+`inserted/request` with `permit=1`, 3× `native-ammo-ack consumed=1`
+(Valkyrie 0→12/12→0 full montage; Volk 5→6 and 2→6), firing observed between
+cycles. Discards are benign reach-window releases. Evidence archived and pushed
+on `handoff/evidence-m01-bb234ba-psvr2-pass` @ `643bb59`
+(`docs/evidence/m01-bb234ba-psvr2-pass/`, log SHA
+`89D5479D9848CE109199151CB0CEEA8B71664554B4383E6F5A47455115701CBE`). Steam
+STAYS on the candidate: DLL `78404247…`, INI `D2E91B0B…`; rollback copies
+verified in `deployment\install-backups\20261023-235243` (baseline
+`A61C3B53…`/`4EA3857A…`). Not claimed: Kašimov, socket-tolerance (user asks
+SOL for a slightly looser insertion), M03 HUD visual grade (same build; next
+physical check). M09 haptics stays a separate later module.
+
+## 2026-10-23 — M01 shoulder-pickup candidate deployed for PSVR2 acceptance — L2_PASS / L3 deployed, L4 OPEN
+
+MAIN integrated SOL `5105359` (targeted Valkyrie/Volk TMD shoulder-magazine fix, plus
+bounded left capsule + 1800 ms Grip reach) by cherry-pick `-x` onto the
+`integration/sol-side-master-package-20261023` base `591d220`; no conflicts, M03 HUD
+(591d220) verified intact after merge. Integration HEAD `bb234ba`; acceptance docs
+committed `1b6accf`. Offline battery all PASS on this host: dual-TMD/reload suite
+(17 x86 programs incl. new Valkyrie/Volk shoulder gesture + 30k conserved transactions),
+TMD short-gauntlet, TMD material-0 wrist/carry ray (L1), **D3D9 + D3D9Ex HAL fixture
+(pixel-verified 3304/3304)** — the gate SIDE could not run, OLED CPU/D3D11,
+right-eye-mirror, M03 HUD live/gates/stereo-ammo. `validate-runtime-policy.ps1` FAIL
+is stale-expectation, fails identically on `main` (pre-existing).
+Candidate build: x86 PE32 `/O2`, commit `bb234ba`,
+DLL SHA256 `78404247B78586FB42416F0A331CD11B13B4DBC0A16708B913A21F04EA374541`
+(differs from SIDE reference `87391208…` as expected; installed=MAIN build).
+Controlled install `2026-10-23 23:52:43`: DLL + 7 scoped INI keys
+(6 `[Input]` shoulder keys + `Diagnostic/ShoulderPickupProbe=1`) ONLY; verified
+installed ini retains `ValkyrieManualReload=1`, `ReloadPalmGrip=1`,
+`ReloadNativeMagazine=1`, `HipKnifeWithTMD=0` and all baseline keys (347→354).
+Backup: `deployment\install-backups\20261023-235243` (baseline DLL `A61C3B53…`,
+INI `4EA3857A…`, manifest-verified); accepted profile
+`deployment/acceptance-20261023-m01/accepted-profile.json` (25 pinned files),
+change plan `change-plan.json` bound by profile SHA `D5676D1E…8528`.
+Steam partially guarded: this profile pins DLL + dependency assets only; post-test
+rollback must re-hash BOTH installed files. No M09 haptics in this build (waits for
+M01 as decided). NO merge into main; no C++ experiments during the physical test.
+
 ## 2026-10-23 — L2 disappearing gun: native gun_scale producer — L1_PASS / L2_PASS
 
 `fix/volk-impulse-palette-producer` builds on the support-gauntlet candidate.

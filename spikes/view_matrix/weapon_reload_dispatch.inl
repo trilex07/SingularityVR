@@ -130,31 +130,61 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     in.clip=ammo.counts[0];in.reserve=ammo.counts[1];in.capacity=ammo.counts[2];in.nowMs=now;in.grip=grip;
     in.ammoFresh=ammo.Fresh((uint32_t)pawn,(uint32_t)weapon,(uint32_t)hud,now);
     in.firing=Rd(g_rawTrigger)>26;in.supportLatched=supportLatched;
-    in.handBusy=hipknife::Reserves(g_hipKnifeState,0);
+    const bool knifeCanBlock=kind==Kind::Valkyrie ?
+        ValkyrieKnifeCanBlock(g_hipKnifeEnabled!=0,g_hipKnifeReady,KnifeDisabledByTmd()) : true;
+    in.handBusy=knifeCanBlock&&hipknife::Reserves(g_hipKnifeState,0);
     const auto& left=g_handLastPos[0];const auto& right=g_handLastPos[1];
     const auto& lq=g_handAimOrientation[0];const auto& rq=g_handAimOrientation[1];
     in.hand={left.x,left.y,left.z};in.socket=witness.socket;
     in.gun={{right.x,right.y,right.z},{rq.x,rq.y,rq.z,rq.w}};
     Calibration calibration;calibration.ready=f.liveIdentityVerified;calibration.revision=1;
     calibration.gesture.socketLocal={};calibration.gesture.socketRadius=.16f;calibration.gesture.pullDistance=.30f;
+    // Only these two profiles use the new, bounded shoulder capsule. The
+    // existing Centurion INI settings do not silently control this path.
+    if(index<2){
+        calibration.shoulder.leftExtension=.01f*float(g_nextShoulderExtraLeftCm[index]);
+        calibration.gesture.pouchRadius=.01f*float(g_nextShoulderRadiusCm[index]);
+        calibration.gripReachMs=(std::uint64_t)g_nextShoulderReachMs[index];
+    }else calibration.gripReachMs=0; // Kasimov stays edge-only/point-only
     if(index<3&&g_nextReady[index])calibration.gesture.ackMs=std::max<uint64_t>(4000,
         (uint64_t)std::ceil(1000.f*g_nextAnimation[index].frames/g_nextAnimation[index].fps)+1500);
     const hipknife::V head{g_headPosXR[0],g_headPosXR[1],g_headPosXR[2]};
     hipknife::V shoulderHead=head;float shoulderYaw=g_centreYaw;
+    f.bodyYaw=g_nextRefillOnly?g_headYawRad:g_centreYaw;
+    shoulderYaw=weaponreload::Active(g_nextReloadState.transaction.phase)?
+        g_nextReloadState.transaction.bodyYaw:f.bodyYaw;
     if(g_nextRefillOnly){
         const auto& le=g_eyePose[0].position;const auto& re=g_eyePose[1].position;
         in.tracked=in.tracked&&g_haveEyes&&g_eyePositionsValid&&MidEye(
             {le.x,le.y,le.z},{re.x,re.y,re.z},shoulderHead);
-        f.bodyYaw=g_headYawRad;
-        shoulderYaw=weaponreload::Active(g_nextReloadState.transaction.phase)?
-            g_nextReloadState.transaction.bodyYaw:f.bodyYaw;
     }
     const auto source=Supply(shoulderHead,shoulderYaw,calibration.shoulder);in.pouch=source.p;
-    if(g_hipKnifeEnabled&&g_hipKnifeReady)in.knifeNear=centurionreload::Near(in.hand,
+    if(g_hipKnifeEnabled&&g_hipKnifeReady&&knifeCanBlock)in.knifeNear=centurionreload::Near(in.hand,
         hipknife::Hip(head,g_centreYaw,g_hipKnifeConfig).p,g_hipKnifeConfig.radius);
+    const bool shoulderGripEdge=in.grip&&!g_nextReloadState.transaction.priorGrip;
+    const auto priorReachUntil=g_nextReloadState.transaction.reachUntil;
+    const auto priorPhase=g_nextReloadState.transaction.phase;
     const auto result=Update(g_nextReloadState,f,calibration);
     const auto& t=g_nextReloadState.transaction;
     const bool valid=in.context&&in.tracked&&in.ammoFresh&&centurionreload::AmmoValid(in)&&f.liveIdentityVerified;
+    static unsigned shoulderReceipts=0;
+    if((kind==Kind::Valkyrie||((kind==Kind::Volk)&&g_shoulderPickupProbe))&&
+       shoulderReceipts<(g_shoulderPickupProbe?48u:32u)&&
+       ((shoulderGripEdge&&priorPhase==Phase::NeedAmmo)||
+        (priorReachUntil&&now>priorReachUntil&&priorPhase==Phase::NeedAmmo))){
+        ++shoulderReceipts;
+        const hipknife::Q inverseYaw{0,-std::sin(shoulderYaw*.5f),0,std::cos(shoulderYaw*.5f)};
+        const auto local=hipknife::Rotate(inverseYaw,in.hand-in.pouch);
+        Log("shoulder pickup gate: kind=%d event=%s phase=%d edge=%d grip=%d window=%llu pointDist=%.3f regionDist=%.3f local=(%.3f,%.3f,%.3f) radius=%.3f extendLeft=%.3f context=%d tracked=%d ammoFresh=%d identity=%d native=%d support=%d knifeBusy=%d knifeNear=%d knifeEnabled=%d tmdOwned=%ld",
+            int(kind),
+            Name(result.event),int(priorPhase),shoulderGripEdge?1:0,in.grip?1:0,
+            (unsigned long long)(priorReachUntil>now?priorReachUntil-now:0),
+            hipknife::Length(in.hand-in.pouch),ShoulderDistance(in.hand,in.pouch,shoulderYaw,calibration.shoulder),
+            local.x,local.y,local.z,calibration.gesture.pouchRadius,calibration.shoulder.leftExtension,
+            in.context?1:0,in.tracked?1:0,in.ammoFresh?1:0,identity?1:0,
+            f.liveIdentityVerified?1:0,in.supportLatched?1:0,in.handBusy?1:0,
+            in.knifeNear?1:0,knifeCanBlock?1:0,Rd(g_knifeTmdOwned));
+    }
     if(circleEdge&&kind!=Kind::None&&gateNotes<=20)
         Log("next reload witness: kind=%d phase=%d grip=%d tracked=%d ammoFresh=%d clip=%d reserve=%d capacity=%d native=%d witness=%d valid=%d event=%d socketDist=%.3f shoulderDist=%.3f",
             int(kind),int(t.phase),grip?1:0,in.tracked?1:0,in.ammoFresh?1:0,
@@ -413,7 +443,8 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
             const bool placed=palm ? currentWrist&&weaponcarry::Matrix(kind,wrist.tracking,carried) :
                 weaponreload::HandMatrix(clipTracking,visual.aim,pose,g_nextClipRenderer[index].SourceCentre(),carried,
                     visual.phase==weaponreload::Phase::Carrying?hipknife::V{0,0,-.06f}:hipknife::V{});
-            if(palm&&kind==weaponreload::Kind::Volk)note(!currentWrist?10:!placed?11:12);
+            if(palm&&(kind==weaponreload::Kind::Volk||kind==weaponreload::Kind::Valkyrie))
+                note(!currentWrist?10:!placed?11:12);
             if(g_volkCarryPoseProbe&&palm&&kind==weaponreload::Kind::Volk&&currentWrist&&placed){
                 static unsigned samples=0;static ULONGLONG nextSample=0;
                 if(samples<8&&now>=nextSample){

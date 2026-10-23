@@ -5,6 +5,11 @@
 namespace handhud {
 inline bool HideHealth(bool twoHand){return twoHand;}
 inline bool HideAmmo(bool opticalActive){return opticalActive;}
+// The Katorga plate supersedes the old plain wrist strip. Never stack both
+// health readouts in the same eye; the plate owns the live health presentation.
+inline bool ShowLegacyWristHealth(bool legacyEnabled, bool plateEnabled) {
+    return legacyEnabled && !plateEnabled;
+}
 constexpr int kScalePct = 88;
 constexpr unsigned kPlateAlphaPct = 82;
 constexpr unsigned kDigitAlphaPct = 94;

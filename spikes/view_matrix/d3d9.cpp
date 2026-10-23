@@ -43,6 +43,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "weapon_wheel_catalog_load.h"
 #include "weapon_wheel_seek.h"
 #include "settings_panel.h"
+#include "ui_remaster_runtime.h"
 #include "weapon_wheel_atlas.h"
 #include "locker_loadout_icons.h"
 #include "weapon_wheel_layout.h"
@@ -2395,6 +2396,10 @@ static NextReloadVisual g_nextVisual;
 static weaponreload::Witness g_nextWitness;
 static int g_reloadPalmGrip=0; // default-OFF; measured native wrist, not AIM-space mount
 static int g_volkCarryPoseProbe=0; // default-OFF; bounded same-frame wrist/magazine witness
+static int g_shoulderPickupProbe=0; // default-OFF; bounded local-frame pickup receipts
+static int g_nextShoulderExtraLeftCm[2]{18,18}; // Valkyrie, Volk; Kasimov unchanged
+static int g_nextShoulderRadiusCm[2]{18,18};
+static int g_nextShoulderReachMs[2]{1800,1800};
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
 static bool g_nextWristStagedFromTmd=false;
 static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
@@ -11190,6 +11195,15 @@ void SyncXRInput(XrTime displayTime) {
         g_xrSessionState==XR_SESSION_STATE_FOCUSED&&!sampledButtons[3]; // R3/wheel owns stick
     const auto reloadActions=g_reloadControls.Update(reloadLayout&&reloadInputContext,
         sampledButtons[0],sampledButtons[1],reloadStickX,reloadStickY,GetTickCount64());
+    // Refresh native ownership before the reload dispatcher reads the knife
+    // exclusion gate. Previously this happened later in the knife update, so
+    // the first TMD-acquisition frame could use stale knife ownership.
+    const uintptr_t knifeOwnerPawn=g_playerPawn;
+    const bool knifeTmdReadable=knifeOwnerPawn&&g_offTMD>=0&&
+        Readable((void*)(knifeOwnerPawn+g_offTMD),4);
+    const bool knifeOwnsTmd=knifeTmdReadable&&
+        *reinterpret_cast<const uintptr_t*>(knifeOwnerPawn+g_offTMD)!=0;
+    InterlockedExchange(&g_knifeTmdOwned,knifeTmdReadable?(knifeOwnsTmd?1:0):-1);
     if(g_centurionReload||g_centurionReloadProbe||g_centurionNativeGuardMode)UpdateCenturionReload(
         feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
         !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed(),
@@ -11201,14 +11215,13 @@ void SyncXRInput(XrTime displayTime) {
         f.enabled=true;f.focused=g_xrSessionState==XR_SESSION_STATE_FOCUSED;
         f.gameplay=feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
             !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed();
-        const uintptr_t pawn=g_playerPawn;f.pawn=(uint32_t)pawn;
+        const uintptr_t pawn=knifeOwnerPawn;f.pawn=(uint32_t)pawn;
         // These offsets already come from the UObject property resolver. Unknown
         // state is never treated as "no TMD" or "alive".
         const bool impulseOk=g_impulseBtnIdx>=0&&g_impulseBtnIdx<kPadButtonCount&&
             g_padButtons[g_impulseBtnIdx].mask==XI_RSHOULDER;
-        const bool tmdReadable=pawn&&g_offTMD>=0&&Readable((void*)(pawn+g_offTMD),4);
-        const bool ownsTmd=tmdReadable&&*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)!=0;
-        InterlockedExchange(&g_knifeTmdOwned,tmdReadable?(ownsTmd?1:0):-1);
+        const bool tmdReadable=knifeTmdReadable;
+        const bool ownsTmd=knifeOwnsTmd;
         f.nativeKnife=tmdReadable&&!ownsTmd&&impulseOk;
         f.hasTMD=ownsTmd&&impulseOk;
         // MAIN round 17/19: IgnoreTMD=1 forces the pre-TMD rule (TMD dispute hatch).
@@ -17733,13 +17746,14 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             centurionvisual::Time((centurionreload::Phase)physicalVisual.phase,physicalVisual.since,physicalVisual.closed,physicalNow,g_centurionRefillOnly!=0).active;
     }
     NextReloadVisual nextCarryVisual;bool nextCarry=false;
-    // Volk may use the original TMD material-0 glove (not the noTMD glove).
-    // Its carried clip still needs a wrist witness from that *rendered* section.
+    // Valkyrie and Volk use the original TMD material-0 glove (not the noTMD
+    // glove) when it owns the left hand. Their carried magazines require the
+    // wrist witness from that actually rendered section.
     if(g_reloadPalmGrip&&(gloves||tmdGloves)&&TryAcquireSRWLockShared(&g_nextVisualLock)){
         nextCarryVisual=g_nextVisual;ReleaseSRWLockShared(&g_nextVisualLock);
         const auto now=GetTickCount64();
         nextCarry=g_nextNativeMagazine&&nextCarryVisual.valid&&nextCarryVisual.phase==weaponreload::Phase::Carrying&&
-            (gloves||nextCarryVisual.kind==weaponreload::Kind::Volk)&&
+            weaponcarry::CarrySectionEligible(nextCarryVisual.kind,gloves)&&
             nextCarryVisual.pawn==(uint32_t)g_playerPawn&&nextCarryVisual.weapon==(uint32_t)Rd(g_weaponObj)&&
             nextCarryVisual.since&&now>=nextCarryVisual.sampledMs&&now-nextCarryVisual.sampledMs<=150;
     }
@@ -20761,9 +20775,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
        g_nextWristStaged.valid&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
         g_nextWrist=g_nextWristStaged;ReleaseSRWLockExclusive(&g_nextVisualLock);
         if(g_nextWristStagedFromTmd){
-            static LONG reportedVolkWrist=0;
-            if(InterlockedCompareExchange(&reportedVolkWrist,1,0)==0)
-                Log("Volk carry wrist: TMD material-0 published after stereo draw, wrist bone=9, segments=%d",nSeg);
+            static LONG reportedTmdWrist[2]{};
+            const unsigned wristProfile=g_nextWristStaged.kind==weaponreload::Kind::Valkyrie?0u:1u;
+            if(InterlockedCompareExchange(&reportedTmdWrist[wristProfile],1,0)==0)
+                Log("next carry wrist: kind=%d TMD material-0 published after stereo draw, wrist bone=9, segments=%d",
+                    int(g_nextWristStaged.kind),nSeg);
         }
     }
     if(g_centurionPhysicalPolish&&independentRegs&&SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&
@@ -27483,6 +27499,93 @@ static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR 
     }
 }
 
+// M02 first slice. No texture, COM work or draw-path change when OFF.
+static LONG g_uiRemasterRuntime=0,g_uiRemasterState=0;
+static IDirect3DTexture9* g_uiRemasterNeutral=nullptr;
+static IDirect3DStateBlock9* g_uiRemasterSaved=nullptr;
+static void ReleaseUiRemasterResources(){
+    if(g_uiRemasterNeutral){g_uiRemasterNeutral->Release();g_uiRemasterNeutral=nullptr;}
+    if(g_uiRemasterSaved){g_uiRemasterSaved->Release();g_uiRemasterSaved=nullptr;}
+    InterlockedExchange(&g_uiRemasterState,0);
+}
+static bool LoadUiRemasterNeutral(IDirect3DDevice9* dev){
+    if(!dev||!Rd(g_uiRemasterRuntime))return false;
+    if(Rd(g_uiRemasterState)!=0)return Rd(g_uiRemasterState)==1;
+    auto fail=[](const char* why){InterlockedExchange(&g_uiRemasterState,-1);
+        Log("M02 UI: neutral atlas unavailable (%s); accepted panel unchanged",why);return false;};
+    char dll[MAX_PATH]{};HMODULE self=nullptr;
+    if(!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|
+        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,(LPCSTR)&LoadUiRemasterNeutral,&self)||
+        !GetModuleFileNameA(self,dll,MAX_PATH))return fail("module path");
+    char* slash=strrchr(dll,'\\');if(!slash)return fail("module directory");*slash=0;
+    char path[MAX_PATH]{};
+    _snprintf_s(path,sizeof(path),_TRUNCATE,"%s\\vr-assets\\ui\\remaster\\ui_atlas_neutral.png",dll);
+    wchar_t wide[MAX_PATH]{};
+    if(!MultiByteToWideChar(CP_ACP,0,path,-1,wide,MAX_PATH))return fail("path encoding");
+    CoInitializeEx(nullptr,COINIT_MULTITHREADED);
+    IWICImagingFactory* fac=nullptr;IWICBitmapDecoder* dec=nullptr;
+    IWICBitmapFrameDecode* frame=nullptr;IWICFormatConverter* conv=nullptr;
+    UINT w=0,h=0;std::vector<BYTE> pixels;
+    bool ok=SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory,nullptr,CLSCTX_INPROC_SERVER,
+        IID_PPV_ARGS(&fac)))&&fac&&
+        SUCCEEDED(fac->CreateDecoderFromFilename(wide,nullptr,GENERIC_READ,
+            WICDecodeMetadataCacheOnDemand,&dec))&&dec&&
+        SUCCEEDED(dec->GetFrame(0,&frame))&&frame&&
+        SUCCEEDED(fac->CreateFormatConverter(&conv))&&conv&&
+        SUCCEEDED(conv->Initialize(frame,GUID_WICPixelFormat32bppBGRA,WICBitmapDitherTypeNone,
+            nullptr,0,WICBitmapPaletteTypeCustom))&&
+        SUCCEEDED(conv->GetSize(&w,&h))&&w==4096&&h==2048;
+    if(ok){pixels.resize((size_t)w*h*4);
+        ok=SUCCEEDED(conv->CopyPixels(nullptr,w*4,(UINT)pixels.size(),pixels.data()));}
+    if(conv)conv->Release();if(frame)frame->Release();if(dec)dec->Release();if(fac)fac->Release();
+    if(!ok)return fail("WIC decode or dimensions");
+    IDirect3DTexture9* tex=nullptr;
+    if(FAILED(dev->CreateTexture(w,h,1,D3DUSAGE_DYNAMIC,D3DFMT_A8R8G8B8,
+        D3DPOOL_DEFAULT,&tex,nullptr))||!tex)return fail("texture create");
+    D3DLOCKED_RECT lock{};
+    if(FAILED(tex->LockRect(0,&lock,nullptr,D3DLOCK_DISCARD))){tex->Release();return fail("texture lock");}
+    for(UINT y=0;y<h;++y)memcpy((BYTE*)lock.pBits+(size_t)y*lock.Pitch,
+        pixels.data()+(size_t)y*w*4,(size_t)w*4);
+    tex->UnlockRect(0);g_uiRemasterNeutral=tex;
+    InterlockedExchange(&g_uiRemasterState,1);
+    Log("M02 UI: neutral atlas ready 4096x2048 (runtime draw still requires panel)");
+    return true;
+}
+static bool DrawUiRemasterPlate(IDirect3DDevice9* dev,const settingspanel::Layout& l,int eyes,
+                                int backW,int backH){
+    if(!Rd(g_uiRemasterRuntime)||!g_origDrawPrimUP||!LoadUiRemasterNeutral(dev))return false;
+    if(!g_uiRemasterSaved&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&g_uiRemasterSaved)))return false;
+    if(!g_uiRemasterSaved||FAILED(g_uiRemasterSaved->Capture()))return false;
+    const auto uv=uiremaster::settingsPlate;
+    dev->SetRenderState(D3DRS_ZENABLE,FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+    dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_LINEAR);
+    dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_LINEAR);
+    dev->SetPixelShader(nullptr);dev->SetVertexShader(nullptr);
+    dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
+    dev->SetTexture(0,g_uiRemasterNeutral);
+    unsigned drawn=0;
+    for(int eye=0;eye<eyes;++eye){
+        const auto q=uiremaster::Plate(eye,eyes,l.half,l.width,l.height,l.y,l.px);
+        if(!uiremaster::Valid(q,eye,l.half,backW,backH))continue;
+        uiremaster::Vertex v[4]{};uiremaster::BuildQuad(q,uv,v);
+        if(SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(v[0]))))++drawn;
+    }
+    const bool restored=SUCCEEDED(g_uiRemasterSaved->Apply());
+    static unsigned receipts=0;
+    if(receipts<4){++receipts;Log("M02 UI: plate eyes=%u/%d restore=%d back=%dx%d",drawn,eyes,
+        restored?1:0,backW,backH);}
+    return drawn==(unsigned)eyes&&restored;
+}
+
 static void DrawVrPanel(IDirect3DDevice9* dev) {
     if (!dev || !g_srcW || !g_srcH) return;
 
@@ -27614,6 +27717,8 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         ++n;
     }
     ClearRects(dev, r, n, D3DCOLOR_XRGB(12, 17, 20));
+    if(Rd(g_uiRemasterRuntime))DrawUiRemasterPlate(dev,layout,eyes,
+        (int)panelDesc.Width,(int)panelDesc.Height);
 
     // Katorga instrument-panel frame: restrained steel rails and a warm
     // status marker. These are decoration only; the hit geometry is unchanged.
@@ -28420,6 +28525,7 @@ static mirrorprobe::Probe g_mirrorPixelProbe;
 static bool g_mirrorProbeCurtain=false;
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    ReleaseUiRemasterResources();
     ResetScopePip();
     g_knifeMeleeReference.Reset();
     g_knifeTmdRoute.Reset();
@@ -28495,7 +28601,13 @@ void DrawCustomGloves(IDirect3DDevice9* dev) {
 void DrawWristHealth(IDirect3DDevice9* dev) {
     const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
         !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
-    if (!handhud::Visible(Rd(g_wristHealth) != 0, VrModeOn(), Rd(g_dupDraws) != 0,
+    // If the optional plate atlas failed to load, retain the plain wrist bar
+    // rather than losing health feedback entirely. While the plate is healthy,
+    // it owns the display even when the wrist is down (face-raise is its gate).
+    const bool plateOwnsHealth = Rd(g_healthPlate) != 0 &&
+        InterlockedCompareExchange(&g_platesState, 0, 0) != -1;
+    if (!handhud::Visible(handhud::ShowLegacyWristHealth(Rd(g_wristHealth) != 0,
+                          plateOwnsHealth), VrModeOn(), Rd(g_dupDraws) != 0,
                           hudGameplay, Rd(g_gamePaused) != 0, Rd(g_vrUiMenu) != 0,
                           Rd(g_panelOpen) != 0, Rd(g_inCinematic) != 0) ||
         !Rd(g_offHandValid) || !g_origDrawPrimUP ||
@@ -28503,11 +28615,11 @@ void DrawWristHealth(IDirect3DDevice9* dev) {
     const uintptr_t pawn = g_playerPawn; // Never initiate an object scan from overlay rendering.
     if (!pawn || !Readable((void*)(pawn + g_offHealth), 4) ||
         !Readable((void*)(pawn + g_offHealthMax), 4)) return;
-    const int hp = *reinterpret_cast<int*>(pawn + g_offHealth);
-    const int maximum = *reinterpret_cast<int*>(pawn + g_offHealthMax);
-    if (maximum <= 0) return;
-    float fraction = (float)hp / maximum;
-    if (fraction < 0) fraction = 0; if (fraction > 1) fraction = 1;
+    const auto health = healthbar::DecodeLiveHealth(
+        *reinterpret_cast<const std::int32_t*>(pawn + g_offHealth),
+        *reinterpret_cast<const std::int32_t*>(pawn + g_offHealthMax));
+    if (!health.valid) return;
+    const float fraction = health.fraction;
     int slot = -1;
     for (int i=0; i<g_camMatUsed; ++i) if (g_camMats[i].valid) { slot=i; break; }
     if (slot < 0) return;
@@ -30321,10 +30433,11 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     const std::int32_t maxBits = *reinterpret_cast<std::int32_t*>(pawn + g_offHealthMax);
     // Health fields are floats in memory: int reads keep ordering (enough for
     // the heal window) but destroy ratios, pinning a segment bar near full.
-    const float hp = healthbar::HpFromBits(hpBits);
-    const float maxHp = healthbar::HpFromBits(maxBits);
-    const int filled = healthbar::FilledSegments(hp, maxHp);
-    if (filled < 0) {
+    const auto health = healthbar::DecodeLiveHealth(hpBits, maxBits);
+    const float hp = health.current;
+    const float maxHp = health.maximum;
+    const int filled = health.plateSlots;
+    if (!health.valid) {
         g_hbShown = false;
         if (!InterlockedCompareExchange(&g_hbUnknownSaid, 0, 0)) {
             InterlockedExchange(&g_hbUnknownSaid, 1);
@@ -30631,8 +30744,7 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     // Fallback size (~5% under the previous 0.17H). Per eye below, the plate
     // is re-anchored to a constant 0.19m world width, so it shrinks with
     // distance instead of looking bigger as the gun moves away (user 2026-10-15).
-    int plateW = std::max(64, (int)(d.Height * 0.16f));
-    int plateH = std::max(21, plateW * 724 / 2172);
+    const int fallbackPlateW = std::max(64, (int)(d.Height * 0.16f));
     // MAIN round 8: digit-free art (user-supplied plates without baked digits
     // or pips) needs NO baked-content covers — only the empty-mag info.
     // The red warning box stays covered iff 3+ rounds remain; everything
@@ -30647,12 +30759,14 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     // MAIN L3 probe (bounded): one drew-confirmation with rect, one proj-fail
     // line. Distinguishes "never drawn" from "drawn but not seen".
     float ammoDrewCx = 0, ammoDrewCy = 0;
+    int ammoDrewW = 0, ammoDrewH = 0;
     bool ammoDrewAny = false, ammoProjFail = true;
     static bool ammoSaidDrew = false, ammoSaidProj = false;
     for (int eye = 0; eye < 2; ++eye) {
         uipointer::ScreenPoint p;
         if (!VrUiProjectEye(eye, hand, p)) continue;
         ammoProjFail = false;
+        int eyePlateW = fallbackPlateW;
         {
             // World-anchored width: project a 0.5m probe along this eye's
             // right axis; px-per-metre here scales the constant 0.19m plate.
@@ -30665,22 +30779,18 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
                 const float du = (p2.u - p.u) * d.Width * 0.5f;
                 const float dv = (p2.v - p.v) * (float)d.Height;
                 const float pxM = 2.0f * sqrtf(du * du + dv * dv);
-                if (pxM > 1.0f) {
-                    int w = (int)(0.19f * pxM);
-                    if (w < 64) w = 64;
-                    const int maxW = (int)(d.Height * 0.30f);
-                    if (w > maxW) w = maxW;
-                    plateW = w;
-                    plateH = std::max(21, plateW * 724 / 2172);
-                }
+                eyePlateW = ammoplates::EyePlateWidth(pxM, fallbackPlateW, (int)d.Height);
             }
         }
-        const int drawW = handhud::ScaledExtent(plateW);
+        const int drawW = handhud::ScaledExtent(eyePlateW);
         const int drawH = std::max(18, drawW * 724 / 2172);
         const float cx = ammoplates::ClampCxToEyeHalf((eye + p.u) * d.Width * 0.5f,
             (float)drawW, (float)d.Width, eye);
         const float cy = p.v * d.Height;
-        if (!ammoDrewAny) { ammoDrewAny = true; ammoDrewCx = cx; ammoDrewCy = cy; }
+        if (!ammoDrewAny) {
+            ammoDrewAny = true; ammoDrewCx = cx; ammoDrewCy = cy;
+            ammoDrewW = drawW; ammoDrewH = drawH;
+        }
         const float x0 = cx - drawW * 0.5f, y0 = cy - drawH * 0.5f;
         const float x1 = cx + drawW * 0.5f, y1 = cy + drawH * 0.5f;
         const DWORD plateTint = handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct);
@@ -30734,7 +30844,8 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     if (ammoDrewAny && !ammoSaidDrew) {
         ammoSaidDrew = true;
         Log("ammo plate: drew plate=%d clip=%d bin=%d %dx%d at %.0f,%.0f (backbuffer %ux%u)",
-            plate, clip, bin, plateW, plateH, (double)ammoDrewCx, (double)ammoDrewCy, d.Width, d.Height);
+            plate, clip, bin, ammoDrewW, ammoDrewH,
+            (double)ammoDrewCx, (double)ammoDrewCy, d.Width, d.Height);
     }
     if (!ammoDrewAny && ammoProjFail && !ammoSaidProj) {
         ammoSaidProj = true;
@@ -34550,6 +34661,7 @@ void LoadIniSettings() {
     InterlockedExchange(&g_contextPointerProjection,GetPrivateProfileIntA("Render","ContextPointerProjection",0,path)?1:0);
     g_vrPromptTokens=GetPrivateProfileIntA("Render","VrPromptTokens",0,path)!=0;
     g_vrSettingsMinimal=GetPrivateProfileIntA("Render","VrSettingsMinimal",0,path)!=0;
+    InterlockedExchange(&g_uiRemasterRuntime,GetPrivateProfileIntA("Render","UiRemasterRuntime",0,path)?1:0);
     g_vrSettingsSessionOnly=GetPrivateProfileIntA("Diagnostic","VrSettingsSessionOnly",0,path)!=0;
     InterlockedExchange(&g_reloadHintsEnabled,
         GetPrivateProfileIntA("Input","ReloadHints",0,path)!=0);
@@ -35396,6 +35508,27 @@ void LoadIniSettings() {
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
     g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;
     g_volkCarryPoseProbe=GetPrivateProfileIntA("Diagnostic","VolkCarryPoseProbe",0,path)!=0;
+    g_shoulderPickupProbe=GetPrivateProfileIntA("Diagnostic","ShoulderPickupProbe",0,path)!=0;
+    const auto shoulderSetting=[&](const char* key,int fallback,int low,int high){
+        const int value=IniSignedInt("Input",key,fallback,path);
+        if(value<low||value>high){
+            Log("shoulder pickup: invalid %s=%d, using %d (accepted range %d..%d)",
+                key,value,fallback,low,high);
+            return fallback;
+        }
+        return value;
+    };
+    const char* const extensionKeys[]{"ValkyrieShoulderExtendLeftCm","VolkShoulderExtendLeftCm"};
+    const char* const radiusKeys[]{"ValkyrieShoulderRadiusCm","VolkShoulderRadiusCm"};
+    const char* const reachKeys[]{"ValkyrieGripReachMs","VolkGripReachMs"};
+    for(unsigned i=0;i<2;++i){
+        g_nextShoulderExtraLeftCm[i]=shoulderSetting(extensionKeys[i],18,0,25);
+        g_nextShoulderRadiusCm[i]=shoulderSetting(radiusKeys[i],18,12,22);
+        g_nextShoulderReachMs[i]=shoulderSetting(reachKeys[i],1800,0,3000);
+    }
+    Log("shoulder pickup: Valkyrie extension=%dcm radius=%dcm reach=%dms; Volk extension=%dcm radius=%dcm reach=%dms; probe=%d",
+        g_nextShoulderExtraLeftCm[0],g_nextShoulderRadiusCm[0],g_nextShoulderReachMs[0],
+        g_nextShoulderExtraLeftCm[1],g_nextShoulderRadiusCm[1],g_nextShoulderReachMs[1],g_shoulderPickupProbe);
     g_weaponTraceRigidOrigin=GetPrivateProfileIntA("Input","WeaponTraceRigidOrigin",0,path)!=0;
     g_weaponMeasuredAim=GetPrivateProfileIntA("Input","WeaponMeasuredAim",0,path)!=0;
     g_centurionAimProbe=GetPrivateProfileIntA("Diagnostic","CenturionAimProbe",0,path)!=0;

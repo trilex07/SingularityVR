@@ -36,6 +36,9 @@ int main(){
     assert(!Hold(true,true,true,true,true,true,true));
     assert(handhud::HideHealth(true)&&!handhud::HideHealth(false));
     assert(handhud::HideAmmo(true)&&!handhud::HideAmmo(false));
+    assert(handhud::ShowLegacyWristHealth(true,false));
+    assert(!handhud::ShowLegacyWristHealth(true,true));
+    assert(!handhud::ShowLegacyWristHealth(false,false));
     Filter mild,strong;hipknife::Pose raw{};
     mild.Update(raw,true,false,1,2,1000);strong.Update(raw,true,true,1,2,1000);
     float inputSq=0,mildSq=0,strongSq=0;

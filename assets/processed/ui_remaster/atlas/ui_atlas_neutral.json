@@ -1,0 +1,1494 @@
+{
+  "atlas_name": "ui_atlas_neutral",
+  "dimensions": [
+    4096,
+    2048
+  ],
+  "vram_bytes_rgba8": 33554432,
+  "vram_mib": 32.0,
+  "gutter_px": 8,
+  "description": "Language-neutral visual plates, frames, buttons, and icons for Singularity VR (Deduplicated, zero-bleed 8px gutters)",
+  "elements": {
+    "settings_console_plate_neutral.png": {
+      "pixel_rect": [
+        4,
+        4,
+        1200,
+        840
+      ],
+      "uv_rect": [
+        0.000977,
+        0.001953,
+        0.293945,
+        0.412109
+      ],
+      "width": 1200,
+      "height": 840
+    },
+    "terminal_slate_neutral.png": {
+      "pixel_rect": [
+        1212,
+        4,
+        680,
+        840
+      ],
+      "uv_rect": [
+        0.295898,
+        0.001953,
+        0.461914,
+        0.412109
+      ],
+      "width": 680,
+      "height": 840
+    },
+    "wheel_chassis_outer.png": {
+      "pixel_rect": [
+        1900,
+        4,
+        800,
+        800
+      ],
+      "uv_rect": [
+        0.463867,
+        0.001953,
+        0.65918,
+        0.392578
+      ],
+      "width": 800,
+      "height": 800
+    },
+    "modal_dialog_plate_neutral.png": {
+      "pixel_rect": [
+        2708,
+        4,
+        640,
+        380
+      ],
+      "uv_rect": [
+        0.661133,
+        0.001953,
+        0.817383,
+        0.1875
+      ],
+      "width": 640,
+      "height": 380
+    },
+    "wheel_center_hub_neutral.png": {
+      "pixel_rect": [
+        3356,
+        4,
+        260,
+        260
+      ],
+      "uv_rect": [
+        0.819336,
+        0.001953,
+        0.882812,
+        0.128906
+      ],
+      "width": 260,
+      "height": 260
+    },
+    "wheel_sector_top_disabled.png": {
+      "pixel_rect": [
+        3624,
+        4,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.884766,
+        0.001953,
+        0.972656,
+        0.119141
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_disabled.png"
+    },
+    "wheel_sector_top_held.png": {
+      "pixel_rect": [
+        4,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.000977,
+        0.416016,
+        0.088867,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_held.png"
+    },
+    "wheel_sector_top_hover.png": {
+      "pixel_rect": [
+        372,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.09082,
+        0.416016,
+        0.178711,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_hover.png"
+    },
+    "wheel_sector_top_idle.png": {
+      "pixel_rect": [
+        740,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.180664,
+        0.416016,
+        0.268555,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_idle.png"
+    },
+    "wheel_sector_top_selected.png": {
+      "pixel_rect": [
+        1108,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.270508,
+        0.416016,
+        0.358398,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_selected.png"
+    },
+    "wheel_telemetry_plate_neutral.png": {
+      "pixel_rect": [
+        1476,
+        852,
+        420,
+        220
+      ],
+      "uv_rect": [
+        0.360352,
+        0.416016,
+        0.462891,
+        0.523438
+      ],
+      "width": 420,
+      "height": 220
+    },
+    "wheel_pointer_needle.png": {
+      "pixel_rect": [
+        1904,
+        852,
+        64,
+        200
+      ],
+      "uv_rect": [
+        0.464844,
+        0.416016,
+        0.480469,
+        0.513672
+      ],
+      "width": 64,
+      "height": 200
+    },
+    "weapon_icon_centurion.png": {
+      "pixel_rect": [
+        1976,
+        852,
+        240,
+        110
+      ],
+      "uv_rect": [
+        0.482422,
+        0.416016,
+        0.541016,
+        0.469727
+      ],
+      "width": 240,
+      "height": 110
+    },
+    "weapon_icon_valkyrie.png": {
+      "pixel_rect": [
+        2224,
+        852,
+        240,
+        110
+      ],
+      "uv_rect": [
+        0.542969,
+        0.416016,
+        0.601562,
+        0.469727
+      ],
+      "width": 240,
+      "height": 110
+    },
+    "weapon_icon_tmd.png": {
+      "pixel_rect": [
+        2472,
+        852,
+        208,
+        110
+      ],
+      "uv_rect": [
+        0.603516,
+        0.416016,
+        0.654297,
+        0.469727
+      ],
+      "width": 208,
+      "height": 110
+    },
+    "weapon_icon_spikeshot.png": {
+      "pixel_rect": [
+        2688,
+        852,
+        240,
+        107
+      ],
+      "uv_rect": [
+        0.65625,
+        0.416016,
+        0.714844,
+        0.468262
+      ],
+      "width": 240,
+      "height": 107
+    },
+    "pointer_click_ping.png": {
+      "pixel_rect": [
+        2936,
+        852,
+        96,
+        96
+      ],
+      "uv_rect": [
+        0.716797,
+        0.416016,
+        0.740234,
+        0.462891
+      ],
+      "width": 96,
+      "height": 96
+    },
+    "header_plate_neutral.png": {
+      "pixel_rect": [
+        3040,
+        852,
+        560,
+        90
+      ],
+      "uv_rect": [
+        0.742188,
+        0.416016,
+        0.878906,
+        0.459961
+      ],
+      "width": 560,
+      "height": 90
+    },
+    "weapon_icon_kasimov.png": {
+      "pixel_rect": [
+        3608,
+        852,
+        240,
+        86
+      ],
+      "uv_rect": [
+        0.880859,
+        0.416016,
+        0.939453,
+        0.458008
+      ],
+      "width": 240,
+      "height": 86
+    },
+    "hud_vitals_frame_neutral.png": {
+      "pixel_rect": [
+        3856,
+        852,
+        200,
+        64
+      ],
+      "uv_rect": [
+        0.941406,
+        0.416016,
+        0.990234,
+        0.447266
+      ],
+      "width": 200,
+      "height": 64
+    },
+    "hud_ammo_frame_neutral.png": {
+      "pixel_rect": [
+        4,
+        1100,
+        180,
+        64
+      ],
+      "uv_rect": [
+        0.000977,
+        0.537109,
+        0.044922,
+        0.568359
+      ],
+      "width": 180,
+      "height": 64
+    },
+    "hud_e99_filament_frame_neutral.png": {
+      "pixel_rect": [
+        192,
+        1100,
+        160,
+        64
+      ],
+      "uv_rect": [
+        0.046875,
+        0.537109,
+        0.085938,
+        0.568359
+      ],
+      "width": 160,
+      "height": 64
+    },
+    "icon_grip.png": {
+      "pixel_rect": [
+        360,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.087891,
+        0.537109,
+        0.103516,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_holster.png": {
+      "pixel_rect": [
+        432,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.105469,
+        0.537109,
+        0.121094,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_interact.png": {
+      "pixel_rect": [
+        504,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.123047,
+        0.537109,
+        0.138672,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_melee.png": {
+      "pixel_rect": [
+        576,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.140625,
+        0.537109,
+        0.15625,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_pickup.png": {
+      "pixel_rect": [
+        648,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.158203,
+        0.537109,
+        0.173828,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_ps_circle.png": {
+      "pixel_rect": [
+        720,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.175781,
+        0.537109,
+        0.191406,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_ps_cross.png": {
+      "pixel_rect": [
+        792,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.193359,
+        0.537109,
+        0.208984,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_ps_l1.png": {
+      "pixel_rect": [
+        864,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.210938,
+        0.537109,
+        0.226562,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_ps_l2.png": {
+      "pixel_rect": [
+        936,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.228516,
+        0.537109,
+        0.244141,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_ps_options.png": {
+      "pixel_rect": [
+        1008,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.246094,
+        0.537109,
+        0.261719,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_ps_r1.png": {
+      "pixel_rect": [
+        1080,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.263672,
+        0.537109,
+        0.279297,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_ps_r2.png": {
+      "pixel_rect": [
+        1152,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.28125,
+        0.537109,
+        0.296875,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_ps_square.png": {
+      "pixel_rect": [
+        1224,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.298828,
+        0.537109,
+        0.314453,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_ps_stick_l.png": {
+      "pixel_rect": [
+        1296,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.316406,
+        0.537109,
+        0.332031,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_ps_stick_r.png": {
+      "pixel_rect": [
+        1368,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.333984,
+        0.537109,
+        0.349609,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_ps_triangle.png": {
+      "pixel_rect": [
+        1440,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.351562,
+        0.537109,
+        0.367188,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_reload.png": {
+      "pixel_rect": [
+        1512,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.369141,
+        0.537109,
+        0.384766,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_status_error.png": {
+      "pixel_rect": [
+        1584,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.386719,
+        0.537109,
+        0.402344,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_status_locked.png": {
+      "pixel_rect": [
+        1656,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.404297,
+        0.537109,
+        0.419922,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_status_warning.png": {
+      "pixel_rect": [
+        1728,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.421875,
+        0.537109,
+        0.4375,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_tmd_stasis.png": {
+      "pixel_rect": [
+        1800,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.439453,
+        0.537109,
+        0.455078,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "icon_tmd_time.png": {
+      "pixel_rect": [
+        1872,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.457031,
+        0.537109,
+        0.472656,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "pointer_hover_ring.png": {
+      "pixel_rect": [
+        1944,
+        1100,
+        64,
+        64
+      ],
+      "uv_rect": [
+        0.474609,
+        0.537109,
+        0.490234,
+        0.568359
+      ],
+      "width": 64,
+      "height": 64
+    },
+    "hud_objective_compass_neutral.png": {
+      "pixel_rect": [
+        2016,
+        1100,
+        240,
+        56
+      ],
+      "uv_rect": [
+        0.492188,
+        0.537109,
+        0.550781,
+        0.564453
+      ],
+      "width": 240,
+      "height": 56
+    },
+    "btn_plate_disabled_neutral.png": {
+      "pixel_rect": [
+        2264,
+        1100,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.552734,
+        0.537109,
+        0.669922,
+        0.563477
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_plate_hover_neutral.png": {
+      "pixel_rect": [
+        2752,
+        1100,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.671875,
+        0.537109,
+        0.789062,
+        0.563477
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_plate_idle_neutral.png": {
+      "pixel_rect": [
+        3240,
+        1100,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.791016,
+        0.537109,
+        0.908203,
+        0.563477
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_plate_pressed_neutral.png": {
+      "pixel_rect": [
+        4,
+        1172,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.000977,
+        0.572266,
+        0.118164,
+        0.598633
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_plate_special_amber_hover_neutral.png": {
+      "pixel_rect": [
+        492,
+        1172,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.120117,
+        0.572266,
+        0.237305,
+        0.598633
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_plate_special_amber_idle_neutral.png": {
+      "pixel_rect": [
+        980,
+        1172,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.239258,
+        0.572266,
+        0.356445,
+        0.598633
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "pill_bg_neutral.png": {
+      "pixel_rect": [
+        1468,
+        1172,
+        320,
+        52
+      ],
+      "uv_rect": [
+        0.358398,
+        0.572266,
+        0.436523,
+        0.597656
+      ],
+      "width": 320,
+      "height": 52
+    },
+    "row_focus_amber_frame.png": {
+      "pixel_rect": [
+        1796,
+        1172,
+        1120,
+        48
+      ],
+      "uv_rect": [
+        0.438477,
+        0.572266,
+        0.711914,
+        0.595703
+      ],
+      "width": 1120,
+      "height": 48
+    },
+    "pointer_lockout_marker.png": {
+      "pixel_rect": [
+        2924,
+        1172,
+        48,
+        48
+      ],
+      "uv_rect": [
+        0.713867,
+        0.572266,
+        0.725586,
+        0.595703
+      ],
+      "width": 48,
+      "height": 48
+    },
+    "hud_corner_bracket.png": {
+      "pixel_rect": [
+        2980,
+        1172,
+        48,
+        48
+      ],
+      "uv_rect": [
+        0.727539,
+        0.572266,
+        0.739258,
+        0.595703
+      ],
+      "width": 48,
+      "height": 48
+    },
+    "toggle_lever_off.png": {
+      "pixel_rect": [
+        3036,
+        1172,
+        110,
+        44
+      ],
+      "uv_rect": [
+        0.741211,
+        0.572266,
+        0.768066,
+        0.59375
+      ],
+      "width": 110,
+      "height": 44
+    },
+    "toggle_lever_on.png": {
+      "pixel_rect": [
+        3154,
+        1172,
+        110,
+        44
+      ],
+      "uv_rect": [
+        0.77002,
+        0.572266,
+        0.796875,
+        0.59375
+      ],
+      "width": 110,
+      "height": 44
+    },
+    "toggle_well_neutral.png": {
+      "pixel_rect": [
+        3272,
+        1172,
+        110,
+        44
+      ],
+      "uv_rect": [
+        0.798828,
+        0.572266,
+        0.825684,
+        0.59375
+      ],
+      "width": 110,
+      "height": 44
+    },
+    "slider_knob_brass.png": {
+      "pixel_rect": [
+        3390,
+        1172,
+        36,
+        44
+      ],
+      "uv_rect": [
+        0.827637,
+        0.572266,
+        0.836426,
+        0.59375
+      ],
+      "width": 36,
+      "height": 44
+    },
+    "tab_frame_active_neutral.png": {
+      "pixel_rect": [
+        3434,
+        1172,
+        140,
+        36
+      ],
+      "uv_rect": [
+        0.838379,
+        0.572266,
+        0.872559,
+        0.589844
+      ],
+      "width": 140,
+      "height": 36
+    },
+    "tab_frame_idle_neutral.png": {
+      "pixel_rect": [
+        3582,
+        1172,
+        140,
+        36
+      ],
+      "uv_rect": [
+        0.874512,
+        0.572266,
+        0.908691,
+        0.589844
+      ],
+      "width": 140,
+      "height": 36
+    },
+    "slider_track_recessed.png": {
+      "pixel_rect": [
+        3730,
+        1172,
+        360,
+        32
+      ],
+      "uv_rect": [
+        0.910645,
+        0.572266,
+        0.998535,
+        0.587891
+      ],
+      "width": 360,
+      "height": 32
+    },
+    "hud_hazard_stripes.png": {
+      "pixel_rect": [
+        4,
+        1234,
+        320,
+        32
+      ],
+      "uv_rect": [
+        0.000977,
+        0.602539,
+        0.079102,
+        0.618164
+      ],
+      "width": 320,
+      "height": 32
+    },
+    "pointer_bracket_bl.png": {
+      "pixel_rect": [
+        332,
+        1234,
+        32,
+        32
+      ],
+      "uv_rect": [
+        0.081055,
+        0.602539,
+        0.088867,
+        0.618164
+      ],
+      "width": 32,
+      "height": 32
+    },
+    "pointer_bracket_br.png": {
+      "pixel_rect": [
+        372,
+        1234,
+        32,
+        32
+      ],
+      "uv_rect": [
+        0.09082,
+        0.602539,
+        0.098633,
+        0.618164
+      ],
+      "width": 32,
+      "height": 32
+    },
+    "pointer_bracket_tl.png": {
+      "pixel_rect": [
+        412,
+        1234,
+        32,
+        32
+      ],
+      "uv_rect": [
+        0.100586,
+        0.602539,
+        0.108398,
+        0.618164
+      ],
+      "width": 32,
+      "height": 32
+    },
+    "pointer_bracket_tr.png": {
+      "pixel_rect": [
+        452,
+        1234,
+        32,
+        32
+      ],
+      "uv_rect": [
+        0.110352,
+        0.602539,
+        0.118164,
+        0.618164
+      ],
+      "width": 32,
+      "height": 32
+    },
+    "pointer_reticle_dot.png": {
+      "pixel_rect": [
+        492,
+        1234,
+        32,
+        32
+      ],
+      "uv_rect": [
+        0.120117,
+        0.602539,
+        0.12793,
+        0.618164
+      ],
+      "width": 32,
+      "height": 32
+    },
+    "indicator_lamp_off.png": {
+      "pixel_rect": [
+        532,
+        1234,
+        32,
+        32
+      ],
+      "uv_rect": [
+        0.129883,
+        0.602539,
+        0.137695,
+        0.618164
+      ],
+      "width": 32,
+      "height": 32
+    },
+    "indicator_lamp_on.png": {
+      "pixel_rect": [
+        572,
+        1234,
+        32,
+        32
+      ],
+      "uv_rect": [
+        0.139648,
+        0.602539,
+        0.147461,
+        0.618164
+      ],
+      "width": 32,
+      "height": 32
+    },
+    "wheel_sector_right_disabled.png": {
+      "pixel_rect": [
+        3624,
+        4,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.884766,
+        0.001953,
+        0.972656,
+        0.119141
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_disabled.png"
+    },
+    "wheel_sector_bottom_disabled.png": {
+      "pixel_rect": [
+        3624,
+        4,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.884766,
+        0.001953,
+        0.972656,
+        0.119141
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_disabled.png"
+    },
+    "wheel_sector_left_disabled.png": {
+      "pixel_rect": [
+        3624,
+        4,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.884766,
+        0.001953,
+        0.972656,
+        0.119141
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_disabled.png"
+    },
+    "wheel_sector_disabled.png": {
+      "pixel_rect": [
+        3624,
+        4,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.884766,
+        0.001953,
+        0.972656,
+        0.119141
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_disabled.png"
+    },
+    "wheel_sector_right_held.png": {
+      "pixel_rect": [
+        4,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.000977,
+        0.416016,
+        0.088867,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_held.png"
+    },
+    "wheel_sector_bottom_held.png": {
+      "pixel_rect": [
+        4,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.000977,
+        0.416016,
+        0.088867,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_held.png"
+    },
+    "wheel_sector_left_held.png": {
+      "pixel_rect": [
+        4,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.000977,
+        0.416016,
+        0.088867,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_held.png"
+    },
+    "wheel_sector_held.png": {
+      "pixel_rect": [
+        4,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.000977,
+        0.416016,
+        0.088867,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_held.png"
+    },
+    "wheel_sector_right_hover.png": {
+      "pixel_rect": [
+        372,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.09082,
+        0.416016,
+        0.178711,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_hover.png"
+    },
+    "wheel_sector_bottom_hover.png": {
+      "pixel_rect": [
+        372,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.09082,
+        0.416016,
+        0.178711,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_hover.png"
+    },
+    "wheel_sector_left_hover.png": {
+      "pixel_rect": [
+        372,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.09082,
+        0.416016,
+        0.178711,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_hover.png"
+    },
+    "wheel_sector_hover.png": {
+      "pixel_rect": [
+        372,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.09082,
+        0.416016,
+        0.178711,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_hover.png"
+    },
+    "wheel_sector_right_idle.png": {
+      "pixel_rect": [
+        740,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.180664,
+        0.416016,
+        0.268555,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_idle.png"
+    },
+    "wheel_sector_bottom_idle.png": {
+      "pixel_rect": [
+        740,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.180664,
+        0.416016,
+        0.268555,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_idle.png"
+    },
+    "wheel_sector_left_idle.png": {
+      "pixel_rect": [
+        740,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.180664,
+        0.416016,
+        0.268555,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_idle.png"
+    },
+    "wheel_sector_idle.png": {
+      "pixel_rect": [
+        740,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.180664,
+        0.416016,
+        0.268555,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_idle.png"
+    },
+    "wheel_sector_right_selected.png": {
+      "pixel_rect": [
+        1108,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.270508,
+        0.416016,
+        0.358398,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_selected.png"
+    },
+    "wheel_sector_bottom_selected.png": {
+      "pixel_rect": [
+        1108,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.270508,
+        0.416016,
+        0.358398,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_selected.png"
+    },
+    "wheel_sector_left_selected.png": {
+      "pixel_rect": [
+        1108,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.270508,
+        0.416016,
+        0.358398,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_selected.png"
+    },
+    "wheel_sector_selected.png": {
+      "pixel_rect": [
+        1108,
+        852,
+        360,
+        240
+      ],
+      "uv_rect": [
+        0.270508,
+        0.416016,
+        0.358398,
+        0.533203
+      ],
+      "width": 360,
+      "height": 240,
+      "prototype": "wheel_sector_top_selected.png"
+    }
+  }
+}
