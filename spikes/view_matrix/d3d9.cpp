@@ -17871,7 +17871,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // left than the native gun-hold, while the right hand stays on its controller.
     const bool weaponInHand = Rd(g_weaponObj)!=0 &&
         InterlockedCompareExchange(&g_gunVerts, 0, 0) != 0 && !Rd(g_weaponHolstered);
-    const float leftShift = (wristAnchor || offWristAnchor || nativeOffKnife || nativeCarry || !weaponInHand) ? 0.f
+    // The short TMD sleeve/hardware already shares the controller delta.
+    // Material 0 must not receive a glove-only parking offset while attached.
+    const bool attachedTmdGlove=g_tmdShortGauntlet && tmdGloves &&
+        Rd(g_gloveIsolate)==2 && !supportGrip;
+    const float leftShift = (attachedTmdGlove || wristAnchor || offWristAnchor || nativeOffKnife || nativeCarry || !weaponInHand) ? 0.f
         : (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
     // Idle shift parks the free left glove off the native gun-hold. During an authored
     // pistol grip that same nudge is what puts the support hand beside the weapon.
@@ -20413,9 +20417,45 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         }
     }
     unsigned shortEyeDraws=0;
+    unsigned assemblyEye=0;
     const HRESULT dhr = FAILED(sleevePaletteHr)?sleevePaletteHr:StereoPair(dev, [&] {
+        const unsigned eye=assemblyEye++;
         HRESULT hr = D3D_OK;
         if (shortTmdTail) return hr; // audited 17-face right forearm tail, no hardware
+        // Bounded receipts from the ACTUALLY BOUND draw, before restoration.
+        // One coherent frame per hands/support combination, both eyes/materials.
+        // No surface readback or GPU synchronization.
+        const bool assemblyGlove=(numVertices==7444||numVertices==2626)&&startIndex==0&&primCount==4402;
+        const bool assemblyDevice=shortTmdBuffer&&nativeIndices.valid;
+        if(g_tmdShortGauntlet && independentRegs && (assemblyGlove||assemblyDevice)) {
+            static LONG frames[8]{};
+            static unsigned seen[8]{};
+            const unsigned state=(unsigned)Rd(g_handsStatus);
+            const unsigned part=assemblyGlove?0:1;
+            const unsigned key=(state<4?state:3)*2+(Rd(g_twoHandActive)?1:0);
+            const LONG frame=Rd(g_armPaletteFrameToken);
+            if(assemblyGlove && !frames[key])frames[key]=frame;
+            const unsigned bit=1u<<(part*2+(eye<2?eye:1));
+            if(frames[key]==frame && !(seen[key]&bit)) {
+                seen[key]|=bit;
+                IDirect3DIndexBuffer9* bound=nullptr;float wrist[3][4]{};
+                const HRESULT ibhr=dev->GetIndices(&bound);
+                const unsigned slot=assemblyGlove?1:3;
+                const HRESULT phr=dev->GetVertexShaderConstantF(5+slot*3,&wrist[0][0],3);
+                Log("tmd-assembly bound: frame=%ld eye=%u hands=%u support=%ld material=%u route=%s faces=%u ib=%p ibhr=%08lX palettehr=%08lX skin=[%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g]",
+                    frame,eye,state,Rd(g_twoHandActive),part,
+                    assemblyDevice?"SVTG":cuffBuffer&&nativeIndices.valid?"SVNC":"native",
+                    assemblyDevice?7110:cuffBuffer&&nativeIndices.valid?gloveTriangles:primCount,
+                    bound,ibhr,phr,wrist[0][0],wrist[0][1],wrist[0][2],wrist[0][3],
+                    wrist[1][0],wrist[1][1],wrist[1][2],wrist[1][3],wrist[2][0],wrist[2][1],wrist[2][2],wrist[2][3]);
+                for(unsigned row=0;row<3;++row) {
+                    const float* original=independentSaved[slot*3+row];
+                    Log("tmd-assembly source: frame=%ld material=%u row=%u skin=%g,%g,%g,%g",
+                        Rd(g_armPaletteFrameToken),part,row,original[0],original[1],original[2],original[3]);
+                }
+                if(bound)bound->Release();
+            }
+        }
         const auto bound=tmdgauntlet::DispatchBound(shortTmdBuffer!=nullptr,nativeIndices.valid,
             g_tmdShortGauntletRenderer.Triangles(),gloveTriangles,
             [&](UINT first,UINT triangles){
