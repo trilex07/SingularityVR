@@ -269,6 +269,16 @@ static void TestSharedStateWeaponTransitions(){
     }
 }
 int main(int argc,char** argv){
+    for(int fault=0;fault<5;++fault){
+        Fixture x(profiles[0]);x.Start();
+        assert(x.Tick(true,x.withdrawn).event==E::None);
+        if(fault==1)x.f.gesture.nowMs+=801;
+        if(fault==2){x.f.gesture.handBusy=true;x.Tick(true,x.withdrawn);x.f.gesture.handBusy=false;}
+        if(fault==3){x.f.gesture.supportLatched=true;x.Tick(true,x.withdrawn);x.f.gesture.supportLatched=false;}
+        if(fault==4){x.f.gesture.tracked=false;x.Tick(true,x.withdrawn);x.f.gesture.tracked=true;}
+        const auto got=x.Tick(true,x.f.gesture.pouch);
+        assert((got.event==E::GrabFresh)==(fault==0));
+    }
     assert(!std::strcmp(Name(E::Ejected),"magazine-ejected"));
     TestCalibration();TestSharedStateWeaponTransitions();
     unsigned transactions=0;

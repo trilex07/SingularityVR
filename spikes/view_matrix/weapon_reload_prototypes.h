@@ -67,6 +67,7 @@ struct Transaction {
     std::uint32_t pawn=0,weapon=0;
     int startClip=-1,startReserve=-1,startCapacity=-1;
     std::uint64_t since=0,lastMs=0;
+    std::uint64_t reachUntil=0;
     float bodyYaw=0; // physical head yaw latched on eject, not stick-turn/body yaw
 };
 struct State {
@@ -144,11 +145,14 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
             return enter(Phase::NeedAmmo,Event::Ejected);
         }break;
     case Phase::NeedAmmo:
-        // Ejection doesn't steal support/knife grip. A NEW free-hand squeeze
-        // at the shoulder acquires the fresh magazine, never a held squeeze.
-        if(gripEdge&&!t.ownsGrip&&!in.handBusy&&!in.supportLatched&&!in.knifeNear&&
+        // Valkyrie: allow a fresh, unowned squeeze during the reach to arrive
+        // at the pouch within 800 ms. Never inherit support/knife/menu grip.
+        if(!in.grip||in.handBusy||in.supportLatched||in.knifeNear)t.reachUntil=0;
+        else if(gripEdge&&f.kind==Kind::Valkyrie)t.reachUntil=in.nowMs+800;
+        if((gripEdge||(f.kind==Kind::Valkyrie&&in.grip&&t.reachUntil&&in.nowMs<=t.reachUntil))&&
+           !t.ownsGrip&&!in.handBusy&&!in.supportLatched&&!in.knifeNear&&
            centurionreload::Near(in.hand,in.pouch,g.pouchRadius)){
-            t.ownsGrip=true;return enter(Phase::Carrying,Event::GrabFresh);
+            t.reachUntil=0;t.ownsGrip=true;return enter(Phase::Carrying,Event::GrabFresh);
         }break;
     case Phase::Carrying:
         if(gripRelease){
