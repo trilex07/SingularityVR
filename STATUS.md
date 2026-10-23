@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+## 2026-10-23 SIDE Volk Impulse skinning — L1/L2, cause still OPEN
+
+Cooked/PSK audit proves c5 is clip (198 faces), not the body (c11, 7859 faces).
+No speculative pose replacement. Added default-OFF `VolkImpulseSkinProbe` for
+L2/native fire edges, five consumed bones, source upload and both eye submissions.
+See `docs/handoffs/sol-volk-impulse-skinning.md`. Steam untouched; MAIN capture
+required to distinguish native body collapse from an intervening transform.
+
 ## 2026-10-23 SIDE dual-TMD geometry follow-up — L1_PASS / L2_PASS, L4 OPEN
 
 PSVR2 rejected `a2244f4`: left support grip and short TMD shape remain wrong.

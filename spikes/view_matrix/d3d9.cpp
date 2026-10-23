@@ -1,5 +1,6 @@
 #include "two_hand_grip.h"
 #include "dual_weapon_tmd_policy.h"
+#include "volk_skin_probe.h"
 #include "skeletal_palette.h"
 #include "hand_anchor_probe.h"
 #include "hand_anchor_math.h"
@@ -2257,6 +2258,14 @@ enum { HANDS_NONE = 0, HANDS_TMD = 1, HANDS_WEAPON = 2 };
 inline bool TmdRaised()      { return Rd(g_handsStatus) == HANDS_TMD; }
 inline bool WeaponInHands()  { return Rd(g_handsStatus) == HANDS_WEAPON; }
 static LONG g_dualWeaponTmdReady=0,g_dualWeaponTmdProbe=0;
+static LONG g_volkSkinProbe=0;
+static LONG g_volkSkinFinished=0;
+static volkskin::Mailbox g_volkSkinEvents;
+static float g_volkUpload[15][4]{}; // render-thread diagnostic, never rendered
+static unsigned g_volkUploadFrame=0,g_volkUploadSequence=0;
+static uintptr_t g_volkUploadVs=0,g_volkUploadCaller=0;
+static bool g_volkUploadValid=false;
+static void VolkSkinEvent(unsigned event);
 static dualtmd::Census g_dualTmdCensus; // render thread only
 static bool DualWeaponTmdContext();
 static bool WeaponPresentationInHands();
@@ -2281,6 +2290,11 @@ volatile LONG g_armedState = ARMED_UNKNOWN;
 // ⭐ run 258: the equipped weapon OBJECT, and a one-shot edge for the mesh latch. See RefreshArmedState
 // for why the pointer is the identity, and UpdateFgLatch for what consumes the edge.
 volatile LONG g_weaponObj     = 0;
+static void VolkSkinEvent(unsigned event) {
+    if(Rd(g_volkSkinProbe)&&!Rd(g_volkSkinFinished)&&g_volkSkinEvents.Publish(event))
+        Log("volk-skin event: tick=%llu event=%u hands=%ld weapon=%08X",GetTickCount64(),event,
+            Rd(g_handsStatus),(unsigned)Rd(g_weaponObj));
+}
 volatile LONG g_weaponSwapped = 0;
 volatile LONG g_weaponSwapDrop = 1;   // ini [Input] WeaponSwapDrop - 0 falls back to the 240-frame wait
 
@@ -11682,6 +11696,7 @@ void SyncXRInput(XrTime displayTime) {
         // must not re-arm every frame, hence the edge.
         if (i == g_impulseBtnIdx) {
             static bool wasDown = false;
+            if(down!=wasDown)VolkSkinEvent(down?volkskin::ImpulseDown:volkskin::ImpulseUp);
             if (down && !wasDown &&
                 tmdgauntlet::ArmImpulseMelee(g_tmdShortGauntlet,Rd(g_haveTMD)==1,g_hipKnifeState.held>=0) &&
                 dualtmd::MeleeWindow(dualContext,g_hipKnifeState.held>=0) &&
@@ -13696,6 +13711,17 @@ void UpdateCameraStabilizationThisFrame() {
 
 HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
                                            const float* data, UINT vec4Count) {
+    // Capture original hook input BEFORE this hook's camera/palette processing.
+    // Only a complete fifteen-row upload is evidence; partial writes invalidate
+    // this witness rather than assembling unrelated poses into a fake palette.
+    if(Rd(g_volkSkinProbe)&&!Rd(g_volkSkinFinished)&&data&&startReg<20&&vec4Count<=256&&startReg+vec4Count>5){
+        g_volkUploadValid=g_boundShaderLayout.bones==5&&startReg<=5&&startReg+vec4Count>=20;
+        ++g_volkUploadSequence;
+        g_volkUploadFrame=(unsigned)Rd(g_armPaletteFrameToken);
+        g_volkUploadVs=(uintptr_t)shadowtrace::bound.vs;
+        g_volkUploadCaller=(uintptr_t)_ReturnAddress();
+        if(g_volkUploadValid)memcpy(g_volkUpload,data+(5-startReg)*4,sizeof(g_volkUpload));
+    }
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     if(NativeScopeRendering()){++g_scopeNativeUploads;return g_origSetVSConstF(dev,startReg,data,vec4Count);}
     // The draw-time gate is too late: HMD position, rotation and projection are
@@ -19933,6 +19959,59 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // Transition-scoped evidence survives the startup census budget. A draw
     // count alone cannot distinguish an animated-away gun from a dropped draw.
     bool gunTransitionProbe=false;
+    static volkskin::Window volkWindow;
+    static volkskin::Snapshot volkPrevious;
+    bool volkCapture=false;
+    const bool volkEligible=Rd(g_volkSkinProbe)&&volkWindow.captures<64&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&
+        FgMatchWindow()&&Rd(g_gunVerts)==8297&&t==D3DPT_TRIANGLELIST&&
+        volkskin::Signature(numVertices,startIndex,primCount,minIndex,baseVertex)&&
+        g_boundShaderLayout.bones>=0&&g_boundShaderLayout.bones<=241&&
+        g_boundShaderLayout.local>=0&&g_boundShaderLayout.local<=252;
+    if(volkEligible){
+        const unsigned frame=(unsigned)Rd(g_armPaletteFrameToken);
+        const int state=Rd(g_handsStatus)*2+(Rd(g_twoHandActive)?1:0);
+        volkCapture=volkWindow.Draw(frame,state,g_volkSkinEvents.Take());
+        if(volkWindow.captures==64)InterlockedExchange(&g_volkSkinFinished,1);
+        auto dumpSnapshot=[&](const char* tag,const volkskin::Snapshot& s){
+            Log("volk-skin snapshot: %s frame=%u weapon=%08X state=%d valid=%d",tag,s.frame,s.weapon,s.state,s.valid?1:0);
+            if(!s.valid)return;
+            for(unsigned b=0;b<5;++b){const float* p=&s.skin[b*3][0];
+                Log("volk-skin bone: stage=%s slot=%u bone=%u name=%s finite=%d det=%g rows=%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g",
+                    tag,b,volkskin::bones[b],volkskin::names[b],volkskin::Finite(p,12)?1:0,volkskin::Determinant(p),
+                    p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8],p[9],p[10],p[11]);}
+            for(unsigned r=0;r<4;++r)Log("volk-skin local: stage=%s row=%u %g %g %g %g",tag,r,
+                s.local[r][0],s.local[r][1],s.local[r][2],s.local[r][3]);
+        };
+        if(volkCapture){
+            IDirect3DIndexBuffer9* ib=nullptr;IDirect3DVertexBuffer9* vb=nullptr;
+            UINT offset=0,stride=0;IDirect3DVertexShader9* vs=nullptr;
+            dev->GetIndices(&ib);dev->GetStreamSource(0,&vb,&offset,&stride);dev->GetVertexShader(&vs);
+            Log("volk-skin draw: frame=%u tick=%llu reason=%u hands=%ld support=%ld weapon=%08X nativeHands=%d fireDepth=%ld ib=%p vb=%p vs=%p stream=%u/%u bones=%d local=%d first=%u tris=%u",
+                frame,GetTickCount64(),volkWindow.reason,Rd(g_handsStatus),Rd(g_twoHandActive),(unsigned)Rd(g_weaponObj),
+                NativeAnimatedHandsNow()?1:0,Rd(g_fireDepth),ib,vb,vs,offset,stride,g_boundShaderLayout.bones,g_boundShaderLayout.local,startIndex,primCount);
+            if(ib)ib->Release();if(vb)vb->Release();if(vs)vs->Release();
+            const bool uploadMatches=g_volkUploadValid&&g_volkUploadFrame==frame&&g_volkUploadVs==(uintptr_t)vs&&g_boundShaderLayout.bones==5;
+            Log("volk-skin upload: matches=%d frame=%u seq=%u caller=%p exeBase=%p vs=%p",uploadMatches?1:0,g_volkUploadFrame,g_volkUploadSequence,(void*)g_volkUploadCaller,GetModuleHandleW(nullptr),(void*)g_volkUploadVs);
+            if(uploadMatches)for(unsigned b=0;b<5;++b){const float* p=&g_volkUpload[b*3][0];
+                Log("volk-skin bone: stage=hook-input slot=%u bone=%u finite=%d det=%g rows=%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g",
+                    b,volkskin::bones[b],volkskin::Finite(p,12)?1:0,volkskin::Determinant(p),
+                    p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8],p[9],p[10],p[11]);}
+            dumpSnapshot("previous-draw-not-reused",volkPrevious);
+        }
+        if(volkPrevious.frame!=frame||!volkPrevious.valid){
+            volkPrevious.frame=frame;volkPrevious.state=state;volkPrevious.weapon=(unsigned)Rd(g_weaponObj);
+            const HRESULT skinHr=dev->GetVertexShaderConstantF(g_boundShaderLayout.bones,&volkPrevious.skin[0][0],15);
+            const HRESULT localHr=dev->GetVertexShaderConstantF(g_boundShaderLayout.local,&volkPrevious.local[0][0],4);
+            volkPrevious.valid=SUCCEEDED(skinHr)&&SUCCEEDED(localHr);
+            if(volkCapture)Log("volk-skin reads: skin=%08lX local=%08lX",skinHr,localHr);
+        }
+        if(volkCapture)dumpSnapshot("incoming",volkPrevious);
+    }
+    struct VolkDrawReceipt {
+        bool enabled=false,submitted=false;
+        ~VolkDrawReceipt(){if(enabled&&!submitted)Log("volk-skin draw: did-not-reach-stereo-submission");}
+    } volkDrawReceipt;
+    volkDrawReceipt.enabled=volkCapture;
     if(Rd(g_dualWeaponTmdProbe)&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&
        FgMatchWindow()&&Rd(g_gunVerts)>0&&numVertices==(UINT)Rd(g_gunVerts)) {
         static LONG previous=-1;static unsigned captures=0;
@@ -19944,6 +20023,18 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         }
     }
     auto gunProbeMatrices=[&](const char* stage,unsigned eye){
+        if(volkCapture){
+            float skin[15][4]{},local[4][4]{};
+            const HRESULT sh=dev->GetVertexShaderConstantF(g_boundShaderLayout.bones,&skin[0][0],15);
+            const HRESULT lh=dev->GetVertexShaderConstantF(g_boundShaderLayout.local,&local[0][0],4);
+            Log("volk-skin used: stage=%s eye=%u skinHr=%08lX localHr=%08lX ride=%d",stage,eye,sh,lh,g_thisDrawMoved);
+            if(SUCCEEDED(sh))for(unsigned b=0;b<5;++b){const float* p=&skin[b*3][0];
+                Log("volk-skin bone: stage=%s eye=%u slot=%u bone=%u finite=%d det=%g rows=%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g",
+                    stage,eye,b,volkskin::bones[b],volkskin::Finite(p,12)?1:0,volkskin::Determinant(p),
+                    p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8],p[9],p[10],p[11]);}
+            if(SUCCEEDED(lh))for(unsigned r=0;r<4;++r)Log("volk-skin local: stage=%s eye=%u row=%u %g %g %g %g",stage,eye,r,
+                local[r][0],local[r][1],local[r][2],local[r][3]);
+        }
         if(!gunTransitionProbe)return;
         const int starts[]={g_boundShaderLayout.local,g_boundShaderLayout.bones};
         for(unsigned group=0;group<2;++group){
@@ -20455,6 +20546,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     unsigned shortEyeDraws=0;
     unsigned assemblyEye=0;
     const HRESULT dhr = FAILED(sleevePaletteHr)?sleevePaletteHr:StereoPair(dev, [&] {
+        volkDrawReceipt.submitted=true;
         const unsigned eye=assemblyEye++;
         gunProbeMatrices("submitting",eye);
         HRESULT hr = D3D_OK;
@@ -20525,6 +20617,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         for (int s = 0; s < nSeg; ++s) {
             const HRESULT h = g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
                                                     segStart[s], segPrims[s]);
+            if(volkCapture) {
+                IDirect3DIndexBuffer9* ib=nullptr;dev->GetIndices(&ib);
+                Log("volk-skin segment: eye=%u segment=%d first=%u tris=%u hr=%08lX boundIb=%p",eye,s,segStart[s],segPrims[s],h,ib);
+                if(ib)ib->Release();
+            }
             if (FAILED(h) && SUCCEEDED(hr)) hr = h;      // keep the FIRST failure, not the last
         }
         if(SUCCEEDED(hr)&&cylinderBase>=0&&cylinderReplay.spare){
@@ -20549,6 +20646,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     });
     g_scopeLensStaged=false;
     if(gunTransitionProbe)Log("dual-gun submitted: hr=%08lX eyes=%u segments=%d",dhr,assemblyEye,nSeg);
+    if(volkCapture)Log("volk-skin submitted: hr=%08lX eyes=%u segments=%d nextRegs=%u cylinder=%d",dhr,assemblyEye,nSeg,nextRegs,cylinderBase);
     if(FAILED(dhr))g_scopeAperture={};
     const HRESULT nativeRestore=nativeIndices.Restore();
     if(shortTmdBuffer && FAILED(dhr))
@@ -26062,11 +26160,19 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled) && Stack) {
+    if ((censusOn || routeTwo || cineWatch || Rd(g_volkSkinProbe) || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
         if (fnIdx < 0) InterlockedIncrement(&g_peUnnamed);
     }
+    struct VolkFireReceipt {
+        bool active=false;
+        ~VolkFireReceipt(){if(active)VolkSkinEvent(volkskin::FireExit);}
+    } volkFireReceipt;
+    if(Rd(g_volkSkinProbe)&&fnIdx>=0&&(uintptr_t)self==(uintptr_t)(unsigned)Rd(g_weaponObj))
+        for(int fk=kFnFireFirst;fk<=kFnFireLast;++fk)if(FnIdx(fk)>=0&&FnIdx(fk)==fnIdx){
+            volkFireReceipt.active=true;VolkSkinEvent(volkskin::FireEnter);break;
+        }
     if(nativefx::Probe()&&fnIdx>=0&&FnIdx(kFnFireFirst)>=0&&fnIdx==FnIdx(kFnFireFirst)&&
        reinterpret_cast<uintptr_t>(self)==(uintptr_t)(uint32_t)Rd(g_weaponObj))
         InterlockedIncrement(&nativefx::shots); // Native fire seam, independent of custom VFX host.
@@ -35177,6 +35283,8 @@ void LoadIniSettings() {
     InterlockedExchange(&g_tmdNativeAim,GetPrivateProfileIntA("Input","TmdNativeAim",0,path)!=0);
     InterlockedExchange(&g_dualWeaponTmdReady,GetPrivateProfileIntA("Input","DualWeaponTmdReady",0,path)!=0);
     InterlockedExchange(&g_dualWeaponTmdProbe,GetPrivateProfileIntA("Diagnostic","DualWeaponTmdProbe",0,path)!=0);
+    InterlockedExchange(&g_volkSkinProbe,GetPrivateProfileIntA("Diagnostic","VolkImpulseSkinProbe",0,path)!=0);
+    Log("ini: VolkImpulseSkinProbe=%ld (read-only five-bone probe; default OFF; max64 draw samples)",Rd(g_volkSkinProbe));
     Log("ini: DualWeaponTmdReady=%ld DualWeaponTmdProbe=%ld (default OFF; native draws only, no pawn state writes)",
         Rd(g_dualWeaponTmdReady),Rd(g_dualWeaponTmdProbe));
     Log("ini: TmdNativeAim=%d (default OFF; local native aim/aging getter outputs only)",NativeTmdAim::Enabled()?1:0);
