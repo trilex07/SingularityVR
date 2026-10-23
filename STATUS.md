@@ -1,5 +1,51 @@
 # STATUS — session handoff
 
+## 2026-10-24 — M09 haptics on current baseline: cherry-pick, battery PASS, controlled installed (READY_FOR_PHYSICAL_ACCEPTANCE)
+
+- Branch `integration/m09-haptics-on-current-baseline`: base `27f92bf`
+  (integration tip incl. M01/M03 acceptance records) + cherry-pick `-x` of
+  `5a4ac26` → **`56ae307`** (8 files, +917/−52, same shape as the earlier
+  `e630f64` integration). `native_ui_input.h` conflict resolved by keeping BOTH
+  `native_dual_tmd_gun_scale.h` and `native_tmd_haptics.h` includes and both
+  `Poll()` calls (`NativeTmdHaptics::Poll` before `NativeTmdAim::Poll`).
+- Source gates verified on the merged tree: tracking gate
+  `g_handPoseValid||g_handPositionValid` (d3d9.cpp:12474), `TmdPulses` default
+  0 + `ClearAll()` ON-OFF path (7807–7811), 200 ms bounded pulses (12512),
+  `tmdGates` cleared on pause/cinematic/menu/panel (12484), `ClearAll()` when
+  session not FOCUSED (4954).
+- Offline battery PASS in-worktree: `test_tmd_haptics_native` 7/7,
+  `test_carry_ray_wiring` 4/4, dual-weapon-TMD suite exit=0 with **39 PASS
+  groups** (shoulder gestures + 30k transactions intact), short-gauntlet=0,
+  `test-hud-live`=0, runtime-regressions=0 with D3D9 + D3D9Ex fixtures
+  pixels=3304/3304.
+- Candidate DLL: x86 PE32 `/O2` @ `56ae307`, SHA
+  `92D1BABC820B901BD5E58717E0000ACE81AD18B3EA5FD92D5412E54C1F29C9C4`
+  (`build\m09-candidate\d3d9.dll`, provenance `d3d9.build.json`).
+- **Controlled install 2026-10-24 00:23:49** (report `install-reports/20261024-002349.json`,
+  Pe32=true, DllOnly=true): installed d3d9.dll `92D1BABC…`, **INI unchanged
+  `D2E91B0B…`** (no `[Haptics]` section in the accepted 354-key map — defaults
+  Enabled=1/Level=1 identity, TmdPulses=0 ⇒ **Session A = native rumble
+  restore only, no TMD pulse overlay**).
+- Acceptance profile PROMOTED to the current accepted M01/M03 state:
+  `deployment/acceptance-20261024-m09/accepted-profile.json` (`9D02F242…086`,
+  d3d9 pin `78404247…` + 12 dependency pins + full 354-key INI map) and
+  change-plan `FDDA789F…23B`. Backup immediately prior install:
+  `deployment\install-backups\20261024-002349` contains the accepted
+  d3d9.dll `78404247…` (verified) — the M09 rollback point; INI absent from
+  the backup because unchanged.
+- `%LOCALAPPDATA%\SingularityVR\view_matrix.log` hash `89D5479D…1CBE`
+  == the archived M01 evidence log; the game has not run since the accepted
+  session, so no duplicate archive was created.
+- Runtime receipts available after the next session (view_matrix.log):
+  `[Haptics Trace] XINPUT RUMBLE [n/16]`, `SUBMIT [n/32]`
+  (gate allowed/tracked/poseValid/posValid/focus + xrResult), `STOP [n/16]`.
+- **Next: Session A physical test (TmdPulses=0)** — fire Valkyrie/Volk/pistol
+  with steady aim; confirm rumble on both Sense controllers; TMD activation
+  keeps only native authored rumble. Then archive the fresh log and grep
+  receipts. PASS ⇒ separate INI-only deployment of `TmdPulses=1` for Session
+  B (Impulse/power pulses). FAIL ⇒ rollback to accepted DLL `78404247…` and
+  new evidence-driven investigation; the accepted pair is never lost.
+
 ## 2026-10-24 — M03 live HP/ammo PHYSICAL PASS (observed); M01/M03 accepted install closed — M02/M09 next
 
 User confirmed on the same `bb234ba` PSVR2 session (no further headset tests

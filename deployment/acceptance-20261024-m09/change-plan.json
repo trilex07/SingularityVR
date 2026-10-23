@@ -1,0 +1,14 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "9D02F242EB20B4207A8F0A54ABCD858E135BA55229C118800F7D9C587A7BB086",
+  "reason": "M09 PSVR2 TMD advanced haptics candidate: current accepted baseline (integration/sol-side-master-package-20261023 + cherry-picked 5a4ac26 haptics fix) rebuilt as integration/m09-haptics-on-current-baseline @ 56ae307. TmdPulses stays default OFF; native rumble restored through the OpenXR tracking gate. DLL-only, INI unchanged.",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "78404247B78586FB42416F0A331CD11B13B4DBC0A16708B913A21F04EA374541",
+      "after": "92D1BABC820B901BD5E58717E0000ACE81AD18B3EA5FD92D5412E54C1F29C9C4",
+      "reason": " x86 PE32 /O2 rebuild at 56ae307 with 5a4ac26 haptics fix on the accepted M01/M03 baseline"
+    }
+  ],
+  "ini": []
+}
