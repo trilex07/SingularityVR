@@ -1,0 +1,712 @@
+﻿127:ini: KnifeTrackedMelee=1 (keep joint knife/controller pose during native attack)
+128:ini: KnifeHandGripEnabled=1 (joint original glove/knife assembly)
+129:ini: HipKnifeIgnoreTMD=1 (0=trust engine mTMD, 1=force pre-TMD both-hands rule)
+130:ini: HipKnifeRadiusCm=18 HipKnifeGrabWindowMs=800 (r21: wider squeeze-while-reaching pickup)
+131:ini: HipKnifeEnabled=1 (default OFF, restart required; pre-TMD both hands, post-TMD right hand only, native camera trace)
+151:ini: VetoQuietGun=1 (a mesh drawn in the weaponless pass may never take the GUN role - it is the arms, and latching it hides the real weapon)
+152:ini: RelatchWrongRoles=1 (if the latched gun turns out to be a mesh drawn with no weapon in hand, drop and re-take once a real weapon has been hidden for a while - recovers a bad latch instead of carrying it for the session)
+209:hip knife: cache=READY verts=662 tris=1010 original diffuse=256x256; pre-TMD both hands, post-TMD right hand only, native camera trace
+210:hip knife: build r21 trigger-attack + swing thresholds + grab-window 800ms + radius 28cm + holster drawRadius 32; holster fwd=6.0 right=14.0 up=-36.0 radius=9.0 knife left=0.20 down=0.55 radius=0.18
+218:ini: WeaponSwapDrop=1 (drop the mesh latch the moment the weapon object changes). Run 258: Pawn.Weapon changing IS the swap, known on the frame it happens - run 235c measured it moving on real switches and NOT for the TMD.
+223:native-gloves: separate fist/knife thumb poses ready
+311:weapon state: UNKNOWN - the pawn or the Weapon offset could not be read, so the mesh latch keeps using its heuristics (run 228)
+322:knife belt marker: gate blocked (vr=1 dup=1 paused=0 wheel=0 en=1 ready=1)
+323:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=0 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=0)
+337:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1386:fg pass CHANGED: 4 mesh(es), largest first: 11387 3314 390 9
+1387:tmd-short-gauntlet: native-animation owner=2 arms=0 cinema=1 restraint=0 heal=0 melee=0 knife=-1 hands=-1 owned=-1
+1407:hands: mPlayerHandsStatus = 2 (weapon in hands)
+1408:hands: mTMD is NON-NULL - the TMD has been acquired
+1409:weapon state: a weapon IS equipped (run 228)
+1410:fg pass CHANGED: 18 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 251 225 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1431:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1441:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1444:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1446:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1449:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1451:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1454:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1456:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1458:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1460:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1463:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1465:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1468:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1470:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1473:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1481:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1484:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1486:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1489:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1491:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1494:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1496:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1499:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1501:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1504:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1506:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1510:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1512:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1522:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1524:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1528:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1530:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1534:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1536:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1540:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1542:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1556:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1558:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1559:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1566:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1567:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1568:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1569:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1570:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1571:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1572:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1573:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1574:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1575:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1576:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1623:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1628:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1630:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1631:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1632:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1633:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1634:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1635:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1676:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1677:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1678:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1679:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1707:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1708:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1709:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1710:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1712:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1713:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1714:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1715:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1716:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1717:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1718:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1719:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1755:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1756:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1757:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1758:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1759:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1760:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1761:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1762:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1763:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1764:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1765:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1768:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1800:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1803:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1804:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1805:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1806:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1807:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1808:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1809:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+1810:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+1811:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2260:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2261:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2262:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2263:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2270:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2273:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2275:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2276:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2277:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2278:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2279:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2280:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2281:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2282:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2283:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2284:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2291:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2292:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2294:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2295:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2296:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2297:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2298:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2299:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2300:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2301:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2302:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2303:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2304:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2305:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2312:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2313:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2314:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2355:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2356:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2357:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2358:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2359:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2360:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2361:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2362:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2371:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2378:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2381:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2382:fg pass CHANGED: 21 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 176 168 144 117 76 65 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2383:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2384:fg pass CHANGED: 23 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 194 176 168 144 117 76 65 7 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2385:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2386:fg pass CHANGED: 25 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 194 191 179 176 168 144 117 76 65 7 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2387:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2399:fg pass CHANGED: 29 mesh(es), largest first: 11425 2684 2061 1517 1514 966 775 745 518 319 308 259 251 225 194 191 179 176 168 144 137 117 115 76 65 18 15 7 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2400:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2407:fg pass CHANGED: 32 mesh(es), largest first: 11425 2061 1517 1363 892 775 745 384 319 308 259 251 208 194 191 179 168 153 146 137 120 115 106 91 71 65 18 15 7 6 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2409:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2413:fg pass CHANGED: 32 mesh(es), largest first: 2032 1517 1363 892 745 540 382 359 319 304 251 208 194 191 179 153 146 137 120 115 110 109 106 96 72 71 18 15 7 6 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2415:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2417:fg pass CHANGED: 32 mesh(es), largest first: 7172 2032 1517 1363 892 882 745 600 592 540 490 382 359 319 304 251 208 194 191 179 146 115 110 109 106 96 72 71 15 7 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2418:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2419:fg pass CHANGED: 32 mesh(es), largest first: 2032 1517 1363 892 882 881 745 600 592 540 490 382 359 319 304 251 208 194 191 179 146 115 110 109 106 96 77 72 71 15 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2420:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2421:fg pass CHANGED: 32 mesh(es), largest first: 2032 1517 1363 892 882 881 745 600 540 490 382 359 319 251 208 194 191 179 146 115 110 109 106 96 77 72 71 35 20 15 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2422:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2423:fg pass CHANGED: 32 mesh(es), largest first: 7172 2032 1517 1363 892 882 881 745 600 540 490 382 359 319 251 208 194 191 179 146 115 109 106 96 77 72 71 35 20 15 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2430:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2431:fg pass CHANGED: 32 mesh(es), largest first: 7172 2032 1563 1517 1363 1223 892 882 881 745 540 490 382 359 319 251 194 191 179 146 115 109 106 96 77 72 71 35 20 15 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2432:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2433:fg pass CHANGED: 32 mesh(es), largest first: 7172 2032 1563 1517 1363 1223 892 882 881 745 540 490 382 359 319 251 194 191 179 146 115 109 106 96 77 72 71 35 20 15 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2435:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2437:fg pass CHANGED: 32 mesh(es), largest first: 7172 2032 1563 1517 1363 1223 892 882 881 745 540 490 382 359 319 251 194 191 179 146 115 109 106 96 77 72 71 35 20 15 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2438:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2439:fg pass CHANGED: 32 mesh(es), largest first: 7172 2032 1563 1517 1363 1223 892 882 881 745 540 490 382 359 319 251 194 191 179 146 115 109 106 96 77 72 71 35 20 15 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2440:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2441:fg pass CHANGED: 32 mesh(es), largest first: 7172 2032 1563 1517 1363 1223 892 882 881 745 540 490 382 359 319 251 194 191 179 146 115 109 106 96 77 72 71 35 20 15 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2913:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2926:fg pass CHANGED: 32 mesh(es), largest first: 7172 2032 1563 1517 1363 1223 892 882 881 745 540 490 382 359 319 251 194 191 179 146 115 109 106 96 77 72 71 35 20 15 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2956:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+2959:fg pass CHANGED: 32 mesh(es), largest first: 7172 2032 1563 1517 1363 1223 892 882 881 745 540 490 382 359 319 251 194 191 179 146 115 109 106 96 77 72 71 35 20 15 5 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+2960:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+3648:weapon state: UNKNOWN - the pawn or the Weapon offset could not be read, so the mesh latch keeps using its heuristics (run 228)
+4677:weapon state: NO weapon equipped - nothing in the first-person pass will be hidden (run 228)
+4786:weapon state: a weapon IS equipped (run 228)
+4898:fg pass CHANGED: 3 mesh(es), largest first: 8297 3314 390
+4942:mesh latch: learned that 3314 verts is the ARMS - from now on it can never take the gun role, whatever else is or is not on screen (run 226)
+4943:mesh latch: gun=8297 verts, arms=3314 verts (steady for 30 frames), baseline set of 3
+7345:hands: mPlayerHandsStatus = 0 (neither)
+7350:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+10676:dual-tmd route: frame=10470 eye=shared hands=0 support=0 part=0 route=native-full min=0 verts=7444 first=0 tris=4402 palette=0 segments=1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+10678:dual-tmd route: frame=10470 eye=shared hands=0 support=0 part=1 route=native-full min=2626 verts=4818 first=13206 tris=7704 palette=0 segments=1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+10679:dual-tmd route: frame=10470 eye=shared hands=0 support=0 part=2 route=native-full min=7407 verts=37 first=36318 tris=17 palette=0 segments=1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+10685:fg pass CHANGED: 4 mesh(es), largest first: 8297 7444 4818 37
+10690:dual-tmd route: frame=10473 eye=shared hands=0 support=0 part=0 route=zero min=0 verts=7444 first=0 tris=4402 palette=0 segments=0 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+10694:dual-tmd route: frame=10473 eye=shared hands=0 support=0 part=1 route=hidden min=2626 verts=4818 first=13206 tris=7704 palette=-1 segments=-1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+10695:dual-tmd route: frame=10473 eye=shared hands=0 support=0 part=2 route=hidden min=7407 verts=37 first=36318 tris=17 palette=-1 segments=-1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+53708:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=1 menu=1 panel=0 wheel=0 cine=0)
+54276:tmd-assembly bound: frame=33571 eye=0 hands=0 support=0 material=0 route=native faces=4402 ib=0DEE0A40 ibhr=00000000 palettehr=00000000 skin=[0.675794,0.279374,-0.166591,-8.21136;-0.106411,-0.173098,-0.721951,-155.377;-0.307374,0.674157,-0.116334,64.1308]
+54531:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=1 panel=0 wheel=0 cine=0)
+55663:dual-tmd route: frame=33681 eye=shared hands=0 support=0 part=1 route=hardware min=2626 verts=4818 first=13206 tris=7704 palette=45 segments=1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+55673:hip knife: draw=OK 2 indexed calls/frame (not pixel proof)
+55681:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=0 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=1)
+55691:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+55692:dual-tmd route: frame=33687 eye=shared hands=1 support=0 part=0 route=native-full min=0 verts=7444 first=0 tris=4402 palette=0 segments=1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+55693:dual-tmd route: frame=33687 eye=shared hands=1 support=0 part=1 route=native-full min=2626 verts=4818 first=13206 tris=7704 palette=0 segments=1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+55694:dual-tmd route: frame=33687 eye=shared hands=1 support=0 part=2 route=native-full min=7407 verts=37 first=36318 tris=17 palette=0 segments=1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+55725:holster cue: segmented stereo knife; same anchor; interaction unchanged
+55726:hip knife: draw=OK 2 indexed calls/frame (not pixel proof)
+55729:tmd-assembly bound: frame=33695 eye=0 hands=1 support=0 material=0 route=SVNC faces=3994 ib=2E940800 ibhr=00000000 palettehr=00000000 skin=[0.438403,-0.419702,-0.440628,-78.4594;-0.276949,0.345954,-0.605075,-107.776;0.54185,0.516398,0.0472416,27.3716]
+55735:tmd-assembly bound: frame=33695 eye=0 hands=1 support=0 material=1 route=SVTG faces=7110 ib=2E9408C0 ibhr=00000000 palettehr=00000000 skin=[0.0842282,-0.285657,-0.688336,-49.7817;-0.254215,0.640158,-0.29677,-78.859;0.700557,0.266643,-0.0249322,-4.74644]
+55739:dual-tmd route: frame=33695 eye=shared hands=1 support=0 part=1 route=svtg min=2626 verts=4818 first=13206 tris=7704 palette=45 segments=1 stereoEyes=1 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+55740:dual-tmd route: frame=33695 eye=shared hands=1 support=0 part=2 route=hidden min=7407 verts=37 first=36318 tris=17 palette=-1 segments=-1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+55814:tmd-attachment: cooked socket mesh CRC verified verts=729 faces=1096; shared left controller ride
+55816:tmd-attachment: cooked socket mesh CRC verified verts=251 faces=344; shared left controller ride
+55817:tmd-attachment: cooked socket mesh CRC verified verts=207 faces=270; shared left controller ride
+55818:tmd-attachment: cooked socket mesh CRC verified verts=251 faces=344; shared left controller ride
+55819:tmd-attachment: cooked socket mesh CRC verified verts=207 faces=270; shared left controller ride
+55820:tmd-attachment: cooked socket mesh CRC verified verts=729 faces=1096; shared left controller ride
+55821:tmd-attachment: cooked socket mesh CRC verified verts=118 faces=108; shared left controller ride
+55851:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+55853:tmd-attachment: cooked socket mesh CRC verified verts=251 faces=344; shared left controller ride
+55854:tmd-attachment: cooked socket mesh CRC verified verts=729 faces=1096; shared left controller ride
+55855:tmd-attachment: cooked socket mesh CRC verified verts=118 faces=108; shared left controller ride
+55857:tmd-attachment: cooked socket mesh CRC verified verts=251 faces=344; shared left controller ride
+55858:tmd-attachment: cooked socket mesh CRC verified verts=729 faces=1096; shared left controller ride
+55889:tmd-short-gauntlet: stereo receipt eyes=2 tris=7110 sleevePalette=7 indices=2743..7322 nativeRange=2626+4818 base=0 indexRestore=OK paletteRestore=OK
+56401:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+56402:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+56479:hands: mPlayerHandsStatus = 2 (weapon in hands)
+56481:tmd-assembly bound: frame=34517 eye=0 hands=2 support=0 material=0 route=SVNC faces=3994 ib=2E940800 ibhr=00000000 palettehr=00000000 skin=[-0.355561,-0.581142,-0.313609,-45.2322;-0.155975,0.420009,-0.601469,-105.928;0.641676,-0.219925,-0.319976,-47.6262]
+56485:tmd-assembly bound: frame=34517 eye=1 hands=2 support=0 material=0 route=SVNC faces=3994 ib=2E940800 ibhr=00000000 palettehr=00000000 skin=[-0.355561,-0.581142,-0.313609,-45.2322;-0.155975,0.420009,-0.601469,-105.928;0.641676,-0.219925,-0.319976,-47.6262]
+56489:dual-tmd route: frame=34517 eye=shared hands=2 support=0 part=0 route=native-full min=0 verts=7444 first=0 tris=4402 palette=108 segments=1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+56490:tmd-assembly bound: frame=34517 eye=0 hands=2 support=0 material=1 route=SVTG faces=7110 ib=2E9408C0 ibhr=00000000 palettehr=00000000 skin=[-0.615296,-0.390137,0.178055,-11.3152;-0.304089,0.177341,-0.662254,-122.308;0.302391,-0.615503,-0.303671,-68.8628]
+56494:tmd-assembly bound: frame=34517 eye=1 hands=2 support=0 material=1 route=SVTG faces=7110 ib=2E9408C0 ibhr=00000000 palettehr=00000000 skin=[-0.615296,-0.390137,0.178055,-11.3152;-0.304089,0.177341,-0.662254,-122.308;0.302391,-0.615503,-0.303671,-68.8628]
+56498:dual-tmd route: frame=34517 eye=shared hands=2 support=0 part=1 route=svtg min=2626 verts=4818 first=13206 tris=7704 palette=45 segments=1 stereoEyes=2 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+56499:dual-tmd route: frame=34517 eye=shared hands=2 support=0 part=2 route=hidden min=7407 verts=37 first=36318 tris=17 palette=-1 segments=-1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+56663:hip knife: grip edge hand=0 dist=0.33m (radius=0.18) free=1 picked=0
+56664:two-hand grip: ACQUIRED
+56666:support grip pose: authored-pair gun=8297 leftDelta=primary (bind l_hand_IK is rest, not a grip point)
+56667:tmd-assembly bound: frame=34717 eye=0 hands=2 support=1 material=0 route=SVNC faces=3994 ib=2E940800 ibhr=00000000 palettehr=00000000 skin=[0.308319,-0.189723,0.656844,-43.8144;0.240126,-0.644593,-0.298898,-251.051;0.64014,0.333175,-0.204244,1.25178]
+56671:tmd-assembly bound: frame=34717 eye=1 hands=2 support=1 material=0 route=SVNC faces=3994 ib=2E940800 ibhr=00000000 palettehr=00000000 skin=[0.308319,-0.189723,0.656844,-43.8144;0.240126,-0.644593,-0.298898,-251.051;0.64014,0.333175,-0.204244,1.25178]
+56675:dual-tmd route: frame=34717 eye=shared hands=2 support=1 part=0 route=native-full min=0 verts=7444 first=0 tris=4402 palette=108 segments=1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+56676:dual-tmd route: frame=34717 eye=shared hands=2 support=1 part=1 route=zero min=2626 verts=4818 first=13206 tris=7704 palette=45 segments=0 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+56677:dual-tmd route: frame=34717 eye=shared hands=2 support=1 part=2 route=hidden min=7407 verts=37 first=36318 tris=17 palette=-1 segments=-1 stereoEyes=0 fg=0 window=1 ib=0DEE0A40 vb=2A42FFE0 stream=0/32
+56848:two-hand grip: RELEASED
+57014:hip knife: grip edge hand=1 dist=0.45m (radius=0.18) free=0 picked=0
+57176:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+57178:fg pass CHANGED: 4 mesh(es), largest first: 8297 7444 4818 37
+57179:fg pass CHANGED: 6 mesh(es), largest first: 8297 7444 4818 1368 729 37
+57180:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+57189:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+57380:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+57444:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+57538:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+57653:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+57785:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+57812:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+57906:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+58073:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+58083:hands: mPlayerHandsStatus = 2 (weapon in hands)
+58227:hip knife: grip edge hand=1 dist=0.39m (radius=0.18) free=0 picked=0
+58237:hip knife: grip edge hand=1 dist=0.38m (radius=0.18) free=1 picked=0
+58327:hip knife: grip edge hand=0 dist=0.49m (radius=0.18) free=1 picked=0
+58336:two-hand grip: ACQUIRED
+58339:two-hand grip: RELEASED
+58342:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+58345:fg pass CHANGED: 4 mesh(es), largest first: 8297 7444 4818 37
+58346:fg pass CHANGED: 6 mesh(es), largest first: 8297 7444 4818 1368 729 37
+58398:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+58399:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+58421:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+58444:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+58576:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+58751:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+58762:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+58785:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+58866:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+59022:hip knife: grip edge hand=1 dist=0.43m (radius=0.18) free=0 picked=0
+59027:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+59050:hands: mPlayerHandsStatus = 2 (weapon in hands)
+59127:hip knife: grip edge hand=1 dist=0.38m (radius=0.18) free=1 picked=0
+59136:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=1 menu=0 panel=0 wheel=0 cine=0)
+59751:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=1 menu=1 panel=0 wheel=0 cine=0)
+59905:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=1 panel=0 wheel=0 cine=0)
+61651:hip knife: grip edge hand=0 dist=0.33m (radius=0.18) free=1 picked=0
+61652:two-hand grip: ACQUIRED
+61666:two-hand grip: RELEASED
+61733:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+61736:fg pass CHANGED: 5 mesh(es), largest first: 8297 7444 4818 37 4
+61737:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+61739:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+61840:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+62001:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+62245:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+62307:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+62394:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+62477:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+62480:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+62481:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+62564:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+62579:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+62607:hip knife: grip edge hand=1 dist=0.45m (radius=0.18) free=0 picked=0
+62608:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+62609:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+70113:hip knife: grip held at belt but no pickup (gameplay=0 focused=1 alive=1 nativeKnife=1 hasTMD=0 noWeapon=1 pawn=1BDF6400 offTMD=4184 offHP=740 tmd=1C199C00 hp=1125515264 impIdx=4 impMask=00000200)
+72447:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+72465:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+72604:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+72755:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+75151:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+75160:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+75313:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+75383:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+75384:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+75475:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+75476:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+75477:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+75484:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+75485:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+75654:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+75663:fg pass CHANGED: 7 mesh(es), largest first: 8297 7444 4818 1368 251 207 37
+75664:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+75713:fg pass CHANGED: 6 mesh(es), largest first: 8297 7444 4818 1368 251 37
+75714:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+75726:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+75890:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+75911:fg pass CHANGED: 5 mesh(es), largest first: 8297 7444 4818 251 37
+75913:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+75962:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+76047:hands: mPlayerHandsStatus = 2 (weapon in hands)
+76066:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+76068:fg pass CHANGED: 5 mesh(es), largest first: 8297 7444 4818 37 4
+76069:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+76070:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+76072:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+76172:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+76325:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+76394:hip knife: grip edge hand=1 dist=0.37m (radius=0.18) free=0 picked=0
+76395:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+76396:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+76472:hip knife: grip edge hand=1 dist=0.35m (radius=0.18) free=0 picked=0
+76473:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+76475:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+76580:hip knife: gate blocked (en=1 ready=1 vis=1 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+76581:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+76649:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=0)
+76745:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+76754:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+76833:hip knife: grip edge hand=0 dist=0.18m (radius=0.18) free=1 picked=0
+76843:hip knife: PICKED held=0 pawn=1BDF6400 (native camera trace, not blade collision)
+76844:hip knife: SHEATHED held=-1 pawn=1BDF6400 (native camera trace, not blade collision)
+76906:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+76920:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+77008:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+77070:hip knife: grip edge hand=0 dist=0.15m (radius=0.18) free=1 picked=1
+77071:hip knife: PICKED held=0 pawn=1BDF6400 (native camera trace, not blade collision)
+77175:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+77224:hip knife: SHEATHED held=-1 pawn=1BDF6400 (native camera trace, not blade collision)
+77405:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+77414:fg pass CHANGED: 7 mesh(es), largest first: 8297 7444 4818 1368 251 207 37
+77415:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+77468:fg pass CHANGED: 6 mesh(es), largest first: 8297 7444 4818 1368 251 37
+77469:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+77470:fg pass CHANGED: 5 mesh(es), largest first: 8297 7444 4818 251 37
+77471:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+77472:fg pass CHANGED: 5 mesh(es), largest first: 8297 7444 4818 251 37
+77473:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+77491:fg pass CHANGED: 5 mesh(es), largest first: 8297 7444 4818 251 37
+77495:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+77498:fg pass CHANGED: 7 mesh(es), largest first: 8297 7444 4818 1368 251 207 37
+77499:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+77508:fg pass CHANGED: 5 mesh(es), largest first: 8297 7444 4818 251 37
+77509:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+77564:fg pass CHANGED: 4 mesh(es), largest first: 8297 7444 4818 37
+77565:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+77578:fg pass CHANGED: 6 mesh(es), largest first: 8297 7444 4818 1368 251 37
+77579:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+77581:fg pass CHANGED: 5 mesh(es), largest first: 8297 7444 4818 251 37
+77582:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+77583:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+77584:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+77603:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+77686:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+77856:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78075:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78079:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78177:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78244:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78247:fg pass CHANGED: 6 mesh(es), largest first: 8297 7444 4818 251 37 4
+78251:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78260:fg pass CHANGED: 6 mesh(es), largest first: 8297 7444 4818 251 37 4
+78261:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78262:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78263:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78264:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78349:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78506:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78576:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78658:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78744:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78745:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 251 207 37 4
+78746:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78749:fg pass CHANGED: 6 mesh(es), largest first: 8297 7444 4818 251 37 4
+78750:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78751:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78752:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78753:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78833:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+78834:hip knife: grip edge hand=1 dist=0.34m (radius=0.18) free=1 picked=0
+78835:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+78837:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+78915:hip knife: grip edge hand=1 dist=0.32m (radius=0.18) free=0 picked=0
+78916:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+78917:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+79578:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+79630:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+79727:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+79884:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+79981:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=0 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=1)
+80047:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+80149:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=0 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=0)
+80150:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+83865:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=1 panel=0 wheel=0 cine=0)
+85212:hands: mPlayerHandsStatus = 2 (weapon in hands)
+85227:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+85280:fg pass CHANGED: 5 mesh(es), largest first: 8297 7444 4818 37 4
+85281:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+85282:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+85283:fg pass CHANGED: 11 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 64 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+85387:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+85471:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=0 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=1)
+85682:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+86826:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=1 panel=0 wheel=0 cine=0)
+90828:hip knife: grip edge hand=0 dist=0.18m (radius=0.18) free=1 picked=0
+90882:hip knife: grip edge hand=0 dist=0.19m (radius=0.18) free=1 picked=0
+90978:hip knife: grip edge hand=0 dist=0.19m (radius=0.18) free=1 picked=0
+90979:hip knife: PICKED held=0 pawn=1BDF6400 (native camera trace, not blade collision)
+90980:PrepareIndependentLeft: nativeOffKnife active (joint glove+knife pose while weapon held)
+90995:hip knife: SWING -> RB pulse held=0 pawn=1BDF6400 (native camera trace, not blade collision)
+90996:knife-hand: melee display stays controller-tracked holder=0; native damage untouched
+90997:hip knife: injected XI_RSHOULDER (melee attack) into game btns, held=0
+91063:hip knife: SWING -> RB pulse held=0 pawn=1BDF6400 (native camera trace, not blade collision)
+91064:knife-hand: melee display stays controller-tracked holder=0; native damage untouched
+91065:hip knife: injected XI_RSHOULDER (melee attack) into game btns, held=0
+91084:hip knife: SHEATHED held=-1 pawn=1BDF6400 (native camera trace, not blade collision)
+91085:tmd-short-gauntlet: native-animation owner=1 arms=1 cinema=0 restraint=0 heal=0 melee=1 knife=-1 hands=1 owned=1
+91170:hip knife: grip edge hand=1 dist=0.40m (radius=0.18) free=0 picked=0
+91171:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+91173:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+91239:hands: mPlayerHandsStatus = 2 (weapon in hands)
+91243:hip knife: gate blocked (en=1 ready=1 vis=1 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+91244:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+91248:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=0)
+91269:hip knife: gate blocked (en=1 ready=1 vis=1 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+91270:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+91271:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=0)
+91332:hip knife: gate blocked (en=1 ready=1 vis=1 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+91333:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+91351:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=0)
+91410:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+91477:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+91480:hip knife: grip edge hand=1 dist=0.37m (radius=0.18) free=0 picked=0
+91481:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+91483:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+91884:hip knife: grip edge hand=0 dist=0.49m (radius=0.18) free=0 picked=0
+91956:hip knife: grip edge hand=0 dist=0.47m (radius=0.18) free=0 picked=0
+92143:hip knife: grip edge hand=1 dist=0.44m (radius=0.18) free=0 picked=0
+92144:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+92145:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+92210:hip knife: grip edge hand=1 dist=0.45m (radius=0.18) free=0 picked=0
+92211:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+92214:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+92460:hip knife: gate blocked (en=1 ready=1 vis=1 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+92461:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+92463:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=0)
+92473:hip knife: gate blocked (en=1 ready=1 vis=1 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+92474:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+92475:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=0)
+97521:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=1 menu=1 panel=0 wheel=0 cine=0)
+97598:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=1 panel=0 wheel=0 cine=0)
+99859:hip knife: grip edge hand=0 dist=0.16m (radius=0.18) free=1 picked=1
+99860:hip knife: PICKED held=0 pawn=1BDF6400 (native camera trace, not blade collision)
+99949:hip knife: SHEATHED held=-1 pawn=1BDF6400 (native camera trace, not blade collision)
+99996:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+99998:fg pass CHANGED: 4 mesh(es), largest first: 8297 7444 4818 37
+100007:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+100020:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=1 menu=0 panel=0 wheel=0 cine=0)
+108233:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=1 menu=1 panel=0 wheel=0 cine=0)
+108306:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=1 panel=0 wheel=0 cine=0)
+110657:hip knife: grip edge hand=0 dist=0.16m (radius=0.18) free=1 picked=1
+110658:hip knife: PICKED held=0 pawn=1BDF6400 (native camera trace, not blade collision)
+110677:hip knife: SHEATHED held=-1 pawn=1BDF6400 (native camera trace, not blade collision)
+110734:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=1 menu=0 panel=0 wheel=0 cine=0)
+118945:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=1 menu=1 panel=0 wheel=0 cine=0)
+118982:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=1 panel=0 wheel=0 cine=0)
+121235:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+121236:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+121318:hip knife: grip edge hand=1 dist=0.47m (radius=0.18) free=0 picked=0
+121319:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+121320:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+121337:hip knife: grip edge hand=1 dist=0.44m (radius=0.18) free=0 picked=0
+121338:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+121339:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+121409:hip knife: grip edge hand=0 dist=0.18m (radius=0.18) free=1 picked=1
+121410:hip knife: PICKED held=0 pawn=1BDF6400 (native camera trace, not blade collision)
+121422:hip knife: SHEATHED held=-1 pawn=1BDF6400 (native camera trace, not blade collision)
+121495:hip knife: grip edge hand=0 dist=0.28m (radius=0.18) free=1 picked=0
+121505:hip knife: grip edge hand=0 dist=0.27m (radius=0.18) free=1 picked=0
+121561:hip knife: grip edge hand=0 dist=0.26m (radius=0.18) free=1 picked=0
+121573:hip knife: grip edge hand=0 dist=0.26m (radius=0.18) free=1 picked=0
+121574:hip knife: grip edge hand=0 dist=0.25m (radius=0.18) free=1 picked=0
+121577:hip knife: grip edge hand=0 dist=0.25m (radius=0.18) free=1 picked=0
+121593:hip knife: grip edge hand=0 dist=0.24m (radius=0.18) free=1 picked=0
+121645:hip knife: grip edge hand=0 dist=0.24m (radius=0.18) free=1 picked=0
+121654:hip knife: grip edge hand=0 dist=0.23m (radius=0.18) free=1 picked=0
+121656:hip knife: grip edge hand=0 dist=0.23m (radius=0.18) free=1 picked=0
+121676:hip knife: grip edge hand=0 dist=0.23m (radius=0.18) free=1 picked=0
+121754:hip knife: grip edge hand=0 dist=0.22m (radius=0.18) free=1 picked=0
+121907:hip knife: grip edge hand=0 dist=0.21m (radius=0.18) free=1 picked=0
+121982:hip knife: grip edge hand=0 dist=0.20m (radius=0.18) free=1 picked=0
+122058:hip knife: grip edge hand=0 dist=0.19m (radius=0.18) free=1 picked=0
+122248:hands: mPlayerHandsStatus = 2 (weapon in hands)
+122250:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+122252:fg pass CHANGED: 4 mesh(es), largest first: 8297 7444 4818 37
+122253:fg pass CHANGED: 6 mesh(es), largest first: 8297 7444 4818 1368 729 37
+122254:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+122328:hip knife: grip edge hand=0 dist=0.21m (radius=0.18) free=1 picked=0
+122408:hip knife: grip edge hand=0 dist=0.22m (radius=0.18) free=1 picked=0
+122479:hip knife: grip edge hand=0 dist=0.22m (radius=0.18) free=1 picked=0
+122567:hip knife: grip edge hand=0 dist=0.19m (radius=0.18) free=1 picked=0
+122646:hip knife: grip edge hand=0 dist=0.19m (radius=0.18) free=1 picked=0
+122675:hands: mPlayerHandsStatus = 2 (weapon in hands)
+122681:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+122738:hands: mPlayerHandsStatus = 2 (weapon in hands)
+122769:hip knife: grip edge hand=0 dist=0.20m (radius=0.18) free=1 picked=0
+122831:hip knife: grip edge hand=1 dist=0.43m (radius=0.18) free=0 picked=0
+122832:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+122834:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+122850:hip knife: grip edge hand=1 dist=0.42m (radius=0.18) free=0 picked=0
+122851:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+122856:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+122863:hip knife: grip edge hand=0 dist=0.19m (radius=0.18) free=1 picked=0
+122922:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+122924:fg pass CHANGED: 4 mesh(es), largest first: 8297 7444 4818 37
+122925:fg pass CHANGED: 6 mesh(es), largest first: 8297 7444 4818 1368 729 37
+122926:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+123012:hip knife: grip edge hand=0 dist=0.20m (radius=0.18) free=1 picked=0
+123091:hip knife: grip edge hand=0 dist=0.19m (radius=0.18) free=1 picked=0
+123176:hip knife: grip edge hand=0 dist=0.18m (radius=0.18) free=1 picked=0
+123193:hip knife: PICKED held=0 pawn=1BDF6400 (native camera trace, not blade collision)
+123195:hip knife: SHEATHED held=-1 pawn=1BDF6400 (native camera trace, not blade collision)
+123264:hip knife: grip edge hand=0 dist=0.20m (radius=0.18) free=1 picked=0
+123265:hip knife: grip edge hand=0 dist=0.21m (radius=0.18) free=1 picked=0
+123266:hip knife: grip edge hand=0 dist=0.21m (radius=0.18) free=1 picked=0
+123276:hip knife: grip edge hand=0 dist=0.21m (radius=0.18) free=1 picked=0
+123280:hip knife: grip edge hand=0 dist=0.20m (radius=0.18) free=1 picked=0
+123345:hip knife: grip edge hand=0 dist=0.22m (radius=0.18) free=1 picked=0
+123441:hip knife: grip edge hand=0 dist=0.18m (radius=0.18) free=1 picked=0
+123749:hip knife: grip edge hand=0 dist=0.24m (radius=0.18) free=1 picked=0
+123932:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+124004:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+124079:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+124081:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+124743:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+124744:fg pass CHANGED: 5 mesh(es), largest first: 8297 7444 4818 251 37
+124745:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+124810:fg pass CHANGED: 6 mesh(es), largest first: 8297 7444 4818 1368 251 37
+124811:fg pass CHANGED: 8 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 37
+124815:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+124825:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+124827:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+124830:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+124832:hands: mPlayerHandsStatus = 2 (weapon in hands)
+124917:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+124920:fg pass CHANGED: 4 mesh(es), largest first: 8297 7444 4818 37
+124924:fg pass CHANGED: 7 mesh(es), largest first: 8297 7444 4818 1368 729 251 37
+124925:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+125004:hands: mPlayerHandsStatus = 2 (weapon in hands)
+125006:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+125017:hands: mPlayerHandsStatus = 2 (weapon in hands)
+125019:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+125021:fg pass CHANGED: 4 mesh(es), largest first: 8297 7444 4818 37
+125022:fg pass CHANGED: 7 mesh(es), largest first: 8297 7444 4818 1368 729 251 37
+125023:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+125422:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+125424:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+125488:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+125490:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+125491:hands: mPlayerHandsStatus = 2 (weapon in hands)
+125512:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+125514:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+125897:two-hand grip: ACQUIRED
+126196:two-hand grip: RELEASED
+126214:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+126215:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+126236:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+126241:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+126296:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+126298:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+126303:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+126306:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+126308:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+126310:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+126313:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+126316:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+126396:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+126399:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+126493:two-hand grip: ACQUIRED
+126744:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+126757:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+126821:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+126823:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+126904:fg pass CHANGED: 10 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+126916:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+126991:two-hand grip: RELEASED
+127005:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+127008:fg pass CHANGED: 4 mesh(es), largest first: 8297 7444 4818 37
+127009:fg pass CHANGED: 9 mesh(es), largest first: 8297 7444 4818 1368 729 251 207 118 37   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+127247:hip knife: gate blocked (en=1 ready=1 vis=1 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+127248:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=1 cine=0)
+127263:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=1 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=0)
+127323:mesh latch: Pawn.Weapon CHANGED - dropping the latch on the swap itself rather than after 240 frames of the old gun not being drawn (run 258)
+127324:fg census (at the SWAP drop - this is what it will re-take from): 9 entries: [0]=1368 [1]=8297 [2]=7444 [3]=4818 [4]=37 [5]=207 [6]=251 [7]=118 [8]=729
+127332:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+127341:mesh latch: learned that 7444 verts is the ARMS - from now on it can never take the gun role, whatever else is or is not on screen (run 226)
+127342:mesh latch: gun=11387 verts, arms=7444 verts (steady for 30 frames), baseline set of 10
+127376:hands: mPlayerHandsStatus = 2 (weapon in hands)
+127531:two-hand grip: ACQUIRED
+127721:fg pass CHANGED: 11 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+127964:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+127983:fg pass CHANGED: 11 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+128053:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+128065:fg pass CHANGED: 11 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+128240:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+128241:two-hand grip: RELEASED
+128820:two-hand grip: ACQUIRED
+128894:fg pass CHANGED: 11 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+129070:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+129071:fg pass CHANGED: 11 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+129140:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+129141:two-hand grip: RELEASED
+129404:hip knife: PICKED held=0 pawn=1BDF6400 (native camera trace, not blade collision)
+129460:hip knife: SHEATHED held=-1 pawn=1BDF6400 (native camera trace, not blade collision)
+129462:hip knife: PICKED held=0 pawn=1BDF6400 (native camera trace, not blade collision)
+129482:hip knife: SHEATHED held=-1 pawn=1BDF6400 (native camera trace, not blade collision)
+129559:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+129562:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+129564:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+129566:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+129723:two-hand grip: ACQUIRED
+129783:fg pass CHANGED: 11 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+129883:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+129946:fg pass CHANGED: 11 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+130042:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+130179:two-hand grip: RELEASED
+130577:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+130580:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+130581:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+130583:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+130658:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+130659:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+130667:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+130670:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+130737:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+130739:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+130847:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+130850:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+130906:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=2 free=3 trk=3 noWpn=1 postTMD=0 preTMD=1)
+130908:hip knife: armed grip at belt but no pickup (near=1 grip=2 edge=0 free=1 trk=3 noWpn=0 postTMD=0 preTMD=1)
+130997:fg pass CHANGED: 11 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+131022:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+131105:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+131107:fg pass CHANGED: 6 mesh(es), largest first: 11387 7444 4818 37 9 4
+131160:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+131161:fg pass CHANGED: 11 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+131170:fg pass CHANGED: 12 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 64 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+131278:fg pass CHANGED: 11 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+131442:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+131580:hands: mPlayerHandsStatus = 2 (weapon in hands)
+131690:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+131693:fg pass CHANGED: 5 mesh(es), largest first: 11387 7444 4818 37 9
+131696:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+131844:hands: mPlayerHandsStatus = 2 (weapon in hands)
+131846:fg pass CHANGED: 11 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+131935:fg pass CHANGED: 10 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+132087:fg pass CHANGED: 11 mesh(es), largest first: 11387 7444 4818 1368 729 251 207 118 37 9 4   <== MORE THAN 8. The build before run 232 recorded only the first 8 in draw order and dropped the rest, so every earlier census of this pass was truncated.
+132113:weapon state: UNKNOWN - the pawn or the Weapon offset could not be read, so the mesh latch keeps using its heuristics (run 228)
+132117:fg pass CHANGED: 1 mesh(es), largest first: 4
+132172:fg pass CHANGED: 0 mesh(es), largest first: (empty)
+132206:weapon state: NO weapon equipped - nothing in the first-person pass will be hidden (run 228)
+132215:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=0 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=1)
+132244:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=0 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=0)
+132474:weapon state: a weapon IS equipped (run 228)
+132475:mesh latch: a weapon has been equipped - dropping the unarmed latch so the roles are taken again with a real gun in the pass (run 228)
+132476:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=0 dup=1 eyes=1 paused=1 menu=0 panel=0 wheel=0 cine=0)
+132721:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=0 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=0)
+132866:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=0 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=1)
+132909:hip knife: gate blocked (en=1 ready=1 vis=0 vr=1 play=0 dup=1 eyes=1 paused=0 menu=0 panel=0 wheel=0 cine=0)
