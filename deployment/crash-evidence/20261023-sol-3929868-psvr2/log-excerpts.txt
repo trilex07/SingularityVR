@@ -1,0 +1,47 @@
+# Frame-aligned excerpts from view_matrix.log (3929868 PSVR2 session)
+# Full log SHA256: 55BCAA84C6CC4282E1D51469E9C0BC86D2FDF7056A99AC40296B8E716166C318
+
+=== P0 ready reflected (first stable gameplay pawn) ===
+L3452: dual-tmd gun-scale: ready reflected mGunScaleCtrl=1024 BoneScale=7C getter=00B3E400 pawn=1BD76400 mesh=1C655000 control=1C4D6FC0
+
+=== P0 first scale=0->1 + TMD raised + bone 51 ===
+L4334: dual-tmd gun-scale: local gun_scale scale=0 -> 1 bone=52 pawn=1BD76400 mesh=1C655000 control=1C4D6FC0 hands=2 L2=0
+L4335: hands: mPlayerHandsStatus = 1 (TMD RAISED)
+L4338: dual-tmd right wrist: original bone 51 reconstructed to live controller; support unchanged
+L4339: tmd-right-wrist final: frame=1618 eye=0 hands=1 L2=0 R2=0 valid=1 moved=0 route=SVNC drawSegments=1 ... targetRaw=-7249,18095,-32239
+
+=== P1 weapon-holding (hands=2) wrist baseline ===
+L3861: tmd-right-wrist final: frame=1096 eye=0 hands=2 ... targetRaw=-7569,-15667,-23924
+
+=== P0/P1 R2 fire + hands flip ===
+L4609: hands: mPlayerHandsStatus = 2 (weapon in hands)
+L4611: tmd-right-wrist final: frame=1849 eye=0 hands=2 L2=0 R2=132 ...
+L4645: dual-tmd gun-scale: local gun_scale scale=0 -> 1 ... hands=2 L2=0
+L4647: hands: mPlayerHandsStatus = 1 (TMD RAISED)
+L4649: dual-tmd gun-scale: local gun_scale scale=0 -> 1 ... hands=1 L2=0
+L4640: scalechain: UU/m 65.625 | eyeDelta (-4.13, 0.63, -0.39) UU = 64.0 mm | handOff aim (-5.4, +16.7, -29.7) off (+15.5, +14.2, -29.5) UU
+L4641: handsymmetry: aim dev yaw -2199 (-12.1 deg) pitch +6483 (35.6 deg) | off dev yaw -2580 (-14.2 deg) pitch +7380 (40.5 deg)
+
+=== P2 knife pickup (TMD path NOT taken) ===
+L5388: hip knife: PICKED held=1 pawn=1BD76400 hasTmd=1 nativeKnife=0 ignoreTmd=0
+L5390: knife-hand: held standalone route holder=1 tmd=1 ignoreTmd=0 jointPose=0 glovePose=0 hands=2 frame=2726
+L5391-5394: knife-hand: native joint eye=0/1 frame=2726-2727
+
+=== P2 knife swing + TMD raised ===
+L5639: hip knife: SWING -> RB pulse held=1 pawn=1BD76400 hasTmd=1
+L5643: hands: mPlayerHandsStatus = 1 (TMD RAISED)
+
+=== P3 Volk reload ===
+L5089: next reload: grab-fresh kind=2 phase=2 ... nativeMagazineDraws=792
+L5091: Volk carry wrist: TMD material-0 published after stereo draw, wrist bone=9, segments=1
+L5092: next reload draw gate: stage=12 kind=2 part=1 verts=8297
+L5093: volk-carry-pose: sample=1 ... source=2
+L5210: next reload: inserted/request kind=2 phase=3 ... permit=1
+L5213: next reload: native-ammo-ack kind=2 phase=4 clip=6 reserve=59 consumed=1
+
+=== Two-hand support ===
+L6190: tmd-support-gauntlet: frame=3744 hands=2 support=1 eyes=2 tris=7110 indexRestore=OK paletteRestore=OK
+L6272: tmd-support-gauntlet: frame=3848 hands=2 support=0 eyes=2 tris=7110 indexRestore=OK paletteRestore=OK
+
+=== P0 transient refusal (load) ===
+L2161-2163: dual-tmd gun-scale witness: owner missing ... refused reciprocal local pawn

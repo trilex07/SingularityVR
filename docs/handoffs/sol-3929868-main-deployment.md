@@ -84,15 +84,17 @@ Eject → shoulder mag → palm hold/rotate → insert → fire. Capture `volk-c
 
 Left grip on Volk, rotate both hands, release. Require `tmd-support-gauntlet: ... support=1 eyes=2 tris=7110 ...` and support=0 release when possible.
 
-## Physical grades (fill after PSVR2)
+## Physical grades (PSVR2 complete — see `sol-3929868-psvr2-evidence.md`)
 
 | Area | Grade | Notes |
 |------|-------|-------|
-| P0 gun visibility + gun-scale override | NOT TESTED | |
-| P1 right wrist / final-eye matrices | NOT TESTED | |
-| P2 knife alignment / render route | NOT TESTED | |
-| P3 magazine placement / manual reload | NOT TESTED | |
-| Regression two-handed TMD assembly | NOT TESTED | |
+| P0 gun visibility + gun-scale override | PARTIAL | Scale hook proven; alignment wrong when TMD raised |
+| P1 right wrist / final-eye matrices | PARTIAL | SVNC finals in both eyes; skin vs controller diverge at `hands=1` |
+| P2 knife alignment / render route | FAIL | TMD cuff path never armed; native joint + active TMD glove |
+| P3 magazine placement / manual reload | PASS | stage 12 + volk-carry-pose + native-ammo-ack |
+| Regression two-handed TMD assembly | PASS | support=1/0 receipts intact |
+
+Steam restored to `514bb03` after session.
 
 ## Post-session
 
