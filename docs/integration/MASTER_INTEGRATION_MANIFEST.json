@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "generated_on": "2026-10-23",
+  "branch": "integration/sol-side-master-package-20261023",
+  "baseline_commit": "702f0c32adaa7e9d65df45da3f11ffafec9d89f6",
+  "integration_code_commit": "d897dc4",
+  "head_rule": "Resolve exact branch HEAD with git rev-parse HEAD after fetching; this manifest cannot contain its own commit hash.",
+  "deployment_owner": "Cursor MAIN only",
+  "steam_access_by_this_branch": "no game deployment or launch; one accidental read-only installed-font test is disclosed in BUILD_AND_REGRESSION_EVIDENCE.md",
+  "source_build": {
+    "entry": "spikes/view_matrix/build.ps1",
+    "target": "x86 PE32 /O2",
+    "dll": "spikes/view_matrix/d3d9.dll",
+    "build_receipt": "spikes/view_matrix/d3d9.build.json",
+    "build_receipt_policy": "local generated receipt; MAIN must rebuild and independently hash before Steam deployment"
+  },
+  "modules": [
+    {
+      "id": "M00",
+      "status": "INTEGRATE",
+      "source": "origin/main@702f0c3",
+      "scope": "preserve accepted render, input, Polish, TMD and Volk behavior",
+      "features": {"HipKnifeWithTMD": 0, "TwoHandSpreadPercent": 100},
+      "rollback": "retain exact MAIN-verified baseline DLL, INI and asset hashes; do not restore an assumed baseline"
+    },
+    {
+      "id": "M01",
+      "status": "INTEGRATE_OFFLINE_PHYSICAL_PENDING",
+      "source": "current main ef85bf3 + master commit d897dc4",
+      "scope": "Valkyrie TMD shoulder gate and bounded diagnostic",
+      "changed_files": ["spikes/view_matrix/d3d9.cpp", "spikes/view_matrix/weapon_reload_dispatch.inl", "spikes/view_matrix/weapon_reload_prototypes.h", "spikes/view_matrix/tests/test-next-weapon-reload.cpp"],
+      "gates": {"Input.HipKnifeWithTMD": 0, "Input.ValkyrieManualReload": 1},
+      "receipt": "valkyrie shoulder gate",
+      "rollback": "restore previous MAIN-verified DLL and INI; M01 has no separate installed asset"
+    },
+    {
+      "id": "M02",
+      "status": "PREPARE_ASSETS_NOT_RUNTIME_ENABLED",
+      "source": "side/ui-utility-graphics-remaster@316e60ce0b24a0949eecb84994a2077cc231d59e",
+      "scope": "bilingual industrial sprites/atlases and generation QA; no current menu/GFx override",
+      "atlas_sha256": {
+        "assets/processed/ui_remaster/atlas/ui_atlas_neutral.png": "E4DC0E7D209BDDF23816F101177C8A8B02AA24ED766C55C446877956CAC4F23B",
+        "assets/processed/ui_remaster/atlas/ui_atlas_localized_pl.png": "6436AA257F310F65A1F65C04D7435D9BF8343BFEFAB2EEE50A8A836F96FC83FD",
+        "assets/processed/ui_remaster/atlas/ui_atlas_localized_en.png": "53B570C4787B834270CBCF0943622877613A7EE7E2AD07FA6A363DFE11A422BA"
+      },
+      "test": "python asset-tools/test_ui_atlas_qa.py",
+      "rollback": "data-only: omit optional atlas when packaging; no runtime behavior to revert"
+    },
+    {
+      "id": "M03",
+      "status": "REWORK",
+      "source": "side/diegetic-hud-native@ff29efdefc5982eef5a1c8ba100d3003c5c0bd56",
+      "scope": "physical weapon/TMD readout concept",
+      "blocked_on": "dynamic native producer identity, final weapon/TMD basis, stereo occlusion, private GLB legal boundary",
+      "rollback": "not deployed; existing main health/ammo plates remain authoritative"
+    },
+    {
+      "id": "M04",
+      "status": "PREPARE_PRIVATE_ASSET_PACKAGE",
+      "source": "side/bink-stills-vr@4367040521b9bf74cd6d93d8c260078fb3d7bda7",
+      "manifest": "offline-deliverables/stills-vr-v1/MANIFEST.json",
+      "private_candidates": {
+        "SNG_logo_vr2.bik": "B0D35C12229685142808C82252FDFEEAD9ACFE393B11389CD60B204F26C618EF",
+        "loading_screen_vr2.bik": "4DBDFADA32C493D6D7F779F6B82A628987CBADE8732ACA3C60F4826F49D858EB",
+        "loading_screen_4k.bik": "069253195939380407826A9DDDAB207702A3FA02287DC1B109250D17427234D0"
+      },
+      "default_choice": "1280x720 loading_screen_vr2 only; 4K experimental",
+      "rollback": "MAIN restores only the replaced BIK from its verified per-file backup"
+    },
+    {
+      "id": "M05",
+      "status": "PREPARE_BLOCKED_ON_UE3_PACKAGE_REPLACEMENT",
+      "source": "side/audio-music-sfx-remaster@ba8774c7b9f2c838b3138d42f676a0c692a9b99b",
+      "inventory": "docs/audio_inventory_manifest.json",
+      "validator": "tools/audio/validate_private_candidates.py",
+      "private_root": "SingularityVR-audio-music-sfx-remaster/audio-remaster-private/audition",
+      "cues": 8,
+      "verified_reference_cues": 7,
+      "heuristic_cues": ["ocean/storm ambience"],
+      "rollback": "separate audio package only; never bundled into d3d9.dll; restore each verified original package"
+    },
+    {
+      "id": "M06",
+      "status": "PREPARE_PRIVATE_TEXTURE_PACKAGE",
+      "source": "side/enemy-upscale-batch@393eb16b73e7421fde8a3d852eadd2f5aed7a739",
+      "manifest": "processed/enemy-upscale-batch/MANIFEST.json",
+      "private_root": "SingularityVR-enemy-upscale/processed/enemy-upscale-batch",
+      "candidate_dds_sha256": {
+        "bsplat_decal_d.dds": "94D9CA45447740642625027C2339EBCB500FB6752950E427B5071CAA0491499B",
+        "bsplat3_d.dds": "BEA24F60FB510C82F86A074F0E5A2D7E84ECB13B6F981F29E08E717E5E4BC388",
+        "phasetick_d.dds": "07E55B2A21033400AC6EF0271B3A65511081435E08302027A490CBBD802EF166",
+        "phasetick_e.dds": "A47FED0FD6FF045F317B42581BB2446EF5F1189D2FAFF6DE881B4DA1C3CBA172",
+        "phasetick_n.dds": "F3F85C30E97000C34CCBE6CBC495DAB943F5AA242737DC344D3C2F4CD21DD120",
+        "phasetick_s.dds": "268D6B0AC9E0F61A98835E0731E8B9267DB3E7811CA9736346D919BDDF4E45B9",
+        "revert_t.dds": "1FE491AFB110FF2E0B17343AFB2F5C65442931DA4B6B0ADBAD2C107F4D356CC4",
+        "t_blood_splat02_d.dds": "97ADB665FC8F479FFB7FA9C74D6BAC48157CDA1C17946EBC6C308506343B4E88"
+      },
+      "blocked_on": "current texture-cache hash/format mapping, original alpha/normal validation, GPU lifetime/Reset evidence; agemap sources absent",
+      "rollback": "texture overrides default OFF; MAIN removes only the 8 override mappings and verifies original cache state"
+    },
+    {
+      "id": "M07",
+      "status": "PREPARE_TEXT_ONLY",
+      "source": "side/dubbing-corrections@c3c911d8496e63bb56561f85e40674a22726d8f7",
+      "files": ["audio/polish/all_notes_pl.json", "audio/polish/chrono_notes_pl.json", "audio/polish/notes_pl_patch.jsonl", "localization/pl/all_notes_pl.json", "localization/pl/chrono_notes_pl.json"],
+      "unique_note_ids": 64,
+      "blocked_on": "verified active note producer/package and installed GFx glyph coverage; do not overwrite working dubbing",
+      "rollback": "data-only: keep existing installed localization; separate backed-up note patch only after MAIN proof"
+    },
+    {
+      "id": "M08",
+      "status": "REJECT_DUPLICATE_OR_STALE",
+      "scope": "mirror, old menu/prompt/VFX/gore paths already superseded or conflicting",
+      "rollback": "no runtime code imported"
+    }
+  ]
+}
