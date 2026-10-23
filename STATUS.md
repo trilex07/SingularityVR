@@ -1,5 +1,26 @@
 # STATUS — session handoff
 
+## 2026-10-24 — M03 live HP/ammo PHYSICAL PASS (observed); M01/M03 accepted install closed — M02/M09 next
+
+User confirmed on the same `bb234ba` PSVR2 session (no further headset tests
+required): health indicator updates with damage, ammo counter updates
+correctly, Valkyrie and Volk shoulder reloads both work, TMD and two-hand grip
+work. Runtime receipts independently confirmed live native HP/ammo data and
+duplicate-health suppression (`M03-session-receipts.md`, scheduled in the
+accepted evidence branch). Grading now closed:
+- **M01: PHYSICAL PASS** (`handoff/evidence-m01-bb234ba-psvr2-pass` @ `643bb59`).
+- **M03 live HP/ammo: PHYSICAL PASS for observed behavior.**
+- **M03 per-eye plate edge cases: NOT separately verified** — log has a single
+  `drew` sample and no per-eye projection receipts; documented limitation, does
+  not block other modules.
+- **M03 diegetic 3D HUD: NOT IMPLEMENTED** (asset-only GLB path remains
+  separately gated; "assets alone are not runtime-ready").
+Accepted install PRESERVED as the working pair: DLL `78404247…74541`
+(commit `bb234ba` build), INI `D2E91B0B…A03D8`. M03 needed no new deployment —
+it shipped inside the `591d220` base already installed. Next deployments: M09
+haptics rebase onto this baseline (see below) then M02 only when SOL's runtime
+UI adapter exists (assets alone stay unstaged).
+
 ## 2026-10-24 — M01 shoulder pickup PHYSICALLY_VERIFIED (PSVR2 PASS @ `bb234ba`) — installation preserved
 
 User-accepted PSVR2 session (ended 2026-10-24 00:06): **Valkyrie PASS, Volk S4
