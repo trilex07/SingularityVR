@@ -17681,13 +17681,14 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     float aimTarget[4][4]{};
     const bool supportGrip = Rd(g_twoHandActive) != 0;
     const long supportGunVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
-    const bool weaponSingleHand = handanchor::PistolGrip(gloves,Rd(g_weaponObj)!=0,
+    const bool weaponGripSection=handanchor::WeaponGripSection(gloves,tmdGloves,DualWeaponTmdContext());
+    const bool weaponSingleHand = handanchor::PistolGrip(weaponGripSection,Rd(g_weaponObj)!=0,
         Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip) ||
-        handanchor::ValkyrieSingleGrip(g_valkyrieSingleGrip!=0,gloves,Rd(g_weaponObj)!=0,
+        handanchor::ValkyrieSingleGrip(g_valkyrieSingleGrip!=0,weaponGripSection,Rd(g_weaponObj)!=0,
             Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip) ||
-        handanchor::VolkSingleGrip(g_volkAuthoredGrip!=0,gloves,Rd(g_weaponObj)!=0,
+        handanchor::VolkSingleGrip(g_volkAuthoredGrip!=0,weaponGripSection,Rd(g_weaponObj)!=0,
             Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip) ||
-        handanchor::KasimovSingleGrip(g_kasimovAuthoredGrip!=0,gloves,Rd(g_weaponObj)!=0,
+        handanchor::KasimovSingleGrip(g_kasimovAuthoredGrip!=0,weaponGripSection,Rd(g_weaponObj)!=0,
             Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip);
     if (weaponSingleHand) {
         BuildGunC(aimTarget);
@@ -17769,7 +17770,9 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
                 memcpy(off,targetOff,sizeof(off));
         }
     }
-    if(handanchor::TmdRightWristAnchor(Rd(g_dualWeaponTmdRightWrist)!=0,tmdGloves,
+    // A held weapon owns the authored right-hand grip. Its target is BuildGunC;
+    // the free-wrist translation below is only consumed without that grip.
+    if(!weaponSingleHand && handanchor::TmdRightWristAnchor(Rd(g_dualWeaponTmdRightWrist)!=0,tmdGloves,
         DualWeaponTmdContext(),Rd(g_handsStatus)==HANDS_TMD,AimHand()==1,
         handValid[1],Rd(g_twoHandActive)!=0,(int)Rd(g_gloveIsolate))){
         const auto& tmdBind=armnatural::TmdBind();

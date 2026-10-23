@@ -6,6 +6,20 @@
 static void identity(float m[4][4]){for(int r=0;r<4;++r)for(int c=0;c<4;++c)m[r][c]=r==c?1.f:0.f;}
 static bool close(armik::V a,armik::V b){return armik::Length(a-b)<.001f;}
 int main(){
+    assert(handanchor::WeaponGripSection(true,false,false));
+    assert(handanchor::WeaponGripSection(false,true,true));
+    assert(!handanchor::WeaponGripSection(false,true,false));
+    assert(!handanchor::WeaponGripSection(false,false,true));
+    // In the accepted single-hand weapon pose, changing the source section
+    // from noTMD to TMD must not change which final right-hand target is used.
+    for(bool tmd : {false,true}) {
+        const bool section=handanchor::WeaponGripSection(!tmd,tmd,tmd);
+        assert(handanchor::PistolGrip(section,true,false,5799,false));
+        assert(handanchor::ValkyrieSingleGrip(true,section,true,false,11387,false));
+        assert(handanchor::VolkSingleGrip(true,section,true,false,8297,false));
+        assert(handanchor::KasimovSingleGrip(true,section,true,false,11389,false));
+        assert(!handanchor::VolkSingleGrip(true,section,true,false,8297,true));
+    }
     assert(handanchor::PistolGrip(true,true,false,5799,false));
     assert(!handanchor::PistolGrip(true,false,false,5799,false)); // cached mesh is not an equipped weapon
     assert(!handanchor::PistolGrip(true,true,true,5799,false));
@@ -55,6 +69,17 @@ int main(){
     // target reaches the tracked wrist for every actual camera-ride case.
     assert(handanchor::AimTarget(false,controller,adjusted)==adjusted);
     assert(handanchor::AimTarget(true,controller,adjusted)==controller);
+    float gunTarget[4][4];identity(gunTarget);gunTarget[3][0]=38;
+    float rightFromNoTmd[4][4],rightFromTmd[4][4],leftDelta[4][4];
+    float nativeRide[4][4];identity(nativeRide);
+    assert(skeletal::LocalDeltaPair(leftDelta,rightFromNoTmd,local,nativeRide,
+        adjusted,handanchor::AimTarget(true,gunTarget,adjusted)));
+    const bool tmdWeaponGrip=handanchor::PistolGrip(
+        handanchor::WeaponGripSection(false,true,true),true,false,5799,false);
+    assert(skeletal::LocalDeltaPair(leftDelta,rightFromTmd,local,nativeRide,
+        adjusted,handanchor::AimTarget(tmdWeaponGrip,gunTarget,adjusted)));
+    for(int r=0;r<4;++r)for(int c=0;c<4;++c)
+        assert(std::fabs(rightFromNoTmd[r][c]-rightFromTmd[r][c])<.00001f);
     for(int r=0;r<3;++r)for(int c=0;c<4;++c)assert(adjusted[r][c]==controller[r][c]);
     // The actual camera ride must cancel, even when it differs from the live target (holster/ADS).
     for(int moved=0;moved<3;++moved){

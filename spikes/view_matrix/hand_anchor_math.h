@@ -17,6 +17,13 @@ inline bool KasimovSingleGrip(bool enabled,bool gloves,bool liveWeapon,bool hols
                               long gunVertices,bool supportGrip) {
     return enabled && gloves && liveWeapon && !holstered && gunVertices==11389 && !supportGrip;
 }
+// Material-0 TMD gloves contain the same right hand as the no-TMD foreground
+// section. While a right-hand weapon is held, both must consume its final
+// BuildGunC target; otherwise the TMD glove follows the bare controller while
+// the visible weapon follows its authored grip/align transform.
+inline bool WeaponGripSection(bool noTmdGloves,bool tmdGloves,bool dualContext) {
+    return noTmdGloves || (tmdGloves && dualContext);
+}
 // Free hands miss the pads by the measured gun-anchor residual (~50 UU left,
 // ~41 UU right). That correction runs only while no weapon is live. A held
 // pistol keeps BuildGunC through AimTarget.
