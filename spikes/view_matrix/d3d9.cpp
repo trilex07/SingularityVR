@@ -2388,6 +2388,7 @@ static NextReloadVisual g_nextVisual;
 static weaponreload::Witness g_nextWitness;
 static int g_reloadPalmGrip=0; // default-OFF; measured native wrist, not AIM-space mount
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
+static bool g_nextWristStagedFromTmd=false;
 static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
 static int g_weaponMeasuredAim=0; // default OFF; exact rendered barrel direction
 static int g_centurionAimProbe=0; // read-only: compare native shot, controller aim and rendered +X
@@ -17702,10 +17703,13 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             centurionvisual::Time((centurionreload::Phase)physicalVisual.phase,physicalVisual.since,physicalVisual.closed,physicalNow,g_centurionRefillOnly!=0).active;
     }
     NextReloadVisual nextCarryVisual;bool nextCarry=false;
-    if(g_reloadPalmGrip&&gloves&&TryAcquireSRWLockShared(&g_nextVisualLock)){
+    // Volk may use the original TMD material-0 glove (not the noTMD glove).
+    // Its carried clip still needs a wrist witness from that *rendered* section.
+    if(g_reloadPalmGrip&&(gloves||tmdGloves)&&TryAcquireSRWLockShared(&g_nextVisualLock)){
         nextCarryVisual=g_nextVisual;ReleaseSRWLockShared(&g_nextVisualLock);
         const auto now=GetTickCount64();
         nextCarry=g_nextNativeMagazine&&nextCarryVisual.valid&&nextCarryVisual.phase==weaponreload::Phase::Carrying&&
+            (gloves||nextCarryVisual.kind==weaponreload::Kind::Volk)&&
             nextCarryVisual.pawn==(uint32_t)g_playerPawn&&nextCarryVisual.weapon==(uint32_t)Rd(g_weaponObj)&&
             nextCarryVisual.since&&now>=nextCarryVisual.sampledMs&&now-nextCarryVisual.sampledMs<=150;
     }
@@ -18001,18 +18005,29 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             std::memcpy(g_knifeHandLocal.m,local,sizeof(local));
         }
     }
-    if(nextCarry&&g_nativeGlovePoseThisDraw&&wristSlot[0]>=0){
+    const auto carrySource=weaponcarry::Source(nextCarryVisual.kind,nextCarry,gloves,tmdGloves,
+        g_nativeGlovePoseThisDraw,handValid[0],wristBone[0]);
+    if(carrySource!=weaponcarry::WristSource::None&&wristSlot[0]>=0){
+        const armbind::Mat* wristBind=nullptr;
+        if(carrySource==weaponcarry::WristSource::NoTmd)
+            wristBind=&g_nativeGloveRenderer.WristReference(0);
+        else {
+            const auto& tmdBind=armnatural::TmdBind();
+            if(tmdBind.ready)wristBind=&tmdBind.bind[9];
+        }
         armbind::Mat tracking,chain,actualLocal,actualBase=centurionvisual::Identity(),desired;
         std::memcpy(actualLocal.m,local,sizeof(local));
         if(g_thisDrawMoved==1)BuildGunC(actualBase.m);
         else if(g_thisDrawMoved==2)BuildTmdC(actualBase.m);
         skeletal::Multiply(chain.m,actualLocal.m,actualBase.m);
-        if(weaponreload::TrackingMap({g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
+        if(wristBind&&weaponreload::TrackingMap({g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
              g_baseYaw*(6.2831853f/65536.f),MetresToUU(),tracking)&&
-           weaponcarry::WristTracking(g_nativeGloveRenderer.WristReference(0),
-             reinterpret_cast<const float(*)[4]>(changed+wristSlot[0]*3),chain,tracking,desired))
+           weaponcarry::WristTracking(*wristBind,
+             reinterpret_cast<const float(*)[4]>(changed+wristSlot[0]*3),chain,tracking,desired)){
             g_nextWristStaged={true,nextCarryVisual.kind,nextCarryVisual.pawn,nextCarryVisual.weapon,
                 nextCarryVisual.since,GetTickCount64(),desired};
+            g_nextWristStagedFromTmd=carrySource==weaponcarry::WristSource::Tmd;
+        }
     }
     if(physicalActive&&gloves&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount){
         armbind::Mat tracking;
@@ -20307,6 +20322,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     float shortSleevePalette[45][4];bool shortSleeveReady=false;
     g_centurionGripStaged={};
     g_nextWristStaged={};
+    g_nextWristStagedFromTmd=false;
     const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(dev,numVertices,startIndex,primCount,
         independentSaved,shortSleevePalette,shortSleeveReady) : 0;
     const bool exactTmdSegments=nSeg==1&&segStart[0]==startIndex&&segPrims[0]==primCount;
@@ -20593,8 +20609,14 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 g_tmdShortGauntletRenderer.MinIndex(),g_tmdShortGauntletRenderer.MaxIndex(),minIndex,numVertices,baseVertex);
     }
     if(g_reloadPalmGrip&&independentRegs&&SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&
+       (!g_nextWristStagedFromTmd||nSeg>0)&&
        g_nextWristStaged.valid&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
         g_nextWrist=g_nextWristStaged;ReleaseSRWLockExclusive(&g_nextVisualLock);
+        if(g_nextWristStagedFromTmd){
+            static LONG reportedVolkWrist=0;
+            if(InterlockedCompareExchange(&reportedVolkWrist,1,0)==0)
+                Log("Volk carry wrist: TMD material-0 published after stereo draw, wrist bone=9, segments=%d",nSeg);
+        }
     }
     if(g_centurionPhysicalPolish&&independentRegs&&SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&
        g_centurionGripStaged.identity.valid&&TryAcquireSRWLockExclusive(&g_centurionGripLock)){

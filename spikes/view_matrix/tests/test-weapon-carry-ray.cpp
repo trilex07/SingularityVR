@@ -1,11 +1,34 @@
 #include "../weapon_reload_carry.h"
 #include "../weapon_trace_math.h"
 #include "../weapon_muzzle_geometry.h"
+#include "../arm_natural.h"
 #include <cassert>
 #include <cstdio>
 static armbind::Mat Identity(){armbind::Mat m{};for(unsigned i=0;i<4;++i)m.m[i][i]=1;return m;}
 int main(){
     using namespace weaponreload;
+    using weaponcarry::WristSource;
+    assert(weaponcarry::Source(Kind::Volk,true,false,true,false,true,9)==WristSource::Tmd);
+    assert(weaponcarry::Source(Kind::Volk,true,true,false,true,true,9)==WristSource::NoTmd);
+    assert(weaponcarry::Source(Kind::Valkyrie,true,false,true,false,true,9)==WristSource::None);
+    assert(weaponcarry::Source(Kind::Kasimov,true,false,true,false,true,9)==WristSource::None);
+    assert(weaponcarry::Source(Kind::Volk,false,false,true,false,true,9)==WristSource::None);
+    assert(weaponcarry::Source(Kind::Volk,true,false,true,false,false,9)==WristSource::None);
+    assert(weaponcarry::Source(Kind::Volk,true,false,true,false,true,51)==WristSource::None);
+    const auto& tmd=armnatural::TmdBind();assert(tmd.ready);
+    for(int turn=0;turn<2;++turn){
+        auto skin=Identity(),chain=Identity(),world=Identity(),tracked=Identity(),expected=Identity();
+        if(turn){skin.m[0][0]=0;skin.m[0][1]=1;skin.m[1][0]=-1;skin.m[1][1]=0;}
+        chain.m[3][2]=7;world.m[3][0]=13;
+        float gpu[3][4];armbind::ToGpu(skin,gpu);
+        assert(weaponcarry::WristTracking(tmd.bind[9],gpu,chain,world,tracked));
+        armbind::Mat a,inverse;assert(skeletal::Inverse(inverse.m,world.m));
+        skeletal::Multiply(a.m,tmd.bind[9].m,skin.m);
+        skeletal::Multiply(expected.m,a.m,chain.m);
+        skeletal::Multiply(a.m,expected.m,inverse.m);
+        for(unsigned row=0;row<4;++row)for(unsigned col=0;col<4;++col)
+            assert(std::fabs(tracked.m[row][col]-a.m[row][col])<.0001f);
+    }
     for(unsigned i=0;i<4000;++i){
         const float x=float(i%19)*.3f;
         float a[]{x,2,-3},b[]{x+.1f,2.2f,-2.9f},offset[]{3,-4,.3f};
@@ -40,5 +63,5 @@ int main(){
     armbind::Mat out;assert(!weaponcarry::Mount(Kind::None,out));
     weaponmuzzle::Witness muzzle{true,Kind::Valkyrie,3,4,100,{1,2,3}};
     assert(muzzle.Current(3,4,250));assert(!muzzle.Current(3,4,251));assert(!muzzle.Current(3,5,120));
-    puts("L1 PASS: 4000 translated rays preserve direction; three native wrist mounts, source reflection, muzzle chain, stale/foreign identities");
+    puts("L1 PASS: 4000 translated rays, three native wrist mounts, TMD/Volk source and wrist rotations, muzzle chain, stale/foreign identities");
 }

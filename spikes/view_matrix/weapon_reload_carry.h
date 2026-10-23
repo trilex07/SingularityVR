@@ -4,6 +4,16 @@
 namespace weaponcarry {
 using Mat=armbind::Mat;
 using Kind=weaponreload::Kind;
+enum class WristSource { None, NoTmd, Tmd };
+// Only Volk's original TMD glove is a second source of the carried-clip wrist.
+// Other weapons retain their accepted noTMD producer; neither route invents a pose.
+inline WristSource Source(Kind kind,bool carrying,bool noTmdGlove,bool tmdGlove,
+                          bool noTmdPosed,bool leftTracked,unsigned wristBone){
+    if(!carrying)return WristSource::None;
+    if(noTmdGlove&&noTmdPosed)return WristSource::NoTmd;
+    if(kind==Kind::Volk&&tmdGlove&&leftTracked&&wristBone==9u)return WristSource::Tmd;
+    return WristSource::None;
+}
 inline float Curl(Kind kind){return kind==Kind::Kasimov?.35f:.25f;}
 // Original glove + original clip, fit_magazine_palm.py: zero intersecting
 // triangles and zero sampled containment. Units are NATIVE wrist UU, not XR.
