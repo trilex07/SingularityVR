@@ -1,6 +1,56 @@
 # STATUS — session handoff
 
+## 2026-10-24 — M09 Session A PHYSICAL PASS (corrected); safety review PASS; Session B installed (TmdPulses=1, READY_FOR_PHYSICAL_ACCEPTANCE)
+
+Corrected outcome (earlier stationary-rumble FAIL withdrawn by the user —
+they were only aiming without firing; no failed test exists):
+- **M09 Session A: PHYSICAL PASS for tested scope** — weapon firing feedback
+  (pistol/Valkyrie/Volk) PASS, normal TMD PASS, input/two-hand/reload PASS.
+- Stationary firing: **NOT TESTED** (scheduled inside the Session B session;
+  no PASS claim permitted without evidence).
+- Archive: `docs/evidence/m09-session-a-20261024/` (complete log
+  `081DCA19…7A4D`, INI, build manifest, install report,
+  `analysis-session-a.md`).
+- Receipt analysis: **zero** XINPUT RUMBLE/SUBMIT/STOP receipts for the whole
+  session, and zero nonzero motor captures — but the engine called
+  `XInputSetState` ~2800/s with `emulation ON` (alive hook), and comparator
+  M01-session log shows the identical zero shape. Conclusion (evidence):
+  the game's authored XInput rumble route never emits nonzero in VR sessions
+  (pre-existing, predates M09); the felt firing feedback is the PSVR2
+  adaptive-trigger bridge (`rifleFire=3,7,40 ...`, SteamVR/OpenXR route,
+  bridge PID 37772 connected) — same-config accepted baseline behavior.
+  Receipt caps were NOT the limiter (nothing logged at all).
+- Safety review vs `7388383`/`5a4ac26`: the current integration is a
+  **superset** — hardened `IsLocal` (IsLive + pawn-ownership chain:
+  expectedTmd/playerPawn/CameraOwnedPawn/EngineNativeLocalPlayerPawn),
+  bounded `TMD NON-LOCAL` receipts, `[Haptics Trace] TMD EVENT` receipts,
+  proven ret==0 semantics, SRWLOCK-exclusive state, fail-closed
+  `hooksReady`, 200 ms bounded pulses, focus/pause/cinematic/panel/session
+  clears. Branches are siblings (merge-base `9aa6070`); nothing from either
+  historical branch was wholesale-merged and no function signatures changed.
+- **Session B controlled install 2026-10-24 00:41:08** (guard exit=0):
+  DLL bytes UNCHANGED `92D1BABC…` (Session-A graded build), INI advanced
+  `D2E91B0B…` → `DB2C6CFF…854B` by exactly one key `[Haptics] TmdPulses=1`
+  (354→355). Profile `BBF1F651…BC89` promoted over the Session-A graded
+  state; plan `deployment/acceptance-20261024-m09-sessionb/`. Backup
+  `deployment/install-backups/20261024-004108` = Session-A pair (dll
+  `92D1BABC…`, INI `D2E91B0B…`); the deeper accepted M01/M03 baseline remains
+  in `20261023-235243` (dll `78404247…`, INI `4EA3857A…`).
+- Session B physical script (single session): 1) each available TMD power
+  (Impulse + others) — bounded pulses expected on the TMD hand; 2) ordinary
+  weapon rumble regression check; 3) fire with the controller held
+  stationary; 4) end session via menu/pause — confirm pulses clear (no
+  stuck/excessive vibration). Grade normal gun feedback, stationary firing,
+  and TMD pulses separately; log greps: `TMD EVENT` (accepted=1), `SUBMIT
+  [n/32]` gate tuple + xrResult, `STOP [n/16]` after menu/pause.
+- Next after Session B grading: M02 first runtime slice
+  (`side/ui-utility-graphics-remaster` assets + `feature/side-m02-runtime-ui-prep`
+  @ `df17461` runtime) integrated onto the then-current accepted source with
+  an independent branch, build and rollback; magazine insertion comfort
+  `54bd946` stays staged and separate.
+
 ## 2026-10-24 — M09 haptics on current baseline: cherry-pick, battery PASS, controlled installed (READY_FOR_PHYSICAL_ACCEPTANCE)
+
 
 - Branch `integration/m09-haptics-on-current-baseline`: base `27f92bf`
   (integration tip incl. M01/M03 acceptance records) + cherry-pick `-x` of

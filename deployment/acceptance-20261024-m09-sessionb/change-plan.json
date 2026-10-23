@@ -1,0 +1,14 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "BBF1F651042771E3320D776535E43079ECF1128FCDAEEE45291EE4F31B12BC89",
+  "reason": "M09 Session B controlled change: enable ONLY [Haptics] TmdPulses=1 on the Session-A graded M09 candidate. DLL bytes unchanged (92D1BABC...); no other keys added or modified; all 354 existing keys preserved.",
+  "files": [],
+  "ini": [
+    {
+      "key": "Haptics/TmdPulses",
+      "before": null,
+      "after": "1",
+      "reason": " M09 Session B: enable bounded native TMD power pulses (default OFF otherwise)"
+    }
+  ]
+}
