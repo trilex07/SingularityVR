@@ -63,7 +63,7 @@ headset rendering from the offline result.
 
 With `TmdShortGauntlet=1`, the exact mixed section is now admitted before the
 arm-flesh rule only in hands-only gameplay stereo, a scene foreground window,
-triangle-list/min-index-zero geometry, non-shadow rendering, focused OpenXR,
+triangle-list validated native index-range geometry, non-shadow rendering, focused OpenXR,
 and valid physical-left tracking. The later palette and segment checks must
 pass before drawing; otherwise the admitted mixed material is suppressed
 entirely. Missing/corrupt SVTG or GPU buffer failure uses the existing 6527
@@ -71,6 +71,18 @@ hardware-face/49-run original-index cut, never the unfiltered 7704 faces.
 The 17-face tail still needs a successful two-eye SVTG draw and index-buffer
 restoration before suppression. Gate logs are one per failure stage, bounded
 for the lifetime of the DLL.
+
+## Runtime visibility repair (base 332cc98)
+
+See [runtime handoff](handoffs/tmd-short-gauntlet-runtime.md). The real mixed
+draw uses minIndex=2626 / numVertices=4818, not zero / 7444. The unchanged
+SVTG indices span 2743..7322 and fit that native declaration. Both admission
+and final replacement now allow the measured range; the latter checks all
+decoded indices through their cached extrema. Genuine native animation
+ownership remains in both FgHidden and PrepareIndependentLeft. Only the two
+false melee-window producers on the shared Impulse input are gated when this
+feature is enabled, TMD is acquired and no knife is held. The success receipt
+is emitted after both eye draws, IB restoration AND palette restoration.
 
 ## Private generation and offline tests
 

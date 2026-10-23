@@ -11665,7 +11665,8 @@ void SyncXRInput(XrTime displayTime) {
         // must not re-arm every frame, hence the edge.
         if (i == g_impulseBtnIdx) {
             static bool wasDown = false;
-            if (down && !wasDown && InterlockedCompareExchange(&g_meleeArmsMs, 0, 0) > 0) {
+            if (down && !wasDown && InterlockedCompareExchange(&g_meleeArmsMs, 0, 0) > 0 &&
+                tmdgauntlet::ArmImpulseMelee(g_tmdShortGauntlet,Rd(g_haveTMD)==1,g_hipKnifeState.held>=0)) {
                 InterlockedOr(&g_vrRecorderEventFlags, vrrec::Melee);
                 const LONG64 now = (LONG64)GetTickCount64();
                 InterlockedExchange64(&g_lastMeleeEdgeMs, now);   // fix-G/perf: edge age for spike attribution
@@ -12306,7 +12307,8 @@ void SyncXRInput(XrTime displayTime) {
                           | ((LONG)(BYTE)(lt * 255.0f) << 16)
                           | ((LONG)(BYTE)(rt * 255.0f) << 24);
     if (g_diagEnabled) InterlockedExchange(&g_diagRawBtns, packedBtns);
-    if ((btns & XI_RSHOULDER) && !uiMenu && !Rd(g_gamePaused)) {
+    if ((btns & XI_RSHOULDER) && !uiMenu && !Rd(g_gamePaused) &&
+        tmdgauntlet::ArmImpulseMelee(g_tmdShortGauntlet,Rd(g_haveTMD)==1,g_hipKnifeState.held>=0)) {
         ArmMeleeWindowFromKnife();
     }
 
@@ -16440,7 +16442,19 @@ static bool NativeRestraintHandsNow() {
         g_playerPawn && g_playerPawn==g_nativeRestraintPawn && VrModeOn();
 }
 static bool NativeAnimatedHandsNow() {
-    return ArmsAnimActive() || NativeCinematicHandsNow() || NativeRestraintHandsNow();
+    const bool arms=ArmsAnimActive(),cinema=NativeCinematicHandsNow(),restraint=NativeRestraintHandsNow();
+    // Both FgHidden and PrepareIndependentLeft consume this same ownership.
+    // Do not waive a genuine owner to force the replacement through.
+    if(g_tmdShortGauntlet && (arms||cinema||restraint)) {
+        static volatile LONG seen=0;
+        const unsigned owner=(arms?1u:0u)|(cinema?2u:0u)|(restraint?4u:0u);
+        const LONG bit=1L<<owner;
+        if(!(seen&bit) && !(InterlockedOr(&seen,bit)&bit))
+            Log("tmd-short-gauntlet: native-animation owner=%u arms=%d cinema=%d restraint=%d heal=%d melee=%d knife=%d hands=%ld owned=%ld",
+                owner,arms,cinema,restraint,HealWindowActive(),MeleeWindowActive(),
+                g_hipKnifeState.held,Rd(g_handsStatus),Rd(g_haveTMD));
+    }
+    return arms || cinema || restraint;
 }
 
 inline void ArmMeleeWindowFromKnife() {
@@ -18342,7 +18356,7 @@ static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangle
     if(g_tmdShortGauntlet && gloveisolate::IsArmFleshSection(verts,first,triangles)) {
         const tmdgauntlet::Entry entry{
             g_tmdShortGauntlet,true,GlovesUntilWeaponNow() && Rd(g_gloveIsolate)==2,NativeAnimatedHandsNow(),
-            primitive==D3DPT_TRIANGLELIST,minIndex==0,Rd(g_rtIsScene)!=0,
+            primitive==D3DPT_TRIANGLELIST,tmdgauntlet::KnownNativeRange(minIndex,verts),Rd(g_rtIsScene)!=0,
             g_sceneMode.Current()==vrscene::Mode::GameplayStereo && Rd(g_dupDraws)!=0,
             g_xrSessionState==XR_SESSION_STATE_FOCUSED,
             !Rd(g_gamePaused) && !Rd(g_vrUiMenu) && !Rd(g_inCinematic),FgMatchWindow(),
@@ -20175,9 +20189,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // A later material-2 tail may only use a receipt from THIS mixed-section
     // draw. Invalidate the previous receipt even if allocation/binding fails.
     if(isolateTmdHardware)InterlockedExchange(&g_tmdShortSuccessfulFrame,-1);
-    const bool shortTmdCandidate = isolateTmdHardware && minIndex==0 &&
+    const bool shortTmdRange=g_tmdShortGauntletRenderer.Covers(minIndex,numVertices);
+    const bool shortTmdCandidate = isolateTmdHardware && shortTmdRange &&
         tmdgauntlet::Eligible(g_tmdShortGauntlet,g_tmdShortGauntletRenderer.Ready(),
-            g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_gloveExperiment && g_nativeGloveExperiment,
+            g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_nativeGloveRenderer.Ready() &&
+                g_gloveExperiment && g_nativeGloveExperiment,
             g_independentHands,(int)Rd(g_gloveIsolate),
             Rd(g_rtIsScene)!=0 && Rd(g_dupDraws)!=0 &&
                 g_sceneMode.Current()==vrscene::Mode::GameplayStereo &&
@@ -20188,7 +20204,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         g_tmdShortGauntletRenderer.Ensure(dev):nullptr;
     if(shortTmdAdmitted && admittedGate==tmdgauntlet::Gate::Pass) {
         const auto gate=!g_tmdShortGauntletRenderer.Ready()?tmdgauntlet::Gate::Cache:
-            !(g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_gloveExperiment && g_nativeGloveExperiment)?
+            !shortTmdRange?tmdgauntlet::Gate::MinIndex:
+            !(g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_nativeGloveRenderer.Ready() &&
+                g_gloveExperiment && g_nativeGloveExperiment)?
                 tmdgauntlet::Gate::Cuff:
             !shortTmdBuffer?tmdgauntlet::Gate::Buffer:tmdgauntlet::Gate::Pass;
         if(gate!=tmdgauntlet::Gate::Pass)LogShortTmdGate(gate,numVertices,startIndex,primCount);
@@ -20281,12 +20299,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                     cuffProfile,numVertices,triangles,WeaponInHands()?1:0,h);}
                 return h;
             });
-        if(bound.handled){
-            if(bound.shortTmd){static LONG reportedShort=0;
-                if(InterlockedCompareExchange(&reportedShort,1,0)==0)
-                    Log("tmd-short-gauntlet: original hardware + short closed sleeve, 1 material-1 draw/eye");}
-            return bound.hr;
-        }
+        if(bound.handled)return bound.hr;
         if (isolateNoTmdFaces) {
             for (const auto& run : gloveisolate::kNoTmdHandFaces) {
                 const HRESULT h = g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
@@ -20332,10 +20345,6 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         LogShortTmdGate(tmdgauntlet::Gate::Draw,numVertices,startIndex,primCount);
     if(shortTmdBuffer && FAILED(nativeRestore))
         LogShortTmdGate(tmdgauntlet::Gate::Restore,numVertices,startIndex,primCount);
-    if(tmdgauntlet::SuccessfulStereoBoundDraw(shortTmdBuffer!=nullptr,shortEyeDraws,dhr,nativeRestore)) {
-        InterlockedExchange(&g_tmdShortSuccessfulFrame,Rd(g_armPaletteFrameToken));
-        InterlockedExchange(&g_tmdShortSuccessfulDraw,Rd(g_frameDrawIdx));
-    }
     if(cylinderBase>=0&&FAILED(g_origSetVSConstF(dev,cylinderBase,&cylinderSaved[0][0],15))){
         g_centurionAnimationFault=true;InterlockedExchange(&g_centurionShellSeenGun,0);
         g_thisDrawMoved=0;return E_FAIL;
@@ -20345,6 +20354,16 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         g_centurionSocket=cylinderReplay.socket;ReleaseSRWLockExclusive(&g_centurionSocketLock);
     }
     const HRESULT handRestore=independentRegs?g_origSetVSConstF(dev,5,&independentSaved[0][0],independentRegs):S_OK;
+    if(shortTmdBuffer && FAILED(handRestore))
+        LogShortTmdGate(tmdgauntlet::Gate::Restore,numVertices,startIndex,primCount);
+    if(tmdgauntlet::SuccessfulStereoBoundDraw(shortTmdBuffer!=nullptr,shortEyeDraws,dhr,nativeRestore,handRestore)) {
+        InterlockedExchange(&g_tmdShortSuccessfulFrame,Rd(g_armPaletteFrameToken));
+        InterlockedExchange(&g_tmdShortSuccessfulDraw,Rd(g_frameDrawIdx));
+        static LONG reportedShort=0;
+        if(InterlockedCompareExchange(&reportedShort,1,0)==0)
+            Log("tmd-short-gauntlet: stereo receipt eyes=2 tris=7110 indices=%u..%u nativeRange=%u+%u base=%d indexRestore=OK paletteRestore=OK",
+                g_tmdShortGauntletRenderer.MinIndex(),g_tmdShortGauntletRenderer.MaxIndex(),minIndex,numVertices,baseVertex);
+    }
     if(g_reloadPalmGrip&&independentRegs&&SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&
        g_nextWristStaged.valid&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
         g_nextWrist=g_nextWristStaged;ReleaseSRWLockExclusive(&g_nextVisualLock);

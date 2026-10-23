@@ -5,6 +5,22 @@
 #include "glove_native.h"
 
 namespace tmdgauntlet {
+// RB is native melee before acquisition, but TMD Impulse afterwards. Only
+// correct the opt-in short-gauntlet path; physical knife producers stay intact.
+inline bool ArmImpulseMelee(bool feature, bool tmdOwned, bool knifeHeld) {
+    return !feature || !tmdOwned || knifeHeld;
+}
+// D3D9 MinVertexIndex is a lower bound, NOT an index-buffer rebase. SVTG
+// retains the original absolute indices. Check the decoded payload against
+// the entire declared native range, without changing VB/baseVertex/stride.
+inline bool CoversIndices(unsigned minIndex,unsigned vertices,unsigned lo,unsigned hi) {
+    return vertices && minIndex<7444 && vertices<=7444-minIndex &&
+        lo<=hi && lo>=minIndex && hi-minIndex<vertices;
+}
+inline bool KnownNativeRange(unsigned minIndex,unsigned vertices) {
+    return (minIndex==0 && vertices==7444) ||
+        (minIndex==2626 && (vertices==4818 || vertices==4781));
+}
 // Evaluated at the REAL early foreground visibility seam, before the
 // gloves-only arm-flesh suppression. The index cut still owns every admitted
 // mixed section; admission alone must never draw the unfiltered section.
@@ -15,7 +31,7 @@ enum class Gate : unsigned char {
 };
 struct Entry {
     bool enabled=false, exact=false, handsOnly=false, animated=false;
-    bool triangleList=false, minIndexZero=false, scene=false, stereo=false, focus=false, context=false;
+    bool triangleList=false, indexRange=false, scene=false, stereo=false, focus=false, context=false;
     bool window=false, shadow=false, tracked=false;
 };
 inline Gate FirstEntryGate(const Entry& e) {
@@ -24,7 +40,7 @@ inline Gate FirstEntryGate(const Entry& e) {
     if(!e.handsOnly)return Gate::HandsOnly;
     if(e.animated)return Gate::Animated;
     if(!e.triangleList)return Gate::Primitive;
-    if(!e.minIndexZero)return Gate::MinIndex;
+    if(!e.indexRange)return Gate::MinIndex;
     if(!e.scene)return Gate::Scene;
     if(!e.stereo)return Gate::Stereo;
     if(!e.focus)return Gate::Focus;
@@ -50,7 +66,10 @@ inline Gate AfterPalette(bool admitted,bool palette,bool exactSegments) {
     if(!exactSegments)return Gate::Segments;
     return Gate::Pass;
 }
-struct Data { std::vector<std::uint16_t> indices; unsigned capTriangles=0; };
+struct Data {
+    std::vector<std::uint16_t> indices;
+    unsigned capTriangles=0, minIndex=7444, maxIndex=0;
+};
 inline bool Decode(const unsigned char* p, std::size_t bytes, Data& out) {
     if (!p || bytes < 24 || std::memcmp(p,"SVTG",4) || gloves::U32(p+4)!=1 ||
         gloves::U32(p+8)!=7444 || gloves::U32(p+12)!=7110 ||
@@ -61,6 +80,10 @@ inline bool Decode(const unsigned char* p, std::size_t bytes, Data& out) {
     for (unsigned i=0;i<next.indices.size();i+=3) {
         const auto a=next.indices[i],b=next.indices[i+1],c=next.indices[i+2];
         if (a>=7444 || b>=7444 || c>=7444 || a==b || b==c || a==c) return false;
+        for(unsigned index:{unsigned(a),unsigned(b),unsigned(c)}) {
+            if(index<next.minIndex)next.minIndex=index;
+            if(index>next.maxIndex)next.maxIndex=index;
+        }
     }
     out=std::move(next);return true;
 }
@@ -97,8 +120,9 @@ inline HRESULT DrawHardwareFallback(unsigned startIndex,Draw&& draw) {
     }
     return result;
 }
-inline bool SuccessfulStereoBoundDraw(bool shortBuffer,unsigned eyeDraws,HRESULT draw,HRESULT restore) {
-    return shortBuffer && eyeDraws>=2 && SUCCEEDED(draw) && SUCCEEDED(restore);
+inline bool SuccessfulStereoBoundDraw(bool shortBuffer,unsigned eyeDraws,HRESULT draw,HRESULT restore,
+                                     HRESULT paletteRestore=S_OK) {
+    return shortBuffer && eyeDraws==2 && SUCCEEDED(draw) && SUCCEEDED(restore) && SUCCEEDED(paletteRestore);
 }
 inline bool TailAfterSuccessfulBase(long frame,long draw,long successfulFrame,long successfulDraw) {
     // Material 2 follows the mixed material-1 draw. A stale receipt after
@@ -114,6 +138,11 @@ public:
         data=std::move(next);ready=true;return true;
     }
     bool Ready() const {return ready;}
+    unsigned MinIndex() const {return data.minIndex;}
+    unsigned MaxIndex() const {return data.maxIndex;}
+    bool Covers(unsigned minIndex,unsigned vertices) const {
+        return ready && CoversIndices(minIndex,vertices,data.minIndex,data.maxIndex);
+    }
     unsigned Triangles() const {return ready ? (unsigned)data.indices.size()/3 : 0;}
     void ReleaseGPU(){gloves::Release(ib);failed=false;}
     IDirect3DIndexBuffer9* Ensure(IDirect3DDevice9* dev) {

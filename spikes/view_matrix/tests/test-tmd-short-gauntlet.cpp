@@ -26,6 +26,7 @@ static void TestEarlyVisibilityToStereoDraw() {
     // Reproduce the hook order, not just its final draw: FgHidden's exact
     // admission is decided BEFORE palette preparation and IndexGuard binding.
     tmdgauntlet::Entry e{true,true,true,false,true,true,true,true,true,true,true,false,true};
+    e.indexRange=tmdgauntlet::KnownNativeRange(2626,4818);
     assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::Pass);
     assert(tmdgauntlet::AfterPalette(true,true,true)==tmdgauntlet::Gate::Pass);
     Dev dev;nativegloves::IndexGuard<Dev,Buffer> guard(&dev,&dev.replacement,36369*2);
@@ -58,14 +59,39 @@ static void TestEarlyVisibilityToStereoDraw() {
     e.tracked=true;e.shadow=true;
     assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::Shadow);
     assert(!tmdgauntlet::HideFailedEntry(e,tmdgauntlet::Gate::Shadow));
-    e.shadow=false;e.minIndexZero=false;
+    e.shadow=false;e.indexRange=false;
     assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::MinIndex);
     assert(tmdgauntlet::HideFailedEntry(e,tmdgauntlet::Gate::MinIndex));
-    e.minIndexZero=true;e.context=false;
+    e.indexRange=true;e.context=false;
     assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::Context);
     assert(!tmdgauntlet::HideFailedEntry(e,tmdgauntlet::Gate::Context));
     e.context=true;e.enabled=false;
     assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::Disabled);
+    e.enabled=true;e.animated=true;
+    assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::Animated);
+    assert(!tmdgauntlet::HideFailedEntry(e,tmdgauntlet::Gate::Animated));
+}
+
+static void TestNativeRangeAndOwnership() {
+    for(unsigned feature=0;feature<2;++feature)
+    for(unsigned owned=0;owned<2;++owned)
+    for(unsigned knife=0;knife<2;++knife)
+        assert(tmdgauntlet::ArmImpulseMelee(feature,owned,knife)==(!feature||!owned||knife));
+    // Native absolute-index subrange; no index subtraction or baseVertex edit.
+    assert(tmdgauntlet::KnownNativeRange(2626,4818));
+    assert(tmdgauntlet::KnownNativeRange(0,7444));
+    assert(!tmdgauntlet::KnownNativeRange(0,4818));
+    assert(tmdgauntlet::CoversIndices(2626,4818,2743,7322));
+    assert(tmdgauntlet::CoversIndices(0,7444,2743,7322));
+    assert(!tmdgauntlet::CoversIndices(2626,4818,2625,7322));
+    assert(!tmdgauntlet::CoversIndices(2626,4818,2743,7444));
+    assert(!tmdgauntlet::CoversIndices(0,4818,2743,7322));
+    assert(!tmdgauntlet::CoversIndices(2626,0xffffffffu,2743,7322));
+    assert(!tmdgauntlet::CoversIndices(0xffffffffu,4818,2743,7322));
+    assert(!tmdgauntlet::SuccessfulStereoBoundDraw(true,1,S_OK,S_OK));
+    assert(!tmdgauntlet::SuccessfulStereoBoundDraw(true,3,S_OK,S_OK));
+    assert(!tmdgauntlet::SuccessfulStereoBoundDraw(true,2,E_FAIL,S_OK));
+    assert(!tmdgauntlet::SuccessfulStereoBoundDraw(true,2,S_OK,S_OK,E_FAIL));
 }
 
 static void TestDrawRoute() {
@@ -128,12 +154,16 @@ static void TestDrawRoute() {
 }
 
 int main(int argc,char** argv) {
+    TestNativeRangeAndOwnership();
     TestEarlyVisibilityToStereoDraw();
     TestDrawRoute();
     if(argc>1){
         tmdgauntlet::Renderer renderer;
         assert(renderer.Load(argv[1]));
         assert(renderer.Ready()&&renderer.Triangles()==7110);
+        assert(renderer.MinIndex()==2743&&renderer.MaxIndex()==7322);
+        assert(renderer.Covers(2626,4818)&&renderer.Covers(0,7444));
+        assert(!renderer.Covers(0,4818));
         renderer.ReleaseGPU(); // Reset drops GPU state, not validated CPU geometry.
         assert(renderer.Ready()&&renderer.Triangles()==7110);
     }

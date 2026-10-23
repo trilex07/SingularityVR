@@ -17,4 +17,14 @@ dispatch = source.index("tmdgauntlet::DispatchBound(shortTmdBuffer!=nullptr", is
 restore = source.index("const HRESULT nativeRestore=nativeIndices.Restore()", dispatch)
 assert hide < prepare < post < isolate < dispatch < restore, "foreground/palette/SVTG order regressed"
 assert "if(shortTmdAdmitted && admittedGate!=tmdgauntlet::Gate::Pass)" in source[post:isolate]
+palette_restore = source.index("const HRESULT handRestore=", restore)
+receipt = source.index("tmd-short-gauntlet: stereo receipt", palette_restore)
+assert restore < palette_restore < receipt
+assert "dhr,nativeRestore,handRestore" in source[palette_restore:receipt]
+assert "original hardware + short closed sleeve, 1 material-1 draw/eye" not in source
+assert source.count("tmdgauntlet::ArmImpulseMelee(g_tmdShortGauntlet,Rd(g_haveTMD)==1,g_hipKnifeState.held>=0)") == 2
+assert "if(NativeAnimatedHandsNow()) { IndependentAuditCount(IHA_ANIMATION,audit); return 0; }" in source
+assert "GlovesUntilWeaponNow() && Rd(g_gloveIsolate)==2,NativeAnimatedHandsNow()" in source
+assert "g_tmdShortGauntletRenderer.Covers(minIndex,numVertices)" in source
+assert "gloveisolate::TmdHardwareDelta(OffHand())==0?delta:rightDelta" in source
 print("PASS: real FgHidden -> PrepareIndependentLeft -> filtered SVTG dispatch order")

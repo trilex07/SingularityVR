@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+## SIDE TMD short-gauntlet runtime — L1_PASS / L2_PASS, L3/L4 NOT RUN
+
+`fix/tmd-short-gauntlet-runtime`, based on exact `332cc98`: accepts the measured
+4818/2626 draw after full decoded-index bounds validation; prevents acquired
+TMD Impulse from arming false melee windows at both producers while preserving
+native heal/knife/cinema/restraint ownership. Two-eye receipt now follows index
+AND palette restoration. Original geometry/checksum and 49-run fallback remain.
+Standalone D3D9/Ex pixel tests passed; one pre-existing NIS source-text test
+fails identically on the baseline (math/pixel/bytecode tests pass).
+See [runtime handoff](docs/handoffs/tmd-short-gauntlet-runtime.md). No Steam changes.
+
 ## 2026-10-23 short TMD gauntlet — SIDE L1/L2 candidate, physical OPEN
 
 Separate default-OFF `TmdShortGauntlet` composes the original native glove/cuff,
