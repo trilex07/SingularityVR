@@ -1,0 +1,19 @@
+{
+  "head": "05a94ab645d29e5da84ba3128a5ccd013af40b95",
+  "baselinePhysical": "3929868",
+  "solReferenceDllSha256": "018C132FDAB31BA7EC92A31EAF535DF2EFA6E2D57EFAB5B2E383611291DD8138",
+  "mainDllSha256": "4B34CE06F93DDB2387D75C5A4152BCD6AADD900ED3DBA9E6459F86A677BE496C",
+  "preDeployCheckpoint514bb03Dll": "19DFDFB7C38751B4127A5C87AA32887F355546E172F20C7776D5CEC5F0B209BE",
+  "reviewVerdict": "PASS",
+  "d3d9FixtureMain": "PASS_D3D9_AND_D3D9Ex",
+  "d3d9FixtureSolDesktop": "BLOCKED_HAL_CREATE_DEVICE",
+  "recordedAt": "2026-10-23T21:18:00+02:00",
+  "gates": {
+    "test-knife.ps1": "PASS",
+    "test-dual-tmd-gun-scale.ps1": "PASS",
+    "test-dual-weapon-tmd.ps1_SkipOled": "PASS",
+    "test-tmd-short-gauntlet.ps1": "PASS",
+    "test-tmd-runtime-regressions.ps1": "PASS",
+    "knifehand_JointRoute_ClipTests": "PASS"
+  }
+}

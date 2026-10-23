@@ -1,0 +1,10 @@
+{
+    "rollbackFrom":  "514bb03",
+    "head":  "05a94ab645d29e5da84ba3128a5ccd013af40b95",
+    "baseline":  "3929868",
+    "files":  {
+                  "SingularityVR.ini":  "CBA10397FABF9CACB115D3809FF1B0B8A645C5D63FBE69CCB533050A126C1796",
+                  "d3d9.dll":  "19DFDFB7C38751B4127A5C87AA32887F355546E172F20C7776D5CEC5F0B209BE"
+              },
+    "backedUpAt":  "2026-10-23T21:16:50.2352874+02:00"
+}
