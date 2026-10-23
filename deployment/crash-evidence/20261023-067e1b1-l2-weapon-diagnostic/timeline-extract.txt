@@ -1,0 +1,408 @@
+   647: hands: mPlayerHandsStatus = 2 (weapon in hands)
+  3868: dual-gun transition: frame=661 hands=2 support=0 context=1 weapon=69963600 verts=8297 first=0 tris=10835 nativeHands=0
+  3869: dual-gun matrix: stage=incoming eye=0 group=0 reg=230 hr=00000000 ride=0
+  3870: dual-gun row: 0 0.707378 -0.706836 0 0
+  3871: dual-gun row: 1 8.65595e-17 8.66259e-17 -1 0
+  3872: dual-gun row: 2 0.706836 0.707378 1.22461e-16 0
+  3873: dual-gun row: 3 2.70898 2.71143 -149.266 1
+  3874: dual-gun matrix: stage=incoming eye=0 group=1 reg=5 hr=00000000 ride=0
+  3875: dual-gun row: 0 0.999303 -0.00243539 0.0372667 -12.0761
+  3876: dual-gun row: 1 0.00497502 0.997659 -0.0682073 -25.652
+  3877: dual-gun row: 2 -0.0370134 0.0683451 0.996975 -19.984
+  3878: dual-gun row: 3 0.999303 -0.00243539 0.0372667 -12.0761
+  3880: dual-gun matrix: stage=submitting eye=0 group=0 reg=230 hr=00000000 ride=1
+  3881: dual-gun row: 0 0.707378 -0.706836 0 0
+  3882: dual-gun row: 1 8.65595e-17 8.66259e-17 -1 0
+  3883: dual-gun row: 2 0.706836 0.707378 1.22461e-16 0
+  3884: dual-gun row: 3 2.70898 2.71143 -149.266 1
+  3885: dual-gun matrix: stage=submitting eye=0 group=1 reg=5 hr=00000000 ride=1
+  3886: dual-gun row: 0 0.999303 -0.00243539 0.0372667 -12.0761
+  3887: dual-gun row: 1 0.00497502 0.997659 -0.0682073 -25.652
+  3888: dual-gun row: 2 -0.0370134 0.0683451 0.996975 -19.984
+  3889: dual-gun row: 3 0.999303 -0.00243539 0.0372667 -12.0761
+  3890: dual-gun matrix: stage=submitting eye=1 group=0 reg=230 hr=00000000 ride=1
+  3891: dual-gun row: 0 0.707378 -0.706836 0 0
+  3892: dual-gun row: 1 8.65595e-17 8.66259e-17 -1 0
+  3893: dual-gun row: 2 0.706836 0.707378 1.22461e-16 0
+  3894: dual-gun row: 3 2.70898 2.71143 -149.266 1
+  3895: dual-gun matrix: stage=submitting eye=1 group=1 reg=5 hr=00000000 ride=1
+  3896: dual-gun row: 0 0.999303 -0.00243539 0.0372667 -12.0761
+  3897: dual-gun row: 1 0.00497502 0.997659 -0.0682073 -25.652
+  3898: dual-gun row: 2 -0.0370134 0.0683451 0.996975 -19.984
+  3899: dual-gun row: 3 0.999303 -0.00243539 0.0372667 -12.0761
+  3900: dual-gun submitted: hr=00000000 eyes=2 segments=1
+  4123: dual-tmd census: frame=450 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4124: dual-tmd census: frame=450 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4125: dual-tmd census: frame=450 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4126: dual-tmd census: frame=450 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4127: dual-tmd census: frame=450 hands=2 part=gun raw=1230 reachedStereo=1230 gunRide=1230 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4128: dual-tmd census: frame=450 hands=2 part=hardware raw=1294 reachedStereo=1 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4402: dual-tmd census: frame=900 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4403: dual-tmd census: frame=900 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4404: dual-tmd census: frame=900 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4405: dual-tmd census: frame=900 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4406: dual-tmd census: frame=900 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4407: dual-tmd census: frame=900 hands=2 part=hardware raw=1350 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4684: dual-tmd census: frame=1350 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4685: dual-tmd census: frame=1350 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4686: dual-tmd census: frame=1350 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4687: dual-tmd census: frame=1350 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4688: dual-tmd census: frame=1350 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4689: dual-tmd census: frame=1350 hands=2 part=hardware raw=1350 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  4858: tmd-assembly bound: frame=2245 eye=0 hands=2 support=0 material=0 route=SVNC faces=3994 ib=37CD9320 ibhr=00000000 palettehr=00000000 skin=[0.573352,-0.449739,0.17749,-83.4558;-0.151786,-0.428832,-0.596292,-194.053;0.459053,0.419926,-0.418847,36.6221]
+  4863: tmd-assembly bound: frame=2245 eye=1 hands=2 support=0 material=0 route=SVNC faces=3994 ib=37CD9320 ibhr=00000000 palettehr=00000000 skin=[0.573352,-0.449739,0.17749,-83.4558;-0.151786,-0.428832,-0.596292,-194.053;0.459053,0.419926,-0.418847,36.6221]
+  4870: tmd-assembly bound: frame=2245 eye=0 hands=2 support=0 material=1 route=SVTG faces=7110 ib=37CD6E00 ibhr=00000000 palettehr=00000000 skin=[0.314852,-0.667255,-0.134679,-93.5273;-0.442399,-0.087803,-0.599228,-147.19;0.517351,0.331,-0.430451,25.1828]
+  4874: tmd-assembly bound: frame=2245 eye=1 hands=2 support=0 material=1 route=SVTG faces=7110 ib=37CD6E00 ibhr=00000000 palettehr=00000000 skin=[0.314852,-0.667255,-0.134679,-93.5273;-0.442399,-0.087803,-0.599228,-147.19;0.517351,0.331,-0.430451,25.1828]
+  5091: dual-tmd census: frame=1800 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5092: dual-tmd census: frame=1800 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5093: dual-tmd census: frame=1800 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5094: dual-tmd census: frame=1800 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5095: dual-tmd census: frame=1800 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5096: dual-tmd census: frame=1800 hands=2 part=hardware raw=1350 reachedStereo=528 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5354: dual-tmd census: frame=2250 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5355: dual-tmd census: frame=2250 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5356: dual-tmd census: frame=2250 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5357: dual-tmd census: frame=2250 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5358: dual-tmd census: frame=2250 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5359: dual-tmd census: frame=2250 hands=2 part=hardware raw=1350 reachedStereo=1350 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5550:     buttons held (frames of 120): dash 9
+  5640:     buttons held (frames of 120): dash 1
+  5680: dual-tmd census: frame=2700 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5681: dual-tmd census: frame=2700 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5682: dual-tmd census: frame=2700 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5683: dual-tmd census: frame=2700 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5684: dual-tmd census: frame=2700 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5685: dual-tmd census: frame=2700 hands=2 part=hardware raw=1350 reachedStereo=1350 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5993: dual-tmd census: frame=3150 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5994: dual-tmd census: frame=3150 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5995: dual-tmd census: frame=3150 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5996: dual-tmd census: frame=3150 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5997: dual-tmd census: frame=3150 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  5998: dual-tmd census: frame=3150 hands=2 part=hardware raw=1350 reachedStereo=1350 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6294: dual-tmd census: frame=3600 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6295: dual-tmd census: frame=3600 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6296: dual-tmd census: frame=3600 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6297: dual-tmd census: frame=3600 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6298: dual-tmd census: frame=3600 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6299: dual-tmd census: frame=3600 hands=2 part=hardware raw=1350 reachedStereo=1350 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6373: hands: mPlayerHandsStatus = 1 (TMD RAISED)
+  6375: dual-gun transition: frame=4322 hands=1 support=0 context=1 weapon=69963600 verts=8297 first=0 tris=10835 nativeHands=0
+  6376: dual-gun matrix: stage=incoming eye=0 group=0 reg=230 hr=00000000 ride=0
+  6377: dual-gun row: 0 0.982468 0.186432 0 0
+  6378: dual-gun row: 1 -2.28306e-17 1.20314e-16 -1 0
+  6379: dual-gun row: 2 -0.186432 0.982468 1.22461e-16 0
+  6380: dual-gun row: 3 1.01172 -5.34424 -148.398 1
+  6381: dual-gun matrix: stage=incoming eye=0 group=1 reg=5 hr=00000000 ride=0
+  6382: dual-gun row: 0 0 0 0 -3.25532
+  6383: dual-gun row: 1 0 0 0 -110.389
+  6384: dual-gun row: 2 0 0 0 4.86554
+  6385: dual-gun row: 3 0 0 0 -3.25532
+  6386: dual-gun matrix: stage=submitting eye=0 group=0 reg=230 hr=00000000 ride=1
+  6387: dual-gun row: 0 0.982468 0.186432 0 0
+  6388: dual-gun row: 1 -2.28306e-17 1.20314e-16 -1 0
+  6389: dual-gun row: 2 -0.186432 0.982468 1.22461e-16 0
+  6390: dual-gun row: 3 1.01172 -5.34424 -148.398 1
+  6391: dual-gun matrix: stage=submitting eye=0 group=1 reg=5 hr=00000000 ride=1
+  6392: dual-gun row: 0 0 0 0 -3.25532
+  6393: dual-gun row: 1 0 0 0 -110.389
+  6394: dual-gun row: 2 0 0 0 4.86554
+  6395: dual-gun row: 3 0 0 0 -3.25532
+  6396: dual-gun matrix: stage=submitting eye=1 group=0 reg=230 hr=00000000 ride=1
+  6397: dual-gun row: 0 0.982468 0.186432 0 0
+  6398: dual-gun row: 1 -2.28306e-17 1.20314e-16 -1 0
+  6399: dual-gun row: 2 -0.186432 0.982468 1.22461e-16 0
+  6400: dual-gun row: 3 1.01172 -5.34424 -148.398 1
+  6401: dual-gun matrix: stage=submitting eye=1 group=1 reg=5 hr=00000000 ride=1
+  6402: dual-gun row: 0 0 0 0 -3.25532
+  6403: dual-gun row: 1 0 0 0 -110.389
+  6404: dual-gun row: 2 0 0 0 4.86554
+  6405: dual-gun row: 3 0 0 0 -3.25532
+  6406: dual-gun submitted: hr=00000000 eyes=2 segments=1
+  6407: tmd-assembly bound: frame=4322 eye=0 hands=1 support=0 material=0 route=SVNC faces=3994 ib=37CD9320 ibhr=00000000 palettehr=00000000 skin=[0.562695,0.462484,-0.178837,62.3175;-0.300329,0.533111,0.4337,-39.6724;0.394559,-0.253775,0.585168,-32.0979]
+  6411: tmd-assembly bound: frame=4322 eye=1 hands=1 support=0 material=0 route=SVNC faces=3994 ib=37CD9320 ibhr=00000000 palettehr=00000000 skin=[0.562695,0.462484,-0.178837,62.3175;-0.300329,0.533111,0.4337,-39.6724;0.394559,-0.253775,0.585168,-32.0979]
+  6416: tmd-assembly bound: frame=4322 eye=0 hands=1 support=0 material=1 route=SVTG faces=7110 ib=37CD6E00 ibhr=00000000 palettehr=00000000 skin=[0.556009,0.475017,-0.166474,63.9187;-0.278974,0.497289,0.487214,-43.8307;0.41896,-0.299271,0.545352,-37.8869]
+  6420: tmd-assembly bound: frame=4322 eye=1 hands=1 support=0 material=1 route=SVTG faces=7110 ib=37CD6E00 ibhr=00000000 palettehr=00000000 skin=[0.556009,0.475017,-0.166474,63.9187;-0.278974,0.497289,0.487214,-43.8307;0.41896,-0.299271,0.545352,-37.8869]
+  6503:     buttons held (frames of 120): impulse 20
+  6625: aim mode 9: StartFire        hand(p -2885 y 19307) fieldSet 1 | ctl SET was(p -5899 y 21655) | cam -- was(p 0 y 0) | POV SET was(p -5761 y 21640) | +0 scanned fields
+  6626: aim mode 9: StartFire        hand(p -2885 y 19307) fieldSet 1 | ctl SET was(p -5899 y 21655) | cam -- was(p 0 y 0) | POV SET was(p -5761 y 21640) | +0 scanned fields
+  6627: aim mode 9: StartFire        hand(p -2885 y 19307) fieldSet 1 | ctl SET was(p -5899 y 21655) | cam -- was(p 0 y 0) | POV SET was(p -5761 y 21640) | +0 scanned fields
+  6628: aim mode 9: StartFire        hand(p -2885 y 19307) fieldSet 1 | ctl SET was(p -5899 y 21655) | cam -- was(p 0 y 0) | POV SET was(p -5761 y 21640) | +0 scanned fields
+  6629: aim mode 9: StartFire        hand(p -2885 y 19307) fieldSet 1 | ctl SET was(p -5899 y 21655) | cam -- was(p 0 y 0) | POV SET was(p -5761 y 21640) | +0 scanned fields
+  6630: aim mode 9: BeginFire        hand(p -2885 y 19307) fieldSet 1 | ctl SET was(p -5899 y 21655) | cam -- was(p 0 y 0) | POV SET was(p -5761 y 21640) | +0 scanned fields
+  6631: aim mode 9: BeginFire        hand(p -2885 y 19307) fieldSet 1 | ctl SET was(p -5899 y 21655) | cam -- was(p 0 y 0) | POV SET was(p -5761 y 21640) | +0 scanned fields
+  6634: hands: mPlayerHandsStatus = 2 (weapon in hands)
+  6672: dual-gun transition: frame=4656 hands=2 support=0 context=1 weapon=69963600 verts=8297 first=0 tris=10835 nativeHands=0
+  6673: dual-gun matrix: stage=incoming eye=0 group=0 reg=230 hr=00000000 ride=0
+  6674: dual-gun row: 0 0.875144 0.483863 0 0
+  6675: dual-gun row: 1 -5.92541e-17 1.07171e-16 -1 0
+  6676: dual-gun row: 2 -0.483863 0.875144 1.22461e-16 0
+  6677: dual-gun row: 3 4.53711 -8.20068 -146.75 1
+  6678: dual-gun matrix: stage=incoming eye=0 group=1 reg=5 hr=00000000 ride=0
+  6679: dual-gun row: 0 0.999574 -0.00154937 0.0291557 -11.411
+  6680: dual-gun row: 1 -0.0139175 0.852553 0.522456 -55.9796
+  6681: dual-gun row: 2 -0.0256662 -0.522639 0.852168 -76.611
+  6682: dual-gun row: 3 0.999574 -0.00154937 0.0291557 -11.411
+  6683: dual-gun matrix: stage=submitting eye=0 group=0 reg=230 hr=00000000 ride=1
+  6684: dual-gun row: 0 0.875144 0.483863 0 0
+  6685: dual-gun row: 1 -5.92541e-17 1.07171e-16 -1 0
+  6686: dual-gun row: 2 -0.483863 0.875144 1.22461e-16 0
+  6687: dual-gun row: 3 4.53711 -8.20068 -146.75 1
+  6688: dual-gun matrix: stage=submitting eye=0 group=1 reg=5 hr=00000000 ride=1
+  6689: dual-gun row: 0 0.999574 -0.00154937 0.0291557 -11.411
+  6690: dual-gun row: 1 -0.0139175 0.852553 0.522456 -55.9796
+  6691: dual-gun row: 2 -0.0256662 -0.522639 0.852168 -76.611
+  6692: dual-gun row: 3 0.999574 -0.00154937 0.0291557 -11.411
+  6693: dual-gun matrix: stage=submitting eye=1 group=0 reg=230 hr=00000000 ride=1
+  6694: dual-gun row: 0 0.875144 0.483863 0 0
+  6695: dual-gun row: 1 -5.92541e-17 1.07171e-16 -1 0
+  6696: dual-gun row: 2 -0.483863 0.875144 1.22461e-16 0
+  6697: dual-gun row: 3 4.53711 -8.20068 -146.75 1
+  6698: dual-gun matrix: stage=submitting eye=1 group=1 reg=5 hr=00000000 ride=1
+  6699: dual-gun row: 0 0.999574 -0.00154937 0.0291557 -11.411
+  6700: dual-gun row: 1 -0.0139175 0.852553 0.522456 -55.9796
+  6701: dual-gun row: 2 -0.0256662 -0.522639 0.852168 -76.611
+  6702: dual-gun row: 3 0.999574 -0.00154937 0.0291557 -11.411
+  6703: dual-gun submitted: hr=00000000 eyes=2 segments=1
+  6725: dual-tmd census: frame=4050 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6726: dual-tmd census: frame=4050 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6727: dual-tmd census: frame=4050 hands=1 part=gun raw=1002 reachedStereo=1002 gunRide=1002 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6728: dual-tmd census: frame=4050 hands=1 part=hardware raw=1002 reachedStereo=1002 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6729: dual-tmd census: frame=4050 hands=2 part=gun raw=348 reachedStereo=348 gunRide=348 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6730: dual-tmd census: frame=4050 hands=2 part=hardware raw=348 reachedStereo=348 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+  6968: two-hand grip: ACQUIRED
+  6970: dual-gun transition: frame=5027 hands=2 support=1 context=1 weapon=69963600 verts=8297 first=0 tris=10835 nativeHands=0
+  6971: dual-gun matrix: stage=incoming eye=0 group=0 reg=230 hr=00000000 ride=0
+  6972: dual-gun row: 0 0.998814 0.0486846 0 0
+  6973: dual-gun row: 1 -5.96195e-18 1.22315e-16 -1 0
+  6974: dual-gun row: 2 -0.0486846 0.998814 1.22461e-16 0
+  6975: dual-gun row: 3 0.289062 -5.93164 -148.25 1
+  6976: dual-gun matrix: stage=incoming eye=0 group=1 reg=5 hr=00000000 ride=0
+  6977: dual-gun row: 0 0.999322 -0.00192372 0.0367757 -12.0016
+  6978: dual-gun row: 1 -0.0116007 0.931348 0.363947 -43.5615
+  6979: dual-gun row: 2 -0.034951 -0.364127 0.930694 -61.4121
+  6980: dual-gun row: 3 0.999322 -0.00192372 0.0367757 -12.0016
+  6981: dual-gun matrix: stage=submitting eye=0 group=0 reg=230 hr=00000000 ride=1
+  6982: dual-gun row: 0 0.998814 0.0486846 0 0
+  6983: dual-gun row: 1 -5.96195e-18 1.22315e-16 -1 0
+  6984: dual-gun row: 2 -0.0486846 0.998814 1.22461e-16 0
+  6985: dual-gun row: 3 0.289062 -5.93164 -148.25 1
+  6986: dual-gun matrix: stage=submitting eye=0 group=1 reg=5 hr=00000000 ride=1
+  6987: dual-gun row: 0 0.999322 -0.00192372 0.0367757 -12.0016
+  6988: dual-gun row: 1 -0.0116007 0.931348 0.363947 -43.5615
+  6989: dual-gun row: 2 -0.034951 -0.364127 0.930694 -61.4121
+  6990: dual-gun row: 3 0.999322 -0.00192372 0.0367757 -12.0016
+  6991: dual-gun matrix: stage=submitting eye=1 group=0 reg=230 hr=00000000 ride=1
+  6992: dual-gun row: 0 0.998814 0.0486846 0 0
+  6993: dual-gun row: 1 -5.96195e-18 1.22315e-16 -1 0
+  6994: dual-gun row: 2 -0.0486846 0.998814 1.22461e-16 0
+  6995: dual-gun row: 3 0.289062 -5.93164 -148.25 1
+  6996: dual-gun matrix: stage=submitting eye=1 group=1 reg=5 hr=00000000 ride=1
+  6997: dual-gun row: 0 0.999322 -0.00192372 0.0367757 -12.0016
+  6998: dual-gun row: 1 -0.0116007 0.931348 0.363947 -43.5615
+  6999: dual-gun row: 2 -0.034951 -0.364127 0.930694 -61.4121
+  7000: dual-gun row: 3 0.999322 -0.00192372 0.0367757 -12.0016
+  7001: dual-gun submitted: hr=00000000 eyes=2 segments=1
+  7003: tmd-assembly bound: frame=5027 eye=0 hands=2 support=1 material=0 route=SVNC faces=3994 ib=37CD9320 ibhr=00000000 palettehr=00000000 skin=[0.291876,-0.293598,0.625387,-33.0466;0.0816008,-0.659505,-0.347699,-189.656;0.686039,0.203356,-0.224715,5.51496]
+  7007: tmd-assembly bound: frame=5027 eye=1 hands=2 support=1 material=0 route=SVNC faces=3994 ib=37CD9320 ibhr=00000000 palettehr=00000000 skin=[0.291876,-0.293598,0.625387,-33.0466;0.0816008,-0.659505,-0.347699,-189.656;0.686039,0.203356,-0.224715,5.51496]
+  7078: dual-tmd census: frame=4500 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=1 [signature counts, NOT pixels]
+  7079: dual-tmd census: frame=4500 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=1 [signature counts, NOT pixels]
+  7080: dual-tmd census: frame=4500 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=1 [signature counts, NOT pixels]
+  7081: dual-tmd census: frame=4500 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=1 [signature counts, NOT pixels]
+  7082: dual-tmd census: frame=4500 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=69963600 gunVerts=8297 support=1 [signature counts, NOT pixels]
+  7083: dual-tmd census: frame=4500 hands=2 part=hardware raw=1350 reachedStereo=1350 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=1 [signature counts, NOT pixels]
+  7084: two-hand grip: RELEASED
+  7086: dual-gun transition: frame=5128 hands=2 support=0 context=1 weapon=69963600 verts=8297 first=0 tris=10835 nativeHands=0
+  7087: dual-gun matrix: stage=incoming eye=0 group=0 reg=230 hr=00000000 ride=0
+  7088: dual-gun row: 0 0.917444 0.397866 0 0
+  7089: dual-gun row: 1 -4.87229e-17 1.12351e-16 -1 0
+  7090: dual-gun row: 2 -0.397866 0.917444 1.22461e-16 0
+  7091: dual-gun row: 3 3.98438 -9.17773 -146.414 1
+  7092: dual-gun matrix: stage=incoming eye=0 group=1 reg=5 hr=00000000 ride=0
+  7093: dual-gun row: 0 0.999381 0.000284339 0.0351887 -11.6759
+  7094: dual-gun row: 1 -0.0192181 0.842085 0.539002 -56.3369
+  7095: dual-gun row: 2 -0.0294785 -0.539345 0.841569 -76.8657
+  7096: dual-gun row: 3 0.999381 0.000284339 0.0351887 -11.6759
+  7097: dual-gun matrix: stage=submitting eye=0 group=0 reg=230 hr=00000000 ride=1
+  7098: dual-gun row: 0 0.917444 0.397866 0 0
+  7099: dual-gun row: 1 -4.87229e-17 1.12351e-16 -1 0
+  7100: dual-gun row: 2 -0.397866 0.917444 1.22461e-16 0
+  7101: dual-gun row: 3 3.98438 -9.17773 -146.414 1
+  7102: dual-gun matrix: stage=submitting eye=0 group=1 reg=5 hr=00000000 ride=1
+  7103: dual-gun row: 0 0.999381 0.000284339 0.0351887 -11.6759
+  7104: dual-gun row: 1 -0.0192181 0.842085 0.539002 -56.3369
+  7105: dual-gun row: 2 -0.0294785 -0.539345 0.841569 -76.8657
+  7106: dual-gun row: 3 0.999381 0.000284339 0.0351887 -11.6759
+  7107: dual-gun matrix: stage=submitting eye=1 group=0 reg=230 hr=00000000 ride=1
+  7108: dual-gun row: 0 0.917444 0.397866 0 0
+  7109: dual-gun row: 1 -4.87229e-17 1.12351e-16 -1 0
+  7110: dual-gun row: 2 -0.397866 0.917444 1.22461e-16 0
+  7111: dual-gun row: 3 3.98438 -9.17773 -146.414 1
+  7112: dual-gun matrix: stage=submitting eye=1 group=1 reg=5 hr=00000000 ride=1
+  7113: dual-gun row: 0 0.999381 0.000284339 0.0351887 -11.6759
+  7114: dual-gun row: 1 -0.0192181 0.842085 0.539002 -56.3369
+  7115: dual-gun row: 2 -0.0294785 -0.539345 0.841569 -76.8657
+  7116: dual-gun row: 3 0.999381 0.000284339 0.0351887 -11.6759
+  7117: dual-gun submitted: hr=00000000 eyes=2 segments=1
+  7191: aim mode 9: StartFire        hand(p -3544 y 18227) fieldSet 1 | ctl SET was(p -2997 y 17284) | cam -- was(p 0 y 0) | POV SET was(p -2813 y 17260) | +0 scanned fields
+  7192: aim mode 9: StartFire        hand(p -3544 y 18227) fieldSet 1 | ctl SET was(p -2997 y 17284) | cam -- was(p 0 y 0) | POV SET was(p -2813 y 17260) | +0 scanned fields
+  7193: aim mode 9: StartFire        hand(p -3544 y 18227) fieldSet 1 | ctl SET was(p -2997 y 17284) | cam -- was(p 0 y 0) | POV SET was(p -2813 y 17260) | +0 scanned fields
+  7194: aim mode 9: StartFire        hand(p -3544 y 18227) fieldSet 1 | ctl SET was(p -2997 y 17284) | cam -- was(p 0 y 0) | POV SET was(p -2813 y 17260) | +0 scanned fields
+  7195: aim mode 9: StartFire        hand(p -3544 y 18227) fieldSet 1 | ctl SET was(p -2997 y 17284) | cam -- was(p 0 y 0) | POV SET was(p -2813 y 17260) | +0 scanned fields
+  7196: aim mode 9: BeginFire        hand(p -3544 y 18227) fieldSet 1 | ctl SET was(p -2997 y 17284) | cam -- was(p 0 y 0) | POV SET was(p -2813 y 17260) | +0 scanned fields
+  7197: aim mode 9: BeginFire        hand(p -3544 y 18227) fieldSet 1 | ctl SET was(p -2997 y 17284) | cam -- was(p 0 y 0) | POV SET was(p -2813 y 17260) | +0 scanned fields
+  7234: hands: mPlayerHandsStatus = 1 (TMD RAISED)
+  7236: dual-gun transition: frame=5265 hands=1 support=0 context=1 weapon=69963600 verts=8297 first=0 tris=10835 nativeHands=0
+  7237: dual-gun matrix: stage=incoming eye=0 group=0 reg=230 hr=00000000 ride=0
+  7238: dual-gun row: 0 0.992987 0.118223 0 0
+  7239: dual-gun row: 1 -1.44776e-17 1.21602e-16 -1 0
+  7240: dual-gun row: 2 -0.118223 0.992987 1.22461e-16 0
+  7241: dual-gun row: 3 0.294922 -4.30664 -148.945 1
+  7242: dual-gun matrix: stage=incoming eye=0 group=1 reg=5 hr=00000000 ride=0
+  7243: dual-gun row: 0 0 0 0 -3.0577
+  7244: dual-gun row: 1 0 0 0 -110.95
+  7245: dual-gun row: 2 0 0 0 5.87252
+  7246: dual-gun row: 3 0 0 0 -3.0577
+  7247: dual-gun matrix: stage=submitting eye=0 group=0 reg=230 hr=00000000 ride=1
+  7248: dual-gun row: 0 0.992987 0.118223 0 0
+  7249: dual-gun row: 1 -1.44776e-17 1.21602e-16 -1 0
+  7250: dual-gun row: 2 -0.118223 0.992987 1.22461e-16 0
+  7251: dual-gun row: 3 0.294922 -4.30664 -148.945 1
+  7252: dual-gun matrix: stage=submitting eye=0 group=1 reg=5 hr=00000000 ride=1
+  7253: dual-gun row: 0 0 0 0 -3.0577
+  7254: dual-gun row: 1 0 0 0 -110.95
+  7255: dual-gun row: 2 0 0 0 5.87252
+  7256: dual-gun row: 3 0 0 0 -3.0577
+  7257: dual-gun matrix: stage=submitting eye=1 group=0 reg=230 hr=00000000 ride=1
+  7258: dual-gun row: 0 0.992987 0.118223 0 0
+  7259: dual-gun row: 1 -1.44776e-17 1.21602e-16 -1 0
+  7260: dual-gun row: 2 -0.118223 0.992987 1.22461e-16 0
+  7261: dual-gun row: 3 0.294922 -4.30664 -148.945 1
+  7262: dual-gun matrix: stage=submitting eye=1 group=1 reg=5 hr=00000000 ride=1
+  7263: dual-gun row: 0 0 0 0 -3.0577
+  7264: dual-gun row: 1 0 0 0 -110.95
+  7265: dual-gun row: 2 0 0 0 5.87252
+  7266: dual-gun row: 3 0 0 0 -3.0577
+  7267: dual-gun submitted: hr=00000000 eyes=2 segments=1
+  7301:     buttons held (frames of 120): impulse 16
+  7389:     buttons held (frames of 120): impulse 6 | ageyoung 12
+  7415: aim mode 9: StartFire        hand(p -3591 y 18231) fieldSet 1 | ctl SET was(p -3862 y 14385) | cam -- was(p 0 y 0) | POV SET was(p -3670 y 14268) | +0 scanned fields
+  7416: aim mode 9: StartFire        hand(p -3591 y 18231) fieldSet 1 | ctl SET was(p -3862 y 14385) | cam -- was(p 0 y 0) | POV SET was(p -3670 y 14268) | +0 scanned fields
+  7417: aim mode 9: StartFire        hand(p -3591 y 18231) fieldSet 1 | ctl SET was(p -3862 y 14385) | cam -- was(p 0 y 0) | POV SET was(p -3670 y 14268) | +0 scanned fields
+  7418: aim mode 9: StartFire        hand(p -3591 y 18231) fieldSet 1 | ctl SET was(p -3862 y 14385) | cam -- was(p 0 y 0) | POV SET was(p -3670 y 14268) | +0 scanned fields
+  7419: aim mode 9: StartFire        hand(p -3591 y 18231) fieldSet 1 | ctl SET was(p -3862 y 14385) | cam -- was(p 0 y 0) | POV SET was(p -3670 y 14268) | +0 scanned fields
+  7420: aim mode 9: BeginFire        hand(p -3591 y 18231) fieldSet 1 | ctl SET was(p -3862 y 14385) | cam -- was(p 0 y 0) | POV SET was(p -3670 y 14268) | +0 scanned fields
+  7421: hands: mPlayerHandsStatus = 2 (weapon in hands)
+  7422: dual-gun transition: frame=5429 hands=2 support=0 context=1 weapon=69963600 verts=8297 first=0 tris=10835 nativeHands=0
+  7423: dual-gun matrix: stage=incoming eye=0 group=0 reg=230 hr=00000000 ride=0
+  7424: dual-gun row: 0 0.981673 -0.190575 0 0
+  7425: dual-gun row: 1 2.33379e-17 1.20216e-16 -1 0
+  7426: dual-gun row: 2 0.190575 0.981673 1.22461e-16 0
+  7427: dual-gun row: 3 -0.994141 -5.13818 -148.477 1
+  7428: dual-gun matrix: stage=incoming eye=0 group=1 reg=5 hr=00000000 ride=0
+  7429: dual-gun row: 0 0.999071 0.000239418 0.0431176 -11.6287
+  7430: dual-gun row: 1 -0.0150745 0.938819 0.344081 -42.463
+  7431: dual-gun row: 2 -0.0403972 -0.344411 0.93795 -61.0349
+  7432: dual-gun row: 3 0.999071 0.000239418 0.0431176 -11.6287
+  7433: dual-gun matrix: stage=submitting eye=0 group=0 reg=230 hr=00000000 ride=1
+  7434: dual-gun row: 0 0.981673 -0.190575 0 0
+  7435: dual-gun row: 1 2.33379e-17 1.20216e-16 -1 0
+  7436: dual-gun row: 2 0.190575 0.981673 1.22461e-16 0
+  7437: dual-gun row: 3 -0.994141 -5.13818 -148.477 1
+  7438: dual-gun matrix: stage=submitting eye=0 group=1 reg=5 hr=00000000 ride=1
+  7439: dual-gun row: 0 0.999071 0.000239418 0.0431176 -11.6287
+  7440: dual-gun row: 1 -0.0150745 0.938819 0.344081 -42.463
+  7441: dual-gun row: 2 -0.0403972 -0.344411 0.93795 -61.0349
+  7442: dual-gun row: 3 0.999071 0.000239418 0.0431176 -11.6287
+  7443: dual-gun matrix: stage=submitting eye=1 group=0 reg=230 hr=00000000 ride=1
+  7444: dual-gun row: 0 0.981673 -0.190575 0 0
+  7445: dual-gun row: 1 2.33379e-17 1.20216e-16 -1 0
+  7446: dual-gun row: 2 0.190575 0.981673 1.22461e-16 0
+  7447: dual-gun row: 3 -0.994141 -5.13818 -148.477 1
+  7448: dual-gun matrix: stage=submitting eye=1 group=1 reg=5 hr=00000000 ride=1
+  7449: dual-gun row: 0 0.999071 0.000239418 0.0431176 -11.6287
+  7450: dual-gun row: 1 -0.0150745 0.938819 0.344081 -42.463
+  7451: dual-gun row: 2 -0.0403972 -0.344411 0.93795 -61.0349
+  7452: dual-gun row: 3 0.999071 0.000239418 0.0431176 -11.6287
+  7453: dual-gun submitted: hr=00000000 eyes=2 segments=1
+  7472: hands: mPlayerHandsStatus = 1 (TMD RAISED)
+  7474: dual-gun transition: frame=5459 hands=1 support=0 context=1 weapon=69963600 verts=8297 first=0 tris=10835 nativeHands=0
+  7475: dual-gun matrix: stage=incoming eye=0 group=0 reg=230 hr=00000000 ride=0
+  7476: dual-gun row: 0 0.998833 -0.0483016 0 0
+  7477: dual-gun row: 1 5.91504e-18 1.22318e-16 -1 0
+  7478: dual-gun row: 2 0.0483016 0.998833 1.22461e-16 0
+  7479: dual-gun row: 3 -0.347656 -5.45117 -148.492 1
+  7480: dual-gun matrix: stage=incoming eye=0 group=1 reg=5 hr=00000000 ride=0
+  7481: dual-gun row: 0 0 0 0 -3.1747
+  7482: dual-gun row: 1 0 0 0 -110.454
+  7483: dual-gun row: 2 0 0 0 4.79054
+  7484: dual-gun row: 3 0 0 0 -3.1747
+  7485: dual-gun matrix: stage=submitting eye=0 group=0 reg=230 hr=00000000 ride=1
+  7486: dual-gun row: 0 0.998833 -0.0483016 0 0
+  7487: dual-gun row: 1 5.91504e-18 1.22318e-16 -1 0
+  7488: dual-gun row: 2 0.0483016 0.998833 1.22461e-16 0
+  7489: dual-gun row: 3 -0.347656 -5.45117 -148.492 1
+  7490: dual-gun matrix: stage=submitting eye=0 group=1 reg=5 hr=00000000 ride=1
+  7491: dual-gun row: 0 0 0 0 -3.1747
+  7492: dual-gun row: 1 0 0 0 -110.454
+  7493: dual-gun row: 2 0 0 0 4.79054
+  7494: dual-gun row: 3 0 0 0 -3.1747
+  7495: dual-gun matrix: stage=submitting eye=1 group=0 reg=230 hr=00000000 ride=1
+  7496: dual-gun row: 0 0.998833 -0.0483016 0 0
+  7497: dual-gun row: 1 5.91504e-18 1.22318e-16 -1 0
+  7498: dual-gun row: 2 0.0483016 0.998833 1.22461e-16 0
+  7499: dual-gun row: 3 -0.347656 -5.45117 -148.492 1
+  7500: dual-gun matrix: stage=submitting eye=1 group=1 reg=5 hr=00000000 ride=1
+  7501: dual-gun row: 0 0 0 0 -3.1747
+  7502: dual-gun row: 1 0 0 0 -110.454
+  7503: dual-gun row: 2 0 0 0 4.79054
+  7504: dual-gun row: 3 0 0 0 -3.1747
+  7505: dual-gun submitted: hr=00000000 eyes=2 segments=1
+  7553:     buttons held (frames of 120): impulse 22
+ 10060: dual-tmd census: frame=4950 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+ 10061: dual-tmd census: frame=4950 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+ 10062: dual-tmd census: frame=4950 hands=1 part=gun raw=1215 reachedStereo=828 gunRide=828 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+ 10063: dual-tmd census: frame=4950 hands=1 part=hardware raw=1215 reachedStereo=828 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+ 10064: dual-tmd census: frame=4950 hands=2 part=gun raw=522 reachedStereo=522 gunRide=522 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+ 10065: dual-tmd census: frame=4950 hands=2 part=hardware raw=522 reachedStereo=522 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+ 10108:     buttons held (frames of 120): jump 10
+ 10193:     buttons held (frames of 120): use 18
+ 10236: hands: mPlayerHandsStatus = 2 (weapon in hands)
+ 10237: dual-gun transition: frame=5920 hands=2 support=0 context=1 weapon=69963600 verts=8297 first=0 tris=10835 nativeHands=0
+ 10238: dual-gun matrix: stage=incoming eye=0 group=0 reg=230 hr=00000000 ride=0
+ 10239: dual-gun row: 0 0.998071 -0.0620863 0 0
+ 10240: dual-gun row: 1 7.60312e-18 1.22224e-16 -1 0
+ 10241: dual-gun row: 2 0.0620863 0.998071 1.22461e-16 0
+ 10242: dual-gun row: 3 -0.964844 -15.5269 -141.906 1
+ 10243: dual-gun matrix: stage=incoming eye=0 group=1 reg=5 hr=00000000 ride=0
+ 10244: dual-gun row: 0 0.876794 0.464514 0.12434 38.4439
+ 10245: dual-gun row: 1 -0.339366 0.41455 0.844381 -100.026
+ 10246: dual-gun row: 2 0.340682 -0.782545 0.521115 -99.1341
+ 10247: dual-gun row: 3 0.876794 0.480796 0.00827908 41.8606
+ 10248: dual-gun matrix: stage=submitting eye=0 group=0 reg=230 hr=00000000 ride=1
+ 10249: dual-gun row: 0 0.998071 -0.0620863 0 0
+ 10250: dual-gun row: 1 7.60312e-18 1.22224e-16 -1 0
+ 10251: dual-gun row: 2 0.0620863 0.998071 1.22461e-16 0
+ 10252: dual-gun row: 3 -0.964844 -15.5269 -141.906 1
+ 10253: dual-gun matrix: stage=submitting eye=0 group=1 reg=5 hr=00000000 ride=1
+ 10254: dual-gun row: 0 0.876794 0.464514 0.12434 38.4439
+ 10255: dual-gun row: 1 -0.339366 0.41455 0.844381 -100.026
+ 10256: dual-gun row: 2 0.340682 -0.782545 0.521115 -99.1341
+ 10257: dual-gun row: 3 0.876794 0.480796 0.00827908 41.8606
+ 10258: dual-gun matrix: stage=submitting eye=1 group=0 reg=230 hr=00000000 ride=1
+ 10259: dual-gun row: 0 0.998071 -0.0620863 0 0
+ 10260: dual-gun row: 1 7.60312e-18 1.22224e-16 -1 0
+ 10261: dual-gun row: 2 0.0620863 0.998071 1.22461e-16 0
+ 10262: dual-gun row: 3 -0.964844 -15.5269 -141.906 1
+ 10263: dual-gun matrix: stage=submitting eye=1 group=1 reg=5 hr=00000000 ride=1
+ 10264: dual-gun row: 0 0.876794 0.464514 0.12434 38.4439
+ 10265: dual-gun row: 1 -0.339366 0.41455 0.844381 -100.026
+ 10266: dual-gun row: 2 0.340682 -0.782545 0.521115 -99.1341
+ 10267: dual-gun row: 3 0.876794 0.480796 0.00827908 41.8606
+ 10268: dual-gun submitted: hr=00000000 eyes=2 segments=1
+ 10314:     buttons held (frames of 120): use 4
+ 10418: dual-tmd census: frame=5400 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+ 10419: dual-tmd census: frame=5400 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+ 10420: dual-tmd census: frame=5400 hands=1 part=gun raw=660 reachedStereo=660 gunRide=660 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+ 10421: dual-tmd census: frame=5400 hands=1 part=hardware raw=660 reachedStereo=660 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+ 10422: dual-tmd census: frame=5400 hands=2 part=gun raw=690 reachedStereo=690 gunRide=690 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
+ 10423: dual-tmd census: frame=5400 hands=2 part=hardware raw=690 reachedStereo=690 gunRide=0 nativeHands=0 weapon=69963600 gunVerts=8297 support=0 [signature counts, NOT pixels]
