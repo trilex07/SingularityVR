@@ -1,0 +1,15 @@
+﻿{
+    "builtAt":  "2026-10-23T16:58:13.9688099+02:00",
+    "repository":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR",
+    "branch":  "fix/sol-volk-impulse-skinning-deploy",
+    "commit":  "8fbb9f46b5e993fa4f3a360f723fa90fe9eceae1",
+    "workingTreeStatus":  [
+
+                          ],
+    "optimization":  "/O2",
+    "performanceInstrumentation":  false,
+    "architecture":  "x86 PE32",
+    "machine":  "0x014C",
+    "optionalHeaderMagic":  "0x010B",
+    "sha256":  "6B085CBAC21BDCAAD57A7B72FDC510C9403B166660DE4C366D7BC7ADA15F2CAB"
+}
