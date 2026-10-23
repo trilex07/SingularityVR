@@ -43,6 +43,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "weapon_wheel_catalog_load.h"
 #include "weapon_wheel_seek.h"
 #include "settings_panel.h"
+#include "ui_remaster_runtime.h"
 #include "weapon_wheel_atlas.h"
 #include "locker_loadout_icons.h"
 #include "weapon_wheel_layout.h"
@@ -27580,6 +27581,93 @@ static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR 
     }
 }
 
+// M02 first slice. No texture, COM work or draw-path change when OFF.
+static LONG g_uiRemasterRuntime=0,g_uiRemasterState=0;
+static IDirect3DTexture9* g_uiRemasterNeutral=nullptr;
+static IDirect3DStateBlock9* g_uiRemasterSaved=nullptr;
+static void ReleaseUiRemasterResources(){
+    if(g_uiRemasterNeutral){g_uiRemasterNeutral->Release();g_uiRemasterNeutral=nullptr;}
+    if(g_uiRemasterSaved){g_uiRemasterSaved->Release();g_uiRemasterSaved=nullptr;}
+    InterlockedExchange(&g_uiRemasterState,0);
+}
+static bool LoadUiRemasterNeutral(IDirect3DDevice9* dev){
+    if(!dev||!Rd(g_uiRemasterRuntime))return false;
+    if(Rd(g_uiRemasterState)!=0)return Rd(g_uiRemasterState)==1;
+    auto fail=[](const char* why){InterlockedExchange(&g_uiRemasterState,-1);
+        Log("M02 UI: neutral atlas unavailable (%s); accepted panel unchanged",why);return false;};
+    char dll[MAX_PATH]{};HMODULE self=nullptr;
+    if(!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|
+        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,(LPCSTR)&LoadUiRemasterNeutral,&self)||
+        !GetModuleFileNameA(self,dll,MAX_PATH))return fail("module path");
+    char* slash=strrchr(dll,'\\');if(!slash)return fail("module directory");*slash=0;
+    char path[MAX_PATH]{};
+    _snprintf_s(path,sizeof(path),_TRUNCATE,"%s\\vr-assets\\ui\\remaster\\ui_atlas_neutral.png",dll);
+    wchar_t wide[MAX_PATH]{};
+    if(!MultiByteToWideChar(CP_ACP,0,path,-1,wide,MAX_PATH))return fail("path encoding");
+    CoInitializeEx(nullptr,COINIT_MULTITHREADED);
+    IWICImagingFactory* fac=nullptr;IWICBitmapDecoder* dec=nullptr;
+    IWICBitmapFrameDecode* frame=nullptr;IWICFormatConverter* conv=nullptr;
+    UINT w=0,h=0;std::vector<BYTE> pixels;
+    bool ok=SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory,nullptr,CLSCTX_INPROC_SERVER,
+        IID_PPV_ARGS(&fac)))&&fac&&
+        SUCCEEDED(fac->CreateDecoderFromFilename(wide,nullptr,GENERIC_READ,
+            WICDecodeMetadataCacheOnDemand,&dec))&&dec&&
+        SUCCEEDED(dec->GetFrame(0,&frame))&&frame&&
+        SUCCEEDED(fac->CreateFormatConverter(&conv))&&conv&&
+        SUCCEEDED(conv->Initialize(frame,GUID_WICPixelFormat32bppBGRA,WICBitmapDitherTypeNone,
+            nullptr,0,WICBitmapPaletteTypeCustom))&&
+        SUCCEEDED(conv->GetSize(&w,&h))&&w==4096&&h==2048;
+    if(ok){pixels.resize((size_t)w*h*4);
+        ok=SUCCEEDED(conv->CopyPixels(nullptr,w*4,(UINT)pixels.size(),pixels.data()));}
+    if(conv)conv->Release();if(frame)frame->Release();if(dec)dec->Release();if(fac)fac->Release();
+    if(!ok)return fail("WIC decode or dimensions");
+    IDirect3DTexture9* tex=nullptr;
+    if(FAILED(dev->CreateTexture(w,h,1,D3DUSAGE_DYNAMIC,D3DFMT_A8R8G8B8,
+        D3DPOOL_DEFAULT,&tex,nullptr))||!tex)return fail("texture create");
+    D3DLOCKED_RECT lock{};
+    if(FAILED(tex->LockRect(0,&lock,nullptr,D3DLOCK_DISCARD))){tex->Release();return fail("texture lock");}
+    for(UINT y=0;y<h;++y)memcpy((BYTE*)lock.pBits+(size_t)y*lock.Pitch,
+        pixels.data()+(size_t)y*w*4,(size_t)w*4);
+    tex->UnlockRect(0);g_uiRemasterNeutral=tex;
+    InterlockedExchange(&g_uiRemasterState,1);
+    Log("M02 UI: neutral atlas ready 4096x2048 (runtime draw still requires panel)");
+    return true;
+}
+static bool DrawUiRemasterPlate(IDirect3DDevice9* dev,const settingspanel::Layout& l,int eyes,
+                                int backW,int backH){
+    if(!Rd(g_uiRemasterRuntime)||!g_origDrawPrimUP||!LoadUiRemasterNeutral(dev))return false;
+    if(!g_uiRemasterSaved&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&g_uiRemasterSaved)))return false;
+    if(!g_uiRemasterSaved||FAILED(g_uiRemasterSaved->Capture()))return false;
+    const auto uv=uiremaster::settingsPlate;
+    dev->SetRenderState(D3DRS_ZENABLE,FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+    dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_LINEAR);
+    dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_LINEAR);
+    dev->SetPixelShader(nullptr);dev->SetVertexShader(nullptr);
+    dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
+    dev->SetTexture(0,g_uiRemasterNeutral);
+    unsigned drawn=0;
+    for(int eye=0;eye<eyes;++eye){
+        const auto q=uiremaster::Plate(eye,eyes,l.half,l.width,l.height,l.y,l.px);
+        if(!uiremaster::Valid(q,eye,l.half,backW,backH))continue;
+        uiremaster::Vertex v[4]{};uiremaster::BuildQuad(q,uv,v);
+        if(SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(v[0]))))++drawn;
+    }
+    const bool restored=SUCCEEDED(g_uiRemasterSaved->Apply());
+    static unsigned receipts=0;
+    if(receipts<4){++receipts;Log("M02 UI: plate eyes=%u/%d restore=%d back=%dx%d",drawn,eyes,
+        restored?1:0,backW,backH);}
+    return drawn==(unsigned)eyes&&restored;
+}
+
 static void DrawVrPanel(IDirect3DDevice9* dev) {
     if (!dev || !g_srcW || !g_srcH) return;
 
@@ -27711,6 +27799,8 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         ++n;
     }
     ClearRects(dev, r, n, D3DCOLOR_XRGB(12, 17, 20));
+    if(Rd(g_uiRemasterRuntime))DrawUiRemasterPlate(dev,layout,eyes,
+        (int)panelDesc.Width,(int)panelDesc.Height);
 
     // Katorga instrument-panel frame: restrained steel rails and a warm
     // status marker. These are decoration only; the hit geometry is unchanged.
@@ -28517,6 +28607,7 @@ static mirrorprobe::Probe g_mirrorPixelProbe;
 static bool g_mirrorProbeCurtain=false;
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    ReleaseUiRemasterResources();
     ResetScopePip();
     g_knifeMeleeReference.Reset();
     g_knifeTmdRoute.Reset();
@@ -34652,6 +34743,7 @@ void LoadIniSettings() {
     InterlockedExchange(&g_contextPointerProjection,GetPrivateProfileIntA("Render","ContextPointerProjection",0,path)?1:0);
     g_vrPromptTokens=GetPrivateProfileIntA("Render","VrPromptTokens",0,path)!=0;
     g_vrSettingsMinimal=GetPrivateProfileIntA("Render","VrSettingsMinimal",0,path)!=0;
+    InterlockedExchange(&g_uiRemasterRuntime,GetPrivateProfileIntA("Render","UiRemasterRuntime",0,path)?1:0);
     g_vrSettingsSessionOnly=GetPrivateProfileIntA("Diagnostic","VrSettingsSessionOnly",0,path)!=0;
     InterlockedExchange(&g_reloadHintsEnabled,
         GetPrivateProfileIntA("Input","ReloadHints",0,path)!=0);
