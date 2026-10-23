@@ -34,6 +34,25 @@ int main(){
     }
     assert(!NativeTmdSection(8297,13206,7704)); // gun
     assert(!NativeTmdSection(4818,0,7704)); // wrong material/range
+    assert(!UseWeaponAuthoredPair(true,true,1,8297)); // TMD-pose Volk must reach fore-end
+    assert(!UseWeaponAuthoredPair(true,true,1,11387));
+    assert(UseWeaponAuthoredPair(true,true,1,5799)); // accepted pistol close support
+    assert(UseWeaponAuthoredPair(true,false,1,8297));
+    assert(UseWeaponAuthoredPair(true,true,2,8297));
+    assert(!UseWeaponAuthoredPair(false,true,1,8297));
+    const auto guarded=[](bool feature,bool dual,bool gameplay,bool scene,bool shadow,
+                          bool animated,bool shader,unsigned min,unsigned verts,unsigned first,unsigned tris){
+        return GuardMixedTmdSection(feature,dual,gameplay,scene,shadow,animated,shader,
+                                    min,verts,first,tris);
+    };
+    assert(guarded(true,true,true,true,false,false,true,2626,4818,13206,7704));
+    assert(guarded(true,true,true,true,false,false,true,2626,4781,13206,7704));
+    assert(!guarded(false,true,true,true,false,false,true,2626,4818,13206,7704));
+    assert(!guarded(true,true,true,true,true,false,true,2626,4818,13206,7704));
+    assert(!guarded(true,true,true,true,false,true,true,2626,4818,13206,7704));
+    assert(!guarded(true,true,true,true,false,false,true,0,4818,13206,7704));
+    assert(!guarded(true,true,true,true,false,false,true,2626,4818,0,7704));
+    assert(!guarded(true,true,true,true,false,false,true,2626,8297,13206,7704));
     PowerLatch impulse,age;
     assert(impulse.Update(true,false,true)); // normal native Impulse
     assert(!impulse.Update(true,true,true)); // support priority

@@ -21,6 +21,8 @@ class Wiring(unittest.TestCase):
         self.assertIn('feedGame && WeaponPresentationInHands()',CPP)
         self.assertIn('dualPowerLatch[dualPower].Update(dualOwnsPower,dualPowerReserved,down)',CPP)
         self.assertIn('dualPowerReserved=!dualContext||supportActive||g_centurionOwnsGrip||g_nextOwnsGrip',CPP)
+        self.assertIn('dualtmd::UseWeaponAuthoredPair(',CPP)
+        self.assertIn('dual-tmd support: TMD-pose left glove uses existing weapon fore-end target',CPP)
     def test_original_hardware_draw_scope(self):
         start=CPP.index('if (isolateTmdHardware) {')
         block=CPP[start:CPP.index('for (int s = 0; s < nSeg;',start)]
@@ -32,6 +34,14 @@ class Wiring(unittest.TestCase):
         self.assertGreater(pair,CPP.index('const bool isolateTmdHardware'))
         self.assertIn('nativeIndices.Restore()',CPP[start:])
         self.assertIn('const HRESULT handRestore=',CPP[start:])
+        guard=CPP.index('const bool guardedMixedTmd = dualtmd::GuardMixedTmdSection(')
+        isolate=CPP.index('const bool isolateTmdHardware =',guard)
+        stereo=CPP.index('const HRESULT dhr = StereoPair(',isolate)
+        self.assertLess(guard,isolate)
+        self.assertLess(isolate,stereo)
+        self.assertIn('if (guardedMixedTmd && !independentRegs)',CPP[guard:isolate])
+        self.assertIn('noteTmdRoute(0,-1,-1,0);return D3D_OK;',CPP)
+        self.assertIn('noteTmdRoute(shortTmdBuffer&&shortEyeDraws?1u:',CPP)
     def test_probe_before_hide(self):
         start=CPP.index('const bool dualProbe=')
         self.assertLess(start,CPP.index('if (FgHidden(dev,numVertices',start))

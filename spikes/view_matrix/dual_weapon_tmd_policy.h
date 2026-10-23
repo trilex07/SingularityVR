@@ -27,6 +27,28 @@ inline bool IndependentTmdOwnsPose(bool dualContext, bool independentHands,
            NativeTmdSection(verts, first, triangles);
 }
 
+// The authored two-hand pair belongs to the weapon-hands animation. In
+// HANDS_TMD the same material-0 glove starts in the TMD pose instead; a rigid
+// copy of the gun-hand delta cannot put it on the weapon fore-end. The pistol
+// has no fore-end and retains its accepted close-support policy.
+inline bool UseWeaponAuthoredPair(bool authored, bool dualContext,
+                                  int hands, long gunVerts) {
+    return authored && !(dualContext && hands == 1 && gunVerts != 5799);
+}
+
+// The material-1 draw is the original 6527-face device plus 1177 arm faces.
+// A missed foreground latch must not submit all 7704 faces in focused dual
+// gameplay merely because the replacement/palette route was unavailable.
+inline bool GuardMixedTmdSection(bool feature, bool dualContext, bool gameplay,
+                                 bool scene, bool shadow, bool animated,
+                                 bool originalShader, unsigned minIndex,
+                                 unsigned verts, unsigned first, unsigned triangles) {
+    return feature && dualContext && gameplay && scene && !shadow && !animated &&
+           originalShader && minIndex == 2626u &&
+           (verts == 4818u || verts == 4781u) &&
+           first == 13206u && triangles == 7704u;
+}
+
 // Release-to-rearm: releasing support with L2/Square still down must not fire.
 struct PowerLatch {
     bool blocked=false;

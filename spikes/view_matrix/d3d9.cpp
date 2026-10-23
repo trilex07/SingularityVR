@@ -17717,10 +17717,13 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     const float (*leftTarget)[4] = off;
     if (supportGrip) {
         const SupportGripSpec spec = SupportGripFor(supportGunVerts);
-        if (spec.mode == SupportGripMode::AuthoredPair ||
+        const bool authoredPairAvailable = dualtmd::UseWeaponAuthoredPair(
+            spec.mode == SupportGripMode::AuthoredPair ||
             (supportGunVerts == 11387 && g_valkyrieAuthoredGrip) ||
             (supportGunVerts == 8297 && g_volkAuthoredGrip) ||
-            (supportGunVerts == 11389 && g_kasimovAuthoredGrip)) {
+            (supportGunVerts == 11389 && g_kasimovAuthoredGrip),
+            DualWeaponTmdContext(), (int)Rd(g_handsStatus), supportGunVerts);
+        if (authoredPairAvailable) {
             // Same rigid delta as the aim hand. The live palette already contains the
             // pistol's two-hand relationship; retargeting only the left wrist to BuildGunC
             // (or to l_hand_IK, which matches the rest pose) parks the glove beside the gun.
@@ -17735,6 +17738,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             if (ApplySupportGripTarget(offWeapon, weaponC, supportGunVerts)) {
                 leftTarget = offWeapon;
                 weaponDeltaUsed = true;
+                if (DualWeaponTmdContext() && Rd(g_handsStatus) == HANDS_TMD) {
+                    static LONG saidTmdSupport = 0;
+                    if (InterlockedCompareExchange(&saidTmdSupport, 1, 0) == 0)
+                        Log("dual-tmd support: TMD-pose left glove uses existing weapon fore-end target gun=%ld", supportGunVerts);
+                }
             }
         }
     }
@@ -19907,6 +19915,36 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         !g_boundShaderLayout.shadow&&FgMatchWindow();
     const bool dualProbeGun=dualProbe&&Rd(g_gunVerts)>0&&numVertices==(UINT)Rd(g_gunVerts);
     const bool dualProbeHardware=dualProbe&&gloveisolate::TmdHardwareCutApplies(2,numVertices,startIndex,primCount);
+    // Ninety one-shot buckets maximum: three native hands states, two support
+    // states, three audited material sections, five outcomes. No frame spam.
+    auto noteTmdRoute=[&](unsigned route,int palette,int segments,unsigned eyes){
+        if(!Rd(g_dualWeaponTmdProbe)||!g_dualTmdCensus.Active()||
+           !Rd(g_rtIsScene)||g_boundShaderLayout.shadow)return;
+        unsigned part=3;
+        if((numVertices==7444||numVertices==2626)&&startIndex==0&&primCount==4402)part=0;
+        else if(gloveisolate::IsArmFleshSection(numVertices,startIndex,primCount))part=1;
+        else if(tmdgauntlet::IsRightForearmTail(numVertices,startIndex,primCount))part=2;
+        if(part>2||route>4)return;
+        const LONG hands=Rd(g_handsStatus);
+        if(hands<0||hands>2)return;
+        const unsigned support=Rd(g_twoHandActive)?1u:0u;
+        const unsigned bucket=part*5u+route;
+        static volatile LONG seen[3][2]{};
+        const LONG bit=1L<<bucket;
+        if(InterlockedOr(&seen[hands][support],bit)&bit)return;
+        IDirect3DIndexBuffer9* sourceIb=nullptr;
+        IDirect3DVertexBuffer9* sourceVb=nullptr;
+        UINT streamOffset=0,streamStride=0;
+        dev->GetIndices(&sourceIb);
+        dev->GetStreamSource(0,&sourceVb,&streamOffset,&streamStride);
+        static const char* routes[]={"hidden","svtg","hardware","native-full","zero"};
+        Log("dual-tmd route: frame=%ld eye=shared hands=%ld support=%u part=%u route=%s min=%u verts=%u first=%u tris=%u palette=%d segments=%d stereoEyes=%u fg=%ld window=%d ib=%p vb=%p stream=%u/%u",
+            Rd(g_armPaletteFrameToken),hands,support,part,routes[route],
+            minIndex,numVertices,startIndex,primCount,palette,segments,eyes,
+            Rd(g_inForeground),FgMatchWindow()?1:0,sourceIb,sourceVb,streamOffset,streamStride);
+        if(sourceIb)sourceIb->Release();
+        if(sourceVb)sourceVb->Release();
+    };
     if(dualProbeGun||dualProbeHardware)
         g_dualTmdCensus.Add((int)Rd(g_handsStatus),dualProbeHardware,false,false,NativeAnimatedHandsNow());
     CaptureArmPaletteTrace(dev,baseVertex,minIndex,numVertices,startIndex,primCount);
@@ -19954,14 +19992,18 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         DpgRecord(2, 0.0f, 0.0f, (uint32_t)k, numVertices, primCount, (uint32_t)t);
         // WEAPON FX = HIDE PASS. Deliberately after the learn, per the note above and FgHideWholePass.
         if (FgHideWholePass()) return D3D_OK;
-        if (FgHidden(dev,numVertices, startIndex, primCount,minIndex,t,&shortTmdAdmitted)) return D3D_OK;
+        if (FgHidden(dev,numVertices, startIndex, primCount,minIndex,t,&shortTmdAdmitted)) {
+            noteTmdRoute(0,-1,-1,0);return D3D_OK;
+        }
         if(Rd(g_cinematicSceneProbe) && k<=kFgSanePass)
             InterlockedIncrement(&g_cineProbeFgKept);
         // Returning S_OK without drawing is how the mod already drops draws elsewhere - the
         // device state is untouched, so the next draw behaves normally.
     } else if (FgMatchesSignature(numVertices)) {
         // Outside the pass, but the same mesh - the near-plane depth prime at draws 2-3.
-        if (FgHidden(dev,numVertices, startIndex, primCount,minIndex,t,&shortTmdAdmitted)) return D3D_OK;
+        if (FgHidden(dev,numVertices, startIndex, primCount,minIndex,t,&shortTmdAdmitted)) {
+            noteTmdRoute(0,-1,-1,0);return D3D_OK;
+        }
         // The same mesh, drawn OUTSIDE the foreground pass. This is the whole question.
         DpgRecord(4, 0.0f, 0.0f, (uint32_t)InterlockedCompareExchange(&g_frameDrawIdx, 0, 0),
                   numVertices, primCount, 0);
@@ -20222,6 +20264,23 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         gloveisolate::TmdHardwareCutApplies((int)Rd(g_gloveIsolate),numVertices,startIndex,primCount)&&DualWeaponTmdContext()&&
         Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&FgMatchWindow();
     if(dualHardware&&(!independentRegs||Rd(g_twoHandActive)||!g_handPoseValid[0]||!g_handPositionValid[0]))nSeg=0;
+    const bool guardedMixedTmd = dualtmd::GuardMixedTmdSection(
+        g_tmdShortGauntlet, DualWeaponTmdContext(),
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo,
+        Rd(g_rtIsScene)!=0, g_boundShaderLayout.shadow,
+        NativeAnimatedHandsNow(),
+        g_boundShaderLayout.bones==5 && g_boundShaderLayout.boneRegs==225 &&
+            g_boundShaderLayout.local==230,
+        minIndex,numVertices,startIndex,primCount);
+    if (guardedMixedTmd && !independentRegs) {
+        // This exact native material contains a measured 280-face long sleeve.
+        // If its independent wrist palette is unavailable, preserve neither a
+        // stale full-arm draw nor a guessed replacement transform.
+        nSeg=0;
+        static LONG saidTmdNoPalette=0;
+        if (InterlockedCompareExchange(&saidTmdNoPalette,1,0)==0)
+            Log("dual-tmd: guarded mixed material suppressed without wrist palette min=%u verts=%u first=%u tris=%u",minIndex,numVertices,startIndex,primCount);
+    }
     if(FgIndependentHandsCandidate(numVertices, startIndex, primCount) && !independentRegs) {
         nSeg=0;
         static LONG saidIndependentSuppressed=0;
@@ -20255,7 +20314,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             Rd(g_inCinematic)!=0);
     IDirect3DIndexBuffer9* shortTmdBuffer=shortTmdCandidate?
         g_tmdShortGauntletRenderer.Ensure(dev):nullptr;
-    if(shortTmdAdmitted && admittedGate==tmdgauntlet::Gate::Pass) {
+    if(shortTmdAdmitted && admittedGate==tmdgauntlet::Gate::Pass &&
+       !(dualHardware && Rd(g_twoHandActive))) {
         const auto gate=!g_tmdShortGauntletRenderer.Ready()?tmdgauntlet::Gate::Cache:
             !shortTmdRange?tmdgauntlet::Gate::MinIndex:
             !(g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_nativeGloveRenderer.Ready() &&
@@ -20407,6 +20467,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         g_centurionSocket=cylinderReplay.socket;ReleaseSRWLockExclusive(&g_centurionSocketLock);
     }
     const HRESULT handRestore=independentRegs?g_origSetVSConstF(dev,5,&independentSaved[0][0],independentRegs):S_OK;
+    noteTmdRoute(shortTmdBuffer&&shortEyeDraws?1u:
+        isolateTmdHardware?2u:nSeg?3u:4u,independentRegs,nSeg,shortEyeDraws);
     if(shortTmdBuffer && FAILED(handRestore))
         LogShortTmdGate(tmdgauntlet::Gate::Restore,numVertices,startIndex,primCount);
     if(tmdgauntlet::SuccessfulStereoBoundDraw(shortTmdBuffer!=nullptr,shortEyeDraws,dhr,nativeRestore,handRestore)) {

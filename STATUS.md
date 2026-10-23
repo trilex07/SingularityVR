@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+## 2026-10-23 SIDE dual-TMD geometry follow-up — L1_PASS / L2_PASS, L4 OPEN
+
+PSVR2 rejected `a2244f4`: left support grip and short TMD shape remain wrong.
+The new isolated candidate changes the TMD-pose support target and guards the
+exact mixed TMD material against an unfiltered full-arm draw on palette loss.
+Bounded route receipts distinguish hidden/SVTG/49-run/native-full per state.
+See `docs/handoffs/sol-dual-tmd-geometry-rootcause.md`. No Steam deployment;
+do not describe this as physically verified.
+
 ## 2026-10-23 MAIN integrate dual weapon + short gauntlet — IN PROGRESS
 
 Branch `feature/integrate-dual-weapon-short-gauntlet` from `7e7d8208` with Astra
