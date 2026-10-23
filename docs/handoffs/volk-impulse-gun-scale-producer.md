@@ -4,6 +4,12 @@ Branch: `fix/volk-impulse-palette-producer`, base `362f205` (support-gauntlet
 change `d512c38`, preserving gameplay baseline `cac4ce3`). SIDE only:
 no Steam read/write, deployment, launch or merge. Physical validation OPEN.
 
+Clean source build: `032ab8af4b61effa1f8ed0f18c5a30e02eccb420`.
+DLL SHA256: `7C473E25D295158AFDED3A06B2F11D07EF9C0F45DE98ABB15076AB2F15D0B991`.
+Local artifact: `spikes/view_matrix/d3d9.dll`; provenance in `d3d9.build.json`
+records a clean tree, x86 014C/PE32 010B and `/O2`. The subsequent
+handoff-only commit does not change compiled sources.
+
 ## Evidence and first violated contract
 
 The archived `8fbb9f4` capture, SHA256
@@ -107,6 +113,11 @@ the original value was retained. No per-frame log stream or GPU readback.
 - OLED CPU and D3D11 GPU tests PASS (all three presets, <=1 LSB reference error).
 - Compiled WeaponLocker ABI test preserves the literal `[eax+20Ch]` call and
   FName stack setup. Build x86 PE32 /O2 PASS; pre-existing warnings remain.
+- `tools/reload/test_impulse_compiled_abi.py spikes/view_matrix/d3d9.dll`
+  verifies the actual emitted adapter: original getter exactly once, ECX,
+  bone/component stack order, original return-address witness, x87 float,
+  saved EBX and RET8. This is disassembly of the production DLL, not a
+  source-text assertion.
 
 Private inputs stay outside Git. Reproduction accepts explicit archived paths:
 `audit_impulse_gun_scale.py --exe ... --text ... --package ... --volk ...`.
