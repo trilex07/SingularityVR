@@ -1,0 +1,57 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "D5676D1E51555481A6CC15F1F3930A90DAFEDF5FABDE35A9F34556B216668528",
+  "reason": "M01+SOL 5105359 fixed carry: admit Valkyrie TMD wrist producer; add bounded left-shoulder capsule + Grip reach window for Valkyrie/Volk. Controlled DLL replacement with seven scoped INI keys for MAIN PSVR2 acceptance; no UI, 3D HUD, haptics, audio, Bink, DDS or Polish note changes.",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "A61C3B534F5C4C40DC878EC68CC52A77E8599DB57C6272D85254E58B795F6E1C",
+      "after": "78404247B78586FB42416F0A331CD11B13B4DBC0A16708B913A21F04EA374541",
+      "reason": " rebuilt from integration/sol-side-master-package-20261023 at bb234ba (cherry-pick of 5105359), x86 PE32 /O2"
+    }
+  ],
+  "ini": [
+    {
+      "key": "Input/ValkyrieShoulderExtendLeftCm",
+      "before": null,
+      "after": "18",
+      "reason": " new bounded left extension for the Valkyrie pickup capsule (SOL default)"
+    },
+    {
+      "key": "Input/ValkyrieShoulderRadiusCm",
+      "before": null,
+      "after": "18",
+      "reason": " new capsule radius for the Valkyrie shoulder pickup"
+    },
+    {
+      "key": "Input/ValkyrieGripReachMs",
+      "before": null,
+      "after": "1800",
+      "reason": " bounded reach window after a fresh left-Grip edge (Valkyrie)"
+    },
+    {
+      "key": "Input/VolkShoulderExtendLeftCm",
+      "before": null,
+      "after": "18",
+      "reason": " user-requested farther-left Volk pickup region, same bounded mechanism"
+    },
+    {
+      "key": "Input/VolkShoulderRadiusCm",
+      "before": null,
+      "after": "18",
+      "reason": " capsule radius for the Volk shoulder pickup"
+    },
+    {
+      "key": "Input/VolkGripReachMs",
+      "before": null,
+      "after": "1800",
+      "reason": " bounded reach window after a fresh left-Grip edge (Volk)"
+    },
+    {
+      "key": "Diagnostic/ShoulderPickupProbe",
+      "before": null,
+      "after": "1",
+      "reason": " bounded local-frame grip/shoulder receipts for the acceptance log"
+    }
+  ]
+}
