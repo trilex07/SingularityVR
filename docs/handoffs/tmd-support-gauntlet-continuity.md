@@ -84,6 +84,12 @@ certified by the shared socket-target math. No new offset is introduced.
 
 ## MAIN acceptance (after review only)
 
+Built from clean source commit `d512c3882bbf31f1712b03527f81c5714f66a040`.
+DLL SHA256: `50FD22B216AB01CF3E45A37803151121AAA0CD66198E1C1F0014E7C1462B4D38`.
+Local artifact: `spikes/view_matrix/d3d9.dll`; provenance:
+`spikes/view_matrix/d3d9.build.json` (x86 0x014C, PE32 0x010B, `/O2`, clean tree).
+The subsequent handoff-only commit does not change compiled sources.
+
 Enable only the new flag over the accepted short-gauntlet/dual baseline.
 Hold Volk with Left Grip, rotate both wrists, release and reacquire twice:
 the complete glove, short sleeve and TMD should remain a connected assembly
