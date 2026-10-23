@@ -31,6 +31,7 @@ inline bool Mount(Kind kind,Mat& out){
 struct Wrist {
     bool valid=false;Kind kind=Kind::None;std::uint32_t pawn=0,weapon=0;
     std::uint64_t transaction=0,tick=0;Mat tracking{};
+    WristSource source=WristSource::None;
     bool Current(Kind k,std::uint32_t p,std::uint32_t w,std::uint64_t id,std::uint64_t now)const{
         return valid&&k==kind&&p&&w&&id&&p==pawn&&w==weapon&&id==transaction&&
             now>=tick&&now-tick<=150&&armbind::Finite(tracking);

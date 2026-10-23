@@ -414,6 +414,22 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
                 weaponreload::HandMatrix(clipTracking,visual.aim,pose,g_nextClipRenderer[index].SourceCentre(),carried,
                     visual.phase==weaponreload::Phase::Carrying?hipknife::V{0,0,-.06f}:hipknife::V{});
             if(palm&&kind==weaponreload::Kind::Volk)note(!currentWrist?10:!placed?11:12);
+            if(g_volkCarryPoseProbe&&palm&&kind==weaponreload::Kind::Volk&&currentWrist&&placed){
+                static unsigned samples=0;static ULONGLONG nextSample=0;
+                if(samples<8&&now>=nextSample){
+                    ++samples;nextSample=now+400;
+                    const auto& w=wrist.tracking.m;const auto& c=carried.m;
+                    Log("volk-carry-pose: sample=%u frame=%ld ageMs=%llu pawn=%08X weapon=%08X transaction=%llu hand=(%.6g,%.6g,%.6g) wrist=(%.6g,%.6g,%.6g) mag=(%.6g,%.6g,%.6g) deltaMagHand=(%.6g,%.6g,%.6g) source=%d",
+                        samples,Rd(g_armPaletteFrameToken),(unsigned long long)(now-wrist.tick),visual.pawn,visual.weapon,
+                        (unsigned long long)visual.since,pose.p.x,pose.p.y,pose.p.z,
+                        w[3][0],w[3][1],w[3][2],c[3][0],c[3][1],c[3][2],
+                        c[3][0]-pose.p.x,c[3][1]-pose.p.y,c[3][2]-pose.p.z,int(wrist.source));
+                    for(unsigned row=0;row<4;++row)
+                        Log("volk-carry-pose-matrix: sample=%u row=%u wrist=(%.9g,%.9g,%.9g,%.9g) magazine=(%.9g,%.9g,%.9g,%.9g)",
+                            samples,row,w[row][0],w[row][1],w[row][2],w[row][3],
+                            c[row][0],c[row][1],c[row][2],c[row][3]);
+                }
+            }
             if(placed){
                 if(!weaponreload::SparePalette(g_nextAnimation[index],carried,local,controller,world,regs,replay.spare[replay.count]))return 0;
                 ++replay.count;

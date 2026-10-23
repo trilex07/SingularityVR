@@ -48,6 +48,9 @@ int main(){
         assert(hipknife::Length(Transform(cache,model)-expected)<.000001f);
         weaponcarry::Wrist witness{true,spec.kind,3,4,70,100,wrist};
         assert(witness.Current(spec.kind,3,4,70,250));
+        assert(witness.source==WristSource::None);
+        witness.source=WristSource::Tmd;
+        assert(witness.Current(spec.kind,3,4,70,250));
         assert(!witness.Current(spec.kind,3,4,71,150));
         assert(!witness.Current(spec.kind,3,4,70,251));
         assert(!witness.Current(spec.kind,3,5,70,150));

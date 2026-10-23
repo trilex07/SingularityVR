@@ -2391,6 +2391,7 @@ struct NextReloadVisual {
 static NextReloadVisual g_nextVisual;
 static weaponreload::Witness g_nextWitness;
 static int g_reloadPalmGrip=0; // default-OFF; measured native wrist, not AIM-space mount
+static int g_volkCarryPoseProbe=0; // default-OFF; bounded same-frame wrist/magazine witness
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
 static bool g_nextWristStagedFromTmd=false;
 static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
@@ -18068,7 +18069,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
            weaponcarry::WristTracking(*wristBind,
              reinterpret_cast<const float(*)[4]>(changed+wristSlot[0]*3),chain,tracking,desired)){
             g_nextWristStaged={true,nextCarryVisual.kind,nextCarryVisual.pawn,nextCarryVisual.weapon,
-                nextCarryVisual.since,GetTickCount64(),desired};
+                nextCarryVisual.since,GetTickCount64(),desired,carrySource};
             g_nextWristStagedFromTmd=carrySource==weaponcarry::WristSource::Tmd;
         }
     }
@@ -35305,6 +35306,7 @@ void LoadIniSettings() {
     Log("ini: VolkAuthoredGrip=%d WeaponWheelObservedSelection=%d (default OFF)",g_volkAuthoredGrip,g_weaponWheelObserved);
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
     g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;
+    g_volkCarryPoseProbe=GetPrivateProfileIntA("Diagnostic","VolkCarryPoseProbe",0,path)!=0;
     g_weaponTraceRigidOrigin=GetPrivateProfileIntA("Input","WeaponTraceRigidOrigin",0,path)!=0;
     g_weaponMeasuredAim=GetPrivateProfileIntA("Input","WeaponMeasuredAim",0,path)!=0;
     g_centurionAimProbe=GetPrivateProfileIntA("Diagnostic","CenturionAimProbe",0,path)!=0;
