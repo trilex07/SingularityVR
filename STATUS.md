@@ -1,5 +1,24 @@
 # STATUS — session handoff
 
+## 2026-10-24 — M01 shoulder pickup PHYSICALLY_VERIFIED (PSVR2 PASS @ `bb234ba`) — installation preserved
+
+User-accepted PSVR2 session (ended 2026-10-24 00:06): **Valkyrie PASS, Volk S4
+PASS** (both pickup methods; farther-left region works), TMD + two-hand PASS.
+Runtime receipts confirm the fix end-to-end: 13/13 shoulder gates accepted
+(capsule path exercised), `next carry wrist: kind=1` published (the previously
+missing Valkyrie TMD producer), `stage=12 kind=1|2` placed draws, 3×
+`inserted/request` with `permit=1`, 3× `native-ammo-ack consumed=1`
+(Valkyrie 0→12/12→0 full montage; Volk 5→6 and 2→6), firing observed between
+cycles. Discards are benign reach-window releases. Evidence archived and pushed
+on `handoff/evidence-m01-bb234ba-psvr2-pass` @ `643bb59`
+(`docs/evidence/m01-bb234ba-psvr2-pass/`, log SHA
+`89D5479D9848CE109199151CB0CEEA8B71664554B4383E6F5A47455115701CBE`). Steam
+STAYS on the candidate: DLL `78404247…`, INI `D2E91B0B…`; rollback copies
+verified in `deployment\install-backups\20261023-235243` (baseline
+`A61C3B53…`/`4EA3857A…`). Not claimed: Kašimov, socket-tolerance (user asks
+SOL for a slightly looser insertion), M03 HUD visual grade (same build; next
+physical check). M09 haptics stays a separate later module.
+
 ## 2026-10-23 — M01 shoulder-pickup candidate deployed for PSVR2 acceptance — L2_PASS / L3 deployed, L4 OPEN
 
 MAIN integrated SOL `5105359` (targeted Valkyrie/Volk TMD shoulder-magazine fix, plus
