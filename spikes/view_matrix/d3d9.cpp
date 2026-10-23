@@ -4,6 +4,7 @@
 #include "skeletal_palette.h"
 #include "hand_anchor_probe.h"
 #include "hand_anchor_math.h"
+#include "two_hand_spread.h"
 #include "texture_bridge_contract.h"
 static LONG g_textureBridgeOwned=0;
 static texbridge::Bind g_textureBridgeBind=nullptr;
@@ -2410,6 +2411,7 @@ static int g_scopeOpticalCalibration=0;
 static int g_sniperOpticalSlowTime=0;
 static int g_sniperOpticalAccuracy=0; // native scoped spread queries only, no camera ADS
 static int g_weaponNativeAxis=0; // exact local pre/post-spread basis, default OFF
+static int g_twoHandSpreadPercent=100; // 100 preserves native dispersion
 static LONG g_cinematicHandsOwnership=0; // native hands even when cinematic presentation stays stereo
 static LONG g_cinematicSceneProbe=0; // bounded read-only scene/foreground witness; default OFF
 static LONG g_cinematicEventBridge=0; // exact local six-bool Raven event -> existing cinema state; default OFF
@@ -35319,6 +35321,9 @@ void LoadIniSettings() {
     g_sniperOpticalSlowTime=GetPrivateProfileIntA("Input","SniperOpticalSlowTime",0,path)?1:0;
     g_sniperOpticalAccuracy=GetPrivateProfileIntA("Input","SniperOpticalAccuracy",0,path)?1:0;
     g_weaponNativeAxis=GetPrivateProfileIntA("Input","WeaponNativeAxis",0,path)?1:0;
+    g_twoHandSpreadPercent=(int)GetPrivateProfileIntA("Input","TwoHandSpreadPercent",100,path);
+    if(g_twoHandSpreadPercent<0||g_twoHandSpreadPercent>100)g_twoHandSpreadPercent=100;
+    Log("ini: TwoHandSpreadPercent=%d (100=native; active supported local shots only)",g_twoHandSpreadPercent);
     g_cinematicHandsOwnership=GetPrivateProfileIntA("Render","CinematicHandsOwnership",0,path)?1:0;
     g_cinematicSceneProbe=GetPrivateProfileIntA("Diagnostic","CinematicSceneProbe",0,path)?1:0;
     g_cinematicEventBridge=GetPrivateProfileIntA("Render","CinematicEventBridge",0,path)?1:0;

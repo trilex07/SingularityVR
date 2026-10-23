@@ -245,9 +245,15 @@ static int* __fastcall OpticalAddSpread(void* self,void*,int* output,int pitch,i
     auto* result=spreadOriginal(self,output,pitch,yaw,roll);
     const auto frame=Snapshot();
     const bool scoped=g_sniperOpticalAccuracy&&Current(frame)&&(uintptr_t)self==frame.weapon;
-    const bool ordinary=g_weaponNativeAxis&&VrModeOn()&&InGameplay()&&
+    const bool ordinary=(g_weaponNativeAxis||g_twoHandSpreadPercent<100)&&VrModeOn()&&InGameplay()&&
         !Rd(g_inCinematic)&&!Rd(g_gamePaused)&&!Rd(g_weaponHolstered)&&Rd(g_handDevValid)&&
         (uintptr_t)self==(uintptr_t)(uint32_t)Rd(g_weaponObj);
+    if(Rd(g_fireDepth)>0&&ordinary&&result==output&&output&&
+       PauseRttProbe::SafeRange((uintptr_t)output,12)&&
+       twohandspread::Apply(output,pitch,yaw,g_twoHandSpreadPercent,true,Rd(g_twoHandActive)!=0)){
+        static unsigned notes=0;if(notes++<8)Log("two-hand spread: native result reduced to %d%% weapon=%p seq=%ld; centre/recoil retained",
+            g_twoHandSpreadPercent,self,Rd(g_fireSeq));
+    }
     if(g_weaponMeasuredAim&&Rd(g_fireDepth)>0&&(scoped||ordinary)&&result==output&&output&&
        PauseRttProbe::SafeRange((uintptr_t)output,12)){
         shotAxis={g_playerPawn,(uintptr_t)self,GetTickCount64(),Rd(g_fireSeq),
@@ -680,7 +686,7 @@ static void Draw(IDirect3DDevice9* dev){
 }
 void NativeScopeTick(){
     NativeRifleFx::MaintainTick();NativeRifleFx::ObserveTick();NativeScopePip::Tick();
-    if(g_weaponNativeAxis&&VrModeOn()&&InGameplay()&&!Rd(g_inCinematic)){
+    if((g_weaponNativeAxis||g_twoHandSpreadPercent<100)&&VrModeOn()&&InGameplay()&&!Rd(g_inCinematic)){
         // Audited common RvWeaponShared method, not a guessed subclass offset.
         static ULONGLONG lastAttempt=0;const auto now=GetTickCount64();
         if(!NativeScopePip::spreadOriginal&&now-lastAttempt>=2000){
