@@ -1,0 +1,1613 @@
+{
+  "version": "2.1.1",
+  "project": "Singularity VR",
+  "languages": ["pl", "en"],
+  "description": "Master UI Localization Mapping and Rendering Audit for Singularity VR Interface & Utility Graphics Remaster. Contains full screen assignment, rendering pipeline (runtime font vs baked texture), asset ID, and recommended text bounds.",
+  "total_keys": 89,
+  "baked_sprites_per_language": 36,
+  "runtime_font_keys": 53,
+  "entries": [
+    {
+      "key": "WEAPON_CENTURION_NAME",
+      "screen": "weapon_wheel",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "Centurion .44",
+      "en": "Centurion .44",
+      "ui_element": "Weapon Wheel - Sector 1",
+      "recommended_bounds": {
+        "max_width_px": 240,
+        "max_height_px": 32,
+        "font_size_pt": 16,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_CENTURION_CALIBER",
+      "screen": "weapon_wheel",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KALIBER: .44 MAGNUM",
+      "en": "CALIBER: .44 MAGNUM",
+      "ui_element": "Weapon Wheel - Telemetry Plate",
+      "recommended_bounds": {
+        "max_width_px": 280,
+        "max_height_px": 24,
+        "font_size_pt": 13,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_VALKYRIE_NAME",
+      "screen": "weapon_wheel",
+      "rendered_by": "both",
+      "asset_id": "wheel_telemetry_plate",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "AR9 Walkiria",
+      "en": "AR9 Valkyrie",
+      "ui_element": "Weapon Wheel - Sector 2",
+      "recommended_bounds": {
+        "max_width_px": 240,
+        "max_height_px": 32,
+        "font_size_pt": 16,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_VALKYRIE_CALIBER",
+      "screen": "weapon_wheel",
+      "rendered_by": "both",
+      "asset_id": "wheel_telemetry_plate",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KALIBER: 7.62x39mm",
+      "en": "CALIBER: 7.62x39mm",
+      "ui_element": "Weapon Wheel - Telemetry Plate",
+      "recommended_bounds": {
+        "max_width_px": 280,
+        "max_height_px": 24,
+        "font_size_pt": 13,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_SPIKESHOT_NAME",
+      "screen": "weapon_wheel",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "Spikeshot",
+      "en": "Spikeshot",
+      "ui_element": "Weapon Wheel - Sector 3",
+      "recommended_bounds": {
+        "max_width_px": 240,
+        "max_height_px": 32,
+        "font_size_pt": 16,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_SPIKESHOT_CALIBER",
+      "screen": "weapon_wheel",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "AMUNICJA: IGŁY TUNGSTENOWE",
+      "en": "AMMO: TUNGSTEN FLECHETTES",
+      "ui_element": "Weapon Wheel - Telemetry Plate",
+      "recommended_bounds": {
+        "max_width_px": 280,
+        "max_height_px": 24,
+        "font_size_pt": 13,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_KASIMOV_NAME",
+      "screen": "weapon_wheel",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "Kasimov SNV-E99",
+      "en": "Kasimov SNV-E99",
+      "ui_element": "Weapon Wheel - Sector 4",
+      "recommended_bounds": {
+        "max_width_px": 240,
+        "max_height_px": 32,
+        "font_size_pt": 16,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_KASIMOV_CALIBER",
+      "screen": "weapon_wheel",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KALIBER: 7.62x54mmR E99",
+      "en": "CALIBER: 7.62x54mmR E99",
+      "ui_element": "Weapon Wheel - Telemetry Plate",
+      "recommended_bounds": {
+        "max_width_px": 280,
+        "max_height_px": 24,
+        "font_size_pt": 13,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_TMD_NAME",
+      "screen": "weapon_wheel",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "Urządzenie E99 TMD",
+      "en": "TMD E99 Device",
+      "ui_element": "Weapon Wheel - Special Slot",
+      "recommended_bounds": {
+        "max_width_px": 240,
+        "max_height_px": 32,
+        "font_size_pt": 16,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_MAGAZINE_LABEL",
+      "screen": "weapon_wheel",
+      "rendered_by": "both",
+      "asset_id": "wheel_telemetry_plate",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "MAGAZYNEK:",
+      "en": "MAGAZINE:",
+      "ui_element": "Weapon Wheel - Telemetry Plate",
+      "recommended_bounds": {
+        "max_width_px": 140,
+        "max_height_px": 24,
+        "font_size_pt": 13,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_SELECT_PROMPT",
+      "screen": "weapon_wheel",
+      "rendered_by": "both",
+      "asset_id": "wheel_telemetry_plate",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "[ZWOLNIJ R3] WYBIERZ",
+      "en": "[RELEASE R3] SELECT",
+      "ui_element": "Weapon Wheel - Telemetry Plate",
+      "recommended_bounds": {
+        "max_width_px": 280,
+        "max_height_px": 24,
+        "font_size_pt": 13,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_CENTER_HUB_TITLE",
+      "screen": "weapon_wheel",
+      "rendered_by": "baked_texture",
+      "asset_id": "wheel_center_hub",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "WYBÓR BRONI",
+      "en": "WEAPON SELECT",
+      "ui_element": "Weapon Wheel - Center Hub",
+      "recommended_bounds": {
+        "max_width_px": 160,
+        "max_height_px": 24,
+        "font_size_pt": 12,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_STATUS_HELD",
+      "screen": "weapon_wheel",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "W DŁONIACH",
+      "en": "EQUIPPED",
+      "ui_element": "Weapon Wheel - Sector Badge",
+      "recommended_bounds": {
+        "max_width_px": 120,
+        "max_height_px": 20,
+        "font_size_pt": 11,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "WEAPON_STATUS_SELECTED",
+      "screen": "weapon_wheel",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "WYBRANA",
+      "en": "SELECTED",
+      "ui_element": "Weapon Wheel - Sector Badge",
+      "recommended_bounds": {
+        "max_width_px": 120,
+        "max_height_px": 20,
+        "font_size_pt": 11,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_PAGE_ROOT",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "USTAWIENIA VR",
+      "en": "VR SETTINGS",
+      "ui_element": "VR Settings - Title Bar",
+      "recommended_bounds": {
+        "max_width_px": 400,
+        "max_height_px": 36,
+        "font_size_pt": 22,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_TAB_GENERAL",
+      "screen": "vr_settings",
+      "rendered_by": "baked_texture",
+      "asset_id": "tab_general",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "OGÓLNE VR",
+      "en": "GENERAL VR",
+      "ui_element": "VR Settings - Tab 0",
+      "recommended_bounds": {
+        "max_width_px": 120,
+        "max_height_px": 28,
+        "font_size_pt": 13,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_TAB_CONTROLLER",
+      "screen": "vr_settings",
+      "rendered_by": "baked_texture",
+      "asset_id": "tab_controller",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KONTROLER",
+      "en": "CONTROLLER",
+      "ui_element": "VR Settings - Tab 1",
+      "recommended_bounds": {
+        "max_width_px": 120,
+        "max_height_px": 28,
+        "font_size_pt": 13,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_TAB_COMFORT",
+      "screen": "vr_settings",
+      "rendered_by": "baked_texture",
+      "asset_id": "tab_comfort",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KOMFORT",
+      "en": "COMFORT",
+      "ui_element": "VR Settings - Tab 2",
+      "recommended_bounds": {
+        "max_width_px": 120,
+        "max_height_px": 28,
+        "font_size_pt": 13,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_TAB_DISPLAY",
+      "screen": "vr_settings",
+      "rendered_by": "baked_texture",
+      "asset_id": "tab_display",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "OBRAZ",
+      "en": "DISPLAY",
+      "ui_element": "VR Settings - Tab 3",
+      "recommended_bounds": {
+        "max_width_px": 120,
+        "max_height_px": 28,
+        "font_size_pt": 13,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_TAB_ADVANCED",
+      "screen": "vr_settings",
+      "rendered_by": "baked_texture",
+      "asset_id": "tab_advanced",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "ZAAWANSOWANE",
+      "en": "ADVANCED",
+      "ui_element": "VR Settings - Tab 4",
+      "recommended_bounds": {
+        "max_width_px": 120,
+        "max_height_px": 28,
+        "font_size_pt": 13,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_TAB_WEAPON",
+      "screen": "vr_settings",
+      "rendered_by": "baked_texture",
+      "asset_id": "tab_weapon",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KALIBRACJA BRONI",
+      "en": "WEAPON ALIGN",
+      "ui_element": "VR Settings - Tab 5",
+      "recommended_bounds": {
+        "max_width_px": 130,
+        "max_height_px": 28,
+        "font_size_pt": 13,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_TAB_TMD",
+      "screen": "vr_settings",
+      "rendered_by": "baked_texture",
+      "asset_id": "tab_tmd",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "TMD",
+      "en": "TMD",
+      "ui_element": "VR Settings - Tab 6",
+      "recommended_bounds": {
+        "max_width_px": 90,
+        "max_height_px": 28,
+        "font_size_pt": 13,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_TAB_HANDS",
+      "screen": "vr_settings",
+      "rendered_by": "baked_texture",
+      "asset_id": "tab_hands",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "DŁONIE",
+      "en": "HANDS",
+      "ui_element": "VR Settings - Tab 9",
+      "recommended_bounds": {
+        "max_width_px": 90,
+        "max_height_px": 28,
+        "font_size_pt": 13,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_TAB_LANGUAGE",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "JĘZYK",
+      "en": "LANGUAGE",
+      "ui_element": "VR Settings - Tab 10",
+      "recommended_bounds": {
+        "max_width_px": 100,
+        "max_height_px": 28,
+        "font_size_pt": 13,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_TAB_TUTORIAL",
+      "screen": "vr_settings",
+      "rendered_by": "baked_texture",
+      "asset_id": "tab_tutorial",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "SAMOUCZEK",
+      "en": "TUTORIAL",
+      "ui_element": "VR Settings - Tab 11",
+      "recommended_bounds": {
+        "max_width_px": 110,
+        "max_height_px": 28,
+        "font_size_pt": 13,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_ENABLE_VR",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "TRYB VR",
+      "en": "VR MODE",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_AIM_METHOD",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "METODA CELOWANIA",
+      "en": "AIM METHOD",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_AIM_CONTROLLER",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KONTROLER RUCHU",
+      "en": "MOTION CONTROLLER",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_AIM_HEAD",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "CELOWANIE GŁOWĄ",
+      "en": "HEAD AIM",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_AIM_TWOHAND",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "CHWYT DWURĘCZNY",
+      "en": "TWO-HANDED",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_CUTSCENE_VIEW",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "WIDOK PRZERYWNIKÓW",
+      "en": "CUTSCENE VIEW",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_CUTSCENE_FLAT",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "PŁASKIE KINO",
+      "en": "FLAT CINEMA",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_CUTSCENE_VR",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "ZAWSZE W VR",
+      "en": "ALWAYS VR",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_TURN_MODE",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "TRYB OBRACANIA",
+      "en": "TURN MODE",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_TURN_SNAP",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "SKOKOWY (SNAP)",
+      "en": "SNAP TURN",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_TURN_SMOOTH",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "PŁYNNY (SMOOTH)",
+      "en": "SMOOTH TURN",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_SNAP_ANGLE",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KĄT SKOKU",
+      "en": "SNAP ANGLE",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_TURN_SPEED",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "SZYBKOŚĆ OBROTU",
+      "en": "TURN SPEED",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_MOVE_DIR",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KIERUNEK RUCHU",
+      "en": "MOVE DIRECTION",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_MOVE_HEAD",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KIERUNEK GŁOWY",
+      "en": "HEAD DIRECTION",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_MOVE_CONTROLLER",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KIERUNEK KONTROLERA",
+      "en": "CONTROLLER DIRECTION",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_DOMINANT_HAND",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "DŁOŃ DOMINUJĄCA",
+      "en": "DOMINANT HAND",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_HAND_RIGHT",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "PRAWA",
+      "en": "RIGHT",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 160,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_HAND_LEFT",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "LEWA",
+      "en": "LEFT",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 160,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_RELOAD_HINTS",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "INSTRUKCJE PRZEŁADOWANIA",
+      "en": "RELOAD INSTRUCTIONS",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_LASER_POINTER",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "WSKAŹNIK LASEROWY",
+      "en": "LASER POINTER",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_LASER_ALWAYS",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "ZAWSZE WŁĄCZONY",
+      "en": "ALWAYS ON",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_LASER_CONTEXT",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KONTEKSTOWY",
+      "en": "CONTEXTUAL",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_LASER_OFF",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "WYŁĄCZONY",
+      "en": "OFF",
+      "ui_element": "VR Settings - Row Value",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "right",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_WORLD_SCALE",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "SKALA ŚWIATA",
+      "en": "WORLD SCALE",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_NOTE_SIZE",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "ROZMIAR NOTATEK / HUD",
+      "en": "NOTE / HUD SIZE",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_POLISH_TEXT",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "NAPISY POLSKIE",
+      "en": "POLISH TEXT",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_UI_NARRATOR",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "LEKTOR INTERFEJSU",
+      "en": "UI NARRATOR",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_CROSSHAIR",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "CELOWNIK EKRANOWY",
+      "en": "SCREEN CROSSHAIR",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_ROW_WEAPON_PITCH",
+      "screen": "vr_settings",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KĄT NACHYLENIA BRONI",
+      "en": "WEAPON PITCH OFFSET",
+      "ui_element": "VR Settings - Row Label",
+      "recommended_bounds": {
+        "max_width_px": 320,
+        "max_height_px": 32,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "COMMON_STATE_ON",
+      "screen": "vr_settings",
+      "rendered_by": "baked_texture",
+      "asset_id": "toggle_state_on",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "WŁ.",
+      "en": "ON",
+      "ui_element": "VR Settings - Toggle State",
+      "recommended_bounds": {
+        "max_width_px": 80,
+        "max_height_px": 28,
+        "font_size_pt": 14,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "COMMON_STATE_OFF",
+      "screen": "vr_settings",
+      "rendered_by": "baked_texture",
+      "asset_id": "toggle_state_off",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "WYŁ.",
+      "en": "OFF",
+      "ui_element": "VR Settings - Toggle State",
+      "recommended_bounds": {
+        "max_width_px": 80,
+        "max_height_px": 28,
+        "font_size_pt": 14,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "SETTINGS_FOOTER_LEGEND",
+      "screen": "vr_settings",
+      "rendered_by": "baked_texture",
+      "asset_id": "footer_legend",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "[LASER + R2] WYBIERZ   [○] WSTECZ   [LEWY DRĄŻEK] NAWIGACJA",
+      "en": "[LASER + R2] SELECT   [○] BACK   [LEFT STICK] NAVIGATE",
+      "ui_element": "VR Settings - Footer",
+      "recommended_bounds": {
+        "max_width_px": 850,
+        "max_height_px": 28,
+        "font_size_pt": 13,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PAUSE_TITLE_HEADER",
+      "screen": "pause_menu",
+      "rendered_by": "baked_texture",
+      "asset_id": "header_pause",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "PAUZA // KONTROLA OPERACJI",
+      "en": "PAUSE // MISSION CONTROL",
+      "ui_element": "Pause Menu - Header Plate",
+      "recommended_bounds": {
+        "max_width_px": 480,
+        "max_height_px": 36,
+        "font_size_pt": 20,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PAUSE_BTN_RESUME",
+      "screen": "pause_menu",
+      "rendered_by": "baked_texture",
+      "asset_id": "btn_resume",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "WZNOWIENIE GRY",
+      "en": "RESUME GAME",
+      "ui_element": "Pause Menu - Push Button 1",
+      "recommended_bounds": {
+        "max_width_px": 460,
+        "max_height_px": 48,
+        "font_size_pt": 17,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PAUSE_BTN_LOAD",
+      "screen": "pause_menu",
+      "rendered_by": "baked_texture",
+      "asset_id": "btn_load",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "WCZYTAJ STAN",
+      "en": "LOAD GAME",
+      "ui_element": "Pause Menu - Push Button 2",
+      "recommended_bounds": {
+        "max_width_px": 460,
+        "max_height_px": 48,
+        "font_size_pt": 17,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PAUSE_BTN_SAVE",
+      "screen": "pause_menu",
+      "rendered_by": "baked_texture",
+      "asset_id": "btn_save",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "ZAPISZ STAN",
+      "en": "SAVE GAME",
+      "ui_element": "Pause Menu - Push Button 3",
+      "recommended_bounds": {
+        "max_width_px": 460,
+        "max_height_px": 48,
+        "font_size_pt": 17,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PAUSE_BTN_VR_SETTINGS",
+      "screen": "pause_menu",
+      "rendered_by": "baked_texture",
+      "asset_id": "btn_vr_settings",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "OPCJE VR",
+      "en": "VR SETTINGS",
+      "ui_element": "Pause Menu - Push Button 4 (Special)",
+      "recommended_bounds": {
+        "max_width_px": 460,
+        "max_height_px": 48,
+        "font_size_pt": 17,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PAUSE_BTN_GAME_OPTIONS",
+      "screen": "pause_menu",
+      "rendered_by": "baked_texture",
+      "asset_id": "btn_options",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "USTAWIENIA GRY",
+      "en": "GAME OPTIONS",
+      "ui_element": "Pause Menu - Push Button 5",
+      "recommended_bounds": {
+        "max_width_px": 460,
+        "max_height_px": 48,
+        "font_size_pt": 17,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PAUSE_BTN_MAIN_MENU",
+      "screen": "pause_menu",
+      "rendered_by": "baked_texture",
+      "asset_id": "btn_main_menu",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "MENU GŁÓWNE",
+      "en": "MAIN MENU",
+      "ui_element": "Pause Menu - Push Button 6",
+      "recommended_bounds": {
+        "max_width_px": 460,
+        "max_height_px": 48,
+        "font_size_pt": 17,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PAUSE_BTN_EXIT_DESKTOP",
+      "screen": "pause_menu",
+      "rendered_by": "baked_texture",
+      "asset_id": "btn_exit",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "WYJŚCIE DO PULPITU",
+      "en": "EXIT TO DESKTOP",
+      "ui_element": "Pause Menu - Push Button 7",
+      "recommended_bounds": {
+        "max_width_px": 460,
+        "max_height_px": 48,
+        "font_size_pt": 17,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PAUSE_FOOTER_LEGEND",
+      "screen": "pause_menu",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "[R2] WYBIERZ      [○] WSTECZ      [LEWY DRĄŻEK] NAWIGACJA",
+      "en": "[R2] SELECT      [○] BACK      [LEFT STICK] NAVIGATE",
+      "ui_element": "Pause Menu - Footer",
+      "recommended_bounds": {
+        "max_width_px": 580,
+        "max_height_px": 24,
+        "font_size_pt": 12,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "CONFIRM_TITLE",
+      "screen": "confirmation_modal",
+      "rendered_by": "both",
+      "asset_id": "dialog_main_menu",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "POTWIERDZENIE DECYZJI",
+      "en": "CONFIRMATION",
+      "ui_element": "Confirmation Modal - Header",
+      "recommended_bounds": {
+        "max_width_px": 520,
+        "max_height_px": 36,
+        "font_size_pt": 20,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "CONFIRM_BODY_MAIN_MENU",
+      "screen": "confirmation_modal",
+      "rendered_by": "both",
+      "asset_id": "dialog_main_menu",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "CZY NA PEWNO CHCESZ POWRÓCIĆ DO MENU GŁÓWNEGO? WSZELKIE NIEZAPISANE POSTĘPY W MISJI ZOSTANĄ UTRACONE.",
+      "en": "ARE YOU SURE YOU WANT TO RETURN TO THE MAIN MENU? ANY UNSAVED MISSION PROGRESS WILL BE LOST.",
+      "ui_element": "Confirmation Modal - Body Text",
+      "recommended_bounds": {
+        "max_width_px": 580,
+        "max_height_px": 120,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": true
+      }
+    },
+    {
+      "key": "CONFIRM_BODY_EXIT_DESKTOP",
+      "screen": "confirmation_modal",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "CZY NA PEWNO CHCESZ ZAKOŃCZYĆ ROZGRYWKĘ I WYJŚĆ DO PULPITU?",
+      "en": "ARE YOU SURE YOU WANT TO EXIT THE GAME AND RETURN TO THE DESKTOP?",
+      "ui_element": "Confirmation Modal - Body Text",
+      "recommended_bounds": {
+        "max_width_px": 580,
+        "max_height_px": 80,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": true
+      }
+    },
+    {
+      "key": "CONFIRM_BTN_CONFIRM",
+      "screen": "confirmation_modal",
+      "rendered_by": "baked_texture",
+      "asset_id": "btn_confirm",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "POTWIERDŹ [R2]",
+      "en": "CONFIRM [R2]",
+      "ui_element": "Confirmation Modal - Primary Button",
+      "recommended_bounds": {
+        "max_width_px": 220,
+        "max_height_px": 48,
+        "font_size_pt": 16,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "CONFIRM_BTN_CANCEL",
+      "screen": "confirmation_modal",
+      "rendered_by": "baked_texture",
+      "asset_id": "btn_cancel",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "ANULUJ [○]",
+      "en": "CANCEL [○]",
+      "ui_element": "Confirmation Modal - Secondary Button",
+      "recommended_bounds": {
+        "max_width_px": 220,
+        "max_height_px": 48,
+        "font_size_pt": 16,
+        "text_align": "center",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PROMPT_INTERACT",
+      "screen": "interaction_prompts",
+      "rendered_by": "baked_texture",
+      "asset_id": "prompt_interact",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "INTERAKCJA",
+      "en": "INTERACT",
+      "ui_element": "Interaction Prompt Pill",
+      "recommended_bounds": {
+        "max_width_px": 220,
+        "max_height_px": 36,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PROMPT_PICKUP",
+      "screen": "interaction_prompts",
+      "rendered_by": "baked_texture",
+      "asset_id": "prompt_pickup",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "PODNIEŚ PRZEDMIOT",
+      "en": "PICK UP ITEM",
+      "ui_element": "Interaction Prompt Pill",
+      "recommended_bounds": {
+        "max_width_px": 240,
+        "max_height_px": 36,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PROMPT_RELOAD",
+      "screen": "interaction_prompts",
+      "rendered_by": "baked_texture",
+      "asset_id": "prompt_reload",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "PRZEŁADUJ BROŃ",
+      "en": "RELOAD WEAPON",
+      "ui_element": "Interaction Prompt Pill",
+      "recommended_bounds": {
+        "max_width_px": 220,
+        "max_height_px": 36,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PROMPT_HOLSTER",
+      "screen": "interaction_prompts",
+      "rendered_by": "baked_texture",
+      "asset_id": "prompt_holster",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "SCHOWAJ BROŃ",
+      "en": "HOLSTER WEAPON",
+      "ui_element": "Interaction Prompt Pill",
+      "recommended_bounds": {
+        "max_width_px": 220,
+        "max_height_px": 36,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PROMPT_TWOHAND_GRIP",
+      "screen": "interaction_prompts",
+      "rendered_by": "baked_texture",
+      "asset_id": "prompt_twohand",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "CHWYT DWURĘCZNY",
+      "en": "TWO-HAND GRIP",
+      "ui_element": "Interaction Prompt Pill",
+      "recommended_bounds": {
+        "max_width_px": 240,
+        "max_height_px": 36,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PROMPT_MELEE",
+      "screen": "interaction_prompts",
+      "rendered_by": "baked_texture",
+      "asset_id": "prompt_melee",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "ATAK WRĘCZ",
+      "en": "MELEE ATTACK",
+      "ui_element": "Interaction Prompt Pill",
+      "recommended_bounds": {
+        "max_width_px": 220,
+        "max_height_px": 36,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PROMPT_TMD_STASIS",
+      "screen": "interaction_prompts",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "IMPULS STAZY TMD",
+      "en": "TMD STASIS IMPULSE",
+      "ui_element": "Interaction Prompt Pill",
+      "recommended_bounds": {
+        "max_width_px": 260,
+        "max_height_px": 36,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PROMPT_TMD_TIME",
+      "screen": "interaction_prompts",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "MANIPULACJA WIEKIEM",
+      "en": "AGE MANIPULATION",
+      "ui_element": "Interaction Prompt Pill",
+      "recommended_bounds": {
+        "max_width_px": 260,
+        "max_height_px": 36,
+        "font_size_pt": 15,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PROMPT_STATUS_LOCKED",
+      "screen": "interaction_prompts",
+      "rendered_by": "baked_texture",
+      "asset_id": "prompt_locked",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "MECHANIZM ZARYGLOWANY",
+      "en": "MECHANISM LOCKED",
+      "ui_element": "Status Prompt Pill",
+      "recommended_bounds": {
+        "max_width_px": 280,
+        "max_height_px": 36,
+        "font_size_pt": 14,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PROMPT_STATUS_NO_AMMO",
+      "screen": "interaction_prompts",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "BRAK AMUNICJI W MAGAZYNKU",
+      "en": "NO AMMUNITION IN MAGAZINE",
+      "ui_element": "Status Prompt Pill",
+      "recommended_bounds": {
+        "max_width_px": 300,
+        "max_height_px": 36,
+        "font_size_pt": 14,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "PROMPT_STATUS_WARNING",
+      "screen": "interaction_prompts",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "UWAGA: PROMIENIOWANIE E99",
+      "en": "WARNING: E99 RADIATION",
+      "ui_element": "Status Prompt Pill",
+      "recommended_bounds": {
+        "max_width_px": 300,
+        "max_height_px": 36,
+        "font_size_pt": 14,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "HUD_LABEL_AMMO",
+      "screen": "utility_hud",
+      "rendered_by": "baked_texture",
+      "asset_id": "hud_label_ammo",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "AMUNICJA",
+      "en": "AMMO",
+      "ui_element": "Diegetic HUD Support Frame",
+      "recommended_bounds": {
+        "max_width_px": 140,
+        "max_height_px": 24,
+        "font_size_pt": 13,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "HUD_LABEL_VITALS",
+      "screen": "utility_hud",
+      "rendered_by": "baked_texture",
+      "asset_id": "hud_label_vitals",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "STAN ZDROWIA",
+      "en": "VITALS",
+      "ui_element": "Diegetic HUD Support Frame",
+      "recommended_bounds": {
+        "max_width_px": 160,
+        "max_height_px": 24,
+        "font_size_pt": 13,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "HUD_LABEL_E99",
+      "screen": "utility_hud",
+      "rendered_by": "baked_texture",
+      "asset_id": "hud_label_e99",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "ENERGIA E99",
+      "en": "E99 ENERGY",
+      "ui_element": "Diegetic HUD Support Frame",
+      "recommended_bounds": {
+        "max_width_px": 150,
+        "max_height_px": 24,
+        "font_size_pt": 13,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "HUD_LABEL_OBJECTIVE",
+      "screen": "utility_hud",
+      "rendered_by": "baked_texture",
+      "asset_id": "hud_label_objective",
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "CEL BIEŻĄCY:",
+      "en": "CURRENT OBJECTIVE:",
+      "ui_element": "Diegetic HUD Support Frame",
+      "recommended_bounds": {
+        "max_width_px": 200,
+        "max_height_px": 24,
+        "font_size_pt": 13,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    },
+    {
+      "key": "HUD_OBJECTIVE_DEFAULT",
+      "screen": "utility_hud",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "ZBADAJ SEKTOR BADAWCZY KATORGA-12",
+      "en": "INVESTIGATE KATORGA-12 RESEARCH SECTOR",
+      "ui_element": "Diegetic HUD Support Text",
+      "recommended_bounds": {
+        "max_width_px": 420,
+        "max_height_px": 48,
+        "font_size_pt": 14,
+        "text_align": "left",
+        "line_wrap": true
+      }
+    },
+    {
+      "key": "HUD_WARNING_RADIATION",
+      "screen": "utility_hud",
+      "rendered_by": "runtime_font",
+      "asset_id": null,
+      "pl_status": "VERIFIED",
+      "en_status": "VERIFIED",
+      "pl": "KRYTYCZNE PROMIENIOWANIE TEMPORALNE",
+      "en": "CRITICAL TEMPORAL RADIATION",
+      "ui_element": "Diegetic HUD Alert Banner",
+      "recommended_bounds": {
+        "max_width_px": 420,
+        "max_height_px": 32,
+        "font_size_pt": 14,
+        "text_align": "left",
+        "line_wrap": false
+      }
+    }
+  ]
+}
