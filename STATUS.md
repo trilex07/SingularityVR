@@ -1,5 +1,16 @@
 # STATUS — session handoff
 
+## 2026-10-23 — L2 disappearing gun: native gun_scale producer — L1_PASS / L2_PASS
+
+`fix/volk-impulse-palette-producer` builds on the support-gauntlet candidate.
+Original `SwitchToTMD` activates `mGunScaleCtrl`, authored `gun_scale` on
+`mInviewMesh.cog_gun`, with BoneScale=0. All five Volk palette bones descend
+from this node. New default-OFF `[Input] DualWeaponTmdGunScale=1` overrides
+only that owned control's scale getter to 1 in dual gameplay. Native animation,
+TMD powers and hands state are not rewritten; no saved palette is replayed.
+See `docs/handoffs/volk-impulse-gun-scale-producer.md` for ABI/asset evidence,
+tests and MAIN acceptance. Steam/PSVR2 NOT RUN; no physical PASS claim.
+
 ## 2026-10-23 — TMD supporting-wrist assembly — L1_PASS / L2_PASS
 
 `fix/tmd-support-gauntlet-continuity`, base `cac4ce3`: opt-in

@@ -2259,8 +2259,10 @@ enum { HANDS_NONE = 0, HANDS_TMD = 1, HANDS_WEAPON = 2 };
 inline bool TmdRaised()      { return Rd(g_handsStatus) == HANDS_TMD; }
 inline bool WeaponInHands()  { return Rd(g_handsStatus) == HANDS_WEAPON; }
 static LONG g_dualWeaponTmdReady=0,g_dualWeaponTmdProbe=0;
+static LONG g_dualWeaponTmdGunScale=0; // opt-in native gun_scale result, no cached pose
 static dualtmd::Census g_dualTmdCensus; // render thread only
 static bool DualWeaponTmdContext();
+static bool NativeAnimatedHandsNow();
 static bool WeaponPresentationInHands();
 
 static uintptr_t FindPlayerPawn(bool force = false);   // defined just below; cached, not a walk
@@ -35190,6 +35192,8 @@ void LoadIniSettings() {
     g_bodyEquipmentProbe=GetPrivateProfileIntA("Diagnostic","BodyEquipmentProbe",0,path)!=0;
     InterlockedExchange(&g_tmdNativeAim,GetPrivateProfileIntA("Input","TmdNativeAim",0,path)!=0);
     InterlockedExchange(&g_dualWeaponTmdReady,GetPrivateProfileIntA("Input","DualWeaponTmdReady",0,path)!=0);
+    InterlockedExchange(&g_dualWeaponTmdGunScale,GetPrivateProfileIntA("Input","DualWeaponTmdGunScale",0,path)!=0);
+    Log("ini: DualWeaponTmdGunScale=%ld (default OFF; owned gun_scale result only)",Rd(g_dualWeaponTmdGunScale));
     InterlockedExchange(&g_dualWeaponTmdProbe,GetPrivateProfileIntA("Diagnostic","DualWeaponTmdProbe",0,path)!=0);
     Log("ini: DualWeaponTmdReady=%ld DualWeaponTmdProbe=%ld (default OFF; native draws only, no pawn state writes)",
         Rd(g_dualWeaponTmdReady),Rd(g_dualWeaponTmdProbe));
