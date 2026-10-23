@@ -1,0 +1,590 @@
+{
+  "atlas_name": "ui_atlas_localized_pl",
+  "language": "pl",
+  "dimensions": [
+    2048,
+    1024
+  ],
+  "vram_bytes_rgba8": 8388608,
+  "vram_mib": 8.0,
+  "gutter_px": 8,
+  "description": "Baked localized UI textures (PL) for Singularity VR (Zero-bleed 8px gutters)",
+  "elements": {
+    "dialog_main_menu_pl.png": {
+      "pixel_rect": [
+        4,
+        4,
+        640,
+        380
+      ],
+      "uv_rect": [
+        0.001953,
+        0.003906,
+        0.314453,
+        0.375
+      ],
+      "width": 640,
+      "height": 380
+    },
+    "wheel_center_hub_pl.png": {
+      "pixel_rect": [
+        652,
+        4,
+        260,
+        260
+      ],
+      "uv_rect": [
+        0.318359,
+        0.003906,
+        0.445312,
+        0.257812
+      ],
+      "width": 260,
+      "height": 260
+    },
+    "wheel_telemetry_plate_pl.png": {
+      "pixel_rect": [
+        920,
+        4,
+        420,
+        220
+      ],
+      "uv_rect": [
+        0.449219,
+        0.003906,
+        0.654297,
+        0.21875
+      ],
+      "width": 420,
+      "height": 220
+    },
+    "header_pause_pl.png": {
+      "pixel_rect": [
+        1348,
+        4,
+        560,
+        90
+      ],
+      "uv_rect": [
+        0.658203,
+        0.003906,
+        0.931641,
+        0.091797
+      ],
+      "width": 560,
+      "height": 90
+    },
+    "btn_cancel_pl.png": {
+      "pixel_rect": [
+        4,
+        392,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.001953,
+        0.382812,
+        0.236328,
+        0.435547
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_confirm_pl.png": {
+      "pixel_rect": [
+        492,
+        392,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.240234,
+        0.382812,
+        0.474609,
+        0.435547
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_exit_pl.png": {
+      "pixel_rect": [
+        980,
+        392,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.478516,
+        0.382812,
+        0.712891,
+        0.435547
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_load_pl.png": {
+      "pixel_rect": [
+        1468,
+        392,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.716797,
+        0.382812,
+        0.951172,
+        0.435547
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_main_menu_pl.png": {
+      "pixel_rect": [
+        4,
+        454,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.001953,
+        0.443359,
+        0.236328,
+        0.496094
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_options_pl.png": {
+      "pixel_rect": [
+        492,
+        454,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.240234,
+        0.443359,
+        0.474609,
+        0.496094
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_resume_pl.png": {
+      "pixel_rect": [
+        980,
+        454,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.478516,
+        0.443359,
+        0.712891,
+        0.496094
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_save_pl.png": {
+      "pixel_rect": [
+        1468,
+        454,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.716797,
+        0.443359,
+        0.951172,
+        0.496094
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "btn_vr_settings_pl.png": {
+      "pixel_rect": [
+        4,
+        516,
+        480,
+        54
+      ],
+      "uv_rect": [
+        0.001953,
+        0.503906,
+        0.236328,
+        0.556641
+      ],
+      "width": 480,
+      "height": 54
+    },
+    "prompt_holster_pl.png": {
+      "pixel_rect": [
+        492,
+        516,
+        320,
+        52
+      ],
+      "uv_rect": [
+        0.240234,
+        0.503906,
+        0.396484,
+        0.554688
+      ],
+      "width": 320,
+      "height": 52
+    },
+    "prompt_interact_pl.png": {
+      "pixel_rect": [
+        820,
+        516,
+        320,
+        52
+      ],
+      "uv_rect": [
+        0.400391,
+        0.503906,
+        0.556641,
+        0.554688
+      ],
+      "width": 320,
+      "height": 52
+    },
+    "prompt_locked_pl.png": {
+      "pixel_rect": [
+        1148,
+        516,
+        320,
+        52
+      ],
+      "uv_rect": [
+        0.560547,
+        0.503906,
+        0.716797,
+        0.554688
+      ],
+      "width": 320,
+      "height": 52
+    },
+    "prompt_melee_pl.png": {
+      "pixel_rect": [
+        1476,
+        516,
+        320,
+        52
+      ],
+      "uv_rect": [
+        0.720703,
+        0.503906,
+        0.876953,
+        0.554688
+      ],
+      "width": 320,
+      "height": 52
+    },
+    "prompt_pickup_pl.png": {
+      "pixel_rect": [
+        4,
+        578,
+        320,
+        52
+      ],
+      "uv_rect": [
+        0.001953,
+        0.564453,
+        0.158203,
+        0.615234
+      ],
+      "width": 320,
+      "height": 52
+    },
+    "prompt_reload_pl.png": {
+      "pixel_rect": [
+        332,
+        578,
+        320,
+        52
+      ],
+      "uv_rect": [
+        0.162109,
+        0.564453,
+        0.318359,
+        0.615234
+      ],
+      "width": 320,
+      "height": 52
+    },
+    "prompt_twohand_pl.png": {
+      "pixel_rect": [
+        660,
+        578,
+        320,
+        52
+      ],
+      "uv_rect": [
+        0.322266,
+        0.564453,
+        0.478516,
+        0.615234
+      ],
+      "width": 320,
+      "height": 52
+    },
+    "tab_advanced_pl.png": {
+      "pixel_rect": [
+        988,
+        578,
+        140,
+        36
+      ],
+      "uv_rect": [
+        0.482422,
+        0.564453,
+        0.550781,
+        0.599609
+      ],
+      "width": 140,
+      "height": 36
+    },
+    "tab_comfort_pl.png": {
+      "pixel_rect": [
+        1136,
+        578,
+        140,
+        36
+      ],
+      "uv_rect": [
+        0.554688,
+        0.564453,
+        0.623047,
+        0.599609
+      ],
+      "width": 140,
+      "height": 36
+    },
+    "tab_controller_pl.png": {
+      "pixel_rect": [
+        1284,
+        578,
+        140,
+        36
+      ],
+      "uv_rect": [
+        0.626953,
+        0.564453,
+        0.695312,
+        0.599609
+      ],
+      "width": 140,
+      "height": 36
+    },
+    "tab_display_pl.png": {
+      "pixel_rect": [
+        1432,
+        578,
+        140,
+        36
+      ],
+      "uv_rect": [
+        0.699219,
+        0.564453,
+        0.767578,
+        0.599609
+      ],
+      "width": 140,
+      "height": 36
+    },
+    "tab_general_pl.png": {
+      "pixel_rect": [
+        1580,
+        578,
+        140,
+        36
+      ],
+      "uv_rect": [
+        0.771484,
+        0.564453,
+        0.839844,
+        0.599609
+      ],
+      "width": 140,
+      "height": 36
+    },
+    "tab_hands_pl.png": {
+      "pixel_rect": [
+        1728,
+        578,
+        140,
+        36
+      ],
+      "uv_rect": [
+        0.84375,
+        0.564453,
+        0.912109,
+        0.599609
+      ],
+      "width": 140,
+      "height": 36
+    },
+    "tab_tmd_pl.png": {
+      "pixel_rect": [
+        1876,
+        578,
+        140,
+        36
+      ],
+      "uv_rect": [
+        0.916016,
+        0.564453,
+        0.984375,
+        0.599609
+      ],
+      "width": 140,
+      "height": 36
+    },
+    "tab_tutorial_pl.png": {
+      "pixel_rect": [
+        4,
+        638,
+        140,
+        36
+      ],
+      "uv_rect": [
+        0.001953,
+        0.623047,
+        0.070312,
+        0.658203
+      ],
+      "width": 140,
+      "height": 36
+    },
+    "tab_weapon_pl.png": {
+      "pixel_rect": [
+        152,
+        638,
+        140,
+        36
+      ],
+      "uv_rect": [
+        0.074219,
+        0.623047,
+        0.142578,
+        0.658203
+      ],
+      "width": 140,
+      "height": 36
+    },
+    "footer_legend_pl.png": {
+      "pixel_rect": [
+        300,
+        638,
+        900,
+        32
+      ],
+      "uv_rect": [
+        0.146484,
+        0.623047,
+        0.585938,
+        0.654297
+      ],
+      "width": 900,
+      "height": 32
+    },
+    "toggle_state_off_pl.png": {
+      "pixel_rect": [
+        1208,
+        638,
+        64,
+        28
+      ],
+      "uv_rect": [
+        0.589844,
+        0.623047,
+        0.621094,
+        0.650391
+      ],
+      "width": 64,
+      "height": 28
+    },
+    "toggle_state_on_pl.png": {
+      "pixel_rect": [
+        1280,
+        638,
+        64,
+        28
+      ],
+      "uv_rect": [
+        0.625,
+        0.623047,
+        0.65625,
+        0.650391
+      ],
+      "width": 64,
+      "height": 28
+    },
+    "hud_label_ammo_pl.png": {
+      "pixel_rect": [
+        1352,
+        638,
+        140,
+        24
+      ],
+      "uv_rect": [
+        0.660156,
+        0.623047,
+        0.728516,
+        0.646484
+      ],
+      "width": 140,
+      "height": 24
+    },
+    "hud_label_e99_pl.png": {
+      "pixel_rect": [
+        1500,
+        638,
+        140,
+        24
+      ],
+      "uv_rect": [
+        0.732422,
+        0.623047,
+        0.800781,
+        0.646484
+      ],
+      "width": 140,
+      "height": 24
+    },
+    "hud_label_objective_pl.png": {
+      "pixel_rect": [
+        1648,
+        638,
+        140,
+        24
+      ],
+      "uv_rect": [
+        0.804688,
+        0.623047,
+        0.873047,
+        0.646484
+      ],
+      "width": 140,
+      "height": 24
+    },
+    "hud_label_vitals_pl.png": {
+      "pixel_rect": [
+        1796,
+        638,
+        140,
+        24
+      ],
+      "uv_rect": [
+        0.876953,
+        0.623047,
+        0.945312,
+        0.646484
+      ],
+      "width": 140,
+      "height": 24
+    }
+  }
+}

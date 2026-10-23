@@ -24,6 +24,14 @@ class Wiring(unittest.TestCase):
         self.assertLess(source.index('const HRESULT nextRestore='), publish)
         self.assertIn('SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)', source[:publish][-240:])
 
+    def test_valkyrie_tmd_carry_reaches_the_measured_wrist_route(self):
+        source = (ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf8')
+        self.assertIn('weaponcarry::CarrySectionEligible(nextCarryVisual.kind,gloves)', source)
+        self.assertIn('weaponcarry::Source(nextCarryVisual.kind,nextCarry,gloves,tmdGloves,', source)
+        dispatch = (ROOT/'spikes/view_matrix/weapon_reload_dispatch.inl').read_text(encoding='utf8')
+        self.assertIn('weaponcarry::Matrix(kind,wrist.tracking,carried)', dispatch)
+        self.assertIn('kind==weaponreload::Kind::Valkyrie', dispatch)
+
     def test_probe_preserves_accepted_vfx_and_no_custom_substitute(self):
         source = (ROOT/'tools/reload/prepare_vr_settings_rifle_test.ps1').read_text(encoding='utf8')
         self.assertIn('[switch]$NativeFxCapture', source)

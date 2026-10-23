@@ -1,0 +1,219 @@
+{
+  "producer": "tools/enemy_upscale_batch.py (side/enemy-upscale-batch)",
+  "method": "2x steps: restrained-sharpen albedo/spec/emissive, renormalized normals, plain Lanczos masks; alpha preserved; mirrors texture_pipeline.py primitives",
+  "pending_extraction__needs_MAIN_readonly_umodel_run": [
+    {
+      "name": "agemap_body",
+      "missing_source": "missing source: C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\original-png\\RvGameMPLoader_SF\\Texture2D\\agemap_body.png"
+    },
+    {
+      "name": "agemap_head",
+      "missing_source": "missing source: C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\original-png\\RvGameMPLoader_SF\\Texture2D\\agemap_head.png"
+    }
+  ],
+  "injector_note": "merge the targets[] entries below into asset-tools/texture-injector/targets_generated.h (file itself untouched by Side)",
+  "targets": [
+    {
+      "name": "phasetick_d",
+      "format": "DXT1",
+      "px": 2048,
+      "fnv1a64_mip0": "5405D53001791050"
+    },
+    {
+      "name": "phasetick_n",
+      "format": "DXT5",
+      "px": 2048,
+      "fnv1a64_mip0": "F31AB0EE5759B9FE"
+    },
+    {
+      "name": "phasetick_s",
+      "format": "DXT1",
+      "px": 2048,
+      "fnv1a64_mip0": "44B8D4BA0A47328F"
+    },
+    {
+      "name": "phasetick_e",
+      "format": "DXT1",
+      "px": 2048,
+      "fnv1a64_mip0": "E6B7EC4425CD48E8"
+    },
+    {
+      "name": "bsplat3_d",
+      "format": "DXT5",
+      "px": 2048,
+      "fnv1a64_mip0": "1DFA7461769C1804"
+    },
+    {
+      "name": "bsplat_decal_d",
+      "format": "DXT1",
+      "px": 2048,
+      "fnv1a64_mip0": "2BE4C5F3DCB316A5"
+    },
+    {
+      "name": "t_blood_splat02_d",
+      "format": "DXT5",
+      "px": 2048,
+      "fnv1a64_mip0": "D74D1351B3B3A6B5"
+    },
+    {
+      "name": "revert_t",
+      "format": "DXT1",
+      "px": 1024,
+      "fnv1a64_mip0": "EFA2F9FD019DFDEE"
+    }
+  ],
+  "assets": {
+    "phasetick_d": {
+      "name": "phasetick_d",
+      "kind": "albedo",
+      "format": "DXT1",
+      "native_px": [
+        512,
+        512
+      ],
+      "target_px": [
+        2048,
+        2048
+      ],
+      "mip_levels": 10,
+      "bytes": 2796328,
+      "vram_bytes": 2796200,
+      "fnv1a64_mip0": "5405D53001791050",
+      "src_sha256": "2CB01E714AE138F81071617FBC2CBAF5B8C87F77854912698EA54CB5FE08F3F7",
+      "out_sha256": "07E55B2A21033400AC6EF0271B3A65511081435E08302027A490CBBD802EF166"
+    },
+    "phasetick_n": {
+      "name": "phasetick_n",
+      "kind": "normal",
+      "format": "DXT5",
+      "native_px": [
+        512,
+        512
+      ],
+      "target_px": [
+        2048,
+        2048
+      ],
+      "mip_levels": 10,
+      "bytes": 5592528,
+      "vram_bytes": 5592400,
+      "fnv1a64_mip0": "F31AB0EE5759B9FE",
+      "src_sha256": "D556CE3051F30093086DC75DD98C88D41B810567AA945D1AC5729E1F4FB27A0E",
+      "out_sha256": "F3F85C30E97000C34CCBE6CBC495DAB943F5AA242737DC344D3C2F4CD21DD120"
+    },
+    "phasetick_s": {
+      "name": "phasetick_s",
+      "kind": "spec",
+      "format": "DXT1",
+      "native_px": [
+        512,
+        512
+      ],
+      "target_px": [
+        2048,
+        2048
+      ],
+      "mip_levels": 10,
+      "bytes": 2796328,
+      "vram_bytes": 2796200,
+      "fnv1a64_mip0": "44B8D4BA0A47328F",
+      "src_sha256": "9167ACF552E05027F585389148877A073EDC4CDF828A2F8D2B08FF6F5111BECE",
+      "out_sha256": "268D6B0AC9E0F61A98835E0731E8B9267DB3E7811CA9736346D919BDDF4E45B9"
+    },
+    "phasetick_e": {
+      "name": "phasetick_e",
+      "kind": "emissive",
+      "format": "DXT1",
+      "native_px": [
+        512,
+        512
+      ],
+      "target_px": [
+        2048,
+        2048
+      ],
+      "mip_levels": 10,
+      "bytes": 2796328,
+      "vram_bytes": 2796200,
+      "fnv1a64_mip0": "E6B7EC4425CD48E8",
+      "src_sha256": "17BF3B26B84EE703C1364BB6A55623A282BC845D19B7454F82331ED12991820D",
+      "out_sha256": "A47FED0FD6FF045F317B42581BB2446EF5F1189D2FAFF6DE881B4DA1C3CBA172"
+    },
+    "bsplat3_d": {
+      "name": "bsplat3_d",
+      "kind": "albedo",
+      "format": "DXT5",
+      "native_px": [
+        256,
+        256
+      ],
+      "target_px": [
+        2048,
+        2048
+      ],
+      "mip_levels": 10,
+      "bytes": 5592528,
+      "vram_bytes": 5592400,
+      "fnv1a64_mip0": "1DFA7461769C1804",
+      "src_sha256": "772232AD3FD9D1899F3178AB08878C421C11CF0967E8D67233C18223D1F6245C",
+      "out_sha256": "BEA24F60FB510C82F86A074F0E5A2D7E84ECB13B6F981F29E08E717E5E4BC388"
+    },
+    "bsplat_decal_d": {
+      "name": "bsplat_decal_d",
+      "kind": "albedo",
+      "format": "DXT1",
+      "native_px": [
+        128,
+        128
+      ],
+      "target_px": [
+        2048,
+        2048
+      ],
+      "mip_levels": 10,
+      "bytes": 2796328,
+      "vram_bytes": 2796200,
+      "fnv1a64_mip0": "2BE4C5F3DCB316A5",
+      "src_sha256": "B531D7BC45F52738E533E914C436D957489815B98714AB31519C9D04E06D19A8",
+      "out_sha256": "94D9CA45447740642625027C2339EBCB500FB6752950E427B5071CAA0491499B"
+    },
+    "t_blood_splat02_d": {
+      "name": "t_blood_splat02_d",
+      "kind": "albedo",
+      "format": "DXT5",
+      "native_px": [
+        256,
+        256
+      ],
+      "target_px": [
+        2048,
+        2048
+      ],
+      "mip_levels": 10,
+      "bytes": 5592528,
+      "vram_bytes": 5592400,
+      "fnv1a64_mip0": "D74D1351B3B3A6B5",
+      "src_sha256": "87F1DB2DC42B385ED5076EDC5157EBDE6F09B7514FD20331F3FCFA702101E286",
+      "out_sha256": "97ADB665FC8F479FFB7FA9C74D6BAC48157CDA1C17946EBC6C308506343B4E88"
+    },
+    "revert_t": {
+      "name": "revert_t",
+      "kind": "mask",
+      "format": "DXT1",
+      "native_px": [
+        512,
+        512
+      ],
+      "target_px": [
+        1024,
+        1024
+      ],
+      "mip_levels": 9,
+      "bytes": 699176,
+      "vram_bytes": 699048,
+      "fnv1a64_mip0": "EFA2F9FD019DFDEE",
+      "src_sha256": "D52E77C4428859CEE2393D0D4A6DBB849F999DB552C7943D549FDF2CBD686B97",
+      "out_sha256": "1FE491AFB110FF2E0B17343AFB2F5C65442931DA4B6B0ADBAD2C107F4D356CC4"
+    }
+  }
+}

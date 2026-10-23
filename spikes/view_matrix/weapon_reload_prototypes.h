@@ -1,13 +1,21 @@
 #pragma once
 #include "centurion_reload.h"
 #include "weapon_reload_profiles.h"
+#include <algorithm>
 #include <cstring>
+#include <limits>
 
 // Pure CPU policy, called by the opt-in runtime dispatcher. No engine ABI here.
 // Independent magazine policy: Circle eject -> shoulder grab -> insert/release.
 // Reuse observation types, NEVER the Centurion cylinder FSM or native tap.
 namespace weaponreloadproto {
-struct Shoulder {float left=.22f,down=.12f,back=.18f;};
+// A disabled post-TMD knife has no grip or proximity claim on Valkyrie's
+// shoulder pouch. Keep this policy profile-specific: Volk/Kasimov retain their
+// previously tested routing until a separate physical result warrants change.
+inline bool ValkyrieKnifeCanBlock(bool enabled,bool ready,bool disabledByTmd){
+    return enabled&&ready&&!disabledByTmd;
+}
+struct Shoulder {float left=.22f,down=.12f,back=.18f,leftExtension=0;};
 inline bool MidEye(hipknife::V left,hipknife::V right,hipknife::V& centre){
     if(!hipknife::Finite(left)||!hipknife::Finite(right))return false;
     const float separation=hipknife::Length(right-left);
@@ -18,19 +26,37 @@ inline hipknife::Pose Supply(hipknife::V headCentre,float latchedPhysicalYaw,con
     const hipknife::Q q{0,std::sin(latchedPhysicalYaw*.5f),0,std::cos(latchedPhysicalYaw*.5f)};
     return {headCentre+hipknife::Rotate(q,{-c.left,-c.down,c.back}),q};
 }
+// Original spherical pouch plus a capsule going only toward physical left.
+// The segment begins at the OLD centre, so no previously valid point is lost.
+inline float ShoulderDistance(hipknife::V hand,hipknife::V originalCentre,
+                              float physicalYaw,const Shoulder& c){
+    if(!hipknife::Finite(hand)||!hipknife::Finite(originalCentre)||
+       !std::isfinite(physicalYaw)||!std::isfinite(c.leftExtension))
+        return std::numeric_limits<float>::infinity();
+    if(c.leftExtension<=0)return hipknife::Length(hand-originalCentre);
+    const hipknife::Q q{0,std::sin(physicalYaw*.5f),0,std::cos(physicalYaw*.5f)};
+    const auto span=hipknife::Rotate(q,{-c.leftExtension,0,0});
+    const float length2=hipknife::Dot(span,span);
+    if(!std::isfinite(length2)||length2<=0)return std::numeric_limits<float>::infinity();
+    const float along=std::clamp(hipknife::Dot(hand-originalCentre,span)/length2,0.f,1.f);
+    return hipknife::Length(hand-(originalCentre+span*along));
+}
 struct Calibration {
     bool ready=false;
     std::uint32_t revision=0; // caller increments on any calibration change
     centurionreload::Config gesture{}; // INERT until explicitly calibrated
     Shoulder shoulder{}; // physical left/back; caller must use Supply, not old belt Pouch
+    std::uint64_t gripReachMs=800; // bounded squeeze-before-reach, profile-owned
 };
 inline bool Valid(const Calibration& c){
     const auto& g=c.gesture;
     return c.ready&&c.revision&&hipknife::Finite(g.socketLocal)&&
         hipknife::Length(g.socketLocal)<=1.f&&std::isfinite(c.shoulder.left)&&
         std::isfinite(c.shoulder.down)&&std::isfinite(c.shoulder.back)&&
+        std::isfinite(c.shoulder.leftExtension)&&
         c.shoulder.left>=.15f&&c.shoulder.left<=.40f&&c.shoulder.down>=0&&c.shoulder.down<=.25f&&
         c.shoulder.back>=.10f&&c.shoulder.back<=.35f&&
+        c.shoulder.leftExtension>=0&&c.shoulder.leftExtension<=.25f&&c.gripReachMs<=3000&&
         g.socketRadius>0&&g.socketRadius<g.pullDistance&&g.pullDistance<=1.f&&
         g.pouchRadius>0&&g.pouchRadius<=.5f&&g.timeoutMs>=100&&g.timeoutMs<=60000&&
         g.ackMs>=100&&g.ackMs<=60000&&g.cooldownMs<=5000;
@@ -76,6 +102,7 @@ struct State {
     bool haveCalibration=false;
     centurionreload::Config priorCalibration{};
     Shoulder priorShoulder{};
+    std::uint64_t priorGripReachMs=0;
     Transaction transaction{};
 };
 struct Result {
@@ -91,7 +118,9 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
     const bool calibrated=Valid(c);
     const bool changed=(s.profile!=Kind::None&&s.profile!=f.kind)||
         (s.haveCalibration&&(s.calibrationRevision!=c.revision||!Same(s.priorCalibration,c.gesture)||
-            s.priorShoulder.left!=c.shoulder.left||s.priorShoulder.down!=c.shoulder.down||s.priorShoulder.back!=c.shoulder.back));
+            s.priorShoulder.left!=c.shoulder.left||s.priorShoulder.down!=c.shoulder.down||
+            s.priorShoulder.back!=c.shoulder.back||s.priorShoulder.leftExtension!=c.shoulder.leftExtension||
+            s.priorGripReachMs!=c.gripReachMs));
     const auto& in=f.gesture;auto& t=s.transaction;
     const bool gripEdge=in.grip&&!t.priorGrip,gripRelease=!in.grip&&t.priorGrip;
     const bool core=f.enabled&&identity&&f.aimHand==1&&calibrated&&!changed&&
@@ -101,7 +130,7 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
         (!t.pawn||t.pawn==in.pawn)&&(!t.weapon||t.weapon==in.weapon);
     s.profile=identity?f.kind:Kind::None;
     s.calibrationRevision=calibrated?c.revision:0;s.haveCalibration=calibrated;
-    if(calibrated){s.priorCalibration=c.gesture;s.priorShoulder=c.shoulder;}
+    if(calibrated){s.priorCalibration=c.gesture;s.priorShoulder=c.shoulder;s.priorGripReachMs=c.gripReachMs;}
     if(!core){
         const bool active=t.phase!=Phase::Idle&&t.phase!=Phase::Cooldown;
         const bool owned=t.ownsGrip&&in.grip;
@@ -145,13 +174,14 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
             return enter(Phase::NeedAmmo,Event::Ejected);
         }break;
     case Phase::NeedAmmo:
-        // Valkyrie: allow a fresh, unowned squeeze during the reach to arrive
-        // at the pouch within 800 ms. Never inherit support/knife/menu grip.
+        // A fresh, unowned squeeze may arrive at either shoulder region within
+        // the profile's bounded reach interval. Never inherit support/menu grip.
         if(!in.grip||in.handBusy||in.supportLatched||in.knifeNear)t.reachUntil=0;
-        else if(gripEdge&&f.kind==Kind::Valkyrie)t.reachUntil=in.nowMs+800;
-        if((gripEdge||(f.kind==Kind::Valkyrie&&in.grip&&t.reachUntil&&in.nowMs<=t.reachUntil))&&
+        else if(gripEdge&&(f.kind==Kind::Valkyrie||f.kind==Kind::Volk)&&c.gripReachMs)
+            t.reachUntil=in.nowMs+c.gripReachMs;
+        if((gripEdge||(in.grip&&t.reachUntil&&in.nowMs<=t.reachUntil))&&
            !t.ownsGrip&&!in.handBusy&&!in.supportLatched&&!in.knifeNear&&
-           centurionreload::Near(in.hand,in.pouch,g.pouchRadius)){
+           ShoulderDistance(in.hand,in.pouch,t.bodyYaw,c.shoulder)<=g.pouchRadius){
             t.reachUntil=0;t.ownsGrip=true;return enter(Phase::Carrying,Event::GrabFresh);
         }break;
     case Phase::Carrying:
