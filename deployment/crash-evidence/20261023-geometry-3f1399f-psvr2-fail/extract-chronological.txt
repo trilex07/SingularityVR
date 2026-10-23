@@ -1,0 +1,111 @@
+﻿221:tmd-short-gauntlet: CPU ready enabled=1 tris=7110 (original hardware 6527 + short cuff, no new material)
+635:tmd-short-gauntlet: native-animation owner=2 arms=0 cinema=1 restraint=0 heal=0 melee=0 knife=-1 hands=-1 owned=-1
+649:hands: mPlayerHandsStatus = 2 (weapon in hands)
+3766:dual-tmd census: frame=450 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+3767:dual-tmd census: frame=450 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+3768:dual-tmd census: frame=450 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+3769:dual-tmd census: frame=450 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+3770:dual-tmd census: frame=450 hands=2 part=gun raw=1251 reachedStereo=1251 gunRide=1251 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+3771:dual-tmd census: frame=450 hands=2 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4027:dual-tmd census: frame=900 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4028:dual-tmd census: frame=900 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4029:dual-tmd census: frame=900 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4030:dual-tmd census: frame=900 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4031:dual-tmd census: frame=900 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4032:dual-tmd census: frame=900 hands=2 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4312:dual-tmd census: frame=1350 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4313:dual-tmd census: frame=1350 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4314:dual-tmd census: frame=1350 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4315:dual-tmd census: frame=1350 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4316:dual-tmd census: frame=1350 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4317:dual-tmd census: frame=1350 hands=2 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4597:dual-tmd census: frame=1800 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4598:dual-tmd census: frame=1800 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4599:dual-tmd census: frame=1800 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4600:dual-tmd census: frame=1800 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4601:dual-tmd census: frame=1800 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4602:dual-tmd census: frame=1800 hands=2 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4875:dual-tmd census: frame=2250 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4876:dual-tmd census: frame=2250 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4877:dual-tmd census: frame=2250 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4878:dual-tmd census: frame=2250 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4879:dual-tmd census: frame=2250 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+4880:dual-tmd census: frame=2250 hands=2 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5120:dual-tmd census: frame=2700 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5121:dual-tmd census: frame=2700 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5122:dual-tmd census: frame=2700 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5123:dual-tmd census: frame=2700 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5124:dual-tmd census: frame=2700 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5125:dual-tmd census: frame=2700 hands=2 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5402:dual-tmd census: frame=3150 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5403:dual-tmd census: frame=3150 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5404:dual-tmd census: frame=3150 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5405:dual-tmd census: frame=3150 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5406:dual-tmd census: frame=3150 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5407:dual-tmd census: frame=3150 hands=2 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5681:dual-tmd census: frame=3600 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5682:dual-tmd census: frame=3600 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5683:dual-tmd census: frame=3600 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5684:dual-tmd census: frame=3600 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5685:dual-tmd census: frame=3600 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5686:dual-tmd census: frame=3600 hands=2 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5947:dual-tmd census: frame=4050 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5948:dual-tmd census: frame=4050 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5949:dual-tmd census: frame=4050 hands=1 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5950:dual-tmd census: frame=4050 hands=1 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5951:dual-tmd census: frame=4050 hands=2 part=gun raw=1350 reachedStereo=1350 gunRide=1350 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+5952:dual-tmd census: frame=4050 hands=2 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+6090:hands: mPlayerHandsStatus = 0 (neither)
+9747:dual-tmd route: frame=9521 eye=shared hands=0 support=0 part=0 route=native-full min=0 verts=7444 first=0 tris=4402 palette=0 segments=1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+9748:tmd-short-gauntlet: exact mixed draw seen min=2626 type=4 foreground=0 scene=1 shadow=0
+9749:dual-tmd route: frame=9521 eye=shared hands=0 support=0 part=1 route=native-full min=2626 verts=4818 first=13206 tris=7704 palette=0 segments=1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+9750:dual-tmd route: frame=9521 eye=shared hands=0 support=0 part=2 route=native-full min=7407 verts=37 first=36318 tris=17 palette=0 segments=1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+9753:tmd-short-gauntlet: first failed gate=animated verts=4818 first=13206 tris=7704
+9768:tmd-short-gauntlet: first failed gate=stereo verts=4818 first=13206 tris=7704
+9770:dual-tmd route: frame=9524 eye=shared hands=0 support=0 part=1 route=hidden min=2626 verts=4818 first=13206 tris=7704 palette=-1 segments=-1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+9771:dual-tmd route: frame=9524 eye=shared hands=0 support=0 part=2 route=hidden min=7407 verts=37 first=36318 tris=17 palette=-1 segments=-1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+11150:dual-tmd route: frame=9646 eye=shared hands=0 support=0 part=1 route=hardware min=2626 verts=4818 first=13206 tris=7704 palette=45 segments=1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+11179:hands: mPlayerHandsStatus = 1 (TMD RAISED)
+11180:dual-tmd route: frame=9652 eye=shared hands=1 support=0 part=0 route=native-full min=0 verts=7444 first=0 tris=4402 palette=0 segments=1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+11181:dual-tmd route: frame=9652 eye=shared hands=1 support=0 part=1 route=native-full min=2626 verts=4818 first=13206 tris=7704 palette=0 segments=1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+11182:dual-tmd route: frame=9652 eye=shared hands=1 support=0 part=2 route=native-full min=7407 verts=37 first=36318 tris=17 palette=0 segments=1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+11223:tmd-short-gauntlet: early exact mixed section admitted to independent palette
+11224:dual-tmd route: frame=9660 eye=shared hands=1 support=0 part=1 route=svtg min=2626 verts=4818 first=13206 tris=7704 palette=45 segments=1 stereoEyes=1 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+11225:dual-tmd route: frame=9660 eye=shared hands=1 support=0 part=2 route=hidden min=7407 verts=37 first=36318 tris=17 palette=-1 segments=-1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+11260:tmd-short-gauntlet: stereo receipt eyes=2 tris=7110 indices=2743..7322 nativeRange=2626+4818 base=0 indexRestore=OK paletteRestore=OK
+11425:dual-tmd census: frame=4500 hands=0 part=gun raw=393 reachedStereo=27 gunRide=6 nativeHands=21 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+11426:dual-tmd census: frame=4500 hands=0 part=hardware raw=393 reachedStereo=27 gunRide=0 nativeHands=21 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+11427:dual-tmd census: frame=4500 hands=1 part=gun raw=616 reachedStereo=616 gunRide=592 nativeHands=24 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+11428:dual-tmd census: frame=4500 hands=1 part=hardware raw=616 reachedStereo=616 gunRide=0 nativeHands=24 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+11429:dual-tmd census: frame=4500 hands=2 part=gun raw=750 reachedStereo=750 gunRide=747 nativeHands=3 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+11430:dual-tmd census: frame=4500 hands=2 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+17180:tmd-short-gauntlet: first failed gate=context verts=4818 first=13206 tris=7704
+17181:dual-tmd route: frame=10037 eye=shared hands=1 support=0 part=1 route=hidden min=2626 verts=4818 first=13206 tris=7704 palette=-1 segments=-1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+18490:dual-tmd route: frame=10179 eye=shared hands=1 support=0 part=1 route=hardware min=2626 verts=4818 first=13206 tris=7704 palette=45 segments=1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+18733:dual-tmd census: frame=4950 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+18734:dual-tmd census: frame=4950 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+18735:dual-tmd census: frame=4950 hands=1 part=gun raw=1777 reachedStereo=1351 gunRide=1351 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+18736:dual-tmd census: frame=4950 hands=1 part=hardware raw=1777 reachedStereo=1351 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+18737:dual-tmd census: frame=4950 hands=2 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+18738:dual-tmd census: frame=4950 hands=2 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=0 [signature counts, NOT pixels]
+18851:two-hand grip: ACQUIRED
+18854:dual-tmd route: frame=10642 eye=shared hands=1 support=1 part=0 route=native-full min=0 verts=7444 first=0 tris=4402 palette=108 segments=1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+18855:dual-tmd route: frame=10642 eye=shared hands=1 support=1 part=1 route=zero min=2626 verts=4818 first=13206 tris=7704 palette=45 segments=0 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+18856:dual-tmd route: frame=10642 eye=shared hands=1 support=1 part=2 route=hidden min=7407 verts=37 first=36318 tris=17 palette=-1 segments=-1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+18931:two-hand grip: RELEASED
+19019:two-hand grip: ACQUIRED
+19023:hands: mPlayerHandsStatus = 2 (weapon in hands)
+19025:support grip pose: authored-pair gun=8297 leftDelta=primary (bind l_hand_IK is rest, not a grip point)
+19026:dual-tmd route: frame=10835 eye=shared hands=2 support=1 part=0 route=native-full min=0 verts=7444 first=0 tris=4402 palette=108 segments=1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+19027:dual-tmd route: frame=10835 eye=shared hands=2 support=1 part=1 route=zero min=2626 verts=4818 first=13206 tris=7704 palette=45 segments=0 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+19028:dual-tmd route: frame=10835 eye=shared hands=2 support=1 part=2 route=hidden min=7407 verts=37 first=36318 tris=17 palette=-1 segments=-1 stereoEyes=0 fg=0 window=1 ib=0D020F80 vb=2A3EE0E0 stream=0/32
+19052:dual-tmd census: frame=5400 hands=0 part=gun raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=1 [signature counts, NOT pixels]
+19053:dual-tmd census: frame=5400 hands=0 part=hardware raw=0 reachedStereo=0 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=1 [signature counts, NOT pixels]
+19054:dual-tmd census: frame=5400 hands=1 part=gun raw=1069 reachedStereo=1069 gunRide=1069 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=1 [signature counts, NOT pixels]
+19055:dual-tmd census: frame=5400 hands=1 part=hardware raw=1069 reachedStereo=1069 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=1 [signature counts, NOT pixels]
+19056:dual-tmd census: frame=5400 hands=2 part=gun raw=192 reachedStereo=192 gunRide=192 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=1 [signature counts, NOT pixels]
+19057:dual-tmd census: frame=5400 hands=2 part=hardware raw=192 reachedStereo=192 gunRide=0 nativeHands=0 weapon=3ABA2A00 gunVerts=8297 support=1 [signature counts, NOT pixels]
+19128:two-hand grip: RELEASED
+19140:two-hand grip: ACQUIRED
+19211:two-hand grip: RELEASED
+19224:tmd-short-gauntlet: first failed gate=focus verts=4818 first=13206 tris=7704

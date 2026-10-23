@@ -1,0 +1,19 @@
+{
+  "label": "20261023-geometry-3f1399f-psvr2-fail",
+  "userVerdict": "PSVR2 FAIL (scenarios A and B not accepted)",
+  "failedCommit": "3f1399ff97e641d33c8391833a11b1a88c5c0b5d",
+  "failedBranch": "fix/sol-dual-tmd-geometry-rootcause",
+  "failedDllSha256": "96375E307A64368A2E8CE765CC6DD16A38BE8C54E800B755DE777F7CA3192C43",
+  "failedIniSha256": "4FC5A130DCAFA8D9DA71D48514122C9E305C95025BB1EF3D16A8461040160408",
+  "restoredCommit": "7e7d8208d3b79b2b5b228eb8ea93a7db7cb5a4a5",
+  "restoredDllSha256": "C075677AF7569BE121AB554953EB803CB822A0434A3EC7070EED882E89033BC8",
+  "restoredIniSha256": "E89E159279F759ACC15DFF3BD8607F835FD055A8A931BF04B5E033A0B43A775F",
+  "screenshots": "none on host at archive time",
+  "artifacts": [
+    "view_matrix_full.log",
+    "extract-chronological.txt",
+    "route-grouped-material1.txt",
+    "failed-deploy-d3d9.dll",
+    "failed-deploy-SingularityVR.ini"
+  ]
+}

@@ -1,0 +1,33 @@
+# Material part=1 (min=2626 verts=4818 tris=7704)
+
+hands=0 support=0 route=hardware palette=45 segments=1 stereoEyes=0 count=1 frames=9646
+hands=0 support=0 route=hidden palette=-1 segments=-1 stereoEyes=0 count=1 frames=9524
+hands=0 support=0 route=native-full palette=0 segments=1 stereoEyes=0 count=1 frames=9521
+hands=1 support=0 route=hardware palette=45 segments=1 stereoEyes=0 count=1 frames=10179
+hands=1 support=0 route=hidden palette=-1 segments=-1 stereoEyes=0 count=1 frames=10037
+hands=1 support=0 route=native-full palette=0 segments=1 stereoEyes=0 count=1 frames=9652
+hands=1 support=0 route=svtg palette=45 segments=1 stereoEyes=1 count=1 frames=9660
+hands=1 support=1 route=zero palette=45 segments=0 stereoEyes=0 count=1 frames=10642
+hands=2 support=1 route=zero palette=45 segments=0 stereoEyes=0 count=1 frames=10835
+
+# All route rows (chronological)
+
+L9747 frame=9521 hands=0 support=0 part=0 route=native-full palette=0 segments=1 stereoEyes=0
+L9749 frame=9521 hands=0 support=0 part=1 route=native-full palette=0 segments=1 stereoEyes=0
+L9750 frame=9521 hands=0 support=0 part=2 route=native-full palette=0 segments=1 stereoEyes=0
+L9770 frame=9524 hands=0 support=0 part=1 route=hidden palette=-1 segments=-1 stereoEyes=0
+L9771 frame=9524 hands=0 support=0 part=2 route=hidden palette=-1 segments=-1 stereoEyes=0
+L11150 frame=9646 hands=0 support=0 part=1 route=hardware palette=45 segments=1 stereoEyes=0
+L11180 frame=9652 hands=1 support=0 part=0 route=native-full palette=0 segments=1 stereoEyes=0
+L11181 frame=9652 hands=1 support=0 part=1 route=native-full palette=0 segments=1 stereoEyes=0
+L11182 frame=9652 hands=1 support=0 part=2 route=native-full palette=0 segments=1 stereoEyes=0
+L11224 frame=9660 hands=1 support=0 part=1 route=svtg palette=45 segments=1 stereoEyes=1
+L11225 frame=9660 hands=1 support=0 part=2 route=hidden palette=-1 segments=-1 stereoEyes=0
+L17181 frame=10037 hands=1 support=0 part=1 route=hidden palette=-1 segments=-1 stereoEyes=0
+L18490 frame=10179 hands=1 support=0 part=1 route=hardware palette=45 segments=1 stereoEyes=0
+L18854 frame=10642 hands=1 support=1 part=0 route=native-full palette=108 segments=1 stereoEyes=0
+L18855 frame=10642 hands=1 support=1 part=1 route=zero palette=45 segments=0 stereoEyes=0
+L18856 frame=10642 hands=1 support=1 part=2 route=hidden palette=-1 segments=-1 stereoEyes=0
+L19026 frame=10835 hands=2 support=1 part=0 route=native-full palette=108 segments=1 stereoEyes=0
+L19027 frame=10835 hands=2 support=1 part=1 route=zero palette=45 segments=0 stereoEyes=0
+L19028 frame=10835 hands=2 support=1 part=2 route=hidden palette=-1 segments=-1 stereoEyes=0
