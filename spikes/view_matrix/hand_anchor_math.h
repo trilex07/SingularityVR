@@ -23,6 +23,14 @@ inline bool KasimovSingleGrip(bool enabled,bool gloves,bool liveWeapon,bool hols
 inline bool FreeWristAnchor(bool gloves, bool weaponLive, int isolateMode, bool supportGrip) {
     return gloves && !weaponLive && isolateMode == 2 && !supportGrip;
 }
+// TMD material 0 also contains the original right wrist (bone 51). During
+// Impulse the native right pose can park near the body while its controller
+// stays tracked; the noTMD free-hand correction does not cover this section.
+inline bool TmdRightWristAnchor(bool enabled,bool tmdGloves,bool dual,bool tmdHands,
+                                bool rightAim,bool rightTracked,bool supportGrip,int isolateMode) {
+    return enabled&&tmdGloves&&dual&&tmdHands&&rightAim&&rightTracked&&
+        !supportGrip&&isolateMode==2;
+}
 // Select at consumption time: a snapshot made before TargetWrist silently
 // bypasses its correction. The proven pistol grip deliberately keeps its
 // weapon target; free hands use the final corrected controller target.

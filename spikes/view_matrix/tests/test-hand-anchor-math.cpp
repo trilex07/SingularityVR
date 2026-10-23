@@ -1,4 +1,5 @@
 #include "../hand_anchor_math.h"
+#include "../arm_natural.h"
 #include <cassert>
 #include <limits>
 #include <cstdio>
@@ -21,6 +22,24 @@ int main(){
     assert(!handanchor::FreeWristAnchor(true,false,0,false));
     assert(!handanchor::FreeWristAnchor(true,false,2,true));
     assert(!handanchor::FreeWristAnchor(false,false,2,false));
+    for(unsigned bits=0;bits<128;++bits){
+        const bool selected=handanchor::TmdRightWristAnchor(bits&1,bits&2,bits&4,
+            bits&8,bits&16,bits&32,bits&64,2);
+        assert(selected==((bits&127)==63)); // support bit 64 must be clear
+    }
+    assert(!handanchor::TmdRightWristAnchor(true,true,true,true,true,true,false,1));
+    const auto& tmd=armnatural::TmdBind();assert(tmd.ready);
+    float tmdSkin[3][4]={{1,0,0,0},{0,1,0,0},{0,0,1,0}};
+    float tmdLocal[4][4],tmdController[4][4],tmdTarget[4][4];
+    identity(tmdLocal);identity(tmdController);
+    tmdLocal[3][0]=27;tmdController[3][1]=-13;
+    const armik::V physicalRight{41,18,-9};
+    assert(handanchor::TargetWrist(tmdTarget,tmd.bind[51],tmdSkin,tmdLocal,
+        tmdController,physicalRight));
+    armbind::Mat tmdJoint;
+    assert(armbind::CurrentJoint(tmd.bind[51],tmdSkin,tmdJoint));
+    assert(close(handanchor::Point(handanchor::Point(armbind::Position(tmdJoint),tmdLocal),
+        tmdTarget),physicalRight));
     armbind::Mat bind;identity(bind.m);bind.m[3][0]=12;bind.m[3][1]=-7;bind.m[3][2]=3;
     float skin[3][4]={{1,0,0,-12},{0,1,0,7},{0,0,1,0}}; // animated joint, not skin translation
     float local[4][4];identity(local);local[3][0]=20;local[3][2]=-40;

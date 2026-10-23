@@ -2260,6 +2260,7 @@ inline bool TmdRaised()      { return Rd(g_handsStatus) == HANDS_TMD; }
 inline bool WeaponInHands()  { return Rd(g_handsStatus) == HANDS_WEAPON; }
 static LONG g_dualWeaponTmdReady=0,g_dualWeaponTmdProbe=0;
 static LONG g_dualWeaponTmdGunScale=0; // opt-in native gun_scale result, no cached pose
+static LONG g_dualWeaponTmdRightWrist=0; // opt-in original TMD right-wrist target
 static dualtmd::Census g_dualTmdCensus; // render thread only
 static bool DualWeaponTmdContext();
 static bool NativeAnimatedHandsNow();
@@ -17314,10 +17315,11 @@ static bool IndependentAuditCandidate(UINT verts) {
 // identity-indexed copy of the PSK skeleton.  Keeping the maps here makes the
 // collapse/finger path fail closed if a new section signature is introduced.
 static const unsigned kNoTmdSleeveMap[6] = { 50,85,49,27,8,7 };
-static const unsigned kTmdGloveMap[36] = {
+static constexpr unsigned kTmdGloveMap[36] = {
     85,9,10,11,12,23,24,20,17,18,14,13,15,21,16,25,22,19,
     26,51,70,71,72,79,80,76,73,74,82,83,77,84,81,78,75,50
 };
+static_assert(kTmdGloveMap[19]==51u,"TMD material-0 right wrist must remain bone 51");
 static const unsigned (&kTmdBaseMap)[15] = tmdsleeve::kMap;
 static const unsigned kTmdExtraMap[2] = { 85,50 };
 
@@ -17759,6 +17761,28 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             if(handanchor::TargetWrist(targetOff,noTmdBind[offSide?51:9],
                 reinterpret_cast<const float (*)[4]>(&saved[wsOff*3]),local,off,h))
                 memcpy(off,targetOff,sizeof(off));
+        }
+    }
+    if(handanchor::TmdRightWristAnchor(Rd(g_dualWeaponTmdRightWrist)!=0,tmdGloves,
+        DualWeaponTmdContext(),Rd(g_handsStatus)==HANDS_TMD,AimHand()==1,
+        handValid[1],Rd(g_twoHandActive)!=0,(int)Rd(g_gloveIsolate))){
+        const auto& tmdBind=armnatural::TmdBind();
+        const int ws=GloveFindSlot(sectionMap,slots,GloveRefs(),89,"r_arm_wrist");
+        float rightTarget[4][4];
+        if(tmdBind.ready&&ws>=0&&sectionMap[ws]==51u){
+            if(g_thisDrawMoved==1)BuildGunC(base);
+            else if(g_thisDrawMoved==2)BuildTmdC(base);
+            armik::V h{(float)Rd(g_handOffX)/kHandFixed,
+                (float)Rd(g_handOffY)/kHandFixed,
+                (float)(g_gunSignPosZ*Rd(g_handOffZ))/kHandFixed};
+            if(g_gunHeadOffset){h.x+=g_hmdOffset[0];h.y+=g_hmdOffset[1];h.z+=g_hmdOffset[2];}
+            if(handanchor::TargetWrist(rightTarget,tmdBind.bind[51],
+                reinterpret_cast<const float (*)[4]>(&saved[ws*3]),local,primary,h)){
+                memcpy(primary,rightTarget,sizeof(primary));
+                static LONG saidRightTmdWrist=0;
+                if(InterlockedCompareExchange(&saidRightTmdWrist,1,0)==0)
+                    Log("dual-tmd right wrist: original bone 51 reconstructed to live controller; support unchanged");
+            }
         }
     }
     const float (*leftTarget)[4] = off;
@@ -35231,6 +35255,8 @@ void LoadIniSettings() {
     InterlockedExchange(&g_dualWeaponTmdReady,GetPrivateProfileIntA("Input","DualWeaponTmdReady",0,path)!=0);
     InterlockedExchange(&g_dualWeaponTmdGunScale,GetPrivateProfileIntA("Input","DualWeaponTmdGunScale",0,path)!=0);
     Log("ini: DualWeaponTmdGunScale=%ld (default OFF; owned gun_scale result only)",Rd(g_dualWeaponTmdGunScale));
+    InterlockedExchange(&g_dualWeaponTmdRightWrist,GetPrivateProfileIntA("Input","DualWeaponTmdRightWrist",0,path)!=0);
+    Log("ini: DualWeaponTmdRightWrist=%ld (default OFF; TMD material-0 original right wrist)",Rd(g_dualWeaponTmdRightWrist));
     InterlockedExchange(&g_dualWeaponTmdProbe,GetPrivateProfileIntA("Diagnostic","DualWeaponTmdProbe",0,path)!=0);
     Log("ini: DualWeaponTmdReady=%ld DualWeaponTmdProbe=%ld (default OFF; native draws only, no pawn state writes)",
         Rd(g_dualWeaponTmdReady),Rd(g_dualWeaponTmdProbe));

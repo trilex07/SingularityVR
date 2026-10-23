@@ -30,3 +30,23 @@ disagreement. These diagnostics do not write the pawn or graphics state.
 Offline: x86 MinHook fixture passed, including the exact missing-camera and
 conflicting-owner cases; PE32 `/O2` build and emitted hook ABI regression
 passed. Steam/PSVR2 visual behavior remains **NOT RUN** for this revision.
+
+## Separate right-glove observation
+
+The user clarified that L2 leaves the right glove near the body while only
+the gun disappears. The TMD material-0 section contains original right wrist
+bone 51 at GPU palette slot 19. Unlike the noTMD free-hand route, this exact
+TMD section previously did not reconstruct that wrist against the live right
+controller after the native TMD animation took presentation ownership. A
+separate default-OFF `[Input] DualWeaponTmdRightWrist=1` uses the existing
+`TargetWrist` bind/skin/local/ride calculation for that original bone, only
+in right-handed, tracked, `HANDS_TMD`, no-support dual gameplay. It leaves
+the left TMD device and accepted two-hand support path untouched. The
+material-0 map is compile-time checked for bone 51 at slot 19; the actual
+TMD bind and wrist-placement math pass an x86 `/O2` test.
+
+Falsifier: if the right glove still parks near the body with the new
+`dual-tmd right wrist` receipt, inspect the final TMD material-0 draw and
+palette rather than adding an offset. This wrist correction does **not**
+substitute for a visible right weapon or prove that the gun-scale override
+executed. Keep both flags independently switchable for a controlled A/B.
