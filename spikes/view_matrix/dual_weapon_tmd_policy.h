@@ -12,6 +12,21 @@ inline bool Weapon(bool nativeWeapon, bool context, bool equipped, int hands) {
 }
 inline bool MeleeWindow(bool context, bool knifeHeld) { return !context || knifeHeld; }
 
+// The native TMD mesh has three exact material sections. In dual presentation
+// its bones are independently retargeted to the tracked wrists; it must not
+// also inherit the camera-space ride selected for the right-hand gun.
+inline bool NativeTmdSection(unsigned verts, unsigned first, unsigned triangles) {
+    return ((verts == 7444u || verts == 2626u) && first == 0u && triangles == 4402u) ||
+           ((verts == 7444u || verts == 4818u || verts == 4781u) && first == 13206u && triangles == 7704u) ||
+           ((verts == 7444u || verts == 37u) && first == 36318u && triangles == 17u);
+}
+inline bool IndependentTmdOwnsPose(bool dualContext, bool independentHands,
+                                   bool scene, bool shadow, bool foreground,
+                                   unsigned verts, unsigned first, unsigned triangles) {
+    return dualContext && independentHands && scene && !shadow && foreground &&
+           NativeTmdSection(verts, first, triangles);
+}
+
 // Release-to-rearm: releasing support with L2/Square still down must not fire.
 struct PowerLatch {
     bool blocked=false;

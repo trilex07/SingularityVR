@@ -44,5 +44,17 @@ class Wiring(unittest.TestCase):
         self.assertLess(short,gate)
         self.assertLess(gate,stray)
         self.assertIn('return Rd(g_twoHandActive)||!g_handPoseValid[0]||!g_handPositionValid[0];',block[:gate+400])
+    def test_tmd_palette_owns_camera_pose_before_gun_ride(self):
+        # This is the actual draw-dispatch seam. The policy's CPU truth table
+        # alone cannot catch a caller which still sends TMD material 1 to
+        # RideTargetFor(numVertices) and loses its exact section identity.
+        start=CPP.index('static int RideTargetFor(UINT verts,UINT first,UINT triangles) {')
+        end=CPP.index('static void BuildGunC(',start)
+        route=CPP[start:end]
+        self.assertLess(route.index('dualtmd::IndependentTmdOwnsPose('),
+                        route.index('FgRidesGun(verts)'))
+        self.assertIn('dualtmd::NativeTmdSection(verts,first,triangles)',route)
+        self.assertIn('RideTargetFor(numVertices,startIndex,primCount)',CPP)
+        self.assertIn('const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(',CPP)
 
 if __name__=='__main__':unittest.main()

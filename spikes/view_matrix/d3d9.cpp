@@ -14798,7 +14798,7 @@ static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangle
                      UINT minIndex,D3DPRIMITIVETYPE primitive,bool* shortTmdAdmitted);
 static bool FgRidesGun(UINT verts);
 static bool FgMatchesSignature(UINT verts);   // ⭐ run 237c: used by the depth-prime exemption
-static int  RideTargetFor(UINT verts);   // ⭐ run 237: 0 none, 1 gun hand, 2 off hand
+static int  RideTargetFor(UINT verts,UINT first=0,UINT triangles=0);   // ⭐ run 237: 0 none, 1 gun hand, 2 off hand
 static bool FgHideWholePass();
 static void DpgRecord(uint8_t kind, float z0, float z1, uint32_t a, uint32_t b, uint32_t c, uint32_t d);
 void LogFgList(const char* why);      // run 213: the scope census dumps the mesh list alongside itself
@@ -17147,9 +17147,18 @@ static void BuildTmdC(float C[4][4]) {    float G[3]; TmdAnchorWorld(G);
 // Split from FgRidesGun rather than folded into it: that function is the one every draw in the pass
 // runs through and it has been the site of three separate regressions, so the new behaviour rides on
 // top of its answer instead of editing its conditions.
-static int RideTargetFor(UINT verts);
-
-static int RideTargetFor(UINT verts) {
+extern int g_independentHands; // defined with the independent palette settings below
+inline bool FgMatchWindow();   // defined with the foreground pass classifier below
+static int RideTargetFor(UINT verts,UINT first,UINT triangles) {
+    // Measured dual-TMD census: 900 hardware draws in HANDS_WEAPON inherited
+    // the right gun's camera ride. Their bone palette is independently
+    // retargeted to the physical left wrist. Keep those exact TMD sections in
+    // native camera space so the palette has one owner; leave weapon/FX rides
+    // and standalone TMD presentation unchanged.
+    if(g_independentHands && dualtmd::NativeTmdSection(verts,first,triangles) &&
+       dualtmd::IndependentTmdOwnsPose(DualWeaponTmdContext(),true,
+        Rd(g_rtIsScene)!=0,g_boundShaderLayout.shadow,FgMatchWindow(),
+        verts,first,triangles))return 0;
     if (!FgRidesGun(verts)) return 0;
     // ⚠ The OFF-HAND pose has to be VALID, not just "the TMD is up". With one controller lost to
     // tracking the alternative is not "slightly wrong" - it is the whole TMD assembly pinned at a stale
@@ -19971,7 +19980,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     if (isGun) { AdsCapture(dev); AdsFreeze(dev); AdsMask(dev); }   // ⭐ run 223: freeze before StereoPair: it only
                                                      // rewrites the camera slots, so the bones persist
                                                      // across both eye draws
-    const int rideTo = isGun ? 1 : RideTargetFor(numVertices);   // ⭐ run 237
+    const int rideTo = isGun ? 1 : RideTargetFor(numVertices,startIndex,primCount);   // ⭐ run 237
     // The same exact foreground identities already used for controller palettes
     // and menu hiding. Never suppress world/NPC geometry or shadow generation.
     const bool trackedCineMesh = isGun || rideTo != 0 ||

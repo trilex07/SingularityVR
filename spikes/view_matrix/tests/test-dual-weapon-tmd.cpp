@@ -18,6 +18,22 @@ int main(){
         }
     assert(!MeleeWindow(true,false));assert(MeleeWindow(true,true));
     assert(MeleeWindow(false,false));assert(MeleeWindow(false,true));
+    // Reproduce the integration collision: a TMD material may be submitted
+    // while HANDS_WEAPON is active, but its tracked palette owns the pose.
+    for(const auto& section: {std::initializer_list<unsigned>{7444,0,4402},
+                              {2626,0,4402},{4818,13206,7704},
+                              {4781,13206,7704},{7444,13206,7704},
+                              {37,36318,17},{7444,36318,17}}) {
+        auto it=section.begin();const unsigned verts=*it++,first=*it++,triangles=*it;
+        assert(NativeTmdSection(verts,first,triangles));
+        assert(IndependentTmdOwnsPose(true,true,true,false,true,verts,first,triangles));
+        assert(!IndependentTmdOwnsPose(false,true,true,false,true,verts,first,triangles));
+        assert(!IndependentTmdOwnsPose(true,true,false,false,true,verts,first,triangles));
+        assert(!IndependentTmdOwnsPose(true,true,true,true,true,verts,first,triangles));
+        assert(!IndependentTmdOwnsPose(true,true,true,false,false,verts,first,triangles));
+    }
+    assert(!NativeTmdSection(8297,13206,7704)); // gun
+    assert(!NativeTmdSection(4818,0,7704)); // wrong material/range
     PowerLatch impulse,age;
     assert(impulse.Update(true,false,true)); // normal native Impulse
     assert(!impulse.Update(true,true,true)); // support priority
