@@ -28,7 +28,7 @@ class Wiring(unittest.TestCase):
         block=CPP[start:CPP.index('for (int s = 0; s < nSeg;',start)]
         self.assertIn('tmdgauntlet::DrawHardwareFallback',block)
         self.assertIn('g_origDrawIndexedPrim',block)
-        self.assertIn('if(dualHardware&&(!independentRegs||Rd(g_twoHandActive)',CPP)
+        self.assertIn('if(dualHardware && tmdsupport::HideHardware(Rd(g_twoHandActive)!=0,TmdSupportAssemblyEnabled(),',CPP)
         # Original primitive list is emitted inside the existing per-eye lambda.
         pair=CPP.rfind('StereoPair(',0,start)
         self.assertGreater(pair,CPP.index('const bool isolateTmdHardware'))
@@ -53,7 +53,13 @@ class Wiring(unittest.TestCase):
         stray=block.index('gloveisolate::IsStrayFingerSection')
         self.assertLess(short,gate)
         self.assertLess(gate,stray)
-        self.assertIn('return Rd(g_twoHandActive)||!g_handPoseValid[0]||!g_handPositionValid[0];',block[:gate+400])
+        self.assertIn('return tmdsupport::HideHardware(Rd(g_twoHandActive)!=0,TmdSupportAssemblyEnabled(),',block[:gate+500])
+    def test_opt_in_support_assembly(self):
+        self.assertIn('GetPrivateProfileIntA("Render","TmdSupportGauntlet",0,ini)',CPP)
+        self.assertEqual(CPP.count('if (g_thisDrawMoved == 3) BuildTmdAssemblyC(C);'),2)
+        self.assertIn('tmdsupport::Target(offWeapon,primary,off,weaponC,true,false,supportGunVerts)',CPP)
+        self.assertIn('tmdsupport::Target(C,primary,off,weapon,true,authored,gun)',CPP)
+        self.assertIn('(!supportGrip || TmdSupportAssemblyEnabled())',CPP)
     def test_tmd_palette_owns_camera_pose_before_gun_ride(self):
         # This is the actual draw-dispatch seam. The policy's CPU truth table
         # alone cannot catch a caller which still sends TMD material 1 to

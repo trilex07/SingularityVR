@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+## 2026-10-23 — TMD supporting-wrist assembly — L1_PASS / L2_PASS
+
+`fix/tmd-support-gauntlet-continuity`, base `cac4ce3`: opt-in
+`[Render] TmdSupportGauntlet=1` (default OFF). Keeps the existing short sleeve
+and TMD on the supporting glove using the same support transform; no remodel.
+See `docs/handoffs/tmd-support-gauntlet-continuity.md` for evidence and gates.
+PSVR2 NOT RUN. L2 Impulse weapon disappearance remains unresolved and is
+explicitly NOT part of this fix. No game launch or deployment for this candidate.
+
 ## 2026-10-23 SIDE dual-TMD geometry follow-up — L1_PASS / L2_PASS, L4 OPEN
 
 PSVR2 rejected `a2244f4`: left support grip and short TMD shape remain wrong.

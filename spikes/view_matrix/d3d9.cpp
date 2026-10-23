@@ -1,5 +1,6 @@
 #include "two_hand_grip.h"
 #include "dual_weapon_tmd_policy.h"
+#include "tmd_support_gauntlet.h"
 #include "skeletal_palette.h"
 #include "hand_anchor_probe.h"
 #include "hand_anchor_math.h"
@@ -147,6 +148,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "tmd_attachment_identity.h"
 static tmdattachment::Identity g_tmdAttachmentIdentity;
 static void BuildLiveControllerC(float C[4][4], bool aimHand);
+static void BuildTmdAssemblyC(float C[4][4]);
 #include "tmd_sleeve_palette.h"
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include "bink_audio_observation.h"
@@ -6551,6 +6553,7 @@ static nativegloves::Renderer g_nativeGloveRenderer;
 static glovecuffs::Renderer g_nativeCuffRenderer;
 static tmdgauntlet::Renderer g_tmdShortGauntletRenderer;
 static bool g_tmdShortGauntlet=false;
+static bool g_tmdSupportGauntlet=false;
 static volatile LONG g_tmdShortSuccessfulFrame=-1, g_tmdShortSuccessfulDraw=-1;
 static bool g_nativeCuffClosure=false;
 static bool NativeGlovesEligible();
@@ -10278,6 +10281,8 @@ bool InitXRInput() {
         try {gauntletLoaded=SiblingIniPath("vr-assets\\hud\\katorga\\glove-animation\\tmd_short_gauntlet.svtg",gauntletPath)&&
             g_tmdShortGauntletRenderer.Load(gauntletPath);} catch(...) {gauntletLoaded=false;}
         g_tmdShortGauntlet=IniPath(ini)&&GetPrivateProfileIntA("Render","TmdShortGauntlet",0,ini)!=0;
+        g_tmdSupportGauntlet=IniPath(ini)&&GetPrivateProfileIntA("Render","TmdSupportGauntlet",0,ini)!=0;
+        Log("tmd-support-gauntlet: enabled=%d (presentation only; native powers unchanged)",g_tmdSupportGauntlet?1:0);
         Log("tmd-short-gauntlet: %s enabled=%d tris=%u (original hardware 6527 + short cuff, no new material)",
             gauntletLoaded?"CPU ready":"unavailable; native fallback",g_tmdShortGauntlet?1:0,
             g_tmdShortGauntletRenderer.Triangles());
@@ -14737,7 +14742,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
                 // file has recorded which space it is since the matrix scan probed
                 // "origin(translated-world)" as a candidate point.
                 float C[4][4];
-                if (g_thisDrawMoved == 3) BuildLiveControllerC(C,OffHand()!=0);
+                if (g_thisDrawMoved == 3) BuildTmdAssemblyC(C);
                 else if (g_thisDrawMoved == 2) BuildTmdC(C); else BuildGunC(C);
                 ApplyWorldMatrix(reinterpret_cast<Reg4*>(mat), cs.conv, C);
             }
@@ -14767,7 +14772,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
                 // what makes it point where the controller points. Pivoting on the world origin
                 // would fling it across the level.
                 float C[4][4];
-                if (g_thisDrawMoved == 3) BuildLiveControllerC(C,OffHand()!=0);
+                if (g_thisDrawMoved == 3) BuildTmdAssemblyC(C);
                 else if (g_thisDrawMoved == 2) BuildTmdC(C); else BuildGunC(C);
                 ApplyWorldMatrix(reinterpret_cast<Reg4*>(mat), cs.conv, C);
             }
@@ -17247,6 +17252,34 @@ static void BuildLiveControllerC(float C[4][4], bool aimHand) {
     ApplyMeshScale(C, H);
 }
 
+// Enable only the existing independent, right-handed dual presentation. Missing
+// assets/tracking keep the old hardware-hidden support policy; never expose arm faces.
+static bool TmdSupportAssemblyEnabled() {
+    return tmdsupport::Enabled(g_tmdSupportGauntlet,
+        g_tmdShortGauntlet && g_tmdShortGauntletRenderer.Ready(),
+        g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_nativeGloveRenderer.Ready() &&
+            g_gloveExperiment && g_nativeGloveExperiment,
+        DualWeaponTmdContext(),g_independentHands!=0,(int)Rd(g_gloveIsolate),
+        g_handPoseValid[0] && g_handPositionValid[0],
+        g_handPoseValid[1] && g_handPositionValid[1]);
+}
+static bool AuthoredLeftSupport(long gun) {
+    return dualtmd::UseWeaponAuthoredPair(
+        SupportGripFor(gun).mode==SupportGripMode::AuthoredPair ||
+        (gun==11387 && g_valkyrieAuthoredGrip) ||
+        (gun==8297 && g_volkAuthoredGrip) || (gun==11389 && g_kasimovAuthoredGrip),
+        DualWeaponTmdContext(),(int)Rd(g_handsStatus),gun);
+}
+static void BuildTmdAssemblyC(float C[4][4]) {
+    BuildLiveControllerC(C,OffHand()!=0);
+    if(!Rd(g_twoHandActive) || !TmdSupportAssemblyEnabled())return;
+    float primary[4][4],off[4][4],weapon[4][4]{};
+    BuildLiveControllerC(primary,true);BuildLiveControllerC(off,false);
+    const long gun=Rd(g_gunVerts);const bool authored=AuthoredLeftSupport(gun);
+    if(!authored)BuildGunC(weapon);
+    tmdsupport::Target(C,primary,off,weapon,true,authored,gun);
+}
+
 int g_independentHands=0; // Evidence-backed prototype, enabled explicitly in the test INI.
 volatile LONG g_independentRejectCode = 0;
 volatile LONG g_pauseMenuDiag = 0;
@@ -17723,13 +17756,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     }
     const float (*leftTarget)[4] = off;
     if (supportGrip) {
-        const SupportGripSpec spec = SupportGripFor(supportGunVerts);
-        const bool authoredPairAvailable = dualtmd::UseWeaponAuthoredPair(
-            spec.mode == SupportGripMode::AuthoredPair ||
-            (supportGunVerts == 11387 && g_valkyrieAuthoredGrip) ||
-            (supportGunVerts == 8297 && g_volkAuthoredGrip) ||
-            (supportGunVerts == 11389 && g_kasimovAuthoredGrip),
-            DualWeaponTmdContext(), (int)Rd(g_handsStatus), supportGunVerts);
+        const bool authoredPairAvailable = AuthoredLeftSupport(supportGunVerts);
         if (authoredPairAvailable) {
             // Same rigid delta as the aim hand. The live palette already contains the
             // pistol's two-hand relationship; retargeting only the left wrist to BuildGunC
@@ -17742,7 +17769,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
                     " (bind l_hand_IK is rest, not a grip point)", supportGunVerts);
         } else {
             BuildGunC(weaponC);
-            if (ApplySupportGripTarget(offWeapon, weaponC, supportGunVerts)) {
+            if (tmdsupport::Target(offWeapon,primary,off,weaponC,true,false,supportGunVerts)) {
                 leftTarget = offWeapon;
                 weaponDeltaUsed = true;
                 if (DualWeaponTmdContext() && Rd(g_handsStatus) == HANDS_TMD) {
@@ -17879,7 +17906,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // The short TMD sleeve/hardware already shares the controller delta.
     // Material 0 must not receive a glove-only parking offset while attached.
     const bool attachedTmdGlove=g_tmdShortGauntlet && tmdGloves &&
-        Rd(g_gloveIsolate)==2 && !supportGrip;
+        Rd(g_gloveIsolate)==2 && (!supportGrip || TmdSupportAssemblyEnabled());
     const float leftShift = (attachedTmdGlove || (tmdGloves && supportGrip && weaponDeltaUsed) || wristAnchor || offWristAnchor || nativeOffKnife || nativeCarry || !weaponInHand) ? 0.f
         : (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
     // Idle shift parks the free left glove off the native gun-hold. During an authored
@@ -18447,7 +18474,8 @@ static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangle
     if(g_independentHands&&
        gloveisolate::TmdHardwareCutApplies((int)Rd(g_gloveIsolate),verts,first,triangles)&&DualWeaponTmdContext()&&
        Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&FgMatchWindow())
-        return Rd(g_twoHandActive)||!g_handPoseValid[0]||!g_handPositionValid[0];
+        return tmdsupport::HideHardware(Rd(g_twoHandActive)!=0,TmdSupportAssemblyEnabled(),
+            true,g_handPoseValid[0] && g_handPositionValid[0]);
     if(g_gloveExperiment && gloves::ReplaceSection(CustomGlovesEligible(),verts,first,triangles,
         Rd(g_rtIsScene)!=0,g_boundShaderLayout.shadow,g_boundShaderLayout.bones,
         g_boundShaderLayout.boneRegs,g_boundShaderLayout.local,
@@ -20043,7 +20071,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                                                      // across both eye draws
     int rideTo = isGun ? 1 : RideTargetFor(numVertices,startIndex,primCount);
     if(!isGun && rideTo==2 && g_tmdShortGauntlet && g_independentHands &&
-       Rd(g_gloveIsolate)==2 && !Rd(g_twoHandActive) && !g_boundShaderLayout.shadow &&
+       Rd(g_gloveIsolate)==2 && (!Rd(g_twoHandActive) || TmdSupportAssemblyEnabled()) && !g_boundShaderLayout.shadow &&
        Rd(g_rtIsScene) && FgMatchWindow() && startIndex==0 && minIndex==0 &&
        g_tmdAttachmentIdentity.Match(dev,numVertices,primCount)) {
         rideTo=3; // same physical-left rigid owner as the independently tracked wrist
@@ -20291,7 +20319,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     const bool dualHardware=g_independentHands&&
         gloveisolate::TmdHardwareCutApplies((int)Rd(g_gloveIsolate),numVertices,startIndex,primCount)&&DualWeaponTmdContext()&&
         Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&FgMatchWindow();
-    if(dualHardware&&(!independentRegs||Rd(g_twoHandActive)||!g_handPoseValid[0]||!g_handPositionValid[0]))nSeg=0;
+    if(dualHardware && tmdsupport::HideHardware(Rd(g_twoHandActive)!=0,TmdSupportAssemblyEnabled(),
+        independentRegs!=0,g_handPoseValid[0] && g_handPositionValid[0]))nSeg=0;
     const bool guardedMixedTmd = dualtmd::GuardMixedTmdSection(
         g_tmdShortGauntlet, DualWeaponTmdContext(),
         g_sceneMode.Current()==vrscene::Mode::GameplayStereo,
@@ -20343,7 +20372,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     IDirect3DIndexBuffer9* shortTmdBuffer=shortTmdCandidate?
         g_tmdShortGauntletRenderer.Ensure(dev):nullptr;
     if(shortTmdAdmitted && admittedGate==tmdgauntlet::Gate::Pass &&
-       !(dualHardware && Rd(g_twoHandActive))) {
+       !(dualHardware && Rd(g_twoHandActive) && !TmdSupportAssemblyEnabled())) {
         const auto gate=!g_tmdShortGauntletRenderer.Ready()?tmdgauntlet::Gate::Cache:
             !shortTmdRange?tmdgauntlet::Gate::MinIndex:
             !(g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_nativeGloveRenderer.Ready() &&
@@ -20545,6 +20574,17 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     if(tmdgauntlet::SuccessfulStereoBoundDraw(shortTmdBuffer!=nullptr,shortEyeDraws,dhr,nativeRestore,handRestore)) {
         InterlockedExchange(&g_tmdShortSuccessfulFrame,Rd(g_armPaletteFrameToken));
         InterlockedExchange(&g_tmdShortSuccessfulDraw,Rd(g_frameDrawIdx));
+        // At most eight successful support/release receipts per process.
+        // This is AFTER both eye draws and both restorations, not CPU readiness.
+        if(g_tmdSupportGauntlet) {
+            static int previousSupport=-1;static unsigned supportNotes=0;
+            const int support=Rd(g_twoHandActive)?1:0;
+            if(supportNotes<8 && support!=previousSupport) {
+                previousSupport=support;++supportNotes;
+                Log("tmd-support-gauntlet: frame=%ld hands=%ld support=%d eyes=2 tris=7110 indexRestore=OK paletteRestore=OK",
+                    Rd(g_armPaletteFrameToken),Rd(g_handsStatus),support);
+            }
+        }
         static LONG reportedShort=0;
         if(InterlockedCompareExchange(&reportedShort,1,0)==0)
             Log("tmd-short-gauntlet: stereo receipt eyes=2 tris=7110 sleevePalette=7 indices=%u..%u nativeRange=%u+%u base=%d indexRestore=OK paletteRestore=OK",

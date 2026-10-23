@@ -8,6 +8,7 @@ $out = Join-Path $root 'build/dual-tmd-tests'
 New-Item -ItemType Directory -Force $out | Out-Null
 $tests = @(
     'spikes/view_matrix/tests/test-dual-weapon-tmd.cpp',
+    'spikes/view_matrix/tests/test-tmd-support-gauntlet.cpp',
     'spikes/view_matrix/tests/test-tmd-aim.cpp',
     'spikes/view_matrix/tests/test-tmd-native-adapter.cpp',
     'spikes/view_matrix/tests/test-weapon-holster.cpp',
