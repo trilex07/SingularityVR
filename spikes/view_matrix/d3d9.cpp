@@ -144,6 +144,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "glove_native.h"
 #include "native_glove_cuffs.h"
 #include "tmd_short_gauntlet.h"
+#include "tmd_sleeve_palette.h"
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include "bink_audio_observation.h"
 #include "bink_intro_audio.h"
@@ -17275,7 +17276,7 @@ static const unsigned kTmdGloveMap[36] = {
     85,9,10,11,12,23,24,20,17,18,14,13,15,21,16,25,22,19,
     26,51,70,71,72,79,80,76,73,74,82,83,77,84,81,78,75,50
 };
-static const unsigned kTmdBaseMap[15] = { 7,46,8,27,43,41,44,45,42,29,28,30,50,85,49 };
+static const unsigned (&kTmdBaseMap)[15] = tmdsleeve::kMap;
 static const unsigned kTmdExtraMap[2] = { 85,50 };
 
 static const char* const kTmdBoneNames[89] = {
@@ -17463,7 +17464,8 @@ static bool CenturionPhysicalHandsReady(){
         g_independentHands&&Rd(g_gloveIsolate)==2&&Rd(g_noTmdPaletteFix);
 }
 static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first, UINT triangles,
-                                  float saved[135][4]) {
+                                  float saved[135][4], float shortSleeve[45][4], bool& shortSleeveReady) {
+    shortSleeveReady=false;
     g_nativeGlovePoseThisDraw=false;
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::bone_palette);
     if (g_hotPathSampler.active())
@@ -17999,6 +18001,14 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             }
         }
     }
+    // Stage only the exact material-1 SVTG palette. The ordinary hardware
+    // palette is uploaded unchanged; sleeve bones are committed only after
+    // its replacement index buffer has actually bound successfully.
+    if(tmdBase && handValid[0])
+        shortSleeveReady=tmdsleeve::Stage(sectionMap,(unsigned)slots,
+            reinterpret_cast<const float (*)[4]>(saved),
+            reinterpret_cast<const float (*)[4]>(changed),
+            gloveisolate::TmdHardwareDelta(OffHand())==0?delta:rightDelta,shortSleeve);
     // Internal palette writes must bypass camera/HUD upload classification.
     if(!g_origSetVSConstF || FAILED(g_origSetVSConstF(dev,5,&changed[0][0],regs))) {
         IndependentAuditCount(IHA_PALETTE,audit);
@@ -20248,9 +20258,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // whole set. Putting the loop outside would run the per-eye setup once and the geometry twice.
     // The ordinary path is nSeg == 1 and emits exactly the call it always did.
     float independentSaved[135][4];
+    float shortSleevePalette[45][4];bool shortSleeveReady=false;
     g_centurionGripStaged={};
     g_nextWristStaged={};
-    const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(dev,numVertices,startIndex,primCount,independentSaved) : 0;
+    const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(dev,numVertices,startIndex,primCount,
+        independentSaved,shortSleevePalette,shortSleeveReady) : 0;
     const bool exactTmdSegments=nSeg==1&&segStart[0]==startIndex&&segPrims[0]==primCount;
     const auto admittedGate=tmdgauntlet::AfterPalette(shortTmdAdmitted,independentRegs!=0,exactTmdSegments);
     if(shortTmdAdmitted && admittedGate!=tmdgauntlet::Gate::Pass) {
@@ -20302,7 +20314,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // draw. Invalidate the previous receipt even if allocation/binding fails.
     if(isolateTmdHardware)InterlockedExchange(&g_tmdShortSuccessfulFrame,-1);
     const bool shortTmdRange=g_tmdShortGauntletRenderer.Covers(minIndex,numVertices);
-    const bool shortTmdCandidate = isolateTmdHardware && shortTmdRange &&
+    const bool shortTmdCandidate = isolateTmdHardware && shortTmdRange && shortSleeveReady &&
         tmdgauntlet::Eligible(g_tmdShortGauntlet,g_tmdShortGauntletRenderer.Ready(),
             g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_nativeGloveRenderer.Ready() &&
                 g_gloveExperiment && g_nativeGloveExperiment,
@@ -20364,6 +20376,13 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         shortTmdBuffer?36369*2:(cuffBuffer?g_nativeCuffRenderer.SourceBytes(cuffProfile):16512*2));
     if(shortTmdBuffer && !nativeIndices.valid)
         LogShortTmdGate(tmdgauntlet::Gate::Bind,numVertices,startIndex,primCount);
+    // Never alter the native 49-run fallback: it uses the original hardware
+    // indices and the ordinary independent palette. Only the bound SVTG draw
+    // receives the staged sleeve+hardware palette.
+    const bool shortPaletteCommit=tmdsleeve::CommitAllowed(shortTmdBuffer && nativeIndices.valid,
+        g_independentHands && g_handPoseValid[0] && g_handPositionValid[0],shortSleeveReady,independentRegs);
+    const HRESULT sleevePaletteHr=shortTmdBuffer && nativeIndices.valid?
+        (shortPaletteCommit?g_origSetVSConstF(dev,5,&shortSleevePalette[0][0],independentRegs):E_FAIL):S_OK;
     float cylinderSaved[15][4];CenturionDrawReplay cylinderReplay;
     const int cylinderBase=t==D3DPT_TRIANGLELIST&&nSeg==1&&!boneRegN&&!independentRegs
         ?PrepareCenturionCylinder(dev,baseVertex,numVertices,startIndex,primCount,cylinderSaved,cylinderReplay):-1;
@@ -20394,7 +20413,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         }
     }
     unsigned shortEyeDraws=0;
-    const HRESULT dhr = StereoPair(dev, [&] {
+    const HRESULT dhr = FAILED(sleevePaletteHr)?sleevePaletteHr:StereoPair(dev, [&] {
         HRESULT hr = D3D_OK;
         if (shortTmdTail) return hr; // audited 17-face right forearm tail, no hardware
         const auto bound=tmdgauntlet::DispatchBound(shortTmdBuffer!=nullptr,nativeIndices.valid,
@@ -20476,7 +20495,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         InterlockedExchange(&g_tmdShortSuccessfulDraw,Rd(g_frameDrawIdx));
         static LONG reportedShort=0;
         if(InterlockedCompareExchange(&reportedShort,1,0)==0)
-            Log("tmd-short-gauntlet: stereo receipt eyes=2 tris=7110 indices=%u..%u nativeRange=%u+%u base=%d indexRestore=OK paletteRestore=OK",
+            Log("tmd-short-gauntlet: stereo receipt eyes=2 tris=7110 sleevePalette=7 indices=%u..%u nativeRange=%u+%u base=%d indexRestore=OK paletteRestore=OK",
                 g_tmdShortGauntletRenderer.MinIndex(),g_tmdShortGauntletRenderer.MaxIndex(),minIndex,numVertices,baseVertex);
     }
     if(g_reloadPalmGrip&&independentRegs&&SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&

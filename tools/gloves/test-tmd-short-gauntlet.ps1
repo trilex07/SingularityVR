@@ -12,9 +12,17 @@ cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W3 /O2 /MD /Fe:`"$e
 if($LASTEXITCODE -ne 0){throw 'TMD gauntlet C++ compile failed'}
 if($Asset){ & $exe $Asset } else { & $exe }
 if($LASTEXITCODE -ne 0){throw 'TMD gauntlet C++ test failed'}
+$paletteSource=Join-Path $repo 'spikes/view_matrix/tests/test-tmd-sleeve-palette.cpp'
+$paletteExe=Join-Path $out 'test-tmd-sleeve-palette.exe'
+cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W3 /O2 /MD /Fe:`"$paletteExe`" /Fo:`"$out/palette.obj`" `"$paletteSource`""
+if($LASTEXITCODE -ne 0){throw 'TMD sleeve palette C++ compile failed'}
+& $paletteExe
+if($LASTEXITCODE -ne 0){throw 'TMD sleeve palette C++ test failed'}
 py -3 (Join-Path $PSScriptRoot 'test_tmd_short_route.py')
 if($LASTEXITCODE -ne 0){throw 'TMD early visibility/dispatch order test failed'}
 if($Tmd -and $Cooked -and $Asset){
     py -3 (Join-Path $PSScriptRoot 'test_tmd_short_gauntlet.py') --tmd $Tmd --cooked $Cooked --asset $Asset
     if($LASTEXITCODE -ne 0){throw 'TMD gauntlet private-source test failed'}
+    py -3 (Join-Path $PSScriptRoot 'test_tmd_sleeve_palette.py') --tmd $Tmd --cooked $Cooked
+    if($LASTEXITCODE -ne 0){throw 'TMD mixed-weight palette test failed'}
 }

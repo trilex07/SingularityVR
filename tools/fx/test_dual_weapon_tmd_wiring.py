@@ -36,7 +36,7 @@ class Wiring(unittest.TestCase):
         self.assertIn('const HRESULT handRestore=',CPP[start:])
         guard=CPP.index('const bool guardedMixedTmd = dualtmd::GuardMixedTmdSection(')
         isolate=CPP.index('const bool isolateTmdHardware =',guard)
-        stereo=CPP.index('const HRESULT dhr = StereoPair(',isolate)
+        stereo=CPP.index('const HRESULT dhr = FAILED(sleevePaletteHr)?sleevePaletteHr:StereoPair(',isolate)
         self.assertLess(guard,isolate)
         self.assertLess(isolate,stereo)
         self.assertIn('if (guardedMixedTmd && !independentRegs)',CPP[guard:isolate])
