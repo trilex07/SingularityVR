@@ -1,4 +1,4 @@
-# M02 runtime UI adapter — isolated preparation, not deployable
+# M02 runtime UI adapter — preparation and first default-OFF slice
 
 Branch base: `48fba76`, separate from the Valkyrie/Volk insertion comfort branch. No Steam changes.
 
@@ -14,4 +14,4 @@ Implement `UiRemasterRuntime=0` under `[Render]`; default and missing key OFF. W
 
 Before expanding beyond that slice, add a CPU layout test for both eyes at 5264x2684 and a D3D9/D3D9Ex draw-state test showing two submitted eyes and restored state. MAIN then validates one screenshot per eye plus laser/R2 alignment in a short PSVR2 session. Only after that gate should the adapter cover main/pause menu, wheel, or localized prompts. Native GFx interaction must remain active throughout. No M02 asset should be mixed into the M01 magazine candidate.
 
-Status: asset QA PASS; runtime adapter NOT IMPLEMENTED; D3D9/PSVR2 NOT RUN. The current integration matrix correctly marks M02 BLOCKED for deployment.
+Status update: the first runtime slice is implemented on this branch. It draws only the neutral settings plate; PL/EN atlases and the other UI surfaces remain out of scope. See `docs/handoffs/side-m02-runtime-first-slice-20261024.md` for build/test evidence and the MAIN physical gate. This is not PSVR2-accepted or a full M02 deployment.
