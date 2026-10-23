@@ -27500,7 +27500,7 @@ static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR 
 }
 
 // M02 first slice. No texture, COM work or draw-path change when OFF.
-static LONG g_uiRemasterRuntime=0,g_uiRemasterSettings=0,g_uiRemasterState=0;
+static LONG g_uiRemasterRuntime=0,g_uiRemasterSettings=0,g_uiRemasterWheel=0,g_uiRemasterState=0;
 static IDirect3DTexture9* g_uiRemasterNeutral=nullptr;
 static IDirect3DTexture9* g_uiRemasterPl=nullptr;
 static IDirect3DTexture9* g_uiRemasterEn=nullptr;
@@ -27556,7 +27556,7 @@ static bool LoadUiRemasterAtlas(IDirect3DDevice9* dev,const char* name,UINT expe
     return true;
 }
 static bool LoadUiRemasterNeutral(IDirect3DDevice9* dev){
-    if(!dev||!Rd(g_uiRemasterRuntime))return false;
+    if(!dev||(!Rd(g_uiRemasterRuntime)&&!Rd(g_uiRemasterWheel)))return false;
     if(Rd(g_uiRemasterState)!=0)return Rd(g_uiRemasterState)==1;
     if(!LoadUiRemasterAtlas(dev,"ui_atlas_neutral.png",4096,2048,&g_uiRemasterNeutral)){
         InterlockedExchange(&g_uiRemasterState,-1);
@@ -27606,6 +27606,21 @@ static bool DrawUiRemasterSprite(IDirect3DDevice9* dev,IDirect3DTexture9* tex,
     if(FAILED(dev->SetTexture(0,tex)))return false;
     return SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(v[0])));
 }
+static IDirect3DTexture9* LoadUiRemasterLocalized(IDirect3DDevice9* dev,bool polish){
+    IDirect3DTexture9** localized=polish?&g_uiRemasterPl:&g_uiRemasterEn;
+    LONG* state=polish?&g_uiRemasterPlState:&g_uiRemasterEnState;
+    if(Rd(*state)<0)return nullptr;
+    if(!*localized){
+        const char* name=polish?"ui_atlas_localized_pl.png":"ui_atlas_localized_en.png";
+        if(!LoadUiRemasterAtlas(dev,name,2048,1024,localized)){
+            InterlockedExchange(state,-1);
+            Log("M02 UI: %s atlas unavailable; native interface retained",polish?"pl":"en");
+            return nullptr;
+        }
+        InterlockedExchange(state,1);
+    }
+    return *localized;
+}
 // P1 is independently OFF. The accepted plate and native text/input remain
 // untouched if either atlas is absent. All decoration uses the exact row rects.
 static bool DrawUiRemasterSettings(IDirect3DDevice9* dev,const settingspanel::Layout& l,
@@ -27613,18 +27628,8 @@ static bool DrawUiRemasterSettings(IDirect3DDevice9* dev,const settingspanel::La
     if(!Rd(g_uiRemasterRuntime)||!Rd(g_uiRemasterSettings)||!g_origDrawPrimUP||
        !LoadUiRemasterNeutral(dev))return false;
     const bool polish=PolishLocalization::PL().IsPolishEnabled();
-    IDirect3DTexture9** localized=polish?&g_uiRemasterPl:&g_uiRemasterEn;
-    LONG* localizedState=polish?&g_uiRemasterPlState:&g_uiRemasterEnState;
-    if(Rd(*localizedState)<0)return false;
-    if(!*localized){
-        const char* name=polish?"ui_atlas_localized_pl.png":"ui_atlas_localized_en.png";
-        if(!LoadUiRemasterAtlas(dev,name,2048,1024,localized)){
-            InterlockedExchange(localizedState,-1);
-            Log("M02 settings: %s atlas unavailable; original rows retained",polish?"pl":"en");
-            return false;
-        }
-        InterlockedExchange(localizedState,1);
-    }
+    IDirect3DTexture9* localized=LoadUiRemasterLocalized(dev,polish);
+    if(!localized)return false;
     if(!g_uiRemasterSaved&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&g_uiRemasterSaved)))return false;
     if(!g_uiRemasterSaved||FAILED(g_uiRemasterSaved->Capture()))return false;
     dev->SetRenderState(D3DRS_ZENABLE,FALSE);
@@ -27662,10 +27667,10 @@ static bool DrawUiRemasterSettings(IDirect3DDevice9* dev,const settingspanel::La
            !uiremaster::Valid(footer,eye,l.half,backW,backH)||
            !uiremaster::Valid(r2,eye,l.half,backW,backH)) {drawn=false;continue;}
         drawn &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,header,uiremaster::header);
-        drawn &= DrawUiRemasterSprite(dev,*localized,tab,uiremaster::Tab(page));
+        drawn &= DrawUiRemasterSprite(dev,localized,tab,uiremaster::Tab(page));
         drawn &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,focus,uiremaster::focus);
         drawn &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,r2,uiremaster::senseR2);
-        drawn &= DrawUiRemasterSprite(dev,*localized,footer,uiremaster::footer);
+        drawn &= DrawUiRemasterSprite(dev,localized,footer,uiremaster::footer);
     }
     const bool restored=SUCCEEDED(g_uiRemasterSaved->Apply());
     static unsigned receipts=0;if(receipts<4){++receipts;
@@ -30014,6 +30019,79 @@ static void DrawLockerVrLoadout(IDirect3DDevice9* dev) {
     back->Release();
 }
 
+static bool ReadWheelHeldAmmo(int& clip,int& reserve){
+    clip=reserve=-1;
+    const uintptr_t hud=FindHudObject();
+    if(!hud||!Readable((const void*)(hud+OBJ_CLASS),sizeof(uintptr_t)))return false;
+    const uintptr_t klass=*reinterpret_cast<const uintptr_t*>(hud+OBJ_CLASS);
+    if(!klass)return false;
+    static uintptr_t cachedClass=0;static int offClip=-1,offReserve=-1;
+    if(klass!=cachedClass){cachedClass=klass;
+        offClip=PropOffsetInChain(klass,"mClipAmmo");
+        offReserve=PropOffsetInChain(klass,"mBinAmmo");}
+    if(offClip<0||offReserve<0||!Readable((const void*)(hud+offClip),4)||
+       !Readable((const void*)(hud+offReserve),4))return false;
+    clip=*reinterpret_cast<const int32_t*>(hud+offClip);
+    reserve=*reinterpret_cast<const int32_t*>(hud+offReserve);
+    return clip>=0&&clip<=999&&reserve>=0&&reserve<=9999;
+}
+static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
+                                   const wheel_layout::Metrics& m,int slots,int selected,
+                                   const long* verts,const bool* named,int clip,int reserve,
+                                   int backW,int backH){
+    if(!Rd(g_uiRemasterWheel)||slots!=4||!g_origDrawPrimUP||
+       !LoadUiRemasterNeutral(dev))return false;
+    IDirect3DTexture9* lang=LoadUiRemasterLocalized(dev,
+        PolishLocalization::PL().IsPolishEnabled());
+    if(!lang)return false;
+    const int half=backW/2;
+    const uiremaster::Rect chassis{cx-m.outerR,cy-m.outerR,cx+m.outerR,cy+m.outerR};
+    if(!uiremaster::Valid(chassis,eye,half,backW,backH))return false;
+    for(int i=0;i<slots;++i)if(!uiremaster::SpriteValid(uiremaster::WheelIcon(verts[i])))return false;
+    dev->SetRenderState(D3DRS_ZENABLE,FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+    dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_LINEAR);
+    dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_LINEAR);
+    dev->SetPixelShader(nullptr);dev->SetVertexShader(nullptr);
+    dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
+    bool good=DrawUiRemasterSprite(dev,g_uiRemasterNeutral,chassis,uiremaster::wheelChassis);
+    for(int i=0;i<slots;++i){
+        if(!named[i])continue;
+        float ix=0,iy=0;
+        wheel_layout::WedgePoint((float)cx,(float)cy,(float)m.iconR,
+                                 wheel_layout::SectorCenter(i,slots),ix,iy);
+        const int x=(int)lroundf(ix),y=(int)lroundf(iy);
+        const uiremaster::Rect icon{x-m.iconHalf,y-m.iconHalf,x+m.iconHalf,y+m.iconHalf};
+        if(!uiremaster::Valid(icon,eye,half,backW,backH))return false;
+        good &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,icon,uiremaster::WheelIcon(verts[i]));
+        if(i==selected){
+            const uiremaster::Rect ring{x-m.iconHalf-5,y-m.iconHalf-5,
+                                        x+m.iconHalf+5,y+m.iconHalf+5};
+            good &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,ring,uiremaster::wheelSelected);
+        }
+    }
+    const uiremaster::Rect hub{cx-m.innerR,cy-m.innerR,cx+m.innerR,cy+m.innerR};
+    good &= DrawUiRemasterSprite(dev,lang,hub,uiremaster::wheelHub);
+    // Only the held weapon has an authoritative HUD count. Unknown values stay blank.
+    if(clip>=0&&reserve>=0){
+        char label[32]{};_snprintf_s(label,sizeof(label),_TRUNCATE,"%d / %d",clip,reserve);
+        D3DRECT glyphs[256]{};
+        const int px=std::max(2,m.textPx);
+        const int width=(int)strlen(label)*(kGlyphW+1)*px;
+        dev->SetTexture(0,nullptr);
+        dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_DIFFUSE);
+        const int n=TextRects(glyphs,0,256,cx-width/2,cy+m.innerR/2,px,label);
+        ClearRects(dev,glyphs,n,0xFFE8EEF8);
+    }
+    return good;
+}
 void DrawWeaponWheel(IDirect3DDevice9* dev) {
     if (!dev || !VrModeOn() || !Rd(g_dupDraws) || !Rd(g_weaponWheelOpen) ||
         !g_handPositionValid[1] || !g_haveEyes || !g_origSetRenderTarget) return;
@@ -30135,6 +30213,8 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
             if (seenCopy[k] == pv) { slotNamed[i] = true; break; }
         }
     }
+    int wheelClip=-1,wheelReserve=-1;
+    if(Rd(g_uiRemasterWheel)&&heldVerts>0)ReadWheelHeldAmmo(wheelClip,wheelReserve);
     // Inventory readiness alone does not prove the renderer consumed it.
     // Record the resolved draw plan, bounded and only when it changes.
     {
@@ -30184,6 +30264,8 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
         const float wheelV=roundOn ? wheel_layout::VisibleCenter(p.v,(int)d.Height,safeMetrics.outerR) : p.v;
         const int cx = (int)lroundf((eye + wheelU) * d.Width * 0.5f);
         const int cy = (int)lroundf(wheelV * d.Height);
+        if(roundOn&&DrawUiRemasterWheelEye(dev,eye,cx,cy,safeMetrics,slots,selected,
+            slotVerts,slotNamed,wheelClip,wheelReserve,(int)d.Width,(int)d.Height))continue;
         if (roundOn) {
             // Round layout (reference mockup): wedge sectors + outer ring +
             // centre disc, icons at mid-radius, catalog labels near the rim.
@@ -34753,6 +34835,7 @@ void LoadIniSettings() {
     g_vrSettingsMinimal=GetPrivateProfileIntA("Render","VrSettingsMinimal",0,path)!=0;
     InterlockedExchange(&g_uiRemasterRuntime,GetPrivateProfileIntA("Render","UiRemasterRuntime",0,path)?1:0);
     InterlockedExchange(&g_uiRemasterSettings,GetPrivateProfileIntA("Render","UiRemasterSettings",0,path)?1:0);
+    InterlockedExchange(&g_uiRemasterWheel,GetPrivateProfileIntA("Render","UiRemasterWheel",0,path)?1:0);
     g_vrSettingsSessionOnly=GetPrivateProfileIntA("Diagnostic","VrSettingsSessionOnly",0,path)!=0;
     InterlockedExchange(&g_reloadHintsEnabled,
         GetPrivateProfileIntA("Input","ReloadHints",0,path)!=0);

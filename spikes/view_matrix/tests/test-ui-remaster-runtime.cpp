@@ -1,5 +1,6 @@
 #include "../settings_panel.h"
 #include "../ui_remaster_runtime.h"
+#include "../weapon_wheel_layout.h"
 #include <cassert>
 #include <cstdio>
 int main(){
@@ -34,5 +35,15 @@ int main(){
     assert(uiremaster::settingsPlate.v0>=0&&uiremaster::settingsPlate.v1<=1);
     for(int page=0;page<=12;++page){const auto t=uiremaster::Tab(page);
         assert(t.u0>=0&&t.u1<=1&&t.v0>=0&&t.v1<=1&&t.u0<t.u1&&t.v0<t.v1);}
+    const long gunVerts[4]{5799,11387,8297,11389};
+    for(int i=0;i<4;++i){const auto icon=uiremaster::WheelIcon(gunVerts[i]);
+        assert(uiremaster::SpriteValid(icon));
+        for(int j=0;j<i;++j)assert(icon.u0!=uiremaster::WheelIcon(gunVerts[j]).u0);}
+    assert(!uiremaster::SpriteValid(uiremaster::WheelIcon(0)));
+    const auto m=wheel_layout::RoundMetrics(2684);
+    for(int eye=0;eye<2;++eye){const int half=5264/2,cx=eye*half+half/2;
+        const uiremaster::Rect wheel{cx-m.outerR,2684/2-m.outerR,
+                                      cx+m.outerR,2684/2+m.outerR};
+        assert(uiremaster::Valid(wheel,eye,half,5264,2684));}
     std::puts("M02 plate geometry PASS: mono/stereo 5264x2684, bounded eyes and shared settings layout");
 }

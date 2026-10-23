@@ -65,6 +65,15 @@ static int Run(bool ex){
         assert(uiremaster::Valid(tab,eye,64,128,64));
         uiremaster::BuildQuad(tab,uiremaster::Tab(3),v);
         assert(SUCCEEDED(dev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,2,v,sizeof(v[0]))));
+        // P2 wheel chassis + a real mapped weapon icon, same per-eye symmetry.
+        const int cx=eye*64+32;
+        const uiremaster::Rect chassis{cx-12,22,cx+12,46};
+        assert(uiremaster::Valid(chassis,eye,64,128,64));
+        uiremaster::BuildQuad(chassis,uiremaster::wheelChassis,v);
+        assert(SUCCEEDED(dev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,2,v,sizeof(v[0]))));
+        const uiremaster::Rect icon{cx-5,25,cx+5,30};
+        uiremaster::BuildQuad(icon,uiremaster::WheelIcon(5799),v);
+        assert(SUCCEEDED(dev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,2,v,sizeof(v[0]))));
     }
     assert(SUCCEEDED(dev->EndScene()));assert(draws==2);
     assert(SUCCEEDED(state->Apply()));
