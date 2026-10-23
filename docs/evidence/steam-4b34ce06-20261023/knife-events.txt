@@ -1,0 +1,23 @@
+# Knife + TMD route timeline (view_matrix.log lines)
+# Session: 2026-10-23 21:18:17 local attach — DLL build 4B34CE06 @ commit 05a94ab
+
+L212: hip knife: cache=READY ... post-TMD right hand only
+L6242: hip knife: grip edge hand=1 dist=0.14m ... picked=1
+L6243: hip knife: PICKED held=1 pawn=1BD76400 hasTmd=1 ignoreTmd=0
+L6244: knife-hand: reserve TMD cuff joint frame=3495 previousJoint=-1 eyes=0; standalone overlay suppressed
+L6245: knife-hand: native joint eye=0 frame=3495 holder=1 tmdCuff=1 gloveTris=3994 ... sceneLit=1
+L6246: knife-hand: native joint eye=1 frame=3495 holder=1 tmdCuff=1 gloveTris=3994 ... sceneLit=1
+L6247: knife-hand: reserve TMD cuff joint frame=3496 previousJoint=3495 eyes=3; standalone overlay suppressed
+L6248-6249: native joint both eyes frame=3496 tmdCuff=1
+L6250-6251: reserve TMD cuff joint frames=3497-3498 eyes=3 (standalone suppressed)
+L6332: hip knife: SHEATHED held=-1 pawn=1BD76400 hasTmd=1
+
+NOT OBSERVED in this log:
+- knife-hand: held standalone route (3929868 failure mode)
+- Second PICKED / reacquire after sheath
+
+Related weapon/grip receipts (same session):
+L4391: single-hand weapon grip: right glove delta follows BuildGunC ... gunVerts=8297
+L4695: dual-tmd gun-scale witness: edge Impulse=1 ADS=0 R2=0 hands=2 ...
+L4699/4728: dual-tmd gun-scale: local gun_scale scale=0 -> 1 ... Impulse=1 ... hands=2 then hands=1
+L4706+: tmd-right-wrist final ... Impulse=1 ADS=0 ... both eyes

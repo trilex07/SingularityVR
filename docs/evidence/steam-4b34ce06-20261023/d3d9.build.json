@@ -1,0 +1,15 @@
+﻿{
+    "builtAt":  "2026-10-23T21:17:16.5137555+02:00",
+    "repository":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR",
+    "branch":  "main-deploy-05a94ab",
+    "commit":  "05a94ab645d29e5da84ba3128a5ccd013af40b95",
+    "workingTreeStatus":  [
+                              "?? deployment/deploy-backups/"
+                          ],
+    "optimization":  "/O2",
+    "performanceInstrumentation":  false,
+    "architecture":  "x86 PE32",
+    "machine":  "0x014C",
+    "optionalHeaderMagic":  "0x010B",
+    "sha256":  "4B34CE06F93DDB2387D75C5A4152BCD6AADD900ED3DBA9E6459F86A677BE496C"
+}

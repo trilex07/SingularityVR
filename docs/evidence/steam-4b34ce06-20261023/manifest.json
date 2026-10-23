@@ -1,0 +1,52 @@
+{
+  "evidenceId": "steam-4b34ce06-20261023",
+  "capturedAt": "2026-10-23T21:40:00+02:00",
+  "source": "completed Steam PSVR2 session (not re-run)",
+  "git": {
+    "branch": "fix/sol-tmd-raised-weapon-knife",
+    "head": "05a94ab645d29e5da84ba3128a5ccd013af40b95",
+    "commits": [
+      "9593169 Align TMD right glove with authored held-weapon grip",
+      "0cf6c17 Keep TMD knife on one draw route per pickup",
+      "6e15e77 Distinguish raw TMD Impulse from suppressed ADS diagnostics",
+      "05a94ab Document TMD right-hand and knife candidate evidence"
+    ],
+    "baselinePhysical": "3929868",
+    "preSessionCheckpoint": "514bb03"
+  },
+  "dll": {
+    "sha256": "4B34CE06F93DDB2387D75C5A4152BCD6AADD900ED3DBA9E6459F86A677BE496C",
+    "solReferenceSha256": "018C132FDAB31BA7EC92A31EAF535DF2EFA6E2D57EFAB5B2E383611291DD8138",
+    "builtAt": "2026-10-23T21:17:16+02:00",
+    "architecture": "x86 PE32 /O2"
+  },
+  "session": {
+    "logAttachedLocal": "2026-10-23 21:18:17",
+    "logLastActivityApprox": "2026-10-23 21:19:19",
+    "logBytes": 828991,
+    "logSha256": "592023235301C7A57EAFBC1113CAF13C12FD136C31E89E311A8875D866CB7F26"
+  },
+  "iniEffective": {
+    "file": "SingularityVR.ini.effective",
+    "sha256": "F5FD4613666EB2B3B0E9CFAE2E5495E52D39FF19409E2DA244D680CA81D6EBFC",
+    "candidateDeltasFrom514bb03": [
+      "DualWeaponTmdRightWrist=1",
+      "HipKnifeIgnoreTMD=0",
+      "VolkAuthoredGrip=1 (unchanged)",
+      "DualWeaponTmdReady=1",
+      "DualWeaponTmdGunScale=1",
+      "TmdShortGauntlet=1",
+      "TmdSupportGauntlet=1",
+      "VolkManualReload=1",
+      "ReloadNativeMagazine=1",
+      "ReloadPalmGrip=1"
+    ]
+  },
+  "files": {
+    "view_matrix.log": "592023235301C7A57EAFBC1113CAF13C12FD136C31E89E311A8875D866CB7F26",
+    "SingularityVR.ini.effective": "F5FD4613666EB2B3B0E9CFAE2E5495E52D39FF19409E2DA244D680CA81D6EBFC",
+    "d3d9.build.json": "see file",
+    "knife-events.txt": "excerpt index",
+    "SUMMARY-knife-fix-agent.md": "handoff summary"
+  }
+}
