@@ -19,6 +19,10 @@ static unsigned receipts=0, attempts=0;
 static int lastState=-1;
 static volatile LONG refusals=0;
 static ULONGLONG retry=0;
+static int lastL2Edge=-1, lastR2Edge=-1;
+static unsigned edgeReports=0, resolverReports=0;
+static uintptr_t lastResolverPawn=0;
+static int lastControlOff=-3,lastInviewOff=-3;
 static bool Enabled(){return Rd(g_dualWeaponTmdGunScale)!=0;}
 static uintptr_t OwnedPawn() {
     const uintptr_t camera=NativeOwnedInventory::CameraOwnedPawn();
@@ -42,6 +46,25 @@ static void Fault() {
     InterlockedExchange(&g_dualWeaponTmdGunScale,0);
     control=localPawn=localMesh=0;
     Refuse(1,"context AV (gate OFF)");
+}
+// The old context receipt sampled only changes of the dual/weapon state. It
+// never sampled a held Impulse, and combined three unrelated reflection gates
+// into one refusal. Capture the actual input edges and each producer identity
+// without changing the native scale or retaining an UObject pointer.
+static void Witness(const char* reason,uintptr_t pawn=0,int controlOff=-2,int inviewOff=-2) {
+    if((!strcmp(reason,"edge") ? edgeReports++ : resolverReports++)>=16)return;
+    using namespace NativeOwnedInventory;
+    const uintptr_t cameraPawn=CameraOwnedPawn(),nativePawn=EngineNativeLocalPlayerPawn();
+    const uintptr_t cachedPawn=g_playerPawn,cls=pawn?P(pawn+OBJ_CLASS):0;
+    char className[80]{};
+    if(cls)NameOf(cls,className,sizeof(className));
+    const uintptr_t node=controlOff>=0&&pawn?P(pawn+controlOff):0;
+    const uintptr_t mesh=inviewOff>=0&&pawn?P(pawn+inviewOff):0;
+    Log("dual-tmd gun-scale witness: %s L2=%ld R2=%ld hands=%ld dual=%d menu=%ld pause=%ld camera=%08X controller=%08X cachedPawn=%08X cameraPawn=%08X nativePawn=%08X selected=%08X class=%s controlOff=%d expected=1024 inviewOff=%d node=%08X mesh=%08X armed=%d",
+        reason,Rd(g_rawAltTrigger),Rd(g_rawTrigger),Rd(g_handsStatus),DualWeaponTmdContext(),
+        Rd(g_vrMenuClass),Rd(g_gamePaused),(unsigned)g_camera,(unsigned)g_controller,
+        (unsigned)cachedPawn,(unsigned)cameraPawn,(unsigned)nativePawn,(unsigned)pawn,
+        className,controlOff,inviewOff,(unsigned)node,(unsigned)mesh,target!=0);
 }
 static bool NamedControl(uintptr_t c) {
     if(nameOffset<0||!PauseRttProbe::SafeRange(c+nameOffset,8))return false;
@@ -87,6 +110,11 @@ static void Poll() {
     __try {
         using namespace NativeOwnedInventory;
         const auto context=Context();
+        const int l2=Rd(g_rawAltTrigger)>128?1:0,r2=Rd(g_rawTrigger)>128?1:0;
+        if(l2!=lastL2Edge||r2!=lastR2Edge){
+            lastL2Edge=l2;lastR2Edge=r2;
+            if(context.dual)Witness("edge",OwnedPawn());
+        }
         const unsigned state=(context.dual?1u:0u)|(context.nativeHands?2u:0u)|
             (context.holstered?4u:0u)|(context.equipped?8u:0u);
         static unsigned previous=~0u, contextReceipts=0;
@@ -97,6 +125,7 @@ static void Poll() {
         if(!dualgunscale::ContextAllowed(context)) {control=localPawn=localMesh=0;return;}
         const auto pawn=OwnedPawn();
         if(!pawn){control=localPawn=localMesh=0;
+            if(!(Rd(refusals)&32))Witness("owner missing");
             if(!(Rd(refusals)&32))Log("dual-tmd gun-scale: owner sources camera=%08X native=%08X",
                 (unsigned)CameraOwnedPawn(),(unsigned)EngineNativeLocalPlayerPawn());
             Refuse(32,"reciprocal local pawn unavailable or owners disagree");return;}
@@ -111,6 +140,10 @@ static void Poll() {
         const int off=PropOffsetInChain(pc,"mGunScaleCtrl");
         // PostBeginPlay finds gun_scale on mInviewMesh, NOT Pawn.Mesh (body).
         meshOffset=PropOffsetInChain(pc,"mInviewMesh");
+        if(pawn!=lastResolverPawn||off!=lastControlOff||meshOffset!=lastInviewOff){
+            lastResolverPawn=pawn;lastControlOff=off;lastInviewOff=meshOffset;
+            Witness("resolve pawn fields",pawn,off,meshOffset);
+        }
         if(off!=dualgunscale::PawnControlOffset||meshOffset<0||!NativeTmdAim::ExactClass(pc,"RvPlayerPawnSP")){
             Refuse(64,"reflected mGunScaleCtrl/mInviewMesh/local SP class");return;}
         const auto node=P(pawn+off),mesh=P(pawn+meshOffset),cls=P(node+OBJ_CLASS);

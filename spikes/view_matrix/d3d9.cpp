@@ -2015,6 +2015,9 @@ WantedName g_wantNames[] = {
     // Read-only scene witness: actual native hand components and their assets.
     { "mArmMeshComponent", -1 }, { "mInviewMesh", -1 }, { "Mesh", -1 },
     { "SkeletalMesh", -1 }, { "Animations", -1 },
+    // Native dual-TMD gun_scale resolves these by PropOffsetInChain, whose
+    // WantedIdx gate cannot inspect any name omitted from this registry.
+    { "mGunScaleCtrl", -1 }, { "ControlName", -1 }, { "BoneScale", -1 },
     // Ammo probe round 4: UT-pattern firemode object (WeaponFireTypes[0])
     // carries the live counters. Resolved per weapon class, never assumed.
     { "WeaponFireTypes", -1 },
