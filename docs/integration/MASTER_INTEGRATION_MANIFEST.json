@@ -48,10 +48,12 @@
     },
     {
       "id": "M03",
-      "status": "REWORK",
+      "status": "LIVE_DATA_OFFLINE_PASS_3D_REWORK",
       "source": "side/diegetic-hud-native@ff29efdefc5982eef5a1c8ba100d3003c5c0bd56",
       "scope": "physical weapon/TMD readout concept",
-      "blocked_on": "dynamic native producer identity, final weapon/TMD basis, stereo occlusion, private GLB legal boundary",
+      "live_data_work": "shared float health decoding, 10-cell value, no duplicate health readout, independent per-eye ammo plate size",
+      "evidence": "docs/integration/M03_HUD_LIVE_DATA_AND_MOUNT_GATE.md",
+      "blocked_on": "same-frame final weapon/TMD skin and LocalToWorld basis, stereo depth/occlusion, static preview values and private GLB legal boundary",
       "rollback": "not deployed; existing main health/ammo plates remain authoritative"
     },
     {

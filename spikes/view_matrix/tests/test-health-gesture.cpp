@@ -33,6 +33,21 @@ int main() {
     Expect(FilledSegments(HpFromBits((std::int32_t)0x42900000),
                           HpFromBits((std::int32_t)0x43100000)) == 6, "half hp bits half bar");
     Expect(HpFromBits(1125515264) > 0.0f, "session bits positive float");
+    {
+        const auto full = DecodeLiveHealth((std::int32_t)0x43100000, (std::int32_t)0x43100000);
+        const auto half = DecodeLiveHealth((std::int32_t)0x42900000, (std::int32_t)0x43100000);
+        const auto empty = DecodeLiveHealth(0, (std::int32_t)0x43100000);
+        Expect(full.valid && full.fraction == 1.0f && full.cells10 == 10 &&
+               full.plateSlots == 11, "live full: wrist and plate share float source");
+        Expect(half.valid && half.fraction == 0.5f && half.cells10 == 5 &&
+               half.plateSlots == 6, "live half: no integer-bit ratio");
+        Expect(empty.valid && empty.fraction == 0.0f && empty.cells10 == 0,
+               "live empty: zero cells");
+        Expect(!DecodeLiveHealth((std::int32_t)0x7f800000, (std::int32_t)0x43100000).valid,
+               "infinite health hidden");
+        Expect(!DecodeLiveHealth((std::int32_t)0x43100000, 0).valid,
+               "unknown max hidden");
+    }
     Expect(FilledSegments(0.0f, 100.0f) == 0, "empty bar");
     Expect(FilledSegments(50.0f, 100.0f) == 6, "half rounds to six");
     Expect(FilledSegments(150.0f, 100.0f) == 11, "overheal clamps full");

@@ -28503,7 +28503,13 @@ void DrawCustomGloves(IDirect3DDevice9* dev) {
 void DrawWristHealth(IDirect3DDevice9* dev) {
     const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
         !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
-    if (!handhud::Visible(Rd(g_wristHealth) != 0, VrModeOn(), Rd(g_dupDraws) != 0,
+    // If the optional plate atlas failed to load, retain the plain wrist bar
+    // rather than losing health feedback entirely. While the plate is healthy,
+    // it owns the display even when the wrist is down (face-raise is its gate).
+    const bool plateOwnsHealth = Rd(g_healthPlate) != 0 &&
+        InterlockedCompareExchange(&g_platesState, 0, 0) != -1;
+    if (!handhud::Visible(handhud::ShowLegacyWristHealth(Rd(g_wristHealth) != 0,
+                          plateOwnsHealth), VrModeOn(), Rd(g_dupDraws) != 0,
                           hudGameplay, Rd(g_gamePaused) != 0, Rd(g_vrUiMenu) != 0,
                           Rd(g_panelOpen) != 0, Rd(g_inCinematic) != 0) ||
         !Rd(g_offHandValid) || !g_origDrawPrimUP ||
@@ -28511,11 +28517,11 @@ void DrawWristHealth(IDirect3DDevice9* dev) {
     const uintptr_t pawn = g_playerPawn; // Never initiate an object scan from overlay rendering.
     if (!pawn || !Readable((void*)(pawn + g_offHealth), 4) ||
         !Readable((void*)(pawn + g_offHealthMax), 4)) return;
-    const int hp = *reinterpret_cast<int*>(pawn + g_offHealth);
-    const int maximum = *reinterpret_cast<int*>(pawn + g_offHealthMax);
-    if (maximum <= 0) return;
-    float fraction = (float)hp / maximum;
-    if (fraction < 0) fraction = 0; if (fraction > 1) fraction = 1;
+    const auto health = healthbar::DecodeLiveHealth(
+        *reinterpret_cast<const std::int32_t*>(pawn + g_offHealth),
+        *reinterpret_cast<const std::int32_t*>(pawn + g_offHealthMax));
+    if (!health.valid) return;
+    const float fraction = health.fraction;
     int slot = -1;
     for (int i=0; i<g_camMatUsed; ++i) if (g_camMats[i].valid) { slot=i; break; }
     if (slot < 0) return;
@@ -30329,10 +30335,11 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
     const std::int32_t maxBits = *reinterpret_cast<std::int32_t*>(pawn + g_offHealthMax);
     // Health fields are floats in memory: int reads keep ordering (enough for
     // the heal window) but destroy ratios, pinning a segment bar near full.
-    const float hp = healthbar::HpFromBits(hpBits);
-    const float maxHp = healthbar::HpFromBits(maxBits);
-    const int filled = healthbar::FilledSegments(hp, maxHp);
-    if (filled < 0) {
+    const auto health = healthbar::DecodeLiveHealth(hpBits, maxBits);
+    const float hp = health.current;
+    const float maxHp = health.maximum;
+    const int filled = health.plateSlots;
+    if (!health.valid) {
         g_hbShown = false;
         if (!InterlockedCompareExchange(&g_hbUnknownSaid, 0, 0)) {
             InterlockedExchange(&g_hbUnknownSaid, 1);
@@ -30639,8 +30646,7 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     // Fallback size (~5% under the previous 0.17H). Per eye below, the plate
     // is re-anchored to a constant 0.19m world width, so it shrinks with
     // distance instead of looking bigger as the gun moves away (user 2026-10-15).
-    int plateW = std::max(64, (int)(d.Height * 0.16f));
-    int plateH = std::max(21, plateW * 724 / 2172);
+    const int fallbackPlateW = std::max(64, (int)(d.Height * 0.16f));
     // MAIN round 8: digit-free art (user-supplied plates without baked digits
     // or pips) needs NO baked-content covers — only the empty-mag info.
     // The red warning box stays covered iff 3+ rounds remain; everything
@@ -30655,12 +30661,14 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     // MAIN L3 probe (bounded): one drew-confirmation with rect, one proj-fail
     // line. Distinguishes "never drawn" from "drawn but not seen".
     float ammoDrewCx = 0, ammoDrewCy = 0;
+    int ammoDrewW = 0, ammoDrewH = 0;
     bool ammoDrewAny = false, ammoProjFail = true;
     static bool ammoSaidDrew = false, ammoSaidProj = false;
     for (int eye = 0; eye < 2; ++eye) {
         uipointer::ScreenPoint p;
         if (!VrUiProjectEye(eye, hand, p)) continue;
         ammoProjFail = false;
+        int eyePlateW = fallbackPlateW;
         {
             // World-anchored width: project a 0.5m probe along this eye's
             // right axis; px-per-metre here scales the constant 0.19m plate.
@@ -30673,22 +30681,18 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
                 const float du = (p2.u - p.u) * d.Width * 0.5f;
                 const float dv = (p2.v - p.v) * (float)d.Height;
                 const float pxM = 2.0f * sqrtf(du * du + dv * dv);
-                if (pxM > 1.0f) {
-                    int w = (int)(0.19f * pxM);
-                    if (w < 64) w = 64;
-                    const int maxW = (int)(d.Height * 0.30f);
-                    if (w > maxW) w = maxW;
-                    plateW = w;
-                    plateH = std::max(21, plateW * 724 / 2172);
-                }
+                eyePlateW = ammoplates::EyePlateWidth(pxM, fallbackPlateW, (int)d.Height);
             }
         }
-        const int drawW = handhud::ScaledExtent(plateW);
+        const int drawW = handhud::ScaledExtent(eyePlateW);
         const int drawH = std::max(18, drawW * 724 / 2172);
         const float cx = ammoplates::ClampCxToEyeHalf((eye + p.u) * d.Width * 0.5f,
             (float)drawW, (float)d.Width, eye);
         const float cy = p.v * d.Height;
-        if (!ammoDrewAny) { ammoDrewAny = true; ammoDrewCx = cx; ammoDrewCy = cy; }
+        if (!ammoDrewAny) {
+            ammoDrewAny = true; ammoDrewCx = cx; ammoDrewCy = cy;
+            ammoDrewW = drawW; ammoDrewH = drawH;
+        }
         const float x0 = cx - drawW * 0.5f, y0 = cy - drawH * 0.5f;
         const float x1 = cx + drawW * 0.5f, y1 = cy + drawH * 0.5f;
         const DWORD plateTint = handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct);
@@ -30742,7 +30746,8 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     if (ammoDrewAny && !ammoSaidDrew) {
         ammoSaidDrew = true;
         Log("ammo plate: drew plate=%d clip=%d bin=%d %dx%d at %.0f,%.0f (backbuffer %ux%u)",
-            plate, clip, bin, plateW, plateH, (double)ammoDrewCx, (double)ammoDrewCy, d.Width, d.Height);
+            plate, clip, bin, ammoDrewW, ammoDrewH,
+            (double)ammoDrewCx, (double)ammoDrewCy, d.Width, d.Height);
     }
     if (!ammoDrewAny && ammoProjFail && !ammoSaidProj) {
         ammoSaidProj = true;

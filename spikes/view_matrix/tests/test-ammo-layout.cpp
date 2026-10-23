@@ -19,6 +19,11 @@ int main() {
     Expect(PlateForGunVerts(99999) == -1, "unknown gun no plate");
     Expect(PlateFile(0) != nullptr && PlateFile(3) != nullptr, "plate files");
     Expect(PlateFile(9) == nullptr, "bad plate refused");
+    Expect(EyePlateWidth(0.0f, 160, 1000) == 160, "unprojectable eye uses its own fallback");
+    Expect(EyePlateWidth(INFINITY, 160, 1000) == 160, "nonfinite projection uses fallback");
+    Expect(EyePlateWidth(1000.0f, 160, 1000) == 190, "metric width from current eye");
+    Expect(EyePlateWidth(10000.0f, 160, 1000) == 300, "eye width bounded");
+    Expect(EyePlateWidth(1e30f, 160, 1000) == 300, "finite extreme projection clamps before cast");
     // Glyph rects sit inside the 2172x240 strip, ordered, non-empty.
     {
         bool ok = true;

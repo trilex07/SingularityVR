@@ -41,6 +41,21 @@ outside Git. Private asset hashes are in the manifest; no asset was copied to
 the Steam game directory. The generated local DLL is not a physical candidate
 until Cursor MAIN reviews, rebuilds and snapshots its own deployment.
 
+## M03 follow-up — live HUD correctness
+
+The subsequent HUD change has its own evidence in
+`M03_HUD_LIVE_DATA_AND_MOUNT_GATE.md`; it does not import the SIDE static GLBs.
+`tools/tests/test-hud-live.ps1` passed all three optimized x86 programs
+(health decoding/gesture, HUD gates, stereo ammo layout). The full
+`tools/tests/test-dual-weapon-tmd.ps1 -SkipOled` suite passed, including
+Centurion/next-weapon reload, TMD, two-hand, aim and WeaponLocker programs.
+The production DLL rebuilt successfully as x86 PE32 `/O2`, SHA256
+`79ED957374B0C63857561FB2FE96B9CB8D76115BA50504C79CAE3486AF2B5599`.
+Existing static-analysis warnings remain; no new fatal warning or compiler
+error was reported. The build receipt was generated before the documentation
+commit and must be rebuilt by MAIN from the reviewed HEAD. Steam and PSVR2:
+**NOT TESTED**. The physical 3D diegetic asset path remains **NO-GO**.
+
 ## Priority unresolved gates
 
 1. **P0:** physical Valkyrie shoulder pickup with TMD, left-palm magazine,

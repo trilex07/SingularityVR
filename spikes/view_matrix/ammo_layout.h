@@ -7,7 +7,21 @@
 // cover quads over the baked digit bands, live digit glyphs right-aligned,
 // and (when the mag is empty) a cover over the white mag cell. Hidden while
 // the R3 wheel is open so the two never overlap.
+#include <cmath>
+
 namespace ammoplates {
+
+// Size each eye independently. A failed right-eye projection must not inherit
+// the left eye's previous-frame or same-loop width, which creates disparity.
+inline int EyePlateWidth(float pixelsPerMetre, int fallbackWidth, int renderHeight) {
+    if (!std::isfinite(pixelsPerMetre) || !(pixelsPerMetre > 1.0f)) return fallbackWidth;
+    const int maximum = (int)(renderHeight * 0.30f);
+    if (maximum <= 0) return fallbackWidth;
+    const float width = 0.19f * pixelsPerMetre;
+    if (width >= (float)maximum) return maximum;
+    if (width <= 64.0f) return 64;
+    return (int)width;
+}
 
 // Plate pick by first-person gun verts (catalog ids).
 inline int PlateForGunVerts(long verts) {
