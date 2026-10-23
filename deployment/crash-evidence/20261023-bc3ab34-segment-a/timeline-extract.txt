@@ -1,0 +1,22 @@
+   103: ini: DualWeaponTmdGunScale=1 (default OFF; owned gun_scale result only)
+   104: ini: DualWeaponTmdRightWrist=0 (default OFF; TMD material-0 original right wrist)
+   105: ini: DualWeaponTmdReady=1 DualWeaponTmdProbe=0 (default OFF; native draws only, no pawn state writes)
+   131: ini: HipKnifeIgnoreTMD=1 (0=trust engine mTMD, 1=force pre-TMD both-hands rule)
+   132: ini: HipKnifeRadiusCm=18 HipKnifeGrabWindowMs=800 (r21: wider squeeze-while-reaching pickup)
+   133: ini: HipKnifeEnabled=1 (default OFF, restart required; pre-TMD both hands, post-TMD right hand only, native camera trace)
+   186: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=0 hands=-1 L2=0
+   224: tmd-support-gauntlet: enabled=1 (presentation only; native powers unchanged)
+   758: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  1082: dual-tmd gun-scale: context dual=1 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  1083: dual-tmd gun-scale: refused reflected mGunScaleCtrl/mInviewMesh/local SP class; native result retained
+  1485: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  2228: dual-tmd gun-scale: context dual=1 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  2229: dual-tmd gun-scale: owner sources camera=00000000 native=00000000
+  2230: dual-tmd gun-scale: refused reciprocal local pawn unavailable or owners disagree; native result retained
+  3419: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=0 hands=2 L2=0
+  3471: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  3575: dual-tmd gun-scale: context dual=1 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  4992: next reload draw gate: stage=10 kind=2 part=1 verts=8297 prim=10835 first=0 min=0 base=0 moved=1 fg=1 scene=1 paused=0 wheel=0 thread=1
+  5013: tmd-support-gauntlet: frame=2897 hands=2 support=0 eyes=2 tris=7110 indexRestore=OK paletteRestore=OK
+  5963: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  8373: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=0 hands=2 L2=0

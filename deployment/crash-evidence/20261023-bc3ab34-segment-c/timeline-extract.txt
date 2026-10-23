@@ -1,0 +1,32 @@
+   103: ini: DualWeaponTmdGunScale=1 (default OFF; owned gun_scale result only)
+   104: ini: DualWeaponTmdRightWrist=1 (default OFF; TMD material-0 original right wrist)
+   105: ini: DualWeaponTmdReady=1 DualWeaponTmdProbe=0 (default OFF; native draws only, no pawn state writes)
+   131: ini: HipKnifeIgnoreTMD=0 (0=trust engine mTMD, 1=force pre-TMD both-hands rule)
+   132: ini: HipKnifeRadiusCm=18 HipKnifeGrabWindowMs=800 (r21: wider squeeze-while-reaching pickup)
+   133: ini: HipKnifeEnabled=1 (default OFF, restart required; pre-TMD both hands, post-TMD right hand only, native camera trace)
+   186: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=0 hands=-1 L2=0
+   224: tmd-support-gauntlet: enabled=1 (presentation only; native powers unchanged)
+   623: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+   918: dual-tmd gun-scale: context dual=1 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+   919: dual-tmd gun-scale: refused reflected mGunScaleCtrl/mInviewMesh/local SP class; native result retained
+   933: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  1617: dual-tmd gun-scale: context dual=1 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  1618: dual-tmd gun-scale: owner sources camera=00000000 native=00000000
+  1619: dual-tmd gun-scale: refused reciprocal local pawn unavailable or owners disagree; native result retained
+  1720: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=0 hands=2 L2=0
+  1772: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  1882: dual-tmd gun-scale: context dual=1 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  2407: next reload draw gate: stage=10 kind=2 part=1 verts=8297 prim=10835 first=0 min=0 base=0 moved=1 fg=1 scene=1 paused=0 wheel=0 thread=1
+  2428: tmd-support-gauntlet: frame=1151 hands=2 support=0 eyes=2 tris=7110 indexRestore=OK paletteRestore=OK
+  2746: dual-tmd gun-scale: context dual=1 nativeHands=0 holstered=1 equipped=1 hands=2 L2=0
+  2834: hip knife: PICKED held=1 pawn=1BD76400 hasTmd=1 nativeKnife=0 ignoreTmd=0 (native camera trace, not blade collision)
+  2835: knife-hand: held standalone route holder=1 tmd=1 ignoreTmd=0 jointPose=0 glovePose=0 hands=2 frame=1564
+  2870: knife-hand: melee display stays controller-tracked holder=1; native damage untouched
+  2875: dual-tmd right wrist: original bone 51 reconstructed to live controller; support unchanged
+  3499: dual-tmd gun-scale: context dual=1 nativeHands=0 holstered=0 equipped=1 hands=1 L2=0
+  3531: dual-tmd gun-scale: context dual=1 nativeHands=0 holstered=1 equipped=1 hands=1 L2=0
+  3612: dual-tmd gun-scale: context dual=1 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  3834: Volk carry wrist: TMD material-0 published after stereo draw, wrist bone=9, segments=1
+  3835: next reload draw gate: stage=12 kind=2 part=1 verts=8297 prim=10835 first=0 min=0 base=0 moved=1 fg=1 scene=1 paused=0 wheel=0 thread=1
+  4133: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=1 hands=2 L2=0
+  6527: dual-tmd gun-scale: context dual=0 nativeHands=0 holstered=0 equipped=0 hands=2 L2=0
