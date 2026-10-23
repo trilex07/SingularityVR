@@ -144,6 +144,9 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "glove_native.h"
 #include "native_glove_cuffs.h"
 #include "tmd_short_gauntlet.h"
+#include "tmd_attachment_identity.h"
+static tmdattachment::Identity g_tmdAttachmentIdentity;
+static void BuildLiveControllerC(float C[4][4], bool aimHand);
 #include "tmd_sleeve_palette.h"
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include "bink_audio_observation.h"
@@ -14734,7 +14737,8 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
                 // file has recorded which space it is since the matrix scan probed
                 // "origin(translated-world)" as a candidate point.
                 float C[4][4];
-                if (g_thisDrawMoved == 2) BuildTmdC(C); else BuildGunC(C);   // ⭐ run 237
+                if (g_thisDrawMoved == 3) BuildLiveControllerC(C,OffHand()!=0);
+                else if (g_thisDrawMoved == 2) BuildTmdC(C); else BuildGunC(C);
                 ApplyWorldMatrix(reinterpret_cast<Reg4*>(mat), cs.conv, C);
             }
             if(int(cs.reg)==g_boundShaderLayout.viewProjection&&g_thisDrawMoved==1)ScopeProjectNativeLens(mat,cs.conv,0,full);
@@ -14763,7 +14767,8 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
                 // what makes it point where the controller points. Pivoting on the world origin
                 // would fling it across the level.
                 float C[4][4];
-                if (g_thisDrawMoved == 2) BuildTmdC(C); else BuildGunC(C);   // ⭐ run 237
+                if (g_thisDrawMoved == 3) BuildLiveControllerC(C,OffHand()!=0);
+                else if (g_thisDrawMoved == 2) BuildTmdC(C); else BuildGunC(C);
                 ApplyWorldMatrix(reinterpret_cast<Reg4*>(mat), cs.conv, C);
             }
             if(int(cs.reg)==g_boundShaderLayout.viewProjection&&g_thisDrawMoved==1)ScopeProjectNativeLens(mat,cs.conv,1,full);
@@ -17875,7 +17880,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // Material 0 must not receive a glove-only parking offset while attached.
     const bool attachedTmdGlove=g_tmdShortGauntlet && tmdGloves &&
         Rd(g_gloveIsolate)==2 && !supportGrip;
-    const float leftShift = (attachedTmdGlove || wristAnchor || offWristAnchor || nativeOffKnife || nativeCarry || !weaponInHand) ? 0.f
+    const float leftShift = (attachedTmdGlove || (tmdGloves && supportGrip && weaponDeltaUsed) || wristAnchor || offWristAnchor || nativeOffKnife || nativeCarry || !weaponInHand) ? 0.f
         : (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
     // Idle shift parks the free left glove off the native gun-hold. During an authored
     // pistol grip that same nudge is what puts the support hand beside the weapon.
@@ -20036,7 +20041,14 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     if (isGun) { AdsCapture(dev); AdsFreeze(dev); AdsMask(dev); }   // ⭐ run 223: freeze before StereoPair: it only
                                                      // rewrites the camera slots, so the bones persist
                                                      // across both eye draws
-    const int rideTo = isGun ? 1 : RideTargetFor(numVertices,startIndex,primCount);   // ⭐ run 237
+    int rideTo = isGun ? 1 : RideTargetFor(numVertices,startIndex,primCount);
+    if(!isGun && rideTo==2 && g_tmdShortGauntlet && g_independentHands &&
+       Rd(g_gloveIsolate)==2 && !Rd(g_twoHandActive) && !g_boundShaderLayout.shadow &&
+       Rd(g_rtIsScene) && FgMatchWindow() && startIndex==0 && minIndex==0 &&
+       g_tmdAttachmentIdentity.Match(dev,numVertices,primCount)) {
+        rideTo=3; // same physical-left rigid owner as the independently tracked wrist
+        static unsigned said=0;if(said++<12)Log("tmd-attachment: cooked socket mesh CRC verified verts=%u faces=%u; shared left controller ride",numVertices,primCount);
+    }
     // The same exact foreground identities already used for controller palettes
     // and menu hiding. Never suppress world/NPC geometry or shadow generation.
     const bool trackedCineMesh = isGun || rideTo != 0 ||
@@ -28204,6 +28216,7 @@ void ReleaseWristResources() {
     g_xrCaptureAlphaPass.Release();
     g_nativeCuffRenderer.ReleaseGPU();
     g_tmdShortGauntletRenderer.ReleaseGPU();
+    g_tmdAttachmentIdentity.Reset();
     InterlockedExchange(&g_tmdShortSuccessfulFrame,-1);
     InterlockedExchange(&g_tmdShortSuccessfulDraw,-1);
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;

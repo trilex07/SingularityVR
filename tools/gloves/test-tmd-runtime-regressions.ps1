@@ -6,7 +6,7 @@ New-Item -ItemType Directory -Force $out | Out-Null
 $vswhere="${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
 $vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $vc=Join-Path $vs 'VC/Auxiliary/Build/vcvarsall.bat'
-$tests=@('test-tmd-aim','test-tmd-native-adapter','test-weapon-holster','test-native-glove-cuffs',
+$tests=@('test-tmd-attachment','test-tmd-aim','test-tmd-native-adapter','test-weapon-holster','test-native-glove-cuffs',
     'test-hands-only','test-vr-transition-sim','test-centurion-reload','test-next-weapon-reload',
     'test-measured-aim','test-locker-vr-loadout-preview','test-locker-vr-loadout-policy',
     'test-locker-vr-loadout-layout','test-tmd-short-gauntlet-d3d9')
