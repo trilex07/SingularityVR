@@ -20514,6 +20514,37 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         // No surface readback or GPU synchronization.
         const bool assemblyGlove=(numVertices==7444||numVertices==2626)&&startIndex==0&&primCount==4402;
         const bool assemblyDevice=shortTmdBuffer&&nativeIndices.valid;
+        // The assembly receipt below samples slot 1 (LEFT wrist). The failed
+        // L2 test concerns the RIGHT wrist, which is slot 19 in material 0.
+        // Capture its final bound palette in both eyes for a few frames per
+        // hands/L2/R2 state; this cannot be inferred from a one-shot CPU note.
+        if(g_dualWeaponTmdRightWrist&&assemblyGlove&&independentRegs&&eye<2){
+            const unsigned hands=(unsigned)Rd(g_handsStatus);
+            if(hands==1||hands==2){
+                const unsigned key=(hands-1)*4+(Rd(g_rawAltTrigger)>128?2u:0u)+
+                    (Rd(g_rawTrigger)>128?1u:0u);
+                static LONG lastFrame[8]{};static unsigned samples[8]{};
+                const LONG frame=Rd(g_armPaletteFrameToken);
+                if(lastFrame[key]!=frame){lastFrame[key]=frame;++samples[key];}
+                if(samples[key]<=3){
+                    float skin[3][4]{},localW[4][4]{};
+                    const HRESULT s=dev->GetVertexShaderConstantF(5+19*3,&skin[0][0],3);
+                    const HRESULT l=dev->GetVertexShaderConstantF(230,&localW[0][0],4);
+                    Log("tmd-right-wrist final: frame=%ld eye=%u hands=%u L2=%ld R2=%ld valid=%d moved=%d route=%s drawSegments=%d skinHr=%08lX localHr=%08lX skin=[%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g] local=[%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g] targetRaw=%ld,%ld,%ld",
+                        frame,eye,hands,Rd(g_rawAltTrigger),Rd(g_rawTrigger),
+                        g_handPoseValid[1]&&g_handPositionValid[1]?1:0,g_thisDrawMoved,
+                        cuffBuffer&&nativeIndices.valid?"SVNC":"native",nSeg,s,l,
+                        skin[0][0],skin[0][1],skin[0][2],skin[0][3],
+                        skin[1][0],skin[1][1],skin[1][2],skin[1][3],
+                        skin[2][0],skin[2][1],skin[2][2],skin[2][3],
+                        localW[0][0],localW[0][1],localW[0][2],localW[0][3],
+                        localW[1][0],localW[1][1],localW[1][2],localW[1][3],
+                        localW[2][0],localW[2][1],localW[2][2],localW[2][3],
+                        localW[3][0],localW[3][1],localW[3][2],localW[3][3],
+                        Rd(g_handOffX),Rd(g_handOffY),Rd(g_handOffZ));
+                }
+            }
+        }
         if(g_tmdShortGauntlet && independentRegs && (assemblyGlove||assemblyDevice)) {
             static LONG frames[8]{};
             static unsigned seen[8]{};
