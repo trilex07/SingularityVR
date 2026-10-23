@@ -6576,7 +6576,9 @@ static bool g_knifeHandTmdThisDraw = false;
 static armbind::Mat g_knifeHandWrist{}, g_knifeHandLocal{};
 static LONG g_knifeJointFrame = -1;
 static unsigned g_knifeJointEyes = 0;
+static std::uint64_t g_knifeJointPickup = 0;
 static unsigned long g_knifeJointDraws = 0;
+static knifehand::JointRoute g_knifeTmdRoute;
 static hipknife::Calls NativeKnifeDriverCalls();
 static bool g_glovePoseValid[2]{};
 static bool g_gloveReplacementSeen=false;
@@ -18495,9 +18497,10 @@ static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT v
     const bool restored=guard.Restore();
     if(!ok||!restored){KnifeHandDisable(restored?"joint draw failed":"joint state restore failed");return;}
     g_knifeJointEyes|=bit;++g_knifeJointDraws;
+    g_knifeJointPickup=g_hipKnifeState.pickedMs;
     static unsigned notes=0;if(notes++<4)
-        Log("knife-hand: native joint eye=%d frame=%ld holder=%d camera=c%d sharedDepth=%ux%u sceneLit=%d; original glove material, original knife UV",
-            g_knifeStereoEye,frame,g_hipKnifeState.held,layout.viewProjection,desc.Width,desc.Height,sceneLit);
+        Log("knife-hand: native joint eye=%d frame=%ld holder=%d tmdCuff=%d gloveTris=%u camera=c%d sharedDepth=%ux%u sceneLit=%d; original glove material, original knife UV",
+            g_knifeStereoEye,frame,g_hipKnifeState.held,g_knifeHandTmdThisDraw?1:0,gloveTriangles,layout.viewProjection,desc.Width,desc.Height,sceneLit);
 }
 static float g_customGloveNativeScale=1.f;
 static void LogShortTmdGate(tmdgauntlet::Gate gate,UINT verts,UINT first,UINT triangles) {
@@ -20471,7 +20474,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     const bool nativeCuff=independentRegs&&g_nativeGlovePoseThisDraw&&(NativeGlovesEligible()||NativeKnifeOffHandEligible())&&
         t==D3DPT_TRIANGLELIST&&(numVertices==3314||numVertices==2924)&&
         startIndex==0&&primCount==4830&&nSeg==1&&segStart[0]==0&&segPrims[0]==4830;
-    const bool tmdKnifeCuff=independentRegs&&g_knifeHandTmdThisDraw&&g_knifeHandPoseThisDraw&&
+    const bool tmdKnifeCuff=independentRegs&&!g_knifeTmdRoute.fallback&&
+        g_knifeHandTmdThisDraw&&g_knifeHandPoseThisDraw&&
         t==D3DPT_TRIANGLELIST&&(numVertices==7444||numVertices==2626)&&
         startIndex==0&&primCount==4402&&nSeg==1&&segStart[0]==0&&segPrims[0]==4402;
     const int cuffProfile=glovecuffs::Profile(numVertices,startIndex,primCount);
@@ -28361,8 +28365,9 @@ static bool g_mirrorProbeCurtain=false;
 void ReleaseWristResources() {
     ResetScopePip();
     g_knifeMeleeReference.Reset();
+    g_knifeTmdRoute.Reset();
     nativefx::Release();
-    g_knifeHandPoseThisDraw=false;g_knifeHandTmdThisDraw=false;g_knifeJointFrame=-1;g_knifeJointEyes=0;
+    g_knifeHandPoseThisDraw=false;g_knifeHandTmdThisDraw=false;g_knifeJointFrame=-1;g_knifeJointEyes=0;g_knifeJointPickup=0;
     g_nativeGloveRenderer.ReleaseGPU();g_nativeGlovePoseThisDraw=false;
     g_xrCaptureAlphaPass.Release();
     g_nativeCuffRenderer.ReleaseGPU();
@@ -28608,8 +28613,29 @@ void DrawHipKnife(IDirect3DDevice9* dev){
     // matrices/shared depth. Never redraw it on top as an independent overlay.
     const LONG frame = Rd(g_sceneModeFrame);
     const bool jointSubmitted=g_knifeHandGrip && g_hipKnifeState.held >= 0 &&
+       g_knifeJointPickup==g_hipKnifeState.pickedMs &&
        (g_knifeJointFrame == frame || g_knifeJointFrame == frame - 1) &&
        g_knifeJointEyes != 0;
+    // In the captured pickup frame the overlay ran BEFORE the TMD glove's
+    // foreground draw, so the old receipt-based check submitted a standalone
+    // knife and then a second knife with the glove in both eyes. Reserve the
+    // current frame for the exact native TMD cuff route when it can draw.
+    const bool tmdJointEligible=g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&
+        g_hipKnifeVisible&&g_hipKnifeState.held==1&&Rd(g_haveTMD)==1&&
+        DualWeaponTmdContext()&&g_independentHands&&Rd(g_gloveIsolate)==2&&
+        g_nativeCuffClosure&&g_nativeCuffRenderer.Ready()&&
+        armnatural::TmdBind().ready&&g_handPoseValid[1]&&g_handPositionValid[1]&&
+        !Rd(g_twoHandActive)&&!NativeAnimatedHandsNow()&&
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&
+        g_xrSessionState==XR_SESSION_STATE_FOCUSED&&Rd(g_dupDraws)!=0&&g_haveEyes;
+    const bool reserveTmd=g_knifeTmdRoute.Native(g_hipKnifeState.pickedMs,frame,
+        tmdJointEligible,g_knifeJointFrame,g_knifeJointEyes);
+    if(reserveTmd){
+        static unsigned receipts=0;
+        if(receipts++<4)Log("knife-hand: reserve TMD cuff joint frame=%ld previousJoint=%ld eyes=%u; standalone overlay suppressed",
+            frame,g_knifeJointFrame,g_knifeJointEyes);
+        return;
+    }
     if(jointSubmitted)return;
     // A held knife without the original glove/depth joint takes the standalone
     // OpenXR-pose renderer. Record that route once per holder/TMD mode so a

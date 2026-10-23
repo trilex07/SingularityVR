@@ -7,6 +7,21 @@
 
 static void ClipTests(){
     using namespace knifehand;
+    JointRoute route;
+    // The overlay is visited before the TMD material-0 joint in a pickup
+    // frame: reserve both eyes for one native owner, not two knife copies.
+    assert(route.Native(41,100,true,-1,0));
+    assert(route.Native(41,101,true,100,3));
+    assert(route.Native(41,102,true,101,3));
+    assert(!route.fallback);
+    // A permanently absent joint switches once to the standalone fallback.
+    route.Reset();
+    assert(route.Native(42,200,true,-1,0));
+    assert(route.Native(42,201,true,-1,0));
+    assert(!route.Native(42,202,true,-1,0));
+    assert(route.fallback && !route.Native(42,203,true,202,3));
+    assert(route.Native(43,204,true,-1,0)); // new pickup rearms native route
+    assert(!route.Native(43,205,false,-1,0)); // invalid tracking permits fallback
     const Viewport vp{10,20,800,600,.1f,.9f};
     const ClipVertex base[3]={{{-.5f,-.5f,.5f,1},0,0},{{.5f,-.5f,.5f,1},1,0},{{0,.5f,.5f,1},.5f,1}};
     ClipVertex out[12];assert(ClipTriangle(base,out)==3);

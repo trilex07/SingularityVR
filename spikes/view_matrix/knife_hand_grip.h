@@ -6,6 +6,25 @@
 #include <cstdint>
 
 namespace knifehand {
+// The overlay pass can precede the foreground glove draw in the same frame.
+// Reserve that frame for the native glove+knife joint, otherwise both routes
+// submit a knife. If the joint fails for two active frames, lock to the
+// standalone fallback for this pickup; never switch owners mid-frame.
+struct JointRoute {
+    std::uint64_t pickup=0;
+    long firstFrame=-1;
+    bool fallback=false;
+    void Reset(){pickup=0;firstFrame=-1;fallback=false;}
+    bool Native(std::uint64_t generation,long frame,bool eligible,long lastJointFrame,unsigned eyes){
+        if(!eligible){Reset();return false;}
+        if(generation!=pickup||firstFrame<0||frame<firstFrame){
+            pickup=generation;firstFrame=frame;fallback=false;
+        }
+        if(!fallback&&frame-firstFrame>=2 &&
+           !(lastJointFrame>=frame-1 && (eyes&3u)==3u))fallback=true;
+        return !fallback;
+    }
+};
 // The fitted SVNG mount is in the noTMD component bind space. A TMD glove
 // uses a different wrist bind, but the same physical wrist joint: preserve
 // the measured knife-to-wrist transform instead of reusing component axes.
