@@ -1,5 +1,22 @@
 # STATUS — session handoff
 
+## 2026-10-23 — M09 haptics verified + HELD pending M01 (user decision)
+
+M09 candidate re-checked on disk after handoff: branch
+`integration/m09-haptics-on-main` @ `e630f64` (= origin), x86 PE32, `/O2`,
+SHA256 `51DB9D39AC52C6FFEEF0FBFA64209C44BE28D46486CF9D5AFAD695EFCDFBA9BF`,
+build manifest `build/m09-haptics-on-main/d3d9.build.json`. Code audit in
+`d3d9.cpp` (12442–12526): tracking gate `(g_handPoseValid || g_handPositionValid)`,
+TMD overlay cleared on pause/cinematic/menu/panel/non-FOCUSED, `TmdPulses`
+default 0, 200 ms pulse preserved, trace receipts capped (STOP 16 / SUBMIT 32).
+User chose to WAIT FOR M01: do **not** deploy M09 until SOL's targeted
+Valkyrie/Volk reload correction passes on Steam, then rebase M09 onto the
+accepted gameplay base. Steam verified restored: DLL `A61C3B53…`, INI
+`4EA3857A…` (hash-confirmed on disk 2026-10-23). `fix/side-shoulder-mag-pickup-20261023`
+still at `1c358e2` — targeted M01 correction NOT yet pushed by SOL. No Steam
+writes this session; M01 evidence at 8789865 re-read (primary mismatch =
+carry/insertion/discard policy, not radius).
+
 ## 2026-10-23 — L2 disappearing gun: native gun_scale producer — L1_PASS / L2_PASS
 
 `fix/volk-impulse-palette-producer` builds on the support-gauntlet candidate.
