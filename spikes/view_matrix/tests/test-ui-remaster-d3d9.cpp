@@ -56,6 +56,15 @@ static int Run(bool ex){
         assert(uiremaster::Valid(q,eye,64,128,64));
         uiremaster::Vertex v[4]{};uiremaster::BuildQuad(q,uv,v);
         if(SUCCEEDED(dev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,2,v,sizeof(v[0]))))++draws;
+        // P1 selected row and localized tab use the same panel/eye coordinates.
+        const auto focus=uiremaster::Focus(q,16,13,1,0);
+        assert(uiremaster::Valid(focus,eye,64,128,64));
+        uiremaster::BuildQuad(focus,uiremaster::focus,v);
+        assert(SUCCEEDED(dev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,2,v,sizeof(v[0]))));
+        const uiremaster::Rect tab{q.right-22,q.top+2,q.right-2,q.top+8};
+        assert(uiremaster::Valid(tab,eye,64,128,64));
+        uiremaster::BuildQuad(tab,uiremaster::Tab(3),v);
+        assert(SUCCEEDED(dev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,2,v,sizeof(v[0]))));
     }
     assert(SUCCEEDED(dev->EndScene()));assert(draws==2);
     assert(SUCCEEDED(state->Apply()));

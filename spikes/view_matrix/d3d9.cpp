@@ -27582,29 +27582,34 @@ static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR 
 }
 
 // M02 first slice. No texture, COM work or draw-path change when OFF.
-static LONG g_uiRemasterRuntime=0,g_uiRemasterState=0;
+static LONG g_uiRemasterRuntime=0,g_uiRemasterSettings=0,g_uiRemasterState=0;
 static IDirect3DTexture9* g_uiRemasterNeutral=nullptr;
+static IDirect3DTexture9* g_uiRemasterPl=nullptr;
+static IDirect3DTexture9* g_uiRemasterEn=nullptr;
+static LONG g_uiRemasterPlState=0,g_uiRemasterEnState=0;
 static IDirect3DStateBlock9* g_uiRemasterSaved=nullptr;
 static void ReleaseUiRemasterResources(){
     if(g_uiRemasterNeutral){g_uiRemasterNeutral->Release();g_uiRemasterNeutral=nullptr;}
+    if(g_uiRemasterPl){g_uiRemasterPl->Release();g_uiRemasterPl=nullptr;}
+    if(g_uiRemasterEn){g_uiRemasterEn->Release();g_uiRemasterEn=nullptr;}
+    InterlockedExchange(&g_uiRemasterPlState,0);
+    InterlockedExchange(&g_uiRemasterEnState,0);
     if(g_uiRemasterSaved){g_uiRemasterSaved->Release();g_uiRemasterSaved=nullptr;}
     InterlockedExchange(&g_uiRemasterState,0);
 }
-static bool LoadUiRemasterNeutral(IDirect3DDevice9* dev){
-    if(!dev||!Rd(g_uiRemasterRuntime))return false;
-    if(Rd(g_uiRemasterState)!=0)return Rd(g_uiRemasterState)==1;
-    auto fail=[](const char* why){InterlockedExchange(&g_uiRemasterState,-1);
-        Log("M02 UI: neutral atlas unavailable (%s); accepted panel unchanged",why);return false;};
+static bool LoadUiRemasterAtlas(IDirect3DDevice9* dev,const char* name,UINT expectedW,
+                                UINT expectedH,IDirect3DTexture9** output){
+    if(!dev||!name||!output)return false;
     char dll[MAX_PATH]{};HMODULE self=nullptr;
     if(!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|
-        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,(LPCSTR)&LoadUiRemasterNeutral,&self)||
-        !GetModuleFileNameA(self,dll,MAX_PATH))return fail("module path");
-    char* slash=strrchr(dll,'\\');if(!slash)return fail("module directory");*slash=0;
+        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,(LPCSTR)&LoadUiRemasterAtlas,&self)||
+        !GetModuleFileNameA(self,dll,MAX_PATH))return false;
+    char* slash=strrchr(dll,'\\');if(!slash)return false;*slash=0;
     char path[MAX_PATH]{};
-    _snprintf_s(path,sizeof(path),_TRUNCATE,"%s\\vr-assets\\ui\\remaster\\ui_atlas_neutral.png",dll);
+    _snprintf_s(path,sizeof(path),_TRUNCATE,"%s\\vr-assets\\ui\\remaster\\%s",dll,name);
     wchar_t wide[MAX_PATH]{};
-    if(!MultiByteToWideChar(CP_ACP,0,path,-1,wide,MAX_PATH))return fail("path encoding");
-    CoInitializeEx(nullptr,COINIT_MULTITHREADED);
+    if(!MultiByteToWideChar(CP_ACP,0,path,-1,wide,MAX_PATH))return false;
+    const HRESULT comInit=CoInitializeEx(nullptr,COINIT_MULTITHREADED);
     IWICImagingFactory* fac=nullptr;IWICBitmapDecoder* dec=nullptr;
     IWICBitmapFrameDecode* frame=nullptr;IWICFormatConverter* conv=nullptr;
     UINT w=0,h=0;std::vector<BYTE> pixels;
@@ -27616,19 +27621,29 @@ static bool LoadUiRemasterNeutral(IDirect3DDevice9* dev){
         SUCCEEDED(fac->CreateFormatConverter(&conv))&&conv&&
         SUCCEEDED(conv->Initialize(frame,GUID_WICPixelFormat32bppBGRA,WICBitmapDitherTypeNone,
             nullptr,0,WICBitmapPaletteTypeCustom))&&
-        SUCCEEDED(conv->GetSize(&w,&h))&&w==4096&&h==2048;
+        SUCCEEDED(conv->GetSize(&w,&h))&&w==expectedW&&h==expectedH;
     if(ok){pixels.resize((size_t)w*h*4);
         ok=SUCCEEDED(conv->CopyPixels(nullptr,w*4,(UINT)pixels.size(),pixels.data()));}
     if(conv)conv->Release();if(frame)frame->Release();if(dec)dec->Release();if(fac)fac->Release();
-    if(!ok)return fail("WIC decode or dimensions");
+    if(SUCCEEDED(comInit))CoUninitialize();
+    if(!ok)return false;
     IDirect3DTexture9* tex=nullptr;
     if(FAILED(dev->CreateTexture(w,h,1,D3DUSAGE_DYNAMIC,D3DFMT_A8R8G8B8,
-        D3DPOOL_DEFAULT,&tex,nullptr))||!tex)return fail("texture create");
+        D3DPOOL_DEFAULT,&tex,nullptr))||!tex)return false;
     D3DLOCKED_RECT lock{};
-    if(FAILED(tex->LockRect(0,&lock,nullptr,D3DLOCK_DISCARD))){tex->Release();return fail("texture lock");}
+    if(FAILED(tex->LockRect(0,&lock,nullptr,D3DLOCK_DISCARD))){tex->Release();return false;}
     for(UINT y=0;y<h;++y)memcpy((BYTE*)lock.pBits+(size_t)y*lock.Pitch,
         pixels.data()+(size_t)y*w*4,(size_t)w*4);
-    tex->UnlockRect(0);g_uiRemasterNeutral=tex;
+    tex->UnlockRect(0);*output=tex;
+    return true;
+}
+static bool LoadUiRemasterNeutral(IDirect3DDevice9* dev){
+    if(!dev||!Rd(g_uiRemasterRuntime))return false;
+    if(Rd(g_uiRemasterState)!=0)return Rd(g_uiRemasterState)==1;
+    if(!LoadUiRemasterAtlas(dev,"ui_atlas_neutral.png",4096,2048,&g_uiRemasterNeutral)){
+        InterlockedExchange(&g_uiRemasterState,-1);
+        Log("M02 UI: neutral atlas unavailable; accepted panel unchanged");return false;
+    }
     InterlockedExchange(&g_uiRemasterState,1);
     Log("M02 UI: neutral atlas ready 4096x2048 (runtime draw still requires panel)");
     return true;
@@ -27666,6 +27681,79 @@ static bool DrawUiRemasterPlate(IDirect3DDevice9* dev,const settingspanel::Layou
     if(receipts<4){++receipts;Log("M02 UI: plate eyes=%u/%d restore=%d back=%dx%d",drawn,eyes,
         restored?1:0,backW,backH);}
     return drawn==(unsigned)eyes&&restored;
+}
+static bool DrawUiRemasterSprite(IDirect3DDevice9* dev,IDirect3DTexture9* tex,
+                                 uiremaster::Rect rect,uiremaster::Sprite sprite){
+    uiremaster::Vertex v[4]{};uiremaster::BuildQuad(rect,sprite,v);
+    if(FAILED(dev->SetTexture(0,tex)))return false;
+    return SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(v[0])));
+}
+// P1 is independently OFF. The accepted plate and native text/input remain
+// untouched if either atlas is absent. All decoration uses the exact row rects.
+static bool DrawUiRemasterSettings(IDirect3DDevice9* dev,const settingspanel::Layout& l,
+                                   int eyes,int backW,int backH,int page,int row){
+    if(!Rd(g_uiRemasterRuntime)||!Rd(g_uiRemasterSettings)||!g_origDrawPrimUP||
+       !LoadUiRemasterNeutral(dev))return false;
+    const bool polish=PolishLocalization::PL().IsPolishEnabled();
+    IDirect3DTexture9** localized=polish?&g_uiRemasterPl:&g_uiRemasterEn;
+    LONG* localizedState=polish?&g_uiRemasterPlState:&g_uiRemasterEnState;
+    if(Rd(*localizedState)<0)return false;
+    if(!*localized){
+        const char* name=polish?"ui_atlas_localized_pl.png":"ui_atlas_localized_en.png";
+        if(!LoadUiRemasterAtlas(dev,name,2048,1024,localized)){
+            InterlockedExchange(localizedState,-1);
+            Log("M02 settings: %s atlas unavailable; original rows retained",polish?"pl":"en");
+            return false;
+        }
+        InterlockedExchange(localizedState,1);
+    }
+    if(!g_uiRemasterSaved&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&g_uiRemasterSaved)))return false;
+    if(!g_uiRemasterSaved||FAILED(g_uiRemasterSaved->Capture()))return false;
+    dev->SetRenderState(D3DRS_ZENABLE,FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+    dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_LINEAR);
+    dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_LINEAR);
+    dev->SetPixelShader(nullptr);dev->SetVertexShader(nullptr);
+    dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
+    bool drawn=true;
+    for(int eye=0;eye<eyes;++eye){
+        const auto plate=uiremaster::Plate(eye,eyes,l.half,l.width,l.height,l.y,l.px);
+        const int cx=eye*l.half+l.half/2;
+        const uiremaster::Rect header{plate.left+l.px,plate.top+l.px,plate.right-l.px,
+                                       plate.top+2*l.line};
+        const uiremaster::Rect tab{plate.right-22*l.px,plate.top+2*l.px,
+                                    plate.right-2*l.px,plate.top+8*l.px};
+        const auto focus=uiremaster::Focus(plate,l.y,l.line,l.px,row);
+        const uiremaster::Rect footer{cx-l.width/2,l.y+l.line*(l.rows+2),
+                                       cx+l.width/2,l.y+l.line*(l.rows+3)};
+        const int iconSize=8*l.px;
+        const uiremaster::Rect r2{plate.right-iconSize-2*l.px,focus.top,
+                                   plate.right-2*l.px,focus.top+iconSize};
+        if(!uiremaster::Valid(plate,eye,l.half,backW,backH)||
+           !uiremaster::Valid(header,eye,l.half,backW,backH)||
+           !uiremaster::Valid(tab,eye,l.half,backW,backH)||
+           !uiremaster::Valid(focus,eye,l.half,backW,backH)||
+           !uiremaster::Valid(footer,eye,l.half,backW,backH)||
+           !uiremaster::Valid(r2,eye,l.half,backW,backH)) {drawn=false;continue;}
+        drawn &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,header,uiremaster::header);
+        drawn &= DrawUiRemasterSprite(dev,*localized,tab,uiremaster::Tab(page));
+        drawn &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,focus,uiremaster::focus);
+        drawn &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,r2,uiremaster::senseR2);
+        drawn &= DrawUiRemasterSprite(dev,*localized,footer,uiremaster::footer);
+    }
+    const bool restored=SUCCEEDED(g_uiRemasterSaved->Apply());
+    static unsigned receipts=0;if(receipts<4){++receipts;
+        Log("M02 settings: page=%d row=%d eyes=%d drawn=%d restore=%d lang=%s",
+            page,row,eyes,drawn?1:0,restored?1:0,polish?"pl":"en");}
+    return drawn&&restored;
 }
 
 static void DrawVrPanel(IDirect3DDevice9* dev) {
@@ -27801,6 +27889,8 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
     ClearRects(dev, r, n, D3DCOLOR_XRGB(12, 17, 20));
     if(Rd(g_uiRemasterRuntime))DrawUiRemasterPlate(dev,layout,eyes,
         (int)panelDesc.Width,(int)panelDesc.Height);
+    const bool remasterSettingsReady=DrawUiRemasterSettings(dev,layout,eyes,
+        (int)panelDesc.Width,(int)panelDesc.Height,g_panelPage,g_panelRow);
 
     // Katorga instrument-panel frame: restrained steel rails and a warm
     // status marker. These are decoration only; the hit geometry is unchanged.
@@ -27834,7 +27924,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         r[n].x2 = cx + boxW / 2 + px * 2; r[n].y2 = ry + (kGlyphH + 1) * px;
         ++n;
     }
-    ClearRects(dev, r, n, D3DCOLOR_XRGB(43, 54, 51));
+    if(!remasterSettingsReady)ClearRects(dev, r, n, D3DCOLOR_XRGB(43, 54, 51));
 
     // Title, rows, and the key hint - the hint matters because nothing else on screen says how to
     // get out, and a panel you cannot close is worse than no panel.
@@ -27858,7 +27948,7 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         n = TextRects(r, n, kCap, x0, y0 + lh * (nRows + 2), px,
                       PanelPageFooter(g_panelPage));
     }
-    ClearRects(dev, r, n, D3DCOLOR_XRGB(168, 178, 190));
+    if(!remasterSettingsReady)ClearRects(dev, r, n, D3DCOLOR_XRGB(168, 178, 190));
     n += bodyRects;
     // ⭐ run 248: loud, not silent. A page that cannot fit must SAY so - the failure it replaces
     // was indistinguishable from the feature being broken, and cost a headset run to report.
@@ -34744,6 +34834,7 @@ void LoadIniSettings() {
     g_vrPromptTokens=GetPrivateProfileIntA("Render","VrPromptTokens",0,path)!=0;
     g_vrSettingsMinimal=GetPrivateProfileIntA("Render","VrSettingsMinimal",0,path)!=0;
     InterlockedExchange(&g_uiRemasterRuntime,GetPrivateProfileIntA("Render","UiRemasterRuntime",0,path)?1:0);
+    InterlockedExchange(&g_uiRemasterSettings,GetPrivateProfileIntA("Render","UiRemasterSettings",0,path)?1:0);
     g_vrSettingsSessionOnly=GetPrivateProfileIntA("Diagnostic","VrSettingsSessionOnly",0,path)!=0;
     InterlockedExchange(&g_reloadHintsEnabled,
         GetPrivateProfileIntA("Input","ReloadHints",0,path)!=0);
