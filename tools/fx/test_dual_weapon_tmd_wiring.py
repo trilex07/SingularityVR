@@ -15,6 +15,7 @@ class Wiring(unittest.TestCase):
         self.assertNotIn('InterlockedExchange',helper)
     def test_no_tmd_melee_window(self):
         self.assertEqual(CPP.count('dualtmd::MeleeWindow(dualContext,g_hipKnifeState.held>=0)'),2)
+        self.assertEqual(CPP.count('tmdgauntlet::ArmImpulseMelee(g_tmdShortGauntlet,Rd(g_haveTMD)==1,g_hipKnifeState.held>=0)'),2)
         self.assertIn('ArmMeleeWindowFromKnife();',CPP) # separate real-knife path retained
     def test_shared_support_and_release(self):
         self.assertIn('feedGame && WeaponPresentationInHands()',CPP)
@@ -23,9 +24,8 @@ class Wiring(unittest.TestCase):
     def test_original_hardware_draw_scope(self):
         start=CPP.index('if (isolateTmdHardware) {')
         block=CPP[start:CPP.index('for (int s = 0; s < nSeg;',start)]
-        self.assertIn('gloveisolate::kTmdHardwareFaces',block)
+        self.assertIn('tmdgauntlet::DrawHardwareFallback',block)
         self.assertIn('g_origDrawIndexedPrim',block)
-        self.assertIn('startIndex + run.first * 3,run.last-run.first+1',block)
         self.assertIn('if(dualHardware&&(!independentRegs||Rd(g_twoHandActive)',CPP)
         # Original primitive list is emitted inside the existing per-eye lambda.
         pair=CPP.rfind('StereoPair(',0,start)
@@ -38,8 +38,11 @@ class Wiring(unittest.TestCase):
         self.assertIn('[signature counts, NOT pixels]',CPP)
     def test_hardware_selection_precedes_broad_arm_hide(self):
         block=CPP[CPP.rindex('static bool FgHidden(IDirect3DDevice9* dev,UINT verts,'):]
+        short=block.index('gloveisolate::IsArmFleshSection')
         gate=block.index('gloveisolate::TmdHardwareCutApplies')
-        self.assertLess(gate,block.index('GlovesUntilWeaponNow()'))
+        stray=block.index('gloveisolate::IsStrayFingerSection')
+        self.assertLess(short,gate)
+        self.assertLess(gate,stray)
         self.assertIn('return Rd(g_twoHandActive)||!g_handPoseValid[0]||!g_handPositionValid[0];',block[:gate+400])
 
 if __name__=='__main__':unittest.main()
