@@ -22,6 +22,8 @@ static void Away(State& s,Frame& f){
     f.nowMs+=11;CHECK(Update(s,f)==Event::None);CHECK(s.armed);
 }
 int main(){
+    CHECK(Available(false,false));CHECK(Available(false,true));
+    CHECK(!Available(true,false));CHECK(Available(true,true));
     {const Pose hip=Hip({0,1,0},0);CHECK(hip.p.x<0&&hip.p.y==.5f&&hip.p.z<0);
      const Pose turned=Hip({0,1,0},3.14159265f*.5f);CHECK(std::fabs(turned.p.x+.06f)<1e-5f&&turned.p.z>.24f);
      const Q down=Multiply(hip.q,{-.70710678f,0,0,.70710678f});CHECK(Rotate(down,{0,0,-1}).y<-.999f);}
@@ -91,6 +93,13 @@ int main(){
     {State s;Frame f=Base();Pick(s,f,0); // left-held pre-TMD, then TMD arrives
      f.nativeKnife=false;f.hasTMD=true;f.noWeapon=true;
      CHECK(Update(s,f)==Event::Reset);CHECK(s.held==-1);}
+    {State s;Frame f=Base();Pick(s,f,1);
+     s.TriggerAttack(f.nowMs);CHECK(s.Pulse(f.nowMs));
+     f.hasTMD=true;f.nativeKnife=false;f.enabled=Available(true,false);
+     CHECK(Update(s,f)==Event::Reset);CHECK(s.held==-1&&!s.Pulse(f.nowMs));
+     f.nowMs+=11;f.grip[1]=true;CHECK(Update(s,f)==Event::None);
+     CHECK(s.held==-1); // no pickup or attack while TMD owns the slot
+    }
     {State s;Frame f=Base();Pick(s,f);Away(s,f);
      unsigned swings=0;
      for(int i=1;i<=8;++i){const float a=float(i)*.13f;f.hand[0].q={0,std::sin(a*.5f),0,std::cos(a*.5f)};

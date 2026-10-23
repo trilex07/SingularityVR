@@ -4,6 +4,9 @@
 #include <cstdint>
 
 namespace hipknife {
+// Feature availability follows native TMD ownership, independently of the
+// older IgnoreTMD gesture override. This policy applies to input and draws.
+inline bool Available(bool tmdOwned,bool allowWithTmd){return !tmdOwned||allowWithTmd;}
 using V=uipointer::V;
 using uipointer::Dot;
 using uipointer::Finite;

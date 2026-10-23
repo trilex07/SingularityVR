@@ -2481,10 +2481,16 @@ static int g_knifeStereoEye=-1;
 // Independent, default-OFF pre-TMD knife candidate; render/input state is
 // updated by the existing XR frame owner, never a new hook or worker thread.
 int g_hipKnifeEnabled=0;
-// MAIN round 17: escape hatch for the TMD dispute (user reports no TMD while
-// the exact-FName mTMD read says acquired). Default 0 = trust the engine
-// (pre-TMD both hands, post-TMD right hand only). =1 forces the pre-TMD
-// both-hands rule regardless of mTMD. Restart required.
+// Once the native TMD is owned, the knife is unavailable by default. Keep an
+// explicit opt-in for a later, physically validated TMD/knife joint fix.
+static bool g_hipKnifeWithTMD=false;
+static volatile LONG g_knifeTmdOwned=-1;
+static bool KnifeDisabledByTmd(){
+    const LONG owned=Rd(g_knifeTmdOwned);
+    return !hipknife::Available(owned==1||(owned<0&&Rd(g_haveTMD)==1),g_hipKnifeWithTMD);
+}
+// Legacy hand-selection override. It cannot re-enable the knife while the
+// separate HipKnifeWithTMD availability policy disables it.
 int g_hipKnifeIgnoreTMD=0;
 bool g_hipKnifeReady=false,g_hipKnifeVisible=false;
 hipknife::Config g_hipKnifeConfig{};
@@ -10005,7 +10011,7 @@ bool InitXRInput() {
                 }
             }
         }
-        Log("hip knife: cache=%s verts=%u tris=%u original diffuse=%ux%u; pre-TMD both hands, post-TMD right hand only, native camera trace",
+        Log("hip knife: cache=%s verts=%u tris=%u original diffuse=%ux%u; pre-TMD knife, post-TMD disabled by default, native camera trace",
             g_hipKnifeReady?"READY":"MISSING/INVALID (disabled)",
             g_hipKnifeRenderer.Vertices(),g_hipKnifeRenderer.Triangles(),
             g_hipKnifeRenderer.TextureWidth(),g_hipKnifeRenderer.TextureHeight());
@@ -11201,10 +11207,15 @@ void SyncXRInput(XrTime displayTime) {
         const bool impulseOk=g_impulseBtnIdx>=0&&g_impulseBtnIdx<kPadButtonCount&&
             g_padButtons[g_impulseBtnIdx].mask==XI_RSHOULDER;
         const bool tmdReadable=pawn&&g_offTMD>=0&&Readable((void*)(pawn+g_offTMD),4);
-        f.nativeKnife=tmdReadable&&*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)==0&&impulseOk;
-        f.hasTMD=tmdReadable&&*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)!=0&&impulseOk;
+        const bool ownsTmd=tmdReadable&&*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)!=0;
+        InterlockedExchange(&g_knifeTmdOwned,tmdReadable?(ownsTmd?1:0):-1);
+        f.nativeKnife=tmdReadable&&!ownsTmd&&impulseOk;
+        f.hasTMD=ownsTmd&&impulseOk;
         // MAIN round 17/19: IgnoreTMD=1 forces the pre-TMD rule (TMD dispute hatch).
         if(g_hipKnifeIgnoreTMD){f.hasTMD=false;f.nativeKnife=impulseOk;}
+        // Ownership, not the legacy IgnoreTMD presentation override, decides
+        // whether the knife exists. Update resets any held knife and pulse.
+        if(KnifeDisabledByTmd())f.enabled=false;
         f.alive=pawn&&g_offHealth>=0&&Readable((void*)(pawn+g_offHealth),4)&&
             *reinterpret_cast<const int*>(pawn+g_offHealth)>0;
         f.noWeapon=!WeaponPresentationInHands()||Rd(g_weaponHolstered);
@@ -18024,7 +18035,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     }
     if(gloves&&(nativeBoth||nativeOffKnife||nativeCarry)&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount&&
        g_nativeGloveRenderer.Ensure(dev)){
-        const bool joint=g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&g_hipKnifeVisible&&
+        const bool joint=!KnifeDisabledByTmd()&&g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&g_hipKnifeVisible&&
             (g_hipKnifeState.held==0||g_hipKnifeState.held==1);
         const int held=g_hipKnifeState.held;
         if(joint&&g_knifeTrackedMelee){
@@ -18052,7 +18063,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // its real right wrist, while the noTMD-only joint route above cannot
     // publish a wrist here. Retarget the measured SVNG mount through the two
     // bind wrists rather than using the standalone OpenXR overlay pose.
-    if(tmdGloves&&g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&
+    if(!KnifeDisabledByTmd()&&tmdGloves&&g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&
        g_hipKnifeVisible&&g_hipKnifeState.held==1&&handValid[1]&&
        !Rd(g_twoHandActive)&&wristSlot[1]>=0&&g_nativeCuffClosure&&
        g_nativeCuffRenderer.Ready()&&armnatural::TmdBind().ready){
@@ -18426,7 +18437,7 @@ static bool NativeGlovesEligible() {
 static bool NativeKnifeOffHandEligible() {
     if (NativeRestraintHandsNow()) return false;
     const int offSide=OffHand();
-    return g_independentHands&&Rd(g_gloveIsolate)==2&&
+    return !KnifeDisabledByTmd()&&g_independentHands&&Rd(g_gloveIsolate)==2&&
         g_gloveExperiment&&g_nativeGloveExperiment&&g_nativeGloveRenderer.Ready()&&
         g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&g_hipKnifeVisible&&
         g_hipKnifeState.held==offSide&&
@@ -18462,7 +18473,7 @@ static void KnifeHandDisable(const char* reason){
     static unsigned notes=0;if(notes++<8)Log("knife-hand: disabled (%s); original gun/hands retained",reason);
 }
 static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT vertices,UINT gloveTriangles){
-    if(!g_knifeHandGrip||!g_knifeHandPoseThisDraw||!g_hipKnifeReady||
+    if(KnifeDisabledByTmd()||!g_knifeHandGrip||!g_knifeHandPoseThisDraw||!g_hipKnifeReady||
        !g_hipKnifeVisible||g_hipKnifeState.held<0||g_hipKnifeState.held>1||g_knifeStereoEye<0)return;
     const LONG frame=Rd(g_sceneModeFrame);
     if(g_knifeJointFrame!=frame){g_knifeJointFrame=frame;g_knifeJointEyes=0;}
@@ -28654,7 +28665,7 @@ static void MaybeLoadHudAtlas(IDirect3DDevice9* dev) {
 }
 
 void DrawHipKnife(IDirect3DDevice9* dev){
-    if(NativeRestraintHandsNow())return;
+    if(NativeRestraintHandsNow()||KnifeDisabledByTmd())return;
     // Held joint assembly was already drawn with the native hand's actual eye
     // matrices/shared depth. Never redraw it on top as an independent overlay.
     const LONG frame = Rd(g_sceneModeFrame);
@@ -30958,7 +30969,7 @@ void DrawHolsterMarker(IDirect3DDevice9* dev) {
 // MAIN round 11: also shown while docked (held<0 no longer gates) so the
 // belt can be FOUND: the user reports never seeing the knife at all.
 void DrawKnifeBeltMarker(IDirect3DDevice9* dev) {
-    if(NativeRestraintHandsNow())return;
+    if(NativeRestraintHandsNow()||KnifeDisabledByTmd())return;
     // SAME hide rule as the Style==1 cue below: no hoops outside focused gameplay
     // (menus, mod panel, cinematics). Legacy path previously ignored menu state.
     if (!VrModeOn() || !Rd(g_dupDraws) || Rd(g_gamePaused) ||
@@ -35511,7 +35522,9 @@ void LoadIniSettings() {
     Log("ini: KnifeTrackedMelee=%d (keep joint knife/controller pose during native attack)",g_knifeTrackedMelee);
     Log("ini: KnifeHandGripEnabled=%d (joint original glove/knife assembly)",g_knifeHandGrip);
     g_hipKnifeIgnoreTMD=GetPrivateProfileIntA("Input","HipKnifeIgnoreTMD",1,path)?1:0;
-    Log("ini: HipKnifeIgnoreTMD=%d (0=trust engine mTMD, 1=force pre-TMD both-hands rule)",g_hipKnifeIgnoreTMD);
+    Log("ini: HipKnifeIgnoreTMD=%d (legacy hand selection; cannot bypass HipKnifeWithTMD=0)",g_hipKnifeIgnoreTMD);
+    g_hipKnifeWithTMD=GetPrivateProfileIntA("Input","HipKnifeWithTMD",0,path)!=0;
+    Log("ini: HipKnifeWithTMD=%d (default 0 hides knife and left belt cue after TMD acquisition)",g_hipKnifeWithTMD?1:0);
     g_hipKnifeConfig.left=std::max(.10f,std::min(.50f,IniSignedInt("Input","HipKnifeLeftCm",25,path)*.01f));
     g_hipKnifeConfig.down=std::max(.20f,std::min(.90f,IniSignedInt("Input","HipKnifeDownCm",50,path)*.01f));
     g_hipKnifeConfig.forward=std::max(-.20f,std::min(.30f,IniSignedInt("Input","HipKnifeForwardCm",6,path)*.01f));
@@ -35520,7 +35533,7 @@ void LoadIniSettings() {
     g_hipKnifeConfig.grabWindowMs = (std::uint64_t)(gw < 0 ? 0 : (gw > 2000 ? 2000 : gw));
     Log("ini: HipKnifeRadiusCm=%.0f HipKnifeGrabWindowMs=%u (r21: wider squeeze-while-reaching pickup)",
         (double)(g_hipKnifeConfig.radius*100.f),(unsigned)g_hipKnifeConfig.grabWindowMs);
-    Log("ini: HipKnifeEnabled=%d (default OFF, restart required; pre-TMD both hands, post-TMD right hand only, native camera trace)",g_hipKnifeEnabled);
+    Log("ini: HipKnifeEnabled=%d (default OFF; post-TMD requires HipKnifeWithTMD=1; native camera trace)",g_hipKnifeEnabled);
     g_holsterConfig.radius = (float)IniSignedInt("Input", "HolsterRadius", 12, path);
     if (g_holsterConfig.radius < 2.0f) g_holsterConfig.radius = 2.0f;
     if (g_holsterConfig.radius > 48.0f) g_holsterConfig.radius = 48.0f;
