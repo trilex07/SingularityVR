@@ -139,6 +139,7 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     in.gun={{right.x,right.y,right.z},{rq.x,rq.y,rq.z,rq.w}};
     Calibration calibration;calibration.ready=f.liveIdentityVerified;calibration.revision=1;
     calibration.gesture.socketLocal={};calibration.gesture.socketRadius=.16f;calibration.gesture.pullDistance=.30f;
+    if(index<2)calibration.gesture.socketRadius=.01f*float(g_nextInsertRadiusCm[index]);
     // Only these two profiles use the new, bounded shoulder capsule. The
     // existing Centurion INI settings do not silently control this path.
     if(index<2){
@@ -244,11 +245,11 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     static unsigned records=0;static int priorReady=-1;const int ready=valid?int(kind):0;
     if(records<160&&(result.event!=Event::None||priorReady!=ready)){
         priorReady=ready;++records;
-        Log("next reload: %s kind=%d phase=%d pawn=%08X weapon=%08X clip=%d reserve=%d size=%d ready=%d native=%d renderWitness=%d permit=%d consumed=%d nativePermits=%ld nativeBlocks=%ld socketDist=%.3f shoulderDist=%.3f t=%llu nativeMagazineDraws=%ld (ammo observer; no writes)",
+        Log("next reload: %s kind=%d phase=%d pawn=%08X weapon=%08X clip=%d reserve=%d size=%d ready=%d native=%d renderWitness=%d permit=%d consumed=%d nativePermits=%ld nativeBlocks=%ld socketDist=%.3f socketRadius=%.3f shoulderDist=%.3f t=%llu nativeMagazineDraws=%ld (ammo observer; no writes)",
             Name(result.event),int(kind),int(t.phase),in.pawn,in.weapon,in.clip,in.reserve,in.capacity,
             valid?1:0,native?1:0,f.liveIdentityVerified?1:0,permit?1:0,f.nativePermitConsumed?1:0,
             Rd(g_nextNativePermits),Rd(g_nextNativeBlocks),
-            hipknife::Length(in.hand-in.socket),hipknife::Length(in.hand-in.pouch),(unsigned long long)now,Rd(g_nextNativeMagazineDraws));
+            hipknife::Length(in.hand-in.socket),calibration.gesture.socketRadius,hipknife::Length(in.hand-in.pouch),(unsigned long long)now,Rd(g_nextNativeMagazineDraws));
     }
 }
 static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertices,UINT first,UINT triangles,float* saved,UINT& reg,
