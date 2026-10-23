@@ -19930,6 +19930,30 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             Log("tmd-short-gauntlet: exact mixed draw seen min=%u type=%u foreground=%ld scene=%ld shadow=%d",
                 minIndex,(unsigned)t,Rd(g_inForeground),Rd(g_rtIsScene),g_boundShaderLayout.shadow?1:0);
     }
+    // Transition-scoped evidence survives the startup census budget. A draw
+    // count alone cannot distinguish an animated-away gun from a dropped draw.
+    bool gunTransitionProbe=false;
+    if(Rd(g_dualWeaponTmdProbe)&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&
+       FgMatchWindow()&&Rd(g_gunVerts)>0&&numVertices==(UINT)Rd(g_gunVerts)) {
+        static LONG previous=-1;static unsigned captures=0;
+        const LONG state=Rd(g_handsStatus)*2+(Rd(g_twoHandActive)?1:0);
+        if(state!=previous&&captures<24){previous=state;++captures;gunTransitionProbe=true;
+            Log("dual-gun transition: frame=%ld hands=%ld support=%ld context=%d weapon=%08X verts=%u first=%u tris=%u nativeHands=%d",
+                Rd(g_armPaletteFrameToken),Rd(g_handsStatus),Rd(g_twoHandActive),DualWeaponTmdContext()?1:0,
+                (unsigned)Rd(g_weaponObj),numVertices,startIndex,primCount,NativeAnimatedHandsNow()?1:0);
+        }
+    }
+    auto gunProbeMatrices=[&](const char* stage,unsigned eye){
+        if(!gunTransitionProbe)return;
+        const int starts[]={g_boundShaderLayout.local,g_boundShaderLayout.bones};
+        for(unsigned group=0;group<2;++group){
+            if(starts[group]<0||starts[group]>252)continue;
+            float rows[4][4]{};const HRESULT h=dev->GetVertexShaderConstantF(starts[group],&rows[0][0],4);
+            Log("dual-gun matrix: stage=%s eye=%u group=%u reg=%d hr=%08lX ride=%d",stage,eye,group,starts[group],h,g_thisDrawMoved);
+            if(SUCCEEDED(h))for(unsigned r=0;r<4;++r)Log("dual-gun row: %u %g %g %g %g",r,rows[r][0],rows[r][1],rows[r][2],rows[r][3]);
+        }
+    };
+    gunProbeMatrices("incoming",0);
     const bool dualProbe=Rd(g_dualWeaponTmdProbe)&&g_dualTmdCensus.Active()&&Rd(g_rtIsScene)&&
         !g_boundShaderLayout.shadow&&FgMatchWindow();
     const bool dualProbeGun=dualProbe&&Rd(g_gunVerts)>0&&numVertices==(UINT)Rd(g_gunVerts);
@@ -20432,6 +20456,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     unsigned assemblyEye=0;
     const HRESULT dhr = FAILED(sleevePaletteHr)?sleevePaletteHr:StereoPair(dev, [&] {
         const unsigned eye=assemblyEye++;
+        gunProbeMatrices("submitting",eye);
         HRESULT hr = D3D_OK;
         if (shortTmdTail) return hr; // audited 17-face right forearm tail, no hardware
         // Bounded receipts from the ACTUALLY BOUND draw, before restoration.
@@ -20523,6 +20548,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         return hr;
     });
     g_scopeLensStaged=false;
+    if(gunTransitionProbe)Log("dual-gun submitted: hr=%08lX eyes=%u segments=%d",dhr,assemblyEye,nSeg);
     if(FAILED(dhr))g_scopeAperture={};
     const HRESULT nativeRestore=nativeIndices.Restore();
     if(shortTmdBuffer && FAILED(dhr))
