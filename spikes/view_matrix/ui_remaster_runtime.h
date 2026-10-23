@@ -17,6 +17,19 @@ constexpr Sprite senseR2=Atlas(1152,1100,64,64,4096,2048);
 constexpr Sprite senseOptions=Atlas(1008,1100,64,64,4096,2048);
 constexpr Sprite senseCircle=Atlas(720,1100,64,64,4096,2048);
 constexpr Sprite footer=Atlas(300,638,900,32,2048,1024);
+constexpr Sprite wheelChassis=Atlas(1900,4,800,800,4096,2048);
+constexpr Sprite wheelHub=Atlas(652,4,260,260,2048,1024);
+constexpr Sprite wheelSelected=Atlas(1944,1100,64,64,4096,2048);
+constexpr Sprite WheelIcon(long verts){
+    switch(verts){
+        case 5799:return Atlas(1976,852,240,110,4096,2048);
+        case 11387:return Atlas(2224,852,240,110,4096,2048);
+        case 8297:return Atlas(2688,852,240,107,4096,2048);
+        case 11389:return Atlas(3608,852,240,86,4096,2048);
+        default:return {};
+    }
+}
+inline bool SpriteValid(Sprite s){return s.u0>=0&&s.v0>=0&&s.u1<=1&&s.v1<=1&&s.u0<s.u1&&s.v0<s.v1;}
 constexpr Sprite Tab(int page){
     switch(page){
         case 0:return Atlas(1580,578,140,36,2048,1024); // general
