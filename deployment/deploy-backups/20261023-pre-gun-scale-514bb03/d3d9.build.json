@@ -1,0 +1,15 @@
+﻿{
+    "builtAt":  "2026-10-23T18:23:29.3275931+02:00",
+    "repository":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR",
+    "branch":  "main-deploy-volk-gun-scale",
+    "commit":  "514bb03a0c7adb4e42261f6cdd593166370a540e",
+    "workingTreeStatus":  [
+                              "?? deployment/deploy-backups/"
+                          ],
+    "optimization":  "/O2",
+    "performanceInstrumentation":  false,
+    "architecture":  "x86 PE32",
+    "machine":  "0x014C",
+    "optionalHeaderMagic":  "0x010B",
+    "sha256":  "19DFDFB7C38751B4127A5C87AA32887F355546E172F20C7776D5CEC5F0B209BE"
+}
