@@ -73,6 +73,29 @@ static void MeleeMath(){
     current=ref;for(unsigned r=0;r<3;++r)current.m[r][r]=2;
     assert(!StabilizeMeleeWrist(actual,baseline,current,trackedMat,bind));assert(!std::memcmp(&actual,&sentinel,sizeof(actual)));
 }
+static void TmdWristMount(){
+    using namespace knifehand;
+    armbind::Mat no{},tmd{},knife{},joint{};
+    for(unsigned i=0;i<4;++i)no.m[i][i]=tmd.m[i][i]=knife.m[i][i]=joint.m[i][i]=1;
+    no.m[3][0]=48;no.m[3][1]=-7;tmd.m[3][0]=51;tmd.m[3][1]=12;
+    knife.m[3][0]=52;knife.m[3][1]=-4;knife.m[3][2]=6;
+    for(float angle:{0.f,.4f,-1.2f,2.4f}){
+        joint.m[0][0]=joint.m[1][1]=std::cos(angle);
+        joint.m[0][1]=std::sin(angle);joint.m[1][0]=-std::sin(angle);
+        joint.m[3][0]=10+angle;joint.m[3][1]=15-angle;
+        armbind::Mat invNo,invTmd,oldSkin,tmdSkin,oldKnife,newMount,newKnife;
+        assert(skeletal::Inverse(invNo.m,no.m)&&skeletal::Inverse(invTmd.m,tmd.m));
+        skeletal::Multiply(oldSkin.m,invNo.m,joint.m);
+        skeletal::Multiply(tmdSkin.m,invTmd.m,joint.m);
+        skeletal::Multiply(oldKnife.m,knife.m,oldSkin.m);
+        assert(RetargetMount(newMount,knife,no,tmd));
+        skeletal::Multiply(newKnife.m,newMount.m,tmdSkin.m);
+        for(unsigned r=0;r<4;++r)for(unsigned c=0;c<4;++c)
+            assert(std::fabs(oldKnife.m[r][c]-newKnife.m[r][c])<1e-4f);
+    }
+    auto invalid=no;invalid.m[0][0]=0;
+    armbind::Mat out{};assert(!RetargetMount(out,knife,invalid,tmd));
+}
 static void CapturedShader(const char* path,bool shadow){
     std::vector<unsigned char> bytes;assert(gloves::Read(path,bytes,65536)&&bytes.size()%4==0);
     std::vector<std::uint32_t> words(bytes.size()/4);std::memcpy(words.data(),bytes.data(),bytes.size());
@@ -81,7 +104,7 @@ static void CapturedShader(const char* path,bool shadow){
     assert(layout.viewProjection==(shadow?-1:0));
 }
 int main(int argc,char** argv){
-    ClipTests();MeleeMath();
+    ClipTests();MeleeMath();TmdWristMount();
     if(argc<3){std::puts("PASS joint homogeneous clipping/depth/digit math; private replay not requested");return 0;}
     std::vector<unsigned char> bytes;assert(gloves::Read(argv[1],bytes,1024));knifehand::Data data;
     assert(knifehand::Decode(bytes.data(),bytes.size(),data));

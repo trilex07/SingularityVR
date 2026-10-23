@@ -6571,6 +6571,7 @@ static knifehand::MeleeReference g_knifeMeleeReference;
 static bool g_knifeHandAssetReady = false;
 static knifehand::Data g_knifeHandData{};
 static bool g_knifeHandPoseThisDraw = false;
+static bool g_knifeHandTmdThisDraw = false;
 static armbind::Mat g_knifeHandWrist{}, g_knifeHandLocal{};
 static LONG g_knifeJointFrame = -1;
 static unsigned g_knifeJointEyes = 0;
@@ -17564,6 +17565,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     if (sleeve && InterlockedCompareExchange(&g_gloveIsolate, 0, 0) >= 2)
         return 0;
     const bool tmdGloves=(verts==7444 || verts==2626) && first==0 && triangles==4402;
+    if(gloves||tmdGloves){g_knifeHandPoseThisDraw=false;g_knifeHandTmdThisDraw=false;}
     const bool tmdBase=(verts==7444 || verts==4818 || verts==4781) && first==13206 && triangles==7704;
     const bool tmdExtra=(verts==7444 || verts==37) && first==36318 && triangles==17;
     // tmdBase is mixed hardware/arm material. The draw hook below filters its
@@ -18033,6 +18035,19 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             std::memcpy(g_knifeHandLocal.m,local,sizeof(local));
         }
     }
+    // Post-TMD ownership draws a different original glove. Material 0 holds
+    // its real right wrist, while the noTMD-only joint route above cannot
+    // publish a wrist here. Retarget the measured SVNG mount through the two
+    // bind wrists rather than using the standalone OpenXR overlay pose.
+    if(tmdGloves&&g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&
+       g_hipKnifeVisible&&g_hipKnifeState.held==1&&handValid[1]&&
+       !Rd(g_twoHandActive)&&wristSlot[1]>=0&&g_nativeCuffClosure&&
+       g_nativeCuffRenderer.Ready()&&armnatural::TmdBind().ready){
+        g_knifeHandPoseThisDraw=armbind::FromGpu(
+            reinterpret_cast<const float(*)[4]>(&changed[wristSlot[1]*3]),g_knifeHandWrist);
+        g_knifeHandTmdThisDraw=g_knifeHandPoseThisDraw;
+        if(g_knifeHandPoseThisDraw)std::memcpy(g_knifeHandLocal.m,local,sizeof(local));
+    }
     const auto carrySource=weaponcarry::Source(nextCarryVisual.kind,nextCarry,gloves,tmdGloves,
         g_nativeGlovePoseThisDraw,handValid[0],wristBone[0]);
     if(carrySource!=weaponcarry::WristSource::None&&wristSlot[0]>=0){
@@ -18418,7 +18433,7 @@ static void PrepareXrCaptureAlpha(IDirect3DDevice9* dev,IDirect3DSurface9* outpu
     if(!ok)g_xrCaptureOpaqueAlpha=false;
 }
 static void KnifeHandDisable(const char* reason){
-    g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};g_knifeHandPoseThisDraw=false;
+    g_hipKnifeReady=false;g_hipKnifeVisible=false;g_hipKnifeState={};g_knifeHandPoseThisDraw=false;g_knifeHandTmdThisDraw=false;
     static unsigned notes=0;if(notes++<8)Log("knife-hand: disabled (%s); original gun/hands retained",reason);
 }
 static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT vertices,UINT gloveTriangles){
@@ -18462,11 +18477,16 @@ static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT v
     if(ok)ok=SUCCEEDED(g_origDrawIndexedPrim(dev,D3DPT_TRIANGLELIST,baseVertex,0,vertices,0,gloveTriangles));
     armbind::Mat a,b,clip;
     if(ok){
-        skeletal::Multiply(a.m,g_knifeHandData.mount[g_hipKnifeState.held].m,g_knifeHandWrist.m);
-        skeletal::Multiply(b.m,a.m,g_knifeHandLocal.m);
-        skeletal::Multiply(clip.m,b.m,eye);
-        ok=sceneLit?g_hipKnifeRenderer.DrawLitShared(dev,calls,b.m,clip.m):
-            g_hipKnifeRenderer.DrawShared(dev,calls,clip.m);
+        armbind::Mat mount=g_knifeHandData.mount[g_hipKnifeState.held];
+        if(g_knifeHandTmdThisDraw)ok=knifehand::RetargetMount(mount,mount,
+            g_nativeGloveRenderer.WristReference(1),armnatural::TmdBind().bind[51]);
+        if(ok){
+            skeletal::Multiply(a.m,mount.m,g_knifeHandWrist.m);
+            skeletal::Multiply(b.m,a.m,g_knifeHandLocal.m);
+            skeletal::Multiply(clip.m,b.m,eye);
+            ok=sceneLit?g_hipKnifeRenderer.DrawLitShared(dev,calls,b.m,clip.m):
+                g_hipKnifeRenderer.DrawShared(dev,calls,clip.m);
+        }
     }
     const bool restored=guard.Restore();
     if(!ok||!restored){KnifeHandDisable(restored?"joint draw failed":"joint state restore failed");return;}
@@ -20447,6 +20467,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     const bool nativeCuff=independentRegs&&g_nativeGlovePoseThisDraw&&(NativeGlovesEligible()||NativeKnifeOffHandEligible())&&
         t==D3DPT_TRIANGLELIST&&(numVertices==3314||numVertices==2924)&&
         startIndex==0&&primCount==4830&&nSeg==1&&segStart[0]==0&&segPrims[0]==4830;
+    const bool tmdKnifeCuff=independentRegs&&g_knifeHandTmdThisDraw&&g_knifeHandPoseThisDraw&&
+        t==D3DPT_TRIANGLELIST&&(numVertices==7444||numVertices==2626)&&
+        startIndex==0&&primCount==4402&&nSeg==1&&segStart[0]==0&&segPrims[0]==4402;
     const int cuffProfile=glovecuffs::Profile(numVertices,startIndex,primCount);
     const bool fullCuff=independentRegs&&minIndex==0&&nSeg==1&&segStart[0]==0&&segPrims[0]==primCount&&cuffProfile>=0&&
         glovecuffs::Eligible(g_nativeCuffClosure,g_gloveExperiment&&g_nativeGloveExperiment,
@@ -20584,7 +20607,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             [&](UINT first,UINT triangles){
                 ++g_nativeGloveRenderer.draws;
                 const HRESULT h=g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,first,triangles);
-                if(SUCCEEDED(h)&&nativeCuff)DrawKnifeWithNativeGlove(dev,baseVertex,numVertices,triangles);
+                if(SUCCEEDED(h)&&(nativeCuff||(tmdKnifeCuff&&cuffBuffer&&nativeIndices.valid)))
+                    DrawKnifeWithNativeGlove(dev,baseVertex,numVertices,triangles);
                 if(cuffBuffer){static unsigned logs=0;if(logs++<8)Log("native-cuffs: profile=%d verts=%u tris=%u fullCuff=1 held=%d hr=%08lX",
                     cuffProfile,numVertices,triangles,WeaponInHands()?1:0,h);}
                 return h;
@@ -28334,7 +28358,7 @@ void ReleaseWristResources() {
     ResetScopePip();
     g_knifeMeleeReference.Reset();
     nativefx::Release();
-    g_knifeHandPoseThisDraw=false;g_knifeJointFrame=-1;g_knifeJointEyes=0;
+    g_knifeHandPoseThisDraw=false;g_knifeHandTmdThisDraw=false;g_knifeJointFrame=-1;g_knifeJointEyes=0;
     g_nativeGloveRenderer.ReleaseGPU();g_nativeGlovePoseThisDraw=false;
     g_xrCaptureAlphaPass.Release();
     g_nativeCuffRenderer.ReleaseGPU();

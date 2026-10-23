@@ -6,6 +6,18 @@
 #include <cstdint>
 
 namespace knifehand {
+// The fitted SVNG mount is in the noTMD component bind space. A TMD glove
+// uses a different wrist bind, but the same physical wrist joint: preserve
+// the measured knife-to-wrist transform instead of reusing component axes.
+inline bool RetargetMount(armbind::Mat& out,const armbind::Mat& fitted,
+                          const armbind::Mat& noTmdWrist,const armbind::Mat& tmdWrist){
+    if(!armbind::Finite(fitted)||!armbind::Finite(noTmdWrist)||!armbind::Finite(tmdWrist))return false;
+    armbind::Mat inv,relative;
+    if(!skeletal::Inverse(inv.m,noTmdWrist.m))return false;
+    skeletal::Multiply(relative.m,fitted.m,inv.m);
+    skeletal::Multiply(out.m,relative.m,tmdWrist.m);
+    return armbind::Finite(out);
+}
 // Native damage still consumes RB. Only its legacy camera-space arm DISPLAY
 // window is bypassed while the existing tracked joint assembly owns the hand.
 inline bool KeepTrackedMelee(bool enabled,bool nativeEligible,bool ready,bool visible,
