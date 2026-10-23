@@ -681,6 +681,8 @@ volatile LONG g_rawTrigger = 0;
 // 16-23 for the pad, but nothing published it on its own - and it is the alt-fire, which is what
 // raises the sniper scope. The scope census keys on this edge.
 volatile LONG g_rawAltTrigger = 0;
+// Raw OpenXR Impulse action, before intentional XInput LT/ADS suppression.
+volatile LONG g_rawImpulsePressed = 0;
 
 // ---- ⚠️ run 155: reported STUCK TRIGGERS on a set-down controller ----
 //
@@ -11169,6 +11171,8 @@ void SyncXRInput(XrTime displayTime) {
     const bool rawSupportGrip = getGrip(OffHand());
     bool sampledButtons[kPadButtonCount]{};
     for(int i=0;i<kPadButtonCount;++i)sampledButtons[i]=getBool(g_padButtons[i].action);
+    InterlockedExchange(&g_rawImpulsePressed,
+        g_impulseBtnIdx>=0&&g_impulseBtnIdx<kPadButtonCount&&sampledButtons[g_impulseBtnIdx]?1:0);
     // Opt-in physical Sense layout. Keep the XR actions and native menu
     // select/back bindings intact. No extra polls and no hidden INI rewrites.
     const bool reloadLayout=g_reloadControlLayout&&AimHand()==1&&!Rd(g_swapSticks);
@@ -20552,7 +20556,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         if(g_dualWeaponTmdRightWrist&&assemblyGlove&&independentRegs&&eye<2){
             const unsigned hands=(unsigned)Rd(g_handsStatus);
             if(hands==1||hands==2){
-                const unsigned key=(hands-1)*4+(Rd(g_rawAltTrigger)>128?2u:0u)+
+                const unsigned key=(hands-1)*4+(Rd(g_rawImpulsePressed)?2u:0u)+
                     (Rd(g_rawTrigger)>128?1u:0u);
                 static LONG lastFrame[8]{};static unsigned samples[8]{};
                 const LONG frame=Rd(g_armPaletteFrameToken);
@@ -20561,8 +20565,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                     float skin[3][4]{},localW[4][4]{};
                     const HRESULT s=dev->GetVertexShaderConstantF(5+19*3,&skin[0][0],3);
                     const HRESULT l=dev->GetVertexShaderConstantF(230,&localW[0][0],4);
-                    Log("tmd-right-wrist final: frame=%ld eye=%u hands=%u L2=%ld R2=%ld valid=%d moved=%d route=%s drawSegments=%d skinHr=%08lX localHr=%08lX skin=[%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g] local=[%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g] targetRaw=%ld,%ld,%ld",
-                        frame,eye,hands,Rd(g_rawAltTrigger),Rd(g_rawTrigger),
+                    Log("tmd-right-wrist final: frame=%ld eye=%u hands=%u Impulse=%ld ADS=%ld R2=%ld valid=%d moved=%d route=%s drawSegments=%d skinHr=%08lX localHr=%08lX skin=[%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g] local=[%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g;%g,%g,%g,%g] targetRaw=%ld,%ld,%ld",
+                        frame,eye,hands,Rd(g_rawImpulsePressed),Rd(g_rawAltTrigger),Rd(g_rawTrigger),
                         g_handPoseValid[1]&&g_handPositionValid[1]?1:0,g_thisDrawMoved,
                         cuffBuffer&&nativeIndices.valid?"SVNC":"native",nSeg,s,l,
                         skin[0][0],skin[0][1],skin[0][2],skin[0][3],

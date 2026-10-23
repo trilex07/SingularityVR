@@ -60,8 +60,8 @@ static void Witness(const char* reason,uintptr_t pawn=0,int controlOff=-2,int in
     if(cls)NameOf(cls,className,sizeof(className));
     const uintptr_t node=controlOff>=0&&pawn?P(pawn+controlOff):0;
     const uintptr_t mesh=inviewOff>=0&&pawn?P(pawn+inviewOff):0;
-    Log("dual-tmd gun-scale witness: %s L2=%ld R2=%ld hands=%ld dual=%d menu=%ld pause=%ld camera=%08X controller=%08X cachedPawn=%08X cameraPawn=%08X nativePawn=%08X selected=%08X class=%s controlOff=%d expected=1024 inviewOff=%d node=%08X mesh=%08X armed=%d",
-        reason,Rd(g_rawAltTrigger),Rd(g_rawTrigger),Rd(g_handsStatus),DualWeaponTmdContext(),
+    Log("dual-tmd gun-scale witness: %s Impulse=%ld ADS=%ld R2=%ld hands=%ld dual=%d menu=%ld pause=%ld camera=%08X controller=%08X cachedPawn=%08X cameraPawn=%08X nativePawn=%08X selected=%08X class=%s controlOff=%d expected=1024 inviewOff=%d node=%08X mesh=%08X armed=%d",
+        reason,Rd(g_rawImpulsePressed),Rd(g_rawAltTrigger),Rd(g_rawTrigger),Rd(g_handsStatus),DualWeaponTmdContext(),
         Rd(g_vrMenuClass),Rd(g_gamePaused),(unsigned)g_camera,(unsigned)g_controller,
         (unsigned)cachedPawn,(unsigned)cameraPawn,(unsigned)nativePawn,(unsigned)pawn,
         className,controlOff,inviewOff,(unsigned)node,(unsigned)mesh,target!=0);
@@ -90,10 +90,10 @@ static float Resolve(void* self,int bone,void* mesh,uintptr_t caller,float value
             Refuse(!owned?4:!sameMesh?8:16,!owned?"live control ownership":!sameMesh?"inview component ownership":"caller/bone/native scale contract");
             return value;
         }
-        const int state=(int)Rd(g_handsStatus)*2+(Rd(g_rawAltTrigger)>128?1:0);
+        const int state=(int)Rd(g_handsStatus)*2+(Rd(g_rawImpulsePressed)?1:0);
         if(state!=lastState&&receipts<12){lastState=state;++receipts;
-            Log("dual-tmd gun-scale: local gun_scale scale=0 -> 1 bone=%d pawn=%08X mesh=%08X control=%08X hands=%ld L2=%ld [live animation; no palette/pawn writes]",
-                bone,(unsigned)pawn,(unsigned)localMesh,(unsigned)control,Rd(g_handsStatus),Rd(g_rawAltTrigger));}
+            Log("dual-tmd gun-scale: local gun_scale scale=0 -> 1 bone=%d pawn=%08X mesh=%08X control=%08X hands=%ld Impulse=%ld ADS=%ld [live animation; no palette/pawn writes]",
+                bone,(unsigned)pawn,(unsigned)localMesh,(unsigned)control,Rd(g_handsStatus),Rd(g_rawImpulsePressed),Rd(g_rawAltTrigger));}
         return 1.f;
     } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
         Fault();return value;
@@ -110,7 +110,7 @@ static void Poll() {
     __try {
         using namespace NativeOwnedInventory;
         const auto context=Context();
-        const int l2=Rd(g_rawAltTrigger)>128?1:0,r2=Rd(g_rawTrigger)>128?1:0;
+        const int l2=Rd(g_rawImpulsePressed)?1:0,r2=Rd(g_rawTrigger)>128?1:0;
         if(l2!=lastL2Edge||r2!=lastR2Edge){
             lastL2Edge=l2;lastR2Edge=r2;
             if(context.dual)Witness("edge",OwnedPawn());
@@ -119,9 +119,9 @@ static void Poll() {
             (context.holstered?4u:0u)|(context.equipped?8u:0u);
         static unsigned previous=~0u, contextReceipts=0;
         if(state!=previous){previous=state;
-            if(contextReceipts++<20)Log("dual-tmd gun-scale: context dual=%d nativeHands=%d holstered=%d equipped=%d hands=%ld L2=%ld",
+            if(contextReceipts++<20)Log("dual-tmd gun-scale: context dual=%d nativeHands=%d holstered=%d equipped=%d hands=%ld Impulse=%ld ADS=%ld",
                 context.dual,context.nativeHands,context.holstered,context.equipped,
-                Rd(g_handsStatus),Rd(g_rawAltTrigger));}
+                Rd(g_handsStatus),Rd(g_rawImpulsePressed),Rd(g_rawAltTrigger));}
         if(!dualgunscale::ContextAllowed(context)) {control=localPawn=localMesh=0;return;}
         const auto pawn=OwnedPawn();
         if(!pawn){control=localPawn=localMesh=0;

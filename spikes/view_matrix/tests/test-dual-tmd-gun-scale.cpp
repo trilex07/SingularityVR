@@ -9,7 +9,7 @@
 #include <initializer_list>
 #include "MinHook.h"
 static LONG g_dualWeaponTmdGunScale=0,g_weaponHolstered=0,g_weaponObj=1,g_handsStatus=1,g_rawAltTrigger=255;
-static LONG g_rawTrigger=0,g_vrMenuClass=0,g_gamePaused=0;
+static LONG g_rawTrigger=0,g_rawImpulsePressed=0,g_vrMenuClass=0,g_gamePaused=0;
 static uintptr_t g_camera=0,g_controller=0,g_playerPawn=0;
 static bool dual=true,nativeHands=false,bad=false,live=true;
 static unsigned char pawnBytes[0x2000]{},nodeBytes[0x100]{},meshBytes[0x100]{},otherBytes[0x100]{};
