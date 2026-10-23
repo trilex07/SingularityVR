@@ -2395,6 +2395,10 @@ static NextReloadVisual g_nextVisual;
 static weaponreload::Witness g_nextWitness;
 static int g_reloadPalmGrip=0; // default-OFF; measured native wrist, not AIM-space mount
 static int g_volkCarryPoseProbe=0; // default-OFF; bounded same-frame wrist/magazine witness
+static int g_shoulderPickupProbe=0; // default-OFF; bounded local-frame pickup receipts
+static int g_nextShoulderExtraLeftCm[2]{18,18}; // Valkyrie, Volk; Kasimov unchanged
+static int g_nextShoulderRadiusCm[2]{18,18};
+static int g_nextShoulderReachMs[2]{1800,1800};
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
 static bool g_nextWristStagedFromTmd=false;
 static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
@@ -17741,13 +17745,14 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             centurionvisual::Time((centurionreload::Phase)physicalVisual.phase,physicalVisual.since,physicalVisual.closed,physicalNow,g_centurionRefillOnly!=0).active;
     }
     NextReloadVisual nextCarryVisual;bool nextCarry=false;
-    // Volk may use the original TMD material-0 glove (not the noTMD glove).
-    // Its carried clip still needs a wrist witness from that *rendered* section.
+    // Valkyrie and Volk use the original TMD material-0 glove (not the noTMD
+    // glove) when it owns the left hand. Their carried magazines require the
+    // wrist witness from that actually rendered section.
     if(g_reloadPalmGrip&&(gloves||tmdGloves)&&TryAcquireSRWLockShared(&g_nextVisualLock)){
         nextCarryVisual=g_nextVisual;ReleaseSRWLockShared(&g_nextVisualLock);
         const auto now=GetTickCount64();
         nextCarry=g_nextNativeMagazine&&nextCarryVisual.valid&&nextCarryVisual.phase==weaponreload::Phase::Carrying&&
-            (gloves||nextCarryVisual.kind==weaponreload::Kind::Volk)&&
+            weaponcarry::CarrySectionEligible(nextCarryVisual.kind,gloves)&&
             nextCarryVisual.pawn==(uint32_t)g_playerPawn&&nextCarryVisual.weapon==(uint32_t)Rd(g_weaponObj)&&
             nextCarryVisual.since&&now>=nextCarryVisual.sampledMs&&now-nextCarryVisual.sampledMs<=150;
     }
@@ -20769,9 +20774,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
        g_nextWristStaged.valid&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
         g_nextWrist=g_nextWristStaged;ReleaseSRWLockExclusive(&g_nextVisualLock);
         if(g_nextWristStagedFromTmd){
-            static LONG reportedVolkWrist=0;
-            if(InterlockedCompareExchange(&reportedVolkWrist,1,0)==0)
-                Log("Volk carry wrist: TMD material-0 published after stereo draw, wrist bone=9, segments=%d",nSeg);
+            static LONG reportedTmdWrist[2]{};
+            const unsigned wristProfile=g_nextWristStaged.kind==weaponreload::Kind::Valkyrie?0u:1u;
+            if(InterlockedCompareExchange(&reportedTmdWrist[wristProfile],1,0)==0)
+                Log("next carry wrist: kind=%d TMD material-0 published after stereo draw, wrist bone=9, segments=%d",
+                    int(g_nextWristStaged.kind),nSeg);
         }
     }
     if(g_centurionPhysicalPolish&&independentRegs&&SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&
@@ -35404,6 +35411,27 @@ void LoadIniSettings() {
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
     g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;
     g_volkCarryPoseProbe=GetPrivateProfileIntA("Diagnostic","VolkCarryPoseProbe",0,path)!=0;
+    g_shoulderPickupProbe=GetPrivateProfileIntA("Diagnostic","ShoulderPickupProbe",0,path)!=0;
+    const auto shoulderSetting=[&](const char* key,int fallback,int low,int high){
+        const int value=IniSignedInt("Input",key,fallback,path);
+        if(value<low||value>high){
+            Log("shoulder pickup: invalid %s=%d, using %d (accepted range %d..%d)",
+                key,value,fallback,low,high);
+            return fallback;
+        }
+        return value;
+    };
+    const char* const extensionKeys[]{"ValkyrieShoulderExtendLeftCm","VolkShoulderExtendLeftCm"};
+    const char* const radiusKeys[]{"ValkyrieShoulderRadiusCm","VolkShoulderRadiusCm"};
+    const char* const reachKeys[]{"ValkyrieGripReachMs","VolkGripReachMs"};
+    for(unsigned i=0;i<2;++i){
+        g_nextShoulderExtraLeftCm[i]=shoulderSetting(extensionKeys[i],18,0,25);
+        g_nextShoulderRadiusCm[i]=shoulderSetting(radiusKeys[i],18,12,22);
+        g_nextShoulderReachMs[i]=shoulderSetting(reachKeys[i],1800,0,3000);
+    }
+    Log("shoulder pickup: Valkyrie extension=%dcm radius=%dcm reach=%dms; Volk extension=%dcm radius=%dcm reach=%dms; probe=%d",
+        g_nextShoulderExtraLeftCm[0],g_nextShoulderRadiusCm[0],g_nextShoulderReachMs[0],
+        g_nextShoulderExtraLeftCm[1],g_nextShoulderRadiusCm[1],g_nextShoulderReachMs[1],g_shoulderPickupProbe);
     g_weaponTraceRigidOrigin=GetPrivateProfileIntA("Input","WeaponTraceRigidOrigin",0,path)!=0;
     g_weaponMeasuredAim=GetPrivateProfileIntA("Input","WeaponMeasuredAim",0,path)!=0;
     g_centurionAimProbe=GetPrivateProfileIntA("Diagnostic","CenturionAimProbe",0,path)!=0;

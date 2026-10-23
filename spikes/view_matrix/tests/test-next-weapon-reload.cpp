@@ -218,7 +218,7 @@ static void TestCircleAndOwnership(const Profile& p){
 }
 static void TestCalibration(){
     Calibration c;c.ready=true;c.revision=1;assert(Valid(c));
-    for(int fault=0;fault<9;++fault){
+    for(int fault=0;fault<12;++fault){
         auto bad=c;
         if(fault==0)bad.gesture.socketLocal.x=std::numeric_limits<float>::quiet_NaN();
         if(fault==1)bad.gesture.socketRadius=bad.gesture.pullDistance;
@@ -229,6 +229,9 @@ static void TestCalibration(){
         if(fault==6)bad.gesture.timeoutMs=60001;
         if(fault==7)bad.gesture.cooldownMs=5001;
         if(fault==8)bad.gesture.pullDistance=std::numeric_limits<float>::quiet_NaN();
+        if(fault==9)bad.shoulder.leftExtension=.26f;
+        if(fault==10)bad.shoulder.leftExtension=-.01f;
+        if(fault==11)bad.gripReachMs=3001;
         assert(!Valid(bad));
     }
     for(int degrees=-180;degrees<=180;++degrees){
@@ -237,6 +240,67 @@ static void TestCalibration(){
         const auto delta=hipknife::Rotate({0,-std::sin(yaw*.5f),0,std::cos(yaw*.5f)},p.p-head);
         assert(std::fabs(delta.x+.22f)<1e-6f&&std::fabs(delta.y+.12f)<1e-6f&&std::fabs(delta.z-.18f)<1e-6f);
     }
+}
+static void TestShoulderRegion(){
+    Calibration c;c.ready=true;c.revision=1;c.shoulder.leftExtension=.18f;
+    c.gesture.pouchRadius=.18f;c.gripReachMs=1800;assert(Valid(c));
+    for(int degrees=-180;degrees<=180;degrees+=5){
+        const float yaw=float(degrees)*3.14159265359f/180.f;
+        const hipknife::Q q{0,std::sin(yaw*.5f),0,std::cos(yaw*.5f)};
+        for(float headHeight:{.85f,1.20f,1.75f}){
+            const auto centre=Supply({.3f,headHeight,-.2f},yaw,c.shoulder).p;
+            // The original point, its entire 17 cm sphere, and 18 cm farther
+            // to physical left are all inside the new bounded capsule.
+            assert(ShoulderDistance(centre,centre,yaw,c.shoulder)<.00001f);
+            assert(ShoulderDistance(centre+hipknife::Rotate(q,{0,.169f,0}),centre,yaw,c.shoulder)<.17f);
+            assert(ShoulderDistance(centre+hipknife::Rotate(q,{-.18f,0,0}),centre,yaw,c.shoulder)<.00001f);
+            assert(ShoulderDistance(centre+hipknife::Rotate(q,{-.29f,0,0}),centre,yaw,c.shoulder)<.18f);
+            // Do not expand toward the chest, right hand or weapon.
+            assert(ShoulderDistance(centre+hipknife::Rotate(q,{.21f,0,0}),centre,yaw,c.shoulder)>.18f);
+            assert(ShoulderDistance(centre+hipknife::Rotate(q,{0,0,-.25f}),centre,yaw,c.shoulder)>.18f);
+            assert(ShoulderDistance(centre+hipknife::Rotate(q,{-.5f,0,0}),centre,yaw,c.shoulder)>.18f);
+        }
+    }
+    assert(!std::isfinite(ShoulderDistance({NAN,0,0},{0,0,0},0,c.shoulder)));
+    assert(!std::isfinite(ShoulderDistance({0,0,0},{0,0,0},NAN,c.shoulder)));
+}
+static void TestReachGesture(const Profile& p){
+    Fixture x(p);x.c.shoulder.leftExtension=.18f;x.c.gesture.pouchRadius=.18f;
+    x.c.gripReachMs=1800;x.Start();
+    assert(x.Tick(true,x.withdrawn).event==E::None);
+    x.f.gesture.nowMs+=1300;
+    const auto extended=x.f.gesture.pouch+hipknife::V{-.18f,0,0};
+    assert(x.Tick(true,extended).event==E::GrabFresh);
+    assert(x.Tick(true,x.f.gesture.socket).event==E::None); // no duplicate on held Grip
+    assert(x.Tick(false,x.withdrawn).event==E::Discarded);
+    assert(x.Tick(true,x.withdrawn).event==E::None);
+    assert(x.Tick(true,extended).event==E::GrabFresh); // clean retry after release
+
+    Fixture expired(p);expired.c.gripReachMs=1800;expired.Start();
+    assert(expired.Tick(true,expired.withdrawn).event==E::None);
+    expired.f.gesture.nowMs+=1801;
+    assert(expired.Tick(true,expired.f.gesture.pouch).event==E::None);
+    expired.Tick(false,expired.withdrawn);
+    assert(expired.Tick(true,expired.f.gesture.pouch).event==E::GrabFresh);
+
+    Fixture support(p);support.c.gripReachMs=1800;support.Start();
+    support.f.gesture.supportLatched=true;
+    assert(support.Tick(true,support.withdrawn).event==E::None);
+    support.f.gesture.supportLatched=false;
+    assert(support.Tick(true,support.f.gesture.pouch).event==E::None);
+    support.Tick(false,support.withdrawn);
+    assert(support.Tick(true,support.f.gesture.pouch).event==E::GrabFresh);
+
+    Fixture tracking(p);tracking.c.gripReachMs=1800;tracking.Start();
+    tracking.Tick(true,tracking.withdrawn);tracking.f.gesture.tracked=false;
+    assert(tracking.Tick(true,tracking.f.gesture.pouch).event==E::Cancelled);
+    tracking.f.gesture.tracked=true;
+    assert(tracking.Tick(true,tracking.f.gesture.pouch).event==E::None);
+    tracking.Tick(false,tracking.withdrawn);
+    // New eject/transaction is required after tracking loss.
+    tracking.Tick(false,tracking.withdrawn);
+    assert(tracking.Tick(false,tracking.withdrawn,true).event==E::Ejected);
+    assert(tracking.Tick(true,tracking.f.gesture.pouch).event==E::GrabFresh);
 }
 static void ValidateAsset(const char* path,unsigned expectedVerts,unsigned expectedTris){
     FILE* file=nullptr;assert(fopen_s(&file,path,"rb")==0&&file);
@@ -289,7 +353,8 @@ int main(int argc,char** argv){
         assert((got.event==E::GrabFresh)==(fault==0));
     }
     assert(!std::strcmp(Name(E::Ejected),"magazine-ejected"));
-    TestCalibration();TestSharedStateWeaponTransitions();
+    TestCalibration();TestShoulderRegion();TestSharedStateWeaponTransitions();
+    TestReachGesture(profiles[0]);TestReachGesture(profiles[1]);
     unsigned transactions=0;
     for(const auto& p:profiles){
         TestDefaultsAndIdentity(p);TestCancellation(p);TestAmmoAndTimeout(p);TestEveryPhase(p);TestCircleAndOwnership(p);
