@@ -2413,6 +2413,7 @@ static int g_shoulderPickupProbe=0; // default-OFF; bounded local-frame pickup r
 static int g_nextShoulderExtraLeftCm[2]{18,18}; // Valkyrie, Volk; Kasimov unchanged
 static int g_nextShoulderRadiusCm[2]{18,18};
 static int g_nextShoulderReachMs[2]{1800,1800};
+static int g_nextInsertRadiusCm[2]{18,18}; // Valkyrie, Volk; native clip-joint socket
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
 static bool g_nextWristStagedFromTmd=false;
 static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
@@ -36186,10 +36187,12 @@ void LoadIniSettings() {
     const char* const extensionKeys[]{"ValkyrieShoulderExtendLeftCm","VolkShoulderExtendLeftCm"};
     const char* const radiusKeys[]{"ValkyrieShoulderRadiusCm","VolkShoulderRadiusCm"};
     const char* const reachKeys[]{"ValkyrieGripReachMs","VolkGripReachMs"};
+    const char* const insertKeys[]{"ValkyrieInsertRadiusCm","VolkInsertRadiusCm"};
     for(unsigned i=0;i<2;++i){
         g_nextShoulderExtraLeftCm[i]=shoulderSetting(extensionKeys[i],18,0,25);
         g_nextShoulderRadiusCm[i]=shoulderSetting(radiusKeys[i],18,12,22);
         g_nextShoulderReachMs[i]=shoulderSetting(reachKeys[i],1800,0,3000);
+        g_nextInsertRadiusCm[i]=shoulderSetting(insertKeys[i],18,16,20);
     }
     Log("shoulder pickup: Valkyrie extension=%dcm radius=%dcm reach=%dms; Volk extension=%dcm radius=%dcm reach=%dms; probe=%d",
         g_nextShoulderExtraLeftCm[0],g_nextShoulderRadiusCm[0],g_nextShoulderReachMs[0],

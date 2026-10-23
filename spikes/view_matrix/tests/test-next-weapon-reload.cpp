@@ -100,6 +100,28 @@ static void TestCancellation(const Profile& p){
         assert(x.Tick(false,x.f.gesture.socket,true).event==E::Ejected);
     }
 }
+static void TestInsertComfort(const Profile& p){
+    for(const float radius:{.16f,.18f,.20f}){
+        // The original clip joint is the centre. A 2 cm change admits only
+        // nearby releases, not a release by the support grip or wrong weapon.
+        Fixture inside(p);inside.c.gesture.pullDistance=.30f;inside.c.gesture.socketRadius=radius;inside.Start();
+        assert(inside.Tick(true,inside.f.gesture.pouch).event==E::GrabFresh);
+        V insideSocket=inside.f.gesture.socket;insideSocket.x+=radius-.005f;
+        assert(inside.Tick(false,insideSocket).event==E::Inserted);
+        Fixture outside(p);outside.c.gesture.pullDistance=.30f;outside.c.gesture.socketRadius=radius;outside.Start();
+        assert(outside.Tick(true,outside.f.gesture.pouch).event==E::GrabFresh);
+        V outsideSocket=outside.f.gesture.socket;outsideSocket.x+=radius+.005f;
+        assert(outside.Tick(false,outsideSocket).event==E::Discarded);
+        Fixture support(p);support.c.gesture.pullDistance=.30f;support.c.gesture.socketRadius=radius;support.Start();
+        assert(support.Tick(true,support.f.gesture.pouch).event==E::GrabFresh);
+        support.f.gesture.supportLatched=true;
+        assert(support.Tick(false,support.f.gesture.socket).event==E::Cancelled);
+        Fixture stale(p);stale.c.gesture.pullDistance=.30f;stale.c.gesture.socketRadius=radius;stale.Start();
+        assert(stale.Tick(true,stale.f.gesture.pouch).event==E::GrabFresh);
+        ++stale.f.gesture.weapon;
+        assert(stale.Tick(false,stale.f.gesture.socket).event==E::Cancelled);
+    }
+}
 static void TestAmmoAndTimeout(const Profile& p){
     Fixture noPermit(p);noPermit.f.nativePermitRequired=true;noPermit.Insert();
     noPermit.f.gesture.clip=6;noPermit.f.gesture.reserve=21;
@@ -357,7 +379,7 @@ int main(int argc,char** argv){
     TestReachGesture(profiles[0]);TestReachGesture(profiles[1]);
     unsigned transactions=0;
     for(const auto& p:profiles){
-        TestDefaultsAndIdentity(p);TestCancellation(p);TestAmmoAndTimeout(p);TestEveryPhase(p);TestCircleAndOwnership(p);
+        TestDefaultsAndIdentity(p);TestCancellation(p);TestInsertComfort(p);TestAmmoAndTimeout(p);TestEveryPhase(p);TestCircleAndOwnership(p);
         for(unsigned cycle=0;cycle<10000;++cycle){
             Fixture x(p);x.Insert();
             for(unsigned i=0;i<4;++i)assert(!x.Tick(false,x.f.gesture.socket).reloadIntent);
