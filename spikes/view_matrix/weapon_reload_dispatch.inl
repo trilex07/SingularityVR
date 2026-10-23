@@ -409,10 +409,11 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
             const bool palm=g_reloadPalmGrip&&visual.phase==weaponreload::Phase::Carrying;
             // Wait for a successfully drawn glove witness. Never substitute an
             // AIM-space magazine inside the hand when its wrist is unavailable.
-            const bool placed=palm ? wrist.Current(kind,visual.pawn,visual.weapon,visual.since,now)&&
-                weaponcarry::Matrix(kind,wrist.tracking,carried) :
+            const bool currentWrist=palm&&wrist.Current(kind,visual.pawn,visual.weapon,visual.since,now);
+            const bool placed=palm ? currentWrist&&weaponcarry::Matrix(kind,wrist.tracking,carried) :
                 weaponreload::HandMatrix(clipTracking,visual.aim,pose,g_nextClipRenderer[index].SourceCentre(),carried,
                     visual.phase==weaponreload::Phase::Carrying?hipknife::V{0,0,-.06f}:hipknife::V{});
+            if(palm&&kind==weaponreload::Kind::Volk)note(!currentWrist?10:!placed?11:12);
             if(placed){
                 if(!weaponreload::SparePalette(g_nextAnimation[index],carried,local,controller,world,regs,replay.spare[replay.count]))return 0;
                 ++replay.count;
