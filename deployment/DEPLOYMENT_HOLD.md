@@ -2,9 +2,11 @@
 
 **Status:** HOLD — awaiting SOL pushed candidate after `cac4ce3` PSVR2 **PARTIAL**.
 
-**Live Steam DLL:** `BEA5A562…` (`cac4ce3`) — preserved per user instruction (not rolled back).
+**Active diagnostic (2026-10-23):** DLL `A0A3365A…` (`067e1b1` runtime-alignment probes). Rollback folder: `20261023-pre-runtime-alignment-067e1b1/` → `BEA5A562…` (`cac4ce3`).
 
-**Do not deploy** experimental fixes until SOL provides a new branch/commit.
+**After diagnostic session:** restore `cac4ce3` unless user keeps probe build.
+
+**Do not deploy** further experimental fixes until SOL provides a implementation candidate from diagnostic results.
 
 **Preserved builds (backups only):**
 - Volk magazine `9bb0e47`: `deployment/deploy-backups/20261023-pre-volk-magazine-9bb0e47/`

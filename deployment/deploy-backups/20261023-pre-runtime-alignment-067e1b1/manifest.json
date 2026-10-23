@@ -1,0 +1,10 @@
+{
+    "solReportedDll":  "A93D60D00D5317AA5DE58D4F2E50B861472A4E2B0E4BBE55CC3AC54A84755628",
+    "priorIni":  "00200C0572C99D1656E294C1F312D104F27A9B4CB44BD5CD0890AEAB22387A79",
+    "rollbackToCac4ce3":  "Restore d3d9.dll + SingularityVR.ini from this folder after diagnostic session",
+    "priorCommit":  "cac4ce3701c08cca28bfdcb6cbbdf189bcc5076e",
+    "priorDll":  "BEA5A5623E2995C5DEE85AC30D1736F0B3E3CEAF68AF20A84B86B7DA3E83D581",
+    "deployedDll":  "A0A3365A34C0F957263B286CC982A3E5422AA370995183CC0F421252A0763589",
+    "label":  "20261023-pre-runtime-alignment-067e1b1",
+    "deployedCommit":  "067e1b1b7301987501354e9dab63030e26eb3d6a"
+}
