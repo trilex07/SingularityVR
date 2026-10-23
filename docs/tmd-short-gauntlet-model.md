@@ -49,6 +49,29 @@ D3D9 index device; it checks two 7110-face eye draws, native flag-OFF routing,
 fallback, bind/restore failure and Reset invalidation. This remains L1/L2,
 not a physical PSVR2 result.
 
+## Early foreground visibility follow-up
+
+Observed L4 failure on the correct DLL and SVTG: `CPU ready enabled=1
+tris=7110`, but no `original hardware + short closed sleeve` draw receipt and
+no visible short sleeve. Source-path cause: `FgHidden()` can discard the exact
+7444/13206/7704 mixed TMD section through `GlovesUntilWeaponNow()` and
+`IsArmFleshSection()` before `PrepareIndependentLeft()` and SVTG dispatch run.
+The falsifier is a new bounded runtime gate log: an `early exact mixed section
+admitted` line followed by a palette/buffer/bind/draw failure rather than the
+stereo receipt would identify a later blocker. We do not infer successful
+headset rendering from the offline result.
+
+With `TmdShortGauntlet=1`, the exact mixed section is now admitted before the
+arm-flesh rule only in hands-only gameplay stereo, a scene foreground window,
+triangle-list/min-index-zero geometry, non-shadow rendering, focused OpenXR,
+and valid physical-left tracking. The later palette and segment checks must
+pass before drawing; otherwise the admitted mixed material is suppressed
+entirely. Missing/corrupt SVTG or GPU buffer failure uses the existing 6527
+hardware-face/49-run original-index cut, never the unfiltered 7704 faces.
+The 17-face tail still needs a successful two-eye SVTG draw and index-buffer
+restoration before suppression. Gate logs are one per failure stage, bounded
+for the lifetime of the DLL.
+
 ## Private generation and offline tests
 
 Use original, locally owned PSK and decompressed RvGame; never commit them or

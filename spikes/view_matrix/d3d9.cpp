@@ -14776,7 +14776,8 @@ extern volatile LONG g_inForeground, g_hideMeshIdx, g_fgDrawCount;
 // Defined with the foreground-mesh code. StereoPair reads it; the non-indexed draw hook above sets
 // it as of run 181, and that hook comes before the definition.
 extern int g_thisDrawMoved;   // ⭐ run 237: 0 none, 1 gun hand, 2 off hand
-static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangles);
+static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangles,
+                     UINT minIndex,D3DPRIMITIVETYPE primitive,bool* shortTmdAdmitted);
 static bool FgRidesGun(UINT verts);
 static bool FgMatchesSignature(UINT verts);   // ⭐ run 237c: used by the depth-prime exemption
 static int  RideTargetFor(UINT verts);   // ⭐ run 237: 0 none, 1 gun hand, 2 off hand
@@ -18328,7 +18329,40 @@ static void DrawKnifeWithNativeGlove(IDirect3DDevice9* dev,INT baseVertex,UINT v
             g_knifeStereoEye,frame,g_hipKnifeState.held,layout.viewProjection,desc.Width,desc.Height,sceneLit);
 }
 static float g_customGloveNativeScale=1.f;
-static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangles) { // arms, in modes 2 and 3
+static void LogShortTmdGate(tmdgauntlet::Gate gate,UINT verts,UINT first,UINT triangles) {
+    static volatile LONG seen=0;
+    const LONG bit=1L<<static_cast<unsigned>(gate);
+    if(!(InterlockedOr(&seen,bit)&bit))
+        Log("tmd-short-gauntlet: first failed gate=%s verts=%u first=%u tris=%u",
+            tmdgauntlet::GateName(gate),verts,first,triangles);
+}
+static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangles,
+                     UINT minIndex,D3DPRIMITIVETYPE primitive,bool* shortTmdAdmitted) { // arms, in modes 2 and 3
+    if(shortTmdAdmitted)*shortTmdAdmitted=false;
+    if(g_tmdShortGauntlet && gloveisolate::IsArmFleshSection(verts,first,triangles)) {
+        const tmdgauntlet::Entry entry{
+            g_tmdShortGauntlet,true,GlovesUntilWeaponNow() && Rd(g_gloveIsolate)==2,NativeAnimatedHandsNow(),
+            primitive==D3DPT_TRIANGLELIST,minIndex==0,Rd(g_rtIsScene)!=0,
+            g_sceneMode.Current()==vrscene::Mode::GameplayStereo && Rd(g_dupDraws)!=0,
+            g_xrSessionState==XR_SESSION_STATE_FOCUSED,
+            !Rd(g_gamePaused) && !Rd(g_vrUiMenu) && !Rd(g_inCinematic),FgMatchWindow(),
+            g_boundShaderLayout.shadow,
+            g_handPoseValid[gloveisolate::TmdHardwareTrackedSide()] &&
+                g_handPositionValid[gloveisolate::TmdHardwareTrackedSide()]};
+        const auto gate=tmdgauntlet::FirstEntryGate(entry);
+        if(gate==tmdgauntlet::Gate::Pass) {
+            if(shortTmdAdmitted)*shortTmdAdmitted=true;
+            static LONG saidAdmission=0;
+            if(InterlockedCompareExchange(&saidAdmission,1,0)==0)
+                Log("tmd-short-gauntlet: early exact mixed section admitted to independent palette");
+            return false; // later palette + exact index cut are mandatory
+        }
+        LogShortTmdGate(gate,verts,first,triangles);
+        // In gameplay hands-only mode an exact mixed section may never fall
+        // through as 7704 unfiltered faces merely because tracking, the
+        // foreground window, or its index base failed this frame.
+        if(tmdgauntlet::HideFailedEntry(entry,gate)) return true;
+    }
     // Native health/animation ownership outranks replacement and sleeve clipping.
     // The old exemption below these rules could never recover an earlier drop.
     if (NativeAnimatedHandsNow()) return false;
@@ -19808,6 +19842,12 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,1,t,primCount,numVertices,startIndex,minIndex,baseVertex,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
+    if(g_tmdShortGauntlet && gloveisolate::IsArmFleshSection(numVertices,startIndex,primCount)) {
+        static LONG saidExact=0;
+        if(InterlockedCompareExchange(&saidExact,1,0)==0)
+            Log("tmd-short-gauntlet: exact mixed draw seen min=%u type=%u foreground=%ld scene=%ld shadow=%d",
+                minIndex,(unsigned)t,Rd(g_inForeground),Rd(g_rtIsScene),g_boundShaderLayout.shadow?1:0);
+    }
     CaptureArmPaletteTrace(dev,baseVertex,minIndex,numVertices,startIndex,primCount);
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
     if(g_boundShaderLayout.shadow)InterlockedIncrement(&g_vrCounters.fpShadowDepthDraws);
@@ -19829,6 +19869,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     // the list next frame and every index after it would shift - the toggle would walk through a
     // moving target and nothing would be reproducible.
     const LARGE_INTEGER tMatch = g_timeOurWork ? Now() : LARGE_INTEGER{};
+    bool shortTmdAdmitted=false;
     if (InterlockedCompareExchange(&g_inForeground, 0, 0)) {
         const LONG k = InterlockedIncrement(&g_fgDrawCount);
         FgLearnSignature(numVertices);
@@ -19852,14 +19893,14 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         DpgRecord(2, 0.0f, 0.0f, (uint32_t)k, numVertices, primCount, (uint32_t)t);
         // WEAPON FX = HIDE PASS. Deliberately after the learn, per the note above and FgHideWholePass.
         if (FgHideWholePass()) return D3D_OK;
-        if (FgHidden(dev,numVertices, startIndex, primCount)) return D3D_OK;
+        if (FgHidden(dev,numVertices, startIndex, primCount,minIndex,t,&shortTmdAdmitted)) return D3D_OK;
         if(Rd(g_cinematicSceneProbe) && k<=kFgSanePass)
             InterlockedIncrement(&g_cineProbeFgKept);
         // Returning S_OK without drawing is how the mod already drops draws elsewhere - the
         // device state is untouched, so the next draw behaves normally.
     } else if (FgMatchesSignature(numVertices)) {
         // Outside the pass, but the same mesh - the near-plane depth prime at draws 2-3.
-        if (FgHidden(dev,numVertices, startIndex, primCount)) return D3D_OK;
+        if (FgHidden(dev,numVertices, startIndex, primCount,minIndex,t,&shortTmdAdmitted)) return D3D_OK;
         // The same mesh, drawn OUTSIDE the foreground pass. This is the whole question.
         DpgRecord(4, 0.0f, 0.0f, (uint32_t)InterlockedCompareExchange(&g_frameDrawIdx, 0, 0),
                   numVertices, primCount, 0);
@@ -20107,6 +20148,15 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     g_centurionGripStaged={};
     g_nextWristStaged={};
     const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(dev,numVertices,startIndex,primCount,independentSaved) : 0;
+    const bool exactTmdSegments=nSeg==1&&segStart[0]==startIndex&&segPrims[0]==primCount;
+    const auto admittedGate=tmdgauntlet::AfterPalette(shortTmdAdmitted,independentRegs!=0,exactTmdSegments);
+    if(shortTmdAdmitted && admittedGate!=tmdgauntlet::Gate::Pass) {
+        // FgHidden admitted this MIXED material solely for the original-index
+        // filter. Never submit its 1177 arm triangles when palette/segmentation
+        // failed, even if a separate foreground classifier changes state.
+        nSeg=0;
+        LogShortTmdGate(admittedGate,numVertices,startIndex,primCount);
+    }
     if(FgIndependentHandsCandidate(numVertices, startIndex, primCount) && !independentRegs) {
         nSeg=0;
         static LONG saidIndependentSuppressed=0;
@@ -20136,6 +20186,13 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             Rd(g_inCinematic)!=0);
     IDirect3DIndexBuffer9* shortTmdBuffer=shortTmdCandidate?
         g_tmdShortGauntletRenderer.Ensure(dev):nullptr;
+    if(shortTmdAdmitted && admittedGate==tmdgauntlet::Gate::Pass) {
+        const auto gate=!g_tmdShortGauntletRenderer.Ready()?tmdgauntlet::Gate::Cache:
+            !(g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_gloveExperiment && g_nativeGloveExperiment)?
+                tmdgauntlet::Gate::Cuff:
+            !shortTmdBuffer?tmdgauntlet::Gate::Buffer:tmdgauntlet::Gate::Pass;
+        if(gate!=tmdgauntlet::Gate::Pass)LogShortTmdGate(gate,numVertices,startIndex,primCount);
+    }
     const bool shortTmdTail=independentRegs && g_independentHands &&
         tmdgauntlet::IsRightForearmTail(numVertices,startIndex,primCount) &&
         tmdgauntlet::Eligible(g_tmdShortGauntlet,g_tmdShortGauntletRenderer.Ready(),
@@ -20174,6 +20231,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     nativegloves::IndexGuard<> nativeIndices(dev,shortTmdBuffer?shortTmdBuffer:
         (cuffBuffer?cuffBuffer:(nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr)),
         shortTmdBuffer?36369*2:(cuffBuffer?g_nativeCuffRenderer.SourceBytes(cuffProfile):16512*2));
+    if(shortTmdBuffer && !nativeIndices.valid)
+        LogShortTmdGate(tmdgauntlet::Gate::Bind,numVertices,startIndex,primCount);
     float cylinderSaved[15][4];CenturionDrawReplay cylinderReplay;
     const int cylinderBase=t==D3DPT_TRIANGLELIST&&nSeg==1&&!boneRegN&&!independentRegs
         ?PrepareCenturionCylinder(dev,baseVertex,numVertices,startIndex,primCount,cylinderSaved,cylinderReplay):-1;
@@ -20269,6 +20328,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     g_scopeLensStaged=false;
     if(FAILED(dhr))g_scopeAperture={};
     const HRESULT nativeRestore=nativeIndices.Restore();
+    if(shortTmdBuffer && FAILED(dhr))
+        LogShortTmdGate(tmdgauntlet::Gate::Draw,numVertices,startIndex,primCount);
+    if(shortTmdBuffer && FAILED(nativeRestore))
+        LogShortTmdGate(tmdgauntlet::Gate::Restore,numVertices,startIndex,primCount);
     if(tmdgauntlet::SuccessfulStereoBoundDraw(shortTmdBuffer!=nullptr,shortEyeDraws,dhr,nativeRestore)) {
         InterlockedExchange(&g_tmdShortSuccessfulFrame,Rd(g_armPaletteFrameToken));
         InterlockedExchange(&g_tmdShortSuccessfulDraw,Rd(g_frameDrawIdx));

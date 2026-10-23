@@ -12,6 +12,8 @@ cmd /c "`"$vcvars`" x86 >nul && cl /nologo /EHsc /std:c++17 /W3 /O2 /MD /Fe:`"$e
 if($LASTEXITCODE -ne 0){throw 'TMD gauntlet C++ compile failed'}
 if($Asset){ & $exe $Asset } else { & $exe }
 if($LASTEXITCODE -ne 0){throw 'TMD gauntlet C++ test failed'}
+py -3 (Join-Path $PSScriptRoot 'test_tmd_short_route.py')
+if($LASTEXITCODE -ne 0){throw 'TMD early visibility/dispatch order test failed'}
 if($Tmd -and $Cooked -and $Asset){
     py -3 (Join-Path $PSScriptRoot 'test_tmd_short_gauntlet.py') --tmd $Tmd --cooked $Cooked --asset $Asset
     if($LASTEXITCODE -ne 0){throw 'TMD gauntlet private-source test failed'}

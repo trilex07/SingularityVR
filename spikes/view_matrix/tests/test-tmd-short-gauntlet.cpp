@@ -22,6 +22,52 @@ struct Dev {
     }
 };
 
+static void TestEarlyVisibilityToStereoDraw() {
+    // Reproduce the hook order, not just its final draw: FgHidden's exact
+    // admission is decided BEFORE palette preparation and IndexGuard binding.
+    tmdgauntlet::Entry e{true,true,true,false,true,true,true,true,true,true,true,false,true};
+    assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::Pass);
+    assert(tmdgauntlet::AfterPalette(true,true,true)==tmdgauntlet::Gate::Pass);
+    Dev dev;nativegloves::IndexGuard<Dev,Buffer> guard(&dev,&dev.replacement,36369*2);
+    unsigned shortDraws=0,originalDraws=0;
+    for(int eye=0;eye<2;++eye) {
+        const auto r=tmdgauntlet::DispatchBound(true,guard.valid,7110,3994,
+            [&](unsigned first,unsigned faces){assert(first==0&&faces==7110);++shortDraws;return S_OK;},
+            [&](unsigned,unsigned){++originalDraws;return S_OK;});
+        assert(r.handled&&r.shortTmd);
+    }
+    assert(tmdgauntlet::SuccessfulStereoBoundDraw(true,shortDraws,S_OK,guard.Restore()));
+    assert(shortDraws==2&&originalDraws==0&&dev.bound==&dev.original);
+
+    // A missing asset is admitted only as an input to the audited 49-run
+    // hardware cut. No unfiltered 7704-face mixed draw is ever submitted.
+    assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::Pass);
+    assert(tmdgauntlet::AfterPalette(true,true,true)==tmdgauntlet::Gate::Pass);
+    unsigned runs=0,faces=0;
+    const auto fallback=tmdgauntlet::DrawHardwareFallback(13206,[&](unsigned,unsigned count){
+        ++runs;faces+=count;return S_OK;});
+    assert(SUCCEEDED(fallback)&&runs==49&&faces==6527);
+
+    // Palette failure or a split/mismatched section suppresses the admitted
+    // draw before SVTG dispatch, never exposing the 1177 original arm faces.
+    assert(tmdgauntlet::AfterPalette(true,false,true)==tmdgauntlet::Gate::Palette);
+    assert(tmdgauntlet::AfterPalette(true,true,false)==tmdgauntlet::Gate::Segments);
+    e.tracked=false;
+    assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::Tracking);
+    assert(tmdgauntlet::HideFailedEntry(e,tmdgauntlet::Gate::Tracking));
+    e.tracked=true;e.shadow=true;
+    assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::Shadow);
+    assert(!tmdgauntlet::HideFailedEntry(e,tmdgauntlet::Gate::Shadow));
+    e.shadow=false;e.minIndexZero=false;
+    assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::MinIndex);
+    assert(tmdgauntlet::HideFailedEntry(e,tmdgauntlet::Gate::MinIndex));
+    e.minIndexZero=true;e.context=false;
+    assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::Context);
+    assert(!tmdgauntlet::HideFailedEntry(e,tmdgauntlet::Gate::Context));
+    e.context=true;e.enabled=false;
+    assert(tmdgauntlet::FirstEntryGate(e)==tmdgauntlet::Gate::Disabled);
+}
+
 static void TestDrawRoute() {
     // Same dispatch function called by the StereoPair lambda. The shorter
     // generic glove count must never win when SVTG is successfully bound.
@@ -82,6 +128,7 @@ static void TestDrawRoute() {
 }
 
 int main(int argc,char** argv) {
+    TestEarlyVisibilityToStereoDraw();
     TestDrawRoute();
     if(argc>1){
         tmdgauntlet::Renderer renderer;

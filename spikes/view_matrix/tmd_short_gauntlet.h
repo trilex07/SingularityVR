@@ -5,6 +5,51 @@
 #include "glove_native.h"
 
 namespace tmdgauntlet {
+// Evaluated at the REAL early foreground visibility seam, before the
+// gloves-only arm-flesh suppression. The index cut still owns every admitted
+// mixed section; admission alone must never draw the unfiltered section.
+enum class Gate : unsigned char {
+    Pass, Disabled, Section, HandsOnly, Animated, Primitive, MinIndex, Scene,
+    Stereo, Focus, Context, Window, Shadow, Tracking, Palette, Segments,
+    Cache, Cuff, Buffer, Bind, Draw, Restore
+};
+struct Entry {
+    bool enabled=false, exact=false, handsOnly=false, animated=false;
+    bool triangleList=false, minIndexZero=false, scene=false, stereo=false, focus=false, context=false;
+    bool window=false, shadow=false, tracked=false;
+};
+inline Gate FirstEntryGate(const Entry& e) {
+    if(!e.enabled)return Gate::Disabled;
+    if(!e.exact)return Gate::Section;
+    if(!e.handsOnly)return Gate::HandsOnly;
+    if(e.animated)return Gate::Animated;
+    if(!e.triangleList)return Gate::Primitive;
+    if(!e.minIndexZero)return Gate::MinIndex;
+    if(!e.scene)return Gate::Scene;
+    if(!e.stereo)return Gate::Stereo;
+    if(!e.focus)return Gate::Focus;
+    if(!e.context)return Gate::Context;
+    if(!e.window)return Gate::Window;
+    if(e.shadow)return Gate::Shadow;
+    if(!e.tracked)return Gate::Tracking;
+    return Gate::Pass;
+}
+inline bool HideFailedEntry(const Entry& e,Gate gate) {
+    return gate!=Gate::Pass && e.handsOnly && !e.animated && e.scene &&
+        e.stereo && e.focus && e.context && !e.shadow;
+}
+inline const char* GateName(Gate g) {
+    constexpr const char* names[]={"pass","disabled","section","hands-only","animated","primitive",
+        "min-index","scene","stereo","focus","context","window","shadow","tracking",
+        "palette","segments","cache","cuff","buffer","bind","draw","restore"};
+    return names[static_cast<unsigned>(g)];
+}
+inline Gate AfterPalette(bool admitted,bool palette,bool exactSegments) {
+    if(!admitted)return Gate::Disabled;
+    if(!palette)return Gate::Palette;
+    if(!exactSegments)return Gate::Segments;
+    return Gate::Pass;
+}
 struct Data { std::vector<std::uint16_t> indices; unsigned capTriangles=0; };
 inline bool Decode(const unsigned char* p, std::size_t bytes, Data& out) {
     if (!p || bytes < 24 || std::memcmp(p,"SVTG",4) || gloves::U32(p+4)!=1 ||
