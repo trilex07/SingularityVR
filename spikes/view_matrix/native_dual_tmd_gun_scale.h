@@ -2,6 +2,11 @@
 #include "dual_tmd_gun_scale_policy.h"
 #include <intrin.h>
 
+// The startup/local-player path independently verifies Camera.PCOwner,
+// Controller.Pawn and Pawn.Controller. The older inventory reflection can
+// temporarily miss the camera while that reciprocal path is already live.
+std::uintptr_t EngineNativeLocalPlayerPawn();
+
 // Read-only result override at the ORIGINAL bone-scale producer. Not a shader
 // palette patch, pose cache, pawn-state write or change to TMD power execution.
 namespace NativeDualTmdGunScale {
@@ -15,6 +20,14 @@ static int lastState=-1;
 static volatile LONG refusals=0;
 static ULONGLONG retry=0;
 static bool Enabled(){return Rd(g_dualWeaponTmdGunScale)!=0;}
+static uintptr_t OwnedPawn() {
+    const uintptr_t camera=NativeOwnedInventory::CameraOwnedPawn();
+    const uintptr_t native=EngineNativeLocalPlayerPawn();
+    // Never override another pawn's authored gun presentation if the two
+    // independently verified owners disagree during a level transition.
+    if(camera&&native&&camera!=native)return 0;
+    return native?native:camera;
+}
 static void Refuse(LONG bit,const char* reason) {
     if(!(Rd(refusals)&bit)&&!(InterlockedOr(&refusals,bit)&bit))
         Log("dual-tmd gun-scale: refused %s; native result retained",reason);
@@ -44,7 +57,7 @@ static float Resolve(void* self,int bone,void* mesh,uintptr_t caller,float value
         using namespace NativeOwnedInventory;
         const auto c=Context();
         if(!dualgunscale::ContextAllowed(c))return value;
-        const auto pawn=CameraOwnedPawn();
+        const auto pawn=OwnedPawn();
         const bool owned=pawn&&pawn==localPawn&&IsLive(control)&&
             P(pawn+dualgunscale::PawnControlOffset)==control&&P(control+OBJ_CLASS)==controlClass&&
             P(P(control)+dualgunscale::GetterSlot)==target&&NamedControl(control);
@@ -73,9 +86,20 @@ static void Poll() {
     if(engineThread&&engineThread!=GetCurrentThreadId())return;
     __try {
         using namespace NativeOwnedInventory;
-        if(!dualgunscale::ContextAllowed(Context())) {control=localPawn=localMesh=0;return;}
-        const auto pawn=CameraOwnedPawn();
-        if(!pawn){control=localPawn=localMesh=0;Refuse(32,"local camera-owned pawn unavailable");return;}
+        const auto context=Context();
+        const unsigned state=(context.dual?1u:0u)|(context.nativeHands?2u:0u)|
+            (context.holstered?4u:0u)|(context.equipped?8u:0u);
+        static unsigned previous=~0u, contextReceipts=0;
+        if(state!=previous){previous=state;
+            if(contextReceipts++<20)Log("dual-tmd gun-scale: context dual=%d nativeHands=%d holstered=%d equipped=%d hands=%ld L2=%ld",
+                context.dual,context.nativeHands,context.holstered,context.equipped,
+                Rd(g_handsStatus),Rd(g_rawAltTrigger));}
+        if(!dualgunscale::ContextAllowed(context)) {control=localPawn=localMesh=0;return;}
+        const auto pawn=OwnedPawn();
+        if(!pawn){control=localPawn=localMesh=0;
+            if(!(Rd(refusals)&32))Log("dual-tmd gun-scale: owner sources camera=%08X native=%08X",
+                (unsigned)CameraOwnedPawn(),(unsigned)EngineNativeLocalPlayerPawn());
+            Refuse(32,"reciprocal local pawn unavailable or owners disagree");return;}
         // Refresh a live instance when loading/switching animations, without
         // retaining UObject ownership across a level change or GC.
         const auto now=GetTickCount64();

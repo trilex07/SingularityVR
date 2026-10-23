@@ -13,6 +13,8 @@ static bool dual=true,nativeHands=false,bad=false,live=true;
 static unsigned char pawnBytes[0x2000]{},nodeBytes[0x100]{},meshBytes[0x100]{},otherBytes[0x100]{};
 static uintptr_t pawn=(uintptr_t)pawnBytes,node=(uintptr_t)nodeBytes,mesh=(uintptr_t)meshBytes;
 static uintptr_t currentPawn=pawn,fieldNode=node,fieldMesh=mesh;
+static uintptr_t nativePawn=pawn;
+std::uintptr_t EngineNativeLocalPlayerPawn(){return nativePawn;}
 static constexpr int OBJ_CLASS=0x34;
 static LONG Rd(volatile LONG& x){return InterlockedCompareExchange(&x,0,0);}
 static bool DualWeaponTmdContext(){return dual;}
@@ -71,6 +73,13 @@ int main(){
     NativeDualTmdGunScale::Poll();assert(!NativeDualTmdGunScale::target);
     g_dualWeaponTmdGunScale=1;NativeDualTmdGunScale::Poll();
     assert(NativeDualTmdGunScale::target==0xb3e400&&NativeDualTmdGunScale::control==node);
+    // Runtime regression: inventory camera reflection misses a pawn while
+    // the independent reciprocal local-player route still identifies it.
+    NativeDualTmdGunScale::control=NativeDualTmdGunScale::localPawn=0;
+    NativeDualTmdGunScale::retry=0;
+    currentPawn=0;NativeDualTmdGunScale::Poll();
+    assert(NativeDualTmdGunScale::localPawn==pawn&&NativeDualTmdGunScale::control==node);
+    currentPawn=pawn;
     uintptr_t before=0,after=0;
     __asm mov before,esp
     for(int i=0;i<10000;++i)assert(Invoke(call,nodeBytes,52,meshBytes)==1.f);
@@ -87,7 +96,14 @@ int main(){
     nativeHands=true;assert(Invoke(call,nodeBytes,52,meshBytes)==0);nativeHands=false;
     g_weaponHolstered=1;assert(Invoke(call,nodeBytes,52,meshBytes)==0);g_weaponHolstered=0;
     g_weaponObj=0;assert(Invoke(call,nodeBytes,52,meshBytes)==0);g_weaponObj=1;
-    currentPawn=0;assert(Invoke(call,nodeBytes,52,meshBytes)==0);currentPawn=pawn;
+    currentPawn=0;nativePawn=0;assert(Invoke(call,nodeBytes,52,meshBytes)==0);
+    currentPawn=pawn;nativePawn=pawn;
+    // The shipped log found the reciprocal native owner while this older
+    // camera reflection rejected it. Both paths must still agree if present.
+    currentPawn=0;assert(Invoke(call,nodeBytes,52,meshBytes)==1);
+    currentPawn=pawn;nativePawn=(uintptr_t)otherBytes;
+    assert(Invoke(call,nodeBytes,52,meshBytes)==0);
+    nativePawn=pawn;
     fieldNode=0;assert(Invoke(call,nodeBytes,52,meshBytes)==0);fieldNode=node;
     fieldMesh=0;assert(Invoke(call,nodeBytes,52,meshBytes)==0);fieldMesh=mesh;
     live=false;assert(Invoke(call,nodeBytes,52,meshBytes)==0);live=true;
