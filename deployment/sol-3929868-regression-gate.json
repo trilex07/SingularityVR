@@ -1,0 +1,19 @@
+{
+  "branch": "fix/sol-bc3ab34-runtime-evidence",
+  "head": "392986821eb544b96f17bfe2606b467d8ec24049",
+  "base": "bc3ab34",
+  "mainDllSha256": "56BBC470E1ADBB128AB409EEAE5242B59772F8E28ED9A697269DB0CA89816B61",
+  "solReferenceDllSha256": "9B22770F44C3931EAD88332D61B18843128972110B7AA2317E385FB5619D6D69",
+  "checkpoint514bb03DllSha256": "19DFDFB7C38751B4127A5C87AA32887F355546E172F20C7776D5CEC5F0B209BE",
+  "recordedAt": "2026-10-23T20:35:00+02:00",
+  "gates": {
+    "test-dual-tmd-gun-scale.ps1": "PASS",
+    "test_gun_scale_name_registry.py": "PASS",
+    "test-dual-weapon-tmd.ps1": "PASS",
+    "test-tmd-short-gauntlet.ps1": "PASS",
+    "test-tmd-short-gauntlet-d3d9": "PASS",
+    "test-knife.ps1": "PASS",
+    "test-weapon-carry-ray": "PASS",
+    "test_carry_ray_wiring.py": "PASS"
+  }
+}
