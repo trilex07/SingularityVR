@@ -269,6 +269,15 @@ static void TestSharedStateWeaponTransitions(){
     }
 }
 int main(int argc,char** argv){
+    assert(ValkyrieKnifeCanBlock(true,true,false));
+    assert(!ValkyrieKnifeCanBlock(true,true,true));
+    assert(!ValkyrieKnifeCanBlock(false,true,false));
+    assert(!ValkyrieKnifeCanBlock(true,false,false));
+    // After TMD acquisition the knife is unavailable; stale native knife
+    // proximity must not veto the magazine even if the hand is near its old hip.
+    Fixture postTmd(profiles[0]);postTmd.Start();
+    postTmd.f.gesture.knifeNear=ValkyrieKnifeCanBlock(true,true,true);
+    assert(postTmd.Tick(true,postTmd.f.gesture.pouch).event==E::GrabFresh);
     for(int fault=0;fault<5;++fault){
         Fixture x(profiles[0]);x.Start();
         assert(x.Tick(true,x.withdrawn).event==E::None);

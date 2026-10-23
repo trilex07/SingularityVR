@@ -7,6 +7,12 @@
 // Independent magazine policy: Circle eject -> shoulder grab -> insert/release.
 // Reuse observation types, NEVER the Centurion cylinder FSM or native tap.
 namespace weaponreloadproto {
+// A disabled post-TMD knife has no grip or proximity claim on Valkyrie's
+// shoulder pouch. Keep this policy profile-specific: Volk/Kasimov retain their
+// previously tested routing until a separate physical result warrants change.
+inline bool ValkyrieKnifeCanBlock(bool enabled,bool ready,bool disabledByTmd){
+    return enabled&&ready&&!disabledByTmd;
+}
 struct Shoulder {float left=.22f,down=.12f,back=.18f;};
 inline bool MidEye(hipknife::V left,hipknife::V right,hipknife::V& centre){
     if(!hipknife::Finite(left)||!hipknife::Finite(right))return false;

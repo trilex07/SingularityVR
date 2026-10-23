@@ -130,7 +130,9 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     in.clip=ammo.counts[0];in.reserve=ammo.counts[1];in.capacity=ammo.counts[2];in.nowMs=now;in.grip=grip;
     in.ammoFresh=ammo.Fresh((uint32_t)pawn,(uint32_t)weapon,(uint32_t)hud,now);
     in.firing=Rd(g_rawTrigger)>26;in.supportLatched=supportLatched;
-    in.handBusy=hipknife::Reserves(g_hipKnifeState,0);
+    const bool knifeCanBlock=kind==Kind::Valkyrie ?
+        ValkyrieKnifeCanBlock(g_hipKnifeEnabled!=0,g_hipKnifeReady,KnifeDisabledByTmd()) : true;
+    in.handBusy=knifeCanBlock&&hipknife::Reserves(g_hipKnifeState,0);
     const auto& left=g_handLastPos[0];const auto& right=g_handLastPos[1];
     const auto& lq=g_handAimOrientation[0];const auto& rq=g_handAimOrientation[1];
     in.hand={left.x,left.y,left.z};in.socket=witness.socket;
@@ -150,11 +152,27 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
             g_nextReloadState.transaction.bodyYaw:f.bodyYaw;
     }
     const auto source=Supply(shoulderHead,shoulderYaw,calibration.shoulder);in.pouch=source.p;
-    if(g_hipKnifeEnabled&&g_hipKnifeReady)in.knifeNear=centurionreload::Near(in.hand,
+    if(g_hipKnifeEnabled&&g_hipKnifeReady&&knifeCanBlock)in.knifeNear=centurionreload::Near(in.hand,
         hipknife::Hip(head,g_centreYaw,g_hipKnifeConfig).p,g_hipKnifeConfig.radius);
+    const bool shoulderGripEdge=in.grip&&!g_nextReloadState.transaction.priorGrip;
+    const auto priorReachUntil=g_nextReloadState.transaction.reachUntil;
+    const auto priorPhase=g_nextReloadState.transaction.phase;
     const auto result=Update(g_nextReloadState,f,calibration);
     const auto& t=g_nextReloadState.transaction;
     const bool valid=in.context&&in.tracked&&in.ammoFresh&&centurionreload::AmmoValid(in)&&f.liveIdentityVerified;
+    static unsigned shoulderReceipts=0;
+    if(kind==Kind::Valkyrie&&shoulderReceipts<32&&
+       ((shoulderGripEdge&&priorPhase==Phase::NeedAmmo)||
+        (priorReachUntil&&now>priorReachUntil&&priorPhase==Phase::NeedAmmo))){
+        ++shoulderReceipts;
+        Log("valkyrie shoulder gate: event=%s phase=%d edge=%d grip=%d window=%llu distance=%.3f radius=%.3f context=%d tracked=%d ammoFresh=%d identity=%d native=%d support=%d knifeBusy=%d knifeNear=%d knifeEnabled=%d tmdOwned=%ld",
+            Name(result.event),int(priorPhase),shoulderGripEdge?1:0,in.grip?1:0,
+            (unsigned long long)(priorReachUntil>now?priorReachUntil-now:0),
+            hipknife::Length(in.hand-in.pouch),calibration.gesture.pouchRadius,
+            in.context?1:0,in.tracked?1:0,in.ammoFresh?1:0,identity?1:0,
+            f.liveIdentityVerified?1:0,in.supportLatched?1:0,in.handBusy?1:0,
+            in.knifeNear?1:0,knifeCanBlock?1:0,Rd(g_knifeTmdOwned));
+    }
     if(circleEdge&&kind!=Kind::None&&gateNotes<=20)
         Log("next reload witness: kind=%d phase=%d grip=%d tracked=%d ammoFresh=%d clip=%d reserve=%d capacity=%d native=%d witness=%d valid=%d event=%d socketDist=%.3f shoulderDist=%.3f",
             int(kind),int(t.phase),grip?1:0,in.tracked?1:0,in.ammoFresh?1:0,

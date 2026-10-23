@@ -11190,6 +11190,15 @@ void SyncXRInput(XrTime displayTime) {
         g_xrSessionState==XR_SESSION_STATE_FOCUSED&&!sampledButtons[3]; // R3/wheel owns stick
     const auto reloadActions=g_reloadControls.Update(reloadLayout&&reloadInputContext,
         sampledButtons[0],sampledButtons[1],reloadStickX,reloadStickY,GetTickCount64());
+    // Refresh native ownership before the reload dispatcher reads the knife
+    // exclusion gate. Previously this happened later in the knife update, so
+    // the first TMD-acquisition frame could use stale knife ownership.
+    const uintptr_t knifeOwnerPawn=g_playerPawn;
+    const bool knifeTmdReadable=knifeOwnerPawn&&g_offTMD>=0&&
+        Readable((void*)(knifeOwnerPawn+g_offTMD),4);
+    const bool knifeOwnsTmd=knifeTmdReadable&&
+        *reinterpret_cast<const uintptr_t*>(knifeOwnerPawn+g_offTMD)!=0;
+    InterlockedExchange(&g_knifeTmdOwned,knifeTmdReadable?(knifeOwnsTmd?1:0):-1);
     if(g_centurionReload||g_centurionReloadProbe||g_centurionNativeGuardMode)UpdateCenturionReload(
         feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
         !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed(),
@@ -11201,14 +11210,13 @@ void SyncXRInput(XrTime displayTime) {
         f.enabled=true;f.focused=g_xrSessionState==XR_SESSION_STATE_FOCUSED;
         f.gameplay=feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
             !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed();
-        const uintptr_t pawn=g_playerPawn;f.pawn=(uint32_t)pawn;
+        const uintptr_t pawn=knifeOwnerPawn;f.pawn=(uint32_t)pawn;
         // These offsets already come from the UObject property resolver. Unknown
         // state is never treated as "no TMD" or "alive".
         const bool impulseOk=g_impulseBtnIdx>=0&&g_impulseBtnIdx<kPadButtonCount&&
             g_padButtons[g_impulseBtnIdx].mask==XI_RSHOULDER;
-        const bool tmdReadable=pawn&&g_offTMD>=0&&Readable((void*)(pawn+g_offTMD),4);
-        const bool ownsTmd=tmdReadable&&*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD)!=0;
-        InterlockedExchange(&g_knifeTmdOwned,tmdReadable?(ownsTmd?1:0):-1);
+        const bool tmdReadable=knifeTmdReadable;
+        const bool ownsTmd=knifeOwnsTmd;
         f.nativeKnife=tmdReadable&&!ownsTmd&&impulseOk;
         f.hasTMD=ownsTmd&&impulseOk;
         // MAIN round 17/19: IgnoreTMD=1 forces the pre-TMD rule (TMD dispute hatch).
