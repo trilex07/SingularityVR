@@ -11235,9 +11235,10 @@ void SyncXRInput(XrTime displayTime) {
         }
         if(event!=hipknife::Event::None){
             static unsigned notes=0;
-            if(notes++<128)Log("hip knife: %s held=%d pawn=%08X (native camera trace, not blade collision)",
+            if(notes++<128)Log("hip knife: %s held=%d pawn=%08X hasTmd=%d nativeKnife=%d ignoreTmd=%d (native camera trace, not blade collision)",
                 event==hipknife::Event::Picked?"PICKED":event==hipknife::Event::Sheathed?"SHEATHED":
-                event==hipknife::Event::Swing?"SWING -> RB pulse":"RESET",g_hipKnifeState.held,f.pawn);
+                event==hipknife::Event::Swing?"SWING -> RB pulse":"RESET",g_hipKnifeState.held,f.pawn,
+                f.hasTMD?1:0,f.nativeKnife?1:0,g_hipKnifeIgnoreTMD?1:0);
             if(event==hipknife::Event::Swing){
                 ArmMeleeWindowFromKnife();
             }
@@ -28520,9 +28521,23 @@ void DrawHipKnife(IDirect3DDevice9* dev){
     // Held joint assembly was already drawn with the native hand's actual eye
     // matrices/shared depth. Never redraw it on top as an independent overlay.
     const LONG frame = Rd(g_sceneModeFrame);
-    if(g_knifeHandGrip && g_hipKnifeState.held >= 0 &&
+    const bool jointSubmitted=g_knifeHandGrip && g_hipKnifeState.held >= 0 &&
        (g_knifeJointFrame == frame || g_knifeJointFrame == frame - 1) &&
-       g_knifeJointEyes != 0) return;
+       g_knifeJointEyes != 0;
+    if(jointSubmitted)return;
+    // A held knife without the original glove/depth joint takes the standalone
+    // OpenXR-pose renderer. Record that route once per holder/TMD mode so a
+    // floating knife can be attributed to a missing joint versus its mount.
+    if(g_knifeHandGrip&&g_hipKnifeState.held>=0){
+        static unsigned seenRoutes=0;
+        const unsigned route=(g_hipKnifeState.held?2u:1u)|(Rd(g_haveTMD)==1?4u:0u)|
+            (g_hipKnifeIgnoreTMD?8u:0u);
+        if(!(seenRoutes&(1u<<route))){seenRoutes|=1u<<route;
+            Log("knife-hand: held standalone route holder=%d tmd=%ld ignoreTmd=%d jointPose=%d glovePose=%d hands=%ld frame=%ld",
+                g_hipKnifeState.held,Rd(g_haveTMD),g_hipKnifeIgnoreTMD?1:0,
+                g_knifeHandPoseThisDraw?1:0,g_nativeGlovePoseThisDraw?1:0,
+                Rd(g_handsStatus),frame);}
+    }
     // MAIN round 18: gate on dupDraws (TRUE stereo, the normal VR path — same
     // signal the belt ring uses), NOT g_stereo (the F12 alternate-eye debug
     // method that SetVrMode/F1 deliberately clear, so the knife could NEVER
