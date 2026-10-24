@@ -1,0 +1,326 @@
+{
+  "schema": 1,
+  "branch": "integration/astra-final-side-candidate",
+  "source_head": "c936f7f17560a11a3864c309b18816f2f61e7480",
+  "sources": {
+    "hud": "d79ad975",
+    "gameplay_bridge_icons": "09887b18",
+    "reload": "54bd946",
+    "hires": "d837d68",
+    "audio_remaster": "ba8774c",
+    "old_voice_qa": "602a5c",
+    "bink_research": "47b4ef7",
+    "xtts": "c3c911d"
+  },
+  "binaries": {
+    "spikes/view_matrix/d3d9.dll": "ee19d3ee7bd06efb91e71251559efa988eaf0f6ead1710b05c4e7308fc0fa0a2",
+    "deployment/texture-cache/artifact/dinput8.dll": "99ff4bf5c49b32ecfe3e7f921f4b17afd28e82390fac8b34b9f5308e46100a55"
+  },
+  "installed": false,
+  "physical_acceptance": "PENDING; HUD mirror/left-hand reports remain open",
+  "private_textures": {
+    "schema": 1,
+    "status": "offline only; not deployed or PSVR2 validated",
+    "private_stage": "<assets-local>/material-remaster-hires/ready",
+    "runtime_note": "PR57 PriorityMaterial allows only Volk and glove; other entries are staged for later MAIN scope review",
+    "maps": {
+      "AR_E99Rifle_alt_d": {
+        "asset": "Valkyrie",
+        "role": "diffuse",
+        "status": "staged",
+        "confidence": "high-source-medium-runtime",
+        "source_package": "RvGame",
+        "source_layout": [
+          2048,
+          1024
+        ],
+        "source_fourcc": "DXT5",
+        "source_sha256": "93ee1b484c982fa953604a9f020e01c82955c3e7e6d06786c52b4ef7df6864f4",
+        "source_fnv64": 16160022635740620080,
+        "width": 4096,
+        "height": 2048,
+        "fourcc": "DXT5",
+        "sha256": "a0cdc3dd8528f6b278ef814c77c8f81e7efa708a12c6d32a30c69b7dc3b59ee9",
+        "preview": "<assets-local>/material-remaster-batch2/weapon_e99/comparison/AR_E99Rifle_alt_diffuse_compare.png"
+      },
+      "AR_E99Rifle_n": {
+        "asset": "Valkyrie",
+        "role": "normal",
+        "status": "staged",
+        "confidence": "high-source-medium-runtime",
+        "source_package": "RvGame",
+        "source_layout": [
+          2048,
+          1024
+        ],
+        "source_fourcc": "DXT1",
+        "source_sha256": "05bfb7f5d361e95eefc3f720bb3731d25f5be52ecf45bbf519854beac9522736",
+        "source_fnv64": 185541836161454253,
+        "width": 4096,
+        "height": 2048,
+        "fourcc": "DXT1",
+        "sha256": "54d47f3b7f15ee63410f321b945acb310dbc95d94346cc006ffd2d7460d06fee",
+        "preview": "<assets-local>/material-remaster-batch2/weapon_e99/comparison/AR_E99Rifle_alt_normal_compare.png"
+      },
+      "AR_shotgun_d": {
+        "asset": "Volk",
+        "role": "diffuse",
+        "status": "staged",
+        "confidence": "medium-visual",
+        "source_package": "RvGameMPLoader_SF",
+        "source_layout": [
+          1024,
+          1024
+        ],
+        "source_fourcc": "DXT5",
+        "source_sha256": "62e4dd278e0ea9288b81c5d5f3d25fa85e3799ff73c70b3eaaf5602358030ecb",
+        "source_fnv64": 5337964157207211514,
+        "width": 2048,
+        "height": 2048,
+        "fourcc": "DXT5",
+        "sha256": "d6a98ef03ec588a31fefdb7393757738b19b86b9e9381029e47e5c26c0506237",
+        "preview": "<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/AR_shotgun_d.png",
+        "note": "Source RGB has dark sparse color speckles; no new procedural grain, inspect in-game before acceptance"
+      },
+      "AR_shotgun_n": {
+        "asset": "Volk",
+        "role": "normal",
+        "status": "staged",
+        "confidence": "high-source-medium-runtime",
+        "source_package": "RvGameMPLoader_SF",
+        "source_layout": [
+          1024,
+          1024
+        ],
+        "source_fourcc": "DXT1",
+        "source_sha256": "3a36fd5d3c856bb38d448dcc7f488a4a5379e83686c2e5878f8487438969510c",
+        "source_fnv64": 10487084446201973189,
+        "width": 2048,
+        "height": 2048,
+        "fourcc": "DXT1",
+        "sha256": "83f64bfce085107a4ec80f14d236eb1409a402b8d879bcf8691667c3f92cd798",
+        "preview": "<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/AR_shotgun_n.png"
+      },
+      "inview_glove_d": {
+        "asset": "first-person gloves",
+        "role": "diffuse",
+        "status": "staged",
+        "confidence": "high-source-medium-runtime",
+        "source_package": "RvGame",
+        "source_layout": [
+          1024,
+          1024
+        ],
+        "source_fourcc": "DXT1",
+        "source_sha256": "f49feef3c08085e6c104fadaea93f533b0b97a7ffde6fb86e618161178125560",
+        "source_fnv64": 14169204449685679501,
+        "width": 2048,
+        "height": 2048,
+        "fourcc": "DXT1",
+        "sha256": "d76d05b122a6c81b24b3560e88cf181167fab3ee64a967a7017d21770f3d4754",
+        "preview": "<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/inview_glove_d.png"
+      },
+      "inview_glove_n": {
+        "asset": "first-person gloves",
+        "role": "normal",
+        "status": "staged",
+        "confidence": "high-source-medium-runtime",
+        "source_package": "RvGame",
+        "source_layout": [
+          1024,
+          1024
+        ],
+        "source_fourcc": "DXT1",
+        "source_sha256": "67342ce3a34cd6ba9fd4903c58efaeda2973633c576dc71dd5b78f4525a6bd23",
+        "source_fnv64": 14124171308224505833,
+        "width": 2048,
+        "height": 2048,
+        "fourcc": "DXT1",
+        "sha256": "5f0a8e9e4c65763a58bc5e88cafeee238ef715935730065336cdff2ca3d8e049",
+        "preview": "<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/inview_glove_n.png"
+      },
+      "ar_sniper_rifle_n": {
+        "asset": "Kasimov",
+        "role": "normal",
+        "status": "staged",
+        "confidence": "high-source-medium-runtime",
+        "source_package": "RvGameMPLoader_SF",
+        "source_layout": [
+          2048,
+          1024
+        ],
+        "source_fourcc": "DXT1",
+        "source_sha256": "1ea5f3484a3ed988015e12c69bdeb5a75687bd3e078044fe5b08b9894e744b2c",
+        "source_fnv64": 10616915492120553037,
+        "width": 4096,
+        "height": 2048,
+        "fourcc": "DXT1",
+        "sha256": "37ea2c1a3c368e1a2b7428490d5a36d9673ab0244dfc5af013ac604c17daed77",
+        "preview": "<assets-local>/material-remaster-batch3/weapon_sniper_normal/comparison/ar_sniper_rifle_n_normal_compare.png"
+      },
+      "ar_sniper_rifle_d": {
+        "asset": "Kasimov",
+        "role": "diffuse",
+        "status": "blocked-lower-mip",
+        "confidence": "low",
+        "source_package": "RvGameMPLoader_SF",
+        "object_layout": [
+          2048,
+          1024
+        ],
+        "available_extraction": [
+          1024,
+          512
+        ],
+        "reason": "UE3 object declares 2048x1024; private extraction contains only 1024x512"
+      },
+      "handgun_d": {
+        "asset": "Centurion",
+        "role": "diffuse",
+        "status": "blocked-identity-and-lower-mip",
+        "confidence": "low",
+        "source_package": "RvGameMPLoader_SF",
+        "object_layout": [
+          2048,
+          2048
+        ],
+        "available_capture": [
+          1024,
+          1024
+        ],
+        "reason": "UE3 object is PF_DXT1 2048x2048 while capture is DXT5 1024x1024; identity/layout not proven"
+      },
+      "handgun_n": {
+        "asset": "Centurion",
+        "role": "normal",
+        "status": "blocked-lower-mip",
+        "confidence": "low",
+        "source_package": "captured",
+        "reason": "No verified top mip plus UE3 identity match"
+      }
+    }
+  },
+  "first_gate_stage": "C:/Users/Trilex/vr-mods/SingularityVR-assets-local/astra-first-hires-gate-20261024",
+  "normal_settings": {
+    "priority_material_mode": 0,
+    "remaster_apply": 0,
+    "spread_percent": 100,
+    "preserve_installed_ini": true
+  },
+  "accuracy_ab": {
+    "TwoHandSpreadPercent": 100,
+    "VrValkyrieSpreadPercent": 70,
+    "VrValkyrieTwoHandPercent": 50,
+    "VrVolkSpreadPercent": 85,
+    "VrVolkTwoHandPercent": 50
+  },
+  "tests": {
+    "audio-private": {
+      "log": "build\\integration-results\\audio-private.log",
+      "sha256": "0090f2e6aaee9278ec2873303568e2f948bb474619aca61813dd8ad258eb85ba",
+      "tail": "=-4.99dB PCM-SHA256=E67D3400E7B703C24A8DD30B0C255A65D4DA7CA1E7AE4862EA1541E1BE5B235C\n  remaster_enhanced.wav: 2ch 32000Hz 4224000f RMS=-21.02dB peak=-4.49dB PCM-SHA256=69E7170704A5C31E99C51F4DE3C7B43BB023EED0BD29E13A0DEF25840DCF1CEE\nPASS 07_music_combat_boss_grom: MUSIC_combatBossGrom01_XSA.xxx::combatBossGrom01 cue=combatBossGrom01\n  original.wav: 6ch 44100Hz 3432648f RMS=-20.09dB peak=-2.98dB PCM-SHA256=5135F61FED913A494275B3317307DF7662BE2C37957B8CF8C4CC1068828732B4\n  restored_conservative.wav: 6ch 44100Hz 3432648f RMS=-20.34dB peak=-2.90dB PCM-SHA256=1D8C34B717302B0C8F92D97FB91B8E200B510FED470D8F067CCC16B5E24B94BE\n  remaster_enhanced.wav: 6ch 44100Hz 3432648f RMS=-19.75dB peak=-2.51dB PCM-SHA256=C41A2118141C2A1C962B5D93780B69D9AC86CB49196DD2A390ACAB36B54FB389\nCUE UNPROVEN 08_ambience_ocean_storm: SP_Freight_Audio_2010_XSA.xxx::windStormHigh01_R cue=windStormHigh01\n  original.wav: 1ch 22050Hz 1323000f RMS=-16.27dB peak=-3.07dB PCM-SHA256=02BFBA528B726BC8E35AF816D5F2C61777A20DA8394711CF086104CC16B2C853\n  restored_conservative.wav: 1ch 22050Hz 1323000f RMS=-16.77dB peak=-3.35dB PCM-SHA256=4457F88796F0DD8F7F56097EBE1D457DF75464B4EC439D06A628909C7A0B68C2\n  remaster_enhanced.wav: 1ch 22050Hz 1323000f RMS=-17.12dB peak=-3.73dB PCM-SHA256=765BBEAA4F41442188BC6A99AF40C198D7015EDBA123D1A4C3ECFAD65272E732\nTrue peak, phase and UE3 cue replacement: NOT verified by this PCM-header check\n"
+    },
+    "dual-tmd": {
+      "log": "build\\integration-results\\dual-tmd.log",
+      "sha256": "4240ae78598e5d000c259e68aed4ea97fb75f960bc66de386009ff32d7424448",
+      "tail": "eparated cleanly; 255 remains 255 with smooth shoulder.\n\n[Test 7] Verifying Selective Target Color Boosts...\n  PASS: E99 Cyan, Amber, and Red alarm colors correctly enhanced.\n\n[Test 8] Verifying Alpha Channel Preservation...\n  PASS: Alpha channel preserved exactly across all test alpha values.\n\n[Test 9] Verifying D3D11 Device Lifetime & Fail-Closed Regression Suite...\n  Sub-test 9.1 PASS: Device A -> Device B transition cleanly handled.\n  Sub-test 9.2 PASS: Failed initialization -> valid new device recovery verified.\n  Sub-test 9.3 PASS: 90 frames at 90 Hz verified with ZERO repeated allocation attempts.\n  Sub-test 9.4 PASS: Legitimate resolution change triggered exactly 1 controlled retry and succeeded.\n  Sub-test 9.5 PASS: Correct pointer passthrough to original source texture verified across all bypass/failure modes.\n  PASS: All D3D11 Device Lifetime & Fail-Closed Regression Scenarios Passed!\n\n[Test 10] Executing Direct3D 11 GPU Compute Shader vs CPU Reference for ALL Presets...\n  D3D11 CheckFormatSupport: DXGI_FORMAT_B8G8R8A8_UNORM supports TYPED_UAV (0x33FEF3F3).\n  PASS: Preset 1 GPU Compute Shader matched CPU reference (Max diff = 1 LSB).\n  PASS: Preset 2 GPU Compute Shader matched CPU reference (Max diff = 1 LSB).\n  PASS: Preset 3 GPU Compute Shader matched CPU reference (Max diff = 1 LSB).\n\n>>> ALL VERIFICATION TESTS (GATES C + CRITICAL REVIEW) PASSED SUCCESSFULLY! <<<\n"
+    },
+    "fonts": {
+      "log": "build\\integration-results\\fonts.log",
+      "sha256": "7a2d7d5632b37fc5db1ce6a5a1fd5c10bc783dc5e538dbd711e806a3f392f7c0",
+      "tail": "FAIL: test_installed_package_when_present: \nPASS: test_refuse_install_output\nPASS: test_shape_roundtrip_synthetic\nPASS: test_wrong_hash_rejected\n"
+    },
+    "haptics": {
+      "log": "build\\integration-results\\haptics.log",
+      "sha256": "c930e89d496327f20e0c6f7130d4c77796b8e2c4514005db5601fd7af38ab706",
+      "tail": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.125s\n\nOK\n"
+    },
+    "hires-stage": {
+      "log": "build\\integration-results\\hires-stage.log",
+      "sha256": "633f35fcc9054f9a58b0c53fb18a166b6160b91e80fe4b301a489239530ec125",
+      "tail": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\astra-first-hires-gate-20261024\n"
+    },
+    "hires-tests": {
+      "log": "build\\integration-results\\hires-tests.log",
+      "sha256": "e505e26f7d646f58d6088975a613752577b1b372613064ed1939235e8cbc998d",
+      "tail": "..\n----------------------------------------------------------------------\nRan 2 tests in 0.006s\n\nOK\n"
+    },
+    "hud": {
+      "log": "build\\integration-results\\hud.log",
+      "sha256": "05818812119a3448527f98282d4cb90085ecc938e2f090f50c742a71db09fd34",
+      "tail": "test-diegetic-centurion.cpp\ntest-diegetic-centurion: all L1 checks PASS\ntest-diegetic-projection.cpp\nPASS: 24 stereo projections, reflected source winding, exact body/alias selection, attachment rejection, coherent pose, near-plane/NaN failure\ntest-diegetic-d3d9.cpp\nPASS D3D9: 108 actual-atlas pixel cases, 3 weapons, 3 rolls, 3 resolutions, hostile state/restoration, failure paths, Reset\nPASS D3D9Ex: 108 actual-atlas pixel cases, 3 weapons, 3 rolls, 3 resolutions, hostile state/restoration, failure paths, Reset\n"
+    },
+    "icons": {
+      "log": "build\\integration-results\\icons.log",
+      "sha256": "39b4944c16145d57fd5735342e1a30076445482ca0ebf6b2e4225e5b46c5ad27",
+      "tail": "PASS: 4 distinct sprites, exact original UVs, source/atlas pixel match, zero non-icon pixel changes\nPASS: PL/EN atlases byte-identical to accepted baseline; 144px selected/idle previews written\n"
+    },
+    "locker-abi": {
+      "log": "build\\integration-results\\locker-abi.log",
+      "sha256": "4cbd8abede268e826a58968c8d6a0fdba77ddc2629bada57b42ca9671a8451f0",
+      "tail": "100c6e35 mov dword ptr [ebp - 4], 0\n100c6e3c mov dword ptr [ebp - 0xc], eax\n100c6e3f push 1\n100c6e41 push 0\n100c6e43 sub esp, 8\n100c6e46 mov ecx, esp\n100c6e48 push 1\n100c6e4a push 1\n100c6e4c push dword ptr [ebp - 8]\n100c6e4f mov eax, dword ptr [ebp - 0xc]\n100c6e52 call eax\n100c6e54 mov ecx, dword ptr [ebp - 0x10]\n100c6e57 mov eax, dword ptr [ecx]\n100c6e59 mov eax, dword ptr [eax + 0x20c]\n100c6e5f call eax\n100c6e61 mov dword ptr [ebp - 4], eax\n100c6e64 mov esi, dword ptr [ebp - 4]\nPASS: PE32 factory literal displacement and FName stack setup\n"
+    },
+    "nis-wiring": {
+      "log": "build\\integration-results\\nis-wiring.log",
+      "sha256": "1ca786c8ec369888e9a340ec0ed1fd94dc016fba15d7112c6d24e1374519db2f",
+      "tail": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.004s\n\nOK\n"
+    },
+    "nis": {
+      "log": "build\\integration-results\\nis.log",
+      "sha256": "4ea93ecde13a2746e6ee7fa7edbbac2f65c807579a6406bf5b423b075dbaa66c",
+      "tail": "\\n        LogInit();\\n        // Stamp the run so a log can be told apart from the previous one at a glance. The file is\\n        // truncated at attach, but without a date there is no way to know whether what you are\\n        // reading is this run or the last one - which matters when the log is read from disk\\n        // rather than pasted, and cost real confusion across earlier sessions.\\n        {\\n            SYSTEMTIME st{}; GetLocalTime(&st);\\n            Log(\"=== view_matrix attached %04u-%02u-%02u %02u:%02u:%02u - run starts here ===\",\\n                st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);\\n        }\\n        if (!LoadReal()) { Log(\"FATAL: real d3d9.dll not loadable\"); return FALSE; }\\n        PhysXPreflight();\\n        InstallAutoResolution();\\n        // Earliest possible attempt, for the same reason the command line needs one: if UE3\\n        // enumerates input devices during startup and caches \"no pad\", a hook installed at the\\n        // first Present is already too late. If XINPUT1_3.dll is not mapped yet this does nothing\\n        // and Present retries.\\n        InstallXInputHook();\\n    } else if (reason == DLL_PROCESS_DETACH) {\\n        g_psvr2Client.Stop();\\n        g_vrRecorder.Stop();\\n    }\\n    return TRUE;\\n}\\n'\n\n----------------------------------------------------------------------\nRan 3 tests in 0.019s\n\nFAILED (failures=1)\n"
+    },
+    "notes": {
+      "log": "build\\integration-results\\notes.log",
+      "sha256": "223e06d17dfb6c32bd67ca7c62b915cb03e0a1189bad193f723662e346b75b55",
+      "tail": ".\n----------------------------------------------------------------------\nRan 1 test in 0.001s\n\nOK\n"
+    },
+    "production": {
+      "log": "build\\integration-results\\production.log",
+      "sha256": "e9733378aa7b3535b4bfdc0f6350f6709490401dd29cd1adead871d74605de47",
+      "tail": "onsider using MultiByteToWideChar() and WideCharToMultiByte() from <Windows.h> instead. You can define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING or _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS to suppress this warning.\npolish_localization.cpp(133): warning C4996: 'std::wstring_convert<std::codecvt_utf8<wchar_t,1114111,(std::codecvt_mode)0>,wchar_t,std::allocator<wchar_t>,std::allocator<char>>::to_bytes': warning STL4017: std::wbuffer_convert, std::wstring_convert, and the <codecvt> header (containing std::codecvt_mode, std::codecvt_utf8, std::codecvt_utf16, and std::codecvt_utf8_utf16) are deprecated in C++17. (The std::codecvt class template is NOT deprecated.) The C++ Standard doesn't provide equivalent non-deprecated functionality; consider using MultiByteToWideChar() and WideCharToMultiByte() from <Windows.h> instead. You can define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING or _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS to suppress this warning.\nGenerowanie kodu...\nTrwa kompilowanie...\nbuffer.c\nhook.c\ntrampoline.c\nhde32.c\nGenerowanie kodu...\n   Trwa tworzenie biblioteki d3d9.lib i obiektu d3d9.exp\n\nBuilt: C:\\Users\\Trilex\\vr-mods\\SingularityVR-astra-final-side\\spikes\\view_matrix\\d3d9.dll\nBuild provenance: C:\\Users\\Trilex\\vr-mods\\SingularityVR-astra-final-side\\spikes\\view_matrix\\d3d9.build.json (SHA-256 EE19D3EE7BD06EFB91E71251559EFA988EAF0F6EAD1710B05C4E7308FC0FA0A2)\n"
+    },
+    "stage-tests": {
+      "log": "build\\integration-results\\stage-tests.log",
+      "sha256": "c6dcad1ff6ef9b6461ec0a6e883649a7de1056ff177477c66eace1dc91052d99",
+      "tail": "..\n----------------------------------------------------------------------\nRan 2 tests in 0.015s\n\nOK\n"
+    },
+    "texture-cache": {
+      "log": "build\\integration-results\\texture-cache.log",
+      "sha256": "cd5d42d664ea814c25a6acd05dc75c7fe55bd8e080b16680079a4b5090c76ffa",
+      "tail": "cement pixels preserved after reset\nPASS write invalidation drops positive cache\nPASS metadata restored for destruction check\nPASS cache does not pin original lifetime\nPASS source destruction releases replacement ownership\nPASS Ex device\nPASS factory creates/uploads synthetic red DXT1\nPASS actual pool is Ex DEFAULT / plain MANAGED\nPASS readback proves uploaded RGB (not black)\nPASS factory uploads DXT5 alpha material\nPASS DXT5 decoded RGB/alpha readback preserved\nPASS source owns replacement metadata without source pin\nPASS positive callback forwards replacement once, preserves stage/HRESULT\nPASS protected menu/shadow source bypassed\nPASS unknown ABI fails closed to original\nPASS native Reset / ResetEx succeeds with held replacement\nPASS resource metadata retained across reset\nPASS replacement pixels preserved after reset\nPASS write invalidation drops positive cache\nPASS metadata restored for destruction check\nPASS cache does not pin original lifetime\nPASS source destruction releases replacement ownership\ntexture_injector.cpp\nGenerowanie kodu...\nTrwa kompilowanie...\nbuffer.c\nhook.c\ntrampoline.c\nhde32.c\nGenerowanie kodu...\n   Trwa tworzenie biblioteki dinput8.lib i obiektu dinput8.exp\nBuilt verified x86 PE32/O2: C:\\Users\\Trilex\\vr-mods\\SingularityVR-astra-final-side\\deployment\\texture-cache\\artifact\\dinput8.dll SHA 99FF4BF5C49B32ECFE3E7F921F4B17AFD28E82390FAC8B34B9F5308E46100A55\n"
+    },
+    "texture-main": {
+      "log": "build\\integration-results\\texture-main.log",
+      "sha256": "09005777d7c555a8e708fac94c1323f947c85a173830066f20932699582a13a9",
+      "tail": "WideChar() and WideCharToMultiByte() from <Windows.h> instead. You can define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING or _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS to suppress this warning.\nGenerowanie kodu...\nTrwa kompilowanie...\nbuffer.c\nhook.c\ntrampoline.c\nhde32.c\nGenerowanie kodu...\nPASS actual MAIN translated source creation\nPASS translated source is DEFAULT\nPASS raw DEFAULT LockRect fails, not assumed lockable\nPASS actual wrapper redirects write to SYSTEMMEM\nPASS actual wrapper uploads source\nPASS actual injector hashes translated source through MAIN readonly lock\nPASS actual Ex replacement factory through MAIN CreateTexture vtable\nPASS source-owned replacement\nPASS single MAIN->callback->driver forward completes without recursion\nPASS driver gets replacement; MAIN trace retains ORIGINAL identity\nPASS source write still lockable\nPASS actual MAIN write invalidates positive decision\nPASS restamp before direct engine UpdateTexture\nPASS external SYSTEMMEM upload allocated\nPASS external upload lock\nPASS external UpdateTexture reaches MAIN hook\nPASS external UpdateTexture invalidates cached replacement\nPASS Ex reset with actual MAIN-translated source\nPASS source shadow/read-only hashing retained after reset\nPASS original not pinned; MAIN shadow teardown\nPASS replacement ownership released\nPASS no live translated shadows; cumulative allocation counter is NOT a live count\n"
+    },
+    "tmd-runtime": {
+      "log": "build\\integration-results\\tmd-runtime.log",
+      "sha256": "87bf9817ab16a7ee250bffc7bb658b7834a04c700c9d2171ff9ac0ccde6e09dd",
+      "tail": "eparated cleanly; 255 remains 255 with smooth shoulder.\n\n[Test 7] Verifying Selective Target Color Boosts...\n  PASS: E99 Cyan, Amber, and Red alarm colors correctly enhanced.\n\n[Test 8] Verifying Alpha Channel Preservation...\n  PASS: Alpha channel preserved exactly across all test alpha values.\n\n[Test 9] Verifying D3D11 Device Lifetime & Fail-Closed Regression Suite...\n  Sub-test 9.1 PASS: Device A -> Device B transition cleanly handled.\n  Sub-test 9.2 PASS: Failed initialization -> valid new device recovery verified.\n  Sub-test 9.3 PASS: 90 frames at 90 Hz verified with ZERO repeated allocation attempts.\n  Sub-test 9.4 PASS: Legitimate resolution change triggered exactly 1 controlled retry and succeeded.\n  Sub-test 9.5 PASS: Correct pointer passthrough to original source texture verified across all bypass/failure modes.\n  PASS: All D3D11 Device Lifetime & Fail-Closed Regression Scenarios Passed!\n\n[Test 10] Executing Direct3D 11 GPU Compute Shader vs CPU Reference for ALL Presets...\n  D3D11 CheckFormatSupport: DXGI_FORMAT_B8G8R8A8_UNORM supports TYPED_UAV (0x33FEF3F3).\n  PASS: Preset 1 GPU Compute Shader matched CPU reference (Max diff = 1 LSB).\n  PASS: Preset 2 GPU Compute Shader matched CPU reference (Max diff = 1 LSB).\n  PASS: Preset 3 GPU Compute Shader matched CPU reference (Max diff = 1 LSB).\n\n>>> ALL VERIFICATION TESTS (GATES C + CRITICAL REVIEW) PASSED SUCCESSFULLY! <<<\n"
+    },
+    "voice-banks": {
+      "log": "build\\integration-results\\voice-banks.log",
+      "sha256": "4a203f958ef9d765ff1f89816631e1bdf553b4acf1d56449f1d10ad92bb46ff3",
+      "tail": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.001s\n\nOK\n"
+    },
+    "voice-coverage": {
+      "log": "build\\integration-results\\voice-coverage.log",
+      "sha256": "4a203f958ef9d765ff1f89816631e1bdf553b4acf1d56449f1d10ad92bb46ff3",
+      "tail": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.001s\n\nOK\n"
+    },
+    "voice-stage": {
+      "log": "build\\integration-results\\voice-stage.log",
+      "sha256": "383a12fba9b5b327054a24ce7e5739569c4f0b6621facd981f2d6a4271063b3c",
+      "tail": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.001s\n\nOK\n"
+    }
+  },
+  "blockers": [
+    "MAIN accepted HUD reconciliation",
+    "font package differs from original patcher pin; no repatch",
+    "Valkyrie/Kasimov lack isolated priority scope gates",
+    "Centurion/Kasimov diffuse source top mips unproven",
+    "native audio packaging needs accepted bank/profile pins and explicit package list; no bank enabled"
+  ]
+}
