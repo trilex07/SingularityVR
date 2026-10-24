@@ -1,6 +1,43 @@
 # STATUS — session handoff
 
+## 2026-10-24 — M09 Session B PHYSICAL FAIL (advanced TMD pulses); root cause bounded to classification; rolled back to Session A state
+
+Session B archive `docs/evidence/m09-session-b-20261024/` (complete log
+`ED29829D…AFB0`, INI `DB2C6CFF…854B`, install report, `analysis-session-b.md`).
+Grades: normal gun feedback PASS, stationary-hand firing PASS, **advanced TMD
+pulses PHYSICAL FAIL** (no vibration felt from any TMD power), no-stuck-after-
+pause PASS, no input/gameplay regressions.
+- **First proven failing stage: B — event captured, rejected at power
+  classification.** Native Start/StopFirePower observers installed and alive
+  (8 hook events). ALL events ended `unclassified power object=0F8E2A00
+  class= [ignored]` (7× stable instance) + 1× `139D9760` with EMPTY class
+  column → pulse engine never armed → `TMD EVENT` 0, `SUBMIT` 0, `STOP` 0
+  (caps started empty; nothing was masked).
+- Name resolution helpers are PROVEN functional in the same session
+  (`cutscene-state class=RvPlayerController`, `scope PiP captureClass=…`);
+  the unclassified receipt does not print `IsLive` or the class POINTER, so
+  the sub-stage (IsLive false / cls null / empty name / map miss) stays
+  INCONCLUSIVE at finer granularity — the exact missing instrumentation bit.
+- Rollback executed (guarded): `20261024-004108` → **post-rollback verified
+  DLL `92D1BABC…C9C4` + INI `D2E91B0B…03D8`** = the physically accepted
+  Session A configuration (TmdPulses absent ⇒ default OFF); M01/M03
+  gameplay untouched. Session-B profile/plan (`BBF1F651…`, `FDDA789F`-bound
+  session-b plan) remain in git for the record.
+- **Minimal fix proposal for SOL (evidence-driven, no amplitude changes, no
+  new hooks):** 1) one bounded receipt field — print `clsPtr=%08X live=%d`
+  in the unclassified receipt to split the four sub-stages; 2) proven-fact
+  fallback: when class resolution yields None but the hardened `IsLocal()`
+  ownership chain confirms the LOCAL TMD, arm the already-bounded pulse as
+  `power=Generic` (foreign TMDs stay rejected — the TMD argument is
+  available in `Note(self, tmd, …)`); classification can be refined later
+  from the new receipt evidence. Keep 200 ms/amplitude caps and all gates
+  unchanged.
+- M02 moves next per MAIN instruction (independent branch, flags default
+  OFF, cherry-picks `df17461`+`d2d54be`+`9ed671d` onto the accepted source
+  baseline).
+
 ## 2026-10-24 — M09 Session A PHYSICAL PASS (corrected); safety review PASS; Session B installed (TmdPulses=1, READY_FOR_PHYSICAL_ACCEPTANCE)
+
 
 Corrected outcome (earlier stationary-rumble FAIL withdrawn by the user —
 they were only aiming without firing; no failed test exists):

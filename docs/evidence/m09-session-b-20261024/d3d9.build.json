@@ -1,0 +1,15 @@
+﻿{
+    "builtAt":  "2026-10-24T00:21:04.5027968+02:00",
+    "repository":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-m09-current",
+    "branch":  "integration/m09-haptics-on-current-baseline",
+    "commit":  "56ae307637596e094be58f5421ca2ac3a43826a8",
+    "workingTreeStatus":  [
+                              "?? build/m09-build.out"
+                          ],
+    "optimization":  "/O2",
+    "performanceInstrumentation":  false,
+    "architecture":  "x86 PE32",
+    "machine":  "0x014C",
+    "optionalHeaderMagic":  "0x010B",
+    "sha256":  "92D1BABC820B901BD5E58717E0000ACE81AD18B3EA5FD92D5412E54C1F29C9C4"
+}
