@@ -148,7 +148,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "glove_native.h"
 #include "native_glove_cuffs.h"
 #include "tmd_short_gauntlet.h"
-#include "diegetic_weapon_hud.h" // MAIN diegetic counter: pure math, L1-tested
+#include "diegetic_hud_draw.h" // shared projection/state/submission, pixel-tested offline
 #include "tmd_attachment_identity.h"
 static tmdattachment::Identity g_tmdAttachmentIdentity;
 static void BuildLiveControllerC(float C[4][4], bool aimHand);
@@ -202,6 +202,8 @@ static XrTime g_hotPredictedDisplayTime = 0;
 #pragma comment(lib, "d3d11.lib")
 
 namespace {
+
+extern singularity::shadow::ShadowRegisterCensus g_shadowRegs;
 
 extern volatile LONG g_vrMenuClass;
 extern volatile LONG g_independentRejectCode;
@@ -20703,8 +20705,23 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         g_thisDrawMoved == 1 && !g_boundShaderLayout.shadow &&
         Rd(g_rtIsScene) && !Rd(g_weaponHolstered) &&
         g_boundShaderLayout.bones >= 0 && g_boundShaderLayout.local >= 0) {
-        const diegetichud::WeaponMount* mo = diegetichud::MountForVerts(numVertices);
-        if (mo && g_boundShaderLayout.boneRegs >= (mo->rootSlot + 1) * 3) {
+        const diegetichud::WeaponMount* mo = diegetichud::MountForBodyDraw(
+            baseVertex,minIndex,numVertices,startIndex,primCount);
+        // Match the named weapon camera actually remapped by StereoPair.
+        // A later world/VFX draw must not supply the HUD's camera at Present.
+        const CamMatSlot* camera=nullptr;
+        for(int i=0;i<g_camMatUsed;++i)
+            if(g_camMats[i].valid && int(g_camMats[i].reg)==g_boundShaderLayout.viewProjection &&
+               (Rd(g_shadowMode)!=3 || singularity::shadow::SlotMayRemap(g_shadowRegs,(std::uint32_t)i,true))) {
+                camera=&g_camMats[i];break;
+            }
+        if(mo && !camera) {
+            static unsigned cameraRejects[3]{};
+            if(cameraRejects[mo->plate]++<2)
+                Log("diegetic hud: body camera unavailable %s vp=c%d tracked=%d; refusing unrelated Present camera",
+                    mo->name,g_boundShaderLayout.viewProjection,g_camMatUsed);
+        }
+        if (mo && camera && g_origSetVSConstF && g_boundShaderLayout.boneRegs >= (mo->rootSlot + 1) * 3) {
             float palette[3][4]; armbind::Mat skin, local, controller;
             if (SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.bones + mo->rootSlot * 3, &palette[0][0], 3)) &&
                 armbind::FromGpu(palette, skin) &&
@@ -20712,20 +20729,26 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 armbind::Finite(local)) {
                 BuildGunC(controller.m);
                 const auto chain = centurionvisual::Product(centurionvisual::Product(skin, local), controller);
-                diegetichud::Mat4 m;
+                diegetichud::Pose pose;
                 for (int r = 0; r < 4; ++r) {
                     for (int c = 0; c < 4; ++c) {
-                        m.m[r][c] = chain.m[r][c];
+                        pose.chain.m[r][c] = chain.m[r][c];
                     }
+                }
+                for(int eye=0;eye<2;++eye) {
+                    float m[16];memcpy(m,camera->m,sizeof(m));
+                    if(eye)ApplyOffset(reinterpret_cast<Reg4*>(m),camera->conv,g_eyeDeltaUU);
+                    ApplyEyeRemap(reinterpret_cast<Reg4*>(m),camera->conv,eye?+.5f:-.5f);
+                    pose.eyeClip[eye]=diegetichud::RowProjection(m,camera->conv==CONV_COL);
                 }
                 const uint64_t now = GetTickCount64();
                 const unsigned frame = (unsigned)Rd(g_sceneModeFrame);
-                diegetichud::RecordLiveTransform(numVertices, m, now, frame);
+                diegetichud::RecordLiveTransform(mo->verts, pose, now, frame);
                 static long saidTfVerts = 0;
                 if (saidTfVerts != (long)numVertices) {
                     saidTfVerts = (long)numVertices;
-                    Log("diegetic hud: captured live 3D transform for %s (%ld) at tick=%I64u frame=%u",
-                        mo->name, (long)numVertices, now, frame);
+                    Log("diegetic hud: body pose %s mesh=%ld first=%u tris=%u root=%d vp=c%u conv=%d tick=%I64u frame=%u",
+                        mo->name, (long)numVertices, startIndex, primCount, mo->rootSlot, camera->reg, camera->conv, now, frame);
                 }
             }
         }
@@ -31357,8 +31380,8 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
     // Live weapon transform: must be captured this frame from Hook_DrawIndexedPrim
     const uint64_t now = GetTickCount64();
     const unsigned frame = (unsigned)Rd(g_sceneModeFrame);
-    diegetichud::Mat4 chain{};
-    if (!diegetichud::GetLiveTransform(heldVerts, now, frame, chain)) {
+    diegetichud::Pose pose{};
+    if (!diegetichud::GetLiveTransform(heldVerts, now, frame, pose)) {
         static uint64_t lastStaleLog = 0;
         if (now - lastStaleLog > 3000) {
             lastStaleLog = now;
@@ -31412,188 +31435,39 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
     const int numQuads = diegetichud::BuildFixtureQuads3D(*mo, clip, bin, quads, 16);
     if (numQuads <= 0) return;
 
-    // Transform quads from Model Space to Translated-World Space (in UU)
-    struct QuadWorld {
-        diegetichud::V3 p[4];
-        float u0, v0, u1, v1;
-        uint32_t col;
-    };
-    QuadWorld worldQuads[16];
-    for (int q = 0; q < numQuads; ++q) {
-        worldQuads[q].u0 = quads[q].u0;
-        worldQuads[q].v0 = quads[q].v0;
-        worldQuads[q].u1 = quads[q].u1;
-        worldQuads[q].v1 = quads[q].v1;
-        worldQuads[q].col = quads[q].color;
-        for (int k = 0; k < 4; ++k) {
-            worldQuads[q].p[k] = diegetichud::Point(quads[q].p[k], chain);
-        }
+    IDirect3DSurface9* back=nullptr;
+    if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back)) || !back)return;
+    D3DSURFACE_DESC desc{};
+    if(FAILED(back->GetDesc(&desc))){back->Release();return;}
+    const auto plan=diegetichud::Project(quads,numQuads,pose,desc.Width,desc.Height,handhud::kPlateAlphaPct);
+    const auto result=diegetichud::Render(dev,back,g_diegeticAtlas,g_diegeticState,plan,
+        [&](IDirect3DSurface9* target){return g_origSetRenderTarget(dev,0,target);},
+        [&](const diegetichud::ScreenVertex* vertices){return g_origDrawPrimUP(dev,
+            D3DPT_TRIANGLESTRIP,2,vertices,sizeof(diegetichud::ScreenVertex));});
+    back->Release();
+    if(mo->plate>=0 && mo->plate<=2)InterlockedExchange(&g_diegeticDrew[mo->plate],result.handledEyes);
+
+    // Six bounded receipts per weapon/session, plus state changes. No readback,
+    // shader dump or GPU synchronization in the production draw path.
+    static unsigned receipts[3]{};
+    static int lastState[3]={-1,-1,-1};
+    const int state=plan.ready?(SUCCEEDED(result.hr)?1:2):0;
+    if(receipts[mo->plate]<6 && lastState[mo->plate]!=state) {
+        ++receipts[mo->plate];lastState[mo->plate]=state;
+        const auto p=diegetichud::Point(quads[4].p[0],pose.chain);
+        Log("diegetic hud 3D: %s state=%d handledEyes=%u submitted=%u/%u screenFacing=%d/%d "
+            "bezelWorld=(%.3f,%.3f,%.3f) bboxL=(%.1f,%.1f)-(%.1f,%.1f) bboxR=(%.1f,%.1f)-(%.1f,%.1f) back=%ux%u hr=%08lx",
+            mo->name,state,result.handledEyes,result.submitted[0],result.submitted[1],
+            plan.eye[0].front[5]?1:0,plan.eye[1].front[5]?1:0,
+            double(p.x),double(p.y),double(p.z),
+            double(plan.eye[0].minX),double(plan.eye[0].minY),double(plan.eye[0].maxX),double(plan.eye[0].maxY),
+            double(plan.eye[1].minX),double(plan.eye[1].minY),double(plan.eye[1].maxX),double(plan.eye[1].maxY),
+            desc.Width,desc.Height,result.hr);
+        for(int r=0;r<4;++r)Log("diegetic hud pose row%d chain=(%.6g %.6g %.6g %.6g) L=(%.6g %.6g %.6g %.6g) R=(%.6g %.6g %.6g %.6g)",
+            r,double(pose.chain.m[r][0]),double(pose.chain.m[r][1]),double(pose.chain.m[r][2]),double(pose.chain.m[r][3]),
+            double(pose.eyeClip[0].m[r][0]),double(pose.eyeClip[0].m[r][1]),double(pose.eyeClip[0].m[r][2]),double(pose.eyeClip[0].m[r][3]),
+            double(pose.eyeClip[1].m[r][0]),double(pose.eyeClip[1].m[r][1]),double(pose.eyeClip[1].m[r][2]),double(pose.eyeClip[1].m[r][3]));
     }
-
-    // Prepare backbuffer and state block
-    IDirect3DSurface9* back = nullptr;
-    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
-    D3DSURFACE_DESC d{};
-    if (FAILED(back->GetDesc(&d)) || d.Width < 8 || d.Height < 8) {
-        back->Release();
-        return;
-    }
-    IDirect3DSurface9* old = nullptr;
-    IDirect3DSurface9* depth = nullptr;
-    dev->GetRenderTarget(0, &old);
-    dev->GetDepthStencilSurface(&depth);
-    if (!g_diegeticState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_diegeticState))) {
-        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
-    }
-    if (FAILED(g_diegeticState->Capture())) {
-        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
-    }
-
-    g_origSetRenderTarget(dev, 0, back);
-    dev->SetDepthStencilSurface(nullptr);
-    dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
-
-    D3DVIEWPORT9 vp{0, 0, d.Width, d.Height, 0.0f, 1.0f};
-    dev->SetViewport(&vp);
-    dev->SetVertexShader(nullptr);
-    dev->SetPixelShader(nullptr);
-    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
-    dev->SetTexture(0, g_diegeticAtlas);
-    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
-    dev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-    dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
-
-    struct DiegeticVtx { float x, y, z, rhw; DWORD c; float u, v; };
-    static char saidWeapon[24] = { 0 };
-    int drewEye = 0;
-
-    // Retrieve base camera matrix
-    float baseCam[16];
-    int baseConv = CONV_ROW;
-    bool baseOk = false;
-    if (g_vfxBaseCamValid) {
-        memcpy(baseCam, g_vfxBaseCam, sizeof(baseCam));
-        baseConv = g_vfxBaseCamConv;
-        baseOk = true;
-    } else {
-        for (int i = 0; i < g_camMatUsed; ++i) {
-            if (g_camMats[i].valid) {
-                memcpy(baseCam, g_camMats[i].m, sizeof(baseCam));
-                baseConv = g_camMats[i].conv;
-                baseOk = true;
-                break;
-            }
-        }
-    }
-
-    float eyeMinX[2] = { 1e9f, 1e9f }, eyeMinY[2] = { 1e9f, 1e9f };
-    float eyeMaxX[2] = { -1e9f, -1e9f }, eyeMaxY[2] = { -1e9f, -1e9f };
-
-    if (baseOk) {
-        for (int eye = 0; eye < 2; ++eye) {
-            float m[16];
-            memcpy(m, baseCam, sizeof(m));
-            const int conv = baseConv;
-            if (eye) ApplyOffset(reinterpret_cast<Reg4*>(m), conv, g_eyeDeltaUU);
-            ApplyEyeRemap(reinterpret_cast<Reg4*>(m), conv, eye ? +0.5f : -0.5f);
-
-            RECT rcEye = {
-                eye == 0 ? 0 : (LONG)(d.Width / 2),
-                0,
-                eye == 0 ? (LONG)(d.Width / 2) : (LONG)d.Width,
-                (LONG)d.Height
-            };
-            dev->SetScissorRect(&rcEye);
-            dev->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
-
-            int quadsDrawnThisEye = 0;
-            for (int q = 0; q < numQuads; ++q) {
-                float cl[4][4];
-                bool cornerOk = true;
-                for (int k = 0; k < 4 && cornerOk; ++k) {
-                    const float pt[3] = { worldQuads[q].p[k].x, worldQuads[q].p[k].y, worldQuads[q].p[k].z };
-                    WorldToClip(m, conv, pt, cl[k]);
-                    if (cl[k][3] <= 0.001f) cornerOk = false;
-                }
-                if (!cornerOk) continue;
-
-                auto SX = [&](const float* c) { return (c[0] / c[3] * 0.5f + 0.5f) * (float)d.Width; };
-                auto SY = [&](const float* c) { return (0.5f - c[1] / c[3] * 0.5f) * (float)d.Height; };
-                auto SZ = [&](const float* c) {
-                    float z = c[2] / c[3];
-                    if (z < 0.0f) z = 0.0f; else if (z > 1.0f) z = 1.0f;
-                    return z;
-                };
-
-                for (int k = 0; k < 4; ++k) {
-                    const float sx = SX(cl[k]);
-                    const float sy = SY(cl[k]);
-                    if (sx < eyeMinX[eye]) eyeMinX[eye] = sx;
-                    if (sx > eyeMaxX[eye]) eyeMaxX[eye] = sx;
-                    if (sy < eyeMinY[eye]) eyeMinY[eye] = sy;
-                    if (sy > eyeMaxY[eye]) eyeMaxY[eye] = sy;
-                }
-
-                const uint32_t qc = worldQuads[q].col;
-                const DWORD col = handhud::WithAlphaPct(qc, handhud::kPlateAlphaPct);
-
-                DiegeticVtx v[4] = {
-                    { SX(cl[0]), SY(cl[0]), SZ(cl[0]), 1.0f / cl[0][3], col, worldQuads[q].u0, worldQuads[q].v0 },
-                    { SX(cl[1]), SY(cl[1]), SZ(cl[1]), 1.0f / cl[1][3], col, worldQuads[q].u1, worldQuads[q].v0 },
-                    { SX(cl[3]), SY(cl[3]), SZ(cl[3]), 1.0f / cl[3][3], col, worldQuads[q].u0, worldQuads[q].v1 },
-                    { SX(cl[2]), SY(cl[2]), SZ(cl[2]), 1.0f / cl[2][3], col, worldQuads[q].u1, worldQuads[q].v1 },
-                };
-
-                if (SUCCEEDED(g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(DiegeticVtx)))) {
-                    quadsDrawnThisEye++;
-                }
-            }
-            if (quadsDrawnThisEye >= 6 &&
-                diegetichud::EyeBoundsVisible(eyeMinX[eye], eyeMinY[eye],
-                                              eyeMaxX[eye], eyeMaxY[eye],
-                                              eye, d.Width, d.Height)) {
-                drewEye |= (1 << eye);
-            }
-        }
-    }
-
-    if (mo->plate >= 0 && mo->plate <= 2)
-        InterlockedExchange(&g_diegeticDrew[mo->plate], drewEye);
-
-    if ((drewEye & 3) == 3 && strcmp(saidWeapon, mo->name) != 0) {
-        snprintf(saidWeapon, sizeof(saidWeapon), "%s", mo->name);
-        Log("diegetic hud 3D: drew %s (mesh %ld) plate=%d clip=%d bin=%d quads=%d eyes=LR "
-            "bboxL=(%.0f,%.0f)-(%.0f,%.0f) bboxR=(%.0f,%.0f)-(%.0f,%.0f) (backbuffer %ux%u)",
-            mo->name, heldVerts, mo->plate, clip, bin, numQuads,
-            (double)eyeMinX[0], (double)eyeMinY[0], (double)eyeMaxX[0], (double)eyeMaxY[0],
-            (double)eyeMinX[1], (double)eyeMinY[1], (double)eyeMaxX[1], (double)eyeMaxY[1],
-            d.Width, d.Height);
-    } else if ((drewEye & 3) != 3) {
-        static uint64_t lastProjLog = 0;
-        if (now - lastProjLog > 3000) {
-            lastProjLog = now;
-            Log("diegetic hud 3D: projection out of eye bounds for %s (%ld) drewEye=%d "
-                "bboxL=(%.0f,%.0f)-(%.0f,%.0f) bboxR=(%.0f,%.0f)-(%.0f,%.0f); falling back to 2D plate",
-                mo->name, heldVerts, drewEye,
-                (double)eyeMinX[0], (double)eyeMinY[0], (double)eyeMaxX[0], (double)eyeMaxY[0],
-                (double)eyeMinX[1], (double)eyeMinY[1], (double)eyeMaxX[1], (double)eyeMaxY[1]);
-        }
-    }
-
-    g_diegeticState->Apply();
-    if (old) g_origSetRenderTarget(dev, 0, old);
-    dev->SetDepthStencilSurface(depth);
-    if (old) old->Release(); if (depth) depth->Release(); back->Release();
 }
 
 // MAIN 2026-10-15: white translucent ring marks the hip holster spot while a

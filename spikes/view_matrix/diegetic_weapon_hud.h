@@ -69,6 +69,17 @@ inline const WeaponMount* MountForVerts(long v) {
     return nullptr; // TMD / seeker / unknown: no diegetic counter
 }
 
+// The root slot belongs to the BODY palette, not every draw sharing its VB.
+// In particular Valkyrie's 8-triangle attachment uses cog_gun in slot 0.
+inline const WeaponMount* MountForBodyDraw(int base, unsigned minIndex,
+    unsigned verts, unsigned first, unsigned triangles) {
+    if (base != 0 || minIndex != 0 || first != 0) return nullptr;
+    if (verts == 5799 && triangles == 6767) return MountForVerts(5799);
+    if ((verts == 11387 || verts == 11378) && triangles == 12834) return MountForVerts(11387);
+    if (verts == 8297 && triangles == 10835) return MountForVerts(8297);
+    return nullptr;
+}
+
 // Hand-anchor lift above the calibrated 0.03 m baseline: the per-weapon
 // fixture centre difference to the Centurion baseline, converted to metres.
 inline float MountAnchorLiftM(const WeaponMount& m) {
@@ -189,12 +200,10 @@ inline V3 operator-(const V3& a, const V3& b) { return { a.x - b.x, a.y - b.y, a
 inline V3 operator*(const V3& a, float s) { return { a.x * s, a.y * s, a.z * s }; }
 inline V3 operator*(float s, const V3& a) { return { a.x * s, a.y * s, a.z * s }; }
 
-// Converts a point or vector from raw ActorX PSK space (PNTS0000) into
-// Singularity's native cooked GPU vertex stream space (where Y is negated:
-// native_pos = psk_pos * [1, -1, 1], proven in tools/reload/audit_next_weapon_space.py).
-inline V3 ToNativeVertexSpace(const V3& pskPt) {
-    return { pskPt.x, -pskPt.y, pskPt.z };
-}
+// Verified against ALL original cooked Volk positions (8297 wedges): the
+// fixture source PSK uses +Y, while the cooked stream uses -Y. The handoff's
+// proposed identity conversion is contradicted by the original package bytes.
+inline V3 ToNativeVertexSpace(const V3& p) { return {p.x,-p.y,p.z}; }
 
 struct Quad3D {
     V3 p[4];            // 4 corners in native GPU weapon model space (0: top-left, 1: top-right, 2: bot-right, 3: bot-left)
@@ -206,6 +215,20 @@ struct Quad3D {
 struct Mat4 {
     float m[4][4]{};
 };
+
+// One coherent body-draw snapshot. Eye matrices are the SAME named camera
+// remaps as StereoPair, before GunC (already included exactly once in chain).
+struct Pose {
+    Mat4 chain{};
+    Mat4 eyeClip[2]{}; // canonical row-vector convention
+};
+
+inline Mat4 RowProjection(const float* registers,bool columnConvention) {
+    Mat4 out;
+    for(int r=0;r<4;++r)for(int c=0;c<4;++c)
+        out.m[r][c]=registers[columnConvention?c*4+r:r*4+c];
+    return out;
+}
 
 inline V3 Point(const V3& v, const Mat4& mat) {
     return {
@@ -229,7 +252,7 @@ struct LiveTransform {
     long verts = 0;
     uint64_t tick = 0;
     unsigned frame = 0;
-    Mat4 chain{};
+    Pose pose{};
 };
 
 inline LiveTransform& GlobalLiveTransform() {
@@ -237,8 +260,8 @@ inline LiveTransform& GlobalLiveTransform() {
     return g_tf;
 }
 
-inline void RecordLiveTransform(long verts, const Mat4& chain, uint64_t tick, unsigned frame) {
-    if (!Finite(chain)) return;
+inline void RecordLiveTransform(long verts, const Pose& pose, uint64_t tick, unsigned frame) {
+    if (!Finite(pose.chain) || !Finite(pose.eyeClip[0]) || !Finite(pose.eyeClip[1])) return;
     auto& tf = GlobalLiveTransform();
     const LONG s0 = InterlockedIncrement(&tf.seq);
     (void)s0;
@@ -246,13 +269,13 @@ inline void RecordLiveTransform(long verts, const Mat4& chain, uint64_t tick, un
     tf.verts = verts;
     tf.tick = tick;
     tf.frame = frame;
-    tf.chain = chain;
+    tf.pose = pose;
     InterlockedExchange(&tf.valid, 1);
     MemoryBarrier();
     InterlockedIncrement(&tf.seq);
 }
 
-inline bool GetLiveTransform(long verts, uint64_t now, unsigned frame, Mat4& out) {
+inline bool GetLiveTransform(long verts, uint64_t now, unsigned frame, Pose& out) {
     auto& tf = GlobalLiveTransform();
     for (int attempt = 0; attempt < 4; ++attempt) {
         const LONG s1 = InterlockedCompareExchange(&tf.seq, 0, 0);
@@ -262,7 +285,7 @@ inline bool GetLiveTransform(long verts, uint64_t now, unsigned frame, Mat4& out
         const long curVerts = tf.verts;
         const uint64_t curTick = tf.tick;
         const unsigned curFrame = tf.frame;
-        const Mat4 curChain = tf.chain;
+        const Pose curPose = tf.pose;
         MemoryBarrier();
         const LONG s2 = InterlockedCompareExchange(&tf.seq, 0, 0);
         if (s1 != s2) continue;
@@ -276,8 +299,8 @@ inline bool GetLiveTransform(long verts, uint64_t now, unsigned frame, Mat4& out
         } else {
             if (curTick - now > 50) return false;
         }
-        if (!Finite(curChain)) return false;
-        out = curChain;
+        if (!Finite(curPose.chain) || !Finite(curPose.eyeClip[0]) || !Finite(curPose.eyeClip[1])) return false;
+        out = curPose;
         return true;
     }
     return false;
@@ -320,17 +343,13 @@ inline int BuildFixtureQuads3D(const WeaponMount& mo, int clip, int reserve,
     const float cos_p = std::cos(rad);
     const float sin_p = std::sin(rad);
 
-    // Orthonormal basis in ActorX PSK space (prepare_diegetic_models_v2.py):
-    //   right_psk = (1, 0, 0)
-    //   fwd_psk   = (0, sin_p, cos_p)
-    //   norm_psk  = (0, cos_p, -sin_p)
-    // Converted to native cooked GPU vertex stream space via ToNativeVertexSpace
-    // (Y negated: native_pos = psk_pos * [1, -1, 1]):
-    const V3 right = ToNativeVertexSpace({ 1.0f, 0.0f, 0.0f });
-    const V3 fwd   = ToNativeVertexSpace({ 0.0f, sin_p, cos_p });
-    const V3 norm  = ToNativeVertexSpace({ 0.0f, cos_p, -sin_p });
+    // Measurements are in the source fixture's ActorX coordinates. Match the
+    // original cooked stream before applying its native bone palette.
+    const V3 right=ToNativeVertexSpace({1.0f,0.0f,0.0f});
+    const V3 fwd=ToNativeVertexSpace({0.0f,sin_p,cos_p});
+    const V3 norm=ToNativeVertexSpace({0.0f,cos_p,-sin_p});
 
-    const V3 center = ToNativeVertexSpace({ mo.cxUU, mo.cyUU, mo.czUU });
+    const V3 center=ToNativeVertexSpace({mo.cxUU,mo.cyUU,mo.czUU});
     const float rx = mo.wUU * 0.5f;
     const float ry = mo.hUU * 0.5f;
     const float rz = mo.dUU * 0.5f;

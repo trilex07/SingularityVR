@@ -158,7 +158,7 @@ int main() {
     CHECK(sameCell(Quad{0,0,0,0, cq3d[7].u0, cq3d[7].v0, cq3d[7].u1, cq3d[7].v1}, Digit(true, 2))); // amber
 
     // 18. Native GPU vertex space conversion and upright UV orientation.
-    // Cooked UE3 SkeletalMesh GPU stream reflects ActorX PSK Y -> -Y.
+    // Original cooked buffers reflect the +Y source PSK exactly once.
     CHECK(Near(vq3d[4].p[0].y, -mv->cyUU, 2.0f));
     CHECK(Near(sq3d[4].p[0].y, -ms->cyUU, 2.0f));
     CHECK(Near(cq3d[4].p[0].y, -mc->cyUU, 2.0f));
@@ -171,19 +171,20 @@ int main() {
     Mat4 testMat{};
     testMat.m[0][0] = 1; testMat.m[1][1] = 1; testMat.m[2][2] = 1; testMat.m[3][3] = 1;
     testMat.m[3][0] = 10.0f; testMat.m[3][1] = 20.0f; testMat.m[3][2] = 30.0f;
-    RecordLiveTransform(11387, testMat, 1000, 42);
-    Mat4 outMat{};
-    CHECK(GetLiveTransform(11387, 1050, 42, outMat));
-    CHECK(GetLiveTransform(11387, 1050, 43, outMat));
-    CHECK(Near(outMat.m[3][0], 10.0f, 1e-4f));
-    CHECK(Near(outMat.m[3][1], 20.0f, 1e-4f));
-    CHECK(Near(outMat.m[3][2], 30.0f, 1e-4f));
+    Pose testPose{}; testPose.chain=testMat; testPose.eyeClip[0]=testMat; testPose.eyeClip[1]=testMat;
+    RecordLiveTransform(11387, testPose, 1000, 42);
+    Pose outPose{};
+    CHECK(GetLiveTransform(11387, 1050, 42, outPose));
+    CHECK(GetLiveTransform(11387, 1050, 43, outPose));
+    CHECK(Near(outPose.chain.m[3][0], 10.0f, 1e-4f));
+    CHECK(Near(outPose.chain.m[3][1], 20.0f, 1e-4f));
+    CHECK(Near(outPose.chain.m[3][2], 30.0f, 1e-4f));
     // Stale tick rejection (>100ms)
-    CHECK(!GetLiveTransform(11387, 1150, 42, outMat));
+    CHECK(!GetLiveTransform(11387, 1150, 42, outPose));
     // Stale frame rejection (frame diff > 2)
-    CHECK(!GetLiveTransform(11387, 1020, 46, outMat));
+    CHECK(!GetLiveTransform(11387, 1020, 46, outPose));
     // Weapon mismatch rejection
-    CHECK(!GetLiveTransform(5799, 1050, 42, outMat));
+    CHECK(!GetLiveTransform(5799, 1050, 42, outPose));
 
     // 20. Eye viewport visibility bounds check.
     CHECK(EyeBoundsVisible(1200.0f, 1400.0f, 1320.0f, 1460.0f, 0, 5640, 2876));
