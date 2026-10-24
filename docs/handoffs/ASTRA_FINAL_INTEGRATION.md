@@ -4,7 +4,7 @@ Branch: `integration/astra-final-side-candidate`. No Steam launch, deployment or
 
 ## Actual integration
 
-Started at HUD d79ad975. Merged 09887b18 without conflicts (ad4f5b15), preserving detailed icons, native spread policy and the single-owner slot-65 bridge. Cherry-picked reload comfort 54bd946 as 56a157ab; imported hires tools/manifests 132d24d1 and d837d68 as 35ab3b33/c936f7f1. HUD draw/projection headers remain unchanged. No input, aiming or TMD redesign.
+Started at HUD d79ad975. Merged 09887b18 without conflicts (ad4f5b15), preserving detailed icons, native spread policy and the single-owner slot-65 bridge. Cherry-picked reload comfort 54bd946 as 56a157ab; imported hires tools/manifests 132d24d1 and d837d68 as 35ab3b33/c936f7f1. Initial integration preserved HUD draw/projection headers; the follow-up below synchronizes the reviewed HUD fixes. No input, aiming or TMD redesign.
 
 Valkyrie/Volk insertion radius is 18 cm; Kasimov remains 16 cm and Centurion separate. Native Grip release and ammo transactions remain authoritative. Accuracy defaults remain 100%; optional balance settings are separate from the candidate's normal configuration.
 
@@ -26,6 +26,14 @@ ba8774c audio tools/inventory are already byte-identical on this base. Eight pri
 
 ## Review outcome
 
-GO for source review and staged offline candidate; NO-GO for promotion as a stable release until MAIN reconciles its physically accepted HUD tip. User-reported mirrored counter and left-hand offset are unresolved, owned by MAIN. No physical PASS claimed. Valkyrie/Kasimov hires remain staged, not enabled: their old broad remaster scope is not an independent safe gate. Centurion and Kasimov diffuse remain blocked by original top-mip/identity evidence.
+GO for source review and controlled MAIN testing; NO-GO for stable release until physical acceptance. The latest HUD source is now integrated: reflection is corrected in code, physical acceptance pending. Left-hand offset remains unresolved; bounded measurement is provided. No physical PASS claimed. Valkyrie/Kasimov hires remain staged, not enabled: their old broad remaster scope is not an independent safe gate. Centurion and Kasimov diffuse remain blocked by original top-mip/identity evidence.
 
 Binary hashes, source commits, assets, configuration deltas and test receipts: ASTRA_FINAL_CANDIDATE.json.
+
+## Latest HUD synchronization
+
+Merged f307ad32c2a52288534fcf196f70ac9739c1b59f at d933715b733e58acec271e213d5f9705ff110f6a. Only conflict was STATUS.md; both entries retained. Preserves all prior integration changes and body-owned projection. Includes 5181cdc4 reader-axis reflection and 36081c3d final-bound wrist measurement; no guessed wrist offsets or tracking writes.
+
+Focused offline PASS: 6 recorded pose replays, 24 stereo projections, 120 D3D9 + 120 D3D9Ex pixel cases; wrist probe/math plus 7 parser cases; full critical gameplay/TMD/reload/OLED suite; actual compiled WeaponLocker ABI. Build x86 PE32 /O2 PASS. See manifest for exact DLL SHA256 and hashed logs. Physical acceptance PENDING.
+
+Opt-in diagnostic: [Render] HandAnchorProbe=1; default 0. Eight records per eye at >=2 seconds, final-bound receipt. No configuration change or Steam access performed. Texture replacements and experimental accuracy settings remain disabled/default100.

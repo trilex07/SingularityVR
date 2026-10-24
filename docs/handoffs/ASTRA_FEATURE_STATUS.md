@@ -4,7 +4,7 @@ Installed means this exact combined artifact. No row is installed by SIDE.
 
 | Feature | SIDE source | In final branch | Built | Installed | PSVR2 grade | Missing work |
 |---|---|---|---|---|---|---|
-| HUD 3D | d79ad975 | INTEGRATED unchanged | OFFLINE PASS | No | PHYSICAL FAIL: orientation report; hand offset open | MAIN accepted-tip reconciliation |
+| HUD 3D | f307ad32 (5181cdc4 + 36081c3d) | INTEGRATED reader reflection + wrist probe | OFFLINE PASS 240 pixel cases | No | PENDING; old orientation failure addressed in code, hand offset open | MAIN physical acceptance |
 | Reload comfort | 54bd946 | INTEGRATED | OFFLINE PASS | No | Pending new radii | 18cm Valk/Volk physical test |
 | Accuracy | eade95a via 09887b1 | INTEGRATED | OFFLINE PASS | No | Proposed balance unaccepted | Separate 100% vs A/B |
 | Single-owner texture bridge | PR57 via 09887b1 | INTEGRATED | OFFLINE PASS D3D9/Ex | No | Pending | Log-only then four-map replacement |
