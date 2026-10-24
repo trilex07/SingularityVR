@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+## 2026-10-25 — SIDE dual-hand action interference: evidence gate
+
+User reports L2/Square drops the right gun and R2 disturbs left TMD. Native
+presentation switches and original animation displacement are confirmed offline;
+the actual failing draw/pose ownership at those actions is still unproven.
+Default-OFF `DualHandPoseProbe` captures bounded same-frame source/bound palettes
+and raw action states. L1/L2 PASS; this is **diagnostic only, not a repaired pose**.
+No Steam access. Seeker and accepted visual/input behavior unchanged. Details:
+[dual-hand handoff](docs/handoffs/sol-dual-hand-action-interference.md).
+
 ## 2026-10-25 — SIDE Seeker back slot / measured support / launch candidate
 
 `feature/sol-seeker-back-slot` starts at accepted `543bff1`. Three independent

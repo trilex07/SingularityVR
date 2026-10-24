@@ -3,6 +3,7 @@
 #include "tmd_support_gauntlet.h"
 #include "skeletal_palette.h"
 #include "hand_anchor_probe.h"
+#include "dual_hand_pose_probe.h"
 #include "hand_anchor_math.h"
 #include "two_hand_spread.h"
 #include "texture_bridge_contract.h"
@@ -693,6 +694,7 @@ volatile LONG g_rawTrigger = 0;
 volatile LONG g_rawAltTrigger = 0;
 // Raw OpenXR Impulse action, before intentional XInput LT/ADS suppression.
 volatile LONG g_rawImpulsePressed = 0;
+static volatile LONG g_rawAgePressed = 0; // diagnostic copy of the existing action sample
 
 // ---- ⚠️ run 155: reported STUCK TRIGGERS on a set-down controller ----
 //
@@ -5851,11 +5853,13 @@ static LONG g_cutsceneNativeHands = 0; // default OFF: original animated foregro
 extern volatile LONG g_vrUiMenu;
 static LONG g_cutsceneMenuPairFix = 0; // exact focused menus; same-source XR crop experiment
 static LONG g_handAnchorProbe = 0;
+static LONG g_dualHandPoseProbe = 0; // read-only action-correlated pose evidence, default OFF
 static LONG g_noTmdWristAnchorFix = 0;
 static volatile LONG g_uiNarratorEnabled = 0; // UI/tutorial overlay only; native dialogue untouched.
 static volatile LONG g_modalUiProbe = 0; // cold reflected identity; no presentation changes.
 static void StopPolishUiNarrator();
 static void FlushHandAnchorProbe();
+static void FlushDualHandPoseProbe();
 static bool CutsceneNativeCameraArmed() {
     const bool cinemaPause = CinemaMenuPauseOwnsPresentation(Rd(g_cutsceneMenuPairFix)!=0,
         (int)Rd(g_vrMenuClass),Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0);
@@ -6073,6 +6077,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     const LARGE_INTEGER cinemaStarted = cinemaTiming ? Now() : LARGE_INTEGER{};
     ComposeCutsceneMonoPair(dev);
     FlushHandAnchorProbe();
+    FlushDualHandPoseProbe();
     if (cinemaTiming) {
         static unsigned frames=0,notes=0;
         static double sum=0,peak=0;
@@ -9789,6 +9794,7 @@ int g_btnHeldFrames[kPadButtonCount]{};
 // Run 214: which row is the melee/impulse button. Resolved once at ini load; -1 until then, and the
 // melee window simply never arms in that case rather than guessing at a row.
 int g_impulseBtnIdx = -1;
+static int g_ageBtnIdx = -1;
 // ⭐ run 219: the laser toggle rides the JUMP button's long press. See the note at the poll loop.
 int g_jumpBtnIdx = -1;
 volatile LONG g_laserHoldMs = 1000;    // ini [Input] LaserHoldMs, 0 = no button toggle
@@ -10350,6 +10356,7 @@ bool InitXRInput() {
                 // user-rebindable from this very loop, so keying on it would break the moment
                 // somebody moved the button.
                 if (!strcmp(g_padButtons[i].name, "impulse")) g_impulseBtnIdx = i;
+                if (!strcmp(g_padButtons[i].name, "ageyoung")) g_ageBtnIdx = i;
                 if (!strcmp(g_padButtons[i].name, "jump"))    g_jumpBtnIdx    = i;
             }
         }
@@ -11264,6 +11271,8 @@ void SyncXRInput(XrTime displayTime) {
     for(int i=0;i<kPadButtonCount;++i)sampledButtons[i]=getBool(g_padButtons[i].action);
     InterlockedExchange(&g_rawImpulsePressed,
         g_impulseBtnIdx>=0&&g_impulseBtnIdx<kPadButtonCount&&sampledButtons[g_impulseBtnIdx]?1:0);
+    if(Rd(g_dualHandPoseProbe))InterlockedExchange(&g_rawAgePressed,
+        g_ageBtnIdx>=0&&g_ageBtnIdx<kPadButtonCount&&sampledButtons[g_ageBtnIdx]?1:0);
     // Opt-in physical Sense layout. Keep the XR actions and native menu
     // select/back bindings intact. No extra polls and no hidden INI rewrites.
     const bool reloadLayout=g_reloadControlLayout&&AimHand()==1&&!Rd(g_swapSticks);
@@ -16495,6 +16504,50 @@ int g_armIkMode = 0;                  // ini [Render] ArmIKMode
 volatile LONG g_gloveIsolate = 2;     // ini [Render] GloveIsolate
 volatile LONG g_gloveFaceFilter = 0;  // ini [Render] GloveFaceFilter
 volatile LONG g_noTmdPaletteFix = 0;  // controlled experiment; [Render] NoTmdPaletteFix
+// No COM resources retained: addresses below are identity receipts, never dereferenced.
+struct DualPoseRecord {
+    unsigned frame,call,part,eye,verts,first,faces,minIndex;
+    unsigned route,count,slots[3],bones[3],stride,streamOffset;
+    int moved,sourceOk,boundOk,tracked,submitted,independentRegs,segments,aimHand;
+    unsigned plannedFaces;uint64_t poseTime;
+    HRESULT drawHr,ibRestore,paletteRestore;
+    uintptr_t sourceIb,ib,vb,shader;
+    float before[3][12],after[3][12],sourceLocal[16],local[16],ride[16];
+    float controller[2][16],head[3],units;
+};
+static dualpose::Budget g_dualPoseBudget;
+static DualPoseRecord g_dualPoseRecords[6];
+static unsigned g_dualPoseMask=0,g_dualPoseStages[3]{},g_dualPoseStoredFrame=~0u;
+static DWORD g_dualPoseThread=0;
+static void FlushDualHandPoseProbe() {
+    if(!Rd(g_dualHandPoseProbe)||g_dualPoseThread!=GetCurrentThreadId()||!g_dualPoseBudget.Active())return;
+    const auto& state=g_dualPoseBudget.Current();
+    Log("dual-hand-pose frame=%u event=%u phase=%u hands=%u support=%u actions=%u gun=%u weapon=%p stages=%u,%u,%u captured=0x%X; actions L2=1 Square=2 R2=4; stages source=1 visible=2 palette=4; pre-submit matrices, HRESULT is not pixel proof",
+        g_dualPoseBudget.Frame(),g_dualPoseBudget.Transition(),g_dualPoseBudget.Phase(),state.hands,state.support,
+        state.actions,state.gun,(void*)state.weapon,g_dualPoseStages[0],g_dualPoseStages[1],g_dualPoseStages[2],g_dualPoseMask);
+    for(unsigned i=0;i<6;++i)if(g_dualPoseMask&(1u<<i)) {
+        const auto& r=g_dualPoseRecords[i];
+        Log("dual-hand-pose bound frame=%u call=%u part=%u eye=%u verts=%u min=%u first=%u sourceFaces=%u route=%u moved=%d sourceOk=%d boundOk=%d trackedMask=%d sourceIB=%p boundIB=%p VB=%p offset=%u stride=%u VS=%p submitted=%d drawHr=%08lX ibRestore=%08lX paletteRestore=%08lX UUperM=%g head=%g,%g,%g; route native=0 SVNC=1 SVTG=2 hardware-runs=3",
+            r.frame,r.call,r.part,r.eye,r.verts,r.minIndex,r.first,r.faces,r.route,r.moved,r.sourceOk,r.boundOk,r.tracked,
+            (void*)r.sourceIb,(void*)r.ib,(void*)r.vb,r.streamOffset,r.stride,(void*)r.shader,r.submitted,
+            r.drawHr,r.ibRestore,r.paletteRestore,r.units,r.head[0],r.head[1],r.head[2]);
+        Log("dual-hand-pose ownership frame=%u call=%u part=%u eye=%u poseTime=%I64u aimHand=%d independentRegs=%d segments=%d plannedFaces=%u",
+            r.frame,r.call,r.part,r.eye,r.poseTime,r.aimHand,r.independentRegs,r.segments,r.plannedFaces);
+        auto matrix=[&](const char* name,const float* f,unsigned n) {
+            char line[512]{};size_t used=0;
+            for(unsigned j=0;j<n&&used<sizeof(line);++j){int k=_snprintf_s(line+used,sizeof(line)-used,_TRUNCATE," %.9g",f[j]);if(k>0)used+=(size_t)k;}
+            Log("dual-hand-pose matrix frame=%u part=%u eye=%u %s:%s",r.frame,r.part,r.eye,name,line);
+        };
+        matrix("sourceLocal",r.sourceLocal,16);matrix("local",r.local,16);matrix("ride",r.ride,16);
+        matrix("controllerAim",r.controller[0],16);matrix("controllerOff",r.controller[1],16);
+        for(unsigned j=0;j<r.count;++j){
+            Log("dual-hand-pose joint frame=%u part=%u eye=%u joint=%u slot=%u bone=%u (gun bone=UINT_MAX means use weapon-specific PSK)",r.frame,r.part,r.eye,j,r.slots[j],r.bones[j]);
+            matrix("sourceSkin",r.before[j],12);matrix("boundSkin",r.after[j],12);
+        }
+    }
+    g_dualPoseBudget.EndFrame();g_dualPoseMask=0;
+    for(auto& stage:g_dualPoseStages)stage=0;
+}
 static handanchor::WeaponProbe g_handAnchorRecords;
 static handanchor::Probe g_tmdHandAnchorRecords[2]; // eight final-bound samples/eye, opt-in
 static DWORD g_handAnchorThread=0;
@@ -20270,6 +20323,56 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             Log("tmd-short-gauntlet: exact mixed draw seen min=%u type=%u foreground=%ld scene=%ld shadow=%d",
                 minIndex,(unsigned)t,Rd(g_inForeground),Rd(g_rtIsScene),g_boundShaderLayout.shadow?1:0);
     }
+    DualPoseRecord poseSource;
+    bool poseDue=false;
+    if(Rd(g_dualHandPoseProbe)&&Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&
+       t==D3DPT_TRIANGLELIST&&baseVertex==0&&FgMatchWindow()&&
+       handanchor::GameplaySource(true,Rd(g_inCinematic)!=0,Rd(g_vrUiMenu)!=0,
+           Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo)) {
+        const DWORD thread=GetCurrentThreadId();if(!g_dualPoseThread)g_dualPoseThread=thread;
+        if(thread==g_dualPoseThread) {
+            const unsigned frame=(unsigned)Rd(g_armPaletteFrameToken);
+            const dualpose::State state{(unsigned)Rd(g_handsStatus),Rd(g_twoHandActive)?1u:0u,
+                (Rd(g_rawImpulsePressed)?1u:0u)|(Rd(g_rawAgePressed)?2u:0u)|(Rd(g_rawTrigger)>128?4u:0u),
+                (unsigned)Rd(g_gunVerts),(uintptr_t)(unsigned)Rd(g_weaponObj)};
+            if(g_dualPoseBudget.Observe(true,frame,GetTickCount(),state)) {
+                if(g_dualPoseStoredFrame!=frame){
+                    g_dualPoseStoredFrame=frame;g_dualPoseMask=0;
+                    for(auto& stage:g_dualPoseStages)stage=0;
+                }
+                const auto* gun=diegetichud::MountForBodyDraw(baseVertex,minIndex,numVertices,startIndex,primCount);
+                const bool seeker=seekergeometry::Body(baseVertex,minIndex,numVertices,startIndex,primCount);
+                const bool sniper=weaponreload::DrawPart(weaponreload::Kind::Kasimov,baseVertex,minIndex,numVertices,startIndex,primCount)==weaponreload::Part::Body;
+                const bool gunBody=gun||seeker||sniper;
+                const unsigned gunSlot=gun?(unsigned)gun->rootSlot:seeker?1u:weaponreloadanim::Find(weaponreload::Kind::Kasimov)->root;
+                const bool glove=(numVertices==7444||numVertices==2626)&&startIndex==0&&primCount==4402;
+                const bool device=gloveisolate::IsArmFleshSection(numVertices,startIndex,primCount);
+                const unsigned part=glove?0:device?1:2;
+                poseDue=(glove||device||gunBody)&&!(g_dualPoseStages[part]&1u);
+                if(poseDue) {
+                    poseSource={};poseSource.drawHr=E_PENDING;poseSource.ibRestore=E_PENDING;poseSource.paletteRestore=E_PENDING;
+                    poseSource.part=part;poseSource.frame=frame;poseSource.call=(unsigned)Rd(g_frameDrawIdx);
+                    poseSource.verts=numVertices;poseSource.minIndex=minIndex;poseSource.first=startIndex;poseSource.faces=primCount;
+                    g_dualPoseStages[poseSource.part]|=1;
+                    poseSource.count=gunBody?1:3;
+                    const unsigned slots[2][3]={{1,18,19},{3,2,5}},bones[2][3]={{9,26,51},{27,8,41}};
+                    for(unsigned j=0;j<poseSource.count;++j){
+                        poseSource.slots[j]=gunBody?gunSlot:slots[poseSource.part][j];
+                        poseSource.bones[j]=gunBody?~0u:bones[poseSource.part][j];
+                    }
+                    const int boneBase=g_boundShaderLayout.bones,localBase=g_boundShaderLayout.local;
+                    bool ok=boneBase>=0&&localBase>=0;
+                    if(ok)ok=SUCCEEDED(dev->GetVertexShaderConstantF(localBase,poseSource.sourceLocal,4));
+                    for(unsigned j=0;j<poseSource.count&&ok;++j)
+                        ok=g_boundShaderLayout.boneRegs>=int((poseSource.slots[j]+1)*3)&&
+                            SUCCEEDED(dev->GetVertexShaderConstantF(boneBase+poseSource.slots[j]*3,poseSource.before[j],3));
+                    IDirect3DIndexBuffer9* ib=nullptr;
+                    ok=SUCCEEDED(dev->GetIndices(&ib))&&ib&&ok;
+                    poseSource.sourceIb=(uintptr_t)ib;if(ib)ib->Release();poseSource.sourceOk=ok?1:0;
+                }
+            }
+        }
+    }
     const bool dualProbe=Rd(g_dualWeaponTmdProbe)&&g_dualTmdCensus.Active()&&Rd(g_rtIsScene)&&
         !g_boundShaderLayout.shadow&&FgMatchWindow();
     const bool dualProbeGun=dualProbe&&Rd(g_gunVerts)>0&&numVertices==(UINT)Rd(g_gunVerts);
@@ -20376,6 +20479,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     if (Rd(g_renderEvidence) && armCaptureOffers<500 && FgMatchWindow() && (numVertices==3314 || numVertices==7444 || numVertices==4818)) {
         ++armCaptureOffers; CaptureRenderEvidence(dev,"arms",numVertices,startIndex,primCount);
     }
+    if(poseDue)g_dualPoseStages[poseSource.part]|=2;
     const bool isGun = FgMoved(numVertices);
     if(isGun)ProbeKnifeGunPose(dev,numVertices);
     if (isGun) { AdsCapture(dev); AdsFreeze(dev); AdsMask(dev); }   // ⭐ run 223: freeze before StereoPair: it only
@@ -20845,6 +20949,38 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     unsigned assemblyEye=0;
     const HRESULT dhr = FAILED(sleevePaletteHr)?sleevePaletteHr:StereoPair(dev, [&] {
         const unsigned eye=assemblyEye++;
+        unsigned poseIndex=6;
+        if(poseDue&&g_dualPoseBudget.Claim(poseSource.frame,poseSource.part,eye)) {
+            poseIndex=poseSource.part*2+eye;
+            auto& r=g_dualPoseRecords[poseIndex];r=poseSource;r.eye=eye;
+            r.route=shortTmdBuffer&&nativeIndices.valid?2: nativeIndices.valid?1:isolateTmdHardware?3:0;
+            r.independentRegs=independentRegs;r.segments=nSeg;r.aimHand=AimHand();r.poseTime=(uint64_t)g_lastHandPoseTime;
+            r.plannedFaces=0;
+            if(r.route==2)r.plannedFaces=g_tmdShortGauntletRenderer.Triangles();
+            else if(r.route==1)r.plannedFaces=gloveTriangles;
+            else if(r.route==3)for(const auto& run:gloveisolate::kTmdHardwareFaces)r.plannedFaces+=run.last-run.first+1;
+            else for(int j=0;j<nSeg;++j)r.plannedFaces+=segPrims[j];
+            r.moved=g_thisDrawMoved;r.units=MetresToUU();memcpy(r.head,g_hmdOffset,sizeof(r.head));
+            r.tracked=(g_handPoseValid[0]&&g_handPositionValid[0]?1:0)|(g_handPoseValid[1]&&g_handPositionValid[1]?2:0);
+            BuildLiveControllerC(reinterpret_cast<float(*)[4]>(r.controller[0]),true);
+            BuildLiveControllerC(reinterpret_cast<float(*)[4]>(r.controller[1]),false);
+            if(r.moved==1)BuildGunC(reinterpret_cast<float(*)[4]>(r.ride));
+            else if(r.moved==2)BuildTmdC(reinterpret_cast<float(*)[4]>(r.ride));
+            else if(r.moved==3)BuildTmdAssemblyC(reinterpret_cast<float(*)[4]>(r.ride));
+            else for(unsigned j=0;j<4;++j)r.ride[j*4+j]=1.f;
+            const int boneBase=g_boundShaderLayout.bones,localBase=g_boundShaderLayout.local;
+            bool ok=boneBase>=0&&localBase>=0;
+            if(ok)ok=SUCCEEDED(dev->GetVertexShaderConstantF(localBase,r.local,4));
+            for(unsigned j=0;j<r.count&&ok;++j)ok=g_boundShaderLayout.boneRegs>=int((r.slots[j]+1)*3)&&
+                SUCCEEDED(dev->GetVertexShaderConstantF(boneBase+r.slots[j]*3,r.after[j],3));
+            IDirect3DIndexBuffer9* ib=nullptr;IDirect3DVertexBuffer9* vb=nullptr;IDirect3DVertexShader9* vs=nullptr;
+            ok=SUCCEEDED(dev->GetIndices(&ib))&&ib&&ok;r.ib=(uintptr_t)ib;if(ib)ib->Release();
+            ok=SUCCEEDED(dev->GetStreamSource(0,&vb,&r.streamOffset,&r.stride))&&vb&&ok;r.vb=(uintptr_t)vb;if(vb)vb->Release();
+            ok=SUCCEEDED(dev->GetVertexShader(&vs))&&vs&&ok;r.shader=(uintptr_t)vs;if(vs)vs->Release();
+            r.boundOk=ok?1:0;g_dualPoseMask|=1u<<poseIndex;
+            if(ok)g_dualPoseStages[r.part]|=4;
+        }
+        const auto drawEye=[&]()->HRESULT {
         HRESULT hr = D3D_OK;
         if (shortTmdTail) return hr; // audited 17-face right forearm tail, no hardware
         // Bounded receipts from the ACTUALLY BOUND draw, before restoration.
@@ -21014,6 +21150,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             else InterlockedIncrement(&g_nextNativeMagazineDraws);
         }
         return hr;
+        };
+        const HRESULT eyeHr=drawEye();
+        if(poseIndex<6){g_dualPoseRecords[poseIndex].drawHr=eyeHr;g_dualPoseRecords[poseIndex].submitted=1;}
+        return eyeHr;
     });
     g_scopeLensStaged=false;
     if(FAILED(dhr))g_scopeAperture={};
@@ -21072,6 +21212,12 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         InterlockedIncrement(&g_centurionPalmPublished);
     }
     const HRESULT nextRestore=nextRegs?g_origSetVSConstF(dev,nextReg,nextSaved,(UINT)nextRegs):D3D_OK;
+    if(poseDue)for(unsigned eye=0;eye<2;++eye){
+        auto& r=g_dualPoseRecords[poseSource.part*2+eye];
+        if(r.frame==poseSource.frame&&r.call==poseSource.call){
+            r.ibRestore=nativeRestore;r.paletteRestore=FAILED(handRestore)?handRestore:nextRestore;
+        }
+    }
     if(seekerStaged.valid&&seekerEyeDraws==2&&SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)&&
        SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
         g_seekerPose=seekerStaged;ReleaseSRWLockExclusive(&g_nextVisualLock);
@@ -36184,6 +36330,8 @@ void LoadIniSettings() {
     g_cineMenuLoadClear=GetPrivateProfileIntA("Render","CineMenuLoadClear",1,path)?1:0;
     g_cutsceneMenuPairFix=GetPrivateProfileIntA("Render","CutsceneMenuPairFix",0,path)?1:0;
     g_handAnchorProbe=GetPrivateProfileIntA("Render","HandAnchorProbe",0,path)?1:0;
+    g_dualHandPoseProbe=GetPrivateProfileIntA("Diagnostic","DualHandPoseProbe",0,path)?1:0;
+    Log("ini: DualHandPoseProbe=%ld (read-only; max16 transitions, arrival/250ms settled, three exact parts/two eyes; default OFF)",Rd(g_dualHandPoseProbe));
     g_noTmdWristAnchorFix=GetPrivateProfileIntA("Render","NoTmdWristAnchorFix",0,path)?1:0;
     g_textureBridgeOwned=GetPrivateProfileIntA("Render","TextureBridgeOwned",0,path)?1:0;
     Log("ini: TextureBridgeOwned=%ld (single slot65 owner; default OFF)",Rd(g_textureBridgeOwned));
