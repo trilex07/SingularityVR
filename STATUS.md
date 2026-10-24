@@ -1,5 +1,10 @@
 # STATUS — session handoff
 
+## 2026-10-24 — M02 P2 four weapon icons (SIDE asset-only, READY_FOR_PHYSICAL_ACCEPTANCE)
+
+- Branch feature/side-m02-detailed-weapon-icons replaces only the four weapon sprites and their rectangles in the neutral atlas. Accepted wheel/M09 runtime code and localized atlases are unchanged.
+- Pixel/atlas QA and existing M02 D3D9/D3D9Ex, wheel geometry and M09 haptics fixtures PASS offline. New neutral atlas SHA256 3EF1782696B4A5E1E9D93F409C5B0F6FF014B78CC42FAB06EC29110661981818; physical PSVR2 appearance remains untested. Handoff: docs/handoffs/side-m02-detailed-weapon-icons-20261024.md.
+
 ## 2026-10-24 — Diegetic HUD milestone 2: Valkyrie `30/120` + Spikeshot `08/32` (L2_PASS / READY_FOR_PHYSICAL_ACCEPTANCE; gate already armed)
 
 - Same branch `integration/diegetic-hud-centurion-20261024`, commit

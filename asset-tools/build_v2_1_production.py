@@ -14,6 +14,7 @@ import json
 import math
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
+from build_detailed_weapon_icons import CONTENT_HEIGHT, SOURCE, make_sprite
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 REF_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "references"))
@@ -257,7 +258,17 @@ def generate_production_assets():
         ("tmd", "icon-tmd", "tmd")
     ]
     for w_id, ref_f, fallback in icons:
-        w_im = load_weapon_silhouette(ref_f, max_w=240, max_h=110, fallback_shape=fallback)
+        # Keep the four accepted P2 UV rectangles while sourcing the detailed
+        # weapon art from the committed transparent masters. TMD is unchanged.
+        if w_id in CONTENT_HEIGHT:
+            source_dimensions = {
+                "centurion": (240, 110), "valkyrie": (240, 110),
+                "spikeshot": (240, 107), "kasimov": (240, 86),
+            }
+            w_im = make_sprite(SOURCE / f"weapon_icon_{w_id}_master.png",
+                               *source_dimensions[w_id], CONTENT_HEIGHT[w_id])
+        else:
+            w_im = load_weapon_silhouette(ref_f, max_w=240, max_h=110, fallback_shape=fallback)
         w_im.save(os.path.join(ww_dir, f"weapon_icon_{w_id}.png"), "PNG")
 
     # Telemetry plate (Neutral, PL, EN)
