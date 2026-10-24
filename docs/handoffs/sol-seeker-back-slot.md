@@ -5,6 +5,9 @@ SIDE branch `feature/sol-seeker-back-slot`, based exactly on accepted integratio
 Target PR base: `integration/main-sol-20261024`. No Steam access or deployment.
 L1/L2 results below do **not** establish physical PSVR2 acceptance.
 
+Implementation: `f7ea47bba7ee32e8070570dc6582bc7fd5add5ca`. Clean x86 `/O2` PE32 DLL SHA256:
+`29621ECB8170CB0C58627E899F0AB486FEDDB31F8A2156F15186BE915FB21798`. Machine-readable receipt: `sol-seeker-validation.json`.
+
 ## A. Back storage/retrieval
 
 **Proven native mechanism:** `RvPlayerController::SwitchWeapon` at `1047220`
