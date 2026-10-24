@@ -1,12 +1,41 @@
 # STATUS — session handoff
 
+## 2026-10-25 — PSVR2 Physical Acceptance: HD Textures Gate A → B → C (Volk & Gloves)
+
+- **Status: PHYSICAL PASS** (confirmed in PSVR2 by user: 'wyglada okej daj na main').
+- **Assets replaced (2048x2048)**:
+  - AR_shotgun_d.dds (SHA256: D6A98EF03EC588A31FEFDB7393757738B19B86B9E9381029E47E5C26C0506237)
+  - AR_shotgun_n.dds (SHA256: 83F64BFCE085107A4EC80F14D236EB1409A402B8D879BCF8691667C3F92CD798)
+  - inview_glove_d.dds (SHA256: D76D05B122A6C81B24B3560E88CF181167FAB3EE64A967A7017D21770F3D4754)
+  - inview_glove_n.dds (SHA256: 5F0A8E9E4C65763A58BC5E88CAFEEE238EF715935730065336CDFF2CA3D8E049)
+- **Runtime Verification**:
+  - priority_material_mode=2 in 	exture_override.ini, 
+emaster_apply=0, ridge_owned=1, mode_apply=1.
+  - Zero D3D errors, zero resource evictions (evictions=0, 	able=0/512), 532,877 native cache hits over 729,347 binds.
+  - Strict scope isolation: zero unintended overrides; UI and shadow passes fully protected.
+- **Archived Evidence Logs**:
+  - Step A: deployment/deploy-backups/20261025-hd-textures-stepA/texture_override.log (SHA256: AB848E730B30086237D9FED26D606E39112A0272B02820B2F58442A03CDE3FA3)
+  - Step B: deployment/deploy-backups/20261025-hd-textures-stepB/texture_override.log (SHA256: B3942F5A734EADD76CA831E940B600C5A4C920524FED2B91115EEE331F32EAF3)
+
+## 2026-10-25 — SIDE Seeker back slot / measured support / launch candidate
+
+eature/sol-seeker-back-slot starts at accepted 543bff1. Three independent
+default-OFF Seeker features retain only an actually owned native weapon, select
+it from the lower-right back, reconstruct support from original PSK/PSA, and
+correct native projectile launch using the rendered muzzle. Existing Valkyrie
+accuracy and Valkyrie/Volk 20 cm insertion are supplied as candidate INI keys;
+ordinary defaults remain unchanged. Native ownership/ABI, geometry, D3D9/Ex,
+HUD/TMD/haptics/WeaponLocker/NIS/OLED regressions PASS offline. Physical acceptance
+is open; no Steam access. Evidence/limits/test plan:
+docs/handoffs/sol-seeker-back-slot.md. Final L2 artifact receipt is separate.
+
 ## 2026-10-24 — PSVR2 Physical Verification: Combined Build A82184B2 (Accepted Features & Open Scope)
 
 - **Physical Acceptance Results (PSVR2 test by user)**:
   - **HUD 3D (PHYSICAL PASS)**: Volk and Valkyrie counters rigidly mounted, reader orientation correct (clip left, reserve right), real-time ammo updates, clean stereo without ghosting/doubling.
   - **TMD / Haptics / Two-Hand Grip (PHYSICAL PASS)**: Pulse effects, gauntlet posture, and two-handed stability verified.
   - **Menu Navigation & Dubbing (PHYSICAL PASS)**: Menus function properly, options select correctly, and Polish dubbing is confirmed.
-  - **Full Visual UI Remaster (PARTIAL)**: The new detailed weapon icons atlas (3EF17826...) is active in the weapon wheel, but the overall visual remaster remains incomplete: legacy UI background/plate elements and raw Xbox/UE3 controller prompts (e.g. "Pad 11") are still visible. Requires dedicated SIDE UI work to update main/pause menu visual styling, finish remaining icons, and selectively replace "Pad 11" with PS VR2 Sense button icons while strictly preserving subtitles, objectives, and interaction prompts.
+  - **Full Visual UI Remaster (PARTIAL)**: The new detailed weapon icons atlas (3EF17826...) is active in the weapon wheel, but the overall visual remaster remains incomplete: legacy UI background/plate elements and raw Xbox/UE3 controller prompts (e.g. 'Pad 11') are still visible. Requires dedicated SIDE UI work to update main/pause menu visual styling, finish remaining icons, and selectively replace 'Pad 11' with PS VR2 Sense button icons while strictly preserving subtitles, objectives, and interaction prompts.
   - **Left-Hand Tracking (PHYSICAL PASS)**: Glove motion accurately matches controller in gameplay.
   - **Manual Reload Insertion Comfort (PARTIAL)**: 18 cm insertion radius functional on Valkyrie and Volk, but requires expansion to bounded 20 cm for full comfort.
   - **New Scope / Issues Identified (Astra Ownership)**:
@@ -16,7 +45,7 @@
 - **Preserved Artifacts & Hashes**:
   - Live Steam DLL: A82184B2F82F019B7A59E3DBFB49EE60C1675BEC39FB7FE239E182B974F0FA73
   - Backup Checkpoint: deployment/deploy-backups/20261024-accepted-a82184b2
-  - Archived PSVR2 Session Log: view_matrix.log (SHA256: 2AEFD4F46D3B92116C958523B4149A18D0351577BE4ACAC739F8A812DE90776F)
+  - Archived PSVR2 Session Log: view_matrix.log (SHA256: 2AEFD4F46D3B92116C958523B4149A18D0351577BE4ACAC739F8A812DE90776F)
 - **Integration Boundary**: MAIN preserves accepted baseline and continues offline HD texture and audio prep. Astra owns Seeker retention/holster, support grip, accuracy, and 20 cm reload candidate.
 
 ## 2026-10-24 — SIDE first-four material remaster bridge (L2_PASS; physical gate open)

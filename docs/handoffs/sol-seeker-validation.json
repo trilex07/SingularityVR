@@ -1,0 +1,217 @@
+{
+  "status": "L1_PASS / L2_PASS; physical verification NOT RUN",
+  "baseline": "543bff1242b319673a03d2bc37ff540e00e0bd67",
+  "implementation_commit": "f7ea47bba7ee32e8070570dc6582bc7fd5add5ca",
+  "branch": "feature/sol-seeker-back-slot",
+  "dll_sha256": "29621ECB8170CB0C58627E899F0AB486FEDDB31F8A2156F15186BE915FB21798",
+  "architecture": "x86 PE32",
+  "optimization": "/O2",
+  "source_tree_clean": true,
+  "artifact": "spikes/view_matrix/d3d9.dll",
+  "native_abi": {
+    "native_text_base": "0x402000",
+    "switch_return_offsets": [
+      210,
+      233
+    ],
+    "native_contracts": [
+      {
+        "name": "SwitchWeapon",
+        "va": "0x1047220",
+        "bytes": 447,
+        "fnv64": "BD62E75D7EBD62DB"
+      },
+      {
+        "name": "SelectOwned",
+        "va": "0x102f650",
+        "bytes": 168,
+        "fnv64": "CB797F59504492C3"
+      },
+      {
+        "name": "RocketProjectileFire",
+        "va": "0xe87ba0",
+        "bytes": 26,
+        "fnv64": "5B3CC29BF4ACD7E6"
+      },
+      {
+        "name": "ProjectileFire",
+        "va": "0xe86da0",
+        "bytes": 558,
+        "fnv64": "B4AEC94DBDB7CE21"
+      },
+      {
+        "name": "PhysicalFireStart",
+        "va": "0xe6a1a0",
+        "bytes": 1110,
+        "fnv64": "0A70C4D3EEE25B1C"
+      },
+      {
+        "name": "GetAdjustedAim",
+        "va": "0xe87580",
+        "bytes": 213,
+        "fnv64": "538700ED62A99B3E"
+      },
+      {
+        "name": "SpawnProjectile",
+        "va": "0xe8fcc0",
+        "bytes": 294,
+        "fnv64": "3DC3105D1A3C1A2B"
+      }
+    ],
+    "compiled": {
+      "StartHook@NativeSeekerProjectile": {
+        "va": "0x100baeb0",
+        "ret_cleanup": "0x10",
+        "ret_count": 1
+      },
+      "SpawnHook@NativeSeekerProjectile": {
+        "va": "0x100b9300",
+        "ret_cleanup": "0xc",
+        "ret_count": 1
+      },
+      "FireHook@NativeSeekerProjectile": {
+        "va": "0x1004f8b0",
+        "ret_cleanup": "0",
+        "ret_count": 2
+      },
+      "Heavy@NativeSeekerSlot": {
+        "va": "0x10052f90",
+        "ret_cleanup": "0",
+        "ret_count": 2
+      }
+    },
+    "input_sha256": {
+      "Singularity.exe": "bd459acd87d4b82693928dee4ed437c086d5928a8e0428f3ad54b6fc114c0f51",
+      "Singularity.text-memory.bin": "858f2fc33b1c99b3a4a27a817a11205da66414ee1b030a03df821f1ad6a0c78a",
+      "d3d9.dll": "29621ecb8170cb0c58627e899f0ab486feddb31f8a2156f15186be915fb21798"
+    },
+    "limitation": "Offline native and emitted x86 contracts, not live selection or headset proof"
+  },
+  "geometry": {
+    "input_sha256": [
+      "2fb038b287eed9d7b7730acd5e73d6b7913f154b69e1124e89b5110430dd416e",
+      "0fe784a10c05fe32729a4385275d66730c256809f86a72feddcac2134f6bb460",
+      "42cc9df1622cc971da506f72560f19e5061d0464d41cec655dfc1e60efd901ed"
+    ],
+    "vertices": 12444,
+    "triangles": 14996,
+    "layout": {
+      "offset": 968379,
+      "chunks": [
+        {
+          "first": 0,
+          "vertices": 12436,
+          "palette": [
+            64,
+            53,
+            54,
+            62,
+            57,
+            59,
+            60,
+            61,
+            55
+          ]
+        },
+        {
+          "first": 12436,
+          "vertices": 8,
+          "palette": [
+            64
+          ]
+        }
+      ],
+      "index_fnv": 3842523959,
+      "index_count": 44988
+    },
+    "root_bind": [
+      [
+        0.9999999999999982,
+        -3.651977214951895e-08,
+        -4.8062500188613006e-08,
+        0.0
+      ],
+      [
+        3.6519773050246374e-08,
+        0.9999999999999991,
+        1.6836574375886786e-08,
+        0.0
+      ],
+      [
+        4.806249948346115e-08,
+        -1.6836576278047317e-08,
+        0.9999999999999984,
+        0.0
+      ],
+      [
+        4.187306998915119e-06,
+        109.49099916161299,
+        44.335929618876825,
+        1.0
+      ]
+    ],
+    "left_idle_relative": [
+      [
+        0.04679601888770863,
+        -0.9641320869800908,
+        -0.26126509807411386,
+        0.0
+      ],
+      [
+        0.7344385418522447,
+        0.21048913738619277,
+        -0.6452087656598946,
+        0.0
+      ],
+      [
+        0.6770599388962617,
+        -0.1616899560821005,
+        0.7179458177634014,
+        0.0
+      ],
+      [
+        5.368237084321024,
+        6.00629782274595,
+        10.267012816779499,
+        1.0
+      ]
+    ],
+    "muzzle_origin": [
+      6.786479079184736e-06,
+      112.88768866321422,
+      95.8339956245517
+    ],
+    "muzzle_forward": [
+      4.806249970550574e-08,
+      -1.683657627804732e-08,
+      0.9999999999999982
+    ],
+    "idle_fire_max_difference": 0.0003475634381686632,
+    "native_projectile_modes": [
+      {
+        "archetype": "Shared_ARSteerable_Projectile_MainFire",
+        "native_flag": "mIsDrunk"
+      },
+      {
+        "archetype": "Shared_ARSteerable_Projectile_AltFire",
+        "native_flag": "mSteerable"
+      }
+    ],
+    "compiled_geometry_max_error": 3.6245517094357638e-06
+  },
+  "validation": [
+    "test-seeker.ps1 -IndexAsset: 4 x86 programs PASS",
+    "test-dual-weapon-tmd.ps1: 18 x86 programs, 3 Python suites and OLED PASS",
+    "test-tmd-short-gauntlet.ps1: 2 x86 programs and route seam PASS",
+    "test-tmd-short-gauntlet-d3d9: D3D9/D3D9Ex 2x7110 draws 3304/3304 pixels PASS",
+    "test-diegetic-hud.ps1: 3 programs, 240 D3D9/D3D9Ex pixel cases PASS",
+    "test-nis.ps1: 3 programs and Python suite PASS",
+    "test_tmd_haptics_native.py: 7 tests PASS; test-tmd-haptics.cpp: 14 groups PASS",
+    "audit_seeker_geometry.py: original joints and projectile archetype flags PASS",
+    "audit_seeker_native.py: native fingerprints/call sites and emitted proxy ret cleanup PASS",
+    "test_locker_compiled_abi.py: emitted literal [eax+20Ch] and FName stack PASS",
+    "git diff --check PASS"
+  ],
+  "steam_access": false,
+  "physical_test": false
+}

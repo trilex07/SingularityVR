@@ -9,6 +9,7 @@
 #include "native_owned_inventory.h"
 #include "native_body_equipment_probe.h"
 #include "native_tmd_aim.h"
+#include "native_seeker_slot.h"
 #include "native_dual_tmd_gun_scale.h"
 #include "native_tmd_haptics.h"
 #include "locker_virtual_runtime.h"
@@ -392,6 +393,7 @@ static void __fastcall Poll(void* self,void*,float dt) {
  NativeNpcName::Update(); // native GFx calls stay on this engine thread
  NativeGameplayText::Update(); // exact original gameplay location holder, default OFF
  NativeOwnedInventory::Poll(); // bounded actual possession snapshot / queued selection
+ NativeSeekerSlot::Poll(); // exact owned special weapon; independent back slot
  LockerOwnedDisplayCache::TickWhileActive();
  LockerVrLoadout::PollEngine();
  NativeBodyEquipmentProbe::Poll(); // opt-in read-only heavy/grenade ownership census
