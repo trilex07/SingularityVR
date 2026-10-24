@@ -1,0 +1,33 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "29DA66B70079DCC95D073272383A53802D369516EAC4EB0DB53A4C18F66108CD",
+  "reason": "M02 deployment A: dll 92D1BABC->34A2946C (cherry-picked M02 P0/P1/P2 onto the accepted M09 Session-A source) and exactly the three default-OFF Render switches; atlases already installed by the companion session-asset delta.",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "92D1BABC820B901BD5E58717E0000ACE81AD18B3EA5FD92D5412E54C1F29C9C4",
+      "after": "34A2946C5C618DAFF5F3804FA8463121A6489215F4D5405BCA375498BE3EA287",
+      "reason": " M02 remaster runtime slice (P0+P1+P2 pruned default-OFF) atop the accepted M09 Session-A source"
+    }
+  ],
+  "ini": [
+    {
+      "key": "Render/UiRemasterRuntime",
+      "before": null,
+      "after": "0",
+      "reason": " M02 P0 switch staged default OFF"
+    },
+    {
+      "key": "Render/UiRemasterSettings",
+      "before": null,
+      "after": "0",
+      "reason": " M02 P1 switch staged default OFF"
+    },
+    {
+      "key": "Render/UiRemasterWheel",
+      "before": null,
+      "after": "0",
+      "reason": " M02 P2 switch staged default OFF"
+    }
+  ]
+}

@@ -45,7 +45,7 @@ if($m.schema -cne 'singularityvr-session-assets-delta-v1' -or @($m.files).Count 
 $seen=@{}
 foreach($f in $m.files){
     $relative=[string]$f.path
-    if($relative -cnotmatch '^(Binaries/vr-assets/audio/polish/story/[A-Za-z0-9_.-]+\.wav|Binaries/vr-assets/localization/pl/polish_(text|story_voice)\.jsonl|Binaries/texture-override-remaster/revert_[dn]2\.dds|RvGame/CookedPC/[sS][pP]_[A-Za-z0-9_]+_LOC_INT\.xxx)$'){
+    if($relative -cnotmatch '^(Binaries/vr-assets/audio/polish/story/[A-Za-z0-9_.-]+\.wav|Binaries/vr-assets/localization/pl/polish_(text|story_voice)\.jsonl|Binaries/texture-override-remaster/revert_[dn]2\.dds|RvGame/CookedPC/[sS][pP]_[A-Za-z0-9_]+_LOC_INT\.xxx|Binaries/vr-assets/ui/remaster/[A-Za-z0-9_.-]+\.png)$'){
         throw "Target outside campaign delta: $relative"
     }
     if($seen.ContainsKey($relative.ToLowerInvariant())){throw 'Duplicate asset target'}

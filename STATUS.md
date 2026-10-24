@@ -1,6 +1,47 @@
 # STATUS — session handoff
 
+## 2026-10-24 — M02 first runtime UX integrated on accepted baseline; deployment A/B installed (P0 gate armed, READY_FOR_PHYSICAL_ACCEPTANCE)
+
+- Branch `integration/m02-settings-wheel-remaster` = accepted M09
+  Session-A source (`3fa5655`, TmdPulses default-OFF) + cherry-picks
+  `df17461` (P0 settings plate), `d2d54be` (P1 settings styling),
+  `9ed671d` (P2 wheel skin) → **`478167e`** prepared via `cherry-pick -x`.
+  One doc modify/delete conflict resolved (SOL prep doc kept), one erroneous
+  duplicate re-pick aborted (no content impact; all three picks landed).
+- Offline battery PASS in-worktree: dual-weapon-TMD 39 PASS groups,
+  `test_tmd_haptics_native` 7/7, `test_carry_ray_wiring` 4/4,
+  short-gauntlet exit=0, `test-hud-live` exit=0, D3D9+D3D9Ex runtime
+  regressions pixels=3304/3304. Candidate dll: x86 PE32 `/O2` @ `478167e`,
+  **SHA `34A2946C5C618DAFF5F3804FA8463121A6489215F4D5405BCA375498BE3EA287`**
+  (`build\m02-runtime-candidate-*`).
+- **Deployment chain (guarded, game closed throughout):**
+  1. Atlas delta (`-SessionAssetsManifestPath`, whitelist extended for the
+     exact `Binaries/vr-assets/ui/remaster/*.png` class in
+     `tools/integration/session-assets.ps1`): 3 atlases installed with
+     SHA-pinned receipt; hashes verified == SOL pins (E4DC0E7D… neutral,
+     6436AA25… PL, 53B570C4… EN). Delta backup receipt at
+     `build\next-weapon-reload\m02-atlas-backup-20261024-094700`.
+  2. Runtime pair (deployment A backup `…094231`): dll `92D1BABC…`→
+     `34A2946C…`, INI advanced with exactly `UiRemasterRuntime/Settings/
+     Wheel=0` (354→357 keys); profiles `29DA66B7…08CD`/
+     plans in `deployment/acceptance-20261024-m02/`.
+  3. **Deployment B (backup `…094238`): `UiRemasterRuntime=1` ONLY** —
+     INI `EB8EEA0A…CA0B`; Settings/Wheel remain 0. dll unchanged.
+- P0 grading session script (independent rollback switches preserved):
+  open VR Settings → decorative plate visible in BOTH eyes behind the
+  native panel, correct positioning + legible text, laser/R2 hit-testing
+  unchanged, close/reopen the panel, no visual corruption or state leak
+  afterward (including a settings Reset). Log receipts: `M02 UI: plate
+  eyes=2/2 restore=1`, asset lines `M02 UI: neutral atlas ready 4096x2048`.
+  On failure: set `UiRemasterRuntime=0` (guarded INI-only deploy) and verify
+  the accepted baseline.
+- After P0 PASS: deployment C (`UiRemasterSettings=1`), then deployment D
+  (`UiRemasterWheel=1`), one graded PSVR2 gate each, per the SOL P1/P2
+  MAIN-gate scripts. M09 repairs, insertion comfort `54bd946`, diegetic HUD
+  and other SIDE items are NOT part of this chain.
+
 ## 2026-10-24 — M09 Session B PHYSICAL FAIL (advanced TMD pulses); root cause bounded to classification; rolled back to Session A state
+
 
 Session B archive `docs/evidence/m09-session-b-20261024/` (complete log
 `ED29829D…AFB0`, INI `DB2C6CFF…854B`, install report, `analysis-session-b.md`).

@@ -1,0 +1,14 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "41678F1ED273084FF3E9D23E622757A244677331509879958C45CCE75DAC8135",
+  "reason": "M02 deployment B: arm ONLY Render/UiRemasterRuntime=1 for the P0 physical grading session; UiRemasterSettings and UiRemasterWheel stay 0; dll unchanged.",
+  "files": [],
+  "ini": [
+    {
+      "key": "Render/UiRemasterRuntime",
+      "before": "0",
+      "after": "1",
+      "reason": " P0 grading gate: plate behind VR Settings"
+    }
+  ]
+}
