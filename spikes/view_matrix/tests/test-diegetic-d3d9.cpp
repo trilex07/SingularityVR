@@ -106,6 +106,24 @@ static void Run(bool ex) {
             }
             target->Release();original->Release();
         }
+        // Replay the actual failing PSVR2 matrices through the production
+        // renderer as well as the CPU orientation checks (both eyes).
+        IDirect3DSurface9* replay=nullptr;
+        assert(SUCCEEDED(dev->CreateRenderTarget(5640,2876,D3DFMT_A8R8G8B8,D3DMULTISAMPLE_NONE,0,FALSE,&replay,nullptr)));
+        for(const auto& sample:observedHudPoses){
+            Quad3D q[16];const int n=BuildFixtureQuads3D(*MountForVerts(sample.verts),5,59,q,16);
+            const auto plan=Project(q,n,sample.pose,5640,2876,100);assert(plan.ready);
+            assert(SUCCEEDED(dev->ColorFill(replay,nullptr,0xff000000)));
+            assert(SUCCEEDED(dev->BeginScene()));
+            const auto result=Render(dev,replay,atlas,state,plan,
+                [&](IDirect3DSurface9* s){return dev->SetRenderTarget(0,s);},
+                [&](const ScreenVertex* v){return dev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,2,v,sizeof(*v));});
+            assert(SUCCEEDED(dev->EndScene()));assert(SUCCEEDED(result.hr)&&result.handledEyes==3);
+            const auto px=Pixels(dev,replay,5640,2876);unsigned lit[2]{};
+            for(unsigned y=0;y<2876;++y)for(unsigned x=0;x<5640;++x)if(px[y*5640+x]&0xffffff)++lit[x/2820];
+            assert(lit[0]>0&&lit[1]>0);++cases;
+        }
+        replay->Release();
         // Same lifetime policy as runtime: release atlas/state before Reset.
         dev->SetTexture(0,nullptr);if(state)state->Release();atlas->Release();
         if(!cycle){if(ex)assert(SUCCEEDED(devEx->ResetEx(&pp,nullptr)));else assert(SUCCEEDED(dev->Reset(&pp)));}

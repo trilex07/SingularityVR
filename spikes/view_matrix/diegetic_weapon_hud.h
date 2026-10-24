@@ -387,18 +387,23 @@ inline int BuildFixtureQuads3D(const WeaponMount& mo, int clip, int reserve,
     out[n++] = Quad3D{ { p3, p0, p4, p7 }, f_u0, f_v0, f_u1, f_v1, flankCol };
     out[n++] = Quad3D{ { p1, p2, p6, p5 }, f_u0, f_v0, f_u1, f_v1, flankCol };
 
-    // 2. Bezel Top Face (chamfered rim + rivets): top-left p3, top-right p2, bot-right p1, bot-left p0
+    // The fixture's +X points to the shooter's LEFT after the original native
+    // skin/camera chain (verified by the recorded PSVR2 matrices). Keep the
+    // housing geometry and Y conversion intact; map the readout from -X to +X
+    // in reader order. +f remains the top, towards the muzzle: do not flip V.
+    const V3 readerRight = right * -1.f;
+    // 2. Bezel Top Face (chamfered rim + rivets), in reader order.
     const Cell bz = BezelBg();
     const float b_u0 = bz.x / AtlasW(), b_v0 = bz.y / AtlasH();
     const float b_u1 = (bz.x + bz.w) / AtlasW(), b_v1 = (bz.y + bz.h) / AtlasH();
-    out[n++] = Quad3D{ { p3, p2, p1, p0 }, b_u0, b_v0, b_u1, b_v1, 0xFFFFFFFF };
+    out[n++] = Quad3D{ { p2, p3, p0, p1 }, b_u0, b_v0, b_u1, b_v1, 0xFFFFFFFF };
 
     // 3. Recessed Cathode Display Bed
     // Sits slightly proud of bezel top to prevent depth fighting
     const V3 dispCenter = center + u + norm * 0.005f;
     const float sw = mo.wUU * 0.82f;
     const float sh = mo.dUU * 0.78f;
-    const V3 sr = right * (sw * 0.5f);
+    const V3 sr = readerRight * (sw * 0.5f);
     const V3 sf = fwd * (sh * 0.5f);
 
     const Cell sc = ScreenBg();
@@ -431,8 +436,8 @@ inline int BuildFixtureQuads3D(const WeaponMount& mo, int clip, int reserve,
     auto pushGlyph = [&](float centerOffset, const Cell& c) {
         if (n >= maxQuads) return;
         const float gw = (c.w / c.h) * bandH;
-        const V3 qc = textCenter + right * centerOffset;
-        const V3 qr = right * (gw * 0.5f);
+        const V3 qc = textCenter + readerRight * centerOffset;
+        const V3 qr = readerRight * (gw * 0.5f);
         const V3 qf = fwd * (bandH * 0.5f);
         const float u0 = c.x / AtlasW();
         const float v0 = c.y / AtlasH();
