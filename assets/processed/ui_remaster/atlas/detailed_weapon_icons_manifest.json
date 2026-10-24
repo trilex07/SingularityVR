@@ -1,0 +1,58 @@
+{
+  "base_commit": "e379b7afbcc40eb6e2bf6331b49feee833330820",
+  "atlas_name": "ui_atlas_neutral.png",
+  "atlas_dimensions": [
+    4096,
+    2048
+  ],
+  "old_atlas_sha256": "E4DC0E7D209BDDF23816F101177C8A8B02AA24ED766C55C446877956CAC4F23B",
+  "new_atlas_sha256": "3EF1782696B4A5E1E9D93F409C5B0F6FF014B78CC42FAB06EC29110661981818",
+  "uv_manifest_sha256": "837C3EF6CF48C58CFBDDAEA22123C88D7B070716409B39E2E74C264955311FAA",
+  "changed_rectangles_only": true,
+  "weapons": {
+    "centurion": {
+      "atlas_rect": [
+        1976,
+        852,
+        240,
+        110
+      ],
+      "source_master_sha256": "8CA3E0596E60DFCCA2EDD439E5946B478F44D3AF1797189FDD931CE6FEFA5BF0",
+      "sprite_sha256": "874F15AD9FBF1BD386E57F7C7DE3824477355725A2011ACA7F3E98D43CE37B85",
+      "content_height": 64
+    },
+    "valkyrie": {
+      "atlas_rect": [
+        2224,
+        852,
+        240,
+        110
+      ],
+      "source_master_sha256": "C9A07BA1CB19B732F4F9C6E6962EDA3987A71FD611A684DD95A0F9F81D801DDA",
+      "sprite_sha256": "C34E5AFAF12ED1CEA83A67551450B1E2D6D7454F5BD7F046A1C3B56C92FF5E38",
+      "content_height": 43
+    },
+    "spikeshot": {
+      "atlas_rect": [
+        2688,
+        852,
+        240,
+        107
+      ],
+      "source_master_sha256": "BCB723CA21FA3EB7BB2CF929DB70DFAF6D241C5B49C9FC70E10ED289626BB595",
+      "sprite_sha256": "AF5CD2036BD1F10B5640170415C4413EF7177679009594588AF769281DEE1F6F",
+      "content_height": 50
+    },
+    "kasimov": {
+      "atlas_rect": [
+        3608,
+        852,
+        240,
+        86
+      ],
+      "source_master_sha256": "5CA9BC319259D63028E7FF003A0F6C5B266FF78A5E096F78CD393A70D039826A",
+      "sprite_sha256": "25998193680EA4E4EC06A4E8A389CB3BC6F9482D6D49E8D118603523AD6CF3DD",
+      "content_height": 29
+    }
+  }
+}
