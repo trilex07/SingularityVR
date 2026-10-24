@@ -241,6 +241,7 @@ static V RotatorDirection(int pitch,int yaw){
     return {c*std::cos(y),c*std::sin(y),std::sin(p)};
 }
 static int* __fastcall OpticalAddSpread(void* self,void*,int* output,int pitch,int yaw,int roll){
+    const auto spreadCaller=(uintptr_t)_ReturnAddress();
     shotAxis={};
     auto* result=spreadOriginal(self,output,pitch,yaw,roll);
     const auto frame=Snapshot();
@@ -275,6 +276,8 @@ static int* __fastcall OpticalAddSpread(void* self,void*,int* output,int pitch,i
         shotAxis={g_playerPawn,(uintptr_t)self,GetTickCount64(),Rd(g_fireSeq),
             RotatorDirection(pitch,yaw),RotatorDirection(output[0],output[1])};
     }
+    if(result==output&&output&&PauseRttProbe::SafeRange((uintptr_t)output,12))
+        SeekerProjectileSpread(self,spreadCaller,pitch,yaw,output);
     return result;
 }
 static bool BindSpread(uintptr_t weapon){
@@ -702,7 +705,7 @@ static void Draw(IDirect3DDevice9* dev){
 }
 void NativeScopeTick(){
     NativeRifleFx::MaintainTick();NativeRifleFx::ObserveTick();NativeScopePip::Tick();
-    if((g_weaponNativeAxis||g_twoHandSpreadPercent<100||g_vrValkyrieSpreadPercent<100||
+    if((g_seekerProjectileAim||g_weaponNativeAxis||g_twoHandSpreadPercent<100||g_vrValkyrieSpreadPercent<100||
         g_vrVolkSpreadPercent<100||g_vrValkyrieTwoHandPercent<100||
         g_vrVolkTwoHandPercent<100)&&VrModeOn()&&InGameplay()&&!Rd(g_inCinematic)){
         // Audited common RvWeaponShared method, not a guessed subclass offset.
@@ -712,6 +715,7 @@ void NativeScopeTick(){
             if(weapon&&PauseRttProbe::SafeRange(weapon,4))NativeScopePip::BindSpread(weapon);
         }
     }
+    SeekerProjectileTick();
 }
 bool NativeScopeAlignShot(float* start,float* end){
     const auto& shot=NativeScopePip::shotAxis;
