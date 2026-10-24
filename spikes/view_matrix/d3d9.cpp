@@ -29,6 +29,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "weapon_reload_carry.h"
 #include "weapon_trace_math.h"
 #include "weapon_muzzle_geometry.h"
+#include "weapon_accuracy_policy.h"
 #include "sniper_scope.h"
 #include "scope_pip_policy.h"
 #include "weapon_wheel.h"
@@ -2429,6 +2430,8 @@ static int g_sniperOpticalSlowTime=0;
 static int g_sniperOpticalAccuracy=0; // native scoped spread queries only, no camera ADS
 static int g_weaponNativeAxis=0; // exact local pre/post-spread basis, default OFF
 static int g_twoHandSpreadPercent=100; // 100 preserves native dispersion
+static int g_vrValkyrieSpreadPercent=100, g_vrVolkSpreadPercent=100; // default native
+static int g_vrValkyrieTwoHandPercent=100, g_vrVolkTwoHandPercent=100; // scoped support bonus, default OFF
 static LONG g_cinematicHandsOwnership=0; // native hands even when cinematic presentation stays stereo
 static LONG g_cinematicSceneProbe=0; // bounded read-only scene/foreground witness; default OFF
 static LONG g_cinematicEventBridge=0; // exact local six-bool Raven event -> existing cinema state; default OFF
@@ -22826,6 +22829,9 @@ IDirect3DDevice9* g_gameDev = nullptr; // for UpdateTexture
 LONG g_xlatTex = 0, g_xlatVB = 0, g_xlatIB = 0, g_xlatCube = 0, g_xlatVol = 0;
 LONG g_stageCount = 0, g_stageFailed = 0, g_xlatFailed = 0;
 double g_stageMB = 0.0;
+// FlushShadow holds g_stageLock. Its writes were already invalidated at LockRect;
+// a Release triggered by FreePrivateData inside that lock would deadlock.
+thread_local bool g_bridgeInternalUpload = false;
 
 // ---- the side table: DEFAULT resource -> its SYSTEMMEM shadow ----
 //
@@ -22971,7 +22977,9 @@ PFN_Release        g_origVolRelease = nullptr;
 // wrapper was fine for six runs.
 inline void FlushShadow(StageEntry* e) {
     if (!e || !e->shadow || !e->dirty || !g_gameDev) return;
+    g_bridgeInternalUpload = true;
     HRESULT hr = g_gameDev->UpdateTexture(e->shadow, e->key);
+    g_bridgeInternalUpload = false;
     e->dirty = false;
     if (FAILED(hr)) {
         static int once = 0;
@@ -23113,12 +23121,14 @@ ULONG STDMETHODCALLTYPE Hook_VolRelease(IUnknown* self) {
 
 // ---- the Create* hooks ----
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateTexture)(IDirect3DDevice9*, UINT, UINT, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DTexture9**, HANDLE*);
+typedef HRESULT (STDMETHODCALLTYPE *PFN_UpdateTexture)(IDirect3DDevice9*, IDirect3DBaseTexture9*, IDirect3DBaseTexture9*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateVolumeTexture)(IDirect3DDevice9*, UINT, UINT, UINT, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DVolumeTexture9**, HANDLE*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateCubeTexture)(IDirect3DDevice9*, UINT, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DCubeTexture9**, HANDLE*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateVertexBuffer)(IDirect3DDevice9*, UINT, DWORD, DWORD, D3DPOOL, IDirect3DVertexBuffer9**, HANDLE*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateIndexBuffer)(IDirect3DDevice9*, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DIndexBuffer9**, HANDLE*);
 
 PFN_CreateTexture       g_origCreateTexture = nullptr;
+PFN_UpdateTexture       g_origUpdateTexture = nullptr;
 PFN_CreateVolumeTexture g_origCreateVolumeTexture = nullptr;
 PFN_CreateCubeTexture   g_origCreateCubeTexture = nullptr;
 PFN_CreateVertexBuffer  g_origCreateVertexBuffer = nullptr;
@@ -23620,6 +23630,18 @@ inline bool SuppressCapturedVrMenuDraw() {
 // D3DUSAGE_DYNAMIC never legally coexists with MANAGED, and a DEFAULT texture that IS dynamic can
 // be locked directly - so a translated texture only needs a shadow when it is not dynamic.
 inline bool NeedsShadow(DWORD usage) { return (usage & D3DUSAGE_DYNAMIC) == 0; }
+
+// A successful engine-side UpdateTexture can rewrite a resource without going
+// through its LockRect vtable. Drop any source-owned match/replacement stamp so
+// the next bind sees the new content. The staging wrapper invalidates at Lock.
+HRESULT STDMETHODCALLTYPE Hook_UpdateTexture(IDirect3DDevice9* dev,
+        IDirect3DBaseTexture9* source, IDirect3DBaseTexture9* destination) {
+    const HRESULT hr = g_origUpdateTexture(dev, source, destination);
+    if (SUCCEEDED(hr) && !g_bridgeInternalUpload && destination &&
+        destination->GetType() == D3DRTYPE_TEXTURE)
+        texbridge::Invalidate(static_cast<IDirect3DTexture9*>(destination));
+    return hr;
+}
 
 // Defined below - the vtable for a resource type can only be patched once an instance exists, so
 // each Create* hook arms its own type on first success.
@@ -36117,7 +36139,19 @@ void LoadIniSettings() {
     g_weaponNativeAxis=GetPrivateProfileIntA("Input","WeaponNativeAxis",0,path)?1:0;
     g_twoHandSpreadPercent=(int)GetPrivateProfileIntA("Input","TwoHandSpreadPercent",100,path);
     if(g_twoHandSpreadPercent<0||g_twoHandSpreadPercent>100)g_twoHandSpreadPercent=100;
+    g_vrValkyrieSpreadPercent=(int)GetPrivateProfileIntA("Input","VrValkyrieSpreadPercent",100,path);
+    g_vrVolkSpreadPercent=(int)GetPrivateProfileIntA("Input","VrVolkSpreadPercent",100,path);
+    g_vrValkyrieTwoHandPercent=(int)GetPrivateProfileIntA("Input","VrValkyrieTwoHandPercent",100,path);
+    g_vrVolkTwoHandPercent=(int)GetPrivateProfileIntA("Input","VrVolkTwoHandPercent",100,path);
+    if(g_vrValkyrieSpreadPercent<0||g_vrValkyrieSpreadPercent>100)g_vrValkyrieSpreadPercent=100;
+    if(g_vrVolkSpreadPercent<0||g_vrVolkSpreadPercent>100)g_vrVolkSpreadPercent=100;
+    if(g_vrValkyrieTwoHandPercent<0||g_vrValkyrieTwoHandPercent>100)g_vrValkyrieTwoHandPercent=100;
+    if(g_vrVolkTwoHandPercent<0||g_vrVolkTwoHandPercent>100)g_vrVolkTwoHandPercent=100;
     Log("ini: TwoHandSpreadPercent=%d (100=native; active supported local shots only)",g_twoHandSpreadPercent);
+    Log("ini: VrValkyrieSpreadPercent=%d VrVolkSpreadPercent=%d (100=native; fresh matching muzzle only)",
+        g_vrValkyrieSpreadPercent,g_vrVolkSpreadPercent);
+    Log("ini: VrValkyrieTwoHandPercent=%d VrVolkTwoHandPercent=%d (100=OFF; profile-scoped support)",
+        g_vrValkyrieTwoHandPercent,g_vrVolkTwoHandPercent);
     g_cinematicHandsOwnership=GetPrivateProfileIntA("Render","CinematicHandsOwnership",0,path)?1:0;
     g_cinematicSceneProbe=GetPrivateProfileIntA("Diagnostic","CinematicSceneProbe",0,path)?1:0;
     g_cinematicEventBridge=GetPrivateProfileIntA("Render","CinematicEventBridge",0,path)?1:0;
@@ -36837,9 +36871,11 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
         // light-space render pass, which was why the former VrShadows=0 still left a rectangle.
         g_origSetTexture = (PFN_SetTexture)PatchVTable(*out,65,(void*)&Hook_SetTexture);
         if(Rd(g_textureBridgeOwned)) {
+            g_origUpdateTexture = (PFN_UpdateTexture)PatchVTable(*out,31,(void*)&Hook_UpdateTexture);
             HMODULE injector=GetModuleHandleW(L"dinput8.dll");
             g_textureBridgeBind=injector?reinterpret_cast<texbridge::Bind>(GetProcAddress(injector,"SingularityTextureBridgeV1")):nullptr;
-            Log("texture bridge: slot65 MAIN owner; callback=%p originalForward=%p",(void*)g_textureBridgeBind,(void*)g_origSetTexture);
+            Log("texture bridge: slot65 MAIN owner; callback=%p originalForward=%p updateForward=%p",
+                (void*)g_textureBridgeBind,(void*)g_origSetTexture,(void*)g_origUpdateTexture);
         }
         // 118 = CreateQuery, the last method on IDirect3DDevice9. Counted forward from
         // SetVertexShaderConstantF at 94, which is independently confirmed working.

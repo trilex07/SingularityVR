@@ -54,6 +54,7 @@ static bool      g_apply = true;              // false = log only
 static bool      g_resourceNativeCache = true;
 static bool      g_bridgeOwned = false; // new route default OFF; never arms MinHook
 static bool      g_remasterApply=false;
+static remasterscope::PriorityMode g_priorityMaterialMode=remasterscope::PriorityMode::Off;
 static bool      g_effectsRemaster=false; // reviewed effects candidate, startup-only, default OFF
 static char      g_remasterDir[MAX_PATH]="texture-override-remaster";
 struct alignas(8) CacheCounters {
@@ -138,6 +139,8 @@ static void LoadConfig() {
     g_resourceNativeCache=iniInt("general","resource_native_cache",1,ini)!=0;
     g_bridgeOwned=iniInt("general","bridge_owned",0,ini)!=0;
     g_remasterApply=iniInt("general","remaster_apply",0,ini)!=0;
+    g_priorityMaterialMode=remasterscope::ParsePriorityMode(
+        iniInt("general","priority_material_mode",0,ini));
     g_effectsRemaster=iniInt("general","effects_remaster",0,ini)!=0;
     iniStr("general","remasterdir","texture-override-remaster",g_remasterDir,MAX_PATH,ini);
     iniStr("general", "texturesdir", "texture-override", g_texturesDir, MAX_PATH, ini);
@@ -172,6 +175,8 @@ static void LoadConfig() {
     Log("quality: %s (dir %s)", quality, g_texturesDir);
     Log("TEXTURE_NATIVE_CACHE enabled=%d version=1; target lookup/DDS pixels unchanged",
         g_resourceNativeCache?1:0);
+    Log("priority material mode=%d (0=accepted base, 1=log only, 2=four-map remaster)",
+        static_cast<int>(g_priorityMaterialMode));
 }
 
 // ---------------------------------------------------------------------------
@@ -648,22 +653,28 @@ extern "C" HRESULT WINAPI SingularityTextureBridgeV1(IDirect3DDevice9* dev,DWORD
     if(target&&!texgroups::GroupAllows(g_groupOn,texgroups::GroupIndex(target->group)))target=nullptr;
     // New blood identities must not widen baseline replacement when OFF.
     if(target&&remasterscope::IsAddedBlood(target->name)&&!g_effectsRemaster)target=nullptr;
+    const bool priority=target&&remasterscope::PriorityMaterial(target->name);
     const bool remaster=target&&remasterscope::Contains(target->name,g_effectsRemaster);
     if(target){
         static volatile LONG seen[kTargetCount]{};
         const unsigned slot=unsigned(target-kTargets);
-        if(!InterlockedCompareExchange(&seen[slot],1,0))Log("BRIDGE MATCH %s exact original hash=%016llX remaster=%d remaster_apply=%d; named proof before substitution",
-            target->name,(unsigned long long)hash,remaster?1:0,g_remasterApply?1:0);
+        if(!InterlockedCompareExchange(&seen[slot],1,0))Log("BRIDGE MATCH %s exact original hash=%016llX remaster=%d remaster_apply=%d priority_mode=%d; named proof before substitution",
+            target->name,(unsigned long long)hash,remaster?1:0,g_remasterApply?1:0,
+            priority?static_cast<int>(g_priorityMaterialMode):0);
     }
     IDirect3DTexture9* replacement=nullptr;
+    // LogOnly never selects the four new remaster files. It may still select
+    // the already accepted base override, unless global mode_apply=0.
+    // Off retains the existing remaster_apply policy byte for byte.
     if(target&&g_apply){
         char relative[MAX_PATH],path[MAX_PATH];
-        _snprintf_s(relative,_TRUNCATE,"%s\\%s",(remaster&&g_remasterApply)?g_remasterDir:g_texturesDir,target->dds);
+        const bool useRemaster=remasterscope::UseRemaster(priority,remaster,g_remasterApply,g_priorityMaterialMode);
+        _snprintf_s(relative,_TRUNCATE,"%s\\%s",useRemaster?g_remasterDir:g_texturesDir,target->dds);
         if(relative[0]=='\\'||relative[1]==':')strcpy_s(path,relative);else BuildPath(relative,path,sizeof(path));
         DDSImage image;
         if(LoadDDS(path,image)&&image.fmt==desc.Format&&CreateReplacement(dev,image,&replacement)){
             if(!texpositive::Store(original,replacement)){replacement->Release();replacement=nullptr;}
-            else Log("BRIDGE SUBSTITUTE %s (%ux%u -> %ux%u) stage=%u remaster=%d; resource-owned",target->name,desc.Width,desc.Height,image.w,image.h,stage,(remaster&&g_remasterApply)?1:0);
+            else Log("BRIDGE SUBSTITUTE %s (%ux%u -> %ux%u) stage=%u remaster=%d; resource-owned",target->name,desc.Width,desc.Height,image.w,image.h,stage,useRemaster?1:0);
         }
     }
     if(!replacement&&g_resourceNativeCache)texnative::RememberNative(original);
