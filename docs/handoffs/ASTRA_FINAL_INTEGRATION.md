@@ -16,7 +16,7 @@ NIS source-wiring regression still expected pre-OLED g_frameSrc11. Updated it to
 
 Unified x86 PE32 /O2 build PASS. Actual DLL disassembly retains literal [eax+20Ch] and FName stack setup. Dual TMD/reload suite PASS, including 30,000 reload transactions and 4,000 carry samples. HUD actual D3D9/Ex atlas tests: 108 cases each; 24 projection cases. Texture bridge D3D9/Ex, UpdateTexture invalidation, Reset, COM ownership tests PASS. TMD material replacement submits 2x7110 triangles with restored IB in offline D3D9/Ex test. OLED CPU/GPU comparison PASS. Haptics 7 tests, voice coverage 4, native-bank tools 4, voice staging 3, note manifest and icon tests PASS. See hashed log receipts in JSON; historical failing NIS log is retained and superseded only by the passing wiring rerun.
 
-Font synthetic checks PASS; the optional existing-package check fails the patcher's original-package pin. This does not prove missing Polish glyphs: the package may already be patched. Do not replace it with the old patcher's input. MAIN must reconcile its accepted hash before any font work.
+Font synthetic checks PASS; the optional existing-package check fails an assertion. Its runner suppresses the failing assertion location, so the precise cause is not established. The test requires the old original-package pin; a currently patched package is one possible explanation, not a proven regression. Do not replace it with the old patcher's input. MAIN must reconcile its accepted hash before any font work.
 
 ## Audio and remaining scope
 
