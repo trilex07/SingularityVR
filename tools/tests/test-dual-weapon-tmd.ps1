@@ -19,6 +19,7 @@ $tests = @(
     'spikes/view_matrix/tests/test-next-weapon-reload.cpp',
     'spikes/view_matrix/tests/test-weapon-carry-ray.cpp',
     'spikes/view_matrix/tests/test-two-hand-spread.cpp',
+    'spikes/view_matrix/tests/test-weapon-accuracy-policy.cpp',
     'spikes/view_matrix/tests/test-measured-aim.cpp',
     'spikes/view_matrix/tests/test-locker-vr-loadout-preview.cpp',
     'spikes/view_matrix/tests/test-locker-vr-loadout-policy.cpp',
