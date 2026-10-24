@@ -1,6 +1,54 @@
 # STATUS — session handoff
 
+## 2026-10-24 — M02 safety integration (`b49380d`) deployed (dll `107FA9C0…`, INI unchanged); P0 grading session still PENDING
+
+- MAIN verification: live log at instruction time == the already-archived
+  Session B file (`ED29829D…AFB0`, mtime 09:29:24, zero `M02 UI` receipts,
+  mtime predates the M02 deploys) ⇒ **the P0 headset session has NOT run
+  yet**; nothing unarchived existed, so "archive before relaunch" remains
+  satisfied by the committed archive; the next relaunch truncates a
+  first-archived log by definition.
+- Cherry-pick `-x` of SOL safety correction `b49380d` onto `6d08f4d` ⇒
+  **`7d156f8`** (clean; +240/−21 = originals). Build: x86 PE32 `/O2`,
+  provenance `7d156f82114c`, **dll SHA `107FA9C01047F8BBFED4D53BB9C872964
+  173EAE72E89308CBF89713002B71120`** (`build\m02-runtime-candidate-safety`).
+- Mandatory-gate evidence, all PASS:
+  1. Native VR Settings footer retained: baked 900×32 footer draw removed,
+     native-footer `ClearRects` fills unconditional (readability authority
+     back in P1; P0 unaffected — P1 was OFF on the deployed binary).
+  2. P2 wheel offscreen staging + single two-eye composite
+     (`DrawUiRemasterWheelPair`, cached `D3DUSAGE_RENDERTARGET` stage,
+     local viewport/clear, `-1 = uncertain commit` never layered with the
+     native wheel).
+  3. Failure-injection fallback: fixture injects a later source-failure
+     path; backbuffer hash unchanged until one composite; accepted pixels
+     stay on abort.
+  4. Switch combinations: committed `tests/test-ui-remaster-switch-combos.cpp`
+     — 8-combo truth table PASS (Runtime∧Settings for P1; Wheel independent;
+     0/1/0 and 0/1/1 correctly inert for styling).
+  5. State restoration: fixture PASS "texture/blend state restored";
+     staging path restores previous RT+viewport or cleans up on every
+     failure branch.
+  6. Full battery PASS: dual-weapon-TMD 39 groups, haptics-native,
+     carry-ray, short-gauntlet, HUD-live, D3D9+D3D9Ex HAL pixels=3304/3304;
+     new M02 fixtures: runtime geometry PASS, D3D9+D3D9Ex "2 eyes,
+     2240/2240 pixels, state restored".
+- **Guarded deployment (game closed):** dll-only narrow mode, INI
+  BYTE-IDENTICAL (no ini allowances, hash unchanged `EB8EEA0A…CA0B`):
+  `34A2946C…` → **`107FA9C0…71120`**, guard exit=0, backup `…095316`,
+  profile `85488495…1701` (`deployment/acceptance-20261024-m02-safety/`).
+  P0 stays armed (`UiRemasterRuntime=1`), P1/P2 OFF, `TmdPulses` absent,
+  three atlas assets verified in place.
+- **NEXT (user): P0 grading session** on the safety build (both-eye plate,
+  positioning/legible text, laser/R2, close/reopen, Reset, no corruption).
+  On "done": archive log FIRST, verify `M02 UI: neutral atlas ready` +
+  `plate eyes=2/2 restore=1`, grade P0 separately. THEN: P1 acceptance
+  (`UiRemasterSettings=1` guarded deploy → PSVR2 gate on footer readability
+  + selected-row frame), then P2 (`UiRemasterWheel=1` → wheel skin gate).
+  M09 classification fix and insertion comfort remain unbundled.
+
 ## 2026-10-24 — M02 first runtime UX integrated on accepted baseline; deployment A/B installed (P0 gate armed, READY_FOR_PHYSICAL_ACCEPTANCE)
+
 
 - Branch `integration/m02-settings-wheel-remaster` = accepted M09
   Session-A source (`3fa5655`, TmdPulses default-OFF) + cherry-picks

@@ -1,0 +1,14 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "854884953E5BA0FCD1B4494BF46D466D379E77ACE36DA0C02B5098A8AE5A1701",
+  "reason": "M02 safety deployment: mandatory b49380d cherry-pick rebuild (dll 34A2946C->107FA9C0 @ 7d156f8). INI untouched and byte-identical; P0 gate stays armed (UiRemasterRuntime=1), P1/P2 stay OFF.",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "34A2946C5C618DAFF5F3804FA8463121A6489215F4D5405BCA375498BE3EA287",
+      "after": "107FA9C01047F8BBFED4D53BB9C872964173EAE72E89308CBF89713002B71120",
+      "reason": " safety rebuild: settings-footer retention + atomic wheel staging + fallback"
+    }
+  ],
+  "ini": []
+}
