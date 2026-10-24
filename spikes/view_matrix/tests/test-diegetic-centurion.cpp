@@ -127,11 +127,11 @@ int main() {
     // 4 flanks + 1 bezel + 1 screen bed + 2 clip digits ('30') + 1 slash + 3 reserve digits ('120') = 12 quads
     CHECK(vn3d == 12);
     // Check housing top bezel quad (quad index 4)
-    CHECK(Near(vq3d[4].p[0].x, -mv->wUU * 0.5f, 1e-3f));
-    CHECK(Near(vq3d[4].p[1].x, mv->wUU * 0.5f, 1e-3f));
+    CHECK(Near(vq3d[4].p[0].x, mv->wUU * 0.5f, 1e-3f));
+    CHECK(Near(vq3d[4].p[1].x, -mv->wUU * 0.5f, 1e-3f));
     // Check screen bed quad (quad index 5)
-    CHECK(Near(vq3d[5].p[0].x, -mv->wUU * 0.82f * 0.5f, 1e-3f));
-    CHECK(Near(vq3d[5].p[1].x, mv->wUU * 0.82f * 0.5f, 1e-3f));
+    CHECK(Near(vq3d[5].p[0].x, mv->wUU * 0.82f * 0.5f, 1e-3f));
+    CHECK(Near(vq3d[5].p[1].x, -mv->wUU * 0.82f * 0.5f, 1e-3f));
     // Check readout digit quads (quads 6..11)
     CHECK(sameCell(Quad{0,0,0,0, vq3d[6].u0, vq3d[6].v0, vq3d[6].u1, vq3d[6].v1}, Digit(false, 3)));
     CHECK(sameCell(Quad{0,0,0,0, vq3d[7].u0, vq3d[7].v0, vq3d[7].u1, vq3d[7].v1}, Digit(false, 0)));

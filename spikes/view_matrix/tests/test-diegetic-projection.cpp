@@ -4,13 +4,16 @@
 #include <cstdio>
 #include <limits>
 using namespace diegetichud;
+#include "diegetic_observed_poses.h"
 
 Pose FixturePose(const WeaponMount& mo,float roll=0.f) {
     Pose p;const float a=mo.pitchDeg*3.14159265f/180.f;
     // Place the measured mount 30 UU in front of a camera facing its screen.
-    p.chain.m[0][0]=1;p.chain.m[1][1]=-sinf(a);p.chain.m[2][1]=cosf(a);
+    // Match the shooter-facing side of the native model, including horizontal
+    // handedness. The old fixture viewed the opposite side and hid mirror bugs.
+    p.chain.m[0][0]=-1;p.chain.m[1][1]=-sinf(a);p.chain.m[2][1]=cosf(a);
     p.chain.m[1][2]=cosf(a);p.chain.m[2][2]=sinf(a);p.chain.m[3][3]=1;
-    p.chain.m[3][0]=-mo.cxUU;
+    p.chain.m[3][0]=mo.cxUU;
     p.chain.m[3][1]=-mo.cyUU*sinf(a)-mo.czUU*cosf(a);
     p.chain.m[3][2]=30+mo.cyUU*cosf(a)-mo.czUU*sinf(a);
     for(int r=0;r<4;++r){const float x=p.chain.m[r][0],y=p.chain.m[r][1];
@@ -39,8 +42,7 @@ int main(){
             V3 mid{};for(const auto& v:q[f].p)mid=mid+v*.25f;
             const auto outward=mid-centre;
             const float dot=normal.x*outward.x+normal.y*outward.y+normal.z*outward.z;
-            if(dot>=0){printf("winding w=%d face=%d dot=%g\n",w,f,dot);fflush(stdout);}
-            assert(dot<0); // reflection reverses the original source winding
+            assert(f==4?dot>0:dot<0); // reader-facing bezel; original flanks untouched
         }
         for(float roll:{0.f,.785398f,1.570796f,3.141593f})for(unsigned width:{4128u,5264u}){
             auto pose=FixturePose(*mo,roll);
@@ -80,6 +82,21 @@ int main(){
     Pose saved;assert(GetLiveTransform(11387,1001,10,saved));
     assert(saved.eyeClip[0].m[3][0]==body.eyeClip[0].m[3][0]);
     assert(!GetLiveTransform(5799,1001,10,saved));assert(!GetLiveTransform(11387,1101,10,saved));
+    unsigned observed=0;
+    for(const auto& sample:observedHudPoses){
+        Quad3D q[16];const int n=BuildFixtureQuads3D(*MountForVerts(sample.verts),5,59,q,16);
+        const auto plan=Project(q,n,sample.pose,5640,2876,100);assert(plan.ready);
+        for(const auto& eye:plan.eye){
+            assert(eye.front[5]); // no mirrored screen in either eye
+            for(int k=6;k<n;++k){const auto* v=eye.quad[k];
+                assert(v[1].x>v[0].x); // increasing U reads left to right
+                assert(v[2].y>v[0].y); // increasing V points down, not upside down
+                if(k>6)assert(v[0].x>eye.quad[k-1][0].x); // digits AND their order
+            }
+        }
+        ++observed;
+    }
+    printf("PASS: %u observed PSVR2 pose replays, both-eye glyph orientation and number order\n",observed);
     printf("PASS: %u stereo projections, reflected source winding, exact body/alias selection, attachment rejection, coherent pose, near-plane/NaN failure\n",projections);
 }
 #endif

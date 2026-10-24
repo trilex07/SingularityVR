@@ -16477,23 +16477,35 @@ volatile LONG g_gloveIsolate = 2;     // ini [Render] GloveIsolate
 volatile LONG g_gloveFaceFilter = 0;  // ini [Render] GloveFaceFilter
 volatile LONG g_noTmdPaletteFix = 0;  // controlled experiment; [Render] NoTmdPaletteFix
 static handanchor::WeaponProbe g_handAnchorRecords;
+static handanchor::Probe g_tmdHandAnchorRecords[2]; // eight final-bound samples/eye, opt-in
 static DWORD g_handAnchorThread=0;
 static void FlushHandAnchorProbe() {
     if(!Rd(g_handAnchorProbe)||g_handAnchorThread!=GetCurrentThreadId())return;
     handanchor::Record r;
-    if(!g_handAnchorRecords.Take(r))return;
-    Log("hand-anchor sample=%u frame=%u moved=%d weapon=%p epoch=%u targetL=(%.4f,%.4f,%.4f) targetR=(%.4f,%.4f,%.4f) head=(%.4f,%.4f,%.4f) gunAnchor=(%.4f,%.4f,%.4f); stage=GameplayStereo; raw noTMD constants, not inferred world-joint position",
-        g_handAnchorRecords.Count(),r.frame,r.moved,(void*)r.weapon,r.epoch,r.target[0][0],r.target[0][1],r.target[0][2],r.target[1][0],r.target[1][1],r.target[1][2],r.headOffset[0],r.headOffset[1],r.headOffset[2],r.anchor[0],r.anchor[1],r.anchor[2]);
-    auto matrix=[](const char* name,const float* f,unsigned n){
-        char line[512]{};size_t used=0;
-        for(unsigned i=0;i<n && used<sizeof(line);++i){const int k=_snprintf_s(line+used,sizeof(line)-used,_TRUNCATE," %.6g",f[i]);if(k>0)used+=(size_t)k;}
-        Log("hand-anchor %s:%s",name,line);
-    };
-    matrix("local230",r.local,16);
-    matrix("controllerAim",r.controller[0],16);matrix("controllerOff",r.controller[1],16);
-    matrix("cameraRide",r.ride,16);
-    matrix("nativeLeft9",r.before[0],12);matrix("nativeRight51",r.before[1],12);
-    matrix("posedLeft9",r.after[0],12);matrix("posedRight51",r.after[1],12);
+    for(unsigned source=0;source<3;++source) {
+        if(!(source?g_tmdHandAnchorRecords[source-1].Take(r):g_handAnchorRecords.Take(r)))continue;
+        const char* prefix=r.tmd?"tmd-hand-anchor":"hand-anchor";
+        Log("%s sample=%u frame=%u moved=%d weapon=%p epoch=%u targetL=(%.4f,%.4f,%.4f) targetR=(%.4f,%.4f,%.4f) head=(%.4f,%.4f,%.4f) gunAnchor=(%.4f,%.4f,%.4f); stage=GameplayStereo; raw constants (mesh identity below for TMD)",
+            prefix,source?g_tmdHandAnchorRecords[source-1].Count():g_handAnchorRecords.Count(),r.frame,r.moved,(void*)r.weapon,r.epoch,r.target[0][0],r.target[0][1],r.target[0][2],r.target[1][0],r.target[1][1],r.target[1][2],r.headOffset[0],r.headOffset[1],r.headOffset[2],r.anchor[0],r.anchor[1],r.anchor[2]);
+        auto matrix=[prefix](const char* name,const float* f,unsigned n){
+            char line[512]{};size_t used=0;
+            for(unsigned i=0;i<n && used<sizeof(line);++i){const int k=_snprintf_s(line+used,sizeof(line)-used,_TRUNCATE," %.6g",f[i]);if(k>0)used+=(size_t)k;}
+            Log("%s %s:%s",prefix,name,line);
+        };
+        matrix("local230",r.local,16);
+        matrix("controllerAim",r.controller[0],16);matrix("controllerOff",r.controller[1],16);
+        matrix("cameraRide",r.ride,16);
+        matrix("nativeLeft9",r.before[0],12);matrix("nativeRight51",r.before[1],12);
+        matrix("posedLeft9",r.after[0],12);matrix("posedRight51",r.after[1],12);
+        if(r.tmd) {
+            Log("tmd-hand-anchor final-bound: frame=%u eye=%u hands=%u support=%u verts=%u first=%u faces=%u ib=%p UUperM=%.6g wristL=(%.6g,%.6g,%.6g) wristR=(%.6g,%.6g,%.6g) errorL=(%.6g,%.6g,%.6g) errorR=(%.6g,%.6g,%.6g); before draw, not pixel proof",
+                r.frame,r.eye,r.hands,r.support,r.verts,r.first,r.triangles,(void*)r.indexBuffer,r.uuPerMetre,
+                r.wristWorld[0][0],r.wristWorld[0][1],r.wristWorld[0][2],
+                r.wristWorld[1][0],r.wristWorld[1][1],r.wristWorld[1][2],
+                r.wristWorld[0][0]-r.target[0][0],r.wristWorld[0][1]-r.target[0][1],r.wristWorld[0][2]-r.target[0][2],
+                r.wristWorld[1][0]-r.target[1][0],r.wristWorld[1][1]-r.target[1][1],r.wristWorld[1][2]-r.target[1][2]);
+        }
+    }
 }
 volatile LONG g_gloveStumpScalePct = 20; // ini [Render] GloveStumpScale
 // Mesh-space +X is the bind-pose left axis (left wrist +49, right wrist -49).
@@ -20768,6 +20780,52 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         // No surface readback or GPU synchronization.
         const bool assemblyGlove=(numVertices==7444||numVertices==2626)&&startIndex==0&&primCount==4402;
         const bool assemblyDevice=shortTmdBuffer&&nativeIndices.valid;
+        // Existing opt-in probe extended to the physical symptom's exact TMD
+        // glove section. Read the bound palette/IB before restoration, in EACH
+        // eye; no pose writes, GPU readback, tracking bypass or guessed offset.
+        if(Rd(g_handAnchorProbe)&&assemblyGlove&&independentRegs&&eye<2&&nSeg>0&&
+           armnatural::TmdBind().ready&&g_handPoseValid[0]&&g_handPositionValid[0]&&
+           g_handPoseValid[1]&&g_handPositionValid[1]&&
+           handanchor::GameplaySource(true,Rd(g_inCinematic)!=0,Rd(g_vrUiMenu)!=0,
+               Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo)) {
+            const DWORD thread=GetCurrentThreadId(),tick=GetTickCount();
+            if(!g_handAnchorThread)g_handAnchorThread=thread;
+            static unsigned failedAttempts[2]{};
+            if(thread==g_handAnchorThread&&failedAttempts[eye]<8&&g_tmdHandAnchorRecords[eye].Due(tick)) {
+                handanchor::Record r;r.tmd=true;r.eye=eye;r.tick=tick;r.frame=(unsigned)Rd(g_armPaletteFrameToken);
+                r.moved=g_thisDrawMoved;r.hands=(unsigned)Rd(g_handsStatus);r.support=Rd(g_twoHandActive)?1:0;
+                r.weapon=(std::uintptr_t)(unsigned)Rd(g_weaponObj);r.verts=numVertices;r.first=startIndex;
+                r.triangles=cuffBuffer&&nativeIndices.valid?gloveTriangles:primCount;r.uuPerMetre=MetresToUU();
+                bool ok=SUCCEEDED(dev->GetVertexShaderConstantF(230,r.local,4));
+                BuildLiveControllerC(reinterpret_cast<float (*)[4]>(r.controller[0]),true);
+                BuildLiveControllerC(reinterpret_cast<float (*)[4]>(r.controller[1]),false);
+                if(g_thisDrawMoved==3)BuildTmdAssemblyC(reinterpret_cast<float (*)[4]>(r.ride));
+                else if(g_thisDrawMoved==1)BuildGunC(reinterpret_cast<float (*)[4]>(r.ride));
+                else if(g_thisDrawMoved==2)BuildTmdC(reinterpret_cast<float (*)[4]>(r.ride));
+                else for(unsigned i=0;i<4;++i)r.ride[i*4+i]=1.f;
+                const unsigned slots[2]={1,19},bones[2]={9,51}; // audited material-0 palette
+                for(unsigned side=0;side<2;++side) {
+                    ok=SUCCEEDED(dev->GetVertexShaderConstantF(5+slots[side]*3,r.after[side],3))&&ok;
+                    memcpy(r.before[side],independentSaved[slots[side]*3],sizeof(r.before[side]));
+                    armbind::Mat joint;
+                    if(!armbind::CurrentJoint(armnatural::TmdBind().bind[bones[side]],
+                        reinterpret_cast<const float (*)[4]>(r.after[side]),joint)){ok=false;continue;}
+                    const auto world=handanchor::Point(handanchor::Point(armbind::Position(joint),
+                        reinterpret_cast<const float (*)[4]>(r.local)),reinterpret_cast<const float (*)[4]>(r.ride));
+                    r.wristWorld[side][0]=world.x;r.wristWorld[side][1]=world.y;r.wristWorld[side][2]=world.z;
+                    const bool aim=(int)side==AimHand();
+                    r.target[side][0]=(float)Rd(aim?g_handOffX:g_offHandOffX)/kHandFixed;
+                    r.target[side][1]=(float)Rd(aim?g_handOffY:g_offHandOffY)/kHandFixed;
+                    r.target[side][2]=(float)(g_gunSignPosZ*Rd(aim?g_handOffZ:g_offHandOffZ))/kHandFixed;
+                    if(g_gunHeadOffset)for(unsigned axis=0;axis<3;++axis)r.target[side][axis]+=g_hmdOffset[axis];
+                }
+                memcpy(r.headOffset,g_hmdOffset,sizeof(r.headOffset));GunAnchorWorld(r.anchor);
+                IDirect3DIndexBuffer9* ib=nullptr;ok=SUCCEEDED(dev->GetIndices(&ib))&&ok;
+                r.indexBuffer=reinterpret_cast<std::uintptr_t>(ib);if(ib)ib->Release();
+                if(!ok||!g_tmdHandAnchorRecords[eye].Capture(r))++failedAttempts[eye];
+            }
+        }
+
         // The assembly receipt below samples slot 1 (LEFT wrist). The failed
         // L2 test concerns the RIGHT wrist, which is slot 19 in material 0.
         // Capture its final bound palette in both eyes for a few frames per
