@@ -5,6 +5,7 @@
 #include "ui_asset_witness.h"
 #include "native_context_cursor.h"
 #include "native_npc_name.h"
+#include "native_gameplay_text.h"
 #include "native_owned_inventory.h"
 #include "native_body_equipment_probe.h"
 #include "native_tmd_aim.h"
@@ -388,6 +389,7 @@ static void __fastcall Poll(void* self,void*,float dt) {
  ReadableForget();
  UpdateMenu(); // update mode before the game tick/XInput routes the trigger
  NativeNpcName::Update(); // native GFx calls stay on this engine thread
+ NativeGameplayText::Update(); // exact original gameplay location holder, default OFF
  NativeOwnedInventory::Poll(); // bounded actual possession snapshot / queued selection
  LockerOwnedDisplayCache::TickWhileActive();
  LockerVrLoadout::PollEngine();
