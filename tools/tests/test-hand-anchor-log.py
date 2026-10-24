@@ -39,5 +39,9 @@ class Tests(unittest.TestCase):
         self.assertEqual(rows[-1]['weapon'],0x01234567)
     def test_nonfinite_refuses(self):
         with self.assertRaises(ValueError):anchor.extract(record().replace('local230: 0','local230: nan'))
+    def test_tmd_is_not_misread_as_notmd(self):
+        tmd=record(True,True).replace('hand-anchor','tmd-hand-anchor')
+        self.assertEqual(anchor.extract(tmd),[])
+        self.assertEqual(len(anchor.extract(tmd+'\n'+record(True,True))),1)
 
 if __name__=='__main__':unittest.main()

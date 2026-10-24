@@ -14,7 +14,7 @@ def extract(text):
     for i,line in enumerate(lines):
         transition=re.search(r'SceneMode: \w+ -> (\w+)',line)
         if transition:mode=transition.group(1)
-        match=re.search(r'hand-anchor sample=(?P<sample>\d+) frame=(?P<frame>\d+) moved=(?P<moved>\d+)'
+        match=re.search(r'(?<![\w-])hand-anchor sample=(?P<sample>\d+) frame=(?P<frame>\d+) moved=(?P<moved>\d+)'
             r'(?: weapon=(?P<weapon>[0-9a-fA-F]{8}) epoch=(?P<epoch>\d+))?'
             r' targetL=\((?P<left>[^)]+)\) targetR=\((?P<right>[^)]+)\)',line)
         if not match:continue
