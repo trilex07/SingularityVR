@@ -28,6 +28,17 @@
   `2240/2240`, gameplay-text probe+safe-area, hud-reseat 203, menu-hud-scale,
   haptics-native py, dual-weapon wiring py, dual-weapon-TMD 39 groups,
   HUD-live, short-gauntlet — all PASS, no regressions.
+- Deployed (game closed, 2026-10-24 11:25): session-assets delta first
+  (atlas `9ED4A5C3…` → `Binaries/vr-assets/hud/diegetic/`, manifest
+  `ee719b1f…`, backup `build/next-weapon-reload/diegetic-atlas-backup`;
+  session-assets.ps1 whitelist/count extended per the `6d08f4d` precedent),
+  then the guarded candidate run (`-DllOnly -IncludeIni -SkipTextures`,
+  profile `3F46C1D6…`, plan `75E4752…`): installed dll `ADF2833A70E0…`
+  (PE32 0x014C) + INI `257F9DFB14A4` (359 keys; only
+  `Render/DiegeticWeaponHud=1` added), report `20261024-112533.json`, backup
+  `deployment/install-backups/20261024-112533` = the accepted combined pair
+  verified (`DA63A2A9…`). Rollback switches: `DiegeticWeaponHud=0` (feature)
+  or the backup pair (full).
 - Physical grading state: NOT physically verified (Centurion-only milestone;
   other weapons + TMD wrist display stay out of scope until the user grades
   this candidate).
