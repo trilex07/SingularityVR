@@ -18,6 +18,8 @@ No first-shot detector or recoil-property write is justified by the available ev
 - Original barrel-to-ray rotation preserves length and source; the existing fresh shot-sequence match excludes unrelated collision rays.
 - Native `AddSpread` method still requires the exact 536-byte fingerprint `90E1F845D48FC976`. The offline source contract test covers the prior `GetWeaponSpread`/`AddSpread` audit, but these tests cannot establish live weapon-property values or visible impact grouping.
 - Steam and PSVR2 were not accessed by SIDE. Physical acceptance is pending.
+- Source commit `eeb76e35c523a6e24307e6c637a0928fff361b29`; x86 PE32 `/O2` DLL SHA256 `314774F7AAF8485B4E5483235596DB5D988728B8635EC11127DAC27F54A06D83`. The DLL was built from these source contents before the documentation-only follow-up commit.
+- `test-dual-weapon-tmd.ps1 -SkipOled` PASS, including measured aim, ammo/reload, gloves, TMD and WeaponLocker; `test_rifle_scope_backend.py` 8/8 PASS; input/remap and reload instruction tests PASS. M02 D3D9 and D3D9Ex fixture both PASS (2240/2240 pixels each eye, restored texture/blend state); OLED D3D11 suite PASS. These are offline and fixture results only.
 
 ## MAIN physical check
 
