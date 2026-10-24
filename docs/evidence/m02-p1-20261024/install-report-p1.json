@@ -1,0 +1,74 @@
+﻿{
+    "Action":  "Install",
+    "AcceptedProfileSha256":  "7F0D2ADF722C514BAE2E50090541336219E7981864864385F96E2D4588EA93E6",
+    "ChangePlanSha256":  "E6C569EF2F6169CB01C141E53DD2704F43B06B9D146005A44514344634DA2D63",
+    "Timestamp":  "2026-10-24T09:58:37.6898908+02:00",
+    "GameBin":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries",
+    "BackupPath":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-m02-remaster\\deployment\\install-backups\\20261024-095837",
+    "Pe32":  true,
+    "DllOnly":  true,
+    "RuntimeDllPairOnly":  false,
+    "IncludeIni":  true,
+    "DInput8Pe32":  null,
+    "Installed":  [
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-m02-remaster\\build\\m02-runtime-candidate-p1\\d3d9.dll",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+                          "Sha256":  "107FA9C01047F8BBFED4D53BB9C872964173EAE72E89308CBF89713002B71120"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-m02-remaster\\build\\m02-runtime-candidate-p1\\SingularityVR.ini",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\SingularityVR.ini",
+                          "Sha256":  "994B111AE7E65283E0D396D03657B02A566A073C59B0DE28CD93489B95866314"
+                      }
+                  ],
+    "TextureVariant":  "skipped",
+    "TextureCount":  0,
+    "FinalState":  [
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+                           "Exists":  true,
+                           "Size":  3643392,
+                           "Sha256":  "107FA9C01047F8BBFED4D53BB9C872964173EAE72E89308CBF89713002B71120",
+                           "Pe32":  true,
+                           "Machine":  "0x014C",
+                           "OptionalMagic":  "0x010B"
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\SingularityVR.ini",
+                           "Exists":  true,
+                           "Size":  11710,
+                           "Sha256":  "994B111AE7E65283E0D396D03657B02A566A073C59B0DE28CD93489B95866314",
+                           "Pe32":  null,
+                           "Machine":  null,
+                           "OptionalMagic":  null
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8.dll",
+                           "Exists":  true,
+                           "Size":  46592,
+                           "Sha256":  "726010169F34972029F17A74B73884E868FADB5847BAD3825B858AF6C4694C69",
+                           "Pe32":  true,
+                           "Machine":  "0x014C",
+                           "OptionalMagic":  "0x010B"
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8_orig.dll",
+                           "Exists":  true,
+                           "Size":  176640,
+                           "Sha256":  "2A746CCF3922AECCED0387F3C6E21E55C6DF786DF8164C482F2A2E6165EDD395",
+                           "Pe32":  true,
+                           "Machine":  "0x014C",
+                           "OptionalMagic":  "0x010B"
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture_override.ini",
+                           "Exists":  true,
+                           "Size":  1967,
+                           "Sha256":  "895523B4986F584F6BF336F36321EE446BEED63966B3ECCED6C64B62A9228185",
+                           "Pe32":  null,
+                           "Machine":  null,
+                           "OptionalMagic":  null
+                       }
+                   ]
+}
