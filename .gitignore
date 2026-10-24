@@ -64,6 +64,7 @@ desktop.ini
 # make-release.ps1 rebuilds both from source every run; nothing here is authored.
 packaging/staging/
 packaging/dist/
+/deployment/texture-cache/
 
 # ---- machine-specific build provenance ----
 # Generated on each local build; repository paths and local working-tree state are embedded.

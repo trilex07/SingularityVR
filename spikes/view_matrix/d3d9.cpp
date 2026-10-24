@@ -22772,6 +22772,9 @@ IDirect3DDevice9* g_gameDev = nullptr; // for UpdateTexture
 LONG g_xlatTex = 0, g_xlatVB = 0, g_xlatIB = 0, g_xlatCube = 0, g_xlatVol = 0;
 LONG g_stageCount = 0, g_stageFailed = 0, g_xlatFailed = 0;
 double g_stageMB = 0.0;
+// FlushShadow holds g_stageLock. Its writes were already invalidated at LockRect;
+// a Release triggered by FreePrivateData inside that lock would deadlock.
+thread_local bool g_bridgeInternalUpload = false;
 
 // ---- the side table: DEFAULT resource -> its SYSTEMMEM shadow ----
 //
@@ -22917,7 +22920,9 @@ PFN_Release        g_origVolRelease = nullptr;
 // wrapper was fine for six runs.
 inline void FlushShadow(StageEntry* e) {
     if (!e || !e->shadow || !e->dirty || !g_gameDev) return;
+    g_bridgeInternalUpload = true;
     HRESULT hr = g_gameDev->UpdateTexture(e->shadow, e->key);
+    g_bridgeInternalUpload = false;
     e->dirty = false;
     if (FAILED(hr)) {
         static int once = 0;
@@ -23059,12 +23064,14 @@ ULONG STDMETHODCALLTYPE Hook_VolRelease(IUnknown* self) {
 
 // ---- the Create* hooks ----
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateTexture)(IDirect3DDevice9*, UINT, UINT, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DTexture9**, HANDLE*);
+typedef HRESULT (STDMETHODCALLTYPE *PFN_UpdateTexture)(IDirect3DDevice9*, IDirect3DBaseTexture9*, IDirect3DBaseTexture9*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateVolumeTexture)(IDirect3DDevice9*, UINT, UINT, UINT, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DVolumeTexture9**, HANDLE*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateCubeTexture)(IDirect3DDevice9*, UINT, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DCubeTexture9**, HANDLE*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateVertexBuffer)(IDirect3DDevice9*, UINT, DWORD, DWORD, D3DPOOL, IDirect3DVertexBuffer9**, HANDLE*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateIndexBuffer)(IDirect3DDevice9*, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DIndexBuffer9**, HANDLE*);
 
 PFN_CreateTexture       g_origCreateTexture = nullptr;
+PFN_UpdateTexture       g_origUpdateTexture = nullptr;
 PFN_CreateVolumeTexture g_origCreateVolumeTexture = nullptr;
 PFN_CreateCubeTexture   g_origCreateCubeTexture = nullptr;
 PFN_CreateVertexBuffer  g_origCreateVertexBuffer = nullptr;
@@ -23566,6 +23573,18 @@ inline bool SuppressCapturedVrMenuDraw() {
 // D3DUSAGE_DYNAMIC never legally coexists with MANAGED, and a DEFAULT texture that IS dynamic can
 // be locked directly - so a translated texture only needs a shadow when it is not dynamic.
 inline bool NeedsShadow(DWORD usage) { return (usage & D3DUSAGE_DYNAMIC) == 0; }
+
+// A successful engine-side UpdateTexture can rewrite a resource without going
+// through its LockRect vtable. Drop any source-owned match/replacement stamp so
+// the next bind sees the new content. The staging wrapper invalidates at Lock.
+HRESULT STDMETHODCALLTYPE Hook_UpdateTexture(IDirect3DDevice9* dev,
+        IDirect3DBaseTexture9* source, IDirect3DBaseTexture9* destination) {
+    const HRESULT hr = g_origUpdateTexture(dev, source, destination);
+    if (SUCCEEDED(hr) && !g_bridgeInternalUpload && destination &&
+        destination->GetType() == D3DRTYPE_TEXTURE)
+        texbridge::Invalidate(static_cast<IDirect3DTexture9*>(destination));
+    return hr;
+}
 
 // Defined below - the vtable for a resource type can only be patched once an instance exists, so
 // each Create* hook arms its own type on first success.
@@ -36840,9 +36859,11 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
         // light-space render pass, which was why the former VrShadows=0 still left a rectangle.
         g_origSetTexture = (PFN_SetTexture)PatchVTable(*out,65,(void*)&Hook_SetTexture);
         if(Rd(g_textureBridgeOwned)) {
+            g_origUpdateTexture = (PFN_UpdateTexture)PatchVTable(*out,31,(void*)&Hook_UpdateTexture);
             HMODULE injector=GetModuleHandleW(L"dinput8.dll");
             g_textureBridgeBind=injector?reinterpret_cast<texbridge::Bind>(GetProcAddress(injector,"SingularityTextureBridgeV1")):nullptr;
-            Log("texture bridge: slot65 MAIN owner; callback=%p originalForward=%p",(void*)g_textureBridgeBind,(void*)g_origSetTexture);
+            Log("texture bridge: slot65 MAIN owner; callback=%p originalForward=%p updateForward=%p",
+                (void*)g_textureBridgeBind,(void*)g_origSetTexture,(void*)g_origUpdateTexture);
         }
         // 118 = CreateQuery, the last method on IDirect3DDevice9. Counted forward from
         // SetVertexShaderConstantF at 94, which is independently confirmed working.
