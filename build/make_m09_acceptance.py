@@ -1,6 +1,6 @@
-import json, hashlib, re, io, os
+import json, os, hashlib, re, io, os
 
-WS = r"C:\Users\Trilex\vr-mods\SingularityVR-m09-current"
+WS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GAME = r"C:\Program Files (x86)\Steam\steamapps\common\Singularity"
 PROFILE = WS + r"\deployment\acceptance-20261024-m09\accepted-profile.json"
 PLAN = WS + r"\deployment\acceptance-20261024-m09\change-plan.json"

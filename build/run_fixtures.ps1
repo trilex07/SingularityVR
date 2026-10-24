@@ -19,7 +19,7 @@ try {
     foreach($name in $tests.Keys){
         $src=Join-Path $root "spikes/view_matrix/tests/$name.cpp"
         if(-not (Test-Path $src)){ Write-Output "$name MISSING (predecessor branch only)"; continue }
-        cmd /c "`"$vc`" x86 >nul && cl /nologo /O2 /EHsc /std:c++17 /I`"$($xr.Inc)`" /I`"C:\Users\Trilex\vr-mods\SingularityVR-m02-m09\spikes\view_matrix`" `"$src`" /Fe:$name.exe $($tests[$name])" > $null 2>&1
+        cmd /c "`"$vc`" x86 >nul && cl /nologo /O2 /EHsc /std:c++17 /I`"$($xr.Inc)`" /I`"$($root)\spikes\view_matrix`" `"$src`" /Fe:$name.exe $($tests[$name])" > $null 2>&1
         if($LASTEXITCODE -ne 0){ throw "compile failed: $name" }
         Write-Output "=== $name ==="
         cmd /c ".\$name.exe"

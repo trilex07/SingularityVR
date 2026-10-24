@@ -1,6 +1,6 @@
-import json, hashlib, io, os, shutil
+import json, os, hashlib, io, os, shutil
 
-WS = r"C:\Users\Trilex\vr-mods\SingularityVR-m02-remaster"
+WS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GAME = r"C:\Program Files (x86)\Steam\steamapps\common\Singularity"
 BIN = os.path.join(GAME, "Binaries")
 BASE = os.path.join(WS, r"spikes\view_matrix")
@@ -27,7 +27,7 @@ def parse_ini(t):
     return out
 
 
-import re
+import re, os
 
 live_ini_path = os.path.join(BIN, "SingularityVR.ini")
 text = io.open(live_ini_path, encoding="utf-8-sig").read()

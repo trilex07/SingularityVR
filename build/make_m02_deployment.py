@@ -1,6 +1,6 @@
-import json, hashlib, io, os, re, shutil
+import json, os, hashlib, io, os, re, shutil
 
-WS = r"C:\Users\Trilex\vr-mods\SingularityVR-m02-remaster"
+WS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GAME = r"C:\Program Files (x86)\Steam\steamapps\common\Singularity"
 BIN = os.path.join(GAME, "Binaries")
 ASSETS_SRC = os.path.join(WS, r"assets\processed\ui_remaster\atlas")

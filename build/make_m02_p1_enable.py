@@ -1,6 +1,6 @@
-import json, hashlib, io, os, re, shutil
+import json, os, hashlib, io, os, re, shutil
 
-WS = r"C:\Users\Trilex\vr-mods\SingularityVR-m02-remaster"
+WS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GAME = r"C:\Program Files (x86)\Steam\steamapps\common\Singularity"
 BIN = os.path.join(GAME, "Binaries")
 PROFILE_DIR = os.path.join(WS, "deployment", "acceptance-20261024-m02-p1")

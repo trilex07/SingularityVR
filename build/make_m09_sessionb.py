@@ -1,6 +1,6 @@
-import json, hashlib, io, os, re
+import json, os, hashlib, io, os, re
 
-WS = r"C:\Users\Trilex\vr-mods\SingularityVR-m09-current"
+WS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GAME = r"C:\Program Files (x86)\Steam\steamapps\common\Singularity"
 DIR = os.path.join(WS, "deployment", "acceptance-20261024-m09-sessionb")
 CAND_DIR = os.path.join(WS, "build", "m09-sessionb-candidate")
