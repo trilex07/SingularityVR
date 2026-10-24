@@ -134,6 +134,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "frontend_menu_surface.h"
 #include "menu_hud_scale.h"
 #include "hand_hud_policy.h"
+#include "gameplay_text_probe.h"
 #include "menu_pointer_design.h"
 #include "modal_menu_policy.h"
 #include "holster_marker.h"
@@ -21102,6 +21103,38 @@ bool g_inHudRemap = false;
 volatile LONG g_hudDraws = 0, g_hudDrawsLast = 0;
 // Budget for the per-element position dump, refilled by the '[' re-arm.
 int g_uiDumpLeft = 0;
+static LONG g_gameplayTextProbe = 0; // [Diagnostic] GameplayTextProbe, default OFF
+static gameplaytextprobe::UniqueBudget g_gameplayTextProbeBudget;
+static unsigned g_gameplayTextProbeEligible = 0, g_gameplayTextProbeQueries = 0;
+
+// Read-only, bounded draw identity. The source of location/object text has not
+// been proven; moving every lower-left batch would also move unrelated HUD.
+// Record only original c5-c8, before HudStereoPair changes it for either eye.
+static void ObserveGameplayTextCandidate(IDirect3DDevice9* dev, unsigned route,
+                                         unsigned stride, unsigned primitives) {
+    if (!Rd(g_gameplayTextProbe) || g_gameplayTextProbeBudget.used ==
+        gameplaytextprobe::UniqueBudget::Limit || !InGameplay() ||
+        Rd(g_vrMenuClass) || Rd(g_vrUiMenu) || Rd(g_panelOpen) ||
+        Rd(g_gamePaused) || Rd(g_inCinematic) || g_boundShaderLayout.shadow ||
+        primitives < 2 || primitives > 300 || stride < 4 || stride > 32) return;
+    // Sampling and the hard query cap bound driver work even if no unique
+    // signature ever fills the receipt budget.
+    if ((++g_gameplayTextProbeEligible & 3u) != 0 ||
+        g_gameplayTextProbeQueries >= 4096) return;
+    ++g_gameplayTextProbeQueries;
+    float m[16]{};
+    if (FAILED(dev->GetVertexShaderConstantF(5, m, 4))) return;
+    if (!gameplaytextprobe::Candidate(true, true, false, true, stride, primitives, m)) return;
+    const LONG texture = BoundTexId(dev);
+    const int x100 = static_cast<int>(m[12] * 100.f);
+    const int y100 = static_cast<int>(m[13] * 100.f);
+    if (!g_gameplayTextProbeBudget.Admit(gameplaytextprobe::Key(route, stride,
+            primitives, x100, y100, static_cast<std::uint32_t>(texture)))) return;
+    Log("gameplay-text candidate %u/96: ms=%lu route=%u (0=offscreen 1=scene-original 2=hud-eye) rtScene=%ld rtBack=%ld stride=%u prim=%u tex=%08lX clip=(%.3f,%.3f) scale=(%.5f,%.5f) [identity UNPROVEN]",
+        g_gameplayTextProbeBudget.used, GetTickCount(), route, Rd(g_rtIsScene),
+        Rd(g_rtIsBackbuffer), stride, primitives, (unsigned long)texture,
+        m[12], m[13], m[0], m[5]);
+}
 
 // ---- ⭐ run 229: the UI census, reachable from a headset ----
 //
@@ -22268,6 +22301,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     // Run 192: recorded AFTER the classifier, so the census reports the decision actually taken
     // rather than re-deriving it and risking disagreement with the code it is measuring.
     FireCensusRecord(2, t, primCount, vtxStride, vtxData, quad, 0);
+    if (!quad) ObserveGameplayTextCandidate(dev,
+        !Rd(g_rtIsScene) ? 0u : (hudArmed && g_hudRemap ? 2u : 1u),
+        vtxStride, primCount);
     if (quad) QuadCensusRecord(dev, 2, t, primCount, vtxData, vtxStride);   // ⭐ run 260
     if (g_flashProbeLeft > 0) {
         LONG lo, hi; TakeDrawWriteMask(&lo, &hi);
@@ -22422,6 +22458,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // Run 192: recorded AFTER the classifier, so the census reports the decision actually taken
     // rather than re-deriving it and risking disagreement with the code it is measuring.
     FireCensusRecord(3, t, primCount, vtxStride, vtxData, quad, numVertices);
+    if (!quad) ObserveGameplayTextCandidate(dev,
+        !Rd(g_rtIsScene) ? 0u : (hudArmed && g_hudRemap ? 2u : 1u),
+        vtxStride, primCount);
     if (quad) QuadCensusRecord(dev, 3, t, primCount, vtxData, vtxStride);   // ⭐ run 260
     // ⭐ Run 192 found shot geometry on THIS hook at stride 72.
     if (g_flashProbeLeft > 0) {
@@ -35170,6 +35209,10 @@ void LoadIniSettings() {
     if (Rd(g_lockerAvailabilityTrace)) LockerAvailabilityTrace::TryInstallEarly();
     g_contextCursorNative=GetPrivateProfileIntA("Render","ContextCursorNative",0,path)?1:0;
     g_npcNameScalePct=std::clamp((int)GetPrivateProfileIntA("Render","NpcNameScalePct",100,path),40,100);
+    InterlockedExchange(&g_gameplayTextProbe,
+        GetPrivateProfileIntA("Diagnostic","GameplayTextProbe",0,path) != 0);
+    if (Rd(g_gameplayTextProbe))
+        Log("gameplay-text probe enabled: read-only lower-left orthographic draw census, 96 unique signatures maximum; no HUD movement");
     g_keepAcquiredWeapons=GetPrivateProfileIntA("Input","KeepAcquiredWeapons",0,path)?1:0;
     InterlockedExchange(&g_lockerRetainOrdinary,
         GetPrivateProfileIntA("Input", "LockerRetainOrdinary", 0, path) != 0);

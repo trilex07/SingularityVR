@@ -377,6 +377,10 @@ change plan `change-plan.json` bound by profile SHA `D5676D1E…8528`.
 Steam partially guarded: this profile pins DLL + dependency assets only; post-test
 rollback must re-hash BOTH installed files. No M09 haptics in this build (waits for
 M01 as decided). NO merge into main; no C++ experiments during the physical test.
+## 2026-10-24 — Gameplay HUD lower-left text: diagnostic L2_PASS, visual fix NOT TESTED
+
+SIDE added the default-OFF `GameplayTextProbe` to identify the actual lower-left gameplay text draw route before changing placement. The source of location and contextual labels remains unproven; no HUD/menu geometry or Steam install was changed. See `docs/handoffs/gameplay-hud-text-safe-area-probe.md`. CPU policy and x86 PE32 `/O2` build passed; MAIN-owned runtime identity capture and subsequent physical acceptance remain open.
+d9a160e (Add bounded gameplay HUD text source probe)
 
 ## 2026-10-23 — L2 disappearing gun: native gun_scale producer — L1_PASS / L2_PASS
 
