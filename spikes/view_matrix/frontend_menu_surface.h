@@ -2,6 +2,7 @@
 #include <d3d9.h>
 #include "frontend_menu_comfort.h"
 #include "cinema_surface_copy.h"
+#include "ui_menu_skin.h"
 
 namespace frontmenu {
 struct Vertex {float x,y,z,rhw;DWORD colour;float u,v;};
@@ -35,6 +36,7 @@ struct SurfacePass {
     CinemaSetTarget setTarget;SetVS setVS;SetTexture setTexture;DrawUP draw;
     IDirect3DSurface9 *old=nullptr,*depth=nullptr,*extra[3]{};
     D3DVIEWPORT9 viewport{};DWORD targets=1;
+    IDirect3DTexture9* skin=nullptr; // borrowed for this captured transaction
     SurfacePass(IDirect3DDevice9* d,IDirect3DSurface9* b,IDirect3DTexture9* m,Resources& r,
         const D3DSURFACE_DESC& dc,const Vertex (&v)[2][4],CinemaSetTarget rt,SetVS vs,SetTexture tex,DrawUP up)
         :dev(d),back(b),menu(m),resources(r),desc(dc),vertices(v),setTarget(rt),setVS(vs),setTexture(tex),draw(up){}
@@ -83,7 +85,9 @@ struct SurfacePass {
     bool BeginScene(){return SUCCEEDED(dev->BeginScene());}
     bool DrawEye(int eye){
         const RECT rect{(LONG)(eye*desc.Width/2),0,(LONG)((eye+1)*desc.Width/2),(LONG)desc.Height};
-        return SUCCEEDED(dev->SetScissorRect(&rect))&&SUCCEEDED(draw(dev,D3DPT_TRIANGLESTRIP,2,vertices[eye],sizeof(Vertex)));
+        if(FAILED(dev->SetScissorRect(&rect)))return false;
+        if(skin&&!menuskin::DrawBackdrop(dev,skin,vertices[eye],draw))return false;
+        return SUCCEEDED(draw(dev,D3DPT_TRIANGLESTRIP,2,vertices[eye],sizeof(Vertex)));
     }
     bool EndScene(){return SUCCEEDED(dev->EndScene());}
     bool Restore(){
