@@ -6835,6 +6835,9 @@ static void NoteXrHeartbeat(int shouldRender, int layerCount) {
     }
 }
 volatile LONG g_contextPromptVisible=0; // set by the measured native pickup/use prompt draw
+#include "vr_legacy_prompts.h"
+static bool g_vrHideLegacyPadPrompts=true;
+static volatile LONG g_vrPromptControls[vrprompts::Count]{};
 static bool g_vrPromptTokens=false; // action-token text replaces ambiguous native pad aliases
 static void ReportVrRuntimeCounters() {
     const auto& c=g_vrCounters;
@@ -9762,6 +9765,52 @@ PadButtonAction g_padButtons[] = {
     { "menu",       "Menu",           "/user/hand/left/input/menu/click",        "Menu",       XI_START,     XR_NULL_HANDLE, true,  false },
 };
 const int kPadButtonCount = (int)(sizeof(g_padButtons) / sizeof(g_padButtons[0]));
+inline int AimHand();
+// Bounded source snapshot after successful xrSyncActions. Read by the native
+// localization hook through atomic enum values; no engine-thread XR calls.
+static vrprompts::Control BoundPromptControl(XrAction action,bool rightAxis=false){
+    if(!action||!g_xrSession)return vrprompts::Unbound;
+    XrBoundSourcesForActionEnumerateInfo info{XR_TYPE_BOUND_SOURCES_FOR_ACTION_ENUMERATE_INFO};
+    info.action=action;XrPath sources[16]{};uint32_t count=0;
+    if(XR_FAILED(xrEnumerateBoundSourcesForAction(g_xrSession,&info,16,&count,sources))||count>16)return vrprompts::Unbound;
+    auto result=vrprompts::Unbound;
+    for(uint32_t i=0;i<count;++i){char path[XR_MAX_PATH_LENGTH]{};uint32_t bytes=0;
+        if(XR_FAILED(xrPathToString(g_xrInstance,sources[i],sizeof(path),&bytes,path)))continue;
+        auto control=vrprompts::Path(path);
+        if(rightAxis&&!strcmp(path,"/user/hand/right/input/thumbstick"))control=vrprompts::RightUp;
+        if(control==vrprompts::Unbound)continue;
+        if(result!=vrprompts::Unbound&&result!=control)return vrprompts::Unbound;
+        result=control;
+    }
+    return result;
+}
+static void UpdateVrPromptControls(){
+    if(!g_vrHideLegacyPadPrompts)return;
+    static ULONGLONG last=0;const auto now=GetTickCount64();if(last&&now-last<1000)return;last=now;
+    vrprompts::Control c[vrprompts::Count]{};
+    for(int i=0;i<kPadButtonCount;++i){const auto& b=g_padButtons[i];
+        // INI can remap native masks; name alone is not the action delivered.
+        auto a=vrprompts::Unknown;
+        switch(b.mask){case XI_X:a=vrprompts::Use;break;case XI_A:a=vrprompts::Jump;break;
+            case XI_RSHOULDER:a=vrprompts::Impulse;break;case XI_LSHOULDER:a=vrprompts::Age;break;
+            case XI_LTHUMB:a=vrprompts::Dash;break;case 0x0001:a=vrprompts::Health;break;}
+        if(a!=vrprompts::Unknown)c[a]=BoundPromptControl(b.action);
+    }
+    c[vrprompts::Fire]=BoundPromptControl(g_actFire);
+    c[vrprompts::Aim]=BoundPromptControl(g_actAltFire);
+    if(AimHand()==1&&Rd(g_haveTMD)==1)c[vrprompts::Aim]=vrprompts::Unbound;
+    c[vrprompts::Cycle]=BoundPromptControl(g_actR3);
+    c[vrprompts::Reload]=c[vrprompts::Use];
+    const bool layout=g_reloadControlLayout&&AimHand()==1&&!Rd(g_swapSticks);
+    if(layout){
+        c[vrprompts::Reload]=BoundPromptControl(g_actUiBack);
+        c[vrprompts::Health]=BoundPromptControl(g_actUiSelect);
+        c[vrprompts::Jump]=BoundPromptControl(g_actTurn,true);
+    }
+    if(!Rd(g_swapSticks)&&BoundPromptControl(g_actTurn,true)==vrprompts::RightUp)c[vrprompts::Crouch]=vrprompts::RightDown;
+    for(int i=0;i<vrprompts::Count;++i)InterlockedExchange(&g_vrPromptControls[i],c[i]);
+}
+
 
 // ---- ⭐ run 274: the buttons had NO instrument, and that is why the tester report stalled ----
 //
@@ -10885,6 +10934,7 @@ void SyncXRInput(XrTime displayTime) {
     if (!pollOff) g_hotPathSampler.count(hotpath::Counter::xr_sync_actions);
     const XrResult sr = pollOff ? XR_SUCCESS : xrSyncActions(g_xrSession, &si);
     if (!pollOff) DiagPhaseAdd(DP_SYNC, diagSync);
+    if(!pollOff && sr==XR_SUCCESS)UpdateVrPromptControls();
     {
         const double ms = MsSince(tSync);
         g_msSyncActions += ms;
@@ -25552,7 +25602,8 @@ static bool PolishLookupByKey(const wchar_t* section, const wchar_t* key,
 static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
                                  const wchar_t* key = nullptr, const wchar_t* package = nullptr) {
     const bool polish=PolishLocalization::PL().IsPolishEnabled();
-    const bool prompts=g_vrPromptTokens&&VrModeOn();
+    const bool cleanup=g_vrHideLegacyPadPrompts&&VrModeOn();
+    const bool prompts=(g_vrPromptTokens||cleanup)&&VrModeOn();
     if (!result || (!polish&&!prompts)) return;
     if (!Readable(result, 12)) return;
     wchar_t* data = *reinterpret_cast<wchar_t**>(result);
@@ -25590,7 +25641,18 @@ static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
     prompttokens::Result rewritten;
     if(prompts){
         const bool layout=g_reloadControlLayout&&AimHand()==1&&!Rd(g_swapSticks);
-        rewritten=prompttokens::Rewrite(visible,prompt,sizeof(prompt),layout,AimHand()==1,polish);
+        if(cleanup){
+            vrprompts::Control controls[vrprompts::Count]{};
+            for(int i=0;i<vrprompts::Count;++i)controls[i]=(vrprompts::Control)InterlockedCompareExchange(&g_vrPromptControls[i],0,0);
+            char sec[128]{},ky[128]{};
+            if(section)WideFieldToUtf8(section,sec,sizeof(sec));
+            if(key)WideFieldToUtf8(key,ky,sizeof(ky));
+            // Notes/subtitles are not action instruction producers.
+            if(!PolishNotesSection(section)){
+                const auto clean=vrprompts::Rewrite(visible,prompt,sizeof(prompt),controls,polish,sec,ky);
+                rewritten.changed=clean.changed;rewritten.overflow=clean.overflow;
+            }
+        }else rewritten=prompttokens::Rewrite(visible,prompt,sizeof(prompt),layout,AimHand()==1,polish);
         if(rewritten.changed&&!rewritten.overflow){
             visible=prompt;
             static unsigned notes=0;if(notes++<24)Log("vr-prompt token rewrite: reloadLayout=%d replacements=%u source=\"%.240s\" visible=\"%.300s\"",
@@ -25618,7 +25680,7 @@ static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
     // FString/GFx receives Unicode; a code-page round trip neither creates
     // glyphs nor proves their coverage and can replace unsupported text by '?'.
     const int wn = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, visible, -1, wide, 4096);
-    if (wn <= 1) return;
+    if (wn <= 0) return;
     static LONG saidNoteUnicode = 0;
     if (notes && InterlockedCompareExchange(&saidNoteUnicode, 1, 0) == 0)
         Log("polish notes: Unicode preserved; font glyph coverage requires separate validation");
@@ -27768,7 +27830,7 @@ static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR 
 }
 
 // M02 first slice. No texture, COM work or draw-path change when OFF.
-static LONG g_uiRemasterRuntime=0,g_uiRemasterSettings=0,g_uiRemasterWheel=0,g_uiRemasterState=0;
+static LONG g_uiRemasterRuntime=1,g_uiRemasterSettings=1,g_uiRemasterWheel=1,g_uiRemasterMenus=1,g_uiRemasterState=0;
 static IDirect3DTexture9* g_uiRemasterNeutral=nullptr;
 static IDirect3DTexture9* g_uiRemasterPl=nullptr;
 static IDirect3DTexture9* g_uiRemasterEn=nullptr;
@@ -27830,7 +27892,7 @@ static bool LoadUiRemasterAtlas(IDirect3DDevice9* dev,const char* name,UINT expe
     return true;
 }
 static bool LoadUiRemasterNeutral(IDirect3DDevice9* dev){
-    if(!dev||(!Rd(g_uiRemasterRuntime)&&!Rd(g_uiRemasterWheel)))return false;
+    if(!dev||(!Rd(g_uiRemasterRuntime)&&!Rd(g_uiRemasterWheel)&&!Rd(g_uiRemasterMenus)))return false;
     if(Rd(g_uiRemasterState)!=0)return Rd(g_uiRemasterState)==1;
     if(!LoadUiRemasterAtlas(dev,"ui_atlas_neutral.png",4096,2048,&g_uiRemasterNeutral)){
         InterlockedExchange(&g_uiRemasterState,-1);
@@ -30608,6 +30670,11 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     const int remasterResult=roundOn?DrawUiRemasterWheelPair(dev,safeMetrics,wheelCx,wheelCy,
         slots,selected,slotVerts,slotNamed,wheelClip,wheelReserve,(int)d.Width,(int)d.Height):0;
     const bool remasterRendered=remasterResult!=0;
+    {static unsigned receipts=0;static int previous=-99;
+     if(receipts<12&&previous!=remasterResult){previous=remasterResult;++receipts;
+         Log("M02 wheel binding: result=%d enabled=%ld slots=%d neutral=%p lang=%s; result=1 is committed both-eye draw",
+             remasterResult,Rd(g_uiRemasterWheel),slots,(void*)g_uiRemasterNeutral,
+             PolishLocalization::PL().IsPolishEnabled()?"pl":"en");}}
     if(remasterResult<0){static bool once=false;if(!once){once=true;
         Log("M02 wheel: two-eye composite failed; native overlay withheld for this frame");}}
     for (int eye = 0; eye < 2; ++eye) {
@@ -35354,10 +35421,12 @@ void LoadIniSettings() {
     InterlockedExchange(&g_modalUiProbe, GetPrivateProfileIntA("Render","ModalUiProbe",0,path)?1:0);
     InterlockedExchange(&g_contextPointerProjection,GetPrivateProfileIntA("Render","ContextPointerProjection",0,path)?1:0);
     g_vrPromptTokens=GetPrivateProfileIntA("Render","VrPromptTokens",0,path)!=0;
+    g_vrHideLegacyPadPrompts=GetPrivateProfileIntA("Render","VrHideLegacyPadPrompts",1,path)!=0;
     g_vrSettingsMinimal=GetPrivateProfileIntA("Render","VrSettingsMinimal",0,path)!=0;
-    InterlockedExchange(&g_uiRemasterRuntime,GetPrivateProfileIntA("Render","UiRemasterRuntime",0,path)?1:0);
-    InterlockedExchange(&g_uiRemasterSettings,GetPrivateProfileIntA("Render","UiRemasterSettings",0,path)?1:0);
-    InterlockedExchange(&g_uiRemasterWheel,GetPrivateProfileIntA("Render","UiRemasterWheel",0,path)?1:0);
+    InterlockedExchange(&g_uiRemasterRuntime,GetPrivateProfileIntA("Render","UiRemasterRuntime",1,path)?1:0);
+    InterlockedExchange(&g_uiRemasterSettings,GetPrivateProfileIntA("Render","UiRemasterSettings",1,path)?1:0);
+    InterlockedExchange(&g_uiRemasterWheel,GetPrivateProfileIntA("Render","UiRemasterWheel",1,path)?1:0);
+    InterlockedExchange(&g_uiRemasterMenus,GetPrivateProfileIntA("Render","UiRemasterMenus",1,path)?1:0);
     g_vrSettingsSessionOnly=GetPrivateProfileIntA("Diagnostic","VrSettingsSessionOnly",0,path)!=0;
     InterlockedExchange(&g_reloadHintsEnabled,
         GetPrivateProfileIntA("Input","ReloadHints",0,path)!=0);

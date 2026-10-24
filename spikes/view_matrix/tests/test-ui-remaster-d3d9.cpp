@@ -3,6 +3,7 @@
 #include <d3d9.h>
 #include "../settings_panel.h"
 #include "../ui_remaster_runtime.h"
+#include "../ui_menu_skin.h"
 #include <cassert>
 #include <cstdio>
 
@@ -170,6 +171,36 @@ static int Run(bool ex){
     assert(restoredVp.Width==originalVp.Width&&restoredVp.Height==originalVp.Height);
     IDirect3DSurface9* restoredRt=nullptr;assert(SUCCEEDED(dev->GetRenderTarget(0,&restoredRt)));
     assert(restoredRt==rt);restoredRt->Release();
+    // Production menu backdrop helper: same projected native quad, both eyes,
+    // local blend/texture restoration including failed draw. No hit geometry writes.
+    struct SkinV{float x,y,z,rhw;DWORD colour;float u,v;};
+    auto draw=[](IDirect3DDevice9* d,D3DPRIMITIVETYPE t,UINT n,const void* p,UINT stride)->HRESULT{
+        return d->DrawPrimitiveUP(t,n,p,stride);};
+    auto fail=[](IDirect3DDevice9*,D3DPRIMITIVETYPE,UINT,const void*,UINT)->HRESULT{return E_FAIL;};
+    dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1);
+    dev->SetTexture(0,nullptr);dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_ONE);
+    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_ZERO);
+    dev->SetRenderState(D3DRS_ZENABLE,FALSE);dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+    assert(SUCCEEDED(dev->Clear(0,nullptr,D3DCLEAR_TARGET,0,1,0)));
+    assert(SUCCEEDED(dev->BeginScene()));
+    for(int eye=0;eye<2;++eye){const float x=16.f+eye*64;
+        SkinV q[4]={{x,16,0,1,0xffffffff,0,0},{x+32,16,0,1,0xffffffff,1,0},
+            {x,48,0,1,0xffffffff,0,1},{x+32,48,0,1,0xffffffff,1,1}},copy[4];memcpy(copy,q,sizeof(q));
+        assert(menuskin::DrawBackdrop(dev,tex,q,draw));
+        assert(!menuskin::DrawBackdrop(dev,tex,q,fail));assert(!memcmp(copy,q,sizeof(q)));
+        DWORD blend=0;dev->GetRenderState(D3DRS_SRCBLEND,&blend);assert(blend==D3DBLEND_ONE);
+        IDirect3DBaseTexture9* bound=nullptr;dev->GetTexture(0,&bound);assert(bound==nullptr);
+    }
+    assert(SUCCEEDED(dev->EndScene()));assert(SUCCEEDED(dev->GetRenderTargetData(rt,read)));
+    assert(SUCCEEDED(read->LockRect(&eyeLock,nullptr,D3DLOCK_READONLY)));
+    const DWORD a=((DWORD*)((BYTE*)eyeLock.pBits+32*eyeLock.Pitch))[24];
+    const DWORD b=((DWORD*)((BYTE*)eyeLock.pBits+32*eyeLock.Pitch))[88];assert(a==b&&(a&0xffffff)!=0);
+    read->UnlockRect();puts("PASS: native menu skin both-eye pixels, unchanged hit quad, failure/texture/blend restoration");
     stageRt->Release();stageTex->Release();read->Release();rt->Release();state->Release();tex->Release();dev->Release();
     api->Release();DestroyWindow(window);
     std::printf("M02 D3D9%s PASS: 2 eyes, %u/%u pixels, texture/blend state restored\n",
