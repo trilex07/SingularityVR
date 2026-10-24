@@ -49,6 +49,9 @@ static int Run(bool ex){
     dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
     dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);dev->SetTexture(0,tex);
     assert(SUCCEEDED(dev->BeginScene()));
+    dev->SetRenderState(D3DRS_ZENABLE,FALSE);
+    dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
     unsigned draws=0;const auto uv=uiremaster::settingsPlate;
     for(int eye=0;eye<2;++eye){
         // Reduced-size equivalent of the production shared plate geometry.
@@ -90,7 +93,84 @@ static int Run(bool ex){
     for(unsigned y=0;y<64;++y)for(unsigned x=0;x<128;++x)
         if(((DWORD*)((BYTE*)lock.pBits+y*lock.Pitch))[x]&0xffffff)++pixels[x/64];
     assert(pixels[0]>100&&pixels[0]==pixels[1]);
-    read->UnlockRect();read->Release();rt->Release();state->Release();tex->Release();dev->Release();
+    read->UnlockRect();
+    // Stage an actual draw, inject a later source failure, and verify that
+    // neither eye changed until a single two-eye composite is submitted.
+    auto hashBack=[&](){
+        assert(SUCCEEDED(dev->GetRenderTargetData(rt,read)));
+        D3DLOCKED_RECT lr{};assert(SUCCEEDED(read->LockRect(&lr,nullptr,D3DLOCK_READONLY)));
+        unsigned long long h=1469598103934665603ull;
+        for(int y=0;y<64;++y)for(int x=0;x<128;++x){
+            h^=((DWORD*)((BYTE*)lr.pBits+y*lr.Pitch))[x];h*=1099511628211ull;}
+        read->UnlockRect();return h;
+    };
+    const auto beforeAbort=hashBack();
+    IDirect3DTexture9* stageTex=nullptr;IDirect3DSurface9* stageRt=nullptr;
+    assert(SUCCEEDED(dev->CreateTexture(32,32,1,D3DUSAGE_RENDERTARGET,
+        D3DFMT_A8R8G8B8,D3DPOOL_DEFAULT,&stageTex,nullptr)));
+    assert(SUCCEEDED(stageTex->GetSurfaceLevel(0,&stageRt)));
+    D3DVIEWPORT9 originalVp{};assert(SUCCEEDED(dev->GetViewport(&originalVp)));
+    assert(SUCCEEDED(state->Capture()));
+    assert(SUCCEEDED(dev->SetRenderTarget(0,stageRt)));
+    D3DVIEWPORT9 localVp{0,0,32,32,0.f,1.f};assert(SUCCEEDED(dev->SetViewport(&localVp)));
+    assert(SUCCEEDED(dev->Clear(0,nullptr,D3DCLEAR_TARGET,0xffff0000,1,0)));
+    assert(SUCCEEDED(dev->BeginScene()));
+    dev->SetRenderState(D3DRS_ZENABLE,FALSE);
+    dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
+    dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);dev->SetTexture(0,tex);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,FALSE);
+    uiremaster::Vertex staged[4]{};
+    uiremaster::BuildQuad({12,12,20,20},{0,0,1,1},staged);
+    assert(SUCCEEDED(dev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,2,staged,sizeof(staged[0]))));
+    assert(SUCCEEDED(dev->EndScene()));
+    IDirect3DSurface9* stageRead=nullptr;
+    assert(SUCCEEDED(dev->CreateOffscreenPlainSurface(32,32,D3DFMT_A8R8G8B8,
+        D3DPOOL_SYSTEMMEM,&stageRead,nullptr)));
+    assert(SUCCEEDED(dev->GetRenderTargetData(stageRt,stageRead)));
+    D3DLOCKED_RECT stageLock{};assert(SUCCEEDED(stageRead->LockRect(&stageLock,nullptr,D3DLOCK_READONLY)));
+    assert(((DWORD*)((BYTE*)stageLock.pBits+16*stageLock.Pitch))[16]==0xff38a472);
+    assert(((DWORD*)stageLock.pBits)[0]==0xffff0000);
+    stageRead->UnlockRect();stageRead->Release();
+    // A failed later sprite draw aborts: no composite and accepted pixels stay.
+    assert(SUCCEEDED(dev->SetRenderTarget(0,rt)));
+    assert(SUCCEEDED(dev->SetViewport(&originalVp)));
+    assert(hashBack()==beforeAbort);
+    const int cx[2]{32,96},cy[2]{32,32};uiremaster::Vertex pair[12]{};
+    assert(uiremaster::BuildWheelPair(cx,cy,12,128,64,32,pair));
+    dev->SetTexture(0,stageTex);
+    dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+    dev->SetRenderState(D3DRS_ZENABLE,FALSE);
+    dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
+    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_ONE);
+    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+    assert(SUCCEEDED(dev->BeginScene()));
+    assert(SUCCEEDED(dev->DrawPrimitiveUP(D3DPT_TRIANGLELIST,4,pair,sizeof(pair[0]))));
+    assert(SUCCEEDED(dev->EndScene()));
+    const auto afterCommit=hashBack();
+    assert(afterCommit!=beforeAbort);
+    assert(SUCCEEDED(dev->GetRenderTargetData(rt,read)));
+    D3DLOCKED_RECT eyeLock{};assert(SUCCEEDED(read->LockRect(&eyeLock,nullptr,D3DLOCK_READONLY)));
+    const DWORD left=((DWORD*)((BYTE*)eyeLock.pBits+32*eyeLock.Pitch))[24];
+    const DWORD right=((DWORD*)((BYTE*)eyeLock.pBits+32*eyeLock.Pitch))[88];
+    assert((left&0xffffff)==0xff0000 && left==right);
+    read->UnlockRect();
+    assert(SUCCEEDED(state->Apply()));
+    D3DVIEWPORT9 restoredVp{};assert(SUCCEEDED(dev->GetViewport(&restoredVp)));
+    assert(restoredVp.Width==originalVp.Width&&restoredVp.Height==originalVp.Height);
+    IDirect3DSurface9* restoredRt=nullptr;assert(SUCCEEDED(dev->GetRenderTarget(0,&restoredRt)));
+    assert(restoredRt==rt);restoredRt->Release();
+    stageRt->Release();stageTex->Release();read->Release();rt->Release();state->Release();tex->Release();dev->Release();
     api->Release();DestroyWindow(window);
     std::printf("M02 D3D9%s PASS: 2 eyes, %u/%u pixels, texture/blend state restored\n",
         ex?"Ex":"",pixels[0],pixels[1]);return 0;
