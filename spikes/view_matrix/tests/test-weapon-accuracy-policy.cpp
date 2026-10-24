@@ -13,13 +13,24 @@ static float DirectionAngle(int pitch,int yaw){
 int main(){
     using weaponreload::Kind;
     using weaponaccuracy::EffectivePercent;
-    assert(EffectivePercent(11387,Kind::Valkyrie,true,false,50,70,85)==70);
-    assert(EffectivePercent(11387,Kind::Valkyrie,true,true,50,70,85)==35);
-    assert(EffectivePercent(8297,Kind::Volk,true,true,50,70,85)==43);
-    assert(EffectivePercent(11387,Kind::Volk,true,true,50,70,85)==100);
-    assert(EffectivePercent(8297,Kind::Volk,false,true,50,70,85)==100);
-    assert(EffectivePercent(5799,Kind::None,true,true,50,70,85)==100);
-    assert(EffectivePercent(11387,Kind::Valkyrie,true,true,50,-2,85)==100);
+    const weaponaccuracy::Settings defaults{};
+    assert(EffectivePercent(11387,Kind::Valkyrie,true,false,defaults)==100);
+    assert(EffectivePercent(11387,Kind::Valkyrie,true,true,defaults)==100);
+    const weaponaccuracy::Settings scoped{100,70,85,50,50};
+    // Matched one hand, matched two hand, mismatched support, weapon switch.
+    assert(EffectivePercent(11387,Kind::Valkyrie,true,false,scoped)==70);
+    assert(EffectivePercent(11387,Kind::Valkyrie,true,true,scoped)==35);
+    assert(EffectivePercent(8297,Kind::Volk,true,true,scoped)==43);
+    assert(EffectivePercent(11387,Kind::Volk,true,true,scoped)==100);
+    assert(EffectivePercent(8297,Kind::Volk,false,true,scoped)==100);
+    assert(EffectivePercent(5799,Kind::None,true,true,scoped)==100);
+    const weaponaccuracy::Settings globalLegacy{50,70,85,50,50};
+    assert(EffectivePercent(5799,Kind::None,true,true,globalLegacy)==50);
+    assert(EffectivePercent(11387,Kind::Volk,true,true,globalLegacy)==50);
+    assert(EffectivePercent(8297,Kind::Volk,false,true,globalLegacy)==50);
+    assert(EffectivePercent(11387,Kind::Valkyrie,true,true,globalLegacy)==18);
+    const weaponaccuracy::Settings bad{100,-2,85,50,50};
+    assert(EffectivePercent(11387,Kind::Valkyrie,true,true,bad)==100);
     unsigned seed=0x12345678;double nativeSquare=0,rifleSquare=0,
         rifleSupportedSquare=0,volkSquare=0,volkSupportedSquare=0;
     for(int i=0;i<10000;++i){

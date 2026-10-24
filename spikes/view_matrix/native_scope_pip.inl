@@ -246,7 +246,8 @@ static int* __fastcall OpticalAddSpread(void* self,void*,int* output,int pitch,i
     const auto frame=Snapshot();
     const bool scoped=g_sniperOpticalAccuracy&&Current(frame)&&(uintptr_t)self==frame.weapon;
     const bool ordinary=(g_weaponNativeAxis||g_twoHandSpreadPercent<100||
-        g_vrValkyrieSpreadPercent<100||g_vrVolkSpreadPercent<100)&&VrModeOn()&&InGameplay()&&
+        g_vrValkyrieSpreadPercent<100||g_vrVolkSpreadPercent<100||
+        g_vrValkyrieTwoHandPercent<100||g_vrVolkTwoHandPercent<100)&&VrModeOn()&&InGameplay()&&
         !Rd(g_inCinematic)&&!Rd(g_gamePaused)&&!Rd(g_weaponHolstered)&&Rd(g_handDevValid)&&
         (uintptr_t)self==(uintptr_t)(uint32_t)Rd(g_weaponObj);
     weaponmuzzle::Witness muzzle;
@@ -259,9 +260,10 @@ static int* __fastcall OpticalAddSpread(void* self,void*,int* output,int pitch,i
     const bool profileMatch=currentMuzzle&&
         ((gunVertices==11387&&muzzle.kind==weaponreload::Kind::Valkyrie)||
          (gunVertices==8297&&muzzle.kind==weaponreload::Kind::Volk));
-    const int percent=profileMatch?weaponaccuracy::EffectivePercent(gunVertices,muzzle.kind,currentMuzzle,
-        support,g_twoHandSpreadPercent,g_vrValkyrieSpreadPercent,g_vrVolkSpreadPercent):
-        (support?g_twoHandSpreadPercent:100); // preserve the accepted pre-existing supported path
+    const weaponaccuracy::Settings settings{g_twoHandSpreadPercent,g_vrValkyrieSpreadPercent,
+        g_vrVolkSpreadPercent,g_vrValkyrieTwoHandPercent,g_vrVolkTwoHandPercent};
+    const int percent=weaponaccuracy::EffectivePercent(gunVertices,muzzle.kind,currentMuzzle,
+        support,settings); // unmatched path preserves the accepted global setting
     if(Rd(g_fireDepth)>0&&ordinary&&result==output&&output&&
        PauseRttProbe::SafeRange((uintptr_t)output,12)&&
        twohandspread::Apply(output,pitch,yaw,percent,true,true)){
@@ -701,7 +703,8 @@ static void Draw(IDirect3DDevice9* dev){
 void NativeScopeTick(){
     NativeRifleFx::MaintainTick();NativeRifleFx::ObserveTick();NativeScopePip::Tick();
     if((g_weaponNativeAxis||g_twoHandSpreadPercent<100||g_vrValkyrieSpreadPercent<100||
-        g_vrVolkSpreadPercent<100)&&VrModeOn()&&InGameplay()&&!Rd(g_inCinematic)){
+        g_vrVolkSpreadPercent<100||g_vrValkyrieTwoHandPercent<100||
+        g_vrVolkTwoHandPercent<100)&&VrModeOn()&&InGameplay()&&!Rd(g_inCinematic)){
         // Audited common RvWeaponShared method, not a guessed subclass offset.
         static ULONGLONG lastAttempt=0;const auto now=GetTickCount64();
         if(!NativeScopePip::spreadOriginal&&now-lastAttempt>=2000){

@@ -2427,6 +2427,7 @@ static int g_sniperOpticalAccuracy=0; // native scoped spread queries only, no c
 static int g_weaponNativeAxis=0; // exact local pre/post-spread basis, default OFF
 static int g_twoHandSpreadPercent=100; // 100 preserves native dispersion
 static int g_vrValkyrieSpreadPercent=100, g_vrVolkSpreadPercent=100; // default native
+static int g_vrValkyrieTwoHandPercent=100, g_vrVolkTwoHandPercent=100; // scoped support bonus, default OFF
 static LONG g_cinematicHandsOwnership=0; // native hands even when cinematic presentation stays stereo
 static LONG g_cinematicSceneProbe=0; // bounded read-only scene/foreground witness; default OFF
 static LONG g_cinematicEventBridge=0; // exact local six-bool Raven event -> existing cinema state; default OFF
@@ -35879,11 +35880,17 @@ void LoadIniSettings() {
     if(g_twoHandSpreadPercent<0||g_twoHandSpreadPercent>100)g_twoHandSpreadPercent=100;
     g_vrValkyrieSpreadPercent=(int)GetPrivateProfileIntA("Input","VrValkyrieSpreadPercent",100,path);
     g_vrVolkSpreadPercent=(int)GetPrivateProfileIntA("Input","VrVolkSpreadPercent",100,path);
+    g_vrValkyrieTwoHandPercent=(int)GetPrivateProfileIntA("Input","VrValkyrieTwoHandPercent",100,path);
+    g_vrVolkTwoHandPercent=(int)GetPrivateProfileIntA("Input","VrVolkTwoHandPercent",100,path);
     if(g_vrValkyrieSpreadPercent<0||g_vrValkyrieSpreadPercent>100)g_vrValkyrieSpreadPercent=100;
     if(g_vrVolkSpreadPercent<0||g_vrVolkSpreadPercent>100)g_vrVolkSpreadPercent=100;
+    if(g_vrValkyrieTwoHandPercent<0||g_vrValkyrieTwoHandPercent>100)g_vrValkyrieTwoHandPercent=100;
+    if(g_vrVolkTwoHandPercent<0||g_vrVolkTwoHandPercent>100)g_vrVolkTwoHandPercent=100;
     Log("ini: TwoHandSpreadPercent=%d (100=native; active supported local shots only)",g_twoHandSpreadPercent);
     Log("ini: VrValkyrieSpreadPercent=%d VrVolkSpreadPercent=%d (100=native; fresh matching muzzle only)",
         g_vrValkyrieSpreadPercent,g_vrVolkSpreadPercent);
+    Log("ini: VrValkyrieTwoHandPercent=%d VrVolkTwoHandPercent=%d (100=OFF; profile-scoped support)",
+        g_vrValkyrieTwoHandPercent,g_vrVolkTwoHandPercent);
     g_cinematicHandsOwnership=GetPrivateProfileIntA("Render","CinematicHandsOwnership",0,path)?1:0;
     g_cinematicSceneProbe=GetPrivateProfileIntA("Diagnostic","CinematicSceneProbe",0,path)?1:0;
     g_cinematicEventBridge=GetPrivateProfileIntA("Render","CinematicEventBridge",0,path)?1:0;
