@@ -1,5 +1,25 @@
 # STATUS — session handoff
 
+## 2026-10-24 — M02 P1 PHYSICAL PASS (user, quoted); combined M02-P2 + M09 next
+
+- P1 session archived before any relaunch:
+  `docs/evidence/m02-p1-20261024/` — complete log
+  `5E990066E966D94FE95ED2AD8E379DE1516D07AD89C81E8075317AD4E7264B61`
+  (attached 10:00:17, ended 10:01:40), `installed.ini`, install report,
+  `analysis-p1.md`. Installed dll verified `107FA9C0…71120` (unchanged),
+  INI `994B111A…6314` (P0+P1 on, Wheel off, TmdPulses absent).
+- Receipts: P0 plate lines unchanged (`eyes=2/2 restore=1` ×4); the P1
+  styling path logs ONLY on failure (`<pl|en> atlas unavailable`) — 0 hits ⇒
+  the localized atlas loaded and styling drew; `PolishLanguage=1` (PL
+  presentation exercised; EN not exercised ⇒ no separate PL/EN claim).
+- **P1 grade: PHYSICAL PASS (tested scope)** — user: "Everything works. The
+  R2 icon is a little small, but it can stay like that." Settings appearance
+  and interaction PASS; R2 icon size minor cosmetic ACCEPTED as-is (no
+  resize work requested).
+- NEXT: combined M02 P2 wheel + M09 `f73b91d` classification fix — new
+  branch `integration/m02-m09-combined-20261024`, ONE guarded deployment,
+  ONE physical session, sections graded independently.
+
 ## 2026-10-24 — M02 P0 PHYSICAL PASS (user, quoted); P1 gate armed (`UiRemasterSettings=1`, READY_FOR_PHYSICAL_ACCEPTANCE)
 
 - P0 session archived **before any relaunch**:
