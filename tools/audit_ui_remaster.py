@@ -17,5 +17,7 @@ if a.installed_binaries:
   c=configparser.ConfigParser(strict=False);c.read(ini,encoding='utf-8-sig')
   for key in ['UiRemasterRuntime','UiRemasterSettings','UiRemasterWheel','UiRemasterMenus','VrPromptTokens','VrHideLegacyPadPrompts']:
    flags[key]=c.get('Render',key,fallback='absent')
-result={'atlases':rows,'installed_flags':flags,'rendering_proven':False,'note':'File identity/config only, not a live binding or pixel receipt'}
+result={'atlases':rows,'installed_flags':flags,
+        'installed_dll_sha256':digest(a.installed_binaries/'d3d9.dll') if a.installed_binaries else None,
+        'rendering_proven':False,'note':'File identity/config only, not a live binding or pixel receipt'}
 a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(result,indent=2),encoding='utf-8');print(json.dumps(result,indent=2))
