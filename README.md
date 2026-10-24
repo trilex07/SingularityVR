@@ -74,7 +74,15 @@ and configuration, not automatically to every weapon, level or headset.
   controller aiming and live weapon alignment.
 - Controller-tracked hands/gloves, weapon holstering, a left-hip knife and
   physical melee interaction.
-- Native pause/menu integration and in-headset VR settings.
+- Native pause/menu integration and in-headset VR settings. The remastered
+  VR Settings plates (P0) and localized styling (P1), plus the remastered
+  four-gun weapon wheel (P2), all default-off in source, were **physically
+  passed on PSVR2**; more detailed weapon silhouettes are an accepted
+  cosmetic follow-up.
+- Bounded OpenXR TMD-power controller pulses with native power
+  classification and local-player-only ownership: **physically passed on
+  PSVR2** in a combined session (short Impulse-scale pulses; cooldown and
+  foreign-owner rejection verified in receipts).
 - Reconstructed dynamic world and first-person shadows. Keep High Quality Decals
   enabled; see [accepted shadow/input fixes](docs/accepted-shadow-input-fixes.md).
 - Input-enumeration caching to avoid the previously measured button-held stalls.
@@ -124,6 +132,15 @@ for your headset and must not be copied from another user's setup.
 
 ## Known issues and work in progress
 
+- **Gameplay location/information HUD repositioning:** implemented offline
+  (`ShowInformation` → `locationTxt` → `LocationTextDisplay`; targeted GFx
+  path `_root.txtMsgContainer.LocationTextDisplay`) with the movie-identity
+  checks and native GFx setter safeguards preserved. **OFFLINE PASS,
+  PHYSICAL PENDING** — `[Render] VrGameplayTextSafeArea=0` and
+  `[Diagnostic] GameplayTextProbe` must stay default OFF; with those
+  switches disabled no gameplay HUD coordinates are modified and no extra
+  text is drawn. It will be activated only in a later controlled headset
+  session.
 - **TV/desktop mirror, Steam screenshots and health HUD:** confirmed in the
   October 18 PSVR2 candidate test. Steam VR captures required opaque alpha on
   the final XR copy (`XrCaptureOpaqueAlpha=1`); the source RGB was already correct.

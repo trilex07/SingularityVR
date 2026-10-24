@@ -1,5 +1,38 @@
 # STATUS — session handoff
 
+## 2026-10-24 — Promotion to main: accepted M02/M09 history + default-OFF gameplay HUD fix; all promotion regressions PASS
+
+- Promotion branch `integration/promo-m02m09-hud` (worktree
+  `SingularityVR-promo`, created FROM `origin/main` `702f0c3`):
+  fast-forward merge of the verified combined branch tip `459c18f`
+  (M02 P0/P1/P2 + M09 `f73b91d`, all PHYSICAL PASS), then `cherry-pick -x`
+  of SIDE HUD `d9a160e` (bounded probe) and `26b22d2` (placement
+  implementation). One STATUS conflict per pick resolved keeping both
+  records; native movie-identity checks and GFx setter safeguards
+  preserved; `ui_localization_pl_en.json` assets intact.
+- Promotion build: x86 PE32 `/O2` prov `230f178154e9`, dll
+  `53E3ABB6296B5B75BA249BD8B26B0A162BAA7DB75FF4AFDFC1959677D8AD1DFD`.
+- Promotion battery, all PASS: fixtures — tmd-haptics classification + 14
+  groups, ui-remaster D3D9/D3D9Ex `2240/2240` + truth table 8/8 + runtime
+  geometry, gameplay-text probe (route identity/2D geometry/96-entry
+  bound) + safe-area (targeted geometry/both-eye bounds), hud-reseat 203
+  cases, menu-hud-scale; python — haptics-native, dual-weapon, tmd-aim,
+  carry-ray, gloves, native-hands; PS — dual-weapon-TMD 39 groups,
+  short-gauntlet, HUD-live, gun-scale, gloves, runtime-regressions
+  D3D9+D3D9Ex `3304/3304 IB restored`.
+- HUD acceptance state: `[Render] VrGameplayTextSafeArea=0` default OFF,
+  `[Diagnostic] GameplayTextProbe=0` default OFF (verified in source);
+  with switches off no gameplay HUD coordinates change and no extra text
+  draws. HUD repositioning = **OFFLINE PASS / PHYSICAL PENDING**.
+- Diff hygiene vs `origin/main`: no added binaries/logs/temporary
+  artifacts (audit: none of .dll/.exe/.xxx/.dds/.log/.bak/.map added);
+  build helper scripts scrubbed of machine-specific absolute paths
+  (`integration/promo` chore commit); evidence dirs committed
+  deliberately (P0/P1/combined session analyses + install reports).
+- Steam untouched by this Git promotion: installed dll
+  `E304F225…3C6` / INI `DA63A2A9…9FBC` unchanged since the combined
+  session (hashes verified at its archive; no deploy executed here).
+
 ## 2026-10-24 — M02 P2 wheel PHYSICAL PASS + M09 TMD pulses PHYSICAL PASS (single combined session; receipts + user)
 
 - Archived `docs/evidence/m02-m09-combined-20261024/` (log `305C4C2D…96C4`, attached 10:12:09 ends 10:13:23; dll `E304F225…3C6`; INI `DA63A2A9…9FBC` Wheel=1 + `TmdPulses=1`). Root cause PROVEN: the old `IsLive`-early-return rejected a READABLE receiver (`live=0`, `class=RvTMDPower_Impulse` resolves fine) → `decision=Impulse`, `EVENT accepted=1 armed=1` (cooldown ret=3 correctly refused), `SUBMIT overlay=0.800 xrResult=0`, `STOP result=0`, 0 NON-LOCAL, 0 XINPUT, wheel failure scan 0. User: "PASS, everything works." Grades: **M02 P2 wheel PHYSICAL PASS**; **M09 TMD pulses PHYSICAL PASS**; weapon icon detail = ACCEPTED COSMETIC FOLLOW-UP (SOL).
