@@ -148,6 +148,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "glove_native.h"
 #include "native_glove_cuffs.h"
 #include "tmd_short_gauntlet.h"
+#include "diegetic_weapon_hud.h" // MAIN diegetic counter: pure math, L1-tested
 #include "tmd_attachment_identity.h"
 static tmdattachment::Identity g_tmdAttachmentIdentity;
 static void BuildLiveControllerC(float C[4][4], bool aimHand);
@@ -6031,6 +6032,7 @@ static bool NativeScopeRendering(){return g_scopeNativeDepth!=0;}
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
+static void DrawDiegeticCenturion(IDirect3DDevice9* dev); // diegetic Centurion counter (default OFF)
 void DrawHolsterMarker(IDirect3DDevice9* dev); // MAIN: white ring at the hip while a gun is held
 void DrawKnifeBeltMarker(IDirect3DDevice9* dev); // MAIN: white ring at the left belt while the knife is held
 void DrawCustomGloves(IDirect3DDevice9* dev); // default-OFF, noTMD free hands only
@@ -6077,6 +6079,12 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawLaserSight(dev);
     DrawWristHealth(dev);
     DrawHealthPlate(dev);
+    // Diegetic counters run BEFORE the ammo plates: their per-frame drew-latch
+    // is exactly the atomic suppression input the plates consult below
+    // (physical fail 2026-10-24 fix). Order swap is layer-safe: each fn
+    // captures+restores its own full state block and the back-off guarantees
+    // the legacy plate and its replacement never draw the same readout.
+    DrawDiegeticCenturion(dev);
     DrawAmmoPlate(dev);
     DrawHolsterMarker(dev);
     DrawKnifeBeltMarker(dev);
@@ -30938,6 +30946,7 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
 // rounds remain. Unknown values hide the plate, never a guessed one.
 volatile LONG g_ammoPlate = 0;
 static char g_ammoAssetRoot[MAX_PATH] = "vr-assets/hud/katorga/ammo";
+static const char* g_diegeticAssetRoot = "vr-assets/hud/diegetic";
 static IDirect3DTexture9* g_ammoPlateTex[4]{};
 static IDirect3DTexture9* g_ammoDigitsTex = nullptr;
 static volatile LONG g_ammoArtState = 0;   // 0 unloaded, 1 ready, -1 failed (logged once)
@@ -30945,21 +30954,49 @@ static volatile LONG g_ammoUnknownSaid = 0;
 // HUD sampler cache: offsets resolved BY NAME per HUD class (probe round 9).
 static uintptr_t g_ammoHudCls = 0;
 static int g_ammoOffClip = -2, g_ammoOffBin = -2, g_ammoOffSize = -2;
+// Diegetic counter (milestone 1: Centurion '06/24'): [Render] DiegeticWeaponHud
+// default OFF. While enabled+ready it owns the Centurion readout (the plate
+// backs off); atlas PNG quads only, no GLB/model loading, unknown ammo hides.
+volatile LONG g_diegeticHud = 0;
+static IDirect3DTexture9* g_diegeticAtlas = nullptr;
+static volatile LONG g_diegeticArtState = 0; // 0 unloaded, 1 ready, -1 failed
+static volatile LONG g_diegeticDrew[3] = { 0, 0, 0 }; // per legacy plate 0..2, per frame:
+                              // bit0 = counter drawn into the left half, bit1 = right half,
+                              // cleared at the start of every diegetic frame and set ONLY
+                              // after actual draw submission in that eye. This is the
+                              // atomic input for the plate back-off (atlas readiness,
+                              // gate state or 'skipped' frames never suppress the plate).
+static IDirect3DStateBlock9* g_diegeticState = nullptr;
 
-static bool LoadAmmoPng(IDirect3DDevice9* dev, const char* file, IDirect3DTexture9** out) {
+// Build the absolute runtime asset path for a repo-relative root + file name
+// (the dll's own directory is the install Binaries folder). Shared by the
+// plates loader and the diegetic loader so logged paths match what is opened.
+static bool AmmoAssetPath(const char* root, const char* file, char* pngPath, size_t cb) {
     char dll[MAX_PATH]{};
     HMODULE self = nullptr;
     if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
                             GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                            (LPCSTR)&LoadAmmoPng, &self) ||
+                            (LPCSTR)&AmmoAssetPath, &self) ||
         !GetModuleFileNameA(self, dll, MAX_PATH)) return false;
     char* slash = strrchr(dll, '\\');
     if (!slash) return false;
     *slash = 0;
-    std::string root = g_ammoAssetRoot;
-    for (char& c : root) if (c == '/') c = '\\';
+    std::string r = root;
+    for (char& c : r) if (c == '/') c = '\\';
+    _snprintf_s(pngPath, cb, _TRUNCATE, "%s\\%s\\%s", dll, r.c_str(), file);
+    return true;
+}
+
+// root selects the asset directory explicitly: the legacy plates live under
+// g_ammoAssetRoot (katorga/ammo) while the diegetic atlas lives under
+// g_diegeticAssetRoot (hud/diegetic). Physical fail 2026-10-24: resolving the
+// diegetic atlas with the plates root made it 'unavailable' every session.
+static bool LoadAmmoPng(IDirect3DDevice9* dev, const char* root, const char* file,
+                        IDirect3DTexture9** out, UINT* outW = nullptr, UINT* outH = nullptr) {
     char pngPath[MAX_PATH]{};
-    _snprintf_s(pngPath, sizeof(pngPath), _TRUNCATE, "%s\\%s\\%s", dll, root.c_str(), file);
+    if (!AmmoAssetPath(root, file, pngPath, sizeof(pngPath))) return false;
+    if (outW) *outW = 0;
+    if (outH) *outH = 0;
     CoInitializeEx(nullptr, COINIT_MULTITHREADED); // no-op if the game COM is already up
     wchar_t wpng[MAX_PATH]{};
     if (!MultiByteToWideChar(CP_ACP, 0, pngPath, -1, wpng, MAX_PATH)) return false;
@@ -31005,13 +31042,13 @@ static void MaybeLoadAmmoArt(IDirect3DDevice9* dev) {
     const char* files[4] = { "plate-centurion.png", "plate-rifle.png",
                              "plate-shotgun.png", "plate-sniper.png" };
     for (int i = 0; i < 4; ++i) {
-        if (!LoadAmmoPng(dev, files[i], &g_ammoPlateTex[i])) {
+        if (!LoadAmmoPng(dev, g_ammoAssetRoot, files[i], &g_ammoPlateTex[i])) {
             InterlockedExchange(&g_ammoArtState, -1);
             Log("ammo plate: art unavailable (%s) - plates hidden", files[i]);
             return;
         }
     }
-    if (!LoadAmmoPng(dev, "ammo-digits.png", &g_ammoDigitsTex)) {
+    if (!LoadAmmoPng(dev, g_ammoAssetRoot, "ammo-digits.png", &g_ammoDigitsTex)) {
         InterlockedExchange(&g_ammoArtState, -1);
         Log("ammo plate: art unavailable (ammo-digits.png) - plates hidden");
         return;
@@ -31046,6 +31083,15 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
     const int plate = ammoplates::PlateForGunVerts(heldVerts);
     if (plate < 0 || plate > 3 || !g_ammoPlateTex[plate] || !g_ammoDigitsTex) return;
+    // Atomic replacement (physical fail 2026-10-24: atlas 'ready' suppressed
+    // these plates while the diegetic draw itself was gate/asset-blocked ->
+    // no ammo display at all). The diegetic counter suppresses its legacy
+    // plate for THIS frame only when the counter actually rendered BOTH eyes
+    // this frame (per-plate latch set by DrawDiegeticCenturion, which now
+    // runs immediately before this function). Turning the gate OFF restores
+    // these verbatim plates unconditionally (independent rollback).
+    if (plate >= 0 && plate <= 2 && Rd(g_diegeticHud) != 0 &&
+        (InterlockedCompareExchange(&g_diegeticDrew[plate], 0, 0) & 3) == 3) return;
     // HUD sampler: offsets BY NAME per HUD class (round-9 probe verdict).
     const uintptr_t hud = FindHudObject();
     uintptr_t hc = 0;
@@ -31227,6 +31273,186 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
         Log("ammo plate: anchor not projectable in either eye (hand behind camera?)");
     }
     g_wristState->Apply();
+    if (old) g_origSetRenderTarget(dev, 0, old);
+    dev->SetDepthStencilSurface(depth);
+    if (old) old->Release(); if (depth) depth->Release(); back->Release();
+}
+
+// ---- Diegetic weapon HUD (milestone 2: centurion + valkyrie + spikeshot) ----
+// [Render] DiegeticWeaponHud, default OFF. Same verified pipeline as the ammo
+// plate: aim-hand anchor, per-eye projection, world-anchored px-per-metre
+// sizing, live native HUD ammo sampler, own state block, full state restore.
+// Runtime representation = atlas PNG quads only; no GLB or mesh is loaded.
+// The counter replaces its weapon's legacy plate ONLY frame-atomically: the
+// per-plate drew-latch (both eye halves actually submitted) is what
+// DrawAmmoPlate consults; any skipped/rejected frame keeps the legacy plate.
+// Unknown ammo values hide the counter, never a guess. Amber glyph row at
+// <=2 rounds. Physical fail 2026-10-24 root fix: the atlas resolves from its
+// own g_diegeticAssetRoot, not the legacy plates' katorga/ammo root.
+static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
+    // Per-frame atomicity: clear the drew-latches FIRST. Any early return
+    // below (gate blocked, no mount, unknown ammo, load failure) leaves the
+    // latches at zero, so the legacy plates keep drawing this frame.
+    InterlockedExchange(&g_diegeticDrew[0], 0);
+    InterlockedExchange(&g_diegeticDrew[1], 0);
+    InterlockedExchange(&g_diegeticDrew[2], 0);
+    if(handhud::HideAmmo(Rd(g_opticalHudHidden)!=0))return;
+    const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
+        !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
+    const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+    // Per-weapon diegetic mount (measured fixture frames): Centurion 5799,
+    // Valkyrie AR9 11387, Spikeshot 8297 (ammo_layout catalog evidence).
+    const diegetichud::WeaponMount* mo = diegetichud::MountForVerts(heldVerts);
+    if (!mo) return; // no mount for the held weapon (TMD / seeker / unknown)
+    if (!handhud::Visible(Rd(g_diegeticHud) != 0, VrModeOn(), Rd(g_dupDraws) != 0,
+                          hudGameplay, Rd(g_gamePaused) != 0, Rd(g_vrUiMenu) != 0,
+                          Rd(g_panelOpen) != 0, Rd(g_inCinematic) != 0) ||
+        Rd(g_weaponWheelOpen) || !WeaponPresentationInHands() ||
+        !g_handPositionValid[AimHand()] || !g_haveEyes ||
+        !g_origSetRenderTarget || !g_origDrawPrimUP) {
+        static bool saidGate = false;
+        if (!saidGate) {
+            saidGate = true;
+            Log("diegetic hud: gate blocked (flag=%d wheel=%d armed=%d hand=%d eyes=%d)",
+                (int)Rd(g_diegeticHud), (int)Rd(g_weaponWheelOpen),
+                WeaponInHands() ? 1 : 0, g_handPositionValid[AimHand()] ? 1 : 0,
+                g_haveEyes ? 1 : 0);
+        }
+        return;
+    }
+    if (InterlockedCompareExchange(&g_diegeticArtState, 0, 0) == 0) {
+        IDirect3DTexture9* t = nullptr;
+        UINT tw = 0, th = 0;
+        if (LoadAmmoPng(dev, g_diegeticAssetRoot, "diegetic_hud_atlas.png", &t, &tw, &th) && t) {
+            g_diegeticAtlas = t;
+            InterlockedExchange(&g_diegeticArtState, 1);
+            Log("diegetic hud: atlas ready %ux%u from %s", tw, th, g_diegeticAssetRoot);
+        } else {
+            if (t) t->Release();
+            InterlockedExchange(&g_diegeticArtState, -1);
+            char tried[MAX_PATH]{};
+            AmmoAssetPath(g_diegeticAssetRoot, "diegetic_hud_atlas.png", tried, sizeof(tried));
+            Log("diegetic hud: atlas unavailable (%s); diegetic counter hidden", tried);
+        }
+    }
+    if (InterlockedCompareExchange(&g_diegeticArtState, 0, 0) != 1) return;
+    // Live ammo comes from the same native HUD sampler as the plates:
+    // offsets resolved BY NAME per HUD class (round-9 probe verdict).
+    const uintptr_t hud = FindHudObject();
+    uintptr_t hc = 0;
+    if (hud && Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t)))
+        hc = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS);
+    if (hc && hc != g_ammoHudCls) {
+        g_ammoHudCls = hc;
+        g_ammoOffClip = PropOffsetInChain(hc, "mClipAmmo");
+        g_ammoOffBin = PropOffsetInChain(hc, "mBinAmmo");
+        g_ammoOffSize = PropOffsetInChain(hc, "mClipSize");
+    }
+    int clip = -1, bin = -1;
+    if (g_ammoOffClip >= 0 && g_ammoOffBin >= 0 && hud &&
+        Readable((const void*)(hud + g_ammoOffClip), 4) &&
+        Readable((const void*)(hud + g_ammoOffBin), 4)) {
+        clip = *reinterpret_cast<const int32_t*>(hud + g_ammoOffClip);
+        bin = *reinterpret_cast<const int32_t*>(hud + g_ammoOffBin);
+    }
+    if (clip < 0 || bin < 0) return; // unknown -> hidden (never guessed)
+    const uipointer::V hand{ g_handLastPos[AimHand()].x,
+                             g_handLastPos[AimHand()].y + (0.03f + diegetichud::MountAnchorLiftM(*mo)),
+                             g_handLastPos[AimHand()].z };
+    IDirect3DSurface9* back = nullptr;
+    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
+    D3DSURFACE_DESC d{};
+    if (FAILED(back->GetDesc(&d)) || d.Width < 8 || d.Height < 8) {
+        back->Release();
+        return;
+    }
+    IDirect3DSurface9* old = nullptr;
+    IDirect3DSurface9* depth = nullptr;
+    dev->GetRenderTarget(0, &old);
+    dev->GetDepthStencilSurface(&depth);
+    if (!g_diegeticState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_diegeticState))) {
+        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    if (FAILED(g_diegeticState->Capture())) {
+        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    dev->SetDepthStencilSurface(nullptr);
+    g_origSetRenderTarget(dev, 0, back);
+    D3DVIEWPORT9 vp{0, 0, d.Width, d.Height, 0.0f, 1.0f};
+    dev->SetViewport(&vp);
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetRenderState(D3DRS_ZENABLE, FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    struct DiegeticVtx { float x, y, z, rhw; DWORD c; float u, v; };
+    static char saidWeapon[24] = { 0 };
+    const DWORD tint = handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct);
+    int drewEye = 0; // bit0 = left half submitted, bit1 = right half submitted
+    float drewCx = 0, drewCy = 0, drewW = 0, drewH = 0;
+    for (int eye = 0; eye < 2; ++eye) {
+        uipointer::ScreenPoint p;
+        if (!VrUiProjectEye(eye, hand, p)) continue;
+        float pxM = 0.0f;
+        {
+            const uipointer::V rgt = VrUiRotate(g_eyePose[eye].orientation, { 1, 0, 0 });
+            const uipointer::V probe{ hand.x + rgt.x * 0.5f, hand.y + rgt.y * 0.5f,
+                                      hand.z + rgt.z * 0.5f };
+            uipointer::ScreenPoint p2;
+            if (VrUiProjectEye(eye, probe, p2)) {
+                const float du = (p2.u - p.u) * d.Width * 0.5f;
+                const float dv = (p2.v - p.v) * (float)d.Height;
+                pxM = 2.0f * sqrtf(du * du + dv * dv);
+            }
+        }
+        float w = diegetichud::PanelWidthPx(pxM, (float)d.Height, mo->wUU);
+        if (w <= 0.0f) w = std::max(40.0f, d.Height * 0.062f); // probe failed
+        const float h = w * 0.5f; // screen_bg cell is 2:1
+        float cx = (eye + p.u) * d.Width * 0.5f;
+        diegetichud::ClampCentre(cx, w, (float)d.Width);
+        const float cy = p.v * d.Height;
+        diegetichud::Quad q[16];
+        const int n = diegetichud::LayoutCounter(clip, bin, cx, cy, w, h, q, 16, mo->resPad);
+        if (n <= 0) continue;
+        dev->SetTexture(0, g_diegeticAtlas);
+        for (int i = 0; i < n; ++i) {
+            DiegeticVtx v[4] = {
+                { q[i].x0, q[i].y0, 0, 1, tint, q[i].u0, q[i].v0 },
+                { q[i].x1, q[i].y0, 0, 1, tint, q[i].u1, q[i].v0 },
+                { q[i].x0, q[i].y1, 0, 1, tint, q[i].u0, q[i].v1 },
+                { q[i].x1, q[i].y1, 0, 1, tint, q[i].u1, q[i].v1 },
+            };
+            g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(DiegeticVtx));
+        }
+        if (drewEye == 0) { // first submitted half wins the receipt
+            drewCx = cx; drewCy = cy; drewW = w; drewH = h;
+        }
+        drewEye |= 1 << eye;
+    }
+    // Atomic suppression input: published BEFORE the state restore so the very
+    // next DrawAmmoPlate call (same frame) reads exactly this frame's truth.
+    if (mo->plate >= 0 && mo->plate <= 2)
+        InterlockedExchange(&g_diegeticDrew[mo->plate], drewEye);
+    if (drewEye && strcmp(saidWeapon, mo->name) != 0) {
+        const char* eyes = (drewEye & 3) == 3 ? "LR" : ((drewEye & 1) ? "L" : "R");
+        snprintf(saidWeapon, sizeof(saidWeapon), "%s", mo->name);
+        Log("diegetic hud: drew %s plate=%d clip=%d bin=%d panel %.0fx%.0f at %.0f,%.0f eyes=%s"
+            " (backbuffer %ux%u)",
+            mo->name, mo->plate, clip, bin, (double)drewW, (double)drewH, (double)drewCx,
+            (double)drewCy, eyes, d.Width, d.Height);
+    }
+    g_diegeticState->Apply();
     if (old) g_origSetRenderTarget(dev, 0, old);
     dev->SetDepthStencilSurface(depth);
     if (old) old->Release(); if (depth) depth->Release(); back->Release();
@@ -35850,6 +36076,10 @@ void LoadIniSettings() {
         }
     }
     Log("ammo plate: %s (ammo root %s)", Rd(g_ammoPlate) ? "ENABLED" : "off", g_ammoAssetRoot);
+    InterlockedExchange(&g_diegeticHud,
+        GetPrivateProfileIntA("Render", "DiegeticWeaponHud", 0, path) ? 1 : 0);
+    Log("diegetic hud: %s (weapon counters centurion/valkyrie/spikeshot, default off, atlas vr-assets/hud/diegetic)",
+        Rd(g_diegeticHud) ? "ENABLED" : "off");
     Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld, scene trace=%ld",
         Rd(g_wristHealth),Rd(g_renderEvidence),Rd(g_sceneModeTrace));
     Log("cutscene presentation: %s, cinema matte=%s (VR panel rows)",

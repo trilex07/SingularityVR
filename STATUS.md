@@ -1,5 +1,99 @@
 # STATUS — session handoff
 
+## 2026-10-24 — Diegetic HUD milestone 2: Valkyrie `30/120` + Spikeshot `08/32` (L2_PASS / READY_FOR_PHYSICAL_ACCEPTANCE; gate already armed)
+
+- Same branch `integration/diegetic-hud-centurion-20261024`, commit
+  `bc4c32147c3b`. Pivot evidence: the Centurion candidate is not gradeable on
+  the user's save (Centurion not owned; only Valkyrie AR9 11387 + Volk/Spikeshot
+  8297 are). Pre-pivot session log archived
+  `docs/evidence/diegetic-session-20261024/` (analysis + local log): exactly
+  one diegetic line (`ENABLED`), zero draws, zero atlas lines — consistent
+  with the lazy atlas load (first mounted-gun draw); the atlas raster path is
+  therefore still physically unexercised. Same session: `_HUD cache
+  clip+1404 bin+1400 size+1408 on RvHUD` and `drew plate=2 clip=6 bin=59 …
+  backbuffer 5640x2876` — the user held the Spikeshot and the accepted plates
+  pipeline rendered live ammo (live reserve 59 vs fixture '32' — the display
+  tracks the native sampler; fixture values are snapshots only). No plate
+  regression from milestone 1 in the real run.
+- Implementation: per-weapon mounts in `diegetic_weapon_hud.h` from the
+  measured fixture builders (`prepare_diegetic_models_v2.py` @ `ff29efd`,
+  PSK names verified against it): Centurion `5799` (0,115.3,43.5)
+  (2.6,0.45,1.8) pitch 18°; Valkyrie `11387` (0,117.2,35.0) (2.8,0.45,1.9)
+  pitch 20°, readout `30/120` (reserve pad 3); Spikeshot `8297` (0,116.8,42.0)
+  (2.8,0.45,1.9) pitch 15°, readout `08/32`. Mount lookup replaces the
+  Centurion-only early return; hand-anchor adds the measured per-weapon centre
+  lift above the calibrated 115.3 baseline (shotgun +0.038 m, AR9 +0.048 m);
+  panel width uses the per-weapon housing width; atlas cells, projection,
+  gates, low-mag (<=2) amber rule, `mClipAmmo/mBinAmmo` validity and the
+  full state restore are unchanged. Ammo plates 0-2 (all three guns) back off
+  while the counter draws; TMD/unknown verts still draw nothing.
+- L1: `test-diegetic-centurion` extended (mount table, anchor lifts, `30/120`
+  7-quad and `08/32` 6-quad layouts, per-weapon world-anchored widths) — all
+  PASS including the original Centurion asserts (default `resPad=2` preserved).
+- L2: x86 PE32 `/O2` @ `bc4c32147c3b`, dll
+  `B5F2A2AD4ADB53BBA4DEC5369CD5F2A5FD1EA06373C6F1E1E58E374633B58613`.
+  Regressions: full fixture battery (9), haptics-native py, dual-weapon wiring
+  py, dual-weapon-TMD 39 groups, HUD-live, short-gauntlet, gun-scale — all
+  PASS, no regressions.
+- Deployed (game closed, 2026-10-24 11:55): guarded candidate run
+  (`-DllOnly -IncludeIni -SkipTextures`, profile `E7A3DD14…`, plan
+  `4AB467E0…`): installed dll `B5F2A2AD…` (PE32 0x014C) + INI `257F9DFB14A4…`
+  byte-identical (359 keys, `DiegeticWeaponHud=1` already armed — the one
+  controlled change this milestone is the dll), report
+  `20261024-115514.json`, backup `deployment/install-backups/20261024-115514`
+  = the exact Centurion-candidate pair (`ADF2833A…`) verified. Live atlas
+  `9ED4A5C…81F9` re-verified under the new profile pin (repo copy hash-equal).
+  Rollback switches: `DiegeticWeaponHud=0` (feature) or the backup pair
+  (dll-only revert to the Centurion build).
+- Physical grading state: NOT physically verified. Grading unit = Valkyrie
+  counter and Spikeshot counter separately (visibility, placement, firing and
+  reload updates, weapon-switch following); sight obstruction, stereo and FPS
+  checked by the user. Centurion stays ungraded (not owned); no other
+  weapon/TMD claims.
+
+## 2026-10-24 — Diegetic HUD milestone 1: Centurion `06/24` counter (L2_PASS / READY_FOR_PHYSICAL_ACCEPTANCE; default OFF)
+
+- Branch `integration/diegetic-hud-centurion-20261024` from `origin/main`
+  `551c64d7`. Source evidence: `side/diegetic-hud-native` @ `ff29efd`
+  (measured Centurion fixture `center=(0.0,115.3,43.5)` UU,
+  `size=(2.6,0.45,1.8)` UU, pitch 18°; PSK `ch_inview_pistol_mesh.psk`;
+  rendered/recessed-well acceptance in `docs/diegetic_hud_v2_review.md`).
+- Runtime representation: atlas-PNG quads only (`diegetic_hud_atlas.png`
+  1024×512 — screen/housing cells, cyan/amber `0-9` glyphs + slash; **no GLB
+  or mesh loading at runtime**); per-eye drawn inside the verified ammo-plate
+  pipeline (aim-hand anchor + `VrUiProjectEye` + world-anchored px-per-metre
+  probe + own state block + full state restore). Live values only from the
+  native HUD sampler (`mClipAmmo`/`mBinAmmo`, round-9 probe); unknown values
+  hide; out-of-`mClipSize` clip values rejected; while enabled+ready the
+  Centurion ammo plate backs off (independent rollback switches).
+- Gate `[Render] DiegeticWeaponHud`=0 default OFF (parse + `diegetic hud:`
+  startup log). Low mag (`<=2`) switches to the amber glyph row.
+- L1 fixture `test-diegetic-centurion` PASS (measured dims, atlas-cell
+  geometry vs the shipped PNG header, 15-row gate truth table, sizing probe
+  failures, `06` zero-pad layout, amber switchover, 3-digit reserve, clamp;
+  2 fixture bugs fixed: wrong captured array in `sameCell`, PNG signature
+  byte offset — layout itself proven correct by cell dumps).
+- L2: build x86 PE32 `/O2` @ `551c64d7`, dll
+  `ADF2833A70E0BE027AE4028134B5BFD2CD86759005A7D00AFD7112803B2625DF`.
+  Regressions: tmd-haptics fixture, M02 runtime/switch 8-combo/D3D9+D3D9Ex
+  `2240/2240`, gameplay-text probe+safe-area, hud-reseat 203, menu-hud-scale,
+  haptics-native py, dual-weapon wiring py, dual-weapon-TMD 39 groups,
+  HUD-live, short-gauntlet — all PASS, no regressions.
+- Deployed (game closed, 2026-10-24 11:25): session-assets delta first
+  (atlas `9ED4A5C3…` → `Binaries/vr-assets/hud/diegetic/`, manifest
+  `ee719b1f…`, backup `build/next-weapon-reload/diegetic-atlas-backup`;
+  session-assets.ps1 whitelist/count extended per the `6d08f4d` precedent),
+  then the guarded candidate run (`-DllOnly -IncludeIni -SkipTextures`,
+  profile `3F46C1D6…`, plan `75E4752…`): installed dll `ADF2833A70E0…`
+  (PE32 0x014C) + INI `257F9DFB14A4` (359 keys; only
+  `Render/DiegeticWeaponHud=1` added), report `20261024-112533.json`, backup
+  `deployment/install-backups/20261024-112533` = the accepted combined pair
+  verified (`DA63A2A9…`). Rollback switches: `DiegeticWeaponHud=0` (feature)
+  or the backup pair (full).
+- Physical grading state: NOT physically verified (Centurion-only milestone;
+  other weapons + TMD wrist display stay out of scope until the user grades
+  this candidate).
+
 ## 2026-10-24 — Promotion to main: accepted M02/M09 history + default-OFF gameplay HUD fix; all promotion regressions PASS
 
 - Promotion branch `integration/promo-m02m09-hud` (worktree
