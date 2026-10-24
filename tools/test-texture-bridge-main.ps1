@@ -12,7 +12,7 @@ $sources=@('spikes/view_matrix/tests/test-texture-bridge-main.cpp','spikes/textu
 $sources+=@('buffer.c','hook.c','trampoline.c','hde/hde32.c')|ForEach-Object {'"'+(Join-Path $mh ('src/'+$_))+'"'}
 Push-Location $out
 try{
- & cmd /c ("`"$vc`" x86 >nul && cl /nologo /O2 /EHsc /W3 /MD /std:c++17 /I`"$($xr.Inc)`" /I`"$mh/include`" /Fe:test-main.exe "+($sources -join ' ')+" /link /LIBPATH:`"$($xr.LibDir)`" openxr_loader.lib dxgi.lib user32.lib shell32.lib")
+ & cmd /c ("`"$vc`" x86 >nul && cl /nologo /O2 /EHsc /W3 /MD /std:c++17 /I`"$($xr.Inc)`" /I`"$mh/include`" /Fe:test-main.exe "+($sources -join ' ')+" /link /LIBPATH:`"$($xr.LibDir)`" openxr_loader.lib dxgi.lib user32.lib shell32.lib ole32.lib windowscodecs.lib")
  if($LASTEXITCODE -ne 0){throw 'Actual MAIN integration test compile failed'}
  Copy-Item -LiteralPath (Join-Path $xr.BinDir 'openxr_loader.dll') -Destination (Join-Path $out 'openxr_loader.dll')
  & ./test-main.exe
