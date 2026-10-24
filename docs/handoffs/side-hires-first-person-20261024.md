@@ -9,6 +9,8 @@ Branch: `feature/side-hires-weapon-textures`. Parent is PR #57 head `5cc9150a`. 
 - **Later single-map A/B: Kasimov normal.** `ar_sniper_rifle_n`, 4096×2048, unchanged from batch 3. The diffuse source is only 1024×512 against UE3's 2048×1024 object, so a complete Kasimov set is blocked.
 - **Centurion: blocked.** The available `handgun_d` capture is 1024×1024 DXT5 while the UE3 object is 2048×2048 PF_DXT1; `handgun_n` is likewise not proven to be a top mip. The captures are not promoted to a replacement.
 
+The prior read-only recovery report `feature/texture-source-recovery:docs/SOURCE_RECOVERY_FINDINGS.md` already tested the local TFC files and UModel exports. It found no recoverable handgun mip0 or sniper diffuse mip0: local P0–P3 caches were byte-identical, handgun mip1 failed bulk reads and sniper diffuse exported only mip1. Repeating an upscale of those lower mips would not resolve the missing-source gate.
+
 All seven staged private filenames, full SHA256 values, source SHA/FNV identities, dimensions, formats, confidence and preview paths are recorded in the manifest. The ready directory has no extra DDS. All previews stay outside public Git, under `<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/` and the existing batch-2/batch-3 comparison folders.
 
 ## Quality finding
