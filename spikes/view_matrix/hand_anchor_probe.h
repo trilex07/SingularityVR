@@ -9,6 +9,12 @@ struct Record {
     std::uintptr_t weapon=0; unsigned epoch=0;
     float local[16]{}, controller[2][16]{}, ride[16]{}, before[2][12]{}, after[2][12]{};
     float target[2][3]{}, headOffset[3]{}, anchor[3]{};
+    // TMD-only optional final-bound evidence. Defaults leave the noTMD probe
+    // unchanged. World joints are reconstructed with ORIGINAL bind matrices.
+    bool tmd=false;
+    unsigned eye=0, hands=0, support=0, verts=0, first=0, triangles=0;
+    std::uintptr_t indexBuffer=0;
+    float wristWorld[2][3]{}, uuPerMetre=0;
 };
 class Probe {
 public:
@@ -20,6 +26,9 @@ public:
         if(!finite(r.local,16)||!finite(r.controller[0],16)||!finite(r.controller[1],16)||!finite(r.ride,16)||
            !finite(r.before[0],12)||!finite(r.before[1],12)||!finite(r.after[0],12)||!finite(r.after[1],12)||
            !finite(r.target[0],3)||!finite(r.target[1],3)||!finite(r.headOffset,3)||!finite(r.anchor,3))return false;
+        if(r.tmd && (r.eye>1 || !r.indexBuffer || !r.triangles ||
+            !std::isfinite(r.uuPerMetre) || r.uuPerMetre<=0 ||
+            !finite(r.wristWorld[0],3) || !finite(r.wristWorld[1],3)))return false;
         record_=r;last_=r.tick;++count_;pending_=true;return true;
     }
     bool Take(Record& out){if(!pending_)return false;out=record_;pending_=false;return true;}

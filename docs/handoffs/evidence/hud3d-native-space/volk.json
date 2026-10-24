@@ -1,0 +1,30 @@
+{
+  "mesh": "ch_inview_shotgun_mesh",
+  "vertices": 8297,
+  "y_sign": -1,
+  "native_offset": 1244000,
+  "bounds": [
+    [
+      -3.3082590103149414,
+      -120.35984802246094,
+      33.90352249145508
+    ],
+    [
+      3.927781105041504,
+      -97.56742858886719,
+      105.32389831542969
+    ]
+  ],
+  "mount_source": [
+    0.0,
+    116.8,
+    42.0
+  ],
+  "nearest_vertex_distance_uu": {
+    "1": 214.38931719759748,
+    "-1": 0.6768769259603195
+  },
+  "psk_sha256": "941c871b695480e608ac8eb0ca25b99731344eca57383c9c5927cf71e7baf1ab",
+  "package_sha256": "4bb21b02abc69a9db2c3e4f350e0abc29783ea665f54de1c8eee11b6a78355ca",
+  "evidence": "all named-mesh GPU positions, 32-byte stride; offline, not live shader matrices"
+}

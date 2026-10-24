@@ -15,6 +15,17 @@ deployment or PSVR2 check. See
 
 - Branch feature/side-m02-detailed-weapon-icons replaces only the four weapon sprites and their rectangles in the neutral atlas. Accepted wheel/M09 runtime code and localized atlases are unchanged.
 - Pixel/atlas QA and existing M02 D3D9/D3D9Ex, wheel geometry and M09 haptics fixtures PASS offline. New neutral atlas SHA256 3EF1782696B4A5E1E9D93F409C5B0F6FF014B78CC42FAB06EC29110661981818; physical PSVR2 appearance remains untested. Handoff: docs/handoffs/side-m02-detailed-weapon-icons-20261024.md.
+## 2026-10-24 — HUD reader orientation / left TMD wrist evidence
+
+- HUD horizontal reflection corrected (`5181cdc4`), using six recorded PSVR2
+  pose replays; top/vertical axis was already correct. Housing/pose untouched.
+- Left-hand offset remains UNKNOWN: `36081c3d` adds opt-in final-bound TMD
+  wrist/pad measurements to HandAnchorProbe, with eight records per eye.
+  No tracking/pose correction claimed.
+- L1/L2 PASS: 240 D3D9/Ex pixel cases, hand/reload/WeaponLocker/OLED regressions,
+  clean x86 PE32 `/O2` build. No Steam writes or physical validation.
+- Handoff: `docs/handoffs/sol-hud-orientation-left-wrist-20261024.md`.
+
 
 ## 2026-10-24 — Diegetic HUD milestone 2: Valkyrie `30/120` + Spikeshot `08/32` (L2_PASS / READY_FOR_PHYSICAL_ACCEPTANCE; gate already armed)
 

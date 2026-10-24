@@ -105,6 +105,8 @@ _work_u/
 /build/next-weapon-reload/
 /build/menu-holster-polish/
 /build/right-eye-mirror/
+/build/fixtures/
+/build/hud3d-*
 /build/startup-readiness/
 
 # ---- bink stills pipeline: intermediates local ----

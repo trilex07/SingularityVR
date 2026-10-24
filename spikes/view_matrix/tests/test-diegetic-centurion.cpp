@@ -1,4 +1,4 @@
-// L1: diegetic weapon HUD math (Centurion counter). No D3D, no engine state.
+// L1: diegetic weapon HUD math (Centurion, Valkyrie, Spikeshot). No D3D, no engine state.
 // Runs from build/fixtures; the atlas PNG path is relative to that directory.
 #include "../diegetic_weapon_hud.h"
 #include <cstdio>
@@ -17,7 +17,8 @@ int main() {
     CHECK(LowState(0) && LowState(2) && !LowState(3));
 
     // 2. Atlas PNG header matches the hardcoded atlas size (no silent swap).
-    FILE* f = fopen("../../assets/processed/hud/diegetic/diegetic_hud_atlas.png", "rb");
+    FILE* f = nullptr;
+    fopen_s(&f, "../../assets/processed/hud/diegetic/diegetic_hud_atlas.png", "rb");
     CHECK(f != nullptr);
     if (f) {
         std::uint8_t h[24]; size_t r = fread(h, 1, 24, f); fclose(f);
@@ -119,6 +120,88 @@ int main() {
     // 14. Weapon-scaled world-anchored width (2.8 UU housing for valk/spike).
     CHECK(Near(PanelWidthPx(600.0f, 1080.0f, 2.8f), 2.8f * 0.0254f * 600.0f * 3.0f, 1e-3f));
     CHECK(Near(PanelWidthPx(600.0f, 1080.0f, 2.6f), 0.06604f * 600.0f * 3.0f, 1e-3f));
+
+    // 15. 3D Fixture Geometry Generation for Valkyrie AR9 ('30/120').
+    Quad3D vq3d[24]{};
+    const int vn3d = BuildFixtureQuads3D(*mv, 30, 120, vq3d, 24);
+    // 4 flanks + 1 bezel + 1 screen bed + 2 clip digits ('30') + 1 slash + 3 reserve digits ('120') = 12 quads
+    CHECK(vn3d == 12);
+    // Check housing top bezel quad (quad index 4)
+    CHECK(Near(vq3d[4].p[0].x, mv->wUU * 0.5f, 1e-3f));
+    CHECK(Near(vq3d[4].p[1].x, -mv->wUU * 0.5f, 1e-3f));
+    // Check screen bed quad (quad index 5)
+    CHECK(Near(vq3d[5].p[0].x, mv->wUU * 0.82f * 0.5f, 1e-3f));
+    CHECK(Near(vq3d[5].p[1].x, -mv->wUU * 0.82f * 0.5f, 1e-3f));
+    // Check readout digit quads (quads 6..11)
+    CHECK(sameCell(Quad{0,0,0,0, vq3d[6].u0, vq3d[6].v0, vq3d[6].u1, vq3d[6].v1}, Digit(false, 3)));
+    CHECK(sameCell(Quad{0,0,0,0, vq3d[7].u0, vq3d[7].v0, vq3d[7].u1, vq3d[7].v1}, Digit(false, 0)));
+    CHECK(sameCell(Quad{0,0,0,0, vq3d[8].u0, vq3d[8].v0, vq3d[8].u1, vq3d[8].v1}, Slash()));
+    CHECK(sameCell(Quad{0,0,0,0, vq3d[9].u0, vq3d[9].v0, vq3d[9].u1, vq3d[9].v1}, Digit(false, 1)));
+    CHECK(sameCell(Quad{0,0,0,0, vq3d[10].u0, vq3d[10].v0, vq3d[10].u1, vq3d[10].v1}, Digit(false, 2)));
+    CHECK(sameCell(Quad{0,0,0,0, vq3d[11].u0, vq3d[11].v0, vq3d[11].u1, vq3d[11].v1}, Digit(false, 0)));
+
+    // 16. 3D Fixture Geometry Generation for Spikeshot ('08/32').
+    Quad3D sq3d[24]{};
+    const int sn3d = BuildFixtureQuads3D(*ms, 8, 32, sq3d, 24);
+    CHECK(sn3d == 11); // 4 flanks + 1 bezel + 1 bed + 2 clip + 1 slash + 2 reserve = 11 quads
+    CHECK(sameCell(Quad{0,0,0,0, sq3d[6].u0, sq3d[6].v0, sq3d[6].u1, sq3d[6].v1}, Digit(false, 0)));
+    CHECK(sameCell(Quad{0,0,0,0, sq3d[7].u0, sq3d[7].v0, sq3d[7].u1, sq3d[7].v1}, Digit(false, 8)));
+    CHECK(sameCell(Quad{0,0,0,0, sq3d[8].u0, sq3d[8].v0, sq3d[8].u1, sq3d[8].v1}, Slash()));
+    CHECK(sameCell(Quad{0,0,0,0, sq3d[9].u0, sq3d[9].v0, sq3d[9].u1, sq3d[9].v1}, Digit(false, 3)));
+    CHECK(sameCell(Quad{0,0,0,0, sq3d[10].u0, sq3d[10].v0, sq3d[10].u1, sq3d[10].v1}, Digit(false, 2)));
+
+    // 17. 3D Fixture Geometry for Centurion with Low Ammo (clip=2 -> amber).
+    Quad3D cq3d[24]{};
+    const int cn3d = BuildFixtureQuads3D(*mc, 2, 24, cq3d, 24);
+    CHECK(cn3d == 11);
+    CHECK(sameCell(Quad{0,0,0,0, cq3d[6].u0, cq3d[6].v0, cq3d[6].u1, cq3d[6].v1}, Digit(true, 0))); // amber
+    CHECK(sameCell(Quad{0,0,0,0, cq3d[7].u0, cq3d[7].v0, cq3d[7].u1, cq3d[7].v1}, Digit(true, 2))); // amber
+
+    // 18. Native GPU vertex space conversion and upright UV orientation.
+    // Original cooked buffers reflect the +Y source PSK exactly once.
+    CHECK(Near(vq3d[4].p[0].y, -mv->cyUU, 2.0f));
+    CHECK(Near(sq3d[4].p[0].y, -ms->cyUU, 2.0f));
+    CHECK(Near(cq3d[4].p[0].y, -mc->cyUU, 2.0f));
+    // Top corners (p[0], p[1] with v0) must sit above bottom corners (p[2], p[3] with v1)
+    CHECK(vq3d[4].p[0].z > vq3d[4].p[3].z);
+    CHECK(sq3d[6].p[0].z > sq3d[6].p[3].z);
+    CHECK(cq3d[6].p[0].z > cq3d[6].p[3].z);
+
+    // 19. Live weapon transform capture, seqlock, and frame/tick coherence.
+    Mat4 testMat{};
+    testMat.m[0][0] = 1; testMat.m[1][1] = 1; testMat.m[2][2] = 1; testMat.m[3][3] = 1;
+    testMat.m[3][0] = 10.0f; testMat.m[3][1] = 20.0f; testMat.m[3][2] = 30.0f;
+    Pose testPose{}; testPose.chain=testMat; testPose.eyeClip[0]=testMat; testPose.eyeClip[1]=testMat;
+    RecordLiveTransform(11387, testPose, 1000, 42);
+    Pose outPose{};
+    CHECK(GetLiveTransform(11387, 1050, 42, outPose));
+    CHECK(GetLiveTransform(11387, 1050, 43, outPose));
+    CHECK(Near(outPose.chain.m[3][0], 10.0f, 1e-4f));
+    CHECK(Near(outPose.chain.m[3][1], 20.0f, 1e-4f));
+    CHECK(Near(outPose.chain.m[3][2], 30.0f, 1e-4f));
+    // Stale tick rejection (>100ms)
+    CHECK(!GetLiveTransform(11387, 1150, 42, outPose));
+    // Stale frame rejection (frame diff > 2)
+    CHECK(!GetLiveTransform(11387, 1020, 46, outPose));
+    // Weapon mismatch rejection
+    CHECK(!GetLiveTransform(5799, 1050, 42, outPose));
+
+    // 20. Eye viewport visibility bounds check.
+    CHECK(EyeBoundsVisible(1200.0f, 1400.0f, 1320.0f, 1460.0f, 0, 5640, 2876));
+    CHECK(EyeBoundsVisible(4000.0f, 1400.0f, 4120.0f, 1460.0f, 1, 5640, 2876));
+    // Reject left-eye coords in right-eye viewport (and vice versa)
+    CHECK(!EyeBoundsVisible(1200.0f, 1400.0f, 1320.0f, 1460.0f, 1, 5640, 2876));
+    CHECK(!EyeBoundsVisible(4000.0f, 1400.0f, 4120.0f, 1460.0f, 0, 5640, 2876));
+    // Reject offscreen / sub-pixel degenerate bounds
+    CHECK(!EyeBoundsVisible(-500.0f, 1400.0f, -100.0f, 1460.0f, 0, 5640, 2876));
+    CHECK(!EyeBoundsVisible(1200.0f, 1400.0f, 1200.5f, 1400.5f, 0, 5640, 2876));
+
+    // 21. Point transform math.
+    const V3 pt{ 1.0f, 2.0f, 3.0f };
+    const V3 xformed = Point(pt, testMat);
+    CHECK(Near(xformed.x, 11.0f, 1e-4f));
+    CHECK(Near(xformed.y, 22.0f, 1e-4f));
+    CHECK(Near(xformed.z, 33.0f, 1e-4f));
 
     printf(g_fail ? "test-diegetic-centurion: %d FAIL\n" : "test-diegetic-centurion: all L1 checks PASS\n", g_fail);
     return g_fail ? 1 : 0;
