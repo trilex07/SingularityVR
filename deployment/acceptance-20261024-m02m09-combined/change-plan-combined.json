@@ -1,0 +1,27 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "493A92DDF6D07A44623CCF9EF8746E2CDDD6417837E25EBA8E8265F823A1AE4E",
+  "reason": "COMBINED single deployment for ONE physical session: M02 P2 wheel skin (UiRemasterWheel=0->1) and M09 f73b91d bounded local-only TMD generic pulses (Haptics/TmdPulses absent->1) on a rebuilt dll (107FA9C0->E304F225 @ d104a33). No magazine insertion comfort, no gameplay HUD text changes, no other features.",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "107FA9C01047F8BBFED4D53BB9C872964173EAE72E89308CBF89713002B71120",
+      "after": "E304F22559C6EEF2D8055B73B48518870F1B24199C8BDD2753CCB5A9798E63C6",
+      "reason": " combined build: accepted M02 (safety b49380d included) + M09 classification fix"
+    }
+  ],
+  "ini": [
+    {
+      "key": "Render/UiRemasterWheel",
+      "before": "0",
+      "after": "1",
+      "reason": " P2 grading gate: remastered four-gun wheel"
+    },
+    {
+      "key": "Haptics/TmdPulses",
+      "before": null,
+      "after": "1",
+      "reason": " M09 grading gate: bounded local TMD generic pulses"
+    }
+  ]
+}

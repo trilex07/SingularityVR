@@ -1,6 +1,38 @@
 # STATUS — session handoff
 
+## 2026-10-24 — COMBINED M02-P2 + M09 session armed (`E304F225…` dll @ `d104a33`, all three last fixtures, ready for the single PSVR2 session)
+
+- Branch `integration/m02-m09-combined-20261024` = accepted M02 source
+  `e4f425d` (P0+P1 PHYSICAL PASS evidence included) + cherry-pick `-x`
+  `f73b91d` (M09 classification fix; PR #55 NOT merged) → `d104a33`;
+  one STATUS conflict resolved keeping both records; **no accepted M02
+  logic changed** (only native_tmd_haptics.h, tmd_haptics.h,
+  tests/test-tmd-haptics.cpp + STATUS).
+- Offline batteries, all PASS: build x86 PE32 `/O2` prov `d104a33796a2`
+  **dll `E304F22559C6EEF2D8055B73B48518870F1B24199C8BDD2753CCB5A9798E63C6`**;
+  fixtures — tmd-haptics "classification plus 14 baseline groups" (records
+  foreign/invalid rejection, local-ownership-only Generic, StopFirePower
+  no-arm, bounded 0.40/70 ms, default OFF, gate clear), ui-remaster d3d9
+  D3D9+D3D9Ex 2240/2240 with atomic staging + failure-injection + state
+  restoration, switch truth table 8/8, runtime geometry; python suites —
+  haptics-native 7/7, dual-weapon wiring, tmd-aim, measured-aim, carry-ray,
+  gloves, native-hands; PS batteries — dual-weapon-TMD 39 groups (weapon/
+  reload/TMD/WeaponLocker), short-gauntlet, gun-scale, gloves, HUD-live,
+  runtime-regressions D3D9+D3D9Ex 3304/3304 (IB restored). Adaptive-trigger
+  gun path untouched by the M09 patch (classification/pulses only).
+- **SINGLE guarded deployment (game closed)**: guard exit=0, backup
+  `install-backups/20261024-101113` = the P1-accepted pair (dll
+  `107FA9C0…` verified inside + INI `994B111A…`), report
+  `install-reports/20261024-101113.json`; live now dll `E304F225…3C6`,
+  INI `DA63A2A90821FC4167EE3F77F57F7184203998D930864FE83F9F039650F69FBC`
+  with `UiRemasterRuntime=1 UiRemasterSettings=1 UiRemasterWheel=1` +
+  `[Haptics] TmdPulses=1`; all three atlas hashes verified unchanged
+  (`E4DC0E7D… / 6436AA25… / 53B570C4…`); unrelated accepted settings
+  untouched; magazine insertion comfort and HUD text changes NOT included.
+- Physical session plan (sections graded INDEPENDENTLY on user's report):
+
 ## 2026-10-24 — M02 P1 PHYSICAL PASS (user, quoted); combined M02-P2 + M09 next
+
 
 - P1 session archived before any relaunch:
   `docs/evidence/m02-p1-20261024/` — complete log
