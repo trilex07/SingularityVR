@@ -148,6 +148,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "glove_native.h"
 #include "native_glove_cuffs.h"
 #include "tmd_short_gauntlet.h"
+#include "diegetic_weapon_hud.h" // MAIN diegetic counter: pure math, L1-tested
 #include "tmd_attachment_identity.h"
 static tmdattachment::Identity g_tmdAttachmentIdentity;
 static void BuildLiveControllerC(float C[4][4], bool aimHand);
@@ -6031,6 +6032,7 @@ static bool NativeScopeRendering(){return g_scopeNativeDepth!=0;}
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
+static void DrawDiegeticCenturion(IDirect3DDevice9* dev); // diegetic Centurion counter (default OFF)
 void DrawHolsterMarker(IDirect3DDevice9* dev); // MAIN: white ring at the hip while a gun is held
 void DrawKnifeBeltMarker(IDirect3DDevice9* dev); // MAIN: white ring at the left belt while the knife is held
 void DrawCustomGloves(IDirect3DDevice9* dev); // default-OFF, noTMD free hands only
@@ -6078,6 +6080,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawWristHealth(dev);
     DrawHealthPlate(dev);
     DrawAmmoPlate(dev);
+    DrawDiegeticCenturion(dev);
     DrawHolsterMarker(dev);
     DrawKnifeBeltMarker(dev);
     DrawWeaponWheel(dev);
@@ -30945,6 +30948,13 @@ static volatile LONG g_ammoUnknownSaid = 0;
 // HUD sampler cache: offsets resolved BY NAME per HUD class (probe round 9).
 static uintptr_t g_ammoHudCls = 0;
 static int g_ammoOffClip = -2, g_ammoOffBin = -2, g_ammoOffSize = -2;
+// Diegetic counter (milestone 1: Centurion '06/24'): [Render] DiegeticWeaponHud
+// default OFF. While enabled+ready it owns the Centurion readout (the plate
+// backs off); atlas PNG quads only, no GLB/model loading, unknown ammo hides.
+volatile LONG g_diegeticHud = 0;
+static IDirect3DTexture9* g_diegeticAtlas = nullptr;
+static volatile LONG g_diegeticArtState = 0; // 0 unloaded, 1 ready, -1 failed
+static IDirect3DStateBlock9* g_diegeticState = nullptr;
 
 static bool LoadAmmoPng(IDirect3DDevice9* dev, const char* file, IDirect3DTexture9** out) {
     char dll[MAX_PATH]{};
@@ -31046,6 +31056,10 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
     const int plate = ammoplates::PlateForGunVerts(heldVerts);
     if (plate < 0 || plate > 3 || !g_ammoPlateTex[plate] || !g_ammoDigitsTex) return;
+    // The diegetic counter owns the Centurion readout while enabled and ready;
+    // turning its gate OFF restores this verbatim plate (independent rollback).
+    if (plate == 0 && Rd(g_diegeticHud) != 0 &&
+        InterlockedCompareExchange(&g_diegeticArtState, 0, 0) == 1) return;
     // HUD sampler: offsets BY NAME per HUD class (round-9 probe verdict).
     const uintptr_t hud = FindHudObject();
     uintptr_t hc = 0;
@@ -31227,6 +31241,157 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
         Log("ammo plate: anchor not projectable in either eye (hand behind camera?)");
     }
     g_wristState->Apply();
+    if (old) g_origSetRenderTarget(dev, 0, old);
+    dev->SetDepthStencilSurface(depth);
+    if (old) old->Release(); if (depth) depth->Release(); back->Release();
+}
+
+// ---- Diegetic weapon HUD (milestone 1: Centurion '06/24' counter) ----
+// [Render] DiegeticWeaponHud, default OFF. Same verified pipeline as the ammo
+// plate: aim-hand anchor, per-eye projection, world-anchored px-per-metre
+// sizing, live native HUD ammo sampler, own state block, full state restore.
+// Runtime representation = atlas PNG quads only; no GLB or mesh is loaded.
+// While ready for the Centurion this owns the readout ('06/24' style, amber
+// glyph row at <=2 rounds); the Centurion ammo plate backs off and its own
+// gate restores it. Unknown ammo values hide the counter, never a guess.
+static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
+    if(handhud::HideAmmo(Rd(g_opticalHudHidden)!=0))return;
+    const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
+        !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
+    const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+    if (heldVerts != 5799) return; // Centurion first-person mesh (ammo_layout)
+    if (!handhud::Visible(Rd(g_diegeticHud) != 0, VrModeOn(), Rd(g_dupDraws) != 0,
+                          hudGameplay, Rd(g_gamePaused) != 0, Rd(g_vrUiMenu) != 0,
+                          Rd(g_panelOpen) != 0, Rd(g_inCinematic) != 0) ||
+        Rd(g_weaponWheelOpen) || !WeaponPresentationInHands() ||
+        !g_handPositionValid[AimHand()] || !g_haveEyes ||
+        !g_origSetRenderTarget || !g_origDrawPrimUP) {
+        static bool saidGate = false;
+        if (!saidGate) {
+            saidGate = true;
+            Log("diegetic hud: gate blocked (flag=%d wheel=%d armed=%d hand=%d eyes=%d)",
+                (int)Rd(g_diegeticHud), (int)Rd(g_weaponWheelOpen),
+                WeaponInHands() ? 1 : 0, g_handPositionValid[AimHand()] ? 1 : 0,
+                g_haveEyes ? 1 : 0);
+        }
+        return;
+    }
+    if (InterlockedCompareExchange(&g_diegeticArtState, 0, 0) == 0) {
+        IDirect3DTexture9* t = nullptr;
+        if (LoadAmmoPng(dev, "diegetic_hud_atlas.png", &t) && t) {
+            g_diegeticAtlas = t;
+            InterlockedExchange(&g_diegeticArtState, 1);
+            Log("diegetic hud: atlas ready");
+        } else {
+            if (t) t->Release();
+            InterlockedExchange(&g_diegeticArtState, -1);
+            Log("diegetic hud: atlas unavailable; diegetic counter hidden");
+        }
+    }
+    if (InterlockedCompareExchange(&g_diegeticArtState, 0, 0) != 1) return;
+    // Live ammo comes from the same native HUD sampler as the plates:
+    // offsets resolved BY NAME per HUD class (round-9 probe verdict).
+    const uintptr_t hud = FindHudObject();
+    uintptr_t hc = 0;
+    if (hud && Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t)))
+        hc = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS);
+    if (hc && hc != g_ammoHudCls) {
+        g_ammoHudCls = hc;
+        g_ammoOffClip = PropOffsetInChain(hc, "mClipAmmo");
+        g_ammoOffBin = PropOffsetInChain(hc, "mBinAmmo");
+        g_ammoOffSize = PropOffsetInChain(hc, "mClipSize");
+    }
+    int clip = -1, bin = -1;
+    if (g_ammoOffClip >= 0 && g_ammoOffBin >= 0 && hud &&
+        Readable((const void*)(hud + g_ammoOffClip), 4) &&
+        Readable((const void*)(hud + g_ammoOffBin), 4)) {
+        clip = *reinterpret_cast<const int32_t*>(hud + g_ammoOffClip);
+        bin = *reinterpret_cast<const int32_t*>(hud + g_ammoOffBin);
+    }
+    if (clip < 0 || bin < 0) return; // unknown -> hidden (never guessed)
+    const uipointer::V hand{ g_handLastPos[AimHand()].x, g_handLastPos[AimHand()].y + 0.03f,
+                             g_handLastPos[AimHand()].z };
+    IDirect3DSurface9* back = nullptr;
+    if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
+    D3DSURFACE_DESC d{};
+    if (FAILED(back->GetDesc(&d)) || d.Width < 8 || d.Height < 8) {
+        back->Release();
+        return;
+    }
+    IDirect3DSurface9* old = nullptr;
+    IDirect3DSurface9* depth = nullptr;
+    dev->GetRenderTarget(0, &old);
+    dev->GetDepthStencilSurface(&depth);
+    if (!g_diegeticState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_diegeticState))) {
+        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    if (FAILED(g_diegeticState->Capture())) {
+        if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    dev->SetDepthStencilSurface(nullptr);
+    g_origSetRenderTarget(dev, 0, back);
+    D3DVIEWPORT9 vp{0, 0, d.Width, d.Height, 0.0f, 1.0f};
+    dev->SetViewport(&vp);
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetRenderState(D3DRS_ZENABLE, FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    struct DiegeticVtx { float x, y, z, rhw; DWORD c; float u, v; };
+    static bool saidDrew = false;
+    const DWORD tint = handhud::WithAlphaPct(0xFFFFFFFFu, handhud::kPlateAlphaPct);
+    for (int eye = 0; eye < 2; ++eye) {
+        uipointer::ScreenPoint p;
+        if (!VrUiProjectEye(eye, hand, p)) continue;
+        float pxM = 0.0f;
+        {
+            const uipointer::V rgt = VrUiRotate(g_eyePose[eye].orientation, { 1, 0, 0 });
+            const uipointer::V probe{ hand.x + rgt.x * 0.5f, hand.y + rgt.y * 0.5f,
+                                      hand.z + rgt.z * 0.5f };
+            uipointer::ScreenPoint p2;
+            if (VrUiProjectEye(eye, probe, p2)) {
+                const float du = (p2.u - p.u) * d.Width * 0.5f;
+                const float dv = (p2.v - p.v) * (float)d.Height;
+                pxM = 2.0f * sqrtf(du * du + dv * dv);
+            }
+        }
+        float w = diegetichud::PanelWidthPx(pxM, (float)d.Height);
+        if (w <= 0.0f) w = std::max(40.0f, d.Height * 0.062f); // probe failed
+        const float h = w * 0.5f; // screen_bg cell is 2:1
+        float cx = (eye + p.u) * d.Width * 0.5f;
+        diegetichud::ClampCentre(cx, w, (float)d.Width);
+        const float cy = p.v * d.Height;
+        diegetichud::Quad q[16];
+        const int n = diegetichud::LayoutCounter(clip, bin, cx, cy, w, h, q, 16);
+        if (n <= 0) continue;
+        dev->SetTexture(0, g_diegeticAtlas);
+        for (int i = 0; i < n; ++i) {
+            DiegeticVtx v[4] = {
+                { q[i].x0, q[i].y0, 0, 1, tint, q[i].u0, q[i].v0 },
+                { q[i].x1, q[i].y0, 0, 1, tint, q[i].u1, q[i].v0 },
+                { q[i].x0, q[i].y1, 0, 1, tint, q[i].u0, q[i].v1 },
+                { q[i].x1, q[i].y1, 0, 1, tint, q[i].u1, q[i].v1 },
+            };
+            g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(DiegeticVtx));
+        }
+        if (!saidDrew) {
+            saidDrew = true;
+            Log("diegetic hud: drew centurion clip=%d bin=%d panel %.0fx%.0f at %.0f,%.0f (backbuffer %ux%u)",
+                clip, bin, (double)w, (double)h, (double)cx, (double)cy, d.Width, d.Height);
+        }
+    }
+    g_diegeticState->Apply();
     if (old) g_origSetRenderTarget(dev, 0, old);
     dev->SetDepthStencilSurface(depth);
     if (old) old->Release(); if (depth) depth->Release(); back->Release();
@@ -35850,6 +36015,10 @@ void LoadIniSettings() {
         }
     }
     Log("ammo plate: %s (ammo root %s)", Rd(g_ammoPlate) ? "ENABLED" : "off", g_ammoAssetRoot);
+    InterlockedExchange(&g_diegeticHud,
+        GetPrivateProfileIntA("Render", "DiegeticWeaponHud", 0, path) ? 1 : 0);
+    Log("diegetic hud: %s (Centurion counter, default off, atlas vr-assets/hud/diegetic)",
+        Rd(g_diegeticHud) ? "ENABLED" : "off");
     Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld, scene trace=%ld",
         Rd(g_wristHealth),Rd(g_renderEvidence),Rd(g_sceneModeTrace));
     Log("cutscene presentation: %s, cinema matte=%s (VR panel rows)",

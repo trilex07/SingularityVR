@@ -1,5 +1,37 @@
 # STATUS — session handoff
 
+## 2026-10-24 — Diegetic HUD milestone 1: Centurion `06/24` counter (L2_PASS / READY_FOR_PHYSICAL_ACCEPTANCE; default OFF)
+
+- Branch `integration/diegetic-hud-centurion-20261024` from `origin/main`
+  `551c64d7`. Source evidence: `side/diegetic-hud-native` @ `ff29efd`
+  (measured Centurion fixture `center=(0.0,115.3,43.5)` UU,
+  `size=(2.6,0.45,1.8)` UU, pitch 18°; PSK `ch_inview_pistol_mesh.psk`;
+  rendered/recessed-well acceptance in `docs/diegetic_hud_v2_review.md`).
+- Runtime representation: atlas-PNG quads only (`diegetic_hud_atlas.png`
+  1024×512 — screen/housing cells, cyan/amber `0-9` glyphs + slash; **no GLB
+  or mesh loading at runtime**); per-eye drawn inside the verified ammo-plate
+  pipeline (aim-hand anchor + `VrUiProjectEye` + world-anchored px-per-metre
+  probe + own state block + full state restore). Live values only from the
+  native HUD sampler (`mClipAmmo`/`mBinAmmo`, round-9 probe); unknown values
+  hide; out-of-`mClipSize` clip values rejected; while enabled+ready the
+  Centurion ammo plate backs off (independent rollback switches).
+- Gate `[Render] DiegeticWeaponHud`=0 default OFF (parse + `diegetic hud:`
+  startup log). Low mag (`<=2`) switches to the amber glyph row.
+- L1 fixture `test-diegetic-centurion` PASS (measured dims, atlas-cell
+  geometry vs the shipped PNG header, 15-row gate truth table, sizing probe
+  failures, `06` zero-pad layout, amber switchover, 3-digit reserve, clamp;
+  2 fixture bugs fixed: wrong captured array in `sameCell`, PNG signature
+  byte offset — layout itself proven correct by cell dumps).
+- L2: build x86 PE32 `/O2` @ `551c64d7`, dll
+  `ADF2833A70E0BE027AE4028134B5BFD2CD86759005A7D00AFD7112803B2625DF`.
+  Regressions: tmd-haptics fixture, M02 runtime/switch 8-combo/D3D9+D3D9Ex
+  `2240/2240`, gameplay-text probe+safe-area, hud-reseat 203, menu-hud-scale,
+  haptics-native py, dual-weapon wiring py, dual-weapon-TMD 39 groups,
+  HUD-live, short-gauntlet — all PASS, no regressions.
+- Physical grading state: NOT physically verified (Centurion-only milestone;
+  other weapons + TMD wrist display stay out of scope until the user grades
+  this candidate).
+
 ## 2026-10-24 — Promotion to main: accepted M02/M09 history + default-OFF gameplay HUD fix; all promotion regressions PASS
 
 - Promotion branch `integration/promo-m02m09-hud` (worktree
