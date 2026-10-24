@@ -5,7 +5,8 @@
 - **Physical Acceptance Results (PSVR2 test by user)**:
   - **HUD 3D (PHYSICAL PASS)**: Volk and Valkyrie counters rigidly mounted, reader orientation correct (clip left, reserve right), real-time ammo updates, clean stereo without ghosting/doubling.
   - **TMD / Haptics / Two-Hand Grip (PHYSICAL PASS)**: Pulse effects, gauntlet posture, and two-handed stability verified.
-  - **Menu / Weapon Icons / Dubbing (PHYSICAL PASS)**: Polished neutral/localized UI assets, detailed weapon icons, Polish dubbing confirmed.
+  - **Menu Navigation & Dubbing (PHYSICAL PASS)**: Menus function properly, options select correctly, and Polish dubbing is confirmed.
+  - **Full Visual UI Remaster (PARTIAL)**: The new detailed weapon icons atlas (3EF17826...) is active in the weapon wheel, but the overall visual remaster remains incomplete: legacy UI background/plate elements and raw Xbox/UE3 controller prompts (e.g. "Pad 11") are still visible. Requires dedicated SIDE UI work to update main/pause menu visual styling, finish remaining icons, and selectively replace "Pad 11" with PS VR2 Sense button icons while strictly preserving subtitles, objectives, and interaction prompts.
   - **Left-Hand Tracking (PHYSICAL PASS)**: Glove motion accurately matches controller in gameplay.
   - **Manual Reload Insertion Comfort (PARTIAL)**: 18 cm insertion radius functional on Valkyrie and Volk, but requires expansion to bounded 20 cm for full comfort.
   - **New Scope / Issues Identified (Astra Ownership)**:
