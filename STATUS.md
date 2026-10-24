@@ -377,6 +377,11 @@ change plan `change-plan.json` bound by profile SHA `D5676D1E…8528`.
 Steam partially guarded: this profile pins DLL + dependency assets only; post-test
 rollback must re-hash BOTH installed files. No M09 haptics in this build (waits for
 M01 as decided). NO merge into main; no C++ experiments during the physical test.
+## 2026-10-24 — Original gameplay ShowInformation text safe area: source-side L2_PASS, L3/L4 PENDING
+
+SIDE decoded the original fingerprinted HUD SWF: `ShowInformation` uses `locationTxt` → `LocationTextDisplay` export 414, authored `ALIGN_BOTTOM`/`ALIGN_LEFT` plus 100 px down. The default-OFF `[Render] VrGameplayTextSafeArea` now repositions only that verified holder via the audited native numeric GFx setter on the engine thread. Original strings, animations and fade remain in the movie. Private-asset identity, per-eye geometry, x86 `/O2` and relevant D3D9/D3D9Ex regressions passed; no Steam or headset test was run. See `docs/handoffs/gameplay-hud-text-safe-area-implementation.md`.
+
+26b22d2 (Reposition original gameplay information GFx holder in VR)
 ## 2026-10-24 — Gameplay HUD lower-left text: diagnostic L2_PASS, visual fix NOT TESTED
 
 SIDE added the default-OFF `GameplayTextProbe` to identify the actual lower-left gameplay text draw route before changing placement. The source of location and contextual labels remains unproven; no HUD/menu geometry or Steam install was changed. See `docs/handoffs/gameplay-hud-text-safe-area-probe.md`. CPU policy and x86 PE32 `/O2` build passed; MAIN-owned runtime identity capture and subsequent physical acceptance remain open.

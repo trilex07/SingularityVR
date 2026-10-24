@@ -6654,6 +6654,7 @@ volatile LONG g_vrUiDirectCanvas=0,g_vrUiNoteCanvas=0,g_contextPointerProjection
 volatile LONG g_contextCursorSuppress=0,g_contextCursorSuppressLogged=0;
 volatile LONG g_contextCursorNative=0;
 volatile LONG g_npcNameScalePct=100;
+volatile LONG g_vrGameplayTextSafeArea=0; // [Render] default OFF; original LocationTextDisplay holder only
 volatile LONG g_keepAcquiredWeapons=0,g_ownedWeaponWheel=0;
 static float g_vrMenuTextureScore=1e9f;
 static uipointer::VrMenuPanel g_vrMenuPanel;
@@ -35209,6 +35210,8 @@ void LoadIniSettings() {
     if (Rd(g_lockerAvailabilityTrace)) LockerAvailabilityTrace::TryInstallEarly();
     g_contextCursorNative=GetPrivateProfileIntA("Render","ContextCursorNative",0,path)?1:0;
     g_npcNameScalePct=std::clamp((int)GetPrivateProfileIntA("Render","NpcNameScalePct",100,path),40,100);
+    InterlockedExchange(&g_vrGameplayTextSafeArea,
+        GetPrivateProfileIntA("Render","VrGameplayTextSafeArea",0,path)!=0);
     InterlockedExchange(&g_gameplayTextProbe,
         GetPrivateProfileIntA("Diagnostic","GameplayTextProbe",0,path) != 0);
     if (Rd(g_gameplayTextProbe))
