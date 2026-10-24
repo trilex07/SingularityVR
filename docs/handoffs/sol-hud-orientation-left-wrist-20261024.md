@@ -81,7 +81,10 @@ one guessed offset.
 - `tools/tests/test-hand-anchor-log.py`: seven parser regressions PASS.
 - `tools/tests/test-dual-weapon-tmd.ps1`: hand/support, TMD, reload, holster,
   carried magazine, measured aim, WeaponLocker and OLED CPU/D3D11 suites PASS.
-- x86 PE32 `/O2` build required for the supplied DLL; see final delivery SHA.
+- x86 PE32 `/O2` build PASS, clean source commit
+  `36081c3dff1529580ad98e8ec9fb2a5e41c25152`. DLL SHA256:
+  `857F498D7142E444C089AE35E596BD1F3C7E8BB41844AEE14569C765572C1337`.
+  HUD-only commit: `5181cdc4`; diagnostic follow-up: `36081c3d`.
 
 ## One MAIN-owned acceptance session
 

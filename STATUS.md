@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+## 2026-10-24 — HUD reader orientation / left TMD wrist evidence
+
+- HUD horizontal reflection corrected (`5181cdc4`), using six recorded PSVR2
+  pose replays; top/vertical axis was already correct. Housing/pose untouched.
+- Left-hand offset remains UNKNOWN: `36081c3d` adds opt-in final-bound TMD
+  wrist/pad measurements to HandAnchorProbe, with eight records per eye.
+  No tracking/pose correction claimed.
+- L1/L2 PASS: 240 D3D9/Ex pixel cases, hand/reload/WeaponLocker/OLED regressions,
+  clean x86 PE32 `/O2` build. No Steam writes or physical validation.
+- Handoff: `docs/handoffs/sol-hud-orientation-left-wrist-20261024.md`.
+
+
 ## 2026-10-24 — Diegetic HUD milestone 2: Valkyrie `30/120` + Spikeshot `08/32` (L2_PASS / READY_FOR_PHYSICAL_ACCEPTANCE; gate already armed)
 
 - Same branch `integration/diegetic-hud-centurion-20261024`, commit
