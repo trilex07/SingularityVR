@@ -1,0 +1,14 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "7F0D2ADF722C514BAE2E50090541336219E7981864864385F96E2D4588EA93E6",
+  "reason": "P1 grading gate: arm ONLY Render/UiRemasterSettings=1 on the P0-accepted safety build; UiRemasterWheel stays 0; dll byte-identical (staged rewrite, same SHA allowed); native footer remains the readability authority.",
+  "files": [],
+  "ini": [
+    {
+      "key": "Render/UiRemasterSettings",
+      "before": "0",
+      "after": "1",
+      "reason": " P1 styling gate: header/selected-row frame/R2 glyph + localized tab"
+    }
+  ]
+}

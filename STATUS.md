@@ -1,6 +1,37 @@
 # STATUS — session handoff
 
+## 2026-10-24 — M02 P0 PHYSICAL PASS (user, quoted); P1 gate armed (`UiRemasterSettings=1`, READY_FOR_PHYSICAL_ACCEPTANCE)
+
+- P0 session archived **before any relaunch**:
+  `docs/evidence/m02-p0-20261024/` — complete log
+  `D9D5C52327B235C850AD520A05ECA12B54932C7077FE5420501DE820991984D9`
+  (attached 09:54:18, ended 09:55:27 — the first session on the safety
+  build, installed 09:53:16), `installed.ini`, `install-report-safety.json`,
+  `d3d9.build.json`, `analysis-p0.md`.
+- Receipts: `M02 UI: neutral atlas ready 4096x2048 (runtime draw still
+  requires panel)` + `M02 UI: plate eyes=2/2 restore=1 back=5640x2876` ×4;
+  failure scan 0 hits. Installed dll verified `107FA9C0…71120`, INI
+  `EB8EEA0A…CA0B` (P0 gate on, P1/P2 off, TmdPulses absent).
+- **P0 grade: PHYSICAL PASS** — user: "The new VR Settings works and looks
+  good." Honest scope: plate visuals and Settings usability confirmed;
+  Reset/open-close edge cases were NOT explicitly reported (no failure
+  evidence; they are covered again by the P1 session's interactions).
+- **P1 deployment (guard exit=0, backup `20261024-095837`, report
+  `20261024-095837.json`)**: INI-only change `Render/UiRemasterSettings`
+  `0`→`1`; ini now `994B111AE7E65283E0D396D03657B02A566A073C59B0DE28CD
+  93489B95866314` with `UiRemasterRuntime=1`, `UiRemasterSettings=1`,
+  `UiRemasterWheel=0`; dll rewritten byte-identical; profile
+  `7F0D2ADF…93E6` (`deployment/acceptance-20261024-m02-p1/`); all atlas
+  pins, M01/M03 and M09 Session-A state preserved; rollback switch =
+  `UiRemasterSettings=0`.
+- **NEXT (user): P1 grading session** — header, selected-row highlight, R2
+  icon, readable native footer, laser interaction, any PL/EN presentation.
+  On "done": archive log first, grade P1 separately (receipts: localized
+  atlas load + settings styling draws), then P2 enable is prepared the
+  same way. M09 classification fix and insertion comfort remain unbundled.
+
 ## 2026-10-24 — M02 safety integration (`b49380d`) deployed (dll `107FA9C0…`, INI unchanged); P0 grading session still PENDING
+
 
 - MAIN verification: live log at instruction time == the already-archived
   Session B file (`ED29829D…AFB0`, mtime 09:29:24, zero `M02 UI` receipts,

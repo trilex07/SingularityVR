@@ -1,0 +1,25 @@
+﻿{
+    "builtAt":  "2026-10-24T09:48:57.6352294+02:00",
+    "repository":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-m02-remaster",
+    "branch":  "integration/m02-settings-wheel-remaster",
+    "commit":  "7d156f82114cd6e80c70aad21439ef0109077a92",
+    "workingTreeStatus":  [
+                              "?? build/m02-a-deploy.out",
+                              "?? build/m02-atlas-deploy.out",
+                              "?? build/m02-b-deploy.out",
+                              "?? build/m02-build.out",
+                              "?? build/m02-dual.out",
+                              "?? build/m02-gauntlet.out",
+                              "?? build/m02-hud.out",
+                              "?? build/m02-runtime-candidate-a/",
+                              "?? build/m02-runtime-candidate-b/",
+                              "?? build/m02-runtime-reg.out",
+                              "?? build/m02s-build.out"
+                          ],
+    "optimization":  "/O2",
+    "performanceInstrumentation":  false,
+    "architecture":  "x86 PE32",
+    "machine":  "0x014C",
+    "optionalHeaderMagic":  "0x010B",
+    "sha256":  "107FA9C01047F8BBFED4D53BB9C872964173EAE72E89308CBF89713002B71120"
+}
