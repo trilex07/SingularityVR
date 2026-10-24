@@ -1,0 +1,14 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "E7A3DD142F13C3E0277585375F208DBA15D6ABDA4161F6B01A83088DCAF93370",
+  "reason": "Diegetic HUD milestone 2 (Valkyrie + Spikeshot; READY_FOR_PHYSICAL_ACCEPTANCE): rebuild d3d9.dll (ADF2833A -> B5F2A2AD4ADB... @ bc4c32147c3b / integration/diegetic-hud-centurion-20261024) with per-weapon measured mounts and '30/120' / '08/32' readouts. Gate DiegeticWeaponHud=1 stays armed for the grading session; INI byte-identical; rollback = the preserved Centurion-candidate backup.",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "ADF2833A70E0BE027AE4028134B5BFD2CD86759005A7D00AFD7112803B2625DF",
+      "after": "B5F2A2AD4ADB53BBA4DEC5369CD5F2A5FD1EA06373C6F1E1E58E374633B58613",
+      "reason": " per-weapon diegetic mounts (Valkyrie/Spikeshot/Centurion) + plate back-off extension"
+    }
+  ],
+  "ini": []
+}

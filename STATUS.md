@@ -1,5 +1,56 @@
 # STATUS — session handoff
 
+## 2026-10-24 — Diegetic HUD milestone 2: Valkyrie `30/120` + Spikeshot `08/32` (L2_PASS / READY_FOR_PHYSICAL_ACCEPTANCE; gate already armed)
+
+- Same branch `integration/diegetic-hud-centurion-20261024`, commit
+  `bc4c32147c3b`. Pivot evidence: the Centurion candidate is not gradeable on
+  the user's save (Centurion not owned; only Valkyrie AR9 11387 + Volk/Spikeshot
+  8297 are). Pre-pivot session log archived
+  `docs/evidence/diegetic-session-20261024/` (analysis + local log): exactly
+  one diegetic line (`ENABLED`), zero draws, zero atlas lines — consistent
+  with the lazy atlas load (first mounted-gun draw); the atlas raster path is
+  therefore still physically unexercised. Same session: `_HUD cache
+  clip+1404 bin+1400 size+1408 on RvHUD` and `drew plate=2 clip=6 bin=59 …
+  backbuffer 5640x2876` — the user held the Spikeshot and the accepted plates
+  pipeline rendered live ammo (live reserve 59 vs fixture '32' — the display
+  tracks the native sampler; fixture values are snapshots only). No plate
+  regression from milestone 1 in the real run.
+- Implementation: per-weapon mounts in `diegetic_weapon_hud.h` from the
+  measured fixture builders (`prepare_diegetic_models_v2.py` @ `ff29efd`,
+  PSK names verified against it): Centurion `5799` (0,115.3,43.5)
+  (2.6,0.45,1.8) pitch 18°; Valkyrie `11387` (0,117.2,35.0) (2.8,0.45,1.9)
+  pitch 20°, readout `30/120` (reserve pad 3); Spikeshot `8297` (0,116.8,42.0)
+  (2.8,0.45,1.9) pitch 15°, readout `08/32`. Mount lookup replaces the
+  Centurion-only early return; hand-anchor adds the measured per-weapon centre
+  lift above the calibrated 115.3 baseline (shotgun +0.038 m, AR9 +0.048 m);
+  panel width uses the per-weapon housing width; atlas cells, projection,
+  gates, low-mag (<=2) amber rule, `mClipAmmo/mBinAmmo` validity and the
+  full state restore are unchanged. Ammo plates 0-2 (all three guns) back off
+  while the counter draws; TMD/unknown verts still draw nothing.
+- L1: `test-diegetic-centurion` extended (mount table, anchor lifts, `30/120`
+  7-quad and `08/32` 6-quad layouts, per-weapon world-anchored widths) — all
+  PASS including the original Centurion asserts (default `resPad=2` preserved).
+- L2: x86 PE32 `/O2` @ `bc4c32147c3b`, dll
+  `B5F2A2AD4ADB53BBA4DEC5369CD5F2A5FD1EA06373C6F1E1E58E374633B58613`.
+  Regressions: full fixture battery (9), haptics-native py, dual-weapon wiring
+  py, dual-weapon-TMD 39 groups, HUD-live, short-gauntlet, gun-scale — all
+  PASS, no regressions.
+- Deployed (game closed, 2026-10-24 11:55): guarded candidate run
+  (`-DllOnly -IncludeIni -SkipTextures`, profile `E7A3DD14…`, plan
+  `4AB467E0…`): installed dll `B5F2A2AD…` (PE32 0x014C) + INI `257F9DFB14A4…`
+  byte-identical (359 keys, `DiegeticWeaponHud=1` already armed — the one
+  controlled change this milestone is the dll), report
+  `20261024-115514.json`, backup `deployment/install-backups/20261024-115514`
+  = the exact Centurion-candidate pair (`ADF2833A…`) verified. Live atlas
+  `9ED4A5C…81F9` re-verified under the new profile pin (repo copy hash-equal).
+  Rollback switches: `DiegeticWeaponHud=0` (feature) or the backup pair
+  (dll-only revert to the Centurion build).
+- Physical grading state: NOT physically verified. Grading unit = Valkyrie
+  counter and Spikeshot counter separately (visibility, placement, firing and
+  reload updates, weapon-switch following); sight obstruction, stereo and FPS
+  checked by the user. Centurion stays ungraded (not owned); no other
+  weapon/TMD claims.
+
 ## 2026-10-24 — Diegetic HUD milestone 1: Centurion `06/24` counter (L2_PASS / READY_FOR_PHYSICAL_ACCEPTANCE; default OFF)
 
 - Branch `integration/diegetic-hud-centurion-20261024` from `origin/main`
