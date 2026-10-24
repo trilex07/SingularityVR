@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+## 2026-10-25 — SIDE Seeker back slot / measured support / launch candidate
+
+`feature/sol-seeker-back-slot` starts at accepted `543bff1`. Three independent
+default-OFF Seeker features retain only an actually owned native weapon, select
+it from the lower-right back, reconstruct support from original PSK/PSA, and
+correct native projectile launch using the rendered muzzle. Existing Valkyrie
+accuracy and Valkyrie/Volk 20 cm insertion are supplied as candidate INI keys;
+ordinary defaults remain unchanged. Native ownership/ABI, geometry, D3D9/Ex,
+HUD/TMD/haptics/WeaponLocker/NIS/OLED regressions PASS offline. Physical acceptance
+is open; no Steam access. Evidence/limits/test plan:
+`docs/handoffs/sol-seeker-back-slot.md`. Final L2 artifact receipt is separate.
+
 ## 2026-10-24 — SIDE first-four material remaster bridge (L2_PASS; physical gate open)
 
 On `feature/side-material-remaster-d3d9ex`, a separate, default-OFF
