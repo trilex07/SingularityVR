@@ -243,7 +243,11 @@ inline bool GetLiveTransform(long verts, uint64_t now, unsigned /*frame*/, Mat4&
     auto& tf = GlobalLiveTransform();
     if (!InterlockedCompareExchange(&tf.valid, 0, 0)) return false;
     if (tf.verts != verts) return false;
-    if (now < tf.tick || now - tf.tick > 150) return false;
+    if (now >= tf.tick) {
+        if (now - tf.tick > 250) return false;
+    } else {
+        if (tf.tick - now > 50) return false;
+    }
     out = tf.chain;
     return true;
 }

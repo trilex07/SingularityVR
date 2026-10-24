@@ -167,8 +167,8 @@ int main() {
     CHECK(Near(outMat.m[3][0], 10.0f, 1e-4f));
     CHECK(Near(outMat.m[3][1], 20.0f, 1e-4f));
     CHECK(Near(outMat.m[3][2], 30.0f, 1e-4f));
-    // Stale tick rejection (>150ms)
-    CHECK(!GetLiveTransform(11387, 1200, 42, outMat));
+    // Stale tick rejection (>250ms)
+    CHECK(!GetLiveTransform(11387, 1300, 42, outMat));
     // Weapon mismatch rejection
     CHECK(!GetLiveTransform(5799, 1050, 42, outMat));
 

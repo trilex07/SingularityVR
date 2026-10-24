@@ -20699,7 +20699,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     }
     // Diegetic 3D HUD: capture the live weapon transform (skin * local * controller)
     // for Centurion (5799), Valkyrie AR9 (11387), and Spikeshot/Volk (8297).
-    if (Rd(g_diegeticHud) && t == D3DPT_TRIANGLELIST && startIndex == 0 &&
+    if (Rd(g_diegeticHud) && t == D3DPT_TRIANGLELIST &&
         g_thisDrawMoved == 1 && !g_boundShaderLayout.shadow &&
         Rd(g_rtIsScene) && !Rd(g_weaponHolstered) &&
         g_boundShaderLayout.bones >= 0 && g_boundShaderLayout.local >= 0) {
@@ -20718,9 +20718,15 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                         m.m[r][c] = chain.m[r][c];
                     }
                 }
-                const uint64_t frame = (uint64_t)Rd(g_sceneModeFrame);
                 const uint64_t now = GetTickCount64();
-                diegetichud::RecordLiveTransform(numVertices, m, frame, now);
+                const unsigned frame = (unsigned)Rd(g_sceneModeFrame);
+                diegetichud::RecordLiveTransform(numVertices, m, now, frame);
+                static long saidTfVerts = 0;
+                if (saidTfVerts != (long)numVertices) {
+                    saidTfVerts = (long)numVertices;
+                    Log("diegetic hud: captured live 3D transform for %s (%ld) at tick=%I64u frame=%u",
+                        mo->name, (long)numVertices, now, frame);
+                }
             }
         }
     }
@@ -31348,14 +31354,16 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
 
     // Live weapon transform: must be captured this frame from Hook_DrawIndexedPrim
     const uint64_t now = GetTickCount64();
-    const uint64_t frame = (uint64_t)Rd(g_sceneModeFrame);
+    const unsigned frame = (unsigned)Rd(g_sceneModeFrame);
     diegetichud::Mat4 chain{};
     if (!diegetichud::GetLiveTransform(heldVerts, now, frame, chain)) {
         static uint64_t lastStaleLog = 0;
         if (now - lastStaleLog > 3000) {
             lastStaleLog = now;
-            Log("diegetic hud: no fresh 3D transform for %s (%ld) at frame %I64u; falling back to 2D plate",
-                mo->name, heldVerts, (unsigned long long)frame);
+            Log("diegetic hud: no fresh 3D transform for %s (%ld) at frame %u (now=%I64u tf.tick=%I64u tf.valid=%ld); falling back to 2D plate",
+                mo->name, heldVerts, frame, now,
+                (unsigned __int64)diegetichud::GlobalLiveTransform().tick,
+                (long)diegetichud::GlobalLiveTransform().valid);
         }
         return;
     }
@@ -31440,22 +31448,8 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
     }
 
     g_origSetRenderTarget(dev, 0, back);
-    bool canDepth = false;
-    if (depth) {
-        D3DSURFACE_DESC dd{};
-        if (SUCCEEDED(depth->GetDesc(&dd)) && dd.Width >= d.Width && dd.Height >= d.Height) {
-            canDepth = true;
-        }
-    }
-    if (canDepth) {
-        dev->SetDepthStencilSurface(depth);
-        dev->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
-        dev->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
-        dev->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
-    } else {
-        dev->SetDepthStencilSurface(nullptr);
-        dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
-    }
+    dev->SetDepthStencilSurface(nullptr);
+    dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
 
     D3DVIEWPORT9 vp{0, 0, d.Width, d.Height, 0.0f, 1.0f};
     dev->SetViewport(&vp);
