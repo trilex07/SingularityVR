@@ -31067,6 +31067,8 @@ static bool LoadAmmoPng(IDirect3DDevice9* dev, const char* root, const char* fil
     for (UINT y = 0; y < ph; ++y)
         memcpy((BYTE*)lr.pBits + (size_t)y * lr.Pitch, src + (size_t)y * pw * 4, (size_t)pw * 4);
     tex->UnlockRect(0);
+    if (outW) *outW = pw;
+    if (outH) *outH = ph;
     *out = tex;
     return true;
 }
@@ -31494,6 +31496,9 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
         }
     }
 
+    float eyeMinX[2] = { 1e9f, 1e9f }, eyeMinY[2] = { 1e9f, 1e9f };
+    float eyeMaxX[2] = { -1e9f, -1e9f }, eyeMaxY[2] = { -1e9f, -1e9f };
+
     if (baseOk) {
         for (int eye = 0; eye < 2; ++eye) {
             float m[16];
@@ -31530,6 +31535,15 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
                     return z;
                 };
 
+                for (int k = 0; k < 4; ++k) {
+                    const float sx = SX(cl[k]);
+                    const float sy = SY(cl[k]);
+                    if (sx < eyeMinX[eye]) eyeMinX[eye] = sx;
+                    if (sx > eyeMaxX[eye]) eyeMaxX[eye] = sx;
+                    if (sy < eyeMinY[eye]) eyeMinY[eye] = sy;
+                    if (sy > eyeMaxY[eye]) eyeMaxY[eye] = sy;
+                }
+
                 const uint32_t qc = worldQuads[q].col;
                 const DWORD col = handhud::WithAlphaPct(qc, handhud::kPlateAlphaPct);
 
@@ -31544,7 +31558,10 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
                     quadsDrawnThisEye++;
                 }
             }
-            if (quadsDrawnThisEye > 0) {
+            if (quadsDrawnThisEye >= 6 &&
+                diegetichud::EyeBoundsVisible(eyeMinX[eye], eyeMinY[eye],
+                                              eyeMaxX[eye], eyeMaxY[eye],
+                                              eye, d.Width, d.Height)) {
                 drewEye |= (1 << eye);
             }
         }
@@ -31553,11 +31570,24 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
     if (mo->plate >= 0 && mo->plate <= 2)
         InterlockedExchange(&g_diegeticDrew[mo->plate], drewEye);
 
-    if (drewEye && strcmp(saidWeapon, mo->name) != 0) {
-        const char* eyes = (drewEye & 3) == 3 ? "LR" : ((drewEye & 1) ? "L" : "R");
+    if ((drewEye & 3) == 3 && strcmp(saidWeapon, mo->name) != 0) {
         snprintf(saidWeapon, sizeof(saidWeapon), "%s", mo->name);
-        Log("diegetic hud 3D: drew %s (mesh %ld) plate=%d clip=%d bin=%d quads=%d eyes=%s (backbuffer %ux%u)",
-            mo->name, heldVerts, mo->plate, clip, bin, numQuads, eyes, d.Width, d.Height);
+        Log("diegetic hud 3D: drew %s (mesh %ld) plate=%d clip=%d bin=%d quads=%d eyes=LR "
+            "bboxL=(%.0f,%.0f)-(%.0f,%.0f) bboxR=(%.0f,%.0f)-(%.0f,%.0f) (backbuffer %ux%u)",
+            mo->name, heldVerts, mo->plate, clip, bin, numQuads,
+            (double)eyeMinX[0], (double)eyeMinY[0], (double)eyeMaxX[0], (double)eyeMaxY[0],
+            (double)eyeMinX[1], (double)eyeMinY[1], (double)eyeMaxX[1], (double)eyeMaxY[1],
+            d.Width, d.Height);
+    } else if ((drewEye & 3) != 3) {
+        static uint64_t lastProjLog = 0;
+        if (now - lastProjLog > 3000) {
+            lastProjLog = now;
+            Log("diegetic hud 3D: projection out of eye bounds for %s (%ld) drewEye=%d "
+                "bboxL=(%.0f,%.0f)-(%.0f,%.0f) bboxR=(%.0f,%.0f)-(%.0f,%.0f); falling back to 2D plate",
+                mo->name, heldVerts, drewEye,
+                (double)eyeMinX[0], (double)eyeMinY[0], (double)eyeMaxX[0], (double)eyeMaxY[0],
+                (double)eyeMinX[1], (double)eyeMinY[1], (double)eyeMaxX[1], (double)eyeMaxY[1]);
+        }
     }
 
     g_diegeticState->Apply();

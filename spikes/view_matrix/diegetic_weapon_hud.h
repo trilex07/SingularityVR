@@ -189,8 +189,15 @@ inline V3 operator-(const V3& a, const V3& b) { return { a.x - b.x, a.y - b.y, a
 inline V3 operator*(const V3& a, float s) { return { a.x * s, a.y * s, a.z * s }; }
 inline V3 operator*(float s, const V3& a) { return { a.x * s, a.y * s, a.z * s }; }
 
+// Converts a point or vector from raw ActorX PSK space (PNTS0000) into
+// Singularity's native cooked GPU vertex stream space (where Y is negated:
+// native_pos = psk_pos * [1, -1, 1], proven in tools/reload/audit_next_weapon_space.py).
+inline V3 ToNativeVertexSpace(const V3& pskPt) {
+    return { pskPt.x, -pskPt.y, pskPt.z };
+}
+
 struct Quad3D {
-    V3 p[4];            // 4 corners in weapon model space (0: top-left, 1: top-right, 2: bot-right, 3: bot-left)
+    V3 p[4];            // 4 corners in native GPU weapon model space (0: top-left, 1: top-right, 2: bot-right, 3: bot-left)
     float u0 = 0.0f, v0 = 0.0f, u1 = 0.0f, v1 = 0.0f;
     uint32_t color = 0xFFFFFFFF;
 };
@@ -215,8 +222,9 @@ inline bool Finite(const Mat4& a) {
     return true;
 }
 
-// Thread-safe storage for the live captured weapon transform
+// Thread-safe storage for the live captured weapon transform (seqlock)
 struct LiveTransform {
+    volatile LONG seq = 0;
     volatile LONG valid = 0;
     long verts = 0;
     uint64_t tick = 0;
@@ -232,27 +240,73 @@ inline LiveTransform& GlobalLiveTransform() {
 inline void RecordLiveTransform(long verts, const Mat4& chain, uint64_t tick, unsigned frame) {
     if (!Finite(chain)) return;
     auto& tf = GlobalLiveTransform();
+    const LONG s0 = InterlockedIncrement(&tf.seq);
+    (void)s0;
+    MemoryBarrier();
     tf.verts = verts;
     tf.tick = tick;
     tf.frame = frame;
     tf.chain = chain;
     InterlockedExchange(&tf.valid, 1);
+    MemoryBarrier();
+    InterlockedIncrement(&tf.seq);
 }
 
-inline bool GetLiveTransform(long verts, uint64_t now, unsigned /*frame*/, Mat4& out) {
+inline bool GetLiveTransform(long verts, uint64_t now, unsigned frame, Mat4& out) {
     auto& tf = GlobalLiveTransform();
-    if (!InterlockedCompareExchange(&tf.valid, 0, 0)) return false;
-    if (tf.verts != verts) return false;
-    if (now >= tf.tick) {
-        if (now - tf.tick > 250) return false;
-    } else {
-        if (tf.tick - now > 50) return false;
+    for (int attempt = 0; attempt < 4; ++attempt) {
+        const LONG s1 = InterlockedCompareExchange(&tf.seq, 0, 0);
+        if (s1 & 1) continue; // write in progress
+        MemoryBarrier();
+        const LONG v = InterlockedCompareExchange(&tf.valid, 0, 0);
+        const long curVerts = tf.verts;
+        const uint64_t curTick = tf.tick;
+        const unsigned curFrame = tf.frame;
+        const Mat4 curChain = tf.chain;
+        MemoryBarrier();
+        const LONG s2 = InterlockedCompareExchange(&tf.seq, 0, 0);
+        if (s1 != s2) continue;
+        if (!v || curVerts != verts) return false;
+        if (frame > 0 && curFrame > 0) {
+            const unsigned diff = (frame >= curFrame) ? (frame - curFrame) : (curFrame - frame);
+            if (diff > 2) return false;
+        }
+        if (now >= curTick) {
+            if (now - curTick > 100) return false;
+        } else {
+            if (curTick - now > 50) return false;
+        }
+        if (!Finite(curChain)) return false;
+        out = curChain;
+        return true;
     }
-    out = tf.chain;
-    return true;
+    return false;
 }
 
-// Generates 3D fixture geometry in weapon model space:
+// Screen-space viewport visibility check for a projected eye half.
+// Ensures that a quad submission is only counted as visible when its projected
+// bounding box is finite, has positive pixel extent, and lies inside the eye viewport.
+inline bool EyeBoundsVisible(float minX, float minY, float maxX, float maxY,
+                             int eye, unsigned backW, unsigned backH) {
+    if (!std::isfinite(minX) || !std::isfinite(minY) ||
+        !std::isfinite(maxX) || !std::isfinite(maxY)) return false;
+    if (backW < 8 || backH < 8 || eye < 0 || eye > 1) return false;
+    const float wPx = maxX - minX;
+    const float hPx = maxY - minY;
+    if (wPx < 2.0f || hPx < 2.0f || wPx > (float)backW || hPx > (float)backH) return false;
+    const float eyeX0 = eye == 0 ? 0.0f : (float)(backW / 2);
+    const float eyeX1 = eye == 0 ? (float)(backW / 2) : (float)backW;
+    const float eyeY0 = 0.0f;
+    const float eyeY1 = (float)backH;
+    // Require intersection with the eye's viewport half
+    const float ix0 = (std::max)(minX, eyeX0);
+    const float iy0 = (std::max)(minY, eyeY0);
+    const float ix1 = (std::min)(maxX, eyeX1);
+    const float iy1 = (std::min)(maxY, eyeY1);
+    return (ix1 - ix0) >= 2.0f && (iy1 - iy0) >= 2.0f;
+}
+
+// Generates 3D fixture geometry in native GPU weapon model space:
 // - 4 Housing Box Flanks (solid gunmetal steel dropping into weapon receiver)
 // - 1 Bezel Top Face (bezel_bg rim with rivets)
 // - 1 Recessed Screen Bed (screen_bg dark phosphor CRT glass)
@@ -266,15 +320,17 @@ inline int BuildFixtureQuads3D(const WeaponMount& mo, int clip, int reserve,
     const float cos_p = std::cos(rad);
     const float sin_p = std::sin(rad);
 
-    // Orthonormal basis in weapon model space:
-    // right: local +X (across weapon)
-    // fwd: local surface axis (tilted up/forward along receiver)
-    // norm: outward surface normal (tilted up/rearward towards shooter's eyes)
-    const V3 right{ 1.0f, 0.0f, 0.0f };
-    const V3 fwd{ 0.0f, sin_p, cos_p };
-    const V3 norm{ 0.0f, cos_p, -sin_p };
+    // Orthonormal basis in ActorX PSK space (prepare_diegetic_models_v2.py):
+    //   right_psk = (1, 0, 0)
+    //   fwd_psk   = (0, sin_p, cos_p)
+    //   norm_psk  = (0, cos_p, -sin_p)
+    // Converted to native cooked GPU vertex stream space via ToNativeVertexSpace
+    // (Y negated: native_pos = psk_pos * [1, -1, 1]):
+    const V3 right = ToNativeVertexSpace({ 1.0f, 0.0f, 0.0f });
+    const V3 fwd   = ToNativeVertexSpace({ 0.0f, sin_p, cos_p });
+    const V3 norm  = ToNativeVertexSpace({ 0.0f, cos_p, -sin_p });
 
-    const V3 center{ mo.cxUU, mo.cyUU, mo.czUU };
+    const V3 center = ToNativeVertexSpace({ mo.cxUU, mo.cyUU, mo.czUU });
     const float rx = mo.wUU * 0.5f;
     const float ry = mo.hUU * 0.5f;
     const float rz = mo.dUU * 0.5f;
@@ -284,17 +340,20 @@ inline int BuildFixtureQuads3D(const WeaponMount& mo, int clip, int reserve,
     const V3 f = fwd * rz;
 
     // 8 corners of the 3D housing box
-    // Top corners (+u outward)
-    const V3 p0 = center - r - f + u; // top front-left
-    const V3 p1 = center + r - f + u; // top front-right
-    const V3 p2 = center + r + f + u; // top back-right
-    const V3 p3 = center - r + f + u; // top back-left
+    // Top corners (+u outward towards shooter)
+    // Note: p0..p1 is +right, p3..p0 is -fwd (down the screen), p0..p3 is +fwd (up the screen).
+    // For top-left (u0,v0) -> top-right (u1,v0) -> bot-right (u1,v1) -> bot-left (u0,v1),
+    // top of display is +f (p3, p2) and bottom of display is -f (p0, p1).
+    const V3 p0 = center - r - f + u; // bot-left on display (+u)
+    const V3 p1 = center + r - f + u; // bot-right on display (+u)
+    const V3 p2 = center + r + f + u; // top-right on display (+u)
+    const V3 p3 = center - r + f + u; // top-left on display (+u)
 
     // Bottom corners (-u into receiver)
-    const V3 p4 = center - r - f - u; // bot front-left
-    const V3 p5 = center + r - f - u; // bot front-right
-    const V3 p6 = center + r + f - u; // bot back-right
-    const V3 p7 = center - r + f - u; // bot back-left
+    const V3 p4 = center - r - f - u; // bot-left base (-u)
+    const V3 p5 = center + r - f - u; // bot-right base (-u)
+    const V3 p6 = center + r + f - u; // top-right base (-u)
+    const V3 p7 = center - r + f - u; // top-left base (-u)
 
     int n = 0;
 
@@ -309,14 +368,14 @@ inline int BuildFixtureQuads3D(const WeaponMount& mo, int clip, int reserve,
     out[n++] = Quad3D{ { p3, p0, p4, p7 }, f_u0, f_v0, f_u1, f_v1, flankCol };
     out[n++] = Quad3D{ { p1, p2, p6, p5 }, f_u0, f_v0, f_u1, f_v1, flankCol };
 
-    // 2. Bezel Top Face (chamfered rim + rivets)
+    // 2. Bezel Top Face (chamfered rim + rivets): top-left p3, top-right p2, bot-right p1, bot-left p0
     const Cell bz = BezelBg();
     const float b_u0 = bz.x / AtlasW(), b_v0 = bz.y / AtlasH();
     const float b_u1 = (bz.x + bz.w) / AtlasW(), b_v1 = (bz.y + bz.h) / AtlasH();
-    out[n++] = Quad3D{ { p0, p1, p2, p3 }, b_u0, b_v0, b_u1, b_v1, 0xFFFFFFFF };
+    out[n++] = Quad3D{ { p3, p2, p1, p0 }, b_u0, b_v0, b_u1, b_v1, 0xFFFFFFFF };
 
     // 3. Recessed Cathode Display Bed
-    // Sits slightly proud of bezel base to prevent depth fighting
+    // Sits slightly proud of bezel top to prevent depth fighting
     const V3 dispCenter = center + u + norm * 0.005f;
     const float sw = mo.wUU * 0.82f;
     const float sh = mo.dUU * 0.78f;
@@ -327,11 +386,11 @@ inline int BuildFixtureQuads3D(const WeaponMount& mo, int clip, int reserve,
     const float s_u0 = sc.x / AtlasW(), s_v0 = sc.y / AtlasH();
     const float s_u1 = (sc.x + sc.w) / AtlasW(), s_v1 = (sc.y + sc.h) / AtlasH();
 
-    const V3 s0 = dispCenter - sr - sf;
-    const V3 s1 = dispCenter + sr - sf;
-    const V3 s2 = dispCenter + sr + sf;
-    const V3 s3 = dispCenter - sr + sf;
-    out[n++] = Quad3D{ { s0, s1, s2, s3 }, s_u0, s_v0, s_u1, s_v1, 0xFFFFFFFF };
+    const V3 s_tl = dispCenter - sr + sf; // top-left (+sf)
+    const V3 s_tr = dispCenter + sr + sf; // top-right (+sf)
+    const V3 s_br = dispCenter + sr - sf; // bot-right (-sf)
+    const V3 s_bl = dispCenter - sr - sf; // bot-left (-sf)
+    out[n++] = Quad3D{ { s_tl, s_tr, s_br, s_bl }, s_u0, s_v0, s_u1, s_v1, 0xFFFFFFFF };
 
     if (clip < 0 || reserve < 0) return n; // unknown -> housing & screen only
 
@@ -360,8 +419,9 @@ inline int BuildFixtureQuads3D(const WeaponMount& mo, int clip, int reserve,
         const float v0 = c.y / AtlasH();
         const float u1 = (c.x + c.w) / AtlasW();
         const float v1 = (c.y + c.h) / AtlasH();
+        // Top of glyph is +qf (v0), bottom of glyph is -qf (v1)
         out[n++] = Quad3D{
-            { qc - qr - qf, qc + qr - qf, qc + qr + qf, qc - qr + qf },
+            { qc - qr + qf, qc + qr + qf, qc + qr - qf, qc - qr - qf },
             u0, v0, u1, v1, 0xFFFFFFFF
         };
     };
