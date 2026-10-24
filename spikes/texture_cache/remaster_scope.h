@@ -1,6 +1,22 @@
 #pragma once
 #include <cstring>
 namespace remasterscope {
+// First physical A/B is limited to these four true-mip0 first-person maps.
+// Keep the accepted base override path unchanged when this experiment is OFF.
+inline bool PriorityMaterial(const char* name){
+    return name && (!std::strcmp(name,"AR_shotgun_d") ||
+        !std::strcmp(name,"AR_shotgun_n") ||
+        !std::strcmp(name,"inview_glove_d") ||
+        !std::strcmp(name,"inview_glove_n"));
+}
+enum class PriorityMode { Off=0, LogOnly=1, Apply=2 };
+inline PriorityMode ParsePriorityMode(int value){
+    return value==1?PriorityMode::LogOnly:value==2?PriorityMode::Apply:PriorityMode::Off;
+}
+inline bool UseRemaster(bool priority,bool inRemasterScope,bool oldApply,PriorityMode mode){
+    if(priority && mode==PriorityMode::LogOnly)return false;
+    return (priority && mode==PriorityMode::Apply) || (inRemasterScope && oldApply);
+}
 inline bool IsAddedBlood(const char* name){
     return name && (!std::strcmp(name,"bsplat_decal_d") || !std::strcmp(name,"t_blood_splat02_d"));
 }

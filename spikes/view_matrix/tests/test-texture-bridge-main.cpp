@@ -18,6 +18,7 @@ int main(){
     IDirect3DDevice9Ex* dev=nullptr;if(FAILED(api->CreateDeviceEx(0,D3DDEVTYPE_HAL,window,D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,nullptr,&dev)))return 1;
     g_deviceIsEx=true;g_gameDev=dev;
     g_origCreateTexture=reinterpret_cast<PFN_CreateTexture>(PatchVTable(dev,23,reinterpret_cast<void*>(&Hook_CreateTexture)));
+    g_origUpdateTexture=reinterpret_cast<PFN_UpdateTexture>(PatchVTable(dev,31,reinterpret_cast<void*>(&Hook_UpdateTexture)));
     g_origSetTexture=reinterpret_cast<PFN_SetTexture>(PatchVTable(dev,65,reinterpret_cast<void*>(&Hook_SetTexture)));
     g_textureBridgeBind=&SingularityTextureBridgeV1;
     IDirect3DTexture9* source=nullptr;Check(SUCCEEDED(dev->CreateTexture(4,4,1,0,D3DFMT_DXT1,D3DPOOL_MANAGED,&source,nullptr)),"actual MAIN translated source creation");if(!source)return 1;
@@ -33,6 +34,17 @@ int main(){
     IDirect3DBaseTexture9* bound=nullptr;dev->GetTexture(1,&bound);Check(bound==replacement&&shadowtrace::bound.tex[1]==source,"driver gets replacement; MAIN trace retains ORIGINAL identity");if(bound)bound->Release();dev->SetTexture(1,nullptr);
     Check(SUCCEEDED(source->LockRect(0,&lr,nullptr,0)),"source write still lockable");memcpy(lr.pBits,green,8);source->UnlockRect(0);
     Check(!FixtureHasReplacement(source),"actual MAIN write invalidates positive decision");
+    Check(FixtureStore(source,replacement),"restamp before direct engine UpdateTexture");
+    IDirect3DTexture9* upload=nullptr;
+    Check(SUCCEEDED(dev->CreateTexture(4,4,1,0,D3DFMT_DXT1,D3DPOOL_SYSTEMMEM,&upload,nullptr)),
+        "external SYSTEMMEM upload allocated");
+    if(upload){
+        Check(SUCCEEDED(upload->LockRect(0,&lr,nullptr,0)),"external upload lock");
+        memcpy(lr.pBits,green,8);upload->UnlockRect(0);
+        Check(SUCCEEDED(dev->UpdateTexture(upload,source)),"external UpdateTexture reaches MAIN hook");
+        Check(!FixtureHasReplacement(source),"external UpdateTexture invalidates cached replacement");
+        upload->Release();
+    }
     Check(SUCCEEDED(dev->ResetEx(&pp,nullptr)),"Ex reset with actual MAIN-translated source");
     Check(FixtureHash(source,&found)&&found==expected,"source shadow/read-only hashing retained after reset");
     Check(source->Release()==0,"original not pinned; MAIN shadow teardown");

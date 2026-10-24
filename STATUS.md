@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+## 2026-10-24 — SIDE first-four material remaster bridge (L2_PASS; physical gate open)
+
+On `feature/side-material-remaster-d3d9ex`, a separate, default-OFF
+`priority_material_mode` selects four verified shotgun/glove diffuse+normal
+maps for log-only or isolated apply. The accepted slot-65 single-owner bridge,
+D3D9Ex shadow hashing and pool-aware factory are preserved; direct engine
+`UpdateTexture` now invalidates stale resource-owned decisions. x86 `/O2`,
+native D3D9/D3D9Ex pixel/alpha/Reset fixtures and the combined MAIN→injector
+fixture PASS. Four private DDS are hash/mip-verified outside Git. No Steam
+deployment or PSVR2 check. See
+`docs/handoffs/side-material-remaster-d3d9ex-20261024.md`.
+
 ## 2026-10-24 — COMBINED M02-P2 + M09 session armed (`E304F225…` dll @ `d104a33`, all three last fixtures, ready for the single PSVR2 session)
 
 - Branch `integration/m02-m09-combined-20261024` = accepted M02 source
