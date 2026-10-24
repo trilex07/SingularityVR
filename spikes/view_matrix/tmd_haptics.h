@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <cstring>
 
 // TMD power haptics: pure, allocation-free policy.
 //
@@ -12,7 +13,7 @@
 // short pulses (<= 120 ms) triggered ONLY on confirmed native power acceptance.
 namespace tmdhaptics {
 
-enum class Power : std::uint8_t { None, Impulse, Age, AntiGrav, Deadlock, Heal, Shield, Teleport };
+enum class Power : std::uint8_t { None, Impulse, Age, AntiGrav, Deadlock, Heal, Shield, Teleport, Generic };
 enum class Level : std::uint8_t { Low = 0, Normal = 1, Strong = 2 };
 
 struct Config {
@@ -35,6 +36,26 @@ struct Profile {
     std::uint32_t startMs;  // duration in ms (bounded <= 120 ms)
 };
 
+inline Power ClassifyExactName(const char* name) {
+    if (!name || !name[0]) return Power::None;
+    struct Entry { const char* name; Power power; };
+    static const Entry names[] = {
+        {"RvTMDPower_Impulse", Power::Impulse}, {"RvTMDPower_Age", Power::Age},
+        {"RvTMDPower_AntiGrav", Power::AntiGrav}, {"RvTMDPower_Deadlock", Power::Deadlock},
+        {"RvTMDPower_Heal", Power::Heal}, {"RvTMDPower_Shield", Power::Shield},
+        {"RvTMDPower_Teleport", Power::Teleport}
+    };
+    for (const auto& e : names) if (std::strcmp(name, e.name) == 0) return e.power;
+    return Power::None;
+}
+
+// The native hook has already returned from the real method. Unknown class
+// names are allowed only for a readable receiver AND a positively owned TMD.
+inline Power SelectLocalPower(Power classified, bool readableReceiver, bool confirmedLocal) {
+    if (!readableReceiver || !confirmedLocal) return Power::None;
+    return classified == Power::None ? Power::Generic : classified;
+}
+
 // Verified conservative short pulses. Every amplitude <= 0.80 and duration <= 100 ms.
 // No speculative continuous sustain vibration.
 inline Profile ProfileFor(Power p) {
@@ -46,6 +67,7 @@ inline Profile ProfileFor(Power p) {
     case Power::Deadlock: return { 0.55f, 80 };  // distinct deadlock launch
     case Power::Heal:     return { 0.45f, 70 };  // subtle heal pulse
     case Power::Shield:   return { 0.50f, 70 };  // medium shield pulse
+    case Power::Generic:  return { 0.40f, 70 };  // local-only fallback; no sustained rumble
     case Power::None:     break;
     }
     return { 0.0f, 0 };

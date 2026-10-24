@@ -92,6 +92,36 @@ struct MockInstaller {
 };
 
 int main() {
+    // Session-B correction: direct class identity and local-only Generic path.
+    assert(ClassifyExactName("RvTMDPower_Impulse") == Power::Impulse);
+    assert(ClassifyExactName("RvTMDPower_Age") == Power::Age);
+    assert(ClassifyExactName("RvTMDPower_AntiGrav") == Power::AntiGrav);
+    assert(ClassifyExactName("RvTMDPower_Deadlock") == Power::Deadlock);
+    assert(ClassifyExactName("RvTMDPower_Heal") == Power::Heal);
+    assert(ClassifyExactName("RvTMDPower_Shield") == Power::Shield);
+    assert(ClassifyExactName("RvTMDPower_Teleport") == Power::Teleport);
+    assert(ClassifyExactName("UnknownPower") == Power::None);
+    assert(ClassifyExactName(nullptr) == Power::None);
+    assert(SelectLocalPower(Power::Impulse,true,true) == Power::Impulse);
+    assert(SelectLocalPower(Power::None,true,true) == Power::Generic);
+    assert(SelectLocalPower(Power::None,true,false) == Power::None); // foreign TMD
+    assert(SelectLocalPower(Power::Impulse,true,false) == Power::None);
+    assert(SelectLocalPower(Power::None,false,true) == Power::None); // null/invalid receiver
+    assert(SelectLocalPower(Power::Impulse,false,true) == Power::None);
+    {
+        Engine e;Config c=On();
+        assert(!e.OnStart(Power::Generic,false,c,900)); // native activation rejected
+        assert(e.OnStart(SelectLocalPower(Power::None,true,true),true,c,1000));
+        assert(Near(e.Amplitude(c,true,1001),0.40f));
+        assert(!e.OnStop(Power::Generic,c,1002));
+        assert(Near(e.Amplitude(c,true,1070),0.0f));
+        assert(e.OnStart(Power::Generic,true,c,1100));
+        assert(Near(e.Amplitude(c,false,1101),0.0f)); // pause/menu/unfocused clears
+        assert(Near(e.Amplitude(c,true,1102),0.0f));  // no delayed replay
+        c.tmd=false;
+        assert(!e.OnStart(Power::Generic,true,c,2000));
+        assert(Near(e.Amplitude(c,true,2001),0.0f));
+    }
     // 1. Rejected start (ret != 0: energy, cooldown, or invalid target) never pulses.
     {
         Engine e;
@@ -176,8 +206,8 @@ int main() {
         assert(Near(Merge(0.80f, 0.80f, true, c), 0.0f));
     }
 
-    // 9. All 7 profiles verified: all short (<= 100 ms), bounded (<= 0.80), no sustain.
-    for (int i = 1; i <= 7; ++i) {
+    // 9. All 8 profiles verified: all short (<= 100 ms), bounded (<= 0.80), no sustain.
+    for (int i = 1; i <= 8; ++i) {
         const Profile p = ProfileFor((Power)i);
         assert(p.startAmp > 0.0f && p.startAmp <= 0.80f);
         assert(p.startMs > 0 && p.startMs <= 100);
@@ -296,6 +326,6 @@ int main() {
         assert(MockHook::removeCalls == 2);
     }
 
-    std::puts("test-tmd-haptics: all 14 tests (policy, profiles, concurrency, hook safety) PASS");
+    std::puts("test-tmd-haptics: classification plus 14 baseline groups PASS");
     return 0;
 }

@@ -46,14 +46,22 @@ static volatile LONG cachedAmpMilli = 0;
 static volatile LONG hooksReady = 0;
 static volatile LONG installAttempts = 0;
 
-static tmdhaptics::Power Classify(uintptr_t power, char* outName, size_t outNameCap) {
+static tmdhaptics::Power Classify(uintptr_t power, char* outName, size_t outNameCap,
+                                  bool& readable, bool& live, uintptr_t& cls) {
     using namespace NativeOwnedInventory;
     using tmdhaptics::Power;
     if (outName && outNameCap) outName[0] = '\0';
-    if (!power || !IsLive(power)) return Power::None;
-    const auto cls = P(power + OBJ_CLASS);
-    if (!cls) return Power::None;
+    readable = power && Readable((const void*)power, 0x40);
+    live = readable && IsLive(power);
+    cls = readable ? P(power + OBJ_CLASS) : 0;
+    if (!readable || !cls || !Readable((const void*)cls, 0x40)) return Power::None;
     if (outName && outNameCap) NameOf(cls, outName, outNameCap);
+
+    // A native power receiver can be a TMD-owned subobject whose Outer chain
+    // does not satisfy IsLive's PersistentLevel heuristic. Its direct class
+    // identity is still available even before superclass reflection resolves.
+    const auto direct = tmdhaptics::ClassifyExactName(outName);
+    if (direct != Power::None) return direct;
 
     static const struct { const char* name; Power p; } kMap[] = {
         { "RvTMDPower_Impulse",  Power::Impulse },
@@ -73,8 +81,8 @@ static tmdhaptics::Power Classify(uintptr_t power, char* outName, size_t outName
 }
 
 static const char* Name(tmdhaptics::Power p) {
-    static const char* n[] = { "None", "Impulse", "Age", "AntiGrav", "Deadlock", "Heal", "Shield", "Teleport" };
-    return n[(unsigned)p < 8 ? (unsigned)p : 0];
+    static const char* n[] = { "None", "Impulse", "Age", "AntiGrav", "Deadlock", "Heal", "Shield", "Teleport", "Generic" };
+    return n[(unsigned)p < 9 ? (unsigned)p : 0];
 }
 
 static bool IsLocal(uintptr_t tmd) {
@@ -114,25 +122,22 @@ static void Note(void* self, void* tmd, unsigned raw, bool start) {
     if (!InterlockedCompareExchange(&hooksReady, 0, 0)) return;
     __try {
         char clsName[96]{};
-        const auto power = Classify((uintptr_t)self, clsName, sizeof(clsName));
-        if (power == tmdhaptics::Power::None) {
-            static unsigned unclassified = 0;
-            if (unclassified < 8) {
-                ++unclassified;
-                Log("TMD haptics: unclassified power object=%08X class=%s [ignored]", (unsigned)(uintptr_t)self, clsName);
-            }
-            return;
+        bool readable=false, live=false;
+        uintptr_t cls=0;
+        const auto classified=Classify((uintptr_t)self, clsName, sizeof(clsName),
+                                        readable, live, cls);
+        const bool local=IsLocal((uintptr_t)tmd);
+        const auto power=tmdhaptics::SelectLocalPower(classified, readable, local);
+        static unsigned identityReceipts=0;
+        if(identityReceipts<24){
+            ++identityReceipts;
+            Log("[Haptics Trace] TMD CLASSIFY [%u/24]: event=%s object=%08X readable=%d live=%d classPtr=%08X class=%s tmd=%08X local=%d classified=%s decision=%s",
+                identityReceipts,start?"start":"stop",(unsigned)(uintptr_t)self,
+                readable?1:0,live?1:0,(unsigned)cls,clsName,(unsigned)(uintptr_t)tmd,
+                local?1:0,Name(classified),Name(power));
         }
-        if (!IsLocal((uintptr_t)tmd)) {
-            static unsigned nonLocalReceipts = 0;
-            if (nonLocalReceipts < 8) {
-                ++nonLocalReceipts;
-                Log("[Haptics Trace] TMD NON-LOCAL: power=%s tmd=%08X owner=%08X localPawn=%08X [ignored]",
-                    Name(power), (unsigned)(uintptr_t)tmd,
-                    (unsigned)NativeOwnedInventory::P((uintptr_t)tmd + 0x98),
-                    (unsigned)g_playerPawn);
-            }
-            return; // AI or foreign TMD
+        if (power == tmdhaptics::Power::None) {
+            return;
         }
 
         // Proven return semantics: ret == 0 is successful activation (energy & cooldown clear)

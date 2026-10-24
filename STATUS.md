@@ -118,6 +118,9 @@
   (`UiRemasterWheel=1`), one graded PSVR2 gate each, per the SOL P1/P2
   MAIN-gate scripts. M09 repairs, insertion comfort `54bd946`, diegetic HUD
   and other SIDE items are NOT part of this chain.
+## 2026-10-24 — SIDE M09 classification correction: L2_PASS, physical acceptance pending
+
+`fix/side-m09-tmd-power-classification` corrects the class-resolution gate and adds a local-owner-only Generic pulse fallback. Native haptics, D3D9/D3D9Ex, TMD/reload/WeaponLocker regressions and PE32 x86 `/O2` build passed offline. The Session B physical failure below remains the last headset result; the corrected DLL has not been deployed or physically tested. See `docs/handoffs/m09-tmd-classification-fix.md`.
 
 ## 2026-10-24 — M09 Session B PHYSICAL FAIL (advanced TMD pulses); root cause bounded to classification; rolled back to Session A state
 
