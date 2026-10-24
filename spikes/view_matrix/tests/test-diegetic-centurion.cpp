@@ -89,6 +89,36 @@ int main() {
     cx = 1999.0f; ClampCentre(cx, 200.0f, 2000.0f); CHECK(Near(cx, 1899.0f, 1e-3f));
     cx = std::nanf(""); ClampCentre(cx, 200.0f, 2000.0f); CHECK(Near(cx, 1000.0f, 1e-3f));
 
+    // 11. Per-weapon mounts (measured fixture frames; verts ids = gun catalog).
+    const WeaponMount* mc = MountForVerts(5799);
+    const WeaponMount* mv = MountForVerts(11387);
+    const WeaponMount* ms = MountForVerts(8297);
+    CHECK(mc && mv && ms && !MountForVerts(4818) && !MountForVerts(11389));
+    CHECK(mv->wUU == 2.8f && mv->hUU == 0.45f && mv->dUU == 1.9f && mv->pitchDeg == 20.0f);
+    CHECK(Near(ms->cyUU, 116.8f, 0) && ms->pitchDeg == 15.0f);
+    CHECK(Near(MountAnchorLiftM(*mc), 0.0f, 1e-5f));      // calibrated baseline
+    CHECK(Near(MountAnchorLiftM(*ms), (116.8f - 115.3f) * 0.0254f, 1e-6f));
+    CHECK(Near(MountAnchorLiftM(*mv), (117.2f - 115.3f) * 0.0254f, 1e-6f));
+
+    // 12. Valkyrie readout '30/120' (reserve padded to 3 digits).
+    Quad vq[16]{}; CHECK(LayoutCounter(30, 120, 0, 0, 200, 100, vq, 16, mv->resPad) == 7);
+    CHECK(sameCell(vq[1], Digit(false, 3)));
+    CHECK(sameCell(vq[2], Digit(false, 0)));
+    CHECK(sameCell(vq[3], Slash()));
+    CHECK(sameCell(vq[4], Digit(false, 1)));
+    CHECK(sameCell(vq[5], Digit(false, 2)));
+    CHECK(sameCell(vq[6], Digit(false, 0)));
+
+    // 13. Spikeshot readout '08/32'.
+    Quad sq[16]{}; CHECK(LayoutCounter(8, 32, 0, 0, 200, 100, sq, 16, ms->resPad) == 6);
+    CHECK(sameCell(sq[1], Digit(false, 0)));
+    CHECK(sameCell(sq[2], Digit(false, 8)));
+    CHECK(sq[4].y0 < sq[4].y1 && sameCell(sq[5], Digit(false, 2)));
+
+    // 14. Weapon-scaled world-anchored width (2.8 UU housing for valk/spike).
+    CHECK(Near(PanelWidthPx(600.0f, 1080.0f, 2.8f), 2.8f * 0.0254f * 600.0f * 3.0f, 1e-3f));
+    CHECK(Near(PanelWidthPx(600.0f, 1080.0f, 2.6f), 0.06604f * 600.0f * 3.0f, 1e-3f));
+
     printf(g_fail ? "test-diegetic-centurion: %d FAIL\n" : "test-diegetic-centurion: all L1 checks PASS\n", g_fail);
     return g_fail ? 1 : 0;
 }

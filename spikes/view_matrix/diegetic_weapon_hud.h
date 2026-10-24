@@ -33,9 +33,45 @@ inline constexpr float kUUMetres = 0.0254f;   // UE unit scale (evidence above)
 inline constexpr float kHousingWUU = 2.6f;    // measured Centurion fixture
 inline constexpr float kHousingHUU = 0.45f;
 inline constexpr float kMountPitchDeg = 18.0f;
+// Measured Centurion fixture Y (the "on top of the receiver" baseline the
+// hand-anchor offset was calibrated against in the first candidate).
+inline constexpr float kBaselineYUU = 115.3f;
 
 inline float HousingWidthMetres() { return kHousingWUU * kUUMetres; }  // 0.06604
 inline float HousingHeightMetres() { return kHousingHUU * kUUMetres; } // 0.01143
+
+// Per-weapon mounts from the measured fixture builders
+// (side/diegetic-hud-native @ ff29efd, tools/hud/prepare_diegetic_models_v2.py
+// run configs + builders; verts ids are the proven first-person gun mesh
+// catalog used by ammo_layout.h). The atlas cells are shared; each weapon
+// differs by mount frame, physical housing width and the readout layout.
+struct WeaponMount {
+    const char* name;
+    long verts;          // first-person gun mesh catalog id (evidence)
+    float cyUU;          // fixture centre height (top-strap line)
+    float wUU, hUU, dUU; // housing box in UU (2:1 screen panel aspect)
+    float pitchDeg;
+    int clipPad;         // zero-padded clip glyph count ('06','30','08')
+    int resPad;          // zero-padded reserve width ('24','120','32')
+};
+// Measured values (do not invent a second source):
+//  Centurion: ch_inview_pistol_mesh.psk   (0.0,115.3,43.5) size(2.6,0.45,1.8) pitch 18 '06/24'
+//  Valkyrie : ch_inview_machinegun_mesh.psk (0.0,117.2,35.0) size(2.8,0.45,1.9) pitch 20 '30/120'
+//  Spikeshot: ch_inview_shotgun_mesh.psk  (0.0,116.8,42.0) size(2.8,0.45,1.9) pitch 15 '08/32'
+inline const WeaponMount* MountForVerts(long v) {
+    static const WeaponMount kMounts[] = {
+        { "centurion", 5799, 115.3f, 2.6f, 0.45f, 1.8f, 18.0f, 2, 2 },
+        { "valkyrie", 11387, 117.2f, 2.8f, 0.45f, 1.9f, 20.0f, 2, 3 },
+        { "spikeshot", 8297, 116.8f, 2.8f, 0.45f, 1.9f, 15.0f, 2, 2 },
+    };
+    for (const auto& m : kMounts) if (m.verts == v) return &m;
+    return nullptr; // TMD / seeker / unknown: no diegetic counter
+}
+// Hand-anchor lift above the calibrated 0.03 m baseline: the per-weapon
+// fixture centre difference to the Centurion baseline, converted to metres.
+inline float MountAnchorLiftM(const WeaponMount& m) {
+    return (m.cyUU - kBaselineYUU) * kUUMetres;
+}
 
 // Atlas cells in px of diegetic_hud_atlas.png (1024x512; source JSON).
 struct Cell { float x, y, w, h; };
@@ -69,14 +105,18 @@ inline bool PanelVisible(bool flagOn, bool artReady, bool centurionInHands,
 // World-anchored width from the per-eye px-per-metre probe (same evidence
 // shape as ammoplates::EyePlateWidth). Probe failure returns 0; the caller
 // then uses its own bounded fallback instead of inheriting the other eye.
-inline float PanelWidthPx(float pxPerMetre, float renderHeight) {
+inline float PanelWidthPx(float pxPerMetre, float renderHeight, float housingWUU) {
     if (!std::isfinite(pxPerMetre) || !(pxPerMetre > 1.0f)) return 0.0f;
     if (!(renderHeight >= 64.0f)) return 0.0f;
     const float maximum = renderHeight * 0.12f;
-    const float width = HousingWidthMetres() * pxPerMetre * 3.0f; // legible pin
+    const float width = housingWUU * kUUMetres * pxPerMetre * 3.0f; // legible pin
     if (width <= 26.0f) return 26.0f;
     if (width >= maximum) return maximum;
     return width;
+}
+// Centurion-sized overload retained for L1 fixtures.
+inline float PanelWidthPx(float pxPerMetre, float renderHeight) {
+    return PanelWidthPx(pxPerMetre, renderHeight, kHousingWUU);
 }
 
 struct Quad { float x0, y0, x1, y1, u0, v0, u1, v1; };
@@ -86,12 +126,14 @@ inline int Power10(int p) { int v = 1; while (p-- > 0) v *= 10; return v; }
 // Compose the counter at centre (cx,cy) with panel pixel size (w x h):
 // quad 0 = screen_bg panel; then nc clip glyphs, one slash, nr reserve glyphs
 // centred in the band (band = 52% of panel height; glyph aspect from cells).
-// Clip is zero-padded to 2 ('06'); reserve to 2 or 3 ('24', '120'). Low mag
-// switches clip glyphs to the amber row. Unknown values (negative) draw the
-// panel without digits so the runtime can hide instead of presenting garbage.
-// Returns the number of quads written (<= maxQuads); 0 only on invalid input.
+// Clip is zero-padded to 2 ('06','30','08'); reserve is zero-padded to
+// resPad digits ('24','120','32'), growing beyond resPad only if needed.
+// Low mag (clip <= 2) switches clip glyphs to the amber row. Unknown values
+// (negative) draw the panel without digits so the runtime can hide instead
+// of presenting garbage. Returns the number of quads written (<= maxQuads);
+// 0 only on invalid input.
 inline int LayoutCounter(int clip, int reserve, float cx, float cy, float w,
-    float h, Quad* out, int maxQuads) {
+    float h, Quad* out, int maxQuads, int resPad = 2) {
     if (!out || maxQuads <= 0) return 0;
     if (!(w >= 8.0f) || !(h >= 4.0f)) return 0;
     const Cell sc = ScreenBg();
@@ -108,7 +150,7 @@ inline int LayoutCounter(int clip, int reserve, float cx, float cy, float w,
     const float gap = 0.05f * w;
     auto countDigits = [](int v) { int n = 1; while (v >= 10) { v /= 10; ++n; } return n; };
     const int nc = countDigits(clip) < 2 ? 2 : countDigits(clip);
-    const int nr = countDigits(reserve) < 2 ? 2 : countDigits(reserve);
+    const int nr = countDigits(reserve) < resPad ? resPad : countDigits(reserve);
     const float total = nc * glyphW + gap + slashW + gap + nr * glyphW;
     float adv = cx - total * 0.5f;
     int n = 1;

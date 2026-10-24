@@ -31056,9 +31056,10 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
     const int plate = ammoplates::PlateForGunVerts(heldVerts);
     if (plate < 0 || plate > 3 || !g_ammoPlateTex[plate] || !g_ammoDigitsTex) return;
-    // The diegetic counter owns the Centurion readout while enabled and ready;
-    // turning its gate OFF restores this verbatim plate (independent rollback).
-    if (plate == 0 && Rd(g_diegeticHud) != 0 &&
+    // The diegetic counters own these readouts while enabled and ready
+    // (Centurion 0 / Valkyrie 1 / Spikeshot 2); turning the gate OFF restores
+    // these verbatim plates (independent rollback).
+    if (plate >= 0 && plate <= 2 && Rd(g_diegeticHud) != 0 &&
         InterlockedCompareExchange(&g_diegeticArtState, 0, 0) == 1) return;
     // HUD sampler: offsets BY NAME per HUD class (round-9 probe verdict).
     const uintptr_t hud = FindHudObject();
@@ -31246,7 +31247,7 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     if (old) old->Release(); if (depth) depth->Release(); back->Release();
 }
 
-// ---- Diegetic weapon HUD (milestone 1: Centurion '06/24' counter) ----
+// ---- Diegetic weapon HUD (milestone 2: centurion + valkyrie + spikeshot) ----
 // [Render] DiegeticWeaponHud, default OFF. Same verified pipeline as the ammo
 // plate: aim-hand anchor, per-eye projection, world-anchored px-per-metre
 // sizing, live native HUD ammo sampler, own state block, full state restore.
@@ -31259,7 +31260,10 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
     const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
         !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
     const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
-    if (heldVerts != 5799) return; // Centurion first-person mesh (ammo_layout)
+    // Per-weapon diegetic mount (measured fixture frames): Centurion 5799,
+    // Valkyrie AR9 11387, Spikeshot 8297 (ammo_layout catalog evidence).
+    const diegetichud::WeaponMount* mo = diegetichud::MountForVerts(heldVerts);
+    if (!mo) return; // no mount for the held weapon (TMD / seeker / unknown)
     if (!handhud::Visible(Rd(g_diegeticHud) != 0, VrModeOn(), Rd(g_dupDraws) != 0,
                           hudGameplay, Rd(g_gamePaused) != 0, Rd(g_vrUiMenu) != 0,
                           Rd(g_panelOpen) != 0, Rd(g_inCinematic) != 0) ||
@@ -31309,7 +31313,8 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
         bin = *reinterpret_cast<const int32_t*>(hud + g_ammoOffBin);
     }
     if (clip < 0 || bin < 0) return; // unknown -> hidden (never guessed)
-    const uipointer::V hand{ g_handLastPos[AimHand()].x, g_handLastPos[AimHand()].y + 0.03f,
+    const uipointer::V hand{ g_handLastPos[AimHand()].x,
+                             g_handLastPos[AimHand()].y + (0.03f + diegetichud::MountAnchorLiftM(*mo)),
                              g_handLastPos[AimHand()].z };
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
@@ -31366,14 +31371,14 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
                 pxM = 2.0f * sqrtf(du * du + dv * dv);
             }
         }
-        float w = diegetichud::PanelWidthPx(pxM, (float)d.Height);
+        float w = diegetichud::PanelWidthPx(pxM, (float)d.Height, mo->wUU);
         if (w <= 0.0f) w = std::max(40.0f, d.Height * 0.062f); // probe failed
         const float h = w * 0.5f; // screen_bg cell is 2:1
         float cx = (eye + p.u) * d.Width * 0.5f;
         diegetichud::ClampCentre(cx, w, (float)d.Width);
         const float cy = p.v * d.Height;
         diegetichud::Quad q[16];
-        const int n = diegetichud::LayoutCounter(clip, bin, cx, cy, w, h, q, 16);
+        const int n = diegetichud::LayoutCounter(clip, bin, cx, cy, w, h, q, 16, mo->resPad);
         if (n <= 0) continue;
         dev->SetTexture(0, g_diegeticAtlas);
         for (int i = 0; i < n; ++i) {
@@ -31387,8 +31392,8 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
         }
         if (!saidDrew) {
             saidDrew = true;
-            Log("diegetic hud: drew centurion clip=%d bin=%d panel %.0fx%.0f at %.0f,%.0f (backbuffer %ux%u)",
-                clip, bin, (double)w, (double)h, (double)cx, (double)cy, d.Width, d.Height);
+            Log("diegetic hud: drew %s clip=%d bin=%d panel %.0fx%.0f at %.0f,%.0f (backbuffer %ux%u)",
+                mo->name, clip, bin, (double)w, (double)h, (double)cx, (double)cy, d.Width, d.Height);
         }
     }
     g_diegeticState->Apply();
@@ -36017,7 +36022,7 @@ void LoadIniSettings() {
     Log("ammo plate: %s (ammo root %s)", Rd(g_ammoPlate) ? "ENABLED" : "off", g_ammoAssetRoot);
     InterlockedExchange(&g_diegeticHud,
         GetPrivateProfileIntA("Render", "DiegeticWeaponHud", 0, path) ? 1 : 0);
-    Log("diegetic hud: %s (Centurion counter, default off, atlas vr-assets/hud/diegetic)",
+    Log("diegetic hud: %s (weapon counters centurion/valkyrie/spikeshot, default off, atlas vr-assets/hud/diegetic)",
         Rd(g_diegeticHud) ? "ENABLED" : "off");
     Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld, scene trace=%ld",
         Rd(g_wristHealth),Rd(g_renderEvidence),Rd(g_sceneModeTrace));
