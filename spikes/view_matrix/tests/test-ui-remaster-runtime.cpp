@@ -4,6 +4,11 @@
 #include <cassert>
 #include <cstdio>
 int main(){
+    for(int flags=0;flags<8;++flags){
+        const bool p0=(flags&1)!=0,p1=(flags&2)!=0,p2=(flags&4)!=0;
+        assert(uiremaster::SettingsEnabled(p0,p1)==(p0&&p1));
+        assert(uiremaster::WheelEnabled(p2)==p2);
+    }
     for(bool stereo:{false,true}){
         const auto l=settingspanel::Make(5264,2684,stereo,12,30,34);
         const int eyes=stereo?2:1;
@@ -41,6 +46,17 @@ int main(){
         for(int j=0;j<i;++j)assert(icon.u0!=uiremaster::WheelIcon(gunVerts[j]).u0);}
     assert(!uiremaster::SpriteValid(uiremaster::WheelIcon(0)));
     const auto m=wheel_layout::RoundMetrics(2684);
+    const int pairX[2]{1316,3948},pairY[2]{1342,1342};
+    uiremaster::Vertex pair[12]{};
+    assert(uiremaster::BuildWheelPair(pairX,pairY,m.outerR,5264,2684,
+                                      2*m.outerR+16,pair));
+    assert(pair[6].x-pair[0].x==2632.f);
+    assert(pair[0].u==pair[6].u&&pair[0].v==pair[6].v);
+    const int invalidX[2]{1316,2632};
+    assert(!uiremaster::BuildWheelPair(invalidX,pairY,m.outerR,5264,2684,
+                                       2*m.outerR+16,pair));
+    assert(!uiremaster::BuildWheelPair(pairX,pairY,m.outerR,5264,2684,
+                                       2*m.outerR,pair));
     for(int eye=0;eye<2;++eye){const int half=5264/2,cx=eye*half+half/2;
         const uiremaster::Rect wheel{cx-m.outerR,2684/2-m.outerR,
                                       cx+m.outerR,2684/2+m.outerR};

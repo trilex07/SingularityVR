@@ -27504,9 +27504,15 @@ static LONG g_uiRemasterRuntime=0,g_uiRemasterSettings=0,g_uiRemasterWheel=0,g_u
 static IDirect3DTexture9* g_uiRemasterNeutral=nullptr;
 static IDirect3DTexture9* g_uiRemasterPl=nullptr;
 static IDirect3DTexture9* g_uiRemasterEn=nullptr;
+static IDirect3DTexture9* g_uiRemasterWheelStage=nullptr;
+static UINT g_uiRemasterWheelStageSide=0;
+static bool g_uiRemasterWheelStageUnsupported=false;
 static LONG g_uiRemasterPlState=0,g_uiRemasterEnState=0;
 static IDirect3DStateBlock9* g_uiRemasterSaved=nullptr;
 static void ReleaseUiRemasterResources(){
+    if(g_uiRemasterWheelStage){g_uiRemasterWheelStage->Release();g_uiRemasterWheelStage=nullptr;}
+    g_uiRemasterWheelStageSide=0;
+    g_uiRemasterWheelStageUnsupported=false;
     if(g_uiRemasterNeutral){g_uiRemasterNeutral->Release();g_uiRemasterNeutral=nullptr;}
     if(g_uiRemasterPl){g_uiRemasterPl->Release();g_uiRemasterPl=nullptr;}
     if(g_uiRemasterEn){g_uiRemasterEn->Release();g_uiRemasterEn=nullptr;}
@@ -27625,7 +27631,7 @@ static IDirect3DTexture9* LoadUiRemasterLocalized(IDirect3DDevice9* dev,bool pol
 // untouched if either atlas is absent. All decoration uses the exact row rects.
 static bool DrawUiRemasterSettings(IDirect3DDevice9* dev,const settingspanel::Layout& l,
                                    int eyes,int backW,int backH,int page,int row){
-    if(!Rd(g_uiRemasterRuntime)||!Rd(g_uiRemasterSettings)||!g_origDrawPrimUP||
+    if(!uiremaster::SettingsEnabled(Rd(g_uiRemasterRuntime)!=0,Rd(g_uiRemasterSettings)!=0)||!g_origDrawPrimUP||
        !LoadUiRemasterNeutral(dev))return false;
     const bool polish=PolishLocalization::PL().IsPolishEnabled();
     IDirect3DTexture9* localized=LoadUiRemasterLocalized(dev,polish);
@@ -27649,14 +27655,11 @@ static bool DrawUiRemasterSettings(IDirect3DDevice9* dev,const settingspanel::La
     bool drawn=true;
     for(int eye=0;eye<eyes;++eye){
         const auto plate=uiremaster::Plate(eye,eyes,l.half,l.width,l.height,l.y,l.px);
-        const int cx=eye*l.half+l.half/2;
         const uiremaster::Rect header{plate.left+l.px,plate.top+l.px,plate.right-l.px,
                                        plate.top+2*l.line};
         const uiremaster::Rect tab{plate.right-22*l.px,plate.top+2*l.px,
                                     plate.right-2*l.px,plate.top+8*l.px};
         const auto focus=uiremaster::Focus(plate,l.y,l.line,l.px,row);
-        const uiremaster::Rect footer{cx-l.width/2,l.y+l.line*(l.rows+2),
-                                       cx+l.width/2,l.y+l.line*(l.rows+3)};
         const int iconSize=8*l.px;
         const uiremaster::Rect r2{plate.right-iconSize-2*l.px,focus.top,
                                    plate.right-2*l.px,focus.top+iconSize};
@@ -27664,13 +27667,11 @@ static bool DrawUiRemasterSettings(IDirect3DDevice9* dev,const settingspanel::La
            !uiremaster::Valid(header,eye,l.half,backW,backH)||
            !uiremaster::Valid(tab,eye,l.half,backW,backH)||
            !uiremaster::Valid(focus,eye,l.half,backW,backH)||
-           !uiremaster::Valid(footer,eye,l.half,backW,backH)||
            !uiremaster::Valid(r2,eye,l.half,backW,backH)) {drawn=false;continue;}
         drawn &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,header,uiremaster::header);
         drawn &= DrawUiRemasterSprite(dev,localized,tab,uiremaster::Tab(page));
         drawn &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,focus,uiremaster::focus);
         drawn &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,r2,uiremaster::senseR2);
-        drawn &= DrawUiRemasterSprite(dev,localized,footer,uiremaster::footer);
     }
     const bool restored=SUCCEEDED(g_uiRemasterSaved->Apply());
     static unsigned receipts=0;if(receipts<4){++receipts;
@@ -27871,7 +27872,9 @@ static void DrawVrPanel(IDirect3DDevice9* dev) {
         n = TextRects(r, n, kCap, x0, y0 + lh * (nRows + 2), px,
                       PanelPageFooter(g_panelPage));
     }
-    if(!remasterSettingsReady)ClearRects(dev, r, n, D3DCOLOR_XRGB(168, 178, 190));
+    // The native footer remains the readable navigation authority. The baked
+    // 900x32 footer shrank below the accepted glyph height on this panel.
+    ClearRects(dev, r, n, D3DCOLOR_XRGB(168, 178, 190));
     n += bodyRects;
     // ⭐ run 248: loud, not silent. A page that cannot fit must SAY so - the failure it replaces
     // was indistinguishable from the feature being broken, and cost a headset run to report.
@@ -30039,7 +30042,7 @@ static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
                                    const wheel_layout::Metrics& m,int slots,int selected,
                                    const long* verts,const bool* named,int clip,int reserve,
                                    int backW,int backH){
-    if(!Rd(g_uiRemasterWheel)||slots!=4||!g_origDrawPrimUP||
+    if(!uiremaster::WheelEnabled(Rd(g_uiRemasterWheel)!=0)||slots!=4||!g_origDrawPrimUP||
        !LoadUiRemasterNeutral(dev))return false;
     IDirect3DTexture9* lang=LoadUiRemasterLocalized(dev,
         PolishLocalization::PL().IsPolishEnabled());
@@ -30092,6 +30095,73 @@ static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
     }
     return good;
 }
+// Render the entire wheel offscreen first. A failed atlas draw must never
+// leave new-wheel fragments on the backbuffer before the native fallback.
+// 0 = source failure (native fallback), 1 = committed, -1 = uncertain GPU
+// commit (do not layer the native wheel over a potentially partial draw).
+static int DrawUiRemasterWheelPair(IDirect3DDevice9* dev,const wheel_layout::Metrics& m,
+                                    const int (&cx)[2],const int (&cy)[2],int slots,int selected,
+                                    const long* verts,const bool* named,int clip,int reserve,
+                                    int backW,int backH){
+    if(!uiremaster::WheelEnabled(Rd(g_uiRemasterWheel)!=0)||slots!=4||!g_origDrawPrimUP||!g_origSetRenderTarget)return false;
+    const UINT side=(UINT)(2*m.outerR+16);
+    if(side<16||side>2048)return false;
+    uiremaster::Vertex vertices[12]{};
+    if(!uiremaster::BuildWheelPair(cx,cy,m.outerR,backW,backH,(int)side,vertices))return false;
+    if(g_uiRemasterWheelStage&&g_uiRemasterWheelStageSide!=side){
+        g_uiRemasterWheelStage->Release();g_uiRemasterWheelStage=nullptr;
+        g_uiRemasterWheelStageSide=0;
+    }
+    if(!g_uiRemasterWheelStage){
+        if(g_uiRemasterWheelStageUnsupported)return 0;
+        if(FAILED(dev->CreateTexture(side,side,1,D3DUSAGE_RENDERTARGET,D3DFMT_A8R8G8B8,
+                                     D3DPOOL_DEFAULT,&g_uiRemasterWheelStage,nullptr))){
+            g_uiRemasterWheelStageUnsupported=true;return 0;
+        }
+        g_uiRemasterWheelStageSide=side;
+    }
+    IDirect3DSurface9* stage=nullptr;
+    IDirect3DSurface9* previous=nullptr;
+    D3DVIEWPORT9 previousVp{};
+    if(FAILED(g_uiRemasterWheelStage->GetSurfaceLevel(0,&stage))||!stage)return false;
+    if(FAILED(dev->GetRenderTarget(0,&previous))||!previous||
+       FAILED(dev->GetViewport(&previousVp))){
+        if(previous)previous->Release();stage->Release();return false;
+    }
+    bool ready=false;
+    const bool stageBound=SUCCEEDED(g_origSetRenderTarget(dev,0,stage));
+    if(stageBound){
+        D3DVIEWPORT9 localVp{0,0,side,side,0.0f,1.0f};
+        if(SUCCEEDED(dev->SetViewport(&localVp))&&
+           SUCCEEDED(dev->Clear(0,nullptr,D3DCLEAR_TARGET,0,1.0f,0))){
+            // The scratch texture stores premultiplied colour and straight
+            // alpha. Text glyphs are opaque, so the same composite applies.
+            dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE,TRUE);
+            dev->SetRenderState(D3DRS_SRCBLENDALPHA,D3DBLEND_ONE);
+            dev->SetRenderState(D3DRS_DESTBLENDALPHA,D3DBLEND_INVSRCALPHA);
+            ready=DrawUiRemasterWheelEye(dev,0,(int)side/2,(int)side/2,m,slots,
+                                         selected,verts,named,clip,reserve,(int)side*2,(int)side);
+        }
+    }
+    const bool rtRestored=SUCCEEDED(g_origSetRenderTarget(dev,0,previous));
+    const bool vpRestored=SUCCEEDED(dev->SetViewport(&previousVp));
+    previous->Release();stage->Release();
+    if(!rtRestored||!vpRestored)return -1;
+    if(!ready)return 0;
+    // One DrawPrimitiveUP submits both eyes. Until this call succeeds, the
+    // accepted backbuffer has not received a single remastered wheel pixel.
+    dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE,FALSE);
+    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_ONE);
+    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+    dev->SetTexture(0,g_uiRemasterWheelStage);
+    dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
+    return SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLELIST,4,vertices,
+                                      sizeof(uiremaster::Vertex)))?1:-1;
+}
 void DrawWeaponWheel(IDirect3DDevice9* dev) {
     if (!dev || !VrModeOn() || !Rd(g_dupDraws) || !Rd(g_weaponWheelOpen) ||
         !g_handPositionValid[1] || !g_haveEyes || !g_origSetRenderTarget) return;
@@ -30106,6 +30176,8 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     }
     IDirect3DSurface9* old = nullptr;
     IDirect3DSurface9* depth = nullptr;
+    D3DVIEWPORT9 oldWheelVp{};
+    if(FAILED(dev->GetViewport(&oldWheelVp))){back->Release();return;}
     dev->GetRenderTarget(0, &old);
     dev->GetDepthStencilSurface(&depth);
     if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) {
@@ -30253,19 +30325,27 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     const uipointer::V hand{g_handLastPos[1].x, g_handLastPos[1].y + 0.12f,
                             g_handLastPos[1].z};
     const float pi = 3.14159265358979323846f;
-    for (int eye = 0; eye < 2; ++eye) {
+    const wheel_layout::Metrics safeMetrics=wheel_layout::RoundMetrics((int)d.Height);
+    int wheelCx[2]{},wheelCy[2]{};
+    bool projected[2]{};
+    for(int eye=0;eye<2;++eye){
         uipointer::ScreenPoint p;
-        if (!VrUiProjectEye(eye, hand, p)) {
-            if(!roundOn)continue;
-            p.u=0.5f;p.v=0.5f; // open wheel stays visible when its hand is outside the frustum
-        }
-        const wheel_layout::Metrics safeMetrics = wheel_layout::RoundMetrics((int)d.Height);
-        const float wheelU=roundOn ? wheel_layout::VisibleCenter(p.u,(int)d.Width/2,safeMetrics.outerR) : p.u;
-        const float wheelV=roundOn ? wheel_layout::VisibleCenter(p.v,(int)d.Height,safeMetrics.outerR) : p.v;
-        const int cx = (int)lroundf((eye + wheelU) * d.Width * 0.5f);
-        const int cy = (int)lroundf(wheelV * d.Height);
-        if(roundOn&&DrawUiRemasterWheelEye(dev,eye,cx,cy,safeMetrics,slots,selected,
-            slotVerts,slotNamed,wheelClip,wheelReserve,(int)d.Width,(int)d.Height))continue;
+        projected[eye]=VrUiProjectEye(eye,hand,p);
+        if(!projected[eye]){p.u=0.5f;p.v=0.5f;}
+        const float u=roundOn?wheel_layout::VisibleCenter(p.u,(int)d.Width/2,safeMetrics.outerR):p.u;
+        const float v=roundOn?wheel_layout::VisibleCenter(p.v,(int)d.Height,safeMetrics.outerR):p.v;
+        wheelCx[eye]=(int)lroundf((eye+u)*d.Width*0.5f);
+        wheelCy[eye]=(int)lroundf(v*d.Height);
+    }
+    const int remasterResult=roundOn?DrawUiRemasterWheelPair(dev,safeMetrics,wheelCx,wheelCy,
+        slots,selected,slotVerts,slotNamed,wheelClip,wheelReserve,(int)d.Width,(int)d.Height):0;
+    const bool remasterRendered=remasterResult!=0;
+    if(remasterResult<0){static bool once=false;if(!once){once=true;
+        Log("M02 wheel: two-eye composite failed; native overlay withheld for this frame");}}
+    for (int eye = 0; eye < 2; ++eye) {
+        if(remasterRendered)continue;
+        if(!roundOn&&!projected[eye])continue;
+        const int cx=wheelCx[eye],cy=wheelCy[eye];
         if (roundOn) {
             // Round layout (reference mockup): wedge sectors + outer ring +
             // centre disc, icons at mid-radius, catalog labels near the rim.
@@ -30469,6 +30549,7 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     }
     g_wristState->Apply();
     if (old) g_origSetRenderTarget(dev, 0, old);
+    dev->SetViewport(&oldWheelVp);
     dev->SetDepthStencilSurface(depth);
     if (old) old->Release(); if (depth) depth->Release(); back->Release();
 }

@@ -4,6 +4,9 @@
 // M02 first slice: the verified neutral atlas' settings_console_plate sprite.
 // Geometry is derived from the SAME settingspanel::Layout used for text/hits.
 namespace uiremaster {
+// P0 is the plate prerequisite for P1; P2 is independently switchable.
+constexpr bool SettingsEnabled(bool plate,bool settings){return plate&&settings;}
+constexpr bool WheelEnabled(bool wheel){return wheel;}
 struct Rect {int left,top,right,bottom;};
 struct Sprite {float u0,v0,u1,v1;};
 struct Vertex {float x,y,z,rhw,u,v;};
@@ -57,6 +60,22 @@ inline void BuildQuad(Rect q,Sprite uv,Vertex (&v)[4]){
     v[1]={q.right-.5f,q.top-.5f,0,1,uv.u1,uv.v0};
     v[2]={q.left-.5f,q.bottom-.5f,0,1,uv.u0,uv.v1};
     v[3]={q.right-.5f,q.bottom-.5f,0,1,uv.u1,uv.v1};
+}
+// One two-eye commit geometry; no per-eye draw can leave a half-updated wheel.
+inline bool BuildWheelPair(const int (&cx)[2],const int (&cy)[2],int radius,
+                           int backW,int backH,int sourceSide,Vertex (&out)[12]){
+    if(radius<=0||sourceSide<=2*radius||backW<=0||backW%2||backH<=0)return false;
+    for(int eye=0;eye<2;++eye){
+        const Rect dst{cx[eye]-radius,cy[eye]-radius,cx[eye]+radius,cy[eye]+radius};
+        if(!Valid(dst,eye,backW/2,backW,backH))return false;
+        const float inset=(float)(sourceSide/2-radius)/(float)sourceSide;
+        Vertex q[4]{};
+        BuildQuad(dst,{inset,inset,1.f-inset,1.f-inset},q);
+        const int o=eye*6;
+        out[o]=q[0];out[o+1]=q[1];out[o+2]=q[2];
+        out[o+3]=q[2];out[o+4]=q[1];out[o+5]=q[3];
+    }
+    return true;
 }
 inline Rect Focus(const Rect& plate,int y,int line,int px,int row){
     const int top=y+line*(2+row)-px;
