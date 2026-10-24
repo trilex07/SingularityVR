@@ -1,4 +1,5 @@
 # ---- build output ----
+/build/seeker-private/
 /build/effects-review/
 /build/accepted-profile-guard/
 /build/frontend-menu-comfort/
@@ -64,6 +65,7 @@ desktop.ini
 # make-release.ps1 rebuilds both from source every run; nothing here is authored.
 packaging/staging/
 packaging/dist/
+/deployment/texture-cache/
 
 # ---- machine-specific build provenance ----
 # Generated on each local build; repository paths and local working-tree state are embedded.
@@ -104,6 +106,8 @@ _work_u/
 /build/next-weapon-reload/
 /build/menu-holster-polish/
 /build/right-eye-mirror/
+/build/fixtures/
+/build/hud3d-*
 /build/startup-readiness/
 
 # ---- bink stills pipeline: intermediates local ----

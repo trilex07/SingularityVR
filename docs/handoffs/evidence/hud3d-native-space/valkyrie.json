@@ -1,0 +1,30 @@
+{
+  "mesh": "ch_inview_machinegun_mesh",
+  "vertices": 11387,
+  "y_sign": -1,
+  "native_offset": 13084681,
+  "bounds": [
+    [
+      -3.7406468391418457,
+      -121.90280151367188,
+      19.138830184936523
+    ],
+    [
+      3.786713123321533,
+      -91.29763793945312,
+      85.83972930908203
+    ]
+  ],
+  "mount_source": [
+    0.0,
+    117.2,
+    35.0
+  ],
+  "nearest_vertex_distance_uu": {
+    "1": 209.41658214607185,
+    "-1": 1.539774978820805
+  },
+  "psk_sha256": "b445a4a2c27e9eedfc487a2cd5358b6db1bd755b184cafd663c4a2454991b442",
+  "package_sha256": "09de450d9f620952c3701d874beb90a8bd9235263975157a641b9e3441336c92",
+  "evidence": "all named-mesh GPU positions, 32-byte stride; offline, not live shader matrices"
+}

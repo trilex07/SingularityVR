@@ -1,5 +1,174 @@
 # STATUS — session handoff
 
+## 2026-10-25 — PSVR2 Physical Acceptance: HD Textures Gate A → B → C (Volk & Gloves)
+
+- **Status: PHYSICAL PASS** (confirmed in PSVR2 by user: 'wyglada okej daj na main').
+- **Assets replaced (2048x2048)**:
+  - AR_shotgun_d.dds (SHA256: D6A98EF03EC588A31FEFDB7393757738B19B86B9E9381029E47E5C26C0506237)
+  - AR_shotgun_n.dds (SHA256: 83F64BFCE085107A4EC80F14D236EB1409A402B8D879BCF8691667C3F92CD798)
+  - inview_glove_d.dds (SHA256: D76D05B122A6C81B24B3560E88CF181167FAB3EE64A967A7017D21770F3D4754)
+  - inview_glove_n.dds (SHA256: 5F0A8E9E4C65763A58BC5E88CAFEEE238EF715935730065336CDFF2CA3D8E049)
+- **Runtime Verification**:
+  - priority_material_mode=2 in 	exture_override.ini, 
+emaster_apply=0, ridge_owned=1, mode_apply=1.
+  - Zero D3D errors, zero resource evictions (evictions=0, 	able=0/512), 532,877 native cache hits over 729,347 binds.
+  - Strict scope isolation: zero unintended overrides; UI and shadow passes fully protected.
+- **Archived Evidence Logs**:
+  - Step A: deployment/deploy-backups/20261025-hd-textures-stepA/texture_override.log (SHA256: AB848E730B30086237D9FED26D606E39112A0272B02820B2F58442A03CDE3FA3)
+  - Step B: deployment/deploy-backups/20261025-hd-textures-stepB/texture_override.log (SHA256: B3942F5A734EADD76CA831E940B600C5A4C920524FED2B91115EEE331F32EAF3)
+
+## 2026-10-25 — SIDE Seeker back slot / measured support / launch candidate
+
+eature/sol-seeker-back-slot starts at accepted 543bff1. Three independent
+default-OFF Seeker features retain only an actually owned native weapon, select
+it from the lower-right back, reconstruct support from original PSK/PSA, and
+correct native projectile launch using the rendered muzzle. Existing Valkyrie
+accuracy and Valkyrie/Volk 20 cm insertion are supplied as candidate INI keys;
+ordinary defaults remain unchanged. Native ownership/ABI, geometry, D3D9/Ex,
+HUD/TMD/haptics/WeaponLocker/NIS/OLED regressions PASS offline. Physical acceptance
+is open; no Steam access. Evidence/limits/test plan:
+docs/handoffs/sol-seeker-back-slot.md. Final L2 artifact receipt is separate.
+
+## 2026-10-24 — PSVR2 Physical Verification: Combined Build A82184B2 (Accepted Features & Open Scope)
+
+- **Physical Acceptance Results (PSVR2 test by user)**:
+  - **HUD 3D (PHYSICAL PASS)**: Volk and Valkyrie counters rigidly mounted, reader orientation correct (clip left, reserve right), real-time ammo updates, clean stereo without ghosting/doubling.
+  - **TMD / Haptics / Two-Hand Grip (PHYSICAL PASS)**: Pulse effects, gauntlet posture, and two-handed stability verified.
+  - **Menu Navigation & Dubbing (PHYSICAL PASS)**: Menus function properly, options select correctly, and Polish dubbing is confirmed.
+  - **Full Visual UI Remaster (PARTIAL)**: The new detailed weapon icons atlas (3EF17826...) is active in the weapon wheel, but the overall visual remaster remains incomplete: legacy UI background/plate elements and raw Xbox/UE3 controller prompts (e.g. 'Pad 11') are still visible. Requires dedicated SIDE UI work to update main/pause menu visual styling, finish remaining icons, and selectively replace 'Pad 11' with PS VR2 Sense button icons while strictly preserving subtitles, objectives, and interaction prompts.
+  - **Left-Hand Tracking (PHYSICAL PASS)**: Glove motion accurately matches controller in gameplay.
+  - **Manual Reload Insertion Comfort (PARTIAL)**: 18 cm insertion radius functional on Valkyrie and Volk, but requires expansion to bounded 20 cm for full comfort.
+  - **New Scope / Issues Identified (Astra Ownership)**:
+    1. Special Seeker rifle retention: Must remain accessible from back-mounted VR holster after acquisition and switching to another weapon.
+    2. Seeker left-hand support grip alignment: Incorrect, requires adjustment.
+    3. Seeker and Valkyrie accuracy: Requires investigation and tuning.
+- **Preserved Artifacts & Hashes**:
+  - Live Steam DLL: A82184B2F82F019B7A59E3DBFB49EE60C1675BEC39FB7FE239E182B974F0FA73
+  - Backup Checkpoint: deployment/deploy-backups/20261024-accepted-a82184b2
+  - Archived PSVR2 Session Log: view_matrix.log (SHA256: 2AEFD4F46D3B92116C958523B4149A18D0351577BE4ACAC739F8A812DE90776F)
+- **Integration Boundary**: MAIN preserves accepted baseline and continues offline HD texture and audio prep. Astra owns Seeker retention/holster, support grip, accuracy, and 20 cm reload candidate.
+
+## 2026-10-24 — SIDE first-four material remaster bridge (L2_PASS; physical gate open)
+
+On `feature/side-material-remaster-d3d9ex`, a separate, default-OFF
+`priority_material_mode` selects four verified shotgun/glove diffuse+normal
+maps for log-only or isolated apply. The accepted slot-65 single-owner bridge,
+D3D9Ex shadow hashing and pool-aware factory are preserved; direct engine
+`UpdateTexture` now invalidates stale resource-owned decisions. x86 `/O2`,
+native D3D9/D3D9Ex pixel/alpha/Reset fixtures and the combined MAIN→injector
+fixture PASS. Four private DDS are hash/mip-verified outside Git. No Steam
+deployment or PSVR2 check. See
+`docs/handoffs/side-material-remaster-d3d9ex-20261024.md`.
+## 2026-10-24 — M02 P2 four weapon icons (SIDE asset-only, READY_FOR_PHYSICAL_ACCEPTANCE)
+
+- Branch feature/side-m02-detailed-weapon-icons replaces only the four weapon sprites and their rectangles in the neutral atlas. Accepted wheel/M09 runtime code and localized atlases are unchanged.
+- Pixel/atlas QA and existing M02 D3D9/D3D9Ex, wheel geometry and M09 haptics fixtures PASS offline. New neutral atlas SHA256 3EF1782696B4A5E1E9D93F409C5B0F6FF014B78CC42FAB06EC29110661981818; physical PSVR2 appearance remains untested. Handoff: docs/handoffs/side-m02-detailed-weapon-icons-20261024.md.
+## 2026-10-24 — HUD reader orientation / left TMD wrist evidence
+
+- HUD horizontal reflection corrected (`5181cdc4`), using six recorded PSVR2
+  pose replays; top/vertical axis was already correct. Housing/pose untouched.
+- Left-hand offset remains UNKNOWN: `36081c3d` adds opt-in final-bound TMD
+  wrist/pad measurements to HandAnchorProbe, with eight records per eye.
+  No tracking/pose correction claimed.
+- L1/L2 PASS: 240 D3D9/Ex pixel cases, hand/reload/WeaponLocker/OLED regressions,
+  clean x86 PE32 `/O2` build. No Steam writes or physical validation.
+- Handoff: `docs/handoffs/sol-hud-orientation-left-wrist-20261024.md`.
+
+
+## 2026-10-24 — Diegetic HUD milestone 2: Valkyrie `30/120` + Spikeshot `08/32` (L2_PASS / READY_FOR_PHYSICAL_ACCEPTANCE; gate already armed)
+
+- Same branch `integration/diegetic-hud-centurion-20261024`, commit
+  `bc4c32147c3b`. Pivot evidence: the Centurion candidate is not gradeable on
+  the user's save (Centurion not owned; only Valkyrie AR9 11387 + Volk/Spikeshot
+  8297 are). Pre-pivot session log archived
+  `docs/evidence/diegetic-session-20261024/` (analysis + local log): exactly
+  one diegetic line (`ENABLED`), zero draws, zero atlas lines — consistent
+  with the lazy atlas load (first mounted-gun draw); the atlas raster path is
+  therefore still physically unexercised. Same session: `_HUD cache
+  clip+1404 bin+1400 size+1408 on RvHUD` and `drew plate=2 clip=6 bin=59 …
+  backbuffer 5640x2876` — the user held the Spikeshot and the accepted plates
+  pipeline rendered live ammo (live reserve 59 vs fixture '32' — the display
+  tracks the native sampler; fixture values are snapshots only). No plate
+  regression from milestone 1 in the real run.
+- Implementation: per-weapon mounts in `diegetic_weapon_hud.h` from the
+  measured fixture builders (`prepare_diegetic_models_v2.py` @ `ff29efd`,
+  PSK names verified against it): Centurion `5799` (0,115.3,43.5)
+  (2.6,0.45,1.8) pitch 18°; Valkyrie `11387` (0,117.2,35.0) (2.8,0.45,1.9)
+  pitch 20°, readout `30/120` (reserve pad 3); Spikeshot `8297` (0,116.8,42.0)
+  (2.8,0.45,1.9) pitch 15°, readout `08/32`. Mount lookup replaces the
+  Centurion-only early return; hand-anchor adds the measured per-weapon centre
+  lift above the calibrated 115.3 baseline (shotgun +0.038 m, AR9 +0.048 m);
+  panel width uses the per-weapon housing width; atlas cells, projection,
+  gates, low-mag (<=2) amber rule, `mClipAmmo/mBinAmmo` validity and the
+  full state restore are unchanged. Ammo plates 0-2 (all three guns) back off
+  while the counter draws; TMD/unknown verts still draw nothing.
+- L1: `test-diegetic-centurion` extended (mount table, anchor lifts, `30/120`
+  7-quad and `08/32` 6-quad layouts, per-weapon world-anchored widths) — all
+  PASS including the original Centurion asserts (default `resPad=2` preserved).
+- L2: x86 PE32 `/O2` @ `bc4c32147c3b`, dll
+  `B5F2A2AD4ADB53BBA4DEC5369CD5F2A5FD1EA06373C6F1E1E58E374633B58613`.
+  Regressions: full fixture battery (9), haptics-native py, dual-weapon wiring
+  py, dual-weapon-TMD 39 groups, HUD-live, short-gauntlet, gun-scale — all
+  PASS, no regressions.
+- Deployed (game closed, 2026-10-24 11:55): guarded candidate run
+  (`-DllOnly -IncludeIni -SkipTextures`, profile `E7A3DD14…`, plan
+  `4AB467E0…`): installed dll `B5F2A2AD…` (PE32 0x014C) + INI `257F9DFB14A4…`
+  byte-identical (359 keys, `DiegeticWeaponHud=1` already armed — the one
+  controlled change this milestone is the dll), report
+  `20261024-115514.json`, backup `deployment/install-backups/20261024-115514`
+  = the exact Centurion-candidate pair (`ADF2833A…`) verified. Live atlas
+  `9ED4A5C…81F9` re-verified under the new profile pin (repo copy hash-equal).
+  Rollback switches: `DiegeticWeaponHud=0` (feature) or the backup pair
+  (dll-only revert to the Centurion build).
+- Physical grading state: NOT physically verified. Grading unit = Valkyrie
+  counter and Spikeshot counter separately (visibility, placement, firing and
+  reload updates, weapon-switch following); sight obstruction, stereo and FPS
+  checked by the user. Centurion stays ungraded (not owned); no other
+  weapon/TMD claims.
+
+## 2026-10-24 — Diegetic HUD milestone 1: Centurion `06/24` counter (L2_PASS / READY_FOR_PHYSICAL_ACCEPTANCE; default OFF)
+
+- Branch `integration/diegetic-hud-centurion-20261024` from `origin/main`
+  `551c64d7`. Source evidence: `side/diegetic-hud-native` @ `ff29efd`
+  (measured Centurion fixture `center=(0.0,115.3,43.5)` UU,
+  `size=(2.6,0.45,1.8)` UU, pitch 18°; PSK `ch_inview_pistol_mesh.psk`;
+  rendered/recessed-well acceptance in `docs/diegetic_hud_v2_review.md`).
+- Runtime representation: atlas-PNG quads only (`diegetic_hud_atlas.png`
+  1024×512 — screen/housing cells, cyan/amber `0-9` glyphs + slash; **no GLB
+  or mesh loading at runtime**); per-eye drawn inside the verified ammo-plate
+  pipeline (aim-hand anchor + `VrUiProjectEye` + world-anchored px-per-metre
+  probe + own state block + full state restore). Live values only from the
+  native HUD sampler (`mClipAmmo`/`mBinAmmo`, round-9 probe); unknown values
+  hide; out-of-`mClipSize` clip values rejected; while enabled+ready the
+  Centurion ammo plate backs off (independent rollback switches).
+- Gate `[Render] DiegeticWeaponHud`=0 default OFF (parse + `diegetic hud:`
+  startup log). Low mag (`<=2`) switches to the amber glyph row.
+- L1 fixture `test-diegetic-centurion` PASS (measured dims, atlas-cell
+  geometry vs the shipped PNG header, 15-row gate truth table, sizing probe
+  failures, `06` zero-pad layout, amber switchover, 3-digit reserve, clamp;
+  2 fixture bugs fixed: wrong captured array in `sameCell`, PNG signature
+  byte offset — layout itself proven correct by cell dumps).
+- L2: build x86 PE32 `/O2` @ `551c64d7`, dll
+  `ADF2833A70E0BE027AE4028134B5BFD2CD86759005A7D00AFD7112803B2625DF`.
+  Regressions: tmd-haptics fixture, M02 runtime/switch 8-combo/D3D9+D3D9Ex
+  `2240/2240`, gameplay-text probe+safe-area, hud-reseat 203, menu-hud-scale,
+  haptics-native py, dual-weapon wiring py, dual-weapon-TMD 39 groups,
+  HUD-live, short-gauntlet — all PASS, no regressions.
+- Deployed (game closed, 2026-10-24 11:25): session-assets delta first
+  (atlas `9ED4A5C3…` → `Binaries/vr-assets/hud/diegetic/`, manifest
+  `ee719b1f…`, backup `build/next-weapon-reload/diegetic-atlas-backup`;
+  session-assets.ps1 whitelist/count extended per the `6d08f4d` precedent),
+  then the guarded candidate run (`-DllOnly -IncludeIni -SkipTextures`,
+  profile `3F46C1D6…`, plan `75E4752…`): installed dll `ADF2833A70E0…`
+  (PE32 0x014C) + INI `257F9DFB14A4` (359 keys; only
+  `Render/DiegeticWeaponHud=1` added), report `20261024-112533.json`, backup
+  `deployment/install-backups/20261024-112533` = the accepted combined pair
+  verified (`DA63A2A9…`). Rollback switches: `DiegeticWeaponHud=0` (feature)
+  or the backup pair (full).
+- Physical grading state: NOT physically verified (Centurion-only milestone;
+  other weapons + TMD wrist display stay out of scope until the user grades
+  this candidate).
+
 ## 2026-10-24 — Promotion to main: accepted M02/M09 history + default-OFF gameplay HUD fix; all promotion regressions PASS
 
 - Promotion branch `integration/promo-m02m09-hud` (worktree
@@ -331,10 +500,10 @@ they were only aiming without firing; no failed test exists):
   `deployment\install-backups\20261024-002349` contains the accepted
   d3d9.dll `78404247…` (verified) — the M09 rollback point; INI absent from
   the backup because unchanged.
-- `%LOCALAPPDATA%\SingularityVR\view_matrix.log` hash `89D5479D…1CBE`
+- `%LOCALAPPDATA%\SingularityVR\vview_matrix.log` hash `89D5479D…1CBE`
   == the archived M01 evidence log; the game has not run since the accepted
   session, so no duplicate archive was created.
-- Runtime receipts available after the next session (view_matrix.log):
+- Runtime receipts available after the next session (vview_matrix.log):
   `[Haptics Trace] XINPUT RUMBLE [n/16]`, `SUBMIT [n/32]`
   (gate allowed/tracked/poseValid/posValid/focus + xrResult), `STOP [n/16]`.
 - **Next: Session A physical test (TmdPulses=0)** — fire Valkyrie/Volk/pistol
@@ -2563,7 +2732,7 @@ clip<0||bin<0 (offsets cached +1404/+1400 on RvHUD) and health "shown" logged
 but user reports both plates invisible — drew-vs-seen still undistinguished
 until this candidate runs in-headset. Next: one PSVR2 pass (hold gun, check
 ammo plate; empty mag to 0; grip two-hand, check HP low-left), then read
-view_matrix.log for ammo unknown(...)/drew and health drew lines.
+vview_matrix.log for ammo unknown(...)/drew and health drew lines.
 Falsifier: drew present + still invisible = placement/alpha, not sampling;
 unknown with clip/bin>=0 readable = offset/window wrong, not HUD-missing.
 No fix claimed; no rollback (candidate healthy, game closed at deploy).
@@ -3784,7 +3953,7 @@ it does not describe the physically accepted native RTT provider above.
 
 **Steam install (MAIN):** `4F85BEAAFC7033287B900A1750203375FDEE64E9FA817EDA2E9CB6F8EA2BECBE`
 (build after `94b47e8` + compile fix), backup `20261012-113123`, INI preserved.
-L3 smoke: `OpenXR ready` in `view_matrix.log` (2026-10-12 11:32:54 attach); no
+L3 smoke: `OpenXR ready` in `vview_matrix.log` (2026-10-12 11:32:54 attach); no
 `support wrist snap` in this build. Support grip on headset: **READY_FOR_PHYSICAL_ACCEPTANCE**
 (not re-tested on PSVR2 yet). Prior: `0eb22a6` / `2B896A7A…`, backup `20261012-111934`. Workflow:
 `docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
@@ -4309,7 +4478,7 @@ Readability is not liveness. A level transition leaves the previous level's `RvP
 non-archetype match in `GObjects` order, so the stale camera could win and then be revalidated
 forever.
 
-Diagnosed entirely from `view_matrix.log`, no new instrument needed: the post-transition main menu
+Diagnosed entirely from `vview_matrix.log`, no new instrument needed: the post-transition main menu
 reported `identification: 36 of 120 frames lost the matrix entirely; best rejected dotFwd +0.6964
 (gate 0.80)`. dotFwd 0.696 is 45.9°, and the camera being read reported yaw **+44.5°** while the
 matrix carried ~0° — two different cameras. Every rejection invalidates the register slot, so the
@@ -4608,7 +4777,7 @@ recorded rather than filtered out, because a long enough transient reads as a vi
 10b. **✅ FIXED and VERIFIED (run 212) — the run-207 role shift came back past `MinFgMeshes`.**
    `VetoQuietGun=1`, `RelatchWrongRoles=1`.
    - **Verified, and the case was genuinely exercised** — this is not a clean-run false pass. In a
-     161,376-line playthrough from the beginning, `view_matrix.log` line 17471 logs the veto firing on
+     161,376-line playthrough from the beginning, `vview_matrix.log` line 17471 logs the veto firing on
      `fg census (at the REFUSED take): 3 entries: [0]=3314 [1]=390 [2]=662` — **the identical signature
      to the Aug 7 failure**, including the same 662 mesh. The pistol then latched correctly at line
      35663, `[5799 3314 390]`. User-confirmed in play.
@@ -4908,11 +5077,11 @@ that order leaves both stereo modes running at once. F12 before F1 is harmless a
 
 Mouse and head tracking now **add** rather than fight — turning with the mouse no longer snaps
 back, and the same fix is what stick-turning will need in the shipped mod.
-Log: `C:\Users\<you>\AppData\Local\SingularityVR\view_matrix.log` — **read it directly from disk**;
+Log: `C:\Users\<you>\AppData\Local\SingularityVR\vview_matrix.log` — **read it directly from disk**;
 it does not need pasting into chat, and it must never be pasted into this file. Truncated at each
 attach and stamped with the run's date and time on line 1, so a stale file is obvious at a glance.
 
-**Every run is kept, named for when it started.** The live run is always `view_matrix.log`; at
+**Every run is kept, named for when it started.** The live run is always `vview_matrix.log`; at
 the next attach it is renamed to `view_matrix_YYYY-MM-DD_HH-MM-SS.log`, the stamp read back out
 of its own line-1 header. Newest archive = most recent finished run. Nothing is ever evicted, so
 **a reference to a specific log stays valid permanently** — cite them by name in notes.

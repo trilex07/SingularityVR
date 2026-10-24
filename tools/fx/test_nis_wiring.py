@@ -11,7 +11,10 @@ class Wiring(unittest.TestCase):
     def test_gameplay_gate_and_failure_before_swapchain(self):
         body = SOURCE[SOURCE.index('const bool nisStereoSbs'):]
         self.assertIn('frame->stereo, frame->menuFlat, frame->cineFlat', body)
-        self.assertIn('if (nisStereoSbs && g_frameSrc11', body)
+        # OLED selects displaySrc before NIS; testing the pre-OLED source would
+        # incorrectly reject the integrated pipeline (or allow bypassing OLED).
+        self.assertIn('if (nisStereoSbs && displaySrc', body)
+        self.assertIn('NisBridge_ProcessStereo(&g_nis, g_ctx11, displaySrc,', body)
         self.assertLess(body.index('NisBridge_ProcessStereo'), body.index('EnsureSwapchain'))
         self.assertIn('const bool splitOutput = monoCrop || nisFrame;', body)
         self.assertIn('if (splitOutput)', body)

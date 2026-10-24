@@ -1,0 +1,21 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "3F46C1D66D45030FA18A390D78D78BE61EB908074B1A6DBA572743D557C6BE51",
+  "reason": "Diegetic HUD milestone 1 (Centurion only, READY_FOR_PHYSICAL_ACCEPTANCE off-mine): rebuild d3d9.dll (E304F225 -> ADF2833A @ 551c64d7 + diegetic_weapon_hud.h) and arm the gate via Render/DiegeticWeaponHud 0(default absent) -> 1 for ONE short PSVR2 session. Centurion ammo plate backs off while the diegetic counter draws; both switches roll back independently.",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "E304F22559C6EEF2D8055B73B48518870F1B24199C8BDD2753CCB5A9798E63C6",
+      "after": "ADF2833A70E0BE027AE4028134B5BFD2CD86759005A7D00AFD7112803B2625DF",
+      "reason": " diegetic counter renderer integration (plate-pipeline per-eye draw, live mClipAmmo/mBinAmmo)"
+    }
+  ],
+  "ini": [
+    {
+      "key": "Render/DiegeticWeaponHud",
+      "before": null,
+      "after": "1",
+      "reason": " Centurion counter grading gate (default OFF in source; explicitly armed for the session)"
+    }
+  ]
+}

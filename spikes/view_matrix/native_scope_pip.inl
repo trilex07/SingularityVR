@@ -241,24 +241,43 @@ static V RotatorDirection(int pitch,int yaw){
     return {c*std::cos(y),c*std::sin(y),std::sin(p)};
 }
 static int* __fastcall OpticalAddSpread(void* self,void*,int* output,int pitch,int yaw,int roll){
+    const auto spreadCaller=(uintptr_t)_ReturnAddress();
     shotAxis={};
     auto* result=spreadOriginal(self,output,pitch,yaw,roll);
     const auto frame=Snapshot();
     const bool scoped=g_sniperOpticalAccuracy&&Current(frame)&&(uintptr_t)self==frame.weapon;
-    const bool ordinary=(g_weaponNativeAxis||g_twoHandSpreadPercent<100)&&VrModeOn()&&InGameplay()&&
+    const bool ordinary=(g_weaponNativeAxis||g_twoHandSpreadPercent<100||
+        g_vrValkyrieSpreadPercent<100||g_vrVolkSpreadPercent<100||
+        g_vrValkyrieTwoHandPercent<100||g_vrVolkTwoHandPercent<100)&&VrModeOn()&&InGameplay()&&
         !Rd(g_inCinematic)&&!Rd(g_gamePaused)&&!Rd(g_weaponHolstered)&&Rd(g_handDevValid)&&
         (uintptr_t)self==(uintptr_t)(uint32_t)Rd(g_weaponObj);
+    weaponmuzzle::Witness muzzle;
+    if(ordinary&&TryAcquireSRWLockShared(&g_nextVisualLock)){
+        muzzle=g_nextMuzzle;ReleaseSRWLockShared(&g_nextVisualLock);
+    }
+    const bool support=Rd(g_twoHandActive)!=0;
+    const int gunVertices=(int)Rd(g_gunVerts);
+    const bool currentMuzzle=muzzle.Current((uint32_t)g_playerPawn,(uint32_t)(uintptr_t)self,GetTickCount64());
+    const bool profileMatch=currentMuzzle&&
+        ((gunVertices==11387&&muzzle.kind==weaponreload::Kind::Valkyrie)||
+         (gunVertices==8297&&muzzle.kind==weaponreload::Kind::Volk));
+    const weaponaccuracy::Settings settings{g_twoHandSpreadPercent,g_vrValkyrieSpreadPercent,
+        g_vrVolkSpreadPercent,g_vrValkyrieTwoHandPercent,g_vrVolkTwoHandPercent};
+    const int percent=weaponaccuracy::EffectivePercent(gunVertices,muzzle.kind,currentMuzzle,
+        support,settings); // unmatched path preserves the accepted global setting
     if(Rd(g_fireDepth)>0&&ordinary&&result==output&&output&&
        PauseRttProbe::SafeRange((uintptr_t)output,12)&&
-       twohandspread::Apply(output,pitch,yaw,g_twoHandSpreadPercent,true,Rd(g_twoHandActive)!=0)){
-        static unsigned notes=0;if(notes++<8)Log("two-hand spread: native result reduced to %d%% weapon=%p seq=%ld; centre/recoil retained",
-            g_twoHandSpreadPercent,self,Rd(g_fireSeq));
+       twohandspread::Apply(output,pitch,yaw,percent,true,true)){
+        static unsigned notes=0;if(notes++<8)Log("VR spread: native result reduced to %d%% weapon=%p seq=%ld profile=%d support=%d; centre/recoil retained",
+            percent,self,Rd(g_fireSeq),profileMatch?gunVertices:0,support?1:0);
     }
     if(g_weaponMeasuredAim&&Rd(g_fireDepth)>0&&(scoped||ordinary)&&result==output&&output&&
        PauseRttProbe::SafeRange((uintptr_t)output,12)){
         shotAxis={g_playerPawn,(uintptr_t)self,GetTickCount64(),Rd(g_fireSeq),
             RotatorDirection(pitch,yaw),RotatorDirection(output[0],output[1])};
     }
+    if(result==output&&output&&PauseRttProbe::SafeRange((uintptr_t)output,12))
+        SeekerProjectileSpread(self,spreadCaller,pitch,yaw,output);
     return result;
 }
 static bool BindSpread(uintptr_t weapon){
@@ -686,7 +705,9 @@ static void Draw(IDirect3DDevice9* dev){
 }
 void NativeScopeTick(){
     NativeRifleFx::MaintainTick();NativeRifleFx::ObserveTick();NativeScopePip::Tick();
-    if((g_weaponNativeAxis||g_twoHandSpreadPercent<100)&&VrModeOn()&&InGameplay()&&!Rd(g_inCinematic)){
+    if((g_seekerProjectileAim||g_weaponNativeAxis||g_twoHandSpreadPercent<100||g_vrValkyrieSpreadPercent<100||
+        g_vrVolkSpreadPercent<100||g_vrValkyrieTwoHandPercent<100||
+        g_vrVolkTwoHandPercent<100)&&VrModeOn()&&InGameplay()&&!Rd(g_inCinematic)){
         // Audited common RvWeaponShared method, not a guessed subclass offset.
         static ULONGLONG lastAttempt=0;const auto now=GetTickCount64();
         if(!NativeScopePip::spreadOriginal&&now-lastAttempt>=2000){
@@ -694,6 +715,7 @@ void NativeScopeTick(){
             if(weapon&&PauseRttProbe::SafeRange(weapon,4))NativeScopePip::BindSpread(weapon);
         }
     }
+    SeekerProjectileTick();
 }
 bool NativeScopeAlignShot(float* start,float* end){
     const auto& shot=NativeScopePip::shotAxis;

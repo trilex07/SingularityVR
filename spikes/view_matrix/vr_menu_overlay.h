@@ -34,6 +34,9 @@ static bool ComposeCleanFrontend(IDirect3DDevice9* dev,IDirect3DSurface9* back,
     }
     frontmenu::SurfacePass pass(dev,back,g_vrMenuTexture,g_frontMenuResources,desc,vertices,
         g_origSetRenderTarget,g_origSetVS,g_origSetTexture,g_origDrawPrimUP);
+    if(menuskin::Eligible(Rd(g_uiRemasterMenus)!=0,(int)Rd(g_vrMenuClass),
+                         Rd(g_modalSaveDialog)!=0,Rd(g_panelOpen)!=0)&&LoadUiRemasterNeutral(dev))
+        pass.skin=g_uiRemasterNeutral;
     InterlockedExchange(&g_vrMenuProviderDrawing,1);
     const auto result=frontmenu::Render(pass);
     InterlockedExchange(&g_vrMenuProviderDrawing,0);
@@ -42,9 +45,9 @@ static bool ComposeCleanFrontend(IDirect3DDevice9* dev,IDirect3DSurface9* back,
     static unsigned notes=0;static unsigned long long notedToken=0;
     if(notes<16 && (notedToken!=VrMenuStateToken()||!result.composed)){
         notedToken=VrMenuStateToken();++notes;
-        Log("frontend-clean: token=%llu composed=%d stateRestore=%d pixelRestore=%d source=%p back=%ux%u perEye=1",
+        Log("frontend-clean: token=%llu composed=%d stateRestore=%d pixelRestore=%d source=%p back=%ux%u perEye=1 M02skin=%d",
             notedToken,result.composed?1:0,result.stateRestored?1:0,result.pixelsRestored?1:0,
-            (void*)g_vrMenuTexture,desc.Width,desc.Height);
+            (void*)g_vrMenuTexture,desc.Width,desc.Height,pass.skin?1:0);
     }
     return result.composed;
 }
@@ -95,6 +98,7 @@ static void DrawPromptRole(IDirect3DDevice9* dev,float x,float y,float size,prom
     if(PromptIconUv(promptroles::IconName(action),u0,u1)) DrawVrPromptIcon(dev,x,y,size,u0,u1);
 }
 static void DrawVrPromptLegend(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,bool gameplay) {
+    if(g_vrHideLegacyPadPrompts)return; // action-local labels replace historical fixed legends
     if(!LoadVrPromptAtlas(dev)) return;
     dev->SetTexture(0,g_vrPromptAtlas); dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1);
     dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_MODULATE); dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE); dev->SetTextureStageState(0,D3DTSS_COLORARG2,D3DTA_DIFFUSE);
@@ -124,7 +128,7 @@ void DrawVrContextPrompt(IDirect3DDevice9* dev) {
     const LONG active=InterlockedExchange(&g_contextPromptVisible,0);
     // A draw shape cannot distinguish reload from use. When native tokens
     // carry the actual control label, do not add the old unconditional R1.
-    if(g_vrPromptTokens)return;
+    if(g_vrPromptTokens||g_vrHideLegacyPadPrompts)return;
     if(!active || !dev || !VrModeOn() || !Rd(g_dupDraws) || Rd(g_vrUiMenu) || !g_origDrawPrimUP) return;
     static LONG contextIconLogCount=0;
     LONG cil=InterlockedIncrement(&contextIconLogCount);
@@ -679,6 +683,13 @@ void DrawVrMenuPointer(IDirect3DDevice9* dev) {
             if(g_origSetTexture)g_origSetTexture(dev,0,g_vrMenuTexture);
             else dev->SetTexture(0,g_vrMenuTexture);
             dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1);
+            if(menuskin::Eligible(Rd(g_uiRemasterMenus)!=0,(int)Rd(g_vrMenuClass),
+                                 Rd(g_modalSaveDialog)!=0,Rd(g_panelOpen)!=0)&&LoadUiRemasterNeutral(dev)){
+                // The native draw remains mandatory even when decoration fails.
+                const bool skinDrawn=menuskin::DrawBackdrop(dev,g_uiRemasterNeutral,v,g_origDrawPrimUP);
+                static unsigned skinReceipts=0;if(skinReceipts<8){++skinReceipts;
+                    Log("M02 menu skin: class=%ld eye=%d drawn=%d native text/hits retained",Rd(g_vrMenuClass),eye,skinDrawn?1:0);}
+            }
             const HRESULT menuDraw = g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(VrMenuVtx));
             if (dedicatedPause && PauseRttProbe::presentedToken != VrMenuStateToken()) {
                 static unsigned geometryLogs = 0;

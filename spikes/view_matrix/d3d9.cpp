@@ -14,6 +14,8 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "arm_natural.h"
 #include "support_grip.h"
 #include "weapon_holster.h"
+#include "seeker_slot_policy.h"
+#include "seeker_index_identity.h"
 #include "knife_renderer.h"
 #include "centurion_reload.h"
 #include "centurion_clip_preview.h"
@@ -29,6 +31,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "weapon_reload_carry.h"
 #include "weapon_trace_math.h"
 #include "weapon_muzzle_geometry.h"
+#include "weapon_accuracy_policy.h"
 #include "sniper_scope.h"
 #include "scope_pip_policy.h"
 #include "weapon_wheel.h"
@@ -148,6 +151,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "glove_native.h"
 #include "native_glove_cuffs.h"
 #include "tmd_short_gauntlet.h"
+#include "diegetic_hud_draw.h" // shared projection/state/submission, pixel-tested offline
 #include "tmd_attachment_identity.h"
 static tmdattachment::Identity g_tmdAttachmentIdentity;
 static void BuildLiveControllerC(float C[4][4], bool aimHand);
@@ -202,6 +206,8 @@ static XrTime g_hotPredictedDisplayTime = 0;
 
 namespace {
 
+extern singularity::shadow::ShadowRegisterCensus g_shadowRegs;
+
 extern volatile LONG g_vrMenuClass;
 extern volatile LONG g_independentRejectCode;
 extern volatile LONG g_pauseMenuDiag;
@@ -227,6 +233,7 @@ extern volatile LONG g_gameOwnsCamera;
 static LONG g_scriptedCameraFlat = 1;
 extern volatile LONG g_sceneVideoSeen;
 extern volatile LONG g_sceneModeFrame;
+extern volatile LONG g_diegeticHud;
 static void UpdateSceneModeFrame();
 static bool CutsceneNativeCameraArmed();
 
@@ -2408,6 +2415,12 @@ static int g_shoulderPickupProbe=0; // default-OFF; bounded local-frame pickup r
 static int g_nextShoulderExtraLeftCm[2]{18,18}; // Valkyrie, Volk; Kasimov unchanged
 static int g_nextShoulderRadiusCm[2]{18,18};
 static int g_nextShoulderReachMs[2]{1800,1800};
+static int g_nextInsertRadiusCm[2]{18,18}; // Valkyrie, Volk; native clip-joint socket (candidate INI: 20)
+static volatile LONG g_seekerBackSlot=0,g_seekerBackRequest=0,g_seekerBackAvailable=0;
+static int g_seekerSupportGrip=0,g_seekerProjectileAim=0;
+static seekergeometry::Witness g_seekerPose;
+static seekergeometry::SupportFrame g_seekerSupportFrame;
+static seekergeometry::IndexIdentity g_seekerIndices;
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
 static bool g_nextWristStagedFromTmd=false;
 static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
@@ -2425,6 +2438,8 @@ static int g_sniperOpticalSlowTime=0;
 static int g_sniperOpticalAccuracy=0; // native scoped spread queries only, no camera ADS
 static int g_weaponNativeAxis=0; // exact local pre/post-spread basis, default OFF
 static int g_twoHandSpreadPercent=100; // 100 preserves native dispersion
+static int g_vrValkyrieSpreadPercent=100, g_vrVolkSpreadPercent=100; // default native
+static int g_vrValkyrieTwoHandPercent=100, g_vrVolkTwoHandPercent=100; // scoped support bonus, default OFF
 static LONG g_cinematicHandsOwnership=0; // native hands even when cinematic presentation stays stereo
 static LONG g_cinematicSceneProbe=0; // bounded read-only scene/foreground witness; default OFF
 static LONG g_cinematicEventBridge=0; // exact local six-bool Raven event -> existing cinema state; default OFF
@@ -6018,6 +6033,9 @@ void DrawLaserSight(IDirect3DDevice9* dev);
 void DrawScopePip(IDirect3DDevice9* dev);
 void ResetScopePip();
 void NativeScopeTick();
+void SeekerProjectileTick();
+bool SeekerOwnsTrace(void* source);
+void SeekerProjectileSpread(void* weapon,uintptr_t caller,int pitch,int yaw,int* result);
 void NativeScopeShotReceipt(const float* start,const float* end,const float* rawDirection);
 bool NativeScopeAlignShot(float* start,float* end);
 void NativeScopeBind(IDirect3DSurface9* surface);
@@ -6031,6 +6049,7 @@ static bool NativeScopeRendering(){return g_scopeNativeDepth!=0;}
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
+static void DrawDiegeticCenturion(IDirect3DDevice9* dev); // diegetic Centurion counter (default OFF)
 void DrawHolsterMarker(IDirect3DDevice9* dev); // MAIN: white ring at the hip while a gun is held
 void DrawKnifeBeltMarker(IDirect3DDevice9* dev); // MAIN: white ring at the left belt while the knife is held
 void DrawCustomGloves(IDirect3DDevice9* dev); // default-OFF, noTMD free hands only
@@ -6077,6 +6096,12 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawLaserSight(dev);
     DrawWristHealth(dev);
     DrawHealthPlate(dev);
+    // Diegetic counters run BEFORE the ammo plates: their per-frame drew-latch
+    // is exactly the atomic suppression input the plates consult below
+    // (physical fail 2026-10-24 fix). Order swap is layer-safe: each fn
+    // captures+restores its own full state block and the back-off guarantees
+    // the legacy plate and its replacement never draw the same readout.
+    DrawDiegeticCenturion(dev);
     DrawAmmoPlate(dev);
     DrawHolsterMarker(dev);
     DrawKnifeBeltMarker(dev);
@@ -6820,6 +6845,9 @@ static void NoteXrHeartbeat(int shouldRender, int layerCount) {
     }
 }
 volatile LONG g_contextPromptVisible=0; // set by the measured native pickup/use prompt draw
+#include "vr_legacy_prompts.h"
+static bool g_vrHideLegacyPadPrompts=true;
+static volatile LONG g_vrPromptControls[vrprompts::Count]{};
 static bool g_vrPromptTokens=false; // action-token text replaces ambiguous native pad aliases
 static void ReportVrRuntimeCounters() {
     const auto& c=g_vrCounters;
@@ -9747,6 +9775,52 @@ PadButtonAction g_padButtons[] = {
     { "menu",       "Menu",           "/user/hand/left/input/menu/click",        "Menu",       XI_START,     XR_NULL_HANDLE, true,  false },
 };
 const int kPadButtonCount = (int)(sizeof(g_padButtons) / sizeof(g_padButtons[0]));
+inline int AimHand();
+// Bounded source snapshot after successful xrSyncActions. Read by the native
+// localization hook through atomic enum values; no engine-thread XR calls.
+static vrprompts::Control BoundPromptControl(XrAction action,bool rightAxis=false){
+    if(!action||!g_xrSession)return vrprompts::Unbound;
+    XrBoundSourcesForActionEnumerateInfo info{XR_TYPE_BOUND_SOURCES_FOR_ACTION_ENUMERATE_INFO};
+    info.action=action;XrPath sources[16]{};uint32_t count=0;
+    if(XR_FAILED(xrEnumerateBoundSourcesForAction(g_xrSession,&info,16,&count,sources))||count>16)return vrprompts::Unbound;
+    auto result=vrprompts::Unbound;
+    for(uint32_t i=0;i<count;++i){char path[XR_MAX_PATH_LENGTH]{};uint32_t bytes=0;
+        if(XR_FAILED(xrPathToString(g_xrInstance,sources[i],sizeof(path),&bytes,path)))continue;
+        auto control=vrprompts::Path(path);
+        if(rightAxis&&!strcmp(path,"/user/hand/right/input/thumbstick"))control=vrprompts::RightUp;
+        if(control==vrprompts::Unbound)continue;
+        if(result!=vrprompts::Unbound&&result!=control)return vrprompts::Unbound;
+        result=control;
+    }
+    return result;
+}
+static void UpdateVrPromptControls(){
+    if(!g_vrHideLegacyPadPrompts)return;
+    static ULONGLONG last=0;const auto now=GetTickCount64();if(last&&now-last<1000)return;last=now;
+    vrprompts::Control c[vrprompts::Count]{};
+    for(int i=0;i<kPadButtonCount;++i){const auto& b=g_padButtons[i];
+        // INI can remap native masks; name alone is not the action delivered.
+        auto a=vrprompts::Unknown;
+        switch(b.mask){case XI_X:a=vrprompts::Use;break;case XI_A:a=vrprompts::Jump;break;
+            case XI_RSHOULDER:a=vrprompts::Impulse;break;case XI_LSHOULDER:a=vrprompts::Age;break;
+            case XI_LTHUMB:a=vrprompts::Dash;break;case 0x0001:a=vrprompts::Health;break;}
+        if(a!=vrprompts::Unknown)c[a]=BoundPromptControl(b.action);
+    }
+    c[vrprompts::Fire]=BoundPromptControl(g_actFire);
+    c[vrprompts::Aim]=BoundPromptControl(g_actAltFire);
+    if(AimHand()==1&&Rd(g_haveTMD)==1)c[vrprompts::Aim]=vrprompts::Unbound;
+    c[vrprompts::Cycle]=BoundPromptControl(g_actR3);
+    c[vrprompts::Reload]=c[vrprompts::Use];
+    const bool layout=g_reloadControlLayout&&AimHand()==1&&!Rd(g_swapSticks);
+    if(layout){
+        c[vrprompts::Reload]=BoundPromptControl(g_actUiBack);
+        c[vrprompts::Health]=BoundPromptControl(g_actUiSelect);
+        c[vrprompts::Jump]=BoundPromptControl(g_actTurn,true);
+    }
+    if(!Rd(g_swapSticks)&&BoundPromptControl(g_actTurn,true)==vrprompts::RightUp)c[vrprompts::Crouch]=vrprompts::RightDown;
+    for(int i=0;i<vrprompts::Count;++i)InterlockedExchange(&g_vrPromptControls[i],c[i]);
+}
+
 
 // ---- ⭐ run 274: the buttons had NO instrument, and that is why the tester report stalled ----
 //
@@ -10870,6 +10944,7 @@ void SyncXRInput(XrTime displayTime) {
     if (!pollOff) g_hotPathSampler.count(hotpath::Counter::xr_sync_actions);
     const XrResult sr = pollOff ? XR_SUCCESS : xrSyncActions(g_xrSession, &si);
     if (!pollOff) DiagPhaseAdd(DP_SYNC, diagSync);
+    if(!pollOff && sr==XR_SUCCESS)UpdateVrPromptControls();
     {
         const double ms = MsSince(tSync);
         g_msSyncActions += ms;
@@ -11493,8 +11568,17 @@ void SyncXRInput(XrTime displayTime) {
     const float handX = (float)Rd(g_handOffX) / kHandFixed;
     const float handY = (float)Rd(g_handOffY) / kHandFixed;
     const float handZ = (float)(g_gunSignPosZ * Rd(g_handOffZ)) / kHandFixed;
+    const auto& backHand=g_handLastPos[AimHand()];
+    const bool backGrip=seekerslot::BackGrip(primaryGripRising,
+        feedGame&&!uiMenu&&!Rd(g_gamePaused)&&!Rd(g_inCinematic)&&AimHand()==1,
+        g_handPositionValid[AimHand()]&&g_handPoseValid[AimHand()],
+        Rd(g_weaponHolstered)||Rd(g_twoHandActive)||g_nextOwnsGrip||g_centurionOwnsGrip||
+            g_nextBlockFire||g_hipKnifeState.held>=0||Rd(g_weaponWheelOpen),
+        Rd(g_seekerBackSlot)&&Rd(g_seekerBackAvailable),
+        {backHand.x,backHand.y,backHand.z},{g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw);
+    if(backGrip)InterlockedExchange(&g_seekerBackRequest,Rd(g_seekerBackAvailable));
     const weaponholster::Event holsterEvent = weaponholster::Update(
-        g_holsterState, primaryGripRising && !uiMenu && !Rd(g_gamePaused), holsterValid, feedGame,
+        g_holsterState, primaryGripRising && !backGrip && !uiMenu && !Rd(g_gamePaused), holsterValid, feedGame,
         (uint32_t)holsterIdentity, {handX, handY, handZ},
         {holsterHip[0], holsterHip[1], holsterHip[2]}, g_holsterConfig);
     // MAIN round 20: bounded miss probe — right grip edge while holstered that
@@ -16462,23 +16546,35 @@ volatile LONG g_gloveIsolate = 2;     // ini [Render] GloveIsolate
 volatile LONG g_gloveFaceFilter = 0;  // ini [Render] GloveFaceFilter
 volatile LONG g_noTmdPaletteFix = 0;  // controlled experiment; [Render] NoTmdPaletteFix
 static handanchor::WeaponProbe g_handAnchorRecords;
+static handanchor::Probe g_tmdHandAnchorRecords[2]; // eight final-bound samples/eye, opt-in
 static DWORD g_handAnchorThread=0;
 static void FlushHandAnchorProbe() {
     if(!Rd(g_handAnchorProbe)||g_handAnchorThread!=GetCurrentThreadId())return;
     handanchor::Record r;
-    if(!g_handAnchorRecords.Take(r))return;
-    Log("hand-anchor sample=%u frame=%u moved=%d weapon=%p epoch=%u targetL=(%.4f,%.4f,%.4f) targetR=(%.4f,%.4f,%.4f) head=(%.4f,%.4f,%.4f) gunAnchor=(%.4f,%.4f,%.4f); stage=GameplayStereo; raw noTMD constants, not inferred world-joint position",
-        g_handAnchorRecords.Count(),r.frame,r.moved,(void*)r.weapon,r.epoch,r.target[0][0],r.target[0][1],r.target[0][2],r.target[1][0],r.target[1][1],r.target[1][2],r.headOffset[0],r.headOffset[1],r.headOffset[2],r.anchor[0],r.anchor[1],r.anchor[2]);
-    auto matrix=[](const char* name,const float* f,unsigned n){
-        char line[512]{};size_t used=0;
-        for(unsigned i=0;i<n && used<sizeof(line);++i){const int k=_snprintf_s(line+used,sizeof(line)-used,_TRUNCATE," %.6g",f[i]);if(k>0)used+=(size_t)k;}
-        Log("hand-anchor %s:%s",name,line);
-    };
-    matrix("local230",r.local,16);
-    matrix("controllerAim",r.controller[0],16);matrix("controllerOff",r.controller[1],16);
-    matrix("cameraRide",r.ride,16);
-    matrix("nativeLeft9",r.before[0],12);matrix("nativeRight51",r.before[1],12);
-    matrix("posedLeft9",r.after[0],12);matrix("posedRight51",r.after[1],12);
+    for(unsigned source=0;source<3;++source) {
+        if(!(source?g_tmdHandAnchorRecords[source-1].Take(r):g_handAnchorRecords.Take(r)))continue;
+        const char* prefix=r.tmd?"tmd-hand-anchor":"hand-anchor";
+        Log("%s sample=%u frame=%u moved=%d weapon=%p epoch=%u targetL=(%.4f,%.4f,%.4f) targetR=(%.4f,%.4f,%.4f) head=(%.4f,%.4f,%.4f) gunAnchor=(%.4f,%.4f,%.4f); stage=GameplayStereo; raw constants (mesh identity below for TMD)",
+            prefix,source?g_tmdHandAnchorRecords[source-1].Count():g_handAnchorRecords.Count(),r.frame,r.moved,(void*)r.weapon,r.epoch,r.target[0][0],r.target[0][1],r.target[0][2],r.target[1][0],r.target[1][1],r.target[1][2],r.headOffset[0],r.headOffset[1],r.headOffset[2],r.anchor[0],r.anchor[1],r.anchor[2]);
+        auto matrix=[prefix](const char* name,const float* f,unsigned n){
+            char line[512]{};size_t used=0;
+            for(unsigned i=0;i<n && used<sizeof(line);++i){const int k=_snprintf_s(line+used,sizeof(line)-used,_TRUNCATE," %.6g",f[i]);if(k>0)used+=(size_t)k;}
+            Log("%s %s:%s",prefix,name,line);
+        };
+        matrix("local230",r.local,16);
+        matrix("controllerAim",r.controller[0],16);matrix("controllerOff",r.controller[1],16);
+        matrix("cameraRide",r.ride,16);
+        matrix("nativeLeft9",r.before[0],12);matrix("nativeRight51",r.before[1],12);
+        matrix("posedLeft9",r.after[0],12);matrix("posedRight51",r.after[1],12);
+        if(r.tmd) {
+            Log("tmd-hand-anchor final-bound: frame=%u eye=%u hands=%u support=%u verts=%u first=%u faces=%u ib=%p UUperM=%.6g wristL=(%.6g,%.6g,%.6g) wristR=(%.6g,%.6g,%.6g) errorL=(%.6g,%.6g,%.6g) errorR=(%.6g,%.6g,%.6g); before draw, not pixel proof",
+                r.frame,r.eye,r.hands,r.support,r.verts,r.first,r.triangles,(void*)r.indexBuffer,r.uuPerMetre,
+                r.wristWorld[0][0],r.wristWorld[0][1],r.wristWorld[0][2],
+                r.wristWorld[1][0],r.wristWorld[1][1],r.wristWorld[1][2],
+                r.wristWorld[0][0]-r.target[0][0],r.wristWorld[0][1]-r.target[0][1],r.wristWorld[0][2]-r.target[0][2],
+                r.wristWorld[1][0]-r.target[1][0],r.wristWorld[1][1]-r.target[1][1],r.wristWorld[1][2]-r.target[1][2]);
+        }
+    }
 }
 volatile LONG g_gloveStumpScalePct = 20; // ini [Render] GloveStumpScale
 // Mesh-space +X is the bind-pose left axis (left wrist +49, right wrist -49).
@@ -17389,6 +17485,12 @@ static bool TmdSupportAssemblyEnabled() {
         g_handPoseValid[0] && g_handPositionValid[0],
         g_handPoseValid[1] && g_handPositionValid[1]);
 }
+static bool SeekerSupportActive(){
+    return g_seekerSupportGrip&&seekergeometry::Vertices(Rd(g_gunVerts))&&Rd(g_twoHandActive)&&
+        !Rd(g_weaponHolstered)&&AimHand()==1&&g_handPoseValid[0]&&g_handPositionValid[0]&&
+        g_handPoseValid[1]&&g_handPositionValid[1]&&
+        !NativeAnimatedHandsNow()&&g_sceneMode.Current()==vrscene::Mode::GameplayStereo;
+}
 static bool AuthoredLeftSupport(long gun) {
     return dualtmd::UseWeaponAuthoredPair(
         SupportGripFor(gun).mode==SupportGripMode::AuthoredPair ||
@@ -17403,6 +17505,12 @@ static void BuildTmdAssemblyC(float C[4][4]) {
     BuildLiveControllerC(primary,true);BuildLiveControllerC(off,false);
     const long gun=Rd(g_gunVerts);const bool authored=AuthoredLeftSupport(gun);
     if(!authored)BuildGunC(weapon);
+    if(SeekerSupportActive()) {
+        if(g_seekerSupportFrame.valid&&g_seekerSupportFrame.frame==(uint32_t)Rd(g_sceneModeFrame)&&
+           g_seekerSupportFrame.pawn==(uint32_t)g_playerPawn&&g_seekerSupportFrame.weapon==(uint32_t)Rd(g_weaponObj))
+            memcpy(C,g_seekerSupportFrame.target.m,sizeof(float)*16);
+        return;
+    }
     tmdsupport::Target(C,primary,off,weapon,true,authored,gun);
 }
 
@@ -17914,7 +18022,29 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     const float (*leftTarget)[4] = off;
     if (supportGrip) {
         const bool authoredPairAvailable = AuthoredLeftSupport(supportGunVerts);
-        if (authoredPairAvailable) {
+        if (SeekerSupportActive()) {
+            seekergeometry::Witness witness;
+            if(TryAcquireSRWLockShared(&g_nextVisualLock)) {
+                witness=g_seekerPose;ReleaseSRWLockShared(&g_nextVisualLock);
+            }
+            armbind::Mat sourceLocal,gun,target;
+            memcpy(sourceLocal.m,local,sizeof(local));BuildGunC(gun.m);
+            const int wrist=GloveFindSlot(sectionMap,slots,GloveRefs(),89,"l_arm_wrist");
+            const armbind::Mat* bind=nullptr;
+            if(tmdGloves&&armnatural::TmdBind().ready)bind=&armnatural::TmdBind().bind[9];
+            static armbind::Mat noTmd[90];static bool haveNoTmd=false;
+            if(gloves){if(!haveNoTmd)haveNoTmd=armbind::BuildReference(bindassets::noTmd,90,noTmd);
+                if(haveNoTmd)bind=&noTmd[9];}
+            const auto pawn=(uint32_t)g_playerPawn,weapon=(uint32_t)Rd(g_weaponObj),frame=(uint32_t)Rd(g_sceneModeFrame);
+            bool ready=bind&&wrist>=0&&seekergeometry::SupportTarget(witness,pawn,weapon,GetTickCount64(),
+                *bind,reinterpret_cast<const float(*)[4]>(saved+wrist*3),sourceLocal,gun,target);
+            if(ready)g_seekerSupportFrame={true,pawn,weapon,frame,sourceLocal,target};
+            else if(tmdBase||tmdExtra)ready=g_seekerSupportFrame.Read(pawn,weapon,frame,sourceLocal,target);
+            if(ready){
+                memcpy(offWeapon,target.m,sizeof(offWeapon));leftTarget=offWeapon;weaponDeltaUsed=true;
+                static unsigned notes=0;if(notes++<4)Log("Seeker support: original idle wrist relative to rendered cog; shared glove/device target");
+            } // no witness: independent controller, never an invented fore-end offset
+        } else if (authoredPairAvailable) {
             // Same rigid delta as the aim hand. The live palette already contains the
             // pistol's two-hand relationship; retargeting only the left wrist to BuildGunC
             // (or to l_hand_IK, which matches the rest pose) parks the glove beside the gun.
@@ -17938,6 +18068,12 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         }
     }
     memcpy(changed,saved,regs*4*sizeof(float));
+    if(SeekerSupportActive()&&weaponDeltaUsed){
+        // Invert the ride StereoPair actually submits, not a controller proxy.
+        if(g_thisDrawMoved==1)BuildGunC(base);
+        else if(g_thisDrawMoved==2)BuildTmdC(base);
+        else if(g_thisDrawMoved==3)BuildTmdAssemblyC(base);
+    }
     float rightDelta[4][4];
     bool paired = skeletal::LocalDeltaPair(delta, rightDelta, local, base, leftTarget,
         handanchor::AimTarget(weaponSingleHand, aimTarget, primary));
@@ -18064,7 +18200,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // Material 0 must not receive a glove-only parking offset while attached.
     const bool attachedTmdGlove=g_tmdShortGauntlet && tmdGloves &&
         Rd(g_gloveIsolate)==2 && (!supportGrip || TmdSupportAssemblyEnabled());
-    const float leftShift = (attachedTmdGlove || (tmdGloves && supportGrip && weaponDeltaUsed) || wristAnchor || offWristAnchor || nativeOffKnife || nativeCarry || !weaponInHand) ? 0.f
+    const float leftShift = (attachedTmdGlove || (supportGrip && weaponDeltaUsed && (tmdGloves || SeekerSupportActive())) || wristAnchor || offWristAnchor || nativeOffKnife || nativeCarry || !weaponInHand) ? 0.f
         : (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
     // Idle shift parks the free left glove off the native gun-hold. During an authored
     // pistol grip that same nudge is what puts the support hand beside the weapon.
@@ -20688,7 +20824,74 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             }
         }
     }
+    seekergeometry::Witness seekerStaged;
+    if((g_seekerSupportGrip||g_seekerProjectileAim)&&t==D3DPT_TRIANGLELIST&&
+       seekergeometry::Body(baseVertex,minIndex,numVertices,startIndex,primCount)&&
+       g_thisDrawMoved==1&&!g_boundShaderLayout.shadow&&Rd(g_rtIsScene)&&!Rd(g_weaponHolstered)&&
+       g_boundShaderLayout.bones>=0&&g_boundShaderLayout.boneRegs>=27&&g_boundShaderLayout.local>=0&&
+       g_seekerIndices.Match(dev)){
+        float palette[3][4];armbind::Mat skin,local;
+        if(SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.bones+3,&palette[0][0],3))&&
+           armbind::FromGpu(palette,skin)&&
+           SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.local,&local.m[0][0],4)))
+            seekergeometry::Capture(skin,local,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),seekerStaged);
+    }
+    // Diegetic 3D HUD: capture the live weapon transform (skin * local * controller)
+    // for Centurion (5799), Valkyrie AR9 (11387), and Spikeshot/Volk (8297).
+    if (Rd(g_diegeticHud) && t == D3DPT_TRIANGLELIST &&
+        g_thisDrawMoved == 1 && !g_boundShaderLayout.shadow &&
+        Rd(g_rtIsScene) && !Rd(g_weaponHolstered) &&
+        g_boundShaderLayout.bones >= 0 && g_boundShaderLayout.local >= 0) {
+        const diegetichud::WeaponMount* mo = diegetichud::MountForBodyDraw(
+            baseVertex,minIndex,numVertices,startIndex,primCount);
+        // Match the named weapon camera actually remapped by StereoPair.
+        // A later world/VFX draw must not supply the HUD's camera at Present.
+        const CamMatSlot* camera=nullptr;
+        for(int i=0;i<g_camMatUsed;++i)
+            if(g_camMats[i].valid && int(g_camMats[i].reg)==g_boundShaderLayout.viewProjection &&
+               (Rd(g_shadowMode)!=3 || singularity::shadow::SlotMayRemap(g_shadowRegs,(std::uint32_t)i,true))) {
+                camera=&g_camMats[i];break;
+            }
+        if(mo && !camera) {
+            static unsigned cameraRejects[3]{};
+            if(cameraRejects[mo->plate]++<2)
+                Log("diegetic hud: body camera unavailable %s vp=c%d tracked=%d; refusing unrelated Present camera",
+                    mo->name,g_boundShaderLayout.viewProjection,g_camMatUsed);
+        }
+        if (mo && camera && g_origSetVSConstF && g_boundShaderLayout.boneRegs >= (mo->rootSlot + 1) * 3) {
+            float palette[3][4]; armbind::Mat skin, local, controller;
+            if (SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.bones + mo->rootSlot * 3, &palette[0][0], 3)) &&
+                armbind::FromGpu(palette, skin) &&
+                SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.local, &local.m[0][0], 4)) &&
+                armbind::Finite(local)) {
+                BuildGunC(controller.m);
+                const auto chain = centurionvisual::Product(centurionvisual::Product(skin, local), controller);
+                diegetichud::Pose pose;
+                for (int r = 0; r < 4; ++r) {
+                    for (int c = 0; c < 4; ++c) {
+                        pose.chain.m[r][c] = chain.m[r][c];
+                    }
+                }
+                for(int eye=0;eye<2;++eye) {
+                    float m[16];memcpy(m,camera->m,sizeof(m));
+                    if(eye)ApplyOffset(reinterpret_cast<Reg4*>(m),camera->conv,g_eyeDeltaUU);
+                    ApplyEyeRemap(reinterpret_cast<Reg4*>(m),camera->conv,eye?+.5f:-.5f);
+                    pose.eyeClip[eye]=diegetichud::RowProjection(m,camera->conv==CONV_COL);
+                }
+                const uint64_t now = GetTickCount64();
+                const unsigned frame = (unsigned)Rd(g_sceneModeFrame);
+                diegetichud::RecordLiveTransform(mo->verts, pose, now, frame);
+                static long saidTfVerts = 0;
+                if (saidTfVerts != (long)numVertices) {
+                    saidTfVerts = (long)numVertices;
+                    Log("diegetic hud: body pose %s mesh=%ld first=%u tris=%u root=%d vp=c%u conv=%d tick=%I64u frame=%u",
+                        mo->name, (long)numVertices, startIndex, primCount, mo->rootSlot, camera->reg, camera->conv, now, frame);
+                }
+            }
+        }
+    }
     unsigned shortEyeDraws=0;
+    unsigned seekerEyeDraws=0;
     unsigned assemblyEye=0;
     const HRESULT dhr = FAILED(sleevePaletteHr)?sleevePaletteHr:StereoPair(dev, [&] {
         const unsigned eye=assemblyEye++;
@@ -20699,6 +20902,52 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         // No surface readback or GPU synchronization.
         const bool assemblyGlove=(numVertices==7444||numVertices==2626)&&startIndex==0&&primCount==4402;
         const bool assemblyDevice=shortTmdBuffer&&nativeIndices.valid;
+        // Existing opt-in probe extended to the physical symptom's exact TMD
+        // glove section. Read the bound palette/IB before restoration, in EACH
+        // eye; no pose writes, GPU readback, tracking bypass or guessed offset.
+        if(Rd(g_handAnchorProbe)&&assemblyGlove&&independentRegs&&eye<2&&nSeg>0&&
+           armnatural::TmdBind().ready&&g_handPoseValid[0]&&g_handPositionValid[0]&&
+           g_handPoseValid[1]&&g_handPositionValid[1]&&
+           handanchor::GameplaySource(true,Rd(g_inCinematic)!=0,Rd(g_vrUiMenu)!=0,
+               Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo)) {
+            const DWORD thread=GetCurrentThreadId(),tick=GetTickCount();
+            if(!g_handAnchorThread)g_handAnchorThread=thread;
+            static unsigned failedAttempts[2]{};
+            if(thread==g_handAnchorThread&&failedAttempts[eye]<8&&g_tmdHandAnchorRecords[eye].Due(tick)) {
+                handanchor::Record r;r.tmd=true;r.eye=eye;r.tick=tick;r.frame=(unsigned)Rd(g_armPaletteFrameToken);
+                r.moved=g_thisDrawMoved;r.hands=(unsigned)Rd(g_handsStatus);r.support=Rd(g_twoHandActive)?1:0;
+                r.weapon=(std::uintptr_t)(unsigned)Rd(g_weaponObj);r.verts=numVertices;r.first=startIndex;
+                r.triangles=cuffBuffer&&nativeIndices.valid?gloveTriangles:primCount;r.uuPerMetre=MetresToUU();
+                bool ok=SUCCEEDED(dev->GetVertexShaderConstantF(230,r.local,4));
+                BuildLiveControllerC(reinterpret_cast<float (*)[4]>(r.controller[0]),true);
+                BuildLiveControllerC(reinterpret_cast<float (*)[4]>(r.controller[1]),false);
+                if(g_thisDrawMoved==3)BuildTmdAssemblyC(reinterpret_cast<float (*)[4]>(r.ride));
+                else if(g_thisDrawMoved==1)BuildGunC(reinterpret_cast<float (*)[4]>(r.ride));
+                else if(g_thisDrawMoved==2)BuildTmdC(reinterpret_cast<float (*)[4]>(r.ride));
+                else for(unsigned i=0;i<4;++i)r.ride[i*4+i]=1.f;
+                const unsigned slots[2]={1,19},bones[2]={9,51}; // audited material-0 palette
+                for(unsigned side=0;side<2;++side) {
+                    ok=SUCCEEDED(dev->GetVertexShaderConstantF(5+slots[side]*3,r.after[side],3))&&ok;
+                    memcpy(r.before[side],independentSaved[slots[side]*3],sizeof(r.before[side]));
+                    armbind::Mat joint;
+                    if(!armbind::CurrentJoint(armnatural::TmdBind().bind[bones[side]],
+                        reinterpret_cast<const float (*)[4]>(r.after[side]),joint)){ok=false;continue;}
+                    const auto world=handanchor::Point(handanchor::Point(armbind::Position(joint),
+                        reinterpret_cast<const float (*)[4]>(r.local)),reinterpret_cast<const float (*)[4]>(r.ride));
+                    r.wristWorld[side][0]=world.x;r.wristWorld[side][1]=world.y;r.wristWorld[side][2]=world.z;
+                    const bool aim=(int)side==AimHand();
+                    r.target[side][0]=(float)Rd(aim?g_handOffX:g_offHandOffX)/kHandFixed;
+                    r.target[side][1]=(float)Rd(aim?g_handOffY:g_offHandOffY)/kHandFixed;
+                    r.target[side][2]=(float)(g_gunSignPosZ*Rd(aim?g_handOffZ:g_offHandOffZ))/kHandFixed;
+                    if(g_gunHeadOffset)for(unsigned axis=0;axis<3;++axis)r.target[side][axis]+=g_hmdOffset[axis];
+                }
+                memcpy(r.headOffset,g_hmdOffset,sizeof(r.headOffset));GunAnchorWorld(r.anchor);
+                IDirect3DIndexBuffer9* ib=nullptr;ok=SUCCEEDED(dev->GetIndices(&ib))&&ok;
+                r.indexBuffer=reinterpret_cast<std::uintptr_t>(ib);if(ib)ib->Release();
+                if(!ok||!g_tmdHandAnchorRecords[eye].Capture(r))++failedAttempts[eye];
+            }
+        }
+
         // The assembly receipt below samples slot 1 (LEFT wrist). The failed
         // L2 test concerns the RIGHT wrist, which is slot 19 in material 0.
         // Capture its final bound palette in both eyes for a few frames per
@@ -20793,6 +21042,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             const HRESULT h = g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
                                                     segStart[s], segPrims[s]);
             if (FAILED(h) && SUCCEEDED(hr)) hr = h;      // keep the FIRST failure, not the last
+            if(seekerStaged.valid&&nSeg==1&&segStart[s]==startIndex&&segPrims[s]==primCount&&SUCCEEDED(h))
+                ++seekerEyeDraws;
         }
         if(SUCCEEDED(hr)&&cylinderBase>=0&&cylinderReplay.spare){
             bool restored=false;
@@ -20871,6 +21122,12 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         InterlockedIncrement(&g_centurionPalmPublished);
     }
     const HRESULT nextRestore=nextRegs?g_origSetVSConstF(dev,nextReg,nextSaved,(UINT)nextRegs):D3D_OK;
+    if(seekerStaged.valid&&seekerEyeDraws==2&&SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)&&
+       SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
+        g_seekerPose=seekerStaged;ReleaseSRWLockExclusive(&g_nextVisualLock);
+        static bool saidSeeker=false;if(!saidSeeker){saidSeeker=true;
+            Log("Seeker pose: source IB matched, body=14990 eyes=2 rootSlot=1; restored, witness published");}
+    }
     if((g_weaponTraceRigidOrigin||g_weaponMeasuredAim||g_scopeMeasuredPose)&&SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)&&g_nextMuzzleStaged.valid&&
        TryAcquireSRWLockExclusive(&g_nextVisualLock)){
         g_nextMuzzle=g_nextMuzzleStaged;
@@ -22761,6 +23018,9 @@ IDirect3DDevice9* g_gameDev = nullptr; // for UpdateTexture
 LONG g_xlatTex = 0, g_xlatVB = 0, g_xlatIB = 0, g_xlatCube = 0, g_xlatVol = 0;
 LONG g_stageCount = 0, g_stageFailed = 0, g_xlatFailed = 0;
 double g_stageMB = 0.0;
+// FlushShadow holds g_stageLock. Its writes were already invalidated at LockRect;
+// a Release triggered by FreePrivateData inside that lock would deadlock.
+thread_local bool g_bridgeInternalUpload = false;
 
 // ---- the side table: DEFAULT resource -> its SYSTEMMEM shadow ----
 //
@@ -22906,7 +23166,9 @@ PFN_Release        g_origVolRelease = nullptr;
 // wrapper was fine for six runs.
 inline void FlushShadow(StageEntry* e) {
     if (!e || !e->shadow || !e->dirty || !g_gameDev) return;
+    g_bridgeInternalUpload = true;
     HRESULT hr = g_gameDev->UpdateTexture(e->shadow, e->key);
+    g_bridgeInternalUpload = false;
     e->dirty = false;
     if (FAILED(hr)) {
         static int once = 0;
@@ -23048,12 +23310,14 @@ ULONG STDMETHODCALLTYPE Hook_VolRelease(IUnknown* self) {
 
 // ---- the Create* hooks ----
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateTexture)(IDirect3DDevice9*, UINT, UINT, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DTexture9**, HANDLE*);
+typedef HRESULT (STDMETHODCALLTYPE *PFN_UpdateTexture)(IDirect3DDevice9*, IDirect3DBaseTexture9*, IDirect3DBaseTexture9*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateVolumeTexture)(IDirect3DDevice9*, UINT, UINT, UINT, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DVolumeTexture9**, HANDLE*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateCubeTexture)(IDirect3DDevice9*, UINT, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DCubeTexture9**, HANDLE*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateVertexBuffer)(IDirect3DDevice9*, UINT, DWORD, DWORD, D3DPOOL, IDirect3DVertexBuffer9**, HANDLE*);
 typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateIndexBuffer)(IDirect3DDevice9*, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DIndexBuffer9**, HANDLE*);
 
 PFN_CreateTexture       g_origCreateTexture = nullptr;
+PFN_UpdateTexture       g_origUpdateTexture = nullptr;
 PFN_CreateVolumeTexture g_origCreateVolumeTexture = nullptr;
 PFN_CreateCubeTexture   g_origCreateCubeTexture = nullptr;
 PFN_CreateVertexBuffer  g_origCreateVertexBuffer = nullptr;
@@ -23556,6 +23820,18 @@ inline bool SuppressCapturedVrMenuDraw() {
 // be locked directly - so a translated texture only needs a shadow when it is not dynamic.
 inline bool NeedsShadow(DWORD usage) { return (usage & D3DUSAGE_DYNAMIC) == 0; }
 
+// A successful engine-side UpdateTexture can rewrite a resource without going
+// through its LockRect vtable. Drop any source-owned match/replacement stamp so
+// the next bind sees the new content. The staging wrapper invalidates at Lock.
+HRESULT STDMETHODCALLTYPE Hook_UpdateTexture(IDirect3DDevice9* dev,
+        IDirect3DBaseTexture9* source, IDirect3DBaseTexture9* destination) {
+    const HRESULT hr = g_origUpdateTexture(dev, source, destination);
+    if (SUCCEEDED(hr) && !g_bridgeInternalUpload && destination &&
+        destination->GetType() == D3DRTYPE_TEXTURE)
+        texbridge::Invalidate(static_cast<IDirect3DTexture9*>(destination));
+    return hr;
+}
+
 // Defined below - the vtable for a resource type can only be patched once an instance exists, so
 // each Create* hook arms its own type on first success.
 void PatchTextureVTableOnce(IDirect3DTexture9* t);
@@ -23664,6 +23940,8 @@ HRESULT STDMETHODCALLTYPE Hook_CreateIndexBuffer(IDirect3DDevice9* dev, UINT len
                                                  IDirect3DIndexBuffer9** out, HANDLE* share) {
     usage=centurionanim::ReadableUsage(g_centurionCylinderAnimation!=0,len,fmt==D3DFMT_INDEX16,usage,D3DUSAGE_WRITEONLY);
     usage=weaponreload::ReadableUsage(NextReloadEnabled(),len,fmt==D3DFMT_INDEX16,usage,D3DUSAGE_WRITEONLY);
+    if((g_seekerSupportGrip||g_seekerProjectileAim)&&len==seekergeometry::IndexBytes&&fmt==D3DFMT_INDEX16)
+        usage&=~D3DUSAGE_WRITEONLY;
     if (g_deviceIsEx && pool == D3DPOOL_MANAGED) { pool = D3DPOOL_DEFAULT; InterlockedIncrement(&g_xlatIB); }
     return g_origCreateIndexBuffer(dev, len, usage, fmt, pool, out, share);
 }
@@ -25406,7 +25684,8 @@ static bool PolishLookupByKey(const wchar_t* section, const wchar_t* key,
 static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
                                  const wchar_t* key = nullptr, const wchar_t* package = nullptr) {
     const bool polish=PolishLocalization::PL().IsPolishEnabled();
-    const bool prompts=g_vrPromptTokens&&VrModeOn();
+    const bool cleanup=g_vrHideLegacyPadPrompts&&VrModeOn();
+    const bool prompts=(g_vrPromptTokens||cleanup)&&VrModeOn();
     if (!result || (!polish&&!prompts)) return;
     if (!Readable(result, 12)) return;
     wchar_t* data = *reinterpret_cast<wchar_t**>(result);
@@ -25444,7 +25723,18 @@ static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
     prompttokens::Result rewritten;
     if(prompts){
         const bool layout=g_reloadControlLayout&&AimHand()==1&&!Rd(g_swapSticks);
-        rewritten=prompttokens::Rewrite(visible,prompt,sizeof(prompt),layout,AimHand()==1,polish);
+        if(cleanup){
+            vrprompts::Control controls[vrprompts::Count]{};
+            for(int i=0;i<vrprompts::Count;++i)controls[i]=(vrprompts::Control)InterlockedCompareExchange(&g_vrPromptControls[i],0,0);
+            char sec[128]{},ky[128]{};
+            if(section)WideFieldToUtf8(section,sec,sizeof(sec));
+            if(key)WideFieldToUtf8(key,ky,sizeof(ky));
+            // Notes/subtitles are not action instruction producers.
+            if(!PolishNotesSection(section)){
+                const auto clean=vrprompts::Rewrite(visible,prompt,sizeof(prompt),controls,polish,sec,ky);
+                rewritten.changed=clean.changed;rewritten.overflow=clean.overflow;
+            }
+        }else rewritten=prompttokens::Rewrite(visible,prompt,sizeof(prompt),layout,AimHand()==1,polish);
         if(rewritten.changed&&!rewritten.overflow){
             visible=prompt;
             static unsigned notes=0;if(notes++<24)Log("vr-prompt token rewrite: reloadLayout=%d replacements=%u source=\"%.240s\" visible=\"%.300s\"",
@@ -25472,7 +25762,7 @@ static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
     // FString/GFx receives Unicode; a code-page round trip neither creates
     // glyphs nor proves their coverage and can replace unsupported text by '?'.
     const int wn = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, visible, -1, wide, 4096);
-    if (wn <= 1) return;
+    if (wn <= 0) return;
     static LONG saidNoteUnicode = 0;
     if (notes && InterlockedCompareExchange(&saidNoteUnicode, 1, 0) == 0)
         Log("polish notes: Unicode preserved; font glyph coverage requires separate validation");
@@ -25901,6 +26191,9 @@ volatile LONG g_slcRotated = 0;
 int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                                     float* End, float* Start, uint32_t flags,
                                     void* extent, void* a7) {
+    // The opt-in Seeker launch already supplies native weapon-space origin and
+    // spread. Do not rotate its own auxiliary traces a second time as hitscan.
+    if(SeekerOwnsTrace(src))return g_origSLC(self,edx,hit,src,End,Start,flags,extent,a7);
     if (InterlockedCompareExchange(&g_fireDepth, 0, 0) > 0 &&
         End && Start && Readable(End, 12) && Readable(Start, 12) &&
         InterlockedCompareExchange(&g_camPosValid, 0, 0)) {
@@ -27622,7 +27915,7 @@ static void ClearRects(IDirect3DDevice9* dev, const D3DRECT* r, int n, D3DCOLOR 
 }
 
 // M02 first slice. No texture, COM work or draw-path change when OFF.
-static LONG g_uiRemasterRuntime=0,g_uiRemasterSettings=0,g_uiRemasterWheel=0,g_uiRemasterState=0;
+static LONG g_uiRemasterRuntime=1,g_uiRemasterSettings=1,g_uiRemasterWheel=1,g_uiRemasterMenus=1,g_uiRemasterState=0;
 static IDirect3DTexture9* g_uiRemasterNeutral=nullptr;
 static IDirect3DTexture9* g_uiRemasterPl=nullptr;
 static IDirect3DTexture9* g_uiRemasterEn=nullptr;
@@ -27684,7 +27977,7 @@ static bool LoadUiRemasterAtlas(IDirect3DDevice9* dev,const char* name,UINT expe
     return true;
 }
 static bool LoadUiRemasterNeutral(IDirect3DDevice9* dev){
-    if(!dev||(!Rd(g_uiRemasterRuntime)&&!Rd(g_uiRemasterWheel)))return false;
+    if(!dev||(!Rd(g_uiRemasterRuntime)&&!Rd(g_uiRemasterWheel)&&!Rd(g_uiRemasterMenus)))return false;
     if(Rd(g_uiRemasterState)!=0)return Rd(g_uiRemasterState)==1;
     if(!LoadUiRemasterAtlas(dev,"ui_atlas_neutral.png",4096,2048,&g_uiRemasterNeutral)){
         InterlockedExchange(&g_uiRemasterState,-1);
@@ -28756,6 +29049,8 @@ void ReleaseWristResources() {
     g_nativeCuffRenderer.ReleaseGPU();
     g_tmdShortGauntletRenderer.ReleaseGPU();
     g_tmdAttachmentIdentity.Reset();
+    g_seekerIndices.Reset();g_seekerSupportFrame={};
+    AcquireSRWLockExclusive(&g_nextVisualLock);g_seekerPose={};ReleaseSRWLockExclusive(&g_nextVisualLock);
     InterlockedExchange(&g_tmdShortSuccessfulFrame,-1);
     InterlockedExchange(&g_tmdShortSuccessfulDraw,-1);
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
@@ -29191,6 +29486,7 @@ struct CenturionRefillNative {
 #include "native_registry.inl"
 #include "native_rifle_fx.inl"
 #include "native_scope_pip.inl"
+#include "native_seeker_projectile.inl"
 static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
     const auto object=(uint32_t)reinterpret_cast<uintptr_t>(self);
     const auto weapon=(uint32_t)Rd(g_weaponObj),pawn=(uint32_t)g_playerPawn;
@@ -30462,6 +30758,11 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     const int remasterResult=roundOn?DrawUiRemasterWheelPair(dev,safeMetrics,wheelCx,wheelCy,
         slots,selected,slotVerts,slotNamed,wheelClip,wheelReserve,(int)d.Width,(int)d.Height):0;
     const bool remasterRendered=remasterResult!=0;
+    {static unsigned receipts=0;static int previous=-99;
+     if(receipts<12&&previous!=remasterResult){previous=remasterResult;++receipts;
+         Log("M02 wheel binding: result=%d enabled=%ld slots=%d neutral=%p lang=%s; result=1 is committed both-eye draw",
+             remasterResult,Rd(g_uiRemasterWheel),slots,(void*)g_uiRemasterNeutral,
+             PolishLocalization::PL().IsPolishEnabled()?"pl":"en");}}
     if(remasterResult<0){static bool once=false;if(!once){once=true;
         Log("M02 wheel: two-eye composite failed; native overlay withheld for this frame");}}
     for (int eye = 0; eye < 2; ++eye) {
@@ -30938,6 +31239,7 @@ void DrawHealthPlate(IDirect3DDevice9* dev) {
 // rounds remain. Unknown values hide the plate, never a guessed one.
 volatile LONG g_ammoPlate = 0;
 static char g_ammoAssetRoot[MAX_PATH] = "vr-assets/hud/katorga/ammo";
+static const char* g_diegeticAssetRoot = "vr-assets/hud/diegetic";
 static IDirect3DTexture9* g_ammoPlateTex[4]{};
 static IDirect3DTexture9* g_ammoDigitsTex = nullptr;
 static volatile LONG g_ammoArtState = 0;   // 0 unloaded, 1 ready, -1 failed (logged once)
@@ -30945,21 +31247,49 @@ static volatile LONG g_ammoUnknownSaid = 0;
 // HUD sampler cache: offsets resolved BY NAME per HUD class (probe round 9).
 static uintptr_t g_ammoHudCls = 0;
 static int g_ammoOffClip = -2, g_ammoOffBin = -2, g_ammoOffSize = -2;
+// Diegetic counter (milestone 1: Centurion '06/24'): [Render] DiegeticWeaponHud
+// default OFF. While enabled+ready it owns the Centurion readout (the plate
+// backs off); atlas PNG quads only, no GLB/model loading, unknown ammo hides.
+volatile LONG g_diegeticHud = 0;
+static IDirect3DTexture9* g_diegeticAtlas = nullptr;
+static volatile LONG g_diegeticArtState = 0; // 0 unloaded, 1 ready, -1 failed
+static volatile LONG g_diegeticDrew[3] = { 0, 0, 0 }; // per legacy plate 0..2, per frame:
+                              // bit0 = counter drawn into the left half, bit1 = right half,
+                              // cleared at the start of every diegetic frame and set ONLY
+                              // after actual draw submission in that eye. This is the
+                              // atomic input for the plate back-off (atlas readiness,
+                              // gate state or 'skipped' frames never suppress the plate).
+static IDirect3DStateBlock9* g_diegeticState = nullptr;
 
-static bool LoadAmmoPng(IDirect3DDevice9* dev, const char* file, IDirect3DTexture9** out) {
+// Build the absolute runtime asset path for a repo-relative root + file name
+// (the dll's own directory is the install Binaries folder). Shared by the
+// plates loader and the diegetic loader so logged paths match what is opened.
+static bool AmmoAssetPath(const char* root, const char* file, char* pngPath, size_t cb) {
     char dll[MAX_PATH]{};
     HMODULE self = nullptr;
     if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
                             GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                            (LPCSTR)&LoadAmmoPng, &self) ||
+                            (LPCSTR)&AmmoAssetPath, &self) ||
         !GetModuleFileNameA(self, dll, MAX_PATH)) return false;
     char* slash = strrchr(dll, '\\');
     if (!slash) return false;
     *slash = 0;
-    std::string root = g_ammoAssetRoot;
-    for (char& c : root) if (c == '/') c = '\\';
+    std::string r = root;
+    for (char& c : r) if (c == '/') c = '\\';
+    _snprintf_s(pngPath, cb, _TRUNCATE, "%s\\%s\\%s", dll, r.c_str(), file);
+    return true;
+}
+
+// root selects the asset directory explicitly: the legacy plates live under
+// g_ammoAssetRoot (katorga/ammo) while the diegetic atlas lives under
+// g_diegeticAssetRoot (hud/diegetic). Physical fail 2026-10-24: resolving the
+// diegetic atlas with the plates root made it 'unavailable' every session.
+static bool LoadAmmoPng(IDirect3DDevice9* dev, const char* root, const char* file,
+                        IDirect3DTexture9** out, UINT* outW = nullptr, UINT* outH = nullptr) {
     char pngPath[MAX_PATH]{};
-    _snprintf_s(pngPath, sizeof(pngPath), _TRUNCATE, "%s\\%s\\%s", dll, root.c_str(), file);
+    if (!AmmoAssetPath(root, file, pngPath, sizeof(pngPath))) return false;
+    if (outW) *outW = 0;
+    if (outH) *outH = 0;
     CoInitializeEx(nullptr, COINIT_MULTITHREADED); // no-op if the game COM is already up
     wchar_t wpng[MAX_PATH]{};
     if (!MultiByteToWideChar(CP_ACP, 0, pngPath, -1, wpng, MAX_PATH)) return false;
@@ -30996,6 +31326,8 @@ static bool LoadAmmoPng(IDirect3DDevice9* dev, const char* file, IDirect3DTextur
     for (UINT y = 0; y < ph; ++y)
         memcpy((BYTE*)lr.pBits + (size_t)y * lr.Pitch, src + (size_t)y * pw * 4, (size_t)pw * 4);
     tex->UnlockRect(0);
+    if (outW) *outW = pw;
+    if (outH) *outH = ph;
     *out = tex;
     return true;
 }
@@ -31005,13 +31337,13 @@ static void MaybeLoadAmmoArt(IDirect3DDevice9* dev) {
     const char* files[4] = { "plate-centurion.png", "plate-rifle.png",
                              "plate-shotgun.png", "plate-sniper.png" };
     for (int i = 0; i < 4; ++i) {
-        if (!LoadAmmoPng(dev, files[i], &g_ammoPlateTex[i])) {
+        if (!LoadAmmoPng(dev, g_ammoAssetRoot, files[i], &g_ammoPlateTex[i])) {
             InterlockedExchange(&g_ammoArtState, -1);
             Log("ammo plate: art unavailable (%s) - plates hidden", files[i]);
             return;
         }
     }
-    if (!LoadAmmoPng(dev, "ammo-digits.png", &g_ammoDigitsTex)) {
+    if (!LoadAmmoPng(dev, g_ammoAssetRoot, "ammo-digits.png", &g_ammoDigitsTex)) {
         InterlockedExchange(&g_ammoArtState, -1);
         Log("ammo plate: art unavailable (ammo-digits.png) - plates hidden");
         return;
@@ -31046,6 +31378,15 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
     const int plate = ammoplates::PlateForGunVerts(heldVerts);
     if (plate < 0 || plate > 3 || !g_ammoPlateTex[plate] || !g_ammoDigitsTex) return;
+    // Atomic replacement (physical fail 2026-10-24: atlas 'ready' suppressed
+    // these plates while the diegetic draw itself was gate/asset-blocked ->
+    // no ammo display at all). The diegetic counter suppresses its legacy
+    // plate for THIS frame only when the counter actually rendered BOTH eyes
+    // this frame (per-plate latch set by DrawDiegeticCenturion, which now
+    // runs immediately before this function). Turning the gate OFF restores
+    // these verbatim plates unconditionally (independent rollback).
+    if (plate >= 0 && plate <= 2 && Rd(g_diegeticHud) != 0 &&
+        (InterlockedCompareExchange(&g_diegeticDrew[plate], 0, 0) & 3) == 3) return;
     // HUD sampler: offsets BY NAME per HUD class (round-9 probe verdict).
     const uintptr_t hud = FindHudObject();
     uintptr_t hc = 0;
@@ -31230,6 +31571,139 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     if (old) g_origSetRenderTarget(dev, 0, old);
     dev->SetDepthStencilSurface(depth);
     if (old) old->Release(); if (depth) depth->Release(); back->Release();
+}
+
+// ---- Diegetic weapon HUD (milestone 2: centurion + valkyrie + spikeshot) ----
+// [Render] DiegeticWeaponHud, default OFF. Same verified pipeline as the ammo
+// plate: aim-hand anchor, per-eye projection, world-anchored px-per-metre
+// sizing, live native HUD ammo sampler, own state block, full state restore.
+// Runtime representation = atlas PNG quads only; no GLB or mesh is loaded.
+// The counter replaces its weapon's legacy plate ONLY frame-atomically: the
+// per-plate drew-latch (both eye halves actually submitted) is what
+// DrawAmmoPlate consults; any skipped/rejected frame keeps the legacy plate.
+// Unknown ammo values hide the counter, never a guess. Amber glyph row at
+// <=2 rounds. Physical fail 2026-10-24 root fix: the atlas resolves from its
+// own g_diegeticAssetRoot, not the legacy plates' katorga/ammo root.
+static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
+    // Per-frame atomicity: clear the drew-latches FIRST. Any early return
+    // below (gate blocked, no mount, unknown ammo, load failure, stale transform)
+    // leaves the latches at zero, so the legacy plates keep drawing this frame.
+    InterlockedExchange(&g_diegeticDrew[0], 0);
+    InterlockedExchange(&g_diegeticDrew[1], 0);
+    InterlockedExchange(&g_diegeticDrew[2], 0);
+    if (handhud::HideAmmo(Rd(g_opticalHudHidden) != 0)) return;
+    const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
+        !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
+    const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+    // Per-weapon diegetic mount: Centurion 5799, Valkyrie AR9 11387, Spikeshot 8297
+    const diegetichud::WeaponMount* mo = diegetichud::MountForVerts(heldVerts);
+    if (!mo) return; // no mount for the held weapon
+    if (!handhud::Visible(Rd(g_diegeticHud) != 0, VrModeOn(), Rd(g_dupDraws) != 0,
+                          hudGameplay, Rd(g_gamePaused) != 0, Rd(g_vrUiMenu) != 0,
+                          Rd(g_panelOpen) != 0, Rd(g_inCinematic) != 0) ||
+        Rd(g_weaponWheelOpen) || !WeaponPresentationInHands() ||
+        !g_haveEyes || !g_origSetRenderTarget || !g_origDrawPrimUP) {
+        static bool saidGate = false;
+        if (!saidGate) {
+            saidGate = true;
+            Log("diegetic hud: gate blocked (flag=%d wheel=%d armed=%d eyes=%d)",
+                (int)Rd(g_diegeticHud), (int)Rd(g_weaponWheelOpen),
+                WeaponInHands() ? 1 : 0, g_haveEyes ? 1 : 0);
+        }
+        return;
+    }
+
+    // Live weapon transform: must be captured this frame from Hook_DrawIndexedPrim
+    const uint64_t now = GetTickCount64();
+    const unsigned frame = (unsigned)Rd(g_sceneModeFrame);
+    diegetichud::Pose pose{};
+    if (!diegetichud::GetLiveTransform(heldVerts, now, frame, pose)) {
+        static uint64_t lastStaleLog = 0;
+        if (now - lastStaleLog > 3000) {
+            lastStaleLog = now;
+            Log("diegetic hud: no fresh 3D transform for %s (%ld) at frame %u (now=%I64u tf.tick=%I64u tf.valid=%ld); falling back to 2D plate",
+                mo->name, heldVerts, frame, now,
+                (unsigned __int64)diegetichud::GlobalLiveTransform().tick,
+                (long)diegetichud::GlobalLiveTransform().valid);
+        }
+        return;
+    }
+
+    if (InterlockedCompareExchange(&g_diegeticArtState, 0, 0) == 0) {
+        IDirect3DTexture9* t = nullptr;
+        UINT tw = 0, th = 0;
+        if (LoadAmmoPng(dev, g_diegeticAssetRoot, "diegetic_hud_atlas.png", &t, &tw, &th) && t) {
+            g_diegeticAtlas = t;
+            InterlockedExchange(&g_diegeticArtState, 1);
+            Log("diegetic hud: atlas ready %ux%u from %s", tw, th, g_diegeticAssetRoot);
+        } else {
+            if (t) t->Release();
+            InterlockedExchange(&g_diegeticArtState, -1);
+            char tried[MAX_PATH]{};
+            AmmoAssetPath(g_diegeticAssetRoot, "diegetic_hud_atlas.png", tried, sizeof(tried));
+            Log("diegetic hud: atlas unavailable (%s); diegetic counter hidden", tried);
+        }
+    }
+    if (InterlockedCompareExchange(&g_diegeticArtState, 0, 0) != 1 || !g_diegeticAtlas) return;
+
+    // Live ammo from native HUD sampler
+    const uintptr_t hud = FindHudObject();
+    uintptr_t hc = 0;
+    if (hud && Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t)))
+        hc = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS);
+    if (hc && hc != g_ammoHudCls) {
+        g_ammoHudCls = hc;
+        g_ammoOffClip = PropOffsetInChain(hc, "mClipAmmo");
+        g_ammoOffBin = PropOffsetInChain(hc, "mBinAmmo");
+        g_ammoOffSize = PropOffsetInChain(hc, "mClipSize");
+    }
+    int clip = -1, bin = -1;
+    if (g_ammoOffClip >= 0 && g_ammoOffBin >= 0 && hud &&
+        Readable((const void*)(hud + g_ammoOffClip), 4) &&
+        Readable((const void*)(hud + g_ammoOffBin), 4)) {
+        clip = *reinterpret_cast<const int32_t*>(hud + g_ammoOffClip);
+        bin = *reinterpret_cast<const int32_t*>(hud + g_ammoOffBin);
+    }
+    if (clip < 0 || bin < 0) return; // unknown -> hidden (never guessed)
+
+    // Build the 3D model-space quads for this weapon
+    diegetichud::Quad3D quads[16];
+    const int numQuads = diegetichud::BuildFixtureQuads3D(*mo, clip, bin, quads, 16);
+    if (numQuads <= 0) return;
+
+    IDirect3DSurface9* back=nullptr;
+    if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back)) || !back)return;
+    D3DSURFACE_DESC desc{};
+    if(FAILED(back->GetDesc(&desc))){back->Release();return;}
+    const auto plan=diegetichud::Project(quads,numQuads,pose,desc.Width,desc.Height,handhud::kPlateAlphaPct);
+    const auto result=diegetichud::Render(dev,back,g_diegeticAtlas,g_diegeticState,plan,
+        [&](IDirect3DSurface9* target){return g_origSetRenderTarget(dev,0,target);},
+        [&](const diegetichud::ScreenVertex* vertices){return g_origDrawPrimUP(dev,
+            D3DPT_TRIANGLESTRIP,2,vertices,sizeof(diegetichud::ScreenVertex));});
+    back->Release();
+    if(mo->plate>=0 && mo->plate<=2)InterlockedExchange(&g_diegeticDrew[mo->plate],result.handledEyes);
+
+    // Six bounded receipts per weapon/session, plus state changes. No readback,
+    // shader dump or GPU synchronization in the production draw path.
+    static unsigned receipts[3]{};
+    static int lastState[3]={-1,-1,-1};
+    const int state=plan.ready?(SUCCEEDED(result.hr)?1:2):0;
+    if(receipts[mo->plate]<6 && lastState[mo->plate]!=state) {
+        ++receipts[mo->plate];lastState[mo->plate]=state;
+        const auto p=diegetichud::Point(quads[4].p[0],pose.chain);
+        Log("diegetic hud 3D: %s state=%d handledEyes=%u submitted=%u/%u screenFacing=%d/%d "
+            "bezelWorld=(%.3f,%.3f,%.3f) bboxL=(%.1f,%.1f)-(%.1f,%.1f) bboxR=(%.1f,%.1f)-(%.1f,%.1f) back=%ux%u hr=%08lx",
+            mo->name,state,result.handledEyes,result.submitted[0],result.submitted[1],
+            plan.eye[0].front[5]?1:0,plan.eye[1].front[5]?1:0,
+            double(p.x),double(p.y),double(p.z),
+            double(plan.eye[0].minX),double(plan.eye[0].minY),double(plan.eye[0].maxX),double(plan.eye[0].maxY),
+            double(plan.eye[1].minX),double(plan.eye[1].minY),double(plan.eye[1].maxX),double(plan.eye[1].maxY),
+            desc.Width,desc.Height,result.hr);
+        for(int r=0;r<4;++r)Log("diegetic hud pose row%d chain=(%.6g %.6g %.6g %.6g) L=(%.6g %.6g %.6g %.6g) R=(%.6g %.6g %.6g %.6g)",
+            r,double(pose.chain.m[r][0]),double(pose.chain.m[r][1]),double(pose.chain.m[r][2]),double(pose.chain.m[r][3]),
+            double(pose.eyeClip[0].m[r][0]),double(pose.eyeClip[0].m[r][1]),double(pose.eyeClip[0].m[r][2]),double(pose.eyeClip[0].m[r][3]),
+            double(pose.eyeClip[1].m[r][0]),double(pose.eyeClip[1].m[r][1]),double(pose.eyeClip[1].m[r][2]),double(pose.eyeClip[1].m[r][3]));
+    }
 }
 
 // MAIN 2026-10-15: white translucent ring marks the hip holster spot while a
@@ -35035,10 +35509,12 @@ void LoadIniSettings() {
     InterlockedExchange(&g_modalUiProbe, GetPrivateProfileIntA("Render","ModalUiProbe",0,path)?1:0);
     InterlockedExchange(&g_contextPointerProjection,GetPrivateProfileIntA("Render","ContextPointerProjection",0,path)?1:0);
     g_vrPromptTokens=GetPrivateProfileIntA("Render","VrPromptTokens",0,path)!=0;
+    g_vrHideLegacyPadPrompts=GetPrivateProfileIntA("Render","VrHideLegacyPadPrompts",1,path)!=0;
     g_vrSettingsMinimal=GetPrivateProfileIntA("Render","VrSettingsMinimal",0,path)!=0;
-    InterlockedExchange(&g_uiRemasterRuntime,GetPrivateProfileIntA("Render","UiRemasterRuntime",0,path)?1:0);
-    InterlockedExchange(&g_uiRemasterSettings,GetPrivateProfileIntA("Render","UiRemasterSettings",0,path)?1:0);
-    InterlockedExchange(&g_uiRemasterWheel,GetPrivateProfileIntA("Render","UiRemasterWheel",0,path)?1:0);
+    InterlockedExchange(&g_uiRemasterRuntime,GetPrivateProfileIntA("Render","UiRemasterRuntime",1,path)?1:0);
+    InterlockedExchange(&g_uiRemasterSettings,GetPrivateProfileIntA("Render","UiRemasterSettings",1,path)?1:0);
+    InterlockedExchange(&g_uiRemasterWheel,GetPrivateProfileIntA("Render","UiRemasterWheel",1,path)?1:0);
+    InterlockedExchange(&g_uiRemasterMenus,GetPrivateProfileIntA("Render","UiRemasterMenus",1,path)?1:0);
     g_vrSettingsSessionOnly=GetPrivateProfileIntA("Diagnostic","VrSettingsSessionOnly",0,path)!=0;
     InterlockedExchange(&g_reloadHintsEnabled,
         GetPrivateProfileIntA("Input","ReloadHints",0,path)!=0);
@@ -35850,6 +36326,10 @@ void LoadIniSettings() {
         }
     }
     Log("ammo plate: %s (ammo root %s)", Rd(g_ammoPlate) ? "ENABLED" : "off", g_ammoAssetRoot);
+    InterlockedExchange(&g_diegeticHud,
+        GetPrivateProfileIntA("Render", "DiegeticWeaponHud", 0, path) ? 1 : 0);
+    Log("diegetic hud: %s (weapon counters centurion/valkyrie/spikeshot, default off, atlas vr-assets/hud/diegetic)",
+        Rd(g_diegeticHud) ? "ENABLED" : "off");
     Log("controller features: TwoHandGrip configurable, wrist health=%ld, bounded render evidence=%ld, scene trace=%ld",
         Rd(g_wristHealth),Rd(g_renderEvidence),Rd(g_sceneModeTrace));
     Log("cutscene presentation: %s, cinema matte=%s (VR panel rows)",
@@ -35875,7 +36355,19 @@ void LoadIniSettings() {
     g_weaponNativeAxis=GetPrivateProfileIntA("Input","WeaponNativeAxis",0,path)?1:0;
     g_twoHandSpreadPercent=(int)GetPrivateProfileIntA("Input","TwoHandSpreadPercent",100,path);
     if(g_twoHandSpreadPercent<0||g_twoHandSpreadPercent>100)g_twoHandSpreadPercent=100;
+    g_vrValkyrieSpreadPercent=(int)GetPrivateProfileIntA("Input","VrValkyrieSpreadPercent",100,path);
+    g_vrVolkSpreadPercent=(int)GetPrivateProfileIntA("Input","VrVolkSpreadPercent",100,path);
+    g_vrValkyrieTwoHandPercent=(int)GetPrivateProfileIntA("Input","VrValkyrieTwoHandPercent",100,path);
+    g_vrVolkTwoHandPercent=(int)GetPrivateProfileIntA("Input","VrVolkTwoHandPercent",100,path);
+    if(g_vrValkyrieSpreadPercent<0||g_vrValkyrieSpreadPercent>100)g_vrValkyrieSpreadPercent=100;
+    if(g_vrVolkSpreadPercent<0||g_vrVolkSpreadPercent>100)g_vrVolkSpreadPercent=100;
+    if(g_vrValkyrieTwoHandPercent<0||g_vrValkyrieTwoHandPercent>100)g_vrValkyrieTwoHandPercent=100;
+    if(g_vrVolkTwoHandPercent<0||g_vrVolkTwoHandPercent>100)g_vrVolkTwoHandPercent=100;
     Log("ini: TwoHandSpreadPercent=%d (100=native; active supported local shots only)",g_twoHandSpreadPercent);
+    Log("ini: VrValkyrieSpreadPercent=%d VrVolkSpreadPercent=%d (100=native; fresh matching muzzle only)",
+        g_vrValkyrieSpreadPercent,g_vrVolkSpreadPercent);
+    Log("ini: VrValkyrieTwoHandPercent=%d VrVolkTwoHandPercent=%d (100=OFF; profile-scoped support)",
+        g_vrValkyrieTwoHandPercent,g_vrVolkTwoHandPercent);
     g_cinematicHandsOwnership=GetPrivateProfileIntA("Render","CinematicHandsOwnership",0,path)?1:0;
     g_cinematicSceneProbe=GetPrivateProfileIntA("Diagnostic","CinematicSceneProbe",0,path)?1:0;
     g_cinematicEventBridge=GetPrivateProfileIntA("Render","CinematicEventBridge",0,path)?1:0;
@@ -35910,16 +36402,21 @@ void LoadIniSettings() {
     const char* const extensionKeys[]{"ValkyrieShoulderExtendLeftCm","VolkShoulderExtendLeftCm"};
     const char* const radiusKeys[]{"ValkyrieShoulderRadiusCm","VolkShoulderRadiusCm"};
     const char* const reachKeys[]{"ValkyrieGripReachMs","VolkGripReachMs"};
+    const char* const insertKeys[]{"ValkyrieInsertRadiusCm","VolkInsertRadiusCm"};
     for(unsigned i=0;i<2;++i){
         g_nextShoulderExtraLeftCm[i]=shoulderSetting(extensionKeys[i],18,0,25);
         g_nextShoulderRadiusCm[i]=shoulderSetting(radiusKeys[i],18,12,22);
         g_nextShoulderReachMs[i]=shoulderSetting(reachKeys[i],1800,0,3000);
+        g_nextInsertRadiusCm[i]=shoulderSetting(insertKeys[i],18,16,20);
     }
     Log("shoulder pickup: Valkyrie extension=%dcm radius=%dcm reach=%dms; Volk extension=%dcm radius=%dcm reach=%dms; probe=%d",
         g_nextShoulderExtraLeftCm[0],g_nextShoulderRadiusCm[0],g_nextShoulderReachMs[0],
         g_nextShoulderExtraLeftCm[1],g_nextShoulderRadiusCm[1],g_nextShoulderReachMs[1],g_shoulderPickupProbe);
     g_weaponTraceRigidOrigin=GetPrivateProfileIntA("Input","WeaponTraceRigidOrigin",0,path)!=0;
     g_weaponMeasuredAim=GetPrivateProfileIntA("Input","WeaponMeasuredAim",0,path)!=0;
+    InterlockedExchange(&g_seekerBackSlot,GetPrivateProfileIntA("Input","SeekerBackSlot",0,path)!=0);
+    g_seekerSupportGrip=GetPrivateProfileIntA("Input","SeekerSupportGrip",0,path);
+    g_seekerProjectileAim=GetPrivateProfileIntA("Input","SeekerProjectileAim",0,path);
     g_centurionAimProbe=GetPrivateProfileIntA("Diagnostic","CenturionAimProbe",0,path)!=0;
     g_bodyEquipmentProbe=GetPrivateProfileIntA("Diagnostic","BodyEquipmentProbe",0,path)!=0;
     InterlockedExchange(&g_tmdNativeAim,GetPrivateProfileIntA("Input","TmdNativeAim",0,path)!=0);
@@ -36595,9 +37092,11 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
         // light-space render pass, which was why the former VrShadows=0 still left a rectangle.
         g_origSetTexture = (PFN_SetTexture)PatchVTable(*out,65,(void*)&Hook_SetTexture);
         if(Rd(g_textureBridgeOwned)) {
+            g_origUpdateTexture = (PFN_UpdateTexture)PatchVTable(*out,31,(void*)&Hook_UpdateTexture);
             HMODULE injector=GetModuleHandleW(L"dinput8.dll");
             g_textureBridgeBind=injector?reinterpret_cast<texbridge::Bind>(GetProcAddress(injector,"SingularityTextureBridgeV1")):nullptr;
-            Log("texture bridge: slot65 MAIN owner; callback=%p originalForward=%p",(void*)g_textureBridgeBind,(void*)g_origSetTexture);
+            Log("texture bridge: slot65 MAIN owner; callback=%p originalForward=%p updateForward=%p",
+                (void*)g_textureBridgeBind,(void*)g_origSetTexture,(void*)g_origUpdateTexture);
         }
         // 118 = CreateQuery, the last method on IDirect3DDevice9. Counted forward from
         // SetVertexShaderConstantF at 94, which is independently confirmed working.

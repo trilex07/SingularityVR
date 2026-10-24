@@ -24,5 +24,18 @@ int main(){
     for(unsigned n=1;n<8;++n){r.tick+=2000;assert(wp.Due(r.tick,0x1234)&&wp.Capture(r)&&wp.Take(out));}
     assert(wp.Count()==16&&!wp.Due(r.tick+4000,0x1234));
     assert(!wp.Due(r.tick+4000,0x5678)); // fixed budget, not eight records per every swap
-    std::puts("PASS: fixed eight records, two-second cadence/wrap, pending isolation, finite inputs");
+    handanchor::Probe tmd[2];r.tmd=true;r.tick=100;r.eye=0;
+    assert(!tmd[0].Capture(r)); // no bound IB/face count/units
+    r.indexBuffer=0x1234;r.triangles=4402;r.uuPerMetre=65.625f;
+    r.wristWorld[0][0]=std::numeric_limits<float>::quiet_NaN();
+    assert(!tmd[0].Capture(r));r.wristWorld[0][0]=12;
+    r.verts=7444;r.hands=2;r.support=0;
+    for(unsigned i=0;i<8;++i){
+        for(unsigned eye=0;eye<2;++eye){r.eye=eye;assert(tmd[eye].Capture(r));
+            assert(tmd[eye].Take(out));assert(out.eye==eye&&out.tmd&&out.indexBuffer==0x1234);
+            assert(out.wristWorld[0][0]==12&&out.uuPerMetre==65.625f);}
+        r.tick+=2000;
+    }
+    for(auto& p:tmd)assert(!p.Capture(r)); // independent bounded stereo budgets
+    std::puts("PASS: fixed eight records, two-second cadence/wrap, pending isolation, finite inputs, final-bound TMD stereo metadata");
 }
