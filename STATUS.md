@@ -1,5 +1,23 @@
 # STATUS — session handoff
 
+## 2026-10-24 — PSVR2 Physical Verification: Combined Build A82184B2 (Accepted Features & Open Scope)
+
+- **Physical Acceptance Results (PSVR2 test by user)**:
+  - **HUD 3D (PHYSICAL PASS)**: Volk and Valkyrie counters rigidly mounted, reader orientation correct (clip left, reserve right), real-time ammo updates, clean stereo without ghosting/doubling.
+  - **TMD / Haptics / Two-Hand Grip (PHYSICAL PASS)**: Pulse effects, gauntlet posture, and two-handed stability verified.
+  - **Menu / Weapon Icons / Dubbing (PHYSICAL PASS)**: Polished neutral/localized UI assets, detailed weapon icons, Polish dubbing confirmed.
+  - **Left-Hand Tracking (PHYSICAL PASS)**: Glove motion accurately matches controller in gameplay.
+  - **Manual Reload Insertion Comfort (PARTIAL)**: 18 cm insertion radius functional on Valkyrie and Volk, but requires expansion to bounded 20 cm for full comfort.
+  - **New Scope / Issues Identified (Astra Ownership)**:
+    1. Special Seeker rifle retention: Must remain accessible from back-mounted VR holster after acquisition and switching to another weapon.
+    2. Seeker left-hand support grip alignment: Incorrect, requires adjustment.
+    3. Seeker and Valkyrie accuracy: Requires investigation and tuning.
+- **Preserved Artifacts & Hashes**:
+  - Live Steam DLL: A82184B2F82F019B7A59E3DBFB49EE60C1675BEC39FB7FE239E182B974F0FA73
+  - Backup Checkpoint: deployment/deploy-backups/20261024-accepted-a82184b2
+  - Archived PSVR2 Session Log: view_matrix.log (SHA256: 2AEFD4F46D3B92116C958523B4149A18D0351577BE4ACAC739F8A812DE90776F)
+- **Integration Boundary**: MAIN preserves accepted baseline and continues offline HD texture and audio prep. Astra owns Seeker retention/holster, support grip, accuracy, and 20 cm reload candidate.
+
 ## 2026-10-24 — SIDE first-four material remaster bridge (L2_PASS; physical gate open)
 
 On `feature/side-material-remaster-d3d9ex`, a separate, default-OFF
@@ -452,10 +470,10 @@ they were only aiming without firing; no failed test exists):
   `deployment\install-backups\20261024-002349` contains the accepted
   d3d9.dll `78404247…` (verified) — the M09 rollback point; INI absent from
   the backup because unchanged.
-- `%LOCALAPPDATA%\SingularityVR\view_matrix.log` hash `89D5479D…1CBE`
+- `%LOCALAPPDATA%\SingularityVR\vview_matrix.log` hash `89D5479D…1CBE`
   == the archived M01 evidence log; the game has not run since the accepted
   session, so no duplicate archive was created.
-- Runtime receipts available after the next session (view_matrix.log):
+- Runtime receipts available after the next session (vview_matrix.log):
   `[Haptics Trace] XINPUT RUMBLE [n/16]`, `SUBMIT [n/32]`
   (gate allowed/tracked/poseValid/posValid/focus + xrResult), `STOP [n/16]`.
 - **Next: Session A physical test (TmdPulses=0)** — fire Valkyrie/Volk/pistol
@@ -2684,7 +2702,7 @@ clip<0||bin<0 (offsets cached +1404/+1400 on RvHUD) and health "shown" logged
 but user reports both plates invisible — drew-vs-seen still undistinguished
 until this candidate runs in-headset. Next: one PSVR2 pass (hold gun, check
 ammo plate; empty mag to 0; grip two-hand, check HP low-left), then read
-view_matrix.log for ammo unknown(...)/drew and health drew lines.
+vview_matrix.log for ammo unknown(...)/drew and health drew lines.
 Falsifier: drew present + still invisible = placement/alpha, not sampling;
 unknown with clip/bin>=0 readable = offset/window wrong, not HUD-missing.
 No fix claimed; no rollback (candidate healthy, game closed at deploy).
@@ -3905,7 +3923,7 @@ it does not describe the physically accepted native RTT provider above.
 
 **Steam install (MAIN):** `4F85BEAAFC7033287B900A1750203375FDEE64E9FA817EDA2E9CB6F8EA2BECBE`
 (build after `94b47e8` + compile fix), backup `20261012-113123`, INI preserved.
-L3 smoke: `OpenXR ready` in `view_matrix.log` (2026-10-12 11:32:54 attach); no
+L3 smoke: `OpenXR ready` in `vview_matrix.log` (2026-10-12 11:32:54 attach); no
 `support wrist snap` in this build. Support grip on headset: **READY_FOR_PHYSICAL_ACCEPTANCE**
 (not re-tested on PSVR2 yet). Prior: `0eb22a6` / `2B896A7A…`, backup `20261012-111934`. Workflow:
 `docs/STEAM_MAIN_DEPLOY_WORKFLOW.md`.
@@ -4430,7 +4448,7 @@ Readability is not liveness. A level transition leaves the previous level's `RvP
 non-archetype match in `GObjects` order, so the stale camera could win and then be revalidated
 forever.
 
-Diagnosed entirely from `view_matrix.log`, no new instrument needed: the post-transition main menu
+Diagnosed entirely from `vview_matrix.log`, no new instrument needed: the post-transition main menu
 reported `identification: 36 of 120 frames lost the matrix entirely; best rejected dotFwd +0.6964
 (gate 0.80)`. dotFwd 0.696 is 45.9°, and the camera being read reported yaw **+44.5°** while the
 matrix carried ~0° — two different cameras. Every rejection invalidates the register slot, so the
@@ -4729,7 +4747,7 @@ recorded rather than filtered out, because a long enough transient reads as a vi
 10b. **✅ FIXED and VERIFIED (run 212) — the run-207 role shift came back past `MinFgMeshes`.**
    `VetoQuietGun=1`, `RelatchWrongRoles=1`.
    - **Verified, and the case was genuinely exercised** — this is not a clean-run false pass. In a
-     161,376-line playthrough from the beginning, `view_matrix.log` line 17471 logs the veto firing on
+     161,376-line playthrough from the beginning, `vview_matrix.log` line 17471 logs the veto firing on
      `fg census (at the REFUSED take): 3 entries: [0]=3314 [1]=390 [2]=662` — **the identical signature
      to the Aug 7 failure**, including the same 662 mesh. The pistol then latched correctly at line
      35663, `[5799 3314 390]`. User-confirmed in play.
@@ -5029,11 +5047,11 @@ that order leaves both stereo modes running at once. F12 before F1 is harmless a
 
 Mouse and head tracking now **add** rather than fight — turning with the mouse no longer snaps
 back, and the same fix is what stick-turning will need in the shipped mod.
-Log: `C:\Users\<you>\AppData\Local\SingularityVR\view_matrix.log` — **read it directly from disk**;
+Log: `C:\Users\<you>\AppData\Local\SingularityVR\vview_matrix.log` — **read it directly from disk**;
 it does not need pasting into chat, and it must never be pasted into this file. Truncated at each
 attach and stamped with the run's date and time on line 1, so a stale file is obvious at a glance.
 
-**Every run is kept, named for when it started.** The live run is always `view_matrix.log`; at
+**Every run is kept, named for when it started.** The live run is always `vview_matrix.log`; at
 the next attach it is renamed to `view_matrix_YYYY-MM-DD_HH-MM-SS.log`, the stamp read back out
 of its own line-1 header. Newest archive = most recent finished run. Nothing is ever evicted, so
 **a reference to a specific log stays valid permanently** — cite them by name in notes.

@@ -1,0 +1,68 @@
+{
+  "source_commit": "0989f269430362decc2ab6ddeffd4962175291d2",
+  "base_commit": "279203ba",
+  "branch": "feature/ui-remaster-legacy-prompt-cleanup",
+  "dll_sha256": "9800178AF2930802182C1B3C53B995F62A5BACC6BFC1A0186212E4DA839852DB",
+  "architecture": "x86 PE32",
+  "optimization": "/O2",
+  "deployment_audit": {
+    "atlases": [
+      {
+        "file": "ui_atlas_neutral.png",
+        "source_sha256": "3EF1782696B4A5E1E9D93F409C5B0F6FF014B78CC42FAB06EC29110661981818",
+        "installed_sha256": "3EF1782696B4A5E1E9D93F409C5B0F6FF014B78CC42FAB06EC29110661981818",
+        "installed_path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\vr-assets\\ui\\remaster\\ui_atlas_neutral.png"
+      },
+      {
+        "file": "ui_atlas_localized_pl.png",
+        "source_sha256": "6436AA257F310F65A1F65C04D7435D9BF8343BFEFAB2EEE50A8A836F96FC83FD",
+        "installed_sha256": "6436AA257F310F65A1F65C04D7435D9BF8343BFEFAB2EEE50A8A836F96FC83FD",
+        "installed_path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\vr-assets\\ui\\remaster\\ui_atlas_localized_pl.png"
+      },
+      {
+        "file": "ui_atlas_localized_en.png",
+        "source_sha256": "53B570C4787B834270CBCF0943622877613A7EE7E2AD07FA6A363DFE11A422BA",
+        "installed_sha256": "53B570C4787B834270CBCF0943622877613A7EE7E2AD07FA6A363DFE11A422BA",
+        "installed_path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\vr-assets\\ui\\remaster\\ui_atlas_localized_en.png"
+      }
+    ],
+    "installed_flags": {
+      "UiRemasterRuntime": "1",
+      "UiRemasterSettings": "1",
+      "UiRemasterWheel": "1",
+      "UiRemasterMenus": "absent",
+      "VrPromptTokens": "1",
+      "VrHideLegacyPadPrompts": "absent"
+    },
+    "installed_dll_sha256": "A82184B2F82F019B7A59E3DBFB49EE60C1675BEC39FB7FE239E182B974F0FA73",
+    "rendering_proven": false,
+    "note": "File identity/config only, not a live binding or pixel receipt"
+  },
+  "flags": {
+    "UiRemasterRuntime": 1,
+    "UiRemasterMenus": 1,
+    "UiRemasterWheel": 1,
+    "VrHideLegacyPadPrompts": 1,
+    "UiRemasterSettings": 1
+  },
+  "offline_tests": {
+    "detailed_weapon_icons": "PASS",
+    "hud3d_240_pixels": "PASS",
+    "d3d9_d3d9ex_pixels_and_restore": "PASS",
+    "atlas_pl_en_163_sprites": "PASS",
+    "pe32_o2_build": "PASS",
+    "compiled_locker_abi": "PASS",
+    "ui_cleanup_12_programs": "PASS",
+    "critical_gameplay_tmd_reload_oled": "PASS"
+  },
+  "physical_acceptance": "PENDING",
+  "steam_deployment": "NOT RUN",
+  "limitations": [
+    "Native main/pause button art retained; new atlas frame/backdrop only",
+    "Unknown prompt producers deliberately unchanged",
+    "Unknown or ambiguous XR control source displays VR",
+    "Runtime active bindings and headset readability require MAIN validation"
+  ],
+  "rollback": "UiRemasterMenus=0 and VrHideLegacyPadPrompts=0 restore previous menu backdrop and prompt policy",
+  "handoff": "UI_REMASTER_PROMPT_CLEANUP.md"
+}
