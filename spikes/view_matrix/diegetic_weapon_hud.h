@@ -48,6 +48,7 @@ inline float HousingHeightMetres() { return kHousingHUU * kUUMetres; } // 0.0114
 struct WeaponMount {
     const char* name;
     long verts;          // first-person gun mesh catalog id (evidence)
+    int plate;           // accepted legacy plate index this counter replaces
     float cyUU;          // fixture centre height (top-strap line)
     float wUU, hUU, dUU; // housing box in UU (2:1 screen panel aspect)
     float pitchDeg;
@@ -60,9 +61,9 @@ struct WeaponMount {
 //  Spikeshot: ch_inview_shotgun_mesh.psk  (0.0,116.8,42.0) size(2.8,0.45,1.9) pitch 15 '08/32'
 inline const WeaponMount* MountForVerts(long v) {
     static const WeaponMount kMounts[] = {
-        { "centurion", 5799, 115.3f, 2.6f, 0.45f, 1.8f, 18.0f, 2, 2 },
-        { "valkyrie", 11387, 117.2f, 2.8f, 0.45f, 1.9f, 20.0f, 2, 3 },
-        { "spikeshot", 8297, 116.8f, 2.8f, 0.45f, 1.9f, 15.0f, 2, 2 },
+        { "centurion", 5799, 0, 115.3f, 2.6f, 0.45f, 1.8f, 18.0f, 2, 2 },
+        { "valkyrie", 11387, 1, 117.2f, 2.8f, 0.45f, 1.9f, 20.0f, 2, 3 },
+        { "spikeshot", 8297, 2, 116.8f, 2.8f, 0.45f, 1.9f, 15.0f, 2, 2 },
     };
     for (const auto& m : kMounts) if (m.verts == v) return &m;
     return nullptr; // TMD / seeker / unknown: no diegetic counter

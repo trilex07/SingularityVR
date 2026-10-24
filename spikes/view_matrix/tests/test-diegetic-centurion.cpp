@@ -94,6 +94,7 @@ int main() {
     const WeaponMount* mv = MountForVerts(11387);
     const WeaponMount* ms = MountForVerts(8297);
     CHECK(mc && mv && ms && !MountForVerts(4818) && !MountForVerts(11389));
+    CHECK(mc->plate == 0 && mv->plate == 1 && ms->plate == 2); // legacy plates 0..2
     CHECK(mv->wUU == 2.8f && mv->hUU == 0.45f && mv->dUU == 1.9f && mv->pitchDeg == 20.0f);
     CHECK(Near(ms->cyUU, 116.8f, 0) && ms->pitchDeg == 15.0f);
     CHECK(Near(MountAnchorLiftM(*mc), 0.0f, 1e-5f));      // calibrated baseline
