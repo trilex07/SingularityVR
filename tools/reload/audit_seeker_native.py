@@ -53,6 +53,11 @@ def audit(exe, text, dll):
     assert u32(pe.read(0x19d0788+0xb18,4),0)==0x102f700
     for slot,a in [(0x504,0xe87ba0),(0x440,0xe6a1a0),(0x430,0xe87580),(0x598,0xe8fcc0)]:
         assert u32(pe.read(rocket_vt+slot,4),0)==a
+    # Independent binary oracle for Actor.Instigator, not a synthetic adapter offset.
+    assert pe.read(0x18236bc,22).decode('utf-16le').rstrip('\0') == 'Instigator'
+    assert body(0x8b64ae,5) == bytes.fromhex('68bc368201')
+    assert body(0x8b64fb,6) == bytes.fromhex('8b82cc000000')
+    assert body(0xe6a1fb,6) == bytes.fromhex('8b8ecc000000')
     sw=ops(0x1047220,447)
     sites=[]
     for i,x in enumerate(sw):
@@ -85,6 +90,12 @@ def audit(exe, text, dll):
     for line in mapping.splitlines():
         m=re.search(r'\s(\S+)\s+([0-9a-fA-F]{8}) f\s',line)
         if m: symbols.append((int(m[2],16),m[1]))
+    a, = [a for a,s in symbols if s.startswith('?Read@NativeSeekerSlot')]
+    end=min(v for v,_ in symbols if v>a)
+    ownership=list(md.disasm(proxy.read(a,end-a),a))
+    assert any(x.mnemonic=='cmp' and x.op_str=='eax, 0xcc' for x in ownership)
+    assert any(x.mnemonic=='lea' and '+ 0xcc]' in x.op_str for x in ownership)
+    assert not any('+ 0x98]' in x.op_str for x in ownership)
     compiled={}
     for name,cleanup in [('StartHook@NativeSeekerProjectile','0x10'),('SpawnHook@NativeSeekerProjectile','0xc'),
                          ('FireHook@NativeSeekerProjectile',''),('Heavy@NativeSeekerSlot','')]:
@@ -94,7 +105,7 @@ def audit(exe, text, dll):
         rets=[x.op_str for x in ins if x.mnemonic=='ret']
         assert rets and all(r==cleanup for r in rets),(name,rets)
         compiled[name]={'va':hex(a),'ret_cleanup':cleanup or '0','ret_count':len(rets)}
-    return dict(native_text_base=hex(text_base),switch_return_offsets=sites,
+    return dict(instigator_offset="0xCC (Actor named serialization and native fire)",native_text_base=hex(text_base),switch_return_offsets=sites,
         native_contracts=[dict(name=name,va=hex(a),bytes=n,fnv64=f'{h:016X}') for name,a,n,h in contracts],
         compiled=compiled,input_sha256={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (exe,text,dll)},
         limitation='Offline native and emitted x86 contracts, not live selection or headset proof')

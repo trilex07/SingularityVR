@@ -20334,6 +20334,17 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             Log("tmd-short-gauntlet: exact mixed draw seen min=%u type=%u foreground=%ld scene=%ld shadow=%d",
                 minIndex,(unsigned)t,Rd(g_inForeground),Rd(g_rtIsScene),g_boundShaderLayout.shadow?1:0);
     }
+    static seekergeometry::SupportProbeBudget seekerBudget;
+    const bool seekerProbe=g_seekerSupportGrip&&seekergeometry::Vertices(Rd(g_gunVerts))&&
+        Rd(g_rtIsScene)&&!g_boundShaderLayout.shadow&&startIndex==0&&
+        (((numVertices==7444||numVertices==2626)&&primCount==4402)||
+         ((numVertices==3314||numVertices==2924)&&primCount==4830))&&
+        seekerBudget.Frame((uint32_t)Rd(g_armPaletteFrameToken),(unsigned)Rd(g_handsStatus),Rd(g_twoHandActive)!=0);
+    if(seekerProbe)Log("Seeker glove source: frame=%ld hands=%ld support=%ld tracked=%d/%d min=%u verts=%u first=%u tris=%u fg=%d animated=%d shader=%d/%d/%d",
+        Rd(g_armPaletteFrameToken),Rd(g_handsStatus),Rd(g_twoHandActive),
+        g_handPoseValid[0]&&g_handPositionValid[0],g_handPoseValid[1]&&g_handPositionValid[1],
+        minIndex,numVertices,startIndex,primCount,FgMatchWindow(),NativeAnimatedHandsNow(),
+        g_boundShaderLayout.bones,g_boundShaderLayout.boneRegs,g_boundShaderLayout.local);
     const bool dualProbe=Rd(g_dualWeaponTmdProbe)&&g_dualTmdCensus.Active()&&Rd(g_rtIsScene)&&
         !g_boundShaderLayout.shadow&&FgMatchWindow();
     const bool dualProbeGun=dualProbe&&Rd(g_gunVerts)>0&&numVertices==(UINT)Rd(g_gunVerts);
@@ -20416,6 +20427,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         // WEAPON FX = HIDE PASS. Deliberately after the learn, per the note above and FgHideWholePass.
         if (FgHideWholePass()) return D3D_OK;
         if (FgHidden(dev,numVertices, startIndex, primCount,minIndex,t,&shortTmdAdmitted)) {
+            if(seekerProbe)Log("Seeker glove refused: FgHidden frame=%ld",Rd(g_armPaletteFrameToken));
             noteTmdRoute(0,-1,-1,0);return D3D_OK;
         }
         if(Rd(g_cinematicSceneProbe) && k<=kFgSanePass)
@@ -20425,6 +20437,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     } else if (FgMatchesSignature(numVertices)) {
         // Outside the pass, but the same mesh - the near-plane depth prime at draws 2-3.
         if (FgHidden(dev,numVertices, startIndex, primCount,minIndex,t,&shortTmdAdmitted)) {
+            if(seekerProbe)Log("Seeker glove refused: FgHidden frame=%ld",Rd(g_armPaletteFrameToken));
             noteTmdRoute(0,-1,-1,0);return D3D_OK;
         }
         // The same mesh, drawn OUTSIDE the foreground pass. This is the whole question.
@@ -20916,6 +20929,23 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         // No surface readback or GPU synchronization.
         const bool assemblyGlove=(numVertices==7444||numVertices==2626)&&startIndex==0&&primCount==4402;
         const bool assemblyDevice=shortTmdBuffer&&nativeIndices.valid;
+        if(seekerProbe&&eye<2){
+            // Final bound shader/IB inside each eye; no GPU readback or flush.
+            IDirect3DIndexBuffer9* ib=nullptr;IDirect3DVertexBuffer9* vb=nullptr;
+            UINT offset=0,stride=0;dev->GetIndices(&ib);dev->GetStreamSource(0,&vb,&offset,&stride);
+            Log("Seeker glove bound: frame=%ld eye=%u hands=%ld support=%ld moved=%d independent=%d segments=%d route=%s faces=%u ib=%p vb=%p stream=%u/%u targetFrame=%u",
+                Rd(g_armPaletteFrameToken),eye,Rd(g_handsStatus),Rd(g_twoHandActive),g_thisDrawMoved,
+                independentRegs,nSeg,cuffBuffer&&nativeIndices.valid?"SVNC":"native",
+                cuffBuffer&&nativeIndices.valid?gloveTriangles:primCount,ib,vb,offset,stride,g_seekerSupportFrame.frame);
+            const int regs[]={5+(assemblyGlove?1:18)*3,230,g_boundShaderLayout.viewProjection};
+            for(unsigned kind=0;kind<3;++kind){
+                float m[4][4]{};const unsigned count=kind==0?3:4;
+                const HRESULT h=regs[kind]>=0?dev->GetVertexShaderConstantF(regs[kind],m[0],count):E_FAIL;
+                for(unsigned row=0;row<count;++row)Log("Seeker glove matrix: eye=%u kind=%u reg=%d row=%u hr=%08lX value=%g,%g,%g,%g",
+                    eye,kind,regs[kind],row,h,m[row][0],m[row][1],m[row][2],m[row][3]);
+            }
+            if(ib)ib->Release();if(vb)vb->Release();
+        }
         // Existing opt-in probe extended to the physical symptom's exact TMD
         // glove section. Read the bound palette/IB before restoration, in EACH
         // eye; no pose writes, GPU readback, tracking bypass or guessed offset.
@@ -21095,6 +21125,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         g_centurionSocket=cylinderReplay.socket;ReleaseSRWLockExclusive(&g_centurionSocketLock);
     }
     const HRESULT handRestore=independentRegs?g_origSetVSConstF(dev,5,&independentSaved[0][0],independentRegs):S_OK;
+    if(seekerProbe)Log("Seeker glove completed: frame=%ld eyes=%u draw=%08lX ibRestore=%08lX paletteRestore=%08lX independent=%d segments=%d",
+        Rd(g_armPaletteFrameToken),assemblyEye,dhr,nativeRestore,handRestore,independentRegs,nSeg);
     noteTmdRoute(shortTmdBuffer&&shortEyeDraws?1u:
         isolateTmdHardware?2u:nSeg?3u:4u,independentRegs,nSeg,shortEyeDraws);
     if(shortTmdBuffer && FAILED(handRestore))

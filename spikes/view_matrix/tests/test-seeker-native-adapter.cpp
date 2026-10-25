@@ -14,10 +14,11 @@ constexpr unsigned OBJ_CLASS=32;
 static LONG Rd(volatile LONG& p){return InterlockedCompareExchange(&p,0,0);}
 static bool VrModeOn(){return true;}
 static void Log(const char*,...){}
-alignas(16) static unsigned char pawn[4096]{},manager[1024]{},seeker[1024]{},rifle[1024]{},controller[1024]{};
+alignas(16) static unsigned char pawn[4096]{},manager[1024]{},seeker[1024]{},rifle[1024]{},controller[1024]{},unrelated[1024]{};
 static uintptr_t Ptr(void* p){return (uintptr_t)p;}
 static bool liveSeeker=true,wrongOwner=false,badMethod=false;
 static uintptr_t currentPawn=Ptr(pawn);
+static int reflectedInstigator=0xcc;
 static std::map<uintptr_t,uintptr_t> fields;
 static bool IsLive(uintptr_t p){return p&&(p!=Ptr(seeker)||liveSeeker);}
 namespace PauseRttProbe {static bool SafeRange(uintptr_t p,size_t){return p!=0;}}
@@ -31,7 +32,7 @@ static unsigned refreshes=0;
 static void Refresh(){++refreshes;}
 static uintptr_t CameraOwnedPawn(){return 0;} // recorded PR60 failure
 static uintptr_t P(uintptr_t a){
-    if(wrongOwner&&a==Ptr(seeker)+0x98)return Ptr(pawn)+4;
+    if(wrongOwner&&a==Ptr(seeker)+0xcc)return Ptr(pawn)+4;
     auto i=fields.find(a);return i==fields.end()?0:i->second;
 }
 static bool ClassHas(uintptr_t c,const char* n){
@@ -41,7 +42,7 @@ static bool ClassHas(uintptr_t c,const char* n){
     if(c==4)return !strcmp(n,"RvPlayerController");return false;
 }
 static bool NameFromIndex(int i,char* out,size_t n){
-    const char* text=i==10?"ARSteerable":i==20?"ARRifle":nullptr;
+    const char* text=i==10?"ARSteerable":i==20?"ARRifle":i==30?"UnrelatedWeapon":nullptr;
     if(!text)return false;strcpy_s(out,n,text);return true;
 }
 #include "seeker_registered_names.h"
@@ -50,7 +51,7 @@ struct MemberCache {int Get(uintptr_t,const char* n){
     if(!registered)return -1;
     if(!strcmp(n,"InvManager"))return 0x3d0;if(!strcmp(n,"Weapon"))return 0x3d4;
     if(!strcmp(n,"InventoryChain")||!strcmp(n,"Inventory"))return 0x1e0;
-    if(!strcmp(n,"Instigator"))return 0x98;if(!strcmp(n,"mWeaponName"))return 0x2e8;
+    if(!strcmp(n,"Instigator"))return reflectedInstigator;if(!strcmp(n,"mWeaponName"))return 0x2e8;
     if(!strcmp(n,"Controller"))return 0x80;return -1;
 }};
 }
@@ -80,7 +81,7 @@ static void Setup(){
     fields[Ptr(seeker)+OBJ_CLASS]=fields[Ptr(rifle)+OBJ_CLASS]=3;fields[Ptr(controller)+OBJ_CLASS]=4;
     fields[Ptr(pawn)+0x3d0]=Ptr(manager);fields[Ptr(pawn)+0x3d4]=Ptr(rifle);
     fields[Ptr(manager)+0x1e0]=Ptr(rifle);fields[Ptr(rifle)+0x1e0]=Ptr(seeker);
-    fields[Ptr(seeker)+0x98]=fields[Ptr(rifle)+0x98]=Ptr(pawn);
+    fields[Ptr(seeker)+0xcc]=fields[Ptr(rifle)+0xcc]=Ptr(pawn);
     fields[Ptr(pawn)+0x80]=Ptr(controller);
     fields[Ptr(pawn)]=0x10000;fields[0x10000+0xb14]=Ptr((void*)&SelectOwned);
     fields[0x10000+0xb18]=inventoryretention::HasWeaponImpl;
@@ -91,6 +92,21 @@ static void Setup(){
 }
 int main(){
     Setup();seekerslot::Snapshot s;assert(NativeSeekerSlot::Read(s)&&s.count==2);
+    reflectedInstigator=0x98;assert(!NativeSeekerSlot::Read(s));
+    assert(!strcmp(NativeSeekerSlot::stage,"instigator-offset"));reflectedInstigator=0xcc;
+    // A foreign unrelated item ahead of the real weapons does not veto them.
+    fields[Ptr(unrelated)+OBJ_CLASS]=3;
+    fields[Ptr(manager)+0x1e0]=Ptr(unrelated);
+    fields[Ptr(unrelated)+0x1e0]=Ptr(rifle);
+    fields[Ptr(unrelated)+0xcc]=Ptr(pawn)+4;
+    *(NativeOwnedInventory::Name*)(unrelated+0x2e8)={30,0};
+    assert(NativeSeekerSlot::Read(s)&&s.count==2);
+    // Even a recognized but foreign weapon is excluded, never selected.
+    *(NativeOwnedInventory::Name*)(unrelated+0x2e8)={20,0};
+    assert(NativeSeekerSlot::Read(s)&&s.count==2);
+    // Old build incorrectly required +98: poison it independently of +CC.
+    fields[Ptr(seeker)+0x98]=fields[Ptr(rifle)+0x98]=0xDEAD0001;
+    assert(NativeSeekerSlot::Read(s)&&s.count==2);
     // Capture every byte, including arbitrary synthetic native ammunition fields.
     memset(seeker+0x300,0xa7,100);memset(rifle+0x300,0x3c,100);
     unsigned char beforeSeeker[1024],beforeRifle[1024];

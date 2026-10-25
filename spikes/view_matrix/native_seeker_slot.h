@@ -11,6 +11,15 @@ static seekerslot::State state;
 static unsigned receipts=0;
 static const char* stage="not sampled";
 static bool Fail(const char* why){stage=why;return false;}
+// Actor serialization names Instigator then reads [actor+CC] at 008B64FB;
+// PhysicalFireStart independently dereferences [weapon+CC] at 00E6A1FB.
+static constexpr unsigned InstigatorOffset=0xcc;
+static void ItemGate(const char* why,uintptr_t item,uintptr_t pawn,int offset,uintptr_t owner){
+    static unsigned count=0;static uintptr_t prior=0;static const char* last=nullptr;
+    if(count>=24||(prior==item&&last==why))return;
+    ++count;prior=item;last=why;
+    Log("Seeker ownership item: gate=%s item=%p pawn=%p offset=%X owner=%p",why,(void*)item,(void*)pawn,offset,(void*)owner);
+}
 static void Receipt(const seekerslot::Snapshot& s,bool forced=false){
     static const char* last=nullptr;static uint32_t lastPawn=0,lastCurrent=0,lastSeeker=0;
     static unsigned count=0;
@@ -45,13 +54,25 @@ static bool Read(seekerslot::Snapshot& s){
         const auto cls=P(it+OBJ_CLASS);
         if(!ClassHas(cls,"Inventory")||nextField.Get(cls,"Inventory")!=0x1e0)return Fail("item-next-field");
         if(!ClassHas(cls,"RvWeaponShared"))continue;
-        // Instigator is the authoritative owner used by native weapon helpers.
-        if(ownerField.Get(cls,"Instigator")!=0x98||P(it+0x98)!=s.pawn||
-           nameField.Get(cls,"mWeaponName")!=0x2e8||!PauseRttProbe::SafeRange(it+0x2e8,8))return Fail("weapon-owner-or-name-field");
+        // Classify before owner filtering: unrelated weapon-like inventory
+        // entries must not invalidate an otherwise owned Seeker.
+        if(nameField.Get(cls,"mWeaponName")!=0x2e8 || !PauseRttProbe::SafeRange(it+0x2e8,8))
+            return Fail("weapon-name-field");
         const auto name=*(const Name*)(it+0x2e8);char text[96]{};
         if(!NameFromIndex(name.index,text,sizeof(text)))return Fail("weapon-name");
         const bool seeker=!strcmp(text,"ARSteerable")&&name.number==0;
         const bool ordinary=inventoryretention::WeaponMesh(text)!=0;
+        if(!seeker&&!ordinary)continue;
+        const int ownerOffset=ownerField.Get(cls,"Instigator");
+        if(ownerOffset!=InstigatorOffset){
+            ItemGate("instigator-offset",it,s.pawn,ownerOffset,0);
+            return Fail("instigator-offset");
+        }
+        const auto owner=P(it+InstigatorOffset);
+        if(owner!=s.pawn){
+            ItemGate("foreign-item-skipped",it,s.pawn,ownerOffset,owner);
+            continue; // never select or retain an item belonging to another pawn
+        }
         if(seeker||ordinary)s.items[s.count++]={(uint32_t)it,name.index,name.number,seeker};
     }
     s.valid=true;stage="ownership-ready";return true;
