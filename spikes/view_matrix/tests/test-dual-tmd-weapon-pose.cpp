@@ -57,7 +57,9 @@ int main() {
     armbind::ToGpu(originalChild,original[0]);
     float left[kMaxBones][3][4]{},right[kMaxBones][3][4]{};
     Mat finalGun;
-    assert(reference.Correct(key,original,4,local,ride,raw,2461,10012,left,&finalGun));
+    CorrectGate gate=CorrectGate::Reference;
+    assert(reference.Correct(key,original,4,local,ride,raw,2461,10012,left,&finalGun,&gate));
+    assert(gate==CorrectGate::Pass);
     assert(reference.Correct(key,original,4,local,ride,raw,2461,10012,right));
     assert(std::memcmp(left,right,sizeof(left))==0);
     const Mat expected=Product(Product(Matrix(normalSkin),local),ride);
@@ -88,11 +90,16 @@ int main() {
     const auto longNow=10080+(3008-2462)*11;
     assert(reference.Correct(key,original,4,local,ride,raw,3008,longNow+1,right,&sameFrameGun));
     assert(Distance(sameFrameGun,expected)<.03f);
-    assert(!reference.Correct(key,original,4,local,ride,raw,3011,longNow+2,right));
-    assert(!reference.Correct(key,original,4,local,ride,raw,3008,longNow+501,right));
+    assert(!reference.Correct(key,original,4,local,ride,raw,3011,longNow+2,right,nullptr,&gate));
+    assert(gate==CorrectGate::Frame);
+    assert(!reference.Correct(key,original,4,local,ride,raw,3008,longNow+501,right,nullptr,&gate));
+    assert(gate==CorrectGate::Frame);
     Key other=key;++other.weapon;
-    assert(!reference.Correct(other,original,4,local,ride,raw,3008,longNow+1,right));
-    assert(!reference.Correct(key,original,2,local,ride,raw,3008,longNow+1,right));
-    reference.Clear();assert(!reference.Correct(key,original,4,local,ride,raw,3008,longNow+1,right));
+    assert(!reference.Correct(other,original,4,local,ride,raw,3008,longNow+1,right,nullptr,&gate));
+    assert(gate==CorrectGate::Reference);
+    assert(!reference.Correct(key,original,2,local,ride,raw,3008,longNow+1,right,nullptr,&gate));
+    assert(gate==CorrectGate::Matrix);
+    reference.Clear();assert(!reference.Correct(key,original,4,local,ride,raw,3008,longNow+1,right,nullptr,&gate));
+    assert(gate==CorrectGate::Reference);
     std::puts("PASS dual TMD gun: normal gun anchor survives animated TMD wrist, repeated same-frame draws, long L2 hold, child/recoil pose, stereo, freshness and identity");
 }

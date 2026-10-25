@@ -17699,10 +17699,22 @@ static bool TmdSupportAssemblyEnabled() {
         g_handPoseValid[1] && g_handPositionValid[1]);
 }
 static bool SeekerSupportActive(){
-    return g_seekerSupportGrip&&seekergeometry::Vertices(Rd(g_gunVerts))&&Rd(g_twoHandActive)&&
+    const bool seekerGrip=g_seekerSupportGrip&&seekergeometry::Vertices(Rd(g_gunVerts))&&Rd(g_twoHandActive);
+    const bool active=seekerGrip&&
         !Rd(g_weaponHolstered)&&AimHand()==1&&g_handPoseValid[0]&&g_handPositionValid[0]&&
         g_handPoseValid[1]&&g_handPositionValid[1]&&
         !NativeAnimatedHandsNow()&&g_sceneMode.Current()==vrscene::Mode::GameplayStereo;
+    if(seekerGrip) {
+        static int previous=-1;static unsigned transitions=0;
+        if(transitions<12&&previous!=int(active)) {
+            previous=int(active);++transitions;
+            Log("Seeker support eligibility: active=%d trackedL=%d/%d trackedR=%d/%d holstered=%ld animated=%d scene=%d frame=%ld",
+                active?1:0,g_handPoseValid[0],g_handPositionValid[0],
+                g_handPoseValid[1],g_handPositionValid[1],Rd(g_weaponHolstered),
+                NativeAnimatedHandsNow()?1:0,int(g_sceneMode.Current()),Rd(g_sceneModeFrame));
+        }
+    }
+    return active;
 }
 static bool AuthoredLeftSupport(long gun) {
     return dualtmd::UseWeaponAuthoredPair(
@@ -18262,6 +18274,17 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
                 *bind,reinterpret_cast<const float(*)[4]>(saved+wrist*3),sourceLocal,gun,target);
             if(ready)g_seekerSupportFrame={true,pawn,weapon,frame,sourceLocal,target};
             else if(tmdBase||tmdExtra)ready=g_seekerSupportFrame.Read(pawn,weapon,frame,sourceLocal,target);
+            if(tmdGloves) {
+                static int previous=-1;static unsigned transitions=0;
+                if(transitions<12&&previous!=int(ready)) {
+                    previous=int(ready);++transitions;
+                    const auto now=GetTickCount64();
+                    Log("Seeker support target: ready=%d source=%s bind=%d wristSlot=%d witness=%d age=%llums frame=%u [fallback=independent-controller]",
+                        ready?1:0,gloves?"noTMD":"TMD",bind?1:0,wrist,
+                        witness.Current(pawn,weapon,now)?1:0,
+                        (unsigned long long)(now>=witness.tick?now-witness.tick:0),frame);
+                }
+            }
             if(ready){
                 memcpy(offWeapon,target.m,sizeof(offWeapon));leftTarget=offWeapon;weaponDeltaUsed=true;
                 static unsigned notes=0;if(notes++<4)Log("Seeker support: original idle wrist relative to rendered cog; shared glove/device target");
@@ -18300,6 +18323,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     bool paired = skeletal::LocalDeltaPair(delta, rightDelta, local, base, leftTarget,
         handanchor::AimTarget(weaponSingleHand, aimTarget, primary));
     if (!paired && supportGrip && weaponDeltaUsed) {
+        if(SeekerSupportActive()) {
+            static unsigned notes=0;
+            if(notes++<8)Log("Seeker support: palette delta refused; reverting to independent controller frame=%ld hands=%ld",
+                Rd(g_sceneModeFrame),Rd(g_handsStatus));
+        }
         paired = skeletal::LocalDeltaPair(delta, rightDelta, local, base, off, primary);
         paletteFallback = paired;
         weaponDeltaUsed = false;
@@ -21195,9 +21223,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 if(Rd(g_handsStatus)==HANDS_TMD) {
                     const auto now=GetTickCount64();
                     armbind::Mat correctedFinalGun;
+                    dualtmdgunpose::CorrectGate correctionGate=dualtmdgunpose::CorrectGate::Pass;
                     if(g_dualTmdGunPose.Correct(dualGunKey,dualGunSaved,dualGunBones,
                            dualGunLocal,dualGunRide,dualGunRawController,
-                           (unsigned)Rd(g_armPaletteFrameToken),now,dualGunAdjusted,&correctedFinalGun)) {
+                           (unsigned)Rd(g_armPaletteFrameToken),now,dualGunAdjusted,
+                           &correctedFinalGun,&correctionGate)) {
                         const HRESULT setHr=g_origSetVSConstF(dev,g_boundShaderLayout.bones,
                             &dualGunAdjusted[0][0][0],dualGunBones*3);
                         if(SUCCEEDED(setHr)) {
@@ -21225,12 +21255,38 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                             if(FAILED(undo)){g_thisDrawMoved=0;return undo;}
                         }
                     } else {
-                        static unsigned refused=0;
-                        if(refused++<4)Log("dual-tmd gun-pose: body not retargeted gun=%u root=%u refValid=%d refSame=%d refAge=%llums frame=%ld [native palette forwarded]",
+                        // One receipt per first failed mathematical contract. A
+                        // generic false concealed the head-relative fallback in
+                        // the preceding physical run even with a fresh reference.
+                        static unsigned reportedGates=0;
+                        const unsigned bit=1u<<unsigned(correctionGate);
+                        if(!(reportedGates&bit)) {
+                            reportedGates|=bit;
+                            Log("dual-tmd gun-pose: REFUSED gate=%s gun=%u root=%u refValid=%d refSame=%d refAge=%llums wristAge=%llums frame=%ld wristFrame=%u bones=%u [native palette forwarded]",
+                            dualtmdgunpose::GateName(correctionGate),
                             numVertices,dualGunKey.rootSlot,g_dualTmdGunPose.valid?1:0,
                             g_dualTmdGunPose.key==dualGunKey?1:0,
                             (unsigned long long)(now>=g_dualTmdGunPose.tick?now-g_dualTmdGunPose.tick:0),
-                            Rd(g_armPaletteFrameToken));
+                            (unsigned long long)(now>=g_dualTmdGunPose.wristTick?now-g_dualTmdGunPose.wristTick:0),
+                            Rd(g_armPaletteFrameToken),g_dualTmdGunPose.wristFrame,dualGunBones);
+                            if(correctionGate!=dualtmdgunpose::CorrectGate::Reference &&
+                               correctionGate!=dualtmdgunpose::CorrectGate::Frame) {
+                                const auto dump=[&](const char* name,const float m[4][4]) {
+                                    for(unsigned row=0;row<4;++row)
+                                        Log("dual-tmd gun-pose: %s row=%u value=%.7g,%.7g,%.7g,%.7g",
+                                            name,row,m[row][0],m[row][1],m[row][2],m[row][3]);
+                                };
+                                armbind::Mat sourceRoot{};
+                                if(armbind::FromGpu(dualGunSaved[dualGunKey.rootSlot],sourceRoot))
+                                    dump("source-root",sourceRoot.m);
+                                dump("local",dualGunLocal.m);
+                                dump("ride",dualGunRide.m);
+                                dump("raw-controller",dualGunRawController.m);
+                                dump("normal-wrist",g_dualTmdGunPose.normalWrist.m);
+                                dump("normal-controller",g_dualTmdGunPose.normalRawController.m);
+                                dump("gun-from-wrist",g_dualTmdGunPose.gunFromWrist.m);
+                            }
+                        }
                     }
                 }
             }

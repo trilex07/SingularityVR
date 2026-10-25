@@ -20,6 +20,27 @@ struct Key {
         return pawn==b.pawn&&weapon==b.weapon&&verts==b.verts&&rootSlot==b.rootSlot;
     }
 };
+enum class CorrectGate : unsigned char {
+    Pass, Reference, Frame, Matrix, Inverse, Root, Predicted, Target,
+    Delta, Displacement, Bone, FinalWitness
+};
+inline const char* GateName(CorrectGate gate) {
+    switch(gate) {
+    case CorrectGate::Pass: return "pass";
+    case CorrectGate::Reference: return "reference";
+    case CorrectGate::Frame: return "frame";
+    case CorrectGate::Matrix: return "matrix";
+    case CorrectGate::Inverse: return "inverse";
+    case CorrectGate::Root: return "root";
+    case CorrectGate::Predicted: return "predicted";
+    case CorrectGate::Target: return "target";
+    case CorrectGate::Delta: return "delta";
+    case CorrectGate::Displacement: return "displacement";
+    case CorrectGate::Bone: return "bone";
+    case CorrectGate::FinalWitness: return "final-witness";
+    }
+    return "unknown";
+}
 inline float LargestDifference(const Mat& a,const Mat& b) {
     float d=0;
     for(unsigned r=0;r<4;++r)for(unsigned c=0;c<4;++c)
@@ -89,39 +110,44 @@ struct Reference {
     bool Correct(Key k,const float original[kMaxBones][3][4],unsigned bones,
                  const Mat& local,const Mat& ride,const Mat& rawController,
                  unsigned frame,std::uint64_t now,
-                 float result[kMaxBones][3][4],Mat* finalGun=nullptr) const {
-        if(!valid||!wristValid||!(key==k)||!frame||frame<wristFrame||
-           frame-wristFrame>2||
-           !bones||bones>kMaxBones||k.rootSlot>=bones||
-           now<tick||now<wristTick||now-wristTick>500||
-           !Affine(local)||!Uniform(ride)||!Uniform(rawController))return false;
+                 float result[kMaxBones][3][4],Mat* finalGun=nullptr,
+                 CorrectGate* rejected=nullptr) const {
+        if(rejected)*rejected=CorrectGate::Pass;
+        const auto fail=[&](CorrectGate gate) {if(rejected)*rejected=gate;return false;};
+        if(!valid||!wristValid||!(key==k))return fail(CorrectGate::Reference);
+        if(!frame||frame<wristFrame||frame-wristFrame>2||
+           now<tick||now<wristTick||now-wristTick>500)return fail(CorrectGate::Frame);
+        if(!bones||bones>kMaxBones||k.rootSlot>=bones||
+           !Affine(local)||!Uniform(ride)||!Uniform(rawController))return fail(CorrectGate::Matrix);
         Mat inverseController,inverseTail,inverseRoot,root;
         const Mat tail=Product(local,ride);
         if(!skeletal::Inverse(inverseController.m,normalRawController.m)||
-           !skeletal::Inverse(inverseTail.m,tail.m)||
-           !armbind::FromGpu(original[k.rootSlot],root)||!armbind::Rigid(root)||
-           !skeletal::Inverse(inverseRoot.m,root.m))return false;
+           !skeletal::Inverse(inverseTail.m,tail.m))return fail(CorrectGate::Inverse);
+        if(!armbind::FromGpu(original[k.rootSlot],root)||!armbind::Rigid(root)||
+           !skeletal::Inverse(inverseRoot.m,root.m))return fail(CorrectGate::Root);
         const Mat predictedWrist=Product(Product(normalWrist,inverseController),rawController);
         const Mat desiredFinal=Product(predictedWrist,gunFromWrist);
         const Mat targetSkin=Product(desiredFinal,inverseTail);
         const Mat delta=Product(inverseRoot,targetSkin);
-        if(!Uniform(predictedWrist)||!Uniform(desiredFinal)||
-           !armbind::Rigid(targetSkin)||!armbind::Rigid(delta))return false;
+        if(!Uniform(predictedWrist)||!Uniform(desiredFinal))return fail(CorrectGate::Predicted);
+        if(!armbind::Rigid(targetSkin))return fail(CorrectGate::Target);
+        if(!armbind::Rigid(delta))return fail(CorrectGate::Delta);
         const auto p=armbind::Position(delta);
-        if(p.x*p.x+p.y*p.y+p.z*p.z>256.f*256.f)return false;
+        if(p.x*p.x+p.y*p.y+p.z*p.z>256.f*256.f)return fail(CorrectGate::Displacement);
         float staged[kMaxBones][3][4]{};
         for(unsigned i=0;i<bones;++i){
             Mat check;
-            if(!armbind::FromGpu(original[i],check))return false;
+            if(!armbind::FromGpu(original[i],check))return fail(CorrectGate::Bone);
             bool empty=true;
             for(const auto& row:original[i])for(float value:row)if(value!=0)empty=false;
             if(empty)std::memcpy(staged[i],original[i],sizeof(staged[i]));
             else skeletal::TransformBone(staged[i],original[i],delta.m);
-            if(!armbind::FromGpu(staged[i],check))return false;
+            if(!armbind::FromGpu(staged[i],check))return fail(CorrectGate::Bone);
         }
         Mat mapped;
         if(!armbind::FromGpu(staged[k.rootSlot],mapped)||
-           LargestDifference(Product(Product(mapped,local),ride),desiredFinal)>.03f)return false;
+           LargestDifference(Product(Product(mapped,local),ride),desiredFinal)>.03f)
+            return fail(CorrectGate::FinalWitness);
         std::memcpy(result,staged,bones*sizeof(staged[0]));
         if(finalGun)*finalGun=desiredFinal;
         return true;

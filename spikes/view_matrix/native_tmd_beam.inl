@@ -67,8 +67,38 @@ static void Forward(void* component,uintptr_t caller,void* scene,void* owner,
     // Original SetParentToWorld uses MOVAPS and synchronously copies all 64
     // bytes. The aligned local must stay alive through the one native call.
     __declspec(align(16)) armbind::Mat corrected;
-    const auto selected=Prepare(component,caller,parent,corrected)?&corrected:parent;
+    const bool tracked=Prepare(component,caller,parent,corrected);
+    const auto selected=tracked?&corrected:parent;
     original(component,scene,owner,selected,collision);
+    if(tracked) {
+        // RvTMDPower_Age::TickFX (FE4570) reads this child's LocalToWorld
+        // translation at component+0xA0 as the ACTUAL beam start. Parent
+        // submission alone does not prove that the rendered source moved.
+        static unsigned samples=0;
+        if(samples<12) {
+            __try {
+                if(PauseRttProbe::SafeRange((uintptr_t)component+0xA0,sizeof(float)*3)) {
+                    const float* start=reinterpret_cast<const float*>((uintptr_t)component+0xA0);
+                    Log("TMD tracked beam: post-update source=(%.3f %.3f %.3f) parent=(%.3f %.3f %.3f) delta=(%.3f %.3f %.3f) [TickFX source witness]",
+                        start[0],start[1],start[2],corrected.m[3][0],corrected.m[3][1],corrected.m[3][2],
+                        start[0]-corrected.m[3][0],start[1]-corrected.m[3][1],start[2]-corrected.m[3][2]);
+                    tmdmuzzle::Witness w;
+                    if(TryAcquireSRWLockShared(&NativeTmdSocket::lock)) {
+                        w=NativeTmdSocket::published;ReleaseSRWLockShared(&NativeTmdSocket::lock);
+                        armbind::Mat socket;
+                        if(tmdmuzzle::Socket(w,w.pawn,GetTickCount64(),socket))
+                            Log("TMD tracked beam: tracked socket=(%.3f %.3f %.3f) source-minus-socket=(%.3f %.3f %.3f) frame=%u",
+                                socket.m[3][0],socket.m[3][1],socket.m[3][2],
+                                start[0]-socket.m[3][0],start[1]-socket.m[3][1],
+                                start[2]-socket.m[3][2],w.frame);
+                    }
+                    ++samples;
+                }
+            } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
+                Note("post-update-source-unreadable");
+            }
+        }
+    }
 }
 static void __fastcall Hook(void* component,void*,void* scene,void* owner,
                            const armbind::Mat* parent,int collision) {
