@@ -168,6 +168,8 @@ template<class Upload,class Draw>bool Replay(Upload upload,Draw draw,const float
 }
 struct ReplayPlan {
     unsigned count=0,index=0,regs=0;
+    bool carried=false; // diagnostic identity only; never changes draw selection
+    std::uint64_t transaction=0;
     float attached[16*12],spare[2][16*12]; // initialized only for eligible native draws
 };
 inline bool Palette(const weaponreloadanim::Data& d,float frame,bool absent,const float* native,unsigned regs,float* out){

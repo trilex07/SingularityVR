@@ -66,13 +66,30 @@ static void __fastcall Hook(void* component,void*,void* scene,void* owner,
 }
 static void Poll() {
     if(!g_tmdTrackedBeam||original)return;
-    static ULONGLONG retry=0;const auto now=GetTickCount64();
-    if(now<retry)return;retry=now+250;
+    static ULONGLONG retry=0;static unsigned agePolls=0,ageEdges=0;
+    static bool wasAge=false;
+    const auto now=GetTickCount64();
+    const bool age=g_tmdBeamAgeProbe&&Rd(g_rawAgePressed)!=0;
+    if(age&&!wasAge&&ageEdges<4){
+        ++ageEdges;retry=0;
+        Log("TMD tracked beam: Square edge=%u; immediate owned-component census",ageEdges);
+    }
+    wasAge=age;
+    if(now<retry)return;
+    // A transient owned component can exist only during the Square action.
+    // Keep the normal 250ms census; permit at most 60 faster reads while held.
+    const bool fast=age&&agePolls<60;
+    retry=now+(fast?16:250);
+    if(fast)++agePolls;
     __try {
         uintptr_t pawn=0;const auto tmd=NativeTmdAim::LocalTmd(pawn);
         if(!tmd){Note("installer-no-owned-tmd");return;}
         static NativeOwnedInventory::MemberCache aging,mesh;
         const auto beam=Member(tmd,"mAgingBeam",aging),owned=Member(tmd,"mOwnerMesh",mesh);
+        if(fast&&agePolls<=12)
+            Log("TMD tracked beam: Square census sample=%u tmd=%p beam=%p owner=%p beamLive=%d ownerLive=%d",
+                agePolls,(void*)tmd,(void*)beam,(void*)owned,
+                beam&&IsLive(beam)?1:0,owned&&IsLive(owned)?1:0);
         if(!beam||!IsLive(beam)){Note("installer-no-live-aging-beam");return;}
         if(!owned||!IsLive(owned)){Note("installer-no-live-owner-mesh");return;}
         if(!NativeTmdAim::ExactClass(NativeOwnedInventory::P(beam+OBJ_CLASS),"RvCurvedBeamComponent")||

@@ -2283,6 +2283,7 @@ static bool g_trackedDepthPrimeProbe=false; // bounded first-refusal only; OFF
 static bool g_trackedDepthSourcePose=false; // keep original wrist producer when omitting depth; OFF
 static bool g_tmdTrackedMuzzle=false; // original TMD_Muzzle socket -> final rendered wrist; OFF
 static bool g_tmdTrackedBeam=false; // exact owned aging-beam child attachment; OFF
+static bool g_tmdBeamAgeProbe=false; // bounded Square-edge component census
 static trackedprime::Cache g_trackedPrimeCache;
 static dualaction::Frame g_dualActionFrame;
 static volatile LONG g_dualActionRenderThread=0;
@@ -2415,6 +2416,7 @@ static weaponreload::Witness g_nextWitness;
 static int g_reloadPalmGrip=0; // default-OFF; measured native wrist, not AIM-space mount
 static bool g_reloadCarryTrackedContinuity=false; // default OFF; bounded measured-wrist continuation
 static bool g_reloadCarryContinuityProbe=false; // bounded read-only carry draw receipts
+static bool g_reloadCarryRenderProbe=false; // actual stereo replay and D3D state, bounded
 static int g_volkCarryPoseProbe=0; // default-OFF; bounded same-frame wrist/magazine witness
 static int g_shoulderPickupProbe=0; // default-OFF; bounded local-frame pickup receipts
 static int g_nextShoulderExtraLeftCm[2]{18,18}; // Valkyrie, Volk; Kasimov unchanged
@@ -11333,7 +11335,7 @@ void SyncXRInput(XrTime displayTime) {
     for(int i=0;i<kPadButtonCount;++i)sampledButtons[i]=getBool(g_padButtons[i].action);
     InterlockedExchange(&g_rawImpulsePressed,
         g_impulseBtnIdx>=0&&g_impulseBtnIdx<kPadButtonCount&&sampledButtons[g_impulseBtnIdx]?1:0);
-    if(Rd(g_dualHandPoseProbe))InterlockedExchange(&g_rawAgePressed,
+    if(Rd(g_dualHandPoseProbe)||g_tmdBeamAgeProbe)InterlockedExchange(&g_rawAgePressed,
         g_ageBtnIdx>=0&&g_ageBtnIdx<kPadButtonCount&&sampledButtons[g_ageBtnIdx]?1:0);
     // Opt-in physical Sense layout. Keep the XR actions and native menu
     // select/back bindings intact. No extra polls and no hidden INI rewrites.
@@ -21524,11 +21526,36 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             else InterlockedIncrement(&g_centurionSpareDraws);
         }
         for(unsigned copy=0;SUCCEEDED(hr)&&nextRegs&&copy<nextReplay.count;++copy){
+            bool probeDraw=false;
+            IDirect3DSurface9* probeRt=nullptr;IDirect3DSurface9* probeDepth=nullptr;
+            IDirect3DBaseTexture9* probeTexture=nullptr;
+            DWORD probeZ=~0u,probeWrite=~0u,probeBlend=~0u,probeAlpha=~0u,probeCull=~0u;
+            if(g_reloadCarryRenderProbe&&nextReplay.carried&&copy==0&&eye<2&&nextReplay.index<3){
+                static unsigned receipts[3][2]{};
+                probeDraw=receipts[nextReplay.index][eye]++<32;
+                if(probeDraw){
+                    dev->GetRenderTarget(0,&probeRt);dev->GetDepthStencilSurface(&probeDepth);
+                    dev->GetTexture(0,&probeTexture);
+                    dev->GetRenderState(D3DRS_ZENABLE,&probeZ);
+                    dev->GetRenderState(D3DRS_ZWRITEENABLE,&probeWrite);
+                    dev->GetRenderState(D3DRS_ALPHABLENDENABLE,&probeBlend);
+                    dev->GetRenderState(D3DRS_ALPHATESTENABLE,&probeAlpha);
+                    dev->GetRenderState(D3DRS_CULLMODE,&probeCull);
+                }
+            }
             bool restored=false;
             const bool ok=weaponreload::Replay([&](const float* palette){
                     return SUCCEEDED(g_origSetVSConstF(dev,nextReg,palette,nextReplay.regs));
                 },[&](){return SUCCEEDED(g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount));},
                 nextReplay.spare[copy],nextReplay.attached,restored);
+            if(probeDraw){
+                Log("reload carry render: submitted frame=%ld eye=%u kindIndex=%u transaction=%llu copies=%u hr=%d paletteRestored=%d rt=%p depth=%p texture=%p z=%lu write=%lu blend=%lu alpha=%lu cull=%lu",
+                    Rd(g_armPaletteFrameToken),eye,nextReplay.index,(unsigned long long)nextReplay.transaction,
+                    nextReplay.count,ok?1:0,restored?1:0,probeRt,probeDepth,probeTexture,
+                    probeZ,probeWrite,probeBlend,probeAlpha,probeCull);
+                if(probeRt)probeRt->Release();if(probeDepth)probeDepth->Release();
+                if(probeTexture)probeTexture->Release();
+            }
             if(!ok){InterlockedExchange(&g_nextFault[nextReplay.index],1);hr=E_FAIL;}
             else InterlockedIncrement(&g_nextNativeMagazineDraws);
         }
@@ -36899,6 +36926,9 @@ void LoadIniSettings() {
     g_reloadCarryContinuityProbe=GetPrivateProfileIntA("Diagnostic","ReloadCarryContinuityProbe",0,path)!=0;
     Log("ini: ReloadCarryContinuityProbe=%d (bounded read-only carried-magazine transitions; default OFF)",
         g_reloadCarryContinuityProbe?1:0);
+    g_reloadCarryRenderProbe=GetPrivateProfileIntA("Diagnostic","ReloadCarryRenderProbe",0,path)!=0;
+    Log("ini: ReloadCarryRenderProbe=%d (bounded carried-magazine per-eye draw/state evidence; default OFF)",
+        g_reloadCarryRenderProbe?1:0);
     g_volkCarryPoseProbe=GetPrivateProfileIntA("Diagnostic","VolkCarryPoseProbe",0,path)!=0;
     g_shoulderPickupProbe=GetPrivateProfileIntA("Diagnostic","ShoulderPickupProbe",0,path)!=0;
     const auto shoulderSetting=[&](const char* key,int fallback,int low,int high){
@@ -36943,6 +36973,8 @@ void LoadIniSettings() {
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
     g_tmdTrackedBeam=GetPrivateProfileIntA("Render","TmdTrackedBeam",0,path)!=0;
     Log("ini: TmdTrackedBeam=%d (default OFF; owned native aging-beam attachment, native endpoint preserved)",g_tmdTrackedBeam?1:0);
+    g_tmdBeamAgeProbe=GetPrivateProfileIntA("Diagnostic","TmdBeamAgeProbe",0,path)!=0;
+    Log("ini: TmdBeamAgeProbe=%d (bounded Square-edge owned component census; default OFF)",g_tmdBeamAgeProbe?1:0);
     Log("ini: TmdTrackedMuzzle=%d (default OFF; original socket on final both-eye rendered wrist)",g_tmdTrackedMuzzle?1:0);
     Log("ini: TrackedDepthPrimeFix=%d (default OFF; exact restored-color depth-only siblings)",g_trackedDepthPrimeFix?1:0);
     Log("ini: TrackedDepthSourcePose=%d (default OFF; preserve original wrist capture before exact depth omission)",g_trackedDepthSourcePose?1:0);

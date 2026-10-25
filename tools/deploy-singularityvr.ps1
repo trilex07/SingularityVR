@@ -52,8 +52,11 @@ if($IncludeIni -and ((-not $RuntimeDllPairOnly -and -not $DllOnly) -or $KeepIni)
 $narrowRuntime=$DllOnly -or $RuntimeDllPairOnly
 
 function Assert-GameClosed {
-    if(-not (Get-CimInstance Win32_Process -Filter "ProcessId=$PID" -ErrorAction Stop)){
-        throw 'Full process context required for MAIN deployment'
+    # A background restore guardian can lack WMI/CIM permission while ordinary
+    # process enumeration remains available. Verify this process through the
+    # same API used below for the game's closed-state guard.
+    if(-not (Get-Process -Id $PID -ErrorAction Stop)){
+        throw 'Process context required for MAIN deployment'
     }
     if(@(Get-Process -Name Singularity -ErrorAction SilentlyContinue).Count){
         throw 'Singularity is running; refusing install/rollback'

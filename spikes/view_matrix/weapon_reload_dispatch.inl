@@ -285,7 +285,13 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
        Rd(g_weaponHolstered)||CutsceneNativeCameraArmed()||
        g_sceneMode.Current()!=vrscene::Mode::GameplayStereo||g_xrSessionState!=XR_SESSION_STATE_FOCUSED){note(1);return 0;}
     NextReloadVisual visual;weaponcarry::Wrist wrist;
-    if(!TryAcquireSRWLockShared(&g_nextVisualLock))return 0;
+    if(!TryAcquireSRWLockShared(&g_nextVisualLock)){
+        if(g_reloadCarryRenderProbe){
+            static unsigned misses=0;
+            if(misses++<16)Log("reload carry render: visual-lock-miss frame=%ld kind=%d part=%d",Rd(g_armPaletteFrameToken),int(kind),int(part));
+        }
+        return 0;
+    }
     visual=g_nextVisual;wrist=g_nextWrist;ReleaseSRWLockShared(&g_nextVisualLock);
     const auto now=GetTickCount64();
     if(!visual.valid||visual.kind!=kind||visual.pawn!=(uint32_t)g_playerPawn||visual.weapon!=(uint32_t)Rd(g_weaponObj)||
@@ -438,6 +444,8 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
         if(!weaponreload::TrackingMap({g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
             g_baseYaw*(6.2831853f/65536.f),MetresToUU(),world))return 0;
         replay.index=index;replay.regs=regs;
+        replay.carried=visual.phase==weaponreload::Phase::Carrying;
+        replay.transaction=visual.since;
         if(visual.phase==weaponreload::Phase::NeedAmmo||visual.phase==weaponreload::Phase::Carrying){
             const auto pose=visual.phase==weaponreload::Phase::Carrying?visual.hand:visual.source;
             armbind::Mat carried;
@@ -479,6 +487,16 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
             }
             if(placed){
                 if(!weaponreload::SparePalette(g_nextAnimation[index],carried,local,controller,world,regs,replay.spare[replay.count]))return 0;
+                if(g_reloadCarryRenderProbe&&replay.carried){
+                    static unsigned samples[3]{};
+                    if(samples[index]++<32){
+                        const unsigned slot=weaponreload::ClipSlot(kind);
+                        const float* c=replay.spare[replay.count]+slot*12;
+                        Log("reload carry render: prepared kind=%d frame=%ld transaction=%llu sample=%u wristAge=%llu magSkinT=(%.6g %.6g %.6g) source=%d",
+                            int(kind),Rd(g_armPaletteFrameToken),(unsigned long long)visual.since,samples[index],
+                            (unsigned long long)(now>=wrist.tick?now-wrist.tick:0),c[3],c[7],c[11],int(wrist.source));
+                    }
+                }
                 ++replay.count;
             }
         }
