@@ -19,6 +19,8 @@ Seeker-specific additions do not write `g_nextWrist`, controller positions, `g_t
 
 The new render normalization applies to the four ordinary weapon profiles, not Seeker. A mismatch between the visible fore-end and the old raw-controller acquisition cone is consequently **a hypothesis**, not a proven cause. The archived log has neither attempted-Grip timestamps nor corresponding raw position + orientation samples. Sparse `hands raw XR` lines 22907/22999 have no Grip state or same-sample primary quaternion. Final wrist matrices alone cannot reconstruct the input transaction. No guessed offset/cone relaxation has been committed.
 
+There is narrower evidence against a generally reversed controller/barrel axis: paired `weapon measured aim` receipts at lines 18933/18941/18945 print `LegacyGunAimDir` and the rendered muzzle witness direction in the same shot call. Their normalized dot products are **0.988706, 0.989150, 0.989100** (8.62, 8.45, 8.47 degrees apart). The nearby negative `weapon actual ray aimDot` therefore does **not** establish a 180-degree visual/controller mismatch: both expected axes point approximately -X while those outgoing native traces point +X. These are firing samples, not attempted-Grip samples; this observation cannot establish the cause of failed support. Native trace semantics and their call classification are outside this branch's scope.
+
 ## Smallest missing measurement
 
 `[Diagnostic] SupportGripProbe=1` (default OFF) adds a read-only observation immediately after the existing production latch update in `SyncXRInput`.
