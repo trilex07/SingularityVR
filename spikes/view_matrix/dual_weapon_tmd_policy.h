@@ -12,6 +12,15 @@ inline bool Weapon(bool nativeWeapon, bool context, bool equipped, int hands) {
 }
 inline bool MeleeWindow(bool context, bool knifeHeld) { return !context || knifeHeld; }
 
+// The native HANDS_TMD animation does not place the left wrist at the weapon's
+// authored fore-end. A Grip can be accepted while the physical hand is still
+// behind/below the gun; using that inter-controller vector as barrel direction
+// folds the weapon toward the body. Keep the right controller's measured aim in
+// this one state. HANDS_WEAPON retains the accepted two-hand direction policy.
+inline bool UseSupportAimVector(bool twoHand, bool dualContext, int hands) {
+    return twoHand && !(dualContext && hands == 1);
+}
+
 // The native TMD mesh has three exact material sections. In dual presentation
 // its bones are independently retargeted to the tracked wrists; it must not
 // also inherit the camera-space ride selected for the right-hand gun.

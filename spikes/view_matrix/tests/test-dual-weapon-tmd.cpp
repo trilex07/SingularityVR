@@ -18,6 +18,10 @@ int main(){
         }
     assert(!MeleeWindow(true,false));assert(MeleeWindow(true,true));
     assert(MeleeWindow(false,false));assert(MeleeWindow(false,true));
+    assert(!UseSupportAimVector(true,true,1)); // L2 TMD pose keeps right-controller barrel aim
+    assert(UseSupportAimVector(true,true,2));  // R2 weapon pose retains two-hand aim
+    assert(UseSupportAimVector(true,false,1)); // existing non-dual policy unchanged
+    assert(!UseSupportAimVector(false,true,2));
     // Reproduce the integration collision: a TMD material may be submitted
     // while HANDS_WEAPON is active, but its tracked palette owns the pose.
     for(const auto& section: {std::initializer_list<unsigned>{7444,0,4402},

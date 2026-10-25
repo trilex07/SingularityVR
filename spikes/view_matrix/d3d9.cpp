@@ -13201,7 +13201,9 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                     Rd(g_handDevValid), Rd(g_offHandValid));
             }
         }
-        if (Rd(g_twoHandActive) && g_handPositionValid[AimHand()] && g_handPositionValid[OffHand()]) {
+        if (dualtmd::UseSupportAimVector(Rd(g_twoHandActive)!=0,
+                DualWeaponTmdContext(),(int)Rd(g_handsStatus)) &&
+            g_handPositionValid[AimHand()] && g_handPositionValid[OffHand()]) {
             const XrVector3f& a=g_handLastPos[AimHand()];
             const XrVector3f& b=g_handLastPos[OffHand()];
             const float dx=b.x-a.x,dy=b.y-a.y,dz=b.z-a.z;
