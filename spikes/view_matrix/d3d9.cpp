@@ -12,6 +12,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "camera_translation_evidence.h"
 #include "arm_ik.h"
 #include "arm_bind.h"
+#include "tmd_muzzle_socket.h"
 #include "arm_natural.h"
 #include "dual_hand_action_pose.h"
 #include "support_grip.h"
@@ -2275,6 +2276,8 @@ static LONG g_dualWeaponTmdGunScale=0; // opt-in native gun_scale result, no cac
 static LONG g_dualWeaponTmdRightWrist=0; // opt-in original TMD right-wrist target
 static LONG g_dualHandActionPose=0; // source-wrist normalization; default OFF
 static bool g_trackedDepthPrimeFix=false; // exact late-color siblings only; default OFF
+static bool g_trackedDepthPrimeProbe=false; // bounded first-refusal only; OFF
+static bool g_tmdTrackedMuzzle=false; // original TMD_Muzzle socket -> final rendered wrist; OFF
 static trackedprime::Cache g_trackedPrimeCache;
 static dualaction::Frame g_dualActionFrame;
 static volatile LONG g_dualActionRenderThread=0;
@@ -6966,6 +6969,10 @@ static void FinishCinemaExitHotPath() {
     g_cinemaExitProfileStart=0;
 }
 #include "pause_vr_settings.h"
+namespace NativeTmdSocket {
+static void Poll();
+static void Publish(const tmdmuzzle::Witness&);
+}
 #include "native_ui_input.h"
 uipointer::TriggerGate g_vrUiTrigger[2];
 griplatch::GripLatch g_supportLatch;
@@ -20577,6 +20584,37 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         trackedprime::Receipt receipt;
         const bool skip=g_trackedPrimeCache.Skip(dev,TrackedPrimeOwner(),
             TrackedPrimeDraw(t,baseVertex,minIndex,numVertices,startIndex,primCount),&receipt);
+        if(g_trackedDepthPrimeProbe&&!skip) {
+            struct Seen {const char* gate;UINT vertices,start,tris;LONG hands,support;};
+            struct Window {LONG weapon,hands,support;unsigned attempts;};
+            static Seen seen[64]{};static unsigned count=0,windowCount=0;
+            static Window windows[8]{};
+            const LONG hands=Rd(g_handsStatus),support=Rd(g_twoHandActive),weapon=Rd(g_gunVerts);
+            unsigned window=0;
+            for(;window<windowCount;++window)if(windows[window].weapon==weapon&&
+                windows[window].hands==hands&&windows[window].support==support)break;
+            if(window==windowCount&&windowCount<8)windows[windowCount++]={weapon,hands,support,0};
+            // Idle weapon draws must not exhaust the diagnostic before the
+            // user raises TMD. At most eight contexts x 32 actual inspections.
+            if(count<64&&window<windowCount&&windows[window].attempts<32) {
+                trackedprime::Inspection r;
+                if(g_trackedPrimeCache.Inspect(dev,TrackedPrimeOwner(),
+                   TrackedPrimeDraw(t,baseVertex,minIndex,numVertices,startIndex,primCount),r)) {
+                    ++windows[window].attempts;
+                    bool duplicate=false;
+                    for(unsigned i=0;i<count;++i)if(seen[i].gate==r.gate&&seen[i].vertices==numVertices&&
+                       seen[i].start==startIndex&&seen[i].tris==primCount&&
+                       seen[i].hands==hands&&seen[i].support==support){duplicate=true;break;}
+                    if(!duplicate){seen[count++]={r.gate,numVertices,startIndex,primCount,hands,support};
+                        Log("tracked-prime refusal: gate=%s frame=%ld hands=%ld support=%ld verts=%u base=%d min=%u first=%u tris=%u scene=%d shadow=%d exact=%d VB=%p IB=%p stream=%u/%u RT=%p VS=%p PS=%p requested=%d:%.6g/%.6g actual=%.6g/%.6g z=%lu write=%lu color=%lX stencil=%lu",
+                            r.gate,Rd(g_armPaletteFrameToken),hands,support,numVertices,
+                            baseVertex,minIndex,startIndex,primCount,r.key.rtIsScene,r.key.layoutShadow,r.exact,
+                            r.key.vb,r.key.ib,r.key.vbOffset,r.key.stride,r.rt,r.vs,r.ps,r.requestedValid,
+                            r.requested.MinZ,r.requested.MaxZ,r.actual.MinZ,r.actual.MaxZ,r.z,r.write,r.color,r.stencil);
+                    }
+                }
+            }
+        }
         // Never broaden the predicate to force a fix to engage. Refusals from
         // an exact native near-plane sibling distinguish color/stencil routes.
         static unsigned keptNotes=0,skippedNotes=0;
@@ -21121,6 +21159,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     unsigned shortEyeDraws=0;
     unsigned seekerEyeDraws=0;
     unsigned assemblyEye=0;
+    tmdmuzzle::Witness tmdSocketEye[2];
+    bool tmdSocketDrawn[2]{};
     const HRESULT dhr = FAILED(sleevePaletteHr)?sleevePaletteHr:StereoPair(dev, [&] {
         const unsigned eye=assemblyEye++;
         unsigned poseIndex=6;
@@ -21162,6 +21202,28 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         // No surface readback or GPU synchronization.
         const bool assemblyGlove=(numVertices==7444||numVertices==2626)&&startIndex==0&&primCount==4402;
         const bool assemblyDevice=shortTmdBuffer&&nativeIndices.valid;
+        // Read the exact material-0 wrist palette actually consumed by this
+        // eye, after independent tracking. Ride lives in the camera matrix,
+        // not c230: include it once when reconstructing world space.
+        if(g_tmdTrackedMuzzle&&assemblyGlove&&eye<2&&independentRegs&&nSeg>0&&
+           g_boundShaderLayout.bones==5&&g_boundShaderLayout.local==230&&
+           !g_boundShaderLayout.shadow&&Rd(g_camPosValid)&&TmdRaised()&&
+           !Rd(g_twoHandActive)&&Rd(g_offHandValid)&&Rd(g_tmdOnOffHand)&&
+           armnatural::TmdBind().ready&&
+           g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&
+           !Rd(g_gamePaused)&&!Rd(g_inCinematic)&&!Rd(g_vrUiMenu)) {
+            float skin[3][4];armbind::Mat local,ride;
+            if(SUCCEEDED(dev->GetVertexShaderConstantF(8,skin[0],3))&&
+               SUCCEEDED(dev->GetVertexShaderConstantF(230,local.m[0],4))) {
+                if(g_thisDrawMoved==1)BuildGunC(ride.m);
+                else if(g_thisDrawMoved==2)BuildTmdC(ride.m);
+                else if(g_thisDrawMoved==3)BuildTmdAssemblyC(ride.m);
+                else for(unsigned axis=0;axis<4;++axis)ride.m[axis][axis]=1.f;
+                tmdmuzzle::Capture(armnatural::TmdBind().bind[9],skin,local,ride,
+                    g_camPos,g_playerPawn,GetTickCount64(),
+                    (unsigned)Rd(g_armPaletteFrameToken),tmdSocketEye[eye]);
+            }
+        }
         if(seekerProbe&&eye<2){
             // Final bound shader/IB inside each eye; no GPU readback or flush.
             IDirect3DIndexBuffer9* ib=nullptr;IDirect3DVertexBuffer9* vb=nullptr;
@@ -21343,6 +21405,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         return hr;
         };
         const HRESULT eyeHr=drawEye();
+        if(eye<2)tmdSocketDrawn[eye]=SUCCEEDED(eyeHr)&&tmdSocketEye[eye].valid;
         if(poseIndex<6){g_dualPoseRecords[poseIndex].drawHr=eyeHr;g_dualPoseRecords[poseIndex].submitted=1;}
         return eyeHr;
     });
@@ -21405,6 +21468,13 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         InterlockedIncrement(&g_centurionPalmPublished);
     }
     const HRESULT nextRestore=nextRegs?g_origSetVSConstF(dev,nextReg,nextSaved,(UINT)nextRegs):D3D_OK;
+    if(g_tmdTrackedMuzzle&&tmdmuzzle::Completed(tmdSocketEye,tmdSocketDrawn,assemblyEye,
+       SUCCEEDED(dhr),SUCCEEDED(nativeRestore),SUCCEEDED(handRestore),SUCCEEDED(nextRestore))) {
+        NativeTmdSocket::Publish(tmdSocketEye[0]);
+        static unsigned notes=0;
+        if(notes++<4)Log("TMD tracked muzzle: published final material-0 wrist frame=%u eyes=2 indexRestore=OK paletteRestore=OK",
+            tmdSocketEye[0].frame);
+    }
     if(poseDue)for(unsigned eye=0;eye<2;++eye){
         auto& r=g_dualPoseRecords[poseSource.part*2+eye];
         if(r.frame==poseSource.frame&&r.call==poseSource.call){
@@ -29784,6 +29854,7 @@ struct CenturionRefillNative {
 #include "native_refill_engine.inl"
 #include "native_registry.inl"
 #include "native_rifle_fx.inl"
+#include "native_tmd_socket.inl"
 #include "native_scope_pip.inl"
 #include "native_seeker_projectile.inl"
 static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
@@ -36728,6 +36799,9 @@ void LoadIniSettings() {
     InterlockedExchange(&g_dualHandActionPose,GetPrivateProfileIntA("Input","DualHandActionPose",0,path)!=0);
     Log("ini: DualHandActionPose=%ld (default OFF; original material0 wrist parent, render only)",Rd(g_dualHandActionPose));
     g_trackedDepthPrimeFix=GetPrivateProfileIntA("Render","TrackedDepthPrimeFix",0,path)!=0;
+    g_trackedDepthPrimeProbe=GetPrivateProfileIntA("Diagnostic","TrackedDepthPrimeProbe",0,path)!=0;
+    g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
+    Log("ini: TmdTrackedMuzzle=%d (default OFF; original socket on final both-eye rendered wrist)",g_tmdTrackedMuzzle?1:0);
     Log("ini: TrackedDepthPrimeFix=%d (default OFF; exact restored-color depth-only siblings)",g_trackedDepthPrimeFix?1:0);
     Log("ini: DualWeaponTmdRightWrist=%ld (default OFF; TMD material-0 original right wrist)",Rd(g_dualWeaponTmdRightWrist));
     InterlockedExchange(&g_dualWeaponTmdProbe,GetPrivateProfileIntA("Diagnostic","DualWeaponTmdProbe",0,path)!=0);

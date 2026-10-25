@@ -399,6 +399,7 @@ static void __fastcall Poll(void* self,void*,float dt) {
  NativeBodyEquipmentProbe::Poll(); // opt-in read-only heavy/grenade ownership census
  NativeTmdHaptics::Poll(); // default OFF; verified Start/StopFirePower observers
  NativeTmdAim::Poll(); // OFF by default; audited pure TMD getters, not shared gun aim
+ NativeTmdSocket::Poll(); // separate OFF switch; exact original owned TMD socket only
  NativeDualTmdGunScale::Poll(); // OFF; original local gun_scale producer, no pose cache
  ObserveWeaponAssets(); // at most six weapon identities, only the explicit read-only witness
  NativeGamepadEnumProbe::SetContext(VrModeOn() && InterlockedCompareExchange(&g_padEmu,0,0)!=0 &&

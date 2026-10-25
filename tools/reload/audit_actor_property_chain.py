@@ -12,7 +12,8 @@ from ue3_layout import inspect
 
 def audit(path):
     data = path.read_bytes()
-    records = inspect(path, data=data, include_all=True)['records']
+    package = inspect(path, data=data, include_all=True)
+    records = package['records']
     actor, = [r for r in records if r['name'] == 'Actor' and r['cls'] == 0]
     children = {r['index']: r for r in records if r['outer'] == actor['index']}
     # Serialized UObject prefix is 16 bytes; UField.Next follows it. Resolve
@@ -31,11 +32,21 @@ def audit(path):
     assert len(chain) == len(children) == 458
     assert chain.index('Instigator') + 1 == 417
     assert chain.index('Location') + 1 == 304
+    # The bounded post-Spawn receipt must read native StructProperties. A
+    # VectorProperty lookup or the RTT helper's default 400-field budget
+    # cannot produce the actual native Velocity (field 431).
+    observed = {r['name']: dict(type=r['class_name'], ordinal=chain.index(r['name'])+1)
+                for r in package['exports'] if r['outer']==actor['index'] and
+                r['name'] in ('Location','Rotation','Velocity')}
+    assert observed == {'Location':dict(type='StructProperty',ordinal=304),
+                        'Rotation':dict(type='StructProperty',ordinal=305),
+                        'Velocity':dict(type='StructProperty',ordinal=431)}
     return dict(package_sha256=hashlib.sha256(data).hexdigest(),
                 actor_export=actor['index'], direct_fields=len(chain),
                 instigator_ordinal=chain.index('Instigator') + 1,
                 old_walk_budget=400, corrected_walk_budget=4096,
                 old_budget_reaches_instigator=False,
+                projectile_receipt_fields=observed,
                 limitation='Serialized source order, not live UObject memory proof')
 
 

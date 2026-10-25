@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+## 2026-10-25 — MAIN follow-up: original TMD socket / black-mask refusal / native Seeker lifecycle
+
+- Physical candidate `F20194FD...` **FAILED**: misplaced TMD Square FX, black offset silhouette and Seeker retrieval/accuracy. Session `build/main-seeker-evidence/session-20261025-121754`; accepted DLL `610F4C21...` / INI `C5D24E16...` restored and hash-verified. No subsequent deployment or launch yet.
+- Default-OFF `[Render] TmdTrackedMuzzle` reconstructs original `TMD_Muzzle` from the final both-eye material-0 wrist, then corrects only the exact owned native socket query. Original native helper and actual x86 stack ABI verified. **L1_PASS**; actual Square beam consumption is **UNPROVEN**, physical FX acceptance PENDING.
+- Default-OFF `[Diagnostic] TrackedDepthPrimeProbe`: bounded first-refusal/state/resource receipts; original suppression predicate unchanged. Last session omitted zero primes; phase-0-only trace did not contain the affected draw. Black producer still **UNPROVEN**.
+- Per user authorization, next candidate `SeekerBackSlot=0` uses original native heavy-weapon drop/switch lifecycle. No back retrieval promised. New first-12 post-Spawn receipts observe native initialized vectors without writes or guidance/spread changes. Practical accuracy PENDING.
+- **PASS**: focused socket/Seeker CPU adapters, dual-TMD, reload/aim, HUD geometry, WeaponLocker policies, OLED CPU and D3D11 GPU. **BLOCKED**: new D3D9/Ex pixels/IB/state execution because HAL CreateDevice returns `8876086A`; do not inherit old binary's pixel PASS.
+- Build/audit/artifact provenance: final clean-source candidate manifest. L3/PSVR2 NOT RUN for the follow-up; no new accepted baseline.
+- Details, exact restrictions and one-session test: `docs/handoffs/main-seeker-graphics-rootcause-20261025.md` (latest follow-up section supersedes the older test).
+
 ## 2026-10-25 — MAIN Seeker resolver / tracked depth-prime candidate
 
 - Branch: `fix/main-seeker-graphics-rootcause`, based on full integration `218dea73`.

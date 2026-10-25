@@ -30,7 +30,9 @@ static bool ExactClass(uintptr_t cls,const char* expected) {
 }
 static uintptr_t LocalTmd(uintptr_t& pawn) {
     using namespace NativeOwnedInventory;
-    pawn=CameraOwnedPawn();
+    // Reciprocal native controller.Pawn, rather than an optional camera owner.
+    // The failed physical session had a valid native pawn and cameraPawn=0.
+    pawn=ReadNativeLocalPlayer().pawn;
     if(!pawn||!ExactClass(P(pawn+OBJ_CLASS),"RvPlayerPawnSP"))return 0;
     static MemberCache member;
     const int off=member.Get(P(pawn+OBJ_CLASS),"mTMD");

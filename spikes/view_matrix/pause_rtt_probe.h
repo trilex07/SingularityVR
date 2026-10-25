@@ -283,11 +283,13 @@ static uintptr_t Pointer(uintptr_t address) {
         ? *reinterpret_cast<const uintptr_t*>(address) : 0;
 }
 
-static int Property(uintptr_t cls, const char* wanted, const char* expectedType) {
+static int Property(uintptr_t cls, const char* wanted, const char* expectedType,
+                    unsigned fieldBudget = 400) {
+    if (fieldBudget > 4096) return -1;
     if (!g_upChildren || !g_upNext || !g_upOffset) return -1;
     for (unsigned depth = 0; cls && depth < 64; ++depth) {
         uintptr_t property = Pointer(cls + g_upChildren);
-        for (unsigned n = 0; property && n < 400; ++n) {
+        for (unsigned n = 0; property && n < fieldBudget; ++n) {
             if (!Readable((void*)property, 0x100)) return -1;
             char name[96] = {}, type[96] = {};
             if (NameOf(property, name, sizeof(name)) && !strcmp(name, wanted)) {

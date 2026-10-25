@@ -20,7 +20,9 @@ static void Run(bool ex) {
     IDirect3DDevice9* d=nullptr;
     if(ex){IDirect3DDevice9Ex* e=nullptr;assert(SUCCEEDED(apiEx->CreateDeviceEx(0,D3DDEVTYPE_HAL,w,
         D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,nullptr,&e)));d=e;}
-    else assert(SUCCEEDED(api->CreateDevice(0,D3DDEVTYPE_HAL,w,D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,&d)));
+    else {const auto hr=api->CreateDevice(0,D3DDEVTYPE_HAL,w,D3DCREATE_SOFTWARE_VERTEXPROCESSING,&pp,&d);
+        if(FAILED(hr))fprintf(stderr,"D3D9 HAL CreateDevice failed HRESULT=%08lX adapters=%u\n",hr,api->GetAdapterCount());
+        assert(SUCCEEDED(hr));}
     trackedprime::Cache cache;
     IDirect3DVertexBuffer9* vb=nullptr;IDirect3DIndexBuffer9* ib=nullptr;
     auto resources=[&]{
@@ -56,6 +58,15 @@ static void Run(bool ex) {
     {D3DVIEWPORT9 v{};d->GetViewport(&v);
         printf("Native requested viewport 0/0 -> driver actual %g/%g\n",v.MinZ,v.MaxZ);}
     assert(cache.Skip(d,owner,prime));
+    trackedprime::Inspection evidence;
+    assert(cache.Inspect(d,owner,prime,evidence)&&evidence.exact&&
+        !strcmp(evidence.gate,"eligible")&&evidence.key.ib==ib&&evidence.key.vb==vb);
+    viewport(1);cache.ObserveViewport(d,nullptr,E_FAIL);
+    assert(cache.Inspect(d,owner,prime,evidence)&&evidence.exact&&
+        !strcmp(evidence.gate,"no-native-zero-viewport"));
+    primeState();d->SetRenderState(D3DRS_COLORWRITEENABLE,15);
+    assert(cache.Inspect(d,owner,prime,evidence)&&!strcmp(evidence.gate,"color-write-on"));
+    d->SetRenderState(D3DRS_COLORWRITEENABLE,0);
     // A failed native SetViewport, or a nonzero *requested* depth range,
     // cannot seed the prime witness even if this driver canonicalizes it.
     D3DVIEWPORT9 request{0,0,64,64,0,0};

@@ -18,7 +18,7 @@ class Wiring(unittest.TestCase):
         h=(ROOT/'spikes/view_matrix/native_tmd_aim.h').read_text()
         self.assertIn('volatile LONG g_tmdNativeAim = 0;',s)
         self.assertIn('GetPrivateProfileIntA("Input","TmdNativeAim",0,path)',s)
-        for marker in ('CameraOwnedPawn()', '"mTMD"','"RvPlayerPawnSP"','P(tmd+0x98)==pawn',
+        for marker in ('ReadNativeLocalPlayer().pawn', '"mTMD"','"RvPlayerPawnSP"','P(tmd+0x98)==pawn',
                        'engineThread!=GetCurrentThreadId()', 'tmdaim::Current(sample,pawn',
                        'Rd(g_fireDepth)>0','TryAcquireSRWLockShared', 'Method(aim,119',
                        'Method(aging,59','Method(owner,7'):

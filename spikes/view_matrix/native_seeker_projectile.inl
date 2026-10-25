@@ -63,11 +63,46 @@ static V* __fastcall StartHook(void* self,void*,V* out,V offset){
         *out=active.origin;
     return result;
 }
+static void FinalReceipt(void* object,const V& origin,const V& direction) {
+    // The pre-Spawn argument is not proof of initialized projectile flight.
+    // Inspect only the actual returned native projectile, after native init.
+    __try {
+        using namespace NativeOwnedInventory;
+        const auto p=(uintptr_t)object;
+        if(!p||!IsLive(p)||!NativeTmdAim::ExactClass(P(p+OBJ_CLASS),"Projectile")) {
+            Log("Seeker projectile result: object=%p no readable native Projectile (no mutation)",object);return;
+        }
+        const auto cls=P(p+OBJ_CLASS);
+        // Original Engine.u declares all three as StructProperty, not a
+        // VectorProperty class. Actor.Velocity is field 431/458: the legacy
+        // 400-field RTT budget cannot observe it. This bounded, read-only
+        // diagnostic opts into the same 4096 corruption backstop as ownership.
+        const int loc=PauseRttProbe::Property(cls,"Location","StructProperty",4096),
+            vel=PauseRttProbe::Property(cls,"Velocity","StructProperty",4096),
+            rot=PauseRttProbe::Property(cls,"Rotation","StructProperty",4096);
+        V location{},velocity{};int angles[3]{};
+        const bool l=loc>=0&&PauseRttProbe::SafeRange(p+loc,12),
+            v=vel>=0&&PauseRttProbe::SafeRange(p+vel,12),
+            r=rot>=0&&PauseRttProbe::SafeRange(p+rot,12);
+        if(l)memcpy(&location,(void*)(p+loc),12);
+        if(v)memcpy(&velocity,(void*)(p+vel),12);
+        if(r)memcpy(angles,(void*)(p+rot),12);
+        Log("Seeker projectile result: object=%p locationValid=%d velocityValid=%d rotationValid=%d location=(%.3f %.3f %.3f) velocity=(%.5f %.5f %.5f) rotation=%d/%d/%d inputOrigin=(%.3f %.3f %.3f) inputDirection=(%.5f %.5f %.5f) [post native initialization; no guidance/spread changes]",
+            object,l,v,r,location.x,location.y,location.z,velocity.x,velocity.y,velocity.z,
+            angles[0],angles[1],angles[2],origin.x,origin.y,origin.z,direction.x,direction.y,direction.z);
+    } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
+        Log("Seeker projectile result: unreadable returned object; native result retained");
+    }
+}
 static void* __fastcall SpawnHook(void* self,void*,void* archetype,const V* origin,const V* direction){
-    if(active.valid&&active.weapon==(uintptr_t)self&&(uintptr_t)_ReturnAddress()==spawnCaller&&notes++<12&&origin&&direction)
+    const bool receipt=active.valid&&active.weapon==(uintptr_t)self&&
+        (uintptr_t)_ReturnAddress()==spawnCaller&&notes++<12&&origin&&direction;
+    if(receipt)
         Log("Seeker launch: native archetype=%p origin=(%.3f %.3f %.3f) direction=(%.5f %.5f %.5f) barrel=(%.5f %.5f %.5f) expectedOrigin=(%.3f %.3f %.3f); native autoaim/guidance retained",
             archetype,origin->x,origin->y,origin->z,direction->x,direction->y,direction->z,active.axis.x,active.axis.y,active.axis.z,active.origin.x,active.origin.y,active.origin.z);
-    return spawnOriginal(self,archetype,origin,direction);
+    void* result=spawnOriginal(self,archetype,origin,direction);
+    if(receipt)FinalReceipt(result,*origin,*direction);
+    return result;
 }
 static void Tick(){
     if(ready||!g_seekerProjectileAim)return;

@@ -6,6 +6,123 @@ Parent: `218dea7344bcb89cbe630e06141121e0f9007a59` from
 `610F4C21C4E610C40CDF5381B8D8E98675482E409669329C3EDEF23CCD8AEFF1`.
 This is a candidate, not a new physically accepted baseline.
 
+## Latest physical failure and follow-up (supersedes the old test below)
+
+The user tested `F20194FD...` from source `0d871fe1`, session
+`build/main-seeker-evidence/session-20261025-121754/`. TMD Square FX did not
+originate at the glove; black offset silhouettes remained; Seeker back retrieval
+and practical accuracy failed. The installed DLL/INI were restored to accepted
+`610F4C21...` / `C5D24E16...` and independently hashed after exit. No new Steam
+deployment or game launch was performed during this follow-up.
+
+### TMD socket correction: implemented, physical FX consumption pending
+
+The original native `GetSocketWorldLocationAndRotation` reads the original CPU
+skeletal pose. Independent VR tracking changes the final GPU palette instead.
+Consequently, the original socket result does not include the displayed wrist
+delta. The exact named socket is original `TMD_Muzzle`, bone `l_arm_wrist` (9),
+relative location `(5.02409,-7.532,-0.710843)` UU, rotator
+Pitch/Yaw/Roll `-2495/-3631/1137`. These are original socket properties, not a
+guessed controller offset or raw ActorX point conversion.
+
+Default-OFF `[Render] TmdTrackedMuzzle=1` publishes that wrist only after both
+material-0 eye draws succeed and index/hand/reload palettes restore. It composes
+original bind * final consumed skin * local * actual camera ride + camera world
+translation once. The socket's original relative transform is then applied.
+No hand mesh, input, power/energy, projectile, camera or particle assets change.
+Only the successful original query for that socket on the exact locally owned
+TMD component is rewritten. Unknown names, other components, non-engine threads,
+failed original queries, stale (>150ms) wrists, support, cinema and menus forward
+unchanged. Missing evidence cannot produce an AIM-space fallback.
+
+Native helper contracts verified against the original executable/text:
+wrapper `AF8880` 257 bytes FNV `3BF1257B240D565F`, socket helper `AF85E0`
+304 bytes `2D4ED554DDC30DA5`, original matrix-to-rotator `493D90` 282 bytes
+`BF658FB17AAD44DA`. Native caller pushes rotator*, position*, FName.number,
+FName.index with component in ECX. Native RET16 owns cleanup. The actual compiled
+MSVC callback preserves ESI/EDI, forwards those four dwords, balances its optional
+cdecl rewrite and returns RET16. `tools/fx/audit_tmd_socket.py` records complete
+native/compiled stack accounting in ignored private evidence.
+
+Important limit: original script `BeginAgingFX` uses `mMuzzleSocket` for sound;
+`AttachComponentsToOwnerMesh` attaches `mPalmLight` to it. That does **not** prove
+the Square beam consumes the world-query helper. Its runtime consumption remains
+UNPROVEN. Do not call Square FX fixed from this implementation or CPU tests.
+Bounded receipts distinguish: hook armed, both-eye wrist published, successful
+TMD_Muzzle query rewrite, other original socket names (unchanged), or first gate.
+If the query is not consumed during Square, trace that actual producer next;
+do not redirect GetAgingVectors' cached target as though it were an emitter.
+
+The local TMD owner resolver now uses the existing reciprocal native player
+chain; this session had cameraPawn=0 with a valid native pawn. Existing
+`[Input] TmdNativeAim=0` remains OFF for this experiment.
+
+### Black duplicate: first refusal probe, no speculative broader suppression
+
+The session learned eight restored color siblings, but omitted **zero** primes
+and logged **zero** kept exact siblings. The automatic trace had only phase-0
+draws and no weapon/TMD body ranges; it cannot identify the silhouette producer.
+Therefore the black-pixel cause remains UNPROVEN and the existing Skip predicate
+is unchanged.
+
+Default-OFF `[Diagnostic] TrackedDepthPrimeProbe=1` inspects only previously
+learned ranges without changing graphics state. At most eight weapon/hand/support
+contexts x 32 inspections and 64 unique receipts prevent idle weapon draws from
+using up the entire budget before TMD is raised. Receipts include first failed
+gate, exact VB/IB/range, requested/actual viewport, RT/VS/PS identities, depth,
+color and stencil. COM references are released immediately; no GPU readback,
+flush, new pose or broad shadow/foreground mask is introduced.
+
+### Seeker: user-authorized native lifecycle and post-Spawn observation
+
+The latest session resolved a valid owned Seeker and retained it. Actual Grip
+attempts failed the existing zone or busy gates (18.1/47.5/43.7 cm versus 16 cm,
+or hip busy). That is different from the earlier ownership refusal. No guessed
+back-zone movement is justified.
+
+The user permits native heavy-weapon behavior. Candidate `[Input]
+SeekerBackSlot=0` disables the optional retention/retrieval hook: original
+SwitchWeapon can clear/drop the heavy weapon on switching away. There is no
+inventory grant, fake ownership, save edit or added ammunition. Ordinary weapon
+retention remains unchanged. Reacquire a legitimately dropped Seeker if needed.
+
+Twelve earlier launch arguments matched the calculated muzzle, but did not prove
+the initialized flight vector. A new read-only receipt inspects the actual native
+Spawn result after original initialization: Location, Velocity and Rotation,
+only for the first twelve scoped launches. Original Engine.u independently
+declares all three StructProperty; Velocity is child 431/458. Only this diagnostic
+opts into a 4096-field typed lookup budget; the RTT helper's default stays 400.
+The native rocket's drunk/guided behavior, recoil and spread remain authoritative.
+Practical accuracy is still FAILED/PENDING, not declared repaired by an input log.
+
+### Follow-up validation and next controlled session
+
+- PASS: x86 socket geometry/adapter (four rotations, both-eye publication,
+  stale/identity/context/failure/OFF gates, 100 calls with preserved ESP).
+- PASS: Seeker production walker/selector/projectile adapter, including bounded
+  post-Spawn observation and byte-for-byte unchanged native object.
+- PASS: 20 dual-TMD CPU programs and Python wiring/WeaponLocker preview checks;
+  15 muzzle/TMD/aim/shadow/holster programs and associated Python regressions;
+  HUD geometry/orientation/replayed poses; TMD runtime CPU checks.
+- PASS: OLED CPU and real D3D11 GPU comparisons, all presets within 1 LSB.
+- BLOCKED in this session: D3D9/Ex pixel tests (depth prime, HUD and SVTG/Seeker
+  indices), HAL CreateDevice `8876086A` (D3DERR_NOTAVAILABLE). These were compiled,
+  but their pixel/state assertions did not execute. Earlier passes are not a
+  pass for this new binary. No test gate was weakened.
+- Production PE32 `/O2`, native socket/Seeker machine-code audit and literal
+  WeaponLocker `[eax+20Ch]` check: see the final clean-source candidate manifest.
+- L3 and PSVR2: NOT RUN for this follow-up. No physical PASS.
+
+On a new user `start`, MAIN deploys through the existing guarded tooling with
+accepted DLL/INI/profile hashes recorded. One headset session, no chat switching:
+hold a normal weapon and look at floor/wall; raise TMD, use Square and L2 a few
+times while moving only the left hand; shoot 2–3 ordinary shots. If Seeker is
+available, pick it up legitimately and fire in free space, then switch away
+(native drop is expected; do not test back retrieval). Close normally. MAIN
+correlates the socket/refusal/post-Spawn receipts with the user's result.
+
+## Earlier candidate research (historical; acceptance superseded above)
+
 ## Seeker: first proven refusal
 
 The latest failed physical-session log, archived privately as
