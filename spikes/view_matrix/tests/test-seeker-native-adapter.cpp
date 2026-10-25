@@ -29,7 +29,7 @@ namespace NativeOwnedInventory {
 struct Name {int index,number;};
 static unsigned refreshes=0;
 static void Refresh(){++refreshes;}
-static uintptr_t CameraOwnedPawn(){return currentPawn;}
+static uintptr_t CameraOwnedPawn(){return 0;} // recorded PR60 failure
 static uintptr_t P(uintptr_t a){
     if(wrongOwner&&a==Ptr(seeker)+0x98)return Ptr(pawn)+4;
     auto i=fields.find(a);return i==fields.end()?0:i->second;
@@ -44,7 +44,10 @@ static bool NameFromIndex(int i,char* out,size_t n){
     const char* text=i==10?"ARSteerable":i==20?"ARRifle":nullptr;
     if(!text)return false;strcpy_s(out,n,text);return true;
 }
+#include "seeker_registered_names.h"
 struct MemberCache {int Get(uintptr_t,const char* n){
+    bool registered=false;for(auto name:productionNames)if(!strcmp(name,n))registered=true;
+    if(!registered)return -1;
     if(!strcmp(n,"InvManager"))return 0x3d0;if(!strcmp(n,"Weapon"))return 0x3d4;
     if(!strcmp(n,"InventoryChain")||!strcmp(n,"Inventory"))return 0x1e0;
     if(!strcmp(n,"Instigator"))return 0x98;if(!strcmp(n,"mWeaponName"))return 0x2e8;
@@ -52,10 +55,11 @@ struct MemberCache {int Get(uintptr_t,const char* n){
 }};
 }
 static unsigned selected=0;
+static bool selectorCompletes=true;
 static void __fastcall SelectOwned(void* self,void*,NativeOwnedInventory::Name n){
     assert(self==pawn&&n.number==0);++selected;
     assert(n.index==10||n.index==20);
-    fields[Ptr(pawn)+0x3d4]=n.index==10?Ptr(seeker):Ptr(rifle);
+    if(selectorCompletes)fields[Ptr(pawn)+0x3d4]=n.index==10?Ptr(seeker):Ptr(rifle);
 }
 namespace NativeContextCursor {static bool Method(uintptr_t p,size_t,unsigned long long){return p&&!badMethod;}}
 static int __fastcall QueryHeavy(void*,void*){return 1;}
@@ -65,6 +69,8 @@ static bool failEnable=false;
 static int MH_CreateHook(void*,void*,void** out){++created;*out=(void*)&QueryHeavy;return 0;}
 static int MH_EnableHook(void*){return failEnable?1:0;}
 static int MH_RemoveHook(void*){++removed;return 0;}
+#include "../native_local_player.h"
+static nativeplayer::Identity ReadNativeLocalPlayer(){return {Ptr(controller),currentPawn,nativeplayer::Stage::Ready};}
 #include "../native_seeker_slot.h"
 static void Request(){InterlockedExchange(&g_seekerBackRequest,(LONG)currentPawn);NativeSeekerSlot::Poll();}
 static void Setup(){
@@ -104,6 +110,14 @@ int main(){
     badMethod=true;refusal();badMethod=false;
     g_seekerBackRequest=(LONG)Ptr(pawn);currentPawn=Ptr(pawn)+4;
     NativeSeekerSlot::Poll();assert(selected==100&&!g_seekerBackAvailable);currentPawn=Ptr(pawn);
+    // A selector returning is not proof of equip. Keep pending until observed.
+    selectorCompletes=false;Request();assert(NativeSeekerSlot::pendingTarget==Ptr(seeker));
+    NativeSeekerSlot::pendingUntil=0;NativeSeekerSlot::Poll();
+    // Poll is normally throttled; force a fresh engine sample without acquisition.
+    Sleep(110);NativeSeekerSlot::Poll();assert(!NativeSeekerSlot::pendingTarget);
+    assert(fields[Ptr(pawn)+0x3d4]==Ptr(rifle));selectorCompletes=true;
+    Request();assert(NativeSeekerSlot::pendingTarget==Ptr(seeker));
+    Sleep(110);NativeSeekerSlot::Poll();assert(!NativeSeekerSlot::pendingTarget);
     assert(NativeSeekerSlot::Read(s));NativeSeekerSlot::heavyTarget=0;failEnable=true;
     assert(!NativeSeekerSlot::Bind(s)&&!g_seekerBackSlot&&removed==1&&!NativeSeekerSlot::originalHeavy);
     puts("PASS real Seeker slot adapter: 100 native-owned selector ABI calls; byte-exact weapon/ammo conservation; pause/cinema/OFF/owner/cycle/deletion/pawn/method gates; failed hook cleanup");

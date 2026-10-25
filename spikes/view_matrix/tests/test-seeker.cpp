@@ -38,6 +38,11 @@ int main(int argc,char** argv){
         const hipknife::V head{1,1.2f,-2};
         const auto at=bodyequipment::Layout{}.At(bodyequipment::Slot::Heavy,head,yaw).centre;
         assert(BackGrip(true,true,true,false,true,at,head,yaw));
+        assert(BackGripGate(true,true,true,false,false,at,head,yaw)==GripGate::Unavailable);
+        assert(BackGripGate(true,false,true,false,true,at,head,yaw)==GripGate::Context);
+        assert(BackGripGate(true,true,false,false,true,at,head,yaw)==GripGate::Tracking);
+        assert(BackGripGate(true,true,true,true,true,at,head,yaw)==GripGate::Busy);
+        assert(BackGripGate(true,true,true,false,true,at+hipknife::V{0,.5f,0},head,yaw)==GripGate::Outside);
         assert(!BackGrip(false,true,true,false,true,at,head,yaw));
         assert(!BackGrip(true,true,true,true,true,at,head,yaw));
         assert(!BackGrip(true,true,false,false,true,at,head,yaw));
