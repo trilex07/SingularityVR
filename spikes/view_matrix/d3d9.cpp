@@ -2046,6 +2046,7 @@ WantedName g_wantNames[] = {
     // audited native offsets are the source of truth; these two names are the
     // CROSS-CHECK that the layout has not drifted.
     { "InventoryChain", -1 }, { "Inventory", -1 },
+    { "Instigator", -1 }, { "mWeaponName", -1 }, // Seeker ownership cross-checks
     // Ammo probe round 5: shots-fired counter (fire proof per pull) and the
     // pawn baseline below needs no new names.
     { "mShotCount", -1 },
@@ -11569,13 +11570,26 @@ void SyncXRInput(XrTime displayTime) {
     const float handY = (float)Rd(g_handOffY) / kHandFixed;
     const float handZ = (float)(g_gunSignPosZ * Rd(g_handOffZ)) / kHandFixed;
     const auto& backHand=g_handLastPos[AimHand()];
-    const bool backGrip=seekerslot::BackGrip(primaryGripRising,
+    const auto backGate=seekerslot::BackGripGate(primaryGripRising,
         feedGame&&!uiMenu&&!Rd(g_gamePaused)&&!Rd(g_inCinematic)&&AimHand()==1,
         g_handPositionValid[AimHand()]&&g_handPoseValid[AimHand()],
         Rd(g_weaponHolstered)||Rd(g_twoHandActive)||g_nextOwnsGrip||g_centurionOwnsGrip||
             g_nextBlockFire||g_hipKnifeState.held>=0||Rd(g_weaponWheelOpen),
         Rd(g_seekerBackSlot)&&Rd(g_seekerBackAvailable),
         {backHand.x,backHand.y,backHand.z},{g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw);
+    const bool backGrip=backGate==seekerslot::GripGate::Accept;
+    if(primaryGripRising&&Rd(g_seekerBackSlot)){
+        static unsigned backReceipts=0;
+        if(backReceipts++<48){
+            const auto zone=bodyequipment::Layout{}.At(bodyequipment::Slot::Heavy,
+                {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw);
+            Log("Seeker back grip: gate=%s hand=%d tracked=%d availablePawn=%08X handPos=(%.3f %.3f %.3f) zone=(%.3f %.3f %.3f) distance=%.3f radius=%.3f busy[hip=%d support=%d next=%d centurion=%d fire=%d knife=%d wheel=%d]",
+                seekerslot::Name(backGate),AimHand(),g_handPositionValid[AimHand()]&&g_handPoseValid[AimHand()],
+                (unsigned)Rd(g_seekerBackAvailable),backHand.x,backHand.y,backHand.z,
+                zone.centre.x,zone.centre.y,zone.centre.z,hipknife::Length(hipknife::V{backHand.x,backHand.y,backHand.z}-zone.centre),zone.radius,
+                Rd(g_weaponHolstered),Rd(g_twoHandActive),g_nextOwnsGrip,g_centurionOwnsGrip,g_nextBlockFire,g_hipKnifeState.held,Rd(g_weaponWheelOpen));
+        }
+    }
     if(backGrip)InterlockedExchange(&g_seekerBackRequest,Rd(g_seekerBackAvailable));
     const weaponholster::Event holsterEvent = weaponholster::Update(
         g_holsterState, primaryGripRising && !backGrip && !uiMenu && !Rd(g_gamePaused), holsterValid, feedGame,

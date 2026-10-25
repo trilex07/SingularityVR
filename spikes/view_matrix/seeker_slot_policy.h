@@ -34,10 +34,23 @@ inline bool RetainQuery(bool enabled,bool gameplay,bool sameThread,bool ownedSee
     return enabled&&gameplay&&sameThread&&ownedSeeker&&switchMethod&&
         (caller==switchMethod+0xd2||caller==switchMethod+0xe9);
 }
+enum class GripGate { NoEdge,Context,Tracking,Busy,Unavailable,Outside,Accept };
+inline const char* Name(GripGate g){
+    switch(g){case GripGate::NoEdge:return "no-edge";case GripGate::Context:return "context";
+    case GripGate::Tracking:return "tracking";case GripGate::Busy:return "busy";
+    case GripGate::Unavailable:return "unavailable";case GripGate::Outside:return "outside";
+    default:return "accept";}
+}
+inline GripGate BackGripGate(bool edge,bool context,bool tracked,bool busy,bool available,
+                     hipknife::V hand,hipknife::V head,float yaw){
+    if(!edge)return GripGate::NoEdge;if(!context)return GripGate::Context;
+    if(!tracked)return GripGate::Tracking;if(busy)return GripGate::Busy;
+    if(!available)return GripGate::Unavailable;
+    const auto z=bodyequipment::Layout{}.At(bodyequipment::Slot::Heavy,head,yaw);
+    return bodyequipment::Pick(hand,&z,1)==bodyequipment::Slot::Heavy?GripGate::Accept:GripGate::Outside;
+}
 inline bool BackGrip(bool edge,bool context,bool tracked,bool busy,bool available,
                      hipknife::V hand,hipknife::V head,float yaw){
-    if(!edge||!context||!tracked||busy||!available)return false;
-    const auto z=bodyequipment::Layout{}.At(bodyequipment::Slot::Heavy,head,yaw);
-    return bodyequipment::Pick(hand,&z,1)==bodyequipment::Slot::Heavy;
+    return BackGripGate(edge,context,tracked,busy,available,hand,head,yaw)==GripGate::Accept;
 }
 }

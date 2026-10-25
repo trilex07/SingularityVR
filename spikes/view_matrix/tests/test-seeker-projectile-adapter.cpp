@@ -20,6 +20,7 @@ static void Log(const char*,...){}
 static void BuildGunC(float m[4][4]){memset(m,0,64);for(unsigned i=0;i<4;++i)m[i][i]=1;}
 namespace NativeOwnedInventory {static uintptr_t P(uintptr_t){return 0;}}
 namespace NativeSeekerSlot {
+static const char* stage="test-ownership";
 static bool owner=true;
 static bool badRead=false;
 static bool Read(seekerslot::Snapshot& s){if(badRead)RaiseException(EXCEPTION_ACCESS_VIOLATION,0,0,nullptr);

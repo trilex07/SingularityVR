@@ -1,0 +1,28 @@
+{
+  "source_commit": "5e9088799c98a75ec9b40d5e2cc7ee3dfc441aeb",
+  "dll_sha256": "8112FB08142B380C6B8A6421D1522203CE0864017A95A8765A2A7379F303C60F",
+  "architecture": "x86 PE32",
+  "optimization": "/O2",
+  "branch": "fix/seeker-back-holster-evidence",
+  "tests": {
+    "production_registered_names": "PASS",
+    "critical_gameplay_tmd_reload_accuracy_oled": "PASS",
+    "projectile_adapter": "PASS",
+    "seeker_native_and_compiled_abi": "PASS",
+    "selection_confirmation_timeout": "PASS",
+    "seeker_adapter": "PASS",
+    "locker_compiled_abi": "PASS",
+    "d3d9_d3d9ex": "PASS (standalone retry outside sandbox; initial CreateDevice denied)"
+  },
+  "physical": {
+    "seeker_firing": "PARTIAL previous; corrected path PENDING",
+    "valkyrie_volk_20cm_reload": "PASS user; unchanged",
+    "save_load": "NOT TESTED",
+    "valkyrie_accuracy": "PASS user; unchanged",
+    "left_support": "NOT TESTED",
+    "back_holster": "PENDING retest; previous FAIL"
+  },
+  "steam_access": "NONE",
+  "geometry_change": "NONE",
+  "native_guidance_change": "NONE"
+}
