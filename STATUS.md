@@ -1,5 +1,32 @@
 # STATUS — session handoff
 
+## 2026-10-25 — Singularity VR Full Integration Candidate (Branch: integration/full-psvr2-20261025)
+
+- **Candidate DLL SHA-256**: `610F4C21C4E610C40CDF5381B8D8E98675482E409669329C3EDEF23CCD8AEFF1`
+- **Candidate Commit**: `e5ea4c3c` on branch `integration/full-psvr2-20261025`
+- **Reconciled Pull Requests & Work**:
+  - **PR #59** (`b4d24874`): UI Remaster & Legacy Prompt Cleanup (`UiRemasterMenus=1`, `VrHideLegacyPadPrompts=1`, `VrPromptTokens=1`, new weapon icons atlas `3EF17826...`, Sense button token replacements).
+  - **PR #60** (`9ea16074`): Seeker weapon improvements (`SeekerBackSlot=1`, `SeekerSupportGrip=1`, `SeekerProjectileAim=1`, Valkyrie accuracy 70%/50%, Volk/Valkyrie 20 cm reload comfort).
+  - **PR #61** (`7a6ea249`): Independent Dual-Hand Action Pose (`DualHandActionPose=1`, eliminates right-weapon lowering during L2/Square and left-TMD disruption during R2).
+  - **PR #62** (`19bd45da`): Seeker ownership resolver & reflected-name registration (`g_wantNames`).
+  - **PR #63** (`4580631b`): Seeker instigator offset fix (`Actor.Instigator` @ 0xCC instead of 0x98), native ownership & ammo preservation.
+  - **Accepted Baseline Preserved**:
+    - 3D Diegetic HUD (`DiegeticWeaponHud=1`)
+    - 4x HD Volk & Gloves textures (`priority_material_mode=2`, `remaster_apply=0`)
+    - OLED / NIS display grading
+    - Polish localization & dubbing
+    - Independent gloves & TMD haptics
+- **Guarded Backup Manifest**:
+  - Saved to `deployment/deploy-backups/20261025-pre-full-psvr2-integration/`:
+    - Previous `d3d9.dll`: `8112FB08142B380C6B8A6421D1522203CE0864017A95A8765A2A7379F303C60F`
+    - Previous `SingularityVR.ini`: `D6A88FF75F96C2EA9C2AB042786687F37F78E5ACD5D223B5BDBDAF10AD157A45`
+    - Previous `view_matrix.log`: `1EB237B8ED442C55A9E8CE41564C4B4FDCBA2163DB117290D21B3818C6D8B465`
+- **Verification Gates**:
+  - Full x86 test suite PASS (`test-dual-weapon-tmd.ps1`: 39 groups, OLED grading, action pose, pose probe, etc.)
+  - Seeker test suite PASS (`test-seeker.ps1`: lifecycle, native adapter, projectile adapter)
+  - Production build: x86 PE32 /O2 clean, zero compiler errors.
+- **Physical Acceptance Status**: READY FOR COMPREHENSIVE PSVR2 ACCEPTANCE SESSION.
+
 ## 2026-10-25 — PSVR2 Physical Acceptance: HD Textures Gate A → B → C (Volk & Gloves)
 
 - **Status: PHYSICAL PASS** (confirmed in PSVR2 by user: 'wyglada okej daj na main').
