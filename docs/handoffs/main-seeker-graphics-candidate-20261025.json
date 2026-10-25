@@ -1,0 +1,50 @@
+{
+  "schema": "singularityvr-main-candidate-v1",
+  "branch": "fix/main-seeker-graphics-rootcause",
+  "source_sha": "0d871fe14a05eb3e1e9dcb1563922861c47b6345",
+  "parent_sha": "218dea7344bcb89cbe630e06141121e0f9007a59",
+  "dll_sha256": "F20194FDE9BFCCA912D837F2AF122EB4606E2CBE019F8226ECA1B02CE14EAA98",
+  "accepted_dll_sha256": "610F4C21C4E610C40CDF5381B8D8E98675482E409669329C3EDEF23CCD8AEFF1",
+  "architecture": "x86 PE32",
+  "optimization": "/O2",
+  "source_worktree_clean": true,
+  "candidate_flag": {
+    "Render/TrackedDepthPrimeFix": "1"
+  },
+  "default_flag": {
+    "Render/TrackedDepthPrimeFix": "0"
+  },
+  "preserved_flags": {
+    "Input/SeekerBackSlot": "1",
+    "Input/SeekerSupportGrip": "1",
+    "Input/SeekerProjectileAim": "1",
+    "Input/DualHandActionPose": "1"
+  },
+  "tests": {
+    "production_property_walk_x86": "PASS",
+    "actor_serialized_chain_417_of_458": "PASS",
+    "emitted_property_walk_4096": "PASS",
+    "native_seeker_selector_and_projectile_abi": "PASS",
+    "seeker_adapter_100_owned_calls_ammo_conservation": "PASS",
+    "seeker_ib_d3d9_d3d9ex": "PASS",
+    "depth_prime_d3d9_d3d9ex_pixels_off_failure_identity_reset": "PASS",
+    "dual_action_pose_and_reload_accuracy": "PASS",
+    "tmd_runtime_svtg_two_eyes_index_palette_restore": "PASS",
+    "hud_d3d9_d3d9ex_120_pixel_cases_each": "PASS",
+    "single_owner_texture_bridge_d3d9_d3d9ex": "PASS",
+    "oled_cpu_gpu_and_device_lifetime": "PASS",
+    "compiled_locker_factory_literal_20c": "PASS"
+  },
+  "runtime": {
+    "resolver_only_smoke": "valid native chain, no owned Seeker in loaded save; accepted DLL restored",
+    "combined_candidate": "NOT RUN",
+    "seeker_retention_retrieval": "PENDING",
+    "seeker_projectile": "PENDING",
+    "complete_support_glove": "PENDING",
+    "native_black_pixel_producer": "UNPROVEN; controlled near-plane-prime hypothesis"
+  },
+  "physical_acceptance": "PENDING",
+  "steam_deployment": "NOT DEPLOYED",
+  "recommendation": "GO for controlled user PSVR2 acceptance, not stable promotion",
+  "handoff": "docs/handoffs/main-seeker-graphics-rootcause-20261025.md"
+}
