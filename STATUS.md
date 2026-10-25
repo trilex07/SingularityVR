@@ -1,5 +1,17 @@
 # STATUS — session handoff
 
+## 2026-10-25 — SIDE dual-hand action-pose correction (physical gate open)
+
+`fix/dual-hand-action-pose`: recovered archived action-correlated wrist jumps,
+resolved native upper-body animation producers, and implemented default-OFF
+`DualHandActionPose`. Original material-0 wrist parents normalize to measured
+native idle references for four weapons; both hands share the same render-frame
+witness and actual ride cancellation. No native switch/input/power suppression.
+Math/replay, short-gauntlet, dual-TMD, D3D9/Ex and OLED regressions PASS offline.
+Runtime draw-before-witness and relative native left IK remain explicit physical
+acceptance gates. No Steam access. See
+[candidate handoff](docs/handoffs/sol-dual-hand-action-pose.md).
+
 ## 2026-10-25 — SIDE dual-hand action interference: evidence gate
 
 User reports L2/Square drops the right gun and R2 disturbs left TMD. Native
