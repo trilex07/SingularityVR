@@ -1,5 +1,23 @@
 # STATUS — session handoff
 
+## 2026-10-25 — Seeker PR #60 Follow-Up Deployment (Candidate 8112FB08; PSVR2 Retest PENDING)
+
+- **Deployed Candidate Details**:
+  - Source Commit: 5e908879 / 19bd45da (branch ix/seeker-back-holster-evidence)
+  - Installed Steam DLL: 8112FB08142B380C6B8A6421D1522203CE0864017A95A8765A2A7379F303C60F (x86 PE32 /O2)
+  - Backup Checkpoint: deployment/deploy-backups/20261025-pre-seeker-followup
+- **Minimal Core Fixes Applied**:
+  1. **Reciprocal Pawn Resolver**: Replaced CameraOwnedPawn() with ReadNativeLocalPlayer().pawn (fixing cameraPawn=00000000 while 
+ativePawn=141F5000).
+  2. **Registered Reflection Names**: Registered Instigator and mWeaponName in g_wantNames in d3d9.cpp, unblocking reflection property offset lookups.
+  3. **Bounded Receipts**: Added bounded logging for Seeker back gate (64 receipts), XR Grip edge (48 receipts), launch gates (32 receipts), and two-phase selection confirmation (selection-requested -> selection-equipped vs selection-timeout).
+- **Preserved Accepted Baseline**:
+  - Valkyrie accuracy: VrValkyrieSpreadPercent=70, VrValkyrieTwoHandPercent=50 (PHYSICAL PASS)
+  - Reload comfort: ValkyrieInsertRadiusCm=20, VolkInsertRadiusCm=20 (PHYSICAL PASS)
+  - HD textures: priority_material_mode=2 with 4 verified 2K DDS files (PHYSICAL PASS)
+  - HUD 3D, TMD haptics, Polish dubbing, neutral UI atlas intact.
+- **Physical Retest Status**: PENDING short PSVR2 acceptance test.
+
 ## 2026-10-25 — PSVR2 Physical Verification: Seeker PR #60 & Weapon Tuning (PARTIAL)
 
 - **Physical Acceptance Results (PSVR2 test by user)**:
