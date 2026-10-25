@@ -1,5 +1,30 @@
 # STATUS — session handoff
 
+## 2026-10-25 — PSVR2 Physical Verification: Seeker PR #60 & Weapon Tuning (PARTIAL)
+
+- **Physical Acceptance Results (PSVR2 test by user)**:
+  - **Valkyrie Accuracy (PHYSICAL PASS)**: Candidate 70% native spread with 50% two-hand multiplier (35% combined) verified; noticeably tighter and consistent burst grouping in VR.
+  - **Valkyrie & Volk 20 cm Reload Comfort (PHYSICAL PASS)**: Enlarged 20 cm insertion radius confirmed; smooth magazine insertion without hitching or rejected entries.
+  - **Seeker Back Holster (FAIL)**: Gesture behind right shoulder failed to draw/stow Seeker. Runtime evidence: g_seekerBackAvailable remained 0 because NativeSeekerSlot::Read(s) returned false, preventing Bind(s) and back-slot gesture arming.
+  - **Seeker Firing (PARTIAL)**: Native rocket launch works, but VR-corrected muzzle launch hooks were not armed (dependent on NativeSeekerSlot::Read(s) via Local()).
+  - **Seeker Left Support Grip (NOT TESTED)**: In-engine witness published (log lines 21322-21326), but physical feel not tested by user.
+  - **Seeker Save/Load Persistence (NOT TESTED)**.
+- **Preserved PSVR2 Session Evidence Checkpoint**:
+  - Live Steam DLL: 98560D7413CBA7298321DA7EED85AC63ABCC457010C372295615780AAEBE0809 (commit 9ea16074, PR #60)
+  - Live Steam SingularityVR.ini: D8977B92BB7A21D87379AFECF1B5C87D179BC9EF9F69F58AF43E685A44DA363B
+  - Live Steam 	exture_override.ini: 2492C8D08A067C9097AD24ACA5D8AA77EB56B883914369087C7FB6471F2D1BF7
+  - Archived Session Log: deployment/deploy-backups/20261025-pr60-psvr2-session/view_matrix.log (SHA256: AD0A4DD62445BF6C3B0F287D6A3573D21A2FD1619CD6952F4B4A77622CF11AD5)
+  - Startup Log: deployment/deploy-backups/20261025-pr60-psvr2-session/view_matrix_startup.log (SHA256: 758E219117431EBFA7C85AD88AA231559F2A939D258DF5A1F7C60C6591AB56E0)
+  - Checkpoint Manifest: deployment/deploy-backups/20261025-pr60-psvr2-session/manifest.json
+- **Diagnosed Mechanism & Blocker (Handoff to Astra)**:
+  - Seeker possession confirmed: owned inventory: unmapped weapon item name=ARSteerable mWeaponName=ARSteerable logged repeatedly.
+  - NativeSeekerSlot::Bind() never called because NativeSeekerSlot::Read() failed closed silently (likely on strict Instigator offset 0x98 or MemberCache reflection timeout).
+  - Astra ownership: Astra must fix Read(s) / Bind(s) logging and validation without changing accepted systems.
+- **Preserved Baseline Settings for Next Candidate**:
+  - VrValkyrieSpreadPercent=70, VrValkyrieTwoHandPercent=50
+  - ValkyrieInsertRadiusCm=20, VolkInsertRadiusCm=20
+  - priority_material_mode=2 (HD textures)
+
 ## 2026-10-25 — PSVR2 Physical Acceptance: HD Textures Gate A → B → C (Volk & Gloves)
 
 - **Status: PHYSICAL PASS** (confirmed in PSVR2 by user: 'jest okej' / 'wyglada okej').
