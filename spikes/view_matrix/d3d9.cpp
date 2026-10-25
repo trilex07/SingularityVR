@@ -59,6 +59,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "glove_isolate.h"
 #include "support_grip_palette.h"
 #include "fp_shadow.h"
+#include "tracked_depth_prime.h"
 #include "camera_stabilization.h"
 #include "weapon_steady.h"
 #include "shadow_policy.h"
@@ -2082,22 +2083,7 @@ static int32_t WantedIdx(const char* s) {
 // Walk one class's own property list under a candidate layout, looking for the name INDEX `wantIdx`.
 // Returns the offset it reports, or -1. Bounded hard: a wrong layout produces a garbage pointer chain,
 // and this must fail rather than wander.
-static int PropOffsetUnder(uintptr_t cls, int32_t wantIdx, int chOff, int nxOff, int offOff) {
-    if (wantIdx < 0 || !Readable((void*)(cls + chOff), 4)) return -1;
-    uintptr_t p = *reinterpret_cast<uintptr_t*>(cls + chOff);
-    for (int guard = 0; guard < 400 && p; ++guard) {
-        if (!Readable((void*)p, 0x100)) return -1;
-        if (*reinterpret_cast<const int32_t*>(p + OBJ_NAME) == wantIdx) {
-            const int off = *reinterpret_cast<const int32_t*>(p + offOff);
-            // A property offset is a small non-negative byte offset. Anything else says the layout is
-            // wrong, not that the property is exotic.
-            if (off < 0 || off > 0x8000) return -1;
-            return off;
-        }
-        p = *reinterpret_cast<uintptr_t*>(p + nxOff);
-    }
-    return -1;
-}
+#include "native_property_list.inl"
 
 // Look a property up through a class's SUPER chain - Translation lives on PrimitiveComponent, several
 // classes above SkeletalMeshComponent, and the muzzle properties are on RvWeaponFX itself.
@@ -2288,6 +2274,8 @@ static LONG g_dualWeaponTmdReady=0,g_dualWeaponTmdProbe=0;
 static LONG g_dualWeaponTmdGunScale=0; // opt-in native gun_scale result, no cached pose
 static LONG g_dualWeaponTmdRightWrist=0; // opt-in original TMD right-wrist target
 static LONG g_dualHandActionPose=0; // source-wrist normalization; default OFF
+static bool g_trackedDepthPrimeFix=false; // exact late-color siblings only; default OFF
+static trackedprime::Cache g_trackedPrimeCache;
 static dualaction::Frame g_dualActionFrame;
 static volatile LONG g_dualActionRenderThread=0;
 static dualtmd::Census g_dualTmdCensus; // render thread only
@@ -20091,7 +20079,10 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceClear(IDirect3DDevice9* dev,DWORD co
 HRESULT STDMETHODCALLTYPE Hook_SetViewport(IDirect3DDevice9* dev, const D3DVIEWPORT9* vp) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
     if (vp) DpgRecord(0, vp->MinZ, vp->MaxZ, vp->X, vp->Y, vp->Width, vp->Height);
-    return g_origSetViewport(dev, vp);
+    const HRESULT hr=g_origSetViewport(dev,vp);
+    if(g_trackedDepthPrimeFix&&GetCurrentThreadId()==g_mainThreadId)
+        g_trackedPrimeCache.ObserveViewport(dev,vp,hr);
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE Hook_Clear(IDirect3DDevice9* dev, DWORD count, const D3DRECT* rects,
@@ -20298,10 +20289,32 @@ static void CaptureArmPaletteTrace(IDirect3DDevice9* dev, INT baseVertex, UINT m
 
 // Confirm a caster by retained buffer/range identity, not a vertex-count collision.
 // Color draws teach this bounded cache; a new weapon discards all identities.
+static trackedprime::Owner TrackedPrimeOwner() {
+    trackedprime::Owner o;
+    o.pawn=g_playerPawn;o.weapon=(uintptr_t)(unsigned)Rd(g_weaponObj);
+    o.frame=(uint32_t)Rd(g_armPaletteFrameToken);
+    o.active=g_trackedDepthPrimeFix&&Rd(g_dualHandActionPose)&&VrModeOn()&&
+        GetCurrentThreadId()==g_mainThreadId&&g_haveEyes&&g_eyePositionsValid&&
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&
+        !Rd(g_gamePaused)&&!Rd(g_vrUiMenu)&&!Rd(g_inCinematic)&&
+        !Rd(g_weaponHolstered)&&!NativeAnimatedHandsNow()&&!CutsceneNativeCameraArmed()&&
+        g_handPoseValid[0]&&g_handPositionValid[0]&&g_handPoseValid[1]&&g_handPositionValid[1];
+    return o;
+}
+static trackedprime::Draw TrackedPrimeDraw(D3DPRIMITIVETYPE t,INT base,UINT min,
+    UINT vertices,UINT start,UINT primitives) {
+    trackedprime::Draw d;d.triangles=t==D3DPT_TRIANGLELIST;
+    d.foreground=Rd(g_inForeground)!=0&&Rd(g_fgPassConfirmed)!=0&&FgMatchWindow();
+    d.key.verts=vertices;d.key.prims=primitives;d.key.baseVertex=base;
+    d.key.minIndex=min;d.key.startIndex=start;
+    d.key.layoutShadow=g_boundShaderLayout.shadow;d.key.rtIsScene=Rd(g_rtIsScene)!=0;
+    return d;
+}
 static fpshadow::DrawKey g_fpCasterKeys[32];
 static unsigned g_fpCasterCount=0;
 static LONG g_fpCasterWeapon=0;
 void ReleaseFpCasterCache() {
+    g_trackedPrimeCache.Reset();
     for(unsigned i=0;i<g_fpCasterCount;++i) {
         ((IDirect3DVertexBuffer9*)g_fpCasterKeys[i].vb)->Release();
         ((IDirect3DIndexBuffer9*)g_fpCasterKeys[i].ib)->Release();
@@ -20560,6 +20573,25 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     }
     if(g_boundShaderLayout.shadow)
         {ShadowMode3NoteGeneration(dev);return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);}
+    if(g_trackedDepthPrimeFix){
+        trackedprime::Receipt receipt;
+        const bool skip=g_trackedPrimeCache.Skip(dev,TrackedPrimeOwner(),
+            TrackedPrimeDraw(t,baseVertex,minIndex,numVertices,startIndex,primCount),&receipt);
+        // Never broaden the predicate to force a fix to engage. Refusals from
+        // an exact native near-plane sibling distinguish color/stencil routes.
+        static unsigned keptNotes=0,skippedNotes=0;
+        if(receipt.sibling&&!skip&&keptNotes<8){++keptNotes;
+            Log("tracked-depth-prime: kept exact sibling frame=%ld verts=%u first=%u tris=%u z=%lu write=%lu color=%lX stencil=%lu",
+                Rd(g_armPaletteFrameToken),numVertices,startIndex,primCount,
+                receipt.z,receipt.write,receipt.color,receipt.stencil);}
+        if(skip){
+            // No D3D state or tracked-pose mutation; only a proven depth-only sibling.
+            if(skippedNotes<8){++skippedNotes;
+                Log("tracked-depth-prime: omitted exact late-color sibling frame=%ld verts=%u first=%u tris=%u depthOnly=1 nearZ=0 stencil=0",
+                    Rd(g_armPaletteFrameToken),numVertices,startIndex,primCount);}
+            return D3D_OK;
+        }
+    }
     ++g_vidFrameDraws;
     // Indexed geometry cannot expose its vertices cheaply here, so v0 stays zero on these rows -
     // the texture and render-target columns are what this path contributes.
@@ -21430,6 +21462,15 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                     numVertices, lastLive, kBoneReg0, regs/3);
             }
         }
+    }
+    if(g_trackedDepthPrimeFix&&g_trackedPrimeCache.Learn(dev,TrackedPrimeOwner(),
+        TrackedPrimeDraw(t,baseVertex,minIndex,numVertices,startIndex,primCount),
+        assemblyEye==2&&!shortTmdTail&&(nSeg>0||(nativeIndices.valid&&gloveTriangles>0))&&
+        (g_thisDrawMoved!=0||independentRegs>0)&&SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&
+        SUCCEEDED(handRestore)&&SUCCEEDED(nextRestore))) {
+        static unsigned notes=0;
+        if(notes<8){++notes;Log("tracked-depth-prime: learned restored color sibling frame=%ld verts=%u first=%u tris=%u eyes=2",
+            Rd(g_armPaletteFrameToken),numVertices,startIndex,primCount);}
     }
     g_thisDrawMoved = 0;
     return dhr;
@@ -29295,6 +29336,7 @@ static mirrorprobe::Probe g_mirrorPixelProbe;
 static bool g_mirrorProbeCurtain=false;
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    g_trackedPrimeCache.Reset();
     ReleaseUiRemasterResources();
     ResetScopePip();
     g_knifeMeleeReference.Reset();
@@ -36685,6 +36727,8 @@ void LoadIniSettings() {
     InterlockedExchange(&g_dualWeaponTmdRightWrist,GetPrivateProfileIntA("Input","DualWeaponTmdRightWrist",0,path)!=0);
     InterlockedExchange(&g_dualHandActionPose,GetPrivateProfileIntA("Input","DualHandActionPose",0,path)!=0);
     Log("ini: DualHandActionPose=%ld (default OFF; original material0 wrist parent, render only)",Rd(g_dualHandActionPose));
+    g_trackedDepthPrimeFix=GetPrivateProfileIntA("Render","TrackedDepthPrimeFix",0,path)!=0;
+    Log("ini: TrackedDepthPrimeFix=%d (default OFF; exact restored-color depth-only siblings)",g_trackedDepthPrimeFix?1:0);
     Log("ini: DualWeaponTmdRightWrist=%ld (default OFF; TMD material-0 original right wrist)",Rd(g_dualWeaponTmdRightWrist));
     InterlockedExchange(&g_dualWeaponTmdProbe,GetPrivateProfileIntA("Diagnostic","DualWeaponTmdProbe",0,path)!=0);
     Log("ini: DualWeaponTmdReady=%ld DualWeaponTmdProbe=%ld (default OFF; native draws only, no pawn state writes)",
