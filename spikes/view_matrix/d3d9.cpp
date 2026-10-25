@@ -20482,17 +20482,24 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 }
                 const auto* gun=diegetichud::MountForBodyDraw(baseVertex,minIndex,numVertices,startIndex,primCount);
                 const bool seeker=seekergeometry::Body(baseVertex,minIndex,numVertices,startIndex,primCount);
-                const auto target=dualpose::TargetPart(numVertices,startIndex,primCount,gun!=nullptr,seeker);
-                if(target.valid&&g_dualPoseBudget.Due(target.part)) {
-                    poseDue=true;
-                    poseSource.frame=frame;poseSource.call=g_dualPoseBudget.Transition();
-                    poseSource.part=target.part;poseSource.verts=numVertices;poseSource.minIndex=minIndex;
-                    poseSource.first=startIndex;poseSource.faces=primCount;
-                    poseSource.count=target.count;
-                    for(unsigned j=0;j<target.count;++j){
-                        poseSource.slots[j]=target.slots[j];poseSource.bones[j]=target.bones[j];
-                    }
+                const bool sniper=weaponreload::DrawPart(weaponreload::Kind::Kasimov,baseVertex,minIndex,numVertices,startIndex,primCount)==weaponreload::Part::Body;
+                const bool gunBody=gun||seeker||sniper;
+                const unsigned gunSlot=gun?(unsigned)gun->rootSlot:seeker?1u:weaponreloadanim::Find(weaponreload::Kind::Kasimov)->root;
+                const bool glove=(numVertices==7444||numVertices==2626)&&startIndex==0&&primCount==4402;
+                const bool device=gloveisolate::IsArmFleshSection(numVertices,startIndex,primCount);
+                const unsigned part=glove?0:device?1:2;
+                poseDue=(glove||device||gunBody)&&!(g_dualPoseStages[part]&1u);
+                if(poseDue) {
+                    poseSource={};poseSource.drawHr=E_PENDING;poseSource.ibRestore=E_PENDING;poseSource.paletteRestore=E_PENDING;
+                    poseSource.part=part;poseSource.frame=frame;poseSource.call=(unsigned)Rd(g_frameDrawIdx);
+                    poseSource.verts=numVertices;poseSource.minIndex=minIndex;poseSource.first=startIndex;poseSource.faces=primCount;
                     g_dualPoseStages[poseSource.part]|=1;
+                    poseSource.count=gunBody?1:3;
+                    const unsigned slots[2][3]={{1,18,19},{3,2,5}},bones[2][3]={{9,26,51},{27,8,41}};
+                    for(unsigned j=0;j<poseSource.count;++j){
+                        poseSource.slots[j]=gunBody?gunSlot:slots[poseSource.part][j];
+                        poseSource.bones[j]=gunBody?~0u:bones[poseSource.part][j];
+                    }
                     const int boneBase=g_boundShaderLayout.bones,localBase=g_boundShaderLayout.local;
                     bool ok=boneBase>=0&&localBase>=0;
                     if(ok)ok=SUCCEEDED(dev->GetVertexShaderConstantF(localBase,poseSource.sourceLocal,4));
