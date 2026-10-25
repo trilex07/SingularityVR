@@ -63,6 +63,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "support_grip_palette.h"
 #include "fp_shadow.h"
 #include "tracked_depth_prime.h"
+#include "tracked_depth_source.h"
 #include "camera_stabilization.h"
 #include "weapon_steady.h"
 #include "shadow_policy.h"
@@ -2279,6 +2280,7 @@ static LONG g_dualWeaponTmdRightWrist=0; // opt-in original TMD right-wrist targ
 static LONG g_dualHandActionPose=0; // source-wrist normalization; default OFF
 static bool g_trackedDepthPrimeFix=false; // exact late-color siblings only; default OFF
 static bool g_trackedDepthPrimeProbe=false; // bounded first-refusal only; OFF
+static bool g_trackedDepthSourcePose=false; // keep original wrist producer when omitting depth; OFF
 static bool g_tmdTrackedMuzzle=false; // original TMD_Muzzle socket -> final rendered wrist; OFF
 static bool g_tmdTrackedBeam=false; // exact owned aging-beam child attachment; OFF
 static trackedprime::Cache g_trackedPrimeCache;
@@ -17536,6 +17538,32 @@ static bool ApplyDualActionC(float C[4][4],bool aim) {
     }
     return applied;
 }
+static bool PublishDualActionSource(const trackedsource::Source& source,bool omittedPrime) {
+    const auto key=DualActionKey();
+    const auto& bind=armnatural::TmdBind();
+    if(!bind.ready){g_dualActionFrame.Clear();return false;}
+    armbind::Mat local;memcpy(local.m,source.local,sizeof(local));
+    const bool ready=g_dualActionFrame.Capture(key,local,bind.bind[9],source.left,bind.bind[51],source.right);
+    InterlockedExchange(&g_dualActionRenderThread,(LONG)GetCurrentThreadId());
+    // Compare ORIGINAL uploads, not final independent palettes. A mismatch is
+    // evidence of a different producer/space, not permission to freeze a pose.
+    static dualaction::Key primeKey{};
+    static trackedsource::Source primeSource{};
+    static bool havePrime=false;
+    static unsigned equalNotes=0,differentNotes=0;
+    if(omittedPrime){primeKey=key;primeSource=source;havePrime=ready;}
+    else if(g_trackedDepthSourcePose&&havePrime&&primeKey==key){
+        const float localDiff=trackedsource::Difference(&primeSource.local[0][0],&source.local[0][0],16);
+        const float leftDiff=trackedsource::Difference(&primeSource.left[0][0],&source.left[0][0],12);
+        const float rightDiff=trackedsource::Difference(&primeSource.right[0][0],&source.right[0][0],12);
+        const bool equal=ready&&localDiff<=.0001f&&leftDiff<=.0001f&&rightDiff<=.0001f;
+        unsigned& notes=equal?equalNotes:differentNotes;
+        if(notes++<8)Log("tracked-depth-source: compare frame=%u draw=%ld gun=%u ready=%d equal=%d maxOriginal[local=%.7g left=%.7g right=%.7g] (no frozen or guessed palette)",
+            key.frame,Rd(g_frameDrawIdx),key.vertices,ready,equal,localDiff,leftDiff,rightDiff);
+        havePrime=false;
+    }
+    return ready;
+}
 static void CaptureDualActionPose(bool tmdGloves,bool shadow,const unsigned* map,int slots,
                                  const float saved[135][4],const float local[4][4]) {
     if(!Rd(g_dualHandActionPose)||!tmdGloves||shadow)return;
@@ -17544,14 +17572,31 @@ static void CaptureDualActionPose(bool tmdGloves,bool shadow,const unsigned* map
     // This is the audited ORIGINAL material-0 upload, before independent hand,
     // isolation, support, fingers or either eye. Never seed from final constants.
     if(!bind.ready||slots!=36||map[1]!=9||map[19]!=51){g_dualActionFrame.Clear();return;}
-    armbind::Mat l;memcpy(l.m,local,sizeof(l));
-    const bool ready=g_dualActionFrame.Capture(DualActionKey(),l,bind.bind[9],
-        reinterpret_cast<const float(*)[4]>(saved+3),bind.bind[51],
-        reinterpret_cast<const float(*)[4]>(saved+57));
-    InterlockedExchange(&g_dualActionRenderThread,(LONG)GetCurrentThreadId());
+    trackedsource::Source source;
+    memcpy(source.local,local,sizeof(source.local));
+    memcpy(source.left,saved+3,sizeof(source.left));
+    memcpy(source.right,saved+57,sizeof(source.right));
+    const bool ready=PublishDualActionSource(source,false);
     static unsigned notes=0;
     if(notes++<8)Log("dual-hand-action: source material0 frame=%ld hands=%ld gun=%ld ready=%d; original wrists 9/51, same-frame shared assembly correction",
         Rd(g_armPaletteFrameToken),Rd(g_handsStatus),Rd(g_gunVerts),ready);
+}
+
+static void CaptureOmittedDepthSource(IDirect3DDevice9* dev,UINT vertices,UINT first,UINT triangles) {
+    if(!g_trackedDepthSourcePose || (vertices!=7444&&vertices!=2626)||first!=0||triangles!=4402)return;
+    const auto layout=g_boundShaderLayout;
+    const LONG motionMode=Rd(g_hideMeshIdx);
+    const bool eligible=g_independentHands&&(motionMode==0||motionMode==1||motionMode==3)&&DualActionAllowed();
+    trackedsource::Input input{true,true,eligible,layout.shadow,vertices,first,triangles,
+        layout.bones,layout.boneRegs,layout.local};
+    trackedsource::Source source;
+    const char* refusal=trackedsource::Read(dev,input,source);
+    const bool ready=!refusal&&PublishDualActionSource(source,true);
+    static unsigned successful=0,failed=0;
+    unsigned& notes=ready?successful:failed;
+    if(notes++<8)Log("tracked-depth-source: %s frame=%ld draw=%ld gun=%ld verts=%u first=%u tris=%u CTAB=%d/%d/%d gate=%s (original material0, read-only before omitted rasterization)",
+        ready?"CAPTURE":"REFUSED",Rd(g_armPaletteFrameToken),Rd(g_frameDrawIdx),Rd(g_gunVerts),vertices,first,triangles,
+        layout.bones,layout.boneRegs,layout.local,refusal?refusal:ready?"ready":"bind-or-palette");
 }
 
 static void BuildGunC(float C[4][4]) {
@@ -20660,7 +20705,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 Rd(g_armPaletteFrameToken),numVertices,startIndex,primCount,
                 receipt.z,receipt.write,receipt.color,receipt.stencil);}
         if(skip){
-            // No D3D state or tracked-pose mutation; only a proven depth-only sibling.
+            // Keep the ORIGINAL pose producer even though its depth pixels are
+            // redundant. Otherwise BuildGunC has no same-frame witness until
+            // the later glove color draw, changing the pose after gun depth.
+            CaptureOmittedDepthSource(dev,numVertices,startIndex,primCount);
+            // No GPU state or controller-sample writes; omit only the exact depth sibling.
             if(skippedNotes<8){++skippedNotes;
                 Log("tracked-depth-prime: omitted exact late-color sibling frame=%ld verts=%u first=%u tris=%u depthOnly=1 nativePrimeRange=1 stencil=0",
                     Rd(g_armPaletteFrameToken),numVertices,startIndex,primCount);}
@@ -36838,11 +36887,13 @@ void LoadIniSettings() {
     Log("ini: DualHandActionPose=%ld (default OFF; original material0 wrist parent, render only)",Rd(g_dualHandActionPose));
     g_trackedDepthPrimeFix=GetPrivateProfileIntA("Render","TrackedDepthPrimeFix",0,path)!=0;
     g_trackedDepthPrimeProbe=GetPrivateProfileIntA("Diagnostic","TrackedDepthPrimeProbe",0,path)!=0;
+    g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
     g_tmdTrackedBeam=GetPrivateProfileIntA("Render","TmdTrackedBeam",0,path)!=0;
     Log("ini: TmdTrackedBeam=%d (default OFF; owned native aging-beam attachment, native endpoint preserved)",g_tmdTrackedBeam?1:0);
     Log("ini: TmdTrackedMuzzle=%d (default OFF; original socket on final both-eye rendered wrist)",g_tmdTrackedMuzzle?1:0);
     Log("ini: TrackedDepthPrimeFix=%d (default OFF; exact restored-color depth-only siblings)",g_trackedDepthPrimeFix?1:0);
+    Log("ini: TrackedDepthSourcePose=%d (default OFF; preserve original wrist capture before exact depth omission)",g_trackedDepthSourcePose?1:0);
     Log("ini: DualWeaponTmdRightWrist=%ld (default OFF; TMD material-0 original right wrist)",Rd(g_dualWeaponTmdRightWrist));
     InterlockedExchange(&g_dualWeaponTmdProbe,GetPrivateProfileIntA("Diagnostic","DualWeaponTmdProbe",0,path)!=0);
     Log("ini: DualWeaponTmdReady=%ld DualWeaponTmdProbe=%ld (default OFF; native draws only, no pawn state writes)",

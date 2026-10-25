@@ -1,5 +1,8 @@
 #define NOMINMAX
 #include "../tracked_depth_prime.h"
+#include "../tracked_depth_source.h"
+#include "../dual_hand_action_pose.h"
+#include "../arm_natural.h"
 #include <cassert>
 #include <cstdio>
 #include <cmath>
@@ -8,6 +11,145 @@
 // scene reproduces early depth-only old pose -> world -> late new pose. It does
 // not establish the runtime identity of the user's black silhouette.
 struct V {float x,y,z;DWORD color;};
+static armbind::Mat Identity(){armbind::Mat m{};for(unsigned i=0;i<4;++i)m.m[i][i]=1;return m;}
+static armbind::Mat Inverse(const armbind::Mat& m){armbind::Mat r;assert(skeletal::Inverse(r.m,m.m));return r;}
+static float MatrixError(const armbind::Mat& a,const armbind::Mat& b){
+    float e=0;for(unsigned i=0;i<4;++i)for(unsigned j=0;j<4;++j)e=fmaxf(e,fabsf(a.m[i][j]-b.m[i][j]));return e;
+}
+static void SourceOrderingPixels(IDirect3DDevice9* d,bool ex){
+    // The actual cache must omit the early exact material-0 range, while its
+    // original shader constants still reach the real source reader/Frame.
+    // Geometry is synthetic (a repeated quad), not extracted proprietary data.
+    trackedprime::Cache cache;
+    trackedprime::Owner owner{11,22,100,true};
+    trackedprime::Draw gunColor;gunColor.triangles=true;gunColor.foreground=true;
+    gunColor.key.verts=4;gunColor.key.prims=2;
+    auto gloveColor=gunColor;gloveColor.key.verts=7444;gloveColor.key.prims=4402;
+    auto gunPrime=gunColor;gunPrime.foreground=false;
+    auto glovePrime=gloveColor;glovePrime.foreground=false;
+    IDirect3DVertexBuffer9 *gunVb=nullptr,*gloveVb=nullptr;
+    IDirect3DIndexBuffer9 *gunIb=nullptr,*gloveIb=nullptr;
+    const V quad[]={{-.75f,-.5f,.2f,0xffffffff},{-.25f,-.5f,.2f,0xffffffff},
+        {-.75f,.5f,.2f,0xffffffff},{-.25f,.5f,.2f,0xffffffff}};
+    auto makeBuffers=[&](unsigned vertices,unsigned triangles,IDirect3DVertexBuffer9** vb,IDirect3DIndexBuffer9** ib){
+        assert(SUCCEEDED(d->CreateVertexBuffer(vertices*sizeof(V),D3DUSAGE_WRITEONLY,D3DFVF_XYZ|D3DFVF_DIFFUSE,D3DPOOL_DEFAULT,vb,nullptr)));
+        assert(SUCCEEDED(d->CreateIndexBuffer(triangles*3*sizeof(WORD),D3DUSAGE_WRITEONLY,D3DFMT_INDEX16,D3DPOOL_DEFAULT,ib,nullptr)));
+        void* p=nullptr;assert(SUCCEEDED((*vb)->Lock(0,0,&p,0)));memset(p,0,vertices*sizeof(V));memcpy(p,quad,sizeof(quad));(*vb)->Unlock();
+        assert(SUCCEEDED((*ib)->Lock(0,0,&p,0)));const WORD indices[]={0,2,1,1,2,3};
+        for(unsigned i=0;i<triangles*3;++i)((WORD*)p)[i]=indices[i%6];(*ib)->Unlock();
+    };
+    makeBuffers(4,2,&gunVb,&gunIb);makeBuffers(7444,4402,&gloveVb,&gloveIb);
+    auto bind=[&](bool glove){assert(SUCCEEDED(d->SetStreamSource(0,glove?gloveVb:gunVb,0,sizeof(V))));assert(SUCCEEDED(d->SetIndices(glove?gloveIb:gunIb)));};
+    auto draw=[&](bool glove){return d->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,0,0,glove?7444:4,0,glove?4402:2);};
+    auto world=[&](const armbind::Mat& m){D3DMATRIX v;memcpy(&v,m.m,sizeof(v));assert(SUCCEEDED(d->SetTransform(D3DTS_WORLD,&v)));};
+    const auto identity=Identity();world(identity);
+    D3DVIEWPORT9 full{0,0,128,64,0,1};assert(SUCCEEDED(d->SetViewport(&full)));
+    assert(SUCCEEDED(d->SetRenderState(D3DRS_COLORWRITEENABLE,15)));
+    assert(SUCCEEDED(d->SetRenderState(D3DRS_ZFUNC,D3DCMP_LESSEQUAL)));
+    assert(SUCCEEDED(d->BeginScene()));
+    bind(false);assert(SUCCEEDED(draw(false)));assert(cache.Learn(d,owner,gunColor,true));
+    bind(true);assert(SUCCEEDED(draw(true)));assert(cache.Learn(d,owner,gloveColor,true));
+    assert(SUCCEEDED(d->EndScene()));
+    ++owner.frame;
+
+    const auto& original=armnatural::TmdBind();assert(original.ready);
+    auto wanted=identity;wanted.m[3][0]=.25f;wanted.m[3][2]=.2f;
+    const auto nativeLeft=dualaction::Product(dualhandreference::Left,Inverse(wanted));
+    const auto nativeRight=dualaction::Product(dualhandreference::Right8297,Inverse(wanted));
+    trackedsource::Source source;
+    memcpy(source.local,identity.m,sizeof(source.local));
+    armbind::ToGpu(dualaction::Product(Inverse(original.bind[9]),nativeLeft),source.left);
+    armbind::ToGpu(dualaction::Product(Inverse(original.bind[51]),nativeRight),source.right);
+    assert(SUCCEEDED(d->SetVertexShaderConstantF(230,&source.local[0][0],4)));
+    assert(SUCCEEDED(d->SetVertexShaderConstantF(8,&source.left[0][0],3)));
+    assert(SUCCEEDED(d->SetVertexShaderConstantF(62,&source.right[0][0],3)));
+    trackedsource::Input input;input.enabled=input.omitted=input.eligible=true;
+    input.verts=7444;input.first=0;input.triangles=4402;input.bones=5;input.boneRegs=225;input.local=230;
+    assert(trackedsource::Gate(input)==nullptr);
+    auto subset=input;subset.verts=2626;assert(trackedsource::Gate(subset)==nullptr);
+    const dualaction::Key key{owner.frame,(uint32_t)owner.pawn,(uint32_t)owner.weapon,8297};
+    auto capture=[&](dualaction::Frame& f,const trackedsource::Input& in){
+        trackedsource::Source s;const char* refusal=trackedsource::Read(d,in,s);
+        if(refusal)return false;
+        armbind::Mat local;memcpy(local.m,s.local,sizeof(local.m));
+        return f.Capture(key,local,original.bind[9],s.left,original.bind[51],s.right);
+    };
+    // Refused paths never fabricate a source or mutate output, even if the
+    // device is unavailable. They must not silently read guessed registers.
+    for(unsigned gate=0;gate<9;++gate){auto bad=input;
+        switch(gate){case 0:bad.enabled=false;break;case 1:bad.omitted=false;break;case 2:bad.eligible=false;break;
+        case 3:bad.shadow=true;break;case 4:bad.verts=8297;break;case 5:bad.first=3;break;
+        case 6:bad.triangles=4401;break;case 7:bad.bones=4;break;case 8:bad.local=229;break;}
+        trackedsource::Source output;memset(&output,0x5a,sizeof(output));const auto before=output;
+        assert(trackedsource::Gate(bad)!=nullptr&&trackedsource::Read(nullptr,bad,output)!=nullptr);
+        assert(memcmp(&before,&output,sizeof(output))==0);
+        dualaction::Frame f;assert(!capture(f,bad)&&!f.valid);
+    }
+    {auto bad=input;bad.boneRegs=224;assert(trackedsource::Gate(bad)!=nullptr);}
+    dualaction::Frame unsupported;
+    assert(!unsupported.Capture({owner.frame,11,22,12444},identity,original.bind[9],source.left,original.bind[51],source.right));
+    assert(!unsupported.valid); // no Seeker profile is fabricated
+
+    DWORD overlap[2][2][2]{},extension[2][2][2]{};
+    for(unsigned equal=0;equal<2;++equal)for(unsigned fixed=0;fixed<2;++fixed){
+        assert(SUCCEEDED(d->SetViewport(&full)));world(identity);
+        assert(SUCCEEDED(d->Clear(0,nullptr,D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER,0xff204080,1,0)));
+        assert(SUCCEEDED(d->BeginScene()));
+        for(unsigned eye=0;eye<2;++eye){
+            dualaction::Frame frame;
+            // Stale previous-frame witness must not be accepted as current.
+            assert(capture(frame,input));--frame.key.frame;
+            D3DVIEWPORT9 vp{eye*64,0,64,64,0,.0001f};auto h=d->SetViewport(&vp);assert(SUCCEEDED(h));cache.ObserveViewport(d,&vp,h);
+            assert(SUCCEEDED(d->SetRenderState(D3DRS_COLORWRITEENABLE,0)));
+            bind(false);assert(cache.Skip(d,owner,gunPrime));
+            bind(true);auto early=input;early.omitted=cache.Skip(d,owner,glovePrime);assert(early.omitted);
+            if(fixed)assert(capture(frame,early));
+            vp.MaxZ=1;h=d->SetViewport(&vp);assert(SUCCEEDED(h));cache.ObserveViewport(d,&vp,h);
+            // A genuine late foreground clear/prepass remains present. The fix
+            // repairs its transform instead of suppressing required depth.
+            assert(SUCCEEDED(d->Clear(0,nullptr,D3DCLEAR_ZBUFFER,0,1,0)));
+            bind(false);assert(!cache.Skip(d,owner,gunPrime));
+            auto depthC=identity;assert(frame.Apply(key,true,depthC.m)==(fixed!=0));
+            world(depthC);assert(SUCCEEDED(d->SetRenderState(D3DRS_ZFUNC,D3DCMP_LESSEQUAL)));
+            assert(SUCCEEDED(draw(false)));
+            // Later original material0 arrives before final gun color. It must
+            // agree with the source retained from the omitted prime.
+            bind(true);assert(capture(frame,input));
+            auto colorC=identity;assert(frame.Apply(key,true,colorC.m));
+            assert(MatrixError(colorC,wanted)<.0001f);
+            if(fixed)assert(MatrixError(depthC,colorC)==0);
+            else assert(MatrixError(depthC,colorC)>.1f);
+            bind(false);world(colorC);assert(SUCCEEDED(d->SetRenderState(D3DRS_COLORWRITEENABLE,15)));
+            assert(SUCCEEDED(d->SetRenderState(D3DRS_ZFUNC,equal?D3DCMP_EQUAL:D3DCMP_LESSEQUAL)));
+            assert(SUCCEEDED(draw(false)));
+        }
+        assert(SUCCEEDED(d->EndScene()));
+        IDirect3DSurface9 *rt=nullptr,*read=nullptr;assert(SUCCEEDED(d->GetRenderTarget(0,&rt)));
+        assert(SUCCEEDED(d->CreateOffscreenPlainSurface(128,64,D3DFMT_X8R8G8B8,D3DPOOL_SYSTEMMEM,&read,nullptr)));
+        assert(SUCCEEDED(d->GetRenderTargetData(rt,read)));D3DLOCKED_RECT lock{};assert(SUCCEEDED(read->LockRect(&lock,nullptr,D3DLOCK_READONLY)));
+        const auto* row=(DWORD*)((char*)lock.pBits+32*lock.Pitch);
+        for(unsigned eye=0;eye<2;++eye){
+            overlap[equal][fixed][eye]=row[eye*64+20]&0xffffff;
+            extension[equal][fixed][eye]=row[eye*64+28]&0xffffff;
+            assert((row[eye*64+60]&0xffffff)==0x204080);
+        }
+        read->UnlockRect();read->Release();rt->Release();
+    }
+    for(unsigned equal=0;equal<2;++equal)for(unsigned eye=0;eye<2;++eye){
+        assert(overlap[equal][0][eye]==0x204080&&overlap[equal][1][eye]==0xffffff);
+        assert(extension[equal][0][eye]==(equal?0x204080:0xffffff));
+        assert(extension[equal][1][eye]==0xffffff);
+        printf("source ordering %s %s eye=%u overlap=%06lX->%06lX extension=%06lX->%06lX\n",
+            ex?"Ex":"D3D9",equal?"EQUAL":"LEQUAL",eye,overlap[equal][0][eye],overlap[equal][1][eye],extension[equal][0][eye],extension[equal][1][eye]);
+    }
+    // Read/capture must leave the original skin/local constants and bindings intact.
+    trackedsource::Source after;assert(trackedsource::Read(d,input,after)==nullptr);
+    assert(memcmp(&after,&source,sizeof(source))==0);
+    IDirect3DIndexBuffer9* ib=nullptr;assert(SUCCEEDED(d->GetIndices(&ib))&&ib==gunIb);ib->Release();
+    cache.Reset();d->SetIndices(nullptr);d->SetStreamSource(0,nullptr,0,0);
+    assert(gunVb->Release()==0&&gunIb->Release()==0&&gloveVb->Release()==0&&gloveIb->Release()==0);
+    assert(SUCCEEDED(d->SetRenderState(D3DRS_ZFUNC,D3DCMP_LESSEQUAL)));
+}
 static void Run(bool ex) {
     HWND w=CreateWindowA("STATIC","depth-prime offline",WS_OVERLAPPED,0,0,128,64,
         nullptr,nullptr,GetModuleHandle(nullptr),nullptr);assert(w);
@@ -136,6 +278,8 @@ static void Run(bool ex) {
     }
     for(unsigned eye=0;eye<2;++eye){assert(oldPixel[0][eye]==0);assert(oldPixel[1][eye]==0x204080);
         assert(gunPixel[0][eye]==0xffffff&&gunPixel[1][eye]==0xffffff);}
+    SourceOrderingPixels(d,ex);
+    d->SetStreamSource(0,vb,0,sizeof(V));d->SetIndices(ib);
     // Queries/dispatch preserve the exact caller bindings and all tested state.
     primeState();IDirect3DIndexBuffer9* bound=nullptr;d->GetIndices(&bound);assert(bound==ib);bound->Release();
     assert(cache.Skip(d,owner,prime));D3DVIEWPORT9 after{};d->GetViewport(&after);assert(after.MinZ==0);
@@ -147,6 +291,6 @@ static void Run(bool ex) {
     assert(learn());primeState();assert(cache.Skip(d,owner,prime));cache.Reset();
     d->SetIndices(nullptr);d->SetStreamSource(0,nullptr,0,0);assert(vb->Release()==0&&ib->Release()==0);
     d->Release();api->Release();DestroyWindow(w);
-    printf("PASS D3D9%s: exact sibling + OFF/identity/state/lifetime/Reset; both-eye pixels black->204080, gun FFFFFF unchanged\n",ex?"Ex":"");
+    printf("PASS D3D9%s: exact sibling + OFF/identity/state/lifetime/Reset; both-eye pixels black->204080; source-before-depth/color LEQUAL+EQUAL hole->FFFFFF, original constants preserved\n",ex?"Ex":"");
 }
 int main(){Run(false);Run(true);}
